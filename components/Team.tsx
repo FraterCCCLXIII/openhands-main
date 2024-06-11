@@ -15,9 +15,9 @@ const NameCard: React.FC<NameCardProps> = ({ name, title, imageUrl, websiteUrl})
         alt={name}
         className="mb-2 inline-block w-full rounded-xl object-cover h-80 lg:h-80"
       />
-      <p className="font-bold text-lg">{name}</p>
-      <p className="text-lg text-gray-600">{title}</p>
-      <div className="mb-2">
+      <p className="font-bold text-2xl">{name}</p>
+      <p className="text-xl text-gray-700">{title}</p>
+      <div className="mb-1 text-lg">
         <a href={websiteUrl} target="_blank" rel="noopener noreferrer">[Website]</a>
         {/* <Link href={websiteUrl}>
             <FontAwesomeIcon icon={faGithub} className="text-white" size="2x" />
@@ -30,8 +30,8 @@ const NameCard: React.FC<NameCardProps> = ({ name, title, imageUrl, websiteUrl})
 const Team: React.FC = () => {
   return (
     <section>
-      <div className="mx-auto w-full max-w-7xl px-5 py-16 md:px-10 md:py-24 lg:py-32">
-        <div className="text-center mb-20">
+      <div className="mx-auto w-full max-w-7xl px-5 py-16 md:px-10 md:py-20 lg:py-32 md:mt-10">
+        <div className="text-center mb-5 md:mb-20">
           <h2 className="text-3xl font-semibold md:text-5xl">All Hands AI Team</h2>
         </div>
         <div className="mx-auto grid max-w-[1040px] grid-cols-1 justify-items-center gap-5 sm:grid-cols-2 sm:justify-items-stretch md:grid-cols-3 md:gap-4 lg:gap-6">
