@@ -13,7 +13,7 @@ const Contact: React.FC = () => {
           </p>
 
           <p className="mx-2 mb-5 text-2xl lg:mb-8 md:text-4xl">
-            GitHub: <a href="https://github.com/OpenDevin">OpenDevin/OpenDevin</a>
+            GitHub: <a href="https://github.com/OpenDevin">github.com/OpenDevin</a>
           </p>
 
           <p className="mx-2 mb-5 text-2xl lg:mb-8 md:text-4xl">

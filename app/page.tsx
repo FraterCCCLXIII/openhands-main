@@ -7,9 +7,6 @@ import About from '../components/About';
 
 export const metadata: Metadata = {
   title: "All Hands AI",
-  openGraph: {
-    url: "https://all-hands.dev/"
-  },
 }
 
 export default function Web() {
