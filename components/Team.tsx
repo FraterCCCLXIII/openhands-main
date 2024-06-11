@@ -1,47 +1,90 @@
 import React from 'react';
 
-interface NameCardProps {
-  name: string;
-  title: string;
-  imageUrl: string;
-  websiteUrl: string;
-}
+const people = [
+  {
+    name: 'Robert Brennan',
+    role: 'Founder & CEO',
+    imageUrl: '/team/robert.jpg',
+    websiteUrl: 'https://rbren.io/',
+    xUrl: 'https://x.com/rbren_dev',
+    linkedinUrl: 'https://www.linkedin.com/in/robert-a-brennan/',
+    githubUrl: 'https://github.com/rbren',
+  },
+  {
+    name: 'Xingyao Wang',
+    role: 'Founder',
+    imageUrl: '/team/xingyao.jpg',
+    websiteUrl: 'https://xwang.dev/',
+    xUrl: 'https://x.com/xingyaow_',
+    linkedinUrl: 'https://www.linkedin.com/in/xingyao-wang',
+    githubUrl: 'https://github.com/xingyaoww',
+  },
+  {
+    name: 'Graham Neubig',
+    role: 'Founder',
+    imageUrl: '/team/graham.jpg',
+    websiteUrl: 'https://www.phontron.com/',
+    xUrl: 'https://x.com/gneubig',
+    linkedinUrl: 'https://www.linkedin.com/in/graham-neubig-10b41616b/',
+    githubUrl: 'https://github.com/neubig',
+  },
+];
 
-const NameCard: React.FC<NameCardProps> = ({ name, title, imageUrl, websiteUrl}) => {
+
+const NameCard: React.FC<{ person: typeof people[number] }> = ({ person }) => {
   return (
-    <div className="flex flex-col items-center justify-center gap-4 rounded-xl border border-solid border-[#636262] p-4 [box-shadow:rgb(0,_0,_0)_6px_6px]">
-      <img
-        src={imageUrl}
-        alt={name}
-        className="mb-2 inline-block w-full rounded-xl object-cover h-80 lg:h-80"
-      />
-      <p className="font-bold text-2xl">{name}</p>
-      <p className="text-xl text-gray-700">{title}</p>
-      <div className="mb-1 text-lg">
-        <a href={websiteUrl} target="_blank" rel="noopener noreferrer">[Website]</a>
-        {/* <Link href={websiteUrl}>
-            <FontAwesomeIcon icon={faGithub} className="text-white" size="2x" />
-        </Link> */}
-      </div>
-    </div>
-  );
+  <li>
+    <img className="aspect-1 max-h-100 w-full rounded-2xl object-cover" src={person.imageUrl} alt={person.name} />
+    <h3 className="mt-6 text-lg font-semibold leading-8 tracking-tight text-gray-900">{person.name}</h3>
+    <p className="text-base leading-7 text-gray-600">{person.role}</p>
+    
+    <ul role="list" className="mt-6 flex gap-x-6">
+
+      <li>
+        <a href={person.websiteUrl} target="_blank" rel="noopener noreferrer">
+          <span className="sr-only">Website</span>
+          <img src="/social/website.svg" alt="Website" title="Website" style={{ width: '24px', height: '24px'}} />
+        </a>
+      </li>
+
+      <li>
+        <a href={person.xUrl} target="_blank" rel="noopener noreferrer">
+          <span className="sr-only">X</span>
+          <img src="/social/twitter.svg" alt="Twitter" title="Twitter" style={{ width: '24px', height: '24px', filter: 'invert(100%)' }} />
+        </a>
+      </li>
+
+
+      <li>
+        <a href={person.linkedinUrl} target="_blank" rel="noopener noreferrer">
+          <span className="sr-only">LinkedIn</span>
+          <img src="/social/linkedin.svg" alt="LinkedIn" title="LinkedIn" style={{ width: '24px', height: '24px' }} />
+        </a>
+      </li>
+</ul>
+</li>
+);
 };
 
 const Team: React.FC = () => {
   return (
-    <section>
-      <div className="mx-auto w-full max-w-7xl px-5 py-16 md:px-10 md:py-20 lg:py-32 md:mt-10">
-        <div className="text-center mb-5 md:mb-20">
-          <h2 className="text-3xl font-semibold md:text-5xl">All Hands AI Team</h2>
-        </div>
-        <div className="mx-auto grid max-w-[1040px] grid-cols-1 justify-items-center gap-5 sm:grid-cols-2 sm:justify-items-stretch md:grid-cols-3 md:gap-4 lg:gap-6">
-          <NameCard name="Robert Brennan" title="Founder & CEO" imageUrl="/team/robert.jpg" websiteUrl="https://rbren.io/" />
-          <NameCard name="Xingyao Wang" title="Founder" imageUrl="/team/xingyao.jpg" websiteUrl="https://xwang.dev/" />
-          <NameCard name="Graham Neubig" title="Founder" imageUrl="/team/graham.jpg" websiteUrl="https://www.phontron.com/" />
-        </div>
+  <div className="bg-white py-24 sm:py-32">
+    <div className="mx-auto max-w-7xl px-6 lg:px-8">
+      <div className="mx-auto max-w-2xl lg:mx-0">
+        <h2 className="text-6xl font-bold tracking-tight text-gray-900">
+        All Hands AI Team
+        </h2>
       </div>
-    </section>
-  );
+      <ul
+      role="list"
+      className="mx-auto mt-20 grid max-w-2xl grid-cols-1 gap-x-8 gap-y-16 sm:grid-cols-2 lg:mx-0 lg:max-w-none lg:grid-cols-3"
+      >
+      {people.map((person) => (
+      <NameCard key={person.name} person={person} />
+      ))}
+      </ul>
+    </div>
+  </div>
+);
 };
-
 export default Team;
