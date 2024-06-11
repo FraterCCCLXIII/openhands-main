@@ -10,9 +10,9 @@ const About: React.FC = () => {
         </h2>
         <div className="flex flex-col md:flex-row items-center justify-center">
           <div className="md:w-1/4 mb-8 mr-8 md:mb-0">
-            <img src="/logo/open-devin.png" alt="OpenDevin logo" className="w-full" />
+            <img src="/logo/open-devin.png" alt="OpenDevin logo" className="w-3/4" />
           </div>
-          <div className="md:w-3/4 text-left">
+          <div className="mt-2 md:w-3/4 text-left">
             <div className="mb-5 text-2xl lg:mb-8 md:text-3xl">
               <p>
                 Our flagship project is <a href="https://github.com/OpenDevin/OpenDevin">OpenDevin</a>{' '}
