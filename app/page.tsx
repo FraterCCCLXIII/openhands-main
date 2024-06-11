@@ -2,6 +2,8 @@ import { Metadata } from "next"
 import Head from 'next/head';
 import Navbar from '../components/NavBar';
 import Hero from '../components/Hero';
+import Footer from '../components/Footer'; 
+import About from '../components/About'; 
 
 export const metadata: Metadata = {
   title: "All Hands AI",
@@ -12,13 +14,17 @@ export const metadata: Metadata = {
 
 export default function Web() {
   return (
-    <div>
+    <div className="flex flex-col min-h-screen">
       <Head>
         <title>All Hands AI</title>
         <link rel="icon" href="/public/favicon.ico" />
       </Head>
       <Navbar />
-      <Hero />
+      <main className="flex-grow">
+        <Hero />
+        <About /> 
+      </main>
+      <Footer />
     </div>
   );
 }
