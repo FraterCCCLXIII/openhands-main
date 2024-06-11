@@ -6,7 +6,7 @@ const About: React.FC = () => {
     <div className="bg-white">
       <div className="mx-auto max-w-7xl px-5 py-16 md:px-10 md:py-24 lg:py-32">
         <h2 className="mb-6 pb-4 text-2xl font-bold md:text-4xl">
-            All Hands AI's mission is to build AI tools to help developers build software faster and better, and do it in the open.
+            All Hands AI&apos;s mission is to build AI tools to help developers build software faster and better, and do it in the open.
         </h2>
         <div className="flex flex-col md:flex-row items-center justify-center">
           <div className="md:w-1/4 mb-8 mr-8 md:mb-0">
