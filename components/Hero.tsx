@@ -5,8 +5,8 @@ import Link from 'next/link';
 const Hero: React.FC = () => {
   return (
     <div className="bg-neutral-950 flex items-center justify-center flex-grow">
-      <div className="mx-auto w-full max-w-7xl px-5 py-10 md:py-20 md:px-10 md:py-24 lg:py-32 my-20">
-        <div className="mx-2 max-w-full text-left text-white ">
+      <div className="mx-auto w-full max-w-7xl px-5 py-10 md:py-20 md:px-10 lg:py-32 my-20">
+        <div className="mx-2 max-w-full text-left text-white">
 
           <h1 className="mb-6 pb-4 text-6xl font-bold md:text-9xl">
             All Hands AI.
@@ -28,7 +28,7 @@ const Hero: React.FC = () => {
               />
             </a> */}
 
-            <a href="/contact" className="inline-flex items-center justify-center rounded-lg bg-slate-300 px-6 py-3 text-center font-bold text-black transition hover:border-black hover:bg-white">
+            <a href="/contact" className="inline-flex items-center justify-center rounded-lg bg-slate-300 px-6 py-3 text-center font-bold text-black transition hover:border-black hover:bg-white text-xl">
               Contact Us
             </a>
           </div>
