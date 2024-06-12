@@ -48,6 +48,7 @@
     "@semantic-release/release-notes-generator": "^13.0.0",
     "@t3-oss/env-nextjs": "^0.10.1",
     "@vercel/otel": "^1.8.3",
+    "@vercel/speed-insights": "^1.0.11",
     "class-variance-authority": "^0.7.0",
     "lodash": "^4.17.21",
     "next": "^14.2.3",
