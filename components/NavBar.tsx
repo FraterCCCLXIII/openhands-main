@@ -28,6 +28,11 @@ const Navbar: React.FC = () => {
                   About
                 </span>
               </Link> */}
+              <Link href="https://allhandsai.applytojob.com/apply/vgC5tG0D0U/Senior-Full-Stack-Engineer">
+                <span className="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-md font-medium cursor-pointer">
+                  Join us
+                </span>
+              </Link>
               <Link href="/team">
                 <span className="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-md font-medium cursor-pointer">
                   Team
