@@ -38,6 +38,11 @@ const Navbar: React.FC = () => {
                   Team
                 </span>
               </Link>
+              <Link href="/blog">
+                <span className="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-md font-medium cursor-pointer">
+                  Blog
+                </span>
+              </Link>
               <Link href="/contact">
                 <span className="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-md font-medium cursor-pointer">
                   Contact
