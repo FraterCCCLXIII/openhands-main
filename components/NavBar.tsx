@@ -1,6 +1,6 @@
 "use client";
-import React, { useState } from 'react';
 import Link from 'next/link';
+import React, { useState } from 'react';
 import MobileMenuButton from './MobileMenuButton';
 
 const Navbar: React.FC = () => {
@@ -9,14 +9,14 @@ const Navbar: React.FC = () => {
     setIsOpen(!isOpen);
   };
 
-  return ( 
+  return (
     <nav className="bg-black">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
             <Link href="/" className='hover:no-underline'>
               <span className="flex items-center text-white font-bold text-xl cursor-pointer">
-                <img src="/logo/all-hands-logo-white.png" alt="All Hands AI" className="w-8 mr-2" />
+                <img src="logo/all-hands-logo-white.png" alt="All Hands AI" className="w-8 mr-2" />
                 All Hands AI
               </span>
             </Link>

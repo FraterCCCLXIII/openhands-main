@@ -67,10 +67,20 @@ const Switch = () => {
   useEffect(() => {
     // store global functions to local variables to avoid any interference
     updateDOM = window.updateDOM;
+  
     /** Sync the tabs */
-    addEventListener("storage", (e: StorageEvent): void => {
-      e.key === STORAGE_KEY && setMode(e.newValue as ColorSchemePreference);
-    });
+    const handleStorageEvent = (e: StorageEvent): void => {
+      if (e.key === STORAGE_KEY) {
+        setMode(e.newValue as ColorSchemePreference);
+      }
+    };
+  
+    window.addEventListener("storage", handleStorageEvent);
+  
+    // Cleanup function to remove the event listener
+    return () => {
+      window.removeEventListener("storage", handleStorageEvent);
+    };
   }, []);
 
   useEffect(() => {
@@ -81,7 +91,10 @@ const Switch = () => {
   /** toggle mode */
   const handleModeSwitch = () => {
     const index = modes.indexOf(mode);
-    setMode(modes[(index + 1) % modes.length]);
+    const modeValue = modes[(index + 1) % modes.length];
+    if(modeValue) {
+      setMode(modeValue);
+    } 
   };
   return (
     <button
@@ -92,13 +105,15 @@ const Switch = () => {
   );
 };
 
-const Script = memo(() => (
-  <script
-    dangerouslySetInnerHTML={{
-      __html: `(${NoFOUCScript.toString()})('${STORAGE_KEY}')`,
-    }}
-  />
-));
+const Script = memo(function Script() {
+  return (
+    <script
+      dangerouslySetInnerHTML={{
+        __html: `(${NoFOUCScript.toString()})('${STORAGE_KEY}')`,
+      }}
+    />
+  );
+});
 
 /**
  * This component wich applies classes and transitions.
