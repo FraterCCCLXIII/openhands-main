@@ -9,14 +9,14 @@ const Navbar: React.FC = () => {
     setIsOpen(!isOpen);
   };
 
-  return (
+  return ( 
     <nav className="bg-black">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
             <Link href="/" className='hover:no-underline'>
               <span className="flex items-center text-white font-bold text-xl cursor-pointer">
-                <img src="logo/all-hands-logo-white.png" alt="All Hands AI" className="w-8 mr-2" />
+                <img src="/logo/all-hands-logo-white.png" alt="All Hands AI" className="w-8 mr-2" />
                 All Hands AI
               </span>
             </Link>
@@ -36,6 +36,11 @@ const Navbar: React.FC = () => {
               <Link href="/team">
                 <span className="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-md font-medium cursor-pointer">
                   Team
+                </span>
+              </Link>
+              <Link href="/blog">
+                <span className="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-md font-medium cursor-pointer">
+                  Blog
                 </span>
               </Link>
               <Link href="/contact">
