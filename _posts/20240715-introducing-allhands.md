@@ -10,7 +10,7 @@ ogImage:
   url: "/assets/blog/20240715-introducing-allhands/cover.jpg"
 ---
 
-Hello world. We are [All Hands AI](https://www.all-hands.dev/), a new company founded by [Robert Brenner](https://rbren.dev), [Xingyao Wang](https://xwang.dev/), and [Graham Neubig](https://phontron.com). Our mission is to **build the world’s best AI software development agents, for everyone, in the open**.
+Hello world. We are [All Hands AI](https://www.all-hands.dev/), a new company founded by [Robert Brennan](https://rbren.io), [Xingyao Wang](https://xwang.dev/), and [Graham Neubig](https://phontron.com). Our mission is to **build the world’s best AI software development agents, for everyone, in the open**.
 
 Here’s why we think this mission is important.
 
