@@ -5,9 +5,11 @@ import markdownToHtml from "app/api/blog/markdownToHtml";
 import { getAllPosts, getPostBySlug } from "app/api/blog/post";
 import Alert from "app/blog/_components/alert";
 import Container from "app/blog/_components/container";
-import Header from "app/blog/_components/header";
 import { PostBody } from "app/blog/_components/post-body";
 import { PostHeader } from "app/blog/_components/post-header";
+import Navbar from "components/NavBar";
+import Footer from "components/Footer";
+
 
 export default async function Post({ params }: Params) {
   const post = getPostBySlug(params.slug);
@@ -20,10 +22,10 @@ export default async function Post({ params }: Params) {
 
   return (
     <main>
+      <Navbar />
       <Alert preview={post.preview} />
       <Container>
-        <Header />
-        <article className="mb-32">
+        <article className="mx-auto max-w-7xl flex-grow mb-32 mt-20">
           <PostHeader
             title={post.title}
             coverImage={post.coverImage}
@@ -33,6 +35,7 @@ export default async function Post({ params }: Params) {
           <PostBody content={content} />
         </article>
       </Container>
+      <Footer />
     </main>
   );
 }
@@ -50,7 +53,7 @@ export function generateMetadata({ params }: Params): Metadata {
     return notFound();
   }
 
-  const title = `${post.title} | Next.js Blog Example with ${CMS_NAME}`;
+  const title = `${post.title} | Blog | All Hands AI`;
 
   return {
     title,
