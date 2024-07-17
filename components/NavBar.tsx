@@ -11,9 +11,9 @@ const Navbar: React.FC = () => {
 
   const navItems = [
     { href: "/team", label: "Team" },
-    { href: "/contact", label: "Contact" },
-    { href: "/share-opendevin", label: "Share OpenDevin" },
     { href: "/blog", label: "Blog" }, // Add other items as needed
+    { href: "/share-opendevin", label: "Share OpenDevin" },
+    { href: "/contact", label: "Contact" },
   ];
 
   return (
