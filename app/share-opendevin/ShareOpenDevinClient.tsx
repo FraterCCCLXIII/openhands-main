@@ -59,7 +59,7 @@ const ShareOpenDevinClient: React.FC = () => {
               value={shareId}
               onChange={(e) => updateShare(e.target.value)}
               className="border border-gray-300 rounded px-4 py-2 mr-2 w-64"
-              placeholder="Enter Share ID"
+              placeholder="Enter Share/Feedback ID"
             />
             <button
               onClick={() => updateShare(shareId)}
