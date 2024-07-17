@@ -9,7 +9,7 @@ const ShareHero: React.FC = () => {
             Share OpenDevin
           </h1>
           <p className="mb-7 lg:mb-8 text-4xl md:text-6xl">
-            View and share OpenDevin content with others.
+          Share how OpenDevin solves your challenges.
           </p>
         </div>
       </div>
