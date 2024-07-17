@@ -1,6 +1,3 @@
-
-
-
 "use client";
 import Link from 'next/link';
 import React, { useState } from 'react';
@@ -11,6 +8,13 @@ const Navbar: React.FC = () => {
   const toggleMenu = () => {
     setIsOpen(!isOpen);
   };
+
+  const navItems = [
+    { href: "/team", label: "Team" },
+    { href: "/contact", label: "Contact" },
+    { href: "/share-opendevin", label: "Share OpenDevin" },
+    { href: "/blog", label: "Blog" }, // Add other items as needed
+  ];
 
   return (
     <nav className="bg-black">
@@ -26,58 +30,30 @@ const Navbar: React.FC = () => {
           </div>
           <div className="hidden md:block">
             <div className="ml-10 flex items-center space-x-4">
-              <Link href="https://allhandsai.applytojob.com/apply/">
-                <span className="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-md font-medium cursor-pointer">
-                  Join us
-                </span>
-              </Link>
-              <Link href="/team">
-                <span className="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-md font-medium cursor-pointer">
-                  Team
-                </span>
-              </Link>
-              <Link href="/blog">
-                <span className="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-md font-medium cursor-pointer">
-                  Blog
-                </span>
-              </Link>
-              <Link href="/contact">
-                <span className="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-md font-medium cursor-pointer">
-                  Contact
-                </span>
-              </Link>
-              <Link href="/share-opendevin">
-                <span className="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-md font-medium cursor-pointer">
-                  Share OpenDevin
-                </span>
-              </Link>
+              {navItems.map(item => (
+                <Link key={item.href} href={item.href}>
+                  <span className="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-md font-medium cursor-pointer">
+                    {item.label}
+                  </span>
+                </Link>
+              ))}
             </div>
           </div>
-
           <div className="-mr-2 flex md:hidden">
             <MobileMenuButton isOpen={isOpen} onClick={toggleMenu} />
           </div>
         </div>
       </div>
-
       {isOpen && (
         <div className="md:hidden" id="mobile-menu">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-            <Link href="/team">
-              <span className="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium cursor-pointer">
-                Team
-              </span>
-            </Link>
-            <Link href="/contact">
-              <span className="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium cursor-pointer">
-                Contact
-              </span>
-            </Link>
-            <Link href="/share-opendevin">
-              <span className="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium cursor-pointer">
-                Share OpenDevin
-              </span>
-            </Link>
+            {navItems.map(item => (
+              <Link key={item.href} href={item.href}>
+                <span className="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium cursor-pointer">
+                  {item.label}
+                </span>
+              </Link>
+            ))}
           </div>
         </div>
       )}
