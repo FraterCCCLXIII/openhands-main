@@ -1,7 +1,3 @@
-interface Timestamp {
-    // the timestamp is a string in the format "YYYY-MM-DD-HH-mm-ss"
-    [key: string]: string;
-}
 
 interface ActionArgs {
     content?: string;
@@ -28,7 +24,8 @@ interface TrajectoryItem {
 interface Trajectory {
     feedback: string;
     permissions: string;
-    timestamp: Timestamp;
+    timestamp: string;
+    confirmationMode: boolean;
     trajectory: TrajectoryItem[];
 }
 

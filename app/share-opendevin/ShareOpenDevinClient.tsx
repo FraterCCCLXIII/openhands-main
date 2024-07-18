@@ -9,7 +9,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Navbar from '../../components/NavBar';
 import Footer from '../../components/Footer';
 import ShareHero from '../../components/ShareHero';
-import { MessageCircle, Terminal, Code, Eye, Loader, ThumbsUp, Lock, Clock, Bot } from 'lucide-react';
+import { MessageCircle, Terminal, Code, Eye, Loader, ThumbsUp, Lock, Clock, Bot, Search } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { Trajectory, TrajectoryItem } from './trajectoryTypes';
 
@@ -168,24 +168,29 @@ const ShareOpenDevin: React.FC = () => {
         <ShareHero />
         <div className="container mx-auto w-full max-w-7xl px-4 py-8">
           <div className="mb-8 flex justify-center">
-            <input
-              type="text"
-              value={shareId}
-              onChange={(e) => updateShare(e.target.value)}
-              className="border border-gray-300 rounded px-4 py-2 mr-2 w-64"
-              placeholder="Enter Share ID"
-            />
-            <button
-              onClick={() => updateShare(shareId)}
-              className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600"
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <Loader className="animate-spin mr-2 inline-block" size={20} />
-              ) : (
-                'Show Shared Content'
-              )}
-            </button>
+            <div className="flex w-full max-w-xl">
+              <input
+                type="text"
+                value={shareId}
+                onChange={(e) => setShareId(e.target.value)}
+                className="flex-grow px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-l-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-150 ease-in-out"
+                placeholder="Enter Share ID"
+              />
+              <button
+                onClick={() => updateShare(shareId)}
+                className="bg-blue-500 text-white px-6 py-2 rounded-r-full hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-150 ease-in-out flex items-center"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <Loader className="animate-spin" size={20} />
+                ) : (
+                  <>
+                    <Search size={20} className="mr-2" />
+                    <span>Search</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
           {isLoading && (
             <div className="flex justify-center items-center">
