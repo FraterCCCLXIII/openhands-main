@@ -9,15 +9,60 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Navbar from '../../components/NavBar';
 import Footer from '../../components/Footer';
 import ShareHero from '../../components/ShareHero';
-import { MessageCircle, Terminal, Code, Eye } from 'lucide-react';
+import { MessageCircle, Terminal, Code, Eye, Loader, ThumbsUp, Lock, Clock, Bot } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { Trajectory, TrajectoryItem } from './trajectoryTypes';
+
+const MetadataDisplay: React.FC<{
+  feedback: string;
+  permissions: string;
+  timestamp: string;
+  agent: string;
+  confirmationMode: boolean;
+  language: string;
+  llmModel: string;
+}> = ({ feedback, permissions, timestamp, agent, confirmationMode, language, llmModel }) => (
+  <div className="bg-white shadow-md rounded-lg p-6 mb-6">
+    <h3 className="text-xl font-semibold mb-4">Trajectory Metadata</h3>
+    <div className="grid grid-cols-2 gap-4">
+      <div className="flex items-center">
+        <ThumbsUp className="mr-2 text-green-500" size={20} />
+        <span>Feedback: {feedback}</span>
+      </div>
+      <div className="flex items-center">
+        <Lock className="mr-2 text-blue-500" size={20} />
+        <span>Permissions: {permissions}</span>
+      </div>
+      <div className="flex items-center">
+        <Clock className="mr-2 text-yellow-500" size={20} />
+        <span>Timestamp: {timestamp}</span>
+      </div>
+      <div className="flex items-center">
+        <Bot className="mr-2 text-purple-500" size={20} />
+        <span>Agent: {agent}</span>
+      </div>
+      <div className="flex items-center">
+        <Code className="mr-2 text-red-500" size={20} />
+        <span>Confirmation Mode: {confirmationMode ? 'On' : 'Off'}</span>
+      </div>
+      <div className="flex items-center">
+        <MessageCircle className="mr-2 text-indigo-500" size={20} />
+        <span>Language: {language}</span>
+      </div>
+      <div className="flex items-center col-span-2">
+        <Terminal className="mr-2 text-gray-500" size={20} />
+        <span>LLM Model: {llmModel}</span>
+      </div>
+    </div>
+  </div>
+);
 
 const ShareOpenDevin: React.FC = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [shareId, setShareId] = useState<string>('');
   const [sharedContent, setSharedContent] = useState<Trajectory | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   useEffect(() => {
     const id = searchParams.get('share_id');
@@ -28,6 +73,7 @@ const ShareOpenDevin: React.FC = () => {
   }, [searchParams]);
 
   const fetchSharedContent = async (id: string) => {
+    setIsLoading(true);
     try {
       const response = await fetch('https://show-od-trajectory-3u9bw9tx.uc.gateway.dev/show-od-trajectory', {
         method: 'POST',
@@ -41,6 +87,8 @@ const ShareOpenDevin: React.FC = () => {
     } catch (error) {
       toast.error('Error fetching shared content');
       console.error(error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -102,7 +150,6 @@ const ShareOpenDevin: React.FC = () => {
               Observation
             </div>
             <div className="px-4 py-2">
-              {/* <pre className="whitespace-pre-wrap">{item.content}</pre> */}
               <SyntaxHighlighter language="plaintext" style={tomorrow}>
                 {item.content || ''}
               </SyntaxHighlighter>
@@ -131,17 +178,35 @@ const ShareOpenDevin: React.FC = () => {
             <button
               onClick={() => updateShare(shareId)}
               className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600"
+              disabled={isLoading}
             >
-              Show Shared Content
+              {isLoading ? (
+                <Loader className="animate-spin mr-2 inline-block" size={20} />
+              ) : (
+                'Show Shared Content'
+              )}
             </button>
           </div>
-          {sharedContent && (
+          {isLoading && (
+            <div className="flex justify-center items-center">
+              <Loader className="animate-spin text-blue-500" size={40} />
+            </div>
+          )}
+          {!isLoading && sharedContent && (
             <div>
+              <MetadataDisplay
+                feedback={sharedContent.feedback}
+                permissions={sharedContent.permissions}
+                timestamp={sharedContent.timestamp}
+                agent={sharedContent.trajectory[0]?.args?.AGENT || 'Unknown'}
+                confirmationMode={sharedContent.trajectory[0]?.args?.CONFIRMATION_MODE || false}
+                language={sharedContent.trajectory[0]?.args?.LANGUAGE || 'Unknown'}
+                llmModel={sharedContent.trajectory[0]?.args?.LLM_MODEL || 'Unknown'}
+              />
               <h2 className="text-2xl font-semibold mb-4">Shared Trajectory</h2>
               {renderTrajectory(sharedContent.trajectory)}
             </div>
           )}
-          <ToastContainer />
         </div>
       </main>
       <Footer />
