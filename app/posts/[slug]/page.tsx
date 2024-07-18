@@ -7,8 +7,8 @@ import Alert from "app/blog/_components/alert";
 import Container from "app/blog/_components/container";
 import { PostBody } from "app/blog/_components/post-body";
 import { PostHeader } from "app/blog/_components/post-header";
-import Navbar from "components/NavBar";
 import Footer from "components/Footer";
+import Navbar from "components/NavBar";
 
 
 export default async function Post({ params }: Params) {
@@ -25,7 +25,7 @@ export default async function Post({ params }: Params) {
       <Navbar />
       <Alert preview={post.preview} />
       <Container>
-        <article className="mx-auto max-w-7xl flex-grow mb-32 mt-20">
+        <article className="mx-auto max-w-7xl grow mb-32 mt-20">
           <PostHeader
             title={post.title}
             coverImage={post.coverImage}

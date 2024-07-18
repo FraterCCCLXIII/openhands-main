@@ -1,10 +1,10 @@
 // components/Hero.tsx
-import React from 'react';
 import Link from 'next/link';
+import React from 'react';
 
 const Hero: React.FC = () => {
   return (
-    <div className="bg-neutral-950 flex items-center justify-center flex-grow">
+    <div className="bg-neutral-950 flex items-center justify-center grow">
       <div className="mx-auto w-full max-w-7xl px-5 py-10 md:py-20 md:px-10 lg:py-32 my-20">
         <div className="mx-2 max-w-full text-left text-white">
 

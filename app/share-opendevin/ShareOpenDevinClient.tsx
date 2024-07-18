@@ -1,17 +1,17 @@
 'use client'
 
 import React, { useEffect, useState } from 'react';
+import ReactMarkdown from 'react-markdown';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { tomorrow } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { useRouter, useSearchParams } from 'next/navigation';
-import Navbar from '../../components/NavBar';
-import Footer from '../../components/Footer';
-import ShareHero from '../../components/ShareHero';
-import { MessageCircle, Terminal, Code, Eye, Loader, ThumbsUp, Lock, Clock, Bot, Search } from 'lucide-react';
-import ReactMarkdown from 'react-markdown';
 import { Trajectory, TrajectoryItem } from './trajectoryTypes';
+import Footer from '../../components/Footer';
+import Navbar from '../../components/NavBar';
+import ShareHero from '../../components/ShareHero';
+import { Bot, Clock, Code, Eye, Loader, Lock, MessageCircle, Search, Terminal, ThumbsUp } from 'lucide-react';
 
 const MetadataDisplay: React.FC<{
   feedback: string;
@@ -164,7 +164,7 @@ const ShareOpenDevin: React.FC = () => {
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
-      <main className="flex-grow">
+      <main className="grow">
         <ShareHero />
         <div className="container mx-auto w-full max-w-7xl px-4 py-8">
           <div className="mb-8 flex justify-center">
@@ -173,7 +173,7 @@ const ShareOpenDevin: React.FC = () => {
                 type="text"
                 value={shareId}
                 onChange={(e) => setShareId(e.target.value)}
-                className="flex-grow px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-l-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-150 ease-in-out"
+                className="grow px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-l-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-150 ease-in-out"
                 placeholder="Enter Share ID"
               />
               <button

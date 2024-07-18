@@ -4,8 +4,15 @@ interface ActionArgs {
     code?: string;
     command?: string;
     thought?: string;
+
+    // initialize args
+    AGENT?: string;
+    CONFIRMATION_MODE?: boolean;
+    LANGUAGE?: string;
+    LLM_MODEL?: string;
+
     // allow for any other arbitrary key-value pairs
-    [key: string]: string | undefined;
+    [key: string]: string | boolean | undefined;
 }
 
 
