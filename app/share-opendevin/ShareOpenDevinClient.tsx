@@ -9,14 +9,15 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Navbar from '../../components/NavBar';
 import Footer from '../../components/Footer';
 import ShareHero from '../../components/ShareHero';
-import { MessageCircle, Terminal, PenTool, Eye } from 'lucide-react';
+import { MessageCircle, Terminal, Code, Eye } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
+import { Trajectory, TrajectoryItem } from './trajectoryTypes';
 
-const ShareOpenDevin = () => {
+const ShareOpenDevin: React.FC = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [shareId, setShareId] = useState('');
-  const [sharedContent, setSharedContent] = useState(null);
+  const [shareId, setShareId] = useState<string>('');
+  const [sharedContent, setSharedContent] = useState<Trajectory | null>(null);
 
   useEffect(() => {
     const id = searchParams.get('share_id');
@@ -26,7 +27,7 @@ const ShareOpenDevin = () => {
     }
   }, [searchParams]);
 
-  const fetchSharedContent = async (id) => {
+  const fetchSharedContent = async (id: string) => {
     try {
       const response = await fetch('https://show-od-trajectory-3u9bw9tx.uc.gateway.dev/show-od-trajectory', {
         method: 'POST',
@@ -35,7 +36,7 @@ const ShareOpenDevin = () => {
         },
         body: JSON.stringify({ feedback_id: id })
       });
-      const data = await response.json();
+      const data = await response.json() as Trajectory;
       setSharedContent(data);
     } catch (error) {
       toast.error('Error fetching shared content');
@@ -43,14 +44,14 @@ const ShareOpenDevin = () => {
     }
   };
 
-  const updateShare = (id) => {
+  const updateShare = (id: string) => {
     setShareId(id);
     router.push(`/share-opendevin?share_id=${id}`);
     fetchSharedContent(id);
   };
 
-  const renderTrajectory = (trajectory) => {
-    return trajectory.map((item, index) => {
+  const renderTrajectory = (trajectory: TrajectoryItem[]) => {
+    return trajectory.map((item: TrajectoryItem, index: number) => {
       if (item.action === 'message') {
         return (
           <div key={index} className="mb-4 bg-gray-100 rounded-lg shadow-md overflow-hidden">
@@ -58,28 +59,10 @@ const ShareOpenDevin = () => {
               <MessageCircle className="mr-2" size={20} />
               User Message
             </div>
-            {/* <div className="px-4 py-2">{item.args.content}</div> */}
             <div className="px-4 py-2">
-                <ReactMarkdown
-                components={{
-                    code({ node, inline, className, children, ...props }) {
-                    const match = /language-(\w+)/.exec(className || '');
-                    return !inline && match ? (
-                        <CodeBlock
-                        language={match[1]}
-                        value={String(children).replace(/\n$/, '')}
-                        {...props}
-                        />
-                    ) : (
-                        <code className={className} {...props}>
-                        {children}
-                        </code>
-                    );
-                    },
-                }}
-                >
-                {item.args.content}
-                </ReactMarkdown>
+              <ReactMarkdown>
+                {item.args?.content || ''}
+              </ReactMarkdown>
             </div>
           </div>
         );
@@ -87,12 +70,12 @@ const ShareOpenDevin = () => {
         return (
           <div key={index} className="mb-4 bg-blue-100 rounded-lg shadow-md overflow-hidden">
             <div className="bg-blue-200 px-4 py-2 font-bold flex items-center">
-              <PenTool className="mr-2" size={20} />
+              <Code className="mr-2" size={20} />
               IPython Cell Execution
             </div>
             <div className="px-4 py-2">
               <SyntaxHighlighter language="python" style={tomorrow}>
-                {item.args.code}
+                {item.args?.code || ''}
               </SyntaxHighlighter>
             </div>
           </div>
@@ -106,7 +89,7 @@ const ShareOpenDevin = () => {
             </div>
             <div className="px-4 py-2">
               <SyntaxHighlighter language="bash" style={tomorrow}>
-                {item.args.command}
+                {item.args?.command || ''}
               </SyntaxHighlighter>
             </div>
           </div>
@@ -119,7 +102,10 @@ const ShareOpenDevin = () => {
               Observation
             </div>
             <div className="px-4 py-2">
-              <pre className="whitespace-pre-wrap">{item.content}</pre>
+              {/* <pre className="whitespace-pre-wrap">{item.content}</pre> */}
+              <SyntaxHighlighter language="plaintext" style={tomorrow}>
+                {item.content || ''}
+              </SyntaxHighlighter>
             </div>
           </div>
         );
