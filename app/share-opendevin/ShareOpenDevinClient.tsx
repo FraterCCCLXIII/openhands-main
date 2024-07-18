@@ -12,6 +12,7 @@ import Footer from '../../components/Footer';
 import Navbar from '../../components/NavBar';
 import ShareHero from '../../components/ShareHero';
 import { Bot, Clock, Code, Eye, Loader, Lock, MessageCircle, Search, Terminal, ThumbsUp } from 'lucide-react';
+import { Suspense } from 'react';
 
 const MetadataDisplay: React.FC<{
   feedback: string;
@@ -58,6 +59,14 @@ const MetadataDisplay: React.FC<{
 );
 
 const ShareOpenDevin: React.FC = () => {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ShareOpenDevinContent />
+    </Suspense>
+  );
+};
+
+const ShareOpenDevinContent: React.FC = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [shareId, setShareId] = useState<string>('');
