@@ -165,8 +165,34 @@ const ShareOpenDevinContent: React.FC = () => {
             </div>
           </div>
         );
+      } else if (item.observation === 'agent_state_changed') {
+        return (
+          <div key={index} className="mb-4 bg-gray-100 rounded-lg shadow-md overflow-hidden">
+            <div className="bg-gray-200 text-gray-500 px-4 py-2 font-bold flex items-center">
+              <Bot className="mr-2" size={20} />
+              Agent State Changed to [{item.extras?.agent_state}] triggered by [{item.source}]
+            </div>
+          </div>
+        );
       }
-      return null;
+      else if (item.action === 'initialize' || item.status) {
+        return null;
+      }
+
+      // else show json content of item
+      return (
+        <div key={index} className="mb-4 bg-gray-100 rounded-lg shadow-md overflow-hidden">
+          <div className="bg-yellow-200 px-4 py-2 font-bold flex items-center">
+              <Eye className="mr-2" size={20} />
+              Raw Data
+            </div>
+            <div className="px-4 py-2">
+              <SyntaxHighlighter language="json" style={tomorrow}>
+                {JSON.stringify(item, null, 2)}
+              </SyntaxHighlighter>
+            </div>
+          </div>
+        );
     });
   };
 
