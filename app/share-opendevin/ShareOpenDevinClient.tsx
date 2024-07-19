@@ -86,7 +86,7 @@ const renderExecutionObservation = (content: string) => {
           if (line.type === "image") {
             // render it as markdown
             return (
-              <Markdown urlTransform={(value: string) => value}>
+              <Markdown key={index} urlTransform={(value: string) => value}>
                 {line.content}
               </Markdown>
             );
