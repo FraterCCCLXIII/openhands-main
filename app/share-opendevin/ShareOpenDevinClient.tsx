@@ -13,6 +13,7 @@ import Footer from '../../components/Footer';
 import Navbar from '../../components/NavBar';
 import ShareHero from '../../components/ShareHero';
 import { Bot, CirclePause, Clock, Code, Eye, Loader, Lock, MessageCircle, Search, Terminal, ThumbsUp } from 'lucide-react';
+import Markdown from 'react-markdown';
 
 const MetadataDisplay: React.FC<{
   feedback: string;
@@ -57,6 +58,48 @@ const MetadataDisplay: React.FC<{
     </div>
   </div>
 );
+
+const renderExecutionObservation = (content: string) => {
+  const lines = content.split('\n');
+  const aggregatedLines = [];
+  let currentPlaintext = "";
+
+  lines.forEach((line, index) => {
+    if (line.startsWith('![image](data:image/png;base64,')) {
+      if (currentPlaintext) {
+        aggregatedLines.push({ type: "plaintext", content: currentPlaintext });
+        currentPlaintext = "";
+      }
+      aggregatedLines.push({ type: "image", content: line });
+    } else if (line) {
+      currentPlaintext += `${line}\n`;
+    }
+  });
+
+  if (currentPlaintext) {
+    aggregatedLines.push({ type: "plaintext", content: currentPlaintext });
+  }
+
+  return (
+    <div className="">
+        {aggregatedLines.map((line, index) => {
+          if (line.type === "image") {
+            // render it as markdown
+            return (
+              <Markdown urlTransform={(value: string) => value}>
+                {line.content}
+              </Markdown>
+            );
+          }
+          return (
+            <SyntaxHighlighter key={index} language="plaintext" style={tomorrow}>
+              {line.content}
+            </SyntaxHighlighter>
+          );
+        })}
+    </div>
+  );
+};
 
 const ShareOpenDevin: React.FC = () => {
   return (
@@ -159,9 +202,7 @@ const ShareOpenDevinContent: React.FC = () => {
               Observation
             </div>
             <div className="px-4 py-2">
-              <SyntaxHighlighter language="plaintext" style={tomorrow}>
-                {item.content || ''}
-              </SyntaxHighlighter>
+              {renderExecutionObservation(item.content || '')}
             </div>
           </div>
         );
