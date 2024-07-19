@@ -13,7 +13,6 @@ const Navbar: React.FC = () => {
     { href: "https://allhandsai.applytojob.com/apply/", label: "Join us" },
     { href: "/team", label: "Team" },
     { href: "/blog", label: "Blog" }, // Add other items as needed
-    { href: "/share-opendevin", label: "Share OpenDevin" },
     { href: "/contact", label: "Contact" },
   ];
 
