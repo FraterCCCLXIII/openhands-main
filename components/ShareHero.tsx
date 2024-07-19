@@ -8,9 +8,6 @@ const ShareHero: React.FC = () => {
           <h1 className="mb-6 pb-4 text-6xl font-bold md:text-9xl">
             Share OpenDevin
           </h1>
-          <p className="mb-7 lg:mb-8 text-4xl md:text-6xl">
-          Share how OpenDevin solves your challenges.
-          </p>
         </div>
       </div>
     </div>
