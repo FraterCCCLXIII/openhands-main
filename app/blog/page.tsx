@@ -1,11 +1,11 @@
+import { Metadata } from "next";
 import { getAllPosts } from "app/api/blog/post";
 import Container from "app/blog/_components/container";
 import { HeroPost } from "app/blog/_components/hero-post";
 import { Intro } from "app/blog/_components/intro";
 import { MoreStories } from "app/blog/_components/more-stories";
-import Navbar from "components/NavBar";
 import Footer from "components/Footer";
-import { Metadata } from "next";
+import Navbar from "components/NavBar";
 
 export const metadata: Metadata = {
   title: "Blog | All Hands AI",
@@ -26,7 +26,7 @@ export default function Index() {
     <main>
       <Navbar />
       <Container>
-        <main className="mx-auto max-w-7xl flex-grow">
+        <main className="mx-auto max-w-7xl grow">
           <Intro />
           <HeroPost
           title={heroPost.title}

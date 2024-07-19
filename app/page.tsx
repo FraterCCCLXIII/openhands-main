@@ -1,9 +1,9 @@
 import { Metadata } from "next"
 import Head from 'next/head';
-import Navbar from '../components/NavBar';
-import Hero from '../components/Hero';
-import Footer from '../components/Footer'; 
 import About from '../components/About'; 
+import Footer from '../components/Footer'; 
+import Hero from '../components/Hero';
+import Navbar from '../components/NavBar';
 
 export const metadata: Metadata = {
   title: "All Hands AI",
@@ -17,7 +17,7 @@ export default function Web() {
         <link rel="icon" href="/public/favicon.ico" />
       </Head>
       <Navbar />
-      <main className="flex-grow">
+      <main className="grow">
         <Hero />
         <About /> 
       </main>

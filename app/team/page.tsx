@@ -1,6 +1,6 @@
 import { Metadata } from "next"
-import Navbar from '../../components/NavBar';
 import Footer from '../../components/Footer';
+import Navbar from '../../components/NavBar';
 import Team from '../../components/Team';
 
 export const metadata: Metadata = {
@@ -11,7 +11,7 @@ export default function TeamPage() {
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
-      <main className="flex-grow">
+      <main className="grow">
         <Team />
       </main>
       <Footer />
