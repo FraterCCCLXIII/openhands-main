@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useEffect, useState } from 'react';
+import { Suspense } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -11,8 +12,7 @@ import { Trajectory, TrajectoryItem } from './trajectoryTypes';
 import Footer from '../../components/Footer';
 import Navbar from '../../components/NavBar';
 import ShareHero from '../../components/ShareHero';
-import { Bot, Clock, Code, Eye, Loader, Lock, MessageCircle, Search, Terminal, ThumbsUp } from 'lucide-react';
-import { Suspense } from 'react';
+import { Bot, CirclePause, Clock, Code, Eye, Loader, Lock, MessageCircle, Search, Terminal, ThumbsUp } from 'lucide-react';
 
 const MetadataDisplay: React.FC<{
   feedback: string;
@@ -177,6 +177,21 @@ const ShareOpenDevinContent: React.FC = () => {
       }
       else if (item.action === 'initialize' || item.status) {
         return null;
+      }
+      else if (item.action === 'finish') {
+        return (
+          <div key={index} className="mb-4 bg-gray-100 rounded-lg shadow-md overflow-hidden">
+            <div className="bg-gray-200 px-4 py-2 font-bold flex items-center">
+              <CirclePause className="mr-2" size={20} />
+              Finished
+            </div>
+            <div className="px-4 py-2">
+              <ReactMarkdown>
+                {item.args?.thought || ''}
+              </ReactMarkdown>
+            </div>
+          </div>
+        );
       }
 
       // else show json content of item
