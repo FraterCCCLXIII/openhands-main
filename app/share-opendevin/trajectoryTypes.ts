@@ -24,6 +24,9 @@ interface TrajectoryItem {
     message?: string;
     observation?: string;
     source?: string;
+    extras?: {
+        [key: string]: string;
+    };
     // allow for any other arbitrary key-value pairs
     [key: string]: string | number | ActionArgs | undefined;
 }
