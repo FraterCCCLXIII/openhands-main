@@ -42,7 +42,7 @@ So what does this look like from the point of view of software development? We t
 
 - **Level 3 (Conditional Automation)**: The AI system can handle all aspects of software engineering in specific scenarios, such as writing tests, creating documentation, or porting code from one language to another.
 
-- **Level 4 (High Automation)**: The vehicle can perform all software development tasks. However, due to imperfections in the outputs, close human operator supervision of the final product and careful access control are crucial.
+- **Level 4 (High Automation)**: The AI system can perform all software development tasks. However, due to imperfections in the outputs, close human operator supervision of the final product and careful access control are crucial.
 
 - **Level 5 (Full Automation)**: The AI software developer can perform tasks largely independently in all environments and conditions without any human input.
 
