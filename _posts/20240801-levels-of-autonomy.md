@@ -38,9 +38,9 @@ So what does this look like from the point of view of software development? We t
 
 - **Level 1 (Code Completion)**: AI can assist the developer's development process by completing the next code that the developer would write.
 
-- **Level 2 (Partial Automation)**: In addition to completing the developer's next code, the AI also performs small edits on existing code using AI-based functionality.
+- **Level 2 (Partial Automation)**: In addition to completing the developer's next code, the AI also performs edits on existing code using AI-based functionality.
 
-- **Level 3 (Conditional Automation)**: The vehicle can handle all aspects of software engineering in specific scenarios, such as writing tests, creating documentation, or porting code from one language to another.
+- **Level 3 (Conditional Automation)**: The AI system can handle all aspects of software engineering in specific scenarios, such as writing tests, creating documentation, or porting code from one language to another.
 
 - **Level 4 (High Automation)**: The vehicle can perform all software development tasks. However, due to imperfections in the outputs, close human operator supervision of the final product and careful access control are crucial.
 
