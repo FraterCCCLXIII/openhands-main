@@ -1,17 +1,18 @@
-# Levels of Autonomy in AI-powered Software Engineering
-
-By [All Hands AI](https://www.all-hands.dev/) (primary author Graham Neubig)
+---
+title: "Levels of Autonomy in AI-enhanced Software Engineering"
+excerpt: "What are some different levels of autonomy in software development agents, and how do they relate to existing tools? Read on to learn more!"
+coverImage: "/assets/blog/20240801-levels-of-autonomy/levels-of-autonomy.png"
+date: "2024-08-01T08:00:00.000Z"
+author:
+  name: Graham Neubig
+  picture: "/assets/blog/authors/graham.jpg"
+ogImage:
+  url: "/assets/blog/20240801-levels-of-autonomy/levels-of-autonomy.png"
+---
 
 AI holds great promise for software development, and already many or even most developers are already using AI in their everyday development cycles. These include code-completion tools such as [Github CoPilot](https://github.com/features/copilot) or [Cursor](https://www.cursor.com/), frameworks designed to solve end-to-end varieties of software development tasks such as [DiffBlue](https://www.diffblue.com/) for unit test generation or [TransCoder](https://github.com/facebookresearch/TransCoder) for code porting, as well as general-purpose software development agents such as [Devin](https://www.cognition.ai/blog/introducing-devin) or [OpenDevin](https://github.com/OpenDevin/OpenDevin/). What are some different levels of autonomy in software development agents, and how do they relate to existing tools? Read on to learn more!
 
-| **Level** | **Self Driving** | **Software Development** |
-|-----------|------------------|--------------------------|
-| 0: No Automation | Manual driving | Manual Coding |
-| 1: Driver Assistance/ Code Completion | Adaptive cruise control/braking | Copilot/Cursor code completion |
-| 2: Partial Automation | Tesla's autopilot | Copilot chat refactoring |
-| 3: Conditional Automation | Mercedes-Benz drive pilot | DiffBlue test generation, Transcoder code porting |
-| 4: High Automation | Cruise self-driving vehicles | Devin/OpenDevin end-to-end development |
-| 5: Full Automation | ... | ... |
+![Levels of Autonomy in AI-enhanced Software Engineering](/assets/blog/20240801-levels-of-autonomy/levels-of-autonomy.png)
 
 ## Some Inspiration in Self-Driving
 
@@ -51,7 +52,7 @@ Code completion has been around for a long time, even before the advent of AI-dr
 
 Recently, [Github Copilot](https://github.com/features/copilot) and [Cursor](https://www.cursor.com/) have been popular methods for performing this sort of code completion. The below video shows an example of Github completing some code.
 
-![](media/image1.gif)
+![An example of Github Copilot](/assets/blog/20240801-levels-of-autonomy/copilot.gif)
 
 This sort of code completion can be quite beneficial in improving developers' actual and perceived productivity. For more details on this you can see this [interesting research study](https://cacm.acm.org/research/measuring-github-copilots-impact-on-productivity/) by folks at GitHub.
 
@@ -61,7 +62,7 @@ One thing to note is that this always completes the programmer's next action at 
 
 The next level up the autonomy ladder is systems that can work together with programmers to handle more complex editing tasks. There are a number of examples of this, including closed-source solutions such as Github [Copilot Chat](https://docs.github.com/en/copilot/using-github-copilot/asking-github-copilot-questions-in-your-ide), Cursor's [speculative editing](https://www.cursor.com/blog/instant-apply) functionality, and [Codium](https://www.codium.ai/), as well as some open-source tools such as [Agentless](https://github.com/OpenAutoCoder/Agentless) or [Aider](https://aider.chat/). The below video shows an example from Github Copilot chat.
 
-![](media/image2.gif)
+![An example of Github Copilot Chat](/assets/blog/20240801-levels-of-autonomy/copilot-chat.gif)
 
 In this video, you can see that the author presses a keyboard shortcut, types an explanation of what they would like to have done, and the assistant edits the entire document. This allows for more flexible editing, such as introducing libraries at the top of the file, refactoring, etc. But at the same time, it is significantly slower than simple completion and increases the possibility of error.
 
@@ -94,7 +95,7 @@ There are a number of products or open-source projects that attempt to achieve t
 3. testing whether the code runs properly
 4. sending a pull request for review
 
-![](media/image3.gif)
+![An example of OpenDevin's end-to-end Software Engineering](/assets/blog/20240801-levels-of-autonomy/opendevin.gif)
 
 These methods are promising in that they can potentially act as another player in the programmer's team, being dispatched to take care of issues that the programmer needs to tackle but doesn't have time or interest to do themselves.
 
