@@ -16,3 +16,9 @@
 .markdown h3 {
   @apply text-2xl mt-8 mb-4 leading-snug;
 }
+
+.markdown ul,
+.markdown ol {
+  list-style: revert;
+  @apply mx-5;
+}
