@@ -3,6 +3,9 @@ import HamburgerMenuIcon from "../../assets/menu-icon.svg?react";
 import AllHandsLogo from "../../assets/all-hands-1.svg?react";
 import GitHubLogo from "../../assets/github.svg?react";
 import TripleWow from "../../assets/triple-wow.svg?react";
+import Hierarchy from "../../assets/hierarchy.svg?react";
+import Star from "../../assets/star.svg?react";
+import Users from "../../assets/users.svg?react";
 
 export const meta: MetaFunction = () => {
   return [
@@ -27,20 +30,87 @@ export default function Index() {
       </header>
 
       <main>
-        <div className="flex flex-col items-center gap-4 mt-[50px] mb-[79px]">
+        <section className="flex flex-col items-center gap-4 pt-[50px] pb-[79px]">
           <h1 className="text-[58px] leading-[58px] font-normal text-center">Open Source Agents for Developers</h1>
 
           <button className="bg-black px-[30px] h-[58px] rounded-lg flex items-center gap-[15px]">
             <GitHubLogo width={23} height={23} />
             <span className="text-white text-[19px] leading-[27px] font-bold">Get it on Github</span>
           </button>
-        </div>
+        </section>
 
-        <div className="flex flex-col items-center gap-8">
+        <section className="flex flex-col items-center gap-8 pt-[25px] pb-[51px]">
           <TripleWow width={53} height={33} />
           <img alt="product" width={378} height={212} className="bg-[#D4CABD] rounded-[10px]" />
-          <p className="text-lg leading-[25px] text-center w-[352px] text-[#292A36]">Development agents use AI to tackle the toil in your backlog, so you can focus on what matters: hard problems, creative challenges, and over-engineering your dotfiles</p>
-        </div>
+          <p className="text-lg leading-[25px] font-normal text-center w-[352px] text-[#292A36]">Development agents use AI to tackle the toil in your backlog, so you can focus on what matters: hard problems, creative challenges, and over-engineering your dotfiles</p>
+        </section>
+
+        <section className="px-[42px] flex flex-col gap-16 pt-16 pb-16 items-center">
+          <img
+            src="../../assets/unchained.png"
+            alt="hand gripping a broken chain"
+            width={318}
+            height={200}
+            className="mix-blend-multiply"
+          />
+          <div className="flex flex-col gap-4">
+            <span className="text-[50px] leading-[50px] font-normal">Free as in Freedom</span>
+            <p className="text-lg leading-[25px] font-normal text-[#292A36]">We believe agentic technology is too important to be controlled by a few corporations. So we&apos;re building all our agents in the open on GitHub, under the MIT license.</p>
+            <div className="flex flex-col gap-4">
+              <div className="flex gap-[6px]">
+                <Star width={24} height={24} />
+                <span className="text-lg leading-[25px] font-bold">3k Stars</span>
+              </div>
+              <div className="flex gap-[6px]">
+                <Users width={24} height={24} />
+                <span className="text-lg leading-[25px] font-bold">3k Contributors</span>
+              </div>
+              <div className="flex gap-[6px]">
+                <Hierarchy width={24} height={24} />
+                <span className="text-lg leading-[25px] font-bold">Last Commit 2 Days ago</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="flex flex-col py-16 gap-16 px-[42px] items-center">
+          <img
+            src="../../assets/person-robot-heart.png"
+            alt="a persons and robots hands forming a heart"
+            width={326}
+            height={204}
+            className="mix-blend-multiply"
+          />
+          <div className="flex flex-col gap-4">
+            <span className="text-[50px] leading-[50px] font-normal">Power and Responsibility</span>
+            <p className="text-lg leading-[25px] font-normal text-[#292A36]">Our agents can do anything a human developer can: they write code, run commands, and use the web. We&apos;re partnering with AI safety experts like Invariant Labs to balance innovation with security.</p>
+          </div>
+        </section>
+
+        <section className="flex flex-col items-center px-[42px] gap-16 py-24">
+          <div className="grid grid-cols-4 w-fit gap-[11px]">
+            <img src="" alt="contributor" width={75} height={75} className="bg-[#D4CABD] rounded-[7px]" />
+            <img src="" alt="contributor" width={75} height={75} className="bg-[#D4CABD] rounded-[7px]" />
+            <img src="" alt="contributor" width={75} height={75} className="bg-[#D4CABD] rounded-[7px]" />
+            <img src="" alt="contributor" width={75} height={75} className="bg-[#D4CABD] rounded-[7px]" />
+            <img src="" alt="contributor" width={75} height={75} className="bg-[#D4CABD] rounded-[7px]" />
+            <img src="" alt="contributor" width={75} height={75} className="bg-[#D4CABD] rounded-[7px]" />
+            <img src="" alt="contributor" width={75} height={75} className="bg-[#D4CABD] rounded-[7px]" />
+            <img src="" alt="contributor" width={75} height={75} className="bg-[#D4CABD] rounded-[7px]" />
+            <img src="" alt="contributor" width={75} height={75} className="bg-[#D4CABD] rounded-[7px]" />
+            <img src="" alt="contributor" width={75} height={75} className="bg-[#D4CABD] rounded-[7px]" />
+            <img src="" alt="contributor" width={75} height={75} className="bg-[#D4CABD] rounded-[7px]" />
+            <img src="" alt="contributor" width={75} height={75} className="bg-[#D4CABD] rounded-[7px]" />
+          </div>
+
+          <div className="flex flex-col gap-4">
+            <span className="text-[50px] leading-[50px] font-normal">Join the Community</span>
+            <p className="text-lg leading-[25px] font-normal text-[#292A36]">Thousands of developers are working together to build the AI-powered future they want to see. You can connect with us on GitHub, Slack, Twitter, or our blog.</p>
+            <button className="bg-black px-4 py-[11px] rounded-lg self-start">
+              <span className="text-white text-[19px] leading-[27px] font-bold">Join our GitHub</span>
+            </button>
+          </div>
+        </section>
       </main>
     </div>
   );
