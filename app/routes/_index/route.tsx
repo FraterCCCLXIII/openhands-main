@@ -9,6 +9,7 @@ import MirageLogo from "../../../assets/mirage-logo.svg?react";
 import StaticKitLogo from "../../../assets/statickit-logo.svg?react";
 import TransistorLogo from "../../../assets/transistor-logo.svg?react";
 import WorkcationLogo from "../../../assets/workcation-logo.svg?react";
+import X from "../../../assets/x.svg?react";
 import clsx from "clsx";
 import { Header } from "./header";
 import { Footer } from "./footer";
@@ -28,6 +29,22 @@ const GitHubButton: React.FC<GitHubButtonProps> = ({ position }) => (
   <button className={clsx("bg-black px-4 py-[11px] rounded-lg", position && "self-start")}>
     <span className="text-white text-[19px] leading-[27px] font-bold">Join our GitHub</span>
   </button>
+);
+
+const Menu = () => (
+  <div className="relative top-0 left-0 w-screen h-screen bg-black items-center justify-center flex">
+    <X width={31} height={31} className="absolute top-7 left-7" />
+
+    <nav>
+      <ul className="text-white flex flex-col gap-8 text-center text-[41px] leading-[42px] font-quincy">
+        <li>Home</li>
+        <li>About Us</li>
+        <li>Pricing</li>
+        <li>Blog</li>
+        <li>GitHub</li>
+      </ul>
+    </nav>
+  </div>
 );
 
 export default function Index() {
