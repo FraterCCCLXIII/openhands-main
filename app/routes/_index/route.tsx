@@ -32,7 +32,7 @@ const GitHubButton: React.FC<GitHubButtonProps> = ({ position }) => (
 );
 
 const Menu = () => (
-  <div className="relative top-0 left-0 w-screen h-screen bg-black items-center justify-center flex">
+  <aside className="relative top-0 left-0 w-screen h-screen bg-black items-center justify-center flex">
     <X width={31} height={31} className="absolute top-7 left-7" />
 
     <nav>
@@ -44,7 +44,7 @@ const Menu = () => (
         <li>GitHub</li>
       </ul>
     </nav>
-  </div>
+  </aside>
 );
 
 export default function Index() {
