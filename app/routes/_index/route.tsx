@@ -54,7 +54,7 @@ export default function Index() {
 
       <main>
         <section className="flex flex-col items-center gap-4 pt-[50px] pb-[79px]">
-          <h1 className="heading-large text-center">Open Source Agents for Developers</h1>
+          <h1 className="heading-large text-center lg:w-[764px]">Open Source Agents for Developers</h1>
 
           <button className="bg-black px-[30px] h-[58px] rounded-lg flex items-center gap-[15px]">
             <GitHubLogo width={23} height={23} />
@@ -64,21 +64,20 @@ export default function Index() {
 
         <section className="flex flex-col items-center gap-8 pt-[25px] pb-[51px]">
           <TripleWow width={53} height={33} />
-          <img alt="product" width={378} height={212} className="bg-[#D4CABD] rounded-[10px]" />
-          <p className="paragraph text-center w-[352px] text-[#292A36]">Development agents use AI to tackle the toil in your backlog, so you can focus on what matters: hard problems, creative challenges, and over-engineering your dotfiles</p>
+          <img alt="product" className="bg-[#D4CABD] rounded-[10px] w-[378px] h-[212px] lg:w-[1140px] lg:h-[639px]" />
+          <p className="paragraph text-center w-[352px] lg:w-[466px] text-[#292A36]">Development agents use AI to tackle the toil in your backlog, so you can focus on what matters: hard problems, creative challenges, and over-engineering your dotfiles</p>
         </section>
 
-        <section className="px-[42px] flex flex-col gap-16 pt-16 pb-16 items-center">
+        <section className="px-[42px] flex flex-col lg:flex-row gap-16 lg:gap-[81px] pt-16 pb-16 items-center lg:justify-center">
           <img
             src="../../assets/unchained.png"
             alt="hand gripping a broken chain"
-            width={318}
-            height={200}
-            className="mix-blend-multiply"
+            className="mix-blend-multiply w-[318px] lg:w-[525px]"
           />
-          <div className="flex flex-col gap-4">
+
+          <div className="flex flex-col gap-4 lg:w-[500px]">
             <span className="heading">Free as in Freedom</span>
-            <p className="paragraph text-[#292A36]">We believe agentic technology is too important to be controlled by a few corporations. So we&apos;re building all our agents in the open on GitHub, under the MIT license.</p>
+            <p className="paragraph text-[#292A36] lg:w-[466px]">We believe agentic technology is too important to be controlled by a few corporations. So we&apos;re building all our agents in the open on GitHub, under the MIT license.</p>
             <div className="flex flex-col gap-4">
               <div className="flex gap-[6px]">
                 <Star width={24} height={24} />
@@ -96,50 +95,48 @@ export default function Index() {
           </div>
         </section>
 
-        <section className="flex flex-col py-16 gap-16 px-[42px] items-center">
+        <section className="flex flex-col lg:flex-row-reverse py-16 gap-16 lg:gap-8 px-[42px] items-center lg:justify-center">
           <img
             src="../../assets/person-robot-heart.png"
             alt="a persons and robots hands forming a heart"
-            width={326}
-            height={204}
-            className="mix-blend-multiply"
+            className="mix-blend-multiply w-[326px] lg:w-[503px]"
           />
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-4 lg:w-[500px]">
             <span className="heading">Power and Responsibility</span>
-            <p className="paragraph text-[#292A36]">Our agents can do anything a human developer can: they write code, run commands, and use the web. We&apos;re partnering with AI safety experts like Invariant Labs to balance innovation with security.</p>
+            <p className="paragraph text-[#292A36] lg:w-[466px]">Our agents can do anything a human developer can: they write code, run commands, and use the web. We&apos;re partnering with AI safety experts like Invariant Labs to balance innovation with security.</p>
           </div>
         </section>
 
-        <section className="flex flex-col items-center px-[42px] gap-16 py-24">
-          <div className="grid grid-cols-4 w-fit gap-[11px]">
-            <img src="" alt="contributor" width={75} height={75} className="bg-[#D4CABD] rounded-[7px]" />
-            <img src="" alt="contributor" width={75} height={75} className="bg-[#D4CABD] rounded-[7px]" />
-            <img src="" alt="contributor" width={75} height={75} className="bg-[#D4CABD] rounded-[7px]" />
-            <img src="" alt="contributor" width={75} height={75} className="bg-[#D4CABD] rounded-[7px]" />
-            <img src="" alt="contributor" width={75} height={75} className="bg-[#D4CABD] rounded-[7px]" />
-            <img src="" alt="contributor" width={75} height={75} className="bg-[#D4CABD] rounded-[7px]" />
-            <img src="" alt="contributor" width={75} height={75} className="bg-[#D4CABD] rounded-[7px]" />
-            <img src="" alt="contributor" width={75} height={75} className="bg-[#D4CABD] rounded-[7px]" />
-            <img src="" alt="contributor" width={75} height={75} className="bg-[#D4CABD] rounded-[7px]" />
-            <img src="" alt="contributor" width={75} height={75} className="bg-[#D4CABD] rounded-[7px]" />
-            <img src="" alt="contributor" width={75} height={75} className="bg-[#D4CABD] rounded-[7px]" />
-            <img src="" alt="contributor" width={75} height={75} className="bg-[#D4CABD] rounded-[7px]" />
+        <section className="flex flex-col lg:flex-row items-center lg:justify-center px-[42px] gap-16 py-24">
+          <div className="grid grid-cols-4 w-fit gap-[11px] lg:gap-4">
+            <img src="" alt="contributor" className="bg-[#D4CABD] rounded-[7px] w-[76px] h-[76px] lg:w-[113px] lg:h-[113px]" />
+            <img src="" alt="contributor" className="bg-[#D4CABD] rounded-[7px] w-[76px] h-[76px] lg:w-[113px] lg:h-[113px]" />
+            <img src="" alt="contributor" className="bg-[#D4CABD] rounded-[7px] w-[76px] h-[76px] lg:w-[113px] lg:h-[113px]" />
+            <img src="" alt="contributor" className="bg-[#D4CABD] rounded-[7px] w-[76px] h-[76px] lg:w-[113px] lg:h-[113px]" />
+            <img src="" alt="contributor" className="bg-[#D4CABD] rounded-[7px] w-[76px] h-[76px] lg:w-[113px] lg:h-[113px]" />
+            <img src="" alt="contributor" className="bg-[#D4CABD] rounded-[7px] w-[76px] h-[76px] lg:w-[113px] lg:h-[113px]" />
+            <img src="" alt="contributor" className="bg-[#D4CABD] rounded-[7px] w-[76px] h-[76px] lg:w-[113px] lg:h-[113px]" />
+            <img src="" alt="contributor" className="bg-[#D4CABD] rounded-[7px] w-[76px] h-[76px] lg:w-[113px] lg:h-[113px]" />
+            <img src="" alt="contributor" className="bg-[#D4CABD] rounded-[7px] w-[76px] h-[76px] lg:w-[113px] lg:h-[113px]" />
+            <img src="" alt="contributor" className="bg-[#D4CABD] rounded-[7px] w-[76px] h-[76px] lg:w-[113px] lg:h-[113px]" />
+            <img src="" alt="contributor" className="bg-[#D4CABD] rounded-[7px] w-[76px] h-[76px] lg:w-[113px] lg:h-[113px]" />
+            <img src="" alt="contributor" className="bg-[#D4CABD] rounded-[7px] w-[76px] h-[76px] lg:w-[113px] lg:h-[113px]" />
           </div>
 
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-4 lg:w-[500px]">
             <span className="heading">Join the Community</span>
-            <p className="paragraph text-[#292A36]">Thousands of developers are working together to build the AI-powered future they want to see. You can connect with us on GitHub, Slack, Twitter, or our blog.</p>
+            <p className="paragraph text-[#292A36] lg:w-[466px]">Thousands of developers are working together to build the AI-powered future they want to see. You can connect with us on GitHub, Slack, Twitter, or our blog.</p>
             <GitHubButton position="start" />
           </div>
         </section>
 
-        <section className="px-[42px] flex flex-col gap-8 py-24">
+        <section className="px-[42px] flex flex-col gap-8 py-24 lg:py-[41px] lg:items-center">
           <div className="flex flex-col gap-4 text-center h-[206px]">
             <span className="heading">Choose your Engine</span>
-            <p className="paragraph text-[#292A36]">Our agents are compatible with any large language model provider.</p>
+            <p className="paragraph text-[#292A36] lg:w-[466px]">Our agents are compatible with any large language model provider.</p>
           </div>
 
-          <div className="flex flex-col items-center gap-8">
+          <div className="flex flex-col lg:flex-row items-center gap-8 lg:w-screen lg:max-w-[1358px] lg:justify-between">
             <TupleLogo width={105} height={48} />
             <MirageLogo width={138} height={48} />
             <StaticKitLogo width={127} height={48} />
@@ -149,18 +146,13 @@ export default function Index() {
         </section>
 
         <section className="mb-[104px]">
-          <img height={194} src="../../assets/yellow-bouncy.png" alt="" />
+          <div className="bg-[url('../../assets/yellow-wave.png')] h-[194px]" />
           <div className="flex flex-col gap-8 text-center items-center px-[42px] bg-[#FFE165]">
             <span className="heading">Ready to roll?</span>
-            <p className="paragraph text-[#292A36]">Software development is changing. Let&apos;s work together to make sure it&apos;s better for everyone. {"\u2764"}</p>
+            <p className="paragraph text-[#292A36] lg:w-[466px]">Software development is changing. Let&apos;s work together to make sure it&apos;s better for everyone. {"\u2764"}</p>
             <GitHubButton />
           </div>
-          <img
-            height={194}
-            src="../../assets/yellow-bouncy.png"
-            alt=""
-            className="transform rotate-180"
-          />
+          <div className="bg-[url('../../assets/yellow-wave.png')] h-[194px] transform rotate-180" />
         </section>
 
         <Footer />
