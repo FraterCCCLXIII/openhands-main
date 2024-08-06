@@ -14,6 +14,8 @@ import WorkcationLogo from "../../assets/workcation-logo.svg?react";
 import GitHubCircleLogo from "../../assets/gh-logo.svg?react";
 import FacebookLogo from "../../assets/fb-logo.svg?react";
 import InstagramLogo from "../../assets/insta-logo.svg?react";
+import AllHandsText from "../../assets/all-hands-text.svg?react";
+import clsx from "clsx";
 
 export const meta: MetaFunction = () => {
   return [
@@ -22,7 +24,15 @@ export const meta: MetaFunction = () => {
   ];
 };
 
-const AllHands = () => <span className="text-xl">All Hands</span>;
+interface GitHubButtonProps {
+  position?: "start";
+}
+
+const GitHubButton: React.FC<GitHubButtonProps> = ({ position }) => (
+  <button className={clsx("bg-black px-4 py-[11px] rounded-lg", position && "self-start")}>
+    <span className="text-white text-[19px] leading-[27px] font-bold">Join our GitHub</span>
+  </button>
+);
 
 export default function Index() {
   return (
@@ -31,26 +41,26 @@ export default function Index() {
         <div className="absolute left-[26px]">
           <HamburgerMenuIcon width={24} height={24} />
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
           <AllHandsLogo width={39} height={26} />
-          <AllHands />
+          <AllHandsText width={126} height={21} />
         </div>
       </header>
 
       <main>
         <section className="flex flex-col items-center gap-4 pt-[50px] pb-[79px]">
-          <h1 className="text-[58px] leading-[58px] font-normal text-center">Open Source Agents for Developers</h1>
+          <h1 className="heading-large text-center">Open Source Agents for Developers</h1>
 
           <button className="bg-black px-[30px] h-[58px] rounded-lg flex items-center gap-[15px]">
             <GitHubLogo width={23} height={23} />
-            <span className="text-white text-[19px] leading-[27px] font-bold">Get it on Github</span>
+            <span className="text-white text-[19px] leading-[27px] font-bold">Get it on GitHub</span>
           </button>
         </section>
 
         <section className="flex flex-col items-center gap-8 pt-[25px] pb-[51px]">
           <TripleWow width={53} height={33} />
           <img alt="product" width={378} height={212} className="bg-[#D4CABD] rounded-[10px]" />
-          <p className="text-lg leading-[25px] font-normal text-center w-[352px] text-[#292A36]">Development agents use AI to tackle the toil in your backlog, so you can focus on what matters: hard problems, creative challenges, and over-engineering your dotfiles</p>
+          <p className="paragraph text-center w-[352px] text-[#292A36]">Development agents use AI to tackle the toil in your backlog, so you can focus on what matters: hard problems, creative challenges, and over-engineering your dotfiles</p>
         </section>
 
         <section className="px-[42px] flex flex-col gap-16 pt-16 pb-16 items-center">
@@ -62,20 +72,20 @@ export default function Index() {
             className="mix-blend-multiply"
           />
           <div className="flex flex-col gap-4">
-            <span className="text-[50px] leading-[50px] font-normal">Free as in Freedom</span>
-            <p className="text-lg leading-[25px] font-normal text-[#292A36]">We believe agentic technology is too important to be controlled by a few corporations. So we&apos;re building all our agents in the open on GitHub, under the MIT license.</p>
+            <span className="heading">Free as in Freedom</span>
+            <p className="paragraph text-[#292A36]">We believe agentic technology is too important to be controlled by a few corporations. So we&apos;re building all our agents in the open on GitHub, under the MIT license.</p>
             <div className="flex flex-col gap-4">
               <div className="flex gap-[6px]">
                 <Star width={24} height={24} />
-                <span className="text-lg leading-[25px] font-bold">3k Stars</span>
+                <span className="paragraph-bold">3k Stars</span>
               </div>
               <div className="flex gap-[6px]">
                 <Users width={24} height={24} />
-                <span className="text-lg leading-[25px] font-bold">3k Contributors</span>
+                <span className="paragraph-bold">3k Contributors</span>
               </div>
               <div className="flex gap-[6px]">
                 <Hierarchy width={24} height={24} />
-                <span className="text-lg leading-[25px] font-bold">Last Commit 2 Days ago</span>
+                <span className="paragraph-bold">Last Commit 2 Days ago</span>
               </div>
             </div>
           </div>
@@ -90,8 +100,8 @@ export default function Index() {
             className="mix-blend-multiply"
           />
           <div className="flex flex-col gap-4">
-            <span className="text-[50px] leading-[50px] font-normal">Power and Responsibility</span>
-            <p className="text-lg leading-[25px] font-normal text-[#292A36]">Our agents can do anything a human developer can: they write code, run commands, and use the web. We&apos;re partnering with AI safety experts like Invariant Labs to balance innovation with security.</p>
+            <span className="heading">Power and Responsibility</span>
+            <p className="paragraph text-[#292A36]">Our agents can do anything a human developer can: they write code, run commands, and use the web. We&apos;re partnering with AI safety experts like Invariant Labs to balance innovation with security.</p>
           </div>
         </section>
 
@@ -112,18 +122,16 @@ export default function Index() {
           </div>
 
           <div className="flex flex-col gap-4">
-            <span className="text-[50px] leading-[50px] font-normal">Join the Community</span>
-            <p className="text-lg leading-[25px] font-normal text-[#292A36]">Thousands of developers are working together to build the AI-powered future they want to see. You can connect with us on GitHub, Slack, Twitter, or our blog.</p>
-            <button className="bg-black px-4 py-[11px] rounded-lg self-start">
-              <span className="text-white text-[19px] leading-[27px] font-bold">Join our GitHub</span>
-            </button>
+            <span className="heading">Join the Community</span>
+            <p className="paragraph text-[#292A36]">Thousands of developers are working together to build the AI-powered future they want to see. You can connect with us on GitHub, Slack, Twitter, or our blog.</p>
+            <GitHubButton position="start" />
           </div>
         </section>
 
         <section className="px-[42px] flex flex-col gap-8 py-24">
           <div className="flex flex-col gap-4 text-center h-[206px]">
-            <span className="text-[50px] leading-[50px] font-normal">Choose your Engine</span>
-            <p className="text-lg leading-[25px] font-normal text-[#292A36]">Our agents are compatible with any large language model provider.</p>
+            <span className="heading">Choose your Engine</span>
+            <p className="paragraph text-[#292A36]">Our agents are compatible with any large language model provider.</p>
           </div>
 
           <div className="flex flex-col items-center gap-8">
@@ -138,11 +146,9 @@ export default function Index() {
         <section className="mb-[104px]">
           <img height={194} src="../../assets/yellow-bouncy.png" alt="" />
           <div className="flex flex-col gap-8 text-center items-center px-[42px] bg-[#FFE165]">
-            <span className="text-[50px] leading-[50px] font-normal">Ready to roll?</span>
-            <p className="text-lg leading-[25px] font-normal text-[#292A36]">Software development is changing. Let&apos;s work together to make sure it&apos;s better for everyone. {"\u2764"}</p>
-            <button className="bg-black px-4 py-[11px] rounded-lg">
-              <span className="text-white text-[19px] leading-[27px] font-bold">Join our GitHub</span>
-            </button>
+            <span className="heading">Ready to roll?</span>
+            <p className="paragraph text-[#292A36]">Software development is changing. Let&apos;s work together to make sure it&apos;s better for everyone. {"\u2764"}</p>
+            <GitHubButton />
           </div>
           <img
             height={194}
