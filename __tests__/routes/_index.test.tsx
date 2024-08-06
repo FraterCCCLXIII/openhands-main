@@ -1,22 +1,33 @@
-import { expect, test } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { describe, expect, it } from "vitest";
+import { render, screen, within } from "@testing-library/react";
 import { createRemixStub } from "@remix-run/testing";
-import Index from "~/routes/_index/route";
-import { json } from "@remix-run/react";
+import Index, { loader } from "~/routes/_index/route";
 
-test("should pass", async () => {
-  const RemixStub = createRemixStub([
-    {
-      path: "/",
-      Component: Index,
-      loader: async () => {
-        await fetch("https://api.github.com/repos/{owner}/{repo}/collaborators");
-        return json(null);
-      },
-    }
-  ]);
-  render(<RemixStub />);
+const RemixStub = createRemixStub([
+  {
+    path: "/",
+    Component: Index,
+    loader,
+  }
+]);
 
-  const heading = await screen.findByText("Open Source Agents for Developers");
-  expect(heading).toBeInTheDocument();
+describe("Collaborator grid", () => {
+  it("should render 12 collaborators", async () => {
+    render(<RemixStub />);
+    const collaboratorGrid = await screen.findByTestId("collaborators");
+    const collaborators = within(collaboratorGrid).getAllByRole("listitem");
+
+    expect(collaborators).toHaveLength(12);
+  });
+
+  it("should render the correct collaborator images", async () => {
+    render(<RemixStub />);
+    const collaboratorGrid = await screen.findByTestId("collaborators");
+    const collaborators = within(collaboratorGrid).getAllByRole("listitem");
+
+    collaborators.forEach((collaborator, index) => {
+      const img = within(collaborator).getByRole("img");
+      expect(img).toHaveAttribute("src", expect.stringContaining(`collaborator-${index}`));
+    });
+  });
 });
