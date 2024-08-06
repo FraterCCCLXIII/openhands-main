@@ -1,11 +1,11 @@
-import AllHandsLogo from "../../../assets/all-hands-1.svg?react";
-import GitHubCircleLogo from "../../../assets/gh-logo.svg?react";
-import FacebookLogo from "../../../assets/fb-logo.svg?react";
-import InstagramLogo from "../../../assets/insta-logo.svg?react";
+import AllHandsLogo from "../../svgs/all-hands-1.svg?react";
+import GitHubCircleLogo from "../../svgs/gh-logo.svg?react";
+import FacebookLogo from "../../svgs/fb-logo.svg?react";
+import InstagramLogo from "../../svgs/insta-logo.svg?react";
 
 export const Footer = () => (
   <footer>
-    <div className="bg-[url('../../assets/white-wave.png')] h-[89px]" />
+    <div className="bg-[url('/assets/white-wave.png')] h-[89px]" />
 
     <div className="bg-white h-[355px] lg:h-[175px] pt-8 lg:pt-0 flex justify-center">
       <div className="flex flex-col lg:flex-row items-center lg:justify-between lg:w-screen lg:max-w-[1086px] gap-8">

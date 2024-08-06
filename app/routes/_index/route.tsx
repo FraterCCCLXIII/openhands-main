@@ -1,15 +1,15 @@
-import type { MetaFunction } from "@remix-run/node";
-import GitHubLogo from "../../../assets/github.svg?react";
-import TripleWow from "../../../assets/triple-wow.svg?react";
-import Hierarchy from "../../../assets/hierarchy.svg?react";
-import Star from "../../../assets/star.svg?react";
-import Users from "../../../assets/users.svg?react";
-import TupleLogo from "../../../assets/tuple-logo.svg?react";
-import MirageLogo from "../../../assets/mirage-logo.svg?react";
-import StaticKitLogo from "../../../assets/statickit-logo.svg?react";
-import TransistorLogo from "../../../assets/transistor-logo.svg?react";
-import WorkcationLogo from "../../../assets/workcation-logo.svg?react";
-import X from "../../../assets/x.svg?react";
+import type { LinksFunction, MetaFunction } from "@remix-run/node";
+import GitHubLogo from "../../svgs/github.svg?react";
+import TripleWow from "../../svgs/triple-wow.svg?react";
+import Hierarchy from "../../svgs/hierarchy.svg?react";
+import Star from "../../svgs/star.svg?react";
+import Users from "../../svgs/users.svg?react";
+import TupleLogo from "../../svgs/tuple-logo.svg?react";
+import MirageLogo from "../../svgs/mirage-logo.svg?react";
+import StaticKitLogo from "../../svgs/statickit-logo.svg?react";
+import TransistorLogo from "../../svgs/transistor-logo.svg?react";
+import WorkcationLogo from "../../svgs/workcation-logo.svg?react";
+import X from "../../svgs/x.svg?react";
 import clsx from "clsx";
 import { Header } from "./header";
 import { Footer } from "./footer";
@@ -20,6 +20,13 @@ export const meta: MetaFunction = () => {
     { name: "description", content: "Welcome to the All Hands website!" },
   ];
 };
+
+export const links: LinksFunction = () => ([
+  { rel: "preload", as: "image", href: "/assets/person-robot-heart.png" },
+  { rel: "preload", as: "image", href: "/assets/unchained.png" },
+  { rel: "preload", as: "image", href: "/assets/white-wave.png" },
+  { rel: "preload", as: "image", href: "/assets/yellow-wave.png" },
+]);
 
 interface GitHubButtonProps {
   position?: "start";
@@ -70,7 +77,7 @@ export default function Index() {
 
         <section className="px-[42px] flex flex-col lg:flex-row gap-16 lg:gap-[81px] pt-16 pb-16 lg:p-0 lg:h-[489px] items-center lg:justify-center">
           <img
-            src="../../assets/unchained.png"
+            src="/assets/unchained.png"
             alt="hand gripping a broken chain"
             className="mix-blend-multiply w-[318px] lg:w-[525px]"
           />
@@ -97,7 +104,7 @@ export default function Index() {
 
         <section className="flex flex-col lg:flex-row-reverse py-16 gap-16 lg:gap-8 px-[42px] lg:p-0 lg:h-[502px] items-center lg:justify-center">
           <img
-            src="../../assets/person-robot-heart.png"
+            src="/assets/person-robot-heart.png"
             alt="a persons and robots hands forming a heart"
             className="mix-blend-multiply w-[326px] lg:w-[503px]"
           />
@@ -146,13 +153,13 @@ export default function Index() {
         </section>
 
         <section className="mb-[104px]">
-          <div className="bg-[url('../../assets/yellow-wave.png')] h-[194px]" />
+          <div className="bg-[url('/assets/yellow-wave.png')] h-[194px]" />
           <div className="flex flex-col gap-8 text-center items-center px-[42px] bg-[#FFE165]">
             <span className="heading">Ready to roll?</span>
             <p className="paragraph text-[#292A36] lg:w-[466px]">Software development is changing. Let&apos;s work together to make sure it&apos;s better for everyone. {"\u2764"}</p>
             <GitHubButton />
           </div>
-          <div className="bg-[url('../../assets/yellow-wave.png')] h-[194px] transform rotate-180" />
+          <div className="bg-[url('/assets/yellow-wave.png')] h-[194px] transform rotate-180" />
         </section>
 
         <Footer />

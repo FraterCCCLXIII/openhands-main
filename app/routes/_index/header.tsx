@@ -1,6 +1,6 @@
-import HamburgerMenuIcon from "../../../assets/menu-icon.svg?react";
-import AllHandsText from "../../../assets/all-hands-text.svg?react";
-import AllHandsLogo from "../../../assets/all-hands-1.svg?react";
+import HamburgerMenuIcon from "../../svgs/menu-icon.svg?react";
+import AllHandsText from "../../svgs/all-hands-text.svg?react";
+import AllHandsLogo from "../../svgs/all-hands-1.svg?react";
 
 export const Header = () => (
   <header className="h-[83px] flex items-center justify-center relative">

@@ -6,7 +6,7 @@
 
 @font-face {
   font-family: "Quincy CF";
-  src: url("../assets/fonts/quincycf-regular.otf");
+  src: url("/assets/fonts/quincycf-regular.otf");
 }
 
 .heading {
