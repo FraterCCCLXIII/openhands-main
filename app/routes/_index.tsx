@@ -6,6 +6,14 @@ import TripleWow from "../../assets/triple-wow.svg?react";
 import Hierarchy from "../../assets/hierarchy.svg?react";
 import Star from "../../assets/star.svg?react";
 import Users from "../../assets/users.svg?react";
+import TupleLogo from "../../assets/tuple-logo.svg?react";
+import MirageLogo from "../../assets/mirage-logo.svg?react";
+import StaticKitLogo from "../../assets/statickit-logo.svg?react";
+import TransistorLogo from "../../assets/transistor-logo.svg?react";
+import WorkcationLogo from "../../assets/workcation-logo.svg?react";
+import GitHubCircleLogo from "../../assets/gh-logo.svg?react";
+import FacebookLogo from "../../assets/fb-logo.svg?react";
+import InstagramLogo from "../../assets/insta-logo.svg?react";
 
 export const meta: MetaFunction = () => {
   return [
@@ -111,6 +119,60 @@ export default function Index() {
             </button>
           </div>
         </section>
+
+        <section className="px-[42px] flex flex-col gap-8 py-24">
+          <div className="flex flex-col gap-4 text-center h-[206px]">
+            <span className="text-[50px] leading-[50px] font-normal">Choose your Engine</span>
+            <p className="text-lg leading-[25px] font-normal text-[#292A36]">Our agents are compatible with any large language model provider.</p>
+          </div>
+
+          <div className="flex flex-col items-center gap-8">
+            <TupleLogo width={105} height={48} />
+            <MirageLogo width={138} height={48} />
+            <StaticKitLogo width={127} height={48} />
+            <TransistorLogo width={158} height={48} />
+            <WorkcationLogo width={189} height={48} />
+          </div>
+        </section>
+
+        <section className="mb-[104px]">
+          <img height={194} src="../../assets/yellow-bouncy.png" alt="" />
+          <div className="flex flex-col gap-8 text-center items-center px-[42px] bg-[#FFE165]">
+            <span className="text-[50px] leading-[50px] font-normal">Ready to roll?</span>
+            <p className="text-lg leading-[25px] font-normal text-[#292A36]">Software development is changing. Let&apos;s work together to make sure it&apos;s better for everyone. {"\u2764"}</p>
+            <button className="bg-black px-4 py-[11px] rounded-lg">
+              <span className="text-white text-[19px] leading-[27px] font-bold">Join our GitHub</span>
+            </button>
+          </div>
+          <img
+            height={194}
+            src="../../assets/yellow-bouncy.png"
+            alt=""
+            className="transform rotate-180"
+          />
+        </section>
+
+        <footer>
+          <img src="../../assets/white-wave.png" alt="" className="-mb-1" />
+
+          <div className="bg-white flex flex-col items-center gap-8 pt-8 pb-[69px]">
+            <AllHandsLogo width={39} height={26} />
+
+            <div className="grid grid-cols-2 gap-8 text-center">
+              <span>GitHub</span>
+              <span>Blog</span>
+              <span>About Us</span>
+              <span>Terms of Service</span>
+              <span>Pricing</span>
+            </div>
+
+            <span className="flex gap-4">
+              <FacebookLogo width={24} height={24} />
+              <GitHubCircleLogo width={24} height={24} />
+              <InstagramLogo width={24} height={24} />
+            </span>
+          </div>
+        </footer>
       </main>
     </div>
   );
