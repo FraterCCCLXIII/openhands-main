@@ -4,6 +4,7 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useLocation,
 } from "@remix-run/react";
 import "./tailwind.css";
 
@@ -11,6 +12,8 @@ import { Header } from "./components/header";
 import { Footer } from "./components/footer";
 
 export function Layout({ children }: { children: React.ReactNode }) {
+  const location = useLocation();
+
   return (
     <html lang="en">
       <head>
@@ -21,7 +24,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         <div className="bg-[#F1EAE0]">
-          <Header />
+          <Header isRoot={location.pathname === "/"} />
           {children}
           <Footer />
         </div>

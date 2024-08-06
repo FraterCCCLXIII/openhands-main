@@ -32,6 +32,7 @@ export const links: LinksFunction = () => ([
 ]);
 
 export const loader = async () => {
+  // TODO: defer fetching
   const contributors = await fetchRepositoryContributors("opendevin", "opendevin");
   const statistics = await fetchRepositoryStatistics("opendevin", "opendevin");
   const branch = await fetchBranch("opendevin", "opendevin", "main");
