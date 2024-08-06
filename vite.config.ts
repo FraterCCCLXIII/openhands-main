@@ -1,4 +1,5 @@
 /// <reference types="vite-plugin-svgr/client" />
+/// <reference types="vitest" />
 
 import { vitePlugin as remix } from "@remix-run/dev";
 import { defineConfig } from "vite";
@@ -7,7 +8,8 @@ import svgr from "vite-plugin-svgr";
 
 export default defineConfig({
   plugins: [
-    remix({
+    // https://remix.run/docs/en/main/guides/vite#plugin-usage-with-other-vite-based-tools-eg-vitest-storybook
+    !process.env.VITEST && remix({
       future: {
         v3_fetcherPersist: true,
         v3_relativeSplatPath: true,
@@ -17,4 +19,8 @@ export default defineConfig({
     tsconfigPaths(),
     svgr(),
   ],
+  test: {
+    environment: "jsdom",
+    setupFiles: ["./vitest-setup.ts"],
+  },
 });
