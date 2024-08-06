@@ -1,21 +1,17 @@
 import type { MetaFunction } from "@remix-run/node";
-import HamburgerMenuIcon from "../../assets/menu-icon.svg?react";
-import AllHandsLogo from "../../assets/all-hands-1.svg?react";
-import GitHubLogo from "../../assets/github.svg?react";
-import TripleWow from "../../assets/triple-wow.svg?react";
-import Hierarchy from "../../assets/hierarchy.svg?react";
-import Star from "../../assets/star.svg?react";
-import Users from "../../assets/users.svg?react";
-import TupleLogo from "../../assets/tuple-logo.svg?react";
-import MirageLogo from "../../assets/mirage-logo.svg?react";
-import StaticKitLogo from "../../assets/statickit-logo.svg?react";
-import TransistorLogo from "../../assets/transistor-logo.svg?react";
-import WorkcationLogo from "../../assets/workcation-logo.svg?react";
-import GitHubCircleLogo from "../../assets/gh-logo.svg?react";
-import FacebookLogo from "../../assets/fb-logo.svg?react";
-import InstagramLogo from "../../assets/insta-logo.svg?react";
-import AllHandsText from "../../assets/all-hands-text.svg?react";
+import GitHubLogo from "../../../assets/github.svg?react";
+import TripleWow from "../../../assets/triple-wow.svg?react";
+import Hierarchy from "../../../assets/hierarchy.svg?react";
+import Star from "../../../assets/star.svg?react";
+import Users from "../../../assets/users.svg?react";
+import TupleLogo from "../../../assets/tuple-logo.svg?react";
+import MirageLogo from "../../../assets/mirage-logo.svg?react";
+import StaticKitLogo from "../../../assets/statickit-logo.svg?react";
+import TransistorLogo from "../../../assets/transistor-logo.svg?react";
+import WorkcationLogo from "../../../assets/workcation-logo.svg?react";
 import clsx from "clsx";
+import { Header } from "./header";
+import { Footer } from "./footer";
 
 export const meta: MetaFunction = () => {
   return [
@@ -37,15 +33,7 @@ const GitHubButton: React.FC<GitHubButtonProps> = ({ position }) => (
 export default function Index() {
   return (
     <div className="bg-[#F1EAE0]">
-      <header className="h-[83px] flex items-center justify-center relative">
-        <div className="absolute left-[26px]">
-          <HamburgerMenuIcon width={24} height={24} />
-        </div>
-        <div className="flex gap-2 items-center">
-          <AllHandsLogo width={39} height={26} />
-          <AllHandsText width={126} height={21} />
-        </div>
-      </header>
+      <Header />
 
       <main>
         <section className="flex flex-col items-center gap-4 pt-[50px] pb-[79px]">
@@ -158,27 +146,7 @@ export default function Index() {
           />
         </section>
 
-        <footer>
-          <img src="../../assets/white-wave.png" alt="" className="-mb-1" />
-
-          <div className="bg-white flex flex-col items-center gap-8 pt-8 pb-[69px]">
-            <AllHandsLogo width={39} height={26} />
-
-            <div className="grid grid-cols-2 gap-8 text-center">
-              <span>GitHub</span>
-              <span>Blog</span>
-              <span>About Us</span>
-              <span>Terms of Service</span>
-              <span>Pricing</span>
-            </div>
-
-            <span className="flex gap-4">
-              <FacebookLogo width={24} height={24} />
-              <GitHubCircleLogo width={24} height={24} />
-              <InstagramLogo width={24} height={24} />
-            </span>
-          </div>
-        </footer>
+        <Footer />
       </main>
     </div>
   );
