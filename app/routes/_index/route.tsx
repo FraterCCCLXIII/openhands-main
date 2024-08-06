@@ -33,13 +33,12 @@ export const links: LinksFunction = () => ([
 
 export const loader = async () => {
   // TODO: defer fetching
-  const contributors = await fetchRepositoryContributors("opendevin", "opendevin");
+  const contributors = await fetchRepositoryContributors("opendevin", "opendevin", 12);
   const statistics = await fetchRepositoryStatistics("opendevin", "opendevin");
   const branch = await fetchBranch("opendevin", "opendevin", "main");
 
   return json({
-    // return first 12 collaborators
-    contributors: contributors.slice(0, 12),
+    contributors,
     contributorsCount: formatThousands(contributors.length),
     stars: formatThousands(statistics.stargazers_count),
     lastCommit: formatLastCommit(branch.commit.commit.author.date),
@@ -121,8 +120,8 @@ export default function Index() {
         </div>
       </section>
 
-      <section className="px-[42px] flex flex-col gap-8 py-24 lg:py-[41px] lg:items-center">
-        <div className="flex flex-col gap-4 text-center h-[206px]">
+      <section className="px-[42px] flex flex-col gap-8 lg:gap-16 py-24 lg:py-[41px] lg:items-center">
+        <div className="flex flex-col gap-4 text-center h-[206px] lg:h-[126px]">
           <span className="heading">Choose your Engine</span>
           <p className="paragraph text-[#292A36] lg:w-[466px]">Our agents are compatible with any large language model provider.</p>
         </div>

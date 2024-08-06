@@ -2,7 +2,9 @@ import { ContributorGridItem } from "~/components/contributor-grid-item";
 import { YellowWave } from "~/components/yellow-wave";
 import { MemberCard } from "./member-card";
 import { SectionHeading } from "./section-heading";
-import { type MetaFunction } from "@remix-run/node";
+import { json, type MetaFunction } from "@remix-run/node";
+import { fetchRepositoryContributors } from "~/api";
+import { useLoaderData } from "@remix-run/react";
 
 const members: Member[] = [
   { src: "", name: "Robert Brennan", title: "Cofounder", description: "Made with the collaborative help of over 40 engineers in the opensource community. OpenDev changes the way you can create software." },
@@ -17,7 +19,14 @@ export const meta: MetaFunction = () => {
   ];
 };
 
+export const loader = async () => {
+  const contributors = await fetchRepositoryContributors("opendevin", "opendevin", 50);
+  return json({ contributors });
+}
+
 const Company = () => {
+  const { contributors } = useLoaderData<typeof loader>();
+
   return (
     <main>
       <section className="flex flex-col items-center gap-4 text-center py-[86px]">
@@ -31,9 +40,9 @@ const Company = () => {
           heading="The Internet of People"
         />
         <ul className="grid grid-cols-10 gap-4 py-[45px]">
-          {Array.from({ length: 50 }).map((_, index) => (
-            <li key={index}>
-              <ContributorGridItem contributor={{ avatar_url: "" }} />
+          {contributors.map((contributor) => (
+            <li key={contributor.id}>
+              <ContributorGridItem contributor={contributor} />
             </li>
           ))}
         </ul>

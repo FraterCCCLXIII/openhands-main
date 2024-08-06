@@ -1,8 +1,8 @@
 // TODO: Add error handling
 // TODO: Use axios to simplify the code and token handling
 
-export const fetchRepositoryContributors = async (owner: string, repo: string): Promise<Contributor[]> => {
-  const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/contributors`, {
+export const fetchRepositoryContributors = async (owner: string, repo: string, count = 30): Promise<Contributor[]> => {
+  const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/contributors?per_page=${count}`, {
     headers: {
       "X-GitHub-Api-Version": "2022-11-28",
       "Accept": "application/vnd.github+json",

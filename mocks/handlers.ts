@@ -9,8 +9,11 @@ export const handlers = [
     return HttpResponse.json(REPOSITORY);
   }),
 
-  http.get("https://api.github.com/repos/:owner/:repo/contributors", () => {
-    const CONTRIBUTORS: Contributor[] = Array.from({ length: 50 }, (_, index) => ({
+  http.get("https://api.github.com/repos/:owner/:repo/contributors", ({ request }) => {
+    const url = new URL(request.url);
+    const count = url.searchParams.get("per_page") || 30;
+
+    const CONTRIBUTORS: Contributor[] = Array.from({ length: Number(count) }, (_, index) => ({
       id: index,
       login: `contributor-${index}`,
       node_id: `node-${index}`,
