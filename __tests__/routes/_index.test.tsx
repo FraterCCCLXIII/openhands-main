@@ -11,23 +11,36 @@ const RemixStub = createRemixStub([
   }
 ]);
 
-describe("Collaborator grid", () => {
-  it("should render 12 collaborators", async () => {
-    render(<RemixStub />);
-    const collaboratorGrid = await screen.findByTestId("collaborators");
-    const collaborators = within(collaboratorGrid).getAllByRole("listitem");
+describe("Home Page", () => {
+  describe("Repo statistics", () => {
+    it("should render the repo statistics", async () => {
+      render(<RemixStub />);
 
-    expect(collaborators).toHaveLength(12);
+      const statisticsContainer = await screen.findByTestId("repo-statistics");
+      within(statisticsContainer).getByText("28k Stars");
+      within(statisticsContainer).getByText("50 Contributors");
+      within(statisticsContainer).getByText("Last Commit 2 hours ago");
+    });
   });
 
-  it("should render the correct collaborator images", async () => {
-    render(<RemixStub />);
-    const collaboratorGrid = await screen.findByTestId("collaborators");
-    const collaborators = within(collaboratorGrid).getAllByRole("listitem");
+  describe("Collaborator grid", () => {
+    it("should render 12 collaborators", async () => {
+      render(<RemixStub />);
+      const collaboratorGrid = await screen.findByTestId("contributors");
+      const contributors = within(collaboratorGrid).getAllByRole("listitem");
 
-    collaborators.forEach((collaborator, index) => {
-      const img = within(collaborator).getByRole("img");
-      expect(img).toHaveAttribute("src", expect.stringContaining(`collaborator-${index}`));
+      expect(contributors).toHaveLength(12);
+    });
+
+    it("should render the correct collaborator images", async () => {
+      render(<RemixStub />);
+      const collaboratorGrid = await screen.findByTestId("contributors");
+      const contributors = within(collaboratorGrid).getAllByRole("listitem");
+
+      contributors.forEach((collaborator, index) => {
+        const img = within(collaborator).getByRole("img");
+        expect(img).toHaveAttribute("src", expect.stringContaining(`contributor-${index}`));
+      });
     });
   });
 });

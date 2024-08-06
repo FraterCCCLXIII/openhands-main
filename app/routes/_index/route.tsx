@@ -14,6 +14,9 @@ import clsx from "clsx";
 import { Header } from "./header";
 import { Footer } from "./footer";
 import { useLoaderData } from "@remix-run/react";
+import { formatThousands } from "~/utils/format-thousands";
+import { formatLastCommit } from "~/utils/format-last-commit";
+import { fetchBranch, fetchRepositoryContributors, fetchRepositoryStatistics } from "~/api";
 
 export const meta: MetaFunction = () => {
   return [
@@ -56,27 +59,21 @@ const Menu = () => (
 );
 
 export const loader = async () => {
-  const response = await fetch("https://api.github.com/repos/opendevin/opendevin/collaborators", {
-    headers: {
-      "X-GitHub-Api-Version": "2022-11-28",
-      "Accept": "application/vnd.github+json",
-      "Authorization": `Bearer ${import.meta.env.VITE_GITHUB_TOKEN}`,
-    }
+  const contributors = await fetchRepositoryContributors("opendevin", "opendevin");
+  const statistics = await fetchRepositoryStatistics("opendevin", "opendevin");
+  const branch = await fetchBranch("opendevin", "opendevin", "main");
+
+  return json({
+    // return first 12 collaborators
+    contributors: contributors.slice(0, 12),
+    contributorsCount: formatThousands(contributors.length),
+    stars: formatThousands(statistics.stargazers_count),
+    lastCommit: formatLastCommit(branch.commit.commit.author.date),
   });
-
-  if (!response.ok) {
-    // TODO: Handle error
-    return json({ collaborators: [] });
-  }
-
-  const collaborators = await response.json() as Collaborator[];
-
-  // return first 12 collaborators
-  return json({ collaborators: collaborators.slice(0, 12) });
 };
 
 export default function Index() {
-  const { collaborators } = useLoaderData<typeof loader>();
+  const { contributors, contributorsCount, stars, lastCommit } = useLoaderData<typeof loader>();
 
   return (
     <div className="bg-[#F1EAE0]">
@@ -108,18 +105,18 @@ export default function Index() {
           <div className="flex flex-col gap-4 lg:w-[500px]">
             <span className="heading">Free as in Freedom</span>
             <p className="paragraph text-[#292A36] lg:w-[466px]">We believe agentic technology is too important to be controlled by a few corporations. So we&apos;re building all our agents in the open on GitHub, under the MIT license.</p>
-            <div className="flex flex-col gap-4">
+            <div data-testid="repo-statistics" className="flex flex-col gap-4">
               <div className="flex gap-[6px]">
                 <Star width={24} height={24} />
-                <span className="paragraph-bold">3k Stars</span>
+                <span className="paragraph-bold">{stars} Stars</span>
               </div>
               <div className="flex gap-[6px]">
                 <Users width={24} height={24} />
-                <span className="paragraph-bold">3k Contributors</span>
+                <span className="paragraph-bold">{contributorsCount} Contributors</span>
               </div>
               <div className="flex gap-[6px]">
                 <Hierarchy width={24} height={24} />
-                <span className="paragraph-bold">Last Commit 2 Days ago</span>
+                <span className="paragraph-bold">Last Commit {lastCommit}</span>
               </div>
             </div>
           </div>
@@ -138,12 +135,12 @@ export default function Index() {
         </section>
 
         <section className="flex flex-col lg:flex-row items-center lg:justify-center px-[42px] gap-16 lg:gap-[100px] py-24">
-          <ul data-testid="collaborators" className="grid grid-cols-4 w-fit gap-[11px] lg:gap-4">
-            {collaborators.map((collaborator) => (
-              <li key={collaborator.id}>
+          <ul data-testid="contributors" className="grid grid-cols-4 w-fit gap-[11px] lg:gap-4">
+            {contributors.map((contributor) => (
+              <li key={contributor.id}>
                 <img
-                  src={collaborator.avatar_url}
-                  alt={`collaborator ${collaborator.login}`}
+                  src={contributor.avatar_url}
+                  alt={`contributor ${contributor.login}`}
                   className="bg-[#D4CABD] rounded-[7px] w-[76px] h-[76px] lg:w-[113px] lg:h-[113px]"
                 />
               </li>
