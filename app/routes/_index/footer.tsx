@@ -7,17 +7,17 @@ export const Footer = () => (
   <footer>
     <div className="bg-[url('../../assets/white-wave.png')] h-[89px]" />
 
-    <div className="bg-white pb-[69px] flex justify-center items-center">
-      <div className="flex flex-col lg:flex-row items-center lg:justify-between lg:w-screen lg:max-w-[1086px] gap-8 pt-8">
-        <AllHandsLogo width={39} height={26} />
+    <div className="bg-white h-[355px] lg:h-[175px] pt-8 lg:pt-0 flex justify-center">
+      <div className="flex flex-col lg:flex-row items-center lg:justify-between lg:w-screen lg:max-w-[1086px] gap-8">
+        <AllHandsLogo width={65} height={45} />
 
         <nav>
-          <ul className="grid grid-cols-2 gap-8 text-center lg:flex">
-            <ul>GitHub</ul>
-            <ul>Blog</ul>
-            <ul>About Us</ul>
-            <ul>Terms of Service</ul>
-            <ul>Pricing</ul>
+          <ul className="grid grid-cols-2 gap-8 text-center font-poppins text-sm leading-[21px] lg:flex">
+            <li>GitHub</li>
+            <li>Blog</li>
+            <li>About Us</li>
+            <li>Terms of Service</li>
+            <li>Pricing</li>
           </ul>
         </nav>
 

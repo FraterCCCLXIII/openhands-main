@@ -53,8 +53,8 @@ export default function Index() {
       <Header />
 
       <main>
-        <section className="flex flex-col items-center gap-4 pt-[50px] pb-[79px]">
-          <h1 className="heading-large text-center lg:w-[764px]">Open Source Agents for Developers</h1>
+        <section className="flex flex-col items-center gap-4 h-[391px] lg:h-auto pt-[50px] lg:py-[86px]">
+          <h1 className="heading-large text-center h-[188px] lg:h-auto lg:w-[764px]">Open Source Agents for Developers</h1>
 
           <button className="bg-black px-[30px] h-[58px] rounded-lg flex items-center gap-[15px]">
             <GitHubLogo width={23} height={23} />
@@ -62,13 +62,13 @@ export default function Index() {
           </button>
         </section>
 
-        <section className="flex flex-col items-center gap-8 pt-[25px] pb-[51px]">
+        <section className="flex flex-col items-center gap-8 h-[510px] lg:h-[968px] pt-[25px]">
           <TripleWow width={53} height={33} />
           <img alt="product" className="bg-[#D4CABD] rounded-[10px] w-[378px] h-[212px] lg:w-[1140px] lg:h-[639px]" />
           <p className="paragraph text-center w-[352px] lg:w-[466px] text-[#292A36]">Development agents use AI to tackle the toil in your backlog, so you can focus on what matters: hard problems, creative challenges, and over-engineering your dotfiles</p>
         </section>
 
-        <section className="px-[42px] flex flex-col lg:flex-row gap-16 lg:gap-[81px] pt-16 pb-16 items-center lg:justify-center">
+        <section className="px-[42px] flex flex-col lg:flex-row gap-16 lg:gap-[81px] pt-16 pb-16 lg:p-0 lg:h-[489px] items-center lg:justify-center">
           <img
             src="../../assets/unchained.png"
             alt="hand gripping a broken chain"
@@ -95,7 +95,7 @@ export default function Index() {
           </div>
         </section>
 
-        <section className="flex flex-col lg:flex-row-reverse py-16 gap-16 lg:gap-8 px-[42px] items-center lg:justify-center">
+        <section className="flex flex-col lg:flex-row-reverse py-16 gap-16 lg:gap-8 px-[42px] lg:p-0 lg:h-[502px] items-center lg:justify-center">
           <img
             src="../../assets/person-robot-heart.png"
             alt="a persons and robots hands forming a heart"
@@ -107,7 +107,7 @@ export default function Index() {
           </div>
         </section>
 
-        <section className="flex flex-col lg:flex-row items-center lg:justify-center px-[42px] gap-16 py-24">
+        <section className="flex flex-col lg:flex-row items-center lg:justify-center px-[42px] gap-16 lg:gap-[100px] py-24">
           <div className="grid grid-cols-4 w-fit gap-[11px] lg:gap-4">
             <img src="" alt="contributor" className="bg-[#D4CABD] rounded-[7px] w-[76px] h-[76px] lg:w-[113px] lg:h-[113px]" />
             <img src="" alt="contributor" className="bg-[#D4CABD] rounded-[7px] w-[76px] h-[76px] lg:w-[113px] lg:h-[113px]" />
@@ -136,7 +136,7 @@ export default function Index() {
             <p className="paragraph text-[#292A36] lg:w-[466px]">Our agents are compatible with any large language model provider.</p>
           </div>
 
-          <div className="flex flex-col lg:flex-row items-center gap-8 lg:w-screen lg:max-w-[1358px] lg:justify-between">
+          <div className="flex flex-col lg:flex-row items-center gap-8 lg:w-screen lg:max-w-[1358px] lg:px-[143px] lg:justify-between">
             <TupleLogo width={105} height={48} />
             <MirageLogo width={138} height={48} />
             <StaticKitLogo width={127} height={48} />
