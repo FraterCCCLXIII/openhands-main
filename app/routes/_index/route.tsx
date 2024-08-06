@@ -9,12 +9,13 @@ import MirageLogo from "../../svgs/mirage-logo.svg?react";
 import StaticKitLogo from "../../svgs/statickit-logo.svg?react";
 import TransistorLogo from "../../svgs/transistor-logo.svg?react";
 import WorkcationLogo from "../../svgs/workcation-logo.svg?react";
-import X from "../../svgs/x.svg?react";
-import clsx from "clsx";
 import { useLoaderData } from "@remix-run/react";
 import { formatThousands } from "~/utils/format-thousands";
 import { formatLastCommit } from "~/utils/format-last-commit";
 import { fetchBranch, fetchRepositoryContributors, fetchRepositoryStatistics } from "~/api";
+import { ContributorGridItem } from "~/components/contributor-grid-item";
+import { YellowWave } from "~/components/yellow-wave";
+import { GitHubButton } from "~/components/github-button";
 
 export const meta: MetaFunction = () => {
   return [
@@ -29,32 +30,6 @@ export const links: LinksFunction = () => ([
   { rel: "preload", as: "image", href: "/assets/white-wave.png" },
   { rel: "preload", as: "image", href: "/assets/yellow-wave.png" },
 ]);
-
-interface GitHubButtonProps {
-  position?: "start";
-}
-
-const GitHubButton: React.FC<GitHubButtonProps> = ({ position }) => (
-  <button className={clsx("bg-black px-4 py-[11px] rounded-lg", position && "self-start")}>
-    <span className="text-white text-[19px] leading-[27px] font-bold">Join our GitHub</span>
-  </button>
-);
-
-const Menu = () => (
-  <aside className="relative top-0 left-0 w-screen h-screen bg-black items-center justify-center flex">
-    <X width={31} height={31} className="absolute top-7 left-7" />
-
-    <nav>
-      <ul className="text-white flex flex-col gap-8 text-center text-[41px] leading-[42px] font-quincy">
-        <li>Home</li>
-        <li>About Us</li>
-        <li>Pricing</li>
-        <li>Blog</li>
-        <li>GitHub</li>
-      </ul>
-    </nav>
-  </aside>
-);
 
 export const loader = async () => {
   const contributors = await fetchRepositoryContributors("opendevin", "opendevin");
@@ -133,11 +108,7 @@ export default function Index() {
         <ul data-testid="contributors" className="grid grid-cols-4 w-fit gap-[11px] lg:gap-4">
           {contributors.map((contributor) => (
             <li key={contributor.id}>
-              <img
-                src={contributor.avatar_url}
-                alt={`contributor ${contributor.login}`}
-                className="bg-[#D4CABD] rounded-[7px] w-[76px] h-[76px] lg:w-[113px] lg:h-[113px]"
-              />
+              <ContributorGridItem contributor={contributor} />
             </li>
           ))}
         </ul>
@@ -165,13 +136,10 @@ export default function Index() {
       </section>
 
       <section className="mb-[104px]">
-        <div className="bg-[url('/assets/yellow-wave.png')] h-[194px]" />
-        <div className="flex flex-col gap-8 text-center items-center px-[42px] bg-[#FFE165]">
-          <span className="heading">Ready to roll?</span>
-          <p className="paragraph text-[#292A36] lg:w-[466px]">Software development is changing. Let&apos;s work together to make sure it&apos;s better for everyone. {"\u2764"}</p>
-          <GitHubButton />
-        </div>
-        <div className="bg-[url('/assets/yellow-wave.png')] h-[194px] transform rotate-180" />
+        <YellowWave
+          heading="Ready to roll?"
+          text={`Software development is changing. Let's work together to make sure it's better for everyone. \u2764`}
+        />
       </section>
     </main>
   );
