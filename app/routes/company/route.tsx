@@ -2,12 +2,20 @@ import { ContributorGridItem } from "~/components/contributor-grid-item";
 import { YellowWave } from "~/components/yellow-wave";
 import { MemberCard } from "./member-card";
 import { SectionHeading } from "./section-heading";
+import { type MetaFunction } from "@remix-run/node";
 
 const members: Member[] = [
   { src: "", name: "Robert Brennan", title: "Cofounder", description: "Made with the collaborative help of over 40 engineers in the opensource community. OpenDev changes the way you can create software." },
   { src: "", name: "Graham Neubig", title: "Cofounder", description: "Made with the collaborative help of over 40 engineers in the opensource community. OpenDev changes the way you can create software." },
   { src: "", name: "Xingyao Wang", title: "Cofounder", description: "Made with the collaborative help of over 40 engineers in the opensource community. OpenDev changes the way you can create software." },
 ];
+
+export const meta: MetaFunction = () => {
+  return [
+    { title: "All Hands - Company" },
+    { name: "description", content: "Discover the talented team behind OpenDevin and how we leverage the power of collaboration to innovate in software development." },
+  ];
+};
 
 const Company = () => {
   return (
@@ -17,7 +25,7 @@ const Company = () => {
         <p className="paragraph w-[466px] text-[#292A36]">Made with the collaborative help of over 100 engineers in the opensource community. OpenDev changes the way you can create software.</p>
       </section>
 
-      <section className="flex flex-col items-center py-[45px]">
+      <section className="flex flex-col items-center">
         <SectionHeading
           subheading="OUR CONTRIBUTORS"
           heading="The Internet of People"
