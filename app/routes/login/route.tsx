@@ -1,5 +1,12 @@
+import { MetaFunction } from "@remix-run/node";
 import { Form, Link } from "@remix-run/react";
+import { FormInput } from "~/components/form-input";
 import { SectionHeading } from "~/components/section-heading";
+
+export const meta: MetaFunction = () => ([
+  { title: "All Hands - Login" },
+  { name: "description", content: "Login to your All Hands account." },
+]);
 
 const Login = () => {
   return (
@@ -9,20 +16,26 @@ const Login = () => {
         subheading="Welcome back!"
       />
 
-      <Form className="flex flex-col gap-4 text-sm font-poppins w-[418px]">
-        <label className="flex flex-col gap-1 text-[#374151] font-semibold">
+      <Form className="flex flex-col gap-4 text-sm w-[418px]">
+        <label
+          htmlFor="email"
+          className="flex flex-col gap-1 text-gray-700 font-semibold"
+        >
           Email
-          <input
-            className="font-normal py-[9px] px-[13px] rounded-[6px] border border-[#D1D5DB]"
-            type="text"
+          <FormInput
+            id="email"
+            type="email"
             placeholder="johnsmith@mail.com"
           />
         </label>
 
-        <label className="flex flex-col gap-1 text-[#374151] font-semibold">
+        <label
+          htmlFor="password"
+          className="flex flex-col gap-1 text-gray-700 font-semibold"
+        >
           Password
-          <input
-            className="font-normal py-[9px] px-[13px] rounded-[6px] border border-[#D1D5DB]"
+          <FormInput
+            id="password"
             type="password"
           />
         </label>
@@ -37,7 +50,7 @@ const Login = () => {
       </Form>
 
       <div className="paragraph mt-4">
-        <span className="text-[#292A36]">Don&apos;t have an account?</span>
+        <span className="text-description">Don&apos;t have an account?</span>
         {" "}
         <Link to="/signup" className="text-[#0554F2] font-bold">Sign up here</Link>
       </div>

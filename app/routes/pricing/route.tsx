@@ -1,15 +1,19 @@
-import { LoaderFunctionArgs } from "@remix-run/node";
+import { LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
 import { json, useLoaderData } from "@remix-run/react";
 import { SectionHeading } from "~/components/section-heading";
 import { PriceCard } from "./price-card";
 import { Switch } from "./switch";
+
+export const meta: MetaFunction = () => ([
+  { title: "All Hands Pricing" },
+  { name: "description", content: "All Hands product pricing plans for developers." },
+]);
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const url = new URL(request.url);
   let type = url.searchParams.get("type") || "monthly";
 
   if (type !== "monthly" && type !== "yearly") type = "monthly";
-
   return json({ type: type as "monthly" | "yearly" });
 };
 

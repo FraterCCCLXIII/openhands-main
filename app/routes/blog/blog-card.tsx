@@ -1,4 +1,5 @@
 import { Link } from "@remix-run/react";
+import { PlaceholderImage } from "./placeholder-image";
 
 interface BlogCardProps {
   blogId: string;
@@ -8,11 +9,11 @@ interface BlogCardProps {
 
 export const BlogCard: React.FC<BlogCardProps> = ({ blogId, title, description }) => (
   <div className="flex flex-col gap-8 px-[42px] py-[45px]">
-    <img src="" alt="" className="aspect-video bg-[#ACC8FF] rounded-[7px]" />
+    <PlaceholderImage className="aspect-video rounded-[7px]" />
     <div className="flex flex-col gap-4 items-start">
       <h2 className="font-quincy text-[33px] leading-[33px]">{title}</h2>
-      <p className="paragraph text-[#292A36]">{description}</p>
-      <Link to={blogId} className="paragraph text-[#292A36] font-semibold">Read More</Link>
+      <p className="paragraph text-description">{description}</p>
+      <Link to={blogId} className="paragraph text-description font-semibold">Read More</Link>
     </div>
   </div>
 );
