@@ -9,7 +9,7 @@ import MirageLogo from "../../svgs/mirage-logo.svg?react";
 import StaticKitLogo from "../../svgs/statickit-logo.svg?react";
 import TransistorLogo from "../../svgs/transistor-logo.svg?react";
 import WorkcationLogo from "../../svgs/workcation-logo.svg?react";
-import { useLoaderData } from "@remix-run/react";
+import { Link, useLoaderData } from "@remix-run/react";
 import { formatThousands } from "~/utils/format-thousands";
 import { formatLastCommit } from "~/utils/format-last-commit";
 import { fetchBranch, fetchRepositoryContributors, fetchRepositoryStatistics } from "~/api";
@@ -58,10 +58,15 @@ export default function Index() {
       <section className="flex flex-col items-center gap-4 h-[391px] lg:h-auto pt-[50px] lg:py-[86px]">
         <h1 className="heading-large text-center h-[188px] lg:h-auto lg:w-[764px]">Open Source Agents for Developers</h1>
 
-        <button className="bg-black px-[30px] h-[58px] rounded-lg flex items-center gap-[15px]">
+        <Link
+          to="https://github.com/OpenDevin/OpenDevin"
+          rel="noreferrer"
+          target="_blank"
+          className="bg-black px-[30px] h-[58px] rounded-lg flex items-center gap-[15px]"
+        >
           <GitHubLogo width={23} height={23} />
           <span className="text-white text-[19px] leading-[27px] font-bold">Get it on GitHub</span>
-        </button>
+        </Link>
       </section>
 
       <section className="flex flex-col items-center gap-8 h-[510px] lg:h-[968px] pt-[25px]">

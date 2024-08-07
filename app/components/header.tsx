@@ -55,11 +55,18 @@ export const Header: React.FC<HeaderProps> = ({ isRoot, onClickMenuButton }) => 
       </nav>
     )}
 
-    <button className={clsx(
-      "hidden lg:block px-4 py-2 rounded-lg bg-black",
-      isRoot && "absolute right-[26px]"
-    )}>
+    <Link
+      rel="noreferrer"
+      target="_blank"
+      to="https://github.com/OpenDevin"
+      className={
+        clsx(
+          "hidden lg:block px-4 py-2 rounded-lg bg-black",
+          isRoot && "absolute right-[26px]"
+        )
+      }
+    >
       <span className="text-white font-bold font-poppins text-sm leading-5">View GitHub</span>
-    </button>
+    </Link>
   </header >
 );

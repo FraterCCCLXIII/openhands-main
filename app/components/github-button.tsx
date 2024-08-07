@@ -1,3 +1,4 @@
+import { Link } from "@remix-run/react";
 import clsx from "clsx";
 
 interface GitHubButtonProps {
@@ -5,7 +6,11 @@ interface GitHubButtonProps {
 }
 
 export const GitHubButton: React.FC<GitHubButtonProps> = ({ position }) => (
-  <button className={clsx("bg-black px-4 py-[11px] rounded-lg", position && "self-start")}>
+  <Link
+    to="https://github.com/OpenDevin"
+    rel="noreferrer"
+    target="_blank"
+    className={clsx("bg-black px-4 py-[11px] rounded-lg", position && "self-start")}>
     <span className="text-white text-[19px] leading-[27px] font-bold">Join our GitHub</span>
-  </button>
+  </Link>
 );
