@@ -1,18 +1,20 @@
+import { Link } from "@remix-run/react";
 import { Button } from "~/components/button";
 import { SectionHeading } from "~/components/section-heading";
 
 interface BlogCardProps {
+  blogId: string;
   title: string;
   description: string;
 }
 
-const BlogCard: React.FC<BlogCardProps> = ({ title, description }) => (
+const BlogCard: React.FC<BlogCardProps> = ({ blogId, title, description }) => (
   <div className="flex flex-col gap-8 px-[42px] py-[45px]">
     <img src="" alt="" className="aspect-video bg-[#ACC8FF] rounded-[7px]" />
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 items-start">
       <h2 className="font-quincy text-[33px] leading-[33px]">{title}</h2>
       <p className="paragraph text-[#292A36]">{description}</p>
-      <span className="paragraph text-[#292A36] font-semibold">Read More</span>
+      <Link to={blogId} className="paragraph text-[#292A36] font-semibold">Read More</Link>
     </div>
   </div>
 );
@@ -33,11 +35,11 @@ const Blog = () => {
       </section>
 
       <section className="flex py-[45px] px-[42px] gap-8">
-        <img src="" alt="" className="w-[600px] h-[370px] rounded-[10px] bg-[#ACC8FF] border-none" />
+        <img src="" alt="" className="w-[600px] h-[370px] rounded-[10px] bg-[#ACC8FF]" />
         <div className="flex flex-col gap-4">
           <h2 className="heading">Lorem Ipsum</h2>
           <p className="paragraph text-[#292A36] w-[466px]">Made with the collaborative help of over 40 engineers in the opensource community. OpenDev changes the way you can create software.</p>
-          <span className="paragraph font-semibold text-[#292A36]">Read More</span>
+          <Link to="lorem-ipsum" className="paragraph font-semibold text-[#292A36]">Read More</Link>
         </div>
       </section>
 
@@ -46,6 +48,7 @@ const Blog = () => {
           {Array.from({ length: 3 }).map((_, index) => (
             <BlogCard
               key={index}
+              blogId={`lorem-ipsum-${index}`}
               title="Lorem Ipsum"
               description="Made with the collaborative help of over 40 engineers in the opensource community. OpenDev changes the way you can create software."
             />
