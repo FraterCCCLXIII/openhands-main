@@ -14,8 +14,9 @@ import { formatThousands } from "~/utils/format-thousands";
 import { formatLastCommit } from "~/utils/format-last-commit";
 import { fetchBranch, fetchRepositoryContributors, fetchRepositoryStatistics } from "~/api";
 import { ContributorGridItem } from "~/components/contributor-grid-item";
-import { YellowWave } from "~/components/yellow-wave";
+import { YellowWaveSection } from "~/components/yellow-wave-section";
 import { GitHubButton } from "~/components/github-button";
+import clsx from "clsx";
 
 export const meta: MetaFunction = () => {
   return [
@@ -62,17 +63,23 @@ export default function Index() {
           to="https://github.com/OpenDevin/OpenDevin"
           rel="noreferrer"
           target="_blank"
-          className="bg-black px-[30px] h-[58px] rounded-lg flex items-center gap-[15px]"
+          className={clsx(
+            "bg-black px-[30px] h-[58px] rounded-lg flex items-center gap-[15px]",
+            "text-white text-[19px] leading-[27px] font-bold"
+          )}
         >
           <GitHubLogo width={23} height={23} />
-          <span className="text-white text-[19px] leading-[27px] font-bold">Get it on GitHub</span>
+          Get it on GitHub
         </Link>
       </section>
 
       <section className="flex flex-col items-center gap-8 h-[510px] lg:h-[968px] pt-[25px]">
         <TripleWow width={53} height={33} />
-        <img alt="product" className="bg-[#D4CABD] rounded-[10px] w-[378px] h-[212px] lg:w-[1140px] lg:h-[639px]" />
-        <p className="paragraph text-center w-[352px] lg:w-[466px] text-[#292A36]">Development agents use AI to tackle the toil in your backlog, so you can focus on what matters: hard problems, creative challenges, and over-engineering your dotfiles</p>
+        <img
+          alt="product"
+          className="bg-[#D4CABD] rounded-[10px] w-[378px] h-[212px] lg:w-[1140px] lg:h-[639px]"
+        />
+        <p className="paragraph text-center w-[352px] lg:w-[466px] text-description">Development agents use AI to tackle the toil in your backlog, so you can focus on what matters: hard problems, creative challenges, and over-engineering your dotfiles</p>
       </section>
 
       <section className="px-[42px] flex flex-col lg:flex-row gap-16 lg:gap-[81px] pt-16 pb-16 lg:p-0 lg:h-[489px] items-center lg:justify-center">
@@ -84,19 +91,19 @@ export default function Index() {
 
         <div className="flex flex-col gap-4 lg:w-[500px]">
           <span className="heading">Free as in Freedom</span>
-          <p className="paragraph text-[#292A36] lg:w-[466px]">We believe agentic technology is too important to be controlled by a few corporations. So we&apos;re building all our agents in the open on GitHub, under the MIT license.</p>
-          <div data-testid="repo-statistics" className="flex flex-col gap-4">
+          <p className="paragraph text-description lg:w-[466px]">We believe agentic technology is too important to be controlled by a few corporations. So we&apos;re building all our agents in the open on GitHub, under the MIT license.</p>
+          <div data-testid="repo-statistics" className="flex flex-col gap-4 paragraph font-bold">
             <div className="flex gap-[6px]">
               <Star width={24} height={24} />
-              <span className="paragraph-bold">{stars} Stars</span>
+              <span>{stars} Stars</span>
             </div>
             <div className="flex gap-[6px]">
               <Users width={24} height={24} />
-              <span className="paragraph-bold">{contributorsCount} Contributors</span>
+              <span>{contributorsCount} Contributors</span>
             </div>
             <div className="flex gap-[6px]">
               <Hierarchy width={24} height={24} />
-              <span className="paragraph-bold">Last Commit {lastCommit}</span>
+              <span>Last Commit {lastCommit}</span>
             </div>
           </div>
         </div>
@@ -110,7 +117,7 @@ export default function Index() {
         />
         <div className="flex flex-col gap-4 lg:w-[500px]">
           <span className="heading">Power and Responsibility</span>
-          <p className="paragraph text-[#292A36] lg:w-[466px]">Our agents can do anything a human developer can: they write code, run commands, and use the web. We&apos;re partnering with AI safety experts like Invariant Labs to balance innovation with security.</p>
+          <p className="paragraph text-description lg:w-[466px]">Our agents can do anything a human developer can: they write code, run commands, and use the web. We&apos;re partnering with AI safety experts like Invariant Labs to balance innovation with security.</p>
         </div>
       </section>
 
@@ -125,7 +132,7 @@ export default function Index() {
 
         <div className="flex flex-col gap-4 lg:w-[500px]">
           <span className="heading">Join the Community</span>
-          <p className="paragraph text-[#292A36] lg:w-[466px]">Thousands of developers are working together to build the AI-powered future they want to see. You can connect with us on GitHub, Slack, Twitter, or our blog.</p>
+          <p className="paragraph text-description lg:w-[466px]">Thousands of developers are working together to build the AI-powered future they want to see. You can connect with us on GitHub, Slack, Twitter, or our blog.</p>
           <GitHubButton position="start" />
         </div>
       </section>
@@ -133,7 +140,7 @@ export default function Index() {
       <section className="px-[42px] flex flex-col gap-8 lg:gap-16 py-24 lg:py-[41px] lg:items-center">
         <div className="flex flex-col gap-4 text-center h-[206px] lg:h-[126px]">
           <span className="heading">Choose your Engine</span>
-          <p className="paragraph text-[#292A36] lg:w-[466px]">Our agents are compatible with any large language model provider.</p>
+          <p className="paragraph text-description lg:w-[466px]">Our agents are compatible with any large language model provider.</p>
         </div>
 
         <div className="flex flex-col lg:flex-row items-center gap-8 lg:w-screen lg:max-w-[1358px] lg:px-[143px] lg:justify-between">
@@ -146,7 +153,7 @@ export default function Index() {
       </section>
 
       <section className="mb-[104px]">
-        <YellowWave
+        <YellowWaveSection
           heading="Ready to roll?"
           text={`Software development is changing. Let's work together to make sure it's better for everyone. \u2764`}
         />

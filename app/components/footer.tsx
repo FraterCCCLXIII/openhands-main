@@ -14,22 +14,32 @@ export const Footer = () => (
 
         <nav>
           <ul className="grid grid-cols-2 gap-8 text-center font-poppins text-sm leading-[21px] lg:flex">
-            <Link to="https://github.com/OpenDevin" rel="noreferrer" target="_blank">GitHub</Link>
-            <Link to="blog">Blog</Link>
-            <Link to="company">About Us</Link>
-            <Link to="tos">Terms of Service</Link>
-            <Link to="pricing">Pricing</Link>
+            <li>
+              <Link to="https://github.com/OpenDevin" rel="noreferrer" target="_blank">GitHub</Link>
+            </li>
+            <li>
+              <Link to="blog">Blog</Link>
+            </li>
+            <li>
+              <Link to="company">About Us</Link>
+            </li>
+            <li>
+              <Link to="tos">Terms of Service</Link>
+            </li>
+            <li>
+              <Link to="pricing">Pricing</Link>
+            </li>
           </ul>
         </nav>
 
         <span className="flex gap-4">
-          <Link to="https://www.facebook.com/" rel="noreferrer" target="_blank">
+          <Link aria-label="Facebook" to="https://www.facebook.com/" rel="noreferrer" target="_blank">
             <FacebookLogo width={24} height={24} />
           </Link>
-          <Link to="https://github.com/OpenDevin" rel="noreferrer" target="_blank">
+          <Link aria-label="OpenDevin GitHub" to="https://github.com/OpenDevin" rel="noreferrer" target="_blank">
             <GitHubCircleLogo width={24} height={24} />
           </Link>
-          <Link to="https://www.instagram.com/" rel="noreferrer" target="_blank">
+          <Link aria-label="Instagram" to="https://www.instagram.com/" rel="noreferrer" target="_blank">
             <InstagramLogo width={24} height={24} />
           </Link>
         </span>

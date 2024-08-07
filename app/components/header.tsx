@@ -26,6 +26,7 @@ export const Header: React.FC<HeaderProps> = ({ isRoot, onClickMenuButton }) => 
   )}>
     {isRoot && (
       <button
+        aria-label="Open Menu"
         onClick={onClickMenuButton}
         className="absolute left-[26px]"
       >
@@ -33,7 +34,11 @@ export const Header: React.FC<HeaderProps> = ({ isRoot, onClickMenuButton }) => 
       </button>
     )}
 
-    <Link to="/" className="flex gap-2 items-center">
+    <Link
+      aria-label="All Hands Home"
+      to="/"
+      className="flex gap-2 items-center"
+    >
       <AllHandsLogo width={39} height={26} />
       <AllHandsText width={126} height={21} />
     </Link>

@@ -1,5 +1,5 @@
 import { ContributorGridItem } from "~/components/contributor-grid-item";
-import { YellowWave } from "~/components/yellow-wave";
+import { YellowWaveSection } from "~/components/yellow-wave-section";
 import { MemberCard } from "./member-card";
 import { SectionHeading } from "../../components/section-heading";
 import { json, type MetaFunction } from "@remix-run/node";
@@ -65,7 +65,7 @@ const Company = () => {
       </section>
 
       <section className="mb-[104px]">
-        <YellowWave
+        <YellowWaveSection
           heading="Ready to start building software with software that builds software?"
         />
       </section>
