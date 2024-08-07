@@ -2,6 +2,7 @@ import AllHandsLogo from "../svgs/all-hands-1.svg?react";
 import GitHubCircleLogo from "../svgs/gh-logo.svg?react";
 import FacebookLogo from "../svgs/fb-logo.svg?react";
 import InstagramLogo from "../svgs/insta-logo.svg?react";
+import { Link } from "@remix-run/react";
 
 export const Footer = () => (
   <footer>
@@ -14,9 +15,9 @@ export const Footer = () => (
         <nav>
           <ul className="grid grid-cols-2 gap-8 text-center font-poppins text-sm leading-[21px] lg:flex">
             <li>GitHub</li>
-            <li>Blog</li>
-            <li>About Us</li>
-            <li>Terms of Service</li>
+            <Link to="blog">Blog</Link>
+            <Link to="company">About Us</Link>
+            <Link to="tos">Terms of Service</Link>
             <li>Pricing</li>
           </ul>
         </nav>
