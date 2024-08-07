@@ -8,7 +8,7 @@ const RemixStub = createRemixStub([
     path: "/",
     Component: Index,
     loader,
-  }
+  },
 ]);
 
 describe("Home Page", () => {
@@ -18,7 +18,7 @@ describe("Home Page", () => {
 
       const statisticsContainer = await screen.findByTestId("repo-statistics");
       within(statisticsContainer).getByText("28k Stars");
-      within(statisticsContainer).getByText("50 Contributors");
+      within(statisticsContainer).getByText("30 Contributors");
       within(statisticsContainer).getByText("Last Commit 2 hours ago");
     });
   });

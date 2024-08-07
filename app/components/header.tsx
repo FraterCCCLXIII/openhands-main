@@ -7,28 +7,38 @@ import { Link } from "react-router-dom";
 
 const NavMap = [
   { name: "Research", to: "/research" },
-  { name: "Products", to: "/products" },
+  { name: "Products", to: "/pricing" },
   { name: "Company", to: "/company" },
+  { name: "Blog", to: "/blog" },
   { name: "Community", to: "/community" },
 ]
 
 interface HeaderProps {
   /* isRoot is a boolean that determines if the header is the root header */
-  isRoot?: boolean;
+  isRoot: boolean;
+  onClickMenuButton: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ isRoot }) => (
+export const Header: React.FC<HeaderProps> = ({ isRoot, onClickMenuButton }) => (
   <header className={clsx(
     "h-[83px] flex items-center relative w-screen px-[26px]",
     !isRoot ? "justify-between" : "justify-center"
   )}>
     {isRoot && (
-      <div className="absolute left-[26px]">
+      <button
+        aria-label="Open Menu"
+        onClick={onClickMenuButton}
+        className="absolute left-[26px]"
+      >
         <HamburgerMenuIcon width={24} height={24} />
-      </div>
+      </button>
     )}
 
-    <Link to="/" className="flex gap-2 items-center">
+    <Link
+      aria-label="All Hands Home"
+      to="/"
+      className="flex gap-2 items-center"
+    >
       <AllHandsLogo width={39} height={26} />
       <AllHandsText width={126} height={21} />
     </Link>
@@ -50,11 +60,18 @@ export const Header: React.FC<HeaderProps> = ({ isRoot }) => (
       </nav>
     )}
 
-    <button className={clsx(
-      "hidden lg:block px-4 py-2 rounded-lg bg-black",
-      isRoot && "absolute right-[26px]"
-    )}>
+    <Link
+      rel="noreferrer"
+      target="_blank"
+      to="https://github.com/OpenDevin"
+      className={
+        clsx(
+          "hidden lg:block px-4 py-2 rounded-lg bg-black",
+          isRoot && "absolute right-[26px]"
+        )
+      }
+    >
       <span className="text-white font-bold font-poppins text-sm leading-5">View GitHub</span>
-    </button>
+    </Link>
   </header >
 );
