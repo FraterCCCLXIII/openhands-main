@@ -33,12 +33,12 @@ export const links: LinksFunction = () => ([
 
 export const loader = async () => {
   // TODO: defer fetching
-  const contributors = await fetchRepositoryContributors("opendevin", "opendevin", 12);
+  const contributors = await fetchRepositoryContributors("opendevin", "opendevin");
   const statistics = await fetchRepositoryStatistics("opendevin", "opendevin");
   const branch = await fetchBranch("opendevin", "opendevin", "main");
 
   return json({
-    contributors,
+    contributors: contributors.slice(0, 12),
     contributorsCount: formatThousands(contributors.length),
     stars: formatThousands(statistics.stargazers_count),
     lastCommit: formatLastCommit(branch.commit.commit.author.date),

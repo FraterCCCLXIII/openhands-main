@@ -14,18 +14,22 @@ const NavMap = [
 
 interface HeaderProps {
   /* isRoot is a boolean that determines if the header is the root header */
-  isRoot?: boolean;
+  isRoot: boolean;
+  onClickMenuButton: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ isRoot }) => (
+export const Header: React.FC<HeaderProps> = ({ isRoot, onClickMenuButton }) => (
   <header className={clsx(
     "h-[83px] flex items-center relative w-screen px-[26px]",
     !isRoot ? "justify-between" : "justify-center"
   )}>
     {isRoot && (
-      <div className="absolute left-[26px]">
+      <button
+        onClick={onClickMenuButton}
+        className="absolute left-[26px]"
+      >
         <HamburgerMenuIcon width={24} height={24} />
-      </div>
+      </button>
     )}
 
     <Link to="/" className="flex gap-2 items-center">

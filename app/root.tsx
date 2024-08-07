@@ -1,3 +1,4 @@
+import React from "react";
 import {
   Links,
   Meta,
@@ -10,9 +11,11 @@ import "./tailwind.css";
 
 import { Header } from "./components/header";
 import { Footer } from "./components/footer";
+import { Sidebar } from "./components/sidebar";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
+  const [isSidebarHidden, setIsSidebarHidden] = React.useState(true);
 
   return (
     <html lang="en">
@@ -24,7 +27,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         <div className="bg-[#F1EAE0]">
-          <Header isRoot={location.pathname === "/"} />
+          <Header
+            isRoot={location.pathname === "/"}
+            onClickMenuButton={() => setIsSidebarHidden(false)}
+          />
+          <Sidebar
+            isHidden={isSidebarHidden}
+            onClose={() => setIsSidebarHidden(true)}
+          />
           {children}
           <Footer />
         </div>
