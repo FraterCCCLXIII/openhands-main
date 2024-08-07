@@ -18,7 +18,7 @@ export const Footer = () => (
             <Link to="blog">Blog</Link>
             <Link to="company">About Us</Link>
             <Link to="tos">Terms of Service</Link>
-            <li>Pricing</li>
+            <Link to="pricing">Pricing</Link>
           </ul>
         </nav>
 

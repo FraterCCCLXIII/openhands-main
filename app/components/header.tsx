@@ -7,7 +7,7 @@ import { Link } from "react-router-dom";
 
 const NavMap = [
   { name: "Research", to: "/research" },
-  { name: "Products", to: "/products" },
+  { name: "Products", to: "/pricing" },
   { name: "Company", to: "/company" },
   { name: "Blog", to: "/blog" },
   { name: "Community", to: "/community" },
