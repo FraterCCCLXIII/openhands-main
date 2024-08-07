@@ -1,7 +1,7 @@
 import { ContributorGridItem } from "~/components/contributor-grid-item";
 import { YellowWave } from "~/components/yellow-wave";
 import { MemberCard } from "./member-card";
-import { SectionHeading } from "./section-heading";
+import { SectionHeading } from "../../components/section-heading";
 import { json, type MetaFunction } from "@remix-run/node";
 import { fetchRepositoryContributors } from "~/api";
 import { useLoaderData } from "@remix-run/react";
@@ -21,7 +21,7 @@ export const meta: MetaFunction = () => {
 
 export const loader = async () => {
   const contributors = await fetchRepositoryContributors("opendevin", "opendevin", 50);
-  return json({ contributors });
+  return json({ contributors }, { headers: { "Cache-Control": "max-age=1200" } });
 }
 
 const Company = () => {

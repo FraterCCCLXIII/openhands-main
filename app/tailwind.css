@@ -22,7 +22,7 @@
 }
 
 .paragraph {
-  @apply paragraph-base font-normal
+  @apply paragraph-base
 }
 
 .paragraph-bold {

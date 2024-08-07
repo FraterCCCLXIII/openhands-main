@@ -37,12 +37,17 @@ export const loader = async () => {
   const statistics = await fetchRepositoryStatistics("opendevin", "opendevin");
   const branch = await fetchBranch("opendevin", "opendevin", "main");
 
-  return json({
-    contributors: contributors.slice(0, 12),
-    contributorsCount: formatThousands(contributors.length),
-    stars: formatThousands(statistics.stargazers_count),
-    lastCommit: formatLastCommit(branch.commit.commit.author.date),
-  });
+  return json(
+    {
+      contributors: contributors.slice(0, 12),
+      contributorsCount: formatThousands(contributors.length),
+      stars: formatThousands(statistics.stargazers_count),
+      lastCommit: formatLastCommit(branch.commit.commit.author.date),
+    },
+    {
+      headers: { "Cache-Control": "max-age=1200" }
+    }
+  );
 };
 
 export default function Index() {
