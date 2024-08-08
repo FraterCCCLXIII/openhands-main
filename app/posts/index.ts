@@ -37,8 +37,25 @@ const retrieveBlogData = async (): Promise<BlogData[]> => {
   return Promise.all(PROMISES);
 }
 
-export const getAllBlogs = async (): Promise<BlogData[]> => retrieveBlogData();
-export const getBlogByIndex = async (index: number): Promise<BlogData> => {
-  const allBlogs = await retrieveBlogData();
-  return allBlogs[index];
+class BlogAPI {
+  private posts: BlogData[] = [];
+
+  constructor() { }
+
+  public async init() {
+    this.posts = await retrieveBlogData();
+  }
+
+  public async getAllBlogs(): Promise<BlogData[]> {
+    return this.posts;
+  }
+
+  public async getBlogByIndex(index: number): Promise<BlogData> {
+    return this.posts[index];
+  }
 }
+
+const blogAPI = new BlogAPI();
+blogAPI.init();
+
+export { blogAPI };

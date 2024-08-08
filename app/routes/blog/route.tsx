@@ -4,7 +4,7 @@ import { SectionHeading } from "~/components/section-heading";
 import { BlogCard } from "./blog-card";
 import { PlaceholderImage } from "./placeholder-image";
 import { MetaFunction } from "@remix-run/node";
-import { getAllBlogs } from "~/posts";
+import { blogAPI } from "~/posts";
 
 export const meta: MetaFunction = () => ([
   { title: "All Hands Blog - Insights and Innovations" },
@@ -12,7 +12,7 @@ export const meta: MetaFunction = () => ([
 ]);
 
 export const loader = async () => {
-  const blogs = await getAllBlogs();
+  const blogs = await blogAPI.getAllBlogs();
   blogs.sort((a, b) => new Date(b.frontmatter.date).getTime() - new Date(a.frontmatter.date).getTime());
   return json({ blogs });
 };

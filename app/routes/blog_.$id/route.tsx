@@ -6,14 +6,14 @@ import { LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
 
 import { getMDXComponent } from 'mdx-bundler/client';
 import invariant from "tiny-invariant";
-import { getBlogByIndex } from "~/posts";
+import { blogAPI } from "~/posts";
 
 
 export const loader = async ({ params }: LoaderFunctionArgs) => {
   invariant(params.id, "No blog ID provided");
 
   const id = Number(params.id);
-  const blog = await getBlogByIndex(id);
+  const blog = await blogAPI.getBlogByIndex(id);
 
   invariant(blog, "No blog found");
 
