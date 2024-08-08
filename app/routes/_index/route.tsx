@@ -57,7 +57,9 @@ export default function Index() {
 
   return (
     <main>
-      <section className="flex flex-col items-center gap-4 h-[391px] lg:h-auto pt-[50px] lg:py-[86px]">
+      <section
+        className="flex flex-col items-center gap-4 h-[391px] lg:h-auto pt-[50px] lg:py-[86px]"
+      >
         <h1 className="heading-large text-center h-[188px] lg:h-auto lg:w-[764px]">Open Source Agents for Developers</h1>
 
         <Link
@@ -74,14 +76,16 @@ export default function Index() {
         </Link>
       </section>
 
-      <section className="flex flex-col items-center gap-8 h-[510px] lg:h-[968px] pt-[25px]">
+      <AnimatedSection
+        className="flex flex-col items-center gap-8 h-[510px] lg:h-[968px] pt-[25px]"
+      >
         <TripleWow width={53} height={33} />
         <img
           alt="product"
           className="bg-[#D4CABD] rounded-[10px] w-[378px] h-[212px] lg:w-[1140px] lg:h-[639px]"
         />
         <p className="paragraph text-center w-[352px] lg:w-[466px] text-description">Development agents use AI to tackle the toil in your backlog, so you can focus on what matters: hard problems, creative challenges, and over-engineering your dotfiles</p>
-      </section>
+      </AnimatedSection>
 
       <AnimatedSection
         className="px-[42px] flex flex-col lg:flex-row gap-16 lg:gap-[81px] pt-16 pb-16 lg:p-0 lg:h-[489px] items-center lg:justify-center mix-blend-multiply"
