@@ -4,15 +4,16 @@ import { SectionHeading } from "~/components/section-heading";
 import { BlogCard } from "./blog-card";
 import { PlaceholderImage } from "./placeholder-image";
 import { MetaFunction } from "@remix-run/node";
-import { ALL_BLOGS } from "~/posts";
+import { getAllBlogs } from "~/posts";
 
 export const meta: MetaFunction = () => ([
   { title: "All Hands Blog - Insights and Innovations" },
   { name: "description", content: "Read the latest insights and innovations from All Hands." },
 ]);
 
-export const loader = () => {
-  return json({ blogs: ALL_BLOGS });
+export const loader = async () => {
+  const blogs = await getAllBlogs();
+  return json({ blogs });
 };
 
 const Blog = () => {

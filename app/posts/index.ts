@@ -1,5 +1,7 @@
-import * as blog1 from "./blog-1/bundled";
-import * as blog2 from "./blog-2/bundled";
+import { bundleMDX } from "mdx-bundler";
+
+import fs from "fs";
+import path from "path";
 
 interface BlogData {
   code: string;
@@ -18,9 +20,20 @@ interface BlogData {
   };
 }
 
-export const ALL_BLOGS = [
-  blog1,
-  blog2,
-  blog1,
-  blog2,
-] as BlogData[];
+const bundleMDXFromName = async (name: string) => bundleMDX({
+  cwd: process.cwd(),
+  file: `./app/posts/${name}`,
+});
+
+const getFilesInCurrentDirectory = async () => {
+  const directoryPath = path.join(process.cwd(), "app/posts");
+  return fs.readdirSync(directoryPath);
+}
+
+const allFileNames = await getFilesInCurrentDirectory();
+const mdFileNames = allFileNames.filter((fileName) => fileName.endsWith(".md"));
+const PROMISES = mdFileNames.map(async (fileName) => bundleMDXFromName(fileName)) as unknown as Promise<BlogData>[];
+
+const ALL_BLOGS = await Promise.all(PROMISES);
+export const getAllBlogs = async (): Promise<BlogData[]> => ALL_BLOGS;
+export const getBlogByIndex = async (index: number): Promise<BlogData> => ALL_BLOGS[index];

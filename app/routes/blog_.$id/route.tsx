@@ -6,13 +6,13 @@ import { LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
 
 import { getMDXComponent } from 'mdx-bundler/client';
 import invariant from "tiny-invariant";
-import { ALL_BLOGS } from "~/posts";
+import { getBlogByIndex } from "~/posts";
 
 
 export const loader = async ({ params }: LoaderFunctionArgs) => {
   invariant(params.id, "No blog ID provided");
   const id = Number(params.id);
-  const { code, frontmatter } = ALL_BLOGS[id];
+  const { code, frontmatter } = await getBlogByIndex(id);
 
   return json({
     title: frontmatter.title,
@@ -77,8 +77,6 @@ const BlogDetails = () => {
               li: (props) => <li className="list-disc ml-5" {...props}>{props.children}</li>,
               img: (props) => <img className="rounded-lg" {...props} alt={props.alt} />,
               p: (props) => <p className="text-description" {...props}>{props.children}</p>,
-              // italic
-              em: (props) => <em className="italic" {...props}>{props.children}</em>,
             }}
           />
         </section>
