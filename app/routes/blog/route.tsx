@@ -14,7 +14,7 @@ export const meta: MetaFunction = () => ([
 export const loader = async () => {
   const blogs = await blogAPI.getAllBlogs();
   blogs.sort((a, b) => new Date(b.frontmatter.date).getTime() - new Date(a.frontmatter.date).getTime());
-  return json({ blogs });
+  return json({ blogs }, { headers: { "Cache-Control": "max-age=300" } });
 };
 
 const Blog = () => {

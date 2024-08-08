@@ -18,18 +18,20 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
   invariant(blog, "No blog found");
 
   const { code, frontmatter } = blog;
-  return json({
-    title: frontmatter.title,
-    date: frontmatter.date,
-    cover: frontmatter.coverImage || null,
-    author: {
-      name: frontmatter.author.name,
-      src: frontmatter.author.picture,
+  return json(
+    {
+      title: frontmatter.title,
+      date: frontmatter.date,
+      cover: frontmatter.coverImage || null,
+      author: {
+        name: frontmatter.author.name,
+        src: frontmatter.author.picture,
+      },
+      excerpt: frontmatter.excerpt,
+      content: code,
+      ogImage: frontmatter.ogImage.url,
     },
-    excerpt: frontmatter.excerpt,
-    content: code,
-    ogImage: frontmatter.ogImage.url,
-  });
+    { headers: { "Cache-Control": "max-age=300" } });
 };
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => ([

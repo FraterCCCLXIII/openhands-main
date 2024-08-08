@@ -42,20 +42,21 @@ class BlogAPI {
 
   constructor() { }
 
-  public async init() {
-    this.posts = await retrieveBlogData();
-  }
-
   public async getAllBlogs(): Promise<BlogData[]> {
+    if (!this.posts.length) {
+      this.posts = await retrieveBlogData();
+    }
+
     return this.posts;
   }
 
   public async getBlogByIndex(index: number): Promise<BlogData> {
+    if (!this.posts.length) {
+      this.posts = await retrieveBlogData();
+    }
+
     return this.posts[index];
   }
 }
 
-const blogAPI = new BlogAPI();
-blogAPI.init();
-
-export { blogAPI };
+export const blogAPI = new BlogAPI();
