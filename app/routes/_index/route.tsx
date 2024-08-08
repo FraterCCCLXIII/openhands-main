@@ -17,6 +17,7 @@ import { ContributorGridItem } from "~/components/contributor-grid-item";
 import { YellowWaveSection } from "~/components/yellow-wave-section";
 import { GitHubButton } from "~/components/github-button";
 import clsx from "clsx";
+import { AnimatedSection } from "~/components/animated-section";
 
 export const meta: MetaFunction = () => {
   return [
@@ -82,7 +83,9 @@ export default function Index() {
         <p className="paragraph text-center w-[352px] lg:w-[466px] text-description">Development agents use AI to tackle the toil in your backlog, so you can focus on what matters: hard problems, creative challenges, and over-engineering your dotfiles</p>
       </section>
 
-      <section className="px-[42px] flex flex-col lg:flex-row gap-16 lg:gap-[81px] pt-16 pb-16 lg:p-0 lg:h-[489px] items-center lg:justify-center">
+      <AnimatedSection
+        className="px-[42px] flex flex-col lg:flex-row gap-16 lg:gap-[81px] pt-16 pb-16 lg:p-0 lg:h-[489px] items-center lg:justify-center mix-blend-multiply"
+      >
         <img
           src="/assets/unchained.png"
           alt="hand gripping a broken chain"
@@ -107,9 +110,11 @@ export default function Index() {
             </div>
           </div>
         </div>
-      </section>
+      </AnimatedSection>
 
-      <section className="flex flex-col lg:flex-row-reverse py-16 gap-16 lg:gap-8 px-[42px] lg:p-0 lg:h-[502px] items-center lg:justify-center">
+      <AnimatedSection
+        className="flex flex-col lg:flex-row-reverse py-16 gap-16 lg:gap-8 px-[42px] lg:p-0 lg:h-[502px] items-center lg:justify-center mix-blend-multiply"
+      >
         <img
           src="/assets/person-robot-heart.png"
           alt="a persons and robots hands forming a heart"
@@ -119,9 +124,11 @@ export default function Index() {
           <span className="heading">Power and Responsibility</span>
           <p className="paragraph text-description lg:w-[466px]">Our agents can do anything a human developer can: they write code, run commands, and use the web. We&apos;re partnering with AI safety experts like Invariant Labs to balance innovation with security.</p>
         </div>
-      </section>
+      </AnimatedSection>
 
-      <section className="flex flex-col lg:flex-row items-center lg:justify-center px-[42px] gap-16 lg:gap-[100px] py-24">
+      <AnimatedSection
+        className="flex flex-col lg:flex-row items-center lg:justify-center px-[42px] gap-16 lg:gap-[100px] py-24"
+      >
         <ul data-testid="contributors" className="grid grid-cols-4 w-fit gap-[11px] lg:gap-4">
           {contributors.map((contributor) => (
             <li key={contributor.id}>
@@ -135,9 +142,11 @@ export default function Index() {
           <p className="paragraph text-description lg:w-[466px]">Thousands of developers are working together to build the AI-powered future they want to see. You can connect with us on GitHub, Slack, Twitter, or our blog.</p>
           <GitHubButton position="start" />
         </div>
-      </section>
+      </AnimatedSection>
 
-      <section className="px-[42px] flex flex-col gap-8 lg:gap-16 py-24 lg:py-[41px] lg:items-center">
+      <AnimatedSection
+        className="px-[42px] flex flex-col gap-8 lg:gap-16 py-24 lg:py-[41px] lg:items-center"
+      >
         <div className="flex flex-col gap-4 text-center h-[206px] lg:h-[126px]">
           <span className="heading">Choose your Engine</span>
           <p className="paragraph text-description lg:w-[466px]">Our agents are compatible with any large language model provider.</p>
@@ -150,7 +159,7 @@ export default function Index() {
           <TransistorLogo width={158} height={48} />
           <WorkcationLogo width={189} height={48} />
         </div>
-      </section>
+      </AnimatedSection>
 
       <section className="mb-[104px]">
         <YellowWaveSection
