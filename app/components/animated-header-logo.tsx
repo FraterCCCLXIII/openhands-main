@@ -9,7 +9,7 @@ interface AnimatedHeaderLogoProps {
   renderText?: boolean;
 }
 
-export const AnimatedHeaderLogo = ({ renderText = true }) => {
+export const AnimatedHeaderLogo: React.FC<AnimatedHeaderLogoProps> = ({ renderText = true }) => {
   const [textIsVisible, setTextIsVisible] = React.useState(true);
 
   React.useEffect(() => {
