@@ -1,7 +1,7 @@
 import React from "react";
 import { motion, LayoutGroup, AnimatePresence } from "framer-motion";
 import AllHandsText from "../svgs/all-hands-text.svg?react";
-import AllHandsLogo from "../svgs/all-hands-1.svg?react";
+import { getRandomLogo } from "~/utils/get-random-logo-variant";
 
 const ANIMATE_DURATION = 1000;
 
@@ -18,6 +18,8 @@ export const AnimatedHeaderLogo = () => {
     };
   }, []);
 
+  const Logo = React.useMemo(() => getRandomLogo(), []);
+
   return (
     <motion.div
       className="flex gap-2 items-center"
@@ -27,7 +29,7 @@ export const AnimatedHeaderLogo = () => {
     >
       <LayoutGroup>
         <motion.div layout>
-          <AllHandsLogo width={39} height={26} />
+          <Logo width={39} height={26} />
         </motion.div>
         <AnimatePresence>
           {textIsVisible && (
