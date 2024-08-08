@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, within } from "@testing-library/react";
 import { createRemixStub } from "@remix-run/testing";
 import Index, { loader } from "~/routes/_index/route";
@@ -12,6 +12,17 @@ const RemixStub = createRemixStub([
 ]);
 
 describe("Home Page", () => {
+  beforeEach(() => {
+    // Mock IntersectionObserver (`framer-motion` uses it)
+    const mockIntersectionObserver = vi.fn();
+    mockIntersectionObserver.mockReturnValue({
+      observe: vi.fn(),
+      unobserve: vi.fn(),
+      disconnect: vi.fn(),
+    });
+    window.IntersectionObserver = mockIntersectionObserver;
+  });
+
   describe("Repo statistics", () => {
     it("should render the repo statistics", async () => {
       render(<RemixStub />);

@@ -1,10 +1,10 @@
+import React from "react";
 import HamburgerMenuIcon from "../svgs/menu-icon.svg?react";
-import AllHandsText from "../svgs/all-hands-text.svg?react";
-import AllHandsLogo from "../svgs/all-hands-1.svg?react";
 import clsx from "clsx";
-import { Link, NavLink } from "@remix-run/react";
+import { NavLink, Link } from "@remix-run/react";
+import { AnimatedHeaderLogo } from "./animated-header-logo";
 
-const NavMap = [
+const NAV_MAP = [
   { name: "Research", to: "/research" },
   { name: "Products", to: "/pricing" },
   { name: "Company", to: "/company" },
@@ -19,10 +19,12 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ isRoot, onClickMenuButton }) => (
-  <header className={clsx(
-    "h-[83px] flex items-center relative w-screen px-[26px]",
-    !isRoot ? "justify-between" : "justify-center"
-  )}>
+  <header
+    className={clsx(
+      "h-[83px] flex items-center relative w-screen px-[26px]",
+      !isRoot ? "justify-between" : "justify-center"
+    )}
+  >
     {isRoot && (
       <button
         aria-label="Open Menu"
@@ -36,16 +38,14 @@ export const Header: React.FC<HeaderProps> = ({ isRoot, onClickMenuButton }) => 
     <Link
       prefetch="intent"
       to="/"
-      className="flex gap-2 items-center"
     >
-      <AllHandsLogo width={39} height={26} />
-      <AllHandsText width={126} height={21} />
+      <AnimatedHeaderLogo renderText={isRoot} />
     </Link>
 
     {!isRoot && (
       <nav>
         <ul className="font-poppins text-sm leading-[21px] font-normal flex gap-8">
-          {NavMap.map(({ name, to }) => (
+          {NAV_MAP.map(({ name, to }) => (
             <li key={name}>
               <NavLink
                 prefetch="intent"
