@@ -30,16 +30,15 @@ const getFilesInCurrentDirectory = async () => {
   return fs.readdirSync(directoryPath);
 }
 
-let ALL_BLOGS: BlogData[] = [];
-
-const initializeBlogs = async () => {
+const retrieveBlogData = async (): Promise<BlogData[]> => {
   const allFileNames = await getFilesInCurrentDirectory();
   const mdFileNames = allFileNames.filter((fileName) => fileName.endsWith(".md"));
   const PROMISES = mdFileNames.map(async (fileName) => bundleMDXFromName(fileName)) as unknown as Promise<BlogData>[];
-  ALL_BLOGS = await Promise.all(PROMISES);
-};
+  return Promise.all(PROMISES);
+}
 
-initializeBlogs();
-
-export const getAllBlogs = async (): Promise<BlogData[]> => ALL_BLOGS;
-export const getBlogByIndex = async (index: number): Promise<BlogData> => ALL_BLOGS[index];
+export const getAllBlogs = async (): Promise<BlogData[]> => retrieveBlogData();
+export const getBlogByIndex = async (index: number): Promise<BlogData> => {
+  const allBlogs = await retrieveBlogData();
+  return allBlogs[index];
+}
