@@ -12,6 +12,11 @@ import "./tailwind.css";
 import { Header } from "./components/header";
 import { Footer } from "./components/footer";
 import { Sidebar } from "./components/sidebar";
+import { LinksFunction } from "@remix-run/node";
+
+export const links: LinksFunction = () => ([
+  { rel: "stylesheet", href: 'https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Poppins:wght@400;600;700;800&display=swap' },
+]);
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const location = useLocation();

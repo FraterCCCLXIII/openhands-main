@@ -1,15 +1,37 @@
-import { ContributorGridItem } from "~/components/contributor-grid-item";
 import { YellowWaveSection } from "~/components/yellow-wave-section";
 import { MemberCard } from "./member-card";
 import { SectionHeading } from "../../components/section-heading";
-import { json, type MetaFunction } from "@remix-run/node";
+import { defer, LinksFunction, type MetaFunction } from "@remix-run/node";
 import { fetchRepositoryContributors } from "~/api";
-import { useLoaderData } from "@remix-run/react";
+import { Await, useLoaderData } from "@remix-run/react";
+import { Suspense } from "react";
+import { ContributorGrid, ContributorGridPlaceholder } from "~/components/contributor-grid-placeholder";
+
+export const links: LinksFunction = () => ([
+  { rel: "preload", href: "/assets/founders/robert.jpg", as: "image" },
+  { rel: "preload", href: "/assets/founders/graham.jpg", as: "image" },
+  { rel: "preload", href: "/assets/founders/xingyao.jpg", as: "image" },
+]);
 
 const members: Member[] = [
-  { src: "", name: "Robert Brennan", title: "Cofounder", description: "Made with the collaborative help of over 40 engineers in the opensource community. OpenDev changes the way you can create software." },
-  { src: "", name: "Graham Neubig", title: "Cofounder", description: "Made with the collaborative help of over 40 engineers in the opensource community. OpenDev changes the way you can create software." },
-  { src: "", name: "Xingyao Wang", title: "Cofounder", description: "Made with the collaborative help of over 40 engineers in the opensource community. OpenDev changes the way you can create software." },
+  {
+    src: "/assets/founders/robert.jpg",
+    name: "Robert Brennan",
+    title: "Cofounder",
+    description: "Made with the collaborative help of over 40 engineers in the opensource community. OpenDev changes the way you can create software."
+  },
+  {
+    src: "/assets/founders/graham.jpg",
+    name: "Graham Neubig",
+    title: "Cofounder",
+    description: "Made with the collaborative help of over 40 engineers in the opensource community. OpenDev changes the way you can create software."
+  },
+  {
+    src: "/assets/founders/xingyao.jpg",
+    name: "Xingyao Wang",
+    title: "Cofounder",
+    description: "Made with the collaborative help of over 40 engineers in the opensource community. OpenDev changes the way you can create software."
+  },
 ];
 
 export const meta: MetaFunction = () => {
@@ -20,8 +42,8 @@ export const meta: MetaFunction = () => {
 };
 
 export const loader = async () => {
-  const contributors = await fetchRepositoryContributors("opendevin", "opendevin", 50);
-  return json({ contributors }, { headers: { "Cache-Control": "max-age=1200" } });
+  const contributors = fetchRepositoryContributors("opendevin", "opendevin", 50);
+  return defer({ contributors }, { headers: { "Cache-Control": "max-age=1200" } });
 }
 
 const Company = () => {
@@ -39,13 +61,13 @@ const Company = () => {
           subheading="OUR CONTRIBUTORS"
           heading="The Internet of People"
         />
-        <ul className="grid grid-cols-10 gap-4 py-[45px]">
-          {contributors.map((contributor) => (
-            <li key={contributor.id}>
-              <ContributorGridItem contributor={contributor} />
-            </li>
-          ))}
-        </ul>
+        <div className="py-[45px]">
+          <Suspense fallback={<ContributorGridPlaceholder variant="large" />}>
+            <Await resolve={contributors}>
+              {(contributors) => <ContributorGrid contributors={contributors} variant="large" />}
+            </Await>
+          </Suspense>
+        </div>
       </section>
 
       <section>

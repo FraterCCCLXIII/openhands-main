@@ -4,18 +4,22 @@ import { SectionHeading } from "~/components/section-heading";
 import { BlogCard } from "./blog-card";
 import { PlaceholderImage } from "./placeholder-image";
 import { MetaFunction } from "@remix-run/node";
+import { blogAPI } from "~/posts";
 
 export const meta: MetaFunction = () => ([
   { title: "All Hands Blog - Insights and Innovations" },
   { name: "description", content: "Read the latest insights and innovations from All Hands." },
 ]);
 
-export const loader = () => {
-  return json({ blogs: Array.from({ length: 3 }) });
+export const loader = async () => {
+  const blogs = await blogAPI.getAllBlogs();
+  blogs.sort((a, b) => new Date(b.frontmatter.date).getTime() - new Date(a.frontmatter.date).getTime());
+  return json({ blogs }, { headers: { "Cache-Control": "max-age=300" } });
 };
 
 const Blog = () => {
   const { blogs } = useLoaderData<typeof loader>();
+  const latestBlog = blogs[0];
 
   return (
     <main>
@@ -33,22 +37,37 @@ const Blog = () => {
       </section>
 
       <section className="flex py-[45px] px-[42px] gap-8">
-        <PlaceholderImage className="w-[600px] h-[370px]" />
+        {!latestBlog.frontmatter.coverImage && <PlaceholderImage className="w-[600px] h-[370px]" />}
+        {latestBlog.frontmatter.coverImage && (
+          <img
+            src={latestBlog.frontmatter.coverImage}
+            alt="blog cover"
+            className="rounded-[10px] bg-[#ACC8FF] flex items-center justify-center w-[600px] h-[370px] object-contain"
+          />
+        )}
         <div className="flex flex-col gap-4">
-          <h2 className="heading">Lorem Ipsum</h2>
-          <p className="paragraph text-description w-[466px]">Made with the collaborative help of over 40 engineers in the opensource community. OpenDev changes the way you can create software.</p>
-          <Link to="lorem-ipsum" className="paragraph font-semibold text-description">Read More</Link>
+          <h2 className="heading">{latestBlog.frontmatter.title}</h2>
+          <p className="paragraph text-description w-[466px]">{latestBlog.frontmatter.excerpt}</p>
+          <Link
+            to={blogs.findIndex((blog) => blog === latestBlog).toString()}
+            className="paragraph font-semibold text-description">
+            Read More
+          </Link>
         </div>
       </section>
 
       <section className="flex flex-col items-center">
-        <div className="flex">
-          {blogs.map((_, index) => (
+        <div className="grid grid-cols-3">
+          {blogs.map((blog, index) => (
             <BlogCard
               key={index}
-              blogId={`lorem-ipsum-${index}`}
-              title="Lorem Ipsum"
-              description="Made with the collaborative help of over 40 engineers in the opensource community. OpenDev changes the way you can create software."
+              blogId={index.toString()}
+              title={blog.frontmatter.title}
+              description={blog.frontmatter.excerpt}
+              img={{
+                src: blog.frontmatter.coverImage,
+                alt: "blog cover",
+              }}
             />
           ))}
         </div>

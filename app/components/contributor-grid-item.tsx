@@ -1,3 +1,7 @@
+export const ContributorGridItemPlaceholder = () => (
+  <div className="bg-placeholder rounded-[7px] w-[76px] aspect-square lg:w-[113px]" />
+);
+
 interface ContributorGridItemProps {
   contributor: Contributor;
 }

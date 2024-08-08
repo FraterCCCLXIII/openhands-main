@@ -1,7 +1,8 @@
 import clsx from "clsx";
-import X from "../svgs/x.svg?react";
-import TripleWowYellow from "../svgs/triple-wow-yellow.svg?react";
+import X from "./svgs/x.svg?react";
+import TripleWowYellow from "./svgs/triple-wow-yellow.svg?react";
 import { NavLink } from "@remix-run/react";
+import { motion } from "framer-motion";
 
 const NAV_MAP = [
   { name: "Home", to: "/" },
@@ -17,13 +18,15 @@ interface SidebarProps {
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ isHidden, onClose }) => (
-  <aside
+  <motion.aside
+    hidden={isHidden}
+    initial={{ x: "-100%" }}
+    animate={{ x: isHidden ? "-100%" : 0 }}
+    transition={{ type: "spring", stiffness: 300, damping: 35 }}
     data-testid="sidebar"
     className={clsx(
-      "bg-black fixed top-0 left-0 w-screen h-screen lg:w-[323px] items-center lg:items-start justify-center z-10",
-      isHidden ? "hidden" : "flex",
+      "bg-black flex fixed top-0 left-0 w-screen h-screen lg:w-[323px] items-center lg:items-start justify-center z-10",
     )}
-    hidden={isHidden}
   >
     <button
       onClick={onClose}
@@ -41,6 +44,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isHidden, onClose }) => (
           >
             <NavLink
               to={item.to}
+              prefetch="intent"
               className="relative"
               onClick={onClose}
             >
@@ -55,5 +59,5 @@ export const Sidebar: React.FC<SidebarProps> = ({ isHidden, onClose }) => (
         ))}
       </ul>
     </nav>
-  </aside>
+  </motion.aside>
 );
