@@ -2,13 +2,18 @@ import React from "react";
 import { json, useLoaderData } from "@remix-run/react";
 import { formatDate } from "~/utils/format-date";
 import { PlaceholderImage } from "../blog/placeholder-image";
-import { MetaFunction } from "@remix-run/node";
+import { LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
 
 import { getMDXComponent } from 'mdx-bundler/client';
-import { code, frontmatter } from "~/posts/blog-1/bundled";
+import invariant from "tiny-invariant";
+import { ALL_BLOGS } from "~/posts";
 
 
-export const loader = async () => {
+export const loader = async ({ params }: LoaderFunctionArgs) => {
+  invariant(params.id, "No blog ID provided");
+  const id = Number(params.id);
+  const { code, frontmatter } = ALL_BLOGS[id];
+
   return json({
     title: frontmatter.title,
     date: frontmatter.date,
