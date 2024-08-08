@@ -1,4 +1,4 @@
-import { json, type LinksFunction, type MetaFunction } from "@remix-run/node";
+import { defer, type LinksFunction, type MetaFunction } from "@remix-run/node";
 import GitHubLogo from "../../svgs/github.svg?react";
 import TripleWow from "../../svgs/triple-wow.svg?react";
 import Hierarchy from "../../svgs/hierarchy.svg?react";
@@ -9,14 +9,15 @@ import MirageLogo from "../../svgs/mirage-logo.svg?react";
 import StaticKitLogo from "../../svgs/statickit-logo.svg?react";
 import TransistorLogo from "../../svgs/transistor-logo.svg?react";
 import WorkcationLogo from "../../svgs/workcation-logo.svg?react";
-import { Link, useLoaderData } from "@remix-run/react";
+import { Await, Link, useLoaderData } from "@remix-run/react";
 import { formatThousands } from "~/utils/format-thousands";
 import { formatLastCommit } from "~/utils/format-last-commit";
 import { fetchBranch, fetchRepositoryContributors, fetchRepositoryStatistics } from "~/api";
-import { ContributorGridItem } from "~/components/contributor-grid-item";
 import { YellowWaveSection } from "~/components/yellow-wave-section";
 import { GitHubButton } from "~/components/github-button";
 import clsx from "clsx";
+import { Suspense } from "react";
+import { ContributorGrid, ContributorGridPlaceholder } from "~/components/contributor-grid-placeholder";
 
 export const meta: MetaFunction = () => {
   return [
@@ -33,15 +34,13 @@ export const links: LinksFunction = () => ([
 ]);
 
 export const loader = async () => {
-  // TODO: defer fetching
-  const contributors = await fetchRepositoryContributors("opendevin", "opendevin");
+  const contributors = fetchRepositoryContributors("opendevin", "opendevin");
   const statistics = await fetchRepositoryStatistics("opendevin", "opendevin");
   const branch = await fetchBranch("opendevin", "opendevin", "main");
 
-  return json(
+  return defer(
     {
-      contributors: contributors.slice(0, 12),
-      contributorsCount: formatThousands(contributors.length),
+      contributors,
       stars: formatThousands(statistics.stargazers_count),
       lastCommit: formatLastCommit(branch.commit.commit.author.date),
     },
@@ -52,7 +51,7 @@ export const loader = async () => {
 };
 
 export default function Index() {
-  const { contributors, contributorsCount, stars, lastCommit } = useLoaderData<typeof loader>();
+  const { contributors, stars, lastCommit } = useLoaderData<typeof loader>();
 
   return (
     <main>
@@ -99,7 +98,7 @@ export default function Index() {
             </div>
             <div className="flex gap-[6px]">
               <Users width={24} height={24} />
-              <span>{contributorsCount} Contributors</span>
+              <span>{0} Contributors</span>
             </div>
             <div className="flex gap-[6px]">
               <Hierarchy width={24} height={24} />
@@ -122,13 +121,11 @@ export default function Index() {
       </section>
 
       <section className="flex flex-col lg:flex-row items-center lg:justify-center px-[42px] gap-16 lg:gap-[100px] py-24">
-        <ul data-testid="contributors" className="grid grid-cols-4 w-fit gap-[11px] lg:gap-4">
-          {contributors.map((contributor) => (
-            <li key={contributor.id}>
-              <ContributorGridItem contributor={contributor} />
-            </li>
-          ))}
-        </ul>
+        <Suspense fallback={<ContributorGridPlaceholder variant="small" />}>
+          <Await resolve={contributors}>
+            {(contributors) => <ContributorGrid contributors={contributors} variant="small" />}
+          </Await>
+        </Suspense>
 
         <div className="flex flex-col gap-4 lg:w-[500px]">
           <span className="heading">Join the Community</span>

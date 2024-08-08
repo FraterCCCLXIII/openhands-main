@@ -49,6 +49,7 @@ export const Header: React.FC<HeaderProps> = ({ isRoot, onClickMenuButton }) => 
           {NavMap.map(({ name, to }) => (
             <li key={name}>
               <NavLink
+                prefetch="intent"
                 to={to}
                 className={({ isActive }) => isActive ? "underline underline-offset-2" : ""}
               >
