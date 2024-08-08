@@ -1,5 +1,5 @@
 import React from "react";
-import HamburgerMenuIcon from "../svgs/menu-icon.svg?react";
+import HamburgerMenuIcon from "./svgs/menu-icon.svg?react";
 import clsx from "clsx";
 import { NavLink, Link } from "@remix-run/react";
 import { AnimatedHeaderLogo } from "./animated-header-logo";

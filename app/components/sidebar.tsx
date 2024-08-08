@@ -1,6 +1,6 @@
 import clsx from "clsx";
-import X from "../svgs/x.svg?react";
-import TripleWowYellow from "../svgs/triple-wow-yellow.svg?react";
+import X from "./svgs/x.svg?react";
+import TripleWowYellow from "./svgs/triple-wow-yellow.svg?react";
 import { NavLink } from "@remix-run/react";
 import { motion } from "framer-motion";
 

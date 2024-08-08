@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import AllHandsLogo from "~/svgs/all-hands-logo.svg?react";
+import AllHandsLogo from "~/components/svgs/all-hands-logo.svg?react";
 
 interface PlaceholderImageProps {
   className?: React.HTMLAttributes<HTMLDivElement>["className"];

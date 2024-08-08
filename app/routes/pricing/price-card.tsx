@@ -1,6 +1,6 @@
 import clsx from "clsx";
 import { Button } from "~/components/button";
-import CheckCircle from "~/svgs/check-circle-1.svg?react";
+import CheckCircle from "~/components/svgs/check-circle-1.svg?react";
 import { MostPopularHighlight } from "./most-popular-highlight";
 
 interface PriceLabelProps {

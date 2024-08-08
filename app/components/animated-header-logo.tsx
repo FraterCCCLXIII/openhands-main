@@ -1,6 +1,6 @@
 import React from "react";
 import { motion, LayoutGroup, AnimatePresence } from "framer-motion";
-import AllHandsText from "../svgs/all-hands-text.svg?react";
+import AllHandsText from "./svgs/all-hands-text.svg?react";
 import { getRandomLogo } from "~/utils/get-random-logo-variant";
 
 const ANIMATE_DURATION = 1000;

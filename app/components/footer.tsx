@@ -1,7 +1,7 @@
-import AllHandsLogo from "../svgs/all-hands-1.svg?react";
-import GitHubCircleLogo from "../svgs/gh-logo.svg?react";
-import FacebookLogo from "../svgs/fb-logo.svg?react";
-import InstagramLogo from "../svgs/insta-logo.svg?react";
+import AllHandsLogo from "./svgs/all-hands-1.svg?react";
+import GitHubCircleLogo from "./svgs/gh-logo.svg?react";
+import FacebookLogo from "./svgs/fb-logo.svg?react";
+import InstagramLogo from "./svgs/insta-logo.svg?react";
 import { Link } from "@remix-run/react";
 
 export const Footer = () => (
