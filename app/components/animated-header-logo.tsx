@@ -5,7 +5,11 @@ import { getRandomLogo } from "~/utils/get-random-logo-variant";
 
 const ANIMATE_DURATION = 1000;
 
-export const AnimatedHeaderLogo = () => {
+interface AnimatedHeaderLogoProps {
+  renderText?: boolean;
+}
+
+export const AnimatedHeaderLogo = ({ renderText = true }) => {
   const [textIsVisible, setTextIsVisible] = React.useState(true);
 
   React.useEffect(() => {
@@ -32,7 +36,7 @@ export const AnimatedHeaderLogo = () => {
           <Logo width={39} height={26} />
         </motion.div>
         <AnimatePresence>
-          {textIsVisible && (
+          {renderText && textIsVisible && (
             <motion.div
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}

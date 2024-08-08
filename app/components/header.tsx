@@ -39,7 +39,7 @@ export const Header: React.FC<HeaderProps> = ({ isRoot, onClickMenuButton }) => 
       aria-label="All Hands Home"
       to="/"
     >
-      <AnimatedHeaderLogo />
+      <AnimatedHeaderLogo renderText={isRoot} />
     </Link>
 
     {!isRoot && (
