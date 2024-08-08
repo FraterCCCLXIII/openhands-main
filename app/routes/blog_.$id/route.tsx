@@ -11,9 +11,13 @@ import { getBlogByIndex } from "~/posts";
 
 export const loader = async ({ params }: LoaderFunctionArgs) => {
   invariant(params.id, "No blog ID provided");
-  const id = Number(params.id);
-  const { code, frontmatter } = await getBlogByIndex(id);
 
+  const id = Number(params.id);
+  const blog = await getBlogByIndex(id);
+
+  invariant(blog, "No blog found");
+
+  const { code, frontmatter } = blog;
   return json({
     title: frontmatter.title,
     date: frontmatter.date,
@@ -48,7 +52,7 @@ const BlogDetails = () => {
           <img
             src={data.cover}
             alt="blog cover"
-            className="rounded-[10px] bg-[#ACC8FF] flex items-center justify-center aspect-video"
+            className="rounded-[10px] bg-[#ACC8FF] flex items-center justify-center aspect-video object-contain"
           />
         )}
       </figure>
@@ -72,7 +76,7 @@ const BlogDetails = () => {
         <section className="paragraph flex flex-col gap-4">
           <Component
             components={{
-              a: (props) => <a className="text-blue-600" {...props}>{props.children}</a>,
+              a: (props) => <a rel="noreferrer" target="_blank" className="text-blue-600" {...props}>{props.children}</a>,
               h2: (props) => <h2 className="font-quincy text-5xl" {...props}>{props.children}</h2>,
               li: (props) => <li className="list-disc ml-5" {...props}>{props.children}</li>,
               img: (props) => <img className="rounded-lg" {...props} alt={props.alt} />,
@@ -84,5 +88,12 @@ const BlogDetails = () => {
     </article>
   );
 };
+
+export const ErrorBoundary = () => (
+  <div className="flex flex-col items-center gap-4 text-center py-[45px]">
+    <h1 className="heading">Error</h1>
+    <p className="paragraph">There was an error loading the blog.</p>
+  </div>
+);
 
 export default BlogDetails;

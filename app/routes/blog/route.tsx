@@ -13,12 +13,13 @@ export const meta: MetaFunction = () => ([
 
 export const loader = async () => {
   const blogs = await getAllBlogs();
+  blogs.sort((a, b) => new Date(b.frontmatter.date).getTime() - new Date(a.frontmatter.date).getTime());
   return json({ blogs });
 };
 
 const Blog = () => {
   const { blogs } = useLoaderData<typeof loader>();
-  const latestBlog = blogs[blogs.length - 1];
+  const latestBlog = blogs[0];
 
   return (
     <main>
@@ -36,7 +37,14 @@ const Blog = () => {
       </section>
 
       <section className="flex py-[45px] px-[42px] gap-8">
-        <PlaceholderImage className="w-[600px] h-[370px]" />
+        {!latestBlog.frontmatter.coverImage && <PlaceholderImage className="w-[600px] h-[370px]" />}
+        {latestBlog.frontmatter.coverImage && (
+          <img
+            src={latestBlog.frontmatter.coverImage}
+            alt="blog cover"
+            className="rounded-[10px] bg-[#ACC8FF] flex items-center justify-center w-[600px] h-[370px] object-contain"
+          />
+        )}
         <div className="flex flex-col gap-4">
           <h2 className="heading">{latestBlog.frontmatter.title}</h2>
           <p className="paragraph text-description w-[466px]">{latestBlog.frontmatter.excerpt}</p>
@@ -56,6 +64,10 @@ const Blog = () => {
               blogId={index.toString()}
               title={blog.frontmatter.title}
               description={blog.frontmatter.excerpt}
+              img={{
+                src: blog.frontmatter.coverImage,
+                alt: "blog cover",
+              }}
             />
           ))}
         </div>
