@@ -2,8 +2,7 @@ import HamburgerMenuIcon from "../svgs/menu-icon.svg?react";
 import AllHandsText from "../svgs/all-hands-text.svg?react";
 import AllHandsLogo from "../svgs/all-hands-1.svg?react";
 import clsx from "clsx";
-import { NavLink } from "@remix-run/react";
-import { Link } from "react-router-dom";
+import { Link, NavLink } from "@remix-run/react";
 
 const NavMap = [
   { name: "Research", to: "/research" },
@@ -35,7 +34,7 @@ export const Header: React.FC<HeaderProps> = ({ isRoot, onClickMenuButton }) => 
     )}
 
     <Link
-      aria-label="All Hands Home"
+      prefetch="intent"
       to="/"
       className="flex gap-2 items-center"
     >

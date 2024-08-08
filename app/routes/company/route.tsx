@@ -1,16 +1,37 @@
 import { YellowWaveSection } from "~/components/yellow-wave-section";
 import { MemberCard } from "./member-card";
 import { SectionHeading } from "../../components/section-heading";
-import { defer, type MetaFunction } from "@remix-run/node";
+import { defer, LinksFunction, type MetaFunction } from "@remix-run/node";
 import { fetchRepositoryContributors } from "~/api";
 import { Await, useLoaderData } from "@remix-run/react";
 import { Suspense } from "react";
 import { ContributorGrid, ContributorGridPlaceholder } from "~/components/contributor-grid-placeholder";
 
+export const links: LinksFunction = () => ([
+  { rel: "preload", href: "/assets/founders/robert.jpg", as: "image" },
+  { rel: "preload", href: "/assets/founders/graham.jpg", as: "image" },
+  { rel: "preload", href: "/assets/founders/xingyao.jpg", as: "image" },
+]);
+
 const members: Member[] = [
-  { src: "", name: "Robert Brennan", title: "Cofounder", description: "Made with the collaborative help of over 40 engineers in the opensource community. OpenDev changes the way you can create software." },
-  { src: "", name: "Graham Neubig", title: "Cofounder", description: "Made with the collaborative help of over 40 engineers in the opensource community. OpenDev changes the way you can create software." },
-  { src: "", name: "Xingyao Wang", title: "Cofounder", description: "Made with the collaborative help of over 40 engineers in the opensource community. OpenDev changes the way you can create software." },
+  {
+    src: "/assets/founders/robert.jpg",
+    name: "Robert Brennan",
+    title: "Cofounder",
+    description: "Made with the collaborative help of over 40 engineers in the opensource community. OpenDev changes the way you can create software."
+  },
+  {
+    src: "/assets/founders/graham.jpg",
+    name: "Graham Neubig",
+    title: "Cofounder",
+    description: "Made with the collaborative help of over 40 engineers in the opensource community. OpenDev changes the way you can create software."
+  },
+  {
+    src: "/assets/founders/xingyao.jpg",
+    name: "Xingyao Wang",
+    title: "Cofounder",
+    description: "Made with the collaborative help of over 40 engineers in the opensource community. OpenDev changes the way you can create software."
+  },
 ];
 
 export const meta: MetaFunction = () => {

@@ -41,6 +41,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isHidden, onClose }) => (
           >
             <NavLink
               to={item.to}
+              prefetch="intent"
               className="relative"
               onClick={onClose}
             >

@@ -18,16 +18,16 @@ export const Footer = () => (
               <Link to="https://github.com/OpenDevin" rel="noreferrer" target="_blank">GitHub</Link>
             </li>
             <li>
-              <Link to="blog">Blog</Link>
+              <Link prefetch="intent" to="blog">Blog</Link>
             </li>
             <li>
-              <Link to="company">About Us</Link>
+              <Link prefetch="intent" to="company">About Us</Link>
             </li>
             <li>
-              <Link to="tos">Terms of Service</Link>
+              <Link prefetch="intent" to="tos">Terms of Service</Link>
             </li>
             <li>
-              <Link to="pricing">Pricing</Link>
+              <Link prefetch="intent" to="pricing">Pricing</Link>
             </li>
           </ul>
         </nav>
