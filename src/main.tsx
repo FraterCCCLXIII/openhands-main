@@ -7,6 +7,7 @@ import Home, { loader as homeLoader } from './routes/home';
 import About from './routes/about';
 import TermsOfService from './routes/route';
 import Blog, { loader as blogLoader } from './routes/blog';
+import BlogDetails, { loader as blogDetailsLoaders, ErrorBoundary as BlogDetailsErrorBoundary } from './routes/blog.$id';
 
 const router = createBrowserRouter([
   {
@@ -26,6 +27,12 @@ const router = createBrowserRouter([
         path: "/blog",
         element: <Blog />,
         loader: blogLoader,
+      },
+      {
+        path: "/blog/:id",
+        element: <BlogDetails />,
+        errorElement: <BlogDetailsErrorBoundary />,
+        loader: blogDetailsLoaders,
       },
       {
         path: "tos",

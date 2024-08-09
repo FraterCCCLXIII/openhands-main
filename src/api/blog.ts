@@ -8,11 +8,11 @@ class BlogAPI {
     this.posts = RAW_POSTS.map((post) => matter(post)) as unknown as Post[];
   }
 
-  public async getAllBlogs(): Promise<Post[]> {
+  public getAllBlogs(): Post[] {
     return this.posts;
   }
 
-  public async getBlogByIndex(index: number): Promise<Post> {
+  public getBlogByIndex(index: number): Post {
     return this.posts[index];
   }
 }
