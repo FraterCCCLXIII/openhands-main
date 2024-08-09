@@ -12,7 +12,7 @@
 @layer base {
   html,
   body {
-    @apply font-poppins
+    @apply font-poppins overscroll-y-none
   }
 }
 
