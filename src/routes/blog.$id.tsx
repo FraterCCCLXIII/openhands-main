@@ -1,3 +1,4 @@
+import { Helmet } from "react-helmet-async";
 import Markdown from "react-markdown";
 import { LoaderFunctionArgs, useLoaderData } from "react-router-dom";
 import invariant from "tiny-invariant";
@@ -40,6 +41,18 @@ const BlogDetails = () => {
 
   return (
     <article className="flex flex-col items-center py-[45px] gap-8">
+      <Helmet>
+        <title>{data.title}</title>
+        <meta
+          name="description"
+          content={data.excerpt}
+        />
+        <meta
+          property="og:image"
+          content={data.ogImage}
+        />
+      </Helmet>
+
       <figure className="w-[600px]">
         {!data.cover && <PlaceholderImage className="aspect-video" />}
         {data.cover && (

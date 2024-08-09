@@ -1,3 +1,4 @@
+import { Helmet } from "react-helmet-async";
 import { ContributorGridPlaceholder } from "~/components/contributor-grid-placeholder";
 import { MemberCard } from "~/components/member-card";
 import { SectionHeading } from "~/components/section-heading";
@@ -27,6 +28,14 @@ const members: Member[] = [
 const About = () => {
   return (
     <main>
+      <Helmet>
+        <title>All Hands AI - About Us</title>
+        <meta
+          name="description"
+          content="Discover the talented team behind OpenDevin and how we leverage the power of collaboration to innovate in software development."
+        />
+      </Helmet>
+
       <section className="flex flex-col items-center gap-4 text-center py-[86px]">
         <h1 className="heading-large w-[763px] h-[266px]">Building the future takes a lot of talent. So we invited the internet.</h1>
         <p className="paragraph w-[466px] text-description">Made with the collaborative help of over 100 engineers in the opensource community. OpenDev changes the way you can create software.</p>

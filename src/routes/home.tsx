@@ -13,6 +13,7 @@ import { formatLastCommit } from "~/utils/format-last-commit";
 import { formatThousands } from "~/utils/format-thousands";
 import BreakFree from "~/svgs/break-free.svg?react";
 import HeartHands from "~/svgs/heart-hands.svg?react";
+import { Helmet } from "react-helmet-async";
 
 export const loader = () => {
   return {
@@ -27,6 +28,14 @@ const Home = () => {
 
   return (
     <main>
+      <Helmet>
+        <title>All Hands AI</title>
+        <meta
+          name="description"
+          content="Welcome to the All Hands AI website!"
+        />
+      </Helmet>
+
       <section
         className="flex flex-col items-center gap-4 h-[391px] lg:h-auto pt-[50px] lg:py-[86px]"
       >

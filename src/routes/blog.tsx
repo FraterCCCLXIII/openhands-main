@@ -1,3 +1,4 @@
+import { Helmet } from "react-helmet-async";
 import { Link, useLoaderData } from "react-router-dom";
 import { blogAPI } from "~/api/blog";
 import { BlogCard } from "~/components/blog-card";
@@ -17,6 +18,14 @@ const Blog = () => {
 
   return (
     <main>
+      <Helmet>
+        <title>All Hands AI Blog - Insights and Innovations</title>
+        <meta
+          name="description"
+          content="Read the latest insights and innovations from All Hands AI."
+        />
+      </Helmet>
+
       <section>
         <SectionHeading
           isHero
