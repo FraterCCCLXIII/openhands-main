@@ -21,8 +21,8 @@ const router = createBrowserRouter([
         loader: homeLoader,
         handle: {
           meta: {
-            title: "All Hands",
-            description: "Welcome to the All Hands website!",
+            title: "All Hands AI",
+            description: "Welcome to the All Hands AI website!",
           },
         },
       },
@@ -31,7 +31,7 @@ const router = createBrowserRouter([
         element: <About />,
         handle: {
           meta: {
-            title: "All Hands - Company",
+            title: "All Hands AI - Company",
             description: "Discover the talented team behind OpenDevin and how we leverage the power of collaboration to innovate in software development.",
           },
         },
@@ -42,8 +42,8 @@ const router = createBrowserRouter([
         loader: blogLoader,
         handle: {
           meta: {
-            title: "All Hands Blog - Insights and Innovations",
-            description: "Read the latest insights and innovations from All Hands.",
+            title: "All Hands AI Blog - Insights and Innovations",
+            description: "Read the latest insights and innovations from All Hands AI.",
           },
         },
       },
@@ -59,8 +59,8 @@ const router = createBrowserRouter([
         element: <TermsOfService />,
         handle: {
           meta: {
-            title: "All Hands - Terms of Service",
-            description: "All Hands terms of service agreement.",
+            title: "All Hands AI - Terms of Service",
+            description: "All Hands AI terms of service agreement.",
           },
         },
       }
