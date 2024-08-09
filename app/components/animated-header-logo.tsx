@@ -10,18 +10,6 @@ interface AnimatedHeaderLogoProps {
 }
 
 export const AnimatedHeaderLogo: React.FC<AnimatedHeaderLogoProps> = ({ renderText = true }) => {
-  const [textIsVisible, setTextIsVisible] = React.useState(true);
-
-  React.useEffect(() => {
-    const timeout = setTimeout(() => {
-      setTextIsVisible(false);
-    }, ANIMATE_DURATION * 2);
-
-    return () => {
-      clearTimeout(timeout);
-    };
-  }, []);
-
   const Logo = React.useMemo(() => getRandomLogo(), []);
 
   return (
@@ -32,15 +20,19 @@ export const AnimatedHeaderLogo: React.FC<AnimatedHeaderLogoProps> = ({ renderTe
       transition={{ duration: ANIMATE_DURATION / 1000 }}
     >
       <LayoutGroup>
-        <motion.div layout>
+        <motion.div
+          layout
+          transition={{ type: "spring", stiffness: 300, damping: 35, duration: ANIMATE_DURATION / 1000 }}
+        >
           <Logo width={39} height={26} />
         </motion.div>
-        <AnimatePresence>
-          {renderText && textIsVisible && (
+        <AnimatePresence mode="popLayout">
+          {renderText && (
             <motion.div
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: ANIMATE_DURATION / 1000 }}
+              initial={{ opacity: 0, x: 50 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 70 }}
+              transition={{ type: "spring", stiffness: 300, damping: 35, duration: ANIMATE_DURATION / 1000 }}
             >
               <AllHandsText width={126} height={21} />
             </motion.div>
