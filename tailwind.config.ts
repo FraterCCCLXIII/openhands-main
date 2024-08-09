@@ -4,7 +4,17 @@ export default {
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        description: "#292A36",
+        placeholder: "#D4CABD",
+        party: "#FFE165",
+      },
+      fontFamily: {
+        poppins: ["Poppins", "sans-serif"],
+        quincy: ["Quincy CF", "sans-serif"],
+      }
+    },
   },
   plugins: [],
 }

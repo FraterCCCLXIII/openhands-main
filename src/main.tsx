@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import './index.css';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import Home, { loader } from './routes/home';
 
 const router = createBrowserRouter([
   {
@@ -11,7 +12,8 @@ const router = createBrowserRouter([
     children: [
       {
         path: "/",
-        element: <div className='bg-green-500'>Root</div>,
+        element: <Home />,
+        loader,
       },
       {
         path: "/about",
