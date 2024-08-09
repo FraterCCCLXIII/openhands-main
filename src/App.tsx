@@ -8,7 +8,6 @@ import { Helmet } from "react-helmet-async";
 const App = () => {
   const matches = useMatches();
   const match = matches.reverse().find(match => match.handle?.meta);
-  console.log(match?.handle?.meta);
 
   const [isSidebarHidden, setIsSidebarHidden] = React.useState(true);
   const sidebarRef = React.useRef<HTMLDivElement>(null);
