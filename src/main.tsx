@@ -5,7 +5,7 @@ import './index.css';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import Home, { loader as homeLoader } from './routes/home';
 import About from './routes/about';
-import TermsOfService from './routes/route';
+import TermsOfService from './routes/tos';
 import Blog, { loader as blogLoader } from './routes/blog';
 import BlogDetails, { loader as blogDetailsLoaders, ErrorBoundary as BlogDetailsErrorBoundary } from './routes/blog.$id';
 
