@@ -11,6 +11,8 @@ import { GitHubButton } from "~/components/github-button";
 import { AnimatedSection } from "~/components/animated-section";
 import { formatLastCommit } from "~/utils/format-last-commit";
 import { formatThousands } from "~/utils/format-thousands";
+import BreakFree from "~/svgs/break-free.svg?react";
+import HeartHands from "~/svgs/heart-hands.svg?react";
 
 export const loader = () => {
   return {
@@ -59,14 +61,9 @@ const Home = () => {
       </AnimatedSection>
 
       <section
-        className="px-[42px] flex flex-col lg:flex-row gap-16 lg:gap-[81px] pt-16 pb-16 lg:p-0 lg:h-[489px] items-center lg:justify-center mix-blend-multiply"
+        className="px-[42px] flex flex-col lg:flex-row gap-16 lg:gap-[81px] pt-16 pb-16 lg:p-0 lg:h-[489px] items-center lg:justify-center"
       >
-        <img
-          src="/assets/unchained.png"
-          alt="hand gripping a broken chain"
-          className="mix-blend-multiply w-[318px] lg:w-[525px]"
-        />
-
+        <BreakFree className="w-[318px] lg:w-[329px]" />
         <div className="flex flex-col gap-4 lg:w-[500px]">
           <span className="heading">Free as in Freedom</span>
           <p className="paragraph text-description lg:w-[466px]">We believe agentic technology is too important to be controlled by a few corporations. So we&apos;re building all our agents in the open on GitHub, under the MIT license.</p>
@@ -88,13 +85,9 @@ const Home = () => {
       </section>
 
       <section
-        className="flex flex-col lg:flex-row-reverse py-16 gap-16 lg:gap-8 px-[42px] lg:p-0 lg:h-[502px] items-center lg:justify-center mix-blend-multiply"
+        className="flex flex-col lg:flex-row-reverse py-16 gap-16 lg:gap-8 px-[42px] lg:p-0 lg:h-[502px] items-center lg:justify-center"
       >
-        <img
-          src="/assets/person-robot-heart.png"
-          alt="a persons and robots hands forming a heart"
-          className="mix-blend-multiply w-[326px] lg:w-[503px]"
-        />
+        <HeartHands className="w-[326px] lg:w-[312px]" />
         <div className="flex flex-col gap-4 lg:w-[500px]">
           <span className="heading">Power and Responsibility</span>
           <p className="paragraph text-description lg:w-[466px]">Our agents can do anything a human developer can: they write code, run commands, and use the web. We&apos;re partnering with AI safety experts like Invariant Labs to balance innovation with security.</p>
