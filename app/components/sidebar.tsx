@@ -3,11 +3,11 @@ import X from "./svgs/x.svg?react";
 import TripleWowYellow from "./svgs/triple-wow-yellow.svg?react";
 import { NavLink } from "@remix-run/react";
 import { motion } from "framer-motion";
+import React from "react";
 
 const NAV_MAP = [
   { name: "Home", to: "/" },
   { name: "About Us", to: "/company" },
-  { name: "Pricing", to: "/pricing" },
   { name: "Blog", to: "/blog" },
   { name: "GitHub", to: "" },
 ];
@@ -17,15 +17,16 @@ interface SidebarProps {
   onClose: () => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ isHidden, onClose }) => (
+export const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(({ isHidden, onClose }, ref) => (
   <motion.aside
+    ref={ref}
     hidden={isHidden}
     initial={{ x: "-100%" }}
     animate={{ x: isHidden ? "-100%" : 0 }}
     transition={{ type: "spring", stiffness: 300, damping: 35 }}
     data-testid="sidebar"
     className={clsx(
-      "bg-black flex fixed top-0 left-0 w-screen h-screen lg:w-[323px] items-center lg:items-start justify-center z-10",
+      "bg-black flex fixed top-0 left-0 w-screen h-screen lg:w-[323px] items-center lg:items-start justify-center z-30",
     )}
   >
     <button
@@ -60,4 +61,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ isHidden, onClose }) => (
       </ul>
     </nav>
   </motion.aside>
-);
+));
+
+Sidebar.displayName = "Sidebar";

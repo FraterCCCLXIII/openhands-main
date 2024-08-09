@@ -4,11 +4,11 @@ import TripleWow from "~/components/svgs/triple-wow.svg?react";
 import Hierarchy from "~/components/svgs/hierarchy.svg?react";
 import Star from "~/components/svgs/star.svg?react";
 import Users from "~/components/svgs/users.svg?react";
-import TupleLogo from "~/components/svgs/tuple-logo.svg?react";
 import MirageLogo from "~/components/svgs/mirage-logo.svg?react";
-import StaticKitLogo from "~/components/svgs/statickit-logo.svg?react";
-import TransistorLogo from "~/components/svgs/transistor-logo.svg?react";
-import WorkcationLogo from "~/components/svgs/workcation-logo.svg?react";
+import MistralLogo from "~/components/svgs/mistral-logo.svg?react";
+import HfLogo from "~/components/svgs/hf-logo.svg?react";
+import AnthropicLogo from "~/components/svgs/anthropic-logo.svg?react";
+import OpenAILogo from "~/components/svgs/openai-logo.svg?react";
 import { Await, Link, useLoaderData } from "@remix-run/react";
 import { formatThousands } from "~/utils/format-thousands";
 import { formatLastCommit } from "~/utils/format-last-commit";
@@ -80,13 +80,14 @@ export default function Index() {
       >
         <TripleWow width={53} height={33} />
         <img
+          src="/assets/od-cover.png"
           alt="product"
-          className="bg-[#D4CABD] rounded-[10px] w-[378px] h-[212px] lg:w-[1140px] lg:h-[639px]"
+          className="bg-[#D4CABD] rounded-[10px] w-[378px] h-[212px] lg:w-[1140px] lg:h-[639px] object-contain"
         />
         <p className="paragraph text-center w-[352px] lg:w-[466px] text-description">Development agents use AI to tackle the toil in your backlog, so you can focus on what matters: hard problems, creative challenges, and over-engineering your dotfiles</p>
       </AnimatedSection>
 
-      <AnimatedSection
+      <section
         className="px-[42px] flex flex-col lg:flex-row gap-16 lg:gap-[81px] pt-16 pb-16 lg:p-0 lg:h-[489px] items-center lg:justify-center mix-blend-multiply"
       >
         <img
@@ -113,9 +114,9 @@ export default function Index() {
             </div>
           </div>
         </div>
-      </AnimatedSection>
+      </section>
 
-      <AnimatedSection
+      <section
         className="flex flex-col lg:flex-row-reverse py-16 gap-16 lg:gap-8 px-[42px] lg:p-0 lg:h-[502px] items-center lg:justify-center mix-blend-multiply"
       >
         <img
@@ -127,9 +128,9 @@ export default function Index() {
           <span className="heading">Power and Responsibility</span>
           <p className="paragraph text-description lg:w-[466px]">Our agents can do anything a human developer can: they write code, run commands, and use the web. We&apos;re partnering with AI safety experts like Invariant Labs to balance innovation with security.</p>
         </div>
-      </AnimatedSection>
+      </section>
 
-      <AnimatedSection
+      <section
         className="flex flex-col lg:flex-row items-center lg:justify-center px-[42px] gap-16 lg:gap-[100px] py-24"
       >
         <Suspense fallback={<ContributorGridPlaceholder variant="small" />}>
@@ -143,9 +144,9 @@ export default function Index() {
           <p className="paragraph text-description lg:w-[466px]">Thousands of developers are working together to build the AI-powered future they want to see. You can connect with us on GitHub, Slack, Twitter, or our blog.</p>
           <GitHubButton position="start" />
         </div>
-      </AnimatedSection>
+      </section>
 
-      <AnimatedSection
+      <section
         className="px-[42px] flex flex-col gap-8 lg:gap-16 py-24 lg:py-[41px] lg:items-center"
       >
         <div className="flex flex-col gap-4 text-center h-[206px] lg:h-[126px]">
@@ -154,13 +155,13 @@ export default function Index() {
         </div>
 
         <div className="flex flex-col lg:flex-row items-center gap-8 lg:w-screen lg:max-w-[1358px] lg:px-[143px] lg:justify-between">
-          <TupleLogo width={105} height={48} />
+          <MistralLogo width={105} height={48} />
           <MirageLogo width={138} height={48} />
-          <StaticKitLogo width={127} height={48} />
-          <TransistorLogo width={158} height={48} />
-          <WorkcationLogo width={189} height={48} />
+          <HfLogo width={189} height={48} />
+          <AnthropicLogo width={149} height={48} />
+          <OpenAILogo width={149} height={48} />
         </div>
-      </AnimatedSection>
+      </section>
 
       <section className="mb-[104px]">
         <YellowWaveSection

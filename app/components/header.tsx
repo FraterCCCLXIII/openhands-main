@@ -1,31 +1,15 @@
 import React from "react";
 import HamburgerMenuIcon from "./svgs/menu-icon.svg?react";
-import clsx from "clsx";
-import { NavLink, Link } from "@remix-run/react";
+import { Link } from "@remix-run/react";
 import { AnimatedHeaderLogo } from "./animated-header-logo";
 
-const NAV_MAP = [
-  { name: "Research", to: "/research" },
-  { name: "Products", to: "/pricing" },
-  { name: "Company", to: "/company" },
-  { name: "Blog", to: "/blog" },
-  { name: "Community", to: "/community" },
-]
-
 interface HeaderProps {
-  /* isRoot is a boolean that determines if the header is the root header */
-  isRoot: boolean;
   onClickMenuButton: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ isRoot, onClickMenuButton }) => (
-  <header
-    className={clsx(
-      "h-[83px] flex items-center relative w-screen px-[26px]",
-      !isRoot ? "justify-between" : "justify-center"
-    )}
-  >
-    {isRoot && (
+export const Header: React.FC<HeaderProps> = ({ onClickMenuButton }) => (
+  <header className="h-[83px] w-screen">
+    <div className="h-[83px] flex items-center bg-[#F1EAE0] fixed w-full justify-center z-20">
       <button
         aria-label="Open Menu"
         onClick={onClickMenuButton}
@@ -33,45 +17,23 @@ export const Header: React.FC<HeaderProps> = ({ isRoot, onClickMenuButton }) => 
       >
         <HamburgerMenuIcon width={24} height={24} />
       </button>
-    )}
 
-    <Link
-      prefetch="intent"
-      to="/"
-    >
-      <AnimatedHeaderLogo renderText={isRoot} />
-    </Link>
+      <Link
+        prefetch="intent"
+        to="/"
+      >
+        <AnimatedHeaderLogo renderText={true} />
+      </Link>
 
-    {!isRoot && (
-      <nav>
-        <ul className="font-poppins text-sm leading-[21px] font-normal flex gap-8">
-          {NAV_MAP.map(({ name, to }) => (
-            <li key={name}>
-              <NavLink
-                prefetch="intent"
-                to={to}
-                className={({ isActive }) => isActive ? "underline underline-offset-2" : ""}
-              >
-                {name}
-              </NavLink>
-            </li>
-          ))}
-        </ul>
-      </nav>
-    )}
 
-    <Link
-      rel="noreferrer"
-      target="_blank"
-      to="https://github.com/OpenDevin"
-      className={
-        clsx(
-          "hidden lg:block px-4 py-2 rounded-lg bg-black",
-          isRoot && "absolute right-[26px]"
-        )
-      }
-    >
-      <span className="text-white font-bold font-poppins text-sm leading-5">View GitHub</span>
-    </Link>
+      <Link
+        rel="noreferrer"
+        target="_blank"
+        to="https://github.com/OpenDevin"
+        className="hidden lg:block px-4 py-2 rounded-lg bg-black absolute right-[26px]"
+      >
+        <span className="text-white font-bold font-poppins text-sm leading-5">View GitHub</span>
+      </Link>
+    </div>
   </header >
 );

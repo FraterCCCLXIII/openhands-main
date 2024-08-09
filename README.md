@@ -22,6 +22,29 @@
 - e2e testing
 - A `robots.txt` file?
 
+## Feedback
+
+- [x] Add OpenDevin screenshot from repo to frontpage product section
+- [ ] Reduce size of contributor grid items
+- [ ] More padding under the "choose your egine" section
+- [x] Navbar should be sticky
+- [x] Remove section animation of the sections except for the product section
+- [x] Update engine section items
+- [ ] Update favicon
+- [ ] Navbar should only animate 🙌 when scrolling down, and include "all hands" when at the top
+- [ ] Start with default 🙌 then transition to a random color after ~30 seconds
+- [x] Sidebar should close when clicking outside of it
+- [x] Remove alternate navbar style (only keep sidebar)
+
+## Notes for the designer
+
+The new brand logos under "Choose your engine" section have the following dimensions:
+
+- Mistral Logo: 105 x 48
+- Hugging Face Logo: 189 x 48
+- Anthropic Logo: 149 x 48
+- OpenAI Logo: 149 x 48
+
 ## Creating a new blog post
 
 1. Create a new branch from `main` (e.g., `git checkout -b blog/new-post`).

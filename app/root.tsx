@@ -19,8 +19,22 @@ export const links: LinksFunction = () => ([
 ]);
 
 export function Layout({ children }: { children: React.ReactNode }) {
-  const location = useLocation();
   const [isSidebarHidden, setIsSidebarHidden] = React.useState(true);
+  const sidebarRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (sidebarRef.current && !sidebarRef.current.contains(event.target as Node)) {
+        setIsSidebarHidden(true);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, []);
 
   return (
     <html lang="en">
@@ -32,11 +46,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         <div className="bg-[#F1EAE0]">
-          <Header
-            isRoot={location.pathname === "/"}
-            onClickMenuButton={() => setIsSidebarHidden(false)}
-          />
+          <Header onClickMenuButton={() => setIsSidebarHidden(false)} />
           <Sidebar
+            ref={sidebarRef}
             isHidden={isSidebarHidden}
             onClose={() => setIsSidebarHidden(true)}
           />
