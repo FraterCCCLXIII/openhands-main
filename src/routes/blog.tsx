@@ -45,7 +45,7 @@ const Blog = () => {
           <img
             src={latestBlog.data.coverImage}
             alt="blog cover"
-            className="rounded-[10px] bg-[#ACC8FF] flex items-center justify-center w-[600px] h-[370px] object-contain"
+            className="rounded-[10px] flex items-center justify-center w-[600px] h-[370px] object-contain"
           />
         )}
         <div className="flex flex-col gap-4">

@@ -59,7 +59,7 @@ const BlogDetails = () => {
           <img
             src={data.cover}
             alt="blog cover"
-            className="rounded-[10px] bg-[#ACC8FF] flex items-center justify-center aspect-video object-contain"
+            className="rounded-[10px] flex items-center justify-center aspect-video object-contain"
           />
         )}
       </figure>
