@@ -1,4 +1,4 @@
-import { Outlet } from "react-router-dom";
+import { Outlet, ScrollRestoration } from "react-router-dom";
 import { Header } from "./components/header";
 import { Footer } from "./components/footer";
 import { Sidebar } from "./components/sidebar";
@@ -34,6 +34,7 @@ const App = () => {
       />
       <Outlet />
       <Footer />
+      <ScrollRestoration />
     </div>
   )
 }

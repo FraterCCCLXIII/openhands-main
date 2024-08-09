@@ -1,12 +1,11 @@
 import clsx from "clsx";
-import { Await, Link, useLoaderData } from "react-router-dom";
+import { Link, useLoaderData } from "react-router-dom";
 import { GitHubLogo } from "~/svgs/github-logo";
 import { TripleWow } from "~/svgs/triple-wow";
 import { Star } from "~/svgs/star";
 import { Users } from "~/svgs/users";
 import { Hierarchy } from "~/svgs/hierarchy";
-import { Suspense } from "react";
-import { ContributorGrid, ContributorGridPlaceholder } from "~/components/contributor-grid-placeholder";
+import { ContributorGridPlaceholder } from "~/components/contributor-grid-placeholder";
 import { YellowWaveSection } from "~/components/yellow-wave-section";
 import { GitHubButton } from "~/components/github-button";
 import { AnimatedSection } from "~/components/animated-section";
@@ -105,11 +104,7 @@ const Home = () => {
       <section
         className="flex flex-col lg:flex-row items-center lg:justify-center px-[42px] gap-16 lg:gap-[100px] py-24"
       >
-        <Suspense fallback={<ContributorGridPlaceholder variant="small" />}>
-          <Await resolve={contributors}>
-            {(contributors) => <ContributorGrid contributors={contributors} variant="small" />}
-          </Await>
-        </Suspense>
+        <ContributorGridPlaceholder variant="small" />
 
         <div className="flex flex-col gap-4 lg:w-[500px]">
           <span className="heading">Join the Community</span>

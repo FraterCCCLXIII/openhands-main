@@ -46,5 +46,5 @@ export const Header: React.FC<HeaderProps> = ({ onClickMenuButton }) => {
         </Link>
       </div>
     </header >
-  )
+  );
 };
