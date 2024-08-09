@@ -2,6 +2,7 @@ import React from "react";
 import { motion, LayoutGroup, AnimatePresence } from "framer-motion";
 import AllHandsText from "./svgs/all-hands-text.svg?react";
 import { getRandomLogo } from "~/utils/get-random-logo-variant";
+import AllHandsLogoVariant1 from "~/components/svgs/logo-variants/all-hands-logo-1.svg?react";
 
 const ANIMATE_DURATION = 1000;
 
@@ -10,23 +11,20 @@ interface AnimatedHeaderLogoProps {
 }
 
 export const AnimatedHeaderLogo: React.FC<AnimatedHeaderLogoProps> = ({ renderText = true }) => {
-  const Logo = React.useMemo(() => getRandomLogo(), []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const Logo = React.useMemo(() => getRandomLogo(), [renderText]); // get a random logo variant everytime user scrolls
 
   return (
-    <motion.div
-      className="flex gap-2 items-center"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: ANIMATE_DURATION / 1000 }}
-    >
+    <div className="flex gap-2 items-center">
       <LayoutGroup>
         <motion.div
           layout
           transition={{ type: "spring", stiffness: 300, damping: 35, duration: ANIMATE_DURATION / 1000 }}
         >
-          <Logo width={39} height={26} />
+          {!renderText && <Logo width={39} height={26} />}
+          {renderText && <AllHandsLogoVariant1 width={39} height={26} />}
         </motion.div>
-        <AnimatePresence mode="popLayout">
+        <AnimatePresence mode="popLayout" initial={false}>
           {renderText && (
             <motion.div
               initial={{ opacity: 0, x: 50 }}
@@ -39,6 +37,6 @@ export const AnimatedHeaderLogo: React.FC<AnimatedHeaderLogoProps> = ({ renderTe
           )}
         </AnimatePresence>
       </LayoutGroup>
-    </motion.div >
+    </div>
   );
 };

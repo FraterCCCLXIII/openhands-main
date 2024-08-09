@@ -31,8 +31,8 @@
 - [x] Remove section animation of the sections except for the product section
 - [x] Update engine section items
 - [ ] Update favicon
-- [ ] Navbar should only animate 🙌 when scrolling down, and include "all hands" when at the top
-- [ ] Start with default 🙌 then transition to a random color after ~30 seconds
+- [x] Navbar should only animate 🙌 when scrolling down, and include "all hands" when at the top
+- [x] ~~Start with default 🙌 then transition to a random color after ~30 seconds~~ Change color on scroll
 - [x] Sidebar should close when clicking outside of it
 - [x] Remove alternate navbar style (only keep sidebar)
 
