@@ -19,13 +19,10 @@ export const Footer = () => (
               <Link to="blog">Blog</Link>
             </li>
             <li>
-              <Link to="company">About Us</Link>
+              <Link to="about">About Us</Link>
             </li>
             <li>
               <Link to="tos">Terms of Service</Link>
-            </li>
-            <li>
-              <Link to="pricing">Pricing</Link>
             </li>
           </ul>
         </nav>

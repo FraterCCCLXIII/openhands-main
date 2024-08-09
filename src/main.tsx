@@ -5,6 +5,7 @@ import './index.css';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import Home, { loader } from './routes/home';
 import About from './routes/about';
+import TermsOfService from './routes/route';
 
 const router = createBrowserRouter([
   {
@@ -19,6 +20,10 @@ const router = createBrowserRouter([
       {
         path: "/about",
         element: <About />,
+      },
+      {
+        path: "tos",
+        element: <TermsOfService />
       }
     ],
   },
