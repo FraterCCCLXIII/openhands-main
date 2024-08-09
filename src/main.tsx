@@ -4,6 +4,7 @@ import App from './App';
 import './index.css';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import Home, { loader } from './routes/home';
+import About from './routes/about';
 
 const router = createBrowserRouter([
   {
@@ -17,7 +18,7 @@ const router = createBrowserRouter([
       },
       {
         path: "/about",
-        element: <div className='bg-green-500'>About</div>,
+        element: <About />,
       }
     ],
   },
