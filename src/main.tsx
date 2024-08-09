@@ -22,6 +22,7 @@ const router = createBrowserRouter([
       {
         path: "/about",
         element: <About />,
+        loader: () => ({}),
       },
       {
         path: "/blog",
