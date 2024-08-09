@@ -6,7 +6,7 @@ import { PlaceholderImage } from "~/components/placeholder-image";
 import { SectionHeading } from "~/components/section-heading";
 
 export const loader = async () => {
-  const blogs = await blogAPI.getAllBlogs();
+  const blogs = blogAPI.getAllBlogs();
   blogs.sort((a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime());
   return { blogs };
 };

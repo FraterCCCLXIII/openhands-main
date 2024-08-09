@@ -8,6 +8,7 @@ import About from './routes/about';
 import TermsOfService from './routes/tos';
 import Blog, { loader as blogLoader } from './routes/blog';
 import BlogDetails, { loader as blogDetailsLoaders, ErrorBoundary as BlogDetailsErrorBoundary } from './routes/blog.$id';
+import { HelmetProvider } from 'react-helmet-async';
 
 const router = createBrowserRouter([
   {
@@ -18,17 +19,36 @@ const router = createBrowserRouter([
         path: "/",
         element: <Home />,
         loader: homeLoader,
+        handle: {
+          meta: {
+            title: "All Hands",
+            description: "Welcome to the All Hands website!",
+          },
+        },
       },
       {
         path: "/about",
         element: <About />,
+        handle: {
+          meta: {
+            title: "All Hands - Company",
+            description: "Discover the talented team behind OpenDevin and how we leverage the power of collaboration to innovate in software development.",
+          },
+        },
       },
       {
         path: "/blog",
         element: <Blog />,
         loader: blogLoader,
+        handle: {
+          meta: {
+            title: "All Hands Blog - Insights and Innovations",
+            description: "Read the latest insights and innovations from All Hands.",
+          },
+        },
       },
       {
+        id: "blog-details",
         path: "/blog/:id",
         element: <BlogDetails />,
         errorElement: <BlogDetailsErrorBoundary />,
@@ -36,14 +56,22 @@ const router = createBrowserRouter([
       },
       {
         path: "tos",
-        element: <TermsOfService />
+        element: <TermsOfService />,
+        handle: {
+          meta: {
+            title: "All Hands - Terms of Service",
+            description: "All Hands terms of service agreement.",
+          },
+        },
       }
     ],
   },
 ]);
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
-  <React.StrictMode>
-    <RouterProvider router={router} />
-  </React.StrictMode>,
+  <HelmetProvider>
+    <React.StrictMode>
+      <RouterProvider router={router} />
+    </React.StrictMode>
+  </HelmetProvider>,
 );
