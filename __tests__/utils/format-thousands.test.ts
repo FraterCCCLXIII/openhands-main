@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { formatThousands } from "~/utils/format-thousands";
+import { formatThousands } from "../../src/utils/format-thousands";
 
 test("formatThousands", () => {
   expect(formatThousands(1000)).toBe("1k");

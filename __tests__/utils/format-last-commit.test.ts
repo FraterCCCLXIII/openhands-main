@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { formatLastCommit } from "~/utils/format-last-commit";
+import { formatLastCommit } from "../../src/utils/format-last-commit";
 
 test("formatLastCommit", () => {
   const twoSecondsAgo = new Date(new Date().getTime() - 2 * 1000).toISOString();

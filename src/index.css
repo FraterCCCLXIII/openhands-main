@@ -1,0 +1,29 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Poppins:wght@400;600;700;800&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: "Quincy CF";
+  src: url("/assets/fonts/quincycf-regular.otf");
+}
+
+@layer base {
+  html,
+  body {
+    @apply font-poppins overscroll-y-none
+  }
+}
+
+.heading {
+  @apply font-quincy text-[50px] leading-[50px] font-normal lg:text-[60px] lg:leading-[60px]
+}
+
+.heading-large {
+  @apply font-quincy text-[58px] leading-[58px] font-normal lg:text-[77px] lg:leading-[77px]
+}
+
+.paragraph {
+  @apply text-[18px] leading-[25px]
+}
