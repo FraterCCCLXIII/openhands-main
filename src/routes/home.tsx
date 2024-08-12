@@ -8,68 +8,12 @@ import { Hierarchy } from "~/svgs/hierarchy";
 import { ContributorGridPlaceholder } from "~/components/contributor-grid-placeholder";
 import { YellowWaveSection } from "~/components/yellow-wave-section";
 import { GitHubButton } from "~/components/github-button";
-import { AnimatedSection } from "~/components/animated-section";
 import { formatLastCommit } from "~/utils/format-last-commit";
 import { formatThousands } from "~/utils/format-thousands";
 import BreakFree from "~/svgs/break-free.svg?react";
 import HeartHands from "~/svgs/heart-hands.svg?react";
 import { Helmet } from "react-helmet-async";
-import { animate, motion, useMotionValue, Variants } from "framer-motion";
-import React from "react";
-
-const variants: Variants = {
-  animate: (index) => {
-    if (index === 1) return { x: 0, height: 727, width: 1134 };
-    if (index === 2) return {
-      x: [null, 400, 60],
-      height: 515,
-      width: 807,
-      transition: { type: 'tween', duration: 0.4 },
-    };
-
-    return { x: -60, height: 515, width: 807 };
-  }
-};
-
-const ImageCarousel = () => {
-  const zIndexes = [useMotionValue(0), useMotionValue(1), useMotionValue(0)];
-  const [currentCycle, setCurrentCycle] = React.useState(0);
-
-  const next = () => {
-    setCurrentCycle((prev) => (prev + 1) % 3);
-  };
-
-  React.useEffect(() => {
-    zIndexes.forEach((zIndex, index) => {
-      let targetZIndex = index === Math.abs(currentCycle - 1) ? 1 : 0;
-      if (currentCycle === 2) targetZIndex = index === currentCycle ? 1 : 0;
-
-      animate(zIndex, targetZIndex, { type: 'tween', duration: 0.5, onUpdate: (value) => zIndex.set(value) });
-    });
-  }, [currentCycle]);
-
-  return (
-    <motion.div
-      onClick={next}
-      className="relative w-[1134px] h-[750px] flex items-center"
-    >
-      {['bg-red-500', 'bg-blue-500', 'bg-green-500'].map((color, index) => (
-        <motion.div
-          key={index}
-          initial={false}
-          className={clsx(
-            "absolute w-[1100px] h-[750px]",
-            color,
-          )}
-          style={{ zIndex: zIndexes[index] }}
-          animate="animate"
-          variants={variants}
-          custom={(index + currentCycle) % 3}
-        />
-      ))}
-    </motion.div>
-  );
-};
+import { ImageCarousel } from "~/components/image-carousel";
 
 export const loader = () => {
   return {
@@ -113,13 +57,13 @@ const Home = () => {
         </Link>
       </section>
 
-      <AnimatedSection
+      <section
         className="flex flex-col items-center gap-8 h-[510px] lg:h-[968px] pt-[25px]"
       >
         <TripleWow width={53} height={33} />
         <ImageCarousel />
         <p className="paragraph text-center w-[352px] lg:w-[466px] text-description">Development agents use AI to tackle the toil in your backlog, so you can focus on what matters: hard problems, creative challenges, and over-engineering your dotfiles</p>
-      </AnimatedSection>
+      </section>
 
       <section
         className="px-[42px] flex flex-col lg:flex-row gap-16 lg:gap-[81px] pt-16 pb-16 lg:p-0 lg:h-[489px] items-center lg:justify-center"
