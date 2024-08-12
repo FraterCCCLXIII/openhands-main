@@ -1,19 +1,18 @@
-import clsx from "clsx";
-import { Link, useLoaderData } from "react-router-dom";
-import { GitHubLogo } from "~/svgs/github-logo";
-import { TripleWow } from "~/svgs/triple-wow";
-import { Star } from "~/svgs/star";
-import { Users } from "~/svgs/users";
-import { Hierarchy } from "~/svgs/hierarchy";
+import { useLoaderData } from "react-router-dom";
+import GitHubLogo from "~/svgs/github-logo.svg?react";
+import TripleWow from "~/svgs/triple-wow.svg?react";
+import Star from "~/svgs/star.svg?react";
+import Users from "~/svgs/users.svg?react";
+import Hierarchy from "~/svgs/hierarchy.svg?react";
 import { ContributorGridPlaceholder } from "~/components/contributor-grid-placeholder";
 import { YellowWaveSection } from "~/components/yellow-wave-section";
-import { GitHubButton } from "~/components/github-button";
-import { AnimatedSection } from "~/components/animated-section";
+import { Button } from "~/components/button";
 import { formatLastCommit } from "~/utils/format-last-commit";
 import { formatThousands } from "~/utils/format-thousands";
 import BreakFree from "~/svgs/break-free.svg?react";
 import HeartHands from "~/svgs/heart-hands.svg?react";
 import { Helmet } from "react-helmet-async";
+import { ImageCarousel } from "~/components/image-carousel";
 
 export const loader = () => {
   return {
@@ -41,33 +40,22 @@ const Home = () => {
       >
         <h1 className="heading-large text-center h-[188px] lg:h-auto lg:w-[764px]">Open Source Agents for Developers</h1>
 
-        <Link
+        <Button
+          variant="large"
+          icon={<GitHubLogo width={23} height={23} />}
+          text="Get it on GitHub"
           to="https://github.com/OpenDevin/OpenDevin"
-          rel="noreferrer"
-          target="_blank"
-          className={
-            clsx(
-              "bg-black px-[30px] h-[58px] rounded-lg flex items-center gap-[15px]",
-              "text-white text-[19px] leading-[27px] font-bold",
-            )
-          }
-        >
-          <GitHubLogo width={23} height={23} />
-          Get it on GitHub
-        </Link>
+          external
+        />
       </section>
 
-      <AnimatedSection
+      <section
         className="flex flex-col items-center gap-8 h-[510px] lg:h-[968px] pt-[25px]"
       >
         <TripleWow width={53} height={33} />
-        <img
-          src="/assets/od-cover.png"
-          alt="product"
-          className="bg-[#D4CABD] rounded-[10px] w-[378px] h-[212px] lg:w-[1140px] lg:h-[639px] object-contain"
-        />
+        <ImageCarousel />
         <p className="paragraph text-center w-[352px] lg:w-[466px] text-description">Development agents use AI to tackle the toil in your backlog, so you can focus on what matters: hard problems, creative challenges, and over-engineering your dotfiles</p>
-      </AnimatedSection>
+      </section>
 
       <section
         className="px-[42px] flex flex-col lg:flex-row gap-16 lg:gap-[81px] pt-16 pb-16 lg:p-0 lg:h-[489px] items-center lg:justify-center"
@@ -111,7 +99,13 @@ const Home = () => {
         <div className="flex flex-col gap-4 lg:w-[500px]">
           <span className="heading">Join the Community</span>
           <p className="paragraph text-description lg:w-[466px]">Thousands of developers are working together to build the AI-powered future they want to see. You can connect with us on GitHub, Slack, Twitter, or our blog.</p>
-          <GitHubButton position="start" />
+          <Button
+            variant="medium"
+            text="Join our GitHub"
+            className="self-start"
+            to="https://github.com/OpenDevin"
+            external
+          />
         </div>
       </section>
 

@@ -12,6 +12,6 @@ export const PlaceholderImage: React.FC<PlaceholderImageProps> = ({ className })
       className,
     )}
   >
-    <AllHandsLogo width={227} />
+    <AllHandsLogo className="w-[150px] h-[104px] lg:w-[227px] lg:h-[157px]" />
   </div>
 );
