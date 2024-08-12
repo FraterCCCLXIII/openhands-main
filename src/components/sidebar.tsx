@@ -4,12 +4,12 @@ import TripleWowYellow from "~/svgs/triple-wow-yellow.svg?react";
 import { motion } from "framer-motion";
 import React from "react";
 import { NavLink } from "react-router-dom";
+import { MainButton } from "./main-button";
 
 const NAV_MAP = [
   { name: "Home", to: "/" },
   { name: "About Us", to: "/about" },
   { name: "Blog", to: "/blog" },
-  { name: "GitHub", to: "" },
 ];
 
 interface SidebarProps {
@@ -39,8 +39,9 @@ export const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(({ isHidde
     <nav className="lg:mt-[122px]">
       <ul className="text-center flex flex-col gap-8">
         {NAV_MAP.map((item) => (
-          <li
+          <motion.li
             key={item.name}
+            whileHover={{ scale: 1.1 }}
             className="text-white font-quincy text-[41px] leading-[42px]"
           >
             <NavLink
@@ -55,8 +56,11 @@ export const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(({ isHidde
                 </>
               )}
             </NavLink>
-          </li>
+          </motion.li>
         ))}
+        <li>
+          <MainButton />
+        </li>
       </ul>
     </nav>
   </motion.aside>

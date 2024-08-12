@@ -9,7 +9,11 @@ interface ButtonProps {
   external?: boolean;
   icon?: React.ReactNode;
   variant?: "small" | "medium" | "large";
+  style?: "primary" | "secondary";
   className?: string;
+
+  onMouseEnter?: () => void;
+  onMouseLeave?: () => void;
 }
 
 export const Button: React.FC<ButtonProps> = ({
@@ -18,15 +22,20 @@ export const Button: React.FC<ButtonProps> = ({
   external,
   icon,
   variant = "small",
+  style = "primary",
   className,
+  onMouseEnter,
+  onMouseLeave,
 }) => (
   <Link
+    onMouseEnter={onMouseEnter}
+    onMouseLeave={onMouseLeave}
     to={to}
     rel={external ? "noreferrer" : undefined}
     target={external ? "_blank" : undefined}
     className={clsx(
-      "bg-black px-4 rounded-lg hover:bg-[#4B5563]",
-      "text-white font-semibold",
+      style === "primary" ? "bg-black text-white" : "bg-white text-black",
+      "font-semibold px-4 rounded-lg hover:bg-[#4B5563] hover:text-white",
       icon && "flex items-center gap-[15px]",
       variant === "small" ? "py-2 text-sm" : "py-[11px]",
       variant !== "small" && "text-[19px] leading-[27px]", // medium and large
