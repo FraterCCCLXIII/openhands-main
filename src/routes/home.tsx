@@ -19,10 +19,15 @@ import React from "react";
 
 const variants: Variants = {
   animate: (index) => {
-    if (index === 1) return { x: 0 };
-    if (index === 2) return { x: 60 };
+    if (index === 1) return { x: 0, height: 727, width: 1134 };
+    if (index === 2) return {
+      x: [null, 400, 60],
+      height: 515,
+      width: 807,
+      transition: { type: 'tween', duration: 0.4 },
+    };
 
-    return { x: -60 };
+    return { x: -60, height: 515, width: 807 };
   }
 };
 
@@ -39,20 +44,21 @@ const ImageCarousel = () => {
       let targetZIndex = index === Math.abs(currentCycle - 1) ? 1 : 0;
       if (currentCycle === 2) targetZIndex = index === currentCycle ? 1 : 0;
 
-      animate(zIndex, targetZIndex, { type: 'tween', duration: 1, onUpdate: (value) => zIndex.set(value) });
+      animate(zIndex, targetZIndex, { type: 'tween', duration: 0.5, onUpdate: (value) => zIndex.set(value) });
     });
   }, [currentCycle]);
 
   return (
     <motion.div
       onClick={next}
-      className="relative w-[1134px] h-[727px]"
+      className="relative w-[1134px] h-[750px] flex items-center"
     >
       {['bg-red-500', 'bg-blue-500', 'bg-green-500'].map((color, index) => (
         <motion.div
           key={index}
+          initial={false}
           className={clsx(
-            "absolute w-[500px] h-[300px]",
+            "absolute w-[1100px] h-[750px]",
             color,
           )}
           style={{ zIndex: zIndexes[index] }}
