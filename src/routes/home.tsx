@@ -1,10 +1,10 @@
 import clsx from "clsx";
 import { Link, useLoaderData } from "react-router-dom";
-import { GitHubLogo } from "~/svgs/github-logo";
-import { TripleWow } from "~/svgs/triple-wow";
-import { Star } from "~/svgs/star";
-import { Users } from "~/svgs/users";
-import { Hierarchy } from "~/svgs/hierarchy";
+import GitHubLogo from "~/svgs/github-logo.svg?react";
+import TripleWow from "~/svgs/triple-wow.svg?react";
+import Star from "~/svgs/star.svg?react";
+import Users from "~/svgs/users.svg?react";
+import Hierarchy from "~/svgs/hierarchy.svg?react";
 import { ContributorGridPlaceholder } from "~/components/contributor-grid-placeholder";
 import { YellowWaveSection } from "~/components/yellow-wave-section";
 import { GitHubButton } from "~/components/github-button";

@@ -1,6 +1,6 @@
 import React from "react";
 import { motion, LayoutGroup, AnimatePresence } from "framer-motion";
-import { AllHandsText } from "~/svgs/brand/all-hands-text";
+import AllHandsText from "~/svgs/brand/all-hands-text.svg?react";
 import AllHandsLogo1 from "~/svgs/brand/all-hands-logo-1.svg?react";
 import { getRandomLogo } from "~/utils/get-random-logo-variant";
 

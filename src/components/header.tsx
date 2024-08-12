@@ -1,6 +1,6 @@
 import React from "react";
 import { useMotionValueEvent, useScroll } from "framer-motion";
-import { MenuIcon } from "~/svgs/menu-icon";
+import MenuIcon from "~/svgs/menu.svg?react";
 import { Link } from "react-router-dom";
 import { AnimatedHeaderLogo } from "./animated-header-logo";
 
