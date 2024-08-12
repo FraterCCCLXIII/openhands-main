@@ -19,7 +19,7 @@ import React from "react";
 
 const variants: Variants = {
   animate: (index) => {
-    if (index === 1) return { x: 0, zIndex: 1 };
+    if (index === 1) return { x: 0 };
     if (index === 2) return { x: 60 };
 
     return { x: -60 };
@@ -27,35 +27,21 @@ const variants: Variants = {
 };
 
 const ImageCarousel = () => {
-  const zIndex = useMotionValue(0);
-  const [currentIndex, setCurrentIndex] = React.useState(0);
-
-  const zIndexes = [
-    useMotionValue(0),
-    useMotionValue(0),
-    useMotionValue(0),
-  ];
+  const zIndexes = [useMotionValue(0), useMotionValue(1), useMotionValue(0)];
+  const [currentCycle, setCurrentCycle] = React.useState(0);
 
   const next = () => {
-    setCurrentIndex((prev) => (prev + 1) % 3);
+    setCurrentCycle((prev) => (prev + 1) % 3);
   };
 
   React.useEffect(() => {
-    animate(zIndex, currentIndex === 1 ? 1 : 0, {
-      duration: 1,
-      onUpdate: (latest) => zIndex.set(latest),
-    });
-  }, [currentIndex]);
-
-  React.useEffect(() => {
     zIndexes.forEach((zIndex, index) => {
-      const targetZIndex = currentIndex === index ? 1 : 0;
-      animate(zIndex, targetZIndex, {
-        duration: 1,
-        onUpdate: (latest) => zIndex.set(latest),
-      });
+      let targetZIndex = index === Math.abs(currentCycle - 1) ? 1 : 0;
+      if (currentCycle === 2) targetZIndex = index === currentCycle ? 1 : 0;
+
+      animate(zIndex, targetZIndex, { type: 'tween', duration: 1, onUpdate: (value) => zIndex.set(value) });
     });
-  }, [currentIndex, zIndexes]);
+  }, [currentCycle]);
 
   return (
     <motion.div
@@ -69,10 +55,10 @@ const ImageCarousel = () => {
             "absolute w-[500px] h-[300px]",
             color,
           )}
-          style={{ zIndex: (currentIndex - index + 3) % 3 === 1 ? zIndex : undefined }}
+          style={{ zIndex: zIndexes[index] }}
           animate="animate"
           variants={variants}
-          custom={(currentIndex - index + 3) % 3}
+          custom={(index + currentCycle) % 3}
         />
       ))}
     </motion.div>
