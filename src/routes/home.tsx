@@ -14,6 +14,70 @@ import { formatThousands } from "~/utils/format-thousands";
 import BreakFree from "~/svgs/break-free.svg?react";
 import HeartHands from "~/svgs/heart-hands.svg?react";
 import { Helmet } from "react-helmet-async";
+import { animate, motion, useMotionValue, Variants } from "framer-motion";
+import React from "react";
+
+const variants: Variants = {
+  animate: (index) => {
+    if (index === 1) return { x: 0, zIndex: 1 };
+    if (index === 2) return { x: 60 };
+
+    return { x: -60 };
+  }
+};
+
+const ImageCarousel = () => {
+  const zIndex = useMotionValue(0);
+  const [currentIndex, setCurrentIndex] = React.useState(0);
+
+  const zIndexes = [
+    useMotionValue(0),
+    useMotionValue(0),
+    useMotionValue(0),
+  ];
+
+  const next = () => {
+    setCurrentIndex((prev) => (prev + 1) % 3);
+  };
+
+  React.useEffect(() => {
+    animate(zIndex, currentIndex === 1 ? 1 : 0, {
+      duration: 1,
+      onUpdate: (latest) => zIndex.set(latest),
+    });
+  }, [currentIndex]);
+
+  React.useEffect(() => {
+    zIndexes.forEach((zIndex, index) => {
+      const targetZIndex = currentIndex === index ? 1 : 0;
+      animate(zIndex, targetZIndex, {
+        duration: 1,
+        onUpdate: (latest) => zIndex.set(latest),
+      });
+    });
+  }, [currentIndex, zIndexes]);
+
+  return (
+    <motion.div
+      onClick={next}
+      className="relative w-[1134px] h-[727px]"
+    >
+      {['bg-red-500', 'bg-blue-500', 'bg-green-500'].map((color, index) => (
+        <motion.div
+          key={index}
+          className={clsx(
+            "absolute w-[500px] h-[300px]",
+            color,
+          )}
+          style={{ zIndex: (currentIndex - index + 3) % 3 === 1 ? zIndex : undefined }}
+          animate="animate"
+          variants={variants}
+          custom={(currentIndex - index + 3) % 3}
+        />
+      ))}
+    </motion.div>
+  );
+};
 
 export const loader = () => {
   return {
@@ -61,11 +125,7 @@ const Home = () => {
         className="flex flex-col items-center gap-8 h-[510px] lg:h-[968px] pt-[25px]"
       >
         <TripleWow width={53} height={33} />
-        <img
-          src="/assets/od-cover.png"
-          alt="product"
-          className="bg-[#D4CABD] rounded-[10px] w-[378px] h-[212px] lg:w-[1140px] lg:h-[639px] object-contain"
-        />
+        <ImageCarousel />
         <p className="paragraph text-center w-[352px] lg:w-[466px] text-description">Development agents use AI to tackle the toil in your backlog, so you can focus on what matters: hard problems, creative challenges, and over-engineering your dotfiles</p>
       </AnimatedSection>
 
