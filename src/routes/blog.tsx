@@ -34,7 +34,7 @@ const Blog = () => {
           description="Made with the collaborative help of over 40 engineers in the opensource community. OpenDev changes the way you can create software."
           cta={{
             text: "Subscribe to our newsletter",
-            href: "/blog",
+            to: "/blog",
           }}
         />
       </section>
@@ -76,7 +76,7 @@ const Blog = () => {
         </div>
 
         <div className="py-[45px]">
-          <Button text="Load More" />
+          <Button text="Load More" to="/blog" />
         </div>
       </section>
     </main>

@@ -1,5 +1,4 @@
-import clsx from "clsx";
-import { Link, useLoaderData } from "react-router-dom";
+import { useLoaderData } from "react-router-dom";
 import GitHubLogo from "~/svgs/github-logo.svg?react";
 import TripleWow from "~/svgs/triple-wow.svg?react";
 import Star from "~/svgs/star.svg?react";
@@ -7,7 +6,7 @@ import Users from "~/svgs/users.svg?react";
 import Hierarchy from "~/svgs/hierarchy.svg?react";
 import { ContributorGridPlaceholder } from "~/components/contributor-grid-placeholder";
 import { YellowWaveSection } from "~/components/yellow-wave-section";
-import { GitHubButton } from "~/components/github-button";
+import { Button } from "~/components/button";
 import { formatLastCommit } from "~/utils/format-last-commit";
 import { formatThousands } from "~/utils/format-thousands";
 import BreakFree from "~/svgs/break-free.svg?react";
@@ -41,20 +40,13 @@ const Home = () => {
       >
         <h1 className="heading-large text-center h-[188px] lg:h-auto lg:w-[764px]">Open Source Agents for Developers</h1>
 
-        <Link
+        <Button
+          variant="large"
+          icon={<GitHubLogo width={23} height={23} />}
+          text="Get it on GitHub"
           to="https://github.com/OpenDevin/OpenDevin"
-          rel="noreferrer"
-          target="_blank"
-          className={
-            clsx(
-              "bg-black px-[30px] h-[58px] rounded-lg flex items-center gap-[15px]",
-              "text-white text-[19px] leading-[27px] font-bold",
-            )
-          }
-        >
-          <GitHubLogo width={23} height={23} />
-          Get it on GitHub
-        </Link>
+          external
+        />
       </section>
 
       <section
@@ -107,7 +99,13 @@ const Home = () => {
         <div className="flex flex-col gap-4 lg:w-[500px]">
           <span className="heading">Join the Community</span>
           <p className="paragraph text-description lg:w-[466px]">Thousands of developers are working together to build the AI-powered future they want to see. You can connect with us on GitHub, Slack, Twitter, or our blog.</p>
-          <GitHubButton position="start" />
+          <Button
+            variant="medium"
+            text="Join our GitHub"
+            className="self-start"
+            to="https://github.com/OpenDevin"
+            external
+          />
         </div>
       </section>
 

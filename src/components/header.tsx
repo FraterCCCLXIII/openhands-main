@@ -3,6 +3,7 @@ import { useMotionValueEvent, useScroll } from "framer-motion";
 import MenuIcon from "~/svgs/menu.svg?react";
 import { Link } from "react-router-dom";
 import { AnimatedHeaderLogo } from "./animated-header-logo";
+import { Button } from "./button";
 
 interface HeaderProps {
   onClickMenuButton: () => void;
@@ -36,14 +37,12 @@ export const Header: React.FC<HeaderProps> = ({ onClickMenuButton }) => {
         </Link>
 
 
-        <Link
-          rel="noreferrer"
-          target="_blank"
+        <Button
+          text="View GitHub"
+          className="hidden lg:block absolute right-[26px]"
           to="https://github.com/OpenDevin"
-          className="hidden lg:block px-4 py-2 rounded-lg bg-black absolute right-[26px]"
-        >
-          <span className="text-white font-bold font-poppins text-sm leading-5">View GitHub</span>
-        </Link>
+          external
+        />
       </div>
     </header >
   );
