@@ -17,7 +17,9 @@ export const ContributorGridPlaceholder: React.FC<Omit<ContributorGridProps, "co
     {Array
       .from({ length: variant === "small" ? 12 : 50 })
       .map((_, index) => (
-        <ContributorGridItemPlaceholder key={index} />
+        <li key={index}>
+          <ContributorGridItemPlaceholder />
+        </li>
       ))}
   </ul>
 );

@@ -32,7 +32,7 @@ export const Header: React.FC<HeaderProps> = ({ onClickMenuButton }) => {
           <MenuIcon width={24} height={24} />
         </button>
 
-        <Link to="/">
+        <Link to="/" aria-label="Go to Home">
           <AnimatedHeaderLogo renderText={textIsVisible} />
         </Link>
 

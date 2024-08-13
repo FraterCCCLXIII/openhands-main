@@ -32,6 +32,7 @@ export const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(({ isHidde
     <button
       onClick={onClose}
       className="absolute left-7 top-7"
+      aria-label="Close Sidebar"
     >
       <X width={31} height={31} style={{ color: "#FFE165" }} />
     </button>
