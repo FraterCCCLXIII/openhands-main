@@ -7,10 +7,10 @@ import { PlaceholderImage } from "~/components/placeholder-image";
 import { formatDate } from "~/utils/format-date";
 
 export const loader = ({ params }: LoaderFunctionArgs) => {
-  invariant(params.id, "No blog ID provided");
+  invariant(params.slug, "No blog ID provided");
 
-  const id = Number(params.id);
-  const blog = blogAPI.getBlogByIndex(id);
+  const slug = params.slug.toString();
+  const blog = blogAPI.getBlogBySlug(slug);
 
   invariant(blog, "No blog found");
   const { content, data } = blog;

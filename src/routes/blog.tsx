@@ -5,6 +5,7 @@ import { BlogCard, FeaturedBlogCard } from "~/components/blog-card";
 import { Button } from "~/components/button";
 import { SectionHeading } from "~/components/section-heading";
 import { useWidth } from "~/hooks/use-media";
+import { stringToSlug } from "~/utils/string-to-slug";
 
 export const loader = async () => {
   const blogs = blogAPI.getAllBlogs();
@@ -43,7 +44,7 @@ const Blog = () => {
 
       <section className="hidden lg:block">
         <FeaturedBlogCard
-          blogId={blogs.findIndex((post) => post === latestBlog).toString()}
+          blogId={stringToSlug(latestBlog.data.title)}
           title={latestBlog.data.title}
           description={latestBlog.data.excerpt}
         />
@@ -54,7 +55,7 @@ const Blog = () => {
           {blogs.slice(width > 1024 ? 1 : 0).map((blog, index) => (
             <BlogCard
               key={index}
-              blogId={index.toString()}
+              blogId={stringToSlug(blog.data.title)}
               title={blog.data.title}
               description={blog.data.excerpt}
             />
