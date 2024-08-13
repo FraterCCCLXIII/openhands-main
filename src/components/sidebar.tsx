@@ -27,6 +27,7 @@ export const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(({ isHidde
     data-testid="sidebar"
     className={clsx(
       "bg-black flex fixed top-0 left-0 w-screen h-screen lg:w-[323px] items-center lg:items-start justify-center z-30",
+      isHidden && "hidden"
     )}
   >
     <button

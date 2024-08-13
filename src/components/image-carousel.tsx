@@ -55,6 +55,7 @@ export const ImageCarousel: React.FC<ImageCarouselProps> = ({ images }) => {
 
   return (
     <div
+      data-testid="carousel"
       onClick={next}
       className="relative w-[378px] h-[212px] lg:w-[1137px] lg:h-[727px]"
     >
@@ -72,7 +73,6 @@ export const ImageCarousel: React.FC<ImageCarouselProps> = ({ images }) => {
           className={clsx(
             "bg-[#D4CABD] rounded-[10px]",
             "absolute top-0",
-            // isCurrentImage(index) && "z-10",
             isLastImage(index) && "right-0",
           )}
         />

@@ -32,7 +32,7 @@ const Home = () => {
   const { contributors, lastCommit, stars } = useLoaderData() as ReturnType<typeof loader>;
 
   return (
-    <main>
+    <main data-testid="home-content">
       <Helmet>
         <title>All Hands AI</title>
         <meta
