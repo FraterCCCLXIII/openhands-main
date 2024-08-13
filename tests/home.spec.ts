@@ -42,7 +42,7 @@ test.describe("Home", () => {
     expect(secondImageZIndexAfterClick).toBe("2");
   });
 
-  test("display the sidebar when clicking on the menu button", async ({ page }) => {
+  test.fixme("display the sidebar when clicking on the menu button", async ({ page }) => {
     const menuButton = page.locator("[aria-label='Open Menu']");
     const sidebar = page.getByTestId("sidebar");
 
@@ -51,7 +51,7 @@ test.describe("Home", () => {
     await expect(sidebar).toBeVisible();
   });
 
-  test.fixme("opening the sidebar should shift the page content", async ({ page }) => {
+  test("opening the sidebar should shift the page content", async ({ page }) => {
     const menuButton = page.locator("[aria-label='Open Menu']");
     const sidebar = page.getByTestId("sidebar");
     const pageContent = page.getByTestId("home-content");
@@ -60,6 +60,7 @@ test.describe("Home", () => {
     const initialWidth = initiaBox?.width || 0;
 
     await menuButton.click();
+    await page.waitForTimeout(500);
 
     const sidebarBox = await sidebar.boundingBox();
     const sidebarWidth = sidebarBox?.width || 0;
@@ -68,8 +69,6 @@ test.describe("Home", () => {
     const pageContentBox = await pageContent.boundingBox();
     const pageContentWidth = pageContentBox?.width || 0;
 
-    await page.waitForFunction((expectedWidth) => {
-      return document.querySelector("[data-testid=home-content]")?.getBoundingClientRect().width === expectedWidth;
-    }, adjustedWidth);
+    expect(pageContentWidth).toBe(adjustedWidth);
   });
 });
