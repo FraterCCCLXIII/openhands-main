@@ -4,6 +4,7 @@ import { blogAPI } from "~/api/blog";
 import { BlogCard, FeaturedBlogCard } from "~/components/blog-card";
 import { Button } from "~/components/button";
 import { SectionHeading } from "~/components/section-heading";
+import { useWidth } from "~/hooks/use-media";
 
 export const loader = async () => {
   const blogs = blogAPI.getAllBlogs();
@@ -14,6 +15,8 @@ export const loader = async () => {
 const Blog = () => {
   const { blogs } = useLoaderData() as { blogs: Post[] }
   const latestBlog = blogs[0];
+
+  const width = useWidth();
 
   return (
     <main>
@@ -48,7 +51,7 @@ const Blog = () => {
 
       <section className="flex flex-col items-center">
         <div className="grid grid-cols-1 lg:grid-cols-3">
-          {blogs.map((blog, index) => (
+          {blogs.slice(width > 1024 ? 1 : 0).map((blog, index) => (
             <BlogCard
               key={index}
               blogId={index.toString()}
