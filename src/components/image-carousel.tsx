@@ -1,5 +1,6 @@
 import React from "react";
 import { animate, motion, useMotionValue, Variants } from "framer-motion";
+import clsx from "clsx";
 
 const variants: Variants = {
   animate: (index) => {
@@ -51,5 +52,44 @@ export const ImageCarousel = () => {
         />
       ))}
     </motion.div>
+  );
+};
+
+interface ImageCarouselProps {
+  images: string[];
+}
+
+export const NewImageCarousel: React.FC<ImageCarouselProps> = ({ images }) => {
+  const [currentImage, setCurrentImage] = React.useState(0);
+
+  const isCurrentImage = (index: number) => index === currentImage;
+  const isNextImage = (index: number) => index === (currentImage + 1) % images.length;
+  const isLastImage = (index: number) => index === (images.length - 1 + currentImage) % images.length;
+
+  const next = () => {
+    setCurrentImage((prev) => (prev + 1) % images.length);
+  }
+
+  return (
+    <div
+      onClick={next}
+      className="relative lg:w-[1137px] lg:h-[781px]"
+    >
+      {images.map((src, index) => (
+        <img
+          key={src}
+          src={src}
+          alt=""
+          className={clsx(
+            "lg:w-[1137px] bg-[#D4CABD] rounded-[10px]",
+            "absolute top-0",
+            isCurrentImage(index) && "z-10",
+            !isCurrentImage(index) && "lg:w-[807px] top-1/2 transform -translate-y-1/2",
+            isNextImage(index) && "-left-[60px]",
+            isLastImage(index) && "-right-[60px]",
+          )}
+        />
+      ))}
+    </div>
   );
 };
