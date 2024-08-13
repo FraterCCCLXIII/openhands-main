@@ -17,9 +17,10 @@ export const ImageCarousel: React.FC<ImageCarouselProps> = ({ images }) => {
   React.useEffect(() => {
     // see https://github.com/framer/motion/issues/1254#issuecomment-920773347 on why this is necessary
     zIndexes.forEach((zIndex, index) => {
-      let targetZIndex = 2; // default - current image
+      // TODO: zIndexes should be adjusted for n > 3 images
+      let targetZIndex = 0; // default - last image
+      if (isCurrentImage(index)) targetZIndex = 2;
       if (isNextImage(index)) targetZIndex = 1;
-      if (isLastImage(index)) targetZIndex = 0;
 
       animate(zIndex, targetZIndex, { type: 'tween', duration: 0.4, onUpdate: (value) => zIndex.set(value) });
     });
