@@ -12,7 +12,7 @@ import { formatThousands } from "~/utils/format-thousands";
 import BreakFree from "~/svgs/break-free.svg?react";
 import HeartHands from "~/svgs/heart-hands.svg?react";
 import { Helmet } from "react-helmet-async";
-import { ImageCarousel, NewImageCarousel } from "~/components/image-carousel";
+import { ImageCarousel } from "~/components/image-carousel";
 
 export const loader = () => {
   return {
@@ -53,7 +53,7 @@ const Home = () => {
         className="flex flex-col items-center gap-8 pt-[25px]"
       >
         <TripleWow width={53} height={33} />
-        <NewImageCarousel
+        <ImageCarousel
           images={Array.from({ length: 3 }).map((_, index) => `/assets/product/product-slide-${index + 1}.png`)}
         />
         <p className="paragraph text-center w-[352px] lg:w-[466px] text-description">Development agents use AI to tackle the toil in your backlog, so you can focus on what matters: hard problems, creative challenges, and over-engineering your dotfiles</p>
