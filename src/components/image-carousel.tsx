@@ -32,7 +32,7 @@ export const ImageCarousel: React.FC<ImageCarouselProps> = ({ images }) => {
     setCurrentImage((prev) => (prev + 1) % images.length);
   }
 
-  const primaryWidth = width >= 1024 ? 1137 : 378;
+  const primaryWidth = width >= 1024 ? 1134 : 378;
   const secondaryWidth = width >= 1024 ? 807 : 268;
   const slideDistance = primaryWidth - secondaryWidth;
 
@@ -56,7 +56,7 @@ export const ImageCarousel: React.FC<ImageCarouselProps> = ({ images }) => {
   return (
     <div
       onClick={next}
-      className="relative w-[378px] h-[212px] lg:w-[1137px] lg:h-[781px]"
+      className="relative w-[378px] h-[212px] lg:w-[1137px] lg:h-[727px]"
     >
       {images.map((src, index) => (
         <motion.img
