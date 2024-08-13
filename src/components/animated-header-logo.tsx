@@ -27,6 +27,7 @@ export const AnimatedHeaderLogo: React.FC<AnimatedHeaderLogoProps> = ({ renderTe
         <AnimatePresence mode="popLayout" initial={false}>
           {renderText && (
             <motion.div
+              data-testid="header-title"
               initial={{ opacity: 0, x: 50 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 70 }}

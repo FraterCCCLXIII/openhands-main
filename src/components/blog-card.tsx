@@ -9,7 +9,7 @@ interface FeaturedBlogCardProps {
 
 export const FeaturedBlogCard: React.FC<FeaturedBlogCardProps> = ({ blogId, title, description }) => (
   <Link to={blogId} className="flex py-[45px] px-[42px] gap-8">
-    <PlaceholderImage className="w-[600px] h-[370px]" />
+    <PlaceholderImage className="min-w-[600px] h-[370px]" />
     <div className="flex flex-col gap-4">
       <h2 className="heading">{title}</h2>
       <p className="paragraph text-description w-[466px]">{description}</p>

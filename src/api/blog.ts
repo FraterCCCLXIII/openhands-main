@@ -1,10 +1,11 @@
 import matter from "gray-matter";
 import { RAW_POSTS } from "~/posts";
+import { stringToSlug } from "~/utils/string-to-slug";
 
 class BlogAPI {
   private posts: Post[] = [];
 
-  constructor() { 
+  constructor() {
     this.posts = RAW_POSTS.map((post) => matter(post)) as unknown as Post[];
   }
 
@@ -12,8 +13,8 @@ class BlogAPI {
     return this.posts;
   }
 
-  public getBlogByIndex(index: number): Post {
-    return this.posts[index];
+  public getBlogBySlug(slug: string): Post | undefined {
+    return this.posts.find((post) => stringToSlug(post.data.title) === slug);
   }
 }
 
