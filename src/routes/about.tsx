@@ -1,8 +1,9 @@
 import { Helmet } from "react-helmet-async";
-import { ContributorGridPlaceholder } from "~/components/contributor-grid-placeholder";
+import { ContributorGrid } from "~/components/contributor-grid";
 import { MemberCard } from "~/components/member-card";
 import { SectionHeading } from "~/components/section-heading";
 import { YellowWaveSection } from "~/components/yellow-wave-section";
+import CONTRIBUTORS from "~/data/contributors.json";
 
 const members: Member[] = [
   {
@@ -47,7 +48,10 @@ const About = () => {
           heading="The Internet of People"
         />
         <div className="py-[45px]">
-          <ContributorGridPlaceholder variant="large" />
+          <ContributorGrid
+            variant="large"
+            contributors={CONTRIBUTORS}
+          />
         </div>
       </section>
 

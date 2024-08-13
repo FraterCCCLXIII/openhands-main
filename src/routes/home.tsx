@@ -9,7 +9,7 @@ import HuggingFace from "~/svgs/engines/hf-logo.svg?react";
 import OLlama from "~/svgs/engines/ollama-logo.svg?react";
 import OpenAI from "~/svgs/engines/openai-logo.svg?react";
 import TogetherAI from "~/svgs/engines/together-ai-logo.svg?react";
-import { ContributorGridPlaceholder } from "~/components/contributor-grid-placeholder";
+import { ContributorGrid } from "~/components/contributor-grid";
 import { YellowWaveSection } from "~/components/yellow-wave-section";
 import { Button } from "~/components/button";
 import { formatLastCommit } from "~/utils/format-last-commit";
@@ -18,10 +18,11 @@ import BreakFree from "~/svgs/break-free.svg?react";
 import HeartHands from "~/svgs/heart-hands.svg?react";
 import { Helmet } from "react-helmet-async";
 import { ImageCarousel } from "~/components/image-carousel";
+import CONTRIBUTORS from "~/data/contributors.json";
 
 export const loader = () => {
   return {
-    contributors: [],
+    contributors: CONTRIBUTORS.slice(0, 12),
     stars: formatThousands(0),
     lastCommit: formatLastCommit(new Date().toISOString()),
   };
@@ -101,7 +102,10 @@ const Home = () => {
       <section
         className="flex flex-col lg:flex-row items-center lg:justify-center px-[42px] gap-16 lg:gap-[100px] py-24 lg:py-16"
       >
-        <ContributorGridPlaceholder variant="small" />
+        <ContributorGrid
+          variant="small"
+          contributors={contributors}
+        />
 
         <div className="flex flex-col gap-4 lg:w-[500px]">
           <span className="heading">Join the Community</span>
