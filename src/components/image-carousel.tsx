@@ -70,23 +70,37 @@ export const NewImageCarousel: React.FC<ImageCarouselProps> = ({ images }) => {
     setCurrentImage((prev) => (prev + 1) % images.length);
   }
 
+  const variants: Variants = {
+    animate: (index) => {
+      if (isCurrentImage(index)) return { x: 0, width: 1137 };
+      return {
+        x: isNextImage(index) ? -60 : [null, 400, 60],
+        width: 807,
+        top: "50%",
+        y: "-50%"
+      };
+    }
+  };
+
   return (
     <div
       onClick={next}
       className="relative lg:w-[1137px] lg:h-[781px]"
     >
       {images.map((src, index) => (
-        <img
+        <motion.img
           key={src}
           src={src}
           alt=""
+          custom={index}
+          variants={variants}
+          animate="animate"
+          transition={{ type: 'tween', duration: 0.4 }}
           className={clsx(
-            "lg:w-[1137px] bg-[#D4CABD] rounded-[10px]",
+            "bg-[#D4CABD] rounded-[10px]",
             "absolute top-0",
             isCurrentImage(index) && "z-10",
-            !isCurrentImage(index) && "lg:w-[807px] top-1/2 transform -translate-y-1/2",
-            isNextImage(index) && "-left-[60px]",
-            isLastImage(index) && "-right-[60px]",
+            isLastImage(index) && "right-0",
           )}
         />
       ))}
