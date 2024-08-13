@@ -1,6 +1,7 @@
 import React from "react";
 import { animate, motion, useMotionValue, Variants } from "framer-motion";
 import clsx from "clsx";
+import { useWidth } from "~/hooks/use-media";
 
 interface ImageCarouselProps {
   images: string[];
@@ -9,6 +10,7 @@ interface ImageCarouselProps {
 export const ImageCarousel: React.FC<ImageCarouselProps> = ({ images }) => {
   const zIndexes = [useMotionValue(2), useMotionValue(1), useMotionValue(0)];
   const [currentImage, setCurrentImage] = React.useState(0);
+  const width = useWidth();
 
   const isCurrentImage = (index: number) => index === currentImage;
   const isNextImage = (index: number) => index === (currentImage + 1) % images.length;
@@ -30,12 +32,21 @@ export const ImageCarousel: React.FC<ImageCarouselProps> = ({ images }) => {
     setCurrentImage((prev) => (prev + 1) % images.length);
   }
 
+  const primaryWidth = width >= 1024 ? 1137 : 378;
+  const secondaryWidth = width >= 1024 ? 807 : 268;
+  const slideDistance = primaryWidth - secondaryWidth;
+
+  const offset = width >= 1024 ? 60 : 20;
+
   const variants: Variants = {
     animate: (index) => {
-      if (isCurrentImage(index)) return { x: 0, width: 1137 };
+      if (isCurrentImage(index)) return {
+        x: 0,
+        width: primaryWidth,
+      };
       return {
-        x: isNextImage(index) ? -60 : [null, 400, 60],
-        width: 807,
+        x: isNextImage(index) ? -offset : [null, slideDistance, offset],
+        width: secondaryWidth,
         top: "50%",
         y: "-50%"
       };
@@ -45,7 +56,7 @@ export const ImageCarousel: React.FC<ImageCarouselProps> = ({ images }) => {
   return (
     <div
       onClick={next}
-      className="relative lg:w-[1137px] lg:h-[781px]"
+      className="relative w-[378px] h-[212px] lg:w-[1137px] lg:h-[781px]"
     >
       {images.map((src, index) => (
         <motion.img
