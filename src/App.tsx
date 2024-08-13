@@ -24,21 +24,20 @@ const App = () => {
   }, []);
 
   return (
-    <div className="bg-[#F1EAE0] overflow-hidden">
+    <div className="bg-[#F1EAE0]">
       <Sidebar
         ref={sidebarRef}
         isHidden={isSidebarHidden}
         onClose={() => setIsSidebarHidden(true)}
       />
+      <Header
+        onClickMenuButton={() => setIsSidebarHidden(false)}
+      />
       <motion.div
         animate={{
-          x: !isSidebarHidden ? sidebarRef.current?.clientWidth : 0,
+          paddingLeft: !isSidebarHidden ? sidebarRef.current?.clientWidth : 0,
         }}
-        transition={{ type: "spring", stiffness: 300, damping: 35 }} // this is the same transition properties as the sidebar for consistency
       >
-        <Header
-          onClickMenuButton={() => setIsSidebarHidden(false)}
-        />
         <Outlet />
         <Footer />
       </motion.div>
