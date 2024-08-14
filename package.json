@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "test": "vitest",
     "test:e2e": "playwright test",
-    "fetch-contributors": "node scripts/fetch-contributors.js"
+    "fetch-contributors": "node scripts/fetch-contributors.js",
+    "fetch-repo-statistics": "node scripts/fetch-repo-statistics.js"
   },
   "dependencies": {
     "clsx": "^2.1.1",

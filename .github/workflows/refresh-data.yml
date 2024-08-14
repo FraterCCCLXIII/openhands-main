@@ -9,6 +9,9 @@ jobs:
   refresh-contributors:
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: write
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -21,6 +24,9 @@ jobs:
 
       - name: Fetch contributors data
         run: bun run fetch-contributors
+      
+      - name: Fetch repository statistics
+        run: bun run fetch-repo-statistics
 
       - name: Commit and push changes
         run: |
