@@ -18,7 +18,7 @@ import {
   IPythonAction,
   IPythonObservation,
   FinishAction
-} from "../trajectory-list-items";
+} from "./trajectory-list-items";
 import { TrajectoryCard } from "./trajectory-card";
 
 interface TrajectoryListProps {
