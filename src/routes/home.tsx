@@ -21,14 +21,6 @@ import { ImageCarousel } from "~/components/image-carousel";
 import CONTRIBUTORS from "~/data/contributors.json";
 import { formatContributorCount } from "~/utils/format-contributor-count";
 
-export const loader = () => {
-  return {
-    contributors: CONTRIBUTORS.slice(0, 12),
-    stars: formatThousands(0),
-    lastCommit: formatLastCommit(new Date().toISOString()),
-  };
-};
-
 const Home = () => {
   return (
     <main data-testid="home-content">

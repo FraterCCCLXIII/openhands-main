@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import './index.css';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-import Home, { loader as homeLoader } from './routes/home';
+import Home from './routes/home';
 import About from './routes/about';
 import Blog, { loader as blogLoader } from './routes/blog';
 import BlogDetails, { loader as blogDetailsLoaders, ErrorBoundary as BlogDetailsErrorBoundary } from './routes/blog.$slug';
@@ -18,12 +18,10 @@ const router = createBrowserRouter([
       {
         path: "/",
         element: <Home />,
-        loader: homeLoader,
       },
       {
         path: "/about",
         element: <About />,
-        loader: () => ({}),
       },
       {
         path: "/blog",
