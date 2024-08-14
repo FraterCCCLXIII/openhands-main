@@ -1,26 +1,26 @@
-export const isConfig = (data: any): data is Config =>
-  data.action === "initialize";
+export const isConfig = (data: TrajectoryItem): data is Config =>
+  "action" in data && data.action === "initialize";
 
-export const isAgentStateChange = (message: any): message is AgentStateChange =>
-  message.observation === "agent_state_changed" && message.source === "agent";
+export const isAgentStateChange = (data: TrajectoryItem): data is AgentStateChange =>
+  "observation" in data && data.observation === "agent_state_changed" && data.source === "agent";
 
-export const isUserMessage = (message: any): message is UserMessage =>
-  message.action === "message" && !message.source;
+export const isUserMessage = (data: TrajectoryItem): data is UserMessage =>
+  "action" in data && data.action === "message" && !("source" in data)
 
-export const isAssistantMessage = (message: any): message is AssistantMessage =>
-  message.action === "message" && message.source === "agent";
+export const isAssistantMessage = (data: TrajectoryItem): data is AssistantMessage =>
+  "action" in data && data.action === "message" && "source" in data && data.source === "agent";
 
-export const isCommandAction = (message: any): message is CommandAction =>
-  message.action === "run" && message.source === "agent";
+export const isCommandAction = (data: TrajectoryItem): data is CommandAction =>
+  "action" in data && data.action === "run" && data.source === "agent";
 
-export const isCommandObservation = (message: any): message is CommandObservation =>
-  message.observation === "run" && message.source === "agent";
+export const isCommandObservation = (data: TrajectoryItem): data is CommandObservation =>
+  "observation" in data && data.observation === "run" && data.source === "agent";
 
-export const isIPythonAction = (message: any): message is IPythonAction =>
-  message.action === "run_ipython" && message.source === "agent";
+export const isIPythonAction = (data: TrajectoryItem): data is IPythonAction =>
+  "action" in data && data.action === "run_ipython" && data.source === "agent";
 
-export const isIPythonObservation = (message: any): message is IPythonObservation =>
-  message.observation === "run_ipython" && message.source === "agent";
+export const isIPythonObservation = (data: TrajectoryItem): data is IPythonObservation =>
+  "observation" in data && data.observation === "run_ipython" && data.source === "agent";
 
-export const isFinishAction = (message: any): message is FinishAction =>
-  message.action === "finish" && message.source === "agent";
+export const isFinishAction = (data: TrajectoryItem): data is FinishAction =>
+  "action" in data && data.action === "finish" && data.source === "agent";

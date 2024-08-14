@@ -1,4 +1,5 @@
-import { useLoaderData } from "react-router-dom";
+import { LoaderFunctionArgs, useLoaderData } from "react-router-dom";
+import { json } from "react-router-dom";
 import TRAJECTORY from "~/../TEMP.json";
 import { CSyntaxHighlighter } from "~/components/c-syntax-highlighter";
 import {
@@ -23,36 +24,93 @@ import {
   isUserMessage
 } from "~/utils/share";
 
-export const loader = async () => {
+interface TrajectoryData {
+  version: string;
+  feedback: "positive" | "negative";
+  permissions: "public" | "private";
+  timestamp: string;
+  trajectory: TrajectoryItem[];
+}
+
+interface TrajectoryMeta {
+  feedback: "positive" | "negative";
+  permissions: "public" | "private";
+  timestamp: string;
+  agent: string;
+  language: string;
+  model: string;
+}
+
+const fetchTrajectoryData = async (id: string): Promise<TrajectoryData> => {
+  const response = await fetch('https://show-od-trajectory-3u9bw9tx.uc.gateway.dev/show-od-trajectory', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ feedback_id: id })
+  });
+
+  return response.json();
+}
+
+export const loader = async ({ request }: LoaderFunctionArgs) => {
+  const url = new URL(request.url);
+  const id = url.searchParams.get('share_id');
+
+  if (!id) return json(null);
+  const data = await fetchTrajectoryData(id);
+
+  const config = TRAJECTORY.trajectory.find((item) => isConfig(item as TrajectoryItem));
+  const trajectory = TRAJECTORY.trajectory.filter((item) => !isConfig(item as TrajectoryItem));
+
+  const meta: TrajectoryMeta = {
+    feedback: data.feedback,
+    permissions: data.permissions,
+    timestamp: data.timestamp,
+    agent: config?.args?.AGENT || "",
+    language: config?.args?.LANGUAGE || "",
+    model: config?.args?.LLM_MODEL || "",
+  }
   return {
-    TRAJECTORY,
-    config: TRAJECTORY.trajectory.find(isConfig),
+    trajectory,
+    meta,
   };
 };
 
 const Share = () => {
-  const { TRAJECTORY, config } = useLoaderData() as {
-    TRAJECTORY: { feedback: string; permissions: string; timestamp: string; trajectory: [] };
-    config: Config;
-  };
+  const data = useLoaderData() as {
+    trajectory: TrajectoryData["trajectory"];
+    meta: TrajectoryMeta;
+  } | null;
+
+  if (!data) {
+    return (
+      <div>
+        <h1>Error</h1>
+        <p>There was an error loading the trajectory.</p>
+      </div>
+    );
+  }
+
+  const { trajectory, meta } = data;
 
   return (
     <main className="flex flex-col items-center gap-8 py-[45px]">
-      <header className="bg-white p-4 rounded-md text-center flex flex-col gap-4">
-        <h1 className="heading">Share</h1>
+      <h1 className="heading">Share</h1>
 
+      <header className="bg-white p-4 rounded-md text-center flex flex-col gap-4">
         <div className="grid grid-cols-2">
-          <span>Feedback: {TRAJECTORY.feedback}</span>
-          <span>Permission: {TRAJECTORY.permissions}</span>
-          <span>Timestamp: {TRAJECTORY.timestamp}</span>
-          <span>Agent: {config.args.AGENT}</span>
-          <span>Language: {config.args.LANGUAGE}</span>
-          <span>Model: {config.args.LLM_MODEL}</span>
+          <span>Feedback: {meta.feedback}</span>
+          <span>Permission: {meta.permissions}</span>
+          <span>Timestamp: {meta.timestamp}</span>
+          <span>Agent: {meta.agent}</span>
+          <span>Language: {meta.language}</span>
+          <span>Model: {meta.model}</span>
         </div>
       </header>
 
       <div className="flex flex-col items-center gap-2">
-        {TRAJECTORY.trajectory.map((item: any, index: number) => {
+        {trajectory.map((item, index) => {
           if (isAgentStateChange(item)) {
             return <AgentStateChange key={index} state={item} />;
           } else if (isUserMessage(item)) {

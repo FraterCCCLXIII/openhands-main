@@ -9,14 +9,6 @@ interface Config {
   }
 }
 
-enum AgentState {
-  INIT = "init",
-  LOADING = "loading",
-  RUNNING = "running",
-  PENDING = "awaiting_user_input",
-  FINISHED = "finished",
-}
-
 interface AgentStateChange {
   id: number;
   message: string;
@@ -25,7 +17,7 @@ interface AgentStateChange {
   observation: "agent_state_changed";
   content: string;
   extras: {
-    agent_state: AgentState
+    agent_state: "init" | "loading" | "running" | "awaiting_user_input" | "finished";
   };
 }
 
@@ -33,7 +25,7 @@ interface UserMessage {
   action: "message";
   args: {
     content: string;
-    image_urls?: string[];
+    images_urls: string[];
   };
 }
 
@@ -45,7 +37,7 @@ interface AssistantMessage {
   timestamp: string; // ISO 8601
   args: {
     content: string;
-    image_urls: string[] | null;
+    images_urls: string[] | null;
     wait_for_response: boolean;
   };
 }
@@ -117,3 +109,5 @@ interface FinishAction {
     thought: string;
   };
 }
+
+type TrajectoryItem = AgentStateChange | UserMessage | AssistantMessage | CommandAction | CommandObservation | IPythonAction | IPythonObservation | FinishAction | Config;
