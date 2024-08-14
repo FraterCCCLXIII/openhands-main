@@ -1,4 +1,4 @@
-import { TrajectoryCard } from "./trajectory-card";
+import { TrajectoryCard } from "../share/trajectory-card";
 import { CSyntaxHighlighter } from "../c-syntax-highlighter";
 
 interface CommandObservationProps {

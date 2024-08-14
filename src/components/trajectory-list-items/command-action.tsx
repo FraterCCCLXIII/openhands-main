@@ -1,5 +1,5 @@
 import { CSyntaxHighlighter } from "../c-syntax-highlighter";
-import { TrajectoryCard } from "./trajectory-card";
+import { TrajectoryCard } from "../share/trajectory-card";
 
 interface CommandActionProps {
   command: CommandAction;

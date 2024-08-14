@@ -1,4 +1,4 @@
-import { TrajectoryCard } from "./trajectory-card";
+import { TrajectoryCard } from "../share/trajectory-card";
 
 interface AssistantMessageProps {
   message: AssistantMessage;

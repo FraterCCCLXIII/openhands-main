@@ -8,7 +8,7 @@ import About from './routes/about';
 import Blog, { loader as blogLoader } from './routes/blog';
 import BlogDetails, { loader as blogDetailsLoaders, ErrorBoundary as BlogDetailsErrorBoundary } from './routes/blog.$slug';
 import { HelmetProvider } from 'react-helmet-async';
-import Share, { loader as shareLoader } from './routes/share';
+import Share, { loader as shareLoader, ErrorBoundary as ShareErrorBoundary } from './routes/share';
 
 const router = createBrowserRouter([
   {
