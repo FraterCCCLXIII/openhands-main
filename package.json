@@ -8,7 +8,8 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "test": "vitest",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "fetch-contributors": "node scripts/fetch-contributors.js"
   },
   "dependencies": {
     "clsx": "^2.1.1",
