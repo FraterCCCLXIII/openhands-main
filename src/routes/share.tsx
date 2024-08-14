@@ -1,6 +1,5 @@
 import { LoaderFunctionArgs, useLoaderData } from "react-router-dom";
 import { json } from "react-router-dom";
-import TRAJECTORY from "~/../TEMP.json";
 import { CSyntaxHighlighter } from "~/components/c-syntax-highlighter";
 import {
   AgentStateChange,
@@ -60,8 +59,8 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   if (!id) return json(null);
   const data = await fetchTrajectoryData(id);
 
-  const config = TRAJECTORY.trajectory.find((item) => isConfig(item as TrajectoryItem));
-  const trajectory = TRAJECTORY.trajectory.filter((item) => !isConfig(item as TrajectoryItem));
+  const config = data.trajectory.find(isConfig);
+  const trajectory = data.trajectory.filter((item) => !isConfig(item));
 
   const meta: TrajectoryMeta = {
     feedback: data.feedback,
