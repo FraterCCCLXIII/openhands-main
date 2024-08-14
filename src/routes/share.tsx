@@ -1,9 +1,10 @@
-import { LoaderFunctionArgs, useLoaderData } from "react-router-dom";
+import { Form, LoaderFunctionArgs, useLoaderData, useNavigation } from "react-router-dom";
 import { json } from "react-router-dom";
 import { isConfig, } from "~/utils/share";
 import { MetaHeader, TrajectoryMeta } from "~/components/share/meta-header";
 import { TrajectoryList } from "~/components/share/trajectory-list";
 import { fetchTrajectoryData, TrajectoryData } from "~/api/share";
+import clsx from "clsx";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const url = new URL(request.url);
@@ -25,24 +26,44 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       language: config?.args.LANGUAGE || "",
       model: config?.args.LLM_MODEL || "",
     }
-    return {
-      trajectory,
-      meta,
-    };
+    return json({ id, trajectory, meta });
   } catch (error) {
     return json({ status: 404 });
   }
 };
 
 const Share = () => {
+  const navigation = useNavigation();
   const data = useLoaderData() as {
+    id: string;
     trajectory: TrajectoryData["trajectory"];
     meta: TrajectoryMeta;
   } | { status: number };
 
   return (
-    <main className="flex flex-col items-center gap-8 py-[45px]">
-      <h1 className="heading">Share</h1>
+    <main className="flex flex-col items-center gap-4 py-[45px]">
+      <h1 className="heading-large">Share</h1>
+      <p className="description h-[25px]">
+        {navigation.state === "loading" && "Loading..."}
+      </p>
+      <Form className="flex gap-2">
+        <input
+          name="share_id"
+          type="text"
+          placeholder="Enter Share ID"
+          className="w-[500px] rounded-md px-4 py-2"
+          defaultValue={"id" in data ? data.id : ""}
+        />
+        <button
+          type="submit"
+          className={clsx(
+            "bg-black text-white",
+            "font-semibold px-4 rounded-lg hover:bg-[#4B5563] hover:text-white",
+          )}
+        >
+          Search
+        </button>
+      </Form>
 
       {"status" in data && (
         <div className="flex flex-col items-center gap-4 text-center py-[45px]">
