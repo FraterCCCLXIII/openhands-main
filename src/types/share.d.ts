@@ -110,4 +110,14 @@ interface FinishAction {
   };
 }
 
-type TrajectoryItem = AgentStateChange | UserMessage | AssistantMessage | CommandAction | CommandObservation | IPythonAction | IPythonObservation | FinishAction | Config;
+interface ErrorObservation {
+  id: number;
+  message: string;
+  source: "agent";
+  timestamp: string;
+  observation: "error";
+  content: string;
+  extras: Record<string, unknown>;
+}
+
+type TrajectoryItem = AgentStateChange | UserMessage | AssistantMessage | CommandAction | CommandObservation | IPythonAction | IPythonObservation | FinishAction | Config | ErrorObservation;

@@ -6,7 +6,8 @@ import {
   isCommandObservation,
   isIPythonAction,
   isIPythonObservation,
-  isFinishAction
+  isFinishAction,
+  isErrorObservation
 } from "~/utils/share";
 import { CSyntaxHighlighter } from "../c-syntax-highlighter";
 import {
@@ -20,6 +21,7 @@ import {
   FinishAction
 } from "./trajectory-list-items";
 import { TrajectoryCard } from "./trajectory-card";
+import { ErrorObservation } from "./trajectory-list-items/assistant-message copy";
 
 interface TrajectoryListProps {
   trajectory: TrajectoryItem[];
@@ -45,6 +47,8 @@ export const TrajectoryList: React.FC<TrajectoryListProps> = ({ trajectory }) =>
           return <IPythonObservation key={index} observation={item} />;
         } else if (isFinishAction(item)) {
           return <FinishAction key={index} action={item} />;
+        } else if (isErrorObservation(item)) {
+          return <ErrorObservation key={index} observation={item} />;
         } else {
           return (
             <TrajectoryCard key={index}>

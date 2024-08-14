@@ -24,3 +24,6 @@ export const isIPythonObservation = (data: TrajectoryItem): data is IPythonObser
 
 export const isFinishAction = (data: TrajectoryItem): data is FinishAction =>
   "action" in data && data.action === "finish" && data.source === "agent";
+
+export const isErrorObservation = (data: TrajectoryItem): data is ErrorObservation =>
+  "observation" in data && data.observation === "error" && data.source === "agent";
