@@ -68,7 +68,7 @@ const Share = () => {
       {"status" in data && (
         <div className="flex flex-col items-center gap-4 text-center py-[45px]">
           {data.status === 400 && (
-            <p className="paragraph">Enter the share ID in the input above.</p>
+            <p className="paragraph">Enter the share ID in the input above to view the full trajectory.</p>
           )}
 
           {data.status === 404 && (
