@@ -3,11 +3,12 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import './index.css';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-import Home, { loader as homeLoader } from './routes/home';
+import Home from './routes/home';
 import About from './routes/about';
 import Blog, { loader as blogLoader } from './routes/blog';
 import BlogDetails, { loader as blogDetailsLoaders, ErrorBoundary as BlogDetailsErrorBoundary } from './routes/blog.$slug';
 import { HelmetProvider } from 'react-helmet-async';
+import Share, { loader as shareLoader } from './routes/share';
 
 const router = createBrowserRouter([
   {
@@ -17,7 +18,7 @@ const router = createBrowserRouter([
       {
         path: "/",
         element: <Home />,
-        loader: homeLoader,
+        loader: () => ({}),
       },
       {
         path: "/about",
@@ -35,6 +36,11 @@ const router = createBrowserRouter([
         element: <BlogDetails />,
         errorElement: <BlogDetailsErrorBoundary />,
         loader: blogDetailsLoaders,
+      },
+      {
+        path: "/share",
+        element: <Share />,
+        loader: shareLoader,
       },
     ],
   },

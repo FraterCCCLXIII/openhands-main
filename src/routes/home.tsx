@@ -1,4 +1,5 @@
-import { useLoaderData } from "react-router-dom";
+import statistics from "~/data/statistics.json";
+import contributors from "~/data/contributors.json";
 import GitHubLogo from "~/svgs/github-logo.svg?react";
 import TripleWow from "~/svgs/triple-wow.svg?react";
 import Star from "~/svgs/star.svg?react";
@@ -6,7 +7,6 @@ import Users from "~/svgs/users.svg?react";
 import Hierarchy from "~/svgs/hierarchy.svg?react";
 import Anthropic from "~/svgs/engines/anthropic-logo.svg?react";
 import HuggingFace from "~/svgs/engines/hf-logo.svg?react";
-import OLlama from "~/svgs/engines/ollama-logo.svg?react";
 import OpenAI from "~/svgs/engines/openai-logo.svg?react";
 import TogetherAI from "~/svgs/engines/together-ai-logo.svg?react";
 import { ContributorGrid } from "~/components/contributor-grid";
@@ -19,18 +19,9 @@ import HeartHands from "~/svgs/heart-hands.svg?react";
 import { Helmet } from "react-helmet-async";
 import { ImageCarousel } from "~/components/image-carousel";
 import CONTRIBUTORS from "~/data/contributors.json";
-
-export const loader = () => {
-  return {
-    contributors: CONTRIBUTORS.slice(0, 12),
-    stars: formatThousands(0),
-    lastCommit: formatLastCommit(new Date().toISOString()),
-  };
-};
+import { formatContributorCount } from "~/utils/format-contributor-count";
 
 const Home = () => {
-  const { contributors, lastCommit, stars } = useLoaderData() as ReturnType<typeof loader>;
-
   return (
     <main data-testid="home-content">
       <Helmet>
@@ -75,15 +66,15 @@ const Home = () => {
           <div data-testid="repo-statistics" className="flex flex-col gap-4 paragraph font-bold">
             <div className="flex gap-[6px]">
               <Star width={24} height={24} />
-              <span>{stars} Stars</span>
+              <span>{formatThousands(statistics.stargazers)} Stars</span>
             </div>
             <div className="flex gap-[6px]">
               <Users width={24} height={24} />
-              <span>{0} Contributors</span>
+              <span>{formatContributorCount(statistics.contributors_count)} Contributors</span>
             </div>
             <div className="flex gap-[6px]">
               <Hierarchy width={24} height={24} />
-              <span>Last Commit {lastCommit}</span>
+              <span>Last commit made {formatLastCommit(statistics.latest_commit)}</span>
             </div>
           </div>
         </div>
@@ -104,7 +95,7 @@ const Home = () => {
       >
         <ContributorGrid
           variant="small"
-          contributors={contributors}
+          contributors={contributors.filter((contributor) => contributor.type !== "Bot")}
         />
 
         <div className="flex flex-col gap-4 lg:w-[500px]">
@@ -129,11 +120,16 @@ const Home = () => {
         </div>
 
         <div className="flex flex-col lg:flex-row items-center gap-8 lg:w-screen lg:max-w-[1358px] lg:px-[143px] lg:justify-between">
-          <Anthropic width={130} height={48} />
-          <HuggingFace width={150} height={48} />
-          <OLlama width={100} height={48} />
+          <Anthropic width={120} height={48} />
+          <HuggingFace width={140} height={48} />
+          <img
+            src="/assets/llama-logo.png"
+            width={48}
+            height={48}
+            alt=""
+          />
           <OpenAI width={100} height={48} />
-          <TogetherAI width={130} height={48} />
+          <TogetherAI width={120} height={48} />
         </div>
       </section>
 

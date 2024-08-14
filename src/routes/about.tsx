@@ -3,7 +3,7 @@ import { ContributorGrid } from "~/components/contributor-grid";
 import { MemberCard } from "~/components/member-card";
 import { SectionHeading } from "~/components/section-heading";
 import { YellowWaveSection } from "~/components/yellow-wave-section";
-import CONTRIBUTORS from "~/data/contributors.json";
+import contributors from "~/data/contributors.json";
 
 const members: Member[] = [
   {
@@ -50,7 +50,7 @@ const About = () => {
         <div className="py-[45px]">
           <ContributorGrid
             variant="large"
-            contributors={CONTRIBUTORS}
+            contributors={contributors.filter((contributor) => contributor.type !== "Bot")}
           />
         </div>
       </section>
