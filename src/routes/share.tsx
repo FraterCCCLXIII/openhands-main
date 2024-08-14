@@ -66,9 +66,9 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     feedback: data.feedback,
     permissions: data.permissions,
     timestamp: data.timestamp,
-    agent: config?.args?.AGENT || "",
-    language: config?.args?.LANGUAGE || "",
-    model: config?.args?.LLM_MODEL || "",
+    agent: config?.args.AGENT || "",
+    language: config?.args.LANGUAGE || "",
+    model: config?.args.LLM_MODEL || "",
   }
   return {
     trajectory,
