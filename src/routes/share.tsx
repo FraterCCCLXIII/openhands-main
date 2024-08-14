@@ -56,9 +56,10 @@ const Share = () => {
         />
         <button
           type="submit"
+          disabled={navigation.state === "loading"}
           className={clsx(
             "bg-black text-white",
-            "font-semibold px-4 rounded-lg hover:bg-[#4B5563] hover:text-white",
+            "font-semibold px-4 rounded-lg hover:bg-[#4B5563] hover:text-white disabled:opacity-50",
           )}
         >
           Search

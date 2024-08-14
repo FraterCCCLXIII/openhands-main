@@ -7,7 +7,6 @@ import Users from "~/svgs/users.svg?react";
 import Hierarchy from "~/svgs/hierarchy.svg?react";
 import Anthropic from "~/svgs/engines/anthropic-logo.svg?react";
 import HuggingFace from "~/svgs/engines/hf-logo.svg?react";
-import OLlama from "~/svgs/engines/ollama-logo.svg?react";
 import OpenAI from "~/svgs/engines/openai-logo.svg?react";
 import TogetherAI from "~/svgs/engines/together-ai-logo.svg?react";
 import { ContributorGrid } from "~/components/contributor-grid";
@@ -129,11 +128,16 @@ const Home = () => {
         </div>
 
         <div className="flex flex-col lg:flex-row items-center gap-8 lg:w-screen lg:max-w-[1358px] lg:px-[143px] lg:justify-between">
-          <Anthropic width={130} height={48} />
-          <HuggingFace width={150} height={48} />
-          <OLlama width={100} height={48} />
+          <Anthropic width={120} height={48} />
+          <HuggingFace width={140} height={48} />
+          <img
+            src="/assets/llama-logo.png"
+            width={48}
+            height={48}
+            alt=""
+          />
           <OpenAI width={100} height={48} />
-          <TogetherAI width={130} height={48} />
+          <TogetherAI width={120} height={48} />
         </div>
       </section>
 
