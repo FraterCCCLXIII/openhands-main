@@ -1,13 +1,15 @@
+import { TrajectoryCard } from "./trajectory-card";
+
 interface AgentStateChangeProps {
   state: AgentStateChange;
 }
 
 export const AgentStateChange: React.FC<AgentStateChangeProps> = ({ state }) => {
   return (
-    <section className="w-[1000px] bg-amber-300 rounded-md flex gap-1">
+    <TrajectoryCard className="bg-amber-200 flex gap-1 p-2 border border-amber-400">
       <span>Agent State Change</span>
       <span>{"\u2192"}</span>
-      <p>{state.extras.agent_state}</p>
-    </section>
+      <span className="font-bold">{state.extras.agent_state}</span>
+    </TrajectoryCard>
   );
 }

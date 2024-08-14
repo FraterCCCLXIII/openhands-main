@@ -1,5 +1,6 @@
 import { useLoaderData } from "react-router-dom";
 import TRAJECTORY from "~/../TEMP.json";
+import { CSyntaxHighlighter } from "~/components/c-syntax-highlighter";
 import {
   AgentStateChange,
   UserMessage,
@@ -10,6 +11,7 @@ import {
   IPythonObservation,
   FinishAction
 } from "~/components/share";
+import { TrajectoryCard } from "~/components/share/trajectory-card";
 import {
   isAgentStateChange,
   isAssistantMessage,
@@ -21,7 +23,7 @@ import {
   isUserMessage
 } from "~/utils/share";
 
-export const loader = () => {
+export const loader = async () => {
   return {
     TRAJECTORY,
     config: TRAJECTORY.trajectory.find(isConfig),
@@ -35,18 +37,21 @@ const Share = () => {
   };
 
   return (
-    <main className="flex flex-col items-center">
-      <header className="bg-white p-4 rounded-md">
+    <main className="flex flex-col items-center gap-8 py-[45px]">
+      <header className="bg-white p-4 rounded-md text-center flex flex-col gap-4">
         <h1 className="heading">Share</h1>
-        <span>{TRAJECTORY.feedback}</span>
-        <span>{TRAJECTORY.permissions}</span>
-        <span>{TRAJECTORY.timestamp}</span>
-        <span>{config.args.AGENT}</span>
-        <span>{config.args.LANGUAGE}</span>
-        <span>{config.args.LLM_MODEL}</span>
+
+        <div className="grid grid-cols-2">
+          <span>Feedback: {TRAJECTORY.feedback}</span>
+          <span>Permission: {TRAJECTORY.permissions}</span>
+          <span>Timestamp: {TRAJECTORY.timestamp}</span>
+          <span>Agent: {config.args.AGENT}</span>
+          <span>Language: {config.args.LANGUAGE}</span>
+          <span>Model: {config.args.LLM_MODEL}</span>
+        </div>
       </header>
 
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col items-center gap-2">
         {TRAJECTORY.trajectory.map((item: any, index: number) => {
           if (isAgentStateChange(item)) {
             return <AgentStateChange key={index} state={item} />;
@@ -65,7 +70,16 @@ const Share = () => {
           } else if (isFinishAction(item)) {
             return <FinishAction key={index} action={item} />;
           } else {
-            return <div key={index}>Unknown message</div>;
+            return (
+              <TrajectoryCard key={index}>
+                <CSyntaxHighlighter
+                  language="json"
+                  key={index}
+                >
+                  {JSON.stringify(item, null, 2)}
+                </CSyntaxHighlighter>
+              </TrajectoryCard>
+            );
           }
         })}
       </div>
