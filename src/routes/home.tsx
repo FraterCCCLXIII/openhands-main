@@ -46,7 +46,7 @@ const Home = () => {
       </section>
 
       <section
-        className="flex flex-col items-center gap-8 pt-[25px] pb-[19px] overflow-x-hidden"
+        className="flex flex-col items-center gap-8 pt-[25px] pb-[19px] overflow-hidden"
       >
         <TripleWow width={53} height={33} />
         <ImageCarousel
