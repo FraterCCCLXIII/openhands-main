@@ -1,5 +1,5 @@
 import React from "react";
-import { useMotionValueEvent, useScroll } from "framer-motion";
+import { motion, useMotionValueEvent, useScroll } from "framer-motion";
 import MenuIcon from "~/svgs/menu.svg?react";
 import { Link } from "react-router-dom";
 import { AnimatedHeaderLogo } from "./animated-header-logo";
@@ -7,9 +7,10 @@ import { Button } from "./button";
 
 interface HeaderProps {
   onClickMenuButton: () => void;
+  width?: number;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onClickMenuButton }) => {
+export const Header: React.FC<HeaderProps> = ({ width, onClickMenuButton }) => {
   const { scrollY } = useScroll();
   const [textIsVisible, setTextIsVisible] = React.useState(true);
 
@@ -22,28 +23,30 @@ export const Header: React.FC<HeaderProps> = ({ onClickMenuButton }) => {
   });
 
   return (
-    <header className="h-[83px] w-screen">
-      <div className="h-[83px] flex items-center bg-[#F1EAE0] fixed w-full justify-center z-20">
-        <button
-          aria-label="Open Menu"
-          onClick={onClickMenuButton}
-          className="absolute left-[26px]"
-        >
-          <MenuIcon width={24} height={24} />
-        </button>
+    <motion.header
+      initial={false}
+      animate={{ width }}
+      className="h-[83px] flex items-center bg-[#F1EAE0] fixed top-0 right-0 justify-center z-20"
+    >
+      <button
+        aria-label="Open Menu"
+        onClick={onClickMenuButton}
+        className="absolute left-[26px]"
+      >
+        <MenuIcon width={38} height={38} />
+      </button>
 
-        <Link to="/" aria-label="Go to Home">
-          <AnimatedHeaderLogo renderText={textIsVisible} />
-        </Link>
+      <Link to="/" aria-label="Go to Home">
+        <AnimatedHeaderLogo renderText={textIsVisible} />
+      </Link>
 
 
-        <Button
-          text="View GitHub"
-          className="hidden lg:block absolute right-[26px]"
-          to="https://github.com/OpenDevin"
-          external
-        />
-      </div>
-    </header >
+      <Button
+        text="View GitHub"
+        className="hidden lg:block absolute right-[26px]"
+        to="https://github.com/OpenDevin"
+        external
+      />
+    </motion.header>
   );
 };

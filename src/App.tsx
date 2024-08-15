@@ -10,6 +10,7 @@ const App = () => {
   const [isSidebarHidden, setIsSidebarHidden] = React.useState(true);
   const sidebarRef = React.useRef<HTMLDivElement>(null);
   const width = useWidth();
+  const isDesktop = width >= 1024;
 
   React.useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -26,20 +27,22 @@ const App = () => {
   }, []);
 
   return (
-    <div className="bg-[#F1EAE0]">
+    <div className="bg-[#F1EAE0] relative">
       <Sidebar
         ref={sidebarRef}
         isHidden={isSidebarHidden}
         onClose={() => setIsSidebarHidden(true)}
       />
-      <Header
-        onClickMenuButton={() => setIsSidebarHidden(false)}
-      />
       <motion.div
+        className="mt-[83px]"
         animate={{
-          paddingLeft: width >= 1024 && !isSidebarHidden ? sidebarRef.current?.clientWidth : 0,
+          paddingLeft: isDesktop && !isSidebarHidden ? sidebarRef.current?.clientWidth : 0,
         }}
       >
+        <Header
+          onClickMenuButton={() => setIsSidebarHidden(false)}
+          width={(!isSidebarHidden && sidebarRef.current && isDesktop) ? width - sidebarRef.current?.clientWidth : width}
+        />
         <Outlet />
         <Footer />
       </motion.div>

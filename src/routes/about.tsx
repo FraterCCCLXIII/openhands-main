@@ -7,22 +7,24 @@ import contributors from "~/data/contributors.json";
 
 const members: Member[] = [
   {
-    src: "/assets/founders/robert.jpg",
+    src: "/assets/members/robert.jpg",
     name: "Robert Brennan",
-    title: "Cofounder",
-    description: "Made with the collaborative help of over 40 engineers in the opensource community. OpenDev changes the way you can create software."
+    title: "CEO",
   },
   {
-    src: "/assets/founders/graham.jpg",
+    src: "/assets/members/graham.jpg",
     name: "Graham Neubig",
-    title: "Cofounder",
-    description: "Made with the collaborative help of over 40 engineers in the opensource community. OpenDev changes the way you can create software."
+    title: "Chief Scientist",
   },
   {
-    src: "/assets/founders/xingyao.jpg",
+    src: "/assets/members/xingyao.jpg",
     name: "Xingyao Wang",
-    title: "Cofounder",
-    description: "Made with the collaborative help of over 40 engineers in the opensource community. OpenDev changes the way you can create software."
+    title: "Chief AI Officer",
+  },
+  {
+    src: "/assets/members/tim.png",
+    name: "Tim O'Farrell",
+    title: "Founding Principal Engineer",
   },
 ];
 
@@ -37,31 +39,35 @@ const About = () => {
         />
       </Helmet>
 
-      <section className="flex flex-col items-center gap-4 text-center py-[86px]">
-        <h1 className="heading-large w-[763px] h-[266px]">Building the future takes a lot of talent. So we invited the internet.</h1>
-        <p className="paragraph w-[466px] text-description">Made with the collaborative help of over 100 engineers in the opensource community. OpenDev changes the way you can create software.</p>
+      <section className="flex flex-col items-center gap-4 text-center py-[86px] px-[53px]">
+        <h1 className="heading-large max-w-[763px]">It takes a village to build the future. So we invited the internet.</h1>
       </section>
 
       <section className="flex flex-col items-center">
         <SectionHeading
           subheading="OUR CONTRIBUTORS"
-          heading="The Internet of People"
-        />
-        <div className="py-[45px]">
+          heading="An Internet of People"
+        >
+          <p className="paragraph h-[75px]">Over 150 developers have contributed. Come join us!</p>
+        </SectionHeading>
+      </section>
+
+      <section className="flex flex-col items-center py-[45px]">
+        <div className="h-[calc(88px*4+40px)] lg:h-auto overflow-hidden relative">
           <ContributorGrid
             variant="large"
-            contributors={contributors.filter((contributor) => contributor.type !== "Bot")}
+            contributors={contributors}
           />
+          <div className="lg:hidden absolute bottom-0 bg-gradient-to-t from-[#F1EAE0] to-transparent h-[40px] w-full" />
         </div>
       </section>
 
       <section>
         <SectionHeading
-          subheading="OUR TEAM"
-          heading="With our power combined!"
+          subheading="OUR FULL-TIME TEAM"
         />
 
-        <div className="flex justify-center">
+        <div className="flex flex-col justify-center lg:flex-row">
           {members.map((member) => (
             <MemberCard
               key={member.name}
@@ -76,7 +82,7 @@ const About = () => {
           heading="Ready to start building software with software that builds software?"
         />
       </section>
-    </main>
+    </main >
   )
 };
 

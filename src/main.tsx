@@ -5,7 +5,7 @@ import './index.css';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import Home from './routes/home';
 import About from './routes/about';
-import Blog, { loader as blogLoader } from './routes/blog';
+import Blog, { loader as blogLoader, action as blogAction } from './routes/blog';
 import BlogDetails, { loader as blogDetailsLoaders, ErrorBoundary as BlogDetailsErrorBoundary } from './routes/blog.$slug';
 import { HelmetProvider } from 'react-helmet-async';
 import Share, { loader as shareLoader } from './routes/share';
@@ -29,6 +29,7 @@ const router = createBrowserRouter([
         path: "/blog",
         element: <Blog />,
         loader: blogLoader,
+        action: blogAction,
       },
       {
         id: "blog-details",

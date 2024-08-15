@@ -8,8 +8,8 @@ interface ContributorGridItemProps {
 
 export const ContributorGridItem: React.FC<ContributorGridItemProps> = ({ contributor }) => (
   <img
-    src={contributor.avatar_url}
+    src={`https://avatars.githubusercontent.com/u/${contributor.id}?v=4`}
     alt={contributor.login}
-    className="bg-placeholder rounded-[7px] w-[76px] aspect-square lg:w-[113px]"
+    className="bg-placeholder rounded-[10px] w-[80px] aspect-square lg:w-[113px]"
   />
 );

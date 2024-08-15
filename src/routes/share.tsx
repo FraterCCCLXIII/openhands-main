@@ -51,7 +51,7 @@ const Share = () => {
           name="share_id"
           type="text"
           placeholder="Enter Share ID"
-          className="w-[500px] rounded-md px-4 py-2"
+          className="lg:w-[500px] rounded-md px-4 py-2"
           defaultValue={"id" in data ? data.id : ""}
         />
         <button
@@ -59,7 +59,7 @@ const Share = () => {
           disabled={navigation.state === "loading"}
           className={clsx(
             "bg-black text-white",
-            "font-semibold px-4 rounded-lg hover:bg-[#4B5563] hover:text-white disabled:opacity-50",
+            "font-semibold px-4 rounded-lg hover:bg-[#4B5563] hover:text-white disabled:opacity-50 transition-colors duration-50",
           )}
         >
           Search
@@ -67,7 +67,7 @@ const Share = () => {
       </Form>
 
       {"status" in data && (
-        <div className="flex flex-col items-center gap-4 text-center py-[45px]">
+        <div className="flex flex-col items-center gap-4 text-center py-[45px] px-[42px]">
           {data.status === 400 && (
             <p className="paragraph">Enter the share ID in the input above to view the full trajectory.</p>
           )}
