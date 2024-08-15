@@ -1,7 +1,8 @@
 import clsx from "clsx";
+import fetchJsonp from "fetch-jsonp";
 import React from "react";
 import { Helmet } from "react-helmet-async";
-import { useLoaderData } from "react-router-dom";
+import { ActionFunctionArgs, Form, json, useActionData, useLoaderData, useNavigation } from "react-router-dom";
 import { blogAPI } from "~/api/blog";
 import { BlogCard, FeaturedBlogCard } from "~/components/blog-card";
 import { SectionHeading } from "~/components/section-heading";
@@ -11,16 +12,19 @@ import { stringToSlug } from "~/utils/string-to-slug";
 interface FormButtonProps {
   onClick?: () => void;
   type?: "button" | "submit";
+  disabled?: boolean;
   children: string;
 }
 
-const FormButton: React.FC<FormButtonProps> = ({ onClick, type = "button", children }) => (
+const FormButton: React.FC<FormButtonProps> = ({ onClick, type = "button", disabled = false, children }) => (
   <button
     type={type}
     onClick={onClick}
+    disabled={disabled}
     className={clsx(
       "bg-black text-white py-2 text-sm",
       "font-semibold px-4 rounded-lg hover:bg-[#4B5563] hover:text-white transition-colors duration-50",
+      "disabled:opacity-50 disabled:cursor-not-allowed disabled:transition-none",
     )}
   >
     {children}
@@ -33,7 +37,35 @@ export const loader = async () => {
   return { blogs };
 };
 
+export const action = async ({ request }: ActionFunctionArgs) => {
+  const formData = await request.formData();
+  const email = formData.get("email");
+
+  if (!email || typeof email !== "string") {
+    return json({ result: "error", msg: "Email is required" });
+  }
+
+  const url = "https://dev.us17.list-manage.com/subscribe/post?u=669d348a75588dd92a51fb0a4&id=34795608c8";
+  const query = new URLSearchParams({ EMAIL: email }).toString();
+  const endpoint = url.replace("/post", "/post-json") + `&${query}`;
+
+  try {
+    // This is a JSONP request to Mailchimp's API
+    // (Mailchimp doesn't support CORS, so we have to use JSONP)
+    const response = await fetchJsonp(endpoint, {
+      jsonpCallback: "c",
+    });
+
+    const data = await response.json() as { result: string, msg: string };
+    return json(data);
+  } catch (error) {
+    return json({ result: "error", msg: "Failed to subscribe. Please try again later." });
+  }
+}
+
 const Blog = () => {
+  const data = useActionData() as { result: "success" | "error", msg: string } | undefined | null;
+  const navigation = useNavigation();
   const [formIsVisible, setFormIsVisible] = React.useState(false);
   const { blogs } = useLoaderData() as { blogs: Post[] }
   const latestBlog = blogs[0];
@@ -66,21 +98,36 @@ const Blog = () => {
           {!formIsVisible && (
             <FormButton onClick={() => setFormIsVisible(true)}>Subscribe to our newsletter</FormButton>
           )}
-          {formIsVisible && (
-            <form
+          {formIsVisible && !data && (
+            <Form
               className="flex gap-2"
               method="post"
-              action="https://dev.us17.list-manage.com/subscribe/post"
             >
               <input
                 type="email"
+                name="email"
                 placeholder="Email"
                 required
                 pattern="[^@]+@[^.]+\..+"
                 className="bg-white text-black py-2 px-4 rounded-lg w-[300px]"
               />
-              <FormButton type="submit">Subscribe</FormButton>
-            </form>
+              <FormButton
+                type="submit"
+                disabled={navigation.state === "submitting" || !!data}
+              >
+                Subscribe
+              </FormButton>
+            </Form>
+          )}
+          {data && (
+            <p
+              className={clsx(
+                "description h-[25px]",
+                data.result === "success" ? "text-green-600" : "text-red-600",
+              )}
+            >
+              {data.msg}
+            </p>
           )}
         </SectionHeading>
       </section>

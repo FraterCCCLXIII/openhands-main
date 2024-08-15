@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "clsx": "^2.1.1",
+    "fetch-jsonp": "^1.3.0",
     "framer-motion": "^11.3.24",
     "gray-matter": "^4.0.3",
     "react": "^18.3.1",
