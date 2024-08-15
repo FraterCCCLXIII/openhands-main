@@ -9,8 +9,6 @@ export const formatLastCommit = (date: string) => {
   const days = hours / 24;
   const weeks = days / 7;
 
-  console.log(hours)
-
   if (weeks >= 1) return `${Math.floor(weeks)} week${Math.floor(weeks) > 1 ? 's' : ''} ago`;
   if (days >= 1) return `${Math.floor(days)} day${Math.floor(days) > 1 ? 's' : ''} ago`;
   if (hours >= 1) return `${Math.floor(hours)} hour${Math.floor(hours) > 1 ? 's' : ''} ago`;

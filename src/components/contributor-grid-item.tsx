@@ -10,6 +10,6 @@ export const ContributorGridItem: React.FC<ContributorGridItemProps> = ({ contri
   <img
     src={contributor.avatar_url}
     alt={contributor.login}
-    className="bg-placeholder rounded-[7px] w-[76px] aspect-square lg:w-[113px]"
+    className="bg-placeholder rounded-[10px] w-[80px] aspect-square lg:w-[113px]"
   />
 );

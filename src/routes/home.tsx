@@ -18,7 +18,6 @@ import BreakFree from "~/svgs/break-free.svg?react";
 import HeartHands from "~/svgs/heart-hands.svg?react";
 import { Helmet } from "react-helmet-async";
 import { ImageCarousel } from "~/components/image-carousel";
-import CONTRIBUTORS from "~/data/contributors.json";
 import { formatContributorCount } from "~/utils/format-contributor-count";
 
 const Home = () => {
@@ -53,7 +52,10 @@ const Home = () => {
         <ImageCarousel
           images={Array.from({ length: 3 }).map((_, index) => `/assets/product/product-slide-${index + 1}.png`)}
         />
-        <p className="paragraph text-center w-[352px] lg:w-[466px] text-description">Development agents use AI to tackle the toil in your backlog, so you can focus on what matters: hard problems, creative challenges, and over-engineering your dotfiles</p>
+      </section>
+
+      <section className="flex justify-center text-center py-[90px] px-[42px]">
+        <h2 className="heading lg:max-w-[902px]">Development agents use AI to tackle the toil in your backlog, so you can focus on what matters: hard problems, creative challenges, and over-engineering your dotfiles.</h2>
       </section>
 
       <section
