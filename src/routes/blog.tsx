@@ -4,7 +4,6 @@ import { Helmet } from "react-helmet-async";
 import { useLoaderData } from "react-router-dom";
 import { blogAPI } from "~/api/blog";
 import { BlogCard, FeaturedBlogCard } from "~/components/blog-card";
-import { Button } from "~/components/button";
 import { SectionHeading } from "~/components/section-heading";
 import { useWidth } from "~/hooks/use-media";
 import { stringToSlug } from "~/utils/string-to-slug";
@@ -40,6 +39,12 @@ const Blog = () => {
   const latestBlog = blogs[0];
 
   const width = useWidth();
+
+  const [visibleCount, setVisibleCount] = React.useState(3);
+
+  const loadMoreBlogs = () => {
+    setVisibleCount((prev) => prev + 3);
+  }
 
   return (
     <main>
@@ -90,7 +95,7 @@ const Blog = () => {
 
       <section className="flex flex-col items-center">
         <div className="grid grid-cols-1 lg:grid-cols-3">
-          {blogs.slice(width > 1024 ? 1 : 0).map((blog, index) => (
+          {blogs.slice((width > 1024 ? 1 : 0), visibleCount + (width > 1024 ? 1 : 0)).map((blog, index) => (
             <BlogCard
               key={index}
               blogId={stringToSlug(blog.data.title)}
@@ -100,9 +105,11 @@ const Blog = () => {
           ))}
         </div>
 
-        <div className="py-[45px]">
-          <Button text="Load More" to="/blog" />
-        </div>
+        {visibleCount < blogs.length && (
+          <div className="py-[45px]">
+            <FormButton onClick={loadMoreBlogs}>Load More</FormButton>
+          </div>
+        )}
       </section>
     </main>
   );
