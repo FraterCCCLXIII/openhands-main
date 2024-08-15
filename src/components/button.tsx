@@ -1,6 +1,8 @@
 import clsx from "clsx";
 import { Link } from "react-router-dom";
 
+// TODO: Separate the button from the Link
+
 interface ButtonProps {
   text: string;
   // If `to` is provided, it will be used as the Link `to` prop
@@ -35,7 +37,7 @@ export const Button: React.FC<ButtonProps> = ({
     target={external ? "_blank" : undefined}
     className={clsx(
       style === "primary" ? "bg-black text-white" : "bg-white text-black",
-      "font-semibold px-4 rounded-lg hover:bg-[#4B5563] hover:text-white",
+      "font-semibold px-4 rounded-lg hover:bg-[#4B5563] hover:text-white transition-colors duration-50",
       icon && "flex items-center gap-[15px]",
       variant === "small" ? "py-2 text-sm" : "py-[11px]",
       variant !== "small" && "text-[19px] leading-[27px]", // medium and large

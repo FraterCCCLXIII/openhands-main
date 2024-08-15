@@ -20,7 +20,7 @@ const FormButton: React.FC<FormButtonProps> = ({ onClick, type = "button", child
     onClick={onClick}
     className={clsx(
       "bg-black text-white py-2 text-sm",
-      "font-semibold px-4 rounded-lg hover:bg-[#4B5563] hover:text-white",
+      "font-semibold px-4 rounded-lg hover:bg-[#4B5563] hover:text-white transition-colors duration-50",
     )}
   >
     {children}

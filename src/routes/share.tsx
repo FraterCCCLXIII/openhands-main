@@ -59,7 +59,7 @@ const Share = () => {
           disabled={navigation.state === "loading"}
           className={clsx(
             "bg-black text-white",
-            "font-semibold px-4 rounded-lg hover:bg-[#4B5563] hover:text-white disabled:opacity-50",
+            "font-semibold px-4 rounded-lg hover:bg-[#4B5563] hover:text-white disabled:opacity-50 transition-colors duration-50",
           )}
         >
           Search
