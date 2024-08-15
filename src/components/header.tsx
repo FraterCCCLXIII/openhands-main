@@ -33,7 +33,7 @@ export const Header: React.FC<HeaderProps> = ({ width, onClickMenuButton }) => {
         onClick={onClickMenuButton}
         className="absolute left-[26px]"
       >
-        <MenuIcon width={24} height={24} />
+        <MenuIcon width={38} height={38} />
       </button>
 
       <Link to="/" aria-label="Go to Home">
