@@ -24,7 +24,7 @@ export const ImageCarousel: React.FC<ImageCarouselProps> = ({ images }) => {
       if (isCurrentImage(index)) targetZIndex = 2;
       if (isNextImage(index)) targetZIndex = 1;
 
-      animate(zIndex, targetZIndex, { type: 'tween', duration: 0.4, onUpdate: (value) => zIndex.set(value) });
+      animate(zIndex, targetZIndex, { type: 'tween', duration: 2, onUpdate: (value) => zIndex.set(value) });
     });
   }, [currentImage]);
 
@@ -34,14 +34,14 @@ export const ImageCarousel: React.FC<ImageCarouselProps> = ({ images }) => {
 
   const primaryWidth = width >= 1024 ? 1134 : 378;
   const secondaryWidth = width >= 1024 ? 807 : 268;
-  const slideDistance = primaryWidth - secondaryWidth;
+  const slideDistance = (primaryWidth - secondaryWidth) * 1.2;
 
   const offset = width >= 1024 ? 60 : 20;
 
   const variants: Variants = {
     animate: (index) => {
       if (isCurrentImage(index)) return {
-        x: 0,
+        x: [null, -slideDistance, 0],
         width: primaryWidth,
       };
       return {
@@ -68,7 +68,10 @@ export const ImageCarousel: React.FC<ImageCarouselProps> = ({ images }) => {
           custom={index}
           variants={variants}
           animate="animate"
-          transition={{ type: 'tween', duration: 0.4 }}
+          transition={{
+            duration: 0.8,
+            ease: [0.43, 0.13, 0.23, 0.96], // Similar to easeInOut but smoother
+          }}
           style={{ zIndex: zIndexes[index] }}
           className={clsx(
             "bg-[#D4CABD] rounded-[10px]",
