@@ -30,7 +30,7 @@ interface BlogCardProps {
 
 export const BlogCard: React.FC<BlogCardProps> = ({ blogId, title, description, img }) => (
   <Link to={blogId} className="flex flex-col gap-8 px-[42px] py-[45px]">
-    {!img?.src && <PlaceholderImage className="aspect-video rounded-[7px]" />}
+    {!img?.src && <PlaceholderImage variant="robot" className="aspect-video rounded-[7px]" />}
     {img?.src && <img src={img.src} alt={img.alt} className="flex items-center justify-center aspect-video rounded-[7px] object-contain" />}
     <div className="flex flex-col gap-4 items-start">
       <h2 className="font-quincy text-[33px] leading-[33px]">{title}</h2>
