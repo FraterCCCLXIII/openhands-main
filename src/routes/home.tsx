@@ -97,7 +97,7 @@ const Home = () => {
       >
         <ContributorGrid
           variant="small"
-          contributors={contributors.filter((contributor) => contributor.type !== "Bot")}
+          contributors={contributors}
         />
 
         <div className="flex flex-col gap-4 lg:w-[500px]">

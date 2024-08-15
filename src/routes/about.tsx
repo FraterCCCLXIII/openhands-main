@@ -56,7 +56,7 @@ const About = () => {
         <div className="h-[calc(88px*4+40px)] lg:h-auto overflow-hidden relative">
           <ContributorGrid
             variant="large"
-            contributors={contributors.filter((contributor) => contributor.type !== "Bot")}
+            contributors={contributors}
           />
           <div className="lg:hidden absolute bottom-0 bg-gradient-to-t from-[#F1EAE0] to-transparent h-[40px] w-full" />
         </div>
