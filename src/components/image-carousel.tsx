@@ -15,6 +15,7 @@ export const ImageCarousel: React.FC<ImageCarouselProps> = ({ images }) => {
   const [zi, setZi] = React.useState(INITIAL_ZI_STATE);
   const [currentImage, setCurrentImage] = React.useState(0);
   const width = useWidth();
+  const isDesktop = width >= 1024;
 
   const isCurrentImage = (index: number) => index === currentImage;
   const isNextImage = (index: number) => index === (currentImage + 1) % images.length;
@@ -24,6 +25,7 @@ export const ImageCarousel: React.FC<ImageCarouselProps> = ({ images }) => {
   };
 
   React.useEffect(() => {
+    // Automatically cycle through images
     const interval = setInterval(next, 5000);
     return () => {
       clearInterval(interval);
@@ -35,6 +37,13 @@ export const ImageCarousel: React.FC<ImageCarouselProps> = ({ images }) => {
       setInitial(false);
       return;
     }
+
+    // context: https://github.com/framer/motion/issues/1254#issuecomment-920773347
+
+
+    // To prevent the next image from flickering while the current becomes the last,
+    // we first make the last image zIndex above the next image. We then swap the last and next image
+    // after a delay to prevent flickering.
 
     const timeoutFirst = setTimeout(() => {
       setZi((prev) => {
@@ -50,13 +59,14 @@ export const ImageCarousel: React.FC<ImageCarouselProps> = ({ images }) => {
         [1, 0, 2],
       ];
       const swappables = original.map(swapOneAndZero);
+      // Only swap if it has been previously swapped
       const isSwapped = (order: number[]) => swappables.some((swappable) => swappable.every((v, i) => v === order[i]));
 
       setZi((prev) => {
         if (isSwapped(prev)) return swapOneAndZero(prev);
         return prev;
       });
-    }, 375 * 2);
+    }, 375 * 2); // trigger after the first timeout
 
     return () => {
       clearTimeout(timeoutFirst);
@@ -64,11 +74,11 @@ export const ImageCarousel: React.FC<ImageCarouselProps> = ({ images }) => {
     }
   }, [currentImage]);
 
-  const primaryWidth = width >= 1024 ? 1134 : 378;
-  const secondaryWidth = width >= 1024 ? 807 : 268;
+  const primaryWidth = isDesktop ? 1134 : 378;
+  const secondaryWidth = isDesktop ? 807 : 268;
   const slideDistance = (primaryWidth - secondaryWidth) * 1.2;
 
-  const offset = width >= 1024 ? 60 : 20;
+  const offset = isDesktop ? 60 : 20;
 
   const variants: Variants = {
     animate: (index) => {
