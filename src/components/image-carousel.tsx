@@ -1,7 +1,10 @@
 import React from "react";
-import { animate, motion, useMotionValue, Variants } from "framer-motion";
+import { motion, Variants } from "framer-motion";
 import clsx from "clsx";
 import { useWidth } from "~/hooks/use-media";
+import { shiftOrder, swapOneAndZero } from "~/utils/shift-and-swap";
+
+const INITIAL_ZI_STATE = [2, 1, 0];
 
 interface ImageCarouselProps {
   images: string[];
@@ -9,7 +12,7 @@ interface ImageCarouselProps {
 
 export const ImageCarousel: React.FC<ImageCarouselProps> = ({ images }) => {
   const [initial, setInitial] = React.useState(true);
-  const [zi, setZi] = React.useState([2, 1, 0]);
+  const [zi, setZi] = React.useState(INITIAL_ZI_STATE);
   const [currentImage, setCurrentImage] = React.useState(0);
   const width = useWidth();
 
@@ -25,13 +28,29 @@ export const ImageCarousel: React.FC<ImageCarouselProps> = ({ images }) => {
 
     const timeoutFirst = setTimeout(() => {
       setZi((prev) => {
-        const [two, one, zero] = prev;
-        return [zero, two, one];
+        const shifted = shiftOrder(prev);
+        return swapOneAndZero(shifted);
       });
     }, 375);
 
+    const timeoutSecond = setTimeout(() => {
+      const original = [
+        [2, 1, 0],
+        [0, 2, 1],
+        [1, 0, 2],
+      ];
+      const swappables = original.map(swapOneAndZero);
+      const isSwapped = (order: number[]) => swappables.some((swappable) => swappable.every((v, i) => v === order[i]));
+
+      setZi((prev) => {
+        if (isSwapped(prev)) return swapOneAndZero(prev);
+        return prev;
+      });
+    }, 375 * 2);
+
     return () => {
       clearTimeout(timeoutFirst);
+      clearTimeout(timeoutSecond);
     }
   }, [currentImage]);
 
