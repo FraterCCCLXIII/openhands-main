@@ -1,5 +1,5 @@
 import React from "react";
-import { motion, Variants } from "framer-motion";
+import { AnimatePresence, motion, Variants } from "framer-motion";
 import clsx from "clsx";
 import { useWidth } from "~/hooks/use-media";
 import { shiftOrder, swapOneAndZero } from "~/utils/shift-and-swap";
@@ -99,26 +99,27 @@ export const ImageCarousel: React.FC<ImageCarouselProps> = ({ images }) => {
       onClick={next}
       className="relative w-[378px] h-[212px] lg:w-[1137px] lg:h-[727px]"
     >
-      {images.map((src, index) => (
-        <motion.img
-          key={src}
-          src={src}
-          alt=""
-          initial={false}
-          custom={index}
-          variants={variants}
-          animate="animate"
-          transition={{
-            duration: 0.8,
-            ease: [0.43, 0.13, 0.23, 0.96], // Similar to easeInOut but smoother
-          }}
-          style={{ zIndex: zi[index] }}
-          className={clsx(
-            "bg-[#D4CABD] rounded-md lg:rounded-[10px]",
-            "absolute top-0",
-          )}
-        />
-      ))}
+      <AnimatePresence initial={false}>
+        {images.map((src, index) => (
+          <motion.img
+            key={index}
+            src={src}
+            alt=""
+            custom={index}
+            variants={variants}
+            animate="animate"
+            transition={{
+              duration: 0.8,
+              ease: [0.43, 0.13, 0.23, 0.96], // Similar to easeInOut but smoother
+            }}
+            style={{ zIndex: zi[index] }}
+            className={clsx(
+              "bg-[#D4CABD] rounded-md lg:rounded-[10px]",
+              "absolute top-0",
+            )}
+          />
+        ))}
+      </AnimatePresence>
     </div>
   );
 };
