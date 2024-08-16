@@ -53,13 +53,13 @@ const BlogDetails = () => {
         />
       </Helmet>
 
-      <figure className="lg:max-w-[600px] px-[42px]">
+      <figure className="lg:max-w-[800px] px-[42px]">
         {!data.cover && <PlaceholderImage className="aspect-video" />}
         {data.cover && (
           <img
             src={data.cover}
             alt="blog cover"
-            className="rounded-[7px] lg:rounded-[10px] flex items-center justify-center lg:aspect-video object-cover"
+            className="rounded-[7px] lg:rounded-[10px] flex items-center justify-center lg:aspect-video"
           />
         )}
       </figure>
