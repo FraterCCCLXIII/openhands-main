@@ -32,7 +32,7 @@ const Home = () => {
       </Helmet>
 
       <section
-        className="flex flex-col items-center gap-4 h-[391px] lg:h-auto pt-[50px] lg:py-[86px]"
+        className="flex flex-col items-center gap-4 pb-[45px] lg:h-auto pt-[50px] lg:py-[86px]"
       >
         <h1 className="heading-large text-center h-[188px] lg:h-auto lg:w-[764px]">Open Source Agents for Developers</h1>
 
@@ -50,12 +50,12 @@ const Home = () => {
       >
         <TripleWow width={53} height={33} />
         <ImageCarousel
-          images={Array.from({ length: 3 }).map((_, index) => `/assets/product/product-slide-${index + 1}.png`)}
+          images={Array.from({ length: 3 }).map((_, index) => `/assets/product/product-slide-${index + 1}.webp`)}
         />
       </section>
 
-      <section className="flex justify-center text-center py-[90px] px-[42px]">
-        <h2 className="heading lg:max-w-[902px]">Development agents use AI to tackle the toil in your backlog, so you can focus on what matters: hard problems, creative challenges, and over-engineering your dotfiles.</h2>
+      <section className="flex justify-center text-center pt-[45px] pb-[90px] px-[42px]">
+        <h2 className="font-quincy text-4xl lg:text-[60px] lg:leading-[60px] lg:max-w-[902px]">All Hands develops AI agents that tackle the toil in your backlog, so you can focus on what matters: hard problems, creative challenges, and over-engineering your dotfiles.</h2>
       </section>
 
       <section

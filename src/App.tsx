@@ -27,7 +27,7 @@ const App = () => {
   }, []);
 
   return (
-    <div className="bg-[#F1EAE0] relative">
+    <div className="relative">
       <Sidebar
         ref={sidebarRef}
         isHidden={isSidebarHidden}

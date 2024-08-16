@@ -26,6 +26,7 @@ export const Header: React.FC<HeaderProps> = ({ width, onClickMenuButton }) => {
     <motion.header
       initial={false}
       animate={{ width }}
+      transition={{ type: "spring", stiffness: 300, damping: 35 }} // same as sidebar
       className="h-[83px] flex items-center bg-[#F1EAE0] fixed top-0 right-0 justify-center z-20"
     >
       <button

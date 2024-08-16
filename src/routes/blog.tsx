@@ -79,7 +79,7 @@ const Blog = () => {
   }
 
   return (
-    <main>
+    <main className="flex flex-col">
       <Helmet>
         <title>All Hands AI Blog - Insights and Innovations</title>
         <meta
@@ -132,31 +132,35 @@ const Blog = () => {
         </SectionHeading>
       </section>
 
-      <section className="hidden lg:block">
-        <FeaturedBlogCard
-          blogId={stringToSlug(latestBlog.data.title)}
-          title={latestBlog.data.title}
-          description={latestBlog.data.excerpt}
-        />
-      </section>
+      <section className="max-w-[1440px] monitor:self-center">
+        <section className="hidden lg:block">
+          <FeaturedBlogCard
+            blogId={stringToSlug(latestBlog.data.title)}
+            title={latestBlog.data.title}
+            description={latestBlog.data.excerpt}
+            img={latestBlog.data.coverImage}
+          />
+        </section>
 
-      <section className="flex flex-col items-center">
-        <div className="grid grid-cols-1 lg:grid-cols-3">
-          {blogs.slice((width > 1024 ? 1 : 0), visibleCount + (width > 1024 ? 1 : 0)).map((blog, index) => (
-            <BlogCard
-              key={index}
-              blogId={stringToSlug(blog.data.title)}
-              title={blog.data.title}
-              description={blog.data.excerpt}
-            />
-          ))}
-        </div>
-
-        {visibleCount < blogs.length && (
-          <div className="py-[45px]">
-            <FormButton onClick={loadMoreBlogs}>Load More</FormButton>
+        <section className="flex flex-col items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-3">
+            {blogs.slice((width > 1024 ? 1 : 0), visibleCount + (width > 1024 ? 1 : 0)).map((blog, index) => (
+              <BlogCard
+                key={index}
+                blogId={stringToSlug(blog.data.title)}
+                title={blog.data.title}
+                description={blog.data.excerpt}
+                img={blog.data.coverImage}
+              />
+            ))}
           </div>
-        )}
+
+          {visibleCount < blogs.length && (
+            <div className="py-[45px]">
+              <FormButton onClick={loadMoreBlogs}>Load More</FormButton>
+            </div>
+          )}
+        </section>
       </section>
     </main>
   );

@@ -1,13 +1,40 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/all-hands-logo-1.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>All Hands AI</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/all-hands-logo-1.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>All Hands AI</title>
+
+  <!-- Preconnect to Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Poppins:wght@400;600;700;800&display=swap"
+    rel="stylesheet">
+
+  <!-- Prefetch custom fonts -->
+  <link rel="preload" href="/assets/fonts/quincycf-regular.otf" as="font" type="font/otf" crossorigin>
+
+  <!-- Preconnect to GitHub avatars -->
+  <link rel="preconnect" href="https://avatars.githubusercontent.com" crossorigin>
+
+  <!-- Prefetch product assets -->
+  <link rel="prefetch" href="/assets/product/product-slide-1.webp" as="image">
+  <link rel="prefetch" href="/assets/product/product-slide-2.webp" as="image">
+  <link rel="prefetch" href="/assets/product/product-slide-3.webp" as="image">
+
+  <!-- Prefetch member assets -->
+  <link rel="prefetch" href="/assets/members/graham.webp" as="image">
+  <link rel="prefetch" href="/assets/members/robert.webp" as="image">
+  <link rel="prefetch" href="/assets/members/tim.webp" as="image">
+  <link rel="prefetch" href="/assets/members/xingyao.webp" as="image">
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx"></script>
+</body>
+
 </html>

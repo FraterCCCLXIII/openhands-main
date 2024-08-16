@@ -40,7 +40,7 @@ const BlogDetails = () => {
   const data = useLoaderData() as ReturnType<typeof loader>;
 
   return (
-    <article className="flex flex-col items-center pb-[45px] lg:pt-[45px] gap-8">
+    <article className="flex flex-col items-center py-[45px] gap-8">
       <Helmet>
         <title>{data.title}</title>
         <meta
@@ -53,18 +53,18 @@ const BlogDetails = () => {
         />
       </Helmet>
 
-      <figure className="lg:w-[600px]">
+      <figure className="lg:max-w-[800px] px-[42px]">
         {!data.cover && <PlaceholderImage className="aspect-video" />}
         {data.cover && (
           <img
             src={data.cover}
             alt="blog cover"
-            className="lg:rounded-[10px] flex items-center justify-center lg:aspect-video object-contain"
+            className="rounded-[7px] lg:rounded-[10px] flex items-center justify-center lg:aspect-video"
           />
         )}
       </figure>
 
-      <main className="flex flex-col gap-4 lg:w-[600px] px-[42px]">
+      <main className="flex flex-col gap-4 lg:max-w-[800px] px-[42px]">
         <h1 className="heading">{data.title}</h1>
 
         <header className="flex items-center gap-4 text-[17px] leading-6 font-semibold text-description">
@@ -73,7 +73,7 @@ const BlogDetails = () => {
             alt="author"
             width={40}
             height={40}
-            className="bg-placeholder rounded-[10px]"
+            className="bg-placeholder rounded-[7px] lg:rounded-[10px]"
           />
           <span>By {data.author.name}</span>
           <span>&#8226;</span>

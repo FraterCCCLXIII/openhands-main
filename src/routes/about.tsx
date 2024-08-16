@@ -4,25 +4,27 @@ import { MemberCard } from "~/components/member-card";
 import { SectionHeading } from "~/components/section-heading";
 import { YellowWaveSection } from "~/components/yellow-wave-section";
 import contributors from "~/data/contributors.json";
+import statistics from "~/data/statistics.json";
+import { formatContributorCount } from "~/utils/format-contributor-count";
 
 const members: Member[] = [
   {
-    src: "/assets/members/robert.jpg",
+    src: "/assets/members/robert.webp",
     name: "Robert Brennan",
     title: "CEO",
   },
   {
-    src: "/assets/members/graham.jpg",
+    src: "/assets/members/graham.webp",
     name: "Graham Neubig",
     title: "Chief Scientist",
   },
   {
-    src: "/assets/members/xingyao.jpg",
+    src: "/assets/members/xingyao.webp",
     name: "Xingyao Wang",
     title: "Chief AI Officer",
   },
   {
-    src: "/assets/members/tim.png",
+    src: "/assets/members/tim.webp",
     name: "Tim O'Farrell",
     title: "Founding Principal Engineer",
   },
@@ -48,7 +50,7 @@ const About = () => {
           subheading="OUR CONTRIBUTORS"
           heading="An Internet of People"
         >
-          <p className="paragraph h-[75px]">Over 150 developers have contributed. Come join us!</p>
+          <p className="paragraph h-[75px]">Over {formatContributorCount(statistics.contributors_count)} developers have contributed. Come join us!</p>
         </SectionHeading>
       </section>
 
@@ -62,7 +64,7 @@ const About = () => {
         </div>
       </section>
 
-      <section>
+      <section className="flex flex-col items-center">
         <SectionHeading
           subheading="OUR FULL-TIME TEAM"
         />
