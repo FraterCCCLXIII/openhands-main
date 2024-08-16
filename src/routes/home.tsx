@@ -50,7 +50,7 @@ const Home = () => {
       >
         <TripleWow width={53} height={33} />
         <ImageCarousel
-          images={Array.from({ length: 3 }).map((_, index) => `/assets/product/product-slide-${index + 1}.png`)}
+          images={Array.from({ length: 3 }).map((_, index) => `/assets/product/product-slide-${index + 1}.webp`)}
         />
       </section>
 
