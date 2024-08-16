@@ -1,13 +1,13 @@
 ---
 title: "Levels of Autonomy in AI-enhanced Software Engineering"
 excerpt: "What are some different levels of autonomy in software development agents, and how do they relate to existing tools? Read on to learn more!"
-coverImage: "/assets/blog/20240801-levels-of-autonomy/levels-of-autonomy.png"
+coverImage: "/assets/blog/20240801-levels-of-autonomy/cover.jpg"
 date: "2024-08-01T08:00:00.000Z"
 author:
   name: Graham Neubig
   picture: "/assets/blog/authors/graham.jpg"
 ogImage:
-  url: "/assets/blog/20240801-levels-of-autonomy/levels-of-autonomy.png"
+  url: "/assets/blog/20240801-levels-of-autonomy/cover.jpg"
 ---
 
 AI holds great promise for software development, and already many or even most developers are already using AI in their everyday development cycles. These include code-completion tools such as [Github CoPilot](https://github.com/features/copilot) or [Cursor](https://www.cursor.com/), frameworks designed to solve end-to-end varieties of software development tasks such as [DiffBlue](https://www.diffblue.com/) for unit test generation or [TransCoder](https://github.com/facebookresearch/TransCoder) for code porting, as well as general-purpose software development agents such as [Devin](https://www.cognition.ai/blog/introducing-devin) or [OpenDevin](https://github.com/OpenDevin/OpenDevin/). What are some different levels of autonomy in software development agents, and how do they relate to existing tools? Read on to learn more!

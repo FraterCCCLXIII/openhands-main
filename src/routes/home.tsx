@@ -55,7 +55,7 @@ const Home = () => {
       </section>
 
       <section className="flex justify-center text-center py-[90px] px-[42px]">
-        <h2 className="heading lg:max-w-[902px]">Development agents use AI to tackle the toil in your backlog, so you can focus on what matters: hard problems, creative challenges, and over-engineering your dotfiles.</h2>
+        <h2 className="heading lg:max-w-[902px]">All Hands develops AI agents that tackle the toil in your backlog, so you can focus on what matters: hard problems, creative challenges, and over-engineering your dotfiles.</h2>
       </section>
 
       <section

@@ -62,7 +62,7 @@ const About = () => {
         </div>
       </section>
 
-      <section>
+      <section className="flex flex-col items-center">
         <SectionHeading
           subheading="OUR FULL-TIME TEAM"
         />
