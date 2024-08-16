@@ -11,7 +11,7 @@
 
   html,
   body {
-    @apply font-poppins overscroll-y-none
+    @apply font-poppins overscroll-y-none bg-[#F1EAE0]
   }
 }
 
