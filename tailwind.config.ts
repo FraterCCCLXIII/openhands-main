@@ -13,7 +13,10 @@ export default {
       fontFamily: {
         poppins: ["Poppins", "sans-serif"],
         quincy: ["Quincy CF", "sans-serif"],
-      }
+      },
+      screens: {
+        'monitor': '2560px',
+      },
     },
   },
   plugins: [],

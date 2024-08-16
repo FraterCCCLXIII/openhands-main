@@ -4,6 +4,8 @@ import { MemberCard } from "~/components/member-card";
 import { SectionHeading } from "~/components/section-heading";
 import { YellowWaveSection } from "~/components/yellow-wave-section";
 import contributors from "~/data/contributors.json";
+import statistics from "~/data/statistics.json";
+import { formatContributorCount } from "~/utils/format-contributor-count";
 
 const members: Member[] = [
   {
@@ -48,7 +50,7 @@ const About = () => {
           subheading="OUR CONTRIBUTORS"
           heading="An Internet of People"
         >
-          <p className="paragraph h-[75px]">Over 150 developers have contributed. Come join us!</p>
+          <p className="paragraph h-[75px]">Over {formatContributorCount(statistics.contributors_count)} developers have contributed. Come join us!</p>
         </SectionHeading>
       </section>
 

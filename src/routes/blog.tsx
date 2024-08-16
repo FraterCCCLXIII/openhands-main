@@ -132,7 +132,7 @@ const Blog = () => {
         </SectionHeading>
       </section>
 
-      <section className="max-w-[1440px]">
+      <section className="max-w-[1440px] monitor:self-center">
         <section className="hidden lg:block">
           <FeaturedBlogCard
             blogId={stringToSlug(latestBlog.data.title)}

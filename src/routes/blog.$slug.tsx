@@ -53,7 +53,7 @@ const BlogDetails = () => {
         />
       </Helmet>
 
-      <figure className="lg:w-[600px] px-[42px]">
+      <figure className="lg:max-w-[600px] px-[42px]">
         {!data.cover && <PlaceholderImage className="aspect-video" />}
         {data.cover && (
           <img
@@ -64,7 +64,7 @@ const BlogDetails = () => {
         )}
       </figure>
 
-      <main className="flex flex-col gap-4 lg:w-[600px] px-[42px]">
+      <main className="flex flex-col gap-4 lg:max-w-[800px] px-[42px]">
         <h1 className="heading">{data.title}</h1>
 
         <header className="flex items-center gap-4 text-[17px] leading-6 font-semibold text-description">
