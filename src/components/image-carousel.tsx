@@ -19,6 +19,17 @@ export const ImageCarousel: React.FC<ImageCarouselProps> = ({ images }) => {
   const isCurrentImage = (index: number) => index === currentImage;
   const isNextImage = (index: number) => index === (currentImage + 1) % images.length;
 
+  const next = () => {
+    setCurrentImage((prev) => (prev + 1) % images.length);
+  };
+
+  React.useEffect(() => {
+    const interval = setInterval(next, 5000);
+    return () => {
+      clearInterval(interval);
+    };
+  }, []);
+
   React.useEffect(() => {
     if (initial) {
       setInitial(false);
@@ -52,10 +63,6 @@ export const ImageCarousel: React.FC<ImageCarouselProps> = ({ images }) => {
       clearTimeout(timeoutSecond);
     }
   }, [currentImage]);
-
-  const next = () => {
-    setCurrentImage((prev) => (prev + 1) % images.length);
-  }
 
   const primaryWidth = width >= 1024 ? 1134 : 378;
   const secondaryWidth = width >= 1024 ? 807 : 268;
@@ -96,7 +103,6 @@ export const ImageCarousel: React.FC<ImageCarouselProps> = ({ images }) => {
   return (
     <div
       data-testid="carousel"
-      onClick={next}
       className="relative w-[378px] h-[212px] lg:w-[1137px] lg:h-[727px]"
     >
       <AnimatePresence initial={false}>
