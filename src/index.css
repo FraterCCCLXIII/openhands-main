@@ -16,11 +16,11 @@
 }
 
 .heading {
-  @apply font-quincy text-[50px] leading-[50px] font-normal lg:text-[60px] lg:leading-[60px]
+  @apply font-quincy text-[50px] leading-[50px] lg:text-[60px] lg:leading-[60px]
 }
 
 .heading-large {
-  @apply font-quincy text-[58px] leading-[58px] font-normal lg:text-[77px] lg:leading-[77px]
+  @apply font-quincy text-[58px] leading-[58px] lg:text-[77px] lg:leading-[77px]
 }
 
 .paragraph {

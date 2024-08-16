@@ -7,22 +7,22 @@ import contributors from "~/data/contributors.json";
 
 const members: Member[] = [
   {
-    src: "/assets/members/robert.jpg",
+    src: "/assets/members/robert.webp",
     name: "Robert Brennan",
     title: "CEO",
   },
   {
-    src: "/assets/members/graham.jpg",
+    src: "/assets/members/graham.webp",
     name: "Graham Neubig",
     title: "Chief Scientist",
   },
   {
-    src: "/assets/members/xingyao.jpg",
+    src: "/assets/members/xingyao.webp",
     name: "Xingyao Wang",
     title: "Chief AI Officer",
   },
   {
-    src: "/assets/members/tim.png",
+    src: "/assets/members/tim.webp",
     name: "Tim O'Farrell",
     title: "Founding Principal Engineer",
   },
