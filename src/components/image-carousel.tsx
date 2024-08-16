@@ -18,7 +18,6 @@ export const ImageCarousel: React.FC<ImageCarouselProps> = ({ images }) => {
 
   const isCurrentImage = (index: number) => index === currentImage;
   const isNextImage = (index: number) => index === (currentImage + 1) % images.length;
-  const isLastImage = (index: number) => index === (images.length - 1 + currentImage) % images.length;
 
   React.useEffect(() => {
     if (initial) {
@@ -66,14 +65,27 @@ export const ImageCarousel: React.FC<ImageCarouselProps> = ({ images }) => {
 
   const variants: Variants = {
     animate: (index) => {
-      // when image is "becoming" the current image
-      if (isCurrentImage(index)) return {
-        x: [null, -slideDistance, 0],
-        width: primaryWidth,
-      };
-      // when image is "becoming" the next or last image
+      // "becoming" the current image
+      if (isCurrentImage(index)) {
+        return {
+          x: [null, -slideDistance, 0],
+          width: primaryWidth,
+        };
+      }
+
+      // "becoming" the next image
+      if (isNextImage(index)) {
+        return {
+          x: -offset,
+          width: secondaryWidth,
+          top: "50%",
+          y: "-50%",
+        };
+      }
+
+      // "becoming" the last image
       return {
-        x: isNextImage(index) ? -offset : [null, slideDistance, offset],
+        x: [null, slideDistance * 1.6, slideDistance],
         width: secondaryWidth,
         top: "50%",
         y: "-50%"
@@ -104,7 +116,6 @@ export const ImageCarousel: React.FC<ImageCarouselProps> = ({ images }) => {
           className={clsx(
             "bg-[#D4CABD] rounded-md lg:rounded-[10px]",
             "absolute top-0",
-            isLastImage(index) && "right-0",
           )}
         />
       ))}
