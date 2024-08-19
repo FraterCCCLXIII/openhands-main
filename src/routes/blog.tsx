@@ -1,8 +1,8 @@
-import fetchJsonp from "fetch-jsonp";
 import React from "react";
 import { Helmet } from "react-helmet-async";
 import { ActionFunctionArgs, json, useActionData, useLoaderData, useNavigation } from "react-router-dom";
 import { blogAPI } from "~/api/blog";
+import { subscribeToNewsletter } from "~/api/newsletter";
 import { BlogCard, FeaturedBlogCard } from "~/components/blog-card";
 import { NewsletterForm } from "~/components/newsletter-form";
 import { RegularButton } from "~/components/regular-button";
@@ -23,19 +23,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   if (!email || typeof email !== "string") {
     return json({ result: "error", msg: "Email is required" });
   }
-
-  const url = "https://dev.us17.list-manage.com/subscribe/post?u=669d348a75588dd92a51fb0a4&id=34795608c8";
-  const query = new URLSearchParams({ EMAIL: email }).toString();
-  const endpoint = url.replace("/post", "/post-json") + `&${query}`;
-
   try {
-    // This is a JSONP request to Mailchimp's API
-    // (Mailchimp doesn't support CORS, so we have to use JSONP)
-    const response = await fetchJsonp(endpoint, {
-      jsonpCallback: "c",
-    });
-
-    const data = await response.json() as { result: string, msg: string };
+    const data = await subscribeToNewsletter(email);
     return json(data);
   } catch (error) {
     return json({ result: "error", msg: "Failed to subscribe. Please try again later." });
@@ -43,13 +32,12 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 }
 
 const Blog = () => {
-  const data = useActionData() as { result: "success" | "error", msg: string } | undefined | null;
   const navigation = useNavigation();
+  const data = useActionData() as { result: "success" | "error", msg: string } | undefined | null;
   const { blogs } = useLoaderData() as { blogs: Post[] }
   const latestBlog = blogs[0];
 
   const width = useWidth();
-
   const [visibleCount, setVisibleCount] = React.useState(3);
 
   const loadMoreBlogs = () => {
