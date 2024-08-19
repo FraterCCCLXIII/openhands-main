@@ -67,7 +67,7 @@ const BlogDetails = () => {
       <main className="flex flex-col gap-4 lg:max-w-[800px] px-[42px]">
         <h1 className="heading">{data.title}</h1>
 
-        <header className="flex items-center gap-4 text-[17px] leading-6 font-semibold text-description">
+        <header className="flex items-center gap-2 lg:gap-4 text-[17px] leading-6 font-semibold text-description">
           <img
             src={data.author.src}
             alt="author"
@@ -75,9 +75,11 @@ const BlogDetails = () => {
             height={40}
             className="bg-placeholder rounded-[7px] lg:rounded-[10px]"
           />
-          <span>By {data.author.name}</span>
-          <span>&#8226;</span>
-          <time dateTime={data.date}>{formatDate(data.date)}</time>
+          <div className="flex flex-col items-start lg:flex-row lg:items-center lg:gap-4">
+            <span>By {data.author.name}</span>
+            <span className="hidden lg:block">&#8226;</span>
+            <time dateTime={data.date}>{formatDate(data.date)}</time>
+          </div>
         </header>
 
         <section className="paragraph flex flex-col gap-4">
