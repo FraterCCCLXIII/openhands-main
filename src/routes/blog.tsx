@@ -1,6 +1,6 @@
 import React from "react";
 import { Helmet } from "react-helmet-async";
-import { ActionFunctionArgs, json, useActionData, useLoaderData, useNavigation } from "react-router-dom";
+import { ActionFunctionArgs, json, Link, useActionData, useLoaderData, useNavigation } from "react-router-dom";
 import { blogAPI } from "~/api/blog";
 import { subscribeToNewsletter } from "~/api/newsletter";
 import { BlogCard, FeaturedBlogCard } from "~/components/blog-card";
@@ -71,25 +71,31 @@ const Blog = () => {
 
       <section className="max-w-[1440px] monitor:self-center">
         <section className="hidden lg:block">
-          <FeaturedBlogCard
-            blogId={stringToSlug(latestBlog.data.title)}
-            title={latestBlog.data.title}
-            description={latestBlog.data.excerpt}
-            img={latestBlog.data.coverImage}
-          />
+          <Link to={stringToSlug(latestBlog.data.title)}>
+            <FeaturedBlogCard
+              title={latestBlog.data.title}
+              description={latestBlog.data.excerpt}
+              img={latestBlog.data.coverImage}
+            />
+          </Link>
         </section>
 
         <section className="flex flex-col items-center">
           <div className="grid grid-cols-1 lg:grid-cols-3">
-            {blogs.slice((width > 1024 ? 1 : 0), visibleCount + (width > 1024 ? 1 : 0)).map((blog, index) => (
-              <BlogCard
-                key={index}
-                blogId={stringToSlug(blog.data.title)}
-                title={blog.data.title}
-                description={blog.data.excerpt}
-                img={blog.data.coverImage}
-              />
-            ))}
+            {blogs
+              .slice((width >= 1024 ? 1 : 0), visibleCount + (width >= 1024 ? 1 : 0))
+              .map((blog) => (
+                <Link
+                  key={stringToSlug(blog.data.title)}
+                  to={stringToSlug(blog.data.title)}
+                >
+                  <BlogCard
+                    title={blog.data.title}
+                    description={blog.data.excerpt}
+                    img={blog.data.coverImage}
+                  />
+                </Link>
+              ))}
           </div>
 
           {visibleCount < blogs.length && (
