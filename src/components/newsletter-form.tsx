@@ -19,7 +19,7 @@ export const NewsletterForm: React.FC<NewsletterFormProps> = ({ error, success, 
       {formIsVisible && (
         <Form
           data-testid="newsletter-form"
-          className="flex gap-2"
+          className="flex gap-2 mb-4"
           method="post"
         >
           <input
@@ -38,8 +38,8 @@ export const NewsletterForm: React.FC<NewsletterFormProps> = ({ error, success, 
           </RegularButton>
         </Form>
       )}
-      {error && <p className="text-red-600">{error}</p>}
-      {success && <p className="text-green-600">{success}</p>}
+      {error && <p className="description text-red-600">{error}</p>}
+      {success && <p className="description text-green-600">{success}</p>}
     </div>
   );
 };

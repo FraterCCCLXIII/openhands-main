@@ -1,10 +1,10 @@
-import clsx from "clsx";
 import fetchJsonp from "fetch-jsonp";
 import React from "react";
 import { Helmet } from "react-helmet-async";
-import { ActionFunctionArgs, Form, json, useActionData, useLoaderData, useNavigation } from "react-router-dom";
+import { ActionFunctionArgs, json, useActionData, useLoaderData, useNavigation } from "react-router-dom";
 import { blogAPI } from "~/api/blog";
 import { BlogCard, FeaturedBlogCard } from "~/components/blog-card";
+import { NewsletterForm } from "~/components/newsletter-form";
 import { RegularButton } from "~/components/regular-button";
 import { SectionHeading } from "~/components/section-heading";
 import { useWidth } from "~/hooks/use-media";
@@ -45,7 +45,6 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 const Blog = () => {
   const data = useActionData() as { result: "success" | "error", msg: string } | undefined | null;
   const navigation = useNavigation();
-  const [formIsVisible, setFormIsVisible] = React.useState(false);
   const { blogs } = useLoaderData() as { blogs: Post[] }
   const latestBlog = blogs[0];
 
@@ -74,41 +73,11 @@ const Blog = () => {
           subheading="OUR BLOG"
           description="Made with the collaborative help of over 40 engineers in the opensource community. OpenDev changes the way you can create software."
         >
-          {!formIsVisible && (
-            <RegularButton onClick={() => setFormIsVisible(true)}>Subscribe to our newsletter</RegularButton>
-          )}
-          {formIsVisible && !data && (
-            <Form
-              data-testid="newsletter-form"
-              className="flex gap-2"
-              method="post"
-            >
-              <input
-                type="email"
-                name="email"
-                placeholder="Email"
-                required
-                pattern="[^@]+@[^.]+\..+"
-                className="bg-white text-black py-2 px-4 rounded-lg w-[300px]"
-              />
-              <RegularButton
-                type="submit"
-                disabled={navigation.state === "submitting" || !!data}
-              >
-                Subscribe
-              </RegularButton>
-            </Form>
-          )}
-          {data && (
-            <p
-              className={clsx(
-                "description h-[25px]",
-                data.result === "success" ? "text-green-600" : "text-red-600",
-              )}
-            >
-              {data.msg}
-            </p>
-          )}
+          <NewsletterForm
+            error={data?.result === "error" ? data.msg : undefined}
+            success={data?.result === "success" ? data.msg : undefined}
+            disabled={navigation.state === "submitting" || !!data}
+          />
         </SectionHeading>
       </section>
 
