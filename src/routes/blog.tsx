@@ -79,6 +79,7 @@ const Blog = () => {
           )}
           {formIsVisible && !data && (
             <Form
+              data-testid="newsletter-form"
               className="flex gap-2"
               method="post"
             >
