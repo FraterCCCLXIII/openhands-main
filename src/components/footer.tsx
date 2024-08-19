@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import AllHandsLogo from "~/svgs/brand/all-hands-logo-1.svg?react";
 import GitHubCircleLogo from "~/svgs/gh-logo.svg?react";
+import TwitterLogo from "~/svgs/twitter-logo.svg?react";
 
 export const Footer = () => (
   <footer>
@@ -10,8 +11,8 @@ export const Footer = () => (
       <div className="flex flex-col lg:flex-row items-center lg:justify-between lg:w-screen lg:max-w-[1086px] gap-8">
         <AllHandsLogo width={65} height={45} />
 
-        <nav>
-          <ul className="grid grid-cols-2 gap-8 text-center font-poppins text-sm leading-[21px] lg:flex">
+        <nav className="w-[160px] lg:w-auto">
+          <ul className="flex flex-wrap gap-8 justify-center text-sm leading-[21px] lg:flex">
             <li>
               <Link to="https://github.com/OpenDevin" rel="noreferrer" target="_blank">GitHub</Link>
             </li>
@@ -27,6 +28,9 @@ export const Footer = () => (
         <span className="flex gap-4">
           <Link aria-label="OpenDevin GitHub" to="https://github.com/OpenDevin" rel="noreferrer" target="_blank">
             <GitHubCircleLogo width={24} height={24} />
+          </Link>
+          <Link aria-label="OpenDevin Twitter" to="https://x.com/allhands_ai" rel="noreferrer" target="_blank">
+            <TwitterLogo width={24} height={24} />
           </Link>
         </span>
       </div>
