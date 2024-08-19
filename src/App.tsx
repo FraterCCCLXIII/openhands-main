@@ -34,7 +34,7 @@ const App = () => {
         onClose={() => setIsSidebarHidden(true)}
       />
       <motion.div
-        className="mt-[83px]"
+        className="mt-[83px] flex flex-col min-h-screen"
         animate={{
           paddingLeft: isDesktop && !isSidebarHidden ? sidebarRef.current?.clientWidth : 0,
         }}
@@ -43,7 +43,9 @@ const App = () => {
           onClickMenuButton={() => setIsSidebarHidden(false)}
           width={(!isSidebarHidden && sidebarRef.current && isDesktop) ? width - sidebarRef.current?.clientWidth : width}
         />
-        <Outlet />
+        <div className="flex-1">
+          <Outlet />
+        </div>
         <Footer />
       </motion.div>
       <ScrollRestoration />

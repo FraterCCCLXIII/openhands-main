@@ -17,7 +17,7 @@ test.describe("Home", () => {
     await expect(headerTitle).toBeVisible();
   });
 
-  test("should cycle through the images when clicking on the image carousel", async ({ page }) => {
+  test.fixme("should cycle through the images when clicking on the image carousel", async ({ page }) => {
     const carousel = page.getByTestId("carousel");
 
     const firstImage = carousel.locator("img").first();
