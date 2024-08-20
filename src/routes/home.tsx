@@ -34,10 +34,10 @@ const Home = () => {
       <section
         className="flex flex-col items-center gap-4 pb-[45px] lg:h-auto pt-[50px] lg:py-[86px]"
       >
-        <h1 className="heading-large text-center h-[188px] lg:h-auto lg:w-[764px]">Open Source Agents for Developers</h1>
+        <h1 className="font-quincy lg:text-[52px] lg:leading-[52px] text-center h-[188px] lg:h-auto lg:w-[764px]">Open Source Agents for Developers</h1>
 
         <Button
-          variant="large"
+          variant="small"
           icon={<GitHubLogo width={23} height={23} />}
           text="Get it on GitHub"
           to="https://github.com/OpenDevin/OpenDevin"
@@ -59,7 +59,7 @@ const Home = () => {
       </section>
 
       <section
-        className="px-[42px] flex flex-col lg:flex-row gap-16 lg:gap-[81px] pt-16 pb-16 lg:p-0 lg:h-[489px] items-center lg:justify-center"
+        className="px-[42px] lg:px-[184px] flex flex-col lg:flex-row gap-16 lg:gap-[81px] pt-16 pb-16 lg:p-0 lg:h-[489px] items-center lg:justify-center"
       >
         <BreakFree className="w-[318px] lg:w-[329px]" />
         <div className="flex flex-col gap-4 lg:w-[500px]">
