@@ -32,10 +32,10 @@ const Home = () => {
       </Helmet>
 
       <section
-        className="flex flex-col items-center gap-4 pb-[45px] lg:h-auto pt-[50px] lg:py-[86px]"
+        className="flex flex-col items-center gap-4 pb-[45px] lg:h-auto pt-[50px] lg:py-[86px] px-[42px]"
       >
         <h1 className="font-quincy text-[58px] leading-[58px] lg:text-[52px] lg:leading-[52px] text-center h-[188px] lg:h-auto lg:w-[764px]">Open Source Agents for Developers</h1>
-
+        <p className="paragraph text-description lg:w-[466px] text-center">Use AI to tackle the toil in your backlog, so you can focus on what matters: hard problems, creative challenges, and over-engineering your dotfiles</p>
         <Button
           variant="small"
           icon={<GitHubLogo width={23} height={23} />}
@@ -52,10 +52,6 @@ const Home = () => {
         <ImageCarousel
           images={Array.from({ length: 3 }).map((_, index) => `/assets/product/product-slide-${index + 1}.webp`)}
         />
-      </section>
-
-      <section className="flex justify-center text-center pt-[45px] pb-[90px] px-[42px]">
-        <h2 className="font-quincy text-4xl lg:text-[40px] lg:leading-[40px] lg:max-w-[902px]">Use AI to tackle the toil in your backlog, so you can focus on what matters: hard problems, creative challenges, and over-engineering your dotfiles</h2>
       </section>
 
       <section
