@@ -15,7 +15,7 @@ export default {
         quincy: ["Quincy CF", "sans-serif"],
       },
       screens: {
-        'monitor': '2560px',
+        'monitor': '2000px',
       },
     },
   },

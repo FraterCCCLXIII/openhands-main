@@ -28,6 +28,21 @@ const members: Member[] = [
     name: "Tim O'Farrell",
     title: "Founding Principal Engineer",
   },
+  {
+    src: "/assets/members/stephan.webp",
+    name: "Stephan Psaras",
+    title: "Senior Software Engineer",
+  },
+  {
+    src: "/assets/members/paul.webp",
+    name: "Paul Bloch",
+    title: "Design and UX Lead",
+  },
+  {
+    src: "/assets/members/mahmoud.webp",
+    name: "Mahmoud",
+    title: "Community Manager",
+  },
 ];
 
 const About = () => {
@@ -69,7 +84,7 @@ const About = () => {
           subheading="OUR FULL-TIME TEAM"
         />
 
-        <div className="flex flex-col justify-center lg:flex-row">
+        <div className="flex flex-col justify-center lg:flex-row flex-wrap">
           {members.map((member) => (
             <MemberCard
               key={member.name}
