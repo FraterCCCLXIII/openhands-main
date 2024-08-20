@@ -46,16 +46,16 @@ const Home = () => {
       </section>
 
       <section
-        className="flex flex-col items-center gap-8 pt-[25px] pb-[60px] overflow-hidden"
+        className="flex flex-col items-center gap-8 pt-[25px] pb-[60px] lg:pt-0 overflow-hidden"
       >
-        <TripleWow width={53} height={33} />
+        <TripleWow width={36} height={22} />
         <ImageCarousel
           images={Array.from({ length: 3 }).map((_, index) => `/assets/product/product-slide-${index + 1}.webp`)}
         />
       </section>
 
       <section className="flex justify-center text-center pt-[45px] pb-[90px] px-[42px]">
-        <h2 className="font-quincy text-4xl lg:text-[60px] lg:leading-[60px] lg:max-w-[902px]">All Hands develops AI agents that tackle the toil in your backlog, so you can focus on what matters: hard problems, creative challenges, and over-engineering your dotfiles.</h2>
+        <h2 className="font-quincy text-4xl lg:text-[40px] lg:leading-[40px] lg:max-w-[902px]">All Hands develops AI agents that tackle the toil in your backlog, so you can focus on what matters: hard problems, creative challenges, and over-engineering your dotfiles.</h2>
       </section>
 
       <section

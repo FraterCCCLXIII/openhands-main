@@ -20,7 +20,7 @@
 }
 
 .heading-large {
-  @apply font-quincy text-[58px] leading-[58px] lg:text-[77px] lg:leading-[77px]
+  @apply font-quincy text-[58px] leading-[58px] lg:text-[52px] lg:leading-[52px]
 }
 
 .paragraph {

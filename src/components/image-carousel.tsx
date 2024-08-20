@@ -74,8 +74,8 @@ export const ImageCarousel: React.FC<ImageCarouselProps> = ({ images }) => {
     }
   }, [currentImage]);
 
-  const primaryWidth = isDesktop ? 1134 : 378;
-  const secondaryWidth = isDesktop ? 807 : 268;
+  const primaryWidth = isDesktop ? 760 : 378;
+  const secondaryWidth = isDesktop ? 541 : 268;
   const slideDistance = (primaryWidth - secondaryWidth) * 1.2;
 
   const offset = isDesktop ? 60 : 20;
@@ -113,7 +113,7 @@ export const ImageCarousel: React.FC<ImageCarouselProps> = ({ images }) => {
   return (
     <div
       data-testid="carousel"
-      className="relative w-[378px] h-[212px] lg:w-[1137px] lg:h-[727px]"
+      className="relative w-[378px] h-[212px] lg:w-[762px] lg:h-[487px]"
     >
       <LazyMotion features={domAnimation}>
         <AnimatePresence initial={false}>
