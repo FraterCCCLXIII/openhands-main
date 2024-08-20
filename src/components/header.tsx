@@ -44,7 +44,7 @@ export const Header: React.FC<HeaderProps> = ({ width, onClickMenuButton }) => {
 
       <Button
         text="View GitHub"
-        className="hidden lg:block absolute right-[26px]"
+        className="hidden lg:block absolute right-[26px] lg:text-lg"
         to="https://github.com/OpenDevin"
         external
       />
