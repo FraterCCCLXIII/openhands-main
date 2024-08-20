@@ -10,7 +10,6 @@ const NAV_MAP = [
   { name: "Home", to: "/" },
   { name: "About Us", to: "/about" },
   { name: "Blog", to: "/blog" },
-  { name: "Share", to: "/share" },
 ];
 
 interface SidebarProps {

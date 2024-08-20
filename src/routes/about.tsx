@@ -64,7 +64,18 @@ const About = () => {
         <SectionHeading
           subheading="OUR CONTRIBUTORS"
         >
-          <p className="paragraph h-[75px]">Over {formatContributorCount(statistics.contributors_count)} developers have contributed. Come join us!</p>
+          <p className="paragraph h-[75px]">
+            {formatContributorCount(statistics.contributors_count)} developers have contributed.
+            {" "}
+            <a
+              className="underline"
+              href="https://github.com/All-Hands-AI/OpenHands"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Come join us!
+            </a>
+          </p>
           <div className="h-[calc(88px*4+40px)] lg:h-auto overflow-hidden relative">
             <ContributorGrid
               variant="large"
