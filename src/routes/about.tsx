@@ -62,21 +62,17 @@ const About = () => {
 
       <section className="flex flex-col items-center">
         <SectionHeading
-          subheading="OUR CONTRIBUTORS"
-          heading="An Internet of People"
+          heading="Our Contributors"
         >
           <p className="paragraph h-[75px]">Over {formatContributorCount(statistics.contributors_count)} developers have contributed. Come join us!</p>
+          <div className="h-[calc(88px*4+40px)] lg:h-auto overflow-hidden relative">
+            <ContributorGrid
+              variant="large"
+              contributors={contributors}
+            />
+            <div className="lg:hidden absolute bottom-0 bg-gradient-to-t from-[#F1EAE0] to-transparent h-[40px] w-full" />
+          </div>
         </SectionHeading>
-      </section>
-
-      <section className="flex flex-col items-center py-[45px] px-[42px]">
-        <div className="h-[calc(88px*4+40px)] lg:h-auto overflow-hidden relative">
-          <ContributorGrid
-            variant="large"
-            contributors={contributors}
-          />
-          <div className="lg:hidden absolute bottom-0 bg-gradient-to-t from-[#F1EAE0] to-transparent h-[40px] w-full" />
-        </div>
       </section>
 
       <section className="flex flex-col items-center">
