@@ -13,7 +13,7 @@ export const YellowWaveSection: React.FC<YellowWaveProps> = ({ heading, text }) 
       {text && <p className="paragraph text-description lg:w-[466px]">{text}</p>}
       <Button
         variant="medium"
-        text="Join our GitHub"
+        text="Get it on GitHub"
         to="https://github.com/OpenDevin"
         external
       />

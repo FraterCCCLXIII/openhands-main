@@ -108,7 +108,7 @@ const Home = () => {
           <p className="paragraph text-description lg:w-[466px]">Thousands of developers are working together to build the AI-powered future they want to see. You can connect with us on GitHub, Slack, Twitter, or our blog.</p>
           <Button
             variant="medium"
-            text="Join our GitHub"
+            text="Get it on GitHub"
             className="self-start"
             to="https://github.com/OpenDevin"
             external
