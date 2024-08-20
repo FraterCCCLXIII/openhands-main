@@ -40,7 +40,7 @@ const members: Member[] = [
   },
   {
     src: "/assets/members/mahmoud.webp",
-    name: "Mahmoud",
+    name: "Mahmoud Hosseini",
     title: "Community Manager",
   },
 ];
@@ -62,7 +62,7 @@ const About = () => {
 
       <section className="flex flex-col items-center">
         <SectionHeading
-          heading="Our Contributors"
+          subheading="OUR CONTRIBUTORS"
         >
           <p className="paragraph h-[75px]">Over {formatContributorCount(statistics.contributors_count)} developers have contributed. Come join us!</p>
           <div className="h-[calc(88px*4+40px)] lg:h-auto overflow-hidden relative">
@@ -77,7 +77,7 @@ const About = () => {
 
       <section className="flex flex-col items-center">
         <SectionHeading
-          subheading="OUR FULL-TIME TEAM"
+          subheading="THE ALL HANDS TEAM"
         />
 
         <div className="flex flex-col justify-center lg:flex-row flex-wrap">

@@ -4,6 +4,7 @@ import MenuIcon from "~/svgs/menu.svg?react";
 import { Link } from "react-router-dom";
 import { AnimatedHeaderLogo } from "./animated-header-logo";
 import { Button } from "./button";
+import GitHubLogo from "~/svgs/github-logo.svg?react";
 
 interface HeaderProps {
   onClickMenuButton: () => void;
@@ -44,8 +45,9 @@ export const Header: React.FC<HeaderProps> = ({ width, onClickMenuButton }) => {
 
       <Button
         text="Get it on GitHub"
-        className="hidden lg:block absolute right-[26px] lg:text-lg"
-        to="https://github.com/OpenDevin"
+        icon={<GitHubLogo width={23} height={23} />}
+        className="hidden lg:flex absolute right-[26px] lg:text-lg"
+        to="https://github.com/All-Hands-AI/OpenHands"
         external
       />
     </motion.header>
