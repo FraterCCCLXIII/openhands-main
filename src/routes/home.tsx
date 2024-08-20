@@ -95,10 +95,13 @@ const Home = () => {
       <section
         className="flex flex-col lg:flex-row items-center lg:justify-center px-[42px] gap-16 lg:gap-[100px] py-24 lg:py-16"
       >
-        <ContributorGrid
-          variant="small"
-          contributors={contributors}
-        />
+        <div className="h-[calc(58px*3+40px)] lg:h-auto overflow-hidden relative">
+          <ContributorGrid
+            variant="small"
+            contributors={contributors}
+          />
+          <div className="lg:hidden absolute bottom-0 bg-gradient-to-t from-[#F1EAE0] to-transparent h-[40px] w-full" />
+        </div>
 
         <div className="flex flex-col gap-4 lg:w-[500px]">
           <span className="heading">Join the Community</span>

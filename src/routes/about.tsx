@@ -69,7 +69,7 @@ const About = () => {
         </SectionHeading>
       </section>
 
-      <section className="flex flex-col items-center py-[45px]">
+      <section className="flex flex-col items-center py-[45px] px-[42px]">
         <div className="h-[calc(88px*4+40px)] lg:h-auto overflow-hidden relative">
           <ContributorGrid
             variant="large"

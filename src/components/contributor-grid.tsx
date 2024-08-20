@@ -30,7 +30,7 @@ export const ContributorGrid: React.FC<ContributorGridProps> = ({ contributors, 
     className={clsx(
       "grid gap-2 lg:gap-4",
       variant === "small" && "grid-cols-5",
-      variant === "large" && "grid-cols-4 lg:grid-cols-10",
+      variant === "large" && "grid-cols-5 lg:grid-cols-10",
     )}
   >
     {contributors.slice(0, variant === "small" ? 20 : 50).map((contributor) => (
