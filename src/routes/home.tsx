@@ -105,7 +105,7 @@ const Home = () => {
           <Button
             variant="medium"
             icon={<GitHubLogo width={23} height={23} />}
-            text="Get it on GitHub"
+            text="Join us on GitHub"
             className="self-start"
             to="https://github.com/All-Hands-AI/OpenHands"
             external
