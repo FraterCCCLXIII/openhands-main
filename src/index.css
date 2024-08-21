@@ -1,0 +1,28 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: "Quincy CF";
+  src: url("/assets/fonts/QuincyCF-Regular.woff");
+}
+
+@layer base {
+
+  html,
+  body {
+    @apply font-poppins overscroll-y-none bg-[#F1EAE0]
+  }
+}
+
+.heading {
+  @apply font-quincy text-[50px] leading-[50px] lg:text-[60px] lg:leading-[60px]
+}
+
+.heading-large {
+  @apply font-quincy text-[58px] leading-[58px] lg:text-[77px] lg:leading-[77px]
+}
+
+.paragraph {
+  @apply text-[18px] leading-[25px]
+}

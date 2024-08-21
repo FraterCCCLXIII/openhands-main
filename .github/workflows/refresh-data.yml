@@ -1,0 +1,35 @@
+name: Refresh Contributor Data
+
+on:
+  schedule:
+    # Runs every 30 minutes
+    - cron: "*/30 * * * *"
+
+jobs:
+  refresh-contributors:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Fetch contributors data
+        run: bun run fetch-contributors
+      
+      - name: Fetch repository statistics
+        run: bun run fetch-repo-statistics
+
+      - name: Commit and push changes
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "GitHub Actions"
+          git add .
+          git commit -m "Auto-update contributors data"
+          git push
+    
