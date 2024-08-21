@@ -23,7 +23,7 @@ export const NewsletterForm: React.FC<NewsletterFormProps> = ({ error, success, 
           placeholder="Email"
           required
           pattern="[^@]+@[^.]+\..+"
-          className="bg-white text-black py-2 px-4 rounded-lg w-[300px]"
+          className="bg-white text-black py-2 px-4 rounded-lg lg:w-[300px]"
         />
         <RegularButton
           type="submit"
