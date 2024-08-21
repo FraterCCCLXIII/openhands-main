@@ -37,7 +37,7 @@ const Home = () => {
         <h1 className="font-quincy text-[58px] leading-[58px] lg:text-[52px] lg:leading-[52px] text-center lg:h-auto lg:w-[764px]">Open Source Agents for Developers</h1>
         <p className="paragraph text-description lg:w-[466px] text-center">Use AI to tackle the toil in your backlog, so you can focus on what matters: hard problems, creative challenges, and over-engineering your dotfiles</p>
         <Button
-          variant="small"
+          variant="large"
           icon={<GitHubLogo width={23} height={23} />}
           text="Get it on GitHub"
           to="https://github.com/All-Hands-AI/OpenHands"
