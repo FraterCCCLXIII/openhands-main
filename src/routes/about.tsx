@@ -91,7 +91,7 @@ const About = () => {
           subheading="THE ALL HANDS TEAM"
         />
 
-        <div className="flex flex-col justify-center lg:flex-row flex-wrap">
+        <div className="flex flex-col justify-center lg:flex-row flex-wrap max-w-[1228px]">
           {members.map((member) => (
             <MemberCard
               key={member.name}
