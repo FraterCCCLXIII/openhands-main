@@ -1,4 +1,5 @@
 import { Button } from "./button";
+import GitHubLogo from "~/svgs/github-logo.svg?react";
 
 interface YellowWaveProps {
   heading: string;
@@ -13,8 +14,9 @@ export const YellowWaveSection: React.FC<YellowWaveProps> = ({ heading, text }) 
       {text && <p className="paragraph text-description lg:w-[466px]">{text}</p>}
       <Button
         variant="medium"
-        text="Join our GitHub"
-        to="https://github.com/OpenDevin"
+        icon={<GitHubLogo width={23} height={23} />}
+        text="Get it on GitHub"
+        to="https://github.com/All-Hands-AI/OpenHands"
         external
       />
     </div>

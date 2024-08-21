@@ -32,34 +32,30 @@ const Home = () => {
       </Helmet>
 
       <section
-        className="flex flex-col items-center gap-4 pb-[45px] lg:h-auto pt-[50px] lg:py-[86px]"
+        className="flex flex-col items-center gap-4 pb-[45px] lg:h-auto pt-[50px] lg:py-[86px] px-[42px]"
       >
-        <h1 className="heading-large text-center h-[188px] lg:h-auto lg:w-[764px]">Open Source Agents for Developers</h1>
-
+        <h1 className="font-quincy text-[58px] leading-[58px] lg:text-[52px] lg:leading-[52px] text-center h-[188px] lg:h-auto lg:w-[764px]">Open Source Agents for Developers</h1>
+        <p className="paragraph text-description lg:w-[466px] text-center">Use AI to tackle the toil in your backlog, so you can focus on what matters: hard problems, creative challenges, and over-engineering your dotfiles</p>
         <Button
-          variant="large"
+          variant="small"
           icon={<GitHubLogo width={23} height={23} />}
           text="Get it on GitHub"
-          to="https://github.com/OpenDevin/OpenDevin"
+          to="https://github.com/All-Hands-AI/OpenHands"
           external
         />
       </section>
 
       <section
-        className="flex flex-col items-center gap-8 pt-[25px] pb-[60px] overflow-hidden"
+        className="flex flex-col items-center gap-8 pt-[25px] pb-[60px] lg:pt-0 overflow-hidden"
       >
-        <TripleWow width={53} height={33} />
+        <TripleWow width={36} height={22} />
         <ImageCarousel
           images={Array.from({ length: 3 }).map((_, index) => `/assets/product/product-slide-${index + 1}.webp`)}
         />
       </section>
 
-      <section className="flex justify-center text-center pt-[45px] pb-[90px] px-[42px]">
-        <h2 className="font-quincy text-4xl lg:text-[60px] lg:leading-[60px] lg:max-w-[902px]">All Hands develops AI agents that tackle the toil in your backlog, so you can focus on what matters: hard problems, creative challenges, and over-engineering your dotfiles.</h2>
-      </section>
-
       <section
-        className="px-[42px] flex flex-col lg:flex-row gap-16 lg:gap-[81px] pt-16 pb-16 lg:p-0 lg:h-[489px] items-center lg:justify-center"
+        className="px-[42px] lg:px-[184px] flex flex-col lg:flex-row gap-16 lg:gap-[81px] pt-16 pb-16 lg:p-0 lg:h-[489px] items-center lg:justify-center"
       >
         <BreakFree className="w-[318px] lg:w-[329px]" />
         <div className="flex flex-col gap-4 lg:w-[500px]">
@@ -95,19 +91,23 @@ const Home = () => {
       <section
         className="flex flex-col lg:flex-row items-center lg:justify-center px-[42px] gap-16 lg:gap-[100px] py-24 lg:py-16"
       >
-        <ContributorGrid
-          variant="small"
-          contributors={contributors}
-        />
+        <div className="h-[calc(58px*3+40px)] lg:h-auto overflow-hidden relative">
+          <ContributorGrid
+            variant="small"
+            contributors={contributors}
+          />
+          <div className="lg:hidden absolute bottom-0 bg-gradient-to-t from-[#F1EAE0] to-transparent h-[40px] w-full" />
+        </div>
 
         <div className="flex flex-col gap-4 lg:w-[500px]">
           <span className="heading">Join the Community</span>
           <p className="paragraph text-description lg:w-[466px]">Thousands of developers are working together to build the AI-powered future they want to see. You can connect with us on GitHub, Slack, Twitter, or our blog.</p>
           <Button
             variant="medium"
-            text="Join our GitHub"
+            icon={<GitHubLogo width={23} height={23} />}
+            text="Get it on GitHub"
             className="self-start"
-            to="https://github.com/OpenDevin"
+            to="https://github.com/All-Hands-AI/OpenHands"
             external
           />
         </div>

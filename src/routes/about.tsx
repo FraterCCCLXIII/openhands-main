@@ -28,6 +28,21 @@ const members: Member[] = [
     name: "Tim O'Farrell",
     title: "Founding Principal Engineer",
   },
+  {
+    src: "https://avatars.githubusercontent.com/u/83104063?v=4",
+    name: "Stephan Psaras",
+    title: "Senior Software Engineer",
+  },
+  {
+    src: "/assets/members/paul.webp",
+    name: "Paul Bloch",
+    title: "Design and UX Lead",
+  },
+  {
+    src: "/assets/members/mahmoud.webp",
+    name: "Mahmoud Hosseini",
+    title: "Community Manager",
+  },
 ];
 
 const About = () => {
@@ -48,28 +63,35 @@ const About = () => {
       <section className="flex flex-col items-center">
         <SectionHeading
           subheading="OUR CONTRIBUTORS"
-          heading="An Internet of People"
         >
-          <p className="paragraph h-[75px]">Over {formatContributorCount(statistics.contributors_count)} developers have contributed. Come join us!</p>
+          <p className="paragraph h-[75px]">
+            {formatContributorCount(statistics.contributors_count)} developers have contributed.
+            {" "}
+            <a
+              className="underline"
+              href="https://github.com/All-Hands-AI/OpenHands"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Come join us!
+            </a>
+          </p>
+          <div className="h-[calc(88px*4+40px)] lg:h-auto overflow-hidden relative">
+            <ContributorGrid
+              variant="large"
+              contributors={contributors}
+            />
+            <div className="lg:hidden absolute bottom-0 bg-gradient-to-t from-[#F1EAE0] to-transparent h-[40px] w-full" />
+          </div>
         </SectionHeading>
-      </section>
-
-      <section className="flex flex-col items-center py-[45px]">
-        <div className="h-[calc(88px*4+40px)] lg:h-auto overflow-hidden relative">
-          <ContributorGrid
-            variant="large"
-            contributors={contributors}
-          />
-          <div className="lg:hidden absolute bottom-0 bg-gradient-to-t from-[#F1EAE0] to-transparent h-[40px] w-full" />
-        </div>
       </section>
 
       <section className="flex flex-col items-center">
         <SectionHeading
-          subheading="OUR FULL-TIME TEAM"
+          subheading="THE ALL HANDS TEAM"
         />
 
-        <div className="flex flex-col justify-center lg:flex-row">
+        <div className="flex flex-col justify-center lg:flex-row flex-wrap max-w-[1228px]">
           {members.map((member) => (
             <MemberCard
               key={member.name}

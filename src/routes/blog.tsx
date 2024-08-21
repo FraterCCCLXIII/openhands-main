@@ -57,9 +57,7 @@ const Blog = () => {
       <section className="flex flex-col items-center">
         <SectionHeading
           isHero
-          heading="This is what we're up to"
           subheading="OUR BLOG"
-          description="Made with the collaborative help of over 40 engineers in the opensource community. OpenDev changes the way you can create software."
         >
           <NewsletterForm
             error={data?.result === "error" ? data.msg : undefined}
