@@ -46,7 +46,7 @@ export const Header: React.FC<HeaderProps> = ({ width, onClickMenuButton }) => {
       <Button
         text="Get it on GitHub"
         icon={<GitHubLogo width={23} height={23} />}
-        className="hidden lg:flex absolute right-[26px] lg:text-lg"
+        className="hidden lg:flex absolute right-[26px]"
         to="https://github.com/All-Hands-AI/OpenHands"
         external
       />
