@@ -41,6 +41,7 @@ const App = () => {
       >
         <Header
           onClickMenuButton={() => setIsSidebarHidden(false)}
+          showMenuIcon={isSidebarHidden}
           width={(!isSidebarHidden && sidebarRef.current && isDesktop) ? width - sidebarRef.current?.clientWidth : width}
         />
         <div className="flex-1">
