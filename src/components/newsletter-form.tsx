@@ -11,10 +11,9 @@ interface NewsletterFormProps {
 export const NewsletterForm: React.FC<NewsletterFormProps> = ({ error, success, disabled }) => {
   return (
     <div>
-
       <Form
         data-testid="newsletter-form"
-        className="flex gap-2 mb-4"
+        className="flex gap-2 w-full flex-col md:flex-row items-center"
         method="post"
       >
         <input
@@ -23,7 +22,7 @@ export const NewsletterForm: React.FC<NewsletterFormProps> = ({ error, success, 
           placeholder="Email"
           required
           pattern="[^@]+@[^.]+\..+"
-          className="bg-white text-black py-2 px-4 rounded-lg lg:w-[300px]"
+          className="bg-white text-black py-2 px-4 rounded-lg w-full lg:w-[300px]"
         />
         <RegularButton
           type="submit"
@@ -32,8 +31,8 @@ export const NewsletterForm: React.FC<NewsletterFormProps> = ({ error, success, 
           Subscribe
         </RegularButton>
       </Form>
-      {error && <p className="description text-red-600">{error}</p>}
-      {success && <p className="description text-green-600">{success}</p>}
+      {error && <p className="description mb-4 text-red-600">{error}</p>}
+      {success && <p className="description mb-4 text-green-600">{success}</p>}
     </div>
   );
 };
