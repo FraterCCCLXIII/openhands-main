@@ -5,13 +5,15 @@ import { Link } from "react-router-dom";
 import { AnimatedHeaderLogo } from "./animated-header-logo";
 import { Button } from "./button";
 import GitHubLogo from "~/svgs/github-logo.svg?react";
+import clsx from "clsx";
 
 interface HeaderProps {
   onClickMenuButton: () => void;
+  showMenuIcon?: boolean;
   width?: number;
 }
 
-export const Header: React.FC<HeaderProps> = ({ width, onClickMenuButton }) => {
+export const Header: React.FC<HeaderProps> = ({ width, showMenuIcon, onClickMenuButton }) => {
   const { scrollY } = useScroll();
   const [textIsVisible, setTextIsVisible] = React.useState(true);
 
@@ -33,7 +35,7 @@ export const Header: React.FC<HeaderProps> = ({ width, onClickMenuButton }) => {
       <button
         aria-label="Open Menu"
         onClick={onClickMenuButton}
-        className="absolute left-[26px]"
+        className={clsx("absolute left-[26px]", showMenuIcon ? "block" : "hidden")}
       >
         <MenuIcon width={38} height={38} />
       </button>

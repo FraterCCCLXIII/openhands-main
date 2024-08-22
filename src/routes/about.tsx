@@ -29,7 +29,7 @@ const members: Member[] = [
     title: "Founding Principal Engineer",
   },
   {
-    src: "https://avatars.githubusercontent.com/u/83104063?v=4",
+    src: "/assets/members/stephan.webp",
     name: "Stephan Psaras",
     title: "Senior Software Engineer",
   },
