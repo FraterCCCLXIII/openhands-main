@@ -14,7 +14,7 @@ export const Footer = () => (
         <nav className="w-[160px] lg:w-auto">
           <ul className="flex flex-wrap gap-8 justify-center text-sm leading-[21px] lg:flex">
             <li>
-              <Link to="https://github.com/OpenDevin" rel="noreferrer" target="_blank">GitHub</Link>
+              <Link to="https://github.com/All-Hands-AI/OpenHands" rel="noreferrer" target="_blank">GitHub</Link>
             </li>
             <li>
               <Link to="blog">Blog</Link>
@@ -26,7 +26,7 @@ export const Footer = () => (
         </nav>
 
         <span className="flex gap-4">
-          <Link aria-label="OpenDevin GitHub" to="https://github.com/OpenDevin" rel="noreferrer" target="_blank">
+          <Link aria-label="OpenHands GitHub" to="https://github.com/All-Hands-AI/OpenHands" rel="noreferrer" target="_blank">
             <GitHubCircleLogo width={24} height={24} />
           </Link>
           <Link aria-label="OpenDevin Twitter" to="https://x.com/allhands_ai" rel="noreferrer" target="_blank">
