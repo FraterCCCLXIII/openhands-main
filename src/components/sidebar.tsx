@@ -59,6 +59,18 @@ export const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(({ isHidde
             </NavLink>
           </motion.li>
         ))}
+        <motion.li
+          whileHover={{ scale: 1.1 }}
+          className="text-white font-quincy text-[41px] leading-[42px]"
+        >
+          <NavLink
+            to="https://allhandsai.applytojob.com/apply/"
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            Careers
+          </NavLink>
+        </motion.li>
         <li>
           <MainButton />
         </li>
