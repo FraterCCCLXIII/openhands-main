@@ -104,6 +104,10 @@ const About = () => {
       <section className="mb-[104px]">
         <YellowWaveSection
           heading="Ready to start building software with software that builds software?"
+          cta={{
+            text: "View open jobs",
+            to: "https://allhandsai.applytojob.com/apply/"
+          }}
         />
       </section>
     </main >

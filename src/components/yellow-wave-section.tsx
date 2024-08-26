@@ -3,9 +3,14 @@ import { Button } from "./button";
 interface YellowWaveProps {
   heading: string;
   text?: string;
+  cta: {
+    icon?: React.ReactNode;
+    text: string;
+    to: string;
+  }
 }
 
-export const YellowWaveSection: React.FC<YellowWaveProps> = ({ heading, text }) => (
+export const YellowWaveSection: React.FC<YellowWaveProps> = ({ heading, text, cta }) => (
   <div>
     <div className="bg-[url('/assets/yellow-wave.png')] h-[194px]" />
     <div className="flex flex-col gap-8 text-center items-center px-[42px] bg-party">
@@ -13,8 +18,9 @@ export const YellowWaveSection: React.FC<YellowWaveProps> = ({ heading, text }) 
       {text && <p className="paragraph text-description lg:w-[466px]">{text}</p>}
       <Button
         variant="medium"
-        text="View open jobs"
-        to="https://allhandsai.applytojob.com/apply/"
+        icon={cta.icon}
+        text={cta.text}
+        to={cta.to}
         external
       />
     </div>

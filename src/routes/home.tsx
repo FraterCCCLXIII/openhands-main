@@ -139,6 +139,11 @@ const Home = () => {
         <YellowWaveSection
           heading="Ready to roll?"
           text={`Software development is changing. Let's work together to make sure it's better for everyone. \u2764`}
+          cta={{
+            icon: <GitHubLogo width={23} height={23} />,
+            text: "Get it on GitHub",
+            to: "https://github.com/All-Hands-AI/OpenHands"
+          }}
         />
       </section>
     </main>
