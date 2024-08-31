@@ -1,6 +1,5 @@
 import statistics from "~/data/statistics.json";
 import contributors from "~/data/contributors.json";
-import GitHubLogo from "~/svgs/github-logo.svg?react";
 import TripleWow from "~/svgs/triple-wow.svg?react";
 import Star from "~/svgs/star.svg?react";
 import Users from "~/svgs/users.svg?react";
@@ -19,45 +18,38 @@ import HeartHands from "~/svgs/heart-hands.svg?react";
 import { Helmet } from "react-helmet-async";
 import { ImageCarousel } from "~/components/image-carousel";
 import { formatContributorCount } from "~/utils/format-contributor-count";
-import { WaitlistForm } from "~/components/waitlist-form";
-import { ActionFunctionArgs, json, useActionData, useNavigation } from "react-router-dom";
-import { subscribeToWaitlist } from "~/api/mailchimp";
 import React from "react";
+import clsx from "clsx";
+import GitHubLogo from "~/svgs/github-logo.svg?react";
+import GitHubLogoBlack from "~/svgs/github-logo-black.svg?react";
+import { Link } from "react-router-dom";
 
-export const action = async ({ request }: ActionFunctionArgs) => {
-  const formData = await request.formData();
-  const email = formData.get("email");
-  const user = formData.get("user");
-  const org = formData.get("org");
-  const first = formData.get("first");
-  const last = formData.get("last");
+interface HeroButtonProps {
+  onClick?: () => void;
+  children: string;
+  logo?: React.ReactNode;
+  variant?: "primary" | "secondary";
+}
 
-  if (!email || typeof email !== "string") {
-    return json({ result: "error", msg: "Email is required" });
-  } else if (!user || typeof user !== "string") {
-    return json({ result: "error", msg: "Username is required" });
-  } else if (!org || typeof org !== "string") {
-    return json({ result: "error", msg: "Company is required" });
-  } else if (!first || typeof first !== "string") {
-    return json({ result: "error", msg: "First name is required" });
-  } else if (!last || typeof last !== "string") {
-    return json({ result: "error", msg: "Last name is required" });
-  }
+function HeroButton({ onClick, children, logo, variant = "primary" }: HeroButtonProps) {
+  const className = clsx(
+    "font-[700] text-[19px] leading-[27px] rounded-lg py-4 w-[250px] flex items-center justify-center gap-4",
+    variant === "primary" && "bg-black text-white border-none",
+    variant === "secondary" && "bg-transparent border border-black text-black"
+  );
 
-  try {
-    const data = await subscribeToWaitlist(email, user, org, first, last);
-    return json(data);
-  } catch (error) {
-    return json({ result: "error", msg: "Failed to subscribe. Please try again later." });
-  }
-};
+  return (
+    <button
+      className={className}
+      onClick={onClick}
+    >
+      {logo}
+      {children}
+    </button>
+  );
+}
 
 const Home = () => {
-  const navigation = useNavigation();
-  const data = useActionData() as { result: "success" | "error", msg: string } | undefined | null;
-
-  const [formIsVisible, setFormIsVisible] = React.useState(false);
-
   return (
     <main data-testid="home-content">
       <Helmet>
@@ -72,24 +64,24 @@ const Home = () => {
         className="flex flex-col items-center gap-4 pb-[45px] lg:h-auto pt-[50px] lg:py-[86px] px-[42px]"
       >
         <h1 className="font-quincy text-[58px] leading-[58px] lg:text-[52px] lg:leading-[52px] text-center lg:h-auto lg:w-[764px]">Open Source Agents for Developers</h1>
-        {data?.result !== "success" && (
-          <p className="paragraph text-description lg:w-[466px] text-center">We're building a hosted version of OpenHands! If you'd like to be one of the first people to try it, you can reserve your spot in line by filling out the form below.</p>
-        )}
-        {!formIsVisible && (
-          <button
-            className="font-[700] text-[19px] leading-[27px] text-white bg-black rounded-lg py-4 w-[250px]"
-            onClick={() => setFormIsVisible(true)}
-          >
+        <p className="paragraph text-description lg:w-[466px] text-center">Use AI to tackle the toil in your backlog, so you can focus on what matters: hard problems, creative challenges, and over-engineering your dotfiles</p>
+        <Link to="join-waitlist">
+          <HeroButton>
             Save your spot
-          </button>
-        )}
-        {formIsVisible && (
-          <WaitlistForm
-            success={data?.result === "success" ? data.msg : undefined}
-            error={data?.result === "error" ? data.msg : undefined}
-            disabled={navigation.state === "submitting" || !!data}
-          />
-        )}
+          </HeroButton>
+        </Link>
+        <Link
+          to="https://github.com/All-Hands-AI/OpenHands"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <HeroButton
+            logo={<GitHubLogoBlack width={23} height={23} />}
+            variant="secondary"
+          >
+            Get it on GitHub
+          </HeroButton>
+        </Link>
       </section>
 
       <section

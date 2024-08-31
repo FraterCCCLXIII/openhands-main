@@ -1,8 +1,6 @@
 import React from "react";
 import { RegularButton } from "./regular-button";
 import { Form } from "react-router-dom";
-import { Button } from "./button";
-import GitHubLogo from "~/svgs/github-logo.svg?react";
 
 interface WaitlistFormProps {
   error?: string;
@@ -66,14 +64,20 @@ export const WaitlistForm: React.FC<WaitlistFormProps> = ({ error, success, disa
     {success && (
       <div className="flex flex-col items-center gap-4">
         <p className="description text-green-600">{success || "Success!"}</p>
-        <p className="paragraph text-description lg:w-[466px] text-center">We will notify you as soon as we set thins up. In the meantime, you can download <span className="font-quincy text-xl">OpenHands</span> on GitHub to try it locally.</p>
-        <Button
-          variant="large"
-          icon={<GitHubLogo width={23} height={23} />}
-          text="Get it on GitHub"
-          to="https://github.com/All-Hands-AI/OpenHands"
-          external
-        />
+        <p className="paragraph text-description lg:w-[466px] text-center">
+          We will notify you as soon as we set thins up. In the meantime, you can
+          {" "}
+          <a
+            href="https://github.com/All-Hands-AI/OpenHands"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-600 underline underline-offset-2"
+          >
+            download <span className="font-quincy text-xl">OpenHands</span> on GitHub
+          </a>
+          {" "}
+          to try it locally.
+        </p>
       </div>
     )}
     {error && <p className="description mb-4 text-red-600">{error}</p>}
