@@ -64,12 +64,12 @@
     "login": "dorbanianas"
   },
   {
-    "id": 17094895,
-    "login": "tofarr"
-  },
-  {
     "id": 6738274,
     "login": "frankxu2004"
+  },
+  {
+    "id": 17094895,
+    "login": "tofarr"
   },
   {
     "id": 13436140,
@@ -96,20 +96,20 @@
     "login": "Umpire2018"
   },
   {
-    "id": 56214007,
-    "login": "RajWorking"
-  },
-  {
     "id": 62982824,
     "login": "zeul22"
   },
   {
-    "id": 27664428,
-    "login": "JustinLin610"
+    "id": 56214007,
+    "login": "RajWorking"
   },
   {
     "id": 5436704,
     "login": "xcodebuild"
+  },
+  {
+    "id": 27664428,
+    "login": "JustinLin610"
   },
   {
     "id": 95778421,
@@ -152,12 +152,12 @@
     "login": "jeremi"
   },
   {
-    "id": 7479937,
-    "login": "DaxServer"
-  },
-  {
     "id": 76570167,
     "login": "JayQuimby"
+  },
+  {
+    "id": 7479937,
+    "login": "DaxServer"
   },
   {
     "id": 28674735,
@@ -180,16 +180,16 @@
     "login": "super-dainiu"
   },
   {
-    "id": 19970308,
-    "login": "libowen2121"
+    "id": 135171913,
+    "login": "geohotstan"
   },
   {
     "id": 10394160,
     "login": "94mashiro"
   },
   {
-    "id": 135171913,
-    "login": "geohotstan"
+    "id": 19970308,
+    "login": "libowen2121"
   },
   {
     "id": 3149885,
@@ -220,10 +220,6 @@
     "login": "adrgs"
   },
   {
-    "id": 59855919,
-    "login": "Ghat0tkach"
-  },
-  {
     "id": 99925255,
     "login": "bin123apple"
   },
@@ -234,5 +230,9 @@
   {
     "id": 5136688,
     "login": "mlejva"
+  },
+  {
+    "id": 48287262,
+    "login": "jannikwinghart"
   }
 ]
