@@ -64,12 +64,12 @@
     "login": "dorbanianas"
   },
   {
-    "id": 17094895,
-    "login": "tofarr"
-  },
-  {
     "id": 6738274,
     "login": "frankxu2004"
+  },
+  {
+    "id": 17094895,
+    "login": "tofarr"
   },
   {
     "id": 13436140,
@@ -96,44 +96,36 @@
     "login": "Umpire2018"
   },
   {
-    "id": 62982824,
-    "login": "zeul22"
-  },
-  {
     "id": 56214007,
     "login": "RajWorking"
   },
   {
-    "id": 5436704,
-    "login": "xcodebuild"
+    "id": 62982824,
+    "login": "zeul22"
   },
   {
     "id": 27664428,
     "login": "JustinLin610"
   },
   {
-    "id": 175740463,
-    "login": "openhands-agent"
-  },
-  {
-    "id": 40566439,
-    "login": "joorjeh"
+    "id": 5436704,
+    "login": "xcodebuild"
   },
   {
     "id": 95778421,
     "login": "PierrunoYT"
   },
   {
-    "id": 6035284,
-    "login": "Borda"
+    "id": 22478336,
+    "login": "tangxiangru"
   },
   {
     "id": 55055083,
     "login": "Jiayi-Pan"
   },
   {
-    "id": 22478336,
-    "login": "tangxiangru"
+    "id": 6035284,
+    "login": "Borda"
   },
   {
     "id": 3778956,
@@ -144,28 +136,32 @@
     "login": "eltociear"
   },
   {
-    "id": 48168290,
-    "login": "richardokonicha"
+    "id": 40566439,
+    "login": "joorjeh"
   },
   {
-    "id": 76570167,
-    "login": "JayQuimby"
+    "id": 175740463,
+    "login": "openhands-agent"
+  },
+  {
+    "id": 78588128,
+    "login": "super-dainiu"
+  },
+  {
+    "id": 9537,
+    "login": "jeremi"
   },
   {
     "id": 19970308,
     "login": "libowen2121"
   },
   {
-    "id": 15134896,
-    "login": "jiangleo"
+    "id": 79442223,
+    "login": "ryanhoangt"
   },
   {
-    "id": 135171913,
-    "login": "geohotstan"
-  },
-  {
-    "id": 9537,
-    "login": "jeremi"
+    "id": 48168290,
+    "login": "richardokonicha"
   },
   {
     "id": 10394160,
@@ -176,24 +172,24 @@
     "login": "DaxServer"
   },
   {
-    "id": 28674735,
-    "login": "temotskipa"
-  },
-  {
-    "id": 78588128,
-    "login": "super-dainiu"
-  },
-  {
-    "id": 79442223,
-    "login": "ryanhoangt"
+    "id": 135171913,
+    "login": "geohotstan"
   },
   {
     "id": 141804823,
     "login": "yueqis"
   },
   {
-    "id": 33564701,
-    "login": "ChengyangDu"
+    "id": 76570167,
+    "login": "JayQuimby"
+  },
+  {
+    "id": 28674735,
+    "login": "temotskipa"
+  },
+  {
+    "id": 15134896,
+    "login": "jiangleo"
   },
   {
     "id": 3149885,
@@ -208,20 +204,28 @@
     "login": "mzydmer"
   },
   {
-    "id": 58907,
-    "login": "mbalunovic"
-  },
-  {
     "id": 61054665,
     "login": "h9-tect"
   },
   {
-    "id": 5136688,
-    "login": "mlejva"
+    "id": 33564701,
+    "login": "ChengyangDu"
+  },
+  {
+    "id": 58907,
+    "login": "mbalunovic"
+  },
+  {
+    "id": 4014534,
+    "login": "bartshappee"
   },
   {
     "id": 52126281,
     "login": "suryavirkapur"
+  },
+  {
+    "id": 5136688,
+    "login": "mlejva"
   },
   {
     "id": 25987491,
@@ -230,9 +234,5 @@
   {
     "id": 96804013,
     "login": "poudel-bibek"
-  },
-  {
-    "id": 66483176,
-    "login": "sb-git-cloud"
   }
 ]
