@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 import { AnimatedHeaderLogo } from "./animated-header-logo";
 import clsx from "clsx";
 import { GitHubButton } from "./buttons/github-button";
-import { TryItNowButton } from "./buttons/try-it-now-button";
+import { SaveYourSpotButton } from "./buttons/try-it-now-button";
 
 interface HeaderProps {
   onClickMenuButton: () => void;
@@ -46,7 +46,7 @@ export const Header: React.FC<HeaderProps> = ({ width, showMenuIcon, onClickMenu
 
 
       <div className="hidden lg:flex gap-[15px] absolute right-[26px]">
-        <TryItNowButton />
+        <SaveYourSpotButton />
         <GitHubButton />
       </div>
     </motion.header>

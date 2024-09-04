@@ -1,9 +1,9 @@
 import clsx from "clsx";
 import { Link } from "react-router-dom";
 
-interface TryItNowButtonProps { }
+interface SaveYourSpotButtonProps { }
 
-export const TryItNowButton: React.FC<TryItNowButtonProps> = () => (
+export const SaveYourSpotButton: React.FC<SaveYourSpotButtonProps> = () => (
   <Link
     to="/join-waitlist"
     className={clsx(
@@ -13,6 +13,6 @@ export const TryItNowButton: React.FC<TryItNowButtonProps> = () => (
       "flex items-center gap-[15px]",
     )}
   >
-    Try it Now
+    Save your spot
   </Link>
 );
