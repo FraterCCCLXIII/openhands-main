@@ -9,6 +9,7 @@ import Blog, { loader as blogLoader, action as blogAction } from './routes/blog'
 import BlogDetails, { loader as blogDetailsLoaders, ErrorBoundary as BlogDetailsErrorBoundary } from './routes/blog.$slug';
 import { HelmetProvider } from 'react-helmet-async';
 import Share, { loader as shareLoader } from './routes/share';
+import JoinWaitlist, { action as joinWaitlistAction } from './routes/join-waitlist';
 
 const AppErrorBoundary = () => {
   const error = useRouteError();
@@ -64,6 +65,12 @@ const router = createBrowserRouter([
         element: <Share />,
         loader: shareLoader,
       },
+      {
+        path: "/join-waitlist",
+        element: <JoinWaitlist />,
+        action: joinWaitlistAction,
+        loader: () => ({}),
+      }
     ],
   },
 ]);

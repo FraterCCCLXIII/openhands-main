@@ -2,7 +2,7 @@ import React from "react";
 import { Helmet } from "react-helmet-async";
 import { ActionFunctionArgs, json, Link, useActionData, useLoaderData, useNavigation } from "react-router-dom";
 import { blogAPI } from "~/api/blog";
-import { subscribeToNewsletter } from "~/api/newsletter";
+import { subscribeToNewsletter } from "~/api/mailchimp";
 import { BlogCard, FeaturedBlogCard } from "~/components/blog-card";
 import { NewsletterForm } from "~/components/newsletter-form";
 import { RegularButton } from "~/components/regular-button";
