@@ -10,9 +10,7 @@ ogImage:
   url: "/assets/blog/placeholder.png"
 ---
 
-# All Hands Announces $5M to Scale AI Agent for Software Development
-
-BOSTON, September Xx, 2024 — All Hands AI, a company making open source AI to help developers build software, today announced that it’s raised $5 million in seed funding. Menlo led the round, with additional investors including Pillar VC, Betaworks, and Rebellion, as well as a number of angels including Hugging Face Co-Founder Thom Wolf; Cloudera Co-Founder Jeff Hammerbacher; and PyTorch creator and Meta VP Soumith Chintala.
+BOSTON, September 05, 2024 — All Hands AI, a company making open source AI to help developers build software, today announced that it’s raised $5 million in seed funding. Menlo led the round, with additional investors including Pillar VC, Betaworks, and Rebellion, as well as a number of angels including Hugging Face Co-Founder Thom Wolf; Cloudera Co-Founder Jeff Hammerbacher; and PyTorch creator and Meta VP Soumith Chintala.
 
 "AI has become an invaluable part of the software engineer's toolchain, but so far it's been limited to ‘smarter’ autocomplete. And the most powerful AI for writing code is being built behind closed doors, in a way that's totally opaque to developers" said Robert Brennan, co-founder and CEO of All Hands AI. “At All Hands, we’re building open source AI agents that can tackle all the toil involved in an engineer's day-to-day work, helping them ship faster and focus on what they do best: creative problem solving. And we're doing it in the open, under the MIT license."
 
