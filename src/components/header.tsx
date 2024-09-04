@@ -3,9 +3,9 @@ import { motion, useMotionValueEvent, useScroll } from "framer-motion";
 import MenuIcon from "~/svgs/menu.svg?react";
 import { Link } from "react-router-dom";
 import { AnimatedHeaderLogo } from "./animated-header-logo";
-import { Button } from "./button";
-import GitHubLogo from "~/svgs/github-logo.svg?react";
 import clsx from "clsx";
+import { GitHubButton } from "./buttons/github-button";
+import { SaveYourSpotButton } from "./buttons/save-your-spot-button";
 
 interface HeaderProps {
   onClickMenuButton: () => void;
@@ -45,13 +45,10 @@ export const Header: React.FC<HeaderProps> = ({ width, showMenuIcon, onClickMenu
       </Link>
 
 
-      <Button
-        text="Get it on GitHub"
-        icon={<GitHubLogo width={23} height={23} />}
-        className="hidden lg:flex absolute right-[26px]"
-        to="https://github.com/All-Hands-AI/OpenHands"
-        external
-      />
+      <div className="hidden lg:flex gap-[15px] absolute right-[26px]">
+        <SaveYourSpotButton />
+        <GitHubButton />
+      </div>
     </motion.header>
   );
 };

@@ -1,6 +1,5 @@
 import statistics from "~/data/statistics.json";
 import contributors from "~/data/contributors.json";
-import GitHubLogo from "~/svgs/github-logo.svg?react";
 import TripleWow from "~/svgs/triple-wow.svg?react";
 import Star from "~/svgs/star.svg?react";
 import Users from "~/svgs/users.svg?react";
@@ -19,6 +18,36 @@ import HeartHands from "~/svgs/heart-hands.svg?react";
 import { Helmet } from "react-helmet-async";
 import { ImageCarousel } from "~/components/image-carousel";
 import { formatContributorCount } from "~/utils/format-contributor-count";
+import React from "react";
+import clsx from "clsx";
+import GitHubLogo from "~/svgs/github-logo.svg?react";
+import GitHubLogoBlack from "~/svgs/github-logo-black.svg?react";
+import { Link } from "react-router-dom";
+
+interface HeroButtonProps {
+  onClick?: () => void;
+  children: string;
+  logo?: React.ReactNode;
+  variant?: "primary" | "secondary";
+}
+
+function HeroButton({ onClick, children, logo, variant = "primary" }: HeroButtonProps) {
+  const className = clsx(
+    "font-[700] text-[19px] leading-[27px] rounded-lg py-4 w-[250px] flex items-center justify-center gap-4",
+    variant === "primary" && "bg-black text-white border-none",
+    variant === "secondary" && "bg-transparent border border-black text-black"
+  );
+
+  return (
+    <button
+      className={className}
+      onClick={onClick}
+    >
+      {logo}
+      {children}
+    </button>
+  );
+}
 
 const Home = () => {
   return (
@@ -36,13 +65,23 @@ const Home = () => {
       >
         <h1 className="font-quincy text-[58px] leading-[58px] lg:text-[52px] lg:leading-[52px] text-center lg:h-auto lg:w-[764px]">Open Source Agents for Developers</h1>
         <p className="paragraph text-description lg:w-[466px] text-center">Use AI to tackle the toil in your backlog, so you can focus on what matters: hard problems, creative challenges, and over-engineering your dotfiles</p>
-        <Button
-          variant="large"
-          icon={<GitHubLogo width={23} height={23} />}
-          text="Get it on GitHub"
+        <Link to="join-waitlist">
+          <HeroButton>
+            Save your spot
+          </HeroButton>
+        </Link>
+        <Link
           to="https://github.com/All-Hands-AI/OpenHands"
-          external
-        />
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <HeroButton
+            logo={<GitHubLogoBlack width={23} height={23} />}
+            variant="secondary"
+          >
+            Get it on GitHub
+          </HeroButton>
+        </Link>
       </section>
 
       <section
