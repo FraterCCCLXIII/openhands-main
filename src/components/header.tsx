@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 import { AnimatedHeaderLogo } from "./animated-header-logo";
 import clsx from "clsx";
 import { GitHubButton } from "./buttons/github-button";
-import { SaveYourSpotButton } from "./buttons/try-it-now-button";
+import { SaveYourSpotButton } from "./buttons/save-your-spot-button";
 
 interface HeaderProps {
   onClickMenuButton: () => void;
