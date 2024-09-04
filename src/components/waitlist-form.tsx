@@ -55,6 +55,7 @@ export const WaitlistForm: React.FC<WaitlistFormProps> = ({ error, success, disa
         <RegularButton
           type="submit"
           disabled={disabled}
+          className="w-full"
         >
           Subscribe
         </RegularButton>
