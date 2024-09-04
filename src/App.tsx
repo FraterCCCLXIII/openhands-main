@@ -2,7 +2,7 @@ import React from "react";
 import { Outlet, ScrollRestoration } from "react-router-dom";
 import { Header } from "./components/header";
 import { Footer } from "./components/footer";
-import { Sidebar } from "./components/sidebar";
+import { Sidebar } from "./components/sidebar/sidebar";
 import { motion } from "framer-motion";
 import { useWidth } from "./hooks/use-media";
 
