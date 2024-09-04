@@ -66,7 +66,7 @@ export const WaitlistForm: React.FC<WaitlistFormProps> = ({ error, success, disa
       <div className="flex flex-col items-center gap-4">
         <p className="description text-green-600">{success || "Success!"}</p>
         <p className="paragraph text-description lg:w-[466px] text-center">
-          We will notify you as soon as we set thins up. In the meantime, you can
+          We'll let you know you as soon as it's ready! In the meantime, you can
           {" "}
           <a
             href="https://github.com/All-Hands-AI/OpenHands"
@@ -74,7 +74,7 @@ export const WaitlistForm: React.FC<WaitlistFormProps> = ({ error, success, disa
             rel="noopener noreferrer"
             className="text-blue-600 underline underline-offset-2"
           >
-            download <span className="font-quincy text-xl">OpenHands</span> on GitHub
+            download OpenHands on GitHub
           </a>
           {" "}
           to try it locally.
