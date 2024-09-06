@@ -10,6 +10,7 @@ import BlogDetails, { loader as blogDetailsLoaders, ErrorBoundary as BlogDetails
 import { HelmetProvider } from 'react-helmet-async';
 import Share, { loader as shareLoader } from './routes/share';
 import JoinWaitlist, { action as joinWaitlistAction } from './routes/join-waitlist';
+import { Analytics } from "@vercel/analytics/react";
 
 const AppErrorBoundary = () => {
   const error = useRouteError();
@@ -79,6 +80,7 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <HelmetProvider>
     <React.StrictMode>
       <RouterProvider router={router} />
+      <Analytics />
     </React.StrictMode>
   </HelmetProvider>,
 );
