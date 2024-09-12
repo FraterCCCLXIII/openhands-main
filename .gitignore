@@ -26,3 +26,6 @@ dist-ssr
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+.next/
+.npm-only-allow/
+package-lock.json
