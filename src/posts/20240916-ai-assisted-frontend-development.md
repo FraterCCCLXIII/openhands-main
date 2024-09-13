@@ -1,13 +1,13 @@
 ---
 title: "Building a Frontend App with Open Source AI Agents"
-excerpt: ""
-coverImage: "/assets/blog/placeholder.png"
-date: "2024-09-16T08:00:00.000Z"
+excerpt: "Luckily, with the help of recent AI tools, that barrier has significantly lowered, and it's now possible to build practical frontend apps, almost entirely automatically. In this post I'll demonstrate how I built a frontend for a GitHub Pull Request viewer using OpenHands, the open-source AI agent for software development that we're building at All Hands AI."
+coverImage: "/assets/blog/20240916-ai-assisted-frontend-development/pr-viewer-with-dark-mode.png"
+date: "2024-09-10T08:00:00.000Z"
 author:
   name: Graham Neubig
   picture: "/assets/blog/authors/graham.jpg"
 ogImage:
-  url: "/assets/blog/placeholder.png"
+  url: "/assets/blog/20240916-ai-assisted-frontend-development/pr-viewer-with-dark-mode.png"
 ---
 
 # Building a Frontend App with Open Source AI Agents
@@ -18,22 +18,28 @@ Luckily, with the help of recent AI tools, that barrier has significantly lowere
 
 The GitHub PR viewer is an example of something that's simple but practical -- it allows me as a developer to view all open PRs across my team's GitHub repositories, and it would have been a pain to build manually, but with OpenHands it took around 30 minutes to go from nothing to something that actually worked and even had a few bells and whistles.
 
-If you want to jump to the code, you can find it [here](https://github.com/neubig/pr-viewer).
+If you want to take a look at the code that the agent built, you can find it [here](https://github.com/neubig/pr-viewer).
 
 ## Step 1: Setting the Foundation
 
 I began by providing OpenHands with a detailed prompt, outlining the specific requirements for the app.
 
 ```
-I want to create a React app to view all of the open pull requests that exist on all of my team's github repos. Here are some details:
+I want to create a React app to view all of the open pull 
+requests that exist on all of my team's github repos. Here 
+are some details:
 
-1. Please initialize the app using vite and react-ts. You will not be able to interactively enter content, so you can use "yes | npm …" to pipe in confirmations to the npm functions.
-2. You can test the app on the https://github.com/OpenDevin/ github org
-3. I have provided a github token in the .env file (the variable name is GITHUB_TOKEN)
-4. It should have a dropdown that allows me to select a single repo within the org.
-5. There should be tests written using vitest. You can add the --run argument to npm test to avoid interactive commands.
+1. Please initialize the app using vite and react-ts.
+2. You can test the app on the https://github.com/OpenDevin/
+   github org
+3. I have provided a github token in the .env file (the
+   variable name is GITHUB_TOKEN)
+4. It should have a dropdown that allows me to select a
+   single repo within the org.
+5. There should be tests written using vitest.
 
-When things are working, initialize a github repo, create a .gitignore file, and commit the changes.
+When things are working, initialize a github repo, create
+a .gitignore file, and commit the changes.
 ```
 
 A few notes about this prompt:
@@ -71,7 +77,10 @@ It's a functioning app! This is exactly what we wanted, pretty exciting to get t
 However, on closer inspection I noticed that the app was only displaying 10 PRs per repo. This seemed like an API limitation, so I asked OpenHands to modify the backend to retrieve all PRs by default.
 
 ```
-It seems that instead of displaying every single open PR, the viewer is only showing about 10 PRs, possibly due to pagination. It would be good if we could fix this, by modifying the backend to retrieve all pull requests by default.
+It seems that instead of displaying every single open PR,
+the viewer is only showing about 10 PRs, possibly due to
+pagination. It would be good if we could fix this, by
+modifying the backend to retrieve all pull requests by default.
 ```
 
 OpenHands managed to fix this pretty quickly, so I pushed the resulting code and the app was fully functional.
@@ -81,9 +90,11 @@ OpenHands managed to fix this pretty quickly, so I pushed the resulting code and
 Already, the app looked decent -- it was simple and followed React best practices. But I also like having dark mode for when I'm working in dim places, with a simple prompt below.
 
 ```
-It'd be nice if this app could also support dark mode, we can add a toggle that can turn on dark mode.
+It'd be nice if this app could also support dark mode, we can
+add a toggle that can turn on dark mode.
 
-This would require adding a toggle that switches between the different modes to JS, and modifying the css file.
+This would require adding a toggle that switches between the
+different modes to JS, and modifying the css file.
 ```
 
 The resulting code worked out of the box, and I was able to toggle dark mode on and off with no issues.
