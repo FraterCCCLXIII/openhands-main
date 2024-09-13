@@ -1,18 +1,28 @@
-# AI-Assisted Frontend Development: How I Used OpenHands to Create a GitHub PR Viewer
+---
+title: "Building a Frontend App with Open Source AI Agents"
+excerpt: ""
+coverImage: "/assets/blog/placeholder.png"
+date: "2024-09-16T08:00:00.000Z"
+author:
+  name: Graham Neubig
+  picture: "/assets/blog/authors/graham.jpg"
+ogImage:
+  url: "/assets/blog/placeholder.png"
+---
 
-*Published on September 16, 2024*
+# Building a Frontend App with Open Source AI Agents
 
-As a seasoned backend and machine learning programmer, I've always found myself in a peculiar situation. While I can architect complex systems and train sophisticated models, there's been a persistent barrier in my professional journey: creating appealing frontends to showcase my work. It's not that I can't do it, but rather that frontend development has never been my strong suit, often leaving my projects without the polished user interfaces they deserve.
+I consider myself a pretty good Python programmer. I can architect systems, build backend servers, train models, etc. One thing that I'm not super-good at, though, is frontend development. Many times I've wanted to show off a project that includes a cool UI or build a tool that would be helpful for my own workflow, but I usually hesitate because it would take me too long to crank one out.
 
-That is, until I discovered the power of open-source AI agents, specifically OpenHands. In this blog post, I'll walk you through how I leveraged OpenHands to create a frontend for a GitHub Pull Request viewer, almost entirely automatically. This experience not only resulted in a functional app but also opened my eyes to the potential of AI-assisted development in bridging skill gaps.
+Luckily, with the help of recent AI tools, that barrier has significantly lowered, and it's now possible to build practical frontend apps, almost entirely automatically. In this post I'll demonstrate how I built a frontend for a GitHub Pull Request viewer using [OpenHands](https://github.com/All-Hands-AI/OpenHands), the open-source AI agent for software development that we're building at [All Hands AI](https://all-hands.dev).
 
-## The Challenge: A GitHub PR Viewer
+The GitHub PR viewer is an example of something that's simple but practical -- it allows me as a developer to view all open PRs across my team's GitHub repositories, and it would have been a pain to build manually, but with OpenHands it took around 30 minutes to go from nothing to something that actually worked and even had a few bells and whistles.
 
-The task at hand was to create a React application that could display all open pull requests across my team's GitHub repositories. As someone more comfortable with backend systems, the prospect of setting up a React app, handling GitHub API interactions, and implementing a user-friendly interface seemed daunting. However, with OpenHands by my side, the process became surprisingly manageable.
+If you want to jump to the code, you can find it [here](https://github.com/neubig/pr-viewer).
 
 ## Step 1: Setting the Foundation
 
-I began by providing OpenHands with a detailed prompt, outlining the specific requirements for the app:
+I began by providing OpenHands with a detailed prompt, outlining the specific requirements for the app.
 
 ```
 I want to create a React app to view all of the open pull requests that exist on all of my team's github repos. Here are some details:
@@ -26,13 +36,22 @@ I want to create a React app to view all of the open pull requests that exist on
 When things are working, initialize a github repo, create a .gitignore file, and commit the changes.
 ```
 
-This prompt was intentionally detailed. While AI agents have come a long way, they can sometimes make suboptimal implementation decisions. By breaking down the requirements, I ensured that OpenHands would choose the right path for our project.
+A few notes about this prompt:
 
-[Insert screenshot of initial app setup here]
+* This prompt was intentionally detailed. While AI agents have come a long way, they can sometimes make suboptimal implementation decisions. By breaking down the requirements, I ensured that OpenHands would choose the right path for our project, using the specific tech stack that I'm intereted in (react + vite + typescript).
+* By default the agent doesn't have credentials to access the github api, so I added the token to the .env file, which gives it access. Fortunately, GitHub has very nice [personal access tokens](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens) that make it easy to create a token with the right permissions so you don't have to give the agent access to repositories in ways that you don't want to. I put this token in a `.env` file in the [OpenHands workspace directory](https://docs.all-hands.dev/modules/usage/getting-started), so the agent can access it.
+* I asked the agent to do testing. This is important because agents have the ability to go back and check if the code is working properly, resolve library issues, etc. But they might not do it unless you ask them to.
+
+I let OpenHands do its thing and in a few minutes it had created the repo, initialized the git repo, and added the initial code. Tests passed, and I got something that looked like this:
+
+![A Screenshot of a Blank Screen](/assets/blog/20240916-ai-assisted-frontend-development/blank-screen.png)
+
+Um yeah, that's a blank screen. Something is wrong, and unfortunately the agent didn't catch it so I'm going to have to give it a little help.
 
 ## Step 2: Debugging with AI
 
-After the initial setup, I encountered an error when trying to run the app locally. The Chrome developer console revealed:
+While I'm not a huge fan of frontend development, I do know enough to open up the browser and see what's going on.
+So I fired up the repo (according to the instructions that OpenHands had kindly provided in the README.md), opened up Chrome, went to the [developer console](https://developer.chrome.com/docs/devtools/open), and saw this:
 
 ```
 PullRequestViewer.tsx:8
@@ -40,17 +59,26 @@ Uncaught ReferenceError: process is not defined
 at PullRequestViewer.tsx:8:37
 ```
 
-I promptly reported this issue back to OpenHands, asking for a fix. This highlights an important aspect of working with AI agents: while they're incredibly capable, they're not infallible. Human oversight and the ability to provide feedback are crucial for successful outcomes.
+Based on this, I reported this issue back to OpenHands by copying it in the chat window, and asked for a fix. This was enough to put the agent back on the right track, and it quickly came back with a fix. Let's try again and see what we get.
 
-## Step 3: Enhancing Functionality
+![A Screenshot of a Working PR Viewer](/assets/blog/20240916-ai-assisted-frontend-development/pr-viewer.png)
 
-With the basic app up and running, I noticed a limitation in the number of pull requests being displayed. It seemed that the viewer was only showing about 10 PRs, likely due to pagination in the GitHub API response. I asked OpenHands to modify the backend to retrieve all pull requests by default, enhancing the app's utility.
 
-[Insert screenshot of app displaying all PRs here]
+It's a functioning app! This is exactly what we wanted, pretty exciting to get this in just about 10 minutes of work (and drinking coffe while the agent does its thing).
 
-## Step 4: Adding Dark Mode
+## Step 3: Fixing Bugs: API Pagination
 
-To improve the user experience and demonstrate the flexibility of AI-assisted development, I decided to add a dark mode feature. The prompt to OpenHands was straightforward:
+However, on closer inspection I noticed that the app was only displaying 10 PRs per repo. This seemed like an API limitation, so I asked OpenHands to modify the backend to retrieve all PRs by default.
+
+```
+It seems that instead of displaying every single open PR, the viewer is only showing about 10 PRs, possibly due to pagination. It would be good if we could fix this, by modifying the backend to retrieve all pull requests by default.
+```
+
+OpenHands managed to fix this pretty quickly, so I pushed the resulting code and the app was fully functional.
+
+## Step 4: Adding Functionality: Dark Mode
+
+Already, the app looked decent -- it was simple and followed React best practices. But I also like having dark mode for when I'm working in dim places, with a simple prompt below.
 
 ```
 It'd be nice if this app could also support dark mode, we can add a toggle that can turn on dark mode.
@@ -58,28 +86,23 @@ It'd be nice if this app could also support dark mode, we can add a toggle that 
 This would require adding a toggle that switches between the different modes to JS, and modifying the css file.
 ```
 
-OpenHands swiftly implemented the feature, showcasing its ability to handle both functional and aesthetic enhancements.
+The resulting code worked out of the box, and I was able to toggle dark mode on and off with no issues.
 
-[Insert screenshot of app in dark mode here]
+![A Screenshot of a Working PR Viewer with Dark Mode](/assets/blog/20240916-ai-assisted-frontend-development/pr-viewer-with-dark-mode.png)
+
 
 ## Step 5: Open-Sourcing the Project
 
-As a firm believer in the power of open-source software, I wanted to ensure our project was properly licensed. A simple prompt to OpenHands took care of this:
+Finally, I'm a firm believer in the power of open-source software, so I wanted to ensure our project was properly licensed. A simple prompt to OpenHands took care of this:
 
 ```
 We can license this repo under the MIT license.
 ```
 
-The AI agent added the appropriate license file, completing our journey from concept to a fully functional, open-source GitHub PR viewer.
-
 ## Conclusion
 
-This experience with OpenHands has been eye-opening. As a backend developer, I've always seen frontend development as a necessary but challenging aspect of showcasing my work. With AI-assisted development, that barrier has significantly lowered. 
-
-The process wasn't without its hiccups – we encountered errors and limitations that required human intervention. However, the speed at which we moved from a basic concept to a functional, feature-rich application was remarkable.
+Overall, the resulting app was pretty simple, but it demonstrated how you can go through the steps of building a frontend app with open-source AI agents. Note that this was an iterative process -- there were hiccups that required debugging. And we also didn't get a perfect app out-of-the-box. But using an appropriate agent like OpenHands, you can quickly iterate on ideas and build something that works pretty well.
 
 What's particularly exciting is the potential this holds for developers across all specializations. AI agents like OpenHands can help bridge skill gaps, allowing developers to venture into areas outside their comfort zones with greater confidence.
 
-As we continue to explore the possibilities of AI-assisted development, it's clear that tools like OpenHands are not replacing developers, but rather augmenting our capabilities. They're enabling us to work more efficiently, tackle a broader range of tasks, and ultimately, bring our ideas to life more quickly and effectively than ever before.
-
-The future of software development is collaborative – humans and AI working together to push the boundaries of what's possible. And if my experience with this GitHub PR viewer is any indication, that future is incredibly bright.
+If you're interested in trying out OpenHands, download the project [here](https://github.com/All-Hands-AI/OpenHands) and get started right away, and you can also get on our mailing list for All Hands AI [here](https://www.all-hands.dev/join-waitlist) for further updates.
