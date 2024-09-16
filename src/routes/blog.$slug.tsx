@@ -1,8 +1,10 @@
+import React from "react";
 import { Helmet } from "react-helmet-async";
 import Markdown from "react-markdown";
 import { LoaderFunctionArgs, useLoaderData } from "react-router-dom";
 import invariant from "tiny-invariant";
 import { blogAPI } from "~/api/blog";
+import { CSyntaxHighlighter } from "~/components/c-syntax-highlighter";
 import { PlaceholderImage } from "~/components/placeholder-image";
 import { formatDate } from "~/utils/format-date";
 
@@ -38,6 +40,11 @@ export const ErrorBoundary = () => (
 
 const BlogDetails = () => {
   const data = useLoaderData() as ReturnType<typeof loader>;
+  // THIS IS A HACK TO GET THE WIDTH OF THE CODE ELEMENT
+  // SHOULD BE REPLACED WITH A BETTER SOLUTION
+  const codeElementWidth = React.useMemo(() => {
+    return window.innerWidth - 84; // 42px padding on each side
+  }, []);
 
   return (
     <article className="flex flex-col items-center py-[45px] gap-8">
@@ -91,6 +98,7 @@ const BlogDetails = () => {
               li: (props) => <li className="list-disc ml-5" {...props}>{props.children}</li>,
               img: (props) => <img className="rounded-lg" {...props} alt={props.alt} />,
               p: (props) => <p className="text-description" {...props}>{props.children}</p>,
+              code: (props) => <CSyntaxHighlighter className={{ maxWidth: codeElementWidth }}>{String(props.children).replace(/\n$/, "")}</CSyntaxHighlighter>,
             }}
           />
         </section>
