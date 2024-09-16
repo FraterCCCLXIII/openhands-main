@@ -24,7 +24,7 @@ If you want to take a look at the code that the agent built, you can find it [he
 
 I began by providing OpenHands with a detailed prompt, outlining the specific requirements for the app.
 
-```
+```md
 I want to create a React app to view all of the open pull 
 requests that exist on all of my team's github repos. Here 
 are some details:
@@ -59,7 +59,7 @@ Um yeah, that's a blank screen. Something is wrong, and unfortunately the agent 
 While I'm not a huge fan of frontend development, I do know enough to open up the browser and see what's going on.
 So I fired up the repo (according to the instructions that OpenHands had kindly provided in the README.md), opened up Chrome, went to the [developer console](https://developer.chrome.com/docs/devtools/open), and saw this:
 
-```
+```md
 PullRequestViewer.tsx:8
 Uncaught ReferenceError: process is not defined
 at PullRequestViewer.tsx:8:37
@@ -69,14 +69,13 @@ Based on this, I reported this issue back to OpenHands by copying it in the chat
 
 ![A Screenshot of a Working PR Viewer](/assets/blog/20240916-ai-assisted-frontend-development/pr-viewer.png)
 
-
 It's a functioning app! This is exactly what we wanted, pretty exciting to get this in just about 10 minutes of work (and drinking coffe while the agent does its thing).
 
 ## Step 3: Fixing Bugs: API Pagination
 
 However, on closer inspection I noticed that the app was only displaying 10 PRs per repo. This seemed like an API limitation, so I asked OpenHands to modify the backend to retrieve all PRs by default.
 
-```
+```md
 It seems that instead of displaying every single open PR,
 the viewer is only showing about 10 PRs, possibly due to
 pagination. It would be good if we could fix this, by
@@ -89,7 +88,7 @@ OpenHands managed to fix this pretty quickly, so I pushed the resulting code and
 
 Already, the app looked decent -- it was simple and followed React best practices. But I also like having dark mode for when I'm working in dim places, with a simple prompt below.
 
-```
+```md
 It'd be nice if this app could also support dark mode, we can
 add a toggle that can turn on dark mode.
 
@@ -101,12 +100,11 @@ The resulting code worked out of the box, and I was able to toggle dark mode on 
 
 ![A Screenshot of a Working PR Viewer with Dark Mode](/assets/blog/20240916-ai-assisted-frontend-development/pr-viewer-with-dark-mode.png)
 
-
 ## Step 5: Open-Sourcing the Project
 
 Finally, I'm a firm believer in the power of open-source software, so I wanted to ensure our project was properly licensed. A simple prompt to OpenHands took care of this:
 
-```
+```md
 We can license this repo under the MIT license.
 ```
 
