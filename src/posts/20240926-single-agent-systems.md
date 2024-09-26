@@ -10,8 +10,6 @@ ogImage:
   url: "/assets/blog/20240926-single-agent-systems/single-agent-systems.png"
 ---
 
-![Image depicting multi-agent vs single-agent systems](/assets/blog/20240926-single-agent-systems/single-agent-systems.png)
-
 Recently "**multi-agent system**" is one of the hottest buzzwords in AI, the focus of popular open-source frameworks like [MetaGPT](https://github.com/geekan/MetaGPT) and [Autogen](https://microsoft.github.io/autogen/), as well as [hackathons](https://medium.com/@kyeg/announcing-the-sthe-first-multi-agent-hackathon-ever-b5e76f534b0d), and many research papers. But in this post, I'd like to take a look at this trend and argue that there are some strong arguments to be made for **single-agent systems**. In doing so, I'll draw on our experience building [OpenHands](https://github.com/All-Hands-AI/OpenHands), a framework for software development agents.
 
 In the summary, we'll discuss:
