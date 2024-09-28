@@ -108,6 +108,14 @@
     "login": "xcodebuild"
   },
   {
+    "id": 175740463,
+    "login": "openhands-agent"
+  },
+  {
+    "id": 22633385,
+    "login": "eltociear"
+  },
+  {
     "id": 55055083,
     "login": "Jiayi-Pan"
   },
@@ -120,36 +128,28 @@
     "login": "WannaTen"
   },
   {
-    "id": 22633385,
-    "login": "eltociear"
-  },
-  {
-    "id": 175740463,
-    "login": "openhands-agent"
-  },
-  {
-    "id": 3778956,
-    "login": "computer-whisperer"
-  },
-  {
     "id": 40566439,
     "login": "joorjeh"
-  },
-  {
-    "id": 6035284,
-    "login": "Borda"
-  },
-  {
-    "id": 95778421,
-    "login": "PierrunoYT"
   },
   {
     "id": 79442223,
     "login": "ryanhoangt"
   },
   {
+    "id": 3778956,
+    "login": "computer-whisperer"
+  },
+  {
+    "id": 95778421,
+    "login": "PierrunoYT"
+  },
+  {
     "id": 22478336,
     "login": "tangxiangru"
+  },
+  {
+    "id": 6035284,
+    "login": "Borda"
   },
   {
     "id": 19970308,
