@@ -5,10 +5,11 @@ interface Post {
     excerpt: string;
     coverImage: string | undefined;
     date: string; // ISO string
-    author: {
+    authors: {
       name: string;
       picture: string;
-    };
+      link: string;
+    }[];
     ogImage: {
       url: string;
     };

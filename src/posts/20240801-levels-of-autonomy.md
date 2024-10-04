@@ -3,9 +3,10 @@ title: "Levels of Autonomy in AI-enhanced Software Engineering"
 excerpt: "What are some different levels of autonomy in software development agents, and how do they relate to existing tools? Read on to learn more!"
 coverImage: "/assets/blog/20240801-levels-of-autonomy/cover.jpg"
 date: "2024-08-01T08:00:00.000Z"
-author:
-  name: Graham Neubig
-  picture: "/assets/blog/authors/graham.jpg"
+authors:
+  - name: Graham Neubig
+    picture: "/assets/blog/authors/graham.jpg"
+    link: https://www.phontron.com/
 ogImage:
   url: "/assets/blog/20240801-levels-of-autonomy/cover.jpg"
 ---

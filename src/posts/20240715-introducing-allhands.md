@@ -3,9 +3,10 @@ title: "Introducing All Hands AI"
 excerpt: "Introducing All Hands AI -- we build AI software development agents for everyone, in the open."
 coverImage: "/assets/blog/20240715-introducing-allhands/cover.jpg"
 date: "2024-07-15T12:35:00.000Z"
-author:
-  name: Graham Neubig
-  picture: "/assets/blog/authors/graham.jpg"
+authors:
+  - name: Graham Neubig
+    picture: "/assets/blog/authors/graham.jpg"
+    link: https://www.phontron.com/
 ogImage:
   url: "/assets/blog/20240715-introducing-allhands/cover.jpg"
 ---

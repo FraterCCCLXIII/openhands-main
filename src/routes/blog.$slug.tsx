@@ -22,10 +22,10 @@ export const loader = ({ params }: LoaderFunctionArgs) => {
     title: data.title,
     date: data.date,
     cover: data.coverImage || null,
-    author: {
-      name: data.author.name,
-      src: data.author.picture,
-    },
+    authors: data.authors.map((author) => ({
+          name: author.name,
+      link: author.link || null,
+    })),
     excerpt: data.excerpt,
     ogImage: data.ogImage.url,
   }
@@ -74,18 +74,28 @@ const BlogDetails = () => {
       <main className="flex flex-col gap-4 lg:max-w-[800px] px-[42px]">
         <h1 className="heading">{data.title}</h1>
 
-        <header className="flex items-center gap-2 lg:gap-4 text-[17px] leading-6 font-semibold text-description">
-          <img
-            src={data.author.src}
-            alt="author"
-            width={40}
-            height={40}
-            className="bg-placeholder rounded-[7px] lg:rounded-[10px]"
-          />
-          <div className="flex flex-col items-start lg:flex-row lg:items-center lg:gap-4">
-            <span>By {data.author.name}</span>
-            <span className="hidden lg:block">&#8226;</span>
-            <time dateTime={data.date}>{formatDate(data.date)}</time>
+        <header className="flex flex-col gap-2">
+          <div className="flex items-center gap-2 lg:gap-4 text-[17px] leading-6 font-semibold text-description">
+            <div className="flex flex-col items-start lg:flex-row lg:items-center lg:gap-4">
+              <span>
+                By{' '}
+                {data.authors.map((author, index) => (
+                  <React.Fragment key={author.name}>
+                    {index > 0 && ', '}
+                    <a
+                      href={author.link || undefined}
+                      className="text-blue-600"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      {author.name}
+                    </a>
+                  </React.Fragment>
+                ))}
+              </span>
+              <span className="hidden lg:block">&#8226;</span>
+              <time dateTime={data.date}>{formatDate(data.date)}</time>
+            </div>
           </div>
         </header>
 

@@ -12,9 +12,10 @@
     excerpt: "Excerpt of the blog post"
     coverImage: "/assets/blog/path/to/cover-image.jpg"
     date: "2024-07-15T12:35:00.000Z"
-    author:
-      name: Author Name
-      picture: "/assets/blog/path/to/author.jpg"
+    authors:
+      - name: Author Name
+        link: link-to-your-website
+        picture: "/assets/blog/path/to/author.jpg"
     ogImage:
       url: "/assets/blog/path/to/cover-image.jpg"
     ---
