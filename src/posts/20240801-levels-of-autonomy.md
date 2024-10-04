@@ -6,6 +6,7 @@ date: "2024-08-01T08:00:00.000Z"
 author:
   name: Graham Neubig
   picture: "/assets/blog/authors/graham.jpg"
+  link: https://www.phontron.com/
 ogImage:
   url: "/assets/blog/20240801-levels-of-autonomy/cover.jpg"
 ---

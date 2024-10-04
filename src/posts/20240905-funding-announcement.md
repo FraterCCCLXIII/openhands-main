@@ -6,6 +6,7 @@ date: "2024-09-05T08:00:00.000Z"
 author:
   name: Robert Brennan
   picture: "/assets/blog/authors/robert.webp"
+  link: https://www.phontron.com/
 ogImage:
   url: "/assets/blog/placeholder.png"
 ---

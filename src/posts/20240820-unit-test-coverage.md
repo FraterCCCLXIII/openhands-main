@@ -6,6 +6,7 @@ date: "2024-08-20T08:00:00.000Z"
 author:
   name: Tim O'Farrell
   picture: "/assets/blog/authors/tim.png"
+  link: https://www.phontron.com/
 ogImage:
   url: "/assets/blog/placeholder.png"
 ---

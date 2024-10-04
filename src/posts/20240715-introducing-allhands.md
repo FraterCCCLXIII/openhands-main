@@ -6,6 +6,7 @@ date: "2024-07-15T12:35:00.000Z"
 author:
   name: Graham Neubig
   picture: "/assets/blog/authors/graham.jpg"
+  link: https://www.phontron.com/
 ogImage:
   url: "/assets/blog/20240715-introducing-allhands/cover.jpg"
 ---

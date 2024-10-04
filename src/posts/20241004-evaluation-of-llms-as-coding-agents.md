@@ -4,8 +4,10 @@ excerpt: "We evaluated LLMs as coding agents on SWE-Bench Lite, using an evaluat
 coverImage: "/assets/blog/20241004-evaluation-of-llms-as-coding-agents/accuracy-bar-chart.png"
 date: "2024-10-04T08:00:00.000Z"
 author:
-  name: Graham Neubig
-  picture: "/assets/blog/authors/graham.jpg"
+  - name: Graham Neubig
+    link: https://www.phontron.com/
+  - name: Xingyao Wang
+    link: https://xwang.dev
 ogImage:
   url: "/assets/blog/20241004-evaluation-of-llms-as-coding-agents/accuracy-bar-chart.png"
 ---
