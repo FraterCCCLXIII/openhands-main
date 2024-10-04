@@ -3,10 +3,10 @@ title: "Building a Frontend App with Open Source AI Agents"
 excerpt: "Luckily, with the help of recent AI tools, that barrier has significantly lowered, and it's now possible to build practical frontend apps, almost entirely automatically. In this post I'll demonstrate how I built a frontend for a GitHub Pull Request viewer using OpenHands, the open-source AI agent for software development that we're building at All Hands AI."
 coverImage: "/assets/blog/20240916-ai-assisted-frontend-development/pr-viewer-with-dark-mode.png"
 date: "2024-09-10T08:00:00.000Z"
-author:
-  name: Graham Neubig
-  picture: "/assets/blog/authors/graham.jpg"
-  link: https://www.phontron.com/
+authors:
+  - name: Graham Neubig
+    picture: "/assets/blog/authors/graham.jpg"
+    link: https://www.phontron.com/
 ogImage:
   url: "/assets/blog/20240916-ai-assisted-frontend-development/pr-viewer-with-dark-mode.png"
 ---

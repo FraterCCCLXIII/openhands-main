@@ -22,15 +22,10 @@ export const loader = ({ params }: LoaderFunctionArgs) => {
     title: data.title,
     date: data.date,
     cover: data.coverImage || null,
-    authors: Array.isArray(data.author)
-      ? data.author.map((author) => ({
+    authors: data.authors.map((author) => ({
           name: author.name,
-          link: author.link || null,
-        }))
-      : [{
-          name: data.author.name,
-          link: data.author.link || null,
-        }],
+      link: author.link || null,
+    })),
     excerpt: data.excerpt,
     ogImage: data.ogImage.url,
   }
@@ -88,7 +83,7 @@ const BlogDetails = () => {
                   <React.Fragment key={author.name}>
                     {index > 0 && ', '}
                     <a
-                      href={author.link || null}
+                      href={author.link || undefined}
                       className="text-blue-600"
                       target="_blank"
                       rel="noreferrer"

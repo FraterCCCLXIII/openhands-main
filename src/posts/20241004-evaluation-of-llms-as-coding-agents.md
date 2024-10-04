@@ -3,7 +3,7 @@ title: "Evaluation of LLMs as Coding Agents on SWE-Bench (at 30x Speed!)"
 excerpt: "We evaluated LLMs as coding agents on SWE-Bench Lite, using an evaluation framework we built for efficient evaluation of coding agents."
 coverImage: "/assets/blog/20241004-evaluation-of-llms-as-coding-agents/accuracy-bar-chart.png"
 date: "2024-10-04T08:00:00.000Z"
-author:
+authors:
   - name: Graham Neubig
     link: https://www.phontron.com/
   - name: Xingyao Wang

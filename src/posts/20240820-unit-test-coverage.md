@@ -3,10 +3,10 @@ title: "Using OpenHands to Improve your Test Coverage"
 excerpt: "Here is a practical example of how OpenHands (Formerly OpenDevin) can improve your unit test coverage right now."
 coverImage: "/assets/blog/placeholder.png"
 date: "2024-08-20T08:00:00.000Z"
-author:
-  name: Tim O'Farrell
-  picture: "/assets/blog/authors/tim.png"
-  link: https://www.phontron.com/
+authors:
+  - name: Tim O'Farrell
+    picture: "/assets/blog/authors/tim.png"
+    link: https://www.linkedin.com/in/tim-o-129b4364/
 ogImage:
   url: "/assets/blog/placeholder.png"
 ---
