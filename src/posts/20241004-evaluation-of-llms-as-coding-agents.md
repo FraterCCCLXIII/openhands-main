@@ -61,7 +61,7 @@ Another aspect that is of interest, given that running agents can be relatively 
 
 ![Chart of price/accuracy tradeoff](/assets/blog/20241004-evaluation-of-llms-as-coding-agents/accuracy-vs-cost.png)
 
-Here there were two clear winners: Claude with a high resolve rate of 27 and a modest cost of $0.3 per issue, and deepseek with an amazing cost of $0.03 (yes, three cents!). Notably, both of [Anthropic](https://www.anthropic.com/news/prompt-caching) and [Deepseek](https://platform.deepseek.com/api-docs/news/news0802/) have recently introduced prompt caching, which greatly reduced their cost in agentic settings, making these results possible.
+Here there were two clear winners: Claude with a high resolve rate of 27 and a modest cost of $0.3 per issue, and deepseek with an amazing cost of $0.003 (yes, 0.3 cents!). Notably, both of [Anthropic](https://www.anthropic.com/news/prompt-caching) and [Deepseek](https://platform.deepseek.com/api-docs/news/news0802/) have recently introduced prompt caching, which greatly reduced their cost in agentic settings, making these results possible.
 
 ## What's next?
 
