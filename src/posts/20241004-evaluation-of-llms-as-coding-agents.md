@@ -5,8 +5,10 @@ coverImage: "/assets/blog/20241004-evaluation-of-llms-as-coding-agents/accuracy-
 date: "2024-10-04T08:00:00.000Z"
 authors:
   - name: Graham Neubig
+    picture: "/assets/blog/authors/graham.jpg"
     link: https://www.phontron.com/
   - name: Xingyao Wang
+    picture: "/assets/blog/authors/xingyao.webp"
     link: https://xwang.dev
 ogImage:
   url: "/assets/blog/20241004-evaluation-of-llms-as-coding-agents/accuracy-bar-chart.png"
