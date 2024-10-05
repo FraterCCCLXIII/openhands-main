@@ -5,6 +5,7 @@ import { LoaderFunctionArgs, useLoaderData } from "react-router-dom";
 import invariant from "tiny-invariant";
 import { blogAPI } from "~/api/blog";
 import { CSyntaxHighlighter } from "~/components/c-syntax-highlighter";
+import { code as Code } from "~/components/code";
 import { PlaceholderImage } from "~/components/placeholder-image";
 import { formatDate } from "~/utils/format-date";
 
@@ -23,7 +24,7 @@ export const loader = ({ params }: LoaderFunctionArgs) => {
     date: data.date,
     cover: data.coverImage || null,
     authors: data.authors.map((author) => ({
-          name: author.name,
+      name: author.name,
       link: author.link || null,
     })),
     excerpt: data.excerpt,
@@ -108,7 +109,7 @@ const BlogDetails = () => {
               li: (props) => <li className="list-disc ml-5" {...props}>{props.children}</li>,
               img: (props) => <img className="rounded-lg" {...props} alt={props.alt} />,
               p: (props) => <p className="text-description" {...props}>{props.children}</p>,
-              code: (props) => <CSyntaxHighlighter className={{ maxWidth: codeElementWidth }}>{String(props.children).replace(/\n$/, "")}</CSyntaxHighlighter>,
+              code: (props) => <Code {...props} customStyle={{ maxWidth: codeElementWidth }} />,
             }}
           />
         </section>
