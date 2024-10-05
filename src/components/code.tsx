@@ -22,7 +22,7 @@ export function code({
   const match = /language-(\w+)/.exec(className || ""); // get the language
 
   if (!match) {
-    return <code className="bg-[rgb(30,30,30)] text-[rgb(212,212,212)] p-0.5 rounded">{children}</code>;
+    return <code className={className}>{children}</code>;
   }
 
   return (
