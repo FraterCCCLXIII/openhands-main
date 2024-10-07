@@ -34,6 +34,7 @@ interface HeroButtonProps {
 function HeroButton({ onClick, children, logo, variant = "primary" }: HeroButtonProps) {
   const className = clsx(
     "font-[700] text-[19px] leading-[27px] rounded-lg py-4 w-[250px] flex items-center justify-center gap-4",
+    variant === "primary" && "hover:bg-[#4B5563] hover:text-white transition-colors duration-50",
     variant === "primary" && "bg-black text-white border-none",
     variant === "secondary" && "bg-transparent border border-black text-black"
   );
