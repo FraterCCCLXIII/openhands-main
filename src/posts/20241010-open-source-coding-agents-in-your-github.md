@@ -19,7 +19,7 @@ Today, we're excited to introduce a tool that we've developed that can help auto
 
 The OpenHands resolver is based on [OpenHands](https://github.com/All-Hands-AI/openhands), which is a framework for building open-source coding agents. If you're interested in the details about how the agents are implemented, you can read the [docs](https://docs.all-hands.dev/) or our [paper](https://arxiv.org/abs/2407.16741).
 
-Normally you use OpenHands through a UI where you can dynamically interact with the agents, but in order to resolve individual issues you need to spin up the interface, copy-paste in the issue description, and wait a few minutes for the agent to propose a fix, which takes a bit of work.
+Normally you use OpenHands through a UI where you dynamically interact with the agents, but in order to resolve individual issues you need to spin up the interface, copy-paste in the issue description, and wait a few minutes for the agent to propose a fix, which takes a bit of work.
 
 Instead for the OpenHands resolver, you can run it as a GitHub action, and it will automatically fix any issues in your repository that you tag with the `fix-me` label. You can also run the resolver locally, where it can even attempt to solve *all* the issues in your repository with one fell swoop.
 
