@@ -17,6 +17,9 @@ export default {
       screens: {
         'monitor': '1800px',
       },
+      listStyleType: {
+        alpha: 'lower-alpha',
+      },
     },
   },
   plugins: [],
