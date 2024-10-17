@@ -26,17 +26,17 @@ I saw Graham made a commit soon after that with a front-end, kind of mocking out
 
 **Graham Neubig:** I saw the Devin demo online, I was interested in it, and then on Twitter I saw that this OpenDevin project existed. I had been doing research in the area, like Xingyao had, and so I was interested. I saw that it had a ridiculous number of stars on GitHub despite only having a README. That indicated to me that people were very interested in this.
 
-**Xingyao Wang:** When Devin first came out, I was really depressed for a night. I was having trouble sleeping. I was like, “Oh, what am I gonna do for my PhD” because Devin wasn’t supposed to be my goal until the fifth year of my PhD. Suddenly Devin just came out, and the demo looked amazing.
+**Xingyao Wang:** When Devin first came out, I was depressed for a night. I was having trouble sleeping. I was like, "Oh, what am I gonna do for my PhD?" because Devin wasn't supposed to be my goal until the fifth year of my PhD. Suddenly, Devin just came out, and the demo looked amazing.
 
-I was sitting in front of the Devin demo for an hour trying to decipher what the prompting mechanism happening behind the scenes was. Then I actually wrote a 14 tweet Twitter thread, and then before I clicked send, Twitter crashed.
+I was sitting in front of the Devin demo for an hour to decipher the prompting mechanism behind the scenes. Then, I wrote 14 tweets in a Twitter thread. Before I clicked send, Twitter crashed.
 
-I said, OK, I should go to bed. I woke up the next morning, and my friend messaged me, saying, “Hey, here's a tweet. Somebody is building OpenDevin.” I thought, since my research is in this area and I am no longer going to do this for my PhD, why not just do it in an open source way?
+I said, OK, I should go to bed. I woke up the next morning, and my friend messaged me, saying, "Hey, somebody is building OpenDevin." Since my research is in this area, why not just do it in an open source way?
 
 **Graham:** So I think [Junyang Lin](https://github.com/JustinLin610) and [Binyuan Hui](https://github.com/huybery) (who started the project) were like, “OK, let's write out an architecture diagram, let's create a plan, let's execute on this.”
 
 I said, “Or I could use Claude and come up with an interface that looks like Devin tonight and put it online and then people can start working on it. And so I talked to Junyang and Binyuan and they said, “OK, yeah, let's do this.”
 
-**Xingyao:** One of the huge pains I had in the past was when you wrote some research codebase, but nobody else was using it. After six months, it's no longer useful because something new came out and your old code that no one is using is not caught up with the latest state-of-the-art and you have to do something from scratch all over again for a new project. So I thought, why not take this opportunity to integrate my past research into this open source project and then turn it into something actually useful to people so everyone can help maintain it. And then I have a friend, who is currently a postdoc in Graham's lab, who actually introduced me to Junyang and Binyuan. It's a fun connection. 
+**Xingyao:** One of the biggest pains I had in the past was when you started a research codebase, but nobody else was using it. After six months, it's no longer useful because something new came out, and your old code, which no one is using, is not caught up with the latest state-of-the-art. So, why not take this opportunity to integrate my past research into this open source project and then turn it into something useful to people so everyone can help maintain it.
 
 ## Part 2: Catching the energy
 
@@ -102,10 +102,8 @@ It also includes people in various varieties of industry that don't want to be b
 
 My belief is that that's also just a good decision for making the best software. We can provide tools for other people to do the research they already want to be doing and make the changes they already want to make. We won't have to duplicate effort 50 times, we can build it together.
 
-**Xingyao:** For doing research, reproducibility is really important. As an academic reviewer myself, I'm a bit skeptical about work where you can't access the code to reproduce it. For example, if you publish a paper without publishing your code, you get criticized: “I cannot reproduce your scores.”
+**Xingyao:** For doing research, reproducibility is really important. I'm skeptical about work where the results are so great, but you can't access the code to reproduce it.
 
-Another advantage comes when you make a mistake. Somebody else tries to run your code, they tell you, and you will be able to find bugs earlier on. So I think building things in the open should be the default, making sure everybody can run your code and reproduce your results. 
-
-Doing this in the open is better than doing it behind the scenes.	
+Another advantage of open-source comes when you make a mistake; someone in the open-source community runs your code and helps you catch those bugs. I hope building things in the open becomes the new default, ensuring everybody can run your code, reproduce your results, and point out errors.
 
 **Robert:** I think good science is, by definition, open.  
