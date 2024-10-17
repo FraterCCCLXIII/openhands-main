@@ -6,6 +6,7 @@ import post5 from "./20240916-ai-assisted-frontend-development.md?raw";
 import post6 from "./20240926-single-agent-systems.md?raw";
 import post7 from "./20241004-evaluation-of-llms-as-coding-agents.md?raw";
 import post8 from "./20241010-open-source-coding-agents-in-your-github.md?raw";
+import post9 from "./20241015-readme-to-open-source-movement.md?raw";
 
 export const RAW_POSTS = [
   post1,
@@ -16,4 +17,5 @@ export const RAW_POSTS = [
   post6,
   post7,
   post8,
+  post9,
 ];
