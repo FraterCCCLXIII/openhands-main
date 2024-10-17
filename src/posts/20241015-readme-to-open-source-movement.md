@@ -72,7 +72,7 @@ Another helpful thing for us was that we had the Cognition demo video, so everyb
 
 **Robert:** We also had a designer, Paul Bloch, who's still working with us, come pretty early and actually mock up what he thought it should look like. He did an amazing job and I think that also having that visual North Star was really helpful.
 
-## Part 4: Making a company**
+## Part 4: Making a company
 
 **Robert:** VCs started reaching out to us within a week or two of things starting to take off. I think it was pretty clear to us like, “Oh, there's something going on here.” So the the idea was put in our heads pretty early on.
 
