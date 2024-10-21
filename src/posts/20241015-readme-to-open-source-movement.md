@@ -1,7 +1,7 @@
 ---
 title: "OpenHands: From README to open source movement"
 excerpt: "OpenHands exists because our community willed it. Here’s how it all started."
-coverImage: "/assets/blog/20241015-readme-to-open-source-movement/all-hands-founders.jpg"
+coverImage: "/assets/blog/20241015-readme-to-open-source-movement/all-hands-founders-full.jpg"
 date: "2024-10-17T08:00:00.000Z"
 authors:
   - name: Ana Hevesi
