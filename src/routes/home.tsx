@@ -95,6 +95,21 @@ const Home = () => {
       </section>
 
       <section
+        className="flex flex-col lg:flex-row-reverse py-16 gap-16 lg:gap-8 px-[42px] lg:p-0 lg:h-[502px] items-center lg:justify-center"
+      >
+        <img src="/assets/swe-bench.png" className="w-[500px] lg:w-[412px]" />
+        <div className="flex flex-col gap-4 lg:w-[466px]">
+          <span className="heading">Best in Class</span>
+          <p className="paragraph text-description lg:w-[400px]">
+            OpenHands is the leading AI software engineer to date. Our agent can solve over
+            half the problems in the <a className="underline" href="https://www.swebench.com/" target="_blank">SWE-bench</a> Verified problem set, and is the
+            first AI engineer to score over 50%. And top researchers in code generation,
+            from over a dozen academic institutions, are helping us improve it every day.
+          </p>
+        </div>
+      </section>
+
+      <section
         className="px-[42px] lg:px-[184px] flex flex-col lg:flex-row gap-16 lg:gap-[81px] pt-16 pb-16 lg:p-0 lg:h-[489px] items-center lg:justify-center"
       >
         <BreakFree className="w-[318px] lg:w-[329px]" />
@@ -124,7 +139,7 @@ const Home = () => {
         <HeartHands className="w-[326px] lg:w-[312px]" />
         <div className="flex flex-col gap-4 lg:w-[500px]">
           <span className="heading">Power and Responsibility</span>
-          <p className="paragraph text-description lg:w-[466px]">Our agents can do anything a human developer can: they write code, run commands, and use the web. We&apos;re partnering with AI safety experts like Invariant Labs to balance innovation with security.</p>
+          <p className="paragraph text-description lg:w-[466px]">OpenHands can do anything a human developer can: they write code, run commands, and use the web. We&apos;re partnering with AI safety experts like Invariant Labs to balance innovation with security.</p>
         </div>
       </section>
 
@@ -158,7 +173,7 @@ const Home = () => {
       >
         <div className="flex flex-col gap-4 text-center h-[206px] lg:h-[126px]">
           <span className="heading">Choose your Engine</span>
-          <p className="paragraph text-description lg:w-[466px]">Our agents are compatible with any large language model provider.</p>
+          <p className="paragraph text-description lg:w-[466px]">OpenHands is compatible with any large language model provider.</p>
         </div>
 
         <div className="flex flex-col lg:flex-row items-center gap-8 lg:w-screen lg:max-w-[1358px] lg:px-[143px] lg:justify-between">
