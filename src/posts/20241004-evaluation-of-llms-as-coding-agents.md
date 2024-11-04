@@ -67,7 +67,7 @@ Here there were two clear winners: Claude with a high resolve rate of 27 and a m
 
 We'd love to roll out this environment to anyone who is interested in efficient evaluation of coding agents! Currently the environment is in beta, so if you want to get started with it, please contact us by:
 
-- [Joining our slack](https://join.slack.com/t/opendevin/shared_invite/zt-2oikve2hu-UDxHeo8nsE69y6T7yFX_BA) and pinging us on the `#remote-runtime-limited-beta` channel
+- [Joining our slack](https://join.slack.com/t/openhands-ai/shared_invite/zt-2tom0er4l-JeNUGHt_AxpEfIBstbLPiw) and pinging us on the `#remote-runtime-limited-beta` channel
 - Emailing us at [contact@all-hands.dev](mailto:contact@all-hands.dev)
 
 We're also interested in using the environment to evaluation of more language models, and also existing models on more tasks. So if you have any requests for this, please get in contact as well.

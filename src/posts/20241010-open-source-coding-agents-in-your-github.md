@@ -97,7 +97,7 @@ We believe that this could be a pretty useful tool for developers, and it could 
 We invite you to:
 
 1. Try out the [OpenHands resolver](https://github.com/All-Hands-AI/openhands-resolver) on your own repositories.
-2. Contribute to its development by submitting pull requests, reporting bugs, or discussing on our [slack](https://join.slack.com/t/opendevin/shared_invite/zt-2oikve2hu-UDxHeo8nsE69y6T7yFX_BA).
+2. Contribute to its development by submitting pull requests, reporting bugs, or discussing on our [slack](https://join.slack.com/t/openhands-ai/shared_invite/zt-2tom0er4l-JeNUGHt_AxpEfIBstbLPiw).
 3. Star the repository and spread the word to fellow developers.
 
 Together, we can build a more efficient, collaborative, and innovative future for open-source development.
