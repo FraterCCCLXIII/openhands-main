@@ -8,6 +8,7 @@ import post7 from "./20241004-evaluation-of-llms-as-coding-agents.md?raw";
 import post8 from "./20241010-open-source-coding-agents-in-your-github.md?raw";
 import post9 from "./20241015-readme-to-open-source-movement.md?raw";
 import post10 from "./20241101-codeact2-1-swebench.md?raw";
+import post11 from "./20241104-beta-rollout.md?raw";
 
 export const RAW_POSTS = [
   post1,
@@ -20,4 +21,6 @@ export const RAW_POSTS = [
   post8,
   post9,
   post10,
+  post11,
 ];
+
