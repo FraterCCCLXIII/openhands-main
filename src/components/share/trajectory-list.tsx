@@ -28,9 +28,27 @@ interface TrajectoryListProps {
 }
 
 export const TrajectoryList: React.FC<TrajectoryListProps> = ({ trajectory }) => {
+  const shouldDisplayItem = (item: TrajectoryItem): boolean => {
+    // Filter out change_agent_state actions
+    if ("action" in item && item.action === "change_agent_state" as const) {
+      return false;
+    }
+
+    // Filter out null observations
+    if ("observation" in item && typeof item.observation === "string" && item.observation === "null") {
+      return false;
+    }
+
+    // Keep all other items
+    return true;
+  };
+
+  // Apply filtering to remove unwanted events
+  const filteredTrajectory = trajectory.filter(shouldDisplayItem);
+
   return (
     <div className="flex flex-col items-center gap-2">
-      {trajectory.map((item, index) => {
+      {filteredTrajectory.map((item, index) => {
         if (isAgentStateChange(item)) {
           return <AgentStateChange key={index} state={item} />;
         } else if (isUserMessage(item)) {

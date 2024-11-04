@@ -9,10 +9,22 @@ interface Config {
   }
 }
 
-interface AgentStateChange {
+interface AgentStateChangeAction {
   id: number;
   message: string;
-  source: "agent";
+  source: "environment" | "agent";
+  timestamp: string;
+  action: "change_agent_state";
+  args: {
+    agent_state: "init" | "loading" | "running" | "awaiting_user_input" | "finished";
+    thought: string;
+  };
+}
+
+interface AgentStateChangeObservation {
+  id: number;
+  message: string;
+  source: "environment" | "agent";
   timestamp: string;
   observation: "agent_state_changed";
   content: string;
@@ -21,9 +33,13 @@ interface AgentStateChange {
   };
 }
 
+type AgentStateChange = AgentStateChangeAction | AgentStateChangeObservation;
+
 interface UserMessage {
   action: "message";
-  args: {
+  source?: "user";
+  content?: string;
+  args?: {
     content: string;
     images_urls: string[];
   };
@@ -35,7 +51,8 @@ interface AssistantMessage {
   message: string;
   source: "agent";
   timestamp: string; // ISO 8601
-  args: {
+  content?: string;
+  args?: {
     content: string;
     images_urls: string[] | null;
     wait_for_response: boolean;
@@ -55,6 +72,17 @@ interface CommandAction {
   };
 }
 
+
+interface NullObservation {
+  id: number;
+  cause: number;
+  observation: "null";
+  message: string;
+  content: string;
+  source: "environment" | "user";
+  timestamp: string;
+  extras: Record<string, unknown>;
+}
 
 interface CommandObservation {
   id: number;
@@ -120,4 +148,4 @@ interface ErrorObservation {
   extras: Record<string, unknown>;
 }
 
-type TrajectoryItem = AgentStateChange | UserMessage | AssistantMessage | CommandAction | CommandObservation | IPythonAction | IPythonObservation | FinishAction | Config | ErrorObservation;
+type TrajectoryItem = AgentStateChange | UserMessage | AssistantMessage | CommandAction | CommandObservation | IPythonAction | IPythonObservation | FinishAction | Config | ErrorObservation | NullObservation;

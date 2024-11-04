@@ -2,10 +2,13 @@ export const isConfig = (data: TrajectoryItem): data is Config =>
   "action" in data && data.action === "initialize";
 
 export const isAgentStateChange = (data: TrajectoryItem): data is AgentStateChange =>
-  "observation" in data && data.observation === "agent_state_changed" && data.source === "agent";
+  "observation" in data && 
+  data.observation === "agent_state_changed" &&
+  (data.source === "environment" || data.source === "agent");
 
 export const isUserMessage = (data: TrajectoryItem): data is UserMessage =>
-  "action" in data && data.action === "message" && !("source" in data)
+  ("action" in data && data.action === "message" && 
+   ((!("source" in data)) || data.source === "user"));
 
 export const isAssistantMessage = (data: TrajectoryItem): data is AssistantMessage =>
   "action" in data && data.action === "message" && "source" in data && data.source === "agent";

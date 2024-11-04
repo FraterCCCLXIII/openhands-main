@@ -9,7 +9,7 @@ export const AssistantMessage: React.FC<AssistantMessageProps> = ({ message }) =
     <TrajectoryCard className="bg-indigo-200">
       <TrajectoryCard.Header className="bg-indigo-400">Assistant</TrajectoryCard.Header>
       <TrajectoryCard.Body>
-        {message.args.content}
+        {message.args?.content || message.content || ""}
       </TrajectoryCard.Body>
     </TrajectoryCard>
   );
