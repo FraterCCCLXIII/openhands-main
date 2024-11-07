@@ -24,10 +24,10 @@ export const subscribeToWaitlist = async (
   return response.json();
 };
 
-export const subscribeToNewsletter = async (email: string): Promise<{ result: string, msg: string }> => {
-  const url = "https://dev.us17.list-manage.com/subscribe/post?u=669d348a75588dd92a51fb0a4&id=34795608c8";
-  const query = new URLSearchParams({ EMAIL: email }).toString();
-  const endpoint = url.replace("/post", "/post-json") + `&${query}`;
+export const subscribeToNewsletter = async (email: string) => {
+  const url = new URL("https://dev.us17.list-manage.com/subscribe/post?u=669d348a75588dd92a51fb0a4&id=34795608c8");
+  url.searchParams.append("EMAIL", email);
+  const endpoint = url.toString();
 
   // This is a JSONP request to Mailchimp's API
   // (Mailchimp doesn't support CORS, so we have to use JSONP)
@@ -35,5 +35,6 @@ export const subscribeToNewsletter = async (email: string): Promise<{ result: st
     jsonpCallback: "c",
   });
 
-  return response.json();
+  const data = await response.json();
+  return data;
 }
