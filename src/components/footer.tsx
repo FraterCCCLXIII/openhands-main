@@ -25,6 +25,9 @@ export const Footer = () => (
             <li>
               <Link to="tos">Terms of Service</Link>
             </li>
+            <li>
+              <Link to="privacy">Privacy Policy</Link>
+            </li>
           </ul>
         </nav>
 

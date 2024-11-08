@@ -11,7 +11,8 @@ import { HelmetProvider } from 'react-helmet-async';
 import Share, { loader as shareLoader } from './routes/share';
 import JoinWaitlist, { action as joinWaitlistAction } from './routes/join-waitlist';
 import { Analytics } from "@vercel/analytics/react";
-import TOS from './routes/tos/route';
+import TOS from './routes/tos';
+import PrivacyPolicy from './routes/privacy-policy';
 
 const AppErrorBoundary = () => {
   const error = useRouteError();
@@ -76,6 +77,11 @@ const router = createBrowserRouter([
       {
         path: "/tos",
         element: <TOS />,
+        loader: () => ({}),
+      },
+      {
+        path: "/privacy",
+        element: <PrivacyPolicy />,
         loader: () => ({}),
       }
     ],
