@@ -132,12 +132,12 @@
     "login": "xcodebuild"
   },
   {
-    "id": 3778956,
-    "login": "computer-whisperer"
-  },
-  {
     "id": 22478336,
     "login": "tangxiangru"
+  },
+  {
+    "id": 3778956,
+    "login": "computer-whisperer"
   },
   {
     "id": 95778421,
@@ -148,8 +148,8 @@
     "login": "Borda"
   },
   {
-    "id": 28674735,
-    "login": "temotskipa"
+    "id": 7479937,
+    "login": "DaxServer"
   },
   {
     "id": 76570167,
@@ -158,6 +158,10 @@
   {
     "id": 33360440,
     "login": "AlexCuadron"
+  },
+  {
+    "id": 28674735,
+    "login": "temotskipa"
   },
   {
     "id": 141804823,
@@ -190,10 +194,6 @@
   {
     "id": 10394160,
     "login": "94mashiro"
-  },
-  {
-    "id": 7479937,
-    "login": "DaxServer"
   },
   {
     "id": 30446202,
