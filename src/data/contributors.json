@@ -104,16 +104,16 @@
     "login": "Umpire2018"
   },
   {
+    "id": 22633385,
+    "login": "eltociear"
+  },
+  {
     "id": 55055083,
     "login": "Jiayi-Pan"
   },
   {
     "id": 56214007,
     "login": "RajWorking"
-  },
-  {
-    "id": 22633385,
-    "login": "eltociear"
   },
   {
     "id": 62982824,
@@ -124,10 +124,6 @@
     "login": "JustinLin610"
   },
   {
-    "id": 30446202,
-    "login": "malhotra5"
-  },
-  {
     "id": 5436704,
     "login": "xcodebuild"
   },
@@ -136,12 +132,16 @@
     "login": "WannaTen"
   },
   {
-    "id": 6035284,
-    "login": "Borda"
+    "id": 30446202,
+    "login": "malhotra5"
   },
   {
     "id": 22478336,
     "login": "tangxiangru"
+  },
+  {
+    "id": 6035284,
+    "login": "Borda"
   },
   {
     "id": 3778956,
