@@ -13,7 +13,7 @@ ogImage:
 
 The backlog. It's the long list of issues that you haven't been able to get to (and possibly never will). Every developer knows and fears it.
 
-Today, we're excited to introduce a tool that we've developed that can help automatically bring down your backlog a bit, and also work as a pair programmer to help you fix newly created issues as well. It's called the [OpenHands GitHub Resolver](https://github.com/All-Hands-AI/openhands-resolver), it's an open source tool that uses AI to automatically fix github issues and send pull requests.
+Today, we're excited to introduce a tool that we've developed that can help automatically bring down your backlog a bit, and also work as a pair programmer to help you fix newly created issues as well. It's called the [OpenHands GitHub Resolver](https://github.com/All-Hands-AI/OpenHands/tree/main/openhands/resolver), it's an open source tool that uses AI to automatically fix github issues and send pull requests.
 
 ## How Does It Work?
 
