@@ -29,19 +29,24 @@ const members: Member[] = [
     title: "Founding Principal Engineer",
   },
   {
+    src: "https://avatars.githubusercontent.com/u/12611964?v=4",
+    name: "Calvin Smith",
+    title: "Senior Agent Researcher",
+  },
+  {
     src: "/assets/members/stephan.webp",
     name: "Stephan Psaras",
     title: "Senior Software Engineer",
   },
   {
+    src: "/assets/members/mahmoud.webp",
+    name: "Mahmoud Hosseini",
+    title: "Senior Automation Engineer",
+  },
+  {
     src: "/assets/members/paul.webp",
     name: "Paul Bloch",
     title: "Design and UX Lead",
-  },
-  {
-    src: "/assets/members/mahmoud.webp",
-    name: "Mahmoud Hosseini",
-    title: "Community Manager",
   },
 ];
 
