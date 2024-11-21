@@ -44,12 +44,12 @@
     "login": "tofarr"
   },
   {
-    "id": 16201837,
-    "login": "iFurySt"
-  },
-  {
     "id": 175740463,
     "login": "openhands-agent"
+  },
+  {
+    "id": 16201837,
+    "login": "iFurySt"
   },
   {
     "id": 46636043,
@@ -108,16 +108,16 @@
     "login": "Umpire2018"
   },
   {
+    "id": 55055083,
+    "login": "Jiayi-Pan"
+  },
+  {
     "id": 56214007,
     "login": "RajWorking"
   },
   {
     "id": 22633385,
     "login": "eltociear"
-  },
-  {
-    "id": 55055083,
-    "login": "Jiayi-Pan"
   },
   {
     "id": 62982824,
@@ -136,24 +136,36 @@
     "login": "xcodebuild"
   },
   {
-    "id": 95778421,
-    "login": "PierrunoYT"
+    "id": 3778956,
+    "login": "computer-whisperer"
   },
   {
     "id": 6035284,
     "login": "Borda"
   },
   {
-    "id": 3778956,
-    "login": "computer-whisperer"
+    "id": 95778421,
+    "login": "PierrunoYT"
   },
   {
     "id": 22478336,
     "login": "tangxiangru"
   },
   {
+    "id": 15134896,
+    "login": "jiangleo"
+  },
+  {
     "id": 9537,
     "login": "jeremi"
+  },
+  {
+    "id": 28674735,
+    "login": "temotskipa"
+  },
+  {
+    "id": 76570167,
+    "login": "JayQuimby"
   },
   {
     "id": 7479937,
@@ -164,24 +176,12 @@
     "login": "yueqis"
   },
   {
-    "id": 19970308,
-    "login": "libowen2121"
-  },
-  {
-    "id": 15134896,
-    "login": "jiangleo"
-  },
-  {
     "id": 48168290,
     "login": "richardokonicha"
   },
   {
-    "id": 76570167,
-    "login": "JayQuimby"
-  },
-  {
-    "id": 28674735,
-    "login": "temotskipa"
+    "id": 19970308,
+    "login": "libowen2121"
   },
   {
     "id": 78588128,
@@ -192,16 +192,16 @@
     "login": "geohotstan"
   },
   {
+    "id": 93481273,
+    "login": "young010101"
+  },
+  {
     "id": 33360440,
     "login": "AlexCuadron"
   },
   {
     "id": 10394160,
     "login": "94mashiro"
-  },
-  {
-    "id": 93481273,
-    "login": "young010101"
   },
   {
     "id": 2492022,
