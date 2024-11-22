@@ -39,9 +39,14 @@ const members: Member[] = [
     title: "Senior Software Engineer",
   },
   {
+    src: "https://ca.slack-edge.com/T07E1S2M2Q6-U082RR02VGQ-59331e932841-512",
+    name: "Rohit Malhotra",
+    title: "Software Engineer",
+  },
+  {
     src: "/assets/members/mahmoud.webp",
     name: "Mahmoud Hosseini",
-    title: "Senior Automation Engineer",
+    title: "Community Manager",
   },
   {
     src: "/assets/members/paul.webp",
