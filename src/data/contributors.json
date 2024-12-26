@@ -84,12 +84,12 @@
     "login": "ryanhoangt"
   },
   {
-    "id": 93481273,
-    "login": "young010101"
-  },
-  {
     "id": 13436140,
     "login": "huybery"
+  },
+  {
+    "id": 93481273,
+    "login": "young010101"
   },
   {
     "id": 97225946,
@@ -216,6 +216,10 @@
     "login": "geohotstan"
   },
   {
+    "id": 33564701,
+    "login": "ChengyangDu"
+  },
+  {
     "id": 187258225,
     "login": "Mr-Imperium"
   },
@@ -224,15 +228,11 @@
     "login": "diwu-sf"
   },
   {
-    "id": 61054665,
-    "login": "h9-tect"
+    "id": 2492022,
+    "login": "ColeMurray"
   },
   {
     "id": 23031065,
     "login": "akhilvc10"
-  },
-  {
-    "id": 3149885,
-    "login": "johnnyaug"
   }
 ]
