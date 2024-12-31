@@ -28,4 +28,3 @@ dist-ssr
 /playwright/.cache/
 .next/
 .npm-only-allow/
-package-lock.json
