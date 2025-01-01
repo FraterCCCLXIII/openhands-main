@@ -7,21 +7,26 @@ import {
   isIPythonAction,
   isIPythonObservation,
   isFinishAction,
-  isErrorObservation
-} from "~/utils/share";
+  isErrorObservation,
+  isReadAction,
+  isReadObservation
+} from "../../utils/share";
 import { CSyntaxHighlighter } from "../c-syntax-highlighter";
 import {
-  AgentStateChange,
-  UserMessage,
-  AssistantMessage,
-  CommandAction,
-  CommandObservation,
-  IPythonAction,
-  IPythonObservation,
-  FinishAction
+  AgentStateChangeComponent,
+  UserMessageComponent,
+  AssistantMessageComponent,
+  CommandActionComponent,
+  CommandObservationComponent,
+  IPythonActionComponent,
+  IPythonObservationComponent,
+  FinishActionComponent,
+  ReadActionComponent,
+  ReadObservationComponent
 } from "./trajectory-list-items";
 import { TrajectoryCard } from "./trajectory-card";
-import { ErrorObservation } from "./trajectory-list-items/assistant-message copy";
+import { ErrorObservationComponent } from "./trajectory-list-items/assistant-message copy";
+import { TrajectoryItem } from '../../types';
 
 interface TrajectoryListProps {
   trajectory: TrajectoryItem[];
@@ -50,23 +55,27 @@ export const TrajectoryList: React.FC<TrajectoryListProps> = ({ trajectory }) =>
     <div className="flex flex-col items-center gap-2">
       {filteredTrajectory.map((item, index) => {
         if (isAgentStateChange(item)) {
-          return <AgentStateChange key={index} state={item} />;
+          return <AgentStateChangeComponent key={index} state={item} />;
         } else if (isUserMessage(item)) {
-          return <UserMessage key={index} message={item} />;
+          return <UserMessageComponent key={index} message={item} />;
         } else if (isAssistantMessage(item)) {
-          return <AssistantMessage key={index} message={item} />;
+          return <AssistantMessageComponent key={index} message={item} />;
         } else if (isCommandAction(item)) {
-          return <CommandAction key={index} command={item} />;
+          return <CommandActionComponent key={index} command={item} />;
         } else if (isCommandObservation(item)) {
-          return <CommandObservation key={index} observation={item} />;
+          return <CommandObservationComponent key={index} observation={item} />;
         } else if (isIPythonAction(item)) {
-          return <IPythonAction key={index} action={item} />;
+          return <IPythonActionComponent key={index} action={item} />;
         } else if (isIPythonObservation(item)) {
-          return <IPythonObservation key={index} observation={item} />;
+          return <IPythonObservationComponent key={index} observation={item} />;
         } else if (isFinishAction(item)) {
-          return <FinishAction key={index} action={item} />;
+          return <FinishActionComponent key={index} action={item} />;
         } else if (isErrorObservation(item)) {
-          return <ErrorObservation key={index} observation={item} />;
+          return <ErrorObservationComponent key={index} observation={item} />;
+        } else if (isReadAction(item)) {
+          return <ReadActionComponent key={index} item={item} />;
+        } else if (isReadObservation(item)) {
+          return <ReadObservationComponent key={index} observation={item} />;
         } else {
           return (
             <TrajectoryCard key={index}>

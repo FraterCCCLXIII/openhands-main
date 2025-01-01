@@ -1,4 +1,4 @@
-interface Config {
+export interface Config {
   action: "initialize";
   args: {
     AGENT: string;
@@ -9,7 +9,7 @@ interface Config {
   }
 }
 
-interface AgentStateChangeAction {
+export interface AgentStateChangeAction {
   id: number;
   message: string;
   source: "environment" | "agent";
@@ -21,7 +21,7 @@ interface AgentStateChangeAction {
   };
 }
 
-interface AgentStateChangeObservation {
+export interface AgentStateChangeObservation {
   id: number;
   message: string;
   source: "environment" | "agent";
@@ -33,9 +33,9 @@ interface AgentStateChangeObservation {
   };
 }
 
-type AgentStateChange = AgentStateChangeAction | AgentStateChangeObservation;
+export type AgentStateChange = AgentStateChangeAction | AgentStateChangeObservation;
 
-interface UserMessage {
+export interface UserMessage {
   action: "message";
   source?: "user";
   content?: string;
@@ -45,7 +45,7 @@ interface UserMessage {
   };
 }
 
-interface AssistantMessage {
+export interface AssistantMessage {
   id: number;
   action: "message";
   message: string;
@@ -59,7 +59,7 @@ interface AssistantMessage {
   };
 }
 
-interface CommandAction {
+export interface CommandAction {
   id: number;
   action: "run";
   message: string;
@@ -73,7 +73,7 @@ interface CommandAction {
 }
 
 
-interface NullObservation {
+export interface NullObservation {
   id: number;
   cause: number;
   observation: "null";
@@ -84,7 +84,7 @@ interface NullObservation {
   extras: Record<string, unknown>;
 }
 
-interface CommandObservation {
+export interface CommandObservation {
   id: number;
   cause: number;
   observation: "run";
@@ -99,7 +99,7 @@ interface CommandObservation {
   };
 }
 
-interface IPythonAction {
+export interface IPythonAction {
   id: number;
   action: "run_ipython";
   message: string;
@@ -113,7 +113,7 @@ interface IPythonAction {
   };
 }
 
-interface IPythonObservation {
+export interface IPythonObservation {
   id: number;
   cause: number;
   observation: "run_ipython";
@@ -126,7 +126,7 @@ interface IPythonObservation {
   };
 }
 
-interface FinishAction {
+export interface FinishAction {
   id: number;
   message: string;
   source: "agent";
@@ -138,7 +138,7 @@ interface FinishAction {
   };
 }
 
-interface ErrorObservation {
+export interface ErrorObservation {
   id: number;
   message: string;
   source: "agent";
@@ -148,4 +148,29 @@ interface ErrorObservation {
   extras: Record<string, unknown>;
 }
 
-type TrajectoryItem = AgentStateChange | UserMessage | AssistantMessage | CommandAction | CommandObservation | IPythonAction | IPythonObservation | FinishAction | Config | ErrorObservation | NullObservation;
+export interface ReadAction {
+  id: number;
+  action: "read";
+  message: string;
+  source: "agent";
+  timestamp: string;
+  args: {
+    path: string;
+    thought?: string;
+  };
+}
+
+export interface ReadObservation {
+  id: number;
+  cause: number;
+  observation: "read";
+  message: string;
+  content: string;
+  source: "agent";
+  timestamp: string;
+  extras: {
+    path: string;
+  };
+}
+
+export type TrajectoryItem = AgentStateChange | UserMessage | AssistantMessage | CommandAction | CommandObservation | IPythonAction | IPythonObservation | FinishAction | Config | ErrorObservation | NullObservation | ReadAction | ReadObservation;

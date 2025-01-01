@@ -1,3 +1,5 @@
+import { TrajectoryItem } from '../types';
+
 export interface TrajectoryData {
   version: string;
   feedback: "positive" | "negative";

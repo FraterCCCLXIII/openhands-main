@@ -5,4 +5,6 @@ export * from "./command-observation";
 export * from "./finish-action";
 export * from "./ipython-action";
 export * from "./ipython-observation";
+export * from "./read-action";
+export * from "./read-observation";
 export * from "./user-message";

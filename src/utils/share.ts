@@ -1,3 +1,5 @@
+import { TrajectoryItem, Config, AgentStateChange, UserMessage, AssistantMessage, CommandAction, CommandObservation, IPythonAction, IPythonObservation, FinishAction, ErrorObservation, ReadAction, ReadObservation } from '../types';
+
 export const isConfig = (data: TrajectoryItem): data is Config =>
   "action" in data && data.action === "initialize";
 
@@ -30,3 +32,9 @@ export const isFinishAction = (data: TrajectoryItem): data is FinishAction =>
 
 export const isErrorObservation = (data: TrajectoryItem): data is ErrorObservation =>
   "observation" in data && data.observation === "error" && data.source === "agent";
+
+export const isReadAction = (data: TrajectoryItem): data is ReadAction =>
+  "action" in data && data.action === "read" && "source" in data && data.source === "agent";
+
+export const isReadObservation = (data: TrajectoryItem): data is ReadObservation =>
+  "observation" in data && data.observation === "read" && "source" in data && data.source === "agent";
