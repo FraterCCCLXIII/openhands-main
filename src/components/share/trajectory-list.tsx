@@ -9,7 +9,9 @@ import {
   isFinishAction,
   isErrorObservation,
   isReadAction,
-  isReadObservation
+  isReadObservation,
+  isEditAction,
+  isEditObservation
 } from "../../utils/share";
 import { CSyntaxHighlighter } from "../c-syntax-highlighter";
 import {
@@ -22,7 +24,9 @@ import {
   IPythonObservationComponent,
   FinishActionComponent,
   ReadActionComponent,
-  ReadObservationComponent
+  ReadObservationComponent,
+  EditActionComponent,
+  EditObservationComponent
 } from "./trajectory-list-items";
 import { TrajectoryCard } from "./trajectory-card";
 import { ErrorObservationComponent } from "./trajectory-list-items/assistant-message copy";
@@ -76,6 +80,10 @@ export const TrajectoryList: React.FC<TrajectoryListProps> = ({ trajectory }) =>
           return <ReadActionComponent key={index} item={item} />;
         } else if (isReadObservation(item)) {
           return <ReadObservationComponent key={index} observation={item} />;
+        } else if (isEditAction(item)) {
+          return <EditActionComponent key={index} item={item} />;
+        } else if (isEditObservation(item)) {
+          return <EditObservationComponent key={index} observation={item} />;
         } else {
           return (
             <TrajectoryCard key={index}>

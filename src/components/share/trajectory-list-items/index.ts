@@ -7,4 +7,6 @@ export * from "./ipython-action";
 export * from "./ipython-observation";
 export * from "./read-action";
 export * from "./read-observation";
+export * from "./edit-action";
+export * from "./edit-observation";
 export * from "./user-message";

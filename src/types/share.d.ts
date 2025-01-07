@@ -173,4 +173,33 @@ export interface ReadObservation {
   };
 }
 
-export type TrajectoryItem = AgentStateChange | UserMessage | AssistantMessage | CommandAction | CommandObservation | IPythonAction | IPythonObservation | FinishAction | Config | ErrorObservation | NullObservation | ReadAction | ReadObservation;
+export interface EditAction {
+  id: number;
+  action: "edit";
+  message: string;
+  source: "agent";
+  timestamp: string;
+  args: {
+    path: string;
+    old_content: string;
+    new_content: string;
+    thought?: string;
+  };
+}
+
+export interface EditObservation {
+  id: number;
+  cause: number;
+  observation: "edit";
+  message: string;
+  content: string;
+  source: "agent";
+  timestamp: string;
+  extras: {
+    path: string;
+    old_content: string;
+    new_content: string;
+  };
+}
+
+export type TrajectoryItem = AgentStateChange | UserMessage | AssistantMessage | CommandAction | CommandObservation | IPythonAction | IPythonObservation | FinishAction | Config | ErrorObservation | NullObservation | ReadAction | ReadObservation | EditAction | EditObservation;
