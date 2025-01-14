@@ -26,3 +26,7 @@
 .paragraph {
   @apply text-[18px] leading-[25px]
 }
+
+.code-block {
+  @apply text-[14px] leading-[20px]
+}
