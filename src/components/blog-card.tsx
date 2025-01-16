@@ -7,11 +7,11 @@ interface FeaturedBlogCardProps {
 }
 
 export const FeaturedBlogCard: React.FC<FeaturedBlogCardProps> = ({ title, description, img }) => (
-  <div data-testid="blog-card" className="flex flex-col lg:flex-row py-[30px] lg:py-[45px] px-[20px] lg:px-[42px] gap-4 lg:gap-8">
-    <img src={img} alt="" className="w-full lg:w-1/2 aspect-video object-cover rounded-[7px] lg:rounded-[10px]" />
+  <div data-testid="blog-card" className="flex py-[45px] px-[42px] gap-8">
+    <img src={img} alt="" className="max-w-[600px] aspect-video object-cover rounded-[10px]" />
     <div className="flex flex-col gap-4">
       <h2 className="heading">{title}</h2>
-      <p className="paragraph text-description">{description}</p>
+      <p className="paragraph text-description w-[466px]">{description}</p>
       <span
         className="paragraph font-semibold text-description">
         Read More
@@ -27,11 +27,11 @@ interface BlogCardProps {
 }
 
 export const BlogCard: React.FC<BlogCardProps> = ({ title, description, img }) => (
-  <div data-testid="blog-card" className="flex flex-col gap-4 lg:gap-8 px-[20px] lg:px-[42px] py-[30px] lg:py-[45px]">
+  <div data-testid="blog-card" className="flex flex-col gap-8 px-[42px] py-[45px]">
     {!img && <PlaceholderImage variant="robot" className="aspect-video rounded-[7px]" />}
     {img && <img src={img} alt="" className="flex items-center justify-center aspect-video rounded-[7px] object-cover" />}
     <div className="flex flex-col gap-4 items-start">
-      <h2 className="font-quincy text-[28px] leading-[32px] lg:text-[33px] lg:leading-[33px]">{title}</h2>
+      <h2 className="font-quincy text-[33px] leading-[33px]">{title}</h2>
       <p className="paragraph text-description">{description}</p>
       <span className="paragraph text-description font-semibold">Read More</span>
     </div>
