@@ -41,14 +41,15 @@ export const ErrorBoundary = () => (
 
 const BlogDetails = () => {
   const data = useLoaderData() as ReturnType<typeof loader>;
-  // THIS IS A HACK TO GET THE WIDTH OF THE CODE ELEMENT
-  // SHOULD BE REPLACED WITH A BETTER SOLUTION
   const codeElementWidth = React.useMemo(() => {
-    return window.innerWidth - 84; // 42px padding on each side
+    const baseWidth = window.innerWidth;
+    const padding = baseWidth >= 1024 ? 84 : 40; // 42px or 20px padding on each side
+    const maxWidth = Math.min(baseWidth - padding, 800); // Max width of 800px for larger screens
+    return maxWidth;
   }, []);
 
   return (
-    <article className="flex flex-col items-center py-[45px] gap-8">
+    <article className="flex flex-col items-center py-[30px] lg:py-[45px] gap-4 lg:gap-8">
       <Helmet>
         <title>{data.title}</title>
         <meta
@@ -61,18 +62,18 @@ const BlogDetails = () => {
         />
       </Helmet>
 
-      <figure className="lg:max-w-[800px] px-[42px]">
+      <figure className="w-full lg:max-w-[800px] px-[20px] lg:px-[42px]">
         {!data.cover && <PlaceholderImage className="aspect-video" />}
         {data.cover && (
           <img
             src={data.cover}
             alt="blog cover"
-            className="rounded-[7px] lg:rounded-[10px] flex items-center justify-center lg:aspect-video"
+            className="w-full rounded-[7px] lg:rounded-[10px] flex items-center justify-center aspect-video object-cover"
           />
         )}
       </figure>
 
-      <main className="flex flex-col gap-4 lg:max-w-[800px] px-[42px]">
+      <main className="flex flex-col gap-4 w-full lg:max-w-[800px] px-[20px] lg:px-[42px]">
         <h1 className="heading">{data.title}</h1>
 
         <header className="flex flex-col gap-2">
