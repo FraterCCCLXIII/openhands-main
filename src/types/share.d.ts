@@ -96,6 +96,7 @@ export interface CommandObservation {
     command: string;
     command_id: number;
     exit_code: number;
+    metadata: Record<string, unknown>;
   };
 }
 

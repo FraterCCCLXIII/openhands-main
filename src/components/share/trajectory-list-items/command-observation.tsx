@@ -13,6 +13,14 @@ export const CommandObservationComponent: React.FC<CommandObservationProps> = ({
       <TrajectoryCard.Header className="bg-orange-400">Assistant Shell Observation</TrajectoryCard.Header>
       <TrajectoryCard.Body>
         <CSyntaxHighlighter language="shell">{observation.content}</CSyntaxHighlighter>
+        {observation.extras.metadata && (
+          <>
+            <div className="mt-2 text-sm font-semibold">Metadata:</div>
+            <CSyntaxHighlighter language="json">
+              {JSON.stringify(observation.extras.metadata, null, 2)}
+            </CSyntaxHighlighter>
+          </>
+        )}
       </TrajectoryCard.Body>
     </TrajectoryCard>
   );
