@@ -115,6 +115,6 @@ Overall, the resulting app was pretty simple, but it demonstrated how you can go
 
 What's particularly exciting is the potential this holds for developers across all specializations. AI agents like OpenHands can help bridge skill gaps, allowing developers to venture into areas outside their comfort zones with greater confidence.
 
-If you're interested in trying out OpenHands, download the project [here](https://github.com/All-Hands-AI/OpenHands) and get started right away, and you can also get on our mailing list for All Hands AI [here](https://www.all-hands.dev/join-waitlist) for further updates.
+If you're interested in trying out OpenHands, download the project [here](https://github.com/All-Hands-AI/OpenHands#-how-to-join-the-community) and get started right away, and you can also get on our mailing list for All Hands AI [here](https://www.all-hands.dev/join-waitlist) for further updates.
 
 **Acknowledgement:** I'd like to thank [Bryan Finster](https://www.linkedin.com/in/bryan-finster/) of [Defense Unicorns](https://defenseunicorns.com/) for his original inspiration for the app featured here.
