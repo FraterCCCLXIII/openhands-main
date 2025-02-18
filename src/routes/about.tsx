@@ -7,7 +7,7 @@ import contributors from "~/data/contributors.json";
 import statistics from "~/data/statistics.json";
 import { formatContributorCount } from "~/utils/format-contributor-count";
 
-const members: Member[] = [
+const founders: Member[] = [
   {
     src: "/assets/members/robert.webp",
     name: "Robert Brennan",
@@ -23,6 +23,9 @@ const members: Member[] = [
     name: "Xingyao Wang",
     title: "Chief AI Officer",
   },
+];
+
+const members: Member[] = [
   {
     src: "/assets/members/tim.webp",
     name: "Tim O'Farrell",
@@ -49,13 +52,20 @@ const members: Member[] = [
     title: "Community Manager",
   },
   {
-    src: "/assets/members/paul.webp",
-    name: "Paul Bloch",
-    title: "Design and UX Lead",
+    src: "/assets/members/ray.webp",
+    name: "Ray Myers",
+    title: "Chief Architect",
+  }, 
+  {
+    src: "/assets/members/chuck.webp",
+    name: "Chuck Butkus",
+    title: "Principal Engineer",
   },
 ];
 
 const About = () => {
+  const shuffledMembers = [...members].sort(() => Math.random() - 0.5);
+
   return (
     <main>
       <Helmet>
@@ -102,7 +112,13 @@ const About = () => {
         />
 
         <div className="flex flex-col justify-center lg:flex-row flex-wrap max-w-[1228px]">
-          {members.map((member) => (
+          {founders.map((founder) => (
+            <MemberCard
+              key={founder.name}
+              member={founder}
+            />
+          ))}
+          {shuffledMembers.map((member) => (
             <MemberCard
               key={member.name}
               member={member}
