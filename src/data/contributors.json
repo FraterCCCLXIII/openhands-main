@@ -100,12 +100,12 @@
     "login": "808vita"
   },
   {
-    "id": 3324,
-    "login": "raymyers"
-  },
-  {
     "id": 5805397,
     "login": "isavita"
+  },
+  {
+    "id": 3324,
+    "login": "raymyers"
   },
   {
     "id": 8560257,
@@ -212,16 +212,8 @@
     "login": "DaxServer"
   },
   {
-    "id": 28674735,
-    "login": "temotskipa"
-  },
-  {
     "id": 10394160,
     "login": "94mashiro"
-  },
-  {
-    "id": 141804823,
-    "login": "yueqis"
   },
   {
     "id": 135171913,
@@ -234,5 +226,13 @@
   {
     "id": 25279767,
     "login": "idagelic"
+  },
+  {
+    "id": 141804823,
+    "login": "yueqis"
+  },
+  {
+    "id": 28674735,
+    "login": "temotskipa"
   }
 ]
