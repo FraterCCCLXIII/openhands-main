@@ -57,7 +57,7 @@ const members: Member[] = [
     title: "Chief Architect",
   }, 
   {
-    src: "/assets/members/chuck.webp",
+    src: "https://ca.slack-edge.com/T06P212QSEA-U08DZAR5JR3-14c091a83032-512",
     name: "Chuck Butkus",
     title: "Principal Engineer",
   },
