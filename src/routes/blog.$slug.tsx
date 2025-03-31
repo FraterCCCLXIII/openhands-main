@@ -1,6 +1,7 @@
 import React from "react";
 import { Helmet } from "react-helmet-async";
 import Markdown from "react-markdown";
+import rehypeRaw from "rehype-raw";
 import { LoaderFunctionArgs, useLoaderData } from "react-router-dom";
 import invariant from "tiny-invariant";
 import { blogAPI } from "~/api/blog";
@@ -104,6 +105,7 @@ const BlogDetails = () => {
         <section className="paragraph flex flex-col gap-4">
           <Markdown
             children={data.content}
+            rehypePlugins={[rehypeRaw]}
             components={{
               a: (props) => <a rel="noreferrer" target="_blank" className="text-blue-600" {...props}>{props.children}</a>,
               h2: (props) => <h2 className="font-quincy text-5xl" {...props}>{props.children}</h2>,
@@ -111,8 +113,13 @@ const BlogDetails = () => {
               img: (props) => <img className="rounded-lg" {...props} alt={props.alt} />,
               p: (props) => <p className="text-description" {...props}>{props.children}</p>,
               code: (props) => <Code {...props} customStyle={{ maxWidth: codeElementWidth }} />,
+              iframe: (props) => {
+                const { node, ...rest } = props;
+                return <div className="w-full flex justify-center my-4"><iframe {...rest} /></div>;
+              },
             }}
           />
+          
         </section>
       </main>
     </article>
