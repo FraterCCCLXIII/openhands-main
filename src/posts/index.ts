@@ -11,6 +11,7 @@ import post10 from "./20241101-codeact2-1-swebench.md?raw";
 import post11 from "./20241104-beta-rollout.md?raw";
 import post12 from "./20250116-use-cases-for-generalist-software-development-agents.md?raw";
 import post13 from "./20250317-openhands-anniversary.md?raw";
+import post14 from "./20250331-openhands-lm-release.md?raw";
 
 export const RAW_POSTS = [
   post1,
@@ -26,5 +27,6 @@ export const RAW_POSTS = [
   post11,
   post12,
   post13,
+  post14,
 ];
 
