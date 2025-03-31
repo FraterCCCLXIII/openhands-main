@@ -30,7 +30,7 @@ OpenHands LM is built on the foundation of [Qwen Coder 2.5 Instruct 32B](https:/
 - It features a 128K token context window, ideal for handling large codebases and long-horizon software engineering tasks
 
 
-## Performance: Punching Above Its Weight
+## Matching SOTA Open Models 20x Larger
 
 We evaluated OpenHands LM using our latest [iterative evaluation protocol](https://github.com/All-Hands-AI/OpenHands/tree/main/evaluation/benchmarks/swe_bench#run-inference-rollout-on-swe-bench-instances-generate-patch-from-problem-statement) on the [SWE-Bench Verified benchmark](https://www.swebench.com/#verified).
 
@@ -56,7 +56,7 @@ You can start using OpenHands LM immediately through these channels:
    For optimal performance, it is recommended to serve this model with a GPU using [SGLang](https://github.com/sgl-project/sglang) or [vLLM](https://github.com/vllm-project/vllm).
 
 3. **Point your OpenHands agent to the new model**
-   Download [OpenHands](https://github.com/All-Hands-AI/OpenHands) and follow the instructions for [using an OpenAI-compatible endpoint](https://docs.all-hands.dev/modules/usage/llms/openai-llms#using-openai-compatible-endpoints).
+   Download [OpenHands](https://github.com/All-Hands-AI/OpenHands) and follow the instructions for [using local models](https://docs.all-hands.dev/modules/usage/llms/local-llms).
 
 
 ## The Road Ahead: Our Development Plans
