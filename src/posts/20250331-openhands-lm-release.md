@@ -70,6 +70,19 @@ We're also developing more compact versions of the model (including a 7B paramet
 
 We encourage you to experiment with OpenHands LM, share your experiences, and participate in its evolution. Together, we can create better tools for tomorrow's software development landscape.
 
+## Try OpenHands Cloud
+
+While OpenHands LM is a powerful model you can run locally, we also offer a fully managed cloud solution that makes it even easier to leverage AI for your software development needs.
+
+[OpenHands Cloud](/blog/introducing-the-openhands-cloud) provides:
+
+- Seamless GitHub integration with issue and PR support
+- Multiple interaction methods including text, voice, and mobile
+- Parallel agent capabilities for working on multiple tasks simultaneously
+- All the power of OpenHands without managing infrastructure
+
+OpenHands Cloud is built on the same technology as our open-source solution but adds convenient features for teams and individuals who want a ready-to-use platform. [Visit app.all-hands.dev](https://app.all-hands.dev) to get started today!
+
 ## Join Our Community
 
 We invite you to be part of the OpenHands LM journey:
