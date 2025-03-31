@@ -1,11 +1,13 @@
 import clsx from "clsx";
 import { Link } from "react-router-dom";
 
-interface SaveYourSpotButtonProps { }
+interface TryItLiveButtonProps { }
 
-export const SaveYourSpotButton: React.FC<SaveYourSpotButtonProps> = () => (
+export const TryItLiveButton: React.FC<TryItLiveButtonProps> = () => (
   <Link
-    to="/join-waitlist"
+    to="https://app.all-hands.dev"
+    target="_blank"
+    rel="noopener noreferrer"
     className={clsx(
       "font-semibold px-4 py-2 text-sm rounded-lg",
       "bg-black text-white",
@@ -13,6 +15,6 @@ export const SaveYourSpotButton: React.FC<SaveYourSpotButtonProps> = () => (
       "flex items-center gap-[15px]",
     )}
   >
-    Save your spot
+    Try it live
   </Link>
 );

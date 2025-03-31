@@ -66,9 +66,9 @@ const Home = () => {
       >
         <h1 className="font-quincy text-[58px] leading-[58px] lg:text-[52px] lg:leading-[52px] text-center lg:h-auto lg:w-[764px]">Open Source Agents for Developers</h1>
         <p className="paragraph text-description lg:w-[466px] text-center">Use AI to tackle the toil in your backlog, so you can focus on what matters: hard problems, creative challenges, and over-engineering your dotfiles</p>
-        <Link to="join-waitlist">
+        <Link to="https://app.all-hands.dev" target="_blank" rel="noopener noreferrer">
           <HeroButton>
-            Save your spot
+            Try it live
           </HeroButton>
         </Link>
         <Link
