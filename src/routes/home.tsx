@@ -190,6 +190,30 @@ const Home = () => {
         </div>
       </section>
 
+      <section
+        className="px-[42px] flex flex-col gap-8 lg:gap-16 py-24 lg:py-16 lg:items-center"
+      >
+        <div className="flex flex-col gap-4 text-center h-[100px] lg:h-[50px]">
+          <span className="heading">OpenHands in Action</span>
+        </div>
+        <div className="flex flex-col items-center gap-4 w-full">
+          <div className="flex justify-center w-full">
+            <div className="w-full max-w-[1000px] mx-auto">
+              <video 
+                className="w-full rounded-lg shadow-lg" 
+                controls 
+                autoPlay
+                muted
+              >
+                <source src="/assets/videos/openhands_demo.mp4" type="video/mp4" />
+                Your browser does not support the video tag.
+              </video>
+            </div>
+          </div>
+        </div>
+      </section>
+
+
       <section className="mb-[104px]">
         <YellowWaveSection
           heading="Ready to roll?"
@@ -200,7 +224,8 @@ const Home = () => {
             to: "https://github.com/All-Hands-AI/OpenHands"
           }}
         />
-      </section>
+      </section> 
+          
     </main>
   )
 };
