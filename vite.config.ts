@@ -18,4 +18,12 @@ export default defineConfig({
       "**/tests",
     ],
   },
+  server: {
+    host: true,
+    port: 12000,
+    cors: true,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+    },
+  },
 });

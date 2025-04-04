@@ -20,9 +20,6 @@ import BlogDetails, {
 } from "./routes/blog.$slug";
 import { HelmetProvider } from "react-helmet-async";
 import Share, { loader as shareLoader } from "./routes/share";
-import JoinWaitlist, {
-  action as joinWaitlistAction,
-} from "./routes/join-waitlist";
 import { Analytics } from "@vercel/analytics/react";
 import TOS from "./routes/tos";
 import PrivacyPolicy from "./routes/privacy-policy";
@@ -80,12 +77,6 @@ const router = createBrowserRouter([
         path: "/share",
         element: <Share />,
         loader: shareLoader,
-      },
-      {
-        path: "/join-waitlist",
-        element: <JoinWaitlist />,
-        action: joinWaitlistAction,
-        loader: () => ({}),
       },
       {
         path: "/tos",

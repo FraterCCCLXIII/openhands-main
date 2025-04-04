@@ -28,3 +28,7 @@ dist-ssr
 /playwright/.cache/
 .next/
 .npm-only-allow/
+
+# Environment variables
+.env
+.env.*
