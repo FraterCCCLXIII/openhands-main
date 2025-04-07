@@ -50,6 +50,42 @@ function HeroButton({ onClick, children, logo, variant = "primary" }: HeroButton
   );
 }
 
+function BenchmarkDisplay() {
+  return (
+    <>
+      <div className="relative w-[90vw] max-w-[500px] lg:w-[412px] h-[300px] flex items-center justify-center">
+        <div className="absolute w-full lg:w-[412px] transform rotate-[-2deg] translate-y-[15px] translate-x-[0px] shadow-lg border-2 border-gray-200 bg-white">
+          <img 
+            src="/assets/agent_performance/live-swebench.png"
+            className="w-full" 
+            alt="LiveSWEBench performance"
+          />
+        </div>
+        <div className="absolute w-full lg:w-[412px] transform rotate-[-3deg] translate-y-[-20px] translate-x-[-15px] shadow-lg border-2 border-gray-200 bg-white">
+          <img 
+            src="/assets/agent_performance/swebench-full.png"
+            className="w-full" 
+            alt="SWE-bench performance"
+          />
+        </div>
+        <div className="absolute w-full lg:w-[412px] transform rotate-[1deg] translate-y-[70px] translate-x-[10px] shadow-lg border-2 border-gray-200 bg-white">
+          <img 
+            src="/assets/agent_performance/multi-swebench.png"
+            className="w-full" 
+            alt="Multi-SWE-bench performance"
+          />
+        </div>
+      </div>
+      <div className="flex flex-col gap-4 lg:w-[466px]">
+        <span className="heading">Best in Class</span>
+        <div className="paragraph text-description lg:w-[400px]">
+          OpenHands is a top performer across a variety of software development benchmarks for agents, including <a className="underline" href="https://www.swebench.com" target="_blank">SWE-bench</a>, <a className="underline" href="https://multi-swe-bench.github.io" target="_blank">Multi-SWE-bench</a> across 8 programming languages, and contamination-free <a className="underline" href="https://www.liveswebench.ai" target="_blank">LiveSWEBench</a>.
+        </div>
+      </div>
+    </>
+  );
+}
+
 const Home = () => {
   return (
     <main data-testid="home-content">
@@ -97,16 +133,7 @@ const Home = () => {
       <section
         className="flex flex-col lg:flex-row-reverse py-16 gap-16 lg:gap-8 px-[42px] lg:p-0 lg:h-[502px] items-center lg:justify-center"
       >
-        <img src="/assets/swe-bench.png" className="w-[500px] lg:w-[412px]" />
-        <div className="flex flex-col gap-4 lg:w-[466px]">
-          <span className="heading">Best in Class</span>
-          <p className="paragraph text-description lg:w-[400px]">
-            OpenHands is the leading AI software engineer to date. Our agent can solve over
-            half the problems in the <a className="underline" href="https://www.swebench.com/" target="_blank">SWE-bench</a> Verified problem set, and is the
-            first AI engineer to score over 50%. And top researchers in code generation,
-            from over a dozen academic institutions, are helping us improve it every day.
-          </p>
-        </div>
+        <BenchmarkDisplay />
       </section>
 
       <section
