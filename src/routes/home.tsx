@@ -246,9 +246,15 @@ const Home = () => {
           heading="Ready to roll?"
           text={`Software development is changing. Let's work together to make sure it's better for everyone. \u2764`}
           cta={{
+            text: "Try it live",
+            to: "https://app.all-hands.dev",
+            style: "primary"
+          }}
+          secondaryCta={{
             icon: <GitHubLogo width={23} height={23} />,
             text: "Get it on GitHub",
-            to: "https://github.com/All-Hands-AI/OpenHands"
+            to: "https://github.com/All-Hands-AI/OpenHands",
+            style: "primary"
           }}
         />
       </section> 
