@@ -37,7 +37,6 @@ We believe AI assistants should adapt to your workflow, not the other way around
 
 - Traditional text chat through your browser
 - Mobile interface for on-the-go development assistance
-- Voice commands and responses for hands-free operation
 - Integration with your favorite development tools
 
 No matter where you are or how you prefer to work, OpenHands is there to help.
