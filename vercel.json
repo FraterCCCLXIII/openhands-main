@@ -1,4 +1,11 @@
 {
+  "redirects": [
+    { 
+      "source": "/blog/20250409-oh-condenser-release",
+      "destination": "/blog/openhands-context-condensensation-for-more-efficient-ai-agents",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     { "source": "/(.*)", "destination": "/" }
   ]
