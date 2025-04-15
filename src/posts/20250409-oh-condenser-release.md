@@ -77,6 +77,6 @@ Context condensation is available in OpenHands today. To try it out:
 
 - **Contribute to Open Source**: Star our [GitHub repository](https://github.com/All-Hands-AI/OpenHands) and help advance the frontier of open-source AI software development.
 
-- **Join Our Community**: Connect with us on [Slack](https://join.slack.com/t/openhands-ai/shared_invite/zt-33atab2b9-pXBR8SBeq0li1wW~ErWE0g), read our [documentation](https://docs.all-hands.dev), and stay updated on our latest developments.
+- **Join Our Community**: Connect with us on [Slack](https://join.slack.com/t/openhands-ai/shared_invite/zt-2ngejmfw6-9gW4APWOC9XUp1n~SiQ6iw), read our [documentation](https://docs.all-hands.dev), and stay updated on our latest developments.
 
 We can't wait to see what you'll build with OpenHands!
