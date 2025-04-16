@@ -14,6 +14,7 @@ import post13 from "./20250317-openhands-anniversary.md?raw";
 import post14 from "./20250331-openhands-lm-release.md?raw";
 import post15 from "./20250331-introducing-openhands-cloud.md?raw";
 import post16 from "./20250409-oh-condenser-release.md?raw";
+import post17 from "./20250416-inference-time-scaling-sota.md?raw";
 
 export const RAW_POSTS = [
   post1,
@@ -32,4 +33,5 @@ export const RAW_POSTS = [
   post14,
   post15,
   post16,
+  post17,
 ];

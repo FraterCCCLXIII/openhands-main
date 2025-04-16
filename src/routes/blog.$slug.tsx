@@ -2,6 +2,8 @@ import React from "react";
 import { Helmet } from "react-helmet-async";
 import Markdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
+import rehypeKatex from "rehype-katex";
+import remarkMath from "remark-math";
 import { LoaderFunctionArgs, useLoaderData } from "react-router-dom";
 import invariant from "tiny-invariant";
 import { blogAPI } from "~/api/blog";
@@ -9,6 +11,7 @@ import { CSyntaxHighlighter } from "~/components/c-syntax-highlighter";
 import { code as Code } from "~/components/code";
 import { PlaceholderImage } from "~/components/placeholder-image";
 import { formatDate } from "~/utils/format-date";
+import "katex/dist/katex.min.css";
 
 export const loader = ({ params }: LoaderFunctionArgs) => {
   invariant(params.slug, "No blog ID provided");
@@ -105,7 +108,8 @@ const BlogDetails = () => {
         <section className="paragraph flex flex-col gap-4">
           <Markdown
             children={data.content}
-            rehypePlugins={[rehypeRaw]}
+            remarkPlugins={[remarkMath]}
+            rehypePlugins={[rehypeRaw, rehypeKatex]}
             components={{
               a: (props) => <a rel="noreferrer" target="_blank" className="text-blue-600" {...props}>{props.children}</a>,
               h2: (props) => <h2 className="font-quincy text-5xl" {...props}>{props.children}</h2>,
