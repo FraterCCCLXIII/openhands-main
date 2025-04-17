@@ -4,6 +4,11 @@
       "source": "/blog/20250409-oh-condenser-release",
       "destination": "/blog/openhands-context-condensensation-for-more-efficient-ai-agents",
       "permanent": true
+    },
+    {
+      "source": "/blog/20250416-inference-time-scaling-sota",
+      "destination": "/blog/sota-on-swe-bench-verified-with-inference-time-scaling-and-critic-model",
+      "permanent": true
     }
   ],
   "rewrites": [
