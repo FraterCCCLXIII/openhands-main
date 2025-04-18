@@ -11,9 +11,13 @@ import { CSyntaxHighlighter } from "~/components/c-syntax-highlighter";
 import { code as Code } from "~/components/code";
 import { PlaceholderImage } from "~/components/placeholder-image";
 import { formatDate } from "~/utils/format-date";
+import { BlogFooter } from "~/components/blog-footer";
+import { handleNewsletterSubscription } from "~/utils/newsletter-subscription";
 import "katex/dist/katex.min.css";
 
-export const loader = ({ params }: LoaderFunctionArgs) => {
+export const action = handleNewsletterSubscription;
+
+export const loader = ({ params, request }: LoaderFunctionArgs) => {
   invariant(params.slug, "No blog ID provided");
 
   const slug = params.slug.toString();
@@ -21,6 +25,9 @@ export const loader = ({ params }: LoaderFunctionArgs) => {
 
   invariant(blog, "No blog found");
   const { content, data } = blog;
+  
+  // Get the current URL for citation
+  const url = new URL(request.url).origin + "/blog/" + slug;
 
   return {
     content,
@@ -33,6 +40,7 @@ export const loader = ({ params }: LoaderFunctionArgs) => {
     })),
     excerpt: data.excerpt,
     ogImage: data.ogImage.url,
+    url,
   }
 };
 
@@ -124,6 +132,12 @@ const BlogDetails = () => {
             }}
           />
           
+          <BlogFooter
+            title={data.title}
+            authors={data.authors}
+            date={data.date}
+            url={data.url}
+          />
         </section>
       </main>
     </article>

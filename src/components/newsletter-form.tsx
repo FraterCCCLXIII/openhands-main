@@ -13,7 +13,7 @@ export const NewsletterForm: React.FC<NewsletterFormProps> = ({ error, success, 
     <div>
       <Form
         data-testid="newsletter-form"
-        className="flex gap-2 w-full flex-col md:flex-row items-center"
+        className="flex gap-4 md:gap-2 w-full flex-col md:flex-row items-center"
         method="post"
       >
         <input

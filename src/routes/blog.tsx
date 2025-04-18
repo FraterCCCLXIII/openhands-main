@@ -1,12 +1,13 @@
 import React from "react";
 import { Helmet } from "react-helmet-async";
-import { ActionFunctionArgs, json, Link, useActionData, useLoaderData, useNavigation } from "react-router-dom";
+import { Link, useActionData, useLoaderData, useNavigation } from "react-router-dom";
 import { blogAPI } from "~/api/blog";
 import { BlogCard, FeaturedBlogCard } from "~/components/blog-card";
 import { NewsletterForm } from "~/components/newsletter-form";
 import { RegularButton } from "~/components/regular-button";
 import { SectionHeading } from "~/components/section-heading";
 import { useWidth } from "~/hooks/use-media";
+import { handleNewsletterSubscription } from "~/utils/newsletter-subscription";
 import { stringToSlug } from "~/utils/string-to-slug";
 
 export const loader = async () => {
@@ -15,30 +16,7 @@ export const loader = async () => {
   return { blogs };
 };
 
-export const action = async ({ request }: ActionFunctionArgs) => {
-  const formData = await request.formData();
-  const email = formData.get("email");
-
-  if (!email || typeof email !== "string") {
-    return json({ result: "error", msg: "Email is required" });
-  }
-  
-  try {
-    // Call our server-side API endpoint instead of directly using Resend
-    const response = await fetch('/api/subscribe-newsletter', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ email }),
-    });
-    
-    const data = await response.json();
-    return json(data);
-  } catch (error) {
-    return json({ result: "error", msg: "Failed to subscribe. Please try again later." });
-  }
-}
+export const action = handleNewsletterSubscription;
 
 const Blog = () => {
   const navigation = useNavigation();

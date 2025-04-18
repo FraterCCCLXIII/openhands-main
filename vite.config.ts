@@ -10,6 +10,10 @@ import { configDefaults } from "vitest/config";
 export default defineConfig({
   plugins: [react(), tsconfigPaths(), svgr(), nodePolyfills()],
   assetsInclude: "**/*.md",
+  server: {
+    host: true,
+    allowedHosts: true,
+  },
   test: {
     environment: "jsdom",
     setupFiles: ["vitest-setup.ts"],
