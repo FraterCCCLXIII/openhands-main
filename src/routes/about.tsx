@@ -52,6 +52,11 @@ const members: Member[] = [
     title: "Community Manager",
   },
   {
+    src: "/assets/members/juan.webp",
+    name: "Juan Michelini",
+    title: "Senior Agent Researcher",
+  },
+  {
     src: "/assets/members/ray.webp",
     name: "Ray Myers",
     title: "Chief Architect",
