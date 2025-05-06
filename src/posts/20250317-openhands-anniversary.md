@@ -54,7 +54,7 @@ The success of OpenHands is a testament to the power of open-source collaboratio
 We believe in the power of open source and community-driven development. If you're excited about the future of AI-assisted software development, we'd love to have you join us:
 
 - Check out our [GitHub repository](https://github.com/All-Hands-AI/OpenHands)
-- Join our [Slack](https://join.slack.com/t/openhands-ai/shared_invite/zt-2ngejmfw6-9gW4APWOC9XUp1n~SiQ6iw)
+- Join our [Slack](https://join.slack.com/t/openhands-ai/shared_invite/zt-34zm4j0gj-Qz5kRHoca8DFCbqXPS~f_A)
 - Follow our [documentation](https://docs.all-hands.dev) to get started
 - Report issues and contribute improvements
 - Share your experiences with the community

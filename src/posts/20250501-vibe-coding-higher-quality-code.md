@@ -114,4 +114,4 @@ and github actions for CI/CD.
 If you do this, you'll have a repo that is set up with all of these practices from the start, so you can jump in to getting the agent to write relatively solid code for you right away.
 
 If you're interested in doing some serious vibe coding, it's easy to get started on the [OpenHands Cloud](https://app.all-hands.dev), or download and run [OpenHands](https://github.com/All-Hands-AI/OpenHands) yourself.
-And if you want to discuss best practices, learn more about agents, or just chat about AI in software development, come join us on [Slack](https://join.slack.com/t/openhands-ai/shared_invite/zt-2ngejmfw6-9gW4APWOC9XUp1n~SiQ6iw) or [Discord](https://discord.gg/ESHStjSjD4).
+And if you want to discuss best practices, learn more about agents, or just chat about AI in software development, come join us on [Slack](https://join.slack.com/t/openhands-ai/shared_invite/zt-34zm4j0gj-Qz5kRHoca8DFCbqXPS~f_A) or [Discord](https://discord.gg/ESHStjSjD4).

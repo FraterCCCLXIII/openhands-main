@@ -88,7 +88,7 @@ OpenHands Cloud is built on the same technology as our open-source solution but 
 We invite you to be part of the OpenHands LM journey:
 
 - Explore our [GitHub repository](https://github.com/All-Hands-AI/OpenHands)
-- Connect with us on [Slack](https://join.slack.com/t/openhands-ai/shared_invite/zt-2ngejmfw6-9gW4APWOC9XUp1n~SiQ6iw)
+- Connect with us on [Slack](https://join.slack.com/t/openhands-ai/shared_invite/zt-34zm4j0gj-Qz5kRHoca8DFCbqXPS~f_A)
 - Follow our [documentation](https://docs.all-hands.dev) to get started
 
 By contributing your experiences and feedback, you'll help shape the future of this open-source initiative. Together, we can create better tools for tomorrow's software development landscape.
