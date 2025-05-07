@@ -196,12 +196,16 @@
     "login": "ryx2"
   },
   {
+    "id": 605806,
+    "login": "cshimmin"
+  },
+  {
     "id": 35432522,
     "login": "MischaPanch"
   },
   {
-    "id": 15134896,
-    "login": "jiangleo"
+    "id": 9537,
+    "login": "jeremi"
   },
   {
     "id": 135171913,
@@ -212,12 +216,12 @@
     "login": "richardokonicha"
   },
   {
-    "id": 9537,
-    "login": "jeremi"
-  },
-  {
     "id": 7479937,
     "login": "DaxServer"
+  },
+  {
+    "id": 1479804,
+    "login": "kripper"
   },
   {
     "id": 78588128,
@@ -230,9 +234,5 @@
   {
     "id": 76570167,
     "login": "JayQuimby"
-  },
-  {
-    "id": 1479804,
-    "login": "kripper"
   }
 ]
