@@ -220,10 +220,6 @@
     "login": "DaxServer"
   },
   {
-    "id": 1479804,
-    "login": "kripper"
-  },
-  {
     "id": 78588128,
     "login": "super-dainiu"
   },
@@ -234,5 +230,9 @@
   {
     "id": 76570167,
     "login": "JayQuimby"
+  },
+  {
+    "id": 1479804,
+    "login": "kripper"
   }
 ]
