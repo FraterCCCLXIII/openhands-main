@@ -86,7 +86,7 @@ const BlogDetails = () => {
       </figure>
 
       <main className="flex flex-col gap-4 w-full lg:max-w-[800px] px-[20px] lg:px-[42px]">
-        <h1 className="heading">{data.title}</h1>
+        <h1 className="heading font-bold">{data.title}</h1>
 
         <header className="flex flex-col gap-2">
           <div className="flex items-center gap-2 lg:gap-4 text-[17px] leading-6 font-semibold text-description">
@@ -120,7 +120,8 @@ const BlogDetails = () => {
             rehypePlugins={[rehypeRaw, rehypeKatex]}
             components={{
               a: (props) => <a rel="noreferrer" target="_blank" className="text-blue-600" {...props}>{props.children}</a>,
-              h2: (props) => <h2 className="font-quincy text-5xl" {...props}>{props.children}</h2>,
+              h2: (props) => <h2 className="font-quincy font-bold text-5xl" {...props}>{props.children}</h2>,
+              h3: (props) => <h3 className="font-quincy font-bold text-3xl" {...props}>{props.children}</h3>,
               li: (props) => <li className="list-disc ml-5" {...props}>{props.children}</li>,
               img: (props) => <img className="rounded-lg" {...props} alt={props.alt} />,
               p: (props) => <p className="text-description" {...props}>{props.children}</p>,
