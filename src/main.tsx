@@ -23,6 +23,7 @@ import Share, { loader as shareLoader } from "./routes/share";
 import { Analytics } from "@vercel/analytics/react";
 import TOS from "./routes/tos";
 import PrivacyPolicy from "./routes/privacy-policy";
+import Pricing from "./routes/pricing";
 
 const AppErrorBoundary = () => {
   const error = useRouteError();
@@ -86,6 +87,11 @@ const router = createBrowserRouter([
       {
         path: "/privacy",
         element: <PrivacyPolicy />,
+        loader: () => ({}),
+      },
+      {
+        path: "/pricing",
+        element: <Pricing />,
         loader: () => ({}),
       },
     ],

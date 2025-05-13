@@ -12,6 +12,7 @@ const INTERNAL_NAV_MAP = [
   { name: "Home", to: "/" },
   { name: "About Us", to: "/about" },
   { name: "Blog", to: "/blog" },
+  { name: "Pricing", to: "/pricing" },
 ];
 
 const EXTERNAL_NAV_MAP = [
