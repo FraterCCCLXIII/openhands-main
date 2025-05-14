@@ -42,16 +42,18 @@ describe("Pricing Page", () => {
     
     // Check Pay-as-you-go features
     expect(screen.getByText("Immediate access from any device")).toBeInTheDocument();
-    expect(screen.getByText("No LLM account required")).toBeInTheDocument();
-    expect(screen.getByText("No rate limits")).toBeInTheDocument();
+    expect(screen.getByText("Access to the highest-performing LLMs")).toBeInTheDocument();
+    expect(screen.getByText("High token rate limits")).toBeInTheDocument();
     expect(screen.getByText("GitHub and GitLab support")).toBeInTheDocument();
     expect(screen.getByText("API support")).toBeInTheDocument();
     expect(screen.getByText("Refill as low as $10")).toBeInTheDocument();
     
     expect(screen.getByText("Everything in pay-as-you-go, plus:")).toBeInTheDocument();
     expect(screen.getByText("Additional integrations")).toBeInTheDocument();
-    expect(screen.getByText("Competitive token pricing")).toBeInTheDocument();
+    expect(screen.getByText("Higher token rate limits")).toBeInTheDocument();
+    expect(screen.getByText("More concurrent conversations")).toBeInTheDocument();
     expect(screen.getByText("Self-hosted option")).toBeInTheDocument();
-    expect(screen.getByText("Support package")).toBeInTheDocument();
+    expect(screen.getByText("Bring your own LLM (self-hosted only)")).toBeInTheDocument();
+    expect(screen.getByText("Support and enablement package")).toBeInTheDocument();
   });
 });

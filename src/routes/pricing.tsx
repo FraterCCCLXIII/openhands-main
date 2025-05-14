@@ -49,8 +49,8 @@ const Pricing = () => {
 
   const payAsYouGoFeatures = [
     "Immediate access from any device",
-    "No LLM account required",
-    "No rate limits",
+    "Access to the highest-performing LLMs",
+    "High token rate limits",
     "GitHub and GitLab support",
     "API support",
     "Refill as low as $10"
@@ -59,9 +59,11 @@ const Pricing = () => {
   const businessFeatures = [
     "Everything in pay-as-you-go, plus:",
     "Additional integrations",
-    "Competitive token pricing",
+    "Higher token rate limits",
+    "More concurrent conversations",
     "Self-hosted option",
-    "Support package"
+    "Bring your own LLM (self-hosted only)",
+    "Support and enablement package"
   ];
 
   return (
