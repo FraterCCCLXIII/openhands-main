@@ -24,6 +24,7 @@ import { Analytics } from "@vercel/analytics/react";
 import TOS from "./routes/tos";
 import PrivacyPolicy from "./routes/privacy-policy";
 import Pricing from "./routes/pricing";
+import Features from "./routes/features";
 
 const AppErrorBoundary = () => {
   const error = useRouteError();
@@ -92,6 +93,11 @@ const router = createBrowserRouter([
       {
         path: "/pricing",
         element: <Pricing />,
+        loader: () => ({}),
+      },
+      {
+        path: "/features",
+        element: <Features />,
         loader: () => ({}),
       },
     ],

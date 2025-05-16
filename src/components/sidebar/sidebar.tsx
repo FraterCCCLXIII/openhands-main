@@ -10,13 +10,14 @@ import { ExternalAnchor } from "./external-anchor";
 
 const INTERNAL_NAV_MAP = [
   { name: "Home", to: "/" },
-  { name: "About Us", to: "/about" },
-  { name: "Blog", to: "/blog" },
+  { name: "Product", to: "/features" },
   { name: "Pricing", to: "/pricing" },
+  { name: "Blog", to: "/blog" },
+  { name: "Careers", to: "https://allhandsai.applytojob.com/apply/" },
+  { name: "About Us", to: "/about" },
 ];
 
 const EXTERNAL_NAV_MAP = [
-  { name: "Careers", to: "https://allhandsai.applytojob.com/apply/" },
   { name: "Docs", to: "https://docs.all-hands.dev/" },
 ];
 
@@ -50,18 +51,24 @@ export const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
         <ul className="text-center flex flex-col gap-8">
           {INTERNAL_NAV_MAP.map((item) => (
             <AnimatedListItem key={item.name}>
-              <NavLink
-                to={item.to}
-                className="relative"
-                onClick={onClose}
-              >
-                {({ isActive }) => (
-                  <>
-                    {isActive && <TripleWowYellow width={36} height={22} className="absolute -right-7 -top-2 transform rotate-[34deg]" />}
-                    {item.name}
-                  </>
-                )}
-              </NavLink>
+              {item.to.startsWith('http') ? (
+                <ExternalAnchor to={item.to}>
+                  {item.name}
+                </ExternalAnchor>
+              ) : (
+                <NavLink
+                  to={item.to}
+                  className="relative"
+                  onClick={onClose}
+                >
+                  {({ isActive }) => (
+                    <>
+                      {isActive && <TripleWowYellow width={36} height={22} className="absolute -right-7 -top-2 transform rotate-[34deg]" />}
+                      {item.name}
+                    </>
+                  )}
+                </NavLink>
+              )}
             </AnimatedListItem>
           ))}
           {EXTERNAL_NAV_MAP.map((item) => (
