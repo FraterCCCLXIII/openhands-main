@@ -136,14 +136,6 @@
     "login": "zeul22"
   },
   {
-    "id": 605806,
-    "login": "cshimmin"
-  },
-  {
-    "id": 16740055,
-    "login": "WannaTen"
-  },
-  {
     "id": 18455687,
     "login": "pandukamuditha"
   },
@@ -156,16 +148,24 @@
     "login": "idagelic"
   },
   {
+    "id": 16740055,
+    "login": "WannaTen"
+  },
+  {
+    "id": 605806,
+    "login": "cshimmin"
+  },
+  {
     "id": 5436704,
     "login": "xcodebuild"
   },
   {
-    "id": 183959486,
-    "login": "diwu-sf"
-  },
-  {
     "id": 55055083,
     "login": "Jiayi-Pan"
+  },
+  {
+    "id": 183959486,
+    "login": "diwu-sf"
   },
   {
     "id": 27664428,
@@ -176,12 +176,12 @@
     "login": "AlexCuadron"
   },
   {
-    "id": 20578281,
-    "login": "juanmichelini"
+    "id": 3778956,
+    "login": "computer-whisperer"
   },
   {
-    "id": 6035284,
-    "login": "Borda"
+    "id": 20578281,
+    "login": "juanmichelini"
   },
   {
     "id": 22478336,
@@ -192,8 +192,8 @@
     "login": "MischaPanch"
   },
   {
-    "id": 3778956,
-    "login": "computer-whisperer"
+    "id": 6035284,
+    "login": "Borda"
   },
   {
     "id": 21298347,
