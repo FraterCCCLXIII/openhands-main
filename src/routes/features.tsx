@@ -19,42 +19,45 @@ const Feature: React.FC<FeatureProps> = ({
   imageUrl,
   index,
 }) => {
+  // Image component to avoid duplication
+  const ImageComponent = ({ isMobile = false }) => (
+    <div className={`w-full md:w-1/2 flex justify-center ${isMobile ? 'items-center' : ''}`}>
+        <img 
+          src={imageUrl} 
+          alt={title} 
+          className={`h-auto rounded-lg ${isMobile ? 'w-1/2 mx-auto' : 'max-w-full'}`} 
+        />
+    </div>
+  );
+
+  // Text component to avoid duplication
+  const TextComponent = () => (
+    <div className="w-full md:w-1/2 flex flex-col justify-center">
+      <h2 className="text-2xl md:text-3xl font-bold mb-4">{title}</h2>
+      <div className="text-gray-700">
+        {description}
+      </div>
+    </div>
+  );
+
   return (
     <div className={clsx(
       "flex flex-col md:flex-row items-center gap-8 py-12 border-b border-gray-200",
       index === 0 && "pt-0",
       index === 5 && "border-b-0"
     )}>
-      {imagePosition === "left" && (
-        <div className="w-full md:w-1/2 flex justify-center">
-          {imageUrl ? (
-            <img src={imageUrl} alt={title} className="max-w-full h-auto rounded-lg" />
-          ) : (
-            <div className="w-full aspect-video bg-gray-200 rounded-lg flex items-center justify-center text-gray-400">
-              Image coming soon
-            </div>
-          )}
-        </div>
-      )}
-      
-      <div className="w-full md:w-1/2 flex flex-col">
-        <h2 className="text-2xl md:text-3xl font-bold mb-4">{title}</h2>
-        <div className="text-gray-700">
-          {description}
-        </div>
+      {/* Mobile view - Image always on top with 50% width */}
+      <div className="flex flex-col w-full md:hidden">
+        <ImageComponent isMobile={true} />
+        <TextComponent />
       </div>
-      
-      {imagePosition === "right" && (
-        <div className="w-full md:w-1/2 flex justify-center">
-          {imageUrl ? (
-            <img src={imageUrl} alt={title} className="max-w-full h-auto rounded-lg" />
-          ) : (
-            <div className="w-full aspect-video bg-gray-200 rounded-lg flex items-center justify-center text-gray-400">
-              Image coming soon
-            </div>
-          )}
-        </div>
-      )}
+
+      {/* Desktop view - Image position based on imagePosition prop */}
+      <div className="hidden md:flex md:flex-row w-full">
+        {imagePosition === "left" && <ImageComponent isMobile={false} />}
+        <TextComponent />
+        {imagePosition === "right" && <ImageComponent isMobile={false} />}
+      </div>
     </div>
   );
 };
