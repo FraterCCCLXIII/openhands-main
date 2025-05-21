@@ -1,11 +1,20 @@
 import React from "react";
 import { motion, useMotionValueEvent, useScroll } from "framer-motion";
 import MenuIcon from "~/svgs/menu.svg?react";
-import { Link } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import { AnimatedHeaderLogo } from "./animated-header-logo";
 import clsx from "clsx";
 import { GitHubButton } from "./buttons/github-button";
 import { TryItLiveButton } from "./buttons/try-it-live-button";
+
+// Navigation items for desktop view
+const DESKTOP_NAV_ITEMS = [
+  { name: "Home", to: "/" },
+  { name: "Product", to: "/features" },
+  { name: "Pricing", to: "/pricing" },
+  { name: "Blog", to: "/blog" },
+  { name: "Docs", to: "https://docs.all-hands.dev/" },
+];
 
 interface HeaderProps {
   onClickMenuButton: () => void;
@@ -30,24 +39,73 @@ export const Header: React.FC<HeaderProps> = ({ width, showMenuIcon, onClickMenu
       initial={false}
       animate={{ width }}
       transition={{ type: "spring", stiffness: 300, damping: 35 }} // same as sidebar
-      className="h-[83px] flex items-center bg-[#F1EAE0] fixed top-0 right-0 justify-center z-20"
+      className="h-[83px] flex items-center bg-[#F1EAE0] fixed top-0 right-0 justify-between z-20"
     >
-      <button
-        aria-label="Open Menu"
-        onClick={onClickMenuButton}
-        className={clsx("absolute left-[26px]", showMenuIcon ? "block" : "hidden")}
-      >
-        <MenuIcon width={38} height={38} />
-      </button>
+      {/* Max width container for desktop view */}
+      <div className="w-full max-w-[1440px] mx-auto flex items-center px-[30px]">
+        {/* Mobile view - Logo centered with menu button on left */}
+        <div className="flex items-center justify-between w-full lg:w-1/3 lg:justify-start">
+          {/* Mobile menu button - only visible on mobile */}
+          <div className="lg:hidden w-[38px]">
+            {showMenuIcon && (
+              <button
+                aria-label="Open Menu"
+                onClick={onClickMenuButton}
+              >
+                <MenuIcon width={38} height={38} />
+              </button>
+            )}
+          </div>
 
-      <Link to="/" aria-label="Go to Home">
-        <AnimatedHeaderLogo renderText={textIsVisible} />
-      </Link>
+          {/* Logo - centered on mobile, left-aligned on desktop */}
+          <div className="flex-1 flex justify-center lg:justify-start">
+            <Link to="/" aria-label="Go to Home">
+              <AnimatedHeaderLogo renderText={textIsVisible} />
+            </Link>
+          </div>
+          
+          {/* Empty div to balance the menu button on mobile */}
+          <div className="lg:hidden w-[38px]"></div>
+        </div>
 
+        {/* Center - Desktop Navigation - only visible on desktop */}
+        <div className="hidden lg:flex lg:w-1/3 justify-center">
+          <nav>
+            <ul className="flex space-x-8">
+              {DESKTOP_NAV_ITEMS.map((item) => (
+                <li key={item.name}>
+                  {item.to.startsWith('http') ? (
+                    <a 
+                      href={item.to} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-[18px] hover:text-gray-600 transition-colors"
+                    >
+                      {item.name}
+                    </a>
+                  ) : (
+                    <NavLink
+                      to={item.to}
+                      className={({ isActive }) => 
+                        clsx("text-[18px] hover:text-gray-600 transition-colors", 
+                          isActive && "font-semibold"
+                        )
+                      }
+                    >
+                      {item.name}
+                    </NavLink>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </nav>
+        </div>
 
-      <div className="hidden lg:flex gap-[15px] absolute right-[26px]">
-        <TryItLiveButton />
-        <GitHubButton />
+        {/* Right side buttons */}
+        <div className="hidden lg:flex lg:w-1/3 justify-end gap-[15px]">
+          <TryItLiveButton />
+          <GitHubButton />
+        </div>
       </div>
     </motion.header>
   );
