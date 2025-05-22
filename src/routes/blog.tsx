@@ -1,18 +1,25 @@
-import React from "react";
-import { Helmet } from "react-helmet-async";
-import { Link, useActionData, useLoaderData, useNavigation } from "react-router-dom";
-import { blogAPI } from "~/api/blog";
-import { BlogCard, FeaturedBlogCard } from "~/components/blog-card";
-import { NewsletterForm } from "~/components/newsletter-form";
-import { RegularButton } from "~/components/regular-button";
-import { SectionHeading } from "~/components/section-heading";
-import { useWidth } from "~/hooks/use-media";
-import { handleNewsletterSubscription } from "~/utils/newsletter-subscription";
-import { stringToSlug } from "~/utils/string-to-slug";
+import React from 'react';
+import { Helmet } from 'react-helmet-async';
+import {
+  Link,
+  useActionData,
+  useLoaderData,
+  useNavigation,
+} from 'react-router';
+import { blogAPI } from '~/api/blog';
+import { BlogCard, FeaturedBlogCard } from '~/components/blog-card';
+import { NewsletterForm } from '~/components/newsletter-form';
+import { RegularButton } from '~/components/regular-button';
+import { SectionHeading } from '~/components/section-heading';
+import { useWidth } from '~/hooks/use-media';
+import { handleNewsletterSubscription } from '~/utils/newsletter-subscription';
+import { stringToSlug } from '~/utils/string-to-slug';
 
 export const loader = async () => {
   const blogs = blogAPI.getAllBlogs();
-  blogs.sort((a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime());
+  blogs.sort(
+    (a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime()
+  );
   return { blogs };
 };
 
@@ -20,8 +27,11 @@ export const action = handleNewsletterSubscription;
 
 const Blog = () => {
   const navigation = useNavigation();
-  const data = useActionData() as { result: "success" | "error", msg: string } | undefined | null;
-  const { blogs } = useLoaderData() as { blogs: Post[] }
+  const data = useActionData() as
+    | { result: 'success' | 'error'; msg: string }
+    | undefined
+    | null;
+  const { blogs } = useLoaderData() as { blogs: Post[] };
   const latestBlog = blogs[0];
 
   const width = useWidth();
@@ -29,33 +39,30 @@ const Blog = () => {
 
   const loadMoreBlogs = () => {
     setVisibleCount((prev) => prev + 3);
-  }
+  };
 
   return (
-    <main className="flex flex-col">
+    <main className='flex flex-col'>
       <Helmet>
         <title>All Hands AI Blog - Insights and Innovations</title>
         <meta
-          name="description"
-          content="Read the latest insights and innovations from All Hands AI."
+          name='description'
+          content='Read the latest insights and innovations from All Hands AI.'
         />
       </Helmet>
 
-      <section className="flex flex-col items-center">
-        <SectionHeading
-          isHero
-          subheading="OUR BLOG"
-        >
+      <section className='flex flex-col items-center'>
+        <SectionHeading isHero subheading='OUR BLOG'>
           <NewsletterForm
-            error={data?.result === "error" ? data.msg : undefined}
-            success={data?.result === "success" ? data.msg : undefined}
-            disabled={navigation.state === "submitting" || !!data}
+            error={data?.result === 'error' ? data.msg : undefined}
+            success={data?.result === 'success' ? data.msg : undefined}
+            disabled={navigation.state === 'submitting' || !!data}
           />
         </SectionHeading>
       </section>
 
-      <section className="max-w-[1440px] monitor:self-center">
-        <section className="hidden lg:block">
+      <section className='max-w-[1440px] monitor:self-center'>
+        <section className='hidden lg:block'>
           <Link to={stringToSlug(latestBlog.data.title)}>
             <FeaturedBlogCard
               title={latestBlog.data.title}
@@ -65,10 +72,13 @@ const Blog = () => {
           </Link>
         </section>
 
-        <section className="flex flex-col items-center">
-          <div className="grid grid-cols-1 lg:grid-cols-3">
+        <section className='flex flex-col items-center'>
+          <div className='grid grid-cols-1 lg:grid-cols-3'>
             {blogs
-              .slice((width >= 1024 ? 1 : 0), visibleCount + (width >= 1024 ? 1 : 0))
+              .slice(
+                width >= 1024 ? 1 : 0,
+                visibleCount + (width >= 1024 ? 1 : 0)
+              )
               .map((blog) => (
                 <Link
                   key={stringToSlug(blog.data.title)}
@@ -84,7 +94,7 @@ const Blog = () => {
           </div>
 
           {visibleCount < blogs.length && (
-            <div className="py-[45px]">
+            <div className='py-[45px]'>
               <RegularButton onClick={loadMoreBlogs}>Load More</RegularButton>
             </div>
           )}

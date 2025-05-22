@@ -1,33 +1,33 @@
-import React from "react";
-import { Helmet } from "react-helmet-async";
-import Markdown from "react-markdown";
-import rehypeRaw from "rehype-raw";
-import rehypeKatex from "rehype-katex";
-import remarkMath from "remark-math";
-import { LoaderFunctionArgs, useLoaderData } from "react-router-dom";
-import invariant from "tiny-invariant";
-import { blogAPI } from "~/api/blog";
-import { CSyntaxHighlighter } from "~/components/c-syntax-highlighter";
-import { code as Code } from "~/components/code";
-import { PlaceholderImage } from "~/components/placeholder-image";
-import { formatDate } from "~/utils/format-date";
-import { BlogFooter } from "~/components/blog-footer";
-import { handleNewsletterSubscription } from "~/utils/newsletter-subscription";
-import "katex/dist/katex.min.css";
+import React from 'react';
+import { Helmet } from 'react-helmet-async';
+import Markdown from 'react-markdown';
+import rehypeRaw from 'rehype-raw';
+import rehypeKatex from 'rehype-katex';
+import remarkMath from 'remark-math';
+import { LoaderFunctionArgs, useLoaderData } from 'react-router';
+import invariant from 'tiny-invariant';
+import { blogAPI } from '~/api/blog';
+import { CSyntaxHighlighter } from '~/components/c-syntax-highlighter';
+import { code as Code } from '~/components/code';
+import { PlaceholderImage } from '~/components/placeholder-image';
+import { formatDate } from '~/utils/format-date';
+import { BlogFooter } from '~/components/blog-footer';
+import { handleNewsletterSubscription } from '~/utils/newsletter-subscription';
+import 'katex/dist/katex.min.css';
 
 export const action = handleNewsletterSubscription;
 
 export const loader = ({ params, request }: LoaderFunctionArgs) => {
-  invariant(params.slug, "No blog ID provided");
+  invariant(params.slug, 'No blog ID provided');
 
   const slug = params.slug.toString();
   const blog = blogAPI.getBlogBySlug(slug);
 
-  invariant(blog, "No blog found");
+  invariant(blog, 'No blog found');
   const { content, data } = blog;
-  
+
   // Get the current URL for citation
-  const url = new URL(request.url).origin + "/blog/" + slug;
+  const url = new URL(request.url).origin + '/blog/' + slug;
 
   return {
     content,
@@ -41,13 +41,13 @@ export const loader = ({ params, request }: LoaderFunctionArgs) => {
     excerpt: data.excerpt,
     ogImage: data.ogImage.url,
     url,
-  }
+  };
 };
 
 export const ErrorBoundary = () => (
-  <div className="flex flex-col items-center gap-4 text-center py-[45px]">
-    <h1 className="heading">Error</h1>
-    <p className="paragraph">There was an error loading the blog.</p>
+  <div className='flex flex-col items-center gap-4 text-center py-[45px]'>
+    <h1 className='heading'>Error</h1>
+    <p className='paragraph'>There was an error loading the blog.</p>
   </div>
 );
 
@@ -61,36 +61,30 @@ const BlogDetails = () => {
   }, []);
 
   return (
-    <article className="flex flex-col items-center py-[30px] lg:py-[45px] gap-4 lg:gap-8">
+    <article className='flex flex-col items-center py-[30px] lg:py-[45px] gap-4 lg:gap-8'>
       <Helmet>
         <title>{data.title}</title>
-        <meta
-          name="description"
-          content={data.excerpt}
-        />
-        <meta
-          property="og:image"
-          content={data.ogImage}
-        />
+        <meta name='description' content={data.excerpt} />
+        <meta property='og:image' content={data.ogImage} />
       </Helmet>
 
-      <figure className="w-full lg:max-w-[800px] px-[20px] lg:px-[42px]">
-        {!data.cover && <PlaceholderImage className="aspect-video" />}
+      <figure className='w-full lg:max-w-[800px] px-[20px] lg:px-[42px]'>
+        {!data.cover && <PlaceholderImage className='aspect-video' />}
         {data.cover && (
           <img
             src={data.cover}
-            alt="blog cover"
-            className="w-full rounded-[7px] lg:rounded-[10px] flex items-center justify-center aspect-video object-cover"
+            alt='blog cover'
+            className='w-full rounded-[7px] lg:rounded-[10px] flex items-center justify-center aspect-video object-cover'
           />
         )}
       </figure>
 
-      <main className="flex flex-col gap-4 w-full lg:max-w-[800px] px-[20px] lg:px-[42px]">
-        <h1 className="heading font-bold">{data.title}</h1>
+      <main className='flex flex-col gap-4 w-full lg:max-w-[800px] px-[20px] lg:px-[42px]'>
+        <h1 className='heading font-bold'>{data.title}</h1>
 
-        <header className="flex flex-col gap-2">
-          <div className="flex items-center gap-2 lg:gap-4 text-[17px] leading-6 font-semibold text-description">
-            <div className="flex flex-col items-start lg:flex-row lg:items-center lg:gap-4">
+        <header className='flex flex-col gap-2'>
+          <div className='flex items-center gap-2 lg:gap-4 text-[17px] leading-6 font-semibold text-description'>
+            <div className='flex flex-col items-start lg:flex-row lg:items-center lg:gap-4'>
               <span>
                 By{' '}
                 {data.authors.map((author, index) => (
@@ -98,41 +92,74 @@ const BlogDetails = () => {
                     {index > 0 && ', '}
                     <a
                       href={author.link || undefined}
-                      className="text-blue-600"
-                      target="_blank"
-                      rel="noreferrer"
+                      className='text-blue-600'
+                      target='_blank'
+                      rel='noreferrer'
                     >
                       {author.name}
                     </a>
                   </React.Fragment>
                 ))}
               </span>
-              <span className="hidden lg:block">&#8226;</span>
+              <span className='hidden lg:block'>&#8226;</span>
               <time dateTime={data.date}>{formatDate(data.date)}</time>
             </div>
           </div>
         </header>
 
-        <section className="paragraph flex flex-col gap-4">
+        <section className='paragraph flex flex-col gap-4'>
           <Markdown
             children={data.content}
             remarkPlugins={[remarkMath]}
             rehypePlugins={[rehypeRaw, rehypeKatex]}
             components={{
-              a: (props) => <a rel="noreferrer" target="_blank" className="text-blue-600" {...props}>{props.children}</a>,
-              h2: (props) => <h2 className="font-quincy font-bold text-5xl" {...props}>{props.children}</h2>,
-              h3: (props) => <h3 className="font-quincy font-bold text-3xl" {...props}>{props.children}</h3>,
-              li: (props) => <li className="list-disc ml-5" {...props}>{props.children}</li>,
-              img: (props) => <img className="rounded-lg" {...props} alt={props.alt} />,
-              p: (props) => <p className="text-description" {...props}>{props.children}</p>,
-              code: (props) => <Code {...props} customStyle={{ maxWidth: codeElementWidth }} />,
+              a: (props) => (
+                <a
+                  rel='noreferrer'
+                  target='_blank'
+                  className='text-blue-600'
+                  {...props}
+                >
+                  {props.children}
+                </a>
+              ),
+              h2: (props) => (
+                <h2 className='font-quincy font-bold text-5xl' {...props}>
+                  {props.children}
+                </h2>
+              ),
+              h3: (props) => (
+                <h3 className='font-quincy font-bold text-3xl' {...props}>
+                  {props.children}
+                </h3>
+              ),
+              li: (props) => (
+                <li className='list-disc ml-5' {...props}>
+                  {props.children}
+                </li>
+              ),
+              img: (props) => (
+                <img className='rounded-lg' {...props} alt={props.alt} />
+              ),
+              p: (props) => (
+                <p className='text-description' {...props}>
+                  {props.children}
+                </p>
+              ),
+              code: (props) => (
+                <Code {...props} customStyle={{ maxWidth: codeElementWidth }} />
+              ),
               iframe: (props) => {
                 const { node, ...rest } = props;
-                return <div className="w-full flex justify-center my-4"><iframe {...rest} /></div>;
+                return (
+                  <div className='w-full flex justify-center my-4'>
+                    <iframe {...rest} />
+                  </div>
+                );
               },
             }}
           />
-          
+
           <BlogFooter
             title={data.title}
             authors={data.authors}
