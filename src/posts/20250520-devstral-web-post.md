@@ -46,7 +46,7 @@ The model is also available on the [Mistral API](https://docs.mistral.ai/api/) u
 
 For comparison, Claude 3.7 Sonnet is 30x more expensive per input token and 50x per output token.
 
-You can download the model on [Hugging Face](https://huggingface.co/mistralai/Devstral-Small-2505_gguf), [Ollama](https://ollama.com/library/devstral), [Kaggle](https://www.kaggle.com/models/mistral-ai/devstral-small-2505), [Unsloth](https://docs.unsloth.ai/basics/devstral) starting today.
+You can download the model on [Hugging Face](https://huggingface.co/mistralai/Devstral-Small-2505), [Ollama](https://ollama.com/library/devstral), [Kaggle](https://www.kaggle.com/models/mistral-ai/devstral-small-2505), [Unsloth](https://docs.unsloth.ai/basics/devstral) starting today.
 
 The performance of the model also makes it a suitable choice for agentic coding on privacy-sensitive repositories in enterprises, especially ones subject to stringent security and compliance requirements. For enterprise deployments that require deployment in private settings, or higher-fidelity customization such as continued pre-training or distilling Devstral's capabilities into other models, please [contact us](mailto:contact@all-hands.dev).
 
