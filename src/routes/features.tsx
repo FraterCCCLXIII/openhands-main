@@ -3,6 +3,7 @@ import { Helmet } from "react-helmet-async";
 import clsx from "clsx";
 import { GitHubButton } from "~/components/buttons/github-button";
 import { TryItLiveButton } from "~/components/buttons/try-it-live-button";
+import { ViewPricingButton } from "~/components/buttons/view-pricing-button";
 
 interface FeatureProps {
   title: string;
@@ -145,6 +146,11 @@ const Features = () => {
       
       <div className="container mx-auto px-4 py-16">
         <h1 className="heading-large text-center">OpenHands Cloud</h1>
+        
+        <div className="flex justify-center gap-4 mb-8 pt-10">
+          <TryItLiveButton />
+          <ViewPricingButton />
+        </div>
 
         <div className="max-w-4xl mx-auto">
           {features.map((feature, index) => (
@@ -157,6 +163,11 @@ const Features = () => {
               index={index}
             />
           ))}
+          
+          <div className="flex justify-center gap-4 mt-12">
+            <TryItLiveButton />
+            <ViewPricingButton />
+          </div>
         </div>
       </div>
     </div>
