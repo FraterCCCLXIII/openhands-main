@@ -19,7 +19,7 @@ describe('Pricing Page', () => {
 
     // Check pricing tiers
     expect(screen.getByText('Open Source')).toBeInTheDocument();
-    expect(screen.getByText('Pay-as-you-go')).toBeInTheDocument();
+    expect(screen.getByText('Individual')).toBeInTheDocument();
     expect(screen.getByText('Business')).toBeInTheDocument();
 
     // Check descriptions
@@ -28,7 +28,7 @@ describe('Pricing Page', () => {
     ).toBeInTheDocument();
     expect(screen.getByText('Great for individuals')).toBeInTheDocument();
     expect(
-      screen.getByText('Great for teams with multiple users')
+      screen.getByText('Great for teams')
     ).toBeInTheDocument();
 
     // Check OpenHands Cloud banner
@@ -48,27 +48,23 @@ describe('Pricing Page', () => {
       screen.getByText('Active open source community')
     ).toBeInTheDocument();
 
-    // Check Pay-as-you-go features
-    expect(
-      screen.getByText('Immediate access from any device')
-    ).toBeInTheDocument();
+    // Check Individual (formerly Pay-as-you-go) features
+    expect(screen.getByText('1 user')).toBeInTheDocument();
+    expect(screen.getByText('Pay-as-you-go ($10 min refill)')).toBeInTheDocument();
+    expect(screen.getByText('Access from desktop or mobile')).toBeInTheDocument();
     expect(
       screen.getByText('Access to the highest-performing LLMs')
     ).toBeInTheDocument();
     expect(screen.getByText('High token rate limits')).toBeInTheDocument();
-    expect(screen.getByText('GitHub and GitLab support')).toBeInTheDocument();
-    expect(screen.getByText('API support')).toBeInTheDocument();
-    expect(screen.getByText('Refill as low as $10')).toBeInTheDocument();
+    expect(screen.getByText('Use with GitHub or GitLab')).toBeInTheDocument();
+    expect(screen.getAllByText('API support').length).toBeGreaterThan(0);
 
-    expect(
-      screen.getByText('Everything in pay-as-you-go, plus:')
-    ).toBeInTheDocument();
+    expect(screen.getByText('Multiple users')).toBeInTheDocument();
     expect(screen.getByText('Additional integrations')).toBeInTheDocument();
     expect(screen.getByText('Higher token rate limits')).toBeInTheDocument();
     expect(
       screen.getByText('More concurrent conversations')
     ).toBeInTheDocument();
-    expect(screen.getByText('Self-hosted option')).toBeInTheDocument();
     expect(
       screen.getByText('Bring your own LLM (self-hosted only)')
     ).toBeInTheDocument();

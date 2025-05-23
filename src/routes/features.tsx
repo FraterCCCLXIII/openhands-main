@@ -164,6 +164,7 @@ const Features = () => {
             />
           ))}
           
+          <h2 className="text-2xl font-bold text-center mb-6">Get started today</h2>
           <div className="flex justify-center gap-4 mt-12">
             <TryItLiveButton />
             <ViewPricingButton />
