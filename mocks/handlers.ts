@@ -2,7 +2,7 @@ import { http, HttpResponse } from "msw";
 
 export const handlers = [
   http.get("https://api.github.com/repos/:owner/:repo", () => {
-    const REPOSITORY: Repository = {
+    const REPOSITORY = {
       stargazers_count: 28000,
     };
 
@@ -24,7 +24,7 @@ export const handlers = [
   }),
 
   http.get("https://api.github.com/repos/:owner/:repo/branches/:branch", () => {
-    const BRANCH: Branch = {
+    const BRANCH = {
       commit: {
         commit: {
           author: {

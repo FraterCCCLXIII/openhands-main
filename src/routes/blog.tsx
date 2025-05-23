@@ -1,5 +1,4 @@
 import React from 'react';
-import { Helmet } from 'react-helmet-async';
 import {
   Link,
   useActionData,
@@ -14,6 +13,7 @@ import { SectionHeading } from '~/components/section-heading';
 import { useWidth } from '~/hooks/use-media';
 import { handleNewsletterSubscription } from '~/utils/newsletter-subscription';
 import { stringToSlug } from '~/utils/string-to-slug';
+import type { Route } from './+types/blog';
 
 export const loader = async () => {
   const blogs = blogAPI.getAllBlogs();
@@ -24,6 +24,14 @@ export const loader = async () => {
 };
 
 export const action = handleNewsletterSubscription;
+
+export const meta: Route.MetaFunction = () => [
+  { title: 'All Hands AI Blog - Insights and Innovations' },
+  {
+    name: 'description',
+    content: 'Read the latest insights and innovations from All Hands AI.',
+  },
+];
 
 const Blog = () => {
   const navigation = useNavigation();
@@ -43,14 +51,6 @@ const Blog = () => {
 
   return (
     <main className='flex flex-col'>
-      <Helmet>
-        <title>All Hands AI Blog - Insights and Innovations</title>
-        <meta
-          name='description'
-          content='Read the latest insights and innovations from All Hands AI.'
-        />
-      </Helmet>
-
       <section className='flex flex-col items-center'>
         <SectionHeading isHero subheading='OUR BLOG'>
           <NewsletterForm

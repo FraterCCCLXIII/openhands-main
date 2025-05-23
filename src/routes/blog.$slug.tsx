@@ -1,19 +1,18 @@
 import React from 'react';
-import { Helmet } from 'react-helmet-async';
 import Markdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
 import rehypeKatex from 'rehype-katex';
 import remarkMath from 'remark-math';
-import { LoaderFunctionArgs, useLoaderData } from 'react-router';
+import { type LoaderFunctionArgs, useLoaderData } from 'react-router';
 import invariant from 'tiny-invariant';
 import { blogAPI } from '~/api/blog';
-import { CSyntaxHighlighter } from '~/components/c-syntax-highlighter';
-import { code as Code } from '~/components/code';
 import { PlaceholderImage } from '~/components/placeholder-image';
 import { formatDate } from '~/utils/format-date';
 import { BlogFooter } from '~/components/blog-footer';
 import { handleNewsletterSubscription } from '~/utils/newsletter-subscription';
 import 'katex/dist/katex.min.css';
+import type { Route } from './+types/blog.$slug';
+import { LazyCode } from '~/components/lazy-code';
 
 export const action = handleNewsletterSubscription;
 
@@ -51,6 +50,46 @@ export const ErrorBoundary = () => (
   </div>
 );
 
+export const meta: Route.MetaFunction = ({ data }) => [
+  { title: data.title },
+  {
+    name: 'description',
+    content: data.excerpt,
+  },
+  {
+    property: 'og:image',
+    content: data.ogImage,
+  },
+  {
+    property: 'og:title',
+    content: data.title,
+  },
+  {
+    property: 'og:description',
+    content: data.excerpt,
+  },
+  {
+    property: 'og:url',
+    content: data.url,
+  },
+  {
+    name: 'twitter:image',
+    content: data.ogImage,
+  },
+  {
+    name: 'twitter:title',
+    content: data.title,
+  },
+  {
+    name: 'twitter:description',
+    content: data.excerpt,
+  },
+  {
+    name: 'twitter:url',
+    content: data.url,
+  },
+];
+
 const BlogDetails = () => {
   const data = useLoaderData() as ReturnType<typeof loader>;
   const codeElementWidth = React.useMemo(() => {
@@ -62,12 +101,6 @@ const BlogDetails = () => {
 
   return (
     <article className='flex flex-col items-center py-[30px] lg:py-[45px] gap-4 lg:gap-8'>
-      <Helmet>
-        <title>{data.title}</title>
-        <meta name='description' content={data.excerpt} />
-        <meta property='og:image' content={data.ogImage} />
-      </Helmet>
-
       <figure className='w-full lg:max-w-[800px] px-[20px] lg:px-[42px]'>
         {!data.cover && <PlaceholderImage className='aspect-video' />}
         {data.cover && (
@@ -146,8 +179,13 @@ const BlogDetails = () => {
                   {props.children}
                 </p>
               ),
-              code: (props) => (
-                <Code {...props} customStyle={{ maxWidth: codeElementWidth }} />
+              code: ({ children, className }) => (
+                <LazyCode
+                  className={className}
+                  customStyle={{ maxWidth: codeElementWidth }}
+                >
+                  {children}
+                </LazyCode>
               ),
               iframe: (props) => {
                 const { node, ...rest } = props;

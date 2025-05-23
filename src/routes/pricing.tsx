@@ -1,6 +1,6 @@
-import React, { useState } from "react";
-import { Helmet } from "react-helmet-async";
+import React from "react";
 import { SectionHeading } from "~/components/section-heading";
+import type { Route } from "./+types/pricing";
 
 const FAQItem = ({ 
   question, 
@@ -9,7 +9,7 @@ const FAQItem = ({
   question: string; 
   answer: React.ReactNode; 
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = React.useState(false);
 
   return (
     <div className="border-b border-gray-200 py-4">
@@ -77,6 +77,15 @@ const PricingCard = ({
   );
 };
 
+export const meta: Route.MetaFunction = () => [
+  { title: 'All Hands AI - Pricing' },
+  {
+    name: 'description',
+    content:
+      'Flexible pricing options - from open source to enterprise solutions.',
+  },
+];
+
 const Pricing = () => {
   const openSourceFeatures = [
     "Run OpenHands locally",
@@ -106,14 +115,6 @@ const Pricing = () => {
 
   return (
     <main>
-      <Helmet>
-        <title>All Hands AI - Pricing</title>
-        <meta
-          name="description"
-          content="Flexible pricing options for All-Hands.dev - from open source to enterprise solutions."
-        />
-      </Helmet>
-
       <section className="flex flex-col items-center gap-4 text-center py-[86px] px-[53px]">
         <h1 className="heading-large max-w-[763px]">Flexible Pricing</h1>
       </section>

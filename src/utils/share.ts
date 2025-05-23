@@ -1,4 +1,4 @@
-import { TrajectoryItem, Config, AgentStateChange, UserMessage, AssistantMessage, CommandAction, CommandObservation, IPythonAction, IPythonObservation, FinishAction, ErrorObservation, ReadAction, ReadObservation, EditAction, EditObservation } from '../types';
+import type { TrajectoryItem, Config, AgentStateChange, UserMessage, AssistantMessage, CommandAction, CommandObservation, IPythonAction, IPythonObservation, FinishAction, ErrorObservation, ReadAction, ReadObservation, EditAction, EditObservation } from '../types';
 
 export const isConfig = (data: TrajectoryItem): data is Config =>
   "action" in data && data.action === "initialize";

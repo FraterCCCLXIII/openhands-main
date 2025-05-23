@@ -15,7 +15,6 @@ import { formatLastCommit } from '~/utils/format-last-commit';
 import { formatThousands } from '~/utils/format-thousands';
 import BreakFree from '~/svgs/break-free.svg?react';
 import HeartHands from '~/svgs/heart-hands.svg?react';
-import { Helmet } from 'react-helmet-async';
 import { ImageCarousel } from '~/components/image-carousel';
 import { formatContributorCount } from '~/utils/format-contributor-count';
 import React from 'react';
@@ -23,6 +22,7 @@ import clsx from 'clsx';
 import GitHubLogo from '~/svgs/github-logo.svg?react';
 import GitHubLogoBlack from '~/svgs/github-logo-black.svg?react';
 import { Link } from 'react-router';
+import type { Route } from './+types/home';
 
 interface HeroButtonProps {
   onClick?: () => void;
@@ -114,17 +114,35 @@ function BenchmarkDisplay() {
   );
 }
 
+export const links: Route.LinksFunction = () => [
+  {
+    rel: 'prefetch',
+    href: '/assets/product/product-slide-1.webp',
+    as: 'image',
+  },
+  {
+    rel: 'prefetch',
+    href: '/assets/product/product-slide-2.webp',
+    as: 'image',
+  },
+  {
+    rel: 'prefetch',
+    href: '/assets/product/product-slide-3.webp',
+    as: 'image',
+  },
+];
+
+export const meta: Route.MetaFunction = () => [
+  { title: 'All Hands AI' },
+  {
+    name: 'description',
+    content: 'Welcome to the All Hands AI website!',
+  },
+];
+
 const Home = () => {
   return (
     <main data-testid='home-content'>
-      <Helmet>
-        <title>All Hands AI</title>
-        <meta
-          name='description'
-          content='Welcome to the All Hands AI website!'
-        />
-      </Helmet>
-
       <section className='flex flex-col items-center gap-4 pb-[45px] lg:h-auto pt-[50px] lg:py-[86px] px-[42px]'>
         <h1 className='font-quincy text-[58px] leading-[58px] lg:text-[52px] lg:leading-[52px] text-center lg:h-auto lg:w-[764px]'>
           Open Source Agents for Developers

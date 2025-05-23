@@ -1,4 +1,3 @@
-import { Helmet } from "react-helmet-async";
 import { ContributorGrid } from "~/components/contributor-grid";
 import { MemberCard } from "~/components/member-card";
 import { SectionHeading } from "~/components/section-heading";
@@ -6,6 +5,7 @@ import { YellowWaveSection } from "~/components/yellow-wave-section";
 import contributors from "~/data/contributors.json";
 import statistics from "~/data/statistics.json";
 import { formatContributorCount } from "~/utils/format-contributor-count";
+import type { Route } from "./+types/about";
 
 const founders: Member[] = [
   {
@@ -68,19 +68,16 @@ const members: Member[] = [
   },
 ];
 
+export const meta: Route.MetaFunction = () => ([
+  { title: "All Hands AI - About Us" },
+  { name: "description", content: "Discover the talented team behind OpenDevin and how we leverage the power of collaboration to innovate in software development." },
+]);
+
 const About = () => {
   const shuffledMembers = [...members].sort(() => Math.random() - 0.5);
 
   return (
     <main>
-      <Helmet>
-        <title>All Hands AI - About Us</title>
-        <meta
-          name="description"
-          content="Discover the talented team behind OpenDevin and how we leverage the power of collaboration to innovate in software development."
-        />
-      </Helmet>
-
       <section className="flex flex-col items-center gap-4 text-center py-[86px] px-[53px]">
         <h1 className="heading-large max-w-[763px]">It takes a village to build the future. So we invited the internet.</h1>
       </section>

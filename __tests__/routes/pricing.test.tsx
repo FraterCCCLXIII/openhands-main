@@ -2,16 +2,13 @@ import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { describe, it, expect } from 'vitest';
 import Pricing from '../../src/routes/pricing';
-import { HelmetProvider } from 'react-helmet-async';
 
 describe('Pricing Page', () => {
   it('renders the pricing page with correct content', () => {
     render(
-      <HelmetProvider>
-        <MemoryRouter>
-          <Pricing />
-        </MemoryRouter>
-      </HelmetProvider>
+      <MemoryRouter>
+        <Pricing />
+      </MemoryRouter>
     );
 
     // Check main heading

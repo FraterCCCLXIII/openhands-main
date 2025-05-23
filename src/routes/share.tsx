@@ -1,13 +1,16 @@
 import {
   Form,
-  LoaderFunctionArgs,
+  type LoaderFunctionArgs,
   useLoaderData,
   useNavigation,
 } from 'react-router';
 import { isConfig } from '~/utils/share';
-import { MetaHeader, TrajectoryMeta } from '~/components/share/meta-header';
+import {
+  MetaHeader,
+  type TrajectoryMeta,
+} from '~/components/share/meta-header';
 import { TrajectoryList } from '~/components/share/trajectory-list';
-import { fetchTrajectoryData, TrajectoryData } from '~/api/share';
+import { fetchTrajectoryData, type TrajectoryData } from '~/api/share';
 import clsx from 'clsx';
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {

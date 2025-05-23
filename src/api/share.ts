@@ -1,4 +1,4 @@
-import { TrajectoryItem } from '../types';
+import type { TrajectoryItem } from '../types';
 
 export interface TrajectoryData {
   version: string;

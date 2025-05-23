@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
 import { ReadObservationComponent } from "../../../src/components/share/trajectory-list-items/read-observation";
+import type { ReadObservation } from "~/types";
 
 describe("ReadObservation", () => {
   const mockObservation = {
@@ -25,9 +26,9 @@ describe("ReadObservation", () => {
   });
 
   it("should handle missing path", () => {
-    const observationWithoutPath = {
+    const observationWithoutPath: ReadObservation = {
       ...mockObservation,
-      extras: {}
+      extras: { path: "" }
     };
     
     render(<ReadObservationComponent observation={observationWithoutPath} />);

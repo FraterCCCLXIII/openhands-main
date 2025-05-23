@@ -1,4 +1,4 @@
-import { ActionFunctionArgs } from 'react-router';
+import { type ActionFunctionArgs } from 'react-router';
 
 export const handleNewsletterSubscription = async ({
   request,

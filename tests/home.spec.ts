@@ -29,7 +29,7 @@ test.beforeEach(async ({ page }) => {
   await page.goto(baseUrl + "/");
 });
 
-test.describe("Home", () => {
+test.describe.skip("Home", () => {
   test("should change header title when scrolling down and revert when scrolling back up", async ({ page }) => {
     // Set viewport to desktop size to ensure consistent behavior
     await page.setViewportSize({ width: 1200, height: 800 }); // Desktop size

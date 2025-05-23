@@ -39,12 +39,7 @@ export const Header: React.FC<HeaderProps> = ({
   });
 
   return (
-    <motion.header
-      initial={false}
-      animate={{ width }}
-      transition={{ type: 'spring', stiffness: 300, damping: 35 }} // same as sidebar
-      className='h-[83px] flex items-center bg-[#F1EAE0] fixed top-0 right-0 justify-between z-20'
-    >
+    <header className='h-[83px] flex items-center bg-[#F1EAE0] fixed top-0 right-0 justify-between z-20 w-full'>
       {/* Max width container for desktop view */}
       <div className='w-full max-w-[1440px] mx-auto flex items-center px-[30px]'>
         {/* Mobile view - Logo centered with menu button on left */}
@@ -109,6 +104,6 @@ export const Header: React.FC<HeaderProps> = ({
           <GitHubButton />
         </div>
       </div>
-    </motion.header>
+    </header>
   );
 };

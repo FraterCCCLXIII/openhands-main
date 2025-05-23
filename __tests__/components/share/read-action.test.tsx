@@ -1,9 +1,10 @@
 import { render, screen } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
 import { ReadActionComponent } from "../../../src/components/share/trajectory-list-items/read-action";
+import type { TrajectoryItem } from "~/types";
 
 describe("ReadActionComponent", () => {
-  const mockItem = {
+  const mockItem: TrajectoryItem = {
     id: 1,
     cause: 1,
     observation: "read",
@@ -37,6 +38,7 @@ describe("ReadActionComponent", () => {
       timestamp: "2024-01-01T00:00:00.000Z"
     };
     
+    // @ts-ignore
     render(<ReadActionComponent item={itemWithThought} />);
     
     expect(screen.getByText("Test thought")).toBeInTheDocument();

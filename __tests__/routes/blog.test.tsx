@@ -1,12 +1,11 @@
 import { render, screen, within } from '@testing-library/react';
 import {
-  ActionFunctionArgs,
+  type ActionFunctionArgs,
   createMemoryRouter,
   RouterProvider,
 } from 'react-router';
 import { beforeAll, describe, expect, it } from 'vitest';
 import Blog from '../../src/routes/blog';
-import { HelmetProvider } from 'react-helmet-async';
 import userEvent, { type UserEvent } from '@testing-library/user-event';
 
 const MOCK_BLOGS = [
@@ -67,10 +66,7 @@ const openFormUtility = async (user: UserEvent) => {
   return { form, input, submitButton };
 };
 
-const renderBlog = () =>
-  render(<RouterProvider router={router} />, {
-    wrapper: ({ children }) => <HelmetProvider>{children}</HelmetProvider>,
-  });
+const renderBlog = () => render(<RouterProvider router={router} />);
 
 describe('Blog', () => {
   it('should render the blog page', async () => {

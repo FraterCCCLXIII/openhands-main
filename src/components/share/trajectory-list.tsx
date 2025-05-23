@@ -11,9 +11,9 @@ import {
   isReadAction,
   isReadObservation,
   isEditAction,
-  isEditObservation
-} from "../../utils/share";
-import { CSyntaxHighlighter } from "../c-syntax-highlighter";
+  isEditObservation,
+} from '../../utils/share';
+import { CSyntaxHighlighter } from '../c-syntax-highlighter-lazy';
 import {
   AgentStateChangeComponent,
   UserMessageComponent,
@@ -26,25 +26,31 @@ import {
   ReadActionComponent,
   ReadObservationComponent,
   EditActionComponent,
-  EditObservationComponent
-} from "./trajectory-list-items";
-import { TrajectoryCard } from "./trajectory-card";
-import { ErrorObservationComponent } from "./trajectory-list-items/assistant-message copy";
-import { TrajectoryItem } from '../../types';
+  EditObservationComponent,
+} from './trajectory-list-items';
+import { TrajectoryCard } from './trajectory-card';
+import { ErrorObservationComponent } from './trajectory-list-items/assistant-message copy';
+import type { TrajectoryItem } from '../../types';
 
 interface TrajectoryListProps {
   trajectory: TrajectoryItem[];
 }
 
-export const TrajectoryList: React.FC<TrajectoryListProps> = ({ trajectory }) => {
+export const TrajectoryList: React.FC<TrajectoryListProps> = ({
+  trajectory,
+}) => {
   const shouldDisplayItem = (item: TrajectoryItem): boolean => {
     // Filter out change_agent_state actions
-    if ("action" in item && item.action === "change_agent_state" as const) {
+    if ('action' in item && item.action === ('change_agent_state' as const)) {
       return false;
     }
 
     // Filter out null observations
-    if ("observation" in item && typeof item.observation === "string" && item.observation === "null") {
+    if (
+      'observation' in item &&
+      typeof item.observation === 'string' &&
+      item.observation === 'null'
+    ) {
       return false;
     }
 
@@ -56,7 +62,7 @@ export const TrajectoryList: React.FC<TrajectoryListProps> = ({ trajectory }) =>
   const filteredTrajectory = trajectory.filter(shouldDisplayItem);
 
   return (
-    <div className="flex flex-col items-center gap-2">
+    <div className='flex flex-col items-center gap-2'>
       {filteredTrajectory.map((item, index) => {
         if (isAgentStateChange(item)) {
           return <AgentStateChangeComponent key={index} state={item} />;
@@ -87,10 +93,7 @@ export const TrajectoryList: React.FC<TrajectoryListProps> = ({ trajectory }) =>
         } else {
           return (
             <TrajectoryCard key={index}>
-              <CSyntaxHighlighter
-                language="json"
-                key={index}
-              >
+              <CSyntaxHighlighter language='json' key={index}>
                 {JSON.stringify(item, null, 2)}
               </CSyntaxHighlighter>
             </TrajectoryCard>

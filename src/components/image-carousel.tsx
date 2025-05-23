@@ -1,5 +1,5 @@
 import React from "react";
-import { AnimatePresence, domAnimation, LazyMotion, m, Variants } from "framer-motion";
+import { AnimatePresence, domAnimation, LazyMotion, m, type Variants } from "framer-motion";
 import clsx from "clsx";
 import { useWidth } from "~/hooks/use-media";
 import { shiftOrder, swapOneAndZero } from "~/utils/shift-and-swap";
