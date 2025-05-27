@@ -181,7 +181,7 @@ const Pricing = () => {
               question="What is the token pricing for the Individual (pay-as-you-go) plan?"
               answer="With the Individual (pay-as-you-go) plan, customers start with $50 in free token credits. Tokens can be refilled for as low as $10. 
 
-              Additional tokens can be purchased at the following rates:
+              Additional tokens are billed at the following rates:
 
               Input: $6 per million tokens
               Cache write: $7.50 per million tokens
