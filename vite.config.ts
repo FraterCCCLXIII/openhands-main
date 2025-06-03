@@ -11,6 +11,8 @@ export default defineConfig({
   assetsInclude: '**/*.md',
   server: {
     host: true,
+    cors: true,
+    allowedHosts: ['work-1-jobyjlkutwzfesrq.prod-runtime.all-hands.dev', 'work-2-jobyjlkutwzfesrq.prod-runtime.all-hands.dev'],
   },
   test: {
     environment: 'jsdom',
