@@ -29,6 +29,12 @@ export const Footer = () => (
               <Link to='about'>About Us</Link>
             </li>
             <li>
+              <Link 
+                to='https://allhandsai.applytojob.com/apply/'    
+                target='_blank'
+              >Careers</Link>
+            </li>
+            <li>
               <Link to='tos'>Terms of Service</Link>
             </li>
             <li>
