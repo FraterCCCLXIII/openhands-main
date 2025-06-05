@@ -16,6 +16,8 @@ ogImage:
 
 There's a lot of news in agents nowadays, ones that code, ones that browse the web, ones that perform customer service, ones that wash your socks. However, while there is a lot of excitement around agents, there is also a lot of disappointment. When you actually try them out, they often make simple mistakes, get stuck in loops, and don't get the job done.
 
+<iframe width="560" height="315" src="https://www.youtube.com/embed/uc2P-7E0ZwE" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+
 At [OpenHands](https://github.com/All-Hands-AI/OpenHands), we have been working hard at making agents that actually work, and doing it in the open so you can actually understand why they work too. And how have we proven that they work? We have consistently been on or near the top of the industry-standard [SWE-Bench leaderboard](https://www.swebench.com/), which measures the ability of agents to solve software bugs in Python.
 
 However, there's a lot more to life than solving bugs on Python repos. If you're a software developer, you might do frontend development, build apps from scratch, do software maintenance, gather information from internal documents, communicate with your team, and do administrative work as well. Our aspirations for building agents are much higher, we want an agent where you can **delegate any task, and have a pretty good idea that the agent will deliver for you**.
