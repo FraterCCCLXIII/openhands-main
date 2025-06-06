@@ -35,10 +35,7 @@ export const meta: Route.MetaFunction = () => [
 
 const Blog = () => {
   const navigation = useNavigation();
-  const data = useActionData() as
-    | { result: 'success' | 'error'; msg: string }
-    | undefined
-    | null;
+  const data = useActionData<typeof action>();
   const { blogs } = useLoaderData() as { blogs: Post[] };
   const latestBlog = blogs[0];
 

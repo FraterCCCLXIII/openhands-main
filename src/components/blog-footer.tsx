@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { formatDate } from '~/utils/format-date';
 import { NewsletterForm } from './newsletter-form';
 import { useActionData, useNavigation } from 'react-router';
+import type { action } from '~/routes/blog.$slug';
 
 interface BlogFooterProps {
   title: string;
@@ -19,10 +20,7 @@ export const BlogFooter: React.FC<BlogFooterProps> = ({
   const [copied, setCopied] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const navigation = useNavigation();
-  const data = useActionData() as
-    | { result: 'success' | 'error'; msg: string }
-    | undefined
-    | null;
+  const data = useActionData<typeof action>();
 
   // Format the date for citation
   const dateObj = new Date(date);

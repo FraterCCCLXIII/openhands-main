@@ -18,7 +18,8 @@ This implementation follows security best practices:
 The Resend integration requires the following environment variables to be set on the server:
 
 ```
-RESEND_API_KEY=your_resend_api_key
+VITE_RESEND_API_KEY=your_prod_resend_api_key
+VITE_RESEND_AUDIENCE_ID=your_prod_audience_id
 ```
 
 In development, you can set this in a `.env` file in the root of the project.
@@ -26,7 +27,7 @@ In production, set this as an environment variable in your Vercel project settin
 
 ## Audience ID
 
-The production audience ID is hardcoded in the API endpoint:
+The production audience ID is:
 
 ```js
 const PROD_AUDIENCE_ID = '14a0a664-dbc7-4920-8a36-f5248bdaafeb';
@@ -34,9 +35,7 @@ const PROD_AUDIENCE_ID = '14a0a664-dbc7-4920-8a36-f5248bdaafeb';
 
 ## API Endpoints
 
-The server-side API is implemented as a Vercel API route:
-
-- `/api/subscribe-newsletter`: Handles all subscription requests
+The server-side API is implemented as a React Router resource route:
 
 The client-side forms submit to this endpoint, which then securely communicates with the Resend API.
 
@@ -46,7 +45,8 @@ To test the integration locally:
 
 1. Set up the environment variable:
    ```
-   RESEND_API_KEY=your_resend_api_key
+   VITE_RESEND_API_KEY=your_resend_api_key
+   VITE_RESEND_AUDIENCE_ID=your_audience_id
    ```
 
 2. Run the development server:

@@ -1,4 +1,10 @@
 import { type ActionFunctionArgs } from 'react-router';
+import { Resend } from 'resend';
+
+const resendAudienceId = import.meta.env.VITE_RESEND_AUDIENCE_ID;
+const resendApiKey = import.meta.env.VITE_RESEND_API_KEY;
+
+const resend = new Resend(resendApiKey);
 
 export const handleNewsletterSubscription = async ({
   request,
@@ -10,23 +16,15 @@ export const handleNewsletterSubscription = async ({
     return { result: 'error', msg: 'Email is required' };
   }
 
-  try {
-    // Call our server-side API endpoint instead of directly using Resend
-    const response = await fetch('/api/subscribe-newsletter', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ email }),
-    });
+  const { error, data } = await resend.contacts.create({
+    email,
+    audienceId: resendAudienceId,
+  })
 
-    const data = await response.json();
-    return data;
-  } catch (error) {
+  if (error)  {
     console.warn(error);
-    return {
-      result: 'error',
-      msg: 'Failed to subscribe. Please try again later.',
-    };
+    return { result: 'error', msg: 'Failed to subscribe. Please try again later.' };
   }
+
+  return { result: "success", msg: 'Successfully subscribed!' };
 };
