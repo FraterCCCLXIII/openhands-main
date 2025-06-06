@@ -19,6 +19,11 @@ import { useWidth } from './hooks/use-media';
 import './index.css';
 
 export const links: Route.LinksFunction = () => [
+  {
+    rel: 'icon',
+    href: '/all-hands-logo-1.svg',
+    type: 'image/svg+xml',
+  },
   // Preconnect to Google Fonts
   { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
   {
