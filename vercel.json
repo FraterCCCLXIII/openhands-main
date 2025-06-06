@@ -9,6 +9,11 @@
       "source": "/blog/20250416-inference-time-scaling-sota",
       "destination": "/blog/sota-on-swe-bench-verified-with-inference-time-scaling-and-critic-model",
       "permanent": true
+    },
+    {
+      "source": "/blog/20250604-openhands-versa",
+      "destination": "/blog/building-a-provably-versatile-agent",
+      "permanent": true
     }
   ],
   "rewrites": [
