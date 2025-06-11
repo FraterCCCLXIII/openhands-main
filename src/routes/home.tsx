@@ -4,17 +4,12 @@ import TripleWow from '~/svgs/triple-wow.svg?react';
 import Star from '~/svgs/star.svg?react';
 import Users from '~/svgs/users.svg?react';
 import Hierarchy from '~/svgs/hierarchy.svg?react';
-import Anthropic from '~/svgs/engines/anthropic-logo.svg?react';
-import HuggingFace from '~/svgs/engines/hf-logo.svg?react';
-import OpenAI from '~/svgs/engines/openai-logo.svg?react';
-import TogetherAI from '~/svgs/engines/together-ai-logo.svg?react';
+import { generateMeta } from '@forge42/seo-tools/remix/metadata';
 import { ContributorGrid } from '~/components/contributor-grid';
 import { YellowWaveSection } from '~/components/yellow-wave-section';
 import { Button } from '~/components/button';
 import { formatLastCommit } from '~/utils/format-last-commit';
 import { formatThousands } from '~/utils/format-thousands';
-import BreakFree from '~/svgs/break-free.svg?react';
-import HeartHands from '~/svgs/heart-hands.svg?react';
 import { ImageCarousel } from '~/components/image-carousel';
 import { formatContributorCount } from '~/utils/format-contributor-count';
 import React from 'react';
@@ -101,13 +96,16 @@ export const links: Route.LinksFunction = () => [
   },
 ];
 
-export const meta: Route.MetaFunction = () => [
-  { title: 'All Hands AI' },
-  {
-    name: 'description',
-    content: 'Welcome to the All Hands AI website!',
-  },
-];
+export const meta: Route.MetaFunction = () => {
+  return generateMeta({
+    title: 'All Hands AI',
+    description: 'Welcome to the All Hands AI website!',
+    image: '/assets/all-hands-text-logo.png',
+    url: 'https://www.all-hands.dev',
+    twitterCard: 'summary_large_image',
+    siteName: 'All Hands AI',
+  });
+};
 
 const Home = () => {
   return (
@@ -117,7 +115,8 @@ const Home = () => {
           Code Less, Make More
         </h1>
         <p className='paragraph text-description lg:w-[764px] text-center'>
-          Hand off your next task to OpenHands &mdash; the leading open source AI coding agent
+          Hand off your next task to OpenHands &mdash; the leading open source
+          AI coding agent
         </p>
         <p>&nbsp;</p>
         <Link
@@ -159,27 +158,45 @@ const Home = () => {
           <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8'>
             <div className='flex flex-col gap-4 p-6 bg-white rounded-lg shadow-sm'>
               <h3 className='text-xl font-bold'>Speed up code reviews</h3>
-              <p className='text-description'>Summarize pull requests, incorporate feedback, and push fixes so code reviews are quick and painless.</p>
+              <p className='text-description'>
+                Summarize pull requests, incorporate feedback, and push fixes so
+                code reviews are quick and painless.
+              </p>
             </div>
             <div className='flex flex-col gap-4 p-6 bg-white rounded-lg shadow-sm'>
               <h3 className='text-xl font-bold'>Refactor old code</h3>
-              <p className='text-description'>Decompose monolithic code, refactor tech debt, and automate version bumps without breaking the build.</p>
+              <p className='text-description'>
+                Decompose monolithic code, refactor tech debt, and automate
+                version bumps without breaking the build.
+              </p>
             </div>
             <div className='flex flex-col gap-4 p-6 bg-white rounded-lg shadow-sm'>
               <h3 className='text-xl font-bold'>Expand test coverage</h3>
-              <p className='text-description'>Generate tests for new features to elevate code quality and squash hidden bugs.</p>
+              <p className='text-description'>
+                Generate tests for new features to elevate code quality and
+                squash hidden bugs.
+              </p>
             </div>
             <div className='flex flex-col gap-4 p-6 bg-white rounded-lg shadow-sm'>
               <h3 className='text-xl font-bold'>Fix failing pipelines</h3>
-              <p className='text-description'>Fix broken tests without debugging or interrupting others for help.</p>
+              <p className='text-description'>
+                Fix broken tests without debugging or interrupting others for
+                help.
+              </p>
             </div>
             <div className='flex flex-col gap-4 p-6 bg-white rounded-lg shadow-sm'>
               <h3 className='text-xl font-bold'>Create prototypes</h3>
-              <p className='text-description'>Turn ideas and concepts into working code you can test with customers.</p>
+              <p className='text-description'>
+                Turn ideas and concepts into working code you can test with
+                customers.
+              </p>
             </div>
             <div className='flex flex-col gap-4 p-6 bg-white rounded-lg shadow-sm'>
               <h3 className='text-xl font-bold'>Get to "done" faster</h3>
-              <p className='text-description'>Offload all the engineering toil you don't want to do to OpenHands!</p>
+              <p className='text-description'>
+                Offload all the engineering toil you don't want to do to
+                OpenHands!
+              </p>
             </div>
           </div>
         </div>
@@ -194,19 +211,35 @@ const Home = () => {
           <div className='grid grid-cols-1 md:grid-cols-2 gap-8'>
             <div className='flex flex-col gap-4 p-6 border-white rounded-lg border-2'>
               <h3 className='text-xl font-bold'>Deeply customizable</h3>
-              <p className='text-description'>OpenHands is an open-source core, unlocking customization for a variety of enterprise use cases.</p>
+              <p className='text-description'>
+                OpenHands is an open-source core, unlocking customization for a
+                variety of enterprise use cases.
+              </p>
             </div>
             <div className='flex flex-col gap-4 p-6 border-white rounded-lg border-2'>
-              <h3 className='text-xl font-bold'>Deploy as SaaS or self-hosted</h3>
-              <p className='text-description'>Flexible SaaS or self-hosted options for deploying AI coding agents across your organization.</p>
+              <h3 className='text-xl font-bold'>
+                Deploy as SaaS or self-hosted
+              </h3>
+              <p className='text-description'>
+                Flexible SaaS or self-hosted options for deploying AI coding
+                agents across your organization.
+              </p>
             </div>
             <div className='flex flex-col gap-4 p-6 border-white rounded-lg border-2'>
-              <h3 className='text-xl font-bold'>Best in class coding accuracy</h3>
-              <p className='text-description'>OpenHands is a top performer across a variety of software development benchmarks for agents, like SWE-bench.</p>
+              <h3 className='text-xl font-bold'>
+                Best in class coding accuracy
+              </h3>
+              <p className='text-description'>
+                OpenHands is a top performer across a variety of software
+                development benchmarks for agents, like SWE-bench.
+              </p>
             </div>
             <div className='flex flex-col gap-4 p-6 border-white rounded-lg border-2'>
               <h3 className='text-xl font-bold'>Works where you do</h3>
-              <p className='text-description'>Use OpenHands in your browser, as a CLI, via API, or in tools like GitHub, GitLab, Slack, Jira, and more.</p>
+              <p className='text-description'>
+                Use OpenHands in your browser, as a CLI, via API, or in tools
+                like GitHub, GitLab, Slack, Jira, and more.
+              </p>
             </div>
           </div>
         </div>
@@ -281,7 +314,6 @@ const Home = () => {
           />
         </div>
       </section>
-
 
       <section className='mb-[104px]'>
         <YellowWaveSection

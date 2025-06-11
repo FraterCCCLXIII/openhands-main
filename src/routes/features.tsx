@@ -3,6 +3,8 @@ import clsx from 'clsx';
 import { TryItLiveButton } from '~/components/buttons/try-it-live-button';
 import { ViewPricingButton } from '~/components/buttons/view-pricing-button';
 import type { Route } from './+types/features';
+import { generateMeta } from '@forge42/seo-tools/remix/metadata';
+import { softwareApp } from '@forge42/seo-tools/structured-data/software-app';
 
 interface FeatureProps {
   title: string;
@@ -68,14 +70,28 @@ const Feature: React.FC<FeatureProps> = ({
   );
 };
 
-export const meta: Route.MetaFunction = () => [
-  { title: 'All Hands AI - OpenHands Features' },
-  {
-    name: 'description',
-    content:
-      'Explore the powerful features of OpenHands AI agents that supercharge your engineering team.',
-  },
-];
+export const meta: Route.MetaFunction = ({ location }) => {
+  return generateMeta(
+    {
+      title: 'All Hands AI - OpenHands Cloud',
+      description:
+        'Explore the powerful features of OpenHands AI agents that supercharge your engineering team.',
+      image: '/assets/all-hands-text-logo.png',
+      url: 'https://www.all-hands.dev' + location.pathname,
+      twitterCard: 'summary_large_image',
+      siteName: 'All Hands AI',
+    },
+    [
+      {
+        'script:ld+json': softwareApp({
+          '@type': 'SoftwareApplication',
+          name: 'OpenHands',
+          applicationCategory: 'DeveloperApplication',
+        }),
+      },
+    ]
+  );
+};
 
 const Features = () => {
   const features = [

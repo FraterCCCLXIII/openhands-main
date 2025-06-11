@@ -13,6 +13,8 @@ import { handleNewsletterSubscription } from '~/utils/newsletter-subscription';
 import 'katex/dist/katex.min.css';
 import type { Route } from './+types/blog.$slug';
 import { LazyCode } from '~/components/lazy-code';
+import { generateMeta } from '@forge42/seo-tools/remix/metadata';
+import { article } from '@forge42/seo-tools/structured-data/article';
 
 export const action = handleNewsletterSubscription;
 
@@ -35,6 +37,7 @@ export const loader = ({ params, request }: LoaderFunctionArgs) => {
     cover: data.coverImage || null,
     authors: data.authors.map((author) => ({
       name: author.name,
+      picture: author.picture || null,
       link: author.link || null,
     })),
     excerpt: data.excerpt,
@@ -50,45 +53,42 @@ export const ErrorBoundary = () => (
   </div>
 );
 
-export const meta: Route.MetaFunction = ({ data }) => [
-  { title: data.title },
-  {
-    name: 'description',
-    content: data.excerpt,
-  },
-  {
-    property: 'og:image',
-    content: data.ogImage,
-  },
-  {
-    property: 'og:title',
-    content: data.title,
-  },
-  {
-    property: 'og:description',
-    content: data.excerpt,
-  },
-  {
-    property: 'og:url',
-    content: data.url,
-  },
-  {
-    name: 'twitter:image',
-    content: data.ogImage,
-  },
-  {
-    name: 'twitter:title',
-    content: data.title,
-  },
-  {
-    name: 'twitter:description',
-    content: data.excerpt,
-  },
-  {
-    name: 'twitter:url',
-    content: data.url,
-  },
-];
+export const meta: Route.MetaFunction = ({ data }) => {
+  return generateMeta(
+    {
+      title: data.title,
+      description: data.excerpt,
+      image: data.ogImage,
+      url: data.url,
+      twitterCard: 'summary_large_image',
+      siteName: 'All Hands AI',
+    },
+    [
+      {
+        'script:ld+json': article({
+          '@type': 'BlogPosting',
+          headline: data.title,
+          description: data.excerpt,
+          image: data.cover,
+          datePublished: data.date,
+          author: data.authors.map((author) => ({
+            '@type': 'Person',
+            name: author.name,
+            image: author.picture || undefined,
+            url: author.link || undefined,
+          })),
+          publisher: {
+            '@type': 'Organization',
+            name: 'All Hands AI',
+          },
+          articleBody: data.content,
+          wordCount: data.content.split(' ').length,
+          inLanguage: 'en-US',
+        }),
+      },
+    ]
+  );
+};
 
 const BlogDetails = () => {
   const data = useLoaderData() as ReturnType<typeof loader>;

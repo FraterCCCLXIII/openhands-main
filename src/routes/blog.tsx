@@ -14,6 +14,7 @@ import { useWidth } from '~/hooks/use-media';
 import { handleNewsletterSubscription } from '~/utils/newsletter-subscription';
 import { stringToSlug } from '~/utils/string-to-slug';
 import type { Route } from './+types/blog';
+import { generateMeta } from '@forge42/seo-tools/remix/metadata';
 
 export const loader = async () => {
   const blogs = blogAPI.getAllBlogs();
@@ -25,13 +26,16 @@ export const loader = async () => {
 
 export const action = handleNewsletterSubscription;
 
-export const meta: Route.MetaFunction = () => [
-  { title: 'All Hands AI Blog - Insights and Innovations' },
-  {
-    name: 'description',
-    content: 'Read the latest insights and innovations from All Hands AI.',
-  },
-];
+export const meta: Route.MetaFunction = ({ location }) => {
+  return generateMeta({
+    title: 'All Hands AI Blog - Insights and Innovations',
+    description: 'Read the latest insights and innovations from All Hands AI.',
+    image: '/assets/all-hands-text-logo.png',
+    url: 'https://www.all-hands.dev' + location.pathname,
+    twitterCard: 'summary_large_image',
+    siteName: 'All Hands AI',
+  });
+};
 
 const Blog = () => {
   const navigation = useNavigation();
