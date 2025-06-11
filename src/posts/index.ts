@@ -19,6 +19,7 @@ import post18 from "./20250501-vibe-coding-higher-quality-code.md?raw";
 import post19 from "./20250507-openhands-cloud-api.md?raw";
 import post20 from "./20250520-devstral-web-post.md?raw";
 import post21 from "./20250604-openhands-versa.md?raw";
+import post22 from "./20250611-walking-the-line-commercial-open-source.md?raw";
 
 export const RAW_POSTS = [
   post1,
@@ -42,4 +43,5 @@ export const RAW_POSTS = [
   post19,
   post20,
   post21,
+  post22,
 ];
