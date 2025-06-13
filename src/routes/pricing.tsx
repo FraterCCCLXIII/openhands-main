@@ -166,7 +166,7 @@ const Pricing = () => {
             <div className='flex flex-col md:flex-row justify-center gap-4 md:gap-6'>
               <PricingCard
                 title='Individual'
-                subtitle='Start with $50 in free credits'
+                subtitle='Start with $20 in free credits'
                 description='Great for individuals'
                 features={payAsYouGoFeatures}
                 buttonText='Sign Up'
@@ -203,7 +203,7 @@ const Pricing = () => {
             />
             <FAQItem
               question='What is the token pricing for the Individual (pay-as-you-go) plan?'
-              answer='With the Individual (pay-as-you-go) plan, customers start with $50 in free token credits. Tokens can be refilled for as low as $10. 
+              answer='With the Individual (pay-as-you-go) plan, customers start with $20 in free token credits. Tokens can be refilled for as low as $10. 
 
               Additional tokens are billed at the following rates:
 

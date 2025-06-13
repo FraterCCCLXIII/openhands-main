@@ -67,7 +67,7 @@ Overall, the takeaway is simple: OpenHands is an agent that actually delivers ac
 
 Getting started with this new version of OpenHands is easy. You can:
 
-* Immediately access it through the [OpenHands Cloud](https://app.all-hands.dev), where new users can get started right away with $50 in free credits.
+* Immediately access it through the [OpenHands Cloud](https://app.all-hands.dev), where new users can get started right away with $20 in free credits.
 * [Download OpenHands](https://github.com/All-Hands-AI/OpenHands) and run locally, selecting a version 0.41.0 or higher.
 
 We also encourage you to join the community – connect with us on [Slack](https://join.slack.com/t/openhands-ai/shared_invite/zt-34zm4j0gj-Qz5kRHoca8DFCbqXPS~f_A), read our [documentation](https://docs.all-hands.dev/), and stay updated on our latest developments. Looking forward to what you all do with the world's most versatile agent!

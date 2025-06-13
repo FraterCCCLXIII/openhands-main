@@ -80,7 +80,7 @@ Besides being state-of-the-art on SWE-Bench Verified, OpenHands is also a top-pe
 Overall, we feel confident in saying that OpenHands is the best agent out there for a wide variety of tasks!
 If you'd like to try it out today you can:
 
-- **Start with OpenHands Cloud**: The easiest way to get started is with our fully managed [cloud solution](https://app.all-hands.dev) with $50 free credits, seamless GitHub integration, mobile support, and optimizations like [context condensation](https://www.all-hands.dev/blog/openhands-context-condensensation-for-more-efficient-ai-agents) ready to use.
+- **Start with OpenHands Cloud**: The easiest way to get started is with our fully managed [cloud solution](https://app.all-hands.dev) with $20 free credits, seamless GitHub integration, mobile support, and optimizations like [context condensation](https://www.all-hands.dev/blog/openhands-context-condensensation-for-more-efficient-ai-agents) ready to use.
 
 - **Contribute to Open Source**: Star, open issues, or send PRs to our [GitHub repository](https://github.com/All-Hands-AI/OpenHands) and help advance the frontier of open-source AI software development.
 

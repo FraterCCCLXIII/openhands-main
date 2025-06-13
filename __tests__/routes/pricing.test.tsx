@@ -27,6 +27,9 @@ describe('Pricing Page', () => {
     expect(
       screen.getByText('Great for teams')
     ).toBeInTheDocument();
+    
+    // Check free credits amount
+    expect(screen.getByText('Start with $20 in free credits')).toBeInTheDocument();
 
     // Check OpenHands Cloud banner
     expect(screen.getByText('OpenHands Cloud')).toBeInTheDocument();
