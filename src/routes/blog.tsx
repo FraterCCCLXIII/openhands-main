@@ -31,14 +31,14 @@ export const meta: Route.MetaFunction = ({ location }) => {
     { name: 'description', content: 'Read the latest insights and innovations from All Hands AI.' },
     { property: 'og:title', content: 'All Hands AI Blog - Insights and Innovations' },
     { property: 'og:description', content: 'Read the latest insights and innovations from All Hands AI.' },
-    { property: 'og:image', content: '/assets/all-hands-text-logo.png' },
+    { property: 'og:image', content: 'https://www.all-hands.dev/assets/all-hands-text-logo.png' },
     { property: 'og:url', content: 'https://www.all-hands.dev' + location.pathname },
     { property: 'og:type', content: 'website' },
     { property: 'og:site_name', content: 'All Hands AI' },
     { name: 'twitter:card', content: 'summary_large_image' },
     { name: 'twitter:title', content: 'All Hands AI Blog - Insights and Innovations' },
     { name: 'twitter:description', content: 'Read the latest insights and innovations from All Hands AI.' },
-    { name: 'twitter:image', content: '/assets/all-hands-text-logo.png' },
+    { name: 'twitter:image', content: 'https://www.all-hands.dev/assets/all-hands-text-logo.png' },
     { rel: 'canonical', href: 'https://www.all-hands.dev' + location.pathname },
   ];
 };

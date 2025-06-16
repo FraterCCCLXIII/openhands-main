@@ -27,6 +27,7 @@ export const loader = ({ params, request }: LoaderFunctionArgs) => {
 
   // Get the current URL for citation
   const url = new URL(request.url).origin + '/blog/' + slug;
+  const origin = new URL(request.url).origin;
 
   return {
     content,
@@ -39,7 +40,7 @@ export const loader = ({ params, request }: LoaderFunctionArgs) => {
       link: author.link || null,
     })),
     excerpt: data.excerpt,
-    ogImage: data.ogImage.url,
+    ogImage: data.ogImage.url.startsWith('http') ? data.ogImage.url : origin + data.ogImage.url,
     url,
   };
 };

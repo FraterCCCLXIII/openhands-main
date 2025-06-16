@@ -99,14 +99,14 @@ export const meta: Route.MetaFunction = ({ location }) => {
     { name: 'description', content: 'Flexible pricing options - from open source to enterprise solutions.' },
     { property: 'og:title', content: 'All Hands AI - Pricing' },
     { property: 'og:description', content: 'Flexible pricing options - from open source to enterprise solutions.' },
-    { property: 'og:image', content: '/assets/all-hands-text-logo.png' },
+    { property: 'og:image', content: 'https://www.all-hands.dev/assets/all-hands-logo.png' },
     { property: 'og:url', content: 'https://www.all-hands.dev' + location.pathname },
     { property: 'og:type', content: 'website' },
     { property: 'og:site_name', content: 'All Hands AI' },
     { name: 'twitter:card', content: 'summary_large_image' },
     { name: 'twitter:title', content: 'All Hands AI - Pricing' },
     { name: 'twitter:description', content: 'Flexible pricing options - from open source to enterprise solutions.' },
-    { name: 'twitter:image', content: '/assets/all-hands-text-logo.png' },
+    { name: 'twitter:image', content: 'https://www.all-hands.dev/assets/all-hands-logo.png' },
     { rel: 'canonical', href: 'https://www.all-hands.dev' + location.pathname },
   ];
 };

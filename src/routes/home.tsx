@@ -101,14 +101,14 @@ export const meta: Route.MetaFunction = () => {
     { name: 'description', content: 'Code Less, Make More. Hand off your next task to OpenHands — the leading open source AI coding agent.' },
     { property: 'og:title', content: 'All Hands AI' },
     { property: 'og:description', content: 'Code Less, Make More. Hand off your next task to OpenHands — the leading open source AI coding agent.' },
-    { property: 'og:image', content: '/assets/all-hands-text-logo.png' },
+    { property: 'og:image', content: 'https://www.all-hands.dev/assets/all-hands-logo.png' },
     { property: 'og:url', content: 'https://www.all-hands.dev' },
     { property: 'og:type', content: 'website' },
     { property: 'og:site_name', content: 'All Hands AI' },
     { name: 'twitter:card', content: 'summary_large_image' },
     { name: 'twitter:title', content: 'All Hands AI' },
     { name: 'twitter:description', content: 'Code Less, Make More. Hand off your next task to OpenHands — the leading open source AI coding agent.' },
-    { name: 'twitter:image', content: '/assets/all-hands-text-logo.png' },
+    { name: 'twitter:image', content: 'https://www.all-hands.dev/assets/all-hands-logo.png' },
     { rel: 'canonical', href: 'https://www.all-hands.dev' },
   ];
 };

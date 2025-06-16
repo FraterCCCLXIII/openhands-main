@@ -14,14 +14,14 @@ export const meta: Route.MetaFunction = ({ location }) => {
     { name: 'description', content: 'Discover the talented team behind OpenHands and how we leverage the power of collaboration to innovate in software development.' },
     { property: 'og:title', content: 'All Hands AI - About Us' },
     { property: 'og:description', content: 'Discover the talented team behind OpenHands and how we leverage the power of collaboration to innovate in software development.' },
-    { property: 'og:image', content: '/assets/all-hands-text-logo.png' },
+    { property: 'og:image', content: 'https://www.all-hands.dev/assets/all-hands-logo.png' },
     { property: 'og:url', content: 'https://www.all-hands.dev' + location.pathname },
     { property: 'og:type', content: 'website' },
     { property: 'og:site_name', content: 'All Hands AI' },
     { name: 'twitter:card', content: 'summary_large_image' },
     { name: 'twitter:title', content: 'All Hands AI - About Us' },
     { name: 'twitter:description', content: 'Discover the talented team behind OpenHands and how we leverage the power of collaboration to innovate in software development.' },
-    { name: 'twitter:image', content: '/assets/all-hands-text-logo.png' },
+    { name: 'twitter:image', content: 'https://www.all-hands.dev/assets/all-hands-logo.png' },
     { rel: 'canonical', href: 'https://www.all-hands.dev' + location.pathname },
   ];
 };

@@ -74,14 +74,14 @@ export const meta: Route.MetaFunction = ({ location }) => {
     { name: 'description', content: 'Explore the powerful features of OpenHands AI agents that supercharge your engineering team.' },
     { property: 'og:title', content: 'All Hands AI - OpenHands Cloud' },
     { property: 'og:description', content: 'Explore the powerful features of OpenHands AI agents that supercharge your engineering team.' },
-    { property: 'og:image', content: '/assets/all-hands-text-logo.png' },
+    { property: 'og:image', content: 'https://www.all-hands.dev/assets/all-hands-logo.png' },
     { property: 'og:url', content: 'https://www.all-hands.dev' + location.pathname },
     { property: 'og:type', content: 'website' },
     { property: 'og:site_name', content: 'All Hands AI' },
     { name: 'twitter:card', content: 'summary_large_image' },
     { name: 'twitter:title', content: 'All Hands AI - OpenHands Cloud' },
     { name: 'twitter:description', content: 'Explore the powerful features of OpenHands AI agents that supercharge your engineering team.' },
-    { name: 'twitter:image', content: '/assets/all-hands-text-logo.png' },
+    { name: 'twitter:image', content: 'https://www.all-hands.dev/assets/all-hands-logo.png' },
     { rel: 'canonical', href: 'https://www.all-hands.dev' + location.pathname },
     {
       'script:ld+json': JSON.stringify({
