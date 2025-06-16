@@ -13,8 +13,6 @@ import { handleNewsletterSubscription } from '~/utils/newsletter-subscription';
 import 'katex/dist/katex.min.css';
 import type { Route } from './+types/blog.$slug';
 import { LazyCode } from '~/components/lazy-code';
-import { generateMeta } from '@forge42/seo-tools/remix/metadata';
-import { article } from '@forge42/seo-tools/structured-data/article';
 
 export const action = handleNewsletterSubscription;
 
@@ -54,40 +52,46 @@ export const ErrorBoundary = () => (
 );
 
 export const meta: Route.MetaFunction = ({ data }) => {
-  return generateMeta(
+  return [
+    { title: data.title },
+    { name: 'description', content: data.excerpt },
+    { property: 'og:title', content: data.title },
+    { property: 'og:description', content: data.excerpt },
+    { property: 'og:image', content: data.ogImage },
+    { property: 'og:url', content: data.url },
+    { property: 'og:type', content: 'article' },
+    { property: 'og:site_name', content: 'All Hands AI' },
+    { property: 'article:published_time', content: data.date },
+    { property: 'article:author', content: data.authors.map((author) => author.name).join(', ') },
+    { name: 'twitter:card', content: 'summary_large_image' },
+    { name: 'twitter:title', content: data.title },
+    { name: 'twitter:description', content: data.excerpt },
+    { name: 'twitter:image', content: data.ogImage },
+    { rel: 'canonical', href: data.url },
     {
-      title: data.title,
-      description: data.excerpt,
-      image: data.ogImage,
-      url: data.url,
-      twitterCard: 'summary_large_image',
-      siteName: 'All Hands AI',
+      'script:ld+json': JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'BlogPosting',
+        headline: data.title,
+        description: data.excerpt,
+        image: data.cover,
+        datePublished: data.date,
+        author: data.authors.map((author) => ({
+          '@type': 'Person',
+          name: author.name,
+          image: author.picture || undefined,
+          url: author.link || undefined,
+        })),
+        publisher: {
+          '@type': 'Organization',
+          name: 'All Hands AI',
+        },
+        articleBody: data.content,
+        wordCount: data.content.split(' ').length,
+        inLanguage: 'en-US',
+      }),
     },
-    [
-      {
-        'script:ld+json': article({
-          '@type': 'BlogPosting',
-          headline: data.title,
-          description: data.excerpt,
-          image: data.cover,
-          datePublished: data.date,
-          author: data.authors.map((author) => ({
-            '@type': 'Person',
-            name: author.name,
-            image: author.picture || undefined,
-            url: author.link || undefined,
-          })),
-          publisher: {
-            '@type': 'Organization',
-            name: 'All Hands AI',
-          },
-          articleBody: data.content,
-          wordCount: data.content.split(' ').length,
-          inLanguage: 'en-US',
-        }),
-      },
-    ]
-  );
+  ];
 };
 
 const BlogDetails = () => {

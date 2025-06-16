@@ -6,19 +6,24 @@ import contributors from '~/data/contributors.json';
 import statistics from '~/data/statistics.json';
 import { formatContributorCount } from '~/utils/format-contributor-count';
 import type { Route } from './+types/about';
-import { generateMeta } from '@forge42/seo-tools/remix/metadata';
 import { founders, members } from '~/constants/members';
 
 export const meta: Route.MetaFunction = ({ location }) => {
-  return generateMeta({
-    title: 'All Hands AI - About Us',
-    description:
-      'Discover the talented team behind OpenHands and how we leverage the power of collaboration to innovate in software development.',
-    image: '/assets/all-hands-text-logo.png',
-    url: 'https://www.all-hands.dev' + location.pathname,
-    twitterCard: 'summary_large_image',
-    siteName: 'All Hands AI',
-  });
+  return [
+    { title: 'All Hands AI - About Us' },
+    { name: 'description', content: 'Discover the talented team behind OpenHands and how we leverage the power of collaboration to innovate in software development.' },
+    { property: 'og:title', content: 'All Hands AI - About Us' },
+    { property: 'og:description', content: 'Discover the talented team behind OpenHands and how we leverage the power of collaboration to innovate in software development.' },
+    { property: 'og:image', content: '/assets/all-hands-text-logo.png' },
+    { property: 'og:url', content: 'https://www.all-hands.dev' + location.pathname },
+    { property: 'og:type', content: 'website' },
+    { property: 'og:site_name', content: 'All Hands AI' },
+    { name: 'twitter:card', content: 'summary_large_image' },
+    { name: 'twitter:title', content: 'All Hands AI - About Us' },
+    { name: 'twitter:description', content: 'Discover the talented team behind OpenHands and how we leverage the power of collaboration to innovate in software development.' },
+    { name: 'twitter:image', content: '/assets/all-hands-text-logo.png' },
+    { rel: 'canonical', href: 'https://www.all-hands.dev' + location.pathname },
+  ];
 };
 
 const About = () => {

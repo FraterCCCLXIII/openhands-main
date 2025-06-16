@@ -12,6 +12,7 @@ import {
 import { TrajectoryList } from '~/components/share/trajectory-list';
 import { fetchTrajectoryData, type TrajectoryData } from '~/api/share';
 import clsx from 'clsx';
+import type { Route } from './+types/share';
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const url = new URL(request.url);
@@ -37,6 +38,45 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   } catch (error) {
     return { status: 404 };
   }
+};
+
+export const meta: Route.MetaFunction = ({ data, location }) => {
+  if (!data || 'status' in data) {
+    return [
+      { title: 'All Hands AI - Shared Trajectory' },
+      { name: 'description', content: 'View shared OpenHands AI agent trajectories and interactions.' },
+      { property: 'og:title', content: 'All Hands AI - Shared Trajectory' },
+      { property: 'og:description', content: 'View shared OpenHands AI agent trajectories and interactions.' },
+      { property: 'og:image', content: '/assets/all-hands-text-logo.png' },
+      { property: 'og:url', content: 'https://www.all-hands.dev' + location.pathname },
+      { property: 'og:type', content: 'website' },
+      { property: 'og:site_name', content: 'All Hands AI' },
+      { name: 'twitter:card', content: 'summary_large_image' },
+      { name: 'twitter:title', content: 'All Hands AI - Shared Trajectory' },
+      { name: 'twitter:description', content: 'View shared OpenHands AI agent trajectories and interactions.' },
+      { name: 'twitter:image', content: '/assets/all-hands-text-logo.png' },
+      { rel: 'canonical', href: 'https://www.all-hands.dev' + location.pathname },
+    ];
+  }
+
+  const agent = data.meta?.agent || 'Unknown Agent';
+  const model = data.meta?.model || 'Unknown Model';
+
+  return [
+    { title: `All Hands AI - Shared Trajectory (${agent})` },
+    { name: 'description', content: `View a shared OpenHands AI agent trajectory using ${model} model.` },
+    { property: 'og:title', content: `All Hands AI - Shared Trajectory (${agent})` },
+    { property: 'og:description', content: `View a shared OpenHands AI agent trajectory using ${model} model.` },
+    { property: 'og:image', content: '/assets/all-hands-text-logo.png' },
+    { property: 'og:url', content: 'https://www.all-hands.dev' + location.pathname },
+    { property: 'og:type', content: 'website' },
+    { property: 'og:site_name', content: 'All Hands AI' },
+    { name: 'twitter:card', content: 'summary_large_image' },
+    { name: 'twitter:title', content: `All Hands AI - Shared Trajectory (${agent})` },
+    { name: 'twitter:description', content: `View a shared OpenHands AI agent trajectory using ${model} model.` },
+    { name: 'twitter:image', content: '/assets/all-hands-text-logo.png' },
+    { rel: 'canonical', href: 'https://www.all-hands.dev' + location.pathname },
+  ];
 };
 
 const Share = () => {

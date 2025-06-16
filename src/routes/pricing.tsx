@@ -1,8 +1,6 @@
 import React from 'react';
 import { SectionHeading } from '~/components/section-heading';
 import type { Route } from './+types/pricing';
-import { product } from '@forge42/seo-tools/structured-data/product';
-import { generateMeta } from '@forge42/seo-tools/remix/metadata';
 
 const FAQItem = ({
   question,
@@ -96,15 +94,21 @@ const PricingCard = ({
 };
 
 export const meta: Route.MetaFunction = ({ location }) => {
-  return generateMeta({
-    title: 'All Hands AI - Pricing',
-    description:
-      'Flexible pricing options - from open source to enterprise solutions.',
-    image: '/assets/all-hands-text-logo.png',
-    url: 'https://www.all-hands.dev' + location.pathname,
-    twitterCard: 'summary_large_image',
-    siteName: 'All Hands AI',
-  });
+  return [
+    { title: 'All Hands AI - Pricing' },
+    { name: 'description', content: 'Flexible pricing options - from open source to enterprise solutions.' },
+    { property: 'og:title', content: 'All Hands AI - Pricing' },
+    { property: 'og:description', content: 'Flexible pricing options - from open source to enterprise solutions.' },
+    { property: 'og:image', content: '/assets/all-hands-text-logo.png' },
+    { property: 'og:url', content: 'https://www.all-hands.dev' + location.pathname },
+    { property: 'og:type', content: 'website' },
+    { property: 'og:site_name', content: 'All Hands AI' },
+    { name: 'twitter:card', content: 'summary_large_image' },
+    { name: 'twitter:title', content: 'All Hands AI - Pricing' },
+    { name: 'twitter:description', content: 'Flexible pricing options - from open source to enterprise solutions.' },
+    { name: 'twitter:image', content: '/assets/all-hands-text-logo.png' },
+    { rel: 'canonical', href: 'https://www.all-hands.dev' + location.pathname },
+  ];
 };
 
 const Pricing = () => {

@@ -4,7 +4,6 @@ import TripleWow from '~/svgs/triple-wow.svg?react';
 import Star from '~/svgs/star.svg?react';
 import Users from '~/svgs/users.svg?react';
 import Hierarchy from '~/svgs/hierarchy.svg?react';
-import { generateMeta } from '@forge42/seo-tools/remix/metadata';
 import { ContributorGrid } from '~/components/contributor-grid';
 import { YellowWaveSection } from '~/components/yellow-wave-section';
 import { Button } from '~/components/button';
@@ -97,14 +96,21 @@ export const links: Route.LinksFunction = () => [
 ];
 
 export const meta: Route.MetaFunction = () => {
-  return generateMeta({
-    title: 'All Hands AI',
-    description: 'Welcome to the All Hands AI website!',
-    image: '/assets/all-hands-text-logo.png',
-    url: 'https://www.all-hands.dev',
-    twitterCard: 'summary_large_image',
-    siteName: 'All Hands AI',
-  });
+  return [
+    { title: 'All Hands AI' },
+    { name: 'description', content: 'Code Less, Make More. Hand off your next task to OpenHands — the leading open source AI coding agent.' },
+    { property: 'og:title', content: 'All Hands AI' },
+    { property: 'og:description', content: 'Code Less, Make More. Hand off your next task to OpenHands — the leading open source AI coding agent.' },
+    { property: 'og:image', content: '/assets/all-hands-text-logo.png' },
+    { property: 'og:url', content: 'https://www.all-hands.dev' },
+    { property: 'og:type', content: 'website' },
+    { property: 'og:site_name', content: 'All Hands AI' },
+    { name: 'twitter:card', content: 'summary_large_image' },
+    { name: 'twitter:title', content: 'All Hands AI' },
+    { name: 'twitter:description', content: 'Code Less, Make More. Hand off your next task to OpenHands — the leading open source AI coding agent.' },
+    { name: 'twitter:image', content: '/assets/all-hands-text-logo.png' },
+    { rel: 'canonical', href: 'https://www.all-hands.dev' },
+  ];
 };
 
 const Home = () => {

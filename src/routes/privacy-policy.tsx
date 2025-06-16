@@ -6,6 +6,26 @@ import {
   Mailto,
   ExternalLink,
 } from "../components/custom-elements";
+import type { Route } from './+types/privacy-policy';
+
+export const meta: Route.MetaFunction = ({ location }) => {
+  return [
+    { title: 'All Hands AI - Privacy Policy' },
+    { name: 'description', content: 'Learn about how All Hands AI collects, uses, and protects your personal information.' },
+    { property: 'og:title', content: 'All Hands AI - Privacy Policy' },
+    { property: 'og:description', content: 'Learn about how All Hands AI collects, uses, and protects your personal information.' },
+    { property: 'og:image', content: '/assets/all-hands-text-logo.png' },
+    { property: 'og:url', content: 'https://www.all-hands.dev' + location.pathname },
+    { property: 'og:type', content: 'website' },
+    { property: 'og:site_name', content: 'All Hands AI' },
+    { name: 'twitter:card', content: 'summary_large_image' },
+    { name: 'twitter:title', content: 'All Hands AI - Privacy Policy' },
+    { name: 'twitter:description', content: 'Learn about how All Hands AI collects, uses, and protects your personal information.' },
+    { name: 'twitter:image', content: '/assets/all-hands-text-logo.png' },
+    { rel: 'canonical', href: 'https://www.all-hands.dev' + location.pathname },
+    { name: 'robots', content: 'noindex, nofollow' },
+  ];
+};
 
 
 function PrivacyPolicy() {

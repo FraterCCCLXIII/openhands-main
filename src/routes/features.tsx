@@ -3,8 +3,6 @@ import clsx from 'clsx';
 import { TryItLiveButton } from '~/components/buttons/try-it-live-button';
 import { ViewPricingButton } from '~/components/buttons/view-pricing-button';
 import type { Route } from './+types/features';
-import { generateMeta } from '@forge42/seo-tools/remix/metadata';
-import { softwareApp } from '@forge42/seo-tools/structured-data/software-app';
 
 interface FeatureProps {
   title: string;
@@ -71,26 +69,29 @@ const Feature: React.FC<FeatureProps> = ({
 };
 
 export const meta: Route.MetaFunction = ({ location }) => {
-  return generateMeta(
+  return [
+    { title: 'All Hands AI - OpenHands Cloud' },
+    { name: 'description', content: 'Explore the powerful features of OpenHands AI agents that supercharge your engineering team.' },
+    { property: 'og:title', content: 'All Hands AI - OpenHands Cloud' },
+    { property: 'og:description', content: 'Explore the powerful features of OpenHands AI agents that supercharge your engineering team.' },
+    { property: 'og:image', content: '/assets/all-hands-text-logo.png' },
+    { property: 'og:url', content: 'https://www.all-hands.dev' + location.pathname },
+    { property: 'og:type', content: 'website' },
+    { property: 'og:site_name', content: 'All Hands AI' },
+    { name: 'twitter:card', content: 'summary_large_image' },
+    { name: 'twitter:title', content: 'All Hands AI - OpenHands Cloud' },
+    { name: 'twitter:description', content: 'Explore the powerful features of OpenHands AI agents that supercharge your engineering team.' },
+    { name: 'twitter:image', content: '/assets/all-hands-text-logo.png' },
+    { rel: 'canonical', href: 'https://www.all-hands.dev' + location.pathname },
     {
-      title: 'All Hands AI - OpenHands Cloud',
-      description:
-        'Explore the powerful features of OpenHands AI agents that supercharge your engineering team.',
-      image: '/assets/all-hands-text-logo.png',
-      url: 'https://www.all-hands.dev' + location.pathname,
-      twitterCard: 'summary_large_image',
-      siteName: 'All Hands AI',
+      'script:ld+json': JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'SoftwareApplication',
+        name: 'OpenHands',
+        applicationCategory: 'DeveloperApplication',
+      }),
     },
-    [
-      {
-        'script:ld+json': softwareApp({
-          '@type': 'SoftwareApplication',
-          name: 'OpenHands',
-          applicationCategory: 'DeveloperApplication',
-        }),
-      },
-    ]
-  );
+  ];
 };
 
 const Features = () => {
