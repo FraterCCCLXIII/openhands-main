@@ -19,6 +19,12 @@ pip install openhands-ai
 openhands
 ```
 
+Or if you prefer not to manage your own Python environment, you can use [uvx](https://docs.astral.sh/uv/getting-started/installation/):
+
+```bash
+uvx --python 3.12 --from openhands-ai openhands
+```
+
 That's it, no need for Docker, no need for a web interface, and you can immediately access OpenHands' top-performing coding agents.
 And unlike other options, it's fully open source, with no model lock-in.
 
