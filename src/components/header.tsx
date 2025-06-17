@@ -39,9 +39,17 @@ export const Header: React.FC<HeaderProps> = ({
   });
 
   return (
-    <header className='h-[83px] flex items-center bg-[#F1EAE0] fixed top-0 right-0 justify-between z-20 w-full'>
-      {/* Max width container for desktop view */}
-      <div className='w-full max-w-[1440px] mx-auto flex items-center px-[30px]'>
+    <>
+      {/* Webinar Banner */}
+      <div className='bg-black text-white h-[50px] flex items-center justify-center fixed top-0 left-0 right-0 z-30 w-full'>
+        <p className='text-center text-sm font-medium px-4'>
+          <a href="https://lu.ma/cudxstkw" target="_blank"><u>Register</u> for our June 24th Webinar: AI Coding Agents: What Works and What Doesn't</a>
+        </p>
+      </div>
+      
+      <header className='h-[83px] flex items-center bg-[#F1EAE0] fixed top-[50px] right-0 justify-between z-20 w-full'>
+        {/* Max width container for desktop view */}
+        <div className='w-full max-w-[1440px] mx-auto flex items-center px-[30px]'>
         {/* Mobile view - Logo centered with menu button on left */}
         <div className='flex items-center justify-between w-full lg:w-1/3 lg:justify-start'>
           {/* Mobile menu button - only visible on mobile */}
@@ -105,5 +113,6 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
       </div>
     </header>
+    </>
   );
 };
