@@ -37,7 +37,7 @@ No need to wait for us, go ahead and get started! (or read on for more details)
 OpenHands has been around for a while, and there are several convenient ways to use it:
 
 - **GUI**: This gives good visibility into agents' work, and is easy to use through the [OpenHands Cloud](https://app.all-hands.dev) and [local web interface](https://docs.all-hands.dev/usage/how-to/gui-mode).
-- **GitHub/GitLab Resolver**: The [Cloud GitHub Resolver](https://docs.all-hands.dev/modules/usage/cloud/cloud-github-resolver) allows you to call OpenHands by adding a `@openhands` comment to your code.
+- **GitHub/GitLab Resolver**: The [Cloud GitHub Resolver](https://docs.all-hands.dev/usage/cloud/github-installation) and [GitLab Integration](https://docs.all-hands.dev/usage/cloud/gitlab-installation) allow you to call OpenHands by adding a `@openhands` comment to your code.
 - **API**: The [OpenHands Cloud API](https://docs.all-hands.dev/modules/usage/cloud/cloud-api) allows for programmatic access.
 
 But we've also heard from developers who prefer to work directly in their terminal, or found the installation process for the GUI too cumbersome.
