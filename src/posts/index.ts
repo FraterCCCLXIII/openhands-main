@@ -20,6 +20,7 @@ import post19 from "./20250507-openhands-cloud-api.md?raw";
 import post20 from "./20250520-devstral-web-post.md?raw";
 import post21 from "./20250604-openhands-versa.md?raw";
 import post22 from "./20250611-walking-the-line-commercial-open-source.md?raw";
+import post23 from "./20250617-introducing-openhands-cli.md?raw";
 
 export const RAW_POSTS = [
   post1,
@@ -44,4 +45,5 @@ export const RAW_POSTS = [
   post20,
   post21,
   post22,
+  post23,
 ];
