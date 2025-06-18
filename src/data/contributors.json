@@ -144,20 +144,20 @@
     "login": "idagelic"
   },
   {
-    "id": 605806,
-    "login": "cshimmin"
-  },
-  {
-    "id": 16740055,
-    "login": "WannaTen"
-  },
-  {
     "id": 18455687,
     "login": "pandukamuditha"
   },
   {
     "id": 62982824,
     "login": "zeul22"
+  },
+  {
+    "id": 16740055,
+    "login": "WannaTen"
+  },
+  {
+    "id": 605806,
+    "login": "cshimmin"
   },
   {
     "id": 5436704,
@@ -176,10 +176,6 @@
     "login": "AlexCuadron"
   },
   {
-    "id": 12680117,
-    "login": "kotauchisunsun"
-  },
-  {
     "id": 183959486,
     "login": "diwu-sf"
   },
@@ -188,32 +184,28 @@
     "login": "Jiayi-Pan"
   },
   {
-    "id": 3778956,
-    "login": "computer-whisperer"
-  },
-  {
-    "id": 141804823,
-    "login": "yueqis"
-  },
-  {
-    "id": 6035284,
-    "login": "Borda"
+    "id": 12680117,
+    "login": "kotauchisunsun"
   },
   {
     "id": 95778421,
     "login": "PierrunoYT"
   },
   {
-    "id": 10997968,
-    "login": "mislavlukach"
+    "id": 21298347,
+    "login": "ryx2"
   },
   {
     "id": 20578281,
     "login": "juanmichelini"
   },
   {
-    "id": 21298347,
-    "login": "ryx2"
+    "id": 141804823,
+    "login": "yueqis"
+  },
+  {
+    "id": 10997968,
+    "login": "mislavlukach"
   },
   {
     "id": 35432522,
@@ -224,15 +216,23 @@
     "login": "tangxiangru"
   },
   {
-    "id": 10394160,
-    "login": "94mashiro"
+    "id": 3778956,
+    "login": "computer-whisperer"
   },
   {
-    "id": 135171913,
-    "login": "geohotstan"
+    "id": 6035284,
+    "login": "Borda"
+  },
+  {
+    "id": 48168290,
+    "login": "richardokonicha"
   },
   {
     "id": 78588128,
     "login": "super-dainiu"
+  },
+  {
+    "id": 76570167,
+    "login": "JayQuimby"
   }
 ]
