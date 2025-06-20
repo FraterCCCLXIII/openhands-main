@@ -25,7 +25,7 @@ These numbers demonstrate the strength of our agents, and the difference in user
 
 - [Run OpenHands locally](https://docs.all-hands.dev/modules/usage/installation)
 - [Run OpenHands in github actions](https://github.com/All-Hands-AI/OpenHands-resolver/)
-- [Sign up for our soon-to-be-released online version](https://www.all-hands.dev/join-waitlist)
+- [Try OpenHands Cloud](https://app.all-hands.dev)
 
 ## What is SWE-Bench?
 

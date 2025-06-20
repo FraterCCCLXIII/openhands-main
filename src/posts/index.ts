@@ -21,6 +21,7 @@ import post20 from "./20250520-devstral-web-post.md?raw";
 import post21 from "./20250604-openhands-versa.md?raw";
 import post22 from "./20250611-walking-the-line-commercial-open-source.md?raw";
 import post23 from "./20250617-introducing-openhands-cli.md?raw";
+import post24 from "./20250618-openhands-self-hosted.md?raw";
 
 export const RAW_POSTS = [
   post1,
@@ -46,4 +47,5 @@ export const RAW_POSTS = [
   post21,
   post22,
   post23,
+  post24,
 ];

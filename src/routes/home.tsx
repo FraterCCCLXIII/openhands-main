@@ -132,18 +132,20 @@ const Home = () => {
         >
           <HeroButton>Try it live</HeroButton>
         </Link>
-        <Link
-          to='https://github.com/All-Hands-AI/OpenHands'
-          target='_blank'
-          rel='noopener noreferrer'
-        >
-          <HeroButton
-            logo={<GitHubLogoBlack width={23} height={23} />}
-            variant='secondary'
+        <div className='flex flex-col sm:flex-row gap-4'>
+          <Link
+            to='https://github.com/All-Hands-AI/OpenHands'
+            target='_blank'
+            rel='noopener noreferrer'
           >
-            Get it on GitHub
-          </HeroButton>
-        </Link>
+            <HeroButton
+              logo={<GitHubLogoBlack width={23} height={23} />}
+              variant='secondary'
+            >
+              Get it on GitHub
+            </HeroButton>
+          </Link>
+        </div>
       </section>
 
       <section className='flex flex-col items-center gap-8 pt-[25px] pb-[60px] lg:pt-0 overflow-hidden'>

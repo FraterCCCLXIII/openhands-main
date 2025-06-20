@@ -3,6 +3,7 @@ import Markdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
 import rehypeKatex from 'rehype-katex';
 import remarkMath from 'remark-math';
+import remarkGfm from 'remark-gfm';
 import { type LoaderFunctionArgs, useLoaderData } from 'react-router';
 import invariant from 'tiny-invariant';
 import { blogAPI } from '~/api/blog';
@@ -148,7 +149,7 @@ const BlogDetails = () => {
         <section className='paragraph flex flex-col gap-4'>
           <Markdown
             children={data.content}
-            remarkPlugins={[remarkMath]}
+            remarkPlugins={[remarkMath, remarkGfm]}
             rehypePlugins={[rehypeRaw, rehypeKatex]}
             components={{
               a: (props) => (
@@ -200,6 +201,38 @@ const BlogDetails = () => {
                   </div>
                 );
               },
+              table: (props) => (
+                <div className='overflow-x-auto my-6'>
+                  <table className='min-w-full border-collapse border border-gray-300' {...props}>
+                    {props.children}
+                  </table>
+                </div>
+              ),
+              thead: (props) => (
+                <thead className='bg-gray-50' {...props}>
+                  {props.children}
+                </thead>
+              ),
+              tbody: (props) => (
+                <tbody {...props}>
+                  {props.children}
+                </tbody>
+              ),
+              tr: (props) => (
+                <tr className='border-b border-gray-200' {...props}>
+                  {props.children}
+                </tr>
+              ),
+              th: (props) => (
+                <th className='border border-gray-300 px-4 py-2 text-left font-semibold bg-gray-100' {...props}>
+                  {props.children}
+                </th>
+              ),
+              td: (props) => (
+                <td className='border border-gray-300 px-4 py-2' {...props}>
+                  {props.children}
+                </td>
+              ),
             }}
           />
 

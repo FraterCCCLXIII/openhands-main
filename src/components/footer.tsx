@@ -26,7 +26,19 @@ export const Footer = () => (
               <Link to='blog'>Blog</Link>
             </li>
             <li>
+              <Link 
+                to='https://docs.all-hands.dev/'
+                target='_blank'
+                rel='noopener noreferrer'
+              >
+                Docs
+              </Link>
+            </li>
+            <li>
               <Link to='about'>About Us</Link>
+            </li>
+            <li>
+              <Link to='contact'>Contact</Link>
             </li>
             <li>
               <Link 

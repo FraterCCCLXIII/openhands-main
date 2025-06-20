@@ -52,6 +52,14 @@ npm run dev
 
 5. Confirm that the blog post is displayed correctly on the blog page.
 
+6. **Run the link checker**: After creating a new blog post, run the link checker script to ensure all links are working:
+
+    ```bash
+    node scripts/check-links.js src/posts/
+    ```
+
+    This script will check all links in the blog posts and report any broken links. Fix any broken links before publishing the blog post.
+
 #### How does the app rank blog posts?
 
 The app ranks blog posts based on the date of the blog post. The most recent blog post will be displayed first. The date of the blog post is extracted from the frontmatter of the markdown file.

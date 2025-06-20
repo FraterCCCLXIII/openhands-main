@@ -84,4 +84,4 @@ OpenHands is one of the top-performing agents in the world (e.g. on [SWE-Bench V
 
 If that entices you, just `pip install openhands-ai` and `openhands` to get started!
 As always, we love to have people join our community to give feedback or send in pull requests.
-Join the community: on [Slack](https://join.slack.com/t/openhands-ai/shared_invite/zt-2ngejmfw6-9gW4APWOC9XUp1n~SiQ6iw), [Discord](https://discord.gg/ESHStjSjD4), or [GitHub Discussions](https://github.com/All-Hands-AI/OpenHands/discussions)
+Join the community: on [Slack](https://join.slack.com/t/openhands-ai/shared_invite/zt-2ngejmfw6-9gW4APWOC9XUp1n~SiQ6iw), [Discord](https://discord.gg/ESHStjSjD4), or [GitHub Issues](https://github.com/All-Hands-AI/OpenHands/issues)

@@ -201,4 +201,4 @@ This blog post covered 8 common use cases where we've been using OpenHands a lot
 But hopefully this gets you a good idea of some tasks that you can start out with, and hopefully accelerate your software development process! If you'd like to try out OpenHands, please download the open source repo, or sign up for our online app:
 
 * Open Source: [https://github.com/All-Hands-AI/OpenHands](https://github.com/All-Hands-AI/OpenHands)
-* Online App: [https://www.all-hands.dev/join-waitlist](https://www.all-hands.dev/join-waitlist)
+* Online App: [https://app.all-hands.dev](https://app.all-hands.dev)
