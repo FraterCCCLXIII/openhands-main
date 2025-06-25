@@ -16,6 +16,8 @@ As AI agents like [OpenHands](https://github.com/All-Hands-AI/OpenHands) incorpo
 And today, much of that interaction happens in Slack.
 Today we're excited to announce the beta release of OpenHands Slack integration, bringing AI-powered software development directly into your Slack workspace.
 
+<iframe width="560" height="315" src="https://www.youtube.com/embed/hbloGmfZsJ4" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+
 ## How It Works
 
 **Start conversations instantly**: Simply mention `@openhands` in any Slack channel to activate your AI development assistant. Specify which repository you want to work with using natural language -- OpenHands supports both simple repo names ("my-repo") and full GitHub paths ("All-Hands-AI/OpenHands").
