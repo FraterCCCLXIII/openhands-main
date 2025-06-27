@@ -28,7 +28,7 @@ const Contact = () => {
         <p className='paragraph text-description mb-8'>
           In order to contact us, please fill out this{' '}
           <a 
-            href="https://docs.google.com/forms/d/e/1FAIpQLSet3VbGaz8z32gW9Wm-Grl4jpt5WgMXPgJ4EDPVmCETCBpJtQ/viewform"
+            href="https://docs.google.com/forms/d/e/1FAIpQLScygK76gSmjRfqkC1XzogU89X4vNVaiITdDVkmdEP_Qh2b4gg/viewform"
             target="_blank"
             rel="noopener noreferrer"
             className="text-blue-600 hover:text-blue-800 underline"

@@ -47,6 +47,12 @@ export const Footer = () => (
               >Careers</Link>
             </li>
             <li>
+              <Link
+                to='https://statuspage.incident.io/openhands'
+                target='_blank'
+                >System Status</Link>
+            </li>
+            <li>
               <Link to='tos'>Terms of Service</Link>
             </li>
             <li>
