@@ -12,7 +12,7 @@ export default defineConfig({
   server: {
     host: true,
     cors: true,
-    allowedHosts: ['work-1-jobyjlkutwzfesrq.prod-runtime.all-hands.dev', 'work-2-jobyjlkutwzfesrq.prod-runtime.all-hands.dev', 'work-1-szkhgiiemnsxkrfu.prod-runtime.all-hands.dev', 'work-2-szkhgiiemnsxkrfu.prod-runtime.all-hands.dev', 'work-1-bzqtzhnhqqmonbry.prod-runtime.all-hands.dev', 'work-2-bzqtzhnhqqmonbry.prod-runtime.all-hands.dev'],
+    allowedHosts: ['work-1-jobyjlkutwzfesrq.prod-runtime.all-hands.dev', 'work-2-jobyjlkutwzfesrq.prod-runtime.all-hands.dev', 'work-1-szkhgiiemnsxkrfu.prod-runtime.all-hands.dev', 'work-2-szkhgiiemnsxkrfu.prod-runtime.all-hands.dev', 'work-1-bzqtzhnhqqmonbry.prod-runtime.all-hands.dev', 'work-2-bzqtzhnhqqmonbry.prod-runtime.all-hands.dev', 'work-1-vtalhqzgjwolpxja.prod-runtime.all-hands.dev', 'work-2-vtalhqzgjwolpxja.prod-runtime.all-hands.dev'],
   },
   test: {
     environment: 'jsdom',
