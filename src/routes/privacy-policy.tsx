@@ -298,7 +298,7 @@ function PrivacyPolicy() {
         <Paragraph>
           We employ a number of technical, organizational and physical safeguards designed to protect the
           personal information we collect. However, no security measures are failsafe and we cannot guarantee
-          the security of your personal information.
+          the security of your personal information. Email contact@all-hands.dev if you'd like to have your data removed from the platform.
         </Paragraph>
       </Section>
 
@@ -310,10 +310,10 @@ function PrivacyPolicy() {
         </Paragraph>
       </Section>
 
-      <Section title="Data security">
+      <Section title="Further questions">
         <Paragraph>
           Please direct any questions or comments about this Privacy Policy or Site to <Mailto>contact@all-hands.dev</Mailto> or
-          send a letter to All Hands AI, 12 Cady Avenue, Somerville, MA 02144.
+          send a letter to All Hands AI, 24 Oak St, Apt 2, Somerville, MA 02139.
         </Paragraph>
       </Section>
     </main>
