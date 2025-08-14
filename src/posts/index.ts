@@ -24,6 +24,7 @@ import post23 from "./20250617-introducing-openhands-cli.md?raw";
 import post24 from "./20250618-openhands-self-hosted.md?raw";
 import post25 from "./20250624-slack-integration.md?raw";
 import post26 from "./20250715-openhands-configuration-guide.md?raw";
+import post27 from "./20250814-ai-agent-security.md?raw";
 
 export const RAW_POSTS = [
   post1,
@@ -52,4 +53,5 @@ export const RAW_POSTS = [
   post24,
   post25,
   post26,
+  post27,
 ];
