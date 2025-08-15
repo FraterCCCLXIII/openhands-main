@@ -89,7 +89,7 @@ I see "confirmation mode" as a stopgap solution, given how much it limits the va
 
 ### Security Analyzers
 
-At OpenHands, we've worked with [Invariant Labs](https://invariantlabs.ai/) to add a [security analyzer](https://github.com/All-Hands-AI/OpenHands/tree/81ef363658c09a3dba42e74c4978296c23825003/openhands/security) to our agent. This uses an LLM to assess any actions the agent wants to take for potential threats. When a problem is detected, the agent can stop to ask for explicit permission, or even refuse to proceed.
+At OpenHands, we've worked with [Invariant Labs](https://invariantlabs.ai/) to add a [security analyzer](https://github.com/All-Hands-AI/OpenHands/tree/81ef363658c09a3dba42e74c4978296c23825003/openhands/security) to our agent. This assesses any actions the agent wants to take for potential threats. When a problem is detected, the agent can stop to ask for explicit permission, or even refuse to proceed.
 
 There are two main things we might want to analyze:
 
