@@ -26,7 +26,7 @@ First off, we want a flavor of OpenHands that’s *extremely* light-weight. We�
 
 Our current docker image is close to 10GB, and our CLI takes several minutes to install due to a wild list of transitive dependencies (including a YouTube API client for some reason??)
 
-We’re going to factor out an OpenHands Agent SDK—a tiny library that allows you to run a general‑purpose agent with any set of tools you like. Here’s some sample code:
+We’re going to factor out an OpenHands [Agent SDK](https://github.com/All-Hands-AI/agent-sdk)—a tiny library that allows you to run a general‑purpose agent with any set of tools you like. Here’s some sample code:
 
 ```python
 from openhands.core import (
