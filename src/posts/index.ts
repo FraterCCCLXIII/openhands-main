@@ -26,6 +26,7 @@ import post25 from "./20250624-slack-integration.md?raw";
 import post26 from "./20250715-openhands-configuration-guide.md?raw";
 import post27 from "./20250814-ai-agent-security.md?raw";
 import post28 from "./20250821-openhands-cloud-oss-credit-program.md?raw";
+import post29 from "./20250908-openhands-v1.md?raw";
 
 export const RAW_POSTS = [
   post1,
@@ -56,4 +57,5 @@ export const RAW_POSTS = [
   post26,
   post27,
   post28,
+  post29,
 ];
