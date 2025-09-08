@@ -27,6 +27,7 @@ import post26 from "./20250715-openhands-configuration-guide.md?raw";
 import post27 from "./20250814-ai-agent-security.md?raw";
 import post28 from "./20250821-openhands-cloud-oss-credit-program.md?raw";
 import post29 from "./20250908-openhands-v1.md?raw";
+import post30 from "./20250909-us-mobile-case-study.md?raw";
 
 export const RAW_POSTS = [
   post1,
@@ -58,4 +59,5 @@ export const RAW_POSTS = [
   post27,
   post28,
   post29,
+  post30,
 ];
