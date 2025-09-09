@@ -17,6 +17,7 @@ import { Header } from './components/header';
 import { Sidebar } from './components/sidebar/sidebar';
 import { useWidth } from './hooks/use-media';
 import './index.css';
+import { PHProvider } from './provider';
 
 export const links: Route.LinksFunction = () => [
   {
@@ -61,10 +62,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
-        {children}
-        <Analytics />
-        <ScrollRestoration />
-        <Scripts />
+        <PHProvider>
+          {children}
+          <Analytics />
+          <ScrollRestoration />
+          <Scripts />
+        </PHProvider>
       </body>
     </html>
   );
