@@ -40,14 +40,7 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <>
-      {/* Webinar Banner */}
-      <div className='bg-black text-white h-[50px] flex items-center justify-center fixed top-0 left-0 right-0 z-30 w-full'>
-        <p className='text-center text-sm font-medium px-4'>
-          <a href="https://luma.com/akz33lyl" target="_blank"><u>Register</u> for our September 11th Webinar: Prompt Injection Security for Autonomous Agents</a>
-        </p>
-      </div>
-
-      <header className='h-[83px] flex items-center bg-[#F1EAE0] fixed top-[50px] right-0 justify-between z-20 w-full'>
+<header className='h-[83px] flex items-center bg-[#F1EAE0] fixed top-0 right-0 justify-between z-20 w-full'>
 
 
         {/* Max width container for desktop view */}
