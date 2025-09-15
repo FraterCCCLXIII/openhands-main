@@ -13,7 +13,8 @@ export default defineConfig({
     noExternal: ['posthog-js', 'posthog-js/react'],
   },
   server: {
-    host: true,
+    host: '0.0.0.0',
+    port: 12000,
     cors: true,
     allowedHosts: [
       'work-1-jobyjlkutwzfesrq.prod-runtime.all-hands.dev',
@@ -24,6 +25,8 @@ export default defineConfig({
       'work-2-bzqtzhnhqqmonbry.prod-runtime.all-hands.dev',
       'work-1-vtalhqzgjwolpxja.prod-runtime.all-hands.dev',
       'work-2-vtalhqzgjwolpxja.prod-runtime.all-hands.dev',
+      'work-1-wwbvnpzpoleiwmqz.prod-runtime.all-hands.dev',
+      'work-2-wwbvnpzpoleiwmqz.prod-runtime.all-hands.dev',
     ],
   },
   test: {

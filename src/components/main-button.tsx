@@ -3,7 +3,11 @@ import { Button } from "./button";
 import GitHubLogoBlack from "~/svgs/github-logo-black.svg?react";
 import GitHubLogo from "~/svgs/github-logo.svg?react";
 
-export const MainButton = () => {
+interface MainButtonProps {
+  onClick?: () => void;
+}
+
+export const MainButton: React.FC<MainButtonProps> = ({ onClick }) => {
   const [isHovered, setIsHovered] = React.useState(false);
 
   const handleMouseEnter = () => setIsHovered(true);
@@ -16,9 +20,10 @@ export const MainButton = () => {
       style="secondary"
       variant="large"
       icon={isHovered ? <GitHubLogo width={23} height={23} /> : <GitHubLogoBlack width={23} height={23} />}
-      text="Get it on GitHub"
-      to="https://github.com/All-Hands-AI/OpenHands"
-      external
+      text="Start with OSS"
+      to={onClick ? undefined : "https://github.com/All-Hands-AI/OpenHands"}
+      onClick={onClick}
+      external={!onClick}
     />
   );
 };

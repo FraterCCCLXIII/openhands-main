@@ -11,6 +11,7 @@ import { formatLastCommit } from '~/utils/format-last-commit';
 import { formatThousands } from '~/utils/format-thousands';
 import { ImageCarousel } from '~/components/image-carousel';
 import { formatContributorCount } from '~/utils/format-contributor-count';
+import { useGitHubModal } from '~/contexts/github-modal-context';
 import React from 'react';
 import clsx from 'clsx';
 import GitHubLogo from '~/svgs/github-logo.svg?react';
@@ -32,7 +33,7 @@ function HeroButton({
   variant = 'primary',
 }: HeroButtonProps) {
   const className = clsx(
-    'font-[700] text-[19px] leading-[27px] rounded-lg py-4 w-[250px] flex items-center justify-center gap-4',
+    'font-[700] text-[19px] leading-[27px] rounded-lg py-4 w-[275px] flex items-center justify-center gap-4',
     variant === 'primary' &&
       'hover:bg-[#4B5563] hover:text-white transition-colors duration-50',
     variant === 'primary' && 'bg-black text-white border-none',
@@ -114,6 +115,8 @@ export const meta: Route.MetaFunction = () => {
 };
 
 const Home = () => {
+  const { openGitHubModal } = useGitHubModal();
+
   return (
     <main data-testid='home-content'>
       <section className='flex flex-col items-center gap-4 pb-[45px] lg:h-auto pt-[50px] lg:py-[86px] px-[42px]'>
@@ -133,18 +136,13 @@ const Home = () => {
           <HeroButton>Try it live</HeroButton>
         </Link>
         <div className='flex flex-col sm:flex-row gap-4'>
-          <Link
-            to='https://github.com/All-Hands-AI/OpenHands'
-            target='_blank'
-            rel='noopener noreferrer'
+          <HeroButton
+            logo={<GitHubLogoBlack width={23} height={23} />}
+            variant='secondary'
+            onClick={openGitHubModal}
           >
-            <HeroButton
-              logo={<GitHubLogoBlack width={23} height={23} />}
-              variant='secondary'
-            >
-              Get it on GitHub
-            </HeroButton>
-          </Link>
+            Start with OSS
+          </HeroButton>
         </div>
       </section>
 
@@ -317,8 +315,7 @@ const Home = () => {
             icon={<GitHubLogo width={23} height={23} />}
             text='Join us on GitHub'
             className='self-start'
-            to='https://github.com/All-Hands-AI/OpenHands'
-            external
+            onClick={openGitHubModal}
           />
         </div>
       </section>
@@ -334,8 +331,8 @@ const Home = () => {
           }}
           secondaryCta={{
             icon: <GitHubLogo width={23} height={23} />,
-            text: 'Get it on GitHub',
-            to: 'https://github.com/All-Hands-AI/OpenHands',
+            text: 'Start with OSS',
+            onClick: openGitHubModal,
             style: 'primary',
           }}
         />

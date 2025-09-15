@@ -1,19 +1,39 @@
 import clsx from "clsx";
 import GitHubLogoBlack from "~/svgs/github-logo-black.svg?react";
 
-interface GitHubButtonProps { }
+interface GitHubButtonProps {
+  onClick?: () => void;
+}
 
-export const GitHubButton: React.FC<GitHubButtonProps> = () => (
-  <a
-    href="https://github.com/All-Hands-AI/OpenHands"
-    rel="noreferrer"
-    target="_blank"
-    className={clsx(
-      "font-semibold px-4 py-2 text-sm rounded-lg border border-black",
-      "flex items-center gap-2",
-    )}
-  >
-    <GitHubLogoBlack width={16} height={16} />
-    <span>Get it on GitHub</span>
-  </a>
-);
+export const GitHubButton: React.FC<GitHubButtonProps> = ({ onClick }) => {
+  const commonClassName = clsx(
+    "font-semibold px-4 py-2 text-sm rounded-lg border border-black",
+    "flex items-center gap-2 justify-center",
+  );
+
+  const content = (
+    <>
+      <GitHubLogoBlack width={16} height={16} />
+      <span>Start with OSS</span>
+    </>
+  );
+
+  if (onClick) {
+    return (
+      <button onClick={onClick} className={commonClassName}>
+        {content}
+      </button>
+    );
+  }
+
+  return (
+    <a
+      href="https://github.com/All-Hands-AI/OpenHands"
+      rel="noreferrer"
+      target="_blank"
+      className={commonClassName}
+    >
+      {content}
+    </a>
+  );
+};

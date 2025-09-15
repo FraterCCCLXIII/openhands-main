@@ -22,10 +22,11 @@ const EXTERNAL_NAV_MAP = [{ name: 'Docs', to: 'https://docs.all-hands.dev/' }];
 interface SidebarProps {
   isHidden: boolean;
   onClose: () => void;
+  onClickGitHubButton?: () => void;
 }
 
 export const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
-  ({ isHidden, onClose }, ref) => (
+  ({ isHidden, onClose, onClickGitHubButton }, ref) => (
     <motion.aside
       ref={ref}
       hidden={isHidden}
@@ -75,7 +76,7 @@ export const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
             </AnimatedListItem>
           ))}
           <li>
-            <MainButton />
+            <MainButton onClick={onClickGitHubButton} />
           </li>
         </ul>
       </nav>

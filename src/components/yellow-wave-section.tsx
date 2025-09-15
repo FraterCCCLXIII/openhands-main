@@ -6,13 +6,15 @@ interface YellowWaveProps {
   cta: {
     icon?: React.ReactNode;
     text: string;
-    to: string;
+    to?: string;
+    onClick?: () => void;
     style?: "primary" | "secondary";
   };
   secondaryCta?: {
     icon?: React.ReactNode;
     text: string;
-    to: string;
+    to?: string;
+    onClick?: () => void;
     style?: "primary" | "secondary";
   };
 }
@@ -29,8 +31,9 @@ export const YellowWaveSection: React.FC<YellowWaveProps> = ({ heading, text, ct
           icon={cta.icon}
           text={cta.text}
           to={cta.to}
+          onClick={cta.onClick}
           style={cta.style || "primary"}
-          external
+          external={!cta.onClick}
         />
         {secondaryCta && (
           <Button
@@ -38,8 +41,9 @@ export const YellowWaveSection: React.FC<YellowWaveProps> = ({ heading, text, ct
             icon={secondaryCta.icon}
             text={secondaryCta.text}
             to={secondaryCta.to}
+            onClick={secondaryCta.onClick}
             style={secondaryCta.style || "primary"}
-            external
+            external={!secondaryCta.onClick}
           />
         )}
       </div>

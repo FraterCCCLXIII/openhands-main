@@ -85,7 +85,7 @@ const PricingCard = ({
       </ul>
       <a
         href={buttonLink}
-        className='bg-yellow-400 hover:bg-yellow-500 text-black font-medium py-2 px-4 rounded text-center transition-colors'
+        className='bg-yellow-400 hover:bg-yellow-500 text-black font-medium py-2 px-6 rounded text-center transition-colors min-w-[200px] flex items-center justify-center'
       >
         {buttonText}
       </a>
@@ -155,7 +155,7 @@ const Pricing = () => {
               <em>The world's leading open source AI coding agent</em>
             }
             features={openSourceFeatures}
-            buttonText='Get it on GitHub'
+            buttonText='Start with OSS'
             buttonLink='https://github.com/All-Hands-AI/OpenHands'
           />
 

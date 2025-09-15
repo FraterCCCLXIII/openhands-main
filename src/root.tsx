@@ -15,6 +15,8 @@ import React from 'react';
 import { Footer } from './components/footer';
 import { Header } from './components/header';
 import { Sidebar } from './components/sidebar/sidebar';
+import { GitHubModal } from './components/github-modal';
+import { GitHubModalProvider } from './contexts/github-modal-context';
 import { useWidth } from './hooks/use-media';
 import './index.css';
 import { PHProvider } from './provider';
@@ -80,9 +82,18 @@ export const clientLoader = () => {
 
 export default function App() {
   const [isSidebarHidden, setIsSidebarHidden] = React.useState(true);
+  const [isGitHubModalOpen, setIsGitHubModalOpen] = React.useState(false);
   const sidebarRef = React.useRef<HTMLDivElement>(null);
   const width = useWidth();
   const isDesktop = width >= 1024;
+
+  const handleOpenGitHubModal = () => {
+    setIsGitHubModalOpen(true);
+  };
+
+  const handleCloseGitHubModal = () => {
+    setIsGitHubModalOpen(false);
+  };
 
   React.useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -107,6 +118,7 @@ export default function App() {
         ref={sidebarRef}
         isHidden={isSidebarHidden}
         onClose={() => setIsSidebarHidden(true)}
+        onClickGitHubButton={handleOpenGitHubModal}
       />
       <motion.div
         className='mt-[83px] flex flex-col min-h-screen'
@@ -123,12 +135,22 @@ export default function App() {
               ? width - sidebarRef.current?.clientWidth
               : width
           }
+          onClickGitHubButton={handleOpenGitHubModal}
         />
         <div className='flex-1'>
-          <Outlet />
+          <GitHubModalProvider openGitHubModal={handleOpenGitHubModal}>
+            <Outlet />
+          </GitHubModalProvider>
         </div>
         <Footer />
       </motion.div>
+      
+      {/* GitHub Modal */}
+      <GitHubModal 
+        isOpen={isGitHubModalOpen} 
+        onClose={handleCloseGitHubModal} 
+      />
+      
       <ScrollRestoration />
     </div>
   );

@@ -20,12 +20,14 @@ interface HeaderProps {
   onClickMenuButton: () => void;
   showMenuIcon?: boolean;
   width?: number;
+  onClickGitHubButton?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
   width,
   showMenuIcon,
   onClickMenuButton,
+  onClickGitHubButton,
 }) => {
   const { scrollY } = useScroll();
   const [textIsVisible, setTextIsVisible] = React.useState(true);
@@ -106,7 +108,7 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Right side buttons */}
         <div className='hidden lg:flex lg:w-1/3 justify-end gap-[15px]'>
           <TryItLiveButton />
-          <GitHubButton />
+          <GitHubButton onClick={onClickGitHubButton} />
         </div>
       </div>
     </header>
