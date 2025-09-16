@@ -121,7 +121,7 @@ export default function App() {
         onClickGitHubButton={handleOpenGitHubModal}
       />
       <motion.div
-        className='mt-[83px] flex flex-col min-h-screen'
+        className='mt-[133px] flex flex-col min-h-screen'
         animate={{
           paddingLeft:
             isDesktop && !isSidebarHidden ? sidebarRef.current?.clientWidth : 0,

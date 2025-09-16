@@ -35,7 +35,7 @@ describe('Pricing Page', () => {
     expect(screen.getByText('OpenHands Cloud')).toBeInTheDocument();
 
     // Check buttons
-    expect(screen.getByText('Get it on GitHub')).toBeInTheDocument();
+    expect(screen.getByText('Start with OSS')).toBeInTheDocument();
     expect(screen.getByText('Sign Up')).toBeInTheDocument();
     expect(screen.getByText('Contact Us')).toBeInTheDocument();
 
