@@ -218,7 +218,7 @@ const Pricing = () => {
                 description='Everything in Pay-as-you-go, plus:'
                 features={proFeatures}
                 buttonText='Sign Up'
-                buttonLink='https://app.all-hands.dev/'
+                buttonLink='https://app.all-hands.dev/settings'
               />
             </>
           ) : (
@@ -271,9 +271,9 @@ const Pricing = () => {
               answer='OpenHands Cloud is a hosted SaaS version of OpenHands that provides out-of-the-box runtime support and a high token rate LLM access. There are a few options with OpenHands Cloud:
 
               - Individual plan: Support for 1 user. Great for individuals who want a pay-as-you-go option for AI coding.
-              - Business plan: Support for multiple users. Great for organizations who want to deploy OpenHands across many teams and centrally manage access.
+              - Enterprise plan: Support for multiple users. Great for organizations who want to deploy OpenHands across many teams and centrally manage access.
 
-              The Business Plan is available in two deployment options: SaaS (hosted by All Hands), or self-hosted (hosted by you in your private VPC). With self-hosted, you get the added option of customizing the LLM you use.'
+              The Enterprise Plan is available in two deployment options: SaaS (hosted by All Hands), or self-hosted (hosted by you in your private VPC). With self-hosted, you get the added option of customizing the LLM you use.'
             />
             <FAQItem
               question='What is the token pricing for the Individual (pay-as-you-go) plan?'
