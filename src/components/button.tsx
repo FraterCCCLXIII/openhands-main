@@ -33,7 +33,7 @@ export const Button: React.FC<ButtonProps> = ({
   onMouseLeave,
 }) => {
   const commonClassName = clsx(
-    style === 'primary' ? 'bg-black text-white' : 'bg-white text-black',
+    style === 'primary' ? 'bg-black text-white' : 'bg-transparent text-black',
     'font-semibold px-4 rounded-lg hover:bg-[#4B5563] hover:text-white transition-colors duration-50',
     icon && 'flex items-center gap-[15px]',
     variant === 'small' ? 'py-2 text-sm' : 'py-[11px]',

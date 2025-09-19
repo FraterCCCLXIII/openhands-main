@@ -1,5 +1,8 @@
 import React from 'react';
 import { SectionHeading } from '~/components/section-heading';
+import { Button } from '~/components/button';
+import { useGitHubModal } from '~/contexts/github-modal-context';
+import GitHubLogo from '~/svgs/github-logo.svg?react';
 import type { Route } from './+types/pricing';
 
 const FAQItem = ({
@@ -71,10 +74,10 @@ const PricingCard = ({
   buttonLink: string;
 }) => {
   return (
-    <div className='flex flex-col bg-white rounded-lg shadow-md p-6 w-full md:w-[320px] lg:w-[320px]'>
-      <h3 className='text-xl font-bold mb-2'>{title}</h3>
-      <p className='mb-1 font-semibold'>{subtitle}</p>
-      <p className='text-gray-600 italic mb-4'>{description}</p>
+    <div className='flex flex-col bg-white rounded-lg shadow-md p-6 w-full md:w-[400px] lg:w-[400px]'>
+      <h3 className='text-2xl font-semibold mb-2'>{title}</h3>
+      <p className='mb-1 font-semibold text-3xl'>{subtitle}</p>
+      <p className='text-gray-600 font-semibold mb-4 mt-4 italic'>{description}</p>
       <ul className='mb-6 flex-grow'>
         {features.map((feature, index) => (
           <li key={index} className='flex items-start mb-2'>
@@ -89,6 +92,41 @@ const PricingCard = ({
       >
         {buttonText}
       </a>
+    </div>
+  );
+};
+
+const PlanToggle = ({
+  showIndividual,
+  onToggle,
+}: {
+  showIndividual: boolean;
+  onToggle: (showIndividual: boolean) => void;
+}) => {
+  return (
+    <div className='flex justify-center mb-8'>
+      <div className='bg-gray-100 rounded-lg p-1 flex'>
+        <button
+          className={`px-6 py-2 rounded-md font-medium transition-colors ${
+            showIndividual
+              ? 'bg-white text-black shadow-sm'
+              : 'text-gray-600 hover:text-black'
+          }`}
+          onClick={() => onToggle(true)}
+        >
+          Individual Plans
+        </button>
+        <button
+          className={`px-6 py-2 rounded-md font-medium transition-colors ${
+            !showIndividual
+              ? 'bg-white text-black shadow-sm'
+              : 'text-gray-600 hover:text-black'
+          }`}
+          onClick={() => onToggle(false)}
+        >
+          Enterprise Plans
+        </button>
+      </div>
     </div>
   );
 };
@@ -112,80 +150,112 @@ export const meta: Route.MetaFunction = ({ location }) => {
 };
 
 const Pricing = () => {
-  const openSourceFeatures = [
-    'Run OpenHands locally',
-    'Bring your own LLM or API key',
-    'Active open source community',
-  ];
+  const [showIndividual, setShowIndividual] = React.useState(true);
+  const { openGitHubModal } = useGitHubModal();
 
+  // Individual Plans
   const payAsYouGoFeatures = [
     '1 user',
-    'Pay-as-you-go ($10 min refill)',
     'Access from desktop or mobile',
-    'Access to the highest-performing LLMs',
+    'Access to highest-performing LLMs',
     'High token rate limits',
-    'Use with GitHub or GitLab',
+    'GitHub, GitLab, and Bitbucket',
     'API support',
+    'Marked up pricing on LLM usage',
   ];
 
-  const businessFeatures = [
+  const proFeatures = [
+    'At-cost, no markup pricing on LLM usage',
+    'Model choice (or bring your own LLM)',
+    'Access to OpenHands runtime compute',
+    'LLM risk analyzer'
+  ];
+
+  // Enterprise Plans
+  const enterpriseCloudFeatures = [
     'Multiple users',
-    'Additional integrations',
-    'Higher token rate limits',
-    'More concurrent conversations',
-    'Bring your own LLM (self-hosted only)',
-    'Support and enablement package',
+    'Centralized billing',
+    'At-cost, no markup pricing on LLM usage',
+    'Model choice (or bring your own LLM)',
+    'Git, Slack, and ticketing system integrations',
     'API support',
+    'Priority support',
+  ];
+
+  const enterpriseSelfHostedFeatures = [
+    'Run OpenHands Cloud in your private VPC',
+    'Bring your own LLM key',
+    'Enterprise support and services',
+    'Shared Slack channel',
   ];
 
   return (
     <main>
-      <section className='flex flex-col items-center gap-4 text-center py-[86px] px-[53px]'>
-        <h1 className='heading-large max-w-[763px]'>Flexible Pricing</h1>
+      <section className='flex flex-col items-center gap-4 text-center pt-[86px] px-[53px]'>
+        <h1 className='heading-large'>OpenHands Cloud Pricing</h1>
       </section>
 
       <section className='flex flex-col items-center mb-[104px]'>
         <SectionHeading />
+        
+        <PlanToggle showIndividual={showIndividual} onToggle={setShowIndividual} />
 
         <div className='flex flex-col md:flex-row justify-center flex-wrap max-w-[1228px] gap-6'>
-          <PricingCard
-            title='Open Source'
-            subtitle=''
-            description={
-              <em>The world's leading open source AI coding agent</em>
-            }
-            features={openSourceFeatures}
-            buttonText='Start with OSS'
-            buttonLink='https://github.com/All-Hands-AI/OpenHands'
-          />
-
-          <div className='flex flex-col md:w-[660px] lg:w-[660px]'>
-            {/* Yellow box hidden on mobile (screen width < 768px) */}
-            <div className='w-full text-center mb-4 hidden md:block'>
-              <div className='w-full bg-yellow-400 px-6 py-3 rounded-lg font-semibold text-lg'>
-                OpenHands Cloud
-              </div>
-            </div>
-
-            <div className='flex flex-col md:flex-row justify-center gap-4 md:gap-6'>
+          {showIndividual ? (
+            // Individual Plans
+            <>
               <PricingCard
-                title='Individual'
-                subtitle='Start with $20 in free credits'
-                description='Great for individuals'
+                title='Pay-as-you-go'
+                subtitle='$20 in free credits'
+                description='Great for getting started'
                 features={payAsYouGoFeatures}
                 buttonText='Sign Up'
-                buttonLink='https://app.all-hands.dev'
+                buttonLink='https://app.all-hands.dev/'
               />
-
               <PricingCard
-                title='Business'
-                subtitle='SaaS or Self-hosted options'
-                description='Great for teams'
-                features={businessFeatures}
+                title='Pro'
+                subtitle='$20 / month'
+                description='Everything in Pay-as-you-go, plus:'
+                features={proFeatures}
+                buttonText='Sign Up'
+                buttonLink='https://app.all-hands.dev/'
+              />
+            </>
+          ) : (
+            // Enterprise Plans
+            <>
+              <PricingCard
+                title='Enterprise Cloud'
+                subtitle='$40 / user / month'
+                description='For teams and organizations'
+                features={enterpriseCloudFeatures}
+                buttonText='Join Early Access'
+                buttonLink='https://forms.gle/pdYjBk59Fwy6rshF8'
+              />
+              <PricingCard
+                title='Enterprise Self-hosted'
+                subtitle='Contact Us'
+                description='Everything in Enterprise Cloud, plus:'
+                features={enterpriseSelfHostedFeatures}
                 buttonText='Contact Us'
                 buttonLink='https://forms.gle/pdYjBk59Fwy6rshF8'
               />
-            </div>
+            </>
+          )}
+        </div>
+      </section>
+
+      <section className='flex flex-col items-center mb-[104px]'>
+        <div className='text-center'>
+          <p className='text-2xl font-bold mb-4'>Want to try OpenHands locally?</p>
+          <div className='flex justify-center'>
+            <Button
+              variant="medium"
+              style="primary"
+              icon={<GitHubLogo width={23} height={23} />}
+              text="Start with OSS"
+              onClick={openGitHubModal}
+            />
           </div>
         </div>
       </section>
