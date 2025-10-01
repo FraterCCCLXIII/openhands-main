@@ -11,4 +11,8 @@ export default [
   route('/pricing', 'routes/pricing.tsx'),
   route('/features', 'routes/features.tsx'),
   route('/contact', 'routes/contact.tsx'),
+  route('/joinslack', 'routes/joinslack.tsx'),
+  route('/sdk', 'routes/sdk.tsx'),
+  route('/github', 'routes/github.tsx'),
+  route('/contactme', 'routes/contactme.tsx'),
 ] satisfies RouteConfig;
