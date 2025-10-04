@@ -19,6 +19,11 @@
       "source": "/nyc",
       "destination": "https://github.com/jamiechicago312/agent-sdk-hackathon/blob/main/HACKATHON_DEMO_README.md",
       "permanent": true
+    },
+    {
+      "source": "/nycslides",
+      "destination": "https://docs.google.com/presentation/d/1mu2DBcHQg1PjNppfrzelRD2tjnoZeD5w2BoKcl_JKNU/edit?usp=sharing",
+      "permanent": true
     }
   ],
   "rewrites": [
