@@ -14,6 +14,11 @@
       "source": "/blog/20250604-openhands-versa",
       "destination": "/blog/building-a-provably-versatile-agent",
       "permanent": true
+    },
+    {
+      "source": "/nyc",
+      "destination": "https://github.com/jamiechicago312/agent-sdk/blob/ai-agent-hackathon-demo/HACKATHON_DEMO_README.md",
+      "permanent": true
     }
   ],
   "rewrites": [
