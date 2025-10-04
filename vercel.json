@@ -17,7 +17,7 @@
     },
     {
       "source": "/nyc",
-      "destination": "https://github.com/jamiechicago312/agent-sdk/blob/ai-agent-hackathon-demo/HACKATHON_DEMO_README.md",
+      "destination": "https://github.com/jamiechicago312/agent-sdk-hackathon/blob/main/HACKATHON_DEMO_README.md",
       "permanent": true
     }
   ],
