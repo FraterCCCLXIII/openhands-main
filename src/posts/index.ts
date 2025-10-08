@@ -30,6 +30,7 @@ import post29 from "./20250908-openhands-v1.md?raw";
 import post30 from "./20250909-us-mobile-case-study.md?raw";
 import post31 from "./20250918-openhands-cloud-byok-ux-redesign.md?raw";
 import post32 from "./20251002-when-to-pick-each-language-model.md?raw";
+import post33 from "./20251009-automating-refactors-with-ai-agents.md?raw";
 
 export const RAW_POSTS = [
   post1,
@@ -64,4 +65,5 @@ export const RAW_POSTS = [
   post30,
   post31,
   post32,
+  post33,
 ];
