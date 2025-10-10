@@ -45,7 +45,7 @@ export const Header: React.FC<HeaderProps> = ({
       {/* Webinar Banner */}
       <div className='bg-black text-white h-[50px] flex items-center justify-center fixed top-0 left-0 right-0 z-30 w-full'>
         <p className='text-center text-sm font-medium px-4'>
-          <a href="https://luma.com/56mzjmzu" target="_blank"><u>Register</u> for our October 13th Webinar: Streamlining Dev Workflows with MCP</a>
+          <a href="https://luma.com/56mzjmzu" target="_blank"><u>Register</u> for our October 20th Webinar: Streamlining Dev Workflows with MCP</a>
         </p>
       </div>
 
