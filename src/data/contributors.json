@@ -188,10 +188,6 @@
     "login": "xcodebuild"
   },
   {
-    "id": 33360440,
-    "login": "AlexCuadron"
-  },
-  {
     "id": 183959486,
     "login": "diwu-sf"
   },
@@ -206,6 +202,10 @@
   {
     "id": 12345678,
     "login": "shubh2294"
+  },
+  {
+    "id": 33360440,
+    "login": "AlexCuadron"
   },
   {
     "id": 6035284,
@@ -224,15 +224,15 @@
     "login": "npneeraj"
   },
   {
-    "id": 1479804,
-    "login": "kripper"
-  },
-  {
     "id": 141804823,
     "login": "yueqis"
   },
   {
     "id": 22478336,
     "login": "tangxiangru"
+  },
+  {
+    "id": 1479804,
+    "login": "kripper"
   }
 ]
