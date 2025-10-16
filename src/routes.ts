@@ -13,6 +13,7 @@ export default [
   route('/contact', 'routes/contact.tsx'),
   route('/joinslack', 'routes/joinslack.tsx'),
   route('/sdk', 'routes/sdk.tsx'),
+  route('/survey', 'routes/survey.tsx'),
   route('/github', 'routes/github.tsx'),
   route('/contactme', 'routes/contactme.tsx'),
 ] satisfies RouteConfig;
