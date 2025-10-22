@@ -36,4 +36,4 @@ dist-ssr
 
 # React Router
 .react-router
-build
+build*.zip
