@@ -114,4 +114,4 @@ Over the next year, we expect the bulk of coding agents will be running in the c
 
 We're already seeing organizations use OpenHands like this—leveling mountains of tech debt with only a few highly-skilled agent engineers. It's incredible being at the forefront of agent-driven development, and we're excited to see how our users put OpenHands to work next!
 
-*Interested in tearing down your tech debt? OpenHands provides a [Cloud Agent SDK](https://github.com/All-Hands-AI/agent-sdk/), a Refactor Kit, and other purpose-built tools for code maintenance at scale. Check out [our GitHub repos](http://github.com/all-Hands-AI/) or [get in touch with our research team](mailto:contact@openhands.dev)!*
+*Interested in tearing down your tech debt? OpenHands provides a [Cloud Agent SDK](https://github.com/OpenHands/agent-sdk/), a Refactor Kit, and other purpose-built tools for code maintenance at scale. Check out [our GitHub repos](http://github.com/OpenHands/) or [get in touch with our research team](mailto:contact@openhands.dev)!*

@@ -13,11 +13,11 @@ ogImage:
 
 The backlog. It's the long list of issues that you haven't been able to get to (and possibly never will). Every developer knows and fears it.
 
-Today, we're excited to introduce a tool that we've developed that can help automatically bring down your backlog a bit, and also work as a pair programmer to help you fix newly created issues as well. It's called the [OpenHands GitHub Resolver](https://github.com/All-Hands-AI/OpenHands/tree/main/openhands/resolver), it's an open source tool that uses AI to automatically fix github issues and send pull requests.
+Today, we're excited to introduce a tool that we've developed that can help automatically bring down your backlog a bit, and also work as a pair programmer to help you fix newly created issues as well. It's called the [OpenHands GitHub Resolver](https://github.com/OpenHands/OpenHands/tree/main/openhands/resolver), it's an open source tool that uses AI to automatically fix github issues and send pull requests.
 
 ## How Does It Work?
 
-The OpenHands resolver is based on [OpenHands](https://github.com/All-Hands-AI/openhands), which is a framework for building open-source coding agents. If you're interested in the details about how the agents are implemented, you can read the [docs](https://docs.all-hands.dev/) or our [paper](https://arxiv.org/abs/2407.16741).
+The OpenHands resolver is based on [OpenHands](https://github.com/OpenHands/openhands), which is a framework for building open-source coding agents. If you're interested in the details about how the agents are implemented, you can read the [docs](https://docs.all-hands.dev/) or our [paper](https://arxiv.org/abs/2407.16741).
 
 Normally you use OpenHands through a UI where you dynamically interact with the agents, but in order to resolve individual issues you need to spin up the interface, copy-paste in the issue description, and wait a few minutes for the agent to propose a fix, which takes a bit of work.
 
@@ -25,7 +25,7 @@ Instead for the OpenHands resolver, you can run it as a GitHub action, and it wi
 
 ## What can the Resolver Do?
 
-One of the most exciting aspects of the OpenHands GitHub resolver is its ability to contribute to its own development. 37% of the recent commits to the resolver's codebase have been written by the AI itself, and we expect this to only grow as the underlying agent becomes more sophisticated. Don't believe us? Check out the [commits page](https://github.com/All-Hands-AI/openhands-resolver/commits/main) to see the contributions made by this AI-powered tool on its own repo, or go to the user page of [openhands-agent](https://github.com/openhands-agent) to see all the contributions made by the agent across various repositories. You'll find numerous commits where the resolver has fixed bugs, implemented new features, and improved its own functionality.
+One of the most exciting aspects of the OpenHands GitHub resolver is its ability to contribute to its own development. 37% of the recent commits to the resolver's codebase have been written by the AI itself, and we expect this to only grow as the underlying agent becomes more sophisticated. Don't believe us? Check out the [commits page](https://github.com/OpenHands/openhands-resolver/commits/main) to see the contributions made by this AI-powered tool on its own repo, or go to the user page of [OpenHands-agent](https://github.com/OpenHands-agent) to see all the contributions made by the agent across various repositories. You'll find numerous commits where the resolver has fixed bugs, implemented new features, and improved its own functionality.
 
 In general, AI agents do well with tasks that are [reasonably sized and reasonably well defined](https://docs.all-hands.dev/modules/usage/prompting-best-practices), so if you can write your issue descriptions in this way, there is a good chance that it will be able to solve them for you.
 
@@ -86,8 +86,8 @@ recent pypi package. We should:
 
 Are you interested? It's pretty easy to set it up on your own repos, so try it out!
 
-1. Open up [openhands-resolver.yml](https://github.com/All-Hands-AI/openhands-resolver/blob/main/examples/openhands-resolver.yml) and copy it into the `.github/workflows` folder in your repository.
-2. Create a personal access token for github and an LLM API key and set them as secrets in your repository. (more details [here](https://github.com/All-Hands-AI/openhands-resolver?tab=readme-ov-file#using-the-github-actions-workflow))
+1. Open up [openhands-resolver.yml](https://github.com/OpenHands/openhands-resolver/blob/main/examples/openhands-resolver.yml) and copy it into the `.github/workflows` folder in your repository.
+2. Create a personal access token for github and an LLM API key and set them as secrets in your repository. (more details [here](https://github.com/OpenHands/openhands-resolver?tab=readme-ov-file#using-the-github-actions-workflow))
 3. Run the resolver on an issue by adding the `fix-me` label to the issue. The resolver will immediately start working, and in a few minutes you'll either see a pull request, or a message that the resolver wasn't able to fix the issue (and a branch with its intermediate progress).
 
 ## Build with AI and Build with Us
@@ -96,7 +96,7 @@ We believe that this could be a pretty useful tool for developers, and it could 
 
 We invite you to:
 
-1. Try out the [OpenHands resolver](https://github.com/All-Hands-AI/openhands-resolver) on your own repositories.
+1. Try out the [OpenHands resolver](https://github.com/OpenHands/openhands-resolver) on your own repositories.
 2. Contribute to its development by submitting pull requests, reporting bugs, or discussing on our [slack](https://join.slack.com/t/openhands-ai/shared_invite/zt-34zm4j0gj-Qz5kRHoca8DFCbqXPS~f_A).
 3. Star the repository and spread the word to fellow developers.
 

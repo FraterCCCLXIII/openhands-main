@@ -26,13 +26,13 @@ Which LLM came out as the winner? Are there any good open-source models for AI c
 
 ## What we built: A remote sandboxing environment for parallel processing of software engineering agents
 
-At All Hands AI, we are developing [OpenHands](https://github.com/All-Hands-AI/OpenHands), an open-source framework that anyone can use to build with, and also evaluate software engineering agents.
+At All Hands AI, we are developing [OpenHands](https://github.com/OpenHands/OpenHands), an open-source framework that anyone can use to build with, and also evaluate software engineering agents.
 
 One important element of OpenHands is sandboxing, where we allow the agent to write, run, and test code within an environment that is cordoned off from the rest of the machine. We do sandboxing because we don't want to damage the computer that the agent is running on – but at the same time the agent should be able to use actions available to human developers, such as running arbitrary code. To do this sandboxing, OpenHands implements a "runtime" that executes all the actions in a Docker environment to isolate the environment. The agent communicates through the runtime using messages ("actions"), and receives feedback from the environment ("observations"), as in the diagram below.
 
 ![Diagram of OpenHands runtime](/assets/blog/20241004-evaluation-of-llms-as-coding-agents/agent-runtime.png)
 
-In order to make evaluation in OpenHands faster, we built a cloud-based solution that makes it possible to spin up many of these runtimes in parallel. This is implemented in the OpenHands remote runtime (for those interested in the technical details, you can dig in to the code [here](https://github.com/All-Hands-AI/OpenHands/blob/b61455042f3aac3e3b874187da6f9133cae068f5/openhands/runtime/remote/runtime.py) and more about how OpenHands runtime works in general [here](https://docs.all-hands.dev/modules/usage/architecture/runtime#how-does-the-runtime-work)).
+In order to make evaluation in OpenHands faster, we built a cloud-based solution that makes it possible to spin up many of these runtimes in parallel. This is implemented in the OpenHands remote runtime (for those interested in the technical details, you can dig in to the code [here](https://github.com/OpenHands/OpenHands/blob/b61455042f3aac3e3b874187da6f9133cae068f5/openhands/runtime/remote/runtime.py) and more about how OpenHands runtime works in general [here](https://docs.all-hands.dev/modules/usage/architecture/runtime#how-does-the-runtime-work)).
 
 Why is this good? Now we can use the power of the cloud to run many evaluations in parallel on separate machines, greatly speeding up the process. For instance, we ran evaluation in 32x parallel, and this speeds up the time for running a SWE-Bench Lite eval from several days to several hours.
 

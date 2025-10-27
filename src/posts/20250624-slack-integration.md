@@ -12,7 +12,7 @@ ogImage:
   url: "/assets/blog/20250624-slack-integration/cover.png"
 ---
 
-As AI agents like [OpenHands](https://github.com/All-Hands-AI/OpenHands) incorporate more and more into software development, we expect that developers will want to interact with AI in the same places where they interact with other co-workers.
+As AI agents like [OpenHands](https://github.com/OpenHands/OpenHands) incorporate more and more into software development, we expect that developers will want to interact with AI in the same places where they interact with other co-workers.
 And today, much of that interaction happens in Slack.
 Today we're excited to announce the beta release of OpenHands Slack integration, bringing AI-powered software development directly into your Slack workspace.
 
@@ -58,4 +58,4 @@ One other thing that we've found convenient was to create a channel `#openhands-
 ## We Welcome Feedback
 
 This is a new release, so we're eager to hear your feedback.
-Share your experience and suggestions on [Slack](https://join.slack.com/t/openhands-ai/shared_invite/zt-2ngejmfw6-9gW4APWOC9XUp1n~SiQ6iw) (of course!), [Discord](https://discord.gg/ESHStjSjD4), or [GitHub Issues](https://github.com/All-Hands-AI/OpenHands/issues).
+Share your experience and suggestions on [Slack](https://join.slack.com/t/openhands-ai/shared_invite/zt-2ngejmfw6-9gW4APWOC9XUp1n~SiQ6iw) (of course!), [Discord](https://discord.gg/ESHStjSjD4), or [GitHub Issues](https://github.com/OpenHands/OpenHands/issues).

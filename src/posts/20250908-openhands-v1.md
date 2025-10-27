@@ -10,7 +10,7 @@ ogImage:
   url: "/assets/blog/20250908-openhands-v1/image.png"
 ---
 
-The [OpenHands GitHub repository](https://github.com/All-Hands-AI/OpenHands) has grown organically over the last 18 months. We’re averaging about 60 commits per week (!) with contributions from nearly 400 unique developers.
+The [OpenHands GitHub repository](https://github.com/OpenHands/OpenHands) has grown organically over the last 18 months. We’re averaging about 60 commits per week (!) with contributions from nearly 400 unique developers.
 
 As you can imagine, the codebase has gotten a bit out of hand.
 
@@ -22,11 +22,11 @@ We’re due for a major overhaul. So we’ve sketched out our wish list for a v1
 
 ## OpenHands SDK v1
 
-First off, we want a flavor of OpenHands that’s *extremely* light-weight. We’re tracking this in [GitHub](https://github.com/All-Hands-AI/OpenHands/issues/10577).
+First off, we want a flavor of OpenHands that’s *extremely* light-weight. We’re tracking this in [GitHub](https://github.com/OpenHands/OpenHands/issues/10577).
 
 Our current docker image is close to 10GB, and our CLI takes several minutes to install due to a wild list of transitive dependencies (including a YouTube API client for some reason??)
 
-We’re going to factor out an OpenHands [Agent SDK](https://github.com/All-Hands-AI/agent-sdk)—a tiny library that allows you to run a general‑purpose agent with any set of tools you like. Here’s some sample code:
+We’re going to factor out an OpenHands [Agent SDK](https://github.com/OpenHands/agent-sdk)—a tiny library that allows you to run a general‑purpose agent with any set of tools you like. Here’s some sample code:
 
 ```python
 from openhands.core import (
@@ -73,7 +73,7 @@ Since conversations can take minutes—even hours—to run, we’ll also provide
 
 The SDK will live in its own Python package, alongside some common tools for working with files, running bash commands, and browsing the web.
 
-You can read the [full SDK proposal on GitHub](https://github.com/All-Hands-AI/OpenHands/issues/10577).
+You can read the [full SDK proposal on GitHub](https://github.com/OpenHands/OpenHands/issues/10577).
 
 ## OpenHands CLI v1
 

@@ -11,7 +11,7 @@ ogImage:
 ---
 
 Autonomous agents for software development are already contributing to a [wide range of software development tasks](/blog/8-use-cases-for-generalist-software-development-agents).
-But up to this point, strong coding agents have relied on proprietary models, which means that even if you use an open-source agent like [OpenHands](https://github.com/All-Hands-AI/OpenHands), you are still reliant on API calls to an external service.
+But up to this point, strong coding agents have relied on proprietary models, which means that even if you use an open-source agent like [OpenHands](https://github.com/OpenHands/OpenHands), you are still reliant on API calls to an external service.
 
 Today, we are excited to introduce OpenHands LM, a new open coding model that:
 
@@ -32,7 +32,7 @@ OpenHands LM is built on the foundation of [Qwen Coder 2.5 Instruct 32B](https:/
 
 ## Matching SOTA Open Models 20x Larger
 
-We evaluated OpenHands LM using our latest [iterative evaluation protocol](https://github.com/All-Hands-AI/OpenHands/tree/main/evaluation/benchmarks/swe_bench#run-inference-rollout-on-swe-bench-instances-generate-patch-from-problem-statement) on the [SWE-Bench Verified benchmark](https://www.swebench.com/#verified).
+We evaluated OpenHands LM using our latest [iterative evaluation protocol](https://github.com/OpenHands/OpenHands/tree/main/evaluation/benchmarks/swe_bench#run-inference-rollout-on-swe-bench-instances-generate-patch-from-problem-statement) on the [SWE-Bench Verified benchmark](https://www.swebench.com/#verified).
 
 The results are impressive:
 
@@ -56,7 +56,7 @@ You can start using OpenHands LM immediately through these channels:
    For optimal performance, it is recommended to serve this model with a GPU using [SGLang](https://github.com/sgl-project/sglang) or [vLLM](https://github.com/vllm-project/vllm).
 
 3. **Point your OpenHands agent to the new model**
-   Download [OpenHands](https://github.com/All-Hands-AI/OpenHands) and follow the instructions for [using local models](https://docs.all-hands.dev/modules/usage/llms/local-llms).
+   Download [OpenHands](https://github.com/OpenHands/OpenHands) and follow the instructions for [using local models](https://docs.all-hands.dev/modules/usage/llms/local-llms).
 
 
 ## The Road Ahead: Our Development Plans
@@ -87,7 +87,7 @@ OpenHands Cloud is built on the same technology as our open-source solution but 
 
 We invite you to be part of the OpenHands LM journey:
 
-- Explore our [GitHub repository](https://github.com/All-Hands-AI/OpenHands)
+- Explore our [GitHub repository](https://github.com/OpenHands/OpenHands)
 - Connect with us on [Slack](https://join.slack.com/t/openhands-ai/shared_invite/zt-34zm4j0gj-Qz5kRHoca8DFCbqXPS~f_A)
 - Follow our [documentation](https://docs.all-hands.dev) to get started
 

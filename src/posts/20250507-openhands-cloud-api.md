@@ -101,7 +101,7 @@ def weekly_maintenance():
 ### 2. Custom Developer Tools
 
 Build custom developer tools that leverage OpenHands' capabilities, such as IDE plugins, CLI tools, or internal dashboards.
-As an example of this, we built a [simple Chrome extension](https://github.com/All-Hands-AI/openhands-chrome-extension) that allows you to add a button to GitHub allowing for one-click start of conversations in OpenHands (using OpenHands, of course!).
+As an example of this, we built a [simple Chrome extension](https://github.com/OpenHands/openhands-chrome-extension) that allows you to add a button to GitHub allowing for one-click start of conversations in OpenHands (using OpenHands, of course!).
 
 ![OpenHands Chrome Extension](/assets/blog/20250507-openhands-cloud-api/openhands-chrome-extension.png)
 
@@ -159,6 +159,6 @@ Of course, the Cloud API is just one of several ways to interact with OpenHands:
 
 - **Web Interface**: The [OpenHands Cloud](https://app.all-hands.dev) web app provides a full-featured interactive experience
 - **GitHub Resolver**: Use the [Cloud GitHub Resolver](https://docs.all-hands.dev/modules/usage/cloud/cloud-github-resolver) to integrate OpenHands with your GitHub workflows
-- **Run Locally**: As always, OpenHands is [open source](https://github.com/All-Hands-AI/OpenHands) and you can download, run, and modify away!
+- **Run Locally**: As always, OpenHands is [open source](https://github.com/OpenHands/OpenHands) and you can download, run, and modify away!
 
-And as always, if you have any questions or feature requests, come join us on [Slack](https://join.slack.com/t/openhands-ai/shared_invite/zt-2ngejmfw6-9gW4APWOC9XUp1n~SiQ6iw) or [Discord](https://discord.gg/ESHStjSjD4), or open issues on [GitHub](https://github.com/All-Hands-AI/openhands-cloud).
+And as always, if you have any questions or feature requests, come join us on [Slack](https://join.slack.com/t/openhands-ai/shared_invite/zt-2ngejmfw6-9gW4APWOC9XUp1n~SiQ6iw) or [Discord](https://discord.gg/ESHStjSjD4), or open issues on [GitHub](https://github.com/OpenHands/openhands-cloud).

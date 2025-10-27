@@ -21,7 +21,7 @@ export const MainButton: React.FC<MainButtonProps> = ({ onClick }) => {
       variant="large"
       icon={isHovered ? <GitHubLogo width={23} height={23} /> : <GitHubLogoBlack width={23} height={23} />}
       text="Start with OSS"
-      to={onClick ? undefined : "https://github.com/All-Hands-AI/OpenHands"}
+      to={onClick ? undefined : "https://github.com/OpenHands/OpenHands"}
       onClick={onClick}
       external={!onClick}
     />

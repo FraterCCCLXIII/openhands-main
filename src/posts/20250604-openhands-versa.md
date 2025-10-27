@@ -18,7 +18,7 @@ There's a lot of news in agents nowadays, ones that code, ones that browse the w
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/uc2P-7E0ZwE" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
 
-At [OpenHands](https://github.com/All-Hands-AI/OpenHands), we have been working hard at making agents that actually work, and doing it in the open so you can actually understand why they work too. And how have we proven that they work? We have consistently been on or near the top of the industry-standard [SWE-Bench leaderboard](https://www.swebench.com/), which measures the ability of agents to solve software bugs in Python.
+At [OpenHands](https://github.com/OpenHands/OpenHands), we have been working hard at making agents that actually work, and doing it in the open so you can actually understand why they work too. And how have we proven that they work? We have consistently been on or near the top of the industry-standard [SWE-Bench leaderboard](https://www.swebench.com/), which measures the ability of agents to solve software bugs in Python.
 
 However, there's a lot more to life than solving bugs on Python repos. If you're a software developer, you might do frontend development, build apps from scratch, do software maintenance, gather information from internal documents, communicate with your team, and do administrative work as well. Our aspirations for building agents are much higher, we want an agent where you can **delegate any task, and have a pretty good idea that the agent will deliver for you**.
 
@@ -29,7 +29,7 @@ Today, we're announcing two first steps towards this goal:
 
 OpenHands Versa is quite capable, delivering performance that exceeds the state of the art on 5/8 benchmarks on VersaBench and is competitive on the others. This is the first time that a single agent has been demonstrated to be so broadly capable, and we think that you'll like it if you try it out.
 
-OpenHands Versa is enabled by default in the most recent version of OpenHands, so you can use it in the [OpenHands Cloud](https://app.all-hands.dev) today, [download OpenHands](https://github.com/All-Hands-AI/OpenHands) 0.41 or higher, and read on to learn more.
+OpenHands Versa is enabled by default in the most recent version of OpenHands, so you can use it in the [OpenHands Cloud](https://app.all-hands.dev) today, [download OpenHands](https://github.com/OpenHands/OpenHands) 0.41 or higher, and read on to learn more.
 
 ## VersaBench: A Diverse Benchmark for Software Engineering
 
@@ -68,6 +68,6 @@ Overall, the takeaway is simple: OpenHands is an agent that actually delivers ac
 Getting started with this new version of OpenHands is easy. You can:
 
 * Immediately access it through the [OpenHands Cloud](https://app.all-hands.dev), where new users can get started right away with $20 in free credits.
-* [Download OpenHands](https://github.com/All-Hands-AI/OpenHands) and run locally, selecting a version 0.41.0 or higher.
+* [Download OpenHands](https://github.com/OpenHands/OpenHands) and run locally, selecting a version 0.41.0 or higher.
 
 We also encourage you to join the community – connect with us on [Slack](https://join.slack.com/t/openhands-ai/shared_invite/zt-34zm4j0gj-Qz5kRHoca8DFCbqXPS~f_A), read our [documentation](https://docs.all-hands.dev/), and stay updated on our latest developments. Looking forward to what you all do with the world's most versatile agent!

@@ -24,7 +24,7 @@ Based on our new agent, CodeAct 2.1 (powered by the new Claude Sonnet 3.5), we a
 These numbers demonstrate the strength of our agents, and the difference in user experience using them is palpable - they resolve more issues more autonomously than ever before. Read on more for details, or jump right in to:
 
 - [Run OpenHands locally](https://docs.all-hands.dev/modules/usage/installation)
-- [Run OpenHands in github actions](https://github.com/All-Hands-AI/OpenHands-resolver/)
+- [Run OpenHands in github actions](https://github.com/OpenHands/OpenHands-resolver/)
 - [Try OpenHands Cloud](https://app.all-hands.dev)
 
 ## What is SWE-Bench?
@@ -49,5 +49,5 @@ Further, at All Hands AI we believe strongly that **AI agents are going to be tr
 
 If this mission resonates with you, we would love to have you start out by using OpenHands through the links above, and further:
 
-- [Contribute to the open source](https://github.com/All-Hands-AI/OpenHands?tab=readme-ov-file#-how-to-contribute)
+- [Contribute to the open source](https://github.com/OpenHands/OpenHands?tab=readme-ov-file#-how-to-contribute)
 - [Apply to work with us at All Hands AI](https://allhandsai.applytojob.com/apply/)

@@ -12,9 +12,9 @@ export const meta: Route.MetaFunction = () => [
 export default function SDK() {
   useEffect(() => {
     // Redirect to the GitHub repository in a new window
-    window.open('https://github.com/All-Hands-AI/agent-sdk', '_blank', 'noopener,noreferrer');
+    window.open('https://github.com/OpenHands/agent-sdk', '_blank', 'noopener,noreferrer');
     // Also redirect the current window for fallback
-    window.location.href = 'https://github.com/All-Hands-AI/agent-sdk';
+    window.location.href = 'https://github.com/OpenHands/agent-sdk';
   }, []);
 
   return (
@@ -27,7 +27,7 @@ export default function SDK() {
         <p className="paragraph text-sm text-gray-600">
           If you are not redirected automatically, 
           <a 
-            href="https://github.com/All-Hands-AI/agent-sdk" 
+            href="https://github.com/OpenHands/agent-sdk" 
             target="_blank" 
             rel="noopener noreferrer"
             className="text-[#6366F1] hover:underline ml-1"

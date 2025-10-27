@@ -75,7 +75,7 @@ Context condensation is available in OpenHands today. To try it out:
 
 - **Start with OpenHands Cloud**: The easiest way to get started is with our fully managed [cloud solution](https://app.all-hands.dev) with seamless GitHub integration, mobile support, and optimizations like context condensation ready to use.
 
-- **Contribute to Open Source**: Star our [GitHub repository](https://github.com/All-Hands-AI/OpenHands) and help advance the frontier of open-source AI software development.
+- **Contribute to Open Source**: Star our [GitHub repository](https://github.com/OpenHands/OpenHands) and help advance the frontier of open-source AI software development.
 
 - **Join Our Community**: Connect with us on [Slack](https://join.slack.com/t/openhands-ai/shared_invite/zt-34zm4j0gj-Qz5kRHoca8DFCbqXPS~f_A), read our [documentation](https://docs.all-hands.dev), and stay updated on our latest developments.
 

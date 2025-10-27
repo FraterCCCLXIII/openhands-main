@@ -13,24 +13,24 @@ ogImage:
 
 # 8 Use Cases for Generalist Software Development Agents (w/ Prompts)
 
-We are developing [OpenHands](https://github.com/All-Hands-AI/OpenHands), an agent for software development that has the ability to write code, execute code, and browse the web. It is very general and can do a lot of tasks, which is a double-edged sword:
+We are developing [OpenHands](https://github.com/OpenHands/OpenHands), an agent for software development that has the ability to write code, execute code, and browse the web. It is very general and can do a lot of tasks, which is a double-edged sword:
 
 * On the **plus side**, this makes the agent framework very powerful, and once you learn how to use it you can do most anything.
 * On the **minus side**, it means that sometimes we've found users to be at a loss of how to start using it.
 
-This blog post is meant to showcase some great use cases that we've found for OpenHands and provide some sample prompts that we have used. We'd also like to point out that OpenHands has a flexible framework for prompt customization using ["microagents"](https://github.com/All-Hands-AI/OpenHands/tree/main/microagents), and some of these tasks are available as micro-agents within OpenHands itself as well.
+This blog post is meant to showcase some great use cases that we've found for OpenHands and provide some sample prompts that we have used. We'd also like to point out that OpenHands has a flexible framework for prompt customization using ["microagents"](https://github.com/OpenHands/OpenHands/tree/main/microagents), and some of these tasks are available as micro-agents within OpenHands itself as well.
 
 Let's see what a generalist software development agent can do, and how to skillfully prompt it to do a good job!
 
 ## Fix Bugs
 
-All non-trivial software has bugs, and we want to squash them when we can find them. Here's [an example of a bug from OpenHands](https://github.com/All-Hands-AI/OpenHands/issues/4480) (where LLM requests being blocked by CloudFlare caused the agent to make many futile retries) that we fixed using the OpenHands agent, resulting in [this pull request](https://github.com/All-Hands-AI/OpenHands/pull/4482).
+All non-trivial software has bugs, and we want to squash them when we can find them. Here's [an example of a bug from OpenHands](https://github.com/OpenHands/OpenHands/issues/4480) (where LLM requests being blocked by CloudFlare caused the agent to make many futile retries) that we fixed using the OpenHands agent, resulting in [this pull request](https://github.com/OpenHands/OpenHands/pull/4482).
 
 OpenHands has the ability to view github issues through the github API, browse the file system, and run code so when I want to fix a bug with OpenHands, I will often first select the repo that I'm working on, then give it a prompt like the following:
 
 ```
 Please use the github API to read this issue:
-https://github.com/All-Hands-AI/OpenHands/issues/4480
+https://github.com/OpenHands/OpenHands/issues/4480
 
 Diagnose the problem, and fix it according to the following procedure:
 1. Explore the codebase to find a likely location where the problem is occurring
@@ -56,7 +56,7 @@ Let's break this down a bit, it is in several steps:
 
 ## Implement Features
 
-In addition to squashing bugs, you also often want to implement new features. Here's [an example of a feature](https://github.com/All-Hands-AI/OpenHands/pull/5807) that was implemented by the OpenHands agent – tooltips for a sidebar in the OpenHands app. When implementing features, it's reasonable to use a prompt pretty similar to the one we use for fixing bugs, for similar reasons:
+In addition to squashing bugs, you also often want to implement new features. Here's [an example of a feature](https://github.com/OpenHands/OpenHands/pull/5807) that was implemented by the OpenHands agent – tooltips for a sidebar in the OpenHands app. When implementing features, it's reasonable to use a prompt pretty similar to the one we use for fixing bugs, for similar reasons:
 
 ```
 I would like to implement tooltips for the sidebar in our web app.
@@ -76,13 +76,13 @@ I would like to implement tooltips for the sidebar in our web app.
 
 While the two above use-cases are for improving apps that already exist, sometimes you want to build an app from scratch. This is also possible with OpenHands. The easiest way to do this is to create an empty github repo with just a README, open it, and then put in a prompt describing the app that you want to create. Here are a couple of examples from things I've created recently.
 
-A [frontend app for viewing github PRs](https://github.com/All-Hands-AI/OpenHands/pull/5807):
+A [frontend app for viewing github PRs](https://github.com/OpenHands/OpenHands/pull/5807):
 
 ```
 I want to create a React app to view open pull requests across my team's github
 repos. Here are some details:
 1. Please initialize the app using vite and react-ts.
-2. You can test the app on the https://github.com/All-Hands-AI/ github org
+2. You can test the app on the https://github.com/OpenHands/ github org
 3. You can use the GITHUB_TOKEN environment variable to test the app
 4. It should have a dropdown to select a single repo within the org
 5. There should be tests written using vitest
@@ -112,7 +112,7 @@ OpenHands has actually been pretty revolutionary for me in this department, beca
 
 ```
 Please pull the branch add-japanese-translations associated with
-https://github.com/All-Hands-AI/OpenHands/pull/6070
+https://github.com/OpenHands/OpenHands/pull/6070
 
 Github CI actions are failing on the most recent version of this branch.
 
@@ -132,7 +132,7 @@ In addition to fixing continuous integration, another *huge* pain is fixing merg
 
 ```
 Please pull the branch add-japanese-translations associated with
-https://github.com/All-Hands-AI/OpenHands/pull/6070
+https://github.com/OpenHands/OpenHands/pull/6070
 
 There are merge conflicts with main. Run git merge main and fix the conflicts
 appropriately. Then check the ".github/workflows" directory for unit testing
@@ -182,7 +182,7 @@ Finally, OpenHands is quite useful at performing random data analysis tasks. Her
 This was very easy to do with the following prompt:
 
 ```
-Please clone https://github.com/All-Hands-AI/OpenHands and create a line chart
+Please clone https://github.com/OpenHands/OpenHands and create a line chart
 showing weekly statistics:
 1. The total number of commits
 2. The number of unique contributors
@@ -200,5 +200,5 @@ This blog post covered 8 common use cases where we've been using OpenHands a lot
 
 But hopefully this gets you a good idea of some tasks that you can start out with, and hopefully accelerate your software development process! If you'd like to try out OpenHands, please download the open source repo, or sign up for our online app:
 
-* Open Source: [https://github.com/All-Hands-AI/OpenHands](https://github.com/All-Hands-AI/OpenHands)
+* Open Source: [https://github.com/OpenHands/OpenHands](https://github.com/OpenHands/OpenHands)
 * Online App: [https://app.all-hands.dev](https://app.all-hands.dev)

@@ -14,7 +14,7 @@ I've been building commercial open source software for over a decade. I'd like t
 
 But different stakeholders have different needs. Even when they don't *directly* conflict with each other, you have limited time and resources. It's impossible to make everyone happy all the time.
 
-So I'll share a few things I've learned about managing commercial open source, and discuss the approach we're taking with [OpenHands](https://github.com/All-Hands-AI/OpenHands), our open source coding agent.
+So I'll share a few things I've learned about managing commercial open source, and discuss the approach we're taking with [OpenHands](https://github.com/OpenHands/OpenHands), our open source coding agent.
 
 ## 1. Be Honest
 
@@ -24,7 +24,7 @@ There are two main sides to the conflict: the people who would rather everything
 
 Open source users are quite savvy. They'll know if you're sandbagging a PR because your worried it'll eat into your business. They'll know if you're ignoring their feature requests. They'll notice if your open source commits drop off as you shift priorities to the internal code base. They'll notice if you try to sneak in a phone-home or user analytics package.
 
-So just tell them! "We've decided to close this PR because it will hurt the sustainability of the project" is a perfectly valid reply. When we realized we needed better intel about who was using OpenHands and how, we [opened an issue](https://github.com/All-Hands-AI/OpenHands/issues/4533) about adding analytics, and started a discussion in Slack. (Surprisingly, were mostly supportive, especially when we made it opt-in.)
+So just tell them! "We've decided to close this PR because it will hurt the sustainability of the project" is a perfectly valid reply. When we realized we needed better intel about who was using OpenHands and how, we [opened an issue](https://github.com/OpenHands/OpenHands/issues/4533) about adding analytics, and started a discussion in Slack. (Surprisingly, were mostly supportive, especially when we made it opt-in.)
 
 Similarly, you need to be clear with investors: the open source project is a very long-term investment. The ROI is not always obvious or easy to calculate. Investors will frequently be tempted to sacrifice a bit of community health for short term revenue.
 
@@ -94,4 +94,4 @@ And to sustain that, we'll build commercial complements that enable *teams* of d
 
 I can't promise that this line will make everyone happy all the time. But it's our best shot at making sure the software development community gets a say in how the future of coding evolves.
 
-*Check out [OpenHands on GitHub](https://github.com/All-Hands-AI/OpenHands)! You can also see the README for links to our Slack and Discord communities.*
+*Check out [OpenHands on GitHub](https://github.com/OpenHands/OpenHands)! You can also see the README for links to our Slack and Discord communities.*

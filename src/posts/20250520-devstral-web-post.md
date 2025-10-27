@@ -22,7 +22,7 @@ Today we introduce Devstral, an agentic LLM for software engineering tasks. Devs
 
 While typical LLMs are excellent at atomic coding tasks such as writing standalone functions or code completion, they currently struggle to solve real-world software engineering problems. Real-world development requires contextualising code within a large codebase, identifying relationships between disparate components, and identifying subtle bugs in intricate functions.
 
-Devstral is an attempt at tackling this problem. Devstral is trained to solve real GitHub issues; it was trained to be compatible with the [OpenHands](https://github.com/All-Hands-AI/OpenHands),  coding agent. Here, we show Devstral's performance on the popular SWE-Bench Verified benchmark, a dataset of 500 real-world GitHub issues which have been manually screened for correctness.
+Devstral is an attempt at tackling this problem. Devstral is trained to solve real GitHub issues; it was trained to be compatible with the [OpenHands](https://github.com/OpenHands/OpenHands),  coding agent. Here, we show Devstral's performance on the popular SWE-Bench Verified benchmark, a dataset of 500 real-world GitHub issues which have been manually screened for correctness.
 
 OpenHands+Devstral achieves a score of 46.8% on SWE-Bench Verified, outperforming prior open-source SoTA by more than 6% points. Compared to OpenHands with larger models such as Deepseek-V3-0324 (671B) and Qwen3 232B-A22B, Devstral achieves much more accurate results.
 

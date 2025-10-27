@@ -22,7 +22,7 @@ Only a few years ago n November 2022, ChatGPT 3.5 launched, and much to my surpr
 
 The next year, GitHub Copilot went mainstream (though it had already been in GA for a while). Having an LLM right there in neovim felt like magic—Copilot was able to predict what I was going to type before my hands even hit the keyboard. It had at least a small window into my codebase—no more copy/pasting back and forth into the ChatGPT window.
 
-Then, in 2024, Cognition released their demo video of an autonomous coding agent—an AI that didn't just *write* code! It could run the code, Google error messages, add debug statements, and keep iterating until it solved the task at hand. The next day, OpenDevin—now [OpenHands](https://github.com/All-Hands-AI/OpenHands)—was born.
+Then, in 2024, Cognition released their demo video of an autonomous coding agent—an AI that didn't just *write* code! It could run the code, Google error messages, add debug statements, and keep iterating until it solved the task at hand. The next day, OpenDevin—now [OpenHands](https://github.com/OpenHands/OpenHands)—was born.
 
 This was a massive leap forward in AI-driven development. Agents were able to take on the entire inner loop of software development, making incremental changes, testing them, and constructing entire PRs on their own. But, of course, the code is rarely perfect—we still need a human in the loop to review and QA the agent's output.
 
@@ -111,7 +111,7 @@ Managing fleets of agents is wildly fun once you've got a good workflow down. I 
 
 If you're interested in operating fleets of agents for large-scale refactoring projects, here's how to get started:
 
-1. **Try OpenHands**: Check out [OpenHands](https://github.com/All-Hands-AI/OpenHands) to run coding agents locally or in the cloud
+1. **Try OpenHands**: Check out [OpenHands](https://github.com/OpenHands/OpenHands) to run coding agents locally or in the cloud
 2. **Explore the refactor-sdk**: [Contact us](https://www.all-hands.dev/contact) to join the beta of the refactor sdk, a toolkit for managing large-scale refactoring projects with AI agents
 3. **Join the community**: Connect with other developers tackling similar challenges in our [Slack community](https://join.slack.com/t/openhands-ai/shared_invite/zt-2tom0er4z-RiNl7RbPZaIW60cMFm1Q1A)
 

@@ -18,7 +18,7 @@ Now all you have to do is go to app.all-hands.dev and get to work within seconds
 
 We're doing a gradual rollout to ensure we can scale up to meet demand. We've already invited our core open source maintainers, and will be adding more users over the coming weeks. We expect to have a fully open release in early 2025.
 
-You can try OpenHands Cloud at [app.all-hands.dev](https://app.all-hands.dev). You can also go over to the [GitHub repo](https://github.com/All-Hands-AI/OpenHands) and download it yourself, as always. We will also be prioritizing access to OpenHands contributors, so this is as good a time as ever to start contributing!
+You can try OpenHands Cloud at [app.all-hands.dev](https://app.all-hands.dev). You can also go over to the [GitHub repo](https://github.com/OpenHands/OpenHands) and download it yourself, as always. We will also be prioritizing access to OpenHands contributors, so this is as good a time as ever to start contributing!
 
 ## New UI
 

@@ -10,7 +10,7 @@ ogImage:
   url: "/assets/blog/20241015-readme-to-open-source-movement/all-hands-founders.jpg"
 ---
 
-[OpenHands](https://github.com/All-Hands-AI/OpenHands) exists because our community willed it. 
+[OpenHands](https://github.com/OpenHands/OpenHands) exists because our community willed it. 
 
 When Cognition AI launched their demo for Devin, they captured the imaginations of developers around the world—but it was also kind of scary. The future of development was here, and it was being built in a closed source walled garden. 
 

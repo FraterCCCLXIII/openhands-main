@@ -15,7 +15,7 @@ export const Footer = () => (
           <ul className='flex flex-wrap gap-8 justify-center text-sm leading-[21px] lg:flex'>
             <li>
               <Link
-                to='https://github.com/All-Hands-AI/OpenHands'
+                to='https://github.com/OpenHands/OpenHands'
                 rel='noreferrer'
                 target='_blank'
               >
@@ -64,7 +64,7 @@ export const Footer = () => (
         <span className='flex gap-4'>
           <Link
             aria-label='OpenHands GitHub'
-            to='https://github.com/All-Hands-AI/OpenHands'
+            to='https://github.com/OpenHands/OpenHands'
             rel='noreferrer'
             target='_blank'
           >
@@ -72,7 +72,7 @@ export const Footer = () => (
           </Link>
           <Link
             aria-label='OpenDevin Twitter'
-            to='https://x.com/allhands_ai'
+            to='https://x.com/OpenHandsDev'
             rel='noreferrer'
             target='_blank'
           >

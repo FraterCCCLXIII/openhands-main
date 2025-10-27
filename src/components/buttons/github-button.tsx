@@ -28,7 +28,7 @@ export const GitHubButton: React.FC<GitHubButtonProps> = ({ onClick }) => {
 
   return (
     <a
-      href="https://github.com/All-Hands-AI/OpenHands"
+      href="https://github.com/OpenHands/OpenHands"
       rel="noreferrer"
       target="_blank"
       className={commonClassName}

@@ -15,7 +15,7 @@ ogImage:
 
 I consider myself a pretty good Python programmer. I can architect systems, build backend servers, train models, etc. One thing that I'm not super-good at, though, is frontend development. Many times I've wanted to show off a project that includes a cool UI or build a tool that would be helpful for my own workflow, but I usually hesitate because it would take me too long to crank one out.
 
-Luckily, with the help of recent AI tools, that barrier has significantly lowered, and it's now possible to build practical frontend apps, almost entirely automatically. In this post I'll demonstrate how I built a frontend for a GitHub Pull Request viewer using [OpenHands](https://github.com/All-Hands-AI/OpenHands), the open-source AI agent for software development that we're building at [All Hands AI](https://all-hands.dev).
+Luckily, with the help of recent AI tools, that barrier has significantly lowered, and it's now possible to build practical frontend apps, almost entirely automatically. In this post I'll demonstrate how I built a frontend for a GitHub Pull Request viewer using [OpenHands](https://github.com/OpenHands/OpenHands), the open-source AI agent for software development that we're building at [All Hands AI](https://all-hands.dev).
 
 The GitHub PR viewer is an example of something that's simple but practical -- it allows me as a developer to view all open PRs across my team's GitHub repositories, and it would have been a pain to build manually, but with OpenHands it took around 30 minutes to go from nothing to something that actually worked and even had a few bells and whistles.
 
@@ -115,6 +115,6 @@ Overall, the resulting app was pretty simple, but it demonstrated how you can go
 
 What's particularly exciting is the potential this holds for developers across all specializations. AI agents like OpenHands can help bridge skill gaps, allowing developers to venture into areas outside their comfort zones with greater confidence.
 
-If you're interested in trying out OpenHands, download the project [here](https://github.com/All-Hands-AI/OpenHands#-how-to-join-the-community) and get started right away, or try it online at [OpenHands Cloud](https://app.all-hands.dev).
+If you're interested in trying out OpenHands, download the project [here](https://github.com/OpenHands/OpenHands#-how-to-join-the-community) and get started right away, or try it online at [OpenHands Cloud](https://app.all-hands.dev).
 
 **Acknowledgement:** I'd like to thank [Bryan Finster](https://www.linkedin.com/in/bryan-finster/) of [Defense Unicorns](https://defenseunicorns.com/) for his original inspiration for the app featured here.

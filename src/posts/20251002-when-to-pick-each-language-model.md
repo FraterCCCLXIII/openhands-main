@@ -86,6 +86,6 @@ We develop [OpenHands](https://www.all-hands.dev/), an LM agnostic coding agents
 
 We recently upgraded the OpenHands Cloud to support model choice, which means you can select from a broad set of supported models (or bring your own key for your preferred provider): [https://www.all-hands.dev/blog/all-new-openhands-cloud-more-model-choice-lower-prices-slicker-design](https://www.all-hands.dev/blog/all-new-openhands-cloud-more-model-choice-lower-prices-slicker-design)
 
-If you'd like to try different models for yourself? [Sign up for OpenHands Cloud](https://app.all-hands.dev/) today and experiment with all three models to see which works best for your specific use cases. Or [download OpenHands](https://github.com/All-Hands-AI/OpenHands) to run locally with your preferred model.
+If you'd like to try different models for yourself? [Sign up for OpenHands Cloud](https://app.all-hands.dev/) today and experiment with all three models to see which works best for your specific use cases. Or [download OpenHands](https://github.com/OpenHands/OpenHands) to run locally with your preferred model.
 
 Have questions about model selection or want to share your own experiences? Join our [Slack community](https://all-hands.dev/joinslack) or [email us directly](mailto:contact@all-hands.dev). We are always excited to hear how different models perform in real-world scenarios.

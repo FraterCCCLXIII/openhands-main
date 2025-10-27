@@ -10,7 +10,7 @@ ogImage:
   url: "/assets/blog/20250821-oss-credit-program/cover.png"
 ---
 
-[OpenHands](https://github.com/All-Hands-AI/OpenHands) was built in the open—growing from an ambitious idea into a thriving, ~60K‑star open‑source project that's reshaping how developers work with AI. We rely on the OSS ecosystem—and we want to give back *where it moves the needle most*: active maintainers of **established (mid‑size and up) open‑source projects** who spend real time on upkeep.
+[OpenHands](https://github.com/OpenHands/OpenHands) was built in the open—growing from an ambitious idea into a thriving, ~60K‑star open‑source project that's reshaping how developers work with AI. We rely on the OSS ecosystem—and we want to give back *where it moves the needle most*: active maintainers of **established (mid‑size and up) open‑source projects** who spend real time on upkeep.
 
 **Get &#36;100 to &#36;500 in [OpenHands Cloud](https://app.all-hands.dev) credits** to offload routine maintenance tasks, bug fixes, or features to an AI coding agent you control.
 

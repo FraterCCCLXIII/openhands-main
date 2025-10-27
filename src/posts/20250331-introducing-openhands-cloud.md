@@ -55,7 +55,7 @@ This parallel processing capability significantly increases your productivity by
 
 ## Open Source Foundation
 
-While OpenHands Cloud provides a convenient hosted solution, we remain committed to open source. The underlying [OpenHands codebase](https://github.com/All-Hands-AI/OpenHands) is fully open source, allowing you to:
+While OpenHands Cloud provides a convenient hosted solution, we remain committed to open source. The underlying [OpenHands codebase](https://github.com/OpenHands/OpenHands) is fully open source, allowing you to:
 
 - Understand exactly how the system works
 - Contribute new features or improvements

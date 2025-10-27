@@ -37,4 +37,4 @@ The OS community is amazing, but it requires a full-time staff (and compute) to 
 
 Good news! We’re [hiring for a few full-time positions](https://allhandsai.applytojob.com/apply/) so please apply.
 
-And we always welcome new community members, please [join us](https://github.com/All-Hands-AI/OpenHands#-how-to-join-the-community) in making sure that the future of software remains open!
+And we always welcome new community members, please [join us](https://github.com/OpenHands/OpenHands#-how-to-join-the-community) in making sure that the future of software remains open!

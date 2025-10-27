@@ -89,7 +89,7 @@ I see "confirmation mode" as a stopgap solution, given how much it limits the va
 
 ### Security Analyzers
 
-At OpenHands, we've worked with [Invariant Labs](https://invariantlabs.ai/) to add a [security analyzer](https://github.com/All-Hands-AI/OpenHands/tree/81ef363658c09a3dba42e74c4978296c23825003/openhands/security) to our agent. This assesses any actions the agent wants to take for potential threats. When a problem is detected, the agent can stop to ask for explicit permission, or even refuse to proceed.
+At OpenHands, we've worked with [Invariant Labs](https://invariantlabs.ai/) to add a [security analyzer](https://github.com/OpenHands/OpenHands/tree/81ef363658c09a3dba42e74c4978296c23825003/openhands/security) to our agent. This assesses any actions the agent wants to take for potential threats. When a problem is detected, the agent can stop to ask for explicit permission, or even refuse to proceed.
 
 There are two main things we might want to analyze:
 
@@ -116,7 +116,7 @@ At the very least, the agent still has access to `curl` and your source code, ma
 
 We can improve on the sandboxing strategy by leveraging existing policy frameworks to decide what the agent can and can't do.
 
-Organizations that self-host OpenHands using [our Kubernetes deployment](https://github.com/all-Hands-AI/OpenHands-cloud) can leverage things like network policy and eBPF tooling to restrict exactly what the agent is allowed to do inside its sandbox.
+Organizations that self-host OpenHands using [our Kubernetes deployment](https://github.com/OpenHands/OpenHands-cloud) can leverage things like network policy and eBPF tooling to restrict exactly what the agent is allowed to do inside its sandbox.
 
 For example, you could use network policy to block all access to [pastebin.com](http://pastebin.com), or to create an allowlist of trusted domains that the agent is allowed to view. You could even use eBPF to block the agent's ability to use `curl` on the command line.
 

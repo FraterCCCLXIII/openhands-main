@@ -74,7 +74,7 @@ OpenHands is model agnostic, so you can use it with any LLM provider, especially
 This includes both cloud-based models like Claude (4 sonnet provides the best performance at the moment) and local models like [Devstral](https://www.all-hands.dev/blog/devstral-a-new-state-of-the-art-open-model-for-coding-agents).
 
 **Open source**:
-The CLI is fully open source, included in the MIT-licensed [OpenHands repository](https://github.com/All-Hands-AI/OpenHands).
+The CLI is fully open source, included in the MIT-licensed [OpenHands repository](https://github.com/OpenHands/OpenHands).
 It's available for you to build with or build on.
 
 **Top-performing agents**:
@@ -84,4 +84,4 @@ OpenHands is one of the top-performing agents in the world (e.g. on [SWE-Bench V
 
 If that entices you, just `pip install openhands-ai` and `openhands` to get started!
 As always, we love to have people join our community to give feedback or send in pull requests.
-Join the community: on [Slack](https://join.slack.com/t/openhands-ai/shared_invite/zt-2ngejmfw6-9gW4APWOC9XUp1n~SiQ6iw), [Discord](https://discord.gg/ESHStjSjD4), or [GitHub Issues](https://github.com/All-Hands-AI/OpenHands/issues)
+Join the community: on [Slack](https://join.slack.com/t/openhands-ai/shared_invite/zt-2ngejmfw6-9gW4APWOC9XUp1n~SiQ6iw), [Discord](https://discord.gg/ESHStjSjD4), or [GitHub Issues](https://github.com/OpenHands/OpenHands/issues)

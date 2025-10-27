@@ -13,7 +13,7 @@ ogImage:
 
 There is a lot of conjecture and abstract articles out there about what AI may or may not be able to do for you. There is also a lot of FUD about how it is going to replace everybody and crash the economy.
 
-Here is a practical example of how [OpenHands](https://github.com/All-Hands-AI/OpenHands) (Formerly OpenDevin) can improve your unit test coverage right now. We are constantly improving the reliability and usability of this tool, so your mileage may vary!
+Here is a practical example of how [OpenHands](https://github.com/OpenHands/OpenHands) (Formerly OpenDevin) can improve your unit test coverage right now. We are constantly improving the reliability and usability of this tool, so your mileage may vary!
 
 ## Background
 

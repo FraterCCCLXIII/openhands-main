@@ -12,7 +12,7 @@ export const meta: Route.MetaFunction = () => [
 export default function GitHub() {
   useEffect(() => {
     // Redirect to the GitHub repository
-    window.location.href = 'https://github.com/All-Hands-AI/OpenHands';
+    window.location.href = 'https://github.com/OpenHands/OpenHands';
   }, []);
 
   return (
@@ -25,7 +25,7 @@ export default function GitHub() {
         <p className="paragraph text-sm text-gray-600">
           If you are not redirected automatically, 
           <a 
-            href="https://github.com/All-Hands-AI/OpenHands" 
+            href="https://github.com/OpenHands/OpenHands" 
             target="_blank" 
             rel="noopener noreferrer"
             className="text-[#6366F1] hover:underline ml-1"

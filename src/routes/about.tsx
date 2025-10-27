@@ -44,7 +44,7 @@ const About = () => {
             have contributed.{' '}
             <a
               className='underline'
-              href='https://github.com/All-Hands-AI/OpenHands'
+              href='https://github.com/OpenHands/OpenHands'
               target='_blank'
               rel='noopener noreferrer'
             >
