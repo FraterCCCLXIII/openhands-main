@@ -2,6 +2,10 @@
 
 ## Building and Viewing the Website
 
+```bash
+npm install
+```
+
 This is a [Vite + React + TS](https://vitejs.dev/) project. To build the project, run
 
 ```bash
