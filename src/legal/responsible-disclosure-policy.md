@@ -17,6 +17,6 @@ It's important that anybody is able to contact us with concerns or information a
 * We ask that you do not attempt to engage in any activities that could be considered illegal or unethical.
 * We will not take legal action against or pursue any penalties against individuals who report potential vulnerabilities in accordance with this policy.
 
-We appreciate your assistance in helping us maintain the security and integrity of our products and services. If you have any questions or concerns about this policy, please contact our [security team](mailto:security@openhands.dev).
+We appreciate your assistance in helping us maintain the security and integrity of our products and services. If you have any questions or concerns about this policy, please contact our security team at `security@openhands.dev`.
 
 *In this policy, references to "us", "we" and "our" mean All Hands AI, a limited liability company registered in the USA.*
