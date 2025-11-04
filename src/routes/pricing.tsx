@@ -96,41 +96,6 @@ const PricingCard = ({
   );
 };
 
-const PlanToggle = ({
-  showIndividual,
-  onToggle,
-}: {
-  showIndividual: boolean;
-  onToggle: (showIndividual: boolean) => void;
-}) => {
-  return (
-    <div className='flex justify-center mb-8'>
-      <div className='bg-gray-100 rounded-lg p-1 flex'>
-        <button
-          className={`px-6 py-2 rounded-md font-medium transition-colors ${
-            showIndividual
-              ? 'bg-white text-black shadow-sm'
-              : 'text-gray-600 hover:text-black'
-          }`}
-          onClick={() => onToggle(true)}
-        >
-          Individual Plans
-        </button>
-        <button
-          className={`px-6 py-2 rounded-md font-medium transition-colors ${
-            !showIndividual
-              ? 'bg-white text-black shadow-sm'
-              : 'text-gray-600 hover:text-black'
-          }`}
-          onClick={() => onToggle(false)}
-        >
-          Enterprise Plans
-        </button>
-      </div>
-    </div>
-  );
-};
-
 export const meta: Route.MetaFunction = ({ location }) => {
   return [
     { title: 'All Hands AI - Pricing' },
@@ -150,25 +115,16 @@ export const meta: Route.MetaFunction = ({ location }) => {
 };
 
 const Pricing = () => {
-  const [showIndividual, setShowIndividual] = React.useState(true);
   const { openGitHubModal } = useGitHubModal();
 
-  // Individual Plans
+  // Pay-as-you-go Plan
   const payAsYouGoFeatures = [
     '1 user',
     'Access from desktop or mobile',
-    'Access to highest-performing LLMs',
+    'Bring your own LLM, or use OpenHands LLMs at cost',
     'High token rate limits',
     'GitHub, GitLab, and Bitbucket',
-    'API support',
-    'Marked up pricing on LLM usage',
-  ];
-
-  const proFeatures = [
-    'At-cost, no markup pricing on LLM usage',
-    'Model choice (or bring your own LLM)',
-    'Access to OpenHands runtime compute',
-    'LLM risk analyzer'
+    'API support'
   ];
 
   // Enterprise Plans
@@ -197,51 +153,32 @@ const Pricing = () => {
 
       <section className='flex flex-col items-center mb-[104px]'>
         <SectionHeading />
-        
-        <PlanToggle showIndividual={showIndividual} onToggle={setShowIndividual} />
 
-        <div className='flex flex-col md:flex-row justify-center flex-wrap max-w-[1228px] gap-6'>
-          {showIndividual ? (
-            // Individual Plans
-            <>
-              <PricingCard
-                title='Pay-as-you-go'
-                subtitle='$20 in free credits'
-                description='Great for getting started'
-                features={payAsYouGoFeatures}
-                buttonText='Sign Up'
-                buttonLink='https://app.all-hands.dev/'
-              />
-              <PricingCard
-                title='Pro'
-                subtitle='$20 / month'
-                description='Everything in Pay-as-you-go, plus:'
-                features={proFeatures}
-                buttonText='Sign Up'
-                buttonLink='https://app.all-hands.dev/settings'
-              />
-            </>
-          ) : (
-            // Enterprise Plans
-            <>
-              <PricingCard
-                title='Enterprise Cloud'
-                subtitle='$40 / user / month'
-                description='For teams and organizations'
-                features={enterpriseCloudFeatures}
-                buttonText='Join Early Access'
-                buttonLink='https://forms.gle/pdYjBk59Fwy6rshF8'
-              />
-              <PricingCard
-                title='Enterprise Self-hosted'
-                subtitle='Contact Us'
-                description='Everything in Enterprise Cloud, plus:'
-                features={enterpriseSelfHostedFeatures}
-                buttonText='Contact Us'
-                buttonLink='https://forms.gle/pdYjBk59Fwy6rshF8'
-              />
-            </>
-          )}
+        <div className='flex flex-row justify-center items-stretch flex-wrap max-w-[1300px] gap-6 px-4'>
+          <PricingCard
+            title='Individual'
+            subtitle='Free to start'
+            description='Great for individual developers'
+            features={payAsYouGoFeatures}
+            buttonText='Sign Up'
+            buttonLink='https://app.all-hands.dev/'
+          />
+          <PricingCard
+            title='Enterprise Cloud'
+            subtitle='$40 / user / month'
+            description='For teams and organizations'
+            features={enterpriseCloudFeatures}
+            buttonText='Join Early Access'
+            buttonLink='https://forms.gle/pdYjBk59Fwy6rshF8'
+          />
+          <PricingCard
+            title='Enterprise Self-hosted'
+            subtitle='Contact Us'
+            description='Everything in Enterprise Cloud, plus:'
+            features={enterpriseSelfHostedFeatures}
+            buttonText='Contact Us'
+            buttonLink='https://forms.gle/pdYjBk59Fwy6rshF8'
+          />
         </div>
       </section>
 
@@ -277,14 +214,7 @@ const Pricing = () => {
             />
             <FAQItem
               question='What is the token pricing for the Individual (pay-as-you-go) plan?'
-              answer='With the Individual (pay-as-you-go) plan, customers start with $20 in free token credits. Tokens can be refilled for as low as $10. 
-
-              Additional tokens are billed at the following rates:
-
-              Input: $6 per million tokens
-              Cache write: $7.50 per million tokens
-              Cache read: $0.60 per million tokens
-              Output: $30 per million tokens'
+              answer='With the Individual (pay-as-you-go) plan, customers start with $10 in free token credits. Tokens can be refilled for as low as $10. Token pricing is billed at cost (zero markup) based on API prices.'
             />
           </div>
         </div>
