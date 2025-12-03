@@ -35,6 +35,7 @@ import post34 from "./20251013-dgx-spark.md?raw";
 import post35 from "./20251022-remediating-cves-with-openhands.md?raw";
 import post36 from "./20251104-eol-pro-plan.md?raw";
 import post37 from "./20251105-openhands-sdk-plug-and-play-coding-agents.md?raw";
+import post38 from "./20251111-datadog-debugging-automation.md?raw";
 
 export const RAW_POSTS = [
   post1,
@@ -74,4 +75,5 @@ export const RAW_POSTS = [
   post35,
   post36,
   post37,
+  post38,
 ];
