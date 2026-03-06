@@ -27,17 +27,17 @@ export const action = handleNewsletterSubscription;
 
 export const meta: Route.MetaFunction = ({ location }) => {
   return [
-    { title: 'All Hands AI Blog - Insights and Innovations' },
-    { name: 'description', content: 'Read the latest insights and innovations from All Hands AI.' },
-    { property: 'og:title', content: 'All Hands AI Blog - Insights and Innovations' },
-    { property: 'og:description', content: 'Read the latest insights and innovations from All Hands AI.' },
+    { title: 'OpenHands Blog | Cloud Coding Agents, AI Development, and Open Source Insights' },
+    { name: 'description', content: 'Explore the latest in cloud coding agents, autonomous development, and open-source engineering. Deep dives, tutorials, and news from the OpenHands team.' },
+    { property: 'og:title', content: 'OpenHands Blog | Cloud Coding Agents, AI Development, and Open Source Insights' },
+    { property: 'og:description', content: 'Explore the latest in cloud coding agents, autonomous development, and open-source engineering. Deep dives, tutorials, and news from the OpenHands team.' },
     { property: 'og:image', content: 'https://www.all-hands.dev/assets/all-hands-text-logo.png' },
     { property: 'og:url', content: 'https://www.all-hands.dev' + location.pathname },
     { property: 'og:type', content: 'website' },
-    { property: 'og:site_name', content: 'All Hands AI' },
+    { property: 'og:site_name', content: 'OpenHands' },
     { name: 'twitter:card', content: 'summary_large_image' },
-    { name: 'twitter:title', content: 'All Hands AI Blog - Insights and Innovations' },
-    { name: 'twitter:description', content: 'Read the latest insights and innovations from All Hands AI.' },
+    { name: 'twitter:title', content: 'OpenHands Blog | Cloud Coding Agents, AI Development, and Open Source Insights' },
+    { name: 'twitter:description', content: 'Explore the latest in cloud coding agents, autonomous development, and open-source engineering. Deep dives, tutorials, and news from the OpenHands team.' },
     { name: 'twitter:image', content: 'https://www.all-hands.dev/assets/all-hands-text-logo.png' },
     { rel: 'canonical', href: 'https://www.all-hands.dev' + location.pathname },
   ];
@@ -57,15 +57,25 @@ const Blog = () => {
   };
 
   return (
-    <main className='flex flex-col'>
-      <section className='flex flex-col items-center'>
-        <SectionHeading isHero subheading='OUR BLOG'>
-          <NewsletterForm
-            error={data?.result === 'error' ? data.msg : undefined}
-            success={data?.result === 'success' ? data.msg : undefined}
-            disabled={navigation.state === 'submitting' || !!data}
-          />
-        </SectionHeading>
+    <main className='flex flex-col pt-[100px]'>
+      <section className='flex flex-col items-center py-16 px-10'>
+        <h1 className='text-4xl lg:text-6xl font-bold mb-6 text-center'>OpenHands Blog</h1>
+        <p className='text-lg text-brand-muted text-center mb-8 max-w-2xl'>
+          Explore the latest in cloud coding agents, autonomous development, and open-source engineering.
+        </p>
+        <div className='flex gap-4 justify-center flex-wrap mb-8'>
+          <a href='https://app.all-hands.dev' className='btn btn-primary'>
+            Try it live
+          </a>
+          <a href='https://docs.openhands.dev/sdk' className='btn btn-outline'>
+            Build with SDK
+          </a>
+        </div>
+        <NewsletterForm
+          error={data?.result === 'error' ? data.msg : undefined}
+          success={data?.result === 'success' ? data.msg : undefined}
+          disabled={navigation.state === 'submitting' || !!data}
+        />
       </section>
 
       <section className='max-w-[1440px] monitor:self-center'>

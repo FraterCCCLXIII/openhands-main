@@ -54,6 +54,12 @@ export const ErrorBoundary = () => (
 );
 
 export const meta: Route.MetaFunction = ({ data }) => {
+  if (!data) {
+    return [
+      { title: 'OpenHands Blog' },
+      { name: 'description', content: 'Read the latest from the OpenHands team.' },
+    ];
+  }
   return [
     { title: data.title },
     { name: 'description', content: data.excerpt },
@@ -98,11 +104,13 @@ export const meta: Route.MetaFunction = ({ data }) => {
 
 const BlogDetails = () => {
   const data = useLoaderData() as ReturnType<typeof loader>;
-  const codeElementWidth = React.useMemo(() => {
+  const [codeElementWidth, setCodeElementWidth] = React.useState(800);
+  
+  React.useEffect(() => {
     const baseWidth = window.innerWidth;
     const padding = baseWidth >= 1024 ? 84 : 40; // 42px or 20px padding on each side
     const maxWidth = Math.min(baseWidth - padding, 800); // Max width of 800px for larger screens
-    return maxWidth;
+    setCodeElementWidth(maxWidth);
   }, []);
 
   return (

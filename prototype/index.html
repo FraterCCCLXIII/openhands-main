@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>OpenHands Front Page Prototype</title>
+  <style>
+    /* === DESIGN SYSTEM === */
+    :root {
+      --bg: #f9f0d9;
+      --fg: #22150d;
+      --accent: #e8ff4f;
+      --dark-bg: #22150d;
+      --light-text: #f9f0d9;
+      --radius: 100px;
+      --radius-card: 16px;
+      --container-width: 1200px;
+      --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-family);
+      background-color: var(--bg);
+      color: var(--fg);
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: var(--container-width);
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* === BUTTONS === */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 24px;
+      border-radius: var(--radius);
+      font-weight: 500;
+      font-size: 14px;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: none;
+    }
+
+    .btn-primary {
+      background-color: var(--accent);
+      color: var(--fg);
+    }
+
+    .btn-primary:hover {
+      filter: brightness(1.05);
+    }
+
+    .btn-secondary {
+      background-color: transparent;
+      color: var(--fg);
+      border: 1px solid var(--fg);
+    }
+
+    .btn-secondary:hover {
+      background-color: var(--fg);
+      color: var(--bg);
+    }
+
+    .btn-dark {
+      background-color: var(--light-text);
+      color: var(--fg);
+    }
+
+    /* === HEADER === */
+    header {
+      position: sticky;
+      top: 0;
+      background-color: var(--bg);
+      z-index: 100;
+      border-bottom: 1px solid rgba(34, 21, 13, 0.1);
+    }
+
+    .header-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 0;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 20px;
+      font-weight: 600;
+      text-decoration: none;
+      color: var(--fg);
+    }
+
+    .logo-icon {
+      width: 32px;
+      height: 32px;
+    }
+
+    nav {
+      display: flex;
+      align-items: center;
+      gap: 32px;
+    }
+
+    nav a {
+      color: var(--fg);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    nav a:hover {
+      opacity: 0.7;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .github-stars {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 14px;
+      text-decoration: none;
+      color: var(--fg);
+    }
+
+    /* === HERO === */
+    .hero {
+      position: relative;
+      padding: 120px 0;
+      text-align: center;
+      overflow: hidden;
+    }
+
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      font-family: var(--font-mono);
+      font-size: 14px;
+      line-height: 14px;
+      color: var(--fg);
+      opacity: 0.12;
+      white-space: pre;
+      overflow: hidden;
+      user-select: none;
+      pointer-events: none;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero h1 {
+      font-size: 56px;
+      font-weight: 600;
+      max-width: 800px;
+      margin: 0 auto 24px;
+      line-height: 1.1;
+    }
+
+    .hero-subtitle {
+      font-size: 18px;
+      color: rgba(34, 21, 13, 0.7);
+      max-width: 600px;
+      margin: 0 auto 40px;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+    }
+
+    /* === ANNOUNCEMENT BAR === */
+    .announcement {
+      background-color: var(--accent);
+      padding: 12px 24px;
+      text-align: center;
+      border-radius: var(--radius);
+      margin-bottom: 40px;
+      display: inline-block;
+    }
+
+    .announcement a {
+      color: var(--fg);
+      font-weight: 500;
+    }
+
+    /* === LOGO CAROUSEL === */
+    .logos-section {
+      padding: 60px 0;
+    }
+
+    .logos-title {
+      text-align: center;
+      font-size: 20px;
+      font-weight: 500;
+      margin-bottom: 32px;
+    }
+
+    .logos-grid {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 40px;
+      align-items: center;
+      opacity: 0.7;
+    }
+
+    .logos-grid img {
+      height: 28px;
+      width: auto;
+    }
+
+    /* === PRODUCT TABS === */
+    .product-tabs {
+      padding: 80px 0;
+    }
+
+    .tabs-header {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 40px;
+    }
+
+    .tab-btn {
+      padding: 8px 20px;
+      border-radius: var(--radius);
+      background: transparent;
+      border: 1px solid var(--fg);
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .tab-btn.active,
+    .tab-btn:hover {
+      background: var(--fg);
+      color: var(--bg);
+    }
+
+    .tab-content {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      align-items: center;
+    }
+
+    .tab-text h2 {
+      font-size: 40px;
+      margin-bottom: 16px;
+    }
+
+    .tab-text p {
+      font-size: 18px;
+      color: rgba(34, 21, 13, 0.7);
+      margin-bottom: 24px;
+    }
+
+    .tab-image {
+      background: var(--dark-bg);
+      border-radius: var(--radius-card);
+      padding: 24px;
+      min-height: 400px;
+    }
+
+    .code-preview {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--light-text);
+      line-height: 1.6;
+    }
+
+    .code-preview .keyword {
+      color: #ff79c6;
+    }
+
+    .code-preview .string {
+      color: #f1fa8c;
+    }
+
+    .code-preview .comment {
+      color: #6272a4;
+    }
+
+    /* === FEATURES SECTION === */
+    .features-section {
+      padding: 80px 0;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 48px;
+    }
+
+    .section-header h2 {
+      font-size: 32px;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .feature-card {
+      background: var(--dark-bg);
+      color: var(--light-text);
+      padding: 32px;
+      border-radius: var(--radius-card);
+    }
+
+    .feature-icon {
+      width: 48px;
+      height: 48px;
+      margin-bottom: 24px;
+    }
+
+    .feature-icon svg {
+      width: 100%;
+      height: 100%;
+      stroke: var(--accent);
+      stroke-width: 1.5;
+      fill: none;
+    }
+
+    .feature-card h3 {
+      font-size: 18px;
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+
+    .feature-card p {
+      font-size: 14px;
+      color: rgba(249, 240, 217, 0.7);
+      line-height: 1.5;
+    }
+
+    /* === TESTIMONIAL === */
+    .testimonial-section {
+      background: var(--accent);
+      padding: 120px 0;
+      text-align: center;
+    }
+
+    .testimonial-quote {
+      font-size: 36px;
+      font-weight: 500;
+      max-width: 900px;
+      margin: 0 auto 40px;
+      line-height: 1.3;
+    }
+
+    .testimonial-author {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+    }
+
+    .author-avatar {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: var(--fg);
+    }
+
+    .author-info {
+      text-align: left;
+    }
+
+    .author-name {
+      font-weight: 600;
+    }
+
+    .author-title {
+      font-size: 14px;
+      opacity: 0.7;
+    }
+
+    /* === CTA SECTION === */
+    .cta-section {
+      background: var(--dark-bg);
+      color: var(--light-text);
+      padding: 120px 0;
+      text-align: center;
+    }
+
+    .cta-section h2 {
+      font-size: 40px;
+      max-width: 700px;
+      margin: 0 auto 24px;
+    }
+
+    .cta-section p {
+      font-size: 18px;
+      opacity: 0.7;
+      max-width: 600px;
+      margin: 0 auto 40px;
+    }
+
+    .cta-actions {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+    }
+
+    /* === FOOTER === */
+    footer {
+      padding: 80px 0 40px;
+    }
+
+    .footer-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 32px;
+      margin-bottom: 40px;
+    }
+
+    .footer-col h4 {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    .footer-col a {
+      display: block;
+      color: var(--fg);
+      text-decoration: none;
+      font-size: 14px;
+      opacity: 0.7;
+      margin-bottom: 8px;
+    }
+
+    .footer-col a:hover {
+      opacity: 1;
+    }
+
+    .footer-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 24px;
+      border-top: 1px solid rgba(34, 21, 13, 0.1);
+      font-size: 14px;
+      opacity: 0.7;
+    }
+
+    /* === PROTOTYPE CONTROLS === */
+    .prototype-controls {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: white;
+      padding: 16px;
+      border-radius: 8px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+      z-index: 1000;
+      font-size: 12px;
+    }
+
+    .prototype-controls h4 {
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+
+    .prototype-controls label {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .prototype-controls input[type="color"] {
+      width: 40px;
+      height: 24px;
+      border: none;
+      cursor: pointer;
+    }
+
+    /* === RESPONSIVE === */
+    @media (max-width: 992px) {
+      .hero h1 {
+        font-size: 40px;
+      }
+
+      .tab-content {
+        grid-template-columns: 1fr;
+      }
+
+      .features-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .footer-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    @media (max-width: 768px) {
+      nav {
+        display: none;
+      }
+
+      .hero h1 {
+        font-size: 32px;
+      }
+
+      .features-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-actions {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .footer-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- HEADER -->
+  <header>
+    <div class="container">
+      <div class="header-inner">
+        <a href="/" class="logo">
+          <svg class="logo-icon" viewBox="0 0 32 32" fill="none">
+            <text x="0" y="24" font-size="24">🙌</text>
+          </svg>
+          OpenHands
+        </a>
+        <nav>
+          <a href="/product">Product</a>
+          <a href="/enterprise">Enterprise</a>
+          <a href="/pricing">Pricing</a>
+          <a href="https://index.openhands.dev/home">Benchmarks</a>
+          <a href="/community">Community</a>
+          <a href="#">Resources</a>
+        </nav>
+        <div class="header-actions">
+          <a href="https://github.com/OpenHands/OpenHands" class="github-stars">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+            </svg>
+            68K
+          </a>
+          <a href="https://docs.openhands.dev/sdk" class="btn btn-secondary">Build with SDK</a>
+          <a href="https://app.all-hands.dev/" class="btn btn-primary">Try it live</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- HERO SECTION -->
+  <section class="hero">
+    <div class="hero-bg">
+O>]OOHHHHHHHHEEE}>EEE       DD! DD                      *[{~~                  <,;   NNNNNNNNNNNNNNNNNN    >,<   NNNNNNN  ,.
+O]:OOHHHHHHHHEEE~}[EE       DD!DDD                       -.!*<                 .;*   NNNNNNNNNNNNNNNNNN     ;~[  NNNNNNN  >-
+OO]OOHHHHHHHHHEE*> EEE      DD;DDD                        <!>*                 -!}    NNNNNNNNNNNNNNNNN     >~!   NNNNNN  >*
+OO*[OOHHHHHHHHEEE!*EEE      DD:DDDD                       }~<<:                 .->    NNNNNNNNNNNNNNN      -*:   NNNNNN  [-<
+O>]OOHHHHHHHHEEE}>EEE       DD! DD                      *[{~~                  <,;   NNNNNNNNNNNNNNNNNN    >,<   NNNNNNN  ,.
+O]:OOHHHHHHHHEEE~}[EE       DD!DDD                       -.!*<                 .;*   NNNNNNNNNNNNNNNNNN     ;~[  NNNNNNN  >-
+OO]OOHHHHHHHHHEE*> EEE      DD;DDD                        <!>*                 -!}    NNNNNNNNNNNNNNNNN     >~!   NNNNNN  >*
+OO*[OOHHHHHHHHEEE!*EEE      DD:DDDD                       }~<<:                 .->    NNNNNNNNNNNNNNN      -*:   NNNNNN  [-<
+    </div>
+    <div class="container hero-content">
+      <div class="announcement">
+        Introducing the OpenHands Index, a live leaderboard for language models on real software engineering tasks.
+        <a href="https://openhands.dev/blog/openhands-index">Read More →</a>
+      </div>
+      <h1>The open platform for cloud coding agents.</h1>
+      <p class="hero-subtitle">
+        Scale from one to thousands of agents — open source, model-agnostic, and enterprise-ready.
+      </p>
+      <div class="hero-actions">
+        <a href="https://app.all-hands.dev/" class="btn btn-primary">Try it live</a>
+        <a href="https://docs.openhands.dev/sdk" class="btn btn-secondary">Build with SDK</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- LOGOS SECTION -->
+  <section class="logos-section">
+    <div class="container">
+      <p class="logos-title">Trusted by engineers at</p>
+      <div class="logos-grid">
+        <img src="https://cdn.prod.website-files.com/68ff4058b35616cdd47d5b59/69137f6974b71a1a4a932f82_TikTok_logo.svg" alt="TikTok">
+        <img src="https://cdn.prod.website-files.com/68ff4058b35616cdd47d5b59/69137f523b08f91a5aa905b9_Vmware.svg" alt="VMware">
+        <img src="https://cdn.prod.website-files.com/68ff4058b35616cdd47d5b59/69137f10c3975e28b3932320_Amazon_logo1.svg" alt="Amazon">
+        <img src="https://cdn.prod.website-files.com/68ff4058b35616cdd47d5b59/69137eac8f27ca27f5e48420_Netflix_2015_logo1.svg" alt="Netflix">
+        <img src="https://cdn.prod.website-files.com/68ff4058b35616cdd47d5b59/69137e199ce2cb594b0210ab_google-ar211.svg" alt="Google">
+        <img src="https://cdn.prod.website-files.com/68ff4058b35616cdd47d5b59/690b9e5400fdae4c12eedd75_small-client-logo.svg" alt="AMD">
+      </div>
+    </div>
+  </section>
+
+  <!-- PRODUCT TABS -->
+  <section class="product-tabs">
+    <div class="container">
+      <div class="tabs-header">
+        <button class="tab-btn active">SDK</button>
+        <button class="tab-btn">Cloud</button>
+        <button class="tab-btn">CLI</button>
+      </div>
+      <div class="tab-content">
+        <div class="tab-text">
+          <h2>SDK</h2>
+          <p>Use the SDK to embed OpenHands into apps and workflows</p>
+          <a href="https://docs.openhands.dev/sdk" class="btn btn-secondary">Get the SDK</a>
+        </div>
+        <div class="tab-image">
+          <pre class="code-preview">
+<span class="keyword">from</span> openhands.sdk <span class="keyword">import</span> LLM, Agent, Conversation, Tool
+<span class="keyword">from</span> openhands.tools.file_editor <span class="keyword">import</span> FileEditorTool
+<span class="keyword">from</span> openhands.tools.task_tracker <span class="keyword">import</span> TaskTrackerTool
+<span class="keyword">from</span> openhands.tools.terminal <span class="keyword">import</span> TerminalTool
+
+llm = LLM(
+    model=<span class="string">"anthropic/claude-sonnet-4-5-20250929"</span>,
+    api_key=os.getenv(<span class="string">"LLM_API_KEY"</span>),
+)
+
+agent = Agent(
+    llm=llm,
+    tools=[
+        Tool(name=TerminalTool.name),
+        Tool(name=FileEditorTool.name),
+        Tool(name=TaskTrackerTool.name),
+    ],
+)
+
+cwd = os.getcwd()
+          </pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES SECTION -->
+  <section class="features-section">
+    <div class="container">
+      <div class="section-header">
+        <h2>Why teams choose OpenHands</h2>
+        <a href="https://app.all-hands.dev/" class="btn btn-primary">Try it live</a>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18M7 7l10 10M17 7l-10 10"/></svg>
+          </div>
+          <h3>Extensible and customizable for any workflow</h3>
+          <p>Build and orchestrate your own agents with open SDKs, APIs, and micro-agents.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 3"/></svg>
+          </div>
+          <h3>Model-agnostic</h3>
+          <p>Adapt OpenHands to any model, CI/CD pipeline, or codebase with fine-grained configurability.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 12h6M9 15h4"/></svg>
+          </div>
+          <h3>Works where you do</h3>
+          <p>Delegate tasks directly from GitHub, GitLab, Slack, or via the API and SDK</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          <h3>Secure, sandboxed runtime you control</h3>
+          <p>Deploy in isolated Docker or Kubernetes environments, self-hosted or cloud, with full access control and auditability.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+          </div>
+          <h3>Open source and transparent by design</h3>
+          <p>Full visibility into every agent and artifact.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          </div>
+          <h3>Cloud coding agents that scale</h3>
+          <p>From a single task to thousands of parallel runs.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TESTIMONIAL SECTION -->
+  <section class="testimonial-section">
+    <div class="container">
+      <blockquote class="testimonial-quote">
+        "OpenHands was the only solution that let us prompt an autonomous coding agent remotely at scale, not just on a laptop or inside a narrow CI template."
+      </blockquote>
+      <div class="testimonial-author">
+        <div class="author-avatar"></div>
+        <div class="author-info">
+          <div class="author-name">Sina Pakazad</div>
+          <div class="author-title">VP of Data Science at C3.ai</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA SECTION -->
+  <section class="cta-section">
+    <div class="container">
+      <h2>Building the open standard for autonomous software development.</h2>
+      <p>OpenHands is the foundation for secure, transparent, model-agnostic coding agents - empowering every software team to build faster with full control.</p>
+      <div class="cta-actions">
+        <a href="https://docs.openhands.dev/sdk" class="btn btn-dark">Build with SDK</a>
+        <a href="https://app.all-hands.dev/" class="btn btn-primary">Try it live</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-col">
+          <h4>Home</h4>
+          <a href="/">Home</a>
+        </div>
+        <div class="footer-col">
+          <h4>Product</h4>
+          <a href="/product">Product</a>
+        </div>
+        <div class="footer-col">
+          <h4>Enterprise</h4>
+          <a href="/enterprise">Enterprise</a>
+        </div>
+        <div class="footer-col">
+          <h4>Pricing</h4>
+          <a href="/pricing">Pricing</a>
+        </div>
+        <div class="footer-col">
+          <h4>Resources</h4>
+          <a href="/community">Community</a>
+          <a href="/manifesto">Manifesto</a>
+          <a href="https://docs.openhands.dev/">Docs</a>
+          <a href="/blog">Blog</a>
+          <a href="/press">Press</a>
+        </div>
+        <div class="footer-col">
+          <h4>Contact</h4>
+          <a href="/contact">Contact</a>
+          <a href="/about">About</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© 2026 OpenHands - All rights reserved</span>
+        <a href="/privacy">Privacy Policy</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- PROTOTYPE CONTROLS -->
+  <div class="prototype-controls">
+    <h4>🎨 Prototype Controls</h4>
+    <label>
+      Background:
+      <input type="color" id="bg-color" value="#f9f0d9" onchange="document.documentElement.style.setProperty('--bg', this.value)">
+    </label>
+    <label>
+      Accent:
+      <input type="color" id="accent-color" value="#e8ff4f" onchange="document.documentElement.style.setProperty('--accent', this.value)">
+    </label>
+    <label>
+      Text:
+      <input type="color" id="fg-color" value="#22150d" onchange="document.documentElement.style.setProperty('--fg', this.value)">
+    </label>
+    <p style="margin-top: 8px;">Edit this HTML file to prototype modifications!</p>
+  </div>
+
+  <script>
+    // Tab switching
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        
+        // Update tab content based on selection
+        const tabName = this.textContent;
+        const tabText = document.querySelector('.tab-text');
+        
+        if (tabName === 'Cloud') {
+          tabText.querySelector('h2').textContent = 'Cloud';
+          tabText.querySelector('p').textContent = 'Plan and execute complex tasks via the desktop or mobile web';
+          tabText.querySelector('a').textContent = 'Try it live';
+          tabText.querySelector('a').href = 'https://app.all-hands.dev/';
+        } else if (tabName === 'CLI') {
+          tabText.querySelector('h2').textContent = 'CLI';
+          tabText.querySelector('p').textContent = 'Pair with OpenHands CLI right from your terminal';
+          tabText.querySelector('a').textContent = 'Download CLI';
+          tabText.querySelector('a').href = 'https://docs.openhands.dev/openhands/usage/cli/installation';
+        } else {
+          tabText.querySelector('h2').textContent = 'SDK';
+          tabText.querySelector('p').textContent = 'Use the SDK to embed OpenHands into apps and workflows';
+          tabText.querySelector('a').textContent = 'Get the SDK';
+          tabText.querySelector('a').href = 'https://docs.openhands.dev/sdk';
+        }
+      });
+    });
+  </script>
+</body>
+</html>

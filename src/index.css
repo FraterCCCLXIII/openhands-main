@@ -1,3 +1,6 @@
+/* Google Fonts - Inter - must be first */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -7,14 +10,89 @@
   src: url("/assets/fonts/QuincyCF-Regular.woff");
 }
 
-@layer base {
+/* CSS Variables matching Webflow computed styles exactly */
+:root {
+  /* Colors - exact Webflow values */
+  --bg: #f9f0d9;
+  --fg: #22150d;
+  --accent: #ffff8b;
+  --muted: #b3a88c;
+  
+  /* Section padding - Webflow uses ~62px */
+  --section-padding: 62px;
+  
+  /* Container */
+  --container-max-width: 1238px;
+  
+  /* Typography - exact Webflow computed values */
+  --h1-font-size: 37.14px;
+  --h1-line-height: 1.1;
+  --h1-font-weight: 500;
+  --h1-letter-spacing: -0.03em;
+  
+  --h2-font-size: 35.31px;
+  --h2-line-height: 1.1;
+  --h2-font-weight: 500;
+  --h2-letter-spacing: -0.02em;
+  
+  --h3-font-size: 27.43px;
+  --h3-line-height: 1.2;
+  --h3-font-weight: 500;
+  
+  --paragraph-line-height: 1.4;
+  --paragraph-lg-line-height: 1.3;
+  
+  /* Button - exact Webflow values */
+  --btn-padding-y: 14.4px;
+  --btn-padding-x: 30.4px;
+  --btn-border-radius: 8px;
+  
+  /* Banner */
+  --banner-border-radius: 6.4px;
+}
 
+@layer base {
   html,
   body {
-    @apply font-poppins overscroll-y-none bg-[#F1EAE0]
+    @apply font-inter overscroll-y-none bg-brand-bg text-brand-fg;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  ::selection {
+    @apply bg-brand-fg text-brand-bg;
   }
 }
 
+/* Webflow-style diagonal stripe background pattern */
+.bg-stripe-pattern {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='3' height='3' viewBox='0 0 3 3' fill='none'%3E%3Cg clip-path='url(%23clip0_481_2070)'%3E%3Cpath d='M2.99997 0.970703L0.969971 3.0007H2.02997L2.99997 2.0307V0.970703Z' fill='%23259d4d'/%3E%3Cpath d='M0.97 0L0 0.97V2.03L2.03 0H0.97Z' fill='%23259d4d'/%3E%3C/g%3E%3Cdefs%3E%3CclipPath id='clip0_481_2070'%3E%3Crect width='3' height='3' fill='white'/%3E%3C/clipPath%3E%3C/defs%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 4px;
+}
+
+/* ASCII art footer background */
+.ascii-art-bg {
+  position: relative;
+  overflow: hidden;
+}
+
+.ascii-art-bg::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 200px;
+  background-image: url('/assets/webflow/backgrounds/ascii-art.svg');
+  background-repeat: no-repeat;
+  background-position: center bottom;
+  background-size: 100% auto;
+  opacity: 0.1;
+  pointer-events: none;
+}
+
+/* Legacy heading styles (kept for backward compatibility) */
 .heading {
   @apply font-quincy text-[50px] leading-[50px] lg:text-[60px] lg:leading-[60px]
 }
@@ -29,4 +107,309 @@
 
 .code-block {
   @apply text-[14px] leading-[20px]
+}
+
+/* Modern design system utilities */
+@layer components {
+  /* Button styles - exact Webflow computed values */
+  .btn {
+    @apply inline-flex items-center justify-center font-medium cursor-pointer transition-all duration-300 relative;
+    padding: var(--btn-padding-y) var(--btn-padding-x);
+    border-radius: var(--btn-border-radius);
+    font-size: 16px;
+    line-height: 1.3;
+    font-weight: 500;
+  }
+
+  .btn-primary {
+    @apply bg-brand-fg text-brand-bg border border-transparent;
+  }
+  .btn-primary:hover {
+    box-shadow: inset 0 0 0 1px rgba(249, 240, 217, 0.3);
+  }
+
+  .btn-outline {
+    @apply bg-transparent text-brand-fg border border-brand-fg;
+  }
+  .btn-outline:hover {
+    @apply bg-brand-fg text-brand-bg;
+  }
+
+  .btn-outline-light {
+    @apply bg-transparent text-white border border-white/50 hover:bg-white/10;
+  }
+
+  .btn-lg {
+    padding: 1em 2.2em;
+    font-size: 1.1rem;
+  }
+
+  /* Section styles */
+  .section-title {
+    @apply text-[28px] lg:text-[44px] font-bold leading-tight;
+  }
+
+  /* Card styles */
+  .card-dark {
+    @apply bg-card-bg text-card-text rounded-lg p-6;
+  }
+
+  /* Feature list item */
+  /* Match live site: horizontal padding, no vertical padding */
+  .feature-item {
+    @apply flex gap-5 px-5 border-t border-brand-border;
+  }
+
+  .feature-item:last-child {
+    @apply border-b border-brand-border;
+  }
+
+  /* Stacked feature items for Why teams section - matches live site ~120px height */
+  .feature-item-stacked {
+    @apply flex gap-5 py-6 px-5 border-t border-brand-border;
+    min-height: 120px;
+  }
+
+  .feature-item-stacked:last-child {
+    @apply border-b border-brand-border;
+  }
+
+  /* Use case block */
+  .use-case-block {
+    @apply bg-[#efe6d1] rounded-2xl p-8 mb-6;
+  }
+
+  .use-case-label {
+    @apply font-mono text-sm mb-6 text-brand-muted;
+  }
+
+  /* Trust logos - match openhands.dev: 970px container, 48px gap, 64px wide logos */
+  .logo-grid {
+    @apply flex flex-wrap justify-center items-center;
+    gap: 32px 48px;
+    max-width: 970px;
+    margin: 0 auto;
+  }
+
+  /* Match openhands.dev: logos 64px wide, h-6 (24px) tall */
+  .logo-grid img {
+    @apply opacity-100 hover:opacity-80 transition-opacity;
+    width: 64px;
+    height: 24px;
+    object-fit: contain;
+  }
+
+  /* Code window */
+  .code-window {
+    @apply bg-card-bg rounded-2xl overflow-hidden shadow-xl;
+  }
+
+  .code-header {
+    @apply px-4 py-3 flex items-center gap-2 bg-white/5;
+  }
+
+  .code-dot {
+    @apply w-3 h-3 rounded-full;
+  }
+
+  /* Testimonial styles */
+  /* Live site: 44px font, 48.4px line-height */
+  .testimonial-quote {
+    @apply text-xl lg:text-[44px] lg:leading-[1.1] font-medium text-center;
+  }
+}
+
+/* ASCII Animation Styles - matches openhands.dev */
+.ascii-embed {
+  position: relative;
+  inset: 0;
+  overflow: hidden;
+}
+
+.ascii-pre {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: 0;
+  color: var(--fg, #22150d);
+  background: transparent;
+  font-family: monospace;
+  /* Match openhands.dev: 16px font-size */
+  font-size: 16px;
+  line-height: 16px;
+  overflow: hidden;
+  white-space: pre;
+  pointer-events: auto;
+  user-select: none;
+}
+
+@media (min-width: 900px) {
+  .ascii-pre {
+    /* Match openhands.dev: 16px on desktop too */
+    font-size: 16px;
+    line-height: 16px;
+  }
+}
+
+/* Webflow-style nav styling */
+.nav_wrap {
+  @apply fixed top-0 left-0 right-0 z-50;
+  background-color: rgba(249, 240, 217, 0.95);
+  backdrop-filter: blur(12px);
+}
+
+.nav_contain {
+  @apply max-w-[1400px] mx-auto px-5 lg:px-10;
+}
+
+.nav_grid {
+  @apply flex items-center justify-between h-[72px];
+}
+
+.nav_logo_link {
+  @apply flex items-center gap-2;
+}
+
+.nav_logo_img {
+  @apply h-[30px] w-auto;
+}
+
+.nav_links {
+  @apply hidden lg:flex items-center gap-1;
+}
+
+.nav_links_list {
+  @apply flex items-center gap-1 list-none m-0 p-0;
+}
+
+.nav_links_li {
+  @apply relative;
+}
+
+.nav_links_link {
+  @apply flex items-center gap-1 px-4 py-2 text-sm font-medium rounded-full transition-colors;
+}
+
+.nav_links_link:hover {
+  @apply bg-black/5;
+}
+
+.nav_links_icon {
+  @apply w-3 h-3 transition-transform;
+}
+
+.nav_links_dropdown_wrap {
+  @apply absolute top-full left-0 pt-2 opacity-0 invisible transition-all;
+}
+
+.nav_links_li:hover .nav_links_dropdown_wrap {
+  @apply opacity-100 visible;
+}
+
+.nav_links_dropdown {
+  @apply bg-brand-bg border border-brand-border rounded-lg shadow-lg p-4 min-w-[280px];
+}
+
+.nav_links_dropdown_group {
+  @apply mb-4 last:mb-0;
+}
+
+.nav_links_dropdown_group .dropdown-eyebrow {
+  @apply text-xs font-semibold uppercase tracking-wider text-brand-muted mb-2;
+}
+
+.nav_links_list.is-dropdown {
+  @apply flex-col items-stretch gap-0;
+}
+
+.nav_links_li.is-dropdown {
+  @apply w-full;
+}
+
+.nav_links_link.is-dropdown {
+  @apply w-full justify-start rounded-lg px-3 py-2;
+}
+
+.nav_links_dropdown_icon {
+  @apply w-4 h-4 mr-2 opacity-60;
+}
+
+.nav_links_subtext {
+  @apply text-xs text-brand-muted mt-0.5;
+}
+
+.nav_right {
+  @apply flex items-center gap-3;
+}
+
+/* Button component styles matching Webflow */
+.button {
+  @apply inline-flex items-center justify-center px-5 py-2.5 rounded-full font-medium text-sm cursor-pointer transition-all duration-200;
+}
+
+.button[data-wf--button--variant="primary"] {
+  @apply bg-brand-fg text-brand-bg hover:bg-opacity-80;
+}
+
+.button[data-wf--button--variant="secondary"] {
+  @apply bg-transparent text-brand-fg border border-brand-fg hover:bg-brand-fg hover:text-brand-bg;
+}
+
+/* Banner styles */
+.banner {
+  @apply bg-brand-accent py-3 px-4 text-center text-sm;
+}
+
+.banner-wrap {
+  @apply max-w-6xl mx-auto;
+}
+
+/* Hero section */
+.section-hero {
+  @apply relative overflow-hidden;
+}
+
+.hero {
+  @apply relative;
+}
+
+.hero-content {
+  @apply relative z-10 max-w-4xl mx-auto text-center py-20 lg:py-32;
+}
+
+.hero-content.is-center {
+  @apply flex flex-col items-center;
+}
+
+.hero_btn_wrap {
+  @apply flex gap-4 justify-center flex-wrap;
+}
+
+/* Utility classes matching Webflow */
+.u-overflow-hidden {
+  overflow: hidden;
+}
+
+.u-text-center {
+  text-align: center;
+}
+
+.u-mb-md {
+  margin-bottom: 2rem;
+}
+
+.u-mt-md {
+  margin-top: 2rem;
+}
+
+.u-text-midgray {
+  @apply text-brand-muted;
+}
+
+.paragraph-lg {
+  @apply text-lg lg:text-xl;
+}
+
+.h1 {
+  @apply text-4xl lg:text-6xl font-bold leading-tight;
 }

@@ -12,7 +12,7 @@ import { Analytics } from '@vercel/analytics/react';
 import type { Route } from './+types/root';
 import { motion } from 'framer-motion';
 import React from 'react';
-import { Footer } from './components/footer';
+// Footer is rendered inside each page's CTA section, not globally
 import { Header } from './components/header';
 import { Sidebar } from './components/sidebar/sidebar';
 import { GitHubModal } from './components/github-modal';
@@ -76,11 +76,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
-export const clientLoader = () => {
-  // get device width on client side before hydration
-  return { deviceWidth: window.innerWidth };
-};
-
 export default function App() {
   const [isSidebarHidden, setIsSidebarHidden] = React.useState(true);
   const [isGitHubModalOpen, setIsGitHubModalOpen] = React.useState(false);
@@ -122,7 +117,7 @@ export default function App() {
         onClickGitHubButton={handleOpenGitHubModal}
       />
       <motion.div
-        className='mt-[83px] flex flex-col min-h-screen'
+        className='flex flex-col min-h-screen'
         animate={{
           paddingLeft:
             isDesktop && !isSidebarHidden ? sidebarRef.current?.clientWidth : 0,
@@ -143,7 +138,6 @@ export default function App() {
             <Outlet />
           </GitHubModalProvider>
         </div>
-        <Footer />
       </motion.div>
       
       {/* GitHub Modal */}

@@ -1,341 +1,614 @@
 import statistics from '~/data/statistics.json';
 import contributors from '~/data/contributors.json';
-import TripleWow from '~/svgs/triple-wow.svg?react';
-import Star from '~/svgs/star.svg?react';
-import Users from '~/svgs/users.svg?react';
-import Hierarchy from '~/svgs/hierarchy.svg?react';
 import { ContributorGrid } from '~/components/contributor-grid';
-import { YellowWaveSection } from '~/components/yellow-wave-section';
-import { Button } from '~/components/button';
-import { formatLastCommit } from '~/utils/format-last-commit';
+import { Footer } from '~/components/footer';
 import { formatThousands } from '~/utils/format-thousands';
-import { ImageCarousel } from '~/components/image-carousel';
 import { formatContributorCount } from '~/utils/format-contributor-count';
 import { useGitHubModal } from '~/contexts/github-modal-context';
-import React from 'react';
-import clsx from 'clsx';
+import React, { Suspense, lazy } from 'react';
 import GitHubLogo from '~/svgs/github-logo.svg?react';
 import GitHubLogoBlack from '~/svgs/github-logo-black.svg?react';
 import { Link } from 'react-router';
 import type { Route } from './+types/home';
 
-interface HeroButtonProps {
-  onClick?: () => void;
-  children: string;
-  logo?: React.ReactNode;
-  variant?: 'primary' | 'secondary';
-}
+// Lazy load the ASCII animation for performance
+const ASCIIAnimation = lazy(() => import('~/components/ascii-animation'));
 
-function HeroButton({
-  onClick,
-  children,
-  logo,
-  variant = 'primary',
-}: HeroButtonProps) {
-  const className = clsx(
-    'font-[700] text-[19px] leading-[27px] rounded-lg py-4 w-[275px] flex items-center justify-center gap-4',
-    variant === 'primary' &&
-      'hover:bg-[#4B5563] hover:text-white transition-colors duration-50',
-    variant === 'primary' && 'bg-black text-white border-none',
-    variant === 'secondary' && 'bg-transparent border border-black text-black'
-  );
+// Client logos from Webflow
+const CLIENT_LOGOS = [
+  { name: 'TikTok', url: '/assets/webflow/logos/69137f6974b71a1a4a932f82_TikTok_logo.svg' },
+  { name: 'VMware', url: '/assets/webflow/logos/69137f523b08f91a5aa905b9_Vmware.svg' },
+  { name: 'Roche', url: '/assets/webflow/logos/69137f2cb537758796a9dba1_Roche_Logo.svg' },
+  { name: 'Amazon', url: '/assets/webflow/logos/69137f10c3975e28b3932320_Amazon_logo1.svg' },
+  { name: 'Cloudera', url: '/assets/webflow/misc/69137efe8466ac374a9bc8a1_idlJcLIGV__17611861580951.svg' },
+  { name: 'Fujitsu', url: '/assets/webflow/misc/69137eedd7c29cc9046de43f_Group.svg' },
+  { name: 'C3.ai', url: '/assets/webflow/logos/69137ec5a6f77dd174e557ce_C3ai_logo1.svg' },
+  { name: 'Netflix', url: '/assets/webflow/logos/69137eac8f27ca27f5e48420_Netflix_2015_logo1.svg' },
+  { name: 'Mastercard', url: '/assets/webflow/misc/69137e8df2c028b9e1506ede_mastercard1.svg' },
+  { name: 'Red Hat', url: '/assets/webflow/logos/69137e783790933dd06f9d59_Red_Hat_Logo_20191.svg' },
+  { name: 'MongoDB', url: '/assets/webflow/logos/69137e5fa006d963a1d1904d_mongodb-ar211.svg' },
+  { name: 'Apple', url: '/assets/webflow/logos/69137e47b45195da10c50f49_apple-111.svg' },
+  { name: 'Nvidia', url: '/assets/webflow/logos/69137e34e3a5ab71e37082a7_NVIDIA_logo1.svg' },
+  { name: 'Google', url: '/assets/webflow/logos/69137e199ce2cb594b0210ab_google-ar211.svg' },
+  { name: 'AMD', url: '/assets/webflow/logos/690b9e5400fdae4c12eedd75_small-client-logo.svg' },
+];
 
-  return (
-    <button className={className} onClick={onClick}>
-      {logo}
-      {children}
-    </button>
-  );
-}
+// Product features from Webflow CMS
+const FEATURES = [
+  { title: 'Extensible and customizable for any workflow', description: 'Build and orchestrate your own agents with open SDKs, APIs, and micro-agents.', icon: '/assets/webflow/features/690b95df7d9ca76624d45550_Frame48095777.svg' },
+  { title: 'Model-agnostic', description: 'Adapt OpenHands to any model, CI/CD pipeline, or codebase with fine-grained configurability.', icon: '/assets/webflow/features/690b95d99040920ad0084107_Frame48095776.svg' },
+  { title: 'Works where you do', description: 'Delegate tasks directly from GitHub, GitLab, Slack, or via the API and SDK', icon: '/assets/webflow/features/690b95d3c92c94a6a9b249f8_Frame48095775.svg' },
+  { title: 'Secure, sandboxed runtime you control', description: 'Deploy in isolated Docker or Kubernetes environments, self-hosted or cloud, with full access control and auditability.', icon: '/assets/webflow/features/690b95ca541b813083e0b38a_Frame48095774.svg' },
+  { title: 'Open source and transparent by design', description: 'Full visibility into every agent and artifact.', icon: '/assets/webflow/features/690b95bf82d3695da1690cb8_Frame48095773.svg' },
+  { title: 'Cloud coding agents that scale', description: 'From a single task to thousands of parallel runs.', icon: '/assets/webflow/features/690b95b580671251fa0903f4_Frame48095772.svg' },
+];
 
-function BenchmarkDisplay() {
-  return (
-    <>
-      <div className='relative w-[90vw] max-w-[500px] lg:w-[412px] h-[300px] flex items-center justify-center'>
-        <div className='absolute w-full lg:w-[412px] transform rotate-[-2deg] translate-y-[15px] translate-x-[0px] shadow-lg border-2 border-gray-200 bg-white'>
-          <img
-            src='/assets/agent_performance/live-swebench.png'
-            className='w-full'
-            alt='LiveSWEBench performance'
-          />
-        </div>
-        <div className='absolute w-full lg:w-[412px] transform rotate-[-3deg] translate-y-[-20px] translate-x-[-15px] shadow-lg border-2 border-gray-200 bg-white'>
-          <img
-            src='/assets/agent_performance/swebench-full.png'
-            className='w-full'
-            alt='SWE-bench performance'
-          />
-        </div>
-        <div className='absolute w-full lg:w-[412px] transform rotate-[1deg] translate-y-[70px] translate-x-[10px] shadow-lg border-2 border-gray-200 bg-white'>
-          <img
-            src='/assets/agent_performance/multi-swebench.png'
-            className='w-full'
-            alt='Multi-SWE-bench performance'
-          />
-        </div>
-      </div>
-    </>
-  );
-}
+// Use cases from Webflow CMS
+const USE_CASES_REDUCE = [
+  { title: 'Speed up code reviews', description: 'Summarize pull requests, apply feedback, fix tests, and push fixes instantly so code reviews move from hours to minutes.', icon: '/assets/webflow/testimonials/690db602c5ec8e837c1ff9b9_Frame48095783.svg' },
+  { title: 'Expand test coverage', description: 'Generate and maintain tests for new features to boost reliability and catch regressions before they ship.', icon: '/assets/webflow/testimonials/690db60c9a0ef2e561f859b8_Frame48095783-1.svg' },
+  { title: 'Automate docs & release notes', description: 'Generate accurate documentation and release notes directly from commits and pull requests, no manual updates required.', icon: '/assets/webflow/testimonials/690db61152b4d406db66af21_Frame48095783-2.svg' },
+];
 
-export const links: Route.LinksFunction = () => [
+const USE_CASES_STREAMLINE = [
+  { title: 'Refactor old code', description: 'Decompose monoliths, clean up tech debt, and modernize legacy codebases automatically without slowing down the roadmap.', icon: '/assets/webflow/testimonials/690db655aca9f8ee7a0d001f_Frame48095783.svg' },
+  { title: 'Eliminate security debt', description: 'Harness OpenHands to upgrade dependencies, fix security vulnerabilities, and reduce complexity for large scale, multi-repo changes.', icon: '/assets/webflow/testimonials/690db65c8a83399ae0b30aab_Frame48095783-1.svg' },
+  { title: 'Triage & fix prod issues', description: 'Deploy agents to analyze logs, pinpoint root causes, and generate fixed PRs ready for your team to review and approve.', icon: '/assets/webflow/testimonials/690db661c0a9589bc9d70bb3_Frame48095783-2.svg' },
+];
+
+// Testimonials from Webflow CMS
+const TESTIMONIALS = [
   {
-    rel: 'prefetch',
-    href: '/assets/product/product-slide-1.webp',
-    as: 'image',
+    quote: "The integration of Lemonade Server with OpenHands reflects AMD's commitment to open-source innovation and developer choice. This collaboration enables local coding agents that prioritize privacy, cost efficiency, and flexible model selection – while taking advantage of acceleration on Ryzen AI PCs. Together, we're supporting a range of workflows and staying true to open-source values.",
+    name: 'Adrian Macias',
+    title: 'Director, Developer Acceleration at AMD',
+    logo: '/assets/webflow/logos/690b9e5400fdae4c12eedd75_small-client-logo.svg',
+    photo: '/assets/webflow/testimonials/authors/amd.png',
   },
   {
-    rel: 'prefetch',
-    href: '/assets/product/product-slide-2.webp',
-    as: 'image',
+    quote: "OpenHands was the only solution that let us prompt an autonomous coding agent remotely at scale, not just on a laptop or inside a narrow CI template.",
+    name: 'Sina Pakazad',
+    title: 'VP of Data Science at C3',
+    logo: '/assets/webflow/logos/69137ec5a6f77dd174e557ce_C3ai_logo1.svg',
+    photo: '/assets/webflow/testimonials/authors/c3.png',
   },
   {
-    rel: 'prefetch',
-    href: '/assets/product/product-slide-3.webp',
-    as: 'image',
+    quote: "OpenHands autonomously fixes 87% of bug tickets same-day. Our clients think we hired an army of engineers.",
+    name: 'Nick Blanchet',
+    title: 'CTO at Flextract',
+    logo: '/assets/webflow/logos/6915b02ded45d0b434a0974d_flextract.png',
+    photo: '/assets/webflow/testimonials/authors/flextract.png',
   },
 ];
 
+// Social proof tweets from Webflow CMS - "Developers love OpenHands"
+const DEVELOPER_TWEETS = [
+  {
+    name: 'Dan Kempe',
+    handle: '@danielkempe',
+    avatar: '/assets/webflow/avatars/69783c9c4f51d7fb8f0ec4da_hAlMtLep_400x400.jpeg',
+    content: 'OpenHands raised $18.8M to build cloud coding agents that solve 87% of bug tickets same day. This is what AI coding tools should be. Not another chat interface. Actual autonomous problem solving that ships to production.',
+    url: 'https://x.com/danielkempe/status/2009643859043594394',
+  },
+  {
+    name: 'Esteban Puerta',
+    handle: '@Esteban_Puerta9',
+    avatar: '/assets/webflow/avatars/69783c9c29335a4e5f25171c_XdPDMFhM_400x400.jpeg',
+    content: "At this point, there isn't much of a need to roll your own especially when claude code SDK and openhands sdk are offering nice API's to utilize them. This is where it gets interesting.",
+    url: 'https://x.com/Esteban_Puerta9/status/2008257988356911231',
+  },
+  {
+    name: 'Leonardo Gonzalez',
+    handle: '@archimagos',
+    avatar: '/assets/webflow/avatars/69783c9c901a7c70a903b9c5_v7Pqyx4B_400x400.jpeg',
+    content: 'I love using autonomous agents like @allhands_ai OpenHands for 80% of the work (esp. backend), and then an interactive IDE like @windsurf or @zeddotdev for debugging, refinement, and UI work. It saves tons of my time and saves a lot of money too with the right models/plans.',
+    url: 'https://x.com/archimagos/status/1968386148121862626',
+  },
+  {
+    name: 'Wil - e/acc',
+    handle: '@wilfullyapt',
+    avatar: '/assets/webflow/avatars/69783c9ceee8b37f4ea0de9d_7pG3i1Kf_400x400.jpeg',
+    content: "I fvkn love vibe coding with OpenHands. It's not like your editor is doing things for you, it's like an idiot internal that literally knows all the book stuff. OpenHands commit, my tweaks, rinse and repeat. Phenomenal!!",
+    url: 'https://x.com/wilfullyapt/status/1906124164337197058',
+  },
+  {
+    name: 'Christian Genco',
+    handle: '@cgenco',
+    avatar: '/assets/webflow/avatars/69783c9cc7c27cc7bedeac33_40ETg5qV_400x400.jpeg',
+    content: "I haven't tried Devin yet but I freakin' love OpenHands. I prefer having more control over how it's working. Also that general workflow is the future. Just opening GitHub issues and the AI figures it out and writes tests and then pushes a PR is magical.",
+    url: 'https://x.com/cgenco/status/1887551887001424102',
+  },
+  {
+    name: 'Fisherman',
+    handle: '@Rybens92',
+    avatar: '/assets/webflow/avatars/69783c9c26731c8116dd7b63_VCfb1w94_400x400.jpeg',
+    content: 'Unpopular opinion, but still a very good alternative - @OpenHandsDev',
+    url: 'https://x.com/Rybens92/status/2008218093856976948',
+  },
+  {
+    name: 'Nour Eddine Hamaidi',
+    handle: '@NOOROU',
+    avatar: '/assets/webflow/avatars/69783c9c63f057bd2835f7dd_i-ehEnWR_400x400.jpeg',
+    content: 'Just tested a long session it did good with @OpenHandsDev',
+    url: 'https://x.com/NOOROU/status/2006419963599630419',
+  },
+  {
+    name: 'Chris Kennedy',
+    handle: '@c3K',
+    avatar: '/assets/webflow/avatars/69783c9da42038611de27929_987pKt6O_400x400.jpeg',
+    content: "I recommend trying @OpenHandsDev if you haven't already",
+    url: 'https://x.com/c3K/status/2002808616290812268',
+  },
+];
+
+// Footer social links
+const SOCIAL_LINKS = [
+  { name: 'Slack', url: 'https://openhands.dev/joinslack', icon: '/assets/webflow/misc/6908d21b2270590dedae7f30_Frame48095725.svg' },
+  { name: 'X', url: 'https://x.com/OpenHandsDev', icon: '/assets/webflow/misc/6908d21bd2a1305f4f77161b_Frame48095723.svg' },
+  { name: 'GitHub', url: 'https://github.com/OpenHands/OpenHands', icon: '/assets/webflow/misc/6908d21a36dee3e7147b3d21_Frame48095724.svg' },
+];
+
+// Code examples for each tab
+const TAB_CODE = {
+  sdk: `import os
+
+from openhands.sdk import LLM, Agent, Conversation, Tool
+from openhands.tools.file_editor import FileEditorTool
+from openhands.tools.task_tracker import TaskTrackerTool
+from openhands.tools.terminal import TerminalTool
+
+llm = LLM(
+    model="anthropic/claude-sonnet-4-5-20250929",
+    api_key=os.getenv('LLM_API_KEY'),
+)
+
+agent = Agent(
+    llm=llm,
+    tools=[
+        Tool(name=TerminalTool.name),
+        Tool(name=FileEditorTool.name),
+        Tool(name=TaskTrackerTool.name),
+    ],
+)
+
+cwd = os.getcwd()`,
+  cloud: `// OpenHands Cloud - Web Interface
+
+Navigate to: https://app.all-hands.dev
+
+1. Sign in with your account
+2. Create a new workspace
+3. Describe your task in natural language
+4. Watch the agent work in real-time
+5. Review and approve changes
+
+// Access via API
+curl -X POST https://api.all-hands.dev/v1/tasks \\
+  -H "Authorization: Bearer $API_KEY" \\
+  -d '{"prompt": "Fix the bug in auth.py"}'`,
+  cli: `# Install OpenHands CLI
+pip install openhands-ai
+
+# Start an interactive session
+openhands chat
+
+# Run a one-shot task
+openhands run "Add unit tests for utils.py"
+
+# Work on a specific repository
+openhands --repo ./my-project chat
+
+# Use with specific model
+openhands --model claude-sonnet-4 chat`,
+};
+
 export const meta: Route.MetaFunction = () => {
   return [
-    { title: 'All Hands AI' },
-    { name: 'description', content: 'Code Less, Make More. Hand off your next task to OpenHands — the leading open source AI coding agent.' },
-    { property: 'og:title', content: 'All Hands AI' },
-    { property: 'og:description', content: 'Code Less, Make More. Hand off your next task to OpenHands — the leading open source AI coding agent.' },
-    { property: 'og:image', content: 'https://www.all-hands.dev/assets/all-hands-logo.png' },
+    { title: 'OpenHands | The Open Platform for Cloud Coding Agents' },
+    { name: 'description', content: 'Meet OpenHands, the open-source, model-agnostic platform for cloud coding agents. Automate real engineering tasks securely in sandboxed environments.' },
+    { property: 'og:title', content: 'OpenHands | The Open Platform for Cloud Coding Agents' },
+    { property: 'og:description', content: 'Meet OpenHands, the open-source, model-agnostic platform for cloud coding agents. Automate real engineering tasks securely in sandboxed environments.' },
+    { property: 'og:image', content: '/assets/webflow/og/69161b32abf448a2df921a73_openhands_opengraph_01.png' },
     { property: 'og:url', content: 'https://www.all-hands.dev' },
     { property: 'og:type', content: 'website' },
-    { property: 'og:site_name', content: 'All Hands AI' },
     { name: 'twitter:card', content: 'summary_large_image' },
-    { name: 'twitter:title', content: 'All Hands AI' },
-    { name: 'twitter:description', content: 'Code Less, Make More. Hand off your next task to OpenHands — the leading open source AI coding agent.' },
-    { name: 'twitter:image', content: 'https://www.all-hands.dev/assets/all-hands-logo.png' },
     { rel: 'canonical', href: 'https://www.all-hands.dev' },
   ];
 };
 
 const Home = () => {
   const { openGitHubModal } = useGitHubModal();
+  const [activeTab, setActiveTab] = React.useState<'sdk' | 'cloud' | 'cli'>('sdk');
+  const [activeTestimonial, setActiveTestimonial] = React.useState(0);
 
   return (
     <main data-testid='home-content'>
-      <section className='flex flex-col items-center gap-4 pb-[45px] lg:h-auto pt-[50px] lg:py-[86px] px-[42px]'>
-        <h1 className='font-quincy heading-large lg:leading-[52px] text-center lg:h-auto lg:w-[764px]'>
-          Code Less, Make More
-        </h1>
-        <p className='paragraph text-description lg:w-[764px] text-center'>
-          Hand off your next task to OpenHands &mdash; the leading open source
-          AI coding agent
-        </p>
-        <p>&nbsp;</p>
-        <Link
-          to='https://app.all-hands.dev'
-          target='_blank'
-          rel='noopener noreferrer'
-        >
-          <HeroButton>Try it live</HeroButton>
-        </Link>
-        <div className='flex flex-col sm:flex-row gap-4'>
-          <HeroButton
-            logo={<GitHubLogoBlack width={23} height={23} />}
-            variant='secondary'
-            onClick={openGitHubModal}
-          >
-            Start with OSS
-          </HeroButton>
+      {/* ASCII Background Container - Extends across Hero + Trust Logos + SDK Tabs sections */}
+      {/* On openhands.dev this is ~1400px tall */}
+      <div className='relative'>
+        {/* Animated ASCII Art Background - spans multiple sections */}
+        {/* ASCII container - opacity is on the pre element itself, not the container */}
+        <div className='absolute inset-0 pointer-events-none' style={{ minHeight: '1400px' }}>
+          <Suspense fallback={
+            <img 
+              src='/assets/webflow/backgrounds/ascii-pattern.svg' 
+              alt='' 
+              className='w-full h-full object-cover'
+            />
+          }>
+            <ASCIIAnimation />
+          </Suspense>
+        </div>
+        
+        {/* Hero Section */}
+        {/* Combined Hero + Trust Logos + SDK section to match live site structure */}
+        {/* Live site has no padding on section - spacing from internal elements */}
+        <section className='relative overflow-hidden'>
+          {/* Hero - 64px offset from section top to match live site */}
+          <div className='relative z-10 max-w-4xl mx-auto px-10 text-center pt-16'>
+            {/* Floating Banner - matching openhands.dev structure */}
+            <div className='inline-block bg-brand-accent mb-8' style={{ borderRadius: '0.4rem' }}>
+              <div className='flex items-center gap-3 px-6 py-3.5 text-sm'>
+                <span className="whitespace-nowrap">Introducing the OpenHands Index, a live leaderboard for language models on real software engineering tasks.</span>
+                <span className='hidden sm:block w-px h-4 bg-brand-fg/30'></span>
+                <Link to='/blog/openhands-index' className='font-semibold hover:underline whitespace-nowrap'>
+                  Read More
+                </Link>
+              </div>
+            </div>
+
+            <h1 className='mb-6' style={{ 
+              fontSize: 'clamp(2rem, 1.5rem + 2vw, 2.75rem)', 
+              lineHeight: '1.1', 
+              fontWeight: 500, 
+              letterSpacing: '-0.03em' 
+            }}>
+              The open platform for cloud coding agents.
+            </h1>
+            <p className='text-brand-muted mb-8 max-w-2xl mx-auto' style={{
+              fontSize: 'clamp(1.1rem, 1rem + 0.5vw, 1.3rem)',
+              lineHeight: '1.2',
+              fontWeight: 500
+            }}>
+              Scale from one to thousands of agents — open source, model-agnostic, and enterprise-ready.
+            </p>
+            <div className='flex gap-4 justify-center flex-wrap'>
+              <Link to='https://app.all-hands.dev' className='btn btn-primary' style={{ padding: '14.4px 30.4px' }}>
+                Try it live
+              </Link>
+              <Link to='https://docs.openhands.dev/sdk' className='btn btn-outline' style={{ padding: '14.4px 30.4px' }}>
+                Build with SDK
+              </Link>
+            </div>
+          </div>
+
+          {/* Trust Logos - part of hero section */}
+          <div className='max-w-5xl mx-auto px-10 py-12 mt-12'>
+            <p className='text-center text-lg font-semibold mb-8'>Trusted by engineers at</p>
+            <div className='logo-grid'>
+              {CLIENT_LOGOS.map((logo) => (
+                <img key={logo.name} src={logo.url} alt={logo.name} />
+              ))}
+            </div>
+          </div>
+
+          {/* SDK Showcase - part of hero section */}
+          {/* Live site uses 1/4 to 3/4 split: text ~294px, code ~968px */}
+          {/* Live site has no vertical padding on SDK container */}
+          <div className='max-w-[1262px] mx-auto px-10 mt-8 grid lg:grid-cols-[294px_1fr] gap-16 items-center'>
+            <div className='max-w-[270px]'>
+              <div className='flex gap-2 mb-6'>
+                {(['sdk', 'cloud', 'cli'] as const).map((tab, idx) => (
+                  <button
+                    key={tab}
+                    data-key={String(idx + 1)}
+                    onClick={() => setActiveTab(tab)}
+                    className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                      activeTab === tab ? 'bg-brand-fg text-brand-bg' : 'bg-brand-fg/10 hover:bg-brand-fg/20'
+                    }`}
+                  >
+                    {tab.toUpperCase()}
+                  </button>
+                ))}
+              </div>
+              {/* Render all tab content for SEO/SSR parity with Webflow - use sr-only for non-active */}
+              {/* SDK Tab */}
+              <div className={activeTab !== 'sdk' ? 'sr-only' : ''}>
+                <h2 className='text-[44px] font-bold mb-4'>SDK</h2>
+                <p className='text-lg text-brand-muted mb-6'>Use the SDK to embed OpenHands into apps and workflows</p>
+                <Link to='https://docs.openhands.dev/sdk' className='btn btn-outline'>Get the SDK</Link>
+              </div>
+              {/* Cloud Tab */}
+              <div className={activeTab !== 'cloud' ? 'sr-only' : ''}>
+                <h2 className='text-[44px] font-bold mb-4'>Cloud</h2>
+                <p className='text-lg text-brand-muted mb-6'>Plan and execute complex tasks via the desktop or mobile web</p>
+                <Link to='https://app.all-hands.dev' className='btn btn-outline'>Try it live</Link>
+              </div>
+              {/* CLI Tab */}
+              <div className={activeTab !== 'cli' ? 'sr-only' : ''}>
+                <h2 className='text-[44px] font-bold mb-4'>CLI</h2>
+                <p className='text-lg text-brand-muted mb-6'>Pair with OpenHands CLI right from your terminal</p>
+                <div className='flex gap-3 flex-wrap'>
+                  <Link to='https://pypi.org/project/openhands-ai/' className='btn btn-outline'>Download CLI</Link>
+                  <Link to='https://github.com/OpenHands/OpenHands/releases' className='btn btn-outline'>Download Web UI</Link>
+                </div>
+              </div>
+            </div>
+            <div className='code-window'>
+              <div className='code-header'>
+                <span className='code-dot bg-red-500'></span>
+                <span className='code-dot bg-yellow-500'></span>
+                <span className='code-dot bg-green-500'></span>
+                <span className='ml-auto text-xs text-white/50'>OpenHands</span>
+              </div>
+              <pre className='p-5 text-sm text-card-text overflow-x-auto font-mono leading-relaxed'>
+                <code>{TAB_CODE[activeTab]}</code>
+              </pre>
+            </div>
+          </div>
+        </section>
+
+      {/* Why Teams Choose - side-by-side layout matching live site */}
+      {/* Live site: left col ~426px (title+CTA), right col ~639px (features stacked) */}
+      <section className='py-20'>
+        <div className='max-w-[1278px] mx-auto px-10'>
+          <div className='flex flex-col lg:flex-row justify-between gap-8'>
+            {/* Left column: title + CTA */}
+            <div className='lg:w-[33%] flex flex-col justify-between'>
+              <h3 className='section-title max-w-sm mb-8'>Why teams choose OpenHands</h3>
+              <Link to='https://app.all-hands.dev' className='btn btn-outline w-fit'>Try it live</Link>
+            </div>
+            {/* Right column: features stacked vertically */}
+            <div className='lg:w-[50%] flex flex-col'>
+              {FEATURES.map((feature) => (
+                <div key={feature.title} className='feature-item-stacked'>
+                  <img src={feature.icon} alt='' className='w-8 h-8 flex-shrink-0' />
+                  <div>
+                    <p className='font-semibold mb-1'>{feature.title}</p>
+                    <p className='text-sm text-brand-muted'>{feature.description}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+      </div>{/* End ASCII Background Container */}
+
+      {/* Automate Section - full width, inner constrained */}
+      {/* Use Cases - matches openhands.dev layout: icons in dark boxes, text outside */}
+      <section className='py-20'>
+        <div className='max-w-5xl mx-auto px-10'>
+          {/* First row - no container background, just grid of cards */}
+          <div className='grid md:grid-cols-3 gap-6 mb-8'>
+            {USE_CASES_REDUCE.map((uc) => (
+              <div key={uc.title}>
+                <div className='bg-card-bg rounded-lg p-6 mb-4 flex items-center justify-center'>
+                  <img src={uc.icon} alt='' className='w-[140px] h-[140px]' />
+                </div>
+                <h3 className='font-semibold text-lg mb-2'>{uc.title}</h3>
+                <p className='text-sm text-brand-muted'>{uc.description}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Second row - with tan container like live site */}
+          <div className='use-case-block'>
+            <div className='use-case-label'>Streamline complex work</div>
+            <div className='grid md:grid-cols-3 gap-6'>
+              {USE_CASES_STREAMLINE.map((uc) => (
+                <div key={uc.title}>
+                  <div className='bg-card-bg rounded-lg p-6 mb-4 flex items-center justify-center'>
+                    <img src={uc.icon} alt='' className='w-[140px] h-[140px]' />
+                  </div>
+                  <h3 className='font-semibold text-lg mb-2'>{uc.title}</h3>
+                  <p className='text-sm text-brand-muted'>{uc.description}</p>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
-      <section className='flex flex-col items-center gap-8 pt-[25px] pb-[60px] lg:pt-0 overflow-hidden'>
-        <TripleWow width={36} height={22} />
-        <ImageCarousel
-          images={Array.from({ length: 3 }).map(
-            (_, index) => `/assets/product/product-slide-${index + 1}.webp`
-          )}
-        />
-      </section>
-
-      {/* Use Case Section */}
-      <section className='px-[42px] lg:px-[184px] py-16 lg:py-24 flex justify-center'>
-        <div className='w-full max-w-[1440px]'>
-          <div className='flex flex-col gap-8 items-center text-center mb-12'>
-            <span className='heading'>Use Cases</span>
+      {/* Testimonials - match openhands.dev styling: yellow bg, author photo, arrow nav */}
+      <section className='bg-brand-accent py-20 relative overflow-hidden'>
+        {/* ASCII art background pattern */}
+        <div className='absolute inset-0 opacity-30 pointer-events-none' style={{
+          backgroundImage: 'url(/assets/webflow/backgrounds/ascii-pattern.svg)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }} />
+        <div className='max-w-4xl mx-auto px-10 text-center relative z-10'>
+          {/* Render all testimonial H2s - use sr-only for non-active to maintain SSR parity while hiding visually */}
+          {TESTIMONIALS.map((testimonial, idx) => (
+            <h2 
+              key={idx}
+              className={`testimonial-quote mb-8 ${idx !== activeTestimonial ? 'sr-only' : ''}`}
+            >
+              "{testimonial.quote}"
+            </h2>
+          ))}
+          <div className='flex flex-wrap items-center justify-center gap-4 mb-8'>
+            {/* Author photo */}
+            <div className='w-12 h-12 rounded-full overflow-hidden bg-brand-fg flex-shrink-0'>
+              <img
+                src={TESTIMONIALS[activeTestimonial].photo}
+                alt={TESTIMONIALS[activeTestimonial].name}
+                className='w-full h-full object-cover'
+              />
+            </div>
+            <div className='text-left'>
+              <span className='font-semibold text-lg'>{TESTIMONIALS[activeTestimonial].name},</span>
+              <span className='text-lg ml-2'>{TESTIMONIALS[activeTestimonial].title}</span>
+            </div>
+            <div className='w-px h-6 bg-brand-fg/30 hidden sm:block' />
+            <img src={TESTIMONIALS[activeTestimonial].logo} alt='' className='h-8' />
           </div>
-          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8'>
-            <div className='flex flex-col gap-4 p-6 bg-white rounded-lg shadow-sm'>
-              <h3 className='text-xl font-bold'>Speed up code reviews</h3>
-              <p className='text-description'>
-                Summarize pull requests, incorporate feedback, and push fixes so
-                code reviews are quick and painless.
-              </p>
+          {/* Arrow navigation like live site */}
+          <div className='flex items-center justify-between mt-8'>
+            <div className='text-sm'>
+              {String(activeTestimonial + 1).padStart(2, '0')}/{String(TESTIMONIALS.length).padStart(2, '0')}
             </div>
-            <div className='flex flex-col gap-4 p-6 bg-white rounded-lg shadow-sm'>
-              <h3 className='text-xl font-bold'>Refactor old code</h3>
-              <p className='text-description'>
-                Decompose monolithic code, refactor tech debt, and automate
-                version bumps without breaking the build.
-              </p>
-            </div>
-            <div className='flex flex-col gap-4 p-6 bg-white rounded-lg shadow-sm'>
-              <h3 className='text-xl font-bold'>Expand test coverage</h3>
-              <p className='text-description'>
-                Generate tests for new features to elevate code quality and
-                squash hidden bugs.
-              </p>
-            </div>
-            <div className='flex flex-col gap-4 p-6 bg-white rounded-lg shadow-sm'>
-              <h3 className='text-xl font-bold'>Fix failing pipelines</h3>
-              <p className='text-description'>
-                Fix broken tests without debugging or interrupting others for
-                help.
-              </p>
-            </div>
-            <div className='flex flex-col gap-4 p-6 bg-white rounded-lg shadow-sm'>
-              <h3 className='text-xl font-bold'>Create prototypes</h3>
-              <p className='text-description'>
-                Turn ideas and concepts into working code you can test with
-                customers.
-              </p>
-            </div>
-            <div className='flex flex-col gap-4 p-6 bg-white rounded-lg shadow-sm'>
-              <h3 className='text-xl font-bold'>Get to "done" faster</h3>
-              <p className='text-description'>
-                Offload all the engineering toil you don't want to do to
-                OpenHands!
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Why OpenHands Section */}
-      <section className='px-[42px] lg:px-[184px] py-16 lg:py-24 flex justify-center'>
-        <div className='w-full max-w-[1440px]'>
-          <div className='flex flex-col gap-8 items-center text-center mb-12'>
-            <span className='heading'>Why OpenHands</span>
-          </div>
-          <div className='grid grid-cols-1 md:grid-cols-2 gap-8'>
-            <div className='flex flex-col gap-4 p-6 border-white rounded-lg border-2'>
-              <h3 className='text-xl font-bold'>Deeply customizable</h3>
-              <p className='text-description'>
-                OpenHands is an open-source core, unlocking customization for a
-                variety of enterprise use cases.
-              </p>
-            </div>
-            <div className='flex flex-col gap-4 p-6 border-white rounded-lg border-2'>
-              <h3 className='text-xl font-bold'>
-                Deploy as SaaS or self-hosted
-              </h3>
-              <p className='text-description'>
-                Flexible SaaS or self-hosted options for deploying AI coding
-                agents across your organization.
-              </p>
-            </div>
-            <div className='flex flex-col gap-4 p-6 border-white rounded-lg border-2'>
-              <h3 className='text-xl font-bold'>
-                Best in class coding accuracy
-              </h3>
-              <p className='text-description'>
-                OpenHands is a top performer across a variety of software
-                development benchmarks for agents, like SWE-bench.
-              </p>
-            </div>
-            <div className='flex flex-col gap-4 p-6 border-white rounded-lg border-2'>
-              <h3 className='text-xl font-bold'>Works where you do</h3>
-              <p className='text-description'>
-                Use OpenHands in your browser, as a CLI, via API, or in tools
-                like GitHub, GitLab, Slack, Jira, and more.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className='px-[42px] flex flex-col gap-8 lg:gap-16 lg:py-24 py-16 lg:items-center'>
-        <div className='flex flex-col gap-4 text-center h-[100px] lg:h-[50px]'>
-          <span className='heading'>OpenHands in Action</span>
-        </div>
-        <div className='flex flex-col items-center gap-4 w-full'>
-          <div className='flex justify-center w-full'>
-            <div className='w-full max-w-[1000px] mx-auto'>
-              <video
-                className='w-full rounded-lg shadow-lg'
-                controls
-                autoPlay
-                muted
+            <div className='flex gap-2'>
+              <button
+                onClick={() => setActiveTestimonial(prev => prev === 0 ? TESTIMONIALS.length - 1 : prev - 1)}
+                className='w-10 h-10 rounded-full border border-brand-fg/30 flex items-center justify-center hover:bg-brand-fg/10 transition-colors'
+                aria-label='Previous testimonial'
               >
-                <source
-                  src='/assets/videos/openhands_demo.mp4'
-                  type='video/mp4'
-                />
-                Your browser does not support the video tag.
-              </video>
+                <svg width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
+                  <path d='M15 18l-6-6 6-6' />
+                </svg>
+              </button>
+              <button
+                onClick={() => setActiveTestimonial(prev => prev === TESTIMONIALS.length - 1 ? 0 : prev + 1)}
+                className='w-10 h-10 rounded-full border border-brand-fg/30 flex items-center justify-center hover:bg-brand-fg/10 transition-colors'
+                aria-label='Next testimonial'
+              >
+                <svg width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
+                  <path d='M9 18l6-6-6-6' />
+                </svg>
+              </button>
             </div>
           </div>
         </div>
       </section>
 
-      <section className='flex flex-col lg:flex-row items-center lg:justify-center px-[42px] gap-16 lg:gap-[100px] lg:py-24 py-16 mb-16'>
-        <div className='h-[calc(58px*3+40px)] lg:h-auto overflow-hidden relative'>
-          <ContributorGrid variant='small' contributors={contributors} />
-          <div className='lg:hidden absolute bottom-0 bg-gradient-to-t from-[#F1EAE0] to-transparent h-[40px] w-full' />
-        </div>
-
-        <div className='flex flex-col gap-4 lg:w-[500px]'>
-          <span className='heading'>Join the Community</span>
-          <p className='paragraph text-description lg:w-[466px]'>
-            Thousands of developers are working together to build the AI-powered
-            future they want to see. You can connect with us on GitHub, Slack,
-            Twitter, or our blog.
-          </p>
-          <div
-            data-testid='repo-statistics'
-            className='flex flex-col gap-4 paragraph font-bold mb-4'
-          >
-            <div className='flex gap-[6px]'>
-              <Star width={24} height={24} />
-              <span>{formatThousands(statistics.stargazers)} Stars</span>
+      {/* Community Cards Section - full width */}
+      <section className='py-20'>
+        <div className='max-w-6xl mx-auto px-10'>
+          <div className='grid lg:grid-cols-2 gap-6 mb-6'>
+            {/* Community velocity card - live h=616px */}
+            <div className='card-dark p-8 min-h-[616px]'>
+              <p className='text-brand-accent font-medium mb-2'>Community that compounds velocity</p>
+              <p className='text-white/70 mb-6'>
+                With {formatThousands(statistics.stargazers)}+ GitHub stars and a thriving open-source ecosystem, OpenHands evolves through collective innovation - every contribution makes the platform faster, safer, and smarter.
+              </p>
+              <Link to='https://github.com/OpenHands/OpenHands' className='btn btn-outline-light mb-8'>
+                Explore the repo
+              </Link>
+              <div className='flex items-end justify-end gap-2'>
+                <span className='text-6xl font-bold text-brand-accent'>{formatThousands(statistics.stargazers)}</span>
+                <span className='text-2xl font-bold text-white'>+</span>
+              </div>
+              <div className='flex items-center justify-end gap-2 mt-2'>
+                <span className='text-sm text-white/60'>GitHub stars</span>
+                <span className='text-brand-accent'>⭐</span>
+              </div>
             </div>
-            <div className='flex gap-[6px]'>
-              <Users width={24} height={24} />
-              <span>
-                {formatContributorCount(statistics.contributors_count)}{' '}
-                Contributors
-              </span>
-            </div>
-            <div className='flex gap-[6px]'>
-              <Hierarchy width={24} height={24} />
-              <span>
-                Last commit made {formatLastCommit(statistics.latest_commit)}
-              </span>
+            {/* Integrations card - live h=616px */}
+            <div className='card-dark p-8 flex flex-col justify-between min-h-[616px]'>
+              <div>
+                <p className='text-brand-accent font-medium mb-2'>Plays well with your stack</p>
+                <p className='text-white/70 mb-6'>
+                  Native integrations with GitHub, GitLab, CI/CD, Slack, and ticketing tools. OpenHands fits seamlessly into enterprise governance systems and your preferred model providers.
+                </p>
+              </div>
+              <div className='grid grid-cols-4 gap-4 mt-auto'>
+                <div className='text-center'>
+                  <img src='/assets/webflow/icons/6908c8dc26f3de5a93212b4c_loop-1--multimedia-multi-button-repeat-media-loop-infinity-controls.svg' alt='CI/CD' className='h-8 mx-auto mb-2' />
+                  <span className='text-xs text-white/60'>CI/CD</span>
+                </div>
+                <div className='text-center'>
+                  <img src='/assets/webflow/icons/6908c8dd7162d7d09526a0fd_Slack_Technologies_Logo2.svg' alt='Slack' className='h-8 mx-auto mb-2' />
+                  <span className='text-xs text-white/60'>Slack</span>
+                </div>
+                <div className='text-center'>
+                  <img src='/assets/webflow/icons/6908c8dc24685e3f5e172012_github-mark4.svg' alt='GitHub' className='h-8 mx-auto mb-2' />
+                  <span className='text-xs text-white/60'>GitHub</span>
+                </div>
+                <div className='text-center'>
+                  <img src='/assets/webflow/icons/6908c8dde7fa5732b9ed5cb4_Vector.svg' alt='GitLab' className='h-8 mx-auto mb-2' />
+                  <span className='text-xs text-white/60'>GitLab</span>
+                </div>
+              </div>
             </div>
           </div>
-          <Button
-            variant='medium'
-            icon={<GitHubLogo width={23} height={23} />}
-            text='Join us on GitHub'
-            className='self-start'
-            onClick={openGitHubModal}
+          {/* Enterprise security card - live h=419px */}
+          <div className='card-dark p-8 min-h-[419px]'>
+            <div className='grid lg:grid-cols-2 gap-8 items-center'>
+              <div>
+                <p className='text-brand-accent font-medium mb-2'>Enterprise-grade security and control</p>
+                <p className='text-white/70 mb-6'>
+                  Control every layer of your environment with fine-grained access control, model-agnostic architecture, and flexible self-hosted or private cloud deployment options that keep your code and data secure.
+                </p>
+                <Link to='/enterprise' className='btn btn-outline-light'>
+                  Learn about Enterprise
+                </Link>
+              </div>
+              <div className='flex justify-center'>
+                <img src='/assets/webflow/misc/6908c923f44bb0269a602378_last-icon.svg' alt='Security' className='h-32' />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Developers Love OpenHands Section - full width */}
+      <section className='py-20 bg-brand-bg'>
+        <div className='max-w-6xl mx-auto px-10'>
+          <div className='text-center mb-12'>
+            <h2 className='section-title'>Developers love OpenHands</h2>
+            <p className='text-brand-muted'>Join millions of developers to build software autonomously</p>
+          </div>
+          <div className='grid md:grid-cols-2 lg:grid-cols-4 gap-4'>
+            {DEVELOPER_TWEETS.map((tweet) => (
+              <a
+                key={tweet.handle}
+                href={tweet.url}
+                target='_blank'
+                rel='noopener noreferrer'
+                className='card bg-white p-4 hover:shadow-lg transition-shadow block'
+              >
+                <div className='flex items-center gap-3 mb-3'>
+                  <img src={tweet.avatar} alt={tweet.name} className='w-10 h-10 rounded-full' />
+                  <div>
+                    <p className='font-semibold text-sm'>{tweet.name}</p>
+                    <p className='text-xs text-brand-muted'>{tweet.handle}</p>
+                  </div>
+                </div>
+                <p className='text-sm text-brand-fg'>{tweet.content}</p>
+              </a>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Footer CTA Section - full width */}
+      <section className='py-20 bg-brand-accent text-brand-fg text-center relative overflow-hidden'>
+        {/* ASCII Art Background */}
+        <div className='absolute inset-0 pointer-events-none opacity-20'>
+          <img 
+            src='/assets/webflow/backgrounds/6908d170831c19b2b6976323_ascii-art_(16)_1.svg' 
+            alt='' 
+            className='w-full h-full object-cover'
           />
         </div>
-      </section>
-
-      <section className='mb-[104px]'>
-        <YellowWaveSection
-          heading='Ready to roll?'
-          text={`Software development is changing. Let's work together to make sure it's better for everyone. \u2764`}
-          cta={{
-            text: 'Try it live',
-            to: 'https://app.all-hands.dev',
-            style: 'primary',
-          }}
-          secondaryCta={{
-            icon: <GitHubLogo width={23} height={23} />,
-            text: 'Start with OSS',
-            onClick: openGitHubModal,
-            style: 'primary',
-          }}
-        />
+        <div className='max-w-3xl mx-auto relative z-10'>
+          <p className='text-3xl lg:text-4xl font-bold mb-4'>
+            Building the open standard for autonomous software development.
+          </p>
+          <p className='text-brand-fg/70 mb-8'>
+            OpenHands is the foundation for secure, transparent, model-agnostic coding agents - empowering every software team to build faster with full control.
+          </p>
+          <div className='flex gap-4 justify-center flex-wrap mb-12'>
+            <Link to='https://docs.openhands.dev/sdk' className='btn btn-primary btn-lg'>
+              Build with SDK
+            </Link>
+            <Link to='https://app.all-hands.dev' className='btn btn-outline-light btn-lg'>
+              Try it live
+            </Link>
+          </div>
+          {/* Social Links */}
+          <div className='flex justify-center gap-4 mb-8'>
+            {SOCIAL_LINKS.map((link) => (
+              <a key={link.name} href={link.url} target='_blank' rel='noopener noreferrer' className='w-12 h-12 rounded-full border border-brand-fg/20 flex items-center justify-center hover:bg-brand-fg/10 transition-colors'>
+                <img src={link.icon} alt={link.name} className='h-6 w-6' />
+              </a>
+            ))}
+          </div>
+          {/* Footer Nav - inside CTA section to match live site */}
+          <Footer />
+        </div>
       </section>
     </main>
   );

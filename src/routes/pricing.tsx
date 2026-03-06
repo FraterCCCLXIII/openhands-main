@@ -75,13 +75,17 @@ const PricingCard = ({
 }) => {
   return (
     <div className='flex flex-col bg-white rounded-lg shadow-md p-6 w-full md:w-[400px] lg:w-[400px]'>
-      <h3 className='text-2xl font-semibold mb-2'>{title}</h3>
+      <div className='text-2xl font-semibold mb-2'>{title}</div>
       <p className='mb-1 font-semibold text-3xl'>{subtitle}</p>
       <p className='text-gray-600 font-semibold mb-4 mt-4 italic'>{description}</p>
       <ul className='mb-6 flex-grow'>
         {features.map((feature, index) => (
           <li key={index} className='flex items-start mb-2'>
-            <span className='mr-2 text-yellow-500'>•</span>
+            <img 
+              src='/assets/webflow/icons/690cb1513c759a7404df1ba1_check.svg' 
+              alt='✓' 
+              className='w-5 h-5 mr-2 flex-shrink-0'
+            />
             <span>{feature}</span>
           </li>
         ))}
@@ -98,17 +102,17 @@ const PricingCard = ({
 
 export const meta: Route.MetaFunction = ({ location }) => {
   return [
-    { title: 'All Hands AI - Pricing' },
-    { name: 'description', content: 'Flexible pricing options - from open source to enterprise solutions.' },
-    { property: 'og:title', content: 'All Hands AI - Pricing' },
-    { property: 'og:description', content: 'Flexible pricing options - from open source to enterprise solutions.' },
+    { title: 'OpenHands Pricing | Start Building for Free' },
+    { name: 'description', content: 'Choose the right plan for your team. Start for free with OpenHands Open Source or upgrade to Team and Enterprise plans.' },
+    { property: 'og:title', content: 'OpenHands Pricing | Start Building for Free' },
+    { property: 'og:description', content: 'Choose the right plan for your team. Start for free with OpenHands Open Source or upgrade to Team and Enterprise plans.' },
     { property: 'og:image', content: 'https://www.all-hands.dev/assets/all-hands-logo.png' },
     { property: 'og:url', content: 'https://www.all-hands.dev' + location.pathname },
     { property: 'og:type', content: 'website' },
-    { property: 'og:site_name', content: 'All Hands AI' },
+    { property: 'og:site_name', content: 'OpenHands' },
     { name: 'twitter:card', content: 'summary_large_image' },
-    { name: 'twitter:title', content: 'All Hands AI - Pricing' },
-    { name: 'twitter:description', content: 'Flexible pricing options - from open source to enterprise solutions.' },
+    { name: 'twitter:title', content: 'OpenHands Pricing | Start Building for Free' },
+    { name: 'twitter:description', content: 'Choose the right plan for your team. Start for free with OpenHands Open Source or upgrade to Team and Enterprise plans.' },
     { name: 'twitter:image', content: 'https://www.all-hands.dev/assets/all-hands-logo.png' },
     { rel: 'canonical', href: 'https://www.all-hands.dev' + location.pathname },
   ];
@@ -146,61 +150,65 @@ const Pricing = () => {
   ];
 
   return (
-    <main>
-      <section className='flex flex-col items-center gap-4 text-center pt-[86px] px-[53px]'>
-        <h1 className='heading-large'>OpenHands Cloud Pricing</h1>
+    <main className='pt-[100px]'>
+      <section className='flex flex-col items-center gap-4 text-center pt-12 pb-8 px-10'>
+        <h1 className='text-4xl lg:text-6xl font-bold mb-4'>Pricing that fits your rollout</h1>
+        <p className='text-lg text-brand-muted max-w-2xl'>
+          Run locally, in our cloud, or self-host. Pay only for what you need
+        </p>
+        <div className='flex gap-4 justify-center flex-wrap mt-6'>
+          <a href='https://app.all-hands.dev' className='btn btn-primary'>
+            Try it live
+          </a>
+          <a href='https://docs.openhands.dev/sdk' className='btn btn-outline'>
+            Build with SDK
+          </a>
+        </div>
       </section>
 
-      <section className='flex flex-col items-center mb-[104px]'>
-        <SectionHeading />
+      <section className='flex flex-col items-center mb-16 px-10'>
+        <h2 className='section-title text-center mb-12'>Compare plans</h2>
 
-        <div className='flex flex-row justify-center items-stretch flex-wrap max-w-[1300px] gap-6 px-4'>
+        <div className='flex flex-row justify-center items-stretch flex-wrap max-w-[1300px] gap-6'>
           <PricingCard
-            title='Individual'
-            subtitle='Free to start'
-            description='Great for individual developers'
-            features={payAsYouGoFeatures}
-            buttonText='Sign Up'
+            title='Free'
+            subtitle='$0'
+            description='Free, local OpenHands for getting started'
+            features={['Best-in-class OpenHands Agent', 'Web-based GUI, Terminal UI, and CLI', 'Bring your own key or use our providers at-cost']}
+            buttonText='Download'
+            buttonLink='https://pypi.org/project/openhands-ai/'
+          />
+          <PricingCard
+            title='Cloud'
+            subtitle='Pay-as-you-go'
+            description='Everything in Free, plus:'
+            features={['Hosted cloud access from desktop and mobile', 'API support for automation and scripting', 'Jira and Slack integrations', 'BYOK or use OpenHands models at-cost']}
+            buttonText='Try it live'
             buttonLink='https://app.all-hands.dev/'
           />
           <PricingCard
-            title='Enterprise Cloud'
+            title='Enterprise'
             subtitle='$40 / user / month'
-            description='For teams and organizations'
-            features={enterpriseCloudFeatures}
-            buttonText='Join Early Access'
-            buttonLink='https://forms.gle/pdYjBk59Fwy6rshF8'
+            description='Everything in Cloud, plus:'
+            features={['Multiple users with centralized billing', 'At-cost, no markup pricing on LLM usage', 'Git, Slack, and ticketing system integrations', 'Priority support']}
+            buttonText='Contact sales'
+            buttonLink='/contact'
           />
           <PricingCard
-            title='Enterprise Self-hosted'
-            subtitle='Contact Us'
-            description='Everything in Enterprise Cloud, plus:'
-            features={enterpriseSelfHostedFeatures}
-            buttonText='Contact Us'
-            buttonLink='https://forms.gle/pdYjBk59Fwy6rshF8'
+            title='Self-hosted'
+            subtitle='Contact us'
+            description='Everything in Enterprise, plus:'
+            features={['Run OpenHands in your private VPC', 'Bring your own LLM key', 'Enterprise support and services', 'Shared Slack channel']}
+            buttonText='Contact sales'
+            buttonLink='/contact'
           />
         </div>
       </section>
 
-      <section className='flex flex-col items-center mb-[104px]'>
-        <div className='text-center'>
-          <p className='text-2xl font-bold mb-4'>Want to try OpenHands locally?</p>
-          <div className='flex justify-center'>
-            <Button
-              variant="medium"
-              style="primary"
-              icon={<GitHubLogo width={23} height={23} />}
-              text="Start with OSS"
-              onClick={openGitHubModal}
-            />
-          </div>
-        </div>
-      </section>
-
-      <section className='flex flex-col items-center mb-[104px]'>
-        <div className='max-w-[800px] w-full px-6'>
-          <h2 className='text-2xl font-bold mb-6 text-center'>
-            Frequently Asked Questions
+      <section className='flex flex-col items-center mb-16 px-10'>
+        <div className='max-w-[800px] w-full'>
+          <h2 className='section-title text-center mb-8'>
+            FAQ's
           </h2>
           <div className='bg-white rounded-lg shadow-md p-6'>
             <FAQItem

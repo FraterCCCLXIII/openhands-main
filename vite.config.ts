@@ -1,10 +1,9 @@
 /// <reference types="vitest" />
 
-import { defineConfig } from 'vite';
+import { defineConfig, type UserConfig } from 'vite';
 import { reactRouter } from '@react-router/dev/vite';
 import tsconfigPaths from 'vite-tsconfig-paths';
 import svgr from 'vite-plugin-svgr';
-import { configDefaults } from 'vitest/config';
 
 export default defineConfig({
   plugins: [!process.env.VITEST && reactRouter(), tsconfigPaths(), svgr()],
@@ -31,11 +30,13 @@ export default defineConfig({
       'work-2-mdyrwpwijsfliofl.prod-runtime.all-hands.dev',
       'work-1-egmxtsefwqvojzhw.prod-runtime.all-hands.dev',
       'work-2-egmxtsefwqvojzhw.prod-runtime.all-hands.dev',
+      'work-1-eevvzjysdpcfrebu.prod-runtime.all-hands.dev',
+      'work-2-eevvzjysdpcfrebu.prod-runtime.all-hands.dev',
     ],
   },
   test: {
     environment: 'jsdom',
     setupFiles: ['vitest-setup.ts'],
-    exclude: [...configDefaults.exclude, '**/tests'],
+    exclude: ['**/node_modules/**', '**/tests/**'],
   },
-});
+} as UserConfig & { test: object });

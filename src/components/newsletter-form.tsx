@@ -33,7 +33,12 @@ export const NewsletterForm: React.FC<NewsletterFormProps> = ({
         </RegularButton>
       </Form>
       {error && <p className='description mb-4 text-red-600'>{error}</p>}
-      {success && <p className='description mb-4 text-green-600'>{success}</p>}
+      {success && (
+        <div className='mt-4'>
+          <h3 className='text-lg font-semibold text-green-600'>Thank you for your submission!</h3>
+          <p className='description text-green-600'>{success}</p>
+        </div>
+      )}
     </div>
   );
 };

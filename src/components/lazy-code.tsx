@@ -20,6 +20,16 @@ export const LazyCode: React.FC<React.PropsWithChildren<CodeProps>> = ({
   className,
   customStyle,
 }) => {
+  // During SSR, just render the fallback code (no syntax highlighting)
+  // React.lazy throws on the server
+  if (typeof window === 'undefined') {
+    return (
+      <FallbackCode className={className} customStyle={customStyle}>
+        {children}
+      </FallbackCode>
+    );
+  }
+
   return (
     <React.Suspense
       fallback={

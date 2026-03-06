@@ -1,60 +1,26 @@
 import React from 'react';
-import { motion, LayoutGroup, AnimatePresence } from 'framer-motion';
-import AllHandsText from '~/svgs/brand/all-hands-text.svg?react';
-import AllHandsLogo1 from '~/svgs/brand/all-hands-logo-1.svg?react';
-import { getRandomLogo } from '~/utils/get-random-logo-variant';
-import { useWidth } from '~/hooks/use-media';
-import { useLocation, useNavigation } from 'react-router';
-
-const ANIMATE_DURATION = 1000;
 
 interface AnimatedHeaderLogoProps {
-  renderText?: boolean;
+  renderText?: boolean;  // kept for API compatibility but ignored
 }
 
-export const AnimatedHeaderLogo: React.FC<AnimatedHeaderLogoProps> = ({
-  renderText = true,
-}) => {
-  const location = useLocation();
-
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const Logo = React.useMemo(() => getRandomLogo(), [renderText]); // get a random logo variant everytime user scrolls
-  const width = useWidth();
-  const SCALE = React.useMemo(() => (width >= 1024 ? 1.4 : 1), [width]);
-
+// Match openhands.dev: single combined logo image, always shows full "OpenHands" text
+export const AnimatedHeaderLogo: React.FC<AnimatedHeaderLogoProps> = () => {
   return (
-    <div className='flex gap-2 items-center'>
-      <motion.div
-        key={location.pathname}
-        layout
-        transition={{
-          type: 'spring',
-          stiffness: 300,
-          damping: 35,
-          duration: ANIMATE_DURATION / 1000,
-        }}
-      >
-        {!renderText && <Logo width={39 * SCALE} height={26 * SCALE} />}
-        {renderText && <AllHandsLogo1 width={39 * SCALE} height={26 * SCALE} />}
-      </motion.div>
-      <AnimatePresence mode='popLayout' initial={false}>
-        {renderText && (
-          <motion.div
-            data-testid='header-title'
-            initial={{ opacity: 0, x: 50 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 70 }}
-            transition={{
-              type: 'spring',
-              stiffness: 300,
-              damping: 35,
-              duration: ANIMATE_DURATION / 1000,
-            }}
-          >
-            <AllHandsText width={126 * SCALE} height={21 * SCALE} />
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+    // Match openhands.dev nav_logo_link: width 12rem (192px)
+    <picture className='nav_logo_img' style={{ width: '192px', height: '29.5px' }}>
+      {/* Mobile: smaller logo for narrow screens */}
+      <source
+        media='(max-width: 85rem)'
+        srcSet='/assets/webflow/brand/openhands-logo-mobile.svg'
+      />
+      {/* Desktop: full logo with text */}
+      <img
+        src='/assets/webflow/brand/openhands-logo-full.svg'
+        alt='OpenHands'
+        className='h-full w-auto'
+        style={{ height: '29.5px' }}
+      />
+    </picture>
   );
 };

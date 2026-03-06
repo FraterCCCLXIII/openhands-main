@@ -1,4 +1,8 @@
-export const formatThousands = (stars: number) => {
-  if (stars < 1000) return stars.toString();
-  return `${Math.floor(stars / 1000)}k`;
+export const formatThousands = (num: number) => {
+  // Match openhands.dev format using Intl.NumberFormat compact notation
+  // This produces "68.7K" format (one decimal, uppercase K)
+  return Intl.NumberFormat('en-US', {
+    notation: 'compact',
+    maximumFractionDigits: 1
+  }).format(num);
 }

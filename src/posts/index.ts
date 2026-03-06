@@ -36,6 +36,13 @@ import post35 from "./20251022-remediating-cves-with-openhands.md?raw";
 import post36 from "./20251104-eol-pro-plan.md?raw";
 import post37 from "./20251105-openhands-sdk-plug-and-play-coding-agents.md?raw";
 import post38 from "./20251111-datadog-debugging-automation.md?raw";
+import post39 from "./20251120-amd-ryzen-ai-collaboration.md?raw";
+import post40 from "./20251202-agents-in-the-outer-loop.md?raw";
+import post41 from "./20251207-use-openhands-in-your-ide-with-acp.md?raw";
+import post42 from "./20251209-cobol-to-java-refactoring.md?raw";
+import post43 from "./20251218-openhands-toad-collaboration.md?raw";
+import post44 from "./20260216-swefficiency-benchmark.md?raw";
+import post45 from "./20260219-velocity-is-dead.md?raw";
 
 export const RAW_POSTS = [
   post1,
@@ -76,4 +83,11 @@ export const RAW_POSTS = [
   post36,
   post37,
   post38,
+  post39,
+  post40,
+  post41,
+  post42,
+  post43,
+  post44,
+  post45,
 ];

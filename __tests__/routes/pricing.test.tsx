@@ -16,56 +16,50 @@ describe('Pricing Page', () => {
       </MemoryRouter>
     );
 
-    // Check main heading
-    expect(screen.getByText('OpenHands Cloud Pricing')).toBeInTheDocument();
+    // Check main heading (matches Webflow design)
+    expect(screen.getByText('Pricing that fits your rollout')).toBeInTheDocument();
 
-    // Check the 3 pricing tiers
-    expect(screen.getByText('Individual')).toBeInTheDocument();
-    expect(screen.getByText('Enterprise Cloud')).toBeInTheDocument();
-    expect(screen.getByText('Enterprise Self-hosted')).toBeInTheDocument();
+    // Check the 4 pricing tiers
+    expect(screen.getByText('Free')).toBeInTheDocument();
+    expect(screen.getByText('Cloud')).toBeInTheDocument();
+    expect(screen.getByText('Enterprise')).toBeInTheDocument();
+    expect(screen.getByText('Self-hosted')).toBeInTheDocument();
 
-    // Check descriptions
-    expect(screen.getByText('Great for individual developers')).toBeInTheDocument();
-    expect(screen.getByText('For teams and organizations')).toBeInTheDocument();
-    expect(screen.getByText('Everything in Enterprise Cloud, plus:')).toBeInTheDocument();
-    
     // Check pricing
-    expect(screen.getByText('Free to start')).toBeInTheDocument();
+    expect(screen.getByText('$0')).toBeInTheDocument();
+    expect(screen.getByText('Pay-as-you-go')).toBeInTheDocument();
     expect(screen.getByText('$40 / user / month')).toBeInTheDocument();
-    expect(screen.getAllByText('Contact Us').length).toBeGreaterThan(0);
+    expect(screen.getByText('Contact us')).toBeInTheDocument();
 
     // Check buttons
-    expect(screen.getByText('Start with OSS')).toBeInTheDocument();
-    expect(screen.getByText('Sign Up')).toBeInTheDocument();
-    expect(screen.getByText('Join Early Access')).toBeInTheDocument();
-    expect(screen.getAllByText('Contact Us').length).toBeGreaterThan(0);
+    expect(screen.getByText('Download')).toBeInTheDocument();
+    expect(screen.getAllByText('Try it live').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Contact sales').length).toBeGreaterThan(0);
 
-    // Check Individual plan features
-    expect(screen.getByText('1 user')).toBeInTheDocument();
-    expect(screen.getByText('Access from desktop or mobile')).toBeInTheDocument();
-    expect(screen.getByText('Bring your own LLM, or use OpenHands LLMs at cost')).toBeInTheDocument();
-    expect(screen.getByText('High token rate limits')).toBeInTheDocument();
-    expect(screen.getByText('GitHub, GitLab, and Bitbucket')).toBeInTheDocument();
-    expect(screen.getAllByText('API support').length).toBeGreaterThan(0);
+    // Check Free plan features
+    expect(screen.getByText('Best-in-class OpenHands Agent')).toBeInTheDocument();
+    expect(screen.getByText('Web-based GUI, Terminal UI, and CLI')).toBeInTheDocument();
+    expect(screen.getByText('Bring your own key or use our providers at-cost')).toBeInTheDocument();
 
-    // Check Enterprise Cloud features
-    expect(screen.getByText('Multiple users')).toBeInTheDocument();
-    expect(screen.getByText('Centralized billing')).toBeInTheDocument();
+    // Check Cloud plan features
+    expect(screen.getByText('Hosted cloud access from desktop and mobile')).toBeInTheDocument();
+    expect(screen.getByText('API support for automation and scripting')).toBeInTheDocument();
+    expect(screen.getByText('Jira and Slack integrations')).toBeInTheDocument();
+    expect(screen.getByText('BYOK or use OpenHands models at-cost')).toBeInTheDocument();
+
+    // Check Enterprise plan features
+    expect(screen.getByText('Multiple users with centralized billing')).toBeInTheDocument();
     expect(screen.getByText('At-cost, no markup pricing on LLM usage')).toBeInTheDocument();
-    expect(screen.getByText('Model choice (or bring your own LLM)')).toBeInTheDocument();
     expect(screen.getByText('Git, Slack, and ticketing system integrations')).toBeInTheDocument();
     expect(screen.getByText('Priority support')).toBeInTheDocument();
 
-    // Check Enterprise Self-hosted features
-    expect(screen.getByText('Run OpenHands Cloud in your private VPC')).toBeInTheDocument();
+    // Check Self-hosted plan features
+    expect(screen.getByText('Run OpenHands in your private VPC')).toBeInTheDocument();
     expect(screen.getByText('Bring your own LLM key')).toBeInTheDocument();
     expect(screen.getByText('Enterprise support and services')).toBeInTheDocument();
     expect(screen.getByText('Shared Slack channel')).toBeInTheDocument();
 
-    // Check local OpenHands section
-    expect(screen.getByText('Want to try OpenHands locally?')).toBeInTheDocument();
-
-    // Check FAQ section
-    expect(screen.getByText('Frequently Asked Questions')).toBeInTheDocument();
+    // Check FAQ section (matches Webflow H2)
+    expect(screen.getByText("FAQ's")).toBeInTheDocument();
   });
 });

@@ -1,18 +1,11 @@
 import React from 'react';
-import { useRouteLoaderData } from 'react-router';
-import type { clientLoader } from '~/root';
 
 export const useWidth = (defaultWidth = 1024) => {
-  const loaderData = useRouteLoaderData<typeof clientLoader>('root');
-
-  const [width, setWidth] = React.useState(() => {
-    return typeof window !== 'undefined'
-      ? window.innerWidth
-      : loaderData?.deviceWidth || defaultWidth;
-  });
+  const [width, setWidth] = React.useState(defaultWidth);
 
   React.useEffect(() => {
-    if (typeof window === 'undefined') return;
+    // Set initial width on client
+    setWidth(window.innerWidth);
 
     const resize = () => {
       setWidth(window.innerWidth);
