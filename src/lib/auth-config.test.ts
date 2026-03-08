@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { getAuthSecret, getBaseUrl, getGoogleAuthSetupStatus, isAuthDisabled } from "@/src/lib/auth-config";
+import {
+  getAuthSecret,
+  getBaseUrl,
+  getGithubAuthSetupStatus,
+  getGithubClientId,
+  getGithubClientSecret,
+  isAuthDisabled,
+} from "@/src/lib/auth-config";
 
 const env = (values: Record<string, string>) => values as unknown as NodeJS.ProcessEnv;
 
@@ -26,25 +33,39 @@ describe("auth-config", () => {
     expect(getAuthSecret(env({ AUTH_SECRET: "top-secret" }))).toBe("top-secret");
   });
 
-  it("reports the missing variables required for Google sign-in", () => {
-    expect(getGoogleAuthSetupStatus(env({}))).toMatchObject({
+  it("supports Auth.js GitHub env inference names", () => {
+    expect(getGithubClientId(env({ AUTH_GITHUB_ID: "github-id" }))).toBe("github-id");
+    expect(getGithubClientSecret(env({ AUTH_GITHUB_SECRET: "github-secret" }))).toBe(
+      "github-secret",
+    );
+  });
+
+  it("supports legacy GitHub client variable names", () => {
+    expect(getGithubClientId(env({ GITHUB_CLIENT_ID: "legacy-id" }))).toBe("legacy-id");
+    expect(getGithubClientSecret(env({ GITHUB_CLIENT_SECRET: "legacy-secret" }))).toBe(
+      "legacy-secret",
+    );
+  });
+
+  it("reports the missing variables required for GitHub sign-in", () => {
+    expect(getGithubAuthSetupStatus(env({}))).toMatchObject({
       configured: false,
       missing: [
-        "GOOGLE_CLIENT_ID",
-        "GOOGLE_CLIENT_SECRET",
+        "AUTH_GITHUB_ID or GITHUB_CLIENT_ID",
+        "AUTH_GITHUB_SECRET or GITHUB_CLIENT_SECRET",
         "NEXTAUTH_SECRET or AUTH_SECRET",
         "NEXTAUTH_URL or AUTH_URL",
       ],
-      callbackUrl: "http://localhost:3000/api/auth/callback/google",
+      callbackUrl: "http://localhost:3000/api/auth/callback/github",
     });
   });
 
-  it("marks Google auth as configured when required values are present", () => {
+  it("marks GitHub auth as configured when required values are present", () => {
     expect(
-      getGoogleAuthSetupStatus(
+      getGithubAuthSetupStatus(
         env({
-          GOOGLE_CLIENT_ID: "google-id",
-          GOOGLE_CLIENT_SECRET: "google-secret",
+          AUTH_GITHUB_ID: "github-id",
+          AUTH_GITHUB_SECRET: "github-secret",
           NEXTAUTH_SECRET: "secret",
           NEXTAUTH_URL: "https://openhands-context-layer.vercel.app",
         }),
@@ -53,7 +74,7 @@ describe("auth-config", () => {
       configured: true,
       missing: [],
       baseUrl: "https://openhands-context-layer.vercel.app",
-      callbackUrl: "https://openhands-context-layer.vercel.app/api/auth/callback/google",
+      callbackUrl: "https://openhands-context-layer.vercel.app/api/auth/callback/github",
     });
   });
 });

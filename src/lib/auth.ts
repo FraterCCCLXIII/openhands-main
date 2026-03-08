@@ -1,8 +1,14 @@
 import NextAuth from "next-auth";
 import type { Provider } from "next-auth/providers";
-import Google from "next-auth/providers/google";
+import GitHub from "next-auth/providers/github";
 
-import { getAuthSecret, getGoogleAuthSetupStatus, isAuthDisabled } from "@/src/lib/auth-config";
+import {
+  getAuthSecret,
+  getGithubAuthSetupStatus,
+  getGithubClientId,
+  getGithubClientSecret,
+  isAuthDisabled,
+} from "@/src/lib/auth-config";
 
 export { isAuthDisabled } from "@/src/lib/auth-config";
 
@@ -14,13 +20,13 @@ const mockSession = {
   expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
 };
 
-const googleAuth = getGoogleAuthSetupStatus();
+const githubAuth = getGithubAuthSetupStatus();
 
-const providers: Provider[] = googleAuth.configured
+const providers: Provider[] = githubAuth.configured
   ? [
-      Google({
-        clientId: process.env.GOOGLE_CLIENT_ID!,
-        clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      GitHub({
+        clientId: getGithubClientId(),
+        clientSecret: getGithubClientSecret(),
       }),
     ]
   : [];

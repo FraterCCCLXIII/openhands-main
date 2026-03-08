@@ -16,6 +16,6 @@ This repository contains a Next.js/TypeScript implementation of an agent context
 - `src/lib/adapters/composio-adapter.ts` uses `@composio/core` for SaaS/API tool execution.
 - `src/lib/adapters/mcp-adapter.ts` uses `@modelcontextprotocol/sdk` to call remote MCP tools.
 - `src/lib/db/postgres-repository.ts` uses Neon with `POSTGRES_URL` or `DATABASE_URL`; `src/lib/db/memory-repository.ts` is the local/test fallback.
-- `src/lib/auth.ts` configures Auth.js for Google login only; `DISABLE_AUTH=true` bypasses interactive auth for local development.
+- `src/lib/auth.ts` configures Auth.js for GitHub OAuth on the hosted dashboard; `DISABLE_AUTH=true` bypasses interactive auth for local development.
 - `src/components/admin/admin-dashboard.tsx` is the OpenHands-inspired Tailwind dashboard using TanStack Query + Zustand.
 - `app/api/cron/expire-grants/route.ts` is intended for a Vercel cron job to purge expired temporary grants.

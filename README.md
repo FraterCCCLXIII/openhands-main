@@ -60,10 +60,10 @@ http://localhost:3000
 
 Core variables:
 
-- `NEXTAUTH_SECRET`
-- `NEXTAUTH_URL`
-- `GOOGLE_CLIENT_ID`
-- `GOOGLE_CLIENT_SECRET`
+- `NEXTAUTH_SECRET` or `AUTH_SECRET`
+- `NEXTAUTH_URL` or `AUTH_URL`
+- `AUTH_GITHUB_ID` (preferred) or `GITHUB_CLIENT_ID`
+- `AUTH_GITHUB_SECRET` (preferred) or `GITHUB_CLIENT_SECRET`
 - `POSTGRES_URL` or `DATABASE_URL`
 - `COMPOSIO_API_KEY`
 - `CRON_SECRET`
@@ -76,26 +76,25 @@ Optional notification variables:
 - `TWILIO_AUTH_TOKEN`
 - `TWILIO_FROM_NUMBER`
 
-## Google sign-in setup
+## GitHub sign-in setup
 
-1. In Google Cloud Console, create or select a project.
-2. Configure the OAuth consent screen.
-3. Create an **OAuth client ID** with application type **Web application**.
-4. Add authorized JavaScript origins for each environment you will sign in from, for example:
+1. In GitHub, open **Settings → Developer settings → OAuth Apps** (or the matching organization-owned OAuth app flow).
+2. Create a new **OAuth App**.
+3. Set the **Homepage URL** to your app URL, for example:
    - `http://localhost:3000`
    - `https://openhands-context-layer.vercel.app`
-5. Add authorized redirect URIs for each matching environment:
-   - `http://localhost:3000/api/auth/callback/google`
-   - `https://openhands-context-layer.vercel.app/api/auth/callback/google`
-6. In Vercel or `.env.local`, set:
-   - `GOOGLE_CLIENT_ID`
-   - `GOOGLE_CLIENT_SECRET`
+4. Set the **Authorization callback URL** for each environment:
+   - `http://localhost:3000/api/auth/callback/github`
+   - `https://openhands-context-layer.vercel.app/api/auth/callback/github`
+5. In Vercel or `.env.local`, set:
+   - `AUTH_GITHUB_ID` (or `GITHUB_CLIENT_ID`)
+   - `AUTH_GITHUB_SECRET` (or `GITHUB_CLIENT_SECRET`)
    - `NEXTAUTH_SECRET` (or `AUTH_SECRET`)
    - `NEXTAUTH_URL=https://openhands-context-layer.vercel.app`
-7. Redeploy after updating environment variables.
+6. Redeploy after updating environment variables.
 
 Notes:
-- Google sign-in on preview deployments will fail unless that exact preview URL is also added in Google Cloud.
+- GitHub OAuth apps use one callback URL per app. If you need both localhost and production sign-in, create separate OAuth apps or switch the callback URL when testing.
 - If you set `DISABLE_AUTH=true`, the app bypasses interactive login and you can open `/admin` directly for local development.
 
 

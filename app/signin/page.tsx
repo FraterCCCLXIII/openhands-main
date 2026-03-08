@@ -1,18 +1,18 @@
 import Link from "next/link";
 
 import { Card } from "@/src/components/ui/card";
-import { getGoogleAuthSetupStatus } from "@/src/lib/auth-config";
+import { getGithubAuthSetupStatus } from "@/src/lib/auth-config";
 
 const guideItems = [
-  "Create a Google Cloud OAuth client of type Web application.",
-  "Set the app's authorized JavaScript origin to your site URL.",
-  "Set the app's authorized redirect URI to /api/auth/callback/google on that same site.",
+  "Create a GitHub OAuth App in your GitHub account or organization settings.",
+  "Set the homepage URL to your site URL.",
+  "Set the authorization callback URL to /api/auth/callback/github on that same site.",
   "Copy the client ID and client secret into your Vercel environment variables.",
   "Set NEXTAUTH_SECRET (or AUTH_SECRET) and NEXTAUTH_URL, then redeploy.",
 ];
 
 export default function SignInPage() {
-  const authSetup = getGoogleAuthSetupStatus();
+  const authSetup = getGithubAuthSetupStatus();
 
   return (
     <main className="flex min-h-screen items-center justify-center px-6 py-10">
@@ -20,7 +20,7 @@ export default function SignInPage() {
         <div className="space-y-3">
           <h1 className="text-3xl font-bold text-white">Sign in to Agent Context Layer</h1>
           <p className="text-sm leading-7 text-[var(--color-text-base)]">
-            Google is the only interactive sign-in option for the hosted app.
+            GitHub is the interactive sign-in option for the hosted app, matching the KPI tracker dashboard flow.
           </p>
         </div>
 
@@ -39,17 +39,17 @@ export default function SignInPage() {
             </div>
           ) : authSetup.configured ? (
             <a
-              href="/api/auth/signin/google?callbackUrl=%2Fadmin"
+              href="/api/auth/signin/github?callbackUrl=%2Fadmin"
               className="inline-flex w-full items-center justify-center rounded-xl bg-[var(--color-accent)] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[var(--color-accent-hover)]"
             >
-              Continue with Google
+              Continue with GitHub
             </a>
           ) : (
             <div className="space-y-5 rounded-2xl border border-amber-400/30 bg-amber-500/10 p-5 text-sm text-amber-100">
               <div className="space-y-2">
-                <h2 className="text-base font-semibold text-white">Google sign-in is not configured yet</h2>
+                <h2 className="text-base font-semibold text-white">GitHub sign-in is not configured yet</h2>
                 <p className="leading-7 text-amber-50/90">
-                  Before Google login will work, finish the OAuth setup below and redeploy.
+                  Before GitHub login will work, finish the OAuth app setup below and redeploy.
                 </p>
               </div>
 
@@ -63,7 +63,7 @@ export default function SignInPage() {
               </div>
 
               <div className="space-y-2">
-                <p className="font-medium text-white">Google Cloud Console checklist</p>
+                <p className="font-medium text-white">GitHub OAuth app checklist</p>
                 <ol className="list-decimal space-y-1 pl-5 text-amber-50/90">
                   {guideItems.map((item) => (
                     <li key={item}>{item}</li>
@@ -72,8 +72,12 @@ export default function SignInPage() {
               </div>
 
               <div className="rounded-xl border border-white/10 bg-black/10 p-4 text-xs text-amber-50/90">
-                <p><span className="font-semibold text-white">Base URL:</span> {authSetup.baseUrl}</p>
-                <p className="mt-2 break-all"><span className="font-semibold text-white">Redirect URI:</span> {authSetup.callbackUrl}</p>
+                <p>
+                  <span className="font-semibold text-white">Base URL:</span> {authSetup.baseUrl}
+                </p>
+                <p className="mt-2 break-all">
+                  <span className="font-semibold text-white">Callback URL:</span> {authSetup.callbackUrl}
+                </p>
               </div>
             </div>
           )}

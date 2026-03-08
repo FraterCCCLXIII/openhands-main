@@ -19,15 +19,21 @@ export const getBaseUrl = (env: NodeJS.ProcessEnv = process.env) => {
   return DEFAULT_LOCAL_URL;
 };
 
-export const getGoogleAuthSetupStatus = (env: NodeJS.ProcessEnv = process.env) => {
+export const getGithubClientId = (env: NodeJS.ProcessEnv = process.env) =>
+  env.AUTH_GITHUB_ID ?? env.GITHUB_CLIENT_ID ?? "";
+
+export const getGithubClientSecret = (env: NodeJS.ProcessEnv = process.env) =>
+  env.AUTH_GITHUB_SECRET ?? env.GITHUB_CLIENT_SECRET ?? "";
+
+export const getGithubAuthSetupStatus = (env: NodeJS.ProcessEnv = process.env) => {
   const missing: string[] = [];
 
-  if (!env.GOOGLE_CLIENT_ID) {
-    missing.push("GOOGLE_CLIENT_ID");
+  if (!getGithubClientId(env)) {
+    missing.push("AUTH_GITHUB_ID or GITHUB_CLIENT_ID");
   }
 
-  if (!env.GOOGLE_CLIENT_SECRET) {
-    missing.push("GOOGLE_CLIENT_SECRET");
+  if (!getGithubClientSecret(env)) {
+    missing.push("AUTH_GITHUB_SECRET or GITHUB_CLIENT_SECRET");
   }
 
   if (!getAuthSecret(env)) {
@@ -43,7 +49,7 @@ export const getGoogleAuthSetupStatus = (env: NodeJS.ProcessEnv = process.env) =
   return {
     authDisabled: isAuthDisabled(env),
     baseUrl,
-    callbackUrl: `${baseUrl}/api/auth/callback/google`,
+    callbackUrl: `${baseUrl}/api/auth/callback/github`,
     configured: missing.length === 0,
     missing,
   };
