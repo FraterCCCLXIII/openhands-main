@@ -24,6 +24,8 @@ This repository contains a Next.js/TypeScript implementation of an agent context
 - `src/components/admin/dashboard-workspace.tsx` now contains the main tabbed dashboard UX; `src/components/admin/admin-dashboard.tsx` is a thin re-export so the admin page import stays stable.
 - `src/components/admin/integration-wizard.tsx` powers the guided integration onboarding flow: choose API vs MCP, discover functions, then review per-function access defaults before saving.
 - `app/api/integrations/discover/route.ts` and `src/lib/integrations/discovery.ts` provide server-side function discovery for Composio toolkits and remote MCP servers.
+- MCP discovery should only infer `api_key` auth when a secret is present; a default header name by itself should still resolve to `none`, which matters for local proxy-based QA.
+- Local QA can be exercised with `DISABLE_AUTH=true npm run dev` on localhost plus a tiny localhost proxy that forwards `http://127.0.0.1:12001/` to GitHub's hosted MCP using `GITHUB_TOKEN`; the dashboard then uses `local-dev-context-key` instead of a PAT.
 - `FunctionSpec.accessMode` now supports `enabled`, `disabled`, and `approval_required`; `approval_required` bypasses agent-class policy and requires a temporary grant.
 - `app/api/cron/expire-grants/route.ts` is intended for a Vercel cron job to purge expired temporary grants.
 - `.github/workflows/` now includes OpenHands PR review (`pr-review-by-openhands.yml`, `pr-review-evaluation.yml`) and vulnerability remediation (`vulnerability-scan.yml`) wrappers copied from `OpenHands/extensions` plugins.

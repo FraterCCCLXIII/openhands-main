@@ -65,16 +65,15 @@ const normalizeComposioAuthStrategy = (modes: string[] = []): AuthStrategy => {
   return "oauth2";
 };
 
-const inferMcpAuthStrategy = (
+export const inferMcpAuthStrategy = (
   credentials: Record<string, unknown>,
 ): AuthStrategy => {
-  const headerName = credentials.headerName as string | undefined;
   const secret = credentials.secret as string | undefined;
   const accessToken = credentials.accessToken as string | undefined;
   const username = credentials.username as string | undefined;
   const password = credentials.password as string | undefined;
 
-  if (headerName || secret) {
+  if (secret) {
     return "api_key";
   }
 
