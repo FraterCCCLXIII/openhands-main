@@ -5,10 +5,10 @@ import { getGithubAuthSetupStatus } from "@/src/lib/auth-config";
 
 const guideItems = [
   "Create a GitHub OAuth App in your GitHub account or organization settings.",
-  "Set the homepage URL to your site URL.",
-  "Set the authorization callback URL to /api/auth/callback/github on that same site.",
-  "Copy the client ID and client secret into your Vercel environment variables.",
-  "Set NEXTAUTH_SECRET (or AUTH_SECRET) and NEXTAUTH_URL, then redeploy.",
+  "Set the homepage URL to your stable production site URL.",
+  "Set the authorization callback URL to your stable production /api/auth/callback/github endpoint.",
+  "Copy GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET, and AUTH_SECRET into your Vercel environment variables.",
+  "Set AUTH_TRUST_HOST=true and, for preview deployments, AUTH_REDIRECT_PROXY_URL to your stable production /api/auth URL.",
 ];
 
 export default function SignInPage() {
@@ -73,11 +73,20 @@ export default function SignInPage() {
 
               <div className="rounded-xl border border-white/10 bg-black/10 p-4 text-xs text-amber-50/90">
                 <p>
-                  <span className="font-semibold text-white">Base URL:</span> {authSetup.baseUrl}
+                  <span className="font-semibold text-white">Current app URL:</span> {authSetup.baseUrl}
                 </p>
                 <p className="mt-2 break-all">
-                  <span className="font-semibold text-white">Callback URL:</span> {authSetup.callbackUrl}
+                  <span className="font-semibold text-white">GitHub callback URL:</span> {authSetup.callbackUrl}
                 </p>
+                {authSetup.previewDeploymentsEnabled ? (
+                  <p className="mt-2 break-all">
+                    <span className="font-semibold text-white">Preview redirect proxy:</span> {authSetup.redirectProxyUrl}
+                  </p>
+                ) : (
+                  <p className="mt-2 text-amber-200/90">
+                    Preview deployments are not enabled yet. Add AUTH_REDIRECT_PROXY_URL to match the KPI tracker setup.
+                  </p>
+                )}
               </div>
             </div>
           )}

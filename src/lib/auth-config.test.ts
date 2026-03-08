@@ -4,8 +4,10 @@ import {
   getAuthSecret,
   getBaseUrl,
   getGithubAuthSetupStatus,
+  getGithubCallbackUrl,
   getGithubClientId,
   getGithubClientSecret,
+  getRedirectProxyUrl,
   isAuthDisabled,
 } from "@/src/lib/auth-config";
 
@@ -33,30 +35,40 @@ describe("auth-config", () => {
     expect(getAuthSecret(env({ AUTH_SECRET: "top-secret" }))).toBe("top-secret");
   });
 
-  it("supports Auth.js GitHub env inference names", () => {
-    expect(getGithubClientId(env({ AUTH_GITHUB_ID: "github-id" }))).toBe("github-id");
-    expect(getGithubClientSecret(env({ AUTH_GITHUB_SECRET: "github-secret" }))).toBe(
-      "github-secret",
+  it("prefers the KPI tracker GitHub client variable names", () => {
+    expect(getGithubClientId(env({ GITHUB_CLIENT_ID: "github-id", AUTH_GITHUB_ID: "auth-id" }))).toBe(
+      "github-id",
     );
+    expect(
+      getGithubClientSecret(
+        env({ GITHUB_CLIENT_SECRET: "github-secret", AUTH_GITHUB_SECRET: "auth-secret" }),
+      ),
+    ).toBe("github-secret");
   });
 
-  it("supports legacy GitHub client variable names", () => {
-    expect(getGithubClientId(env({ GITHUB_CLIENT_ID: "legacy-id" }))).toBe("legacy-id");
-    expect(getGithubClientSecret(env({ GITHUB_CLIENT_SECRET: "legacy-secret" }))).toBe(
-      "legacy-secret",
+  it("supports Auth.js GitHub inference names as a fallback", () => {
+    expect(getGithubClientId(env({ AUTH_GITHUB_ID: "auth-id" }))).toBe("auth-id");
+    expect(getGithubClientSecret(env({ AUTH_GITHUB_SECRET: "auth-secret" }))).toBe("auth-secret");
+  });
+
+  it("uses the redirect proxy URL when preview deployment support is enabled", () => {
+    const previewEnv = env({
+      AUTH_REDIRECT_PROXY_URL: "https://openhands-context-layer.vercel.app/api/auth/",
+      VERCEL_URL: "openhands-context-layer-git-feature.vercel.app",
+    });
+
+    expect(getRedirectProxyUrl(previewEnv)).toBe("https://openhands-context-layer.vercel.app/api/auth");
+    expect(getGithubCallbackUrl(previewEnv)).toBe(
+      "https://openhands-context-layer.vercel.app/api/auth/callback/github",
     );
   });
 
   it("reports the missing variables required for GitHub sign-in", () => {
     expect(getGithubAuthSetupStatus(env({}))).toMatchObject({
       configured: false,
-      missing: [
-        "AUTH_GITHUB_ID or GITHUB_CLIENT_ID",
-        "AUTH_GITHUB_SECRET or GITHUB_CLIENT_SECRET",
-        "NEXTAUTH_SECRET or AUTH_SECRET",
-        "NEXTAUTH_URL or AUTH_URL",
-      ],
+      missing: ["GITHUB_CLIENT_ID", "GITHUB_CLIENT_SECRET", "AUTH_SECRET or NEXTAUTH_SECRET"],
       callbackUrl: "http://localhost:3000/api/auth/callback/github",
+      previewDeploymentsEnabled: false,
     });
   });
 
@@ -64,10 +76,11 @@ describe("auth-config", () => {
     expect(
       getGithubAuthSetupStatus(
         env({
-          AUTH_GITHUB_ID: "github-id",
-          AUTH_GITHUB_SECRET: "github-secret",
-          NEXTAUTH_SECRET: "secret",
+          GITHUB_CLIENT_ID: "github-id",
+          GITHUB_CLIENT_SECRET: "github-secret",
+          AUTH_SECRET: "secret",
           NEXTAUTH_URL: "https://openhands-context-layer.vercel.app",
+          AUTH_REDIRECT_PROXY_URL: "https://openhands-context-layer.vercel.app/api/auth",
         }),
       ),
     ).toMatchObject({
@@ -75,6 +88,8 @@ describe("auth-config", () => {
       missing: [],
       baseUrl: "https://openhands-context-layer.vercel.app",
       callbackUrl: "https://openhands-context-layer.vercel.app/api/auth/callback/github",
+      previewDeploymentsEnabled: true,
+      redirectProxyUrl: "https://openhands-context-layer.vercel.app/api/auth",
     });
   });
 });

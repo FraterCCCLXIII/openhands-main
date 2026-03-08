@@ -60,13 +60,18 @@ http://localhost:3000
 
 Core variables:
 
-- `NEXTAUTH_SECRET` or `AUTH_SECRET`
-- `NEXTAUTH_URL` or `AUTH_URL`
-- `AUTH_GITHUB_ID` (preferred) or `GITHUB_CLIENT_ID`
-- `AUTH_GITHUB_SECRET` (preferred) or `GITHUB_CLIENT_SECRET`
+- `GITHUB_CLIENT_ID`
+- `GITHUB_CLIENT_SECRET`
+- `AUTH_SECRET` (or `NEXTAUTH_SECRET`)
 - `POSTGRES_URL` or `DATABASE_URL`
 - `COMPOSIO_API_KEY`
 - `CRON_SECRET`
+
+Optional auth variables:
+
+- `NEXTAUTH_URL` for local development only
+- `AUTH_TRUST_HOST=true` for Vercel/custom proxy deployments
+- `AUTH_REDIRECT_PROXY_URL=https://openhands-context-layer.vercel.app/api/auth` to enable GitHub OAuth on preview deployments
 
 Optional notification variables:
 
@@ -78,24 +83,38 @@ Optional notification variables:
 
 ## GitHub sign-in setup
 
-1. In GitHub, open **Settings → Developer settings → OAuth Apps** (or the matching organization-owned OAuth app flow).
-2. Create a new **OAuth App**.
-3. Set the **Homepage URL** to your app URL, for example:
-   - `http://localhost:3000`
+### Basic deployment
+
+1. Create a GitHub OAuth App in the OpenHands organization:
+   - https://github.com/organizations/OpenHands/settings/applications/new
+2. Set the app values to:
+   - **Homepage URL:** `https://openhands-context-layer.vercel.app`
+   - **Authorization callback URL:** `https://openhands-context-layer.vercel.app/api/auth/callback/github`
+3. In Vercel or `.env.local`, set:
+   - `GITHUB_CLIENT_ID`
+   - `GITHUB_CLIENT_SECRET`
+   - `AUTH_SECRET` (or `NEXTAUTH_SECRET`)
+   - `AUTH_TRUST_HOST=true`
+4. For local development only, set:
+   - `NEXTAUTH_URL=http://localhost:3000`
+5. Redeploy after updating environment variables.
+
+### Enabling OAuth on preview deployments
+
+This project now follows the same Auth.js preview deployment pattern used by `OpenHands/kpi-tracker`.
+
+1. Deploy the production app first at a stable URL:
    - `https://openhands-context-layer.vercel.app`
-4. Set the **Authorization callback URL** for each environment:
-   - `http://localhost:3000/api/auth/callback/github`
+2. Keep the GitHub OAuth callback URL fixed to production:
    - `https://openhands-context-layer.vercel.app/api/auth/callback/github`
-5. In Vercel or `.env.local`, set:
-   - `AUTH_GITHUB_ID` (or `GITHUB_CLIENT_ID`)
-   - `AUTH_GITHUB_SECRET` (or `GITHUB_CLIENT_SECRET`)
-   - `NEXTAUTH_SECRET` (or `AUTH_SECRET`)
-   - `NEXTAUTH_URL=https://openhands-context-layer.vercel.app`
-6. Redeploy after updating environment variables.
+3. Add `AUTH_REDIRECT_PROXY_URL` to **all** Vercel environments (Production, Preview, and Development):
+   - `AUTH_REDIRECT_PROXY_URL=https://openhands-context-layer.vercel.app/api/auth`
+4. Keep the same `AUTH_SECRET` value in all environments that need GitHub OAuth.
+5. When a user signs in from a preview deployment, Auth.js will proxy the OAuth callback through production and then redirect back to the preview URL.
 
 Notes:
-- GitHub OAuth apps use one callback URL per app. If you need both localhost and production sign-in, create separate OAuth apps or switch the callback URL when testing.
 - If you set `DISABLE_AUTH=true`, the app bypasses interactive login and you can open `/admin` directly for local development.
+- If you want localhost GitHub login without the redirect proxy flow, create a separate GitHub OAuth app with callback `http://localhost:3000/api/auth/callback/github`.
 
 
 ## Key routes

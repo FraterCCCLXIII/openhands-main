@@ -19,38 +19,46 @@ export const getBaseUrl = (env: NodeJS.ProcessEnv = process.env) => {
   return DEFAULT_LOCAL_URL;
 };
 
+export const getRedirectProxyUrl = (env: NodeJS.ProcessEnv = process.env) =>
+  env.AUTH_REDIRECT_PROXY_URL?.replace(/\/$/, "") ?? "";
+
 export const getGithubClientId = (env: NodeJS.ProcessEnv = process.env) =>
-  env.AUTH_GITHUB_ID ?? env.GITHUB_CLIENT_ID ?? "";
+  env.GITHUB_CLIENT_ID ?? env.AUTH_GITHUB_ID ?? "";
 
 export const getGithubClientSecret = (env: NodeJS.ProcessEnv = process.env) =>
-  env.AUTH_GITHUB_SECRET ?? env.GITHUB_CLIENT_SECRET ?? "";
+  env.GITHUB_CLIENT_SECRET ?? env.AUTH_GITHUB_SECRET ?? "";
+
+export const getGithubCallbackUrl = (env: NodeJS.ProcessEnv = process.env) => {
+  const redirectProxyUrl = getRedirectProxyUrl(env);
+  if (redirectProxyUrl) {
+    return `${redirectProxyUrl}/callback/github`;
+  }
+
+  return `${getBaseUrl(env)}/api/auth/callback/github`;
+};
 
 export const getGithubAuthSetupStatus = (env: NodeJS.ProcessEnv = process.env) => {
   const missing: string[] = [];
 
   if (!getGithubClientId(env)) {
-    missing.push("AUTH_GITHUB_ID or GITHUB_CLIENT_ID");
+    missing.push("GITHUB_CLIENT_ID");
   }
 
   if (!getGithubClientSecret(env)) {
-    missing.push("AUTH_GITHUB_SECRET or GITHUB_CLIENT_SECRET");
+    missing.push("GITHUB_CLIENT_SECRET");
   }
 
   if (!getAuthSecret(env)) {
-    missing.push("NEXTAUTH_SECRET or AUTH_SECRET");
+    missing.push("AUTH_SECRET or NEXTAUTH_SECRET");
   }
-
-  if (!(env.AUTH_URL ?? env.NEXTAUTH_URL ?? env.VERCEL_URL)) {
-    missing.push("NEXTAUTH_URL or AUTH_URL");
-  }
-
-  const baseUrl = getBaseUrl(env);
 
   return {
     authDisabled: isAuthDisabled(env),
-    baseUrl,
-    callbackUrl: `${baseUrl}/api/auth/callback/github`,
+    baseUrl: getBaseUrl(env),
+    callbackUrl: getGithubCallbackUrl(env),
     configured: missing.length === 0,
     missing,
+    previewDeploymentsEnabled: Boolean(getRedirectProxyUrl(env)),
+    redirectProxyUrl: getRedirectProxyUrl(env),
   };
 };
