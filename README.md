@@ -44,7 +44,7 @@ npm install
 cp .env.example .env.local
 ```
 
-3. For local development, you can use the dev login instead of Google:
+3. For local development, you can bypass interactive auth entirely:
 
 ```bash
 DISABLE_AUTH=true npm run dev
@@ -75,6 +75,29 @@ Optional notification variables:
 - `TWILIO_ACCOUNT_SID`
 - `TWILIO_AUTH_TOKEN`
 - `TWILIO_FROM_NUMBER`
+
+## Google sign-in setup
+
+1. In Google Cloud Console, create or select a project.
+2. Configure the OAuth consent screen.
+3. Create an **OAuth client ID** with application type **Web application**.
+4. Add authorized JavaScript origins for each environment you will sign in from, for example:
+   - `http://localhost:3000`
+   - `https://openhands-context-layer.vercel.app`
+5. Add authorized redirect URIs for each matching environment:
+   - `http://localhost:3000/api/auth/callback/google`
+   - `https://openhands-context-layer.vercel.app/api/auth/callback/google`
+6. In Vercel or `.env.local`, set:
+   - `GOOGLE_CLIENT_ID`
+   - `GOOGLE_CLIENT_SECRET`
+   - `NEXTAUTH_SECRET` (or `AUTH_SECRET`)
+   - `NEXTAUTH_URL=https://openhands-context-layer.vercel.app`
+7. Redeploy after updating environment variables.
+
+Notes:
+- Google sign-in on preview deployments will fail unless that exact preview URL is also added in Google Cloud.
+- If you set `DISABLE_AUTH=true`, the app bypasses interactive login and you can open `/admin` directly for local development.
+
 
 ## Key routes
 
