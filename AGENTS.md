@@ -19,3 +19,4 @@ This repository contains a Next.js/TypeScript implementation of an agent context
 - `src/lib/auth.ts` configures Auth.js for GitHub OAuth on the hosted dashboard using the same preview-deployment redirect proxy pattern as `OpenHands/kpi-tracker`; `DISABLE_AUTH=true` bypasses interactive auth for local development.
 - `src/components/admin/admin-dashboard.tsx` is the OpenHands-inspired Tailwind dashboard using TanStack Query + Zustand.
 - `app/api/cron/expire-grants/route.ts` is intended for a Vercel cron job to purge expired temporary grants.
+- `.github/workflows/` now includes OpenHands PR review (`pr-review-by-openhands.yml`, `pr-review-evaluation.yml`) and vulnerability remediation (`vulnerability-scan.yml`) wrappers copied from `OpenHands/extensions` plugins.
