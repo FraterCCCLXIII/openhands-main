@@ -1,15 +1,21 @@
 # AGENTS.md
 
 ## Repository purpose
-This repository contains an MVP "agent context layer" service built with FastAPI. It provides a single context endpoint across registered APIs and MCP-style integrations, agent-class permissions, temporary approval-based grants, notification fanout, and a small admin UI.
+This repository contains a Next.js/TypeScript implementation of an agent context layer. It exposes a single agent-facing context endpoint, supports Composio-backed API connectors and MCP SDK-backed MCP servers, provides fine-grained agent-class permissions plus temporary approval grants, and ships with a Tailwind admin dashboard styled after the OpenHands KPI tracker.
 
 ## Common commands
-- Install dependencies: `python -m pip install -e .[dev]`
-- Run app: `uvicorn agent_context_layer.app:create_app --factory --reload`
-- Run tests: `pytest`
+- Install dependencies: `npm install`
+- Run locally with dev auth: `DISABLE_AUTH=true npm run dev`
+- Run tests: `npm test`
+- Typecheck: `npm run typecheck`
+- Production build check: `npm run build`
 
 ## Architecture notes
-- `agent_context_layer.models` defines the domain objects.
-- `agent_context_layer.services` contains the in-memory store, access-control logic, approval flow, and execution adapters.
-- `agent_context_layer.auth` contains optional Google OAuth support plus a dev login for local testing.
-- `agent_context_layer.app` wires the FastAPI routes and the admin UI.
+- `app/` contains the App Router pages and API route handlers.
+- `src/lib/core/service.ts` contains the main permissioning, approval, and invocation orchestration logic.
+- `src/lib/adapters/composio-adapter.ts` uses `@composio/core` for SaaS/API tool execution.
+- `src/lib/adapters/mcp-adapter.ts` uses `@modelcontextprotocol/sdk` to call remote MCP tools.
+- `src/lib/db/postgres-repository.ts` uses Neon with `POSTGRES_URL` or `DATABASE_URL`; `src/lib/db/memory-repository.ts` is the local/test fallback.
+- `src/lib/auth.ts` configures Auth.js with Google login and a credentials-based dev login.
+- `src/components/admin/admin-dashboard.tsx` is the OpenHands-inspired Tailwind dashboard using TanStack Query + Zustand.
+- `app/api/cron/expire-grants/route.ts` is intended for a Vercel cron job to purge expired temporary grants.
