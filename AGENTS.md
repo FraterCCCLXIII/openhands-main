@@ -26,3 +26,4 @@ This repository contains a Next.js/TypeScript implementation of an agent context
 - `app/api/integrations/discover/route.ts` and `src/lib/integrations/discovery.ts` provide server-side function discovery for Composio toolkits and remote MCP servers.
 - `FunctionSpec.accessMode` now supports `enabled`, `disabled`, and `approval_required`; `approval_required` bypasses agent-class policy and requires a temporary grant.
 - `app/api/cron/expire-grants/route.ts` is intended for a Vercel cron job to purge expired temporary grants.
+- `.github/workflows/` now includes OpenHands PR review (`pr-review-by-openhands.yml`, `pr-review-evaluation.yml`) and vulnerability remediation (`vulnerability-scan.yml`) wrappers copied from `OpenHands/extensions` plugins.
