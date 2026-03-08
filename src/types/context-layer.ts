@@ -11,12 +11,18 @@ export type AuthStrategy =
   | "mcp_session";
 
 export type NotificationChannel = "email" | "in_app" | "sms";
-export type AccessRequestStatus = "pending" | "approved" | "rejected" | "expired";
+export type AccessRequestStatus =
+  | "pending"
+  | "approved"
+  | "rejected"
+  | "expired";
+export type FunctionAccessMode = "enabled" | "disabled" | "approval_required";
 
 export interface FunctionSpec {
   name: string;
   description?: string;
   enabled: boolean;
+  accessMode?: FunctionAccessMode;
   fineGrainedPermissions: boolean;
   defaultScopes: string[];
   executionMode: "provider" | "mock";
