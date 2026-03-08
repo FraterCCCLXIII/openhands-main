@@ -1,0 +1,57 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@100..700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-bg-dark: #0c0e10;
+  --color-bg-light: #292929;
+  --color-bg-input: #393939;
+  --color-bg-workspace: #1f2228;
+  --color-border: #3c3c4a;
+  --color-text-base: #9099ac;
+  --color-text-active: #c4cbda;
+  --color-bg-sidebar: #24272e;
+  --color-bg-active: #31343d;
+  --color-accent: #3b82f6;
+  --color-accent-hover: #2563eb;
+  --color-success: #22c55e;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  background:
+    radial-gradient(circle at top, rgba(59, 130, 246, 0.12), transparent 32%),
+    linear-gradient(180deg, #0c0e10 0%, #111418 100%);
+  color: #e6edf3;
+  font-family: "Outfit", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code,
+pre,
+kbd {
+  font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+input,
+textarea,
+select,
+button {
+  font: inherit;
+}
