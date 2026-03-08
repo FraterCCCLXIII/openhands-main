@@ -10,6 +10,7 @@ import type {
   AccessRequest,
   AgentClassPolicy,
   ContextInvocationResult,
+  FunctionAccessMode,
   FunctionSpec,
   IntegrationSpec,
   PolicyRule,
@@ -17,6 +18,29 @@ import type {
 } from "@/src/types/context-layer";
 
 const unique = (values: string[]) => [...new Set(values)];
+
+const getFunctionAccessMode = (
+  functionSpec: FunctionSpec,
+): FunctionAccessMode =>
+  functionSpec.accessMode ?? (functionSpec.enabled ? "enabled" : "disabled");
+
+const normalizeFunctionSpec = (functionSpec: FunctionSpec): FunctionSpec => {
+  const accessMode = getFunctionAccessMode(functionSpec);
+
+  return {
+    ...functionSpec,
+    accessMode,
+    enabled: accessMode !== "disabled",
+  };
+};
+
+const normalizeFunctions = (functions: Record<string, FunctionSpec>) =>
+  Object.fromEntries(
+    Object.entries(functions).map(([name, functionSpec]) => [
+      name,
+      normalizeFunctionSpec(functionSpec),
+    ]),
+  );
 
 const permittedByRule = (
   rule: PolicyRule,
@@ -28,11 +52,18 @@ const permittedByRule = (
     return false;
   }
 
-  if (fineGrained && rule.functionNames.length > 0 && !rule.functionNames.includes(functionName)) {
+  if (
+    fineGrained &&
+    rule.functionNames.length > 0 &&
+    !rule.functionNames.includes(functionName)
+  ) {
     return false;
   }
 
-  if (rule.scopes.length > 0 && !requestedScopes.every((scope) => rule.scopes.includes(scope))) {
+  if (
+    rule.scopes.length > 0 &&
+    !requestedScopes.every((scope) => rule.scopes.includes(scope))
+  ) {
     return false;
   }
 
@@ -65,20 +96,25 @@ export class ContextLayerService {
     return this.repository.listNotifications();
   }
 
-  async registerIntegration(spec: Omit<IntegrationSpec, "functions"> & { functions?: Record<string, FunctionSpec> }) {
+  async registerIntegration(
+    spec: Omit<IntegrationSpec, "functions"> & {
+      functions?: Record<string, FunctionSpec>;
+    },
+  ) {
     await this.initialize();
     const integration: IntegrationSpec = {
       ...spec,
-      functions: spec.functions ?? {},
+      functions: normalizeFunctions(spec.functions ?? {}),
     };
     return this.repository.upsertIntegration(integration);
   }
 
   async addFunction(integrationKey: string, functionSpec: FunctionSpec) {
     const integration = await this.getIntegration(integrationKey);
-    integration.functions[functionSpec.name] = functionSpec;
+    integration.functions[functionSpec.name] =
+      normalizeFunctionSpec(functionSpec);
     await this.repository.upsertIntegration(integration);
-    return functionSpec;
+    return integration.functions[functionSpec.name];
   }
 
   async setIntegrationEnabled(integrationKey: string, enabled: boolean) {
@@ -87,15 +123,27 @@ export class ContextLayerService {
     return this.repository.upsertIntegration(integration);
   }
 
-  async setFunctionEnabled(integrationKey: string, functionName: string, enabled: boolean) {
+  async setFunctionEnabled(
+    integrationKey: string,
+    functionName: string,
+    enabled: boolean,
+  ) {
     const integration = await this.getIntegration(integrationKey);
     const functionSpec = integration.functions[functionName];
 
     if (!functionSpec) {
-      throw new ContextLayerError(`Unknown function '${functionName}' for integration '${integrationKey}'.`, 404);
+      throw new ContextLayerError(
+        `Unknown function '${functionName}' for integration '${integrationKey}'.`,
+        404,
+      );
     }
 
     functionSpec.enabled = enabled;
+    functionSpec.accessMode = enabled
+      ? functionSpec.accessMode === "disabled"
+        ? "enabled"
+        : getFunctionAccessMode(functionSpec)
+      : "disabled";
     await this.repository.upsertIntegration(integration);
     return functionSpec;
   }
@@ -117,17 +165,61 @@ export class ContextLayerService {
     const functionSpec = integration.functions[functionName];
 
     if (!functionSpec) {
-      throw new ContextLayerError(`Unknown function '${functionName}' for integration '${integrationKey}'.`, 404);
+      throw new ContextLayerError(
+        `Unknown function '${functionName}' for integration '${integrationKey}'.`,
+        404,
+      );
     }
 
-    const effectiveScopes = unique(requestedScopes.length > 0 ? requestedScopes : functionSpec.defaultScopes);
+    const effectiveScopes = unique(
+      requestedScopes.length > 0 ? requestedScopes : functionSpec.defaultScopes,
+    );
+    const accessMode = getFunctionAccessMode(functionSpec);
 
     if (!integration.enabled) {
-      return { allowed: false, reason: "Integration disabled", effectiveScopes };
+      return {
+        allowed: false,
+        reason: "Integration disabled",
+        effectiveScopes,
+      };
     }
 
-    if (!functionSpec.enabled) {
+    if (!functionSpec.enabled || accessMode === "disabled") {
       return { allowed: false, reason: "Function disabled", effectiveScopes };
+    }
+
+    const activeGrant = (await this.repository.listTemporaryGrants()).find(
+      (grant) => {
+        if (
+          grant.agentId !== agentId ||
+          grant.agentClass !== agentClass ||
+          grant.integrationKey !== integrationKey ||
+          grant.functionName !== functionName
+        ) {
+          return false;
+        }
+
+        if (grant.expiresAt <= nowIso()) {
+          return false;
+        }
+
+        return (
+          grant.scopes.length === 0 ||
+          effectiveScopes.every((scope) => grant.scopes.includes(scope))
+        );
+      },
+    );
+
+    if (accessMode === "approval_required") {
+      if (activeGrant) {
+        return {
+          allowed: true,
+          reason: "Allowed by temporary approval",
+          effectiveScopes,
+        };
+      }
+
+      return { allowed: false, reason: "Permission required", effectiveScopes };
     }
 
     const policy = await this.repository.getPolicy(agentClass);
@@ -137,32 +229,25 @@ export class ContextLayerService {
           continue;
         }
 
-        const fineGrained = integration.fineGrainedPermissions && functionSpec.fineGrainedPermissions;
+        const fineGrained =
+          integration.fineGrainedPermissions &&
+          functionSpec.fineGrainedPermissions;
         if (permittedByRule(rule, functionName, effectiveScopes, fineGrained)) {
-          return { allowed: true, reason: "Allowed by agent class policy", effectiveScopes };
+          return {
+            allowed: true,
+            reason: "Allowed by agent class policy",
+            effectiveScopes,
+          };
         }
       }
     }
 
-    const activeGrant = (await this.repository.listTemporaryGrants()).find((grant) => {
-      if (
-        grant.agentId !== agentId ||
-        grant.agentClass !== agentClass ||
-        grant.integrationKey !== integrationKey ||
-        grant.functionName !== functionName
-      ) {
-        return false;
-      }
-
-      if (grant.expiresAt <= nowIso()) {
-        return false;
-      }
-
-      return grant.scopes.length === 0 || effectiveScopes.every((scope) => grant.scopes.includes(scope));
-    });
-
     if (activeGrant) {
-      return { allowed: true, reason: "Allowed by temporary approval", effectiveScopes };
+      return {
+        allowed: true,
+        reason: "Allowed by temporary approval",
+        effectiveScopes,
+      };
     }
 
     return { allowed: false, reason: "Permission required", effectiveScopes };
@@ -183,7 +268,11 @@ export class ContextLayerService {
     return accessRequest;
   }
 
-  async approveAccessRequest(requestId: string, approver: string, durationMinutes?: number) {
+  async approveAccessRequest(
+    requestId: string,
+    approver: string,
+    durationMinutes?: number,
+  ) {
     const request = await this.getAccessRequest(requestId);
     const decidedAt = nowIso();
     const approvedRequest: AccessRequest = {
@@ -203,7 +292,10 @@ export class ContextLayerService {
       scopes: request.scopes,
       grantedBy: approver,
       createdAt: decidedAt,
-      expiresAt: addMinutes(decidedAt, durationMinutes ?? request.requestedMinutes),
+      expiresAt: addMinutes(
+        decidedAt,
+        durationMinutes ?? request.requestedMinutes,
+      ),
     };
 
     await this.repository.saveTemporaryGrant(grant);
@@ -238,18 +330,37 @@ export class ContextLayerService {
     const integration = await this.getIntegration(integrationKey);
     const functionSpec = integration.functions[functionName];
     if (!functionSpec) {
-      throw new ContextLayerError(`Unknown function '${functionName}' for integration '${integrationKey}'.`, 404);
+      throw new ContextLayerError(
+        `Unknown function '${functionName}' for integration '${integrationKey}'.`,
+        404,
+      );
     }
 
-    const decision = await this.evaluateAccess(agentId, agentClass, integrationKey, functionName, requestedScopes);
+    const decision = await this.evaluateAccess(
+      agentId,
+      agentClass,
+      integrationKey,
+      functionName,
+      requestedScopes,
+    );
     if (!decision.allowed) {
       throw new ContextLayerError(decision.reason, 403);
     }
 
     const data =
       functionSpec.executionMode === "mock"
-        ? await this.adapters.invoke("mock", { agentId, integration, functionSpec, payload })
-        : await this.adapters.invoke(integration.provider, { agentId, integration, functionSpec, payload });
+        ? await this.adapters.invoke("mock", {
+            agentId,
+            integration,
+            functionSpec,
+            payload,
+          })
+        : await this.adapters.invoke(integration.provider, {
+            agentId,
+            integration,
+            functionSpec,
+            payload,
+          });
 
     return {
       integration: integration.key,
@@ -275,7 +386,10 @@ export class ContextLayerService {
     await this.initialize();
     const request = await this.repository.getAccessRequest(requestId);
     if (!request) {
-      throw new ContextLayerError(`Unknown access request '${requestId}'.`, 404);
+      throw new ContextLayerError(
+        `Unknown access request '${requestId}'.`,
+        404,
+      );
     }
     return request;
   }

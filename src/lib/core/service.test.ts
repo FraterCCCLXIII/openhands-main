@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { AdapterRegistry, type IntegrationAdapter } from "@/src/lib/core/adapter-registry";
+import {
+  AdapterRegistry,
+  type IntegrationAdapter,
+} from "@/src/lib/core/adapter-registry";
 import { MemoryRepository } from "@/src/lib/db/memory-repository";
 import { NotificationPublisher } from "@/src/lib/notifications/publisher";
 import { ContextLayerService } from "@/src/lib/core/service";
@@ -106,6 +109,71 @@ describe("ContextLayerService", () => {
     ).rejects.toThrow("Function disabled");
   });
 
+  it("requires temporary approval for case-by-case functions", async () => {
+    const repository = new MemoryRepository();
+    const service = new ContextLayerService(
+      repository,
+      new AdapterRegistry({
+        composio: { invoke: async () => ({ ok: true }) },
+        mock: { invoke: async () => ({}) },
+      }),
+      new NotificationPublisher(repository),
+    );
+
+    await service.registerIntegration({
+      ...baseIntegration,
+      functions: {
+        accounts: {
+          ...baseIntegration.functions.accounts,
+          accessMode: "approval_required",
+        },
+      },
+    });
+    await service.upsertAgentPolicy("assistant", [
+      {
+        integrationKey: "salesforce",
+        functionNames: ["accounts"],
+        scopes: ["accounts.read"],
+        enabled: true,
+      },
+    ]);
+
+    await expect(
+      service.invokeContext(
+        "agent-4",
+        "assistant",
+        "salesforce",
+        "accounts",
+        {},
+        ["accounts.read"],
+      ),
+    ).rejects.toThrow("Permission required");
+
+    const request = await service.createAccessRequest({
+      agentId: "agent-4",
+      agentClass: "assistant",
+      integrationKey: "salesforce",
+      functionName: "accounts",
+      scopes: ["accounts.read"],
+      requestedMinutes: 30,
+      channels: [],
+      notificationTargets: {},
+      justification: "Need approval",
+    });
+    await service.approveAccessRequest(request.id, "human-1", 30);
+
+    const response = await service.invokeContext(
+      "agent-4",
+      "assistant",
+      "salesforce",
+      "accounts",
+      {},
+      ["accounts.read"],
+    );
+
+    expect(response.decision.reason).toBe("Allowed by temporary approval");
+  });
+
   it("creates notifications for multiple channels when access is requested", async () => {
     const repository = new MemoryRepository();
     const service = new ContextLayerService(
@@ -132,7 +200,11 @@ describe("ContextLayerService", () => {
     });
 
     const notifications = await repository.listNotifications();
-    expect(notifications.map((item) => item.channel).sort()).toEqual(["email", "in_app", "sms"]);
+    expect(notifications.map((item) => item.channel).sort()).toEqual([
+      "email",
+      "in_app",
+      "sms",
+    ]);
     expect(new Set(notifications.map((item) => item.recipient))).toEqual(
       new Set(["owner@example.com", "+15551234567", "ops-inbox"]),
     );
@@ -142,7 +214,10 @@ describe("ContextLayerService", () => {
     const repository = new MemoryRepository();
     const service = new ContextLayerService(
       repository,
-      new AdapterRegistry({ composio: { invoke: async () => ({ ok: true }) }, mock: { invoke: async () => ({}) } }),
+      new AdapterRegistry({
+        composio: { invoke: async () => ({ ok: true }) },
+        mock: { invoke: async () => ({}) },
+      }),
       new NotificationPublisher(repository),
     );
     await service.registerIntegration(baseIntegration);
@@ -176,14 +251,9 @@ describe("ContextLayerService", () => {
     await repository.saveTemporaryGrant(grant);
 
     await expect(
-      service.invokeContext(
-        "agent-3",
-        "writer",
-        "salesforce",
-        "accounts",
-        {},
-        ["accounts.read"],
-      ),
+      service.invokeContext("agent-3", "writer", "salesforce", "accounts", {}, [
+        "accounts.read",
+      ]),
     ).rejects.toThrow("Permission required");
   });
 

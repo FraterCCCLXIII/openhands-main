@@ -4,6 +4,9 @@ export const functionSpecSchema = z.object({
   name: z.string().min(1),
   description: z.string().optional().default(""),
   enabled: z.boolean().default(true),
+  accessMode: z
+    .enum(["enabled", "disabled", "approval_required"])
+    .default("enabled"),
   fineGrainedPermissions: z.boolean().default(true),
   defaultScopes: z.array(z.string()).default([]),
   executionMode: z.enum(["provider", "mock"]).default("provider"),
@@ -16,7 +19,14 @@ export const integrationSpecSchema = z.object({
   name: z.string().min(1),
   kind: z.enum(["api", "mcp"]),
   provider: z.enum(["composio", "mcp", "mock"]),
-  authStrategy: z.enum(["none", "api_key", "bearer", "basic", "oauth2", "mcp_session"]),
+  authStrategy: z.enum([
+    "none",
+    "api_key",
+    "bearer",
+    "basic",
+    "oauth2",
+    "mcp_session",
+  ]),
   enabled: z.boolean().default(true),
   fineGrainedPermissions: z.boolean().default(true),
   config: z.record(z.string(), z.unknown()).default({}),
@@ -75,11 +85,22 @@ export const notificationRecordSchema = z.object({
   createdAt: z.string().datetime(),
 });
 
-export const integrationCreateSchema = integrationSpecSchema.omit({ functions: true });
+export const integrationCreateSchema = integrationSpecSchema;
 export const functionCreateSchema = functionSpecSchema;
-export const policyUpdateSchema = z.object({ rules: z.array(policyRuleSchema) });
-export const accessRequestCreateSchema = accessRequestSchema.omit({ id: true, createdAt: true, status: true, decidedAt: true, decidedBy: true });
-export const accessRequestDecisionSchema = z.object({ approver: z.string().min(1), durationMinutes: z.number().int().positive().optional() });
+export const policyUpdateSchema = z.object({
+  rules: z.array(policyRuleSchema),
+});
+export const accessRequestCreateSchema = accessRequestSchema.omit({
+  id: true,
+  createdAt: true,
+  status: true,
+  decidedAt: true,
+  decidedBy: true,
+});
+export const accessRequestDecisionSchema = z.object({
+  approver: z.string().min(1),
+  durationMinutes: z.number().int().positive().optional(),
+});
 export const contextInvokeSchema = z.object({
   agentId: z.string().min(1),
   agentClass: z.string().min(1),

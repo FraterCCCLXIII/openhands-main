@@ -15,7 +15,7 @@ export async function POST(request: Request) {
   try {
     const payload = integrationCreateSchema.parse(await request.json());
     const service = getContextLayerService();
-    return ok(await service.registerIntegration({ ...payload, functions: {} }));
+    return ok(await service.registerIntegration(payload));
   } catch (error) {
     return fromError(error);
   }
