@@ -22,6 +22,7 @@ import { IntegrationWizard } from "@/src/components/admin/integration-wizard";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
 import { Card } from "@/src/components/ui/card";
+import { buildAgentConnectionGuide } from "@/src/lib/agent-connection";
 import { cn } from "@/src/lib/utils";
 import { useAdminStore } from "@/src/stores/admin-store";
 import type {
@@ -97,6 +98,9 @@ interface AdminDashboardProps {
   initialAccessRequests: AccessRequest[];
   initialNotifications: NotificationRecord[];
   currentUser: { name?: string | null; email?: string | null };
+  contextApiBaseUrl: string;
+  contextApiKey: string;
+  usingDefaultLocalApiKey: boolean;
 }
 
 const ADMIN_TABS: Array<{
@@ -171,16 +175,6 @@ const INTEGRATION_PRESETS: Array<{
     },
   },
 ];
-
-const AGENT_REQUEST_EXAMPLE = `POST /api/context/notion/list_pages
-{
-  "agentId": "research-bot-01",
-  "agentClass": "researcher",
-  "scopes": ["pages.read"],
-  "payload": {
-    "query": "quarterly roadmap"
-  }
-}`;
 
 const getIntegrationGuide = ({
   kind,
@@ -374,6 +368,9 @@ export const DashboardWorkspace = ({
   initialAccessRequests,
   initialNotifications,
   currentUser,
+  contextApiBaseUrl,
+  contextApiKey,
+  usingDefaultLocalApiKey,
 }: AdminDashboardProps) => {
   const queryClient = useQueryClient();
   const { providerFilter, requestFilter, setProviderFilter, setRequestFilter } =
@@ -499,6 +496,17 @@ export const DashboardWorkspace = ({
   const enabledIntegrationCount = integrations.filter(
     (integration) => integration.enabled,
   ).length;
+  const contextApiReady = contextApiKey.trim().length > 0;
+  const agentConnectionGuide = useMemo(
+    () =>
+      buildAgentConnectionGuide({
+        baseUrl: contextApiBaseUrl,
+        apiKey:
+          contextApiKey.trim() || "<set CONTEXT_LAYER_API_KEY in your environment>",
+        integrations,
+      }),
+    [contextApiBaseUrl, contextApiKey, integrations],
+  );
   const guide = getIntegrationGuide(integrationForm);
 
   return (
@@ -532,6 +540,21 @@ export const DashboardWorkspace = ({
       {statusMessage ? (
         <div className="rounded-xl border border-[var(--color-border)] bg-white/5 px-4 py-3 text-sm text-[var(--color-text-active)]">
           {statusMessage}
+        </div>
+      ) : null}
+
+      {usingDefaultLocalApiKey ? (
+        <div className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
+          Local dev mode is active. The dashboard is limited to localhost requests, and agents can authenticate with{" "}
+          <code className="text-white">Authorization: Bearer {contextApiKey}</code> until you set a custom{" "}
+          <code className="text-white">CONTEXT_LAYER_API_KEY</code> or{" "}
+          <code className="text-white">CONTEXT_LAYER_API_KEYS</code>.
+        </div>
+      ) : !contextApiReady ? (
+        <div className="rounded-xl border border-amber-400/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+          Agents cannot call <code className="text-white">/api/context</code> yet. Set{" "}
+          <code className="text-white">CONTEXT_LAYER_API_KEY</code> or{" "}
+          <code className="text-white">CONTEXT_LAYER_API_KEYS</code> in your environment, then reload the dashboard.
         </div>
       ) : null}
 
@@ -609,13 +632,39 @@ export const DashboardWorkspace = ({
                 description="Every agent uses the same route pattern. The integration key and function name come from the Integrations tab."
                 tooltip="This is the clearest end-to-end path for agent developers using the context layer."
               />
-              <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-dark)]/60 p-4">
-                <p className="mb-3 text-sm font-medium text-white">
-                  Example request
-                </p>
-                <pre className="overflow-x-auto whitespace-pre-wrap text-xs leading-6 text-[var(--color-text-base)]">
-                  {AGENT_REQUEST_EXAMPLE}
-                </pre>
+              <div className="space-y-4 rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-dark)]/60 p-4">
+                <div>
+                  <p className="text-sm font-medium text-white">Endpoint</p>
+                  <code className="mt-2 block break-all text-xs text-[var(--color-text-base)]">
+                    {agentConnectionGuide.endpoint}
+                  </code>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-white">Authentication</p>
+                  <p className="mt-2 text-sm leading-7 text-[var(--color-text-base)]">
+                    Send the context-layer API key in{" "}
+                    <code className="text-white">Authorization: Bearer ...</code>
+                    {" "}or <code className="text-white">X-API-Key</code>. The
+                    underlying MCP token stays inside the integration settings and
+                    is never passed to the agent.
+                  </p>
+                </div>
+                <div>
+                  <p className="mb-3 text-sm font-medium text-white">
+                    Example request body
+                  </p>
+                  <pre className="overflow-x-auto whitespace-pre-wrap text-xs leading-6 text-[var(--color-text-base)]">
+                    {agentConnectionGuide.requestBody}
+                  </pre>
+                </div>
+                <div>
+                  <p className="mb-3 text-sm font-medium text-white">
+                    Copyable cURL example
+                  </p>
+                  <pre className="overflow-x-auto whitespace-pre-wrap text-xs leading-6 text-[var(--color-text-base)]">
+                    {agentConnectionGuide.curlExample}
+                  </pre>
+                </div>
               </div>
               <ul className="mt-4 space-y-2 text-sm leading-7 text-[var(--color-text-base)]">
                 <li>
@@ -627,6 +676,14 @@ export const DashboardWorkspace = ({
                   like <code className="text-white">researcher</code> or{" "}
                   <code className="text-white">designer</code> that match your
                   saved policies.
+                </li>
+                <li>
+                  • The current sample targets{" "}
+                  <code className="text-white">
+                    {agentConnectionGuide.integrationKey}/
+                    {agentConnectionGuide.functionName}
+                  </code>
+                  . Create an integration first if you still see placeholders.
                 </li>
                 <li>
                   • If access is denied, check the Approvals tab for a pending
@@ -660,6 +717,15 @@ export const DashboardWorkspace = ({
                     <code className="text-white">serverUrl</code> in config, and
                     an <code className="text-white">accessToken</code> in
                     credentials.
+                  </p>
+                </div>
+                <div className="rounded-xl border border-[var(--color-border)] bg-black/15 p-4">
+                  <p className="font-medium text-white">GitHub MCP quick start</p>
+                  <p>
+                    Use <code className="text-white">key=github</code>,{" "}
+                    <code className="text-white">serverUrl=https://api.githubcopilot.com/mcp/</code>,
+                    and paste a GitHub PAT into the{" "}
+                    <code className="text-white">accessToken</code> field.
                   </p>
                 </div>
                 <div className="rounded-xl border border-[var(--color-border)] bg-black/15 p-4">
@@ -875,28 +941,37 @@ export const DashboardWorkspace = ({
               </div>
               <div className="rounded-2xl border border-[var(--color-border)] bg-black/15 p-5">
                 <p className="font-semibold text-white">
-                  Step 3: call the unified endpoint
+                  Step 3: call the unified endpoint with the context-layer API key
                 </p>
                 <p>
                   From the agent, send{" "}
                   <code className="text-white">agentId</code>,{" "}
                   <code className="text-white">agentClass</code>, optional{" "}
                   <code className="text-white">scopes</code>, and the tool
-                  payload to{" "}
-                  <code className="text-white">
-                    POST /api/context/[integrationKey]/[functionName]
-                  </code>
-                  .
+                  payload to <code className="text-white">{agentConnectionGuide.endpoint}</code>. Authenticate with{" "}
+                  <code className="text-white">Authorization: Bearer ...</code>
+                  {" "}or <code className="text-white">X-API-Key</code>; do not
+                  pass the MCP token directly to the agent.
                 </p>
               </div>
             </div>
-            <div className="mt-5 rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-dark)]/60 p-4">
-              <p className="mb-3 text-sm font-medium text-white">
-                Endpoint reminder
-              </p>
-              <pre className="overflow-x-auto whitespace-pre-wrap text-xs leading-6 text-[var(--color-text-base)]">
-                {AGENT_REQUEST_EXAMPLE}
-              </pre>
+            <div className="mt-5 space-y-4 rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-dark)]/60 p-4">
+              <div>
+                <p className="mb-3 text-sm font-medium text-white">
+                  Copyable fetch example
+                </p>
+                <pre className="overflow-x-auto whitespace-pre-wrap text-xs leading-6 text-[var(--color-text-base)]">
+                  {agentConnectionGuide.fetchExample}
+                </pre>
+              </div>
+              <div>
+                <p className="mb-3 text-sm font-medium text-white">
+                  Request body reminder
+                </p>
+                <pre className="overflow-x-auto whitespace-pre-wrap text-xs leading-6 text-[var(--color-text-base)]">
+                  {agentConnectionGuide.requestBody}
+                </pre>
+              </div>
             </div>
           </Card>
 

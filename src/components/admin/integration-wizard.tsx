@@ -451,6 +451,11 @@ export const IntegrationWizard = ({
                       }))
                     }
                   />
+                  <span className="text-xs leading-6 text-[var(--color-text-base)]">
+                    Example: GitHub&apos;s hosted MCP server uses{" "}
+                    <code className="text-white">https://api.githubcopilot.com/mcp/</code>.
+                    For local QA, a localhost MCP proxy URL also works.
+                  </span>
                 </label>
                 <div className="grid gap-4 md:grid-cols-2">
                   <label className="grid gap-2 text-sm text-white">
@@ -466,6 +471,9 @@ export const IntegrationWizard = ({
                         }))
                       }
                     />
+                    <span className="text-xs leading-6 text-[var(--color-text-base)]">
+                      Use this for bearer-token MCP servers such as GitHub&apos;s hosted MCP.
+                    </span>
                   </label>
                   <label className="grid gap-2 text-sm text-white">
                     <span className="font-medium">API key (optional)</span>
@@ -577,6 +585,11 @@ export const IntegrationWizard = ({
                 <li>
                   • It infers auth from the credentials you provided, without
                   making you choose an auth type explicitly.
+                </li>
+                <li>
+                  • For GitHub MCP, use{" "}
+                  <code className="text-white">https://api.githubcopilot.com/mcp/</code>
+                  {" "}plus a GitHub PAT in <span className="text-white">Access token</span>.
                 </li>
                 <li>
                   • Every discovered tool is prepared as an enabled function by

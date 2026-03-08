@@ -44,7 +44,7 @@ npm install
 cp .env.example .env.local
 ```
 
-3. For local development, you can bypass interactive auth entirely:
+3. For local development, you can bypass interactive auth entirely. In this mode the app only responds to localhost requests, and the unified context endpoint accepts a default agent API key of `local-dev-context-key` unless you set `CONTEXT_LAYER_API_KEY(S)` yourself:
 
 ```bash
 DISABLE_AUTH=true npm run dev
@@ -63,6 +63,7 @@ Core variables:
 - `GITHUB_CLIENT_ID`
 - `GITHUB_CLIENT_SECRET`
 - `AUTH_SECRET` (or `NEXTAUTH_SECRET`)
+- `CONTEXT_LAYER_API_KEY` or `CONTEXT_LAYER_API_KEYS` for agent access to `POST /api/context/*`
 - `POSTGRES_URL` or `DATABASE_URL`
 - `COMPOSIO_API_KEY`
 - `CRON_SECRET`
@@ -113,7 +114,8 @@ This project now follows the same Auth.js preview deployment pattern used by `Op
 5. When a user signs in from a preview deployment, Auth.js will proxy the OAuth callback through production and then redirect back to the preview URL.
 
 Notes:
-- If you set `DISABLE_AUTH=true`, the app bypasses interactive login and you can open `/admin` directly for local development.
+- If you set `DISABLE_AUTH=true`, the app bypasses interactive login, only serves localhost requests, and you can open `/admin` directly for local development.
+- In that localhost-only mode, agents can use `Authorization: Bearer local-dev-context-key` unless you override it with `CONTEXT_LAYER_API_KEY` or `CONTEXT_LAYER_API_KEYS`.
 - If you want localhost GitHub login without the redirect proxy flow, create a separate GitHub OAuth app with callback `http://localhost:3000/api/auth/callback/github`.
 
 

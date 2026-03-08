@@ -1,8 +1,11 @@
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { AdminDashboard } from "@/src/components/admin/admin-dashboard";
 import { auth, isAuthDisabled } from "@/src/lib/auth";
+import { getContextApiAuthStatus } from "@/src/lib/context-api-auth";
 import { getContextLayerService } from "@/src/lib/core/runtime";
+import { getRequestOrigin } from "@/src/lib/request-context";
 
 export const dynamic = "force-dynamic";
 
@@ -13,6 +16,8 @@ export default async function AdminPage() {
     redirect("/signin");
   }
 
+  const requestHeaders = await headers();
+  const contextApiAuth = getContextApiAuthStatus();
   const service = getContextLayerService();
   const [initialIntegrations, initialAccessRequests, initialNotifications] =
     await Promise.all([
@@ -29,6 +34,9 @@ export default async function AdminPage() {
           initialIntegrations={initialIntegrations}
           initialAccessRequests={initialAccessRequests}
           initialNotifications={initialNotifications}
+          contextApiBaseUrl={getRequestOrigin(requestHeaders)}
+          contextApiKey={contextApiAuth.primaryKey}
+          usingDefaultLocalApiKey={contextApiAuth.usingDefaultLocalKey}
         />
       </div>
     </main>
