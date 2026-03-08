@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { GitHubSignInButton } from "@/src/components/auth/github-sign-in-button";
 import { Card } from "@/src/components/ui/card";
 import { getGithubAuthSetupStatus } from "@/src/lib/auth-config";
 
@@ -38,12 +39,7 @@ export default function SignInPage() {
               </Link>
             </div>
           ) : authSetup.configured ? (
-            <a
-              href="/api/auth/signin/github?callbackUrl=%2Fadmin"
-              className="inline-flex w-full items-center justify-center rounded-xl bg-[var(--color-accent)] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[var(--color-accent-hover)]"
-            >
-              Continue with GitHub
-            </a>
+            <GitHubSignInButton callbackUrl="/admin" />
           ) : (
             <div className="space-y-5 rounded-2xl border border-amber-400/30 bg-amber-500/10 p-5 text-sm text-amber-100">
               <div className="space-y-2">
