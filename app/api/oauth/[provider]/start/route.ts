@@ -2,8 +2,12 @@ import { randomBytes } from "node:crypto";
 import { NextResponse } from "next/server";
 
 import { getCurrentUserIdentity } from "@/src/lib/current-user";
-import { getContextLayerService } from "@/src/lib/core/runtime";
-import { createOAuthStateExpiry, getOAuthProvider } from "@/src/lib/oauth/providers";
+import {
+  getContextLayerRepository,
+  getContextLayerService,
+} from "@/src/lib/core/runtime";
+import { createOAuthStateExpiry } from "@/src/lib/oauth/providers";
+import { resolveOAuthProvider } from "@/src/lib/oauth/provider-resolver";
 
 const buildRedirect = (
   requestUrl: string,
@@ -23,7 +27,10 @@ export async function GET(
 ) {
   const url = new URL(request.url);
   const { provider: providerParam } = await params;
-  const provider = getOAuthProvider(providerParam);
+  const provider = await resolveOAuthProvider(
+    getContextLayerRepository(),
+    providerParam,
+  );
 
   if (!provider) {
     return NextResponse.json(

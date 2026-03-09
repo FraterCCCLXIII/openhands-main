@@ -1,6 +1,6 @@
 export type IntegrationKind = "api" | "mcp";
 
-export type IntegrationProvider = "composio" | "mcp" | "mock";
+export type IntegrationProvider = "composio" | "mcp" | "mock" | "http";
 
 export type AuthStrategy =
   | "none"
@@ -9,6 +9,9 @@ export type AuthStrategy =
   | "basic"
   | "oauth2"
   | "mcp_session";
+
+export type HttpRequestContentType = "json" | "form_urlencoded" | "text";
+export type OAuthClientAuthentication = "basic" | "body";
 
 export type NotificationChannel = "email" | "in_app" | "sms";
 export type AccessRequestStatus =
@@ -76,6 +79,59 @@ export interface OAuthProviderCatalogOption {
   docsUrl?: string;
   notes: string;
   popularityRank: number;
+}
+
+export interface GenericOAuthConfig {
+  authorizationUrl: string;
+  tokenUrl: string;
+  scopes: string[];
+  scopeSeparator?: "space" | "comma";
+  pkce?: boolean;
+  clientAuthentication?: OAuthClientAuthentication;
+  additionalAuthorizationParams?: Record<string, string>;
+  additionalTokenParams?: Record<string, string>;
+}
+
+export interface GenericHttpRequestTemplate {
+  method: string;
+  path: string;
+  query?: Record<string, unknown>;
+  headers?: Record<string, unknown>;
+  body?: unknown;
+  contentType?: HttpRequestContentType;
+}
+
+export interface ManagedConnectorFunctionDefinition {
+  name: string;
+  description: string;
+  defaultScopes: string[];
+  request: GenericHttpRequestTemplate;
+}
+
+export interface ManagedConnectorDefinition {
+  slug: string;
+  name: string;
+  description: string;
+  logoUrl?: string;
+  appUrl?: string;
+  docsUrl?: string;
+  categories: string[];
+  authModes: AuthStrategy[];
+  authStrategy: AuthStrategy;
+  oauthConfigured?: boolean;
+  credentialLabel: string;
+  credentialPlaceholder: string;
+  credentialHelp: string;
+  apiBaseUrl: string;
+  oauthConfig?: GenericOAuthConfig;
+  functions: ManagedConnectorFunctionDefinition[];
+  enabled: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ManagedConnectorRecord extends ManagedConnectorDefinition {
+  encryptedOAuthClient?: string;
 }
 
 

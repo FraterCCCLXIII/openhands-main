@@ -6,8 +6,9 @@ import { ContextLayerError } from "@/src/lib/core/errors";
 import type { ContextRepository } from "@/src/lib/core/repository";
 import { decryptCredentials, encryptCredentials } from "@/src/lib/credential-crypto";
 import { getBuiltInConnectorDefinition } from "@/src/lib/integrations/built-in-connectors";
+import { sanitizeManagedConnector } from "@/src/lib/integrations/managed-connectors";
 import type { NotificationPublisher } from "@/src/lib/notifications/publisher";
-import { getOAuthProvider } from "@/src/lib/oauth/providers";
+import { resolveOAuthProvider } from "@/src/lib/oauth/provider-resolver";
 import type {
   AccessDecision,
   AccessRequest,
@@ -16,9 +17,12 @@ import type {
   ContextInvocationResult,
   FunctionAccessMode,
   FunctionSpec,
+  GenericOAuthConfig,
   IntegrationConnectionRecord,
   IntegrationConnectionStatus,
   IntegrationSpec,
+  ManagedConnectorDefinition,
+  ManagedConnectorRecord,
   NotificationRecord,
   PolicyRule,
   TemporaryGrant,
@@ -121,6 +125,100 @@ export class ContextLayerService {
   async listIntegrations() {
     await this.initialize();
     return this.repository.listIntegrations();
+  }
+
+  async listManagedConnectors() {
+    await this.initialize();
+    const connectors = await this.repository.listManagedConnectors();
+    return connectors.map(sanitizeManagedConnector);
+  }
+
+  async upsertManagedConnector(
+    input: Omit<
+      ManagedConnectorDefinition,
+      "authModes" | "createdAt" | "oauthConfigured" | "updatedAt"
+    > & {
+      authModes?: ManagedConnectorDefinition["authModes"];
+      oauthClientId?: string;
+      oauthClientSecret?: string;
+    },
+  ) {
+    await this.initialize();
+
+    const slug = input.slug.trim();
+    if (!slug) {
+      throw new ContextLayerError("Managed connectors require a slug.", 400);
+    }
+
+    const timestamp = nowIso();
+    const existing = await this.repository.getManagedConnector(slug);
+    const authModes =
+      input.authModes?.length && input.authModes.every(Boolean)
+        ? [...new Set(input.authModes)]
+        : [input.authStrategy];
+
+    const normalizedOAuthConfig: GenericOAuthConfig | undefined =
+      input.authStrategy === "oauth2" && input.oauthConfig
+        ? {
+            ...input.oauthConfig,
+            scopes: [...new Set(input.oauthConfig.scopes.map((scope) => scope.trim()).filter(Boolean))],
+          }
+        : undefined;
+
+    let encryptedOAuthClient = existing?.encryptedOAuthClient;
+    if (input.authStrategy === "oauth2") {
+      if (!normalizedOAuthConfig) {
+        throw new ContextLayerError(
+          "OAuth-managed connectors require an oauthConfig.",
+          400,
+        );
+      }
+
+      if (input.oauthClientId || input.oauthClientSecret) {
+        if (!input.oauthClientId?.trim() || !input.oauthClientSecret?.trim()) {
+          throw new ContextLayerError(
+            "Provide both oauthClientId and oauthClientSecret when updating OAuth credentials.",
+            400,
+          );
+        }
+
+        encryptedOAuthClient = encryptCredentials({
+          clientId: input.oauthClientId.trim(),
+          clientSecret: input.oauthClientSecret.trim(),
+        });
+      }
+    } else {
+      encryptedOAuthClient = undefined;
+    }
+
+    const record: ManagedConnectorRecord = {
+      slug,
+      name: input.name.trim(),
+      description: input.description.trim(),
+      logoUrl: input.logoUrl?.trim() || undefined,
+      appUrl: input.appUrl?.trim() || undefined,
+      docsUrl: input.docsUrl?.trim() || undefined,
+      categories: input.categories.map((category) => category.trim()).filter(Boolean),
+      authModes,
+      authStrategy: input.authStrategy,
+      oauthConfigured:
+        input.authStrategy !== "oauth2" ||
+        Boolean(normalizedOAuthConfig && encryptedOAuthClient),
+      credentialLabel: input.credentialLabel.trim(),
+      credentialPlaceholder: input.credentialPlaceholder.trim(),
+      credentialHelp: input.credentialHelp.trim(),
+      apiBaseUrl: input.apiBaseUrl.trim(),
+      oauthConfig: normalizedOAuthConfig,
+      encryptedOAuthClient,
+      functions: input.functions,
+      enabled: input.enabled,
+      createdAt: existing?.createdAt ?? timestamp,
+      updatedAt: timestamp,
+    };
+
+    return sanitizeManagedConnector(
+      await this.repository.upsertManagedConnector(record),
+    );
   }
 
   async listAccessRequests() {
@@ -582,7 +680,7 @@ export class ContextLayerService {
   }
 
   private async refreshOAuthConnection(record: IntegrationConnectionRecord) {
-    const provider = getOAuthProvider(record.provider);
+    const provider = await resolveOAuthProvider(this.repository, record.provider);
     if (!provider) {
       throw new ContextLayerError(
         `OAuth provider '${record.provider}' is not configured.`,

@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { fromError, ok } from "@/src/lib/api";
+import { getContextLayerRepository } from "@/src/lib/core/runtime";
 import { discoverIntegration } from "@/src/lib/integrations/discovery";
 
 const integrationDiscoverySchema = z.object({
@@ -14,7 +15,12 @@ export async function POST(request: Request) {
   try {
     const payload = integrationDiscoverySchema.parse(await request.json());
     const baseUrl = new URL(request.url).origin;
-    return ok(await discoverIntegration(payload, { baseUrl }));
+    return ok(
+      await discoverIntegration(payload, {
+        baseUrl,
+        repository: getContextLayerRepository(),
+      }),
+    );
   } catch (error) {
     return fromError(error);
   }

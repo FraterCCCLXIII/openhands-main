@@ -61,7 +61,9 @@ export default function AddConnectorPage() {
           <p className="max-w-3xl text-sm leading-7 text-[var(--color-text-base)]">
             If the integration setup flow does not show the provider you need,
             use this page to see what is already available and learn how admins
-            can add a missing provider to the source code for this deployment.
+            can add a missing provider through the managed-connector system for
+            common OAuth and HTTP patterns, or through source-code changes for
+            special-case implementations.
           </p>
           <div className="flex flex-wrap gap-2">
             {readyBuiltInConnectors.map((connector) => (
@@ -121,15 +123,17 @@ export default function AddConnectorPage() {
 
             <div className="space-y-4 text-sm leading-7 text-[var(--color-text-base)]">
               <p>
-                Use the existing Notion and Figma implementations as the
-                reference examples for a complete built-in + OAuth flow.
+                Use managed connectors for common OAuth and HTTP-style APIs, and
+                fall back to custom source-code implementations when a provider
+                needs nonstandard behavior.
               </p>
               <ol className="grid gap-3">
                 <li>
                   <span className="font-medium text-white">1.</span> Confirm the
                   provider has stable OAuth documentation and identify the app
-                  URL, authorization URL, token URL, callback requirements, and
-                  minimum scopes.
+                  URL, authorization URL, token URL, callback requirements,
+                  minimum scopes, and the core REST operations you want agents to
+                  call.
                 </li>
                 <li>
                   <span className="font-medium text-white">2.</span> Add the
@@ -140,8 +144,17 @@ export default function AddConnectorPage() {
                   so it shows up in this researched catalog.
                 </li>
                 <li>
-                  <span className="font-medium text-white">3.</span> Add the
-                  built-in connector definition in{" "}
+                  <span className="font-medium text-white">3.</span> For common
+                  cases, create a managed connector definition through{" "}
+                  <code className="text-white">app/api/managed-connectors/route.ts</code>
+                  . Store the provider metadata, OAuth settings, base API URL,
+                  and request templates there so the generic HTTP adapter can run
+                  it without adding a custom MCP route.
+                </li>
+                <li>
+                  <span className="font-medium text-white">4.</span> If the
+                  provider needs special handling, add the built-in connector
+                  definition in{" "}
                   <code className="text-white">
                     src/lib/integrations/built-in-connectors.ts
                   </code>{" "}
@@ -156,15 +169,16 @@ export default function AddConnectorPage() {
                   for examples.
                 </li>
                 <li>
-                  <span className="font-medium text-white">4.</span> Register the
-                  provider in{" "}
+                  <span className="font-medium text-white">5.</span> For custom
+                  OAuth implementations, register the provider in{" "}
                   <code className="text-white">src/lib/oauth/providers.ts</code>,
                   add the required client ID and client secret environment
-                  variables, and redeploy. The existing Notion and Figma provider
-                  definitions show the expected shape.
+                  variables, and redeploy. Managed connectors already store OAuth
+                  client metadata in the database, so this step is only needed
+                  for special-case code paths.
                 </li>
                 <li>
-                  <span className="font-medium text-white">5.</span> Open the
+                  <span className="font-medium text-white">6.</span> Open the
                   admin dashboard, connect a real user account, and confirm the
                   connector now appears in the integration wizard as a ready
                   option.

@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
 
 import { ContextLayerError } from "@/src/lib/core/errors";
-import { getContextLayerService } from "@/src/lib/core/runtime";
-import { getOAuthProvider } from "@/src/lib/oauth/providers";
+import {
+  getContextLayerRepository,
+  getContextLayerService,
+} from "@/src/lib/core/runtime";
+import { resolveOAuthProvider } from "@/src/lib/oauth/provider-resolver";
 
 const buildRedirect = (
   requestUrl: string,
@@ -23,7 +26,10 @@ export async function GET(
   const service = getContextLayerService();
   const url = new URL(request.url);
   const { provider: providerParam } = await params;
-  const provider = getOAuthProvider(providerParam);
+  const provider = await resolveOAuthProvider(
+    getContextLayerRepository(),
+    providerParam,
+  );
 
   if (!provider) {
     return NextResponse.json(

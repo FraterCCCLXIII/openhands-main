@@ -4,6 +4,7 @@ import type {
   AgentClassPolicy,
   IntegrationConnectionRecord,
   IntegrationSpec,
+  ManagedConnectorRecord,
   NotificationRecord,
   OAuthStateRecord,
   TemporaryGrant,
@@ -22,6 +23,7 @@ export class MemoryRepository implements ContextRepository {
     string,
     IntegrationConnectionRecord
   >();
+  private readonly managedConnectors = new Map<string, ManagedConnectorRecord>();
   private readonly oauthStates = new Map<string, OAuthStateRecord>();
 
   async ensureSchema() {}
@@ -111,6 +113,21 @@ export class MemoryRepository implements ContextRepository {
 
     this.agentApiKeysByOwner.set(record.ownerId, record);
     this.agentApiKeysByValue.set(record.apiKey, record);
+    return record;
+  }
+
+  async listManagedConnectors() {
+    return [...this.managedConnectors.values()].sort((a, b) =>
+      a.slug.localeCompare(b.slug),
+    );
+  }
+
+  async getManagedConnector(slug: string) {
+    return this.managedConnectors.get(slug) ?? null;
+  }
+
+  async upsertManagedConnector(record: ManagedConnectorRecord) {
+    this.managedConnectors.set(record.slug, record);
     return record;
   }
 

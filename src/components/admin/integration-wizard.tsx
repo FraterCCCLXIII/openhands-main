@@ -33,7 +33,7 @@ interface IntegrationWizardProps {
 }
 
 interface DiscoveryResponse {
-  provider: "composio" | "mcp" | "mock";
+  provider: "composio" | "mcp" | "mock" | "http";
   authStrategy: AuthStrategy;
   config: Record<string, unknown>;
   credentials: Record<string, unknown>;
@@ -190,7 +190,12 @@ const buildCreatePayload = (
   return {
     key: draft.key.trim(),
     name: draft.name.trim() || draft.key.trim(),
-    kind: draft.kind === "built_in" ? "mcp" : draft.kind,
+    kind:
+      draft.kind === "built_in"
+        ? discovery.provider === "http"
+          ? "api"
+          : "mcp"
+        : draft.kind,
     provider: discovery.provider,
     authStrategy: discovery.authStrategy,
     enabled: true,

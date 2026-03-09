@@ -17,6 +17,12 @@ vi.mock("@/src/lib/current-user", () => ({
 afterEach(() => {
   vi.unstubAllEnvs();
   vi.resetModules();
+  const runtime = globalThis as typeof globalThis & {
+    contextLayerRepository?: unknown;
+    contextLayerService?: unknown;
+  };
+  delete runtime.contextLayerRepository;
+  delete runtime.contextLayerService;
   getCurrentUserIdentityMock.mockClear();
 });
 

@@ -12,6 +12,10 @@ This repository contains a Next.js/TypeScript implementation of an agent context
 - Typecheck: `npm run typecheck`
 - Production build check: `npm run build`
 
+## Workflow notes
+
+- For this workstream, push code changes to `origin/openhands/oauth-interface-improvement` when the user asks for code updates to be pushed.
+
 ## Architecture notes
 
 - `app/` contains the App Router pages and API route handlers.
@@ -32,6 +36,7 @@ This repository contains a Next.js/TypeScript implementation of an agent context
 - `src/lib/integrations/oauth-provider-catalog.ts` and `app/api/integrations/oauth-provider-catalog/route.ts` expose the researched OAuth-capable provider catalog used by the add-connector/admin UI.
 - `app/api/mcp/*/route.ts` hosts stateless MCP routes that proxy those curated built-ins to provider REST APIs using the caller's bearer token.
 - `app/api/integrations/discover/route.ts` and `src/lib/integrations/discovery.ts` provide server-side function discovery for built-in connectors, Composio toolkits, and remote MCP servers.
+- Managed connectors now provide a data-driven escape hatch for common nonstandard integrations: admins can upsert DB-backed connector definitions through `app/api/managed-connectors/route.ts`, discovery merges them into the built-in catalog, `src/lib/adapters/http-adapter.ts` executes their request templates, and `src/lib/oauth/provider-resolver.ts` turns stored OAuth client metadata into runtime OAuth providers.
 - MCP discovery should only infer `api_key` auth when a secret is present; a default header name by itself should still resolve to `none`, which matters for local proxy-based QA.
 - Local QA can be exercised with `DISABLE_AUTH=true npm run dev` on localhost plus a tiny localhost proxy that forwards `http://127.0.0.1:12001/` to GitHub's hosted MCP using `GITHUB_TOKEN`; the dashboard provisions a per-user context API key server-side, and agents cannot call `/api/context/*` until a user has opened `/admin` once to provision that key.
 - `FunctionSpec.accessMode` now supports `enabled`, `disabled`, and `approval_required`; `approval_required` bypasses agent-class policy and requires a temporary grant.

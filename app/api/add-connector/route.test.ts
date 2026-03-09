@@ -5,11 +5,12 @@ import { GET as getNotifications } from "@/app/api/notifications/route";
 import { POST } from "./route";
 
 const resetRuntimeService = () => {
-  delete (
-    globalThis as typeof globalThis & {
-      contextLayerService?: unknown;
-    }
-  ).contextLayerService;
+  const runtime = globalThis as typeof globalThis & {
+    contextLayerRepository?: unknown;
+    contextLayerService?: unknown;
+  };
+  delete runtime.contextLayerRepository;
+  delete runtime.contextLayerService;
 };
 
 afterEach(() => {

@@ -3,11 +3,17 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 
 import { ContextLayerError } from "@/src/lib/core/errors";
+import type { ContextRepository } from "@/src/lib/core/repository";
 import {
   buildBuiltInConnectorFunctions,
   getBuiltInConnectorDefinition,
-  listBuiltInConnectors as listCuratedBuiltInConnectors,
+  listBuiltInConnectors as listStaticBuiltInConnectors,
 } from "@/src/lib/integrations/built-in-connectors";
+import {
+  discoverManagedBuiltInConnector,
+  getManagedConnectorRecord,
+  listAvailableBuiltInConnectors,
+} from "@/src/lib/integrations/managed-connectors";
 import type {
   AuthStrategy,
   BuiltInConnectorOption,
@@ -162,6 +168,7 @@ export interface IntegrationDiscoveryInput {
 
 export interface IntegrationDiscoveryOptions {
   baseUrl?: string;
+  repository?: ContextRepository;
 }
 
 export interface IntegrationDiscoveryResult {
@@ -184,9 +191,12 @@ const getComposioClient = () => {
   return new Composio({ apiKey });
 };
 
-export const listBuiltInConnectors = async (): Promise<
-  BuiltInConnectorOption[]
-> => listCuratedBuiltInConnectors();
+export const listBuiltInConnectors = async (
+  repository?: ContextRepository,
+): Promise<BuiltInConnectorOption[]> =>
+  repository
+    ? listAvailableBuiltInConnectors(repository)
+    : listStaticBuiltInConnectors();
 
 const discoverBuiltInConnectorIntegration = async (
   input: IntegrationDiscoveryInput,
@@ -196,43 +206,48 @@ const discoverBuiltInConnectorIntegration = async (
     (input.config.builtInSlug as string | undefined)?.trim() || input.key.trim();
   const connector = getBuiltInConnectorDefinition(slug);
 
-  if (!connector) {
-    throw new ContextLayerError(
-      `Unknown built-in connector '${slug}'.`,
-      404,
-    );
+  if (connector) {
+    const baseUrl = options.baseUrl?.trim();
+    if (!baseUrl) {
+      throw new ContextLayerError(
+        "A baseUrl is required to discover built-in connectors.",
+        500,
+      );
+    }
+
+    const accessToken =
+      (input.credentials.accessToken as string | undefined)?.trim();
+
+    if (connector.authStrategy !== "oauth2" && !accessToken) {
+      throw new ContextLayerError(
+        `${connector.credentialLabel} is required to use the ${connector.name} built-in connector.`,
+        400,
+      );
+    }
+
+    return {
+      provider: "mcp",
+      authStrategy: connector.authStrategy,
+      config: compactRecord({
+        builtInSlug: connector.slug,
+        serverUrl: `${baseUrl.replace(/\/$/, "")}${connector.serverPath}`,
+      }),
+      credentials:
+        connector.authStrategy === "oauth2"
+          ? {}
+          : compactRecord({ accessToken }),
+      functions: buildBuiltInConnectorFunctions(connector.slug),
+    };
   }
 
-  const baseUrl = options.baseUrl?.trim();
-  if (!baseUrl) {
-    throw new ContextLayerError(
-      "A baseUrl is required to discover built-in connectors.",
-      500,
-    );
+  if (options.repository) {
+    const managedConnector = await getManagedConnectorRecord(options.repository, slug);
+    if (managedConnector) {
+      return discoverManagedBuiltInConnector(managedConnector, input);
+    }
   }
 
-  const accessToken = (input.credentials.accessToken as string | undefined)?.trim();
-
-  if (connector.authStrategy !== "oauth2" && !accessToken) {
-    throw new ContextLayerError(
-      `${connector.credentialLabel} is required to use the ${connector.name} built-in connector.`,
-      400,
-    );
-  }
-
-  return {
-    provider: "mcp",
-    authStrategy: connector.authStrategy,
-    config: compactRecord({
-      builtInSlug: connector.slug,
-      serverUrl: `${baseUrl.replace(/\/$/, "")}${connector.serverPath}`,
-    }),
-    credentials:
-      connector.authStrategy === "oauth2"
-        ? {}
-        : compactRecord({ accessToken }),
-    functions: buildBuiltInConnectorFunctions(connector.slug),
-  };
+  throw new ContextLayerError(`Unknown built-in connector '${slug}'.`, 404);
 };
 
 const discoverComposioIntegration = async (

@@ -18,7 +18,7 @@ export const integrationSpecSchema = z.object({
   key: z.string().min(1),
   name: z.string().min(1),
   kind: z.enum(["api", "mcp"]),
-  provider: z.enum(["composio", "mcp", "mock"]),
+  provider: z.enum(["composio", "mcp", "mock", "http"]),
   authStrategy: z.enum([
     "none",
     "api_key",

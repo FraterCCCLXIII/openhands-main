@@ -1,24 +1,37 @@
 import { ComposioAdapter } from "@/src/lib/adapters/composio-adapter";
+import { HttpAdapter } from "@/src/lib/adapters/http-adapter";
 import { McpAdapter } from "@/src/lib/adapters/mcp-adapter";
 import { MockAdapter } from "@/src/lib/adapters/mock-adapter";
 import { AdapterRegistry } from "@/src/lib/core/adapter-registry";
+import type { ContextRepository } from "@/src/lib/core/repository";
 import { ContextLayerService } from "@/src/lib/core/service";
 import { MemoryRepository } from "@/src/lib/db/memory-repository";
 import { PostgresRepository } from "@/src/lib/db/postgres-repository";
 import { NotificationPublisher } from "@/src/lib/notifications/publisher";
 
 const globalForContextLayer = globalThis as typeof globalThis & {
+  contextLayerRepository?: ContextRepository;
   contextLayerService?: ContextLayerService;
+};
+
+export const getContextLayerRepository = () => {
+  if (!globalForContextLayer.contextLayerRepository) {
+    globalForContextLayer.contextLayerRepository =
+      process.env.POSTGRES_URL || process.env.DATABASE_URL
+        ? new PostgresRepository()
+        : new MemoryRepository();
+  }
+
+  return globalForContextLayer.contextLayerRepository;
 };
 
 export const getContextLayerService = () => {
   if (!globalForContextLayer.contextLayerService) {
-    const repository = process.env.POSTGRES_URL || process.env.DATABASE_URL
-      ? new PostgresRepository()
-      : new MemoryRepository();
+    const repository = getContextLayerRepository();
 
     const registry = new AdapterRegistry({
       composio: new ComposioAdapter(),
+      http: new HttpAdapter(),
       mcp: new McpAdapter(),
       mock: new MockAdapter(),
     });
