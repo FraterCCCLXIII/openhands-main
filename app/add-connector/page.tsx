@@ -137,7 +137,16 @@ export default function AddConnectorPage() {
                 <li>
                   <span className="font-medium text-white">2.</span> Create or
                   update a managed connector through the admin tooling or by
-                  sending a record to <code className="text-white">POST /api/managed-connectors</code>.
+                  sending a record to <code className="text-white">POST /api/managed-connectors</code>. Use the{" "}
+                  <a
+                    href="/api/managed-connectors/openapi"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
+                  >
+                    OpenAPI doc
+                  </a>{" "}
+                  for the request shape.
                 </li>
                 <li>
                   <span className="font-medium text-white">3.</span> In that DB

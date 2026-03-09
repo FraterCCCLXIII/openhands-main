@@ -17,6 +17,8 @@ describe("AddConnectorPage", () => {
     expect(html).toContain("Popular OAuth-ready provider options");
     expect(html).toContain("How to add a provider that is not currently showing up.");
     expect(html).toContain("POST /api/managed-connectors");
+    expect(html).toContain("/api/managed-connectors/openapi");
+    expect(html).toContain("OpenAPI doc");
     expect(html).toContain("managed connector record in the database");
     expect(html).not.toContain("src/lib/oauth/providers.ts");
     expect(html).not.toContain("Submit provider information");
