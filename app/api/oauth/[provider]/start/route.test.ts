@@ -1,9 +1,23 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { GET } from "./route";
+const { getCurrentUserIdentityMock } = vi.hoisted(() => ({
+  getCurrentUserIdentityMock: vi.fn(async () => ({
+    ownerId: "dev@localhost",
+    user: {
+      email: "dev@localhost",
+      name: "Local Dev User",
+    },
+  })),
+}));
+
+vi.mock("@/src/lib/current-user", () => ({
+  getCurrentUserIdentity: getCurrentUserIdentityMock,
+}));
 
 afterEach(() => {
   vi.unstubAllEnvs();
+  vi.resetModules();
+  getCurrentUserIdentityMock.mockClear();
 });
 
 describe("GET /api/oauth/[provider]/start", () => {
@@ -11,6 +25,8 @@ describe("GET /api/oauth/[provider]/start", () => {
     vi.stubEnv("DISABLE_AUTH", "true");
     vi.stubEnv("NOTION_CLIENT_ID", "");
     vi.stubEnv("NOTION_CLIENT_SECRET", "");
+
+    const { GET } = await import("./route");
 
     const response = await GET(
       new Request(
@@ -28,7 +44,7 @@ describe("GET /api/oauth/[provider]/start", () => {
     );
     expect(location).toContain("oauth_provider=notion");
     expect(location).toContain("oauth_status=error");
-    expect(decodeURIComponent(location ?? "")).toContain(
+    expect(new URL(location ?? "http://localhost").searchParams.get("oauth_error")).toBe(
       "NOTION_CLIENT_ID is not configured.",
     );
   });

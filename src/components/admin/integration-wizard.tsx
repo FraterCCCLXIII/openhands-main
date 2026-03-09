@@ -14,6 +14,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
 import { Card } from "@/src/components/ui/card";
+import { filterReadyBuiltInConnectors } from "@/src/lib/integrations/connector-readiness";
 import { cn } from "@/src/lib/utils";
 import type {
   AuthStrategy,
@@ -21,7 +22,6 @@ import type {
   FunctionAccessMode,
   FunctionSpec,
   IntegrationConnectionStatus,
-  OAuthProviderCatalogOption,
 } from "@/src/types/context-layer";
 
 type IntegrationKind = "built_in" | "mcp";
@@ -114,19 +114,6 @@ const accessModeLabel = (mode: FunctionAccessMode) => {
       return "Disabled";
     case "approval_required":
       return "Case-by-case";
-  }
-};
-
-const availabilityLabel = (
-  availability: OAuthProviderCatalogOption["availability"],
-) => {
-  switch (availability) {
-    case "oauth_ready":
-      return "OAuth ready";
-    case "manual_token":
-      return "Manual token today";
-    case "planned":
-      return "Planned";
   }
 };
 
@@ -282,35 +269,10 @@ export const IntegrationWizard = ({
     staleTime: 5 * 60 * 1000,
   });
 
-
-  const oauthProviderCatalogQuery = useQuery({
-    queryKey: ["oauth-provider-catalog"],
-    queryFn: () =>
-      fetchJson<OAuthProviderCatalogOption[]>(
-        "/api/integrations/oauth-provider-catalog",
-      ),
-    enabled: draft.kind === "built_in" && step === 2,
-    staleTime: 5 * 60 * 1000,
-  });
-
-  const oauthProviderSuggestions = useMemo(() => {
-    const query = connectorSearch.trim().toLowerCase();
-    const catalog = oauthProviderCatalogQuery.data ?? [];
-
-    const filtered = catalog.filter((provider) => {
-      if (!query) {
-        return true;
-      }
-
-      return [provider.name, provider.slug, ...provider.categories].some((value) =>
-        value.toLowerCase().includes(query),
-      );
-    });
-
-    return filtered.slice(0, query ? 8 : 10);
-  }, [connectorSearch, oauthProviderCatalogQuery.data]);
-
-  const builtInConnectors = builtInConnectorsQuery.data ?? [];
+  const builtInConnectors = useMemo(
+    () => filterReadyBuiltInConnectors(builtInConnectorsQuery.data ?? []),
+    [builtInConnectorsQuery.data],
+  );
 
   const selectedConnector = useMemo(
     () =>
@@ -592,8 +554,17 @@ export const IntegrationWizard = ({
                   </datalist>
                   <span className="text-xs leading-6 text-[var(--color-text-base)]">
                     Use the dropdown and start typing to filter the curated
-                    connectors hosted inside this Vercel deployment. Selecting one
-                    auto-fills the key and display name below.
+                    connectors hosted inside this deployment. Selecting one auto-
+                    fills the key and display name below.
+                  </span>
+                  <span className="text-xs leading-6 text-[var(--color-text-base)]">
+                    Don&apos;t see a connector you want?{" "}
+                    <a
+                      href="/add-connector"
+                      className="text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
+                    >
+                      Click here.
+                    </a>
                   </span>
                 </label>
 
@@ -602,93 +573,6 @@ export const IntegrationWizard = ({
                     {(builtInConnectorsQuery.error as Error).message}
                   </div>
                 ) : null}
-
-                <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-4 text-sm text-[var(--color-text-base)]">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                      <p className="font-semibold text-white">
-                        Popular OAuth-ready provider options
-                      </p>
-                      <p className="mt-1 text-xs leading-6 text-[var(--color-text-base)]">
-                        Researched catalog of 50 popular providers with OAuth support.
-                        The curated built-ins above work now; the rest are planned next.
-                      </p>
-                    </div>
-                    <Badge>{oauthProviderCatalogQuery.data?.length ?? 0} options</Badge>
-                  </div>
-
-                  {oauthProviderCatalogQuery.isPending ? (
-                    <p className="mt-3 text-xs leading-6 text-[var(--color-text-base)]">
-                      Loading researched provider options...
-                    </p>
-                  ) : (
-                    <div className="mt-4 grid gap-3 md:grid-cols-2">
-                      {oauthProviderSuggestions.map((provider) => {
-                        const builtInMatch = provider.builtInSlug
-                          ? builtInConnectors.find(
-                              (connector) => connector.slug === provider.builtInSlug,
-                            )
-                          : null;
-
-                        return (
-                          <div
-                            key={provider.slug}
-                            className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)] p-4"
-                          >
-                            <div className="flex flex-wrap items-center gap-2">
-                              <p className="font-medium text-white">{provider.name}</p>
-                              <Badge>{provider.slug}</Badge>
-                              <Badge
-                                tone={
-                                  provider.availability === "planned"
-                                    ? "warning"
-                                    : provider.availability === "oauth_ready"
-                                      ? "success"
-                                      : "default"
-                                }
-                              >
-                                {availabilityLabel(provider.availability)}
-                              </Badge>
-                            </div>
-                            <p className="mt-2 text-xs leading-6 text-[var(--color-text-base)]">
-                              {provider.description}
-                            </p>
-                            <p className="mt-2 text-xs leading-6 text-[var(--color-text-base)]">
-                              {provider.notes}
-                            </p>
-                            <div className="mt-3 flex flex-wrap gap-2">
-                              {provider.categories.map((category) => (
-                                <Badge key={`${provider.slug}-${category}`}>{category}</Badge>
-                              ))}
-                            </div>
-                            <div className="mt-4 flex flex-wrap gap-3">
-                              {builtInMatch ? (
-                                <Button
-                                  className="h-9 rounded-lg px-4 text-xs"
-                                  variant="secondary"
-                                  onClick={() => handleConnectorSelect(builtInMatch)}
-                                >
-                                  Use {builtInMatch.name}
-                                </Button>
-                              ) : null}
-                              {provider.docsUrl ? (
-                                <a
-                                  href={provider.docsUrl}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="inline-flex items-center text-xs text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
-                                >
-                                  Open OAuth docs
-                                </a>
-                              ) : null}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-
 
                 {selectedConnector ? (
                   <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-4 text-sm text-[var(--color-text-base)]">
@@ -717,7 +601,7 @@ export const IntegrationWizard = ({
                             </p>
                             <p className="mt-1 text-xs leading-6 text-[var(--color-text-base)]">
                               {!oauthConnectionEnabled
-                                ? `${selectedConnector.name} OAuth is not configured on this deployment yet. Add the required client ID and secret first.`
+                                ? `${selectedConnector.name} is not available on this deployment yet. Visit the add connector page to request it.`
                                 : selectedConnection
                                   ? `This ${selectedConnector.name} token is stored per user in the database and will be injected automatically for agent calls.`
                                   : selectedConnector.credentialHelp}
@@ -740,7 +624,7 @@ export const IntegrationWizard = ({
                             }}
                           >
                             {!oauthConnectionEnabled
-                              ? "OAuth not configured"
+                              ? "Not available"
                               : selectedConnection
                                 ? "Reconnect"
                                 : "Connect"}
@@ -802,7 +686,7 @@ export const IntegrationWizard = ({
                 {requiresOAuthConnection ? (
                   <div className="rounded-xl border border-dashed border-[var(--color-border)] px-4 py-4 text-sm text-[var(--color-text-base)]">
                     {!oauthConnectionEnabled
-                      ? `${selectedConnector?.name ?? "This provider"} needs deployment-level OAuth configuration before users can connect accounts.`
+                      ? `${selectedConnector?.name ?? "This provider"} is not available on this deployment yet. Visit /add-connector to request it.`
                       : selectedConnection
                         ? `${selectedConnector?.name} is connected. Click Discover to save this integration with your stored OAuth credentials.`
                         : `Connect ${selectedConnector?.name ?? "this provider"} before discovering functions.`}

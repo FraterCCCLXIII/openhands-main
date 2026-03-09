@@ -19,6 +19,7 @@ import type {
   IntegrationConnectionRecord,
   IntegrationConnectionStatus,
   IntegrationSpec,
+  NotificationRecord,
   PolicyRule,
   TemporaryGrant,
 } from "@/src/types/context-layer";
@@ -130,6 +131,11 @@ export class ContextLayerService {
   async listNotifications() {
     await this.initialize();
     return this.repository.listNotifications();
+  }
+
+  async createNotification(notification: NotificationRecord) {
+    await this.initialize();
+    return this.repository.createNotification(notification);
   }
 
   async getOrCreateAgentApiKey(ownerId: string): Promise<AgentApiKeyRecord> {
