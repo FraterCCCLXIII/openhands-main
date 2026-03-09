@@ -1,5 +1,6 @@
-import { ArrowLeft, ExternalLink, Mail, ShieldCheck, UserRound } from "lucide-react";
+import { ArrowLeft, Mail, ShieldCheck, UserRound } from "lucide-react";
 
+import { CuratedProviderList } from "@/src/components/admin/curated-provider-list";
 import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
 import { filterReadyBuiltInConnectors } from "@/src/lib/integrations/connector-readiness";
@@ -11,28 +12,6 @@ import { listBuiltInConnectors } from "@/src/lib/integrations/built-in-connector
 import { listOAuthProviderCatalog } from "@/src/lib/integrations/oauth-provider-catalog";
 
 export const dynamic = "force-dynamic";
-
-const availabilityTone = (availability: "oauth_ready" | "manual_token" | "planned") => {
-  switch (availability) {
-    case "oauth_ready":
-      return "success" as const;
-    case "planned":
-      return "warning" as const;
-    default:
-      return "default" as const;
-  }
-};
-
-const availabilityLabel = (availability: "oauth_ready" | "manual_token" | "planned") => {
-  switch (availability) {
-    case "oauth_ready":
-      return "OAuth ready";
-    case "manual_token":
-      return "Manual token today";
-    case "planned":
-      return "Planned";
-  }
-};
 
 export default function AddConnectorPage() {
   const adminEmail = getAdminContactEmail();
@@ -103,7 +82,7 @@ export default function AddConnectorPage() {
               <p>
                 Share the provider name, the OAuth documentation link, and the
                 work you want the agent to do. That gives admins the context they
-                need to add the connector in code.
+                need to add the connector as a managed integration record.
               </p>
             </div>
           </Card>
@@ -190,63 +169,10 @@ export default function AddConnectorPage() {
             <Badge>{providerCatalog.length} options</Badge>
           </div>
 
-          <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {providerCatalog.map((provider) => {
-              const builtInMatch = provider.builtInSlug
-                ? readyBuiltInConnectors.find(
-                    (connector) => connector.slug === provider.builtInSlug,
-                  )
-                : null;
-
-              return (
-                <div
-                  key={provider.slug}
-                  className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-4"
-                >
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="font-medium text-white">{provider.name}</p>
-                    <Badge>{provider.slug}</Badge>
-                    <Badge tone={availabilityTone(provider.availability)}>
-                      {availabilityLabel(provider.availability)}
-                    </Badge>
-                    {builtInMatch ? <Badge tone="success">Ready now</Badge> : null}
-                  </div>
-                  <p className="mt-3 text-sm leading-7 text-[var(--color-text-base)]">
-                    {provider.description}
-                  </p>
-                  <p className="mt-2 text-sm leading-7 text-[var(--color-text-base)]">
-                    {provider.notes}
-                  </p>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {provider.categories.map((category) => (
-                      <Badge key={`${provider.slug}-${category}`}>{category}</Badge>
-                    ))}
-                  </div>
-                  <div className="mt-4 flex flex-wrap gap-3 text-xs">
-                    {builtInMatch ? (
-                      <a
-                        href={`/admin?section=integrations&showIntegrationWizard=1&builtIn=${builtInMatch.slug}`}
-                        className="inline-flex items-center gap-1 text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
-                      >
-                        Use {builtInMatch.name}
-                      </a>
-                    ) : null}
-                    {provider.docsUrl ? (
-                      <a
-                        href={provider.docsUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-1 text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
-                      >
-                        OAuth docs
-                        <ExternalLink className="h-3.5 w-3.5" />
-                      </a>
-                    ) : null}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+          <CuratedProviderList
+            providerCatalog={providerCatalog}
+            readyBuiltInConnectors={readyBuiltInConnectors}
+          />
         </Card>
       </div>
     </main>

@@ -19,6 +19,7 @@ describe("AddConnectorPage", () => {
     expect(html).toContain("POST /api/managed-connectors");
     expect(html).toContain("/api/managed-connectors/openapi");
     expect(html).toContain("OpenAPI doc");
+    expect(html).toContain("Search curated adaptors");
     expect(html).toContain("managed connector record in the database");
     expect(html).not.toContain("src/lib/oauth/providers.ts");
     expect(html).not.toContain("Submit provider information");
