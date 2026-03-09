@@ -3,6 +3,8 @@ import { ArrowLeft, Mail, ShieldCheck, UserRound } from "lucide-react";
 import { CuratedProviderList } from "@/src/components/admin/curated-provider-list";
 import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
+import { auth } from "@/src/lib/auth";
+import { isAppAdminEmail } from "@/src/lib/app-admins";
 import { filterReadyBuiltInConnectors } from "@/src/lib/integrations/connector-readiness";
 import {
   getAdminContactEmail,
@@ -13,11 +15,13 @@ import { listOAuthProviderCatalog } from "@/src/lib/integrations/oauth-provider-
 
 export const dynamic = "force-dynamic";
 
-export default function AddConnectorPage() {
+export default async function AddConnectorPage() {
+  const session = await auth();
   const adminEmail = getAdminContactEmail();
   const adminInstruction = getAdminContactInstruction(adminEmail ?? undefined);
   const readyBuiltInConnectors = filterReadyBuiltInConnectors(listBuiltInConnectors());
   const providerCatalog = listOAuthProviderCatalog();
+  const canRegisterManagedConnectors = isAppAdminEmail(session?.user?.email ?? undefined);
 
   return (
     <main className="min-h-screen px-6 py-8">
@@ -105,6 +109,10 @@ export default function AddConnectorPage() {
                 For most providers, add a managed connector record in the
                 database instead of making source-code changes.
               </p>
+              <p>
+                The in-app registration form is only available to signed-in app
+                administrators whose email appears in <code className="text-white">APP_ADMIN_EMAILS</code>, which should be set in Vercel environment variables.
+              </p>
               <ol className="grid gap-3">
                 <li>
                   <span className="font-medium text-white">1.</span> Confirm the
@@ -172,6 +180,7 @@ export default function AddConnectorPage() {
           <CuratedProviderList
             providerCatalog={providerCatalog}
             readyBuiltInConnectors={readyBuiltInConnectors}
+            canRegisterManagedConnectors={canRegisterManagedConnectors}
           />
         </Card>
       </div>

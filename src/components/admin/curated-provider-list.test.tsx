@@ -2,7 +2,7 @@
 
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { CuratedProviderList } from "@/src/components/admin/curated-provider-list";
 import type {
@@ -55,14 +55,35 @@ const providerCatalog: OAuthProviderCatalogOption[] = [
   },
 ];
 
+const setInputValue = (element: Element | null, value: string) => {
+  if (!(element instanceof HTMLInputElement)) {
+    throw new Error("Expected HTMLInputElement");
+  }
+
+  const valueSetter = Object.getOwnPropertyDescriptor(
+    HTMLInputElement.prototype,
+    "value",
+  )?.set;
+  valueSetter?.call(element, value);
+  element.dispatchEvent(new Event("input", { bubbles: true }));
+};
+
 describe("CuratedProviderList", () => {
   let container: HTMLDivElement;
   let root: Root;
+  let fetchMock: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     container = document.createElement("div");
     document.body.appendChild(container);
     root = createRoot(container);
+    fetchMock = vi.fn(async () =>
+      new Response(JSON.stringify({ slug: "google-calendar" }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
   });
 
   afterEach(async () => {
@@ -70,9 +91,127 @@ describe("CuratedProviderList", () => {
       root.unmount();
     });
     container.remove();
+    vi.unstubAllGlobals();
   });
 
-  it("renders a compact searchable list and reveals an example API call when expanded", async () => {
+  it("renders a compact searchable list and lets app admins register a provider in-app", async () => {
+    await act(async () => {
+      root.render(
+        <CuratedProviderList
+          providerCatalog={providerCatalog}
+          readyBuiltInConnectors={readyBuiltInConnectors}
+          canRegisterManagedConnectors
+        />,
+      );
+    });
+
+    expect(container.textContent).toContain("Search curated adaptors");
+    expect(container.textContent).toContain("GitHub(github)");
+    expect(container.textContent).toContain("Show details");
+    expect(container.textContent).not.toContain("Example API call");
+
+    const searchInput = container.querySelector('input[type="search"]');
+    await act(async () => {
+      setInputValue(searchInput, "calendar");
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    expect(container.textContent).toContain("Google Calendar");
+    expect(container.textContent).not.toContain("GitHub repositories and pull requests");
+
+    const calendarButton = Array.from(container.querySelectorAll("button")).find(
+      (button) => button.textContent?.includes("Google Calendar"),
+    );
+    expect(calendarButton).toBeTruthy();
+
+    await act(async () => {
+      calendarButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    expect(container.textContent).toContain("Register this provider");
+    expect(container.textContent).toContain("Register connector");
+
+    await act(async () => {
+      const urlInputs = Array.from(container.querySelectorAll('input[type="url"]'));
+      setInputValue(urlInputs[0] ?? null, "https://api.calendar.test");
+      setInputValue(urlInputs[1] ?? null, "https://accounts.google.com/o/oauth2/v2/auth");
+      setInputValue(urlInputs[2] ?? null, "https://oauth2.googleapis.com/token");
+      setInputValue(
+        Array.from(container.querySelectorAll('input[type="text"]')).find(
+          (input) => (input as HTMLInputElement).placeholder === "repo, read:user",
+        ) ?? null,
+        "calendar.readonly",
+      );
+      setInputValue(
+        Array.from(container.querySelectorAll('input[type="text"]')).find(
+          (input) => (input as HTMLInputElement).value === "google-calendar_action",
+        ) ?? null,
+        "list_events",
+      );
+      setInputValue(
+        Array.from(container.querySelectorAll('input[type="text"]')).find(
+          (input) => (input as HTMLInputElement).value === "Example Google Calendar operation",
+        ) ?? null,
+        "List calendar events",
+      );
+      setInputValue(
+        Array.from(container.querySelectorAll('input[type="text"]')).find(
+          (input) => (input as HTMLInputElement).value === "GET",
+        ) ?? null,
+        "GET",
+      );
+      setInputValue(
+        Array.from(container.querySelectorAll('input[type="text"]')).find(
+          (input) => (input as HTMLInputElement).value === "/v1/example",
+        ) ?? null,
+        "/calendars/primary/events",
+      );
+      setInputValue(
+        Array.from(container.querySelectorAll('input[type="text"]')).find(
+          (input) =>
+            (input as HTMLInputElement).value === "" &&
+            (input as HTMLInputElement).placeholder !== "repo, read:user",
+        ) ?? null,
+        "calendar-client-id",
+      );
+      setInputValue(container.querySelector('input[type="password"]'), "calendar-client-secret");
+    });
+
+    const form = container.querySelector("form");
+    expect(form).toBeTruthy();
+
+    await act(async () => {
+      form?.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/managed-connectors",
+      expect.objectContaining({ method: "POST" }),
+    );
+
+    const [, requestInit] = fetchMock.mock.calls[0] as [string, RequestInit];
+    const body = JSON.parse(String(requestInit.body)) as {
+      slug: string;
+      oauthConfig: { scopes: string[] };
+      oauthClientId: string;
+      oauthClientSecret: string;
+      functions: Array<{ name: string; request: { path: string } }>;
+    };
+    expect(body.slug).toBe("google-calendar");
+    expect(body.oauthConfig.scopes).toEqual(["calendar.readonly"]);
+    expect(body.oauthClientId).toBe("calendar-client-id");
+    expect(body.oauthClientSecret).toBe("calendar-client-secret");
+    expect(body.functions[0]).toMatchObject({
+      name: "list_events",
+      request: { path: "/calendars/primary/events" },
+    });
+    expect(container.textContent).toContain(
+      "Connector registered. Refresh the integration wizard to confirm it appears.",
+    );
+  });
+
+  it("shows an access notice instead of the registration form for non-admin users", async () => {
     await act(async () => {
       root.render(
         <CuratedProviderList
@@ -82,40 +221,17 @@ describe("CuratedProviderList", () => {
       );
     });
 
-    expect(container.textContent).toContain("Search curated adaptors");
-    expect(container.textContent).toContain("GitHub repositories and pull requests");
-    expect(container.textContent).not.toContain("Example API call");
-
-    const githubButton = Array.from(container.querySelectorAll("button")).find(
-      (button) => button.textContent?.includes("GitHub"),
+    const calendarButton = Array.from(container.querySelectorAll("button")).find(
+      (button) => button.textContent?.includes("Google Calendar"),
     );
-    expect(githubButton).toBeTruthy();
 
     await act(async () => {
-      githubButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      calendarButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
 
-    expect(container.textContent).toContain("Example API call");
-    expect(container.textContent).toContain("curl -X POST");
-    expect(container.textContent).toContain("$BASE_URL/api/managed-connectors");
-    expect(container.textContent).toContain('"slug": "github"');
-
-    const searchInput = container.querySelector('input[type="search"]');
-    expect(searchInput).toBeTruthy();
-
-    await act(async () => {
-      if (searchInput instanceof HTMLInputElement) {
-        const valueSetter = Object.getOwnPropertyDescriptor(
-          HTMLInputElement.prototype,
-          "value",
-        )?.set;
-        valueSetter?.call(searchInput, "calendar");
-        searchInput.dispatchEvent(new Event("input", { bubbles: true }));
-        await new Promise((resolve) => setTimeout(resolve, 0));
-      }
-    });
-
-    expect(container.textContent).toContain("Google Calendar");
-    expect(container.textContent).not.toContain("GitHub repositories and pull requests");
+    expect(container.textContent).toContain(
+      "Only app administrators listed in APP_ADMIN_EMAILS can register providers from this page.",
+    );
+    expect(container.textContent).not.toContain("Register this provider");
   });
 });
