@@ -6,7 +6,6 @@ import {
   ChevronRight,
   KeyRound,
   PlugZap,
-  Search,
   Waypoints,
 } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -115,24 +114,27 @@ const accessModeLabel = (mode: FunctionAccessMode) => {
   }
 };
 
-const connectorMatchesSearch = (
-  connector: BuiltInConnectorOption,
-  search: string,
+const connectorOptionLabel = (connector: BuiltInConnectorOption) =>
+  `${connector.name} (${connector.slug})`;
+
+const findConnectorByQuery = (
+  connectors: BuiltInConnectorOption[],
+  query: string,
 ) => {
-  const normalizedSearch = search.trim().toLowerCase();
-  if (!normalizedSearch) {
-    return true;
+  const normalizedQuery = query.trim().toLowerCase();
+  if (!normalizedQuery) {
+    return null;
   }
 
-  return [
-    connector.name,
-    connector.slug,
-    connector.description,
-    ...connector.categories,
-  ]
-    .join(" ")
-    .toLowerCase()
-    .includes(normalizedSearch);
+  return (
+    connectors.find((connector) =>
+      [
+        connectorOptionLabel(connector),
+        connector.name,
+        connector.slug,
+      ].some((value) => value.toLowerCase() === normalizedQuery),
+    ) ?? null
+  );
 };
 
 const buildDiscoverPayload = (draft: WizardDraft) => {
@@ -263,20 +265,14 @@ export const IntegrationWizard = ({
     staleTime: 5 * 60 * 1000,
   });
 
+  const builtInConnectors = builtInConnectorsQuery.data ?? [];
+
   const selectedConnector = useMemo(
     () =>
-      (builtInConnectorsQuery.data ?? []).find(
-        (connector) => connector.slug === draft.builtInSlug,
-      ) ?? null,
-    [builtInConnectorsQuery.data, draft.builtInSlug],
+      builtInConnectors.find((connector) => connector.slug === draft.builtInSlug) ??
+      null,
+    [builtInConnectors, draft.builtInSlug],
   );
-
-  const filteredConnectors = useMemo(() => {
-    const connectors = builtInConnectorsQuery.data ?? [];
-    return connectors
-      .filter((connector) => connectorMatchesSearch(connector, connectorSearch))
-      .slice(0, 8);
-  }, [builtInConnectorsQuery.data, connectorSearch]);
 
   const discoverMutation = useMutation({
     mutationFn: async () =>
@@ -356,7 +352,24 @@ export const IntegrationWizard = ({
       accessToken:
         current.builtInSlug === connector.slug ? current.accessToken : "",
     }));
-    setConnectorSearch(connector.name);
+    setConnectorSearch(connectorOptionLabel(connector));
+    onStatus(null);
+  };
+
+  const handleConnectorSearchChange = (value: string) => {
+    setConnectorSearch(value);
+
+    const connector = findConnectorByQuery(builtInConnectors, value);
+    if (connector) {
+      handleConnectorSelect(connector);
+      return;
+    }
+
+    setDraft((current) => ({
+      ...current,
+      builtInSlug: "",
+      accessToken: "",
+    }));
     onStatus(null);
   };
 
@@ -448,80 +461,40 @@ export const IntegrationWizard = ({
               <>
                 <label className="grid gap-2 text-sm text-white">
                   <span className="font-medium">Built-in connector</span>
-                  <div className="relative">
-                    <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-text-base)]" />
-                    <input
-                      className={cn(inputClassName, "w-full pl-11")}
-                      placeholder={
-                        builtInConnectorsQuery.isPending
-                          ? "Loading supported connectors..."
-                          : "Search GitHub, Notion, Slack..."
-                      }
-                      value={connectorSearch}
-                      onChange={(event) => setConnectorSearch(event.target.value)}
-                      disabled={builtInConnectorsQuery.isPending}
-                    />
-                  </div>
+                  <input
+                    className={inputClassName}
+                    list="built-in-connector-options"
+                    placeholder={
+                      builtInConnectorsQuery.isPending
+                        ? "Loading supported connectors..."
+                        : "Choose GitHub, Notion, Slack..."
+                    }
+                    value={connectorSearch}
+                    onChange={(event) =>
+                      handleConnectorSearchChange(event.target.value)
+                    }
+                    disabled={builtInConnectorsQuery.isPending}
+                  />
+                  <datalist id="built-in-connector-options">
+                    {builtInConnectors.map((connector) => (
+                      <option
+                        key={connector.slug}
+                        value={connectorOptionLabel(connector)}
+                      />
+                    ))}
+                  </datalist>
                   <span className="text-xs leading-6 text-[var(--color-text-base)]">
-                    Choose from the curated connectors hosted inside this Vercel
-                    deployment. Selecting one auto-fills the key and display name below.
+                    Use the dropdown and start typing to filter the curated
+                    connectors hosted inside this Vercel deployment. Selecting one
+                    auto-fills the key and display name below.
                   </span>
                 </label>
 
-                <div className="overflow-hidden rounded-2xl border border-[var(--color-border)] bg-black/10">
-                  {builtInConnectorsQuery.isPending ? (
-                    <p className="px-4 py-4 text-sm text-[var(--color-text-base)]">
-                      Loading supported connectors...
-                    </p>
-                  ) : builtInConnectorsQuery.isError ? (
-                    <p className="px-4 py-4 text-sm text-amber-200">
-                      {(builtInConnectorsQuery.error as Error).message}
-                    </p>
-                  ) : filteredConnectors.length === 0 ? (
-                    <p className="px-4 py-4 text-sm text-[var(--color-text-base)]">
-                      No supported connectors match that search.
-                    </p>
-                  ) : (
-                    filteredConnectors.map((connector, index) => (
-                      <button
-                        key={connector.slug}
-                        type="button"
-                        className={cn(
-                          "flex w-full flex-col gap-2 px-4 py-4 text-left transition-colors hover:bg-white/5",
-                          index > 0 && "border-t border-[var(--color-border)]",
-                          connector.slug === draft.builtInSlug &&
-                            "bg-[var(--color-bg-active)]",
-                        )}
-                        onClick={() => handleConnectorSelect(connector)}
-                      >
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="font-medium text-white">
-                            {connector.name}
-                          </span>
-                          <Badge>{connector.slug}</Badge>
-                          {connector.toolCount > 0 ? (
-                            <Badge>{connector.toolCount} tools</Badge>
-                          ) : null}
-                          {connector.authModes.map((mode) => (
-                            <Badge key={`${connector.slug}-${mode}`}>
-                              {authStrategyLabel(mode)}
-                            </Badge>
-                          ))}
-                        </div>
-                        {connector.description ? (
-                          <p className="text-sm leading-6 text-[var(--color-text-base)]">
-                            {connector.description}
-                          </p>
-                        ) : null}
-                        {connector.categories.length > 0 ? (
-                          <p className="text-xs text-[var(--color-text-base)]">
-                            {connector.categories.join(" • ")}
-                          </p>
-                        ) : null}
-                      </button>
-                    ))
-                  )}
-                </div>
+                {builtInConnectorsQuery.isError ? (
+                  <div className="rounded-2xl border border-amber-500/40 bg-amber-500/10 px-4 py-4 text-sm text-amber-200">
+                    {(builtInConnectorsQuery.error as Error).message}
+                  </div>
+                ) : null}
 
                 {selectedConnector ? (
                   <div className="rounded-2xl border border-[var(--color-border)] bg-black/10 p-4 text-sm text-[var(--color-text-base)]">
