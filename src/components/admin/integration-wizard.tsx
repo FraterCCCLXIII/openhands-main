@@ -67,7 +67,7 @@ const INITIAL_DRAFT: WizardDraft = {
 };
 
 const inputClassName =
-  "rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-input)] px-4 py-3 text-white outline-none transition-colors focus:border-[var(--color-accent)]";
+  "rounded-md border border-[var(--color-border)] bg-[var(--color-bg-input)] px-4 py-3 text-white outline-none transition-colors focus:border-[var(--color-accent)]";
 
 const fetchJson = async <T,>(
   input: RequestInfo,
@@ -239,10 +239,10 @@ const StepBadge = ({
 }) => (
   <div
     className={cn(
-      "flex items-center gap-3 rounded-2xl border px-4 py-3",
+      "flex items-center gap-3 rounded-xl border px-4 py-3",
       active || complete
         ? "border-[var(--color-accent)] bg-[var(--color-bg-active)]"
-        : "border-[var(--color-border)] bg-black/10",
+        : "border-[var(--color-border)] bg-[var(--color-surface-subtle)]",
     )}
   >
     <div
@@ -537,10 +537,10 @@ export const IntegrationWizard = ({
               key={option.kind}
               type="button"
               className={cn(
-                "rounded-2xl border p-5 text-left transition-colors",
+                "rounded-xl border p-5 text-left transition-colors",
                 draft.kind === option.kind
                   ? "border-[var(--color-accent)] bg-[var(--color-bg-active)]"
-                  : "border-[var(--color-border)] bg-black/10 hover:bg-white/5",
+                  : "border-[var(--color-border)] bg-[var(--color-surface-subtle)] hover:bg-[var(--color-bg-active)]",
               )}
               onClick={() => {
                 setDraft({ ...INITIAL_DRAFT, kind: option.kind });
@@ -598,12 +598,12 @@ export const IntegrationWizard = ({
                 </label>
 
                 {builtInConnectorsQuery.isError ? (
-                  <div className="rounded-2xl border border-amber-500/40 bg-amber-500/10 px-4 py-4 text-sm text-amber-200">
+                  <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-4 text-sm text-amber-200">
                     {(builtInConnectorsQuery.error as Error).message}
                   </div>
                 ) : null}
 
-                <div className="rounded-2xl border border-[var(--color-border)] bg-black/10 p-4 text-sm text-[var(--color-text-base)]">
+                <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-4 text-sm text-[var(--color-text-base)]">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
                       <p className="font-semibold text-white">
@@ -633,7 +633,7 @@ export const IntegrationWizard = ({
                         return (
                           <div
                             key={provider.slug}
-                            className="rounded-2xl border border-[var(--color-border)] bg-black/20 p-4"
+                            className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)] p-4"
                           >
                             <div className="flex flex-wrap items-center gap-2">
                               <p className="font-medium text-white">{provider.name}</p>
@@ -691,7 +691,7 @@ export const IntegrationWizard = ({
 
 
                 {selectedConnector ? (
-                  <div className="rounded-2xl border border-[var(--color-border)] bg-black/10 p-4 text-sm text-[var(--color-text-base)]">
+                  <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-4 text-sm text-[var(--color-text-base)]">
                     <div className="flex flex-wrap items-center gap-2">
                       <p className="font-semibold text-white">
                         {selectedConnector.name}
@@ -707,7 +707,7 @@ export const IntegrationWizard = ({
                         "This built-in connector is backed by a Vercel-hosted MCP route in this deployment."}
                     </p>
                     {requiresOAuthConnection ? (
-                      <div className="mt-4 rounded-2xl border border-[var(--color-border)] bg-black/20 p-4">
+                      <div className="mt-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)] p-4">
                         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                           <div>
                             <p className="text-sm font-medium text-white">
@@ -800,7 +800,7 @@ export const IntegrationWizard = ({
                 </div>
 
                 {requiresOAuthConnection ? (
-                  <div className="rounded-2xl border border-dashed border-[var(--color-border)] px-4 py-4 text-sm text-[var(--color-text-base)]">
+                  <div className="rounded-xl border border-dashed border-[var(--color-border)] px-4 py-4 text-sm text-[var(--color-text-base)]">
                     {!oauthConnectionEnabled
                       ? `${selectedConnector?.name ?? "This provider"} needs deployment-level OAuth configuration before users can connect accounts.`
                       : selectedConnection
@@ -985,7 +985,7 @@ export const IntegrationWizard = ({
             </div>
           </div>
 
-          <div className="rounded-2xl border border-[var(--color-border)] bg-black/10 p-5 text-sm leading-7 text-[var(--color-text-base)]">
+          <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-5 text-sm leading-7 text-[var(--color-text-base)]">
             <p className="font-semibold text-white">
               What happens in this step
             </p>
@@ -1035,7 +1035,7 @@ export const IntegrationWizard = ({
 
       {step === 3 && discovery ? (
         <div className="space-y-6">
-          <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-[var(--color-border)] bg-black/10 p-4 text-sm text-[var(--color-text-base)]">
+          <div className="flex flex-wrap items-center gap-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-4 text-sm text-[var(--color-text-base)]">
             <Badge>{draft.kind === "built_in" ? "Built-in" : "MCP"}</Badge>
             <Badge>{discovery.provider}</Badge>
             <Badge>{authStrategyLabel(discovery.authStrategy)}</Badge>
@@ -1046,7 +1046,7 @@ export const IntegrationWizard = ({
           </div>
 
           {reviewedFunctions.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-[var(--color-border)] bg-black/10 p-5 text-sm text-[var(--color-text-base)]">
+            <div className="rounded-xl border border-dashed border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-5 text-sm text-[var(--color-text-base)]">
               No functions were discovered for this connector. Go back and
               confirm the selected built-in connector or MCP server URL.
             </div>
@@ -1055,7 +1055,7 @@ export const IntegrationWizard = ({
               {reviewedFunctions.map(([name, functionSpec]) => (
                 <div
                   key={name}
-                  className="rounded-2xl border border-[var(--color-border)] bg-black/10 p-4"
+                  className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-4"
                 >
                   <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                     <div>

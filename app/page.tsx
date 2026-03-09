@@ -10,9 +10,9 @@ export default async function HomePage() {
   const session = await auth();
 
   return (
-    <main className="min-h-screen px-6 py-10">
+    <main className="min-h-screen px-6 py-12">
       <div className="mx-auto flex max-w-6xl flex-col gap-8">
-        <header className="flex flex-col gap-6 rounded-3xl border border-[var(--color-border)] bg-[color:rgba(31,34,40,0.86)] px-8 py-10 shadow-[0_24px_60px_rgba(0,0,0,0.35)]">
+        <header className="flex flex-col gap-6 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-workspace)] px-8 py-10">
           <div className="flex items-center gap-3 text-sm text-[var(--color-text-base)]">
             <Badge>Vercel-native</Badge>
             <Badge>Built-in + MCP adapters</Badge>
@@ -34,7 +34,7 @@ export default async function HomePage() {
               </Button>
             </Link>
             <a href="/api/context/sample/mock" className="hidden" />
-            <div className="rounded-xl border border-[var(--color-border)] bg-black/20 px-4 py-2 text-sm text-[var(--color-text-base)]">
+            <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)] px-4 py-2 text-sm text-[var(--color-text-base)]">
               Unified route: <code>POST /api/context/[integration]/[function]</code>
             </div>
           </div>

@@ -27,13 +27,13 @@ export default function SignInPage() {
 
         <div className="mt-8 space-y-6">
           {authSetup.authDisabled ? (
-            <div className="space-y-4 rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-active)] p-5">
+            <div className="space-y-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-active)] p-5">
               <p className="text-sm leading-7 text-[var(--color-text-base)]">
                 Authentication is disabled in this environment. You can open the admin dashboard directly.
               </p>
               <Link
                 href="/admin"
-                className="inline-flex w-full items-center justify-center rounded-xl bg-[var(--color-accent)] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[var(--color-accent-hover)]"
+                className="inline-flex w-full items-center justify-center rounded-md border border-[var(--color-accent)] bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-[var(--color-accent-foreground)] transition-colors hover:bg-[var(--color-accent-hover)]"
               >
                 Open admin dashboard
               </Link>
@@ -41,17 +41,17 @@ export default function SignInPage() {
           ) : authSetup.configured ? (
             <GitHubSignInButton callbackUrl="/admin" />
           ) : (
-            <div className="space-y-5 rounded-2xl border border-amber-400/30 bg-amber-500/10 p-5 text-sm text-amber-100">
+            <div className="space-y-5 rounded-xl border border-[color:rgba(217,181,90,0.25)] bg-[color:rgba(217,181,90,0.12)] p-5 text-sm text-[var(--color-warning)]">
               <div className="space-y-2">
                 <h2 className="text-base font-semibold text-white">GitHub sign-in is not configured yet</h2>
-                <p className="leading-7 text-amber-50/90">
+                <p className="leading-7 text-white/85">
                   Before GitHub login will work, finish the OAuth app setup below and redeploy.
                 </p>
               </div>
 
               <div className="space-y-2">
                 <p className="font-medium text-white">Missing configuration</p>
-                <ul className="list-disc space-y-1 pl-5 text-amber-50/90">
+                <ul className="list-disc space-y-1 pl-5 text-white/85">
                   {authSetup.missing.map((item) => (
                     <li key={item}>{item}</li>
                   ))}
@@ -60,14 +60,14 @@ export default function SignInPage() {
 
               <div className="space-y-2">
                 <p className="font-medium text-white">GitHub OAuth app checklist</p>
-                <ol className="list-decimal space-y-1 pl-5 text-amber-50/90">
+                <ol className="list-decimal space-y-1 pl-5 text-white/85">
                   {guideItems.map((item) => (
                     <li key={item}>{item}</li>
                   ))}
                 </ol>
               </div>
 
-              <div className="rounded-xl border border-white/10 bg-black/10 p-4 text-xs text-amber-50/90">
+              <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-4 text-xs text-white/85">
                 <p>
                   <span className="font-semibold text-white">Current app URL:</span> {authSetup.baseUrl}
                 </p>
@@ -79,7 +79,7 @@ export default function SignInPage() {
                     <span className="font-semibold text-white">Preview redirect proxy:</span> {authSetup.redirectProxyUrl}
                   </p>
                 ) : (
-                  <p className="mt-2 text-amber-200/90">
+                  <p className="mt-2 text-[var(--color-warning)]">
                     Preview deployments are not enabled yet. Add AUTH_REDIRECT_PROXY_URL to match the KPI tracker setup.
                   </p>
                 )}
