@@ -481,25 +481,20 @@ export const DashboardWorkspace = ({
   };
 
   return (
-    <div className="grid gap-4 xl:grid-cols-[220px_minmax(0,1fr)]">
-      <aside className="self-start xl:sticky xl:top-6">
-        <div className="overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[color:rgba(17,19,23,0.96)] shadow-[0_10px_30px_rgba(0,0,0,0.25)] backdrop-blur">
-          <div className="border-b border-[var(--color-border)] px-3 py-3">
+    <div className="grid gap-4 xl:grid-cols-[220px_minmax(0,1fr)] xl:gap-6">
+      <aside className="self-start xl:sticky xl:top-0 xl:h-screen xl:border-r xl:border-[var(--color-border)] xl:pr-4 xl:pt-6">
+        <div className="space-y-4">
+          <div className="border-b border-[var(--color-border)] pb-3">
             <p className="text-[11px] uppercase tracking-[0.22em] text-[var(--color-text-base)]">
               Context Layer
             </p>
             <div className="mt-2 flex items-center justify-between gap-3">
-              <div>
-                <p className="text-sm font-semibold text-white">Admin workspace</p>
-                <p className="text-xs text-[var(--color-text-base)]">
-                  Compact operations view
-                </p>
-              </div>
+              <p className="text-sm font-semibold text-white">Admin workspace</p>
               <Badge>{enabledIntegrationCount} live</Badge>
             </div>
           </div>
 
-          <nav className="space-y-1 p-2">
+          <nav className="space-y-1">
             {ADMIN_SECTIONS.map((section) => (
               <SidebarNavItem
                 key={section.id}
@@ -511,7 +506,7 @@ export const DashboardWorkspace = ({
             ))}
           </nav>
 
-          <div className="border-t border-[var(--color-border)] px-3 py-3">
+          <div className="border-t border-[var(--color-border)] pt-3">
             <div className="space-y-3">
               <div>
                 <p className="text-[11px] uppercase tracking-[0.18em] text-[var(--color-text-base)]">
