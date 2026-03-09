@@ -59,6 +59,26 @@ export interface BuiltInConnectorOption {
   credentialHelp: string;
 }
 
+export type OAuthProviderAvailability =
+  | "oauth_ready"
+  | "manual_token"
+  | "planned";
+
+export interface OAuthProviderCatalogOption {
+  slug: string;
+  name: string;
+  description: string;
+  categories: string[];
+  authStrategy: "oauth2";
+  availability: OAuthProviderAvailability;
+  builtInSlug?: string;
+  appUrl?: string;
+  docsUrl?: string;
+  notes: string;
+  popularityRank: number;
+}
+
+
 export interface PolicyRule {
   integrationKey: string;
   functionNames: string[];

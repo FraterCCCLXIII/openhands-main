@@ -21,6 +21,7 @@ import type {
   FunctionAccessMode,
   FunctionSpec,
   IntegrationConnectionStatus,
+  OAuthProviderCatalogOption,
 } from "@/src/types/context-layer";
 
 type IntegrationKind = "built_in" | "mcp";
@@ -113,6 +114,19 @@ const accessModeLabel = (mode: FunctionAccessMode) => {
       return "Disabled";
     case "approval_required":
       return "Case-by-case";
+  }
+};
+
+const availabilityLabel = (
+  availability: OAuthProviderCatalogOption["availability"],
+) => {
+  switch (availability) {
+    case "oauth_ready":
+      return "OAuth ready";
+    case "manual_token":
+      return "Manual token today";
+    case "planned":
+      return "Planned";
   }
 };
 
@@ -267,6 +281,34 @@ export const IntegrationWizard = ({
     enabled: draft.kind === "built_in" && step === 2,
     staleTime: 5 * 60 * 1000,
   });
+
+
+  const oauthProviderCatalogQuery = useQuery({
+    queryKey: ["oauth-provider-catalog"],
+    queryFn: () =>
+      fetchJson<OAuthProviderCatalogOption[]>(
+        "/api/integrations/oauth-provider-catalog",
+      ),
+    enabled: draft.kind === "built_in" && step === 2,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const oauthProviderSuggestions = useMemo(() => {
+    const query = connectorSearch.trim().toLowerCase();
+    const catalog = oauthProviderCatalogQuery.data ?? [];
+
+    const filtered = catalog.filter((provider) => {
+      if (!query) {
+        return true;
+      }
+
+      return [provider.name, provider.slug, ...provider.categories].some((value) =>
+        value.toLowerCase().includes(query),
+      );
+    });
+
+    return filtered.slice(0, query ? 8 : 10);
+  }, [connectorSearch, oauthProviderCatalogQuery.data]);
 
   const builtInConnectors = builtInConnectorsQuery.data ?? [];
 
@@ -560,6 +602,93 @@ export const IntegrationWizard = ({
                     {(builtInConnectorsQuery.error as Error).message}
                   </div>
                 ) : null}
+
+                <div className="rounded-2xl border border-[var(--color-border)] bg-black/10 p-4 text-sm text-[var(--color-text-base)]">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <p className="font-semibold text-white">
+                        Popular OAuth-ready provider options
+                      </p>
+                      <p className="mt-1 text-xs leading-6 text-[var(--color-text-base)]">
+                        Researched catalog of 50 popular providers with OAuth support.
+                        The curated built-ins above work now; the rest are planned next.
+                      </p>
+                    </div>
+                    <Badge>{oauthProviderCatalogQuery.data?.length ?? 0} options</Badge>
+                  </div>
+
+                  {oauthProviderCatalogQuery.isPending ? (
+                    <p className="mt-3 text-xs leading-6 text-[var(--color-text-base)]">
+                      Loading researched provider options...
+                    </p>
+                  ) : (
+                    <div className="mt-4 grid gap-3 md:grid-cols-2">
+                      {oauthProviderSuggestions.map((provider) => {
+                        const builtInMatch = provider.builtInSlug
+                          ? builtInConnectors.find(
+                              (connector) => connector.slug === provider.builtInSlug,
+                            )
+                          : null;
+
+                        return (
+                          <div
+                            key={provider.slug}
+                            className="rounded-2xl border border-[var(--color-border)] bg-black/20 p-4"
+                          >
+                            <div className="flex flex-wrap items-center gap-2">
+                              <p className="font-medium text-white">{provider.name}</p>
+                              <Badge>{provider.slug}</Badge>
+                              <Badge
+                                tone={
+                                  provider.availability === "planned"
+                                    ? "warning"
+                                    : provider.availability === "oauth_ready"
+                                      ? "success"
+                                      : "default"
+                                }
+                              >
+                                {availabilityLabel(provider.availability)}
+                              </Badge>
+                            </div>
+                            <p className="mt-2 text-xs leading-6 text-[var(--color-text-base)]">
+                              {provider.description}
+                            </p>
+                            <p className="mt-2 text-xs leading-6 text-[var(--color-text-base)]">
+                              {provider.notes}
+                            </p>
+                            <div className="mt-3 flex flex-wrap gap-2">
+                              {provider.categories.map((category) => (
+                                <Badge key={`${provider.slug}-${category}`}>{category}</Badge>
+                              ))}
+                            </div>
+                            <div className="mt-4 flex flex-wrap gap-3">
+                              {builtInMatch ? (
+                                <Button
+                                  className="h-9 rounded-lg px-4 text-xs"
+                                  variant="secondary"
+                                  onClick={() => handleConnectorSelect(builtInMatch)}
+                                >
+                                  Use {builtInMatch.name}
+                                </Button>
+                              ) : null}
+                              {provider.docsUrl ? (
+                                <a
+                                  href={provider.docsUrl}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="inline-flex items-center text-xs text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
+                                >
+                                  Open OAuth docs
+                                </a>
+                              ) : null}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
 
                 {selectedConnector ? (
                   <div className="rounded-2xl border border-[var(--color-border)] bg-black/10 p-4 text-sm text-[var(--color-text-base)]">
