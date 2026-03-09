@@ -145,16 +145,16 @@ const CompactPanel = ({
   children: ReactNode;
   className?: string;
 }) => (
-  <Card className={cn("p-4", className)}>
-    <div className="mb-4 flex items-start justify-between gap-4">
+  <Card className={cn("p-5", className)}>
+    <div className="mb-5 flex items-start justify-between gap-4">
       <div className="min-w-0">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5">
           {Icon ? (
-            <span className="rounded-lg border border-[var(--color-border)] bg-black/20 p-1.5">
+            <span className="rounded-md border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-1.5">
               <Icon className="h-4 w-4 text-[var(--color-accent)]" />
             </span>
           ) : null}
-          <h2 className="text-sm font-semibold tracking-[0.01em] text-white">
+          <h2 className="text-base font-semibold tracking-[-0.01em] text-white">
             {title}
           </h2>
         </div>
@@ -185,10 +185,10 @@ const SidebarNavItem = ({
     type="button"
     onClick={onClick}
     className={cn(
-      "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm transition-colors",
+      "flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm transition-colors",
       active
         ? "bg-[var(--color-bg-active)] text-white"
-        : "text-[var(--color-text-base)] hover:bg-white/5 hover:text-white",
+        : "text-[var(--color-text-base)] hover:bg-[var(--color-bg-active)] hover:text-white",
     )}
   >
     <Icon
@@ -213,7 +213,7 @@ const MetricRow = ({
   description: string;
 }) => (
   <div className="flex items-start gap-3 px-1 py-3">
-    <span className="rounded-lg border border-[var(--color-border)] bg-black/20 p-1.5">
+    <span className="rounded-md border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-1.5">
       <Icon className="h-4 w-4 text-[var(--color-accent)]" />
     </span>
     <div className="flex min-w-0 flex-1 items-start justify-between gap-4">
@@ -270,7 +270,7 @@ const ChecklistRow = ({
     </div>
     <Button
       variant="ghost"
-      className="h-8 shrink-0 gap-2 rounded-lg px-2 text-xs"
+      className="h-8 shrink-0 gap-2 rounded-md px-2 text-xs"
       onClick={onClick}
     >
       {action}
@@ -451,17 +451,20 @@ export const DashboardWorkspace = ({
   };
 
   return (
-    <div className="grid gap-4 xl:grid-cols-[220px_minmax(0,1fr)] xl:gap-6">
-      <aside className="self-start xl:sticky xl:top-0 xl:h-screen xl:border-r xl:border-[var(--color-border)] xl:pr-4 xl:pt-6">
+    <div className="grid gap-5 xl:grid-cols-[240px_minmax(0,1fr)] xl:gap-8">
+      <aside className="self-start rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-sidebar)] p-4 xl:sticky xl:top-6 xl:max-h-[calc(100vh-3rem)] xl:overflow-y-auto">
         <div className="space-y-4">
           <div className="border-b border-[var(--color-border)] pb-3">
             <p className="text-[11px] uppercase tracking-[0.22em] text-[var(--color-text-base)]">
-              Context Layer
+              OpenHands
             </p>
             <div className="mt-2 flex items-center justify-between gap-3">
-              <p className="text-sm font-semibold text-white">Admin workspace</p>
+              <p className="text-sm font-semibold text-white">Context Layer</p>
               <Badge>{enabledIntegrationCount} live</Badge>
             </div>
+            <p className="mt-2 text-xs leading-6 text-[var(--color-text-base)]">
+              Admin workspace inspired by the OpenHands settings shell.
+            </p>
           </div>
 
           <nav className="space-y-1">
@@ -492,7 +495,7 @@ export const DashboardWorkspace = ({
               </div>
               <Button
                 variant="secondary"
-                className="h-9 w-full rounded-lg px-3 text-xs"
+                className="h-9 w-full rounded-md px-3 text-xs"
                 onClick={() => signOut({ redirectTo: "/" })}
               >
                 Sign out
@@ -523,13 +526,13 @@ export const DashboardWorkspace = ({
         </header>
 
         {statusMessage ? (
-          <div className="rounded-xl border border-[var(--color-border)] bg-white/5 px-3 py-2 text-sm text-[var(--color-text-active)]">
+          <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] px-3 py-2 text-sm text-[var(--color-text-active)]">
             {statusMessage}
           </div>
         ) : null}
 
         {!contextApiReady ? (
-          <div className="rounded-xl border border-amber-400/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-100">
+          <div className="rounded-xl border border-[color:rgba(217,181,90,0.25)] bg-[color:rgba(217,181,90,0.12)] px-3 py-2 text-sm text-[var(--color-warning)]">
             Open <code className="text-white">/admin</code> once to provision a
             personal key before agents call <code className="text-white">/api/context/*</code>.
           </div>
@@ -633,7 +636,7 @@ export const DashboardWorkspace = ({
                           actions={
                             <>
                               <Button
-                                className="h-8 rounded-lg px-3 text-xs"
+                                className="h-8 rounded-md px-3 text-xs"
                                 onClick={() =>
                                   actionMutation.mutate({
                                     url: `/api/access-requests/${request.id}/approve`,
@@ -649,7 +652,7 @@ export const DashboardWorkspace = ({
                               </Button>
                               <Button
                                 variant="danger"
-                                className="h-8 rounded-lg px-3 text-xs"
+                                className="h-8 rounded-md px-3 text-xs"
                                 onClick={() =>
                                   actionMutation.mutate({
                                     url: `/api/access-requests/${request.id}/reject`,
@@ -748,7 +751,7 @@ export const DashboardWorkspace = ({
                   value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.endpoint}</code>}
                 />
               </div>
-              <div className="mt-4 rounded-xl border border-[var(--color-border)] bg-black/20 px-3 py-3 text-xs leading-6 text-[var(--color-text-base)]">
+              <div className="mt-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)] px-3 py-3 text-xs leading-6 text-[var(--color-text-base)]">
                 The persisted personal key belongs to <code className="text-white">{userEmail}</code>. Provider credentials stay server-side in integration settings or per-user OAuth records and are never handed directly to the agent.
               </div>
             </CompactPanel>
@@ -759,7 +762,7 @@ export const DashboardWorkspace = ({
           <section className="space-y-4">
             <div className="flex justify-start">
               <Button
-                className="h-9 rounded-lg px-4 text-xs"
+                className="h-9 rounded-md px-4 text-xs"
                 onClick={() => setShowIntegrationWizard(true)}
               >
                 Add new integration
@@ -807,7 +810,7 @@ export const DashboardWorkspace = ({
                         </div>
                         <Button
                           variant={integration.enabled ? "secondary" : "primary"}
-                          className="h-8 shrink-0 gap-2 rounded-lg px-3 text-xs"
+                          className="h-8 shrink-0 gap-2 rounded-md px-3 text-xs"
                           onClick={() =>
                             actionMutation.mutate({
                               url: `/api/integrations/${integration.key}/toggle`,
@@ -826,7 +829,7 @@ export const DashboardWorkspace = ({
                         </Button>
                       </div>
 
-                      <div className="mt-3 overflow-hidden rounded-xl border border-[var(--color-border)] bg-black/10">
+                      <div className="mt-3 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)]">
                         {Object.values(integration.functions).length === 0 ? (
                           <p className="px-3 py-3 text-sm text-[var(--color-text-base)]">
                             No functions registered yet.
@@ -865,7 +868,7 @@ export const DashboardWorkspace = ({
                               </div>
                               <Button
                                 variant={functionSpec.enabled ? "secondary" : "primary"}
-                                className="h-8 shrink-0 rounded-lg px-3 text-xs"
+                                className="h-8 shrink-0 rounded-md px-3 text-xs"
                                 onClick={() =>
                                   actionMutation.mutate({
                                     url: `/api/integrations/${integration.key}/functions/${functionSpec.name}/toggle`,
@@ -908,7 +911,7 @@ export const DashboardWorkspace = ({
                   value={<code className="break-all text-xs text-[var(--color-text-active)]">{contextApiBaseUrl}</code>}
                 />
               </div>
-              <div className="mt-4 rounded-xl border border-[var(--color-border)] bg-black/20 px-3 py-3">
+              <div className="mt-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)] px-3 py-3">
                 <code className="block break-all text-sm text-white">
                   {maskedApiKey || "No personal API key available yet."}
                 </code>
@@ -916,7 +919,7 @@ export const DashboardWorkspace = ({
               <div className="mt-3 flex flex-wrap gap-2">
                 <Button
                   variant="secondary"
-                  className="h-8 gap-2 rounded-lg px-3 text-xs"
+                  className="h-8 gap-2 rounded-md px-3 text-xs"
                   onClick={() => setRevealApiKey((current) => !current)}
                   disabled={!contextApiReady}
                 >
@@ -928,7 +931,7 @@ export const DashboardWorkspace = ({
                   {revealApiKey ? "Hide" : "Reveal"}
                 </Button>
                 <Button
-                  className="h-8 gap-2 rounded-lg px-3 text-xs"
+                  className="h-8 gap-2 rounded-md px-3 text-xs"
                   onClick={handleCopyApiKey}
                   disabled={!contextApiReady}
                 >
@@ -957,7 +960,7 @@ export const DashboardWorkspace = ({
                   value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.endpoint}</code>}
                 />
               </div>
-              <div className="mt-4 overflow-hidden rounded-xl border border-[var(--color-border)] bg-black/20">
+              <div className="mt-4 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)]">
                 <div className="border-b border-[var(--color-border)] px-3 py-2 text-xs uppercase tracking-[0.18em] text-[var(--color-text-base)]">
                   cURL example
                 </div>
