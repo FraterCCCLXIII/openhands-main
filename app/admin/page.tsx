@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 
 import { AdminDashboard } from "@/src/components/admin/admin-dashboard";
 import { auth, isAuthDisabled } from "@/src/lib/auth";
-import { getContextApiAuthStatus } from "@/src/lib/context-api-auth";
 import { getContextLayerService } from "@/src/lib/core/runtime";
 import { getRequestOrigin } from "@/src/lib/request-context";
 
@@ -16,27 +15,32 @@ export default async function AdminPage() {
     redirect("/signin");
   }
 
+  const currentUser = session?.user ?? {
+    name: "Admin User",
+    email: "dev@localhost",
+  };
   const requestHeaders = await headers();
-  const contextApiAuth = getContextApiAuthStatus();
   const service = getContextLayerService();
-  const [initialIntegrations, initialAccessRequests, initialNotifications] =
+  const contextApiOwner =
+    currentUser.email?.trim() || currentUser.name?.trim() || "dev@localhost";
+  const [initialIntegrations, initialAccessRequests, initialNotifications, contextApiAuth] =
     await Promise.all([
       service.listIntegrations(),
       service.listAccessRequests(),
       service.listNotifications(),
+      service.getOrCreateAgentApiKey(contextApiOwner),
     ]);
 
   return (
     <main className="min-h-screen px-6 py-8">
       <div className="mx-auto max-w-7xl">
         <AdminDashboard
-          currentUser={session?.user ?? { name: "Admin User", email: "dev@localhost" }}
+          currentUser={currentUser}
           initialIntegrations={initialIntegrations}
           initialAccessRequests={initialAccessRequests}
           initialNotifications={initialNotifications}
           contextApiBaseUrl={getRequestOrigin(requestHeaders)}
-          contextApiKey={contextApiAuth.primaryKey}
-          usingDefaultLocalApiKey={contextApiAuth.usingDefaultLocalKey}
+          contextApiKey={contextApiAuth.apiKey}
         />
       </div>
     </main>

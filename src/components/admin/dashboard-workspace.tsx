@@ -100,7 +100,6 @@ interface AdminDashboardProps {
   currentUser: { name?: string | null; email?: string | null };
   contextApiBaseUrl: string;
   contextApiKey: string;
-  usingDefaultLocalApiKey: boolean;
 }
 
 const ADMIN_TABS: Array<{
@@ -370,7 +369,6 @@ export const DashboardWorkspace = ({
   currentUser,
   contextApiBaseUrl,
   contextApiKey,
-  usingDefaultLocalApiKey,
 }: AdminDashboardProps) => {
   const queryClient = useQueryClient();
   const { providerFilter, requestFilter, setProviderFilter, setRequestFilter } =
@@ -502,7 +500,7 @@ export const DashboardWorkspace = ({
       buildAgentConnectionGuide({
         baseUrl: contextApiBaseUrl,
         apiKey:
-          contextApiKey.trim() || "<set CONTEXT_LAYER_API_KEY in your environment>",
+          contextApiKey.trim() || "<open /admin to provision a personal context-layer API key>",
         integrations,
       }),
     [contextApiBaseUrl, contextApiKey, integrations],
@@ -543,20 +541,22 @@ export const DashboardWorkspace = ({
         </div>
       ) : null}
 
-      {usingDefaultLocalApiKey ? (
+      {contextApiReady ? (
         <div className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
-          Local dev mode is active. The dashboard is limited to localhost requests, and agents can authenticate with{" "}
-          <code className="text-white">Authorization: Bearer {contextApiKey}</code> until you set a custom{" "}
+          This dashboard automatically provisions a personal context-layer API key for{" "}
+          <code className="text-white">
+            {currentUser.email ?? currentUser.name ?? "the current user"}
+          </code>{" "}
+          and stores it server-side. Agents can authenticate with{" "}
+          <code className="text-white">Authorization: Bearer {contextApiKey}</code>. Shared{" "}
           <code className="text-white">CONTEXT_LAYER_API_KEY</code> or{" "}
-          <code className="text-white">CONTEXT_LAYER_API_KEYS</code>.
+          <code className="text-white">CONTEXT_LAYER_API_KEYS</code> remain optional for service-wide automation.
         </div>
-      ) : !contextApiReady ? (
+      ) : (
         <div className="rounded-xl border border-amber-400/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
-          Agents cannot call <code className="text-white">/api/context</code> yet. Set{" "}
-          <code className="text-white">CONTEXT_LAYER_API_KEY</code> or{" "}
-          <code className="text-white">CONTEXT_LAYER_API_KEYS</code> in your environment, then reload the dashboard.
+          The personal context-layer API key for this user is not available yet. Reload the dashboard to provision it.
         </div>
-      ) : null}
+      )}
 
       <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         {ADMIN_TABS.map((tab) => (

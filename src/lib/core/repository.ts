@@ -1,5 +1,6 @@
 import type {
   AccessRequest,
+  AgentApiKeyRecord,
   AgentClassPolicy,
   IntegrationSpec,
   NotificationRecord,
@@ -22,4 +23,8 @@ export interface ContextRepository {
   purgeExpiredGrants(nowIso: string): Promise<number>;
   listNotifications(): Promise<NotificationRecord[]>;
   createNotification(notification: NotificationRecord): Promise<NotificationRecord>;
+  getAgentApiKeyByOwner(ownerId: string): Promise<AgentApiKeyRecord | null>;
+  findAgentApiKey(apiKey: string): Promise<AgentApiKeyRecord | null>;
+  saveAgentApiKey(record: AgentApiKeyRecord): Promise<AgentApiKeyRecord>;
+  hasAgentApiKeys(): Promise<boolean>;
 }

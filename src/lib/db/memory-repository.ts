@@ -1,5 +1,6 @@
 import type {
   AccessRequest,
+  AgentApiKeyRecord,
   AgentClassPolicy,
   IntegrationSpec,
   NotificationRecord,
@@ -13,6 +14,8 @@ export class MemoryRepository implements ContextRepository {
   private readonly accessRequests = new Map<string, AccessRequest>();
   private readonly temporaryGrants = new Map<string, TemporaryGrant>();
   private readonly notifications = new Map<string, NotificationRecord>();
+  private readonly agentApiKeysByOwner = new Map<string, AgentApiKeyRecord>();
+  private readonly agentApiKeysByValue = new Map<string, AgentApiKeyRecord>();
 
   async ensureSchema() {}
 
@@ -83,5 +86,28 @@ export class MemoryRepository implements ContextRepository {
   async createNotification(notification: NotificationRecord) {
     this.notifications.set(notification.id, notification);
     return notification;
+  }
+
+  async getAgentApiKeyByOwner(ownerId: string) {
+    return this.agentApiKeysByOwner.get(ownerId) ?? null;
+  }
+
+  async findAgentApiKey(apiKey: string) {
+    return this.agentApiKeysByValue.get(apiKey) ?? null;
+  }
+
+  async saveAgentApiKey(record: AgentApiKeyRecord) {
+    const existing = this.agentApiKeysByOwner.get(record.ownerId);
+    if (existing && existing.apiKey !== record.apiKey) {
+      this.agentApiKeysByValue.delete(existing.apiKey);
+    }
+
+    this.agentApiKeysByOwner.set(record.ownerId, record);
+    this.agentApiKeysByValue.set(record.apiKey, record);
+    return record;
+  }
+
+  async hasAgentApiKeys() {
+    return this.agentApiKeysByOwner.size > 0;
   }
 }

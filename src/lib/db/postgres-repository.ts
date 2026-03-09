@@ -2,6 +2,7 @@ import { neon } from "@neondatabase/serverless";
 
 import type {
   AccessRequest,
+  AgentApiKeyRecord,
   AgentClassPolicy,
   IntegrationSpec,
   NotificationRecord,
@@ -107,6 +108,15 @@ export class PostgresRepository implements ContextRepository {
         body TEXT NOT NULL,
         metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
         created_at TIMESTAMPTZ NOT NULL
+      )
+    `;
+
+    await sql`
+      CREATE TABLE IF NOT EXISTS agent_api_keys (
+        owner_id TEXT PRIMARY KEY,
+        api_key TEXT NOT NULL UNIQUE,
+        created_at TIMESTAMPTZ NOT NULL,
+        updated_at TIMESTAMPTZ NOT NULL
       )
     `;
 
@@ -344,5 +354,58 @@ export class PostgresRepository implements ContextRepository {
       )
     `;
     return notification;
+  }
+
+  async getAgentApiKeyByOwner(ownerId: string) {
+    await this.ensureSchema();
+    const sql = getSql();
+    const rows = await sql`SELECT * FROM agent_api_keys WHERE owner_id = ${ownerId}`;
+    const row = rows[0];
+    if (!row) {
+      return null;
+    }
+    return {
+      ownerId: row.owner_id,
+      apiKey: row.api_key,
+      createdAt: new Date(row.created_at).toISOString(),
+      updatedAt: new Date(row.updated_at).toISOString(),
+    } satisfies AgentApiKeyRecord;
+  }
+
+  async findAgentApiKey(apiKey: string) {
+    await this.ensureSchema();
+    const sql = getSql();
+    const rows = await sql`SELECT * FROM agent_api_keys WHERE api_key = ${apiKey}`;
+    const row = rows[0];
+    if (!row) {
+      return null;
+    }
+    return {
+      ownerId: row.owner_id,
+      apiKey: row.api_key,
+      createdAt: new Date(row.created_at).toISOString(),
+      updatedAt: new Date(row.updated_at).toISOString(),
+    } satisfies AgentApiKeyRecord;
+  }
+
+  async saveAgentApiKey(record: AgentApiKeyRecord) {
+    await this.ensureSchema();
+    const sql = getSql();
+    await sql`
+      INSERT INTO agent_api_keys (owner_id, api_key, created_at, updated_at)
+      VALUES (${record.ownerId}, ${record.apiKey}, ${record.createdAt}, ${record.updatedAt})
+      ON CONFLICT (owner_id) DO UPDATE SET
+        api_key = EXCLUDED.api_key,
+        created_at = EXCLUDED.created_at,
+        updated_at = EXCLUDED.updated_at
+    `;
+    return record;
+  }
+
+  async hasAgentApiKeys() {
+    await this.ensureSchema();
+    const sql = getSql();
+    const rows = await sql`SELECT 1 FROM agent_api_keys LIMIT 1`;
+    return rows.length > 0;
   }
 }

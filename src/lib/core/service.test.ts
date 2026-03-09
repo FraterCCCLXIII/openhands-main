@@ -290,4 +290,18 @@ describe("ContextLayerService", () => {
     expect(response.provider).toBe("mock");
     expect(response.data).toEqual({ ok: true, payload: { q: "hello" } });
   });
+
+  it("provisions stable per-user context API keys", async () => {
+    const service = createService();
+
+    const first = await service.getOrCreateAgentApiKey("Owner@Example.com");
+    const second = await service.getOrCreateAgentApiKey("owner@example.com");
+
+    expect(first.ownerId).toBe("owner@example.com");
+    expect(second.apiKey).toBe(first.apiKey);
+    expect(await service.hasStoredAgentApiKeys()).toBe(true);
+    expect(await service.isStoredAgentApiKeyAuthorized(first.apiKey)).toBe(true);
+    expect(await service.isStoredAgentApiKeyAuthorized("not-a-real-key")).toBe(false);
+  });
+
 });

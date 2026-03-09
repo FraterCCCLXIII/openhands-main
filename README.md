@@ -44,7 +44,7 @@ npm install
 cp .env.example .env.local
 ```
 
-3. For local development, you can bypass interactive auth entirely. In this mode the app only responds to localhost requests, and the unified context endpoint accepts a default agent API key of `local-dev-context-key` unless you set `CONTEXT_LAYER_API_KEY(S)` yourself:
+3. For local development, you can bypass interactive auth entirely. In this mode the app only responds to localhost requests. When you open the dashboard, it provisions a personal context-layer API key for the current user and stores it server-side. `CONTEXT_LAYER_API_KEY(S)` remains optional if you also want shared service keys:
 
 ```bash
 DISABLE_AUTH=true npm run dev
@@ -63,7 +63,7 @@ Core variables:
 - `GITHUB_CLIENT_ID`
 - `GITHUB_CLIENT_SECRET`
 - `AUTH_SECRET` (or `NEXTAUTH_SECRET`)
-- `CONTEXT_LAYER_API_KEY` or `CONTEXT_LAYER_API_KEYS` for agent access to `POST /api/context/*`
+- `CONTEXT_LAYER_API_KEY` or `CONTEXT_LAYER_API_KEYS` for optional shared agent access to `POST /api/context/*`
 - `POSTGRES_URL` or `DATABASE_URL`
 - `COMPOSIO_API_KEY`
 - `CRON_SECRET`
@@ -115,7 +115,8 @@ This project now follows the same Auth.js preview deployment pattern used by `Op
 
 Notes:
 - If you set `DISABLE_AUTH=true`, the app bypasses interactive login, only serves localhost requests, and you can open `/admin` directly for local development.
-- In that localhost-only mode, agents can use `Authorization: Bearer local-dev-context-key` unless you override it with `CONTEXT_LAYER_API_KEY` or `CONTEXT_LAYER_API_KEYS`.
+- The dashboard automatically provisions a personal context-layer API key for the signed-in user (or the local dev user when auth is disabled) and stores it server-side. Shared `CONTEXT_LAYER_API_KEY` / `CONTEXT_LAYER_API_KEYS` values are optional overrides for automation or service accounts.
+- For backward-compatible local smoke tests, the localhost-only fallback key `local-dev-context-key` is still accepted unless you configure shared environment keys.
 - If you want localhost GitHub login without the redirect proxy flow, create a separate GitHub OAuth app with callback `http://localhost:3000/api/auth/callback/github`.
 
 

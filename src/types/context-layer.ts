@@ -94,6 +94,13 @@ export interface NotificationRecord {
   createdAt: string;
 }
 
+export interface AgentApiKeyRecord {
+  ownerId: string;
+  apiKey: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface AccessDecision {
   allowed: boolean;
   reason: string;

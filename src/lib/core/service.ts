@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { randomBytes, randomUUID } from "node:crypto";
 
 import type { AdapterRegistry } from "@/src/lib/core/adapter-registry";
 import { addMinutes, nowIso } from "@/src/lib/core/date";
@@ -8,6 +8,7 @@ import type { NotificationPublisher } from "@/src/lib/notifications/publisher";
 import type {
   AccessDecision,
   AccessRequest,
+  AgentApiKeyRecord,
   AgentClassPolicy,
   ContextInvocationResult,
   FunctionAccessMode,
@@ -41,6 +42,10 @@ const normalizeFunctions = (functions: Record<string, FunctionSpec>) =>
       normalizeFunctionSpec(functionSpec),
     ]),
   );
+
+const normalizeAgentApiKeyOwner = (ownerId: string) => ownerId.trim().toLowerCase();
+
+const createAgentApiKeyValue = () => `cla_${randomBytes(24).toString("base64url")}`;
 
 const permittedByRule = (
   rule: PolicyRule,
@@ -95,6 +100,48 @@ export class ContextLayerService {
     await this.initialize();
     return this.repository.listNotifications();
   }
+
+  async getOrCreateAgentApiKey(ownerId: string): Promise<AgentApiKeyRecord> {
+    await this.initialize();
+    const normalizedOwnerId = normalizeAgentApiKeyOwner(ownerId);
+
+    if (!normalizedOwnerId) {
+      throw new ContextLayerError(
+        "A signed-in user email or name is required before issuing a context-layer API key.",
+        400,
+      );
+    }
+
+    const existing = await this.repository.getAgentApiKeyByOwner(normalizedOwnerId);
+    if (existing) {
+      return existing;
+    }
+
+    const timestamp = nowIso();
+    return this.repository.saveAgentApiKey({
+      ownerId: normalizedOwnerId,
+      apiKey: createAgentApiKeyValue(),
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    });
+  }
+
+  async hasStoredAgentApiKeys() {
+    await this.initialize();
+    return this.repository.hasAgentApiKeys();
+  }
+
+  async isStoredAgentApiKeyAuthorized(apiKey: string) {
+    await this.initialize();
+    const candidate = apiKey.trim();
+
+    if (!candidate) {
+      return false;
+    }
+
+    return (await this.repository.findAgentApiKey(candidate)) !== null;
+  }
+
 
   async registerIntegration(
     spec: Omit<IntegrationSpec, "functions"> & {

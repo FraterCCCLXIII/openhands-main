@@ -1,6 +1,7 @@
 import { fromError, ok } from "@/src/lib/api";
 import {
-  getContextApiAuthStatus,
+  extractContextApiKey,
+  getContextApiKeys,
   isContextApiKeyAuthorized,
 } from "@/src/lib/context-api-auth";
 import { ContextLayerError } from "@/src/lib/core/errors";
@@ -14,20 +15,27 @@ export async function POST(
   { params }: { params: Promise<{ integrationKey: string; functionName: string }> },
 ) {
   try {
-    const authStatus = getContextApiAuthStatus();
+    const service = getContextLayerService();
+    const providedApiKey = extractContextApiKey(request.headers);
+    const hasConfiguredContextApiKeys =
+      getContextApiKeys().length > 0 || (await service.hasStoredAgentApiKeys());
 
-    if (!authStatus.configured) {
+    if (!hasConfiguredContextApiKeys) {
       throw new ContextLayerError(
-        "Set CONTEXT_LAYER_API_KEY or CONTEXT_LAYER_API_KEYS before agents call /api/context.",
+        "Open the dashboard once to provision a personal context-layer API key, or set CONTEXT_LAYER_API_KEY / CONTEXT_LAYER_API_KEYS for a shared key.",
         500,
       );
     }
 
-    if (!isContextApiKeyAuthorized(request.headers)) {
+    const authorized =
+      isContextApiKeyAuthorized(request.headers) ||
+      (await service.isStoredAgentApiKeyAuthorized(providedApiKey));
+
+    if (!authorized) {
       return Response.json(
         {
           detail:
-            "Provide a valid context-layer API key in the Authorization bearer header or X-API-Key.",
+            "Provide a valid personal or shared context-layer API key in the Authorization bearer header or X-API-Key.",
         },
         {
           status: 401,
@@ -38,7 +46,6 @@ export async function POST(
 
     const payload = contextInvokeSchema.parse(await request.json());
     const { integrationKey, functionName } = await params;
-    const service = getContextLayerService();
     return ok(
       await service.invokeContext(
         payload.agentId,
