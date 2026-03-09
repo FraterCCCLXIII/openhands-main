@@ -10,6 +10,7 @@ import GitHubLogo from '~/svgs/github-logo.svg?react';
 import GitHubLogoBlack from '~/svgs/github-logo-black.svg?react';
 import { Link } from 'react-router';
 import type { Route } from './+types/home';
+import { UseCaseCarousel } from '~/components/use-case-carousel';
 
 // Lazy load the ASCII animation for performance
 const ASCIIAnimation = lazy(() => import('~/components/ascii-animation'));
@@ -265,21 +266,9 @@ const Home = () => {
             }}>
               The open platform for cloud coding agents.
             </h1>
-            <p className='text-brand-muted mb-8 max-w-2xl mx-auto' style={{
-              fontSize: 'clamp(1.1rem, 1rem + 0.5vw, 1.3rem)',
-              lineHeight: '1.2',
-              fontWeight: 500
-            }}>
-              Scale from one to thousands of agents — open source, model-agnostic, and enterprise-ready.
-            </p>
-            <div className='flex gap-4 justify-center flex-wrap'>
-              <Link to='https://app.all-hands.dev' className='btn btn-primary' style={{ padding: '14.4px 30.4px' }}>
-                Try it live
-              </Link>
-              <Link to='https://docs.openhands.dev/sdk' className='btn btn-outline' style={{ padding: '14.4px 30.4px' }}>
-                Build with SDK
-              </Link>
-            </div>
+            
+            {/* Use Case Carousel */}
+            <UseCaseCarousel />
           </div>
 
           {/* Trust Logos - part of hero section */}
