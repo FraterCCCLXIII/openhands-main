@@ -123,9 +123,8 @@ export default function AddConnectorPage() {
 
             <div className="space-y-4 text-sm leading-7 text-[var(--color-text-base)]">
               <p>
-                Use managed connectors for common OAuth and HTTP-style APIs, and
-                fall back to custom source-code implementations when a provider
-                needs nonstandard behavior.
+                For most providers, add a managed connector record in the
+                database instead of making source-code changes.
               </p>
               <ol className="grid gap-3">
                 <li>
@@ -136,52 +135,32 @@ export default function AddConnectorPage() {
                   call.
                 </li>
                 <li>
-                  <span className="font-medium text-white">2.</span> Add the
-                  provider to{" "}
-                  <code className="text-white">
-                    src/lib/integrations/oauth-provider-catalog.ts
-                  </code>{" "}
-                  so it shows up in this researched catalog.
+                  <span className="font-medium text-white">2.</span> Create or
+                  update a managed connector through the admin tooling or by
+                  sending a record to <code className="text-white">POST /api/managed-connectors</code>.
                 </li>
                 <li>
-                  <span className="font-medium text-white">3.</span> For common
-                  cases, create a managed connector definition through{" "}
-                  <code className="text-white">app/api/managed-connectors/route.ts</code>
-                  . Store the provider metadata, OAuth settings, base API URL,
-                  and request templates there so the generic HTTP adapter can run
-                  it without adding a custom MCP route.
+                  <span className="font-medium text-white">3.</span> In that DB
+                  record, fill in the provider metadata, base API URL, auth
+                  strategy, OAuth settings, and the function request templates the
+                  generic connector should expose.
                 </li>
                 <li>
                   <span className="font-medium text-white">4.</span> If the
-                  provider needs special handling, add the built-in connector
-                  definition in{" "}
-                  <code className="text-white">
-                    src/lib/integrations/built-in-connectors.ts
-                  </code>{" "}
-                  and implement the matching MCP proxy route in{" "}
-                  <code className="text-white">
-                    app/api/mcp/&lt;provider&gt;/route.ts
-                  </code>
-                  . See{" "}
-                  <code className="text-white">app/api/mcp/notion/route.ts</code>{" "}
-                  and{" "}
-                  <code className="text-white">app/api/mcp/figma/route.ts</code>{" "}
-                  for examples.
+                  provider uses OAuth, store the client ID and client secret in
+                  the managed connector record so the runtime can complete the
+                  OAuth flow without any code deploy.
                 </li>
                 <li>
-                  <span className="font-medium text-white">5.</span> For custom
-                  OAuth implementations, register the provider in{" "}
-                  <code className="text-white">src/lib/oauth/providers.ts</code>,
-                  add the required client ID and client secret environment
-                  variables, and redeploy. Managed connectors already store OAuth
-                  client metadata in the database, so this step is only needed
-                  for special-case code paths.
-                </li>
-                <li>
-                  <span className="font-medium text-white">6.</span> Open the
+                  <span className="font-medium text-white">5.</span> Open the
                   admin dashboard, connect a real user account, and confirm the
                   connector now appears in the integration wizard as a ready
                   option.
+                </li>
+                <li>
+                  <span className="font-medium text-white">6.</span> Only fall
+                  back to a custom code change when the provider needs behavior
+                  the managed connector model cannot express yet.
                 </li>
               </ol>
             </div>
