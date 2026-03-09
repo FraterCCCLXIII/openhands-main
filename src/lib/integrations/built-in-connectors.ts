@@ -61,12 +61,12 @@ const builtInConnectorDefinitions = [
       "Vercel-hosted MCP wrapper for Figma files, nodes, and rendered assets.",
     appUrl: "https://www.figma.com/developers/api",
     categories: ["Design", "Frontend"],
-    authModes: ["bearer"],
-    authStrategy: "bearer",
-    credentialLabel: "Figma token",
-    credentialPlaceholder: "figd_...",
+    authModes: ["oauth2"],
+    authStrategy: "oauth2",
+    credentialLabel: "Connect Figma",
+    credentialPlaceholder: "Connect your Figma account",
     credentialHelp:
-      "Use a Figma personal access token that can read the files and teams you want the agent to inspect.",
+      "Use the OAuth button below to connect a Figma account and store the access token per user.",
     serverPath: "/api/mcp/figma",
     functions: [
       {
@@ -93,12 +93,12 @@ const builtInConnectorDefinitions = [
       "Vercel-hosted MCP wrapper for Notion search, pages, and writebacks.",
     appUrl: "https://developers.notion.com/reference/intro",
     categories: ["Knowledge base", "Documentation"],
-    authModes: ["bearer"],
-    authStrategy: "bearer",
-    credentialLabel: "Notion integration token",
-    credentialPlaceholder: "ntn_...",
+    authModes: ["oauth2"],
+    authStrategy: "oauth2",
+    credentialLabel: "Connect Notion",
+    credentialPlaceholder: "Connect your Notion workspace",
     credentialHelp:
-      "Use a Notion integration token and make sure the integration has been shared with the target pages or databases.",
+      "Use the OAuth button below to connect a Notion workspace and store the access token per user.",
     serverPath: "/api/mcp/notion",
     functions: [
       {
@@ -198,12 +198,10 @@ export const getBuiltInConnectorDefinition = (slug: string) =>
   builtInConnectorDefinitions.find((connector) => connector.slug === slug) ?? null;
 
 export const listBuiltInConnectors = (): BuiltInConnectorOption[] =>
-  builtInConnectorDefinitions.map(
-    ({ authStrategy: _authStrategy, functions, serverPath: _serverPath, ...connector }) => ({
-      ...connector,
-      toolCount: functions.length,
-    }),
-  );
+  builtInConnectorDefinitions.map(({ functions, serverPath: _serverPath, ...connector }) => ({
+    ...connector,
+    toolCount: functions.length,
+  }));
 
 export const buildBuiltInConnectorFunctions = (
   slug: string,

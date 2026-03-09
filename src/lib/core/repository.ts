@@ -2,8 +2,10 @@ import type {
   AccessRequest,
   AgentApiKeyRecord,
   AgentClassPolicy,
+  IntegrationConnectionRecord,
   IntegrationSpec,
   NotificationRecord,
+  OAuthStateRecord,
   TemporaryGrant,
 } from "@/src/types/context-layer";
 
@@ -27,4 +29,15 @@ export interface ContextRepository {
   findAgentApiKey(apiKey: string): Promise<AgentApiKeyRecord | null>;
   saveAgentApiKey(record: AgentApiKeyRecord): Promise<AgentApiKeyRecord>;
   hasAgentApiKeys(): Promise<boolean>;
+  listIntegrationConnections(ownerId: string): Promise<IntegrationConnectionRecord[]>;
+  getIntegrationConnection(
+    ownerId: string,
+    integrationKey: string,
+  ): Promise<IntegrationConnectionRecord | null>;
+  upsertIntegrationConnection(
+    record: IntegrationConnectionRecord,
+  ): Promise<IntegrationConnectionRecord>;
+  saveOAuthState(record: OAuthStateRecord): Promise<OAuthStateRecord>;
+  getOAuthState(state: string): Promise<OAuthStateRecord | null>;
+  deleteOAuthState(state: string): Promise<void>;
 }

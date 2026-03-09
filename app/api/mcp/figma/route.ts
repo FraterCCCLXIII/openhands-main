@@ -10,7 +10,7 @@ export const maxDuration = 60;
 const createServer = (token: string) => {
   const server = new McpServer({ name: "figma-built-in", version: "0.2.0" });
   const headers = {
-    "X-Figma-Token": token,
+    Authorization: `Bearer ${token}`,
   };
 
   server.registerTool(

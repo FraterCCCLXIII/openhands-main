@@ -23,6 +23,7 @@ describe("listBuiltInConnectors", () => {
   it("returns the curated Vercel-hosted built-in connector catalog", async () => {
     const connectors = await listBuiltInConnectors();
     const github = connectors.find((connector) => connector.slug === "github");
+    const notion = connectors.find((connector) => connector.slug === "notion");
     const googleDocs = connectors.find(
       (connector) => connector.slug === "google-docs",
     );
@@ -33,6 +34,11 @@ describe("listBuiltInConnectors", () => {
       authModes: ["bearer"],
       credentialLabel: "GitHub token",
       toolCount: 4,
+    });
+    expect(notion).toMatchObject({
+      name: "Notion",
+      authModes: ["oauth2"],
+      credentialLabel: "Connect Notion",
     });
     expect(googleDocs).toMatchObject({
       name: "Google Docs",
@@ -84,7 +90,7 @@ describe("discoverIntegration", () => {
     });
   });
 
-  it("requires an access token for built-in connectors", async () => {
+  it("does not require an embedded token for OAuth built-in connectors", async () => {
     await expect(
       discoverIntegration(
         {
@@ -99,9 +105,14 @@ describe("discoverIntegration", () => {
           baseUrl: "https://context-layer.vercel.app",
         },
       ),
-    ).rejects.toThrow(
-      "Notion integration token is required to use the Notion built-in connector.",
-    );
+    ).resolves.toMatchObject({
+      authStrategy: "oauth2",
+      config: {
+        builtInSlug: "notion",
+        serverUrl: "https://context-layer.vercel.app/api/mcp/notion",
+      },
+      credentials: {},
+    });
   });
 });
 

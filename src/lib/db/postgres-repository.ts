@@ -4,8 +4,10 @@ import type {
   AccessRequest,
   AgentApiKeyRecord,
   AgentClassPolicy,
+  IntegrationConnectionRecord,
   IntegrationSpec,
   NotificationRecord,
+  OAuthStateRecord,
   TemporaryGrant,
 } from "@/src/types/context-layer";
 import type { ContextRepository } from "@/src/lib/core/repository";
@@ -117,6 +119,39 @@ export class PostgresRepository implements ContextRepository {
         api_key TEXT NOT NULL UNIQUE,
         created_at TIMESTAMPTZ NOT NULL,
         updated_at TIMESTAMPTZ NOT NULL
+      )
+    `;
+
+    await sql`
+      CREATE TABLE IF NOT EXISTS integration_connections (
+        owner_id TEXT NOT NULL,
+        integration_key TEXT NOT NULL,
+        provider TEXT NOT NULL,
+        auth_strategy TEXT NOT NULL,
+        encrypted_credentials TEXT NOT NULL,
+        token_type TEXT,
+        scopes JSONB NOT NULL DEFAULT '[]'::jsonb,
+        expires_at TIMESTAMPTZ,
+        external_account_id TEXT,
+        external_workspace_id TEXT,
+        display_name TEXT,
+        metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+        created_at TIMESTAMPTZ NOT NULL,
+        updated_at TIMESTAMPTZ NOT NULL,
+        PRIMARY KEY (owner_id, integration_key)
+      )
+    `;
+
+    await sql`
+      CREATE TABLE IF NOT EXISTS oauth_states (
+        state TEXT PRIMARY KEY,
+        owner_id TEXT NOT NULL,
+        integration_key TEXT NOT NULL,
+        provider TEXT NOT NULL,
+        code_verifier TEXT,
+        redirect_to TEXT NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL,
+        expires_at TIMESTAMPTZ NOT NULL
       )
     `;
 
@@ -407,5 +442,137 @@ export class PostgresRepository implements ContextRepository {
     const sql = getSql();
     const rows = await sql`SELECT 1 FROM agent_api_keys LIMIT 1`;
     return rows.length > 0;
+  }
+
+  async listIntegrationConnections(ownerId: string) {
+    await this.ensureSchema();
+    const sql = getSql();
+    const rows = await sql`
+      SELECT * FROM integration_connections
+      WHERE owner_id = ${ownerId}
+      ORDER BY integration_key ASC
+    `;
+    return rows.map((row) => ({
+      ownerId: row.owner_id,
+      integrationKey: row.integration_key,
+      provider: row.provider,
+      authStrategy: row.auth_strategy,
+      encryptedCredentials: row.encrypted_credentials,
+      tokenType: row.token_type ?? undefined,
+      scopes: parseJson<string[]>(row.scopes),
+      expiresAt: row.expires_at ? new Date(row.expires_at).toISOString() : undefined,
+      externalAccountId: row.external_account_id ?? undefined,
+      externalWorkspaceId: row.external_workspace_id ?? undefined,
+      displayName: row.display_name ?? undefined,
+      metadata: parseJson<Record<string, unknown>>(row.metadata),
+      createdAt: new Date(row.created_at).toISOString(),
+      updatedAt: new Date(row.updated_at).toISOString(),
+    } satisfies IntegrationConnectionRecord));
+  }
+
+  async getIntegrationConnection(ownerId: string, integrationKey: string) {
+    await this.ensureSchema();
+    const sql = getSql();
+    const rows = await sql`
+      SELECT * FROM integration_connections
+      WHERE owner_id = ${ownerId} AND integration_key = ${integrationKey}
+    `;
+    const row = rows[0];
+    if (!row) {
+      return null;
+    }
+    return {
+      ownerId: row.owner_id,
+      integrationKey: row.integration_key,
+      provider: row.provider,
+      authStrategy: row.auth_strategy,
+      encryptedCredentials: row.encrypted_credentials,
+      tokenType: row.token_type ?? undefined,
+      scopes: parseJson<string[]>(row.scopes),
+      expiresAt: row.expires_at ? new Date(row.expires_at).toISOString() : undefined,
+      externalAccountId: row.external_account_id ?? undefined,
+      externalWorkspaceId: row.external_workspace_id ?? undefined,
+      displayName: row.display_name ?? undefined,
+      metadata: parseJson<Record<string, unknown>>(row.metadata),
+      createdAt: new Date(row.created_at).toISOString(),
+      updatedAt: new Date(row.updated_at).toISOString(),
+    } satisfies IntegrationConnectionRecord;
+  }
+
+  async upsertIntegrationConnection(record: IntegrationConnectionRecord) {
+    await this.ensureSchema();
+    const sql = getSql();
+    await sql`
+      INSERT INTO integration_connections (
+        owner_id, integration_key, provider, auth_strategy, encrypted_credentials,
+        token_type, scopes, expires_at, external_account_id, external_workspace_id,
+        display_name, metadata, created_at, updated_at
+      ) VALUES (
+        ${record.ownerId}, ${record.integrationKey}, ${record.provider}, ${record.authStrategy}, ${record.encryptedCredentials},
+        ${record.tokenType ?? null}, ${JSON.stringify(record.scopes)}, ${record.expiresAt ?? null}, ${record.externalAccountId ?? null}, ${record.externalWorkspaceId ?? null},
+        ${record.displayName ?? null}, ${JSON.stringify(record.metadata)}, ${record.createdAt}, ${record.updatedAt}
+      )
+      ON CONFLICT (owner_id, integration_key) DO UPDATE SET
+        provider = EXCLUDED.provider,
+        auth_strategy = EXCLUDED.auth_strategy,
+        encrypted_credentials = EXCLUDED.encrypted_credentials,
+        token_type = EXCLUDED.token_type,
+        scopes = EXCLUDED.scopes,
+        expires_at = EXCLUDED.expires_at,
+        external_account_id = EXCLUDED.external_account_id,
+        external_workspace_id = EXCLUDED.external_workspace_id,
+        display_name = EXCLUDED.display_name,
+        metadata = EXCLUDED.metadata,
+        created_at = EXCLUDED.created_at,
+        updated_at = EXCLUDED.updated_at
+    `;
+    return record;
+  }
+
+  async saveOAuthState(record: OAuthStateRecord) {
+    await this.ensureSchema();
+    const sql = getSql();
+    await sql`
+      INSERT INTO oauth_states (
+        state, owner_id, integration_key, provider, code_verifier, redirect_to, created_at, expires_at
+      ) VALUES (
+        ${record.state}, ${record.ownerId}, ${record.integrationKey}, ${record.provider}, ${record.codeVerifier ?? null}, ${record.redirectTo}, ${record.createdAt}, ${record.expiresAt}
+      )
+      ON CONFLICT (state) DO UPDATE SET
+        owner_id = EXCLUDED.owner_id,
+        integration_key = EXCLUDED.integration_key,
+        provider = EXCLUDED.provider,
+        code_verifier = EXCLUDED.code_verifier,
+        redirect_to = EXCLUDED.redirect_to,
+        created_at = EXCLUDED.created_at,
+        expires_at = EXCLUDED.expires_at
+    `;
+    return record;
+  }
+
+  async getOAuthState(state: string) {
+    await this.ensureSchema();
+    const sql = getSql();
+    const rows = await sql`SELECT * FROM oauth_states WHERE state = ${state}`;
+    const row = rows[0];
+    if (!row) {
+      return null;
+    }
+    return {
+      state: row.state,
+      ownerId: row.owner_id,
+      integrationKey: row.integration_key,
+      provider: row.provider,
+      codeVerifier: row.code_verifier ?? undefined,
+      redirectTo: row.redirect_to,
+      createdAt: new Date(row.created_at).toISOString(),
+      expiresAt: new Date(row.expires_at).toISOString(),
+    } satisfies OAuthStateRecord;
+  }
+
+  async deleteOAuthState(state: string) {
+    await this.ensureSchema();
+    const sql = getSql();
+    await sql`DELETE FROM oauth_states WHERE state = ${state}`;
   }
 }

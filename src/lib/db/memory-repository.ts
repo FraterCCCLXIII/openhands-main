@@ -2,8 +2,10 @@ import type {
   AccessRequest,
   AgentApiKeyRecord,
   AgentClassPolicy,
+  IntegrationConnectionRecord,
   IntegrationSpec,
   NotificationRecord,
+  OAuthStateRecord,
   TemporaryGrant,
 } from "@/src/types/context-layer";
 import type { ContextRepository } from "@/src/lib/core/repository";
@@ -16,6 +18,11 @@ export class MemoryRepository implements ContextRepository {
   private readonly notifications = new Map<string, NotificationRecord>();
   private readonly agentApiKeysByOwner = new Map<string, AgentApiKeyRecord>();
   private readonly agentApiKeysByValue = new Map<string, AgentApiKeyRecord>();
+  private readonly integrationConnections = new Map<
+    string,
+    IntegrationConnectionRecord
+  >();
+  private readonly oauthStates = new Map<string, OAuthStateRecord>();
 
   async ensureSchema() {}
 
@@ -109,5 +116,33 @@ export class MemoryRepository implements ContextRepository {
 
   async hasAgentApiKeys() {
     return this.agentApiKeysByOwner.size > 0;
+  }
+
+  async listIntegrationConnections(ownerId: string) {
+    return [...this.integrationConnections.values()]
+      .filter((connection) => connection.ownerId === ownerId)
+      .sort((a, b) => a.integrationKey.localeCompare(b.integrationKey));
+  }
+
+  async getIntegrationConnection(ownerId: string, integrationKey: string) {
+    return this.integrationConnections.get(`${ownerId}:${integrationKey}`) ?? null;
+  }
+
+  async upsertIntegrationConnection(record: IntegrationConnectionRecord) {
+    this.integrationConnections.set(`${record.ownerId}:${record.integrationKey}`, record);
+    return record;
+  }
+
+  async saveOAuthState(record: OAuthStateRecord) {
+    this.oauthStates.set(record.state, record);
+    return record;
+  }
+
+  async getOAuthState(state: string) {
+    return this.oauthStates.get(state) ?? null;
+  }
+
+  async deleteOAuthState(state: string) {
+    this.oauthStates.delete(state);
   }
 }

@@ -8,7 +8,8 @@ import {
   PlugZap,
   Waypoints,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
 
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
@@ -19,6 +20,7 @@ import type {
   BuiltInConnectorOption,
   FunctionAccessMode,
   FunctionSpec,
+  IntegrationConnectionStatus,
 } from "@/src/types/context-layer";
 
 type IntegrationKind = "built_in" | "mcp";
@@ -249,6 +251,7 @@ export const IntegrationWizard = ({
   onCreated,
   onStatus,
 }: IntegrationWizardProps) => {
+  const searchParams = useSearchParams();
   const [step, setStep] = useState<WizardStep>(1);
   const [draft, setDraft] = useState<WizardDraft>(INITIAL_DRAFT);
   const [discovery, setDiscovery] = useState<DiscoveryResponse | null>(null);
@@ -273,6 +276,61 @@ export const IntegrationWizard = ({
       null,
     [builtInConnectors, draft.builtInSlug],
   );
+
+  const connectionStatusesQuery = useQuery({
+    queryKey: ["oauth-connections"],
+    queryFn: () => fetchJson<IntegrationConnectionStatus[]>("/api/oauth/connections"),
+    enabled: draft.kind === "built_in" && step === 2,
+    staleTime: 15_000,
+  });
+
+  const selectedConnection = useMemo(
+    () =>
+      connectionStatusesQuery.data?.find(
+        (connection) =>
+          connection.integrationKey === (draft.key.trim() || draft.builtInSlug),
+      ) ?? null,
+    [connectionStatusesQuery.data, draft.builtInSlug, draft.key],
+  );
+
+
+  useEffect(() => {
+    const builtInSlug = searchParams.get("builtIn")?.trim();
+    if (!builtInSlug) {
+      return;
+    }
+
+    if (draft.kind == null) {
+      setDraft((current) => ({
+        ...current,
+        kind: "built_in",
+      }));
+    }
+
+    if (step === 1) {
+      setStep(2);
+    }
+  }, [draft.kind, searchParams, step]);
+
+  useEffect(() => {
+    if (draft.kind !== "built_in") {
+      return;
+    }
+
+    const builtInSlug = searchParams.get("builtIn")?.trim();
+    if (!builtInSlug || draft.builtInSlug) {
+      return;
+    }
+
+    const connector = builtInConnectors.find(
+      (candidate) => candidate.slug === builtInSlug,
+    );
+    if (!connector) {
+      return;
+    }
+
+    handleConnectorSelect(connector);
+  }, [builtInConnectors, draft.builtInSlug, draft.kind, searchParams]);
 
   const discoverMutation = useMutation({
     mutationFn: async () =>
@@ -335,12 +393,15 @@ export const IntegrationWizard = ({
     [discovery],
   );
 
+  const requiresOAuthConnection = selectedConnector?.authStrategy === "oauth2";
+
   const canDiscover =
     !!draft.kind &&
     !!draft.key.trim() &&
     !!draft.name.trim() &&
     (draft.kind === "built_in"
-      ? !!draft.builtInSlug.trim() && !!draft.accessToken.trim()
+      ? !!draft.builtInSlug.trim() &&
+        (requiresOAuthConnection ? !!selectedConnection : !!draft.accessToken.trim())
       : !!draft.serverUrl.trim());
 
   const handleConnectorSelect = (connector: BuiltInConnectorOption) => {
@@ -416,7 +477,7 @@ export const IntegrationWizard = ({
             {
               kind: "built_in" as const,
               title: "Built-in connector",
-              body: "Pick from the five Vercel-hosted connectors, provide the provider token, and let the dashboard discover the available functions.",
+              body: "Pick from the curated Vercel-hosted connectors, connect your account when OAuth is available, and let the dashboard discover the available functions.",
               icon: KeyRound,
             },
             {
@@ -503,11 +564,51 @@ export const IntegrationWizard = ({
                         {selectedConnector.name}
                       </p>
                       <Badge>{selectedConnector.slug}</Badge>
+                      <Badge>{authStrategyLabel(selectedConnector.authStrategy)}</Badge>
+                      {selectedConnection ? (
+                        <Badge tone="success">Connected</Badge>
+                      ) : null}
                     </div>
                     <p className="mt-2 leading-7">
                       {selectedConnector.description ||
                         "This built-in connector is backed by a Vercel-hosted MCP route in this deployment."}
                     </p>
+                    {requiresOAuthConnection ? (
+                      <div className="mt-4 rounded-2xl border border-[var(--color-border)] bg-black/20 p-4">
+                        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-white">
+                              {selectedConnection
+                                ? selectedConnection.displayName || `${selectedConnector.name} account connected`
+                                : `Connect your ${selectedConnector.name} account`}
+                            </p>
+                            <p className="mt-1 text-xs leading-6 text-[var(--color-text-base)]">
+                              {selectedConnection
+                                ? `This ${selectedConnector.name} token is stored per user in the database and will be injected automatically for agent calls.`
+                                : selectedConnector.credentialHelp}
+                            </p>
+                            {selectedConnection?.expiresAt ? (
+                              <p className="mt-1 text-xs leading-6 text-[var(--color-text-base)]">
+                                Expires {new Date(selectedConnection.expiresAt).toLocaleString()}.
+                              </p>
+                            ) : null}
+                          </div>
+                          <Button
+                            className="h-9 rounded-lg px-4 text-xs"
+                            disabled={!draft.builtInSlug.trim()}
+                            onClick={() => {
+                              window.location.href = `/api/oauth/${selectedConnector.slug}/start?integrationKey=${encodeURIComponent(
+                                draft.key.trim() || selectedConnector.slug,
+                              )}&redirectTo=${encodeURIComponent(
+                                `/admin?section=integrations&showIntegrationWizard=1&builtIn=${draft.builtInSlug || selectedConnector.slug}`,
+                              )}`;
+                            }}
+                          >
+                            {selectedConnection ? "Reconnect" : "Connect"}
+                          </Button>
+                        </div>
+                      </div>
+                    ) : null}
                     {selectedConnector.appUrl ? (
                       <a
                         href={selectedConnector.appUrl}
@@ -559,29 +660,37 @@ export const IntegrationWizard = ({
                   </label>
                 </div>
 
-                <label className="grid gap-2 text-sm text-white">
-                  <span className="font-medium">
-                    {selectedConnector?.credentialLabel ?? "Access token"}
-                  </span>
-                  <input
-                    className={inputClassName}
-                    placeholder={
-                      selectedConnector?.credentialPlaceholder ?? "Paste the provider token"
-                    }
-                    value={draft.accessToken}
-                    onChange={(event) =>
-                      setDraft((current) => ({
-                        ...current,
-                        accessToken: event.target.value,
-                      }))
-                    }
-                    disabled={!draft.builtInSlug.trim()}
-                  />
-                  <span className="text-xs leading-6 text-[var(--color-text-base)]">
-                    {selectedConnector?.credentialHelp ??
-                      "Provide the provider token that the built-in MCP route should forward upstream."}
-                  </span>
-                </label>
+                {requiresOAuthConnection ? (
+                  <div className="rounded-2xl border border-dashed border-[var(--color-border)] px-4 py-4 text-sm text-[var(--color-text-base)]">
+                    {selectedConnection
+                      ? `${selectedConnector?.name} is connected. Click Discover to save this integration with your stored OAuth credentials.`
+                      : `Connect ${selectedConnector?.name ?? "this provider"} before discovering functions.`}
+                  </div>
+                ) : (
+                  <label className="grid gap-2 text-sm text-white">
+                    <span className="font-medium">
+                      {selectedConnector?.credentialLabel ?? "Access token"}
+                    </span>
+                    <input
+                      className={inputClassName}
+                      placeholder={
+                        selectedConnector?.credentialPlaceholder ?? "Paste the provider token"
+                      }
+                      value={draft.accessToken}
+                      onChange={(event) =>
+                        setDraft((current) => ({
+                          ...current,
+                          accessToken: event.target.value,
+                        }))
+                      }
+                      disabled={!draft.builtInSlug.trim()}
+                    />
+                    <span className="text-xs leading-6 text-[var(--color-text-base)]">
+                      {selectedConnector?.credentialHelp ??
+                        "Provide the provider token that the built-in MCP route should forward upstream."}
+                    </span>
+                  </label>
+                )}
               </>
             ) : (
               <>

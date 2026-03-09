@@ -22,9 +22,9 @@ export async function POST(
       );
     }
 
-    const authorized = await service.isStoredAgentApiKeyAuthorized(providedApiKey);
+    const apiKeyRecord = await service.getStoredAgentApiKey(providedApiKey);
 
-    if (!authorized) {
+    if (!apiKeyRecord) {
       return Response.json(
         {
           detail:
@@ -47,6 +47,9 @@ export async function POST(
         functionName,
         payload.payload,
         payload.scopes,
+        {
+          ownerId: apiKeyRecord.ownerId,
+        },
       ),
     );
   } catch (error) {

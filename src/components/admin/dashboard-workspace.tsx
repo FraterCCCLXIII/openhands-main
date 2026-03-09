@@ -19,7 +19,8 @@ import {
   Waypoints,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
-import { type ReactNode, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { type ReactNode, useEffect, useMemo, useState } from "react";
 
 import { IntegrationWizard } from "@/src/components/admin/integration-wizard";
 import { Badge } from "@/src/components/ui/badge";
@@ -312,12 +313,42 @@ export const DashboardWorkspace = ({
   contextApiKey,
 }: AdminDashboardProps) => {
   const queryClient = useQueryClient();
+  const searchParams = useSearchParams();
   const [activeSection, setActiveSection] = useState<AdminSection>("home");
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [showIntegrationWizard, setShowIntegrationWizard] = useState(
     initialIntegrations.length === 0,
   );
   const [revealApiKey, setRevealApiKey] = useState(false);
+
+  useEffect(() => {
+    const requestedSection = searchParams.get("section");
+    if (
+      requestedSection === "home" ||
+      requestedSection === "profile" ||
+      requestedSection === "integrations" ||
+      requestedSection === "apiKeys"
+    ) {
+      setActiveSection(requestedSection);
+    }
+
+    if (searchParams.get("showIntegrationWizard") === "1") {
+      setShowIntegrationWizard(true);
+    }
+
+    const oauthStatus = searchParams.get("oauth_status");
+    const oauthProvider = searchParams.get("oauth_provider");
+    const oauthError = searchParams.get("oauth_error");
+    if (oauthStatus === "connected" && oauthProvider) {
+      setStatusMessage(
+        `${oauthProvider[0]?.toUpperCase() ?? ""}${oauthProvider.slice(1)} connected successfully. Finish saving the integration to use it.`,
+      );
+    }
+
+    if (oauthStatus === "error") {
+      setStatusMessage(oauthError || "OAuth connection failed.");
+    }
+  }, [searchParams]);
 
   const integrationsQuery = useQuery({
     queryKey: ["integrations"],
@@ -718,7 +749,7 @@ export const DashboardWorkspace = ({
                 />
               </div>
               <div className="mt-4 rounded-xl border border-[var(--color-border)] bg-black/20 px-3 py-3 text-xs leading-6 text-[var(--color-text-base)]">
-                The persisted personal key belongs to <code className="text-white">{userEmail}</code>. Provider-specific secrets stay inside each integration configuration and are never handed directly to the agent.
+                The persisted personal key belongs to <code className="text-white">{userEmail}</code>. Provider credentials stay server-side in integration settings or per-user OAuth records and are never handed directly to the agent.
               </div>
             </CompactPanel>
           </section>

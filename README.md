@@ -67,6 +67,13 @@ Core variables:
 - `COMPOSIO_API_KEY`
 - `CRON_SECRET`
 
+Optional provider OAuth variables for built-in per-user connections:
+
+- `NOTION_CLIENT_ID`
+- `NOTION_CLIENT_SECRET`
+- `FIGMA_CLIENT_ID`
+- `FIGMA_CLIENT_SECRET`
+
 Optional auth variables:
 
 - `NEXTAUTH_URL` for local development only
@@ -117,6 +124,31 @@ Notes:
 - The dashboard automatically provisions a personal context-layer API key for the signed-in user (or the local dev user when auth is disabled) and stores it server-side.
 - Agents can call `POST /api/context/*` only after a user has opened the dashboard once and provisioned a personal key.
 - If you want localhost GitHub login without the redirect proxy flow, create a separate GitHub OAuth app with callback `http://localhost:3000/api/auth/callback/github`.
+
+## Built-in provider OAuth setup
+
+For providers that support per-user OAuth in the admin UI, create a provider OAuth app and set the matching client ID and secret in the environment.
+
+### Notion
+
+1. Create a public or internal integration in Notion.
+2. Add the redirect URI:
+   - `https://<your-host>/api/oauth/notion/callback`
+   - `http://localhost:3000/api/oauth/notion/callback` for local development
+3. Set `NOTION_CLIENT_ID` and `NOTION_CLIENT_SECRET`.
+4. In the dashboard, choose the Notion built-in connector and click **Connect**.
+
+### Figma
+
+1. Create a Figma OAuth app.
+2. Add the redirect URI:
+   - `https://<your-host>/api/oauth/figma/callback`
+   - `http://localhost:3000/api/oauth/figma/callback` for local development
+3. Set `FIGMA_CLIENT_ID` and `FIGMA_CLIENT_SECRET`.
+4. In the dashboard, choose the Figma built-in connector and click **Connect**.
+
+The callback routes store provider access tokens encrypted in the database as per-user integration connections. Agent calls to `/api/context/*` are authorized with the user's personal context-layer API key, which is then used to resolve and inject the correct per-user provider credentials server-side.
+
 
 
 ## Key routes

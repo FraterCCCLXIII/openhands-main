@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 
 import { AdminDashboard } from "@/src/components/admin/admin-dashboard";
 import { auth, isAuthDisabled } from "@/src/lib/auth";
+import { getCurrentUserIdentity } from "@/src/lib/current-user";
 import { getContextLayerService } from "@/src/lib/core/runtime";
 import { getRequestOrigin } from "@/src/lib/request-context";
 
@@ -15,14 +16,10 @@ export default async function AdminPage() {
     redirect("/signin");
   }
 
-  const currentUser = session?.user ?? {
-    name: "Admin User",
-    email: "dev@localhost",
-  };
+  const { user: currentUser, ownerId: contextApiOwner } =
+    await getCurrentUserIdentity();
   const requestHeaders = await headers();
   const service = getContextLayerService();
-  const contextApiOwner =
-    currentUser.email?.trim() || currentUser.name?.trim() || "dev@localhost";
   const [initialIntegrations, initialAccessRequests, initialNotifications, contextApiAuth] =
     await Promise.all([
       service.listIntegrations(),

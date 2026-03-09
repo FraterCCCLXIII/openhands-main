@@ -52,6 +52,7 @@ export interface BuiltInConnectorOption {
   toolCount: number;
   categories: string[];
   authModes: AuthStrategy[];
+  authStrategy: AuthStrategy;
   credentialLabel: string;
   credentialPlaceholder: string;
   credentialHelp: string;
@@ -113,6 +114,49 @@ export interface AgentApiKeyRecord {
   apiKey: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface IntegrationConnectionRecord {
+  ownerId: string;
+  integrationKey: string;
+  provider: string;
+  authStrategy: AuthStrategy;
+  encryptedCredentials: string;
+  tokenType?: string;
+  scopes: string[];
+  expiresAt?: string;
+  externalAccountId?: string;
+  externalWorkspaceId?: string;
+  displayName?: string;
+  metadata: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface IntegrationConnectionStatus {
+  integrationKey: string;
+  provider: string;
+  authStrategy: AuthStrategy;
+  tokenType?: string;
+  scopes: string[];
+  expiresAt?: string;
+  externalAccountId?: string;
+  externalWorkspaceId?: string;
+  displayName?: string;
+  metadata: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface OAuthStateRecord {
+  state: string;
+  ownerId: string;
+  integrationKey: string;
+  provider: string;
+  codeVerifier?: string;
+  redirectTo: string;
+  createdAt: string;
+  expiresAt: string;
 }
 
 export interface AccessDecision {

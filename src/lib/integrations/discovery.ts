@@ -212,7 +212,8 @@ const discoverBuiltInConnectorIntegration = async (
   }
 
   const accessToken = (input.credentials.accessToken as string | undefined)?.trim();
-  if (!accessToken) {
+
+  if (connector.authStrategy !== "oauth2" && !accessToken) {
     throw new ContextLayerError(
       `${connector.credentialLabel} is required to use the ${connector.name} built-in connector.`,
       400,
@@ -226,7 +227,10 @@ const discoverBuiltInConnectorIntegration = async (
       builtInSlug: connector.slug,
       serverUrl: `${baseUrl.replace(/\/$/, "")}${connector.serverPath}`,
     }),
-    credentials: compactRecord({ accessToken }),
+    credentials:
+      connector.authStrategy === "oauth2"
+        ? {}
+        : compactRecord({ accessToken }),
     functions: buildBuiltInConnectorFunctions(connector.slug),
   };
 };

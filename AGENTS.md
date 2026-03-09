@@ -19,10 +19,13 @@ This repository contains a Next.js/TypeScript implementation of an agent context
 - `src/lib/adapters/composio-adapter.ts` uses `@composio/core` for Composio-backed tool execution.
 - `src/lib/adapters/mcp-adapter.ts` uses `@modelcontextprotocol/sdk` to call remote MCP tools.
 - `src/lib/db/postgres-repository.ts` uses Neon with `POSTGRES_URL` or `DATABASE_URL`; `src/lib/db/memory-repository.ts` is the local/test fallback.
+- Built-in Notion and Figma connectors now default to `oauth2`; user-specific provider tokens are stored server-side as per-user integration connection records instead of being embedded in the integration spec.
+- OAuth onboarding uses `/api/oauth/[provider]/start` and `/api/oauth/[provider]/callback`, persists encrypted credentials plus short-lived state records in the repository, and `/api/context/*` resolves the calling user from the personal context-layer API key so the correct per-user OAuth token is injected at invocation time.
+
 - `src/lib/auth.ts` configures Auth.js for GitHub OAuth on the hosted dashboard using the same preview-deployment redirect proxy pattern as `OpenHands/kpi-tracker`; `DISABLE_AUTH=true` bypasses interactive auth for local development.
 - `src/components/admin/admin-dashboard.tsx` is the OpenHands-inspired Tailwind dashboard using TanStack Query + Zustand.
 - `src/components/admin/dashboard-workspace.tsx` now contains the main sidebar-driven dashboard UX with a compact, Vercel-inspired density pass across Home, User Profile, Integrations, and Agent Connection; `src/components/admin/admin-dashboard.tsx` is a thin re-export so the admin page import stays stable.
-- `src/components/admin/integration-wizard.tsx` powers the guided integration onboarding flow: choose a Built-in connector vs MCP, search the curated Vercel-hosted built-in connector list, provide the provider token, discover functions, then review per-function access defaults before saving.
+- `src/components/admin/integration-wizard.tsx` powers the guided integration onboarding flow: choose a Built-in connector vs MCP, search the curated Vercel-hosted built-in connector list, connect OAuth-backed providers or enter manual credentials, discover functions, then review per-function access defaults before saving.
 - `src/lib/integrations/built-in-connectors.ts` defines the curated built-in catalog for GitHub, Figma, Notion, Slack, and Google Docs.
 - `app/api/mcp/*/route.ts` hosts stateless MCP routes that proxy those curated built-ins to provider REST APIs using the caller's bearer token.
 - `app/api/integrations/discover/route.ts` and `src/lib/integrations/discovery.ts` provide server-side function discovery for built-in connectors, Composio toolkits, and remote MCP servers.
