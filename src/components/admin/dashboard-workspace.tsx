@@ -9,7 +9,6 @@ import {
   Copy,
   Eye,
   EyeOff,
-  HelpCircle,
   Home,
   KeyRound,
   PlugZap,
@@ -20,7 +19,7 @@ import {
   Waypoints,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
-import { type ReactNode, useEffect, useMemo, useState } from "react";
+import { type ReactNode, useMemo, useState } from "react";
 
 import { IntegrationWizard } from "@/src/components/admin/integration-wizard";
 import { Badge } from "@/src/components/ui/badge";
@@ -33,12 +32,6 @@ import type {
   IntegrationSpec,
   NotificationRecord,
 } from "@/src/types/context-layer";
-
-const parseCsv = (value: string) =>
-  value
-    .split(",")
-    .map((item) => item.trim())
-    .filter(Boolean);
 
 const fetchJson = async <T,>(
   input: RequestInfo,
@@ -59,13 +52,6 @@ const fetchJson = async <T,>(
 };
 
 type AdminSection = "home" | "profile" | "integrations" | "apiKeys";
-
-interface PolicyFormState {
-  agentClass: string;
-  integrationKey: string;
-  functionNames: string;
-  scopes: string;
-}
 
 interface AdminDashboardProps {
   initialIntegrations: IntegrationSpec[];
@@ -102,14 +88,13 @@ const ADMIN_SECTIONS: Array<{
   },
   {
     id: "apiKeys",
-    label: "Agent API Keys",
+    label: "Agent Connection",
     description: "Reveal, copy, and use the persisted personal key.",
     icon: KeyRound,
   },
 ];
 
-const inputClassName =
-  "h-10 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-input)] px-3 text-sm text-white outline-none transition-colors focus:border-[var(--color-accent)]";
+const OPENHANDS_CONTEXT_KEY_ENV = "$OPENHANDS_CONTEXT_KEY";
 
 const maskApiKey = (apiKey: string, revealed: boolean) => {
   const trimmed = apiKey.trim();
@@ -318,35 +303,6 @@ const ActivityRow = ({
   </div>
 );
 
-const FormField = ({
-  label,
-  hint,
-  tooltip,
-  children,
-}: {
-  label: string;
-  hint?: string;
-  tooltip?: string;
-  children: ReactNode;
-}) => (
-  <label className="grid gap-2 text-sm text-white">
-    <span className="flex items-center gap-2 font-medium">
-      {label}
-      {tooltip ? (
-        <span title={tooltip} className="text-[var(--color-text-base)]">
-          <HelpCircle className="h-4 w-4" />
-        </span>
-      ) : null}
-    </span>
-    {children}
-    {hint ? (
-      <span className="text-xs leading-6 text-[var(--color-text-base)]">
-        {hint}
-      </span>
-    ) : null}
-  </label>
-);
-
 export const DashboardWorkspace = ({
   initialIntegrations,
   initialAccessRequests,
@@ -362,12 +318,6 @@ export const DashboardWorkspace = ({
     initialIntegrations.length === 0,
   );
   const [revealApiKey, setRevealApiKey] = useState(false);
-  const [policyForm, setPolicyForm] = useState<PolicyFormState>({
-    agentClass: "researcher",
-    integrationKey: initialIntegrations[0]?.key ?? "",
-    functionNames: "",
-    scopes: "",
-  });
 
   const integrationsQuery = useQuery({
     queryKey: ["integrations"],
@@ -423,15 +373,6 @@ export const DashboardWorkspace = ({
   const accessRequests = accessRequestsQuery.data ?? [];
   const notifications = notificationsQuery.data ?? [];
 
-  useEffect(() => {
-    if (!policyForm.integrationKey && integrations[0]) {
-      setPolicyForm((current) => ({
-        ...current,
-        integrationKey: integrations[0]?.key ?? "",
-      }));
-    }
-  }, [integrations, policyForm.integrationKey]);
-
   const enabledIntegrationCount = integrations.filter(
     (integration) => integration.enabled,
   ).length;
@@ -458,12 +399,10 @@ export const DashboardWorkspace = ({
     () =>
       buildAgentConnectionGuide({
         baseUrl: contextApiBaseUrl,
-        apiKey:
-          contextApiKey.trim() ||
-          "<open /admin to provision a personal context-layer API key>",
+        apiKey: OPENHANDS_CONTEXT_KEY_ENV,
         integrations,
       }),
-    [contextApiBaseUrl, contextApiKey, integrations],
+    [contextApiBaseUrl, integrations],
   );
 
   const handleCopyApiKey = async () => {
@@ -536,10 +475,10 @@ export const DashboardWorkspace = ({
         <header className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <div className="min-w-0">
             <p className="text-[11px] uppercase tracking-[0.22em] text-[var(--color-text-base)]">
-              {activeSectionMeta.label}
+              OpenHands Context Layer
             </p>
             <h1 className="mt-1 text-2xl font-semibold text-white">
-              Agent Context Layer
+              {activeSectionMeta.label}
             </h1>
             <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--color-text-base)]">
               {activeSectionMeta.description}
@@ -558,17 +497,12 @@ export const DashboardWorkspace = ({
           </div>
         ) : null}
 
-        {contextApiReady ? (
-          <div className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-100">
-            Personal context-layer API key is provisioned for this user. Agents
-            should authenticate with <code className="text-white">Authorization: Bearer ...</code>.
-          </div>
-        ) : (
+        {!contextApiReady ? (
           <div className="rounded-xl border border-amber-400/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-100">
             Open <code className="text-white">/admin</code> once to provision a
             personal key before agents call <code className="text-white">/api/context/*</code>.
           </div>
-        )}
+        ) : null}
 
         {activeSection === "home" ? (
           <section className="space-y-4">
@@ -627,291 +561,121 @@ export const DashboardWorkspace = ({
                   <ChecklistRow
                     title="Copy your key"
                     body="Reveal or copy the personal agent key, then configure your runtime."
-                    action="Open API keys"
+                    action="Open connection"
                     onClick={() => setActiveSection("apiKeys")}
                   />
                 </div>
               </CompactPanel>
             </div>
 
-            <div className="grid gap-4 xl:grid-cols-[minmax(0,1.08fr)_minmax(320px,0.92fr)]">
-              <CompactPanel
-                title="Recent activity"
-                description="Pending approvals and notifications in one compact feed."
-                icon={Bell}
-              >
-                <div className="space-y-4">
-                  <div>
-                    <div className="mb-2 flex items-center justify-between gap-3 px-1">
-                      <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-base)]">
-                        Pending approvals
+            <CompactPanel
+              title="Recent activity"
+              description="Pending approvals and notifications in one compact feed."
+              icon={Bell}
+            >
+              <div className="space-y-4">
+                <div>
+                  <div className="mb-2 flex items-center justify-between gap-3 px-1">
+                    <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-base)]">
+                      Pending approvals
+                    </p>
+                    <Badge tone={pendingAccessRequests.length > 0 ? "warning" : "default"}>
+                      {pendingAccessRequests.length}
+                    </Badge>
+                  </div>
+                  <div className="divide-y divide-[var(--color-border)]">
+                    {pendingAccessRequests.length === 0 ? (
+                      <p className="px-1 py-3 text-sm text-[var(--color-text-base)]">
+                        No pending access requests.
                       </p>
-                      <Badge tone={pendingAccessRequests.length > 0 ? "warning" : "default"}>
-                        {pendingAccessRequests.length}
-                      </Badge>
-                    </div>
-                    <div className="divide-y divide-[var(--color-border)]">
-                      {pendingAccessRequests.length === 0 ? (
-                        <p className="px-1 py-3 text-sm text-[var(--color-text-base)]">
-                          No pending access requests.
-                        </p>
-                      ) : (
-                        pendingAccessRequests.slice(0, 3).map((request) => (
-                          <ActivityRow
-                            key={request.id}
-                            title={
-                              <>
-                                <span>{request.integrationKey}.{request.functionName}</span>
-                                <Badge tone="warning">pending</Badge>
-                              </>
-                            }
-                            detail={`${request.agentId} (${request.agentClass}) requested ${request.scopes.join(", ") || "default scopes"} for ${request.requestedMinutes} minutes.`}
-                            actions={
-                              <>
-                                <Button
-                                  className="h-8 rounded-lg px-3 text-xs"
-                                  onClick={() =>
-                                    actionMutation.mutate({
-                                      url: `/api/access-requests/${request.id}/approve`,
-                                      method: "POST",
-                                      body: {
-                                        approver: currentUser.email ?? "admin",
-                                        durationMinutes: request.requestedMinutes,
-                                      },
-                                    })
-                                  }
-                                >
-                                  Approve
-                                </Button>
-                                <Button
-                                  variant="danger"
-                                  className="h-8 rounded-lg px-3 text-xs"
-                                  onClick={() =>
-                                    actionMutation.mutate({
-                                      url: `/api/access-requests/${request.id}/reject`,
-                                      method: "POST",
-                                      body: {
-                                        approver: currentUser.email ?? "admin",
-                                      },
-                                    })
-                                  }
-                                >
-                                  Reject
-                                </Button>
-                              </>
-                            }
-                          />
-                        ))
-                      )}
-                    </div>
+                    ) : (
+                      pendingAccessRequests.slice(0, 3).map((request) => (
+                        <ActivityRow
+                          key={request.id}
+                          title={
+                            <>
+                              <span>{request.integrationKey}.{request.functionName}</span>
+                              <Badge tone="warning">pending</Badge>
+                            </>
+                          }
+                          detail={`${request.agentId} (${request.agentClass}) requested ${request.scopes.join(", ") || "default scopes"} for ${request.requestedMinutes} minutes.`}
+                          actions={
+                            <>
+                              <Button
+                                className="h-8 rounded-lg px-3 text-xs"
+                                onClick={() =>
+                                  actionMutation.mutate({
+                                    url: `/api/access-requests/${request.id}/approve`,
+                                    method: "POST",
+                                    body: {
+                                      approver: currentUser.email ?? "admin",
+                                      durationMinutes: request.requestedMinutes,
+                                    },
+                                  })
+                                }
+                              >
+                                Approve
+                              </Button>
+                              <Button
+                                variant="danger"
+                                className="h-8 rounded-lg px-3 text-xs"
+                                onClick={() =>
+                                  actionMutation.mutate({
+                                    url: `/api/access-requests/${request.id}/reject`,
+                                    method: "POST",
+                                    body: {
+                                      approver: currentUser.email ?? "admin",
+                                    },
+                                  })
+                                }
+                              >
+                                Reject
+                              </Button>
+                            </>
+                          }
+                        />
+                      ))
+                    )}
                   </div>
+                </div>
 
-                  <div>
-                    <div className="mb-2 flex items-center justify-between gap-3 px-1">
-                      <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-base)]">
-                        Latest notifications
+                <div>
+                  <div className="mb-2 flex items-center justify-between gap-3 px-1">
+                    <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-base)]">
+                      Latest notifications
+                    </p>
+                    <Badge>{notifications.length}</Badge>
+                  </div>
+                  <div className="divide-y divide-[var(--color-border)]">
+                    {notifications.length === 0 ? (
+                      <p className="px-1 py-3 text-sm text-[var(--color-text-base)]">
+                        Notifications will appear here when agents request access.
                       </p>
-                      <Badge>{notifications.length}</Badge>
-                    </div>
-                    <div className="divide-y divide-[var(--color-border)]">
-                      {notifications.length === 0 ? (
-                        <p className="px-1 py-3 text-sm text-[var(--color-text-base)]">
-                          Notifications will appear here when agents request access.
-                        </p>
-                      ) : (
-                        notifications.slice(0, 3).map((notification) => (
-                          <ActivityRow
-                            key={notification.id}
-                            title={
-                              <>
-                                <Badge>{notification.channel}</Badge>
-                                <span>{notification.recipient}</span>
-                              </>
-                            }
-                            detail={
-                              <>
-                                <span className="block text-sm text-white">
-                                  {notification.subject}
-                                </span>
-                                <span>{notification.body}</span>
-                              </>
-                            }
-                          />
-                        ))
-                      )}
-                    </div>
+                    ) : (
+                      notifications.slice(0, 3).map((notification) => (
+                        <ActivityRow
+                          key={notification.id}
+                          title={
+                            <>
+                              <Badge>{notification.channel}</Badge>
+                              <span>{notification.recipient}</span>
+                            </>
+                          }
+                          detail={
+                            <>
+                              <span className="block text-sm text-white">
+                                {notification.subject}
+                              </span>
+                              <span>{notification.body}</span>
+                            </>
+                          }
+                        />
+                      ))
+                    )}
                   </div>
                 </div>
-              </CompactPanel>
-
-              <CompactPanel
-                title="Connection details"
-                description="Hand these values to your agent runtime."
-                icon={ShieldCheck}
-              >
-                <div className="divide-y divide-[var(--color-border)]">
-                  <KeyValueRow
-                    label="Unified endpoint"
-                    value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.endpoint}</code>}
-                  />
-                  <KeyValueRow
-                    label="Auth"
-                    value="Authorization: Bearer <personal-api-key>"
-                  />
-                  <KeyValueRow
-                    label="Agent class"
-                    value="Use a stable value such as researcher, designer, or support-bot."
-                  />
-                </div>
-                <div className="mt-4 overflow-hidden rounded-xl border border-[var(--color-border)] bg-black/20">
-                  <div className="border-b border-[var(--color-border)] px-3 py-2 text-xs uppercase tracking-[0.18em] text-[var(--color-text-base)]">
-                    Fetch example
-                  </div>
-                  <pre className="overflow-x-auto whitespace-pre-wrap px-3 py-3 text-xs leading-6 text-[var(--color-text-base)]">
-                    {agentConnectionGuide.fetchExample}
-                  </pre>
-                </div>
-              </CompactPanel>
-            </div>
-
-            <div className="grid gap-4 xl:grid-cols-[minmax(320px,0.78fr)_minmax(0,1.22fr)]">
-              <CompactPanel
-                title="Agent onboarding"
-                description="A compact checklist instead of large step cards."
-                icon={CheckCircle2}
-              >
-                <div className="divide-y divide-[var(--color-border)]">
-                  <ActivityRow
-                    title="1. Choose a stable agentClass"
-                    detail="Reusable labels such as researcher or support-bot keep your saved policies easy to reuse."
-                  />
-                  <ActivityRow
-                    title="2. Save an allowlist"
-                    detail="Map an integration, allowed functions, and default scopes in the policy form next to this checklist."
-                  />
-                  <ActivityRow
-                    title="3. Call the unified endpoint"
-                    detail={
-                      <>
-                        Send <code className="text-white">agentId</code>, <code className="text-white">agentClass</code>, optional <code className="text-white">scopes</code>, and the payload to <code className="text-white">{agentConnectionGuide.endpoint}</code>. Authenticate with the persisted personal key.
-                      </>
-                    }
-                  />
-                </div>
-              </CompactPanel>
-
-              <CompactPanel
-                title="Save an agent policy"
-                description="Create the allowlist an agent class uses when it invokes the context layer."
-                icon={ShieldCheck}
-              >
-                {integrations.length === 0 ? (
-                  <div className="rounded-xl border border-dashed border-[var(--color-border)] px-3 py-4 text-sm text-[var(--color-text-base)]">
-                    Create an integration first, then come back here to map it to an agent class.
-                  </div>
-                ) : null}
-                <form
-                  className="grid gap-3 md:grid-cols-2"
-                  onSubmit={(event) => {
-                    event.preventDefault();
-                    actionMutation.mutate({
-                      url: `/api/agent-classes/${policyForm.agentClass}`,
-                      method: "PUT",
-                      body: {
-                        rules: [
-                          {
-                            integrationKey: policyForm.integrationKey,
-                            functionNames: parseCsv(policyForm.functionNames),
-                            scopes: parseCsv(policyForm.scopes),
-                            enabled: true,
-                          },
-                        ],
-                      },
-                    });
-                  }}
-                >
-                  <FormField
-                    label="Agent class"
-                    hint="Use the same string your agent passes in the request body."
-                    tooltip="Example: researcher"
-                  >
-                    <input
-                      className={inputClassName}
-                      placeholder="researcher"
-                      value={policyForm.agentClass}
-                      onChange={(event) =>
-                        setPolicyForm({
-                          ...policyForm,
-                          agentClass: event.target.value,
-                        })
-                      }
-                    />
-                  </FormField>
-
-                  <FormField label="Integration" hint="The connector this class may use.">
-                    <select
-                      className={inputClassName}
-                      value={policyForm.integrationKey}
-                      onChange={(event) =>
-                        setPolicyForm({
-                          ...policyForm,
-                          integrationKey: event.target.value,
-                        })
-                      }
-                    >
-                      <option value="">Select integration</option>
-                      {integrations.map((integration) => (
-                        <option key={integration.key} value={integration.key}>
-                          {integration.name}
-                        </option>
-                      ))}
-                    </select>
-                  </FormField>
-
-                  <FormField
-                    label="Allowed functions"
-                    hint="Comma-separated function names."
-                    tooltip="Example: list_pages, search_files"
-                  >
-                    <input
-                      className={inputClassName}
-                      placeholder="list_pages"
-                      value={policyForm.functionNames}
-                      onChange={(event) =>
-                        setPolicyForm({
-                          ...policyForm,
-                          functionNames: event.target.value,
-                        })
-                      }
-                    />
-                  </FormField>
-
-                  <FormField
-                    label="Allowed scopes"
-                    hint="Comma-separated scopes the class may request by default."
-                    tooltip="Example: pages.read, files.read"
-                  >
-                    <input
-                      className={inputClassName}
-                      placeholder="pages.read"
-                      value={policyForm.scopes}
-                      onChange={(event) =>
-                        setPolicyForm({
-                          ...policyForm,
-                          scopes: event.target.value,
-                        })
-                      }
-                    />
-                  </FormField>
-
-                  <div className="flex justify-end md:col-span-2">
-                    <Button type="submit" className="h-9 rounded-lg px-4 text-xs">
-                      Save policy
-                    </Button>
-                  </div>
-                </form>
-              </CompactPanel>
-            </div>
+              </div>
+            </CompactPanel>
           </section>
         ) : null}
 
@@ -962,15 +726,12 @@ export const DashboardWorkspace = ({
 
         {activeSection === "integrations" ? (
           <section className="space-y-4">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-sm text-[var(--color-text-base)]">
-                Review current integrations in a denser list view and expand the wizard only when you need to add one.
-              </p>
+            <div className="flex justify-start">
               <Button
-                className="h-9 self-start rounded-lg px-4 text-xs"
-                onClick={() => setShowIntegrationWizard((current) => !current)}
+                className="h-9 rounded-lg px-4 text-xs"
+                onClick={() => setShowIntegrationWizard(true)}
               >
-                {showIntegrationWizard ? "Hide add integration" : "Add new integration"}
+                Add new integration
               </Button>
             </div>
 
@@ -1098,7 +859,7 @@ export const DashboardWorkspace = ({
         ) : null}
 
         {activeSection === "apiKeys" ? (
-          <section className="grid gap-4 xl:grid-cols-[minmax(0,0.95fr)_minmax(320px,1.05fr)]">
+          <section className="space-y-4">
             <CompactPanel
               title="Personal context-layer key"
               description="Masked by default, with compact reveal and copy controls."
@@ -1156,7 +917,7 @@ export const DashboardWorkspace = ({
                   label="Auth header"
                   value={
                     <code className="break-all text-xs text-[var(--color-text-active)]">
-                      Authorization: Bearer {contextApiReady ? contextApiKey : "<personal-api-key>"}
+                      Authorization: Bearer {OPENHANDS_CONTEXT_KEY_ENV}
                     </code>
                   }
                 />

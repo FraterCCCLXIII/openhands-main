@@ -20,7 +20,7 @@ export default async function HomePage() {
           </div>
           <div className="max-w-3xl space-y-5">
             <h1 className="text-5xl font-bold tracking-tight text-white">
-              Agent Context Layer
+              OpenHands Context Layer
             </h1>
             <p className="text-lg leading-8 text-[var(--color-text-base)]">
               A unified endpoint and admin workspace for AI agents to access APIs and MCP tools with agent-class policies, temporary approvals, and Vercel-native persistence.

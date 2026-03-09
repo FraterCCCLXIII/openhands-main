@@ -4,7 +4,7 @@ import "./globals.css";
 import { Providers } from "@/src/components/providers";
 
 export const metadata: Metadata = {
-  title: "Agent Context Layer",
+  title: "OpenHands Context Layer",
   description: "A Vercel-native context layer for AI agents with Composio, MCP, approvals, and scoped permissions.",
 };
 
