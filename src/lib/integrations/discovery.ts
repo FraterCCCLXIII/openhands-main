@@ -5,6 +5,7 @@ import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/
 import { ContextLayerError } from "@/src/lib/core/errors";
 import type {
   AuthStrategy,
+  BuiltInConnectorOption,
   FunctionSpec,
   IntegrationKind,
   IntegrationProvider,
@@ -39,31 +40,75 @@ const compactRecord = (record: Record<string, unknown>) =>
     }),
   );
 
-const normalizeComposioAuthStrategy = (modes: string[] = []): AuthStrategy => {
-  const normalized = modes.map((mode) => mode.toLowerCase());
+const normalizeComposioAuthStrategy = (modes: string[] = []): AuthStrategy =>
+  normalizeComposioAuthModes(modes)[0] ?? "oauth2";
+
+function uniqueValues<T>(values: T[]) {
+  return [...new Set(values)];
+}
+
+export function normalizeComposioAuthModes(
+  modes: string[] = [],
+  includesNoAuth = false,
+): AuthStrategy[] {
+  const normalized = uniqueValues(modes.map((mode) => mode.toLowerCase()));
+  const authModes: AuthStrategy[] = [];
 
   if (normalized.some((mode) => mode.includes("oauth"))) {
-    return "oauth2";
+    authModes.push("oauth2");
   }
 
   if (normalized.includes("api_key")) {
-    return "api_key";
+    authModes.push("api_key");
   }
 
   if (normalized.includes("bearer_token")) {
-    return "bearer";
+    authModes.push("bearer");
   }
 
   if (normalized.some((mode) => mode.startsWith("basic"))) {
-    return "basic";
+    authModes.push("basic");
   }
 
-  if (normalized.includes("no_auth")) {
-    return "none";
+  if (includesNoAuth || normalized.includes("no_auth")) {
+    authModes.push("none");
   }
 
-  return "oauth2";
-};
+  return authModes.length > 0 ? authModes : ["oauth2"];
+}
+
+export const buildBuiltInConnectorOption = (toolkit: {
+  slug: string;
+  name: string;
+  meta: {
+    description?: string;
+    logo?: string;
+    appUrl?: string;
+    toolsCount?: number;
+    categories?: Array<{ slug: string; name: string }>;
+  };
+  authSchemes?: string[];
+  composioManagedAuthSchemes?: string[];
+  noAuth?: boolean;
+}): BuiltInConnectorOption => ({
+  slug: toolkit.slug,
+  name: toolkit.name,
+  description: toolkit.meta.description ?? "",
+  logoUrl: toolkit.meta.logo,
+  appUrl: toolkit.meta.appUrl,
+  toolCount: toolkit.meta.toolsCount ?? 0,
+  categories: uniqueValues(
+    (toolkit.meta.categories ?? []).map((category) => category.name),
+  ),
+  authModes: normalizeComposioAuthModes(
+    [
+      ...(toolkit.authSchemes ?? []),
+      ...(toolkit.composioManagedAuthSchemes ?? []),
+    ],
+    toolkit.noAuth ?? false,
+  ),
+});
+
 
 export const inferMcpAuthStrategy = (
   credentials: Record<string, unknown>,
@@ -149,20 +194,40 @@ export interface IntegrationDiscoveryResult {
   functions: Record<string, FunctionSpec>;
 }
 
-const discoverComposioIntegration = async (
-  input: IntegrationDiscoveryInput,
-): Promise<IntegrationDiscoveryResult> => {
+const getComposioClient = () => {
   const apiKey = process.env.COMPOSIO_API_KEY;
   if (!apiKey) {
     throw new ContextLayerError(
-      "COMPOSIO_API_KEY is required to discover API integrations.",
+      "COMPOSIO_API_KEY is required to use Composio-backed built-in connectors.",
       500,
     );
   }
 
+  return new Composio({ apiKey });
+};
+
+export const listBuiltInConnectors = async (): Promise<
+  BuiltInConnectorOption[]
+> => {
+  const composio = getComposioClient();
+  const toolkits = await composio.toolkits.get({
+    limit: 500,
+    managedBy: "composio",
+    sortBy: "alphabetically",
+  });
+
+  return toolkits
+    .filter((toolkit) => !toolkit.isLocalToolkit)
+    .map(buildBuiltInConnectorOption)
+    .sort((left, right) => left.name.localeCompare(right.name));
+};
+
+const discoverComposioIntegration = async (
+  input: IntegrationDiscoveryInput,
+): Promise<IntegrationDiscoveryResult> => {
   const toolkitSlug =
     (input.config.toolkitSlug as string | undefined)?.trim() || input.key;
-  const composio = new Composio({ apiKey });
+  const composio = getComposioClient();
   const [toolkit, tools] = await Promise.all([
     composio.toolkits.get(toolkitSlug),
     composio.tools.getRawComposioTools({ toolkits: [toolkitSlug], limit: 200 }),

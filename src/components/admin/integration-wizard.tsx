@@ -1,11 +1,12 @@
 "use client";
 
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   CheckCircle2,
   ChevronRight,
   KeyRound,
   PlugZap,
+  Search,
   Waypoints,
 } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -16,6 +17,7 @@ import { Card } from "@/src/components/ui/card";
 import { cn } from "@/src/lib/utils";
 import type {
   AuthStrategy,
+  BuiltInConnectorOption,
   FunctionAccessMode,
   FunctionSpec,
 } from "@/src/types/context-layer";
@@ -63,6 +65,9 @@ const INITIAL_DRAFT: WizardDraft = {
   username: "",
   password: "",
 };
+
+const inputClassName =
+  "rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-input)] px-4 py-3 text-white outline-none transition-colors focus:border-[var(--color-accent)]";
 
 const fetchJson = async <T,>(
   input: RequestInfo,
@@ -112,17 +117,41 @@ const accessModeLabel = (mode: FunctionAccessMode) => {
   }
 };
 
+const connectorMatchesSearch = (
+  connector: BuiltInConnectorOption,
+  search: string,
+) => {
+  const normalizedSearch = search.trim().toLowerCase();
+  if (!normalizedSearch) {
+    return true;
+  }
+
+  return [
+    connector.name,
+    connector.slug,
+    connector.description,
+    ...connector.categories,
+  ]
+    .join(" ")
+    .toLowerCase()
+    .includes(normalizedSearch);
+};
+
 const buildDiscoverPayload = (draft: WizardDraft) => {
   if (!draft.kind) {
-    throw new Error("Select API or MCP first.");
+    throw new Error("Select Built-in connector or MCP first.");
   }
 
   if (draft.kind === "api") {
+    if (!draft.toolkitSlug.trim()) {
+      throw new Error("Choose a built-in connector first.");
+    }
+
     return {
       key: draft.key.trim(),
       kind: draft.kind,
       config: {
-        toolkitSlug: draft.toolkitSlug.trim() || draft.key.trim(),
+        toolkitSlug: draft.toolkitSlug.trim(),
       },
       credentials: {
         connectedAccountId: draft.connectedAccountId.trim(),
@@ -152,7 +181,7 @@ const buildCreatePayload = (
   functionModes: Record<string, FunctionAccessMode>,
 ) => {
   if (!draft.kind) {
-    throw new Error("Select API or MCP first.");
+    throw new Error("Select Built-in connector or MCP first.");
   }
 
   return {
@@ -226,6 +255,30 @@ export const IntegrationWizard = ({
   const [functionModes, setFunctionModes] = useState<
     Record<string, FunctionAccessMode>
   >({});
+  const [connectorSearch, setConnectorSearch] = useState("");
+
+  const builtInConnectorsQuery = useQuery({
+    queryKey: ["built-in-connectors"],
+    queryFn: () =>
+      fetchJson<BuiltInConnectorOption[]>("/api/integrations/built-in-connectors"),
+    enabled: draft.kind === "api" && step === 2,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const selectedConnector = useMemo(
+    () =>
+      (builtInConnectorsQuery.data ?? []).find(
+        (connector) => connector.slug === draft.toolkitSlug,
+      ) ?? null,
+    [builtInConnectorsQuery.data, draft.toolkitSlug],
+  );
+
+  const filteredConnectors = useMemo(() => {
+    const connectors = builtInConnectorsQuery.data ?? [];
+    return connectors
+      .filter((connector) => connectorMatchesSearch(connector, connectorSearch))
+      .slice(0, 8);
+  }, [builtInConnectorsQuery.data, connectorSearch]);
 
   const discoverMutation = useMutation({
     mutationFn: async () =>
@@ -275,6 +328,7 @@ export const IntegrationWizard = ({
       setDraft(INITIAL_DRAFT);
       setDiscovery(null);
       setFunctionModes({});
+      setConnectorSearch("");
       setStep(1);
     },
     onError: (error: Error) => {
@@ -291,7 +345,18 @@ export const IntegrationWizard = ({
     !!draft.kind &&
     !!draft.key.trim() &&
     !!draft.name.trim() &&
-    (draft.kind === "api" ? true : !!draft.serverUrl.trim());
+    (draft.kind === "api" ? !!draft.toolkitSlug.trim() : !!draft.serverUrl.trim());
+
+  const handleConnectorSelect = (connector: BuiltInConnectorOption) => {
+    setDraft((current) => ({
+      ...current,
+      toolkitSlug: connector.slug,
+      key: connector.slug,
+      name: connector.name,
+    }));
+    setConnectorSearch(connector.name);
+    onStatus(null);
+  };
 
   return (
     <Card className="p-6">
@@ -324,9 +389,9 @@ export const IntegrationWizard = ({
           </h2>
         </div>
         <p className="text-sm leading-7 text-[var(--color-text-base)]">
-          Choose API or MCP first, let the dashboard discover the available
-          functions, then keep each function enabled, disable it, or mark it as
-          case-by-case approval.
+          Choose a Built-in connector or MCP server, let the dashboard discover
+          the available functions, then keep each function enabled, disable it,
+          or mark it as case-by-case approval.
         </p>
       </div>
 
@@ -335,8 +400,8 @@ export const IntegrationWizard = ({
           {[
             {
               kind: "api" as const,
-              title: "API connector",
-              body: "Uses Composio to discover a toolkit and auto-detect whether it is OAuth, API-key, bearer, basic, or no-auth.",
+              title: "Built-in connector",
+              body: "Pick from the Composio-supported connectors, then let the dashboard auto-fill the basics and discover the available functions.",
               icon: KeyRound,
             },
             {
@@ -356,8 +421,12 @@ export const IntegrationWizard = ({
                   : "border-[var(--color-border)] bg-black/10 hover:bg-white/5",
               )}
               onClick={() => {
-                setDraft((current) => ({ ...current, kind: option.kind }));
+                setDraft({ ...INITIAL_DRAFT, kind: option.kind });
+                setDiscovery(null);
+                setFunctionModes({});
+                setConnectorSearch("");
                 setStep(2);
+                onStatus(null);
               }}
             >
               <option.icon className="mb-4 h-6 w-6 text-[var(--color-accent)]" />
@@ -373,58 +442,154 @@ export const IntegrationWizard = ({
       {step === 2 ? (
         <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
           <div className="grid gap-4">
-            <label className="grid gap-2 text-sm text-white">
-              <span className="font-medium">Integration key</span>
-              <input
-                className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-input)] px-4 py-3 text-white"
-                placeholder={draft.kind === "api" ? "notion" : "figma-mcp"}
-                value={draft.key}
-                onChange={(event) =>
-                  setDraft((current) => ({
-                    ...current,
-                    key: event.target.value,
-                  }))
-                }
-              />
-            </label>
-
-            <label className="grid gap-2 text-sm text-white">
-              <span className="font-medium">Display name</span>
-              <input
-                className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-input)] px-4 py-3 text-white"
-                placeholder={draft.kind === "api" ? "Notion" : "Figma MCP"}
-                value={draft.name}
-                onChange={(event) =>
-                  setDraft((current) => ({
-                    ...current,
-                    name: event.target.value,
-                  }))
-                }
-              />
-            </label>
-
             {draft.kind === "api" ? (
               <>
                 <label className="grid gap-2 text-sm text-white">
-                  <span className="font-medium">Toolkit slug</span>
-                  <input
-                    className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-input)] px-4 py-3 text-white"
-                    placeholder="Defaults to the integration key"
-                    value={draft.toolkitSlug}
-                    onChange={(event) =>
-                      setDraft((current) => ({
-                        ...current,
-                        toolkitSlug: event.target.value,
-                      }))
-                    }
-                  />
+                  <span className="font-medium">Built-in connector</span>
+                  <div className="relative">
+                    <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-text-base)]" />
+                    <input
+                      className={cn(inputClassName, "w-full pl-11")}
+                      placeholder={
+                        builtInConnectorsQuery.isPending
+                          ? "Loading supported connectors..."
+                          : "Search GitHub, Notion, Slack..."
+                      }
+                      value={connectorSearch}
+                      onChange={(event) => setConnectorSearch(event.target.value)}
+                      disabled={builtInConnectorsQuery.isPending}
+                    />
+                  </div>
+                  <span className="text-xs leading-6 text-[var(--color-text-base)]">
+                    Choose from the connectors supported through Composio. Selecting
+                    one auto-fills the key and display name below.
+                  </span>
                 </label>
+
+                <div className="overflow-hidden rounded-2xl border border-[var(--color-border)] bg-black/10">
+                  {builtInConnectorsQuery.isPending ? (
+                    <p className="px-4 py-4 text-sm text-[var(--color-text-base)]">
+                      Loading supported connectors...
+                    </p>
+                  ) : builtInConnectorsQuery.isError ? (
+                    <p className="px-4 py-4 text-sm text-amber-200">
+                      {(builtInConnectorsQuery.error as Error).message}
+                    </p>
+                  ) : filteredConnectors.length === 0 ? (
+                    <p className="px-4 py-4 text-sm text-[var(--color-text-base)]">
+                      No supported connectors match that search.
+                    </p>
+                  ) : (
+                    filteredConnectors.map((connector, index) => (
+                      <button
+                        key={connector.slug}
+                        type="button"
+                        className={cn(
+                          "flex w-full flex-col gap-2 px-4 py-4 text-left transition-colors hover:bg-white/5",
+                          index > 0 && "border-t border-[var(--color-border)]",
+                          connector.slug === draft.toolkitSlug &&
+                            "bg-[var(--color-bg-active)]",
+                        )}
+                        onClick={() => handleConnectorSelect(connector)}
+                      >
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="font-medium text-white">
+                            {connector.name}
+                          </span>
+                          <Badge>{connector.slug}</Badge>
+                          {connector.toolCount > 0 ? (
+                            <Badge>{connector.toolCount} tools</Badge>
+                          ) : null}
+                          {connector.authModes.map((mode) => (
+                            <Badge key={`${connector.slug}-${mode}`}>
+                              {authStrategyLabel(mode)}
+                            </Badge>
+                          ))}
+                        </div>
+                        {connector.description ? (
+                          <p className="text-sm leading-6 text-[var(--color-text-base)]">
+                            {connector.description}
+                          </p>
+                        ) : null}
+                        {connector.categories.length > 0 ? (
+                          <p className="text-xs text-[var(--color-text-base)]">
+                            {connector.categories.join(" • ")}
+                          </p>
+                        ) : null}
+                      </button>
+                    ))
+                  )}
+                </div>
+
+                {selectedConnector ? (
+                  <div className="rounded-2xl border border-[var(--color-border)] bg-black/10 p-4 text-sm text-[var(--color-text-base)]">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="font-semibold text-white">
+                        {selectedConnector.name}
+                      </p>
+                      <Badge>{selectedConnector.slug}</Badge>
+                    </div>
+                    <p className="mt-2 leading-7">
+                      {selectedConnector.description ||
+                        "This supported connector is ready to discover through Composio."}
+                    </p>
+                    {selectedConnector.appUrl ? (
+                      <a
+                        href={selectedConnector.appUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="mt-3 inline-flex text-xs text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
+                      >
+                        Open connector site
+                      </a>
+                    ) : null}
+                  </div>
+                ) : null}
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  <label className="grid gap-2 text-sm text-white">
+                    <span className="font-medium">Integration key</span>
+                    <input
+                      className={inputClassName}
+                      placeholder="github"
+                      value={draft.key}
+                      onChange={(event) =>
+                        setDraft((current) => ({
+                          ...current,
+                          key: event.target.value,
+                        }))
+                      }
+                      disabled={!draft.toolkitSlug.trim()}
+                    />
+                    <span className="text-xs leading-6 text-[var(--color-text-base)]">
+                      Edit this if you want more than one saved connection for the
+                      same built-in connector.
+                    </span>
+                  </label>
+
+                  <label className="grid gap-2 text-sm text-white">
+                    <span className="font-medium">Display name</span>
+                    <input
+                      className={inputClassName}
+                      placeholder="GitHub"
+                      value={draft.name}
+                      onChange={(event) =>
+                        setDraft((current) => ({
+                          ...current,
+                          name: event.target.value,
+                        }))
+                      }
+                      disabled={!draft.toolkitSlug.trim()}
+                    />
+                  </label>
+                </div>
+
                 <label className="grid gap-2 text-sm text-white">
                   <span className="font-medium">
                     Connected account ID (optional)
                   </span>
                   <input
-                    className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-input)] px-4 py-3 text-white"
+                    className={inputClassName}
                     placeholder="acct_..."
                     value={draft.connectedAccountId}
                     onChange={(event) =>
@@ -433,15 +598,50 @@ export const IntegrationWizard = ({
                         connectedAccountId: event.target.value,
                       }))
                     }
+                    disabled={!draft.toolkitSlug.trim()}
                   />
+                  <span className="text-xs leading-6 text-[var(--color-text-base)]">
+                    If you already have a specific Composio connected account for
+                    this connector, enter it here; otherwise leave it blank.
+                  </span>
                 </label>
               </>
             ) : (
               <>
                 <label className="grid gap-2 text-sm text-white">
+                  <span className="font-medium">Integration key</span>
+                  <input
+                    className={inputClassName}
+                    placeholder="figma-mcp"
+                    value={draft.key}
+                    onChange={(event) =>
+                      setDraft((current) => ({
+                        ...current,
+                        key: event.target.value,
+                      }))
+                    }
+                  />
+                </label>
+
+                <label className="grid gap-2 text-sm text-white">
+                  <span className="font-medium">Display name</span>
+                  <input
+                    className={inputClassName}
+                    placeholder="Figma MCP"
+                    value={draft.name}
+                    onChange={(event) =>
+                      setDraft((current) => ({
+                        ...current,
+                        name: event.target.value,
+                      }))
+                    }
+                  />
+                </label>
+
+                <label className="grid gap-2 text-sm text-white">
                   <span className="font-medium">Server URL</span>
                   <input
-                    className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-input)] px-4 py-3 text-white"
+                    className={inputClassName}
                     placeholder="https://mcp.example.com"
                     value={draft.serverUrl}
                     onChange={(event) =>
@@ -461,7 +661,7 @@ export const IntegrationWizard = ({
                   <label className="grid gap-2 text-sm text-white">
                     <span className="font-medium">Access token (optional)</span>
                     <input
-                      className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-input)] px-4 py-3 text-white"
+                      className={inputClassName}
                       placeholder="OAuth or bearer token"
                       value={draft.accessToken}
                       onChange={(event) =>
@@ -478,7 +678,7 @@ export const IntegrationWizard = ({
                   <label className="grid gap-2 text-sm text-white">
                     <span className="font-medium">API key (optional)</span>
                     <input
-                      className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-input)] px-4 py-3 text-white"
+                      className={inputClassName}
                       placeholder="Secret used with a header"
                       value={draft.apiKey}
                       onChange={(event) =>
@@ -492,7 +692,7 @@ export const IntegrationWizard = ({
                   <label className="grid gap-2 text-sm text-white">
                     <span className="font-medium">API key header name</span>
                     <input
-                      className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-input)] px-4 py-3 text-white"
+                      className={inputClassName}
                       placeholder="X-API-Key"
                       value={draft.headerName}
                       onChange={(event) =>
@@ -507,7 +707,7 @@ export const IntegrationWizard = ({
                     <label className="grid gap-2 text-sm text-white">
                       <span className="font-medium">Username (optional)</span>
                       <input
-                        className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-input)] px-4 py-3 text-white"
+                        className={inputClassName}
                         placeholder="demo"
                         value={draft.username}
                         onChange={(event) =>
@@ -522,7 +722,7 @@ export const IntegrationWizard = ({
                       <span className="font-medium">Password (optional)</span>
                       <input
                         type="password"
-                        className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-input)] px-4 py-3 text-white"
+                        className={inputClassName}
                         placeholder="secret"
                         value={draft.password}
                         onChange={(event) =>
@@ -565,15 +765,16 @@ export const IntegrationWizard = ({
             {draft.kind === "api" ? (
               <ul className="mt-3 space-y-2">
                 <li>
-                  • The dashboard queries the Composio toolkit that matches your
-                  integration key or toolkit slug.
+                  • The dashboard loads the Composio-supported built-in connectors
+                  so you can search and pick one instead of typing a toolkit slug.
                 </li>
                 <li>
-                  • It auto-detects the auth scheme from toolkit metadata.
+                  • Choosing a connector auto-fills the integration key and display
+                  name, while still letting you customize them if needed.
                 </li>
                 <li>
-                  • It pulls the available API functions so you can review them
-                  before saving.
+                  • It auto-detects the auth scheme from Composio metadata and
+                  pulls the available functions for review before saving.
                 </li>
               </ul>
             ) : (
@@ -604,7 +805,7 @@ export const IntegrationWizard = ({
       {step === 3 && discovery ? (
         <div className="space-y-6">
           <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-[var(--color-border)] bg-black/10 p-4 text-sm text-[var(--color-text-base)]">
-            <Badge>{draft.kind === "api" ? "API" : "MCP"}</Badge>
+            <Badge>{draft.kind === "api" ? "Built-in" : "MCP"}</Badge>
             <Badge>{discovery.provider}</Badge>
             <Badge>{authStrategyLabel(discovery.authStrategy)}</Badge>
             <span>
@@ -616,7 +817,7 @@ export const IntegrationWizard = ({
           {reviewedFunctions.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-[var(--color-border)] bg-black/10 p-5 text-sm text-[var(--color-text-base)]">
               No functions were discovered for this connector. Go back and
-              confirm the toolkit slug or MCP server URL.
+              confirm the selected built-in connector or MCP server URL.
             </div>
           ) : (
             <div className="grid gap-3">

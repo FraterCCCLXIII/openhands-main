@@ -43,6 +43,17 @@ export interface IntegrationSpec {
   functions: Record<string, FunctionSpec>;
 }
 
+export interface BuiltInConnectorOption {
+  slug: string;
+  name: string;
+  description: string;
+  logoUrl?: string;
+  appUrl?: string;
+  toolCount: number;
+  categories: string[];
+  authModes: AuthStrategy[];
+}
+
 export interface PolicyRule {
   integrationKey: string;
   functionNames: string[];

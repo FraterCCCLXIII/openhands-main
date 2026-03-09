@@ -554,7 +554,7 @@ export const DashboardWorkspace = ({
                   />
                   <ChecklistRow
                     title="Add an integration"
-                    body="Create an API or MCP connector and review its callable functions."
+                    body="Create a Built-in or MCP connector and review its callable functions."
                     action="Open integrations"
                     onClick={() => setActiveSection("integrations")}
                   />
