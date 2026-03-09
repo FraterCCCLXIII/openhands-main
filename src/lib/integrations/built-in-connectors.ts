@@ -1,3 +1,4 @@
+import { isOAuthProviderConfigured } from "@/src/lib/oauth/providers";
 import type {
   AuthStrategy,
   BuiltInConnectorOption,
@@ -200,6 +201,10 @@ export const getBuiltInConnectorDefinition = (slug: string) =>
 export const listBuiltInConnectors = (): BuiltInConnectorOption[] =>
   builtInConnectorDefinitions.map(({ functions, serverPath: _serverPath, ...connector }) => ({
     ...connector,
+    oauthConfigured:
+      connector.authStrategy === "oauth2"
+        ? isOAuthProviderConfigured(connector.slug)
+        : true,
     toolCount: functions.length,
   }));
 

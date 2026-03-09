@@ -348,4 +348,16 @@ export const listOAuthProviders = () => Object.values(oauthProviders);
 
 export const getOAuthProvider = (provider: string) => oauthProviders[provider] ?? null;
 
+export const isOAuthProviderConfigured = (provider: string) => {
+  const definition = getOAuthProvider(provider);
+  if (!definition) {
+    return false;
+  }
+
+  return Boolean(
+    process.env[definition.clientIdEnv]?.trim() &&
+      process.env[definition.clientSecretEnv]?.trim(),
+  );
+};
+
 export const createOAuthStateExpiry = () => addMinutes(nowIso(), 10);

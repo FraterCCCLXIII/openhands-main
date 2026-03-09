@@ -53,6 +53,7 @@ export interface BuiltInConnectorOption {
   categories: string[];
   authModes: AuthStrategy[];
   authStrategy: AuthStrategy;
+  oauthConfigured?: boolean;
   credentialLabel: string;
   credentialPlaceholder: string;
   credentialHelp: string;

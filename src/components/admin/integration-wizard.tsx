@@ -394,6 +394,8 @@ export const IntegrationWizard = ({
   );
 
   const requiresOAuthConnection = selectedConnector?.authStrategy === "oauth2";
+  const oauthConnectionEnabled =
+    !requiresOAuthConnection || selectedConnector?.oauthConfigured !== false;
 
   const canDiscover =
     !!draft.kind &&
@@ -401,7 +403,9 @@ export const IntegrationWizard = ({
     !!draft.name.trim() &&
     (draft.kind === "built_in"
       ? !!draft.builtInSlug.trim() &&
-        (requiresOAuthConnection ? !!selectedConnection : !!draft.accessToken.trim())
+        (requiresOAuthConnection
+          ? oauthConnectionEnabled && !!selectedConnection
+          : !!draft.accessToken.trim())
       : !!draft.serverUrl.trim());
 
   const handleConnectorSelect = (connector: BuiltInConnectorOption) => {
@@ -583,9 +587,11 @@ export const IntegrationWizard = ({
                                 : `Connect your ${selectedConnector.name} account`}
                             </p>
                             <p className="mt-1 text-xs leading-6 text-[var(--color-text-base)]">
-                              {selectedConnection
-                                ? `This ${selectedConnector.name} token is stored per user in the database and will be injected automatically for agent calls.`
-                                : selectedConnector.credentialHelp}
+                              {!oauthConnectionEnabled
+                                ? `${selectedConnector.name} OAuth is not configured on this deployment yet. Add the required client ID and secret first.`
+                                : selectedConnection
+                                  ? `This ${selectedConnector.name} token is stored per user in the database and will be injected automatically for agent calls.`
+                                  : selectedConnector.credentialHelp}
                             </p>
                             {selectedConnection?.expiresAt ? (
                               <p className="mt-1 text-xs leading-6 text-[var(--color-text-base)]">
@@ -595,7 +601,7 @@ export const IntegrationWizard = ({
                           </div>
                           <Button
                             className="h-9 rounded-lg px-4 text-xs"
-                            disabled={!draft.builtInSlug.trim()}
+                            disabled={!draft.builtInSlug.trim() || !oauthConnectionEnabled}
                             onClick={() => {
                               window.location.href = `/api/oauth/${selectedConnector.slug}/start?integrationKey=${encodeURIComponent(
                                 draft.key.trim() || selectedConnector.slug,
@@ -604,7 +610,11 @@ export const IntegrationWizard = ({
                               )}`;
                             }}
                           >
-                            {selectedConnection ? "Reconnect" : "Connect"}
+                            {!oauthConnectionEnabled
+                              ? "OAuth not configured"
+                              : selectedConnection
+                                ? "Reconnect"
+                                : "Connect"}
                           </Button>
                         </div>
                       </div>
@@ -662,9 +672,11 @@ export const IntegrationWizard = ({
 
                 {requiresOAuthConnection ? (
                   <div className="rounded-2xl border border-dashed border-[var(--color-border)] px-4 py-4 text-sm text-[var(--color-text-base)]">
-                    {selectedConnection
-                      ? `${selectedConnector?.name} is connected. Click Discover to save this integration with your stored OAuth credentials.`
-                      : `Connect ${selectedConnector?.name ?? "this provider"} before discovering functions.`}
+                    {!oauthConnectionEnabled
+                      ? `${selectedConnector?.name ?? "This provider"} needs deployment-level OAuth configuration before users can connect accounts.`
+                      : selectedConnection
+                        ? `${selectedConnector?.name} is connected. Click Discover to save this integration with your stored OAuth credentials.`
+                        : `Connect ${selectedConnector?.name ?? "this provider"} before discovering functions.`}
                   </div>
                 ) : (
                   <label className="grid gap-2 text-sm text-white">
