@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  buildBuiltInConnectorOption,
+  discoverIntegration,
   inferMcpAuthStrategy,
+  listBuiltInConnectors,
   normalizeComposioAuthModes,
 } from "@/src/lib/integrations/discovery";
 
@@ -18,37 +19,89 @@ describe("normalizeComposioAuthModes", () => {
   });
 });
 
-describe("buildBuiltInConnectorOption", () => {
-  it("compacts connector metadata into the picker option shape", () => {
-    expect(
-      buildBuiltInConnectorOption({
-        slug: "github",
-        name: "GitHub",
-        meta: {
-          description: "GitHub issues, repos, and pull requests.",
-          logo: "https://cdn.example.com/github.png",
-          appUrl: "https://github.com",
-          toolsCount: 42,
-          categories: [
-            { slug: "developer-tools", name: "Developer Tools" },
-            { slug: "developer-tools", name: "Developer Tools" },
-            { slug: "collaboration", name: "Collaboration" },
-          ],
-        },
-        authSchemes: ["oauth2"],
-        composioManagedAuthSchemes: ["api_key"],
-        noAuth: false,
-      }),
-    ).toEqual({
-      slug: "github",
+describe("listBuiltInConnectors", () => {
+  it("returns the curated Vercel-hosted built-in connector catalog", async () => {
+    const connectors = await listBuiltInConnectors();
+    const github = connectors.find((connector) => connector.slug === "github");
+    const googleDocs = connectors.find(
+      (connector) => connector.slug === "google-docs",
+    );
+
+    expect(connectors).toHaveLength(5);
+    expect(github).toMatchObject({
       name: "GitHub",
-      description: "GitHub issues, repos, and pull requests.",
-      logoUrl: "https://cdn.example.com/github.png",
-      appUrl: "https://github.com",
-      toolCount: 42,
-      categories: ["Developer Tools", "Collaboration"],
-      authModes: ["oauth2", "api_key"],
+      authModes: ["bearer"],
+      credentialLabel: "GitHub token",
+      toolCount: 4,
     });
+    expect(googleDocs).toMatchObject({
+      name: "Google Docs",
+      credentialPlaceholder: "ya29....",
+      toolCount: 4,
+    });
+  });
+});
+
+describe("discoverIntegration", () => {
+  it("maps curated built-in connectors to internal MCP endpoints", async () => {
+    await expect(
+      discoverIntegration(
+        {
+          key: "github",
+          kind: "built_in",
+          config: {
+            builtInSlug: "github",
+          },
+          credentials: {
+            accessToken: "github-pat",
+          },
+        },
+        {
+          baseUrl: "https://context-layer.vercel.app",
+        },
+      ),
+    ).resolves.toMatchObject({
+      provider: "mcp",
+      authStrategy: "bearer",
+      config: {
+        builtInSlug: "github",
+        serverUrl: "https://context-layer.vercel.app/api/mcp/github",
+      },
+      credentials: {
+        accessToken: "github-pat",
+      },
+      functions: {
+        get_me: {
+          config: {
+            toolName: "get_me",
+          },
+          defaultScopes: ["read"],
+        },
+        create_issue: {
+          defaultScopes: ["write"],
+        },
+      },
+    });
+  });
+
+  it("requires an access token for built-in connectors", async () => {
+    await expect(
+      discoverIntegration(
+        {
+          key: "notion",
+          kind: "built_in",
+          config: {
+            builtInSlug: "notion",
+          },
+          credentials: {},
+        },
+        {
+          baseUrl: "https://context-layer.vercel.app",
+        },
+      ),
+    ).rejects.toThrow(
+      "Notion integration token is required to use the Notion built-in connector.",
+    );
   });
 });
 

@@ -5,7 +5,7 @@ import { discoverIntegration } from "@/src/lib/integrations/discovery";
 
 const integrationDiscoverySchema = z.object({
   key: z.string().min(1),
-  kind: z.enum(["api", "mcp"]),
+  kind: z.enum(["api", "mcp", "built_in"]),
   config: z.record(z.string(), z.unknown()).default({}),
   credentials: z.record(z.string(), z.unknown()).default({}),
 });
@@ -13,7 +13,8 @@ const integrationDiscoverySchema = z.object({
 export async function POST(request: Request) {
   try {
     const payload = integrationDiscoverySchema.parse(await request.json());
-    return ok(await discoverIntegration(payload));
+    const baseUrl = new URL(request.url).origin;
+    return ok(await discoverIntegration(payload, { baseUrl }));
   } catch (error) {
     return fromError(error);
   }

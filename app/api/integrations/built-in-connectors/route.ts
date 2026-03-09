@@ -1,5 +1,5 @@
 import { fromError, ok } from "@/src/lib/api";
-import { listBuiltInConnectors } from "@/src/lib/integrations/discovery";
+import { listBuiltInConnectors } from "@/src/lib/integrations/built-in-connectors";
 
 export async function GET() {
   try {

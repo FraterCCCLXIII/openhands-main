@@ -22,7 +22,7 @@ import type {
   FunctionSpec,
 } from "@/src/types/context-layer";
 
-type IntegrationKind = "api" | "mcp";
+type IntegrationKind = "built_in" | "mcp";
 type WizardStep = 1 | 2 | 3;
 
 interface IntegrationWizardProps {
@@ -42,9 +42,8 @@ interface WizardDraft {
   kind: IntegrationKind | null;
   key: string;
   name: string;
-  toolkitSlug: string;
+  builtInSlug: string;
   serverUrl: string;
-  connectedAccountId: string;
   accessToken: string;
   apiKey: string;
   headerName: string;
@@ -56,9 +55,8 @@ const INITIAL_DRAFT: WizardDraft = {
   kind: null,
   key: "",
   name: "",
-  toolkitSlug: "",
+  builtInSlug: "",
   serverUrl: "",
-  connectedAccountId: "",
   accessToken: "",
   apiKey: "",
   headerName: "X-API-Key",
@@ -142,19 +140,19 @@ const buildDiscoverPayload = (draft: WizardDraft) => {
     throw new Error("Select Built-in connector or MCP first.");
   }
 
-  if (draft.kind === "api") {
-    if (!draft.toolkitSlug.trim()) {
+  if (draft.kind === "built_in") {
+    if (!draft.builtInSlug.trim()) {
       throw new Error("Choose a built-in connector first.");
     }
 
     return {
       key: draft.key.trim(),
-      kind: draft.kind,
+      kind: "built_in" as const,
       config: {
-        toolkitSlug: draft.toolkitSlug.trim(),
+        builtInSlug: draft.builtInSlug.trim(),
       },
       credentials: {
-        connectedAccountId: draft.connectedAccountId.trim(),
+        accessToken: draft.accessToken.trim(),
       },
     };
   }
@@ -187,7 +185,7 @@ const buildCreatePayload = (
   return {
     key: draft.key.trim(),
     name: draft.name.trim() || draft.key.trim(),
-    kind: draft.kind,
+    kind: draft.kind === "built_in" ? "mcp" : draft.kind,
     provider: discovery.provider,
     authStrategy: discovery.authStrategy,
     enabled: true,
@@ -261,16 +259,16 @@ export const IntegrationWizard = ({
     queryKey: ["built-in-connectors"],
     queryFn: () =>
       fetchJson<BuiltInConnectorOption[]>("/api/integrations/built-in-connectors"),
-    enabled: draft.kind === "api" && step === 2,
+    enabled: draft.kind === "built_in" && step === 2,
     staleTime: 5 * 60 * 1000,
   });
 
   const selectedConnector = useMemo(
     () =>
       (builtInConnectorsQuery.data ?? []).find(
-        (connector) => connector.slug === draft.toolkitSlug,
+        (connector) => connector.slug === draft.builtInSlug,
       ) ?? null,
-    [builtInConnectorsQuery.data, draft.toolkitSlug],
+    [builtInConnectorsQuery.data, draft.builtInSlug],
   );
 
   const filteredConnectors = useMemo(() => {
@@ -345,14 +343,18 @@ export const IntegrationWizard = ({
     !!draft.kind &&
     !!draft.key.trim() &&
     !!draft.name.trim() &&
-    (draft.kind === "api" ? !!draft.toolkitSlug.trim() : !!draft.serverUrl.trim());
+    (draft.kind === "built_in"
+      ? !!draft.builtInSlug.trim() && !!draft.accessToken.trim()
+      : !!draft.serverUrl.trim());
 
   const handleConnectorSelect = (connector: BuiltInConnectorOption) => {
     setDraft((current) => ({
       ...current,
-      toolkitSlug: connector.slug,
+      builtInSlug: connector.slug,
       key: connector.slug,
       name: connector.name,
+      accessToken:
+        current.builtInSlug === connector.slug ? current.accessToken : "",
     }));
     setConnectorSearch(connector.name);
     onStatus(null);
@@ -389,9 +391,9 @@ export const IntegrationWizard = ({
           </h2>
         </div>
         <p className="text-sm leading-7 text-[var(--color-text-base)]">
-          Choose a Built-in connector or MCP server, let the dashboard discover
-          the available functions, then keep each function enabled, disable it,
-          or mark it as case-by-case approval.
+          Choose a Built-in connector hosted in this deployment or a remote MCP
+          server, let the dashboard discover the available functions, then keep
+          each function enabled, disable it, or mark it as case-by-case approval.
         </p>
       </div>
 
@@ -399,9 +401,9 @@ export const IntegrationWizard = ({
         <div className="grid gap-4 md:grid-cols-2">
           {[
             {
-              kind: "api" as const,
+              kind: "built_in" as const,
               title: "Built-in connector",
-              body: "Pick from the Composio-supported connectors, then let the dashboard auto-fill the basics and discover the available functions.",
+              body: "Pick from the five Vercel-hosted connectors, provide the provider token, and let the dashboard discover the available functions.",
               icon: KeyRound,
             },
             {
@@ -442,7 +444,7 @@ export const IntegrationWizard = ({
       {step === 2 ? (
         <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
           <div className="grid gap-4">
-            {draft.kind === "api" ? (
+            {draft.kind === "built_in" ? (
               <>
                 <label className="grid gap-2 text-sm text-white">
                   <span className="font-medium">Built-in connector</span>
@@ -461,8 +463,8 @@ export const IntegrationWizard = ({
                     />
                   </div>
                   <span className="text-xs leading-6 text-[var(--color-text-base)]">
-                    Choose from the connectors supported through Composio. Selecting
-                    one auto-fills the key and display name below.
+                    Choose from the curated connectors hosted inside this Vercel
+                    deployment. Selecting one auto-fills the key and display name below.
                   </span>
                 </label>
 
@@ -487,7 +489,7 @@ export const IntegrationWizard = ({
                         className={cn(
                           "flex w-full flex-col gap-2 px-4 py-4 text-left transition-colors hover:bg-white/5",
                           index > 0 && "border-t border-[var(--color-border)]",
-                          connector.slug === draft.toolkitSlug &&
+                          connector.slug === draft.builtInSlug &&
                             "bg-[var(--color-bg-active)]",
                         )}
                         onClick={() => handleConnectorSelect(connector)}
@@ -531,7 +533,7 @@ export const IntegrationWizard = ({
                     </div>
                     <p className="mt-2 leading-7">
                       {selectedConnector.description ||
-                        "This supported connector is ready to discover through Composio."}
+                        "This built-in connector is backed by a Vercel-hosted MCP route in this deployment."}
                     </p>
                     {selectedConnector.appUrl ? (
                       <a
@@ -540,7 +542,7 @@ export const IntegrationWizard = ({
                         rel="noreferrer"
                         className="mt-3 inline-flex text-xs text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
                       >
-                        Open connector site
+                        Open provider docs
                       </a>
                     ) : null}
                   </div>
@@ -559,7 +561,7 @@ export const IntegrationWizard = ({
                           key: event.target.value,
                         }))
                       }
-                      disabled={!draft.toolkitSlug.trim()}
+                      disabled={!draft.builtInSlug.trim()}
                     />
                     <span className="text-xs leading-6 text-[var(--color-text-base)]">
                       Edit this if you want more than one saved connection for the
@@ -579,30 +581,32 @@ export const IntegrationWizard = ({
                           name: event.target.value,
                         }))
                       }
-                      disabled={!draft.toolkitSlug.trim()}
+                      disabled={!draft.builtInSlug.trim()}
                     />
                   </label>
                 </div>
 
                 <label className="grid gap-2 text-sm text-white">
                   <span className="font-medium">
-                    Connected account ID (optional)
+                    {selectedConnector?.credentialLabel ?? "Access token"}
                   </span>
                   <input
                     className={inputClassName}
-                    placeholder="acct_..."
-                    value={draft.connectedAccountId}
+                    placeholder={
+                      selectedConnector?.credentialPlaceholder ?? "Paste the provider token"
+                    }
+                    value={draft.accessToken}
                     onChange={(event) =>
                       setDraft((current) => ({
                         ...current,
-                        connectedAccountId: event.target.value,
+                        accessToken: event.target.value,
                       }))
                     }
-                    disabled={!draft.toolkitSlug.trim()}
+                    disabled={!draft.builtInSlug.trim()}
                   />
                   <span className="text-xs leading-6 text-[var(--color-text-base)]">
-                    If you already have a specific Composio connected account for
-                    this connector, enter it here; otherwise leave it blank.
+                    {selectedConnector?.credentialHelp ??
+                      "Provide the provider token that the built-in MCP route should forward upstream."}
                   </span>
                 </label>
               </>
@@ -762,19 +766,23 @@ export const IntegrationWizard = ({
             <p className="font-semibold text-white">
               What happens in this step
             </p>
-            {draft.kind === "api" ? (
+            {draft.kind === "built_in" ? (
               <ul className="mt-3 space-y-2">
                 <li>
-                  • The dashboard loads the Composio-supported built-in connectors
-                  so you can search and pick one instead of typing a toolkit slug.
+                  • The dashboard loads the five curated connectors that are hosted
+                  as MCP routes inside this Vercel deployment.
                 </li>
                 <li>
                   • Choosing a connector auto-fills the integration key and display
                   name, while still letting you customize them if needed.
                 </li>
                 <li>
-                  • It auto-detects the auth scheme from Composio metadata and
-                  pulls the available functions for review before saving.
+                  • It stores the provider token you supply and wires the
+                  integration to the matching internal MCP endpoint.
+                </li>
+                <li>
+                  • The available functions are discovered from that internal MCP
+                  route before you save the integration.
                 </li>
               </ul>
             ) : (
@@ -805,7 +813,7 @@ export const IntegrationWizard = ({
       {step === 3 && discovery ? (
         <div className="space-y-6">
           <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-[var(--color-border)] bg-black/10 p-4 text-sm text-[var(--color-text-base)]">
-            <Badge>{draft.kind === "api" ? "Built-in" : "MCP"}</Badge>
+            <Badge>{draft.kind === "built_in" ? "Built-in" : "MCP"}</Badge>
             <Badge>{discovery.provider}</Badge>
             <Badge>{authStrategyLabel(discovery.authStrategy)}</Badge>
             <span>

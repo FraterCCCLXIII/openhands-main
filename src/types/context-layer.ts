@@ -52,6 +52,9 @@ export interface BuiltInConnectorOption {
   toolCount: number;
   categories: string[];
   authModes: AuthStrategy[];
+  credentialLabel: string;
+  credentialPlaceholder: string;
+  credentialHelp: string;
 }
 
 export interface PolicyRule {

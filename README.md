@@ -1,14 +1,14 @@
 # OpenHands Context Layer
 
-A Vercel-native context layer for AI agents built with Next.js, TypeScript, Auth.js, Neon, Composio, and the official MCP SDK.
+A Vercel-native context layer for AI agents built with Next.js, TypeScript, Auth.js, Neon, curated built-in connectors, Composio, and the official MCP SDK.
 
 ## What this implements
 
 - A single unified invocation endpoint: `POST /api/context/[integrationKey]/[functionName]`
-- Connector onboarding for API and MCP integrations
+- Connector onboarding for curated built-in connectors plus custom MCP integrations
 - Existing-library adapter layer:
-  - `@composio/core` for SaaS/API tool execution
-  - `@modelcontextprotocol/sdk` for MCP server access
+  - `@composio/core` for broader SaaS/API tool execution
+  - `@modelcontextprotocol/sdk` for both hosted built-in MCP routes and remote MCP server access
 - Fine-grained controls for:
   - integration enable/disable
   - function enable/disable

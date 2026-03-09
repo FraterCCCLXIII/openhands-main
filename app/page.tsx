@@ -15,7 +15,7 @@ export default async function HomePage() {
         <header className="flex flex-col gap-6 rounded-3xl border border-[var(--color-border)] bg-[color:rgba(31,34,40,0.86)] px-8 py-10 shadow-[0_24px_60px_rgba(0,0,0,0.35)]">
           <div className="flex items-center gap-3 text-sm text-[var(--color-text-base)]">
             <Badge>Vercel-native</Badge>
-            <Badge>Composio + MCP adapters</Badge>
+            <Badge>Built-in + MCP adapters</Badge>
             <Badge>Scoped approvals</Badge>
           </div>
           <div className="max-w-3xl space-y-5">
@@ -44,7 +44,7 @@ export default async function HomePage() {
           {[
             {
               title: "Connector breadth",
-              body: "Reuse Composio for SaaS/API adapters instead of hand-building integrations.",
+              body: "Start with curated built-in connectors for GitHub, Figma, Notion, Slack, and Google Docs, while still supporting broader Composio-based integrations.",
               icon: DatabaseZap,
             },
             {

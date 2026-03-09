@@ -3,6 +3,11 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 
 import { ContextLayerError } from "@/src/lib/core/errors";
+import {
+  buildBuiltInConnectorFunctions,
+  getBuiltInConnectorDefinition,
+  listBuiltInConnectors as listCuratedBuiltInConnectors,
+} from "@/src/lib/integrations/built-in-connectors";
 import type {
   AuthStrategy,
   BuiltInConnectorOption,
@@ -77,39 +82,6 @@ export function normalizeComposioAuthModes(
   return authModes.length > 0 ? authModes : ["oauth2"];
 }
 
-export const buildBuiltInConnectorOption = (toolkit: {
-  slug: string;
-  name: string;
-  meta: {
-    description?: string;
-    logo?: string;
-    appUrl?: string;
-    toolsCount?: number;
-    categories?: Array<{ slug: string; name: string }>;
-  };
-  authSchemes?: string[];
-  composioManagedAuthSchemes?: string[];
-  noAuth?: boolean;
-}): BuiltInConnectorOption => ({
-  slug: toolkit.slug,
-  name: toolkit.name,
-  description: toolkit.meta.description ?? "",
-  logoUrl: toolkit.meta.logo,
-  appUrl: toolkit.meta.appUrl,
-  toolCount: toolkit.meta.toolsCount ?? 0,
-  categories: uniqueValues(
-    (toolkit.meta.categories ?? []).map((category) => category.name),
-  ),
-  authModes: normalizeComposioAuthModes(
-    [
-      ...(toolkit.authSchemes ?? []),
-      ...(toolkit.composioManagedAuthSchemes ?? []),
-    ],
-    toolkit.noAuth ?? false,
-  ),
-});
-
-
 export const inferMcpAuthStrategy = (
   credentials: Record<string, unknown>,
 ): AuthStrategy => {
@@ -179,11 +151,17 @@ const buildFunctionSpec = (
   config,
 });
 
+export type IntegrationDiscoveryKind = IntegrationKind | "built_in";
+
 export interface IntegrationDiscoveryInput {
   key: string;
-  kind: IntegrationKind;
+  kind: IntegrationDiscoveryKind;
   config: Record<string, unknown>;
   credentials: Record<string, unknown>;
+}
+
+export interface IntegrationDiscoveryOptions {
+  baseUrl?: string;
 }
 
 export interface IntegrationDiscoveryResult {
@@ -198,7 +176,7 @@ const getComposioClient = () => {
   const apiKey = process.env.COMPOSIO_API_KEY;
   if (!apiKey) {
     throw new ContextLayerError(
-      "COMPOSIO_API_KEY is required to use Composio-backed built-in connectors.",
+      "COMPOSIO_API_KEY is required to use Composio-backed integrations.",
       500,
     );
   }
@@ -208,18 +186,49 @@ const getComposioClient = () => {
 
 export const listBuiltInConnectors = async (): Promise<
   BuiltInConnectorOption[]
-> => {
-  const composio = getComposioClient();
-  const toolkits = await composio.toolkits.get({
-    limit: 500,
-    managedBy: "composio",
-    sortBy: "alphabetically",
-  });
+> => listCuratedBuiltInConnectors();
 
-  return toolkits
-    .filter((toolkit) => !toolkit.isLocalToolkit)
-    .map(buildBuiltInConnectorOption)
-    .sort((left, right) => left.name.localeCompare(right.name));
+const discoverBuiltInConnectorIntegration = async (
+  input: IntegrationDiscoveryInput,
+  options: IntegrationDiscoveryOptions,
+): Promise<IntegrationDiscoveryResult> => {
+  const slug =
+    (input.config.builtInSlug as string | undefined)?.trim() || input.key.trim();
+  const connector = getBuiltInConnectorDefinition(slug);
+
+  if (!connector) {
+    throw new ContextLayerError(
+      `Unknown built-in connector '${slug}'.`,
+      404,
+    );
+  }
+
+  const baseUrl = options.baseUrl?.trim();
+  if (!baseUrl) {
+    throw new ContextLayerError(
+      "A baseUrl is required to discover built-in connectors.",
+      500,
+    );
+  }
+
+  const accessToken = (input.credentials.accessToken as string | undefined)?.trim();
+  if (!accessToken) {
+    throw new ContextLayerError(
+      `${connector.credentialLabel} is required to use the ${connector.name} built-in connector.`,
+      400,
+    );
+  }
+
+  return {
+    provider: "mcp",
+    authStrategy: connector.authStrategy,
+    config: compactRecord({
+      builtInSlug: connector.slug,
+      serverUrl: `${baseUrl.replace(/\/$/, "")}${connector.serverPath}`,
+    }),
+    credentials: compactRecord({ accessToken }),
+    functions: buildBuiltInConnectorFunctions(connector.slug),
+  };
 };
 
 const discoverComposioIntegration = async (
@@ -319,7 +328,12 @@ const discoverMcpIntegration = async (
 
 export const discoverIntegration = async (
   input: IntegrationDiscoveryInput,
+  options: IntegrationDiscoveryOptions = {},
 ): Promise<IntegrationDiscoveryResult> => {
+  if (input.kind === "built_in") {
+    return discoverBuiltInConnectorIntegration(input, options);
+  }
+
   if (input.kind === "api") {
     return discoverComposioIntegration(input);
   }
