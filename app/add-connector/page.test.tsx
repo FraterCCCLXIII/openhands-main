@@ -15,7 +15,8 @@ describe("AddConnectorPage", () => {
 
     expect(html).toContain("contact an admin");
     expect(html).toContain("Popular OAuth-ready provider options");
-    expect(html).toContain("Submit provider information");
+    expect(html).toContain("How to add a provider that is not currently showing up.");
+    expect(html).not.toContain("Submit provider information");
   });
 
   it("shows the configured admin email when ADMIN_EMAIL is set", () => {
@@ -25,5 +26,11 @@ describe("AddConnectorPage", () => {
 
     expect(html).toContain("Contact admin@example.com");
     expect(html).toContain("please contact admin@example.com");
+  });
+
+  it("renders users before admins", () => {
+    const html = renderToStaticMarkup(<AddConnectorPage />);
+
+    expect(html.indexOf("For users")).toBeLessThan(html.indexOf("For admins"));
   });
 });
