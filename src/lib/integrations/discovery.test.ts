@@ -7,6 +7,15 @@ describe("inferMcpAuthStrategy", () => {
     expect(inferMcpAuthStrategy({ headerName: "X-API-Key" })).toBe("none");
   });
 
+  it("handles an empty string secret as no auth", () => {
+    expect(
+      inferMcpAuthStrategy({
+        headerName: "X-API-Key",
+        secret: "",
+      }),
+    ).toBe("none");
+  });
+
   it("prefers oauth2 when an access token is present", () => {
     expect(
       inferMcpAuthStrategy({
@@ -23,5 +32,19 @@ describe("inferMcpAuthStrategy", () => {
         secret: "context-secret",
       }),
     ).toBe("api_key");
+  });
+
+  it("requires both username and password for basic auth", () => {
+    expect(
+      inferMcpAuthStrategy({
+        username: "demo",
+      }),
+    ).toBe("none");
+    expect(
+      inferMcpAuthStrategy({
+        username: "demo",
+        password: "secret",
+      }),
+    ).toBe("basic");
   });
 });

@@ -73,15 +73,15 @@ export const inferMcpAuthStrategy = (
   const username = credentials.username as string | undefined;
   const password = credentials.password as string | undefined;
 
-  if (secret) {
-    return "api_key";
-  }
-
   if (accessToken) {
     return "oauth2";
   }
 
-  if (username || password) {
+  if (secret) {
+    return "api_key";
+  }
+
+  if (username && password) {
     return "basic";
   }
 
