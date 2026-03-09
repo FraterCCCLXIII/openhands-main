@@ -19,7 +19,7 @@ export default function SignInPage() {
     <main className="flex min-h-screen items-center justify-center px-6 py-10">
       <Card className="w-full max-w-xl p-8">
         <div className="space-y-3">
-          <h1 className="text-3xl font-bold text-white">Sign in to Agent Context Layer</h1>
+          <h1 className="text-3xl font-bold text-white">Sign in to OpenHands Context Layer</h1>
           <p className="text-sm leading-7 text-[var(--color-text-base)]">
             GitHub is the interactive sign-in option for the hosted app, matching the KPI tracker dashboard flow.
           </p>

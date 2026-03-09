@@ -5,45 +5,34 @@ import type { LucideIcon } from "lucide-react";
 import {
   ArrowRight,
   Bell,
-  Bot,
   CheckCircle2,
-  HelpCircle,
+  Copy,
+  Eye,
+  EyeOff,
+  Home,
   KeyRound,
   PlugZap,
   ShieldCheck,
   ToggleLeft,
   ToggleRight,
+  User,
   Waypoints,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
-import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { type ReactNode, useEffect, useMemo, useState } from "react";
 
 import { IntegrationWizard } from "@/src/components/admin/integration-wizard";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
 import { Card } from "@/src/components/ui/card";
+import { buildAgentConnectionGuide } from "@/src/lib/agent-connection";
 import { cn } from "@/src/lib/utils";
-import { useAdminStore } from "@/src/stores/admin-store";
 import type {
   AccessRequest,
-  AuthStrategy,
   IntegrationSpec,
   NotificationRecord,
 } from "@/src/types/context-layer";
-
-const parseCsv = (value: string) =>
-  value
-    .split(",")
-    .map((item) => item.trim())
-    .filter(Boolean);
-
-const parseJson = (value: string) => {
-  if (!value.trim()) {
-    return {} as Record<string, unknown>;
-  }
-
-  return JSON.parse(value) as Record<string, unknown>;
-};
 
 const fetchJson = async <T,>(
   input: RequestInfo,
@@ -63,282 +52,132 @@ const fetchJson = async <T,>(
   return (await response.json()) as T;
 };
 
-type AdminTab = "overview" | "integrations" | "agents" | "approvals";
-
-interface IntegrationFormState {
-  key: string;
-  name: string;
-  kind: string;
-  provider: string;
-  authStrategy: AuthStrategy;
-  configJson: string;
-  credentialsJson: string;
-}
-
-interface FunctionFormState {
-  integrationKey: string;
-  name: string;
-  description: string;
-  defaultScopes: string;
-  executionMode: string;
-  configJson: string;
-  mockResponseJson: string;
-}
-
-interface PolicyFormState {
-  agentClass: string;
-  integrationKey: string;
-  functionNames: string;
-  scopes: string;
-}
+type AdminSection = "home" | "profile" | "integrations" | "apiKeys";
 
 interface AdminDashboardProps {
   initialIntegrations: IntegrationSpec[];
   initialAccessRequests: AccessRequest[];
   initialNotifications: NotificationRecord[];
   currentUser: { name?: string | null; email?: string | null };
+  contextApiBaseUrl: string;
+  contextApiKey: string;
 }
 
-const ADMIN_TABS: Array<{
-  id: AdminTab;
+const ADMIN_SECTIONS: Array<{
+  id: AdminSection;
   label: string;
   description: string;
   icon: LucideIcon;
 }> = [
   {
-    id: "overview",
-    label: "Overview",
-    description: "Understand how the workspace fits together.",
-    icon: CheckCircle2,
+    id: "home",
+    label: "Home",
+    description: "Compact overview, setup checklist, and recent activity.",
+    icon: Home,
+  },
+  {
+    id: "profile",
+    label: "User Profile",
+    description: "Current user identity and connection context.",
+    icon: User,
   },
   {
     id: "integrations",
     label: "Integrations",
-    description: "Add MCP or API connectors and register functions.",
+    description: "Review connectors, functions, and toggles in one list.",
     icon: PlugZap,
   },
   {
-    id: "agents",
-    label: "Agent setup",
-    description: "Define which agent classes can call which tools.",
-    icon: Bot,
-  },
-  {
-    id: "approvals",
-    label: "Approvals",
-    description: "Handle pending access requests and notifications.",
-    icon: Bell,
+    id: "apiKeys",
+    label: "Agent Connection",
+    description: "Reveal, copy, and use the persisted personal key.",
+    icon: KeyRound,
   },
 ];
 
-const INTEGRATION_PRESETS: Array<{
-  label: string;
-  description: string;
-  values: Partial<IntegrationFormState>;
-}> = [
-  {
-    label: "OAuth API",
-    description: "Composio-managed OAuth for SaaS APIs such as Notion.",
-    values: {
-      kind: "api",
-      provider: "composio",
-      authStrategy: "oauth2",
-      configJson: '{"defaultToolSlug":"NOTION_LIST_USERS"}',
-      credentialsJson: '{"connectedAccountId":"acct_..."}',
-    },
-  },
-  {
-    label: "OAuth MCP",
-    description: "Remote MCP server that expects a bearer token from OAuth.",
-    values: {
-      kind: "mcp",
-      provider: "mcp",
-      authStrategy: "oauth2",
-      configJson: '{"serverUrl":"https://mcp.example.com"}',
-      credentialsJson: '{"accessToken":"oauth_access_token"}',
-    },
-  },
-  {
-    label: "API-key MCP",
-    description:
-      "Remote MCP server that authenticates with a custom API-key header.",
-    values: {
-      kind: "mcp",
-      provider: "mcp",
-      authStrategy: "api_key",
-      configJson: '{"serverUrl":"https://mcp.example.com"}',
-      credentialsJson: '{"headerName":"X-API-Key","secret":"..."}',
-    },
-  },
-];
+const OPENHANDS_CONTEXT_KEY_ENV = "$OPENHANDS_CONTEXT_KEY";
 
-const AGENT_REQUEST_EXAMPLE = `POST /api/context/notion/list_pages
-{
-  "agentId": "research-bot-01",
-  "agentClass": "researcher",
-  "scopes": ["pages.read"],
-  "payload": {
-    "query": "quarterly roadmap"
-  }
-}`;
+const maskApiKey = (apiKey: string, revealed: boolean) => {
+  const trimmed = apiKey.trim();
 
-const getIntegrationGuide = ({
-  kind,
-  provider,
-  authStrategy,
-}: Pick<IntegrationFormState, "kind" | "provider" | "authStrategy">) => {
-  if (provider === "mock") {
-    return {
-      title: "Mock mode is best for demos and UI validation.",
-      body: "Use mock integrations to validate policies and approvals without contacting a real provider.",
-      configPlaceholder: '{"preview":"simulated integration"}',
-      credentialsPlaceholder: "{}",
-    };
+  if (revealed || !trimmed) {
+    return trimmed;
   }
 
-  if (provider === "composio" && authStrategy === "oauth2") {
-    return {
-      title: "OAuth API setup",
-      body: "Use this for SaaS APIs managed through Composio. Complete the provider OAuth flow externally, then paste the connectedAccountId here so the context layer can execute the tool on behalf of the agent.",
-      configPlaceholder: '{"defaultToolSlug":"NOTION_LIST_USERS"}',
-      credentialsPlaceholder: '{"connectedAccountId":"acct_..."}',
-    };
+  if (trimmed.length <= 8) {
+    return "•".repeat(trimmed.length);
   }
 
-  if (kind === "mcp" && authStrategy === "oauth2") {
-    return {
-      title: "OAuth MCP setup",
-      body: "Use this for remote MCP servers that expect a bearer token. Put the MCP server URL in configJson and the OAuth access token in credentialsJson. This fits flows like a hosted Notion or Figma MCP once you have completed OAuth outside the dashboard.",
-      configPlaceholder: '{"serverUrl":"https://mcp.example.com"}',
-      credentialsPlaceholder: '{"accessToken":"oauth_access_token"}',
-    };
-  }
-
-  if (kind === "mcp" && authStrategy === "api_key") {
-    return {
-      title: "API-key MCP setup",
-      body: "Use this for MCP servers that expect a secret header. The MCP adapter will send headerName + secret with each request.",
-      configPlaceholder: '{"serverUrl":"https://mcp.example.com"}',
-      credentialsPlaceholder: '{"headerName":"X-API-Key","secret":"..."}',
-    };
-  }
-
-  if (authStrategy === "basic") {
-    return {
-      title: "Basic auth setup",
-      body: "Provide the target URL in configJson and username/password in credentialsJson.",
-      configPlaceholder: '{"serverUrl":"https://api.example.com"}',
-      credentialsPlaceholder: '{"username":"demo","password":"secret"}',
-    };
-  }
-
-  if (authStrategy === "bearer") {
-    return {
-      title: "Bearer token setup",
-      body: "Provide the target URL in configJson and the bearer access token in credentialsJson.",
-      configPlaceholder:
-        kind === "mcp"
-          ? '{"serverUrl":"https://mcp.example.com"}'
-          : '{"defaultToolSlug":"EXAMPLE_TOOL"}',
-      credentialsPlaceholder: '{"accessToken":"token"}',
-    };
-  }
-
-  if (authStrategy === "none") {
-    return {
-      title: "No-auth setup",
-      body: "Use this only for public endpoints or local mock/test MCP servers.",
-      configPlaceholder:
-        kind === "mcp"
-          ? '{"serverUrl":"https://mcp.example.com"}'
-          : '{"defaultToolSlug":"EXAMPLE_TOOL"}',
-      credentialsPlaceholder: "{}",
-    };
-  }
-
-  return {
-    title: "Choose a preset or fill in the fields manually.",
-    body: "The selected provider and auth strategy determine which keys belong in configJson and credentialsJson. The examples above match the adapter behavior implemented by this project.",
-    configPlaceholder:
-      kind === "mcp"
-        ? '{"serverUrl":"https://mcp.example.com"}'
-        : '{"defaultToolSlug":"EXAMPLE_TOOL"}',
-    credentialsPlaceholder: "{}",
-  };
+  return `${trimmed.slice(0, 4)}${"•".repeat(
+    Math.max(12, trimmed.length - 8),
+  )}${trimmed.slice(-4)}`;
 };
 
-const FormField = ({
-  label,
-  hint,
-  tooltip,
-  children,
-}: {
-  label: string;
-  hint?: string;
-  tooltip?: string;
-  children: React.ReactNode;
-}) => (
-  <label className="grid gap-2 text-sm text-white">
-    <span className="flex items-center gap-2 font-medium">
-      {label}
-      {tooltip ? (
-        <span title={tooltip} className="text-[var(--color-text-base)]">
-          <HelpCircle className="h-4 w-4" />
-        </span>
-      ) : null}
-    </span>
-    {children}
-    {hint ? (
-      <span className="text-xs leading-6 text-[var(--color-text-base)]">
-        {hint}
-      </span>
-    ) : null}
-  </label>
-);
+const copyTextToClipboard = async (text: string) => {
+  if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(text);
+    return;
+  }
 
-const SectionHeading = ({
-  icon: Icon,
+  const textArea = document.createElement("textarea");
+  textArea.value = text;
+  textArea.setAttribute("readonly", "true");
+  textArea.style.position = "absolute";
+  textArea.style.left = "-9999px";
+  document.body.appendChild(textArea);
+  textArea.select();
+  document.execCommand("copy");
+  document.body.removeChild(textArea);
+};
+
+const CompactPanel = ({
   title,
   description,
-  tooltip,
+  icon: Icon,
+  action,
+  children,
+  className,
 }: {
-  icon: LucideIcon;
   title: string;
   description?: string;
-  tooltip?: string;
+  icon?: LucideIcon;
+  action?: ReactNode;
+  children: ReactNode;
+  className?: string;
 }) => (
-  <div className="mb-4 flex items-start gap-3">
-    <div className="rounded-xl border border-[var(--color-border)] bg-black/20 p-2">
-      <Icon className="h-5 w-5 text-[var(--color-accent)]" />
-    </div>
-    <div className="space-y-1">
-      <div className="flex items-center gap-2">
-        <h2 className="text-lg font-semibold text-white">{title}</h2>
-        {tooltip ? (
-          <span title={tooltip} className="text-[var(--color-text-base)]">
-            <HelpCircle className="h-4 w-4" />
-          </span>
+  <Card className={cn("p-4", className)}>
+    <div className="mb-4 flex items-start justify-between gap-4">
+      <div className="min-w-0">
+        <div className="flex items-center gap-2">
+          {Icon ? (
+            <span className="rounded-lg border border-[var(--color-border)] bg-black/20 p-1.5">
+              <Icon className="h-4 w-4 text-[var(--color-accent)]" />
+            </span>
+          ) : null}
+          <h2 className="text-sm font-semibold tracking-[0.01em] text-white">
+            {title}
+          </h2>
+        </div>
+        {description ? (
+          <p className="mt-2 text-xs leading-6 text-[var(--color-text-base)]">
+            {description}
+          </p>
         ) : null}
       </div>
-      {description ? (
-        <p className="text-sm leading-7 text-[var(--color-text-base)]">
-          {description}
-        </p>
-      ) : null}
+      {action ? <div className="shrink-0">{action}</div> : null}
     </div>
-  </div>
+    {children}
+  </Card>
 );
 
-const TabButton = ({
+const SidebarNavItem = ({
   icon: Icon,
   label,
-  description,
   active,
   onClick,
 }: {
   icon: LucideIcon;
   label: string;
-  description: string;
   active: boolean;
   onClick: () => void;
 }) => (
@@ -346,27 +185,123 @@ const TabButton = ({
     type="button"
     onClick={onClick}
     className={cn(
-      "flex flex-col gap-2 rounded-2xl border px-4 py-4 text-left transition-colors",
+      "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm transition-colors",
       active
-        ? "border-[var(--color-accent)] bg-[var(--color-bg-active)]"
-        : "border-[var(--color-border)] bg-[var(--color-bg-workspace)] hover:bg-white/5",
+        ? "bg-[var(--color-bg-active)] text-white"
+        : "text-[var(--color-text-base)] hover:bg-white/5 hover:text-white",
     )}
   >
-    <div className="flex items-center gap-3">
-      <Icon
-        className={cn(
-          "h-5 w-5",
-          active
-            ? "text-[var(--color-accent)]"
-            : "text-[var(--color-text-base)]",
-        )}
-      />
-      <span className="font-semibold text-white">{label}</span>
-    </div>
-    <span className="text-sm leading-6 text-[var(--color-text-base)]">
-      {description}
-    </span>
+    <Icon
+      className={cn(
+        "h-4 w-4 shrink-0",
+        active ? "text-[var(--color-accent)]" : "text-[var(--color-text-base)]",
+      )}
+    />
+    <span className="truncate font-medium">{label}</span>
   </button>
+);
+
+const MetricRow = ({
+  icon: Icon,
+  label,
+  value,
+  description,
+}: {
+  icon: LucideIcon;
+  label: string;
+  value: string;
+  description: string;
+}) => (
+  <div className="flex items-start gap-3 px-1 py-3">
+    <span className="rounded-lg border border-[var(--color-border)] bg-black/20 p-1.5">
+      <Icon className="h-4 w-4 text-[var(--color-accent)]" />
+    </span>
+    <div className="flex min-w-0 flex-1 items-start justify-between gap-4">
+      <div className="min-w-0">
+        <p className="text-sm font-medium text-white">{label}</p>
+        <p className="text-xs leading-6 text-[var(--color-text-base)]">
+          {description}
+        </p>
+      </div>
+      <p className="shrink-0 text-xl font-semibold text-white">{value}</p>
+    </div>
+  </div>
+);
+
+const KeyValueRow = ({
+  label,
+  value,
+  valueClassName,
+}: {
+  label: string;
+  value: ReactNode;
+  valueClassName?: string;
+}) => (
+  <div className="flex flex-col gap-1 px-1 py-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+    <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-base)]">
+      {label}
+    </p>
+    <div
+      className={cn(
+        "text-sm font-medium text-white sm:max-w-[70%] sm:text-right",
+        valueClassName,
+      )}
+    >
+      {value}
+    </div>
+  </div>
+);
+
+const ChecklistRow = ({
+  title,
+  body,
+  action,
+  onClick,
+}: {
+  title: string;
+  body: string;
+  action: string;
+  onClick: () => void;
+}) => (
+  <div className="flex flex-col gap-3 px-1 py-3 md:flex-row md:items-center md:justify-between">
+    <div className="min-w-0">
+      <p className="text-sm font-medium text-white">{title}</p>
+      <p className="text-xs leading-6 text-[var(--color-text-base)]">{body}</p>
+    </div>
+    <Button
+      variant="ghost"
+      className="h-8 shrink-0 gap-2 rounded-lg px-2 text-xs"
+      onClick={onClick}
+    >
+      {action}
+      <ArrowRight className="h-3.5 w-3.5" />
+    </Button>
+  </div>
+);
+
+const ActivityRow = ({
+  title,
+  detail,
+  trailing,
+  actions,
+}: {
+  title: ReactNode;
+  detail: ReactNode;
+  trailing?: ReactNode;
+  actions?: ReactNode;
+}) => (
+  <div className="px-1 py-3">
+    <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+      <div className="min-w-0 space-y-1">
+        <div className="flex flex-wrap items-center gap-2 text-sm font-medium text-white">
+          {title}
+        </div>
+        <div className="text-xs leading-6 text-[var(--color-text-base)]">{detail}</div>
+      </div>
+      {trailing ? <div className="shrink-0">{trailing}</div> : null}
+    </div>
+    {actions ? <div className="mt-3 flex flex-wrap gap-2">{actions}</div> : null}
+  </div>
 );
 
 export const DashboardWorkspace = ({
@@ -374,36 +309,46 @@ export const DashboardWorkspace = ({
   initialAccessRequests,
   initialNotifications,
   currentUser,
+  contextApiBaseUrl,
+  contextApiKey,
 }: AdminDashboardProps) => {
   const queryClient = useQueryClient();
-  const { providerFilter, requestFilter, setProviderFilter, setRequestFilter } =
-    useAdminStore();
-  const [activeTab, setActiveTab] = useState<AdminTab>("overview");
+  const searchParams = useSearchParams();
+  const [activeSection, setActiveSection] = useState<AdminSection>("home");
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
-  const [integrationForm, setIntegrationForm] = useState<IntegrationFormState>({
-    key: "",
-    name: "",
-    kind: "api",
-    provider: "composio",
-    authStrategy: "oauth2",
-    configJson: '{"defaultToolSlug":""}',
-    credentialsJson: "{}",
-  });
-  const [functionForm, setFunctionForm] = useState<FunctionFormState>({
-    integrationKey: initialIntegrations[0]?.key ?? "",
-    name: "",
-    description: "",
-    defaultScopes: "",
-    executionMode: "provider",
-    configJson: "{}",
-    mockResponseJson: "{}",
-  });
-  const [policyForm, setPolicyForm] = useState<PolicyFormState>({
-    agentClass: "researcher",
-    integrationKey: initialIntegrations[0]?.key ?? "",
-    functionNames: "",
-    scopes: "",
-  });
+  const [showIntegrationWizard, setShowIntegrationWizard] = useState(
+    initialIntegrations.length === 0,
+  );
+  const [revealApiKey, setRevealApiKey] = useState(false);
+
+  useEffect(() => {
+    const requestedSection = searchParams.get("section");
+    if (
+      requestedSection === "home" ||
+      requestedSection === "profile" ||
+      requestedSection === "integrations" ||
+      requestedSection === "apiKeys"
+    ) {
+      setActiveSection(requestedSection);
+    }
+
+    if (searchParams.get("showIntegrationWizard") === "1") {
+      setShowIntegrationWizard(true);
+    }
+
+    const oauthStatus = searchParams.get("oauth_status");
+    const oauthProvider = searchParams.get("oauth_provider");
+    const oauthError = searchParams.get("oauth_error");
+    if (oauthStatus === "connected" && oauthProvider) {
+      setStatusMessage(
+        `${oauthProvider[0]?.toUpperCase() ?? ""}${oauthProvider.slice(1)} connected successfully. Finish saving the integration to use it.`,
+      );
+    }
+
+    if (oauthStatus === "error") {
+      setStatusMessage(oauthError || "OAuth connection failed.");
+    }
+  }, [searchParams]);
 
   const integrationsQuery = useQuery({
     queryKey: ["integrations"],
@@ -459,361 +404,468 @@ export const DashboardWorkspace = ({
   const accessRequests = accessRequestsQuery.data ?? [];
   const notifications = notificationsQuery.data ?? [];
 
-  useEffect(() => {
-    if (!functionForm.integrationKey && integrations[0]) {
-      setFunctionForm((current) => ({
-        ...current,
-        integrationKey: integrations[0]?.key ?? "",
-      }));
-    }
-
-    if (!policyForm.integrationKey && integrations[0]) {
-      setPolicyForm((current) => ({
-        ...current,
-        integrationKey: integrations[0]?.key ?? "",
-      }));
-    }
-  }, [functionForm.integrationKey, integrations, policyForm.integrationKey]);
-
-  const filteredIntegrations = useMemo(() => {
-    if (providerFilter === "all") {
-      return integrations;
-    }
-
-    return integrations.filter(
-      (integration) => integration.provider === providerFilter,
-    );
-  }, [integrations, providerFilter]);
-
-  const filteredRequests = useMemo(() => {
-    if (requestFilter === "all") {
-      return accessRequests;
-    }
-
-    return accessRequests.filter((item) => item.status === requestFilter);
-  }, [accessRequests, requestFilter]);
-
-  const pendingRequestCount = accessRequests.filter(
-    (request) => request.status === "pending",
-  ).length;
   const enabledIntegrationCount = integrations.filter(
     (integration) => integration.enabled,
   ).length;
-  const guide = getIntegrationGuide(integrationForm);
+  const discoveredFunctionCount = integrations.reduce(
+    (count, integration) => count + Object.keys(integration.functions).length,
+    0,
+  );
+  const pendingAccessRequests = accessRequests.filter(
+    (request) => request.status === "pending",
+  );
+  const contextApiReady = contextApiKey.trim().length > 0;
+  const maskedApiKey = maskApiKey(contextApiKey, revealApiKey);
+  const userName = currentUser.name?.trim() || "Admin User";
+  const userEmail = currentUser.email?.trim() || "Not provided";
+  const authMode =
+    currentUser.email === "dev@localhost"
+      ? "Local development session"
+      : "Authenticated dashboard session";
+  const activeSectionMeta =
+    ADMIN_SECTIONS.find((section) => section.id === activeSection) ??
+    ADMIN_SECTIONS[0];
+
+  const agentConnectionGuide = useMemo(
+    () =>
+      buildAgentConnectionGuide({
+        baseUrl: contextApiBaseUrl,
+        apiKey: OPENHANDS_CONTEXT_KEY_ENV,
+        integrations,
+      }),
+    [contextApiBaseUrl, integrations],
+  );
+
+  const handleCopyApiKey = async () => {
+    if (!contextApiReady) {
+      setStatusMessage("The personal API key is not available yet.");
+      return;
+    }
+
+    try {
+      await copyTextToClipboard(contextApiKey);
+      setStatusMessage("API key copied to clipboard.");
+    } catch {
+      setStatusMessage("Unable to copy the API key from this browser session.");
+    }
+  };
 
   return (
-    <div className="space-y-6">
-      <header className="flex flex-col gap-4 rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-workspace)] px-6 py-5 md:flex-row md:items-center md:justify-between">
-        <div className="space-y-3">
-          <div className="flex flex-wrap items-center gap-2 text-sm text-[var(--color-text-base)]">
-            <Badge>{enabledIntegrationCount} enabled integrations</Badge>
-            <Badge>{pendingRequestCount} pending approvals</Badge>
-            <Badge>Unified agent endpoint</Badge>
+    <div className="grid gap-4 xl:grid-cols-[220px_minmax(0,1fr)] xl:gap-6">
+      <aside className="self-start xl:sticky xl:top-0 xl:h-screen xl:border-r xl:border-[var(--color-border)] xl:pr-4 xl:pt-6">
+        <div className="space-y-4">
+          <div className="border-b border-[var(--color-border)] pb-3">
+            <p className="text-[11px] uppercase tracking-[0.22em] text-[var(--color-text-base)]">
+              Context Layer
+            </p>
+            <div className="mt-2 flex items-center justify-between gap-3">
+              <p className="text-sm font-semibold text-white">Admin workspace</p>
+              <Badge>{enabledIntegrationCount} live</Badge>
+            </div>
           </div>
-          <div>
-            <h1 className="text-3xl font-bold text-white">
-              Agent Context Layer dashboard
+
+          <nav className="space-y-1">
+            {ADMIN_SECTIONS.map((section) => (
+              <SidebarNavItem
+                key={section.id}
+                icon={section.icon}
+                label={section.label}
+                active={activeSection === section.id}
+                onClick={() => setActiveSection(section.id)}
+              />
+            ))}
+          </nav>
+
+          <div className="border-t border-[var(--color-border)] pt-3">
+            <div className="space-y-3">
+              <div>
+                <p className="text-[11px] uppercase tracking-[0.18em] text-[var(--color-text-base)]">
+                  Signed in as
+                </p>
+                <p className="mt-1 break-all text-sm font-medium text-white">
+                  {currentUser.email ?? currentUser.name ?? "admin"}
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Badge>{pendingAccessRequests.length} pending</Badge>
+                <Badge>{discoveredFunctionCount} functions</Badge>
+              </div>
+              <Button
+                variant="secondary"
+                className="h-9 w-full rounded-lg px-3 text-xs"
+                onClick={() => signOut({ redirectTo: "/" })}
+              >
+                Sign out
+              </Button>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <div className="space-y-4">
+        <header className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+          <div className="min-w-0">
+            <p className="text-[11px] uppercase tracking-[0.22em] text-[var(--color-text-base)]">
+              OpenHands Context Layer
+            </p>
+            <h1 className="mt-1 text-2xl font-semibold text-white">
+              {activeSectionMeta.label}
             </h1>
-            <p className="text-sm leading-7 text-[var(--color-text-base)]">
-              Signed in as {currentUser.email ?? currentUser.name ?? "admin"}.
-              The workspace is split into tabs so connector setup, agent
-              onboarding, and approvals are easier to follow.
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--color-text-base)]">
+              {activeSectionMeta.description}
             </p>
           </div>
-        </div>
-        <Button
-          variant="secondary"
-          onClick={() => signOut({ redirectTo: "/" })}
-        >
-          Sign out
-        </Button>
-      </header>
-
-      {statusMessage ? (
-        <div className="rounded-xl border border-[var(--color-border)] bg-white/5 px-4 py-3 text-sm text-[var(--color-text-active)]">
-          {statusMessage}
-        </div>
-      ) : null}
-
-      <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-        {ADMIN_TABS.map((tab) => (
-          <TabButton
-            key={tab.id}
-            icon={tab.icon}
-            label={tab.label}
-            description={tab.description}
-            active={activeTab === tab.id}
-            onClick={() => setActiveTab(tab.id)}
-          />
-        ))}
-      </section>
-
-      {activeTab === "overview" ? (
-        <section className="grid gap-6 xl:grid-cols-[1.2fr_1fr]">
-          <Card className="p-6">
-            <SectionHeading
-              icon={Waypoints}
-              title="Start here"
-              description="The dashboard now separates integration setup, agent setup, and approvals into dedicated tabs. Follow these steps in order when onboarding a new tool."
-              tooltip="This replaces the previous single noisy screen with a clearer setup flow."
-            />
-            <div className="grid gap-4 md:grid-cols-3">
-              {[
-                {
-                  title: "1. Add an integration",
-                  body: "Choose whether the tool is an API or MCP, then pick the auth pattern. Use the preset buttons in the Integrations tab for OAuth API, OAuth MCP, or API-key MCP setups.",
-                  action: "Open integrations",
-                  onClick: () => setActiveTab("integrations"),
-                },
-                {
-                  title: "2. Connect an agent",
-                  body: "Give the agent a stable agentClass, then save a policy that allows the integration functions and scopes that class may request.",
-                  action: "Open agent setup",
-                  onClick: () => setActiveTab("agents"),
-                },
-                {
-                  title: "3. Review approvals",
-                  body: "If a requested scope is not yet allowed, the agent creates an access request. Approve it here to grant temporary access and let the agent continue.",
-                  action: "Open approvals",
-                  onClick: () => setActiveTab("approvals"),
-                },
-              ].map((step) => (
-                <div
-                  key={step.title}
-                  className="rounded-2xl border border-[var(--color-border)] bg-black/15 p-5"
-                >
-                  <h3 className="text-base font-semibold text-white">
-                    {step.title}
-                  </h3>
-                  <p className="mt-2 text-sm leading-7 text-[var(--color-text-base)]">
-                    {step.body}
-                  </p>
-                  <Button
-                    variant="ghost"
-                    className="mt-4 gap-2 px-0"
-                    onClick={step.onClick}
-                  >
-                    {step.action}
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))}
-            </div>
-          </Card>
-
-          <div className="grid gap-6">
-            <Card className="p-6">
-              <SectionHeading
-                icon={Bot}
-                title="How an agent calls the context layer"
-                description="Every agent uses the same route pattern. The integration key and function name come from the Integrations tab."
-                tooltip="This is the clearest end-to-end path for agent developers using the context layer."
-              />
-              <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-dark)]/60 p-4">
-                <p className="mb-3 text-sm font-medium text-white">
-                  Example request
-                </p>
-                <pre className="overflow-x-auto whitespace-pre-wrap text-xs leading-6 text-[var(--color-text-base)]">
-                  {AGENT_REQUEST_EXAMPLE}
-                </pre>
-              </div>
-              <ul className="mt-4 space-y-2 text-sm leading-7 text-[var(--color-text-base)]">
-                <li>
-                  • Use a stable <code className="text-white">agentId</code> so
-                  approvals can be traced.
-                </li>
-                <li>
-                  • Use <code className="text-white">agentClass</code> values
-                  like <code className="text-white">researcher</code> or{" "}
-                  <code className="text-white">designer</code> that match your
-                  saved policies.
-                </li>
-                <li>
-                  • If access is denied, check the Approvals tab for a pending
-                  request or widen the policy in Agent setup.
-                </li>
-              </ul>
-            </Card>
-
-            <Card className="p-6">
-              <SectionHeading
-                icon={PlugZap}
-                title="Integration auth cheat sheet"
-                description="These examples mirror the adapter behavior implemented in this repository."
-              />
-              <div className="space-y-3 text-sm leading-7 text-[var(--color-text-base)]">
-                <div className="rounded-xl border border-[var(--color-border)] bg-black/15 p-4">
-                  <p className="font-medium text-white">OAuth API</p>
-                  <p>
-                    Use provider <code className="text-white">Composio</code>{" "}
-                    and auth <code className="text-white">oauth2</code>. Store a{" "}
-                    <code className="text-white">connectedAccountId</code> in
-                    credentials after completing OAuth.
-                  </p>
-                </div>
-                <div className="rounded-xl border border-[var(--color-border)] bg-black/15 p-4">
-                  <p className="font-medium text-white">OAuth MCP</p>
-                  <p>
-                    Use kind <code className="text-white">MCP</code>, provider{" "}
-                    <code className="text-white">MCP SDK</code>, auth{" "}
-                    <code className="text-white">oauth2</code>, a{" "}
-                    <code className="text-white">serverUrl</code> in config, and
-                    an <code className="text-white">accessToken</code> in
-                    credentials.
-                  </p>
-                </div>
-                <div className="rounded-xl border border-[var(--color-border)] bg-black/15 p-4">
-                  <p className="font-medium text-white">API-key MCP</p>
-                  <p>
-                    Use kind <code className="text-white">MCP</code>, auth{" "}
-                    <code className="text-white">api_key</code>, then provide{" "}
-                    <code className="text-white">headerName</code> and{" "}
-                    <code className="text-white">secret</code> in credentials.
-                  </p>
-                </div>
-              </div>
-            </Card>
+          <div className="flex flex-wrap gap-2">
+            <Badge>{integrations.length} integrations</Badge>
+            <Badge>{enabledIntegrationCount} enabled</Badge>
+            <Badge>{pendingAccessRequests.length} pending approvals</Badge>
           </div>
-        </section>
-      ) : null}
+        </header>
 
-      {activeTab === "integrations" ? (
-        <section className="space-y-6">
-          <IntegrationWizard
-            onCreated={invalidateAll}
-            onStatus={setStatusMessage}
-          />
+        {statusMessage ? (
+          <div className="rounded-xl border border-[var(--color-border)] bg-white/5 px-3 py-2 text-sm text-[var(--color-text-active)]">
+            {statusMessage}
+          </div>
+        ) : null}
 
-          <Card className="p-5">
-            <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-              <div>
-                <h2 className="text-xl font-semibold text-white">
-                  Integrations & functions
-                </h2>
-                <p className="text-sm text-[var(--color-text-base)]">
-                  Review the current connector catalog, filter by provider, and
-                  confirm which functions are default-enabled, disabled, or
-                  case-by-case.
-                </p>
-              </div>
-              <select
-                className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-input)] px-4 py-3 text-white"
-                value={providerFilter}
-                onChange={(event) => setProviderFilter(event.target.value)}
-                title="Filter the integration list by adapter/provider."
+        {!contextApiReady ? (
+          <div className="rounded-xl border border-amber-400/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-100">
+            Open <code className="text-white">/admin</code> once to provision a
+            personal key before agents call <code className="text-white">/api/context/*</code>.
+          </div>
+        ) : null}
+
+        {activeSection === "home" ? (
+          <section className="space-y-4">
+            <div className="grid gap-4 xl:grid-cols-[minmax(0,0.9fr)_minmax(320px,1.1fr)]">
+              <CompactPanel
+                title="Workspace summary"
+                description="Dense status rows instead of oversized tiles."
+                icon={Home}
               >
-                <option value="all">All providers</option>
-                {[
-                  ...new Set(
-                    integrations.map((integration) => integration.provider),
-                  ),
-                ].map((provider) => (
-                  <option key={provider} value={provider}>
-                    {provider}
-                  </option>
-                ))}
-              </select>
+                <div className="divide-y divide-[var(--color-border)]">
+                  <MetricRow
+                    icon={PlugZap}
+                    label="Integrations"
+                    value={String(integrations.length)}
+                    description="Connected API and MCP providers visible to the dashboard."
+                  />
+                  <MetricRow
+                    icon={CheckCircle2}
+                    label="Enabled integrations"
+                    value={String(enabledIntegrationCount)}
+                    description="Integrations currently available for agent calls."
+                  />
+                  <MetricRow
+                    icon={KeyRound}
+                    label="Functions discovered"
+                    value={String(discoveredFunctionCount)}
+                    description="Callable functions registered across all integrations."
+                  />
+                  <MetricRow
+                    icon={Bell}
+                    label="Pending approvals"
+                    value={String(pendingAccessRequests.length)}
+                    description="Requests waiting for an approval or rejection decision."
+                  />
+                </div>
+              </CompactPanel>
+
+              <CompactPanel
+                title="Getting started"
+                description="Follow the same compact sequence each time you onboard a new agent."
+                icon={Waypoints}
+              >
+                <div className="divide-y divide-[var(--color-border)]">
+                  <ChecklistRow
+                    title="Review your profile"
+                    body="Confirm the signed-in identity that owns the persisted personal key."
+                    action="Open profile"
+                    onClick={() => setActiveSection("profile")}
+                  />
+                  <ChecklistRow
+                    title="Add an integration"
+                    body="Create a Built-in or MCP connector and review its callable functions."
+                    action="Open integrations"
+                    onClick={() => setActiveSection("integrations")}
+                  />
+                  <ChecklistRow
+                    title="Copy your key"
+                    body="Reveal or copy the personal agent key, then configure your runtime."
+                    action="Open connection"
+                    onClick={() => setActiveSection("apiKeys")}
+                  />
+                </div>
+              </CompactPanel>
             </div>
-            <div className="grid gap-4">
-              {filteredIntegrations.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-[var(--color-border)] bg-black/10 p-6 text-sm text-[var(--color-text-base)]">
-                  No integrations yet. Start with the setup form above.
+
+            <CompactPanel
+              title="Recent activity"
+              description="Pending approvals and notifications in one compact feed."
+              icon={Bell}
+            >
+              <div className="space-y-4">
+                <div>
+                  <div className="mb-2 flex items-center justify-between gap-3 px-1">
+                    <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-base)]">
+                      Pending approvals
+                    </p>
+                    <Badge tone={pendingAccessRequests.length > 0 ? "warning" : "default"}>
+                      {pendingAccessRequests.length}
+                    </Badge>
+                  </div>
+                  <div className="divide-y divide-[var(--color-border)]">
+                    {pendingAccessRequests.length === 0 ? (
+                      <p className="px-1 py-3 text-sm text-[var(--color-text-base)]">
+                        No pending access requests.
+                      </p>
+                    ) : (
+                      pendingAccessRequests.slice(0, 3).map((request) => (
+                        <ActivityRow
+                          key={request.id}
+                          title={
+                            <>
+                              <span>{request.integrationKey}.{request.functionName}</span>
+                              <Badge tone="warning">pending</Badge>
+                            </>
+                          }
+                          detail={`${request.agentId} (${request.agentClass}) requested ${request.scopes.join(", ") || "default scopes"} for ${request.requestedMinutes} minutes.`}
+                          actions={
+                            <>
+                              <Button
+                                className="h-8 rounded-lg px-3 text-xs"
+                                onClick={() =>
+                                  actionMutation.mutate({
+                                    url: `/api/access-requests/${request.id}/approve`,
+                                    method: "POST",
+                                    body: {
+                                      approver: currentUser.email ?? "admin",
+                                      durationMinutes: request.requestedMinutes,
+                                    },
+                                  })
+                                }
+                              >
+                                Approve
+                              </Button>
+                              <Button
+                                variant="danger"
+                                className="h-8 rounded-lg px-3 text-xs"
+                                onClick={() =>
+                                  actionMutation.mutate({
+                                    url: `/api/access-requests/${request.id}/reject`,
+                                    method: "POST",
+                                    body: {
+                                      approver: currentUser.email ?? "admin",
+                                    },
+                                  })
+                                }
+                              >
+                                Reject
+                              </Button>
+                            </>
+                          }
+                        />
+                      ))
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <div className="mb-2 flex items-center justify-between gap-3 px-1">
+                    <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-base)]">
+                      Latest notifications
+                    </p>
+                    <Badge>{notifications.length}</Badge>
+                  </div>
+                  <div className="divide-y divide-[var(--color-border)]">
+                    {notifications.length === 0 ? (
+                      <p className="px-1 py-3 text-sm text-[var(--color-text-base)]">
+                        Notifications will appear here when agents request access.
+                      </p>
+                    ) : (
+                      notifications.slice(0, 3).map((notification) => (
+                        <ActivityRow
+                          key={notification.id}
+                          title={
+                            <>
+                              <Badge>{notification.channel}</Badge>
+                              <span>{notification.recipient}</span>
+                            </>
+                          }
+                          detail={
+                            <>
+                              <span className="block text-sm text-white">
+                                {notification.subject}
+                              </span>
+                              <span>{notification.body}</span>
+                            </>
+                          }
+                        />
+                      ))
+                    )}
+                  </div>
+                </div>
+              </div>
+            </CompactPanel>
+          </section>
+        ) : null}
+
+        {activeSection === "profile" ? (
+          <section className="grid gap-4 xl:grid-cols-[minmax(0,0.95fr)_minmax(320px,1.05fr)]">
+            <CompactPanel
+              title="User profile"
+              description="Current dashboard identity and request origin details."
+              icon={User}
+            >
+              <div className="divide-y divide-[var(--color-border)]">
+                <KeyValueRow label="Name" value={userName} />
+                <KeyValueRow label="Email" value={userEmail} />
+                <KeyValueRow label="Session type" value={authMode} />
+                <KeyValueRow
+                  label="Context API base URL"
+                  value={<code className="break-all text-xs text-[var(--color-text-active)]">{contextApiBaseUrl}</code>}
+                />
+              </div>
+            </CompactPanel>
+
+            <CompactPanel
+              title="Connection context"
+              description="Useful at-a-glance values for validating the current environment."
+              icon={ShieldCheck}
+            >
+              <div className="divide-y divide-[var(--color-border)]">
+                <KeyValueRow
+                  label="Personal key status"
+                  value={contextApiReady ? "Provisioned" : "Not available yet"}
+                />
+                <KeyValueRow label="Visible integrations" value={String(integrations.length)} />
+                <KeyValueRow
+                  label="Pending approvals"
+                  value={String(pendingAccessRequests.length)}
+                />
+                <KeyValueRow
+                  label="Endpoint pattern"
+                  value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.endpoint}</code>}
+                />
+              </div>
+              <div className="mt-4 rounded-xl border border-[var(--color-border)] bg-black/20 px-3 py-3 text-xs leading-6 text-[var(--color-text-base)]">
+                The persisted personal key belongs to <code className="text-white">{userEmail}</code>. Provider credentials stay server-side in integration settings or per-user OAuth records and are never handed directly to the agent.
+              </div>
+            </CompactPanel>
+          </section>
+        ) : null}
+
+        {activeSection === "integrations" ? (
+          <section className="space-y-4">
+            <div className="flex justify-start">
+              <Button
+                className="h-9 rounded-lg px-4 text-xs"
+                onClick={() => setShowIntegrationWizard(true)}
+              >
+                Add new integration
+              </Button>
+            </div>
+
+            {showIntegrationWizard ? (
+              <IntegrationWizard
+                onCreated={async () => {
+                  await invalidateAll();
+                  setShowIntegrationWizard(false);
+                }}
+                onStatus={setStatusMessage}
+              />
+            ) : null}
+
+            <CompactPanel
+              title="Integration catalog"
+              description="Compact rows for providers, status, auth strategy, and functions."
+              icon={PlugZap}
+            >
+              {integrations.length === 0 ? (
+                <div className="rounded-xl border border-dashed border-[var(--color-border)] px-3 py-4 text-sm text-[var(--color-text-base)]">
+                  No integrations yet. Use the button above to add your first one.
                 </div>
               ) : (
-                filteredIntegrations.map((integration) => (
-                  <div
-                    key={integration.key}
-                    className="rounded-2xl border border-[var(--color-border)] bg-black/15 p-5"
-                  >
-                    <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                      <div className="space-y-2">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <h3 className="text-lg font-semibold text-white">
-                            {integration.name}
-                          </h3>
-                          <Badge>{integration.provider}</Badge>
-                          <Badge>{integration.kind}</Badge>
-                          <Badge
-                            tone={integration.enabled ? "success" : "danger"}
-                          >
-                            {integration.enabled ? "enabled" : "disabled"}
-                          </Badge>
+                <div className="divide-y divide-[var(--color-border)]">
+                  {integrations.map((integration) => (
+                    <div key={integration.key} className="py-4 first:pt-0 last:pb-0">
+                      <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <h3 className="text-sm font-semibold text-white">
+                              {integration.name}
+                            </h3>
+                            <Badge>{integration.provider}</Badge>
+                            <Badge>{integration.kind}</Badge>
+                            <Badge tone={integration.enabled ? "success" : "danger"}>
+                              {integration.enabled ? "enabled" : "disabled"}
+                            </Badge>
+                          </div>
+                          <p className="mt-2 text-xs leading-6 text-[var(--color-text-base)]">
+                            {integration.key} · auth: {integration.authStrategy}
+                          </p>
                         </div>
-                        <p className="text-sm text-[var(--color-text-base)]">
-                          {integration.key} · auth: {integration.authStrategy}
-                        </p>
+                        <Button
+                          variant={integration.enabled ? "secondary" : "primary"}
+                          className="h-8 shrink-0 gap-2 rounded-lg px-3 text-xs"
+                          onClick={() =>
+                            actionMutation.mutate({
+                              url: `/api/integrations/${integration.key}/toggle`,
+                              method: "POST",
+                              body: { enabled: !integration.enabled },
+                            })
+                          }
+                          title="Temporarily enable or disable the full integration."
+                        >
+                          {integration.enabled ? (
+                            <ToggleRight className="h-4 w-4" />
+                          ) : (
+                            <ToggleLeft className="h-4 w-4" />
+                          )}
+                          {integration.enabled ? "Disable" : "Enable"}
+                        </Button>
                       </div>
-                      <Button
-                        variant={integration.enabled ? "secondary" : "primary"}
-                        className="gap-2"
-                        onClick={() =>
-                          actionMutation.mutate({
-                            url: `/api/integrations/${integration.key}/toggle`,
-                            method: "POST",
-                            body: { enabled: !integration.enabled },
-                          })
-                        }
-                        title="Temporarily enable or disable the full integration."
-                      >
-                        {integration.enabled ? (
-                          <ToggleRight className="h-4 w-4" />
+
+                      <div className="mt-3 overflow-hidden rounded-xl border border-[var(--color-border)] bg-black/10">
+                        {Object.values(integration.functions).length === 0 ? (
+                          <p className="px-3 py-3 text-sm text-[var(--color-text-base)]">
+                            No functions registered yet.
+                          </p>
                         ) : (
-                          <ToggleLeft className="h-4 w-4" />
-                        )}
-                        {integration.enabled ? "Disable" : "Enable"}
-                      </Button>
-                    </div>
-                    <div className="grid gap-3">
-                      {Object.values(integration.functions).length === 0 ? (
-                        <p className="text-sm text-[var(--color-text-base)]">
-                          No functions registered yet.
-                        </p>
-                      ) : (
-                        Object.values(integration.functions).map(
-                          (functionSpec) => (
+                          Object.values(integration.functions).map((functionSpec, index) => (
                             <div
                               key={functionSpec.name}
-                              className="flex flex-col gap-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-dark)]/60 p-4 md:flex-row md:items-center md:justify-between"
+                              className={cn(
+                                "flex flex-col gap-3 px-3 py-3 md:flex-row md:items-start md:justify-between",
+                                index > 0 && "border-t border-[var(--color-border)]",
+                              )}
                             >
-                              <div>
+                              <div className="min-w-0">
                                 <div className="flex flex-wrap items-center gap-2">
-                                  <p className="font-medium text-white">
+                                  <p className="text-sm font-medium text-white">
                                     {functionSpec.name}
                                   </p>
-                                  <Badge
-                                    tone={
-                                      functionSpec.enabled
-                                        ? "success"
-                                        : "danger"
-                                    }
-                                  >
-                                    {functionSpec.enabled
-                                      ? "enabled"
-                                      : "disabled"}
+                                  <Badge tone={functionSpec.enabled ? "success" : "danger"}>
+                                    {functionSpec.enabled ? "enabled" : "disabled"}
                                   </Badge>
                                   <Badge>
-                                    {functionSpec.accessMode ===
-                                    "approval_required"
+                                    {functionSpec.accessMode === "approval_required"
                                       ? "case-by-case"
                                       : functionSpec.enabled
                                         ? "default-enabled"
                                         : "disabled"}
                                   </Badge>
                                 </div>
-                                <p className="text-sm text-[var(--color-text-base)]">
-                                  {functionSpec.description ||
-                                    "No description provided."}
+                                <p className="mt-1 text-xs leading-6 text-[var(--color-text-base)]">
+                                  {functionSpec.description || "No description provided."}
                                 </p>
-                                <p className="mt-2 text-xs text-[var(--color-text-base)]">
-                                  Scopes:{" "}
-                                  {functionSpec.defaultScopes.join(", ") ||
-                                    "none"}
+                                <p className="mt-1 text-[11px] leading-5 text-[var(--color-text-base)]">
+                                  Scopes: {functionSpec.defaultScopes.join(", ") || "none"}
                                 </p>
                               </div>
                               <Button
-                                variant={
-                                  functionSpec.enabled ? "secondary" : "primary"
-                                }
+                                variant={functionSpec.enabled ? "secondary" : "primary"}
+                                className="h-8 shrink-0 rounded-lg px-3 text-xs"
                                 onClick={() =>
                                   actionMutation.mutate({
                                     url: `/api/integrations/${integration.key}/functions/${functionSpec.name}/toggle`,
@@ -823,327 +875,100 @@ export const DashboardWorkspace = ({
                                 }
                                 title="Enable or disable just this callable function."
                               >
-                                {functionSpec.enabled
-                                  ? "Disable function"
-                                  : "Enable function"}
+                                {functionSpec.enabled ? "Disable function" : "Enable function"}
                               </Button>
                             </div>
-                          ),
-                        )
-                      )}
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </Card>
-        </section>
-      ) : null}
-
-      {activeTab === "agents" ? (
-        <section className="grid gap-6 xl:grid-cols-[1.1fr_1fr]">
-          <Card className="p-6">
-            <SectionHeading
-              icon={Bot}
-              title="Connect an agent to the context layer"
-              description="This tab makes the agent onboarding path explicit: define the class, save the policy, then call the unified endpoint from your agent runtime."
-              tooltip="This addresses the earlier confusion around how agents are connected."
-            />
-            <div className="space-y-4 text-sm leading-7 text-[var(--color-text-base)]">
-              <div className="rounded-2xl border border-[var(--color-border)] bg-black/15 p-5">
-                <p className="font-semibold text-white">
-                  Step 1: pick an agentClass
-                </p>
-                <p>
-                  Use a human-readable class such as{" "}
-                  <code className="text-white">researcher</code>,{" "}
-                  <code className="text-white">designer</code>, or{" "}
-                  <code className="text-white">support-bot</code>. Policies are
-                  attached to the class, not to a single run.
-                </p>
-              </div>
-              <div className="rounded-2xl border border-[var(--color-border)] bg-black/15 p-5">
-                <p className="font-semibold text-white">
-                  Step 2: allow integrations and scopes
-                </p>
-                <p>
-                  Save one or more policy rules that list the integration key,
-                  allowed function names, and scopes the class may request. If
-                  the agent needs more than this policy allows, the request will
-                  appear in the Approvals tab.
-                </p>
-              </div>
-              <div className="rounded-2xl border border-[var(--color-border)] bg-black/15 p-5">
-                <p className="font-semibold text-white">
-                  Step 3: call the unified endpoint
-                </p>
-                <p>
-                  From the agent, send{" "}
-                  <code className="text-white">agentId</code>,{" "}
-                  <code className="text-white">agentClass</code>, optional{" "}
-                  <code className="text-white">scopes</code>, and the tool
-                  payload to{" "}
-                  <code className="text-white">
-                    POST /api/context/[integrationKey]/[functionName]
-                  </code>
-                  .
-                </p>
-              </div>
-            </div>
-            <div className="mt-5 rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-dark)]/60 p-4">
-              <p className="mb-3 text-sm font-medium text-white">
-                Endpoint reminder
-              </p>
-              <pre className="overflow-x-auto whitespace-pre-wrap text-xs leading-6 text-[var(--color-text-base)]">
-                {AGENT_REQUEST_EXAMPLE}
-              </pre>
-            </div>
-          </Card>
-
-          <Card className="p-5">
-            <SectionHeading
-              icon={ShieldCheck}
-              title="Agent-class policy"
-              description="Create the allowlist an agent class uses when it invokes the context layer."
-              tooltip="If no policy matches, the request is denied or routed to approval."
-            />
-            {integrations.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-[var(--color-border)] bg-black/10 p-5 text-sm text-[var(--color-text-base)]">
-                Create an integration first in the Integrations tab, then come
-                back here to map it to an agent class.
-              </div>
-            ) : null}
-            <form
-              className="grid gap-4"
-              onSubmit={(event) => {
-                event.preventDefault();
-                actionMutation.mutate({
-                  url: `/api/agent-classes/${policyForm.agentClass}`,
-                  method: "PUT",
-                  body: {
-                    rules: [
-                      {
-                        integrationKey: policyForm.integrationKey,
-                        functionNames: parseCsv(policyForm.functionNames),
-                        scopes: parseCsv(policyForm.scopes),
-                        enabled: true,
-                      },
-                    ],
-                  },
-                });
-              }}
-            >
-              <FormField
-                label="Agent class"
-                hint="Use the same string your agent passes in the request body."
-                tooltip="Example: researcher"
-              >
-                <input
-                  className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-input)] px-4 py-3 text-white"
-                  placeholder="researcher"
-                  value={policyForm.agentClass}
-                  onChange={(event) =>
-                    setPolicyForm({
-                      ...policyForm,
-                      agentClass: event.target.value,
-                    })
-                  }
-                />
-              </FormField>
-
-              <FormField
-                label="Integration"
-                hint="The connector this class may use."
-              >
-                <select
-                  className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-input)] px-4 py-3 text-white"
-                  value={policyForm.integrationKey}
-                  onChange={(event) =>
-                    setPolicyForm({
-                      ...policyForm,
-                      integrationKey: event.target.value,
-                    })
-                  }
-                >
-                  <option value="">Select integration</option>
-                  {integrations.map((integration) => (
-                    <option key={integration.key} value={integration.key}>
-                      {integration.name}
-                    </option>
-                  ))}
-                </select>
-              </FormField>
-
-              <FormField
-                label="Allowed functions"
-                hint="Comma-separated function names. Leave empty only if you intend to revise this rule later."
-                tooltip="Example: list_pages, search_files"
-              >
-                <input
-                  className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-input)] px-4 py-3 text-white"
-                  placeholder="list_pages"
-                  value={policyForm.functionNames}
-                  onChange={(event) =>
-                    setPolicyForm({
-                      ...policyForm,
-                      functionNames: event.target.value,
-                    })
-                  }
-                />
-              </FormField>
-
-              <FormField
-                label="Allowed scopes"
-                hint="Comma-separated scopes the class may request by default."
-                tooltip="Example: pages.read, files.read"
-              >
-                <input
-                  className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-input)] px-4 py-3 text-white"
-                  placeholder="pages.read"
-                  value={policyForm.scopes}
-                  onChange={(event) =>
-                    setPolicyForm({ ...policyForm, scopes: event.target.value })
-                  }
-                />
-              </FormField>
-
-              <Button type="submit">Save policy</Button>
-            </form>
-          </Card>
-        </section>
-      ) : null}
-
-      {activeTab === "approvals" ? (
-        <section className="grid gap-6 xl:grid-cols-[2fr_1fr]">
-          <Card className="p-5">
-            <SectionHeading
-              icon={KeyRound}
-              title="Access requests"
-              description="Approve temporary access when an agent needs scopes outside its current policy."
-            />
-            <select
-              className="mb-4 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-input)] px-4 py-3 text-white"
-              value={requestFilter}
-              onChange={(event) =>
-                setRequestFilter(
-                  event.target.value as
-                    | "all"
-                    | "pending"
-                    | "approved"
-                    | "rejected",
-                )
-              }
-              title="Filter by request state."
-            >
-              <option value="all">All statuses</option>
-              <option value="pending">Pending</option>
-              <option value="approved">Approved</option>
-              <option value="rejected">Rejected</option>
-            </select>
-            <div className="space-y-3">
-              {filteredRequests.length === 0 ? (
-                <p className="text-sm text-[var(--color-text-base)]">
-                  No access requests yet.
-                </p>
-              ) : (
-                filteredRequests.map((request) => (
-                  <div
-                    key={request.id}
-                    className="rounded-xl border border-[var(--color-border)] bg-black/15 p-4"
-                  >
-                    <div className="flex flex-wrap items-center gap-2">
-                      <p className="font-medium text-white">
-                        {request.integrationKey}.{request.functionName}
-                      </p>
-                      <Badge
-                        tone={
-                          request.status === "approved"
-                            ? "success"
-                            : request.status === "rejected"
-                              ? "danger"
-                              : "warning"
-                        }
-                      >
-                        {request.status}
-                      </Badge>
-                    </div>
-                    <p className="mt-2 text-sm text-[var(--color-text-base)]">
-                      {request.agentId} ({request.agentClass}) requested{" "}
-                      {request.scopes.join(", ") || "default scopes"} for{" "}
-                      {request.requestedMinutes} minutes.
-                    </p>
-                    {request.status === "pending" ? (
-                      <div className="mt-3 flex gap-2">
-                        <Button
-                          onClick={() =>
-                            actionMutation.mutate({
-                              url: `/api/access-requests/${request.id}/approve`,
-                              method: "POST",
-                              body: {
-                                approver: currentUser.email ?? "admin",
-                                durationMinutes: request.requestedMinutes,
-                              },
-                            })
-                          }
-                        >
-                          Approve
-                        </Button>
-                        <Button
-                          variant="danger"
-                          onClick={() =>
-                            actionMutation.mutate({
-                              url: `/api/access-requests/${request.id}/reject`,
-                              method: "POST",
-                              body: { approver: currentUser.email ?? "admin" },
-                            })
-                          }
-                        >
-                          Reject
-                        </Button>
+                          ))
+                        )}
                       </div>
-                    ) : null}
-                  </div>
-                ))
-              )}
-            </div>
-          </Card>
-
-          <Card className="p-5">
-            <SectionHeading
-              icon={Bell}
-              title="Recent notifications"
-              description="Messages sent when agents request access or approval outcomes change."
-            />
-            <div className="space-y-3">
-              {notifications.length === 0 ? (
-                <p className="text-sm text-[var(--color-text-base)]">
-                  Notifications will appear here when agents request access.
-                </p>
-              ) : (
-                notifications.slice(0, 10).map((notification) => (
-                  <div
-                    key={notification.id}
-                    className="rounded-xl border border-[var(--color-border)] bg-black/15 p-4"
-                  >
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Badge>{notification.channel}</Badge>
-                      <span className="text-sm font-medium text-white">
-                        {notification.recipient}
-                      </span>
                     </div>
-                    <p className="mt-2 text-sm text-white">
-                      {notification.subject}
-                    </p>
-                    <p className="mt-1 text-xs leading-6 text-[var(--color-text-base)]">
-                      {notification.body}
-                    </p>
-                  </div>
-                ))
+                  ))}
+                </div>
               )}
-            </div>
-          </Card>
-        </section>
-      ) : null}
+            </CompactPanel>
+          </section>
+        ) : null}
+
+        {activeSection === "apiKeys" ? (
+          <section className="space-y-4">
+            <CompactPanel
+              title="Personal context-layer key"
+              description="Masked by default, with compact reveal and copy controls."
+              icon={KeyRound}
+              action={
+                <Badge tone={contextApiReady ? "success" : "warning"}>
+                  {contextApiReady ? "ready" : "unavailable"}
+                </Badge>
+              }
+            >
+              <div className="divide-y divide-[var(--color-border)]">
+                <KeyValueRow label="Issued for" value={userEmail} />
+                <KeyValueRow
+                  label="Base URL"
+                  value={<code className="break-all text-xs text-[var(--color-text-active)]">{contextApiBaseUrl}</code>}
+                />
+              </div>
+              <div className="mt-4 rounded-xl border border-[var(--color-border)] bg-black/20 px-3 py-3">
+                <code className="block break-all text-sm text-white">
+                  {maskedApiKey || "No personal API key available yet."}
+                </code>
+              </div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Button
+                  variant="secondary"
+                  className="h-8 gap-2 rounded-lg px-3 text-xs"
+                  onClick={() => setRevealApiKey((current) => !current)}
+                  disabled={!contextApiReady}
+                >
+                  {revealApiKey ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                  {revealApiKey ? "Hide" : "Reveal"}
+                </Button>
+                <Button
+                  className="h-8 gap-2 rounded-lg px-3 text-xs"
+                  onClick={handleCopyApiKey}
+                  disabled={!contextApiReady}
+                >
+                  <Copy className="h-4 w-4" />
+                  Copy
+                </Button>
+              </div>
+            </CompactPanel>
+
+            <CompactPanel
+              title="Usage"
+              description="Use the persisted personal key as a bearer token."
+              icon={ShieldCheck}
+            >
+              <div className="divide-y divide-[var(--color-border)]">
+                <KeyValueRow
+                  label="Auth header"
+                  value={
+                    <code className="break-all text-xs text-[var(--color-text-active)]">
+                      Authorization: Bearer {OPENHANDS_CONTEXT_KEY_ENV}
+                    </code>
+                  }
+                />
+                <KeyValueRow
+                  label="Endpoint"
+                  value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.endpoint}</code>}
+                />
+              </div>
+              <div className="mt-4 overflow-hidden rounded-xl border border-[var(--color-border)] bg-black/20">
+                <div className="border-b border-[var(--color-border)] px-3 py-2 text-xs uppercase tracking-[0.18em] text-[var(--color-text-base)]">
+                  cURL example
+                </div>
+                <pre className="overflow-x-auto whitespace-pre-wrap px-3 py-3 text-xs leading-6 text-[var(--color-text-base)]">
+                  {agentConnectionGuide.curlExample}
+                </pre>
+              </div>
+            </CompactPanel>
+          </section>
+        ) : null}
+      </div>
     </div>
   );
 };

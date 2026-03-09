@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   CheckCircle2,
   ChevronRight,
@@ -8,7 +8,8 @@ import {
   PlugZap,
   Waypoints,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
 
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
@@ -16,11 +17,14 @@ import { Card } from "@/src/components/ui/card";
 import { cn } from "@/src/lib/utils";
 import type {
   AuthStrategy,
+  BuiltInConnectorOption,
   FunctionAccessMode,
   FunctionSpec,
+  IntegrationConnectionStatus,
+  OAuthProviderCatalogOption,
 } from "@/src/types/context-layer";
 
-type IntegrationKind = "api" | "mcp";
+type IntegrationKind = "built_in" | "mcp";
 type WizardStep = 1 | 2 | 3;
 
 interface IntegrationWizardProps {
@@ -40,9 +44,8 @@ interface WizardDraft {
   kind: IntegrationKind | null;
   key: string;
   name: string;
-  toolkitSlug: string;
+  builtInSlug: string;
   serverUrl: string;
-  connectedAccountId: string;
   accessToken: string;
   apiKey: string;
   headerName: string;
@@ -54,15 +57,17 @@ const INITIAL_DRAFT: WizardDraft = {
   kind: null,
   key: "",
   name: "",
-  toolkitSlug: "",
+  builtInSlug: "",
   serverUrl: "",
-  connectedAccountId: "",
   accessToken: "",
   apiKey: "",
   headerName: "X-API-Key",
   username: "",
   password: "",
 };
+
+const inputClassName =
+  "rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-input)] px-4 py-3 text-white outline-none transition-colors focus:border-[var(--color-accent)]";
 
 const fetchJson = async <T,>(
   input: RequestInfo,
@@ -112,20 +117,60 @@ const accessModeLabel = (mode: FunctionAccessMode) => {
   }
 };
 
-const buildDiscoverPayload = (draft: WizardDraft) => {
-  if (!draft.kind) {
-    throw new Error("Select API or MCP first.");
+const availabilityLabel = (
+  availability: OAuthProviderCatalogOption["availability"],
+) => {
+  switch (availability) {
+    case "oauth_ready":
+      return "OAuth ready";
+    case "manual_token":
+      return "Manual token today";
+    case "planned":
+      return "Planned";
+  }
+};
+
+const connectorOptionLabel = (connector: BuiltInConnectorOption) =>
+  `${connector.name} (${connector.slug})`;
+
+const findConnectorByQuery = (
+  connectors: BuiltInConnectorOption[],
+  query: string,
+) => {
+  const normalizedQuery = query.trim().toLowerCase();
+  if (!normalizedQuery) {
+    return null;
   }
 
-  if (draft.kind === "api") {
+  return (
+    connectors.find((connector) =>
+      [
+        connectorOptionLabel(connector),
+        connector.name,
+        connector.slug,
+      ].some((value) => value.toLowerCase() === normalizedQuery),
+    ) ?? null
+  );
+};
+
+const buildDiscoverPayload = (draft: WizardDraft) => {
+  if (!draft.kind) {
+    throw new Error("Select Built-in connector or MCP first.");
+  }
+
+  if (draft.kind === "built_in") {
+    if (!draft.builtInSlug.trim()) {
+      throw new Error("Choose a built-in connector first.");
+    }
+
     return {
       key: draft.key.trim(),
-      kind: draft.kind,
+      kind: "built_in" as const,
       config: {
-        toolkitSlug: draft.toolkitSlug.trim() || draft.key.trim(),
+        builtInSlug: draft.builtInSlug.trim(),
       },
       credentials: {
-        connectedAccountId: draft.connectedAccountId.trim(),
+        accessToken: draft.accessToken.trim(),
       },
     };
   }
@@ -152,13 +197,13 @@ const buildCreatePayload = (
   functionModes: Record<string, FunctionAccessMode>,
 ) => {
   if (!draft.kind) {
-    throw new Error("Select API or MCP first.");
+    throw new Error("Select Built-in connector or MCP first.");
   }
 
   return {
     key: draft.key.trim(),
     name: draft.name.trim() || draft.key.trim(),
-    kind: draft.kind,
+    kind: draft.kind === "built_in" ? "mcp" : draft.kind,
     provider: discovery.provider,
     authStrategy: discovery.authStrategy,
     enabled: true,
@@ -220,12 +265,114 @@ export const IntegrationWizard = ({
   onCreated,
   onStatus,
 }: IntegrationWizardProps) => {
+  const searchParams = useSearchParams();
   const [step, setStep] = useState<WizardStep>(1);
   const [draft, setDraft] = useState<WizardDraft>(INITIAL_DRAFT);
   const [discovery, setDiscovery] = useState<DiscoveryResponse | null>(null);
   const [functionModes, setFunctionModes] = useState<
     Record<string, FunctionAccessMode>
   >({});
+  const [connectorSearch, setConnectorSearch] = useState("");
+
+  const builtInConnectorsQuery = useQuery({
+    queryKey: ["built-in-connectors"],
+    queryFn: () =>
+      fetchJson<BuiltInConnectorOption[]>("/api/integrations/built-in-connectors"),
+    enabled: draft.kind === "built_in" && step === 2,
+    staleTime: 5 * 60 * 1000,
+  });
+
+
+  const oauthProviderCatalogQuery = useQuery({
+    queryKey: ["oauth-provider-catalog"],
+    queryFn: () =>
+      fetchJson<OAuthProviderCatalogOption[]>(
+        "/api/integrations/oauth-provider-catalog",
+      ),
+    enabled: draft.kind === "built_in" && step === 2,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const oauthProviderSuggestions = useMemo(() => {
+    const query = connectorSearch.trim().toLowerCase();
+    const catalog = oauthProviderCatalogQuery.data ?? [];
+
+    const filtered = catalog.filter((provider) => {
+      if (!query) {
+        return true;
+      }
+
+      return [provider.name, provider.slug, ...provider.categories].some((value) =>
+        value.toLowerCase().includes(query),
+      );
+    });
+
+    return filtered.slice(0, query ? 8 : 10);
+  }, [connectorSearch, oauthProviderCatalogQuery.data]);
+
+  const builtInConnectors = builtInConnectorsQuery.data ?? [];
+
+  const selectedConnector = useMemo(
+    () =>
+      builtInConnectors.find((connector) => connector.slug === draft.builtInSlug) ??
+      null,
+    [builtInConnectors, draft.builtInSlug],
+  );
+
+  const connectionStatusesQuery = useQuery({
+    queryKey: ["oauth-connections"],
+    queryFn: () => fetchJson<IntegrationConnectionStatus[]>("/api/oauth/connections"),
+    enabled: draft.kind === "built_in" && step === 2,
+    staleTime: 15_000,
+  });
+
+  const selectedConnection = useMemo(
+    () =>
+      connectionStatusesQuery.data?.find(
+        (connection) =>
+          connection.integrationKey === (draft.key.trim() || draft.builtInSlug),
+      ) ?? null,
+    [connectionStatusesQuery.data, draft.builtInSlug, draft.key],
+  );
+
+
+  useEffect(() => {
+    const builtInSlug = searchParams.get("builtIn")?.trim();
+    if (!builtInSlug) {
+      return;
+    }
+
+    if (draft.kind == null) {
+      setDraft((current) => ({
+        ...current,
+        kind: "built_in",
+      }));
+    }
+
+    if (step === 1) {
+      setStep(2);
+    }
+  }, [draft.kind, searchParams, step]);
+
+  useEffect(() => {
+    if (draft.kind !== "built_in") {
+      return;
+    }
+
+    const builtInSlug = searchParams.get("builtIn")?.trim();
+    if (!builtInSlug || draft.builtInSlug) {
+      return;
+    }
+
+    const connector = builtInConnectors.find(
+      (candidate) => candidate.slug === builtInSlug,
+    );
+    if (!connector) {
+      return;
+    }
+
+    handleConnectorSelect(connector);
+  }, [builtInConnectors, draft.builtInSlug, draft.kind, searchParams]);
 
   const discoverMutation = useMutation({
     mutationFn: async () =>
@@ -275,6 +422,7 @@ export const IntegrationWizard = ({
       setDraft(INITIAL_DRAFT);
       setDiscovery(null);
       setFunctionModes({});
+      setConnectorSearch("");
       setStep(1);
     },
     onError: (error: Error) => {
@@ -287,11 +435,50 @@ export const IntegrationWizard = ({
     [discovery],
   );
 
+  const requiresOAuthConnection = selectedConnector?.authStrategy === "oauth2";
+  const oauthConnectionEnabled =
+    !requiresOAuthConnection || selectedConnector?.oauthConfigured !== false;
+
   const canDiscover =
     !!draft.kind &&
     !!draft.key.trim() &&
     !!draft.name.trim() &&
-    (draft.kind === "api" ? true : !!draft.serverUrl.trim());
+    (draft.kind === "built_in"
+      ? !!draft.builtInSlug.trim() &&
+        (requiresOAuthConnection
+          ? oauthConnectionEnabled && !!selectedConnection
+          : !!draft.accessToken.trim())
+      : !!draft.serverUrl.trim());
+
+  const handleConnectorSelect = (connector: BuiltInConnectorOption) => {
+    setDraft((current) => ({
+      ...current,
+      builtInSlug: connector.slug,
+      key: connector.slug,
+      name: connector.name,
+      accessToken:
+        current.builtInSlug === connector.slug ? current.accessToken : "",
+    }));
+    setConnectorSearch(connectorOptionLabel(connector));
+    onStatus(null);
+  };
+
+  const handleConnectorSearchChange = (value: string) => {
+    setConnectorSearch(value);
+
+    const connector = findConnectorByQuery(builtInConnectors, value);
+    if (connector) {
+      handleConnectorSelect(connector);
+      return;
+    }
+
+    setDraft((current) => ({
+      ...current,
+      builtInSlug: "",
+      accessToken: "",
+    }));
+    onStatus(null);
+  };
 
   return (
     <Card className="p-6">
@@ -324,9 +511,9 @@ export const IntegrationWizard = ({
           </h2>
         </div>
         <p className="text-sm leading-7 text-[var(--color-text-base)]">
-          Choose API or MCP first, let the dashboard discover the available
-          functions, then keep each function enabled, disable it, or mark it as
-          case-by-case approval.
+          Choose a Built-in connector hosted in this deployment or a remote MCP
+          server, let the dashboard discover the available functions, then keep
+          each function enabled, disable it, or mark it as case-by-case approval.
         </p>
       </div>
 
@@ -334,9 +521,9 @@ export const IntegrationWizard = ({
         <div className="grid gap-4 md:grid-cols-2">
           {[
             {
-              kind: "api" as const,
-              title: "API connector",
-              body: "Uses Composio to discover a toolkit and auto-detect whether it is OAuth, API-key, bearer, basic, or no-auth.",
+              kind: "built_in" as const,
+              title: "Built-in connector",
+              body: "Pick from the curated Vercel-hosted connectors, connect your account when OAuth is available, and let the dashboard discover the available functions.",
               icon: KeyRound,
             },
             {
@@ -356,8 +543,12 @@ export const IntegrationWizard = ({
                   : "border-[var(--color-border)] bg-black/10 hover:bg-white/5",
               )}
               onClick={() => {
-                setDraft((current) => ({ ...current, kind: option.kind }));
+                setDraft({ ...INITIAL_DRAFT, kind: option.kind });
+                setDiscovery(null);
+                setFunctionModes({});
+                setConnectorSearch("");
                 setStep(2);
+                onStatus(null);
               }}
             >
               <option.icon className="mb-4 h-6 w-6 text-[var(--color-accent)]" />
@@ -373,75 +564,311 @@ export const IntegrationWizard = ({
       {step === 2 ? (
         <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
           <div className="grid gap-4">
-            <label className="grid gap-2 text-sm text-white">
-              <span className="font-medium">Integration key</span>
-              <input
-                className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-input)] px-4 py-3 text-white"
-                placeholder={draft.kind === "api" ? "notion" : "figma-mcp"}
-                value={draft.key}
-                onChange={(event) =>
-                  setDraft((current) => ({
-                    ...current,
-                    key: event.target.value,
-                  }))
-                }
-              />
-            </label>
-
-            <label className="grid gap-2 text-sm text-white">
-              <span className="font-medium">Display name</span>
-              <input
-                className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-input)] px-4 py-3 text-white"
-                placeholder={draft.kind === "api" ? "Notion" : "Figma MCP"}
-                value={draft.name}
-                onChange={(event) =>
-                  setDraft((current) => ({
-                    ...current,
-                    name: event.target.value,
-                  }))
-                }
-              />
-            </label>
-
-            {draft.kind === "api" ? (
+            {draft.kind === "built_in" ? (
               <>
                 <label className="grid gap-2 text-sm text-white">
-                  <span className="font-medium">Toolkit slug</span>
+                  <span className="font-medium">Built-in connector</span>
                   <input
-                    className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-input)] px-4 py-3 text-white"
-                    placeholder="Defaults to the integration key"
-                    value={draft.toolkitSlug}
-                    onChange={(event) =>
-                      setDraft((current) => ({
-                        ...current,
-                        toolkitSlug: event.target.value,
-                      }))
+                    className={inputClassName}
+                    list="built-in-connector-options"
+                    placeholder={
+                      builtInConnectorsQuery.isPending
+                        ? "Loading supported connectors..."
+                        : "Choose GitHub, Notion, Slack..."
                     }
+                    value={connectorSearch}
+                    onChange={(event) =>
+                      handleConnectorSearchChange(event.target.value)
+                    }
+                    disabled={builtInConnectorsQuery.isPending}
                   />
-                </label>
-                <label className="grid gap-2 text-sm text-white">
-                  <span className="font-medium">
-                    Connected account ID (optional)
+                  <datalist id="built-in-connector-options">
+                    {builtInConnectors.map((connector) => (
+                      <option
+                        key={connector.slug}
+                        value={connectorOptionLabel(connector)}
+                      />
+                    ))}
+                  </datalist>
+                  <span className="text-xs leading-6 text-[var(--color-text-base)]">
+                    Use the dropdown and start typing to filter the curated
+                    connectors hosted inside this Vercel deployment. Selecting one
+                    auto-fills the key and display name below.
                   </span>
-                  <input
-                    className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-input)] px-4 py-3 text-white"
-                    placeholder="acct_..."
-                    value={draft.connectedAccountId}
-                    onChange={(event) =>
-                      setDraft((current) => ({
-                        ...current,
-                        connectedAccountId: event.target.value,
-                      }))
-                    }
-                  />
                 </label>
+
+                {builtInConnectorsQuery.isError ? (
+                  <div className="rounded-2xl border border-amber-500/40 bg-amber-500/10 px-4 py-4 text-sm text-amber-200">
+                    {(builtInConnectorsQuery.error as Error).message}
+                  </div>
+                ) : null}
+
+                <div className="rounded-2xl border border-[var(--color-border)] bg-black/10 p-4 text-sm text-[var(--color-text-base)]">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <p className="font-semibold text-white">
+                        Popular OAuth-ready provider options
+                      </p>
+                      <p className="mt-1 text-xs leading-6 text-[var(--color-text-base)]">
+                        Researched catalog of 50 popular providers with OAuth support.
+                        The curated built-ins above work now; the rest are planned next.
+                      </p>
+                    </div>
+                    <Badge>{oauthProviderCatalogQuery.data?.length ?? 0} options</Badge>
+                  </div>
+
+                  {oauthProviderCatalogQuery.isPending ? (
+                    <p className="mt-3 text-xs leading-6 text-[var(--color-text-base)]">
+                      Loading researched provider options...
+                    </p>
+                  ) : (
+                    <div className="mt-4 grid gap-3 md:grid-cols-2">
+                      {oauthProviderSuggestions.map((provider) => {
+                        const builtInMatch = provider.builtInSlug
+                          ? builtInConnectors.find(
+                              (connector) => connector.slug === provider.builtInSlug,
+                            )
+                          : null;
+
+                        return (
+                          <div
+                            key={provider.slug}
+                            className="rounded-2xl border border-[var(--color-border)] bg-black/20 p-4"
+                          >
+                            <div className="flex flex-wrap items-center gap-2">
+                              <p className="font-medium text-white">{provider.name}</p>
+                              <Badge>{provider.slug}</Badge>
+                              <Badge
+                                tone={
+                                  provider.availability === "planned"
+                                    ? "warning"
+                                    : provider.availability === "oauth_ready"
+                                      ? "success"
+                                      : "default"
+                                }
+                              >
+                                {availabilityLabel(provider.availability)}
+                              </Badge>
+                            </div>
+                            <p className="mt-2 text-xs leading-6 text-[var(--color-text-base)]">
+                              {provider.description}
+                            </p>
+                            <p className="mt-2 text-xs leading-6 text-[var(--color-text-base)]">
+                              {provider.notes}
+                            </p>
+                            <div className="mt-3 flex flex-wrap gap-2">
+                              {provider.categories.map((category) => (
+                                <Badge key={`${provider.slug}-${category}`}>{category}</Badge>
+                              ))}
+                            </div>
+                            <div className="mt-4 flex flex-wrap gap-3">
+                              {builtInMatch ? (
+                                <Button
+                                  className="h-9 rounded-lg px-4 text-xs"
+                                  variant="secondary"
+                                  onClick={() => handleConnectorSelect(builtInMatch)}
+                                >
+                                  Use {builtInMatch.name}
+                                </Button>
+                              ) : null}
+                              {provider.docsUrl ? (
+                                <a
+                                  href={provider.docsUrl}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="inline-flex items-center text-xs text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
+                                >
+                                  Open OAuth docs
+                                </a>
+                              ) : null}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+
+                {selectedConnector ? (
+                  <div className="rounded-2xl border border-[var(--color-border)] bg-black/10 p-4 text-sm text-[var(--color-text-base)]">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="font-semibold text-white">
+                        {selectedConnector.name}
+                      </p>
+                      <Badge>{selectedConnector.slug}</Badge>
+                      <Badge>{authStrategyLabel(selectedConnector.authStrategy)}</Badge>
+                      {selectedConnection ? (
+                        <Badge tone="success">Connected</Badge>
+                      ) : null}
+                    </div>
+                    <p className="mt-2 leading-7">
+                      {selectedConnector.description ||
+                        "This built-in connector is backed by a Vercel-hosted MCP route in this deployment."}
+                    </p>
+                    {requiresOAuthConnection ? (
+                      <div className="mt-4 rounded-2xl border border-[var(--color-border)] bg-black/20 p-4">
+                        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-white">
+                              {selectedConnection
+                                ? selectedConnection.displayName || `${selectedConnector.name} account connected`
+                                : `Connect your ${selectedConnector.name} account`}
+                            </p>
+                            <p className="mt-1 text-xs leading-6 text-[var(--color-text-base)]">
+                              {!oauthConnectionEnabled
+                                ? `${selectedConnector.name} OAuth is not configured on this deployment yet. Add the required client ID and secret first.`
+                                : selectedConnection
+                                  ? `This ${selectedConnector.name} token is stored per user in the database and will be injected automatically for agent calls.`
+                                  : selectedConnector.credentialHelp}
+                            </p>
+                            {selectedConnection?.expiresAt ? (
+                              <p className="mt-1 text-xs leading-6 text-[var(--color-text-base)]">
+                                Expires {new Date(selectedConnection.expiresAt).toLocaleString()}.
+                              </p>
+                            ) : null}
+                          </div>
+                          <Button
+                            className="h-9 rounded-lg px-4 text-xs"
+                            disabled={!draft.builtInSlug.trim() || !oauthConnectionEnabled}
+                            onClick={() => {
+                              window.location.href = `/api/oauth/${selectedConnector.slug}/start?integrationKey=${encodeURIComponent(
+                                draft.key.trim() || selectedConnector.slug,
+                              )}&redirectTo=${encodeURIComponent(
+                                `/admin?section=integrations&showIntegrationWizard=1&builtIn=${draft.builtInSlug || selectedConnector.slug}`,
+                              )}`;
+                            }}
+                          >
+                            {!oauthConnectionEnabled
+                              ? "OAuth not configured"
+                              : selectedConnection
+                                ? "Reconnect"
+                                : "Connect"}
+                          </Button>
+                        </div>
+                      </div>
+                    ) : null}
+                    {selectedConnector.appUrl ? (
+                      <a
+                        href={selectedConnector.appUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="mt-3 inline-flex text-xs text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
+                      >
+                        Open provider docs
+                      </a>
+                    ) : null}
+                  </div>
+                ) : null}
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  <label className="grid gap-2 text-sm text-white">
+                    <span className="font-medium">Integration key</span>
+                    <input
+                      className={inputClassName}
+                      placeholder="github"
+                      value={draft.key}
+                      onChange={(event) =>
+                        setDraft((current) => ({
+                          ...current,
+                          key: event.target.value,
+                        }))
+                      }
+                      disabled={!draft.builtInSlug.trim()}
+                    />
+                    <span className="text-xs leading-6 text-[var(--color-text-base)]">
+                      Edit this if you want more than one saved connection for the
+                      same built-in connector.
+                    </span>
+                  </label>
+
+                  <label className="grid gap-2 text-sm text-white">
+                    <span className="font-medium">Display name</span>
+                    <input
+                      className={inputClassName}
+                      placeholder="GitHub"
+                      value={draft.name}
+                      onChange={(event) =>
+                        setDraft((current) => ({
+                          ...current,
+                          name: event.target.value,
+                        }))
+                      }
+                      disabled={!draft.builtInSlug.trim()}
+                    />
+                  </label>
+                </div>
+
+                {requiresOAuthConnection ? (
+                  <div className="rounded-2xl border border-dashed border-[var(--color-border)] px-4 py-4 text-sm text-[var(--color-text-base)]">
+                    {!oauthConnectionEnabled
+                      ? `${selectedConnector?.name ?? "This provider"} needs deployment-level OAuth configuration before users can connect accounts.`
+                      : selectedConnection
+                        ? `${selectedConnector?.name} is connected. Click Discover to save this integration with your stored OAuth credentials.`
+                        : `Connect ${selectedConnector?.name ?? "this provider"} before discovering functions.`}
+                  </div>
+                ) : (
+                  <label className="grid gap-2 text-sm text-white">
+                    <span className="font-medium">
+                      {selectedConnector?.credentialLabel ?? "Access token"}
+                    </span>
+                    <input
+                      className={inputClassName}
+                      placeholder={
+                        selectedConnector?.credentialPlaceholder ?? "Paste the provider token"
+                      }
+                      value={draft.accessToken}
+                      onChange={(event) =>
+                        setDraft((current) => ({
+                          ...current,
+                          accessToken: event.target.value,
+                        }))
+                      }
+                      disabled={!draft.builtInSlug.trim()}
+                    />
+                    <span className="text-xs leading-6 text-[var(--color-text-base)]">
+                      {selectedConnector?.credentialHelp ??
+                        "Provide the provider token that the built-in MCP route should forward upstream."}
+                    </span>
+                  </label>
+                )}
               </>
             ) : (
               <>
                 <label className="grid gap-2 text-sm text-white">
+                  <span className="font-medium">Integration key</span>
+                  <input
+                    className={inputClassName}
+                    placeholder="figma-mcp"
+                    value={draft.key}
+                    onChange={(event) =>
+                      setDraft((current) => ({
+                        ...current,
+                        key: event.target.value,
+                      }))
+                    }
+                  />
+                </label>
+
+                <label className="grid gap-2 text-sm text-white">
+                  <span className="font-medium">Display name</span>
+                  <input
+                    className={inputClassName}
+                    placeholder="Figma MCP"
+                    value={draft.name}
+                    onChange={(event) =>
+                      setDraft((current) => ({
+                        ...current,
+                        name: event.target.value,
+                      }))
+                    }
+                  />
+                </label>
+
+                <label className="grid gap-2 text-sm text-white">
                   <span className="font-medium">Server URL</span>
                   <input
-                    className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-input)] px-4 py-3 text-white"
+                    className={inputClassName}
                     placeholder="https://mcp.example.com"
                     value={draft.serverUrl}
                     onChange={(event) =>
@@ -451,12 +878,17 @@ export const IntegrationWizard = ({
                       }))
                     }
                   />
+                  <span className="text-xs leading-6 text-[var(--color-text-base)]">
+                    Example: GitHub&apos;s hosted MCP server uses{" "}
+                    <code className="text-white">https://api.githubcopilot.com/mcp/</code>.
+                    For local QA, a localhost MCP proxy URL also works.
+                  </span>
                 </label>
                 <div className="grid gap-4 md:grid-cols-2">
                   <label className="grid gap-2 text-sm text-white">
                     <span className="font-medium">Access token (optional)</span>
                     <input
-                      className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-input)] px-4 py-3 text-white"
+                      className={inputClassName}
                       placeholder="OAuth or bearer token"
                       value={draft.accessToken}
                       onChange={(event) =>
@@ -466,11 +898,14 @@ export const IntegrationWizard = ({
                         }))
                       }
                     />
+                    <span className="text-xs leading-6 text-[var(--color-text-base)]">
+                      Use this for bearer-token MCP servers such as GitHub&apos;s hosted MCP.
+                    </span>
                   </label>
                   <label className="grid gap-2 text-sm text-white">
                     <span className="font-medium">API key (optional)</span>
                     <input
-                      className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-input)] px-4 py-3 text-white"
+                      className={inputClassName}
                       placeholder="Secret used with a header"
                       value={draft.apiKey}
                       onChange={(event) =>
@@ -484,7 +919,7 @@ export const IntegrationWizard = ({
                   <label className="grid gap-2 text-sm text-white">
                     <span className="font-medium">API key header name</span>
                     <input
-                      className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-input)] px-4 py-3 text-white"
+                      className={inputClassName}
                       placeholder="X-API-Key"
                       value={draft.headerName}
                       onChange={(event) =>
@@ -499,7 +934,7 @@ export const IntegrationWizard = ({
                     <label className="grid gap-2 text-sm text-white">
                       <span className="font-medium">Username (optional)</span>
                       <input
-                        className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-input)] px-4 py-3 text-white"
+                        className={inputClassName}
                         placeholder="demo"
                         value={draft.username}
                         onChange={(event) =>
@@ -514,7 +949,7 @@ export const IntegrationWizard = ({
                       <span className="font-medium">Password (optional)</span>
                       <input
                         type="password"
-                        className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-input)] px-4 py-3 text-white"
+                        className={inputClassName}
                         placeholder="secret"
                         value={draft.password}
                         onChange={(event) =>
@@ -554,18 +989,23 @@ export const IntegrationWizard = ({
             <p className="font-semibold text-white">
               What happens in this step
             </p>
-            {draft.kind === "api" ? (
+            {draft.kind === "built_in" ? (
               <ul className="mt-3 space-y-2">
                 <li>
-                  • The dashboard queries the Composio toolkit that matches your
-                  integration key or toolkit slug.
+                  • The dashboard loads the five curated connectors that are hosted
+                  as MCP routes inside this Vercel deployment.
                 </li>
                 <li>
-                  • It auto-detects the auth scheme from toolkit metadata.
+                  • Choosing a connector auto-fills the integration key and display
+                  name, while still letting you customize them if needed.
                 </li>
                 <li>
-                  • It pulls the available API functions so you can review them
-                  before saving.
+                  • It stores the provider token you supply and wires the
+                  integration to the matching internal MCP endpoint.
+                </li>
+                <li>
+                  • The available functions are discovered from that internal MCP
+                  route before you save the integration.
                 </li>
               </ul>
             ) : (
@@ -577,6 +1017,11 @@ export const IntegrationWizard = ({
                 <li>
                   • It infers auth from the credentials you provided, without
                   making you choose an auth type explicitly.
+                </li>
+                <li>
+                  • For GitHub MCP, use{" "}
+                  <code className="text-white">https://api.githubcopilot.com/mcp/</code>
+                  {" "}plus a GitHub PAT in <span className="text-white">Access token</span>.
                 </li>
                 <li>
                   • Every discovered tool is prepared as an enabled function by
@@ -591,7 +1036,7 @@ export const IntegrationWizard = ({
       {step === 3 && discovery ? (
         <div className="space-y-6">
           <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-[var(--color-border)] bg-black/10 p-4 text-sm text-[var(--color-text-base)]">
-            <Badge>{draft.kind === "api" ? "API" : "MCP"}</Badge>
+            <Badge>{draft.kind === "built_in" ? "Built-in" : "MCP"}</Badge>
             <Badge>{discovery.provider}</Badge>
             <Badge>{authStrategyLabel(discovery.authStrategy)}</Badge>
             <span>
@@ -603,7 +1048,7 @@ export const IntegrationWizard = ({
           {reviewedFunctions.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-[var(--color-border)] bg-black/10 p-5 text-sm text-[var(--color-text-base)]">
               No functions were discovered for this connector. Go back and
-              confirm the toolkit slug or MCP server URL.
+              confirm the selected built-in connector or MCP server URL.
             </div>
           ) : (
             <div className="grid gap-3">

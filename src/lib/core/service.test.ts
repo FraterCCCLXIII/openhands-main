@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import {
   AdapterRegistry,
@@ -290,4 +290,98 @@ describe("ContextLayerService", () => {
     expect(response.provider).toBe("mock");
     expect(response.data).toEqual({ ok: true, payload: { q: "hello" } });
   });
+
+  it("provisions stable per-user context API keys", async () => {
+    const service = createService();
+
+    const first = await service.getOrCreateAgentApiKey("Owner@Example.com");
+    const second = await service.getOrCreateAgentApiKey("owner@example.com");
+
+    expect(first.ownerId).toBe("owner@example.com");
+    expect(second.apiKey).toBe(first.apiKey);
+    expect(await service.hasStoredAgentApiKeys()).toBe(true);
+    expect(await service.isStoredAgentApiKeyAuthorized(first.apiKey)).toBe(true);
+    expect(await service.isStoredAgentApiKeyAuthorized("not-a-real-key")).toBe(false);
+  });
+
+  it("injects saved per-user OAuth credentials during invocation", async () => {
+    const repository = new MemoryRepository();
+    const mcpInvoke = vi.fn(async ({ integration }) => integration.credentials);
+    const service = new ContextLayerService(
+      repository,
+      new AdapterRegistry({
+        mcp: { invoke: mcpInvoke },
+        mock: { invoke: async () => ({}) },
+      }),
+      new NotificationPublisher(repository),
+    );
+
+    await service.registerIntegration({
+      key: "notion",
+      name: "Notion",
+      kind: "mcp",
+      provider: "mcp",
+      authStrategy: "oauth2",
+      enabled: true,
+      fineGrainedPermissions: true,
+      config: { builtInSlug: "notion" },
+      credentials: {},
+      functions: {
+        search: {
+          name: "search",
+          description: "Search Notion",
+          enabled: true,
+          fineGrainedPermissions: true,
+          defaultScopes: ["read"],
+          executionMode: "provider",
+          config: {},
+        },
+      },
+    });
+    await service.upsertAgentPolicy("assistant", [
+      {
+        integrationKey: "notion",
+        functionNames: ["search"],
+        scopes: ["read"],
+        enabled: true,
+      },
+    ]);
+    await service.saveOAuthConnection(
+      "owner@example.com",
+      "notion",
+      "notion",
+      {
+        accessToken: "user-access-token",
+        refreshToken: "user-refresh-token",
+      },
+      {
+        authStrategy: "oauth2",
+        tokenType: "bearer",
+        scopes: ["read"],
+        expiresAt: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+        externalAccountId: "bot_123",
+        externalWorkspaceId: "workspace_123",
+        displayName: "Team Wiki",
+        metadata: {},
+      },
+    );
+
+    const response = await service.invokeContext(
+      "agent-11",
+      "assistant",
+      "notion",
+      "search",
+      { query: "docs" },
+      ["read"],
+      { ownerId: "owner@example.com" },
+    );
+
+    expect(mcpInvoke).toHaveBeenCalledTimes(1);
+    expect(response.data).toEqual({
+      accessToken: "user-access-token",
+      refreshToken: "user-refresh-token",
+    });
+  });
+
+
 });

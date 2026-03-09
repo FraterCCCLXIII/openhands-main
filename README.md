@@ -1,14 +1,14 @@
-# Agent Context Layer
+# OpenHands Context Layer
 
-A Vercel-native context layer for AI agents built with Next.js, TypeScript, Auth.js, Neon, Composio, and the official MCP SDK.
+A Vercel-native context layer for AI agents built with Next.js, TypeScript, Auth.js, Neon, curated built-in connectors, Composio, and the official MCP SDK.
 
 ## What this implements
 
 - A single unified invocation endpoint: `POST /api/context/[integrationKey]/[functionName]`
-- Connector onboarding for API and MCP integrations
+- Connector onboarding for curated built-in connectors plus custom MCP integrations
 - Existing-library adapter layer:
-  - `@composio/core` for SaaS/API tool execution
-  - `@modelcontextprotocol/sdk` for MCP server access
+  - `@composio/core` for broader SaaS/API tool execution
+  - `@modelcontextprotocol/sdk` for both hosted built-in MCP routes and remote MCP server access
 - Fine-grained controls for:
   - integration enable/disable
   - function enable/disable
@@ -44,7 +44,7 @@ npm install
 cp .env.example .env.local
 ```
 
-3. For local development, you can bypass interactive auth entirely:
+3. For local development, you can bypass interactive auth entirely. In this mode the app only responds to localhost requests. When you open the dashboard, it provisions a personal context-layer API key for the current user and stores it server-side:
 
 ```bash
 DISABLE_AUTH=true npm run dev
@@ -66,6 +66,13 @@ Core variables:
 - `POSTGRES_URL` or `DATABASE_URL`
 - `COMPOSIO_API_KEY`
 - `CRON_SECRET`
+
+Optional provider OAuth variables for built-in per-user connections:
+
+- `NOTION_CLIENT_ID`
+- `NOTION_CLIENT_SECRET`
+- `FIGMA_CLIENT_ID`
+- `FIGMA_CLIENT_SECRET`
 
 Optional auth variables:
 
@@ -113,8 +120,35 @@ This project now follows the same Auth.js preview deployment pattern used by `Op
 5. When a user signs in from a preview deployment, Auth.js will proxy the OAuth callback through production and then redirect back to the preview URL.
 
 Notes:
-- If you set `DISABLE_AUTH=true`, the app bypasses interactive login and you can open `/admin` directly for local development.
+- If you set `DISABLE_AUTH=true`, the app bypasses interactive login, only serves localhost requests, and you can open `/admin` directly for local development.
+- The dashboard automatically provisions a personal context-layer API key for the signed-in user (or the local dev user when auth is disabled) and stores it server-side.
+- Agents can call `POST /api/context/*` only after a user has opened the dashboard once and provisioned a personal key.
 - If you want localhost GitHub login without the redirect proxy flow, create a separate GitHub OAuth app with callback `http://localhost:3000/api/auth/callback/github`.
+
+## Built-in provider OAuth setup
+
+For providers that support per-user OAuth in the admin UI, create a provider OAuth app and set the matching client ID and secret in the environment.
+
+### Notion
+
+1. Create a public or internal integration in Notion.
+2. Add the redirect URI:
+   - `https://<your-host>/api/oauth/notion/callback`
+   - `http://localhost:3000/api/oauth/notion/callback` for local development
+3. Set `NOTION_CLIENT_ID` and `NOTION_CLIENT_SECRET`.
+4. In the dashboard, choose the Notion built-in connector and click **Connect**.
+
+### Figma
+
+1. Create a Figma OAuth app.
+2. Add the redirect URI:
+   - `https://<your-host>/api/oauth/figma/callback`
+   - `http://localhost:3000/api/oauth/figma/callback` for local development
+3. Set `FIGMA_CLIENT_ID` and `FIGMA_CLIENT_SECRET`.
+4. In the dashboard, choose the Figma built-in connector and click **Connect**.
+
+The callback routes store provider access tokens encrypted in the database as per-user integration connections. Agent calls to `/api/context/*` are authorized with the user's personal context-layer API key, which is then used to resolve and inject the correct per-user provider credentials server-side.
+
 
 
 ## Key routes

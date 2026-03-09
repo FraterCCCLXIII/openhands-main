@@ -43,6 +43,42 @@ export interface IntegrationSpec {
   functions: Record<string, FunctionSpec>;
 }
 
+export interface BuiltInConnectorOption {
+  slug: string;
+  name: string;
+  description: string;
+  logoUrl?: string;
+  appUrl?: string;
+  toolCount: number;
+  categories: string[];
+  authModes: AuthStrategy[];
+  authStrategy: AuthStrategy;
+  oauthConfigured?: boolean;
+  credentialLabel: string;
+  credentialPlaceholder: string;
+  credentialHelp: string;
+}
+
+export type OAuthProviderAvailability =
+  | "oauth_ready"
+  | "manual_token"
+  | "planned";
+
+export interface OAuthProviderCatalogOption {
+  slug: string;
+  name: string;
+  description: string;
+  categories: string[];
+  authStrategy: "oauth2";
+  availability: OAuthProviderAvailability;
+  builtInSlug?: string;
+  appUrl?: string;
+  docsUrl?: string;
+  notes: string;
+  popularityRank: number;
+}
+
+
 export interface PolicyRule {
   integrationKey: string;
   functionNames: string[];
@@ -92,6 +128,56 @@ export interface NotificationRecord {
   body: string;
   metadata: Record<string, unknown>;
   createdAt: string;
+}
+
+export interface AgentApiKeyRecord {
+  ownerId: string;
+  apiKey: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface IntegrationConnectionRecord {
+  ownerId: string;
+  integrationKey: string;
+  provider: string;
+  authStrategy: AuthStrategy;
+  encryptedCredentials: string;
+  tokenType?: string;
+  scopes: string[];
+  expiresAt?: string;
+  externalAccountId?: string;
+  externalWorkspaceId?: string;
+  displayName?: string;
+  metadata: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface IntegrationConnectionStatus {
+  integrationKey: string;
+  provider: string;
+  authStrategy: AuthStrategy;
+  tokenType?: string;
+  scopes: string[];
+  expiresAt?: string;
+  externalAccountId?: string;
+  externalWorkspaceId?: string;
+  displayName?: string;
+  metadata: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface OAuthStateRecord {
+  state: string;
+  ownerId: string;
+  integrationKey: string;
+  provider: string;
+  codeVerifier?: string;
+  redirectTo: string;
+  createdAt: string;
+  expiresAt: string;
 }
 
 export interface AccessDecision {
