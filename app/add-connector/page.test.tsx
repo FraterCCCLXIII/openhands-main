@@ -35,7 +35,8 @@ describe("AddConnectorPage", () => {
     expect(html).toContain("Composio-hosted MCP URL pattern");
     expect(html).toContain("customerId=replace-me");
     expect(html).toContain("OAuth app setup docs");
-    expect(html).toContain("/api/oauth/&lt;provider&gt;/callback");
+    expect(html).toContain("AUTH_REDIRECT_PROXY_URL");
+    expect(html).toContain("stable deployment origin instead of the preview URL");
     expect(html).toContain("Connect");
     expect(html).toContain("Discover functions");
     expect(html).toContain("src/lib/integrations/built-in-connectors.ts");

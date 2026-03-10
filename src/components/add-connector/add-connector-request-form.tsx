@@ -208,12 +208,13 @@ export const AddConnectorRequestForm = ({
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-xs leading-6 text-[var(--color-text-base)]">
-          Submissions are saved as in-app notifications for triage. After review,
-          an admin can either register a service-level OAuth MCP from this page or
-          add a custom built-in connector in source code by updating
+          Admins can add a new connector in source by updating
           <code className="mx-1 text-white">src/lib/integrations/built-in-connectors.ts</code>
           and the matching
-          <code className="mx-1 text-white">app/api/mcp/&lt;provider&gt;/route.ts</code>.
+          <code className="mx-1 text-white">app/api/mcp/&lt;provider&gt;/route.ts</code>,
+          or register a service-level OAuth MCP through the admin flow on this
+          page. Submitted details are still saved as in-app notifications so the
+          team can review and prioritize requests.
         </p>
         <Button className="h-10 rounded-lg px-4" disabled={isSubmitting} type="submit">
           {isSubmitting ? "Submitting..." : "Submit provider information"}

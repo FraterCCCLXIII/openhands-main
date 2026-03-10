@@ -96,6 +96,7 @@ const registrationDefaults: Record<string, OAuthProviderRegistrationDefaults> = 
     requestPath: "/conversations.list",
   },
   notion: {
+    serverUrl: "https://mcp.notion.com/mcp",
     apiBaseUrl: "https://api.notion.com",
     authorizationUrl: "https://api.notion.com/v1/oauth/authorize",
     tokenUrl: "https://api.notion.com/v1/oauth/token",

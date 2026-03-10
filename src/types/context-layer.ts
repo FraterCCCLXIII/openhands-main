@@ -247,6 +247,8 @@ export interface OAuthStateRecord {
   provider: string;
   codeVerifier?: string;
   redirectTo: string;
+  redirectUri?: string;
+  callbackUrl?: string;
   createdAt: string;
   expiresAt: string;
 }

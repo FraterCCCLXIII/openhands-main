@@ -367,6 +367,8 @@ export class ContextLayerService {
     provider: string;
     codeVerifier?: string;
     redirectTo: string;
+    redirectUri?: string;
+    callbackUrl?: string;
     expiresAt: string;
   }) {
     await this.initialize();
@@ -377,14 +379,12 @@ export class ContextLayerService {
     });
   }
 
-  async consumeOAuthState(state: string, provider: string) {
+  async getOAuthState(state: string, provider: string) {
     await this.initialize();
     const record = await this.repository.getOAuthState(state);
     if (!record) {
       throw new ContextLayerError("OAuth state not found or already used.", 400);
     }
-
-    await this.repository.deleteOAuthState(state);
 
     if (record.provider !== provider) {
       throw new ContextLayerError("OAuth state provider mismatch.", 400);
@@ -394,6 +394,14 @@ export class ContextLayerService {
       throw new ContextLayerError("OAuth state has expired. Try connecting again.", 400);
     }
 
+    return record;
+
+  }
+
+  async consumeOAuthState(state: string, provider: string) {
+    await this.initialize();
+    const record = await this.getOAuthState(state, provider);
+    await this.repository.deleteOAuthState(state);
     return record;
   }
 

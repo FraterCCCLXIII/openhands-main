@@ -7,6 +7,8 @@ import {
   getGithubCallbackUrl,
   getGithubClientId,
   getGithubClientSecret,
+  getOAuthCallbackBaseUrl,
+  getOAuthCallbackUrl,
   getRedirectProxyUrl,
   isAuthDisabled,
 } from "@/src/lib/auth-config";
@@ -60,6 +62,21 @@ describe("auth-config", () => {
     expect(getRedirectProxyUrl(previewEnv)).toBe("https://openhands-context-layer.vercel.app/api/auth");
     expect(getGithubCallbackUrl(previewEnv)).toBe(
       "https://openhands-context-layer.vercel.app/api/auth/callback/github",
+    );
+  });
+
+
+  it("uses the redirect proxy origin for service OAuth callbacks on preview deployments", () => {
+    const previewEnv = env({
+      AUTH_REDIRECT_PROXY_URL: "https://openhands-context-layer.vercel.app/api/auth/",
+      VERCEL_URL: "openhands-context-layer-git-feature.vercel.app",
+    });
+
+    expect(getOAuthCallbackBaseUrl(previewEnv)).toBe(
+      "https://openhands-context-layer.vercel.app/api/oauth",
+    );
+    expect(getOAuthCallbackUrl("notion", previewEnv)).toBe(
+      "https://openhands-context-layer.vercel.app/api/oauth/notion/callback",
     );
   });
 

@@ -28,6 +28,8 @@ const readyBuiltInConnectors: BuiltInConnectorOption[] = [
   },
 ];
 
+const oauthCallbackBaseUrl = "https://openhands-context-layer.vercel.app/api/oauth";
+
 const providerCatalog: OAuthProviderCatalogOption[] = [
   {
     slug: "github",
@@ -108,6 +110,7 @@ describe("CuratedProviderList", () => {
           providerCatalog={providerCatalog}
           readyBuiltInConnectors={readyBuiltInConnectors}
           canRegisterManagedConnectors
+          oauthCallbackBaseUrl={oauthCallbackBaseUrl}
         />,
       );
     });
@@ -142,7 +145,7 @@ describe("CuratedProviderList", () => {
     expect(container.textContent).toContain("Register connector");
     expect(container.textContent).toContain("How to create Google Calendar OAuth credentials");
     expect(container.textContent).toContain(
-      `${window.location.origin}/api/oauth/google-calendar/callback`,
+      `${oauthCallbackBaseUrl}/google-calendar/callback`,
     );
     expect(container.textContent).toContain(
       "The standard OAuth URLs and scopes for Google Calendar are already filled in.",
@@ -224,6 +227,7 @@ describe("CuratedProviderList", () => {
           providerCatalog={providerCatalog}
           readyBuiltInConnectors={readyBuiltInConnectors}
           canRegisterManagedConnectors
+          oauthCallbackBaseUrl={oauthCallbackBaseUrl}
         />,
       );
     });

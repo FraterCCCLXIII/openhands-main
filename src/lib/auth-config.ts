@@ -22,6 +22,20 @@ export const getBaseUrl = (env: NodeJS.ProcessEnv = process.env) => {
 export const getRedirectProxyUrl = (env: NodeJS.ProcessEnv = process.env) =>
   env.AUTH_REDIRECT_PROXY_URL?.replace(/\/$/, "") ?? "";
 
+export const getOAuthCallbackBaseUrl = (env: NodeJS.ProcessEnv = process.env) => {
+  const redirectProxyUrl = getRedirectProxyUrl(env);
+  if (redirectProxyUrl) {
+    return `${new URL(redirectProxyUrl).origin}/api/oauth`;
+  }
+
+  return `${getBaseUrl(env)}/api/oauth`;
+};
+
+export const getOAuthCallbackUrl = (
+  provider: string,
+  env: NodeJS.ProcessEnv = process.env,
+) => `${getOAuthCallbackBaseUrl(env)}/${provider}/callback`;
+
 export const getGithubClientId = (env: NodeJS.ProcessEnv = process.env) =>
   env.GITHUB_CLIENT_ID ?? env.AUTH_GITHUB_ID ?? "";
 

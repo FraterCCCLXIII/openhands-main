@@ -1,6 +1,6 @@
 "use client";
 
-import { type FormEvent, useEffect, useMemo, useState } from "react";
+import { type FormEvent, useMemo, useState } from "react";
 import { ExternalLink } from "lucide-react";
 
 import { Badge } from "@/src/components/ui/badge";
@@ -77,8 +77,8 @@ const hasFixedOAuthConfig = (provider: OAuthProviderCatalogOption) =>
       provider.registrationDefaults?.tokenUrl,
   );
 
-const buildCallbackUrl = (origin: string, slug: string) =>
-  `${origin || "https://<your-deployment>"}/api/oauth/${slug}/callback`;
+const buildCallbackUrl = (callbackBaseUrl: string, slug: string) =>
+  `${callbackBaseUrl || "https://<your-deployment>/api/oauth"}/${slug}/callback`;
 
 const buildManagedConnectorPayload = (
   provider: OAuthProviderCatalogOption,
@@ -116,23 +116,20 @@ interface CuratedProviderListProps {
   providerCatalog: OAuthProviderCatalogOption[];
   readyBuiltInConnectors: BuiltInConnectorOption[];
   canRegisterManagedConnectors?: boolean;
+  oauthCallbackBaseUrl?: string;
 }
 
 export function CuratedProviderList({
   providerCatalog,
   readyBuiltInConnectors,
   canRegisterManagedConnectors = false,
+  oauthCallbackBaseUrl = "",
 }: CuratedProviderListProps) {
   const [query, setQuery] = useState("");
   const [expandedSlug, setExpandedSlug] = useState<string | null>(null);
-  const [deploymentOrigin, setDeploymentOrigin] = useState("");
   const [registrationForms, setRegistrationForms] = useState<
     Record<string, RegistrationFormState>
   >({});
-
-  useEffect(() => {
-    setDeploymentOrigin(window.location.origin);
-  }, []);
 
   const updateRegistrationForm = (
     provider: OAuthProviderCatalogOption,
@@ -254,7 +251,7 @@ export function CuratedProviderList({
             const isExpanded = expandedSlug === provider.slug;
             const registrationForm = getRegistrationForm(provider);
             const usesFixedOAuthDefaults = hasFixedOAuthConfig(provider);
-            const callbackUrl = buildCallbackUrl(deploymentOrigin, provider.slug);
+            const callbackUrl = buildCallbackUrl(oauthCallbackBaseUrl, provider.slug);
 
             return (
               <div key={provider.slug}>

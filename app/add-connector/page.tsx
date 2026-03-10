@@ -1,6 +1,7 @@
 import { ArrowLeft, Mail, ShieldCheck, UserRound } from "lucide-react";
 
 import { CuratedProviderList } from "@/src/components/admin/curated-provider-list";
+import { getOAuthCallbackBaseUrl } from "@/src/lib/auth-config";
 import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
 import { auth } from "@/src/lib/auth";
@@ -22,6 +23,8 @@ export default async function AddConnectorPage() {
   const readyBuiltInConnectors = filterReadyBuiltInConnectors(listBuiltInConnectors());
   const providerCatalog = listOAuthProviderCatalog();
   const canRegisterManagedConnectors = isAppAdminEmail(session?.user?.email ?? undefined);
+  const oauthCallbackBaseUrl = getOAuthCallbackBaseUrl();
+
 
   return (
     <main className="min-h-screen px-6 py-8">
@@ -145,12 +148,10 @@ export default async function AddConnectorPage() {
                   OAuth client ID and client secret in that managed connector if
                   this service is going to run the OAuth callback flow for users.
                   Every provider row includes a direct link to that provider's
-                  OAuth app setup docs, and if the provider asks for a redirect
-                  URI you should register
-                  <code className="mx-1 text-white">
-                    https://&lt;your-deployment&gt;/api/oauth/&lt;provider&gt;/callback
-                  </code>
-                  for this deployment.
+                  OAuth app setup docs and shows the callback URL to register.
+                  When <code className="text-white">AUTH_REDIRECT_PROXY_URL</code>
+                  is configured for preview deployments, that callback uses the
+                  stable deployment origin instead of the preview URL.
                 </li>
                 <li>
                   <span className="font-medium text-white">4.</span> Have a real
@@ -190,6 +191,7 @@ export default async function AddConnectorPage() {
             providerCatalog={providerCatalog}
             readyBuiltInConnectors={readyBuiltInConnectors}
             canRegisterManagedConnectors={canRegisterManagedConnectors}
+            oauthCallbackBaseUrl={oauthCallbackBaseUrl}
           />
         </Card>
       </div>

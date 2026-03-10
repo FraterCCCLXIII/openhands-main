@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { getOAuthCallbackUrl } from "@/src/lib/auth-config";
 import { ContextLayerError } from "@/src/lib/core/errors";
 import {
   getContextLayerRepository,
@@ -15,6 +16,15 @@ const buildRedirect = (
   const destination = new URL(redirectTo, requestUrl);
   for (const [key, value] of Object.entries(params)) {
     destination.searchParams.set(key, value);
+  }
+  return NextResponse.redirect(destination);
+};
+
+const buildCallbackRedirect = (requestUrl: string, callbackUrl: string) => {
+  const source = new URL(requestUrl);
+  const destination = new URL(callbackUrl);
+  for (const [key, value] of source.searchParams.entries()) {
+    destination.searchParams.append(key, value);
   }
   return NextResponse.redirect(destination);
 };
@@ -50,8 +60,20 @@ export async function GET(
   let redirectTo = "/admin?section=integrations&showIntegrationWizard=1";
 
   try {
-    const stateRecord = await service.consumeOAuthState(state, provider.slug);
+    const requestCallbackUrl = `${url.origin}/api/oauth/${provider.slug}/callback`;
+    const proxyCallbackUrl = getOAuthCallbackUrl(provider.slug);
+    const stateRecord = await service.getOAuthState(state, provider.slug);
     redirectTo = stateRecord.redirectTo;
+
+    if (
+      stateRecord.callbackUrl &&
+      stateRecord.callbackUrl !== requestCallbackUrl &&
+      proxyCallbackUrl === requestCallbackUrl
+    ) {
+      return buildCallbackRedirect(request.url, stateRecord.callbackUrl);
+    }
+
+    await service.consumeOAuthState(state, provider.slug);
 
     if (error) {
       return buildRedirect(request.url, redirectTo, {
@@ -65,7 +87,7 @@ export async function GET(
       throw new ContextLayerError("Missing OAuth authorization code.", 400);
     }
 
-    const redirectUri = `${url.origin}/api/oauth/${provider.slug}/callback`;
+    const redirectUri = stateRecord.redirectUri ?? proxyCallbackUrl;
     const exchange = await provider.exchangeCode({
       code,
       redirectUri,

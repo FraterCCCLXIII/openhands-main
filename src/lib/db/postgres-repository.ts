@@ -175,10 +175,15 @@ export class PostgresRepository implements ContextRepository {
         provider TEXT NOT NULL,
         code_verifier TEXT,
         redirect_to TEXT NOT NULL,
+        redirect_uri TEXT,
+        callback_url TEXT,
         created_at TIMESTAMPTZ NOT NULL,
         expires_at TIMESTAMPTZ NOT NULL
       )
     `;
+
+    await sql`ALTER TABLE oauth_states ADD COLUMN IF NOT EXISTS redirect_uri TEXT`;
+    await sql`ALTER TABLE oauth_states ADD COLUMN IF NOT EXISTS callback_url TEXT`;
 
     this.schemaReady = true;
   }
@@ -661,9 +666,9 @@ export class PostgresRepository implements ContextRepository {
     const sql = getSql();
     await sql`
       INSERT INTO oauth_states (
-        state, owner_id, integration_key, provider, code_verifier, redirect_to, created_at, expires_at
+        state, owner_id, integration_key, provider, code_verifier, redirect_to, redirect_uri, callback_url, created_at, expires_at
       ) VALUES (
-        ${record.state}, ${record.ownerId}, ${record.integrationKey}, ${record.provider}, ${record.codeVerifier ?? null}, ${record.redirectTo}, ${record.createdAt}, ${record.expiresAt}
+        ${record.state}, ${record.ownerId}, ${record.integrationKey}, ${record.provider}, ${record.codeVerifier ?? null}, ${record.redirectTo}, ${record.redirectUri ?? null}, ${record.callbackUrl ?? null}, ${record.createdAt}, ${record.expiresAt}
       )
       ON CONFLICT (state) DO UPDATE SET
         owner_id = EXCLUDED.owner_id,
@@ -671,6 +676,8 @@ export class PostgresRepository implements ContextRepository {
         provider = EXCLUDED.provider,
         code_verifier = EXCLUDED.code_verifier,
         redirect_to = EXCLUDED.redirect_to,
+        redirect_uri = EXCLUDED.redirect_uri,
+        callback_url = EXCLUDED.callback_url,
         created_at = EXCLUDED.created_at,
         expires_at = EXCLUDED.expires_at
     `;
@@ -692,6 +699,8 @@ export class PostgresRepository implements ContextRepository {
       provider: row.provider,
       codeVerifier: row.code_verifier ?? undefined,
       redirectTo: row.redirect_to,
+      redirectUri: row.redirect_uri ?? undefined,
+      callbackUrl: row.callback_url ?? undefined,
       createdAt: new Date(row.created_at).toISOString(),
       expiresAt: new Date(row.expires_at).toISOString(),
     } satisfies OAuthStateRecord;

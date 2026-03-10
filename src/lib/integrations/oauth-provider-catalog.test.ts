@@ -46,7 +46,7 @@ describe("listOAuthProviderCatalog", () => {
     });
     expect(notion?.registrationDefaults).toMatchObject({
       apiBaseUrl: "https://api.notion.com",
-      serverUrl: "https://mcp.composio.dev/partner/composio/notion/mcp?customerId=replace-me",
+      serverUrl: "https://mcp.notion.com/mcp",
       authorizationUrl: "https://api.notion.com/v1/oauth/authorize",
       tokenUrl: "https://api.notion.com/v1/oauth/token",
       functionName: "search_workspace",
