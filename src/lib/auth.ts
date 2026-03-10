@@ -18,7 +18,7 @@ const nextAuth = NextAuth({
     GitHub({
       clientId: getGithubClientId() || "dummy",
       clientSecret: getGithubClientSecret() || "dummy",
-      authorization: { params: { scope: "read:user" } },
+      authorization: { params: { scope: "read:user user:email" } },
     }),
   ],
   pages: {

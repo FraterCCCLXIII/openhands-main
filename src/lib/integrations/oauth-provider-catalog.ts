@@ -1,12 +1,14 @@
+import { getOAuthProviderRegistrationDefaults } from "@/src/lib/integrations/oauth-provider-registration-defaults";
 import type { OAuthProviderCatalogOption } from "@/src/types/context-layer";
 
 const provider = (
   popularityRank: number,
-  option: Omit<OAuthProviderCatalogOption, "authStrategy" | "popularityRank">,
+  option: Omit<OAuthProviderCatalogOption, "authStrategy" | "popularityRank" | "registrationDefaults">,
 ): OAuthProviderCatalogOption => ({
   ...option,
   authStrategy: "oauth2",
   popularityRank,
+  registrationDefaults: getOAuthProviderRegistrationDefaults(option.slug),
 });
 
 const oauthProviderCatalog = [
@@ -52,7 +54,7 @@ const oauthProviderCatalog = [
     builtInSlug: "notion",
     appUrl: "https://www.notion.so",
     docsUrl: "https://developers.notion.com/docs/authorization",
-    notes: "Available now as a curated built-in with per-user OAuth connection support.",
+    notes: "",
   }),
   provider(5, {
     slug: "figma",
@@ -63,7 +65,7 @@ const oauthProviderCatalog = [
     builtInSlug: "figma",
     appUrl: "https://www.figma.com",
     docsUrl: "https://www.figma.com/developers/api#oauth2",
-    notes: "Available now as a curated built-in with per-user OAuth connection support.",
+    notes: "",
   }),
   provider(6, {
     slug: "google-drive",
@@ -153,7 +155,7 @@ const oauthProviderCatalog = [
     availability: "planned",
     appUrl: "https://trello.com",
     docsUrl: "https://developer.atlassian.com/cloud/trello/guides/rest-api/authorization/",
-    notes: "Useful for SMB and cross-functional task boards.",
+    notes: "Useful for SMB and cross-functional task boards, but Trello's public API auth is a special-case flow rather than a straightforward generic OAuth2 connector.",
   }),
   provider(15, {
     slug: "clickup",
@@ -392,8 +394,8 @@ const oauthProviderCatalog = [
     categories: ["Database", "Developer tools"],
     availability: "planned",
     appUrl: "https://supabase.com",
-    docsUrl: "https://supabase.com/docs/guides/auth/social-login/auth-github",
-    notes: "Popular developer platform with broad automation value.",
+    docsUrl: "https://supabase.com/docs/guides/integrations/build-a-supabase-oauth-integration",
+    notes: "Popular developer platform with broad automation value and a documented management-API OAuth integration flow.",
   }),
   provider(39, {
     slug: "vercel",
@@ -423,7 +425,7 @@ const oauthProviderCatalog = [
     availability: "planned",
     appUrl: "https://plaid.com",
     docsUrl: "https://plaid.com/docs/auth/oauth/",
-    notes: "Strong fintech workflow candidate where OAuth support matters.",
+    notes: "Strong fintech workflow candidate, although much of Plaid's OAuth guidance is a special-case token exchange rather than a generic end-user SaaS OAuth connector.",
   }),
   provider(42, {
     slug: "okta",

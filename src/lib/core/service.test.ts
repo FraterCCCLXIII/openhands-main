@@ -1,5 +1,6 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { HttpAdapter } from "@/src/lib/adapters/http-adapter";
 import {
   AdapterRegistry,
   type IntegrationAdapter,
@@ -8,6 +9,11 @@ import { MemoryRepository } from "@/src/lib/db/memory-repository";
 import { NotificationPublisher } from "@/src/lib/notifications/publisher";
 import { ContextLayerService } from "@/src/lib/core/service";
 import type { IntegrationSpec } from "@/src/types/context-layer";
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
+
 
 const createService = () => {
   const mockAdapter: IntegrationAdapter = {
@@ -383,5 +389,105 @@ describe("ContextLayerService", () => {
     });
   });
 
+  it("invokes managed HTTP connectors with stored OAuth credentials", async () => {
+    const repository = new MemoryRepository();
+    const service = new ContextLayerService(
+      repository,
+      new AdapterRegistry({
+        http: new HttpAdapter(),
+        mock: { invoke: async () => ({}) },
+      }),
+      new NotificationPublisher(repository),
+    );
 
+    await service.registerIntegration({
+      key: "acme-crm",
+      name: "Acme CRM",
+      kind: "api",
+      provider: "http",
+      authStrategy: "oauth2",
+      enabled: true,
+      fineGrainedPermissions: true,
+      config: {
+        builtInSlug: "acme-crm",
+        apiBaseUrl: "https://api.acme.test/v1",
+        managedConnectorSlug: "acme-crm",
+      },
+      credentials: {},
+      functions: {
+        get_contact: {
+          name: "get_contact",
+          description: "Get a contact",
+          enabled: true,
+          fineGrainedPermissions: true,
+          defaultScopes: ["contacts.read"],
+          executionMode: "provider",
+          config: {
+            request: {
+              method: "GET",
+              path: "/contacts/{{contactId}}",
+              query: {
+                include: "{{include}}",
+              },
+            },
+          },
+        },
+      },
+    });
+    await service.upsertAgentPolicy("assistant", [
+      {
+        integrationKey: "acme-crm",
+        functionNames: ["get_contact"],
+        scopes: ["contacts.read"],
+        enabled: true,
+      },
+    ]);
+    await service.saveOAuthConnection(
+      "owner@example.com",
+      "acme-crm",
+      "acme-crm",
+      {
+        accessToken: "managed-access-token",
+        refreshToken: "managed-refresh-token",
+      },
+      {
+        authStrategy: "oauth2",
+        tokenType: "bearer",
+        scopes: ["contacts.read"],
+        expiresAt: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+        metadata: {},
+      },
+    );
+
+    const fetchMock = vi.fn(async () =>
+      new Response(JSON.stringify({ id: "contact_123", name: "Ada" }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const response = await service.invokeContext(
+      "agent-12",
+      "assistant",
+      "acme-crm",
+      "get_contact",
+      {
+        contactId: "contact_123",
+        include: "notes",
+      },
+      ["contacts.read"],
+      { ownerId: "owner@example.com" },
+    );
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const [url, init] = fetchMock.mock.calls[0] as unknown as [URL, RequestInit];
+    expect(url.toString()).toBe(
+      "https://api.acme.test/v1/contacts/contact_123?include=notes",
+    );
+    expect(init.headers).toMatchObject({
+      Authorization: "Bearer managed-access-token",
+    });
+    expect(response.data).toEqual({ id: "contact_123", name: "Ada" });
+  });
 });

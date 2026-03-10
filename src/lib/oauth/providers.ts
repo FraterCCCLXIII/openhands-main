@@ -55,7 +55,7 @@ export interface OAuthTokenExchangeResult {
   metadata: Record<string, unknown>;
 }
 
-interface OAuthProviderDefinition {
+export interface OAuthProviderDefinition {
   slug: string;
   name: string;
   clientIdEnv: string;

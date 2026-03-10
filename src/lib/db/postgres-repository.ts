@@ -6,6 +6,7 @@ import type {
   AgentClassPolicy,
   IntegrationConnectionRecord,
   IntegrationSpec,
+  ManagedConnectorRecord,
   NotificationRecord,
   OAuthStateRecord,
   TemporaryGrant,
@@ -123,6 +124,30 @@ export class PostgresRepository implements ContextRepository {
     `;
 
     await sql`
+      CREATE TABLE IF NOT EXISTS managed_connectors (
+        slug TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        description TEXT NOT NULL,
+        logo_url TEXT,
+        app_url TEXT,
+        docs_url TEXT,
+        categories JSONB NOT NULL DEFAULT '[]'::jsonb,
+        auth_modes JSONB NOT NULL DEFAULT '[]'::jsonb,
+        auth_strategy TEXT NOT NULL,
+        credential_label TEXT NOT NULL,
+        credential_placeholder TEXT NOT NULL,
+        credential_help TEXT NOT NULL,
+        api_base_url TEXT NOT NULL,
+        oauth_config JSONB,
+        encrypted_oauth_client TEXT,
+        functions JSONB NOT NULL DEFAULT '[]'::jsonb,
+        enabled BOOLEAN NOT NULL DEFAULT TRUE,
+        created_at TIMESTAMPTZ NOT NULL,
+        updated_at TIMESTAMPTZ NOT NULL
+      )
+    `;
+
+    await sql`
       CREATE TABLE IF NOT EXISTS integration_connections (
         owner_id TEXT NOT NULL,
         integration_key TEXT NOT NULL,
@@ -150,10 +175,15 @@ export class PostgresRepository implements ContextRepository {
         provider TEXT NOT NULL,
         code_verifier TEXT,
         redirect_to TEXT NOT NULL,
+        redirect_uri TEXT,
+        callback_url TEXT,
         created_at TIMESTAMPTZ NOT NULL,
         expires_at TIMESTAMPTZ NOT NULL
       )
     `;
+
+    await sql`ALTER TABLE oauth_states ADD COLUMN IF NOT EXISTS redirect_uri TEXT`;
+    await sql`ALTER TABLE oauth_states ADD COLUMN IF NOT EXISTS callback_url TEXT`;
 
     this.schemaReady = true;
   }
@@ -444,6 +474,108 @@ export class PostgresRepository implements ContextRepository {
     return rows.length > 0;
   }
 
+  async listManagedConnectors() {
+    await this.ensureSchema();
+    const sql = getSql();
+    const rows = await sql`SELECT * FROM managed_connectors ORDER BY slug ASC`;
+    return rows.map((row) => ({
+      slug: row.slug,
+      name: row.name,
+      description: row.description,
+      logoUrl: row.logo_url ?? undefined,
+      appUrl: row.app_url ?? undefined,
+      docsUrl: row.docs_url ?? undefined,
+      categories: parseJson<string[]>(row.categories),
+      authModes: parseJson<ManagedConnectorRecord["authModes"]>(row.auth_modes),
+      authStrategy: row.auth_strategy,
+      oauthConfigured: Boolean(row.encrypted_oauth_client),
+      credentialLabel: row.credential_label,
+      credentialPlaceholder: row.credential_placeholder,
+      credentialHelp: row.credential_help,
+      apiBaseUrl: row.api_base_url,
+      oauthConfig: row.oauth_config
+        ? parseJson<ManagedConnectorRecord["oauthConfig"]>(row.oauth_config)
+        : undefined,
+      encryptedOAuthClient: row.encrypted_oauth_client ?? undefined,
+      functions: parseJson<ManagedConnectorRecord["functions"]>(row.functions),
+      enabled: row.enabled,
+      createdAt: new Date(row.created_at).toISOString(),
+      updatedAt: new Date(row.updated_at).toISOString(),
+    } satisfies ManagedConnectorRecord));
+  }
+
+  async getManagedConnector(slug: string) {
+    await this.ensureSchema();
+    const sql = getSql();
+    const rows = await sql`SELECT * FROM managed_connectors WHERE slug = ${slug}`;
+    const row = rows[0];
+    if (!row) {
+      return null;
+    }
+    return {
+      slug: row.slug,
+      name: row.name,
+      description: row.description,
+      logoUrl: row.logo_url ?? undefined,
+      appUrl: row.app_url ?? undefined,
+      docsUrl: row.docs_url ?? undefined,
+      categories: parseJson<string[]>(row.categories),
+      authModes: parseJson<ManagedConnectorRecord["authModes"]>(row.auth_modes),
+      authStrategy: row.auth_strategy,
+      oauthConfigured: Boolean(row.encrypted_oauth_client),
+      credentialLabel: row.credential_label,
+      credentialPlaceholder: row.credential_placeholder,
+      credentialHelp: row.credential_help,
+      apiBaseUrl: row.api_base_url,
+      oauthConfig: row.oauth_config
+        ? parseJson<ManagedConnectorRecord["oauthConfig"]>(row.oauth_config)
+        : undefined,
+      encryptedOAuthClient: row.encrypted_oauth_client ?? undefined,
+      functions: parseJson<ManagedConnectorRecord["functions"]>(row.functions),
+      enabled: row.enabled,
+      createdAt: new Date(row.created_at).toISOString(),
+      updatedAt: new Date(row.updated_at).toISOString(),
+    } satisfies ManagedConnectorRecord;
+  }
+
+  async upsertManagedConnector(record: ManagedConnectorRecord) {
+    await this.ensureSchema();
+    const sql = getSql();
+    await sql`
+      INSERT INTO managed_connectors (
+        slug, name, description, logo_url, app_url, docs_url, categories,
+        auth_modes, auth_strategy, credential_label, credential_placeholder,
+        credential_help, api_base_url, oauth_config, encrypted_oauth_client,
+        functions, enabled, created_at, updated_at
+      ) VALUES (
+        ${record.slug}, ${record.name}, ${record.description}, ${record.logoUrl ?? null}, ${record.appUrl ?? null}, ${record.docsUrl ?? null}, ${JSON.stringify(record.categories)},
+        ${JSON.stringify(record.authModes)}, ${record.authStrategy}, ${record.credentialLabel}, ${record.credentialPlaceholder},
+        ${record.credentialHelp}, ${record.apiBaseUrl}, ${record.oauthConfig ? JSON.stringify(record.oauthConfig) : null}, ${record.encryptedOAuthClient ?? null},
+        ${JSON.stringify(record.functions)}, ${record.enabled}, ${record.createdAt}, ${record.updatedAt}
+      )
+      ON CONFLICT (slug) DO UPDATE SET
+        name = EXCLUDED.name,
+        description = EXCLUDED.description,
+        logo_url = EXCLUDED.logo_url,
+        app_url = EXCLUDED.app_url,
+        docs_url = EXCLUDED.docs_url,
+        categories = EXCLUDED.categories,
+        auth_modes = EXCLUDED.auth_modes,
+        auth_strategy = EXCLUDED.auth_strategy,
+        credential_label = EXCLUDED.credential_label,
+        credential_placeholder = EXCLUDED.credential_placeholder,
+        credential_help = EXCLUDED.credential_help,
+        api_base_url = EXCLUDED.api_base_url,
+        oauth_config = EXCLUDED.oauth_config,
+        encrypted_oauth_client = EXCLUDED.encrypted_oauth_client,
+        functions = EXCLUDED.functions,
+        enabled = EXCLUDED.enabled,
+        created_at = EXCLUDED.created_at,
+        updated_at = EXCLUDED.updated_at
+    `;
+    return record;
+  }
+
   async listIntegrationConnections(ownerId: string) {
     await this.ensureSchema();
     const sql = getSql();
@@ -534,9 +666,9 @@ export class PostgresRepository implements ContextRepository {
     const sql = getSql();
     await sql`
       INSERT INTO oauth_states (
-        state, owner_id, integration_key, provider, code_verifier, redirect_to, created_at, expires_at
+        state, owner_id, integration_key, provider, code_verifier, redirect_to, redirect_uri, callback_url, created_at, expires_at
       ) VALUES (
-        ${record.state}, ${record.ownerId}, ${record.integrationKey}, ${record.provider}, ${record.codeVerifier ?? null}, ${record.redirectTo}, ${record.createdAt}, ${record.expiresAt}
+        ${record.state}, ${record.ownerId}, ${record.integrationKey}, ${record.provider}, ${record.codeVerifier ?? null}, ${record.redirectTo}, ${record.redirectUri ?? null}, ${record.callbackUrl ?? null}, ${record.createdAt}, ${record.expiresAt}
       )
       ON CONFLICT (state) DO UPDATE SET
         owner_id = EXCLUDED.owner_id,
@@ -544,6 +676,8 @@ export class PostgresRepository implements ContextRepository {
         provider = EXCLUDED.provider,
         code_verifier = EXCLUDED.code_verifier,
         redirect_to = EXCLUDED.redirect_to,
+        redirect_uri = EXCLUDED.redirect_uri,
+        callback_url = EXCLUDED.callback_url,
         created_at = EXCLUDED.created_at,
         expires_at = EXCLUDED.expires_at
     `;
@@ -565,6 +699,8 @@ export class PostgresRepository implements ContextRepository {
       provider: row.provider,
       codeVerifier: row.code_verifier ?? undefined,
       redirectTo: row.redirect_to,
+      redirectUri: row.redirect_uri ?? undefined,
+      callbackUrl: row.callback_url ?? undefined,
       createdAt: new Date(row.created_at).toISOString(),
       expiresAt: new Date(row.expires_at).toISOString(),
     } satisfies OAuthStateRecord;

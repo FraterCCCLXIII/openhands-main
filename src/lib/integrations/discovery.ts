@@ -2,12 +2,23 @@ import { Composio } from "@composio/core";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 
+import { decryptCredentials } from "@/src/lib/credential-crypto";
 import { ContextLayerError } from "@/src/lib/core/errors";
+import type { ContextRepository } from "@/src/lib/core/repository";
 import {
   buildBuiltInConnectorFunctions,
   getBuiltInConnectorDefinition,
-  listBuiltInConnectors as listCuratedBuiltInConnectors,
+  listBuiltInConnectors as listStaticBuiltInConnectors,
 } from "@/src/lib/integrations/built-in-connectors";
+import {
+  buildManagedConnectorFunctions,
+  getManagedConnectorApiBaseUrl,
+  getManagedConnectorProvider,
+  getManagedConnectorRecord,
+  getManagedConnectorServerUrl,
+  listAvailableBuiltInConnectors,
+  resolveManagedConnectorCredentials,
+} from "@/src/lib/integrations/managed-connectors";
 import type {
   AuthStrategy,
   BuiltInConnectorOption,
@@ -162,6 +173,8 @@ export interface IntegrationDiscoveryInput {
 
 export interface IntegrationDiscoveryOptions {
   baseUrl?: string;
+  repository?: ContextRepository;
+  ownerId?: string;
 }
 
 export interface IntegrationDiscoveryResult {
@@ -184,9 +197,114 @@ const getComposioClient = () => {
   return new Composio({ apiKey });
 };
 
-export const listBuiltInConnectors = async (): Promise<
-  BuiltInConnectorOption[]
-> => listCuratedBuiltInConnectors();
+export const listBuiltInConnectors = async (
+  repository?: ContextRepository,
+): Promise<BuiltInConnectorOption[]> =>
+  repository
+    ? listAvailableBuiltInConnectors(repository)
+    : listStaticBuiltInConnectors();
+
+const resolveManagedOAuthDiscoveryCredentials = async (
+  repository: ContextRepository,
+  ownerId: string | undefined,
+  integrationKey: string,
+  connectorName: string,
+) => {
+  if (!ownerId) {
+    throw new ContextLayerError(
+      `Sign in before discovering functions for ${connectorName}.`,
+      401,
+    );
+  }
+
+  const connection = await repository.getIntegrationConnection(ownerId, integrationKey);
+  if (!connection) {
+    throw new ContextLayerError(
+      `Connect ${connectorName} for this user before discovering functions.`,
+      403,
+    );
+  }
+
+  return compactRecord(
+    decryptCredentials<Record<string, unknown>>(connection.encryptedCredentials),
+  );
+};
+
+const discoverManagedConnectorIntegration = async (
+  input: IntegrationDiscoveryInput,
+  options: IntegrationDiscoveryOptions,
+  slug: string,
+): Promise<IntegrationDiscoveryResult | null> => {
+  if (!options.repository) {
+    return null;
+  }
+
+  const managedConnector = await getManagedConnectorRecord(options.repository, slug);
+  if (!managedConnector) {
+    return null;
+  }
+
+  if (getManagedConnectorProvider(managedConnector) === "mcp") {
+    const serverUrl = getManagedConnectorServerUrl(managedConnector);
+    if (!serverUrl) {
+      throw new ContextLayerError(
+        `Managed MCP connector '${managedConnector.slug}' is missing a serverUrl.`,
+        500,
+      );
+    }
+
+    const credentials =
+      managedConnector.authStrategy === "oauth2"
+        ? await resolveManagedOAuthDiscoveryCredentials(
+            options.repository,
+            options.ownerId,
+            input.key.trim(),
+            managedConnector.name,
+          )
+        : resolveManagedConnectorCredentials(managedConnector, input);
+
+    const result = await discoverMcpIntegration({
+      ...input,
+      kind: "mcp",
+      config: {
+        serverUrl,
+      },
+      credentials,
+    });
+
+    return {
+      ...result,
+      authStrategy: managedConnector.authStrategy,
+      config: compactRecord({
+        builtInSlug: managedConnector.slug,
+        managedConnectorSlug: managedConnector.slug,
+        serverUrl,
+      }),
+      credentials: managedConnector.authStrategy === "oauth2" ? {} : result.credentials,
+    };
+  }
+
+  const apiBaseUrl = getManagedConnectorApiBaseUrl(managedConnector);
+  if (!apiBaseUrl) {
+    throw new ContextLayerError(
+      `Managed HTTP connector '${managedConnector.slug}' is missing an apiBaseUrl.`,
+      500,
+    );
+  }
+
+  return {
+    provider: "http",
+    authStrategy: managedConnector.authStrategy,
+    config: {
+      builtInSlug: managedConnector.slug,
+      apiBaseUrl,
+      managedConnectorSlug: managedConnector.slug,
+    },
+    credentials: resolveManagedConnectorCredentials(managedConnector, input),
+    functions: buildManagedConnectorFunctions(managedConnector),
+  };
+};
+
 
 const discoverBuiltInConnectorIntegration = async (
   input: IntegrationDiscoveryInput,
@@ -196,43 +314,50 @@ const discoverBuiltInConnectorIntegration = async (
     (input.config.builtInSlug as string | undefined)?.trim() || input.key.trim();
   const connector = getBuiltInConnectorDefinition(slug);
 
-  if (!connector) {
-    throw new ContextLayerError(
-      `Unknown built-in connector '${slug}'.`,
-      404,
-    );
+  if (connector) {
+    const baseUrl = options.baseUrl?.trim();
+    if (!baseUrl) {
+      throw new ContextLayerError(
+        "A baseUrl is required to discover built-in connectors.",
+        500,
+      );
+    }
+
+    const accessToken =
+      (input.credentials.accessToken as string | undefined)?.trim();
+
+    if (connector.authStrategy !== "oauth2" && !accessToken) {
+      throw new ContextLayerError(
+        `${connector.credentialLabel} is required to use the ${connector.name} built-in connector.`,
+        400,
+      );
+    }
+
+    return {
+      provider: "mcp",
+      authStrategy: connector.authStrategy,
+      config: compactRecord({
+        builtInSlug: connector.slug,
+        serverUrl: `${baseUrl.replace(/\/$/, "")}${connector.serverPath}`,
+      }),
+      credentials:
+        connector.authStrategy === "oauth2"
+          ? {}
+          : compactRecord({ accessToken }),
+      functions: buildBuiltInConnectorFunctions(connector.slug),
+    };
   }
 
-  const baseUrl = options.baseUrl?.trim();
-  if (!baseUrl) {
-    throw new ContextLayerError(
-      "A baseUrl is required to discover built-in connectors.",
-      500,
-    );
+  const managedConnectorResult = await discoverManagedConnectorIntegration(
+    input,
+    options,
+    slug,
+  );
+  if (managedConnectorResult) {
+    return managedConnectorResult;
   }
 
-  const accessToken = (input.credentials.accessToken as string | undefined)?.trim();
-
-  if (connector.authStrategy !== "oauth2" && !accessToken) {
-    throw new ContextLayerError(
-      `${connector.credentialLabel} is required to use the ${connector.name} built-in connector.`,
-      400,
-    );
-  }
-
-  return {
-    provider: "mcp",
-    authStrategy: connector.authStrategy,
-    config: compactRecord({
-      builtInSlug: connector.slug,
-      serverUrl: `${baseUrl.replace(/\/$/, "")}${connector.serverPath}`,
-    }),
-    credentials:
-      connector.authStrategy === "oauth2"
-        ? {}
-        : compactRecord({ accessToken }),
-    functions: buildBuiltInConnectorFunctions(connector.slug),
-  };
+  throw new ContextLayerError(`Unknown built-in connector '${slug}'.`, 404);
 };
 
 const discoverComposioIntegration = async (

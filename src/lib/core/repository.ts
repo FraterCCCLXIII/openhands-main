@@ -4,6 +4,7 @@ import type {
   AgentClassPolicy,
   IntegrationConnectionRecord,
   IntegrationSpec,
+  ManagedConnectorRecord,
   NotificationRecord,
   OAuthStateRecord,
   TemporaryGrant,
@@ -28,6 +29,12 @@ export interface ContextRepository {
   getAgentApiKeyByOwner(ownerId: string): Promise<AgentApiKeyRecord | null>;
   findAgentApiKey(apiKey: string): Promise<AgentApiKeyRecord | null>;
   saveAgentApiKey(record: AgentApiKeyRecord): Promise<AgentApiKeyRecord>;
+  listManagedConnectors(): Promise<ManagedConnectorRecord[]>;
+  getManagedConnector(slug: string): Promise<ManagedConnectorRecord | null>;
+  upsertManagedConnector(
+    record: ManagedConnectorRecord,
+  ): Promise<ManagedConnectorRecord>;
+
   hasAgentApiKeys(): Promise<boolean>;
   listIntegrationConnections(ownerId: string): Promise<IntegrationConnectionRecord[]>;
   getIntegrationConnection(
