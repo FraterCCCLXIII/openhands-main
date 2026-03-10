@@ -30,6 +30,7 @@ describe("listOAuthProviderCatalog", () => {
 
     expect(notion?.registrationDefaults).toMatchObject({
       apiBaseUrl: "https://api.notion.com",
+      serverUrl: "https://mcp.notion.example.com/mcp",
       authorizationUrl: "https://api.notion.com/v1/oauth/authorize",
       tokenUrl: "https://api.notion.com/v1/oauth/token",
       functionName: "search_workspace",
@@ -38,6 +39,7 @@ describe("listOAuthProviderCatalog", () => {
     });
     expect(googleCalendar?.registrationDefaults).toMatchObject({
       apiBaseUrl: "https://www.googleapis.com/calendar/v3",
+      serverUrl: "https://mcp.google-calendar.example.com/mcp",
       authorizationUrl: "https://accounts.google.com/o/oauth2/v2/auth",
       tokenUrl: "https://oauth2.googleapis.com/token",
       scopes: ["https://www.googleapis.com/auth/calendar.readonly"],

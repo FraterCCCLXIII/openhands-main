@@ -118,7 +118,10 @@ export default async function AddConnectorPage() {
                   <span className="font-medium text-white">1.</span> Confirm the
                   provider has stable OAuth documentation and identify the MCP
                   server URL, authorization URL, token URL, callback requirements,
-                  and the minimum scopes the MCP needs.
+                  and the minimum scopes the MCP needs. Each provider row below
+                  now starts with a service-specific MCP URL default instead of a
+                  generic placeholder, but you should still replace it if your
+                  hosted MCP uses a different endpoint.
                 </li>
                 <li>
                   <span className="font-medium text-white">2.</span> Create or
@@ -138,6 +141,13 @@ export default async function AddConnectorPage() {
                   <span className="font-medium text-white">3.</span> Store the
                   OAuth client ID and client secret in that managed connector if
                   this service is going to run the OAuth callback flow for users.
+                  Every provider row includes a direct link to that provider's
+                  OAuth app setup docs, and if the provider asks for a redirect
+                  URI you should register
+                  <code className="mx-1 text-white">
+                    https://&lt;your-deployment&gt;/api/oauth/&lt;provider&gt;/callback
+                  </code>
+                  for this deployment.
                 </li>
                 <li>
                   <span className="font-medium text-white">4.</span> Have a real

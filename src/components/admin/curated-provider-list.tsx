@@ -50,7 +50,7 @@ const createRegistrationFormState = (
   const defaults = provider.registrationDefaults;
 
   return {
-    serverUrl: "",
+    serverUrl: defaults?.serverUrl ?? "",
     authorizationUrl: defaults?.authorizationUrl ?? "",
     tokenUrl: defaults?.tokenUrl ?? "",
     scopes: defaults?.scopes?.join(", ") ?? "",
@@ -312,9 +312,15 @@ export function CuratedProviderList({
                                 serverUrl: event.target.value,
                               })
                             }
-                            placeholder="https://mcp.example.com/mcp"
+                            placeholder={
+                              provider.registrationDefaults?.serverUrl ??
+                              `https://mcp.${provider.slug}.example.com/mcp`
+                            }
                             className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-white outline-none placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-accent)]"
                           />
+                          <span className="text-[11px] leading-5 text-[var(--color-text-muted)]">
+                            Starts with a {provider.name} MCP endpoint by default. Replace it if your hosted {provider.name} MCP uses a different URL.
+                          </span>
                         </label>
                         <label className="flex flex-col gap-1 text-xs text-[var(--color-text-muted)]">
                           Scopes (comma separated)
@@ -356,6 +362,29 @@ export function CuratedProviderList({
                             className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-white outline-none focus:border-[var(--color-accent)]"
                           />
                         </label>
+                        <div className="md:col-span-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-[11px] leading-5 text-[var(--color-text-base)]">
+                          <p>
+                            Create a {provider.name} OAuth app before saving this connector so you can paste the client ID and client secret below.
+                          </p>
+                          <p className="mt-1">
+                            If the provider asks for a redirect URI, use
+                            <code className="mx-1 text-white">
+                              https://&lt;your-deployment&gt;/api/oauth/{provider.slug}/callback
+                            </code>
+                            for this deployment.
+                          </p>
+                          {provider.docsUrl ? (
+                            <a
+                              href={provider.docsUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="mt-2 inline-flex items-center gap-1 text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
+                            >
+                              How to create {provider.name} OAuth credentials
+                              <ExternalLink className="h-3.5 w-3.5" />
+                            </a>
+                          ) : null}
+                        </div>
                         <label className="flex flex-col gap-1 text-xs text-[var(--color-text-muted)]">
                           OAuth client ID
                           <input

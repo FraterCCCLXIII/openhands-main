@@ -53,6 +53,7 @@ const providerCatalog: OAuthProviderCatalogOption[] = [
     notes: "Useful for scheduling workflows.",
     popularityRank: 2,
     registrationDefaults: {
+      serverUrl: "https://mcp.google-calendar.example.com/mcp",
       authorizationUrl: "https://accounts.google.com/o/oauth2/v2/auth",
       tokenUrl: "https://oauth2.googleapis.com/token",
       scopes: ["https://www.googleapis.com/auth/calendar.readonly"],
@@ -136,9 +137,16 @@ describe("CuratedProviderList", () => {
     expect(container.textContent).toContain("Register this provider");
     expect(container.textContent).toContain("Register the MCP once for the whole service");
     expect(container.textContent).toContain("Register connector");
+    expect(container.textContent).toContain("Starts with a Google Calendar MCP endpoint by default");
+    expect(container.textContent).toContain("How to create Google Calendar OAuth credentials");
+    expect(container.textContent).toContain(
+      "https://<your-deployment>/api/oauth/google-calendar/callback",
+    );
 
     const urlInputs = Array.from(container.querySelectorAll('input[type="url"]'));
-    expect((urlInputs[0] as HTMLInputElement | undefined)?.value).toBe("");
+    expect((urlInputs[0] as HTMLInputElement | undefined)?.value).toBe(
+      "https://mcp.google-calendar.example.com/mcp",
+    );
     expect((urlInputs[1] as HTMLInputElement | undefined)?.value).toBe(
       "https://accounts.google.com/o/oauth2/v2/auth",
     );

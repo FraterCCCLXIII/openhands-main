@@ -31,6 +31,9 @@ describe("AddConnectorPage", () => {
     expect(html).toContain("endpoint schema doc");
     expect(html).toContain("Search curated adaptors");
     expect(html).toContain("service-level admin action");
+    expect(html).toContain("service-specific MCP URL default");
+    expect(html).toContain("OAuth app setup docs");
+    expect(html).toContain("/api/oauth/&lt;provider&gt;/callback");
     expect(html).toContain("Connect");
     expect(html).toContain("Discover functions");
     expect(html).toContain("src/lib/integrations/built-in-connectors.ts");

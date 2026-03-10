@@ -69,6 +69,7 @@ export type OAuthProviderAvailability =
 
 export interface OAuthProviderRegistrationDefaults {
   apiBaseUrl?: string;
+  serverUrl?: string;
   authorizationUrl?: string;
   tokenUrl?: string;
   scopes?: string[];

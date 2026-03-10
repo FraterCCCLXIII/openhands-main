@@ -58,6 +58,14 @@ const atlassianPreset = (
   requestPath,
 });
 
+const knownManagedMcpServerUrls: Record<string, string> = {
+  github: "https://api.githubcopilot.com/mcp/",
+  slack: "https://mcp.slack.com/sse",
+};
+
+const buildManagedMcpServerUrl = (slug: string) =>
+  knownManagedMcpServerUrls[slug] ?? `https://mcp.${slug}.example.com/mcp`;
+
 const registrationDefaults: Record<string, OAuthProviderRegistrationDefaults> = {
   github: {
     apiBaseUrl: "https://api.github.com",
@@ -508,5 +516,14 @@ const registrationDefaults: Record<string, OAuthProviderRegistrationDefaults> = 
   },
 };
 
-export const getOAuthProviderRegistrationDefaults = (slug: string) =>
-  registrationDefaults[slug];
+export const getOAuthProviderRegistrationDefaults = (slug: string) => {
+  const defaults = registrationDefaults[slug];
+  if (!defaults) {
+    return undefined;
+  }
+
+  return {
+    ...defaults,
+    serverUrl: defaults.serverUrl ?? buildManagedMcpServerUrl(slug),
+  };
+};
