@@ -156,6 +156,17 @@ export class ContextLayerService {
       input.authModes?.length && input.authModes.every(Boolean)
         ? [...new Set(input.authModes)]
         : [input.authStrategy];
+    const provider = input.provider ?? (input.serverUrl ? "mcp" : "http");
+    const normalizedServerUrl = input.serverUrl?.trim() || undefined;
+    const normalizedApiBaseUrl = input.apiBaseUrl?.trim() || undefined;
+
+    if (provider === "mcp" && !normalizedServerUrl && !normalizedApiBaseUrl) {
+      throw new ContextLayerError("Managed MCP connectors require a serverUrl.", 400);
+    }
+
+    if (provider === "http" && !normalizedApiBaseUrl) {
+      throw new ContextLayerError("Managed HTTP connectors require an apiBaseUrl.", 400);
+    }
 
     const normalizedOAuthConfig: GenericOAuthConfig | undefined =
       input.authStrategy === "oauth2" && input.oauthConfig
@@ -201,13 +212,18 @@ export class ContextLayerService {
       categories: input.categories.map((category) => category.trim()).filter(Boolean),
       authModes,
       authStrategy: input.authStrategy,
+      provider,
       oauthConfigured:
         input.authStrategy !== "oauth2" ||
         Boolean(normalizedOAuthConfig && encryptedOAuthClient),
       credentialLabel: input.credentialLabel.trim(),
       credentialPlaceholder: input.credentialPlaceholder.trim(),
       credentialHelp: input.credentialHelp.trim(),
-      apiBaseUrl: input.apiBaseUrl.trim(),
+      apiBaseUrl:
+        provider === "mcp"
+          ? normalizedApiBaseUrl ?? normalizedServerUrl
+          : normalizedApiBaseUrl,
+      serverUrl: normalizedServerUrl ?? (provider === "mcp" ? normalizedApiBaseUrl : undefined),
       oauthConfig: normalizedOAuthConfig,
       encryptedOAuthClient,
       functions: input.functions,

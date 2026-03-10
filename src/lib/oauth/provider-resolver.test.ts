@@ -18,11 +18,12 @@ describe("resolveOAuthProvider", () => {
       categories: ["CRM"],
       authModes: ["oauth2"],
       authStrategy: "oauth2",
+      provider: "mcp",
       oauthConfigured: true,
       credentialLabel: "Connect Acme CRM",
       credentialPlaceholder: "Connect Acme CRM",
       credentialHelp: "Use OAuth to connect Acme CRM.",
-      apiBaseUrl: "https://api.acme.test/v1",
+      serverUrl: "https://mcp.acme.test/mcp",
       oauthConfig: {
         authorizationUrl: "https://auth.acme.test/authorize",
         tokenUrl: "https://auth.acme.test/token",

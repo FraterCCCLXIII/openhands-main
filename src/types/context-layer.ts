@@ -130,11 +130,13 @@ export interface ManagedConnectorDefinition {
   categories: string[];
   authModes: AuthStrategy[];
   authStrategy: AuthStrategy;
+  provider?: "mcp" | "http";
   oauthConfigured?: boolean;
   credentialLabel: string;
   credentialPlaceholder: string;
   credentialHelp: string;
-  apiBaseUrl: string;
+  apiBaseUrl?: string;
+  serverUrl?: string;
   oauthConfig?: GenericOAuthConfig;
   functions: ManagedConnectorFunctionDefinition[];
   enabled: boolean;

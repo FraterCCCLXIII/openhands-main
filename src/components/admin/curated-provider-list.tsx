@@ -33,16 +33,12 @@ const availabilityLabel = (availability: "oauth_ready" | "manual_token" | "plann
 };
 
 interface RegistrationFormState {
-  apiBaseUrl: string;
+  serverUrl: string;
   authorizationUrl: string;
   tokenUrl: string;
   scopes: string;
   oauthClientId: string;
   oauthClientSecret: string;
-  functionName: string;
-  functionDescription: string;
-  requestMethod: string;
-  requestPath: string;
   submitting: boolean;
   status: "idle" | "success" | "error";
   message: string;
@@ -54,17 +50,12 @@ const createRegistrationFormState = (
   const defaults = provider.registrationDefaults;
 
   return {
-    apiBaseUrl: defaults?.apiBaseUrl ?? "https://api.example.com",
+    serverUrl: "",
     authorizationUrl: defaults?.authorizationUrl ?? "",
     tokenUrl: defaults?.tokenUrl ?? "",
     scopes: defaults?.scopes?.join(", ") ?? "",
     oauthClientId: "",
     oauthClientSecret: "",
-    functionName: defaults?.functionName ?? `${provider.slug}_action`,
-    functionDescription:
-      defaults?.functionDescription ?? `Example ${provider.name} operation`,
-    requestMethod: defaults?.requestMethod ?? "GET",
-    requestPath: defaults?.requestPath ?? "/v1/example",
     submitting: false,
     status: "idle",
     message: "",
@@ -89,10 +80,11 @@ const buildManagedConnectorPayload = (
   categories: provider.categories,
   authModes: ["oauth2"],
   authStrategy: "oauth2" as const,
+  provider: "mcp" as const,
   credentialLabel: `Connect ${provider.name}`,
   credentialPlaceholder: `Connect ${provider.name}`,
   credentialHelp: `OAuth connection for ${provider.name}.`,
-  apiBaseUrl: form.apiBaseUrl.trim(),
+  serverUrl: form.serverUrl.trim(),
   oauthConfig: {
     authorizationUrl: form.authorizationUrl.trim(),
     tokenUrl: form.tokenUrl.trim(),
@@ -100,17 +92,7 @@ const buildManagedConnectorPayload = (
   },
   oauthClientId: form.oauthClientId.trim(),
   oauthClientSecret: form.oauthClientSecret.trim(),
-  functions: [
-    {
-      name: form.functionName.trim(),
-      description: form.functionDescription.trim(),
-      defaultScopes: parseScopes(form.scopes),
-      request: {
-        method: form.requestMethod.trim().toUpperCase(),
-        path: form.requestPath.trim(),
-      },
-    },
-  ],
+  functions: [],
   enabled: true,
 });
 
@@ -179,7 +161,7 @@ export function CuratedProviderList({
       updateRegistrationForm(provider, {
         submitting: false,
         status: "success",
-        message: "Connector registered. Refresh the integration wizard to confirm it appears.",
+        message: "Connector registered. Users can now connect it from the integrations wizard and discover its tools.",
       });
     } catch (error) {
       updateRegistrationForm(provider, {
@@ -314,20 +296,24 @@ export function CuratedProviderList({
                             Register this provider
                           </p>
                           <p className="mt-1 text-sm text-[var(--color-text-base)]">
-                            Enter the provider details below and the app will submit the managed connector record for you.
+                            Enter the OAuth-backed MCP details below and the app will submit the managed connector record for you.
                           </p>
                         </div>
-                        <label className="flex flex-col gap-1 text-xs text-[var(--color-text-muted)]">
-                          API base URL
+                        <div className="md:col-span-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-xs leading-6 text-[var(--color-text-base)]">
+                          Register the MCP once for the whole service. Individual users will later connect their own account and discover the MCP's full tool list from the integrations wizard.
+                        </div>
+                        <label className="flex flex-col gap-1 text-xs text-[var(--color-text-muted)] md:col-span-2">
+                          MCP server URL
                           <input
                             type="url"
-                            value={registrationForm.apiBaseUrl}
+                            value={registrationForm.serverUrl}
                             onChange={(event) =>
                               updateRegistrationForm(provider, {
-                                apiBaseUrl: event.target.value,
+                                serverUrl: event.target.value,
                               })
                             }
-                            className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-white outline-none focus:border-[var(--color-accent)]"
+                            placeholder="https://mcp.example.com/mcp"
+                            className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-white outline-none placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-accent)]"
                           />
                         </label>
                         <label className="flex flex-col gap-1 text-xs text-[var(--color-text-muted)]">
@@ -383,7 +369,7 @@ export function CuratedProviderList({
                             className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-white outline-none focus:border-[var(--color-accent)]"
                           />
                         </label>
-                        <label className="flex flex-col gap-1 text-xs text-[var(--color-text-muted)]">
+                        <label className="flex flex-col gap-1 text-xs text-[var(--color-text-muted)] md:col-span-2">
                           OAuth client secret
                           <input
                             type="password"
@@ -395,58 +381,9 @@ export function CuratedProviderList({
                             }
                             className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-white outline-none focus:border-[var(--color-accent)]"
                           />
-                        </label>
-                        <label className="flex flex-col gap-1 text-xs text-[var(--color-text-muted)]">
-                          Function name
-                          <input
-                            type="text"
-                            value={registrationForm.functionName}
-                            onChange={(event) =>
-                              updateRegistrationForm(provider, {
-                                functionName: event.target.value,
-                              })
-                            }
-                            className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-white outline-none focus:border-[var(--color-accent)]"
-                          />
-                        </label>
-                        <label className="flex flex-col gap-1 text-xs text-[var(--color-text-muted)]">
-                          Function description
-                          <input
-                            type="text"
-                            value={registrationForm.functionDescription}
-                            onChange={(event) =>
-                              updateRegistrationForm(provider, {
-                                functionDescription: event.target.value,
-                              })
-                            }
-                            className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-white outline-none focus:border-[var(--color-accent)]"
-                          />
-                        </label>
-                        <label className="flex flex-col gap-1 text-xs text-[var(--color-text-muted)]">
-                          Request method
-                          <input
-                            type="text"
-                            value={registrationForm.requestMethod}
-                            onChange={(event) =>
-                              updateRegistrationForm(provider, {
-                                requestMethod: event.target.value,
-                              })
-                            }
-                            className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-white outline-none focus:border-[var(--color-accent)]"
-                          />
-                        </label>
-                        <label className="flex flex-col gap-1 text-xs text-[var(--color-text-muted)]">
-                          Request path
-                          <input
-                            type="text"
-                            value={registrationForm.requestPath}
-                            onChange={(event) =>
-                              updateRegistrationForm(provider, {
-                                requestPath: event.target.value,
-                              })
-                            }
-                            className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-white outline-none focus:border-[var(--color-accent)]"
-                          />
+                          <span className="text-[11px] leading-5 text-[var(--color-text-muted)]">
+                            Required when this service is the OAuth client for the MCP. The credentials are stored server-side so each user can use the Connect flow later without reconfiguring the connector.
+                          </span>
                         </label>
                         <div className="md:col-span-2 flex flex-wrap items-center gap-3">
                           <Button type="submit" disabled={registrationForm.submitting}>

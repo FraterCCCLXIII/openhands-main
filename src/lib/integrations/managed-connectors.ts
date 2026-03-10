@@ -6,19 +6,38 @@ import type {
   FunctionSpec,
   ManagedConnectorRecord,
 } from "@/src/types/context-layer";
-import type {
-  IntegrationDiscoveryInput,
-  IntegrationDiscoveryResult,
-} from "@/src/lib/integrations/discovery";
+
 
 const isManagedConnectorOAuthConfigured = (connector: ManagedConnectorRecord) =>
   connector.authStrategy !== "oauth2" ||
   (!!connector.oauthConfig && !!connector.encryptedOAuthClient);
 
+export const getManagedConnectorProvider = (connector: ManagedConnectorRecord) =>
+  connector.provider ?? (connector.serverUrl || connector.functions.length === 0 ? "mcp" : "http");
+
+export const getManagedConnectorServerUrl = (connector: ManagedConnectorRecord) => {
+  if (getManagedConnectorProvider(connector) !== "mcp") {
+    return undefined;
+  }
+
+  return connector.serverUrl?.trim() || connector.apiBaseUrl?.trim() || undefined;
+};
+
+export const getManagedConnectorApiBaseUrl = (connector: ManagedConnectorRecord) => {
+  if (getManagedConnectorProvider(connector) !== "http") {
+    return undefined;
+  }
+
+  return connector.apiBaseUrl?.trim() || undefined;
+};
+
 export const sanitizeManagedConnector = (
   connector: ManagedConnectorRecord,
 ): ManagedConnectorRecord => ({
   ...connector,
+  provider: getManagedConnectorProvider(connector),
+  serverUrl: getManagedConnectorServerUrl(connector),
+  apiBaseUrl: getManagedConnectorApiBaseUrl(connector),
   oauthConfigured: isManagedConnectorOAuthConfigured(connector),
   encryptedOAuthClient: undefined,
 });
@@ -31,7 +50,8 @@ export const managedConnectorToBuiltInOption = (
   description: connector.description,
   logoUrl: connector.logoUrl,
   appUrl: connector.appUrl,
-  toolCount: connector.functions.length,
+  toolCount:
+    getManagedConnectorProvider(connector) === "mcp" ? 0 : connector.functions.length,
   categories: connector.categories,
   authModes: connector.authModes,
   authStrategy: connector.authStrategy,
@@ -62,9 +82,9 @@ export const buildManagedConnectorFunctions = (
     ]),
   );
 
-const resolveManagedConnectorCredentials = (
+export const resolveManagedConnectorCredentials = (
   connector: ManagedConnectorRecord,
-  input: IntegrationDiscoveryInput,
+  input: { credentials: Record<string, unknown> },
 ) => {
   switch (connector.authStrategy) {
     case "oauth2":
@@ -116,21 +136,6 @@ const resolveManagedConnectorCredentials = (
       );
   }
 };
-
-export const discoverManagedBuiltInConnector = (
-  connector: ManagedConnectorRecord,
-  input: IntegrationDiscoveryInput,
-): IntegrationDiscoveryResult => ({
-  provider: "http",
-  authStrategy: connector.authStrategy,
-  config: {
-    builtInSlug: connector.slug,
-    apiBaseUrl: connector.apiBaseUrl,
-    managedConnectorSlug: connector.slug,
-  },
-  credentials: resolveManagedConnectorCredentials(connector, input),
-  functions: buildManagedConnectorFunctions(connector),
-});
 
 export const listAvailableBuiltInConnectors = async (
   repository: ContextRepository,

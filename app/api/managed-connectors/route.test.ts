@@ -33,10 +33,11 @@ const createManagedConnectorRequest = () =>
       description: "Configurable CRM connector",
       categories: ["CRM"],
       authStrategy: "oauth2",
+      provider: "mcp",
       credentialLabel: "Connect Acme CRM",
       credentialPlaceholder: "Connect Acme CRM",
       credentialHelp: "Use OAuth to connect Acme CRM.",
-      apiBaseUrl: "https://api.acme.test/v1",
+      serverUrl: "https://mcp.acme.test/mcp",
       oauthConfig: {
         authorizationUrl: "https://auth.acme.test/authorize",
         tokenUrl: "https://auth.acme.test/token",
@@ -44,17 +45,7 @@ const createManagedConnectorRequest = () =>
       },
       oauthClientId: "acme-client-id",
       oauthClientSecret: "acme-client-secret",
-      functions: [
-        {
-          name: "list_contacts",
-          description: "List contacts",
-          defaultScopes: ["contacts.read"],
-          request: {
-            method: "GET",
-            path: "/contacts",
-          },
-        },
-      ],
+      functions: [],
     }),
   });
 
@@ -74,11 +65,15 @@ describe("/api/managed-connectors", () => {
     expect(response.status).toBe(200);
     const body = (await response.json()) as {
       slug: string;
+      provider?: string;
+      serverUrl?: string;
       oauthConfigured?: boolean;
       encryptedOAuthClient?: string;
     };
     expect(body).toMatchObject({
       slug: "acme-crm",
+      provider: "mcp",
+      serverUrl: "https://mcp.acme.test/mcp",
       oauthConfigured: true,
     });
     expect(body.encryptedOAuthClient).toBeUndefined();

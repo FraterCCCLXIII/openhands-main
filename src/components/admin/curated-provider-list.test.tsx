@@ -53,14 +53,9 @@ const providerCatalog: OAuthProviderCatalogOption[] = [
     notes: "Useful for scheduling workflows.",
     popularityRank: 2,
     registrationDefaults: {
-      apiBaseUrl: "https://www.googleapis.com/calendar/v3",
       authorizationUrl: "https://accounts.google.com/o/oauth2/v2/auth",
       tokenUrl: "https://oauth2.googleapis.com/token",
       scopes: ["https://www.googleapis.com/auth/calendar.readonly"],
-      functionName: "list_events",
-      functionDescription: "List events from the user's primary Google Calendar.",
-      requestMethod: "GET",
-      requestPath: "/calendars/primary/events",
     },
   },
 ];
@@ -139,12 +134,11 @@ describe("CuratedProviderList", () => {
     });
 
     expect(container.textContent).toContain("Register this provider");
+    expect(container.textContent).toContain("Register the MCP once for the whole service");
     expect(container.textContent).toContain("Register connector");
 
     const urlInputs = Array.from(container.querySelectorAll('input[type="url"]'));
-    expect((urlInputs[0] as HTMLInputElement | undefined)?.value).toBe(
-      "https://www.googleapis.com/calendar/v3",
-    );
+    expect((urlInputs[0] as HTMLInputElement | undefined)?.value).toBe("");
     expect((urlInputs[1] as HTMLInputElement | undefined)?.value).toBe(
       "https://accounts.google.com/o/oauth2/v2/auth",
     );
@@ -158,32 +152,11 @@ describe("CuratedProviderList", () => {
         ) as HTMLInputElement | undefined
       )?.value,
     ).toBe("https://www.googleapis.com/auth/calendar.readonly");
-    expect(
-      (
-        Array.from(container.querySelectorAll('input[type="text"]')).find(
-          (input) => (input as HTMLInputElement).value === "list_events",
-        ) as HTMLInputElement | undefined
-      )?.value,
-    ).toBe("list_events");
-    expect(
-      (
-        Array.from(container.querySelectorAll('input[type="text"]')).find(
-          (input) =>
-            (input as HTMLInputElement).value ===
-            "List events from the user's primary Google Calendar.",
-        ) as HTMLInputElement | undefined
-      )?.value,
-    ).toBe("List events from the user's primary Google Calendar.");
-    expect(
-      (
-        Array.from(container.querySelectorAll('input[type="text"]')).find(
-          (input) => (input as HTMLInputElement).value === "/calendars/primary/events",
-        ) as HTMLInputElement | undefined
-      )?.value,
-    ).toBe("/calendars/primary/events");
+    expect(container.textContent).not.toContain("Function name");
+    expect(container.textContent).not.toContain("Request path");
 
     await act(async () => {
-      setInputValue(urlInputs[0] ?? null, "https://api.calendar.test");
+      setInputValue(urlInputs[0] ?? null, "https://mcp.calendar.test/mcp");
       setInputValue(
         Array.from(container.querySelectorAll('input[type="text"]')).find(
           (input) => (input as HTMLInputElement).placeholder === "repo, read:user",
@@ -192,35 +165,7 @@ describe("CuratedProviderList", () => {
       );
       setInputValue(
         Array.from(container.querySelectorAll('input[type="text"]')).find(
-          (input) => (input as HTMLInputElement).value === "list_events",
-        ) ?? null,
-        "list_events",
-      );
-      setInputValue(
-        Array.from(container.querySelectorAll('input[type="text"]')).find(
-          (input) =>
-            (input as HTMLInputElement).value ===
-            "List events from the user's primary Google Calendar.",
-        ) ?? null,
-        "List calendar events",
-      );
-      setInputValue(
-        Array.from(container.querySelectorAll('input[type="text"]')).find(
-          (input) => (input as HTMLInputElement).value === "GET",
-        ) ?? null,
-        "GET",
-      );
-      setInputValue(
-        Array.from(container.querySelectorAll('input[type="text"]')).find(
-          (input) => (input as HTMLInputElement).value === "/calendars/primary/events",
-        ) ?? null,
-        "/calendars/primary/events",
-      );
-      setInputValue(
-        Array.from(container.querySelectorAll('input[type="text"]')).find(
-          (input) =>
-            (input as HTMLInputElement).value === "" &&
-            (input as HTMLInputElement).placeholder !== "repo, read:user",
+          (input) => (input as HTMLInputElement).value === "",
         ) ?? null,
         "calendar-client-id",
       );
@@ -243,21 +188,22 @@ describe("CuratedProviderList", () => {
     const [, requestInit] = fetchMock.mock.calls[0] as [string, RequestInit];
     const body = JSON.parse(String(requestInit.body)) as {
       slug: string;
+      provider: string;
+      serverUrl: string;
       oauthConfig: { scopes: string[] };
       oauthClientId: string;
       oauthClientSecret: string;
-      functions: Array<{ name: string; request: { path: string } }>;
+      functions: Array<unknown>;
     };
     expect(body.slug).toBe("google-calendar");
+    expect(body.provider).toBe("mcp");
+    expect(body.serverUrl).toBe("https://mcp.calendar.test/mcp");
     expect(body.oauthConfig.scopes).toEqual(["calendar.readonly"]);
     expect(body.oauthClientId).toBe("calendar-client-id");
     expect(body.oauthClientSecret).toBe("calendar-client-secret");
-    expect(body.functions[0]).toMatchObject({
-      name: "list_events",
-      request: { path: "/calendars/primary/events" },
-    });
+    expect(body.functions).toEqual([]);
     expect(container.textContent).toContain(
-      "Connector registered. Refresh the integration wizard to confirm it appears.",
+      "Connector registered. Users can now connect it from the integrations wizard and discover its tools.",
     );
   });
 

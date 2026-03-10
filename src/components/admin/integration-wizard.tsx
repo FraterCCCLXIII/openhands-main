@@ -881,20 +881,20 @@ export const IntegrationWizard = ({
             {draft.kind === "built_in" ? (
               <ul className="mt-3 space-y-2">
                 <li>
-                  • The dashboard loads the five curated connectors that are hosted
-                  as MCP routes inside this Vercel deployment.
+                  • The dashboard loads both the curated built-in connectors and
+                  any admin-registered managed connectors for this service.
                 </li>
                 <li>
                   • Choosing a connector auto-fills the integration key and display
                   name, while still letting you customize them if needed.
                 </li>
                 <li>
-                  • It stores the provider token you supply and wires the
-                  integration to the matching internal MCP endpoint.
+                  • For OAuth connectors, each user connects their own account and
+                  the token is stored server-side for that user only.
                 </li>
                 <li>
-                  • The available functions are discovered from that internal MCP
-                  route before you save the integration.
+                  • Discover functions calls the MCP for the selected connector and
+                  brings its full tool list into the review step.
                 </li>
               </ul>
             ) : (

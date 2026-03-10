@@ -44,7 +44,7 @@ export const managedConnectorFunctionSchema = z.object({
   request: requestTemplateSchema,
 });
 
-export const managedConnectorUpsertSchema = z.object({
+const managedConnectorBaseSchema = z.object({
   slug: z.string().min(1),
   name: z.string().min(1),
   description: z.string().min(1),
@@ -54,38 +54,62 @@ export const managedConnectorUpsertSchema = z.object({
   categories: z.array(z.string()).default([]),
   authModes: z.array(managedConnectorAuthModeSchema).optional(),
   authStrategy: managedConnectorAuthStrategySchema,
+  provider: z.enum(["mcp", "http"]).optional(),
   credentialLabel: z.string().min(1),
   credentialPlaceholder: z.string().min(1),
   credentialHelp: z.string().min(1),
-  apiBaseUrl: z.string().url(),
+  apiBaseUrl: z.string().url().optional(),
+  serverUrl: z.string().url().optional(),
   oauthConfig: genericOAuthConfigSchema.optional(),
   oauthClientId: z.string().optional(),
   oauthClientSecret: z.string().optional(),
-  functions: z.array(managedConnectorFunctionSchema),
+  functions: z.array(managedConnectorFunctionSchema).default([]),
   enabled: z.boolean().default(true),
 });
 
-export const managedConnectorResponseSchema = z.object({
-  slug: z.string().min(1),
-  name: z.string().min(1),
-  description: z.string().min(1),
-  logoUrl: z.string().url().optional(),
-  appUrl: z.string().url().optional(),
-  docsUrl: z.string().url().optional(),
-  categories: z.array(z.string()),
-  authModes: z.array(managedConnectorAuthModeSchema),
-  authStrategy: managedConnectorAuthStrategySchema,
-  oauthConfigured: z.boolean(),
-  credentialLabel: z.string().min(1),
-  credentialPlaceholder: z.string().min(1),
-  credentialHelp: z.string().min(1),
-  apiBaseUrl: z.string().url(),
-  oauthConfig: genericOAuthConfigSchema.optional(),
-  functions: z.array(managedConnectorFunctionSchema),
-  enabled: z.boolean(),
-  createdAt: z.string().min(1),
-  updatedAt: z.string().min(1),
-});
+export const managedConnectorUpsertSchema = managedConnectorBaseSchema.superRefine(
+  (value, context) => {
+    const provider = value.provider ?? (value.serverUrl ? "mcp" : "http");
+
+    if (provider === "mcp") {
+      const serverUrl = value.serverUrl ?? value.apiBaseUrl;
+      if (!serverUrl) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["serverUrl"],
+          message: "MCP managed connectors require a serverUrl.",
+        });
+      }
+    } else {
+      if (!value.apiBaseUrl) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["apiBaseUrl"],
+          message: "HTTP managed connectors require an apiBaseUrl.",
+        });
+      }
+
+      if (value.functions.length === 0) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["functions"],
+          message: "HTTP managed connectors require at least one function template.",
+        });
+      }
+    }
+  },
+);
+
+export const managedConnectorResponseSchema = managedConnectorBaseSchema
+  .omit({
+    oauthClientId: true,
+    oauthClientSecret: true,
+  })
+  .extend({
+    oauthConfigured: z.boolean(),
+    createdAt: z.string().min(1),
+    updatedAt: z.string().min(1),
+  });
 
 export const managedConnectorListSchema = z.array(managedConnectorResponseSchema);
 

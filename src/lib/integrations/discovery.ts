@@ -2,6 +2,7 @@ import { Composio } from "@composio/core";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 
+import { decryptCredentials } from "@/src/lib/credential-crypto";
 import { ContextLayerError } from "@/src/lib/core/errors";
 import type { ContextRepository } from "@/src/lib/core/repository";
 import {
@@ -10,9 +11,13 @@ import {
   listBuiltInConnectors as listStaticBuiltInConnectors,
 } from "@/src/lib/integrations/built-in-connectors";
 import {
-  discoverManagedBuiltInConnector,
+  buildManagedConnectorFunctions,
+  getManagedConnectorApiBaseUrl,
+  getManagedConnectorProvider,
   getManagedConnectorRecord,
+  getManagedConnectorServerUrl,
   listAvailableBuiltInConnectors,
+  resolveManagedConnectorCredentials,
 } from "@/src/lib/integrations/managed-connectors";
 import type {
   AuthStrategy,
@@ -169,6 +174,7 @@ export interface IntegrationDiscoveryInput {
 export interface IntegrationDiscoveryOptions {
   baseUrl?: string;
   repository?: ContextRepository;
+  ownerId?: string;
 }
 
 export interface IntegrationDiscoveryResult {
@@ -197,6 +203,108 @@ export const listBuiltInConnectors = async (
   repository
     ? listAvailableBuiltInConnectors(repository)
     : listStaticBuiltInConnectors();
+
+const resolveManagedOAuthDiscoveryCredentials = async (
+  repository: ContextRepository,
+  ownerId: string | undefined,
+  integrationKey: string,
+  connectorName: string,
+) => {
+  if (!ownerId) {
+    throw new ContextLayerError(
+      `Sign in before discovering functions for ${connectorName}.`,
+      401,
+    );
+  }
+
+  const connection = await repository.getIntegrationConnection(ownerId, integrationKey);
+  if (!connection) {
+    throw new ContextLayerError(
+      `Connect ${connectorName} for this user before discovering functions.`,
+      403,
+    );
+  }
+
+  return compactRecord(
+    decryptCredentials<Record<string, unknown>>(connection.encryptedCredentials),
+  );
+};
+
+const discoverManagedConnectorIntegration = async (
+  input: IntegrationDiscoveryInput,
+  options: IntegrationDiscoveryOptions,
+  slug: string,
+): Promise<IntegrationDiscoveryResult | null> => {
+  if (!options.repository) {
+    return null;
+  }
+
+  const managedConnector = await getManagedConnectorRecord(options.repository, slug);
+  if (!managedConnector) {
+    return null;
+  }
+
+  if (getManagedConnectorProvider(managedConnector) === "mcp") {
+    const serverUrl = getManagedConnectorServerUrl(managedConnector);
+    if (!serverUrl) {
+      throw new ContextLayerError(
+        `Managed MCP connector '${managedConnector.slug}' is missing a serverUrl.`,
+        500,
+      );
+    }
+
+    const credentials =
+      managedConnector.authStrategy === "oauth2"
+        ? await resolveManagedOAuthDiscoveryCredentials(
+            options.repository,
+            options.ownerId,
+            input.key.trim(),
+            managedConnector.name,
+          )
+        : resolveManagedConnectorCredentials(managedConnector, input);
+
+    const result = await discoverMcpIntegration({
+      ...input,
+      kind: "mcp",
+      config: {
+        serverUrl,
+      },
+      credentials,
+    });
+
+    return {
+      ...result,
+      authStrategy: managedConnector.authStrategy,
+      config: compactRecord({
+        builtInSlug: managedConnector.slug,
+        managedConnectorSlug: managedConnector.slug,
+        serverUrl,
+      }),
+      credentials: managedConnector.authStrategy === "oauth2" ? {} : result.credentials,
+    };
+  }
+
+  const apiBaseUrl = getManagedConnectorApiBaseUrl(managedConnector);
+  if (!apiBaseUrl) {
+    throw new ContextLayerError(
+      `Managed HTTP connector '${managedConnector.slug}' is missing an apiBaseUrl.`,
+      500,
+    );
+  }
+
+  return {
+    provider: "http",
+    authStrategy: managedConnector.authStrategy,
+    config: {
+      builtInSlug: managedConnector.slug,
+      apiBaseUrl,
+      managedConnectorSlug: managedConnector.slug,
+    },
+    credentials: resolveManagedConnectorCredentials(managedConnector, input),
+    functions: buildManagedConnectorFunctions(managedConnector),
+  };
+};
+
 
 const discoverBuiltInConnectorIntegration = async (
   input: IntegrationDiscoveryInput,
@@ -240,11 +348,13 @@ const discoverBuiltInConnectorIntegration = async (
     };
   }
 
-  if (options.repository) {
-    const managedConnector = await getManagedConnectorRecord(options.repository, slug);
-    if (managedConnector) {
-      return discoverManagedBuiltInConnector(managedConnector, input);
-    }
+  const managedConnectorResult = await discoverManagedConnectorIntegration(
+    input,
+    options,
+    slug,
+  );
+  if (managedConnectorResult) {
+    return managedConnectorResult;
   }
 
   throw new ContextLayerError(`Unknown built-in connector '${slug}'.`, 404);

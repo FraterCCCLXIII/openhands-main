@@ -44,9 +44,8 @@ export default async function AddConnectorPage() {
           <p className="max-w-3xl text-sm leading-7 text-[var(--color-text-base)]">
             If the integration setup flow does not show the provider you need,
             use this page to see what is already available and learn how admins
-            can add a missing provider through the managed-connector system for
-            common OAuth and HTTP patterns, or through source-code changes for
-            special-case implementations.
+            can register a missing OAuth-backed MCP for the whole service, or
+            fall back to source-code changes for special-case implementations.
           </p>
           <div className="flex flex-wrap gap-2">
             {readyBuiltInConnectors.map((connector) => (
@@ -84,9 +83,9 @@ export default async function AddConnectorPage() {
                 </a>
               ) : null}
               <p>
-                Share the provider name, the OAuth documentation link, and the
-                work you want the agent to do. That gives admins the context they
-                need to add the connector as a managed integration record.
+                Share the provider name, the OAuth documentation link, the MCP
+                server URL if you know it, and the work you want the agent to do.
+                That gives admins the context they need to register the service-level connector.
               </p>
             </div>
           </Card>
@@ -106,8 +105,9 @@ export default async function AddConnectorPage() {
 
             <div className="space-y-4 text-sm leading-7 text-[var(--color-text-base)]">
               <p>
-                For most providers, add a managed connector record in the
-                database instead of making source-code changes.
+                Add connector is a service-level admin action. Use it once to
+                register an OAuth-backed MCP so every user can see it in the
+                integrations wizard.
               </p>
               <p>
                 The in-app registration form is only available to signed-in app
@@ -116,14 +116,13 @@ export default async function AddConnectorPage() {
               <ol className="grid gap-3">
                 <li>
                   <span className="font-medium text-white">1.</span> Confirm the
-                  provider has stable OAuth documentation and identify the app
-                  URL, authorization URL, token URL, callback requirements,
-                  minimum scopes, and the core REST operations you want agents to
-                  call.
+                  provider has stable OAuth documentation and identify the MCP
+                  server URL, authorization URL, token URL, callback requirements,
+                  and the minimum scopes the MCP needs.
                 </li>
                 <li>
                   <span className="font-medium text-white">2.</span> Create or
-                  update a managed connector through the admin tooling or by
+                  update the managed connector through the admin tooling or by
                   sending a record to <code className="text-white">POST /api/managed-connectors</code>. Use the{" "}
                   <a
                     href="/api/managed-connectors/openapi"
@@ -131,32 +130,29 @@ export default async function AddConnectorPage() {
                     rel="noreferrer"
                     className="text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
                   >
-                    OpenAPI doc
+                    endpoint schema doc
                   </a>{" "}
                   for the request shape.
                 </li>
                 <li>
-                  <span className="font-medium text-white">3.</span> In that DB
-                  record, fill in the provider metadata, base API URL, auth
-                  strategy, OAuth settings, and the function request templates the
-                  generic connector should expose.
+                  <span className="font-medium text-white">3.</span> Store the
+                  OAuth client ID and client secret in that managed connector if
+                  this service is going to run the OAuth callback flow for users.
                 </li>
                 <li>
-                  <span className="font-medium text-white">4.</span> If the
-                  provider uses OAuth, store the client ID and client secret in
-                  the managed connector record so the runtime can complete the
-                  OAuth flow without any code deploy.
+                  <span className="font-medium text-white">4.</span> Have a real
+                  user open the integrations wizard, press <span className="text-white">Connect</span> and then <span className="text-white">Discover functions</span>. That step adds the full MCP tool list to their personal integration.
                 </li>
                 <li>
-                  <span className="font-medium text-white">5.</span> Open the
-                  admin dashboard, connect a real user account, and confirm the
-                  connector now appears in the integration wizard as a ready
-                  option.
+                  <span className="font-medium text-white">5.</span> In the
+                  review step, choose which discovered functions should be enabled,
+                  disabled, or require approval by default.
                 </li>
                 <li>
-                  <span className="font-medium text-white">6.</span> Only fall
-                  back to a custom code change when the provider needs behavior
-                  the managed connector model cannot express yet.
+                  <span className="font-medium text-white">6.</span> If the
+                  provider needs custom behavior beyond a remote OAuth MCP,
+                  modify <code className="text-white">src/lib/integrations/built-in-connectors.ts</code>
+                  {" "}and add or update the corresponding <code className="text-white">app/api/mcp/&lt;provider&gt;/route.ts</code> implementation.
                 </li>
               </ol>
             </div>

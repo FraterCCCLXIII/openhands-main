@@ -1,4 +1,38 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+const { mcpListToolsMock, mcpState } = vi.hoisted(() => ({
+  mcpListToolsMock: vi.fn(
+    async (): Promise<{ tools: Array<Record<string, unknown>> }> => ({ tools: [] }),
+  ),
+  mcpState: {
+    url: "",
+    headers: undefined as Record<string, string> | undefined,
+  },
+}));
+
+vi.mock("@modelcontextprotocol/sdk/client/index.js", () => ({
+  Client: class MockClient {
+    async connect() {}
+
+    async listTools() {
+      return mcpListToolsMock();
+    }
+  },
+}));
+
+vi.mock("@modelcontextprotocol/sdk/client/streamableHttp.js", () => ({
+  StreamableHTTPClientTransport: class MockTransport {
+    constructor(
+      url: URL,
+      options?: { requestInit?: { headers?: Record<string, string> } },
+    ) {
+      mcpState.url = url.toString();
+      mcpState.headers = options?.requestInit?.headers;
+    }
+
+    async close() {}
+  },
+}));
 
 import { encryptCredentials } from "@/src/lib/credential-crypto";
 import { MemoryRepository } from "@/src/lib/db/memory-repository";
@@ -8,6 +42,18 @@ import {
   listBuiltInConnectors,
   normalizeComposioAuthModes,
 } from "@/src/lib/integrations/discovery";
+
+beforeEach(() => {
+  mcpListToolsMock.mockReset();
+  mcpListToolsMock.mockResolvedValue({ tools: [] });
+  mcpState.url = "";
+  mcpState.headers = undefined;
+});
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
+
 
 describe("normalizeComposioAuthModes", () => {
   it("normalizes multiple auth schemes and preserves no-auth support", () => {
@@ -58,11 +104,12 @@ describe("listBuiltInConnectors", () => {
       categories: ["CRM"],
       authModes: ["oauth2"],
       authStrategy: "oauth2",
+      provider: "mcp",
       oauthConfigured: true,
       credentialLabel: "Connect Acme CRM",
       credentialPlaceholder: "Connect Acme CRM",
       credentialHelp: "Use OAuth to connect Acme CRM.",
-      apiBaseUrl: "https://api.acme.test/v1",
+      serverUrl: "https://mcp.acme.test/mcp",
       oauthConfig: {
         authorizationUrl: "https://auth.acme.test/authorize",
         tokenUrl: "https://auth.acme.test/token",
@@ -72,18 +119,7 @@ describe("listBuiltInConnectors", () => {
         clientId: "acme-client-id",
         clientSecret: "acme-client-secret",
       }),
-      functions: [
-        {
-          name: "list_contacts",
-          description: "List contacts",
-          defaultScopes: ["contacts.read"],
-          request: {
-            method: "GET",
-            path: "/contacts",
-            query: { limit: "{{limit}}" },
-          },
-        },
-      ],
+      functions: [],
       enabled: true,
       createdAt: "2026-03-09T00:00:00.000Z",
       updatedAt: "2026-03-09T00:00:00.000Z",
@@ -95,7 +131,7 @@ describe("listBuiltInConnectors", () => {
     expect(connector).toMatchObject({
       name: "Acme CRM",
       authStrategy: "oauth2",
-      toolCount: 1,
+      toolCount: 0,
       oauthConfigured: true,
     });
   });
@@ -168,7 +204,7 @@ describe("discoverIntegration", () => {
     });
   });
 
-  it("discovers managed connectors through the generic HTTP adapter", async () => {
+  it("discovers managed OAuth MCP connectors with the user's stored connection", async () => {
     const repository = new MemoryRepository();
     await repository.upsertManagedConnector({
       slug: "acme-crm",
@@ -177,11 +213,12 @@ describe("discoverIntegration", () => {
       categories: ["CRM"],
       authModes: ["oauth2"],
       authStrategy: "oauth2",
+      provider: "mcp",
       oauthConfigured: true,
       credentialLabel: "Connect Acme CRM",
       credentialPlaceholder: "Connect Acme CRM",
       credentialHelp: "Use OAuth to connect Acme CRM.",
-      apiBaseUrl: "https://api.acme.test/v1",
+      serverUrl: "https://mcp.acme.test/mcp",
       oauthConfig: {
         authorizationUrl: "https://auth.acme.test/authorize",
         tokenUrl: "https://auth.acme.test/token",
@@ -191,21 +228,34 @@ describe("discoverIntegration", () => {
         clientId: "acme-client-id",
         clientSecret: "acme-client-secret",
       }),
-      functions: [
-        {
-          name: "list_contacts",
-          description: "List contacts",
-          defaultScopes: ["contacts.read"],
-          request: {
-            method: "GET",
-            path: "/contacts",
-            query: { limit: "{{limit}}" },
-          },
-        },
-      ],
+      functions: [],
       enabled: true,
       createdAt: "2026-03-09T00:00:00.000Z",
       updatedAt: "2026-03-09T00:00:00.000Z",
+    });
+    await repository.upsertIntegrationConnection({
+      ownerId: "dev@localhost",
+      integrationKey: "acme-crm",
+      provider: "mcp",
+      authStrategy: "oauth2",
+      encryptedCredentials: encryptCredentials({
+        accessToken: "acme-access-token",
+      }),
+      scopes: ["contacts.read"],
+      metadata: {},
+      createdAt: "2026-03-09T00:00:00.000Z",
+      updatedAt: "2026-03-09T00:00:00.000Z",
+    });
+    mcpListToolsMock.mockResolvedValue({
+      tools: [
+        {
+          name: "list_contacts",
+          description: "List contacts",
+          inputSchema: {
+            type: "object",
+          },
+        },
+      ],
     });
 
     await expect(
@@ -219,29 +269,31 @@ describe("discoverIntegration", () => {
           credentials: {},
         },
         {
+          ownerId: "dev@localhost",
           repository,
         },
       ),
     ).resolves.toMatchObject({
-      provider: "http",
+      provider: "mcp",
       authStrategy: "oauth2",
       config: {
         builtInSlug: "acme-crm",
-        apiBaseUrl: "https://api.acme.test/v1",
         managedConnectorSlug: "acme-crm",
+        serverUrl: "https://mcp.acme.test/mcp",
       },
       credentials: {},
       functions: {
         list_contacts: {
-          defaultScopes: ["contacts.read"],
+          description: "List contacts",
           config: {
-            request: {
-              method: "GET",
-              path: "/contacts",
-            },
+            toolName: "list_contacts",
           },
         },
       },
+    });
+    expect(mcpState.url).toBe("https://mcp.acme.test/mcp");
+    expect(mcpState.headers).toEqual({
+      Authorization: "Bearer acme-access-token",
     });
   });
 });

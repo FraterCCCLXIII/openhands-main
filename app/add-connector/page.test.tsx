@@ -28,9 +28,13 @@ describe("AddConnectorPage", () => {
     expect(html).toContain("How to add a provider that is not currently showing up.");
     expect(html).toContain("POST /api/managed-connectors");
     expect(html).toContain("/api/managed-connectors/openapi");
-    expect(html).toContain("OpenAPI doc");
+    expect(html).toContain("endpoint schema doc");
     expect(html).toContain("Search curated adaptors");
-    expect(html).toContain("managed connector record in the database");
+    expect(html).toContain("service-level admin action");
+    expect(html).toContain("Connect");
+    expect(html).toContain("Discover functions");
+    expect(html).toContain("src/lib/integrations/built-in-connectors.ts");
+    expect(html).toContain("app/api/mcp/&lt;provider&gt;/route.ts");
     expect(html).toContain("APP_ADMIN_EMAILS");
     expect(html).not.toContain("src/lib/oauth/providers.ts");
     expect(html).not.toContain("Submit provider information");
