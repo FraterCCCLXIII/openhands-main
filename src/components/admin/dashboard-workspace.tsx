@@ -485,9 +485,8 @@ export const DashboardWorkspace = ({
                 <p className="text-[11px] uppercase tracking-[0.18em] text-[var(--color-text-base)]">
                   Signed in as
                 </p>
-                <p className="mt-1 break-all text-sm font-medium text-white">
-                  {currentUser.email ?? currentUser.name ?? "admin"}
-                </p>
+                <p className="mt-1 text-sm font-medium text-white">{userName}</p>
+                <p className="mt-1 break-all text-xs text-[var(--color-text-base)]">{userEmail}</p>
               </div>
               <div className="flex flex-wrap gap-2">
                 <Badge>{pendingAccessRequests.length} pending</Badge>
