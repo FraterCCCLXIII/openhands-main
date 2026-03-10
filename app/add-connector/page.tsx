@@ -4,7 +4,7 @@ import { CuratedProviderList } from "@/src/components/admin/curated-provider-lis
 import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
 import { auth } from "@/src/lib/auth";
-import { getAppAdminEmails, isAppAdminEmail } from "@/src/lib/app-admins";
+import { isAppAdminEmail } from "@/src/lib/app-admins";
 import { filterReadyBuiltInConnectors } from "@/src/lib/integrations/connector-readiness";
 import {
   getAdminContactEmail,
@@ -21,9 +21,7 @@ export default async function AddConnectorPage() {
   const adminInstruction = getAdminContactInstruction(adminEmail ?? undefined);
   const readyBuiltInConnectors = filterReadyBuiltInConnectors(listBuiltInConnectors());
   const providerCatalog = listOAuthProviderCatalog();
-  const appAdminEmails = getAppAdminEmails();
-  const sessionEmail = session?.user?.email?.trim() || "Not provided";
-  const canRegisterManagedConnectors = isAppAdminEmail(session?.user?.email ?? undefined, appAdminEmails);
+  const canRegisterManagedConnectors = isAppAdminEmail(session?.user?.email ?? undefined);
 
   return (
     <main className="min-h-screen px-6 py-8">
@@ -115,10 +113,6 @@ export default async function AddConnectorPage() {
                 The in-app registration form is only available to signed-in app
                 administrators whose email appears in <code className="text-white">APP_ADMIN_EMAILS</code>, which should be set in Vercel environment variables.
               </p>
-              <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-subtle)] px-3 py-2 text-xs leading-6 text-[var(--color-text-base)]">
-                <span className="font-medium text-white">Debug:</span>{" "}
-                server session email <code className="text-white">{sessionEmail}</code>, APP_ADMIN_EMAILS entries loaded <code className="text-white">{String(appAdminEmails.length)}</code>, admin match <code className="text-white">{canRegisterManagedConnectors ? "yes" : "no"}</code>.
-              </div>
               <ol className="grid gap-3">
                 <li>
                   <span className="font-medium text-white">1.</span> Confirm the

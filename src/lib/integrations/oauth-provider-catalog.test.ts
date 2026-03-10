@@ -22,4 +22,25 @@ describe("listOAuthProviderCatalog", () => {
     expect(figma).toMatchObject({ availability: "oauth_ready", builtInSlug: "figma" });
     expect(github).toMatchObject({ availability: "manual_token", builtInSlug: "github" });
   });
+
+  it("includes registration defaults for researched providers", () => {
+    const providers = listOAuthProviderCatalog();
+    const notion = providers.find((provider) => provider.slug === "notion");
+    const googleCalendar = providers.find((provider) => provider.slug === "google-calendar");
+
+    expect(notion?.registrationDefaults).toMatchObject({
+      apiBaseUrl: "https://api.notion.com",
+      authorizationUrl: "https://api.notion.com/v1/oauth/authorize",
+      tokenUrl: "https://api.notion.com/v1/oauth/token",
+      functionName: "search_workspace",
+      requestMethod: "POST",
+      requestPath: "/v1/search",
+    });
+    expect(googleCalendar?.registrationDefaults).toMatchObject({
+      apiBaseUrl: "https://www.googleapis.com/calendar/v3",
+      authorizationUrl: "https://accounts.google.com/o/oauth2/v2/auth",
+      tokenUrl: "https://oauth2.googleapis.com/token",
+      scopes: ["https://www.googleapis.com/auth/calendar.readonly"],
+    });
+  });
 });

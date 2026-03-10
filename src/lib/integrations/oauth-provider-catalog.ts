@@ -1,12 +1,14 @@
+import { getOAuthProviderRegistrationDefaults } from "@/src/lib/integrations/oauth-provider-registration-defaults";
 import type { OAuthProviderCatalogOption } from "@/src/types/context-layer";
 
 const provider = (
   popularityRank: number,
-  option: Omit<OAuthProviderCatalogOption, "authStrategy" | "popularityRank">,
+  option: Omit<OAuthProviderCatalogOption, "authStrategy" | "popularityRank" | "registrationDefaults">,
 ): OAuthProviderCatalogOption => ({
   ...option,
   authStrategy: "oauth2",
   popularityRank,
+  registrationDefaults: getOAuthProviderRegistrationDefaults(option.slug),
 });
 
 const oauthProviderCatalog = [

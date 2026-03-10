@@ -52,6 +52,16 @@ const providerCatalog: OAuthProviderCatalogOption[] = [
     docsUrl: "https://developers.google.com/identity/protocols/oauth2",
     notes: "Useful for scheduling workflows.",
     popularityRank: 2,
+    registrationDefaults: {
+      apiBaseUrl: "https://www.googleapis.com/calendar/v3",
+      authorizationUrl: "https://accounts.google.com/o/oauth2/v2/auth",
+      tokenUrl: "https://oauth2.googleapis.com/token",
+      scopes: ["https://www.googleapis.com/auth/calendar.readonly"],
+      functionName: "list_events",
+      functionDescription: "List events from the user's primary Google Calendar.",
+      requestMethod: "GET",
+      requestPath: "/calendars/primary/events",
+    },
   },
 ];
 
@@ -131,11 +141,49 @@ describe("CuratedProviderList", () => {
     expect(container.textContent).toContain("Register this provider");
     expect(container.textContent).toContain("Register connector");
 
+    const urlInputs = Array.from(container.querySelectorAll('input[type="url"]'));
+    expect((urlInputs[0] as HTMLInputElement | undefined)?.value).toBe(
+      "https://www.googleapis.com/calendar/v3",
+    );
+    expect((urlInputs[1] as HTMLInputElement | undefined)?.value).toBe(
+      "https://accounts.google.com/o/oauth2/v2/auth",
+    );
+    expect((urlInputs[2] as HTMLInputElement | undefined)?.value).toBe(
+      "https://oauth2.googleapis.com/token",
+    );
+    expect(
+      (
+        Array.from(container.querySelectorAll('input[type="text"]')).find(
+          (input) => (input as HTMLInputElement).placeholder === "repo, read:user",
+        ) as HTMLInputElement | undefined
+      )?.value,
+    ).toBe("https://www.googleapis.com/auth/calendar.readonly");
+    expect(
+      (
+        Array.from(container.querySelectorAll('input[type="text"]')).find(
+          (input) => (input as HTMLInputElement).value === "list_events",
+        ) as HTMLInputElement | undefined
+      )?.value,
+    ).toBe("list_events");
+    expect(
+      (
+        Array.from(container.querySelectorAll('input[type="text"]')).find(
+          (input) =>
+            (input as HTMLInputElement).value ===
+            "List events from the user's primary Google Calendar.",
+        ) as HTMLInputElement | undefined
+      )?.value,
+    ).toBe("List events from the user's primary Google Calendar.");
+    expect(
+      (
+        Array.from(container.querySelectorAll('input[type="text"]')).find(
+          (input) => (input as HTMLInputElement).value === "/calendars/primary/events",
+        ) as HTMLInputElement | undefined
+      )?.value,
+    ).toBe("/calendars/primary/events");
+
     await act(async () => {
-      const urlInputs = Array.from(container.querySelectorAll('input[type="url"]'));
       setInputValue(urlInputs[0] ?? null, "https://api.calendar.test");
-      setInputValue(urlInputs[1] ?? null, "https://accounts.google.com/o/oauth2/v2/auth");
-      setInputValue(urlInputs[2] ?? null, "https://oauth2.googleapis.com/token");
       setInputValue(
         Array.from(container.querySelectorAll('input[type="text"]')).find(
           (input) => (input as HTMLInputElement).placeholder === "repo, read:user",
@@ -144,13 +192,15 @@ describe("CuratedProviderList", () => {
       );
       setInputValue(
         Array.from(container.querySelectorAll('input[type="text"]')).find(
-          (input) => (input as HTMLInputElement).value === "google-calendar_action",
+          (input) => (input as HTMLInputElement).value === "list_events",
         ) ?? null,
         "list_events",
       );
       setInputValue(
         Array.from(container.querySelectorAll('input[type="text"]')).find(
-          (input) => (input as HTMLInputElement).value === "Example Google Calendar operation",
+          (input) =>
+            (input as HTMLInputElement).value ===
+            "List events from the user's primary Google Calendar.",
         ) ?? null,
         "List calendar events",
       );
@@ -162,7 +212,7 @@ describe("CuratedProviderList", () => {
       );
       setInputValue(
         Array.from(container.querySelectorAll('input[type="text"]')).find(
-          (input) => (input as HTMLInputElement).value === "/v1/example",
+          (input) => (input as HTMLInputElement).value === "/calendars/primary/events",
         ) ?? null,
         "/calendars/primary/events",
       );

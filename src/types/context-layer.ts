@@ -67,6 +67,17 @@ export type OAuthProviderAvailability =
   | "manual_token"
   | "planned";
 
+export interface OAuthProviderRegistrationDefaults {
+  apiBaseUrl?: string;
+  authorizationUrl?: string;
+  tokenUrl?: string;
+  scopes?: string[];
+  functionName?: string;
+  functionDescription?: string;
+  requestMethod?: string;
+  requestPath?: string;
+}
+
 export interface OAuthProviderCatalogOption {
   slug: string;
   name: string;
@@ -79,6 +90,7 @@ export interface OAuthProviderCatalogOption {
   docsUrl?: string;
   notes: string;
   popularityRank: number;
+  registrationDefaults?: OAuthProviderRegistrationDefaults;
 }
 
 export interface GenericOAuthConfig {

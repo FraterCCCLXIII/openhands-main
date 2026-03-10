@@ -32,10 +32,6 @@ describe("AddConnectorPage", () => {
     expect(html).toContain("Search curated adaptors");
     expect(html).toContain("managed connector record in the database");
     expect(html).toContain("APP_ADMIN_EMAILS");
-    expect(html).toContain("server session email");
-    expect(html).toContain("dev@localhost");
-    expect(html).toContain("APP_ADMIN_EMAILS entries loaded");
-    expect(html).toContain("admin match");
     expect(html).not.toContain("src/lib/oauth/providers.ts");
     expect(html).not.toContain("Submit provider information");
   });

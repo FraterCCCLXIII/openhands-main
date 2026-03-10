@@ -50,21 +50,26 @@ interface RegistrationFormState {
 
 const createRegistrationFormState = (
   provider: OAuthProviderCatalogOption,
-): RegistrationFormState => ({
-  apiBaseUrl: "https://api.example.com",
-  authorizationUrl: "",
-  tokenUrl: "",
-  scopes: "",
-  oauthClientId: "",
-  oauthClientSecret: "",
-  functionName: `${provider.slug}_action`,
-  functionDescription: `Example ${provider.name} operation`,
-  requestMethod: "GET",
-  requestPath: "/v1/example",
-  submitting: false,
-  status: "idle",
-  message: "",
-});
+): RegistrationFormState => {
+  const defaults = provider.registrationDefaults;
+
+  return {
+    apiBaseUrl: defaults?.apiBaseUrl ?? "https://api.example.com",
+    authorizationUrl: defaults?.authorizationUrl ?? "",
+    tokenUrl: defaults?.tokenUrl ?? "",
+    scopes: defaults?.scopes?.join(", ") ?? "",
+    oauthClientId: "",
+    oauthClientSecret: "",
+    functionName: defaults?.functionName ?? `${provider.slug}_action`,
+    functionDescription:
+      defaults?.functionDescription ?? `Example ${provider.name} operation`,
+    requestMethod: defaults?.requestMethod ?? "GET",
+    requestPath: defaults?.requestPath ?? "/v1/example",
+    submitting: false,
+    status: "idle",
+    message: "",
+  };
+};
 
 const parseScopes = (value: string) =>
   value
