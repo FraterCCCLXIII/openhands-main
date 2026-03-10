@@ -54,7 +54,7 @@ const oauthProviderCatalog = [
     builtInSlug: "notion",
     appUrl: "https://www.notion.so",
     docsUrl: "https://developers.notion.com/docs/authorization",
-    notes: "Available now as a curated built-in with per-user OAuth connection support.",
+    notes: "",
   }),
   provider(5, {
     slug: "figma",
@@ -65,7 +65,7 @@ const oauthProviderCatalog = [
     builtInSlug: "figma",
     appUrl: "https://www.figma.com",
     docsUrl: "https://www.figma.com/developers/api#oauth2",
-    notes: "Available now as a curated built-in with per-user OAuth connection support.",
+    notes: "",
   }),
   provider(6, {
     slug: "google-drive",

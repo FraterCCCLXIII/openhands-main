@@ -23,14 +23,30 @@ describe("listOAuthProviderCatalog", () => {
     expect(github).toMatchObject({ availability: "manual_token", builtInSlug: "github" });
   });
 
+  it("provides researched MCP server URL defaults for every catalog provider", () => {
+    const providers = listOAuthProviderCatalog();
+
+    expect(providers.every((provider) => Boolean(provider.registrationDefaults?.serverUrl))).toBe(true);
+    expect(
+      providers.every(
+        (provider) => !provider.registrationDefaults?.serverUrl?.includes("example.com"),
+      ),
+    ).toBe(true);
+  });
+
+
   it("includes registration defaults for researched providers", () => {
     const providers = listOAuthProviderCatalog();
     const notion = providers.find((provider) => provider.slug === "notion");
     const googleCalendar = providers.find((provider) => provider.slug === "google-calendar");
+    const github = providers.find((provider) => provider.slug === "github");
 
+    expect(github?.registrationDefaults).toMatchObject({
+      serverUrl: "https://api.githubcopilot.com/mcp/",
+    });
     expect(notion?.registrationDefaults).toMatchObject({
       apiBaseUrl: "https://api.notion.com",
-      serverUrl: "https://mcp.notion.example.com/mcp",
+      serverUrl: "https://mcp.composio.dev/partner/composio/notion/mcp?customerId=replace-me",
       authorizationUrl: "https://api.notion.com/v1/oauth/authorize",
       tokenUrl: "https://api.notion.com/v1/oauth/token",
       functionName: "search_workspace",
@@ -39,7 +55,8 @@ describe("listOAuthProviderCatalog", () => {
     });
     expect(googleCalendar?.registrationDefaults).toMatchObject({
       apiBaseUrl: "https://www.googleapis.com/calendar/v3",
-      serverUrl: "https://mcp.google-calendar.example.com/mcp",
+      serverUrl:
+        "https://mcp.composio.dev/partner/composio/google-calendar/mcp?customerId=replace-me",
       authorizationUrl: "https://accounts.google.com/o/oauth2/v2/auth",
       tokenUrl: "https://oauth2.googleapis.com/token",
       scopes: ["https://www.googleapis.com/auth/calendar.readonly"],

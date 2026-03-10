@@ -64,7 +64,8 @@ const knownManagedMcpServerUrls: Record<string, string> = {
 };
 
 const buildManagedMcpServerUrl = (slug: string) =>
-  knownManagedMcpServerUrls[slug] ?? `https://mcp.${slug}.example.com/mcp`;
+  knownManagedMcpServerUrls[slug] ??
+  `https://mcp.composio.dev/partner/composio/${slug}/mcp?customerId=replace-me`;
 
 const registrationDefaults: Record<string, OAuthProviderRegistrationDefaults> = {
   github: {
@@ -181,6 +182,7 @@ const registrationDefaults: Record<string, OAuthProviderRegistrationDefaults> = 
     requestMethod: "GET",
     requestPath: "/tasks",
   },
+  trello: {},
   clickup: {
     apiBaseUrl: "https://api.clickup.com/api/v2",
     authorizationUrl: "https://app.clickup.com/api",
@@ -424,6 +426,8 @@ const registrationDefaults: Record<string, OAuthProviderRegistrationDefaults> = 
     requestMethod: "GET",
     requestPath: "/sites",
   },
+  plaid: {},
+
   okta: {
     apiBaseUrl: "https://{yourOktaDomain}/api/v1",
     authorizationUrl: "https://{yourOktaDomain}/oauth2/v1/authorize",

@@ -1,6 +1,6 @@
 "use client";
 
-import { type FormEvent, useMemo, useState } from "react";
+import { type FormEvent, useEffect, useMemo, useState } from "react";
 import { ExternalLink } from "lucide-react";
 
 import { Badge } from "@/src/components/ui/badge";
@@ -68,6 +68,18 @@ const parseScopes = (value: string) =>
     .map((scope) => scope.trim())
     .filter(Boolean);
 
+const usesGeneratedMcpTemplate = (serverUrl: string) =>
+  /customerId=replace-me/i.test(serverUrl.trim());
+
+const hasFixedOAuthConfig = (provider: OAuthProviderCatalogOption) =>
+  Boolean(
+    provider.registrationDefaults?.authorizationUrl &&
+      provider.registrationDefaults?.tokenUrl,
+  );
+
+const buildCallbackUrl = (origin: string, slug: string) =>
+  `${origin || "https://<your-deployment>"}/api/oauth/${slug}/callback`;
+
 const buildManagedConnectorPayload = (
   provider: OAuthProviderCatalogOption,
   form: RegistrationFormState,
@@ -86,9 +98,13 @@ const buildManagedConnectorPayload = (
   credentialHelp: `OAuth connection for ${provider.name}.`,
   serverUrl: form.serverUrl.trim(),
   oauthConfig: {
-    authorizationUrl: form.authorizationUrl.trim(),
-    tokenUrl: form.tokenUrl.trim(),
-    scopes: parseScopes(form.scopes),
+    authorizationUrl:
+      form.authorizationUrl.trim() || provider.registrationDefaults?.authorizationUrl || "",
+    tokenUrl: form.tokenUrl.trim() || provider.registrationDefaults?.tokenUrl || "",
+    scopes:
+      parseScopes(form.scopes).length > 0
+        ? parseScopes(form.scopes)
+        : provider.registrationDefaults?.scopes ?? [],
   },
   oauthClientId: form.oauthClientId.trim(),
   oauthClientSecret: form.oauthClientSecret.trim(),
@@ -109,9 +125,14 @@ export function CuratedProviderList({
 }: CuratedProviderListProps) {
   const [query, setQuery] = useState("");
   const [expandedSlug, setExpandedSlug] = useState<string | null>(null);
+  const [deploymentOrigin, setDeploymentOrigin] = useState("");
   const [registrationForms, setRegistrationForms] = useState<
     Record<string, RegistrationFormState>
   >({});
+
+  useEffect(() => {
+    setDeploymentOrigin(window.location.origin);
+  }, []);
 
   const updateRegistrationForm = (
     provider: OAuthProviderCatalogOption,
@@ -136,6 +157,16 @@ export function CuratedProviderList({
     event.preventDefault();
 
     const currentForm = getRegistrationForm(provider);
+    if (usesGeneratedMcpTemplate(currentForm.serverUrl)) {
+      updateRegistrationForm(provider, {
+        submitting: false,
+        status: "error",
+        message:
+          "Replace customerId=replace-me in the MCP server URL with the generated customer-specific value before registering this connector.",
+      });
+      return;
+    }
+
     updateRegistrationForm(provider, {
       submitting: true,
       status: "idle",
@@ -222,6 +253,8 @@ export function CuratedProviderList({
               : null;
             const isExpanded = expandedSlug === provider.slug;
             const registrationForm = getRegistrationForm(provider);
+            const usesFixedOAuthDefaults = hasFixedOAuthConfig(provider);
+            const callbackUrl = buildCallbackUrl(deploymentOrigin, provider.slug);
 
             return (
               <div key={provider.slug}>
@@ -250,8 +283,8 @@ export function CuratedProviderList({
 
                 {isExpanded ? (
                   <div className="border-t border-[var(--color-border)] px-4 py-4 text-sm leading-7 text-[var(--color-text-base)]">
-                    <p>{provider.notes}</p>
-                    <div className="mt-3 flex flex-wrap gap-2">
+                    {provider.notes ? <p>{provider.notes}</p> : null}
+                    <div className={`${provider.notes ? "mt-3" : ""} flex flex-wrap gap-2`}>
                       {provider.categories.map((category) => (
                         <Badge key={`${provider.slug}-${category}`}>{category}</Badge>
                       ))}
@@ -260,27 +293,16 @@ export function CuratedProviderList({
                       </Badge>
                       {builtInMatch ? <Badge tone="success">Ready now</Badge> : null}
                     </div>
-                    <div className="mt-4 flex flex-wrap gap-3 text-xs">
-                      {builtInMatch ? (
+                    {builtInMatch ? (
+                      <div className="mt-4 flex flex-wrap gap-3 text-xs">
                         <a
                           href={`/admin?section=integrations&showIntegrationWizard=1&builtIn=${builtInMatch.slug}`}
                           className="inline-flex items-center gap-1 text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
                         >
                           Use {builtInMatch.name}
                         </a>
-                      ) : null}
-                      {provider.docsUrl ? (
-                        <a
-                          href={provider.docsUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="inline-flex items-center gap-1 text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
-                        >
-                          OAuth docs
-                          <ExternalLink className="h-3.5 w-3.5" />
-                        </a>
-                      ) : null}
-                    </div>
+                      </div>
+                    ) : null}
 
                     {builtInMatch ? (
                       <p className="mt-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-text-base)]">
@@ -296,11 +318,8 @@ export function CuratedProviderList({
                             Register this provider
                           </p>
                           <p className="mt-1 text-sm text-[var(--color-text-base)]">
-                            Enter the OAuth-backed MCP details below and the app will submit the managed connector record for you.
+                            Enter the OAuth-backed MCP details below to register this connector once for the whole service. Individual users will later connect their own account and discover the MCP's full tool list from the integrations wizard.
                           </p>
-                        </div>
-                        <div className="md:col-span-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-xs leading-6 text-[var(--color-text-base)]">
-                          Register the MCP once for the whole service. Individual users will later connect their own account and discover the MCP's full tool list from the integrations wizard.
                         </div>
                         <label className="flex flex-col gap-1 text-xs text-[var(--color-text-muted)] md:col-span-2">
                           MCP server URL
@@ -314,63 +333,62 @@ export function CuratedProviderList({
                             }
                             placeholder={
                               provider.registrationDefaults?.serverUrl ??
-                              `https://mcp.${provider.slug}.example.com/mcp`
+                              `https://mcp.composio.dev/partner/composio/${provider.slug}/mcp?customerId=replace-me`
                             }
                             className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-white outline-none placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-accent)]"
                           />
-                          <span className="text-[11px] leading-5 text-[var(--color-text-muted)]">
-                            Starts with a {provider.name} MCP endpoint by default. Replace it if your hosted {provider.name} MCP uses a different URL.
-                          </span>
                         </label>
-                        <label className="flex flex-col gap-1 text-xs text-[var(--color-text-muted)]">
-                          Scopes (comma separated)
-                          <input
-                            type="text"
-                            value={registrationForm.scopes}
-                            onChange={(event) =>
-                              updateRegistrationForm(provider, {
-                                scopes: event.target.value,
-                              })
-                            }
-                            placeholder="repo, read:user"
-                            className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-white outline-none placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-accent)]"
-                          />
-                        </label>
-                        <label className="flex flex-col gap-1 text-xs text-[var(--color-text-muted)]">
-                          Authorization URL
-                          <input
-                            type="url"
-                            value={registrationForm.authorizationUrl}
-                            onChange={(event) =>
-                              updateRegistrationForm(provider, {
-                                authorizationUrl: event.target.value,
-                              })
-                            }
-                            className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-white outline-none focus:border-[var(--color-accent)]"
-                          />
-                        </label>
-                        <label className="flex flex-col gap-1 text-xs text-[var(--color-text-muted)]">
-                          Token URL
-                          <input
-                            type="url"
-                            value={registrationForm.tokenUrl}
-                            onChange={(event) =>
-                              updateRegistrationForm(provider, {
-                                tokenUrl: event.target.value,
-                              })
-                            }
-                            className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-white outline-none focus:border-[var(--color-accent)]"
-                          />
-                        </label>
+                        {!usesFixedOAuthDefaults ? (
+                          <>
+                            <label className="flex flex-col gap-1 text-xs text-[var(--color-text-muted)]">
+                              Authorization URL
+                              <input
+                                type="url"
+                                value={registrationForm.authorizationUrl}
+                                onChange={(event) =>
+                                  updateRegistrationForm(provider, {
+                                    authorizationUrl: event.target.value,
+                                  })
+                                }
+                                className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-white outline-none focus:border-[var(--color-accent)]"
+                              />
+                            </label>
+                            <label className="flex flex-col gap-1 text-xs text-[var(--color-text-muted)]">
+                              Token URL
+                              <input
+                                type="url"
+                                value={registrationForm.tokenUrl}
+                                onChange={(event) =>
+                                  updateRegistrationForm(provider, {
+                                    tokenUrl: event.target.value,
+                                  })
+                                }
+                                className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-white outline-none focus:border-[var(--color-accent)]"
+                              />
+                            </label>
+                            <label className="flex flex-col gap-1 text-xs text-[var(--color-text-muted)] md:col-span-2">
+                              Scopes (comma separated)
+                              <input
+                                type="text"
+                                value={registrationForm.scopes}
+                                onChange={(event) =>
+                                  updateRegistrationForm(provider, {
+                                    scopes: event.target.value,
+                                  })
+                                }
+                                placeholder="repo, read:user"
+                                className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-white outline-none placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-accent)]"
+                              />
+                            </label>
+                          </>
+                        ) : null}
                         <div className="md:col-span-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-[11px] leading-5 text-[var(--color-text-base)]">
                           <p>
-                            Create a {provider.name} OAuth app before saving this connector so you can paste the client ID and client secret below.
+                            Create a {provider.name} OAuth app before saving this connector so you can paste the client ID and client secret below. {usesFixedOAuthDefaults ? `The standard OAuth URLs and scopes for ${provider.name} are already filled in.` : ""}
                           </p>
                           <p className="mt-1">
-                            If the provider asks for a redirect URI, use
-                            <code className="mx-1 text-white">
-                              https://&lt;your-deployment&gt;/api/oauth/{provider.slug}/callback
-                            </code>
+                            Set the redirect URI to
+                            <code className="mx-1 text-white">{callbackUrl}</code>
                             for this deployment.
                           </p>
                           {provider.docsUrl ? (

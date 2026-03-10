@@ -119,9 +119,12 @@ export default async function AddConnectorPage() {
                   provider has stable OAuth documentation and identify the MCP
                   server URL, authorization URL, token URL, callback requirements,
                   and the minimum scopes the MCP needs. Each provider row below
-                  now starts with a service-specific MCP URL default instead of a
-                  generic placeholder, but you should still replace it if your
-                  hosted MCP uses a different endpoint.
+                  now starts with either an official vendor-hosted MCP URL or a
+                  researched Composio-hosted MCP URL pattern instead of a generic
+                  placeholder. If the value still includes
+                  <code className="mx-1 text-white">customerId=replace-me</code>,
+                  replace that with the generated customer-specific value before
+                  saving the connector.
                 </li>
                 <li>
                   <span className="font-medium text-white">2.</span> Create or

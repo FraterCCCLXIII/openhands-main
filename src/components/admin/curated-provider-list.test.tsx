@@ -53,7 +53,8 @@ const providerCatalog: OAuthProviderCatalogOption[] = [
     notes: "Useful for scheduling workflows.",
     popularityRank: 2,
     registrationDefaults: {
-      serverUrl: "https://mcp.google-calendar.example.com/mcp",
+      serverUrl:
+        "https://mcp.composio.dev/partner/composio/google-calendar/mcp?customerId=replace-me",
       authorizationUrl: "https://accounts.google.com/o/oauth2/v2/auth",
       tokenUrl: "https://oauth2.googleapis.com/token",
       scopes: ["https://www.googleapis.com/auth/calendar.readonly"],
@@ -135,42 +136,33 @@ describe("CuratedProviderList", () => {
     });
 
     expect(container.textContent).toContain("Register this provider");
-    expect(container.textContent).toContain("Register the MCP once for the whole service");
+    expect(container.textContent).toContain(
+      "Enter the OAuth-backed MCP details below to register this connector once for the whole service.",
+    );
     expect(container.textContent).toContain("Register connector");
-    expect(container.textContent).toContain("Starts with a Google Calendar MCP endpoint by default");
     expect(container.textContent).toContain("How to create Google Calendar OAuth credentials");
     expect(container.textContent).toContain(
-      "https://<your-deployment>/api/oauth/google-calendar/callback",
+      `${window.location.origin}/api/oauth/google-calendar/callback`,
     );
+    expect(container.textContent).toContain(
+      "The standard OAuth URLs and scopes for Google Calendar are already filled in.",
+    );
+    expect(container.textContent).not.toContain("OAuth docs");
+    expect(container.textContent).not.toContain("Scopes (comma separated)");
+    expect(container.textContent).not.toContain("Authorization URL");
+    expect(container.textContent).not.toContain("Token URL");
+    expect(container.textContent).not.toContain("Starts with a researched");
 
     const urlInputs = Array.from(container.querySelectorAll('input[type="url"]'));
+    expect(urlInputs).toHaveLength(1);
     expect((urlInputs[0] as HTMLInputElement | undefined)?.value).toBe(
-      "https://mcp.google-calendar.example.com/mcp",
+      "https://mcp.composio.dev/partner/composio/google-calendar/mcp?customerId=replace-me",
     );
-    expect((urlInputs[1] as HTMLInputElement | undefined)?.value).toBe(
-      "https://accounts.google.com/o/oauth2/v2/auth",
-    );
-    expect((urlInputs[2] as HTMLInputElement | undefined)?.value).toBe(
-      "https://oauth2.googleapis.com/token",
-    );
-    expect(
-      (
-        Array.from(container.querySelectorAll('input[type="text"]')).find(
-          (input) => (input as HTMLInputElement).placeholder === "repo, read:user",
-        ) as HTMLInputElement | undefined
-      )?.value,
-    ).toBe("https://www.googleapis.com/auth/calendar.readonly");
     expect(container.textContent).not.toContain("Function name");
     expect(container.textContent).not.toContain("Request path");
 
     await act(async () => {
       setInputValue(urlInputs[0] ?? null, "https://mcp.calendar.test/mcp");
-      setInputValue(
-        Array.from(container.querySelectorAll('input[type="text"]')).find(
-          (input) => (input as HTMLInputElement).placeholder === "repo, read:user",
-        ) ?? null,
-        "calendar.readonly",
-      );
       setInputValue(
         Array.from(container.querySelectorAll('input[type="text"]')).find(
           (input) => (input as HTMLInputElement).value === "",
@@ -198,7 +190,11 @@ describe("CuratedProviderList", () => {
       slug: string;
       provider: string;
       serverUrl: string;
-      oauthConfig: { scopes: string[] };
+      oauthConfig: {
+        authorizationUrl: string;
+        tokenUrl: string;
+        scopes: string[];
+      };
       oauthClientId: string;
       oauthClientSecret: string;
       functions: Array<unknown>;
@@ -206,12 +202,51 @@ describe("CuratedProviderList", () => {
     expect(body.slug).toBe("google-calendar");
     expect(body.provider).toBe("mcp");
     expect(body.serverUrl).toBe("https://mcp.calendar.test/mcp");
-    expect(body.oauthConfig.scopes).toEqual(["calendar.readonly"]);
+    expect(body.oauthConfig.authorizationUrl).toBe(
+      "https://accounts.google.com/o/oauth2/v2/auth",
+    );
+    expect(body.oauthConfig.tokenUrl).toBe("https://oauth2.googleapis.com/token");
+    expect(body.oauthConfig.scopes).toEqual([
+      "https://www.googleapis.com/auth/calendar.readonly",
+    ]);
     expect(body.oauthClientId).toBe("calendar-client-id");
     expect(body.oauthClientSecret).toBe("calendar-client-secret");
     expect(body.functions).toEqual([]);
     expect(container.textContent).toContain(
       "Connector registered. Users can now connect it from the integrations wizard and discover its tools.",
+    );
+  });
+
+  it("requires replacing researched MCP templates before registration", async () => {
+    await act(async () => {
+      root.render(
+        <CuratedProviderList
+          providerCatalog={providerCatalog}
+          readyBuiltInConnectors={readyBuiltInConnectors}
+          canRegisterManagedConnectors
+        />,
+      );
+    });
+
+    const calendarButton = Array.from(container.querySelectorAll("button")).find(
+      (button) => button.textContent?.includes("Google Calendar"),
+    );
+
+    await act(async () => {
+      calendarButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    const form = container.querySelector("form");
+    expect(form).toBeTruthy();
+
+    await act(async () => {
+      form?.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(container.textContent).toContain(
+      "Replace customerId=replace-me in the MCP server URL with the generated customer-specific value before registering this connector.",
     );
   });
 
