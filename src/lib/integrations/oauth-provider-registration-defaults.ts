@@ -96,12 +96,13 @@ const registrationDefaults: Record<string, OAuthProviderRegistrationDefaults> = 
     requestPath: "/conversations.list",
   },
   notion: {
-    serverUrl: "https://mcp.notion.com/mcp",
+    provider: "http",
     apiBaseUrl: "https://api.notion.com",
+    openApiUrl: "https://developers.notion.com/openapi.json",
     authorizationUrl: "https://api.notion.com/v1/oauth/authorize",
     tokenUrl: "https://api.notion.com/v1/oauth/token",
     scopes: [],
-    functionName: "search_workspace",
+    functionName: "post_search",
     functionDescription: "Search pages and databases in the connected Notion workspace.",
     requestMethod: "POST",
     requestPath: "/v1/search",
@@ -529,6 +530,9 @@ export const getOAuthProviderRegistrationDefaults = (slug: string) => {
 
   return {
     ...defaults,
-    serverUrl: defaults.serverUrl ?? buildManagedMcpServerUrl(slug),
+    serverUrl:
+      defaults.provider === "http"
+        ? defaults.serverUrl
+        : defaults.serverUrl ?? buildManagedMcpServerUrl(slug),
   };
 };

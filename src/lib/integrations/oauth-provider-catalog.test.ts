@@ -23,13 +23,23 @@ describe("listOAuthProviderCatalog", () => {
     expect(github).toMatchObject({ availability: "manual_token", builtInSlug: "github" });
   });
 
-  it("provides researched MCP server URL defaults for every catalog provider", () => {
+  it("provides concrete managed-connector defaults for every catalog provider", () => {
     const providers = listOAuthProviderCatalog();
 
-    expect(providers.every((provider) => Boolean(provider.registrationDefaults?.serverUrl))).toBe(true);
     expect(
       providers.every(
-        (provider) => !provider.registrationDefaults?.serverUrl?.includes("example.com"),
+        (provider) =>
+          Boolean(
+            provider.registrationDefaults?.serverUrl ||
+              provider.registrationDefaults?.apiBaseUrl,
+          ),
+      ),
+    ).toBe(true);
+    expect(
+      providers.every(
+        (provider) =>
+          !provider.registrationDefaults?.serverUrl?.includes("example.com") &&
+          !provider.registrationDefaults?.apiBaseUrl?.includes("example.com"),
       ),
     ).toBe(true);
   });
@@ -45,11 +55,12 @@ describe("listOAuthProviderCatalog", () => {
       serverUrl: "https://api.githubcopilot.com/mcp/",
     });
     expect(notion?.registrationDefaults).toMatchObject({
+      provider: "http",
       apiBaseUrl: "https://api.notion.com",
-      serverUrl: "https://mcp.notion.com/mcp",
+      openApiUrl: "https://developers.notion.com/openapi.json",
       authorizationUrl: "https://api.notion.com/v1/oauth/authorize",
       tokenUrl: "https://api.notion.com/v1/oauth/token",
-      functionName: "search_workspace",
+      functionName: "post_search",
       requestMethod: "POST",
       requestPath: "/v1/search",
     });

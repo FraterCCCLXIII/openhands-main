@@ -26,10 +26,19 @@ import type {
 
 type IntegrationKind = "built_in" | "mcp";
 type WizardStep = 1 | 2 | 3;
+type DiscoverFeedbackTone = "info" | "success" | "error";
 
 interface IntegrationWizardProps {
   onCreated: () => Promise<void>;
   onStatus: (message: string | null) => void;
+}
+
+type ApiDebugDetails = Record<string, unknown>;
+
+interface DiscoverFeedback {
+  tone: DiscoverFeedbackTone;
+  message: string;
+  debugDetails?: ApiDebugDetails;
 }
 
 interface DiscoveryResponse {
@@ -69,6 +78,16 @@ const INITIAL_DRAFT: WizardDraft = {
 const inputClassName =
   "rounded-md border border-[var(--color-border)] bg-[var(--color-bg-input)] px-4 py-3 text-white outline-none transition-colors focus:border-[var(--color-accent)]";
 
+class ApiRequestError extends Error {
+  public readonly debugDetails?: ApiDebugDetails;
+
+  constructor(message: string, debugDetails?: ApiDebugDetails) {
+    super(message);
+    this.name = "ApiRequestError";
+    this.debugDetails = debugDetails;
+  }
+}
+
 const fetchJson = async <T,>(
   input: RequestInfo,
   init?: RequestInit,
@@ -78,14 +97,19 @@ const fetchJson = async <T,>(
   if (!response.ok) {
     const body = (await response.json().catch(() => null)) as {
       detail?: string;
+      debug?: ApiDebugDetails;
     } | null;
-    throw new Error(
+    throw new ApiRequestError(
       body?.detail ?? `Request failed with status ${response.status}`,
+      body?.debug,
     );
   }
 
   return (await response.json()) as T;
 };
+
+const formatDebugDetails = (debugDetails: ApiDebugDetails) =>
+  JSON.stringify(debugDetails, null, 2);
 
 const authStrategyLabel = (strategy: AuthStrategy) => {
   switch (strategy) {
@@ -265,6 +289,8 @@ export const IntegrationWizard = ({
     Record<string, FunctionAccessMode>
   >({});
   const [connectorSearch, setConnectorSearch] = useState("");
+  const [discoverFeedback, setDiscoverFeedback] =
+    useState<DiscoverFeedback | null>(null);
 
   const builtInConnectorsQuery = useQuery({
     queryKey: ["built-in-connectors"],
@@ -349,6 +375,15 @@ export const IntegrationWizard = ({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(buildDiscoverPayload(draft)),
       }),
+    onMutate: () => {
+      const providerName =
+        selectedConnector?.name || draft.name.trim() || draft.key.trim();
+      setDiscoverFeedback({
+        tone: "info",
+        message: `Discovering functions for ${providerName}… Loading the connector's available function catalog.`,
+      });
+      onStatus(null);
+    },
     onSuccess: (result) => {
       setDiscovery(result);
       setFunctionModes(
@@ -357,12 +392,22 @@ export const IntegrationWizard = ({
         ),
       );
       setStep(3);
-      onStatus(
-        `Discovered ${Object.keys(result.functions).length} functions. Review their default access before saving.`,
-      );
+      const message = `Discovered ${Object.keys(result.functions).length} functions. Review their default access before saving.`;
+      setDiscoverFeedback({
+        tone: "success",
+        message,
+      });
+      onStatus(message);
     },
     onError: (error: Error) => {
-      onStatus(error.message);
+      const message = `Discover failed: ${error.message}`;
+      setDiscoverFeedback({
+        tone: "error",
+        message,
+        debugDetails:
+          error instanceof ApiRequestError ? error.debugDetails : undefined,
+      });
+      onStatus(message);
     },
   });
 
@@ -391,6 +436,7 @@ export const IntegrationWizard = ({
       setDiscovery(null);
       setFunctionModes({});
       setConnectorSearch("");
+      setDiscoverFeedback(null);
       setStep(1);
     },
     onError: (error: Error) => {
@@ -428,6 +474,7 @@ export const IntegrationWizard = ({
         current.builtInSlug === connector.slug ? current.accessToken : "",
     }));
     setConnectorSearch(connectorOptionLabel(connector));
+    setDiscoverFeedback(null);
     onStatus(null);
   };
 
@@ -445,6 +492,7 @@ export const IntegrationWizard = ({
       builtInSlug: "",
       accessToken: "",
     }));
+    setDiscoverFeedback(null);
     onStatus(null);
   };
 
@@ -515,6 +563,7 @@ export const IntegrationWizard = ({
                 setDiscovery(null);
                 setFunctionModes({});
                 setConnectorSearch("");
+                setDiscoverFeedback(null);
                 setStep(2);
                 onStatus(null);
               }}
@@ -859,7 +908,10 @@ export const IntegrationWizard = ({
               <Button
                 variant="secondary"
                 type="button"
-                onClick={() => setStep(1)}
+                onClick={() => {
+                  setDiscoverFeedback(null);
+                  setStep(1);
+                }}
               >
                 Back
               </Button>
@@ -873,6 +925,32 @@ export const IntegrationWizard = ({
                   : "Discover functions"}
               </Button>
             </div>
+
+            {discoverFeedback ? (
+              <div
+                className={cn(
+                  "rounded-xl border px-4 py-3 text-sm leading-6",
+                  discoverFeedback.tone === "error"
+                    ? "border-red-500/40 bg-red-500/10 text-red-100"
+                    : discoverFeedback.tone === "success"
+                      ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-100"
+                      : "border-[var(--color-border)] bg-[var(--color-surface-subtle)] text-[var(--color-text-base)]",
+                )}
+                data-testid="discover-feedback"
+              >
+                <p>{discoverFeedback.message}</p>
+                {discoverFeedback.debugDetails ? (
+                  <div className="mt-3 rounded-lg border border-white/10 bg-black/20 p-3">
+                    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/70">
+                      Admin diagnostics
+                    </p>
+                    <pre className="mt-2 overflow-x-auto whitespace-pre-wrap break-words font-mono text-[11px] leading-5 text-white/85">
+                      {formatDebugDetails(discoverFeedback.debugDetails)}
+                    </pre>
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
           </div>
 
           <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-5 text-sm leading-7 text-[var(--color-text-base)]">

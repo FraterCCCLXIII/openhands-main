@@ -60,6 +60,7 @@ const managedConnectorBaseSchema = z.object({
   credentialHelp: z.string().min(1),
   apiBaseUrl: z.string().url().optional(),
   serverUrl: z.string().url().optional(),
+  openApiUrl: z.string().url().optional(),
   oauthConfig: genericOAuthConfigSchema.optional(),
   oauthClientId: z.string().optional(),
   oauthClientSecret: z.string().optional(),
@@ -89,11 +90,12 @@ export const managedConnectorUpsertSchema = managedConnectorBaseSchema.superRefi
         });
       }
 
-      if (value.functions.length === 0) {
+      if (!value.openApiUrl && value.functions.length === 0) {
         context.addIssue({
           code: z.ZodIssueCode.custom,
           path: ["functions"],
-          message: "HTTP managed connectors require at least one function template.",
+          message:
+            "HTTP managed connectors require at least one function template unless an openApiUrl is provided.",
         });
       }
     }

@@ -39,6 +39,7 @@ describe("AddConnectorPage", () => {
     expect(html).toContain("service-level admin action");
     expect(html).toContain("official vendor-hosted MCP URL");
     expect(html).toContain("Composio-hosted MCP URL pattern");
+    expect(html).toContain("API/OpenAPI default");
     expect(html).toContain("customerId=replace-me");
     expect(html).toContain("OAuth app setup docs");
     expect(html).toContain("AUTH_REDIRECT_PROXY_URL");
@@ -47,7 +48,8 @@ describe("AddConnectorPage", () => {
     expect(html).toContain("Discover functions");
     expect(html).toContain("managed remote MCP or managed HTTP connector");
     expect(html).toContain("APP_ADMIN_EMAILS");
-    expect(html).not.toContain("src/lib/integrations/built-in-connectors.ts");
+    expect(html).toContain("src/lib/integrations/oauth-provider-registration-defaults.ts");
+    expect(html).toContain("src/lib/integrations/oauth-provider-catalog.ts");
     expect(html).not.toContain("app/api/mcp/&lt;provider&gt;/route.ts");
     expect(html).not.toContain("src/lib/oauth/providers.ts");
     expect(html).not.toContain("Submit provider information");
@@ -61,6 +63,19 @@ describe("AddConnectorPage", () => {
     expect(html).toContain("Contact admin@example.com");
     expect(html).toContain("please contact admin@example.com");
   });
+
+
+  it("shows registered managed connector controls to allowlisted admins", async () => {
+    vi.stubEnv("APP_ADMIN_EMAILS", "admin@example.com");
+    authMock.mockResolvedValue({ user: { email: "admin@example.com" } });
+
+    const html = renderToStaticMarkup(await AddConnectorPage());
+
+    expect(html).toContain("Registered managed connectors");
+    expect(html).toContain("Edit stale service-level connector settings in place or delete a connector before re-registering it with a new provider type.");
+    expect(html).toContain("No managed connectors are registered yet.");
+  });
+
 
   it("renders users before admins", async () => {
     const html = renderToStaticMarkup(await AddConnectorPage());

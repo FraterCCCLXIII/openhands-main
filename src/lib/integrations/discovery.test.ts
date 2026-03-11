@@ -456,6 +456,94 @@ describe("discoverIntegration", () => {
       },
     });
   });
+
+  it("discovers managed OAuth HTTP connectors from generated OpenAPI function templates", async () => {
+    const repository = new MemoryRepository();
+    await repository.upsertManagedConnector({
+      slug: "notion",
+      name: "Notion",
+      description: "Managed Notion REST connector",
+      categories: ["Knowledge base"],
+      authModes: ["oauth2"],
+      authStrategy: "oauth2",
+      provider: "http",
+      oauthConfigured: true,
+      credentialLabel: "Connect Notion",
+      credentialPlaceholder: "Connect Notion",
+      credentialHelp: "Use OAuth to connect Notion.",
+      apiBaseUrl: "https://api.notion.com",
+      openApiUrl: "https://developers.notion.com/openapi.json",
+      oauthConfig: {
+        authorizationUrl: "https://api.notion.com/v1/oauth/authorize",
+        tokenUrl: "https://api.notion.com/v1/oauth/token",
+        scopes: [],
+      },
+      encryptedOAuthClient: encryptCredentials({
+        clientId: "notion-client-id",
+        clientSecret: "notion-client-secret",
+      }),
+      functions: [
+        {
+          name: "post_search",
+          description: "Search workspace Provide the request payload under `body`.",
+          defaultScopes: [],
+          request: {
+            method: "POST",
+            path: "/v1/search",
+            headers: {
+              "Notion-Version": "2026-03-11",
+            },
+            body: "{{body}}",
+            contentType: "json",
+          },
+        },
+      ],
+      enabled: true,
+      createdAt: "2026-03-09T00:00:00.000Z",
+      updatedAt: "2026-03-09T00:00:00.000Z",
+    });
+
+    await expect(
+      discoverIntegration(
+        {
+          key: "notion",
+          kind: "built_in",
+          config: {
+            builtInSlug: "notion",
+          },
+          credentials: {},
+        },
+        {
+          ownerId: "dev@localhost",
+          repository,
+        },
+      ),
+    ).resolves.toMatchObject({
+      provider: "http",
+      authStrategy: "oauth2",
+      config: {
+        builtInSlug: "notion",
+        managedConnectorSlug: "notion",
+        apiBaseUrl: "https://api.notion.com",
+      },
+      credentials: {},
+      functions: {
+        post_search: {
+          description: "Search workspace Provide the request payload under `body`.",
+          config: {
+            request: {
+              method: "POST",
+              path: "/v1/search",
+              headers: {
+                "Notion-Version": "2026-03-11",
+              },
+            },
+          },
+        },
+      },
+    });
+  });
+
 });
 
 describe("inferMcpAuthStrategy", () => {

@@ -1,10 +1,8 @@
 import { Composio } from "@composio/core";
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
-
 import { decryptCredentials } from "@/src/lib/credential-crypto";
 import { ContextLayerError } from "@/src/lib/core/errors";
 import type { ContextRepository } from "@/src/lib/core/repository";
+import { buildMcpHeaders, runMcpClientOperation } from "@/src/lib/mcp-client";
 import {
   buildManagedConnectorFunctions,
   getManagedConnectorApiBaseUrl,
@@ -109,36 +107,6 @@ export const inferMcpAuthStrategy = (
   }
 
   return "none";
-};
-
-const buildMcpHeaders = (
-  authStrategy: AuthStrategy,
-  credentials: Record<string, unknown>,
-): Record<string, string> => {
-  if (authStrategy === "api_key") {
-    const headerName =
-      (credentials.headerName as string | undefined) ?? "X-API-Key";
-    const secret = credentials.secret as string | undefined;
-    return secret ? { [headerName]: secret } : {};
-  }
-
-  if (authStrategy === "bearer" || authStrategy === "oauth2") {
-    const token = credentials.accessToken as string | undefined;
-    return token ? { Authorization: `Bearer ${token}` } : {};
-  }
-
-  if (authStrategy === "basic") {
-    const username = credentials.username as string | undefined;
-    const password = credentials.password as string | undefined;
-
-    if (username && password) {
-      return {
-        Authorization: `Basic ${Buffer.from(`${username}:${password}`).toString("base64")}`,
-      };
-    }
-  }
-
-  return {};
 };
 
 const buildFunctionSpec = (
@@ -378,39 +346,36 @@ const discoverMcpIntegration = async (
   });
   const authStrategy = inferMcpAuthStrategy(credentials);
 
-  const client = new Client({
-    name: "agent-context-layer",
-    version: "0.2.0",
-  });
-  const transport = new StreamableHTTPClientTransport(new URL(serverUrl), {
-    requestInit: {
-      headers: buildMcpHeaders(authStrategy, credentials),
-    },
-  });
-
-  await client.connect(transport);
-
-  try {
-    const result = await client.listTools();
-    const functions = Object.fromEntries(
-      result.tools.map((tool) => [
-        tool.name,
-        buildFunctionSpec(tool.name, tool.description ?? tool.title ?? "", [], {
-          toolName: tool.name,
-        }),
-      ]),
-    );
-
-    return {
-      provider: "mcp",
+  const result = await runMcpClientOperation(
+    serverUrl,
+    buildMcpHeaders(authStrategy, credentials),
+    "listTools",
+    (client) => client.listTools(),
+    {
       authStrategy,
-      config: compactRecord({ serverUrl }),
       credentials,
-      functions,
-    };
-  } finally {
-    await transport.close();
-  }
+      integrationKey: input.key,
+      managedConnectorSlug:
+        (input.config.managedConnectorSlug as string | undefined) ??
+        (input.config.builtInSlug as string | undefined),
+    },
+  );
+  const functions = Object.fromEntries(
+    result.tools.map((tool) => [
+      tool.name,
+      buildFunctionSpec(tool.name, tool.description ?? tool.title ?? "", [], {
+        toolName: tool.name,
+      }),
+    ]),
+  );
+
+  return {
+    provider: "mcp",
+    authStrategy,
+    config: compactRecord({ serverUrl }),
+    credentials,
+    functions,
+  };
 };
 
 export const discoverIntegration = async (

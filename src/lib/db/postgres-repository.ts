@@ -35,155 +35,168 @@ const getSql = () => {
   return neon(databaseUrl);
 };
 
+const SCHEMA_LOCK_ID = 482190317;
+
 export class PostgresRepository implements ContextRepository {
   private schemaReady = false;
+  private schemaInitPromise?: Promise<void>;
 
   async ensureSchema() {
     if (this.schemaReady) {
       return;
     }
 
+    if (!this.schemaInitPromise) {
+      this.schemaInitPromise = this.initializeSchema().finally(() => {
+        this.schemaInitPromise = undefined;
+      });
+    }
+
+    await this.schemaInitPromise;
+  }
+
+  private async initializeSchema() {
     const sql = getSql();
 
-    await sql`
-      CREATE TABLE IF NOT EXISTS integrations (
-        key TEXT PRIMARY KEY,
-        name TEXT NOT NULL,
-        kind TEXT NOT NULL,
-        provider TEXT NOT NULL,
-        auth_strategy TEXT NOT NULL,
-        enabled BOOLEAN NOT NULL,
-        fine_grained_permissions BOOLEAN NOT NULL,
-        config JSONB NOT NULL DEFAULT '{}'::jsonb,
-        credentials JSONB NOT NULL DEFAULT '{}'::jsonb,
-        functions JSONB NOT NULL DEFAULT '{}'::jsonb,
-        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-      )
-    `;
-
-    await sql`
-      CREATE TABLE IF NOT EXISTS agent_class_policies (
-        agent_class TEXT PRIMARY KEY,
-        rules JSONB NOT NULL DEFAULT '[]'::jsonb,
-        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-      )
-    `;
-
-    await sql`
-      CREATE TABLE IF NOT EXISTS access_requests (
-        id TEXT PRIMARY KEY,
-        agent_id TEXT NOT NULL,
-        agent_class TEXT NOT NULL,
-        integration_key TEXT NOT NULL,
-        function_name TEXT NOT NULL,
-        scopes JSONB NOT NULL DEFAULT '[]'::jsonb,
-        requested_minutes INTEGER NOT NULL,
-        channels JSONB NOT NULL DEFAULT '[]'::jsonb,
-        notification_targets JSONB NOT NULL DEFAULT '{}'::jsonb,
-        justification TEXT NOT NULL DEFAULT '',
-        created_at TIMESTAMPTZ NOT NULL,
-        status TEXT NOT NULL,
-        decided_at TIMESTAMPTZ,
-        decided_by TEXT
-      )
-    `;
-
-    await sql`
-      CREATE TABLE IF NOT EXISTS temporary_grants (
-        id TEXT PRIMARY KEY,
-        agent_id TEXT NOT NULL,
-        agent_class TEXT NOT NULL,
-        integration_key TEXT NOT NULL,
-        function_name TEXT NOT NULL,
-        scopes JSONB NOT NULL DEFAULT '[]'::jsonb,
-        granted_by TEXT NOT NULL,
-        created_at TIMESTAMPTZ NOT NULL,
-        expires_at TIMESTAMPTZ NOT NULL
-      )
-    `;
-
-    await sql`
-      CREATE TABLE IF NOT EXISTS notifications (
-        id TEXT PRIMARY KEY,
-        channel TEXT NOT NULL,
-        recipient TEXT NOT NULL,
-        subject TEXT NOT NULL,
-        body TEXT NOT NULL,
-        metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
-        created_at TIMESTAMPTZ NOT NULL
-      )
-    `;
-
-    await sql`
-      CREATE TABLE IF NOT EXISTS agent_api_keys (
-        owner_id TEXT PRIMARY KEY,
-        api_key TEXT NOT NULL UNIQUE,
-        created_at TIMESTAMPTZ NOT NULL,
-        updated_at TIMESTAMPTZ NOT NULL
-      )
-    `;
-
-    await sql`
-      CREATE TABLE IF NOT EXISTS managed_connectors (
-        slug TEXT PRIMARY KEY,
-        name TEXT NOT NULL,
-        description TEXT NOT NULL,
-        logo_url TEXT,
-        app_url TEXT,
-        docs_url TEXT,
-        categories JSONB NOT NULL DEFAULT '[]'::jsonb,
-        auth_modes JSONB NOT NULL DEFAULT '[]'::jsonb,
-        auth_strategy TEXT NOT NULL,
-        credential_label TEXT NOT NULL,
-        credential_placeholder TEXT NOT NULL,
-        credential_help TEXT NOT NULL,
-        api_base_url TEXT NOT NULL,
-        oauth_config JSONB,
-        encrypted_oauth_client TEXT,
-        functions JSONB NOT NULL DEFAULT '[]'::jsonb,
-        enabled BOOLEAN NOT NULL DEFAULT TRUE,
-        created_at TIMESTAMPTZ NOT NULL,
-        updated_at TIMESTAMPTZ NOT NULL
-      )
-    `;
-
-    await sql`
-      CREATE TABLE IF NOT EXISTS integration_connections (
-        owner_id TEXT NOT NULL,
-        integration_key TEXT NOT NULL,
-        provider TEXT NOT NULL,
-        auth_strategy TEXT NOT NULL,
-        encrypted_credentials TEXT NOT NULL,
-        token_type TEXT,
-        scopes JSONB NOT NULL DEFAULT '[]'::jsonb,
-        expires_at TIMESTAMPTZ,
-        external_account_id TEXT,
-        external_workspace_id TEXT,
-        display_name TEXT,
-        metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
-        created_at TIMESTAMPTZ NOT NULL,
-        updated_at TIMESTAMPTZ NOT NULL,
-        PRIMARY KEY (owner_id, integration_key)
-      )
-    `;
-
-    await sql`
-      CREATE TABLE IF NOT EXISTS oauth_states (
-        state TEXT PRIMARY KEY,
-        owner_id TEXT NOT NULL,
-        integration_key TEXT NOT NULL,
-        provider TEXT NOT NULL,
-        code_verifier TEXT,
-        redirect_to TEXT NOT NULL,
-        redirect_uri TEXT,
-        callback_url TEXT,
-        created_at TIMESTAMPTZ NOT NULL,
-        expires_at TIMESTAMPTZ NOT NULL
-      )
-    `;
-
-    await sql`ALTER TABLE oauth_states ADD COLUMN IF NOT EXISTS redirect_uri TEXT`;
-    await sql`ALTER TABLE oauth_states ADD COLUMN IF NOT EXISTS callback_url TEXT`;
+    await sql.transaction([
+      sql`SELECT pg_advisory_xact_lock(${SCHEMA_LOCK_ID})`,
+      sql`
+        CREATE TABLE IF NOT EXISTS integrations (
+          key TEXT PRIMARY KEY,
+          name TEXT NOT NULL,
+          kind TEXT NOT NULL,
+          provider TEXT NOT NULL,
+          auth_strategy TEXT NOT NULL,
+          enabled BOOLEAN NOT NULL,
+          fine_grained_permissions BOOLEAN NOT NULL,
+          config JSONB NOT NULL DEFAULT '{}'::jsonb,
+          credentials JSONB NOT NULL DEFAULT '{}'::jsonb,
+          functions JSONB NOT NULL DEFAULT '{}'::jsonb,
+          updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )
+      `,
+      sql`
+        CREATE TABLE IF NOT EXISTS agent_class_policies (
+          agent_class TEXT PRIMARY KEY,
+          rules JSONB NOT NULL DEFAULT '[]'::jsonb,
+          updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )
+      `,
+      sql`
+        CREATE TABLE IF NOT EXISTS access_requests (
+          id TEXT PRIMARY KEY,
+          agent_id TEXT NOT NULL,
+          agent_class TEXT NOT NULL,
+          integration_key TEXT NOT NULL,
+          function_name TEXT NOT NULL,
+          scopes JSONB NOT NULL DEFAULT '[]'::jsonb,
+          requested_minutes INTEGER NOT NULL,
+          channels JSONB NOT NULL DEFAULT '[]'::jsonb,
+          notification_targets JSONB NOT NULL DEFAULT '{}'::jsonb,
+          justification TEXT NOT NULL DEFAULT '',
+          created_at TIMESTAMPTZ NOT NULL,
+          status TEXT NOT NULL,
+          decided_at TIMESTAMPTZ,
+          decided_by TEXT
+        )
+      `,
+      sql`
+        CREATE TABLE IF NOT EXISTS temporary_grants (
+          id TEXT PRIMARY KEY,
+          agent_id TEXT NOT NULL,
+          agent_class TEXT NOT NULL,
+          integration_key TEXT NOT NULL,
+          function_name TEXT NOT NULL,
+          scopes JSONB NOT NULL DEFAULT '[]'::jsonb,
+          granted_by TEXT NOT NULL,
+          created_at TIMESTAMPTZ NOT NULL,
+          expires_at TIMESTAMPTZ NOT NULL
+        )
+      `,
+      sql`
+        CREATE TABLE IF NOT EXISTS notifications (
+          id TEXT PRIMARY KEY,
+          channel TEXT NOT NULL,
+          recipient TEXT NOT NULL,
+          subject TEXT NOT NULL,
+          body TEXT NOT NULL,
+          metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+          created_at TIMESTAMPTZ NOT NULL
+        )
+      `,
+      sql`
+        CREATE TABLE IF NOT EXISTS agent_api_keys (
+          owner_id TEXT PRIMARY KEY,
+          api_key TEXT NOT NULL UNIQUE,
+          created_at TIMESTAMPTZ NOT NULL,
+          updated_at TIMESTAMPTZ NOT NULL
+        )
+      `,
+      sql`
+        CREATE TABLE IF NOT EXISTS managed_connectors (
+          slug TEXT PRIMARY KEY,
+          name TEXT NOT NULL,
+          description TEXT NOT NULL,
+          logo_url TEXT,
+          app_url TEXT,
+          docs_url TEXT,
+          categories JSONB NOT NULL DEFAULT '[]'::jsonb,
+          auth_modes JSONB NOT NULL DEFAULT '[]'::jsonb,
+          auth_strategy TEXT NOT NULL,
+          provider TEXT,
+          credential_label TEXT NOT NULL,
+          credential_placeholder TEXT NOT NULL,
+          credential_help TEXT NOT NULL,
+          api_base_url TEXT NOT NULL,
+          server_url TEXT,
+          open_api_url TEXT,
+          oauth_config JSONB,
+          encrypted_oauth_client TEXT,
+          functions JSONB NOT NULL DEFAULT '[]'::jsonb,
+          enabled BOOLEAN NOT NULL DEFAULT TRUE,
+          created_at TIMESTAMPTZ NOT NULL,
+          updated_at TIMESTAMPTZ NOT NULL
+        )
+      `,
+      sql`
+        CREATE TABLE IF NOT EXISTS integration_connections (
+          owner_id TEXT NOT NULL,
+          integration_key TEXT NOT NULL,
+          provider TEXT NOT NULL,
+          auth_strategy TEXT NOT NULL,
+          encrypted_credentials TEXT NOT NULL,
+          token_type TEXT,
+          scopes JSONB NOT NULL DEFAULT '[]'::jsonb,
+          expires_at TIMESTAMPTZ,
+          external_account_id TEXT,
+          external_workspace_id TEXT,
+          display_name TEXT,
+          metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+          created_at TIMESTAMPTZ NOT NULL,
+          updated_at TIMESTAMPTZ NOT NULL,
+          PRIMARY KEY (owner_id, integration_key)
+        )
+      `,
+      sql`
+        CREATE TABLE IF NOT EXISTS oauth_states (
+          state TEXT PRIMARY KEY,
+          owner_id TEXT NOT NULL,
+          integration_key TEXT NOT NULL,
+          provider TEXT NOT NULL,
+          code_verifier TEXT,
+          redirect_to TEXT NOT NULL,
+          redirect_uri TEXT,
+          callback_url TEXT,
+          created_at TIMESTAMPTZ NOT NULL,
+          expires_at TIMESTAMPTZ NOT NULL
+        )
+      `,
+      sql`ALTER TABLE oauth_states ADD COLUMN IF NOT EXISTS redirect_uri TEXT`,
+      sql`ALTER TABLE oauth_states ADD COLUMN IF NOT EXISTS callback_url TEXT`,
+      sql`ALTER TABLE managed_connectors ADD COLUMN IF NOT EXISTS provider TEXT`,
+      sql`ALTER TABLE managed_connectors ADD COLUMN IF NOT EXISTS server_url TEXT`,
+      sql`ALTER TABLE managed_connectors ADD COLUMN IF NOT EXISTS open_api_url TEXT`,
+    ]);
 
     this.schemaReady = true;
   }
@@ -488,11 +501,14 @@ export class PostgresRepository implements ContextRepository {
       categories: parseJson<string[]>(row.categories),
       authModes: parseJson<ManagedConnectorRecord["authModes"]>(row.auth_modes),
       authStrategy: row.auth_strategy,
+      provider: row.provider ?? undefined,
       oauthConfigured: Boolean(row.encrypted_oauth_client),
       credentialLabel: row.credential_label,
       credentialPlaceholder: row.credential_placeholder,
       credentialHelp: row.credential_help,
       apiBaseUrl: row.api_base_url,
+      serverUrl: row.server_url ?? undefined,
+      openApiUrl: row.open_api_url ?? undefined,
       oauthConfig: row.oauth_config
         ? parseJson<ManagedConnectorRecord["oauthConfig"]>(row.oauth_config)
         : undefined,
@@ -522,11 +538,14 @@ export class PostgresRepository implements ContextRepository {
       categories: parseJson<string[]>(row.categories),
       authModes: parseJson<ManagedConnectorRecord["authModes"]>(row.auth_modes),
       authStrategy: row.auth_strategy,
+      provider: row.provider ?? undefined,
       oauthConfigured: Boolean(row.encrypted_oauth_client),
       credentialLabel: row.credential_label,
       credentialPlaceholder: row.credential_placeholder,
       credentialHelp: row.credential_help,
       apiBaseUrl: row.api_base_url,
+      serverUrl: row.server_url ?? undefined,
+      openApiUrl: row.open_api_url ?? undefined,
       oauthConfig: row.oauth_config
         ? parseJson<ManagedConnectorRecord["oauthConfig"]>(row.oauth_config)
         : undefined,
@@ -544,14 +563,14 @@ export class PostgresRepository implements ContextRepository {
     await sql`
       INSERT INTO managed_connectors (
         slug, name, description, logo_url, app_url, docs_url, categories,
-        auth_modes, auth_strategy, credential_label, credential_placeholder,
-        credential_help, api_base_url, oauth_config, encrypted_oauth_client,
-        functions, enabled, created_at, updated_at
+        auth_modes, auth_strategy, provider, credential_label, credential_placeholder,
+        credential_help, api_base_url, server_url, open_api_url, oauth_config,
+        encrypted_oauth_client, functions, enabled, created_at, updated_at
       ) VALUES (
         ${record.slug}, ${record.name}, ${record.description}, ${record.logoUrl ?? null}, ${record.appUrl ?? null}, ${record.docsUrl ?? null}, ${JSON.stringify(record.categories)},
-        ${JSON.stringify(record.authModes)}, ${record.authStrategy}, ${record.credentialLabel}, ${record.credentialPlaceholder},
-        ${record.credentialHelp}, ${record.apiBaseUrl}, ${record.oauthConfig ? JSON.stringify(record.oauthConfig) : null}, ${record.encryptedOAuthClient ?? null},
-        ${JSON.stringify(record.functions)}, ${record.enabled}, ${record.createdAt}, ${record.updatedAt}
+        ${JSON.stringify(record.authModes)}, ${record.authStrategy}, ${record.provider ?? null}, ${record.credentialLabel}, ${record.credentialPlaceholder},
+        ${record.credentialHelp}, ${record.apiBaseUrl}, ${record.serverUrl ?? null}, ${record.openApiUrl ?? null}, ${record.oauthConfig ? JSON.stringify(record.oauthConfig) : null},
+        ${record.encryptedOAuthClient ?? null}, ${JSON.stringify(record.functions)}, ${record.enabled}, ${record.createdAt}, ${record.updatedAt}
       )
       ON CONFLICT (slug) DO UPDATE SET
         name = EXCLUDED.name,
@@ -562,10 +581,13 @@ export class PostgresRepository implements ContextRepository {
         categories = EXCLUDED.categories,
         auth_modes = EXCLUDED.auth_modes,
         auth_strategy = EXCLUDED.auth_strategy,
+        provider = EXCLUDED.provider,
         credential_label = EXCLUDED.credential_label,
         credential_placeholder = EXCLUDED.credential_placeholder,
         credential_help = EXCLUDED.credential_help,
         api_base_url = EXCLUDED.api_base_url,
+        server_url = EXCLUDED.server_url,
+        open_api_url = EXCLUDED.open_api_url,
         oauth_config = EXCLUDED.oauth_config,
         encrypted_oauth_client = EXCLUDED.encrypted_oauth_client,
         functions = EXCLUDED.functions,
@@ -574,6 +596,12 @@ export class PostgresRepository implements ContextRepository {
         updated_at = EXCLUDED.updated_at
     `;
     return record;
+  }
+
+  async deleteManagedConnector(slug: string) {
+    await this.ensureSchema();
+    const sql = getSql();
+    await sql`DELETE FROM managed_connectors WHERE slug = ${slug}`;
   }
 
   async listIntegrationConnections(ownerId: string) {

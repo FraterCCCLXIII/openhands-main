@@ -68,8 +68,10 @@ export type OAuthProviderAvailability =
   | "planned";
 
 export interface OAuthProviderRegistrationDefaults {
+  provider?: "mcp" | "http";
   apiBaseUrl?: string;
   serverUrl?: string;
+  openApiUrl?: string;
   authorizationUrl?: string;
   tokenUrl?: string;
   scopes?: string[];
@@ -138,6 +140,7 @@ export interface ManagedConnectorDefinition {
   credentialHelp: string;
   apiBaseUrl?: string;
   serverUrl?: string;
+  openApiUrl?: string;
   oauthConfig?: GenericOAuthConfig;
   functions: ManagedConnectorFunctionDefinition[];
   enabled: boolean;

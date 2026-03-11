@@ -1,13 +1,14 @@
 import { ArrowLeft, Mail, ShieldCheck, UserRound } from "lucide-react";
 
 import { CuratedProviderList } from "@/src/components/admin/curated-provider-list";
+import { ManagedConnectorAdminList } from "@/src/components/admin/managed-connector-admin-list";
 import { ServiceUnavailableScreen } from "@/src/components/service-unavailable-screen";
 import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
 import { isAppAdminEmail } from "@/src/lib/app-admins";
 import { auth } from "@/src/lib/auth";
 import { getOAuthCallbackBaseUrl } from "@/src/lib/auth-config";
-import { getContextLayerRepository } from "@/src/lib/core/runtime";
+import { getContextLayerRepository, getContextLayerService } from "@/src/lib/core/runtime";
 import { filterReadyBuiltInConnectors } from "@/src/lib/integrations/connector-readiness";
 import { listBuiltInConnectors } from "@/src/lib/integrations/discovery";
 import {
@@ -32,13 +33,16 @@ export default async function AddConnectorPage() {
 
   const adminEmail = getAdminContactEmail();
   const adminInstruction = getAdminContactInstruction(adminEmail ?? undefined);
+  const repository = getContextLayerRepository();
   const readyBuiltInConnectors = filterReadyBuiltInConnectors(
-    await listBuiltInConnectors(getContextLayerRepository()),
+    await listBuiltInConnectors(repository),
   );
   const providerCatalog = listOAuthProviderCatalog();
   const canRegisterManagedConnectors = isAppAdminEmail(session?.user?.email ?? undefined);
   const oauthCallbackBaseUrl = getOAuthCallbackBaseUrl();
-
+  const managedConnectors = canRegisterManagedConnectors
+    ? await getContextLayerService().listManagedConnectors()
+    : [];
 
   return (
     <main className="min-h-screen px-6 py-8">
@@ -61,7 +65,7 @@ export default async function AddConnectorPage() {
           <p className="max-w-3xl text-sm leading-7 text-[var(--color-text-base)]">
             If the integration setup flow does not show the provider you need,
             use this page to see which managed connectors are already registered
-            for this service and how admins can add another OAuth-backed MCP.
+            for this service and how admins can add another OAuth-backed managed connector, whether that connector is a remote MCP or a REST API generated from an official OpenAPI schema.
           </p>
           <div className="flex flex-wrap gap-2">
             {readyBuiltInConnectors.map((connector) => (
@@ -100,8 +104,9 @@ export default async function AddConnectorPage() {
               ) : null}
               <p>
                 Share the provider name, the OAuth documentation link, the MCP
-                server URL if you know it, and the work you want the agent to do.
-                That gives admins the context they need to register the service-level connector.
+                server URL or REST API/OpenAPI reference if you know it, and the
+                work you want the agent to do. That gives admins the context they
+                need to register the service-level connector.
               </p>
             </div>
           </Card>
@@ -122,8 +127,8 @@ export default async function AddConnectorPage() {
             <div className="space-y-4 text-sm leading-7 text-[var(--color-text-base)]">
               <p>
                 Add connector is a service-level admin action. Use it once to
-                register an OAuth-backed MCP so every user can see it in the
-                integrations wizard.
+                register an OAuth-backed managed connector so every user can see
+                it in the integrations wizard.
               </p>
               <p>
                 The in-app registration form is only available to signed-in app
@@ -132,20 +137,23 @@ export default async function AddConnectorPage() {
               <ol className="grid gap-3">
                 <li>
                   <span className="font-medium text-white">1.</span> Confirm the
-                  provider has stable OAuth documentation and identify the MCP
-                  server URL, authorization URL, token URL, callback requirements,
-                  and the minimum scopes the MCP needs. Each provider row below
-                  now starts with either an official vendor-hosted MCP URL or a
-                  researched Composio-hosted MCP URL pattern instead of a generic
-                  placeholder. If the value still includes
+                  provider has stable OAuth documentation and decide whether it
+                  should be modeled as a remote MCP or as a managed HTTP
+                  connector generated from an official OpenAPI schema. Collect
+                  the MCP server URL or API base URL/OpenAPI URL, authorization
+                  URL, token URL, callback requirements, and the minimum scopes
+                  the connector needs. Each provider row below now starts with
+                  either an official vendor-hosted MCP URL, a researched
+                  Composio-hosted MCP URL pattern, or an API/OpenAPI default. If
+                  the MCP value still includes
                   <code className="mx-1 text-white">customerId=replace-me</code>,
                   replace that with the generated customer-specific value before
                   saving the connector.
                 </li>
                 <li>
                   <span className="font-medium text-white">2.</span> Create or
-                  update the managed connector through the admin tooling or by
-                  sending a record to <code className="text-white">POST /api/managed-connectors</code>. Use the{" "}
+                  update the managed connector through the admin tooling below or
+                  by sending a record to <code className="text-white">POST /api/managed-connectors</code>. Use the{" "}
                   <a
                     href="/api/managed-connectors/openapi"
                     target="_blank"
@@ -154,7 +162,12 @@ export default async function AddConnectorPage() {
                   >
                     endpoint schema doc
                   </a>{" "}
-                  for the request shape.
+                  for the request shape. If an old connector is stale, use the
+                  registered connector panel below to edit it in place or delete
+                  it before re-registering. If you want the provider to appear in
+                  the curated add-connector catalog by default, update the source
+                  metadata in <code className="text-white">src/lib/integrations/oauth-provider-registration-defaults.ts</code>
+                  and <code className="ml-1 text-white">src/lib/integrations/oauth-provider-catalog.ts</code>.
                 </li>
                 <li>
                   <span className="font-medium text-white">3.</span> Store the
@@ -169,7 +182,7 @@ export default async function AddConnectorPage() {
                 </li>
                 <li>
                   <span className="font-medium text-white">4.</span> Have a real
-                  user open the integrations wizard, press <span className="text-white">Connect</span> and then <span className="text-white">Discover functions</span>. That step adds the full MCP tool list to their personal integration.
+                  user open the integrations wizard, press <span className="text-white">Connect</span> and then <span className="text-white">Discover functions</span>. For remote MCP connectors, that step loads the live tool list from the MCP server. For managed HTTP/OpenAPI connectors, it loads the generated function catalog stored on the managed connector.
                 </li>
                 <li>
                   <span className="font-medium text-white">5.</span> In the
@@ -187,6 +200,26 @@ export default async function AddConnectorPage() {
             </div>
           </Card>
         </div>
+
+        {canRegisterManagedConnectors ? (
+          <Card className="p-6">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h2 className="text-lg font-semibold text-white">
+                  Registered managed connectors
+                </h2>
+                <p className="mt-2 text-sm leading-7 text-[var(--color-text-base)]">
+                  Edit stale service-level connector settings in place or delete a
+                  connector before re-registering it with a new provider type.
+                </p>
+              </div>
+              <Badge>{managedConnectors.length} registered</Badge>
+            </div>
+
+            <ManagedConnectorAdminList initialManagedConnectors={managedConnectors} />
+          </Card>
+        ) : null}
+
 
         <Card className="p-6">
           <div className="flex flex-wrap items-center justify-between gap-3">

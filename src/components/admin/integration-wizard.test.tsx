@@ -225,4 +225,233 @@ describe("IntegrationWizard", () => {
     expect(options).toEqual(["GitHub (github)", "Notion (notion)"]);
   });
 
+  it("advances to review access defaults after discovering a connected Notion workspace", async () => {
+    fetchMock.mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = typeof input === "string" ? input : input.toString();
+
+      if (url === "/api/integrations/built-in-connectors") {
+        return new Response(
+          JSON.stringify([
+            {
+              slug: "notion",
+              name: "Notion",
+              description: "Notion connector",
+              toolCount: 3,
+              categories: ["Knowledge base"],
+              authModes: ["oauth2"],
+              authStrategy: "oauth2",
+              oauthConfigured: true,
+              credentialLabel: "Connect Notion",
+              credentialPlaceholder: "Connect Notion",
+              credentialHelp: "Connect Notion.",
+            },
+          ]),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      }
+
+      if (url === "/api/oauth/connections") {
+        return new Response(
+          JSON.stringify([
+            {
+              integrationKey: "notion",
+              provider: "notion",
+              authStrategy: "oauth2",
+              scopes: [],
+              metadata: {},
+              displayName: "Connected Notion workspace",
+              createdAt: "2026-03-09T00:00:00.000Z",
+              updatedAt: "2026-03-09T00:00:00.000Z",
+            },
+          ]),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      }
+
+      if (url === "/api/integrations/discover") {
+        expect(init?.method).toBe("POST");
+        return new Response(
+          JSON.stringify({
+            provider: "mcp",
+            authStrategy: "oauth2",
+            config: {
+              builtInSlug: "notion",
+              serverUrl: "https://mcp.notion.com/mcp",
+            },
+            credentials: {},
+            functions: {
+              searchPages: {
+                name: "searchPages",
+                description: "Search Notion pages",
+                enabled: true,
+                accessMode: "enabled",
+                fineGrainedPermissions: true,
+                defaultScopes: [],
+                executionMode: "provider",
+                config: {
+                  toolName: "searchPages",
+                },
+              },
+            },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      }
+
+      throw new Error(`Unexpected fetch: ${url}`);
+    });
+
+    useSearchParamsMock.mockReturnValue(new URLSearchParams("builtIn=notion"));
+
+    await act(async () => {
+      root.render(
+        <QueryClientProvider client={queryClient}>
+          <IntegrationWizard onCreated={async () => {}} onStatus={() => {}} />
+        </QueryClientProvider>,
+      );
+    });
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    });
+
+    const discoverButton = Array.from(container.querySelectorAll("button")).find(
+      (button) => button.textContent?.includes("Discover functions"),
+    );
+    expect(discoverButton).toBeTruthy();
+    expect(discoverButton?.hasAttribute("disabled")).toBe(false);
+
+    await act(async () => {
+      discoverButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 25));
+    });
+
+    expect(container.textContent).toContain("1 functions discovered for Notion");
+    expect(container.textContent).toContain("searchPages");
+  });
+
+  it("shows inline transport diagnostics when function discovery fails", async () => {
+    fetchMock.mockImplementation(async (input: RequestInfo | URL) => {
+      const url = typeof input === "string" ? input : input.toString();
+
+      if (url === "/api/integrations/built-in-connectors") {
+        return new Response(
+          JSON.stringify([
+            {
+              slug: "notion",
+              name: "Notion",
+              description: "Notion connector",
+              toolCount: 3,
+              categories: ["Knowledge base"],
+              authModes: ["oauth2"],
+              authStrategy: "oauth2",
+              oauthConfigured: true,
+              credentialLabel: "Connect Notion",
+              credentialPlaceholder: "Connect Notion",
+              credentialHelp: "Connect Notion.",
+            },
+          ]),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      }
+
+      if (url === "/api/oauth/connections") {
+        return new Response(
+          JSON.stringify([
+            {
+              integrationKey: "notion",
+              provider: "notion",
+              authStrategy: "oauth2",
+              scopes: [],
+              metadata: {},
+              displayName: "Connected Notion workspace",
+              createdAt: "2026-03-09T00:00:00.000Z",
+              updatedAt: "2026-03-09T00:00:00.000Z",
+            },
+          ]),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      }
+
+      if (url === "/api/integrations/discover") {
+        return new Response(
+          JSON.stringify({
+            detail:
+              "Streamable HTTP transport failed for https://mcp.notion.com/mcp: Timed out connecting. SSE transport failed for https://mcp.notion.com/sse: 401 Unauthorized.",
+            debug: {
+              operationName: "listTools",
+              auth: {
+                authStrategy: "oauth2",
+                accessToken: {
+                  present: true,
+                  length: 212,
+                  containsWhitespace: false,
+                  startsWithBearerPrefix: false,
+                },
+              },
+              attempts: [
+                {
+                  transport: "streamable_http",
+                  url: "https://mcp.notion.com/mcp",
+                  error:
+                    "Streamable HTTP transport failed for https://mcp.notion.com/mcp: Timed out connecting.",
+                },
+                {
+                  transport: "sse",
+                  url: "https://mcp.notion.com/sse",
+                  error:
+                    "SSE transport failed for https://mcp.notion.com/sse: 401 Unauthorized.",
+                },
+              ],
+            },
+          }),
+          { status: 504, headers: { "Content-Type": "application/json" } },
+        );
+      }
+
+      throw new Error(`Unexpected fetch: ${url}`);
+    });
+
+    useSearchParamsMock.mockReturnValue(new URLSearchParams("builtIn=notion"));
+
+    await act(async () => {
+      root.render(
+        <QueryClientProvider client={queryClient}>
+          <IntegrationWizard onCreated={async () => {}} onStatus={() => {}} />
+        </QueryClientProvider>,
+      );
+    });
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    });
+
+    const discoverButton = Array.from(container.querySelectorAll("button")).find(
+      (button) => button.textContent?.includes("Discover functions"),
+    );
+    expect(discoverButton).toBeTruthy();
+    expect(discoverButton?.hasAttribute("disabled")).toBe(false);
+
+    await act(async () => {
+      discoverButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 25));
+    });
+
+    const feedback = container.querySelector('[data-testid="discover-feedback"]');
+    expect(feedback?.textContent).toContain("Discover failed:");
+    expect(feedback?.textContent).toContain("Streamable HTTP transport failed");
+    expect(feedback?.textContent).toContain("SSE transport failed");
+    expect(feedback?.textContent).toContain("Admin diagnostics");
+    expect(feedback?.textContent).toContain('"startsWithBearerPrefix": false');
+    expect(feedback?.textContent).toContain('"operationName": "listTools"');
+    expect(container.textContent).toContain("Connect and discover functions");
+  });
+
+
 });

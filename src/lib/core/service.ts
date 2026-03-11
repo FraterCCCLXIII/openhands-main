@@ -6,6 +6,7 @@ import { ContextLayerError } from "@/src/lib/core/errors";
 import type { ContextRepository } from "@/src/lib/core/repository";
 import { decryptCredentials, encryptCredentials } from "@/src/lib/credential-crypto";
 import { sanitizeManagedConnector } from "@/src/lib/integrations/managed-connectors";
+import { generateManagedConnectorFunctionsFromOpenApi } from "@/src/lib/managed-connectors/openapi";
 import type { NotificationPublisher } from "@/src/lib/notifications/publisher";
 import { resolveOAuthProvider } from "@/src/lib/oauth/provider-resolver";
 import type {
@@ -158,6 +159,7 @@ export class ContextLayerService {
     const provider = input.provider ?? (input.serverUrl ? "mcp" : "http");
     const normalizedServerUrl = input.serverUrl?.trim() || undefined;
     const normalizedApiBaseUrl = input.apiBaseUrl?.trim() || undefined;
+    const normalizedOpenApiUrl = input.openApiUrl?.trim() || undefined;
 
     if (provider === "mcp" && !normalizedServerUrl && !normalizedApiBaseUrl) {
       throw new ContextLayerError("Managed MCP connectors require a serverUrl.", 400);
@@ -173,6 +175,14 @@ export class ContextLayerService {
             ...input.oauthConfig,
             scopes: [...new Set(input.oauthConfig.scopes.map((scope) => scope.trim()).filter(Boolean))],
           }
+        : undefined;
+
+    const generatedFunctions =
+      provider === "http" && normalizedOpenApiUrl
+        ? await generateManagedConnectorFunctionsFromOpenApi({
+            openApiUrl: normalizedOpenApiUrl,
+            authStrategy: input.authStrategy,
+          })
         : undefined;
 
     let encryptedOAuthClient = existing?.encryptedOAuthClient;
@@ -231,9 +241,10 @@ export class ContextLayerService {
           ? normalizedApiBaseUrl ?? normalizedServerUrl
           : normalizedApiBaseUrl,
       serverUrl: normalizedServerUrl ?? (provider === "mcp" ? normalizedApiBaseUrl : undefined),
+      openApiUrl: provider === "http" ? normalizedOpenApiUrl : undefined,
       oauthConfig: normalizedOAuthConfig,
       encryptedOAuthClient,
-      functions: input.functions,
+      functions: generatedFunctions ?? input.functions,
       enabled: input.enabled,
       createdAt: existing?.createdAt ?? timestamp,
       updatedAt: timestamp,
@@ -243,6 +254,24 @@ export class ContextLayerService {
       await this.repository.upsertManagedConnector(record),
     );
   }
+
+  async deleteManagedConnector(slug: string) {
+    await this.initialize();
+
+    const normalizedSlug = slug.trim();
+    if (!normalizedSlug) {
+      throw new ContextLayerError("Managed connectors require a slug.", 400);
+    }
+
+    const existing = await this.repository.getManagedConnector(normalizedSlug);
+    if (!existing) {
+      throw new ContextLayerError("Managed connector not found.", 404);
+    }
+
+    await this.repository.deleteManagedConnector(normalizedSlug);
+    return { deleted: true as const, slug: normalizedSlug };
+  }
+
 
   async listAccessRequests() {
     await this.initialize();

@@ -131,6 +131,10 @@ export class MemoryRepository implements ContextRepository {
     return record;
   }
 
+  async deleteManagedConnector(slug: string) {
+    this.managedConnectors.delete(slug);
+  }
+
   async hasAgentApiKeys() {
     return this.agentApiKeysByOwner.size > 0;
   }

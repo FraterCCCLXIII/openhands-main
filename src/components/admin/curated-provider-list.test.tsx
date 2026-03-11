@@ -62,6 +62,26 @@ const providerCatalog: OAuthProviderCatalogOption[] = [
       scopes: ["https://www.googleapis.com/auth/calendar.readonly"],
     },
   },
+  {
+    slug: "notion",
+    name: "Notion",
+    description: "Workspace search, pages, databases, and knowledge management",
+    categories: ["Knowledge base"],
+    authStrategy: "oauth2",
+    availability: "oauth_ready",
+    builtInSlug: "notion",
+    docsUrl: "https://developers.notion.com/docs/authorization",
+    notes: "Uses the official REST OpenAPI schema.",
+    popularityRank: 3,
+    registrationDefaults: {
+      provider: "http",
+      apiBaseUrl: "https://api.notion.com",
+      openApiUrl: "https://developers.notion.com/openapi.json",
+      authorizationUrl: "https://api.notion.com/v1/oauth/authorize",
+      tokenUrl: "https://api.notion.com/v1/oauth/token",
+      scopes: [],
+    },
+  },
 ];
 
 const setInputValue = (element: Element | null, value: string) => {
@@ -224,6 +244,87 @@ describe("CuratedProviderList", () => {
     expect(container.textContent).toContain("Ready now");
     expect(container.textContent).toContain("Use Google Calendar");
   });
+
+  it("registers Notion as a managed HTTP connector backed by the official OpenAPI schema", async () => {
+    fetchMock.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          slug: "notion",
+          oauthConfigured: true,
+        }),
+        {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        },
+      ),
+    );
+
+    await act(async () => {
+      root.render(
+        <CuratedProviderList
+          providerCatalog={providerCatalog}
+          readyBuiltInConnectors={readyBuiltInConnectors}
+          canRegisterManagedConnectors
+          oauthCallbackBaseUrl={oauthCallbackBaseUrl}
+        />,
+      );
+    });
+
+    const notionButton = Array.from(container.querySelectorAll("button")).find((button) =>
+      button.textContent?.includes("Notion"),
+    );
+    expect(notionButton).toBeTruthy();
+
+    await act(async () => {
+      notionButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    expect(container.textContent).toContain("Enter the OAuth-backed REST API details below");
+    expect(container.textContent).toContain("OpenAPI schema source:");
+    expect(container.textContent).toContain("https://developers.notion.com/openapi.json");
+    expect(container.textContent).toContain("API base URL");
+    expect(container.textContent).not.toContain("MCP server URL");
+
+    const urlInput = container.querySelector('input[type="url"]');
+    expect((urlInput as HTMLInputElement | null)?.value).toBe("https://api.notion.com");
+
+    await act(async () => {
+      setInputValue(
+        Array.from(container.querySelectorAll('input[type="text"]')).find(
+          (input) => (input as HTMLInputElement).value === "",
+        ) ?? null,
+        "notion-client-id",
+      );
+      setInputValue(container.querySelector('input[type="password"]'), "notion-client-secret");
+    });
+
+    const form = container.querySelector("form");
+    expect(form).toBeTruthy();
+
+    await act(async () => {
+      form?.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    const [, requestInit] = fetchMock.mock.calls.at(-1) as [string, RequestInit];
+    const body = JSON.parse(String(requestInit.body)) as {
+      slug: string;
+      provider: string;
+      apiBaseUrl: string;
+      openApiUrl: string;
+      serverUrl?: string;
+      functions: Array<unknown>;
+    };
+    expect(body).toMatchObject({
+      slug: "notion",
+      provider: "http",
+      apiBaseUrl: "https://api.notion.com",
+      openApiUrl: "https://developers.notion.com/openapi.json",
+      functions: [],
+    });
+    expect(body.serverUrl).toBeUndefined();
+  });
+
 
   it("requires replacing researched MCP templates before registration", async () => {
     await act(async () => {
