@@ -129,4 +129,100 @@ describe("IntegrationWizard", () => {
     expect(addConnectorLink?.textContent).toContain("Click here");
     expect(container.textContent).not.toContain("Notion (notion)");
   });
+
+  it("refetches the connector catalog when step 2 opens even if React Query has cached data", async () => {
+    queryClient.setQueryData(["built-in-connectors"], [
+      {
+        slug: "github",
+        name: "GitHub",
+        description: "GitHub connector",
+        toolCount: 4,
+        categories: ["Engineering"],
+        authModes: ["bearer"],
+        authStrategy: "bearer",
+        oauthConfigured: true,
+        credentialLabel: "GitHub token",
+        credentialPlaceholder: "ghp_...",
+        credentialHelp: "Use a GitHub token.",
+      },
+    ]);
+    fetchMock.mockImplementation(async (input: RequestInfo | URL) => {
+      const url = typeof input === "string" ? input : input.toString();
+
+      if (url === "/api/integrations/built-in-connectors") {
+        return new Response(
+          JSON.stringify([
+            {
+              slug: "github",
+              name: "GitHub",
+              description: "GitHub connector",
+              toolCount: 4,
+              categories: ["Engineering"],
+              authModes: ["bearer"],
+              authStrategy: "bearer",
+              oauthConfigured: true,
+              credentialLabel: "GitHub token",
+              credentialPlaceholder: "ghp_...",
+              credentialHelp: "Use a GitHub token.",
+            },
+            {
+              slug: "notion",
+              name: "Notion",
+              description: "Notion connector",
+              toolCount: 3,
+              categories: ["Knowledge base"],
+              authModes: ["oauth2"],
+              authStrategy: "oauth2",
+              oauthConfigured: true,
+              credentialLabel: "Connect Notion",
+              credentialPlaceholder: "Connect Notion",
+              credentialHelp: "Connect Notion.",
+            },
+          ]),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      }
+
+      if (url === "/api/oauth/connections") {
+        return new Response(JSON.stringify([]), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+
+      throw new Error(`Unexpected fetch: ${url}`);
+    });
+
+    await act(async () => {
+      root.render(
+        <QueryClientProvider client={queryClient}>
+          <IntegrationWizard onCreated={async () => {}} onStatus={() => {}} />
+        </QueryClientProvider>,
+      );
+    });
+
+    const builtInButton = Array.from(container.querySelectorAll("button")).find(
+      (button) => button.textContent?.includes("Built-in connector"),
+    );
+    expect(builtInButton).toBeTruthy();
+
+    await act(async () => {
+      builtInButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 25));
+    });
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/integrations/built-in-connectors",
+      undefined,
+    );
+
+    const options = Array.from(container.querySelectorAll("datalist option")).map(
+      (option) => option.getAttribute("value"),
+    );
+    expect(options).toEqual(["GitHub (github)", "Notion (notion)"]);
+  });
+
 });

@@ -6,11 +6,6 @@ import { decryptCredentials } from "@/src/lib/credential-crypto";
 import { ContextLayerError } from "@/src/lib/core/errors";
 import type { ContextRepository } from "@/src/lib/core/repository";
 import {
-  buildBuiltInConnectorFunctions,
-  getBuiltInConnectorDefinition,
-  listBuiltInConnectors as listStaticBuiltInConnectors,
-} from "@/src/lib/integrations/built-in-connectors";
-import {
   buildManagedConnectorFunctions,
   getManagedConnectorApiBaseUrl,
   getManagedConnectorProvider,
@@ -200,9 +195,7 @@ const getComposioClient = () => {
 export const listBuiltInConnectors = async (
   repository?: ContextRepository,
 ): Promise<BuiltInConnectorOption[]> =>
-  repository
-    ? listAvailableBuiltInConnectors(repository)
-    : listStaticBuiltInConnectors();
+  repository ? listAvailableBuiltInConnectors(repository) : [];
 
 const resolveManagedOAuthDiscoveryCredentials = async (
   repository: ContextRepository,
@@ -312,41 +305,6 @@ const discoverBuiltInConnectorIntegration = async (
 ): Promise<IntegrationDiscoveryResult> => {
   const slug =
     (input.config.builtInSlug as string | undefined)?.trim() || input.key.trim();
-  const connector = getBuiltInConnectorDefinition(slug);
-
-  if (connector) {
-    const baseUrl = options.baseUrl?.trim();
-    if (!baseUrl) {
-      throw new ContextLayerError(
-        "A baseUrl is required to discover built-in connectors.",
-        500,
-      );
-    }
-
-    const accessToken =
-      (input.credentials.accessToken as string | undefined)?.trim();
-
-    if (connector.authStrategy !== "oauth2" && !accessToken) {
-      throw new ContextLayerError(
-        `${connector.credentialLabel} is required to use the ${connector.name} built-in connector.`,
-        400,
-      );
-    }
-
-    return {
-      provider: "mcp",
-      authStrategy: connector.authStrategy,
-      config: compactRecord({
-        builtInSlug: connector.slug,
-        serverUrl: `${baseUrl.replace(/\/$/, "")}${connector.serverPath}`,
-      }),
-      credentials:
-        connector.authStrategy === "oauth2"
-          ? {}
-          : compactRecord({ accessToken }),
-      functions: buildBuiltInConnectorFunctions(connector.slug),
-    };
-  }
 
   const managedConnectorResult = await discoverManagedConnectorIntegration(
     input,

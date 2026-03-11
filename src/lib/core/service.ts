@@ -5,7 +5,6 @@ import { addMinutes, nowIso } from "@/src/lib/core/date";
 import { ContextLayerError } from "@/src/lib/core/errors";
 import type { ContextRepository } from "@/src/lib/core/repository";
 import { decryptCredentials, encryptCredentials } from "@/src/lib/credential-crypto";
-import { getBuiltInConnectorDefinition } from "@/src/lib/integrations/built-in-connectors";
 import { sanitizeManagedConnector } from "@/src/lib/integrations/managed-connectors";
 import type { NotificationPublisher } from "@/src/lib/notifications/publisher";
 import { resolveOAuthProvider } from "@/src/lib/oauth/provider-resolver";
@@ -185,8 +184,11 @@ export class ContextLayerService {
         );
       }
 
-      if (input.oauthClientId || input.oauthClientSecret) {
-        if (!input.oauthClientId?.trim() || !input.oauthClientSecret?.trim()) {
+      const oauthClientId = input.oauthClientId?.trim() ?? "";
+      const oauthClientSecret = input.oauthClientSecret?.trim() ?? "";
+
+      if (oauthClientId || oauthClientSecret) {
+        if (!oauthClientId || !oauthClientSecret) {
           throw new ContextLayerError(
             "Provide both oauthClientId and oauthClientSecret when updating OAuth credentials.",
             400,
@@ -194,9 +196,14 @@ export class ContextLayerService {
         }
 
         encryptedOAuthClient = encryptCredentials({
-          clientId: input.oauthClientId.trim(),
-          clientSecret: input.oauthClientSecret.trim(),
+          clientId: oauthClientId,
+          clientSecret: oauthClientSecret,
         });
+      } else if (!encryptedOAuthClient) {
+        throw new ContextLayerError(
+          "New OAuth-managed connectors require both oauthClientId and oauthClientSecret.",
+          400,
+        );
       }
     } else {
       encryptedOAuthClient = undefined;
@@ -770,11 +777,8 @@ export class ContextLayerService {
         integration.authStrategy === "oauth2" &&
         Object.keys(integration.credentials).length === 0
       ) {
-        const builtInSlug =
-          (integration.config.builtInSlug as string | undefined) ?? integration.key;
-        const connector = getBuiltInConnectorDefinition(builtInSlug);
         throw new ContextLayerError(
-          `Connect ${connector?.name ?? integration.name} for this user before invoking '${integration.key}'.`,
+          `Connect ${integration.name} for this user before invoking '${integration.key}'.`,
           403,
         );
       }

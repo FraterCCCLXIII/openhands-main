@@ -54,7 +54,6 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-
 describe("normalizeComposioAuthModes", () => {
   it("normalizes multiple auth schemes and preserves no-auth support", () => {
     expect(
@@ -68,34 +67,11 @@ describe("normalizeComposioAuthModes", () => {
 });
 
 describe("listBuiltInConnectors", () => {
-  it("returns the curated Vercel-hosted built-in connector catalog", async () => {
-    const connectors = await listBuiltInConnectors();
-    const github = connectors.find((connector) => connector.slug === "github");
-    const notion = connectors.find((connector) => connector.slug === "notion");
-    const googleDocs = connectors.find(
-      (connector) => connector.slug === "google-docs",
-    );
-
-    expect(connectors).toHaveLength(5);
-    expect(github).toMatchObject({
-      name: "GitHub",
-      authModes: ["bearer"],
-      credentialLabel: "GitHub token",
-      toolCount: 4,
-    });
-    expect(notion).toMatchObject({
-      name: "Notion",
-      authModes: ["oauth2"],
-      credentialLabel: "Connect Notion",
-    });
-    expect(googleDocs).toMatchObject({
-      name: "Google Docs",
-      credentialPlaceholder: "ya29....",
-      toolCount: 4,
-    });
+  it("returns an empty catalog when no repository is provided", async () => {
+    await expect(listBuiltInConnectors()).resolves.toEqual([]);
   });
 
-  it("includes managed connectors when a repository is provided", async () => {
+  it("returns enabled managed connectors when a repository is provided", async () => {
     const repository = new MemoryRepository();
     await repository.upsertManagedConnector({
       slug: "acme-crm",
@@ -126,19 +102,118 @@ describe("listBuiltInConnectors", () => {
     });
 
     const connectors = await listBuiltInConnectors(repository);
-    const connector = connectors.find((candidate) => candidate.slug === "acme-crm");
 
-    expect(connector).toMatchObject({
-      name: "Acme CRM",
-      authStrategy: "oauth2",
-      toolCount: 0,
+    expect(connectors).toEqual([
+      expect.objectContaining({
+        slug: "acme-crm",
+        name: "Acme CRM",
+        authStrategy: "oauth2",
+        toolCount: 0,
+        oauthConfigured: true,
+      }),
+    ]);
+  });
+
+  it("omits disabled managed connectors and sorts the catalog by name", async () => {
+    const repository = new MemoryRepository();
+    await repository.upsertManagedConnector({
+      slug: "zeta",
+      name: "Zeta Desk",
+      description: "Support connector",
+      categories: ["Support"],
+      authModes: ["bearer"],
+      authStrategy: "bearer",
+      provider: "mcp",
       oauthConfigured: true,
+      credentialLabel: "Zeta token",
+      credentialPlaceholder: "zeta_...",
+      credentialHelp: "Use a Zeta access token.",
+      serverUrl: "https://mcp.zeta.test/mcp",
+      functions: [],
+      enabled: true,
+      createdAt: "2026-03-09T00:00:00.000Z",
+      updatedAt: "2026-03-09T00:00:00.000Z",
     });
+    await repository.upsertManagedConnector({
+      slug: "alpha",
+      name: "Alpha CRM",
+      description: "CRM connector",
+      categories: ["CRM"],
+      authModes: ["bearer"],
+      authStrategy: "bearer",
+      provider: "mcp",
+      oauthConfigured: true,
+      credentialLabel: "Alpha token",
+      credentialPlaceholder: "alpha_...",
+      credentialHelp: "Use an Alpha access token.",
+      serverUrl: "https://mcp.alpha.test/mcp",
+      functions: [],
+      enabled: true,
+      createdAt: "2026-03-09T00:00:00.000Z",
+      updatedAt: "2026-03-09T00:00:00.000Z",
+    });
+    await repository.upsertManagedConnector({
+      slug: "disabled",
+      name: "Disabled Connector",
+      description: "Disabled connector",
+      categories: ["Other"],
+      authModes: ["bearer"],
+      authStrategy: "bearer",
+      provider: "mcp",
+      oauthConfigured: true,
+      credentialLabel: "Disabled token",
+      credentialPlaceholder: "disabled_...",
+      credentialHelp: "Use a token.",
+      serverUrl: "https://mcp.disabled.test/mcp",
+      functions: [],
+      enabled: false,
+      createdAt: "2026-03-09T00:00:00.000Z",
+      updatedAt: "2026-03-09T00:00:00.000Z",
+    });
+
+    const connectors = await listBuiltInConnectors(repository);
+
+    expect(connectors.map((connector) => connector.name)).toEqual([
+      "Alpha CRM",
+      "Zeta Desk",
+    ]);
   });
 });
 
 describe("discoverIntegration", () => {
-  it("maps curated built-in connectors to internal MCP endpoints", async () => {
+  it("discovers managed bearer MCP connectors and forwards the supplied token", async () => {
+    const repository = new MemoryRepository();
+    await repository.upsertManagedConnector({
+      slug: "github",
+      name: "GitHub",
+      description: "Managed GitHub MCP",
+      categories: ["Engineering"],
+      authModes: ["bearer"],
+      authStrategy: "bearer",
+      provider: "mcp",
+      oauthConfigured: true,
+      credentialLabel: "GitHub token",
+      credentialPlaceholder: "ghp_...",
+      credentialHelp: "Use a GitHub token.",
+      serverUrl: "https://api.githubcopilot.com/mcp/",
+      functions: [],
+      enabled: true,
+      createdAt: "2026-03-09T00:00:00.000Z",
+      updatedAt: "2026-03-09T00:00:00.000Z",
+    });
+    mcpListToolsMock.mockResolvedValue({
+      tools: [
+        {
+          name: "get_me",
+          description: "Get the authenticated user",
+        },
+        {
+          name: "create_issue",
+          description: "Create a GitHub issue",
+        },
+      ],
+    });
+
     await expect(
       discoverIntegration(
         {
@@ -152,7 +227,7 @@ describe("discoverIntegration", () => {
           },
         },
         {
-          baseUrl: "https://context-layer.vercel.app",
+          repository,
         },
       ),
     ).resolves.toMatchObject({
@@ -160,26 +235,34 @@ describe("discoverIntegration", () => {
       authStrategy: "bearer",
       config: {
         builtInSlug: "github",
-        serverUrl: "https://context-layer.vercel.app/api/mcp/github",
+        managedConnectorSlug: "github",
+        serverUrl: "https://api.githubcopilot.com/mcp/",
       },
       credentials: {
         accessToken: "github-pat",
       },
       functions: {
         get_me: {
+          description: "Get the authenticated user",
           config: {
             toolName: "get_me",
           },
-          defaultScopes: ["read"],
         },
         create_issue: {
-          defaultScopes: ["write"],
+          description: "Create a GitHub issue",
+          config: {
+            toolName: "create_issue",
+          },
         },
       },
     });
+    expect(mcpState.url).toBe("https://api.githubcopilot.com/mcp/");
+    expect(mcpState.headers).toEqual({
+      Authorization: "Bearer github-pat",
+    });
   });
 
-  it("does not require an embedded token for OAuth built-in connectors", async () => {
+  it("returns 404 when a built-in slug has not been registered as a managed connector", async () => {
     await expect(
       discoverIntegration(
         {
@@ -191,16 +274,11 @@ describe("discoverIntegration", () => {
           credentials: {},
         },
         {
-          baseUrl: "https://context-layer.vercel.app",
+          repository: new MemoryRepository(),
         },
       ),
-    ).resolves.toMatchObject({
-      authStrategy: "oauth2",
-      config: {
-        builtInSlug: "notion",
-        serverUrl: "https://context-layer.vercel.app/api/mcp/notion",
-      },
-      credentials: {},
+    ).rejects.toMatchObject({
+      message: "Unknown built-in connector 'notion'.",
     });
   });
 
@@ -294,6 +372,88 @@ describe("discoverIntegration", () => {
     expect(mcpState.url).toBe("https://mcp.acme.test/mcp");
     expect(mcpState.headers).toEqual({
       Authorization: "Bearer acme-access-token",
+    });
+  });
+
+  it("discovers managed HTTP connectors from their stored function templates", async () => {
+    const repository = new MemoryRepository();
+    await repository.upsertManagedConnector({
+      slug: "linear",
+      name: "Linear",
+      description: "Managed Linear API connector",
+      categories: ["Project management"],
+      authModes: ["api_key"],
+      authStrategy: "api_key",
+      provider: "http",
+      oauthConfigured: true,
+      credentialLabel: "Linear API key",
+      credentialPlaceholder: "lin_api_...",
+      credentialHelp: "Use a Linear API key.",
+      apiBaseUrl: "https://api.linear.app",
+      functions: [
+        {
+          name: "list_issues",
+          description: "List Linear issues",
+          defaultScopes: ["read"],
+          request: {
+            method: "POST",
+            path: "/graphql",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: {
+              query: "{ issues { nodes { id title } } }",
+            },
+            contentType: "json",
+          },
+        },
+      ],
+      enabled: true,
+      createdAt: "2026-03-09T00:00:00.000Z",
+      updatedAt: "2026-03-09T00:00:00.000Z",
+    });
+
+    await expect(
+      discoverIntegration(
+        {
+          key: "linear",
+          kind: "built_in",
+          config: {
+            builtInSlug: "linear",
+          },
+          credentials: {
+            headerName: "X-Linear-Key",
+            secret: "linear-secret",
+          },
+        },
+        {
+          repository,
+        },
+      ),
+    ).resolves.toMatchObject({
+      provider: "http",
+      authStrategy: "api_key",
+      config: {
+        builtInSlug: "linear",
+        managedConnectorSlug: "linear",
+        apiBaseUrl: "https://api.linear.app",
+      },
+      credentials: {
+        headerName: "X-Linear-Key",
+        secret: "linear-secret",
+      },
+      functions: {
+        list_issues: {
+          description: "List Linear issues",
+          defaultScopes: ["read"],
+          config: {
+            request: {
+              method: "POST",
+              path: "/graphql",
+            },
+          },
+        },
+      },
     });
   });
 });

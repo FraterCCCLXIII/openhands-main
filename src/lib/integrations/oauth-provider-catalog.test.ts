@@ -12,7 +12,7 @@ describe("listOAuthProviderCatalog", () => {
     expect(providers.every((provider) => provider.popularityRank >= 1)).toBe(true);
   });
 
-  it("keeps currently supported curated built-ins marked as available or manual-token", () => {
+  it("keeps common provider slugs mapped to the expected managed-connector defaults", () => {
     const providers = listOAuthProviderCatalog();
     const notion = providers.find((provider) => provider.slug === "notion");
     const figma = providers.find((provider) => provider.slug === "figma");

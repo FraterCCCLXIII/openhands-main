@@ -105,4 +105,35 @@ describe("resolveOAuthProvider", () => {
       displayName: "Acme CRM",
     });
   });
+
+  it("returns null when no enabled managed OAuth connector exists for the provider", async () => {
+    const repository = new MemoryRepository();
+
+    await repository.upsertManagedConnector({
+      slug: "notion",
+      name: "Notion",
+      description: "Managed Notion MCP",
+      categories: ["Knowledge base"],
+      authModes: ["oauth2"],
+      authStrategy: "oauth2",
+      provider: "mcp",
+      oauthConfigured: false,
+      credentialLabel: "Connect Notion",
+      credentialPlaceholder: "Connect Notion",
+      credentialHelp: "Use OAuth to connect Notion.",
+      serverUrl: "https://mcp.notion.com/mcp",
+      oauthConfig: {
+        authorizationUrl: "https://auth.managed-notion.test/authorize",
+        tokenUrl: "https://auth.managed-notion.test/token",
+        scopes: ["workspace.read"],
+      },
+      functions: [],
+      enabled: false,
+      createdAt: "2026-03-09T00:00:00.000Z",
+      updatedAt: "2026-03-09T00:00:00.000Z",
+    });
+
+    await expect(resolveOAuthProvider(repository, "notion")).resolves.toBeNull();
+    await expect(resolveOAuthProvider(repository, "github")).resolves.toBeNull();
+  });
 });

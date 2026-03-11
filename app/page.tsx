@@ -2,6 +2,9 @@ import Link from "next/link";
 import { ArrowRight, DatabaseZap, KeyRound, ShieldCheck, Waypoints } from "lucide-react";
 
 import { auth } from "@/src/lib/auth";
+import { isAppAdminEmail } from "@/src/lib/app-admins";
+import { isEphemeralContextLayerStorage } from "@/src/lib/persistence";
+import { ServiceUnavailableScreen } from "@/src/components/service-unavailable-screen";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
 import { Card } from "@/src/components/ui/card";
@@ -9,13 +12,21 @@ import { Card } from "@/src/components/ui/card";
 export default async function HomePage() {
   const session = await auth();
 
+  if (session?.user && isEphemeralContextLayerStorage()) {
+    return (
+      <ServiceUnavailableScreen
+        isAdmin={isAppAdminEmail(session.user.email ?? undefined)}
+      />
+    );
+  }
+
   return (
     <main className="min-h-screen px-6 py-12">
       <div className="mx-auto flex max-w-6xl flex-col gap-8">
         <header className="flex flex-col gap-6 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-workspace)] px-8 py-10">
           <div className="flex items-center gap-3 text-sm text-[var(--color-text-base)]">
             <Badge>Vercel-native</Badge>
-            <Badge>Built-in + MCP adapters</Badge>
+            <Badge>Managed + MCP adapters</Badge>
             <Badge>Scoped approvals</Badge>
           </div>
           <div className="max-w-3xl space-y-5">
@@ -44,7 +55,7 @@ export default async function HomePage() {
           {[
             {
               title: "Connector breadth",
-              body: "Start with curated built-in connectors for GitHub, Figma, Notion, Slack, and Google Docs, while still supporting broader Composio-based integrations.",
+              body: "Register managed connectors in the database, connect remote MCP servers directly, and still support broader Composio-based integrations.",
               icon: DatabaseZap,
             },
             {

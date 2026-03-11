@@ -6,7 +6,7 @@ import { Providers } from "@/src/components/providers";
 export const metadata: Metadata = {
   title: "OpenHands Context Layer",
   description:
-    "A Vercel-native context layer for AI agents with built-in connectors, MCP, approvals, and scoped permissions.",
+    "A Vercel-native context layer for AI agents with managed connectors, MCP, approvals, and scoped permissions.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
