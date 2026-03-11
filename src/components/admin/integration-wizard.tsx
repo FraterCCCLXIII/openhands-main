@@ -26,10 +26,16 @@ import type {
 
 type IntegrationKind = "built_in" | "mcp";
 type WizardStep = 1 | 2 | 3;
+type DiscoverFeedbackTone = "info" | "success" | "error";
 
 interface IntegrationWizardProps {
   onCreated: () => Promise<void>;
   onStatus: (message: string | null) => void;
+}
+
+interface DiscoverFeedback {
+  tone: DiscoverFeedbackTone;
+  message: string;
 }
 
 interface DiscoveryResponse {
@@ -265,6 +271,8 @@ export const IntegrationWizard = ({
     Record<string, FunctionAccessMode>
   >({});
   const [connectorSearch, setConnectorSearch] = useState("");
+  const [discoverFeedback, setDiscoverFeedback] =
+    useState<DiscoverFeedback | null>(null);
 
   const builtInConnectorsQuery = useQuery({
     queryKey: ["built-in-connectors"],
@@ -349,6 +357,18 @@ export const IntegrationWizard = ({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(buildDiscoverPayload(draft)),
       }),
+    onMutate: () => {
+      const providerName =
+        selectedConnector?.name || draft.name.trim() || draft.key.trim();
+      setDiscoverFeedback({
+        tone: "info",
+        message:
+          selectedConnector?.slug === "notion"
+            ? `Discovering functions for ${providerName}… Trying Streamable HTTP first. If Notion's hosted MCP does not respond, the server will retry with SSE and show transport details here if discovery still fails.`
+            : `Discovering functions for ${providerName}… Contacting the connector server and loading its available tools.`,
+      });
+      onStatus(null);
+    },
     onSuccess: (result) => {
       setDiscovery(result);
       setFunctionModes(
@@ -357,12 +377,20 @@ export const IntegrationWizard = ({
         ),
       );
       setStep(3);
-      onStatus(
-        `Discovered ${Object.keys(result.functions).length} functions. Review their default access before saving.`,
-      );
+      const message = `Discovered ${Object.keys(result.functions).length} functions. Review their default access before saving.`;
+      setDiscoverFeedback({
+        tone: "success",
+        message,
+      });
+      onStatus(message);
     },
     onError: (error: Error) => {
-      onStatus(error.message);
+      const message = `Discover failed: ${error.message}`;
+      setDiscoverFeedback({
+        tone: "error",
+        message,
+      });
+      onStatus(message);
     },
   });
 
@@ -391,6 +419,7 @@ export const IntegrationWizard = ({
       setDiscovery(null);
       setFunctionModes({});
       setConnectorSearch("");
+      setDiscoverFeedback(null);
       setStep(1);
     },
     onError: (error: Error) => {
@@ -428,6 +457,7 @@ export const IntegrationWizard = ({
         current.builtInSlug === connector.slug ? current.accessToken : "",
     }));
     setConnectorSearch(connectorOptionLabel(connector));
+    setDiscoverFeedback(null);
     onStatus(null);
   };
 
@@ -445,6 +475,7 @@ export const IntegrationWizard = ({
       builtInSlug: "",
       accessToken: "",
     }));
+    setDiscoverFeedback(null);
     onStatus(null);
   };
 
@@ -515,6 +546,7 @@ export const IntegrationWizard = ({
                 setDiscovery(null);
                 setFunctionModes({});
                 setConnectorSearch("");
+                setDiscoverFeedback(null);
                 setStep(2);
                 onStatus(null);
               }}
@@ -859,7 +891,10 @@ export const IntegrationWizard = ({
               <Button
                 variant="secondary"
                 type="button"
-                onClick={() => setStep(1)}
+                onClick={() => {
+                  setDiscoverFeedback(null);
+                  setStep(1);
+                }}
               >
                 Back
               </Button>
@@ -873,6 +908,22 @@ export const IntegrationWizard = ({
                   : "Discover functions"}
               </Button>
             </div>
+
+            {discoverFeedback ? (
+              <div
+                className={cn(
+                  "rounded-xl border px-4 py-3 text-sm leading-6",
+                  discoverFeedback.tone === "error"
+                    ? "border-red-500/40 bg-red-500/10 text-red-100"
+                    : discoverFeedback.tone === "success"
+                      ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-100"
+                      : "border-[var(--color-border)] bg-[var(--color-surface-subtle)] text-[var(--color-text-base)]",
+                )}
+                data-testid="discover-feedback"
+              >
+                {discoverFeedback.message}
+              </div>
+            ) : null}
           </div>
 
           <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-5 text-sm leading-7 text-[var(--color-text-base)]">
