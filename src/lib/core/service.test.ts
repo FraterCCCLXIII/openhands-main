@@ -310,6 +310,41 @@ describe("ContextLayerService", () => {
     expect(await service.isStoredAgentApiKeyAuthorized("not-a-real-key")).toBe(false);
   });
 
+
+  it("requires OAuth client credentials when first registering an OAuth managed connector", async () => {
+    const repository = new MemoryRepository();
+    const service = new ContextLayerService(
+      repository,
+      new AdapterRegistry({ mock: { invoke: async () => ({}) } }),
+      new NotificationPublisher(repository),
+    );
+
+    await expect(
+      service.upsertManagedConnector({
+        slug: "notion",
+        name: "Notion",
+        description: "Managed Notion MCP",
+        categories: ["Knowledge base"],
+        authStrategy: "oauth2",
+        authModes: ["oauth2"],
+        provider: "mcp",
+        credentialLabel: "Connect Notion",
+        credentialPlaceholder: "Connect Notion",
+        credentialHelp: "Connect Notion with OAuth.",
+        serverUrl: "https://mcp.notion.com/mcp",
+        oauthConfig: {
+          authorizationUrl: "https://api.notion.com/v1/oauth/authorize",
+          tokenUrl: "https://api.notion.com/v1/oauth/token",
+          scopes: [],
+        },
+        functions: [],
+        enabled: true,
+      }),
+    ).rejects.toThrow(
+      "New OAuth-managed connectors require both oauthClientId and oauthClientSecret.",
+    );
+  });
+
   it("injects saved per-user OAuth credentials during invocation", async () => {
     const repository = new MemoryRepository();
     const mcpInvoke = vi.fn(async ({ integration }) => integration.credentials);

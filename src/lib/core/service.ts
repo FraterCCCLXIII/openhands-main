@@ -184,8 +184,11 @@ export class ContextLayerService {
         );
       }
 
-      if (input.oauthClientId || input.oauthClientSecret) {
-        if (!input.oauthClientId?.trim() || !input.oauthClientSecret?.trim()) {
+      const oauthClientId = input.oauthClientId?.trim() ?? "";
+      const oauthClientSecret = input.oauthClientSecret?.trim() ?? "";
+
+      if (oauthClientId || oauthClientSecret) {
+        if (!oauthClientId || !oauthClientSecret) {
           throw new ContextLayerError(
             "Provide both oauthClientId and oauthClientSecret when updating OAuth credentials.",
             400,
@@ -193,9 +196,14 @@ export class ContextLayerService {
         }
 
         encryptedOAuthClient = encryptCredentials({
-          clientId: input.oauthClientId.trim(),
-          clientSecret: input.oauthClientSecret.trim(),
+          clientId: oauthClientId,
+          clientSecret: oauthClientSecret,
         });
+      } else if (!encryptedOAuthClient) {
+        throw new ContextLayerError(
+          "New OAuth-managed connectors require both oauthClientId and oauthClientSecret.",
+          400,
+        );
       }
     } else {
       encryptedOAuthClient = undefined;

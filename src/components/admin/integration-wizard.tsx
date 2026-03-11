@@ -271,7 +271,8 @@ export const IntegrationWizard = ({
     queryFn: () =>
       fetchJson<BuiltInConnectorOption[]>("/api/integrations/built-in-connectors"),
     enabled: draft.kind === "built_in" && step === 2,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
+    refetchOnMount: "always",
   });
 
   const builtInConnectors = useMemo(

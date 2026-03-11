@@ -87,10 +87,16 @@ describe("CuratedProviderList", () => {
     document.body.appendChild(container);
     root = createRoot(container);
     fetchMock = vi.fn(async () =>
-      new Response(JSON.stringify({ slug: "google-calendar" }), {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-      }),
+      new Response(
+        JSON.stringify({
+          slug: "google-calendar",
+          oauthConfigured: true,
+        }),
+        {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        },
+      ),
     );
     vi.stubGlobal("fetch", fetchMock);
   });
@@ -215,9 +221,8 @@ describe("CuratedProviderList", () => {
     expect(body.oauthClientId).toBe("calendar-client-id");
     expect(body.oauthClientSecret).toBe("calendar-client-secret");
     expect(body.functions).toEqual([]);
-    expect(container.textContent).toContain(
-      "Connector registered. Users can now connect it from the integrations wizard and discover its tools.",
-    );
+    expect(container.textContent).toContain("Ready now");
+    expect(container.textContent).toContain("Use Google Calendar");
   });
 
   it("requires replacing researched MCP templates before registration", async () => {
@@ -251,6 +256,45 @@ describe("CuratedProviderList", () => {
     expect(fetchMock).not.toHaveBeenCalled();
     expect(container.textContent).toContain(
       "Replace customerId=replace-me in the MCP server URL with the generated customer-specific value before registering this connector.",
+    );
+  });
+
+  it("requires OAuth client credentials before registering a connector", async () => {
+    await act(async () => {
+      root.render(
+        <CuratedProviderList
+          providerCatalog={providerCatalog}
+          readyBuiltInConnectors={readyBuiltInConnectors}
+          canRegisterManagedConnectors
+          oauthCallbackBaseUrl={oauthCallbackBaseUrl}
+        />,
+      );
+    });
+
+    const calendarButton = Array.from(container.querySelectorAll("button")).find(
+      (button) => button.textContent?.includes("Google Calendar"),
+    );
+
+    await act(async () => {
+      calendarButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    const urlInput = container.querySelector('input[type="url"]');
+    await act(async () => {
+      setInputValue(urlInput, "https://mcp.calendar.test/mcp");
+    });
+
+    const form = container.querySelector("form");
+    expect(form).toBeTruthy();
+
+    await act(async () => {
+      form?.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(container.textContent).toContain(
+      "Paste both the OAuth client ID and client secret before registering this connector. Until those are stored, it will not appear in the integrations wizard.",
     );
   });
 

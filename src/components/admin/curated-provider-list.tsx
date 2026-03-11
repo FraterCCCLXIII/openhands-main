@@ -1,6 +1,6 @@
 "use client";
 
-import { type FormEvent, useMemo, useState } from "react";
+import { type FormEvent, useEffect, useMemo, useState } from "react";
 import { ExternalLink } from "lucide-react";
 
 import { Badge } from "@/src/components/ui/badge";
@@ -130,6 +130,13 @@ export function CuratedProviderList({
   const [registrationForms, setRegistrationForms] = useState<
     Record<string, RegistrationFormState>
   >({});
+  const [readyConnectorSlugs, setReadyConnectorSlugs] = useState(
+    () => new Set(readyBuiltInConnectors.map((connector) => connector.slug)),
+  );
+
+  useEffect(() => {
+    setReadyConnectorSlugs(new Set(readyBuiltInConnectors.map((connector) => connector.slug)));
+  }, [readyBuiltInConnectors]);
 
   const updateRegistrationForm = (
     provider: OAuthProviderCatalogOption,
@@ -164,6 +171,18 @@ export function CuratedProviderList({
       return;
     }
 
+    const oauthClientId = currentForm.oauthClientId.trim();
+    const oauthClientSecret = currentForm.oauthClientSecret.trim();
+    if (!oauthClientId || !oauthClientSecret) {
+      updateRegistrationForm(provider, {
+        submitting: false,
+        status: "error",
+        message:
+          "Paste both the OAuth client ID and client secret before registering this connector. Until those are stored, it will not appear in the integrations wizard.",
+      });
+      return;
+    }
+
     updateRegistrationForm(provider, {
       submitting: true,
       status: "idle",
@@ -179,17 +198,29 @@ export function CuratedProviderList({
         body: JSON.stringify(buildManagedConnectorPayload(provider, currentForm)),
       });
 
+      const body = (await response.json().catch(() => null)) as
+        | {
+            detail?: string;
+            slug?: string;
+            oauthConfigured?: boolean;
+          }
+        | null;
       if (!response.ok) {
-        const body = (await response.json().catch(() => null)) as
-          | { detail?: string }
-          | null;
         throw new Error(body?.detail || "Failed to register connector.");
+      }
+
+      const connectorSlug = provider.builtInSlug ?? provider.slug;
+      if (body?.oauthConfigured !== false) {
+        setReadyConnectorSlugs((current) => new Set([...current, connectorSlug]));
       }
 
       updateRegistrationForm(provider, {
         submitting: false,
-        status: "success",
-        message: "Connector registered. Users can now connect it from the integrations wizard and discover its tools.",
+        status: body?.oauthConfigured === false ? "error" : "success",
+        message:
+          body?.oauthConfigured === false
+            ? "Connector saved, but it still needs OAuth client credentials before it can appear in the integrations wizard."
+            : "Connector registered. It should now appear in the integrations wizard; if that wizard was already open, refresh or reopen it first.",
       });
     } catch (error) {
       updateRegistrationForm(provider, {
@@ -243,11 +274,8 @@ export function CuratedProviderList({
       ) : (
         <div className="overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] divide-y divide-[var(--color-border)]">
           {filteredProviders.map((provider) => {
-            const builtInMatch = provider.builtInSlug
-              ? readyBuiltInConnectors.find(
-                  (connector) => connector.slug === provider.builtInSlug,
-                )
-              : null;
+            const connectorSlug = provider.builtInSlug ?? provider.slug;
+            const isReadyNow = readyConnectorSlugs.has(connectorSlug);
             const isExpanded = expandedSlug === provider.slug;
             const registrationForm = getRegistrationForm(provider);
             const usesFixedOAuthDefaults = hasFixedOAuthConfig(provider);
@@ -267,7 +295,7 @@ export function CuratedProviderList({
                   <span className="shrink-0 text-[var(--color-text-base)]">
                     {availabilityLabel(provider.availability)}
                   </span>
-                  {builtInMatch ? (
+                  {isReadyNow ? (
                     <span className="shrink-0 text-[var(--color-accent)]">— Ready now</span>
                   ) : null}
                   <span className="min-w-0 flex-1 truncate text-[var(--color-text-base)]">
@@ -288,20 +316,20 @@ export function CuratedProviderList({
                       <Badge tone={availabilityTone(provider.availability)}>
                         {availabilityLabel(provider.availability)}
                       </Badge>
-                      {builtInMatch ? <Badge tone="success">Ready now</Badge> : null}
+                      {isReadyNow ? <Badge tone="success">Ready now</Badge> : null}
                     </div>
-                    {builtInMatch ? (
+                    {isReadyNow ? (
                       <div className="mt-4 flex flex-wrap gap-3 text-xs">
                         <a
-                          href={`/admin?section=integrations&showIntegrationWizard=1&builtIn=${builtInMatch.slug}`}
+                          href={`/admin?section=integrations&showIntegrationWizard=1&builtIn=${connectorSlug}`}
                           className="inline-flex items-center gap-1 text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
                         >
-                          Use {builtInMatch.name}
+                          Use {provider.name}
                         </a>
                       </div>
                     ) : null}
 
-                    {builtInMatch ? (
+                    {isReadyNow ? (
                       <p className="mt-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-text-base)]">
                         This provider is already available in the integration wizard, so no additional registration is needed.
                       </p>
@@ -426,7 +454,7 @@ export function CuratedProviderList({
                             className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-white outline-none focus:border-[var(--color-accent)]"
                           />
                           <span className="text-[11px] leading-5 text-[var(--color-text-muted)]">
-                            Required when this service is the OAuth client for the MCP. The credentials are stored server-side so each user can use the Connect flow later without reconfiguring the connector.
+                            Required when this service is the OAuth client for the MCP. The credentials are stored server-side so each user can use the Connect flow later without reconfiguring the connector, and the connector will stay hidden from the integrations wizard until they are saved.
                           </span>
                         </label>
                         <div className="md:col-span-2 flex flex-wrap items-center gap-3">

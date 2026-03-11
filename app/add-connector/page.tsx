@@ -149,9 +149,10 @@ export default async function AddConnectorPage() {
                   <span className="font-medium text-white">3.</span> Store the
                   OAuth client ID and client secret in that managed connector if
                   this service is going to run the OAuth callback flow for users.
-                  Every provider row includes a direct link to that provider's
-                  OAuth app setup docs and shows the callback URL to register.
-                  When <code className="text-white">AUTH_REDIRECT_PROXY_URL</code>
+                  The integrations wizard only lists OAuth connectors after those
+                  service-level credentials are stored. Every provider row includes
+                  a direct link to that provider's OAuth app setup docs and shows
+                  the callback URL to register. When <code className="text-white">AUTH_REDIRECT_PROXY_URL</code>
                   is configured for preview deployments, that callback uses the
                   stable deployment origin instead of the preview URL.
                 </li>
