@@ -312,8 +312,17 @@ const discoverBuiltInConnectorIntegration = async (
 ): Promise<IntegrationDiscoveryResult> => {
   const slug =
     (input.config.builtInSlug as string | undefined)?.trim() || input.key.trim();
-  const connector = getBuiltInConnectorDefinition(slug);
 
+  const managedConnectorResult = await discoverManagedConnectorIntegration(
+    input,
+    options,
+    slug,
+  );
+  if (managedConnectorResult) {
+    return managedConnectorResult;
+  }
+
+  const connector = getBuiltInConnectorDefinition(slug);
   if (connector) {
     const baseUrl = options.baseUrl?.trim();
     if (!baseUrl) {
@@ -346,15 +355,6 @@ const discoverBuiltInConnectorIntegration = async (
           : compactRecord({ accessToken }),
       functions: buildBuiltInConnectorFunctions(connector.slug),
     };
-  }
-
-  const managedConnectorResult = await discoverManagedConnectorIntegration(
-    input,
-    options,
-    slug,
-  );
-  if (managedConnectorResult) {
-    return managedConnectorResult;
   }
 
   throw new ContextLayerError(`Unknown built-in connector '${slug}'.`, 404);

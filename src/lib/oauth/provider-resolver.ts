@@ -253,29 +253,22 @@ export const resolveOAuthProvider = async (
   repository: ContextRepository,
   provider: string,
 ): Promise<OAuthProviderDefinition | null> => {
-  const staticProvider = getOAuthProvider(provider);
-  if (staticProvider) {
-    return staticProvider;
-  }
-
   const connector = await repository.getManagedConnector(provider);
-  if (!connector || !connector.enabled) {
-    return null;
+  if (connector?.enabled) {
+    return buildGenericOAuthProvider(connector);
   }
 
-  return buildGenericOAuthProvider(connector);
+  return getOAuthProvider(provider);
 };
 
 export const isOAuthProviderResolvedAndConfigured = async (
   repository: ContextRepository,
   provider: string,
 ) => {
-  if (getOAuthProvider(provider)) {
-    return isOAuthProviderConfigured(provider);
+  const connector = await repository.getManagedConnector(provider);
+  if (connector?.enabled) {
+    return Boolean(connector.oauthConfig && connector.encryptedOAuthClient);
   }
 
-  const connector = await repository.getManagedConnector(provider);
-  return Boolean(
-    connector?.enabled && connector.oauthConfig && connector.encryptedOAuthClient,
-  );
+  return isOAuthProviderConfigured(provider);
 };

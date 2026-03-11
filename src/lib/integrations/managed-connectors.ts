@@ -140,13 +140,19 @@ export const resolveManagedConnectorCredentials = (
 export const listAvailableBuiltInConnectors = async (
   repository: ContextRepository,
 ): Promise<BuiltInConnectorOption[]> => {
-  const managedConnectors = (await repository.listManagedConnectors())
-    .filter((connector) => connector.enabled)
-    .map(managedConnectorToBuiltInOption);
+  const connectorsBySlug = new Map<string, BuiltInConnectorOption>();
 
-  return [...listStaticBuiltInConnectors(), ...managedConnectors].sort((a, b) =>
-    a.name.localeCompare(b.name),
-  );
+  for (const connector of listStaticBuiltInConnectors()) {
+    connectorsBySlug.set(connector.slug, connector);
+  }
+
+  for (const connector of (await repository.listManagedConnectors())
+    .filter((candidate) => candidate.enabled)
+    .map(managedConnectorToBuiltInOption)) {
+    connectorsBySlug.set(connector.slug, connector);
+  }
+
+  return [...connectorsBySlug.values()].sort((a, b) => a.name.localeCompare(b.name));
 };
 
 export const getManagedConnectorRecord = async (

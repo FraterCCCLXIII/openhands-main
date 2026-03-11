@@ -105,4 +105,50 @@ describe("resolveOAuthProvider", () => {
       displayName: "Acme CRM",
     });
   });
+
+  it("prefers an enabled managed connector over a static provider with the same slug", async () => {
+    const repository = new MemoryRepository();
+    await repository.upsertManagedConnector({
+      slug: "notion",
+      name: "Notion",
+      description: "Managed Notion MCP",
+      categories: ["Knowledge base"],
+      authModes: ["oauth2"],
+      authStrategy: "oauth2",
+      provider: "mcp",
+      oauthConfigured: true,
+      credentialLabel: "Connect Notion",
+      credentialPlaceholder: "Connect Notion",
+      credentialHelp: "Use OAuth to connect Notion.",
+      serverUrl: "https://mcp.notion.com/mcp",
+      oauthConfig: {
+        authorizationUrl: "https://auth.managed-notion.test/authorize",
+        tokenUrl: "https://auth.managed-notion.test/token",
+        scopes: ["workspace.read"],
+      },
+      encryptedOAuthClient: encryptCredentials({
+        clientId: "managed-notion-client-id",
+        clientSecret: "managed-notion-client-secret",
+      }),
+      functions: [],
+      enabled: true,
+      createdAt: "2026-03-09T00:00:00.000Z",
+      updatedAt: "2026-03-09T00:00:00.000Z",
+    });
+
+    const provider = await resolveOAuthProvider(repository, "notion");
+    expect(provider).toBeTruthy();
+
+    const start = provider!.startAuth({
+      state: "state-456",
+      redirectUri: "https://context.test/api/oauth/notion/callback",
+    });
+    const authorizationUrl = new URL(start.authorizationUrl);
+
+    expect(authorizationUrl.origin + authorizationUrl.pathname).toBe(
+      "https://auth.managed-notion.test/authorize",
+    );
+    expect(authorizationUrl.searchParams.get("client_id")).toBe("managed-notion-client-id");
+    expect(authorizationUrl.searchParams.get("scope")).toBe("workspace.read");
+  });
 });

@@ -135,6 +135,49 @@ describe("listBuiltInConnectors", () => {
       oauthConfigured: true,
     });
   });
+
+  it("prefers managed connectors over static built-ins when the slug overlaps", async () => {
+    const repository = new MemoryRepository();
+    await repository.upsertManagedConnector({
+      slug: "notion",
+      name: "Notion",
+      description: "Managed Notion MCP",
+      categories: ["Knowledge base"],
+      authModes: ["oauth2"],
+      authStrategy: "oauth2",
+      provider: "mcp",
+      oauthConfigured: true,
+      credentialLabel: "Connect Notion",
+      credentialPlaceholder: "Connect Notion",
+      credentialHelp: "Use OAuth to connect Notion.",
+      serverUrl: "https://mcp.notion.com/mcp",
+      oauthConfig: {
+        authorizationUrl: "https://auth.managed-notion.test/authorize",
+        tokenUrl: "https://auth.managed-notion.test/token",
+        scopes: ["workspace.read"],
+      },
+      encryptedOAuthClient: encryptCredentials({
+        clientId: "managed-notion-client-id",
+        clientSecret: "managed-notion-client-secret",
+      }),
+      functions: [],
+      enabled: true,
+      createdAt: "2026-03-09T00:00:00.000Z",
+      updatedAt: "2026-03-09T00:00:00.000Z",
+    });
+
+    const connectors = await listBuiltInConnectors(repository);
+    const notionConnectors = connectors.filter((candidate) => candidate.slug === "notion");
+
+    expect(notionConnectors).toHaveLength(1);
+    expect(notionConnectors[0]).toMatchObject({
+      name: "Notion",
+      oauthConfigured: true,
+      toolCount: 0,
+      credentialHelp: "Use OAuth to connect Notion.",
+    });
+  });
+
 });
 
 describe("discoverIntegration", () => {
@@ -294,6 +337,100 @@ describe("discoverIntegration", () => {
     expect(mcpState.url).toBe("https://mcp.acme.test/mcp");
     expect(mcpState.headers).toEqual({
       Authorization: "Bearer acme-access-token",
+    });
+  });
+
+  it("prefers a managed connector over the static built-in when both use the same slug", async () => {
+    const repository = new MemoryRepository();
+    await repository.upsertManagedConnector({
+      slug: "notion",
+      name: "Notion",
+      description: "Managed Notion MCP",
+      categories: ["Knowledge base"],
+      authModes: ["oauth2"],
+      authStrategy: "oauth2",
+      provider: "mcp",
+      oauthConfigured: true,
+      credentialLabel: "Connect Notion",
+      credentialPlaceholder: "Connect Notion",
+      credentialHelp: "Use OAuth to connect Notion.",
+      serverUrl: "https://mcp.notion.com/mcp",
+      oauthConfig: {
+        authorizationUrl: "https://auth.managed-notion.test/authorize",
+        tokenUrl: "https://auth.managed-notion.test/token",
+        scopes: ["workspace.read"],
+      },
+      encryptedOAuthClient: encryptCredentials({
+        clientId: "managed-notion-client-id",
+        clientSecret: "managed-notion-client-secret",
+      }),
+      functions: [],
+      enabled: true,
+      createdAt: "2026-03-09T00:00:00.000Z",
+      updatedAt: "2026-03-09T00:00:00.000Z",
+    });
+    await repository.upsertIntegrationConnection({
+      ownerId: "dev@localhost",
+      integrationKey: "notion",
+      provider: "mcp",
+      authStrategy: "oauth2",
+      encryptedCredentials: encryptCredentials({
+        accessToken: "managed-notion-access-token",
+      }),
+      scopes: ["workspace.read"],
+      metadata: {},
+      createdAt: "2026-03-09T00:00:00.000Z",
+      updatedAt: "2026-03-09T00:00:00.000Z",
+    });
+    mcpListToolsMock.mockResolvedValue({
+      tools: [
+        {
+          name: "search_workspace",
+          description: "Search the Notion workspace",
+          inputSchema: {
+            type: "object",
+          },
+        },
+      ],
+    });
+
+    await expect(
+      discoverIntegration(
+        {
+          key: "notion",
+          kind: "built_in",
+          config: {
+            builtInSlug: "notion",
+          },
+          credentials: {},
+        },
+        {
+          ownerId: "dev@localhost",
+          repository,
+          baseUrl: "https://context-layer.vercel.app",
+        },
+      ),
+    ).resolves.toMatchObject({
+      provider: "mcp",
+      authStrategy: "oauth2",
+      config: {
+        builtInSlug: "notion",
+        managedConnectorSlug: "notion",
+        serverUrl: "https://mcp.notion.com/mcp",
+      },
+      credentials: {},
+      functions: {
+        search_workspace: {
+          description: "Search the Notion workspace",
+          config: {
+            toolName: "search_workspace",
+          },
+        },
+      },
+    });
+    expect(mcpState.url).toBe("https://mcp.notion.com/mcp");
+    expect(mcpState.headers).toEqual({
+      Authorization: "Bearer managed-notion-access-token",
     });
   });
 });
