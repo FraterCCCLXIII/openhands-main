@@ -68,7 +68,11 @@ const createRegistrationFormState = (
 
 const getManagedConnectorProvider = (provider: OAuthProviderCatalogOption) =>
   provider.registrationDefaults?.provider ??
-  (provider.registrationDefaults?.openApiUrl ? "http" : "mcp");
+  (provider.registrationDefaults?.serverUrl
+    ? "mcp"
+    : provider.registrationDefaults?.apiBaseUrl || provider.registrationDefaults?.openApiUrl
+      ? "http"
+      : "mcp");
 
 const isHttpManagedConnector = (provider: OAuthProviderCatalogOption) =>
   getManagedConnectorProvider(provider) === "http";
@@ -79,8 +83,31 @@ const parseScopes = (value: string) =>
     .map((scope) => scope.trim())
     .filter(Boolean);
 
-const usesGeneratedMcpTemplate = (serverUrl: string) =>
-  /customerId=replace-me/i.test(serverUrl.trim());
+const buildDefaultHttpFunctions = (provider: OAuthProviderCatalogOption) => {
+  const defaults = provider.registrationDefaults;
+  if (
+    !defaults ||
+    defaults.openApiUrl ||
+    !defaults.functionName ||
+    !defaults.functionDescription ||
+    !defaults.requestMethod ||
+    !defaults.requestPath
+  ) {
+    return [];
+  }
+
+  return [
+    {
+      name: defaults.functionName,
+      description: defaults.functionDescription,
+      defaultScopes: defaults.scopes ?? [],
+      request: {
+        method: defaults.requestMethod,
+        path: defaults.requestPath,
+      },
+    },
+  ];
+};
 
 const hasFixedOAuthConfig = (provider: OAuthProviderCatalogOption) =>
   Boolean(
@@ -133,7 +160,8 @@ const buildManagedConnectorPayload = (
     },
     oauthClientId: form.oauthClientId.trim(),
     oauthClientSecret: form.oauthClientSecret.trim(),
-    functions: [],
+    functions:
+      managedConnectorProvider === "http" ? buildDefaultHttpFunctions(provider) : [],
     enabled: true,
   };
 };
@@ -189,19 +217,6 @@ export function CuratedProviderList({
     const currentForm = getRegistrationForm(provider);
     const managedConnectorProvider = getManagedConnectorProvider(provider);
     const isHttpConnector = managedConnectorProvider === "http";
-
-    if (
-      managedConnectorProvider === "mcp" &&
-      usesGeneratedMcpTemplate(currentForm.serverUrl)
-    ) {
-      updateRegistrationForm(provider, {
-        submitting: false,
-        status: "error",
-        message:
-          "Replace customerId=replace-me in the MCP server URL with the generated customer-specific value before registering this connector.",
-      });
-      return;
-    }
 
     if (
       isHttpConnector &&
@@ -408,8 +423,7 @@ export function CuratedProviderList({
                             placeholder={
                               isHttpConnector
                                 ? provider.registrationDefaults?.apiBaseUrl ?? "https://api.example.com"
-                                : provider.registrationDefaults?.serverUrl ??
-                                  `https://mcp.composio.dev/partner/composio/${provider.slug}/mcp?customerId=replace-me`
+                                : provider.registrationDefaults?.serverUrl ?? "https://mcp.example.com"
                             }
                             className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-white outline-none placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-accent)]"
                           />
@@ -422,6 +436,25 @@ export function CuratedProviderList({
                             </p>
                             <p className="mt-1">
                               This connector will fetch that schema server-side during registration and generate the HTTP function templates automatically.
+                            </p>
+                          </div>
+                        ) : null}
+                        {isHttpConnector &&
+                        !registrationForm.openApiUrl &&
+                        provider.registrationDefaults?.functionName &&
+                        provider.registrationDefaults?.requestMethod &&
+                        provider.registrationDefaults?.requestPath ? (
+                          <div className="md:col-span-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-[11px] leading-5 text-[var(--color-text-base)]">
+                            <p>
+                              Starter API function:
+                              <code className="mx-1 text-white">
+                                {provider.registrationDefaults.functionName}
+                              </code>
+                              will call
+                              <code className="mx-1 text-white">
+                                {provider.registrationDefaults.requestMethod} {provider.registrationDefaults.requestPath}
+                              </code>
+                              until you replace it with a richer generated catalog or additional custom function templates.
                             </p>
                           </div>
                         ) : null}

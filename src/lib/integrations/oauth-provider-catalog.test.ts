@@ -39,11 +39,11 @@ describe("listOAuthProviderCatalog", () => {
       providers.every(
         (provider) =>
           !provider.registrationDefaults?.serverUrl?.includes("example.com") &&
+          !provider.registrationDefaults?.serverUrl?.includes("mcp.composio.dev") &&
           !provider.registrationDefaults?.apiBaseUrl?.includes("example.com"),
       ),
     ).toBe(true);
   });
-
 
   it("includes registration defaults for researched providers", () => {
     const providers = listOAuthProviderCatalog();
@@ -65,12 +65,15 @@ describe("listOAuthProviderCatalog", () => {
       requestPath: "/v1/search",
     });
     expect(googleCalendar?.registrationDefaults).toMatchObject({
+      provider: "http",
       apiBaseUrl: "https://www.googleapis.com/calendar/v3",
-      serverUrl:
-        "https://mcp.composio.dev/partner/composio/google-calendar/mcp?customerId=replace-me",
       authorizationUrl: "https://accounts.google.com/o/oauth2/v2/auth",
       tokenUrl: "https://oauth2.googleapis.com/token",
       scopes: ["https://www.googleapis.com/auth/calendar.readonly"],
+      functionName: "list_events",
+      requestMethod: "GET",
+      requestPath: "/calendars/primary/events",
     });
+    expect(googleCalendar?.registrationDefaults?.serverUrl).toBeUndefined();
   });
 });
