@@ -38,7 +38,13 @@ describe("agent-connection", () => {
     expect(guide.endpoint).toBe(
       "http://localhost:12000/api/context/github/search_repositories",
     );
+    expect(guide.openApiSchemaEndpoint).toBe(
+      "http://localhost:12000/api/context/openapi",
+    );
     expect(guide.curlExample).toContain("Authorization: Bearer context-key");
+    expect(guide.openApiCurlExample).toContain(
+      'curl -X GET "http://localhost:12000/api/context/openapi"',
+    );
     expect(guide.requestBody).toContain('"scopes": [\n    "repo"\n  ]');
   });
 
@@ -51,6 +57,9 @@ describe("agent-connection", () => {
 
     expect(guide.endpoint).toBe(
       "http://localhost:12000/api/context/your-integration/your-function",
+    );
+    expect(guide.openApiSchemaEndpoint).toBe(
+      "http://localhost:12000/api/context/openapi",
     );
     expect(guide.fetchExample).toContain("your-function");
   });
