@@ -345,6 +345,109 @@ describe("ContextLayerService", () => {
     );
   });
 
+  it("generates managed HTTP connector functions from an OpenAPI schema during registration", async () => {
+    const repository = new MemoryRepository();
+    const service = new ContextLayerService(
+      repository,
+      new AdapterRegistry({ mock: { invoke: async () => ({}) } }),
+      new NotificationPublisher(repository),
+    );
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            openapi: "3.1.0",
+            security: [{ bearerAuth: [] }],
+            components: {
+              parameters: {
+                notionVersion: {
+                  name: "Notion-Version",
+                  in: "header",
+                  required: true,
+                  schema: { enum: ["2026-03-11"] },
+                },
+              },
+            },
+            paths: {
+              "/v1/search": {
+                post: {
+                  operationId: "post-search",
+                  summary: "Search workspace",
+                  parameters: [{ $ref: "#/components/parameters/notionVersion" }],
+                  requestBody: {
+                    content: {
+                      "application/json": {
+                        schema: {
+                          type: "object",
+                          properties: {
+                            query: { type: "string" },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          }),
+          {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          },
+        ),
+      ),
+    );
+
+    const connector = await service.upsertManagedConnector({
+      slug: "notion",
+      name: "Notion",
+      description: "Managed Notion REST connector",
+      categories: ["Knowledge base"],
+      authStrategy: "oauth2",
+      authModes: ["oauth2"],
+      provider: "http",
+      credentialLabel: "Connect Notion",
+      credentialPlaceholder: "Connect Notion",
+      credentialHelp: "Connect Notion with OAuth.",
+      apiBaseUrl: "https://api.notion.com",
+      openApiUrl: "https://developers.notion.com/openapi.json",
+      oauthConfig: {
+        authorizationUrl: "https://api.notion.com/v1/oauth/authorize",
+        tokenUrl: "https://api.notion.com/v1/oauth/token",
+        scopes: [],
+      },
+      oauthClientId: "notion-client-id",
+      oauthClientSecret: "notion-client-secret",
+      functions: [],
+      enabled: true,
+    });
+
+    expect(connector).toMatchObject({
+      slug: "notion",
+      provider: "http",
+      apiBaseUrl: "https://api.notion.com",
+      openApiUrl: "https://developers.notion.com/openapi.json",
+      oauthConfigured: true,
+      functions: [
+        {
+          name: "post_search",
+          request: {
+            method: "POST",
+            path: "/v1/search",
+            headers: {
+              "Notion-Version": "2026-03-11",
+            },
+            body: "{{body}}",
+            contentType: "json",
+          },
+        },
+      ],
+    });
+  });
+
+
   it("injects saved per-user OAuth credentials during invocation", async () => {
     const repository = new MemoryRepository();
     const mcpInvoke = vi.fn(async ({ integration }) => integration.credentials);

@@ -61,7 +61,7 @@ export default async function AddConnectorPage() {
           <p className="max-w-3xl text-sm leading-7 text-[var(--color-text-base)]">
             If the integration setup flow does not show the provider you need,
             use this page to see which managed connectors are already registered
-            for this service and how admins can add another OAuth-backed MCP.
+            for this service and how admins can add another OAuth-backed managed connector, whether that connector is a remote MCP or a REST API generated from an official OpenAPI schema.
           </p>
           <div className="flex flex-wrap gap-2">
             {readyBuiltInConnectors.map((connector) => (
@@ -100,8 +100,9 @@ export default async function AddConnectorPage() {
               ) : null}
               <p>
                 Share the provider name, the OAuth documentation link, the MCP
-                server URL if you know it, and the work you want the agent to do.
-                That gives admins the context they need to register the service-level connector.
+                server URL or REST API/OpenAPI reference if you know it, and the
+                work you want the agent to do. That gives admins the context they
+                need to register the service-level connector.
               </p>
             </div>
           </Card>
@@ -122,8 +123,8 @@ export default async function AddConnectorPage() {
             <div className="space-y-4 text-sm leading-7 text-[var(--color-text-base)]">
               <p>
                 Add connector is a service-level admin action. Use it once to
-                register an OAuth-backed MCP so every user can see it in the
-                integrations wizard.
+                register an OAuth-backed managed connector so every user can see
+                it in the integrations wizard.
               </p>
               <p>
                 The in-app registration form is only available to signed-in app
@@ -132,12 +133,15 @@ export default async function AddConnectorPage() {
               <ol className="grid gap-3">
                 <li>
                   <span className="font-medium text-white">1.</span> Confirm the
-                  provider has stable OAuth documentation and identify the MCP
-                  server URL, authorization URL, token URL, callback requirements,
-                  and the minimum scopes the MCP needs. Each provider row below
-                  now starts with either an official vendor-hosted MCP URL or a
-                  researched Composio-hosted MCP URL pattern instead of a generic
-                  placeholder. If the value still includes
+                  provider has stable OAuth documentation and decide whether it
+                  should be modeled as a remote MCP or as a managed HTTP
+                  connector generated from an official OpenAPI schema. Collect
+                  the MCP server URL or API base URL/OpenAPI URL, authorization
+                  URL, token URL, callback requirements, and the minimum scopes
+                  the connector needs. Each provider row below now starts with
+                  either an official vendor-hosted MCP URL, a researched
+                  Composio-hosted MCP URL pattern, or an API/OpenAPI default. If
+                  the MCP value still includes
                   <code className="mx-1 text-white">customerId=replace-me</code>,
                   replace that with the generated customer-specific value before
                   saving the connector.
@@ -154,7 +158,10 @@ export default async function AddConnectorPage() {
                   >
                     endpoint schema doc
                   </a>{" "}
-                  for the request shape.
+                  for the request shape. If you want the provider to appear in
+                  the curated add-connector catalog by default, update the source
+                  metadata in <code className="text-white">src/lib/integrations/oauth-provider-registration-defaults.ts</code>
+                  and <code className="ml-1 text-white">src/lib/integrations/oauth-provider-catalog.ts</code>.
                 </li>
                 <li>
                   <span className="font-medium text-white">3.</span> Store the
@@ -169,7 +176,7 @@ export default async function AddConnectorPage() {
                 </li>
                 <li>
                   <span className="font-medium text-white">4.</span> Have a real
-                  user open the integrations wizard, press <span className="text-white">Connect</span> and then <span className="text-white">Discover functions</span>. That step adds the full MCP tool list to their personal integration.
+                  user open the integrations wizard, press <span className="text-white">Connect</span> and then <span className="text-white">Discover functions</span>. For remote MCP connectors, that step loads the live tool list from the MCP server. For managed HTTP/OpenAPI connectors, it loads the generated function catalog stored on the managed connector.
                 </li>
                 <li>
                   <span className="font-medium text-white">5.</span> In the

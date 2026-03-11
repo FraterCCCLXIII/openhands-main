@@ -32,7 +32,8 @@ export async function GET(request: Request) {
     tags: [
       {
         name: "Managed Connectors",
-        description: "DB-backed connector definitions used by the generic HTTP adaptor.",
+        description:
+          "DB-backed connector definitions used by the managed connector system for remote MCP and generic HTTP/OpenAPI connectors.",
       },
     ],
     paths: {

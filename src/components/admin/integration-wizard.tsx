@@ -380,10 +380,7 @@ export const IntegrationWizard = ({
         selectedConnector?.name || draft.name.trim() || draft.key.trim();
       setDiscoverFeedback({
         tone: "info",
-        message:
-          selectedConnector?.slug === "notion"
-            ? `Discovering functions for ${providerName}… Trying Streamable HTTP first. If Notion's hosted MCP does not respond, the server will retry with SSE and show transport details here if discovery still fails.`
-            : `Discovering functions for ${providerName}… Contacting the connector server and loading its available tools.`,
+        message: `Discovering functions for ${providerName}… Loading the connector's available function catalog.`,
       });
       onStatus(null);
     },

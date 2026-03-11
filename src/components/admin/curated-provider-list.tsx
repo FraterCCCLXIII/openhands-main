@@ -33,7 +33,9 @@ const availabilityLabel = (availability: "oauth_ready" | "manual_token" | "plann
 };
 
 interface RegistrationFormState {
+  apiBaseUrl: string;
   serverUrl: string;
+  openApiUrl: string;
   authorizationUrl: string;
   tokenUrl: string;
   scopes: string;
@@ -50,7 +52,9 @@ const createRegistrationFormState = (
   const defaults = provider.registrationDefaults;
 
   return {
+    apiBaseUrl: defaults?.apiBaseUrl ?? "",
     serverUrl: defaults?.serverUrl ?? "",
+    openApiUrl: defaults?.openApiUrl ?? "",
     authorizationUrl: defaults?.authorizationUrl ?? "",
     tokenUrl: defaults?.tokenUrl ?? "",
     scopes: defaults?.scopes?.join(", ") ?? "",
@@ -61,6 +65,13 @@ const createRegistrationFormState = (
     message: "",
   };
 };
+
+const getManagedConnectorProvider = (provider: OAuthProviderCatalogOption) =>
+  provider.registrationDefaults?.provider ??
+  (provider.registrationDefaults?.openApiUrl ? "http" : "mcp");
+
+const isHttpManagedConnector = (provider: OAuthProviderCatalogOption) =>
+  getManagedConnectorProvider(provider) === "http";
 
 const parseScopes = (value: string) =>
   value
@@ -83,34 +94,49 @@ const buildCallbackUrl = (callbackBaseUrl: string, slug: string) =>
 const buildManagedConnectorPayload = (
   provider: OAuthProviderCatalogOption,
   form: RegistrationFormState,
-) => ({
-  slug: provider.slug,
-  name: provider.name,
-  description: provider.description,
-  appUrl: provider.appUrl,
-  docsUrl: provider.docsUrl,
-  categories: provider.categories,
-  authModes: ["oauth2"],
-  authStrategy: "oauth2" as const,
-  provider: "mcp" as const,
-  credentialLabel: `Connect ${provider.name}`,
-  credentialPlaceholder: `Connect ${provider.name}`,
-  credentialHelp: `OAuth connection for ${provider.name}.`,
-  serverUrl: form.serverUrl.trim(),
-  oauthConfig: {
-    authorizationUrl:
-      form.authorizationUrl.trim() || provider.registrationDefaults?.authorizationUrl || "",
-    tokenUrl: form.tokenUrl.trim() || provider.registrationDefaults?.tokenUrl || "",
-    scopes:
-      parseScopes(form.scopes).length > 0
-        ? parseScopes(form.scopes)
-        : provider.registrationDefaults?.scopes ?? [],
-  },
-  oauthClientId: form.oauthClientId.trim(),
-  oauthClientSecret: form.oauthClientSecret.trim(),
-  functions: [],
-  enabled: true,
-});
+) => {
+  const managedConnectorProvider = getManagedConnectorProvider(provider);
+
+  return {
+    slug: provider.slug,
+    name: provider.name,
+    description: provider.description,
+    appUrl: provider.appUrl,
+    docsUrl: provider.docsUrl,
+    categories: provider.categories,
+    authModes: ["oauth2"],
+    authStrategy: "oauth2" as const,
+    provider: managedConnectorProvider,
+    credentialLabel: `Connect ${provider.name}`,
+    credentialPlaceholder: `Connect ${provider.name}`,
+    credentialHelp: `OAuth connection for ${provider.name}.`,
+    apiBaseUrl:
+      managedConnectorProvider === "http"
+        ? form.apiBaseUrl.trim() || provider.registrationDefaults?.apiBaseUrl || ""
+        : undefined,
+    serverUrl:
+      managedConnectorProvider === "mcp"
+        ? form.serverUrl.trim()
+        : undefined,
+    openApiUrl:
+      managedConnectorProvider === "http"
+        ? form.openApiUrl.trim() || provider.registrationDefaults?.openApiUrl || ""
+        : undefined,
+    oauthConfig: {
+      authorizationUrl:
+        form.authorizationUrl.trim() || provider.registrationDefaults?.authorizationUrl || "",
+      tokenUrl: form.tokenUrl.trim() || provider.registrationDefaults?.tokenUrl || "",
+      scopes:
+        parseScopes(form.scopes).length > 0
+          ? parseScopes(form.scopes)
+          : provider.registrationDefaults?.scopes ?? [],
+    },
+    oauthClientId: form.oauthClientId.trim(),
+    oauthClientSecret: form.oauthClientSecret.trim(),
+    functions: [],
+    enabled: true,
+  };
+};
 
 interface CuratedProviderListProps {
   providerCatalog: OAuthProviderCatalogOption[];
@@ -161,12 +187,30 @@ export function CuratedProviderList({
     event.preventDefault();
 
     const currentForm = getRegistrationForm(provider);
-    if (usesGeneratedMcpTemplate(currentForm.serverUrl)) {
+    const managedConnectorProvider = getManagedConnectorProvider(provider);
+    const isHttpConnector = managedConnectorProvider === "http";
+
+    if (
+      managedConnectorProvider === "mcp" &&
+      usesGeneratedMcpTemplate(currentForm.serverUrl)
+    ) {
       updateRegistrationForm(provider, {
         submitting: false,
         status: "error",
         message:
           "Replace customerId=replace-me in the MCP server URL with the generated customer-specific value before registering this connector.",
+      });
+      return;
+    }
+
+    if (
+      isHttpConnector &&
+      !(currentForm.apiBaseUrl.trim() || provider.registrationDefaults?.apiBaseUrl)
+    ) {
+      updateRegistrationForm(provider, {
+        submitting: false,
+        status: "error",
+        message: "Enter the API base URL before registering this connector.",
       });
       return;
     }
@@ -279,6 +323,7 @@ export function CuratedProviderList({
             const isExpanded = expandedSlug === provider.slug;
             const registrationForm = getRegistrationForm(provider);
             const usesFixedOAuthDefaults = hasFixedOAuthConfig(provider);
+            const isHttpConnector = isHttpManagedConnector(provider);
             const callbackUrl = buildCallbackUrl(oauthCallbackBaseUrl, provider.slug);
 
             return (
@@ -343,26 +388,43 @@ export function CuratedProviderList({
                             Register this provider
                           </p>
                           <p className="mt-1 text-sm text-[var(--color-text-base)]">
-                            Enter the OAuth-backed MCP details below to register this connector once for the whole service. Individual users will later connect their own account and discover the MCP's full tool list from the integrations wizard.
+                            {isHttpConnector
+                              ? `Enter the OAuth-backed REST API details below to register this connector once for the whole service. Individual users will later connect their own account and discover the generated function catalog from the official OpenAPI schema in the integrations wizard.`
+                              : `Enter the OAuth-backed MCP details below to register this connector once for the whole service. Individual users will later connect their own account and discover the MCP's full tool list from the integrations wizard.`}
                           </p>
                         </div>
                         <label className="flex flex-col gap-1 text-xs text-[var(--color-text-muted)] md:col-span-2">
-                          MCP server URL
+                          {isHttpConnector ? "API base URL" : "MCP server URL"}
                           <input
                             type="url"
-                            value={registrationForm.serverUrl}
+                            value={isHttpConnector ? registrationForm.apiBaseUrl : registrationForm.serverUrl}
                             onChange={(event) =>
                               updateRegistrationForm(provider, {
-                                serverUrl: event.target.value,
+                                ...(isHttpConnector
+                                  ? { apiBaseUrl: event.target.value }
+                                  : { serverUrl: event.target.value }),
                               })
                             }
                             placeholder={
-                              provider.registrationDefaults?.serverUrl ??
-                              `https://mcp.composio.dev/partner/composio/${provider.slug}/mcp?customerId=replace-me`
+                              isHttpConnector
+                                ? provider.registrationDefaults?.apiBaseUrl ?? "https://api.example.com"
+                                : provider.registrationDefaults?.serverUrl ??
+                                  `https://mcp.composio.dev/partner/composio/${provider.slug}/mcp?customerId=replace-me`
                             }
                             className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-white outline-none placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-accent)]"
                           />
                         </label>
+                        {isHttpConnector && registrationForm.openApiUrl ? (
+                          <div className="md:col-span-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-[11px] leading-5 text-[var(--color-text-base)]">
+                            <p>
+                              OpenAPI schema source:
+                              <code className="mx-1 text-white">{registrationForm.openApiUrl}</code>
+                            </p>
+                            <p className="mt-1">
+                              This connector will fetch that schema server-side during registration and generate the HTTP function templates automatically.
+                            </p>
+                          </div>
+                        ) : null}
                         {!usesFixedOAuthDefaults ? (
                           <>
                             <label className="flex flex-col gap-1 text-xs text-[var(--color-text-muted)]">
@@ -409,7 +471,7 @@ export function CuratedProviderList({
                         ) : null}
                         <div className="md:col-span-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-[11px] leading-5 text-[var(--color-text-base)]">
                           <p>
-                            Create a {provider.name} OAuth app before saving this connector so you can paste the client ID and client secret below. {usesFixedOAuthDefaults ? `The standard OAuth URLs and scopes for ${provider.name} are already filled in.` : ""}
+                            Create a {provider.name} OAuth app before saving this connector so you can paste the client ID and client secret below. {usesFixedOAuthDefaults ? `The standard OAuth URLs and scopes for ${provider.name} are already filled in.` : ""}{isHttpConnector ? ` The API function catalog will be generated from the official OpenAPI schema shown above.` : ""}
                           </p>
                           <p className="mt-1">
                             Set the redirect URI to
@@ -454,7 +516,7 @@ export function CuratedProviderList({
                             className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-white outline-none focus:border-[var(--color-accent)]"
                           />
                           <span className="text-[11px] leading-5 text-[var(--color-text-muted)]">
-                            Required when this service is the OAuth client for the MCP. The credentials are stored server-side so each user can use the Connect flow later without reconfiguring the connector, and the connector will stay hidden from the integrations wizard until they are saved.
+                            Required when this service is the OAuth client for the managed connector. The credentials are stored server-side so each user can use the Connect flow later without reconfiguring the connector, and the connector will stay hidden from the integrations wizard until they are saved.
                           </span>
                         </label>
                         <div className="md:col-span-2 flex flex-wrap items-center gap-3">
