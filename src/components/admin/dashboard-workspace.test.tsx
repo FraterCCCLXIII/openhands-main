@@ -80,4 +80,52 @@ describe("DashboardWorkspace", () => {
     expect(adminLink).toBeTruthy();
     expect(adminLink?.textContent).toContain("Admin");
   });
+
+  it("documents how to export a generated SKILL.md file on the usage page", async () => {
+    useSearchParamsMock.mockReturnValue(new URLSearchParams("section=apiKeys"));
+
+    await act(async () => {
+      root.render(
+        <QueryClientProvider client={queryClient}>
+          <DashboardWorkspace
+            initialIntegrations={[
+              {
+                key: "github",
+                name: "GitHub MCP",
+                kind: "mcp",
+                provider: "mcp",
+                authStrategy: "oauth2",
+                enabled: true,
+                fineGrainedPermissions: true,
+                config: {},
+                credentials: {},
+                functions: {
+                  search_repositories: {
+                    name: "search_repositories",
+                    description: "Search repositories",
+                    enabled: true,
+                    accessMode: "enabled",
+                    fineGrainedPermissions: true,
+                    defaultScopes: ["repo"],
+                    executionMode: "provider",
+                    config: {},
+                  },
+                },
+              },
+            ]}
+            initialAccessRequests={[]}
+            initialNotifications={[]}
+            currentUser={{ name: "Admin User", email: "admin@example.com" }}
+            contextApiBaseUrl="https://example.com"
+            contextApiKey="test-key"
+          />
+        </QueryClientProvider>,
+      );
+    });
+
+    expect(container.textContent).toContain("SKILL.md endpoint");
+    expect(container.textContent).toContain("Download a generated");
+    expect(container.textContent).toContain("/api/context/skill");
+    expect(container.textContent).toContain("SKILL.md export");
+  });
 });

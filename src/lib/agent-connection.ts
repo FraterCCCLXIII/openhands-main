@@ -1,4 +1,6 @@
-import type { IntegrationSpec } from "@/src/types/context-layer";
+import type { FunctionSpec, IntegrationSpec } from "@/src/types/context-layer";
+
+export const OPENHANDS_CONTEXT_KEY_ENV = "$OPENHANDS_CONTEXT_KEY";
 
 export interface AgentConnectionGuide {
   endpoint: string;
@@ -7,11 +9,35 @@ export interface AgentConnectionGuide {
   requestBody: string;
   curlExample: string;
   fetchExample: string;
+  skillEndpoint: string;
+  skillCurlExample: string;
 }
 
 const buildDefaultPayload = (functionName: string) => ({
   example: `replace with the arguments for ${functionName}`,
 });
+
+const isFunctionAvailable = (functionSpec: FunctionSpec) =>
+  functionSpec.enabled && functionSpec.accessMode !== "disabled";
+
+const getSampleFunction = (integrations: IntegrationSpec[]) => {
+  for (const integration of integrations) {
+    if (!integration.enabled) {
+      continue;
+    }
+
+    const sampleFunction = Object.values(integration.functions).find(isFunctionAvailable);
+
+    if (sampleFunction) {
+      return {
+        integration,
+        functionSpec: sampleFunction,
+      };
+    }
+  }
+
+  return null;
+};
 
 export const buildAgentConnectionGuide = ({
   baseUrl,
@@ -22,20 +48,18 @@ export const buildAgentConnectionGuide = ({
   apiKey: string;
   integrations: IntegrationSpec[];
 }): AgentConnectionGuide => {
-  const sampleIntegration = integrations[0];
-  const sampleFunction = sampleIntegration
-    ? Object.values(sampleIntegration.functions)[0]
-    : undefined;
-  const integrationKey = sampleIntegration?.key ?? "your-integration";
-  const functionName = sampleFunction?.name ?? "your-function";
-  const defaultScopes = sampleFunction?.defaultScopes ?? [];
+  const normalizedBaseUrl = baseUrl.replace(/\/$/, "");
+  const sample = getSampleFunction(integrations);
+  const integrationKey = sample?.integration.key ?? "your-integration";
+  const functionName = sample?.functionSpec.name ?? "your-function";
+  const defaultScopes = sample?.functionSpec.defaultScopes ?? [];
   const requestPayload = {
     agentId: "research-bot-01",
     agentClass: "researcher",
     scopes: defaultScopes.length > 0 ? defaultScopes : ["scope.read"],
     payload: buildDefaultPayload(functionName),
   };
-  const endpoint = `${baseUrl.replace(/\/$/, "")}/api/context/${integrationKey}/${functionName}`;
+  const endpoint = `${normalizedBaseUrl}/api/context/${integrationKey}/${functionName}`;
   const requestBody = JSON.stringify(requestPayload, null, 2);
   const escapedRequestBody = requestBody.replace(/'/g, "'\\''");
   const curlExample = [
@@ -54,6 +78,12 @@ export const buildAgentConnectionGuide = ({
 });
 
 const result = await response.json();`;
+  const skillEndpoint = `${normalizedBaseUrl}/api/context/skill`;
+  const skillCurlExample = [
+    `curl -L \"${skillEndpoint}\"`,
+    `  -H \"Authorization: Bearer ${apiKey}\"`,
+    "  -o SKILL.md",
+  ].join("\\n");
 
   return {
     endpoint,
@@ -62,5 +92,7 @@ const result = await response.json();`;
     requestBody,
     curlExample,
     fetchExample,
+    skillEndpoint,
+    skillCurlExample,
   };
 };

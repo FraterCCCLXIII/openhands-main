@@ -123,6 +123,7 @@ Notes:
 - If you set `DISABLE_AUTH=true`, the app bypasses interactive login, only serves localhost requests, and you can open `/admin` directly for local development.
 - The dashboard automatically provisions a personal context-layer API key for the signed-in user (or the local dev user when auth is disabled) and stores it server-side.
 - Agents can call `POST /api/context/*` only after a user has opened the dashboard once and provisioned a personal key.
+- `GET /api/context/skill` returns a generated `SKILL.md` file that lists the currently available tools for the profile behind that personal key.
 - If you want localhost GitHub login without the redirect proxy flow, create a separate GitHub OAuth app with callback `http://localhost:3000/api/auth/callback/github`.
 
 ## Built-in provider OAuth setup
@@ -153,6 +154,7 @@ The callback routes store provider access tokens encrypted in the database as pe
 
 ## Key routes
 
+- `GET /api/context/skill`
 - `GET/POST /api/integrations`
 - `POST /api/integrations/[integrationKey]/functions`
 - `POST /api/integrations/[integrationKey]/toggle`

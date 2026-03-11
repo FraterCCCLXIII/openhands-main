@@ -26,7 +26,10 @@ import { IntegrationWizard } from "@/src/components/admin/integration-wizard";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
 import { Card } from "@/src/components/ui/card";
-import { buildAgentConnectionGuide } from "@/src/lib/agent-connection";
+import {
+  buildAgentConnectionGuide,
+  OPENHANDS_CONTEXT_KEY_ENV,
+} from "@/src/lib/agent-connection";
 import { cn } from "@/src/lib/utils";
 import type {
   AccessRequest,
@@ -94,8 +97,6 @@ const ADMIN_SECTIONS: Array<{
     icon: KeyRound,
   },
 ];
-
-const OPENHANDS_CONTEXT_KEY_ENV = "$OPENHANDS_CONTEXT_KEY";
 
 const maskApiKey = (apiKey: string, revealed: boolean) => {
   const trimmed = apiKey.trim();
@@ -970,6 +971,10 @@ export const DashboardWorkspace = ({
                   label="Endpoint"
                   value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.endpoint}</code>}
                 />
+                <KeyValueRow
+                  label="SKILL.md endpoint"
+                  value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.skillEndpoint}</code>}
+                />
               </div>
               <div className="mt-4 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)]">
                 <div className="border-b border-[var(--color-border)] px-3 py-2 text-xs uppercase tracking-[0.18em] text-[var(--color-text-base)]">
@@ -977,6 +982,20 @@ export const DashboardWorkspace = ({
                 </div>
                 <pre className="overflow-x-auto whitespace-pre-wrap px-3 py-3 text-xs leading-6 text-[var(--color-text-base)]">
                   {agentConnectionGuide.curlExample}
+                </pre>
+              </div>
+              <div className="mt-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)] px-3 py-3 text-xs leading-6 text-[var(--color-text-base)]">
+                Download a generated <code className="text-white">SKILL.md</code> file that
+                lists every currently available tool in this profile. The same
+                personal key works for the export route, so you can create the
+                file with:
+              </div>
+              <div className="mt-3 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)]">
+                <div className="border-b border-[var(--color-border)] px-3 py-2 text-xs uppercase tracking-[0.18em] text-[var(--color-text-base)]">
+                  SKILL.md export
+                </div>
+                <pre className="overflow-x-auto whitespace-pre-wrap px-3 py-3 text-xs leading-6 text-[var(--color-text-base)]">
+                  {agentConnectionGuide.skillCurlExample}
                 </pre>
               </div>
             </CompactPanel>
