@@ -1,19 +1,18 @@
 import { ContextLayerError } from "@/src/lib/core/errors";
 import type { ContextRepository } from "@/src/lib/core/repository";
-import { listBuiltInConnectors as listStaticBuiltInConnectors } from "@/src/lib/integrations/built-in-connectors";
 import type {
   BuiltInConnectorOption,
   FunctionSpec,
   ManagedConnectorRecord,
 } from "@/src/types/context-layer";
 
-
 const isManagedConnectorOAuthConfigured = (connector: ManagedConnectorRecord) =>
   connector.authStrategy !== "oauth2" ||
   (!!connector.oauthConfig && !!connector.encryptedOAuthClient);
 
 export const getManagedConnectorProvider = (connector: ManagedConnectorRecord) =>
-  connector.provider ?? (connector.serverUrl || connector.functions.length === 0 ? "mcp" : "http");
+  connector.provider ??
+  (connector.serverUrl || connector.functions.length === 0 ? "mcp" : "http");
 
 export const getManagedConnectorServerUrl = (connector: ManagedConnectorRecord) => {
   if (getManagedConnectorProvider(connector) !== "mcp") {
@@ -139,21 +138,11 @@ export const resolveManagedConnectorCredentials = (
 
 export const listAvailableBuiltInConnectors = async (
   repository: ContextRepository,
-): Promise<BuiltInConnectorOption[]> => {
-  const connectorsBySlug = new Map<string, BuiltInConnectorOption>();
-
-  for (const connector of listStaticBuiltInConnectors()) {
-    connectorsBySlug.set(connector.slug, connector);
-  }
-
-  for (const connector of (await repository.listManagedConnectors())
+): Promise<BuiltInConnectorOption[]> =>
+  (await repository.listManagedConnectors())
     .filter((candidate) => candidate.enabled)
-    .map(managedConnectorToBuiltInOption)) {
-    connectorsBySlug.set(connector.slug, connector);
-  }
-
-  return [...connectorsBySlug.values()].sort((a, b) => a.name.localeCompare(b.name));
-};
+    .map(managedConnectorToBuiltInOption)
+    .sort((a, b) => a.name.localeCompare(b.name));
 
 export const getManagedConnectorRecord = async (
   repository: ContextRepository,

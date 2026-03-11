@@ -15,6 +15,12 @@ afterEach(() => {
   vi.unstubAllEnvs();
   authMock.mockReset();
   authMock.mockResolvedValue({ user: { email: "dev@localhost" } });
+  const runtime = globalThis as typeof globalThis & {
+    contextLayerRepository?: unknown;
+    contextLayerService?: unknown;
+  };
+  delete runtime.contextLayerRepository;
+  delete runtime.contextLayerService;
 });
 
 describe("AddConnectorPage", () => {
@@ -39,9 +45,10 @@ describe("AddConnectorPage", () => {
     expect(html).toContain("stable deployment origin instead of the preview URL");
     expect(html).toContain("Connect");
     expect(html).toContain("Discover functions");
-    expect(html).toContain("src/lib/integrations/built-in-connectors.ts");
-    expect(html).toContain("app/api/mcp/&lt;provider&gt;/route.ts");
+    expect(html).toContain("managed remote MCP or managed HTTP connector");
     expect(html).toContain("APP_ADMIN_EMAILS");
+    expect(html).not.toContain("src/lib/integrations/built-in-connectors.ts");
+    expect(html).not.toContain("app/api/mcp/&lt;provider&gt;/route.ts");
     expect(html).not.toContain("src/lib/oauth/providers.ts");
     expect(html).not.toContain("Submit provider information");
   });

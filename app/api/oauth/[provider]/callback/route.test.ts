@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { encryptCredentials } from "@/src/lib/credential-crypto";
 import { MemoryRepository } from "@/src/lib/db/memory-repository";
 
 const resetRuntimeService = () => {
@@ -20,7 +21,38 @@ const setRuntimeRepository = (repository: MemoryRepository) => {
   delete runtime.contextLayerService;
 };
 
+const seedManagedNotion = async (repository: MemoryRepository) => {
+  await repository.upsertManagedConnector({
+    slug: "notion",
+    name: "Notion",
+    description: "Managed Notion MCP",
+    categories: ["Knowledge base"],
+    authModes: ["oauth2"],
+    authStrategy: "oauth2",
+    provider: "mcp",
+    oauthConfigured: true,
+    credentialLabel: "Connect Notion",
+    credentialPlaceholder: "Connect Notion",
+    credentialHelp: "Use OAuth to connect Notion.",
+    serverUrl: "https://mcp.notion.com/mcp",
+    oauthConfig: {
+      authorizationUrl: "https://auth.managed-notion.test/authorize",
+      tokenUrl: "https://auth.managed-notion.test/token",
+      scopes: ["workspace.read"],
+    },
+    encryptedOAuthClient: encryptCredentials({
+      clientId: "managed-notion-client-id",
+      clientSecret: "managed-notion-client-secret",
+    }),
+    functions: [],
+    enabled: true,
+    createdAt: "2026-03-09T00:00:00.000Z",
+    updatedAt: "2026-03-09T00:00:00.000Z",
+  });
+};
+
 const saveOAuthState = async (repository: MemoryRepository) => {
+  await seedManagedNotion(repository);
   await repository.saveOAuthState({
     state: "state-123",
     ownerId: "dev@localhost",
@@ -43,7 +75,10 @@ afterEach(() => {
 
 describe("GET /api/oauth/[provider]/callback", () => {
   it("proxies stable-domain callbacks back to the preview deployment callback URL", async () => {
-    vi.stubEnv("AUTH_REDIRECT_PROXY_URL", "https://openhands-context-layer.vercel.app/api/auth");
+    vi.stubEnv(
+      "AUTH_REDIRECT_PROXY_URL",
+      "https://openhands-context-layer.vercel.app/api/auth",
+    );
 
     const repository = new MemoryRepository();
     await saveOAuthState(repository);
@@ -70,15 +105,17 @@ describe("GET /api/oauth/[provider]/callback", () => {
   });
 
   it("exchanges the code with the stable redirect URI after the preview callback resumes", async () => {
-    vi.stubEnv("AUTH_REDIRECT_PROXY_URL", "https://openhands-context-layer.vercel.app/api/auth");
-    vi.stubEnv("NOTION_CLIENT_ID", "notion-client-id");
-    vi.stubEnv("NOTION_CLIENT_SECRET", "notion-client-secret");
+    vi.stubEnv(
+      "AUTH_REDIRECT_PROXY_URL",
+      "https://openhands-context-layer.vercel.app/api/auth",
+    );
 
     const fetchMock = vi.fn(async () =>
       new Response(
         JSON.stringify({
           access_token: "access-123",
           token_type: "Bearer",
+          scope: "workspace.read",
           workspace_name: "Team Notion",
           workspace_id: "workspace-123",
           bot_id: "bot-123",
@@ -111,11 +148,16 @@ describe("GET /api/oauth/[provider]/callback", () => {
       "/admin?section=integrations&oauth_provider=notion&oauth_status=connected",
     );
     expect(fetchMock).toHaveBeenCalledTimes(1);
-    const [, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
-    expect(JSON.parse(String(init.body))).toMatchObject({
-      code: "code-123",
-      redirect_uri: "https://openhands-context-layer.vercel.app/api/oauth/notion/callback",
-      grant_type: "authorization_code",
+    const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe("https://auth.managed-notion.test/token");
+    expect(String(init.body)).toContain("code=code-123");
+    expect(String(init.body)).toContain(
+      "redirect_uri=https%3A%2F%2Fopenhands-context-layer.vercel.app%2Fapi%2Foauth%2Fnotion%2Fcallback",
+    );
+    expect(String(init.body)).not.toContain("client_id=");
+    expect(init.headers).toMatchObject({
+      "Content-Type": "application/x-www-form-urlencoded",
+      Authorization: expect.stringMatching(/^Basic\s+/),
     });
     expect(await repository.getOAuthState("state-123")).toBeNull();
   });

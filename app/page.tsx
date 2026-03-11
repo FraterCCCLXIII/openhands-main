@@ -15,7 +15,7 @@ export default async function HomePage() {
         <header className="flex flex-col gap-6 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-workspace)] px-8 py-10">
           <div className="flex items-center gap-3 text-sm text-[var(--color-text-base)]">
             <Badge>Vercel-native</Badge>
-            <Badge>Built-in + MCP adapters</Badge>
+            <Badge>Managed + MCP adapters</Badge>
             <Badge>Scoped approvals</Badge>
           </div>
           <div className="max-w-3xl space-y-5">
@@ -44,7 +44,7 @@ export default async function HomePage() {
           {[
             {
               title: "Connector breadth",
-              body: "Start with curated built-in connectors for GitHub, Figma, Notion, Slack, and Google Docs, while still supporting broader Composio-based integrations.",
+              body: "Register managed connectors in the database, connect remote MCP servers directly, and still support broader Composio-based integrations.",
               icon: DatabaseZap,
             },
             {

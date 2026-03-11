@@ -490,7 +490,7 @@ export const IntegrationWizard = ({
             {
               kind: "built_in" as const,
               title: "Built-in connector",
-              body: "Pick from the curated Vercel-hosted connectors, connect your account when OAuth is available, and let the dashboard discover the available functions.",
+              body: "Pick from the service-level managed connectors, connect your account when OAuth is available, and let the dashboard discover the available functions.",
               icon: KeyRound,
             },
             {
@@ -558,8 +558,8 @@ export const IntegrationWizard = ({
                     ))}
                   </datalist>
                   <span className="text-xs leading-6 text-[var(--color-text-base)]">
-                    Use the dropdown and start typing to filter the curated
-                    connectors hosted inside this deployment. Selecting one auto-
+                    Use the dropdown and start typing to filter the managed
+                    connectors registered for this deployment. Selecting one auto-
                     fills the key and display name below.
                   </span>
                   <span className="text-xs leading-6 text-[var(--color-text-base)]">
@@ -593,7 +593,7 @@ export const IntegrationWizard = ({
                     </div>
                     <p className="mt-2 leading-7">
                       {selectedConnector.description ||
-                        "This built-in connector is backed by a Vercel-hosted MCP route in this deployment."}
+                        "This managed connector is registered for the current deployment."}
                     </p>
                     {requiresOAuthConnection ? (
                       <div className="mt-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)] p-4">
@@ -667,7 +667,7 @@ export const IntegrationWizard = ({
                     />
                     <span className="text-xs leading-6 text-[var(--color-text-base)]">
                       Edit this if you want more than one saved connection for the
-                      same built-in connector.
+                      same managed connector.
                     </span>
                   </label>
 
@@ -717,7 +717,7 @@ export const IntegrationWizard = ({
                     />
                     <span className="text-xs leading-6 text-[var(--color-text-base)]">
                       {selectedConnector?.credentialHelp ??
-                        "Provide the provider token that the built-in MCP route should forward upstream."}
+                        "Provide the provider credential that this managed connector should use upstream."}
                     </span>
                   </label>
                 )}
@@ -881,8 +881,8 @@ export const IntegrationWizard = ({
             {draft.kind === "built_in" ? (
               <ul className="mt-3 space-y-2">
                 <li>
-                  • The dashboard loads both the curated built-in connectors and
-                  any admin-registered managed connectors for this service.
+                  • The dashboard loads the managed connectors registered for this
+                  service.
                 </li>
                 <li>
                   • Choosing a connector auto-fills the integration key and display
@@ -937,7 +937,7 @@ export const IntegrationWizard = ({
           {reviewedFunctions.length === 0 ? (
             <div className="rounded-xl border border-dashed border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-5 text-sm text-[var(--color-text-base)]">
               No functions were discovered for this connector. Go back and
-              confirm the selected built-in connector or MCP server URL.
+              confirm the selected managed connector or MCP server URL.
             </div>
           ) : (
             <div className="grid gap-3">

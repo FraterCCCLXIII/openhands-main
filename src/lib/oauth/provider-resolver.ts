@@ -3,13 +3,11 @@ import { createHash, randomBytes } from "node:crypto";
 import type { ContextRepository } from "@/src/lib/core/repository";
 import { ContextLayerError } from "@/src/lib/core/errors";
 import { decryptCredentials } from "@/src/lib/credential-crypto";
-import {
-  getOAuthProvider,
-  isOAuthProviderConfigured,
-  type OAuthProviderDefinition,
-  type OAuthStartContext,
-  type OAuthStartResult,
-  type OAuthTokenExchangeResult,
+import type {
+  OAuthProviderDefinition,
+  OAuthStartContext,
+  OAuthStartResult,
+  OAuthTokenExchangeResult,
 } from "@/src/lib/oauth/providers";
 import type { ManagedConnectorRecord } from "@/src/types/context-layer";
 
@@ -254,11 +252,11 @@ export const resolveOAuthProvider = async (
   provider: string,
 ): Promise<OAuthProviderDefinition | null> => {
   const connector = await repository.getManagedConnector(provider);
-  if (connector?.enabled) {
-    return buildGenericOAuthProvider(connector);
+  if (!connector?.enabled) {
+    return null;
   }
 
-  return getOAuthProvider(provider);
+  return buildGenericOAuthProvider(connector);
 };
 
 export const isOAuthProviderResolvedAndConfigured = async (
@@ -266,9 +264,7 @@ export const isOAuthProviderResolvedAndConfigured = async (
   provider: string,
 ) => {
   const connector = await repository.getManagedConnector(provider);
-  if (connector?.enabled) {
-    return Boolean(connector.oauthConfig && connector.encryptedOAuthClient);
-  }
-
-  return isOAuthProviderConfigured(provider);
+  return Boolean(
+    connector?.enabled && connector.oauthConfig && connector.encryptedOAuthClient,
+  );
 };

@@ -5,7 +5,6 @@ import { addMinutes, nowIso } from "@/src/lib/core/date";
 import { ContextLayerError } from "@/src/lib/core/errors";
 import type { ContextRepository } from "@/src/lib/core/repository";
 import { decryptCredentials, encryptCredentials } from "@/src/lib/credential-crypto";
-import { getBuiltInConnectorDefinition } from "@/src/lib/integrations/built-in-connectors";
 import { sanitizeManagedConnector } from "@/src/lib/integrations/managed-connectors";
 import type { NotificationPublisher } from "@/src/lib/notifications/publisher";
 import { resolveOAuthProvider } from "@/src/lib/oauth/provider-resolver";
@@ -770,11 +769,8 @@ export class ContextLayerService {
         integration.authStrategy === "oauth2" &&
         Object.keys(integration.credentials).length === 0
       ) {
-        const builtInSlug =
-          (integration.config.builtInSlug as string | undefined) ?? integration.key;
-        const connector = getBuiltInConnectorDefinition(builtInSlug);
         throw new ContextLayerError(
-          `Connect ${connector?.name ?? integration.name} for this user before invoking '${integration.key}'.`,
+          `Connect ${integration.name} for this user before invoking '${integration.key}'.`,
           403,
         );
       }

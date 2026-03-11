@@ -1,17 +1,18 @@
 import { ArrowLeft, Mail, ShieldCheck, UserRound } from "lucide-react";
 
 import { CuratedProviderList } from "@/src/components/admin/curated-provider-list";
-import { getOAuthCallbackBaseUrl } from "@/src/lib/auth-config";
 import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
-import { auth } from "@/src/lib/auth";
 import { isAppAdminEmail } from "@/src/lib/app-admins";
+import { auth } from "@/src/lib/auth";
+import { getOAuthCallbackBaseUrl } from "@/src/lib/auth-config";
+import { getContextLayerRepository } from "@/src/lib/core/runtime";
 import { filterReadyBuiltInConnectors } from "@/src/lib/integrations/connector-readiness";
+import { listBuiltInConnectors } from "@/src/lib/integrations/discovery";
 import {
   getAdminContactEmail,
   getAdminContactInstruction,
 } from "@/src/lib/integrations/connector-requests";
-import { listBuiltInConnectors } from "@/src/lib/integrations/built-in-connectors";
 import { listOAuthProviderCatalog } from "@/src/lib/integrations/oauth-provider-catalog";
 
 export const dynamic = "force-dynamic";
@@ -20,7 +21,9 @@ export default async function AddConnectorPage() {
   const session = await auth();
   const adminEmail = getAdminContactEmail();
   const adminInstruction = getAdminContactInstruction(adminEmail ?? undefined);
-  const readyBuiltInConnectors = filterReadyBuiltInConnectors(listBuiltInConnectors());
+  const readyBuiltInConnectors = filterReadyBuiltInConnectors(
+    await listBuiltInConnectors(getContextLayerRepository()),
+  );
   const providerCatalog = listOAuthProviderCatalog();
   const canRegisterManagedConnectors = isAppAdminEmail(session?.user?.email ?? undefined);
   const oauthCallbackBaseUrl = getOAuthCallbackBaseUrl();
@@ -46,9 +49,8 @@ export default async function AddConnectorPage() {
           </h1>
           <p className="max-w-3xl text-sm leading-7 text-[var(--color-text-base)]">
             If the integration setup flow does not show the provider you need,
-            use this page to see what is already available and learn how admins
-            can register a missing OAuth-backed MCP for the whole service, or
-            fall back to source-code changes for special-case implementations.
+            use this page to see which managed connectors are already registered
+            for this service and how admins can add another OAuth-backed MCP.
           </p>
           <div className="flex flex-wrap gap-2">
             {readyBuiltInConnectors.map((connector) => (
@@ -164,9 +166,10 @@ export default async function AddConnectorPage() {
                 </li>
                 <li>
                   <span className="font-medium text-white">6.</span> If the
-                  provider needs custom behavior beyond a remote OAuth MCP,
-                  modify <code className="text-white">src/lib/integrations/built-in-connectors.ts</code>
-                  {" "}and add or update the corresponding <code className="text-white">app/api/mcp/&lt;provider&gt;/route.ts</code> implementation.
+                  provider needs custom behavior that cannot be expressed as a
+                  managed remote MCP or managed HTTP connector, implement that
+                  custom adapter path deliberately in the application and document
+                  why the managed connector model is not enough before rolling it out.
                 </li>
               </ol>
             </div>
@@ -181,7 +184,7 @@ export default async function AddConnectorPage() {
               </h2>
               <p className="mt-2 text-sm leading-7 text-[var(--color-text-base)]">
                 Researched catalog of 50 popular providers with OAuth support.
-                The curated built-ins above work now; the rest are planned next.
+                Register one of these providers to make it show up in the integrations wizard.
               </p>
             </div>
             <Badge>{providerCatalog.length} options</Badge>
