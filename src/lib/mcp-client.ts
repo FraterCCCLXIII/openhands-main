@@ -15,6 +15,20 @@ type McpTransportKind = "streamable_http" | "sse";
 
 type McpClientOperation<T> = (client: Client) => Promise<T>;
 
+export interface McpDebugContext {
+  authStrategy: AuthStrategy;
+  credentials: Record<string, unknown>;
+  integrationKey?: string;
+  managedConnectorSlug?: string;
+}
+
+interface McpAttemptDebug {
+  transport: McpTransportKind;
+  url: string;
+  error: string;
+}
+
+
 const buildTimeoutError = (message: string) =>
   new ContextLayerError(message, 504);
 
@@ -146,11 +160,83 @@ export const buildMcpHeaders = (
   return {};
 };
 
+const summarizeStringCredential = (value: unknown) => {
+  if (typeof value !== "string") {
+    return {
+      present: false,
+    };
+  }
+
+  const trimmed = value.trim();
+  return {
+    present: trimmed.length > 0,
+    length: trimmed.length,
+    containsWhitespace: /\s/.test(value),
+  };
+};
+
+const summarizeTokenCredential = (value: unknown) => {
+  const summary = summarizeStringCredential(value);
+  if (!summary.present || typeof value !== "string") {
+    return summary;
+  }
+
+  return {
+    ...summary,
+    startsWithBearerPrefix: value.trim().startsWith("Bearer "),
+  };
+};
+
+const buildMcpDebugDetails = (
+  operationName: string,
+  serverUrl: string,
+  fallbackUrl: URL | null,
+  debugContext: McpDebugContext | undefined,
+  attempts: McpAttemptDebug[],
+) => ({
+  operationName,
+  serverUrl,
+  fallbackUrl: fallbackUrl?.toString(),
+  integrationKey: debugContext?.integrationKey,
+  managedConnectorSlug: debugContext?.managedConnectorSlug,
+  auth: debugContext
+    ? {
+        authStrategy: debugContext.authStrategy,
+        accessToken: summarizeTokenCredential(debugContext.credentials.accessToken),
+        refreshToken: summarizeStringCredential(debugContext.credentials.refreshToken),
+        secret: summarizeStringCredential(debugContext.credentials.secret),
+        headerName:
+          typeof debugContext.credentials.headerName === "string"
+            ? debugContext.credentials.headerName
+            : undefined,
+        usernameProvided:
+          typeof debugContext.credentials.username === "string" &&
+          debugContext.credentials.username.trim().length > 0,
+        passwordProvided:
+          typeof debugContext.credentials.password === "string" &&
+          debugContext.credentials.password.trim().length > 0,
+      }
+    : undefined,
+  attempts,
+});
+
+const toContextLayerError = (
+  message: string,
+  error: unknown,
+  debugDetails: Record<string, unknown>,
+) =>
+  new ContextLayerError(
+    message,
+    error instanceof ContextLayerError ? error.statusCode : 502,
+    debugDetails,
+  );
+
 export const runMcpClientOperation = async <T,>(
   serverUrl: string,
   headers: Record<string, string>,
   operationName: string,
   operation: McpClientOperation<T>,
+  debugContext?: McpDebugContext,
 ): Promise<T> => {
   const primaryUrl = new URL(serverUrl);
   const fallbackUrl = getNotionFallbackUrl(serverUrl);
@@ -169,10 +255,27 @@ export const runMcpClientOperation = async <T,>(
       primaryUrl,
       primaryError,
     );
+    const attempts: McpAttemptDebug[] = [
+      {
+        transport: "streamable_http",
+        url: primaryUrl.toString(),
+        error: primaryMessage,
+      },
+    ];
 
     if (!fallbackUrl) {
       console.error(`[mcp] ${operationName} failed. ${primaryMessage}`);
-      throw primaryError;
+      throw toContextLayerError(
+        primaryMessage,
+        primaryError,
+        buildMcpDebugDetails(
+          operationName,
+          serverUrl,
+          fallbackUrl,
+          debugContext,
+          attempts,
+        ),
+      );
     }
 
     console.warn(
@@ -193,6 +296,11 @@ export const runMcpClientOperation = async <T,>(
       return result;
     } catch (fallbackError) {
       const fallbackMessage = formatAttemptError("sse", fallbackUrl, fallbackError);
+      attempts.push({
+        transport: "sse",
+        url: fallbackUrl.toString(),
+        error: fallbackMessage,
+      });
       console.error(
         `[mcp] ${operationName} failed after fallback. ${primaryMessage} ${fallbackMessage}`,
       );
@@ -203,6 +311,13 @@ export const runMcpClientOperation = async <T,>(
           : primaryError instanceof ContextLayerError
             ? primaryError.statusCode
             : 502,
+        buildMcpDebugDetails(
+          operationName,
+          serverUrl,
+          fallbackUrl,
+          debugContext,
+          attempts,
+        ),
       );
     }
   }

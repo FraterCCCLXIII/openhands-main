@@ -30,6 +30,14 @@ export class McpAdapter implements IntegrationAdapter {
           name: toolName,
           arguments: payload,
         }),
+      {
+        authStrategy: integration.authStrategy,
+        credentials: integration.credentials,
+        integrationKey: integration.key,
+        managedConnectorSlug:
+          (integration.config.managedConnectorSlug as string | undefined) ??
+          (integration.config.builtInSlug as string | undefined),
+      },
     );
   }
 }

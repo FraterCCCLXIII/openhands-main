@@ -84,6 +84,7 @@ vi.mock("@modelcontextprotocol/sdk/client/sse.js", () => ({
   },
 }));
 
+import { ContextLayerError } from "@/src/lib/core/errors";
 import { runMcpClientOperation } from "@/src/lib/mcp-client";
 
 beforeEach(() => {
@@ -161,5 +162,64 @@ describe("runMcpClientOperation", () => {
         headers: { Authorization: "Bearer acme-token" },
       },
     ]);
+  });
+
+  it("captures sanitized credential diagnostics on MCP failures", async () => {
+    connectMock.mockRejectedValue(new Error("invalid token"));
+
+    let capturedError: unknown;
+    try {
+      await runMcpClientOperation(
+        "https://mcp.acme.test/mcp",
+        { Authorization: "Bearer token" },
+        "listTools",
+        (client) => client.listTools(),
+        {
+          authStrategy: "oauth2",
+          credentials: {
+            accessToken: "Bearer malformed-token\n",
+          },
+          integrationKey: "notion",
+          managedConnectorSlug: "notion",
+        },
+      );
+    } catch (error) {
+      capturedError = error;
+    }
+
+    expect(capturedError).toBeInstanceOf(ContextLayerError);
+    expect((capturedError as ContextLayerError).debugDetails).toEqual({
+      operationName: "listTools",
+      serverUrl: "https://mcp.acme.test/mcp",
+      fallbackUrl: undefined,
+      integrationKey: "notion",
+      managedConnectorSlug: "notion",
+      auth: {
+        authStrategy: "oauth2",
+        accessToken: {
+          present: true,
+          length: 22,
+          containsWhitespace: true,
+          startsWithBearerPrefix: true,
+        },
+        refreshToken: {
+          present: false,
+        },
+        secret: {
+          present: false,
+        },
+        headerName: undefined,
+        usernameProvided: false,
+        passwordProvided: false,
+      },
+      attempts: [
+        {
+          transport: "streamable_http",
+          url: "https://mcp.acme.test/mcp",
+          error:
+            "Streamable HTTP transport failed for https://mcp.acme.test/mcp: invalid token",
+        },
+      ],
+    });
   });
 });

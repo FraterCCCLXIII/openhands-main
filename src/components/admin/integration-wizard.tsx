@@ -33,9 +33,12 @@ interface IntegrationWizardProps {
   onStatus: (message: string | null) => void;
 }
 
+type ApiDebugDetails = Record<string, unknown>;
+
 interface DiscoverFeedback {
   tone: DiscoverFeedbackTone;
   message: string;
+  debugDetails?: ApiDebugDetails;
 }
 
 interface DiscoveryResponse {
@@ -75,6 +78,16 @@ const INITIAL_DRAFT: WizardDraft = {
 const inputClassName =
   "rounded-md border border-[var(--color-border)] bg-[var(--color-bg-input)] px-4 py-3 text-white outline-none transition-colors focus:border-[var(--color-accent)]";
 
+class ApiRequestError extends Error {
+  public readonly debugDetails?: ApiDebugDetails;
+
+  constructor(message: string, debugDetails?: ApiDebugDetails) {
+    super(message);
+    this.name = "ApiRequestError";
+    this.debugDetails = debugDetails;
+  }
+}
+
 const fetchJson = async <T,>(
   input: RequestInfo,
   init?: RequestInit,
@@ -84,14 +97,19 @@ const fetchJson = async <T,>(
   if (!response.ok) {
     const body = (await response.json().catch(() => null)) as {
       detail?: string;
+      debug?: ApiDebugDetails;
     } | null;
-    throw new Error(
+    throw new ApiRequestError(
       body?.detail ?? `Request failed with status ${response.status}`,
+      body?.debug,
     );
   }
 
   return (await response.json()) as T;
 };
+
+const formatDebugDetails = (debugDetails: ApiDebugDetails) =>
+  JSON.stringify(debugDetails, null, 2);
 
 const authStrategyLabel = (strategy: AuthStrategy) => {
   switch (strategy) {
@@ -389,6 +407,8 @@ export const IntegrationWizard = ({
       setDiscoverFeedback({
         tone: "error",
         message,
+        debugDetails:
+          error instanceof ApiRequestError ? error.debugDetails : undefined,
       });
       onStatus(message);
     },
@@ -921,7 +941,17 @@ export const IntegrationWizard = ({
                 )}
                 data-testid="discover-feedback"
               >
-                {discoverFeedback.message}
+                <p>{discoverFeedback.message}</p>
+                {discoverFeedback.debugDetails ? (
+                  <div className="mt-3 rounded-lg border border-white/10 bg-black/20 p-3">
+                    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/70">
+                      Admin diagnostics
+                    </p>
+                    <pre className="mt-2 overflow-x-auto whitespace-pre-wrap break-words font-mono text-[11px] leading-5 text-white/85">
+                      {formatDebugDetails(discoverFeedback.debugDetails)}
+                    </pre>
+                  </div>
+                ) : null}
               </div>
             ) : null}
           </div>

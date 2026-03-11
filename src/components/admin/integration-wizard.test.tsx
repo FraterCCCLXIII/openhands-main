@@ -381,6 +381,32 @@ describe("IntegrationWizard", () => {
           JSON.stringify({
             detail:
               "Streamable HTTP transport failed for https://mcp.notion.com/mcp: Timed out connecting. SSE transport failed for https://mcp.notion.com/sse: 401 Unauthorized.",
+            debug: {
+              operationName: "listTools",
+              auth: {
+                authStrategy: "oauth2",
+                accessToken: {
+                  present: true,
+                  length: 212,
+                  containsWhitespace: false,
+                  startsWithBearerPrefix: false,
+                },
+              },
+              attempts: [
+                {
+                  transport: "streamable_http",
+                  url: "https://mcp.notion.com/mcp",
+                  error:
+                    "Streamable HTTP transport failed for https://mcp.notion.com/mcp: Timed out connecting.",
+                },
+                {
+                  transport: "sse",
+                  url: "https://mcp.notion.com/sse",
+                  error:
+                    "SSE transport failed for https://mcp.notion.com/sse: 401 Unauthorized.",
+                },
+              ],
+            },
           }),
           { status: 504, headers: { "Content-Type": "application/json" } },
         );
@@ -421,6 +447,9 @@ describe("IntegrationWizard", () => {
     expect(feedback?.textContent).toContain("Discover failed:");
     expect(feedback?.textContent).toContain("Streamable HTTP transport failed");
     expect(feedback?.textContent).toContain("SSE transport failed");
+    expect(feedback?.textContent).toContain("Admin diagnostics");
+    expect(feedback?.textContent).toContain('"startsWithBearerPrefix": false');
+    expect(feedback?.textContent).toContain('"operationName": "listTools"');
     expect(container.textContent).toContain("Connect and discover functions");
   });
 

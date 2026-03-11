@@ -351,6 +351,14 @@ const discoverMcpIntegration = async (
     buildMcpHeaders(authStrategy, credentials),
     "listTools",
     (client) => client.listTools(),
+    {
+      authStrategy,
+      credentials,
+      integrationKey: input.key,
+      managedConnectorSlug:
+        (input.config.managedConnectorSlug as string | undefined) ??
+        (input.config.builtInSlug as string | undefined),
+    },
   );
   const functions = Object.fromEntries(
     result.tools.map((tool) => [
