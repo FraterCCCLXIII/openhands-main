@@ -1,6 +1,7 @@
 import { ArrowLeft, Mail, ShieldCheck, UserRound } from "lucide-react";
 
 import { CuratedProviderList } from "@/src/components/admin/curated-provider-list";
+import { ServiceUnavailableScreen } from "@/src/components/service-unavailable-screen";
 import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
 import { isAppAdminEmail } from "@/src/lib/app-admins";
@@ -14,11 +15,21 @@ import {
   getAdminContactInstruction,
 } from "@/src/lib/integrations/connector-requests";
 import { listOAuthProviderCatalog } from "@/src/lib/integrations/oauth-provider-catalog";
+import { isEphemeralContextLayerStorage } from "@/src/lib/persistence";
 
 export const dynamic = "force-dynamic";
 
 export default async function AddConnectorPage() {
   const session = await auth();
+
+  if (session?.user && isEphemeralContextLayerStorage()) {
+    return (
+      <ServiceUnavailableScreen
+        isAdmin={isAppAdminEmail(session.user.email ?? undefined)}
+      />
+    );
+  }
+
   const adminEmail = getAdminContactEmail();
   const adminInstruction = getAdminContactInstruction(adminEmail ?? undefined);
   const readyBuiltInConnectors = filterReadyBuiltInConnectors(

@@ -106,4 +106,19 @@ describe("/api/managed-connectors", () => {
       detail: "Only app administrators can register managed connectors.",
     });
   });
+
+
+  it("rejects registration in production when persistent storage is unavailable", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("APP_ADMIN_EMAILS", "admin@example.com,ops@example.com");
+
+    const response = await POST(createManagedConnectorRequest());
+
+    expect(response.status).toBe(503);
+    await expect(response.json()).resolves.toMatchObject({
+      detail:
+        "Managed connector registration requires POSTGRES_URL or DATABASE_URL. This deployment has no persistent database configured.",
+    });
+  });
+
 });
