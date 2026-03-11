@@ -376,7 +376,7 @@ export function CuratedProviderList({
 
                     {isReadyNow ? (
                       <p className="mt-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-text-base)]">
-                        This provider is already available in the integration wizard, so no additional registration is needed.
+                        This provider is already available in the integration wizard, so no additional registration is needed.{canRegisterManagedConnectors ? " Use the registered connector panel above if you need to edit or delete its stored service-level configuration." : ""}
                       </p>
                     ) : canRegisterManagedConnectors ? (
                       <form

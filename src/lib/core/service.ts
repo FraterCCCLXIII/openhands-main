@@ -255,6 +255,24 @@ export class ContextLayerService {
     );
   }
 
+  async deleteManagedConnector(slug: string) {
+    await this.initialize();
+
+    const normalizedSlug = slug.trim();
+    if (!normalizedSlug) {
+      throw new ContextLayerError("Managed connectors require a slug.", 400);
+    }
+
+    const existing = await this.repository.getManagedConnector(normalizedSlug);
+    if (!existing) {
+      throw new ContextLayerError("Managed connector not found.", 404);
+    }
+
+    await this.repository.deleteManagedConnector(normalizedSlug);
+    return { deleted: true as const, slug: normalizedSlug };
+  }
+
+
   async listAccessRequests() {
     await this.initialize();
     return this.repository.listAccessRequests();

@@ -479,6 +479,18 @@ export const DashboardWorkspace = ({
             ))}
           </nav>
 
+
+          <div className="border-t border-[var(--color-border)] pt-3">
+            <a
+              href="/add-connector"
+              className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm text-[var(--color-text-base)] transition-colors hover:bg-[var(--color-bg-active)] hover:text-white"
+            >
+              <ShieldCheck className="h-4 w-4 shrink-0 text-[var(--color-text-base)]" />
+              <span className="truncate font-medium">Admin</span>
+            </a>
+          </div>
+
+
           <div className="border-t border-[var(--color-border)] pt-3">
             <div className="space-y-3">
               <div>

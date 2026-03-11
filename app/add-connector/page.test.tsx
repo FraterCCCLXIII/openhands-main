@@ -64,6 +64,19 @@ describe("AddConnectorPage", () => {
     expect(html).toContain("please contact admin@example.com");
   });
 
+
+  it("shows registered managed connector controls to allowlisted admins", async () => {
+    vi.stubEnv("APP_ADMIN_EMAILS", "admin@example.com");
+    authMock.mockResolvedValue({ user: { email: "admin@example.com" } });
+
+    const html = renderToStaticMarkup(await AddConnectorPage());
+
+    expect(html).toContain("Registered managed connectors");
+    expect(html).toContain("Edit stale service-level connector settings in place or delete a connector before re-registering it with a new provider type.");
+    expect(html).toContain("No managed connectors are registered yet.");
+  });
+
+
   it("renders users before admins", async () => {
     const html = renderToStaticMarkup(await AddConnectorPage());
 

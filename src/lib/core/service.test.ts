@@ -447,6 +447,46 @@ describe("ContextLayerService", () => {
     });
   });
 
+  it("deletes an existing managed connector", async () => {
+    const repository = new MemoryRepository();
+    const service = new ContextLayerService(
+      repository,
+      new AdapterRegistry({ mock: { invoke: async () => ({}) } }),
+      new NotificationPublisher(repository),
+    );
+
+    await service.upsertManagedConnector({
+      slug: "notion",
+      name: "Notion",
+      description: "Managed Notion REST connector",
+      categories: ["Knowledge base"],
+      authStrategy: "oauth2",
+      authModes: ["oauth2"],
+      provider: "http",
+      credentialLabel: "Connect Notion",
+      credentialPlaceholder: "Connect Notion",
+      credentialHelp: "Connect Notion with OAuth.",
+      apiBaseUrl: "https://api.notion.com",
+      openApiUrl: "https://developers.notion.com/openapi.json",
+      oauthConfig: {
+        authorizationUrl: "https://api.notion.com/v1/oauth/authorize",
+        tokenUrl: "https://api.notion.com/v1/oauth/token",
+        scopes: [],
+      },
+      oauthClientId: "notion-client-id",
+      oauthClientSecret: "notion-client-secret",
+      functions: [],
+      enabled: true,
+    });
+
+    await expect(service.deleteManagedConnector("notion")).resolves.toEqual({
+      deleted: true,
+      slug: "notion",
+    });
+    await expect(repository.getManagedConnector("notion")).resolves.toBeNull();
+  });
+
+
 
   it("injects saved per-user OAuth credentials during invocation", async () => {
     const repository = new MemoryRepository();

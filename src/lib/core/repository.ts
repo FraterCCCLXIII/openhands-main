@@ -34,6 +34,7 @@ export interface ContextRepository {
   upsertManagedConnector(
     record: ManagedConnectorRecord,
   ): Promise<ManagedConnectorRecord>;
+  deleteManagedConnector(slug: string): Promise<void>;
 
   hasAgentApiKeys(): Promise<boolean>;
   listIntegrationConnections(ownerId: string): Promise<IntegrationConnectionRecord[]>;

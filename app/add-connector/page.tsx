@@ -1,13 +1,14 @@
 import { ArrowLeft, Mail, ShieldCheck, UserRound } from "lucide-react";
 
 import { CuratedProviderList } from "@/src/components/admin/curated-provider-list";
+import { ManagedConnectorAdminList } from "@/src/components/admin/managed-connector-admin-list";
 import { ServiceUnavailableScreen } from "@/src/components/service-unavailable-screen";
 import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
 import { isAppAdminEmail } from "@/src/lib/app-admins";
 import { auth } from "@/src/lib/auth";
 import { getOAuthCallbackBaseUrl } from "@/src/lib/auth-config";
-import { getContextLayerRepository } from "@/src/lib/core/runtime";
+import { getContextLayerRepository, getContextLayerService } from "@/src/lib/core/runtime";
 import { filterReadyBuiltInConnectors } from "@/src/lib/integrations/connector-readiness";
 import { listBuiltInConnectors } from "@/src/lib/integrations/discovery";
 import {
@@ -32,13 +33,16 @@ export default async function AddConnectorPage() {
 
   const adminEmail = getAdminContactEmail();
   const adminInstruction = getAdminContactInstruction(adminEmail ?? undefined);
+  const repository = getContextLayerRepository();
   const readyBuiltInConnectors = filterReadyBuiltInConnectors(
-    await listBuiltInConnectors(getContextLayerRepository()),
+    await listBuiltInConnectors(repository),
   );
   const providerCatalog = listOAuthProviderCatalog();
   const canRegisterManagedConnectors = isAppAdminEmail(session?.user?.email ?? undefined);
   const oauthCallbackBaseUrl = getOAuthCallbackBaseUrl();
-
+  const managedConnectors = canRegisterManagedConnectors
+    ? await getContextLayerService().listManagedConnectors()
+    : [];
 
   return (
     <main className="min-h-screen px-6 py-8">
@@ -148,8 +152,8 @@ export default async function AddConnectorPage() {
                 </li>
                 <li>
                   <span className="font-medium text-white">2.</span> Create or
-                  update the managed connector through the admin tooling or by
-                  sending a record to <code className="text-white">POST /api/managed-connectors</code>. Use the{" "}
+                  update the managed connector through the admin tooling below or
+                  by sending a record to <code className="text-white">POST /api/managed-connectors</code>. Use the{" "}
                   <a
                     href="/api/managed-connectors/openapi"
                     target="_blank"
@@ -158,7 +162,9 @@ export default async function AddConnectorPage() {
                   >
                     endpoint schema doc
                   </a>{" "}
-                  for the request shape. If you want the provider to appear in
+                  for the request shape. If an old connector is stale, use the
+                  registered connector panel below to edit it in place or delete
+                  it before re-registering. If you want the provider to appear in
                   the curated add-connector catalog by default, update the source
                   metadata in <code className="text-white">src/lib/integrations/oauth-provider-registration-defaults.ts</code>
                   and <code className="ml-1 text-white">src/lib/integrations/oauth-provider-catalog.ts</code>.
@@ -194,6 +200,26 @@ export default async function AddConnectorPage() {
             </div>
           </Card>
         </div>
+
+        {canRegisterManagedConnectors ? (
+          <Card className="p-6">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h2 className="text-lg font-semibold text-white">
+                  Registered managed connectors
+                </h2>
+                <p className="mt-2 text-sm leading-7 text-[var(--color-text-base)]">
+                  Edit stale service-level connector settings in place or delete a
+                  connector before re-registering it with a new provider type.
+                </p>
+              </div>
+              <Badge>{managedConnectors.length} registered</Badge>
+            </div>
+
+            <ManagedConnectorAdminList initialManagedConnectors={managedConnectors} />
+          </Card>
+        ) : null}
+
 
         <Card className="p-6">
           <div className="flex flex-wrap items-center justify-between gap-3">

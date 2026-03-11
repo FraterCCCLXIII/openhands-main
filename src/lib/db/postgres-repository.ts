@@ -598,6 +598,12 @@ export class PostgresRepository implements ContextRepository {
     return record;
   }
 
+  async deleteManagedConnector(slug: string) {
+    await this.ensureSchema();
+    const sql = getSql();
+    await sql`DELETE FROM managed_connectors WHERE slug = ${slug}`;
+  }
+
   async listIntegrationConnections(ownerId: string) {
     await this.ensureSchema();
     const sql = getSql();
