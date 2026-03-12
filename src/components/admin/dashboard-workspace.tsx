@@ -960,55 +960,86 @@ export const DashboardWorkspace = ({
               <p className="mb-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-muted)] px-3 py-2 text-xs leading-6 text-[var(--color-text-base)]">
                 {agentConnectionGuide.permissionNote}
               </p>
-              <div className="divide-y divide-[var(--color-border)]">
-                <KeyValueRow
-                  label="Auth header"
-                  value={
-                    <code className="break-all text-xs text-[var(--color-text-active)]">
-                      Authorization: Bearer {OPENHANDS_CONTEXT_KEY_ENV}
-                    </code>
-                  }
-                />
-                <KeyValueRow
-                  label="REST endpoint"
-                  value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.endpoint}</code>}
-                />
-                <KeyValueRow
-                  label="OpenAPI schema"
-                  value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.openApiSchemaEndpoint}</code>}
-                />
-                <KeyValueRow
-                  label="MCP endpoint"
-                  value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.mcpEndpoint}</code>}
-                />
-                <KeyValueRow
-                  label="Example MCP tool"
-                  value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.mcpToolName}</code>}
-                />
-              </div>
-              <div className="mt-4 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)]">
-                <div className="border-b border-[var(--color-border)] px-3 py-2 text-xs uppercase tracking-[0.18em] text-[var(--color-text-base)]">
-                  Tool call cURL example
-                </div>
-                <pre className="overflow-x-auto whitespace-pre-wrap px-3 py-3 text-xs leading-6 text-[var(--color-text-base)]">
-                  {agentConnectionGuide.curlExample}
-                </pre>
-              </div>
-              <div className="mt-4 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)]">
-                <div className="border-b border-[var(--color-border)] px-3 py-2 text-xs uppercase tracking-[0.18em] text-[var(--color-text-base)]">
-                  OpenAPI schema cURL example
-                </div>
-                <pre className="overflow-x-auto whitespace-pre-wrap px-3 py-3 text-xs leading-6 text-[var(--color-text-base)]">
-                  {agentConnectionGuide.openApiCurlExample}
-                </pre>
-              </div>
-              <div className="mt-4 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)]">
-                <div className="border-b border-[var(--color-border)] px-3 py-2 text-xs uppercase tracking-[0.18em] text-[var(--color-text-base)]">
-                  MCP streamable HTTP example
-                </div>
-                <pre className="overflow-x-auto whitespace-pre-wrap px-3 py-3 text-xs leading-6 text-[var(--color-text-base)]">
-                  {agentConnectionGuide.mcpConfigExample}
-                </pre>
+              <div className="space-y-6">
+                <section>
+                  <h4 className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-text-base)]">
+                    REST API Usage
+                  </h4>
+                  <div className="mt-3 divide-y divide-[var(--color-border)]">
+                    <KeyValueRow
+                      label="Auth header"
+                      value={
+                        <code className="break-all text-xs text-[var(--color-text-active)]">
+                          Authorization: Bearer {OPENHANDS_CONTEXT_KEY_ENV}
+                        </code>
+                      }
+                    />
+                    <KeyValueRow
+                      label="REST endpoint"
+                      value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.endpoint}</code>}
+                    />
+                    <KeyValueRow
+                      label="OpenAPI schema"
+                      value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.openApiSchemaEndpoint}</code>}
+                    />
+                  </div>
+                  <div className="mt-4 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)]">
+                    <div className="border-b border-[var(--color-border)] px-3 py-2 text-xs uppercase tracking-[0.18em] text-[var(--color-text-base)]">
+                      Tool call cURL example
+                    </div>
+                    <pre className="overflow-x-auto whitespace-pre-wrap px-3 py-3 text-xs leading-6 text-[var(--color-text-base)]">
+                      {agentConnectionGuide.curlExample}
+                    </pre>
+                  </div>
+                  <div className="mt-4 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)]">
+                    <div className="border-b border-[var(--color-border)] px-3 py-2 text-xs uppercase tracking-[0.18em] text-[var(--color-text-base)]">
+                      OpenAPI schema cURL example
+                    </div>
+                    <pre className="overflow-x-auto whitespace-pre-wrap px-3 py-3 text-xs leading-6 text-[var(--color-text-base)]">
+                      {agentConnectionGuide.openApiCurlExample}
+                    </pre>
+                  </div>
+                </section>
+
+                <section>
+                  <h4 className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-text-base)]">
+                    MCP Usage
+                  </h4>
+                  <div className="mt-3 divide-y divide-[var(--color-border)]">
+                    <KeyValueRow
+                      label="MCP endpoint"
+                      value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.mcpEndpoint}</code>}
+                    />
+                    <KeyValueRow
+                      label="Set agent ID tool"
+                      value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.mcpSetAgentIdToolName}</code>}
+                    />
+                    <KeyValueRow
+                      label="Set agent class tool"
+                      value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.mcpSetAgentClassToolName}</code>}
+                    />
+                    <KeyValueRow
+                      label="Example MCP tool"
+                      value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.mcpToolName}</code>}
+                    />
+                  </div>
+                  <div className="mt-4 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)]">
+                    <div className="border-b border-[var(--color-border)] px-3 py-2 text-xs uppercase tracking-[0.18em] text-[var(--color-text-base)]">
+                      MCP streamable HTTP example
+                    </div>
+                    <pre className="overflow-x-auto whitespace-pre-wrap px-3 py-3 text-xs leading-6 text-[var(--color-text-base)]">
+                      {agentConnectionGuide.mcpConfigExample}
+                    </pre>
+                  </div>
+                  <div className="mt-4 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)]">
+                    <div className="border-b border-[var(--color-border)] px-3 py-2 text-xs uppercase tracking-[0.18em] text-[var(--color-text-base)]">
+                      MCP session setup example
+                    </div>
+                    <pre className="overflow-x-auto whitespace-pre-wrap px-3 py-3 text-xs leading-6 text-[var(--color-text-base)]">
+                      {agentConnectionGuide.mcpSessionSetupExample}
+                    </pre>
+                  </div>
+                </section>
               </div>
             </CompactPanel>
           </section>

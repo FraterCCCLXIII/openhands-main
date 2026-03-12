@@ -5,7 +5,7 @@ import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/
 import { getContextLayerService } from "@/src/lib/core/runtime";
 import type { IntegrationSpec } from "@/src/types/context-layer";
 
-import { DELETE, GET, POST } from "./route";
+import { DELETE, GET, POST, resetMcpSessionsForTests } from "./route";
 
 const resetRuntime = () => {
   const runtime = globalThis as typeof globalThis & {
@@ -58,6 +58,12 @@ const connectClient = async ({
   return { client, transport };
 };
 
+const readToolText = (result: Awaited<ReturnType<Client["callTool"]>>) => {
+  const content = result.content as Array<{ type: string; text?: string }>;
+  expect(content[0]).toMatchObject({ type: "text" });
+  return content[0]?.type === "text" ? (content[0].text ?? "") : "";
+};
+
 const baseIntegration: IntegrationSpec = {
   key: "crm",
   name: "CRM",
@@ -105,18 +111,19 @@ const baseIntegration: IntegrationSpec = {
   },
 };
 
-afterEach(() => {
+afterEach(async () => {
+  await resetMcpSessionsForTests();
   resetRuntime();
 });
 
 describe("/api/mcp", () => {
-  it("lists enabled and case-by-case tools and forwards enabled invocations", async () => {
+  it("lists built-in tools and forwards enabled invocations after session defaults are set", async () => {
     const service = getContextLayerService();
     await service.registerIntegration(baseIntegration);
     const apiKey = (await service.getOrCreateAgentApiKey("owner@example.com")).apiKey;
 
     const { client, transport } = await connectClient({
-      url: "http://localhost:3000/api/mcp?agentId=agent-1&agentClass=assistant",
+      url: "http://localhost:3000/api/mcp",
       apiKey,
     });
 
@@ -124,7 +131,27 @@ describe("/api/mcp", () => {
     expect(tools.tools.map((tool) => tool.name).sort()).toEqual([
       "crm__accounts",
       "crm__contacts",
+      "set_agent_class",
+      "set_agent_id",
     ]);
+
+    const setAgentIdResult = await client.callTool({
+      name: "set_agent_id",
+      arguments: {
+        agentId: "agent-1",
+      },
+    });
+    expect(readToolText(setAgentIdResult)).toContain("MCP session agentId set to agent-1.");
+
+    const setAgentClassResult = await client.callTool({
+      name: "set_agent_class",
+      arguments: {
+        agentClass: "assistant",
+      },
+    });
+    expect(readToolText(setAgentClassResult)).toContain(
+      "MCP session agentClass set to assistant.",
+    );
 
     const result = await client.callTool({
       name: "crm__accounts",
@@ -133,27 +160,37 @@ describe("/api/mcp", () => {
         _scopes: ["crm.read"],
       },
     });
-    const content = result.content as Array<{ type: string; text?: string }>;
 
     expect(result.isError).toBeFalsy();
-    expect(content[0]).toMatchObject({ type: "text" });
-    if (content[0]?.type === "text") {
-      expect(content[0].text ?? "").toContain('"limit": 5');
-      expect(content[0].text ?? "").not.toContain("_scopes");
-      expect(content[0].text ?? "").toContain('"source": "accounts"');
-    }
+    const text = readToolText(result);
+    expect(text).toContain('"limit": 5');
+    expect(text).not.toContain("_scopes");
+    expect(text).toContain('"source": "accounts"');
 
     await transport.close();
   });
 
-  it("returns a human-approval link for case-by-case tools without an active grant", async () => {
+  it("returns a human-approval link for case-by-case tools after session defaults are set", async () => {
     const service = getContextLayerService();
     await service.registerIntegration(baseIntegration);
     const apiKey = (await service.getOrCreateAgentApiKey("owner@example.com")).apiKey;
 
     const { client, transport } = await connectClient({
-      url: "http://localhost:3000/api/mcp?agentId=agent-2&agentClass=assistant",
+      url: "http://localhost:3000/api/mcp",
       apiKey,
+    });
+
+    await client.callTool({
+      name: "set_agent_id",
+      arguments: {
+        agentId: "agent-2",
+      },
+    });
+    await client.callTool({
+      name: "set_agent_class",
+      arguments: {
+        agentClass: "assistant",
+      },
     });
 
     const result = await client.callTool({
@@ -162,16 +199,11 @@ describe("/api/mcp", () => {
         _scopes: ["crm.read"],
       },
     });
-    const content = result.content as Array<{ type: string; text?: string }>;
 
     expect(result.isError).toBe(true);
-    expect(content[0]).toMatchObject({ type: "text" });
-    if (content[0]?.type === "text") {
-      expect(content[0].text ?? "").toContain(
-        "Human approval is currently required before calling crm.contacts.",
-      );
-      expect(content[0].text ?? "").toContain("http://localhost:3000/admin");
-    }
+    const text = readToolText(result);
+    expect(text).toContain("Human approval is currently required before calling crm.contacts.");
+    expect(text).toContain("http://localhost:3000/admin");
 
     await transport.close();
   });

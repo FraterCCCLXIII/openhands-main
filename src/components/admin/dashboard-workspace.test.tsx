@@ -81,7 +81,7 @@ describe("DashboardWorkspace", () => {
     expect(adminLink?.textContent).toContain("Admin");
   });
 
-  it("documents the authenticated OpenAPI schema endpoint on the usage panel", async () => {
+  it("documents separate REST and MCP usage sections on the usage panel", async () => {
     useSearchParamsMock.mockReturnValue(new URLSearchParams("section=apiKeys"));
 
     await act(async () => {
@@ -99,9 +99,14 @@ describe("DashboardWorkspace", () => {
       );
     });
 
+    expect(container.textContent).toContain("REST API Usage");
+    expect(container.textContent).toContain("MCP Usage");
     expect(container.textContent).toContain("OpenAPI schema");
     expect(container.textContent).toContain("https://example.com/api/context/openapi");
     expect(container.textContent).toContain('curl -X GET "https://example.com/api/context/openapi"');
+    expect(container.textContent).toContain("https://example.com/api/mcp");
+    expect(container.textContent).toContain("set_agent_id");
+    expect(container.textContent).toContain("set_agent_class");
     expect(container.textContent).toContain(
       "Enabled tools are callable by default unless you configure an agent-class policy to narrow access; case-by-case tools still need a temporary approval grant.",
     );

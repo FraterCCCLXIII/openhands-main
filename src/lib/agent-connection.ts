@@ -1,4 +1,8 @@
-import { buildContextLayerMcpToolName } from "@/src/lib/mcp/context-layer-server";
+import {
+  buildContextLayerMcpToolName,
+  CONTEXT_LAYER_MCP_SET_AGENT_CLASS_TOOL_NAME,
+  CONTEXT_LAYER_MCP_SET_AGENT_ID_TOOL_NAME,
+} from "@/src/lib/mcp/context-layer-server";
 import {
   buildExamplePayload,
   buildPermissionNote,
@@ -13,12 +17,15 @@ export interface AgentConnectionGuide {
   functionName: string;
   mcpEndpoint: string;
   mcpToolName: string;
+  mcpSetAgentIdToolName: string;
+  mcpSetAgentClassToolName: string;
   requestBody: string;
   curlExample: string;
   fetchExample: string;
   openApiSchemaEndpoint: string;
   openApiCurlExample: string;
   mcpConfigExample: string;
+  mcpSessionSetupExample: string;
   permissionNote: string;
 }
 
@@ -53,8 +60,10 @@ export const buildAgentConnectionGuide = ({
   const normalizedBaseUrl = baseUrl.replace(/\/$/, "");
   const endpoint = `${normalizedBaseUrl}/api/context/${integrationKey}/${functionName}`;
   const openApiSchemaEndpoint = `${normalizedBaseUrl}/api/context/openapi`;
-  const mcpEndpoint = `${normalizedBaseUrl}/api/mcp?agentId=${DEFAULT_AGENT_ID}&agentClass=${DEFAULT_AGENT_CLASS}`;
+  const mcpEndpoint = `${normalizedBaseUrl}/api/mcp`;
   const mcpToolName = buildContextLayerMcpToolName(integrationKey, functionName);
+  const mcpSetAgentIdToolName = CONTEXT_LAYER_MCP_SET_AGENT_ID_TOOL_NAME;
+  const mcpSetAgentClassToolName = CONTEXT_LAYER_MCP_SET_AGENT_CLASS_TOOL_NAME;
   const requestBody = JSON.stringify(requestPayload, null, 2);
   const escapedRequestBody = requestBody.replace(/'/g, "'\\''");
   const curlExample = [
@@ -93,6 +102,20 @@ const result = await response.json();`;
     null,
     2,
   );
+  const mcpInvocationArguments = {
+    ...(sampleFunction ? buildExamplePayload(sampleFunction) : {}),
+    ...(defaultScopes.length > 0 ? { _scopes: defaultScopes } : {}),
+  };
+  const mcpSessionSetupExample = [
+    `1. Call ${mcpSetAgentIdToolName} with:`,
+    JSON.stringify({ agentId: DEFAULT_AGENT_ID }, null, 2),
+    "",
+    `2. Call ${mcpSetAgentClassToolName} with:`,
+    JSON.stringify({ agentClass: DEFAULT_AGENT_CLASS }, null, 2),
+    "",
+    `3. Call ${mcpToolName} with:`,
+    JSON.stringify(mcpInvocationArguments, null, 2),
+  ].join("\n");
 
   return {
     endpoint,
@@ -100,12 +123,15 @@ const result = await response.json();`;
     functionName,
     mcpEndpoint,
     mcpToolName,
+    mcpSetAgentIdToolName,
+    mcpSetAgentClassToolName,
     requestBody,
     curlExample,
     fetchExample,
     openApiSchemaEndpoint,
     openApiCurlExample,
     mcpConfigExample,
+    mcpSessionSetupExample,
     permissionNote: buildPermissionNote(sampleFunction),
   };
 };
