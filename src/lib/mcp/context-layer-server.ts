@@ -4,6 +4,7 @@ import { z } from "zod";
 
 import { ContextLayerError } from "@/src/lib/core/errors";
 import type { ContextLayerService } from "@/src/lib/core/service";
+import type { McpSessionDefaults } from "@/src/lib/mcp/session-store";
 import { getRequestOrigin } from "@/src/lib/request-context";
 import type { ContextInvocationResult, FunctionSpec, IntegrationSpec } from "@/src/types/context-layer";
 
@@ -89,14 +90,9 @@ const buildApprovalMessage = ({
     `Ask your human to authorize access in the dashboard: ${approvalUrl}`,
   ].join(" ");
 
-type SessionAgentDefaults = {
-  agentId: string;
-  agentClass: string;
-};
-
 const extractInvocationContext = (
   args: z.infer<typeof CONTEXT_LAYER_MCP_TOOL_INPUT_SCHEMA>,
-  defaults: SessionAgentDefaults,
+  defaults: McpSessionDefaults,
 ) => {
   const agentId = args._agentId?.trim() || defaults.agentId;
   const agentClass = args._agentClass?.trim() || defaults.agentClass;
@@ -163,10 +159,14 @@ export const createContextLayerMcpServer = async ({
   request,
   service,
   ownerId,
+  sessionDefaults,
+  onSessionDefaultsChanged,
 }: {
   request: Request;
   service: ContextLayerService;
   ownerId: string;
+  sessionDefaults?: Partial<McpSessionDefaults>;
+  onSessionDefaultsChanged?: (defaults: McpSessionDefaults) => Promise<void> | void;
 }) => {
   const server = new McpServer(CONTEXT_LAYER_MCP_SERVER_INFO);
   const approvalUrl = new URL(
@@ -174,9 +174,13 @@ export const createContextLayerMcpServer = async ({
     getRequestOrigin(request.headers),
   ).toString();
   const initialUrl = new URL(request.url);
-  const sessionAgentDefaults: SessionAgentDefaults = {
-    agentId: initialUrl.searchParams.get("agentId")?.trim() ?? "",
-    agentClass: initialUrl.searchParams.get("agentClass")?.trim() ?? "",
+  const sessionAgentDefaults: McpSessionDefaults = {
+    agentId: sessionDefaults?.agentId ?? initialUrl.searchParams.get("agentId")?.trim() ?? "",
+    agentClass:
+      sessionDefaults?.agentClass ?? initialUrl.searchParams.get("agentClass")?.trim() ?? "",
+  };
+  const persistSessionDefaults = async () => {
+    await onSessionDefaultsChanged?.({ ...sessionAgentDefaults });
   };
   const integrations = await service.listIntegrations();
 
@@ -189,6 +193,7 @@ export const createContextLayerMcpServer = async ({
     },
     async ({ agentId }) => {
       sessionAgentDefaults.agentId = agentId.trim();
+      await persistSessionDefaults();
       return buildSessionSettingResult("agentId", sessionAgentDefaults.agentId);
     },
   );
@@ -203,6 +208,7 @@ export const createContextLayerMcpServer = async ({
     },
     async ({ agentClass }) => {
       sessionAgentDefaults.agentClass = agentClass.trim();
+      await persistSessionDefaults();
       return buildSessionSettingResult("agentClass", sessionAgentDefaults.agentClass);
     },
   );
