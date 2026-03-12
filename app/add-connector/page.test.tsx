@@ -30,7 +30,7 @@ describe("AddConnectorPage", () => {
     const html = renderToStaticMarkup(await AddConnectorPage());
 
     expect(html).toContain("contact an admin");
-    expect(html).toContain("Popular OAuth-ready provider options");
+    expect(html).toContain("Popular official provider options");
     expect(html).toContain("How to add a provider that is not currently showing up.");
     expect(html).toContain("POST /api/managed-connectors");
     expect(html).toContain("/api/managed-connectors/openapi");
@@ -38,10 +38,11 @@ describe("AddConnectorPage", () => {
     expect(html).toContain("Search curated adaptors");
     expect(html).toContain("service-level admin action");
     expect(html).toContain("official vendor-hosted MCP URL");
-    expect(html).toContain("Composio-hosted MCP URL pattern");
-    expect(html).toContain("API/OpenAPI default");
-    expect(html).toContain("customerId=replace-me");
-    expect(html).toContain("OAuth app setup docs");
+    expect(html).toContain("official REST API/OpenAPI default");
+    expect(html).toContain("provider&#x27;s own docs");
+    expect(html).toContain("authentication setup docs");
+    expect(html).not.toContain("Composio-hosted MCP URL pattern");
+    expect(html).not.toContain("customerId=replace-me");
     expect(html).toContain("AUTH_REDIRECT_PROXY_URL");
     expect(html).toContain("stable deployment origin instead of the preview URL");
     expect(html).toContain("Connect");
@@ -95,7 +96,7 @@ describe("AddConnectorPage", () => {
     expect(html).toContain("How to set up the database");
     expect(html).toContain("POSTGRES_URL");
     expect(html).toContain("DATABASE_URL");
-    expect(html).not.toContain("Popular OAuth-ready provider options");
+    expect(html).not.toContain("Popular official provider options");
   });
 
 });

@@ -954,7 +954,7 @@ export const DashboardWorkspace = ({
 
             <CompactPanel
               title="Usage"
-              description="Use the persisted personal key as a bearer token for tool calls, or fetch an OpenAPI schema for every currently available tool in this profile."
+              description="Use the persisted personal key as a bearer token for REST calls, the per-user OpenAPI schema, or the MCP bridge."
               icon={ShieldCheck}
             >
               <div className="divide-y divide-[var(--color-border)]">
@@ -967,12 +967,20 @@ export const DashboardWorkspace = ({
                   }
                 />
                 <KeyValueRow
-                  label="Endpoint"
+                  label="REST endpoint"
                   value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.endpoint}</code>}
                 />
                 <KeyValueRow
                   label="OpenAPI schema"
                   value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.openApiSchemaEndpoint}</code>}
+                />
+                <KeyValueRow
+                  label="MCP endpoint"
+                  value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.mcpEndpoint}</code>}
+                />
+                <KeyValueRow
+                  label="Example MCP tool"
+                  value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.mcpToolName}</code>}
                 />
               </div>
               <div className="mt-4 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)]">
@@ -989,6 +997,14 @@ export const DashboardWorkspace = ({
                 </div>
                 <pre className="overflow-x-auto whitespace-pre-wrap px-3 py-3 text-xs leading-6 text-[var(--color-text-base)]">
                   {agentConnectionGuide.openApiCurlExample}
+                </pre>
+              </div>
+              <div className="mt-4 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)]">
+                <div className="border-b border-[var(--color-border)] px-3 py-2 text-xs uppercase tracking-[0.18em] text-[var(--color-text-base)]">
+                  MCP streamable HTTP example
+                </div>
+                <pre className="overflow-x-auto whitespace-pre-wrap px-3 py-3 text-xs leading-6 text-[var(--color-text-base)]">
+                  {agentConnectionGuide.mcpConfigExample}
                 </pre>
               </div>
             </CompactPanel>

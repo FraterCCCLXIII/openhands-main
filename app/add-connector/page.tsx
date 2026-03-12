@@ -143,12 +143,8 @@ export default async function AddConnectorPage() {
                   the MCP server URL or API base URL/OpenAPI URL, authorization
                   URL, token URL, callback requirements, and the minimum scopes
                   the connector needs. Each provider row below now starts with
-                  either an official vendor-hosted MCP URL, a researched
-                  Composio-hosted MCP URL pattern, or an API/OpenAPI default. If
-                  the MCP value still includes
-                  <code className="mx-1 text-white">customerId=replace-me</code>,
-                  replace that with the generated customer-specific value before
-                  saving the connector.
+                  either an official vendor-hosted MCP URL or an official REST
+                  API/OpenAPI default sourced from the provider's own docs.
                 </li>
                 <li>
                   <span className="font-medium text-white">2.</span> Create or
@@ -175,8 +171,9 @@ export default async function AddConnectorPage() {
                   this service is going to run the OAuth callback flow for users.
                   The integrations wizard only lists OAuth connectors after those
                   service-level credentials are stored. Every provider row includes
-                  a direct link to that provider's OAuth app setup docs and shows
-                  the callback URL to register. When <code className="text-white">AUTH_REDIRECT_PROXY_URL</code>
+                  a direct link to that provider's authentication setup docs and
+                  shows the callback URL to register when OAuth is the preferred
+                  path. When <code className="text-white">AUTH_REDIRECT_PROXY_URL</code>
                   is configured for preview deployments, that callback uses the
                   stable deployment origin instead of the preview URL.
                 </li>
@@ -225,10 +222,10 @@ export default async function AddConnectorPage() {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="text-lg font-semibold text-white">
-                Popular OAuth-ready provider options
+                Popular official provider options
               </h2>
               <p className="mt-2 text-sm leading-7 text-[var(--color-text-base)]">
-                Researched catalog of 50 popular providers with OAuth support.
+                Researched catalog of 50 popular providers with official API or MCP entry points.
                 Register one of these providers to make it show up in the integrations wizard.
               </p>
             </div>

@@ -41,11 +41,19 @@ describe("agent-connection", () => {
     expect(guide.openApiSchemaEndpoint).toBe(
       "http://localhost:12000/api/context/openapi",
     );
+    expect(guide.mcpEndpoint).toBe(
+      "http://localhost:12000/api/mcp?agentId=research-bot-01&agentClass=researcher",
+    );
+    expect(guide.mcpToolName).toBe("github__search_repositories");
     expect(guide.curlExample).toContain("Authorization: Bearer context-key");
     expect(guide.openApiCurlExample).toContain(
       'curl -X GET "http://localhost:12000/api/context/openapi"',
     );
     expect(guide.requestBody).toContain('"scopes": [\n    "repo"\n  ]');
+    expect(guide.mcpConfigExample).toContain('"transport": "streamable-http"');
+    expect(guide.mcpConfigExample).toContain(
+      '"url": "http://localhost:12000/api/mcp?agentId=research-bot-01&agentClass=researcher"',
+    );
   });
 
   it("falls back to placeholders before any integrations are created", () => {
@@ -61,6 +69,7 @@ describe("agent-connection", () => {
     expect(guide.openApiSchemaEndpoint).toBe(
       "http://localhost:12000/api/context/openapi",
     );
+    expect(guide.mcpToolName).toBe("your-integration__your-function");
     expect(guide.fetchExample).toContain("your-function");
   });
 });
