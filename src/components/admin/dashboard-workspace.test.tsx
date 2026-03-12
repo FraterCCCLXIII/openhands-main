@@ -102,5 +102,8 @@ describe("DashboardWorkspace", () => {
     expect(container.textContent).toContain("OpenAPI schema");
     expect(container.textContent).toContain("https://example.com/api/context/openapi");
     expect(container.textContent).toContain('curl -X GET "https://example.com/api/context/openapi"');
+    expect(container.textContent).toContain(
+      "Enabled tools are callable by default unless you configure an agent-class policy to narrow access; case-by-case tools still need a temporary approval grant.",
+    );
   });
 });

@@ -57,6 +57,25 @@ const baseIntegration: IntegrationSpec = {
 };
 
 describe("ContextLayerService", () => {
+  it("allows enabled functions when no agent-class policy exists", async () => {
+    const service = createService();
+    await service.registerIntegration(baseIntegration);
+
+    const response = await service.invokeContext(
+      "agent-1",
+      "assistant",
+      "salesforce",
+      "accounts",
+      { limit: 5 },
+      ["accounts.read"],
+    );
+
+    expect(response.integration).toBe("salesforce");
+    expect(response.decision.allowed).toBe(true);
+    expect(response.decision.reason).toBe("Allowed by enabled function default");
+    expect(response.data).toEqual({ ok: true, payload: { limit: 5 } });
+  });
+
   it("allows context invocation through agent-class policies", async () => {
     const service = createService();
     await service.registerIntegration(baseIntegration);
@@ -216,7 +235,7 @@ describe("ContextLayerService", () => {
     );
   });
 
-  it("grants temporary access until expiry", async () => {
+  it("grants temporary access until expiry for case-by-case functions", async () => {
     const repository = new MemoryRepository();
     const service = new ContextLayerService(
       repository,
@@ -226,7 +245,15 @@ describe("ContextLayerService", () => {
       }),
       new NotificationPublisher(repository),
     );
-    await service.registerIntegration(baseIntegration);
+    await service.registerIntegration({
+      ...baseIntegration,
+      functions: {
+        accounts: {
+          ...baseIntegration.functions.accounts,
+          accessMode: "approval_required",
+        },
+      },
+    });
 
     const request = await service.createAccessRequest({
       agentId: "agent-3",
@@ -251,6 +278,7 @@ describe("ContextLayerService", () => {
       ["accounts.read"],
     );
     expect(allowed.decision.allowed).toBe(true);
+    expect(allowed.decision.reason).toBe("Allowed by temporary approval");
 
     const grant = (await repository.listTemporaryGrants())[0];
     grant.expiresAt = new Date(Date.now() - 60_000).toISOString();

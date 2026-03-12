@@ -581,22 +581,27 @@ export class ContextLayerService {
     }
 
     const policy = await this.repository.getPolicy(agentClass);
-    if (policy) {
-      for (const rule of policy.rules) {
-        if (rule.integrationKey !== integrationKey) {
-          continue;
-        }
+    if (!policy) {
+      return {
+        allowed: true,
+        reason: "Allowed by enabled function default",
+        effectiveScopes,
+      };
+    }
 
-        const fineGrained =
-          integration.fineGrainedPermissions &&
-          functionSpec.fineGrainedPermissions;
-        if (permittedByRule(rule, functionName, effectiveScopes, fineGrained)) {
-          return {
-            allowed: true,
-            reason: "Allowed by agent class policy",
-            effectiveScopes,
-          };
-        }
+    for (const rule of policy.rules) {
+      if (rule.integrationKey !== integrationKey) {
+        continue;
+      }
+
+      const fineGrained =
+        integration.fineGrainedPermissions && functionSpec.fineGrainedPermissions;
+      if (permittedByRule(rule, functionName, effectiveScopes, fineGrained)) {
+        return {
+          allowed: true,
+          reason: "Allowed by agent class policy",
+          effectiveScopes,
+        };
       }
     }
 

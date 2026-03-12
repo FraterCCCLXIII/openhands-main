@@ -41,6 +41,16 @@ const githubIntegration: IntegrationSpec = {
       executionMode: "provider",
       config: { toolName: "search_repositories" },
     },
+    get_self: {
+      name: "get_self",
+      description: "Get the current authenticated user",
+      enabled: true,
+      accessMode: "enabled",
+      fineGrainedPermissions: true,
+      defaultScopes: [],
+      executionMode: "provider",
+      config: { toolName: "get_self" },
+    },
   },
 };
 
@@ -172,7 +182,29 @@ describe("GET /api/context/openapi", () => {
     const body = (await response.json()) as {
       openapi: string;
       servers: Array<{ url: string }>;
-      paths: Record<string, { post?: { summary?: string } }>;
+      paths: Record<
+        string,
+        {
+          post?: {
+            summary?: string;
+            description?: string;
+            requestBody?: {
+              content?: {
+                "application/json"?: {
+                  examples?: {
+                    default?: {
+                      value?: {
+                        scopes?: string[];
+                        payload?: Record<string, unknown>;
+                      };
+                    };
+                  };
+                };
+              };
+            };
+          };
+        }
+      >;
       components: {
         securitySchemes: Record<string, unknown>;
         schemas: Record<string, unknown>;
@@ -184,6 +216,22 @@ describe("GET /api/context/openapi", () => {
     expect(body.paths["/api/context/github/search_repositories"]?.post).toMatchObject({
       summary: "Search repositories",
     });
+    expect(body.paths["/api/context/github/get_self"]?.post).toMatchObject({
+      summary: "Get the current authenticated user",
+    });
+    expect(
+      body.paths["/api/context/github/get_self"]?.post?.requestBody?.content?.[
+        "application/json"
+      ]?.examples?.default?.value,
+    ).toEqual({
+      agentId: "research-bot-01",
+      agentClass: "researcher",
+      scopes: [],
+      payload: {},
+    });
+    expect(body.paths["/api/context/github/get_self"]?.post?.description).toContain(
+      "Enabled tools are callable by default unless you configure an agent-class policy to narrow access",
+    );
     expect(body.paths["/api/context/slack/list_channels"]?.post).toMatchObject({
       summary: "List channels",
     });

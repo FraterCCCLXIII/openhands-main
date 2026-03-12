@@ -27,6 +27,51 @@ const githubIntegration: IntegrationSpec = {
   },
 };
 
+const notionIntegration: IntegrationSpec = {
+  key: "notion",
+  name: "Notion",
+  kind: "api",
+  provider: "http",
+  authStrategy: "oauth2",
+  enabled: true,
+  fineGrainedPermissions: true,
+  config: { apiBaseUrl: "https://api.notion.com/v1" },
+  credentials: { accessToken: "secret" },
+  functions: {
+    complete_file_upload: {
+      name: "complete_file_upload",
+      description: "Complete a file upload",
+      enabled: true,
+      accessMode: "approval_required",
+      fineGrainedPermissions: true,
+      defaultScopes: ["files.write"],
+      executionMode: "provider",
+      config: {
+        request: {
+          method: "POST",
+          path: "/file_uploads/{{file_upload_id}}/complete",
+          body: { body: "{{body}}" },
+        },
+      },
+    },
+    get_self: {
+      name: "get_self",
+      description: "Retrieve your token's bot user",
+      enabled: true,
+      accessMode: "enabled",
+      fineGrainedPermissions: true,
+      defaultScopes: [],
+      executionMode: "provider",
+      config: {
+        request: {
+          method: "GET",
+          path: "/users/me",
+        },
+      },
+    },
+  },
+};
+
 describe("agent-connection", () => {
   it("uses the first available integration and function in examples", () => {
     const guide = buildAgentConnectionGuide({
@@ -50,10 +95,26 @@ describe("agent-connection", () => {
       'curl -X GET "http://localhost:12000/api/context/openapi"',
     );
     expect(guide.requestBody).toContain('"scopes": [\n    "repo"\n  ]');
+    expect(guide.permissionNote).toContain("Enabled tools are callable by default");
     expect(guide.mcpConfigExample).toContain('"transport": "streamable-http"');
     expect(guide.mcpConfigExample).toContain(
       '"url": "http://localhost:12000/api/mcp?agentId=research-bot-01&agentClass=researcher"',
     );
+  });
+
+  it("prefers a non-approval function and omits fake payload placeholders", () => {
+    const guide = buildAgentConnectionGuide({
+      baseUrl: "http://localhost:12000",
+      apiKey: "context-key",
+      integrations: [notionIntegration],
+    });
+
+    expect(guide.endpoint).toBe("http://localhost:12000/api/context/notion/get_self");
+    expect(guide.mcpToolName).toBe("notion__get_self");
+    expect(guide.requestBody).toContain('"scopes": []');
+    expect(guide.requestBody).toContain('"payload": {}');
+    expect(guide.requestBody).not.toContain("scope.read");
+    expect(guide.requestBody).not.toContain("replace with the arguments");
   });
 
   it("falls back to placeholders before any integrations are created", () => {
