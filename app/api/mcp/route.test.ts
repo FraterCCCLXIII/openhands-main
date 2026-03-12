@@ -83,7 +83,15 @@ const baseIntegration: IntegrationSpec = {
       fineGrainedPermissions: true,
       defaultScopes: ["crm.read"],
       executionMode: "mock",
-      config: {},
+      config: {
+        request: {
+          method: "GET",
+          path: "/accounts",
+          query: {
+            limit: "{{limit}}",
+          },
+        },
+      },
       mockResponse: {
         source: "accounts",
       },
@@ -97,6 +105,26 @@ const baseIntegration: IntegrationSpec = {
       defaultScopes: ["crm.read"],
       executionMode: "mock",
       config: {},
+    },
+    search: {
+      name: "search",
+      description: "Search records",
+      enabled: true,
+      accessMode: "enabled",
+      fineGrainedPermissions: true,
+      defaultScopes: ["crm.read"],
+      executionMode: "mock",
+      config: {
+        request: {
+          method: "POST",
+          path: "/records/{{record_id}}/search",
+          body: "{{body}}",
+          contentType: "json",
+        },
+      },
+      mockResponse: {
+        source: "search",
+      },
     },
     secrets: {
       name: "secrets",
@@ -117,7 +145,7 @@ afterEach(async () => {
 });
 
 describe("/api/mcp", () => {
-  it("lists built-in tools and forwards enabled invocations after session defaults are set", async () => {
+  it("lists built-in tools and forwards enabled invocations without requiring session defaults", async () => {
     const service = getContextLayerService();
     await service.registerIntegration(baseIntegration);
     const apiKey = (await service.getOrCreateAgentApiKey("owner@example.com")).apiKey;
@@ -131,27 +159,10 @@ describe("/api/mcp", () => {
     expect(tools.tools.map((tool) => tool.name).sort()).toEqual([
       "crm__accounts",
       "crm__contacts",
+      "crm__search",
       "set_agent_class",
       "set_agent_id",
     ]);
-
-    const setAgentIdResult = await client.callTool({
-      name: "set_agent_id",
-      arguments: {
-        agentId: "agent-1",
-      },
-    });
-    expect(readToolText(setAgentIdResult)).toContain("MCP session agentId set to agent-1.");
-
-    const setAgentClassResult = await client.callTool({
-      name: "set_agent_class",
-      arguments: {
-        agentClass: "assistant",
-      },
-    });
-    expect(readToolText(setAgentClassResult)).toContain(
-      "MCP session agentClass set to assistant.",
-    );
 
     const result = await client.callTool({
       name: "crm__accounts",
@@ -170,7 +181,7 @@ describe("/api/mcp", () => {
     await transport.close();
   });
 
-  it("returns a human-approval link for case-by-case tools after session defaults are set", async () => {
+  it("returns a human-approval link for case-by-case tools without requiring session defaults", async () => {
     const service = getContextLayerService();
     await service.registerIntegration(baseIntegration);
     const apiKey = (await service.getOrCreateAgentApiKey("owner@example.com")).apiKey;
@@ -178,19 +189,6 @@ describe("/api/mcp", () => {
     const { client, transport } = await connectClient({
       url: "http://localhost:3000/api/mcp",
       apiKey,
-    });
-
-    await client.callTool({
-      name: "set_agent_id",
-      arguments: {
-        agentId: "agent-2",
-      },
-    });
-    await client.callTool({
-      name: "set_agent_class",
-      arguments: {
-        agentClass: "assistant",
-      },
     });
 
     const result = await client.callTool({
@@ -208,6 +206,55 @@ describe("/api/mcp", () => {
     await transport.close();
   });
 
+  it("publishes function-specific input schemas and accepts body arguments", async () => {
+    const service = getContextLayerService();
+    await service.registerIntegration(baseIntegration);
+    const apiKey = (await service.getOrCreateAgentApiKey("owner@example.com")).apiKey;
+
+    const { client, transport } = await connectClient({
+      url: "http://localhost:3000/api/mcp",
+      apiKey,
+    });
+
+    const tools = await client.listTools();
+    const searchTool = tools.tools.find((tool) => tool.name === "crm__search");
+    expect(searchTool?.inputSchema).toMatchObject({
+      type: "object",
+      properties: {
+        body: {},
+        record_id: {},
+        contextAgentId: {
+          type: "string",
+        },
+        contextAgentClass: {
+          type: "string",
+        },
+        contextScopes: {
+          type: "array",
+        },
+      },
+    });
+
+    const result = await client.callTool({
+      name: "crm__search",
+      arguments: {
+        record_id: "rec_123",
+        body: {
+          query: "customer health",
+        },
+      },
+    });
+
+    expect(result.isError).toBeFalsy();
+    const text = readToolText(result);
+    expect(text).toContain('"record_id": "rec_123"');
+    expect(text).toContain('"query": "customer health"');
+    expect(text).toContain('"source": "search"');
+
+    await transport.close();
+  });
+
+
   it("rejects legacy underscore MCP override arguments", async () => {
     const service = getContextLayerService();
     await service.registerIntegration(baseIntegration);
@@ -218,19 +265,6 @@ describe("/api/mcp", () => {
       apiKey,
     });
 
-    await client.callTool({
-      name: "set_agent_id",
-      arguments: {
-        agentId: "agent-3",
-      },
-    });
-    await client.callTool({
-      name: "set_agent_class",
-      arguments: {
-        agentClass: "assistant",
-      },
-    });
-
     const result = await client.callTool({
       name: "crm__accounts",
       arguments: {
@@ -238,7 +272,6 @@ describe("/api/mcp", () => {
       },
     });
 
-    expect(result.isError).toBe(true);
     expect(readToolText(result)).toContain(
       "Unsupported MCP tool argument(s): _scopes. Use contextAgentId, contextAgentClass, and contextScopes instead.",
     );

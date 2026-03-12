@@ -2,8 +2,10 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 
+import { resolveInvocationIdentity } from "@/src/lib/agent-defaults";
 import { ContextLayerError } from "@/src/lib/core/errors";
 import type { ContextLayerService } from "@/src/lib/core/service";
+import { buildContextLayerToolInputShape } from "@/src/lib/mcp/tool-input-schema";
 import type { McpSessionDefaults } from "@/src/lib/mcp/session-store";
 import { getRequestOrigin } from "@/src/lib/request-context";
 import type { ContextInvocationResult, FunctionSpec, IntegrationSpec } from "@/src/types/context-layer";
@@ -65,7 +67,7 @@ const buildToolDescription = (
   const notes = [
     functionSpec.description?.trim(),
     `Invoke ${integration.key}.${functionSpec.name} through the context layer MCP bridge.`,
-    `Pass downstream tool arguments as top-level fields. Reserved fields: contextScopes, contextAgentId, contextAgentClass. Use ${CONTEXT_LAYER_MCP_SET_AGENT_ID_TOOL_NAME} and ${CONTEXT_LAYER_MCP_SET_AGENT_CLASS_TOOL_NAME} to persist defaults for the current MCP session.`,
+    `Pass downstream tool arguments as top-level fields. Reserved fields: contextScopes, contextAgentId, contextAgentClass. If you omit agent identity, enabled tools use the default session identity; use ${CONTEXT_LAYER_MCP_SET_AGENT_ID_TOOL_NAME} and ${CONTEXT_LAYER_MCP_SET_AGENT_CLASS_TOOL_NAME} to override it for the current MCP session.`,
   ].filter(Boolean);
 
   if (mode === "approval_required") {
@@ -95,12 +97,8 @@ const buildApprovalMessage = ({
     `Ask your human to authorize access in the dashboard: ${approvalUrl}`,
   ].join(" ");
 
-const extractInvocationContext = (
-  args: z.infer<typeof CONTEXT_LAYER_MCP_TOOL_INPUT_SCHEMA>,
-  defaults: McpSessionDefaults,
-) => {
-  const rawArgs = args as Record<string, unknown>;
-  const legacyKeys = LEGACY_RESERVED_TOOL_ARGUMENT_KEYS.filter((key) => key in rawArgs);
+const extractInvocationContext = (args: Record<string, unknown>, defaults: McpSessionDefaults) => {
+  const legacyKeys = LEGACY_RESERVED_TOOL_ARGUMENT_KEYS.filter((key) => key in args);
 
   if (legacyKeys.length > 0) {
     throw new ContextLayerError(
@@ -109,25 +107,21 @@ const extractInvocationContext = (
     );
   }
 
-  const agentId = args.contextAgentId?.trim() || defaults.agentId;
-  const agentClass = args.contextAgentClass?.trim() || defaults.agentClass;
-
-  if (!agentId || !agentClass) {
-    throw new ContextLayerError(
-      `MCP tool calls require an agentId and agentClass. Call ${CONTEXT_LAYER_MCP_SET_AGENT_ID_TOOL_NAME} and ${CONTEXT_LAYER_MCP_SET_AGENT_CLASS_TOOL_NAME} to set session defaults, connect with ?agentId=<id>&agentClass=<class> as initial defaults, or pass contextAgentId and contextAgentClass in the tool arguments.`,
-      400,
-    );
-  }
+  const parsedArgs = CONTEXT_LAYER_MCP_TOOL_INPUT_SCHEMA.parse(args);
+  const { agentId, agentClass } = resolveInvocationIdentity({
+    agentId: parsedArgs.contextAgentId || defaults.agentId,
+    agentClass: parsedArgs.contextAgentClass || defaults.agentClass,
+  });
 
   const payload = Object.fromEntries(
-    Object.entries(args).filter(([key]) => !RESERVED_TOOL_ARGUMENT_KEYS.has(key)),
+    Object.entries(parsedArgs).filter(([key]) => !RESERVED_TOOL_ARGUMENT_KEYS.has(key)),
   );
 
   return {
     agentId,
     agentClass,
     payload,
-    scopes: args.contextScopes,
+    scopes: parsedArgs.contextScopes,
   };
 };
 
@@ -189,11 +183,10 @@ export const createContextLayerMcpServer = async ({
     getRequestOrigin(request.headers),
   ).toString();
   const initialUrl = new URL(request.url);
-  const sessionAgentDefaults: McpSessionDefaults = {
-    agentId: sessionDefaults?.agentId ?? initialUrl.searchParams.get("agentId")?.trim() ?? "",
-    agentClass:
-      sessionDefaults?.agentClass ?? initialUrl.searchParams.get("agentClass")?.trim() ?? "",
-  };
+  const sessionAgentDefaults: McpSessionDefaults = resolveInvocationIdentity({
+    agentId: sessionDefaults?.agentId ?? initialUrl.searchParams.get("agentId"),
+    agentClass: sessionDefaults?.agentClass ?? initialUrl.searchParams.get("agentClass"),
+  });
   const persistSessionDefaults = async () => {
     await onSessionDefaultsChanged?.({ ...sessionAgentDefaults });
   };
@@ -249,10 +242,10 @@ export const createContextLayerMcpServer = async ({
         {
           title: `${integration.name} · ${functionSpec.name}`,
           description: buildToolDescription(integration, functionSpec, toolName),
-          inputSchema: CONTEXT_LAYER_MCP_TOOL_INPUT_SCHEMA,
+          inputSchema: buildContextLayerToolInputShape(functionSpec),
         },
         async (args) => {
-          const invocation = extractInvocationContext(args, sessionAgentDefaults);
+          const invocation = extractInvocationContext(args as Record<string, unknown>, sessionAgentDefaults);
 
           try {
             const result = await service.invokeContext(

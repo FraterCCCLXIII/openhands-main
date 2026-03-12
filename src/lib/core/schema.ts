@@ -1,5 +1,20 @@
 import { z } from "zod";
 
+import { DEFAULT_AGENT_CLASS, DEFAULT_AGENT_ID } from "@/src/lib/agent-defaults";
+
+const defaultedAgentIdentitySchema = (fallback: string) =>
+  z.preprocess(
+    (value) => {
+      if (typeof value !== "string") {
+        return value;
+      }
+
+      const normalized = value.trim();
+      return normalized.length > 0 ? normalized : undefined;
+    },
+    z.string().min(1).default(fallback),
+  );
+
 export const functionSpecSchema = z.object({
   name: z.string().min(1),
   description: z.string().optional().default(""),
@@ -102,8 +117,8 @@ export const accessRequestDecisionSchema = z.object({
   durationMinutes: z.number().int().positive().optional(),
 });
 export const contextInvokeSchema = z.object({
-  agentId: z.string().min(1),
-  agentClass: z.string().min(1),
+  agentId: defaultedAgentIdentitySchema(DEFAULT_AGENT_ID),
+  agentClass: defaultedAgentIdentitySchema(DEFAULT_AGENT_CLASS),
   scopes: z.array(z.string()).default([]),
   payload: z.record(z.string(), z.unknown()).default({}),
 });
