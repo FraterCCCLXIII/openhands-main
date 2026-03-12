@@ -15,9 +15,9 @@ const CONTEXT_LAYER_MCP_SERVER_INFO = {
 
 const CONTEXT_LAYER_MCP_TOOL_INPUT_SCHEMA = z
   .object({
-    _agentId: z.string().trim().min(1).optional(),
-    _agentClass: z.string().trim().min(1).optional(),
-    _scopes: z.array(z.string()).default([]),
+    contextAgentId: z.string().trim().min(1).optional(),
+    contextAgentClass: z.string().trim().min(1).optional(),
+    contextScopes: z.array(z.string()).default([]),
   })
   .passthrough();
 
@@ -29,7 +29,14 @@ const SET_AGENT_CLASS_TOOL_INPUT_SCHEMA = z.object({
   agentClass: z.string().trim().min(1),
 });
 
-const RESERVED_TOOL_ARGUMENT_KEYS = new Set(["_agentId", "_agentClass", "_scopes"]);
+const RESERVED_TOOL_ARGUMENT_KEYS = new Set([
+  "contextAgentId",
+  "contextAgentClass",
+  "contextScopes",
+  "_agentId",
+  "_agentClass",
+  "_scopes",
+]);
 const APPROVAL_DASHBOARD_PATH = "/admin";
 export const CONTEXT_LAYER_MCP_TOOL_SEPARATOR = "__";
 export const CONTEXT_LAYER_MCP_SET_AGENT_ID_TOOL_NAME = "set_agent_id";
@@ -37,6 +44,22 @@ export const CONTEXT_LAYER_MCP_SET_AGENT_CLASS_TOOL_NAME = "set_agent_class";
 
 const getFunctionAccessMode = (functionSpec: FunctionSpec) =>
   functionSpec.accessMode ?? (functionSpec.enabled ? "enabled" : "disabled");
+
+
+const getLegacyStringField = (args: Record<string, unknown>, key: string) => {
+  const value = args[key];
+  return typeof value === "string" ? value.trim() : "";
+};
+
+const getLegacyScopesField = (args: Record<string, unknown>) => {
+  const value = args._scopes;
+
+  if (!Array.isArray(value)) {
+    return [] as string[];
+  }
+
+  return value.filter((scope): scope is string => typeof scope === "string");
+};
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
@@ -60,7 +83,7 @@ const buildToolDescription = (
   const notes = [
     functionSpec.description?.trim(),
     `Invoke ${integration.key}.${functionSpec.name} through the context layer MCP bridge.`,
-    `Pass downstream tool arguments as top-level fields. Reserved fields: _scopes, _agentId, _agentClass. Use ${CONTEXT_LAYER_MCP_SET_AGENT_ID_TOOL_NAME} and ${CONTEXT_LAYER_MCP_SET_AGENT_CLASS_TOOL_NAME} to persist defaults for the current MCP session.`,
+    `Pass downstream tool arguments as top-level fields. Reserved fields: contextScopes, contextAgentId, contextAgentClass. Use ${CONTEXT_LAYER_MCP_SET_AGENT_ID_TOOL_NAME} and ${CONTEXT_LAYER_MCP_SET_AGENT_CLASS_TOOL_NAME} to persist defaults for the current MCP session. Legacy aliases _scopes, _agentId, and _agentClass are still accepted for backwards compatibility.`,
   ].filter(Boolean);
 
   if (mode === "approval_required") {
@@ -94,12 +117,16 @@ const extractInvocationContext = (
   args: z.infer<typeof CONTEXT_LAYER_MCP_TOOL_INPUT_SCHEMA>,
   defaults: McpSessionDefaults,
 ) => {
-  const agentId = args._agentId?.trim() || defaults.agentId;
-  const agentClass = args._agentClass?.trim() || defaults.agentClass;
+  const rawArgs = args as Record<string, unknown>;
+  const agentId = args.contextAgentId?.trim() || getLegacyStringField(rawArgs, "_agentId") || defaults.agentId;
+  const agentClass =
+    args.contextAgentClass?.trim() ||
+    getLegacyStringField(rawArgs, "_agentClass") ||
+    defaults.agentClass;
 
   if (!agentId || !agentClass) {
     throw new ContextLayerError(
-      `MCP tool calls require an agentId and agentClass. Call ${CONTEXT_LAYER_MCP_SET_AGENT_ID_TOOL_NAME} and ${CONTEXT_LAYER_MCP_SET_AGENT_CLASS_TOOL_NAME} to set session defaults, connect with ?agentId=<id>&agentClass=<class> as initial defaults, or pass _agentId and _agentClass in the tool arguments.`,
+      `MCP tool calls require an agentId and agentClass. Call ${CONTEXT_LAYER_MCP_SET_AGENT_ID_TOOL_NAME} and ${CONTEXT_LAYER_MCP_SET_AGENT_CLASS_TOOL_NAME} to set session defaults, connect with ?agentId=<id>&agentClass=<class> as initial defaults, or pass contextAgentId and contextAgentClass in the tool arguments. Legacy aliases _agentId and _agentClass are still accepted.`,
       400,
     );
   }
@@ -112,7 +139,7 @@ const extractInvocationContext = (
     agentId,
     agentClass,
     payload,
-    scopes: args._scopes,
+    scopes: args.contextScopes.length > 0 ? args.contextScopes : getLegacyScopesField(rawArgs),
   };
 };
 

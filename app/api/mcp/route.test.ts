@@ -157,7 +157,7 @@ describe("/api/mcp", () => {
       name: "crm__accounts",
       arguments: {
         limit: 5,
-        _scopes: ["crm.read"],
+        contextScopes: ["crm.read"],
       },
     });
 
@@ -196,7 +196,7 @@ describe("/api/mcp", () => {
     const result = await client.callTool({
       name: "crm__contacts",
       arguments: {
-        _scopes: ["crm.read"],
+        contextScopes: ["crm.read"],
       },
     });
 
