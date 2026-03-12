@@ -957,6 +957,9 @@ export const DashboardWorkspace = ({
               description="Use the persisted personal key as a bearer token for REST calls, the per-user OpenAPI schema, or the MCP bridge."
               icon={ShieldCheck}
             >
+              <p className="mb-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-muted)] px-3 py-2 text-xs leading-6 text-[var(--color-text-base)]">
+                {agentConnectionGuide.permissionNote}
+              </p>
               <div className="divide-y divide-[var(--color-border)]">
                 <KeyValueRow
                   label="Auth header"

@@ -1,7 +1,13 @@
 import { z } from "zod";
 
 import { contextInvokeSchema } from "@/src/lib/core/schema";
-import type { IntegrationSpec } from "@/src/types/context-layer";
+import {
+  buildExamplePayload,
+  buildPermissionNote,
+  getFunctionAccessMode,
+  listExampleFunctions,
+} from "@/src/lib/tool-examples";
+import type { FunctionSpec, IntegrationSpec } from "@/src/types/context-layer";
 
 const CONTEXT_OPENAPI_VERSION = "3.0.3";
 
@@ -42,15 +48,11 @@ const toOpenApiSchema = (schema: z.ZodType) => {
   return jsonSchema;
 };
 
-const buildDefaultPayload = (functionName: string) => ({
-  example: `replace with the arguments for ${functionName}`,
-});
-
-const buildRequestExample = (functionName: string, defaultScopes: string[]) => ({
+const buildRequestExample = (functionSpec: FunctionSpec) => ({
   agentId: "research-bot-01",
   agentClass: "researcher",
-  scopes: defaultScopes.length > 0 ? defaultScopes : ["scope.read"],
-  payload: buildDefaultPayload(functionName),
+  scopes: functionSpec.defaultScopes,
+  payload: buildExamplePayload(functionSpec),
 });
 
 const toOperationId = (integrationKey: string, functionName: string) =>
@@ -58,25 +60,25 @@ const toOperationId = (integrationKey: string, functionName: string) =>
 
 const buildOperationDescription = (
   integration: IntegrationSpec,
-  functionName: string,
-  defaultScopes: string[],
+  functionSpec: FunctionSpec,
 ) => {
   const details = [
     `Integration key: ${integration.key}`,
     `Provider: ${integration.provider}`,
   ];
 
-  if (defaultScopes.length > 0) {
-    details.push(`Default scopes: ${defaultScopes.join(", ")}`);
+  if (functionSpec.defaultScopes.length > 0) {
+    details.push(`Default scopes: ${functionSpec.defaultScopes.join(", ")}`);
   }
 
-  return `${integration.name} tool \`${functionName}\` exposed through the unified context-layer endpoint. ${details.join(" · ")}`;
-};
+  if (getFunctionAccessMode(functionSpec) === "approval_required") {
+    details.push("Access mode: case-by-case approval");
+  }
 
-const listEnabledFunctions = (integration: IntegrationSpec) =>
-  Object.values(integration.functions)
-    .filter((functionSpec) => functionSpec.enabled)
-    .sort((left, right) => left.name.localeCompare(right.name));
+  details.push(buildPermissionNote(functionSpec));
+
+  return `${integration.name} tool \`${functionSpec.name}\` exposed through the unified context-layer endpoint. ${details.join(" · ")}`;
+};
 
 export const buildContextOpenApiDocument = ({
   baseUrl,
@@ -89,7 +91,7 @@ export const buildContextOpenApiDocument = ({
     .filter((integration) => integration.enabled)
     .map((integration) => ({
       integration,
-      functions: listEnabledFunctions(integration),
+      functions: listExampleFunctions(integration),
     }))
     .filter(({ functions }) => functions.length > 0)
     .sort((left, right) => left.integration.key.localeCompare(right.integration.key));
@@ -105,11 +107,7 @@ export const buildContextOpenApiDocument = ({
             summary:
               functionSpec.description?.trim() ||
               `${integration.name}: ${functionSpec.name}`,
-            description: buildOperationDescription(
-              integration,
-              functionSpec.name,
-              functionSpec.defaultScopes,
-            ),
+            description: buildOperationDescription(integration, functionSpec),
             security: [{ ContextApiKey: [] }],
             requestBody: {
               required: true,
@@ -120,10 +118,7 @@ export const buildContextOpenApiDocument = ({
                   },
                   examples: {
                     default: {
-                      value: buildRequestExample(
-                        functionSpec.name,
-                        functionSpec.defaultScopes,
-                      ),
+                      value: buildRequestExample(functionSpec),
                     },
                   },
                 },
@@ -151,7 +146,8 @@ export const buildContextOpenApiDocument = ({
                 },
               },
               403: {
-                description: "Permission required or user connection missing.",
+                description:
+                  "Permission required, case-by-case approval needed, or the user connection is missing.",
                 content: {
                   "application/json": {
                     schema: {

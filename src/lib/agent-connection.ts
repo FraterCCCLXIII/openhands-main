@@ -1,4 +1,10 @@
 import { buildContextLayerMcpToolName } from "@/src/lib/mcp/context-layer-server";
+import {
+  buildExamplePayload,
+  buildPermissionNote,
+  listExampleFunctions,
+  selectExampleIntegration,
+} from "@/src/lib/tool-examples";
 import type { IntegrationSpec } from "@/src/types/context-layer";
 
 export interface AgentConnectionGuide {
@@ -13,14 +19,11 @@ export interface AgentConnectionGuide {
   openApiSchemaEndpoint: string;
   openApiCurlExample: string;
   mcpConfigExample: string;
+  permissionNote: string;
 }
 
 const DEFAULT_AGENT_ID = "research-bot-01";
 const DEFAULT_AGENT_CLASS = "researcher";
-
-const buildDefaultPayload = (functionName: string) => ({
-  example: `replace with the arguments for ${functionName}`,
-});
 
 export const buildAgentConnectionGuide = ({
   baseUrl,
@@ -31,25 +34,21 @@ export const buildAgentConnectionGuide = ({
   apiKey: string;
   integrations: IntegrationSpec[];
 }): AgentConnectionGuide => {
-  const sampleIntegration =
-    integrations.find(
-      (integration) =>
-        integration.enabled &&
-        Object.values(integration.functions).some((functionSpec) => functionSpec.enabled),
-    ) ?? integrations[0];
-  const sampleFunction = sampleIntegration
-    ? Object.values(sampleIntegration.functions).find(
-        (functionSpec) => functionSpec.enabled,
-      ) ?? Object.values(sampleIntegration.functions)[0]
-    : undefined;
+  const sampleIntegrationSelection = selectExampleIntegration(integrations);
+  const sampleIntegration = sampleIntegrationSelection?.integration ?? integrations[0];
+  const sampleFunction = sampleIntegrationSelection
+    ? sampleIntegrationSelection.functions[0]
+    : sampleIntegration
+      ? listExampleFunctions(sampleIntegration)[0] ?? Object.values(sampleIntegration.functions)[0]
+      : undefined;
   const integrationKey = sampleIntegration?.key ?? "your-integration";
   const functionName = sampleFunction?.name ?? "your-function";
   const defaultScopes = sampleFunction?.defaultScopes ?? [];
   const requestPayload = {
     agentId: DEFAULT_AGENT_ID,
     agentClass: DEFAULT_AGENT_CLASS,
-    scopes: defaultScopes.length > 0 ? defaultScopes : ["scope.read"],
-    payload: buildDefaultPayload(functionName),
+    scopes: defaultScopes,
+    payload: sampleFunction ? buildExamplePayload(sampleFunction) : {},
   };
   const normalizedBaseUrl = baseUrl.replace(/\/$/, "");
   const endpoint = `${normalizedBaseUrl}/api/context/${integrationKey}/${functionName}`;
@@ -107,5 +106,6 @@ const result = await response.json();`;
     openApiSchemaEndpoint,
     openApiCurlExample,
     mcpConfigExample,
+    permissionNote: buildPermissionNote(sampleFunction),
   };
 };

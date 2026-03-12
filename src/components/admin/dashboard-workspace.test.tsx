@@ -102,5 +102,8 @@ describe("DashboardWorkspace", () => {
     expect(container.textContent).toContain("OpenAPI schema");
     expect(container.textContent).toContain("https://example.com/api/context/openapi");
     expect(container.textContent).toContain('curl -X GET "https://example.com/api/context/openapi"');
+    expect(container.textContent).toContain(
+      "Successful tool calls also require the agent class to have an allowed policy or an active temporary approval grant.",
+    );
   });
 });
