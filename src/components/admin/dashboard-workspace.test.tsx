@@ -80,4 +80,27 @@ describe("DashboardWorkspace", () => {
     expect(adminLink).toBeTruthy();
     expect(adminLink?.textContent).toContain("Admin");
   });
+
+  it("documents the authenticated OpenAPI schema endpoint on the usage panel", async () => {
+    useSearchParamsMock.mockReturnValue(new URLSearchParams("section=apiKeys"));
+
+    await act(async () => {
+      root.render(
+        <QueryClientProvider client={queryClient}>
+          <DashboardWorkspace
+            initialIntegrations={[]}
+            initialAccessRequests={[]}
+            initialNotifications={[]}
+            currentUser={{ name: "Admin User", email: "admin@example.com" }}
+            contextApiBaseUrl="https://example.com"
+            contextApiKey="test-key"
+          />
+        </QueryClientProvider>,
+      );
+    });
+
+    expect(container.textContent).toContain("OpenAPI schema");
+    expect(container.textContent).toContain("https://example.com/api/context/openapi");
+    expect(container.textContent).toContain('curl -X GET "https://example.com/api/context/openapi"');
+  });
 });

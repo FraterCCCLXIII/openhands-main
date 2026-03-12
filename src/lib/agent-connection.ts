@@ -10,6 +10,8 @@ export interface AgentConnectionGuide {
   requestBody: string;
   curlExample: string;
   fetchExample: string;
+  openApiSchemaEndpoint: string;
+  openApiCurlExample: string;
   mcpConfigExample: string;
 }
 
@@ -29,9 +31,16 @@ export const buildAgentConnectionGuide = ({
   apiKey: string;
   integrations: IntegrationSpec[];
 }): AgentConnectionGuide => {
-  const sampleIntegration = integrations[0];
+  const sampleIntegration =
+    integrations.find(
+      (integration) =>
+        integration.enabled &&
+        Object.values(integration.functions).some((functionSpec) => functionSpec.enabled),
+    ) ?? integrations[0];
   const sampleFunction = sampleIntegration
-    ? Object.values(sampleIntegration.functions)[0]
+    ? Object.values(sampleIntegration.functions).find(
+        (functionSpec) => functionSpec.enabled,
+      ) ?? Object.values(sampleIntegration.functions)[0]
     : undefined;
   const integrationKey = sampleIntegration?.key ?? "your-integration";
   const functionName = sampleFunction?.name ?? "your-function";
@@ -44,6 +53,7 @@ export const buildAgentConnectionGuide = ({
   };
   const normalizedBaseUrl = baseUrl.replace(/\/$/, "");
   const endpoint = `${normalizedBaseUrl}/api/context/${integrationKey}/${functionName}`;
+  const openApiSchemaEndpoint = `${normalizedBaseUrl}/api/context/openapi`;
   const mcpEndpoint = `${normalizedBaseUrl}/api/mcp?agentId=${DEFAULT_AGENT_ID}&agentClass=${DEFAULT_AGENT_CLASS}`;
   const mcpToolName = buildContextLayerMcpToolName(integrationKey, functionName);
   const requestBody = JSON.stringify(requestPayload, null, 2);
@@ -64,6 +74,11 @@ export const buildAgentConnectionGuide = ({
 });
 
 const result = await response.json();`;
+  const openApiCurlExample = [
+    `curl -X GET \"${openApiSchemaEndpoint}\"`,
+    `  -H \"Authorization: Bearer ${apiKey}\"`,
+    '  -H "Accept: application/json"',
+  ].join("\\n");
   const mcpConfigExample = JSON.stringify(
     {
       mcpServers: {
@@ -89,6 +104,8 @@ const result = await response.json();`;
     requestBody,
     curlExample,
     fetchExample,
+    openApiSchemaEndpoint,
+    openApiCurlExample,
     mcpConfigExample,
   };
 };
