@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { DEFAULT_AGENT_CLASS, DEFAULT_AGENT_ID } from "@/src/lib/agent-defaults";
 import { contextInvokeSchema } from "@/src/lib/core/schema";
 import {
   buildExamplePayload,
@@ -49,8 +50,6 @@ const toOpenApiSchema = (schema: z.ZodType) => {
 };
 
 const buildRequestExample = (functionSpec: FunctionSpec) => ({
-  agentId: "research-bot-01",
-  agentClass: "researcher",
   scopes: functionSpec.defaultScopes,
   payload: buildExamplePayload(functionSpec),
 });
@@ -70,6 +69,10 @@ const buildOperationDescription = (
   if (functionSpec.defaultScopes.length > 0) {
     details.push(`Default scopes: ${functionSpec.defaultScopes.join(", ")}`);
   }
+
+  details.push(
+    `Invocation identity defaults to ${DEFAULT_AGENT_ID} (${DEFAULT_AGENT_CLASS}) when agentId and agentClass are omitted.`,
+  );
 
   if (getFunctionAccessMode(functionSpec) === "approval_required") {
     details.push("Access mode: case-by-case approval");

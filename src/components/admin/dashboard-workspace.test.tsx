@@ -112,10 +112,10 @@ describe("DashboardWorkspace", () => {
       "Connect your MCP client to https://example.com/api/mcp.",
     );
     expect(container.textContent).toContain(
-      "Call set_agent_id once at the start of the session to set the agent ID.",
+      "Call your-integration__your-function directly; if you omit agent identity, the session defaults to research-bot-01 (researcher).",
     );
     expect(container.textContent).toContain(
-      "Call set_agent_class once at the start of the session to set the agent class.",
+      "Optionally call set_agent_id and set_agent_class to override the identity for the rest of the session.",
     );
     expect(container.textContent).toContain(
       "Enabled tools are callable by default unless you configure an agent-class policy to narrow access; case-by-case tools still need a temporary approval grant.",

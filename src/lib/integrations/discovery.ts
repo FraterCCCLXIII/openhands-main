@@ -365,6 +365,7 @@ const discoverMcpIntegration = async (
       tool.name,
       buildFunctionSpec(tool.name, tool.description ?? tool.title ?? "", [], {
         toolName: tool.name,
+        inputSchema: tool.inputSchema,
       }),
     ]),
   );
