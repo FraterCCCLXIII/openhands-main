@@ -6,6 +6,7 @@ import {
   ArrowRight,
   Bell,
   CheckCircle2,
+  ChevronRight,
   Copy,
   Eye,
   EyeOff,
@@ -22,6 +23,11 @@ import { signOut } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import { type ReactNode, useEffect, useMemo, useState } from "react";
 
+import {
+  AccessModeSlider,
+  getFunctionAccessMode,
+  matchesFunctionSearch,
+} from "@/src/components/admin/function-access-controls";
 import { IntegrationWizard } from "@/src/components/admin/integration-wizard";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
@@ -30,6 +36,8 @@ import { buildAgentConnectionGuide } from "@/src/lib/agent-connection";
 import { cn } from "@/src/lib/utils";
 import type {
   AccessRequest,
+  FunctionAccessMode,
+  FunctionSpec,
   IntegrationSpec,
   NotificationRecord,
 } from "@/src/types/context-layer";
@@ -50,6 +58,24 @@ const fetchJson = async <T,>(
   }
 
   return (await response.json()) as T;
+};
+
+const inputClassName =
+  "rounded-md border border-[var(--color-border)] bg-[var(--color-bg-input)] px-4 py-3 text-white outline-none transition-colors focus:border-[var(--color-accent)]";
+
+const matchesIntegrationSearch = (integration: IntegrationSpec, query: string) => {
+  const normalizedQuery = query.trim().toLowerCase();
+  if (!normalizedQuery) {
+    return true;
+  }
+
+  return [
+    integration.name,
+    integration.key,
+    integration.provider,
+    integration.kind,
+    integration.authStrategy,
+  ].some((value) => value.toLowerCase().includes(normalizedQuery));
 };
 
 type AdminSection = "home" | "profile" | "integrations" | "apiKeys";
@@ -319,6 +345,14 @@ export const DashboardWorkspace = ({
   const [showIntegrationWizard, setShowIntegrationWizard] = useState(
     initialIntegrations.length === 0,
   );
+  const [integrationSearch, setIntegrationSearch] = useState("");
+  const [hideDisabledSkills, setHideDisabledSkills] = useState(true);
+  const [expandedIntegrations, setExpandedIntegrations] = useState<
+    Record<string, boolean>
+  >({});
+  const [expandedFunctions, setExpandedFunctions] = useState<
+    Record<string, boolean>
+  >({});
   const [revealApiKey, setRevealApiKey] = useState(false);
   const [apiKeyCopied, setApiKeyCopied] = useState(false);
 
@@ -450,6 +484,97 @@ export const DashboardWorkspace = ({
       }),
     [contextApiBaseUrl, integrations],
   );
+
+  const filteredIntegrations = useMemo(() => {
+    const normalizedSearch = integrationSearch.trim().toLowerCase();
+
+    return [...integrations]
+      .sort(
+        (left, right) =>
+          left.name.localeCompare(right.name) || left.key.localeCompare(right.key),
+      )
+      .map((integration) => {
+        const integrationMatchesSearch = matchesIntegrationSearch(
+          integration,
+          normalizedSearch,
+        );
+        const functions = Object.values(integration.functions).sort((left, right) =>
+          left.name.localeCompare(right.name),
+        );
+        const visibleFunctions = functions.filter((functionSpec) => {
+          if (
+            hideDisabledSkills &&
+            getFunctionAccessMode(functionSpec) === "disabled"
+          ) {
+            return false;
+          }
+
+          return (
+            !normalizedSearch ||
+            integrationMatchesSearch ||
+            matchesFunctionSearch(
+              functionSpec.name,
+              functionSpec,
+              normalizedSearch,
+            )
+          );
+        });
+
+        if (
+          normalizedSearch &&
+          !integrationMatchesSearch &&
+          visibleFunctions.length === 0
+        ) {
+          return null;
+        }
+
+        return {
+          integration,
+          functions,
+          visibleFunctions,
+        };
+      })
+      .filter((value): value is {
+        integration: IntegrationSpec;
+        functions: FunctionSpec[];
+        visibleFunctions: FunctionSpec[];
+      } => value !== null);
+  }, [hideDisabledSkills, integrationSearch, integrations]);
+
+  const visibleFunctionCount = filteredIntegrations.reduce(
+    (count, entry) => count + entry.visibleFunctions.length,
+    0,
+  );
+
+  const toggleIntegrationExpanded = (
+    integrationKey: string,
+    expanded: boolean,
+  ) => {
+    setExpandedIntegrations((current) => ({
+      ...current,
+      [integrationKey]: !expanded,
+    }));
+  };
+
+  const toggleFunctionExpanded = (functionKey: string) => {
+    setExpandedFunctions((current) => ({
+      ...current,
+      [functionKey]: !current[functionKey],
+    }));
+  };
+
+  const updateFunctionAccessMode = (
+    integrationKey: string,
+    functionName: string,
+    accessMode: FunctionAccessMode,
+  ) => {
+    actionMutation.mutate({
+      url: `/api/integrations/${integrationKey}/functions/${functionName}`,
+      method: "PATCH",
+      body: { accessMode },
+    });
+  };
+
 
   const handleCopyApiKey = async () => {
     if (!contextApiReady) {
@@ -816,103 +941,233 @@ export const DashboardWorkspace = ({
                   No integrations yet. Use the button above to add your first one.
                 </div>
               ) : (
-                <div className="divide-y divide-[var(--color-border)]">
-                  {integrations.map((integration) => (
-                    <div key={integration.key} className="py-4 first:pt-0 last:pb-0">
-                      <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
-                        <div className="min-w-0">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <h3 className="text-sm font-semibold text-white">
-                              {integration.name}
-                            </h3>
-                            <Badge>{integration.provider}</Badge>
-                            <Badge>{integration.kind}</Badge>
-                            <Badge tone={integration.enabled ? "success" : "danger"}>
-                              {integration.enabled ? "enabled" : "disabled"}
-                            </Badge>
-                          </div>
-                          <p className="mt-2 text-xs leading-6 text-[var(--color-text-base)]">
-                            {integration.key} · auth: {integration.authStrategy}
-                          </p>
-                        </div>
-                        <Button
-                          variant={integration.enabled ? "secondary" : "primary"}
-                          className="h-8 shrink-0 gap-2 rounded-md px-3 text-xs"
-                          onClick={() =>
-                            actionMutation.mutate({
-                              url: `/api/integrations/${integration.key}/toggle`,
-                              method: "POST",
-                              body: { enabled: !integration.enabled },
-                            })
-                          }
-                          title="Temporarily enable or disable the full integration."
-                        >
-                          {integration.enabled ? (
-                            <ToggleRight className="h-4 w-4" />
-                          ) : (
-                            <ToggleLeft className="h-4 w-4" />
-                          )}
-                          {integration.enabled ? "Disable" : "Enable"}
-                        </Button>
+                <div className="space-y-4">
+                  <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-4">
+                    <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+                      <div className="space-y-1">
+                        <h3 className="text-sm font-semibold text-white">
+                          Search and review integration skills
+                        </h3>
+                        <p className="text-xs leading-6 text-[var(--color-text-base)]">
+                          Use the same compact expandable skill rows here to
+                          search integrations, tune access modes, and hide
+                          disabled skills by default.
+                        </p>
                       </div>
-
-                      <div className="mt-3 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)]">
-                        {Object.values(integration.functions).length === 0 ? (
-                          <p className="px-3 py-3 text-sm text-[var(--color-text-base)]">
-                            No functions registered yet.
-                          </p>
-                        ) : (
-                          Object.values(integration.functions).map((functionSpec, index) => (
-                            <div
-                              key={functionSpec.name}
-                              className={cn(
-                                "flex flex-col gap-3 px-3 py-3 md:flex-row md:items-start md:justify-between",
-                                index > 0 && "border-t border-[var(--color-border)]",
-                              )}
-                            >
-                              <div className="min-w-0">
-                                <div className="flex flex-wrap items-center gap-2">
-                                  <p className="text-sm font-medium text-white">
-                                    {functionSpec.name}
-                                  </p>
-                                  <Badge tone={functionSpec.enabled ? "success" : "danger"}>
-                                    {functionSpec.enabled ? "enabled" : "disabled"}
-                                  </Badge>
-                                  <Badge>
-                                    {functionSpec.accessMode === "approval_required"
-                                      ? "case-by-case"
-                                      : functionSpec.enabled
-                                        ? "default-enabled"
-                                        : "disabled"}
-                                  </Badge>
-                                </div>
-                                <p className="mt-1 text-xs leading-6 text-[var(--color-text-base)]">
-                                  {functionSpec.description || "No description provided."}
-                                </p>
-                                <p className="mt-1 text-[11px] leading-5 text-[var(--color-text-base)]">
-                                  Scopes: {functionSpec.defaultScopes.join(", ") || "none"}
-                                </p>
-                              </div>
-                              <Button
-                                variant={functionSpec.enabled ? "secondary" : "primary"}
-                                className="h-8 shrink-0 rounded-md px-3 text-xs"
-                                onClick={() =>
-                                  actionMutation.mutate({
-                                    url: `/api/integrations/${integration.key}/functions/${functionSpec.name}/toggle`,
-                                    method: "POST",
-                                    body: { enabled: !functionSpec.enabled },
-                                  })
-                                }
-                                title="Enable or disable just this callable function."
-                              >
-                                {functionSpec.enabled ? "Disable function" : "Enable function"}
-                              </Button>
-                            </div>
-                          ))
-                        )}
+                      <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--color-text-base)]">
+                        <Badge>{filteredIntegrations.length} integrations</Badge>
+                        <Badge>{visibleFunctionCount} visible skills</Badge>
                       </div>
                     </div>
-                  ))}
+
+                    <div className="mt-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                      <input
+                        type="search"
+                        value={integrationSearch}
+                        onChange={(event) => setIntegrationSearch(event.target.value)}
+                        placeholder="Search integrations and skills"
+                        aria-label="Search integrations and skills"
+                        className={cn(inputClassName, "w-full lg:max-w-md")}
+                      />
+                      <label className="inline-flex items-center gap-2 rounded-md border border-[var(--color-border)] bg-[var(--color-bg-input)] px-3 py-2 text-xs text-white">
+                        <input
+                          type="checkbox"
+                          checked={hideDisabledSkills}
+                          aria-label="Hide disabled skills"
+                          onChange={(event) =>
+                            setHideDisabledSkills(event.target.checked)
+                          }
+                        />
+                        <span>Hide disabled skills</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  {filteredIntegrations.length === 0 ? (
+                    <div className="rounded-xl border border-dashed border-[var(--color-border)] bg-[var(--color-surface-subtle)] px-3 py-4 text-sm text-[var(--color-text-base)]">
+                      No integrations or skills match the current filters.
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {filteredIntegrations.map(
+                        ({ integration, functions, visibleFunctions }) => {
+                          const isExpanded =
+                            expandedIntegrations[integration.key] ??
+                            Boolean(integrationSearch.trim());
+
+                          return (
+                            <div
+                              key={integration.key}
+                              className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-4"
+                              data-integration-key={integration.key}
+                            >
+                              <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
+                                <div className="min-w-0">
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    <h3 className="text-sm font-semibold text-white">
+                                      {integration.name}
+                                    </h3>
+                                    <Badge>{integration.provider}</Badge>
+                                    <Badge>{integration.kind}</Badge>
+                                    <Badge tone={integration.enabled ? "success" : "danger"}>
+                                      {integration.enabled ? "enabled" : "disabled"}
+                                    </Badge>
+                                  </div>
+                                  <p className="mt-2 text-xs leading-6 text-[var(--color-text-base)]">
+                                    {integration.key} · auth: {integration.authStrategy}
+                                  </p>
+                                  <p className="mt-1 text-[11px] leading-5 text-[var(--color-text-base)]">
+                                    {visibleFunctions.length} visible skill
+                                    {visibleFunctions.length === 1 ? "" : "s"}
+                                    {functions.length > 0
+                                      ? ` of ${functions.length}`
+                                      : ""}
+                                  </p>
+                                </div>
+                                <div className="flex flex-wrap items-center gap-2 xl:justify-end">
+                                  <Button
+                                    variant={integration.enabled ? "secondary" : "primary"}
+                                    className="h-8 shrink-0 gap-2 rounded-md px-3 text-xs"
+                                    onClick={() =>
+                                      actionMutation.mutate({
+                                        url: `/api/integrations/${integration.key}/toggle`,
+                                        method: "POST",
+                                        body: { enabled: !integration.enabled },
+                                      })
+                                    }
+                                    title="Temporarily enable or disable the full integration."
+                                  >
+                                    {integration.enabled ? (
+                                      <ToggleRight className="h-4 w-4" />
+                                    ) : (
+                                      <ToggleLeft className="h-4 w-4" />
+                                    )}
+                                    {integration.enabled ? "Disable" : "Enable"}
+                                  </Button>
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    className="h-8 rounded-md px-3 text-xs"
+                                    aria-expanded={isExpanded}
+                                    aria-controls={`integration-functions-${integration.key}`}
+                                    onClick={() =>
+                                      toggleIntegrationExpanded(
+                                        integration.key,
+                                        isExpanded,
+                                      )
+                                    }
+                                  >
+                                    {isExpanded ? "Hide skills" : "Show skills"}
+                                    <ChevronRight
+                                      className={cn(
+                                        "ml-1 h-4 w-4 transition-transform",
+                                        isExpanded && "rotate-90",
+                                      )}
+                                    />
+                                  </Button>
+                                </div>
+                              </div>
+
+                              {isExpanded ? (
+                                <div
+                                  id={`integration-functions-${integration.key}`}
+                                  className="mt-3 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-input)]"
+                                >
+                                  {functions.length === 0 ? (
+                                    <p className="px-4 py-4 text-sm text-[var(--color-text-base)]">
+                                      No skills registered yet.
+                                    </p>
+                                  ) : visibleFunctions.length === 0 ? (
+                                    <p className="px-4 py-4 text-sm text-[var(--color-text-base)]">
+                                      No visible skills match the current filters.
+                                    </p>
+                                  ) : (
+                                    <div className="divide-y divide-[var(--color-border)]">
+                                      {visibleFunctions.map((functionSpec) => {
+                                        const functionKey = `${integration.key}:${functionSpec.name}`;
+                                        const accessMode =
+                                          getFunctionAccessMode(functionSpec);
+                                        const isFunctionExpanded =
+                                          expandedFunctions[functionKey] ?? false;
+
+                                        return (
+                                          <div
+                                            key={functionKey}
+                                            className="px-4 py-4"
+                                            data-function-key={functionKey}
+                                            data-function-name={functionSpec.name}
+                                          >
+                                            <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
+                                              <div className="min-w-0 flex-1">
+                                                <p className="text-sm font-semibold text-white">
+                                                  {functionSpec.name}
+                                                </p>
+                                                <p className="mt-1 truncate text-xs leading-6 text-[var(--color-text-base)]">
+                                                  {functionSpec.description || "No description provided."}
+                                                </p>
+                                              </div>
+                                              <div className="flex flex-wrap items-center gap-2 xl:justify-end">
+                                                <AccessModeSlider
+                                                  functionName={functionSpec.name}
+                                                  mode={accessMode}
+                                                  onChange={(nextMode) =>
+                                                    updateFunctionAccessMode(
+                                                      integration.key,
+                                                      functionSpec.name,
+                                                      nextMode,
+                                                    )
+                                                  }
+                                                />
+                                                <Button
+                                                  type="button"
+                                                  variant="ghost"
+                                                  className="h-8 rounded-md px-3 text-xs"
+                                                  aria-expanded={isFunctionExpanded}
+                                                  aria-controls={`function-details-${functionKey}`}
+                                                  onClick={() =>
+                                                    toggleFunctionExpanded(functionKey)
+                                                  }
+                                                >
+                                                  {isFunctionExpanded
+                                                    ? "Hide details"
+                                                    : "Show details"}
+                                                  <ChevronRight
+                                                    className={cn(
+                                                      "ml-1 h-4 w-4 transition-transform",
+                                                      isFunctionExpanded &&
+                                                        "rotate-90",
+                                                    )}
+                                                  />
+                                                </Button>
+                                              </div>
+                                            </div>
+
+                                            {isFunctionExpanded ? (
+                                              <div
+                                                id={`function-details-${functionKey}`}
+                                                className="mt-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-4"
+                                              >
+                                                <p className="text-sm leading-7 text-[var(--color-text-base)]">
+                                                  {functionSpec.description || "No description provided."}
+                                                </p>
+                                                <p className="mt-2 text-xs leading-6 text-[var(--color-text-base)]">
+                                                  Default scopes: {functionSpec.defaultScopes.join(", ") || "none"}
+                                                </p>
+                                              </div>
+                                            ) : null}
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  )}
+                                </div>
+                              ) : null}
+                            </div>
+                          );
+                        },
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
             </CompactPanel>

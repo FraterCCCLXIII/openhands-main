@@ -680,8 +680,8 @@ describe("IntegrationWizard", () => {
     await clickButton("Disable selected");
     expect(getFunctionMode("createPage")).toBe("disabled");
     expect(getFunctionMode("searchPages")).toBe("disabled");
-
-    await clickButton("Deselect matches");
+    expect(getFunctionCheckbox("createPage")?.checked).toBe(false);
+    expect(getFunctionCheckbox("searchPages")?.checked).toBe(false);
 
     await act(async () => {
       setInputValue(searchInput ?? undefined, "search");
@@ -694,7 +694,7 @@ describe("IntegrationWizard", () => {
     await clickButton("Select all matches");
     await clickButton("Case-by-case selected");
     expect(getFunctionMode("searchPages")).toBe("approval_required");
-    await clickButton("Deselect matches");
+    expect(getFunctionCheckbox("searchPages")?.checked).toBe(false);
 
     await act(async () => {
       setInputValue(searchInput ?? undefined, "archive");
@@ -706,6 +706,7 @@ describe("IntegrationWizard", () => {
 
     await clickButton("Select all matches");
     await clickButton("Enable selected");
+    expect(getFunctionCheckbox("archiveDatabase")?.checked).toBe(false);
 
     await act(async () => {
       setInputValue(searchInput ?? undefined, "");
