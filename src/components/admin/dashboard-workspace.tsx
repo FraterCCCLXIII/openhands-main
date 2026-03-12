@@ -320,6 +320,7 @@ export const DashboardWorkspace = ({
     initialIntegrations.length === 0,
   );
   const [revealApiKey, setRevealApiKey] = useState(false);
+  const [apiKeyCopied, setApiKeyCopied] = useState(false);
 
   useEffect(() => {
     const requestedSection = searchParams.get("section");
@@ -349,6 +350,20 @@ export const DashboardWorkspace = ({
       setStatusMessage(oauthError || "OAuth connection failed.");
     }
   }, [searchParams]);
+
+  useEffect(() => {
+    if (!apiKeyCopied) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setApiKeyCopied(false);
+    }, 2000);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [apiKeyCopied]);
 
   const integrationsQuery = useQuery({
     queryKey: ["integrations"],
@@ -444,8 +459,9 @@ export const DashboardWorkspace = ({
 
     try {
       await copyTextToClipboard(contextApiKey);
-      setStatusMessage("API key copied to clipboard.");
+      setApiKeyCopied(true);
     } catch {
+      setApiKeyCopied(false);
       setStatusMessage("Unable to copy the API key from this browser session.");
     }
   };
@@ -946,7 +962,11 @@ export const DashboardWorkspace = ({
                   onClick={handleCopyApiKey}
                   disabled={!contextApiReady}
                 >
-                  <Copy className="h-4 w-4" />
+                  {apiKeyCopied ? (
+                    <CheckCircle2 className="h-4 w-4" />
+                  ) : (
+                    <Copy className="h-4 w-4" />
+                  )}
                   Copy
                 </Button>
               </div>
