@@ -20,9 +20,19 @@ const CONTEXT_LAYER_MCP_TOOL_INPUT_SCHEMA = z
   })
   .passthrough();
 
+const SET_AGENT_ID_TOOL_INPUT_SCHEMA = z.object({
+  agentId: z.string().trim().min(1),
+});
+
+const SET_AGENT_CLASS_TOOL_INPUT_SCHEMA = z.object({
+  agentClass: z.string().trim().min(1),
+});
+
 const RESERVED_TOOL_ARGUMENT_KEYS = new Set(["_agentId", "_agentClass", "_scopes"]);
 const APPROVAL_DASHBOARD_PATH = "/admin";
 export const CONTEXT_LAYER_MCP_TOOL_SEPARATOR = "__";
+export const CONTEXT_LAYER_MCP_SET_AGENT_ID_TOOL_NAME = "set_agent_id";
+export const CONTEXT_LAYER_MCP_SET_AGENT_CLASS_TOOL_NAME = "set_agent_class";
 
 const getFunctionAccessMode = (functionSpec: FunctionSpec) =>
   functionSpec.accessMode ?? (functionSpec.enabled ? "enabled" : "disabled");
@@ -49,7 +59,7 @@ const buildToolDescription = (
   const notes = [
     functionSpec.description?.trim(),
     `Invoke ${integration.key}.${functionSpec.name} through the context layer MCP bridge.`,
-    "Pass downstream tool arguments as top-level fields. Reserved fields: _scopes, _agentId, _agentClass.",
+    `Pass downstream tool arguments as top-level fields. Reserved fields: _scopes, _agentId, _agentClass. Use ${CONTEXT_LAYER_MCP_SET_AGENT_ID_TOOL_NAME} and ${CONTEXT_LAYER_MCP_SET_AGENT_CLASS_TOOL_NAME} to persist defaults for the current MCP session.`,
   ].filter(Boolean);
 
   if (mode === "approval_required") {
@@ -79,19 +89,21 @@ const buildApprovalMessage = ({
     `Ask your human to authorize access in the dashboard: ${approvalUrl}`,
   ].join(" ");
 
+type SessionAgentDefaults = {
+  agentId: string;
+  agentClass: string;
+};
+
 const extractInvocationContext = (
-  request: Request,
   args: z.infer<typeof CONTEXT_LAYER_MCP_TOOL_INPUT_SCHEMA>,
+  defaults: SessionAgentDefaults,
 ) => {
-  const url = new URL(request.url);
-  const queryAgentId = url.searchParams.get("agentId")?.trim() ?? "";
-  const queryAgentClass = url.searchParams.get("agentClass")?.trim() ?? "";
-  const agentId = args._agentId?.trim() || queryAgentId;
-  const agentClass = args._agentClass?.trim() || queryAgentClass;
+  const agentId = args._agentId?.trim() || defaults.agentId;
+  const agentClass = args._agentClass?.trim() || defaults.agentClass;
 
   if (!agentId || !agentClass) {
     throw new ContextLayerError(
-      "MCP tool calls require an agentId and agentClass. Add ?agentId=<id>&agentClass=<class> to the MCP server URL or pass _agentId and _agentClass in the tool arguments.",
+      `MCP tool calls require an agentId and agentClass. Call ${CONTEXT_LAYER_MCP_SET_AGENT_ID_TOOL_NAME} and ${CONTEXT_LAYER_MCP_SET_AGENT_CLASS_TOOL_NAME} to set session defaults, connect with ?agentId=<id>&agentClass=<class> as initial defaults, or pass _agentId and _agentClass in the tool arguments.`,
       400,
     );
   }
@@ -134,6 +146,14 @@ const formatToolResult = (
   };
 };
 
+const buildSessionSettingResult = (
+  field: "agentId" | "agentClass",
+  value: string,
+): CallToolResult => ({
+  content: [{ type: "text" as const, text: `MCP session ${field} set to ${value}.` }],
+  structuredContent: { [field]: value },
+});
+
 export const buildContextLayerMcpToolName = (
   integrationKey: string,
   functionName: string,
@@ -153,7 +173,39 @@ export const createContextLayerMcpServer = async ({
     APPROVAL_DASHBOARD_PATH,
     getRequestOrigin(request.headers),
   ).toString();
+  const initialUrl = new URL(request.url);
+  const sessionAgentDefaults: SessionAgentDefaults = {
+    agentId: initialUrl.searchParams.get("agentId")?.trim() ?? "",
+    agentClass: initialUrl.searchParams.get("agentClass")?.trim() ?? "",
+  };
   const integrations = await service.listIntegrations();
+
+  server.registerTool(
+    CONTEXT_LAYER_MCP_SET_AGENT_ID_TOOL_NAME,
+    {
+      title: "Set session agent ID",
+      description: "Set the default agentId for subsequent MCP tool calls in this session.",
+      inputSchema: SET_AGENT_ID_TOOL_INPUT_SCHEMA,
+    },
+    async ({ agentId }) => {
+      sessionAgentDefaults.agentId = agentId.trim();
+      return buildSessionSettingResult("agentId", sessionAgentDefaults.agentId);
+    },
+  );
+
+  server.registerTool(
+    CONTEXT_LAYER_MCP_SET_AGENT_CLASS_TOOL_NAME,
+    {
+      title: "Set session agent class",
+      description:
+        "Set the default agentClass for subsequent MCP tool calls in this session.",
+      inputSchema: SET_AGENT_CLASS_TOOL_INPUT_SCHEMA,
+    },
+    async ({ agentClass }) => {
+      sessionAgentDefaults.agentClass = agentClass.trim();
+      return buildSessionSettingResult("agentClass", sessionAgentDefaults.agentClass);
+    },
+  );
 
   for (const integration of integrations) {
     if (!integration.enabled) {
@@ -179,7 +231,7 @@ export const createContextLayerMcpServer = async ({
           inputSchema: CONTEXT_LAYER_MCP_TOOL_INPUT_SCHEMA,
         },
         async (args) => {
-          const invocation = extractInvocationContext(request, args);
+          const invocation = extractInvocationContext(args, sessionAgentDefaults);
 
           try {
             const result = await service.invokeContext(

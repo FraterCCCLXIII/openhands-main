@@ -86,10 +86,10 @@ describe("agent-connection", () => {
     expect(guide.openApiSchemaEndpoint).toBe(
       "http://localhost:12000/api/context/openapi",
     );
-    expect(guide.mcpEndpoint).toBe(
-      "http://localhost:12000/api/mcp?agentId=research-bot-01&agentClass=researcher",
-    );
+    expect(guide.mcpEndpoint).toBe("http://localhost:12000/api/mcp");
     expect(guide.mcpToolName).toBe("github__search_repositories");
+    expect(guide.mcpSetAgentIdToolName).toBe("set_agent_id");
+    expect(guide.mcpSetAgentClassToolName).toBe("set_agent_class");
     expect(guide.curlExample).toContain("Authorization: Bearer context-key");
     expect(guide.openApiCurlExample).toContain(
       'curl -X GET "http://localhost:12000/api/context/openapi"',
@@ -97,9 +97,10 @@ describe("agent-connection", () => {
     expect(guide.requestBody).toContain('"scopes": [\n    "repo"\n  ]');
     expect(guide.permissionNote).toContain("Enabled tools are callable by default");
     expect(guide.mcpConfigExample).toContain('"transport": "streamable-http"');
-    expect(guide.mcpConfigExample).toContain(
-      '"url": "http://localhost:12000/api/mcp?agentId=research-bot-01&agentClass=researcher"',
-    );
+    expect(guide.mcpConfigExample).toContain('"url": "http://localhost:12000/api/mcp"');
+    expect(guide.mcpSessionSetupExample).toContain("1. Call set_agent_id with:");
+    expect(guide.mcpSessionSetupExample).toContain("2. Call set_agent_class with:");
+    expect(guide.mcpSessionSetupExample).toContain("3. Call github__search_repositories with:");
   });
 
   it("prefers a non-approval function and omits fake payload placeholders", () => {
@@ -132,5 +133,7 @@ describe("agent-connection", () => {
     );
     expect(guide.mcpToolName).toBe("your-integration__your-function");
     expect(guide.fetchExample).toContain("your-function");
+    expect(guide.mcpSessionSetupExample).toContain("set_agent_id");
+    expect(guide.mcpSessionSetupExample).toContain("set_agent_class");
   });
 });
