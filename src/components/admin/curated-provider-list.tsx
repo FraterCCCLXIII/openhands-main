@@ -157,6 +157,11 @@ const buildManagedConnectorPayload = (
         parseScopes(form.scopes).length > 0
           ? parseScopes(form.scopes)
           : provider.registrationDefaults?.scopes ?? [],
+      scopeSeparator: provider.registrationDefaults?.scopeSeparator,
+      clientAuthentication: provider.registrationDefaults?.clientAuthentication,
+      additionalAuthorizationParams:
+        provider.registrationDefaults?.additionalAuthorizationParams,
+      pkce: provider.registrationDefaults?.pkce,
     },
     oauthClientId: form.oauthClientId.trim(),
     oauthClientSecret: form.oauthClientSecret.trim(),

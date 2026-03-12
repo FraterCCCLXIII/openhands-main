@@ -86,6 +86,27 @@ const providerCatalog: OAuthProviderCatalogOption[] = [
       scopes: [],
     },
   },
+  {
+    slug: "slack",
+    name: "Slack",
+    description: "Channels, messaging, workflows, and collaboration",
+    categories: ["Communication"],
+    authStrategy: "oauth2",
+    availability: "oauth_ready",
+    builtInSlug: "slack",
+    docsUrl: "https://docs.slack.dev/ai/slack-mcp-server",
+    notes: "Uses Slack's official hosted MCP server.",
+    popularityRank: 4,
+    registrationDefaults: {
+      provider: "mcp",
+      serverUrl: "https://mcp.slack.com/mcp",
+      authorizationUrl: "https://slack.com/oauth/v2_user/authorize",
+      tokenUrl: "https://slack.com/api/oauth.v2.user.access",
+      scopes: ["chat:write", "users:read"],
+      clientAuthentication: "body",
+      pkce: true,
+    },
+  },
 ];
 
 const setInputValue = (element: Element | null, value: string) => {
@@ -268,6 +289,112 @@ describe("CuratedProviderList", () => {
     expect(container.textContent).toContain("Ready now");
     expect(container.textContent).toContain("Use Google Calendar");
   });
+
+  it("registers Slack as a managed MCP connector backed by the official hosted MCP server", async () => {
+    fetchMock.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          slug: "slack",
+          oauthConfigured: true,
+        }),
+        {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        },
+      ),
+    );
+
+    await act(async () => {
+      root.render(
+        <CuratedProviderList
+          providerCatalog={providerCatalog}
+          readyBuiltInConnectors={readyBuiltInConnectors}
+          canRegisterManagedConnectors
+          oauthCallbackBaseUrl={oauthCallbackBaseUrl}
+        />,
+      );
+    });
+
+    const slackButton = Array.from(container.querySelectorAll("button")).find((button) =>
+      button.textContent?.includes("Slack"),
+    );
+    expect(slackButton).toBeTruthy();
+
+    await act(async () => {
+      slackButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    expect(container.textContent).toContain(
+      "Enter the OAuth-backed MCP details below to register this connector once for the whole service.",
+    );
+    expect(container.textContent).toContain("How to create Slack OAuth credentials");
+    expect(container.textContent).toContain(`${oauthCallbackBaseUrl}/slack/callback`);
+    expect(container.textContent).toContain("MCP server URL");
+    expect(container.textContent).not.toContain("API base URL");
+    expect(container.textContent).not.toContain("Starter API function:");
+
+    const urlInputs = Array.from(container.querySelectorAll('input[type="url"]'));
+    expect(urlInputs).toHaveLength(1);
+    expect((urlInputs[0] as HTMLInputElement | undefined)?.value).toBe(
+      "https://mcp.slack.com/mcp",
+    );
+
+    await act(async () => {
+      setInputValue(
+        Array.from(container.querySelectorAll('input[type="text"]')).find(
+          (input) => (input as HTMLInputElement).value === "",
+        ) ?? null,
+        "slack-client-id",
+      );
+      setInputValue(container.querySelector('input[type="password"]'), "slack-client-secret");
+    });
+
+    const form = container.querySelector("form");
+    expect(form).toBeTruthy();
+
+    await act(async () => {
+      form?.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    const [, requestInit] = fetchMock.mock.calls.at(-1) as [string, RequestInit];
+    const body = JSON.parse(String(requestInit.body)) as {
+      slug: string;
+      provider: string;
+      apiBaseUrl: string;
+      serverUrl?: string;
+      oauthConfig: {
+        authorizationUrl: string;
+        tokenUrl: string;
+        clientAuthentication?: string;
+        pkce?: boolean;
+        scopes: string[];
+      };
+      oauthClientId: string;
+      oauthClientSecret: string;
+      functions: Array<unknown>;
+    };
+
+    expect(body).toMatchObject({
+      slug: "slack",
+      provider: "mcp",
+      serverUrl: "https://mcp.slack.com/mcp",
+      oauthClientId: "slack-client-id",
+      oauthClientSecret: "slack-client-secret",
+      functions: [],
+    });
+    expect(body.apiBaseUrl).toBeUndefined();
+    expect(body.oauthConfig).toMatchObject({
+      authorizationUrl: "https://slack.com/oauth/v2_user/authorize",
+      tokenUrl: "https://slack.com/api/oauth.v2.user.access",
+      clientAuthentication: "body",
+      pkce: true,
+      scopes: ["chat:write", "users:read"],
+    });
+    expect(container.textContent).toContain("Ready now");
+    expect(container.textContent).toContain("Use Slack");
+  });
+
 
   it("registers Notion as a managed HTTP connector backed by the official OpenAPI schema", async () => {
     fetchMock.mockResolvedValueOnce(

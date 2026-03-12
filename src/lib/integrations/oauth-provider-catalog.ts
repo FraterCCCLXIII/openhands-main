@@ -37,13 +37,13 @@ const oauthProviderCatalog = [
   provider(3, {
     slug: "slack",
     name: "Slack",
-    description: "Channels, messaging, workflows, and operational collaboration.",
+    description: "Channels, messaging, workflows, canvases, and operational collaboration.",
     categories: ["Communication", "Operations"],
-    availability: "manual_token",
+    availability: "oauth_ready",
     builtInSlug: "slack",
     appUrl: "https://slack.com",
-    docsUrl: "https://api.slack.com/authentication/oauth-v2",
-    notes: "Current built-in uses a bot token manually; Slack OAuth would enable workspace-scoped connect flow later.",
+    docsUrl: "https://docs.slack.dev/ai/slack-mcp-server",
+    notes: "Uses Slack's official hosted MCP server with confidential OAuth user-token auth.",
   }),
   provider(4, {
     slug: "notion",

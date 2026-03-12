@@ -16,10 +16,12 @@ describe("listOAuthProviderCatalog", () => {
     const providers = listOAuthProviderCatalog();
     const notion = providers.find((provider) => provider.slug === "notion");
     const figma = providers.find((provider) => provider.slug === "figma");
+    const slack = providers.find((provider) => provider.slug === "slack");
     const github = providers.find((provider) => provider.slug === "github");
 
     expect(notion).toMatchObject({ availability: "oauth_ready", builtInSlug: "notion" });
     expect(figma).toMatchObject({ availability: "oauth_ready", builtInSlug: "figma" });
+    expect(slack).toMatchObject({ availability: "oauth_ready", builtInSlug: "slack" });
     expect(github).toMatchObject({ availability: "manual_token", builtInSlug: "github" });
   });
 
@@ -49,10 +51,19 @@ describe("listOAuthProviderCatalog", () => {
     const providers = listOAuthProviderCatalog();
     const notion = providers.find((provider) => provider.slug === "notion");
     const googleCalendar = providers.find((provider) => provider.slug === "google-calendar");
+    const slack = providers.find((provider) => provider.slug === "slack");
     const github = providers.find((provider) => provider.slug === "github");
 
     expect(github?.registrationDefaults).toMatchObject({
       serverUrl: "https://api.githubcopilot.com/mcp/",
+    });
+    expect(slack?.registrationDefaults).toMatchObject({
+      provider: "mcp",
+      serverUrl: "https://mcp.slack.com/mcp",
+      authorizationUrl: "https://slack.com/oauth/v2_user/authorize",
+      tokenUrl: "https://slack.com/api/oauth.v2.user.access",
+      clientAuthentication: "body",
+      pkce: true,
     });
     expect(notion?.registrationDefaults).toMatchObject({
       provider: "http",

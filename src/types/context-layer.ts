@@ -75,6 +75,10 @@ export interface OAuthProviderRegistrationDefaults {
   authorizationUrl?: string;
   tokenUrl?: string;
   scopes?: string[];
+  scopeSeparator?: "space" | "comma";
+  clientAuthentication?: OAuthClientAuthentication;
+  additionalAuthorizationParams?: Record<string, string>;
+  pkce?: boolean;
   functionName?: string;
   functionDescription?: string;
   requestMethod?: string;

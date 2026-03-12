@@ -60,7 +60,7 @@ const atlassianPreset = (
 
 const officialManagedMcpServerUrls: Record<string, string> = {
   github: "https://api.githubcopilot.com/mcp/",
-  slack: "https://mcp.slack.com/sse",
+  slack: "https://mcp.slack.com/mcp",
 };
 
 const registrationDefaults: Record<string, OAuthProviderRegistrationDefaults> = {
@@ -82,14 +82,28 @@ const registrationDefaults: Record<string, OAuthProviderRegistrationDefaults> = 
     "/v1/documents/{documentId}",
   ),
   slack: {
-    apiBaseUrl: "https://slack.com/api",
-    authorizationUrl: "https://slack.com/oauth/v2/authorize",
-    tokenUrl: "https://slack.com/api/oauth.v2.access",
-    scopes: ["channels:read", "users:read"],
-    functionName: "list_channels",
-    functionDescription: "List public Slack channels for the connected workspace.",
-    requestMethod: "POST",
-    requestPath: "/conversations.list",
+    provider: "mcp",
+    authorizationUrl: "https://slack.com/oauth/v2_user/authorize",
+    tokenUrl: "https://slack.com/api/oauth.v2.user.access",
+    scopes: [
+      "search:read.public",
+      "search:read.private",
+      "search:read.mpim",
+      "search:read.im",
+      "search:read.files",
+      "search:read.users",
+      "chat:write",
+      "channels:history",
+      "groups:history",
+      "mpim:history",
+      "im:history",
+      "canvases:read",
+      "canvases:write",
+      "users:read",
+      "users:read.email",
+    ],
+    pkce: true,
+    clientAuthentication: "body",
   },
   notion: {
     provider: "http",
