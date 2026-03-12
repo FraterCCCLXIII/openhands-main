@@ -62,5 +62,7 @@ This repository contains a Next.js/TypeScript implementation of an agent context
 - `FunctionSpec.accessMode` now supports `enabled`, `disabled`, and `approval_required`; `approval_required` bypasses agent-class policy and requires a temporary grant, while `enabled` functions are callable by default unless a matching agent-class policy is configured to narrow access.
 - `app/api/cron/expire-grants/route.ts` is intended for a Vercel cron job to purge expired temporary grants.
 - `.github/workflows/` now includes OpenHands PR review (`pr-review-by-openhands.yml`, `pr-review-evaluation.yml`) and vulnerability remediation (`vulnerability-scan.yml`) wrappers copied from `OpenHands/extensions` plugins.
+- The app favicon now mirrors the OpenHands frontend assets: `public/favicon.ico`, `public/favicon-16x16.png`, and `public/favicon-32x32.png`, referenced explicitly via `app/layout.tsx` metadata.
+
 - `app/globals.css` plus `src/components/ui/{button,badge,card}.tsx` now mirror the OpenHands frontend palette more closely: gold primary accents (`#c9b974`/`#cfb755`), flatter dark surfaces, system sans body text, and IBM Plex Mono for code; admin/dashboard styling should stay aligned with those shared primitives.
 
