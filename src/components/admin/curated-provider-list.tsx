@@ -46,6 +46,51 @@ interface RegistrationFormState {
   message: string;
 }
 
+const getProviderAuthStrategy = (provider: OAuthProviderCatalogOption) =>
+  provider.registrationDefaults?.authStrategy ?? provider.authStrategy;
+
+const usesOAuthConnector = (provider: OAuthProviderCatalogOption) =>
+  getProviderAuthStrategy(provider) === "oauth2";
+
+const getCredentialCopy = (provider: OAuthProviderCatalogOption) => {
+  const authStrategy = getProviderAuthStrategy(provider);
+
+  if (authStrategy === "api_key") {
+    return {
+      label:
+        provider.registrationDefaults?.credentialLabel ?? `${provider.name} API key`,
+      placeholder:
+        provider.registrationDefaults?.credentialPlaceholder ??
+        `Paste your ${provider.name} API key`,
+      help:
+        provider.registrationDefaults?.credentialHelp ??
+        `API key provided by ${provider.name}.`,
+    };
+  }
+
+  if (authStrategy === "bearer") {
+    return {
+      label:
+        provider.registrationDefaults?.credentialLabel ?? `${provider.name} bearer token`,
+      placeholder:
+        provider.registrationDefaults?.credentialPlaceholder ??
+        `Paste your ${provider.name} bearer token`,
+      help:
+        provider.registrationDefaults?.credentialHelp ??
+        `Bearer token for ${provider.name}.`,
+    };
+  }
+
+  return {
+    label: provider.registrationDefaults?.credentialLabel ?? `Connect ${provider.name}`,
+    placeholder:
+      provider.registrationDefaults?.credentialPlaceholder ?? `Connect ${provider.name}`,
+    help:
+      provider.registrationDefaults?.credentialHelp ??
+      `OAuth connection for ${provider.name}.`,
+  };
+};
+
 const createRegistrationFormState = (
   provider: OAuthProviderCatalogOption,
 ): RegistrationFormState => {
@@ -110,6 +155,7 @@ const buildDefaultHttpFunctions = (provider: OAuthProviderCatalogOption) => {
 };
 
 const hasFixedOAuthConfig = (provider: OAuthProviderCatalogOption) =>
+  usesOAuthConnector(provider) &&
   Boolean(
     provider.registrationDefaults?.authorizationUrl &&
       provider.registrationDefaults?.tokenUrl,
@@ -122,7 +168,13 @@ const buildManagedConnectorPayload = (
   provider: OAuthProviderCatalogOption,
   form: RegistrationFormState,
 ) => {
+  const authStrategy = getProviderAuthStrategy(provider);
+  const credentialCopy = getCredentialCopy(provider);
   const managedConnectorProvider = getManagedConnectorProvider(provider);
+  const scopes =
+    parseScopes(form.scopes).length > 0
+      ? parseScopes(form.scopes)
+      : provider.registrationDefaults?.scopes ?? [];
 
   return {
     slug: provider.slug,
@@ -131,35 +183,51 @@ const buildManagedConnectorPayload = (
     appUrl: provider.appUrl,
     docsUrl: provider.docsUrl,
     categories: provider.categories,
-    authModes: ["oauth2"],
-    authStrategy: "oauth2" as const,
+    authModes:
+      provider.registrationDefaults?.authModes?.length &&
+      provider.registrationDefaults.authModes.every(Boolean)
+        ? provider.registrationDefaults.authModes
+        : [authStrategy],
+    authStrategy,
     provider: managedConnectorProvider,
-    credentialLabel: `Connect ${provider.name}`,
-    credentialPlaceholder: `Connect ${provider.name}`,
-    credentialHelp: `OAuth connection for ${provider.name}.`,
+    credentialLabel: credentialCopy.label,
+    credentialPlaceholder: credentialCopy.placeholder,
+    credentialHelp: credentialCopy.help,
     apiBaseUrl:
       managedConnectorProvider === "http"
         ? form.apiBaseUrl.trim() || provider.registrationDefaults?.apiBaseUrl || ""
         : undefined,
     serverUrl:
       managedConnectorProvider === "mcp"
-        ? form.serverUrl.trim()
+        ? form.serverUrl.trim() || provider.registrationDefaults?.serverUrl || ""
         : undefined,
     openApiUrl:
       managedConnectorProvider === "http"
         ? form.openApiUrl.trim() || provider.registrationDefaults?.openApiUrl || ""
         : undefined,
-    oauthConfig: {
-      authorizationUrl:
-        form.authorizationUrl.trim() || provider.registrationDefaults?.authorizationUrl || "",
-      tokenUrl: form.tokenUrl.trim() || provider.registrationDefaults?.tokenUrl || "",
-      scopes:
-        parseScopes(form.scopes).length > 0
-          ? parseScopes(form.scopes)
-          : provider.registrationDefaults?.scopes ?? [],
-    },
-    oauthClientId: form.oauthClientId.trim(),
-    oauthClientSecret: form.oauthClientSecret.trim(),
+    oauthConfig:
+      authStrategy === "oauth2"
+        ? {
+            authorizationUrl:
+              form.authorizationUrl.trim() ||
+              provider.registrationDefaults?.authorizationUrl ||
+              "",
+            tokenUrl:
+              form.tokenUrl.trim() || provider.registrationDefaults?.tokenUrl || "",
+            scopes,
+            scopeSeparator: provider.registrationDefaults?.scopeSeparator,
+            pkce: provider.registrationDefaults?.pkce,
+            clientAuthentication:
+              provider.registrationDefaults?.clientAuthentication,
+            additionalAuthorizationParams:
+              provider.registrationDefaults?.additionalAuthorizationParams,
+            additionalTokenParams:
+              provider.registrationDefaults?.additionalTokenParams,
+          }
+        : undefined,
+    oauthClientId: authStrategy === "oauth2" ? form.oauthClientId.trim() : undefined,
+    oauthClientSecret:
+      authStrategy === "oauth2" ? form.oauthClientSecret.trim() : undefined,
     functions:
       managedConnectorProvider === "http" ? buildDefaultHttpFunctions(provider) : [],
     enabled: true,
@@ -215,6 +283,7 @@ export function CuratedProviderList({
     event.preventDefault();
 
     const currentForm = getRegistrationForm(provider);
+    const authStrategy = getProviderAuthStrategy(provider);
     const managedConnectorProvider = getManagedConnectorProvider(provider);
     const isHttpConnector = managedConnectorProvider === "http";
 
@@ -230,16 +299,18 @@ export function CuratedProviderList({
       return;
     }
 
-    const oauthClientId = currentForm.oauthClientId.trim();
-    const oauthClientSecret = currentForm.oauthClientSecret.trim();
-    if (!oauthClientId || !oauthClientSecret) {
-      updateRegistrationForm(provider, {
-        submitting: false,
-        status: "error",
-        message:
-          "Paste both the OAuth client ID and client secret before registering this connector. Until those are stored, it will not appear in the integrations wizard.",
-      });
-      return;
+    if (authStrategy === "oauth2") {
+      const oauthClientId = currentForm.oauthClientId.trim();
+      const oauthClientSecret = currentForm.oauthClientSecret.trim();
+      if (!oauthClientId || !oauthClientSecret) {
+        updateRegistrationForm(provider, {
+          submitting: false,
+          status: "error",
+          message:
+            "Paste both the OAuth client ID and client secret before registering this connector. Until those are stored, it will not appear in the integrations wizard.",
+        });
+        return;
+      }
     }
 
     updateRegistrationForm(provider, {
@@ -333,10 +404,12 @@ export function CuratedProviderList({
       ) : (
         <div className="overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] divide-y divide-[var(--color-border)]">
           {filteredProviders.map((provider) => {
+            const authStrategy = getProviderAuthStrategy(provider);
             const connectorSlug = provider.builtInSlug ?? provider.slug;
             const isReadyNow = readyConnectorSlugs.has(connectorSlug);
             const isExpanded = expandedSlug === provider.slug;
             const registrationForm = getRegistrationForm(provider);
+            const usesOAuth = usesOAuthConnector(provider);
             const usesFixedOAuthDefaults = hasFixedOAuthConfig(provider);
             const isHttpConnector = isHttpManagedConnector(provider);
             const callbackUrl = buildCallbackUrl(oauthCallbackBaseUrl, provider.slug);
@@ -376,6 +449,7 @@ export function CuratedProviderList({
                       <Badge tone={availabilityTone(provider.availability)}>
                         {availabilityLabel(provider.availability)}
                       </Badge>
+                      <Badge>{authStrategy}</Badge>
                       {isReadyNow ? <Badge tone="success">Ready now</Badge> : null}
                     </div>
                     {isReadyNow ? (
@@ -403,9 +477,13 @@ export function CuratedProviderList({
                             Register this provider
                           </p>
                           <p className="mt-1 text-sm text-[var(--color-text-base)]">
-                            {isHttpConnector
-                              ? `Enter the OAuth-backed REST API details below to register this connector once for the whole service. Individual users will later connect their own account and discover the generated function catalog from the official OpenAPI schema in the integrations wizard.`
-                              : `Enter the OAuth-backed MCP details below to register this connector once for the whole service. Individual users will later connect their own account and discover the MCP's full tool list from the integrations wizard.`}
+                            {usesOAuth
+                              ? isHttpConnector
+                                ? `Enter the REST API details below to register this connector once for the whole service. Individual users will later connect their own account and discover the generated function catalog from the published API schema in the integrations wizard.`
+                                : `Enter the MCP details below to register this connector once for the whole service. Individual users will later connect their own account and discover the MCP server's full tool list from the integrations wizard.`
+                              : isHttpConnector
+                                ? `Enter the REST API details below to register this connector once for the whole service. Individual users will later provide their own ${authStrategy === "api_key" ? "API key" : authStrategy.replace("_", " ")} when they use the integrations wizard, and the full function catalog will be generated automatically from the published API schema.`
+                                : `Enter the MCP details below to register this connector once for the whole service. Individual users will later provide their own ${authStrategy === "api_key" ? "API key" : authStrategy.replace("_", " ")} when they use the integrations wizard.`}
                           </p>
                         </div>
                         <label className="flex flex-col gap-1 text-xs text-[var(--color-text-muted)] md:col-span-2">
@@ -431,11 +509,11 @@ export function CuratedProviderList({
                         {isHttpConnector && registrationForm.openApiUrl ? (
                           <div className="md:col-span-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-[11px] leading-5 text-[var(--color-text-base)]">
                             <p>
-                              OpenAPI schema source:
+                              API schema source:
                               <code className="mx-1 text-white">{registrationForm.openApiUrl}</code>
                             </p>
                             <p className="mt-1">
-                              This connector will fetch that schema server-side during registration and generate the HTTP function templates automatically.
+                              This connector will fetch that machine-readable API schema server-side during registration and generate the HTTP function templates automatically.
                             </p>
                           </div>
                         ) : null}
@@ -458,7 +536,7 @@ export function CuratedProviderList({
                             </p>
                           </div>
                         ) : null}
-                        {!usesFixedOAuthDefaults ? (
+                        {usesOAuth && !usesFixedOAuthDefaults ? (
                           <>
                             <label className="flex flex-col gap-1 text-xs text-[var(--color-text-muted)]">
                               Authorization URL
@@ -504,13 +582,18 @@ export function CuratedProviderList({
                         ) : null}
                         <div className="md:col-span-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-[11px] leading-5 text-[var(--color-text-base)]">
                           <p>
-                            Create a {provider.name} OAuth app before saving this connector so you can paste the client ID and client secret below. {usesFixedOAuthDefaults ? `The standard OAuth URLs and scopes for ${provider.name} are already filled in.` : ""}{isHttpConnector ? ` The API function catalog will be generated from the official OpenAPI schema shown above.` : ""}
+                            {usesOAuth
+                              ? `Create a ${provider.name} OAuth app before saving this connector so you can paste the client ID and client secret below.${usesFixedOAuthDefaults ? ` The standard OAuth URLs and scopes for ${provider.name} are already filled in.` : ""}`
+                              : `This provider does not require service-level OAuth client credentials. Register the connector once here, and each user will later provide their own ${authStrategy === "api_key" ? "API key" : authStrategy.replace("_", " ")} in the integrations wizard.`}
+                            {isHttpConnector ? " The API function catalog will be generated from the published schema shown above." : ""}
                           </p>
-                          <p className="mt-1">
-                            Set the redirect URI to
-                            <code className="mx-1 text-white">{callbackUrl}</code>
-                            for this deployment.
-                          </p>
+                          {usesOAuth ? (
+                            <p className="mt-1">
+                              Set the redirect URI to
+                              <code className="mx-1 text-white">{callbackUrl}</code>
+                              for this deployment.
+                            </p>
+                          ) : null}
                           {provider.docsUrl ? (
                             <a
                               href={provider.docsUrl}
@@ -518,40 +601,46 @@ export function CuratedProviderList({
                               rel="noreferrer"
                               className="mt-2 inline-flex items-center gap-1 text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
                             >
-                              How to create {provider.name} OAuth credentials
+                              {usesOAuth
+                                ? `How to create ${provider.name} OAuth credentials`
+                                : `How to configure ${provider.name}`}
                               <ExternalLink className="h-3.5 w-3.5" />
                             </a>
                           ) : null}
                         </div>
-                        <label className="flex flex-col gap-1 text-xs text-[var(--color-text-muted)]">
-                          OAuth client ID
-                          <input
-                            type="text"
-                            value={registrationForm.oauthClientId}
-                            onChange={(event) =>
-                              updateRegistrationForm(provider, {
-                                oauthClientId: event.target.value,
-                              })
-                            }
-                            className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-white outline-none focus:border-[var(--color-accent)]"
-                          />
-                        </label>
-                        <label className="flex flex-col gap-1 text-xs text-[var(--color-text-muted)] md:col-span-2">
-                          OAuth client secret
-                          <input
-                            type="password"
-                            value={registrationForm.oauthClientSecret}
-                            onChange={(event) =>
-                              updateRegistrationForm(provider, {
-                                oauthClientSecret: event.target.value,
-                              })
-                            }
-                            className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-white outline-none focus:border-[var(--color-accent)]"
-                          />
-                          <span className="text-[11px] leading-5 text-[var(--color-text-muted)]">
-                            Required when this service is the OAuth client for the managed connector. The credentials are stored server-side so each user can use the Connect flow later without reconfiguring the connector, and the connector will stay hidden from the integrations wizard until they are saved.
-                          </span>
-                        </label>
+                        {usesOAuth ? (
+                          <>
+                            <label className="flex flex-col gap-1 text-xs text-[var(--color-text-muted)]">
+                              OAuth client ID
+                              <input
+                                type="text"
+                                value={registrationForm.oauthClientId}
+                                onChange={(event) =>
+                                  updateRegistrationForm(provider, {
+                                    oauthClientId: event.target.value,
+                                  })
+                                }
+                                className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-white outline-none focus:border-[var(--color-accent)]"
+                              />
+                            </label>
+                            <label className="flex flex-col gap-1 text-xs text-[var(--color-text-muted)] md:col-span-2">
+                              OAuth client secret
+                              <input
+                                type="password"
+                                value={registrationForm.oauthClientSecret}
+                                onChange={(event) =>
+                                  updateRegistrationForm(provider, {
+                                    oauthClientSecret: event.target.value,
+                                  })
+                                }
+                                className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-white outline-none focus:border-[var(--color-accent)]"
+                              />
+                              <span className="text-[11px] leading-5 text-[var(--color-text-muted)]">
+                                Required when this service is the OAuth client for the managed connector. The credentials are stored server-side so each user can use the Connect flow later without reconfiguring the connector, and the connector will stay hidden from the integrations wizard until they are saved.
+                              </span>
+                            </label>
+                          </>
+                        ) : null}
                         <div className="md:col-span-2 flex flex-wrap items-center gap-3">
                           <Button type="submit" disabled={registrationForm.submitting}>
                             {registrationForm.submitting ? "Registering…" : "Register connector"}

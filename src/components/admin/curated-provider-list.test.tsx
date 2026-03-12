@@ -86,6 +86,28 @@ const providerCatalog: OAuthProviderCatalogOption[] = [
       scopes: [],
     },
   },
+  {
+    slug: "elevenlabs",
+    name: "ElevenLabs",
+    description: "Text to speech, voices, transcription, audio generation, and agents",
+    categories: ["Audio", "AI"],
+    authStrategy: "api_key",
+    availability: "manual_token",
+    builtInSlug: "elevenlabs",
+    docsUrl: "https://elevenlabs.io/docs/api-reference/introduction",
+    notes: "Uses the published API schema and user API keys.",
+    popularityRank: 4,
+    registrationDefaults: {
+      provider: "http",
+      authModes: ["api_key"],
+      authStrategy: "api_key",
+      credentialLabel: "ElevenLabs API key",
+      credentialPlaceholder: "Paste your ElevenLabs API key",
+      credentialHelp: "Personal or workspace ElevenLabs API key sent in the xi-api-key header.",
+      apiBaseUrl: "https://api.elevenlabs.io",
+      openApiUrl: "https://api.elevenlabs.io/openapi.json",
+    },
+  },
 ];
 
 const setInputValue = (element: Element | null, value: string) => {
@@ -170,7 +192,7 @@ describe("CuratedProviderList", () => {
 
     expect(container.textContent).toContain("Register this provider");
     expect(container.textContent).toContain(
-      "Enter the OAuth-backed REST API details below to register this connector once for the whole service.",
+      "Enter the REST API details below to register this connector once for the whole service.",
     );
     expect(container.textContent).toContain("Register connector");
     expect(container.textContent).toContain("How to create Google Calendar OAuth credentials");
@@ -303,8 +325,8 @@ describe("CuratedProviderList", () => {
       notionButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
 
-    expect(container.textContent).toContain("Enter the OAuth-backed REST API details below");
-    expect(container.textContent).toContain("OpenAPI schema source:");
+    expect(container.textContent).toContain("Enter the REST API details below");
+    expect(container.textContent).toContain("API schema source:");
     expect(container.textContent).toContain("https://developers.notion.com/openapi.json");
     expect(container.textContent).toContain("API base URL");
     expect(container.textContent).not.toContain("MCP server URL");
@@ -348,6 +370,88 @@ describe("CuratedProviderList", () => {
     });
     expect(body.serverUrl).toBeUndefined();
   });
+
+  it("registers ElevenLabs without requiring service-level OAuth credentials", async () => {
+    fetchMock.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          slug: "elevenlabs",
+          oauthConfigured: true,
+        }),
+        {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        },
+      ),
+    );
+
+    await act(async () => {
+      root.render(
+        <CuratedProviderList
+          providerCatalog={providerCatalog}
+          readyBuiltInConnectors={readyBuiltInConnectors}
+          canRegisterManagedConnectors
+          oauthCallbackBaseUrl={oauthCallbackBaseUrl}
+        />,
+      );
+    });
+
+    const elevenLabsButton = Array.from(container.querySelectorAll("button")).find((button) =>
+      button.textContent?.includes("ElevenLabs"),
+    );
+    expect(elevenLabsButton).toBeTruthy();
+
+    await act(async () => {
+      elevenLabsButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    expect(container.textContent).toContain(
+      "This provider does not require service-level OAuth client credentials.",
+    );
+    expect(container.textContent).toContain("How to configure ElevenLabs");
+    expect(container.textContent).toContain("API schema source:");
+    expect(container.textContent).not.toContain("OAuth client ID");
+    expect(container.textContent).not.toContain("OAuth client secret");
+    expect(container.textContent).not.toContain(`${oauthCallbackBaseUrl}/elevenlabs/callback`);
+
+    const form = container.querySelector("form");
+    expect(form).toBeTruthy();
+
+    await act(async () => {
+      form?.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    const [, requestInit] = fetchMock.mock.calls.at(-1) as [string, RequestInit];
+    const body = JSON.parse(String(requestInit.body)) as {
+      slug: string;
+      authModes: string[];
+      authStrategy: string;
+      provider: string;
+      apiBaseUrl: string;
+      openApiUrl: string;
+      credentialLabel: string;
+      oauthConfig?: unknown;
+      oauthClientId?: string;
+      oauthClientSecret?: string;
+      functions: Array<unknown>;
+    };
+
+    expect(body).toMatchObject({
+      slug: "elevenlabs",
+      authModes: ["api_key"],
+      authStrategy: "api_key",
+      provider: "http",
+      apiBaseUrl: "https://api.elevenlabs.io",
+      openApiUrl: "https://api.elevenlabs.io/openapi.json",
+      credentialLabel: "ElevenLabs API key",
+      functions: [],
+    });
+    expect(body.oauthConfig).toBeUndefined();
+    expect(body.oauthClientId).toBeUndefined();
+    expect(body.oauthClientSecret).toBeUndefined();
+  });
+
 
 
   it("does not render legacy Composio MCP template guidance", async () => {

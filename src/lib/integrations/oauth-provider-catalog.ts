@@ -3,13 +3,19 @@ import type { OAuthProviderCatalogOption } from "@/src/types/context-layer";
 
 const provider = (
   popularityRank: number,
-  option: Omit<OAuthProviderCatalogOption, "authStrategy" | "popularityRank" | "registrationDefaults">,
-): OAuthProviderCatalogOption => ({
-  ...option,
-  authStrategy: "oauth2",
-  popularityRank,
-  registrationDefaults: getOAuthProviderRegistrationDefaults(option.slug),
-});
+  option: Omit<OAuthProviderCatalogOption, "authStrategy" | "popularityRank" | "registrationDefaults"> & {
+    authStrategy?: OAuthProviderCatalogOption["authStrategy"];
+  },
+): OAuthProviderCatalogOption => {
+  const registrationDefaults = getOAuthProviderRegistrationDefaults(option.slug);
+
+  return {
+    ...option,
+    authStrategy: option.authStrategy ?? registrationDefaults?.authStrategy ?? "oauth2",
+    popularityRank,
+    registrationDefaults,
+  };
+};
 
 const oauthProviderCatalog = [
   provider(1, {
@@ -516,6 +522,19 @@ const oauthProviderCatalog = [
     appUrl: "https://bitbucket.org",
     docsUrl: "https://developer.atlassian.com/cloud/bitbucket/oauth-2/",
     notes: "Popular in Atlassian-centric teams and complements Jira/Confluence.",
+  }),
+  provider(51, {
+    slug: "elevenlabs",
+    name: "ElevenLabs",
+    description: "Text to speech, voices, transcription, audio generation, and agents.",
+    categories: ["Audio", "AI"],
+    authStrategy: "api_key",
+    availability: "manual_token",
+    builtInSlug: "elevenlabs",
+    appUrl: "https://elevenlabs.io",
+    docsUrl: "https://elevenlabs.io/docs/api-reference/introduction",
+    notes:
+      "Official API-key connector backed by ElevenLabs' published OpenAPI spec.",
   }),
 ] satisfies OAuthProviderCatalogOption[];
 

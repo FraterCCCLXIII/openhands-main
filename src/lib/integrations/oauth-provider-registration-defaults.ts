@@ -118,6 +118,17 @@ const registrationDefaults: Record<string, OAuthProviderRegistrationDefaults> = 
     requestMethod: "GET",
     requestPath: "/v1/files/{fileKey}",
   },
+  elevenlabs: {
+    provider: "http",
+    authModes: ["api_key"],
+    authStrategy: "api_key",
+    credentialLabel: "ElevenLabs API key",
+    credentialPlaceholder: "Paste your ElevenLabs API key",
+    credentialHelp:
+      "Personal or workspace ElevenLabs API key sent in the xi-api-key header.",
+    apiBaseUrl: "https://api.elevenlabs.io",
+    openApiUrl: "https://api.elevenlabs.io/openapi.json",
+  },
   "google-drive": googleWorkspacePreset(
     "https://www.googleapis.com/drive/v3",
     ["https://www.googleapis.com/auth/drive.metadata.readonly"],

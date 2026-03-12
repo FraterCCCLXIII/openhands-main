@@ -146,6 +146,10 @@ const toContentType = (content: Record<string, { schema?: OpenApiSchema }>): {
     return { contentType: "form_urlencoded", supported: true };
   }
 
+  if (content["multipart/form-data"]) {
+    return { contentType: "multipart_form_data", supported: true };
+  }
+
   if (content["text/plain"]) {
     return { contentType: "text", supported: true };
   }
@@ -159,23 +163,33 @@ const describeParameterList = (parameters: OpenApiParameter[]) =>
     .join(", ");
 
 const describeBody = (requestBody: OpenApiRequestBody | undefined) => {
-  const schema = requestBody?.content?.["application/json"]?.schema;
-  if (!schema) {
-    return "Provide the request payload under `body`.";
-  }
+  const jsonSchema = requestBody?.content?.["application/json"]?.schema;
+  if (jsonSchema) {
+    if (jsonSchema.type === "object") {
+      const properties = Object.keys(jsonSchema.properties ?? {});
+      const required = new Set(jsonSchema.required ?? []);
+      if (properties.length > 0) {
+        return `Provide the request payload under \`body\`${properties.length > 0 ? ` with fields like ${properties
+          .map((property) => `${property}${required.has(property) ? " (required)" : ""}`)
+          .join(", ")}` : ""}.`;
+      }
+    }
 
-  if (schema.type === "object") {
-    const properties = Object.keys(schema.properties ?? {});
-    const required = new Set(schema.required ?? []);
-    if (properties.length > 0) {
-      return `Provide the request payload under \`body\`${properties.length > 0 ? ` with fields like ${properties
-        .map((property) => `${property}${required.has(property) ? " (required)" : ""}`)
-        .join(", ")}` : ""}.`;
+    if (jsonSchema.type === "array") {
+      return "Provide the request payload array under `body`.";
     }
   }
 
-  if (schema.type === "array") {
-    return "Provide the request payload array under `body`.";
+  if (requestBody?.content?.["application/x-www-form-urlencoded"]) {
+    return "Provide form fields under `body`.";
+  }
+
+  if (requestBody?.content?.["multipart/form-data"]) {
+    return "Provide multipart form fields under `body`. File inputs can use objects like { filename, contentType, contentBase64 }.";
+  }
+
+  if (requestBody?.content?.["text/plain"]) {
+    return "Provide the plain-text request payload under `body`.";
   }
 
   return "Provide the request payload under `body`.";
