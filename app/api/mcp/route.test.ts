@@ -113,14 +113,6 @@ describe("/api/mcp", () => {
   it("lists enabled and case-by-case tools and forwards enabled invocations", async () => {
     const service = getContextLayerService();
     await service.registerIntegration(baseIntegration);
-    await service.upsertAgentPolicy("assistant", [
-      {
-        integrationKey: "crm",
-        functionNames: ["accounts"],
-        scopes: ["crm.read"],
-        enabled: true,
-      },
-    ]);
     const apiKey = (await service.getOrCreateAgentApiKey("owner@example.com")).apiKey;
 
     const { client, transport } = await connectClient({

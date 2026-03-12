@@ -230,7 +230,7 @@ describe("GET /api/context/openapi", () => {
       payload: {},
     });
     expect(body.paths["/api/context/github/get_self"]?.post?.description).toContain(
-      "Successful tool calls still depend on the chosen agent class being allowed by policy",
+      "Enabled tools are callable by default unless you configure an agent-class policy to narrow access",
     );
     expect(body.paths["/api/context/slack/list_channels"]?.post).toMatchObject({
       summary: "List channels",

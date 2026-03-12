@@ -95,7 +95,7 @@ describe("agent-connection", () => {
       'curl -X GET "http://localhost:12000/api/context/openapi"',
     );
     expect(guide.requestBody).toContain('"scopes": [\n    "repo"\n  ]');
-    expect(guide.permissionNote).toContain("agent class being allowed by policy");
+    expect(guide.permissionNote).toContain("Enabled tools are callable by default");
     expect(guide.mcpConfigExample).toContain('"transport": "streamable-http"');
     expect(guide.mcpConfigExample).toContain(
       '"url": "http://localhost:12000/api/mcp?agentId=research-bot-01&agentClass=researcher"',
