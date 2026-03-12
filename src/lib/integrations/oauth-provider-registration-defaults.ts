@@ -58,14 +58,10 @@ const atlassianPreset = (
   requestPath,
 });
 
-const knownManagedMcpServerUrls: Record<string, string> = {
+const officialManagedMcpServerUrls: Record<string, string> = {
   github: "https://api.githubcopilot.com/mcp/",
   slack: "https://mcp.slack.com/sse",
 };
-
-const buildManagedMcpServerUrl = (slug: string) =>
-  knownManagedMcpServerUrls[slug] ??
-  `https://mcp.composio.dev/partner/composio/${slug}/mcp?customerId=replace-me`;
 
 const registrationDefaults: Record<string, OAuthProviderRegistrationDefaults> = {
   github: {
@@ -184,7 +180,13 @@ const registrationDefaults: Record<string, OAuthProviderRegistrationDefaults> = 
     requestMethod: "GET",
     requestPath: "/tasks",
   },
-  trello: {},
+  trello: {
+    apiBaseUrl: "https://api.trello.com/1",
+    functionName: "list_boards",
+    functionDescription: "List Trello boards visible to the authenticated member.",
+    requestMethod: "GET",
+    requestPath: "/members/me/boards",
+  },
   clickup: {
     apiBaseUrl: "https://api.clickup.com/api/v2",
     authorizationUrl: "https://app.clickup.com/api",
@@ -428,7 +430,13 @@ const registrationDefaults: Record<string, OAuthProviderRegistrationDefaults> = 
     requestMethod: "GET",
     requestPath: "/sites",
   },
-  plaid: {},
+  plaid: {
+    apiBaseUrl: "https://production.plaid.com",
+    functionName: "get_accounts",
+    functionDescription: "Fetch accounts for a connected Plaid item.",
+    requestMethod: "POST",
+    requestPath: "/accounts/get",
+  },
 
   okta: {
     apiBaseUrl: "https://{yourOktaDomain}/api/v1",
@@ -528,11 +536,21 @@ export const getOAuthProviderRegistrationDefaults = (slug: string) => {
     return undefined;
   }
 
+  const officialMcpServerUrl = officialManagedMcpServerUrls[slug];
+  const provider =
+    defaults.provider ??
+    (officialMcpServerUrl
+      ? "mcp"
+      : defaults.apiBaseUrl || defaults.openApiUrl
+        ? "http"
+        : undefined);
+
   return {
     ...defaults,
+    provider,
     serverUrl:
-      defaults.provider === "http"
-        ? defaults.serverUrl
-        : defaults.serverUrl ?? buildManagedMcpServerUrl(slug),
+      provider === "mcp"
+        ? defaults.serverUrl ?? officialMcpServerUrl
+        : defaults.serverUrl,
   };
 };
