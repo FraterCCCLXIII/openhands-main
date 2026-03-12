@@ -38,6 +38,14 @@ const parseScopes = (value: string) =>
 const inferProvider = (connector: ManagedConnectorDefinition) =>
   connector.provider ?? (connector.openApiUrl ? "http" : "mcp");
 
+const getCredentialStatusLabel = (connector: ManagedConnectorDefinition) => {
+  if (connector.authStrategy === "oauth2") {
+    return connector.oauthConfigured ? "OAuth ready" : "OAuth credentials missing";
+  }
+
+  return connector.oauthConfigured ? "Credentials configured" : "Credentials missing";
+};
+
 const createFormState = (
   connector: ManagedConnectorDefinition,
 ): ManagedConnectorFormState => ({
@@ -278,7 +286,9 @@ export function ManagedConnectorAdminList({
                 — {functionCount} function{functionCount === 1 ? "" : "s"}
               </span>
               {connector.oauthConfigured ? (
-                <span className="shrink-0 text-[var(--color-accent)]">— OAuth ready</span>
+                <span className="shrink-0 text-[var(--color-accent)]">
+                  — {getCredentialStatusLabel(connector)}
+                </span>
               ) : null}
               <span className="min-w-0 flex-1 truncate text-[var(--color-text-base)]">
                 {connector.description}
@@ -297,11 +307,11 @@ export function ManagedConnectorAdminList({
                     {connector.enabled ? "enabled" : "disabled"}
                   </Badge>
                   <Badge tone={connector.oauthConfigured ? "success" : "warning"}>
-                    {connector.oauthConfigured ? "OAuth ready" : "OAuth credentials missing"}
+                    {getCredentialStatusLabel(connector)}
                   </Badge>
                 </div>
                 <p className="mt-3 text-sm text-[var(--color-text-base)]">
-                  Edit stale provider URLs or OAuth settings here. Saving updates the existing service-level managed connector in place; deleting removes it until an admin registers it again.
+                  Edit stale provider URLs or credential settings here. Saving updates the existing service-level managed connector in place; deleting removes it until an admin registers it again.
                 </p>
                 <form
                   className="mt-4 grid gap-3 md:grid-cols-2"

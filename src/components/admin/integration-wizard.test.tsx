@@ -17,6 +17,21 @@ import { IntegrationWizard } from "@/src/components/admin/integration-wizard";
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
+const setInputValue = (element: HTMLInputElement | undefined, value: string) => {
+  if (!element) {
+    throw new Error("Expected input element");
+  }
+
+  const valueSetter = Object.getOwnPropertyDescriptor(
+    HTMLInputElement.prototype,
+    "value",
+  )?.set;
+  valueSetter?.call(element, value);
+  element.dispatchEvent(new Event("input", { bubbles: true }));
+  element.dispatchEvent(new Event("change", { bubbles: true }));
+};
+
+
 describe("IntegrationWizard", () => {
   let container: HTMLDivElement;
   let root: Root;
@@ -129,6 +144,139 @@ describe("IntegrationWizard", () => {
     expect(addConnectorLink?.textContent).toContain("Click here");
     expect(container.textContent).not.toContain("Notion (notion)");
   });
+
+  it("discovers default API-key connectors with their configured header name", async () => {
+    fetchMock.mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = typeof input === "string" ? input : input.toString();
+
+      if (url === "/api/integrations/built-in-connectors") {
+        return new Response(
+          JSON.stringify([
+            {
+              slug: "elevenlabs",
+              name: "ElevenLabs",
+              description: "ElevenLabs connector",
+              toolCount: 0,
+              categories: ["Audio", "AI"],
+              authModes: ["api_key"],
+              authStrategy: "api_key",
+              oauthConfigured: true,
+              credentialLabel: "ElevenLabs API key",
+              credentialPlaceholder: "Paste your ElevenLabs API key",
+              credentialHelp: "Personal or workspace ElevenLabs API key sent in the xi-api-key header.",
+              apiKeyHeaderName: "xi-api-key",
+            },
+          ]),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      }
+
+      if (url === "/api/oauth/connections") {
+        return new Response(JSON.stringify([]), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+
+      if (url === "/api/integrations/discover") {
+        expect(init?.method).toBe("POST");
+        expect(init?.body).toBeTruthy();
+        expect(JSON.parse(String(init?.body))).toMatchObject({
+          key: "elevenlabs",
+          kind: "built_in",
+          config: {
+            builtInSlug: "elevenlabs",
+          },
+          credentials: {
+            headerName: "xi-api-key",
+            secret: "eleven-secret",
+          },
+        });
+
+        return new Response(
+          JSON.stringify({
+            provider: "http",
+            authStrategy: "api_key",
+            config: {
+              builtInSlug: "elevenlabs",
+              apiBaseUrl: "https://api.elevenlabs.io",
+            },
+            credentials: {
+              headerName: "xi-api-key",
+              secret: "eleven-secret",
+            },
+            functions: {
+              list_models: {
+                name: "list_models",
+                description: "List models",
+                enabled: true,
+                accessMode: "enabled",
+                fineGrainedPermissions: true,
+                defaultScopes: [],
+                executionMode: "provider",
+                config: {
+                  request: {
+                    method: "GET",
+                    path: "/v1/models",
+                  },
+                },
+              },
+            },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      }
+
+      throw new Error(`Unexpected fetch: ${url}`);
+    });
+
+    useSearchParamsMock.mockReturnValue(new URLSearchParams("builtIn=elevenlabs"));
+
+    await act(async () => {
+      root.render(
+        <QueryClientProvider client={queryClient}>
+          <IntegrationWizard onCreated={async () => {}} onStatus={() => {}} />
+        </QueryClientProvider>,
+      );
+    });
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    });
+
+    expect(container.textContent).toContain("xi-api-key");
+
+    const apiKeyInput = Array.from(container.querySelectorAll("input")).find(
+      (input) => input.getAttribute("placeholder") === "Paste your ElevenLabs API key",
+    ) as HTMLInputElement | undefined;
+    expect(apiKeyInput).toBeTruthy();
+
+    await act(async () => {
+      setInputValue(apiKeyInput, "eleven-secret");
+    });
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    const discoverButton = Array.from(container.querySelectorAll("button")).find(
+      (button) => button.textContent?.includes("Discover functions"),
+    );
+    expect(discoverButton).toBeTruthy();
+    expect(discoverButton?.hasAttribute("disabled")).toBe(false);
+
+    await act(async () => {
+      discoverButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 25));
+    });
+
+    expect(container.textContent).toContain("1 functions discovered for ElevenLabs");
+    expect(container.textContent).toContain("list_models");
+  });
+
 
   it("refetches the connector catalog when step 2 opens even if React Query has cached data", async () => {
     queryClient.setQueryData(["built-in-connectors"], [

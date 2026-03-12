@@ -34,7 +34,7 @@ export const requestTemplateSchema = z.object({
   query: z.record(z.string(), z.unknown()).optional(),
   headers: z.record(z.string(), z.unknown()).optional(),
   body: z.unknown().optional(),
-  contentType: z.enum(["json", "form_urlencoded", "text"]).optional(),
+  contentType: z.enum(["json", "form_urlencoded", "multipart_form_data", "text"]).optional(),
 });
 
 export const managedConnectorFunctionSchema = z.object({
