@@ -157,7 +157,7 @@ describe("/api/mcp", () => {
       name: "crm__accounts",
       arguments: {
         limit: 5,
-        _scopes: ["crm.read"],
+        contextScopes: ["crm.read"],
       },
     });
 
@@ -196,7 +196,7 @@ describe("/api/mcp", () => {
     const result = await client.callTool({
       name: "crm__contacts",
       arguments: {
-        _scopes: ["crm.read"],
+        contextScopes: ["crm.read"],
       },
     });
 
@@ -207,4 +207,43 @@ describe("/api/mcp", () => {
 
     await transport.close();
   });
+
+  it("rejects legacy underscore MCP override arguments", async () => {
+    const service = getContextLayerService();
+    await service.registerIntegration(baseIntegration);
+    const apiKey = (await service.getOrCreateAgentApiKey("owner@example.com")).apiKey;
+
+    const { client, transport } = await connectClient({
+      url: "http://localhost:3000/api/mcp",
+      apiKey,
+    });
+
+    await client.callTool({
+      name: "set_agent_id",
+      arguments: {
+        agentId: "agent-3",
+      },
+    });
+    await client.callTool({
+      name: "set_agent_class",
+      arguments: {
+        agentClass: "assistant",
+      },
+    });
+
+    const result = await client.callTool({
+      name: "crm__accounts",
+      arguments: {
+        _scopes: ["crm.read"],
+      },
+    });
+
+    expect(result.isError).toBe(true);
+    expect(readToolText(result)).toContain(
+      "Unsupported MCP tool argument(s): _scopes. Use contextAgentId, contextAgentClass, and contextScopes instead.",
+    );
+
+    await transport.close();
+  });
+
 });

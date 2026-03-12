@@ -102,19 +102,11 @@ const result = await response.json();`;
     null,
     2,
   );
-  const mcpInvocationArguments = {
-    ...(sampleFunction ? buildExamplePayload(sampleFunction) : {}),
-    ...(defaultScopes.length > 0 ? { _scopes: defaultScopes } : {}),
-  };
   const mcpSessionSetupExample = [
-    `1. Call ${mcpSetAgentIdToolName} with:`,
-    JSON.stringify({ agentId: DEFAULT_AGENT_ID }, null, 2),
-    "",
-    `2. Call ${mcpSetAgentClassToolName} with:`,
-    JSON.stringify({ agentClass: DEFAULT_AGENT_CLASS }, null, 2),
-    "",
-    `3. Call ${mcpToolName} with:`,
-    JSON.stringify(mcpInvocationArguments, null, 2),
+    `1. Connect your MCP client to ${mcpEndpoint}.`,
+    `2. Call ${mcpSetAgentIdToolName} once at the start of the session to set the agent ID.`,
+    `3. Call ${mcpSetAgentClassToolName} once at the start of the session to set the agent class.`,
+    `4. Then call ${mcpToolName} like any other MCP tool.`,
   ].join("\n");
 
   return {

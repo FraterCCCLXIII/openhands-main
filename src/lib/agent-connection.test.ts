@@ -98,9 +98,18 @@ describe("agent-connection", () => {
     expect(guide.permissionNote).toContain("Enabled tools are callable by default");
     expect(guide.mcpConfigExample).toContain('"transport": "streamable-http"');
     expect(guide.mcpConfigExample).toContain('"url": "http://localhost:12000/api/mcp"');
-    expect(guide.mcpSessionSetupExample).toContain("1. Call set_agent_id with:");
-    expect(guide.mcpSessionSetupExample).toContain("2. Call set_agent_class with:");
-    expect(guide.mcpSessionSetupExample).toContain("3. Call github__search_repositories with:");
+    expect(guide.mcpSessionSetupExample).toContain(
+      "1. Connect your MCP client to http://localhost:12000/api/mcp.",
+    );
+    expect(guide.mcpSessionSetupExample).toContain(
+      "2. Call set_agent_id once at the start of the session to set the agent ID.",
+    );
+    expect(guide.mcpSessionSetupExample).toContain(
+      "3. Call set_agent_class once at the start of the session to set the agent class.",
+    );
+    expect(guide.mcpSessionSetupExample).toContain(
+      "4. Then call github__search_repositories like any other MCP tool.",
+    );
   });
 
   it("prefers a non-approval function and omits fake payload placeholders", () => {

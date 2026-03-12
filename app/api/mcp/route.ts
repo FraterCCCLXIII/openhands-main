@@ -3,15 +3,20 @@ import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/
 import { ContextLayerError } from "@/src/lib/core/errors";
 import { getContextLayerService } from "@/src/lib/core/runtime";
 import { createContextLayerMcpServer } from "@/src/lib/mcp/context-layer-server";
+import {
+  deleteMcpSession,
+  getMcpSession,
+  resetMcpSessionsForTests as resetStoredMcpSessionsForTests,
+  upsertMcpSession,
+  type McpSessionDefaults,
+} from "@/src/lib/mcp/session-store";
 
 const BEARER_CHALLENGE = 'Bearer realm="agent-context-layer-mcp"';
 
-type McpSessionRecord = {
-  transport: WebStandardStreamableHTTPServerTransport;
-  ownerId: string;
+type HydratableSessionTransport = {
+  sessionId?: string;
+  _initialized?: boolean;
 };
-
-const mcpSessions = new Map<string, McpSessionRecord>();
 
 const getBearerToken = (request: Request) => {
   const authorization = request.headers.get("authorization")?.trim() ?? "";
@@ -24,6 +29,15 @@ const getBearerToken = (request: Request) => {
 };
 
 const getSessionId = (request: Request) => request.headers.get("mcp-session-id")?.trim() ?? "";
+
+const getRequestSessionDefaults = (request: Request): McpSessionDefaults => {
+  const url = new URL(request.url);
+
+  return {
+    agentId: url.searchParams.get("agentId")?.trim() ?? "",
+    agentClass: url.searchParams.get("agentClass")?.trim() ?? "",
+  };
+};
 
 const authorizeApiKey = async (apiKey: string) => {
   const service = getContextLayerService();
@@ -47,8 +61,8 @@ const authorizeApiKey = async (apiKey: string) => {
   return apiKeyRecord;
 };
 
-const getAuthorizedSession = (sessionId: string, ownerId: string) => {
-  const session = mcpSessions.get(sessionId);
+const getAuthorizedSession = async (sessionId: string, ownerId: string) => {
+  const session = await getMcpSession(sessionId);
 
   if (!session || session.ownerId !== ownerId) {
     throw new ContextLayerError(
@@ -60,34 +74,66 @@ const getAuthorizedSession = (sessionId: string, ownerId: string) => {
   return session;
 };
 
+const hydrateTransportSession = (
+  transport: WebStandardStreamableHTTPServerTransport,
+  sessionId: string,
+) => {
+  const hydratedTransport = transport as unknown as HydratableSessionTransport;
+  hydratedTransport.sessionId = sessionId;
+  hydratedTransport._initialized = true;
+};
+
 const createSessionTransport = async ({
   request,
   ownerId,
+  sessionId,
+  sessionDefaults,
 }: {
   request: Request;
   ownerId: string;
+  sessionId?: string;
+  sessionDefaults: McpSessionDefaults;
 }) => {
   const service = getContextLayerService();
   const transport = new WebStandardStreamableHTTPServerTransport({
     enableJsonResponse: true,
-    sessionIdGenerator: () => crypto.randomUUID(),
-    onsessioninitialized: (sessionId) => {
-      mcpSessions.set(sessionId, { transport, ownerId });
+    sessionIdGenerator: () => sessionId ?? crypto.randomUUID(),
+    onsessioninitialized: async (initializedSessionId) => {
+      await upsertMcpSession({
+        sessionId: initializedSessionId,
+        ownerId,
+        defaults: { ...sessionDefaults },
+      });
+    },
+    onsessionclosed: async (closedSessionId) => {
+      if (closedSessionId) {
+        await deleteMcpSession(closedSessionId);
+      }
     },
   });
 
-  transport.onclose = () => {
-    const sessionId = transport.sessionId;
-
-    if (sessionId) {
-      mcpSessions.delete(sessionId);
-    }
-  };
+  if (sessionId) {
+    hydrateTransportSession(transport, sessionId);
+  }
 
   const server = await createContextLayerMcpServer({
     request,
     service,
     ownerId,
+    sessionDefaults,
+    onSessionDefaultsChanged: async (defaults) => {
+      const activeSessionId = transport.sessionId ?? sessionId;
+
+      if (!activeSessionId) {
+        return;
+      }
+
+      await upsertMcpSession({
+        sessionId: activeSessionId,
+        ownerId,
+        defaults,
+      });
+    },
   });
 
   await server.connect(transport);
@@ -116,19 +162,36 @@ const handleMcpRoute = async (request: Request) => {
 
     if (request.method === "POST") {
       if (sessionId) {
-        return getAuthorizedSession(sessionId, apiKeyRecord.ownerId).transport.handleRequest(request);
+        const session = await getAuthorizedSession(sessionId, apiKeyRecord.ownerId);
+        const transport = await createSessionTransport({
+          request,
+          ownerId: apiKeyRecord.ownerId,
+          sessionId,
+          sessionDefaults: session.defaults,
+        });
+
+        return transport.handleRequest(request);
       }
 
       const transport = await createSessionTransport({
         request,
         ownerId: apiKeyRecord.ownerId,
+        sessionDefaults: getRequestSessionDefaults(request),
       });
 
       return transport.handleRequest(request);
     }
 
     if (request.method === "GET") {
-      return getAuthorizedSession(sessionId, apiKeyRecord.ownerId).transport.handleRequest(request);
+      const session = await getAuthorizedSession(sessionId, apiKeyRecord.ownerId);
+      const transport = await createSessionTransport({
+        request,
+        ownerId: apiKeyRecord.ownerId,
+        sessionId,
+        sessionDefaults: session.defaults,
+      });
+
+      return transport.handleRequest(request);
     }
 
     if (request.method === "DELETE") {
@@ -139,7 +202,15 @@ const handleMcpRoute = async (request: Request) => {
         );
       }
 
-      return getAuthorizedSession(sessionId, apiKeyRecord.ownerId).transport.handleRequest(request);
+      const session = await getAuthorizedSession(sessionId, apiKeyRecord.ownerId);
+      const transport = await createSessionTransport({
+        request,
+        ownerId: apiKeyRecord.ownerId,
+        sessionId,
+        sessionDefaults: session.defaults,
+      });
+
+      return transport.handleRequest(request);
     }
 
     return new Response("Method Not Allowed", {
@@ -165,14 +236,7 @@ const handleMcpRoute = async (request: Request) => {
 };
 
 export const resetMcpSessionsForTests = async () => {
-  const transports = [...mcpSessions.values()].map(({ transport }) => transport);
-  mcpSessions.clear();
-
-  await Promise.all(
-    transports.map(async (transport) => {
-      await transport.close().catch(() => undefined);
-    }),
-  );
+  await resetStoredMcpSessionsForTests();
 };
 
 export const POST = handleMcpRoute;

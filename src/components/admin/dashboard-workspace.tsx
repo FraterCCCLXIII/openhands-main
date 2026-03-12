@@ -1053,7 +1053,7 @@ export const DashboardWorkspace = ({
                   </div>
                   <div className="mt-4 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)]">
                     <div className="border-b border-[var(--color-border)] px-3 py-2 text-xs uppercase tracking-[0.18em] text-[var(--color-text-base)]">
-                      MCP session setup example
+                      MCP session setup
                     </div>
                     <pre className="overflow-x-auto whitespace-pre-wrap px-3 py-3 text-xs leading-6 text-[var(--color-text-base)]">
                       {agentConnectionGuide.mcpSessionSetupExample}
