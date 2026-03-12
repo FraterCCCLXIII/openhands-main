@@ -98,9 +98,18 @@ describe("agent-connection", () => {
     expect(guide.permissionNote).toContain("Enabled tools are callable by default");
     expect(guide.mcpConfigExample).toContain('"transport": "streamable-http"');
     expect(guide.mcpConfigExample).toContain('"url": "http://localhost:12000/api/mcp"');
-    expect(guide.mcpSessionSetupExample).toContain("1. Call set_agent_id with:");
-    expect(guide.mcpSessionSetupExample).toContain("2. Call set_agent_class with:");
-    expect(guide.mcpSessionSetupExample).toContain("3. Call github__search_repositories with:");
+    expect(guide.mcpSessionSetupExample).toContain(
+      "1. Connect your MCP client to http://localhost:12000/api/mcp.",
+    );
+    expect(guide.mcpSessionSetupExample).toContain(
+      "2. Call github__search_repositories directly; if you omit agent identity, the session defaults to research-bot-01 (researcher).",
+    );
+    expect(guide.mcpSessionSetupExample).toContain(
+      "3. Optionally call set_agent_id and set_agent_class to override the identity for the rest of the session.",
+    );
+    expect(guide.mcpSessionSetupExample).toContain(
+      "4. You can also pass contextAgentId and contextAgentClass per tool call when you need a one-off override.",
+    );
   });
 
   it("prefers a non-approval function and omits fake payload placeholders", () => {
@@ -133,6 +142,7 @@ describe("agent-connection", () => {
     );
     expect(guide.mcpToolName).toBe("your-integration__your-function");
     expect(guide.fetchExample).toContain("your-function");
+    expect(guide.mcpSessionSetupExample).toContain("defaults to research-bot-01 (researcher)");
     expect(guide.mcpSessionSetupExample).toContain("set_agent_id");
     expect(guide.mcpSessionSetupExample).toContain("set_agent_class");
   });

@@ -65,7 +65,7 @@ export default async function AddConnectorPage() {
           <p className="max-w-3xl text-sm leading-7 text-[var(--color-text-base)]">
             If the integration setup flow does not show the provider you need,
             use this page to see which managed connectors are already registered
-            for this service and how admins can add another OAuth-backed managed connector, whether that connector is a remote MCP or a REST API generated from an official OpenAPI schema.
+            for this service and how admins can add another managed connector, whether that connector is a remote MCP or a REST API generated from a published machine-readable API schema.
           </p>
           <div className="flex flex-wrap gap-2">
             {readyBuiltInConnectors.map((connector) => (
@@ -127,8 +127,8 @@ export default async function AddConnectorPage() {
             <div className="space-y-4 text-sm leading-7 text-[var(--color-text-base)]">
               <p>
                 Add connector is a service-level admin action. Use it once to
-                register an OAuth-backed managed connector so every user can see
-                it in the integrations wizard.
+                register a managed connector so every user can see it in the
+                integrations wizard.
               </p>
               <p>
                 The in-app registration form is only available to signed-in app
@@ -166,11 +166,11 @@ export default async function AddConnectorPage() {
                   and <code className="ml-1 text-white">src/lib/integrations/oauth-provider-catalog.ts</code>.
                 </li>
                 <li>
-                  <span className="font-medium text-white">3.</span> Store the
-                  OAuth client ID and client secret in that managed connector if
-                  this service is going to run the OAuth callback flow for users.
-                  The integrations wizard only lists OAuth connectors after those
-                  service-level credentials are stored. Every provider row includes
+                  <span className="font-medium text-white">3.</span> Store any
+                  required service-level credentials in that managed connector
+                  if this deployment is going to run an OAuth callback flow for
+                  users. The integrations wizard only lists OAuth connectors after
+                  those service-level credentials are stored. Every provider row includes
                   a direct link to that provider's authentication setup docs and
                   shows the callback URL to register when OAuth is the preferred
                   path. When <code className="text-white">AUTH_REDIRECT_PROXY_URL</code>

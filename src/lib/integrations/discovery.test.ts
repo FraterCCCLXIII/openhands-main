@@ -103,7 +103,7 @@ describe("listBuiltInConnectors", () => {
 
     const connectors = await listBuiltInConnectors(repository);
 
-    expect(connectors).toEqual([
+    expect(connectors).toContainEqual(
       expect.objectContaining({
         slug: "acme-crm",
         name: "Acme CRM",
@@ -111,8 +111,23 @@ describe("listBuiltInConnectors", () => {
         toolCount: 0,
         oauthConfigured: true,
       }),
-    ]);
+    );
   });
+
+  it("includes default API-key connectors that need no admin registration", async () => {
+    const connectors = await listBuiltInConnectors(new MemoryRepository());
+
+    expect(connectors).toContainEqual(
+      expect.objectContaining({
+        slug: "elevenlabs",
+        name: "ElevenLabs",
+        authStrategy: "api_key",
+        oauthConfigured: true,
+        apiKeyHeaderName: "xi-api-key",
+      }),
+    );
+  });
+
 
   it("omits disabled managed connectors and sorts the catalog by name", async () => {
     const repository = new MemoryRepository();
@@ -175,6 +190,7 @@ describe("listBuiltInConnectors", () => {
 
     expect(connectors.map((connector) => connector.name)).toEqual([
       "Alpha CRM",
+      "ElevenLabs",
       "Zeta Desk",
     ]);
   });
@@ -262,7 +278,73 @@ describe("discoverIntegration", () => {
     });
   });
 
-  it("returns 404 when a built-in slug has not been registered as a managed connector", async () => {
+  it("discovers default ElevenLabs connectors from curated registration defaults", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            openapi: "3.1.0",
+            paths: {
+              "/v1/models": {
+                get: {
+                  operationId: "list-models",
+                  summary: "List models",
+                },
+              },
+            },
+          }),
+          {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          },
+        ),
+      ),
+    );
+
+    await expect(
+      discoverIntegration(
+        {
+          key: "elevenlabs",
+          kind: "built_in",
+          config: {
+            builtInSlug: "elevenlabs",
+          },
+          credentials: {
+            secret: "eleven-secret",
+          },
+        },
+        {
+          repository: new MemoryRepository(),
+        },
+      ),
+    ).resolves.toMatchObject({
+      provider: "http",
+      authStrategy: "api_key",
+      config: {
+        builtInSlug: "elevenlabs",
+        apiBaseUrl: "https://api.elevenlabs.io",
+      },
+      credentials: {
+        headerName: "xi-api-key",
+        secret: "eleven-secret",
+      },
+      functions: {
+        list_models: {
+          description: "List models",
+          config: {
+            request: {
+              method: "GET",
+              path: "/v1/models",
+            },
+          },
+        },
+      },
+    });
+  });
+
+
+  it("returns 404 when a built-in slug is not available", async () => {
     await expect(
       discoverIntegration(
         {

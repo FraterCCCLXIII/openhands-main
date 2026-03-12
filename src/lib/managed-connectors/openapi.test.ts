@@ -147,6 +147,18 @@ describe("generateManagedConnectorFunctionsFromOpenApi", () => {
           contentType: "json",
         },
       },
+      {
+        name: "upload_file",
+        description:
+          "Upload a file Provide multipart form fields under `body`. File inputs can use objects like { filename, contentType, contentBase64 }.",
+        defaultScopes: [],
+        request: {
+          method: "POST",
+          path: "/v1/file_uploads/{{file_upload_id}}/send",
+          body: "{{body}}",
+          contentType: "multipart_form_data",
+        },
+      },
     ]);
   });
 });

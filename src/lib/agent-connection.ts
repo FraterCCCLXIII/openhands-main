@@ -1,3 +1,4 @@
+import { DEFAULT_AGENT_CLASS, DEFAULT_AGENT_ID } from "@/src/lib/agent-defaults";
 import {
   buildContextLayerMcpToolName,
   CONTEXT_LAYER_MCP_SET_AGENT_CLASS_TOOL_NAME,
@@ -29,9 +30,6 @@ export interface AgentConnectionGuide {
   permissionNote: string;
 }
 
-const DEFAULT_AGENT_ID = "research-bot-01";
-const DEFAULT_AGENT_CLASS = "researcher";
-
 export const buildAgentConnectionGuide = ({
   baseUrl,
   apiKey,
@@ -52,8 +50,6 @@ export const buildAgentConnectionGuide = ({
   const functionName = sampleFunction?.name ?? "your-function";
   const defaultScopes = sampleFunction?.defaultScopes ?? [];
   const requestPayload = {
-    agentId: DEFAULT_AGENT_ID,
-    agentClass: DEFAULT_AGENT_CLASS,
     scopes: defaultScopes,
     payload: sampleFunction ? buildExamplePayload(sampleFunction) : {},
   };
@@ -102,19 +98,11 @@ const result = await response.json();`;
     null,
     2,
   );
-  const mcpInvocationArguments = {
-    ...(sampleFunction ? buildExamplePayload(sampleFunction) : {}),
-    ...(defaultScopes.length > 0 ? { _scopes: defaultScopes } : {}),
-  };
   const mcpSessionSetupExample = [
-    `1. Call ${mcpSetAgentIdToolName} with:`,
-    JSON.stringify({ agentId: DEFAULT_AGENT_ID }, null, 2),
-    "",
-    `2. Call ${mcpSetAgentClassToolName} with:`,
-    JSON.stringify({ agentClass: DEFAULT_AGENT_CLASS }, null, 2),
-    "",
-    `3. Call ${mcpToolName} with:`,
-    JSON.stringify(mcpInvocationArguments, null, 2),
+    `1. Connect your MCP client to ${mcpEndpoint}.`,
+    `2. Call ${mcpToolName} directly; if you omit agent identity, the session defaults to ${DEFAULT_AGENT_ID} (${DEFAULT_AGENT_CLASS}).`,
+    `3. Optionally call ${mcpSetAgentIdToolName} and ${mcpSetAgentClassToolName} to override the identity for the rest of the session.`,
+    "4. You can also pass contextAgentId and contextAgentClass per tool call when you need a one-off override.",
   ].join("\n");
 
   return {

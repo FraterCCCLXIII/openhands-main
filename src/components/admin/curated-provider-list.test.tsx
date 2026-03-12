@@ -89,22 +89,61 @@ const providerCatalog: OAuthProviderCatalogOption[] = [
   {
     slug: "slack",
     name: "Slack",
-    description: "Channels, messaging, workflows, and collaboration",
-    categories: ["Communication"],
+    description: "Channels, messaging, workflows, canvases, and operational collaboration",
+    categories: ["Communication", "Operations"],
     authStrategy: "oauth2",
     availability: "oauth_ready",
     builtInSlug: "slack",
     docsUrl: "https://docs.slack.dev/ai/slack-mcp-server",
-    notes: "Uses Slack's official hosted MCP server.",
+    notes: "Uses Slack's official hosted MCP server with confidential OAuth user-token auth.",
     popularityRank: 4,
     registrationDefaults: {
       provider: "mcp",
       serverUrl: "https://mcp.slack.com/mcp",
       authorizationUrl: "https://slack.com/oauth/v2_user/authorize",
       tokenUrl: "https://slack.com/api/oauth.v2.user.access",
-      scopes: ["chat:write", "users:read"],
+      scopes: [
+        "search:read.public",
+        "search:read.private",
+        "search:read.mpim",
+        "search:read.im",
+        "search:read.files",
+        "search:read.users",
+        "chat:write",
+        "channels:history",
+        "groups:history",
+        "mpim:history",
+        "im:history",
+        "canvases:read",
+        "canvases:write",
+        "users:read",
+        "users:read.email",
+      ],
       clientAuthentication: "body",
       pkce: true,
+    },
+  },
+  {
+    slug: "elevenlabs",
+    name: "ElevenLabs",
+    description: "Text to speech, voices, transcription, audio generation, and agents",
+    categories: ["Audio", "AI"],
+    authStrategy: "api_key",
+    availability: "manual_token",
+    builtInSlug: "elevenlabs",
+    docsUrl: "https://elevenlabs.io/docs/api-reference/introduction",
+    notes: "Uses the published API schema and user API keys.",
+    popularityRank: 5,
+    registrationDefaults: {
+      provider: "http",
+      authModes: ["api_key"],
+      authStrategy: "api_key",
+      credentialLabel: "ElevenLabs API key",
+      credentialPlaceholder: "Paste your ElevenLabs API key",
+      credentialHelp: "Personal or workspace ElevenLabs API key sent in the xi-api-key header.",
+      apiBaseUrl: "https://api.elevenlabs.io",
+      openApiUrl: "https://api.elevenlabs.io/openapi.json",
+      apiKeyHeaderName: "xi-api-key",
     },
   },
 ];
@@ -191,7 +230,7 @@ describe("CuratedProviderList", () => {
 
     expect(container.textContent).toContain("Register this provider");
     expect(container.textContent).toContain(
-      "Enter the OAuth-backed REST API details below to register this connector once for the whole service.",
+      "Enter the REST API details below to register this connector once for the whole service.",
     );
     expect(container.textContent).toContain("Register connector");
     expect(container.textContent).toContain("How to create Google Calendar OAuth credentials");
@@ -325,7 +364,7 @@ describe("CuratedProviderList", () => {
     });
 
     expect(container.textContent).toContain(
-      "Enter the OAuth-backed MCP details below to register this connector once for the whole service.",
+      "Enter the MCP details below to register this connector once for the whole service.",
     );
     expect(container.textContent).toContain("How to create Slack OAuth credentials");
     expect(container.textContent).toContain(`${oauthCallbackBaseUrl}/slack/callback`);
@@ -389,7 +428,23 @@ describe("CuratedProviderList", () => {
       tokenUrl: "https://slack.com/api/oauth.v2.user.access",
       clientAuthentication: "body",
       pkce: true,
-      scopes: ["chat:write", "users:read"],
+      scopes: [
+        "search:read.public",
+        "search:read.private",
+        "search:read.mpim",
+        "search:read.im",
+        "search:read.files",
+        "search:read.users",
+        "chat:write",
+        "channels:history",
+        "groups:history",
+        "mpim:history",
+        "im:history",
+        "canvases:read",
+        "canvases:write",
+        "users:read",
+        "users:read.email",
+      ],
     });
     expect(container.textContent).toContain("Ready now");
     expect(container.textContent).toContain("Use Slack");
@@ -430,8 +485,8 @@ describe("CuratedProviderList", () => {
       notionButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
 
-    expect(container.textContent).toContain("Enter the OAuth-backed REST API details below");
-    expect(container.textContent).toContain("OpenAPI schema source:");
+    expect(container.textContent).toContain("Enter the REST API details below");
+    expect(container.textContent).toContain("API schema source:");
     expect(container.textContent).toContain("https://developers.notion.com/openapi.json");
     expect(container.textContent).toContain("API base URL");
     expect(container.textContent).not.toContain("MCP server URL");
@@ -475,6 +530,88 @@ describe("CuratedProviderList", () => {
     });
     expect(body.serverUrl).toBeUndefined();
   });
+
+  it("registers ElevenLabs without requiring service-level OAuth credentials", async () => {
+    fetchMock.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          slug: "elevenlabs",
+          oauthConfigured: true,
+        }),
+        {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        },
+      ),
+    );
+
+    await act(async () => {
+      root.render(
+        <CuratedProviderList
+          providerCatalog={providerCatalog}
+          readyBuiltInConnectors={readyBuiltInConnectors}
+          canRegisterManagedConnectors
+          oauthCallbackBaseUrl={oauthCallbackBaseUrl}
+        />,
+      );
+    });
+
+    const elevenLabsButton = Array.from(container.querySelectorAll("button")).find((button) =>
+      button.textContent?.includes("ElevenLabs"),
+    );
+    expect(elevenLabsButton).toBeTruthy();
+
+    await act(async () => {
+      elevenLabsButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    expect(container.textContent).toContain(
+      "This provider does not require service-level OAuth client credentials.",
+    );
+    expect(container.textContent).toContain("How to configure ElevenLabs");
+    expect(container.textContent).toContain("API schema source:");
+    expect(container.textContent).not.toContain("OAuth client ID");
+    expect(container.textContent).not.toContain("OAuth client secret");
+    expect(container.textContent).not.toContain(`${oauthCallbackBaseUrl}/elevenlabs/callback`);
+
+    const form = container.querySelector("form");
+    expect(form).toBeTruthy();
+
+    await act(async () => {
+      form?.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    const [, requestInit] = fetchMock.mock.calls.at(-1) as [string, RequestInit];
+    const body = JSON.parse(String(requestInit.body)) as {
+      slug: string;
+      authModes: string[];
+      authStrategy: string;
+      provider: string;
+      apiBaseUrl: string;
+      openApiUrl: string;
+      credentialLabel: string;
+      oauthConfig?: unknown;
+      oauthClientId?: string;
+      oauthClientSecret?: string;
+      functions: Array<unknown>;
+    };
+
+    expect(body).toMatchObject({
+      slug: "elevenlabs",
+      authModes: ["api_key"],
+      authStrategy: "api_key",
+      provider: "http",
+      apiBaseUrl: "https://api.elevenlabs.io",
+      openApiUrl: "https://api.elevenlabs.io/openapi.json",
+      credentialLabel: "ElevenLabs API key",
+      functions: [],
+    });
+    expect(body.oauthConfig).toBeUndefined();
+    expect(body.oauthClientId).toBeUndefined();
+    expect(body.oauthClientSecret).toBeUndefined();
+  });
+
 
 
   it("does not render legacy Composio MCP template guidance", async () => {
