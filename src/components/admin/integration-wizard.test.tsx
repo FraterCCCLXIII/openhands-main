@@ -31,7 +31,6 @@ const setInputValue = (element: HTMLInputElement | undefined, value: string) => 
   element.dispatchEvent(new Event("change", { bubbles: true }));
 };
 
-
 describe("IntegrationWizard", () => {
   let container: HTMLDivElement;
   let root: Root;
@@ -479,6 +478,269 @@ describe("IntegrationWizard", () => {
 
     expect(container.textContent).toContain("1 functions discovered for Notion");
     expect(container.textContent).toContain("searchPages");
+  });
+
+  it("renders searchable bulk access controls with alphabetized compact review rows", async () => {
+    const onCreated = vi.fn(async () => {});
+    let createPayload: Record<string, unknown> | null = null;
+
+    fetchMock.mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = typeof input === "string" ? input : input.toString();
+
+      if (url === "/api/integrations/built-in-connectors") {
+        return new Response(
+          JSON.stringify([
+            {
+              slug: "github",
+              name: "GitHub",
+              description: "GitHub connector",
+              toolCount: 4,
+              categories: ["Engineering"],
+              authModes: ["bearer"],
+              authStrategy: "bearer",
+              oauthConfigured: true,
+              credentialLabel: "GitHub token",
+              credentialPlaceholder: "ghp_...",
+              credentialHelp: "Use a GitHub token.",
+            },
+          ]),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      }
+
+      if (url === "/api/oauth/connections") {
+        return new Response(JSON.stringify([]), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+
+      if (url === "/api/integrations/discover") {
+        return new Response(
+          JSON.stringify({
+            provider: "mcp",
+            authStrategy: "bearer",
+            config: {
+              builtInSlug: "github",
+              serverUrl: "https://api.githubcopilot.com/mcp/",
+            },
+            credentials: {
+              accessToken: "ghp_test_token",
+            },
+            functions: {
+              searchPages: {
+                name: "searchPages",
+                description: "Search all pages",
+                enabled: true,
+                accessMode: "enabled",
+                fineGrainedPermissions: true,
+                defaultScopes: ["pages:read"],
+                executionMode: "provider",
+                config: { toolName: "searchPages" },
+              },
+              archiveDatabase: {
+                name: "archiveDatabase",
+                description: "Archive a database",
+                enabled: true,
+                accessMode: "enabled",
+                fineGrainedPermissions: true,
+                defaultScopes: ["databases:write"],
+                executionMode: "provider",
+                config: { toolName: "archiveDatabase" },
+              },
+              createPage: {
+                name: "createPage",
+                description: "Create a page",
+                enabled: true,
+                accessMode: "enabled",
+                fineGrainedPermissions: true,
+                defaultScopes: ["pages:write"],
+                executionMode: "provider",
+                config: { toolName: "createPage" },
+              },
+            },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      }
+
+      if (url === "/api/integrations") {
+        createPayload = JSON.parse(String(init?.body)) as Record<string, unknown>;
+        return new Response(JSON.stringify({ ok: true }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+
+      throw new Error(`Unexpected fetch: ${url}`);
+    });
+
+    useSearchParamsMock.mockReturnValue(new URLSearchParams("builtIn=github"));
+
+    await act(async () => {
+      root.render(
+        <QueryClientProvider client={queryClient}>
+          <IntegrationWizard onCreated={onCreated} onStatus={() => {}} />
+        </QueryClientProvider>,
+      );
+    });
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    });
+
+    const tokenInput = Array.from(container.querySelectorAll("input")).find(
+      (input) => input.getAttribute("placeholder") === "ghp_...",
+    ) as HTMLInputElement | undefined;
+    expect(tokenInput).toBeTruthy();
+
+    await act(async () => {
+      setInputValue(tokenInput, "ghp_test_token");
+    });
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    const clickButton = async (label: string) => {
+      const button = Array.from(container.querySelectorAll("button")).find((candidate) =>
+        candidate.textContent?.includes(label),
+      );
+      expect(button, `Missing button: ${label}`).toBeTruthy();
+
+      await act(async () => {
+        button?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      });
+
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 0));
+      });
+    };
+
+    const getVisibleFunctionNames = () =>
+      Array.from(container.querySelectorAll("[data-function-name]")).map((row) =>
+        row.getAttribute("data-function-name"),
+      );
+
+    const getFunctionCheckbox = (name: string) =>
+      container.querySelector(`input[aria-label="Select ${name}"]`) as
+        | HTMLInputElement
+        | null;
+
+    const getFunctionMode = (name: string) =>
+      container
+        .querySelector(`[data-function-name="${name}"] [data-access-mode]`)
+        ?.getAttribute("data-access-mode");
+
+    await clickButton("Discover functions");
+
+    expect(getVisibleFunctionNames()).toEqual([
+      "archiveDatabase",
+      "createPage",
+      "searchPages",
+    ]);
+
+    const searchInput = container.querySelector(
+      'input[type="search"][aria-label="Search functions"]',
+    ) as HTMLInputElement | null;
+    expect(searchInput).toBeTruthy();
+
+    await act(async () => {
+      setInputValue(searchInput ?? undefined, "page");
+    });
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    expect(getVisibleFunctionNames()).toEqual(["createPage", "searchPages"]);
+
+    await clickButton("Select all matches");
+
+    await act(async () => {
+      setInputValue(searchInput ?? undefined, "");
+    });
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    expect(getFunctionCheckbox("archiveDatabase")?.checked).toBe(false);
+    expect(getFunctionCheckbox("createPage")?.checked).toBe(true);
+    expect(getFunctionCheckbox("searchPages")?.checked).toBe(true);
+
+    await act(async () => {
+      setInputValue(searchInput ?? undefined, "page");
+    });
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    await clickButton("Disable selected");
+    expect(getFunctionMode("createPage")).toBe("disabled");
+    expect(getFunctionMode("searchPages")).toBe("disabled");
+    expect(getFunctionCheckbox("createPage")?.checked).toBe(false);
+    expect(getFunctionCheckbox("searchPages")?.checked).toBe(false);
+
+    await act(async () => {
+      setInputValue(searchInput ?? undefined, "search");
+    });
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    await clickButton("Select all matches");
+    await clickButton("Case-by-case selected");
+    expect(getFunctionMode("searchPages")).toBe("approval_required");
+    expect(getFunctionCheckbox("searchPages")?.checked).toBe(false);
+
+    await act(async () => {
+      setInputValue(searchInput ?? undefined, "archive");
+    });
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    await clickButton("Select all matches");
+    await clickButton("Enable selected");
+    expect(getFunctionCheckbox("archiveDatabase")?.checked).toBe(false);
+
+    await act(async () => {
+      setInputValue(searchInput ?? undefined, "");
+    });
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    expect(getFunctionMode("archiveDatabase")).toBe("enabled");
+    expect(getFunctionMode("createPage")).toBe("disabled");
+    expect(getFunctionMode("searchPages")).toBe("approval_required");
+
+    await clickButton("Create integration");
+
+    expect(onCreated).toHaveBeenCalledTimes(1);
+    expect(createPayload).toMatchObject({
+      key: "github",
+      name: "GitHub",
+      functions: {
+        archiveDatabase: expect.objectContaining({
+          accessMode: "enabled",
+          enabled: true,
+        }),
+        createPage: expect.objectContaining({
+          accessMode: "disabled",
+          enabled: false,
+        }),
+        searchPages: expect.objectContaining({
+          accessMode: "approval_required",
+          enabled: true,
+        }),
+      },
+    });
   });
 
   it("shows inline transport diagnostics when function discovery fails", async () => {

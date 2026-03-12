@@ -134,6 +134,36 @@ describe("ContextLayerService", () => {
     ).rejects.toThrow("Function disabled");
   });
 
+
+  it("updates function access modes and syncs enabled state", async () => {
+    const service = createService();
+    await service.registerIntegration(baseIntegration);
+
+    const approvalRequired = await service.setFunctionAccessMode(
+      "salesforce",
+      "accounts",
+      "approval_required",
+    );
+    expect(approvalRequired.accessMode).toBe("approval_required");
+    expect(approvalRequired.enabled).toBe(true);
+
+    const disabled = await service.setFunctionAccessMode(
+      "salesforce",
+      "accounts",
+      "disabled",
+    );
+    expect(disabled.accessMode).toBe("disabled");
+    expect(disabled.enabled).toBe(false);
+
+    const restored = await service.setFunctionAccessMode(
+      "salesforce",
+      "accounts",
+      "enabled",
+    );
+    expect(restored.accessMode).toBe("enabled");
+    expect(restored.enabled).toBe(true);
+  });
+
   it("requires temporary approval for case-by-case functions", async () => {
     const repository = new MemoryRepository();
     const service = new ContextLayerService(

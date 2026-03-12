@@ -496,12 +496,35 @@ export class ContextLayerService {
       );
     }
 
-    functionSpec.enabled = enabled;
-    functionSpec.accessMode = enabled
+    const accessMode = enabled
       ? functionSpec.accessMode === "disabled"
         ? "enabled"
         : getFunctionAccessMode(functionSpec)
       : "disabled";
+
+    functionSpec.enabled = accessMode !== "disabled";
+    functionSpec.accessMode = accessMode;
+    await this.repository.upsertIntegration(integration);
+    return functionSpec;
+  }
+
+  async setFunctionAccessMode(
+    integrationKey: string,
+    functionName: string,
+    accessMode: FunctionAccessMode,
+  ) {
+    const integration = await this.getIntegration(integrationKey);
+    const functionSpec = integration.functions[functionName];
+
+    if (!functionSpec) {
+      throw new ContextLayerError(
+        `Unknown function '${functionName}' for integration '${integrationKey}'.`,
+        404,
+      );
+    }
+
+    functionSpec.accessMode = accessMode;
+    functionSpec.enabled = accessMode !== "disabled";
     await this.repository.upsertIntegration(integration);
     return functionSpec;
   }
