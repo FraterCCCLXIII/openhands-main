@@ -108,6 +108,15 @@ describe("DashboardWorkspace", () => {
     expect(container.textContent).toContain("set_agent_id");
     expect(container.textContent).toContain("set_agent_class");
     expect(container.textContent).toContain(
+      "Connect your MCP client to https://example.com/api/mcp.",
+    );
+    expect(container.textContent).toContain(
+      "Call set_agent_id once at the start of the session to set the agent ID.",
+    );
+    expect(container.textContent).toContain(
+      "Call set_agent_class once at the start of the session to set the agent class.",
+    );
+    expect(container.textContent).toContain(
       "Enabled tools are callable by default unless you configure an agent-class policy to narrow access; case-by-case tools still need a temporary approval grant.",
     );
   });
