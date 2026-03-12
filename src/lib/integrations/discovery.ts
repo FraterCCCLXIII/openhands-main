@@ -4,14 +4,16 @@ import { ContextLayerError } from "@/src/lib/core/errors";
 import type { ContextRepository } from "@/src/lib/core/repository";
 import { buildMcpHeaders, runMcpClientOperation } from "@/src/lib/mcp-client";
 import {
+  buildManagedConnectorFunctionSpecs,
   buildManagedConnectorFunctions,
+  getDefaultBuiltInConnector,
   getManagedConnectorApiBaseUrl,
   getManagedConnectorProvider,
-  getManagedConnectorRecord,
   getManagedConnectorServerUrl,
   listAvailableBuiltInConnectors,
   resolveManagedConnectorCredentials,
 } from "@/src/lib/integrations/managed-connectors";
+import { generateManagedConnectorFunctionsFromOpenApi } from "@/src/lib/managed-connectors/openapi";
 import type {
   AuthStrategy,
   BuiltInConnectorOption,
@@ -200,29 +202,33 @@ const discoverManagedConnectorIntegration = async (
     return null;
   }
 
-  const managedConnector = await getManagedConnectorRecord(options.repository, slug);
-  if (!managedConnector) {
+  const storedConnector = await options.repository.getManagedConnector(slug);
+  if (!storedConnector) {
     return null;
   }
 
-  if (getManagedConnectorProvider(managedConnector) === "mcp") {
-    const serverUrl = getManagedConnectorServerUrl(managedConnector);
+  if (!storedConnector.enabled) {
+    return null;
+  }
+
+  if (getManagedConnectorProvider(storedConnector) === "mcp") {
+    const serverUrl = getManagedConnectorServerUrl(storedConnector);
     if (!serverUrl) {
       throw new ContextLayerError(
-        `Managed MCP connector '${managedConnector.slug}' is missing a serverUrl.`,
+        `Managed MCP connector '${storedConnector.slug}' is missing a serverUrl.`,
         500,
       );
     }
 
     const credentials =
-      managedConnector.authStrategy === "oauth2"
+      storedConnector.authStrategy === "oauth2"
         ? await resolveManagedOAuthDiscoveryCredentials(
             options.repository,
             options.ownerId,
             input.key.trim(),
-            managedConnector.name,
+            storedConnector.name,
           )
-        : resolveManagedConnectorCredentials(managedConnector, input);
+        : resolveManagedConnectorCredentials(storedConnector, input);
 
     const result = await discoverMcpIntegration({
       ...input,
@@ -235,37 +241,62 @@ const discoverManagedConnectorIntegration = async (
 
     return {
       ...result,
-      authStrategy: managedConnector.authStrategy,
+      authStrategy: storedConnector.authStrategy,
       config: compactRecord({
-        builtInSlug: managedConnector.slug,
-        managedConnectorSlug: managedConnector.slug,
+        builtInSlug: storedConnector.slug,
+        managedConnectorSlug: storedConnector.slug,
         serverUrl,
       }),
-      credentials: managedConnector.authStrategy === "oauth2" ? {} : result.credentials,
+      credentials: storedConnector.authStrategy === "oauth2" ? {} : result.credentials,
     };
   }
 
-  const apiBaseUrl = getManagedConnectorApiBaseUrl(managedConnector);
+  const apiBaseUrl = getManagedConnectorApiBaseUrl(storedConnector);
   if (!apiBaseUrl) {
     throw new ContextLayerError(
-      `Managed HTTP connector '${managedConnector.slug}' is missing an apiBaseUrl.`,
+      `Managed HTTP connector '${storedConnector.slug}' is missing an apiBaseUrl.`,
       500,
     );
   }
 
   return {
     provider: "http",
-    authStrategy: managedConnector.authStrategy,
+    authStrategy: storedConnector.authStrategy,
     config: {
-      builtInSlug: managedConnector.slug,
+      builtInSlug: storedConnector.slug,
       apiBaseUrl,
-      managedConnectorSlug: managedConnector.slug,
+      managedConnectorSlug: storedConnector.slug,
     },
-    credentials: resolveManagedConnectorCredentials(managedConnector, input),
-    functions: buildManagedConnectorFunctions(managedConnector),
+    credentials: resolveManagedConnectorCredentials(storedConnector, input),
+    functions: buildManagedConnectorFunctions(storedConnector),
   };
 };
 
+const discoverDefaultBuiltInConnectorIntegration = async (
+  input: IntegrationDiscoveryInput,
+  slug: string,
+): Promise<IntegrationDiscoveryResult | null> => {
+  const connector = getDefaultBuiltInConnector(slug);
+  if (!connector) {
+    return null;
+  }
+
+  const functions = await generateManagedConnectorFunctionsFromOpenApi({
+    openApiUrl: connector.openApiUrl,
+    authStrategy: connector.authStrategy,
+  });
+
+  return {
+    provider: "http",
+    authStrategy: connector.authStrategy,
+    config: {
+      builtInSlug: connector.slug,
+      apiBaseUrl: connector.apiBaseUrl,
+    },
+    credentials: resolveManagedConnectorCredentials(connector, input),
+    functions: buildManagedConnectorFunctionSpecs(functions),
+  };
+};
 
 const discoverBuiltInConnectorIntegration = async (
   input: IntegrationDiscoveryInput,
@@ -274,6 +305,13 @@ const discoverBuiltInConnectorIntegration = async (
   const slug =
     (input.config.builtInSlug as string | undefined)?.trim() || input.key.trim();
 
+  if (options.repository) {
+    const storedConnector = await options.repository.getManagedConnector(slug);
+    if (storedConnector && !storedConnector.enabled) {
+      throw new ContextLayerError(`Unknown built-in connector '${slug}'.`, 404);
+    }
+  }
+
   const managedConnectorResult = await discoverManagedConnectorIntegration(
     input,
     options,
@@ -281,6 +319,14 @@ const discoverBuiltInConnectorIntegration = async (
   );
   if (managedConnectorResult) {
     return managedConnectorResult;
+  }
+
+  const defaultConnectorResult = await discoverDefaultBuiltInConnectorIntegration(
+    input,
+    slug,
+  );
+  if (defaultConnectorResult) {
+    return defaultConnectorResult;
   }
 
   throw new ContextLayerError(`Unknown built-in connector '${slug}'.`, 404);

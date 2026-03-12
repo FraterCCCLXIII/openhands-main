@@ -85,6 +85,7 @@ describe("listOAuthProviderCatalog", () => {
       provider: "http",
       authModes: ["api_key"],
       authStrategy: "api_key",
+      apiKeyHeaderName: "xi-api-key",
       apiBaseUrl: "https://api.elevenlabs.io",
       openApiUrl: "https://api.elevenlabs.io/openapi.json",
       credentialLabel: "ElevenLabs API key",

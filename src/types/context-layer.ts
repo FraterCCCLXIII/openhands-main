@@ -64,6 +64,7 @@ export interface BuiltInConnectorOption {
   credentialLabel: string;
   credentialPlaceholder: string;
   credentialHelp: string;
+  apiKeyHeaderName?: string;
 }
 
 export type OAuthProviderAvailability =
@@ -78,6 +79,7 @@ export interface OAuthProviderRegistrationDefaults {
   credentialLabel?: string;
   credentialPlaceholder?: string;
   credentialHelp?: string;
+  apiKeyHeaderName?: string;
   apiBaseUrl?: string;
   serverUrl?: string;
   openApiUrl?: string;

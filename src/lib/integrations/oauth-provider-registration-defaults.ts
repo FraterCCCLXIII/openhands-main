@@ -126,6 +126,7 @@ const registrationDefaults: Record<string, OAuthProviderRegistrationDefaults> = 
     credentialPlaceholder: "Paste your ElevenLabs API key",
     credentialHelp:
       "Personal or workspace ElevenLabs API key sent in the xi-api-key header.",
+    apiKeyHeaderName: "xi-api-key",
     apiBaseUrl: "https://api.elevenlabs.io",
     openApiUrl: "https://api.elevenlabs.io/openapi.json",
   },

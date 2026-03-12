@@ -164,7 +164,56 @@ const findConnectorByQuery = (
   );
 };
 
-const buildDiscoverPayload = (draft: WizardDraft) => {
+const buildBuiltInCredentials = (
+  draft: WizardDraft,
+  connector: BuiltInConnectorOption | null,
+) => {
+  switch (connector?.authStrategy) {
+    case "oauth2":
+    case "none":
+      return {};
+    case "api_key":
+      return {
+        headerName:
+          connector.apiKeyHeaderName?.trim() || draft.headerName.trim(),
+        secret: draft.apiKey.trim(),
+      };
+    case "basic":
+      return {
+        username: draft.username.trim(),
+        password: draft.password.trim(),
+      };
+    case "bearer":
+    default:
+      return {
+        accessToken: draft.accessToken.trim(),
+      };
+  }
+};
+
+const hasBuiltInCredentialInput = (
+  draft: WizardDraft,
+  connector: BuiltInConnectorOption | null,
+) => {
+  switch (connector?.authStrategy) {
+    case "oauth2":
+      return false;
+    case "none":
+      return true;
+    case "api_key":
+      return !!draft.apiKey.trim();
+    case "basic":
+      return !!draft.username.trim() && !!draft.password.trim();
+    case "bearer":
+    default:
+      return !!draft.accessToken.trim();
+  }
+};
+
+const buildDiscoverPayload = (
+  draft: WizardDraft,
+  connector: BuiltInConnectorOption | null,
+) => {
   if (!draft.kind) {
     throw new Error("Select Built-in connector or MCP first.");
   }
@@ -180,9 +229,7 @@ const buildDiscoverPayload = (draft: WizardDraft) => {
       config: {
         builtInSlug: draft.builtInSlug.trim(),
       },
-      credentials: {
-        accessToken: draft.accessToken.trim(),
-      },
+      credentials: buildBuiltInCredentials(draft, connector),
     };
   }
 
@@ -373,7 +420,7 @@ export const IntegrationWizard = ({
       fetchJson<DiscoveryResponse>("/api/integrations/discover", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(buildDiscoverPayload(draft)),
+        body: JSON.stringify(buildDiscoverPayload(draft, selectedConnector)),
       }),
     onMutate: () => {
       const providerName =
@@ -449,7 +496,8 @@ export const IntegrationWizard = ({
     [discovery],
   );
 
-  const requiresOAuthConnection = selectedConnector?.authStrategy === "oauth2";
+  const builtInAuthStrategy = selectedConnector?.authStrategy ?? null;
+  const requiresOAuthConnection = builtInAuthStrategy === "oauth2";
   const oauthConnectionEnabled =
     !requiresOAuthConnection || selectedConnector?.oauthConfigured !== false;
 
@@ -461,7 +509,7 @@ export const IntegrationWizard = ({
       ? !!draft.builtInSlug.trim() &&
         (requiresOAuthConnection
           ? oauthConnectionEnabled && !!selectedConnection
-          : !!draft.accessToken.trim())
+          : hasBuiltInCredentialInput(draft, selectedConnector))
       : !!draft.serverUrl.trim());
 
   const handleConnectorSelect = (connector: BuiltInConnectorOption) => {
@@ -471,7 +519,26 @@ export const IntegrationWizard = ({
       key: connector.slug,
       name: connector.name,
       accessToken:
-        current.builtInSlug === connector.slug ? current.accessToken : "",
+        current.builtInSlug === connector.slug && connector.authStrategy === "bearer"
+          ? current.accessToken
+          : "",
+      apiKey:
+        current.builtInSlug === connector.slug && connector.authStrategy === "api_key"
+          ? current.apiKey
+          : "",
+      headerName:
+        connector.apiKeyHeaderName?.trim() ||
+        (current.builtInSlug === connector.slug && connector.authStrategy === "api_key"
+          ? current.headerName
+          : INITIAL_DRAFT.headerName),
+      username:
+        current.builtInSlug === connector.slug && connector.authStrategy === "basic"
+          ? current.username
+          : "",
+      password:
+        current.builtInSlug === connector.slug && connector.authStrategy === "basic"
+          ? current.password
+          : "",
     }));
     setConnectorSearch(connectorOptionLabel(connector));
     setDiscoverFeedback(null);
@@ -491,6 +558,10 @@ export const IntegrationWizard = ({
       ...current,
       builtInSlug: "",
       accessToken: "",
+      apiKey: "",
+      headerName: INITIAL_DRAFT.headerName,
+      username: "",
+      password: "",
     }));
     setDiscoverFeedback(null);
     onStatus(null);
@@ -745,6 +816,95 @@ export const IntegrationWizard = ({
                       : selectedConnection
                         ? `${selectedConnector?.name} is connected. Click Discover to save this integration with your stored OAuth credentials.`
                         : `Connect ${selectedConnector?.name ?? "this provider"} before discovering functions.`}
+                  </div>
+                ) : builtInAuthStrategy === "api_key" ? (
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <label className="grid gap-2 text-sm text-white md:col-span-2">
+                      <span className="font-medium">
+                        {selectedConnector?.credentialLabel ?? "API key"}
+                      </span>
+                      <input
+                        className={inputClassName}
+                        placeholder={
+                          selectedConnector?.credentialPlaceholder ?? "Paste the provider API key"
+                        }
+                        value={draft.apiKey}
+                        onChange={(event) =>
+                          setDraft((current) => ({
+                            ...current,
+                            apiKey: event.target.value,
+                          }))
+                        }
+                        disabled={!draft.builtInSlug.trim()}
+                      />
+                      <span className="text-xs leading-6 text-[var(--color-text-base)]">
+                        {selectedConnector?.credentialHelp ??
+                          "Provide the provider API key that this managed connector should use upstream."}
+                      </span>
+                    </label>
+                    {selectedConnector?.apiKeyHeaderName ? (
+                      <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] px-4 py-3 text-xs leading-6 text-[var(--color-text-base)] md:col-span-2">
+                        This connector sends your API key in the <code className="text-white">{selectedConnector.apiKeyHeaderName}</code> header.
+                      </div>
+                    ) : (
+                      <label className="grid gap-2 text-sm text-white md:col-span-2">
+                        <span className="font-medium">API key header name</span>
+                        <input
+                          className={inputClassName}
+                          placeholder="X-API-Key"
+                          value={draft.headerName}
+                          onChange={(event) =>
+                            setDraft((current) => ({
+                              ...current,
+                              headerName: event.target.value,
+                            }))
+                          }
+                          disabled={!draft.builtInSlug.trim()}
+                        />
+                      </label>
+                    )}
+                  </div>
+                ) : builtInAuthStrategy === "basic" ? (
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <label className="grid gap-2 text-sm text-white">
+                      <span className="font-medium">Username</span>
+                      <input
+                        className={inputClassName}
+                        placeholder="demo"
+                        value={draft.username}
+                        onChange={(event) =>
+                          setDraft((current) => ({
+                            ...current,
+                            username: event.target.value,
+                          }))
+                        }
+                        disabled={!draft.builtInSlug.trim()}
+                      />
+                    </label>
+                    <label className="grid gap-2 text-sm text-white">
+                      <span className="font-medium">Password</span>
+                      <input
+                        type="password"
+                        className={inputClassName}
+                        placeholder="secret"
+                        value={draft.password}
+                        onChange={(event) =>
+                          setDraft((current) => ({
+                            ...current,
+                            password: event.target.value,
+                          }))
+                        }
+                        disabled={!draft.builtInSlug.trim()}
+                      />
+                    </label>
+                    <div className="text-xs leading-6 text-[var(--color-text-base)] md:col-span-2">
+                      {selectedConnector?.credentialHelp ??
+                        "Provide the provider credentials that this managed connector should use upstream."}
+                    </div>
+                  </div>
+                ) : builtInAuthStrategy === "none" ? (
+                  <div className="rounded-xl border border-dashed border-[var(--color-border)] px-4 py-4 text-sm text-[var(--color-text-base)]">
+                    No provider credential is required for {selectedConnector?.name ?? "this connector"}. Click Discover to load the available functions.
                   </div>
                 ) : (
                   <label className="grid gap-2 text-sm text-white">
