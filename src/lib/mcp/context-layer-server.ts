@@ -33,10 +33,8 @@ const RESERVED_TOOL_ARGUMENT_KEYS = new Set([
   "contextAgentId",
   "contextAgentClass",
   "contextScopes",
-  "_agentId",
-  "_agentClass",
-  "_scopes",
 ]);
+const LEGACY_RESERVED_TOOL_ARGUMENT_KEYS = ["_agentId", "_agentClass", "_scopes"] as const;
 const APPROVAL_DASHBOARD_PATH = "/admin";
 export const CONTEXT_LAYER_MCP_TOOL_SEPARATOR = "__";
 export const CONTEXT_LAYER_MCP_SET_AGENT_ID_TOOL_NAME = "set_agent_id";
@@ -44,22 +42,6 @@ export const CONTEXT_LAYER_MCP_SET_AGENT_CLASS_TOOL_NAME = "set_agent_class";
 
 const getFunctionAccessMode = (functionSpec: FunctionSpec) =>
   functionSpec.accessMode ?? (functionSpec.enabled ? "enabled" : "disabled");
-
-
-const getLegacyStringField = (args: Record<string, unknown>, key: string) => {
-  const value = args[key];
-  return typeof value === "string" ? value.trim() : "";
-};
-
-const getLegacyScopesField = (args: Record<string, unknown>) => {
-  const value = args._scopes;
-
-  if (!Array.isArray(value)) {
-    return [] as string[];
-  }
-
-  return value.filter((scope): scope is string => typeof scope === "string");
-};
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
@@ -83,7 +65,7 @@ const buildToolDescription = (
   const notes = [
     functionSpec.description?.trim(),
     `Invoke ${integration.key}.${functionSpec.name} through the context layer MCP bridge.`,
-    `Pass downstream tool arguments as top-level fields. Reserved fields: contextScopes, contextAgentId, contextAgentClass. Use ${CONTEXT_LAYER_MCP_SET_AGENT_ID_TOOL_NAME} and ${CONTEXT_LAYER_MCP_SET_AGENT_CLASS_TOOL_NAME} to persist defaults for the current MCP session. Legacy aliases _scopes, _agentId, and _agentClass are still accepted for backwards compatibility.`,
+    `Pass downstream tool arguments as top-level fields. Reserved fields: contextScopes, contextAgentId, contextAgentClass. Use ${CONTEXT_LAYER_MCP_SET_AGENT_ID_TOOL_NAME} and ${CONTEXT_LAYER_MCP_SET_AGENT_CLASS_TOOL_NAME} to persist defaults for the current MCP session.`,
   ].filter(Boolean);
 
   if (mode === "approval_required") {
@@ -118,15 +100,21 @@ const extractInvocationContext = (
   defaults: McpSessionDefaults,
 ) => {
   const rawArgs = args as Record<string, unknown>;
-  const agentId = args.contextAgentId?.trim() || getLegacyStringField(rawArgs, "_agentId") || defaults.agentId;
-  const agentClass =
-    args.contextAgentClass?.trim() ||
-    getLegacyStringField(rawArgs, "_agentClass") ||
-    defaults.agentClass;
+  const legacyKeys = LEGACY_RESERVED_TOOL_ARGUMENT_KEYS.filter((key) => key in rawArgs);
+
+  if (legacyKeys.length > 0) {
+    throw new ContextLayerError(
+      `Unsupported MCP tool argument(s): ${legacyKeys.join(", ")}. Use contextAgentId, contextAgentClass, and contextScopes instead.`,
+      400,
+    );
+  }
+
+  const agentId = args.contextAgentId?.trim() || defaults.agentId;
+  const agentClass = args.contextAgentClass?.trim() || defaults.agentClass;
 
   if (!agentId || !agentClass) {
     throw new ContextLayerError(
-      `MCP tool calls require an agentId and agentClass. Call ${CONTEXT_LAYER_MCP_SET_AGENT_ID_TOOL_NAME} and ${CONTEXT_LAYER_MCP_SET_AGENT_CLASS_TOOL_NAME} to set session defaults, connect with ?agentId=<id>&agentClass=<class> as initial defaults, or pass contextAgentId and contextAgentClass in the tool arguments. Legacy aliases _agentId and _agentClass are still accepted.`,
+      `MCP tool calls require an agentId and agentClass. Call ${CONTEXT_LAYER_MCP_SET_AGENT_ID_TOOL_NAME} and ${CONTEXT_LAYER_MCP_SET_AGENT_CLASS_TOOL_NAME} to set session defaults, connect with ?agentId=<id>&agentClass=<class> as initial defaults, or pass contextAgentId and contextAgentClass in the tool arguments.`,
       400,
     );
   }
@@ -139,7 +127,7 @@ const extractInvocationContext = (
     agentId,
     agentClass,
     payload,
-    scopes: args.contextScopes.length > 0 ? args.contextScopes : getLegacyScopesField(rawArgs),
+    scopes: args.contextScopes,
   };
 };
 
