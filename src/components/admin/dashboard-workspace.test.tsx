@@ -55,6 +55,7 @@ describe("DashboardWorkspace", () => {
     });
     queryClient.clear();
     container.remove();
+    vi.useRealTimers();
     vi.unstubAllGlobals();
     useSearchParamsMock.mockReset();
     signOutMock.mockReset();
@@ -111,4 +112,63 @@ describe("DashboardWorkspace", () => {
       "Enabled tools are callable by default unless you configure an agent-class policy to narrow access; case-by-case tools still need a temporary approval grant.",
     );
   });
+
+  it("shows a temporary check icon when the API key is copied without posting a success message", async () => {
+    useSearchParamsMock.mockReturnValue(new URLSearchParams("section=apiKeys"));
+    vi.useFakeTimers();
+
+    const writeTextMock = vi.fn().mockResolvedValue(undefined);
+    vi.stubGlobal("navigator", {
+      clipboard: {
+        writeText: writeTextMock,
+      },
+    });
+
+    await act(async () => {
+      root.render(
+        <QueryClientProvider client={queryClient}>
+          <DashboardWorkspace
+            initialIntegrations={[]}
+            initialAccessRequests={[]}
+            initialNotifications={[]}
+            currentUser={{ name: "Admin User", email: "admin@example.com" }}
+            contextApiBaseUrl="https://example.com"
+            contextApiKey="test-key"
+          />
+        </QueryClientProvider>,
+      );
+    });
+
+    const copyButton = Array.from(container.querySelectorAll("button")).find(
+      (button) => button.textContent?.includes("Copy"),
+    );
+    expect(copyButton).toBeTruthy();
+    expect(copyButton?.querySelector("svg")?.getAttribute("class")).toContain(
+      "lucide-copy",
+    );
+
+    await act(async () => {
+      copyButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(writeTextMock).toHaveBeenCalledWith("test-key");
+    expect(container.textContent).not.toContain("API key copied to clipboard.");
+    expect(copyButton?.querySelector("svg")?.getAttribute("class")).toContain(
+      "lucide-circle-check",
+    );
+
+    await act(async () => {
+      vi.advanceTimersByTime(2000);
+    });
+
+    const copyButtonAfterTimeout = Array.from(
+      container.querySelectorAll("button"),
+    ).find((button) => button.textContent?.includes("Copy"));
+    expect(
+      copyButtonAfterTimeout?.querySelector("svg")?.getAttribute("class"),
+    ).toContain("lucide-copy");
+  });
+
 });
