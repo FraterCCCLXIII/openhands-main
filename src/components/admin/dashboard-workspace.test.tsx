@@ -5,12 +5,20 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { useSearchParamsMock, signOutMock } = vi.hoisted(() => ({
-  useSearchParamsMock: vi.fn(() => new URLSearchParams()),
-  signOutMock: vi.fn(),
-}));
+const { pushMock, usePathnameMock, useRouterMock, useSearchParamsMock, signOutMock } =
+  vi.hoisted(() => ({
+    pushMock: vi.fn(),
+    usePathnameMock: vi.fn(() => "/admin"),
+    useRouterMock: vi.fn(() => ({
+      push: pushMock,
+    })),
+    useSearchParamsMock: vi.fn(() => new URLSearchParams()),
+    signOutMock: vi.fn(),
+  }));
 
 vi.mock("next/navigation", () => ({
+  usePathname: usePathnameMock,
+  useRouter: useRouterMock,
   useSearchParams: useSearchParamsMock,
 }));
 
@@ -44,6 +52,12 @@ describe("DashboardWorkspace", () => {
   let fetchMock: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
+    usePathnameMock.mockImplementation(() => "/admin");
+    useRouterMock.mockImplementation(() => ({
+      push: pushMock,
+    }));
+    useSearchParamsMock.mockImplementation(() => new URLSearchParams());
+
     container = document.createElement("div");
     document.body.appendChild(container);
     root = createRoot(container);
@@ -72,6 +86,9 @@ describe("DashboardWorkspace", () => {
     container.remove();
     vi.useRealTimers();
     vi.unstubAllGlobals();
+    pushMock.mockReset();
+    usePathnameMock.mockReset();
+    useRouterMock.mockReset();
     useSearchParamsMock.mockReset();
     signOutMock.mockReset();
   });
@@ -95,6 +112,35 @@ describe("DashboardWorkspace", () => {
     const adminLink = container.querySelector('a[href="/add-connector"]');
     expect(adminLink).toBeTruthy();
     expect(adminLink?.textContent).toContain("Admin");
+  });
+
+  it("updates the URL when switching admin sections", async () => {
+    await act(async () => {
+      root.render(
+        <QueryClientProvider client={queryClient}>
+          <DashboardWorkspace
+            initialIntegrations={[]}
+            initialAccessRequests={[]}
+            initialNotifications={[]}
+            currentUser={{ name: "Admin User", email: "admin@example.com" }}
+            contextApiBaseUrl="https://example.com"
+            contextApiKey="test-key"
+          />
+        </QueryClientProvider>,
+      );
+    });
+
+    const profileButton = Array.from(container.querySelectorAll("button")).find(
+      (button) => button.textContent?.includes("User Profile"),
+    );
+    expect(profileButton).toBeTruthy();
+
+    await act(async () => {
+      profileButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    expect(pushMock).toHaveBeenCalledWith("/admin?section=profile");
+    expect(container.querySelector("h1")?.textContent).toBe("User Profile");
   });
 
   it("documents separate REST and MCP usage sections on the usage panel", async () => {

@@ -20,7 +20,7 @@ import {
   Waypoints,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
-import { useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { type ReactNode, useEffect, useMemo, useState } from "react";
 
 import {
@@ -339,6 +339,8 @@ export const DashboardWorkspace = ({
   contextApiKey,
 }: AdminDashboardProps) => {
   const queryClient = useQueryClient();
+  const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const [activeSection, setActiveSection] = useState<AdminSection>("home");
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
@@ -398,6 +400,20 @@ export const DashboardWorkspace = ({
       window.clearTimeout(timeoutId);
     };
   }, [apiKeyCopied]);
+
+  const navigateToSection = (section: AdminSection) => {
+    setActiveSection(section);
+
+    const nextSearchParams = new URLSearchParams(searchParams.toString());
+    if (section === "home") {
+      nextSearchParams.delete("section");
+    } else {
+      nextSearchParams.set("section", section);
+    }
+
+    const nextUrl = nextSearchParams.toString();
+    router.push(nextUrl ? `${pathname}?${nextUrl}` : pathname);
+  };
 
   const integrationsQuery = useQuery({
     queryKey: ["integrations"],
@@ -615,7 +631,7 @@ export const DashboardWorkspace = ({
                 icon={section.icon}
                 label={section.label}
                 active={activeSection === section.id}
-                onClick={() => setActiveSection(section.id)}
+                onClick={() => navigateToSection(section.id)}
               />
             ))}
           </nav>
@@ -736,19 +752,19 @@ export const DashboardWorkspace = ({
                     title="Review your profile"
                     body="Confirm the signed-in identity that owns the persisted personal key."
                     action="Open profile"
-                    onClick={() => setActiveSection("profile")}
+                    onClick={() => navigateToSection("profile")}
                   />
                   <ChecklistRow
                     title="Add an integration"
                     body="Create a Built-in or MCP connector and review its callable functions."
                     action="Open integrations"
-                    onClick={() => setActiveSection("integrations")}
+                    onClick={() => navigateToSection("integrations")}
                   />
                   <ChecklistRow
                     title="Copy your key"
                     body="Reveal or copy the personal agent key, then configure your runtime."
                     action="Open connection"
-                    onClick={() => setActiveSection("apiKeys")}
+                    onClick={() => navigateToSection("apiKeys")}
                   />
                 </div>
               </CompactPanel>
