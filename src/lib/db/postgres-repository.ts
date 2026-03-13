@@ -35,6 +35,19 @@ const getSql = () => {
   return neon(databaseUrl);
 };
 
+const mapIntegrationRow = (row: Record<string, unknown>): IntegrationSpec => ({
+  key: String(row.key),
+  name: String(row.name),
+  kind: row.kind as IntegrationSpec["kind"],
+  provider: row.provider as IntegrationSpec["provider"],
+  authStrategy: row.auth_strategy as IntegrationSpec["authStrategy"],
+  enabled: Boolean(row.enabled),
+  fineGrainedPermissions: Boolean(row.fine_grained_permissions),
+  config: parseJson<Record<string, unknown>>(row.config),
+  credentials: parseJson<Record<string, unknown>>(row.credentials),
+  functions: parseJson<IntegrationSpec["functions"]>(row.functions),
+});
+
 const SCHEMA_LOCK_ID = 482190317;
 
 export class PostgresRepository implements ContextRepository {
@@ -73,6 +86,24 @@ export class PostgresRepository implements ContextRepository {
           credentials JSONB NOT NULL DEFAULT '{}'::jsonb,
           functions JSONB NOT NULL DEFAULT '{}'::jsonb,
           updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )
+      `,
+      sql`
+        CREATE TABLE IF NOT EXISTS owner_integrations (
+          owner_id TEXT NOT NULL,
+          key TEXT NOT NULL,
+          name TEXT NOT NULL,
+          kind TEXT NOT NULL,
+          provider TEXT NOT NULL,
+          auth_strategy TEXT NOT NULL,
+          enabled BOOLEAN NOT NULL,
+          fine_grained_permissions BOOLEAN NOT NULL,
+          config JSONB NOT NULL DEFAULT '{}'::jsonb,
+          credentials JSONB NOT NULL DEFAULT '{}'::jsonb,
+          functions JSONB NOT NULL DEFAULT '{}'::jsonb,
+          created_at TIMESTAMPTZ NOT NULL,
+          updated_at TIMESTAMPTZ NOT NULL,
+          PRIMARY KEY (owner_id, key)
         )
       `,
       sql`
@@ -205,18 +236,7 @@ export class PostgresRepository implements ContextRepository {
     await this.ensureSchema();
     const sql = getSql();
     const rows = await sql`SELECT * FROM integrations ORDER BY key ASC`;
-    return rows.map((row) => ({
-      key: row.key,
-      name: row.name,
-      kind: row.kind,
-      provider: row.provider,
-      authStrategy: row.auth_strategy,
-      enabled: row.enabled,
-      fineGrainedPermissions: row.fine_grained_permissions,
-      config: parseJson<Record<string, unknown>>(row.config),
-      credentials: parseJson<Record<string, unknown>>(row.credentials),
-      functions: parseJson<IntegrationSpec["functions"]>(row.functions),
-    }));
+    return rows.map((row) => mapIntegrationRow(row as Record<string, unknown>));
   }
 
   async getIntegration(key: string) {
@@ -224,21 +244,7 @@ export class PostgresRepository implements ContextRepository {
     const sql = getSql();
     const rows = await sql`SELECT * FROM integrations WHERE key = ${key}`;
     const row = rows[0];
-    if (!row) {
-      return null;
-    }
-    return {
-      key: row.key,
-      name: row.name,
-      kind: row.kind,
-      provider: row.provider,
-      authStrategy: row.auth_strategy,
-      enabled: row.enabled,
-      fineGrainedPermissions: row.fine_grained_permissions,
-      config: parseJson<Record<string, unknown>>(row.config),
-      credentials: parseJson<Record<string, unknown>>(row.credentials),
-      functions: parseJson<IntegrationSpec["functions"]>(row.functions),
-    };
+    return row ? mapIntegrationRow(row as Record<string, unknown>) : null;
   }
 
   async upsertIntegration(spec: IntegrationSpec) {
@@ -254,6 +260,55 @@ export class PostgresRepository implements ContextRepository {
         ${spec.fineGrainedPermissions}, ${JSON.stringify(spec.config)}, ${JSON.stringify(spec.credentials)}, ${JSON.stringify(spec.functions)}, NOW()
       )
       ON CONFLICT (key) DO UPDATE SET
+        name = EXCLUDED.name,
+        kind = EXCLUDED.kind,
+        provider = EXCLUDED.provider,
+        auth_strategy = EXCLUDED.auth_strategy,
+        enabled = EXCLUDED.enabled,
+        fine_grained_permissions = EXCLUDED.fine_grained_permissions,
+        config = EXCLUDED.config,
+        credentials = EXCLUDED.credentials,
+        functions = EXCLUDED.functions,
+        updated_at = NOW()
+    `;
+    return spec;
+  }
+
+  async listOwnerIntegrations(ownerId: string) {
+    await this.ensureSchema();
+    const sql = getSql();
+    const rows = await sql`
+      SELECT * FROM owner_integrations
+      WHERE owner_id = ${ownerId}
+      ORDER BY key ASC
+    `;
+    return rows.map((row) => mapIntegrationRow(row as Record<string, unknown>));
+  }
+
+  async getOwnerIntegration(ownerId: string, integrationKey: string) {
+    await this.ensureSchema();
+    const sql = getSql();
+    const rows = await sql`
+      SELECT * FROM owner_integrations
+      WHERE owner_id = ${ownerId} AND key = ${integrationKey}
+    `;
+    const row = rows[0];
+    return row ? mapIntegrationRow(row as Record<string, unknown>) : null;
+  }
+
+  async upsertOwnerIntegration(ownerId: string, spec: IntegrationSpec) {
+    await this.ensureSchema();
+    const sql = getSql();
+    await sql`
+      INSERT INTO owner_integrations (
+        owner_id, key, name, kind, provider, auth_strategy, enabled,
+        fine_grained_permissions, config, credentials, functions, created_at, updated_at
+      )
+      VALUES (
+        ${ownerId}, ${spec.key}, ${spec.name}, ${spec.kind}, ${spec.provider}, ${spec.authStrategy}, ${spec.enabled},
+        ${spec.fineGrainedPermissions}, ${JSON.stringify(spec.config)}, ${JSON.stringify(spec.credentials)}, ${JSON.stringify(spec.functions)}, NOW(), NOW()
+      )
+      ON CONFLICT (owner_id, key) DO UPDATE SET
         name = EXCLUDED.name,
         kind = EXCLUDED.kind,
         provider = EXCLUDED.provider,

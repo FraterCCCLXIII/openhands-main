@@ -7,7 +7,6 @@ import { auth, isAuthDisabled } from "@/src/lib/auth";
 import { isAppAdminEmail } from "@/src/lib/app-admins";
 import { getCurrentUserIdentity } from "@/src/lib/current-user";
 import { getContextLayerService } from "@/src/lib/core/runtime";
-import { filterIntegrationsVisibleToOwner } from "@/src/lib/integrations/visible-integrations";
 import { isEphemeralContextLayerStorage } from "@/src/lib/persistence";
 import { getRequestOrigin } from "@/src/lib/request-context";
 
@@ -33,17 +32,13 @@ export default async function AdminPage() {
   const isAdmin = isAppAdminEmail(currentUser.email ?? undefined);
   const requestHeaders = await headers();
   const service = getContextLayerService();
-  const [allIntegrations, initialConnections, initialAccessRequests, initialNotifications, contextApiAuth] =
+  const [initialIntegrations, initialAccessRequests, initialNotifications, contextApiAuth] =
     await Promise.all([
-      service.listIntegrations(),
-      service.listIntegrationConnections(contextApiOwner),
+      service.listOwnerIntegrations(contextApiOwner),
       service.listAccessRequests(),
       service.listNotifications(),
       service.getOrCreateAgentApiKey(contextApiOwner),
     ]);
-  const initialIntegrations = isAdmin
-    ? allIntegrations
-    : filterIntegrationsVisibleToOwner(allIntegrations, initialConnections);
 
   return (
     <main className="min-h-screen px-6 py-8">

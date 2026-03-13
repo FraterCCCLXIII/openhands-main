@@ -50,6 +50,13 @@ export interface IntegrationSpec {
   functions: Record<string, FunctionSpec>;
 }
 
+export interface OwnerIntegrationRecord {
+  ownerId: string;
+  integration: IntegrationSpec;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface BuiltInConnectorOption {
   slug: string;
   name: string;

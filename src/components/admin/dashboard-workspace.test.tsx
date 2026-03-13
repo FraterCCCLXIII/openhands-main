@@ -94,7 +94,7 @@ describe("DashboardWorkspace", () => {
 
     const adminLink = container.querySelector('a[href="/add-connector"]');
     expect(adminLink).toBeTruthy();
-    expect(adminLink?.textContent).toContain("Admin");
+    expect(adminLink?.textContent).toContain("Manage OAuth apps");
   });
 
 
@@ -160,13 +160,13 @@ describe("DashboardWorkspace", () => {
       );
     });
 
-    expect(container.textContent).toContain("Your active integrations");
+    expect(container.textContent).toContain("Your integrations");
     expect(container.textContent).toContain(
-      "Read-only list of integrations currently active for your personal key.",
+      "Connect accounts, enable integrations, and tune skill access for your personal key.",
     );
     expect(container.querySelector('a[href="/add-connector"]')).toBeNull();
-    expect(container.textContent).not.toContain("Add new integration");
-    expect(container.textContent).not.toContain("Disable");
+    expect(container.textContent).toContain("Add integration");
+    expect(container.textContent).toContain("Disable");
     expect(container.textContent).toContain("enabled");
   });
 

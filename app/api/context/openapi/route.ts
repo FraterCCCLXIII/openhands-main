@@ -36,7 +36,7 @@ export async function GET(request: Request) {
     }
 
     const [integrations, connections] = await Promise.all([
-      service.listIntegrations(),
+      service.listOwnerIntegrations(apiKeyRecord.ownerId),
       service.listIntegrationConnections(apiKeyRecord.ownerId),
     ]);
 

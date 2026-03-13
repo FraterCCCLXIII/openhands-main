@@ -6,6 +6,7 @@ import { ContextLayerError } from "@/src/lib/core/errors";
 import type { ContextRepository } from "@/src/lib/core/repository";
 import { decryptCredentials, encryptCredentials } from "@/src/lib/credential-crypto";
 import { sanitizeManagedConnector } from "@/src/lib/integrations/managed-connectors";
+import { filterIntegrationsVisibleToOwner } from "@/src/lib/integrations/visible-integrations";
 import { generateManagedConnectorFunctionsFromOpenApi } from "@/src/lib/managed-connectors/openapi";
 import type { NotificationPublisher } from "@/src/lib/notifications/publisher";
 import { resolveOAuthProvider } from "@/src/lib/oauth/provider-resolver";
@@ -125,6 +126,30 @@ export class ContextLayerService {
   async listIntegrations() {
     await this.initialize();
     return this.repository.listIntegrations();
+  }
+
+  async listOwnerIntegrations(ownerId: string) {
+    await this.initialize();
+    const normalizedOwnerId = normalizeAgentApiKeyOwner(ownerId);
+    const [ownerIntegrations, globalIntegrations, connections] = await Promise.all([
+      this.repository.listOwnerIntegrations(normalizedOwnerId),
+      this.repository.listIntegrations(),
+      this.repository.listIntegrationConnections(normalizedOwnerId),
+    ]);
+
+    const merged = new Map<string, IntegrationSpec>();
+    for (const integration of filterIntegrationsVisibleToOwner(
+      globalIntegrations,
+      connections,
+    )) {
+      merged.set(integration.key, integration);
+    }
+
+    for (const integration of ownerIntegrations) {
+      merged.set(integration.key, integration);
+    }
+
+    return [...merged.values()].sort((a, b) => a.key.localeCompare(b.key));
   }
 
   async listManagedConnectors() {
@@ -467,6 +492,23 @@ export class ContextLayerService {
     return this.repository.upsertIntegration(integration);
   }
 
+  async registerOwnerIntegration(
+    ownerId: string,
+    spec: Omit<IntegrationSpec, "functions"> & {
+      functions?: Record<string, FunctionSpec>;
+    },
+  ) {
+    await this.initialize();
+    const integration: IntegrationSpec = {
+      ...spec,
+      functions: normalizeFunctions(spec.functions ?? {}),
+    };
+    return this.repository.upsertOwnerIntegration(
+      normalizeAgentApiKeyOwner(ownerId),
+      integration,
+    );
+  }
+
   async addFunction(integrationKey: string, functionSpec: FunctionSpec) {
     const integration = await this.getIntegration(integrationKey);
     integration.functions[functionSpec.name] =
@@ -529,6 +571,47 @@ export class ContextLayerService {
     return functionSpec;
   }
 
+  async setOwnerIntegrationEnabled(
+    ownerId: string,
+    integrationKey: string,
+    enabled: boolean,
+  ) {
+    const normalizedOwnerId = normalizeAgentApiKeyOwner(ownerId);
+    const integration = await this.getOrCreateOwnerIntegration(
+      normalizedOwnerId,
+      integrationKey,
+    );
+    integration.enabled = enabled;
+    return this.repository.upsertOwnerIntegration(normalizedOwnerId, integration);
+  }
+
+  async setOwnerFunctionAccessMode(
+    ownerId: string,
+    integrationKey: string,
+    functionName: string,
+    accessMode: FunctionAccessMode,
+  ) {
+    const normalizedOwnerId = normalizeAgentApiKeyOwner(ownerId);
+    const integration = await this.getOrCreateOwnerIntegration(
+      normalizedOwnerId,
+      integrationKey,
+    );
+    const functionSpec = integration.functions[functionName];
+
+    if (!functionSpec) {
+      throw new ContextLayerError(
+        `Unknown function '${functionName}' for integration '${integrationKey}'.`,
+        404,
+      );
+    }
+
+    functionSpec.accessMode = accessMode;
+    functionSpec.enabled = accessMode !== 'disabled';
+    await this.repository.upsertOwnerIntegration(normalizedOwnerId, integration);
+    return functionSpec;
+  }
+
+
   async upsertAgentPolicy(agentClass: string, rules: PolicyRule[]) {
     await this.initialize();
     const policy: AgentClassPolicy = { agentClass, rules };
@@ -541,8 +624,14 @@ export class ContextLayerService {
     integrationKey: string,
     functionName: string,
     requestedScopes: string[] = [],
+    options: {
+      ownerId?: string;
+    } = {},
   ): Promise<AccessDecision> {
-    const integration = await this.getIntegration(integrationKey);
+    const integration = await this.getRuntimeIntegration(
+      integrationKey,
+      options.ownerId,
+    );
     const functionSpec = integration.functions[functionName];
 
     if (!functionSpec) {
@@ -716,7 +805,10 @@ export class ContextLayerService {
       ownerId?: string;
     } = {},
   ): Promise<ContextInvocationResult> {
-    const integration = await this.getIntegration(integrationKey);
+    const integration = await this.getRuntimeIntegration(
+      integrationKey,
+      options.ownerId,
+    );
     const functionSpec = integration.functions[functionName];
     if (!functionSpec) {
       throw new ContextLayerError(
@@ -731,6 +823,7 @@ export class ContextLayerService {
       integrationKey,
       functionName,
       requestedScopes,
+      { ownerId: options.ownerId },
     );
     if (!decision.allowed) {
       throw new ContextLayerError(decision.reason, 403);
@@ -857,6 +950,47 @@ export class ContextLayerService {
     } satisfies IntegrationSpec;
   }
 
+  private async getRuntimeIntegration(key: string, ownerId?: string) {
+    if (!ownerId) {
+      return this.getIntegration(key);
+    }
+
+    return this.getOwnerIntegration(ownerId, key);
+  }
+
+  private async getOrCreateOwnerIntegration(ownerId: string, key: string) {
+    const normalizedOwnerId = normalizeAgentApiKeyOwner(ownerId);
+    const existing = await this.repository.getOwnerIntegration(normalizedOwnerId, key);
+    if (existing) {
+      return existing;
+    }
+
+    const integration = await this.getIntegration(key);
+    return {
+      ...integration,
+      functions: Object.fromEntries(
+        Object.entries(integration.functions).map(([functionKey, functionSpec]) => [
+          functionKey,
+          { ...functionSpec },
+        ]),
+      ),
+      config: { ...integration.config },
+      credentials: { ...integration.credentials },
+    } satisfies IntegrationSpec;
+  }
+
+  private async getOwnerIntegration(ownerId: string, key: string) {
+    await this.initialize();
+    const integration = await this.repository.getOwnerIntegration(
+      normalizeAgentApiKeyOwner(ownerId),
+      key,
+    );
+    if (integration) {
+      return integration;
+    }
+
+    return this.getIntegration(key);
+  }
 
   private async getIntegration(key: string) {
     await this.initialize();

@@ -15,6 +15,15 @@ export interface ContextRepository {
   listIntegrations(): Promise<IntegrationSpec[]>;
   getIntegration(key: string): Promise<IntegrationSpec | null>;
   upsertIntegration(spec: IntegrationSpec): Promise<IntegrationSpec>;
+  listOwnerIntegrations(ownerId: string): Promise<IntegrationSpec[]>;
+  getOwnerIntegration(
+    ownerId: string,
+    integrationKey: string,
+  ): Promise<IntegrationSpec | null>;
+  upsertOwnerIntegration(
+    ownerId: string,
+    spec: IntegrationSpec,
+  ): Promise<IntegrationSpec>;
   upsertPolicy(policy: AgentClassPolicy): Promise<AgentClassPolicy>;
   getPolicy(agentClass: string): Promise<AgentClassPolicy | null>;
   listAccessRequests(): Promise<AccessRequest[]>;

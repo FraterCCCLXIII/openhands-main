@@ -13,6 +13,7 @@ import type { ContextRepository } from "@/src/lib/core/repository";
 
 export class MemoryRepository implements ContextRepository {
   private readonly integrations = new Map<string, IntegrationSpec>();
+  private readonly ownerIntegrations = new Map<string, IntegrationSpec>();
   private readonly policies = new Map<string, AgentClassPolicy>();
   private readonly accessRequests = new Map<string, AccessRequest>();
   private readonly temporaryGrants = new Map<string, TemporaryGrant>();
@@ -38,6 +39,22 @@ export class MemoryRepository implements ContextRepository {
 
   async upsertIntegration(spec: IntegrationSpec) {
     this.integrations.set(spec.key, spec);
+    return spec;
+  }
+
+  async listOwnerIntegrations(ownerId: string) {
+    return [...this.ownerIntegrations.entries()]
+      .filter(([key]) => key.startsWith(`${ownerId}:`))
+      .map(([, integration]) => integration)
+      .sort((a, b) => a.key.localeCompare(b.key));
+  }
+
+  async getOwnerIntegration(ownerId: string, integrationKey: string) {
+    return this.ownerIntegrations.get(`${ownerId}:${integrationKey}`) ?? null;
+  }
+
+  async upsertOwnerIntegration(ownerId: string, spec: IntegrationSpec) {
+    this.ownerIntegrations.set(`${ownerId}:${spec.key}`, spec);
     return spec;
   }
 

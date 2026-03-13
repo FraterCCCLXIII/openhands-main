@@ -98,7 +98,7 @@ describe("GET /api/integrations", () => {
     expect(body.map((integration) => integration.key)).toEqual(["github", "slack"]);
   });
 
-  it("returns the full integration catalog for app administrators", async () => {
+  it("returns the same personal integration view for app administrators", async () => {
     vi.stubEnv("APP_ADMIN_EMAILS", "admin@example.com");
     authMock.mockResolvedValue({ user: { email: "admin@example.com" } });
     const repository = getContextLayerRepository();
@@ -126,6 +126,6 @@ describe("GET /api/integrations", () => {
     const body = (await response.json()) as Array<{ key: string }>;
 
     expect(response.status).toBe(200);
-    expect(body.map((integration) => integration.key)).toEqual(["github", "slack"]);
+    expect(body.map((integration) => integration.key)).toEqual(["github"]);
   });
 });
