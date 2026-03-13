@@ -1,6 +1,7 @@
 import { randomBytes } from "node:crypto";
 import { NextResponse } from "next/server";
 
+import { buildAdminSectionHref } from "@/src/lib/admin-routes";
 import { getOAuthCallbackUrl } from "@/src/lib/auth-config";
 import { getCurrentUserIdentity } from "@/src/lib/current-user";
 import {
@@ -42,9 +43,10 @@ export async function GET(
 
   const redirectTo =
     url.searchParams.get("redirectTo")?.trim() ||
-    `/admin?section=integrations&showIntegrationWizard=1&builtIn=${encodeURIComponent(
-      provider.slug,
-    )}`;
+    buildAdminSectionHref("integrations", {
+      showIntegrationWizard: "1",
+      builtIn: provider.slug,
+    });
 
   try {
     const { ownerId } = await getCurrentUserIdentity();

@@ -80,7 +80,7 @@ describe("GET /api/oauth/[provider]/start", () => {
 
     const response = await GET(
       new Request(
-        "http://localhost:3000/api/oauth/notion/start?integrationKey=notion&redirectTo=%2Fadmin%3Fsection%3Dintegrations%26showIntegrationWizard%3D1%26builtIn%3Dnotion",
+        "http://localhost:3000/api/oauth/notion/start?integrationKey=notion&redirectTo=%2Fintegrations%3FshowIntegrationWizard%3D1%26builtIn%3Dnotion",
       ),
       {
         params: Promise.resolve({ provider: "notion" }),

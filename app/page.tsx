@@ -38,7 +38,7 @@ export default async function HomePage() {
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
-            <Link href={session?.user ? "/admin" : "/signin"}>
+            <Link href={session?.user ? "/home" : "/signin"}>
               <Button className="gap-2">
                 {session?.user ? "Open dashboard" : "Sign in to configure"}
                 <ArrowRight className="h-4 w-4" />

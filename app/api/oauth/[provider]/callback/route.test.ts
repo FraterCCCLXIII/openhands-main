@@ -58,7 +58,7 @@ const saveOAuthState = async (repository: MemoryRepository) => {
     ownerId: "dev@localhost",
     integrationKey: "notion",
     provider: "notion",
-    redirectTo: "/admin?section=integrations",
+    redirectTo: "/integrations",
     redirectUri: "https://openhands-context-layer.vercel.app/api/oauth/notion/callback",
     callbackUrl: "https://context-layer-git-feature.vercel.app/api/oauth/notion/callback",
     createdAt: "2026-03-09T00:00:00.000Z",
@@ -145,7 +145,7 @@ describe("GET /api/oauth/[provider]/callback", () => {
 
     expect(response.status).toBe(307);
     expect(response.headers.get("location")).toContain(
-      "/admin?section=integrations&oauth_provider=notion&oauth_status=connected",
+      "/integrations?oauth_provider=notion&oauth_status=connected",
     );
     expect(fetchMock).toHaveBeenCalledTimes(1);
     const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];

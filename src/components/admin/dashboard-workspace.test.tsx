@@ -5,12 +5,20 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { useSearchParamsMock, signOutMock } = vi.hoisted(() => ({
-  useSearchParamsMock: vi.fn(() => new URLSearchParams()),
-  signOutMock: vi.fn(),
-}));
+const { pushMock, usePathnameMock, useRouterMock, useSearchParamsMock, signOutMock } =
+  vi.hoisted(() => ({
+    pushMock: vi.fn(),
+    usePathnameMock: vi.fn(() => "/home"),
+    useRouterMock: vi.fn(() => ({
+      push: pushMock,
+    })),
+    useSearchParamsMock: vi.fn(() => new URLSearchParams()),
+    signOutMock: vi.fn(),
+  }));
 
 vi.mock("next/navigation", () => ({
+  usePathname: usePathnameMock,
+  useRouter: useRouterMock,
   useSearchParams: useSearchParamsMock,
 }));
 
@@ -44,6 +52,12 @@ describe("DashboardWorkspace", () => {
   let fetchMock: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
+    usePathnameMock.mockImplementation(() => "/home");
+    useRouterMock.mockImplementation(() => ({
+      push: pushMock,
+    }));
+    useSearchParamsMock.mockImplementation(() => new URLSearchParams());
+
     container = document.createElement("div");
     document.body.appendChild(container);
     root = createRoot(container);
@@ -72,6 +86,9 @@ describe("DashboardWorkspace", () => {
     container.remove();
     vi.useRealTimers();
     vi.unstubAllGlobals();
+    pushMock.mockReset();
+    usePathnameMock.mockReset();
+    useRouterMock.mockReset();
     useSearchParamsMock.mockReset();
     signOutMock.mockReset();
   });
@@ -170,8 +187,56 @@ describe("DashboardWorkspace", () => {
     expect(container.textContent).toContain("enabled");
   });
 
-  it("documents separate REST and MCP usage sections on the usage panel", async () => {
-    useSearchParamsMock.mockReturnValue(new URLSearchParams("section=apiKeys"));
+  it("updates the URL when switching admin sections", async () => {
+    await act(async () => {
+      root.render(
+        <QueryClientProvider client={queryClient}>
+          <DashboardWorkspace
+            initialIntegrations={[]}
+            initialAccessRequests={[]}
+            initialNotifications={[]}
+            currentUser={{ name: "Admin User", email: "admin@example.com" }}
+            contextApiBaseUrl="https://example.com"
+            contextApiKey="test-key"
+          />
+        </QueryClientProvider>,
+      );
+    });
+
+    const profileButton = Array.from(container.querySelectorAll("button")).find(
+      (button) => button.textContent?.includes("User Profile"),
+    );
+    expect(profileButton).toBeTruthy();
+
+    await act(async () => {
+      profileButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    expect(pushMock).toHaveBeenCalledWith("/profile");
+  });
+
+  it("shows the home section on the canonical /home route", async () => {
+    await act(async () => {
+      root.render(
+        <QueryClientProvider client={queryClient}>
+          <DashboardWorkspace
+            initialIntegrations={[]}
+            initialAccessRequests={[]}
+            initialNotifications={[]}
+            currentUser={{ name: "Admin User", email: "admin@example.com" }}
+            contextApiBaseUrl="https://example.com"
+            contextApiKey="test-key"
+          />
+        </QueryClientProvider>,
+      );
+    });
+
+    expect(container.querySelector("h1")?.textContent).toBe("Home");
+    expect(container.textContent).toContain("Workspace summary");
+  });
+
+  it("shows the usage panel from the top-level agent connection route", async () => {
+    usePathnameMock.mockReturnValue("/agent-connection");
 
     await act(async () => {
       root.render(
@@ -210,8 +275,8 @@ describe("DashboardWorkspace", () => {
     );
   });
 
-  it("matches the review-step skill design in the integration catalog", async () => {
-    useSearchParamsMock.mockReturnValue(new URLSearchParams("section=integrations"));
+  it("shows the integration catalog from the top-level integrations route", async () => {
+    usePathnameMock.mockReturnValue("/integrations");
 
     let integrationsState: IntegrationSpec[] = [
       {
@@ -436,7 +501,7 @@ describe("DashboardWorkspace", () => {
   });
 
   it("shows a temporary check icon when the API key is copied without posting a success message", async () => {
-    useSearchParamsMock.mockReturnValue(new URLSearchParams("section=apiKeys"));
+    usePathnameMock.mockReturnValue("/agent-connection");
     vi.useFakeTimers();
 
     const writeTextMock = vi.fn().mockResolvedValue(undefined);
