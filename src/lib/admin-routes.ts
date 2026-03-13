@@ -1,19 +1,11 @@
 export type AdminSection = "home" | "profile" | "integrations" | "apiKeys";
 
 const ADMIN_SECTION_PATHS: Record<AdminSection, string> = {
-  home: "/admin",
+  home: "/home",
   profile: "/profile",
   integrations: "/integrations",
   apiKeys: "/agent-connection",
 };
-
-export const isAdminSection = (
-  value: string | null | undefined,
-): value is AdminSection =>
-  value === "home" ||
-  value === "profile" ||
-  value === "integrations" ||
-  value === "apiKeys";
 
 export const getAdminSectionPath = (section: AdminSection) =>
   ADMIN_SECTION_PATHS[section];
@@ -28,6 +20,7 @@ export const getAdminSectionFromPath = (
       return "integrations";
     case "/agent-connection":
       return "apiKeys";
+    case "/home":
     default:
       return "home";
   }

@@ -1,3 +1,3 @@
 export const dynamic = "force-dynamic";
 
-export { default } from "../admin/page";
+export { AdminDashboardPage as default } from "@/src/components/admin/admin-dashboard-page";

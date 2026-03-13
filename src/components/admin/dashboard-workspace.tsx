@@ -35,7 +35,6 @@ import { Card } from "@/src/components/ui/card";
 import {
   buildAdminSectionHref,
   getAdminSectionFromPath,
-  isAdminSection,
   type AdminSection,
 } from "@/src/lib/admin-routes";
 import { buildAgentConnectionGuide } from "@/src/lib/agent-connection";
@@ -363,13 +362,10 @@ export const DashboardWorkspace = ({
   const [apiKeyCopied, setApiKeyCopied] = useState(false);
 
   useEffect(() => {
-    const requestedSection = searchParams.get("section");
-    setActiveSection(
-      isAdminSection(requestedSection)
-        ? requestedSection
-        : getAdminSectionFromPath(pathname),
-    );
+    setActiveSection(getAdminSectionFromPath(pathname));
+  }, [pathname]);
 
+  useEffect(() => {
     if (searchParams.get("showIntegrationWizard") === "1") {
       setShowIntegrationWizard(true);
     }
@@ -386,7 +382,7 @@ export const DashboardWorkspace = ({
     if (oauthStatus === "error") {
       setStatusMessage(oauthError || "OAuth connection failed.");
     }
-  }, [pathname, searchParams]);
+  }, [searchParams]);
 
   useEffect(() => {
     if (!apiKeyCopied) {
@@ -693,7 +689,7 @@ export const DashboardWorkspace = ({
 
         {!contextApiReady ? (
           <div className="rounded-xl border border-[color:rgba(217,181,90,0.25)] bg-[color:rgba(217,181,90,0.12)] px-3 py-2 text-sm text-[var(--color-warning)]">
-            Open <code className="text-white">/admin</code> once to provision a
+            Open <code className="text-white">/home</code> once to provision a
             personal key before agents call <code className="text-white">/api/context/*</code>.
           </div>
         ) : null}

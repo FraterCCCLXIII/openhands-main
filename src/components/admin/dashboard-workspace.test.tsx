@@ -8,7 +8,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const { pushMock, usePathnameMock, useRouterMock, useSearchParamsMock, signOutMock } =
   vi.hoisted(() => ({
     pushMock: vi.fn(),
-    usePathnameMock: vi.fn(() => "/admin"),
+    usePathnameMock: vi.fn(() => "/home"),
     useRouterMock: vi.fn(() => ({
       push: pushMock,
     })),
@@ -52,7 +52,7 @@ describe("DashboardWorkspace", () => {
   let fetchMock: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
-    usePathnameMock.mockImplementation(() => "/admin");
+    usePathnameMock.mockImplementation(() => "/home");
     useRouterMock.mockImplementation(() => ({
       push: pushMock,
     }));
@@ -142,9 +142,7 @@ describe("DashboardWorkspace", () => {
     expect(pushMock).toHaveBeenCalledWith("/profile");
   });
 
-  it("still honors legacy admin section query params", async () => {
-    useSearchParamsMock.mockReturnValue(new URLSearchParams("section=apiKeys"));
-
+  it("shows the home section on the canonical /home route", async () => {
     await act(async () => {
       root.render(
         <QueryClientProvider client={queryClient}>
@@ -160,7 +158,8 @@ describe("DashboardWorkspace", () => {
       );
     });
 
-    expect(container.querySelector("h1")?.textContent).toBe("Agent Connection");
+    expect(container.querySelector("h1")?.textContent).toBe("Home");
+    expect(container.textContent).toContain("Workspace summary");
   });
 
   it("shows the usage panel from the top-level agent connection route", async () => {
