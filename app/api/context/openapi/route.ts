@@ -3,6 +3,7 @@ import { extractContextApiKey } from "@/src/lib/context-api-auth";
 import { buildContextOpenApiDocument } from "@/src/lib/context-openapi";
 import { ContextLayerError } from "@/src/lib/core/errors";
 import { getContextLayerService } from "@/src/lib/core/runtime";
+import { filterIntegrationsVisibleToOwner } from "@/src/lib/integrations/visible-integrations";
 
 const BEARER_CHALLENGE = 'Bearer realm="agent-context-layer"';
 
@@ -38,25 +39,11 @@ export async function GET(request: Request) {
       service.listIntegrations(),
       service.listIntegrationConnections(apiKeyRecord.ownerId),
     ]);
-    const connectedIntegrationKeys = new Set(
-      connections.map((connection) => connection.integrationKey),
-    );
-    const availableIntegrations = integrations.filter((integration) => {
-      if (integration.authStrategy !== "oauth2") {
-        return true;
-      }
-
-      if (Object.keys(integration.credentials).length > 0) {
-        return true;
-      }
-
-      return connectedIntegrationKeys.has(integration.key);
-    });
 
     return ok(
       buildContextOpenApiDocument({
         baseUrl: new URL(request.url).origin,
-        integrations: availableIntegrations,
+        integrations: filterIntegrationsVisibleToOwner(integrations, connections),
       }),
     );
   } catch (error) {

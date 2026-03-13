@@ -24,6 +24,7 @@ import { useSearchParams } from "next/navigation";
 import { type ReactNode, useEffect, useMemo, useState } from "react";
 
 import {
+  accessModeLabel,
   AccessModeSlider,
   getFunctionAccessMode,
   matchesFunctionSearch,
@@ -87,14 +88,15 @@ interface AdminDashboardProps {
   currentUser: { name?: string | null; email?: string | null };
   contextApiBaseUrl: string;
   contextApiKey: string;
+  isAdmin?: boolean;
 }
 
-const ADMIN_SECTIONS: Array<{
+const getDashboardSections = (isAdmin: boolean): Array<{
   id: AdminSection;
   label: string;
   description: string;
   icon: LucideIcon;
-}> = [
+}> => [
   {
     id: "home",
     label: "Home",
@@ -109,8 +111,10 @@ const ADMIN_SECTIONS: Array<{
   },
   {
     id: "integrations",
-    label: "Integrations",
-    description: "Review connectors, functions, and toggles in one list.",
+    label: isAdmin ? "Integrations" : "My integrations",
+    description: isAdmin
+      ? "Review connectors, functions, and toggles in one list."
+      : "Review the integrations currently active for your personal key.",
     icon: PlugZap,
   },
   {
@@ -337,13 +341,14 @@ export const DashboardWorkspace = ({
   currentUser,
   contextApiBaseUrl,
   contextApiKey,
+  isAdmin = true,
 }: AdminDashboardProps) => {
   const queryClient = useQueryClient();
   const searchParams = useSearchParams();
   const [activeSection, setActiveSection] = useState<AdminSection>("home");
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [showIntegrationWizard, setShowIntegrationWizard] = useState(
-    initialIntegrations.length === 0,
+    isAdmin && initialIntegrations.length === 0,
   );
   const [integrationSearch, setIntegrationSearch] = useState("");
   const [hideDisabledSkills, setHideDisabledSkills] = useState(true);
@@ -367,7 +372,7 @@ export const DashboardWorkspace = ({
       setActiveSection(requestedSection);
     }
 
-    if (searchParams.get("showIntegrationWizard") === "1") {
+    if (isAdmin && searchParams.get("showIntegrationWizard") === "1") {
       setShowIntegrationWizard(true);
     }
 
@@ -383,7 +388,7 @@ export const DashboardWorkspace = ({
     if (oauthStatus === "error") {
       setStatusMessage(oauthError || "OAuth connection failed.");
     }
-  }, [searchParams]);
+  }, [isAdmin, searchParams]);
 
   useEffect(() => {
     if (!apiKeyCopied) {
@@ -400,7 +405,7 @@ export const DashboardWorkspace = ({
   }, [apiKeyCopied]);
 
   const integrationsQuery = useQuery({
-    queryKey: ["integrations"],
+    queryKey: ["integrations", isAdmin ? "admin" : "user"],
     queryFn: () => fetchJson<IntegrationSpec[]>("/api/integrations"),
     initialData: initialIntegrations,
   });
@@ -471,9 +476,9 @@ export const DashboardWorkspace = ({
     currentUser.email === "dev@localhost"
       ? "Local development session"
       : "Authenticated dashboard session";
+  const sections = getDashboardSections(isAdmin);
   const activeSectionMeta =
-    ADMIN_SECTIONS.find((section) => section.id === activeSection) ??
-    ADMIN_SECTIONS[0];
+    sections.find((section) => section.id === activeSection) ?? sections[0];
 
   const agentConnectionGuide = useMemo(
     () =>
@@ -604,12 +609,14 @@ export const DashboardWorkspace = ({
               <Badge>{enabledIntegrationCount} live</Badge>
             </div>
             <p className="mt-2 text-xs leading-6 text-[var(--color-text-base)]">
-              Admin workspace inspired by the OpenHands settings shell.
+              {isAdmin
+                ? "Admin workspace inspired by the OpenHands settings shell."
+                : "Personal workspace for integrations active on your personal key."}
             </p>
           </div>
 
           <nav className="space-y-1">
-            {ADMIN_SECTIONS.map((section) => (
+            {sections.map((section) => (
               <SidebarNavItem
                 key={section.id}
                 icon={section.icon}
@@ -620,17 +627,17 @@ export const DashboardWorkspace = ({
             ))}
           </nav>
 
-
-          <div className="border-t border-[var(--color-border)] pt-3">
-            <a
-              href="/add-connector"
-              className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm text-[var(--color-text-base)] transition-colors hover:bg-[var(--color-bg-active)] hover:text-white"
-            >
-              <ShieldCheck className="h-4 w-4 shrink-0 text-[var(--color-text-base)]" />
-              <span className="truncate font-medium">Admin</span>
-            </a>
-          </div>
-
+          {isAdmin ? (
+            <div className="border-t border-[var(--color-border)] pt-3">
+              <a
+                href="/add-connector"
+                className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm text-[var(--color-text-base)] transition-colors hover:bg-[var(--color-bg-active)] hover:text-white"
+              >
+                <ShieldCheck className="h-4 w-4 shrink-0 text-[var(--color-text-base)]" />
+                <span className="truncate font-medium">Admin</span>
+              </a>
+            </div>
+          ) : null}
 
           <div className="border-t border-[var(--color-border)] pt-3">
             <div className="space-y-3">
@@ -703,13 +710,21 @@ export const DashboardWorkspace = ({
                     icon={PlugZap}
                     label="Integrations"
                     value={String(integrations.length)}
-                    description="Connected API and MCP providers visible to the dashboard."
+                    description={
+                      isAdmin
+                        ? "Connected API and MCP providers visible to the dashboard."
+                        : "Integrations currently active for your personal key."
+                    }
                   />
                   <MetricRow
                     icon={CheckCircle2}
                     label="Enabled integrations"
                     value={String(enabledIntegrationCount)}
-                    description="Integrations currently available for agent calls."
+                    description={
+                      isAdmin
+                        ? "Integrations currently available for agent calls."
+                        : "Enabled integrations your personal key can invoke right now."
+                    }
                   />
                   <MetricRow
                     icon={KeyRound}
@@ -912,16 +927,18 @@ export const DashboardWorkspace = ({
 
         {activeSection === "integrations" ? (
           <section className="space-y-4">
-            <div className="flex justify-start">
-              <Button
-                className="h-9 rounded-md px-4 text-xs"
-                onClick={() => setShowIntegrationWizard(true)}
-              >
-                Add new integration
-              </Button>
-            </div>
+            {isAdmin ? (
+              <div className="flex justify-start">
+                <Button
+                  className="h-9 rounded-md px-4 text-xs"
+                  onClick={() => setShowIntegrationWizard(true)}
+                >
+                  Add new integration
+                </Button>
+              </div>
+            ) : null}
 
-            {showIntegrationWizard ? (
+            {isAdmin && showIntegrationWizard ? (
               <IntegrationWizard
                 onCreated={async () => {
                   await invalidateAll();
@@ -932,13 +949,19 @@ export const DashboardWorkspace = ({
             ) : null}
 
             <CompactPanel
-              title="Integration catalog"
-              description="Compact rows for providers, status, auth strategy, and functions."
+              title={isAdmin ? "Integration catalog" : "Your active integrations"}
+              description={
+                isAdmin
+                  ? "Compact rows for providers, status, auth strategy, and functions."
+                  : "Read-only list of integrations currently active for your personal key."
+              }
               icon={PlugZap}
             >
               {integrations.length === 0 ? (
                 <div className="rounded-xl border border-dashed border-[var(--color-border)] px-3 py-4 text-sm text-[var(--color-text-base)]">
-                  No integrations yet. Use the button above to add your first one.
+                  {isAdmin
+                    ? "No integrations yet. Use the button above to add your first one."
+                    : "No active integrations yet for your personal key."}
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -946,12 +969,14 @@ export const DashboardWorkspace = ({
                     <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
                       <div className="space-y-1">
                         <h3 className="text-sm font-semibold text-white">
-                          Search and review integration skills
+                          {isAdmin
+                            ? "Search and review integration skills"
+                            : "Search your active integration skills"}
                         </h3>
                         <p className="text-xs leading-6 text-[var(--color-text-base)]">
-                          Use the same compact expandable skill rows here to
-                          search integrations, tune access modes, and hide
-                          disabled skills by default.
+                          {isAdmin
+                            ? "Use the same compact expandable skill rows here to search integrations, tune access modes, and hide disabled skills by default."
+                            : "Use the compact expandable rows here to review the integrations and skills currently available to your personal key."}
                         </p>
                       </div>
                       <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--color-text-base)]">
@@ -1025,25 +1050,27 @@ export const DashboardWorkspace = ({
                                   </p>
                                 </div>
                                 <div className="flex flex-wrap items-center gap-2 xl:justify-end">
-                                  <Button
-                                    variant={integration.enabled ? "secondary" : "primary"}
-                                    className="h-8 shrink-0 gap-2 rounded-md px-3 text-xs"
-                                    onClick={() =>
-                                      actionMutation.mutate({
-                                        url: `/api/integrations/${integration.key}/toggle`,
-                                        method: "POST",
-                                        body: { enabled: !integration.enabled },
-                                      })
-                                    }
-                                    title="Temporarily enable or disable the full integration."
-                                  >
-                                    {integration.enabled ? (
-                                      <ToggleRight className="h-4 w-4" />
-                                    ) : (
-                                      <ToggleLeft className="h-4 w-4" />
-                                    )}
-                                    {integration.enabled ? "Disable" : "Enable"}
-                                  </Button>
+                                  {isAdmin ? (
+                                    <Button
+                                      variant={integration.enabled ? "secondary" : "primary"}
+                                      className="h-8 shrink-0 gap-2 rounded-md px-3 text-xs"
+                                      onClick={() =>
+                                        actionMutation.mutate({
+                                          url: `/api/integrations/${integration.key}/toggle`,
+                                          method: "POST",
+                                          body: { enabled: !integration.enabled },
+                                        })
+                                      }
+                                      title="Temporarily enable or disable the full integration."
+                                    >
+                                      {integration.enabled ? (
+                                        <ToggleRight className="h-4 w-4" />
+                                      ) : (
+                                        <ToggleLeft className="h-4 w-4" />
+                                      )}
+                                      {integration.enabled ? "Disable" : "Enable"}
+                                    </Button>
+                                  ) : null}
                                   <Button
                                     type="button"
                                     variant="ghost"
@@ -1107,17 +1134,21 @@ export const DashboardWorkspace = ({
                                                 </p>
                                               </div>
                                               <div className="flex flex-wrap items-center gap-2 xl:justify-end">
-                                                <AccessModeSlider
-                                                  functionName={functionSpec.name}
-                                                  mode={accessMode}
-                                                  onChange={(nextMode) =>
-                                                    updateFunctionAccessMode(
-                                                      integration.key,
-                                                      functionSpec.name,
-                                                      nextMode,
-                                                    )
-                                                  }
-                                                />
+                                                {isAdmin ? (
+                                                  <AccessModeSlider
+                                                    functionName={functionSpec.name}
+                                                    mode={accessMode}
+                                                    onChange={(nextMode) =>
+                                                      updateFunctionAccessMode(
+                                                        integration.key,
+                                                        functionSpec.name,
+                                                        nextMode,
+                                                      )
+                                                    }
+                                                  />
+                                                ) : (
+                                                  <Badge>{accessModeLabel(accessMode)}</Badge>
+                                                )}
                                                 <Button
                                                   type="button"
                                                   variant="ghost"
