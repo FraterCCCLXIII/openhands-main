@@ -24,6 +24,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { type ReactNode, useEffect, useMemo, useState } from "react";
 
 import {
+  accessModeLabel,
   AccessModeSlider,
   getFunctionAccessMode,
   matchesFunctionSearch,
@@ -90,14 +91,15 @@ interface AdminDashboardProps {
   currentUser: { name?: string | null; email?: string | null };
   contextApiBaseUrl: string;
   contextApiKey: string;
+  isAdmin?: boolean;
 }
 
-const ADMIN_SECTIONS: Array<{
+const getDashboardSections = (): Array<{
   id: AdminSection;
   label: string;
   description: string;
   icon: LucideIcon;
-}> = [
+}> => [
   {
     id: "home",
     label: "Home",
@@ -113,7 +115,8 @@ const ADMIN_SECTIONS: Array<{
   {
     id: "integrations",
     label: "Integrations",
-    description: "Review connectors, functions, and toggles in one list.",
+    description:
+      "Connect accounts, enable integrations, and tune skill access for your personal key.",
     icon: PlugZap,
   },
   {
@@ -340,6 +343,7 @@ export const DashboardWorkspace = ({
   currentUser,
   contextApiBaseUrl,
   contextApiKey,
+  isAdmin = true,
 }: AdminDashboardProps) => {
   const queryClient = useQueryClient();
   const router = useRouter();
@@ -475,9 +479,9 @@ export const DashboardWorkspace = ({
     currentUser.email === "dev@localhost"
       ? "Local development session"
       : "Authenticated dashboard session";
+  const sections = getDashboardSections();
   const activeSectionMeta =
-    ADMIN_SECTIONS.find((section) => section.id === activeSection) ??
-    ADMIN_SECTIONS[0];
+    sections.find((section) => section.id === activeSection) ?? sections[0];
 
   const agentConnectionGuide = useMemo(
     () =>
@@ -608,12 +612,12 @@ export const DashboardWorkspace = ({
               <Badge>{enabledIntegrationCount} live</Badge>
             </div>
             <p className="mt-2 text-xs leading-6 text-[var(--color-text-base)]">
-              Admin workspace inspired by the OpenHands settings shell.
+              Personal workspace for integrations active on your personal key.
             </p>
           </div>
 
           <nav className="space-y-1">
-            {ADMIN_SECTIONS.map((section) => (
+            {sections.map((section) => (
               <SidebarNavItem
                 key={section.id}
                 icon={section.icon}
@@ -624,17 +628,17 @@ export const DashboardWorkspace = ({
             ))}
           </nav>
 
-
-          <div className="border-t border-[var(--color-border)] pt-3">
-            <a
-              href="/add-connector"
-              className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm text-[var(--color-text-base)] transition-colors hover:bg-[var(--color-bg-active)] hover:text-white"
-            >
-              <ShieldCheck className="h-4 w-4 shrink-0 text-[var(--color-text-base)]" />
-              <span className="truncate font-medium">Admin</span>
-            </a>
-          </div>
-
+          {isAdmin ? (
+            <div className="border-t border-[var(--color-border)] pt-3">
+              <a
+                href="/add-connector"
+                className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm text-[var(--color-text-base)] transition-colors hover:bg-[var(--color-bg-active)] hover:text-white"
+              >
+                <ShieldCheck className="h-4 w-4 shrink-0 text-[var(--color-text-base)]" />
+                <span className="truncate font-medium">Manage OAuth apps</span>
+              </a>
+            </div>
+          ) : null}
 
           <div className="border-t border-[var(--color-border)] pt-3">
             <div className="space-y-3">
@@ -707,13 +711,13 @@ export const DashboardWorkspace = ({
                     icon={PlugZap}
                     label="Integrations"
                     value={String(integrations.length)}
-                    description="Connected API and MCP providers visible to the dashboard."
+                    description="Integrations currently active for your personal key."
                   />
                   <MetricRow
                     icon={CheckCircle2}
                     label="Enabled integrations"
                     value={String(enabledIntegrationCount)}
-                    description="Integrations currently available for agent calls."
+                    description="Enabled integrations your personal key can invoke right now."
                   />
                   <MetricRow
                     icon={KeyRound}
@@ -921,7 +925,7 @@ export const DashboardWorkspace = ({
                 className="h-9 rounded-md px-4 text-xs"
                 onClick={() => setShowIntegrationWizard(true)}
               >
-                Add new integration
+                Add integration
               </Button>
             </div>
 
@@ -936,13 +940,13 @@ export const DashboardWorkspace = ({
             ) : null}
 
             <CompactPanel
-              title="Integration catalog"
-              description="Compact rows for providers, status, auth strategy, and functions."
+              title="Your integrations"
+              description="Connect accounts, enable integrations, and tune skill access for your personal key."
               icon={PlugZap}
             >
               {integrations.length === 0 ? (
                 <div className="rounded-xl border border-dashed border-[var(--color-border)] px-3 py-4 text-sm text-[var(--color-text-base)]">
-                  No integrations yet. Use the button above to add your first one.
+                  No integrations activated yet. Use the button above to connect your first one.
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -950,12 +954,10 @@ export const DashboardWorkspace = ({
                     <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
                       <div className="space-y-1">
                         <h3 className="text-sm font-semibold text-white">
-                          Search and review integration skills
+                          Search and review your integration skills
                         </h3>
                         <p className="text-xs leading-6 text-[var(--color-text-base)]">
-                          Use the same compact expandable skill rows here to
-                          search integrations, tune access modes, and hide
-                          disabled skills by default.
+                          Use the compact expandable rows here to search your active integrations, tune access modes, and hide disabled skills by default.
                         </p>
                       </div>
                       <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--color-text-base)]">

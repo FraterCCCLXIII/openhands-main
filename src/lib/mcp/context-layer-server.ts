@@ -5,6 +5,7 @@ import { z } from "zod";
 import { resolveInvocationIdentity } from "@/src/lib/agent-defaults";
 import { ContextLayerError } from "@/src/lib/core/errors";
 import type { ContextLayerService } from "@/src/lib/core/service";
+import { filterIntegrationsVisibleToOwner } from "@/src/lib/integrations/visible-integrations";
 import { buildContextLayerToolInputShape } from "@/src/lib/mcp/tool-input-schema";
 import type { McpSessionDefaults } from "@/src/lib/mcp/session-store";
 import { getRequestOrigin } from "@/src/lib/request-context";
@@ -190,7 +191,14 @@ export const createContextLayerMcpServer = async ({
   const persistSessionDefaults = async () => {
     await onSessionDefaultsChanged?.({ ...sessionAgentDefaults });
   };
-  const integrations = await service.listIntegrations();
+  const [integrations, connections] = await Promise.all([
+    service.listOwnerIntegrations(ownerId),
+    service.listIntegrationConnections(ownerId),
+  ]);
+  const visibleIntegrations = filterIntegrationsVisibleToOwner(
+    integrations,
+    connections,
+  );
 
   server.registerTool(
     CONTEXT_LAYER_MCP_SET_AGENT_ID_TOOL_NAME,
@@ -221,7 +229,7 @@ export const createContextLayerMcpServer = async ({
     },
   );
 
-  for (const integration of integrations) {
+  for (const integration of visibleIntegrations) {
     if (!integration.enabled) {
       continue;
     }

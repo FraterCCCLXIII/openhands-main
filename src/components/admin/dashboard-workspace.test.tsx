@@ -111,7 +111,81 @@ describe("DashboardWorkspace", () => {
 
     const adminLink = container.querySelector('a[href="/add-connector"]');
     expect(adminLink).toBeTruthy();
-    expect(adminLink?.textContent).toContain("Admin");
+    expect(adminLink?.textContent).toContain("Manage OAuth apps");
+  });
+
+
+  it("shows only a personal active integrations view for non-admin users", async () => {
+    usePathnameMock.mockReturnValue("/integrations");
+    useSearchParamsMock.mockReturnValue(new URLSearchParams());
+
+    const integrationsState: IntegrationSpec[] = [
+      {
+        key: "slack",
+        name: "Slack",
+        kind: "mcp",
+        provider: "mcp",
+        authStrategy: "oauth2",
+        enabled: true,
+        fineGrainedPermissions: true,
+        config: {},
+        credentials: {},
+        functions: {
+          slack_search_public: {
+            name: "slack_search_public",
+            description: "Search public Slack messages",
+            enabled: true,
+            accessMode: "enabled",
+            fineGrainedPermissions: true,
+            defaultScopes: [],
+            executionMode: "provider",
+            config: {},
+          },
+        },
+      },
+    ];
+
+    fetchMock.mockImplementation(async (input: RequestInfo | URL) => {
+      const url = typeof input === "string" ? input : input.toString();
+
+      if (
+        url === "/api/integrations" ||
+        url === "/api/access-requests" ||
+        url === "/api/notifications"
+      ) {
+        return new Response(JSON.stringify(url === "/api/integrations" ? integrationsState : []), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+
+      throw new Error(`Unexpected fetch: ${url}`);
+    });
+
+    await act(async () => {
+      root.render(
+        <QueryClientProvider client={queryClient}>
+          <DashboardWorkspace
+            initialIntegrations={integrationsState}
+            initialAccessRequests={[]}
+            initialNotifications={[]}
+            currentUser={{ name: "User", email: "user@example.com" }}
+            contextApiBaseUrl="https://example.com"
+            contextApiKey="test-key"
+            isAdmin={false}
+          />
+        </QueryClientProvider>,
+      );
+    });
+
+    expect(container.textContent).toContain("Your integrations");
+    expect(container.textContent).toContain(
+      "Connect accounts, enable integrations, and tune skill access for your personal key.",
+    );
+    expect(container.querySelector('a[href="/add-connector"]')).toBeNull();
+    expect(container.textContent).toContain("Add integration");
+    expect(container.textContent).toContain("Disable");
+    expect(container.textContent).toContain("enabled");
   });
 
   it("updates the URL when switching admin sections", async () => {

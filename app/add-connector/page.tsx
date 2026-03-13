@@ -63,12 +63,14 @@ export default async function AddConnectorPage() {
 
         <div className="space-y-3">
           <h1 className="text-3xl font-semibold tracking-[-0.02em] text-white">
-            Add a connector
+            Manage OAuth apps
           </h1>
           <p className="max-w-3xl text-sm leading-7 text-[var(--color-text-base)]">
-            If the integration setup flow does not show the provider you need,
-            use this page to see which managed connectors are already registered
-            for this service and how admins can add another managed connector, whether that connector is a remote MCP or a REST API generated from a published machine-readable API schema.
+            This page is for service-level connector administration. Use it to
+            see which managed connectors are already registered for this
+            deployment and how admins can add or remove OAuth apps and other
+            managed connectors, whether those connectors are remote MCP servers
+            or REST APIs generated from published machine-readable schemas.
           </p>
           <div className="flex flex-wrap gap-2">
             {readyBuiltInConnectors.map((connector) => (
@@ -129,9 +131,9 @@ export default async function AddConnectorPage() {
 
             <div className="space-y-4 text-sm leading-7 text-[var(--color-text-base)]">
               <p>
-                Add connector is a service-level admin action. Use it once to
-                register a managed connector so every user can see it in the
-                integrations wizard.
+                Managing OAuth apps is a service-level admin action. Use this
+                page to register a managed connector so every user can see it in
+                the integrations wizard.
               </p>
               <p>
                 The in-app registration form is only available to signed-in app
