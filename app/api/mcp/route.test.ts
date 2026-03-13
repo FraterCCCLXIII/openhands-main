@@ -201,7 +201,7 @@ describe("/api/mcp", () => {
     expect(result.isError).toBe(true);
     const text = readToolText(result);
     expect(text).toContain("Human approval is currently required before calling crm.contacts.");
-    expect(text).toContain("http://localhost:3000/admin");
+    expect(text).toContain("http://localhost:3000/home");
 
     await transport.close();
   });

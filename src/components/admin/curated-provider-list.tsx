@@ -5,6 +5,7 @@ import { ExternalLink } from "lucide-react";
 
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
+import { buildAdminSectionHref } from "@/src/lib/admin-routes";
 import type {
   BuiltInConnectorOption,
   OAuthProviderCatalogOption,
@@ -455,7 +456,10 @@ export function CuratedProviderList({
                     {isReadyNow ? (
                       <div className="mt-4 flex flex-wrap gap-3 text-xs">
                         <a
-                          href={`/admin?section=integrations&showIntegrationWizard=1&builtIn=${connectorSlug}`}
+                          href={buildAdminSectionHref("integrations", {
+                            showIntegrationWizard: "1",
+                            builtIn: connectorSlug,
+                          })}
                           className="inline-flex items-center gap-1 text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
                         >
                           Use {provider.name}

@@ -37,7 +37,7 @@ const RESERVED_TOOL_ARGUMENT_KEYS = new Set([
   "contextScopes",
 ]);
 const LEGACY_RESERVED_TOOL_ARGUMENT_KEYS = ["_agentId", "_agentClass", "_scopes"] as const;
-const APPROVAL_DASHBOARD_PATH = "/admin";
+const APPROVAL_DASHBOARD_PATH = "/home";
 export const CONTEXT_LAYER_MCP_TOOL_SEPARATOR = "__";
 export const CONTEXT_LAYER_MCP_SET_AGENT_ID_TOOL_NAME = "set_agent_id";
 export const CONTEXT_LAYER_MCP_SET_AGENT_CLASS_TOOL_NAME = "set_agent_class";

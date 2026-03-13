@@ -45,6 +45,7 @@ describe("AddConnectorPage", () => {
     expect(html).not.toContain("customerId=replace-me");
     expect(html).toContain("AUTH_REDIRECT_PROXY_URL");
     expect(html).toContain("stable deployment origin instead of the preview URL");
+    expect(html).toContain("href=\"/integrations?showIntegrationWizard=1\"");
     expect(html).toContain("Connect");
     expect(html).toContain("Discover functions");
     expect(html).toContain("managed remote MCP or managed HTTP connector");

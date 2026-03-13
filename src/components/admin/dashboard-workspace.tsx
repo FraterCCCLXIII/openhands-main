@@ -20,7 +20,7 @@ import {
   Waypoints,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
-import { useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { type ReactNode, useEffect, useMemo, useState } from "react";
 
 import {
@@ -32,6 +32,11 @@ import { IntegrationWizard } from "@/src/components/admin/integration-wizard";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
 import { Card } from "@/src/components/ui/card";
+import {
+  buildAdminSectionHref,
+  getAdminSectionFromPath,
+  type AdminSection,
+} from "@/src/lib/admin-routes";
 import { buildAgentConnectionGuide } from "@/src/lib/agent-connection";
 import { cn } from "@/src/lib/utils";
 import type {
@@ -77,8 +82,6 @@ const matchesIntegrationSearch = (integration: IntegrationSpec, query: string) =
     integration.authStrategy,
   ].some((value) => value.toLowerCase().includes(normalizedQuery));
 };
-
-type AdminSection = "home" | "profile" | "integrations" | "apiKeys";
 
 interface AdminDashboardProps {
   initialIntegrations: IntegrationSpec[];
@@ -339,6 +342,8 @@ export const DashboardWorkspace = ({
   contextApiKey,
 }: AdminDashboardProps) => {
   const queryClient = useQueryClient();
+  const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const [activeSection, setActiveSection] = useState<AdminSection>("home");
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
@@ -357,16 +362,10 @@ export const DashboardWorkspace = ({
   const [apiKeyCopied, setApiKeyCopied] = useState(false);
 
   useEffect(() => {
-    const requestedSection = searchParams.get("section");
-    if (
-      requestedSection === "home" ||
-      requestedSection === "profile" ||
-      requestedSection === "integrations" ||
-      requestedSection === "apiKeys"
-    ) {
-      setActiveSection(requestedSection);
-    }
+    setActiveSection(getAdminSectionFromPath(pathname));
+  }, [pathname]);
 
+  useEffect(() => {
     if (searchParams.get("showIntegrationWizard") === "1") {
       setShowIntegrationWizard(true);
     }
@@ -398,6 +397,11 @@ export const DashboardWorkspace = ({
       window.clearTimeout(timeoutId);
     };
   }, [apiKeyCopied]);
+
+  const navigateToSection = (section: AdminSection) => {
+    setActiveSection(section);
+    router.push(buildAdminSectionHref(section));
+  };
 
   const integrationsQuery = useQuery({
     queryKey: ["integrations"],
@@ -615,7 +619,7 @@ export const DashboardWorkspace = ({
                 icon={section.icon}
                 label={section.label}
                 active={activeSection === section.id}
-                onClick={() => setActiveSection(section.id)}
+                onClick={() => navigateToSection(section.id)}
               />
             ))}
           </nav>
@@ -685,7 +689,7 @@ export const DashboardWorkspace = ({
 
         {!contextApiReady ? (
           <div className="rounded-xl border border-[color:rgba(217,181,90,0.25)] bg-[color:rgba(217,181,90,0.12)] px-3 py-2 text-sm text-[var(--color-warning)]">
-            Open <code className="text-white">/admin</code> once to provision a
+            Open <code className="text-white">/home</code> once to provision a
             personal key before agents call <code className="text-white">/api/context/*</code>.
           </div>
         ) : null}
@@ -736,19 +740,19 @@ export const DashboardWorkspace = ({
                     title="Review your profile"
                     body="Confirm the signed-in identity that owns the persisted personal key."
                     action="Open profile"
-                    onClick={() => setActiveSection("profile")}
+                    onClick={() => navigateToSection("profile")}
                   />
                   <ChecklistRow
                     title="Add an integration"
                     body="Create a Built-in or MCP connector and review its callable functions."
                     action="Open integrations"
-                    onClick={() => setActiveSection("integrations")}
+                    onClick={() => navigateToSection("integrations")}
                   />
                   <ChecklistRow
                     title="Copy your key"
                     body="Reveal or copy the personal agent key, then configure your runtime."
                     action="Open connection"
-                    onClick={() => setActiveSection("apiKeys")}
+                    onClick={() => navigateToSection("apiKeys")}
                   />
                 </div>
               </CompactPanel>
