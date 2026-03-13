@@ -116,7 +116,8 @@ describe("DashboardWorkspace", () => {
 
 
   it("shows only a personal active integrations view for non-admin users", async () => {
-    useSearchParamsMock.mockReturnValue(new URLSearchParams("section=integrations"));
+    usePathnameMock.mockReturnValue("/integrations");
+    useSearchParamsMock.mockReturnValue(new URLSearchParams());
 
     const integrationsState: IntegrationSpec[] = [
       {
