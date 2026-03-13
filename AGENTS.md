@@ -37,7 +37,8 @@ This repository contains a Next.js/TypeScript implementation of an agent context
 - `src/lib/auth.ts` configures Auth.js for GitHub OAuth on the hosted dashboard using the same preview-deployment redirect proxy pattern as `OpenHands/kpi-tracker`; the GitHub provider requests both `read:user` and `user:email` so the dashboard can populate signed-in email addresses more reliably. `DISABLE_AUTH=true` bypasses interactive auth for local development.
 - `src/components/admin/admin-dashboard.tsx` is the OpenHands-inspired Tailwind dashboard using TanStack Query + Zustand.
 - `src/components/admin/dashboard-workspace.tsx` now contains the main sidebar-driven dashboard UX with a compact, Vercel-inspired density pass across Home, User Profile, Integrations, and Agent Connection; `src/components/admin/admin-dashboard.tsx` is a thin re-export so the admin page import stays stable.
-- Admin dashboard section navigation should keep the URL in sync via the `section` search param (for example `/admin?section=integrations`) so deep links and browser history reflect the active panel.
+- Admin dashboard sections now have clean top-level routes: `/admin` (Home), `/profile`, `/integrations`, and `/agent-connection`. Client navigation should push those paths, while legacy `/admin?section=...` links still need to resolve to the matching section.
+
 - On the Agent Connection panel in `src/components/admin/dashboard-workspace.tsx`, successful API-key copy feedback should use the inline button pattern (temporary check icon) instead of posting a global status banner message.
 - Function-level access controls now share `src/components/admin/function-access-controls.tsx`: the integration wizard review step clears bulk selections after apply, and the dashboard Integration catalog uses the same compact expandable searchable tri-state skill rows with `Hide disabled skills` enabled by default.
 

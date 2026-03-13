@@ -5,6 +5,7 @@ import { ManagedConnectorAdminList } from "@/src/components/admin/managed-connec
 import { ServiceUnavailableScreen } from "@/src/components/service-unavailable-screen";
 import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
+import { buildAdminSectionHref } from "@/src/lib/admin-routes";
 import { isAppAdminEmail } from "@/src/lib/app-admins";
 import { auth } from "@/src/lib/auth";
 import { getOAuthCallbackBaseUrl } from "@/src/lib/auth-config";
@@ -49,7 +50,9 @@ export default async function AddConnectorPage() {
       <div className="mx-auto flex max-w-7xl flex-col gap-6">
         <div className="flex flex-wrap items-center gap-3 text-sm text-[var(--color-text-base)]">
           <a
-            href="/admin?section=integrations&showIntegrationWizard=1"
+            href={buildAdminSectionHref("integrations", {
+              showIntegrationWizard: "1",
+            })}
             className="inline-flex items-center gap-2 text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
           >
             <ArrowLeft className="h-4 w-4" />

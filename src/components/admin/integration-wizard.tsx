@@ -20,6 +20,7 @@ import {
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
 import { Card } from "@/src/components/ui/card";
+import { buildAdminSectionHref } from "@/src/lib/admin-routes";
 import { filterReadyBuiltInConnectors } from "@/src/lib/integrations/connector-readiness";
 import { cn } from "@/src/lib/utils";
 import type {
@@ -822,7 +823,11 @@ export const IntegrationWizard = ({
                               window.location.href = `/api/oauth/${selectedConnector.slug}/start?integrationKey=${encodeURIComponent(
                                 draft.key.trim() || selectedConnector.slug,
                               )}&redirectTo=${encodeURIComponent(
-                                `/admin?section=integrations&showIntegrationWizard=1&builtIn=${draft.builtInSlug || selectedConnector.slug}`,
+                                buildAdminSectionHref("integrations", {
+                                  showIntegrationWizard: "1",
+                                  builtIn:
+                                    draft.builtInSlug || selectedConnector.slug,
+                                }),
                               )}`;
                             }}
                           >

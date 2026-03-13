@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { buildAdminSectionHref } from "@/src/lib/admin-routes";
 import { getOAuthCallbackUrl } from "@/src/lib/auth-config";
 import { ContextLayerError } from "@/src/lib/core/errors";
 import {
@@ -57,7 +58,9 @@ export async function GET(
     return NextResponse.json({ detail: "Missing OAuth state." }, { status: 400 });
   }
 
-  let redirectTo = "/admin?section=integrations&showIntegrationWizard=1";
+  let redirectTo = buildAdminSectionHref("integrations", {
+    showIntegrationWizard: "1",
+  });
 
   try {
     const requestCallbackUrl = `${url.origin}/api/oauth/${provider.slug}/callback`;

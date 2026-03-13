@@ -32,6 +32,12 @@ import { IntegrationWizard } from "@/src/components/admin/integration-wizard";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
 import { Card } from "@/src/components/ui/card";
+import {
+  buildAdminSectionHref,
+  getAdminSectionFromPath,
+  isAdminSection,
+  type AdminSection,
+} from "@/src/lib/admin-routes";
 import { buildAgentConnectionGuide } from "@/src/lib/agent-connection";
 import { cn } from "@/src/lib/utils";
 import type {
@@ -77,8 +83,6 @@ const matchesIntegrationSearch = (integration: IntegrationSpec, query: string) =
     integration.authStrategy,
   ].some((value) => value.toLowerCase().includes(normalizedQuery));
 };
-
-type AdminSection = "home" | "profile" | "integrations" | "apiKeys";
 
 interface AdminDashboardProps {
   initialIntegrations: IntegrationSpec[];
@@ -360,14 +364,11 @@ export const DashboardWorkspace = ({
 
   useEffect(() => {
     const requestedSection = searchParams.get("section");
-    if (
-      requestedSection === "home" ||
-      requestedSection === "profile" ||
-      requestedSection === "integrations" ||
-      requestedSection === "apiKeys"
-    ) {
-      setActiveSection(requestedSection);
-    }
+    setActiveSection(
+      isAdminSection(requestedSection)
+        ? requestedSection
+        : getAdminSectionFromPath(pathname),
+    );
 
     if (searchParams.get("showIntegrationWizard") === "1") {
       setShowIntegrationWizard(true);
@@ -385,7 +386,7 @@ export const DashboardWorkspace = ({
     if (oauthStatus === "error") {
       setStatusMessage(oauthError || "OAuth connection failed.");
     }
-  }, [searchParams]);
+  }, [pathname, searchParams]);
 
   useEffect(() => {
     if (!apiKeyCopied) {
@@ -403,16 +404,7 @@ export const DashboardWorkspace = ({
 
   const navigateToSection = (section: AdminSection) => {
     setActiveSection(section);
-
-    const nextSearchParams = new URLSearchParams(searchParams.toString());
-    if (section === "home") {
-      nextSearchParams.delete("section");
-    } else {
-      nextSearchParams.set("section", section);
-    }
-
-    const nextUrl = nextSearchParams.toString();
-    router.push(nextUrl ? `${pathname}?${nextUrl}` : pathname);
+    router.push(buildAdminSectionHref(section));
   };
 
   const integrationsQuery = useQuery({

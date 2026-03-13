@@ -139,12 +139,32 @@ describe("DashboardWorkspace", () => {
       profileButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
 
-    expect(pushMock).toHaveBeenCalledWith("/admin?section=profile");
-    expect(container.querySelector("h1")?.textContent).toBe("User Profile");
+    expect(pushMock).toHaveBeenCalledWith("/profile");
   });
 
-  it("documents separate REST and MCP usage sections on the usage panel", async () => {
+  it("still honors legacy admin section query params", async () => {
     useSearchParamsMock.mockReturnValue(new URLSearchParams("section=apiKeys"));
+
+    await act(async () => {
+      root.render(
+        <QueryClientProvider client={queryClient}>
+          <DashboardWorkspace
+            initialIntegrations={[]}
+            initialAccessRequests={[]}
+            initialNotifications={[]}
+            currentUser={{ name: "Admin User", email: "admin@example.com" }}
+            contextApiBaseUrl="https://example.com"
+            contextApiKey="test-key"
+          />
+        </QueryClientProvider>,
+      );
+    });
+
+    expect(container.querySelector("h1")?.textContent).toBe("Agent Connection");
+  });
+
+  it("shows the usage panel from the top-level agent connection route", async () => {
+    usePathnameMock.mockReturnValue("/agent-connection");
 
     await act(async () => {
       root.render(
@@ -183,8 +203,8 @@ describe("DashboardWorkspace", () => {
     );
   });
 
-  it("matches the review-step skill design in the integration catalog", async () => {
-    useSearchParamsMock.mockReturnValue(new URLSearchParams("section=integrations"));
+  it("shows the integration catalog from the top-level integrations route", async () => {
+    usePathnameMock.mockReturnValue("/integrations");
 
     let integrationsState: IntegrationSpec[] = [
       {
@@ -409,7 +429,7 @@ describe("DashboardWorkspace", () => {
   });
 
   it("shows a temporary check icon when the API key is copied without posting a success message", async () => {
-    useSearchParamsMock.mockReturnValue(new URLSearchParams("section=apiKeys"));
+    usePathnameMock.mockReturnValue("/agent-connection");
     vi.useFakeTimers();
 
     const writeTextMock = vi.fn().mockResolvedValue(undefined);
