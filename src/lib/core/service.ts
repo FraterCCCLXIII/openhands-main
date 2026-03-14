@@ -139,7 +139,7 @@ export class ContextLayerService {
 
     const merged = new Map<string, IntegrationSpec>();
     for (const integration of filterIntegrationsVisibleToOwner(
-      globalIntegrations,
+      globalIntegrations.map((candidate) => this.stripSharedOAuthCredentials(candidate)),
       connections,
     )) {
       merged.set(integration.key, integration);
@@ -485,6 +485,14 @@ export class ContextLayerService {
     },
   ) {
     await this.initialize();
+
+    if (spec.authStrategy === "oauth2" && Object.keys(spec.credentials).length > 0) {
+      throw new ContextLayerError(
+        "Shared integrations cannot store OAuth credentials directly. Save per-user OAuth connections instead.",
+        400,
+      );
+    }
+
     const integration: IntegrationSpec = {
       ...spec,
       functions: normalizeFunctions(spec.functions ?? {}),
@@ -965,7 +973,7 @@ export class ContextLayerService {
       return existing;
     }
 
-    const integration = await this.getIntegration(key);
+    const integration = this.stripSharedOAuthCredentials(await this.getIntegration(key));
     return {
       ...integration,
       functions: Object.fromEntries(
@@ -989,7 +997,7 @@ export class ContextLayerService {
       return integration;
     }
 
-    return this.getIntegration(key);
+    return this.stripSharedOAuthCredentials(await this.getIntegration(key));
   }
 
   private async getIntegration(key: string) {
@@ -999,6 +1007,20 @@ export class ContextLayerService {
       throw new ContextLayerError(`Unknown integration '${key}'.`, 404);
     }
     return integration;
+  }
+
+  private stripSharedOAuthCredentials(integration: IntegrationSpec) {
+    if (
+      integration.authStrategy !== "oauth2" ||
+      Object.keys(integration.credentials).length === 0
+    ) {
+      return integration;
+    }
+
+    return {
+      ...integration,
+      credentials: {},
+    } satisfies IntegrationSpec;
   }
 
   private async getAccessRequest(requestId: string) {
