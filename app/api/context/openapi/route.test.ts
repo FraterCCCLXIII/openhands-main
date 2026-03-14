@@ -144,10 +144,17 @@ const seedRepository = async () => {
     createdAt: "2026-03-11T00:00:00.000Z",
     updatedAt: "2026-03-11T00:00:00.000Z",
   });
-  await repository.upsertIntegration(githubIntegration);
-  await repository.upsertIntegration(notionIntegration);
-  await repository.upsertIntegration(disabledIntegration);
-  await repository.upsertIntegration(partiallyDisabledIntegration);
+  await repository.upsertOwnerIntegration("dev@localhost", githubIntegration);
+  await repository.upsertOwnerIntegration("dev@localhost", notionIntegration);
+  await repository.upsertOwnerIntegration("dev@localhost", disabledIntegration);
+  await repository.upsertOwnerIntegration("dev@localhost", partiallyDisabledIntegration);
+  await repository.upsertIntegration({
+    ...githubIntegration,
+    key: "legacy-shared",
+    name: "Legacy Shared",
+    authStrategy: "bearer",
+    credentials: { accessToken: "legacy-token" },
+  });
   await repository.upsertIntegrationConnection({
     ownerId: "dev@localhost",
     integrationKey: "github",
@@ -251,6 +258,7 @@ describe("GET /api/context/openapi", () => {
     expect(body.paths["/api/context/notion/search_pages"]).toBeUndefined();
     expect(body.paths["/api/context/linear/list_issues"]).toBeUndefined();
     expect(body.paths["/api/context/slack/delete_message"]).toBeUndefined();
+    expect(body.paths["/api/context/legacy-shared/search_repositories"]).toBeUndefined();
     expect(body.components.securitySchemes.ContextApiKey).toMatchObject({
       type: "http",
       scheme: "bearer",
