@@ -726,4 +726,149 @@ describe("ContextLayerService", () => {
     });
     expect(response.data).toEqual({ id: "contact_123", name: "Ada" });
   });
+
+  it("rejects shared integrations with embedded OAuth credentials", async () => {
+    const service = createService();
+
+    await expect(
+      service.registerIntegration({
+        ...baseIntegration,
+        credentials: { accessToken: "shared-token" },
+      }),
+    ).rejects.toThrow(
+      "Shared integrations cannot store OAuth credentials directly. Save per-user OAuth connections instead.",
+    );
+  });
+
+  it("hides legacy shared OAuth credentials from owner-scoped integration lists", async () => {
+    const repository = new MemoryRepository();
+    const service = new ContextLayerService(
+      repository,
+      new AdapterRegistry({ mock: { invoke: async () => ({}) } }),
+      new NotificationPublisher(repository),
+    );
+
+    await repository.upsertIntegration({
+      key: "slack",
+      name: "Slack",
+      kind: "mcp",
+      provider: "mcp",
+      authStrategy: "oauth2",
+      enabled: true,
+      fineGrainedPermissions: true,
+      config: { serverUrl: "https://mcp.slack.com/mcp" },
+      credentials: { accessToken: "shared-token" },
+      functions: {
+        search_public: {
+          name: "search_public",
+          description: "Search public messages",
+          enabled: true,
+          fineGrainedPermissions: true,
+          defaultScopes: ["search:read"],
+          executionMode: "provider",
+          config: {},
+        },
+      },
+    });
+
+    await expect(service.listOwnerIntegrations("owner@example.com")).resolves.toEqual([]);
+  });
+
+  it("does not clone legacy shared OAuth credentials into owner integrations", async () => {
+    const repository = new MemoryRepository();
+    const service = new ContextLayerService(
+      repository,
+      new AdapterRegistry({ mock: { invoke: async () => ({}) } }),
+      new NotificationPublisher(repository),
+    );
+
+    await repository.upsertIntegration({
+      key: "slack",
+      name: "Slack",
+      kind: "mcp",
+      provider: "mcp",
+      authStrategy: "oauth2",
+      enabled: true,
+      fineGrainedPermissions: true,
+      config: { serverUrl: "https://mcp.slack.com/mcp" },
+      credentials: { accessToken: "shared-token" },
+      functions: {
+        search_public: {
+          name: "search_public",
+          description: "Search public messages",
+          enabled: true,
+          fineGrainedPermissions: true,
+          defaultScopes: ["search:read"],
+          executionMode: "provider",
+          config: {},
+        },
+      },
+    });
+
+    await service.setOwnerIntegrationEnabled("owner@example.com", "slack", true);
+
+    await expect(
+      repository.getOwnerIntegration("owner@example.com", "slack"),
+    ).resolves.toMatchObject({ credentials: {} });
+  });
+
+  it("requires a personal OAuth connection instead of using legacy shared credentials", async () => {
+    const repository = new MemoryRepository();
+    const mcpInvoke = vi.fn(async ({ integration }) => integration.credentials);
+    const service = new ContextLayerService(
+      repository,
+      new AdapterRegistry({
+        mcp: { invoke: mcpInvoke },
+        mock: { invoke: async () => ({}) },
+      }),
+      new NotificationPublisher(repository),
+    );
+
+    await repository.upsertIntegration({
+      key: "notion",
+      name: "Notion",
+      kind: "mcp",
+      provider: "mcp",
+      authStrategy: "oauth2",
+      enabled: true,
+      fineGrainedPermissions: true,
+      config: { serverUrl: "https://mcp.notion.com/mcp" },
+      credentials: { accessToken: "shared-token" },
+      functions: {
+        search: {
+          name: "search",
+          description: "Search Notion",
+          enabled: true,
+          fineGrainedPermissions: true,
+          defaultScopes: ["read"],
+          executionMode: "provider",
+          config: {},
+        },
+      },
+    });
+    await service.upsertAgentPolicy("assistant", [
+      {
+        integrationKey: "notion",
+        functionNames: ["search"],
+        scopes: ["read"],
+        enabled: true,
+      },
+    ]);
+
+    await expect(
+      service.invokeContext(
+        "agent-13",
+        "assistant",
+        "notion",
+        "search",
+        { query: "docs" },
+        ["read"],
+        { ownerId: "owner@example.com" },
+      ),
+    ).rejects.toThrow(
+      "Connect Notion for this user before invoking 'notion'.",
+    );
+    expect(mcpInvoke).not.toHaveBeenCalled();
+  });
+
 });

@@ -29,7 +29,7 @@ const githubIntegration: IntegrationSpec = {
   enabled: true,
   fineGrainedPermissions: true,
   config: { serverUrl: "https://api.githubcopilot.com/mcp/" },
-  credentials: { accessToken: "shared-token" },
+  credentials: {},
   functions: {
     search_repositories: {
       name: "search_repositories",
@@ -148,6 +148,18 @@ const seedRepository = async () => {
   await repository.upsertIntegration(notionIntegration);
   await repository.upsertIntegration(disabledIntegration);
   await repository.upsertIntegration(partiallyDisabledIntegration);
+  await repository.upsertIntegrationConnection({
+    ownerId: "dev@localhost",
+    integrationKey: "github",
+    provider: "github",
+    authStrategy: "oauth2",
+    encryptedCredentials: encryptCredentials({ accessToken: "github-user-token" }),
+    scopes: ["repo"],
+    metadata: {},
+    createdAt: "2026-03-11T00:00:00.000Z",
+    updatedAt: "2026-03-11T00:00:00.000Z",
+  });
+
   await repository.upsertIntegrationConnection({
     ownerId: "dev@localhost",
     integrationKey: "slack",

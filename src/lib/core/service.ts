@@ -139,7 +139,7 @@ export class ContextLayerService {
 
     const merged = new Map<string, IntegrationSpec>();
     for (const integration of filterIntegrationsVisibleToOwner(
-      globalIntegrations,
+      globalIntegrations.map((candidate) => this.stripSharedOAuthCredentials(candidate)),
       connections,
     )) {
       merged.set(integration.key, integration);
@@ -150,6 +150,37 @@ export class ContextLayerService {
     }
 
     return [...merged.values()].sort((a, b) => a.key.localeCompare(b.key));
+  }
+
+  async listLegacySharedOAuthCredentials() {
+    await this.initialize();
+    const integrations = await this.repository.listIntegrations();
+
+    return integrations
+      .filter((integration) => this.hasLegacySharedOAuthCredentials(integration))
+      .map((integration) => this.summarizeLegacySharedOAuthIntegration(integration))
+      .sort((a, b) => a.name.localeCompare(b.name) || a.key.localeCompare(b.key));
+  }
+
+  async scrubLegacySharedOAuthCredentials() {
+    await this.initialize();
+    const integrations = await this.repository.listIntegrations();
+    const legacyIntegrations = integrations.filter((integration) =>
+      this.hasLegacySharedOAuthCredentials(integration),
+    );
+
+    await Promise.all(
+      legacyIntegrations.map((integration) =>
+        this.repository.upsertIntegration(this.stripSharedOAuthCredentials(integration)),
+      ),
+    );
+
+    return {
+      scrubbedCount: legacyIntegrations.length,
+      scrubbedIntegrations: legacyIntegrations
+        .map((integration) => this.summarizeLegacySharedOAuthIntegration(integration))
+        .sort((a, b) => a.name.localeCompare(b.name) || a.key.localeCompare(b.key)),
+    };
   }
 
   async listManagedConnectors() {
@@ -485,6 +516,14 @@ export class ContextLayerService {
     },
   ) {
     await this.initialize();
+
+    if (spec.authStrategy === "oauth2" && Object.keys(spec.credentials).length > 0) {
+      throw new ContextLayerError(
+        "Shared integrations cannot store OAuth credentials directly. Save per-user OAuth connections instead.",
+        400,
+      );
+    }
+
     const integration: IntegrationSpec = {
       ...spec,
       functions: normalizeFunctions(spec.functions ?? {}),
@@ -965,7 +1004,7 @@ export class ContextLayerService {
       return existing;
     }
 
-    const integration = await this.getIntegration(key);
+    const integration = this.stripSharedOAuthCredentials(await this.getIntegration(key));
     return {
       ...integration,
       functions: Object.fromEntries(
@@ -989,7 +1028,7 @@ export class ContextLayerService {
       return integration;
     }
 
-    return this.getIntegration(key);
+    return this.stripSharedOAuthCredentials(await this.getIntegration(key));
   }
 
   private async getIntegration(key: string) {
@@ -999,6 +1038,37 @@ export class ContextLayerService {
       throw new ContextLayerError(`Unknown integration '${key}'.`, 404);
     }
     return integration;
+  }
+
+  private hasLegacySharedOAuthCredentials(integration: IntegrationSpec) {
+    return (
+      integration.authStrategy === "oauth2" &&
+      Object.keys(integration.credentials).length > 0
+    );
+  }
+
+  private summarizeLegacySharedOAuthIntegration(integration: IntegrationSpec) {
+    return {
+      key: integration.key,
+      name: integration.name,
+      kind: integration.kind,
+      provider: integration.provider,
+      credentialKeys: Object.keys(integration.credentials).sort((a, b) =>
+        a.localeCompare(b),
+      ),
+      credentialCount: Object.keys(integration.credentials).length,
+    };
+  }
+
+  private stripSharedOAuthCredentials(integration: IntegrationSpec) {
+    if (!this.hasLegacySharedOAuthCredentials(integration)) {
+      return integration;
+    }
+
+    return {
+      ...integration,
+      credentials: {},
+    } satisfies IntegrationSpec;
   }
 
   private async getAccessRequest(requestId: string) {
