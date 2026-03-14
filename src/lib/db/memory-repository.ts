@@ -12,7 +12,6 @@ import type {
 import type { ContextRepository } from "@/src/lib/core/repository";
 
 export class MemoryRepository implements ContextRepository {
-  private readonly integrations = new Map<string, IntegrationSpec>();
   private readonly ownerIntegrations = new Map<string, IntegrationSpec>();
   private readonly policies = new Map<string, AgentClassPolicy>();
   private readonly accessRequests = new Map<string, AccessRequest>();
@@ -28,19 +27,6 @@ export class MemoryRepository implements ContextRepository {
   private readonly oauthStates = new Map<string, OAuthStateRecord>();
 
   async ensureSchema() {}
-
-  async listIntegrations() {
-    return [...this.integrations.values()].sort((a, b) => a.key.localeCompare(b.key));
-  }
-
-  async getIntegration(key: string) {
-    return this.integrations.get(key) ?? null;
-  }
-
-  async upsertIntegration(spec: IntegrationSpec) {
-    this.integrations.set(spec.key, spec);
-    return spec;
-  }
 
   async listOwnerIntegrations(ownerId: string) {
     return [...this.ownerIntegrations.entries()]

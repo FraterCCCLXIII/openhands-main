@@ -144,10 +144,10 @@ const seedRepository = async () => {
     createdAt: "2026-03-11T00:00:00.000Z",
     updatedAt: "2026-03-11T00:00:00.000Z",
   });
-  await repository.upsertIntegration(githubIntegration);
-  await repository.upsertIntegration(notionIntegration);
-  await repository.upsertIntegration(disabledIntegration);
-  await repository.upsertIntegration(partiallyDisabledIntegration);
+  await repository.upsertOwnerIntegration("dev@localhost", githubIntegration);
+  await repository.upsertOwnerIntegration("dev@localhost", notionIntegration);
+  await repository.upsertOwnerIntegration("dev@localhost", disabledIntegration);
+  await repository.upsertOwnerIntegration("dev@localhost", partiallyDisabledIntegration);
   await repository.upsertIntegrationConnection({
     ownerId: "dev@localhost",
     integrationKey: "github",

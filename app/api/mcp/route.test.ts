@@ -147,7 +147,7 @@ afterEach(async () => {
 describe("/api/mcp", () => {
   it("lists built-in tools and forwards enabled invocations without requiring session defaults", async () => {
     const service = getContextLayerService();
-    await service.registerIntegration(baseIntegration);
+    await service.registerOwnerIntegration("owner@example.com", baseIntegration);
     const apiKey = (await service.getOrCreateAgentApiKey("owner@example.com")).apiKey;
 
     const { client, transport } = await connectClient({
@@ -183,7 +183,7 @@ describe("/api/mcp", () => {
 
   it("returns a human-approval link for case-by-case tools without requiring session defaults", async () => {
     const service = getContextLayerService();
-    await service.registerIntegration(baseIntegration);
+    await service.registerOwnerIntegration("owner@example.com", baseIntegration);
     const apiKey = (await service.getOrCreateAgentApiKey("owner@example.com")).apiKey;
 
     const { client, transport } = await connectClient({
@@ -208,7 +208,7 @@ describe("/api/mcp", () => {
 
   it("publishes function-specific input schemas and accepts body arguments", async () => {
     const service = getContextLayerService();
-    await service.registerIntegration(baseIntegration);
+    await service.registerOwnerIntegration("owner@example.com", baseIntegration);
     const apiKey = (await service.getOrCreateAgentApiKey("owner@example.com")).apiKey;
 
     const { client, transport } = await connectClient({
@@ -257,7 +257,7 @@ describe("/api/mcp", () => {
 
   it("rejects legacy underscore MCP override arguments", async () => {
     const service = getContextLayerService();
-    await service.registerIntegration(baseIntegration);
+    await service.registerOwnerIntegration("owner@example.com", baseIntegration);
     const apiKey = (await service.getOrCreateAgentApiKey("owner@example.com")).apiKey;
 
     const { client, transport } = await connectClient({

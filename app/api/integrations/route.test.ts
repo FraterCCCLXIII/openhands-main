@@ -42,11 +42,12 @@ afterEach(() => {
 });
 
 describe("GET /api/integrations", () => {
-  it("returns only integrations active for the current non-admin user", async () => {
+  it("returns only integrations installed for the current non-admin user", async () => {
     vi.stubEnv("APP_ADMIN_EMAILS", "admin@example.com");
     const repository = getContextLayerRepository();
 
-    await repository.upsertIntegration(
+    await repository.upsertOwnerIntegration(
+      "user@example.com",
       createIntegration({
         key: "github",
         name: "GitHub",
@@ -55,7 +56,8 @@ describe("GET /api/integrations", () => {
         authStrategy: "bearer",
       }),
     );
-    await repository.upsertIntegration(
+    await repository.upsertOwnerIntegration(
+      "user@example.com",
       createIntegration({
         key: "slack",
         name: "Slack",
@@ -64,7 +66,8 @@ describe("GET /api/integrations", () => {
         authStrategy: "oauth2",
       }),
     );
-    await repository.upsertIntegration(
+    await repository.upsertOwnerIntegration(
+      "user@example.com",
       createIntegration({
         key: "notion",
         name: "Notion",
@@ -75,27 +78,20 @@ describe("GET /api/integrations", () => {
       }),
     );
 
-    await repository.upsertIntegrationConnection({
-      ownerId: "user@example.com",
-      integrationKey: "slack",
-      provider: "slack",
-      authStrategy: "oauth2",
-      encryptedCredentials: "encrypted",
-      scopes: [],
-      metadata: {},
-      createdAt: "2026-03-13T00:00:00.000Z",
-      updatedAt: "2026-03-13T00:00:00.000Z",
-    });
-
     const response = await GET();
     const body = (await response.json()) as Array<{ key: string }>;
 
     expect(response.status).toBe(200);
     expect(body).toMatchObject([
       expect.objectContaining({ key: "github" }),
+      expect.objectContaining({ key: "notion" }),
       expect.objectContaining({ key: "slack" }),
     ]);
-    expect(body.map((integration) => integration.key)).toEqual(["github", "slack"]);
+    expect(body.map((integration) => integration.key)).toEqual([
+      "github",
+      "notion",
+      "slack",
+    ]);
   });
 
   it("returns the same personal integration view for app administrators", async () => {
@@ -103,22 +99,14 @@ describe("GET /api/integrations", () => {
     authMock.mockResolvedValue({ user: { email: "admin@example.com" } });
     const repository = getContextLayerRepository();
 
-    await repository.upsertIntegration(
+    await repository.upsertOwnerIntegration(
+      "admin@example.com",
       createIntegration({
         key: "github",
         name: "GitHub",
         kind: "mcp",
         provider: "mcp",
         authStrategy: "bearer",
-      }),
-    );
-    await repository.upsertIntegration(
-      createIntegration({
-        key: "slack",
-        name: "Slack",
-        kind: "mcp",
-        provider: "mcp",
-        authStrategy: "oauth2",
       }),
     );
 

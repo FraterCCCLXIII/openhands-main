@@ -6,7 +6,6 @@ import { ContextLayerError } from "@/src/lib/core/errors";
 import type { ContextRepository } from "@/src/lib/core/repository";
 import { decryptCredentials, encryptCredentials } from "@/src/lib/credential-crypto";
 import { sanitizeManagedConnector } from "@/src/lib/integrations/managed-connectors";
-import { filterIntegrationsVisibleToOwner } from "@/src/lib/integrations/visible-integrations";
 import { generateManagedConnectorFunctionsFromOpenApi } from "@/src/lib/managed-connectors/openapi";
 import type { NotificationPublisher } from "@/src/lib/notifications/publisher";
 import { resolveOAuthProvider } from "@/src/lib/oauth/provider-resolver";
@@ -123,64 +122,10 @@ export class ContextLayerService {
     await this.repository.ensureSchema();
   }
 
-  async listIntegrations() {
-    await this.initialize();
-    return this.repository.listIntegrations();
-  }
-
   async listOwnerIntegrations(ownerId: string) {
     await this.initialize();
-    const normalizedOwnerId = normalizeAgentApiKeyOwner(ownerId);
-    const [ownerIntegrations, globalIntegrations, connections] = await Promise.all([
-      this.repository.listOwnerIntegrations(normalizedOwnerId),
-      this.repository.listIntegrations(),
-      this.repository.listIntegrationConnections(normalizedOwnerId),
-    ]);
-
-    const merged = new Map<string, IntegrationSpec>();
-    for (const integration of filterIntegrationsVisibleToOwner(
-      globalIntegrations.map((candidate) => this.stripSharedOAuthCredentials(candidate)),
-      connections,
-    )) {
-      merged.set(integration.key, integration);
-    }
-
-    for (const integration of ownerIntegrations) {
-      merged.set(integration.key, integration);
-    }
-
-    return [...merged.values()].sort((a, b) => a.key.localeCompare(b.key));
-  }
-
-  async listLegacySharedOAuthCredentials() {
-    await this.initialize();
-    const integrations = await this.repository.listIntegrations();
-
-    return integrations
-      .filter((integration) => this.hasLegacySharedOAuthCredentials(integration))
-      .map((integration) => this.summarizeLegacySharedOAuthIntegration(integration))
-      .sort((a, b) => a.name.localeCompare(b.name) || a.key.localeCompare(b.key));
-  }
-
-  async scrubLegacySharedOAuthCredentials() {
-    await this.initialize();
-    const integrations = await this.repository.listIntegrations();
-    const legacyIntegrations = integrations.filter((integration) =>
-      this.hasLegacySharedOAuthCredentials(integration),
-    );
-
-    await Promise.all(
-      legacyIntegrations.map((integration) =>
-        this.repository.upsertIntegration(this.stripSharedOAuthCredentials(integration)),
-      ),
-    );
-
-    return {
-      scrubbedCount: legacyIntegrations.length,
-      scrubbedIntegrations: legacyIntegrations
-        .map((integration) => this.summarizeLegacySharedOAuthIntegration(integration))
-        .sort((a, b) => a.name.localeCompare(b.name) || a.key.localeCompare(b.key)),
-    };
+    return (await this.repository.listOwnerIntegrations(normalizeAgentApiKeyOwner(ownerId)))
+      .sort((a, b) => a.key.localeCompare(b.key));
   }
 
   async listManagedConnectors() {
@@ -510,7 +455,8 @@ export class ContextLayerService {
   }
 
 
-  async registerIntegration(
+  async registerOwnerIntegration(
+    ownerId: string,
     spec: Omit<IntegrationSpec, "functions"> & {
       functions?: Record<string, FunctionSpec>;
     },
@@ -519,25 +465,11 @@ export class ContextLayerService {
 
     if (spec.authStrategy === "oauth2" && Object.keys(spec.credentials).length > 0) {
       throw new ContextLayerError(
-        "Shared integrations cannot store OAuth credentials directly. Save per-user OAuth connections instead.",
+        "OAuth integrations cannot store credentials directly. Save per-user OAuth connections instead.",
         400,
       );
     }
 
-    const integration: IntegrationSpec = {
-      ...spec,
-      functions: normalizeFunctions(spec.functions ?? {}),
-    };
-    return this.repository.upsertIntegration(integration);
-  }
-
-  async registerOwnerIntegration(
-    ownerId: string,
-    spec: Omit<IntegrationSpec, "functions"> & {
-      functions?: Record<string, FunctionSpec>;
-    },
-  ) {
-    await this.initialize();
     const integration: IntegrationSpec = {
       ...spec,
       functions: normalizeFunctions(spec.functions ?? {}),
@@ -548,26 +480,46 @@ export class ContextLayerService {
     );
   }
 
-  async addFunction(integrationKey: string, functionSpec: FunctionSpec) {
-    const integration = await this.getIntegration(integrationKey);
-    integration.functions[functionSpec.name] =
-      normalizeFunctionSpec(functionSpec);
-    await this.repository.upsertIntegration(integration);
+  async addOwnerFunction(
+    ownerId: string,
+    integrationKey: string,
+    functionSpec: FunctionSpec,
+  ) {
+    const normalizedOwnerId = normalizeAgentApiKeyOwner(ownerId);
+    const integration = await this.getMutableOwnerIntegration(
+      normalizedOwnerId,
+      integrationKey,
+    );
+    integration.functions[functionSpec.name] = normalizeFunctionSpec(functionSpec);
+    await this.repository.upsertOwnerIntegration(normalizedOwnerId, integration);
     return integration.functions[functionSpec.name];
   }
 
-  async setIntegrationEnabled(integrationKey: string, enabled: boolean) {
-    const integration = await this.getIntegration(integrationKey);
+  async setOwnerIntegrationEnabled(
+    ownerId: string,
+    integrationKey: string,
+    enabled: boolean,
+  ) {
+    const normalizedOwnerId = normalizeAgentApiKeyOwner(ownerId);
+    const integration = await this.getMutableOwnerIntegration(
+      normalizedOwnerId,
+      integrationKey,
+    );
     integration.enabled = enabled;
-    return this.repository.upsertIntegration(integration);
+    return this.repository.upsertOwnerIntegration(normalizedOwnerId, integration);
   }
 
-  async setFunctionEnabled(
+  async setOwnerFunctionEnabled(
+    ownerId: string,
     integrationKey: string,
     functionName: string,
     enabled: boolean,
   ) {
-    const integration = await this.getIntegration(integrationKey);
+    const normalizedOwnerId = normalizeAgentApiKeyOwner(ownerId);
+    const integration = await this.getMutableOwnerIntegration(
+      normalizedOwnerId,
+      integrationKey,
+    );
     const functionSpec = integration.functions[functionName];
 
     if (!functionSpec) {
@@ -585,43 +537,8 @@ export class ContextLayerService {
 
     functionSpec.enabled = accessMode !== "disabled";
     functionSpec.accessMode = accessMode;
-    await this.repository.upsertIntegration(integration);
+    await this.repository.upsertOwnerIntegration(normalizedOwnerId, integration);
     return functionSpec;
-  }
-
-  async setFunctionAccessMode(
-    integrationKey: string,
-    functionName: string,
-    accessMode: FunctionAccessMode,
-  ) {
-    const integration = await this.getIntegration(integrationKey);
-    const functionSpec = integration.functions[functionName];
-
-    if (!functionSpec) {
-      throw new ContextLayerError(
-        `Unknown function '${functionName}' for integration '${integrationKey}'.`,
-        404,
-      );
-    }
-
-    functionSpec.accessMode = accessMode;
-    functionSpec.enabled = accessMode !== "disabled";
-    await this.repository.upsertIntegration(integration);
-    return functionSpec;
-  }
-
-  async setOwnerIntegrationEnabled(
-    ownerId: string,
-    integrationKey: string,
-    enabled: boolean,
-  ) {
-    const normalizedOwnerId = normalizeAgentApiKeyOwner(ownerId);
-    const integration = await this.getOrCreateOwnerIntegration(
-      normalizedOwnerId,
-      integrationKey,
-    );
-    integration.enabled = enabled;
-    return this.repository.upsertOwnerIntegration(normalizedOwnerId, integration);
   }
 
   async setOwnerFunctionAccessMode(
@@ -631,7 +548,7 @@ export class ContextLayerService {
     accessMode: FunctionAccessMode,
   ) {
     const normalizedOwnerId = normalizeAgentApiKeyOwner(ownerId);
-    const integration = await this.getOrCreateOwnerIntegration(
+    const integration = await this.getMutableOwnerIntegration(
       normalizedOwnerId,
       integrationKey,
     );
@@ -991,31 +908,27 @@ export class ContextLayerService {
 
   private async getRuntimeIntegration(key: string, ownerId?: string) {
     if (!ownerId) {
-      return this.getIntegration(key);
+      throw new ContextLayerError(
+        `Integration '${key}' must be installed for a specific user before invocation.`,
+        400,
+      );
     }
 
     return this.getOwnerIntegration(ownerId, key);
   }
 
-  private async getOrCreateOwnerIntegration(ownerId: string, key: string) {
+  private async getMutableOwnerIntegration(ownerId: string, key: string) {
+    await this.initialize();
     const normalizedOwnerId = normalizeAgentApiKeyOwner(ownerId);
     const existing = await this.repository.getOwnerIntegration(normalizedOwnerId, key);
     if (existing) {
       return existing;
     }
 
-    const integration = this.stripSharedOAuthCredentials(await this.getIntegration(key));
-    return {
-      ...integration,
-      functions: Object.fromEntries(
-        Object.entries(integration.functions).map(([functionKey, functionSpec]) => [
-          functionKey,
-          { ...functionSpec },
-        ]),
-      ),
-      config: { ...integration.config },
-      credentials: { ...integration.credentials },
-    } satisfies IntegrationSpec;
+    throw new ContextLayerError(
+      `Integration '${key}' is not installed for this user. Install it from the integrations wizard first.`,
+      404,
+    );
   }
 
   private async getOwnerIntegration(ownerId: string, key: string) {
@@ -1028,47 +941,10 @@ export class ContextLayerService {
       return integration;
     }
 
-    return this.stripSharedOAuthCredentials(await this.getIntegration(key));
-  }
-
-  private async getIntegration(key: string) {
-    await this.initialize();
-    const integration = await this.repository.getIntegration(key);
-    if (!integration) {
-      throw new ContextLayerError(`Unknown integration '${key}'.`, 404);
-    }
-    return integration;
-  }
-
-  private hasLegacySharedOAuthCredentials(integration: IntegrationSpec) {
-    return (
-      integration.authStrategy === "oauth2" &&
-      Object.keys(integration.credentials).length > 0
+    throw new ContextLayerError(
+      `Integration '${key}' is not installed for this user. Install it from the integrations wizard first.`,
+      404,
     );
-  }
-
-  private summarizeLegacySharedOAuthIntegration(integration: IntegrationSpec) {
-    return {
-      key: integration.key,
-      name: integration.name,
-      kind: integration.kind,
-      provider: integration.provider,
-      credentialKeys: Object.keys(integration.credentials).sort((a, b) =>
-        a.localeCompare(b),
-      ),
-      credentialCount: Object.keys(integration.credentials).length,
-    };
-  }
-
-  private stripSharedOAuthCredentials(integration: IntegrationSpec) {
-    if (!this.hasLegacySharedOAuthCredentials(integration)) {
-      return integration;
-    }
-
-    return {
-      ...integration,
-      credentials: {},
-    } satisfies IntegrationSpec;
   }
 
   private async getAccessRequest(requestId: string) {
