@@ -1,6 +1,7 @@
 import { ArrowLeft, Mail, ShieldCheck, UserRound } from "lucide-react";
 
 import { CuratedProviderList } from "@/src/components/admin/curated-provider-list";
+import { LegacySharedOAuthCleanup } from "@/src/components/admin/legacy-shared-oauth-cleanup";
 import { ManagedConnectorAdminList } from "@/src/components/admin/managed-connector-admin-list";
 import { ServiceUnavailableScreen } from "@/src/components/service-unavailable-screen";
 import { Badge } from "@/src/components/ui/badge";
@@ -204,22 +205,42 @@ export default async function AddConnectorPage() {
         </div>
 
         {canRegisterManagedConnectors ? (
-          <Card className="p-6">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <h2 className="text-lg font-semibold text-white">
-                  Registered managed connectors
-                </h2>
-                <p className="mt-2 text-sm leading-7 text-[var(--color-text-base)]">
-                  Edit stale service-level connector settings in place or delete a
-                  connector before re-registering it with a new provider type.
-                </p>
+          <>
+            <Card className="p-6">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h2 className="text-lg font-semibold text-white">
+                    Legacy shared OAuth credential cleanup
+                  </h2>
+                  <p className="mt-2 text-sm leading-7 text-[var(--color-text-base)]">
+                    Use this after deploying the credential-isolation fix to inspect
+                    any old shared integrations that still have embedded OAuth tokens,
+                    then scrub those legacy credentials in place.
+                  </p>
+                </div>
+                <Badge>Safe summaries only</Badge>
               </div>
-              <Badge>{managedConnectors.length} registered</Badge>
-            </div>
 
-            <ManagedConnectorAdminList initialManagedConnectors={managedConnectors} />
-          </Card>
+              <LegacySharedOAuthCleanup />
+            </Card>
+
+            <Card className="p-6">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h2 className="text-lg font-semibold text-white">
+                    Registered managed connectors
+                  </h2>
+                  <p className="mt-2 text-sm leading-7 text-[var(--color-text-base)]">
+                    Edit stale service-level connector settings in place or delete a
+                    connector before re-registering it with a new provider type.
+                  </p>
+                </div>
+                <Badge>{managedConnectors.length} registered</Badge>
+              </div>
+
+              <ManagedConnectorAdminList initialManagedConnectors={managedConnectors} />
+            </Card>
+          </>
         ) : null}
 
 

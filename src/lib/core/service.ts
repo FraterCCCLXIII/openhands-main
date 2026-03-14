@@ -152,6 +152,37 @@ export class ContextLayerService {
     return [...merged.values()].sort((a, b) => a.key.localeCompare(b.key));
   }
 
+  async listLegacySharedOAuthCredentials() {
+    await this.initialize();
+    const integrations = await this.repository.listIntegrations();
+
+    return integrations
+      .filter((integration) => this.hasLegacySharedOAuthCredentials(integration))
+      .map((integration) => this.summarizeLegacySharedOAuthIntegration(integration))
+      .sort((a, b) => a.name.localeCompare(b.name) || a.key.localeCompare(b.key));
+  }
+
+  async scrubLegacySharedOAuthCredentials() {
+    await this.initialize();
+    const integrations = await this.repository.listIntegrations();
+    const legacyIntegrations = integrations.filter((integration) =>
+      this.hasLegacySharedOAuthCredentials(integration),
+    );
+
+    await Promise.all(
+      legacyIntegrations.map((integration) =>
+        this.repository.upsertIntegration(this.stripSharedOAuthCredentials(integration)),
+      ),
+    );
+
+    return {
+      scrubbedCount: legacyIntegrations.length,
+      scrubbedIntegrations: legacyIntegrations
+        .map((integration) => this.summarizeLegacySharedOAuthIntegration(integration))
+        .sort((a, b) => a.name.localeCompare(b.name) || a.key.localeCompare(b.key)),
+    };
+  }
+
   async listManagedConnectors() {
     await this.initialize();
     const connectors = await this.repository.listManagedConnectors();
@@ -1009,11 +1040,28 @@ export class ContextLayerService {
     return integration;
   }
 
+  private hasLegacySharedOAuthCredentials(integration: IntegrationSpec) {
+    return (
+      integration.authStrategy === "oauth2" &&
+      Object.keys(integration.credentials).length > 0
+    );
+  }
+
+  private summarizeLegacySharedOAuthIntegration(integration: IntegrationSpec) {
+    return {
+      key: integration.key,
+      name: integration.name,
+      kind: integration.kind,
+      provider: integration.provider,
+      credentialKeys: Object.keys(integration.credentials).sort((a, b) =>
+        a.localeCompare(b),
+      ),
+      credentialCount: Object.keys(integration.credentials).length,
+    };
+  }
+
   private stripSharedOAuthCredentials(integration: IntegrationSpec) {
-    if (
-      integration.authStrategy !== "oauth2" ||
-      Object.keys(integration.credentials).length === 0
-    ) {
+    if (!this.hasLegacySharedOAuthCredentials(integration)) {
       return integration;
     }
 
