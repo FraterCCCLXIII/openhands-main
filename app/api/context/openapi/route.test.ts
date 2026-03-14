@@ -148,13 +148,6 @@ const seedRepository = async () => {
   await repository.upsertOwnerIntegration("dev@localhost", notionIntegration);
   await repository.upsertOwnerIntegration("dev@localhost", disabledIntegration);
   await repository.upsertOwnerIntegration("dev@localhost", partiallyDisabledIntegration);
-  await repository.upsertIntegration({
-    ...githubIntegration,
-    key: "legacy-shared",
-    name: "Legacy Shared",
-    authStrategy: "bearer",
-    credentials: { accessToken: "legacy-token" },
-  });
   await repository.upsertIntegrationConnection({
     ownerId: "dev@localhost",
     integrationKey: "github",
@@ -258,7 +251,6 @@ describe("GET /api/context/openapi", () => {
     expect(body.paths["/api/context/notion/search_pages"]).toBeUndefined();
     expect(body.paths["/api/context/linear/list_issues"]).toBeUndefined();
     expect(body.paths["/api/context/slack/delete_message"]).toBeUndefined();
-    expect(body.paths["/api/context/legacy-shared/search_repositories"]).toBeUndefined();
     expect(body.components.securitySchemes.ContextApiKey).toMatchObject({
       type: "http",
       scheme: "bearer",

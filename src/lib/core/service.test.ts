@@ -750,84 +750,27 @@ describe("ContextLayerService", () => {
     expect(response.data).toEqual({ id: "contact_123", name: "Ada" });
   });
 
-  it("rejects shared integrations with embedded OAuth credentials", async () => {
+  it("rejects owner integrations with embedded OAuth credentials", async () => {
     const service = createService();
 
     await expect(
-      service.registerIntegration({
+      service.registerOwnerIntegration(OWNER_ID, {
         ...baseIntegration,
         authStrategy: "oauth2",
-        credentials: { accessToken: "shared-token" },
+        credentials: { accessToken: "owner-token" },
       }),
     ).rejects.toThrow(
-      "Shared integrations cannot store OAuth credentials directly. Save per-user OAuth connections instead.",
+      "OAuth integrations cannot store credentials directly. Save per-user OAuth connections instead.",
     );
   });
 
-  it("hides legacy shared OAuth credentials from owner-scoped integration lists", async () => {
+  it("requires an explicit owner install before owner mutations", async () => {
     const repository = new MemoryRepository();
     const service = new ContextLayerService(
       repository,
       new AdapterRegistry({ mock: { invoke: async () => ({}) } }),
       new NotificationPublisher(repository),
     );
-
-    await repository.upsertIntegration({
-      key: "slack",
-      name: "Slack",
-      kind: "mcp",
-      provider: "mcp",
-      authStrategy: "oauth2",
-      enabled: true,
-      fineGrainedPermissions: true,
-      config: { serverUrl: "https://mcp.slack.com/mcp" },
-      credentials: { accessToken: "shared-token" },
-      functions: {
-        search_public: {
-          name: "search_public",
-          description: "Search public messages",
-          enabled: true,
-          fineGrainedPermissions: true,
-          defaultScopes: ["search:read"],
-          executionMode: "provider",
-          config: {},
-        },
-      },
-    });
-
-    await expect(service.listOwnerIntegrations("owner@example.com")).resolves.toEqual([]);
-  });
-
-  it("does not let legacy shared integrations act like installed owner integrations", async () => {
-    const repository = new MemoryRepository();
-    const service = new ContextLayerService(
-      repository,
-      new AdapterRegistry({ mock: { invoke: async () => ({}) } }),
-      new NotificationPublisher(repository),
-    );
-
-    await repository.upsertIntegration({
-      key: "slack",
-      name: "Slack",
-      kind: "mcp",
-      provider: "mcp",
-      authStrategy: "oauth2",
-      enabled: true,
-      fineGrainedPermissions: true,
-      config: { serverUrl: "https://mcp.slack.com/mcp" },
-      credentials: { accessToken: "shared-token" },
-      functions: {
-        search_public: {
-          name: "search_public",
-          description: "Search public messages",
-          enabled: true,
-          fineGrainedPermissions: true,
-          defaultScopes: ["search:read"],
-          executionMode: "provider",
-          config: {},
-        },
-      },
-    });
 
     await expect(
       service.setOwnerIntegrationEnabled(OWNER_ID, "slack", true),
@@ -837,7 +780,7 @@ describe("ContextLayerService", () => {
     await expect(repository.getOwnerIntegration(OWNER_ID, "slack")).resolves.toBeNull();
   });
 
-  it("requires a personal OAuth connection instead of using legacy shared credentials", async () => {
+  it("requires a personal OAuth connection before invoking an installed OAuth integration", async () => {
     const repository = new MemoryRepository();
     const mcpInvoke = vi.fn(async ({ integration }) => integration.credentials);
     const service = new ContextLayerService(
@@ -849,28 +792,6 @@ describe("ContextLayerService", () => {
       new NotificationPublisher(repository),
     );
 
-    await repository.upsertIntegration({
-      key: "notion",
-      name: "Notion",
-      kind: "mcp",
-      provider: "mcp",
-      authStrategy: "oauth2",
-      enabled: true,
-      fineGrainedPermissions: true,
-      config: { serverUrl: "https://mcp.notion.com/mcp" },
-      credentials: { accessToken: "shared-token" },
-      functions: {
-        search: {
-          name: "search",
-          description: "Search Notion",
-          enabled: true,
-          fineGrainedPermissions: true,
-          defaultScopes: ["read"],
-          executionMode: "provider",
-          config: {},
-        },
-      },
-    });
     await installIntegration(service, {
       key: "notion",
       name: "Notion",

@@ -12,9 +12,6 @@ import type {
 
 export interface ContextRepository {
   ensureSchema(): Promise<void>;
-  listIntegrations(): Promise<IntegrationSpec[]>;
-  getIntegration(key: string): Promise<IntegrationSpec | null>;
-  upsertIntegration(spec: IntegrationSpec): Promise<IntegrationSpec>;
   listOwnerIntegrations(ownerId: string): Promise<IntegrationSpec[]>;
   getOwnerIntegration(
     ownerId: string,

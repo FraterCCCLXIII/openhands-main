@@ -77,15 +77,6 @@ describe("GET /api/integrations", () => {
         enabled: false,
       }),
     );
-    await repository.upsertIntegration(
-      createIntegration({
-        key: "legacy-shared",
-        name: "Legacy Shared",
-        kind: "mcp",
-        provider: "mcp",
-        authStrategy: "bearer",
-      }),
-    );
 
     const response = await GET();
     const body = (await response.json()) as Array<{ key: string }>;
@@ -116,15 +107,6 @@ describe("GET /api/integrations", () => {
         kind: "mcp",
         provider: "mcp",
         authStrategy: "bearer",
-      }),
-    );
-    await repository.upsertIntegration(
-      createIntegration({
-        key: "slack",
-        name: "Slack",
-        kind: "mcp",
-        provider: "mcp",
-        authStrategy: "oauth2",
       }),
     );
 
