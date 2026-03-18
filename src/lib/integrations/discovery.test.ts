@@ -143,7 +143,7 @@ describe("listBuiltInConnectors", () => {
   });
 
   it("includes default MCP bearer connectors that need no admin registration", async () => {
-    const connectors = await listBuiltInConnectors(new MemoryRepository());
+    const connectors = await listBuiltInConnectors(testRepo);
 
     expect(connectors).toContainEqual(
       expect.objectContaining({
