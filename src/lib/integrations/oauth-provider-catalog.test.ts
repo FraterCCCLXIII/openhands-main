@@ -105,14 +105,14 @@ describe("listOAuthProviderCatalog", () => {
 
     const ordinal = providers.find((provider) => provider.slug === "ordinal");
     expect(ordinal).toMatchObject({
-      authStrategy: "api_key",
+      authStrategy: "bearer",
       availability: "manual_token",
       builtInSlug: "ordinal",
     });
     expect(ordinal?.registrationDefaults).toMatchObject({
       provider: "mcp",
-      authModes: ["api_key"],
-      authStrategy: "api_key",
+      authModes: ["bearer"],
+      authStrategy: "bearer",
       serverUrl: "https://app.tryordinal.com/api/mcp",
       credentialLabel: "Ordinal API key",
     });

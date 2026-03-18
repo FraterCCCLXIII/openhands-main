@@ -557,12 +557,12 @@ const registrationDefaults: Record<string, OAuthProviderRegistrationDefaults> = 
   },
   ordinal: {
     provider: "mcp",
-    authModes: ["api_key"],
-    authStrategy: "api_key",
+    authModes: ["bearer"],
+    authStrategy: "bearer",
     credentialLabel: "Ordinal API key",
     credentialPlaceholder: "Paste your Ordinal API key",
     credentialHelp:
-      "API key from your Ordinal workspace settings, sent as a Bearer token.",
+      "API key from your Ordinal workspace settings, sent as a Bearer token in the Authorization header.",
   },
 };
 

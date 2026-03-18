@@ -541,7 +541,7 @@ const oauthProviderCatalog = [
     name: "Ordinal",
     description: "Social media posts, profiles, analytics, labels, approvals, and engagements.",
     categories: ["Social media", "Marketing"],
-    authStrategy: "api_key",
+    authStrategy: "bearer",
     availability: "manual_token",
     builtInSlug: "ordinal",
     appUrl: "https://app.tryordinal.com",
