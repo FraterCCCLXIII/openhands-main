@@ -281,6 +281,30 @@ const discoverDefaultBuiltInConnectorIntegration = async (
     return null;
   }
 
+  if (connector.provider === "mcp" && connector.serverUrl) {
+    const credentials = resolveManagedConnectorCredentials(connector, input);
+    const result = await discoverMcpIntegration({
+      ...input,
+      kind: "mcp",
+      config: { serverUrl: connector.serverUrl },
+      credentials,
+    });
+
+    return {
+      ...result,
+      authStrategy: connector.authStrategy,
+      config: compactRecord({
+        builtInSlug: connector.slug,
+        serverUrl: connector.serverUrl,
+      }),
+      credentials: result.credentials,
+    };
+  }
+
+  if (!connector.openApiUrl) {
+    return null;
+  }
+
   const functions = await generateManagedConnectorFunctionsFromOpenApi({
     openApiUrl: connector.openApiUrl,
     authStrategy: connector.authStrategy,

@@ -743,6 +743,60 @@ describe("IntegrationWizard", () => {
     });
   });
 
+  it("shows bearer credential input without API key header name for Ordinal", async () => {
+    fetchMock.mockImplementation(async (input: RequestInfo | URL) => {
+      const url = typeof input === "string" ? input : input.toString();
+
+      if (url === "/api/integrations/built-in-connectors") {
+        return new Response(
+          JSON.stringify([
+            {
+              slug: "ordinal",
+              name: "Ordinal",
+              description: "Social media management via Ordinal MCP",
+              toolCount: 0,
+              categories: ["Social media", "Analytics"],
+              authModes: ["bearer"],
+              authStrategy: "bearer",
+              oauthConfigured: true,
+              credentialLabel: "Ordinal API key",
+              credentialPlaceholder: "Paste your Ordinal API key",
+              credentialHelp:
+                "Personal or workspace Ordinal API key from https://app.tryordinal.com.",
+            },
+          ]),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      }
+
+      if (url === "/api/oauth/connections") {
+        return new Response(JSON.stringify([]), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+
+      throw new Error(`Unexpected fetch: ${url}`);
+    });
+
+    useSearchParamsMock.mockReturnValue(new URLSearchParams("builtIn=ordinal"));
+
+    await act(async () => {
+      root.render(
+        <QueryClientProvider client={queryClient}>
+          <IntegrationWizard onCreated={async () => {}} onStatus={() => {}} />
+        </QueryClientProvider>,
+      );
+    });
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    });
+
+    expect(container.textContent).toContain("Ordinal API key");
+    expect(container.textContent).not.toContain("API key header name");
+  });
+
   it("shows inline transport diagnostics when function discovery fails", async () => {
     fetchMock.mockImplementation(async (input: RequestInfo | URL) => {
       const url = typeof input === "string" ? input : input.toString();

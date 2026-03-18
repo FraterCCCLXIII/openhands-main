@@ -6,6 +6,7 @@ import type {
   AuthStrategy,
   BuiltInConnectorOption,
   FunctionSpec,
+  ManagedConnectorDefinition,
   ManagedConnectorFunctionDefinition,
   ManagedConnectorRecord,
   OAuthProviderCatalogOption,
@@ -27,8 +28,10 @@ export interface DefaultBuiltInConnectorDefinition
   authModes: AuthStrategy[];
   credentialPlaceholder: string;
   credentialHelp: string;
-  apiBaseUrl: string;
-  openApiUrl: string;
+  provider?: "http" | "mcp";
+  apiBaseUrl?: string;
+  openApiUrl?: string;
+  serverUrl?: string;
 }
 
 const isManagedConnectorOAuthConfigured = (connector: ManagedConnectorRecord) =>
@@ -76,15 +79,19 @@ const toBuiltInConnectorOption = (
 
 const isDefaultBuiltInProvider = (provider: OAuthProviderCatalogOption) => {
   const defaults = provider.registrationDefaults;
+  if (!defaults?.authStrategy || defaults.authStrategy === "oauth2") {
+    return false;
+  }
 
-  return Boolean(
-    defaults &&
-      defaults.provider === "http" &&
-      defaults.authStrategy &&
-      defaults.authStrategy !== "oauth2" &&
-      defaults.apiBaseUrl &&
-      defaults.openApiUrl,
-  );
+  if (defaults.provider === "http" && defaults.apiBaseUrl && defaults.openApiUrl) {
+    return true;
+  }
+
+  if (defaults.provider === "mcp" && defaults.serverUrl) {
+    return true;
+  }
+
+  return false;
 };
 
 const toDefaultBuiltInConnector = (
@@ -95,7 +102,7 @@ const toDefaultBuiltInConnector = (
   }
 
   const defaults = provider.registrationDefaults;
-  if (!defaults?.authStrategy || !defaults.apiBaseUrl || !defaults.openApiUrl) {
+  if (!defaults?.authStrategy) {
     return null;
   }
 
@@ -116,8 +123,10 @@ const toDefaultBuiltInConnector = (
       defaults.credentialPlaceholder ?? `Paste your ${provider.name} credential`,
     credentialHelp:
       defaults.credentialHelp ?? `Credential required by ${provider.name}.`,
+    provider: defaults.provider,
     apiBaseUrl: defaults.apiBaseUrl,
     openApiUrl: defaults.openApiUrl,
+    serverUrl: defaults.serverUrl,
     apiKeyHeaderName: defaults.apiKeyHeaderName?.trim() || undefined,
   };
 };
@@ -293,6 +302,47 @@ export const listAvailableBuiltInConnectors = async (
       (connector) => !registeredSlugs.has(connector.slug),
     ),
   ].sort((a, b) => a.name.localeCompare(b.name));
+};
+
+const defaultBuiltInToManagedDefinition = (
+  connector: DefaultBuiltInConnectorDefinition,
+): ManagedConnectorDefinition => ({
+  slug: connector.slug,
+  name: connector.name,
+  description: connector.description,
+  appUrl: connector.appUrl,
+  categories: connector.categories,
+  authModes: connector.authModes,
+  authStrategy: connector.authStrategy,
+  provider: connector.provider,
+  oauthConfigured: true,
+  credentialLabel: connector.credentialLabel,
+  credentialPlaceholder: connector.credentialPlaceholder,
+  credentialHelp: connector.credentialHelp,
+  apiBaseUrl: connector.apiBaseUrl,
+  serverUrl: connector.serverUrl,
+  openApiUrl: connector.openApiUrl,
+  functions: [],
+  enabled: true,
+  createdAt: "",
+  updatedAt: "",
+});
+
+export const listAllManagedConnectorDefinitions = async (
+  repository: ContextRepository,
+): Promise<ManagedConnectorDefinition[]> => {
+  const dbConnectors = await repository.listManagedConnectors();
+  const registeredSlugs = new Set(dbConnectors.map((c) => c.slug));
+
+  const catalogDefaults = listOAuthProviderCatalog()
+    .map(toDefaultBuiltInConnector)
+    .filter((c): c is DefaultBuiltInConnectorDefinition => c != null)
+    .filter((c) => !registeredSlugs.has(c.slug))
+    .map(defaultBuiltInToManagedDefinition);
+
+  return [...dbConnectors.map(sanitizeManagedConnector), ...catalogDefaults].sort(
+    (a, b) => a.name.localeCompare(b.name),
+  );
 };
 
 export const getManagedConnectorRecord = async (

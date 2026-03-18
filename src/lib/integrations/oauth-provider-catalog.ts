@@ -536,6 +536,19 @@ const oauthProviderCatalog = [
     notes:
       "Official API-key connector backed by ElevenLabs' published OpenAPI spec.",
   }),
+  provider(52, {
+    slug: "ordinal",
+    name: "Ordinal",
+    description: "Social media posts, profiles, analytics, labels, approvals, and engagements.",
+    categories: ["Social media", "Marketing"],
+    authStrategy: "bearer",
+    availability: "manual_token",
+    builtInSlug: "ordinal",
+    appUrl: "https://app.tryordinal.com",
+    docsUrl: "https://docs.tryordinal.com/api/mcp",
+    notes:
+      "Official MCP server backed by Ordinal's API with API-key (Bearer) auth.",
+  }),
 ] satisfies OAuthProviderCatalogOption[];
 
 export const listOAuthProviderCatalog = () => oauthProviderCatalog;

@@ -74,8 +74,9 @@ describe("AddConnectorPage", () => {
     const html = renderToStaticMarkup(await AddConnectorPage());
 
     expect(html).toContain("Registered managed connectors");
-    expect(html).toContain("Edit stale service-level connector settings in place or delete a connector before re-registering it with a new provider type.");
-    expect(html).toContain("No managed connectors are registered yet.");
+    expect(html).toContain("ElevenLabs");
+    expect(html).toContain("Ordinal");
+    expect(html).not.toContain("No managed connectors are registered yet.");
     expect(html).not.toContain("Legacy shared OAuth credential cleanup");
     expect(html).not.toContain("Safe summaries only");
   });

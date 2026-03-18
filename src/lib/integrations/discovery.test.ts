@@ -128,6 +128,19 @@ describe("listBuiltInConnectors", () => {
     );
   });
 
+  it("includes default MCP bearer connectors that need no admin registration", async () => {
+    const connectors = await listBuiltInConnectors(new MemoryRepository());
+
+    expect(connectors).toContainEqual(
+      expect.objectContaining({
+        slug: "ordinal",
+        name: "Ordinal",
+        authStrategy: "bearer",
+        oauthConfigured: true,
+        credentialLabel: "Ordinal API key",
+      }),
+    );
+  });
 
   it("omits disabled managed connectors and sorts the catalog by name", async () => {
     const repository = new MemoryRepository();
@@ -191,6 +204,7 @@ describe("listBuiltInConnectors", () => {
     expect(connectors.map((connector) => connector.name)).toEqual([
       "Alpha CRM",
       "ElevenLabs",
+      "Ordinal",
       "Zeta Desk",
     ]);
   });
@@ -623,6 +637,38 @@ describe("discoverIntegration", () => {
           },
         },
       },
+    });
+  });
+
+  it("discovers default MCP built-in connectors with bearer auth", async () => {
+    mcpListToolsMock.mockResolvedValue({
+      tools: [
+        { name: "create_post", description: "Create a social media post" },
+        { name: "list_profiles", description: "List connected social profiles" },
+      ],
+    });
+
+    const result = await discoverIntegration(
+      {
+        key: "ordinal",
+        kind: "built_in",
+        config: { builtInSlug: "ordinal" },
+        credentials: { accessToken: "ord_test_key_123" },
+      },
+    );
+
+    expect(result).toMatchObject({
+      provider: "mcp",
+      authStrategy: "bearer",
+      config: {
+        builtInSlug: "ordinal",
+        serverUrl: "https://app.tryordinal.com/api/mcp",
+      },
+    });
+    expect(Object.keys(result.functions)).toEqual(["create_post", "list_profiles"]);
+    expect(mcpState.url).toBe("https://app.tryordinal.com/api/mcp");
+    expect(mcpState.headers).toEqual({
+      Authorization: "Bearer ord_test_key_123",
     });
   });
 
