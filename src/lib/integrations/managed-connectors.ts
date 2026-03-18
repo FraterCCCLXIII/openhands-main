@@ -27,8 +27,10 @@ export interface DefaultBuiltInConnectorDefinition
   authModes: AuthStrategy[];
   credentialPlaceholder: string;
   credentialHelp: string;
-  apiBaseUrl: string;
-  openApiUrl: string;
+  provider?: "http" | "mcp";
+  apiBaseUrl?: string;
+  openApiUrl?: string;
+  serverUrl?: string;
 }
 
 const isManagedConnectorOAuthConfigured = (connector: ManagedConnectorRecord) =>
@@ -76,15 +78,19 @@ const toBuiltInConnectorOption = (
 
 const isDefaultBuiltInProvider = (provider: OAuthProviderCatalogOption) => {
   const defaults = provider.registrationDefaults;
+  if (!defaults?.authStrategy || defaults.authStrategy === "oauth2") {
+    return false;
+  }
 
-  return Boolean(
-    defaults &&
-      defaults.provider === "http" &&
-      defaults.authStrategy &&
-      defaults.authStrategy !== "oauth2" &&
-      defaults.apiBaseUrl &&
-      defaults.openApiUrl,
-  );
+  if (defaults.provider === "http" && defaults.apiBaseUrl && defaults.openApiUrl) {
+    return true;
+  }
+
+  if (defaults.provider === "mcp" && defaults.serverUrl) {
+    return true;
+  }
+
+  return false;
 };
 
 const toDefaultBuiltInConnector = (
@@ -95,7 +101,7 @@ const toDefaultBuiltInConnector = (
   }
 
   const defaults = provider.registrationDefaults;
-  if (!defaults?.authStrategy || !defaults.apiBaseUrl || !defaults.openApiUrl) {
+  if (!defaults?.authStrategy) {
     return null;
   }
 
@@ -116,8 +122,10 @@ const toDefaultBuiltInConnector = (
       defaults.credentialPlaceholder ?? `Paste your ${provider.name} credential`,
     credentialHelp:
       defaults.credentialHelp ?? `Credential required by ${provider.name}.`,
+    provider: defaults.provider,
     apiBaseUrl: defaults.apiBaseUrl,
     openApiUrl: defaults.openApiUrl,
+    serverUrl: defaults.serverUrl,
     apiKeyHeaderName: defaults.apiKeyHeaderName?.trim() || undefined,
   };
 };
