@@ -6,8 +6,8 @@ describe("listOAuthProviderCatalog", () => {
   it("returns the curated provider catalog with unique slugs and auth strategies", () => {
     const providers = listOAuthProviderCatalog();
 
-    expect(providers).toHaveLength(51);
-    expect(new Set(providers.map((provider) => provider.slug)).size).toBe(51);
+    expect(providers).toHaveLength(52);
+    expect(new Set(providers.map((provider) => provider.slug)).size).toBe(52);
     expect(providers.every((provider) => provider.popularityRank >= 1)).toBe(true);
     expect(providers.some((provider) => provider.authStrategy === "api_key")).toBe(true);
     expect(providers.some((provider) => provider.authStrategy === "oauth2")).toBe(true);
@@ -102,5 +102,19 @@ describe("listOAuthProviderCatalog", () => {
       credentialLabel: "ElevenLabs API key",
     });
     expect(googleCalendar?.registrationDefaults?.serverUrl).toBeUndefined();
+
+    const ordinal = providers.find((provider) => provider.slug === "ordinal");
+    expect(ordinal).toMatchObject({
+      authStrategy: "api_key",
+      availability: "manual_token",
+      builtInSlug: "ordinal",
+    });
+    expect(ordinal?.registrationDefaults).toMatchObject({
+      provider: "mcp",
+      authModes: ["api_key"],
+      authStrategy: "api_key",
+      serverUrl: "https://app.tryordinal.com/api/mcp",
+      credentialLabel: "Ordinal API key",
+    });
   });
 });

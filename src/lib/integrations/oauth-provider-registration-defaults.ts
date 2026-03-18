@@ -61,6 +61,7 @@ const atlassianPreset = (
 const officialManagedMcpServerUrls: Record<string, string> = {
   github: "https://api.githubcopilot.com/mcp/",
   slack: "https://mcp.slack.com/mcp",
+  ordinal: "https://app.tryordinal.com/api/mcp",
 };
 
 const registrationDefaults: Record<string, OAuthProviderRegistrationDefaults> = {
@@ -553,6 +554,15 @@ const registrationDefaults: Record<string, OAuthProviderRegistrationDefaults> = 
     functionDescription: "Fetch the authenticated Bitbucket user profile.",
     requestMethod: "GET",
     requestPath: "/user",
+  },
+  ordinal: {
+    provider: "mcp",
+    authModes: ["api_key"],
+    authStrategy: "api_key",
+    credentialLabel: "Ordinal API key",
+    credentialPlaceholder: "Paste your Ordinal API key",
+    credentialHelp:
+      "API key from your Ordinal workspace settings, sent as a Bearer token.",
   },
 };
 
