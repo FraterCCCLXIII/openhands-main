@@ -85,7 +85,7 @@ vi.mock("@modelcontextprotocol/sdk/client/sse.js", () => ({
 }));
 
 import { ContextLayerError } from "@/src/lib/core/errors";
-import { runMcpClientOperation } from "@/src/lib/mcp-client";
+import { buildMcpHeaders, runMcpClientOperation } from "@/src/lib/mcp-client";
 
 beforeEach(() => {
   connectMock.mockReset();
@@ -101,6 +101,24 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.useRealTimers();
+});
+
+describe("buildMcpHeaders", () => {
+  it("sends bearer credentials as Authorization: Bearer header", () => {
+    expect(buildMcpHeaders("bearer", { accessToken: "ord_test_key" })).toEqual({
+      Authorization: "Bearer ord_test_key",
+    });
+  });
+
+  it("sends api_key credentials in a custom header without Bearer prefix", () => {
+    expect(
+      buildMcpHeaders("api_key", { headerName: "X-API-Key", secret: "sk_123" }),
+    ).toEqual({ "X-API-Key": "sk_123" });
+  });
+
+  it("returns empty headers when no token is provided for bearer", () => {
+    expect(buildMcpHeaders("bearer", {})).toEqual({});
+  });
 });
 
 describe("runMcpClientOperation", () => {
