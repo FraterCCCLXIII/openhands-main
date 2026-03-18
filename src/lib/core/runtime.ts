@@ -8,7 +8,7 @@ import { ContextLayerService } from "@/src/lib/core/service";
 import { MemoryRepository } from "@/src/lib/db/memory-repository";
 import { PostgresRepository } from "@/src/lib/db/postgres-repository";
 import { NotificationPublisher } from "@/src/lib/notifications/publisher";
-import { assertContextLayerStorageAvailable, hasPersistentContextLayerStorage } from "@/src/lib/persistence";
+import { assertContextLayerStorageAvailable, canUseEphemeralContextLayerStorage, hasPersistentContextLayerStorage } from "@/src/lib/persistence";
 
 const globalForContextLayer = globalThis as typeof globalThis & {
   contextLayerRepository?: ContextRepository;
@@ -19,13 +19,16 @@ export const getContextLayerRepository = () => {
   if (!globalForContextLayer.contextLayerRepository) {
     if (hasPersistentContextLayerStorage()) {
       globalForContextLayer.contextLayerRepository = new PostgresRepository();
+    } else if (canUseEphemeralContextLayerStorage()) {
+      // MemoryRepository is only used in unit tests (NODE_ENV=test).
+      // Production deployments without POSTGRES_URL will throw below.
+      globalForContextLayer.contextLayerRepository = new MemoryRepository();
     } else {
       assertContextLayerStorageAvailable();
-      globalForContextLayer.contextLayerRepository = new MemoryRepository();
     }
   }
 
-  return globalForContextLayer.contextLayerRepository;
+  return globalForContextLayer.contextLayerRepository!;
 };
 
 export const getContextLayerService = () => {
