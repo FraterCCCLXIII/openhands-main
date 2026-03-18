@@ -6,6 +6,7 @@ import type {
   AuthStrategy,
   BuiltInConnectorOption,
   FunctionSpec,
+  ManagedConnectorDefinition,
   ManagedConnectorFunctionDefinition,
   ManagedConnectorRecord,
   OAuthProviderCatalogOption,
@@ -301,6 +302,47 @@ export const listAvailableBuiltInConnectors = async (
       (connector) => !registeredSlugs.has(connector.slug),
     ),
   ].sort((a, b) => a.name.localeCompare(b.name));
+};
+
+const defaultBuiltInToManagedDefinition = (
+  connector: DefaultBuiltInConnectorDefinition,
+): ManagedConnectorDefinition => ({
+  slug: connector.slug,
+  name: connector.name,
+  description: connector.description,
+  appUrl: connector.appUrl,
+  categories: connector.categories,
+  authModes: connector.authModes,
+  authStrategy: connector.authStrategy,
+  provider: connector.provider,
+  oauthConfigured: true,
+  credentialLabel: connector.credentialLabel,
+  credentialPlaceholder: connector.credentialPlaceholder,
+  credentialHelp: connector.credentialHelp,
+  apiBaseUrl: connector.apiBaseUrl,
+  serverUrl: connector.serverUrl,
+  openApiUrl: connector.openApiUrl,
+  functions: [],
+  enabled: true,
+  createdAt: "",
+  updatedAt: "",
+});
+
+export const listAllManagedConnectorDefinitions = async (
+  repository: ContextRepository,
+): Promise<ManagedConnectorDefinition[]> => {
+  const dbConnectors = await repository.listManagedConnectors();
+  const registeredSlugs = new Set(dbConnectors.map((c) => c.slug));
+
+  const catalogDefaults = listOAuthProviderCatalog()
+    .map(toDefaultBuiltInConnector)
+    .filter((c): c is DefaultBuiltInConnectorDefinition => c != null)
+    .filter((c) => !registeredSlugs.has(c.slug))
+    .map(defaultBuiltInToManagedDefinition);
+
+  return [...dbConnectors.map(sanitizeManagedConnector), ...catalogDefaults].sort(
+    (a, b) => a.name.localeCompare(b.name),
+  );
 };
 
 export const getManagedConnectorRecord = async (

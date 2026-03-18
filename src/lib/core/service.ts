@@ -5,7 +5,10 @@ import { addMinutes, nowIso } from "@/src/lib/core/date";
 import { ContextLayerError } from "@/src/lib/core/errors";
 import type { ContextRepository } from "@/src/lib/core/repository";
 import { decryptCredentials, encryptCredentials } from "@/src/lib/credential-crypto";
-import { sanitizeManagedConnector } from "@/src/lib/integrations/managed-connectors";
+import {
+  listAllManagedConnectorDefinitions,
+  sanitizeManagedConnector,
+} from "@/src/lib/integrations/managed-connectors";
 import { generateManagedConnectorFunctionsFromOpenApi } from "@/src/lib/managed-connectors/openapi";
 import type { NotificationPublisher } from "@/src/lib/notifications/publisher";
 import { resolveOAuthProvider } from "@/src/lib/oauth/provider-resolver";
@@ -130,8 +133,7 @@ export class ContextLayerService {
 
   async listManagedConnectors() {
     await this.initialize();
-    const connectors = await this.repository.listManagedConnectors();
-    return connectors.map(sanitizeManagedConnector);
+    return listAllManagedConnectorDefinitions(this.repository);
   }
 
   async upsertManagedConnector(
