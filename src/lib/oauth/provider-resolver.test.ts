@@ -1,16 +1,29 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
+import type { ContextRepository } from "@/src/lib/core/repository";
 import { encryptCredentials } from "@/src/lib/credential-crypto";
-import { MemoryRepository } from "@/src/lib/db/memory-repository";
+import { createTestRepository, getActiveSql } from "@/src/lib/db/pglite-test-utils";
 import { resolveOAuthProvider } from "@/src/lib/oauth/provider-resolver";
 
-afterEach(() => {
+vi.mock("@neondatabase/serverless", () => ({ neon: () => getActiveSql() }));
+
+let testRepo: ContextRepository;
+let testCleanup: () => Promise<void>;
+
+beforeAll(() => { vi.stubEnv("POSTGRES_URL", "pglite://provider-resolver-test"); });
+beforeEach(async () => {
+  const ctx = await createTestRepository();
+  testRepo = ctx.repository;
+  testCleanup = ctx.cleanup;
+});
+afterEach(async () => {
+  await testCleanup();
   vi.unstubAllGlobals();
 });
 
 describe("resolveOAuthProvider", () => {
   it("builds a generic OAuth provider from a managed connector record", async () => {
-    const repository = new MemoryRepository();
+    const repository = testRepo;
     await repository.upsertManagedConnector({
       slug: "acme-crm",
       name: "Acme CRM",
@@ -107,7 +120,7 @@ describe("resolveOAuthProvider", () => {
   });
 
   it("returns null when no enabled managed OAuth connector exists for the provider", async () => {
-    const repository = new MemoryRepository();
+    const repository = testRepo;
 
     await repository.upsertManagedConnector({
       slug: "notion",

@@ -1,8 +1,18 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+
+vi.mock("@neondatabase/serverless", () => ({ neon: () => getActiveSql() }));
 
 import { GET as getNotifications } from "@/app/api/notifications/route";
+import { createTestRepository, getActiveSql } from "@/src/lib/db/pglite-test-utils";
 
 import { POST } from "./route";
+
+let testCleanup: () => Promise<void>;
+beforeAll(() => { vi.stubEnv("POSTGRES_URL", "pglite://add-connector-test"); });
+beforeEach(async () => {
+  const ctx = await createTestRepository();
+  testCleanup = ctx.cleanup;
+});
 
 const resetRuntimeService = () => {
   const runtime = globalThis as typeof globalThis & {
@@ -13,9 +23,9 @@ const resetRuntimeService = () => {
   delete runtime.contextLayerService;
 };
 
-afterEach(() => {
-  vi.unstubAllEnvs();
+afterEach(async () => {
   resetRuntimeService();
+  await testCleanup();
 });
 
 describe("POST /api/add-connector", () => {

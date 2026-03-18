@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 const { authMock } = vi.hoisted(() => ({
   authMock: vi.fn(async () => ({ user: { email: "admin@example.com" } })),
@@ -8,9 +8,19 @@ vi.mock("@/src/lib/auth", () => ({
   auth: authMock,
 }));
 
+vi.mock("@neondatabase/serverless", () => ({ neon: () => getActiveSql() }));
+
 import { POST } from "@/app/api/managed-connectors/route";
+import { createTestRepository, getActiveSql } from "@/src/lib/db/pglite-test-utils";
 
 import { DELETE } from "./route";
+
+let testCleanup: () => Promise<void>;
+beforeAll(() => { vi.stubEnv("POSTGRES_URL", "pglite://managed-slug-test"); });
+beforeEach(async () => {
+  const ctx = await createTestRepository();
+  testCleanup = ctx.cleanup;
+});
 
 const resetRuntime = () => {
   const runtime = globalThis as typeof globalThis & {
@@ -49,11 +59,11 @@ const createManagedConnectorRequest = () =>
     }),
   });
 
-afterEach(() => {
-  vi.unstubAllEnvs();
+afterEach(async () => {
   authMock.mockReset();
   authMock.mockResolvedValue({ user: { email: "admin@example.com" } });
   resetRuntime();
+  await testCleanup();
 });
 
 describe("DELETE /api/managed-connectors/[slug]", () => {

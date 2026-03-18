@@ -1,33 +1,47 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { HttpAdapter } from "@/src/lib/adapters/http-adapter";
 import {
   AdapterRegistry,
   type IntegrationAdapter,
 } from "@/src/lib/core/adapter-registry";
-import { MemoryRepository } from "@/src/lib/db/memory-repository";
+import type { ContextRepository } from "@/src/lib/core/repository";
+import { createTestRepository, getActiveSql } from "@/src/lib/db/pglite-test-utils";
 import { NotificationPublisher } from "@/src/lib/notifications/publisher";
 import { ContextLayerService } from "@/src/lib/core/service";
 import type { IntegrationSpec } from "@/src/types/context-layer";
 
-afterEach(() => {
+vi.mock("@neondatabase/serverless", () => ({ neon: () => getActiveSql() }));
+
+let testRepo: ContextRepository;
+let testCleanup: () => Promise<void>;
+
+beforeAll(() => { vi.stubEnv("POSTGRES_URL", "pglite://service-test"); });
+beforeEach(async () => {
+  const ctx = await createTestRepository();
+  testRepo = ctx.repository;
+  testCleanup = ctx.cleanup;
+});
+afterEach(async () => {
+  await testCleanup();
   vi.unstubAllGlobals();
 });
 
 
-const createService = () => {
+const createService = (repository?: ContextRepository) => {
+  const repo = repository ?? testRepo;
   const mockAdapter: IntegrationAdapter = {
     invoke: async ({ payload }) => ({ ok: true, payload }),
   };
 
   const service = new ContextLayerService(
-    new MemoryRepository(),
+    repo,
     new AdapterRegistry({
       composio: mockAdapter,
       mcp: mockAdapter,
       mock: mockAdapter,
     }),
-    new NotificationPublisher(new MemoryRepository()),
+    new NotificationPublisher(repo),
   );
 
   return service;
@@ -178,7 +192,7 @@ describe("ContextLayerService", () => {
   });
 
   it("requires temporary approval for case-by-case functions", async () => {
-    const repository = new MemoryRepository();
+    const repository = testRepo;
     const service = new ContextLayerService(
       repository,
       new AdapterRegistry({
@@ -245,7 +259,7 @@ describe("ContextLayerService", () => {
   });
 
   it("creates notifications for multiple channels when access is requested", async () => {
-    const repository = new MemoryRepository();
+    const repository = testRepo;
     const service = new ContextLayerService(
       repository,
       new AdapterRegistry({ mock: { invoke: async () => ({}) } }),
@@ -281,7 +295,7 @@ describe("ContextLayerService", () => {
   });
 
   it("grants temporary access until expiry for case-by-case functions", async () => {
-    const repository = new MemoryRepository();
+    const repository = testRepo;
     const service = new ContextLayerService(
       repository,
       new AdapterRegistry({
@@ -393,7 +407,7 @@ describe("ContextLayerService", () => {
 
 
   it("requires OAuth client credentials when first registering an OAuth managed connector", async () => {
-    const repository = new MemoryRepository();
+    const repository = testRepo;
     const service = new ContextLayerService(
       repository,
       new AdapterRegistry({ mock: { invoke: async () => ({}) } }),
@@ -427,7 +441,7 @@ describe("ContextLayerService", () => {
   });
 
   it("generates managed HTTP connector functions from an OpenAPI schema during registration", async () => {
-    const repository = new MemoryRepository();
+    const repository = testRepo;
     const service = new ContextLayerService(
       repository,
       new AdapterRegistry({ mock: { invoke: async () => ({}) } }),
@@ -529,7 +543,7 @@ describe("ContextLayerService", () => {
   });
 
   it("deletes an existing managed connector", async () => {
-    const repository = new MemoryRepository();
+    const repository = testRepo;
     const service = new ContextLayerService(
       repository,
       new AdapterRegistry({ mock: { invoke: async () => ({}) } }),
@@ -570,7 +584,7 @@ describe("ContextLayerService", () => {
 
 
   it("injects saved per-user OAuth credentials during invocation", async () => {
-    const repository = new MemoryRepository();
+    const repository = testRepo;
     const mcpInvoke = vi.fn(async ({ integration }) => integration.credentials);
     const service = new ContextLayerService(
       repository,
@@ -649,7 +663,7 @@ describe("ContextLayerService", () => {
   });
 
   it("invokes managed HTTP connectors with stored OAuth credentials", async () => {
-    const repository = new MemoryRepository();
+    const repository = testRepo;
     const service = new ContextLayerService(
       repository,
       new AdapterRegistry({
@@ -765,7 +779,7 @@ describe("ContextLayerService", () => {
   });
 
   it("requires an explicit owner install before owner mutations", async () => {
-    const repository = new MemoryRepository();
+    const repository = testRepo;
     const service = new ContextLayerService(
       repository,
       new AdapterRegistry({ mock: { invoke: async () => ({}) } }),
@@ -781,7 +795,7 @@ describe("ContextLayerService", () => {
   });
 
   it("requires a personal OAuth connection before invoking an installed OAuth integration", async () => {
-    const repository = new MemoryRepository();
+    const repository = testRepo;
     const mcpInvoke = vi.fn(async ({ integration }) => integration.credentials);
     const service = new ContextLayerService(
       repository,
