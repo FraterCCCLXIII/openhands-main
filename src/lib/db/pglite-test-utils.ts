@@ -1,12 +1,18 @@
 /**
- * PGlite-backed neon-compatible SQL wrapper for e2e tests.
+ * PGlite-backed neon-compatible SQL wrapper for tests.
  *
  * Creates a tagged-template `sql` function that behaves like the one returned
  * by `neon()` from `@neondatabase/serverless`, but executes against an
  * in-process PGlite (WASM Postgres) instance.
+ *
+ * Also exports `createTestRepository()` — the standard way to get a real
+ * `PostgresRepository` backed by an ephemeral in-process Postgres for any
+ * test that needs one.
  */
 
 import { PGlite } from "@electric-sql/pglite";
+
+import type { ContextRepository } from "@/src/lib/core/repository";
 
 export interface PgliteTestContext {
   /** PGlite instance – direct access when needed. */
@@ -110,5 +116,64 @@ export const createPgliteTestContext = async (): Promise<PgliteTestContext> => {
     pglite,
     sql,
     close: () => pglite.close(),
+  };
+};
+
+// ---------------------------------------------------------------------------
+// Shared test-repository factory
+// ---------------------------------------------------------------------------
+
+/** Active PGlite context for the current test – swapped per beforeEach. */
+let activeCtx: PgliteTestContext | null = null;
+
+/**
+ * Return the active PGlite sql function.  Called by the vi.mock of
+ * `@neondatabase/serverless` that each consuming test file installs.
+ */
+export const getActiveSql = () => {
+  if (!activeCtx) {
+    throw new Error("No active PGlite context – call createTestRepository() in beforeEach first.");
+  }
+  return activeCtx.sql;
+};
+
+/**
+ * Create a fresh PGlite-backed `PostgresRepository` for use in a single test.
+ *
+ * Call this in `beforeEach`.  The returned `cleanup` function should be called
+ * in `afterEach` to close the PGlite instance.
+ *
+ * **Prerequisite**: the test file must mock `@neondatabase/serverless` so that
+ * `neon()` delegates to `getActiveSql()`:
+ *
+ * ```ts
+ * import { getActiveSql } from "@/src/lib/db/pglite-test-utils";
+ * vi.mock("@neondatabase/serverless", () => ({ neon: () => getActiveSql() }));
+ * ```
+ */
+export const createTestRepository = async (): Promise<{
+  repository: ContextRepository;
+  cleanup: () => Promise<void>;
+}> => {
+  // Close any leftover context (safety net).
+  if (activeCtx) {
+    await activeCtx.close();
+  }
+
+  activeCtx = await createPgliteTestContext();
+
+  // Lazy-import to avoid circular deps and to pick up the vi.mock override.
+  const { PostgresRepository } = await import("./postgres-repository");
+  const repository = new PostgresRepository();
+  await repository.ensureSchema();
+
+  return {
+    repository,
+    cleanup: async () => {
+      if (activeCtx) {
+        await activeCtx.close();
+        activeCtx = null;
+      }
+    },
   };
 };

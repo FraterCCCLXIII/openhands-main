@@ -164,7 +164,7 @@ export class PostgresRepository implements ContextRepository {
           credential_label TEXT NOT NULL,
           credential_placeholder TEXT NOT NULL,
           credential_help TEXT NOT NULL,
-          api_base_url TEXT NOT NULL,
+          api_base_url TEXT NOT NULL DEFAULT '',
           server_url TEXT,
           open_api_url TEXT,
           oauth_config JSONB,
@@ -568,7 +568,7 @@ export class PostgresRepository implements ContextRepository {
       ) VALUES (
         ${record.slug}, ${record.name}, ${record.description}, ${record.logoUrl ?? null}, ${record.appUrl ?? null}, ${record.docsUrl ?? null}, ${JSON.stringify(record.categories)},
         ${JSON.stringify(record.authModes)}, ${record.authStrategy}, ${record.provider ?? null}, ${record.credentialLabel}, ${record.credentialPlaceholder},
-        ${record.credentialHelp}, ${record.apiBaseUrl}, ${record.serverUrl ?? null}, ${record.openApiUrl ?? null}, ${record.oauthConfig ? JSON.stringify(record.oauthConfig) : null},
+        ${record.credentialHelp}, ${record.apiBaseUrl ?? ""}, ${record.serverUrl ?? null}, ${record.openApiUrl ?? null}, ${record.oauthConfig ? JSON.stringify(record.oauthConfig) : null},
         ${record.encryptedOAuthClient ?? null}, ${JSON.stringify(record.functions)}, ${record.enabled}, ${record.createdAt}, ${record.updatedAt}
       )
       ON CONFLICT (slug) DO UPDATE SET

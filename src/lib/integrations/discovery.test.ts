@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 const { mcpListToolsMock, mcpState } = vi.hoisted(() => ({
   mcpListToolsMock: vi.fn(
@@ -34,14 +34,27 @@ vi.mock("@modelcontextprotocol/sdk/client/streamableHttp.js", () => ({
   },
 }));
 
+vi.mock("@neondatabase/serverless", () => ({ neon: () => getActiveSql() }));
+
+import type { ContextRepository } from "@/src/lib/core/repository";
 import { encryptCredentials } from "@/src/lib/credential-crypto";
-import { MemoryRepository } from "@/src/lib/db/memory-repository";
+import { createTestRepository, getActiveSql } from "@/src/lib/db/pglite-test-utils";
 import {
   discoverIntegration,
   inferMcpAuthStrategy,
   listBuiltInConnectors,
   normalizeComposioAuthModes,
 } from "@/src/lib/integrations/discovery";
+
+let testRepo: ContextRepository;
+let testCleanup: () => Promise<void>;
+
+beforeAll(() => { vi.stubEnv("POSTGRES_URL", "pglite://discovery-test"); });
+beforeEach(async () => {
+  const ctx = await createTestRepository();
+  testRepo = ctx.repository;
+  testCleanup = ctx.cleanup;
+});
 
 beforeEach(() => {
   mcpListToolsMock.mockReset();
@@ -50,7 +63,8 @@ beforeEach(() => {
   mcpState.headers = undefined;
 });
 
-afterEach(() => {
+afterEach(async () => {
+  await testCleanup();
   vi.unstubAllGlobals();
 });
 
@@ -72,7 +86,7 @@ describe("listBuiltInConnectors", () => {
   });
 
   it("returns enabled managed connectors when a repository is provided", async () => {
-    const repository = new MemoryRepository();
+    const repository = testRepo;
     await repository.upsertManagedConnector({
       slug: "acme-crm",
       name: "Acme CRM",
@@ -115,7 +129,7 @@ describe("listBuiltInConnectors", () => {
   });
 
   it("includes default API-key connectors that need no admin registration", async () => {
-    const connectors = await listBuiltInConnectors(new MemoryRepository());
+    const connectors = await listBuiltInConnectors(testRepo);
 
     expect(connectors).toContainEqual(
       expect.objectContaining({
@@ -143,7 +157,7 @@ describe("listBuiltInConnectors", () => {
   });
 
   it("omits disabled managed connectors and sorts the catalog by name", async () => {
-    const repository = new MemoryRepository();
+    const repository = testRepo;
     await repository.upsertManagedConnector({
       slug: "zeta",
       name: "Zeta Desk",
@@ -212,7 +226,7 @@ describe("listBuiltInConnectors", () => {
 
 describe("discoverIntegration", () => {
   it("discovers managed bearer MCP connectors and forwards the supplied token", async () => {
-    const repository = new MemoryRepository();
+    const repository = testRepo;
     await repository.upsertManagedConnector({
       slug: "github",
       name: "GitHub",
@@ -329,7 +343,7 @@ describe("discoverIntegration", () => {
           },
         },
         {
-          repository: new MemoryRepository(),
+          repository: testRepo,
         },
       ),
     ).resolves.toMatchObject({
@@ -370,7 +384,7 @@ describe("discoverIntegration", () => {
           credentials: {},
         },
         {
-          repository: new MemoryRepository(),
+          repository: testRepo,
         },
       ),
     ).rejects.toMatchObject({
@@ -379,7 +393,7 @@ describe("discoverIntegration", () => {
   });
 
   it("discovers managed OAuth MCP connectors with the user's stored connection", async () => {
-    const repository = new MemoryRepository();
+    const repository = testRepo;
     await repository.upsertManagedConnector({
       slug: "acme-crm",
       name: "Acme CRM",
@@ -472,7 +486,7 @@ describe("discoverIntegration", () => {
   });
 
   it("discovers managed HTTP connectors from their stored function templates", async () => {
-    const repository = new MemoryRepository();
+    const repository = testRepo;
     await repository.upsertManagedConnector({
       slug: "linear",
       name: "Linear",
@@ -554,7 +568,7 @@ describe("discoverIntegration", () => {
   });
 
   it("discovers managed OAuth HTTP connectors from generated OpenAPI function templates", async () => {
-    const repository = new MemoryRepository();
+    const repository = testRepo;
     await repository.upsertManagedConnector({
       slug: "notion",
       name: "Notion",

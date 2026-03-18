@@ -5,10 +5,9 @@ import { MockAdapter } from "@/src/lib/adapters/mock-adapter";
 import { AdapterRegistry } from "@/src/lib/core/adapter-registry";
 import type { ContextRepository } from "@/src/lib/core/repository";
 import { ContextLayerService } from "@/src/lib/core/service";
-import { MemoryRepository } from "@/src/lib/db/memory-repository";
 import { PostgresRepository } from "@/src/lib/db/postgres-repository";
 import { NotificationPublisher } from "@/src/lib/notifications/publisher";
-import { assertContextLayerStorageAvailable, canUseEphemeralContextLayerStorage, hasPersistentContextLayerStorage } from "@/src/lib/persistence";
+import { assertContextLayerStorageAvailable, hasPersistentContextLayerStorage } from "@/src/lib/persistence";
 
 const globalForContextLayer = globalThis as typeof globalThis & {
   contextLayerRepository?: ContextRepository;
@@ -19,11 +18,10 @@ export const getContextLayerRepository = () => {
   if (!globalForContextLayer.contextLayerRepository) {
     if (hasPersistentContextLayerStorage()) {
       globalForContextLayer.contextLayerRepository = new PostgresRepository();
-    } else if (canUseEphemeralContextLayerStorage()) {
-      // MemoryRepository is only used in unit tests (NODE_ENV=test).
-      // Production deployments without POSTGRES_URL will throw below.
-      globalForContextLayer.contextLayerRepository = new MemoryRepository();
     } else {
+      // No DB configured — hard-fail in production/development.
+      // Tests inject a PGlite-backed PostgresRepository via the neon mock
+      // and set POSTGRES_URL so this branch is never reached in CI.
       assertContextLayerStorageAvailable();
     }
   }

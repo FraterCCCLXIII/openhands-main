@@ -1,11 +1,21 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 
 import { getContextLayerService } from "@/src/lib/core/runtime";
+import { createTestRepository, getActiveSql } from "@/src/lib/db/pglite-test-utils";
 import type { IntegrationSpec } from "@/src/types/context-layer";
 
 import { DELETE, GET, POST, resetMcpSessionsForTests } from "./route";
+
+vi.mock("@neondatabase/serverless", () => ({ neon: () => getActiveSql() }));
+
+let testCleanup: () => Promise<void>;
+beforeAll(() => { vi.stubEnv("POSTGRES_URL", "pglite://mcp-route-test"); });
+beforeEach(async () => {
+  const ctx = await createTestRepository();
+  testCleanup = ctx.cleanup;
+});
 
 const resetRuntime = () => {
   const runtime = globalThis as typeof globalThis & {
@@ -142,6 +152,7 @@ const baseIntegration: IntegrationSpec = {
 afterEach(async () => {
   await resetMcpSessionsForTests();
   resetRuntime();
+  await testCleanup();
 });
 
 describe("/api/mcp", () => {

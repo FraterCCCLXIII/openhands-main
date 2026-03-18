@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 const { authMock } = vi.hoisted(() => ({
   authMock: vi.fn(async () => ({ user: { email: "user@example.com" } })),
@@ -9,10 +9,20 @@ vi.mock("@/src/lib/auth", () => ({
   isAuthDisabled: () => false,
 }));
 
+vi.mock("@neondatabase/serverless", () => ({ neon: () => getActiveSql() }));
+
 import { GET } from "./route";
 
 import { getContextLayerRepository } from "@/src/lib/core/runtime";
+import { getActiveSql, createTestRepository } from "@/src/lib/db/pglite-test-utils";
 import type { IntegrationSpec } from "@/src/types/context-layer";
+
+let testCleanup: () => Promise<void>;
+beforeAll(() => { vi.stubEnv("POSTGRES_URL", "pglite://integrations-route-test"); });
+beforeEach(async () => {
+  const ctx = await createTestRepository();
+  testCleanup = ctx.cleanup;
+});
 
 const resetRuntime = () => {
   const runtime = globalThis as typeof globalThis & {
@@ -34,11 +44,11 @@ const createIntegration = (
   ...overrides,
 });
 
-afterEach(() => {
-  vi.unstubAllEnvs();
+afterEach(async () => {
   authMock.mockReset();
   authMock.mockResolvedValue({ user: { email: "user@example.com" } });
   resetRuntime();
+  await testCleanup();
 });
 
 describe("GET /api/integrations", () => {

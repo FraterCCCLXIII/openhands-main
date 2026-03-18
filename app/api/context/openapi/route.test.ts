@@ -1,12 +1,25 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { GET } from "./route";
 
+import type { ContextRepository } from "@/src/lib/core/repository";
 import { encryptCredentials } from "@/src/lib/credential-crypto";
-import { MemoryRepository } from "@/src/lib/db/memory-repository";
+import { createTestRepository, getActiveSql } from "@/src/lib/db/pglite-test-utils";
 import type { IntegrationSpec } from "@/src/types/context-layer";
 
-const setRuntimeRepository = (repository?: MemoryRepository) => {
+vi.mock("@neondatabase/serverless", () => ({ neon: () => getActiveSql() }));
+
+let testRepo: ContextRepository;
+let testCleanup: () => Promise<void>;
+
+beforeAll(() => { vi.stubEnv("POSTGRES_URL", "pglite://openapi-test"); });
+beforeEach(async () => {
+  const ctx = await createTestRepository();
+  testRepo = ctx.repository;
+  testCleanup = ctx.cleanup;
+});
+
+const setRuntimeRepository = (repository?: ContextRepository) => {
   const runtime = globalThis as typeof globalThis & {
     contextLayerRepository?: unknown;
     contextLayerService?: unknown;
@@ -137,7 +150,7 @@ const partiallyDisabledIntegration: IntegrationSpec = {
 };
 
 const seedRepository = async () => {
-  const repository = new MemoryRepository();
+  const repository = testRepo;
   await repository.saveAgentApiKey({
     ownerId: "dev@localhost",
     apiKey: "context-key",
@@ -174,8 +187,9 @@ const seedRepository = async () => {
   setRuntimeRepository(repository);
 };
 
-afterEach(() => {
+afterEach(async () => {
   setRuntimeRepository();
+  await testCleanup();
 });
 
 describe("GET /api/context/openapi", () => {

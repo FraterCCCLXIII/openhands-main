@@ -1,5 +1,5 @@
 import { renderToStaticMarkup } from "react-dom/server";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 const { authMock } = vi.hoisted(() => ({
   authMock: vi.fn(async () => ({ user: { email: "dev@localhost" } })),
@@ -9,10 +9,20 @@ vi.mock("@/src/lib/auth", () => ({
   auth: authMock,
 }));
 
+vi.mock("@neondatabase/serverless", () => ({ neon: () => getActiveSql() }));
+
+import { createTestRepository, getActiveSql } from "@/src/lib/db/pglite-test-utils";
+
 import AddConnectorPage from "./page";
 
-afterEach(() => {
-  vi.unstubAllEnvs();
+let testCleanup: () => Promise<void>;
+beforeAll(() => { vi.stubEnv("POSTGRES_URL", "pglite://add-connector-page-test"); });
+beforeEach(async () => {
+  const ctx = await createTestRepository();
+  testCleanup = ctx.cleanup;
+});
+
+afterEach(async () => {
   authMock.mockReset();
   authMock.mockResolvedValue({ user: { email: "dev@localhost" } });
   const runtime = globalThis as typeof globalThis & {
@@ -21,6 +31,7 @@ afterEach(() => {
   };
   delete runtime.contextLayerRepository;
   delete runtime.contextLayerService;
+  await testCleanup();
 });
 
 describe("AddConnectorPage", () => {
@@ -91,6 +102,8 @@ describe("AddConnectorPage", () => {
 
   it("shows database setup instructions to admins when persistent storage is unavailable", async () => {
     vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("POSTGRES_URL", "");
+    vi.stubEnv("DATABASE_URL", "");
     vi.stubEnv("APP_ADMIN_EMAILS", "admin@example.com");
     authMock.mockResolvedValue({ user: { email: "admin@example.com" } });
 
