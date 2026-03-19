@@ -3,13 +3,19 @@ import type { OAuthProviderCatalogOption } from "@/src/types/context-layer";
 
 const provider = (
   popularityRank: number,
-  option: Omit<OAuthProviderCatalogOption, "authStrategy" | "popularityRank" | "registrationDefaults">,
-): OAuthProviderCatalogOption => ({
-  ...option,
-  authStrategy: "oauth2",
-  popularityRank,
-  registrationDefaults: getOAuthProviderRegistrationDefaults(option.slug),
-});
+  option: Omit<OAuthProviderCatalogOption, "authStrategy" | "popularityRank" | "registrationDefaults"> & {
+    authStrategy?: OAuthProviderCatalogOption["authStrategy"];
+  },
+): OAuthProviderCatalogOption => {
+  const registrationDefaults = getOAuthProviderRegistrationDefaults(option.slug);
+
+  return {
+    ...option,
+    authStrategy: option.authStrategy ?? registrationDefaults?.authStrategy ?? "oauth2",
+    popularityRank,
+    registrationDefaults,
+  };
+};
 
 const oauthProviderCatalog = [
   provider(1, {
@@ -37,13 +43,13 @@ const oauthProviderCatalog = [
   provider(3, {
     slug: "slack",
     name: "Slack",
-    description: "Channels, messaging, workflows, and operational collaboration.",
+    description: "Channels, messaging, workflows, canvases, and operational collaboration.",
     categories: ["Communication", "Operations"],
-    availability: "manual_token",
+    availability: "oauth_ready",
     builtInSlug: "slack",
     appUrl: "https://slack.com",
-    docsUrl: "https://api.slack.com/authentication/oauth-v2",
-    notes: "Current built-in uses a bot token manually; Slack OAuth would enable workspace-scoped connect flow later.",
+    docsUrl: "https://docs.slack.dev/ai/slack-mcp-server",
+    notes: "Uses Slack's official hosted MCP server with confidential OAuth user-token auth.",
   }),
   provider(4, {
     slug: "notion",
@@ -516,6 +522,32 @@ const oauthProviderCatalog = [
     appUrl: "https://bitbucket.org",
     docsUrl: "https://developer.atlassian.com/cloud/bitbucket/oauth-2/",
     notes: "Popular in Atlassian-centric teams and complements Jira/Confluence.",
+  }),
+  provider(51, {
+    slug: "elevenlabs",
+    name: "ElevenLabs",
+    description: "Text to speech, voices, transcription, audio generation, and agents.",
+    categories: ["Audio", "AI"],
+    authStrategy: "api_key",
+    availability: "manual_token",
+    builtInSlug: "elevenlabs",
+    appUrl: "https://elevenlabs.io",
+    docsUrl: "https://elevenlabs.io/docs/api-reference/introduction",
+    notes:
+      "Official API-key connector backed by ElevenLabs' published OpenAPI spec.",
+  }),
+  provider(52, {
+    slug: "ordinal",
+    name: "Ordinal",
+    description: "Social media posts, profiles, analytics, labels, approvals, and engagements.",
+    categories: ["Social media", "Marketing"],
+    authStrategy: "bearer",
+    availability: "manual_token",
+    builtInSlug: "ordinal",
+    appUrl: "https://app.tryordinal.com",
+    docsUrl: "https://docs.tryordinal.com/api/mcp",
+    notes:
+      "Official MCP server backed by Ordinal's API with API-key (Bearer) auth.",
   }),
 ] satisfies OAuthProviderCatalogOption[];
 

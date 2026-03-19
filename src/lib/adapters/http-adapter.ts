@@ -85,6 +85,62 @@ const buildAuthHeaders = (input: AdapterInvocationInput): Record<string, string>
   return {};
 };
 
+const isObject = (value: unknown): value is Record<string, unknown> =>
+  Boolean(value) && typeof value === "object" && !Array.isArray(value);
+
+const appendFormValue = (formData: FormData, key: string, value: unknown) => {
+  if (value == null) {
+    return;
+  }
+
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      appendFormValue(formData, key, item);
+    }
+    return;
+  }
+
+  if (typeof Blob !== "undefined" && value instanceof Blob) {
+    formData.append(key, value);
+    return;
+  }
+
+  if (isObject(value) && typeof value.contentBase64 === "string") {
+    const blob = new Blob([Buffer.from(value.contentBase64, "base64")], {
+      type:
+        typeof value.contentType === "string" && value.contentType.trim()
+          ? value.contentType
+          : "application/octet-stream",
+    });
+    formData.append(
+      key,
+      blob,
+      typeof value.filename === "string" && value.filename.trim()
+        ? value.filename
+        : key,
+    );
+    return;
+  }
+
+  if (isObject(value) && typeof value.text === "string") {
+    if (typeof value.filename === "string" && value.filename.trim()) {
+      const blob = new Blob([value.text], {
+        type:
+          typeof value.contentType === "string" && value.contentType.trim()
+            ? value.contentType
+            : "text/plain",
+      });
+      formData.append(key, blob, value.filename);
+      return;
+    }
+
+    formData.append(key, value.text);
+    return;
+  }
+
+  formData.append(key, isObject(value) ? JSON.stringify(value) : String(value));
+};
+
 const encodeBody = (
   body: unknown,
   contentType: HttpRequestContentType,
@@ -105,6 +161,18 @@ const encodeBody = (
     return {
       body: params.toString(),
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    };
+  }
+
+  if (contentType === "multipart_form_data") {
+    const formData = new FormData();
+    for (const [key, value] of Object.entries((body as Record<string, unknown>) ?? {})) {
+      appendFormValue(formData, key, value);
+    }
+
+    return {
+      body: formData,
+      headers: {},
     };
   }
 
@@ -131,7 +199,21 @@ const parseResponse = async (response: Response) => {
     return response.json();
   }
 
-  return response.text();
+  if (
+    contentType.startsWith("text/") ||
+    contentType.includes("xml") ||
+    contentType.includes("html")
+  ) {
+    return response.text();
+  }
+
+  const buffer = Buffer.from(await response.arrayBuffer());
+  return {
+    contentType: contentType || "application/octet-stream",
+    contentDisposition: response.headers.get("content-disposition") ?? undefined,
+    sizeBytes: buffer.byteLength,
+    contentBase64: buffer.toString("base64"),
+  };
 };
 
 export class HttpAdapter implements IntegrationAdapter {

@@ -5,7 +5,6 @@ import { MockAdapter } from "@/src/lib/adapters/mock-adapter";
 import { AdapterRegistry } from "@/src/lib/core/adapter-registry";
 import type { ContextRepository } from "@/src/lib/core/repository";
 import { ContextLayerService } from "@/src/lib/core/service";
-import { MemoryRepository } from "@/src/lib/db/memory-repository";
 import { PostgresRepository } from "@/src/lib/db/postgres-repository";
 import { NotificationPublisher } from "@/src/lib/notifications/publisher";
 import { assertContextLayerStorageAvailable, hasPersistentContextLayerStorage } from "@/src/lib/persistence";
@@ -20,12 +19,14 @@ export const getContextLayerRepository = () => {
     if (hasPersistentContextLayerStorage()) {
       globalForContextLayer.contextLayerRepository = new PostgresRepository();
     } else {
+      // No DB configured — hard-fail in production/development.
+      // Tests inject a PGlite-backed PostgresRepository via the neon mock
+      // and set POSTGRES_URL so this branch is never reached in CI.
       assertContextLayerStorageAvailable();
-      globalForContextLayer.contextLayerRepository = new MemoryRepository();
     }
   }
 
-  return globalForContextLayer.contextLayerRepository;
+  return globalForContextLayer.contextLayerRepository!;
 };
 
 export const getContextLayerService = () => {

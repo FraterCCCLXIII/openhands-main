@@ -58,14 +58,11 @@ const atlassianPreset = (
   requestPath,
 });
 
-const knownManagedMcpServerUrls: Record<string, string> = {
+const officialManagedMcpServerUrls: Record<string, string> = {
   github: "https://api.githubcopilot.com/mcp/",
-  slack: "https://mcp.slack.com/sse",
+  slack: "https://mcp.slack.com/mcp",
+  ordinal: "https://app.tryordinal.com/api/mcp",
 };
-
-const buildManagedMcpServerUrl = (slug: string) =>
-  knownManagedMcpServerUrls[slug] ??
-  `https://mcp.composio.dev/partner/composio/${slug}/mcp?customerId=replace-me`;
 
 const registrationDefaults: Record<string, OAuthProviderRegistrationDefaults> = {
   github: {
@@ -86,14 +83,28 @@ const registrationDefaults: Record<string, OAuthProviderRegistrationDefaults> = 
     "/v1/documents/{documentId}",
   ),
   slack: {
-    apiBaseUrl: "https://slack.com/api",
-    authorizationUrl: "https://slack.com/oauth/v2/authorize",
-    tokenUrl: "https://slack.com/api/oauth.v2.access",
-    scopes: ["channels:read", "users:read"],
-    functionName: "list_channels",
-    functionDescription: "List public Slack channels for the connected workspace.",
-    requestMethod: "POST",
-    requestPath: "/conversations.list",
+    provider: "mcp",
+    authorizationUrl: "https://slack.com/oauth/v2_user/authorize",
+    tokenUrl: "https://slack.com/api/oauth.v2.user.access",
+    scopes: [
+      "search:read.public",
+      "search:read.private",
+      "search:read.mpim",
+      "search:read.im",
+      "search:read.files",
+      "search:read.users",
+      "chat:write",
+      "channels:history",
+      "groups:history",
+      "mpim:history",
+      "im:history",
+      "canvases:read",
+      "canvases:write",
+      "users:read",
+      "users:read.email",
+    ],
+    pkce: true,
+    clientAuthentication: "body",
   },
   notion: {
     provider: "http",
@@ -121,6 +132,18 @@ const registrationDefaults: Record<string, OAuthProviderRegistrationDefaults> = 
     functionDescription: "Fetch a Figma file by key.",
     requestMethod: "GET",
     requestPath: "/v1/files/{fileKey}",
+  },
+  elevenlabs: {
+    provider: "http",
+    authModes: ["api_key"],
+    authStrategy: "api_key",
+    credentialLabel: "ElevenLabs API key",
+    credentialPlaceholder: "Paste your ElevenLabs API key",
+    credentialHelp:
+      "Personal or workspace ElevenLabs API key sent in the xi-api-key header.",
+    apiKeyHeaderName: "xi-api-key",
+    apiBaseUrl: "https://api.elevenlabs.io",
+    openApiUrl: "https://api.elevenlabs.io/openapi.json",
   },
   "google-drive": googleWorkspacePreset(
     "https://www.googleapis.com/drive/v3",
@@ -184,7 +207,13 @@ const registrationDefaults: Record<string, OAuthProviderRegistrationDefaults> = 
     requestMethod: "GET",
     requestPath: "/tasks",
   },
-  trello: {},
+  trello: {
+    apiBaseUrl: "https://api.trello.com/1",
+    functionName: "list_boards",
+    functionDescription: "List Trello boards visible to the authenticated member.",
+    requestMethod: "GET",
+    requestPath: "/members/me/boards",
+  },
   clickup: {
     apiBaseUrl: "https://api.clickup.com/api/v2",
     authorizationUrl: "https://app.clickup.com/api",
@@ -428,7 +457,13 @@ const registrationDefaults: Record<string, OAuthProviderRegistrationDefaults> = 
     requestMethod: "GET",
     requestPath: "/sites",
   },
-  plaid: {},
+  plaid: {
+    apiBaseUrl: "https://production.plaid.com",
+    functionName: "get_accounts",
+    functionDescription: "Fetch accounts for a connected Plaid item.",
+    requestMethod: "POST",
+    requestPath: "/accounts/get",
+  },
 
   okta: {
     apiBaseUrl: "https://{yourOktaDomain}/api/v1",
@@ -520,6 +555,15 @@ const registrationDefaults: Record<string, OAuthProviderRegistrationDefaults> = 
     requestMethod: "GET",
     requestPath: "/user",
   },
+  ordinal: {
+    provider: "mcp",
+    authModes: ["bearer"],
+    authStrategy: "bearer",
+    credentialLabel: "Ordinal API key",
+    credentialPlaceholder: "Paste your Ordinal API key",
+    credentialHelp:
+      "API key from your Ordinal workspace settings, sent as a Bearer token in the Authorization header.",
+  },
 };
 
 export const getOAuthProviderRegistrationDefaults = (slug: string) => {
@@ -528,11 +572,21 @@ export const getOAuthProviderRegistrationDefaults = (slug: string) => {
     return undefined;
   }
 
+  const officialMcpServerUrl = officialManagedMcpServerUrls[slug];
+  const provider =
+    defaults.provider ??
+    (officialMcpServerUrl
+      ? "mcp"
+      : defaults.apiBaseUrl || defaults.openApiUrl
+        ? "http"
+        : undefined);
+
   return {
     ...defaults,
+    provider,
     serverUrl:
-      defaults.provider === "http"
-        ? defaults.serverUrl
-        : defaults.serverUrl ?? buildManagedMcpServerUrl(slug),
+      provider === "mcp"
+        ? defaults.serverUrl ?? officialMcpServerUrl
+        : defaults.serverUrl,
   };
 };

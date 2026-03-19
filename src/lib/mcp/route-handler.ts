@@ -13,10 +13,13 @@ const getBearerToken = (request: Request) => {
 
 export const handleStatelessMcpRequest = async (
   request: Request,
-  buildServer: (token: string) => McpServer,
+  buildServer: (request: Request, token: string) => Promise<McpServer> | McpServer,
 ) => {
-  if (request.method === "GET") {
-    return new Response("Method Not Allowed", { status: 405 });
+  if (request.method !== "POST") {
+    return new Response("Method Not Allowed", {
+      status: 405,
+      headers: { Allow: "POST" },
+    });
   }
 
   const token = getBearerToken(request);
@@ -30,7 +33,7 @@ export const handleStatelessMcpRequest = async (
   const transport = new WebStandardStreamableHTTPServerTransport({
     enableJsonResponse: true,
   });
-  const server = buildServer(token);
+  const server = await buildServer(request, token);
 
   await server.connect(transport);
   return transport.handleRequest(request);

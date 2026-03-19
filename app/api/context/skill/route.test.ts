@@ -1,25 +1,37 @@
-import { afterEach, describe, expect, it } from "vitest";
-
-import { MemoryRepository } from "@/src/lib/db/memory-repository";
-import type { IntegrationSpec } from "@/src/types/context-layer";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { GET } from "./route";
 
-const resetRuntime = () => {
-  const runtime = globalThis as typeof globalThis & {
-    contextLayerRepository?: unknown;
-    contextLayerService?: unknown;
-  };
-  delete runtime.contextLayerRepository;
-  delete runtime.contextLayerService;
-};
+import type { ContextRepository } from "@/src/lib/core/repository";
+import { createTestRepository, getActiveSql } from "@/src/lib/db/pglite-test-utils";
+import type { IntegrationSpec } from "@/src/types/context-layer";
 
-const setRuntimeRepository = (repository: MemoryRepository) => {
+vi.mock("@neondatabase/serverless", () => ({ neon: () => getActiveSql() }));
+
+let testRepo: ContextRepository;
+let testCleanup: () => Promise<void>;
+
+beforeAll(() => {
+  vi.stubEnv("POSTGRES_URL", "pglite://context-skill-test");
+});
+
+beforeEach(async () => {
+  const ctx = await createTestRepository();
+  testRepo = ctx.repository;
+  testCleanup = ctx.cleanup;
+});
+
+const setRuntimeRepository = (repository?: ContextRepository) => {
   const runtime = globalThis as typeof globalThis & {
     contextLayerRepository?: unknown;
     contextLayerService?: unknown;
   };
-  runtime.contextLayerRepository = repository;
+
+  if (repository) {
+    runtime.contextLayerRepository = repository;
+  } else {
+    delete runtime.contextLayerRepository;
+  }
   delete runtime.contextLayerService;
 };
 
@@ -47,21 +59,46 @@ const githubIntegration: IntegrationSpec = {
   },
 };
 
+const otherOwnerIntegration: IntegrationSpec = {
+  key: "slack",
+  name: "Slack",
+  kind: "mcp",
+  provider: "mcp",
+  authStrategy: "oauth2",
+  enabled: true,
+  fineGrainedPermissions: true,
+  config: { serverUrl: "https://mcp.slack.com/mcp" },
+  credentials: {},
+  functions: {
+    slack_search_public: {
+      name: "slack_search_public",
+      description: "Search public Slack messages",
+      enabled: true,
+      accessMode: "enabled",
+      fineGrainedPermissions: true,
+      defaultScopes: [],
+      executionMode: "provider",
+      config: {},
+    },
+  },
+};
+
 const seedRepository = async () => {
-  const repository = new MemoryRepository();
+  const repository = testRepo;
   await repository.saveAgentApiKey({
     ownerId: "dev@localhost",
     apiKey: "context-key",
     createdAt: "2026-03-11T00:00:00.000Z",
     updatedAt: "2026-03-11T00:00:00.000Z",
   });
-  await repository.upsertIntegration(githubIntegration);
+  await repository.upsertOwnerIntegration("dev@localhost", githubIntegration);
+  await repository.upsertOwnerIntegration("other@localhost", otherOwnerIntegration);
   setRuntimeRepository(repository);
-  return repository;
 };
 
-afterEach(() => {
-  resetRuntime();
+afterEach(async () => {
+  setRuntimeRepository();
+  await testCleanup();
 });
 
 describe("GET /api/context/skill", () => {
@@ -81,9 +118,12 @@ describe("GET /api/context/skill", () => {
     expect(response.status).toBe(200);
     expect(response.headers.get("content-type")).toContain("text/markdown");
     expect(response.headers.get("content-disposition")).toContain("SKILL.md");
-    await expect(response.text()).resolves.toContain(
+
+    const body = await response.text();
+    expect(body).toContain(
       "POST https://context-layer.example.com/api/context/github/search_repositories",
     );
+    expect(body).not.toContain("slack.slack_search_public");
   });
 
   it("rejects requests without a valid personal API key", async () => {
@@ -94,9 +134,26 @@ describe("GET /api/context/skill", () => {
     );
 
     expect(response.status).toBe(401);
+    expect(response.headers.get("WWW-Authenticate")).toBe(
+      'Bearer realm="agent-context-layer"',
+    );
     await expect(response.json()).resolves.toMatchObject({
       detail:
         "Provide a valid personal context-layer API key in the Authorization bearer header or X-API-Key.",
+    });
+  });
+
+  it("returns a 503 until a dashboard visit provisions the first API key", async () => {
+    setRuntimeRepository(testRepo);
+
+    const response = await GET(
+      new Request("https://context-layer.example.com/api/context/skill"),
+    );
+
+    expect(response.status).toBe(503);
+    await expect(response.json()).resolves.toMatchObject({
+      detail:
+        "Open the dashboard once to provision a personal context-layer API key before agents call /api/context.",
     });
   });
 });

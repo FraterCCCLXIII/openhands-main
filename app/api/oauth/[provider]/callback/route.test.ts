@@ -1,7 +1,20 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
+import type { ContextRepository } from "@/src/lib/core/repository";
 import { encryptCredentials } from "@/src/lib/credential-crypto";
-import { MemoryRepository } from "@/src/lib/db/memory-repository";
+import { createTestRepository, getActiveSql } from "@/src/lib/db/pglite-test-utils";
+
+vi.mock("@neondatabase/serverless", () => ({ neon: () => getActiveSql() }));
+
+let testRepo: ContextRepository;
+let testCleanup: () => Promise<void>;
+
+beforeAll(() => { vi.stubEnv("POSTGRES_URL", "pglite://oauth-callback-test"); });
+beforeEach(async () => {
+  const ctx = await createTestRepository();
+  testRepo = ctx.repository;
+  testCleanup = ctx.cleanup;
+});
 
 const resetRuntimeService = () => {
   const runtime = globalThis as typeof globalThis & {
@@ -12,7 +25,7 @@ const resetRuntimeService = () => {
   delete runtime.contextLayerService;
 };
 
-const setRuntimeRepository = (repository: MemoryRepository) => {
+const setRuntimeRepository = (repository: ContextRepository) => {
   const runtime = globalThis as typeof globalThis & {
     contextLayerRepository?: unknown;
     contextLayerService?: unknown;
@@ -21,7 +34,7 @@ const setRuntimeRepository = (repository: MemoryRepository) => {
   delete runtime.contextLayerService;
 };
 
-const seedManagedNotion = async (repository: MemoryRepository) => {
+const seedManagedNotion = async (repository: ContextRepository) => {
   await repository.upsertManagedConnector({
     slug: "notion",
     name: "Notion",
@@ -51,14 +64,14 @@ const seedManagedNotion = async (repository: MemoryRepository) => {
   });
 };
 
-const saveOAuthState = async (repository: MemoryRepository) => {
+const saveOAuthState = async (repository: ContextRepository) => {
   await seedManagedNotion(repository);
   await repository.saveOAuthState({
     state: "state-123",
     ownerId: "dev@localhost",
     integrationKey: "notion",
     provider: "notion",
-    redirectTo: "/admin?section=integrations",
+    redirectTo: "/integrations",
     redirectUri: "https://openhands-context-layer.vercel.app/api/oauth/notion/callback",
     callbackUrl: "https://context-layer-git-feature.vercel.app/api/oauth/notion/callback",
     createdAt: "2026-03-09T00:00:00.000Z",
@@ -66,11 +79,11 @@ const saveOAuthState = async (repository: MemoryRepository) => {
   });
 };
 
-afterEach(() => {
-  vi.unstubAllEnvs();
+afterEach(async () => {
   vi.unstubAllGlobals();
   vi.resetModules();
   resetRuntimeService();
+  await testCleanup();
 });
 
 describe("GET /api/oauth/[provider]/callback", () => {
@@ -80,7 +93,7 @@ describe("GET /api/oauth/[provider]/callback", () => {
       "https://openhands-context-layer.vercel.app/api/auth",
     );
 
-    const repository = new MemoryRepository();
+    const repository = testRepo;
     await saveOAuthState(repository);
     setRuntimeRepository(repository);
 
@@ -128,7 +141,7 @@ describe("GET /api/oauth/[provider]/callback", () => {
     );
     vi.stubGlobal("fetch", fetchMock);
 
-    const repository = new MemoryRepository();
+    const repository = testRepo;
     await saveOAuthState(repository);
     setRuntimeRepository(repository);
 
@@ -145,7 +158,7 @@ describe("GET /api/oauth/[provider]/callback", () => {
 
     expect(response.status).toBe(307);
     expect(response.headers.get("location")).toContain(
-      "/admin?section=integrations&oauth_provider=notion&oauth_status=connected",
+      "/integrations?oauth_provider=notion&oauth_status=connected",
     );
     expect(fetchMock).toHaveBeenCalledTimes(1);
     const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];

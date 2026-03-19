@@ -6,6 +6,7 @@ import {
   ArrowRight,
   Bell,
   CheckCircle2,
+  ChevronRight,
   Copy,
   Eye,
   EyeOff,
@@ -19,13 +20,24 @@ import {
   Waypoints,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
-import { useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { type ReactNode, useEffect, useMemo, useState } from "react";
 
+import {
+  accessModeLabel,
+  AccessModeSlider,
+  getFunctionAccessMode,
+  matchesFunctionSearch,
+} from "@/src/components/admin/function-access-controls";
 import { IntegrationWizard } from "@/src/components/admin/integration-wizard";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
 import { Card } from "@/src/components/ui/card";
+import {
+  buildAdminSectionHref,
+  getAdminSectionFromPath,
+  type AdminSection,
+} from "@/src/lib/admin-routes";
 import {
   buildAgentConnectionGuide,
   OPENHANDS_CONTEXT_KEY_ENV,
@@ -33,6 +45,8 @@ import {
 import { cn } from "@/src/lib/utils";
 import type {
   AccessRequest,
+  FunctionAccessMode,
+  FunctionSpec,
   IntegrationSpec,
   NotificationRecord,
 } from "@/src/types/context-layer";
@@ -55,7 +69,23 @@ const fetchJson = async <T,>(
   return (await response.json()) as T;
 };
 
-type AdminSection = "home" | "profile" | "integrations" | "apiKeys";
+const inputClassName =
+  "rounded-md border border-[var(--color-border)] bg-[var(--color-bg-input)] px-4 py-3 text-white outline-none transition-colors focus:border-[var(--color-accent)]";
+
+const matchesIntegrationSearch = (integration: IntegrationSpec, query: string) => {
+  const normalizedQuery = query.trim().toLowerCase();
+  if (!normalizedQuery) {
+    return true;
+  }
+
+  return [
+    integration.name,
+    integration.key,
+    integration.provider,
+    integration.kind,
+    integration.authStrategy,
+  ].some((value) => value.toLowerCase().includes(normalizedQuery));
+};
 
 interface AdminDashboardProps {
   initialIntegrations: IntegrationSpec[];
@@ -64,14 +94,15 @@ interface AdminDashboardProps {
   currentUser: { name?: string | null; email?: string | null };
   contextApiBaseUrl: string;
   contextApiKey: string;
+  isAdmin?: boolean;
 }
 
-const ADMIN_SECTIONS: Array<{
+const getDashboardSections = (): Array<{
   id: AdminSection;
   label: string;
   description: string;
   icon: LucideIcon;
-}> = [
+}> => [
   {
     id: "home",
     label: "Home",
@@ -87,7 +118,8 @@ const ADMIN_SECTIONS: Array<{
   {
     id: "integrations",
     label: "Integrations",
-    description: "Review connectors, functions, and toggles in one list.",
+    description:
+      "Connect accounts, enable integrations, and tune skill access for your personal key.",
     icon: PlugZap,
   },
   {
@@ -312,27 +344,33 @@ export const DashboardWorkspace = ({
   currentUser,
   contextApiBaseUrl,
   contextApiKey,
+  isAdmin = true,
 }: AdminDashboardProps) => {
   const queryClient = useQueryClient();
+  const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const [activeSection, setActiveSection] = useState<AdminSection>("home");
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [showIntegrationWizard, setShowIntegrationWizard] = useState(
     initialIntegrations.length === 0,
   );
+  const [integrationSearch, setIntegrationSearch] = useState("");
+  const [hideDisabledSkills, setHideDisabledSkills] = useState(true);
+  const [expandedIntegrations, setExpandedIntegrations] = useState<
+    Record<string, boolean>
+  >({});
+  const [expandedFunctions, setExpandedFunctions] = useState<
+    Record<string, boolean>
+  >({});
   const [revealApiKey, setRevealApiKey] = useState(false);
+  const [apiKeyCopied, setApiKeyCopied] = useState(false);
 
   useEffect(() => {
-    const requestedSection = searchParams.get("section");
-    if (
-      requestedSection === "home" ||
-      requestedSection === "profile" ||
-      requestedSection === "integrations" ||
-      requestedSection === "apiKeys"
-    ) {
-      setActiveSection(requestedSection);
-    }
+    setActiveSection(getAdminSectionFromPath(pathname));
+  }, [pathname]);
 
+  useEffect(() => {
     if (searchParams.get("showIntegrationWizard") === "1") {
       setShowIntegrationWizard(true);
     }
@@ -350,6 +388,25 @@ export const DashboardWorkspace = ({
       setStatusMessage(oauthError || "OAuth connection failed.");
     }
   }, [searchParams]);
+
+  useEffect(() => {
+    if (!apiKeyCopied) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setApiKeyCopied(false);
+    }, 2000);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [apiKeyCopied]);
+
+  const navigateToSection = (section: AdminSection) => {
+    setActiveSection(section);
+    router.push(buildAdminSectionHref(section));
+  };
 
   const integrationsQuery = useQuery({
     queryKey: ["integrations"],
@@ -423,9 +480,9 @@ export const DashboardWorkspace = ({
     currentUser.email === "dev@localhost"
       ? "Local development session"
       : "Authenticated dashboard session";
+  const sections = getDashboardSections();
   const activeSectionMeta =
-    ADMIN_SECTIONS.find((section) => section.id === activeSection) ??
-    ADMIN_SECTIONS[0];
+    sections.find((section) => section.id === activeSection) ?? sections[0];
 
   const agentConnectionGuide = useMemo(
     () =>
@@ -437,6 +494,97 @@ export const DashboardWorkspace = ({
     [contextApiBaseUrl, integrations],
   );
 
+  const filteredIntegrations = useMemo(() => {
+    const normalizedSearch = integrationSearch.trim().toLowerCase();
+
+    return [...integrations]
+      .sort(
+        (left, right) =>
+          left.name.localeCompare(right.name) || left.key.localeCompare(right.key),
+      )
+      .map((integration) => {
+        const integrationMatchesSearch = matchesIntegrationSearch(
+          integration,
+          normalizedSearch,
+        );
+        const functions = Object.values(integration.functions).sort((left, right) =>
+          left.name.localeCompare(right.name),
+        );
+        const visibleFunctions = functions.filter((functionSpec) => {
+          if (
+            hideDisabledSkills &&
+            getFunctionAccessMode(functionSpec) === "disabled"
+          ) {
+            return false;
+          }
+
+          return (
+            !normalizedSearch ||
+            integrationMatchesSearch ||
+            matchesFunctionSearch(
+              functionSpec.name,
+              functionSpec,
+              normalizedSearch,
+            )
+          );
+        });
+
+        if (
+          normalizedSearch &&
+          !integrationMatchesSearch &&
+          visibleFunctions.length === 0
+        ) {
+          return null;
+        }
+
+        return {
+          integration,
+          functions,
+          visibleFunctions,
+        };
+      })
+      .filter((value): value is {
+        integration: IntegrationSpec;
+        functions: FunctionSpec[];
+        visibleFunctions: FunctionSpec[];
+      } => value !== null);
+  }, [hideDisabledSkills, integrationSearch, integrations]);
+
+  const visibleFunctionCount = filteredIntegrations.reduce(
+    (count, entry) => count + entry.visibleFunctions.length,
+    0,
+  );
+
+  const toggleIntegrationExpanded = (
+    integrationKey: string,
+    expanded: boolean,
+  ) => {
+    setExpandedIntegrations((current) => ({
+      ...current,
+      [integrationKey]: !expanded,
+    }));
+  };
+
+  const toggleFunctionExpanded = (functionKey: string) => {
+    setExpandedFunctions((current) => ({
+      ...current,
+      [functionKey]: !current[functionKey],
+    }));
+  };
+
+  const updateFunctionAccessMode = (
+    integrationKey: string,
+    functionName: string,
+    accessMode: FunctionAccessMode,
+  ) => {
+    actionMutation.mutate({
+      url: `/api/integrations/${integrationKey}/functions/${functionName}`,
+      method: "PATCH",
+      body: { accessMode },
+    });
+  };
+
+
   const handleCopyApiKey = async () => {
     if (!contextApiReady) {
       setStatusMessage("The personal API key is not available yet.");
@@ -445,8 +593,9 @@ export const DashboardWorkspace = ({
 
     try {
       await copyTextToClipboard(contextApiKey);
-      setStatusMessage("API key copied to clipboard.");
+      setApiKeyCopied(true);
     } catch {
+      setApiKeyCopied(false);
       setStatusMessage("Unable to copy the API key from this browser session.");
     }
   };
@@ -464,33 +613,33 @@ export const DashboardWorkspace = ({
               <Badge>{enabledIntegrationCount} live</Badge>
             </div>
             <p className="mt-2 text-xs leading-6 text-[var(--color-text-base)]">
-              Admin workspace inspired by the OpenHands settings shell.
+              Personal workspace for integrations active on your personal key.
             </p>
           </div>
 
           <nav className="space-y-1">
-            {ADMIN_SECTIONS.map((section) => (
+            {sections.map((section) => (
               <SidebarNavItem
                 key={section.id}
                 icon={section.icon}
                 label={section.label}
                 active={activeSection === section.id}
-                onClick={() => setActiveSection(section.id)}
+                onClick={() => navigateToSection(section.id)}
               />
             ))}
           </nav>
 
-
-          <div className="border-t border-[var(--color-border)] pt-3">
-            <a
-              href="/add-connector"
-              className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm text-[var(--color-text-base)] transition-colors hover:bg-[var(--color-bg-active)] hover:text-white"
-            >
-              <ShieldCheck className="h-4 w-4 shrink-0 text-[var(--color-text-base)]" />
-              <span className="truncate font-medium">Admin</span>
-            </a>
-          </div>
-
+          {isAdmin ? (
+            <div className="border-t border-[var(--color-border)] pt-3">
+              <a
+                href="/add-connector"
+                className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm text-[var(--color-text-base)] transition-colors hover:bg-[var(--color-bg-active)] hover:text-white"
+              >
+                <ShieldCheck className="h-4 w-4 shrink-0 text-[var(--color-text-base)]" />
+                <span className="truncate font-medium">Manage OAuth apps</span>
+              </a>
+            </div>
+          ) : null}
 
           <div className="border-t border-[var(--color-border)] pt-3">
             <div className="space-y-3">
@@ -545,7 +694,7 @@ export const DashboardWorkspace = ({
 
         {!contextApiReady ? (
           <div className="rounded-xl border border-[color:rgba(217,181,90,0.25)] bg-[color:rgba(217,181,90,0.12)] px-3 py-2 text-sm text-[var(--color-warning)]">
-            Open <code className="text-white">/admin</code> once to provision a
+            Open <code className="text-white">/home</code> once to provision a
             personal key before agents call <code className="text-white">/api/context/*</code>.
           </div>
         ) : null}
@@ -563,13 +712,13 @@ export const DashboardWorkspace = ({
                     icon={PlugZap}
                     label="Integrations"
                     value={String(integrations.length)}
-                    description="Connected API and MCP providers visible to the dashboard."
+                    description="Integrations currently active for your personal key."
                   />
                   <MetricRow
                     icon={CheckCircle2}
                     label="Enabled integrations"
                     value={String(enabledIntegrationCount)}
-                    description="Integrations currently available for agent calls."
+                    description="Enabled integrations your personal key can invoke right now."
                   />
                   <MetricRow
                     icon={KeyRound}
@@ -596,19 +745,19 @@ export const DashboardWorkspace = ({
                     title="Review your profile"
                     body="Confirm the signed-in identity that owns the persisted personal key."
                     action="Open profile"
-                    onClick={() => setActiveSection("profile")}
+                    onClick={() => navigateToSection("profile")}
                   />
                   <ChecklistRow
                     title="Add an integration"
                     body="Create a Built-in or MCP connector and review its callable functions."
                     action="Open integrations"
-                    onClick={() => setActiveSection("integrations")}
+                    onClick={() => navigateToSection("integrations")}
                   />
                   <ChecklistRow
                     title="Copy your key"
                     body="Reveal or copy the personal agent key, then configure your runtime."
                     action="Open connection"
-                    onClick={() => setActiveSection("apiKeys")}
+                    onClick={() => navigateToSection("apiKeys")}
                   />
                 </div>
               </CompactPanel>
@@ -777,7 +926,7 @@ export const DashboardWorkspace = ({
                 className="h-9 rounded-md px-4 text-xs"
                 onClick={() => setShowIntegrationWizard(true)}
               >
-                Add new integration
+                Add integration
               </Button>
             </div>
 
@@ -792,112 +941,240 @@ export const DashboardWorkspace = ({
             ) : null}
 
             <CompactPanel
-              title="Integration catalog"
-              description="Compact rows for providers, status, auth strategy, and functions."
+              title="Your integrations"
+              description="Connect accounts, enable integrations, and tune skill access for your personal key."
               icon={PlugZap}
             >
               {integrations.length === 0 ? (
                 <div className="rounded-xl border border-dashed border-[var(--color-border)] px-3 py-4 text-sm text-[var(--color-text-base)]">
-                  No integrations yet. Use the button above to add your first one.
+                  No integrations activated yet. Use the button above to connect your first one.
                 </div>
               ) : (
-                <div className="divide-y divide-[var(--color-border)]">
-                  {integrations.map((integration) => (
-                    <div key={integration.key} className="py-4 first:pt-0 last:pb-0">
-                      <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
-                        <div className="min-w-0">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <h3 className="text-sm font-semibold text-white">
-                              {integration.name}
-                            </h3>
-                            <Badge>{integration.provider}</Badge>
-                            <Badge>{integration.kind}</Badge>
-                            <Badge tone={integration.enabled ? "success" : "danger"}>
-                              {integration.enabled ? "enabled" : "disabled"}
-                            </Badge>
-                          </div>
-                          <p className="mt-2 text-xs leading-6 text-[var(--color-text-base)]">
-                            {integration.key} · auth: {integration.authStrategy}
-                          </p>
-                        </div>
-                        <Button
-                          variant={integration.enabled ? "secondary" : "primary"}
-                          className="h-8 shrink-0 gap-2 rounded-md px-3 text-xs"
-                          onClick={() =>
-                            actionMutation.mutate({
-                              url: `/api/integrations/${integration.key}/toggle`,
-                              method: "POST",
-                              body: { enabled: !integration.enabled },
-                            })
-                          }
-                          title="Temporarily enable or disable the full integration."
-                        >
-                          {integration.enabled ? (
-                            <ToggleRight className="h-4 w-4" />
-                          ) : (
-                            <ToggleLeft className="h-4 w-4" />
-                          )}
-                          {integration.enabled ? "Disable" : "Enable"}
-                        </Button>
+                <div className="space-y-4">
+                  <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-4">
+                    <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+                      <div className="space-y-1">
+                        <h3 className="text-sm font-semibold text-white">
+                          Search and review your integration skills
+                        </h3>
+                        <p className="text-xs leading-6 text-[var(--color-text-base)]">
+                          Use the compact expandable rows here to search your active integrations, tune access modes, and hide disabled skills by default.
+                        </p>
                       </div>
-
-                      <div className="mt-3 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)]">
-                        {Object.values(integration.functions).length === 0 ? (
-                          <p className="px-3 py-3 text-sm text-[var(--color-text-base)]">
-                            No functions registered yet.
-                          </p>
-                        ) : (
-                          Object.values(integration.functions).map((functionSpec, index) => (
-                            <div
-                              key={functionSpec.name}
-                              className={cn(
-                                "flex flex-col gap-3 px-3 py-3 md:flex-row md:items-start md:justify-between",
-                                index > 0 && "border-t border-[var(--color-border)]",
-                              )}
-                            >
-                              <div className="min-w-0">
-                                <div className="flex flex-wrap items-center gap-2">
-                                  <p className="text-sm font-medium text-white">
-                                    {functionSpec.name}
-                                  </p>
-                                  <Badge tone={functionSpec.enabled ? "success" : "danger"}>
-                                    {functionSpec.enabled ? "enabled" : "disabled"}
-                                  </Badge>
-                                  <Badge>
-                                    {functionSpec.accessMode === "approval_required"
-                                      ? "case-by-case"
-                                      : functionSpec.enabled
-                                        ? "default-enabled"
-                                        : "disabled"}
-                                  </Badge>
-                                </div>
-                                <p className="mt-1 text-xs leading-6 text-[var(--color-text-base)]">
-                                  {functionSpec.description || "No description provided."}
-                                </p>
-                                <p className="mt-1 text-[11px] leading-5 text-[var(--color-text-base)]">
-                                  Scopes: {functionSpec.defaultScopes.join(", ") || "none"}
-                                </p>
-                              </div>
-                              <Button
-                                variant={functionSpec.enabled ? "secondary" : "primary"}
-                                className="h-8 shrink-0 rounded-md px-3 text-xs"
-                                onClick={() =>
-                                  actionMutation.mutate({
-                                    url: `/api/integrations/${integration.key}/functions/${functionSpec.name}/toggle`,
-                                    method: "POST",
-                                    body: { enabled: !functionSpec.enabled },
-                                  })
-                                }
-                                title="Enable or disable just this callable function."
-                              >
-                                {functionSpec.enabled ? "Disable function" : "Enable function"}
-                              </Button>
-                            </div>
-                          ))
-                        )}
+                      <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--color-text-base)]">
+                        <Badge>{filteredIntegrations.length} integrations</Badge>
+                        <Badge>{visibleFunctionCount} visible skills</Badge>
                       </div>
                     </div>
-                  ))}
+
+                    <div className="mt-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                      <input
+                        type="search"
+                        value={integrationSearch}
+                        onChange={(event) => setIntegrationSearch(event.target.value)}
+                        placeholder="Search integrations and skills"
+                        aria-label="Search integrations and skills"
+                        className={cn(inputClassName, "w-full lg:max-w-md")}
+                      />
+                      <label className="inline-flex items-center gap-2 rounded-md border border-[var(--color-border)] bg-[var(--color-bg-input)] px-3 py-2 text-xs text-white">
+                        <input
+                          type="checkbox"
+                          checked={hideDisabledSkills}
+                          aria-label="Hide disabled skills"
+                          onChange={(event) =>
+                            setHideDisabledSkills(event.target.checked)
+                          }
+                        />
+                        <span>Hide disabled skills</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  {filteredIntegrations.length === 0 ? (
+                    <div className="rounded-xl border border-dashed border-[var(--color-border)] bg-[var(--color-surface-subtle)] px-3 py-4 text-sm text-[var(--color-text-base)]">
+                      No integrations or skills match the current filters.
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {filteredIntegrations.map(
+                        ({ integration, functions, visibleFunctions }) => {
+                          const isExpanded =
+                            expandedIntegrations[integration.key] ??
+                            Boolean(integrationSearch.trim());
+
+                          return (
+                            <div
+                              key={integration.key}
+                              className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-4"
+                              data-integration-key={integration.key}
+                            >
+                              <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
+                                <div className="min-w-0">
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    <h3 className="text-sm font-semibold text-white">
+                                      {integration.name}
+                                    </h3>
+                                    <Badge>{integration.provider}</Badge>
+                                    <Badge>{integration.kind}</Badge>
+                                    <Badge tone={integration.enabled ? "success" : "danger"}>
+                                      {integration.enabled ? "enabled" : "disabled"}
+                                    </Badge>
+                                  </div>
+                                  <p className="mt-2 text-xs leading-6 text-[var(--color-text-base)]">
+                                    {integration.key} · auth: {integration.authStrategy}
+                                  </p>
+                                  <p className="mt-1 text-[11px] leading-5 text-[var(--color-text-base)]">
+                                    {visibleFunctions.length} visible skill
+                                    {visibleFunctions.length === 1 ? "" : "s"}
+                                    {functions.length > 0
+                                      ? ` of ${functions.length}`
+                                      : ""}
+                                  </p>
+                                </div>
+                                <div className="flex flex-wrap items-center gap-2 xl:justify-end">
+                                  <Button
+                                    variant={integration.enabled ? "secondary" : "primary"}
+                                    className="h-8 shrink-0 gap-2 rounded-md px-3 text-xs"
+                                    onClick={() =>
+                                      actionMutation.mutate({
+                                        url: `/api/integrations/${integration.key}/toggle`,
+                                        method: "POST",
+                                        body: { enabled: !integration.enabled },
+                                      })
+                                    }
+                                    title="Temporarily enable or disable the full integration."
+                                  >
+                                    {integration.enabled ? (
+                                      <ToggleRight className="h-4 w-4" />
+                                    ) : (
+                                      <ToggleLeft className="h-4 w-4" />
+                                    )}
+                                    {integration.enabled ? "Disable" : "Enable"}
+                                  </Button>
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    className="h-8 rounded-md px-3 text-xs"
+                                    aria-expanded={isExpanded}
+                                    aria-controls={`integration-functions-${integration.key}`}
+                                    onClick={() =>
+                                      toggleIntegrationExpanded(
+                                        integration.key,
+                                        isExpanded,
+                                      )
+                                    }
+                                  >
+                                    {isExpanded ? "Hide skills" : "Show skills"}
+                                    <ChevronRight
+                                      className={cn(
+                                        "ml-1 h-4 w-4 transition-transform",
+                                        isExpanded && "rotate-90",
+                                      )}
+                                    />
+                                  </Button>
+                                </div>
+                              </div>
+
+                              {isExpanded ? (
+                                <div
+                                  id={`integration-functions-${integration.key}`}
+                                  className="mt-3 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-input)]"
+                                >
+                                  {functions.length === 0 ? (
+                                    <p className="px-4 py-4 text-sm text-[var(--color-text-base)]">
+                                      No skills registered yet.
+                                    </p>
+                                  ) : visibleFunctions.length === 0 ? (
+                                    <p className="px-4 py-4 text-sm text-[var(--color-text-base)]">
+                                      No visible skills match the current filters.
+                                    </p>
+                                  ) : (
+                                    <div className="divide-y divide-[var(--color-border)]">
+                                      {visibleFunctions.map((functionSpec) => {
+                                        const functionKey = `${integration.key}:${functionSpec.name}`;
+                                        const accessMode =
+                                          getFunctionAccessMode(functionSpec);
+                                        const isFunctionExpanded =
+                                          expandedFunctions[functionKey] ?? false;
+
+                                        return (
+                                          <div
+                                            key={functionKey}
+                                            className="px-4 py-4"
+                                            data-function-key={functionKey}
+                                            data-function-name={functionSpec.name}
+                                          >
+                                            <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
+                                              <div className="min-w-0 flex-1">
+                                                <p className="text-sm font-semibold text-white">
+                                                  {functionSpec.name}
+                                                </p>
+                                                <p className="mt-1 truncate text-xs leading-6 text-[var(--color-text-base)]">
+                                                  {functionSpec.description || "No description provided."}
+                                                </p>
+                                              </div>
+                                              <div className="flex flex-wrap items-center gap-2 xl:justify-end">
+                                                <AccessModeSlider
+                                                  functionName={functionSpec.name}
+                                                  mode={accessMode}
+                                                  onChange={(nextMode) =>
+                                                    updateFunctionAccessMode(
+                                                      integration.key,
+                                                      functionSpec.name,
+                                                      nextMode,
+                                                    )
+                                                  }
+                                                />
+                                                <Button
+                                                  type="button"
+                                                  variant="ghost"
+                                                  className="h-8 rounded-md px-3 text-xs"
+                                                  aria-expanded={isFunctionExpanded}
+                                                  aria-controls={`function-details-${functionKey}`}
+                                                  onClick={() =>
+                                                    toggleFunctionExpanded(functionKey)
+                                                  }
+                                                >
+                                                  {isFunctionExpanded
+                                                    ? "Hide details"
+                                                    : "Show details"}
+                                                  <ChevronRight
+                                                    className={cn(
+                                                      "ml-1 h-4 w-4 transition-transform",
+                                                      isFunctionExpanded &&
+                                                        "rotate-90",
+                                                    )}
+                                                  />
+                                                </Button>
+                                              </div>
+                                            </div>
+
+                                            {isFunctionExpanded ? (
+                                              <div
+                                                id={`function-details-${functionKey}`}
+                                                className="mt-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-4"
+                                              >
+                                                <p className="text-sm leading-7 text-[var(--color-text-base)]">
+                                                  {functionSpec.description || "No description provided."}
+                                                </p>
+                                                <p className="mt-2 text-xs leading-6 text-[var(--color-text-base)]">
+                                                  Default scopes: {functionSpec.defaultScopes.join(", ") || "none"}
+                                                </p>
+                                              </div>
+                                            ) : null}
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  )}
+                                </div>
+                              ) : null}
+                            </div>
+                          );
+                        },
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
             </CompactPanel>
@@ -947,7 +1224,11 @@ export const DashboardWorkspace = ({
                   onClick={handleCopyApiKey}
                   disabled={!contextApiReady}
                 >
-                  <Copy className="h-4 w-4" />
+                  {apiKeyCopied ? (
+                    <CheckCircle2 className="h-4 w-4" />
+                  ) : (
+                    <Copy className="h-4 w-4" />
+                  )}
                   Copy
                 </Button>
               </div>
@@ -955,48 +1236,110 @@ export const DashboardWorkspace = ({
 
             <CompactPanel
               title="Usage"
-              description="Use the persisted personal key as a bearer token."
+              description="Use the persisted personal key as a bearer token for REST calls, the per-user OpenAPI schema, or the MCP bridge."
               icon={ShieldCheck}
             >
-              <div className="divide-y divide-[var(--color-border)]">
-                <KeyValueRow
-                  label="Auth header"
-                  value={
-                    <code className="break-all text-xs text-[var(--color-text-active)]">
-                      Authorization: Bearer {OPENHANDS_CONTEXT_KEY_ENV}
-                    </code>
-                  }
-                />
-                <KeyValueRow
-                  label="Endpoint"
-                  value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.endpoint}</code>}
-                />
-                <KeyValueRow
-                  label="SKILL.md endpoint"
-                  value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.skillEndpoint}</code>}
-                />
-              </div>
-              <div className="mt-4 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)]">
-                <div className="border-b border-[var(--color-border)] px-3 py-2 text-xs uppercase tracking-[0.18em] text-[var(--color-text-base)]">
-                  cURL example
-                </div>
-                <pre className="overflow-x-auto whitespace-pre-wrap px-3 py-3 text-xs leading-6 text-[var(--color-text-base)]">
-                  {agentConnectionGuide.curlExample}
-                </pre>
-              </div>
-              <div className="mt-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)] px-3 py-3 text-xs leading-6 text-[var(--color-text-base)]">
-                Download a generated <code className="text-white">SKILL.md</code> file that
-                lists every currently available tool in this profile. The same
-                personal key works for the export route, so you can create the
-                file with:
-              </div>
-              <div className="mt-3 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)]">
-                <div className="border-b border-[var(--color-border)] px-3 py-2 text-xs uppercase tracking-[0.18em] text-[var(--color-text-base)]">
-                  SKILL.md export
-                </div>
-                <pre className="overflow-x-auto whitespace-pre-wrap px-3 py-3 text-xs leading-6 text-[var(--color-text-base)]">
-                  {agentConnectionGuide.skillCurlExample}
-                </pre>
+              <p className="mb-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-muted)] px-3 py-2 text-xs leading-6 text-[var(--color-text-base)]">
+                {agentConnectionGuide.permissionNote}
+              </p>
+              <div className="space-y-6">
+                <section>
+                  <h4 className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-text-base)]">
+                    REST API Usage
+                  </h4>
+                  <div className="mt-3 divide-y divide-[var(--color-border)]">
+                    <KeyValueRow
+                      label="Auth header"
+                      value={
+                        <code className="break-all text-xs text-[var(--color-text-active)]">
+                          Authorization: Bearer {OPENHANDS_CONTEXT_KEY_ENV}
+                        </code>
+                      }
+                    />
+                    <KeyValueRow
+                      label="REST endpoint"
+                      value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.endpoint}</code>}
+                    />
+                    <KeyValueRow
+                      label="OpenAPI schema"
+                      value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.openApiSchemaEndpoint}</code>}
+                    />
+                    <KeyValueRow
+                      label="SKILL.md endpoint"
+                      value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.skillEndpoint}</code>}
+                    />
+                  </div>
+                  <div className="mt-4 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)]">
+                    <div className="border-b border-[var(--color-border)] px-3 py-2 text-xs uppercase tracking-[0.18em] text-[var(--color-text-base)]">
+                      Tool call cURL example
+                    </div>
+                    <pre className="overflow-x-auto whitespace-pre-wrap px-3 py-3 text-xs leading-6 text-[var(--color-text-base)]">
+                      {agentConnectionGuide.curlExample}
+                    </pre>
+                  </div>
+                  <div className="mt-4 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)]">
+                    <div className="border-b border-[var(--color-border)] px-3 py-2 text-xs uppercase tracking-[0.18em] text-[var(--color-text-base)]">
+                      OpenAPI schema cURL example
+                    </div>
+                    <pre className="overflow-x-auto whitespace-pre-wrap px-3 py-3 text-xs leading-6 text-[var(--color-text-base)]">
+                      {agentConnectionGuide.openApiCurlExample}
+                    </pre>
+                  </div>
+                  <div className="mt-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)] px-3 py-3 text-xs leading-6 text-[var(--color-text-base)]">
+                    Download a generated <code className="text-white">SKILL.md</code> file that
+                    lists every currently available tool in this profile. The same
+                    personal key works for the export route, so you can create the
+                    file with:
+                  </div>
+                  <div className="mt-3 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)]">
+                    <div className="border-b border-[var(--color-border)] px-3 py-2 text-xs uppercase tracking-[0.18em] text-[var(--color-text-base)]">
+                      SKILL.md export
+                    </div>
+                    <pre className="overflow-x-auto whitespace-pre-wrap px-3 py-3 text-xs leading-6 text-[var(--color-text-base)]">
+                      {agentConnectionGuide.skillCurlExample}
+                    </pre>
+                  </div>
+                </section>
+
+                <section>
+                  <h4 className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-text-base)]">
+                    MCP Usage
+                  </h4>
+                  <div className="mt-3 divide-y divide-[var(--color-border)]">
+                    <KeyValueRow
+                      label="MCP endpoint"
+                      value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.mcpEndpoint}</code>}
+                    />
+                    <KeyValueRow
+                      label="Set agent ID tool"
+                      value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.mcpSetAgentIdToolName}</code>}
+                    />
+                    <KeyValueRow
+                      label="Set agent class tool"
+                      value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.mcpSetAgentClassToolName}</code>}
+                    />
+                    <KeyValueRow
+                      label="Example MCP tool"
+                      value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.mcpToolName}</code>}
+                    />
+                  </div>
+                  <div className="mt-4 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)]">
+                    <div className="border-b border-[var(--color-border)] px-3 py-2 text-xs uppercase tracking-[0.18em] text-[var(--color-text-base)]">
+                      MCP streamable HTTP example
+                    </div>
+                    <pre className="overflow-x-auto whitespace-pre-wrap px-3 py-3 text-xs leading-6 text-[var(--color-text-base)]">
+                      {agentConnectionGuide.mcpConfigExample}
+                    </pre>
+                  </div>
+                  <div className="mt-4 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)]">
+                    <div className="border-b border-[var(--color-border)] px-3 py-2 text-xs uppercase tracking-[0.18em] text-[var(--color-text-base)]">
+                      MCP session setup
+                    </div>
+                    <pre className="overflow-x-auto whitespace-pre-wrap px-3 py-3 text-xs leading-6 text-[var(--color-text-base)]">
+                      {agentConnectionGuide.mcpSessionSetupExample}
+                    </pre>
+                  </div>
+                </section>
               </div>
             </CompactPanel>
           </section>

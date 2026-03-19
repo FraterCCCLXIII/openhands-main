@@ -35,6 +35,19 @@ const getSql = () => {
   return neon(databaseUrl);
 };
 
+const mapIntegrationRow = (row: Record<string, unknown>): IntegrationSpec => ({
+  key: String(row.key),
+  name: String(row.name),
+  kind: row.kind as IntegrationSpec["kind"],
+  provider: row.provider as IntegrationSpec["provider"],
+  authStrategy: row.auth_strategy as IntegrationSpec["authStrategy"],
+  enabled: Boolean(row.enabled),
+  fineGrainedPermissions: Boolean(row.fine_grained_permissions),
+  config: parseJson<Record<string, unknown>>(row.config),
+  credentials: parseJson<Record<string, unknown>>(row.credentials),
+  functions: parseJson<IntegrationSpec["functions"]>(row.functions),
+});
+
 const SCHEMA_LOCK_ID = 482190317;
 
 export class PostgresRepository implements ContextRepository {
@@ -60,9 +73,11 @@ export class PostgresRepository implements ContextRepository {
 
     await sql.transaction([
       sql`SELECT pg_advisory_xact_lock(${SCHEMA_LOCK_ID})`,
+      sql`DROP TABLE IF EXISTS integrations`,
       sql`
-        CREATE TABLE IF NOT EXISTS integrations (
-          key TEXT PRIMARY KEY,
+        CREATE TABLE IF NOT EXISTS owner_integrations (
+          owner_id TEXT NOT NULL,
+          key TEXT NOT NULL,
           name TEXT NOT NULL,
           kind TEXT NOT NULL,
           provider TEXT NOT NULL,
@@ -72,7 +87,9 @@ export class PostgresRepository implements ContextRepository {
           config JSONB NOT NULL DEFAULT '{}'::jsonb,
           credentials JSONB NOT NULL DEFAULT '{}'::jsonb,
           functions JSONB NOT NULL DEFAULT '{}'::jsonb,
-          updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+          created_at TIMESTAMPTZ NOT NULL,
+          updated_at TIMESTAMPTZ NOT NULL,
+          PRIMARY KEY (owner_id, key)
         )
       `,
       sql`
@@ -147,7 +164,7 @@ export class PostgresRepository implements ContextRepository {
           credential_label TEXT NOT NULL,
           credential_placeholder TEXT NOT NULL,
           credential_help TEXT NOT NULL,
-          api_base_url TEXT NOT NULL,
+          api_base_url TEXT NOT NULL DEFAULT '',
           server_url TEXT,
           open_api_url TEXT,
           oauth_config JSONB,
@@ -201,59 +218,41 @@ export class PostgresRepository implements ContextRepository {
     this.schemaReady = true;
   }
 
-  async listIntegrations() {
+  async listOwnerIntegrations(ownerId: string) {
     await this.ensureSchema();
     const sql = getSql();
-    const rows = await sql`SELECT * FROM integrations ORDER BY key ASC`;
-    return rows.map((row) => ({
-      key: row.key,
-      name: row.name,
-      kind: row.kind,
-      provider: row.provider,
-      authStrategy: row.auth_strategy,
-      enabled: row.enabled,
-      fineGrainedPermissions: row.fine_grained_permissions,
-      config: parseJson<Record<string, unknown>>(row.config),
-      credentials: parseJson<Record<string, unknown>>(row.credentials),
-      functions: parseJson<IntegrationSpec["functions"]>(row.functions),
-    }));
+    const rows = await sql`
+      SELECT * FROM owner_integrations
+      WHERE owner_id = ${ownerId}
+      ORDER BY key ASC
+    `;
+    return rows.map((row) => mapIntegrationRow(row as Record<string, unknown>));
   }
 
-  async getIntegration(key: string) {
+  async getOwnerIntegration(ownerId: string, integrationKey: string) {
     await this.ensureSchema();
     const sql = getSql();
-    const rows = await sql`SELECT * FROM integrations WHERE key = ${key}`;
+    const rows = await sql`
+      SELECT * FROM owner_integrations
+      WHERE owner_id = ${ownerId} AND key = ${integrationKey}
+    `;
     const row = rows[0];
-    if (!row) {
-      return null;
-    }
-    return {
-      key: row.key,
-      name: row.name,
-      kind: row.kind,
-      provider: row.provider,
-      authStrategy: row.auth_strategy,
-      enabled: row.enabled,
-      fineGrainedPermissions: row.fine_grained_permissions,
-      config: parseJson<Record<string, unknown>>(row.config),
-      credentials: parseJson<Record<string, unknown>>(row.credentials),
-      functions: parseJson<IntegrationSpec["functions"]>(row.functions),
-    };
+    return row ? mapIntegrationRow(row as Record<string, unknown>) : null;
   }
 
-  async upsertIntegration(spec: IntegrationSpec) {
+  async upsertOwnerIntegration(ownerId: string, spec: IntegrationSpec) {
     await this.ensureSchema();
     const sql = getSql();
     await sql`
-      INSERT INTO integrations (
-        key, name, kind, provider, auth_strategy, enabled,
-        fine_grained_permissions, config, credentials, functions, updated_at
+      INSERT INTO owner_integrations (
+        owner_id, key, name, kind, provider, auth_strategy, enabled,
+        fine_grained_permissions, config, credentials, functions, created_at, updated_at
       )
       VALUES (
-        ${spec.key}, ${spec.name}, ${spec.kind}, ${spec.provider}, ${spec.authStrategy}, ${spec.enabled},
-        ${spec.fineGrainedPermissions}, ${JSON.stringify(spec.config)}, ${JSON.stringify(spec.credentials)}, ${JSON.stringify(spec.functions)}, NOW()
+        ${ownerId}, ${spec.key}, ${spec.name}, ${spec.kind}, ${spec.provider}, ${spec.authStrategy}, ${spec.enabled},
+        ${spec.fineGrainedPermissions}, ${JSON.stringify(spec.config)}, ${JSON.stringify(spec.credentials)}, ${JSON.stringify(spec.functions)}, NOW(), NOW()
       )
-      ON CONFLICT (key) DO UPDATE SET
+      ON CONFLICT (owner_id, key) DO UPDATE SET
         name = EXCLUDED.name,
         kind = EXCLUDED.kind,
         provider = EXCLUDED.provider,
@@ -569,7 +568,7 @@ export class PostgresRepository implements ContextRepository {
       ) VALUES (
         ${record.slug}, ${record.name}, ${record.description}, ${record.logoUrl ?? null}, ${record.appUrl ?? null}, ${record.docsUrl ?? null}, ${JSON.stringify(record.categories)},
         ${JSON.stringify(record.authModes)}, ${record.authStrategy}, ${record.provider ?? null}, ${record.credentialLabel}, ${record.credentialPlaceholder},
-        ${record.credentialHelp}, ${record.apiBaseUrl}, ${record.serverUrl ?? null}, ${record.openApiUrl ?? null}, ${record.oauthConfig ? JSON.stringify(record.oauthConfig) : null},
+        ${record.credentialHelp}, ${record.apiBaseUrl ?? ""}, ${record.serverUrl ?? null}, ${record.openApiUrl ?? null}, ${record.oauthConfig ? JSON.stringify(record.oauthConfig) : null},
         ${record.encryptedOAuthClient ?? null}, ${JSON.stringify(record.functions)}, ${record.enabled}, ${record.createdAt}, ${record.updatedAt}
       )
       ON CONFLICT (slug) DO UPDATE SET

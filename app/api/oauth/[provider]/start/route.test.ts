@@ -1,7 +1,10 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
+import type { ContextRepository } from "@/src/lib/core/repository";
 import { encryptCredentials } from "@/src/lib/credential-crypto";
-import { MemoryRepository } from "@/src/lib/db/memory-repository";
+import { createTestRepository, getActiveSql } from "@/src/lib/db/pglite-test-utils";
+
+vi.mock("@neondatabase/serverless", () => ({ neon: () => getActiveSql() }));
 
 const { getCurrentUserIdentityMock } = vi.hoisted(() => ({
   getCurrentUserIdentityMock: vi.fn(async () => ({
@@ -17,7 +20,17 @@ vi.mock("@/src/lib/current-user", () => ({
   getCurrentUserIdentity: getCurrentUserIdentityMock,
 }));
 
-const setRuntimeRepository = (repository?: MemoryRepository) => {
+let testRepo: ContextRepository;
+let testCleanup: () => Promise<void>;
+
+beforeAll(() => { vi.stubEnv("POSTGRES_URL", "pglite://oauth-start-test"); });
+beforeEach(async () => {
+  const ctx = await createTestRepository();
+  testRepo = ctx.repository;
+  testCleanup = ctx.cleanup;
+});
+
+const setRuntimeRepository = (repository?: ContextRepository) => {
   const runtime = globalThis as typeof globalThis & {
     contextLayerRepository?: unknown;
     contextLayerService?: unknown;
@@ -32,7 +45,7 @@ const setRuntimeRepository = (repository?: MemoryRepository) => {
 };
 
 const seedManagedNotion = async () => {
-  const repository = new MemoryRepository();
+  const repository = testRepo;
   await repository.upsertManagedConnector({
     slug: "notion",
     name: "Notion",
@@ -65,11 +78,11 @@ const seedManagedNotion = async () => {
   return repository;
 };
 
-afterEach(() => {
-  vi.unstubAllEnvs();
+afterEach(async () => {
   vi.resetModules();
   setRuntimeRepository();
   getCurrentUserIdentityMock.mockClear();
+  await testCleanup();
 });
 
 describe("GET /api/oauth/[provider]/start", () => {
@@ -80,7 +93,7 @@ describe("GET /api/oauth/[provider]/start", () => {
 
     const response = await GET(
       new Request(
-        "http://localhost:3000/api/oauth/notion/start?integrationKey=notion&redirectTo=%2Fadmin%3Fsection%3Dintegrations%26showIntegrationWizard%3D1%26builtIn%3Dnotion",
+        "http://localhost:3000/api/oauth/notion/start?integrationKey=notion&redirectTo=%2Fintegrations%3FshowIntegrationWizard%3D1%26builtIn%3Dnotion",
       ),
       {
         params: Promise.resolve({ provider: "notion" }),

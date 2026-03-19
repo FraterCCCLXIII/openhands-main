@@ -10,7 +10,11 @@ export type AuthStrategy =
   | "oauth2"
   | "mcp_session";
 
-export type HttpRequestContentType = "json" | "form_urlencoded" | "text";
+export type HttpRequestContentType =
+  | "json"
+  | "form_urlencoded"
+  | "multipart_form_data"
+  | "text";
 export type OAuthClientAuthentication = "basic" | "body";
 
 export type NotificationChannel = "email" | "in_app" | "sms";
@@ -46,6 +50,13 @@ export interface IntegrationSpec {
   functions: Record<string, FunctionSpec>;
 }
 
+export interface OwnerIntegrationRecord {
+  ownerId: string;
+  integration: IntegrationSpec;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface BuiltInConnectorOption {
   slug: string;
   name: string;
@@ -60,6 +71,7 @@ export interface BuiltInConnectorOption {
   credentialLabel: string;
   credentialPlaceholder: string;
   credentialHelp: string;
+  apiKeyHeaderName?: string;
 }
 
 export type OAuthProviderAvailability =
@@ -69,12 +81,23 @@ export type OAuthProviderAvailability =
 
 export interface OAuthProviderRegistrationDefaults {
   provider?: "mcp" | "http";
+  authModes?: AuthStrategy[];
+  authStrategy?: Exclude<AuthStrategy, "mcp_session">;
+  credentialLabel?: string;
+  credentialPlaceholder?: string;
+  credentialHelp?: string;
+  apiKeyHeaderName?: string;
   apiBaseUrl?: string;
   serverUrl?: string;
   openApiUrl?: string;
   authorizationUrl?: string;
   tokenUrl?: string;
   scopes?: string[];
+  scopeSeparator?: "space" | "comma";
+  pkce?: boolean;
+  clientAuthentication?: OAuthClientAuthentication;
+  additionalAuthorizationParams?: Record<string, string>;
+  additionalTokenParams?: Record<string, string>;
   functionName?: string;
   functionDescription?: string;
   requestMethod?: string;
@@ -86,7 +109,7 @@ export interface OAuthProviderCatalogOption {
   name: string;
   description: string;
   categories: string[];
-  authStrategy: "oauth2";
+  authStrategy: Exclude<AuthStrategy, "mcp_session">;
   availability: OAuthProviderAvailability;
   builtInSlug?: string;
   appUrl?: string;

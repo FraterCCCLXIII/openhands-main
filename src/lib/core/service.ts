@@ -5,7 +5,10 @@ import { addMinutes, nowIso } from "@/src/lib/core/date";
 import { ContextLayerError } from "@/src/lib/core/errors";
 import type { ContextRepository } from "@/src/lib/core/repository";
 import { decryptCredentials, encryptCredentials } from "@/src/lib/credential-crypto";
-import { sanitizeManagedConnector } from "@/src/lib/integrations/managed-connectors";
+import {
+  listAllManagedConnectorDefinitions,
+  sanitizeManagedConnector,
+} from "@/src/lib/integrations/managed-connectors";
 import { generateManagedConnectorFunctionsFromOpenApi } from "@/src/lib/managed-connectors/openapi";
 import type { NotificationPublisher } from "@/src/lib/notifications/publisher";
 import { resolveOAuthProvider } from "@/src/lib/oauth/provider-resolver";
@@ -122,15 +125,15 @@ export class ContextLayerService {
     await this.repository.ensureSchema();
   }
 
-  async listIntegrations() {
+  async listOwnerIntegrations(ownerId: string) {
     await this.initialize();
-    return this.repository.listIntegrations();
+    return (await this.repository.listOwnerIntegrations(normalizeAgentApiKeyOwner(ownerId)))
+      .sort((a, b) => a.key.localeCompare(b.key));
   }
 
   async listManagedConnectors() {
     await this.initialize();
-    const connectors = await this.repository.listManagedConnectors();
-    return connectors.map(sanitizeManagedConnector);
+    return listAllManagedConnectorDefinitions(this.repository);
   }
 
   async upsertManagedConnector(
@@ -454,39 +457,71 @@ export class ContextLayerService {
   }
 
 
-  async registerIntegration(
+  async registerOwnerIntegration(
+    ownerId: string,
     spec: Omit<IntegrationSpec, "functions"> & {
       functions?: Record<string, FunctionSpec>;
     },
   ) {
     await this.initialize();
+
+    if (spec.authStrategy === "oauth2" && Object.keys(spec.credentials).length > 0) {
+      throw new ContextLayerError(
+        "OAuth integrations cannot store credentials directly. Save per-user OAuth connections instead.",
+        400,
+      );
+    }
+
     const integration: IntegrationSpec = {
       ...spec,
       functions: normalizeFunctions(spec.functions ?? {}),
     };
-    return this.repository.upsertIntegration(integration);
+    return this.repository.upsertOwnerIntegration(
+      normalizeAgentApiKeyOwner(ownerId),
+      integration,
+    );
   }
 
-  async addFunction(integrationKey: string, functionSpec: FunctionSpec) {
-    const integration = await this.getIntegration(integrationKey);
-    integration.functions[functionSpec.name] =
-      normalizeFunctionSpec(functionSpec);
-    await this.repository.upsertIntegration(integration);
+  async addOwnerFunction(
+    ownerId: string,
+    integrationKey: string,
+    functionSpec: FunctionSpec,
+  ) {
+    const normalizedOwnerId = normalizeAgentApiKeyOwner(ownerId);
+    const integration = await this.getMutableOwnerIntegration(
+      normalizedOwnerId,
+      integrationKey,
+    );
+    integration.functions[functionSpec.name] = normalizeFunctionSpec(functionSpec);
+    await this.repository.upsertOwnerIntegration(normalizedOwnerId, integration);
     return integration.functions[functionSpec.name];
   }
 
-  async setIntegrationEnabled(integrationKey: string, enabled: boolean) {
-    const integration = await this.getIntegration(integrationKey);
+  async setOwnerIntegrationEnabled(
+    ownerId: string,
+    integrationKey: string,
+    enabled: boolean,
+  ) {
+    const normalizedOwnerId = normalizeAgentApiKeyOwner(ownerId);
+    const integration = await this.getMutableOwnerIntegration(
+      normalizedOwnerId,
+      integrationKey,
+    );
     integration.enabled = enabled;
-    return this.repository.upsertIntegration(integration);
+    return this.repository.upsertOwnerIntegration(normalizedOwnerId, integration);
   }
 
-  async setFunctionEnabled(
+  async setOwnerFunctionEnabled(
+    ownerId: string,
     integrationKey: string,
     functionName: string,
     enabled: boolean,
   ) {
-    const integration = await this.getIntegration(integrationKey);
+    const normalizedOwnerId = normalizeAgentApiKeyOwner(ownerId);
+    const integration = await this.getMutableOwnerIntegration(
+      normalizedOwnerId,
+      integrationKey,
+    );
     const functionSpec = integration.functions[functionName];
 
     if (!functionSpec) {
@@ -496,15 +531,44 @@ export class ContextLayerService {
       );
     }
 
-    functionSpec.enabled = enabled;
-    functionSpec.accessMode = enabled
+    const accessMode = enabled
       ? functionSpec.accessMode === "disabled"
         ? "enabled"
         : getFunctionAccessMode(functionSpec)
       : "disabled";
-    await this.repository.upsertIntegration(integration);
+
+    functionSpec.enabled = accessMode !== "disabled";
+    functionSpec.accessMode = accessMode;
+    await this.repository.upsertOwnerIntegration(normalizedOwnerId, integration);
     return functionSpec;
   }
+
+  async setOwnerFunctionAccessMode(
+    ownerId: string,
+    integrationKey: string,
+    functionName: string,
+    accessMode: FunctionAccessMode,
+  ) {
+    const normalizedOwnerId = normalizeAgentApiKeyOwner(ownerId);
+    const integration = await this.getMutableOwnerIntegration(
+      normalizedOwnerId,
+      integrationKey,
+    );
+    const functionSpec = integration.functions[functionName];
+
+    if (!functionSpec) {
+      throw new ContextLayerError(
+        `Unknown function '${functionName}' for integration '${integrationKey}'.`,
+        404,
+      );
+    }
+
+    functionSpec.accessMode = accessMode;
+    functionSpec.enabled = accessMode !== 'disabled';
+    await this.repository.upsertOwnerIntegration(normalizedOwnerId, integration);
+    return functionSpec;
+  }
+
 
   async upsertAgentPolicy(agentClass: string, rules: PolicyRule[]) {
     await this.initialize();
@@ -518,8 +582,14 @@ export class ContextLayerService {
     integrationKey: string,
     functionName: string,
     requestedScopes: string[] = [],
+    options: {
+      ownerId?: string;
+    } = {},
   ): Promise<AccessDecision> {
-    const integration = await this.getIntegration(integrationKey);
+    const integration = await this.getRuntimeIntegration(
+      integrationKey,
+      options.ownerId,
+    );
     const functionSpec = integration.functions[functionName];
 
     if (!functionSpec) {
@@ -581,22 +651,27 @@ export class ContextLayerService {
     }
 
     const policy = await this.repository.getPolicy(agentClass);
-    if (policy) {
-      for (const rule of policy.rules) {
-        if (rule.integrationKey !== integrationKey) {
-          continue;
-        }
+    if (!policy) {
+      return {
+        allowed: true,
+        reason: "Allowed by enabled function default",
+        effectiveScopes,
+      };
+    }
 
-        const fineGrained =
-          integration.fineGrainedPermissions &&
-          functionSpec.fineGrainedPermissions;
-        if (permittedByRule(rule, functionName, effectiveScopes, fineGrained)) {
-          return {
-            allowed: true,
-            reason: "Allowed by agent class policy",
-            effectiveScopes,
-          };
-        }
+    for (const rule of policy.rules) {
+      if (rule.integrationKey !== integrationKey) {
+        continue;
+      }
+
+      const fineGrained =
+        integration.fineGrainedPermissions && functionSpec.fineGrainedPermissions;
+      if (permittedByRule(rule, functionName, effectiveScopes, fineGrained)) {
+        return {
+          allowed: true,
+          reason: "Allowed by agent class policy",
+          effectiveScopes,
+        };
       }
     }
 
@@ -688,7 +763,10 @@ export class ContextLayerService {
       ownerId?: string;
     } = {},
   ): Promise<ContextInvocationResult> {
-    const integration = await this.getIntegration(integrationKey);
+    const integration = await this.getRuntimeIntegration(
+      integrationKey,
+      options.ownerId,
+    );
     const functionSpec = integration.functions[functionName];
     if (!functionSpec) {
       throw new ContextLayerError(
@@ -703,6 +781,7 @@ export class ContextLayerService {
       integrationKey,
       functionName,
       requestedScopes,
+      { ownerId: options.ownerId },
     );
     if (!decision.allowed) {
       throw new ContextLayerError(decision.reason, 403);
@@ -829,14 +908,45 @@ export class ContextLayerService {
     } satisfies IntegrationSpec;
   }
 
-
-  private async getIntegration(key: string) {
-    await this.initialize();
-    const integration = await this.repository.getIntegration(key);
-    if (!integration) {
-      throw new ContextLayerError(`Unknown integration '${key}'.`, 404);
+  private async getRuntimeIntegration(key: string, ownerId?: string) {
+    if (!ownerId) {
+      throw new ContextLayerError(
+        `Integration '${key}' must be installed for a specific user before invocation.`,
+        400,
+      );
     }
-    return integration;
+
+    return this.getOwnerIntegration(ownerId, key);
+  }
+
+  private async getMutableOwnerIntegration(ownerId: string, key: string) {
+    await this.initialize();
+    const normalizedOwnerId = normalizeAgentApiKeyOwner(ownerId);
+    const existing = await this.repository.getOwnerIntegration(normalizedOwnerId, key);
+    if (existing) {
+      return existing;
+    }
+
+    throw new ContextLayerError(
+      `Integration '${key}' is not installed for this user. Install it from the integrations wizard first.`,
+      404,
+    );
+  }
+
+  private async getOwnerIntegration(ownerId: string, key: string) {
+    await this.initialize();
+    const integration = await this.repository.getOwnerIntegration(
+      normalizeAgentApiKeyOwner(ownerId),
+      key,
+    );
+    if (integration) {
+      return integration;
+    }
+
+    throw new ContextLayerError(
+      `Integration '${key}' is not installed for this user. Install it from the integrations wizard first.`,
+      404,
+    );
   }
 
   private async getAccessRequest(requestId: string) {

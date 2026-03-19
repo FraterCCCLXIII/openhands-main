@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 const { mcpListToolsMock, mcpState } = vi.hoisted(() => ({
   mcpListToolsMock: vi.fn(
@@ -34,14 +34,27 @@ vi.mock("@modelcontextprotocol/sdk/client/streamableHttp.js", () => ({
   },
 }));
 
+vi.mock("@neondatabase/serverless", () => ({ neon: () => getActiveSql() }));
+
+import type { ContextRepository } from "@/src/lib/core/repository";
 import { encryptCredentials } from "@/src/lib/credential-crypto";
-import { MemoryRepository } from "@/src/lib/db/memory-repository";
+import { createTestRepository, getActiveSql } from "@/src/lib/db/pglite-test-utils";
 import {
   discoverIntegration,
   inferMcpAuthStrategy,
   listBuiltInConnectors,
   normalizeComposioAuthModes,
 } from "@/src/lib/integrations/discovery";
+
+let testRepo: ContextRepository;
+let testCleanup: () => Promise<void>;
+
+beforeAll(() => { vi.stubEnv("POSTGRES_URL", "pglite://discovery-test"); });
+beforeEach(async () => {
+  const ctx = await createTestRepository();
+  testRepo = ctx.repository;
+  testCleanup = ctx.cleanup;
+});
 
 beforeEach(() => {
   mcpListToolsMock.mockReset();
@@ -50,7 +63,8 @@ beforeEach(() => {
   mcpState.headers = undefined;
 });
 
-afterEach(() => {
+afterEach(async () => {
+  await testCleanup();
   vi.unstubAllGlobals();
 });
 
@@ -72,7 +86,7 @@ describe("listBuiltInConnectors", () => {
   });
 
   it("returns enabled managed connectors when a repository is provided", async () => {
-    const repository = new MemoryRepository();
+    const repository = testRepo;
     await repository.upsertManagedConnector({
       slug: "acme-crm",
       name: "Acme CRM",
@@ -103,7 +117,7 @@ describe("listBuiltInConnectors", () => {
 
     const connectors = await listBuiltInConnectors(repository);
 
-    expect(connectors).toEqual([
+    expect(connectors).toContainEqual(
       expect.objectContaining({
         slug: "acme-crm",
         name: "Acme CRM",
@@ -111,11 +125,39 @@ describe("listBuiltInConnectors", () => {
         toolCount: 0,
         oauthConfigured: true,
       }),
-    ]);
+    );
+  });
+
+  it("includes default API-key connectors that need no admin registration", async () => {
+    const connectors = await listBuiltInConnectors(testRepo);
+
+    expect(connectors).toContainEqual(
+      expect.objectContaining({
+        slug: "elevenlabs",
+        name: "ElevenLabs",
+        authStrategy: "api_key",
+        oauthConfigured: true,
+        apiKeyHeaderName: "xi-api-key",
+      }),
+    );
+  });
+
+  it("includes default MCP bearer connectors that need no admin registration", async () => {
+    const connectors = await listBuiltInConnectors(testRepo);
+
+    expect(connectors).toContainEqual(
+      expect.objectContaining({
+        slug: "ordinal",
+        name: "Ordinal",
+        authStrategy: "bearer",
+        oauthConfigured: true,
+        credentialLabel: "Ordinal API key",
+      }),
+    );
   });
 
   it("omits disabled managed connectors and sorts the catalog by name", async () => {
-    const repository = new MemoryRepository();
+    const repository = testRepo;
     await repository.upsertManagedConnector({
       slug: "zeta",
       name: "Zeta Desk",
@@ -175,6 +217,8 @@ describe("listBuiltInConnectors", () => {
 
     expect(connectors.map((connector) => connector.name)).toEqual([
       "Alpha CRM",
+      "ElevenLabs",
+      "Ordinal",
       "Zeta Desk",
     ]);
   });
@@ -182,7 +226,7 @@ describe("listBuiltInConnectors", () => {
 
 describe("discoverIntegration", () => {
   it("discovers managed bearer MCP connectors and forwards the supplied token", async () => {
-    const repository = new MemoryRepository();
+    const repository = testRepo;
     await repository.upsertManagedConnector({
       slug: "github",
       name: "GitHub",
@@ -262,7 +306,73 @@ describe("discoverIntegration", () => {
     });
   });
 
-  it("returns 404 when a built-in slug has not been registered as a managed connector", async () => {
+  it("discovers default ElevenLabs connectors from curated registration defaults", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            openapi: "3.1.0",
+            paths: {
+              "/v1/models": {
+                get: {
+                  operationId: "list-models",
+                  summary: "List models",
+                },
+              },
+            },
+          }),
+          {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          },
+        ),
+      ),
+    );
+
+    await expect(
+      discoverIntegration(
+        {
+          key: "elevenlabs",
+          kind: "built_in",
+          config: {
+            builtInSlug: "elevenlabs",
+          },
+          credentials: {
+            secret: "eleven-secret",
+          },
+        },
+        {
+          repository: testRepo,
+        },
+      ),
+    ).resolves.toMatchObject({
+      provider: "http",
+      authStrategy: "api_key",
+      config: {
+        builtInSlug: "elevenlabs",
+        apiBaseUrl: "https://api.elevenlabs.io",
+      },
+      credentials: {
+        headerName: "xi-api-key",
+        secret: "eleven-secret",
+      },
+      functions: {
+        list_models: {
+          description: "List models",
+          config: {
+            request: {
+              method: "GET",
+              path: "/v1/models",
+            },
+          },
+        },
+      },
+    });
+  });
+
+
+  it("returns 404 when a built-in slug is not available", async () => {
     await expect(
       discoverIntegration(
         {
@@ -274,7 +384,7 @@ describe("discoverIntegration", () => {
           credentials: {},
         },
         {
-          repository: new MemoryRepository(),
+          repository: testRepo,
         },
       ),
     ).rejects.toMatchObject({
@@ -283,7 +393,7 @@ describe("discoverIntegration", () => {
   });
 
   it("discovers managed OAuth MCP connectors with the user's stored connection", async () => {
-    const repository = new MemoryRepository();
+    const repository = testRepo;
     await repository.upsertManagedConnector({
       slug: "acme-crm",
       name: "Acme CRM",
@@ -376,7 +486,7 @@ describe("discoverIntegration", () => {
   });
 
   it("discovers managed HTTP connectors from their stored function templates", async () => {
-    const repository = new MemoryRepository();
+    const repository = testRepo;
     await repository.upsertManagedConnector({
       slug: "linear",
       name: "Linear",
@@ -458,7 +568,7 @@ describe("discoverIntegration", () => {
   });
 
   it("discovers managed OAuth HTTP connectors from generated OpenAPI function templates", async () => {
-    const repository = new MemoryRepository();
+    const repository = testRepo;
     await repository.upsertManagedConnector({
       slug: "notion",
       name: "Notion",
@@ -541,6 +651,38 @@ describe("discoverIntegration", () => {
           },
         },
       },
+    });
+  });
+
+  it("discovers default MCP built-in connectors with bearer auth", async () => {
+    mcpListToolsMock.mockResolvedValue({
+      tools: [
+        { name: "create_post", description: "Create a social media post" },
+        { name: "list_profiles", description: "List connected social profiles" },
+      ],
+    });
+
+    const result = await discoverIntegration(
+      {
+        key: "ordinal",
+        kind: "built_in",
+        config: { builtInSlug: "ordinal" },
+        credentials: { accessToken: "ord_test_key_123" },
+      },
+    );
+
+    expect(result).toMatchObject({
+      provider: "mcp",
+      authStrategy: "bearer",
+      config: {
+        builtInSlug: "ordinal",
+        serverUrl: "https://app.tryordinal.com/api/mcp",
+      },
+    });
+    expect(Object.keys(result.functions)).toEqual(["create_post", "list_profiles"]);
+    expect(mcpState.url).toBe("https://app.tryordinal.com/api/mcp");
+    expect(mcpState.headers).toEqual({
+      Authorization: "Bearer ord_test_key_123",
     });
   });
 

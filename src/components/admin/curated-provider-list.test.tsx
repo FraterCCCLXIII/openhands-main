@@ -55,11 +55,15 @@ const providerCatalog: OAuthProviderCatalogOption[] = [
     notes: "Useful for scheduling workflows.",
     popularityRank: 2,
     registrationDefaults: {
-      serverUrl:
-        "https://mcp.composio.dev/partner/composio/google-calendar/mcp?customerId=replace-me",
+      provider: "http",
+      apiBaseUrl: "https://www.googleapis.com/calendar/v3",
       authorizationUrl: "https://accounts.google.com/o/oauth2/v2/auth",
       tokenUrl: "https://oauth2.googleapis.com/token",
       scopes: ["https://www.googleapis.com/auth/calendar.readonly"],
+      functionName: "list_events",
+      functionDescription: "List events from the user's primary Google Calendar.",
+      requestMethod: "GET",
+      requestPath: "/calendars/primary/events",
     },
   },
   {
@@ -80,6 +84,66 @@ const providerCatalog: OAuthProviderCatalogOption[] = [
       authorizationUrl: "https://api.notion.com/v1/oauth/authorize",
       tokenUrl: "https://api.notion.com/v1/oauth/token",
       scopes: [],
+    },
+  },
+  {
+    slug: "slack",
+    name: "Slack",
+    description: "Channels, messaging, workflows, canvases, and operational collaboration",
+    categories: ["Communication", "Operations"],
+    authStrategy: "oauth2",
+    availability: "oauth_ready",
+    builtInSlug: "slack",
+    docsUrl: "https://docs.slack.dev/ai/slack-mcp-server",
+    notes: "Uses Slack's official hosted MCP server with confidential OAuth user-token auth.",
+    popularityRank: 4,
+    registrationDefaults: {
+      provider: "mcp",
+      serverUrl: "https://mcp.slack.com/mcp",
+      authorizationUrl: "https://slack.com/oauth/v2_user/authorize",
+      tokenUrl: "https://slack.com/api/oauth.v2.user.access",
+      scopes: [
+        "search:read.public",
+        "search:read.private",
+        "search:read.mpim",
+        "search:read.im",
+        "search:read.files",
+        "search:read.users",
+        "chat:write",
+        "channels:history",
+        "groups:history",
+        "mpim:history",
+        "im:history",
+        "canvases:read",
+        "canvases:write",
+        "users:read",
+        "users:read.email",
+      ],
+      clientAuthentication: "body",
+      pkce: true,
+    },
+  },
+  {
+    slug: "elevenlabs",
+    name: "ElevenLabs",
+    description: "Text to speech, voices, transcription, audio generation, and agents",
+    categories: ["Audio", "AI"],
+    authStrategy: "api_key",
+    availability: "manual_token",
+    builtInSlug: "elevenlabs",
+    docsUrl: "https://elevenlabs.io/docs/api-reference/introduction",
+    notes: "Uses the published API schema and user API keys.",
+    popularityRank: 5,
+    registrationDefaults: {
+      provider: "http",
+      authModes: ["api_key"],
+      authStrategy: "api_key",
+      credentialLabel: "ElevenLabs API key",
+      credentialPlaceholder: "Paste your ElevenLabs API key",
+      credentialHelp: "Personal or workspace ElevenLabs API key sent in the xi-api-key header.",
+      apiBaseUrl: "https://api.elevenlabs.io",
+      openApiUrl: "https://api.elevenlabs.io/openapi.json",
+      apiKeyHeaderName: "xi-api-key",
     },
   },
 ];
@@ -166,7 +230,7 @@ describe("CuratedProviderList", () => {
 
     expect(container.textContent).toContain("Register this provider");
     expect(container.textContent).toContain(
-      "Enter the OAuth-backed MCP details below to register this connector once for the whole service.",
+      "Enter the REST API details below to register this connector once for the whole service.",
     );
     expect(container.textContent).toContain("Register connector");
     expect(container.textContent).toContain("How to create Google Calendar OAuth credentials");
@@ -176,22 +240,22 @@ describe("CuratedProviderList", () => {
     expect(container.textContent).toContain(
       "The standard OAuth URLs and scopes for Google Calendar are already filled in.",
     );
+    expect(container.textContent).toContain("Starter API function:");
+    expect(container.textContent).toContain("list_events");
+    expect(container.textContent).toContain("GET /calendars/primary/events");
     expect(container.textContent).not.toContain("OAuth docs");
     expect(container.textContent).not.toContain("Scopes (comma separated)");
     expect(container.textContent).not.toContain("Authorization URL");
     expect(container.textContent).not.toContain("Token URL");
-    expect(container.textContent).not.toContain("Starts with a researched");
 
     const urlInputs = Array.from(container.querySelectorAll('input[type="url"]'));
     expect(urlInputs).toHaveLength(1);
     expect((urlInputs[0] as HTMLInputElement | undefined)?.value).toBe(
-      "https://mcp.composio.dev/partner/composio/google-calendar/mcp?customerId=replace-me",
+      "https://www.googleapis.com/calendar/v3",
     );
-    expect(container.textContent).not.toContain("Function name");
-    expect(container.textContent).not.toContain("Request path");
+    expect(container.textContent).not.toContain("MCP server URL");
 
     await act(async () => {
-      setInputValue(urlInputs[0] ?? null, "https://mcp.calendar.test/mcp");
       setInputValue(
         Array.from(container.querySelectorAll('input[type="text"]')).find(
           (input) => (input as HTMLInputElement).value === "",
@@ -218,7 +282,8 @@ describe("CuratedProviderList", () => {
     const body = JSON.parse(String(requestInit.body)) as {
       slug: string;
       provider: string;
-      serverUrl: string;
+      apiBaseUrl: string;
+      serverUrl?: string;
       oauthConfig: {
         authorizationUrl: string;
         tokenUrl: string;
@@ -226,11 +291,20 @@ describe("CuratedProviderList", () => {
       };
       oauthClientId: string;
       oauthClientSecret: string;
-      functions: Array<unknown>;
+      functions: Array<{
+        name: string;
+        description: string;
+        defaultScopes: string[];
+        request: {
+          method: string;
+          path: string;
+        };
+      }>;
     };
     expect(body.slug).toBe("google-calendar");
-    expect(body.provider).toBe("mcp");
-    expect(body.serverUrl).toBe("https://mcp.calendar.test/mcp");
+    expect(body.provider).toBe("http");
+    expect(body.apiBaseUrl).toBe("https://www.googleapis.com/calendar/v3");
+    expect(body.serverUrl).toBeUndefined();
     expect(body.oauthConfig.authorizationUrl).toBe(
       "https://accounts.google.com/o/oauth2/v2/auth",
     );
@@ -240,10 +314,142 @@ describe("CuratedProviderList", () => {
     ]);
     expect(body.oauthClientId).toBe("calendar-client-id");
     expect(body.oauthClientSecret).toBe("calendar-client-secret");
-    expect(body.functions).toEqual([]);
+    expect(body.functions).toEqual([
+      {
+        name: "list_events",
+        description: "List events from the user's primary Google Calendar.",
+        defaultScopes: ["https://www.googleapis.com/auth/calendar.readonly"],
+        request: {
+          method: "GET",
+          path: "/calendars/primary/events",
+        },
+      },
+    ]);
     expect(container.textContent).toContain("Ready now");
     expect(container.textContent).toContain("Use Google Calendar");
   });
+
+  it("registers Slack as a managed MCP connector backed by the official hosted MCP server", async () => {
+    fetchMock.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          slug: "slack",
+          oauthConfigured: true,
+        }),
+        {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        },
+      ),
+    );
+
+    await act(async () => {
+      root.render(
+        <CuratedProviderList
+          providerCatalog={providerCatalog}
+          readyBuiltInConnectors={readyBuiltInConnectors}
+          canRegisterManagedConnectors
+          oauthCallbackBaseUrl={oauthCallbackBaseUrl}
+        />,
+      );
+    });
+
+    const slackButton = Array.from(container.querySelectorAll("button")).find((button) =>
+      button.textContent?.includes("Slack"),
+    );
+    expect(slackButton).toBeTruthy();
+
+    await act(async () => {
+      slackButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    expect(container.textContent).toContain(
+      "Enter the MCP details below to register this connector once for the whole service.",
+    );
+    expect(container.textContent).toContain("How to create Slack OAuth credentials");
+    expect(container.textContent).toContain(`${oauthCallbackBaseUrl}/slack/callback`);
+    expect(container.textContent).toContain("MCP server URL");
+    expect(container.textContent).not.toContain("API base URL");
+    expect(container.textContent).not.toContain("Starter API function:");
+
+    const urlInputs = Array.from(container.querySelectorAll('input[type="url"]'));
+    expect(urlInputs).toHaveLength(1);
+    expect((urlInputs[0] as HTMLInputElement | undefined)?.value).toBe(
+      "https://mcp.slack.com/mcp",
+    );
+
+    await act(async () => {
+      setInputValue(
+        Array.from(container.querySelectorAll('input[type="text"]')).find(
+          (input) => (input as HTMLInputElement).value === "",
+        ) ?? null,
+        "slack-client-id",
+      );
+      setInputValue(container.querySelector('input[type="password"]'), "slack-client-secret");
+    });
+
+    const form = container.querySelector("form");
+    expect(form).toBeTruthy();
+
+    await act(async () => {
+      form?.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    const [, requestInit] = fetchMock.mock.calls.at(-1) as [string, RequestInit];
+    const body = JSON.parse(String(requestInit.body)) as {
+      slug: string;
+      provider: string;
+      apiBaseUrl: string;
+      serverUrl?: string;
+      oauthConfig: {
+        authorizationUrl: string;
+        tokenUrl: string;
+        clientAuthentication?: string;
+        pkce?: boolean;
+        scopes: string[];
+      };
+      oauthClientId: string;
+      oauthClientSecret: string;
+      functions: Array<unknown>;
+    };
+
+    expect(body).toMatchObject({
+      slug: "slack",
+      provider: "mcp",
+      serverUrl: "https://mcp.slack.com/mcp",
+      oauthClientId: "slack-client-id",
+      oauthClientSecret: "slack-client-secret",
+      functions: [],
+    });
+    expect(body.apiBaseUrl).toBeUndefined();
+    expect(body.oauthConfig).toMatchObject({
+      authorizationUrl: "https://slack.com/oauth/v2_user/authorize",
+      tokenUrl: "https://slack.com/api/oauth.v2.user.access",
+      clientAuthentication: "body",
+      pkce: true,
+      scopes: [
+        "search:read.public",
+        "search:read.private",
+        "search:read.mpim",
+        "search:read.im",
+        "search:read.files",
+        "search:read.users",
+        "chat:write",
+        "channels:history",
+        "groups:history",
+        "mpim:history",
+        "im:history",
+        "canvases:read",
+        "canvases:write",
+        "users:read",
+        "users:read.email",
+      ],
+    });
+    expect(container.textContent).toContain("Ready now");
+    expect(container.textContent).toContain("Use Slack");
+  });
+
 
   it("registers Notion as a managed HTTP connector backed by the official OpenAPI schema", async () => {
     fetchMock.mockResolvedValueOnce(
@@ -279,8 +485,8 @@ describe("CuratedProviderList", () => {
       notionButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
 
-    expect(container.textContent).toContain("Enter the OAuth-backed REST API details below");
-    expect(container.textContent).toContain("OpenAPI schema source:");
+    expect(container.textContent).toContain("Enter the REST API details below");
+    expect(container.textContent).toContain("API schema source:");
     expect(container.textContent).toContain("https://developers.notion.com/openapi.json");
     expect(container.textContent).toContain("API base URL");
     expect(container.textContent).not.toContain("MCP server URL");
@@ -325,8 +531,90 @@ describe("CuratedProviderList", () => {
     expect(body.serverUrl).toBeUndefined();
   });
 
+  it("registers ElevenLabs without requiring service-level OAuth credentials", async () => {
+    fetchMock.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          slug: "elevenlabs",
+          oauthConfigured: true,
+        }),
+        {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        },
+      ),
+    );
 
-  it("requires replacing researched MCP templates before registration", async () => {
+    await act(async () => {
+      root.render(
+        <CuratedProviderList
+          providerCatalog={providerCatalog}
+          readyBuiltInConnectors={readyBuiltInConnectors}
+          canRegisterManagedConnectors
+          oauthCallbackBaseUrl={oauthCallbackBaseUrl}
+        />,
+      );
+    });
+
+    const elevenLabsButton = Array.from(container.querySelectorAll("button")).find((button) =>
+      button.textContent?.includes("ElevenLabs"),
+    );
+    expect(elevenLabsButton).toBeTruthy();
+
+    await act(async () => {
+      elevenLabsButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    expect(container.textContent).toContain(
+      "This provider does not require service-level OAuth client credentials.",
+    );
+    expect(container.textContent).toContain("How to configure ElevenLabs");
+    expect(container.textContent).toContain("API schema source:");
+    expect(container.textContent).not.toContain("OAuth client ID");
+    expect(container.textContent).not.toContain("OAuth client secret");
+    expect(container.textContent).not.toContain(`${oauthCallbackBaseUrl}/elevenlabs/callback`);
+
+    const form = container.querySelector("form");
+    expect(form).toBeTruthy();
+
+    await act(async () => {
+      form?.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    const [, requestInit] = fetchMock.mock.calls.at(-1) as [string, RequestInit];
+    const body = JSON.parse(String(requestInit.body)) as {
+      slug: string;
+      authModes: string[];
+      authStrategy: string;
+      provider: string;
+      apiBaseUrl: string;
+      openApiUrl: string;
+      credentialLabel: string;
+      oauthConfig?: unknown;
+      oauthClientId?: string;
+      oauthClientSecret?: string;
+      functions: Array<unknown>;
+    };
+
+    expect(body).toMatchObject({
+      slug: "elevenlabs",
+      authModes: ["api_key"],
+      authStrategy: "api_key",
+      provider: "http",
+      apiBaseUrl: "https://api.elevenlabs.io",
+      openApiUrl: "https://api.elevenlabs.io/openapi.json",
+      credentialLabel: "ElevenLabs API key",
+      functions: [],
+    });
+    expect(body.oauthConfig).toBeUndefined();
+    expect(body.oauthClientId).toBeUndefined();
+    expect(body.oauthClientSecret).toBeUndefined();
+  });
+
+
+
+  it("does not render legacy Composio MCP template guidance", async () => {
     await act(async () => {
       root.render(
         <CuratedProviderList
@@ -346,18 +634,8 @@ describe("CuratedProviderList", () => {
       calendarButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
 
-    const form = container.querySelector("form");
-    expect(form).toBeTruthy();
-
-    await act(async () => {
-      form?.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
-      await new Promise((resolve) => setTimeout(resolve, 0));
-    });
-
-    expect(fetchMock).not.toHaveBeenCalled();
-    expect(container.textContent).toContain(
-      "Replace customerId=replace-me in the MCP server URL with the generated customer-specific value before registering this connector.",
-    );
+    expect(container.textContent).not.toContain("customerId=replace-me");
+    expect(container.textContent).not.toContain("mcp.composio.dev");
   });
 
   it("requires OAuth client credentials before registering a connector", async () => {
@@ -382,7 +660,7 @@ describe("CuratedProviderList", () => {
 
     const urlInput = container.querySelector('input[type="url"]');
     await act(async () => {
-      setInputValue(urlInput, "https://mcp.calendar.test/mcp");
+      setInputValue(urlInput, "https://www.googleapis.com/calendar/v3");
     });
 
     const form = container.querySelector("form");

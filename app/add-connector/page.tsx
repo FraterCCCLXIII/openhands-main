@@ -5,6 +5,7 @@ import { ManagedConnectorAdminList } from "@/src/components/admin/managed-connec
 import { ServiceUnavailableScreen } from "@/src/components/service-unavailable-screen";
 import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
+import { buildAdminSectionHref } from "@/src/lib/admin-routes";
 import { isAppAdminEmail } from "@/src/lib/app-admins";
 import { auth } from "@/src/lib/auth";
 import { getOAuthCallbackBaseUrl } from "@/src/lib/auth-config";
@@ -49,7 +50,9 @@ export default async function AddConnectorPage() {
       <div className="mx-auto flex max-w-7xl flex-col gap-6">
         <div className="flex flex-wrap items-center gap-3 text-sm text-[var(--color-text-base)]">
           <a
-            href="/admin?section=integrations&showIntegrationWizard=1"
+            href={buildAdminSectionHref("integrations", {
+              showIntegrationWizard: "1",
+            })}
             className="inline-flex items-center gap-2 text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -60,12 +63,14 @@ export default async function AddConnectorPage() {
 
         <div className="space-y-3">
           <h1 className="text-3xl font-semibold tracking-[-0.02em] text-white">
-            Add a connector
+            Manage OAuth apps
           </h1>
           <p className="max-w-3xl text-sm leading-7 text-[var(--color-text-base)]">
-            If the integration setup flow does not show the provider you need,
-            use this page to see which managed connectors are already registered
-            for this service and how admins can add another OAuth-backed managed connector, whether that connector is a remote MCP or a REST API generated from an official OpenAPI schema.
+            This page is for service-level connector administration. Use it to
+            see which managed connectors are already registered for this
+            deployment and how admins can add or remove OAuth apps and other
+            managed connectors, whether those connectors are remote MCP servers
+            or REST APIs generated from published machine-readable schemas.
           </p>
           <div className="flex flex-wrap gap-2">
             {readyBuiltInConnectors.map((connector) => (
@@ -126,9 +131,9 @@ export default async function AddConnectorPage() {
 
             <div className="space-y-4 text-sm leading-7 text-[var(--color-text-base)]">
               <p>
-                Add connector is a service-level admin action. Use it once to
-                register an OAuth-backed managed connector so every user can see
-                it in the integrations wizard.
+                Managing OAuth apps is a service-level admin action. Use this
+                page to register a managed connector so every user can see it in
+                the integrations wizard.
               </p>
               <p>
                 The in-app registration form is only available to signed-in app
@@ -143,12 +148,8 @@ export default async function AddConnectorPage() {
                   the MCP server URL or API base URL/OpenAPI URL, authorization
                   URL, token URL, callback requirements, and the minimum scopes
                   the connector needs. Each provider row below now starts with
-                  either an official vendor-hosted MCP URL, a researched
-                  Composio-hosted MCP URL pattern, or an API/OpenAPI default. If
-                  the MCP value still includes
-                  <code className="mx-1 text-white">customerId=replace-me</code>,
-                  replace that with the generated customer-specific value before
-                  saving the connector.
+                  either an official vendor-hosted MCP URL or an official REST
+                  API/OpenAPI default sourced from the provider's own docs.
                 </li>
                 <li>
                   <span className="font-medium text-white">2.</span> Create or
@@ -170,13 +171,14 @@ export default async function AddConnectorPage() {
                   and <code className="ml-1 text-white">src/lib/integrations/oauth-provider-catalog.ts</code>.
                 </li>
                 <li>
-                  <span className="font-medium text-white">3.</span> Store the
-                  OAuth client ID and client secret in that managed connector if
-                  this service is going to run the OAuth callback flow for users.
-                  The integrations wizard only lists OAuth connectors after those
-                  service-level credentials are stored. Every provider row includes
-                  a direct link to that provider's OAuth app setup docs and shows
-                  the callback URL to register. When <code className="text-white">AUTH_REDIRECT_PROXY_URL</code>
+                  <span className="font-medium text-white">3.</span> Store any
+                  required service-level credentials in that managed connector
+                  if this deployment is going to run an OAuth callback flow for
+                  users. The integrations wizard only lists OAuth connectors after
+                  those service-level credentials are stored. Every provider row includes
+                  a direct link to that provider's authentication setup docs and
+                  shows the callback URL to register when OAuth is the preferred
+                  path. When <code className="text-white">AUTH_REDIRECT_PROXY_URL</code>
                   is configured for preview deployments, that callback uses the
                   stable deployment origin instead of the preview URL.
                 </li>
@@ -225,10 +227,10 @@ export default async function AddConnectorPage() {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="text-lg font-semibold text-white">
-                Popular OAuth-ready provider options
+                Popular official provider options
               </h2>
               <p className="mt-2 text-sm leading-7 text-[var(--color-text-base)]">
-                Researched catalog of 50 popular providers with OAuth support.
+                Researched catalog of 50 popular providers with official API or MCP entry points.
                 Register one of these providers to make it show up in the integrations wizard.
               </p>
             </div>

@@ -20,7 +20,9 @@ export async function GET(request: Request) {
       );
     }
 
-    if (!(await service.getStoredAgentApiKey(providedApiKey))) {
+    const agentApiKeyRecord = await service.getStoredAgentApiKey(providedApiKey);
+
+    if (!agentApiKeyRecord) {
       return Response.json(
         {
           detail:
@@ -35,7 +37,7 @@ export async function GET(request: Request) {
 
     const markdown = buildAgentSkillMarkdown({
       baseUrl: getRequestOrigin(request.headers),
-      integrations: await service.listIntegrations(),
+      integrations: await service.listOwnerIntegrations(agentApiKeyRecord.ownerId),
     });
 
     return new Response(markdown, {

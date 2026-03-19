@@ -1,44 +1,60 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { HttpAdapter } from "@/src/lib/adapters/http-adapter";
 import {
   AdapterRegistry,
   type IntegrationAdapter,
 } from "@/src/lib/core/adapter-registry";
-import { MemoryRepository } from "@/src/lib/db/memory-repository";
+import type { ContextRepository } from "@/src/lib/core/repository";
+import { createTestRepository, getActiveSql } from "@/src/lib/db/pglite-test-utils";
 import { NotificationPublisher } from "@/src/lib/notifications/publisher";
 import { ContextLayerService } from "@/src/lib/core/service";
 import type { IntegrationSpec } from "@/src/types/context-layer";
 
-afterEach(() => {
+vi.mock("@neondatabase/serverless", () => ({ neon: () => getActiveSql() }));
+
+let testRepo: ContextRepository;
+let testCleanup: () => Promise<void>;
+
+beforeAll(() => { vi.stubEnv("POSTGRES_URL", "pglite://service-test"); });
+beforeEach(async () => {
+  const ctx = await createTestRepository();
+  testRepo = ctx.repository;
+  testCleanup = ctx.cleanup;
+});
+afterEach(async () => {
+  await testCleanup();
   vi.unstubAllGlobals();
 });
 
 
-const createService = () => {
+const createService = (repository?: ContextRepository) => {
+  const repo = repository ?? testRepo;
   const mockAdapter: IntegrationAdapter = {
     invoke: async ({ payload }) => ({ ok: true, payload }),
   };
 
   const service = new ContextLayerService(
-    new MemoryRepository(),
+    repo,
     new AdapterRegistry({
       composio: mockAdapter,
       mcp: mockAdapter,
       mock: mockAdapter,
     }),
-    new NotificationPublisher(new MemoryRepository()),
+    new NotificationPublisher(repo),
   );
 
   return service;
 };
+
+const OWNER_ID = "owner@example.com";
 
 const baseIntegration: IntegrationSpec = {
   key: "salesforce",
   name: "Salesforce",
   kind: "api",
   provider: "composio",
-  authStrategy: "oauth2",
+  authStrategy: "bearer",
   enabled: true,
   fineGrainedPermissions: true,
   config: {},
@@ -56,10 +72,36 @@ const baseIntegration: IntegrationSpec = {
   },
 };
 
+const installIntegration = async (
+  service: ContextLayerService,
+  integration: IntegrationSpec = baseIntegration,
+  ownerId = OWNER_ID,
+) => service.registerOwnerIntegration(ownerId, integration);
+
 describe("ContextLayerService", () => {
+  it("allows enabled functions when no agent-class policy exists", async () => {
+    const service = createService();
+    await installIntegration(service, baseIntegration);
+
+    const response = await service.invokeContext(
+      "agent-1",
+      "assistant",
+      "salesforce",
+      "accounts",
+      { limit: 5 },
+      ["accounts.read"],
+      { ownerId: OWNER_ID },
+    );
+
+    expect(response.integration).toBe("salesforce");
+    expect(response.decision.allowed).toBe(true);
+    expect(response.decision.reason).toBe("Allowed by enabled function default");
+    expect(response.data).toEqual({ ok: true, payload: { limit: 5 } });
+  });
+
   it("allows context invocation through agent-class policies", async () => {
     const service = createService();
-    await service.registerIntegration(baseIntegration);
+    await installIntegration(service, baseIntegration);
     await service.upsertAgentPolicy("assistant", [
       {
         integrationKey: "salesforce",
@@ -76,6 +118,7 @@ describe("ContextLayerService", () => {
       "accounts",
       { limit: 5 },
       ["accounts.read"],
+      { ownerId: OWNER_ID },
     );
 
     expect(response.integration).toBe("salesforce");
@@ -85,7 +128,7 @@ describe("ContextLayerService", () => {
 
   it("blocks disabled functions", async () => {
     const service = createService();
-    await service.registerIntegration({
+    await installIntegration(service, {
       ...baseIntegration,
       functions: {
         accounts: {
@@ -111,12 +154,45 @@ describe("ContextLayerService", () => {
         "accounts",
         {},
         ["accounts.read"],
+        { ownerId: OWNER_ID },
       ),
     ).rejects.toThrow("Function disabled");
   });
 
+  it("updates owner-scoped function access modes and syncs enabled state", async () => {
+    const service = createService();
+    await installIntegration(service, baseIntegration);
+
+    const approvalRequired = await service.setOwnerFunctionAccessMode(
+      OWNER_ID,
+      "salesforce",
+      "accounts",
+      "approval_required",
+    );
+    expect(approvalRequired.accessMode).toBe("approval_required");
+    expect(approvalRequired.enabled).toBe(true);
+
+    const disabled = await service.setOwnerFunctionAccessMode(
+      OWNER_ID,
+      "salesforce",
+      "accounts",
+      "disabled",
+    );
+    expect(disabled.accessMode).toBe("disabled");
+    expect(disabled.enabled).toBe(false);
+
+    const restored = await service.setOwnerFunctionAccessMode(
+      OWNER_ID,
+      "salesforce",
+      "accounts",
+      "enabled",
+    );
+    expect(restored.accessMode).toBe("enabled");
+    expect(restored.enabled).toBe(true);
+  });
+
   it("requires temporary approval for case-by-case functions", async () => {
-    const repository = new MemoryRepository();
+    const repository = testRepo;
     const service = new ContextLayerService(
       repository,
       new AdapterRegistry({
@@ -126,7 +202,7 @@ describe("ContextLayerService", () => {
       new NotificationPublisher(repository),
     );
 
-    await service.registerIntegration({
+    await installIntegration(service, {
       ...baseIntegration,
       functions: {
         accounts: {
@@ -152,6 +228,7 @@ describe("ContextLayerService", () => {
         "accounts",
         {},
         ["accounts.read"],
+        { ownerId: OWNER_ID },
       ),
     ).rejects.toThrow("Permission required");
 
@@ -175,19 +252,20 @@ describe("ContextLayerService", () => {
       "accounts",
       {},
       ["accounts.read"],
+      { ownerId: OWNER_ID },
     );
 
     expect(response.decision.reason).toBe("Allowed by temporary approval");
   });
 
   it("creates notifications for multiple channels when access is requested", async () => {
-    const repository = new MemoryRepository();
+    const repository = testRepo;
     const service = new ContextLayerService(
       repository,
       new AdapterRegistry({ mock: { invoke: async () => ({}) } }),
       new NotificationPublisher(repository),
     );
-    await service.registerIntegration(baseIntegration);
+    await installIntegration(service, baseIntegration);
 
     await service.createAccessRequest({
       agentId: "agent-2",
@@ -216,8 +294,8 @@ describe("ContextLayerService", () => {
     );
   });
 
-  it("grants temporary access until expiry", async () => {
-    const repository = new MemoryRepository();
+  it("grants temporary access until expiry for case-by-case functions", async () => {
+    const repository = testRepo;
     const service = new ContextLayerService(
       repository,
       new AdapterRegistry({
@@ -226,7 +304,15 @@ describe("ContextLayerService", () => {
       }),
       new NotificationPublisher(repository),
     );
-    await service.registerIntegration(baseIntegration);
+    await installIntegration(service, {
+      ...baseIntegration,
+      functions: {
+        accounts: {
+          ...baseIntegration.functions.accounts,
+          accessMode: "approval_required",
+        },
+      },
+    });
 
     const request = await service.createAccessRequest({
       agentId: "agent-3",
@@ -249,23 +335,31 @@ describe("ContextLayerService", () => {
       "accounts",
       {},
       ["accounts.read"],
+      { ownerId: OWNER_ID },
     );
     expect(allowed.decision.allowed).toBe(true);
+    expect(allowed.decision.reason).toBe("Allowed by temporary approval");
 
     const grant = (await repository.listTemporaryGrants())[0];
     grant.expiresAt = new Date(Date.now() - 60_000).toISOString();
     await repository.saveTemporaryGrant(grant);
 
     await expect(
-      service.invokeContext("agent-3", "writer", "salesforce", "accounts", {}, [
-        "accounts.read",
-      ]),
+      service.invokeContext(
+        "agent-3",
+        "writer",
+        "salesforce",
+        "accounts",
+        {},
+        ["accounts.read"],
+        { ownerId: OWNER_ID },
+      ),
     ).rejects.toThrow("Permission required");
   });
 
   it("routes mock execution through the adapter registry", async () => {
     const service = createService();
-    await service.registerIntegration({
+    await installIntegration(service, {
       ...baseIntegration,
       provider: "mock",
       functions: {
@@ -291,6 +385,7 @@ describe("ContextLayerService", () => {
       "accounts",
       { q: "hello" },
       ["accounts.read"],
+      { ownerId: OWNER_ID },
     );
 
     expect(response.provider).toBe("mock");
@@ -312,7 +407,7 @@ describe("ContextLayerService", () => {
 
 
   it("requires OAuth client credentials when first registering an OAuth managed connector", async () => {
-    const repository = new MemoryRepository();
+    const repository = testRepo;
     const service = new ContextLayerService(
       repository,
       new AdapterRegistry({ mock: { invoke: async () => ({}) } }),
@@ -346,7 +441,7 @@ describe("ContextLayerService", () => {
   });
 
   it("generates managed HTTP connector functions from an OpenAPI schema during registration", async () => {
-    const repository = new MemoryRepository();
+    const repository = testRepo;
     const service = new ContextLayerService(
       repository,
       new AdapterRegistry({ mock: { invoke: async () => ({}) } }),
@@ -448,7 +543,7 @@ describe("ContextLayerService", () => {
   });
 
   it("deletes an existing managed connector", async () => {
-    const repository = new MemoryRepository();
+    const repository = testRepo;
     const service = new ContextLayerService(
       repository,
       new AdapterRegistry({ mock: { invoke: async () => ({}) } }),
@@ -489,7 +584,7 @@ describe("ContextLayerService", () => {
 
 
   it("injects saved per-user OAuth credentials during invocation", async () => {
-    const repository = new MemoryRepository();
+    const repository = testRepo;
     const mcpInvoke = vi.fn(async ({ integration }) => integration.credentials);
     const service = new ContextLayerService(
       repository,
@@ -500,7 +595,7 @@ describe("ContextLayerService", () => {
       new NotificationPublisher(repository),
     );
 
-    await service.registerIntegration({
+    await installIntegration(service, {
       key: "notion",
       name: "Notion",
       kind: "mcp",
@@ -568,7 +663,7 @@ describe("ContextLayerService", () => {
   });
 
   it("invokes managed HTTP connectors with stored OAuth credentials", async () => {
-    const repository = new MemoryRepository();
+    const repository = testRepo;
     const service = new ContextLayerService(
       repository,
       new AdapterRegistry({
@@ -578,7 +673,7 @@ describe("ContextLayerService", () => {
       new NotificationPublisher(repository),
     );
 
-    await service.registerIntegration({
+    await installIntegration(service, {
       key: "acme-crm",
       name: "Acme CRM",
       kind: "api",
@@ -668,4 +763,94 @@ describe("ContextLayerService", () => {
     });
     expect(response.data).toEqual({ id: "contact_123", name: "Ada" });
   });
+
+  it("rejects owner integrations with embedded OAuth credentials", async () => {
+    const service = createService();
+
+    await expect(
+      service.registerOwnerIntegration(OWNER_ID, {
+        ...baseIntegration,
+        authStrategy: "oauth2",
+        credentials: { accessToken: "owner-token" },
+      }),
+    ).rejects.toThrow(
+      "OAuth integrations cannot store credentials directly. Save per-user OAuth connections instead.",
+    );
+  });
+
+  it("requires an explicit owner install before owner mutations", async () => {
+    const repository = testRepo;
+    const service = new ContextLayerService(
+      repository,
+      new AdapterRegistry({ mock: { invoke: async () => ({}) } }),
+      new NotificationPublisher(repository),
+    );
+
+    await expect(
+      service.setOwnerIntegrationEnabled(OWNER_ID, "slack", true),
+    ).rejects.toThrow(
+      "Integration 'slack' is not installed for this user. Install it from the integrations wizard first.",
+    );
+    await expect(repository.getOwnerIntegration(OWNER_ID, "slack")).resolves.toBeNull();
+  });
+
+  it("requires a personal OAuth connection before invoking an installed OAuth integration", async () => {
+    const repository = testRepo;
+    const mcpInvoke = vi.fn(async ({ integration }) => integration.credentials);
+    const service = new ContextLayerService(
+      repository,
+      new AdapterRegistry({
+        mcp: { invoke: mcpInvoke },
+        mock: { invoke: async () => ({}) },
+      }),
+      new NotificationPublisher(repository),
+    );
+
+    await installIntegration(service, {
+      key: "notion",
+      name: "Notion",
+      kind: "mcp",
+      provider: "mcp",
+      authStrategy: "oauth2",
+      enabled: true,
+      fineGrainedPermissions: true,
+      config: { serverUrl: "https://mcp.notion.com/mcp" },
+      credentials: {},
+      functions: {
+        search: {
+          name: "search",
+          description: "Search Notion",
+          enabled: true,
+          fineGrainedPermissions: true,
+          defaultScopes: ["read"],
+          executionMode: "provider",
+          config: {},
+        },
+      },
+    });
+    await service.upsertAgentPolicy("assistant", [
+      {
+        integrationKey: "notion",
+        functionNames: ["search"],
+        scopes: ["read"],
+        enabled: true,
+      },
+    ]);
+
+    await expect(
+      service.invokeContext(
+        "agent-13",
+        "assistant",
+        "notion",
+        "search",
+        { query: "docs" },
+        ["read"],
+        { ownerId: OWNER_ID },
+      ),
+    ).rejects.toThrow(
+      "Connect Notion for this user before invoking 'notion'.",
+    );
+    expect(mcpInvoke).not.toHaveBeenCalled();
+  });
+
 });
