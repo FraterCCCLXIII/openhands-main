@@ -13,6 +13,15 @@ This repository contains a Next.js/TypeScript implementation of an agent context
 - Typecheck: `npm run typecheck`
 - Production build check: `npm run build`
 
+## Local DB-backed validation
+
+- All automated tests use PGlite via `src/lib/db/pglite-test-utils.ts`; the standard pattern is `vi.mock("@neondatabase/serverless", () => ({ neon: () => getActiveSql() }))`, `createTestRepository()` in `beforeEach`, and `cleanup()` in `afterEach`.
+- Full repo validation that already exercises the real SQL schema through PGlite: `npm test && npm run test:e2e && npm run typecheck && npm run build`.
+- For live localhost HTTP validation without a real Postgres instance, use a temporary local-only PGlite-backed Neon shim under `.agent_tmp/`, point the installed `@neondatabase/serverless` package at that shim locally (never commit `node_modules`), seed the runtime DB with `PostgresRepository`, then run `POSTGRES_URL='pglite://<name>' DISABLE_AUTH='true' npm run dev -- --hostname 127.0.0.1 --port 12000`.
+- Proven live validation pattern for `/api/context/skill`: seed `saveAgentApiKey(...)` plus `upsertOwnerIntegration(...)` for `dev@localhost`, start the app with the same `POSTGRES_URL`, then `curl -i http://127.0.0.1:12000/api/context/skill -H 'Authorization: Bearer <api-key>'` and expect `200 OK` plus `Content-Disposition: attachment; filename="SKILL.md"`.
+- When `DISABLE_AUTH=true`, localhost requests are allowed but non-loopback hosts are rejected; open `/home` locally if you need the app to provision a fresh personal API key instead of seeding one directly.
+
+
 ## Workflow notes
 
 - For this workstream, when the user requests code changes, commit them and push them to the active PR branch.

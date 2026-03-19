@@ -12,6 +12,8 @@ import {
 } from "@/src/lib/tool-examples";
 import type { IntegrationSpec } from "@/src/types/context-layer";
 
+export const OPENHANDS_CONTEXT_KEY_ENV = "$OPENHANDS_CONTEXT_KEY";
+
 export interface AgentConnectionGuide {
   endpoint: string;
   integrationKey: string;
@@ -23,6 +25,8 @@ export interface AgentConnectionGuide {
   requestBody: string;
   curlExample: string;
   fetchExample: string;
+  skillEndpoint: string;
+  skillCurlExample: string;
   openApiSchemaEndpoint: string;
   openApiCurlExample: string;
   mcpConfigExample: string;
@@ -78,6 +82,12 @@ export const buildAgentConnectionGuide = ({
 });
 
 const result = await response.json();`;
+  const skillEndpoint = `${normalizedBaseUrl}/api/context/skill`;
+  const skillCurlExample = [
+    `curl -L "${skillEndpoint}"`,
+    `  -H "Authorization: Bearer ${apiKey}"`,
+    "  -o SKILL.md",
+  ].join("\\n");
   const openApiCurlExample = [
     `curl -X GET \"${openApiSchemaEndpoint}\"`,
     `  -H \"Authorization: Bearer ${apiKey}\"`,
@@ -116,6 +126,8 @@ const result = await response.json();`;
     requestBody,
     curlExample,
     fetchExample,
+    skillEndpoint,
+    skillCurlExample,
     openApiSchemaEndpoint,
     openApiCurlExample,
     mcpConfigExample,

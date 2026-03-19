@@ -257,8 +257,13 @@ describe("DashboardWorkspace", () => {
     expect(container.textContent).toContain("REST API Usage");
     expect(container.textContent).toContain("MCP Usage");
     expect(container.textContent).toContain("OpenAPI schema");
+    expect(container.textContent).toContain("SKILL.md endpoint");
     expect(container.textContent).toContain("https://example.com/api/context/openapi");
+    expect(container.textContent).toContain("https://example.com/api/context/skill");
     expect(container.textContent).toContain('curl -X GET "https://example.com/api/context/openapi"');
+    expect(container.textContent).toContain("SKILL.md export");
+    expect(container.textContent).toContain('curl -L "https://example.com/api/context/skill"');
+    expect(container.textContent).toContain("-o SKILL.md");
     expect(container.textContent).toContain("https://example.com/api/mcp");
     expect(container.textContent).toContain("set_agent_id");
     expect(container.textContent).toContain("set_agent_class");
