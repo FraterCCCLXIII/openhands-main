@@ -40,6 +40,7 @@ import {
 } from "@/src/lib/admin-routes";
 import {
   buildAgentConnectionGuide,
+  OPENHANDS_CLOUD_SHTTP_MCP_URL,
   OPENHANDS_CONTEXT_KEY_ENV,
 } from "@/src/lib/agent-connection";
 import { cn } from "@/src/lib/utils";
@@ -367,6 +368,49 @@ const ActivityRow = ({
   </div>
 );
 
+const CollapsibleUsageSection = ({
+  title,
+  description,
+  expanded,
+  onToggle,
+  badge,
+  children,
+}: {
+  title: string;
+  description: string;
+  expanded: boolean;
+  onToggle: () => void;
+  badge?: ReactNode;
+  children: ReactNode;
+}) => (
+  <div className="overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)]">
+    <button
+      type="button"
+      className="flex w-full items-start justify-between gap-4 px-4 py-3 text-left"
+      aria-expanded={expanded}
+      onClick={onToggle}
+    >
+      <div className="min-w-0">
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="text-sm font-semibold text-white">{title}</p>
+          {badge}
+        </div>
+        <p className="mt-1 text-xs leading-6 text-[var(--color-text-base)]">
+          {description}
+        </p>
+      </div>
+      <ChevronRight
+        className={cn(
+          "mt-0.5 h-4 w-4 shrink-0 text-[var(--color-text-base)] transition-transform",
+          expanded && "rotate-90",
+        )}
+      />
+    </button>
+    {expanded ? <div className="border-t border-[var(--color-border)] p-4">{children}</div> : null}
+  </div>
+);
+
+
 export const DashboardWorkspace = ({
   initialIntegrations,
   initialAccessRequests,
@@ -389,6 +433,9 @@ export const DashboardWorkspace = ({
     Record<string, boolean>
   >({});
   const [expandedFunctions, setExpandedFunctions] = useState<
+    Record<string, boolean>
+  >({});
+  const [expandedUsageSections, setExpandedUsageSections] = useState<
     Record<string, boolean>
   >({});
   const [revealApiKey, setRevealApiKey] = useState(false);
@@ -557,6 +604,13 @@ export const DashboardWorkspace = ({
     setShowIntegrationWizard(false);
     setActiveSection(section);
     router.push(buildAdminSectionHref(section));
+  };
+
+  const toggleUsageSection = (sectionKey: string) => {
+    setExpandedUsageSections((current) => ({
+      ...current,
+      [sectionKey]: !current[sectionKey],
+    }));
   };
 
   const activeSectionMeta =
@@ -1289,12 +1343,92 @@ export const DashboardWorkspace = ({
               <p className="mb-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-muted)] px-3 py-2 text-xs leading-6 text-[var(--color-text-base)]">
                 {agentConnectionGuide.permissionNote}
               </p>
-              <div className="space-y-6">
-                <section>
-                  <h4 className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-text-base)]">
-                    REST API Usage
-                  </h4>
-                  <div className="mt-3 divide-y divide-[var(--color-border)]">
+              <div className="space-y-3">
+                <CollapsibleUsageSection
+                  title="OpenHands Cloud"
+                  description="Connect OpenHands Cloud to this context layer with the hosted SHTTP MCP server."
+                  expanded={expandedUsageSections.openhandsCloud ?? false}
+                  onToggle={() => toggleUsageSection("openhandsCloud")}
+                  badge={<Badge tone="success">Recommended</Badge>}
+                >
+                  <div className="divide-y divide-[var(--color-border)]">
+                    <KeyValueRow
+                      label="Go to"
+                      value={
+                        <a
+                          href="https://app.all-hands.dev/settings/mcp"
+                          target="_blank"
+                          rel="noreferrer"
+                          className="break-all text-xs text-[var(--color-text-active)] underline-offset-4 hover:underline"
+                        >
+                          https://app.all-hands.dev/settings/mcp
+                        </a>
+                      }
+                    />
+                    <KeyValueRow
+                      label="Server Type"
+                      value={<code className="break-all text-xs text-[var(--color-text-active)]">SHTTP</code>}
+                    />
+                    <KeyValueRow
+                      label="URL"
+                      value={<code className="break-all text-xs text-[var(--color-text-active)]">{OPENHANDS_CLOUD_SHTTP_MCP_URL}</code>}
+                    />
+                    <KeyValueRow
+                      label="API key"
+                      value={<span className="text-xs text-[var(--color-text-base)]">Use the personal API key shown above.</span>}
+                    />
+                  </div>
+                </CollapsibleUsageSection>
+
+                <CollapsibleUsageSection
+                  title="MCP Usage"
+                  description="Connect any MCP client to the streamable HTTP endpoint and call tools directly."
+                  expanded={expandedUsageSections.mcp ?? false}
+                  onToggle={() => toggleUsageSection("mcp")}
+                >
+                  <div className="divide-y divide-[var(--color-border)]">
+                    <KeyValueRow
+                      label="MCP endpoint"
+                      value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.mcpEndpoint}</code>}
+                    />
+                    <KeyValueRow
+                      label="Set agent ID tool"
+                      value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.mcpSetAgentIdToolName}</code>}
+                    />
+                    <KeyValueRow
+                      label="Set agent class tool"
+                      value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.mcpSetAgentClassToolName}</code>}
+                    />
+                    <KeyValueRow
+                      label="Example MCP tool"
+                      value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.mcpToolName}</code>}
+                    />
+                  </div>
+                  <div className="mt-4 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)]">
+                    <div className="border-b border-[var(--color-border)] px-3 py-2 text-xs uppercase tracking-[0.18em] text-[var(--color-text-base)]">
+                      MCP streamable HTTP example
+                    </div>
+                    <pre className="overflow-x-auto whitespace-pre-wrap px-3 py-3 text-xs leading-6 text-[var(--color-text-base)]">
+                      {agentConnectionGuide.mcpConfigExample}
+                    </pre>
+                  </div>
+                  <div className="mt-4 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)]">
+                    <div className="border-b border-[var(--color-border)] px-3 py-2 text-xs uppercase tracking-[0.18em] text-[var(--color-text-base)]">
+                      MCP session setup
+                    </div>
+                    <pre className="overflow-x-auto whitespace-pre-wrap px-3 py-3 text-xs leading-6 text-[var(--color-text-base)]">
+                      {agentConnectionGuide.mcpSessionSetupExample}
+                    </pre>
+                  </div>
+                </CollapsibleUsageSection>
+
+                <CollapsibleUsageSection
+                  title="REST API Usage"
+                  description="Call tools directly over HTTPS or download generated OpenAPI and SKILL.md docs."
+                  expanded={expandedUsageSections.rest ?? false}
+                  onToggle={() => toggleUsageSection("rest")}
+                >
+                  <div className="divide-y divide-[var(--color-border)]">
                     <KeyValueRow
                       label="Auth header"
                       value={
@@ -1346,47 +1480,7 @@ export const DashboardWorkspace = ({
                       {agentConnectionGuide.skillCurlExample}
                     </pre>
                   </div>
-                </section>
-
-                <section>
-                  <h4 className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-text-base)]">
-                    MCP Usage
-                  </h4>
-                  <div className="mt-3 divide-y divide-[var(--color-border)]">
-                    <KeyValueRow
-                      label="MCP endpoint"
-                      value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.mcpEndpoint}</code>}
-                    />
-                    <KeyValueRow
-                      label="Set agent ID tool"
-                      value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.mcpSetAgentIdToolName}</code>}
-                    />
-                    <KeyValueRow
-                      label="Set agent class tool"
-                      value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.mcpSetAgentClassToolName}</code>}
-                    />
-                    <KeyValueRow
-                      label="Example MCP tool"
-                      value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.mcpToolName}</code>}
-                    />
-                  </div>
-                  <div className="mt-4 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)]">
-                    <div className="border-b border-[var(--color-border)] px-3 py-2 text-xs uppercase tracking-[0.18em] text-[var(--color-text-base)]">
-                      MCP streamable HTTP example
-                    </div>
-                    <pre className="overflow-x-auto whitespace-pre-wrap px-3 py-3 text-xs leading-6 text-[var(--color-text-base)]">
-                      {agentConnectionGuide.mcpConfigExample}
-                    </pre>
-                  </div>
-                  <div className="mt-4 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)]">
-                    <div className="border-b border-[var(--color-border)] px-3 py-2 text-xs uppercase tracking-[0.18em] text-[var(--color-text-base)]">
-                      MCP session setup
-                    </div>
-                    <pre className="overflow-x-auto whitespace-pre-wrap px-3 py-3 text-xs leading-6 text-[var(--color-text-base)]">
-                      {agentConnectionGuide.mcpSessionSetupExample}
-                    </pre>
-                  </div>
-                </section>
+                </CollapsibleUsageSection>
               </div>
             </CompactPanel>
           </section>

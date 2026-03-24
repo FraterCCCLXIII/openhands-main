@@ -400,7 +400,7 @@ describe("DashboardWorkspace", () => {
   });
 
 
-  it("shows the usage panel from the top-level agent connection route", async () => {
+  it("shows collapsed MCP-first usage sections on the top-level agent connection route", async () => {
     usePathnameMock.mockReturnValue("/agent-connection");
 
     await act(async () => {
@@ -418,16 +418,46 @@ describe("DashboardWorkspace", () => {
       );
     });
 
-    expect(container.textContent).toContain("REST API Usage");
-    expect(container.textContent).toContain("MCP Usage");
-    expect(container.textContent).toContain("OpenAPI schema");
-    expect(container.textContent).toContain("SKILL.md endpoint");
-    expect(container.textContent).toContain("https://example.com/api/context/openapi");
-    expect(container.textContent).toContain("https://example.com/api/context/skill");
-    expect(container.textContent).toContain('curl -X GET "https://example.com/api/context/openapi"');
-    expect(container.textContent).toContain("SKILL.md export");
-    expect(container.textContent).toContain('curl -L "https://example.com/api/context/skill"');
-    expect(container.textContent).toContain("-o SKILL.md");
+    const usageText = container.textContent ?? "";
+    expect(usageText).toContain("OpenHands Cloud");
+    expect(usageText).toContain("MCP Usage");
+    expect(usageText).toContain("REST API Usage");
+    expect(usageText.indexOf("OpenHands Cloud")).toBeLessThan(
+      usageText.indexOf("MCP Usage"),
+    );
+    expect(usageText.indexOf("MCP Usage")).toBeLessThan(
+      usageText.indexOf("REST API Usage"),
+    );
+    expect(usageText).not.toContain("https://openhands-context-layer.vercel.app/api/mcp");
+    expect(usageText).not.toContain("https://example.com/api/mcp");
+    expect(usageText).not.toContain("https://example.com/api/context/openapi");
+    expect(usageText).toContain(
+      "Enabled tools are callable by default unless you configure an agent-class policy to narrow access; case-by-case tools still need a temporary approval grant.",
+    );
+
+    const openHandsCloudButton = Array.from(container.querySelectorAll("button")).find(
+      (button) => button.textContent?.includes("OpenHands Cloud"),
+    );
+    const mcpButton = Array.from(container.querySelectorAll("button")).find((button) =>
+      button.textContent?.includes("MCP Usage"),
+    );
+    const restButton = Array.from(container.querySelectorAll("button")).find((button) =>
+      button.textContent?.includes("REST API Usage"),
+    );
+
+    expect(openHandsCloudButton).toBeTruthy();
+    expect(mcpButton).toBeTruthy();
+    expect(restButton).toBeTruthy();
+
+    await act(async () => {
+      openHandsCloudButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      mcpButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      restButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    expect(container.textContent).toContain("https://app.all-hands.dev/settings/mcp");
+    expect(container.textContent).toContain("SHTTP");
+    expect(container.textContent).toContain("https://openhands-context-layer.vercel.app/api/mcp");
     expect(container.textContent).toContain("https://example.com/api/mcp");
     expect(container.textContent).toContain("set_agent_id");
     expect(container.textContent).toContain("set_agent_class");
@@ -440,9 +470,12 @@ describe("DashboardWorkspace", () => {
     expect(container.textContent).toContain(
       "Optionally call set_agent_id and set_agent_class to override the identity for the rest of the session.",
     );
-    expect(container.textContent).toContain(
-      "Enabled tools are callable by default unless you configure an agent-class policy to narrow access; case-by-case tools still need a temporary approval grant.",
-    );
+    expect(container.textContent).toContain("https://example.com/api/context/openapi");
+    expect(container.textContent).toContain("https://example.com/api/context/skill");
+    expect(container.textContent).toContain('curl -X GET "https://example.com/api/context/openapi"');
+    expect(container.textContent).toContain("SKILL.md export");
+    expect(container.textContent).toContain('curl -L "https://example.com/api/context/skill"');
+    expect(container.textContent).toContain("-o SKILL.md");
   });
 
   it("shows the integration catalog from the top-level integrations route", async () => {
