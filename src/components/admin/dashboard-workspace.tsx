@@ -100,32 +100,26 @@ interface AdminDashboardProps {
 const getDashboardSections = (): Array<{
   id: AdminSection;
   label: string;
-  description: string;
   icon: LucideIcon;
 }> => [
   {
     id: "home",
     label: "Home",
-    description: "Compact overview, setup checklist, and recent activity.",
     icon: Home,
   },
   {
     id: "profile",
     label: "User Profile",
-    description: "Current user identity and connection context.",
     icon: User,
   },
   {
     id: "integrations",
     label: "Integrations",
-    description:
-      "Connect accounts, enable integrations, and tune skill access for your personal key.",
     icon: PlugZap,
   },
   {
     id: "apiKeys",
     label: "Agent Connection",
-    description: "Reveal, copy, and use the persisted personal key.",
     icon: KeyRound,
   },
 ];
@@ -165,14 +159,12 @@ const copyTextToClipboard = async (text: string) => {
 
 const CompactPanel = ({
   title,
-  description,
   icon: Icon,
   action,
   children,
   className,
 }: {
   title: string;
-  description?: string;
   icon?: LucideIcon;
   action?: ReactNode;
   children: ReactNode;
@@ -191,11 +183,6 @@ const CompactPanel = ({
             {title}
           </h2>
         </div>
-        {description ? (
-          <p className="mt-2 text-xs leading-6 text-[var(--color-text-base)]">
-            {description}
-          </p>
-        ) : null}
       </div>
       {action ? <div className="shrink-0">{action}</div> : null}
     </div>
@@ -612,9 +599,6 @@ export const DashboardWorkspace = ({
               <p className="text-sm font-semibold text-white">Context Layer</p>
               <Badge>{enabledIntegrationCount} live</Badge>
             </div>
-            <p className="mt-2 text-xs leading-6 text-[var(--color-text-base)]">
-              Personal workspace for integrations active on your personal key.
-            </p>
           </div>
 
           <nav className="space-y-1">
@@ -675,9 +659,6 @@ export const DashboardWorkspace = ({
             <h1 className="mt-1 text-2xl font-semibold text-white">
               {activeSectionMeta.label}
             </h1>
-            <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--color-text-base)]">
-              {activeSectionMeta.description}
-            </p>
           </div>
           <div className="flex flex-wrap gap-2">
             <Badge>{integrations.length} integrations</Badge>
@@ -702,11 +683,7 @@ export const DashboardWorkspace = ({
         {activeSection === "home" ? (
           <section className="space-y-4">
             <div className="grid gap-4 xl:grid-cols-[minmax(0,0.9fr)_minmax(320px,1.1fr)]">
-              <CompactPanel
-                title="Workspace summary"
-                description="Dense status rows instead of oversized tiles."
-                icon={Home}
-              >
+              <CompactPanel title="Workspace summary" icon={Home}>
                 <div className="divide-y divide-[var(--color-border)]">
                   <MetricRow
                     icon={PlugZap}
@@ -735,11 +712,7 @@ export const DashboardWorkspace = ({
                 </div>
               </CompactPanel>
 
-              <CompactPanel
-                title="Getting started"
-                description="Follow the same compact sequence each time you onboard a new agent."
-                icon={Waypoints}
-              >
+              <CompactPanel title="Getting started" icon={Waypoints}>
                 <div className="divide-y divide-[var(--color-border)]">
                   <ChecklistRow
                     title="Review your profile"
@@ -763,11 +736,7 @@ export const DashboardWorkspace = ({
               </CompactPanel>
             </div>
 
-            <CompactPanel
-              title="Recent activity"
-              description="Pending approvals and notifications in one compact feed."
-              icon={Bell}
-            >
+            <CompactPanel title="Recent activity" icon={Bell}>
               <div className="space-y-4">
                 <div>
                   <div className="mb-2 flex items-center justify-between gap-3 px-1">
@@ -876,11 +845,7 @@ export const DashboardWorkspace = ({
 
         {activeSection === "profile" ? (
           <section className="grid gap-4 xl:grid-cols-[minmax(0,0.95fr)_minmax(320px,1.05fr)]">
-            <CompactPanel
-              title="User profile"
-              description="Current dashboard identity and request origin details."
-              icon={User}
-            >
+            <CompactPanel title="User profile" icon={User}>
               <div className="divide-y divide-[var(--color-border)]">
                 <KeyValueRow label="Name" value={userName} />
                 <KeyValueRow label="Email" value={userEmail} />
@@ -892,11 +857,7 @@ export const DashboardWorkspace = ({
               </div>
             </CompactPanel>
 
-            <CompactPanel
-              title="Connection context"
-              description="Useful at-a-glance values for validating the current environment."
-              icon={ShieldCheck}
-            >
+            <CompactPanel title="Connection context" icon={ShieldCheck}>
               <div className="divide-y divide-[var(--color-border)]">
                 <KeyValueRow
                   label="Personal key status"
@@ -940,11 +901,7 @@ export const DashboardWorkspace = ({
               />
             ) : null}
 
-            <CompactPanel
-              title="Your integrations"
-              description="Connect accounts, enable integrations, and tune skill access for your personal key."
-              icon={PlugZap}
-            >
+            <CompactPanel title="Your integrations" icon={PlugZap}>
               {integrations.length === 0 ? (
                 <div className="rounded-xl border border-dashed border-[var(--color-border)] px-3 py-4 text-sm text-[var(--color-text-base)]">
                   No integrations activated yet. Use the button above to connect your first one.
@@ -1185,7 +1142,6 @@ export const DashboardWorkspace = ({
           <section className="space-y-4">
             <CompactPanel
               title="Personal context-layer key"
-              description="Masked by default, with compact reveal and copy controls."
               icon={KeyRound}
               action={
                 <Badge tone={contextApiReady ? "success" : "warning"}>
@@ -1234,11 +1190,7 @@ export const DashboardWorkspace = ({
               </div>
             </CompactPanel>
 
-            <CompactPanel
-              title="Usage"
-              description="Use the persisted personal key as a bearer token for REST calls, the per-user OpenAPI schema, or the MCP bridge."
-              icon={ShieldCheck}
-            >
+            <CompactPanel title="Usage" icon={ShieldCheck}>
               <p className="mb-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-muted)] px-3 py-2 text-xs leading-6 text-[var(--color-text-base)]">
                 {agentConnectionGuide.permissionNote}
               </p>
