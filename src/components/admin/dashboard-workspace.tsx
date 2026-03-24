@@ -45,6 +45,7 @@ import {
 import { cn } from "@/src/lib/utils";
 import type {
   AccessRequest,
+  BuiltInConnectorOption,
   FunctionAccessMode,
   FunctionSpec,
   IntegrationSpec,
@@ -221,33 +222,6 @@ const SidebarNavItem = ({
   </button>
 );
 
-const MetricRow = ({
-  icon: Icon,
-  label,
-  value,
-  description,
-}: {
-  icon: LucideIcon;
-  label: string;
-  value: string;
-  description: string;
-}) => (
-  <div className="flex items-start gap-3 px-1 py-3">
-    <span className="rounded-md border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-1.5">
-      <Icon className="h-4 w-4 text-[var(--color-accent)]" />
-    </span>
-    <div className="flex min-w-0 flex-1 items-start justify-between gap-4">
-      <div className="min-w-0">
-        <p className="text-sm font-medium text-white">{label}</p>
-        <p className="text-xs leading-6 text-[var(--color-text-base)]">
-          {description}
-        </p>
-      </div>
-      <p className="shrink-0 text-xl font-semibold text-white">{value}</p>
-    </div>
-  </div>
-);
-
 const KeyValueRow = ({
   label,
   value,
@@ -299,6 +273,75 @@ const ChecklistRow = ({
   </div>
 );
 
+const getConnectorLogoUrl = (connector: BuiltInConnectorOption) => {
+  if (connector.logoUrl?.trim()) {
+    return connector.logoUrl.trim();
+  }
+
+  if (connector.appUrl?.trim()) {
+    return `https://www.google.com/s2/favicons?sz=128&domain_url=${encodeURIComponent(connector.appUrl.trim())}`;
+  }
+
+  return null;
+};
+
+const IntegrationMarketplaceCard = ({
+  connector,
+  installed,
+  onClick,
+}: {
+  connector: BuiltInConnectorOption;
+  installed: boolean;
+  onClick: () => void;
+}) => {
+  const logoUrl = getConnectorLogoUrl(connector);
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      data-built-in-slug={connector.slug}
+      className="group flex h-full flex-col justify-between rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-4 text-left transition-colors hover:border-[var(--color-accent)] hover:bg-[var(--color-bg-active)]"
+    >
+      <div>
+        <div className="flex items-start gap-3">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-input)]">
+            {logoUrl ? (
+              <img
+                src={logoUrl}
+                alt={`${connector.name} logo`}
+                className="h-7 w-7 rounded-md object-contain"
+              />
+            ) : (
+              <span className="text-sm font-semibold text-white">
+                {connector.name.slice(0, 1)}
+              </span>
+            )}
+          </span>
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="text-sm font-semibold text-white">{connector.name}</p>
+              {installed ? <Badge tone="success">Added</Badge> : null}
+            </div>
+            <p className="mt-1 text-xs leading-6 text-[var(--color-text-base)]">
+              {connector.description}
+            </p>
+          </div>
+        </div>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Badge>{connector.authStrategy.replace("_", " ")}</Badge>
+          {connector.categories[0] ? <Badge>{connector.categories[0]}</Badge> : null}
+          {connector.toolCount > 0 ? <Badge>{connector.toolCount} tools</Badge> : null}
+        </div>
+      </div>
+      <div className="mt-4 inline-flex items-center gap-2 text-xs font-medium text-[var(--color-accent)] transition-colors group-hover:text-[var(--color-accent-hover)]">
+        {installed ? "Open setup" : "Set up"}
+        <ArrowRight className="h-3.5 w-3.5" />
+      </div>
+    </button>
+  );
+};
+
 const ActivityRow = ({
   title,
   detail,
@@ -339,9 +382,7 @@ export const DashboardWorkspace = ({
   const searchParams = useSearchParams();
   const [activeSection, setActiveSection] = useState<AdminSection>("home");
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
-  const [showIntegrationWizard, setShowIntegrationWizard] = useState(
-    initialIntegrations.length === 0,
-  );
+  const [showIntegrationWizard, setShowIntegrationWizard] = useState(false);
   const [integrationSearch, setIntegrationSearch] = useState("");
   const [hideDisabledSkills, setHideDisabledSkills] = useState(true);
   const [expandedIntegrations, setExpandedIntegrations] = useState<
@@ -399,6 +440,14 @@ export const DashboardWorkspace = ({
     queryKey: ["integrations"],
     queryFn: () => fetchJson<IntegrationSpec[]>("/api/integrations"),
     initialData: initialIntegrations,
+  });
+
+  const builtInConnectorsQuery = useQuery({
+    queryKey: ["built-in-connectors"],
+    queryFn: () =>
+      fetchJson<BuiltInConnectorOption[]>("/api/integrations/built-in-connectors"),
+    enabled: activeSection === "home",
+    staleTime: Number.POSITIVE_INFINITY,
   });
 
   const accessRequestsQuery = useQuery({
@@ -468,6 +517,48 @@ export const DashboardWorkspace = ({
       ? "Local development session"
       : "Authenticated dashboard session";
   const sections = getDashboardSections();
+
+  const builtInConnectors = builtInConnectorsQuery.data ?? [];
+  const installedIntegrationKeys = useMemo(
+    () =>
+      new Set(
+        integrations.flatMap((integration) => {
+          const builtInSlug =
+            typeof integration.config.builtInSlug === "string"
+              ? integration.config.builtInSlug.trim()
+              : "";
+
+          return [integration.key, builtInSlug].filter(Boolean);
+        }),
+      ),
+    [integrations],
+  );
+  const marketplaceConnectors = useMemo(
+    () => [...builtInConnectors].sort((left, right) => left.name.localeCompare(right.name)),
+    [builtInConnectors],
+  );
+
+  const openIntegrationWizard = (
+    section: AdminSection,
+    builtInSlug?: string,
+  ) => {
+    setShowIntegrationWizard(true);
+    setActiveSection(section);
+    router.push(
+      buildAdminSectionHref(section, {
+        showIntegrationWizard: "1",
+        builtIn: builtInSlug,
+      }),
+    );
+  };
+
+  const handleIntegrationCreated = async (section: AdminSection) => {
+    await invalidateAll();
+    setShowIntegrationWizard(false);
+    setActiveSection(section);
+    router.push(buildAdminSectionHref(section));
+  };
+
   const activeSectionMeta =
     sections.find((section) => section.id === activeSection) ?? sections[0];
 
@@ -682,59 +773,65 @@ export const DashboardWorkspace = ({
 
         {activeSection === "home" ? (
           <section className="space-y-4">
-            <div className="grid gap-4 xl:grid-cols-[minmax(0,0.9fr)_minmax(320px,1.1fr)]">
-              <CompactPanel title="Workspace summary" icon={Home}>
-                <div className="divide-y divide-[var(--color-border)]">
-                  <MetricRow
-                    icon={PlugZap}
-                    label="Integrations"
-                    value={String(integrations.length)}
-                    description="Integrations currently active for your personal key."
-                  />
-                  <MetricRow
-                    icon={CheckCircle2}
-                    label="Enabled integrations"
-                    value={String(enabledIntegrationCount)}
-                    description="Enabled integrations your personal key can invoke right now."
-                  />
-                  <MetricRow
-                    icon={KeyRound}
-                    label="Functions discovered"
-                    value={String(discoveredFunctionCount)}
-                    description="Callable functions registered across all integrations."
-                  />
-                  <MetricRow
-                    icon={Bell}
-                    label="Pending approvals"
-                    value={String(pendingAccessRequests.length)}
-                    description="Requests waiting for an approval or rejection decision."
-                  />
-                </div>
-              </CompactPanel>
+            {showIntegrationWizard ? (
+              <IntegrationWizard
+                onCreated={() => handleIntegrationCreated("home")}
+                onStatus={setStatusMessage}
+                redirectSection="home"
+              />
+            ) : (
+              <div className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)]">
+                <CompactPanel title="Integration marketplace" icon={Home}>
+                  {builtInConnectorsQuery.isPending ? (
+                    <div className="rounded-xl border border-dashed border-[var(--color-border)] px-3 py-4 text-sm text-[var(--color-text-base)]">
+                      Loading available integrations...
+                    </div>
+                  ) : builtInConnectorsQuery.isError ? (
+                    <div className="rounded-xl border border-dashed border-[var(--color-border)] px-3 py-4 text-sm text-[var(--color-text-base)]">
+                      {(builtInConnectorsQuery.error as Error).message}
+                    </div>
+                  ) : marketplaceConnectors.length === 0 ? (
+                    <div className="rounded-xl border border-dashed border-[var(--color-border)] px-3 py-4 text-sm text-[var(--color-text-base)]">
+                      No integrations are available yet.
+                    </div>
+                  ) : (
+                    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                      {marketplaceConnectors.map((connector) => (
+                        <IntegrationMarketplaceCard
+                          key={connector.slug}
+                          connector={connector}
+                          installed={installedIntegrationKeys.has(connector.slug)}
+                          onClick={() => openIntegrationWizard("home", connector.slug)}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </CompactPanel>
 
-              <CompactPanel title="Getting started" icon={Waypoints}>
-                <div className="divide-y divide-[var(--color-border)]">
-                  <ChecklistRow
-                    title="Review your profile"
-                    body="Confirm the signed-in identity that owns the persisted personal key."
-                    action="Open profile"
-                    onClick={() => navigateToSection("profile")}
-                  />
-                  <ChecklistRow
-                    title="Add an integration"
-                    body="Create a Built-in or MCP connector and review its callable functions."
-                    action="Open integrations"
-                    onClick={() => navigateToSection("integrations")}
-                  />
-                  <ChecklistRow
-                    title="Copy your key"
-                    body="Reveal or copy the personal agent key, then configure your runtime."
-                    action="Open connection"
-                    onClick={() => navigateToSection("apiKeys")}
-                  />
-                </div>
-              </CompactPanel>
-            </div>
+                <CompactPanel title="Getting started" icon={Waypoints}>
+                  <div className="divide-y divide-[var(--color-border)]">
+                    <ChecklistRow
+                      title="Add an integration"
+                      body="Pick a connector from the marketplace and walk through the setup flow."
+                      action="Browse connectors"
+                      onClick={() => navigateToSection("home")}
+                    />
+                    <ChecklistRow
+                      title="Connect via MCP"
+                      body="Copy the MCP endpoint and personal key into your client configuration."
+                      action="Open connection"
+                      onClick={() => navigateToSection("apiKeys")}
+                    />
+                    <ChecklistRow
+                      title="Make your first tool call"
+                      body="Use the example payloads to call a tool with your personal key."
+                      action="View usage"
+                      onClick={() => navigateToSection("apiKeys")}
+                    />
+                  </div>
+                </CompactPanel>
+              </div>
+            )}
 
             <CompactPanel title="Recent activity" icon={Bell}>
               <div className="space-y-4">
@@ -885,7 +982,7 @@ export const DashboardWorkspace = ({
             <div className="flex justify-start">
               <Button
                 className="h-9 rounded-md px-4 text-xs"
-                onClick={() => setShowIntegrationWizard(true)}
+                onClick={() => openIntegrationWizard("integrations")}
               >
                 Add integration
               </Button>
@@ -893,11 +990,9 @@ export const DashboardWorkspace = ({
 
             {showIntegrationWizard ? (
               <IntegrationWizard
-                onCreated={async () => {
-                  await invalidateAll();
-                  setShowIntegrationWizard(false);
-                }}
+                onCreated={() => handleIntegrationCreated("integrations")}
                 onStatus={setStatusMessage}
+                redirectSection="integrations"
               />
             ) : null}
 

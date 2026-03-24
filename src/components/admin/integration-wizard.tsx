@@ -20,7 +20,7 @@ import {
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
 import { Card } from "@/src/components/ui/card";
-import { buildAdminSectionHref } from "@/src/lib/admin-routes";
+import { buildAdminSectionHref, type AdminSection } from "@/src/lib/admin-routes";
 import { filterReadyBuiltInConnectors } from "@/src/lib/integrations/connector-readiness";
 import { cn } from "@/src/lib/utils";
 import type {
@@ -38,6 +38,7 @@ type DiscoverFeedbackTone = "info" | "success" | "error";
 interface IntegrationWizardProps {
   onCreated: () => Promise<void>;
   onStatus: (message: string | null) => void;
+  redirectSection?: AdminSection;
 }
 
 type ApiDebugDetails = Record<string, unknown>;
@@ -323,6 +324,7 @@ const StepBadge = ({
 export const IntegrationWizard = ({
   onCreated,
   onStatus,
+  redirectSection = "integrations",
 }: IntegrationWizardProps) => {
   const searchParams = useSearchParams();
   const [step, setStep] = useState<WizardStep>(1);
@@ -823,7 +825,7 @@ export const IntegrationWizard = ({
                               window.location.href = `/api/oauth/${selectedConnector.slug}/start?integrationKey=${encodeURIComponent(
                                 draft.key.trim() || selectedConnector.slug,
                               )}&redirectTo=${encodeURIComponent(
-                                buildAdminSectionHref("integrations", {
+                                buildAdminSectionHref(redirectSection, {
                                   showIntegrationWizard: "1",
                                   builtIn:
                                     draft.builtInSlug || selectedConnector.slug,

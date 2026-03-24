@@ -27,7 +27,7 @@ vi.mock("next-auth/react", () => ({
 }));
 
 import { DashboardWorkspace } from "@/src/components/admin/dashboard-workspace";
-import type { IntegrationSpec } from "@/src/types/context-layer";
+import type { BuiltInConnectorOption, IntegrationSpec } from "@/src/types/context-layer";
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -44,6 +44,78 @@ const setInputValue = (element: HTMLInputElement | undefined, value: string) => 
   element.dispatchEvent(new Event("input", { bubbles: true }));
   element.dispatchEvent(new Event("change", { bubbles: true }));
 };
+
+const builtInConnectors: BuiltInConnectorOption[] = [
+  {
+    slug: "elevenlabs",
+    name: "ElevenLabs",
+    description: "Voice generation and audio tooling.",
+    appUrl: "https://elevenlabs.io",
+    toolCount: 4,
+    categories: ["Audio"],
+    authModes: ["api_key"],
+    authStrategy: "api_key",
+    credentialLabel: "API key",
+    credentialPlaceholder: "Paste your ElevenLabs API key",
+    credentialHelp: "Use an ElevenLabs API key.",
+  },
+  {
+    slug: "github",
+    name: "GitHub",
+    description: "Source control, issues, and pull requests.",
+    appUrl: "https://github.com",
+    toolCount: 12,
+    categories: ["Engineering"],
+    authModes: ["bearer"],
+    authStrategy: "bearer",
+    credentialLabel: "Personal access token",
+    credentialPlaceholder: "Paste your GitHub token",
+    credentialHelp: "Use a GitHub token.",
+  },
+  {
+    slug: "linear",
+    name: "Linear",
+    description: "Issue tracking and roadmap workflows.",
+    appUrl: "https://linear.app",
+    toolCount: 18,
+    categories: ["Project management"],
+    authModes: ["oauth2"],
+    authStrategy: "oauth2",
+    oauthConfigured: true,
+    credentialLabel: "OAuth",
+    credentialPlaceholder: "Connect Linear",
+    credentialHelp: "Connect your Linear account.",
+  },
+  {
+    slug: "notion",
+    name: "Notion",
+    description: "Workspace search, pages, and databases.",
+    appUrl: "https://www.notion.so",
+    toolCount: 16,
+    categories: ["Knowledge base"],
+    authModes: ["oauth2"],
+    authStrategy: "oauth2",
+    oauthConfigured: true,
+    credentialLabel: "OAuth",
+    credentialPlaceholder: "Connect Notion",
+    credentialHelp: "Connect your Notion account.",
+  },
+  {
+    slug: "slack",
+    name: "Slack",
+    description: "Channels, messaging, and workflows.",
+    appUrl: "https://slack.com",
+    toolCount: 14,
+    categories: ["Communication"],
+    authModes: ["oauth2"],
+    authStrategy: "oauth2",
+    oauthConfigured: true,
+    credentialLabel: "OAuth",
+    credentialPlaceholder: "Connect Slack",
+    credentialHelp: "Connect your Slack account.",
+  },
+];
+
 
 describe("DashboardWorkspace", () => {
   let container: HTMLDivElement;
@@ -151,12 +223,22 @@ describe("DashboardWorkspace", () => {
       if (
         url === "/api/integrations" ||
         url === "/api/access-requests" ||
-        url === "/api/notifications"
+        url === "/api/notifications" ||
+        url === "/api/integrations/built-in-connectors"
       ) {
-        return new Response(JSON.stringify(url === "/api/integrations" ? integrationsState : []), {
-          status: 200,
-          headers: { "Content-Type": "application/json" },
-        });
+        return new Response(
+          JSON.stringify(
+            url === "/api/integrations"
+              ? integrationsState
+              : url === "/api/integrations/built-in-connectors"
+                ? builtInConnectors
+                : [],
+          ),
+          {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          },
+        );
       }
 
       throw new Error(`Unexpected fetch: ${url}`);
@@ -216,7 +298,23 @@ describe("DashboardWorkspace", () => {
     expect(pushMock).toHaveBeenCalledWith("/profile");
   });
 
-  it("shows the home section on the canonical /home route", async () => {
+  it("shows the home section as an integration marketplace on the canonical /home route", async () => {
+    fetchMock.mockImplementation(async (input: RequestInfo | URL) => {
+      const url = typeof input === "string" ? input : input.toString();
+
+      if (url === "/api/integrations/built-in-connectors") {
+        return new Response(JSON.stringify(builtInConnectors), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+
+      return new Response(JSON.stringify([]), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    });
+
     await act(async () => {
       root.render(
         <QueryClientProvider client={queryClient}>
@@ -232,9 +330,75 @@ describe("DashboardWorkspace", () => {
       );
     });
 
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    });
+
     expect(container.querySelector("h1")?.textContent).toBe("Home");
-    expect(container.textContent).toContain("Workspace summary");
+    expect(container.textContent).toContain("Integration marketplace");
+    expect(container.textContent).toContain("GitHub");
+    expect(container.textContent).toContain("Slack");
+    expect(container.textContent).toContain("Add an integration");
+    expect(container.textContent).toContain("Connect via MCP");
+    expect(container.textContent).toContain("Make your first tool call");
   });
+
+  it("opens the setup flow from a marketplace card and keeps the selection in the URL", async () => {
+    fetchMock.mockImplementation(async (input: RequestInfo | URL) => {
+      const url = typeof input === "string" ? input : input.toString();
+
+      if (url === "/api/integrations/built-in-connectors") {
+        return new Response(JSON.stringify(builtInConnectors), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+
+      if (
+        url === "/api/integrations" ||
+        url === "/api/access-requests" ||
+        url === "/api/notifications" ||
+        url === "/api/oauth/connections"
+      ) {
+        return new Response(JSON.stringify([]), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+
+      throw new Error(`Unexpected fetch: ${url}`);
+    });
+
+    await act(async () => {
+      root.render(
+        <QueryClientProvider client={queryClient}>
+          <DashboardWorkspace
+            initialIntegrations={[]}
+            initialAccessRequests={[]}
+            initialNotifications={[]}
+            currentUser={{ name: "Admin User", email: "admin@example.com" }}
+            contextApiBaseUrl="https://example.com"
+            contextApiKey="test-key"
+          />
+        </QueryClientProvider>,
+      );
+    });
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    });
+
+    const githubCard = container.querySelector('[data-built-in-slug="github"]');
+    expect(githubCard).toBeTruthy();
+
+    await act(async () => {
+      githubCard?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    expect(container.textContent).toContain("Step-by-step integration setup");
+    expect(pushMock).toHaveBeenCalledWith("/home?showIntegrationWizard=1&builtIn=github");
+  });
+
 
   it("shows the usage panel from the top-level agent connection route", async () => {
     usePathnameMock.mockReturnValue("/agent-connection");
@@ -334,11 +498,20 @@ describe("DashboardWorkspace", () => {
       const url = typeof input === "string" ? input : input.toString();
       const method = init?.method ?? "GET";
 
-      if (url === "/api/access-requests" || url === "/api/notifications") {
-        return new Response(JSON.stringify([]), {
-          status: 200,
-          headers: { "Content-Type": "application/json" },
-        });
+      if (
+        url === "/api/access-requests" ||
+        url === "/api/notifications" ||
+        url === "/api/integrations/built-in-connectors"
+      ) {
+        return new Response(
+          JSON.stringify(
+            url === "/api/integrations/built-in-connectors" ? builtInConnectors : [],
+          ),
+          {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          },
+        );
       }
 
       if (url === "/api/integrations" && method === "GET") {
