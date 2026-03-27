@@ -25,7 +25,6 @@ export default async function HomePage() {
       <div className="mx-auto flex max-w-6xl flex-col gap-8">
         <header className="flex flex-col gap-6 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-workspace)] px-8 py-10">
           <div className="flex items-center gap-3 text-sm text-[var(--color-text-base)]">
-            <Badge>Vercel-native</Badge>
             <Badge>Managed + MCP adapters</Badge>
             <Badge>Scoped approvals</Badge>
           </div>
@@ -34,7 +33,7 @@ export default async function HomePage() {
               OpenHands Context Layer
             </h1>
             <p className="text-lg leading-8 text-[var(--color-text-base)]">
-              A unified endpoint and admin workspace for AI agents to access APIs and MCP tools with agent-class policies, temporary approvals, and Vercel-native persistence.
+              A unified endpoint and admin workspace for AI agents to access APIs and MCP tools with agent-class policies, temporary approvals, and persistent integration storage.
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
