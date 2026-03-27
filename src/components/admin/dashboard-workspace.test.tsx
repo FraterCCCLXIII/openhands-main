@@ -451,6 +451,73 @@ describe("DashboardWorkspace", () => {
     expect(container.textContent).not.toContain("Search popular integrations");
   });
 
+  it("hides already installed integrations from the add integration list", async () => {
+    const integrationsState: IntegrationSpec[] = [
+      {
+        key: "github",
+        name: "GitHub",
+        kind: "mcp",
+        provider: "mcp",
+        authStrategy: "bearer",
+        enabled: true,
+        fineGrainedPermissions: true,
+        config: {},
+        credentials: {},
+        functions: {},
+      },
+    ];
+
+    fetchMock.mockImplementation(async (input: RequestInfo | URL) => {
+      const url = typeof input === "string" ? input : input.toString();
+
+      if (url === "/api/integrations/built-in-connectors") {
+        return new Response(JSON.stringify(builtInConnectors), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+
+      if (url === "/api/integrations") {
+        return new Response(JSON.stringify(integrationsState), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+
+      return new Response(JSON.stringify([]), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    });
+
+    await act(async () => {
+      root.render(
+        <QueryClientProvider client={queryClient}>
+          <DashboardWorkspace
+            initialIntegrations={integrationsState}
+            initialAccessRequests={[]}
+            initialNotifications={[]}
+            currentUser={{ name: "Admin User", email: "admin@example.com" }}
+            contextApiBaseUrl="https://example.com"
+            contextApiKey="test-key"
+          />
+        </QueryClientProvider>,
+      );
+    });
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    });
+
+    const addMenuSlugs = Array.from(container.querySelectorAll("[data-built-in-slug]")).map(
+      (element) => element.getAttribute("data-built-in-slug"),
+    );
+
+    expect(addMenuSlugs).not.toContain("github");
+    expect(addMenuSlugs).toEqual(["slack", "notion", "linear", "elevenlabs"]);
+    expect(container.textContent).toContain("4 available");
+  });
+
   it("opens the setup flow from a marketplace card and keeps the selection in the URL", async () => {
     fetchMock.mockImplementation(async (input: RequestInfo | URL) => {
       const url = typeof input === "string" ? input : input.toString();

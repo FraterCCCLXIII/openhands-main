@@ -310,11 +310,9 @@ const ConnectorLogo = ({
 
 const IntegrationMarketplaceCard = ({
   connector,
-  installed,
   onClick,
 }: {
   connector: BuiltInConnectorOption;
-  installed: boolean;
   onClick: () => void;
 }) => {
   const logoUrl = getConnectorLogoUrl(connector);
@@ -334,7 +332,6 @@ const IntegrationMarketplaceCard = ({
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
           <p className="text-sm font-semibold text-white">{connector.name}</p>
-          {installed ? <Badge tone="success">Added</Badge> : null}
           <Badge>{connector.authStrategy.replace("_", " ")}</Badge>
           {connector.categories[0] ? <Badge>{connector.categories[0]}</Badge> : null}
           {connector.toolCount > 0 ? <Badge>{connector.toolCount} tools</Badge> : null}
@@ -562,6 +559,11 @@ export const DashboardWorkspace = ({
       ),
     [builtInConnectors],
   );
+  const availableConnectorCount = useMemo(
+    () =>
+      builtInConnectors.filter((connector) => !installedIntegrationKeys.has(connector.slug)).length,
+    [builtInConnectors, installedIntegrationKeys],
+  );
   const marketplaceConnectors = useMemo(() => {
     const normalizeRank = (connector: BuiltInConnectorOption) => {
       const explicitIndex = POPULAR_INTEGRATION_SLUGS.indexOf(
@@ -571,13 +573,14 @@ export const DashboardWorkspace = ({
     };
 
     return [...builtInConnectors]
+      .filter((connector) => !installedIntegrationKeys.has(connector.slug))
       .sort((left, right) => {
         const rankDelta = normalizeRank(left) - normalizeRank(right);
         return rankDelta !== 0 ? rankDelta : left.name.localeCompare(right.name);
       })
       .filter((connector) => matchesConnectorSearch(connector, addIntegrationSearch))
       .slice(0, 5);
-  }, [addIntegrationSearch, builtInConnectors]);
+  }, [addIntegrationSearch, builtInConnectors, installedIntegrationKeys]);
   const resolveIntegrationLogoUrl = (integration: IntegrationSpec) => {
     const builtInSlug =
       typeof integration.config.builtInSlug === "string"
@@ -911,7 +914,7 @@ export const DashboardWorkspace = ({
                 <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                   <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--color-text-base)]">
                     <Badge>{marketplaceConnectors.length} shown</Badge>
-                    <Badge>{builtInConnectors.length} available</Badge>
+                    <Badge>{availableConnectorCount} available</Badge>
                   </div>
                   <input
                     type="search"
@@ -941,7 +944,6 @@ export const DashboardWorkspace = ({
                       <IntegrationMarketplaceCard
                         key={connector.slug}
                         connector={connector}
-                        installed={installedIntegrationKeys.has(connector.slug)}
                         onClick={() =>
                           openIntegrationWizard("integrations", connector.slug)
                         }
