@@ -179,7 +179,7 @@ describe("DashboardWorkspace", () => {
     });
 
     expect(container.textContent).toContain("Your integrations");
-    expect(container.textContent).toContain(
+    expect(container.textContent).not.toContain(
       "Connect accounts, enable integrations, and tune skill access for your personal key.",
     );
     expect(container.querySelector('a[href="/add-connector"]')).toBeNull();
