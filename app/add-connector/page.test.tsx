@@ -16,7 +16,9 @@ import { createTestRepository, getActiveSql } from "@/src/lib/db/pglite-test-uti
 import AddConnectorPage from "./page";
 
 let testCleanup: () => Promise<void>;
-beforeAll(() => { vi.stubEnv("POSTGRES_URL", "pglite://add-connector-page-test"); });
+beforeAll(() => {
+  vi.stubEnv("POSTGRES_URL", "pglite://add-connector-page-test");
+});
 beforeEach(async () => {
   const ctx = await createTestRepository();
   testCleanup = ctx.cleanup;
@@ -35,6 +37,20 @@ afterEach(async () => {
 });
 
 describe("AddConnectorPage", () => {
+  it("renders the normal dashboard sidebar chrome for signed-in users", async () => {
+    const html = renderToStaticMarkup(await AddConnectorPage());
+
+    expect(html).toContain("OpenHands");
+    expect(html).toContain("Context Layer");
+    expect(html).toContain('href="/home"');
+    expect(html).toContain('href="/profile"');
+    expect(html).toContain('href="/integrations"');
+    expect(html).toContain('href="/agent-connection"');
+    expect(html).toContain('href="/add-connector"');
+    expect(html).toContain("Manage OAuth apps");
+    expect(html).toContain("Signed in as");
+  });
+
   it("falls back to generic admin guidance when ADMIN_EMAIL is not set", async () => {
     vi.stubEnv("ADMIN_EMAIL", "");
 
@@ -56,12 +72,14 @@ describe("AddConnectorPage", () => {
     expect(html).not.toContain("customerId=replace-me");
     expect(html).toContain("AUTH_REDIRECT_PROXY_URL");
     expect(html).toContain("stable deployment origin instead of the preview URL");
-    expect(html).toContain("href=\"/integrations?showIntegrationWizard=1\"");
+    expect(html).toContain('href="/integrations?showIntegrationWizard=1"');
     expect(html).toContain("Connect");
     expect(html).toContain("Discover functions");
     expect(html).toContain("managed remote MCP or managed HTTP connector");
     expect(html).toContain("APP_ADMIN_EMAILS");
-    expect(html).toContain("src/lib/integrations/oauth-provider-registration-defaults.ts");
+    expect(html).toContain(
+      "src/lib/integrations/oauth-provider-registration-defaults.ts",
+    );
     expect(html).toContain("src/lib/integrations/oauth-provider-catalog.ts");
     expect(html).not.toContain("app/api/mcp/&lt;provider&gt;/route.ts");
     expect(html).not.toContain("src/lib/oauth/providers.ts");
@@ -77,7 +95,6 @@ describe("AddConnectorPage", () => {
     expect(html).toContain("please contact admin@example.com");
   });
 
-
   it("shows registered managed connector controls to allowlisted admins", async () => {
     vi.stubEnv("APP_ADMIN_EMAILS", "admin@example.com");
     authMock.mockResolvedValue({ user: { email: "admin@example.com" } });
@@ -92,13 +109,11 @@ describe("AddConnectorPage", () => {
     expect(html).not.toContain("Safe summaries only");
   });
 
-
   it("renders users before admins", async () => {
     const html = renderToStaticMarkup(await AddConnectorPage());
 
     expect(html.indexOf("For users")).toBeLessThan(html.indexOf("For admins"));
   });
-
 
   it("shows database setup instructions to admins when persistent storage is unavailable", async () => {
     vi.stubEnv("NODE_ENV", "production");
@@ -115,5 +130,4 @@ describe("AddConnectorPage", () => {
     expect(html).toContain("DATABASE_URL");
     expect(html).not.toContain("Popular official provider options");
   });
-
 });
