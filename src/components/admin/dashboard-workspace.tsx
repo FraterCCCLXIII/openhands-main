@@ -14,6 +14,7 @@ import {
   ShieldCheck,
   ToggleLeft,
   ToggleRight,
+  Trash2,
   User,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
@@ -500,14 +501,15 @@ export const DashboardWorkspace = ({
       url: string;
       method: string;
       body?: unknown;
+      successMessage?: string;
     }) =>
       fetchJson(url, {
         method,
         headers: body ? { "Content-Type": "application/json" } : undefined,
         body: body ? JSON.stringify(body) : undefined,
       }),
-    onSuccess: async () => {
-      setStatusMessage("Saved.");
+    onSuccess: async (_data, variables) => {
+      setStatusMessage(variables.successMessage ?? "Saved.");
       await invalidateAll();
     },
     onError: (error: Error) => {
@@ -731,6 +733,23 @@ export const DashboardWorkspace = ({
     });
   };
 
+  const handleDeleteIntegration = (integration: IntegrationSpec) => {
+    if (
+      typeof window !== "undefined" &&
+      typeof window.confirm === "function" &&
+      !window.confirm(
+        `Delete the integration "${integration.name}"? This removes it from your personal dashboard and disconnects any saved credentials for this tool.`,
+      )
+    ) {
+      return;
+    }
+
+    actionMutation.mutate({
+      url: `/api/integrations/${integration.key}`,
+      method: "DELETE",
+      successMessage: `${integration.name} deleted.`,
+    });
+  };
 
   const handleCopyApiKey = async () => {
     if (!contextApiReady) {
@@ -1033,8 +1052,20 @@ export const DashboardWorkspace = ({
                                 </div>
                                 <div className="flex flex-wrap items-center gap-2 xl:justify-end">
                                   <Button
+                                    type="button"
+                                    variant="danger"
+                                    className="h-8 shrink-0 gap-2 rounded-md px-3 text-xs"
+                                    disabled={actionMutation.isPending}
+                                    onClick={() => handleDeleteIntegration(integration)}
+                                    title="Remove this integration and any saved connection details from your personal dashboard."
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                    Delete
+                                  </Button>
+                                  <Button
                                     variant={integration.enabled ? "secondary" : "primary"}
                                     className="h-8 shrink-0 gap-2 rounded-md px-3 text-xs"
+                                    disabled={actionMutation.isPending}
                                     onClick={() =>
                                       actionMutation.mutate({
                                         url: `/api/integrations/${integration.key}/toggle`,

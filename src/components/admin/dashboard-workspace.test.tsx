@@ -275,7 +275,101 @@ describe("DashboardWorkspace", () => {
     ).toBe(true);
     expect(container.textContent).toContain("Add integration");
     expect(container.textContent).toContain("Disable");
+    expect(container.textContent).toContain("Delete");
     expect(container.textContent).toContain("enabled");
+  });
+
+  it("deletes an installed integration from the your integrations list", async () => {
+    let integrationsState: IntegrationSpec[] = [
+      {
+        key: "slack",
+        name: "Slack",
+        kind: "mcp",
+        provider: "mcp",
+        authStrategy: "oauth2",
+        enabled: true,
+        fineGrainedPermissions: true,
+        config: {},
+        credentials: {},
+        functions: {},
+      },
+    ];
+
+    fetchMock.mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = typeof input === "string" ? input : input.toString();
+      const method = init?.method ?? "GET";
+
+      if (
+        url === "/api/access-requests" ||
+        url === "/api/notifications" ||
+        url === "/api/integrations/built-in-connectors"
+      ) {
+        return new Response(
+          JSON.stringify(
+            url === "/api/integrations/built-in-connectors" ? builtInConnectors : [],
+          ),
+          {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          },
+        );
+      }
+
+      if (url === "/api/integrations" && method === "GET") {
+        return new Response(JSON.stringify(integrationsState), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+
+      if (url === "/api/integrations/slack" && method === "DELETE") {
+        integrationsState = [];
+        return new Response(JSON.stringify({ deleted: true, key: "slack" }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+
+      throw new Error(`Unexpected fetch: ${method} ${url}`);
+    });
+
+    const confirmMock = vi.fn(() => true);
+    vi.stubGlobal("confirm", confirmMock);
+
+    await act(async () => {
+      root.render(
+        <QueryClientProvider client={queryClient}>
+          <DashboardWorkspace
+            initialIntegrations={integrationsState}
+            initialAccessRequests={[]}
+            initialNotifications={[]}
+            currentUser={{ name: "User", email: "user@example.com" }}
+            contextApiBaseUrl="https://example.com"
+            contextApiKey="test-key"
+            isAdmin={false}
+          />
+        </QueryClientProvider>,
+      );
+    });
+
+    const deleteButton = Array.from(container.querySelectorAll("button")).find((button) =>
+      button.textContent?.includes("Delete"),
+    );
+    expect(deleteButton).toBeTruthy();
+
+    await act(async () => {
+      deleteButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    expect(confirmMock).toHaveBeenCalledWith(
+      'Delete the integration "Slack"? This removes it from your personal dashboard and disconnects any saved credentials for this tool.',
+    );
+    expect(container.textContent).toContain("Slack deleted.");
+    expect(container.querySelector('[data-integration-key="slack"]')).toBeNull();
   });
 
   it("updates the URL when switching admin sections", async () => {
