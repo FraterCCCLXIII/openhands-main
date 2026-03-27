@@ -32,14 +32,14 @@ export default function SignInPage() {
                 Authentication is disabled in this environment. You can open the admin dashboard directly.
               </p>
               <Link
-                href="/home"
+                href="/integrations"
                 className="inline-flex w-full items-center justify-center rounded-md border border-[var(--color-accent)] bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-[var(--color-accent-foreground)] transition-colors hover:bg-[var(--color-accent-hover)]"
               >
                 Open admin dashboard
               </Link>
             </div>
           ) : authSetup.configured ? (
-            <GitHubSignInButton callbackUrl="/home" />
+            <GitHubSignInButton callbackUrl="/integrations" />
           ) : (
             <div className="space-y-5 rounded-xl border border-[color:rgba(217,181,90,0.25)] bg-[color:rgba(217,181,90,0.12)] p-5 text-sm text-[var(--color-warning)]">
               <div className="space-y-2">

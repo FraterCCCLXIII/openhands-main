@@ -8,7 +8,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const { pushMock, usePathnameMock, useRouterMock, useSearchParamsMock, signOutMock } =
   vi.hoisted(() => ({
     pushMock: vi.fn(),
-    usePathnameMock: vi.fn(() => "/home"),
+    usePathnameMock: vi.fn(() => "/integrations"),
     useRouterMock: vi.fn(() => ({
       push: pushMock,
     })),
@@ -124,7 +124,7 @@ describe("DashboardWorkspace", () => {
   let fetchMock: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
-    usePathnameMock.mockImplementation(() => "/home");
+    usePathnameMock.mockImplementation(() => "/integrations");
     useRouterMock.mockImplementation(() => ({
       push: pushMock,
     }));
@@ -298,7 +298,7 @@ describe("DashboardWorkspace", () => {
     expect(pushMock).toHaveBeenCalledWith("/profile");
   });
 
-  it("shows the home section as an integration marketplace on the canonical /home route", async () => {
+  it("shows integrations as the default section with a searchable add-integration panel", async () => {
     fetchMock.mockImplementation(async (input: RequestInfo | URL) => {
       const url = typeof input === "string" ? input : input.toString();
 
@@ -334,13 +334,14 @@ describe("DashboardWorkspace", () => {
       await new Promise((resolve) => setTimeout(resolve, 10));
     });
 
-    expect(container.querySelector("h1")?.textContent).toBe("Home");
-    expect(container.textContent).toContain("Integration marketplace");
+    expect(container.querySelector("h1")?.textContent).toBe("Integrations");
+    expect(container.textContent).toContain("Add integration");
+    expect(container.textContent).toContain("Browse the most popular integrations");
     expect(container.textContent).toContain("GitHub");
     expect(container.textContent).toContain("Slack");
-    expect(container.textContent).toContain("Add an integration");
-    expect(container.textContent).toContain("Connect via MCP");
-    expect(container.textContent).toContain("Make your first tool call");
+    expect(container.querySelector('input[aria-label="Search popular integrations"]')).toBeTruthy();
+    expect(container.textContent).not.toContain("Home");
+    expect(container.textContent).not.toContain("Getting started");
   });
 
   it("opens the setup flow from a marketplace card and keeps the selection in the URL", async () => {
@@ -396,7 +397,9 @@ describe("DashboardWorkspace", () => {
     });
 
     expect(container.textContent).toContain("Step-by-step integration setup");
-    expect(pushMock).toHaveBeenCalledWith("/home?showIntegrationWizard=1&builtIn=github");
+    expect(pushMock).toHaveBeenCalledWith(
+      "/integrations?showIntegrationWizard=1&builtIn=github",
+    );
   });
 
 
@@ -490,7 +493,7 @@ describe("DashboardWorkspace", () => {
         authStrategy: "bearer",
         enabled: true,
         fineGrainedPermissions: true,
-        config: {},
+        config: { builtInSlug: "github" },
         credentials: {},
         functions: {
           zetaWrite: {
@@ -596,6 +599,20 @@ describe("DashboardWorkspace", () => {
         </QueryClientProvider>,
       );
     });
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    });
+
+
+    expect(container.textContent).toContain("Add integration");
+    expect(
+      container.querySelector('input[type="search"][aria-label="Search popular integrations"]'),
+    ).toBeTruthy();
+    expect(
+      container.querySelector('[data-integration-key="github"] img[alt="GitHub logo"]'),
+    ).toBeTruthy();
+
 
     const clickButton = async (label: string) => {
       const button = Array.from(container.querySelectorAll("button")).find((candidate) =>

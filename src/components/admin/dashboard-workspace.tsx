@@ -4,20 +4,17 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { LucideIcon } from "lucide-react";
 import {
   ArrowRight,
-  Bell,
   CheckCircle2,
   ChevronRight,
   Copy,
   Eye,
   EyeOff,
-  Home,
   KeyRound,
   PlugZap,
   ShieldCheck,
   ToggleLeft,
   ToggleRight,
   User,
-  Waypoints,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -74,6 +71,14 @@ const fetchJson = async <T,>(
 const inputClassName =
   "rounded-md border border-[var(--color-border)] bg-[var(--color-bg-input)] px-4 py-3 text-white outline-none transition-colors focus:border-[var(--color-accent)]";
 
+const POPULAR_INTEGRATION_SLUGS = [
+  "github",
+  "slack",
+  "notion",
+  "linear",
+  "elevenlabs",
+] as const;
+
 const matchesIntegrationSearch = (integration: IntegrationSpec, query: string) => {
   const normalizedQuery = query.trim().toLowerCase();
   if (!normalizedQuery) {
@@ -86,6 +91,24 @@ const matchesIntegrationSearch = (integration: IntegrationSpec, query: string) =
     integration.provider,
     integration.kind,
     integration.authStrategy,
+  ].some((value) => value.toLowerCase().includes(normalizedQuery));
+};
+
+const matchesConnectorSearch = (
+  connector: BuiltInConnectorOption,
+  query: string,
+) => {
+  const normalizedQuery = query.trim().toLowerCase();
+  if (!normalizedQuery) {
+    return true;
+  }
+
+  return [
+    connector.name,
+    connector.slug,
+    connector.description,
+    connector.authStrategy,
+    ...connector.categories,
   ].some((value) => value.toLowerCase().includes(normalizedQuery));
 };
 
@@ -105,16 +128,6 @@ const getDashboardSections = (): Array<{
   icon: LucideIcon;
 }> => [
   {
-    id: "home",
-    label: "Home",
-    icon: Home,
-  },
-  {
-    id: "profile",
-    label: "User Profile",
-    icon: User,
-  },
-  {
     id: "integrations",
     label: "Integrations",
     icon: PlugZap,
@@ -123,6 +136,11 @@ const getDashboardSections = (): Array<{
     id: "apiKeys",
     label: "Agent Connection",
     icon: KeyRound,
+  },
+  {
+    id: "profile",
+    label: "User Profile",
+    icon: User,
   },
 ];
 
@@ -247,34 +265,10 @@ const KeyValueRow = ({
   </div>
 );
 
-const ChecklistRow = ({
-  title,
-  body,
-  action,
-  onClick,
-}: {
-  title: string;
-  body: string;
-  action: string;
-  onClick: () => void;
-}) => (
-  <div className="flex flex-col gap-3 px-1 py-3 md:flex-row md:items-center md:justify-between">
-    <div className="min-w-0">
-      <p className="text-sm font-medium text-white">{title}</p>
-      <p className="text-xs leading-6 text-[var(--color-text-base)]">{body}</p>
-    </div>
-    <Button
-      variant="ghost"
-      className="h-8 shrink-0 gap-2 rounded-md px-2 text-xs"
-      onClick={onClick}
-    >
-      {action}
-      <ArrowRight className="h-3.5 w-3.5" />
-    </Button>
-  </div>
-);
-
-const getConnectorLogoUrl = (connector: BuiltInConnectorOption) => {
+const getConnectorLogoUrl = (connector: {
+  logoUrl?: string;
+  appUrl?: string;
+}) => {
   if (connector.logoUrl?.trim()) {
     return connector.logoUrl.trim();
   }
@@ -285,6 +279,33 @@ const getConnectorLogoUrl = (connector: BuiltInConnectorOption) => {
 
   return null;
 };
+
+const ConnectorLogo = ({
+  name,
+  logoUrl,
+  className,
+}: {
+  name: string;
+  logoUrl: string | null;
+  className?: string;
+}) => (
+  <span
+    className={cn(
+      "flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-input)]",
+      className,
+    )}
+  >
+    {logoUrl ? (
+      <img
+        src={logoUrl}
+        alt={`${name} logo`}
+        className="h-7 w-7 rounded-md object-contain"
+      />
+    ) : (
+      <span className="text-sm font-semibold text-white">{name.slice(0, 1)}</span>
+    )}
+  </span>
+);
 
 const IntegrationMarketplaceCard = ({
   connector,
@@ -306,19 +327,7 @@ const IntegrationMarketplaceCard = ({
     >
       <div>
         <div className="flex items-start gap-3">
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-input)]">
-            {logoUrl ? (
-              <img
-                src={logoUrl}
-                alt={`${connector.name} logo`}
-                className="h-7 w-7 rounded-md object-contain"
-              />
-            ) : (
-              <span className="text-sm font-semibold text-white">
-                {connector.name.slice(0, 1)}
-              </span>
-            )}
-          </span>
+          <ConnectorLogo name={connector.name} logoUrl={logoUrl} />
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
               <p className="text-sm font-semibold text-white">{connector.name}</p>
@@ -342,31 +351,6 @@ const IntegrationMarketplaceCard = ({
     </button>
   );
 };
-
-const ActivityRow = ({
-  title,
-  detail,
-  trailing,
-  actions,
-}: {
-  title: ReactNode;
-  detail: ReactNode;
-  trailing?: ReactNode;
-  actions?: ReactNode;
-}) => (
-  <div className="px-1 py-3">
-    <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-      <div className="min-w-0 space-y-1">
-        <div className="flex flex-wrap items-center gap-2 text-sm font-medium text-white">
-          {title}
-        </div>
-        <div className="text-xs leading-6 text-[var(--color-text-base)]">{detail}</div>
-      </div>
-      {trailing ? <div className="shrink-0">{trailing}</div> : null}
-    </div>
-    {actions ? <div className="mt-3 flex flex-wrap gap-2">{actions}</div> : null}
-  </div>
-);
 
 const CollapsibleUsageSection = ({
   title,
@@ -410,11 +394,10 @@ const CollapsibleUsageSection = ({
   </div>
 );
 
-
 export const DashboardWorkspace = ({
   initialIntegrations,
   initialAccessRequests,
-  initialNotifications,
+  initialNotifications: _initialNotifications,
   currentUser,
   contextApiBaseUrl,
   contextApiKey,
@@ -424,9 +407,12 @@ export const DashboardWorkspace = ({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [activeSection, setActiveSection] = useState<AdminSection>("home");
+  const [activeSection, setActiveSection] = useState<AdminSection>(() =>
+    getAdminSectionFromPath(pathname),
+  );
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [showIntegrationWizard, setShowIntegrationWizard] = useState(false);
+  const [addIntegrationSearch, setAddIntegrationSearch] = useState("");
   const [integrationSearch, setIntegrationSearch] = useState("");
   const [hideDisabledSkills, setHideDisabledSkills] = useState(true);
   const [expandedIntegrations, setExpandedIntegrations] = useState<
@@ -493,7 +479,7 @@ export const DashboardWorkspace = ({
     queryKey: ["built-in-connectors"],
     queryFn: () =>
       fetchJson<BuiltInConnectorOption[]>("/api/integrations/built-in-connectors"),
-    enabled: activeSection === "home",
+    enabled: activeSection === "integrations",
     staleTime: Number.POSITIVE_INFINITY,
   });
 
@@ -503,17 +489,10 @@ export const DashboardWorkspace = ({
     initialData: initialAccessRequests,
   });
 
-  const notificationsQuery = useQuery({
-    queryKey: ["notifications"],
-    queryFn: () => fetchJson<NotificationRecord[]>("/api/notifications"),
-    initialData: initialNotifications,
-  });
-
   const invalidateAll = async () => {
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: ["integrations"] }),
       queryClient.invalidateQueries({ queryKey: ["access-requests"] }),
-      queryClient.invalidateQueries({ queryKey: ["notifications"] }),
     ]);
   };
 
@@ -543,7 +522,6 @@ export const DashboardWorkspace = ({
 
   const integrations = integrationsQuery.data ?? [];
   const accessRequests = accessRequestsQuery.data ?? [];
-  const notifications = notificationsQuery.data ?? [];
 
   const enabledIntegrationCount = integrations.filter(
     (integration) => integration.enabled,
@@ -580,10 +558,52 @@ export const DashboardWorkspace = ({
       ),
     [integrations],
   );
-  const marketplaceConnectors = useMemo(
-    () => [...builtInConnectors].sort((left, right) => left.name.localeCompare(right.name)),
+  const connectorBySlug = useMemo(
+    () =>
+      new Map(
+        builtInConnectors.map((connector) => [connector.slug, connector] as const),
+      ),
     [builtInConnectors],
   );
+  const marketplaceConnectors = useMemo(() => {
+    const normalizeRank = (connector: BuiltInConnectorOption) => {
+      const explicitIndex = POPULAR_INTEGRATION_SLUGS.indexOf(
+        connector.slug as (typeof POPULAR_INTEGRATION_SLUGS)[number],
+      );
+      return explicitIndex >= 0 ? explicitIndex : POPULAR_INTEGRATION_SLUGS.length + 1;
+    };
+
+    return [...builtInConnectors]
+      .sort((left, right) => {
+        const rankDelta = normalizeRank(left) - normalizeRank(right);
+        return rankDelta !== 0 ? rankDelta : left.name.localeCompare(right.name);
+      })
+      .filter((connector) => matchesConnectorSearch(connector, addIntegrationSearch))
+      .slice(0, 5);
+  }, [addIntegrationSearch, builtInConnectors]);
+  const resolveIntegrationLogoUrl = (integration: IntegrationSpec) => {
+    const builtInSlug =
+      typeof integration.config.builtInSlug === "string"
+        ? integration.config.builtInSlug.trim()
+        : "";
+    const connector =
+      connectorBySlug.get(builtInSlug) ?? connectorBySlug.get(integration.key.trim());
+
+    if (connector) {
+      return getConnectorLogoUrl(connector);
+    }
+
+    const appUrl =
+      typeof integration.config.appUrl === "string"
+        ? integration.config.appUrl.trim()
+        : typeof integration.config.serverUrl === "string"
+          ? integration.config.serverUrl.trim()
+          : typeof integration.config.apiBaseUrl === "string"
+            ? integration.config.apiBaseUrl.trim()
+            : "";
+
+    return getConnectorLogoUrl({ appUrl });
+  };
 
   const openIntegrationWizard = (
     section: AdminSection,
@@ -820,178 +840,9 @@ export const DashboardWorkspace = ({
 
         {!contextApiReady ? (
           <div className="rounded-xl border border-[color:rgba(217,181,90,0.25)] bg-[color:rgba(217,181,90,0.12)] px-3 py-2 text-sm text-[var(--color-warning)]">
-            Open <code className="text-white">/home</code> once to provision a
-            personal key before agents call <code className="text-white">/api/context/*</code>.
+            Open <code className="text-white">/integrations</code> once to
+            provision a personal key before agents call <code className="text-white">/api/context/*</code>.
           </div>
-        ) : null}
-
-        {activeSection === "home" ? (
-          <section className="space-y-4">
-            {showIntegrationWizard ? (
-              <IntegrationWizard
-                onCreated={() => handleIntegrationCreated("home")}
-                onStatus={setStatusMessage}
-                redirectSection="home"
-              />
-            ) : (
-              <div className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)]">
-                <CompactPanel title="Integration marketplace" icon={Home}>
-                  {builtInConnectorsQuery.isPending ? (
-                    <div className="rounded-xl border border-dashed border-[var(--color-border)] px-3 py-4 text-sm text-[var(--color-text-base)]">
-                      Loading available integrations...
-                    </div>
-                  ) : builtInConnectorsQuery.isError ? (
-                    <div className="rounded-xl border border-dashed border-[var(--color-border)] px-3 py-4 text-sm text-[var(--color-text-base)]">
-                      {(builtInConnectorsQuery.error as Error).message}
-                    </div>
-                  ) : marketplaceConnectors.length === 0 ? (
-                    <div className="rounded-xl border border-dashed border-[var(--color-border)] px-3 py-4 text-sm text-[var(--color-text-base)]">
-                      No integrations are available yet.
-                    </div>
-                  ) : (
-                    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-                      {marketplaceConnectors.map((connector) => (
-                        <IntegrationMarketplaceCard
-                          key={connector.slug}
-                          connector={connector}
-                          installed={installedIntegrationKeys.has(connector.slug)}
-                          onClick={() => openIntegrationWizard("home", connector.slug)}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </CompactPanel>
-
-                <CompactPanel title="Getting started" icon={Waypoints}>
-                  <div className="divide-y divide-[var(--color-border)]">
-                    <ChecklistRow
-                      title="Add an integration"
-                      body="Pick a connector from the marketplace and walk through the setup flow."
-                      action="Browse connectors"
-                      onClick={() => navigateToSection("home")}
-                    />
-                    <ChecklistRow
-                      title="Connect via MCP"
-                      body="Copy the MCP endpoint and personal key into your client configuration."
-                      action="Open connection"
-                      onClick={() => navigateToSection("apiKeys")}
-                    />
-                    <ChecklistRow
-                      title="Make your first tool call"
-                      body="Use the example payloads to call a tool with your personal key."
-                      action="View usage"
-                      onClick={() => navigateToSection("apiKeys")}
-                    />
-                  </div>
-                </CompactPanel>
-              </div>
-            )}
-
-            <CompactPanel title="Recent activity" icon={Bell}>
-              <div className="space-y-4">
-                <div>
-                  <div className="mb-2 flex items-center justify-between gap-3 px-1">
-                    <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-base)]">
-                      Pending approvals
-                    </p>
-                    <Badge tone={pendingAccessRequests.length > 0 ? "warning" : "default"}>
-                      {pendingAccessRequests.length}
-                    </Badge>
-                  </div>
-                  <div className="divide-y divide-[var(--color-border)]">
-                    {pendingAccessRequests.length === 0 ? (
-                      <p className="px-1 py-3 text-sm text-[var(--color-text-base)]">
-                        No pending access requests.
-                      </p>
-                    ) : (
-                      pendingAccessRequests.slice(0, 3).map((request) => (
-                        <ActivityRow
-                          key={request.id}
-                          title={
-                            <>
-                              <span>{request.integrationKey}.{request.functionName}</span>
-                              <Badge tone="warning">pending</Badge>
-                            </>
-                          }
-                          detail={`${request.agentId} (${request.agentClass}) requested ${request.scopes.join(", ") || "default scopes"} for ${request.requestedMinutes} minutes.`}
-                          actions={
-                            <>
-                              <Button
-                                className="h-8 rounded-md px-3 text-xs"
-                                onClick={() =>
-                                  actionMutation.mutate({
-                                    url: `/api/access-requests/${request.id}/approve`,
-                                    method: "POST",
-                                    body: {
-                                      approver: currentUser.email ?? "admin",
-                                      durationMinutes: request.requestedMinutes,
-                                    },
-                                  })
-                                }
-                              >
-                                Approve
-                              </Button>
-                              <Button
-                                variant="danger"
-                                className="h-8 rounded-md px-3 text-xs"
-                                onClick={() =>
-                                  actionMutation.mutate({
-                                    url: `/api/access-requests/${request.id}/reject`,
-                                    method: "POST",
-                                    body: {
-                                      approver: currentUser.email ?? "admin",
-                                    },
-                                  })
-                                }
-                              >
-                                Reject
-                              </Button>
-                            </>
-                          }
-                        />
-                      ))
-                    )}
-                  </div>
-                </div>
-
-                <div>
-                  <div className="mb-2 flex items-center justify-between gap-3 px-1">
-                    <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-base)]">
-                      Latest notifications
-                    </p>
-                    <Badge>{notifications.length}</Badge>
-                  </div>
-                  <div className="divide-y divide-[var(--color-border)]">
-                    {notifications.length === 0 ? (
-                      <p className="px-1 py-3 text-sm text-[var(--color-text-base)]">
-                        Notifications will appear here when agents request access.
-                      </p>
-                    ) : (
-                      notifications.slice(0, 3).map((notification) => (
-                        <ActivityRow
-                          key={notification.id}
-                          title={
-                            <>
-                              <Badge>{notification.channel}</Badge>
-                              <span>{notification.recipient}</span>
-                            </>
-                          }
-                          detail={
-                            <>
-                              <span className="block text-sm text-white">
-                                {notification.subject}
-                              </span>
-                              <span>{notification.body}</span>
-                            </>
-                          }
-                        />
-                      ))
-                    )}
-                  </div>
-                </div>
-              </div>
-            </CompactPanel>
-          </section>
         ) : null}
 
         {activeSection === "profile" ? (
@@ -1033,15 +884,6 @@ export const DashboardWorkspace = ({
 
         {activeSection === "integrations" ? (
           <section className="space-y-4">
-            <div className="flex justify-start">
-              <Button
-                className="h-9 rounded-md px-4 text-xs"
-                onClick={() => openIntegrationWizard("integrations")}
-              >
-                Add integration
-              </Button>
-            </div>
-
             {showIntegrationWizard ? (
               <IntegrationWizard
                 onCreated={() => handleIntegrationCreated("integrations")}
@@ -1050,10 +892,69 @@ export const DashboardWorkspace = ({
               />
             ) : null}
 
+            <CompactPanel title="Add integration" icon={PlugZap}>
+              <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-4">
+                <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+                  <div className="space-y-1">
+                    <h3 className="text-sm font-semibold text-white">
+                      Browse the most popular integrations
+                    </h3>
+                    <p className="text-xs leading-6 text-[var(--color-text-base)]">
+                      Search across the top five recommended connectors and jump straight into setup.
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--color-text-base)]">
+                    <Badge>{marketplaceConnectors.length} shown</Badge>
+                    <Badge>{builtInConnectors.length} available</Badge>
+                  </div>
+                </div>
+
+                <div className="mt-4">
+                  <input
+                    type="search"
+                    value={addIntegrationSearch}
+                    onChange={(event) => setAddIntegrationSearch(event.target.value)}
+                    placeholder="Search popular integrations"
+                    aria-label="Search popular integrations"
+                    className={cn(inputClassName, "w-full lg:max-w-md")}
+                  />
+                </div>
+              </div>
+
+              <div className="mt-4">
+                {builtInConnectorsQuery.isPending ? (
+                  <div className="rounded-xl border border-dashed border-[var(--color-border)] px-3 py-4 text-sm text-[var(--color-text-base)]">
+                    Loading available integrations...
+                  </div>
+                ) : builtInConnectorsQuery.isError ? (
+                  <div className="rounded-xl border border-dashed border-[var(--color-border)] px-3 py-4 text-sm text-[var(--color-text-base)]">
+                    {(builtInConnectorsQuery.error as Error).message}
+                  </div>
+                ) : marketplaceConnectors.length === 0 ? (
+                  <div className="rounded-xl border border-dashed border-[var(--color-border)] px-3 py-4 text-sm text-[var(--color-text-base)]">
+                    No popular integrations match the current search.
+                  </div>
+                ) : (
+                  <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                    {marketplaceConnectors.map((connector) => (
+                      <IntegrationMarketplaceCard
+                        key={connector.slug}
+                        connector={connector}
+                        installed={installedIntegrationKeys.has(connector.slug)}
+                        onClick={() =>
+                          openIntegrationWizard("integrations", connector.slug)
+                        }
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            </CompactPanel>
+
             <CompactPanel title="Your integrations" icon={PlugZap}>
               {integrations.length === 0 ? (
                 <div className="rounded-xl border border-dashed border-[var(--color-border)] px-3 py-4 text-sm text-[var(--color-text-base)]">
-                  No integrations activated yet. Use the button above to connect your first one.
+                  No integrations activated yet. Use the section above to connect your first one.
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -1115,27 +1016,34 @@ export const DashboardWorkspace = ({
                               data-integration-key={integration.key}
                             >
                               <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
-                                <div className="min-w-0">
-                                  <div className="flex flex-wrap items-center gap-2">
-                                    <h3 className="text-sm font-semibold text-white">
-                                      {integration.name}
-                                    </h3>
-                                    <Badge>{integration.provider}</Badge>
-                                    <Badge>{integration.kind}</Badge>
-                                    <Badge tone={integration.enabled ? "success" : "danger"}>
-                                      {integration.enabled ? "enabled" : "disabled"}
-                                    </Badge>
+                                <div className="flex min-w-0 items-start gap-3">
+                                  <ConnectorLogo
+                                    name={integration.name}
+                                    logoUrl={resolveIntegrationLogoUrl(integration)}
+                                    className="h-10 w-10 rounded-lg"
+                                  />
+                                  <div className="min-w-0">
+                                    <div className="flex flex-wrap items-center gap-2">
+                                      <h3 className="text-sm font-semibold text-white">
+                                        {integration.name}
+                                      </h3>
+                                      <Badge>{integration.provider}</Badge>
+                                      <Badge>{integration.kind}</Badge>
+                                      <Badge tone={integration.enabled ? "success" : "danger"}>
+                                        {integration.enabled ? "enabled" : "disabled"}
+                                      </Badge>
+                                    </div>
+                                    <p className="mt-2 text-xs leading-6 text-[var(--color-text-base)]">
+                                      {integration.key} · auth: {integration.authStrategy}
+                                    </p>
+                                    <p className="mt-1 text-[11px] leading-5 text-[var(--color-text-base)]">
+                                      {visibleFunctions.length} visible skill
+                                      {visibleFunctions.length === 1 ? "" : "s"}
+                                      {functions.length > 0
+                                        ? ` of ${functions.length}`
+                                        : ""}
+                                    </p>
                                   </div>
-                                  <p className="mt-2 text-xs leading-6 text-[var(--color-text-base)]">
-                                    {integration.key} · auth: {integration.authStrategy}
-                                  </p>
-                                  <p className="mt-1 text-[11px] leading-5 text-[var(--color-text-base)]">
-                                    {visibleFunctions.length} visible skill
-                                    {visibleFunctions.length === 1 ? "" : "s"}
-                                    {functions.length > 0
-                                      ? ` of ${functions.length}`
-                                      : ""}
-                                  </p>
                                 </div>
                                 <div className="flex flex-wrap items-center gap-2 xl:justify-end">
                                   <Button

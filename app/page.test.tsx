@@ -42,10 +42,10 @@ describe("HomePage", () => {
     expect(html).toContain("DATABASE_URL");
   });
 
-  it("links signed-in users to the /home dashboard route", async () => {
+  it("links signed-in users to the /integrations dashboard route", async () => {
     const html = renderToStaticMarkup(await HomePage());
 
-    expect(html).toContain('href="/home"');
+    expect(html).toContain('href="/integrations"');
     expect(html).toContain("Open dashboard");
   });
 
