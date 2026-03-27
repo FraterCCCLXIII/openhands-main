@@ -1,6 +1,6 @@
 # OpenHands Context Layer
 
-A Vercel-native context layer for AI agents built with Next.js, TypeScript, Auth.js, Neon, curated built-in connectors, Composio, and the official MCP SDK.
+A context layer for AI agents built with Next.js, TypeScript, Auth.js, Neon, curated built-in connectors, Composio, and the official MCP SDK.
 
 ## What this implements
 

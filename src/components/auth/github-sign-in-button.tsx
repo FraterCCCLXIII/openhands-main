@@ -8,7 +8,7 @@ type GitHubSignInButtonProps = {
   callbackUrl?: string;
 };
 
-export function GitHubSignInButton({ callbackUrl = "/home" }: GitHubSignInButtonProps) {
+export function GitHubSignInButton({ callbackUrl = "/integrations" }: GitHubSignInButtonProps) {
   return (
     <Button className="w-full" onClick={() => signIn("github", { callbackUrl })}>
       Continue with GitHub

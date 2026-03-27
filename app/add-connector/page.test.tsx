@@ -13,7 +13,7 @@ vi.mock("@neondatabase/serverless", () => ({ neon: () => getActiveSql() }));
 
 import { createTestRepository, getActiveSql } from "@/src/lib/db/pglite-test-utils";
 
-import AddConnectorPage from "./page";
+import AdminIntegrationsPage from "../admin-integrations/page";
 
 let testCleanup: () => Promise<void>;
 beforeAll(() => { vi.stubEnv("POSTGRES_URL", "pglite://add-connector-page-test"); });
@@ -34,69 +34,69 @@ afterEach(async () => {
   await testCleanup();
 });
 
-describe("AddConnectorPage", () => {
-  it("falls back to generic admin guidance when ADMIN_EMAIL is not set", async () => {
+describe("AdminIntegrationsPage", () => {
+  it("shows only the user guidance card to regular users", async () => {
     vi.stubEnv("ADMIN_EMAIL", "");
 
-    const html = renderToStaticMarkup(await AddConnectorPage());
+    const html = renderToStaticMarkup(await AdminIntegrationsPage());
 
+    expect(html).toContain("Admin integrations");
+    expect(html).toContain("For users");
     expect(html).toContain("contact an admin");
     expect(html).toContain("Popular official provider options");
-    expect(html).toContain("How to add a provider that is not currently showing up.");
-    expect(html).toContain("POST /api/managed-connectors");
-    expect(html).toContain("/api/managed-connectors/openapi");
-    expect(html).toContain("endpoint schema doc");
     expect(html).toContain("Search curated adaptors");
-    expect(html).toContain("service-level admin action");
-    expect(html).toContain("official vendor-hosted MCP URL");
-    expect(html).toContain("official REST API/OpenAPI default");
-    expect(html).toContain("provider&#x27;s own docs");
-    expect(html).toContain("authentication setup docs");
-    expect(html).not.toContain("Composio-hosted MCP URL pattern");
-    expect(html).not.toContain("customerId=replace-me");
-    expect(html).toContain("AUTH_REDIRECT_PROXY_URL");
-    expect(html).toContain("stable deployment origin instead of the preview URL");
     expect(html).toContain("href=\"/integrations?showIntegrationWizard=1\"");
-    expect(html).toContain("Connect");
-    expect(html).toContain("Discover functions");
-    expect(html).toContain("managed remote MCP or managed HTTP connector");
-    expect(html).toContain("APP_ADMIN_EMAILS");
-    expect(html).toContain("src/lib/integrations/oauth-provider-registration-defaults.ts");
-    expect(html).toContain("src/lib/integrations/oauth-provider-catalog.ts");
-    expect(html).not.toContain("app/api/mcp/&lt;provider&gt;/route.ts");
-    expect(html).not.toContain("src/lib/oauth/providers.ts");
-    expect(html).not.toContain("Submit provider information");
+    expect(html).not.toContain("For admins");
+    expect(html).not.toContain("Registered managed connectors");
+    expect(html).not.toContain("APP_ADMIN_EMAILS");
+    expect(html).not.toContain("POST /api/managed-connectors");
   });
 
   it("shows the configured admin email when ADMIN_EMAIL is set", async () => {
     vi.stubEnv("ADMIN_EMAIL", "admin@example.com");
 
-    const html = renderToStaticMarkup(await AddConnectorPage());
+    const html = renderToStaticMarkup(await AdminIntegrationsPage());
 
     expect(html).toContain("Contact admin@example.com");
     expect(html).toContain("please contact admin@example.com");
   });
 
 
-  it("shows registered managed connector controls to allowlisted admins", async () => {
+  it("shows only the admin guidance card and connector controls to allowlisted admins", async () => {
     vi.stubEnv("APP_ADMIN_EMAILS", "admin@example.com");
     authMock.mockResolvedValue({ user: { email: "admin@example.com" } });
 
-    const html = renderToStaticMarkup(await AddConnectorPage());
+    const html = renderToStaticMarkup(await AdminIntegrationsPage());
 
+    expect(html).toContain("For admins");
+    expect(html).not.toContain("For users");
     expect(html).toContain("Registered managed connectors");
+    expect(html).toContain("POST /api/managed-connectors");
+    expect(html).toContain("/api/managed-connectors/openapi");
+    expect(html).toContain("endpoint schema doc");
+    expect(html).toContain("service-level admin action");
+    expect(html).toContain("official vendor-hosted MCP URL");
+    expect(html).toContain("official REST API/OpenAPI default");
+    expect(html).toContain("provider&#x27;s own docs");
+    expect(html).toContain("authentication setup docs");
+    expect(html).toContain("AUTH_REDIRECT_PROXY_URL");
+    expect(html).toContain("stable deployment origin instead of the preview URL");
+    expect(html).toContain("Connect");
+    expect(html).toContain("Discover functions");
+    expect(html).toContain("managed remote MCP or managed HTTP connector");
+    expect(html).toContain("APP_ADMIN_EMAILS");
+    expect(html).toContain("src/lib/integrations/oauth-provider-registration-defaults.ts");
+    expect(html).toContain("src/lib/integrations/oauth-provider-catalog.ts");
     expect(html).toContain("ElevenLabs");
     expect(html).toContain("Ordinal");
     expect(html).not.toContain("No managed connectors are registered yet.");
     expect(html).not.toContain("Legacy shared OAuth credential cleanup");
     expect(html).not.toContain("Safe summaries only");
-  });
-
-
-  it("renders users before admins", async () => {
-    const html = renderToStaticMarkup(await AddConnectorPage());
-
-    expect(html.indexOf("For users")).toBeLessThan(html.indexOf("For admins"));
+    expect(html).not.toContain("Composio-hosted MCP URL pattern");
+    expect(html).not.toContain("customerId=replace-me");
+    expect(html).not.toContain("app/api/mcp/&lt;provider&gt;/route.ts");
+    expect(html).not.toContain("src/lib/oauth/providers.ts");
+    expect(html).not.toContain("Submit provider information");
   });
 
 
@@ -107,7 +107,7 @@ describe("AddConnectorPage", () => {
     vi.stubEnv("APP_ADMIN_EMAILS", "admin@example.com");
     authMock.mockResolvedValue({ user: { email: "admin@example.com" } });
 
-    const html = renderToStaticMarkup(await AddConnectorPage());
+    const html = renderToStaticMarkup(await AdminIntegrationsPage());
 
     expect(html).toContain("Service unavailable");
     expect(html).toContain("How to set up the database");
