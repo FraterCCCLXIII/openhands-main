@@ -45,6 +45,8 @@ This repository contains a Next.js/TypeScript implementation of an agent context
 
 - Service OAuth callbacks now follow the same stable-domain preview proxy pattern as Auth.js: when `AUTH_REDIRECT_PROXY_URL` is configured, provider auth flows register and exchange against `<stable-origin>/api/oauth/<provider>/callback`, and the stable callback forwards back to the preview deployment callback URL stored in OAuth state before finishing the token exchange.
 - Managed connector registration defaults should prefer the most reliable official surface for each provider: remote MCP when that is stable, otherwise a managed HTTP connector generated from an official OpenAPI schema. Notion now follows the latter path via `https://developers.notion.com/openapi.json` instead of the hosted Notion MCP.
+- Webflow is now a researched oauth-ready managed connector that should use the official hosted MCP server at `https://mcp.webflow.com/mcp` plus Webflow OAuth app credentials; unlike ElevenLabs/Ordinal it still requires one-time service-level registration before it appears in the wizard.
+
 - Static built-ins have been removed; the integrations wizard's "Built-in connector" path is now a compatibility label for service-level managed connectors stored in the repository.
 
 - `src/lib/auth.ts` configures Auth.js for GitHub OAuth on the hosted dashboard using the same preview-deployment redirect proxy pattern as `OpenHands/kpi-tracker`; the GitHub provider requests both `read:user` and `user:email` so the dashboard can populate signed-in email addresses more reliably. `DISABLE_AUTH=true` bypasses interactive auth for local development.

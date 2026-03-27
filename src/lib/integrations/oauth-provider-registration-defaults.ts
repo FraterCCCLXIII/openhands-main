@@ -61,6 +61,7 @@ const atlassianPreset = (
 const officialManagedMcpServerUrls: Record<string, string> = {
   github: "https://api.githubcopilot.com/mcp/",
   slack: "https://mcp.slack.com/mcp",
+  webflow: "https://mcp.webflow.com/mcp",
   ordinal: "https://app.tryordinal.com/api/mcp",
 };
 
@@ -369,14 +370,10 @@ const registrationDefaults: Record<string, OAuthProviderRegistrationDefaults> = 
     requestPath: "/users/me/meetings",
   },
   webflow: {
-    apiBaseUrl: "https://api.webflow.com",
+    provider: "mcp",
     authorizationUrl: "https://webflow.com/oauth/authorize",
     tokenUrl: "https://api.webflow.com/oauth/access_token",
     scopes: ["sites:read"],
-    functionName: "list_sites",
-    functionDescription: "List Webflow sites for the connected workspace.",
-    requestMethod: "GET",
-    requestPath: "/v2/sites",
   },
   miro: {
     apiBaseUrl: "https://api.miro.com/v2",
