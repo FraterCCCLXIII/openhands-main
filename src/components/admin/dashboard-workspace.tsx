@@ -323,31 +323,26 @@ const IntegrationMarketplaceCard = ({
       type="button"
       onClick={onClick}
       data-built-in-slug={connector.slug}
-      className="group flex h-full flex-col justify-between rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-4 text-left transition-colors hover:border-[var(--color-accent)] hover:bg-[var(--color-bg-active)]"
+      className="group flex w-full items-center gap-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] px-3 py-2.5 text-left transition-colors hover:border-[var(--color-accent)] hover:bg-[var(--color-bg-active)]"
     >
-      <div>
-        <div className="flex items-start gap-3">
-          <ConnectorLogo name={connector.name} logoUrl={logoUrl} />
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <p className="text-sm font-semibold text-white">{connector.name}</p>
-              {installed ? <Badge tone="success">Added</Badge> : null}
-            </div>
-            <p className="mt-1 text-xs leading-6 text-[var(--color-text-base)]">
-              {connector.description}
-            </p>
-          </div>
-        </div>
-        <div className="mt-4 flex flex-wrap gap-2">
+      <ConnectorLogo
+        name={connector.name}
+        logoUrl={logoUrl}
+        className="h-9 w-9 rounded-lg"
+      />
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="text-sm font-semibold text-white">{connector.name}</p>
+          {installed ? <Badge tone="success">Added</Badge> : null}
           <Badge>{connector.authStrategy.replace("_", " ")}</Badge>
           {connector.categories[0] ? <Badge>{connector.categories[0]}</Badge> : null}
           {connector.toolCount > 0 ? <Badge>{connector.toolCount} tools</Badge> : null}
         </div>
+        <p className="mt-0.5 text-xs leading-5 text-[var(--color-text-base)]">
+          {connector.description}
+        </p>
       </div>
-      <div className="mt-4 inline-flex items-center gap-2 text-xs font-medium text-[var(--color-accent)] transition-colors group-hover:text-[var(--color-accent-hover)]">
-        {installed ? "Open setup" : "Set up"}
-        <ArrowRight className="h-3.5 w-3.5" />
-      </div>
+      <ArrowRight className="h-3.5 w-3.5 shrink-0 text-[var(--color-accent)] transition-colors group-hover:text-[var(--color-accent-hover)]" />
     </button>
   );
 };
@@ -781,11 +776,11 @@ export const DashboardWorkspace = ({
           {isAdmin ? (
             <div className="border-t border-[var(--color-border)] pt-3">
               <a
-                href="/add-connector"
+                href="/admin-integrations"
                 className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm text-[var(--color-text-base)] transition-colors hover:bg-[var(--color-bg-active)] hover:text-white"
               >
                 <ShieldCheck className="h-4 w-4 shrink-0 text-[var(--color-text-base)]" />
-                <span className="truncate font-medium">Manage OAuth apps</span>
+                <span className="truncate font-medium">Admin integrations</span>
               </a>
             </div>
           ) : null}
@@ -894,49 +889,36 @@ export const DashboardWorkspace = ({
 
             <CompactPanel title="Add integration" icon={PlugZap}>
               <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-4">
-                <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-                  <div className="space-y-1">
-                    <h3 className="text-sm font-semibold text-white">
-                      Browse the most popular integrations
-                    </h3>
-                    <p className="text-xs leading-6 text-[var(--color-text-base)]">
-                      Search across the top five recommended connectors and jump straight into setup.
-                    </p>
-                  </div>
+                <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                   <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--color-text-base)]">
                     <Badge>{marketplaceConnectors.length} shown</Badge>
                     <Badge>{builtInConnectors.length} available</Badge>
                   </div>
-                </div>
-
-                <div className="mt-4">
                   <input
                     type="search"
                     value={addIntegrationSearch}
                     onChange={(event) => setAddIntegrationSearch(event.target.value)}
-                    placeholder="Search popular integrations"
-                    aria-label="Search popular integrations"
+                    placeholder="Search integrations"
+                    aria-label="Search integrations"
                     className={cn(inputClassName, "w-full lg:max-w-md")}
                   />
                 </div>
-              </div>
 
-              <div className="mt-4">
-                {builtInConnectorsQuery.isPending ? (
-                  <div className="rounded-xl border border-dashed border-[var(--color-border)] px-3 py-4 text-sm text-[var(--color-text-base)]">
-                    Loading available integrations...
-                  </div>
-                ) : builtInConnectorsQuery.isError ? (
-                  <div className="rounded-xl border border-dashed border-[var(--color-border)] px-3 py-4 text-sm text-[var(--color-text-base)]">
-                    {(builtInConnectorsQuery.error as Error).message}
-                  </div>
-                ) : marketplaceConnectors.length === 0 ? (
-                  <div className="rounded-xl border border-dashed border-[var(--color-border)] px-3 py-4 text-sm text-[var(--color-text-base)]">
-                    No popular integrations match the current search.
-                  </div>
-                ) : (
-                  <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-                    {marketplaceConnectors.map((connector) => (
+                <div className="mt-3 space-y-2.5">
+                  {builtInConnectorsQuery.isPending ? (
+                    <div className="rounded-xl border border-dashed border-[var(--color-border)] px-3 py-4 text-sm text-[var(--color-text-base)]">
+                      Loading available integrations...
+                    </div>
+                  ) : builtInConnectorsQuery.isError ? (
+                    <div className="rounded-xl border border-dashed border-[var(--color-border)] px-3 py-4 text-sm text-[var(--color-text-base)]">
+                      {(builtInConnectorsQuery.error as Error).message}
+                    </div>
+                  ) : marketplaceConnectors.length === 0 ? (
+                    <div className="rounded-xl border border-dashed border-[var(--color-border)] px-3 py-4 text-sm text-[var(--color-text-base)]">
+                      No popular integrations match the current search.
+                    </div>
+                  ) : (
+                    marketplaceConnectors.map((connector) => (
                       <IntegrationMarketplaceCard
                         key={connector.slug}
                         connector={connector}
@@ -945,9 +927,16 @@ export const DashboardWorkspace = ({
                           openIntegrationWizard("integrations", connector.slug)
                         }
                       />
-                    ))}
-                  </div>
-                )}
+                    ))
+                  )}
+                </div>
+
+                <a
+                  href="/admin-integrations"
+                  className="mt-4 inline-flex text-xs text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
+                >
+                  Can&apos;t find an integration you want? Click here.
+                </a>
               </div>
             </CompactPanel>
 
@@ -1012,15 +1001,15 @@ export const DashboardWorkspace = ({
                           return (
                             <div
                               key={integration.key}
-                              className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-4"
+                              className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-3"
                               data-integration-key={integration.key}
                             >
-                              <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
+                              <div className="flex flex-col gap-2.5 xl:flex-row xl:items-start xl:justify-between">
                                 <div className="flex min-w-0 items-start gap-3">
                                   <ConnectorLogo
                                     name={integration.name}
                                     logoUrl={resolveIntegrationLogoUrl(integration)}
-                                    className="h-10 w-10 rounded-lg"
+                                    className="h-9 w-9 rounded-lg"
                                   />
                                   <div className="min-w-0">
                                     <div className="flex flex-wrap items-center gap-2">
@@ -1033,11 +1022,8 @@ export const DashboardWorkspace = ({
                                         {integration.enabled ? "enabled" : "disabled"}
                                       </Badge>
                                     </div>
-                                    <p className="mt-2 text-xs leading-6 text-[var(--color-text-base)]">
-                                      {integration.key} · auth: {integration.authStrategy}
-                                    </p>
-                                    <p className="mt-1 text-[11px] leading-5 text-[var(--color-text-base)]">
-                                      {visibleFunctions.length} visible skill
+                                    <p className="mt-1 text-xs leading-5 text-[var(--color-text-base)]">
+                                      {integration.key} · auth: {integration.authStrategy} · {visibleFunctions.length} visible skill
                                       {visibleFunctions.length === 1 ? "" : "s"}
                                       {functions.length > 0
                                         ? ` of ${functions.length}`

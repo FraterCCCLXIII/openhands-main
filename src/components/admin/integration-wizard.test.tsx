@@ -107,7 +107,7 @@ describe("IntegrationWizard", () => {
     useSearchParamsMock.mockReset();
   });
 
-  it("shows only ready built-in connectors and links users to add-connector", async () => {
+  it("shows only ready built-in connectors and links users to admin-integrations", async () => {
     await act(async () => {
       root.render(
         <QueryClientProvider client={queryClient}>
@@ -139,7 +139,7 @@ describe("IntegrationWizard", () => {
     );
     expect(options).toEqual(["GitHub (github)"]);
 
-    const addConnectorLink = container.querySelector('a[href="/add-connector"]');
+    const addConnectorLink = container.querySelector('a[href="/admin-integrations"]');
     expect(addConnectorLink?.textContent).toContain("Click here");
     expect(container.textContent).not.toContain("Notion (notion)");
   });

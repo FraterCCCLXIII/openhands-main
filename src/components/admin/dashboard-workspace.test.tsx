@@ -165,7 +165,7 @@ describe("DashboardWorkspace", () => {
     signOutMock.mockReset();
   });
 
-  it("shows an Admin sidebar link to the add-connector page", async () => {
+  it("shows an Admin sidebar link to the admin-integrations page", async () => {
     await act(async () => {
       root.render(
         <QueryClientProvider client={queryClient}>
@@ -181,9 +181,9 @@ describe("DashboardWorkspace", () => {
       );
     });
 
-    const adminLink = container.querySelector('a[href="/add-connector"]');
+    const adminLink = container.querySelector('a[href="/admin-integrations"]');
     expect(adminLink).toBeTruthy();
-    expect(adminLink?.textContent).toContain("Manage OAuth apps");
+    expect(adminLink?.textContent).toContain("Admin integrations");
   });
 
 
@@ -264,7 +264,15 @@ describe("DashboardWorkspace", () => {
     expect(container.textContent).not.toContain(
       "Connect accounts, enable integrations, and tune skill access for your personal key.",
     );
-    expect(container.querySelector('a[href="/add-connector"]')).toBeNull();
+    const adminIntegrationLinks = Array.from(
+      container.querySelectorAll('a[href="/admin-integrations"]'),
+    );
+    expect(
+      adminIntegrationLinks.some((link) => link.textContent?.includes("Admin integrations")),
+    ).toBe(false);
+    expect(
+      adminIntegrationLinks.some((link) => link.textContent?.includes("Click here")),
+    ).toBe(true);
     expect(container.textContent).toContain("Add integration");
     expect(container.textContent).toContain("Disable");
     expect(container.textContent).toContain("enabled");
@@ -336,12 +344,17 @@ describe("DashboardWorkspace", () => {
 
     expect(container.querySelector("h1")?.textContent).toBe("Integrations");
     expect(container.textContent).toContain("Add integration");
-    expect(container.textContent).toContain("Browse the most popular integrations");
     expect(container.textContent).toContain("GitHub");
     expect(container.textContent).toContain("Slack");
-    expect(container.querySelector('input[aria-label="Search popular integrations"]')).toBeTruthy();
+    expect(container.querySelector('input[aria-label="Search integrations"]')).toBeTruthy();
+    expect(
+      Array.from(container.querySelectorAll('a[href="/admin-integrations"]')).some(
+        (link) => link.textContent?.includes("Click here"),
+      ),
+    ).toBe(true);
     expect(container.textContent).not.toContain("Home");
     expect(container.textContent).not.toContain("Getting started");
+    expect(container.textContent).not.toContain("Search popular integrations");
   });
 
   it("opens the setup flow from a marketplace card and keeps the selection in the URL", async () => {
@@ -607,8 +620,13 @@ describe("DashboardWorkspace", () => {
 
     expect(container.textContent).toContain("Add integration");
     expect(
-      container.querySelector('input[type="search"][aria-label="Search popular integrations"]'),
+      container.querySelector('input[type="search"][aria-label="Search integrations"]'),
     ).toBeTruthy();
+    expect(
+      Array.from(container.querySelectorAll('a[href="/admin-integrations"]')).some(
+        (link) => link.textContent?.includes("Click here"),
+      ),
+    ).toBe(true);
     expect(
       container.querySelector('[data-integration-key="github"] img[alt="GitHub logo"]'),
     ).toBeTruthy();
