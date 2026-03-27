@@ -131,6 +131,27 @@ export class ContextLayerService {
       .sort((a, b) => a.key.localeCompare(b.key));
   }
 
+  async deleteOwnerIntegration(ownerId: string, integrationKey: string) {
+    await this.initialize();
+
+    const normalizedOwnerId = normalizeAgentApiKeyOwner(ownerId);
+    const normalizedIntegrationKey = integrationKey.trim();
+    if (!normalizedIntegrationKey) {
+      throw new ContextLayerError("Integration key is required.", 400);
+    }
+
+    const existing = await this.repository.getOwnerIntegration(
+      normalizedOwnerId,
+      normalizedIntegrationKey,
+    );
+    if (!existing) {
+      throw new ContextLayerError("Integration not found.", 404);
+    }
+
+    await this.repository.deleteOwnerIntegration(normalizedOwnerId, normalizedIntegrationKey);
+    return { deleted: true as const, key: normalizedIntegrationKey };
+  }
+
   async listManagedConnectors() {
     await this.initialize();
     return listAllManagedConnectorDefinitions(this.repository);

@@ -4,20 +4,18 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { LucideIcon } from "lucide-react";
 import {
   ArrowRight,
-  Bell,
   CheckCircle2,
   ChevronRight,
   Copy,
   Eye,
   EyeOff,
-  Home,
   KeyRound,
   PlugZap,
   ShieldCheck,
   ToggleLeft,
   ToggleRight,
+  Trash2,
   User,
-  Waypoints,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -40,11 +38,13 @@ import {
 } from "@/src/lib/admin-routes";
 import {
   buildAgentConnectionGuide,
+  OPENHANDS_CLOUD_SHTTP_MCP_URL,
   OPENHANDS_CONTEXT_KEY_ENV,
 } from "@/src/lib/agent-connection";
 import { cn } from "@/src/lib/utils";
 import type {
   AccessRequest,
+  BuiltInConnectorOption,
   FunctionAccessMode,
   FunctionSpec,
   IntegrationSpec,
@@ -72,6 +72,14 @@ const fetchJson = async <T,>(
 const inputClassName =
   "rounded-md border border-[var(--color-border)] bg-[var(--color-bg-input)] px-4 py-3 text-white outline-none transition-colors focus:border-[var(--color-accent)]";
 
+const POPULAR_INTEGRATION_SLUGS = [
+  "github",
+  "slack",
+  "notion",
+  "linear",
+  "elevenlabs",
+] as const;
+
 const matchesIntegrationSearch = (integration: IntegrationSpec, query: string) => {
   const normalizedQuery = query.trim().toLowerCase();
   if (!normalizedQuery) {
@@ -84,6 +92,24 @@ const matchesIntegrationSearch = (integration: IntegrationSpec, query: string) =
     integration.provider,
     integration.kind,
     integration.authStrategy,
+  ].some((value) => value.toLowerCase().includes(normalizedQuery));
+};
+
+const matchesConnectorSearch = (
+  connector: BuiltInConnectorOption,
+  query: string,
+) => {
+  const normalizedQuery = query.trim().toLowerCase();
+  if (!normalizedQuery) {
+    return true;
+  }
+
+  return [
+    connector.name,
+    connector.slug,
+    connector.description,
+    connector.authStrategy,
+    ...connector.categories,
   ].some((value) => value.toLowerCase().includes(normalizedQuery));
 };
 
@@ -103,16 +129,6 @@ const getDashboardSections = (): Array<{
   icon: LucideIcon;
 }> => [
   {
-    id: "home",
-    label: "Home",
-    icon: Home,
-  },
-  {
-    id: "profile",
-    label: "User Profile",
-    icon: User,
-  },
-  {
     id: "integrations",
     label: "Integrations",
     icon: PlugZap,
@@ -121,6 +137,11 @@ const getDashboardSections = (): Array<{
     id: "apiKeys",
     label: "Agent Connection",
     icon: KeyRound,
+  },
+  {
+    id: "profile",
+    label: "User Profile",
+    icon: User,
   },
 ];
 
@@ -221,33 +242,6 @@ const SidebarNavItem = ({
   </button>
 );
 
-const MetricRow = ({
-  icon: Icon,
-  label,
-  value,
-  description,
-}: {
-  icon: LucideIcon;
-  label: string;
-  value: string;
-  description: string;
-}) => (
-  <div className="flex items-start gap-3 px-1 py-3">
-    <span className="rounded-md border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-1.5">
-      <Icon className="h-4 w-4 text-[var(--color-accent)]" />
-    </span>
-    <div className="flex min-w-0 flex-1 items-start justify-between gap-4">
-      <div className="min-w-0">
-        <p className="text-sm font-medium text-white">{label}</p>
-        <p className="text-xs leading-6 text-[var(--color-text-base)]">
-          {description}
-        </p>
-      </div>
-      <p className="shrink-0 text-xl font-semibold text-white">{value}</p>
-    </div>
-  </div>
-);
-
 const KeyValueRow = ({
   label,
   value,
@@ -272,62 +266,131 @@ const KeyValueRow = ({
   </div>
 );
 
-const ChecklistRow = ({
-  title,
-  body,
-  action,
-  onClick,
+const getConnectorLogoUrl = (connector: {
+  logoUrl?: string;
+  appUrl?: string;
+}) => {
+  if (connector.logoUrl?.trim()) {
+    return connector.logoUrl.trim();
+  }
+
+  if (connector.appUrl?.trim()) {
+    return `https://www.google.com/s2/favicons?sz=128&domain_url=${encodeURIComponent(connector.appUrl.trim())}`;
+  }
+
+  return null;
+};
+
+const ConnectorLogo = ({
+  name,
+  logoUrl,
+  className,
 }: {
-  title: string;
-  body: string;
-  action: string;
-  onClick: () => void;
+  name: string;
+  logoUrl: string | null;
+  className?: string;
 }) => (
-  <div className="flex flex-col gap-3 px-1 py-3 md:flex-row md:items-center md:justify-between">
-    <div className="min-w-0">
-      <p className="text-sm font-medium text-white">{title}</p>
-      <p className="text-xs leading-6 text-[var(--color-text-base)]">{body}</p>
-    </div>
-    <Button
-      variant="ghost"
-      className="h-8 shrink-0 gap-2 rounded-md px-2 text-xs"
-      onClick={onClick}
-    >
-      {action}
-      <ArrowRight className="h-3.5 w-3.5" />
-    </Button>
-  </div>
+  <span
+    className={cn(
+      "flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-input)]",
+      className,
+    )}
+  >
+    {logoUrl ? (
+      <img
+        src={logoUrl}
+        alt={`${name} logo`}
+        className="h-7 w-7 rounded-md object-contain"
+      />
+    ) : (
+      <span className="text-sm font-semibold text-white">{name.slice(0, 1)}</span>
+    )}
+  </span>
 );
 
-const ActivityRow = ({
-  title,
-  detail,
-  trailing,
-  actions,
+const IntegrationMarketplaceCard = ({
+  connector,
+  onClick,
 }: {
-  title: ReactNode;
-  detail: ReactNode;
-  trailing?: ReactNode;
-  actions?: ReactNode;
-}) => (
-  <div className="px-1 py-3">
-    <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-      <div className="min-w-0 space-y-1">
-        <div className="flex flex-wrap items-center gap-2 text-sm font-medium text-white">
-          {title}
+  connector: BuiltInConnectorOption;
+  onClick: () => void;
+}) => {
+  const logoUrl = getConnectorLogoUrl(connector);
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      data-built-in-slug={connector.slug}
+      className="group flex w-full items-center gap-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] px-3 py-2.5 text-left transition-colors hover:border-[var(--color-accent)] hover:bg-[var(--color-bg-active)]"
+    >
+      <ConnectorLogo
+        name={connector.name}
+        logoUrl={logoUrl}
+        className="h-9 w-9 rounded-lg"
+      />
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="text-sm font-semibold text-white">{connector.name}</p>
+          <Badge>{connector.authStrategy.replace("_", " ")}</Badge>
+          {connector.categories[0] ? <Badge>{connector.categories[0]}</Badge> : null}
+          {connector.toolCount > 0 ? <Badge>{connector.toolCount} tools</Badge> : null}
         </div>
-        <div className="text-xs leading-6 text-[var(--color-text-base)]">{detail}</div>
+        <p className="mt-0.5 text-xs leading-5 text-[var(--color-text-base)]">
+          {connector.description}
+        </p>
       </div>
-      {trailing ? <div className="shrink-0">{trailing}</div> : null}
-    </div>
-    {actions ? <div className="mt-3 flex flex-wrap gap-2">{actions}</div> : null}
+      <ArrowRight className="h-3.5 w-3.5 shrink-0 text-[var(--color-accent)] transition-colors group-hover:text-[var(--color-accent-hover)]" />
+    </button>
+  );
+};
+
+const CollapsibleUsageSection = ({
+  title,
+  description,
+  expanded,
+  onToggle,
+  badge,
+  children,
+}: {
+  title: string;
+  description: string;
+  expanded: boolean;
+  onToggle: () => void;
+  badge?: ReactNode;
+  children: ReactNode;
+}) => (
+  <div className="overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)]">
+    <button
+      type="button"
+      className="flex w-full items-start justify-between gap-4 px-4 py-3 text-left"
+      aria-expanded={expanded}
+      onClick={onToggle}
+    >
+      <div className="min-w-0">
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="text-sm font-semibold text-white">{title}</p>
+          {badge}
+        </div>
+        <p className="mt-1 text-xs leading-6 text-[var(--color-text-base)]">
+          {description}
+        </p>
+      </div>
+      <ChevronRight
+        className={cn(
+          "mt-0.5 h-4 w-4 shrink-0 text-[var(--color-text-base)] transition-transform",
+          expanded && "rotate-90",
+        )}
+      />
+    </button>
+    {expanded ? <div className="border-t border-[var(--color-border)] p-4">{children}</div> : null}
   </div>
 );
 
 export const DashboardWorkspace = ({
   initialIntegrations,
   initialAccessRequests,
-  initialNotifications,
+  initialNotifications: _initialNotifications,
   currentUser,
   contextApiBaseUrl,
   contextApiKey,
@@ -337,17 +400,21 @@ export const DashboardWorkspace = ({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [activeSection, setActiveSection] = useState<AdminSection>("home");
-  const [statusMessage, setStatusMessage] = useState<string | null>(null);
-  const [showIntegrationWizard, setShowIntegrationWizard] = useState(
-    initialIntegrations.length === 0,
+  const [activeSection, setActiveSection] = useState<AdminSection>(() =>
+    getAdminSectionFromPath(pathname),
   );
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [showIntegrationWizard, setShowIntegrationWizard] = useState(false);
+  const [addIntegrationSearch, setAddIntegrationSearch] = useState("");
   const [integrationSearch, setIntegrationSearch] = useState("");
   const [hideDisabledSkills, setHideDisabledSkills] = useState(true);
   const [expandedIntegrations, setExpandedIntegrations] = useState<
     Record<string, boolean>
   >({});
   const [expandedFunctions, setExpandedFunctions] = useState<
+    Record<string, boolean>
+  >({});
+  const [expandedUsageSections, setExpandedUsageSections] = useState<
     Record<string, boolean>
   >({});
   const [revealApiKey, setRevealApiKey] = useState(false);
@@ -401,23 +468,24 @@ export const DashboardWorkspace = ({
     initialData: initialIntegrations,
   });
 
+  const builtInConnectorsQuery = useQuery({
+    queryKey: ["built-in-connectors"],
+    queryFn: () =>
+      fetchJson<BuiltInConnectorOption[]>("/api/integrations/built-in-connectors"),
+    enabled: activeSection === "integrations",
+    staleTime: Number.POSITIVE_INFINITY,
+  });
+
   const accessRequestsQuery = useQuery({
     queryKey: ["access-requests"],
     queryFn: () => fetchJson<AccessRequest[]>("/api/access-requests"),
     initialData: initialAccessRequests,
   });
 
-  const notificationsQuery = useQuery({
-    queryKey: ["notifications"],
-    queryFn: () => fetchJson<NotificationRecord[]>("/api/notifications"),
-    initialData: initialNotifications,
-  });
-
   const invalidateAll = async () => {
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: ["integrations"] }),
       queryClient.invalidateQueries({ queryKey: ["access-requests"] }),
-      queryClient.invalidateQueries({ queryKey: ["notifications"] }),
     ]);
   };
 
@@ -430,14 +498,15 @@ export const DashboardWorkspace = ({
       url: string;
       method: string;
       body?: unknown;
+      successMessage?: string;
     }) =>
       fetchJson(url, {
         method,
         headers: body ? { "Content-Type": "application/json" } : undefined,
         body: body ? JSON.stringify(body) : undefined,
       }),
-    onSuccess: async () => {
-      setStatusMessage("Saved.");
+    onSuccess: async (_data, variables) => {
+      setStatusMessage(variables.successMessage ?? "Saved.");
       await invalidateAll();
     },
     onError: (error: Error) => {
@@ -447,7 +516,6 @@ export const DashboardWorkspace = ({
 
   const integrations = integrationsQuery.data ?? [];
   const accessRequests = accessRequestsQuery.data ?? [];
-  const notifications = notificationsQuery.data ?? [];
 
   const enabledIntegrationCount = integrations.filter(
     (integration) => integration.enabled,
@@ -468,6 +536,103 @@ export const DashboardWorkspace = ({
       ? "Local development session"
       : "Authenticated dashboard session";
   const sections = getDashboardSections();
+
+  const builtInConnectors = builtInConnectorsQuery.data ?? [];
+  const installedIntegrationKeys = useMemo(
+    () =>
+      new Set(
+        integrations.flatMap((integration) => {
+          const builtInSlug =
+            typeof integration.config.builtInSlug === "string"
+              ? integration.config.builtInSlug.trim()
+              : "";
+
+          return [integration.key, builtInSlug].filter(Boolean);
+        }),
+      ),
+    [integrations],
+  );
+  const connectorBySlug = useMemo(
+    () =>
+      new Map(
+        builtInConnectors.map((connector) => [connector.slug, connector] as const),
+      ),
+    [builtInConnectors],
+  );
+  const availableConnectorCount = useMemo(
+    () =>
+      builtInConnectors.filter((connector) => !installedIntegrationKeys.has(connector.slug)).length,
+    [builtInConnectors, installedIntegrationKeys],
+  );
+  const marketplaceConnectors = useMemo(() => {
+    const normalizeRank = (connector: BuiltInConnectorOption) => {
+      const explicitIndex = POPULAR_INTEGRATION_SLUGS.indexOf(
+        connector.slug as (typeof POPULAR_INTEGRATION_SLUGS)[number],
+      );
+      return explicitIndex >= 0 ? explicitIndex : POPULAR_INTEGRATION_SLUGS.length + 1;
+    };
+
+    return [...builtInConnectors]
+      .filter((connector) => !installedIntegrationKeys.has(connector.slug))
+      .sort((left, right) => {
+        const rankDelta = normalizeRank(left) - normalizeRank(right);
+        return rankDelta !== 0 ? rankDelta : left.name.localeCompare(right.name);
+      })
+      .filter((connector) => matchesConnectorSearch(connector, addIntegrationSearch))
+      .slice(0, 5);
+  }, [addIntegrationSearch, builtInConnectors, installedIntegrationKeys]);
+  const resolveIntegrationLogoUrl = (integration: IntegrationSpec) => {
+    const builtInSlug =
+      typeof integration.config.builtInSlug === "string"
+        ? integration.config.builtInSlug.trim()
+        : "";
+    const connector =
+      connectorBySlug.get(builtInSlug) ?? connectorBySlug.get(integration.key.trim());
+
+    if (connector) {
+      return getConnectorLogoUrl(connector);
+    }
+
+    const appUrl =
+      typeof integration.config.appUrl === "string"
+        ? integration.config.appUrl.trim()
+        : typeof integration.config.serverUrl === "string"
+          ? integration.config.serverUrl.trim()
+          : typeof integration.config.apiBaseUrl === "string"
+            ? integration.config.apiBaseUrl.trim()
+            : "";
+
+    return getConnectorLogoUrl({ appUrl });
+  };
+
+  const openIntegrationWizard = (
+    section: AdminSection,
+    builtInSlug?: string,
+  ) => {
+    setShowIntegrationWizard(true);
+    setActiveSection(section);
+    router.push(
+      buildAdminSectionHref(section, {
+        showIntegrationWizard: "1",
+        builtIn: builtInSlug,
+      }),
+    );
+  };
+
+  const handleIntegrationCreated = async (section: AdminSection) => {
+    await invalidateAll();
+    setShowIntegrationWizard(false);
+    setActiveSection(section);
+    router.push(buildAdminSectionHref(section));
+  };
+
+  const toggleUsageSection = (sectionKey: string) => {
+    setExpandedUsageSections((current) => ({
+      ...current,
+      [sectionKey]: !current[sectionKey],
+    }));
+  };
+
   const activeSectionMeta =
     sections.find((section) => section.id === activeSection) ?? sections[0];
 
@@ -571,6 +736,23 @@ export const DashboardWorkspace = ({
     });
   };
 
+  const handleDeleteIntegration = (integration: IntegrationSpec) => {
+    if (
+      typeof window !== "undefined" &&
+      typeof window.confirm === "function" &&
+      !window.confirm(
+        `Delete the integration "${integration.name}"? This removes it from your personal dashboard and disconnects any saved credentials for this tool.`,
+      )
+    ) {
+      return;
+    }
+
+    actionMutation.mutate({
+      url: `/api/integrations/${integration.key}`,
+      method: "DELETE",
+      successMessage: `${integration.name} deleted.`,
+    });
+  };
 
   const handleCopyApiKey = async () => {
     if (!contextApiReady) {
@@ -616,11 +798,11 @@ export const DashboardWorkspace = ({
           {isAdmin ? (
             <div className="border-t border-[var(--color-border)] pt-3">
               <a
-                href="/add-connector"
+                href="/admin-integrations"
                 className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm text-[var(--color-text-base)] transition-colors hover:bg-[var(--color-bg-active)] hover:text-white"
               >
                 <ShieldCheck className="h-4 w-4 shrink-0 text-[var(--color-text-base)]" />
-                <span className="truncate font-medium">Manage OAuth apps</span>
+                <span className="truncate font-medium">Admin integrations</span>
               </a>
             </div>
           ) : null}
@@ -675,172 +857,9 @@ export const DashboardWorkspace = ({
 
         {!contextApiReady ? (
           <div className="rounded-xl border border-[color:rgba(217,181,90,0.25)] bg-[color:rgba(217,181,90,0.12)] px-3 py-2 text-sm text-[var(--color-warning)]">
-            Open <code className="text-white">/home</code> once to provision a
-            personal key before agents call <code className="text-white">/api/context/*</code>.
+            Open <code className="text-white">/integrations</code> once to
+            provision a personal key before agents call <code className="text-white">/api/context/*</code>.
           </div>
-        ) : null}
-
-        {activeSection === "home" ? (
-          <section className="space-y-4">
-            <div className="grid gap-4 xl:grid-cols-[minmax(0,0.9fr)_minmax(320px,1.1fr)]">
-              <CompactPanel title="Workspace summary" icon={Home}>
-                <div className="divide-y divide-[var(--color-border)]">
-                  <MetricRow
-                    icon={PlugZap}
-                    label="Integrations"
-                    value={String(integrations.length)}
-                    description="Integrations currently active for your personal key."
-                  />
-                  <MetricRow
-                    icon={CheckCircle2}
-                    label="Enabled integrations"
-                    value={String(enabledIntegrationCount)}
-                    description="Enabled integrations your personal key can invoke right now."
-                  />
-                  <MetricRow
-                    icon={KeyRound}
-                    label="Functions discovered"
-                    value={String(discoveredFunctionCount)}
-                    description="Callable functions registered across all integrations."
-                  />
-                  <MetricRow
-                    icon={Bell}
-                    label="Pending approvals"
-                    value={String(pendingAccessRequests.length)}
-                    description="Requests waiting for an approval or rejection decision."
-                  />
-                </div>
-              </CompactPanel>
-
-              <CompactPanel title="Getting started" icon={Waypoints}>
-                <div className="divide-y divide-[var(--color-border)]">
-                  <ChecklistRow
-                    title="Review your profile"
-                    body="Confirm the signed-in identity that owns the persisted personal key."
-                    action="Open profile"
-                    onClick={() => navigateToSection("profile")}
-                  />
-                  <ChecklistRow
-                    title="Add an integration"
-                    body="Create a Built-in or MCP connector and review its callable functions."
-                    action="Open integrations"
-                    onClick={() => navigateToSection("integrations")}
-                  />
-                  <ChecklistRow
-                    title="Copy your key"
-                    body="Reveal or copy the personal agent key, then configure your runtime."
-                    action="Open connection"
-                    onClick={() => navigateToSection("apiKeys")}
-                  />
-                </div>
-              </CompactPanel>
-            </div>
-
-            <CompactPanel title="Recent activity" icon={Bell}>
-              <div className="space-y-4">
-                <div>
-                  <div className="mb-2 flex items-center justify-between gap-3 px-1">
-                    <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-base)]">
-                      Pending approvals
-                    </p>
-                    <Badge tone={pendingAccessRequests.length > 0 ? "warning" : "default"}>
-                      {pendingAccessRequests.length}
-                    </Badge>
-                  </div>
-                  <div className="divide-y divide-[var(--color-border)]">
-                    {pendingAccessRequests.length === 0 ? (
-                      <p className="px-1 py-3 text-sm text-[var(--color-text-base)]">
-                        No pending access requests.
-                      </p>
-                    ) : (
-                      pendingAccessRequests.slice(0, 3).map((request) => (
-                        <ActivityRow
-                          key={request.id}
-                          title={
-                            <>
-                              <span>{request.integrationKey}.{request.functionName}</span>
-                              <Badge tone="warning">pending</Badge>
-                            </>
-                          }
-                          detail={`${request.agentId} (${request.agentClass}) requested ${request.scopes.join(", ") || "default scopes"} for ${request.requestedMinutes} minutes.`}
-                          actions={
-                            <>
-                              <Button
-                                className="h-8 rounded-md px-3 text-xs"
-                                onClick={() =>
-                                  actionMutation.mutate({
-                                    url: `/api/access-requests/${request.id}/approve`,
-                                    method: "POST",
-                                    body: {
-                                      approver: currentUser.email ?? "admin",
-                                      durationMinutes: request.requestedMinutes,
-                                    },
-                                  })
-                                }
-                              >
-                                Approve
-                              </Button>
-                              <Button
-                                variant="danger"
-                                className="h-8 rounded-md px-3 text-xs"
-                                onClick={() =>
-                                  actionMutation.mutate({
-                                    url: `/api/access-requests/${request.id}/reject`,
-                                    method: "POST",
-                                    body: {
-                                      approver: currentUser.email ?? "admin",
-                                    },
-                                  })
-                                }
-                              >
-                                Reject
-                              </Button>
-                            </>
-                          }
-                        />
-                      ))
-                    )}
-                  </div>
-                </div>
-
-                <div>
-                  <div className="mb-2 flex items-center justify-between gap-3 px-1">
-                    <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-base)]">
-                      Latest notifications
-                    </p>
-                    <Badge>{notifications.length}</Badge>
-                  </div>
-                  <div className="divide-y divide-[var(--color-border)]">
-                    {notifications.length === 0 ? (
-                      <p className="px-1 py-3 text-sm text-[var(--color-text-base)]">
-                        Notifications will appear here when agents request access.
-                      </p>
-                    ) : (
-                      notifications.slice(0, 3).map((notification) => (
-                        <ActivityRow
-                          key={notification.id}
-                          title={
-                            <>
-                              <Badge>{notification.channel}</Badge>
-                              <span>{notification.recipient}</span>
-                            </>
-                          }
-                          detail={
-                            <>
-                              <span className="block text-sm text-white">
-                                {notification.subject}
-                              </span>
-                              <span>{notification.body}</span>
-                            </>
-                          }
-                        />
-                      ))
-                    )}
-                  </div>
-                </div>
-              </div>
-            </CompactPanel>
-          </section>
         ) : null}
 
         {activeSection === "profile" ? (
@@ -882,29 +901,70 @@ export const DashboardWorkspace = ({
 
         {activeSection === "integrations" ? (
           <section className="space-y-4">
-            <div className="flex justify-start">
-              <Button
-                className="h-9 rounded-md px-4 text-xs"
-                onClick={() => setShowIntegrationWizard(true)}
-              >
-                Add integration
-              </Button>
-            </div>
-
             {showIntegrationWizard ? (
               <IntegrationWizard
-                onCreated={async () => {
-                  await invalidateAll();
-                  setShowIntegrationWizard(false);
-                }}
+                onCreated={() => handleIntegrationCreated("integrations")}
                 onStatus={setStatusMessage}
+                redirectSection="integrations"
               />
             ) : null}
+
+            <CompactPanel title="Add integration" icon={PlugZap}>
+              <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-4">
+                <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                  <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--color-text-base)]">
+                    <Badge>{marketplaceConnectors.length} shown</Badge>
+                    <Badge>{availableConnectorCount} available</Badge>
+                  </div>
+                  <input
+                    type="search"
+                    value={addIntegrationSearch}
+                    onChange={(event) => setAddIntegrationSearch(event.target.value)}
+                    placeholder="Search integrations"
+                    aria-label="Search integrations"
+                    className={cn(inputClassName, "w-full lg:max-w-md")}
+                  />
+                </div>
+
+                <div className="mt-3 space-y-2.5">
+                  {builtInConnectorsQuery.isPending ? (
+                    <div className="rounded-xl border border-dashed border-[var(--color-border)] px-3 py-4 text-sm text-[var(--color-text-base)]">
+                      Loading available integrations...
+                    </div>
+                  ) : builtInConnectorsQuery.isError ? (
+                    <div className="rounded-xl border border-dashed border-[var(--color-border)] px-3 py-4 text-sm text-[var(--color-text-base)]">
+                      {(builtInConnectorsQuery.error as Error).message}
+                    </div>
+                  ) : marketplaceConnectors.length === 0 ? (
+                    <div className="rounded-xl border border-dashed border-[var(--color-border)] px-3 py-4 text-sm text-[var(--color-text-base)]">
+                      No popular integrations match the current search.
+                    </div>
+                  ) : (
+                    marketplaceConnectors.map((connector) => (
+                      <IntegrationMarketplaceCard
+                        key={connector.slug}
+                        connector={connector}
+                        onClick={() =>
+                          openIntegrationWizard("integrations", connector.slug)
+                        }
+                      />
+                    ))
+                  )}
+                </div>
+
+                <a
+                  href="/admin-integrations"
+                  className="mt-4 inline-flex text-xs text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
+                >
+                  Can&apos;t find an integration you want? Click here.
+                </a>
+              </div>
+            </CompactPanel>
 
             <CompactPanel title="Your integrations" icon={PlugZap}>
               {integrations.length === 0 ? (
                 <div className="rounded-xl border border-dashed border-[var(--color-border)] px-3 py-4 text-sm text-[var(--color-text-base)]">
-                  No integrations activated yet. Use the button above to connect your first one.
+                  No integrations activated yet. Use the section above to connect your first one.
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -962,36 +1022,52 @@ export const DashboardWorkspace = ({
                           return (
                             <div
                               key={integration.key}
-                              className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-4"
+                              className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-3"
                               data-integration-key={integration.key}
                             >
-                              <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
-                                <div className="min-w-0">
-                                  <div className="flex flex-wrap items-center gap-2">
-                                    <h3 className="text-sm font-semibold text-white">
-                                      {integration.name}
-                                    </h3>
-                                    <Badge>{integration.provider}</Badge>
-                                    <Badge>{integration.kind}</Badge>
-                                    <Badge tone={integration.enabled ? "success" : "danger"}>
-                                      {integration.enabled ? "enabled" : "disabled"}
-                                    </Badge>
+                              <div className="flex flex-col gap-2.5 xl:flex-row xl:items-start xl:justify-between">
+                                <div className="flex min-w-0 items-start gap-3">
+                                  <ConnectorLogo
+                                    name={integration.name}
+                                    logoUrl={resolveIntegrationLogoUrl(integration)}
+                                    className="h-9 w-9 rounded-lg"
+                                  />
+                                  <div className="min-w-0">
+                                    <div className="flex flex-wrap items-center gap-2">
+                                      <h3 className="text-sm font-semibold text-white">
+                                        {integration.name}
+                                      </h3>
+                                      <Badge>{integration.provider}</Badge>
+                                      <Badge>{integration.kind}</Badge>
+                                      <Badge tone={integration.enabled ? "success" : "danger"}>
+                                        {integration.enabled ? "enabled" : "disabled"}
+                                      </Badge>
+                                    </div>
+                                    <p className="mt-1 text-xs leading-5 text-[var(--color-text-base)]">
+                                      {integration.key} · auth: {integration.authStrategy} · {visibleFunctions.length} visible skill
+                                      {visibleFunctions.length === 1 ? "" : "s"}
+                                      {functions.length > 0
+                                        ? ` of ${functions.length}`
+                                        : ""}
+                                    </p>
                                   </div>
-                                  <p className="mt-2 text-xs leading-6 text-[var(--color-text-base)]">
-                                    {integration.key} · auth: {integration.authStrategy}
-                                  </p>
-                                  <p className="mt-1 text-[11px] leading-5 text-[var(--color-text-base)]">
-                                    {visibleFunctions.length} visible skill
-                                    {visibleFunctions.length === 1 ? "" : "s"}
-                                    {functions.length > 0
-                                      ? ` of ${functions.length}`
-                                      : ""}
-                                  </p>
                                 </div>
                                 <div className="flex flex-wrap items-center gap-2 xl:justify-end">
                                   <Button
+                                    type="button"
+                                    variant="danger"
+                                    className="h-8 shrink-0 gap-2 rounded-md px-3 text-xs"
+                                    disabled={actionMutation.isPending}
+                                    onClick={() => handleDeleteIntegration(integration)}
+                                    title="Remove this integration and any saved connection details from your personal dashboard."
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                    Delete
+                                  </Button>
+                                  <Button
                                     variant={integration.enabled ? "secondary" : "primary"}
                                     className="h-8 shrink-0 gap-2 rounded-md px-3 text-xs"
+                                    disabled={actionMutation.isPending}
                                     onClick={() =>
                                       actionMutation.mutate({
                                         url: `/api/integrations/${integration.key}/toggle`,
@@ -1194,12 +1270,92 @@ export const DashboardWorkspace = ({
               <p className="mb-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-muted)] px-3 py-2 text-xs leading-6 text-[var(--color-text-base)]">
                 {agentConnectionGuide.permissionNote}
               </p>
-              <div className="space-y-6">
-                <section>
-                  <h4 className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-text-base)]">
-                    REST API Usage
-                  </h4>
-                  <div className="mt-3 divide-y divide-[var(--color-border)]">
+              <div className="space-y-3">
+                <CollapsibleUsageSection
+                  title="OpenHands Cloud"
+                  description="Connect OpenHands Cloud to this context layer with the hosted SHTTP MCP server."
+                  expanded={expandedUsageSections.openhandsCloud ?? false}
+                  onToggle={() => toggleUsageSection("openhandsCloud")}
+                  badge={<Badge tone="success">Recommended</Badge>}
+                >
+                  <div className="divide-y divide-[var(--color-border)]">
+                    <KeyValueRow
+                      label="Go to"
+                      value={
+                        <a
+                          href="https://app.all-hands.dev/settings/mcp"
+                          target="_blank"
+                          rel="noreferrer"
+                          className="break-all text-xs text-[var(--color-text-active)] underline-offset-4 hover:underline"
+                        >
+                          https://app.all-hands.dev/settings/mcp
+                        </a>
+                      }
+                    />
+                    <KeyValueRow
+                      label="Server Type"
+                      value={<code className="break-all text-xs text-[var(--color-text-active)]">SHTTP</code>}
+                    />
+                    <KeyValueRow
+                      label="URL"
+                      value={<code className="break-all text-xs text-[var(--color-text-active)]">{OPENHANDS_CLOUD_SHTTP_MCP_URL}</code>}
+                    />
+                    <KeyValueRow
+                      label="API key"
+                      value={<span className="text-xs text-[var(--color-text-base)]">Use the personal API key shown above.</span>}
+                    />
+                  </div>
+                </CollapsibleUsageSection>
+
+                <CollapsibleUsageSection
+                  title="MCP Usage"
+                  description="Connect any MCP client to the streamable HTTP endpoint and call tools directly."
+                  expanded={expandedUsageSections.mcp ?? false}
+                  onToggle={() => toggleUsageSection("mcp")}
+                >
+                  <div className="divide-y divide-[var(--color-border)]">
+                    <KeyValueRow
+                      label="MCP endpoint"
+                      value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.mcpEndpoint}</code>}
+                    />
+                    <KeyValueRow
+                      label="Set agent ID tool"
+                      value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.mcpSetAgentIdToolName}</code>}
+                    />
+                    <KeyValueRow
+                      label="Set agent class tool"
+                      value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.mcpSetAgentClassToolName}</code>}
+                    />
+                    <KeyValueRow
+                      label="Example MCP tool"
+                      value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.mcpToolName}</code>}
+                    />
+                  </div>
+                  <div className="mt-4 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)]">
+                    <div className="border-b border-[var(--color-border)] px-3 py-2 text-xs uppercase tracking-[0.18em] text-[var(--color-text-base)]">
+                      MCP streamable HTTP example
+                    </div>
+                    <pre className="overflow-x-auto whitespace-pre-wrap px-3 py-3 text-xs leading-6 text-[var(--color-text-base)]">
+                      {agentConnectionGuide.mcpConfigExample}
+                    </pre>
+                  </div>
+                  <div className="mt-4 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)]">
+                    <div className="border-b border-[var(--color-border)] px-3 py-2 text-xs uppercase tracking-[0.18em] text-[var(--color-text-base)]">
+                      MCP session setup
+                    </div>
+                    <pre className="overflow-x-auto whitespace-pre-wrap px-3 py-3 text-xs leading-6 text-[var(--color-text-base)]">
+                      {agentConnectionGuide.mcpSessionSetupExample}
+                    </pre>
+                  </div>
+                </CollapsibleUsageSection>
+
+                <CollapsibleUsageSection
+                  title="REST API Usage"
+                  description="Call tools directly over HTTPS or download generated OpenAPI and SKILL.md docs."
+                  expanded={expandedUsageSections.rest ?? false}
+                  onToggle={() => toggleUsageSection("rest")}
+                >
+                  <div className="divide-y divide-[var(--color-border)]">
                     <KeyValueRow
                       label="Auth header"
                       value={
@@ -1251,47 +1407,7 @@ export const DashboardWorkspace = ({
                       {agentConnectionGuide.skillCurlExample}
                     </pre>
                   </div>
-                </section>
-
-                <section>
-                  <h4 className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-text-base)]">
-                    MCP Usage
-                  </h4>
-                  <div className="mt-3 divide-y divide-[var(--color-border)]">
-                    <KeyValueRow
-                      label="MCP endpoint"
-                      value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.mcpEndpoint}</code>}
-                    />
-                    <KeyValueRow
-                      label="Set agent ID tool"
-                      value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.mcpSetAgentIdToolName}</code>}
-                    />
-                    <KeyValueRow
-                      label="Set agent class tool"
-                      value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.mcpSetAgentClassToolName}</code>}
-                    />
-                    <KeyValueRow
-                      label="Example MCP tool"
-                      value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.mcpToolName}</code>}
-                    />
-                  </div>
-                  <div className="mt-4 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)]">
-                    <div className="border-b border-[var(--color-border)] px-3 py-2 text-xs uppercase tracking-[0.18em] text-[var(--color-text-base)]">
-                      MCP streamable HTTP example
-                    </div>
-                    <pre className="overflow-x-auto whitespace-pre-wrap px-3 py-3 text-xs leading-6 text-[var(--color-text-base)]">
-                      {agentConnectionGuide.mcpConfigExample}
-                    </pre>
-                  </div>
-                  <div className="mt-4 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)]">
-                    <div className="border-b border-[var(--color-border)] px-3 py-2 text-xs uppercase tracking-[0.18em] text-[var(--color-text-base)]">
-                      MCP session setup
-                    </div>
-                    <pre className="overflow-x-auto whitespace-pre-wrap px-3 py-3 text-xs leading-6 text-[var(--color-text-base)]">
-                      {agentConnectionGuide.mcpSessionSetupExample}
-                    </pre>
-                  </div>
-                </section>
+                </CollapsibleUsageSection>
               </div>
             </CompactPanel>
           </section>
