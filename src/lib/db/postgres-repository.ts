@@ -267,6 +267,21 @@ export class PostgresRepository implements ContextRepository {
     return spec;
   }
 
+  async deleteOwnerIntegration(ownerId: string, integrationKey: string) {
+    await this.ensureSchema();
+    const sql = getSql();
+    await sql.transaction([
+      sql`
+        DELETE FROM integration_connections
+        WHERE owner_id = ${ownerId} AND integration_key = ${integrationKey}
+      `,
+      sql`
+        DELETE FROM owner_integrations
+        WHERE owner_id = ${ownerId} AND key = ${integrationKey}
+      `,
+    ]);
+  }
+
   async upsertPolicy(policy: AgentClassPolicy) {
     await this.ensureSchema();
     const sql = getSql();

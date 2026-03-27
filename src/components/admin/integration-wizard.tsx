@@ -20,7 +20,7 @@ import {
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
 import { Card } from "@/src/components/ui/card";
-import { buildAdminSectionHref } from "@/src/lib/admin-routes";
+import { buildAdminSectionHref, type AdminSection } from "@/src/lib/admin-routes";
 import { filterReadyBuiltInConnectors } from "@/src/lib/integrations/connector-readiness";
 import { cn } from "@/src/lib/utils";
 import type {
@@ -38,6 +38,7 @@ type DiscoverFeedbackTone = "info" | "success" | "error";
 interface IntegrationWizardProps {
   onCreated: () => Promise<void>;
   onStatus: (message: string | null) => void;
+  redirectSection?: AdminSection;
 }
 
 type ApiDebugDetails = Record<string, unknown>;
@@ -323,6 +324,7 @@ const StepBadge = ({
 export const IntegrationWizard = ({
   onCreated,
   onStatus,
+  redirectSection = "integrations",
 }: IntegrationWizardProps) => {
   const searchParams = useSearchParams();
   const [step, setStep] = useState<WizardStep>(1);
@@ -764,7 +766,7 @@ export const IntegrationWizard = ({
                   <span className="text-xs leading-6 text-[var(--color-text-base)]">
                     Don&apos;t see a connector you want?{" "}
                     <a
-                      href="/add-connector"
+                      href="/admin-integrations"
                       className="text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
                     >
                       Click here.
@@ -805,7 +807,7 @@ export const IntegrationWizard = ({
                             </p>
                             <p className="mt-1 text-xs leading-6 text-[var(--color-text-base)]">
                               {!oauthConnectionEnabled
-                                ? `${selectedConnector.name} is not available on this deployment yet. Visit the add connector page to request it.`
+                                ? `${selectedConnector.name} is not available on this deployment yet. Visit the admin integrations page to request it.`
                                 : selectedConnection
                                   ? `This ${selectedConnector.name} token is stored per user in the database and will be injected automatically for agent calls.`
                                   : selectedConnector.credentialHelp}
@@ -823,7 +825,7 @@ export const IntegrationWizard = ({
                               window.location.href = `/api/oauth/${selectedConnector.slug}/start?integrationKey=${encodeURIComponent(
                                 draft.key.trim() || selectedConnector.slug,
                               )}&redirectTo=${encodeURIComponent(
-                                buildAdminSectionHref("integrations", {
+                                buildAdminSectionHref(redirectSection, {
                                   showIntegrationWizard: "1",
                                   builtIn:
                                     draft.builtInSlug || selectedConnector.slug,
@@ -894,7 +896,7 @@ export const IntegrationWizard = ({
                 {requiresOAuthConnection ? (
                   <div className="rounded-xl border border-dashed border-[var(--color-border)] px-4 py-4 text-sm text-[var(--color-text-base)]">
                     {!oauthConnectionEnabled
-                      ? `${selectedConnector?.name ?? "This provider"} is not available on this deployment yet. Visit /add-connector to request it.`
+                      ? `${selectedConnector?.name ?? "This provider"} is not available on this deployment yet. Visit /admin-integrations to request it.`
                       : selectedConnection
                         ? `${selectedConnector?.name} is connected. Click Discover to save this integration with your stored OAuth credentials.`
                         : `Connect ${selectedConnector?.name ?? "this provider"} before discovering functions.`}

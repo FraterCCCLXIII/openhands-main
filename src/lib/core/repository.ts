@@ -21,6 +21,7 @@ export interface ContextRepository {
     ownerId: string,
     spec: IntegrationSpec,
   ): Promise<IntegrationSpec>;
+  deleteOwnerIntegration(ownerId: string, integrationKey: string): Promise<void>;
   upsertPolicy(policy: AgentClassPolicy): Promise<AgentClassPolicy>;
   getPolicy(agentClass: string): Promise<AgentClassPolicy | null>;
   listAccessRequests(): Promise<AccessRequest[]>;
