@@ -258,6 +258,37 @@ describe("agent API keys", () => {
 });
 
 // ---------------------------------------------------------------------------
+// User API keys
+// ---------------------------------------------------------------------------
+describe("user API keys", () => {
+  it("saves, finds, and deletes a hashed API key by owner and hash", async () => {
+    const record = {
+      ownerId: "user-1",
+      apiKeyHash: "hash_123",
+      keyPrefix: "clu_abc123",
+      keySuffix: "z9yx",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    await repo.saveUserApiKey(record);
+
+    const byOwner = await repo.getUserApiKeyByOwner("user-1");
+    expect(byOwner).not.toBeNull();
+    expect(byOwner!.apiKeyHash).toBe("hash_123");
+    expect(byOwner!.keyPrefix).toBe("clu_abc123");
+    expect(byOwner!.keySuffix).toBe("z9yx");
+
+    const byHash = await repo.findUserApiKeyByHash("hash_123");
+    expect(byHash).not.toBeNull();
+    expect(byHash!.ownerId).toBe("user-1");
+
+    await repo.deleteUserApiKey("user-1");
+    expect(await repo.getUserApiKeyByOwner("user-1")).toBeNull();
+    expect(await repo.findUserApiKeyByHash("hash_123")).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Agent class policies
 // ---------------------------------------------------------------------------
 describe("agent class policies", () => {

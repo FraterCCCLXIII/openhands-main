@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto";
+
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { HttpAdapter } from "@/src/lib/adapters/http-adapter";
@@ -608,6 +610,138 @@ describe("ContextLayerService", () => {
     expect(await service.isStoredAgentApiKeyAuthorized("not-a-real-key")).toBe(false);
   });
 
+  it("rotates and revokes user API keys with hashed auth and encrypted recovery", async () => {
+    const service = createService();
+
+    const first = await service.rotateUserApiKey("Owner@Example.com");
+    const storedFirst = await testRepo.getUserApiKeyByOwner("owner@example.com");
+
+    expect(first.apiKey.startsWith("clu_")).toBe(true);
+    expect(storedFirst).not.toBeNull();
+    expect(storedFirst?.apiKeyHash).not.toBe(first.apiKey);
+    expect(storedFirst?.encryptedApiKey).toBeTruthy();
+    expect(storedFirst?.encryptedApiKey).not.toBe(first.apiKey);
+    expect(storedFirst?.keyPrefix).toBe(first.key.keyPrefix);
+    expect(storedFirst?.keySuffix).toBe(first.key.keySuffix);
+    expect(await service.getStoredUserApiKey(first.apiKey)).toMatchObject({
+      ownerId: "owner@example.com",
+    });
+    expect(await service.getUserApiKeyStatus("owner@example.com")).toEqual(first.key);
+    expect(await service.getUserApiKeyValue("owner@example.com")).toBe(first.apiKey);
+
+    const second = await service.rotateUserApiKey("owner@example.com");
+    const storedSecond = await testRepo.getUserApiKeyByOwner("owner@example.com");
+
+    expect(second.apiKey).not.toBe(first.apiKey);
+    expect(second.key.createdAt).toBe(first.key.createdAt);
+    expect(second.key.updatedAt).not.toBe(first.key.updatedAt);
+    expect(storedSecond?.apiKeyHash).not.toBe(storedFirst?.apiKeyHash);
+    expect(storedSecond?.encryptedApiKey).not.toBe(storedFirst?.encryptedApiKey);
+    expect(await service.getStoredUserApiKey(first.apiKey)).toBeNull();
+    expect(await service.getStoredUserApiKey(second.apiKey)).toMatchObject({
+      ownerId: "owner@example.com",
+    });
+    expect(await service.getUserApiKeyValue("owner@example.com")).toBe(second.apiKey);
+
+    expect(await service.revokeUserApiKey("owner@example.com")).toEqual({
+      revoked: true,
+    });
+    expect(await service.getStoredUserApiKey(second.apiKey)).toBeNull();
+    expect(await service.getUserApiKeyStatus("owner@example.com")).toBeNull();
+    expect(await service.getUserApiKeyValue("owner@example.com")).toBeNull();
+    expect(await service.revokeUserApiKey("owner@example.com")).toEqual({
+      revoked: false,
+    });
+  });
+
+  it("returns null for unknown user API keys", async () => {
+    const service = createService();
+
+    expect(await service.getStoredUserApiKey("not-a-real-user-key")).toBeNull();
+  });
+
+
+  it("rotates and revokes admin API keys with hashed auth and encrypted recovery", async () => {
+    vi.stubEnv("APP_ADMIN_EMAILS", "admin@example.com");
+    const service = createService();
+
+    const first = await service.rotateAdminApiKey("Admin@Example.com");
+    const storedFirst = await testRepo.getAdminApiKeyByOwner("admin@example.com");
+
+    expect(first.apiKey.startsWith("clad_")).toBe(true);
+    expect(storedFirst).not.toBeNull();
+    expect(storedFirst?.apiKeyHash).not.toBe(first.apiKey);
+    expect(storedFirst?.encryptedApiKey).toBeTruthy();
+    expect(storedFirst?.encryptedApiKey).not.toBe(first.apiKey);
+    expect(storedFirst?.keyPrefix).toBe(first.key.keyPrefix);
+    expect(storedFirst?.keySuffix).toBe(first.key.keySuffix);
+    expect(await service.getStoredAdminApiKey(first.apiKey)).toMatchObject({
+      ownerId: "admin@example.com",
+    });
+    expect(await service.getAdminApiKeyStatus("admin@example.com")).toEqual(first.key);
+    expect(await service.getAdminApiKeyValue("admin@example.com")).toBe(first.apiKey);
+
+    const second = await service.rotateAdminApiKey("admin@example.com");
+    const storedSecond = await testRepo.getAdminApiKeyByOwner("admin@example.com");
+
+    expect(second.apiKey).not.toBe(first.apiKey);
+    expect(second.key.createdAt).toBe(first.key.createdAt);
+    expect(second.key.updatedAt).not.toBe(first.key.updatedAt);
+    expect(storedSecond?.apiKeyHash).not.toBe(storedFirst?.apiKeyHash);
+    expect(storedSecond?.encryptedApiKey).not.toBe(storedFirst?.encryptedApiKey);
+    expect(await service.getStoredAdminApiKey(first.apiKey)).toBeNull();
+    expect(await service.getStoredAdminApiKey(second.apiKey)).toMatchObject({
+      ownerId: "admin@example.com",
+    });
+    expect(await service.getAdminApiKeyValue("admin@example.com")).toBe(second.apiKey);
+
+    expect(await service.revokeAdminApiKey("admin@example.com")).toEqual({
+      revoked: true,
+    });
+    expect(await service.getStoredAdminApiKey(second.apiKey)).toBeNull();
+    expect(await service.getAdminApiKeyStatus("admin@example.com")).toBeNull();
+    expect(await service.getAdminApiKeyValue("admin@example.com")).toBeNull();
+    expect(await service.revokeAdminApiKey("admin@example.com")).toEqual({
+      revoked: false,
+    });
+  });
+
+  it("returns null for unknown admin API keys", async () => {
+    const service = createService();
+
+    expect(await service.getStoredAdminApiKey("not-a-real-admin-key")).toBeNull();
+  });
+
+  it("rejects admin API key issuance and recovery for non-admin owners", async () => {
+    vi.stubEnv("APP_ADMIN_EMAILS", "admin@example.com");
+    const service = createService();
+    const seededApiKey = "clad_seeded_non_admin_key_value";
+    const timestamp = new Date().toISOString();
+
+    await testRepo.saveAdminApiKey({
+      ownerId: OWNER_ID,
+      apiKeyHash: createHash("sha256").update(seededApiKey).digest("hex"),
+      keyPrefix: seededApiKey.slice(0, 12),
+      keySuffix: seededApiKey.slice(-4),
+      encryptedApiKey: null,
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    });
+
+    await expect(service.rotateAdminApiKey(OWNER_ID)).rejects.toMatchObject({
+      statusCode: 403,
+    });
+    await expect(service.getAdminApiKeyStatus(OWNER_ID)).rejects.toMatchObject({
+      statusCode: 403,
+    });
+    await expect(service.getAdminApiKeyValue(OWNER_ID)).rejects.toMatchObject({
+      statusCode: 403,
+    });
+    await expect(service.revokeAdminApiKey(OWNER_ID)).rejects.toMatchObject({
+      statusCode: 403,
+    });
+    expect(await service.getStoredAdminApiKey(seededApiKey)).toBeNull();
+  });
 
   it("requires OAuth client credentials when first registering an OAuth managed connector", async () => {
     const repository = testRepo;

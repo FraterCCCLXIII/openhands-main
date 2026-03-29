@@ -1,6 +1,7 @@
-import { randomBytes, randomUUID } from "node:crypto";
+import { createHash, randomBytes, randomUUID } from "node:crypto";
 
 import { DEFAULT_CASE_BY_CASE_APPROVAL_MINUTES } from "@/src/lib/access-requests";
+import { isAppAdminEmail } from "@/src/lib/app-admins";
 import type { AdapterRegistry } from "@/src/lib/core/adapter-registry";
 import { addMinutes, nowIso } from "@/src/lib/core/date";
 import { ContextLayerError } from "@/src/lib/core/errors";
@@ -21,6 +22,8 @@ import { resolveOAuthProvider } from "@/src/lib/oauth/provider-resolver";
 import type {
   AccessDecision,
   AccessRequest,
+  AdminApiKeyRecord,
+  AdminApiKeyStatus,
   AgentApiKeyRecord,
   AgentClassPolicy,
   ContextInvocationResult,
@@ -40,6 +43,8 @@ import type {
   ToolInvocationOutcome,
   ToolInvocationRecord,
   UnusedFunctionWindowUnit,
+  UserApiKeyRecord,
+  UserApiKeyStatus,
 } from "@/src/types/context-layer";
 
 const unique = (values: string[]) => [...new Set(values)];
@@ -141,7 +146,62 @@ const isConnectionExpired = (expiresAt?: string, bufferMs = 60_000) => {
 
 const normalizeAgentApiKeyOwner = (ownerId: string) => ownerId.trim().toLowerCase();
 
+const requireAdminApiKeyOwner = (ownerId: string) => {
+  const normalizedOwnerId = normalizeAgentApiKeyOwner(ownerId);
+
+  if (!normalizedOwnerId) {
+    throw new ContextLayerError(
+      "A signed-in admin email is required before issuing an admin API key.",
+      400,
+    );
+  }
+
+  if (!isAppAdminEmail(normalizedOwnerId)) {
+    throw new ContextLayerError(
+      "Only allowlisted app administrators can manage admin API keys.",
+      403,
+    );
+  }
+
+  return normalizedOwnerId;
+};
+
 const createAgentApiKeyValue = () => `cla_${randomBytes(24).toString("base64url")}`;
+const createUserApiKeyValue = () => `clu_${randomBytes(32).toString("base64url")}`;
+const createAdminApiKeyValue = () => `clad_${randomBytes(32).toString("base64url")}`;
+const USER_API_KEY_PREFIX_LENGTH = 12;
+const USER_API_KEY_SUFFIX_LENGTH = 4;
+
+const hashScopedApiKey = (apiKey: string) =>
+  createHash("sha256").update(apiKey).digest("hex");
+
+const getScopedApiKeyPrefix = (apiKey: string) =>
+  apiKey.slice(0, USER_API_KEY_PREFIX_LENGTH);
+
+const getScopedApiKeySuffix = (apiKey: string) =>
+  apiKey.slice(-USER_API_KEY_SUFFIX_LENGTH);
+
+const encryptScopedApiKey = (apiKey: string) =>
+  encryptCredentials({ apiKey });
+
+const decryptScopedApiKey = (payload: string) => {
+  const credentials = decryptCredentials<{ apiKey?: string }>(payload);
+  return typeof credentials.apiKey === "string" ? credentials.apiKey : null;
+};
+
+const toUserApiKeyStatus = (record: UserApiKeyRecord): UserApiKeyStatus => ({
+  keyPrefix: record.keyPrefix,
+  keySuffix: record.keySuffix,
+  createdAt: record.createdAt,
+  updatedAt: record.updatedAt,
+});
+
+const toAdminApiKeyStatus = (record: AdminApiKeyRecord): AdminApiKeyStatus => ({
+  keyPrefix: record.keyPrefix,
+  keySuffix: record.keySuffix,
+  createdAt: record.createdAt,
+  updatedAt: record.updatedAt,
+});
 
 const permittedByRule = (
   rule: PolicyRule,
@@ -525,6 +585,191 @@ export class ContextLayerService {
 
     await this.initialize();
     return this.repository.findAgentApiKey(normalizedApiKey);
+  }
+
+  async getUserApiKeyStatus(ownerId: string) {
+    await this.initialize();
+    const normalizedOwnerId = normalizeAgentApiKeyOwner(ownerId);
+    const record = await this.repository.getUserApiKeyByOwner(normalizedOwnerId);
+
+    if (!record) {
+      return null;
+    }
+
+    if (record.encryptedApiKey && !record.keySuffix) {
+      const apiKey = decryptScopedApiKey(record.encryptedApiKey);
+      if (apiKey) {
+        const updatedRecord: UserApiKeyRecord = {
+          ...record,
+          keyPrefix: getScopedApiKeyPrefix(apiKey),
+          keySuffix: getScopedApiKeySuffix(apiKey),
+        };
+        await this.repository.saveUserApiKey(updatedRecord);
+        return toUserApiKeyStatus(updatedRecord);
+      }
+    }
+
+    return toUserApiKeyStatus(record);
+  }
+
+  async getUserApiKeyValue(ownerId: string) {
+    await this.initialize();
+    const normalizedOwnerId = normalizeAgentApiKeyOwner(ownerId);
+    const record = await this.repository.getUserApiKeyByOwner(normalizedOwnerId);
+
+    if (!record?.encryptedApiKey) {
+      return null;
+    }
+
+    return decryptScopedApiKey(record.encryptedApiKey);
+  }
+
+  async rotateUserApiKey(ownerId: string) {
+    await this.initialize();
+    const normalizedOwnerId = normalizeAgentApiKeyOwner(ownerId);
+
+    if (!normalizedOwnerId) {
+      throw new ContextLayerError(
+        "A signed-in user email or name is required before issuing a user API key.",
+        400,
+      );
+    }
+
+    const existing = await this.repository.getUserApiKeyByOwner(normalizedOwnerId);
+    const apiKey = createUserApiKeyValue();
+    const timestamp = nowIso();
+    const record: UserApiKeyRecord = {
+      ownerId: normalizedOwnerId,
+      apiKeyHash: hashScopedApiKey(apiKey),
+      keyPrefix: getScopedApiKeyPrefix(apiKey),
+      keySuffix: getScopedApiKeySuffix(apiKey),
+      encryptedApiKey: encryptScopedApiKey(apiKey),
+      createdAt: existing?.createdAt ?? timestamp,
+      updatedAt: timestamp,
+    };
+
+    await this.repository.saveUserApiKey(record);
+
+    return {
+      apiKey,
+      key: toUserApiKeyStatus(record),
+    };
+  }
+
+  async revokeUserApiKey(ownerId: string) {
+    await this.initialize();
+    const normalizedOwnerId = normalizeAgentApiKeyOwner(ownerId);
+    const existing = await this.repository.getUserApiKeyByOwner(normalizedOwnerId);
+
+    if (!existing) {
+      return { revoked: false as const };
+    }
+
+    await this.repository.deleteUserApiKey(normalizedOwnerId);
+    return { revoked: true as const };
+  }
+
+  async getStoredUserApiKey(apiKey: string | null | undefined) {
+    const normalizedApiKey = apiKey?.trim();
+    if (!normalizedApiKey) {
+      return null;
+    }
+
+    await this.initialize();
+    return this.repository.findUserApiKeyByHash(hashScopedApiKey(normalizedApiKey));
+  }
+
+  async getAdminApiKeyStatus(ownerId: string) {
+    await this.initialize();
+    const normalizedOwnerId = requireAdminApiKeyOwner(ownerId);
+    const record = await this.repository.getAdminApiKeyByOwner(normalizedOwnerId);
+
+    if (!record) {
+      return null;
+    }
+
+    if (record.encryptedApiKey && !record.keySuffix) {
+      const apiKey = decryptScopedApiKey(record.encryptedApiKey);
+      if (apiKey) {
+        const updatedRecord: AdminApiKeyRecord = {
+          ...record,
+          keyPrefix: getScopedApiKeyPrefix(apiKey),
+          keySuffix: getScopedApiKeySuffix(apiKey),
+        };
+        await this.repository.saveAdminApiKey(updatedRecord);
+        return toAdminApiKeyStatus(updatedRecord);
+      }
+    }
+
+    return toAdminApiKeyStatus(record);
+  }
+
+  async getAdminApiKeyValue(ownerId: string) {
+    await this.initialize();
+    const normalizedOwnerId = requireAdminApiKeyOwner(ownerId);
+    const record = await this.repository.getAdminApiKeyByOwner(normalizedOwnerId);
+
+    if (!record?.encryptedApiKey) {
+      return null;
+    }
+
+    return decryptScopedApiKey(record.encryptedApiKey);
+  }
+
+  async rotateAdminApiKey(ownerId: string) {
+    await this.initialize();
+    const normalizedOwnerId = requireAdminApiKeyOwner(ownerId);
+
+    const existing = await this.repository.getAdminApiKeyByOwner(normalizedOwnerId);
+    const apiKey = createAdminApiKeyValue();
+    const timestamp = nowIso();
+    const record: AdminApiKeyRecord = {
+      ownerId: normalizedOwnerId,
+      apiKeyHash: hashScopedApiKey(apiKey),
+      keyPrefix: getScopedApiKeyPrefix(apiKey),
+      keySuffix: getScopedApiKeySuffix(apiKey),
+      encryptedApiKey: encryptScopedApiKey(apiKey),
+      createdAt: existing?.createdAt ?? timestamp,
+      updatedAt: timestamp,
+    };
+
+    await this.repository.saveAdminApiKey(record);
+
+    return {
+      apiKey,
+      key: toAdminApiKeyStatus(record),
+    };
+  }
+
+  async revokeAdminApiKey(ownerId: string) {
+    await this.initialize();
+    const normalizedOwnerId = requireAdminApiKeyOwner(ownerId);
+    const existing = await this.repository.getAdminApiKeyByOwner(normalizedOwnerId);
+
+    if (!existing) {
+      return { revoked: false as const };
+    }
+
+    await this.repository.deleteAdminApiKey(normalizedOwnerId);
+    return { revoked: true as const };
+  }
+
+  async getStoredAdminApiKey(apiKey: string | null | undefined) {
+    const normalizedApiKey = apiKey?.trim();
+    if (!normalizedApiKey) {
+      return null;
+    }
+
+    await this.initialize();
+    const record = await this.repository.findAdminApiKeyByHash(
+      hashScopedApiKey(normalizedApiKey),
+    );
+
+    if (!record || !isAppAdminEmail(record.ownerId)) {
+      return null;
+    }
+
+    return record;
   }
 
   async listIntegrationConnections(ownerId: string) {
@@ -1028,18 +1273,19 @@ export class ContextLayerService {
         integration,
         options.ownerId,
       );
+      const invocationIntegration = resolvedIntegration;
 
       const data =
         functionSpec.executionMode === "mock"
           ? await this.adapters.invoke("mock", {
               agentId,
-              integration: resolvedIntegration,
+              integration: invocationIntegration,
               functionSpec,
               payload,
             })
-          : await this.adapters.invoke(resolvedIntegration.provider, {
+          : await this.adapters.invoke(invocationIntegration.provider, {
               agentId,
-              integration: resolvedIntegration,
+              integration: invocationIntegration,
               functionSpec,
               payload,
             });
@@ -1049,7 +1295,7 @@ export class ContextLayerService {
           ownerId: options.ownerId,
           agentId,
           agentClass,
-          integration: resolvedIntegration,
+          integration: invocationIntegration,
           functionName,
           scopes: decision.effectiveScopes,
           payloadKeys,
@@ -1060,11 +1306,11 @@ export class ContextLayerService {
       });
 
       return {
-        integration: resolvedIntegration.key,
+        integration: invocationIntegration.key,
         function: functionSpec.name,
-        provider: resolvedIntegration.provider,
-        kind: resolvedIntegration.kind,
-        authStrategy: resolvedIntegration.authStrategy,
+        provider: invocationIntegration.provider,
+        kind: invocationIntegration.kind,
+        authStrategy: invocationIntegration.authStrategy,
         decision,
         data,
       };

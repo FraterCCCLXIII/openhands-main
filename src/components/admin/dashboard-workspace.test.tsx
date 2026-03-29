@@ -642,7 +642,7 @@ describe("DashboardWorkspace", () => {
     );
   });
 
-  it("shows collapsed MCP-first usage sections on the top-level agent connection route", async () => {
+  it("shows a combined keys card with connection details on the top-level agent connection route", async () => {
     usePathnameMock.mockReturnValue("/agent-connection");
 
     await act(async () => {
@@ -655,69 +655,62 @@ describe("DashboardWorkspace", () => {
             currentUser={{ name: "Admin User", email: "admin@example.com" }}
             contextApiBaseUrl="https://example.com"
             contextApiKey="test-key"
+            userApiKey={{
+              keyPrefix: "clu_12345678",
+              keySuffix: "mnop",
+              createdAt: "2026-03-29T10:00:00.000Z",
+              updatedAt: "2026-03-29T10:00:00.000Z",
+            }}
+            adminApiKey={{
+              keyPrefix: "clad_123456",
+              keySuffix: "wxyz",
+              createdAt: "2026-03-29T10:00:00.000Z",
+              updatedAt: "2026-03-29T10:00:00.000Z",
+            }}
           />
         </QueryClientProvider>,
       );
     });
 
-    const usageText = container.textContent ?? "";
-    expect(usageText).toContain("OpenHands Cloud");
-    expect(usageText).toContain("MCP Usage");
-    expect(usageText).toContain("REST API Usage");
-    expect(usageText.indexOf("OpenHands Cloud")).toBeLessThan(
-      usageText.indexOf("MCP Usage"),
+    const text = container.textContent ?? "";
+    expect(text).toContain("API keys");
+    expect(text).toContain("Agent key");
+    expect(text).toContain("Give this key to your agent.");
+    expect(text).toContain("User automation key");
+    expect(text).toContain(
+      "Use this key to programmatically manage user-scoped context-layer settings.",
     );
-    expect(usageText.indexOf("MCP Usage")).toBeLessThan(
-      usageText.indexOf("REST API Usage"),
+    expect(text).toContain("Admin automation key");
+    expect(text).toContain(
+      "Use this key for admin-only QA and operational automation surfaces.",
     );
-    expect(usageText).not.toContain("https://openhands-context-layer.vercel.app/api/mcp");
-    expect(usageText).not.toContain("https://example.com/api/mcp");
-    expect(usageText).not.toContain("https://example.com/api/context/openapi");
-    expect(usageText).toContain(
-      "Enabled tools are callable by default unless you configure an agent-class policy to narrow access; case-by-case tools still need a temporary approval grant.",
+    expect(text).toContain("Connection details");
+    expect(text).toContain("Agent MCP");
+    expect(text).toContain("Agent REST API");
+    expect(text).toContain("User REST API");
+    expect(text).toContain("Admin REST API");
+    expect(text).toContain("https://example.com/api/mcp");
+    expect(text).toContain("https://example.com/api/context/openapi");
+    expect(text).toContain("https://example.com/api/user/openapi");
+    expect(text).toContain("https://example.com/api/admin/openapi");
+    expect(text).toContain("I have provided you with an API key in $OPENHANDS_CONTEXT_LAYER_KEY");
+    expect(text).toContain("I have provided you with a user API key in $OPENHANDS_CONTEXT_LAYER_USER_KEY");
+    expect(text).toContain("I have provided you with an admin API key in $OPENHANDS_CONTEXT_LAYER_ADMIN_KEY");
+    expect(text).not.toContain("Works with /api/context/*");
+    expect(text).not.toContain("Works with /api/user/*");
+    expect(text).not.toContain("https://example.com/api/context/skill");
+    expect(text).not.toContain("Generate");
+    expect(text).not.toContain("Revoke");
+
+    const copyButtons = Array.from(container.querySelectorAll("button")).filter((button) =>
+      button.textContent?.includes("Copy"),
+    );
+    const revealButtons = Array.from(container.querySelectorAll("button")).filter((button) =>
+      button.textContent?.includes("Reveal"),
     );
 
-    const openHandsCloudButton = Array.from(container.querySelectorAll("button")).find(
-      (button) => button.textContent?.includes("OpenHands Cloud"),
-    );
-    const mcpButton = Array.from(container.querySelectorAll("button")).find((button) =>
-      button.textContent?.includes("MCP Usage"),
-    );
-    const restButton = Array.from(container.querySelectorAll("button")).find((button) =>
-      button.textContent?.includes("REST API Usage"),
-    );
-
-    expect(openHandsCloudButton).toBeTruthy();
-    expect(mcpButton).toBeTruthy();
-    expect(restButton).toBeTruthy();
-
-    await act(async () => {
-      openHandsCloudButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-      mcpButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-      restButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-    });
-
-    expect(container.textContent).toContain("https://app.all-hands.dev/settings/mcp");
-    expect(container.textContent).toContain("SHTTP");
-    expect(container.textContent).toContain("https://openhands-context-layer.vercel.app/api/mcp");
-    expect(container.textContent).toContain("https://example.com/api/mcp");
-    expect(container.textContent).toContain("set_agent_id");
-    expect(container.textContent).toContain("set_agent_class");
-    expect(container.textContent).toContain(
-      "Connect your MCP client to https://example.com/api/mcp.",
-    );
-    expect(container.textContent).toContain(
-      "Call your-integration__your-function directly; if you omit agent identity, the session defaults to research-bot-01 (researcher).",
-    );
-    expect(container.textContent).toContain(
-      "Optionally call set_agent_id and set_agent_class to override the identity for the rest of the session.",
-    );
-    expect(container.textContent).toContain("https://example.com/api/context/openapi");
-    expect(container.textContent).toContain("https://example.com/api/context/skill");
-    expect(container.textContent).toContain('curl -X GET "https://example.com/api/context/openapi"');
-    expect(container.textContent).toContain("SKILL.md export");
-    expect(container.textContent).toContain('curl -L "https://example.com/api/context/skill"');
-    expect(container.textContent).toContain("-o SKILL.md");
+    expect(copyButtons).toHaveLength(3);
+    expect(revealButtons).toHaveLength(3);
   });
 
   it("shows the integration catalog from the top-level integrations route", async () => {
@@ -1184,9 +1177,9 @@ describe("DashboardWorkspace", () => {
       );
     });
 
-    const copyButton = Array.from(container.querySelectorAll("button")).find(
-      (button) => button.textContent?.includes("Copy"),
-    );
+    const copyButton = container.querySelector(
+      'button[aria-label="Copy agent key"]',
+    ) as HTMLButtonElement | null;
     expect(copyButton).toBeTruthy();
     expect(copyButton?.querySelector("svg")?.getAttribute("class")).toContain(
       "lucide-copy",
@@ -1208,12 +1201,305 @@ describe("DashboardWorkspace", () => {
       vi.advanceTimersByTime(2000);
     });
 
-    const copyButtonAfterTimeout = Array.from(
-      container.querySelectorAll("button"),
-    ).find((button) => button.textContent?.includes("Copy"));
+    const copyButtonAfterTimeout = container.querySelector(
+      'button[aria-label="Copy agent key"]',
+    ) as HTMLButtonElement | null;
     expect(
       copyButtonAfterTimeout?.querySelector("svg")?.getAttribute("class"),
     ).toContain("lucide-copy");
+  });
+
+  it("reveals and copies the user automation key even when only metadata is initially rendered", async () => {
+    usePathnameMock.mockReturnValue("/agent-connection");
+    vi.useFakeTimers();
+
+    const writeTextMock = vi.fn().mockResolvedValue(undefined);
+    vi.stubGlobal("navigator", {
+      clipboard: {
+        writeText: writeTextMock,
+      },
+    });
+
+    fetchMock.mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = typeof input === "string" ? input : input.toString();
+      const method = init?.method ?? "GET";
+
+      if (url === "/api/user/key" && method === "GET") {
+        return new Response(
+          JSON.stringify({
+            hasKey: true,
+            key: {
+              keyPrefix: "clu_12345678",
+              keySuffix: "mnop",
+              createdAt: "2026-03-29T10:00:00.000Z",
+              updatedAt: "2026-03-29T10:00:00.000Z",
+            },
+            apiKey: "clu_1234567890abcdefghijklmnop",
+          }),
+          {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          },
+        );
+      }
+
+      return new Response(JSON.stringify([]), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    });
+
+    await act(async () => {
+      root.render(
+        <QueryClientProvider client={queryClient}>
+          <DashboardWorkspace
+            initialIntegrations={[]}
+            initialAccessRequests={[]}
+            initialNotifications={[]}
+            currentUser={{ name: "Admin User", email: "admin@example.com" }}
+            contextApiBaseUrl="https://example.com"
+            contextApiKey="test-key"
+            userApiKey={{
+              keyPrefix: "clu_12345678",
+              keySuffix: "mnop",
+              createdAt: "2026-03-29T10:00:00.000Z",
+              updatedAt: "2026-03-29T10:00:00.000Z",
+            }}
+          />
+        </QueryClientProvider>,
+      );
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(
+      fetchMock.mock.calls.some(([input]) => String(input) === "/api/user/key"),
+    ).toBe(false);
+
+    const revealButtons = Array.from(container.querySelectorAll("button")).filter((button) =>
+      button.textContent?.includes("Reveal"),
+    );
+    const revealButton = revealButtons[1] as HTMLButtonElement | undefined;
+    const copyButton = container.querySelector(
+      'button[aria-label="Copy user automation key"]',
+    ) as HTMLButtonElement | null;
+    expect(revealButton?.textContent).toContain("Reveal");
+    expect(copyButton).toBeTruthy();
+
+    await act(async () => {
+      revealButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(container.textContent).toContain("clu_1234567890abcdefghijklmnop");
+
+    await act(async () => {
+      copyButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(writeTextMock).toHaveBeenCalledWith("clu_1234567890abcdefghijklmnop");
+    expect(copyButton?.querySelector("svg")?.getAttribute("class")).toContain(
+      "lucide-circle-check",
+    );
+  });
+
+  it("creates a user automation key only when the user explicitly copies it", async () => {
+    usePathnameMock.mockReturnValue("/agent-connection");
+
+    const writeTextMock = vi.fn().mockResolvedValue(undefined);
+    vi.stubGlobal("navigator", {
+      clipboard: {
+        writeText: writeTextMock,
+      },
+    });
+
+    fetchMock.mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = typeof input === "string" ? input : input.toString();
+      const method = init?.method ?? "GET";
+
+      if (url === "/api/user/key" && method === "GET") {
+        return new Response(
+          JSON.stringify({
+            hasKey: false,
+            key: null,
+            apiKey: null,
+          }),
+          {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          },
+        );
+      }
+
+      if (url === "/api/user/key" && method === "POST") {
+        return new Response(
+          JSON.stringify({
+            apiKey: "clu_1234567890abcdefghijklmnop",
+            key: {
+              keyPrefix: "clu_12345678",
+              keySuffix: "mnop",
+              createdAt: "2026-03-29T10:00:00.000Z",
+              updatedAt: "2026-03-29T10:00:00.000Z",
+            },
+          }),
+          {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          },
+        );
+      }
+
+      return new Response(JSON.stringify([]), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    });
+
+    await act(async () => {
+      root.render(
+        <QueryClientProvider client={queryClient}>
+          <DashboardWorkspace
+            initialIntegrations={[]}
+            initialAccessRequests={[]}
+            initialNotifications={[]}
+            currentUser={{ name: "Admin User", email: "admin@example.com" }}
+            contextApiBaseUrl="https://example.com"
+            contextApiKey="test-key"
+          />
+        </QueryClientProvider>,
+      );
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(container.textContent).toContain(
+      "No user automation key yet. Reveal or copy to create one.",
+    );
+    expect(
+      fetchMock.mock.calls.some(([input]) => String(input) === "/api/user/key"),
+    ).toBe(false);
+
+    const copyButton = container.querySelector(
+      'button[aria-label="Copy user automation key"]',
+    ) as HTMLButtonElement | null;
+    expect(copyButton).toBeTruthy();
+
+    await act(async () => {
+      copyButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(writeTextMock).toHaveBeenCalledWith("clu_1234567890abcdefghijklmnop");
+    expect(
+      fetchMock.mock.calls
+        .filter(([input]) => String(input) === "/api/user/key")
+        .map(([, init]) => init?.method ?? "GET"),
+    ).toEqual(["GET", "POST"]);
+    expect(container.textContent).toContain(
+      "Created a new user automation key. Save it somewhere secure because the full value is only shown when you explicitly reveal or copy it.",
+    );
+  });
+
+
+  it("reveals and copies the admin automation key only after an explicit action", async () => {
+    usePathnameMock.mockReturnValue("/agent-connection");
+    vi.useFakeTimers();
+
+    const writeTextMock = vi.fn().mockResolvedValue(undefined);
+    vi.stubGlobal("navigator", {
+      clipboard: {
+        writeText: writeTextMock,
+      },
+    });
+
+    fetchMock.mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = typeof input === "string" ? input : input.toString();
+      const method = init?.method ?? "GET";
+
+      if (url === "/api/admin/key" && method === "GET") {
+        return new Response(
+          JSON.stringify({
+            hasKey: true,
+            key: {
+              keyPrefix: "clad_123456",
+              keySuffix: "wxyz",
+              createdAt: "2026-03-29T10:00:00.000Z",
+              updatedAt: "2026-03-29T10:00:00.000Z",
+            },
+            apiKey: "clad_1234567890abcdefghijklmnopqrstuv",
+          }),
+          {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          },
+        );
+      }
+
+      return new Response(JSON.stringify([]), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    });
+
+    await act(async () => {
+      root.render(
+        <QueryClientProvider client={queryClient}>
+          <DashboardWorkspace
+            initialIntegrations={[]}
+            initialAccessRequests={[]}
+            initialNotifications={[]}
+            currentUser={{ name: "Admin User", email: "admin@example.com" }}
+            contextApiBaseUrl="https://example.com"
+            contextApiKey="test-key"
+            adminApiKey={{
+              keyPrefix: "clad_123456",
+              keySuffix: "wxyz",
+              createdAt: "2026-03-29T10:00:00.000Z",
+              updatedAt: "2026-03-29T10:00:00.000Z",
+            }}
+          />
+        </QueryClientProvider>,
+      );
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(
+      fetchMock.mock.calls.some(([input]) => String(input) === "/api/admin/key"),
+    ).toBe(false);
+
+    const revealButtons = Array.from(container.querySelectorAll("button")).filter((button) =>
+      button.textContent?.includes("Reveal"),
+    );
+    const revealButton = revealButtons[2] as HTMLButtonElement | undefined;
+    const copyButton = container.querySelector(
+      'button[aria-label="Copy admin automation key"]',
+    ) as HTMLButtonElement | null;
+    expect(revealButton?.textContent).toContain("Reveal");
+    expect(copyButton).toBeTruthy();
+
+    await act(async () => {
+      revealButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(container.textContent).toContain("clad_1234567890abcdefghijklmnopqrstuv");
+
+    await act(async () => {
+      copyButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(writeTextMock).toHaveBeenCalledWith("clad_1234567890abcdefghijklmnopqrstuv");
+    expect(copyButton?.querySelector("svg")?.getAttribute("class")).toContain(
+      "lucide-circle-check",
+    );
   });
 
   it("shows the case-by-case approvals page with pending requests sorted newest first and filterable statuses", async () => {
@@ -1496,6 +1782,5 @@ describe("DashboardWorkspace", () => {
       "If you want to approve for more than 100 hours",
     );
   });
-
 
 });

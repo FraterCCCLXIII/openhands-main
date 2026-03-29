@@ -241,6 +241,40 @@ export interface AgentApiKeyRecord {
   updatedAt: string;
 }
 
+export interface UserApiKeyRecord {
+  ownerId: string;
+  apiKeyHash: string;
+  keyPrefix: string;
+  keySuffix: string;
+  encryptedApiKey?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UserApiKeyStatus {
+  keyPrefix: string;
+  keySuffix: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AdminApiKeyRecord {
+  ownerId: string;
+  apiKeyHash: string;
+  keyPrefix: string;
+  keySuffix: string;
+  encryptedApiKey?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AdminApiKeyStatus {
+  keyPrefix: string;
+  keySuffix: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface IntegrationConnectionRecord {
   ownerId: string;
   integrationKey: string;

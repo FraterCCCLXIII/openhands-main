@@ -2,6 +2,7 @@ import { neon } from "@neondatabase/serverless";
 
 import type {
   AccessRequest,
+  AdminApiKeyRecord,
   AgentApiKeyRecord,
   AgentClassPolicy,
   FunctionUsageSummary,
@@ -12,6 +13,7 @@ import type {
   OAuthStateRecord,
   TemporaryGrant,
   ToolInvocationRecord,
+  UserApiKeyRecord,
 } from "@/src/types/context-layer";
 import type { ContextRepository } from "@/src/lib/core/repository";
 
@@ -171,6 +173,28 @@ export class PostgresRepository implements ContextRepository {
         )
       `,
       sql`
+        CREATE TABLE IF NOT EXISTS user_api_keys (
+          owner_id TEXT PRIMARY KEY,
+          api_key_hash TEXT NOT NULL UNIQUE,
+          key_prefix TEXT NOT NULL,
+          key_suffix TEXT NOT NULL DEFAULT '',
+          encrypted_api_key TEXT,
+          created_at TIMESTAMPTZ NOT NULL,
+          updated_at TIMESTAMPTZ NOT NULL
+        )
+      `,
+      sql`
+        CREATE TABLE IF NOT EXISTS admin_api_keys (
+          owner_id TEXT PRIMARY KEY,
+          api_key_hash TEXT NOT NULL UNIQUE,
+          key_prefix TEXT NOT NULL,
+          key_suffix TEXT NOT NULL DEFAULT '',
+          encrypted_api_key TEXT,
+          created_at TIMESTAMPTZ NOT NULL,
+          updated_at TIMESTAMPTZ NOT NULL
+        )
+      `,
+      sql`
         CREATE TABLE IF NOT EXISTS managed_connectors (
           slug TEXT PRIMARY KEY,
           name TEXT NOT NULL,
@@ -234,6 +258,10 @@ export class PostgresRepository implements ContextRepository {
       sql`ALTER TABLE managed_connectors ADD COLUMN IF NOT EXISTS provider TEXT`,
       sql`ALTER TABLE managed_connectors ADD COLUMN IF NOT EXISTS server_url TEXT`,
       sql`ALTER TABLE managed_connectors ADD COLUMN IF NOT EXISTS open_api_url TEXT`,
+      sql`ALTER TABLE user_api_keys ADD COLUMN IF NOT EXISTS key_suffix TEXT NOT NULL DEFAULT ''`,
+      sql`ALTER TABLE user_api_keys ADD COLUMN IF NOT EXISTS encrypted_api_key TEXT`,
+      sql`ALTER TABLE admin_api_keys ADD COLUMN IF NOT EXISTS key_suffix TEXT NOT NULL DEFAULT ''`,
+      sql`ALTER TABLE admin_api_keys ADD COLUMN IF NOT EXISTS encrypted_api_key TEXT`,
     ]);
 
     this.schemaReady = true;
@@ -555,6 +583,160 @@ export class PostgresRepository implements ContextRepository {
         updated_at = EXCLUDED.updated_at
     `;
     return record;
+  }
+
+  async getUserApiKeyByOwner(ownerId: string) {
+    await this.ensureSchema();
+    const sql = getSql();
+    const rows = await sql`SELECT * FROM user_api_keys WHERE owner_id = ${ownerId}`;
+    const row = rows[0];
+    if (!row) {
+      return null;
+    }
+    return {
+      ownerId: row.owner_id,
+      apiKeyHash: row.api_key_hash,
+      keyPrefix: row.key_prefix,
+      keySuffix: row.key_suffix ?? "",
+      encryptedApiKey: row.encrypted_api_key ?? null,
+      createdAt: new Date(row.created_at).toISOString(),
+      updatedAt: new Date(row.updated_at).toISOString(),
+    } satisfies UserApiKeyRecord;
+  }
+
+  async findUserApiKeyByHash(apiKeyHash: string) {
+    await this.ensureSchema();
+    const sql = getSql();
+    const rows = await sql`SELECT * FROM user_api_keys WHERE api_key_hash = ${apiKeyHash}`;
+    const row = rows[0];
+    if (!row) {
+      return null;
+    }
+    return {
+      ownerId: row.owner_id,
+      apiKeyHash: row.api_key_hash,
+      keyPrefix: row.key_prefix,
+      keySuffix: row.key_suffix ?? "",
+      encryptedApiKey: row.encrypted_api_key ?? null,
+      createdAt: new Date(row.created_at).toISOString(),
+      updatedAt: new Date(row.updated_at).toISOString(),
+    } satisfies UserApiKeyRecord;
+  }
+
+  async saveUserApiKey(record: UserApiKeyRecord) {
+    await this.ensureSchema();
+    const sql = getSql();
+    await sql`
+      INSERT INTO user_api_keys (
+        owner_id,
+        api_key_hash,
+        key_prefix,
+        key_suffix,
+        encrypted_api_key,
+        created_at,
+        updated_at
+      )
+      VALUES (
+        ${record.ownerId},
+        ${record.apiKeyHash},
+        ${record.keyPrefix},
+        ${record.keySuffix},
+        ${record.encryptedApiKey ?? null},
+        ${record.createdAt},
+        ${record.updatedAt}
+      )
+      ON CONFLICT (owner_id) DO UPDATE SET
+        api_key_hash = EXCLUDED.api_key_hash,
+        key_prefix = EXCLUDED.key_prefix,
+        key_suffix = EXCLUDED.key_suffix,
+        encrypted_api_key = EXCLUDED.encrypted_api_key,
+        created_at = EXCLUDED.created_at,
+        updated_at = EXCLUDED.updated_at
+    `;
+    return record;
+  }
+
+  async deleteUserApiKey(ownerId: string) {
+    await this.ensureSchema();
+    const sql = getSql();
+    await sql`DELETE FROM user_api_keys WHERE owner_id = ${ownerId}`;
+  }
+
+  async getAdminApiKeyByOwner(ownerId: string) {
+    await this.ensureSchema();
+    const sql = getSql();
+    const rows = await sql`SELECT * FROM admin_api_keys WHERE owner_id = ${ownerId}`;
+    const row = rows[0];
+    if (!row) {
+      return null;
+    }
+    return {
+      ownerId: row.owner_id,
+      apiKeyHash: row.api_key_hash,
+      keyPrefix: row.key_prefix,
+      keySuffix: row.key_suffix ?? "",
+      encryptedApiKey: row.encrypted_api_key ?? null,
+      createdAt: new Date(row.created_at).toISOString(),
+      updatedAt: new Date(row.updated_at).toISOString(),
+    } satisfies AdminApiKeyRecord;
+  }
+
+  async findAdminApiKeyByHash(apiKeyHash: string) {
+    await this.ensureSchema();
+    const sql = getSql();
+    const rows = await sql`SELECT * FROM admin_api_keys WHERE api_key_hash = ${apiKeyHash}`;
+    const row = rows[0];
+    if (!row) {
+      return null;
+    }
+    return {
+      ownerId: row.owner_id,
+      apiKeyHash: row.api_key_hash,
+      keyPrefix: row.key_prefix,
+      keySuffix: row.key_suffix ?? "",
+      encryptedApiKey: row.encrypted_api_key ?? null,
+      createdAt: new Date(row.created_at).toISOString(),
+      updatedAt: new Date(row.updated_at).toISOString(),
+    } satisfies AdminApiKeyRecord;
+  }
+
+  async saveAdminApiKey(record: AdminApiKeyRecord) {
+    await this.ensureSchema();
+    const sql = getSql();
+    await sql`
+      INSERT INTO admin_api_keys (
+        owner_id,
+        api_key_hash,
+        key_prefix,
+        key_suffix,
+        encrypted_api_key,
+        created_at,
+        updated_at
+      )
+      VALUES (
+        ${record.ownerId},
+        ${record.apiKeyHash},
+        ${record.keyPrefix},
+        ${record.keySuffix},
+        ${record.encryptedApiKey ?? null},
+        ${record.createdAt},
+        ${record.updatedAt}
+      )
+      ON CONFLICT (owner_id) DO UPDATE SET
+        api_key_hash = EXCLUDED.api_key_hash,
+        key_prefix = EXCLUDED.key_prefix,
+        key_suffix = EXCLUDED.key_suffix,
+        encrypted_api_key = EXCLUDED.encrypted_api_key,
+        created_at = EXCLUDED.created_at,
+        updated_at = EXCLUDED.updated_at
+    `;
+    return record;
+  }
+
+  async deleteAdminApiKey(ownerId: string) {
+    await this.ensureSchema();
+    const sql = getSql();
+    await sql`DELETE FROM admin_api_keys WHERE owner_id = ${ownerId}`;
   }
 
   async hasAgentApiKeys() {

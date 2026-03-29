@@ -51,6 +51,7 @@ import {
 import { cn } from "@/src/lib/utils";
 import type {
   AccessRequest,
+  AdminApiKeyStatus,
   BuiltInConnectorOption,
   DisableUnusedFunctionsResult,
   FunctionAccessMode,
@@ -58,6 +59,7 @@ import type {
   IntegrationSpec,
   NotificationRecord,
   UnusedFunctionWindowUnit,
+  UserApiKeyStatus,
 } from "@/src/types/context-layer";
 
 const fetchJson = async <T,>(
@@ -222,7 +224,23 @@ interface AdminDashboardProps {
   currentUser: { name?: string | null; email?: string | null };
   contextApiBaseUrl: string;
   contextApiKey: string;
+  userApiKey?: UserApiKeyStatus | null;
+  userApiKeyValue?: string | null;
+  adminApiKey?: AdminApiKeyStatus | null;
+  adminApiKeyValue?: string | null;
   isAdmin?: boolean;
+}
+
+interface UserApiKeyResponse {
+  hasKey: boolean;
+  key: UserApiKeyStatus | null;
+  apiKey: string | null;
+}
+
+interface AdminApiKeyResponse {
+  hasKey: boolean;
+  key: AdminApiKeyStatus | null;
+  apiKey: string | null;
 }
 
 const getDashboardSections = (): Array<{
@@ -266,6 +284,17 @@ const maskApiKey = (apiKey: string, revealed: boolean) => {
   return `${trimmed.slice(0, 4)}${"•".repeat(
     Math.max(12, trimmed.length - 8),
   )}${trimmed.slice(-4)}`;
+};
+
+const maskStoredApiKey = (keyPrefix: string, keySuffix: string) => {
+  const visiblePrefix = keyPrefix.trim().slice(0, 4);
+  const visibleSuffix = keySuffix.trim();
+
+  if (!visiblePrefix && !visibleSuffix) {
+    return "";
+  }
+
+  return `${visiblePrefix}${"•".repeat(16)}${visibleSuffix}`;
 };
 
 const copyTextToClipboard = async (text: string) => {
@@ -452,48 +481,6 @@ const IntegrationMarketplaceCard = ({
   );
 };
 
-const CollapsibleUsageSection = ({
-  title,
-  description,
-  expanded,
-  onToggle,
-  badge,
-  children,
-}: {
-  title: string;
-  description: string;
-  expanded: boolean;
-  onToggle: () => void;
-  badge?: ReactNode;
-  children: ReactNode;
-}) => (
-  <div className="overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)]">
-    <button
-      type="button"
-      className="flex w-full items-start justify-between gap-4 px-4 py-3 text-left"
-      aria-expanded={expanded}
-      onClick={onToggle}
-    >
-      <div className="min-w-0">
-        <div className="flex flex-wrap items-center gap-2">
-          <p className="text-sm font-semibold text-white">{title}</p>
-          {badge}
-        </div>
-        <p className="mt-1 text-xs leading-6 text-[var(--color-text-base)]">
-          {description}
-        </p>
-      </div>
-      <ChevronRight
-        className={cn(
-          "mt-0.5 h-4 w-4 shrink-0 text-[var(--color-text-base)] transition-transform",
-          expanded && "rotate-90",
-        )}
-      />
-    </button>
-    {expanded ? <div className="border-t border-[var(--color-border)] p-4">{children}</div> : null}
-  </div>
-);
-
 export const DashboardWorkspace = ({
   initialIntegrations,
   initialAccessRequests,
@@ -501,6 +488,10 @@ export const DashboardWorkspace = ({
   currentUser,
   contextApiBaseUrl,
   contextApiKey,
+  userApiKey = null,
+  userApiKeyValue: initialUserApiKeyValue = null,
+  adminApiKey = null,
+  adminApiKeyValue: initialAdminApiKeyValue = null,
   isAdmin = true,
 }: AdminDashboardProps) => {
   const queryClient = useQueryClient();
@@ -539,6 +530,22 @@ export const DashboardWorkspace = ({
   const [requestActionPending, setRequestActionPending] = useState(false);
   const [revealApiKey, setRevealApiKey] = useState(false);
   const [apiKeyCopied, setApiKeyCopied] = useState(false);
+  const [userApiKeyStatus, setUserApiKeyStatus] = useState<UserApiKeyStatus | null>(
+    userApiKey,
+  );
+  const [userApiKeyValue, setUserApiKeyValue] = useState(
+    initialUserApiKeyValue ?? "",
+  );
+  const [revealUserApiKey, setRevealUserApiKey] = useState(false);
+  const [userApiKeyCopied, setUserApiKeyCopied] = useState(false);
+  const [adminApiKeyStatus, setAdminApiKeyStatus] = useState<AdminApiKeyStatus | null>(
+    adminApiKey,
+  );
+  const [adminApiKeyValue, setAdminApiKeyValue] = useState(
+    initialAdminApiKeyValue ?? "",
+  );
+  const [revealAdminApiKey, setRevealAdminApiKey] = useState(false);
+  const [adminApiKeyCopied, setAdminApiKeyCopied] = useState(false);
 
   const oauthStatusMessage = useMemo(() => {
     const oauthStatus = searchParams.get("oauth_status");
@@ -579,6 +586,50 @@ export const DashboardWorkspace = ({
       window.clearTimeout(timeoutId);
     };
   }, [apiKeyCopied]);
+
+  useEffect(() => {
+    setUserApiKeyStatus(userApiKey);
+  }, [userApiKey]);
+
+  useEffect(() => {
+    setUserApiKeyValue(initialUserApiKeyValue ?? "");
+  }, [initialUserApiKeyValue]);
+
+  useEffect(() => {
+    setAdminApiKeyStatus(adminApiKey);
+  }, [adminApiKey]);
+
+  useEffect(() => {
+    setAdminApiKeyValue(initialAdminApiKeyValue ?? "");
+  }, [initialAdminApiKeyValue]);
+
+  useEffect(() => {
+    if (!userApiKeyCopied) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setUserApiKeyCopied(false);
+    }, 2000);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [userApiKeyCopied]);
+
+  useEffect(() => {
+    if (!adminApiKeyCopied) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setAdminApiKeyCopied(false);
+    }, 2000);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [adminApiKeyCopied]);
 
   const navigateToSection = (section: AdminSection) => {
     setActiveSection(section);
@@ -730,6 +781,18 @@ export const DashboardWorkspace = ({
   );
   const contextApiReady = contextApiKey.trim().length > 0;
   const maskedApiKey = maskApiKey(contextApiKey, revealApiKey);
+  const hasUserApiKey = userApiKeyStatus !== null;
+  const maskedUserApiKey = userApiKeyValue
+    ? maskApiKey(userApiKeyValue, revealUserApiKey)
+    : userApiKeyStatus
+      ? maskStoredApiKey(userApiKeyStatus.keyPrefix, userApiKeyStatus.keySuffix)
+      : "";
+  const hasAdminApiKey = adminApiKeyStatus !== null;
+  const maskedAdminApiKey = adminApiKeyValue
+    ? maskApiKey(adminApiKeyValue, revealAdminApiKey)
+    : adminApiKeyStatus
+      ? maskStoredApiKey(adminApiKeyStatus.keyPrefix, adminApiKeyStatus.keySuffix)
+      : "";
   const userName = currentUser.name?.trim() || "Admin User";
   const userEmail = currentUser.email?.trim() || "Not provided";
   const authMode =
@@ -827,13 +890,6 @@ export const DashboardWorkspace = ({
     router.push(buildAdminSectionHref(section));
   };
 
-  const toggleUsageSection = (sectionKey: string) => {
-    setExpandedUsageSections((current) => ({
-      ...current,
-      [sectionKey]: !current[sectionKey],
-    }));
-  };
-
   const activeSectionMeta =
     sections.find((section) => section.id === activeSection) ?? sections[0];
 
@@ -841,11 +897,23 @@ export const DashboardWorkspace = ({
     () =>
       buildAgentConnectionGuide({
         baseUrl: contextApiBaseUrl,
-        apiKey: OPENHANDS_CONTEXT_KEY_ENV,
+        apiKey: "$OPENHANDS_CONTEXT_KEY",
         integrations,
       }),
     [contextApiBaseUrl, integrations],
   );
+  const normalizedBaseUrl = contextApiBaseUrl.replace(/\/$/, "");
+  const userOpenApiSchemaEndpoint = `${normalizedBaseUrl}/api/user/openapi`;
+  const adminOpenApiSchemaEndpoint = `${normalizedBaseUrl}/api/admin/openapi`;
+  const agentRestPromptExample =
+    'I have provided you with an API key in $OPENHANDS_CONTEXT_LAYER_KEY, and you can see the API schema at ' +
+    `${agentConnectionGuide.openApiSchemaEndpoint}, feel free to access any tools there.`;
+  const userRestPromptExample =
+    'I have provided you with a user API key in $OPENHANDS_CONTEXT_LAYER_USER_KEY, and you can see the API schema at ' +
+    `${userOpenApiSchemaEndpoint}, feel free to manage my context-layer settings there.`;
+  const adminRestPromptExample =
+    'I have provided you with an admin API key in $OPENHANDS_CONTEXT_LAYER_ADMIN_KEY, and you can see the API schema at ' +
+    `${adminOpenApiSchemaEndpoint}, feel free to manage admin QA and connector workflows there.`;
 
   const filteredIntegrations = useMemo(() => {
     const normalizedSearch = integrationSearch.trim().toLowerCase();
@@ -1082,7 +1150,7 @@ export const DashboardWorkspace = ({
 
   const handleCopyApiKey = async () => {
     if (!contextApiReady) {
-      setStatusMessage("The personal API key is not available yet.");
+      setStatusMessage("The agent key is not available yet.");
       return;
     }
 
@@ -1091,6 +1159,124 @@ export const DashboardWorkspace = ({
       setApiKeyCopied(true);
     } catch {
       setApiKeyCopied(false);
+      setStatusMessage("Unable to copy the API key from this browser session.");
+    }
+  };
+
+  const ensureUserApiKeyValue = async () => {
+    const currentValue = userApiKeyValue.trim();
+    if (currentValue) {
+      return currentValue;
+    }
+
+    const current = await fetchJson<UserApiKeyResponse>("/api/user/key", {
+      cache: "no-store",
+    });
+    setUserApiKeyStatus(current.key);
+
+    if (current.apiKey) {
+      setUserApiKeyValue(current.apiKey);
+      return current.apiKey;
+    }
+
+    const rotated = await fetchJson<{
+      apiKey: string;
+      key: UserApiKeyStatus;
+    }>("/api/user/key", {
+      method: "POST",
+    });
+
+    setUserApiKeyStatus(rotated.key);
+    setUserApiKeyValue(rotated.apiKey);
+    setStatusMessage(
+      current.hasKey
+        ? "Regenerated your user automation key so the full value can be shown again. Update any existing clients using the previous key."
+        : "Created a new user automation key. Save it somewhere secure because the full value is only shown when you explicitly reveal or copy it.",
+    );
+    return rotated.apiKey;
+  };
+
+  const ensureAdminApiKeyValue = async () => {
+    const currentValue = adminApiKeyValue.trim();
+    if (currentValue) {
+      return currentValue;
+    }
+
+    const current = await fetchJson<AdminApiKeyResponse>("/api/admin/key", {
+      cache: "no-store",
+    });
+    setAdminApiKeyStatus(current.key);
+
+    if (current.apiKey) {
+      setAdminApiKeyValue(current.apiKey);
+      return current.apiKey;
+    }
+
+    const rotated = await fetchJson<{
+      apiKey: string;
+      key: AdminApiKeyStatus;
+    }>("/api/admin/key", {
+      method: "POST",
+    });
+
+    setAdminApiKeyStatus(rotated.key);
+    setAdminApiKeyValue(rotated.apiKey);
+    setStatusMessage(
+      current.hasKey
+        ? "Regenerated your admin automation key so the full value can be shown again. Update any existing clients using the previous key."
+        : "Created a new admin automation key. Save it somewhere secure because the full value is only shown when you explicitly reveal or copy it.",
+    );
+    return rotated.apiKey;
+  };
+
+  const handleRevealUserApiKey = async () => {
+    if (revealUserApiKey) {
+      setRevealUserApiKey(false);
+      return;
+    }
+
+    try {
+      await ensureUserApiKeyValue();
+      setRevealUserApiKey(true);
+    } catch {
+      setRevealUserApiKey(false);
+      setStatusMessage("Unable to load the full user automation key right now.");
+    }
+  };
+
+  const handleRevealAdminApiKey = async () => {
+    if (revealAdminApiKey) {
+      setRevealAdminApiKey(false);
+      return;
+    }
+
+    try {
+      await ensureAdminApiKeyValue();
+      setRevealAdminApiKey(true);
+    } catch {
+      setRevealAdminApiKey(false);
+      setStatusMessage("Unable to load the full admin automation key right now.");
+    }
+  };
+
+  const handleCopyUserApiKey = async () => {
+    try {
+      const fullUserApiKey = await ensureUserApiKeyValue();
+      await copyTextToClipboard(fullUserApiKey);
+      setUserApiKeyCopied(true);
+    } catch {
+      setUserApiKeyCopied(false);
+      setStatusMessage("Unable to copy the API key from this browser session.");
+    }
+  };
+
+  const handleCopyAdminApiKey = async () => {
+    try {
+      const fullAdminApiKey = await ensureAdminApiKeyValue();
+      await copyTextToClipboard(fullAdminApiKey);
+      setAdminApiKeyCopied(true);
+    } catch {
+      setAdminApiKeyCopied(false);
       setStatusMessage("Unable to copy the API key from this browser session.");
     }
   };
@@ -1184,7 +1370,7 @@ export const DashboardWorkspace = ({
         {!contextApiReady ? (
           <div className="rounded-xl border border-[color:rgba(217,181,90,0.25)] bg-[color:rgba(217,181,90,0.12)] px-3 py-2 text-sm text-[var(--color-warning)]">
             Open <code className="text-white">/integrations</code> once to
-            provision a personal key before agents call <code className="text-white">/api/context/*</code>.
+            provision the agent key before agents call <code className="text-white">/api/context/*</code>.
           </div>
         ) : null}
 
@@ -1205,7 +1391,7 @@ export const DashboardWorkspace = ({
             <CompactPanel title="Connection context" icon={ShieldCheck}>
               <div className="divide-y divide-[var(--color-border)]">
                 <KeyValueRow
-                  label="Personal key status"
+                  label="Agent key status"
                   value={contextApiReady ? "Provisioned" : "Not available yet"}
                 />
                 <KeyValueRow label="Visible integrations" value={String(integrations.length)} />
@@ -1215,11 +1401,15 @@ export const DashboardWorkspace = ({
                 />
                 <KeyValueRow
                   label="Endpoint pattern"
-                  value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.endpoint}</code>}
+                  value={
+                    <code className="break-all text-xs text-[var(--color-text-active)]">
+                      {`${contextApiBaseUrl}/api/context/{integrationKey}/{functionName}`}
+                    </code>
+                  }
                 />
               </div>
               <div className="mt-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)] px-3 py-3 text-xs leading-6 text-[var(--color-text-base)]">
-                The persisted personal key belongs to <code className="text-white">{userEmail}</code>. Provider credentials stay server-side in integration settings or per-user OAuth records and are never handed directly to the agent.
+                The agent key belongs to <code className="text-white">{userEmail}</code>. Provider credentials stay server-side in integration settings or per-user OAuth records and are never handed directly to the agent.
               </div>
             </CompactPanel>
           </section>
@@ -1893,199 +2083,230 @@ export const DashboardWorkspace = ({
         ) : null}
 
         {activeSection === "apiKeys" ? (
-          <section className="space-y-4">
-            <CompactPanel
-              title="Personal context-layer key"
-              icon={KeyRound}
-              action={
-                <Badge tone={contextApiReady ? "success" : "warning"}>
-                  {contextApiReady ? "ready" : "unavailable"}
-                </Badge>
-              }
-            >
-              <div className="divide-y divide-[var(--color-border)]">
-                <KeyValueRow label="Issued for" value={userEmail} />
-                <KeyValueRow
-                  label="Base URL"
-                  value={<code className="break-all text-xs text-[var(--color-text-active)]">{contextApiBaseUrl}</code>}
-                />
-              </div>
-              <div className="mt-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)] px-3 py-3">
-                <code className="block break-all text-sm text-white">
-                  {maskedApiKey || "No personal API key available yet."}
-                </code>
-              </div>
-              <div className="mt-3 flex flex-wrap gap-2">
-                <Button
-                  variant="secondary"
-                  className="h-8 gap-2 rounded-md px-3 text-xs"
-                  onClick={() => setRevealApiKey((current) => !current)}
-                  disabled={!contextApiReady}
-                >
-                  {revealApiKey ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
-                  {revealApiKey ? "Hide" : "Reveal"}
-                </Button>
-                <Button
-                  className="h-8 gap-2 rounded-md px-3 text-xs"
-                  onClick={handleCopyApiKey}
-                  disabled={!contextApiReady}
-                >
-                  {apiKeyCopied ? (
-                    <CheckCircle2 className="h-4 w-4" />
-                  ) : (
-                    <Copy className="h-4 w-4" />
-                  )}
-                  Copy
-                </Button>
+          <section className="space-y-3">
+            <CompactPanel title="API keys" icon={KeyRound}>
+              <div className="space-y-3">
+                <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <h3 className="text-sm font-semibold text-white">Agent key</h3>
+                      <p className="mt-1 text-sm text-[var(--color-text-base)]">
+                        Give this key to your agent.
+                      </p>
+                    </div>
+                    <Badge tone={contextApiReady ? "success" : "warning"}>agent</Badge>
+                  </div>
+                  <div className="mt-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)] px-3 py-3">
+                    <code className="block break-all text-sm text-white">
+                      {maskedApiKey || "No agent key available yet."}
+                    </code>
+                  </div>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <Button
+                      variant="secondary"
+                      className="h-8 gap-2 rounded-md px-3 text-xs"
+                      onClick={() => setRevealApiKey((current) => !current)}
+                      disabled={!contextApiReady}
+                    >
+                      {revealApiKey ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                      {revealApiKey ? "Hide" : "Reveal"}
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      className="h-8 gap-2 rounded-md px-3 text-xs"
+                      onClick={handleCopyApiKey}
+                      disabled={!contextApiReady}
+                      aria-label="Copy agent key"
+                    >
+                      {apiKeyCopied ? (
+                        <CheckCircle2 className="h-4 w-4" />
+                      ) : (
+                        <Copy className="h-4 w-4" />
+                      )}
+                      Copy
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <h3 className="text-sm font-semibold text-white">User automation key</h3>
+                      <p className="mt-1 text-sm text-[var(--color-text-base)]">
+                        Use this key to programmatically manage user-scoped context-layer settings.
+                      </p>
+                    </div>
+                    <Badge tone={hasUserApiKey ? "warning" : "default"}>user</Badge>
+                  </div>
+                  <div className="mt-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)] px-3 py-3">
+                    <code className="block break-all text-sm text-white">
+                      {maskedUserApiKey || "No user automation key yet. Reveal or copy to create one."}
+                    </code>
+                  </div>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <Button
+                      variant="secondary"
+                      className="h-8 gap-2 rounded-md px-3 text-xs"
+                      onClick={handleRevealUserApiKey}
+                    >
+                      {revealUserApiKey ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                      {revealUserApiKey ? "Hide" : "Reveal"}
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      className="h-8 gap-2 rounded-md px-3 text-xs"
+                      onClick={handleCopyUserApiKey}
+                      aria-label="Copy user automation key"
+                    >
+                      {userApiKeyCopied ? (
+                        <CheckCircle2 className="h-4 w-4" />
+                      ) : (
+                        <Copy className="h-4 w-4" />
+                      )}
+                      Copy
+                    </Button>
+                  </div>
+                </div>
+
+                {isAdmin ? (
+                  <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <h3 className="text-sm font-semibold text-white">Admin automation key</h3>
+                        <p className="mt-1 text-sm text-[var(--color-text-base)]">
+                          Use this key for admin-only QA and operational automation surfaces.
+                        </p>
+                      </div>
+                      <Badge tone={hasAdminApiKey ? "warning" : "default"}>admin</Badge>
+                    </div>
+                    <div className="mt-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)] px-3 py-3">
+                      <code className="block break-all text-sm text-white">
+                        {maskedAdminApiKey || "No admin automation key yet. Reveal or copy to create one."}
+                      </code>
+                    </div>
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      <Button
+                        variant="secondary"
+                        className="h-8 gap-2 rounded-md px-3 text-xs"
+                        onClick={handleRevealAdminApiKey}
+                      >
+                        {revealAdminApiKey ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                        {revealAdminApiKey ? "Hide" : "Reveal"}
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        className="h-8 gap-2 rounded-md px-3 text-xs"
+                        onClick={handleCopyAdminApiKey}
+                        aria-label="Copy admin automation key"
+                      >
+                        {adminApiKeyCopied ? (
+                          <CheckCircle2 className="h-4 w-4" />
+                        ) : (
+                          <Copy className="h-4 w-4" />
+                        )}
+                        Copy
+                      </Button>
+                    </div>
+                  </div>
+                ) : null}
               </div>
             </CompactPanel>
 
-            <CompactPanel title="Usage" icon={ShieldCheck}>
-              <p className="mb-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-muted)] px-3 py-2 text-xs leading-6 text-[var(--color-text-base)]">
-                {agentConnectionGuide.permissionNote}
-              </p>
+            <CompactPanel title="Connection details" icon={ShieldCheck}>
               <div className="space-y-3">
-                <CollapsibleUsageSection
-                  title="OpenHands Cloud"
-                  description="Connect OpenHands Cloud to this context layer with the hosted SHTTP MCP server."
-                  expanded={expandedUsageSections.openhandsCloud ?? false}
-                  onToggle={() => toggleUsageSection("openhandsCloud")}
-                  badge={<Badge tone="success">Recommended</Badge>}
-                >
-                  <div className="divide-y divide-[var(--color-border)]">
+                <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-4">
+                  <h3 className="text-sm font-semibold text-white">Agent MCP</h3>
+                  <p className="mt-1 text-sm leading-6 text-[var(--color-text-base)]">
+                    Connect your MCP client to the streamable HTTP endpoint below and authenticate with the agent key.
+                  </p>
+                  <div className="mt-3 divide-y divide-[var(--color-border)]">
                     <KeyValueRow
-                      label="Go to"
-                      value={
-                        <a
-                          href="https://app.all-hands.dev/settings/mcp"
-                          target="_blank"
-                          rel="noreferrer"
-                          className="break-all text-xs text-[var(--color-text-active)] underline-offset-4 hover:underline"
-                        >
-                          https://app.all-hands.dev/settings/mcp
-                        </a>
-                      }
-                    />
-                    <KeyValueRow
-                      label="Server Type"
-                      value={<code className="break-all text-xs text-[var(--color-text-active)]">SHTTP</code>}
-                    />
-                    <KeyValueRow
-                      label="URL"
-                      value={<code className="break-all text-xs text-[var(--color-text-active)]">{OPENHANDS_CLOUD_SHTTP_MCP_URL}</code>}
-                    />
-                    <KeyValueRow
-                      label="API key"
-                      value={<span className="text-xs text-[var(--color-text-base)]">Use the personal API key shown above.</span>}
-                    />
-                  </div>
-                </CollapsibleUsageSection>
-
-                <CollapsibleUsageSection
-                  title="MCP Usage"
-                  description="Connect any MCP client to the streamable HTTP endpoint and call tools directly."
-                  expanded={expandedUsageSections.mcp ?? false}
-                  onToggle={() => toggleUsageSection("mcp")}
-                >
-                  <div className="divide-y divide-[var(--color-border)]">
-                    <KeyValueRow
-                      label="MCP endpoint"
+                      label="Endpoint"
                       value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.mcpEndpoint}</code>}
                     />
                     <KeyValueRow
-                      label="Set agent ID tool"
-                      value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.mcpSetAgentIdToolName}</code>}
-                    />
-                    <KeyValueRow
-                      label="Set agent class tool"
-                      value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.mcpSetAgentClassToolName}</code>}
-                    />
-                    <KeyValueRow
-                      label="Example MCP tool"
+                      label="Example tool"
                       value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.mcpToolName}</code>}
                     />
                   </div>
-                  <div className="mt-4 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)]">
-                    <div className="border-b border-[var(--color-border)] px-3 py-2 text-xs uppercase tracking-[0.18em] text-[var(--color-text-base)]">
-                      MCP streamable HTTP example
-                    </div>
-                    <pre className="overflow-x-auto whitespace-pre-wrap px-3 py-3 text-xs leading-6 text-[var(--color-text-base)]">
-                      {agentConnectionGuide.mcpConfigExample}
-                    </pre>
-                  </div>
-                  <div className="mt-4 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)]">
-                    <div className="border-b border-[var(--color-border)] px-3 py-2 text-xs uppercase tracking-[0.18em] text-[var(--color-text-base)]">
-                      MCP session setup
-                    </div>
-                    <pre className="overflow-x-auto whitespace-pre-wrap px-3 py-3 text-xs leading-6 text-[var(--color-text-base)]">
-                      {agentConnectionGuide.mcpSessionSetupExample}
-                    </pre>
-                  </div>
-                </CollapsibleUsageSection>
+                </div>
 
-                <CollapsibleUsageSection
-                  title="REST API Usage"
-                  description="Call tools directly over HTTPS or download generated OpenAPI and SKILL.md docs."
-                  expanded={expandedUsageSections.rest ?? false}
-                  onToggle={() => toggleUsageSection("rest")}
-                >
-                  <div className="divide-y divide-[var(--color-border)]">
-                    <KeyValueRow
-                      label="Auth header"
-                      value={
-                        <code className="break-all text-xs text-[var(--color-text-active)]">
-                          Authorization: Bearer {OPENHANDS_CONTEXT_KEY_ENV}
-                        </code>
-                      }
-                    />
-                    <KeyValueRow
-                      label="REST endpoint"
-                      value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.endpoint}</code>}
-                    />
+                <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-4">
+                  <h3 className="text-sm font-semibold text-white">Agent REST API</h3>
+                  <p className="mt-1 text-sm leading-6 text-[var(--color-text-base)]">
+                    Give your agent the agent key and the OpenAPI schema for the tool surface.
+                  </p>
+                  <div className="mt-3 divide-y divide-[var(--color-border)]">
                     <KeyValueRow
                       label="OpenAPI schema"
                       value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.openApiSchemaEndpoint}</code>}
                     />
-                    <KeyValueRow
-                      label="SKILL.md endpoint"
-                      value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.skillEndpoint}</code>}
-                    />
-                  </div>
-                  <div className="mt-4 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)]">
-                    <div className="border-b border-[var(--color-border)] px-3 py-2 text-xs uppercase tracking-[0.18em] text-[var(--color-text-base)]">
-                      Tool call cURL example
-                    </div>
-                    <pre className="overflow-x-auto whitespace-pre-wrap px-3 py-3 text-xs leading-6 text-[var(--color-text-base)]">
-                      {agentConnectionGuide.curlExample}
-                    </pre>
-                  </div>
-                  <div className="mt-4 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)]">
-                    <div className="border-b border-[var(--color-border)] px-3 py-2 text-xs uppercase tracking-[0.18em] text-[var(--color-text-base)]">
-                      OpenAPI schema cURL example
-                    </div>
-                    <pre className="overflow-x-auto whitespace-pre-wrap px-3 py-3 text-xs leading-6 text-[var(--color-text-base)]">
-                      {agentConnectionGuide.openApiCurlExample}
-                    </pre>
-                  </div>
-                  <div className="mt-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)] px-3 py-3 text-xs leading-6 text-[var(--color-text-base)]">
-                    Download a generated <code className="text-white">SKILL.md</code> file that
-                    lists every currently available tool in this profile. The same
-                    personal key works for the export route, so you can create the
-                    file with:
                   </div>
                   <div className="mt-3 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)]">
                     <div className="border-b border-[var(--color-border)] px-3 py-2 text-xs uppercase tracking-[0.18em] text-[var(--color-text-base)]">
-                      SKILL.md export
+                      Example agent prompt
                     </div>
                     <pre className="overflow-x-auto whitespace-pre-wrap px-3 py-3 text-xs leading-6 text-[var(--color-text-base)]">
-                      {agentConnectionGuide.skillCurlExample}
+                      {agentRestPromptExample}
                     </pre>
                   </div>
-                </CollapsibleUsageSection>
+                </div>
+
+                <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-4">
+                  <h3 className="text-sm font-semibold text-white">User REST API</h3>
+                  <p className="mt-1 text-sm leading-6 text-[var(--color-text-base)]">
+                    Use the user automation key with the dashboard-equivalent OpenAPI schema.
+                  </p>
+                  <div className="mt-3 divide-y divide-[var(--color-border)]">
+                    <KeyValueRow
+                      label="OpenAPI schema"
+                      value={<code className="break-all text-xs text-[var(--color-text-active)]">{userOpenApiSchemaEndpoint}</code>}
+                    />
+                  </div>
+                  <div className="mt-3 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)]">
+                    <div className="border-b border-[var(--color-border)] px-3 py-2 text-xs uppercase tracking-[0.18em] text-[var(--color-text-base)]">
+                      Example agent prompt
+                    </div>
+                    <pre className="overflow-x-auto whitespace-pre-wrap px-3 py-3 text-xs leading-6 text-[var(--color-text-base)]">
+                      {userRestPromptExample}
+                    </pre>
+                  </div>
+                </div>
+
+                {isAdmin ? (
+                  <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-4">
+                    <h3 className="text-sm font-semibold text-white">Admin REST API</h3>
+                    <p className="mt-1 text-sm leading-6 text-[var(--color-text-base)]">
+                      Use the admin automation key with the admin-only OpenAPI schema for connector, discovery, and approval QA.
+                    </p>
+                    <div className="mt-3 divide-y divide-[var(--color-border)]">
+                      <KeyValueRow
+                        label="OpenAPI schema"
+                        value={<code className="break-all text-xs text-[var(--color-text-active)]">{adminOpenApiSchemaEndpoint}</code>}
+                      />
+                    </div>
+                    <div className="mt-3 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)]">
+                      <div className="border-b border-[var(--color-border)] px-3 py-2 text-xs uppercase tracking-[0.18em] text-[var(--color-text-base)]">
+                        Example agent prompt
+                      </div>
+                      <pre className="overflow-x-auto whitespace-pre-wrap px-3 py-3 text-xs leading-6 text-[var(--color-text-base)]">
+                        {adminRestPromptExample}
+                      </pre>
+                    </div>
+                  </div>
+                ) : null}
               </div>
             </CompactPanel>
           </section>
