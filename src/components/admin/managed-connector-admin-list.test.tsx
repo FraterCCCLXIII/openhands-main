@@ -82,6 +82,20 @@ describe("ManagedConnectorAdminList", () => {
     vi.unstubAllGlobals();
   });
 
+  it("shows connector logos and top-level delete buttons in the compact card view", async () => {
+    await act(async () => {
+      root.render(
+        <ManagedConnectorAdminList initialManagedConnectors={initialConnectors} />,
+      );
+    });
+
+    expect(container.querySelector('[aria-label="Notion logo"]')).toBeTruthy();
+    expect(
+      container.querySelector('button[aria-label="Delete Notion connector"]'),
+    ).toBeTruthy();
+    expect(container.textContent).toContain("Show details");
+  });
+
   it("updates an existing managed connector in place", async () => {
     fetchMock.mockResolvedValueOnce(
       new Response(
@@ -107,13 +121,13 @@ describe("ManagedConnectorAdminList", () => {
       );
     });
 
-    const notionButton = Array.from(container.querySelectorAll("button")).find((button) =>
-      button.textContent?.includes("Notion"),
+    const expandButton = Array.from(container.querySelectorAll("button")).find((button) =>
+      button.textContent?.includes("Show details"),
     );
-    expect(notionButton).toBeTruthy();
+    expect(expandButton).toBeTruthy();
 
     await act(async () => {
-      notionButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      expandButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
 
     const providerSelect = container.querySelector("select");
@@ -160,7 +174,7 @@ describe("ManagedConnectorAdminList", () => {
     expect(container.textContent).toContain("Connector updated.");
   });
 
-  it("deletes a managed connector from the admin list", async () => {
+  it("deletes a managed connector from the card header without expanding first", async () => {
     fetchMock.mockResolvedValueOnce(
       new Response(JSON.stringify({ deleted: true, slug: "notion" }), {
         status: 200,
@@ -174,17 +188,8 @@ describe("ManagedConnectorAdminList", () => {
       );
     });
 
-    const notionButton = Array.from(container.querySelectorAll("button")).find((button) =>
-      button.textContent?.includes("Notion"),
-    );
-    expect(notionButton).toBeTruthy();
-
-    await act(async () => {
-      notionButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-    });
-
-    const deleteButton = Array.from(container.querySelectorAll("button")).find((button) =>
-      button.textContent?.includes("Delete connector"),
+    const deleteButton = container.querySelector(
+      'button[aria-label="Delete Notion connector"]',
     );
     expect(deleteButton).toBeTruthy();
 

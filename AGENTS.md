@@ -68,6 +68,8 @@ This repository contains a Next.js/TypeScript implementation of an agent context
 - `src/components/admin/curated-provider-list.tsx` renders the `/admin-integrations` researched provider catalog as a compact searchable vertical list; entries are collapsed by default, expand inline, and only show the managed-connector registration form to signed-in users whose email is allowlisted in `APP_ADMIN_EMAILS`.
 
 - `app/admin-integrations/page.tsx` is the canonical user/admin-facing connector request page: regular users see only the “For users” request guidance, admins see only the “For admins” setup guidance plus the registered-connector management panel, and `app/add-connector/page.tsx` is now just a legacy redirect to `/admin-integrations`. In-app admin actions are gated by `APP_ADMIN_EMAILS` from Vercel environment variables.
+- `app/admin-integrations/page.tsx` should keep the same sidebar/header chrome and overall card density as the main integrations dashboard, while `src/components/admin/managed-connector-admin-list.tsx` should keep mirroring the compact integration-card treatment with visible delete actions and logo/avatar tiles.
+
 - `app/api/add-connector/route.ts` stores add-connector form submissions as in-app notifications so the team can review requested providers from the existing dashboard notification feed.
 - `src/lib/integrations/oauth-provider-catalog.ts` and `app/api/integrations/oauth-provider-catalog/route.ts` expose the researched OAuth-capable provider catalog used by the admin-integrations UI.
 - `app/api/integrations/discover/route.ts` and `src/lib/integrations/discovery.ts` provide server-side function discovery for managed connectors, Composio toolkits, and remote MCP servers.

@@ -149,8 +149,8 @@ describe("AdminIntegrationsCatalog", () => {
       googleButtons()[0]?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
 
-    const deleteButton = Array.from(container.querySelectorAll("button")).find((button) =>
-      button.textContent?.includes("Delete connector"),
+    const deleteButton = container.querySelector(
+      'button[aria-label="Delete Google Calendar connector"]',
     );
     expect(deleteButton).toBeTruthy();
 
@@ -163,6 +163,11 @@ describe("AdminIntegrationsCatalog", () => {
       method: "DELETE",
     });
     expect(container.textContent).not.toContain("Use Google Calendar");
+
+    await act(async () => {
+      googleButtons().at(-1)?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
     expect(container.textContent).toContain("Register this provider");
     expect(container.textContent).not.toContain(
       "This provider is already available in the integration wizard, so no additional registration is needed.",

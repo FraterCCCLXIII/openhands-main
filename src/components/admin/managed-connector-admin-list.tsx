@@ -1,9 +1,11 @@
 "use client";
 
+import { ChevronRight, Trash2 } from "lucide-react";
 import { type FormEvent, useMemo, useState } from "react";
 
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
+import { cn } from "@/src/lib/utils";
 import type {
   ManagedConnectorDefinition,
   ManagedConnectorRecord,
@@ -30,6 +32,9 @@ interface ManagedConnectorFormState {
   status: "idle" | "success" | "error";
   message: string;
 }
+
+const inputClassName =
+  "rounded-md border border-[var(--color-border)] bg-[var(--color-bg-input)] px-4 py-3 text-white outline-none transition-colors focus:border-[var(--color-accent)]";
 
 const parseScopes = (value: string) =>
   value
@@ -101,6 +106,65 @@ const buildManagedConnectorPayload = (
   enabled: connector.enabled,
 });
 
+const matchesManagedConnectorSearch = (
+  connector: ManagedConnectorDefinition,
+  query: string,
+) => {
+  const normalizedQuery = query.trim().toLowerCase();
+  if (!normalizedQuery) {
+    return true;
+  }
+
+  return [
+    connector.name,
+    connector.slug,
+    connector.description,
+    inferProvider(connector),
+    connector.authStrategy,
+    getCredentialStatusLabel(connector),
+    ...connector.categories,
+  ].some((value) => value.toLowerCase().includes(normalizedQuery));
+};
+
+const getConnectorInitials = (name: string) => {
+  const parts = name
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2);
+
+  if (parts.length === 0) {
+    return "?";
+  }
+
+  return parts.map((part) => part[0]?.toUpperCase() ?? "").join("") || "?";
+};
+
+const formatUpdatedAt = (value: string) =>
+  value ? new Date(value).toLocaleString() : "Unknown";
+
+const ConnectorAvatar = ({ connector }: { connector: ManagedConnectorDefinition }) => {
+  if (connector.logoUrl?.trim()) {
+    return (
+      <img
+        src={connector.logoUrl}
+        alt={`${connector.name} logo`}
+        className="h-10 w-10 shrink-0 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] object-cover"
+      />
+    );
+  }
+
+  return (
+    <span
+      role="img"
+      aria-label={`${connector.name} logo`}
+      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-input)] text-xs font-semibold tracking-[0.14em] text-white"
+    >
+      {getConnectorInitials(connector.name)}
+    </span>
+  );
+};
+
 export function ManagedConnectorAdminList({
   initialManagedConnectors,
   onConnectorUpdated,
@@ -109,6 +173,7 @@ export function ManagedConnectorAdminList({
   const [managedConnectors, setManagedConnectors] = useState(initialManagedConnectors);
   const [expandedSlug, setExpandedSlug] = useState<string | null>(null);
   const [formStates, setFormStates] = useState<Record<string, ManagedConnectorFormState>>({});
+  const [search, setSearch] = useState("");
 
   const sortedConnectors = useMemo(
     () =>
@@ -116,6 +181,23 @@ export function ManagedConnectorAdminList({
         left.name.localeCompare(right.name) || left.slug.localeCompare(right.slug),
       ),
     [managedConnectors],
+  );
+
+  const filteredConnectors = useMemo(
+    () =>
+      sortedConnectors.filter((connector) =>
+        matchesManagedConnectorSearch(connector, search),
+      ),
+    [search, sortedConnectors],
+  );
+
+  const visibleFunctionCount = useMemo(
+    () =>
+      filteredConnectors.reduce(
+        (total, connector) => total + connector.functions.length,
+        0,
+      ),
+    [filteredConnectors],
   );
 
   const updateFormState = (
@@ -254,7 +336,6 @@ export function ManagedConnectorAdminList({
         status: "error",
         message: error instanceof Error ? error.message : "Failed to delete connector.",
       });
-      return;
     }
   };
 
@@ -267,230 +348,295 @@ export function ManagedConnectorAdminList({
   }
 
   return (
-    <div className="mt-4 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] divide-y divide-[var(--color-border)]">
-      {sortedConnectors.map((connector) => {
-        const form = getFormState(connector);
-        const isExpanded = expandedSlug === connector.slug;
-        const provider = inferProvider(connector);
-        const functionCount = connector.functions.length;
+    <div className="mt-4 space-y-4">
+      <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-4">
+        <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+          <div className="space-y-1">
+            <h3 className="text-sm font-semibold text-white">
+              Search and review registered connectors
+            </h3>
+            <p className="text-xs leading-6 text-[var(--color-text-base)]">
+              Use the same compact card layout here to inspect configured providers,
+              update service-level settings, and delete stale connectors without digging
+              through hidden actions.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--color-text-base)]">
+            <Badge>{filteredConnectors.length} connectors</Badge>
+            <Badge>{visibleFunctionCount} functions</Badge>
+          </div>
+        </div>
 
-        return (
-          <div key={connector.slug}>
-            <button
-              type="button"
-              onClick={() => setExpandedSlug(isExpanded ? null : connector.slug)}
-              aria-expanded={isExpanded}
-              className="flex w-full items-center gap-3 overflow-x-auto whitespace-nowrap px-4 py-2.5 text-left text-sm"
-            >
-              <span className="shrink-0 font-medium text-white">{connector.name}</span>
-              <span className="shrink-0 text-[var(--color-text-muted)]">
-                ({connector.slug})
-              </span>
-              <span className="shrink-0 text-[var(--color-text-base)]">—</span>
-              <span className="shrink-0 text-[var(--color-text-base)]">{provider}</span>
-              <span className="shrink-0 text-[var(--color-text-base)]">
-                — {functionCount} function{functionCount === 1 ? "" : "s"}
-              </span>
-              {connector.oauthConfigured ? (
-                <span className="shrink-0 text-[var(--color-accent)]">
-                  — {getCredentialStatusLabel(connector)}
-                </span>
-              ) : null}
-              <span className="min-w-0 flex-1 truncate text-[var(--color-text-base)]">
-                {connector.description}
-              </span>
-              <span className="shrink-0 text-xs text-[var(--color-text-muted)]">
-                {isExpanded ? "Hide details" : "Show details"}
-              </span>
-            </button>
+        <div className="mt-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <input
+            type="search"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Search managed connectors"
+            aria-label="Search managed connectors"
+            className={cn(inputClassName, "w-full lg:max-w-md")}
+          />
+        </div>
+      </div>
 
-            {isExpanded ? (
-              <div className="border-t border-[var(--color-border)] px-4 py-4 text-sm leading-7 text-[var(--color-text-base)]">
-                <div className="flex flex-wrap gap-2">
-                  <Badge>{provider}</Badge>
-                  <Badge>{connector.authStrategy}</Badge>
-                  <Badge tone={connector.enabled ? "success" : "danger"}>
-                    {connector.enabled ? "enabled" : "disabled"}
-                  </Badge>
-                  <Badge tone={connector.oauthConfigured ? "success" : "warning"}>
-                    {getCredentialStatusLabel(connector)}
-                  </Badge>
-                </div>
-                <p className="mt-3 text-sm text-[var(--color-text-base)]">
-                  Edit stale provider URLs or credential settings here. Saving updates the existing service-level managed connector in place; deleting removes it until an admin registers it again.
-                </p>
-                <form
-                  className="mt-4 grid gap-3 md:grid-cols-2"
-                  onSubmit={(event) => void handleSubmit(event, connector)}
-                >
-                  <label className="flex flex-col gap-1 text-xs text-[var(--color-text-muted)]">
-                    Provider type
-                    <select
-                      value={form.provider}
-                      onChange={(event) =>
-                        updateFormState(connector.slug, connector, {
-                          provider: event.target.value as "mcp" | "http",
-                        })
-                      }
-                      className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-white outline-none focus:border-[var(--color-accent)]"
-                    >
-                      <option value="mcp">Remote MCP</option>
-                      <option value="http">Managed HTTP / OpenAPI</option>
-                    </select>
-                  </label>
-                  <div className="flex items-end text-[11px] leading-5 text-[var(--color-text-muted)]">
-                    Updated {new Date(connector.updatedAt).toLocaleString()}
+      {filteredConnectors.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-[var(--color-border)] bg-[var(--color-surface-subtle)] px-4 py-6 text-sm text-[var(--color-text-base)]">
+          No managed connectors match the current search.
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {filteredConnectors.map((connector) => {
+            const form = getFormState(connector);
+            const isExpanded = expandedSlug === connector.slug;
+            const provider = inferProvider(connector);
+            const functionCount = connector.functions.length;
+
+            return (
+              <div
+                key={connector.slug}
+                className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-4"
+                data-managed-connector={connector.slug}
+              >
+                <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
+                  <div className="flex min-w-0 items-start gap-3">
+                    <ConnectorAvatar connector={connector} />
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h3 className="text-sm font-semibold text-white">
+                          {connector.name}
+                        </h3>
+                        <Badge>{provider}</Badge>
+                        <Badge>{connector.authStrategy}</Badge>
+                        <Badge tone={connector.enabled ? "success" : "danger"}>
+                          {connector.enabled ? "enabled" : "disabled"}
+                        </Badge>
+                        <Badge tone={connector.oauthConfigured ? "success" : "warning"}>
+                          {getCredentialStatusLabel(connector)}
+                        </Badge>
+                      </div>
+                      <p className="mt-2 text-xs leading-6 text-[var(--color-text-base)]">
+                        {connector.description}
+                      </p>
+                      <p className="mt-1 text-[11px] leading-5 text-[var(--color-text-base)]">
+                        {connector.slug} · {functionCount} function
+                        {functionCount === 1 ? "" : "s"} · updated {formatUpdatedAt(connector.updatedAt)}
+                      </p>
+                    </div>
                   </div>
 
-                  {form.provider === "mcp" ? (
-                    <label className="flex flex-col gap-1 text-xs text-[var(--color-text-muted)] md:col-span-2">
-                      MCP server URL
-                      <input
-                        type="url"
-                        value={form.serverUrl}
-                        onChange={(event) =>
-                          updateFormState(connector.slug, connector, {
-                            serverUrl: event.target.value,
-                          })
-                        }
-                        className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-white outline-none focus:border-[var(--color-accent)]"
-                      />
-                    </label>
-                  ) : (
-                    <>
-                      <label className="flex flex-col gap-1 text-xs text-[var(--color-text-muted)] md:col-span-2">
-                        API base URL
-                        <input
-                          type="url"
-                          value={form.apiBaseUrl}
-                          onChange={(event) =>
-                            updateFormState(connector.slug, connector, {
-                              apiBaseUrl: event.target.value,
-                            })
-                          }
-                          className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-white outline-none focus:border-[var(--color-accent)]"
-                        />
-                      </label>
-                      <label className="flex flex-col gap-1 text-xs text-[var(--color-text-muted)] md:col-span-2">
-                        OpenAPI schema URL
-                        <input
-                          type="url"
-                          value={form.openApiUrl}
-                          onChange={(event) =>
-                            updateFormState(connector.slug, connector, {
-                              openApiUrl: event.target.value,
-                            })
-                          }
-                          placeholder="https://developers.example.com/openapi.json"
-                          className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-white outline-none placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-accent)]"
-                        />
-                        <span className="text-[11px] leading-5 text-[var(--color-text-muted)]">
-                          Leave blank if you want to keep the current stored function templates instead of regenerating them from a schema.
-                        </span>
-                      </label>
-                    </>
-                  )}
-
-                  {connector.authStrategy === "oauth2" ? (
-                    <>
-                      <label className="flex flex-col gap-1 text-xs text-[var(--color-text-muted)]">
-                        Authorization URL
-                        <input
-                          type="url"
-                          value={form.authorizationUrl}
-                          onChange={(event) =>
-                            updateFormState(connector.slug, connector, {
-                              authorizationUrl: event.target.value,
-                            })
-                          }
-                          className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-white outline-none focus:border-[var(--color-accent)]"
-                        />
-                      </label>
-                      <label className="flex flex-col gap-1 text-xs text-[var(--color-text-muted)]">
-                        Token URL
-                        <input
-                          type="url"
-                          value={form.tokenUrl}
-                          onChange={(event) =>
-                            updateFormState(connector.slug, connector, {
-                              tokenUrl: event.target.value,
-                            })
-                          }
-                          className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-white outline-none focus:border-[var(--color-accent)]"
-                        />
-                      </label>
-                      <label className="flex flex-col gap-1 text-xs text-[var(--color-text-muted)] md:col-span-2">
-                        Scopes (comma separated)
-                        <input
-                          type="text"
-                          value={form.scopes}
-                          onChange={(event) =>
-                            updateFormState(connector.slug, connector, {
-                              scopes: event.target.value,
-                            })
-                          }
-                          className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-white outline-none focus:border-[var(--color-accent)]"
-                        />
-                      </label>
-                      <label className="flex flex-col gap-1 text-xs text-[var(--color-text-muted)]">
-                        Replace OAuth client ID (optional)
-                        <input
-                          type="text"
-                          value={form.oauthClientId}
-                          onChange={(event) =>
-                            updateFormState(connector.slug, connector, {
-                              oauthClientId: event.target.value,
-                            })
-                          }
-                          className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-white outline-none focus:border-[var(--color-accent)]"
-                        />
-                      </label>
-                      <label className="flex flex-col gap-1 text-xs text-[var(--color-text-muted)]">
-                        Replace OAuth client secret (optional)
-                        <input
-                          type="password"
-                          value={form.oauthClientSecret}
-                          onChange={(event) =>
-                            updateFormState(connector.slug, connector, {
-                              oauthClientSecret: event.target.value,
-                            })
-                          }
-                          className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-white outline-none focus:border-[var(--color-accent)]"
-                        />
-                      </label>
-                    </>
-                  ) : null}
-
-                  <div className="md:col-span-2 flex flex-wrap items-center gap-3">
-                    <Button type="submit" disabled={form.submitting || form.deleting}>
-                      {form.submitting ? "Saving…" : "Save changes"}
-                    </Button>
+                  <div className="flex flex-wrap items-center gap-2 xl:justify-end">
                     <Button
                       type="button"
                       variant="danger"
+                      className="h-8 gap-2 rounded-md px-3 text-xs"
                       disabled={form.submitting || form.deleting}
+                      aria-label={`Delete ${connector.name} connector`}
                       onClick={() => void handleDelete(connector)}
                     >
-                      {form.deleting ? "Deleting…" : "Delete connector"}
+                      <Trash2 className="h-4 w-4" />
+                      {form.deleting ? "Deleting…" : "Delete"}
                     </Button>
-                    {form.message ? (
-                      <p
-                        className={
-                          form.status === "error"
-                            ? "text-sm text-[var(--color-danger)]"
-                            : "text-sm text-[var(--color-text-base)]"
-                        }
-                      >
-                        {form.message}
-                      </p>
-                    ) : null}
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      className="h-8 rounded-md px-3 text-xs"
+                      aria-expanded={isExpanded}
+                      aria-controls={`managed-connector-details-${connector.slug}`}
+                      onClick={() =>
+                        setExpandedSlug(isExpanded ? null : connector.slug)
+                      }
+                    >
+                      {isExpanded ? "Hide details" : "Show details"}
+                      <ChevronRight
+                        className={cn(
+                          "ml-1 h-4 w-4 transition-transform",
+                          isExpanded && "rotate-90",
+                        )}
+                      />
+                    </Button>
                   </div>
-                </form>
+                </div>
+
+                {isExpanded ? (
+                  <div
+                    id={`managed-connector-details-${connector.slug}`}
+                    className="mt-3 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-input)]"
+                  >
+                    <div className="border-b border-[var(--color-border)] px-4 py-4 text-sm text-[var(--color-text-base)]">
+                      Edit stale provider URLs or credential settings here. Saving updates the
+                      existing service-level managed connector in place; deleting removes it
+                      until an admin registers it again.
+                    </div>
+                    <form
+                      className="grid gap-3 p-4 md:grid-cols-2"
+                      onSubmit={(event) => void handleSubmit(event, connector)}
+                    >
+                      <label className="flex flex-col gap-1 text-xs text-[var(--color-text-base)]">
+                        Provider type
+                        <select
+                          value={form.provider}
+                          onChange={(event) =>
+                            updateFormState(connector.slug, connector, {
+                              provider: event.target.value as "mcp" | "http",
+                            })
+                          }
+                          className={inputClassName}
+                        >
+                          <option value="mcp">Remote MCP</option>
+                          <option value="http">Managed HTTP / OpenAPI</option>
+                        </select>
+                      </label>
+                      <div className="flex items-end text-[11px] leading-5 text-[var(--color-text-base)]">
+                        Updated {formatUpdatedAt(connector.updatedAt)}
+                      </div>
+
+                      {form.provider === "mcp" ? (
+                        <label className="flex flex-col gap-1 text-xs text-[var(--color-text-base)] md:col-span-2">
+                          MCP server URL
+                          <input
+                            type="url"
+                            value={form.serverUrl}
+                            onChange={(event) =>
+                              updateFormState(connector.slug, connector, {
+                                serverUrl: event.target.value,
+                              })
+                            }
+                            className={inputClassName}
+                          />
+                        </label>
+                      ) : (
+                        <>
+                          <label className="flex flex-col gap-1 text-xs text-[var(--color-text-base)] md:col-span-2">
+                            API base URL
+                            <input
+                              type="url"
+                              value={form.apiBaseUrl}
+                              onChange={(event) =>
+                                updateFormState(connector.slug, connector, {
+                                  apiBaseUrl: event.target.value,
+                                })
+                              }
+                              className={inputClassName}
+                            />
+                          </label>
+                          <label className="flex flex-col gap-1 text-xs text-[var(--color-text-base)] md:col-span-2">
+                            OpenAPI schema URL
+                            <input
+                              type="url"
+                              value={form.openApiUrl}
+                              onChange={(event) =>
+                                updateFormState(connector.slug, connector, {
+                                  openApiUrl: event.target.value,
+                                })
+                              }
+                              placeholder="https://developers.example.com/openapi.json"
+                              className={cn(
+                                inputClassName,
+                                "placeholder:text-[var(--color-text-base)]",
+                              )}
+                            />
+                            <span className="text-[11px] leading-5 text-[var(--color-text-base)]">
+                              Leave blank if you want to keep the current stored function
+                              templates instead of regenerating them from a schema.
+                            </span>
+                          </label>
+                        </>
+                      )}
+
+                      {connector.authStrategy === "oauth2" ? (
+                        <>
+                          <label className="flex flex-col gap-1 text-xs text-[var(--color-text-base)]">
+                            Authorization URL
+                            <input
+                              type="url"
+                              value={form.authorizationUrl}
+                              onChange={(event) =>
+                                updateFormState(connector.slug, connector, {
+                                  authorizationUrl: event.target.value,
+                                })
+                              }
+                              className={inputClassName}
+                            />
+                          </label>
+                          <label className="flex flex-col gap-1 text-xs text-[var(--color-text-base)]">
+                            Token URL
+                            <input
+                              type="url"
+                              value={form.tokenUrl}
+                              onChange={(event) =>
+                                updateFormState(connector.slug, connector, {
+                                  tokenUrl: event.target.value,
+                                })
+                              }
+                              className={inputClassName}
+                            />
+                          </label>
+                          <label className="flex flex-col gap-1 text-xs text-[var(--color-text-base)] md:col-span-2">
+                            Scopes (comma separated)
+                            <input
+                              type="text"
+                              value={form.scopes}
+                              onChange={(event) =>
+                                updateFormState(connector.slug, connector, {
+                                  scopes: event.target.value,
+                                })
+                              }
+                              className={inputClassName}
+                            />
+                          </label>
+                          <label className="flex flex-col gap-1 text-xs text-[var(--color-text-base)]">
+                            Replace OAuth client ID (optional)
+                            <input
+                              type="text"
+                              value={form.oauthClientId}
+                              onChange={(event) =>
+                                updateFormState(connector.slug, connector, {
+                                  oauthClientId: event.target.value,
+                                })
+                              }
+                              className={inputClassName}
+                            />
+                          </label>
+                          <label className="flex flex-col gap-1 text-xs text-[var(--color-text-base)]">
+                            Replace OAuth client secret (optional)
+                            <input
+                              type="password"
+                              value={form.oauthClientSecret}
+                              onChange={(event) =>
+                                updateFormState(connector.slug, connector, {
+                                  oauthClientSecret: event.target.value,
+                                })
+                              }
+                              className={inputClassName}
+                            />
+                          </label>
+                        </>
+                      ) : null}
+
+                      <div className="flex flex-wrap items-center gap-3 md:col-span-2">
+                        <Button type="submit" disabled={form.submitting || form.deleting}>
+                          {form.submitting ? "Saving…" : "Save changes"}
+                        </Button>
+                        {form.message ? (
+                          <p
+                            className={
+                              form.status === "error"
+                                ? "text-sm text-[var(--color-danger)]"
+                                : "text-sm text-[var(--color-text-base)]"
+                            }
+                          >
+                            {form.message}
+                          </p>
+                        ) : null}
+                      </div>
+                    </form>
+                  </div>
+                ) : null}
               </div>
-            ) : null}
-          </div>
-        );
-      })}
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

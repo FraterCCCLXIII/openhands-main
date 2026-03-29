@@ -16,7 +16,9 @@ import { createTestRepository, getActiveSql } from "@/src/lib/db/pglite-test-uti
 import AdminIntegrationsPage from "../admin-integrations/page";
 
 let testCleanup: () => Promise<void>;
-beforeAll(() => { vi.stubEnv("POSTGRES_URL", "pglite://add-connector-page-test"); });
+beforeAll(() => {
+  vi.stubEnv("POSTGRES_URL", "pglite://add-connector-page-test");
+});
 beforeEach(async () => {
   const ctx = await createTestRepository();
   testCleanup = ctx.cleanup;
@@ -35,17 +37,25 @@ afterEach(async () => {
 });
 
 describe("AdminIntegrationsPage", () => {
-  it("shows only the user guidance card to regular users", async () => {
+  it("renders the dashboard sidebar chrome for signed-in regular users", async () => {
     vi.stubEnv("ADMIN_EMAIL", "");
 
     const html = renderToStaticMarkup(await AdminIntegrationsPage());
 
+    expect(html).toContain("OpenHands");
+    expect(html).toContain("Context Layer");
+    expect(html).toContain('href="/integrations"');
+    expect(html).toContain('href="/agent-connection"');
+    expect(html).toContain('href="/profile"');
+    expect(html).toContain('href="/admin-integrations"');
+    expect(html).not.toContain('href="/home"');
+    expect(html).toContain("Signed in as");
     expect(html).toContain("Admin integrations");
     expect(html).toContain("For users");
     expect(html).toContain("contact an admin");
     expect(html).toContain("Popular official provider options");
     expect(html).toContain("Search curated adaptors");
-    expect(html).toContain("href=\"/integrations?showIntegrationWizard=1\"");
+    expect(html).toContain('href="/integrations?showIntegrationWizard=1"');
     expect(html).not.toContain("For admins");
     expect(html).not.toContain("Registered managed connectors");
     expect(html).not.toContain("APP_ADMIN_EMAILS");
@@ -61,13 +71,14 @@ describe("AdminIntegrationsPage", () => {
     expect(html).toContain("please contact admin@example.com");
   });
 
-
   it("shows only the admin guidance card and connector controls to allowlisted admins", async () => {
     vi.stubEnv("APP_ADMIN_EMAILS", "admin@example.com");
     authMock.mockResolvedValue({ user: { email: "admin@example.com" } });
 
     const html = renderToStaticMarkup(await AdminIntegrationsPage());
 
+    expect(html).toContain("OpenHands");
+    expect(html).toContain("Context Layer");
     expect(html).toContain("For admins");
     expect(html).not.toContain("For users");
     expect(html).toContain("Registered managed connectors");
@@ -99,7 +110,6 @@ describe("AdminIntegrationsPage", () => {
     expect(html).not.toContain("Submit provider information");
   });
 
-
   it("shows database setup instructions to admins when persistent storage is unavailable", async () => {
     vi.stubEnv("NODE_ENV", "production");
     vi.stubEnv("POSTGRES_URL", "");
@@ -115,5 +125,4 @@ describe("AdminIntegrationsPage", () => {
     expect(html).toContain("DATABASE_URL");
     expect(html).not.toContain("Popular official provider options");
   });
-
 });
