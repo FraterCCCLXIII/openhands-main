@@ -105,6 +105,14 @@ const getUserApiKeyPrefix = (apiKey: string) =>
 const getUserApiKeySuffix = (apiKey: string) =>
   apiKey.slice(-USER_API_KEY_SUFFIX_LENGTH);
 
+const encryptUserApiKey = (apiKey: string) =>
+  encryptCredentials({ apiKey });
+
+const decryptUserApiKey = (payload: string) => {
+  const credentials = decryptCredentials<{ apiKey?: string }>(payload);
+  return typeof credentials.apiKey === "string" ? credentials.apiKey : null;
+};
+
 const toUserApiKeyStatus = (record: UserApiKeyRecord): UserApiKeyStatus => ({
   keyPrefix: record.keyPrefix,
   keySuffix: record.keySuffix,
@@ -398,7 +406,37 @@ export class ContextLayerService {
     await this.initialize();
     const normalizedOwnerId = normalizeAgentApiKeyOwner(ownerId);
     const record = await this.repository.getUserApiKeyByOwner(normalizedOwnerId);
-    return record ? toUserApiKeyStatus(record) : null;
+
+    if (!record) {
+      return null;
+    }
+
+    if (record.encryptedApiKey && !record.keySuffix) {
+      const apiKey = decryptUserApiKey(record.encryptedApiKey);
+      if (apiKey) {
+        const updatedRecord: UserApiKeyRecord = {
+          ...record,
+          keyPrefix: getUserApiKeyPrefix(apiKey),
+          keySuffix: getUserApiKeySuffix(apiKey),
+        };
+        await this.repository.saveUserApiKey(updatedRecord);
+        return toUserApiKeyStatus(updatedRecord);
+      }
+    }
+
+    return toUserApiKeyStatus(record);
+  }
+
+  async getUserApiKeyValue(ownerId: string) {
+    await this.initialize();
+    const normalizedOwnerId = normalizeAgentApiKeyOwner(ownerId);
+    const record = await this.repository.getUserApiKeyByOwner(normalizedOwnerId);
+
+    if (!record?.encryptedApiKey) {
+      return null;
+    }
+
+    return decryptUserApiKey(record.encryptedApiKey);
   }
 
   async rotateUserApiKey(ownerId: string) {
@@ -420,6 +458,7 @@ export class ContextLayerService {
       apiKeyHash: hashUserApiKey(apiKey),
       keyPrefix: getUserApiKeyPrefix(apiKey),
       keySuffix: getUserApiKeySuffix(apiKey),
+      encryptedApiKey: encryptUserApiKey(apiKey),
       createdAt: existing?.createdAt ?? timestamp,
       updatedAt: timestamp,
     };

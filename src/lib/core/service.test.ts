@@ -406,7 +406,7 @@ describe("ContextLayerService", () => {
     expect(await service.isStoredAgentApiKeyAuthorized("not-a-real-key")).toBe(false);
   });
 
-  it("rotates and revokes user API keys without storing plaintext", async () => {
+  it("rotates and revokes user API keys with hashed auth and encrypted recovery", async () => {
     const service = createService();
 
     const first = await service.rotateUserApiKey("Owner@Example.com");
@@ -415,12 +415,15 @@ describe("ContextLayerService", () => {
     expect(first.apiKey.startsWith("clu_")).toBe(true);
     expect(storedFirst).not.toBeNull();
     expect(storedFirst?.apiKeyHash).not.toBe(first.apiKey);
+    expect(storedFirst?.encryptedApiKey).toBeTruthy();
+    expect(storedFirst?.encryptedApiKey).not.toBe(first.apiKey);
     expect(storedFirst?.keyPrefix).toBe(first.key.keyPrefix);
     expect(storedFirst?.keySuffix).toBe(first.key.keySuffix);
     expect(await service.getStoredUserApiKey(first.apiKey)).toMatchObject({
       ownerId: "owner@example.com",
     });
     expect(await service.getUserApiKeyStatus("owner@example.com")).toEqual(first.key);
+    expect(await service.getUserApiKeyValue("owner@example.com")).toBe(first.apiKey);
 
     const second = await service.rotateUserApiKey("owner@example.com");
     const storedSecond = await testRepo.getUserApiKeyByOwner("owner@example.com");
@@ -429,16 +432,19 @@ describe("ContextLayerService", () => {
     expect(second.key.createdAt).toBe(first.key.createdAt);
     expect(second.key.updatedAt).not.toBe(first.key.updatedAt);
     expect(storedSecond?.apiKeyHash).not.toBe(storedFirst?.apiKeyHash);
+    expect(storedSecond?.encryptedApiKey).not.toBe(storedFirst?.encryptedApiKey);
     expect(await service.getStoredUserApiKey(first.apiKey)).toBeNull();
     expect(await service.getStoredUserApiKey(second.apiKey)).toMatchObject({
       ownerId: "owner@example.com",
     });
+    expect(await service.getUserApiKeyValue("owner@example.com")).toBe(second.apiKey);
 
     expect(await service.revokeUserApiKey("owner@example.com")).toEqual({
       revoked: true,
     });
     expect(await service.getStoredUserApiKey(second.apiKey)).toBeNull();
     expect(await service.getUserApiKeyStatus("owner@example.com")).toBeNull();
+    expect(await service.getUserApiKeyValue("owner@example.com")).toBeNull();
     expect(await service.revokeUserApiKey("owner@example.com")).toEqual({
       revoked: false,
     });

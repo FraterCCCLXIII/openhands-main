@@ -46,7 +46,7 @@ afterEach(async () => {
 });
 
 describe("/api/user/key", () => {
-  it("returns metadata without exposing plaintext", async () => {
+  it("returns metadata plus the recoverable plaintext to the authenticated session", async () => {
     const service = getContextLayerService();
     const created = await service.rotateUserApiKey("user@example.com");
 
@@ -54,6 +54,7 @@ describe("/api/user/key", () => {
     const body = (await response.json()) as {
       hasKey: boolean;
       key: { keyPrefix: string; keySuffix: string; createdAt: string; updatedAt: string } | null;
+      apiKey: string | null;
     };
 
     expect(response.status).toBe(200);
@@ -61,11 +62,11 @@ describe("/api/user/key", () => {
     expect(body).toEqual({
       hasKey: true,
       key: created.key,
+      apiKey: created.apiKey,
     });
-    expect(JSON.stringify(body)).not.toContain(created.apiKey);
   });
 
-  it("creates or regenerates a user API key and only returns plaintext on rotate", async () => {
+  it("creates or regenerates a user API key for authenticated session use", async () => {
     const firstResponse = await POST();
     const firstBody = (await firstResponse.json()) as {
       apiKey: string;

@@ -8,12 +8,16 @@ export async function GET() {
   try {
     const { ownerId } = await getCurrentUserIdentity();
     const service = getContextLayerService();
-    const key = await service.getUserApiKeyStatus(ownerId);
+    const [key, apiKey] = await Promise.all([
+      service.getUserApiKeyStatus(ownerId),
+      service.getUserApiKeyValue(ownerId),
+    ]);
 
     return ok(
       {
         hasKey: key !== null,
         key,
+        apiKey,
       },
       { headers: NO_STORE_HEADERS },
     );

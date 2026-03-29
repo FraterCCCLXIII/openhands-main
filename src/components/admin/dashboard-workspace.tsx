@@ -122,6 +122,12 @@ interface AdminDashboardProps {
   isAdmin?: boolean;
 }
 
+interface UserApiKeyResponse {
+  hasKey: boolean;
+  key: UserApiKeyStatus | null;
+  apiKey: string | null;
+}
+
 const getDashboardSections = (): Array<{
   id: AdminSection;
   label: string;
@@ -444,6 +450,34 @@ export const DashboardWorkspace = ({
   }, [initialUserApiKeyValue]);
 
   useEffect(() => {
+    if (!userApiKeyStatus || userApiKeyValue) {
+      return;
+    }
+
+    let canceled = false;
+
+    void fetchJson<UserApiKeyResponse>("/api/user/key", {
+      cache: "no-store",
+    })
+      .then((response) => {
+        if (canceled) {
+          return;
+        }
+        setUserApiKeyStatus(response.key);
+        if (response.apiKey) {
+          setUserApiKeyValue(response.apiKey);
+        }
+      })
+      .catch(() => {
+        // Leave the masked metadata visible if the current key cannot be re-fetched.
+      });
+
+    return () => {
+      canceled = true;
+    };
+  }, [userApiKeyStatus, userApiKeyValue]);
+
+  useEffect(() => {
     if (!userApiKeyCopied) {
       return;
     }
@@ -530,7 +564,6 @@ export const DashboardWorkspace = ({
   const contextApiReady = contextApiKey.trim().length > 0;
   const maskedApiKey = maskApiKey(contextApiKey, revealApiKey);
   const userApiKeyReady = userApiKeyStatus !== null;
-  const userApiKeyVisibleInSession = userApiKeyValue.trim().length > 0;
   const maskedUserApiKey = userApiKeyValue
     ? maskApiKey(userApiKeyValue, revealUserApiKey)
     : userApiKeyStatus
@@ -777,16 +810,66 @@ export const DashboardWorkspace = ({
     }
   };
 
-  const handleCopyUserApiKey = async () => {
-    if (!userApiKeyValue) {
-      setStatusMessage(
-        "The full user automation key is only shown when it is first issued in this session.",
-      );
+  const ensureUserApiKeyValue = async () => {
+    const currentValue = userApiKeyValue.trim();
+    if (currentValue) {
+      return currentValue;
+    }
+
+    const current = await fetchJson<UserApiKeyResponse>("/api/user/key", {
+      cache: "no-store",
+    });
+    setUserApiKeyStatus(current.key);
+
+    if (current.apiKey) {
+      setUserApiKeyValue(current.apiKey);
+      return current.apiKey;
+    }
+
+    const rotated = await fetchJson<{
+      apiKey: string;
+      key: UserApiKeyStatus;
+    }>("/api/user/key", {
+      method: "POST",
+    });
+
+    setUserApiKeyStatus(rotated.key);
+    setUserApiKeyValue(rotated.apiKey);
+    setStatusMessage(
+      "Regenerated your user automation key so the full value can be shown again. Update any existing clients using the previous key.",
+    );
+    return rotated.apiKey;
+  };
+
+  const handleRevealUserApiKey = async () => {
+    if (!userApiKeyReady) {
+      setStatusMessage("The user automation key is not available yet.");
+      return;
+    }
+
+    if (revealUserApiKey) {
+      setRevealUserApiKey(false);
       return;
     }
 
     try {
-      await copyTextToClipboard(userApiKeyValue);
+      await ensureUserApiKeyValue();
+      setRevealUserApiKey(true);
+    } catch {
+      setRevealUserApiKey(false);
+      setStatusMessage("Unable to load the full user automation key right now.");
+    }
+  };
+
+  const handleCopyUserApiKey = async () => {
+    if (!userApiKeyReady) {
+      setStatusMessage("The user automation key is not available yet.");
+      return;
+    }
+
+    try {
+      const fullUserApiKey = await ensureUserApiKeyValue();
+      await copyTextToClipboard(fullUserApiKey);
       setUserApiKeyCopied(true);
     } catch {
       setUserApiKeyCopied(false);
@@ -1262,9 +1345,6 @@ export const DashboardWorkspace = ({
                       {maskedApiKey || "No restricted agent key available yet."}
                     </code>
                   </div>
-                  <p className="mt-3 text-xs leading-6 text-[var(--color-text-base)]">
-                    Works with <code className="text-white">/api/context/*</code> and <code className="text-white">/api/mcp</code>.
-                  </p>
                   <div className="mt-4 flex flex-wrap gap-2">
                     <Button
                       variant="secondary"
@@ -1311,15 +1391,12 @@ export const DashboardWorkspace = ({
                       {maskedUserApiKey || "No user automation key available yet."}
                     </code>
                   </div>
-                  <p className="mt-3 text-xs leading-6 text-[var(--color-text-base)]">
-                    Works with <code className="text-white">/api/user/*</code>.
-                  </p>
                   <div className="mt-4 flex flex-wrap gap-2">
                     <Button
                       variant="secondary"
                       className="h-8 gap-2 rounded-md px-3 text-xs"
-                      onClick={() => setRevealUserApiKey((current) => !current)}
-                      disabled={!userApiKeyVisibleInSession}
+                      onClick={handleRevealUserApiKey}
+                      disabled={!userApiKeyReady}
                     >
                       {revealUserApiKey ? (
                         <EyeOff className="h-4 w-4" />
@@ -1332,7 +1409,7 @@ export const DashboardWorkspace = ({
                       variant="secondary"
                       className="h-8 gap-2 rounded-md px-3 text-xs"
                       onClick={handleCopyUserApiKey}
-                      disabled={!userApiKeyVisibleInSession}
+                      disabled={!userApiKeyReady}
                       aria-label="Copy user automation key"
                     >
                       {userApiKeyCopied ? (

@@ -156,6 +156,7 @@ export class PostgresRepository implements ContextRepository {
           api_key_hash TEXT NOT NULL UNIQUE,
           key_prefix TEXT NOT NULL,
           key_suffix TEXT NOT NULL DEFAULT '',
+          encrypted_api_key TEXT,
           created_at TIMESTAMPTZ NOT NULL,
           updated_at TIMESTAMPTZ NOT NULL
         )
@@ -225,6 +226,7 @@ export class PostgresRepository implements ContextRepository {
       sql`ALTER TABLE managed_connectors ADD COLUMN IF NOT EXISTS server_url TEXT`,
       sql`ALTER TABLE managed_connectors ADD COLUMN IF NOT EXISTS open_api_url TEXT`,
       sql`ALTER TABLE user_api_keys ADD COLUMN IF NOT EXISTS key_suffix TEXT NOT NULL DEFAULT ''`,
+      sql`ALTER TABLE user_api_keys ADD COLUMN IF NOT EXISTS encrypted_api_key TEXT`,
     ]);
 
     this.schemaReady = true;
@@ -519,6 +521,7 @@ export class PostgresRepository implements ContextRepository {
       apiKeyHash: row.api_key_hash,
       keyPrefix: row.key_prefix,
       keySuffix: row.key_suffix ?? "",
+      encryptedApiKey: row.encrypted_api_key ?? null,
       createdAt: new Date(row.created_at).toISOString(),
       updatedAt: new Date(row.updated_at).toISOString(),
     } satisfies UserApiKeyRecord;
@@ -537,6 +540,7 @@ export class PostgresRepository implements ContextRepository {
       apiKeyHash: row.api_key_hash,
       keyPrefix: row.key_prefix,
       keySuffix: row.key_suffix ?? "",
+      encryptedApiKey: row.encrypted_api_key ?? null,
       createdAt: new Date(row.created_at).toISOString(),
       updatedAt: new Date(row.updated_at).toISOString(),
     } satisfies UserApiKeyRecord;
@@ -546,12 +550,29 @@ export class PostgresRepository implements ContextRepository {
     await this.ensureSchema();
     const sql = getSql();
     await sql`
-      INSERT INTO user_api_keys (owner_id, api_key_hash, key_prefix, key_suffix, created_at, updated_at)
-      VALUES (${record.ownerId}, ${record.apiKeyHash}, ${record.keyPrefix}, ${record.keySuffix}, ${record.createdAt}, ${record.updatedAt})
+      INSERT INTO user_api_keys (
+        owner_id,
+        api_key_hash,
+        key_prefix,
+        key_suffix,
+        encrypted_api_key,
+        created_at,
+        updated_at
+      )
+      VALUES (
+        ${record.ownerId},
+        ${record.apiKeyHash},
+        ${record.keyPrefix},
+        ${record.keySuffix},
+        ${record.encryptedApiKey ?? null},
+        ${record.createdAt},
+        ${record.updatedAt}
+      )
       ON CONFLICT (owner_id) DO UPDATE SET
         api_key_hash = EXCLUDED.api_key_hash,
         key_prefix = EXCLUDED.key_prefix,
         key_suffix = EXCLUDED.key_suffix,
+        encrypted_api_key = EXCLUDED.encrypted_api_key,
         created_at = EXCLUDED.created_at,
         updated_at = EXCLUDED.updated_at
     `;

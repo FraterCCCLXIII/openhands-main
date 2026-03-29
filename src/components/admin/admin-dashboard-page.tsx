@@ -36,16 +36,18 @@ export async function AdminDashboardPage() {
     initialNotifications,
     contextApiAuth,
     existingUserApiKey,
+    existingUserApiKeyValue,
   ] = await Promise.all([
     service.listOwnerIntegrations(contextApiOwner),
     service.listAccessRequests(),
     service.listNotifications(),
     service.getOrCreateAgentApiKey(contextApiOwner),
     service.getUserApiKeyStatus(contextApiOwner),
+    service.getUserApiKeyValue(contextApiOwner),
   ]);
 
   let userApiKey = existingUserApiKey;
-  let userApiKeyValue: string | null = null;
+  let userApiKeyValue: string | null = existingUserApiKeyValue;
 
   if (!userApiKey) {
     const createdUserApiKey = await service.rotateUserApiKey(contextApiOwner);

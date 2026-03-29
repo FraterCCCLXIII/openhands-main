@@ -241,6 +241,7 @@ export interface UserApiKeyRecord {
   apiKeyHash: string;
   keyPrefix: string;
   keySuffix: string;
+  encryptedApiKey?: string | null;
   createdAt: string;
   updatedAt: string;
 }

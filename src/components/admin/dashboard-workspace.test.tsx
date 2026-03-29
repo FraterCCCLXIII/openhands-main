@@ -680,6 +680,8 @@ describe("DashboardWorkspace", () => {
     expect(text).toContain("https://example.com/api/user/openapi");
     expect(text).toContain("I have provided you with an API key in $OPENHANDS_CONTEXT_LAYER_KEY");
     expect(text).toContain("I have provided you with a user API key in $OPENHANDS_CONTEXT_LAYER_USER_KEY");
+    expect(text).not.toContain("Works with /api/context/*");
+    expect(text).not.toContain("Works with /api/user/*");
     expect(text).not.toContain("https://example.com/api/context/skill");
     expect(text).not.toContain("Generate");
     expect(text).not.toContain("Revoke");
@@ -1006,4 +1008,96 @@ describe("DashboardWorkspace", () => {
     ).toContain("lucide-copy");
   });
 
+  it("reveals and copies the user automation key even when only metadata is initially rendered", async () => {
+    usePathnameMock.mockReturnValue("/agent-connection");
+    vi.useFakeTimers();
+
+    const writeTextMock = vi.fn().mockResolvedValue(undefined);
+    vi.stubGlobal("navigator", {
+      clipboard: {
+        writeText: writeTextMock,
+      },
+    });
+
+    fetchMock.mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = typeof input === "string" ? input : input.toString();
+      const method = init?.method ?? "GET";
+
+      if (url === "/api/user/key" && method === "GET") {
+        return new Response(
+          JSON.stringify({
+            hasKey: true,
+            key: {
+              keyPrefix: "clu_12345678",
+              keySuffix: "mnop",
+              createdAt: "2026-03-29T10:00:00.000Z",
+              updatedAt: "2026-03-29T10:00:00.000Z",
+            },
+            apiKey: "clu_1234567890abcdefghijklmnop",
+          }),
+          {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          },
+        );
+      }
+
+      return new Response(JSON.stringify([]), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    });
+
+    await act(async () => {
+      root.render(
+        <QueryClientProvider client={queryClient}>
+          <DashboardWorkspace
+            initialIntegrations={[]}
+            initialAccessRequests={[]}
+            initialNotifications={[]}
+            currentUser={{ name: "Admin User", email: "admin@example.com" }}
+            contextApiBaseUrl="https://example.com"
+            contextApiKey="test-key"
+            userApiKey={{
+              keyPrefix: "clu_12345678",
+              keySuffix: "mnop",
+              createdAt: "2026-03-29T10:00:00.000Z",
+              updatedAt: "2026-03-29T10:00:00.000Z",
+            }}
+          />
+        </QueryClientProvider>,
+      );
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    const revealButtons = Array.from(container.querySelectorAll("button")).filter((button) =>
+      button.textContent?.includes("Reveal"),
+    );
+    const revealButton = revealButtons[1] as HTMLButtonElement | undefined;
+    const copyButton = container.querySelector(
+      'button[aria-label="Copy user automation key"]',
+    ) as HTMLButtonElement | null;
+    expect(revealButton?.textContent).toContain("Reveal");
+    expect(copyButton).toBeTruthy();
+
+    await act(async () => {
+      revealButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(container.textContent).toContain("clu_1234567890abcdefghijklmnop");
+
+    await act(async () => {
+      copyButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(writeTextMock).toHaveBeenCalledWith("clu_1234567890abcdefghijklmnop");
+    expect(copyButton?.querySelector("svg")?.getAttribute("class")).toContain(
+      "lucide-circle-check",
+    );
+  });
 });
