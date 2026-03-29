@@ -235,11 +235,39 @@ const buildManagedConnectorPayload = (
   };
 };
 
+const buildReadyBuiltInConnectorOption = (
+  provider: OAuthProviderCatalogOption,
+): BuiltInConnectorOption => {
+  const authStrategy = getProviderAuthStrategy(provider);
+  const credentialCopy = getCredentialCopy(provider);
+
+  return {
+    slug: provider.builtInSlug ?? provider.slug,
+    name: provider.name,
+    description: provider.description,
+    appUrl: provider.appUrl,
+    toolCount: getManagedConnectorProvider(provider) === "http" ? buildDefaultHttpFunctions(provider).length : 0,
+    categories: provider.categories,
+    authModes:
+      provider.registrationDefaults?.authModes?.length &&
+      provider.registrationDefaults.authModes.every(Boolean)
+        ? provider.registrationDefaults.authModes
+        : [authStrategy],
+    authStrategy,
+    oauthConfigured: true,
+    credentialLabel: credentialCopy.label,
+    credentialPlaceholder: credentialCopy.placeholder,
+    credentialHelp: credentialCopy.help,
+    apiKeyHeaderName: provider.registrationDefaults?.apiKeyHeaderName,
+  };
+};
+
 interface CuratedProviderListProps {
   providerCatalog: OAuthProviderCatalogOption[];
   readyBuiltInConnectors: BuiltInConnectorOption[];
   canRegisterManagedConnectors?: boolean;
   oauthCallbackBaseUrl?: string;
+  onConnectorRegistered?: (connector: BuiltInConnectorOption) => void;
 }
 
 export function CuratedProviderList({
@@ -247,6 +275,7 @@ export function CuratedProviderList({
   readyBuiltInConnectors,
   canRegisterManagedConnectors = false,
   oauthCallbackBaseUrl = "",
+  onConnectorRegistered,
 }: CuratedProviderListProps) {
   const [query, setQuery] = useState("");
   const [expandedSlug, setExpandedSlug] = useState<string | null>(null);
@@ -343,6 +372,7 @@ export function CuratedProviderList({
       const connectorSlug = provider.builtInSlug ?? provider.slug;
       if (body?.oauthConfigured !== false) {
         setReadyConnectorSlugs((current) => new Set([...current, connectorSlug]));
+        onConnectorRegistered?.(buildReadyBuiltInConnectorOption(provider));
       }
 
       updateRegistrationForm(provider, {

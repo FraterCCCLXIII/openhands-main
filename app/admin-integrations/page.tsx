@@ -1,7 +1,6 @@
 import { ArrowLeft, Mail, ShieldCheck, UserRound } from "lucide-react";
 
-import { CuratedProviderList } from "@/src/components/admin/curated-provider-list";
-import { ManagedConnectorAdminList } from "@/src/components/admin/managed-connector-admin-list";
+import { AdminIntegrationsCatalog } from "@/src/components/admin/admin-integrations-catalog";
 import { ServiceUnavailableScreen } from "@/src/components/service-unavailable-screen";
 import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
@@ -71,11 +70,6 @@ export default async function AdminIntegrationsPage() {
             integration, while admins can register and maintain managed
             connectors for the deployment.
           </p>
-          <div className="flex flex-wrap gap-2">
-            {readyBuiltInConnectors.map((connector) => (
-              <Badge key={connector.slug}>{connector.name}</Badge>
-            ))}
-          </div>
         </div>
 
         {canRegisterManagedConnectors ? (
@@ -203,47 +197,13 @@ export default async function AdminIntegrationsPage() {
           </Card>
         )}
 
-        {canRegisterManagedConnectors ? (
-          <Card className="p-6">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <h2 className="text-lg font-semibold text-white">
-                  Registered managed connectors
-                </h2>
-                <p className="mt-2 text-sm leading-7 text-[var(--color-text-base)]">
-                  Edit stale service-level connector settings in place or delete a
-                  connector before re-registering it with a new provider type.
-                </p>
-              </div>
-              <Badge>{managedConnectors.length} registered</Badge>
-            </div>
-
-            <ManagedConnectorAdminList initialManagedConnectors={managedConnectors} />
-          </Card>
-        ) : null}
-
-        <Card className="p-6">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h2 className="text-lg font-semibold text-white">
-                Popular official provider options
-              </h2>
-              <p className="mt-2 text-sm leading-7 text-[var(--color-text-base)]">
-                Researched catalog of 50 popular providers with official API or
-                MCP entry points. Register one of these providers to make it show
-                up in the integrations wizard.
-              </p>
-            </div>
-            <Badge>{providerCatalog.length} options</Badge>
-          </div>
-
-          <CuratedProviderList
-            providerCatalog={providerCatalog}
-            readyBuiltInConnectors={readyBuiltInConnectors}
-            canRegisterManagedConnectors={canRegisterManagedConnectors}
-            oauthCallbackBaseUrl={oauthCallbackBaseUrl}
-          />
-        </Card>
+        <AdminIntegrationsCatalog
+          providerCatalog={providerCatalog}
+          initialReadyBuiltInConnectors={readyBuiltInConnectors}
+          managedConnectors={managedConnectors}
+          canRegisterManagedConnectors={canRegisterManagedConnectors}
+          oauthCallbackBaseUrl={oauthCallbackBaseUrl}
+        />
       </div>
     </main>
   );
