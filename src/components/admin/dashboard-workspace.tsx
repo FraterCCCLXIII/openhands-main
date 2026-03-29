@@ -1239,7 +1239,7 @@ export const DashboardWorkspace = ({
         {activeSection === "apiKeys" ? (
           <section className="space-y-4">
             <CompactPanel title="API keys" icon={KeyRound}>
-              <div className="grid gap-4 xl:grid-cols-2">
+              <div className="space-y-4">
                 <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div>
@@ -1341,7 +1341,7 @@ export const DashboardWorkspace = ({
             </CompactPanel>
 
             <CompactPanel title="Connection details" icon={ShieldCheck}>
-              <div className="grid gap-4 xl:grid-cols-2">
+              <div className="space-y-4">
                 <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-4">
                   <h3 className="text-sm font-semibold text-white">MCP</h3>
                   <p className="mt-1 text-sm leading-6 text-[var(--color-text-base)]">
