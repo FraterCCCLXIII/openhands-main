@@ -80,6 +80,7 @@ describe("listOAuthProviderCatalog", () => {
       serverUrl: "https://mcp.webflow.com/mcp",
       authorizationUrl: "https://webflow.com/oauth/authorize",
       tokenUrl: "https://api.webflow.com/oauth/access_token",
+      clientAuthentication: "body",
       scopes: ["sites:read"],
     });
     expect(notion?.registrationDefaults).toMatchObject({
