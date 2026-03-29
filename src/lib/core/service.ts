@@ -11,6 +11,11 @@ import {
 } from "@/src/lib/integrations/managed-connectors";
 import { generateManagedConnectorFunctionsFromOpenApi } from "@/src/lib/managed-connectors/openapi";
 import type { NotificationPublisher } from "@/src/lib/notifications/publisher";
+import {
+  encryptManagedOAuthClient,
+  registerManagedOAuthClient,
+  usesDynamicOAuthClientRegistration,
+} from "@/src/lib/oauth/managed-oauth-client";
 import { resolveOAuthProvider } from "@/src/lib/oauth/provider-resolver";
 import type {
   AccessDecision,
@@ -220,22 +225,38 @@ export class ContextLayerService {
 
       const oauthClientId = input.oauthClientId?.trim() ?? "";
       const oauthClientSecret = input.oauthClientSecret?.trim() ?? "";
+      const usesDynamicRegistration = usesDynamicOAuthClientRegistration(normalizedOAuthConfig);
 
-      if (oauthClientId || oauthClientSecret) {
-        if (!oauthClientId || !oauthClientSecret) {
+      if (usesDynamicRegistration) {
+        const registeredClient = await registerManagedOAuthClient({
+          connectorName: input.name.trim(),
+          slug,
+          oauthConfig: normalizedOAuthConfig,
+        });
+        encryptedOAuthClient = encryptManagedOAuthClient(registeredClient);
+      } else if (oauthClientId || oauthClientSecret) {
+        if (
+          !oauthClientId ||
+          (!oauthClientSecret && normalizedOAuthConfig.clientAuthentication !== "none")
+        ) {
           throw new ContextLayerError(
-            "Provide both oauthClientId and oauthClientSecret when updating OAuth credentials.",
+            normalizedOAuthConfig.clientAuthentication === "none"
+              ? "Provide an oauthClientId when updating OAuth credentials."
+              : "Provide both oauthClientId and oauthClientSecret when updating OAuth credentials.",
             400,
           );
         }
 
-        encryptedOAuthClient = encryptCredentials({
-          clientId: oauthClientId,
-          clientSecret: oauthClientSecret,
-        });
+        encryptedOAuthClient = encryptManagedOAuthClient(
+          oauthClientSecret
+            ? { clientId: oauthClientId, clientSecret: oauthClientSecret }
+            : { clientId: oauthClientId },
+        );
       } else if (!encryptedOAuthClient) {
         throw new ContextLayerError(
-          "New OAuth-managed connectors require both oauthClientId and oauthClientSecret.",
+          normalizedOAuthConfig.clientAuthentication === "none"
+            ? "New OAuth-managed connectors require an oauthClientId or a registrationUrl."
+            : "New OAuth-managed connectors require both oauthClientId and oauthClientSecret.",
           400,
         );
       }

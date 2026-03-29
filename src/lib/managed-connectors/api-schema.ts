@@ -23,7 +23,8 @@ export const genericOAuthConfigSchema = z.object({
   scopes: z.array(z.string()).default([]),
   scopeSeparator: z.enum(["space", "comma"]).optional(),
   pkce: z.boolean().optional(),
-  clientAuthentication: z.enum(["basic", "body"]).optional(),
+  clientAuthentication: z.enum(["basic", "body", "none"]).optional(),
+  registrationUrl: z.string().url().optional(),
   additionalAuthorizationParams: z.record(z.string(), z.string()).optional(),
   additionalTokenParams: z.record(z.string(), z.string()).optional(),
 });

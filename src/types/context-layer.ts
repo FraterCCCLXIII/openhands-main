@@ -15,7 +15,7 @@ export type HttpRequestContentType =
   | "form_urlencoded"
   | "multipart_form_data"
   | "text";
-export type OAuthClientAuthentication = "basic" | "body";
+export type OAuthClientAuthentication = "basic" | "body" | "none";
 
 export type NotificationChannel = "email" | "in_app" | "sms";
 export type AccessRequestStatus =
@@ -96,6 +96,7 @@ export interface OAuthProviderRegistrationDefaults {
   scopeSeparator?: "space" | "comma";
   pkce?: boolean;
   clientAuthentication?: OAuthClientAuthentication;
+  registrationUrl?: string;
   additionalAuthorizationParams?: Record<string, string>;
   additionalTokenParams?: Record<string, string>;
   functionName?: string;
@@ -126,6 +127,7 @@ export interface GenericOAuthConfig {
   scopeSeparator?: "space" | "comma";
   pkce?: boolean;
   clientAuthentication?: OAuthClientAuthentication;
+  registrationUrl?: string;
   additionalAuthorizationParams?: Record<string, string>;
   additionalTokenParams?: Record<string, string>;
 }

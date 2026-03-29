@@ -124,6 +124,29 @@ const providerCatalog: OAuthProviderCatalogOption[] = [
     },
   },
   {
+    slug: "webflow",
+    name: "Webflow",
+    description: "CMS items, sites, and web publishing workflows.",
+    categories: ["CMS", "Marketing"],
+    authStrategy: "oauth2",
+    availability: "oauth_ready",
+    builtInSlug: "webflow",
+    docsUrl: "https://developers.webflow.com/mcp/reference/getting-started",
+    notes: "Uses Webflow's hosted MCP server and deployment-scoped OAuth registration.",
+    popularityRank: 5,
+    registrationDefaults: {
+      provider: "mcp",
+      serverUrl: "https://mcp.webflow.com/mcp",
+      authorizationUrl: "https://mcp.webflow.com/oauth/authorize",
+      tokenUrl: "https://mcp.webflow.com/oauth/token",
+      registrationUrl: "https://mcp.webflow.com/oauth/register",
+      clientAuthentication: "none",
+      pkce: true,
+      scopes: [],
+    },
+  },
+
+  {
     slug: "elevenlabs",
     name: "ElevenLabs",
     description: "Text to speech, voices, transcription, audio generation, and agents",
@@ -448,6 +471,98 @@ describe("CuratedProviderList", () => {
     });
     expect(container.textContent).toContain("Ready now");
     expect(container.textContent).toContain("Use Slack");
+  });
+
+  it("registers Webflow with deployment-scoped MCP OAuth client registration instead of manual client secrets", async () => {
+    fetchMock.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          slug: "webflow",
+          oauthConfigured: true,
+        }),
+        {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        },
+      ),
+    );
+
+    await act(async () => {
+      root.render(
+        <CuratedProviderList
+          providerCatalog={providerCatalog}
+          readyBuiltInConnectors={readyBuiltInConnectors}
+          canRegisterManagedConnectors
+          oauthCallbackBaseUrl={oauthCallbackBaseUrl}
+        />,
+      );
+    });
+
+    const webflowButton = Array.from(container.querySelectorAll("button")).find((button) =>
+      button.textContent?.includes("Webflow"),
+    );
+    expect(webflowButton).toBeTruthy();
+
+    await act(async () => {
+      webflowButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    expect(container.textContent).toContain(
+      "Register this connector once and the deployment will create its own Webflow MCP OAuth client automatically.",
+    );
+    expect(container.textContent).toContain("How Webflow MCP authorization works");
+    expect(container.textContent).toContain(`${oauthCallbackBaseUrl}/webflow/callback`);
+    expect(container.textContent).not.toContain("OAuth client ID");
+    expect(container.textContent).not.toContain("OAuth client secret");
+
+    const urlInputs = Array.from(container.querySelectorAll('input[type="url"]'));
+    expect(urlInputs).toHaveLength(1);
+    expect((urlInputs[0] as HTMLInputElement | undefined)?.value).toBe(
+      "https://mcp.webflow.com/mcp",
+    );
+
+    const form = container.querySelector("form");
+    expect(form).toBeTruthy();
+
+    await act(async () => {
+      form?.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    const [, requestInit] = fetchMock.mock.calls.at(-1) as [string, RequestInit];
+    const webflowBody = JSON.parse(String(requestInit.body)) as {
+      slug: string;
+      provider: string;
+      serverUrl?: string;
+      oauthConfig: {
+        authorizationUrl: string;
+        tokenUrl: string;
+        registrationUrl?: string;
+        clientAuthentication?: string;
+        pkce?: boolean;
+        scopes: string[];
+      };
+      oauthClientId?: string;
+      oauthClientSecret?: string;
+      functions: Array<unknown>;
+    };
+
+    expect(webflowBody).toMatchObject({
+      slug: "webflow",
+      provider: "mcp",
+      serverUrl: "https://mcp.webflow.com/mcp",
+      functions: [],
+    });
+    expect(webflowBody.oauthConfig).toMatchObject({
+      authorizationUrl: "https://mcp.webflow.com/oauth/authorize",
+      tokenUrl: "https://mcp.webflow.com/oauth/token",
+      registrationUrl: "https://mcp.webflow.com/oauth/register",
+      clientAuthentication: "none",
+      pkce: true,
+      scopes: [],
+    });
+    expect(webflowBody.oauthClientId).toBe("");
+    expect(webflowBody.oauthClientSecret).toBe("");
   });
 
 

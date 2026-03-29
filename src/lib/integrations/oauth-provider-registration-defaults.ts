@@ -371,10 +371,12 @@ const registrationDefaults: Record<string, OAuthProviderRegistrationDefaults> = 
   },
   webflow: {
     provider: "mcp",
-    authorizationUrl: "https://webflow.com/oauth/authorize",
-    tokenUrl: "https://api.webflow.com/oauth/access_token",
-    clientAuthentication: "body",
-    scopes: ["sites:read"],
+    authorizationUrl: "https://mcp.webflow.com/oauth/authorize",
+    tokenUrl: "https://mcp.webflow.com/oauth/token",
+    registrationUrl: "https://mcp.webflow.com/oauth/register",
+    clientAuthentication: "none",
+    pkce: true,
+    scopes: [],
   },
   miro: {
     apiBaseUrl: "https://api.miro.com/v2",

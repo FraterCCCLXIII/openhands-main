@@ -73,15 +73,17 @@ describe("listOAuthProviderCatalog", () => {
     expect(webflow).toMatchObject({
       availability: "oauth_ready",
       builtInSlug: "webflow",
-      docsUrl: "https://developers.webflow.com/apps/data/docs/register-an-app",
+      docsUrl: "https://developers.webflow.com/mcp/reference/getting-started",
     });
     expect(webflow?.registrationDefaults).toMatchObject({
       provider: "mcp",
       serverUrl: "https://mcp.webflow.com/mcp",
-      authorizationUrl: "https://webflow.com/oauth/authorize",
-      tokenUrl: "https://api.webflow.com/oauth/access_token",
-      clientAuthentication: "body",
-      scopes: ["sites:read"],
+      authorizationUrl: "https://mcp.webflow.com/oauth/authorize",
+      tokenUrl: "https://mcp.webflow.com/oauth/token",
+      registrationUrl: "https://mcp.webflow.com/oauth/register",
+      clientAuthentication: "none",
+      pkce: true,
+      scopes: [],
     });
     expect(notion?.registrationDefaults).toMatchObject({
       provider: "http",

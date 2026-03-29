@@ -6,6 +6,7 @@ import {
   type IntegrationAdapter,
 } from "@/src/lib/core/adapter-registry";
 import type { ContextRepository } from "@/src/lib/core/repository";
+import { decryptCredentials } from "@/src/lib/credential-crypto";
 import { createTestRepository, getActiveSql } from "@/src/lib/db/pglite-test-utils";
 import { NotificationPublisher } from "@/src/lib/notifications/publisher";
 import { ContextLayerService } from "@/src/lib/core/service";
@@ -438,6 +439,69 @@ describe("ContextLayerService", () => {
     ).rejects.toThrow(
       "New OAuth-managed connectors require both oauthClientId and oauthClientSecret.",
     );
+  });
+
+  it("auto-registers public MCP OAuth clients for Webflow-style connectors", async () => {
+    const repository = testRepo;
+    const service = new ContextLayerService(
+      repository,
+      new AdapterRegistry({ mock: { invoke: async () => ({}) } }),
+      new NotificationPublisher(repository),
+    );
+
+    const fetchMock = vi.fn(async () =>
+      new Response(
+        JSON.stringify({
+          client_id: "webflow-mcp-client-id",
+        }),
+        {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        },
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const connector = await service.upsertManagedConnector({
+      slug: "webflow",
+      name: "Webflow",
+      description: "Managed Webflow MCP connector",
+      categories: ["CMS", "Marketing"],
+      authStrategy: "oauth2",
+      authModes: ["oauth2"],
+      provider: "mcp",
+      credentialLabel: "Connect Webflow",
+      credentialPlaceholder: "Connect Webflow",
+      credentialHelp: "Connect Webflow with OAuth.",
+      serverUrl: "https://mcp.webflow.com/mcp",
+      oauthConfig: {
+        authorizationUrl: "https://mcp.webflow.com/oauth/authorize",
+        tokenUrl: "https://mcp.webflow.com/oauth/token",
+        registrationUrl: "https://mcp.webflow.com/oauth/register",
+        clientAuthentication: "none",
+        pkce: true,
+        scopes: [],
+      },
+      functions: [],
+      enabled: true,
+    });
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://mcp.webflow.com/oauth/register",
+      expect.objectContaining({
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+    expect(connector.oauthConfigured).toBe(true);
+
+    const stored = await repository.getManagedConnector("webflow");
+    expect(stored?.encryptedOAuthClient).toBeTruthy();
+    expect(
+      decryptCredentials<{ clientId?: string; clientSecret?: string }>(
+        stored!.encryptedOAuthClient!,
+      ),
+    ).toEqual({ clientId: "webflow-mcp-client-id" });
   });
 
   it("generates managed HTTP connector functions from an OpenAPI schema during registration", async () => {
