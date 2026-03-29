@@ -23,7 +23,7 @@ describe("proxy", () => {
     process.env.DISABLE_AUTH = "true";
 
     const response = proxy(
-      new NextRequest("http://localhost:3000/home", {
+      new NextRequest("http://localhost:3000/integrations", {
         headers: { host: "localhost:3000" },
       }),
     );

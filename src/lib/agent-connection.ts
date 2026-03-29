@@ -13,6 +13,8 @@ import {
 import type { IntegrationSpec } from "@/src/types/context-layer";
 
 export const OPENHANDS_CONTEXT_KEY_ENV = "$OPENHANDS_CONTEXT_KEY";
+export const OPENHANDS_CLOUD_SHTTP_MCP_URL =
+  "https://openhands-context-layer.vercel.app/api/mcp";
 
 export interface AgentConnectionGuide {
   endpoint: string;

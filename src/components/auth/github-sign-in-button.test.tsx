@@ -34,7 +34,7 @@ describe("GitHubSignInButton", () => {
     signInMock.mockReset();
   });
 
-  it("starts the GitHub OAuth flow with the /home callback URL by default", async () => {
+  it("starts the GitHub OAuth flow with the /integrations callback URL by default", async () => {
     await act(async () => {
       root.render(<GitHubSignInButton />);
     });
@@ -46,6 +46,6 @@ describe("GitHubSignInButton", () => {
       button?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
 
-    expect(signInMock).toHaveBeenCalledWith("github", { callbackUrl: "/home" });
+    expect(signInMock).toHaveBeenCalledWith("github", { callbackUrl: "/integrations" });
   });
 });
