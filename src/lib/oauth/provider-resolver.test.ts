@@ -119,6 +119,126 @@ describe("resolveOAuthProvider", () => {
     });
   });
 
+  it("dynamically registers public MCP OAuth clients and exchanges tokens without basic auth", async () => {
+    const repository = testRepo;
+    await repository.upsertManagedConnector({
+      slug: "webflow",
+      name: "Webflow",
+      description: "Managed Webflow MCP",
+      categories: ["CMS", "Marketing"],
+      authModes: ["oauth2"],
+      authStrategy: "oauth2",
+      provider: "mcp",
+      oauthConfigured: true,
+      credentialLabel: "Connect Webflow",
+      credentialPlaceholder: "Connect Webflow",
+      credentialHelp: "Use OAuth to connect Webflow.",
+      serverUrl: "https://mcp.webflow.com/mcp",
+      oauthConfig: {
+        authorizationUrl: "https://mcp.webflow.com/oauth/authorize",
+        tokenUrl: "https://mcp.webflow.com/oauth/token",
+        registrationUrl: "https://mcp.webflow.com/oauth/register",
+        scopes: [],
+        clientAuthentication: "none",
+        pkce: true,
+      },
+      encryptedOAuthClient: encryptCredentials({
+        clientId: "old-webflow-client-id",
+        clientSecret: "old-webflow-client-secret",
+      }),
+      functions: [],
+      enabled: true,
+      createdAt: "2026-03-09T00:00:00.000Z",
+      updatedAt: "2026-03-09T00:00:00.000Z",
+    });
+
+    const fetchMock = vi
+      .fn(async () =>
+        new Response(
+          JSON.stringify({
+            client_id: "webflow-mcp-client-id",
+          }),
+          {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          },
+        ),
+      )
+      .mockImplementationOnce(async () =>
+        new Response(
+          JSON.stringify({
+            client_id: "webflow-mcp-client-id",
+          }),
+          {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          },
+        ),
+      )
+      .mockImplementationOnce(async () =>
+        new Response(
+          JSON.stringify({
+            access_token: "wf-access-123",
+            refresh_token: "wf-refresh-123",
+            expires_in: 3600,
+          }),
+          {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          },
+        ),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const provider = await resolveOAuthProvider(repository, "webflow");
+    expect(provider).toBeTruthy();
+
+    const start = provider!.startAuth({
+      state: "state-123",
+      redirectUri: "https://context.test/api/oauth/webflow/callback",
+    });
+    const authorizationUrl = new URL(start.authorizationUrl);
+    expect(authorizationUrl.origin + authorizationUrl.pathname).toBe(
+      "https://mcp.webflow.com/oauth/authorize",
+    );
+    expect(authorizationUrl.searchParams.get("client_id")).toBe(
+      "webflow-mcp-client-id",
+    );
+    expect(authorizationUrl.searchParams.get("scope")).toBeNull();
+    expect(authorizationUrl.searchParams.get("code_challenge_method")).toBe("S256");
+
+    const exchange = await provider!.exchangeCode({
+      code: "code-123",
+      redirectUri: "https://context.test/api/oauth/webflow/callback",
+      codeVerifier: start.codeVerifier,
+    });
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    const [registrationUrl, registrationInit] = fetchMock.mock.calls[0] as unknown as [
+      string,
+      RequestInit,
+    ];
+    expect(registrationUrl).toBe("https://mcp.webflow.com/oauth/register");
+    expect(String(registrationInit.body)).toContain(
+      '"token_endpoint_auth_method":"none"',
+    );
+
+    const [tokenUrl, tokenInit] = fetchMock.mock.calls[1] as unknown as [string, RequestInit];
+    expect(tokenUrl).toBe("https://mcp.webflow.com/oauth/token");
+    expect(tokenInit.headers).toMatchObject({
+      "Content-Type": "application/x-www-form-urlencoded",
+    });
+    expect((tokenInit.headers as Record<string, string>).Authorization).toBeUndefined();
+    expect(String(tokenInit.body)).toContain("client_id=webflow-mcp-client-id");
+    expect(String(tokenInit.body)).not.toContain("client_secret=");
+    expect(exchange).toMatchObject({
+      accessToken: "wf-access-123",
+      refreshToken: "wf-refresh-123",
+      displayName: "Webflow",
+    });
+  });
+
+
   it("returns null when no enabled managed OAuth connector exists for the provider", async () => {
     const repository = testRepo;
 

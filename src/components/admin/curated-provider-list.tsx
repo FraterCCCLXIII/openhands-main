@@ -53,6 +53,14 @@ const getProviderAuthStrategy = (provider: OAuthProviderCatalogOption) =>
 const usesOAuthConnector = (provider: OAuthProviderCatalogOption) =>
   getProviderAuthStrategy(provider) === "oauth2";
 
+const usesDynamicOAuthRegistration = (provider: OAuthProviderCatalogOption) =>
+  usesOAuthConnector(provider) &&
+  provider.registrationDefaults?.clientAuthentication === "none" &&
+  Boolean(provider.registrationDefaults?.registrationUrl);
+
+const requiresManualOAuthClientCredentials = (provider: OAuthProviderCatalogOption) =>
+  usesOAuthConnector(provider) && !usesDynamicOAuthRegistration(provider);
+
 const getCredentialCopy = (provider: OAuthProviderCatalogOption) => {
   const authStrategy = getProviderAuthStrategy(provider);
 
@@ -220,6 +228,7 @@ const buildManagedConnectorPayload = (
             pkce: provider.registrationDefaults?.pkce,
             clientAuthentication:
               provider.registrationDefaults?.clientAuthentication,
+            registrationUrl: provider.registrationDefaults?.registrationUrl,
             additionalAuthorizationParams:
               provider.registrationDefaults?.additionalAuthorizationParams,
             additionalTokenParams:
@@ -300,7 +309,7 @@ export function CuratedProviderList({
       return;
     }
 
-    if (authStrategy === "oauth2") {
+    if (requiresManualOAuthClientCredentials(provider)) {
       const oauthClientId = currentForm.oauthClientId.trim();
       const oauthClientSecret = currentForm.oauthClientSecret.trim();
       if (!oauthClientId || !oauthClientSecret) {
@@ -412,6 +421,8 @@ export function CuratedProviderList({
             const registrationForm = getRegistrationForm(provider);
             const usesOAuth = usesOAuthConnector(provider);
             const usesFixedOAuthDefaults = hasFixedOAuthConfig(provider);
+            const usesDynamicOAuth = usesDynamicOAuthRegistration(provider);
+            const requiresManualOAuthCredentials = requiresManualOAuthClientCredentials(provider);
             const isHttpConnector = isHttpManagedConnector(provider);
             const callbackUrl = buildCallbackUrl(oauthCallbackBaseUrl, provider.slug);
 
@@ -587,7 +598,9 @@ export function CuratedProviderList({
                         <div className="md:col-span-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-[11px] leading-5 text-[var(--color-text-base)]">
                           <p>
                             {usesOAuth
-                              ? `Create a ${provider.name} OAuth app before saving this connector so you can paste the client ID and client secret below.${usesFixedOAuthDefaults ? ` The standard OAuth URLs and scopes for ${provider.name} are already filled in.` : ""}`
+                              ? usesDynamicOAuth
+                                ? `Register this connector once and the deployment will create its own ${provider.name} MCP OAuth client automatically. Individual users will still authorize their own ${provider.name} sites and workspaces later from the integrations wizard.${usesFixedOAuthDefaults ? ` The standard OAuth URLs for ${provider.name} are already filled in.` : ""}`
+                                : `Create a ${provider.name} OAuth app before saving this connector so you can paste the client ID and client secret below.${usesFixedOAuthDefaults ? ` The standard OAuth URLs and scopes for ${provider.name} are already filled in.` : ""}`
                               : `This provider does not require service-level OAuth client credentials. Register the connector once here, and each user will later provide their own ${authStrategy === "api_key" ? "API key" : authStrategy.replace("_", " ")} in the integrations wizard.`}
                             {isHttpConnector ? " The API function catalog will be generated from the published schema shown above." : ""}
                           </p>
@@ -606,13 +619,15 @@ export function CuratedProviderList({
                               className="mt-2 inline-flex items-center gap-1 text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
                             >
                               {usesOAuth
-                                ? `How to create ${provider.name} OAuth credentials`
+                                ? usesDynamicOAuth
+                                  ? `How ${provider.name} MCP authorization works`
+                                  : `How to create ${provider.name} OAuth credentials`
                                 : `How to configure ${provider.name}`}
                               <ExternalLink className="h-3.5 w-3.5" />
                             </a>
                           ) : null}
                         </div>
-                        {usesOAuth ? (
+                        {requiresManualOAuthCredentials ? (
                           <>
                             <label className="flex flex-col gap-1 text-xs text-[var(--color-text-muted)]">
                               OAuth client ID

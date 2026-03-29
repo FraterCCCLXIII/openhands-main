@@ -2,7 +2,13 @@ import { createHash, randomBytes } from "node:crypto";
 
 import type { ContextRepository } from "@/src/lib/core/repository";
 import { ContextLayerError } from "@/src/lib/core/errors";
-import { decryptCredentials } from "@/src/lib/credential-crypto";
+import {
+  encryptManagedOAuthClient,
+  readManagedOAuthClient,
+  registerManagedOAuthClient,
+  requireManagedOAuthClient,
+  usesDynamicOAuthClientRegistration,
+} from "@/src/lib/oauth/managed-oauth-client";
 import type {
   OAuthProviderDefinition,
   OAuthStartContext,
@@ -41,32 +47,6 @@ const fetchJson = async <T,>(
   return JSON.parse(body) as T;
 };
 
-const getManagedOAuthClient = (connector: ManagedConnectorRecord) => {
-  if (!connector.encryptedOAuthClient) {
-    throw new ContextLayerError(
-      `${connector.name} is missing stored OAuth client credentials.`,
-      500,
-    );
-  }
-
-  const credentials = decryptCredentials<{
-    clientId?: string;
-    clientSecret?: string;
-  }>(connector.encryptedOAuthClient);
-
-  if (!credentials.clientId || !credentials.clientSecret) {
-    throw new ContextLayerError(
-      `${connector.name} is missing stored OAuth client credentials.`,
-      500,
-    );
-  }
-
-  return {
-    clientId: credentials.clientId,
-    clientSecret: credentials.clientSecret,
-  };
-};
-
 const splitScopes = (value: unknown) => {
   if (Array.isArray(value)) {
     return value.map(String).filter(Boolean);
@@ -77,6 +57,32 @@ const splitScopes = (value: unknown) => {
   }
 
   return [];
+};
+
+const ensureDynamicManagedOAuthClient = async (
+  repository: ContextRepository,
+  connector: ManagedConnectorRecord,
+): Promise<ManagedConnectorRecord> => {
+  if (!usesDynamicOAuthClientRegistration(connector.oauthConfig)) {
+    return connector;
+  }
+
+  const storedClient = readManagedOAuthClient(connector);
+  if (storedClient?.clientId && !storedClient.clientSecret) {
+    return connector;
+  }
+
+  const registeredClient = await registerManagedOAuthClient({
+    connectorName: connector.name,
+    slug: connector.slug,
+    oauthConfig: connector.oauthConfig!,
+  });
+
+  return repository.upsertManagedConnector({
+    ...connector,
+    encryptedOAuthClient: encryptManagedOAuthClient(registeredClient),
+    updatedAt: new Date().toISOString(),
+  });
 };
 
 const buildGenericOAuthProvider = (
@@ -92,7 +98,7 @@ const buildGenericOAuthProvider = (
     clientIdEnv: `managed:${connector.slug}:clientId`,
     clientSecretEnv: `managed:${connector.slug}:clientSecret`,
     startAuth({ state, redirectUri }: OAuthStartContext): OAuthStartResult {
-      const { clientId } = getManagedOAuthClient(connector);
+      const { clientId } = requireManagedOAuthClient(connector);
       const authorizationUrl = new URL(connector.oauthConfig!.authorizationUrl);
       authorizationUrl.searchParams.set("client_id", clientId);
       authorizationUrl.searchParams.set("redirect_uri", redirectUri);
@@ -132,7 +138,7 @@ const buildGenericOAuthProvider = (
       };
     },
     async exchangeCode({ code, redirectUri, codeVerifier }) {
-      const { clientId, clientSecret } = getManagedOAuthClient(connector);
+      const { clientId, clientSecret } = requireManagedOAuthClient(connector);
       const body = new URLSearchParams({
         grant_type: "authorization_code",
         code,
@@ -141,7 +147,11 @@ const buildGenericOAuthProvider = (
 
       if (connector.oauthConfig?.clientAuthentication === "body") {
         body.set("client_id", clientId);
-        body.set("client_secret", clientSecret);
+        body.set("client_secret", clientSecret ?? "");
+      }
+
+      if (connector.oauthConfig?.clientAuthentication === "none") {
+        body.set("client_id", clientId);
       }
 
       if (connector.oauthConfig?.pkce && codeVerifier) {
@@ -160,10 +170,11 @@ const buildGenericOAuthProvider = (
           method: "POST",
           headers: {
             "Content-Type": "application/x-www-form-urlencoded",
-            ...(connector.oauthConfig?.clientAuthentication === "body"
+            ...(connector.oauthConfig?.clientAuthentication === "body" ||
+            connector.oauthConfig?.clientAuthentication === "none"
               ? {}
               : {
-                  Authorization: `Basic ${encodeBasicAuth(clientId, clientSecret)}`,
+                  Authorization: `Basic ${encodeBasicAuth(clientId, clientSecret ?? "")}`,
                 }),
           },
           body: body.toString(),
@@ -191,7 +202,7 @@ const buildGenericOAuthProvider = (
       } satisfies OAuthTokenExchangeResult;
     },
     async refreshToken({ refreshToken }) {
-      const { clientId, clientSecret } = getManagedOAuthClient(connector);
+      const { clientId, clientSecret } = requireManagedOAuthClient(connector);
       const body = new URLSearchParams({
         grant_type: "refresh_token",
         refresh_token: refreshToken,
@@ -199,7 +210,11 @@ const buildGenericOAuthProvider = (
 
       if (connector.oauthConfig?.clientAuthentication === "body") {
         body.set("client_id", clientId);
-        body.set("client_secret", clientSecret);
+        body.set("client_secret", clientSecret ?? "");
+      }
+
+      if (connector.oauthConfig?.clientAuthentication === "none") {
+        body.set("client_id", clientId);
       }
 
       for (const [key, value] of Object.entries(
@@ -214,10 +229,11 @@ const buildGenericOAuthProvider = (
           method: "POST",
           headers: {
             "Content-Type": "application/x-www-form-urlencoded",
-            ...(connector.oauthConfig?.clientAuthentication === "body"
+            ...(connector.oauthConfig?.clientAuthentication === "body" ||
+            connector.oauthConfig?.clientAuthentication === "none"
               ? {}
               : {
-                  Authorization: `Basic ${encodeBasicAuth(clientId, clientSecret)}`,
+                  Authorization: `Basic ${encodeBasicAuth(clientId, clientSecret ?? "")}`,
                 }),
           },
           body: body.toString(),
@@ -256,15 +272,11 @@ export const resolveOAuthProvider = async (
     return null;
   }
 
-  return buildGenericOAuthProvider(connector);
+  const resolvedConnector = await ensureDynamicManagedOAuthClient(repository, connector);
+  return buildGenericOAuthProvider(resolvedConnector);
 };
 
 export const isOAuthProviderResolvedAndConfigured = async (
   repository: ContextRepository,
   provider: string,
-) => {
-  const connector = await repository.getManagedConnector(provider);
-  return Boolean(
-    connector?.enabled && connector.oauthConfig && connector.encryptedOAuthClient,
-  );
-};
+) => Boolean(await resolveOAuthProvider(repository, provider));

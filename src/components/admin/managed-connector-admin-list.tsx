@@ -91,6 +91,12 @@ const buildManagedConnectorPayload = (
           authorizationUrl: form.authorizationUrl.trim(),
           tokenUrl: form.tokenUrl.trim(),
           scopes: parseScopes(form.scopes),
+          pkce: connector.oauthConfig?.pkce,
+          clientAuthentication: connector.oauthConfig?.clientAuthentication,
+          registrationUrl: connector.oauthConfig?.registrationUrl,
+          additionalAuthorizationParams:
+            connector.oauthConfig?.additionalAuthorizationParams,
+          additionalTokenParams: connector.oauthConfig?.additionalTokenParams,
         }
       : undefined,
   oauthClientId: form.oauthClientId.trim(),
