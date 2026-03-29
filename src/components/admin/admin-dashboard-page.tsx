@@ -30,13 +30,19 @@ export async function AdminDashboardPage() {
   const isAdmin = isAppAdminEmail(currentUser.email ?? undefined);
   const requestHeaders = await headers();
   const service = getContextLayerService();
-  const [initialIntegrations, initialAccessRequests, initialNotifications, contextApiAuth] =
-    await Promise.all([
-      service.listOwnerIntegrations(contextApiOwner),
-      service.listAccessRequests(),
-      service.listNotifications(),
-      service.getOrCreateAgentApiKey(contextApiOwner),
-    ]);
+  const [
+    initialIntegrations,
+    initialAccessRequests,
+    initialNotifications,
+    contextApiAuth,
+    userApiKey,
+  ] = await Promise.all([
+    service.listOwnerIntegrations(contextApiOwner),
+    service.listAccessRequests(),
+    service.listNotifications(),
+    service.getOrCreateAgentApiKey(contextApiOwner),
+    service.getUserApiKeyStatus(contextApiOwner),
+  ]);
 
   return (
     <main className="min-h-screen px-6 py-8">
@@ -48,6 +54,7 @@ export async function AdminDashboardPage() {
           initialNotifications={initialNotifications}
           contextApiBaseUrl={getRequestOrigin(requestHeaders)}
           contextApiKey={contextApiAuth.apiKey}
+          userApiKey={userApiKey}
           isAdmin={isAdmin}
         />
       </div>

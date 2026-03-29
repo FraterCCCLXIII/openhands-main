@@ -8,6 +8,7 @@ import type {
   NotificationRecord,
   OAuthStateRecord,
   TemporaryGrant,
+  UserApiKeyRecord,
 } from "@/src/types/context-layer";
 
 export interface ContextRepository {
@@ -36,6 +37,10 @@ export interface ContextRepository {
   getAgentApiKeyByOwner(ownerId: string): Promise<AgentApiKeyRecord | null>;
   findAgentApiKey(apiKey: string): Promise<AgentApiKeyRecord | null>;
   saveAgentApiKey(record: AgentApiKeyRecord): Promise<AgentApiKeyRecord>;
+  getUserApiKeyByOwner(ownerId: string): Promise<UserApiKeyRecord | null>;
+  findUserApiKeyByHash(apiKeyHash: string): Promise<UserApiKeyRecord | null>;
+  saveUserApiKey(record: UserApiKeyRecord): Promise<UserApiKeyRecord>;
+  deleteUserApiKey(ownerId: string): Promise<void>;
   listManagedConnectors(): Promise<ManagedConnectorRecord[]>;
   getManagedConnector(slug: string): Promise<ManagedConnectorRecord | null>;
   upsertManagedConnector(

@@ -10,6 +10,7 @@ import type {
   NotificationRecord,
   OAuthStateRecord,
   TemporaryGrant,
+  UserApiKeyRecord,
 } from "@/src/types/context-layer";
 import type { ContextRepository } from "@/src/lib/core/repository";
 
@@ -145,6 +146,15 @@ export class PostgresRepository implements ContextRepository {
         CREATE TABLE IF NOT EXISTS agent_api_keys (
           owner_id TEXT PRIMARY KEY,
           api_key TEXT NOT NULL UNIQUE,
+          created_at TIMESTAMPTZ NOT NULL,
+          updated_at TIMESTAMPTZ NOT NULL
+        )
+      `,
+      sql`
+        CREATE TABLE IF NOT EXISTS user_api_keys (
+          owner_id TEXT PRIMARY KEY,
+          api_key_hash TEXT NOT NULL UNIQUE,
+          key_prefix TEXT NOT NULL,
           created_at TIMESTAMPTZ NOT NULL,
           updated_at TIMESTAMPTZ NOT NULL
         )
@@ -492,6 +502,61 @@ export class PostgresRepository implements ContextRepository {
         updated_at = EXCLUDED.updated_at
     `;
     return record;
+  }
+
+  async getUserApiKeyByOwner(ownerId: string) {
+    await this.ensureSchema();
+    const sql = getSql();
+    const rows = await sql`SELECT * FROM user_api_keys WHERE owner_id = ${ownerId}`;
+    const row = rows[0];
+    if (!row) {
+      return null;
+    }
+    return {
+      ownerId: row.owner_id,
+      apiKeyHash: row.api_key_hash,
+      keyPrefix: row.key_prefix,
+      createdAt: new Date(row.created_at).toISOString(),
+      updatedAt: new Date(row.updated_at).toISOString(),
+    } satisfies UserApiKeyRecord;
+  }
+
+  async findUserApiKeyByHash(apiKeyHash: string) {
+    await this.ensureSchema();
+    const sql = getSql();
+    const rows = await sql`SELECT * FROM user_api_keys WHERE api_key_hash = ${apiKeyHash}`;
+    const row = rows[0];
+    if (!row) {
+      return null;
+    }
+    return {
+      ownerId: row.owner_id,
+      apiKeyHash: row.api_key_hash,
+      keyPrefix: row.key_prefix,
+      createdAt: new Date(row.created_at).toISOString(),
+      updatedAt: new Date(row.updated_at).toISOString(),
+    } satisfies UserApiKeyRecord;
+  }
+
+  async saveUserApiKey(record: UserApiKeyRecord) {
+    await this.ensureSchema();
+    const sql = getSql();
+    await sql`
+      INSERT INTO user_api_keys (owner_id, api_key_hash, key_prefix, created_at, updated_at)
+      VALUES (${record.ownerId}, ${record.apiKeyHash}, ${record.keyPrefix}, ${record.createdAt}, ${record.updatedAt})
+      ON CONFLICT (owner_id) DO UPDATE SET
+        api_key_hash = EXCLUDED.api_key_hash,
+        key_prefix = EXCLUDED.key_prefix,
+        created_at = EXCLUDED.created_at,
+        updated_at = EXCLUDED.updated_at
+    `;
+    return record;
+  }
+
+  async deleteUserApiKey(ownerId: string) {
+    await this.ensureSchema();
+    const sql = getSql();
+    await sql`DELETE FROM user_api_keys WHERE owner_id = ${ownerId}`;
   }
 
   async hasAgentApiKeys() {

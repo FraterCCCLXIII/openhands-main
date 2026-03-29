@@ -49,6 +49,7 @@ import type {
   FunctionSpec,
   IntegrationSpec,
   NotificationRecord,
+  UserApiKeyStatus,
 } from "@/src/types/context-layer";
 
 const fetchJson = async <T,>(
@@ -120,6 +121,7 @@ interface AdminDashboardProps {
   currentUser: { name?: string | null; email?: string | null };
   contextApiBaseUrl: string;
   contextApiKey: string;
+  userApiKey?: UserApiKeyStatus | null;
   isAdmin?: boolean;
 }
 
@@ -159,6 +161,16 @@ const maskApiKey = (apiKey: string, revealed: boolean) => {
   return `${trimmed.slice(0, 4)}${"•".repeat(
     Math.max(12, trimmed.length - 8),
   )}${trimmed.slice(-4)}`;
+};
+
+const maskStoredKeyPrefix = (keyPrefix: string) => {
+  const trimmed = keyPrefix.trim();
+
+  if (!trimmed) {
+    return "";
+  }
+
+  return `${trimmed}${"•".repeat(16)}`;
 };
 
 const copyTextToClipboard = async (text: string) => {
@@ -394,6 +406,7 @@ export const DashboardWorkspace = ({
   currentUser,
   contextApiBaseUrl,
   contextApiKey,
+  userApiKey = null,
   isAdmin = true,
 }: AdminDashboardProps) => {
   const queryClient = useQueryClient();
@@ -419,6 +432,12 @@ export const DashboardWorkspace = ({
   >({});
   const [revealApiKey, setRevealApiKey] = useState(false);
   const [apiKeyCopied, setApiKeyCopied] = useState(false);
+  const [userApiKeyStatus, setUserApiKeyStatus] = useState<UserApiKeyStatus | null>(
+    userApiKey,
+  );
+  const [userApiKeyValue, setUserApiKeyValue] = useState("");
+  const [revealUserApiKey, setRevealUserApiKey] = useState(false);
+  const [userApiKeyCopied, setUserApiKeyCopied] = useState(false);
 
   const oauthStatusMessage = useMemo(() => {
     const oauthStatus = searchParams.get("oauth_status");
@@ -459,6 +478,24 @@ export const DashboardWorkspace = ({
       window.clearTimeout(timeoutId);
     };
   }, [apiKeyCopied]);
+
+  useEffect(() => {
+    setUserApiKeyStatus(userApiKey);
+  }, [userApiKey]);
+
+  useEffect(() => {
+    if (!userApiKeyCopied) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setUserApiKeyCopied(false);
+    }, 2000);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [userApiKeyCopied]);
 
   const navigateToSection = (section: AdminSection) => {
     setActiveSection(section);
@@ -517,6 +554,19 @@ export const DashboardWorkspace = ({
     },
   });
 
+  const userApiKeyMutation = useMutation({
+    mutationFn: async (method: "POST" | "DELETE") =>
+      fetchJson<
+        | { apiKey: string; key: UserApiKeyStatus }
+        | { revoked: boolean }
+      >("/api/user/key", {
+        method,
+      }),
+    onError: (error: Error) => {
+      setStatusMessage(error.message);
+    },
+  });
+
   const integrations = integrationsQuery.data ?? [];
   const accessRequests = accessRequestsQuery.data ?? [];
 
@@ -532,6 +582,12 @@ export const DashboardWorkspace = ({
   );
   const contextApiReady = contextApiKey.trim().length > 0;
   const maskedApiKey = maskApiKey(contextApiKey, revealApiKey);
+  const userApiKeyReady = userApiKeyStatus !== null;
+  const maskedUserApiKey = userApiKeyValue
+    ? maskApiKey(userApiKeyValue, revealUserApiKey)
+    : userApiKeyStatus
+      ? maskStoredKeyPrefix(userApiKeyStatus.keyPrefix)
+      : "";
   const userName = currentUser.name?.trim() || "Admin User";
   const userEmail = currentUser.email?.trim() || "Not provided";
   const authMode =
@@ -759,7 +815,7 @@ export const DashboardWorkspace = ({
 
   const handleCopyApiKey = async () => {
     if (!contextApiReady) {
-      setStatusMessage("The personal API key is not available yet.");
+      setStatusMessage("The restricted agent API key is not available yet.");
       return;
     }
 
@@ -769,6 +825,61 @@ export const DashboardWorkspace = ({
     } catch {
       setApiKeyCopied(false);
       setStatusMessage("Unable to copy the API key from this browser session.");
+    }
+  };
+
+  const handleGenerateUserApiKey = async () => {
+    try {
+      const response = (await userApiKeyMutation.mutateAsync("POST")) as {
+        apiKey: string;
+        key: UserApiKeyStatus;
+      };
+      const actionLabel = userApiKeyStatus ? "regenerated" : "generated";
+      setUserApiKeyStatus(response.key);
+      setUserApiKeyValue(response.apiKey);
+      setRevealUserApiKey(false);
+      setUserApiKeyCopied(false);
+      setStatusMessage(
+        `User automation key ${actionLabel}. Store it now — it will not be shown again.`,
+      );
+    } catch {
+      // handled by mutation onError
+    }
+  };
+
+  const handleCopyUserApiKey = async () => {
+    if (!userApiKeyValue) {
+      setStatusMessage(
+        "Regenerate the user automation key to reveal and copy it again.",
+      );
+      return;
+    }
+
+    try {
+      await copyTextToClipboard(userApiKeyValue);
+      setUserApiKeyCopied(true);
+    } catch {
+      setUserApiKeyCopied(false);
+      setStatusMessage("Unable to copy the API key from this browser session.");
+    }
+  };
+
+  const handleRevokeUserApiKey = async () => {
+    try {
+      const response = (await userApiKeyMutation.mutateAsync("DELETE")) as {
+        revoked: boolean;
+      };
+      setUserApiKeyStatus(null);
+      setUserApiKeyValue("");
+      setRevealUserApiKey(false);
+      setUserApiKeyCopied(false);
+      setStatusMessage(
+        response.revoked
+          ? "User automation key revoked."
+          : "No user automation key was active.",
+      );
+    } catch {
+      // handled by mutation onError
     }
   };
 
@@ -861,7 +972,7 @@ export const DashboardWorkspace = ({
         {!contextApiReady ? (
           <div className="rounded-xl border border-[color:rgba(217,181,90,0.25)] bg-[color:rgba(217,181,90,0.12)] px-3 py-2 text-sm text-[var(--color-warning)]">
             Open <code className="text-white">/integrations</code> once to
-            provision a personal key before agents call <code className="text-white">/api/context/*</code>.
+            provision the restricted agent key before agents call <code className="text-white">/api/context/*</code>.
           </div>
         ) : null}
 
@@ -882,7 +993,7 @@ export const DashboardWorkspace = ({
             <CompactPanel title="Connection context" icon={ShieldCheck}>
               <div className="divide-y divide-[var(--color-border)]">
                 <KeyValueRow
-                  label="Personal key status"
+                  label="Agent key status"
                   value={contextApiReady ? "Provisioned" : "Not available yet"}
                 />
                 <KeyValueRow label="Visible integrations" value={String(integrations.length)} />
@@ -896,7 +1007,7 @@ export const DashboardWorkspace = ({
                 />
               </div>
               <div className="mt-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)] px-3 py-3 text-xs leading-6 text-[var(--color-text-base)]">
-                The persisted personal key belongs to <code className="text-white">{userEmail}</code>. Provider credentials stay server-side in integration settings or per-user OAuth records and are never handed directly to the agent.
+                The restricted agent key belongs to <code className="text-white">{userEmail}</code>. Provider credentials stay server-side in integration settings or per-user OAuth records and are never handed directly to the agent.
               </div>
             </CompactPanel>
           </section>
@@ -1220,7 +1331,7 @@ export const DashboardWorkspace = ({
         {activeSection === "apiKeys" ? (
           <section className="space-y-4">
             <CompactPanel
-              title="Personal context-layer key"
+              title="Restricted agent runtime key"
               icon={KeyRound}
               action={
                 <Badge tone={contextApiReady ? "success" : "warning"}>
@@ -1237,9 +1348,12 @@ export const DashboardWorkspace = ({
               </div>
               <div className="mt-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)] px-3 py-3">
                 <code className="block break-all text-sm text-white">
-                  {maskedApiKey || "No personal API key available yet."}
+                  {maskedApiKey || "No restricted agent API key available yet."}
                 </code>
               </div>
+              <p className="mt-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-muted)] px-3 py-2 text-xs leading-6 text-[var(--color-text-base)]">
+                Use this <span className="text-white">least-privilege</span> key for <code className="text-white">/api/context/*</code> and <code className="text-white">/api/mcp</code>. It does not grant dashboard-level user actions.
+              </p>
               <div className="mt-3 flex flex-wrap gap-2">
                 <Button
                   variant="secondary"
@@ -1265,6 +1379,87 @@ export const DashboardWorkspace = ({
                     <Copy className="h-4 w-4" />
                   )}
                   Copy
+                </Button>
+              </div>
+            </CompactPanel>
+
+            <CompactPanel
+              title="User automation key"
+              icon={ShieldCheck}
+              action={
+                <Badge tone={userApiKeyReady ? "warning" : "default"}>
+                  {userApiKeyReady ? "broad access" : "not issued"}
+                </Badge>
+              }
+            >
+              <div className="divide-y divide-[var(--color-border)]">
+                <KeyValueRow label="Issued for" value={userEmail} />
+                <KeyValueRow
+                  label="API base"
+                  value={<code className="break-all text-xs text-[var(--color-text-active)]">{contextApiBaseUrl}/api/user/*</code>}
+                />
+                <KeyValueRow
+                  label="Status"
+                  value={
+                    userApiKeyReady
+                      ? userApiKeyValue
+                        ? "Visible in this session"
+                        : "Stored server-side"
+                      : "Not generated"
+                  }
+                />
+              </div>
+              <div className="mt-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)] px-3 py-3">
+                <code className="block break-all text-sm text-white">
+                  {maskedUserApiKey || "No user automation key generated yet."}
+                </code>
+              </div>
+              <p className="mt-3 rounded-lg border border-[color:rgba(217,181,90,0.25)] bg-[color:rgba(217,181,90,0.12)] px-3 py-2 text-xs leading-6 text-[var(--color-warning)]">
+                This key can call authenticated <code className="text-white">/api/user/*</code> endpoints for dashboard-equivalent actions. Treat it as more sensitive than the agent runtime key. Plaintext is only returned immediately after generation or regeneration.
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Button
+                  className="h-8 gap-2 rounded-md px-3 text-xs"
+                  onClick={handleGenerateUserApiKey}
+                  disabled={userApiKeyMutation.isPending}
+                >
+                  <KeyRound className="h-4 w-4" />
+                  {userApiKeyReady ? "Regenerate" : "Generate"}
+                </Button>
+                <Button
+                  variant="secondary"
+                  className="h-8 gap-2 rounded-md px-3 text-xs"
+                  onClick={() => setRevealUserApiKey((current) => !current)}
+                  disabled={!userApiKeyValue}
+                >
+                  {revealUserApiKey ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                  {revealUserApiKey ? "Hide" : "Reveal"}
+                </Button>
+                <Button
+                  variant="secondary"
+                  className="h-8 gap-2 rounded-md px-3 text-xs"
+                  onClick={handleCopyUserApiKey}
+                  disabled={!userApiKeyReady}
+                >
+                  {userApiKeyCopied ? (
+                    <CheckCircle2 className="h-4 w-4" />
+                  ) : (
+                    <Copy className="h-4 w-4" />
+                  )}
+                  Copy
+                </Button>
+                <Button
+                  variant="danger"
+                  className="h-8 gap-2 rounded-md px-3 text-xs"
+                  onClick={handleRevokeUserApiKey}
+                  disabled={!userApiKeyReady || userApiKeyMutation.isPending}
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Revoke
                 </Button>
               </div>
             </CompactPanel>
@@ -1305,7 +1500,7 @@ export const DashboardWorkspace = ({
                     />
                     <KeyValueRow
                       label="API key"
-                      value={<span className="text-xs text-[var(--color-text-base)]">Use the personal API key shown above.</span>}
+                      value={<span className="text-xs text-[var(--color-text-base)]">Use the restricted agent key shown above.</span>}
                     />
                   </div>
                 </CollapsibleUsageSection>
@@ -1399,7 +1594,7 @@ export const DashboardWorkspace = ({
                   <div className="mt-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)] px-3 py-3 text-xs leading-6 text-[var(--color-text-base)]">
                     Download a generated <code className="text-white">SKILL.md</code> file that
                     lists every currently available tool in this profile. The same
-                    personal key works for the export route, so you can create the
+                    restricted agent key works for the export route, so you can create the
                     file with:
                   </div>
                   <div className="mt-3 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)]">

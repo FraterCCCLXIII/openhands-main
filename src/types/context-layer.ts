@@ -236,6 +236,20 @@ export interface AgentApiKeyRecord {
   updatedAt: string;
 }
 
+export interface UserApiKeyRecord {
+  ownerId: string;
+  apiKeyHash: string;
+  keyPrefix: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UserApiKeyStatus {
+  keyPrefix: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface IntegrationConnectionRecord {
   ownerId: string;
   integrationKey: string;

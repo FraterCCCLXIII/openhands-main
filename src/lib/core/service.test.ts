@@ -406,6 +406,48 @@ describe("ContextLayerService", () => {
     expect(await service.isStoredAgentApiKeyAuthorized("not-a-real-key")).toBe(false);
   });
 
+  it("rotates and revokes user API keys without storing plaintext", async () => {
+    const service = createService();
+
+    const first = await service.rotateUserApiKey("Owner@Example.com");
+    const storedFirst = await testRepo.getUserApiKeyByOwner("owner@example.com");
+
+    expect(first.apiKey.startsWith("clu_")).toBe(true);
+    expect(storedFirst).not.toBeNull();
+    expect(storedFirst?.apiKeyHash).not.toBe(first.apiKey);
+    expect(storedFirst?.keyPrefix).toBe(first.key.keyPrefix);
+    expect(await service.getStoredUserApiKey(first.apiKey)).toMatchObject({
+      ownerId: "owner@example.com",
+    });
+    expect(await service.getUserApiKeyStatus("owner@example.com")).toEqual(first.key);
+
+    const second = await service.rotateUserApiKey("owner@example.com");
+    const storedSecond = await testRepo.getUserApiKeyByOwner("owner@example.com");
+
+    expect(second.apiKey).not.toBe(first.apiKey);
+    expect(second.key.createdAt).toBe(first.key.createdAt);
+    expect(second.key.updatedAt).not.toBe(first.key.updatedAt);
+    expect(storedSecond?.apiKeyHash).not.toBe(storedFirst?.apiKeyHash);
+    expect(await service.getStoredUserApiKey(first.apiKey)).toBeNull();
+    expect(await service.getStoredUserApiKey(second.apiKey)).toMatchObject({
+      ownerId: "owner@example.com",
+    });
+
+    expect(await service.revokeUserApiKey("owner@example.com")).toEqual({
+      revoked: true,
+    });
+    expect(await service.getStoredUserApiKey(second.apiKey)).toBeNull();
+    expect(await service.getUserApiKeyStatus("owner@example.com")).toBeNull();
+    expect(await service.revokeUserApiKey("owner@example.com")).toEqual({
+      revoked: false,
+    });
+  });
+
+  it("returns null for unknown user API keys", async () => {
+    const service = createService();
+
+    expect(await service.getStoredUserApiKey("not-a-real-user-key")).toBeNull();
+  });
 
   it("requires OAuth client credentials when first registering an OAuth managed connector", async () => {
     const repository = testRepo;

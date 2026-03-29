@@ -1,4 +1,4 @@
-import { randomBytes, randomUUID } from "node:crypto";
+import { createHash, randomBytes, randomUUID } from "node:crypto";
 
 import type { AdapterRegistry } from "@/src/lib/core/adapter-registry";
 import { addMinutes, nowIso } from "@/src/lib/core/date";
@@ -34,6 +34,8 @@ import type {
   NotificationRecord,
   PolicyRule,
   TemporaryGrant,
+  UserApiKeyRecord,
+  UserApiKeyStatus,
 } from "@/src/types/context-layer";
 
 const unique = (values: string[]) => [...new Set(values)];
@@ -90,6 +92,20 @@ const isConnectionExpired = (expiresAt?: string, bufferMs = 60_000) => {
 const normalizeAgentApiKeyOwner = (ownerId: string) => ownerId.trim().toLowerCase();
 
 const createAgentApiKeyValue = () => `cla_${randomBytes(24).toString("base64url")}`;
+const createUserApiKeyValue = () => `clu_${randomBytes(32).toString("base64url")}`;
+const USER_API_KEY_PREFIX_LENGTH = 12;
+
+const hashUserApiKey = (apiKey: string) =>
+  createHash("sha256").update(apiKey).digest("hex");
+
+const getUserApiKeyPrefix = (apiKey: string) =>
+  apiKey.slice(0, USER_API_KEY_PREFIX_LENGTH);
+
+const toUserApiKeyStatus = (record: UserApiKeyRecord): UserApiKeyStatus => ({
+  keyPrefix: record.keyPrefix,
+  createdAt: record.createdAt,
+  updatedAt: record.updatedAt,
+});
 
 const permittedByRule = (
   rule: PolicyRule,
@@ -371,6 +387,66 @@ export class ContextLayerService {
 
     await this.initialize();
     return this.repository.findAgentApiKey(normalizedApiKey);
+  }
+
+  async getUserApiKeyStatus(ownerId: string) {
+    await this.initialize();
+    const normalizedOwnerId = normalizeAgentApiKeyOwner(ownerId);
+    const record = await this.repository.getUserApiKeyByOwner(normalizedOwnerId);
+    return record ? toUserApiKeyStatus(record) : null;
+  }
+
+  async rotateUserApiKey(ownerId: string) {
+    await this.initialize();
+    const normalizedOwnerId = normalizeAgentApiKeyOwner(ownerId);
+
+    if (!normalizedOwnerId) {
+      throw new ContextLayerError(
+        "A signed-in user email or name is required before issuing a user API key.",
+        400,
+      );
+    }
+
+    const existing = await this.repository.getUserApiKeyByOwner(normalizedOwnerId);
+    const apiKey = createUserApiKeyValue();
+    const timestamp = nowIso();
+    const record: UserApiKeyRecord = {
+      ownerId: normalizedOwnerId,
+      apiKeyHash: hashUserApiKey(apiKey),
+      keyPrefix: getUserApiKeyPrefix(apiKey),
+      createdAt: existing?.createdAt ?? timestamp,
+      updatedAt: timestamp,
+    };
+
+    await this.repository.saveUserApiKey(record);
+
+    return {
+      apiKey,
+      key: toUserApiKeyStatus(record),
+    };
+  }
+
+  async revokeUserApiKey(ownerId: string) {
+    await this.initialize();
+    const normalizedOwnerId = normalizeAgentApiKeyOwner(ownerId);
+    const existing = await this.repository.getUserApiKeyByOwner(normalizedOwnerId);
+
+    if (!existing) {
+      return { revoked: false as const };
+    }
+
+    await this.repository.deleteUserApiKey(normalizedOwnerId);
+    return { revoked: true as const };
+  }
+
+  async getStoredUserApiKey(apiKey: string | null | undefined) {
+    const normalizedApiKey = apiKey?.trim();
+    if (!normalizedApiKey) {
+      return null;
+    }
+
+    await this.initialize();
+    return this.repository.findUserApiKeyByHash(hashUserApiKey(normalizedApiKey));
   }
 
   async listIntegrationConnections(ownerId: string) {
