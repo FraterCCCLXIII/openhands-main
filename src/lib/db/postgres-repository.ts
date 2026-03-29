@@ -4,12 +4,14 @@ import type {
   AccessRequest,
   AgentApiKeyRecord,
   AgentClassPolicy,
+  FunctionUsageSummary,
   IntegrationConnectionRecord,
   IntegrationSpec,
   ManagedConnectorRecord,
   NotificationRecord,
   OAuthStateRecord,
   TemporaryGrant,
+  ToolInvocationRecord,
   UserApiKeyRecord,
 } from "@/src/types/context-layer";
 import type { ContextRepository } from "@/src/lib/core/repository";
@@ -129,6 +131,25 @@ export class PostgresRepository implements ContextRepository {
           granted_by TEXT NOT NULL,
           created_at TIMESTAMPTZ NOT NULL,
           expires_at TIMESTAMPTZ NOT NULL
+        )
+      `,
+      sql`
+        CREATE TABLE IF NOT EXISTS tool_invocations (
+          id TEXT PRIMARY KEY,
+          owner_id TEXT,
+          agent_id TEXT NOT NULL,
+          agent_class TEXT NOT NULL,
+          integration_key TEXT NOT NULL,
+          function_name TEXT NOT NULL,
+          scopes JSONB NOT NULL DEFAULT '[]'::jsonb,
+          provider TEXT NOT NULL,
+          kind TEXT NOT NULL,
+          auth_strategy TEXT NOT NULL,
+          outcome TEXT NOT NULL,
+          invoked_at TIMESTAMPTZ NOT NULL,
+          duration_ms INTEGER,
+          payload_keys JSONB NOT NULL DEFAULT '[]'::jsonb,
+          error_message TEXT
         )
       `,
       sql`
@@ -433,6 +454,48 @@ export class PostgresRepository implements ContextRepository {
     const sql = getSql();
     const rows = await sql`DELETE FROM temporary_grants WHERE expires_at <= ${nowIso} RETURNING id`;
     return rows.length;
+  }
+
+  async createToolInvocation(record: ToolInvocationRecord) {
+    await this.ensureSchema();
+    const sql = getSql();
+    await sql`
+      INSERT INTO tool_invocations (
+        id, owner_id, agent_id, agent_class, integration_key, function_name,
+        scopes, provider, kind, auth_strategy, outcome, invoked_at, duration_ms,
+        payload_keys, error_message
+      ) VALUES (
+        ${record.id}, ${record.ownerId ?? null}, ${record.agentId}, ${record.agentClass}, ${record.integrationKey}, ${record.functionName},
+        ${JSON.stringify(record.scopes)}, ${record.provider}, ${record.kind}, ${record.authStrategy}, ${record.outcome}, ${record.invokedAt}, ${record.durationMs ?? null},
+        ${JSON.stringify(record.payloadKeys)}, ${record.errorMessage ?? null}
+      )
+    `;
+    return record;
+  }
+
+  async listOwnerFunctionUsageSummaries(ownerId: string) {
+    await this.ensureSchema();
+    const sql = getSql();
+    const rows = await sql`
+      SELECT
+        integration_key,
+        function_name,
+        COUNT(*)::int AS invocation_count,
+        MAX(invoked_at) AS last_invoked_at,
+        (ARRAY_AGG(outcome ORDER BY invoked_at DESC))[1] AS last_invocation_outcome
+      FROM tool_invocations
+      WHERE owner_id = ${ownerId}
+      GROUP BY integration_key, function_name
+      ORDER BY integration_key ASC, function_name ASC
+    `;
+
+    return rows.map((row) => ({
+      integrationKey: String(row.integration_key),
+      functionName: String(row.function_name),
+      lastInvokedAt: new Date(row.last_invoked_at as string).toISOString(),
+      lastInvocationOutcome: row.last_invocation_outcome as FunctionUsageSummary["lastInvocationOutcome"],
+      invocationCount: Number(row.invocation_count),
+    } satisfies FunctionUsageSummary));
   }
 
   async listNotifications() {

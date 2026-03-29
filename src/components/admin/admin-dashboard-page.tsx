@@ -38,7 +38,7 @@ export async function AdminDashboardPage() {
     existingUserApiKey,
     existingUserApiKeyValue,
   ] = await Promise.all([
-    service.listOwnerIntegrations(contextApiOwner),
+    service.listOwnerIntegrationsWithUsage(contextApiOwner),
     service.listAccessRequests(),
     service.listNotifications(),
     service.getOrCreateAgentApiKey(contextApiOwner),

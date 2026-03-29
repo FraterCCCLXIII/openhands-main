@@ -24,6 +24,8 @@ export type AccessRequestStatus =
   | "rejected"
   | "expired";
 export type FunctionAccessMode = "enabled" | "disabled" | "approval_required";
+export type ToolInvocationOutcome = "success" | "denied" | "error";
+export type UnusedFunctionWindowUnit = "days" | "weeks" | "months";
 
 export interface FunctionSpec {
   name: string;
@@ -35,6 +37,9 @@ export interface FunctionSpec {
   executionMode: "provider" | "mock";
   config: Record<string, unknown>;
   mockResponse?: Record<string, unknown>;
+  lastInvokedAt?: string;
+  lastInvocationOutcome?: ToolInvocationOutcome;
+  invocationCount?: number;
 }
 
 export interface IntegrationSpec {
@@ -296,6 +301,46 @@ export interface OAuthStateRecord {
   callbackUrl?: string;
   createdAt: string;
   expiresAt: string;
+}
+
+export interface ToolInvocationRecord {
+  id: string;
+  ownerId?: string;
+  agentId: string;
+  agentClass: string;
+  integrationKey: string;
+  functionName: string;
+  scopes: string[];
+  provider: IntegrationProvider;
+  kind: IntegrationKind;
+  authStrategy: AuthStrategy;
+  outcome: ToolInvocationOutcome;
+  invokedAt: string;
+  durationMs?: number;
+  payloadKeys: string[];
+  errorMessage?: string;
+}
+
+export interface FunctionUsageSummary {
+  integrationKey: string;
+  functionName: string;
+  lastInvokedAt: string;
+  lastInvocationOutcome: ToolInvocationOutcome;
+  invocationCount: number;
+}
+
+export interface DisabledFunctionSummary {
+  integrationKey: string;
+  functionName: string;
+  lastInvokedAt: string;
+}
+
+export interface DisableUnusedFunctionsResult {
+  thresholdValue: number;
+  thresholdUnit: UnusedFunctionWindowUnit;
+  cutoffIso: string;
+  disabledCount: number;
+  disabledFunctions: DisabledFunctionSummary[];
 }
 
 export interface AccessDecision {

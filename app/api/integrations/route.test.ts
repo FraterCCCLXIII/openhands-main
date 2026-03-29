@@ -64,6 +64,18 @@ describe("GET /api/integrations", () => {
         kind: "mcp",
         provider: "mcp",
         authStrategy: "bearer",
+        functions: {
+          listRepos: {
+            name: "listRepos",
+            description: "List repositories",
+            enabled: true,
+            accessMode: "enabled",
+            fineGrainedPermissions: true,
+            defaultScopes: ["repo:read"],
+            executionMode: "provider",
+            config: {},
+          },
+        },
       }),
     );
     await repository.upsertOwnerIntegration(
@@ -87,9 +99,31 @@ describe("GET /api/integrations", () => {
         enabled: false,
       }),
     );
+    await repository.createToolInvocation({
+      id: "invoke-1",
+      ownerId: "user@example.com",
+      agentId: "agent-1",
+      agentClass: "assistant",
+      integrationKey: "github",
+      functionName: "listRepos",
+      scopes: ["repo:read"],
+      provider: "mcp",
+      kind: "mcp",
+      authStrategy: "bearer",
+      outcome: "success",
+      invokedAt: "2026-03-20T10:00:00.000Z",
+      durationMs: 42,
+      payloadKeys: ["limit"],
+    });
 
     const response = await GET();
-    const body = (await response.json()) as Array<{ key: string }>;
+    const body = (await response.json()) as Array<{
+      key: string;
+      functions: Record<
+        string,
+        { lastInvokedAt?: string; invocationCount?: number; lastInvocationOutcome?: string }
+      >;
+    }>;
 
     expect(response.status).toBe(200);
     expect(body).toMatchObject([
@@ -102,6 +136,11 @@ describe("GET /api/integrations", () => {
       "notion",
       "slack",
     ]);
+    expect(body[0]?.functions.listRepos).toMatchObject({
+      invocationCount: 1,
+      lastInvocationOutcome: "success",
+      lastInvokedAt: "2026-03-20T10:00:00.000Z",
+    });
   });
 
   it("returns the same personal integration view for app administrators", async () => {
