@@ -662,6 +662,13 @@ describe("DashboardWorkspace", () => {
               updatedAt: "2026-03-29T10:00:00.000Z",
             }}
             userApiKeyValue="clu_1234567890abcdefghijklmnop"
+            adminApiKey={{
+              keyPrefix: "clad_123456",
+              keySuffix: "wxyz",
+              createdAt: "2026-03-29T10:00:00.000Z",
+              updatedAt: "2026-03-29T10:00:00.000Z",
+            }}
+            adminApiKeyValue="clad_1234567890abcdefghijklmnopqrstuv"
           />
         </QueryClientProvider>,
       );
@@ -669,21 +676,28 @@ describe("DashboardWorkspace", () => {
 
     const text = container.textContent ?? "";
     expect(text).toContain("API keys");
-    expect(text).toContain("Restricted agent key");
+    expect(text).toContain("Agent key");
     expect(text).toContain("Give this key to your agent.");
     expect(text).toContain("User automation key");
     expect(text).toContain(
-      "Use this key to programmatically set up APIs in the context layer.",
+      "Use this key to programmatically manage user-scoped context-layer settings.",
+    );
+    expect(text).toContain("Admin automation key");
+    expect(text).toContain(
+      "Use this key for admin-only QA and operational automation surfaces.",
     );
     expect(text).toContain("Connection details");
     expect(text).toContain("Agent MCP");
     expect(text).toContain("Agent REST API");
     expect(text).toContain("User REST API");
+    expect(text).toContain("Admin REST API");
     expect(text).toContain("https://example.com/api/mcp");
     expect(text).toContain("https://example.com/api/context/openapi");
     expect(text).toContain("https://example.com/api/user/openapi");
+    expect(text).toContain("https://example.com/api/admin/openapi");
     expect(text).toContain("I have provided you with an API key in $OPENHANDS_CONTEXT_LAYER_KEY");
     expect(text).toContain("I have provided you with a user API key in $OPENHANDS_CONTEXT_LAYER_USER_KEY");
+    expect(text).toContain("I have provided you with an admin API key in $OPENHANDS_CONTEXT_LAYER_ADMIN_KEY");
     expect(text).not.toContain("Works with /api/context/*");
     expect(text).not.toContain("Works with /api/user/*");
     expect(text).not.toContain("https://example.com/api/context/skill");
@@ -697,8 +711,8 @@ describe("DashboardWorkspace", () => {
       button.textContent?.includes("Reveal"),
     );
 
-    expect(copyButtons).toHaveLength(2);
-    expect(revealButtons).toHaveLength(2);
+    expect(copyButtons).toHaveLength(3);
+    expect(revealButtons).toHaveLength(3);
   });
 
   it("shows the integration catalog from the top-level integrations route", async () => {
@@ -1166,7 +1180,7 @@ describe("DashboardWorkspace", () => {
     });
 
     const copyButton = container.querySelector(
-      'button[aria-label="Copy restricted agent key"]',
+      'button[aria-label="Copy agent key"]',
     ) as HTMLButtonElement | null;
     expect(copyButton).toBeTruthy();
     expect(copyButton?.querySelector("svg")?.getAttribute("class")).toContain(
@@ -1190,7 +1204,7 @@ describe("DashboardWorkspace", () => {
     });
 
     const copyButtonAfterTimeout = container.querySelector(
-      'button[aria-label="Copy restricted agent key"]',
+      'button[aria-label="Copy agent key"]',
     ) as HTMLButtonElement | null;
     expect(
       copyButtonAfterTimeout?.querySelector("svg")?.getAttribute("class"),

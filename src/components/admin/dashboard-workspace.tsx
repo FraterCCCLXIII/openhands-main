@@ -51,6 +51,7 @@ import {
 import { cn } from "@/src/lib/utils";
 import type {
   AccessRequest,
+  AdminApiKeyStatus,
   BuiltInConnectorOption,
   DisableUnusedFunctionsResult,
   FunctionAccessMode,
@@ -225,12 +226,20 @@ interface AdminDashboardProps {
   contextApiKey: string;
   userApiKey?: UserApiKeyStatus | null;
   userApiKeyValue?: string | null;
+  adminApiKey?: AdminApiKeyStatus | null;
+  adminApiKeyValue?: string | null;
   isAdmin?: boolean;
 }
 
 interface UserApiKeyResponse {
   hasKey: boolean;
   key: UserApiKeyStatus | null;
+  apiKey: string | null;
+}
+
+interface AdminApiKeyResponse {
+  hasKey: boolean;
+  key: AdminApiKeyStatus | null;
   apiKey: string | null;
 }
 
@@ -481,6 +490,8 @@ export const DashboardWorkspace = ({
   contextApiKey,
   userApiKey = null,
   userApiKeyValue: initialUserApiKeyValue = null,
+  adminApiKey = null,
+  adminApiKeyValue: initialAdminApiKeyValue = null,
   isAdmin = true,
 }: AdminDashboardProps) => {
   const queryClient = useQueryClient();
@@ -527,6 +538,14 @@ export const DashboardWorkspace = ({
   );
   const [revealUserApiKey, setRevealUserApiKey] = useState(false);
   const [userApiKeyCopied, setUserApiKeyCopied] = useState(false);
+  const [adminApiKeyStatus, setAdminApiKeyStatus] = useState<AdminApiKeyStatus | null>(
+    adminApiKey,
+  );
+  const [adminApiKeyValue, setAdminApiKeyValue] = useState(
+    initialAdminApiKeyValue ?? "",
+  );
+  const [revealAdminApiKey, setRevealAdminApiKey] = useState(false);
+  const [adminApiKeyCopied, setAdminApiKeyCopied] = useState(false);
 
   const oauthStatusMessage = useMemo(() => {
     const oauthStatus = searchParams.get("oauth_status");
@@ -577,6 +596,14 @@ export const DashboardWorkspace = ({
   }, [initialUserApiKeyValue]);
 
   useEffect(() => {
+    setAdminApiKeyStatus(adminApiKey);
+  }, [adminApiKey]);
+
+  useEffect(() => {
+    setAdminApiKeyValue(initialAdminApiKeyValue ?? "");
+  }, [initialAdminApiKeyValue]);
+
+  useEffect(() => {
     if (!userApiKeyStatus || userApiKeyValue) {
       return;
     }
@@ -605,6 +632,34 @@ export const DashboardWorkspace = ({
   }, [userApiKeyStatus, userApiKeyValue]);
 
   useEffect(() => {
+    if (!isAdmin || !adminApiKeyStatus || adminApiKeyValue) {
+      return;
+    }
+
+    let canceled = false;
+
+    void fetchJson<AdminApiKeyResponse>("/api/admin/key", {
+      cache: "no-store",
+    })
+      .then((response) => {
+        if (canceled) {
+          return;
+        }
+        setAdminApiKeyStatus(response.key);
+        if (response.apiKey) {
+          setAdminApiKeyValue(response.apiKey);
+        }
+      })
+      .catch(() => {
+        // Leave the masked metadata visible if the current key cannot be re-fetched.
+      });
+
+    return () => {
+      canceled = true;
+    };
+  }, [adminApiKeyStatus, adminApiKeyValue, isAdmin]);
+
+  useEffect(() => {
     if (!userApiKeyCopied) {
       return;
     }
@@ -617,6 +672,20 @@ export const DashboardWorkspace = ({
       window.clearTimeout(timeoutId);
     };
   }, [userApiKeyCopied]);
+
+  useEffect(() => {
+    if (!adminApiKeyCopied) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setAdminApiKeyCopied(false);
+    }, 2000);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [adminApiKeyCopied]);
 
   const navigateToSection = (section: AdminSection) => {
     setActiveSection(section);
@@ -774,6 +843,12 @@ export const DashboardWorkspace = ({
     : userApiKeyStatus
       ? maskStoredApiKey(userApiKeyStatus.keyPrefix, userApiKeyStatus.keySuffix)
       : "";
+  const adminApiKeyReady = adminApiKeyStatus !== null;
+  const maskedAdminApiKey = adminApiKeyValue
+    ? maskApiKey(adminApiKeyValue, revealAdminApiKey)
+    : adminApiKeyStatus
+      ? maskStoredApiKey(adminApiKeyStatus.keyPrefix, adminApiKeyStatus.keySuffix)
+      : "";
   const userName = currentUser.name?.trim() || "Admin User";
   const userEmail = currentUser.email?.trim() || "Not provided";
   const authMode =
@@ -885,12 +960,16 @@ export const DashboardWorkspace = ({
   );
   const normalizedBaseUrl = contextApiBaseUrl.replace(/\/$/, "");
   const userOpenApiSchemaEndpoint = `${normalizedBaseUrl}/api/user/openapi`;
+  const adminOpenApiSchemaEndpoint = `${normalizedBaseUrl}/api/admin/openapi`;
   const agentRestPromptExample =
     'I have provided you with an API key in $OPENHANDS_CONTEXT_LAYER_KEY, and you can see the API schema at ' +
     `${agentConnectionGuide.openApiSchemaEndpoint}, feel free to access any tools there.`;
   const userRestPromptExample =
     'I have provided you with a user API key in $OPENHANDS_CONTEXT_LAYER_USER_KEY, and you can see the API schema at ' +
     `${userOpenApiSchemaEndpoint}, feel free to manage my context-layer settings there.`;
+  const adminRestPromptExample =
+    'I have provided you with an admin API key in $OPENHANDS_CONTEXT_LAYER_ADMIN_KEY, and you can see the API schema at ' +
+    `${adminOpenApiSchemaEndpoint}, feel free to manage admin QA and connector workflows there.`;
 
   const filteredIntegrations = useMemo(() => {
     const normalizedSearch = integrationSearch.trim().toLowerCase();
@@ -1127,7 +1206,7 @@ export const DashboardWorkspace = ({
 
   const handleCopyApiKey = async () => {
     if (!contextApiReady) {
-      setStatusMessage("The restricted agent API key is not available yet.");
+      setStatusMessage("The agent key is not available yet.");
       return;
     }
 
@@ -1171,6 +1250,37 @@ export const DashboardWorkspace = ({
     return rotated.apiKey;
   };
 
+  const ensureAdminApiKeyValue = async () => {
+    const currentValue = adminApiKeyValue.trim();
+    if (currentValue) {
+      return currentValue;
+    }
+
+    const current = await fetchJson<AdminApiKeyResponse>("/api/admin/key", {
+      cache: "no-store",
+    });
+    setAdminApiKeyStatus(current.key);
+
+    if (current.apiKey) {
+      setAdminApiKeyValue(current.apiKey);
+      return current.apiKey;
+    }
+
+    const rotated = await fetchJson<{
+      apiKey: string;
+      key: AdminApiKeyStatus;
+    }>("/api/admin/key", {
+      method: "POST",
+    });
+
+    setAdminApiKeyStatus(rotated.key);
+    setAdminApiKeyValue(rotated.apiKey);
+    setStatusMessage(
+      "Regenerated your admin automation key so the full value can be shown again. Update any existing clients using the previous key.",
+    );
+    return rotated.apiKey;
+  };
+
   const handleRevealUserApiKey = async () => {
     if (!userApiKeyReady) {
       setStatusMessage("The user automation key is not available yet.");
@@ -1191,6 +1301,26 @@ export const DashboardWorkspace = ({
     }
   };
 
+  const handleRevealAdminApiKey = async () => {
+    if (!adminApiKeyReady) {
+      setStatusMessage("The admin automation key is not available yet.");
+      return;
+    }
+
+    if (revealAdminApiKey) {
+      setRevealAdminApiKey(false);
+      return;
+    }
+
+    try {
+      await ensureAdminApiKeyValue();
+      setRevealAdminApiKey(true);
+    } catch {
+      setRevealAdminApiKey(false);
+      setStatusMessage("Unable to load the full admin automation key right now.");
+    }
+  };
+
   const handleCopyUserApiKey = async () => {
     if (!userApiKeyReady) {
       setStatusMessage("The user automation key is not available yet.");
@@ -1203,6 +1333,22 @@ export const DashboardWorkspace = ({
       setUserApiKeyCopied(true);
     } catch {
       setUserApiKeyCopied(false);
+      setStatusMessage("Unable to copy the API key from this browser session.");
+    }
+  };
+
+  const handleCopyAdminApiKey = async () => {
+    if (!adminApiKeyReady) {
+      setStatusMessage("The admin automation key is not available yet.");
+      return;
+    }
+
+    try {
+      const fullAdminApiKey = await ensureAdminApiKeyValue();
+      await copyTextToClipboard(fullAdminApiKey);
+      setAdminApiKeyCopied(true);
+    } catch {
+      setAdminApiKeyCopied(false);
       setStatusMessage("Unable to copy the API key from this browser session.");
     }
   };
@@ -1296,7 +1442,7 @@ export const DashboardWorkspace = ({
         {!contextApiReady ? (
           <div className="rounded-xl border border-[color:rgba(217,181,90,0.25)] bg-[color:rgba(217,181,90,0.12)] px-3 py-2 text-sm text-[var(--color-warning)]">
             Open <code className="text-white">/integrations</code> once to
-            provision the restricted agent key before agents call <code className="text-white">/api/context/*</code>.
+            provision the agent key before agents call <code className="text-white">/api/context/*</code>.
           </div>
         ) : null}
 
@@ -1335,7 +1481,7 @@ export const DashboardWorkspace = ({
                 />
               </div>
               <div className="mt-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)] px-3 py-3 text-xs leading-6 text-[var(--color-text-base)]">
-                The restricted agent key belongs to <code className="text-white">{userEmail}</code>. Provider credentials stay server-side in integration settings or per-user OAuth records and are never handed directly to the agent.
+                The agent key belongs to <code className="text-white">{userEmail}</code>. Provider credentials stay server-side in integration settings or per-user OAuth records and are never handed directly to the agent.
               </div>
             </CompactPanel>
           </section>
@@ -2015,7 +2161,7 @@ export const DashboardWorkspace = ({
                 <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <h3 className="text-sm font-semibold text-white">Restricted agent key</h3>
+                      <h3 className="text-sm font-semibold text-white">Agent key</h3>
                       <p className="mt-1 text-sm text-[var(--color-text-base)]">
                         Give this key to your agent.
                       </p>
@@ -2024,7 +2170,7 @@ export const DashboardWorkspace = ({
                   </div>
                   <div className="mt-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)] px-3 py-3">
                     <code className="block break-all text-sm text-white">
-                      {maskedApiKey || "No restricted agent key available yet."}
+                      {maskedApiKey || "No agent key available yet."}
                     </code>
                   </div>
                   <div className="mt-4 flex flex-wrap gap-2">
@@ -2046,7 +2192,7 @@ export const DashboardWorkspace = ({
                       className="h-8 gap-2 rounded-md px-3 text-xs"
                       onClick={handleCopyApiKey}
                       disabled={!contextApiReady}
-                      aria-label="Copy restricted agent key"
+                      aria-label="Copy agent key"
                     >
                       {apiKeyCopied ? (
                         <CheckCircle2 className="h-4 w-4" />
@@ -2063,7 +2209,7 @@ export const DashboardWorkspace = ({
                     <div>
                       <h3 className="text-sm font-semibold text-white">User automation key</h3>
                       <p className="mt-1 text-sm text-[var(--color-text-base)]">
-                        Use this key to programmatically set up APIs in the context layer.
+                        Use this key to programmatically manage user-scoped context-layer settings.
                       </p>
                     </div>
                     <Badge tone={userApiKeyReady ? "warning" : "default"}>user</Badge>
@@ -2103,6 +2249,54 @@ export const DashboardWorkspace = ({
                     </Button>
                   </div>
                 </div>
+
+                {isAdmin ? (
+                  <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <h3 className="text-sm font-semibold text-white">Admin automation key</h3>
+                        <p className="mt-1 text-sm text-[var(--color-text-base)]">
+                          Use this key for admin-only QA and operational automation surfaces.
+                        </p>
+                      </div>
+                      <Badge tone={adminApiKeyReady ? "warning" : "default"}>admin</Badge>
+                    </div>
+                    <div className="mt-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)] px-3 py-3">
+                      <code className="block break-all text-sm text-white">
+                        {maskedAdminApiKey || "No admin automation key available yet."}
+                      </code>
+                    </div>
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      <Button
+                        variant="secondary"
+                        className="h-8 gap-2 rounded-md px-3 text-xs"
+                        onClick={handleRevealAdminApiKey}
+                        disabled={!adminApiKeyReady}
+                      >
+                        {revealAdminApiKey ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                        {revealAdminApiKey ? "Hide" : "Reveal"}
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        className="h-8 gap-2 rounded-md px-3 text-xs"
+                        onClick={handleCopyAdminApiKey}
+                        disabled={!adminApiKeyReady}
+                        aria-label="Copy admin automation key"
+                      >
+                        {adminApiKeyCopied ? (
+                          <CheckCircle2 className="h-4 w-4" />
+                        ) : (
+                          <Copy className="h-4 w-4" />
+                        )}
+                        Copy
+                      </Button>
+                    </div>
+                  </div>
+                ) : null}
               </div>
             </CompactPanel>
 
@@ -2111,7 +2305,7 @@ export const DashboardWorkspace = ({
                 <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-4">
                   <h3 className="text-sm font-semibold text-white">Agent MCP</h3>
                   <p className="mt-1 text-sm leading-6 text-[var(--color-text-base)]">
-                    Connect your MCP client to the streamable HTTP endpoint below and authenticate with the restricted agent key.
+                    Connect your MCP client to the streamable HTTP endpoint below and authenticate with the agent key.
                   </p>
                   <div className="mt-3 divide-y divide-[var(--color-border)]">
                     <KeyValueRow
@@ -2128,7 +2322,7 @@ export const DashboardWorkspace = ({
                 <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-4">
                   <h3 className="text-sm font-semibold text-white">Agent REST API</h3>
                   <p className="mt-1 text-sm leading-6 text-[var(--color-text-base)]">
-                    Give your agent the restricted key and the OpenAPI schema for the tool surface.
+                    Give your agent the agent key and the OpenAPI schema for the tool surface.
                   </p>
                   <div className="mt-3 divide-y divide-[var(--color-border)]">
                     <KeyValueRow
@@ -2166,6 +2360,29 @@ export const DashboardWorkspace = ({
                     </pre>
                   </div>
                 </div>
+
+                {isAdmin ? (
+                  <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-4">
+                    <h3 className="text-sm font-semibold text-white">Admin REST API</h3>
+                    <p className="mt-1 text-sm leading-6 text-[var(--color-text-base)]">
+                      Use the admin automation key with the admin-only OpenAPI schema for connector, discovery, and approval QA.
+                    </p>
+                    <div className="mt-3 divide-y divide-[var(--color-border)]">
+                      <KeyValueRow
+                        label="OpenAPI schema"
+                        value={<code className="break-all text-xs text-[var(--color-text-active)]">{adminOpenApiSchemaEndpoint}</code>}
+                      />
+                    </div>
+                    <div className="mt-3 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)]">
+                      <div className="border-b border-[var(--color-border)] px-3 py-2 text-xs uppercase tracking-[0.18em] text-[var(--color-text-base)]">
+                        Example agent prompt
+                      </div>
+                      <pre className="overflow-x-auto whitespace-pre-wrap px-3 py-3 text-xs leading-6 text-[var(--color-text-base)]">
+                        {adminRestPromptExample}
+                      </pre>
+                    </div>
+                  </div>
+                ) : null}
               </div>
             </CompactPanel>
           </section>

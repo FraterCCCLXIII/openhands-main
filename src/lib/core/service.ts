@@ -21,6 +21,8 @@ import { resolveOAuthProvider } from "@/src/lib/oauth/provider-resolver";
 import type {
   AccessDecision,
   AccessRequest,
+  AdminApiKeyRecord,
+  AdminApiKeyStatus,
   AgentApiKeyRecord,
   AgentClassPolicy,
   ContextInvocationResult,
@@ -145,27 +147,35 @@ const normalizeAgentApiKeyOwner = (ownerId: string) => ownerId.trim().toLowerCas
 
 const createAgentApiKeyValue = () => `cla_${randomBytes(24).toString("base64url")}`;
 const createUserApiKeyValue = () => `clu_${randomBytes(32).toString("base64url")}`;
+const createAdminApiKeyValue = () => `clad_${randomBytes(32).toString("base64url")}`;
 const USER_API_KEY_PREFIX_LENGTH = 12;
 const USER_API_KEY_SUFFIX_LENGTH = 4;
 
-const hashUserApiKey = (apiKey: string) =>
+const hashScopedApiKey = (apiKey: string) =>
   createHash("sha256").update(apiKey).digest("hex");
 
-const getUserApiKeyPrefix = (apiKey: string) =>
+const getScopedApiKeyPrefix = (apiKey: string) =>
   apiKey.slice(0, USER_API_KEY_PREFIX_LENGTH);
 
-const getUserApiKeySuffix = (apiKey: string) =>
+const getScopedApiKeySuffix = (apiKey: string) =>
   apiKey.slice(-USER_API_KEY_SUFFIX_LENGTH);
 
-const encryptUserApiKey = (apiKey: string) =>
+const encryptScopedApiKey = (apiKey: string) =>
   encryptCredentials({ apiKey });
 
-const decryptUserApiKey = (payload: string) => {
+const decryptScopedApiKey = (payload: string) => {
   const credentials = decryptCredentials<{ apiKey?: string }>(payload);
   return typeof credentials.apiKey === "string" ? credentials.apiKey : null;
 };
 
 const toUserApiKeyStatus = (record: UserApiKeyRecord): UserApiKeyStatus => ({
+  keyPrefix: record.keyPrefix,
+  keySuffix: record.keySuffix,
+  createdAt: record.createdAt,
+  updatedAt: record.updatedAt,
+});
+
+const toAdminApiKeyStatus = (record: AdminApiKeyRecord): AdminApiKeyStatus => ({
   keyPrefix: record.keyPrefix,
   keySuffix: record.keySuffix,
   createdAt: record.createdAt,
@@ -566,12 +576,12 @@ export class ContextLayerService {
     }
 
     if (record.encryptedApiKey && !record.keySuffix) {
-      const apiKey = decryptUserApiKey(record.encryptedApiKey);
+      const apiKey = decryptScopedApiKey(record.encryptedApiKey);
       if (apiKey) {
         const updatedRecord: UserApiKeyRecord = {
           ...record,
-          keyPrefix: getUserApiKeyPrefix(apiKey),
-          keySuffix: getUserApiKeySuffix(apiKey),
+          keyPrefix: getScopedApiKeyPrefix(apiKey),
+          keySuffix: getScopedApiKeySuffix(apiKey),
         };
         await this.repository.saveUserApiKey(updatedRecord);
         return toUserApiKeyStatus(updatedRecord);
@@ -590,7 +600,7 @@ export class ContextLayerService {
       return null;
     }
 
-    return decryptUserApiKey(record.encryptedApiKey);
+    return decryptScopedApiKey(record.encryptedApiKey);
   }
 
   async rotateUserApiKey(ownerId: string) {
@@ -609,10 +619,10 @@ export class ContextLayerService {
     const timestamp = nowIso();
     const record: UserApiKeyRecord = {
       ownerId: normalizedOwnerId,
-      apiKeyHash: hashUserApiKey(apiKey),
-      keyPrefix: getUserApiKeyPrefix(apiKey),
-      keySuffix: getUserApiKeySuffix(apiKey),
-      encryptedApiKey: encryptUserApiKey(apiKey),
+      apiKeyHash: hashScopedApiKey(apiKey),
+      keyPrefix: getScopedApiKeyPrefix(apiKey),
+      keySuffix: getScopedApiKeySuffix(apiKey),
+      encryptedApiKey: encryptScopedApiKey(apiKey),
       createdAt: existing?.createdAt ?? timestamp,
       updatedAt: timestamp,
     };
@@ -645,7 +655,99 @@ export class ContextLayerService {
     }
 
     await this.initialize();
-    return this.repository.findUserApiKeyByHash(hashUserApiKey(normalizedApiKey));
+    return this.repository.findUserApiKeyByHash(hashScopedApiKey(normalizedApiKey));
+  }
+
+  async getAdminApiKeyStatus(ownerId: string) {
+    await this.initialize();
+    const normalizedOwnerId = normalizeAgentApiKeyOwner(ownerId);
+    const record = await this.repository.getAdminApiKeyByOwner(normalizedOwnerId);
+
+    if (!record) {
+      return null;
+    }
+
+    if (record.encryptedApiKey && !record.keySuffix) {
+      const apiKey = decryptScopedApiKey(record.encryptedApiKey);
+      if (apiKey) {
+        const updatedRecord: AdminApiKeyRecord = {
+          ...record,
+          keyPrefix: getScopedApiKeyPrefix(apiKey),
+          keySuffix: getScopedApiKeySuffix(apiKey),
+        };
+        await this.repository.saveAdminApiKey(updatedRecord);
+        return toAdminApiKeyStatus(updatedRecord);
+      }
+    }
+
+    return toAdminApiKeyStatus(record);
+  }
+
+  async getAdminApiKeyValue(ownerId: string) {
+    await this.initialize();
+    const normalizedOwnerId = normalizeAgentApiKeyOwner(ownerId);
+    const record = await this.repository.getAdminApiKeyByOwner(normalizedOwnerId);
+
+    if (!record?.encryptedApiKey) {
+      return null;
+    }
+
+    return decryptScopedApiKey(record.encryptedApiKey);
+  }
+
+  async rotateAdminApiKey(ownerId: string) {
+    await this.initialize();
+    const normalizedOwnerId = normalizeAgentApiKeyOwner(ownerId);
+
+    if (!normalizedOwnerId) {
+      throw new ContextLayerError(
+        "A signed-in admin email is required before issuing an admin API key.",
+        400,
+      );
+    }
+
+    const existing = await this.repository.getAdminApiKeyByOwner(normalizedOwnerId);
+    const apiKey = createAdminApiKeyValue();
+    const timestamp = nowIso();
+    const record: AdminApiKeyRecord = {
+      ownerId: normalizedOwnerId,
+      apiKeyHash: hashScopedApiKey(apiKey),
+      keyPrefix: getScopedApiKeyPrefix(apiKey),
+      keySuffix: getScopedApiKeySuffix(apiKey),
+      encryptedApiKey: encryptScopedApiKey(apiKey),
+      createdAt: existing?.createdAt ?? timestamp,
+      updatedAt: timestamp,
+    };
+
+    await this.repository.saveAdminApiKey(record);
+
+    return {
+      apiKey,
+      key: toAdminApiKeyStatus(record),
+    };
+  }
+
+  async revokeAdminApiKey(ownerId: string) {
+    await this.initialize();
+    const normalizedOwnerId = normalizeAgentApiKeyOwner(ownerId);
+    const existing = await this.repository.getAdminApiKeyByOwner(normalizedOwnerId);
+
+    if (!existing) {
+      return { revoked: false as const };
+    }
+
+    await this.repository.deleteAdminApiKey(normalizedOwnerId);
+    return { revoked: true as const };
+  }
+
+  async getStoredAdminApiKey(apiKey: string | null | undefined) {
+    const normalizedApiKey = apiKey?.trim();
+    if (!normalizedApiKey) {
+      return null;
+    }
+
+    await this.initialize();
+    return this.repository.findAdminApiKeyByHash(hashScopedApiKey(normalizedApiKey));
   }
 
   async listIntegrationConnections(ownerId: string) {

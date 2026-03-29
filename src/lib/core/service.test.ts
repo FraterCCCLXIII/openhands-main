@@ -658,6 +658,57 @@ describe("ContextLayerService", () => {
     expect(await service.getStoredUserApiKey("not-a-real-user-key")).toBeNull();
   });
 
+
+  it("rotates and revokes admin API keys with hashed auth and encrypted recovery", async () => {
+    const service = createService();
+
+    const first = await service.rotateAdminApiKey("Admin@Example.com");
+    const storedFirst = await testRepo.getAdminApiKeyByOwner("admin@example.com");
+
+    expect(first.apiKey.startsWith("clad_")).toBe(true);
+    expect(storedFirst).not.toBeNull();
+    expect(storedFirst?.apiKeyHash).not.toBe(first.apiKey);
+    expect(storedFirst?.encryptedApiKey).toBeTruthy();
+    expect(storedFirst?.encryptedApiKey).not.toBe(first.apiKey);
+    expect(storedFirst?.keyPrefix).toBe(first.key.keyPrefix);
+    expect(storedFirst?.keySuffix).toBe(first.key.keySuffix);
+    expect(await service.getStoredAdminApiKey(first.apiKey)).toMatchObject({
+      ownerId: "admin@example.com",
+    });
+    expect(await service.getAdminApiKeyStatus("admin@example.com")).toEqual(first.key);
+    expect(await service.getAdminApiKeyValue("admin@example.com")).toBe(first.apiKey);
+
+    const second = await service.rotateAdminApiKey("admin@example.com");
+    const storedSecond = await testRepo.getAdminApiKeyByOwner("admin@example.com");
+
+    expect(second.apiKey).not.toBe(first.apiKey);
+    expect(second.key.createdAt).toBe(first.key.createdAt);
+    expect(second.key.updatedAt).not.toBe(first.key.updatedAt);
+    expect(storedSecond?.apiKeyHash).not.toBe(storedFirst?.apiKeyHash);
+    expect(storedSecond?.encryptedApiKey).not.toBe(storedFirst?.encryptedApiKey);
+    expect(await service.getStoredAdminApiKey(first.apiKey)).toBeNull();
+    expect(await service.getStoredAdminApiKey(second.apiKey)).toMatchObject({
+      ownerId: "admin@example.com",
+    });
+    expect(await service.getAdminApiKeyValue("admin@example.com")).toBe(second.apiKey);
+
+    expect(await service.revokeAdminApiKey("admin@example.com")).toEqual({
+      revoked: true,
+    });
+    expect(await service.getStoredAdminApiKey(second.apiKey)).toBeNull();
+    expect(await service.getAdminApiKeyStatus("admin@example.com")).toBeNull();
+    expect(await service.getAdminApiKeyValue("admin@example.com")).toBeNull();
+    expect(await service.revokeAdminApiKey("admin@example.com")).toEqual({
+      revoked: false,
+    });
+  });
+
+  it("returns null for unknown admin API keys", async () => {
+    const service = createService();
+
+    expect(await service.getStoredAdminApiKey("not-a-real-admin-key")).toBeNull();
+  });
+
   it("requires OAuth client credentials when first registering an OAuth managed connector", async () => {
     const repository = testRepo;
     const service = new ContextLayerService(

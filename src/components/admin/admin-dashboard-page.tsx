@@ -37,6 +37,8 @@ export async function AdminDashboardPage() {
     contextApiAuth,
     existingUserApiKey,
     existingUserApiKeyValue,
+    existingAdminApiKey,
+    existingAdminApiKeyValue,
   ] = await Promise.all([
     service.listOwnerIntegrationsWithUsage(contextApiOwner),
     service.listAccessRequests(),
@@ -44,15 +46,25 @@ export async function AdminDashboardPage() {
     service.getOrCreateAgentApiKey(contextApiOwner),
     service.getUserApiKeyStatus(contextApiOwner),
     service.getUserApiKeyValue(contextApiOwner),
+    isAdmin ? service.getAdminApiKeyStatus(contextApiOwner) : Promise.resolve(null),
+    isAdmin ? service.getAdminApiKeyValue(contextApiOwner) : Promise.resolve(null),
   ]);
 
   let userApiKey = existingUserApiKey;
   let userApiKeyValue: string | null = existingUserApiKeyValue;
+  let adminApiKey = existingAdminApiKey;
+  let adminApiKeyValue: string | null = existingAdminApiKeyValue;
 
   if (!userApiKey) {
     const createdUserApiKey = await service.rotateUserApiKey(contextApiOwner);
     userApiKey = createdUserApiKey.key;
     userApiKeyValue = createdUserApiKey.apiKey;
+  }
+
+  if (isAdmin && !adminApiKey) {
+    const createdAdminApiKey = await service.rotateAdminApiKey(contextApiOwner);
+    adminApiKey = createdAdminApiKey.key;
+    adminApiKeyValue = createdAdminApiKey.apiKey;
   }
 
   return (
@@ -67,6 +79,8 @@ export async function AdminDashboardPage() {
           contextApiKey={contextApiAuth.apiKey}
           userApiKey={userApiKey}
           userApiKeyValue={userApiKeyValue}
+          adminApiKey={adminApiKey}
+          adminApiKeyValue={adminApiKeyValue}
           isAdmin={isAdmin}
         />
       </div>
