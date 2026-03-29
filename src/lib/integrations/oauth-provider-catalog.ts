@@ -338,10 +338,12 @@ const oauthProviderCatalog = [
     name: "Webflow",
     description: "CMS items, sites, and web publishing workflows.",
     categories: ["CMS", "Marketing"],
-    availability: "planned",
+    availability: "oauth_ready",
+    builtInSlug: "webflow",
     appUrl: "https://webflow.com",
-    docsUrl: "https://developers.webflow.com/data/docs/oauth-apps",
-    notes: "Popular with design and marketing teams.",
+    docsUrl: "https://developers.webflow.com/apps/data/docs/register-an-app",
+    notes:
+      "Uses Webflow's official hosted MCP server with OAuth app credentials and per-user site authorization.",
   }),
   provider(33, {
     slug: "miro",

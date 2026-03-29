@@ -13,6 +13,8 @@ import type {
 
 interface ManagedConnectorAdminListProps {
   initialManagedConnectors: ManagedConnectorDefinition[];
+  onConnectorUpdated?: (connector: ManagedConnectorDefinition) => void;
+  onConnectorDeleted?: (connector: ManagedConnectorDefinition) => void;
 }
 
 interface ManagedConnectorFormState {
@@ -165,6 +167,8 @@ const ConnectorAvatar = ({ connector }: { connector: ManagedConnectorDefinition 
 
 export function ManagedConnectorAdminList({
   initialManagedConnectors,
+  onConnectorUpdated,
+  onConnectorDeleted,
 }: ManagedConnectorAdminListProps) {
   const [managedConnectors, setManagedConnectors] = useState(initialManagedConnectors);
   const [expandedSlug, setExpandedSlug] = useState<string | null>(null);
@@ -266,6 +270,7 @@ export function ManagedConnectorAdminList({
           candidate.slug === connector.slug ? updatedConnector : candidate,
         ),
       );
+      onConnectorUpdated?.(updatedConnector);
       setExpandedSlug(updatedConnector.slug);
       setFormStates((current) => ({
         ...current,
@@ -318,6 +323,7 @@ export function ManagedConnectorAdminList({
       setManagedConnectors((current) =>
         current.filter((candidate) => candidate.slug !== connector.slug),
       );
+      onConnectorDeleted?.(connector);
       setExpandedSlug((current) => (current === connector.slug ? null : current));
       setFormStates((current) => {
         const next = { ...current };
