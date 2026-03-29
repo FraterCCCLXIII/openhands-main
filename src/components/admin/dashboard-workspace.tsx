@@ -420,6 +420,22 @@ export const DashboardWorkspace = ({
   const [revealApiKey, setRevealApiKey] = useState(false);
   const [apiKeyCopied, setApiKeyCopied] = useState(false);
 
+  const oauthStatusMessage = useMemo(() => {
+    const oauthStatus = searchParams.get("oauth_status");
+    const oauthProvider = searchParams.get("oauth_provider");
+    const oauthError = searchParams.get("oauth_error");
+
+    if (oauthStatus === "connected" && oauthProvider) {
+      return `${oauthProvider[0]?.toUpperCase() ?? ""}${oauthProvider.slice(1)} connected successfully. Finish saving the integration to use it.`;
+    }
+
+    if (oauthStatus === "error") {
+      return oauthError || "OAuth connection failed.";
+    }
+
+    return null;
+  }, [searchParams]);
+
   useEffect(() => {
     setActiveSection(getAdminSectionFromPath(pathname));
   }, [pathname]);
@@ -427,19 +443,6 @@ export const DashboardWorkspace = ({
   useEffect(() => {
     if (searchParams.get("showIntegrationWizard") === "1") {
       setShowIntegrationWizard(true);
-    }
-
-    const oauthStatus = searchParams.get("oauth_status");
-    const oauthProvider = searchParams.get("oauth_provider");
-    const oauthError = searchParams.get("oauth_error");
-    if (oauthStatus === "connected" && oauthProvider) {
-      setStatusMessage(
-        `${oauthProvider[0]?.toUpperCase() ?? ""}${oauthProvider.slice(1)} connected successfully. Finish saving the integration to use it.`,
-      );
-    }
-
-    if (oauthStatus === "error") {
-      setStatusMessage(oauthError || "OAuth connection failed.");
     }
   }, [searchParams]);
 
@@ -849,9 +852,9 @@ export const DashboardWorkspace = ({
           </div>
         </header>
 
-        {statusMessage ? (
+        {oauthStatusMessage || statusMessage ? (
           <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] px-3 py-2 text-sm text-[var(--color-text-active)]">
-            {statusMessage}
+            {oauthStatusMessage || statusMessage}
           </div>
         ) : null}
 

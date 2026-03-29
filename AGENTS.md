@@ -52,8 +52,8 @@ This repository contains a Next.js/TypeScript implementation of an agent context
 - `src/lib/auth.ts` configures Auth.js for GitHub OAuth on the hosted dashboard using the same preview-deployment redirect proxy pattern as `OpenHands/kpi-tracker`; the GitHub provider requests both `read:user` and `user:email` so the dashboard can populate signed-in email addresses more reliably. `DISABLE_AUTH=true` bypasses interactive auth for local development.
 - `src/components/admin/admin-dashboard.tsx` is the OpenHands-inspired Tailwind dashboard using TanStack Query + Zustand.
 - `src/components/admin/dashboard-workspace.tsx` now contains the main sidebar-driven dashboard UX with Integrations as the default first section, followed by Agent Connection and User Profile; `src/components/admin/admin-dashboard.tsx` is a thin re-export so the admin page import stays stable.
+- OAuth callback success/error banners on the dashboard should be derived directly from URL search params (`oauth_status`, `oauth_error`) instead of only mutable wizard status state, so auto-initializing the integration wizard cannot silently clear them.
 - Webflow OAuth token exchange must send `client_id` / `client_secret` in the POST body (`clientAuthentication: "body"` in managed connector OAuth config); using HTTP Basic auth against `https://api.webflow.com/oauth/access_token` returns `{"error":"invalid_client"}` even with the correct credentials.
-
 - Admin dashboard sections now use clean top-level routes only: `/integrations`, `/agent-connection`, and `/profile`. `/home` remains available only as a legacy redirect to `/integrations`; new links and redirects should target the canonical routes directly, with no legacy `/admin` or `?section=` fallback behavior.
 
 - On the Agent Connection panel in `src/components/admin/dashboard-workspace.tsx`, successful API-key copy feedback should use the inline button pattern (temporary check icon) instead of posting a global status banner message.
