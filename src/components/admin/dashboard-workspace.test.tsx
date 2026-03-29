@@ -576,6 +576,67 @@ describe("DashboardWorkspace", () => {
     );
   });
 
+  it("keeps OAuth callback errors visible after the wizard auto-selects the connector", async () => {
+    fetchMock.mockImplementation(async (input: RequestInfo | URL) => {
+      const url = typeof input === "string" ? input : input.toString();
+
+      if (url === "/api/integrations/built-in-connectors") {
+        return new Response(JSON.stringify(builtInConnectors), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+
+      if (
+        url === "/api/integrations" ||
+        url === "/api/access-requests" ||
+        url === "/api/notifications" ||
+        url === "/api/oauth/connections"
+      ) {
+        return new Response(JSON.stringify([]), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+
+      throw new Error(`Unexpected fetch: ${url}`);
+    });
+
+    useSearchParamsMock.mockReturnValue(
+      new URLSearchParams({
+        showIntegrationWizard: "1",
+        builtIn: "notion",
+        oauth_provider: "webflow",
+        oauth_status: "error",
+        oauth_error:
+          'Webflow token exchange failed (400): {"error":"invalid_client"}',
+      }),
+    );
+
+    await act(async () => {
+      root.render(
+        <QueryClientProvider client={queryClient}>
+          <DashboardWorkspace
+            initialIntegrations={[]}
+            initialAccessRequests={[]}
+            initialNotifications={[]}
+            currentUser={{ name: "Admin User", email: "admin@example.com" }}
+            contextApiBaseUrl="https://example.com"
+            contextApiKey="test-key"
+          />
+        </QueryClientProvider>,
+      );
+    });
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    });
+
+    expect(container.textContent).toContain("Step-by-step integration setup");
+    expect(container.textContent).toContain(
+      'Webflow token exchange failed (400): {"error":"invalid_client"}',
+    );
+  });
 
   it("shows collapsed MCP-first usage sections on the top-level agent connection route", async () => {
     usePathnameMock.mockReturnValue("/agent-connection");
