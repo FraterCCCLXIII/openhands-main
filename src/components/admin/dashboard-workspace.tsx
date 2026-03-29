@@ -645,7 +645,15 @@ export const DashboardWorkspace = ({
       }),
     [contextApiBaseUrl, integrations],
   );
-
+  const normalizedBaseUrl = contextApiBaseUrl.replace(/\/$/, "");
+  const userRestListEndpoint = `${normalizedBaseUrl}/api/user/integrations`;
+  const userRestFunctionEndpoint = `${normalizedBaseUrl}/api/user/integrations/${agentConnectionGuide.integrationKey}/functions/${agentConnectionGuide.functionName}`;
+  const userRestCurlExample = [
+    `curl -X PATCH "${userRestFunctionEndpoint}"`,
+    '  -H "Authorization: Bearer YOUR_USER_API_KEY"',
+    '  -H "Content-Type: application/json"',
+    "  -d '{\"accessMode\":\"enabled\"}'",
+  ].join("\n");
 
   const filteredIntegrations = useMemo(() => {
     const normalizedSearch = integrationSearch.trim().toLowerCase();
@@ -1237,9 +1245,9 @@ export const DashboardWorkspace = ({
         ) : null}
 
         {activeSection === "apiKeys" ? (
-          <section className="space-y-4">
+          <section className="space-y-3">
             <CompactPanel title="API keys" icon={KeyRound}>
-              <div className="space-y-4">
+              <div className="space-y-3">
                 <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div>
@@ -1341,13 +1349,13 @@ export const DashboardWorkspace = ({
             </CompactPanel>
 
             <CompactPanel title="Connection details" icon={ShieldCheck}>
-              <div className="space-y-4">
+              <div className="space-y-3">
                 <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-4">
-                  <h3 className="text-sm font-semibold text-white">MCP</h3>
+                  <h3 className="text-sm font-semibold text-white">Agent MCP</h3>
                   <p className="mt-1 text-sm leading-6 text-[var(--color-text-base)]">
                     Connect your MCP client to the streamable HTTP endpoint below and authenticate with the restricted agent key.
                   </p>
-                  <div className="mt-4 divide-y divide-[var(--color-border)]">
+                  <div className="mt-3 divide-y divide-[var(--color-border)]">
                     <KeyValueRow
                       label="Endpoint"
                       value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.mcpEndpoint}</code>}
@@ -1357,7 +1365,7 @@ export const DashboardWorkspace = ({
                       value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.mcpToolName}</code>}
                     />
                   </div>
-                  <div className="mt-4 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)]">
+                  <div className="mt-3 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)]">
                     <div className="border-b border-[var(--color-border)] px-3 py-2 text-xs uppercase tracking-[0.18em] text-[var(--color-text-base)]">
                       MCP config example
                     </div>
@@ -1368,11 +1376,11 @@ export const DashboardWorkspace = ({
                 </div>
 
                 <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-4">
-                  <h3 className="text-sm font-semibold text-white">REST API</h3>
+                  <h3 className="text-sm font-semibold text-white">Agent REST API</h3>
                   <p className="mt-1 text-sm leading-6 text-[var(--color-text-base)]">
                     Call context-layer tool routes directly over HTTPS with the restricted agent key.
                   </p>
-                  <div className="mt-4 divide-y divide-[var(--color-border)]">
+                  <div className="mt-3 divide-y divide-[var(--color-border)]">
                     <KeyValueRow
                       label="Tool endpoint"
                       value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.endpoint}</code>}
@@ -1386,12 +1394,37 @@ export const DashboardWorkspace = ({
                       value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.skillEndpoint}</code>}
                     />
                   </div>
-                  <div className="mt-4 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)]">
+                  <div className="mt-3 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)]">
                     <div className="border-b border-[var(--color-border)] px-3 py-2 text-xs uppercase tracking-[0.18em] text-[var(--color-text-base)]">
                       cURL example
                     </div>
                     <pre className="overflow-x-auto whitespace-pre-wrap px-3 py-3 text-xs leading-6 text-[var(--color-text-base)]">
                       {agentConnectionGuide.curlExample}
+                    </pre>
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-4">
+                  <h3 className="text-sm font-semibold text-white">User REST API</h3>
+                  <p className="mt-1 text-sm leading-6 text-[var(--color-text-base)]">
+                    Call dashboard-equivalent endpoints directly over HTTPS with the user automation key.
+                  </p>
+                  <div className="mt-3 divide-y divide-[var(--color-border)]">
+                    <KeyValueRow
+                      label="List integrations"
+                      value={<code className="break-all text-xs text-[var(--color-text-active)]">{userRestListEndpoint}</code>}
+                    />
+                    <KeyValueRow
+                      label="Update access mode"
+                      value={<code className="break-all text-xs text-[var(--color-text-active)]">{userRestFunctionEndpoint}</code>}
+                    />
+                  </div>
+                  <div className="mt-3 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)]">
+                    <div className="border-b border-[var(--color-border)] px-3 py-2 text-xs uppercase tracking-[0.18em] text-[var(--color-text-base)]">
+                      cURL example
+                    </div>
+                    <pre className="overflow-x-auto whitespace-pre-wrap px-3 py-3 text-xs leading-6 text-[var(--color-text-base)]">
+                      {userRestCurlExample}
                     </pre>
                   </div>
                 </div>

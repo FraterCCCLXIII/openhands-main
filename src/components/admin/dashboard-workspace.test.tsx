@@ -672,11 +672,13 @@ describe("DashboardWorkspace", () => {
       "Use this key to programmatically set up APIs in the context layer.",
     );
     expect(text).toContain("Connection details");
-    expect(text).toContain("MCP");
-    expect(text).toContain("REST API");
+    expect(text).toContain("Agent MCP");
+    expect(text).toContain("Agent REST API");
+    expect(text).toContain("User REST API");
     expect(text).toContain("https://example.com/api/mcp");
     expect(text).toContain("https://example.com/api/context/openapi");
     expect(text).toContain("https://example.com/api/context/skill");
+    expect(text).toContain("https://example.com/api/user/integrations");
     expect(text).not.toContain("Generate");
     expect(text).not.toContain("Revoke");
 
