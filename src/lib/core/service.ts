@@ -1,6 +1,7 @@
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 
 import { DEFAULT_CASE_BY_CASE_APPROVAL_MINUTES } from "@/src/lib/access-requests";
+import { isAppAdminEmail } from "@/src/lib/app-admins";
 import type { AdapterRegistry } from "@/src/lib/core/adapter-registry";
 import { addMinutes, nowIso } from "@/src/lib/core/date";
 import { ContextLayerError } from "@/src/lib/core/errors";
@@ -144,6 +145,26 @@ const isConnectionExpired = (expiresAt?: string, bufferMs = 60_000) => {
 
 
 const normalizeAgentApiKeyOwner = (ownerId: string) => ownerId.trim().toLowerCase();
+
+const requireAdminApiKeyOwner = (ownerId: string) => {
+  const normalizedOwnerId = normalizeAgentApiKeyOwner(ownerId);
+
+  if (!normalizedOwnerId) {
+    throw new ContextLayerError(
+      "A signed-in admin email is required before issuing an admin API key.",
+      400,
+    );
+  }
+
+  if (!isAppAdminEmail(normalizedOwnerId)) {
+    throw new ContextLayerError(
+      "Only allowlisted app administrators can manage admin API keys.",
+      403,
+    );
+  }
+
+  return normalizedOwnerId;
+};
 
 const createAgentApiKeyValue = () => `cla_${randomBytes(24).toString("base64url")}`;
 const createUserApiKeyValue = () => `clu_${randomBytes(32).toString("base64url")}`;
@@ -660,7 +681,7 @@ export class ContextLayerService {
 
   async getAdminApiKeyStatus(ownerId: string) {
     await this.initialize();
-    const normalizedOwnerId = normalizeAgentApiKeyOwner(ownerId);
+    const normalizedOwnerId = requireAdminApiKeyOwner(ownerId);
     const record = await this.repository.getAdminApiKeyByOwner(normalizedOwnerId);
 
     if (!record) {
@@ -685,7 +706,7 @@ export class ContextLayerService {
 
   async getAdminApiKeyValue(ownerId: string) {
     await this.initialize();
-    const normalizedOwnerId = normalizeAgentApiKeyOwner(ownerId);
+    const normalizedOwnerId = requireAdminApiKeyOwner(ownerId);
     const record = await this.repository.getAdminApiKeyByOwner(normalizedOwnerId);
 
     if (!record?.encryptedApiKey) {
@@ -697,14 +718,7 @@ export class ContextLayerService {
 
   async rotateAdminApiKey(ownerId: string) {
     await this.initialize();
-    const normalizedOwnerId = normalizeAgentApiKeyOwner(ownerId);
-
-    if (!normalizedOwnerId) {
-      throw new ContextLayerError(
-        "A signed-in admin email is required before issuing an admin API key.",
-        400,
-      );
-    }
+    const normalizedOwnerId = requireAdminApiKeyOwner(ownerId);
 
     const existing = await this.repository.getAdminApiKeyByOwner(normalizedOwnerId);
     const apiKey = createAdminApiKeyValue();
@@ -729,7 +743,7 @@ export class ContextLayerService {
 
   async revokeAdminApiKey(ownerId: string) {
     await this.initialize();
-    const normalizedOwnerId = normalizeAgentApiKeyOwner(ownerId);
+    const normalizedOwnerId = requireAdminApiKeyOwner(ownerId);
     const existing = await this.repository.getAdminApiKeyByOwner(normalizedOwnerId);
 
     if (!existing) {
@@ -747,7 +761,15 @@ export class ContextLayerService {
     }
 
     await this.initialize();
-    return this.repository.findAdminApiKeyByHash(hashScopedApiKey(normalizedApiKey));
+    const record = await this.repository.findAdminApiKeyByHash(
+      hashScopedApiKey(normalizedApiKey),
+    );
+
+    if (!record || !isAppAdminEmail(record.ownerId)) {
+      return null;
+    }
+
+    return record;
   }
 
   async listIntegrationConnections(ownerId: string) {
@@ -1251,18 +1273,19 @@ export class ContextLayerService {
         integration,
         options.ownerId,
       );
+      const invocationIntegration = resolvedIntegration;
 
       const data =
         functionSpec.executionMode === "mock"
           ? await this.adapters.invoke("mock", {
               agentId,
-              integration: resolvedIntegration,
+              integration: invocationIntegration,
               functionSpec,
               payload,
             })
-          : await this.adapters.invoke(resolvedIntegration.provider, {
+          : await this.adapters.invoke(invocationIntegration.provider, {
               agentId,
-              integration: resolvedIntegration,
+              integration: invocationIntegration,
               functionSpec,
               payload,
             });
@@ -1272,7 +1295,7 @@ export class ContextLayerService {
           ownerId: options.ownerId,
           agentId,
           agentClass,
-          integration: resolvedIntegration,
+          integration: invocationIntegration,
           functionName,
           scopes: decision.effectiveScopes,
           payloadKeys,
@@ -1283,11 +1306,11 @@ export class ContextLayerService {
       });
 
       return {
-        integration: resolvedIntegration.key,
+        integration: invocationIntegration.key,
         function: functionSpec.name,
-        provider: resolvedIntegration.provider,
-        kind: resolvedIntegration.kind,
-        authStrategy: resolvedIntegration.authStrategy,
+        provider: invocationIntegration.provider,
+        kind: invocationIntegration.kind,
+        authStrategy: invocationIntegration.authStrategy,
         decision,
         data,
       };

@@ -661,14 +661,12 @@ describe("DashboardWorkspace", () => {
               createdAt: "2026-03-29T10:00:00.000Z",
               updatedAt: "2026-03-29T10:00:00.000Z",
             }}
-            userApiKeyValue="clu_1234567890abcdefghijklmnop"
             adminApiKey={{
               keyPrefix: "clad_123456",
               keySuffix: "wxyz",
               createdAt: "2026-03-29T10:00:00.000Z",
               updatedAt: "2026-03-29T10:00:00.000Z",
             }}
-            adminApiKeyValue="clad_1234567890abcdefghijklmnopqrstuv"
           />
         </QueryClientProvider>,
       );
@@ -1274,6 +1272,10 @@ describe("DashboardWorkspace", () => {
       await Promise.resolve();
     });
 
+    expect(
+      fetchMock.mock.calls.some(([input]) => String(input) === "/api/user/key"),
+    ).toBe(false);
+
     const revealButtons = Array.from(container.querySelectorAll("button")).filter((button) =>
       button.textContent?.includes("Reveal"),
     );
@@ -1299,6 +1301,202 @@ describe("DashboardWorkspace", () => {
     });
 
     expect(writeTextMock).toHaveBeenCalledWith("clu_1234567890abcdefghijklmnop");
+    expect(copyButton?.querySelector("svg")?.getAttribute("class")).toContain(
+      "lucide-circle-check",
+    );
+  });
+
+  it("creates a user automation key only when the user explicitly copies it", async () => {
+    usePathnameMock.mockReturnValue("/agent-connection");
+
+    const writeTextMock = vi.fn().mockResolvedValue(undefined);
+    vi.stubGlobal("navigator", {
+      clipboard: {
+        writeText: writeTextMock,
+      },
+    });
+
+    fetchMock.mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = typeof input === "string" ? input : input.toString();
+      const method = init?.method ?? "GET";
+
+      if (url === "/api/user/key" && method === "GET") {
+        return new Response(
+          JSON.stringify({
+            hasKey: false,
+            key: null,
+            apiKey: null,
+          }),
+          {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          },
+        );
+      }
+
+      if (url === "/api/user/key" && method === "POST") {
+        return new Response(
+          JSON.stringify({
+            apiKey: "clu_1234567890abcdefghijklmnop",
+            key: {
+              keyPrefix: "clu_12345678",
+              keySuffix: "mnop",
+              createdAt: "2026-03-29T10:00:00.000Z",
+              updatedAt: "2026-03-29T10:00:00.000Z",
+            },
+          }),
+          {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          },
+        );
+      }
+
+      return new Response(JSON.stringify([]), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    });
+
+    await act(async () => {
+      root.render(
+        <QueryClientProvider client={queryClient}>
+          <DashboardWorkspace
+            initialIntegrations={[]}
+            initialAccessRequests={[]}
+            initialNotifications={[]}
+            currentUser={{ name: "Admin User", email: "admin@example.com" }}
+            contextApiBaseUrl="https://example.com"
+            contextApiKey="test-key"
+          />
+        </QueryClientProvider>,
+      );
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(container.textContent).toContain(
+      "No user automation key yet. Reveal or copy to create one.",
+    );
+    expect(
+      fetchMock.mock.calls.some(([input]) => String(input) === "/api/user/key"),
+    ).toBe(false);
+
+    const copyButton = container.querySelector(
+      'button[aria-label="Copy user automation key"]',
+    ) as HTMLButtonElement | null;
+    expect(copyButton).toBeTruthy();
+
+    await act(async () => {
+      copyButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(writeTextMock).toHaveBeenCalledWith("clu_1234567890abcdefghijklmnop");
+    expect(
+      fetchMock.mock.calls
+        .filter(([input]) => String(input) === "/api/user/key")
+        .map(([, init]) => init?.method ?? "GET"),
+    ).toEqual(["GET", "POST"]);
+    expect(container.textContent).toContain(
+      "Created a new user automation key. Save it somewhere secure because the full value is only shown when you explicitly reveal or copy it.",
+    );
+  });
+
+
+  it("reveals and copies the admin automation key only after an explicit action", async () => {
+    usePathnameMock.mockReturnValue("/agent-connection");
+    vi.useFakeTimers();
+
+    const writeTextMock = vi.fn().mockResolvedValue(undefined);
+    vi.stubGlobal("navigator", {
+      clipboard: {
+        writeText: writeTextMock,
+      },
+    });
+
+    fetchMock.mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = typeof input === "string" ? input : input.toString();
+      const method = init?.method ?? "GET";
+
+      if (url === "/api/admin/key" && method === "GET") {
+        return new Response(
+          JSON.stringify({
+            hasKey: true,
+            key: {
+              keyPrefix: "clad_123456",
+              keySuffix: "wxyz",
+              createdAt: "2026-03-29T10:00:00.000Z",
+              updatedAt: "2026-03-29T10:00:00.000Z",
+            },
+            apiKey: "clad_1234567890abcdefghijklmnopqrstuv",
+          }),
+          {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          },
+        );
+      }
+
+      return new Response(JSON.stringify([]), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    });
+
+    await act(async () => {
+      root.render(
+        <QueryClientProvider client={queryClient}>
+          <DashboardWorkspace
+            initialIntegrations={[]}
+            initialAccessRequests={[]}
+            initialNotifications={[]}
+            currentUser={{ name: "Admin User", email: "admin@example.com" }}
+            contextApiBaseUrl="https://example.com"
+            contextApiKey="test-key"
+            adminApiKey={{
+              keyPrefix: "clad_123456",
+              keySuffix: "wxyz",
+              createdAt: "2026-03-29T10:00:00.000Z",
+              updatedAt: "2026-03-29T10:00:00.000Z",
+            }}
+          />
+        </QueryClientProvider>,
+      );
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(
+      fetchMock.mock.calls.some(([input]) => String(input) === "/api/admin/key"),
+    ).toBe(false);
+
+    const revealButtons = Array.from(container.querySelectorAll("button")).filter((button) =>
+      button.textContent?.includes("Reveal"),
+    );
+    const revealButton = revealButtons[2] as HTMLButtonElement | undefined;
+    const copyButton = container.querySelector(
+      'button[aria-label="Copy admin automation key"]',
+    ) as HTMLButtonElement | null;
+    expect(revealButton?.textContent).toContain("Reveal");
+    expect(copyButton).toBeTruthy();
+
+    await act(async () => {
+      revealButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(container.textContent).toContain("clad_1234567890abcdefghijklmnopqrstuv");
+
+    await act(async () => {
+      copyButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(writeTextMock).toHaveBeenCalledWith("clad_1234567890abcdefghijklmnopqrstuv");
     expect(copyButton?.querySelector("svg")?.getAttribute("class")).toContain(
       "lucide-circle-check",
     );

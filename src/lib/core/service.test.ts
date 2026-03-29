@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto";
+
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { HttpAdapter } from "@/src/lib/adapters/http-adapter";
@@ -660,6 +662,7 @@ describe("ContextLayerService", () => {
 
 
   it("rotates and revokes admin API keys with hashed auth and encrypted recovery", async () => {
+    vi.stubEnv("APP_ADMIN_EMAILS", "admin@example.com");
     const service = createService();
 
     const first = await service.rotateAdminApiKey("Admin@Example.com");
@@ -707,6 +710,37 @@ describe("ContextLayerService", () => {
     const service = createService();
 
     expect(await service.getStoredAdminApiKey("not-a-real-admin-key")).toBeNull();
+  });
+
+  it("rejects admin API key issuance and recovery for non-admin owners", async () => {
+    vi.stubEnv("APP_ADMIN_EMAILS", "admin@example.com");
+    const service = createService();
+    const seededApiKey = "clad_seeded_non_admin_key_value";
+    const timestamp = new Date().toISOString();
+
+    await testRepo.saveAdminApiKey({
+      ownerId: OWNER_ID,
+      apiKeyHash: createHash("sha256").update(seededApiKey).digest("hex"),
+      keyPrefix: seededApiKey.slice(0, 12),
+      keySuffix: seededApiKey.slice(-4),
+      encryptedApiKey: null,
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    });
+
+    await expect(service.rotateAdminApiKey(OWNER_ID)).rejects.toMatchObject({
+      statusCode: 403,
+    });
+    await expect(service.getAdminApiKeyStatus(OWNER_ID)).rejects.toMatchObject({
+      statusCode: 403,
+    });
+    await expect(service.getAdminApiKeyValue(OWNER_ID)).rejects.toMatchObject({
+      statusCode: 403,
+    });
+    await expect(service.revokeAdminApiKey(OWNER_ID)).rejects.toMatchObject({
+      statusCode: 403,
+    });
+    expect(await service.getStoredAdminApiKey(seededApiKey)).toBeNull();
   });
 
   it("requires OAuth client credentials when first registering an OAuth managed connector", async () => {

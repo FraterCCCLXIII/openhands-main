@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto";
+
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { GET } from "./route";
@@ -120,7 +122,17 @@ describe("GET /api/admin/openapi", () => {
   });
 
   it("rejects admin keys for users who are no longer allowlisted", async () => {
-    const apiKey = await seedAdminKey("user@example.com");
+    const apiKey = "clad_deallowlisted_user_key_value";
+    await testRepo.saveAdminApiKey({
+      ownerId: "user@example.com",
+      apiKeyHash: createHash("sha256").update(apiKey).digest("hex"),
+      keyPrefix: apiKey.slice(0, 12),
+      keySuffix: apiKey.slice(-4),
+      encryptedApiKey: null,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
+    setRuntimeRepository(testRepo);
 
     const response = await GET(
       new Request("http://localhost:3000/api/admin/openapi", {
@@ -130,9 +142,10 @@ describe("GET /api/admin/openapi", () => {
       }),
     );
 
-    expect(response.status).toBe(403);
+    expect(response.status).toBe(401);
+    expect(response.headers.get("WWW-Authenticate")).toBe(ADMIN_API_BEARER_CHALLENGE);
     await expect(response.json()).resolves.toMatchObject({
-      detail: "This endpoint requires an active admin API key for an allowlisted admin user.",
+      detail: ADMIN_API_UNAUTHORIZED_DETAIL,
     });
   });
 

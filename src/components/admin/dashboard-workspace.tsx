@@ -604,62 +604,6 @@ export const DashboardWorkspace = ({
   }, [initialAdminApiKeyValue]);
 
   useEffect(() => {
-    if (!userApiKeyStatus || userApiKeyValue) {
-      return;
-    }
-
-    let canceled = false;
-
-    void fetchJson<UserApiKeyResponse>("/api/user/key", {
-      cache: "no-store",
-    })
-      .then((response) => {
-        if (canceled) {
-          return;
-        }
-        setUserApiKeyStatus(response.key);
-        if (response.apiKey) {
-          setUserApiKeyValue(response.apiKey);
-        }
-      })
-      .catch(() => {
-        // Leave the masked metadata visible if the current key cannot be re-fetched.
-      });
-
-    return () => {
-      canceled = true;
-    };
-  }, [userApiKeyStatus, userApiKeyValue]);
-
-  useEffect(() => {
-    if (!isAdmin || !adminApiKeyStatus || adminApiKeyValue) {
-      return;
-    }
-
-    let canceled = false;
-
-    void fetchJson<AdminApiKeyResponse>("/api/admin/key", {
-      cache: "no-store",
-    })
-      .then((response) => {
-        if (canceled) {
-          return;
-        }
-        setAdminApiKeyStatus(response.key);
-        if (response.apiKey) {
-          setAdminApiKeyValue(response.apiKey);
-        }
-      })
-      .catch(() => {
-        // Leave the masked metadata visible if the current key cannot be re-fetched.
-      });
-
-    return () => {
-      canceled = true;
-    };
-  }, [adminApiKeyStatus, adminApiKeyValue, isAdmin]);
-
-  useEffect(() => {
     if (!userApiKeyCopied) {
       return;
     }
@@ -837,13 +781,13 @@ export const DashboardWorkspace = ({
   );
   const contextApiReady = contextApiKey.trim().length > 0;
   const maskedApiKey = maskApiKey(contextApiKey, revealApiKey);
-  const userApiKeyReady = userApiKeyStatus !== null;
+  const hasUserApiKey = userApiKeyStatus !== null;
   const maskedUserApiKey = userApiKeyValue
     ? maskApiKey(userApiKeyValue, revealUserApiKey)
     : userApiKeyStatus
       ? maskStoredApiKey(userApiKeyStatus.keyPrefix, userApiKeyStatus.keySuffix)
       : "";
-  const adminApiKeyReady = adminApiKeyStatus !== null;
+  const hasAdminApiKey = adminApiKeyStatus !== null;
   const maskedAdminApiKey = adminApiKeyValue
     ? maskApiKey(adminApiKeyValue, revealAdminApiKey)
     : adminApiKeyStatus
@@ -1245,7 +1189,9 @@ export const DashboardWorkspace = ({
     setUserApiKeyStatus(rotated.key);
     setUserApiKeyValue(rotated.apiKey);
     setStatusMessage(
-      "Regenerated your user automation key so the full value can be shown again. Update any existing clients using the previous key.",
+      current.hasKey
+        ? "Regenerated your user automation key so the full value can be shown again. Update any existing clients using the previous key."
+        : "Created a new user automation key. Save it somewhere secure because the full value is only shown when you explicitly reveal or copy it.",
     );
     return rotated.apiKey;
   };
@@ -1276,17 +1222,14 @@ export const DashboardWorkspace = ({
     setAdminApiKeyStatus(rotated.key);
     setAdminApiKeyValue(rotated.apiKey);
     setStatusMessage(
-      "Regenerated your admin automation key so the full value can be shown again. Update any existing clients using the previous key.",
+      current.hasKey
+        ? "Regenerated your admin automation key so the full value can be shown again. Update any existing clients using the previous key."
+        : "Created a new admin automation key. Save it somewhere secure because the full value is only shown when you explicitly reveal or copy it.",
     );
     return rotated.apiKey;
   };
 
   const handleRevealUserApiKey = async () => {
-    if (!userApiKeyReady) {
-      setStatusMessage("The user automation key is not available yet.");
-      return;
-    }
-
     if (revealUserApiKey) {
       setRevealUserApiKey(false);
       return;
@@ -1302,11 +1245,6 @@ export const DashboardWorkspace = ({
   };
 
   const handleRevealAdminApiKey = async () => {
-    if (!adminApiKeyReady) {
-      setStatusMessage("The admin automation key is not available yet.");
-      return;
-    }
-
     if (revealAdminApiKey) {
       setRevealAdminApiKey(false);
       return;
@@ -1322,11 +1260,6 @@ export const DashboardWorkspace = ({
   };
 
   const handleCopyUserApiKey = async () => {
-    if (!userApiKeyReady) {
-      setStatusMessage("The user automation key is not available yet.");
-      return;
-    }
-
     try {
       const fullUserApiKey = await ensureUserApiKeyValue();
       await copyTextToClipboard(fullUserApiKey);
@@ -1338,11 +1271,6 @@ export const DashboardWorkspace = ({
   };
 
   const handleCopyAdminApiKey = async () => {
-    if (!adminApiKeyReady) {
-      setStatusMessage("The admin automation key is not available yet.");
-      return;
-    }
-
     try {
       const fullAdminApiKey = await ensureAdminApiKeyValue();
       await copyTextToClipboard(fullAdminApiKey);
@@ -2212,11 +2140,11 @@ export const DashboardWorkspace = ({
                         Use this key to programmatically manage user-scoped context-layer settings.
                       </p>
                     </div>
-                    <Badge tone={userApiKeyReady ? "warning" : "default"}>user</Badge>
+                    <Badge tone={hasUserApiKey ? "warning" : "default"}>user</Badge>
                   </div>
                   <div className="mt-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)] px-3 py-3">
                     <code className="block break-all text-sm text-white">
-                      {maskedUserApiKey || "No user automation key available yet."}
+                      {maskedUserApiKey || "No user automation key yet. Reveal or copy to create one."}
                     </code>
                   </div>
                   <div className="mt-4 flex flex-wrap gap-2">
@@ -2224,7 +2152,6 @@ export const DashboardWorkspace = ({
                       variant="secondary"
                       className="h-8 gap-2 rounded-md px-3 text-xs"
                       onClick={handleRevealUserApiKey}
-                      disabled={!userApiKeyReady}
                     >
                       {revealUserApiKey ? (
                         <EyeOff className="h-4 w-4" />
@@ -2237,7 +2164,6 @@ export const DashboardWorkspace = ({
                       variant="secondary"
                       className="h-8 gap-2 rounded-md px-3 text-xs"
                       onClick={handleCopyUserApiKey}
-                      disabled={!userApiKeyReady}
                       aria-label="Copy user automation key"
                     >
                       {userApiKeyCopied ? (
@@ -2259,11 +2185,11 @@ export const DashboardWorkspace = ({
                           Use this key for admin-only QA and operational automation surfaces.
                         </p>
                       </div>
-                      <Badge tone={adminApiKeyReady ? "warning" : "default"}>admin</Badge>
+                      <Badge tone={hasAdminApiKey ? "warning" : "default"}>admin</Badge>
                     </div>
                     <div className="mt-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)] px-3 py-3">
                       <code className="block break-all text-sm text-white">
-                        {maskedAdminApiKey || "No admin automation key available yet."}
+                        {maskedAdminApiKey || "No admin automation key yet. Reveal or copy to create one."}
                       </code>
                     </div>
                     <div className="mt-4 flex flex-wrap gap-2">
@@ -2271,7 +2197,6 @@ export const DashboardWorkspace = ({
                         variant="secondary"
                         className="h-8 gap-2 rounded-md px-3 text-xs"
                         onClick={handleRevealAdminApiKey}
-                        disabled={!adminApiKeyReady}
                       >
                         {revealAdminApiKey ? (
                           <EyeOff className="h-4 w-4" />
@@ -2284,7 +2209,6 @@ export const DashboardWorkspace = ({
                         variant="secondary"
                         className="h-8 gap-2 rounded-md px-3 text-xs"
                         onClick={handleCopyAdminApiKey}
-                        disabled={!adminApiKeyReady}
                         aria-label="Copy admin automation key"
                       >
                         {adminApiKeyCopied ? (

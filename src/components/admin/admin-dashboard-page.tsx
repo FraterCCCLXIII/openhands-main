@@ -36,36 +36,15 @@ export async function AdminDashboardPage() {
     initialNotifications,
     contextApiAuth,
     existingUserApiKey,
-    existingUserApiKeyValue,
     existingAdminApiKey,
-    existingAdminApiKeyValue,
   ] = await Promise.all([
     service.listOwnerIntegrationsWithUsage(contextApiOwner),
     service.listAccessRequests(),
     service.listNotifications(),
     service.getOrCreateAgentApiKey(contextApiOwner),
     service.getUserApiKeyStatus(contextApiOwner),
-    service.getUserApiKeyValue(contextApiOwner),
     isAdmin ? service.getAdminApiKeyStatus(contextApiOwner) : Promise.resolve(null),
-    isAdmin ? service.getAdminApiKeyValue(contextApiOwner) : Promise.resolve(null),
   ]);
-
-  let userApiKey = existingUserApiKey;
-  let userApiKeyValue: string | null = existingUserApiKeyValue;
-  let adminApiKey = existingAdminApiKey;
-  let adminApiKeyValue: string | null = existingAdminApiKeyValue;
-
-  if (!userApiKey) {
-    const createdUserApiKey = await service.rotateUserApiKey(contextApiOwner);
-    userApiKey = createdUserApiKey.key;
-    userApiKeyValue = createdUserApiKey.apiKey;
-  }
-
-  if (isAdmin && !adminApiKey) {
-    const createdAdminApiKey = await service.rotateAdminApiKey(contextApiOwner);
-    adminApiKey = createdAdminApiKey.key;
-    adminApiKeyValue = createdAdminApiKey.apiKey;
-  }
 
   return (
     <main className="min-h-screen px-6 py-8">
@@ -77,10 +56,8 @@ export async function AdminDashboardPage() {
           initialNotifications={initialNotifications}
           contextApiBaseUrl={getRequestOrigin(requestHeaders)}
           contextApiKey={contextApiAuth.apiKey}
-          userApiKey={userApiKey}
-          userApiKeyValue={userApiKeyValue}
-          adminApiKey={adminApiKey}
-          adminApiKeyValue={adminApiKeyValue}
+          userApiKey={existingUserApiKey}
+          adminApiKey={existingAdminApiKey}
           isAdmin={isAdmin}
         />
       </div>
