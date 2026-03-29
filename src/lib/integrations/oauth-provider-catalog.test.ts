@@ -18,11 +18,13 @@ describe("listOAuthProviderCatalog", () => {
     const notion = providers.find((provider) => provider.slug === "notion");
     const figma = providers.find((provider) => provider.slug === "figma");
     const slack = providers.find((provider) => provider.slug === "slack");
+    const webflow = providers.find((provider) => provider.slug === "webflow");
     const github = providers.find((provider) => provider.slug === "github");
 
     expect(notion).toMatchObject({ availability: "oauth_ready", builtInSlug: "notion" });
     expect(figma).toMatchObject({ availability: "oauth_ready", builtInSlug: "figma" });
     expect(slack).toMatchObject({ availability: "oauth_ready", builtInSlug: "slack" });
+    expect(webflow).toMatchObject({ availability: "oauth_ready", builtInSlug: "webflow" });
     expect(github).toMatchObject({ availability: "manual_token", builtInSlug: "github" });
   });
 
@@ -53,6 +55,7 @@ describe("listOAuthProviderCatalog", () => {
     const notion = providers.find((provider) => provider.slug === "notion");
     const googleCalendar = providers.find((provider) => provider.slug === "google-calendar");
     const slack = providers.find((provider) => provider.slug === "slack");
+    const webflow = providers.find((provider) => provider.slug === "webflow");
     const github = providers.find((provider) => provider.slug === "github");
     const elevenlabs = providers.find((provider) => provider.slug === "elevenlabs");
 
@@ -66,6 +69,18 @@ describe("listOAuthProviderCatalog", () => {
       tokenUrl: "https://slack.com/api/oauth.v2.user.access",
       clientAuthentication: "body",
       pkce: true,
+    });
+    expect(webflow).toMatchObject({
+      availability: "oauth_ready",
+      builtInSlug: "webflow",
+      docsUrl: "https://developers.webflow.com/apps/data/docs/register-an-app",
+    });
+    expect(webflow?.registrationDefaults).toMatchObject({
+      provider: "mcp",
+      serverUrl: "https://mcp.webflow.com/mcp",
+      authorizationUrl: "https://webflow.com/oauth/authorize",
+      tokenUrl: "https://api.webflow.com/oauth/access_token",
+      scopes: ["sites:read"],
     });
     expect(notion?.registrationDefaults).toMatchObject({
       provider: "http",
