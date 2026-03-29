@@ -127,6 +127,206 @@ describe("ContextLayerService", () => {
     expect(response.data).toEqual({ ok: true, payload: { limit: 5 } });
   });
 
+  it("records successful invocation metadata and exposes usage summaries", async () => {
+    const service = createService();
+    await installIntegration(service, baseIntegration);
+
+    await service.invokeContext(
+      "agent-usage",
+      "assistant",
+      "salesforce",
+      "accounts",
+      { limit: 5, q: "acme" },
+      ["accounts.read"],
+      { ownerId: OWNER_ID },
+    );
+
+    const sql = getActiveSql();
+    const rows = await sql`SELECT * FROM tool_invocations ORDER BY invoked_at ASC`;
+    const row = rows[0] as Record<string, unknown>;
+    const parseField = <T,>(value: unknown) =>
+      typeof value === "string" ? (JSON.parse(value) as T) : (value as T);
+
+    expect(rows).toHaveLength(1);
+    expect(row.owner_id).toBe(OWNER_ID);
+    expect(row.agent_id).toBe("agent-usage");
+    expect(row.agent_class).toBe("assistant");
+    expect(row.integration_key).toBe("salesforce");
+    expect(row.function_name).toBe("accounts");
+    expect(row.provider).toBe("composio");
+    expect(row.kind).toBe("api");
+    expect(row.auth_strategy).toBe("bearer");
+    expect(row.outcome).toBe("success");
+    expect(parseField<string[]>(row.scopes)).toEqual(["accounts.read"]);
+    expect(parseField<string[]>(row.payload_keys)).toEqual(["limit", "q"]);
+    expect(row.error_message).toBeNull();
+
+    const integrations = await service.listOwnerIntegrationsWithUsage(OWNER_ID);
+    expect(integrations[0]?.functions.accounts).toMatchObject({
+      invocationCount: 1,
+      lastInvocationOutcome: "success",
+    });
+    expect(integrations[0]?.functions.accounts.lastInvokedAt).toBeTruthy();
+  });
+
+  it("records denied invocation metadata for approval-required functions", async () => {
+    const repository = testRepo;
+    const service = new ContextLayerService(
+      repository,
+      new AdapterRegistry({
+        composio: { invoke: async () => ({ ok: true }) },
+        mock: { invoke: async () => ({}) },
+      }),
+      new NotificationPublisher(repository),
+    );
+
+    await installIntegration(service, {
+      ...baseIntegration,
+      functions: {
+        accounts: {
+          ...baseIntegration.functions.accounts,
+          accessMode: "approval_required",
+        },
+      },
+    });
+
+    await expect(
+      service.invokeContext(
+        "agent-denied",
+        "assistant",
+        "salesforce",
+        "accounts",
+        {},
+        ["accounts.read"],
+        { ownerId: OWNER_ID },
+      ),
+    ).rejects.toThrow("Permission required");
+
+    const sql = getActiveSql();
+    const rows = await sql`SELECT * FROM tool_invocations ORDER BY invoked_at ASC`;
+    const row = rows[0] as Record<string, unknown>;
+
+    expect(rows).toHaveLength(1);
+    expect(row.outcome).toBe("denied");
+    expect(row.error_message).toBe("Permission required");
+
+    const integrations = await service.listOwnerIntegrationsWithUsage(OWNER_ID);
+    expect(integrations[0]?.functions.accounts).toMatchObject({
+      invocationCount: 1,
+      lastInvocationOutcome: "denied",
+    });
+  });
+
+  it("returns successful results even when invocation tracking fails", async () => {
+    const repository = Object.create(testRepo) as ContextRepository;
+    const trackingError = new Error("telemetry unavailable");
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    repository.createToolInvocation = vi.fn(async () => {
+      throw trackingError;
+    });
+
+    const service = createService(repository);
+    await installIntegration(service, baseIntegration);
+
+    const response = await service.invokeContext(
+      "agent-success-logging-failure",
+      "assistant",
+      "salesforce",
+      "accounts",
+      { limit: 5 },
+      ["accounts.read"],
+      { ownerId: OWNER_ID },
+    );
+
+    expect(response.data).toEqual({ ok: true, payload: { limit: 5 } });
+    expect(repository.createToolInvocation).toHaveBeenCalledTimes(1);
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining("record a successful tool invocation"),
+    );
+  });
+
+  it("preserves permission-denied behavior when access-request side effects fail", async () => {
+    const repository = Object.create(testRepo) as ContextRepository;
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    repository.createAccessRequest = vi.fn(async () => {
+      throw new Error("access request unavailable");
+    });
+    repository.createToolInvocation = vi.fn(async () => {
+      throw new Error("telemetry unavailable");
+    });
+
+    const service = createService(repository);
+    await installIntegration(service, {
+      ...baseIntegration,
+      functions: {
+        accounts: {
+          ...baseIntegration.functions.accounts,
+          accessMode: "approval_required",
+        },
+      },
+    });
+
+    await expect(
+      service.invokeContext(
+        "agent-denied-side-effect-failure",
+        "assistant",
+        "salesforce",
+        "accounts",
+        {},
+        ["accounts.read"],
+        { ownerId: OWNER_ID },
+      ),
+    ).rejects.toThrow("Permission required");
+
+    const warningMessages = warnSpy.mock.calls.map(([message]) => String(message)).join("\n");
+    expect(warningMessages).toContain("create a pending access request");
+    expect(warningMessages).toContain("record a denied tool invocation");
+  });
+
+  it("preserves adapter errors when failed-invocation tracking also fails", async () => {
+    const repository = Object.create(testRepo) as ContextRepository;
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    repository.createToolInvocation = vi.fn(async () => {
+      throw new Error("telemetry unavailable");
+    });
+
+    const failingAdapter: IntegrationAdapter = {
+      invoke: async () => {
+        throw new Error("adapter boom");
+      },
+    };
+    const service = new ContextLayerService(
+      repository,
+      new AdapterRegistry({
+        composio: failingAdapter,
+        mcp: failingAdapter,
+        mock: failingAdapter,
+      }),
+      new NotificationPublisher(repository),
+    );
+    await installIntegration(service, baseIntegration);
+
+    await expect(
+      service.invokeContext(
+        "agent-error-logging-failure",
+        "assistant",
+        "salesforce",
+        "accounts",
+        { limit: 1 },
+        ["accounts.read"],
+        { ownerId: OWNER_ID },
+      ),
+    ).rejects.toThrow("adapter boom");
+
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining("record a failed tool invocation"),
+    );
+  });
+
+
   it("blocks disabled functions", async () => {
     const service = createService();
     await installIntegration(service, {
@@ -233,18 +433,20 @@ describe("ContextLayerService", () => {
       ),
     ).rejects.toThrow("Permission required");
 
-    const request = await service.createAccessRequest({
+    const pendingRequests = await repository.listAccessRequests();
+    expect(pendingRequests).toHaveLength(1);
+    expect(pendingRequests[0]).toMatchObject({
       agentId: "agent-4",
       agentClass: "assistant",
       integrationKey: "salesforce",
       functionName: "accounts",
       scopes: ["accounts.read"],
-      requestedMinutes: 30,
-      channels: [],
-      notificationTargets: {},
-      justification: "Need approval",
+      requestedMinutes: 240,
+      status: "pending",
     });
-    await service.approveAccessRequest(request.id, "human-1", 30);
+    expect(pendingRequests[0]?.channels).toEqual(["in_app"]);
+
+    await service.approveAccessRequest(pendingRequests[0]!.id, "human-1", 30);
 
     const response = await service.invokeContext(
       "agent-4",

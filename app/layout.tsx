@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import "./globals.css";
 import { Providers } from "@/src/components/providers";
+import { isAuthDisabled } from "@/src/lib/auth-config";
 
 export const metadata: Metadata = {
   title: "OpenHands Context Layer",
@@ -18,10 +19,12 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const authDisabled = isAuthDisabled();
+
   return (
     <html lang="en">
       <body>
-        <Providers>{children}</Providers>
+        <Providers authDisabled={authDisabled}>{children}</Providers>
       </body>
     </html>
   );

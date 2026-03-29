@@ -2,12 +2,14 @@ import type {
   AccessRequest,
   AgentApiKeyRecord,
   AgentClassPolicy,
+  FunctionUsageSummary,
   IntegrationConnectionRecord,
   IntegrationSpec,
   ManagedConnectorRecord,
   NotificationRecord,
   OAuthStateRecord,
   TemporaryGrant,
+  ToolInvocationRecord,
 } from "@/src/types/context-layer";
 
 export interface ContextRepository {
@@ -31,6 +33,8 @@ export interface ContextRepository {
   listTemporaryGrants(): Promise<TemporaryGrant[]>;
   saveTemporaryGrant(grant: TemporaryGrant): Promise<TemporaryGrant>;
   purgeExpiredGrants(nowIso: string): Promise<number>;
+  createToolInvocation(record: ToolInvocationRecord): Promise<ToolInvocationRecord>;
+  listOwnerFunctionUsageSummaries(ownerId: string): Promise<FunctionUsageSummary[]>;
   listNotifications(): Promise<NotificationRecord[]>;
   createNotification(notification: NotificationRecord): Promise<NotificationRecord>;
   getAgentApiKeyByOwner(ownerId: string): Promise<AgentApiKeyRecord | null>;

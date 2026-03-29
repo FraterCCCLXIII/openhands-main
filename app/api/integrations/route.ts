@@ -7,7 +7,7 @@ export async function GET() {
   try {
     const { ownerId } = await getCurrentUserIdentity();
     const service = getContextLayerService();
-    return ok(await service.listOwnerIntegrations(ownerId));
+    return ok(await service.listOwnerIntegrationsWithUsage(ownerId));
   } catch (error) {
     return fromError(error);
   }

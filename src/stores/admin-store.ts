@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-type RequestFilter = "all" | "pending" | "approved" | "rejected";
+type RequestFilter = "all" | "pending" | "approved" | "denied";
 
 type AdminStore = {
   providerFilter: string;

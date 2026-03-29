@@ -32,7 +32,7 @@ export async function AdminDashboardPage() {
   const service = getContextLayerService();
   const [initialIntegrations, initialAccessRequests, initialNotifications, contextApiAuth] =
     await Promise.all([
-      service.listOwnerIntegrations(contextApiOwner),
+      service.listOwnerIntegrationsWithUsage(contextApiOwner),
       service.listAccessRequests(),
       service.listNotifications(),
       service.getOrCreateAgentApiKey(contextApiOwner),

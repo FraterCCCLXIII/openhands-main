@@ -27,7 +27,11 @@ vi.mock("next-auth/react", () => ({
 }));
 
 import { DashboardWorkspace } from "@/src/components/admin/dashboard-workspace";
-import type { BuiltInConnectorOption, IntegrationSpec } from "@/src/types/context-layer";
+import type {
+  AccessRequest,
+  BuiltInConnectorOption,
+  IntegrationSpec,
+} from "@/src/types/context-layer";
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -969,6 +973,191 @@ describe("DashboardWorkspace", () => {
     ]);
   });
 
+  it("bulk disables only tracked unused skills from the integrations page", async () => {
+    usePathnameMock.mockReturnValue("/integrations");
+
+    let integrationsState: IntegrationSpec[] = [
+      {
+        key: "github",
+        name: "GitHub",
+        kind: "mcp",
+        provider: "mcp",
+        authStrategy: "bearer",
+        enabled: true,
+        fineGrainedPermissions: true,
+        config: { builtInSlug: "github" },
+        credentials: {},
+        functions: {
+          staleRead: {
+            name: "staleRead",
+            description: "Old tracked skill",
+            enabled: true,
+            accessMode: "enabled",
+            fineGrainedPermissions: true,
+            defaultScopes: ["repo:read"],
+            executionMode: "provider",
+            config: {},
+            lastInvokedAt: "2026-01-01T00:00:00.000Z",
+            lastInvocationOutcome: "success",
+            invocationCount: 3,
+          },
+          freshWrite: {
+            name: "freshWrite",
+            description: "Recently used skill",
+            enabled: true,
+            accessMode: "enabled",
+            fineGrainedPermissions: true,
+            defaultScopes: ["repo:write"],
+            executionMode: "provider",
+            config: {},
+            lastInvokedAt: "2026-03-25T00:00:00.000Z",
+            lastInvocationOutcome: "success",
+            invocationCount: 1,
+          },
+          noHistory: {
+            name: "noHistory",
+            description: "No tracked usage yet",
+            enabled: true,
+            accessMode: "enabled",
+            fineGrainedPermissions: true,
+            defaultScopes: [],
+            executionMode: "provider",
+            config: {},
+          },
+        },
+      },
+    ];
+
+    fetchMock.mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = typeof input === "string" ? input : input.toString();
+      const method = init?.method ?? "GET";
+
+      if (
+        url === "/api/access-requests" ||
+        url === "/api/notifications" ||
+        url === "/api/integrations/built-in-connectors"
+      ) {
+        return new Response(
+          JSON.stringify(
+            url === "/api/integrations/built-in-connectors" ? builtInConnectors : [],
+          ),
+          {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          },
+        );
+      }
+
+      if (url === "/api/integrations" && method === "GET") {
+        return new Response(JSON.stringify(integrationsState), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+
+      if (url === "/api/integrations/disable-unused" && method === "POST") {
+        const payload = JSON.parse(String(init?.body)) as {
+          thresholdValue: number;
+          thresholdUnit: string;
+        };
+        expect(payload).toEqual({ thresholdValue: 30, thresholdUnit: "days" });
+
+        integrationsState = integrationsState.map((integration) => ({
+          ...integration,
+          functions: {
+            ...integration.functions,
+            staleRead: {
+              ...integration.functions.staleRead,
+              enabled: false,
+              accessMode: "disabled",
+            },
+          },
+        }));
+
+        return new Response(
+          JSON.stringify({
+            thresholdValue: 30,
+            thresholdUnit: "days",
+            cutoffIso: "2026-02-27T00:00:00.000Z",
+            disabledCount: 1,
+            disabledFunctions: [
+              {
+                integrationKey: "github",
+                functionName: "staleRead",
+                lastInvokedAt: "2026-01-01T00:00:00.000Z",
+              },
+            ],
+          }),
+          {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          },
+        );
+      }
+
+      throw new Error(`Unexpected fetch: ${method} ${url}`);
+    });
+
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-03-29T00:00:00.000Z"));
+    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
+
+    await act(async () => {
+      root.render(
+        <QueryClientProvider client={queryClient}>
+          <DashboardWorkspace
+            initialIntegrations={integrationsState}
+            initialAccessRequests={[]}
+            initialNotifications={[]}
+            currentUser={{ name: "Admin User", email: "admin@example.com" }}
+            contextApiBaseUrl="https://example.com"
+            contextApiKey="test-key"
+          />
+        </QueryClientProvider>,
+      );
+    });
+
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(container.textContent).toContain("1 skill matched");
+    expect(
+      Array.from(container.querySelectorAll("button"))
+        .find((button) => button.getAttribute("aria-label") === "Disable unused functions")
+        ?.textContent,
+    ).toContain("Disable");
+    await act(async () => {
+      Array.from(container.querySelectorAll("button"))
+        .find((button) => button.textContent?.includes("Show skills"))
+        ?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+    expect(container.textContent).toContain("Last tracked invocation:");
+    expect(container.textContent).toContain("3 total");
+    expect(container.textContent).toContain("No tracked usage yet");
+
+    await act(async () => {
+      Array.from(container.querySelectorAll("button"))
+        .find((button) => button.getAttribute("aria-label") === "Disable unused functions")
+        ?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(confirmSpy).toHaveBeenCalledTimes(1);
+    expect(confirmSpy.mock.calls[0]?.[0]).toContain("Disable 1 tracked function");
+    expect(confirmSpy.mock.calls[0]?.[0]).toContain("since");
+    expect(container.textContent).toContain("Disabled 1 tracked function");
+    expect(container.textContent).toContain("0 skills matched");
+    expect(integrationsState[0]?.functions.staleRead.accessMode).toBe("disabled");
+
+    confirmSpy.mockRestore();
+  });
+
   it("shows a temporary check icon when the API key is copied without posting a success message", async () => {
     usePathnameMock.mockReturnValue("/agent-connection");
     vi.useFakeTimers();
@@ -1026,5 +1215,287 @@ describe("DashboardWorkspace", () => {
       copyButtonAfterTimeout?.querySelector("svg")?.getAttribute("class"),
     ).toContain("lucide-copy");
   });
+
+  it("shows the case-by-case approvals page with pending requests sorted newest first and filterable statuses", async () => {
+    usePathnameMock.mockReturnValue("/case-by-case-approvals");
+
+    const accessRequestsState: AccessRequest[] = [
+      {
+        id: "req-pending-older",
+        agentId: "agent-1",
+        agentClass: "assistant",
+        integrationKey: "slack",
+        functionName: "send_message",
+        scopes: ["chat:write"],
+        requestedMinutes: 240,
+        channels: ["in_app"],
+        notificationTargets: { in_app: "owner@example.com" },
+        justification: "Need to send Slack updates",
+        createdAt: "2026-03-01T09:00:00.000Z",
+        status: "pending",
+      },
+      {
+        id: "req-approved",
+        agentId: "agent-2",
+        agentClass: "assistant",
+        integrationKey: "github",
+        functionName: "create_issue",
+        scopes: ["issues:write"],
+        requestedMinutes: 240,
+        channels: ["in_app"],
+        notificationTargets: { in_app: "owner@example.com" },
+        justification: "Need to file an issue",
+        createdAt: "2026-03-02T09:00:00.000Z",
+        status: "approved",
+        decidedAt: "2026-03-02T10:00:00.000Z",
+        decidedBy: "admin@example.com",
+      },
+      {
+        id: "req-denied",
+        agentId: "agent-3",
+        agentClass: "reviewer",
+        integrationKey: "linear",
+        functionName: "delete_comment",
+        scopes: ["comments:write"],
+        requestedMinutes: 240,
+        channels: ["in_app"],
+        notificationTargets: { in_app: "owner@example.com" },
+        justification: "Need moderation access",
+        createdAt: "2026-03-03T09:00:00.000Z",
+        status: "rejected",
+        decidedAt: "2026-03-03T10:00:00.000Z",
+        decidedBy: "admin@example.com",
+      },
+      {
+        id: "req-pending-newer",
+        agentId: "agent-4",
+        agentClass: "assistant",
+        integrationKey: "github",
+        functionName: "delete_repo",
+        scopes: ["repo:admin"],
+        requestedMinutes: 240,
+        channels: ["in_app"],
+        notificationTargets: { in_app: "owner@example.com" },
+        justification: "Need repo cleanup access",
+        createdAt: "2026-03-04T09:00:00.000Z",
+        status: "pending",
+      },
+    ];
+
+    fetchMock.mockImplementation(async (input: RequestInfo | URL) => {
+      const url = typeof input === "string" ? input : input.toString();
+
+      if (url === "/api/integrations") {
+        return new Response(JSON.stringify([]), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+
+      if (url === "/api/access-requests") {
+        return new Response(JSON.stringify(accessRequestsState), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+
+      throw new Error(`Unexpected fetch: ${url}`);
+    });
+
+    await act(async () => {
+      root.render(
+        <QueryClientProvider client={queryClient}>
+          <DashboardWorkspace
+            initialIntegrations={[]}
+            initialAccessRequests={accessRequestsState}
+            initialNotifications={[]}
+            currentUser={{ name: "Admin User", email: "admin@example.com" }}
+            contextApiBaseUrl="https://example.com"
+            contextApiKey="test-key"
+          />
+        </QueryClientProvider>,
+      );
+    });
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    expect(container.querySelector("h1")?.textContent).toBe(
+      "Case-by-case Approvals",
+    );
+    expect(
+      container.querySelector(
+        'input[type="search"][aria-label="Search case-by-case approvals"]',
+      ),
+    ).toBeTruthy();
+
+    const visibleRequestIds = Array.from(
+      container.querySelectorAll("[data-request-id]"),
+    ).map((element) => element.getAttribute("data-request-id"));
+    expect(visibleRequestIds).toEqual([
+      "req-pending-newer",
+      "req-pending-older",
+    ]);
+
+    await act(async () => {
+      setInputValue(
+        container.querySelector(
+          'input[type="search"][aria-label="Search case-by-case approvals"]',
+        ) as HTMLInputElement,
+        "github",
+      );
+    });
+
+    expect(
+      Array.from(container.querySelectorAll("[data-request-id]")).map((element) =>
+        element.getAttribute("data-request-id"),
+      ),
+    ).toEqual(["req-pending-newer"]);
+
+    await act(async () => {
+      setInputValue(
+        container.querySelector(
+          'input[type="search"][aria-label="Search case-by-case approvals"]',
+        ) as HTMLInputElement,
+        "",
+      );
+    });
+
+    const approvedFilterButton = Array.from(
+      container.querySelectorAll("button"),
+    ).find((button) => button.textContent?.includes("approved"));
+    expect(approvedFilterButton).toBeTruthy();
+
+    await act(async () => {
+      approvedFilterButton?.dispatchEvent(
+        new MouseEvent("click", { bubbles: true }),
+      );
+    });
+
+    expect(
+      Array.from(container.querySelectorAll("[data-request-id]")).map((element) =>
+        element.getAttribute("data-request-id"),
+      ),
+    ).toEqual(["req-approved"]);
+
+    const deniedFilterButton = Array.from(container.querySelectorAll("button")).find(
+      (button) => button.textContent?.includes("denied"),
+    );
+    expect(deniedFilterButton).toBeTruthy();
+
+    await act(async () => {
+      deniedFilterButton?.dispatchEvent(
+        new MouseEvent("click", { bubbles: true }),
+      );
+    });
+
+    expect(container.textContent).toContain("denied");
+    expect(
+      Array.from(container.querySelectorAll("[data-request-id]")).map((element) =>
+        element.getAttribute("data-request-id"),
+      ),
+    ).toEqual(["req-denied"]);
+  });
+
+  it("approves selected case-by-case requests using the default 4 hour duration", async () => {
+    usePathnameMock.mockReturnValue("/case-by-case-approvals");
+
+    const accessRequestsState: AccessRequest[] = [
+      {
+        id: "req-pending",
+        agentId: "agent-1",
+        agentClass: "assistant",
+        integrationKey: "github",
+        functionName: "delete_repo",
+        scopes: ["repo:admin"],
+        requestedMinutes: 240,
+        channels: ["in_app"],
+        notificationTargets: { in_app: "owner@example.com" },
+        justification: "Need repo cleanup access",
+        createdAt: "2026-03-04T09:00:00.000Z",
+        status: "pending",
+      },
+    ];
+
+    let approvePayload: { approver: string; durationMinutes: number } | null = null;
+
+    fetchMock.mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = typeof input === "string" ? input : input.toString();
+
+      if (url === "/api/integrations" || url === "/api/access-requests") {
+        return new Response(
+          JSON.stringify(url === "/api/integrations" ? [] : accessRequestsState),
+          {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          },
+        );
+      }
+
+      if (url === "/api/access-requests/req-pending/approve") {
+        approvePayload = JSON.parse(String(init?.body)) as {
+          approver: string;
+          durationMinutes: number;
+        };
+        return new Response(JSON.stringify({ ok: true }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+
+      throw new Error(`Unexpected fetch: ${url}`);
+    });
+
+    await act(async () => {
+      root.render(
+        <QueryClientProvider client={queryClient}>
+          <DashboardWorkspace
+            initialIntegrations={[]}
+            initialAccessRequests={accessRequestsState}
+            initialNotifications={[]}
+            currentUser={{ name: "Admin User", email: "admin@example.com" }}
+            contextApiBaseUrl="https://example.com"
+            contextApiKey="test-key"
+          />
+        </QueryClientProvider>,
+      );
+    });
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    const selectAllButton = Array.from(container.querySelectorAll("button")).find(
+      (button) => button.textContent?.includes("Select all matches"),
+    );
+    expect(selectAllButton).toBeTruthy();
+
+    await act(async () => {
+      selectAllButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    const approveSelectedButton = Array.from(
+      container.querySelectorAll("button"),
+    ).find((button) => button.textContent?.includes("Approve selected"));
+    expect(approveSelectedButton).toBeTruthy();
+
+    await act(async () => {
+      approveSelectedButton?.dispatchEvent(
+        new MouseEvent("click", { bubbles: true }),
+      );
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(approvePayload).toEqual({
+      approver: "admin@example.com",
+      durationMinutes: 240,
+    });
+    expect(container.textContent).toContain(
+      "If you want to approve for more than 100 hours",
+    );
+  });
+
 
 });

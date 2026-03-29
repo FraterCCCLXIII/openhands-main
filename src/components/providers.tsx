@@ -4,12 +4,19 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { SessionProvider } from "next-auth/react";
 import { useState } from "react";
 
-export const Providers = ({ children }: { children: React.ReactNode }) => {
+export const Providers = ({
+  children,
+  authDisabled = false,
+}: {
+  children: React.ReactNode;
+  authDisabled?: boolean;
+}) => {
   const [queryClient] = useState(() => new QueryClient());
+  const content = <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
 
-  return (
-    <SessionProvider>
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-    </SessionProvider>
-  );
+  if (authDisabled) {
+    return content;
+  }
+
+  return <SessionProvider>{content}</SessionProvider>;
 };

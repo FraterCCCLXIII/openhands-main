@@ -1,5 +1,8 @@
 import { z } from "zod";
 
+import {
+  MAX_CASE_BY_CASE_APPROVAL_MINUTES,
+} from "@/src/lib/access-requests";
 import { DEFAULT_AGENT_CLASS, DEFAULT_AGENT_ID } from "@/src/lib/agent-defaults";
 
 const defaultedAgentIdentitySchema = (fallback: string) =>
@@ -114,7 +117,16 @@ export const accessRequestCreateSchema = accessRequestSchema.omit({
 });
 export const accessRequestDecisionSchema = z.object({
   approver: z.string().min(1),
-  durationMinutes: z.number().int().positive().optional(),
+  durationMinutes: z
+    .number()
+    .int()
+    .positive()
+    .max(MAX_CASE_BY_CASE_APPROVAL_MINUTES)
+    .optional(),
+});
+export const disableUnusedFunctionsSchema = z.object({
+  thresholdValue: z.number().int().positive().max(3650),
+  thresholdUnit: z.enum(["days", "weeks", "months"]),
 });
 export const contextInvokeSchema = z.object({
   agentId: defaultedAgentIdentitySchema(DEFAULT_AGENT_ID),

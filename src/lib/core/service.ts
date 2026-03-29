@@ -1,5 +1,6 @@
 import { randomBytes, randomUUID } from "node:crypto";
 
+import { DEFAULT_CASE_BY_CASE_APPROVAL_MINUTES } from "@/src/lib/access-requests";
 import type { AdapterRegistry } from "@/src/lib/core/adapter-registry";
 import { addMinutes, nowIso } from "@/src/lib/core/date";
 import { ContextLayerError } from "@/src/lib/core/errors";
@@ -23,8 +24,10 @@ import type {
   AgentApiKeyRecord,
   AgentClassPolicy,
   ContextInvocationResult,
+  DisableUnusedFunctionsResult,
   FunctionAccessMode,
   FunctionSpec,
+  FunctionUsageSummary,
   GenericOAuthConfig,
   IntegrationConnectionRecord,
   IntegrationConnectionStatus,
@@ -34,9 +37,24 @@ import type {
   NotificationRecord,
   PolicyRule,
   TemporaryGrant,
+  ToolInvocationOutcome,
+  ToolInvocationRecord,
+  UnusedFunctionWindowUnit,
 } from "@/src/types/context-layer";
 
 const unique = (values: string[]) => [...new Set(values)];
+
+const normalizeScopes = (scopes: string[]) => [...scopes].sort();
+
+const sameScopes = (left: string[], right: string[]) => {
+  const normalizedLeft = normalizeScopes(left);
+  const normalizedRight = normalizeScopes(right);
+
+  return (
+    normalizedLeft.length === normalizedRight.length &&
+    normalizedLeft.every((scope, index) => scope === normalizedRight[index])
+  );
+};
 
 const getFunctionAccessMode = (
   functionSpec: FunctionSpec,
@@ -77,6 +95,40 @@ const sanitizeConnectionStatus = (
   createdAt: record.createdAt,
   updatedAt: record.updatedAt,
 });
+
+const normalizePayloadKeys = (payload: Record<string, unknown>) =>
+  Object.keys(payload).sort((left, right) => left.localeCompare(right));
+
+const summarizeErrorMessage = (error: unknown, maxLength = 500) => {
+  const message = error instanceof Error ? error.message : String(error);
+  const normalized = message.trim();
+  return normalized.length <= maxLength
+    ? normalized
+    : `${normalized.slice(0, maxLength - 1)}…`;
+};
+
+const subtractUnusedWindow = (
+  referenceIso: string,
+  value: number,
+  unit: UnusedFunctionWindowUnit,
+) => {
+  const reference = new Date(referenceIso);
+  const next = new Date(reference);
+
+  switch (unit) {
+    case "weeks":
+      next.setUTCDate(next.getUTCDate() - value * 7);
+      break;
+    case "months":
+      next.setUTCMonth(next.getUTCMonth() - value);
+      break;
+    default:
+      next.setUTCDate(next.getUTCDate() - value);
+      break;
+  }
+
+  return next.toISOString();
+};
 
 const isConnectionExpired = (expiresAt?: string, bufferMs = 60_000) => {
   if (!expiresAt) {
@@ -134,6 +186,108 @@ export class ContextLayerService {
     await this.initialize();
     return (await this.repository.listOwnerIntegrations(normalizeAgentApiKeyOwner(ownerId)))
       .sort((a, b) => a.key.localeCompare(b.key));
+  }
+
+  async listOwnerIntegrationsWithUsage(ownerId: string) {
+    await this.initialize();
+    const normalizedOwnerId = normalizeAgentApiKeyOwner(ownerId);
+    const [integrations, usageSummaries] = await Promise.all([
+      this.repository.listOwnerIntegrations(normalizedOwnerId),
+      this.repository.listOwnerFunctionUsageSummaries(normalizedOwnerId),
+    ]);
+    const usageByFunction = new Map(
+      usageSummaries.map((summary) => [
+        `${summary.integrationKey}:${summary.functionName}`,
+        summary,
+      ]),
+    );
+
+    return integrations
+      .sort((a, b) => a.key.localeCompare(b.key))
+      .map((integration) => ({
+        ...integration,
+        functions: Object.fromEntries(
+          Object.entries(integration.functions).map(([functionName, functionSpec]) => {
+            const usage = usageByFunction.get(`${integration.key}:${functionName}`);
+            return [
+              functionName,
+              usage
+                ? {
+                    ...functionSpec,
+                    lastInvokedAt: usage.lastInvokedAt,
+                    lastInvocationOutcome: usage.lastInvocationOutcome,
+                    invocationCount: usage.invocationCount,
+                  }
+                : functionSpec,
+            ];
+          }),
+        ),
+      }));
+  }
+
+  async disableUnusedOwnerFunctions(
+    ownerId: string,
+    thresholdValue: number,
+    thresholdUnit: UnusedFunctionWindowUnit,
+  ): Promise<DisableUnusedFunctionsResult> {
+    await this.initialize();
+    const normalizedOwnerId = normalizeAgentApiKeyOwner(ownerId);
+    const [integrations, usageSummaries] = await Promise.all([
+      this.repository.listOwnerIntegrations(normalizedOwnerId),
+      this.repository.listOwnerFunctionUsageSummaries(normalizedOwnerId),
+    ]);
+    const cutoffIso = subtractUnusedWindow(nowIso(), thresholdValue, thresholdUnit);
+    const staleUsageByFunction = new Map(
+      usageSummaries
+        .filter((summary) => summary.lastInvokedAt < cutoffIso)
+        .map((summary) => [`${summary.integrationKey}:${summary.functionName}`, summary]),
+    );
+    const disabledFunctions: DisableUnusedFunctionsResult["disabledFunctions"] = [];
+
+    for (const integration of integrations) {
+      let changed = false;
+
+      for (const [functionName, functionSpec] of Object.entries(integration.functions)) {
+        if (getFunctionAccessMode(functionSpec) === "disabled") {
+          continue;
+        }
+
+        const usage = staleUsageByFunction.get(`${integration.key}:${functionName}`);
+        if (!usage) {
+          continue;
+        }
+
+        integration.functions[functionName] = {
+          ...functionSpec,
+          accessMode: "disabled",
+          enabled: false,
+        };
+        disabledFunctions.push({
+          integrationKey: integration.key,
+          functionName,
+          lastInvokedAt: usage.lastInvokedAt,
+        });
+        changed = true;
+      }
+
+      if (changed) {
+        await this.repository.upsertOwnerIntegration(normalizedOwnerId, integration);
+      }
+    }
+
+    disabledFunctions.sort(
+      (left, right) =>
+        left.integrationKey.localeCompare(right.integrationKey) ||
+        left.functionName.localeCompare(right.functionName),
+    );
+
+    return {
+      thresholdValue,
+      thresholdUnit,
+      cutoffIso,
+      disabledCount: disabledFunctions.length,
+      disabledFunctions,
+    };
   }
 
   async deleteOwnerIntegration(ownerId: string, integrationKey: string) {
@@ -817,6 +971,12 @@ export class ContextLayerService {
       );
     }
 
+    const invokedAt = nowIso();
+    const startedAtMs = Date.now();
+    const payloadKeys = normalizePayloadKeys(payload);
+    const fallbackScopes = normalizeScopes(
+      requestedScopes.length > 0 ? requestedScopes : functionSpec.defaultScopes,
+    );
     const decision = await this.evaluateAccess(
       agentId,
       agentClass,
@@ -826,42 +986,167 @@ export class ContextLayerService {
       { ownerId: options.ownerId },
     );
     if (!decision.allowed) {
+      if (getFunctionAccessMode(functionSpec) === "approval_required") {
+        await this.runOptionalSideEffect(
+          "create a pending access request",
+          async () => {
+            await this.ensurePendingAccessRequest({
+              agentId,
+              agentClass,
+              integrationKey,
+              functionName,
+              scopes: decision.effectiveScopes,
+              ownerId: options.ownerId,
+            });
+          },
+        );
+      }
+
+      await this.runOptionalSideEffect("record a denied tool invocation", async () => {
+        await this.trackToolInvocation({
+          ownerId: options.ownerId,
+          agentId,
+          agentClass,
+          integration,
+          functionName,
+          scopes: decision.effectiveScopes,
+          payloadKeys,
+          invokedAt,
+          outcome: "denied",
+          durationMs: Date.now() - startedAtMs,
+          errorMessage: decision.reason,
+        });
+      });
+
       throw new ContextLayerError(decision.reason, 403);
     }
 
-    const resolvedIntegration = await this.resolveIntegrationForOwner(
-      integration,
-      options.ownerId,
-    );
+    let resolvedIntegration: IntegrationSpec | null = null;
 
-    const data =
-      functionSpec.executionMode === "mock"
-        ? await this.adapters.invoke("mock", {
-            agentId,
-            integration: resolvedIntegration,
-            functionSpec,
-            payload,
-          })
-        : await this.adapters.invoke(resolvedIntegration.provider, {
-            agentId,
-            integration: resolvedIntegration,
-            functionSpec,
-            payload,
-          });
+    try {
+      resolvedIntegration = await this.resolveIntegrationForOwner(
+        integration,
+        options.ownerId,
+      );
 
-    return {
-      integration: resolvedIntegration.key,
-      function: functionSpec.name,
-      provider: resolvedIntegration.provider,
-      kind: resolvedIntegration.kind,
-      authStrategy: resolvedIntegration.authStrategy,
-      decision,
-      data,
+      const data =
+        functionSpec.executionMode === "mock"
+          ? await this.adapters.invoke("mock", {
+              agentId,
+              integration: resolvedIntegration,
+              functionSpec,
+              payload,
+            })
+          : await this.adapters.invoke(resolvedIntegration.provider, {
+              agentId,
+              integration: resolvedIntegration,
+              functionSpec,
+              payload,
+            });
+
+      await this.runOptionalSideEffect("record a successful tool invocation", async () => {
+        await this.trackToolInvocation({
+          ownerId: options.ownerId,
+          agentId,
+          agentClass,
+          integration: resolvedIntegration,
+          functionName,
+          scopes: decision.effectiveScopes,
+          payloadKeys,
+          invokedAt,
+          outcome: "success",
+          durationMs: Date.now() - startedAtMs,
+        });
+      });
+
+      return {
+        integration: resolvedIntegration.key,
+        function: functionSpec.name,
+        provider: resolvedIntegration.provider,
+        kind: resolvedIntegration.kind,
+        authStrategy: resolvedIntegration.authStrategy,
+        decision,
+        data,
+      };
+    } catch (error) {
+      await this.runOptionalSideEffect("record a failed tool invocation", async () => {
+        await this.trackToolInvocation({
+          ownerId: options.ownerId,
+          agentId,
+          agentClass,
+          integration: resolvedIntegration ?? integration,
+          functionName,
+          scopes: decision.effectiveScopes.length > 0 ? decision.effectiveScopes : fallbackScopes,
+          payloadKeys,
+          invokedAt,
+          outcome: "error",
+          durationMs: Date.now() - startedAtMs,
+          errorMessage: summarizeErrorMessage(error),
+        });
+      });
+      throw error;
+    }
+  }
+
+  private async trackToolInvocation({
+    ownerId,
+    agentId,
+    agentClass,
+    integration,
+    functionName,
+    scopes,
+    payloadKeys,
+    invokedAt,
+    outcome,
+    durationMs,
+    errorMessage,
+  }: {
+    ownerId?: string;
+    agentId: string;
+    agentClass: string;
+    integration: Pick<IntegrationSpec, "key" | "provider" | "kind" | "authStrategy">;
+    functionName: string;
+    scopes: string[];
+    payloadKeys: string[];
+    invokedAt: string;
+    outcome: ToolInvocationOutcome;
+    durationMs?: number;
+    errorMessage?: string;
+  }) {
+    const record: ToolInvocationRecord = {
+      id: randomUUID(),
+      ownerId: ownerId ? normalizeAgentApiKeyOwner(ownerId) : undefined,
+      agentId,
+      agentClass,
+      integrationKey: integration.key,
+      functionName,
+      scopes: normalizeScopes(scopes),
+      provider: integration.provider,
+      kind: integration.kind,
+      authStrategy: integration.authStrategy,
+      outcome,
+      invokedAt,
+      durationMs,
+      payloadKeys,
+      errorMessage,
     };
+
+    await this.repository.createToolInvocation(record);
+  }
+
+  private async runOptionalSideEffect(action: string, operation: () => Promise<void>) {
+    try {
+      await operation();
+    } catch (error) {
+      console.warn(
+        `[ContextLayerService] Failed to ${action}: ${summarizeErrorMessage(error)}`,
+      );
+    }
   }
 
   private async refreshOAuthConnection(record: IntegrationConnectionRecord) {
     const provider = await resolveOAuthProvider(this.repository, record.provider);
+
     if (!provider) {
       throw new ContextLayerError(
         `OAuth provider '${record.provider}' is not configured.`,
@@ -973,6 +1258,56 @@ export class ContextLayerService {
       `Integration '${key}' is not installed for this user. Install it from the integrations wizard first.`,
       404,
     );
+  }
+
+  private async ensurePendingAccessRequest({
+    agentId,
+    agentClass,
+    integrationKey,
+    functionName,
+    scopes,
+    ownerId,
+  }: {
+    agentId: string;
+    agentClass: string;
+    integrationKey: string;
+    functionName: string;
+    scopes: string[];
+    ownerId?: string;
+  }) {
+    await this.initialize();
+    const pendingRequests = (await this.repository.listAccessRequests()).filter(
+      (request) => request.status === "pending",
+    );
+    const existing = pendingRequests.find(
+      (request) =>
+        request.agentId === agentId &&
+        request.agentClass === agentClass &&
+        request.integrationKey === integrationKey &&
+        request.functionName === functionName &&
+        sameScopes(request.scopes, scopes),
+    );
+
+    if (existing) {
+      return existing;
+    }
+
+    const notificationRecipient = ownerId?.trim() || "case-by-case-approvals";
+
+    return this.createAccessRequest({
+      agentId,
+      agentClass,
+      integrationKey,
+      functionName,
+      scopes: normalizeScopes(scopes),
+      requestedMinutes: DEFAULT_CASE_BY_CASE_APPROVAL_MINUTES,
+      channels: ["in_app"],
+      notificationTargets: {
+        in_app: notificationRecipient,
+      },
+      justification:
+        "Auto-created after an agent attempted a case-by-case tool without an active approval.",
+    });
   }
 
   private async getOwnerIntegration(ownerId: string, key: string) {

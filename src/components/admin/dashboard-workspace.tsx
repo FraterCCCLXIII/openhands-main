@@ -37,6 +37,13 @@ import {
   type AdminSection,
 } from "@/src/lib/admin-routes";
 import {
+  DEFAULT_CASE_BY_CASE_APPROVAL_HOURS,
+  MAX_CASE_BY_CASE_APPROVAL_HOURS,
+  approvalHoursToMinutes,
+  approvalStatusLabel,
+  normalizeApprovalDurationHours,
+} from "@/src/lib/access-requests";
+import {
   buildAgentConnectionGuide,
   OPENHANDS_CLOUD_SHTTP_MCP_URL,
   OPENHANDS_CONTEXT_KEY_ENV,
@@ -45,10 +52,12 @@ import { cn } from "@/src/lib/utils";
 import type {
   AccessRequest,
   BuiltInConnectorOption,
+  DisableUnusedFunctionsResult,
   FunctionAccessMode,
   FunctionSpec,
   IntegrationSpec,
   NotificationRecord,
+  UnusedFunctionWindowUnit,
 } from "@/src/types/context-layer";
 
 const fetchJson = async <T,>(
@@ -79,6 +88,53 @@ const POPULAR_INTEGRATION_SLUGS = [
   "linear",
   "elevenlabs",
 ] as const;
+
+const UNUSED_FUNCTION_WINDOW_OPTIONS: Array<{
+  value: UnusedFunctionWindowUnit;
+  label: string;
+}> = [
+  { value: "days", label: "days" },
+  { value: "weeks", label: "weeks" },
+  { value: "months", label: "months" },
+];
+
+const subtractUnusedWindow = (
+  reference: Date,
+  amount: number,
+  unit: UnusedFunctionWindowUnit,
+) => {
+  const next = new Date(reference);
+
+  switch (unit) {
+    case "weeks":
+      next.setUTCDate(next.getUTCDate() - amount * 7);
+      break;
+    case "months":
+      next.setUTCMonth(next.getUTCMonth() - amount);
+      break;
+    default:
+      next.setUTCDate(next.getUTCDate() - amount);
+      break;
+  }
+
+  return next;
+};
+
+const formatTrackedUsage = (functionSpec: FunctionSpec) => {
+  if (!functionSpec.lastInvokedAt) {
+    return "No tracked usage yet";
+  }
+
+  const formatted = new Date(functionSpec.lastInvokedAt).toLocaleString();
+  const count = functionSpec.invocationCount ?? 0;
+  const outcomeLabel = functionSpec.lastInvocationOutcome
+    ? functionSpec.lastInvocationOutcome.replace(/_/g, " ")
+    : "unknown";
+
+  return count > 0
+    ? `Last tracked invocation: ${formatted} · ${count} total · ${outcomeLabel}`
+    : `Last tracked invocation: ${formatted} · ${outcomeLabel}`;
+};
 
 const matchesIntegrationSearch = (integration: IntegrationSpec, query: string) => {
   const normalizedQuery = query.trim().toLowerCase();
@@ -113,6 +169,52 @@ const matchesConnectorSearch = (
   ].some((value) => value.toLowerCase().includes(normalizedQuery));
 };
 
+type ApprovalRequestFilter = "pending" | "approved" | "denied";
+
+const approvalStatusTone = (status: AccessRequest["status"]) => {
+  switch (approvalStatusLabel(status)) {
+    case "approved":
+      return "success" as const;
+    case "denied":
+      return "danger" as const;
+    default:
+      return "warning" as const;
+  }
+};
+
+const matchesAccessRequestFilter = (
+  request: AccessRequest,
+  filter: ApprovalRequestFilter,
+) => approvalStatusLabel(request.status) === filter;
+
+const matchesAccessRequestSearch = (
+  request: AccessRequest,
+  query: string,
+) => {
+  const normalizedQuery = query.trim().toLowerCase();
+  if (!normalizedQuery) {
+    return true;
+  }
+
+  return [
+    request.agentId,
+    request.agentClass,
+    request.integrationKey,
+    request.functionName,
+    request.justification ?? "",
+    approvalStatusLabel(request.status),
+    ...request.scopes,
+  ].some((value) => value.toLowerCase().includes(normalizedQuery));
+};
+
+const formatTimestamp = (value?: string) => {
+  if (!value) {
+    return "—";
+  }
+
+  return new Date(value).toLocaleString();
+};
+
 interface AdminDashboardProps {
   initialIntegrations: IntegrationSpec[];
   initialAccessRequests: AccessRequest[];
@@ -132,6 +234,11 @@ const getDashboardSections = (): Array<{
     id: "integrations",
     label: "Integrations",
     icon: PlugZap,
+  },
+  {
+    id: "caseByCaseApprovals",
+    label: "Case-by-case Approvals",
+    icon: CheckCircle2,
   },
   {
     id: "apiKeys",
@@ -408,6 +515,9 @@ export const DashboardWorkspace = ({
   const [addIntegrationSearch, setAddIntegrationSearch] = useState("");
   const [integrationSearch, setIntegrationSearch] = useState("");
   const [hideDisabledSkills, setHideDisabledSkills] = useState(true);
+  const [unusedThresholdValue, setUnusedThresholdValue] = useState("30");
+  const [unusedThresholdUnit, setUnusedThresholdUnit] =
+    useState<UnusedFunctionWindowUnit>("days");
   const [expandedIntegrations, setExpandedIntegrations] = useState<
     Record<string, boolean>
   >({});
@@ -417,6 +527,16 @@ export const DashboardWorkspace = ({
   const [expandedUsageSections, setExpandedUsageSections] = useState<
     Record<string, boolean>
   >({});
+  const [approvalSearch, setApprovalSearch] = useState("");
+  const [approvalFilter, setApprovalFilter] =
+    useState<ApprovalRequestFilter>("pending");
+  const [approvalDurationHours, setApprovalDurationHours] = useState(
+    String(DEFAULT_CASE_BY_CASE_APPROVAL_HOURS),
+  );
+  const [selectedApprovalRequests, setSelectedApprovalRequests] = useState<
+    Record<string, boolean>
+  >({});
+  const [requestActionPending, setRequestActionPending] = useState(false);
   const [revealApiKey, setRevealApiKey] = useState(false);
   const [apiKeyCopied, setApiKeyCopied] = useState(false);
 
@@ -517,8 +637,86 @@ export const DashboardWorkspace = ({
     },
   });
 
+  const bulkDisableMutation = useMutation({
+    mutationFn: async (payload: {
+      thresholdValue: number;
+      thresholdUnit: UnusedFunctionWindowUnit;
+    }) =>
+      fetchJson<DisableUnusedFunctionsResult>("/api/integrations/disable-unused", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      }),
+    onSuccess: async (result) => {
+      setStatusMessage(
+        result.disabledCount > 0
+          ? `Disabled ${result.disabledCount} tracked ${result.disabledCount === 1 ? "function" : "functions"} unused since ${new Date(result.cutoffIso).toLocaleDateString()}.`
+          : "No tracked functions matched the selected unused window.",
+      );
+      await invalidateAll();
+    },
+    onError: (error: Error) => {
+      setStatusMessage(error.message);
+    },
+  });
+
   const integrations = integrationsQuery.data ?? [];
   const accessRequests = accessRequestsQuery.data ?? [];
+  const approverIdentity =
+    currentUser.email?.trim() || currentUser.name?.trim() || "human-approver";
+  const sortedAccessRequests = useMemo(
+    () =>
+      [...accessRequests].sort(
+        (left, right) =>
+          new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime(),
+      ),
+    [accessRequests],
+  );
+  const filteredAccessRequests = useMemo(
+    () =>
+      sortedAccessRequests.filter(
+        (request) =>
+          matchesAccessRequestFilter(request, approvalFilter) &&
+          matchesAccessRequestSearch(request, approvalSearch),
+      ),
+    [approvalFilter, approvalSearch, sortedAccessRequests],
+  );
+  const approvalCounts = useMemo(
+    () => ({
+      pending: sortedAccessRequests.filter((request) => request.status === "pending")
+        .length,
+      approved: sortedAccessRequests.filter((request) => request.status === "approved")
+        .length,
+      denied: sortedAccessRequests.filter(
+        (request) => approvalStatusLabel(request.status) === "denied",
+      ).length,
+    }),
+    [sortedAccessRequests],
+  );
+  const selectedApprovalRequestIds = filteredAccessRequests
+    .filter((request) => selectedApprovalRequests[request.id])
+    .map((request) => request.id);
+  const hasVisibleApprovalRequests = filteredAccessRequests.length > 0;
+  const allVisibleApprovalRequestsSelected =
+    hasVisibleApprovalRequests &&
+    filteredAccessRequests.every((request) => selectedApprovalRequests[request.id]);
+  const selectedApprovalRequestCount = selectedApprovalRequestIds.length;
+  const normalizedApprovalDurationHours = useMemo(() => {
+    const parsed = Number(approvalDurationHours);
+    if (!Number.isFinite(parsed) || parsed <= 0) {
+      return DEFAULT_CASE_BY_CASE_APPROVAL_HOURS;
+    }
+
+    return normalizeApprovalDurationHours(parsed);
+  }, [approvalDurationHours]);
+  const normalizedUnusedThresholdValue = useMemo(() => {
+    const parsed = Number(unusedThresholdValue);
+    if (!Number.isFinite(parsed) || parsed <= 0) {
+      return 30;
+    }
+
+    return Math.min(Math.max(Math.trunc(parsed), 1), 3650);
+  }, [unusedThresholdValue]);
 
   const enabledIntegrationCount = integrations.filter(
     (integration) => integration.enabled,
@@ -709,6 +907,33 @@ export const DashboardWorkspace = ({
     (count, entry) => count + entry.visibleFunctions.length,
     0,
   );
+  const unusedCutoffDate = useMemo(
+    () =>
+      subtractUnusedWindow(
+        new Date(),
+        normalizedUnusedThresholdValue,
+        unusedThresholdUnit,
+      ),
+    [normalizedUnusedThresholdValue, unusedThresholdUnit],
+  );
+  const unusedFunctionCandidates = useMemo(
+    () =>
+      integrations.flatMap((integration) =>
+        Object.values(integration.functions)
+          .filter((functionSpec) => getFunctionAccessMode(functionSpec) !== "disabled")
+          .filter(
+            (functionSpec) =>
+              Boolean(functionSpec.lastInvokedAt) &&
+              new Date(functionSpec.lastInvokedAt!).getTime() < unusedCutoffDate.getTime(),
+          )
+          .map((functionSpec) => ({
+            integrationKey: integration.key,
+            functionName: functionSpec.name,
+            lastInvokedAt: functionSpec.lastInvokedAt as string,
+          })),
+      ),
+    [integrations, unusedCutoffDate],
+  );
 
   const toggleIntegrationExpanded = (
     integrationKey: string,
@@ -739,6 +964,32 @@ export const DashboardWorkspace = ({
     });
   };
 
+  const handleUnusedThresholdBlur = () => {
+    setUnusedThresholdValue(String(normalizedUnusedThresholdValue));
+  };
+
+  const handleDisableUnusedFunctions = () => {
+    if (unusedFunctionCandidates.length === 0) {
+      setStatusMessage("No tracked functions matched the selected unused window.");
+      return;
+    }
+
+    if (
+      typeof window !== "undefined" &&
+      typeof window.confirm === "function" &&
+      !window.confirm(
+        `Disable ${unusedFunctionCandidates.length} tracked ${unusedFunctionCandidates.length === 1 ? "function" : "functions"} that have not been used since ${unusedCutoffDate.toLocaleDateString()}?`,
+      )
+    ) {
+      return;
+    }
+
+    bulkDisableMutation.mutate({
+      thresholdValue: normalizedUnusedThresholdValue,
+      thresholdUnit: unusedThresholdUnit,
+    });
+  };
+
   const handleDeleteIntegration = (integration: IntegrationSpec) => {
     if (
       typeof window !== "undefined" &&
@@ -756,6 +1007,78 @@ export const DashboardWorkspace = ({
       successMessage: `${integration.name} deleted.`,
     });
   };
+
+  const setSelectedStateForApprovalRequests = (
+    requestIds: string[],
+    selected: boolean,
+  ) => {
+    setSelectedApprovalRequests((current) => {
+      const next = { ...current };
+      for (const requestId of requestIds) {
+        if (selected) {
+          next[requestId] = true;
+        } else {
+          delete next[requestId];
+        }
+      }
+      return next;
+    });
+  };
+
+  const handleApprovalDurationBlur = () => {
+    setApprovalDurationHours(String(normalizedApprovalDurationHours));
+  };
+
+  const handleAccessRequestDecision = async (
+    requestIds: string[],
+    action: "approve" | "deny",
+  ) => {
+    if (requestIds.length === 0) {
+      return;
+    }
+
+    setRequestActionPending(true);
+
+    try {
+      for (const requestId of requestIds) {
+        await fetchJson(`/api/access-requests/${requestId}/${action === "approve" ? "approve" : "reject"}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            approver: approverIdentity,
+            ...(action === "approve"
+              ? {
+                  durationMinutes: approvalHoursToMinutes(
+                    normalizedApprovalDurationHours,
+                  ),
+                }
+              : {}),
+          }),
+        });
+      }
+
+      setSelectedApprovalRequests((current) => {
+        const next = { ...current };
+        for (const requestId of requestIds) {
+          delete next[requestId];
+        }
+        return next;
+      });
+      setStatusMessage(
+        action === "approve"
+          ? `Approved ${requestIds.length} request${requestIds.length === 1 ? "" : "s"}.`
+          : `Denied ${requestIds.length} request${requestIds.length === 1 ? "" : "s"}.`,
+      );
+      await invalidateAll();
+    } catch (error) {
+      setStatusMessage(
+        error instanceof Error ? error.message : "Unable to update access request.",
+      );
+    } finally {
+      setRequestActionPending(false);
+    }
+  };
+
 
   const handleCopyApiKey = async () => {
     if (!contextApiReady) {
@@ -902,6 +1225,287 @@ export const DashboardWorkspace = ({
           </section>
         ) : null}
 
+        {activeSection === "caseByCaseApprovals" ? (
+          <section className="space-y-4">
+            <CompactPanel
+              title="Case-by-case approvals"
+              icon={CheckCircle2}
+              action={<Badge>{filteredAccessRequests.length} shown</Badge>}
+            >
+              <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-4">
+                <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+                  <div className="space-y-1">
+                    <h3 className="text-sm font-semibold text-white">
+                      Review pending agent approval requests
+                    </h3>
+                    <p className="text-xs leading-6 text-[var(--color-text-base)]">
+                      Pending requests are auto-created when an agent attempts to
+                      call a case-by-case tool without an active temporary grant.
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-2 text-xs">
+                    <Badge tone="warning">{approvalCounts.pending} pending</Badge>
+                    <Badge tone="success">{approvalCounts.approved} approved</Badge>
+                    <Badge tone="danger">{approvalCounts.denied} denied</Badge>
+                  </div>
+                </div>
+
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {([
+                    ["pending", approvalCounts.pending],
+                    ["approved", approvalCounts.approved],
+                    ["denied", approvalCounts.denied],
+                  ] as const).map(([filter, count]) => (
+                    <Button
+                      key={filter}
+                      type="button"
+                      variant={approvalFilter === filter ? "secondary" : "ghost"}
+                      className="h-9 rounded-md px-3 text-xs capitalize"
+                      onClick={() => setApprovalFilter(filter)}
+                    >
+                      {filter} ({count})
+                    </Button>
+                  ))}
+                </div>
+
+                <div className="mt-4 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+                  <input
+                    type="search"
+                    value={approvalSearch}
+                    onChange={(event) => setApprovalSearch(event.target.value)}
+                    placeholder="Search case-by-case approvals"
+                    aria-label="Search case-by-case approvals"
+                    className={cn(inputClassName, "w-full xl:max-w-md")}
+                  />
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      className="h-9 rounded-md px-3 text-xs"
+                      disabled={
+                        approvalFilter !== "pending" ||
+                        !hasVisibleApprovalRequests ||
+                        allVisibleApprovalRequestsSelected
+                      }
+                      onClick={() =>
+                        setSelectedStateForApprovalRequests(
+                          filteredAccessRequests.map((request) => request.id),
+                          true,
+                        )
+                      }
+                    >
+                      Select all matches
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      className="h-9 rounded-md px-3 text-xs"
+                      disabled={selectedApprovalRequestCount === 0}
+                      onClick={() =>
+                        setSelectedStateForApprovalRequests(
+                          selectedApprovalRequestIds,
+                          false,
+                        )
+                      }
+                    >
+                      Deselect matches
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="mt-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)] p-4">
+                  <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+                    <div className="space-y-1">
+                      <p className="text-sm font-semibold text-white">
+                        Decide selected requests
+                      </p>
+                      <p className="text-xs leading-6 text-[var(--color-text-base)]">
+                        Approvals default to {DEFAULT_CASE_BY_CASE_APPROVAL_HOURS} hours and can last up to {MAX_CASE_BY_CASE_APPROVAL_HOURS} hours.
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--color-text-base)]">
+                      <Badge>{selectedApprovalRequestCount} selected</Badge>
+                      <label className="flex items-center gap-2">
+                        <span>Duration</span>
+                        <input
+                          type="number"
+                          min={1}
+                          max={MAX_CASE_BY_CASE_APPROVAL_HOURS}
+                          step={1}
+                          value={approvalDurationHours}
+                          onChange={(event) =>
+                            setApprovalDurationHours(event.target.value)
+                          }
+                          onBlur={handleApprovalDurationBlur}
+                          aria-label="Approval duration in hours"
+                          className={cn(inputClassName, "h-9 w-24 px-3 py-2 text-sm")}
+                        />
+                        <span>hours</span>
+                      </label>
+                    </div>
+                  </div>
+                  <p className="mt-3 text-xs leading-6 text-[var(--color-text-base)]">
+                    If you want to approve for more than 100 hours, change the
+                    setting to case-by-case on the <a href="/integrations" className="text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]">integrations page</a>.
+                  </p>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <Button
+                      type="button"
+                      className="h-9 rounded-md px-3 text-xs"
+                      disabled={
+                        approvalFilter !== "pending" ||
+                        selectedApprovalRequestCount === 0 ||
+                        requestActionPending
+                      }
+                      onClick={() =>
+                        void handleAccessRequestDecision(
+                          selectedApprovalRequestIds,
+                          "approve",
+                        )
+                      }
+                    >
+                      Approve selected
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="danger"
+                      className="h-9 rounded-md px-3 text-xs"
+                      disabled={
+                        approvalFilter !== "pending" ||
+                        selectedApprovalRequestCount === 0 ||
+                        requestActionPending
+                      }
+                      onClick={() =>
+                        void handleAccessRequestDecision(
+                          selectedApprovalRequestIds,
+                          "deny",
+                        )
+                      }
+                    >
+                      Deny selected
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="mt-4 space-y-3">
+                  {filteredAccessRequests.length === 0 ? (
+                    <div className="rounded-xl border border-dashed border-[var(--color-border)] px-3 py-4 text-sm text-[var(--color-text-base)]">
+                      No {approvalFilter} approval requests match the current
+                      search.
+                    </div>
+                  ) : (
+                    filteredAccessRequests.map((request) => (
+                      <div
+                        key={request.id}
+                        data-request-id={request.id}
+                        className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)] p-4"
+                      >
+                        <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+                          <div className="flex gap-3">
+                            {request.status === "pending" ? (
+                              <input
+                                type="checkbox"
+                                aria-label={`Select request ${request.id}`}
+                                checked={Boolean(selectedApprovalRequests[request.id])}
+                                onChange={(event) =>
+                                  setSelectedStateForApprovalRequests(
+                                    [request.id],
+                                    event.currentTarget.checked,
+                                  )
+                                }
+                                disabled={requestActionPending}
+                                className="mt-1 h-4 w-4 rounded border-[var(--color-border)] bg-[var(--color-bg-input)]"
+                              />
+                            ) : (
+                              <span className="mt-1 h-4 w-4 shrink-0 rounded border border-transparent" />
+                            )}
+                            <div className="space-y-3">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <p className="text-sm font-semibold text-white">
+                                  {request.integrationKey}.{request.functionName}
+                                </p>
+                                <Badge tone={approvalStatusTone(request.status)}>
+                                  {approvalStatusLabel(request.status)}
+                                </Badge>
+                              </div>
+                              <div className="grid gap-2 text-xs text-[var(--color-text-base)] sm:grid-cols-2 xl:grid-cols-3">
+                                <p>
+                                  Agent: <span className="text-white">{request.agentId}</span>
+                                </p>
+                                <p>
+                                  Class: <span className="text-white">{request.agentClass}</span>
+                                </p>
+                                <p>
+                                  Requested: <span className="text-white">{formatTimestamp(request.createdAt)}</span>
+                                </p>
+                                <p>
+                                  Requested duration: <span className="text-white">{Math.max(1, Math.round(request.requestedMinutes / 60))}h</span>
+                                </p>
+                                <p>
+                                  Decided by: <span className="text-white">{request.decidedBy ?? "—"}</span>
+                                </p>
+                                <p>
+                                  Decided at: <span className="text-white">{formatTimestamp(request.decidedAt)}</span>
+                                </p>
+                              </div>
+                              {request.justification ? (
+                                <p className="text-xs leading-6 text-[var(--color-text-base)]">
+                                  {request.justification}
+                                </p>
+                              ) : null}
+                              <div className="flex flex-wrap gap-2">
+                                {request.scopes.length > 0 ? (
+                                  request.scopes.map((scope) => (
+                                    <Badge key={`${request.id}-${scope}`}>{scope}</Badge>
+                                  ))
+                                ) : (
+                                  <Badge>default scopes</Badge>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          {request.status === "pending" ? (
+                            <div className="flex shrink-0 flex-col gap-2 xl:min-w-[170px]">
+                              <Button
+                                type="button"
+                                className="h-9 rounded-md px-3 text-xs"
+                                disabled={requestActionPending}
+                                onClick={() =>
+                                  void handleAccessRequestDecision(
+                                    [request.id],
+                                    "approve",
+                                  )
+                                }
+                              >
+                                Approve
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="danger"
+                                className="h-9 rounded-md px-3 text-xs"
+                                disabled={requestActionPending}
+                                onClick={() =>
+                                  void handleAccessRequestDecision(
+                                    [request.id],
+                                    "deny",
+                                  )
+                                }
+                              >
+                                Deny
+                              </Button>
+                            </div>
+                          ) : null}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </CompactPanel>
+          </section>
+        ) : null}
+
+
         {activeSection === "integrations" ? (
           <section className="space-y-4">
             {showIntegrationWizard ? (
@@ -1008,6 +1612,7 @@ export const DashboardWorkspace = ({
                         <span>Hide disabled skills</span>
                       </label>
                     </div>
+
                   </div>
 
                   {filteredIntegrations.length === 0 ? (
@@ -1148,6 +1753,9 @@ export const DashboardWorkspace = ({
                                                 <p className="mt-1 truncate text-xs leading-6 text-[var(--color-text-base)]">
                                                   {functionSpec.description || "No description provided."}
                                                 </p>
+                                                <p className="mt-1 text-[11px] leading-5 text-[var(--color-text-base)]">
+                                                  {formatTrackedUsage(functionSpec)}
+                                                </p>
                                               </div>
                                               <div className="flex flex-wrap items-center gap-2 xl:justify-end">
                                                 <AccessModeSlider
@@ -1211,6 +1819,73 @@ export const DashboardWorkspace = ({
                       )}
                     </div>
                   )}
+
+                  <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)] p-4">
+                    <div className="flex flex-col gap-4 xl:grid xl:grid-cols-[minmax(0,1fr)_auto] xl:items-end xl:gap-6">
+                      <div className="space-y-1 xl:max-w-2xl">
+                        <h4 className="text-sm font-semibold text-white">
+                          One-time bulk disable for unused skills
+                        </h4>
+                        <p className="text-xs leading-6 text-[var(--color-text-base)]">
+                          Disable enabled skills with tracked usage that has been inactive since before {unusedCutoffDate.toLocaleDateString()}. Functions without tracked invocation history are skipped until new tracking data exists.
+                        </p>
+                      </div>
+                      <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-end md:gap-3 xl:flex-nowrap">
+                        <label className="flex flex-col gap-1 text-xs text-[var(--color-text-base)]">
+                          <span>Unused for at least</span>
+                          <input
+                            type="number"
+                            min={1}
+                            max={3650}
+                            inputMode="numeric"
+                            value={unusedThresholdValue}
+                            aria-label="Unused threshold value"
+                            onChange={(event) =>
+                              setUnusedThresholdValue(event.target.value)
+                            }
+                            onBlur={handleUnusedThresholdBlur}
+                            className={cn(inputClassName, "w-28")}
+                          />
+                        </label>
+                        <label className="flex flex-col gap-1 text-xs text-[var(--color-text-base)]">
+                          <span>Window</span>
+                          <select
+                            value={unusedThresholdUnit}
+                            aria-label="Unused threshold unit"
+                            onChange={(event) =>
+                              setUnusedThresholdUnit(
+                                event.target.value as UnusedFunctionWindowUnit,
+                              )
+                            }
+                            className={cn(inputClassName, "w-32")}
+                          >
+                            {UNUSED_FUNCTION_WINDOW_OPTIONS.map((option) => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                        <div className="flex flex-col gap-2 sm:items-end">
+                          <p className="text-xs text-[var(--color-text-base)]">
+                            {unusedFunctionCandidates.length} skill
+                            {unusedFunctionCandidates.length === 1 ? "" : "s"} matched
+                          </p>
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            className="h-8 shrink-0 rounded-md px-4 text-xs"
+                            onClick={handleDisableUnusedFunctions}
+                            disabled={bulkDisableMutation.isPending}
+                            aria-label="Disable unused functions"
+                          >
+                            Disable
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
                 </div>
               )}
             </CompactPanel>
