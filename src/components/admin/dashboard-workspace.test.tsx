@@ -677,8 +677,10 @@ describe("DashboardWorkspace", () => {
     expect(text).toContain("User REST API");
     expect(text).toContain("https://example.com/api/mcp");
     expect(text).toContain("https://example.com/api/context/openapi");
-    expect(text).toContain("https://example.com/api/context/skill");
-    expect(text).toContain("https://example.com/api/user/integrations");
+    expect(text).toContain("https://example.com/api/user/openapi");
+    expect(text).toContain("I have provided you with an API key in $OPENHANDS_CONTEXT_LAYER_KEY");
+    expect(text).toContain("I have provided you with a user API key in $OPENHANDS_CONTEXT_LAYER_USER_KEY");
+    expect(text).not.toContain("https://example.com/api/context/skill");
     expect(text).not.toContain("Generate");
     expect(text).not.toContain("Revoke");
 

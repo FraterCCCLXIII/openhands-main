@@ -646,14 +646,13 @@ export const DashboardWorkspace = ({
     [contextApiBaseUrl, integrations],
   );
   const normalizedBaseUrl = contextApiBaseUrl.replace(/\/$/, "");
-  const userRestListEndpoint = `${normalizedBaseUrl}/api/user/integrations`;
-  const userRestFunctionEndpoint = `${normalizedBaseUrl}/api/user/integrations/${agentConnectionGuide.integrationKey}/functions/${agentConnectionGuide.functionName}`;
-  const userRestCurlExample = [
-    `curl -X PATCH "${userRestFunctionEndpoint}"`,
-    '  -H "Authorization: Bearer YOUR_USER_API_KEY"',
-    '  -H "Content-Type: application/json"',
-    "  -d '{\"accessMode\":\"enabled\"}'",
-  ].join("\n");
+  const userOpenApiSchemaEndpoint = `${normalizedBaseUrl}/api/user/openapi`;
+  const agentRestPromptExample =
+    'I have provided you with an API key in $OPENHANDS_CONTEXT_LAYER_KEY, and you can see the API schema at ' +
+    `${agentConnectionGuide.openApiSchemaEndpoint}, feel free to access any tools there.`;
+  const userRestPromptExample =
+    'I have provided you with a user API key in $OPENHANDS_CONTEXT_LAYER_USER_KEY, and you can see the API schema at ' +
+    `${userOpenApiSchemaEndpoint}, feel free to manage my context-layer settings there.`;
 
   const filteredIntegrations = useMemo(() => {
     const normalizedSearch = integrationSearch.trim().toLowerCase();
@@ -1365,41 +1364,25 @@ export const DashboardWorkspace = ({
                       value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.mcpToolName}</code>}
                     />
                   </div>
-                  <div className="mt-3 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)]">
-                    <div className="border-b border-[var(--color-border)] px-3 py-2 text-xs uppercase tracking-[0.18em] text-[var(--color-text-base)]">
-                      MCP config example
-                    </div>
-                    <pre className="overflow-x-auto whitespace-pre-wrap px-3 py-3 text-xs leading-6 text-[var(--color-text-base)]">
-                      {agentConnectionGuide.mcpConfigExample}
-                    </pre>
-                  </div>
                 </div>
 
                 <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-4">
                   <h3 className="text-sm font-semibold text-white">Agent REST API</h3>
                   <p className="mt-1 text-sm leading-6 text-[var(--color-text-base)]">
-                    Call context-layer tool routes directly over HTTPS with the restricted agent key.
+                    Give your agent the restricted key and the OpenAPI schema for the tool surface.
                   </p>
                   <div className="mt-3 divide-y divide-[var(--color-border)]">
-                    <KeyValueRow
-                      label="Tool endpoint"
-                      value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.endpoint}</code>}
-                    />
                     <KeyValueRow
                       label="OpenAPI schema"
                       value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.openApiSchemaEndpoint}</code>}
                     />
-                    <KeyValueRow
-                      label="SKILL export"
-                      value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.skillEndpoint}</code>}
-                    />
                   </div>
                   <div className="mt-3 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)]">
                     <div className="border-b border-[var(--color-border)] px-3 py-2 text-xs uppercase tracking-[0.18em] text-[var(--color-text-base)]">
-                      cURL example
+                      Example agent prompt
                     </div>
                     <pre className="overflow-x-auto whitespace-pre-wrap px-3 py-3 text-xs leading-6 text-[var(--color-text-base)]">
-                      {agentConnectionGuide.curlExample}
+                      {agentRestPromptExample}
                     </pre>
                   </div>
                 </div>
@@ -1407,24 +1390,20 @@ export const DashboardWorkspace = ({
                 <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-4">
                   <h3 className="text-sm font-semibold text-white">User REST API</h3>
                   <p className="mt-1 text-sm leading-6 text-[var(--color-text-base)]">
-                    Call dashboard-equivalent endpoints directly over HTTPS with the user automation key.
+                    Use the user automation key with the dashboard-equivalent OpenAPI schema.
                   </p>
                   <div className="mt-3 divide-y divide-[var(--color-border)]">
                     <KeyValueRow
-                      label="List integrations"
-                      value={<code className="break-all text-xs text-[var(--color-text-active)]">{userRestListEndpoint}</code>}
-                    />
-                    <KeyValueRow
-                      label="Update access mode"
-                      value={<code className="break-all text-xs text-[var(--color-text-active)]">{userRestFunctionEndpoint}</code>}
+                      label="OpenAPI schema"
+                      value={<code className="break-all text-xs text-[var(--color-text-active)]">{userOpenApiSchemaEndpoint}</code>}
                     />
                   </div>
                   <div className="mt-3 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)]">
                     <div className="border-b border-[var(--color-border)] px-3 py-2 text-xs uppercase tracking-[0.18em] text-[var(--color-text-base)]">
-                      cURL example
+                      Example agent prompt
                     </div>
                     <pre className="overflow-x-auto whitespace-pre-wrap px-3 py-3 text-xs leading-6 text-[var(--color-text-base)]">
-                      {userRestCurlExample}
+                      {userRestPromptExample}
                     </pre>
                   </div>
                 </div>
