@@ -416,6 +416,7 @@ describe("ContextLayerService", () => {
     expect(storedFirst).not.toBeNull();
     expect(storedFirst?.apiKeyHash).not.toBe(first.apiKey);
     expect(storedFirst?.keyPrefix).toBe(first.key.keyPrefix);
+    expect(storedFirst?.keySuffix).toBe(first.key.keySuffix);
     expect(await service.getStoredUserApiKey(first.apiKey)).toMatchObject({
       ownerId: "owner@example.com",
     });

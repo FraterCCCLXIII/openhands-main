@@ -240,12 +240,14 @@ export interface UserApiKeyRecord {
   ownerId: string;
   apiKeyHash: string;
   keyPrefix: string;
+  keySuffix: string;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface UserApiKeyStatus {
   keyPrefix: string;
+  keySuffix: string;
   createdAt: string;
   updatedAt: string;
 }

@@ -638,7 +638,7 @@ describe("DashboardWorkspace", () => {
     );
   });
 
-  it("shows compact side-by-side key cards on the top-level agent connection route", async () => {
+  it("shows a combined keys card with connection details on the top-level agent connection route", async () => {
     usePathnameMock.mockReturnValue("/agent-connection");
 
     await act(async () => {
@@ -653,6 +653,7 @@ describe("DashboardWorkspace", () => {
             contextApiKey="test-key"
             userApiKey={{
               keyPrefix: "clu_12345678",
+              keySuffix: "mnop",
               createdAt: "2026-03-29T10:00:00.000Z",
               updatedAt: "2026-03-29T10:00:00.000Z",
             }}
@@ -663,17 +664,19 @@ describe("DashboardWorkspace", () => {
     });
 
     const text = container.textContent ?? "";
+    expect(text).toContain("API keys");
     expect(text).toContain("Restricted agent key");
     expect(text).toContain("Give this key to your agent.");
     expect(text).toContain("User automation key");
     expect(text).toContain(
       "Use this key to programmatically set up APIs in the context layer.",
     );
-    expect(text).toContain("/api/context/*");
-    expect(text).toContain("/api/user/*");
-    expect(text).not.toContain("OpenHands Cloud");
-    expect(text).not.toContain("MCP Usage");
-    expect(text).not.toContain("REST API Usage");
+    expect(text).toContain("Connection details");
+    expect(text).toContain("MCP");
+    expect(text).toContain("REST API");
+    expect(text).toContain("https://example.com/api/mcp");
+    expect(text).toContain("https://example.com/api/context/openapi");
+    expect(text).toContain("https://example.com/api/context/skill");
     expect(text).not.toContain("Generate");
     expect(text).not.toContain("Revoke");
 
@@ -967,9 +970,9 @@ describe("DashboardWorkspace", () => {
       );
     });
 
-    const copyButton = Array.from(container.querySelectorAll("button")).find(
-      (button) => button.textContent?.includes("Copy"),
-    );
+    const copyButton = container.querySelector(
+      'button[aria-label="Copy restricted agent key"]',
+    ) as HTMLButtonElement | null;
     expect(copyButton).toBeTruthy();
     expect(copyButton?.querySelector("svg")?.getAttribute("class")).toContain(
       "lucide-copy",
@@ -991,9 +994,9 @@ describe("DashboardWorkspace", () => {
       vi.advanceTimersByTime(2000);
     });
 
-    const copyButtonAfterTimeout = Array.from(
-      container.querySelectorAll("button"),
-    ).find((button) => button.textContent?.includes("Copy"));
+    const copyButtonAfterTimeout = container.querySelector(
+      'button[aria-label="Copy restricted agent key"]',
+    ) as HTMLButtonElement | null;
     expect(
       copyButtonAfterTimeout?.querySelector("svg")?.getAttribute("class"),
     ).toContain("lucide-copy");

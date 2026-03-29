@@ -155,6 +155,7 @@ export class PostgresRepository implements ContextRepository {
           owner_id TEXT PRIMARY KEY,
           api_key_hash TEXT NOT NULL UNIQUE,
           key_prefix TEXT NOT NULL,
+          key_suffix TEXT NOT NULL DEFAULT '',
           created_at TIMESTAMPTZ NOT NULL,
           updated_at TIMESTAMPTZ NOT NULL
         )
@@ -223,6 +224,7 @@ export class PostgresRepository implements ContextRepository {
       sql`ALTER TABLE managed_connectors ADD COLUMN IF NOT EXISTS provider TEXT`,
       sql`ALTER TABLE managed_connectors ADD COLUMN IF NOT EXISTS server_url TEXT`,
       sql`ALTER TABLE managed_connectors ADD COLUMN IF NOT EXISTS open_api_url TEXT`,
+      sql`ALTER TABLE user_api_keys ADD COLUMN IF NOT EXISTS key_suffix TEXT NOT NULL DEFAULT ''`,
     ]);
 
     this.schemaReady = true;
@@ -516,6 +518,7 @@ export class PostgresRepository implements ContextRepository {
       ownerId: row.owner_id,
       apiKeyHash: row.api_key_hash,
       keyPrefix: row.key_prefix,
+      keySuffix: row.key_suffix ?? "",
       createdAt: new Date(row.created_at).toISOString(),
       updatedAt: new Date(row.updated_at).toISOString(),
     } satisfies UserApiKeyRecord;
@@ -533,6 +536,7 @@ export class PostgresRepository implements ContextRepository {
       ownerId: row.owner_id,
       apiKeyHash: row.api_key_hash,
       keyPrefix: row.key_prefix,
+      keySuffix: row.key_suffix ?? "",
       createdAt: new Date(row.created_at).toISOString(),
       updatedAt: new Date(row.updated_at).toISOString(),
     } satisfies UserApiKeyRecord;
@@ -542,11 +546,12 @@ export class PostgresRepository implements ContextRepository {
     await this.ensureSchema();
     const sql = getSql();
     await sql`
-      INSERT INTO user_api_keys (owner_id, api_key_hash, key_prefix, created_at, updated_at)
-      VALUES (${record.ownerId}, ${record.apiKeyHash}, ${record.keyPrefix}, ${record.createdAt}, ${record.updatedAt})
+      INSERT INTO user_api_keys (owner_id, api_key_hash, key_prefix, key_suffix, created_at, updated_at)
+      VALUES (${record.ownerId}, ${record.apiKeyHash}, ${record.keyPrefix}, ${record.keySuffix}, ${record.createdAt}, ${record.updatedAt})
       ON CONFLICT (owner_id) DO UPDATE SET
         api_key_hash = EXCLUDED.api_key_hash,
         key_prefix = EXCLUDED.key_prefix,
+        key_suffix = EXCLUDED.key_suffix,
         created_at = EXCLUDED.created_at,
         updated_at = EXCLUDED.updated_at
     `;

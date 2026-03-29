@@ -53,7 +53,7 @@ describe("/api/user/key", () => {
     const response = await GET();
     const body = (await response.json()) as {
       hasKey: boolean;
-      key: { keyPrefix: string; createdAt: string; updatedAt: string } | null;
+      key: { keyPrefix: string; keySuffix: string; createdAt: string; updatedAt: string } | null;
     };
 
     expect(response.status).toBe(200);
@@ -69,13 +69,14 @@ describe("/api/user/key", () => {
     const firstResponse = await POST();
     const firstBody = (await firstResponse.json()) as {
       apiKey: string;
-      key: { keyPrefix: string; createdAt: string; updatedAt: string };
+      key: { keyPrefix: string; keySuffix: string; createdAt: string; updatedAt: string };
     };
 
     expect(firstResponse.status).toBe(200);
     expect(firstResponse.headers.get("Cache-Control")).toBe("no-store");
     expect(firstBody.apiKey.startsWith("clu_")).toBe(true);
     expect(firstBody.key.keyPrefix).toBe(firstBody.apiKey.slice(0, 12));
+    expect(firstBody.key.keySuffix).toBe(firstBody.apiKey.slice(-4));
 
     const secondResponse = await POST();
     const secondBody = (await secondResponse.json()) as typeof firstBody;

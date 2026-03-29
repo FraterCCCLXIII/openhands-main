@@ -94,6 +94,7 @@ const normalizeAgentApiKeyOwner = (ownerId: string) => ownerId.trim().toLowerCas
 const createAgentApiKeyValue = () => `cla_${randomBytes(24).toString("base64url")}`;
 const createUserApiKeyValue = () => `clu_${randomBytes(32).toString("base64url")}`;
 const USER_API_KEY_PREFIX_LENGTH = 12;
+const USER_API_KEY_SUFFIX_LENGTH = 4;
 
 const hashUserApiKey = (apiKey: string) =>
   createHash("sha256").update(apiKey).digest("hex");
@@ -101,8 +102,12 @@ const hashUserApiKey = (apiKey: string) =>
 const getUserApiKeyPrefix = (apiKey: string) =>
   apiKey.slice(0, USER_API_KEY_PREFIX_LENGTH);
 
+const getUserApiKeySuffix = (apiKey: string) =>
+  apiKey.slice(-USER_API_KEY_SUFFIX_LENGTH);
+
 const toUserApiKeyStatus = (record: UserApiKeyRecord): UserApiKeyStatus => ({
   keyPrefix: record.keyPrefix,
+  keySuffix: record.keySuffix,
   createdAt: record.createdAt,
   updatedAt: record.updatedAt,
 });
@@ -414,6 +419,7 @@ export class ContextLayerService {
       ownerId: normalizedOwnerId,
       apiKeyHash: hashUserApiKey(apiKey),
       keyPrefix: getUserApiKeyPrefix(apiKey),
+      keySuffix: getUserApiKeySuffix(apiKey),
       createdAt: existing?.createdAt ?? timestamp,
       updatedAt: timestamp,
     };

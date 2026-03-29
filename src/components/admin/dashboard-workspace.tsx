@@ -36,6 +36,7 @@ import {
   getAdminSectionFromPath,
   type AdminSection,
 } from "@/src/lib/admin-routes";
+import { buildAgentConnectionGuide } from "@/src/lib/agent-connection";
 import { cn } from "@/src/lib/utils";
 import type {
   AccessRequest,
@@ -159,14 +160,15 @@ const maskApiKey = (apiKey: string, revealed: boolean) => {
   )}${trimmed.slice(-4)}`;
 };
 
-const maskStoredKeyPrefix = (keyPrefix: string) => {
-  const trimmed = keyPrefix.trim();
+const maskStoredApiKey = (keyPrefix: string, keySuffix: string) => {
+  const visiblePrefix = keyPrefix.trim().slice(0, 4);
+  const visibleSuffix = keySuffix.trim();
 
-  if (!trimmed) {
+  if (!visiblePrefix && !visibleSuffix) {
     return "";
   }
 
-  return `${trimmed}${"•".repeat(16)}`;
+  return `${visiblePrefix}${"•".repeat(16)}${visibleSuffix}`;
 };
 
 const copyTextToClipboard = async (text: string) => {
@@ -532,7 +534,7 @@ export const DashboardWorkspace = ({
   const maskedUserApiKey = userApiKeyValue
     ? maskApiKey(userApiKeyValue, revealUserApiKey)
     : userApiKeyStatus
-      ? maskStoredKeyPrefix(userApiKeyStatus.keyPrefix)
+      ? maskStoredApiKey(userApiKeyStatus.keyPrefix, userApiKeyStatus.keySuffix)
       : "";
   const userName = currentUser.name?.trim() || "Admin User";
   const userEmail = currentUser.email?.trim() || "Not provided";
@@ -633,6 +635,17 @@ export const DashboardWorkspace = ({
 
   const activeSectionMeta =
     sections.find((section) => section.id === activeSection) ?? sections[0];
+
+  const agentConnectionGuide = useMemo(
+    () =>
+      buildAgentConnectionGuide({
+        baseUrl: contextApiBaseUrl,
+        apiKey: "$OPENHANDS_CONTEXT_KEY",
+        integrations,
+      }),
+    [contextApiBaseUrl, integrations],
+  );
+
 
   const filteredIntegrations = useMemo(() => {
     const normalizedSearch = integrationSearch.trim().toLowerCase();
@@ -1224,101 +1237,166 @@ export const DashboardWorkspace = ({
         ) : null}
 
         {activeSection === "apiKeys" ? (
-          <section className="grid gap-4 xl:grid-cols-2">
-            <Card className="p-5">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <h2 className="text-base font-semibold text-white">Restricted agent key</h2>
-                  <p className="mt-1 text-sm text-[var(--color-text-base)]">
-                    Give this key to your agent.
+          <section className="space-y-4">
+            <CompactPanel title="API keys" icon={KeyRound}>
+              <div className="grid gap-4 xl:grid-cols-2">
+                <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <h3 className="text-sm font-semibold text-white">Restricted agent key</h3>
+                      <p className="mt-1 text-sm text-[var(--color-text-base)]">
+                        Give this key to your agent.
+                      </p>
+                    </div>
+                    <Badge tone={contextApiReady ? "success" : "warning"}>agent</Badge>
+                  </div>
+                  <div className="mt-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)] px-3 py-3">
+                    <code className="block break-all text-sm text-white">
+                      {maskedApiKey || "No restricted agent key available yet."}
+                    </code>
+                  </div>
+                  <p className="mt-3 text-xs leading-6 text-[var(--color-text-base)]">
+                    Works with <code className="text-white">/api/context/*</code> and <code className="text-white">/api/mcp</code>.
                   </p>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <Button
+                      variant="secondary"
+                      className="h-8 gap-2 rounded-md px-3 text-xs"
+                      onClick={() => setRevealApiKey((current) => !current)}
+                      disabled={!contextApiReady}
+                    >
+                      {revealApiKey ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                      {revealApiKey ? "Hide" : "Reveal"}
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      className="h-8 gap-2 rounded-md px-3 text-xs"
+                      onClick={handleCopyApiKey}
+                      disabled={!contextApiReady}
+                      aria-label="Copy restricted agent key"
+                    >
+                      {apiKeyCopied ? (
+                        <CheckCircle2 className="h-4 w-4" />
+                      ) : (
+                        <Copy className="h-4 w-4" />
+                      )}
+                      Copy
+                    </Button>
+                  </div>
                 </div>
-                <Badge tone={contextApiReady ? "success" : "warning"}>agent</Badge>
-              </div>
-              <div className="mt-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)] px-3 py-3">
-                <code className="block break-all text-sm text-white">
-                  {maskedApiKey || "No restricted agent key available yet."}
-                </code>
-              </div>
-              <p className="mt-3 text-xs leading-6 text-[var(--color-text-base)]">
-                Works with <code className="text-white">/api/context/*</code> and <code className="text-white">/api/mcp</code>.
-              </p>
-              <div className="mt-4 flex flex-wrap gap-2">
-                <Button
-                  variant="secondary"
-                  className="h-8 gap-2 rounded-md px-3 text-xs"
-                  onClick={() => setRevealApiKey((current) => !current)}
-                  disabled={!contextApiReady}
-                >
-                  {revealApiKey ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
-                  {revealApiKey ? "Hide" : "Reveal"}
-                </Button>
-                <Button
-                  className="h-8 gap-2 rounded-md px-3 text-xs"
-                  onClick={handleCopyApiKey}
-                  disabled={!contextApiReady}
-                >
-                  {apiKeyCopied ? (
-                    <CheckCircle2 className="h-4 w-4" />
-                  ) : (
-                    <Copy className="h-4 w-4" />
-                  )}
-                  Copy
-                </Button>
-              </div>
-            </Card>
 
-            <Card className="p-5">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <h2 className="text-base font-semibold text-white">User automation key</h2>
-                  <p className="mt-1 text-sm text-[var(--color-text-base)]">
-                    Use this key to programmatically set up APIs in the context layer.
+                <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <h3 className="text-sm font-semibold text-white">User automation key</h3>
+                      <p className="mt-1 text-sm text-[var(--color-text-base)]">
+                        Use this key to programmatically set up APIs in the context layer.
+                      </p>
+                    </div>
+                    <Badge tone={userApiKeyReady ? "warning" : "default"}>user</Badge>
+                  </div>
+                  <div className="mt-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)] px-3 py-3">
+                    <code className="block break-all text-sm text-white">
+                      {maskedUserApiKey || "No user automation key available yet."}
+                    </code>
+                  </div>
+                  <p className="mt-3 text-xs leading-6 text-[var(--color-text-base)]">
+                    Works with <code className="text-white">/api/user/*</code>.
                   </p>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <Button
+                      variant="secondary"
+                      className="h-8 gap-2 rounded-md px-3 text-xs"
+                      onClick={() => setRevealUserApiKey((current) => !current)}
+                      disabled={!userApiKeyVisibleInSession}
+                    >
+                      {revealUserApiKey ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                      {revealUserApiKey ? "Hide" : "Reveal"}
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      className="h-8 gap-2 rounded-md px-3 text-xs"
+                      onClick={handleCopyUserApiKey}
+                      disabled={!userApiKeyVisibleInSession}
+                      aria-label="Copy user automation key"
+                    >
+                      {userApiKeyCopied ? (
+                        <CheckCircle2 className="h-4 w-4" />
+                      ) : (
+                        <Copy className="h-4 w-4" />
+                      )}
+                      Copy
+                    </Button>
+                  </div>
                 </div>
-                <Badge tone={userApiKeyReady ? "warning" : "default"}>user</Badge>
               </div>
-              <div className="mt-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)] px-3 py-3">
-                <code className="block break-all text-sm text-white">
-                  {maskedUserApiKey || "No user automation key available yet."}
-                </code>
+            </CompactPanel>
+
+            <CompactPanel title="Connection details" icon={ShieldCheck}>
+              <div className="grid gap-4 xl:grid-cols-2">
+                <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-4">
+                  <h3 className="text-sm font-semibold text-white">MCP</h3>
+                  <p className="mt-1 text-sm leading-6 text-[var(--color-text-base)]">
+                    Connect your MCP client to the streamable HTTP endpoint below and authenticate with the restricted agent key.
+                  </p>
+                  <div className="mt-4 divide-y divide-[var(--color-border)]">
+                    <KeyValueRow
+                      label="Endpoint"
+                      value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.mcpEndpoint}</code>}
+                    />
+                    <KeyValueRow
+                      label="Example tool"
+                      value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.mcpToolName}</code>}
+                    />
+                  </div>
+                  <div className="mt-4 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)]">
+                    <div className="border-b border-[var(--color-border)] px-3 py-2 text-xs uppercase tracking-[0.18em] text-[var(--color-text-base)]">
+                      MCP config example
+                    </div>
+                    <pre className="overflow-x-auto whitespace-pre-wrap px-3 py-3 text-xs leading-6 text-[var(--color-text-base)]">
+                      {agentConnectionGuide.mcpConfigExample}
+                    </pre>
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-4">
+                  <h3 className="text-sm font-semibold text-white">REST API</h3>
+                  <p className="mt-1 text-sm leading-6 text-[var(--color-text-base)]">
+                    Call context-layer tool routes directly over HTTPS with the restricted agent key.
+                  </p>
+                  <div className="mt-4 divide-y divide-[var(--color-border)]">
+                    <KeyValueRow
+                      label="Tool endpoint"
+                      value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.endpoint}</code>}
+                    />
+                    <KeyValueRow
+                      label="OpenAPI schema"
+                      value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.openApiSchemaEndpoint}</code>}
+                    />
+                    <KeyValueRow
+                      label="SKILL export"
+                      value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.skillEndpoint}</code>}
+                    />
+                  </div>
+                  <div className="mt-4 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)]">
+                    <div className="border-b border-[var(--color-border)] px-3 py-2 text-xs uppercase tracking-[0.18em] text-[var(--color-text-base)]">
+                      cURL example
+                    </div>
+                    <pre className="overflow-x-auto whitespace-pre-wrap px-3 py-3 text-xs leading-6 text-[var(--color-text-base)]">
+                      {agentConnectionGuide.curlExample}
+                    </pre>
+                  </div>
+                </div>
               </div>
-              <p className="mt-3 text-xs leading-6 text-[var(--color-text-base)]">
-                Works with <code className="text-white">/api/user/*</code>.
-              </p>
-              <div className="mt-4 flex flex-wrap gap-2">
-                <Button
-                  variant="secondary"
-                  className="h-8 gap-2 rounded-md px-3 text-xs"
-                  onClick={() => setRevealUserApiKey((current) => !current)}
-                  disabled={!userApiKeyVisibleInSession}
-                >
-                  {revealUserApiKey ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
-                  {revealUserApiKey ? "Hide" : "Reveal"}
-                </Button>
-                <Button
-                  variant="secondary"
-                  className="h-8 gap-2 rounded-md px-3 text-xs"
-                  onClick={handleCopyUserApiKey}
-                  disabled={!userApiKeyVisibleInSession}
-                >
-                  {userApiKeyCopied ? (
-                    <CheckCircle2 className="h-4 w-4" />
-                  ) : (
-                    <Copy className="h-4 w-4" />
-                  )}
-                  Copy
-                </Button>
-              </div>
-            </Card>
+            </CompactPanel>
           </section>
         ) : null}
       </div>
