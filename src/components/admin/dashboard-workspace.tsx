@@ -36,11 +36,6 @@ import {
   getAdminSectionFromPath,
   type AdminSection,
 } from "@/src/lib/admin-routes";
-import {
-  buildAgentConnectionGuide,
-  OPENHANDS_CLOUD_SHTTP_MCP_URL,
-  OPENHANDS_CONTEXT_KEY_ENV,
-} from "@/src/lib/agent-connection";
 import { cn } from "@/src/lib/utils";
 import type {
   AccessRequest,
@@ -122,6 +117,7 @@ interface AdminDashboardProps {
   contextApiBaseUrl: string;
   contextApiKey: string;
   userApiKey?: UserApiKeyStatus | null;
+  userApiKeyValue?: string | null;
   isAdmin?: boolean;
 }
 
@@ -357,48 +353,6 @@ const IntegrationMarketplaceCard = ({
   );
 };
 
-const CollapsibleUsageSection = ({
-  title,
-  description,
-  expanded,
-  onToggle,
-  badge,
-  children,
-}: {
-  title: string;
-  description: string;
-  expanded: boolean;
-  onToggle: () => void;
-  badge?: ReactNode;
-  children: ReactNode;
-}) => (
-  <div className="overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)]">
-    <button
-      type="button"
-      className="flex w-full items-start justify-between gap-4 px-4 py-3 text-left"
-      aria-expanded={expanded}
-      onClick={onToggle}
-    >
-      <div className="min-w-0">
-        <div className="flex flex-wrap items-center gap-2">
-          <p className="text-sm font-semibold text-white">{title}</p>
-          {badge}
-        </div>
-        <p className="mt-1 text-xs leading-6 text-[var(--color-text-base)]">
-          {description}
-        </p>
-      </div>
-      <ChevronRight
-        className={cn(
-          "mt-0.5 h-4 w-4 shrink-0 text-[var(--color-text-base)] transition-transform",
-          expanded && "rotate-90",
-        )}
-      />
-    </button>
-    {expanded ? <div className="border-t border-[var(--color-border)] p-4">{children}</div> : null}
-  </div>
-);
-
 export const DashboardWorkspace = ({
   initialIntegrations,
   initialAccessRequests,
@@ -407,6 +361,7 @@ export const DashboardWorkspace = ({
   contextApiBaseUrl,
   contextApiKey,
   userApiKey = null,
+  userApiKeyValue: initialUserApiKeyValue = null,
   isAdmin = true,
 }: AdminDashboardProps) => {
   const queryClient = useQueryClient();
@@ -427,15 +382,14 @@ export const DashboardWorkspace = ({
   const [expandedFunctions, setExpandedFunctions] = useState<
     Record<string, boolean>
   >({});
-  const [expandedUsageSections, setExpandedUsageSections] = useState<
-    Record<string, boolean>
-  >({});
   const [revealApiKey, setRevealApiKey] = useState(false);
   const [apiKeyCopied, setApiKeyCopied] = useState(false);
   const [userApiKeyStatus, setUserApiKeyStatus] = useState<UserApiKeyStatus | null>(
     userApiKey,
   );
-  const [userApiKeyValue, setUserApiKeyValue] = useState("");
+  const [userApiKeyValue, setUserApiKeyValue] = useState(
+    initialUserApiKeyValue ?? "",
+  );
   const [revealUserApiKey, setRevealUserApiKey] = useState(false);
   const [userApiKeyCopied, setUserApiKeyCopied] = useState(false);
 
@@ -482,6 +436,10 @@ export const DashboardWorkspace = ({
   useEffect(() => {
     setUserApiKeyStatus(userApiKey);
   }, [userApiKey]);
+
+  useEffect(() => {
+    setUserApiKeyValue(initialUserApiKeyValue ?? "");
+  }, [initialUserApiKeyValue]);
 
   useEffect(() => {
     if (!userApiKeyCopied) {
@@ -554,19 +512,6 @@ export const DashboardWorkspace = ({
     },
   });
 
-  const userApiKeyMutation = useMutation({
-    mutationFn: async (method: "POST" | "DELETE") =>
-      fetchJson<
-        | { apiKey: string; key: UserApiKeyStatus }
-        | { revoked: boolean }
-      >("/api/user/key", {
-        method,
-      }),
-    onError: (error: Error) => {
-      setStatusMessage(error.message);
-    },
-  });
-
   const integrations = integrationsQuery.data ?? [];
   const accessRequests = accessRequestsQuery.data ?? [];
 
@@ -583,6 +528,7 @@ export const DashboardWorkspace = ({
   const contextApiReady = contextApiKey.trim().length > 0;
   const maskedApiKey = maskApiKey(contextApiKey, revealApiKey);
   const userApiKeyReady = userApiKeyStatus !== null;
+  const userApiKeyVisibleInSession = userApiKeyValue.trim().length > 0;
   const maskedUserApiKey = userApiKeyValue
     ? maskApiKey(userApiKeyValue, revealUserApiKey)
     : userApiKeyStatus
@@ -685,25 +631,8 @@ export const DashboardWorkspace = ({
     router.push(buildAdminSectionHref(section));
   };
 
-  const toggleUsageSection = (sectionKey: string) => {
-    setExpandedUsageSections((current) => ({
-      ...current,
-      [sectionKey]: !current[sectionKey],
-    }));
-  };
-
   const activeSectionMeta =
     sections.find((section) => section.id === activeSection) ?? sections[0];
-
-  const agentConnectionGuide = useMemo(
-    () =>
-      buildAgentConnectionGuide({
-        baseUrl: contextApiBaseUrl,
-        apiKey: OPENHANDS_CONTEXT_KEY_ENV,
-        integrations,
-      }),
-    [contextApiBaseUrl, integrations],
-  );
 
   const filteredIntegrations = useMemo(() => {
     const normalizedSearch = integrationSearch.trim().toLowerCase();
@@ -828,29 +757,10 @@ export const DashboardWorkspace = ({
     }
   };
 
-  const handleGenerateUserApiKey = async () => {
-    try {
-      const response = (await userApiKeyMutation.mutateAsync("POST")) as {
-        apiKey: string;
-        key: UserApiKeyStatus;
-      };
-      const actionLabel = userApiKeyStatus ? "regenerated" : "generated";
-      setUserApiKeyStatus(response.key);
-      setUserApiKeyValue(response.apiKey);
-      setRevealUserApiKey(false);
-      setUserApiKeyCopied(false);
-      setStatusMessage(
-        `User automation key ${actionLabel}. Store it now — it will not be shown again.`,
-      );
-    } catch {
-      // handled by mutation onError
-    }
-  };
-
   const handleCopyUserApiKey = async () => {
     if (!userApiKeyValue) {
       setStatusMessage(
-        "Regenerate the user automation key to reveal and copy it again.",
+        "The full user automation key is only shown when it is first issued in this session.",
       );
       return;
     }
@@ -861,25 +771,6 @@ export const DashboardWorkspace = ({
     } catch {
       setUserApiKeyCopied(false);
       setStatusMessage("Unable to copy the API key from this browser session.");
-    }
-  };
-
-  const handleRevokeUserApiKey = async () => {
-    try {
-      const response = (await userApiKeyMutation.mutateAsync("DELETE")) as {
-        revoked: boolean;
-      };
-      setUserApiKeyStatus(null);
-      setUserApiKeyValue("");
-      setRevealUserApiKey(false);
-      setUserApiKeyCopied(false);
-      setStatusMessage(
-        response.revoked
-          ? "User automation key revoked."
-          : "No user automation key was active.",
-      );
-    } catch {
-      // handled by mutation onError
     }
   };
 
@@ -1003,7 +894,11 @@ export const DashboardWorkspace = ({
                 />
                 <KeyValueRow
                   label="Endpoint pattern"
-                  value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.endpoint}</code>}
+                  value={
+                    <code className="break-all text-xs text-[var(--color-text-active)]">
+                      {`${contextApiBaseUrl}/api/context/{integrationKey}/{functionName}`}
+                    </code>
+                  }
                 />
               </div>
               <div className="mt-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)] px-3 py-3 text-xs leading-6 text-[var(--color-text-base)]">
@@ -1329,32 +1224,26 @@ export const DashboardWorkspace = ({
         ) : null}
 
         {activeSection === "apiKeys" ? (
-          <section className="space-y-4">
-            <CompactPanel
-              title="Restricted agent runtime key"
-              icon={KeyRound}
-              action={
-                <Badge tone={contextApiReady ? "success" : "warning"}>
-                  {contextApiReady ? "ready" : "unavailable"}
-                </Badge>
-              }
-            >
-              <div className="divide-y divide-[var(--color-border)]">
-                <KeyValueRow label="Issued for" value={userEmail} />
-                <KeyValueRow
-                  label="Base URL"
-                  value={<code className="break-all text-xs text-[var(--color-text-active)]">{contextApiBaseUrl}</code>}
-                />
+          <section className="grid gap-4 xl:grid-cols-2">
+            <Card className="p-5">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <h2 className="text-base font-semibold text-white">Restricted agent key</h2>
+                  <p className="mt-1 text-sm text-[var(--color-text-base)]">
+                    Give this key to your agent.
+                  </p>
+                </div>
+                <Badge tone={contextApiReady ? "success" : "warning"}>agent</Badge>
               </div>
               <div className="mt-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)] px-3 py-3">
                 <code className="block break-all text-sm text-white">
-                  {maskedApiKey || "No restricted agent API key available yet."}
+                  {maskedApiKey || "No restricted agent key available yet."}
                 </code>
               </div>
-              <p className="mt-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-muted)] px-3 py-2 text-xs leading-6 text-[var(--color-text-base)]">
-                Use this <span className="text-white">least-privilege</span> key for <code className="text-white">/api/context/*</code> and <code className="text-white">/api/mcp</code>. It does not grant dashboard-level user actions.
+              <p className="mt-3 text-xs leading-6 text-[var(--color-text-base)]">
+                Works with <code className="text-white">/api/context/*</code> and <code className="text-white">/api/mcp</code>.
               </p>
-              <div className="mt-3 flex flex-wrap gap-2">
+              <div className="mt-4 flex flex-wrap gap-2">
                 <Button
                   variant="secondary"
                   className="h-8 gap-2 rounded-md px-3 text-xs"
@@ -1381,56 +1270,32 @@ export const DashboardWorkspace = ({
                   Copy
                 </Button>
               </div>
-            </CompactPanel>
+            </Card>
 
-            <CompactPanel
-              title="User automation key"
-              icon={ShieldCheck}
-              action={
-                <Badge tone={userApiKeyReady ? "warning" : "default"}>
-                  {userApiKeyReady ? "broad access" : "not issued"}
-                </Badge>
-              }
-            >
-              <div className="divide-y divide-[var(--color-border)]">
-                <KeyValueRow label="Issued for" value={userEmail} />
-                <KeyValueRow
-                  label="API base"
-                  value={<code className="break-all text-xs text-[var(--color-text-active)]">{contextApiBaseUrl}/api/user/*</code>}
-                />
-                <KeyValueRow
-                  label="Status"
-                  value={
-                    userApiKeyReady
-                      ? userApiKeyValue
-                        ? "Visible in this session"
-                        : "Stored server-side"
-                      : "Not generated"
-                  }
-                />
+            <Card className="p-5">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <h2 className="text-base font-semibold text-white">User automation key</h2>
+                  <p className="mt-1 text-sm text-[var(--color-text-base)]">
+                    Use this key to programmatically set up APIs in the context layer.
+                  </p>
+                </div>
+                <Badge tone={userApiKeyReady ? "warning" : "default"}>user</Badge>
               </div>
               <div className="mt-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)] px-3 py-3">
                 <code className="block break-all text-sm text-white">
-                  {maskedUserApiKey || "No user automation key generated yet."}
+                  {maskedUserApiKey || "No user automation key available yet."}
                 </code>
               </div>
-              <p className="mt-3 rounded-lg border border-[color:rgba(217,181,90,0.25)] bg-[color:rgba(217,181,90,0.12)] px-3 py-2 text-xs leading-6 text-[var(--color-warning)]">
-                This key can call authenticated <code className="text-white">/api/user/*</code> endpoints for dashboard-equivalent actions. Treat it as more sensitive than the agent runtime key. Plaintext is only returned immediately after generation or regeneration.
+              <p className="mt-3 text-xs leading-6 text-[var(--color-text-base)]">
+                Works with <code className="text-white">/api/user/*</code>.
               </p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                <Button
-                  className="h-8 gap-2 rounded-md px-3 text-xs"
-                  onClick={handleGenerateUserApiKey}
-                  disabled={userApiKeyMutation.isPending}
-                >
-                  <KeyRound className="h-4 w-4" />
-                  {userApiKeyReady ? "Regenerate" : "Generate"}
-                </Button>
+              <div className="mt-4 flex flex-wrap gap-2">
                 <Button
                   variant="secondary"
                   className="h-8 gap-2 rounded-md px-3 text-xs"
                   onClick={() => setRevealUserApiKey((current) => !current)}
-                  disabled={!userApiKeyValue}
+                  disabled={!userApiKeyVisibleInSession}
                 >
                   {revealUserApiKey ? (
                     <EyeOff className="h-4 w-4" />
@@ -1443,7 +1308,7 @@ export const DashboardWorkspace = ({
                   variant="secondary"
                   className="h-8 gap-2 rounded-md px-3 text-xs"
                   onClick={handleCopyUserApiKey}
-                  disabled={!userApiKeyReady}
+                  disabled={!userApiKeyVisibleInSession}
                 >
                   {userApiKeyCopied ? (
                     <CheckCircle2 className="h-4 w-4" />
@@ -1452,162 +1317,8 @@ export const DashboardWorkspace = ({
                   )}
                   Copy
                 </Button>
-                <Button
-                  variant="danger"
-                  className="h-8 gap-2 rounded-md px-3 text-xs"
-                  onClick={handleRevokeUserApiKey}
-                  disabled={!userApiKeyReady || userApiKeyMutation.isPending}
-                >
-                  <Trash2 className="h-4 w-4" />
-                  Revoke
-                </Button>
               </div>
-            </CompactPanel>
-
-            <CompactPanel title="Usage" icon={ShieldCheck}>
-              <p className="mb-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-muted)] px-3 py-2 text-xs leading-6 text-[var(--color-text-base)]">
-                {agentConnectionGuide.permissionNote}
-              </p>
-              <div className="space-y-3">
-                <CollapsibleUsageSection
-                  title="OpenHands Cloud"
-                  description="Connect OpenHands Cloud to this context layer with the hosted SHTTP MCP server."
-                  expanded={expandedUsageSections.openhandsCloud ?? false}
-                  onToggle={() => toggleUsageSection("openhandsCloud")}
-                  badge={<Badge tone="success">Recommended</Badge>}
-                >
-                  <div className="divide-y divide-[var(--color-border)]">
-                    <KeyValueRow
-                      label="Go to"
-                      value={
-                        <a
-                          href="https://app.all-hands.dev/settings/mcp"
-                          target="_blank"
-                          rel="noreferrer"
-                          className="break-all text-xs text-[var(--color-text-active)] underline-offset-4 hover:underline"
-                        >
-                          https://app.all-hands.dev/settings/mcp
-                        </a>
-                      }
-                    />
-                    <KeyValueRow
-                      label="Server Type"
-                      value={<code className="break-all text-xs text-[var(--color-text-active)]">SHTTP</code>}
-                    />
-                    <KeyValueRow
-                      label="URL"
-                      value={<code className="break-all text-xs text-[var(--color-text-active)]">{OPENHANDS_CLOUD_SHTTP_MCP_URL}</code>}
-                    />
-                    <KeyValueRow
-                      label="API key"
-                      value={<span className="text-xs text-[var(--color-text-base)]">Use the restricted agent key shown above.</span>}
-                    />
-                  </div>
-                </CollapsibleUsageSection>
-
-                <CollapsibleUsageSection
-                  title="MCP Usage"
-                  description="Connect any MCP client to the streamable HTTP endpoint and call tools directly."
-                  expanded={expandedUsageSections.mcp ?? false}
-                  onToggle={() => toggleUsageSection("mcp")}
-                >
-                  <div className="divide-y divide-[var(--color-border)]">
-                    <KeyValueRow
-                      label="MCP endpoint"
-                      value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.mcpEndpoint}</code>}
-                    />
-                    <KeyValueRow
-                      label="Set agent ID tool"
-                      value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.mcpSetAgentIdToolName}</code>}
-                    />
-                    <KeyValueRow
-                      label="Set agent class tool"
-                      value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.mcpSetAgentClassToolName}</code>}
-                    />
-                    <KeyValueRow
-                      label="Example MCP tool"
-                      value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.mcpToolName}</code>}
-                    />
-                  </div>
-                  <div className="mt-4 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)]">
-                    <div className="border-b border-[var(--color-border)] px-3 py-2 text-xs uppercase tracking-[0.18em] text-[var(--color-text-base)]">
-                      MCP streamable HTTP example
-                    </div>
-                    <pre className="overflow-x-auto whitespace-pre-wrap px-3 py-3 text-xs leading-6 text-[var(--color-text-base)]">
-                      {agentConnectionGuide.mcpConfigExample}
-                    </pre>
-                  </div>
-                  <div className="mt-4 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)]">
-                    <div className="border-b border-[var(--color-border)] px-3 py-2 text-xs uppercase tracking-[0.18em] text-[var(--color-text-base)]">
-                      MCP session setup
-                    </div>
-                    <pre className="overflow-x-auto whitespace-pre-wrap px-3 py-3 text-xs leading-6 text-[var(--color-text-base)]">
-                      {agentConnectionGuide.mcpSessionSetupExample}
-                    </pre>
-                  </div>
-                </CollapsibleUsageSection>
-
-                <CollapsibleUsageSection
-                  title="REST API Usage"
-                  description="Call tools directly over HTTPS or download generated OpenAPI and SKILL.md docs."
-                  expanded={expandedUsageSections.rest ?? false}
-                  onToggle={() => toggleUsageSection("rest")}
-                >
-                  <div className="divide-y divide-[var(--color-border)]">
-                    <KeyValueRow
-                      label="Auth header"
-                      value={
-                        <code className="break-all text-xs text-[var(--color-text-active)]">
-                          Authorization: Bearer {OPENHANDS_CONTEXT_KEY_ENV}
-                        </code>
-                      }
-                    />
-                    <KeyValueRow
-                      label="REST endpoint"
-                      value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.endpoint}</code>}
-                    />
-                    <KeyValueRow
-                      label="OpenAPI schema"
-                      value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.openApiSchemaEndpoint}</code>}
-                    />
-                    <KeyValueRow
-                      label="SKILL.md endpoint"
-                      value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.skillEndpoint}</code>}
-                    />
-                  </div>
-                  <div className="mt-4 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)]">
-                    <div className="border-b border-[var(--color-border)] px-3 py-2 text-xs uppercase tracking-[0.18em] text-[var(--color-text-base)]">
-                      Tool call cURL example
-                    </div>
-                    <pre className="overflow-x-auto whitespace-pre-wrap px-3 py-3 text-xs leading-6 text-[var(--color-text-base)]">
-                      {agentConnectionGuide.curlExample}
-                    </pre>
-                  </div>
-                  <div className="mt-4 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)]">
-                    <div className="border-b border-[var(--color-border)] px-3 py-2 text-xs uppercase tracking-[0.18em] text-[var(--color-text-base)]">
-                      OpenAPI schema cURL example
-                    </div>
-                    <pre className="overflow-x-auto whitespace-pre-wrap px-3 py-3 text-xs leading-6 text-[var(--color-text-base)]">
-                      {agentConnectionGuide.openApiCurlExample}
-                    </pre>
-                  </div>
-                  <div className="mt-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)] px-3 py-3 text-xs leading-6 text-[var(--color-text-base)]">
-                    Download a generated <code className="text-white">SKILL.md</code> file that
-                    lists every currently available tool in this profile. The same
-                    restricted agent key works for the export route, so you can create the
-                    file with:
-                  </div>
-                  <div className="mt-3 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)]">
-                    <div className="border-b border-[var(--color-border)] px-3 py-2 text-xs uppercase tracking-[0.18em] text-[var(--color-text-base)]">
-                      SKILL.md export
-                    </div>
-                    <pre className="overflow-x-auto whitespace-pre-wrap px-3 py-3 text-xs leading-6 text-[var(--color-text-base)]">
-                      {agentConnectionGuide.skillCurlExample}
-                    </pre>
-                  </div>
-                </CollapsibleUsageSection>
-              </div>
-            </CompactPanel>
+            </Card>
           </section>
         ) : null}
       </div>

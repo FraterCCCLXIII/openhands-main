@@ -35,7 +35,7 @@ export async function AdminDashboardPage() {
     initialAccessRequests,
     initialNotifications,
     contextApiAuth,
-    userApiKey,
+    existingUserApiKey,
   ] = await Promise.all([
     service.listOwnerIntegrations(contextApiOwner),
     service.listAccessRequests(),
@@ -43,6 +43,15 @@ export async function AdminDashboardPage() {
     service.getOrCreateAgentApiKey(contextApiOwner),
     service.getUserApiKeyStatus(contextApiOwner),
   ]);
+
+  let userApiKey = existingUserApiKey;
+  let userApiKeyValue: string | null = null;
+
+  if (!userApiKey) {
+    const createdUserApiKey = await service.rotateUserApiKey(contextApiOwner);
+    userApiKey = createdUserApiKey.key;
+    userApiKeyValue = createdUserApiKey.apiKey;
+  }
 
   return (
     <main className="min-h-screen px-6 py-8">
@@ -55,6 +64,7 @@ export async function AdminDashboardPage() {
           contextApiBaseUrl={getRequestOrigin(requestHeaders)}
           contextApiKey={contextApiAuth.apiKey}
           userApiKey={userApiKey}
+          userApiKeyValue={userApiKeyValue}
           isAdmin={isAdmin}
         />
       </div>
