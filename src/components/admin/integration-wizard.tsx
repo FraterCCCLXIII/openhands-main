@@ -15,8 +15,10 @@ import {
   AccessModeSlider,
   accessModeButtonClassName,
   getFunctionAccessMode,
+  isFunctionModeSelectable,
   matchesFunctionSearch,
 } from "@/src/components/admin/function-access-controls";
+import { clampFunctionAccessMode } from "@/src/lib/function-access-mode";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
 import { Card } from "@/src/components/ui/card";
@@ -550,7 +552,15 @@ export const IntegrationWizard = ({
 
     setFunctionModes((current) => ({
       ...current,
-      ...Object.fromEntries(names.map((name) => [name, accessMode])),
+      ...Object.fromEntries(
+        names.map((name) => {
+          const functionSpec = discovery?.functions[name];
+          const nextAccessMode = functionSpec?.maxAccessMode
+            ? clampFunctionAccessMode(accessMode, functionSpec.maxAccessMode)
+            : accessMode;
+          return [name, nextAccessMode];
+        }),
+      ),
     }));
     setSelectedFunctions({});
   };
@@ -1419,12 +1429,17 @@ export const IntegrationWizard = ({
                               <AccessModeSlider
                                 functionName={name}
                                 mode={accessMode}
-                                onChange={(nextMode) =>
+                                maxMode={functionSpec.maxAccessMode}
+                                onChange={(nextMode) => {
+                                  if (!isFunctionModeSelectable(nextMode, functionSpec)) {
+                                    return;
+                                  }
+
                                   setFunctionModes((current) => ({
                                     ...current,
                                     [name]: nextMode,
-                                  }))
-                                }
+                                  }));
+                                }}
                               />
                               <Button
                                 type="button"

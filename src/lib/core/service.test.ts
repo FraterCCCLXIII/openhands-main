@@ -394,6 +394,76 @@ describe("ContextLayerService", () => {
     expect(restored.enabled).toBe(true);
   });
 
+  it("applies managed connector ceilings and injects indexed tools into user integrations", async () => {
+    const service = createService();
+    const timestamp = new Date().toISOString();
+
+    await testRepo.upsertManagedConnector({
+      slug: "salesforce",
+      name: "Salesforce",
+      description: "Managed Salesforce connector",
+      categories: ["CRM"],
+      authModes: ["bearer"],
+      authStrategy: "bearer",
+      provider: "mcp",
+      credentialLabel: "Salesforce token",
+      credentialPlaceholder: "Paste your Salesforce token",
+      credentialHelp: "Token used for Salesforce access.",
+      serverUrl: "https://salesforce.example.com/mcp",
+      functions: [
+        {
+          name: "accounts",
+          description: "List accounts",
+          defaultScopes: ["accounts.read"],
+          accessMode: "approval_required",
+          config: {
+            toolName: "accounts",
+          },
+        },
+        {
+          name: "reports",
+          description: "List reports",
+          defaultScopes: ["reports.read"],
+          accessMode: "disabled",
+          config: {
+            toolName: "reports",
+          },
+        },
+      ],
+      enabled: true,
+      oauthConfigured: false,
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    });
+
+    await service.registerOwnerIntegration(OWNER_ID, {
+      ...baseIntegration,
+      config: {
+        builtInSlug: "salesforce",
+        managedConnectorSlug: "salesforce",
+      },
+    });
+
+    const integrations = await service.listOwnerIntegrations(OWNER_ID);
+    expect(integrations[0]?.functions.accounts).toMatchObject({
+      accessMode: "approval_required",
+      maxAccessMode: "approval_required",
+      enabled: true,
+    });
+    expect(integrations[0]?.functions.reports).toMatchObject({
+      accessMode: "disabled",
+      maxAccessMode: "disabled",
+      enabled: false,
+    });
+
+    await expect(
+      service.setOwnerFunctionAccessMode(OWNER_ID, "salesforce", "accounts", "enabled"),
+    ).rejects.toThrow(
+      "Function 'accounts' cannot exceed the organization-managed 'approval_required' access level.",
+    );
+  });
+
+
   it("requires temporary approval for case-by-case functions", async () => {
     const repository = testRepo;
     const service = new ContextLayerService(

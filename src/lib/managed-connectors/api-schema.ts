@@ -42,7 +42,9 @@ export const managedConnectorFunctionSchema = z.object({
   name: z.string().min(1),
   description: z.string().min(1),
   defaultScopes: z.array(z.string()).default([]),
-  request: requestTemplateSchema,
+  accessMode: z.enum(["enabled", "disabled", "approval_required"]).optional(),
+  request: requestTemplateSchema.optional(),
+  config: z.record(z.string(), z.unknown()).optional(),
 });
 
 const managedConnectorBaseSchema = z.object({

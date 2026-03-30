@@ -193,8 +193,7 @@ export const managedConnectorToBuiltInOption = (
     description: connector.description,
     logoUrl: connector.logoUrl,
     appUrl: connector.appUrl,
-    toolCount:
-      getManagedConnectorProvider(connector) === "mcp" ? 0 : connector.functions.length,
+    toolCount: connector.functions.length,
     categories: connector.categories,
     authModes: connector.authModes,
     authStrategy: connector.authStrategy,
@@ -209,21 +208,28 @@ export const buildManagedConnectorFunctionSpecs = (
   functions: ManagedConnectorFunctionDefinition[],
 ): Record<string, FunctionSpec> =>
   Object.fromEntries(
-    functions.map((tool) => [
-      tool.name,
-      {
-        name: tool.name,
-        description: tool.description,
-        enabled: true,
-        accessMode: "enabled",
-        fineGrainedPermissions: true,
-        defaultScopes: tool.defaultScopes,
-        executionMode: "provider",
-        config: {
-          request: tool.request,
-        },
-      } satisfies FunctionSpec,
-    ]),
+    functions.map((tool) => {
+      const accessMode = tool.accessMode ?? "enabled";
+      const config = {
+        ...(tool.config ?? {}),
+        ...(tool.request ? { request: tool.request } : {}),
+      };
+
+      return [
+        tool.name,
+        {
+          name: tool.name,
+          description: tool.description,
+          enabled: accessMode !== "disabled",
+          accessMode,
+          maxAccessMode: accessMode,
+          fineGrainedPermissions: true,
+          defaultScopes: tool.defaultScopes,
+          executionMode: "provider",
+          config,
+        } satisfies FunctionSpec,
+      ];
+    }),
   );
 
 export const buildManagedConnectorFunctions = (

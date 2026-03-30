@@ -220,6 +220,23 @@ const discoverManagedConnectorIntegration = async (
       );
     }
 
+    if (storedConnector.functions.length > 0) {
+      return {
+        provider: "mcp",
+        authStrategy: storedConnector.authStrategy,
+        config: compactRecord({
+          builtInSlug: storedConnector.slug,
+          managedConnectorSlug: storedConnector.slug,
+          serverUrl,
+        }),
+        credentials:
+          storedConnector.authStrategy === "oauth2"
+            ? {}
+            : resolveManagedConnectorCredentials(storedConnector, input),
+        functions: buildManagedConnectorFunctions(storedConnector),
+      };
+    }
+
     const credentials =
       storedConnector.authStrategy === "oauth2"
         ? await resolveManagedOAuthDiscoveryCredentials(

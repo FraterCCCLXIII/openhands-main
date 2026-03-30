@@ -32,6 +32,7 @@ export interface FunctionSpec {
   description?: string;
   enabled: boolean;
   accessMode?: FunctionAccessMode;
+  maxAccessMode?: FunctionAccessMode;
   fineGrainedPermissions: boolean;
   defaultScopes: string[];
   executionMode: "provider" | "mock";
@@ -150,7 +151,9 @@ export interface ManagedConnectorFunctionDefinition {
   name: string;
   description: string;
   defaultScopes: string[];
-  request: GenericHttpRequestTemplate;
+  accessMode?: FunctionAccessMode;
+  request?: GenericHttpRequestTemplate;
+  config?: Record<string, unknown>;
 }
 
 export interface ManagedConnectorDefinition {

@@ -1951,6 +1951,7 @@ export const DashboardWorkspace = ({
                                                 <AccessModeSlider
                                                   functionName={functionSpec.name}
                                                   mode={accessMode}
+                                                  maxMode={functionSpec.maxAccessMode}
                                                   onChange={(nextMode) =>
                                                     updateFunctionAccessMode(
                                                       integration.key,

@@ -1,8 +1,12 @@
 "use client";
 
-import { ChevronRight, Trash2 } from "lucide-react";
+import { ChevronRight, RefreshCw, Trash2 } from "lucide-react";
 import { type FormEvent, useMemo, useState } from "react";
 
+import {
+  AccessModeSlider,
+  getFunctionAccessMode,
+} from "@/src/components/admin/function-access-controls";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
 import { cn } from "@/src/lib/utils";
@@ -29,6 +33,7 @@ interface ManagedConnectorFormState {
   oauthClientSecret: string;
   submitting: boolean;
   deleting: boolean;
+  indexing: boolean;
   status: "idle" | "success" | "error";
   message: string;
 }
@@ -67,6 +72,7 @@ const createFormState = (
   oauthClientSecret: "",
   submitting: false,
   deleting: false,
+  indexing: false,
   status: "idle",
   message: "",
 });
@@ -223,20 +229,16 @@ export function ManagedConnectorAdminList({
   const getFormState = (connector: ManagedConnectorDefinition) =>
     formStates[connector.slug] ?? createFormState(connector);
 
-  const handleSubmit = async (
-    event: FormEvent<HTMLFormElement>,
+  const validateConnectorForm = (
     connector: ManagedConnectorDefinition,
+    form: ManagedConnectorFormState,
   ) => {
-    event.preventDefault();
-
-    const form = getFormState(connector);
-
     if (form.provider === "mcp" && !form.serverUrl.trim()) {
       updateFormState(connector.slug, connector, {
         status: "error",
         message: "Enter the MCP server URL before saving this connector.",
       });
-      return;
+      return false;
     }
 
     if (form.provider === "http" && !form.apiBaseUrl.trim()) {
@@ -244,11 +246,28 @@ export function ManagedConnectorAdminList({
         status: "error",
         message: "Enter the API base URL before saving this connector.",
       });
+      return false;
+    }
+
+    return true;
+  };
+
+  const persistConnector = async (
+    connector: ManagedConnectorDefinition,
+    updates: Partial<ManagedConnectorFormState>,
+    successMessage: string,
+  ) => {
+    const form = {
+      ...getFormState(connector),
+      ...updates,
+    };
+
+    if (!validateConnectorForm(connector, form)) {
       return;
     }
 
     updateFormState(connector.slug, connector, {
-      submitting: true,
+      ...updates,
       status: "idle",
       message: "",
     });
@@ -282,9 +301,8 @@ export function ManagedConnectorAdminList({
         ...current,
         [connector.slug]: {
           ...createFormState(updatedConnector),
-          submitting: false,
           status: "success",
-          message: "Connector updated.",
+          message: successMessage,
         },
       }));
     } catch (error) {
@@ -295,6 +313,91 @@ export function ManagedConnectorAdminList({
           error instanceof Error ? error.message : "Failed to save connector changes.",
       });
     }
+  };
+
+  const handleSubmit = async (
+    event: FormEvent<HTMLFormElement>,
+    connector: ManagedConnectorDefinition,
+  ) => {
+    event.preventDefault();
+    await persistConnector(connector, { submitting: true }, "Connector updated.");
+  };
+
+  const handleIndexFunctions = async (connector: ManagedConnectorDefinition) => {
+    updateFormState(connector.slug, connector, {
+      indexing: true,
+      status: "idle",
+      message: "",
+    });
+
+    try {
+      const response = await fetch(
+        `/api/managed-connectors/${encodeURIComponent(connector.slug)}/functions`,
+        {
+          method: "POST",
+        },
+      );
+      const body = (await response.json().catch(() => null)) as
+        | (ManagedConnectorRecord & { detail?: string })
+        | { detail?: string }
+        | null;
+      if (!response.ok) {
+        throw new Error(body?.detail || "Failed to index connector tools.");
+      }
+
+      const updatedConnector = body as ManagedConnectorDefinition;
+      setManagedConnectors((current) =>
+        current.map((candidate) =>
+          candidate.slug === connector.slug ? updatedConnector : candidate,
+        ),
+      );
+      onConnectorUpdated?.(updatedConnector);
+      setExpandedSlug(updatedConnector.slug);
+      setFormStates((current) => ({
+        ...current,
+        [connector.slug]: {
+          ...createFormState(updatedConnector),
+          status: "success",
+          message:
+            updatedConnector.functions.length > 0
+              ? `Indexed ${updatedConnector.functions.length} ${updatedConnector.functions.length === 1 ? "tool" : "tools"}.`
+              : "No tools were returned while indexing this connector.",
+        },
+      }));
+    } catch (error) {
+      updateFormState(connector.slug, connector, {
+        indexing: false,
+        status: "error",
+        message:
+          error instanceof Error ? error.message : "Failed to index connector tools.",
+      });
+    }
+  };
+
+  const handleFunctionAccessModeChange = async (
+    connector: ManagedConnectorDefinition,
+    functionName: string,
+    accessMode: "enabled" | "disabled" | "approval_required",
+  ) => {
+    const updatedConnector: ManagedConnectorDefinition = {
+      ...connector,
+      functions: connector.functions.map((functionSpec) =>
+        functionSpec.name === functionName
+          ? {
+              ...functionSpec,
+              accessMode,
+            }
+          : functionSpec,
+      ),
+    };
+
+    setManagedConnectors((current) =>
+      current.map((candidate) =>
+        candidate.slug === connector.slug ? updatedConnector : candidate,
+      ),
+    );
+
+    await persistConnector(updatedConnector, { submitting: true }, "Connector permissions updated.");
   };
 
   const handleDelete = async (connector: ManagedConnectorDefinition) => {
@@ -435,7 +538,7 @@ export function ManagedConnectorAdminList({
                       type="button"
                       variant="danger"
                       className="h-8 gap-2 rounded-md px-3 text-xs"
-                      disabled={form.submitting || form.deleting}
+                      disabled={form.submitting || form.deleting || form.indexing}
                       aria-label={`Delete ${connector.name} connector`}
                       onClick={() => void handleDelete(connector)}
                     >
@@ -473,6 +576,83 @@ export function ManagedConnectorAdminList({
                       existing service-level managed connector in place; deleting removes it
                       until an admin registers it again.
                     </div>
+                    <div className="border-b border-[var(--color-border)] px-4 py-4">
+                      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                        <div>
+                          <h4 className="text-sm font-semibold text-white">Indexed tools</h4>
+                          <p className="mt-1 text-xs leading-6 text-[var(--color-text-base)]">
+                            Index the connector's current tools here, then set the maximum access level each user is allowed to select.
+                          </p>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          className="h-8 gap-2 rounded-md px-3 text-xs"
+                          disabled={form.submitting || form.deleting || form.indexing}
+                          onClick={() => void handleIndexFunctions(connector)}
+                        >
+                          <RefreshCw className={cn("h-4 w-4", form.indexing && "animate-spin")} />
+                          {form.indexing
+                            ? "Indexing…"
+                            : connector.functions.length > 0
+                              ? "Refresh indexed tools"
+                              : "Index tools"}
+                        </Button>
+                      </div>
+
+                      {connector.functions.length === 0 ? (
+                        <p className="mt-4 text-sm text-[var(--color-text-base)]">
+                          No tools are indexed yet. Index this connector to review and constrain user-facing tool permissions.
+                        </p>
+                      ) : (
+                        <div className="mt-4 space-y-3">
+                          {connector.functions
+                            .slice()
+                            .sort((left, right) => left.name.localeCompare(right.name))
+                            .map((functionSpec) => {
+                              const accessMode = getFunctionAccessMode({
+                                name: functionSpec.name,
+                                description: functionSpec.description,
+                                enabled: functionSpec.accessMode !== "disabled",
+                                accessMode: functionSpec.accessMode,
+                                fineGrainedPermissions: true,
+                                defaultScopes: functionSpec.defaultScopes,
+                                executionMode: "provider",
+                                config: {},
+                              });
+
+                              return (
+                                <div
+                                  key={functionSpec.name}
+                                  className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] px-4 py-4"
+                                  data-managed-connector-function={functionSpec.name}
+                                >
+                                  <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
+                                    <div className="min-w-0 flex-1">
+                                      <p className="text-sm font-semibold text-white">{functionSpec.name}</p>
+                                      <p className="mt-1 text-xs leading-6 text-[var(--color-text-base)]">
+                                        {functionSpec.description || "No description provided."}
+                                      </p>
+                                    </div>
+                                    <AccessModeSlider
+                                      functionName={functionSpec.name}
+                                      mode={accessMode}
+                                      onChange={(nextMode) =>
+                                        void handleFunctionAccessModeChange(
+                                          connector,
+                                          functionSpec.name,
+                                          nextMode,
+                                        )
+                                      }
+                                    />
+                                  </div>
+                                </div>
+                              );
+                            })}
+                        </div>
+                      )}
+                    </div>
+
                     <form
                       className="grid gap-3 p-4 md:grid-cols-2"
                       onSubmit={(event) => void handleSubmit(event, connector)}
@@ -620,7 +800,7 @@ export function ManagedConnectorAdminList({
                       ) : null}
 
                       <div className="flex flex-wrap items-center gap-3 md:col-span-2">
-                        <Button type="submit" disabled={form.submitting || form.deleting}>
+                        <Button type="submit" disabled={form.submitting || form.deleting || form.indexing}>
                           {form.submitting ? "Saving…" : "Save changes"}
                         </Button>
                         {form.message ? (

@@ -1,3 +1,8 @@
+import {
+  functionAccessModes,
+  getAllowedFunctionAccessModes,
+  isFunctionAccessModeAllowed,
+} from "@/src/lib/function-access-mode";
 import { cn } from "@/src/lib/utils";
 import type { FunctionAccessMode, FunctionSpec } from "@/src/types/context-layer";
 
@@ -55,46 +60,67 @@ const accessModeSegmentClassName: Record<FunctionAccessMode, string> = {
 const accessModeOptions: Array<{
   value: FunctionAccessMode;
   label: string;
-}> = [
-  { value: "enabled", label: "Enabled" },
-  { value: "approval_required", label: "Case-by-case" },
-  { value: "disabled", label: "Disabled" },
-];
+}> = functionAccessModes.map((value) => ({
+  value,
+  label: accessModeLabel(value),
+}));
 
 export const AccessModeSlider = ({
   functionName,
   mode,
+  maxMode,
   onChange,
 }: {
   functionName: string;
   mode: FunctionAccessMode;
+  maxMode?: FunctionAccessMode;
   onChange: (mode: FunctionAccessMode) => void;
-}) => (
-  <div
-    className="inline-flex flex-wrap items-center gap-1 rounded-full border border-[var(--color-border)] bg-[var(--color-bg-input)] p-1"
-    role="group"
-    aria-label={`Default access for ${functionName}`}
-    data-access-mode={mode}
-  >
-    {accessModeOptions.map((option) => {
-      const active = option.value === mode;
-      return (
-        <button
-          key={option.value}
-          type="button"
-          className={cn(
-            "rounded-full px-3 py-1.5 text-[11px] font-semibold transition-colors",
-            active
-              ? accessModeSegmentClassName[option.value]
-              : "text-[var(--color-text-base)] hover:bg-[var(--color-bg-active)] hover:text-white",
-          )}
-          aria-pressed={active}
-          aria-label={`${accessModeLabel(option.value)} access for ${functionName}`}
-          onClick={() => onChange(option.value)}
-        >
-          {option.label}
-        </button>
-      );
-    })}
-  </div>
-);
+}) => {
+  const allowedModes = maxMode ? getAllowedFunctionAccessModes(maxMode) : functionAccessModes;
+
+  return (
+    <div
+      className="inline-flex flex-wrap items-center gap-1 rounded-full border border-[var(--color-border)] bg-[var(--color-bg-input)] p-1"
+      role="group"
+      aria-label={`Default access for ${functionName}`}
+      data-access-mode={mode}
+      data-max-access-mode={maxMode}
+    >
+      {accessModeOptions.map((option) => {
+        const active = option.value === mode;
+        const allowed = allowedModes.includes(option.value);
+
+        return (
+          <button
+            key={option.value}
+            type="button"
+            className={cn(
+              "rounded-full px-3 py-1.5 text-[11px] font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50",
+              active
+                ? accessModeSegmentClassName[option.value]
+                : "text-[var(--color-text-base)] hover:bg-[var(--color-bg-active)] hover:text-white disabled:hover:bg-transparent disabled:hover:text-[var(--color-text-base)]",
+            )}
+            aria-pressed={active}
+            aria-label={`${accessModeLabel(option.value)} access for ${functionName}`}
+            disabled={!allowed}
+            onClick={() => {
+              if (!allowed) {
+                return;
+              }
+              onChange(option.value);
+            }}
+          >
+            {option.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+};
+
+export const isFunctionModeSelectable = (
+  requestedMode: FunctionAccessMode,
+  functionSpec: FunctionSpec,
+) =>
+  !functionSpec.maxAccessMode ||
+  isFunctionAccessModeAllowed(requestedMode, functionSpec.maxAccessMode);

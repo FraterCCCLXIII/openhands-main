@@ -7,7 +7,9 @@ import { addMinutes, nowIso } from "@/src/lib/core/date";
 import { ContextLayerError } from "@/src/lib/core/errors";
 import type { ContextRepository } from "@/src/lib/core/repository";
 import { decryptCredentials, encryptCredentials } from "@/src/lib/credential-crypto";
+import { discoverIntegration } from "@/src/lib/integrations/discovery";
 import {
+  buildManagedConnectorFunctions,
   listAllManagedConnectorDefinitions,
   sanitizeManagedConnector,
 } from "@/src/lib/integrations/managed-connectors";
@@ -19,6 +21,10 @@ import {
   usesDynamicOAuthClientRegistration,
 } from "@/src/lib/oauth/managed-oauth-client";
 import { resolveOAuthProvider } from "@/src/lib/oauth/provider-resolver";
+import {
+  clampFunctionAccessMode,
+  isFunctionAccessModeAllowed,
+} from "@/src/lib/function-access-mode";
 import type {
   AccessDecision,
   AccessRequest,
@@ -31,11 +37,13 @@ import type {
   FunctionAccessMode,
   FunctionSpec,
   FunctionUsageSummary,
+  GenericHttpRequestTemplate,
   GenericOAuthConfig,
   IntegrationConnectionRecord,
   IntegrationConnectionStatus,
   IntegrationSpec,
   ManagedConnectorDefinition,
+  ManagedConnectorFunctionDefinition,
   ManagedConnectorRecord,
   NotificationRecord,
   PolicyRule,
@@ -83,6 +91,116 @@ const normalizeFunctions = (functions: Record<string, FunctionSpec>) =>
       normalizeFunctionSpec(functionSpec),
     ]),
   );
+
+const getManagedConnectorSlug = (integration: IntegrationSpec) => {
+  const value = integration.config.managedConnectorSlug ?? integration.config.builtInSlug;
+  return typeof value === "string" && value.trim().length > 0 ? value.trim() : null;
+};
+
+const getManagedConnectorFunctionAccessMode = (
+  functionSpec: ManagedConnectorFunctionDefinition,
+): FunctionAccessMode => functionSpec.accessMode ?? "enabled";
+
+const toManagedConnectorFunctionDefinition = (
+  functionSpec: FunctionSpec,
+  accessMode: FunctionAccessMode,
+): ManagedConnectorFunctionDefinition => {
+  const config = { ...functionSpec.config };
+  const request = config.request as GenericHttpRequestTemplate | undefined;
+
+  delete config.request;
+
+  return {
+    name: functionSpec.name,
+    description: functionSpec.description ?? "",
+    defaultScopes: functionSpec.defaultScopes,
+    accessMode,
+    ...(request ? { request } : {}),
+    ...(Object.keys(config).length > 0 ? { config } : {}),
+  };
+};
+
+const sanitizeIndexedFunctionDefinitions = (
+  functions: ManagedConnectorFunctionDefinition[],
+) =>
+  functions.map((functionSpec) => ({
+    ...functionSpec,
+    accessMode: getManagedConnectorFunctionAccessMode(functionSpec),
+  }));
+
+const sanitizeManagedConnectorFunctionSource = (
+  connector: ManagedConnectorRecord,
+): ManagedConnectorRecord => ({
+  ...connector,
+  functions: sanitizeIndexedFunctionDefinitions(connector.functions),
+});
+
+const sanitizeManagedConnectorFunctionResponse = (
+  connector: ManagedConnectorRecord,
+): ManagedConnectorRecord => sanitizeManagedConnector(sanitizeManagedConnectorFunctionSource(connector));
+
+const mergeFunctionConfigs = (
+  indexedConfig: Record<string, unknown>,
+  installedConfig: Record<string, unknown>,
+) => ({
+  ...indexedConfig,
+  ...installedConfig,
+});
+
+const sanitizeManagedConnectorFunctionDefinitions = (
+  connector: ManagedConnectorRecord,
+  integration: IntegrationSpec,
+) => {
+  const indexedFunctions = buildManagedConnectorFunctions(
+    sanitizeManagedConnectorFunctionSource(connector),
+  );
+  const hasIndexedFunctions = connector.functions.length > 0;
+  const nextFunctions: Record<string, FunctionSpec> = {};
+  const functionNames = hasIndexedFunctions
+    ? [...new Set([...Object.keys(indexedFunctions), ...Object.keys(integration.functions)])]
+    : Object.keys(integration.functions);
+
+  for (const functionName of functionNames) {
+    const indexedFunction = indexedFunctions[functionName];
+    const installedFunction = integration.functions[functionName];
+
+    const mergedFunction = normalizeFunctionSpec(
+      indexedFunction && installedFunction
+        ? {
+            ...indexedFunction,
+            ...installedFunction,
+            config: mergeFunctionConfigs(indexedFunction.config, installedFunction.config),
+          }
+        : installedFunction ?? indexedFunction,
+    );
+
+    const maxAccessMode = hasIndexedFunctions
+      ? indexedFunction?.maxAccessMode ?? "disabled"
+      : undefined;
+    const effectiveAccessMode = maxAccessMode
+      ? clampFunctionAccessMode(getFunctionAccessMode(mergedFunction), maxAccessMode)
+      : getFunctionAccessMode(mergedFunction);
+
+    nextFunctions[functionName] = {
+      ...mergedFunction,
+      maxAccessMode,
+      accessMode: effectiveAccessMode,
+      enabled: effectiveAccessMode !== "disabled",
+    };
+  }
+
+  return nextFunctions;
+};
+
+const sanitizeIntegrationFunctions = (
+  integration: IntegrationSpec,
+  connector: ManagedConnectorRecord | null,
+): IntegrationSpec => ({
+  ...integration,
+  functions: connector
+    ? sanitizeManagedConnectorFunctionDefinitions(connector, integration)
+    : normalizeFunctions(integration.functions),
+});
 
 const sanitizeConnectionStatus = (
   record: IntegrationConnectionRecord,
@@ -244,17 +362,24 @@ export class ContextLayerService {
 
   async listOwnerIntegrations(ownerId: string) {
     await this.initialize();
-    return (await this.repository.listOwnerIntegrations(normalizeAgentApiKeyOwner(ownerId)))
-      .sort((a, b) => a.key.localeCompare(b.key));
+    const normalizedOwnerId = normalizeAgentApiKeyOwner(ownerId);
+    const integrations = await this.repository.listOwnerIntegrations(normalizedOwnerId);
+
+    return (await Promise.all(
+      integrations.map((integration) => this.applyManagedConnectorConstraints(integration)),
+    )).sort((a, b) => a.key.localeCompare(b.key));
   }
 
   async listOwnerIntegrationsWithUsage(ownerId: string) {
     await this.initialize();
     const normalizedOwnerId = normalizeAgentApiKeyOwner(ownerId);
-    const [integrations, usageSummaries] = await Promise.all([
+    const [storedIntegrations, usageSummaries] = await Promise.all([
       this.repository.listOwnerIntegrations(normalizedOwnerId),
       this.repository.listOwnerFunctionUsageSummaries(normalizedOwnerId),
     ]);
+    const integrations = await Promise.all(
+      storedIntegrations.map((integration) => this.applyManagedConnectorConstraints(integration)),
+    );
     const usageByFunction = new Map(
       usageSummaries.map((summary) => [
         `${summary.integrationKey}:${summary.functionName}`,
@@ -373,7 +498,10 @@ export class ContextLayerService {
 
   async listManagedConnectors() {
     await this.initialize();
-    return listAllManagedConnectorDefinitions(this.repository);
+    return (await listAllManagedConnectorDefinitions(this.repository)).map((connector) => ({
+      ...connector,
+      functions: sanitizeIndexedFunctionDefinitions(connector.functions),
+    }));
   }
 
   async upsertManagedConnector(
@@ -503,16 +631,92 @@ export class ContextLayerService {
       openApiUrl: provider === "http" ? normalizedOpenApiUrl : undefined,
       oauthConfig: normalizedOAuthConfig,
       encryptedOAuthClient,
-      functions: generatedFunctions ?? input.functions,
+      functions: sanitizeIndexedFunctionDefinitions(generatedFunctions ?? input.functions),
       enabled: input.enabled,
       createdAt: existing?.createdAt ?? timestamp,
       updatedAt: timestamp,
     };
 
-    return sanitizeManagedConnector(
+    return sanitizeManagedConnectorFunctionResponse(
       await this.repository.upsertManagedConnector(record),
     );
   }
+
+  async indexManagedConnectorFunctions(slug: string, ownerId?: string) {
+    await this.initialize();
+
+    const normalizedSlug = slug.trim();
+    if (!normalizedSlug) {
+      throw new ContextLayerError("Managed connectors require a slug.", 400);
+    }
+
+    const existing = await this.repository.getManagedConnector(normalizedSlug);
+    if (!existing) {
+      throw new ContextLayerError("Managed connector not found.", 404);
+    }
+
+    const existingAccessModes = new Map(
+      existing.functions.map((functionSpec) => [
+        functionSpec.name,
+        getManagedConnectorFunctionAccessMode(functionSpec),
+      ]),
+    );
+
+    let functions: ManagedConnectorFunctionDefinition[];
+    const provider = existing.provider ?? (existing.openApiUrl ? "http" : "mcp");
+
+    if (provider === "http") {
+      if (!existing.openApiUrl) {
+        throw new ContextLayerError(
+          "Managed HTTP connectors need an OpenAPI URL before their tools can be indexed.",
+          400,
+        );
+      }
+
+      const generatedFunctions = await generateManagedConnectorFunctionsFromOpenApi({
+        openApiUrl: existing.openApiUrl,
+        authStrategy: existing.authStrategy,
+      });
+      functions = generatedFunctions.map((functionSpec) => ({
+        ...functionSpec,
+        accessMode: existingAccessModes.get(functionSpec.name) ?? "enabled",
+      }));
+    } else {
+      const credentials =
+        existing.authStrategy === "oauth2" && ownerId
+          ? await this.getManagedConnectorDiscoveryCredentials(ownerId, normalizedSlug)
+          : {};
+      const discovery = await discoverIntegration(
+        {
+          key: normalizedSlug,
+          kind: "mcp",
+          config: {
+            serverUrl: existing.serverUrl,
+          },
+          credentials,
+        },
+        {
+          ownerId,
+          repository: this.repository,
+        },
+      );
+
+      functions = Object.values(discovery.functions).map((functionSpec) => {
+        const accessMode =
+          existingAccessModes.get(functionSpec.name) ?? getFunctionAccessMode(functionSpec);
+        return toManagedConnectorFunctionDefinition(functionSpec, accessMode);
+      });
+    }
+
+    const updated = await this.repository.upsertManagedConnector({
+      ...existing,
+      functions: sanitizeIndexedFunctionDefinitions(functions),
+      updatedAt: nowIso(),
+    });
+
+    return sanitizeManagedConnectorFunctionResponse(updated);
+  }
+
 
   async deleteManagedConnector(slug: string) {
     await this.initialize();
@@ -913,10 +1117,10 @@ export class ContextLayerService {
       );
     }
 
-    const integration: IntegrationSpec = {
+    const integration = await this.applyManagedConnectorConstraints({
       ...spec,
       functions: normalizeFunctions(spec.functions ?? {}),
-    };
+    });
     return this.repository.upsertOwnerIntegration(
       normalizeAgentApiKeyOwner(ownerId),
       integration,
@@ -934,8 +1138,9 @@ export class ContextLayerService {
       integrationKey,
     );
     integration.functions[functionSpec.name] = normalizeFunctionSpec(functionSpec);
-    await this.repository.upsertOwnerIntegration(normalizedOwnerId, integration);
-    return integration.functions[functionSpec.name];
+    const constrainedIntegration = await this.applyManagedConnectorConstraints(integration);
+    await this.repository.upsertOwnerIntegration(normalizedOwnerId, constrainedIntegration);
+    return constrainedIntegration.functions[functionSpec.name];
   }
 
   async setOwnerIntegrationEnabled(
@@ -972,11 +1177,14 @@ export class ContextLayerService {
       );
     }
 
-    const accessMode = enabled
+    const requestedAccessMode = enabled
       ? functionSpec.accessMode === "disabled"
         ? "enabled"
         : getFunctionAccessMode(functionSpec)
       : "disabled";
+    const accessMode = functionSpec.maxAccessMode
+      ? clampFunctionAccessMode(requestedAccessMode, functionSpec.maxAccessMode)
+      : requestedAccessMode;
 
     functionSpec.enabled = accessMode !== "disabled";
     functionSpec.accessMode = accessMode;
@@ -1004,8 +1212,18 @@ export class ContextLayerService {
       );
     }
 
+    if (
+      functionSpec.maxAccessMode &&
+      !isFunctionAccessModeAllowed(accessMode, functionSpec.maxAccessMode)
+    ) {
+      throw new ContextLayerError(
+        `Function '${functionName}' cannot exceed the organization-managed '${functionSpec.maxAccessMode}' access level.`,
+        403,
+      );
+    }
+
     functionSpec.accessMode = accessMode;
-    functionSpec.enabled = accessMode !== 'disabled';
+    functionSpec.enabled = accessMode !== "disabled";
     await this.repository.upsertOwnerIntegration(normalizedOwnerId, integration);
     return functionSpec;
   }
@@ -1481,6 +1699,33 @@ export class ContextLayerService {
     } satisfies IntegrationSpec;
   }
 
+
+  private async applyManagedConnectorConstraints(integration: IntegrationSpec) {
+    const managedConnectorSlug = getManagedConnectorSlug(integration);
+    if (!managedConnectorSlug) {
+      return sanitizeIntegrationFunctions(integration, null);
+    }
+
+    const connector = await this.repository.getManagedConnector(managedConnectorSlug);
+    return sanitizeIntegrationFunctions(integration, connector);
+  }
+
+  private async getManagedConnectorDiscoveryCredentials(
+    ownerId: string,
+    integrationKey: string,
+  ): Promise<Record<string, unknown>> {
+    const connection = await this.repository.getIntegrationConnection(
+      normalizeAgentApiKeyOwner(ownerId),
+      integrationKey,
+    );
+
+    if (!connection) {
+      return {};
+    }
+
+    return decryptCredentials<Record<string, unknown>>(connection.encryptedCredentials);
+  }
+
   private async getRuntimeIntegration(key: string, ownerId?: string) {
     if (!ownerId) {
       throw new ContextLayerError(
@@ -1497,7 +1742,7 @@ export class ContextLayerService {
     const normalizedOwnerId = normalizeAgentApiKeyOwner(ownerId);
     const existing = await this.repository.getOwnerIntegration(normalizedOwnerId, key);
     if (existing) {
-      return existing;
+      return this.applyManagedConnectorConstraints(existing);
     }
 
     throw new ContextLayerError(
@@ -1563,7 +1808,7 @@ export class ContextLayerService {
       key,
     );
     if (integration) {
-      return integration;
+      return this.applyManagedConnectorConstraints(integration);
     }
 
     throw new ContextLayerError(

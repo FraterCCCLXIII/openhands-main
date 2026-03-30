@@ -25,6 +25,7 @@ export const functionSpecSchema = z.object({
   accessMode: z
     .enum(["enabled", "disabled", "approval_required"])
     .default("enabled"),
+  maxAccessMode: z.enum(["enabled", "disabled", "approval_required"]).optional(),
   fineGrainedPermissions: z.boolean().default(true),
   defaultScopes: z.array(z.string()).default([]),
   executionMode: z.enum(["provider", "mock"]).default("provider"),
