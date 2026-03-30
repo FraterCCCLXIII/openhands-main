@@ -36,6 +36,7 @@ const getRequestSessionDefaults = (request: Request): McpSessionDefaults => {
   return {
     agentId: url.searchParams.get("agentId")?.trim() ?? "",
     agentClass: url.searchParams.get("agentClass")?.trim() ?? "",
+    agentData: {},
   };
 };
 

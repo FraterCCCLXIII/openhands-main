@@ -9,7 +9,12 @@ import { filterIntegrationsVisibleToOwner } from "@/src/lib/integrations/visible
 import { buildContextLayerToolInputShape } from "@/src/lib/mcp/tool-input-schema";
 import type { McpSessionDefaults } from "@/src/lib/mcp/session-store";
 import { getRequestOrigin } from "@/src/lib/request-context";
-import type { ContextInvocationResult, FunctionSpec, IntegrationSpec } from "@/src/types/context-layer";
+import type {
+  AccessRequestAgentData,
+  ContextInvocationResult,
+  FunctionSpec,
+  IntegrationSpec,
+} from "@/src/types/context-layer";
 
 const CONTEXT_LAYER_MCP_SERVER_INFO = {
   name: "agent-context-layer",
@@ -32,6 +37,10 @@ const SET_AGENT_CLASS_TOOL_INPUT_SCHEMA = z.object({
   agentClass: z.string().trim().min(1),
 });
 
+const SET_AGENT_DATA_TOOL_INPUT_SCHEMA = z.object({
+  conversationLink: z.string().trim().min(1),
+});
+
 const RESERVED_TOOL_ARGUMENT_KEYS = new Set([
   "contextAgentId",
   "contextAgentClass",
@@ -42,6 +51,7 @@ const APPROVAL_DASHBOARD_PATH = "/case-by-case-approvals";
 export const CONTEXT_LAYER_MCP_TOOL_SEPARATOR = "__";
 export const CONTEXT_LAYER_MCP_SET_AGENT_ID_TOOL_NAME = "set_agent_id";
 export const CONTEXT_LAYER_MCP_SET_AGENT_CLASS_TOOL_NAME = "set_agent_class";
+export const CONTEXT_LAYER_MCP_SET_AGENT_DATA_TOOL_NAME = "set_agent_data";
 
 const getFunctionAccessMode = (functionSpec: FunctionSpec) =>
   functionSpec.accessMode ?? (functionSpec.enabled ? "enabled" : "disabled");
@@ -53,6 +63,18 @@ const isToolResultContentBlock = (
   value: unknown,
 ): value is CallToolResult["content"][number] =>
   isRecord(value) && typeof value.type === "string";
+
+
+const normalizeAgentData = (
+  agentData?: AccessRequestAgentData,
+): AccessRequestAgentData => {
+  const conversationLink = agentData?.conversationLink?.trim();
+
+  return conversationLink ? { conversationLink } : {};
+};
+
+const hasConversationLink = (agentData?: AccessRequestAgentData) =>
+  Boolean(normalizeAgentData(agentData).conversationLink);
 
 const isMcpToolResult = (value: unknown): value is CallToolResult =>
   isRecord(value) &&
@@ -68,7 +90,7 @@ const buildToolDescription = (
   const notes = [
     functionSpec.description?.trim(),
     `Invoke ${integration.key}.${functionSpec.name} through the context layer MCP bridge.`,
-    `Pass downstream tool arguments as top-level fields. Reserved fields: contextScopes, contextAgentId, contextAgentClass. If you omit agent identity, enabled tools use the default session identity; use ${CONTEXT_LAYER_MCP_SET_AGENT_ID_TOOL_NAME} and ${CONTEXT_LAYER_MCP_SET_AGENT_CLASS_TOOL_NAME} to override it for the current MCP session.`,
+    `Pass downstream tool arguments as top-level fields. Reserved fields: contextScopes, contextAgentId, contextAgentClass. If you omit agent identity, enabled tools use the default session identity; use ${CONTEXT_LAYER_MCP_SET_AGENT_ID_TOOL_NAME}, ${CONTEXT_LAYER_MCP_SET_AGENT_CLASS_TOOL_NAME}, and ${CONTEXT_LAYER_MCP_SET_AGENT_DATA_TOOL_NAME} to override the session identity or add conversation metadata for approvals.`,
   ].filter(Boolean);
 
   if (mode === "approval_required") {
@@ -96,6 +118,18 @@ const buildApprovalMessage = ({
   [
     `Human approval is currently required before calling ${integrationKey}.${functionName}.`,
     `Ask your human to authorize access in the dashboard: ${approvalUrl}`,
+  ].join(" ");
+
+const buildApprovalSetupMessage = ({
+  functionName,
+  integrationKey,
+}: {
+  functionName: string;
+  integrationKey: string;
+}) =>
+  [
+    `Human approval is currently required before calling ${integrationKey}.${functionName}.`,
+    `Before requesting approval, call ${CONTEXT_LAYER_MCP_SET_AGENT_DATA_TOOL_NAME} with conversationLink so the approvals page can link back to the conversation.`,
   ].join(" ");
 
 const extractInvocationContext = (args: Record<string, unknown>, defaults: McpSessionDefaults) => {
@@ -160,6 +194,20 @@ const buildSessionSettingResult = (
   structuredContent: { [field]: value },
 });
 
+const buildSessionAgentDataResult = (
+  agentData: AccessRequestAgentData,
+): CallToolResult => ({
+  content: [
+    {
+      type: "text" as const,
+      text: `MCP session agent data set with conversation link ${agentData.conversationLink}.`,
+    },
+  ],
+  structuredContent: {
+    conversationLink: agentData.conversationLink,
+  },
+});
+
 export const buildContextLayerMcpToolName = (
   integrationKey: string,
   functionName: string,
@@ -184,10 +232,14 @@ export const createContextLayerMcpServer = async ({
     getRequestOrigin(request.headers),
   ).toString();
   const initialUrl = new URL(request.url);
-  const sessionAgentDefaults: McpSessionDefaults = resolveInvocationIdentity({
+  const resolvedIdentity = resolveInvocationIdentity({
     agentId: sessionDefaults?.agentId ?? initialUrl.searchParams.get("agentId"),
     agentClass: sessionDefaults?.agentClass ?? initialUrl.searchParams.get("agentClass"),
   });
+  const sessionAgentDefaults: McpSessionDefaults = {
+    ...resolvedIdentity,
+    agentData: normalizeAgentData(sessionDefaults?.agentData),
+  };
   const persistSessionDefaults = async () => {
     await onSessionDefaultsChanged?.({ ...sessionAgentDefaults });
   };
@@ -229,6 +281,22 @@ export const createContextLayerMcpServer = async ({
     },
   );
 
+
+  server.registerTool(
+    CONTEXT_LAYER_MCP_SET_AGENT_DATA_TOOL_NAME,
+    {
+      title: "Set session agent data",
+      description:
+        "Set session-scoped agent metadata such as a conversationLink for approval review.",
+      inputSchema: SET_AGENT_DATA_TOOL_INPUT_SCHEMA,
+    },
+    async ({ conversationLink }) => {
+      sessionAgentDefaults.agentData = normalizeAgentData({ conversationLink });
+      await persistSessionDefaults();
+      return buildSessionAgentDataResult(sessionAgentDefaults.agentData);
+    },
+  );
+
   for (const integration of visibleIntegrations) {
     if (!integration.enabled) {
       continue;
@@ -253,7 +321,36 @@ export const createContextLayerMcpServer = async ({
           inputSchema: buildContextLayerToolInputShape(functionSpec),
         },
         async (args) => {
-          const invocation = extractInvocationContext(args as Record<string, unknown>, sessionAgentDefaults);
+          const invocation = extractInvocationContext(
+            args as Record<string, unknown>,
+            sessionAgentDefaults,
+          );
+
+          if (accessMode === "approval_required" && !hasConversationLink(sessionAgentDefaults.agentData)) {
+            const decision = await service.evaluateAccess(
+              invocation.agentId,
+              invocation.agentClass,
+              integration.key,
+              functionSpec.name,
+              invocation.scopes,
+              { ownerId },
+            );
+
+            if (!decision.allowed) {
+              return {
+                isError: true,
+                content: [
+                  {
+                    type: "text" as const,
+                    text: buildApprovalSetupMessage({
+                      functionName: functionSpec.name,
+                      integrationKey: integration.key,
+                    }),
+                  },
+                ],
+              };
+            }
+          }
 
           try {
             const result = await service.invokeContext(
@@ -263,7 +360,10 @@ export const createContextLayerMcpServer = async ({
               functionSpec.name,
               invocation.payload,
               invocation.scopes,
-              { ownerId },
+              {
+                ownerId,
+                agentData: sessionAgentDefaults.agentData,
+              },
             );
 
             return formatToolResult(result.data);

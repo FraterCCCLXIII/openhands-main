@@ -115,6 +115,7 @@ export class PostgresRepository implements ContextRepository {
           channels JSONB NOT NULL DEFAULT '[]'::jsonb,
           notification_targets JSONB NOT NULL DEFAULT '{}'::jsonb,
           justification TEXT NOT NULL DEFAULT '',
+          agent_data JSONB NOT NULL DEFAULT '{}'::jsonb,
           created_at TIMESTAMPTZ NOT NULL,
           status TEXT NOT NULL,
           decided_at TIMESTAMPTZ,
@@ -258,6 +259,7 @@ export class PostgresRepository implements ContextRepository {
       sql`ALTER TABLE managed_connectors ADD COLUMN IF NOT EXISTS provider TEXT`,
       sql`ALTER TABLE managed_connectors ADD COLUMN IF NOT EXISTS server_url TEXT`,
       sql`ALTER TABLE managed_connectors ADD COLUMN IF NOT EXISTS open_api_url TEXT`,
+      sql`ALTER TABLE access_requests ADD COLUMN IF NOT EXISTS agent_data JSONB NOT NULL DEFAULT '{}'::jsonb`,
       sql`ALTER TABLE user_api_keys ADD COLUMN IF NOT EXISTS key_suffix TEXT NOT NULL DEFAULT ''`,
       sql`ALTER TABLE user_api_keys ADD COLUMN IF NOT EXISTS encrypted_api_key TEXT`,
       sql`ALTER TABLE admin_api_keys ADD COLUMN IF NOT EXISTS key_suffix TEXT NOT NULL DEFAULT ''`,
@@ -371,6 +373,7 @@ export class PostgresRepository implements ContextRepository {
       channels: parseJson<AccessRequest["channels"]>(row.channels),
       notificationTargets: parseJson<Record<string, string>>(row.notification_targets),
       justification: row.justification,
+      agentData: parseJson<AccessRequest["agentData"]>(row.agent_data),
       createdAt: new Date(row.created_at).toISOString(),
       status: row.status,
       decidedAt: row.decided_at ? new Date(row.decided_at).toISOString() : undefined,
@@ -389,11 +392,11 @@ export class PostgresRepository implements ContextRepository {
     await sql`
       INSERT INTO access_requests (
         id, agent_id, agent_class, integration_key, function_name, scopes,
-        requested_minutes, channels, notification_targets, justification,
+        requested_minutes, channels, notification_targets, justification, agent_data,
         created_at, status, decided_at, decided_by
       ) VALUES (
         ${request.id}, ${request.agentId}, ${request.agentClass}, ${request.integrationKey}, ${request.functionName}, ${JSON.stringify(request.scopes)},
-        ${request.requestedMinutes}, ${JSON.stringify(request.channels)}, ${JSON.stringify(request.notificationTargets)}, ${request.justification ?? ""},
+        ${request.requestedMinutes}, ${JSON.stringify(request.channels)}, ${JSON.stringify(request.notificationTargets)}, ${request.justification ?? ""}, ${JSON.stringify(request.agentData ?? {})},
         ${request.createdAt}, ${request.status}, ${request.decidedAt ?? null}, ${request.decidedBy ?? null}
       )
     `;
@@ -415,6 +418,7 @@ export class PostgresRepository implements ContextRepository {
         channels = ${JSON.stringify(request.channels)},
         notification_targets = ${JSON.stringify(request.notificationTargets)},
         justification = ${request.justification ?? ""},
+        agent_data = ${JSON.stringify(request.agentData ?? {})},
         created_at = ${request.createdAt},
         status = ${request.status},
         decided_at = ${request.decidedAt ?? null},

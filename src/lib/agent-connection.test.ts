@@ -115,6 +115,7 @@ describe("agent-connection", () => {
     expect(guide.mcpToolName).toBe("github__search_repositories");
     expect(guide.mcpSetAgentIdToolName).toBe("set_agent_id");
     expect(guide.mcpSetAgentClassToolName).toBe("set_agent_class");
+    expect(guide.mcpSetAgentDataToolName).toBe("set_agent_data");
     expect(guide.curlExample).toContain("Authorization: Bearer context-key");
     expect(guide.skillEndpoint).toBe("http://localhost:12000/api/context/skill");
     expect(guide.skillCurlExample).toContain('curl -L "http://localhost:12000/api/context/skill"');
@@ -136,7 +137,10 @@ describe("agent-connection", () => {
       "3. Optionally call set_agent_id and set_agent_class to override the identity for the rest of the session.",
     );
     expect(guide.mcpSessionSetupExample).toContain(
-      "4. You can also pass contextAgentId and contextAgentClass per tool call when you need a one-off override.",
+      "4. If you plan to request case-by-case tools, call set_agent_data with your conversationLink first so humans can review the originating conversation.",
+    );
+    expect(guide.mcpSessionSetupExample).toContain(
+      "5. You can also pass contextAgentId and contextAgentClass per tool call when you need a one-off override.",
     );
   });
 
@@ -174,5 +178,6 @@ describe("agent-connection", () => {
     expect(guide.mcpSessionSetupExample).toContain("defaults to research-bot-01 (researcher)");
     expect(guide.mcpSessionSetupExample).toContain("set_agent_id");
     expect(guide.mcpSessionSetupExample).toContain("set_agent_class");
+    expect(guide.mcpSessionSetupExample).toContain("set_agent_data");
   });
 });

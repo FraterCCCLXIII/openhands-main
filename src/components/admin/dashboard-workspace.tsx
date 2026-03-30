@@ -49,6 +49,7 @@ import {
   OPENHANDS_CLOUD_SHTTP_MCP_URL,
   OPENHANDS_CONTEXT_KEY_ENV,
 } from "@/src/lib/agent-connection";
+import { DEFAULT_AGENT_CLASS, DEFAULT_AGENT_ID } from "@/src/lib/agent-defaults";
 import { cn } from "@/src/lib/utils";
 import type {
   AccessRequest,
@@ -205,10 +206,14 @@ const matchesAccessRequestSearch = (
     request.integrationKey,
     request.functionName,
     request.justification ?? "",
+    request.agentData?.conversationLink ?? "",
     approvalStatusLabel(request.status),
     ...request.scopes,
   ].some((value) => value.toLowerCase().includes(normalizedQuery));
 };
+
+const usesDefaultApprovalIdentity = (request: AccessRequest) =>
+  request.agentId === DEFAULT_AGENT_ID && request.agentClass === DEFAULT_AGENT_CLASS;
 
 const formatTimestamp = (value?: string) => {
   if (!value) {
@@ -1513,12 +1518,31 @@ export const DashboardWorkspace = ({
                                 </Badge>
                               </div>
                               <div className="grid gap-2 text-xs text-[var(--color-text-base)] sm:grid-cols-2 xl:grid-cols-3">
-                                <p>
-                                  Agent: <span className="text-white">{request.agentId}</span>
-                                </p>
-                                <p>
-                                  Class: <span className="text-white">{request.agentClass}</span>
-                                </p>
+                                <div className="flex flex-wrap items-center gap-2 sm:col-span-2 xl:col-span-3">
+                                  <p>
+                                    Invocation identity:{" "}
+                                    <span className="text-white">{request.agentId}</span>
+                                    <span className="text-[var(--color-text-muted)]"> · </span>
+                                    <span className="text-white">{request.agentClass}</span>
+                                  </p>
+                                  {usesDefaultApprovalIdentity(request) ? (
+                                    <Badge>default MCP identity</Badge>
+                                  ) : null}
+                                </div>
+                                {request.agentData?.conversationLink ? (
+                                  <p className="sm:col-span-2 xl:col-span-3">
+                                    Conversation:{" "}
+                                    <a
+                                      href={request.agentData.conversationLink}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      className="inline-flex items-center gap-1 text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
+                                    >
+                                      <span>{request.agentData.conversationLink}</span>
+                                      <ArrowRight className="h-3.5 w-3.5" />
+                                    </a>
+                                  </p>
+                                ) : null}
                                 <p>
                                   Requested: <span className="text-white">{formatTimestamp(request.createdAt)}</span>
                                 </p>

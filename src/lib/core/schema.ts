@@ -64,6 +64,10 @@ export const agentClassPolicySchema = z.object({
   rules: z.array(policyRuleSchema).default([]),
 });
 
+export const accessRequestAgentDataSchema = z.object({
+  conversationLink: z.string().trim().min(1).optional(),
+});
+
 export const accessRequestSchema = z.object({
   id: z.string().min(1),
   agentId: z.string().min(1),
@@ -75,6 +79,7 @@ export const accessRequestSchema = z.object({
   channels: z.array(z.enum(["email", "in_app", "sms"])).default([]),
   notificationTargets: z.record(z.string(), z.string()).default({}),
   justification: z.string().optional().default(""),
+  agentData: accessRequestAgentDataSchema.optional().default({}),
   createdAt: z.string().datetime(),
   status: z.enum(["pending", "approved", "rejected", "expired"]),
   decidedAt: z.string().datetime().optional(),

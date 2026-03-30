@@ -1549,15 +1549,18 @@ describe("DashboardWorkspace", () => {
       },
       {
         id: "req-pending-newer",
-        agentId: "agent-4",
-        agentClass: "assistant",
+        agentId: "research-bot-01",
+        agentClass: "researcher",
         integrationKey: "github",
         functionName: "delete_repo",
         scopes: ["repo:admin"],
         requestedMinutes: 240,
         channels: ["in_app"],
         notificationTargets: { in_app: "owner@example.com" },
-        justification: "Need repo cleanup access",
+        agentData: {
+          conversationLink:
+            "https://app.all-hands.dev/conversations/f3e731620cf147a1976b53050bbe039e",
+        },
         createdAt: "2026-03-04T09:00:00.000Z",
         status: "pending",
       },
@@ -1610,6 +1613,17 @@ describe("DashboardWorkspace", () => {
         'input[type="search"][aria-label="Search case-by-case approvals"]',
       ),
     ).toBeTruthy();
+    expect(container.textContent).toContain("default MCP identity");
+    const conversationLink = container.querySelector(
+      'a[href="https://app.all-hands.dev/conversations/f3e731620cf147a1976b53050bbe039e"]',
+    ) as HTMLAnchorElement | null;
+    expect(conversationLink).toBeTruthy();
+    expect(conversationLink?.textContent).toContain(
+      "https://app.all-hands.dev/conversations/f3e731620cf147a1976b53050bbe039e",
+    );
+    expect(container.textContent).not.toContain(
+      "Auto-created after an agent attempted a case-by-case tool without an active approval.",
+    );
 
     const visibleRequestIds = Array.from(
       container.querySelectorAll("[data-request-id]"),

@@ -1,10 +1,12 @@
 import { neon } from "@neondatabase/serverless";
 
 import { hasPersistentContextLayerStorage } from "@/src/lib/persistence";
+import type { AccessRequestAgentData } from "@/src/types/context-layer";
 
 export type McpSessionDefaults = {
   agentId: string;
   agentClass: string;
+  agentData: AccessRequestAgentData;
 };
 
 export type McpSessionRecord = {
@@ -51,10 +53,12 @@ const ensureSessionSchema = async () => {
             owner_id TEXT NOT NULL,
             agent_id TEXT NOT NULL DEFAULT '',
             agent_class TEXT NOT NULL DEFAULT '',
+            agent_data JSONB NOT NULL DEFAULT '{}'::jsonb,
             expires_at TIMESTAMPTZ NOT NULL,
             updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
           )
         `,
+        sql`ALTER TABLE mcp_sessions ADD COLUMN IF NOT EXISTS agent_data JSONB NOT NULL DEFAULT '{}'::jsonb`,
       ]);
 
       sessionSchemaReady = true;
@@ -74,7 +78,7 @@ export const getMcpSession = async (sessionId: string) => {
   await ensureSessionSchema();
   const sql = getSql();
   const rows = await sql`
-    SELECT session_id, owner_id, agent_id, agent_class
+    SELECT session_id, owner_id, agent_id, agent_class, agent_data
     FROM mcp_sessions
     WHERE session_id = ${sessionId}
       AND expires_at > NOW()
@@ -93,6 +97,9 @@ export const getMcpSession = async (sessionId: string) => {
     defaults: {
       agentId: row.agent_id,
       agentClass: row.agent_class,
+      agentData: ((typeof row.agent_data === "string"
+        ? JSON.parse(row.agent_data)
+        : row.agent_data) ?? {}) as AccessRequestAgentData,
     },
   } satisfies McpSessionRecord;
 };
@@ -108,17 +115,24 @@ export const upsertMcpSession = async (record: McpSessionRecord) => {
 
   await sql.query(
     `
-      INSERT INTO mcp_sessions (session_id, owner_id, agent_id, agent_class, expires_at, updated_at)
-      VALUES ($1, $2, $3, $4, NOW() + ${SESSION_TTL_SQL}, NOW())
+      INSERT INTO mcp_sessions (session_id, owner_id, agent_id, agent_class, agent_data, expires_at, updated_at)
+      VALUES ($1, $2, $3, $4, $5, NOW() + ${SESSION_TTL_SQL}, NOW())
       ON CONFLICT (session_id)
       DO UPDATE SET
         owner_id = EXCLUDED.owner_id,
         agent_id = EXCLUDED.agent_id,
         agent_class = EXCLUDED.agent_class,
+        agent_data = EXCLUDED.agent_data,
         expires_at = NOW() + ${SESSION_TTL_SQL},
         updated_at = NOW()
     `,
-    [record.sessionId, record.ownerId, record.defaults.agentId, record.defaults.agentClass],
+    [
+      record.sessionId,
+      record.ownerId,
+      record.defaults.agentId,
+      record.defaults.agentClass,
+      JSON.stringify(record.defaults.agentData ?? {}),
+    ],
   );
 };
 

@@ -195,6 +195,10 @@ export interface AgentClassPolicy {
   rules: PolicyRule[];
 }
 
+export interface AccessRequestAgentData {
+  conversationLink?: string;
+}
+
 export interface AccessRequest {
   id: string;
   agentId: string;
@@ -206,6 +210,7 @@ export interface AccessRequest {
   channels: NotificationChannel[];
   notificationTargets: Record<string, string>;
   justification?: string;
+  agentData?: AccessRequestAgentData;
   createdAt: string;
   status: AccessRequestStatus;
   decidedAt?: string;

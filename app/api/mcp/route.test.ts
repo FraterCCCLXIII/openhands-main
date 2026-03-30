@@ -172,6 +172,7 @@ describe("/api/mcp", () => {
       "crm__contacts",
       "crm__search",
       "set_agent_class",
+      "set_agent_data",
       "set_agent_id",
     ]);
 
@@ -192,7 +193,7 @@ describe("/api/mcp", () => {
     await transport.close();
   });
 
-  it("returns a human-approval link for case-by-case tools without requiring session defaults", async () => {
+  it("requires set_agent_data before creating case-by-case approval requests and stores the conversation link", async () => {
     const service = getContextLayerService();
     await service.registerOwnerIntegration("owner@example.com", baseIntegration);
     const apiKey = (await service.getOrCreateAgentApiKey("owner@example.com")).apiKey;
@@ -201,6 +202,29 @@ describe("/api/mcp", () => {
       url: "http://localhost:3000/api/mcp",
       apiKey,
     });
+
+    const initialResult = await client.callTool({
+      name: "crm__contacts",
+      arguments: {
+        contextScopes: ["crm.read"],
+      },
+    });
+
+    expect(initialResult.isError).toBe(true);
+    const initialText = readToolText(initialResult);
+    expect(initialText).toContain("Human approval is currently required before calling crm.contacts.");
+    expect(initialText).toContain("set_agent_data");
+    expect(await service.listAccessRequests()).toEqual([]);
+
+    const setAgentDataResult = await client.callTool({
+      name: "set_agent_data",
+      arguments: {
+        conversationLink: "https://app.all-hands.dev/conversations/f3e731620cf147a1976b53050bbe039e",
+      },
+    });
+
+    expect(setAgentDataResult.isError).toBeFalsy();
+    expect(readToolText(setAgentDataResult)).toContain("conversation link");
 
     const result = await client.callTool({
       name: "crm__contacts",
@@ -213,6 +237,17 @@ describe("/api/mcp", () => {
     const text = readToolText(result);
     expect(text).toContain("Human approval is currently required before calling crm.contacts.");
     expect(text).toContain("http://localhost:3000/case-by-case-approvals");
+
+    await expect(service.listAccessRequests()).resolves.toMatchObject([
+      {
+        integrationKey: "crm",
+        functionName: "contacts",
+        agentData: {
+          conversationLink:
+            "https://app.all-hands.dev/conversations/f3e731620cf147a1976b53050bbe039e",
+        },
+      },
+    ]);
 
     await transport.close();
   });
