@@ -55,6 +55,7 @@ This repository contains a Next.js/TypeScript implementation of an agent context
 
 - `src/components/admin/admin-dashboard.tsx` is the OpenHands-inspired Tailwind dashboard using TanStack Query + Zustand.
 - `src/components/admin/dashboard-workspace.tsx` now contains the main sidebar-driven dashboard UX with Integrations as the default first section, followed by Agent Connection and User Profile; `src/components/admin/admin-dashboard.tsx` is a thin re-export so the admin page import stays stable.
+- Shared dashboard sidebar chrome now lives in `src/components/admin/dashboard-sidebar.tsx` and is reused by both the main user-facing dashboard routes and `/admin-integrations`; keep navigation labels/order in that shared component so the sidebars do not drift apart again.
 - OAuth callback success/error banners on the dashboard should be derived directly from URL search params (`oauth_status`, `oauth_error`) instead of only mutable wizard status state, so auto-initializing the integration wizard cannot silently clear them.
 - Admin dashboard sections now use clean top-level routes only: `/integrations`, `/agent-connection`, and `/profile`. `/home` remains available only as a legacy redirect to `/integrations`; new links and redirects should target the canonical routes directly, with no legacy `/admin` or `?section=` fallback behavior.
 

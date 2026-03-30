@@ -45,11 +45,13 @@ describe("AdminIntegrationsPage", () => {
     expect(html).toContain("OpenHands");
     expect(html).toContain("Context Layer");
     expect(html).toContain('href="/integrations"');
+    expect(html).toContain('href="/case-by-case-approvals"');
     expect(html).toContain('href="/agent-connection"');
     expect(html).toContain('href="/profile"');
     expect(html).toContain('href="/admin-integrations"');
     expect(html).not.toContain('href="/home"');
     expect(html).toContain("Signed in as");
+    expect(html).toContain("Case-by-case Approvals");
     expect(html).toContain("Admin integrations");
     expect(html).toContain("For users");
     expect(html).toContain("contact an admin");

@@ -376,7 +376,7 @@ describe("DashboardWorkspace", () => {
     expect(container.querySelector('[data-integration-key="slack"]')).toBeNull();
   });
 
-  it("updates the URL when switching admin sections", async () => {
+  it("renders canonical section links in the shared sidebar", async () => {
     await act(async () => {
       root.render(
         <QueryClientProvider client={queryClient}>
@@ -392,16 +392,11 @@ describe("DashboardWorkspace", () => {
       );
     });
 
-    const profileButton = Array.from(container.querySelectorAll("button")).find(
-      (button) => button.textContent?.includes("User Profile"),
+    const profileLink = Array.from(container.querySelectorAll('a[href="/profile"]')).find(
+      (link) => link.textContent?.includes("User Profile"),
     );
-    expect(profileButton).toBeTruthy();
-
-    await act(async () => {
-      profileButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-    });
-
-    expect(pushMock).toHaveBeenCalledWith("/profile");
+    expect(profileLink).toBeTruthy();
+    expect(profileLink?.getAttribute("href")).toBe("/profile");
   });
 
   it("shows integrations as the default section with a searchable add-integration panel", async () => {
