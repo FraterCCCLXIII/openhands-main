@@ -681,6 +681,9 @@ describe("DashboardWorkspace", () => {
     );
     expect(text).toContain("Connection details");
     expect(text).toContain("Agent MCP");
+    expect(text).toContain("MCP config example");
+    expect(text).toContain('"transport": "streamable-http"');
+    expect(text).toContain('"context-layer"');
     expect(text).toContain("Agent REST API");
     expect(text).toContain("User REST API");
     expect(text).toContain("Admin REST API");
