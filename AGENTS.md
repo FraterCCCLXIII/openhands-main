@@ -12,6 +12,7 @@ This repository contains a Next.js/TypeScript implementation of an agent context
 - Run e2e tests only: `npm run test:e2e`
 - Typecheck: `npm run typecheck`
 - Production build check: `npm run build`
+- Audit shipped dependency graph: `npm run audit`
 
 ## Local DB-backed validation
 
