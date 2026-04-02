@@ -36,6 +36,10 @@ export interface AgentConnectionGuide {
   permissionNote: string;
 }
 
+/**
+ * Builds the agent-facing REST and MCP examples shown on the Agent Connection page.
+ * Keep these examples aligned with the live runtime defaults and generated OpenAPI docs.
+ */
 export const buildAgentConnectionGuide = ({
   baseUrl,
   apiKey,

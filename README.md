@@ -1,84 +1,135 @@
 # OpenHands Context Layer
 
-A context layer for AI agents built with Next.js, TypeScript, Auth.js, Neon, curated built-in connectors, Composio, and the official MCP SDK.
+OpenHands Context Layer is a Next.js + TypeScript application that gives agents one authenticated tool surface while keeping connector setup, per-user credentials, approvals, and operational controls in a human-facing dashboard.
 
-## What this implements
+## Highlights
 
-- A single unified invocation endpoint: `POST /api/context/[integrationKey]/[functionName]`
-- Connector onboarding for curated built-in connectors plus custom MCP integrations
-- Existing-library adapter layer:
-  - `@composio/core` for broader SaaS/API tool execution
-  - `@modelcontextprotocol/sdk` for both hosted built-in MCP routes and remote MCP server access
-- Fine-grained controls for:
-  - integration enable/disable
-  - function enable/disable
-  - agent-class scoped policy rules
-- Dynamic human approval workflow with expiring temporary grants
-- Notification fanout to email, in-app, and SMS channels
-- Auth.js-based admin login with Google support and a dev login fallback
-- A Tailwind admin UI styled after the OpenHands KPI tracker dark dashboard patterns
-- Vercel-friendly persistence using Neon / `POSTGRES_URL` or `DATABASE_URL`
-- A Vercel cron endpoint to purge expired grants
+- Unified agent runtime endpoint: `POST /api/context/[integrationKey]/[functionName]`
+- Agent-facing MCP server at `POST /api/mcp`
+- Generated agent docs via `GET /api/context/skill` and `GET /api/context/openapi`
+- Separate user and admin automation APIs with their own OpenAPI documents
+- Per-user managed connectors, OAuth connections, and remote MCP integrations
+- Function-level access modes: `enabled`, `disabled`, and `approval_required`
+- Temporary approval grants plus invocation tracking for auditability
+- Dashboard routes organized around top-level pages instead of the old `/admin` entrypoint
+
+## Repository docs
+
+- [API.md](./API.md) — route map for the dashboard and REST/MCP surfaces
+- [CONTRIBUTING.md](./CONTRIBUTING.md) — local setup and contribution workflow
+- [CHANGELOG.md](./CHANGELOG.md) — notable unreleased and released changes
+- [AGENTS.md](./AGENTS.md) — repository memory for OpenHands agents and maintainers
+- [LICENSE](./LICENSE) — project license
+
+## Dashboard routes
+
+These are the canonical top-level routes in the current app:
+
+- `/` — landing page
+- `/integrations` — install integrations, connect OAuth accounts, and manage function access
+- `/agent-connection` — view agent/user/admin keys plus REST and MCP connection examples
+- `/profile` — signed-in user profile details
+- `/case-by-case-approvals` — review pending approval-required tool requests
+- `/admin-integrations` — admin-only service-level managed connector and provider catalog management
+
+Legacy compatibility routes still exist, but new docs and links should target the canonical routes above:
+
+- `/home` redirects to `/integrations`
+- `/add-connector` redirects to `/admin-integrations`
+
+## Core interfaces
+
+### Agent runtime
+
+- `POST /api/context/[integrationKey]/[functionName]`
+- `GET /api/context/skill`
+- `GET /api/context/openapi`
+- `POST /api/mcp`
+
+### User automation API
+
+- `GET /api/user/openapi`
+- `GET /api/user/integrations`
+- `PATCH /api/user/integrations/[integrationKey]/functions/[functionName]`
+- `GET|POST /api/user/key`
+
+### Admin automation API
+
+- `GET /api/admin/openapi`
+- `GET|POST /api/admin/key`
+- `GET|POST /api/admin/managed-connectors`
+- `POST /api/admin/integrations/discover`
+
+For a fuller route map and auth breakdown, see [API.md](./API.md).
 
 ## Stack
 
 - Next.js App Router
 - React 19 + TypeScript
 - Tailwind CSS 4
-- Auth.js (`next-auth`)
+- Auth.js
 - Neon serverless Postgres driver
-- TanStack Query + Zustand for dashboard interactivity
-- Vitest for tests
+- TanStack Query + Zustand
+- Vitest + PGlite-backed repository tests
 
 ## Quick start
 
 1. Install dependencies:
 
-```bash
-npm install
-```
+   ```bash
+   npm install
+   ```
 
-2. Copy envs and configure as needed:
+2. Copy the local environment file:
 
-```bash
-cp .env.example .env.local
-```
+   ```bash
+   cp .env.example .env.local
+   ```
 
-3. For local development, you can bypass interactive auth entirely. In this mode the app only responds to localhost requests. When you open the dashboard, it provisions a personal context-layer API key for the current user and stores it server-side:
+3. Configure storage. The app requires `POSTGRES_URL` or `DATABASE_URL` for the dashboard/runtime; without one, signed-in users will see the service-unavailable screen.
 
-```bash
-DISABLE_AUTH=true npm run dev
-```
+4. Start the app:
 
-4. Open the app:
+   ```bash
+   # Standard local development
+   npm run dev
 
-```text
-http://localhost:3000
-```
+   # Or bypass interactive auth for localhost-only development
+   DISABLE_AUTH=true npm run dev
+   ```
+
+5. Open the dashboard:
+
+   ```text
+   http://localhost:3000/integrations
+   ```
+
+6. Visit `/integrations` once to provision the personal agent/runtime API key, then open `/agent-connection` for the generated REST and MCP connection examples.
 
 ## Environment variables
 
 Core variables:
 
+- `POSTGRES_URL` or `DATABASE_URL`
+- `AUTH_SECRET` (or `NEXTAUTH_SECRET`)
 - `GITHUB_CLIENT_ID`
 - `GITHUB_CLIENT_SECRET`
-- `AUTH_SECRET` (or `NEXTAUTH_SECRET`)
-- `POSTGRES_URL` or `DATABASE_URL`
-- `COMPOSIO_API_KEY`
 - `CRON_SECRET`
 
-Optional provider OAuth variables for built-in per-user connections:
+Optional integration/provider variables:
 
+- `COMPOSIO_API_KEY`
 - `NOTION_CLIENT_ID`
 - `NOTION_CLIENT_SECRET`
 - `FIGMA_CLIENT_ID`
 - `FIGMA_CLIENT_SECRET`
 
-Optional auth variables:
+Optional deployment variables:
 
-- `NEXTAUTH_URL` for local development only
+- `NEXTAUTH_URL` for localhost sign-in flows
 - `AUTH_TRUST_HOST=true` for Vercel/custom proxy deployments
-- `AUTH_REDIRECT_PROXY_URL=https://openhands-context-layer.vercel.app/api/auth` to enable GitHub OAuth on preview deployments
+- `AUTH_REDIRECT_PROXY_URL=https://<stable-host>/api/auth` for preview-deployment GitHub OAuth
+- `APP_ADMIN_EMAILS` to allowlist admin-integrations and admin automation features
 
 Optional notification variables:
 
@@ -88,88 +139,49 @@ Optional notification variables:
 - `TWILIO_AUTH_TOKEN`
 - `TWILIO_FROM_NUMBER`
 
+See [`.env.example`](./.env.example) for the full template.
+
 ## GitHub sign-in setup
 
-### Basic deployment
-
-1. Create a GitHub OAuth App in the OpenHands organization:
+1. Create a GitHub OAuth App:
    - https://github.com/organizations/OpenHands/settings/applications/new
-2. Set the app values to:
-   - **Homepage URL:** `https://openhands-context-layer.vercel.app`
-   - **Authorization callback URL:** `https://openhands-context-layer.vercel.app/api/auth/callback/github`
-3. In Vercel or `.env.local`, set:
+2. Set the app values to your deployment origin:
+   - **Homepage URL:** `https://<your-host>`
+   - **Authorization callback URL:** `https://<your-host>/api/auth/callback/github`
+3. Set these values in Vercel or `.env.local`:
    - `GITHUB_CLIENT_ID`
    - `GITHUB_CLIENT_SECRET`
-   - `AUTH_SECRET` (or `NEXTAUTH_SECRET`)
-   - `AUTH_TRUST_HOST=true`
-4. For local development only, set:
+   - `AUTH_SECRET`
+   - `AUTH_TRUST_HOST=true` for hosted deployments
+4. For localhost sign-in, set:
    - `NEXTAUTH_URL=http://localhost:3000`
-5. Redeploy after updating environment variables.
+5. For preview deployments, keep the GitHub callback fixed to a stable deployment and set `AUTH_REDIRECT_PROXY_URL` in every environment.
 
-### Enabling OAuth on preview deployments
+If you set `DISABLE_AUTH=true`, the app bypasses interactive login, only serves localhost requests, and you should open `/integrations` (not `/admin`) for local development.
 
-This project now follows the same Auth.js preview deployment pattern used by `OpenHands/kpi-tracker`.
+## Provider OAuth setup
 
-1. Deploy the production app first at a stable URL:
-   - `https://openhands-context-layer.vercel.app`
-2. Keep the GitHub OAuth callback URL fixed to production:
-   - `https://openhands-context-layer.vercel.app/api/auth/callback/github`
-3. Add `AUTH_REDIRECT_PROXY_URL` to **all** Vercel environments (Production, Preview, and Development):
-   - `AUTH_REDIRECT_PROXY_URL=https://openhands-context-layer.vercel.app/api/auth`
-4. Keep the same `AUTH_SECRET` value in all environments that need GitHub OAuth.
-5. When a user signs in from a preview deployment, Auth.js will proxy the OAuth callback through production and then redirect back to the preview URL.
+Managed provider callbacks use the pattern:
 
-Notes:
-- If you set `DISABLE_AUTH=true`, the app bypasses interactive login, only serves localhost requests, and you can open `/admin` directly for local development.
-- The dashboard automatically provisions a personal context-layer API key for the signed-in user (or the local dev user when auth is disabled) and stores it server-side.
-- Agents can call `POST /api/context/*` only after a user has opened the dashboard once and provisioned a personal key.
-- `GET /api/context/skill` returns a generated `SKILL.md` file that lists the currently available tools for the profile behind that personal key.
-- If you want localhost GitHub login without the redirect proxy flow, create a separate GitHub OAuth app with callback `http://localhost:3000/api/auth/callback/github`.
+- `https://<your-host>/api/oauth/<provider>/callback`
+- `http://localhost:3000/api/oauth/<provider>/callback` for local development
 
-## Built-in provider OAuth setup
+Examples:
 
-For providers that support per-user OAuth in the admin UI, create a provider OAuth app and set the matching client ID and secret in the environment.
+- Notion: set `NOTION_CLIENT_ID` and `NOTION_CLIENT_SECRET`
+- Figma: set `FIGMA_CLIENT_ID` and `FIGMA_CLIENT_SECRET`
 
-### Notion
-
-1. Create a public or internal integration in Notion.
-2. Add the redirect URI:
-   - `https://<your-host>/api/oauth/notion/callback`
-   - `http://localhost:3000/api/oauth/notion/callback` for local development
-3. Set `NOTION_CLIENT_ID` and `NOTION_CLIENT_SECRET`.
-4. In the dashboard, choose the Notion built-in connector and click **Connect**.
-
-### Figma
-
-1. Create a Figma OAuth app.
-2. Add the redirect URI:
-   - `https://<your-host>/api/oauth/figma/callback`
-   - `http://localhost:3000/api/oauth/figma/callback` for local development
-3. Set `FIGMA_CLIENT_ID` and `FIGMA_CLIENT_SECRET`.
-4. In the dashboard, choose the Figma built-in connector and click **Connect**.
-
-The callback routes store provider access tokens encrypted in the database as per-user integration connections. Agent calls to `/api/context/*` are authorized with the user's personal context-layer API key, which is then used to resolve and inject the correct per-user provider credentials server-side.
-
-
-
-## Key routes
-
-- `GET /api/context/skill`
-- `GET/POST /api/integrations`
-- `POST /api/integrations/[integrationKey]/functions`
-- `POST /api/integrations/[integrationKey]/toggle`
-- `POST /api/integrations/[integrationKey]/functions/[functionName]/toggle`
-- `PUT /api/agent-classes/[agentClass]`
-- `GET/POST /api/access-requests`
-- `POST /api/access-requests/[requestId]/approve`
-- `POST /api/access-requests/[requestId]/reject`
-- `GET /api/notifications`
-- `GET /api/cron/expire-grants`
+OAuth access tokens are stored as encrypted per-user integration connections and resolved server-side during runtime tool invocation.
 
 ## Verification
 
 ```bash
-npm run typecheck
 npm test
+npm run test:e2e
+npm run typecheck
 npm run build
 ```
+
+## Contributing
+
+Please read [CONTRIBUTING.md](./CONTRIBUTING.md) before opening a pull request.
