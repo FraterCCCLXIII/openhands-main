@@ -105,7 +105,8 @@ This repository contains a Next.js/TypeScript implementation of an agent context
 - MCP discovery should only infer `api_key` auth when a secret is present; a default header name by itself should still resolve to `none`, which matters for local proxy-based QA.
 - Local QA can be exercised with `DISABLE_AUTH=true npm run dev` on localhost plus a tiny localhost proxy that forwards `http://127.0.0.1:12001/` to GitHub's hosted MCP using `GITHUB_TOKEN`; the dashboard provisions a per-user context API key server-side, and agents cannot call `/api/context/*` until a user has opened `/integrations` once to provision that key.
 - `FunctionSpec.accessMode` now supports `enabled`, `disabled`, and `approval_required`; `approval_required` bypasses agent-class policy and requires a temporary grant, while `enabled` functions are callable by default unless a matching agent-class policy is configured to narrow access.
-- `app/api/cron/expire-grants/route.ts` is intended for a Vercel cron job to purge expired temporary grants.
+- Stored provider credentials now require explicit secret material (`CREDENTIAL_ENCRYPTION_KEY`, `AUTH_SECRET`, or `NEXTAUTH_SECRET`) in every environment; there is no longer a baked-in local-development encryption fallback.
+- `app/api/cron/expire-grants/route.ts` is intended for a Vercel cron job to purge expired temporary grants, and it must fail closed unless `CRON_SECRET` is configured and presented as a bearer token.
 - `.github/workflows/` now includes OpenHands PR review (`pr-review-by-openhands.yml`, `pr-review-evaluation.yml`) and vulnerability remediation (`vulnerability-scan.yml`) wrappers copied from `OpenHands/extensions` plugins.
 - The app favicon now mirrors the OpenHands frontend assets: `public/favicon.ico`, `public/favicon-16x16.png`, and `public/favicon-32x32.png`, referenced explicitly via `app/layout.tsx` metadata.
 
