@@ -1,7 +1,18 @@
-import { z } from "zod";
-
 import { DEFAULT_AGENT_CLASS, DEFAULT_AGENT_ID } from "@/src/lib/agent-defaults";
-import { contextInvokeSchema } from "@/src/lib/core/schema";
+import {
+  contextInvocationResultSchema,
+  contextInvokeSchema,
+} from "@/src/lib/core/schema";
+import {
+  OPENAPI_VERSION,
+  buildApiKeySecurity,
+  buildApiKeySecurityScheme,
+  buildJsonRefResponse,
+  buildJsonRequestBody,
+  buildUnauthorizedResponse,
+  errorResponseSchema,
+  toOpenApiSchema,
+} from "@/src/lib/openapi/shared";
 import {
   buildExamplePayload,
   buildPermissionNote,
@@ -9,45 +20,6 @@ import {
   listExampleFunctions,
 } from "@/src/lib/tool-examples";
 import type { FunctionSpec, IntegrationSpec } from "@/src/types/context-layer";
-
-const CONTEXT_OPENAPI_VERSION = "3.0.3";
-
-const accessDecisionSchema = z.object({
-  allowed: z.boolean(),
-  reason: z.string(),
-  effectiveScopes: z.array(z.string()),
-});
-
-const contextInvocationResultSchema = z.object({
-  integration: z.string(),
-  function: z.string(),
-  provider: z.enum(["composio", "mcp", "mock", "http"]),
-  kind: z.enum(["api", "mcp"]),
-  authStrategy: z.enum([
-    "none",
-    "api_key",
-    "bearer",
-    "basic",
-    "oauth2",
-    "mcp_session",
-  ]),
-  decision: accessDecisionSchema,
-  data: z.unknown(),
-});
-
-const errorResponseSchema = z.object({
-  detail: z.string(),
-  debug: z.record(z.string(), z.unknown()).optional(),
-});
-
-const toOpenApiSchema = (schema: z.ZodType) => {
-  const jsonSchema = z.toJSONSchema(schema, {
-    target: "openapi-3.0",
-  }) as Record<string, unknown>;
-
-  delete jsonSchema.$schema;
-  return jsonSchema;
-};
 
 const buildRequestExample = (functionSpec: FunctionSpec) => ({
   scopes: functionSpec.defaultScopes,
@@ -111,74 +83,37 @@ export const buildContextOpenApiDocument = ({
               functionSpec.description?.trim() ||
               `${integration.name}: ${functionSpec.name}`,
             description: buildOperationDescription(integration, functionSpec),
-            security: [{ ContextApiKey: [] }],
-            requestBody: {
-              required: true,
-              content: {
-                "application/json": {
-                  schema: {
-                    $ref: "#/components/schemas/ContextInvokeRequest",
-                  },
-                  examples: {
-                    default: {
-                      value: buildRequestExample(functionSpec),
-                    },
+            security: buildApiKeySecurity("ContextApiKey"),
+            requestBody: buildJsonRequestBody(
+              { $ref: "#/components/schemas/ContextInvokeRequest" },
+              {
+                examples: {
+                  default: {
+                    value: buildRequestExample(functionSpec),
                   },
                 },
               },
-            },
+            ),
             responses: {
-              200: {
-                description: "Successful tool invocation result.",
-                content: {
-                  "application/json": {
-                    schema: {
-                      $ref: "#/components/schemas/ContextInvocationResult",
-                    },
-                  },
-                },
-              },
-              401: {
-                description: "Missing or invalid personal context-layer API key.",
-                content: {
-                  "application/json": {
-                    schema: {
-                      $ref: "#/components/schemas/ErrorResponse",
-                    },
-                  },
-                },
-              },
-              403: {
-                description:
-                  "Permission required, case-by-case approval needed, or the user connection is missing.",
-                content: {
-                  "application/json": {
-                    schema: {
-                      $ref: "#/components/schemas/ErrorResponse",
-                    },
-                  },
-                },
-              },
-              404: {
-                description: "Unknown integration or function.",
-                content: {
-                  "application/json": {
-                    schema: {
-                      $ref: "#/components/schemas/ErrorResponse",
-                    },
-                  },
-                },
-              },
-              503: {
-                description: "Context-layer key provisioning or storage unavailable.",
-                content: {
-                  "application/json": {
-                    schema: {
-                      $ref: "#/components/schemas/ErrorResponse",
-                    },
-                  },
-                },
-              },
+              200: buildJsonRefResponse(
+                "Successful tool invocation result.",
+                "ContextInvocationResult",
+              ),
+              401: buildUnauthorizedResponse(
+                "Missing or invalid personal context-layer API key.",
+              ),
+              403: buildJsonRefResponse(
+                "Permission required, case-by-case approval needed, or the user connection is missing.",
+                "ErrorResponse",
+              ),
+              404: buildJsonRefResponse(
+                "Unknown integration or function.",
+                "ErrorResponse",
+              ),
+              503: buildJsonRefResponse(
+                "Context-layer key provisioning or storage unavailable.",
+                "ErrorResponse",
+              ),
             },
           },
         },
@@ -187,7 +122,7 @@ export const buildContextOpenApiDocument = ({
   );
 
   return {
-    openapi: CONTEXT_OPENAPI_VERSION,
+    openapi: OPENAPI_VERSION,
     info: {
       title: "Context Layer Tool API",
       version: "1.0.0",
@@ -202,13 +137,9 @@ export const buildContextOpenApiDocument = ({
     paths,
     components: {
       securitySchemes: {
-        ContextApiKey: {
-          type: "http",
-          scheme: "bearer",
-          bearerFormat: "API Key",
-          description:
-            "Personal context-layer API key sent as an Authorization bearer token. X-API-Key is also accepted by the runtime.",
-        },
+        ContextApiKey: buildApiKeySecurityScheme(
+          "Personal context-layer API key sent as an Authorization bearer token. X-API-Key is also accepted by the runtime.",
+        ),
       },
       schemas: {
         ContextInvokeRequest: toOpenApiSchema(contextInvokeSchema),

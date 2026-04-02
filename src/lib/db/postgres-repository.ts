@@ -16,18 +16,21 @@ import type {
   UserApiKeyRecord,
 } from "@/src/types/context-layer";
 import type { ContextRepository } from "@/src/lib/core/repository";
-
-const parseJson = <T>(value: unknown): T => {
-  if (value == null) {
-    return {} as T;
-  }
-
-  if (typeof value === "string") {
-    return JSON.parse(value) as T;
-  }
-
-  return value as T;
-};
+import {
+  mapAccessRequestRow,
+  mapAdminApiKeyRow,
+  mapAgentApiKeyRow,
+  mapFunctionUsageSummaryRow,
+  mapIntegrationConnectionRow,
+  mapIntegrationRow,
+  mapManagedConnectorRow,
+  mapNotificationRow,
+  mapOAuthStateRow,
+  mapPolicyRow,
+  mapTemporaryGrantRow,
+  mapUserApiKeyRow,
+} from "@/src/lib/db/postgres-records";
+import { initializePostgresSchema } from "@/src/lib/db/postgres-schema";
 
 const getSql = () => {
   const databaseUrl = process.env.POSTGRES_URL ?? process.env.DATABASE_URL;
@@ -38,21 +41,6 @@ const getSql = () => {
 
   return neon(databaseUrl);
 };
-
-const mapIntegrationRow = (row: Record<string, unknown>): IntegrationSpec => ({
-  key: String(row.key),
-  name: String(row.name),
-  kind: row.kind as IntegrationSpec["kind"],
-  provider: row.provider as IntegrationSpec["provider"],
-  authStrategy: row.auth_strategy as IntegrationSpec["authStrategy"],
-  enabled: Boolean(row.enabled),
-  fineGrainedPermissions: Boolean(row.fine_grained_permissions),
-  config: parseJson<Record<string, unknown>>(row.config),
-  credentials: parseJson<Record<string, unknown>>(row.credentials),
-  functions: parseJson<IntegrationSpec["functions"]>(row.functions),
-});
-
-const SCHEMA_LOCK_ID = 482190317;
 
 export class PostgresRepository implements ContextRepository {
   private schemaReady = false;
@@ -73,197 +61,7 @@ export class PostgresRepository implements ContextRepository {
   }
 
   private async initializeSchema() {
-    const sql = getSql();
-
-    await sql.transaction([
-      sql`SELECT pg_advisory_xact_lock(${SCHEMA_LOCK_ID})`,
-      sql`DROP TABLE IF EXISTS integrations`,
-      sql`
-        CREATE TABLE IF NOT EXISTS owner_integrations (
-          owner_id TEXT NOT NULL,
-          key TEXT NOT NULL,
-          name TEXT NOT NULL,
-          kind TEXT NOT NULL,
-          provider TEXT NOT NULL,
-          auth_strategy TEXT NOT NULL,
-          enabled BOOLEAN NOT NULL,
-          fine_grained_permissions BOOLEAN NOT NULL,
-          config JSONB NOT NULL DEFAULT '{}'::jsonb,
-          credentials JSONB NOT NULL DEFAULT '{}'::jsonb,
-          functions JSONB NOT NULL DEFAULT '{}'::jsonb,
-          created_at TIMESTAMPTZ NOT NULL,
-          updated_at TIMESTAMPTZ NOT NULL,
-          PRIMARY KEY (owner_id, key)
-        )
-      `,
-      sql`
-        CREATE TABLE IF NOT EXISTS agent_class_policies (
-          agent_class TEXT PRIMARY KEY,
-          rules JSONB NOT NULL DEFAULT '[]'::jsonb,
-          updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-        )
-      `,
-      sql`
-        CREATE TABLE IF NOT EXISTS access_requests (
-          id TEXT PRIMARY KEY,
-          agent_id TEXT NOT NULL,
-          agent_class TEXT NOT NULL,
-          integration_key TEXT NOT NULL,
-          function_name TEXT NOT NULL,
-          scopes JSONB NOT NULL DEFAULT '[]'::jsonb,
-          requested_minutes INTEGER NOT NULL,
-          channels JSONB NOT NULL DEFAULT '[]'::jsonb,
-          notification_targets JSONB NOT NULL DEFAULT '{}'::jsonb,
-          justification TEXT NOT NULL DEFAULT '',
-          created_at TIMESTAMPTZ NOT NULL,
-          status TEXT NOT NULL,
-          decided_at TIMESTAMPTZ,
-          decided_by TEXT
-        )
-      `,
-      sql`
-        CREATE TABLE IF NOT EXISTS temporary_grants (
-          id TEXT PRIMARY KEY,
-          agent_id TEXT NOT NULL,
-          agent_class TEXT NOT NULL,
-          integration_key TEXT NOT NULL,
-          function_name TEXT NOT NULL,
-          scopes JSONB NOT NULL DEFAULT '[]'::jsonb,
-          granted_by TEXT NOT NULL,
-          created_at TIMESTAMPTZ NOT NULL,
-          expires_at TIMESTAMPTZ NOT NULL
-        )
-      `,
-      sql`
-        CREATE TABLE IF NOT EXISTS tool_invocations (
-          id TEXT PRIMARY KEY,
-          owner_id TEXT,
-          agent_id TEXT NOT NULL,
-          agent_class TEXT NOT NULL,
-          integration_key TEXT NOT NULL,
-          function_name TEXT NOT NULL,
-          scopes JSONB NOT NULL DEFAULT '[]'::jsonb,
-          provider TEXT NOT NULL,
-          kind TEXT NOT NULL,
-          auth_strategy TEXT NOT NULL,
-          outcome TEXT NOT NULL,
-          invoked_at TIMESTAMPTZ NOT NULL,
-          duration_ms INTEGER,
-          payload_keys JSONB NOT NULL DEFAULT '[]'::jsonb,
-          error_message TEXT
-        )
-      `,
-      sql`
-        CREATE TABLE IF NOT EXISTS notifications (
-          id TEXT PRIMARY KEY,
-          channel TEXT NOT NULL,
-          recipient TEXT NOT NULL,
-          subject TEXT NOT NULL,
-          body TEXT NOT NULL,
-          metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
-          created_at TIMESTAMPTZ NOT NULL
-        )
-      `,
-      sql`
-        CREATE TABLE IF NOT EXISTS agent_api_keys (
-          owner_id TEXT PRIMARY KEY,
-          api_key TEXT NOT NULL UNIQUE,
-          created_at TIMESTAMPTZ NOT NULL,
-          updated_at TIMESTAMPTZ NOT NULL
-        )
-      `,
-      sql`
-        CREATE TABLE IF NOT EXISTS user_api_keys (
-          owner_id TEXT PRIMARY KEY,
-          api_key_hash TEXT NOT NULL UNIQUE,
-          key_prefix TEXT NOT NULL,
-          key_suffix TEXT NOT NULL DEFAULT '',
-          encrypted_api_key TEXT,
-          created_at TIMESTAMPTZ NOT NULL,
-          updated_at TIMESTAMPTZ NOT NULL
-        )
-      `,
-      sql`
-        CREATE TABLE IF NOT EXISTS admin_api_keys (
-          owner_id TEXT PRIMARY KEY,
-          api_key_hash TEXT NOT NULL UNIQUE,
-          key_prefix TEXT NOT NULL,
-          key_suffix TEXT NOT NULL DEFAULT '',
-          encrypted_api_key TEXT,
-          created_at TIMESTAMPTZ NOT NULL,
-          updated_at TIMESTAMPTZ NOT NULL
-        )
-      `,
-      sql`
-        CREATE TABLE IF NOT EXISTS managed_connectors (
-          slug TEXT PRIMARY KEY,
-          name TEXT NOT NULL,
-          description TEXT NOT NULL,
-          logo_url TEXT,
-          app_url TEXT,
-          docs_url TEXT,
-          categories JSONB NOT NULL DEFAULT '[]'::jsonb,
-          auth_modes JSONB NOT NULL DEFAULT '[]'::jsonb,
-          auth_strategy TEXT NOT NULL,
-          provider TEXT,
-          credential_label TEXT NOT NULL,
-          credential_placeholder TEXT NOT NULL,
-          credential_help TEXT NOT NULL,
-          api_base_url TEXT NOT NULL DEFAULT '',
-          server_url TEXT,
-          open_api_url TEXT,
-          oauth_config JSONB,
-          encrypted_oauth_client TEXT,
-          functions JSONB NOT NULL DEFAULT '[]'::jsonb,
-          enabled BOOLEAN NOT NULL DEFAULT TRUE,
-          created_at TIMESTAMPTZ NOT NULL,
-          updated_at TIMESTAMPTZ NOT NULL
-        )
-      `,
-      sql`
-        CREATE TABLE IF NOT EXISTS integration_connections (
-          owner_id TEXT NOT NULL,
-          integration_key TEXT NOT NULL,
-          provider TEXT NOT NULL,
-          auth_strategy TEXT NOT NULL,
-          encrypted_credentials TEXT NOT NULL,
-          token_type TEXT,
-          scopes JSONB NOT NULL DEFAULT '[]'::jsonb,
-          expires_at TIMESTAMPTZ,
-          external_account_id TEXT,
-          external_workspace_id TEXT,
-          display_name TEXT,
-          metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
-          created_at TIMESTAMPTZ NOT NULL,
-          updated_at TIMESTAMPTZ NOT NULL,
-          PRIMARY KEY (owner_id, integration_key)
-        )
-      `,
-      sql`
-        CREATE TABLE IF NOT EXISTS oauth_states (
-          state TEXT PRIMARY KEY,
-          owner_id TEXT NOT NULL,
-          integration_key TEXT NOT NULL,
-          provider TEXT NOT NULL,
-          code_verifier TEXT,
-          redirect_to TEXT NOT NULL,
-          redirect_uri TEXT,
-          callback_url TEXT,
-          created_at TIMESTAMPTZ NOT NULL,
-          expires_at TIMESTAMPTZ NOT NULL
-        )
-      `,
-      sql`ALTER TABLE oauth_states ADD COLUMN IF NOT EXISTS redirect_uri TEXT`,
-      sql`ALTER TABLE oauth_states ADD COLUMN IF NOT EXISTS callback_url TEXT`,
-      sql`ALTER TABLE managed_connectors ADD COLUMN IF NOT EXISTS provider TEXT`,
-      sql`ALTER TABLE managed_connectors ADD COLUMN IF NOT EXISTS server_url TEXT`,
-      sql`ALTER TABLE managed_connectors ADD COLUMN IF NOT EXISTS open_api_url TEXT`,
-      sql`ALTER TABLE user_api_keys ADD COLUMN IF NOT EXISTS key_suffix TEXT NOT NULL DEFAULT ''`,
-      sql`ALTER TABLE user_api_keys ADD COLUMN IF NOT EXISTS encrypted_api_key TEXT`,
-      sql`ALTER TABLE admin_api_keys ADD COLUMN IF NOT EXISTS key_suffix TEXT NOT NULL DEFAULT ''`,
-      sql`ALTER TABLE admin_api_keys ADD COLUMN IF NOT EXISTS encrypted_api_key TEXT`,
-    ]);
-
+    await initializePostgresSchema(getSql());
     this.schemaReady = true;
   }
 
@@ -275,7 +73,7 @@ export class PostgresRepository implements ContextRepository {
       WHERE owner_id = ${ownerId}
       ORDER BY key ASC
     `;
-    return rows.map((row) => mapIntegrationRow(row as Record<string, unknown>));
+    return rows.map((row) => mapIntegrationRow(row));
   }
 
   async getOwnerIntegration(ownerId: string, integrationKey: string) {
@@ -286,7 +84,7 @@ export class PostgresRepository implements ContextRepository {
       WHERE owner_id = ${ownerId} AND key = ${integrationKey}
     `;
     const row = rows[0];
-    return row ? mapIntegrationRow(row as Record<string, unknown>) : null;
+    return row ? mapIntegrationRow(row) : null;
   }
 
   async upsertOwnerIntegration(ownerId: string, spec: IntegrationSpec) {
@@ -350,32 +148,14 @@ export class PostgresRepository implements ContextRepository {
     if (!row) {
       return null;
     }
-    return {
-      agentClass: row.agent_class,
-      rules: parseJson<AgentClassPolicy["rules"]>(row.rules),
-    };
+    return mapPolicyRow(row);
   }
 
   async listAccessRequests() {
     await this.ensureSchema();
     const sql = getSql();
     const rows = await sql`SELECT * FROM access_requests ORDER BY created_at DESC`;
-    return rows.map((row) => ({
-      id: row.id,
-      agentId: row.agent_id,
-      agentClass: row.agent_class,
-      integrationKey: row.integration_key,
-      functionName: row.function_name,
-      scopes: parseJson<string[]>(row.scopes),
-      requestedMinutes: row.requested_minutes,
-      channels: parseJson<AccessRequest["channels"]>(row.channels),
-      notificationTargets: parseJson<Record<string, string>>(row.notification_targets),
-      justification: row.justification,
-      createdAt: new Date(row.created_at).toISOString(),
-      status: row.status,
-      decidedAt: row.decided_at ? new Date(row.decided_at).toISOString() : undefined,
-      decidedBy: row.decided_by ?? undefined,
-    }));
+    return rows.map((row) => mapAccessRequestRow(row));
   }
 
   async getAccessRequest(id: string) {
@@ -428,17 +208,7 @@ export class PostgresRepository implements ContextRepository {
     await this.ensureSchema();
     const sql = getSql();
     const rows = await sql`SELECT * FROM temporary_grants ORDER BY created_at DESC`;
-    return rows.map((row) => ({
-      id: row.id,
-      agentId: row.agent_id,
-      agentClass: row.agent_class,
-      integrationKey: row.integration_key,
-      functionName: row.function_name,
-      scopes: parseJson<string[]>(row.scopes),
-      grantedBy: row.granted_by,
-      createdAt: new Date(row.created_at).toISOString(),
-      expiresAt: new Date(row.expires_at).toISOString(),
-    }));
+    return rows.map((row) => mapTemporaryGrantRow(row));
   }
 
   async saveTemporaryGrant(grant: TemporaryGrant) {
@@ -503,28 +273,14 @@ export class PostgresRepository implements ContextRepository {
       ORDER BY integration_key ASC, function_name ASC
     `;
 
-    return rows.map((row) => ({
-      integrationKey: String(row.integration_key),
-      functionName: String(row.function_name),
-      lastInvokedAt: new Date(row.last_invoked_at as string).toISOString(),
-      lastInvocationOutcome: row.last_invocation_outcome as FunctionUsageSummary["lastInvocationOutcome"],
-      invocationCount: Number(row.invocation_count),
-    } satisfies FunctionUsageSummary));
+    return rows.map((row) => mapFunctionUsageSummaryRow(row));
   }
 
   async listNotifications() {
     await this.ensureSchema();
     const sql = getSql();
     const rows = await sql`SELECT * FROM notifications ORDER BY created_at DESC`;
-    return rows.map((row) => ({
-      id: row.id,
-      channel: row.channel,
-      recipient: row.recipient,
-      subject: row.subject,
-      body: row.body,
-      metadata: parseJson<Record<string, unknown>>(row.metadata),
-      createdAt: new Date(row.created_at).toISOString(),
-    }));
+    return rows.map((row) => mapNotificationRow(row));
   }
 
   async createNotification(notification: NotificationRecord) {
@@ -547,12 +303,7 @@ export class PostgresRepository implements ContextRepository {
     if (!row) {
       return null;
     }
-    return {
-      ownerId: row.owner_id,
-      apiKey: row.api_key,
-      createdAt: new Date(row.created_at).toISOString(),
-      updatedAt: new Date(row.updated_at).toISOString(),
-    } satisfies AgentApiKeyRecord;
+    return mapAgentApiKeyRow(row);
   }
 
   async findAgentApiKey(apiKey: string) {
@@ -563,12 +314,7 @@ export class PostgresRepository implements ContextRepository {
     if (!row) {
       return null;
     }
-    return {
-      ownerId: row.owner_id,
-      apiKey: row.api_key,
-      createdAt: new Date(row.created_at).toISOString(),
-      updatedAt: new Date(row.updated_at).toISOString(),
-    } satisfies AgentApiKeyRecord;
+    return mapAgentApiKeyRow(row);
   }
 
   async saveAgentApiKey(record: AgentApiKeyRecord) {
@@ -593,15 +339,7 @@ export class PostgresRepository implements ContextRepository {
     if (!row) {
       return null;
     }
-    return {
-      ownerId: row.owner_id,
-      apiKeyHash: row.api_key_hash,
-      keyPrefix: row.key_prefix,
-      keySuffix: row.key_suffix ?? "",
-      encryptedApiKey: row.encrypted_api_key ?? null,
-      createdAt: new Date(row.created_at).toISOString(),
-      updatedAt: new Date(row.updated_at).toISOString(),
-    } satisfies UserApiKeyRecord;
+    return mapUserApiKeyRow(row);
   }
 
   async findUserApiKeyByHash(apiKeyHash: string) {
@@ -612,15 +350,7 @@ export class PostgresRepository implements ContextRepository {
     if (!row) {
       return null;
     }
-    return {
-      ownerId: row.owner_id,
-      apiKeyHash: row.api_key_hash,
-      keyPrefix: row.key_prefix,
-      keySuffix: row.key_suffix ?? "",
-      encryptedApiKey: row.encrypted_api_key ?? null,
-      createdAt: new Date(row.created_at).toISOString(),
-      updatedAt: new Date(row.updated_at).toISOString(),
-    } satisfies UserApiKeyRecord;
+    return mapUserApiKeyRow(row);
   }
 
   async saveUserApiKey(record: UserApiKeyRecord) {
@@ -670,15 +400,7 @@ export class PostgresRepository implements ContextRepository {
     if (!row) {
       return null;
     }
-    return {
-      ownerId: row.owner_id,
-      apiKeyHash: row.api_key_hash,
-      keyPrefix: row.key_prefix,
-      keySuffix: row.key_suffix ?? "",
-      encryptedApiKey: row.encrypted_api_key ?? null,
-      createdAt: new Date(row.created_at).toISOString(),
-      updatedAt: new Date(row.updated_at).toISOString(),
-    } satisfies AdminApiKeyRecord;
+    return mapAdminApiKeyRow(row);
   }
 
   async findAdminApiKeyByHash(apiKeyHash: string) {
@@ -689,15 +411,7 @@ export class PostgresRepository implements ContextRepository {
     if (!row) {
       return null;
     }
-    return {
-      ownerId: row.owner_id,
-      apiKeyHash: row.api_key_hash,
-      keyPrefix: row.key_prefix,
-      keySuffix: row.key_suffix ?? "",
-      encryptedApiKey: row.encrypted_api_key ?? null,
-      createdAt: new Date(row.created_at).toISOString(),
-      updatedAt: new Date(row.updated_at).toISOString(),
-    } satisfies AdminApiKeyRecord;
+    return mapAdminApiKeyRow(row);
   }
 
   async saveAdminApiKey(record: AdminApiKeyRecord) {
@@ -750,33 +464,7 @@ export class PostgresRepository implements ContextRepository {
     await this.ensureSchema();
     const sql = getSql();
     const rows = await sql`SELECT * FROM managed_connectors ORDER BY slug ASC`;
-    return rows.map((row) => ({
-      slug: row.slug,
-      name: row.name,
-      description: row.description,
-      logoUrl: row.logo_url ?? undefined,
-      appUrl: row.app_url ?? undefined,
-      docsUrl: row.docs_url ?? undefined,
-      categories: parseJson<string[]>(row.categories),
-      authModes: parseJson<ManagedConnectorRecord["authModes"]>(row.auth_modes),
-      authStrategy: row.auth_strategy,
-      provider: row.provider ?? undefined,
-      oauthConfigured: Boolean(row.encrypted_oauth_client),
-      credentialLabel: row.credential_label,
-      credentialPlaceholder: row.credential_placeholder,
-      credentialHelp: row.credential_help,
-      apiBaseUrl: row.api_base_url,
-      serverUrl: row.server_url ?? undefined,
-      openApiUrl: row.open_api_url ?? undefined,
-      oauthConfig: row.oauth_config
-        ? parseJson<ManagedConnectorRecord["oauthConfig"]>(row.oauth_config)
-        : undefined,
-      encryptedOAuthClient: row.encrypted_oauth_client ?? undefined,
-      functions: parseJson<ManagedConnectorRecord["functions"]>(row.functions),
-      enabled: row.enabled,
-      createdAt: new Date(row.created_at).toISOString(),
-      updatedAt: new Date(row.updated_at).toISOString(),
-    } satisfies ManagedConnectorRecord));
+    return rows.map((row) => mapManagedConnectorRow(row));
   }
 
   async getManagedConnector(slug: string) {
@@ -787,33 +475,7 @@ export class PostgresRepository implements ContextRepository {
     if (!row) {
       return null;
     }
-    return {
-      slug: row.slug,
-      name: row.name,
-      description: row.description,
-      logoUrl: row.logo_url ?? undefined,
-      appUrl: row.app_url ?? undefined,
-      docsUrl: row.docs_url ?? undefined,
-      categories: parseJson<string[]>(row.categories),
-      authModes: parseJson<ManagedConnectorRecord["authModes"]>(row.auth_modes),
-      authStrategy: row.auth_strategy,
-      provider: row.provider ?? undefined,
-      oauthConfigured: Boolean(row.encrypted_oauth_client),
-      credentialLabel: row.credential_label,
-      credentialPlaceholder: row.credential_placeholder,
-      credentialHelp: row.credential_help,
-      apiBaseUrl: row.api_base_url,
-      serverUrl: row.server_url ?? undefined,
-      openApiUrl: row.open_api_url ?? undefined,
-      oauthConfig: row.oauth_config
-        ? parseJson<ManagedConnectorRecord["oauthConfig"]>(row.oauth_config)
-        : undefined,
-      encryptedOAuthClient: row.encrypted_oauth_client ?? undefined,
-      functions: parseJson<ManagedConnectorRecord["functions"]>(row.functions),
-      enabled: row.enabled,
-      createdAt: new Date(row.created_at).toISOString(),
-      updatedAt: new Date(row.updated_at).toISOString(),
-    } satisfies ManagedConnectorRecord;
+    return mapManagedConnectorRow(row);
   }
 
   async upsertManagedConnector(record: ManagedConnectorRecord) {
@@ -871,22 +533,7 @@ export class PostgresRepository implements ContextRepository {
       WHERE owner_id = ${ownerId}
       ORDER BY integration_key ASC
     `;
-    return rows.map((row) => ({
-      ownerId: row.owner_id,
-      integrationKey: row.integration_key,
-      provider: row.provider,
-      authStrategy: row.auth_strategy,
-      encryptedCredentials: row.encrypted_credentials,
-      tokenType: row.token_type ?? undefined,
-      scopes: parseJson<string[]>(row.scopes),
-      expiresAt: row.expires_at ? new Date(row.expires_at).toISOString() : undefined,
-      externalAccountId: row.external_account_id ?? undefined,
-      externalWorkspaceId: row.external_workspace_id ?? undefined,
-      displayName: row.display_name ?? undefined,
-      metadata: parseJson<Record<string, unknown>>(row.metadata),
-      createdAt: new Date(row.created_at).toISOString(),
-      updatedAt: new Date(row.updated_at).toISOString(),
-    } satisfies IntegrationConnectionRecord));
+    return rows.map((row) => mapIntegrationConnectionRow(row));
   }
 
   async getIntegrationConnection(ownerId: string, integrationKey: string) {
@@ -900,22 +547,7 @@ export class PostgresRepository implements ContextRepository {
     if (!row) {
       return null;
     }
-    return {
-      ownerId: row.owner_id,
-      integrationKey: row.integration_key,
-      provider: row.provider,
-      authStrategy: row.auth_strategy,
-      encryptedCredentials: row.encrypted_credentials,
-      tokenType: row.token_type ?? undefined,
-      scopes: parseJson<string[]>(row.scopes),
-      expiresAt: row.expires_at ? new Date(row.expires_at).toISOString() : undefined,
-      externalAccountId: row.external_account_id ?? undefined,
-      externalWorkspaceId: row.external_workspace_id ?? undefined,
-      displayName: row.display_name ?? undefined,
-      metadata: parseJson<Record<string, unknown>>(row.metadata),
-      createdAt: new Date(row.created_at).toISOString(),
-      updatedAt: new Date(row.updated_at).toISOString(),
-    } satisfies IntegrationConnectionRecord;
+    return mapIntegrationConnectionRow(row);
   }
 
   async upsertIntegrationConnection(record: IntegrationConnectionRecord) {
@@ -979,18 +611,7 @@ export class PostgresRepository implements ContextRepository {
     if (!row) {
       return null;
     }
-    return {
-      state: row.state,
-      ownerId: row.owner_id,
-      integrationKey: row.integration_key,
-      provider: row.provider,
-      codeVerifier: row.code_verifier ?? undefined,
-      redirectTo: row.redirect_to,
-      redirectUri: row.redirect_uri ?? undefined,
-      callbackUrl: row.callback_url ?? undefined,
-      createdAt: new Date(row.created_at).toISOString(),
-      expiresAt: new Date(row.expires_at).toISOString(),
-    } satisfies OAuthStateRecord;
+    return mapOAuthStateRow(row);
   }
 
   async deleteOAuthState(state: string) {
