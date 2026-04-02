@@ -11,7 +11,8 @@
     "test": "vitest",
     "test:e2e": "playwright test",
     "fetch-contributors": "node scripts/fetch-contributors.js",
-    "fetch-repo-statistics": "node scripts/fetch-repo-statistics.js"
+    "fetch-repo-statistics": "node scripts/fetch-repo-statistics.js",
+    "parity:checklist": "node scripts/generate-site-parity-checklist.cjs"
   },
   "dependencies": {
     "@forge42/seo-tools": "^1.4.2",

@@ -31,9 +31,18 @@ Located at: `scripts/validate-visual-styles.cjs`
 
 ## Build & Test Commands
 ```bash
-npm run build    # Build for production
-npm run dev      # Run dev server (port 12001)
+npm run build             # Build for production
+npm run dev               # Run dev server (usually port 12001 in this workspace)
+npm run parity:checklist  # Crawl openhands.dev and compare against local site
 ```
+
+### Parity Audit Output
+- Script: `scripts/generate-site-parity-checklist.cjs`
+- Output: `.agent_tmp/parity/site-parity-checklist.{json,md}`
+- Helpful env vars:
+  - `PARITY_MAX_PAGES` to cap crawl size
+  - `PARITY_DISCOVERY_LIMIT` to cap link discovery breadth
+  - `PARITY_OUTPUT_DIR` to redirect report output
 
 ## Tailwind Color Tokens
 - `brand-bg`: `#F9F0D9` (tan/beige)
