@@ -13,6 +13,7 @@ This repository contains a Next.js/TypeScript implementation of an agent context
 - Typecheck: `npm run typecheck`
 - Production build check: `npm run build`
 - Audit shipped dependency graph: `npm run audit`
+- Lint: `npm run lint`
 
 ## Local DB-backed validation
 
@@ -24,6 +25,8 @@ This repository contains a Next.js/TypeScript implementation of an agent context
 
 
 ## Workflow notes
+
+- Next.js 16 removed the old `next lint` entrypoint in this repo's setup; keep `npm run lint` wired to `eslint .` with the root `eslint.config.mjs`, and keep ESLint on a 9.x release until `eslint-config-next@16.2.x` is verified against ESLint 10 here.
 
 - For this workstream, when the user requests code changes, commit them and push them to the active PR branch.
 
