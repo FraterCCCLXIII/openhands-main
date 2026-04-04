@@ -21,6 +21,7 @@ Teams use it to connect SaaS tools and custom MCP servers, attach each user's ow
 - [CONTRIBUTING.md](./CONTRIBUTING.md) — local setup and contribution workflow
 - [CHANGELOG.md](./CHANGELOG.md) — notable unreleased and released changes
 - [AGENTS.md](./AGENTS.md) — repository memory for OpenHands agents and maintainers
+- [.openhands/skills/adding-integrations/README.md](./.openhands/skills/adding-integrations/README.md) — agent/human guide for adding new integrations
 - [LICENSE](./LICENSE) — project license
 
 ## Dashboard routes
