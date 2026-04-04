@@ -21,12 +21,14 @@ export class NotificationPublisher {
   private buildNotification(channel: NotificationChannel, request: AccessRequest): NotificationRecord {
     const recipient = request.notificationTargets[channel] ?? `default-${channel}-recipient`;
 
+    const identitySummary = [request.agentId, request.agentClass].filter(Boolean).join(" · ") || "no agent identity";
+
     return {
       id: randomUUID(),
       channel,
       recipient,
       subject: `Approval requested for ${request.integrationKey}.${request.functionName}`,
-      body: `Agent '${request.agentId}' requested [${request.scopes.join(", ") || "default scopes"}] for ${request.integrationKey}.${request.functionName} for ${request.requestedMinutes} minutes.`,
+      body: `${identitySummary} requested [${request.scopes.join(", ") || "default scopes"}] for ${request.integrationKey}.${request.functionName} for ${request.requestedMinutes} minutes.`,
       metadata: {
         requestId: request.id,
         agentClass: request.agentClass,

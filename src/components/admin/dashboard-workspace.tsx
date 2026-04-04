@@ -21,7 +21,6 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { type ReactNode, useEffect, useMemo, useState } from "react";
 
 import {
-  accessModeLabel,
   AccessModeSlider,
   getFunctionAccessMode,
   matchesFunctionSearch,
@@ -44,11 +43,7 @@ import {
   approvalStatusLabel,
   normalizeApprovalDurationHours,
 } from "@/src/lib/access-requests";
-import {
-  buildAgentConnectionGuide,
-  OPENHANDS_CLOUD_SHTTP_MCP_URL,
-  OPENHANDS_CONTEXT_KEY_ENV,
-} from "@/src/lib/agent-connection";
+import { buildAgentConnectionGuide } from "@/src/lib/agent-connection";
 import { cn } from "@/src/lib/utils";
 import type {
   AccessRequest,
@@ -200,15 +195,21 @@ const matchesAccessRequestSearch = (
   }
 
   return [
-    request.agentId,
-    request.agentClass,
+    request.agentId ?? "",
+    request.agentClass ?? "",
     request.integrationKey,
     request.functionName,
     request.justification ?? "",
+    request.agentData?.conversationLink ?? "",
     approvalStatusLabel(request.status),
     ...request.scopes,
   ].some((value) => value.toLowerCase().includes(normalizedQuery));
 };
+
+const hasMissingApprovalIdentity = (request: AccessRequest) =>
+  !request.agentId && !request.agentClass;
+
+const formatApprovalIdentityValue = (value: string | null) => value ?? "Not provided";
 
 const formatTimestamp = (value?: string) => {
   if (!value) {
@@ -427,7 +428,6 @@ const IntegrationMarketplaceCard = ({
 export const DashboardWorkspace = ({
   initialIntegrations,
   initialAccessRequests,
-  initialNotifications: _initialNotifications,
   currentUser,
   contextApiBaseUrl,
   contextApiKey,
@@ -456,9 +456,6 @@ export const DashboardWorkspace = ({
     Record<string, boolean>
   >({});
   const [expandedFunctions, setExpandedFunctions] = useState<
-    Record<string, boolean>
-  >({});
-  const [expandedUsageSections, setExpandedUsageSections] = useState<
     Record<string, boolean>
   >({});
   const [approvalSearch, setApprovalSearch] = useState("");
@@ -1513,12 +1510,31 @@ export const DashboardWorkspace = ({
                                 </Badge>
                               </div>
                               <div className="grid gap-2 text-xs text-[var(--color-text-base)] sm:grid-cols-2 xl:grid-cols-3">
-                                <p>
-                                  Agent: <span className="text-white">{request.agentId}</span>
-                                </p>
-                                <p>
-                                  Class: <span className="text-white">{request.agentClass}</span>
-                                </p>
+                                <div className="flex flex-wrap items-center gap-2 sm:col-span-2 xl:col-span-3">
+                                  <p>
+                                    Invocation identity:{" "}
+                                    <span className="text-white">{formatApprovalIdentityValue(request.agentId)}</span>
+                                    <span className="text-[var(--color-text-muted)]"> · </span>
+                                    <span className="text-white">{formatApprovalIdentityValue(request.agentClass)}</span>
+                                  </p>
+                                  {hasMissingApprovalIdentity(request) ? (
+                                    <Badge>no agent identity provided</Badge>
+                                  ) : null}
+                                </div>
+                                {request.agentData?.conversationLink ? (
+                                  <p className="sm:col-span-2 xl:col-span-3">
+                                    Conversation:{" "}
+                                    <a
+                                      href={request.agentData.conversationLink}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      className="inline-flex items-center gap-1 text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
+                                    >
+                                      <span>{request.agentData.conversationLink}</span>
+                                      <ArrowRight className="h-3.5 w-3.5" />
+                                    </a>
+                                  </p>
+                                ) : null}
                                 <p>
                                   Requested: <span className="text-white">{formatTimestamp(request.createdAt)}</span>
                                 </p>

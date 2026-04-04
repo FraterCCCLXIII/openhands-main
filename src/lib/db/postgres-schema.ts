@@ -39,8 +39,8 @@ export const initializePostgresSchema = async (sql: PostgresSqlClient) => {
     sql`
       CREATE TABLE IF NOT EXISTS access_requests (
         id TEXT PRIMARY KEY,
-        agent_id TEXT NOT NULL,
-        agent_class TEXT NOT NULL,
+        agent_id TEXT,
+        agent_class TEXT,
         integration_key TEXT NOT NULL,
         function_name TEXT NOT NULL,
         scopes JSONB NOT NULL DEFAULT '[]'::jsonb,
@@ -48,6 +48,7 @@ export const initializePostgresSchema = async (sql: PostgresSqlClient) => {
         channels JSONB NOT NULL DEFAULT '[]'::jsonb,
         notification_targets JSONB NOT NULL DEFAULT '{}'::jsonb,
         justification TEXT NOT NULL DEFAULT '',
+        agent_data JSONB NOT NULL DEFAULT '{}'::jsonb,
         created_at TIMESTAMPTZ NOT NULL,
         status TEXT NOT NULL,
         decided_at TIMESTAMPTZ,
@@ -57,8 +58,8 @@ export const initializePostgresSchema = async (sql: PostgresSqlClient) => {
     sql`
       CREATE TABLE IF NOT EXISTS temporary_grants (
         id TEXT PRIMARY KEY,
-        agent_id TEXT NOT NULL,
-        agent_class TEXT NOT NULL,
+        agent_id TEXT,
+        agent_class TEXT,
         integration_key TEXT NOT NULL,
         function_name TEXT NOT NULL,
         scopes JSONB NOT NULL DEFAULT '[]'::jsonb,
@@ -71,8 +72,8 @@ export const initializePostgresSchema = async (sql: PostgresSqlClient) => {
       CREATE TABLE IF NOT EXISTS tool_invocations (
         id TEXT PRIMARY KEY,
         owner_id TEXT,
-        agent_id TEXT NOT NULL,
-        agent_class TEXT NOT NULL,
+        agent_id TEXT,
+        agent_class TEXT,
         integration_key TEXT NOT NULL,
         function_name TEXT NOT NULL,
         scopes JSONB NOT NULL DEFAULT '[]'::jsonb,

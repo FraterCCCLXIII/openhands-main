@@ -52,6 +52,7 @@ import { resolveOAuthProvider } from "@/src/lib/oauth/provider-resolver";
 import type {
   AccessDecision,
   AccessRequest,
+  AccessRequestAgentData,
   AdminApiKeyRecord,
   AdminApiKeyStatus,
   AgentApiKeyRecord,
@@ -60,7 +61,6 @@ import type {
   DisableUnusedFunctionsResult,
   FunctionAccessMode,
   FunctionSpec,
-  FunctionUsageSummary,
   GenericOAuthConfig,
   IntegrationConnectionRecord,
   IntegrationConnectionStatus,
@@ -94,6 +94,21 @@ const sanitizeConnectionStatus = (
   updatedAt: record.updatedAt,
 });
 
+const normalizeAccessRequestAgentData = (
+  agentData?: AccessRequestAgentData,
+): AccessRequestAgentData => {
+  const conversationLink = agentData?.conversationLink?.trim();
+
+  return conversationLink ? { conversationLink } : {};
+};
+
+const sameAccessRequestAgentData = (
+  left?: AccessRequestAgentData,
+  right?: AccessRequestAgentData,
+) =>
+  normalizeAccessRequestAgentData(left).conversationLink ===
+  normalizeAccessRequestAgentData(right).conversationLink;
+
 const isConnectionExpired = (expiresAt?: string, bufferMs = 60_000) => {
   if (!expiresAt) {
     return false;
@@ -105,12 +120,13 @@ const isConnectionExpired = (expiresAt?: string, bufferMs = 60_000) => {
 const normalizeAgentApiKeyOwner = normalizeOwnerId;
 
 export interface AccessEvaluationRequest {
-  agentId: string;
-  agentClass: string;
+  agentId: string | null;
+  agentClass: string | null;
   integrationKey: string;
   functionName: string;
   requestedScopes?: string[];
   ownerId?: string;
+  agentData?: AccessRequestAgentData;
 }
 
 export interface ContextInvocationRequest extends AccessEvaluationRequest {
@@ -118,52 +134,57 @@ export interface ContextInvocationRequest extends AccessEvaluationRequest {
 }
 
 const toAccessEvaluationRequest = (
-  agentIdOrRequest: string | AccessEvaluationRequest,
-  agentClass?: string,
+  agentIdOrRequest: string | null | AccessEvaluationRequest,
+  agentClass?: string | null,
   integrationKey?: string,
   functionName?: string,
   requestedScopes: string[] = [],
   options: {
     ownerId?: string;
+    agentData?: AccessRequestAgentData;
   } = {},
 ): AccessEvaluationRequest => {
-  if (typeof agentIdOrRequest !== "string") {
+  if (typeof agentIdOrRequest !== "string" && agentIdOrRequest !== null) {
     return {
       ...agentIdOrRequest,
       requestedScopes: agentIdOrRequest.requestedScopes ?? [],
+      agentData: agentIdOrRequest.agentData,
     };
   }
 
-  if (!agentClass || !integrationKey || !functionName) {
+  if (!integrationKey || !functionName) {
     throw new ContextLayerError("Incomplete access evaluation request.", 400);
   }
 
   return {
     agentId: agentIdOrRequest,
-    agentClass,
+    agentClass: agentClass ?? null,
     integrationKey,
     functionName,
     requestedScopes,
     ownerId: options.ownerId,
+    agentData: options.agentData,
   };
 };
 
 const toContextInvocationRequest = (
-  agentIdOrRequest: string | ContextInvocationRequest,
-  agentClass?: string,
+  agentIdOrRequest: string | null | ContextInvocationRequest,
+  agentClass?: string | null,
   integrationKey?: string,
   functionName?: string,
   payload: Record<string, unknown> = {},
   requestedScopes: string[] = [],
   options: {
     ownerId?: string;
+    agentData?: AccessRequestAgentData;
   } = {},
 ): ContextInvocationRequest => {
-  if (typeof agentIdOrRequest !== "string") {
+  if (typeof agentIdOrRequest !== "string" && agentIdOrRequest !== null) {
     return {
       ...agentIdOrRequest,
       payload: agentIdOrRequest.payload ?? {},
       requestedScopes: agentIdOrRequest.requestedScopes ?? [],
+      agentData: agentIdOrRequest.agentData,
     };
   }
 
@@ -183,6 +204,9 @@ const toContextInvocationRequest = (
 };
 
 
+/**
+ * Main orchestration service for integration lifecycle, API-key management, approvals, and runtime tool invocation.
+ */
 export class ContextLayerService {
   constructor(
     private readonly repository: ContextRepository,
@@ -973,23 +997,25 @@ export class ContextLayerService {
     request: AccessEvaluationRequest,
   ): Promise<AccessDecision>;
   async evaluateAccess(
-    agentId: string,
-    agentClass: string,
+    agentId: string | null,
+    agentClass: string | null,
     integrationKey: string,
     functionName: string,
     requestedScopes?: string[],
     options?: {
       ownerId?: string;
+      agentData?: AccessRequestAgentData;
     },
   ): Promise<AccessDecision>;
   async evaluateAccess(
-    agentIdOrRequest: string | AccessEvaluationRequest,
-    agentClass?: string,
+    agentIdOrRequest: string | null | AccessEvaluationRequest,
+    agentClass?: string | null,
     integrationKey?: string,
     functionName?: string,
     requestedScopes: string[] = [],
     options: {
       ownerId?: string;
+      agentData?: AccessRequestAgentData;
     } = {},
   ): Promise<AccessDecision> {
     const request = toAccessEvaluationRequest(
@@ -1006,7 +1032,7 @@ export class ContextLayerService {
     );
     const [temporaryGrants, policy] = await Promise.all([
       this.repository.listTemporaryGrants(),
-      this.repository.getPolicy(request.agentClass),
+      request.agentClass ? this.repository.getPolicy(request.agentClass) : Promise.resolve(null),
     ]);
 
     return evaluateIntegrationAccess({
@@ -1026,6 +1052,8 @@ export class ContextLayerService {
     await this.initialize();
     const accessRequest: AccessRequest = {
       ...request,
+      justification: request.justification?.trim() || undefined,
+      agentData: normalizeAccessRequestAgentData(request.agentData),
       id: randomUUID(),
       createdAt: nowIso(),
       status: "pending",
@@ -1086,29 +1114,35 @@ export class ContextLayerService {
     return this.repository.purgeExpiredGrants(nowIso());
   }
 
+  /**
+   * Resolves an owner-scoped integration, enforces access policy, invokes the backing adapter,
+   * and records best-effort invocation metadata for auditing.
+   */
   async invokeContext(
     request: ContextInvocationRequest,
   ): Promise<ContextInvocationResult>;
   async invokeContext(
-    agentId: string,
-    agentClass: string,
+    agentId: string | null,
+    agentClass: string | null,
     integrationKey: string,
     functionName: string,
     payload?: Record<string, unknown>,
     requestedScopes?: string[],
     options?: {
       ownerId?: string;
+      agentData?: AccessRequestAgentData;
     },
   ): Promise<ContextInvocationResult>;
   async invokeContext(
-    agentIdOrRequest: string | ContextInvocationRequest,
-    agentClass?: string,
+    agentIdOrRequest: string | null | ContextInvocationRequest,
+    agentClass?: string | null,
     integrationKey?: string,
     functionName?: string,
     payload: Record<string, unknown> = {},
     requestedScopes: string[] = [],
     options: {
       ownerId?: string;
+      agentData?: AccessRequestAgentData;
     } = {},
   ): Promise<ContextInvocationResult> {
     const request = toContextInvocationRequest(
@@ -1151,6 +1185,7 @@ export class ContextLayerService {
             functionName: request.functionName,
             scopes: decision.effectiveScopes,
             ownerId: request.ownerId,
+            agentData: request.agentData,
           });
         });
       }
@@ -1250,8 +1285,8 @@ export class ContextLayerService {
 
   private async recordToolInvocation(args: {
     ownerId?: string;
-    agentId: string;
-    agentClass: string;
+    agentId: string | null;
+    agentClass: string | null;
     integration: Pick<IntegrationSpec, "key" | "provider" | "kind" | "authStrategy">;
     functionName: string;
     scopes: string[];
@@ -1387,13 +1422,15 @@ export class ContextLayerService {
     functionName,
     scopes,
     ownerId,
+    agentData,
   }: {
-    agentId: string;
-    agentClass: string;
+    agentId: string | null;
+    agentClass: string | null;
     integrationKey: string;
     functionName: string;
     scopes: string[];
     ownerId?: string;
+    agentData?: AccessRequestAgentData;
   }) {
     await this.initialize();
     const pendingRequests = (await this.repository.listAccessRequests()).filter(
@@ -1409,6 +1446,19 @@ export class ContextLayerService {
     );
 
     if (existing) {
+      const normalizedAgentData = normalizeAccessRequestAgentData(agentData);
+      if (
+        normalizedAgentData.conversationLink &&
+        !sameAccessRequestAgentData(existing.agentData, normalizedAgentData)
+      ) {
+        const updated = {
+          ...existing,
+          agentData: normalizedAgentData,
+        } satisfies AccessRequest;
+        await this.repository.updateAccessRequest(updated);
+        return updated;
+      }
+
       return existing;
     }
 
@@ -1425,8 +1475,7 @@ export class ContextLayerService {
       notificationTargets: {
         in_app: notificationRecipient,
       },
-      justification:
-        "Auto-created after an agent attempted a case-by-case tool without an active approval.",
+      agentData,
     });
   }
 

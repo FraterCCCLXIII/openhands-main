@@ -33,8 +33,8 @@ export const createToolInvocationRecord = ({
   errorMessage,
 }: {
   ownerId?: string;
-  agentId: string;
-  agentClass: string;
+  agentId: string | null;
+  agentClass: string | null;
   integration: Pick<IntegrationSpec, "key" | "provider" | "kind" | "authStrategy">;
   functionName: string;
   scopes: string[];

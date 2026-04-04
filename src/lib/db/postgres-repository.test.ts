@@ -1,10 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const {
-  neonMock,
-  sqlMock,
-  transactionMock,
-} = vi.hoisted(() => {
+const { neonMock, transactionMock } = vi.hoisted(() => {
   const transactionMock = vi.fn(async (queries: unknown[]) => queries);
   const sqlMock = vi.fn((strings: TemplateStringsArray, ...values: unknown[]) => ({
     text: strings.join("?"),

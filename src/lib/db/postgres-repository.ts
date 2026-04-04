@@ -169,11 +169,11 @@ export class PostgresRepository implements ContextRepository {
     await sql`
       INSERT INTO access_requests (
         id, agent_id, agent_class, integration_key, function_name, scopes,
-        requested_minutes, channels, notification_targets, justification,
+        requested_minutes, channels, notification_targets, justification, agent_data,
         created_at, status, decided_at, decided_by
       ) VALUES (
-        ${request.id}, ${request.agentId}, ${request.agentClass}, ${request.integrationKey}, ${request.functionName}, ${JSON.stringify(request.scopes)},
-        ${request.requestedMinutes}, ${JSON.stringify(request.channels)}, ${JSON.stringify(request.notificationTargets)}, ${request.justification ?? ""},
+        ${request.id}, ${request.agentId ?? null}, ${request.agentClass ?? null}, ${request.integrationKey}, ${request.functionName}, ${JSON.stringify(request.scopes)},
+        ${request.requestedMinutes}, ${JSON.stringify(request.channels)}, ${JSON.stringify(request.notificationTargets)}, ${request.justification ?? ""}, ${JSON.stringify(request.agentData ?? {})},
         ${request.createdAt}, ${request.status}, ${request.decidedAt ?? null}, ${request.decidedBy ?? null}
       )
     `;
@@ -186,8 +186,8 @@ export class PostgresRepository implements ContextRepository {
     await sql`
       UPDATE access_requests
       SET
-        agent_id = ${request.agentId},
-        agent_class = ${request.agentClass},
+        agent_id = ${request.agentId ?? null},
+        agent_class = ${request.agentClass ?? null},
         integration_key = ${request.integrationKey},
         function_name = ${request.functionName},
         scopes = ${JSON.stringify(request.scopes)},
@@ -195,6 +195,7 @@ export class PostgresRepository implements ContextRepository {
         channels = ${JSON.stringify(request.channels)},
         notification_targets = ${JSON.stringify(request.notificationTargets)},
         justification = ${request.justification ?? ""},
+        agent_data = ${JSON.stringify(request.agentData ?? {})},
         created_at = ${request.createdAt},
         status = ${request.status},
         decided_at = ${request.decidedAt ?? null},
@@ -218,7 +219,7 @@ export class PostgresRepository implements ContextRepository {
       INSERT INTO temporary_grants (
         id, agent_id, agent_class, integration_key, function_name, scopes, granted_by, created_at, expires_at
       ) VALUES (
-        ${grant.id}, ${grant.agentId}, ${grant.agentClass}, ${grant.integrationKey}, ${grant.functionName}, ${JSON.stringify(grant.scopes)}, ${grant.grantedBy}, ${grant.createdAt}, ${grant.expiresAt}
+        ${grant.id}, ${grant.agentId ?? null}, ${grant.agentClass ?? null}, ${grant.integrationKey}, ${grant.functionName}, ${JSON.stringify(grant.scopes)}, ${grant.grantedBy}, ${grant.createdAt}, ${grant.expiresAt}
       )
       ON CONFLICT (id) DO UPDATE SET
         agent_id = EXCLUDED.agent_id,
@@ -249,7 +250,7 @@ export class PostgresRepository implements ContextRepository {
         scopes, provider, kind, auth_strategy, outcome, invoked_at, duration_ms,
         payload_keys, error_message
       ) VALUES (
-        ${record.id}, ${record.ownerId ?? null}, ${record.agentId}, ${record.agentClass}, ${record.integrationKey}, ${record.functionName},
+        ${record.id}, ${record.ownerId ?? null}, ${record.agentId ?? null}, ${record.agentClass ?? null}, ${record.integrationKey}, ${record.functionName},
         ${JSON.stringify(record.scopes)}, ${record.provider}, ${record.kind}, ${record.authStrategy}, ${record.outcome}, ${record.invokedAt}, ${record.durationMs ?? null},
         ${JSON.stringify(record.payloadKeys)}, ${record.errorMessage ?? null}
       )

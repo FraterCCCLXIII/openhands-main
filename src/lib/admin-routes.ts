@@ -4,6 +4,9 @@ export type AdminSection =
   | "apiKeys"
   | "caseByCaseApprovals";
 
+/**
+ * Canonical dashboard routes shared by the sidebar, redirects, and docs.
+ */
 const ADMIN_SECTION_PATHS: Record<AdminSection, string> = {
   profile: "/profile",
   integrations: "/integrations",
@@ -11,6 +14,9 @@ const ADMIN_SECTION_PATHS: Record<AdminSection, string> = {
   caseByCaseApprovals: "/case-by-case-approvals",
 };
 
+/**
+ * Resolves a logical dashboard section to the top-level route used in the app router.
+ */
 export const getAdminSectionPath = (section: AdminSection) =>
   ADMIN_SECTION_PATHS[section];
 
@@ -31,6 +37,9 @@ export const getAdminSectionFromPath = (
   }
 };
 
+/**
+ * Builds a canonical dashboard link while preserving any non-empty query parameters.
+ */
 export const buildAdminSectionHref = (
   section: AdminSection,
   params?: URLSearchParams | Record<string, string | undefined>,

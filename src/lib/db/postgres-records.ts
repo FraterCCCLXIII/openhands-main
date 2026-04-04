@@ -56,8 +56,8 @@ export const mapPolicyRow = (row: PostgresRow): AgentClassPolicy => ({
 
 export const mapAccessRequestRow = (row: PostgresRow): AccessRequest => ({
   id: String(row.id),
-  agentId: String(row.agent_id),
-  agentClass: String(row.agent_class),
+  agentId: row.agent_id == null ? null : String(row.agent_id),
+  agentClass: row.agent_class == null ? null : String(row.agent_class),
   integrationKey: String(row.integration_key),
   functionName: String(row.function_name),
   scopes: parseJson<string[]>(row.scopes),
@@ -65,6 +65,7 @@ export const mapAccessRequestRow = (row: PostgresRow): AccessRequest => ({
   channels: parseJson<AccessRequest["channels"]>(row.channels),
   notificationTargets: parseJson<Record<string, string>>(row.notification_targets),
   justification: String(row.justification ?? ""),
+  agentData: parseJson<AccessRequest["agentData"]>(row.agent_data),
   createdAt: toIsoString(row.created_at),
   status: String(row.status) as AccessRequest["status"],
   decidedAt: toOptionalIsoString(row.decided_at),
@@ -73,8 +74,8 @@ export const mapAccessRequestRow = (row: PostgresRow): AccessRequest => ({
 
 export const mapTemporaryGrantRow = (row: PostgresRow): TemporaryGrant => ({
   id: String(row.id),
-  agentId: String(row.agent_id),
-  agentClass: String(row.agent_class),
+  agentId: row.agent_id == null ? null : String(row.agent_id),
+  agentClass: row.agent_class == null ? null : String(row.agent_class),
   integrationKey: String(row.integration_key),
   functionName: String(row.function_name),
   scopes: parseJson<string[]>(row.scopes),

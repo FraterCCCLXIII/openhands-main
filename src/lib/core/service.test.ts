@@ -466,7 +466,13 @@ describe("ContextLayerService", () => {
         "accounts",
         {},
         ["accounts.read"],
-        { ownerId: OWNER_ID },
+        {
+          ownerId: OWNER_ID,
+          agentData: {
+            conversationLink:
+              "https://app.all-hands.dev/conversations/f3e731620cf147a1976b53050bbe039e",
+          },
+        },
       ),
     ).rejects.toThrow("Permission required");
 
@@ -480,6 +486,11 @@ describe("ContextLayerService", () => {
       scopes: ["accounts.read"],
       requestedMinutes: 240,
       status: "pending",
+      justification: "",
+      agentData: {
+        conversationLink:
+          "https://app.all-hands.dev/conversations/f3e731620cf147a1976b53050bbe039e",
+      },
     });
     expect(pendingRequests[0]?.channels).toEqual(["in_app"]);
 
@@ -496,6 +507,66 @@ describe("ContextLayerService", () => {
     );
 
     expect(response.decision.reason).toBe("Allowed by temporary approval");
+  });
+
+
+  it("updates an existing pending access request when richer agent data arrives later", async () => {
+    const repository = testRepo;
+    const service = new ContextLayerService(
+      repository,
+      new AdapterRegistry({ composio: { invoke: async () => ({ ok: true }) } }),
+      new NotificationPublisher(repository),
+    );
+    await installIntegration(service, {
+      ...baseIntegration,
+      functions: {
+        accounts: {
+          ...baseIntegration.functions.accounts,
+          accessMode: "approval_required",
+        },
+      },
+    });
+
+    await expect(
+      service.invokeContext(
+        "agent-5",
+        "assistant",
+        "salesforce",
+        "accounts",
+        {},
+        ["accounts.read"],
+        { ownerId: OWNER_ID },
+      ),
+    ).rejects.toThrow("Permission required");
+
+    await expect(
+      service.invokeContext(
+        "agent-5",
+        "assistant",
+        "salesforce",
+        "accounts",
+        {},
+        ["accounts.read"],
+        {
+          ownerId: OWNER_ID,
+          agentData: {
+            conversationLink:
+              "https://app.all-hands.dev/conversations/updated-session-context",
+          },
+        },
+      ),
+    ).rejects.toThrow("Permission required");
+
+    await expect(repository.listAccessRequests()).resolves.toMatchObject([
+      {
+        agentId: "agent-5",
+        functionName: "accounts",
+        agentData: {
+          conversationLink:
+            "https://app.all-hands.dev/conversations/updated-session-context",
+        },
+      },
+    ]);
   });
 
   it("creates notifications for multiple channels when access is requested", async () => {

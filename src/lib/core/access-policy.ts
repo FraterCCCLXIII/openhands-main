@@ -90,8 +90,8 @@ const findActiveGrant = ({
   temporaryGrants,
   currentTime = nowIso(),
 }: {
-  agentId: string;
-  agentClass: string;
+  agentId: string | null;
+  agentClass: string | null;
   integrationKey: string;
   functionName: string;
   effectiveScopes: string[];
@@ -143,8 +143,8 @@ export const evaluateIntegrationAccess = ({
   policy,
   currentTime,
 }: {
-  agentId: string;
-  agentClass: string;
+  agentId: string | null;
+  agentClass: string | null;
   integration: IntegrationSpec;
   functionName: string;
   requestedScopes?: string[];
