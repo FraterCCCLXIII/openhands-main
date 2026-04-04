@@ -122,7 +122,7 @@ export const IntegrationMarketplaceCard = ({
       type="button"
       onClick={onClick}
       data-built-in-slug={connector.slug}
-      className="flex w-full items-center justify-between gap-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)] px-4 py-3 text-left transition-colors hover:bg-[var(--color-bg-active)]"
+      className="flex w-full cursor-pointer items-center justify-between gap-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)] px-4 py-3 text-left transition-colors hover:bg-[var(--color-bg-active)]"
     >
       <div className="flex min-w-0 items-center gap-3">
         <ConnectorLogo name={connector.name} logoUrl={logoUrl} className="h-10 w-10" />

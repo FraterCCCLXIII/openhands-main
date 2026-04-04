@@ -124,4 +124,5 @@ The root `LICENSE` is proprietary: `Copyright All Hands AI, Inc. All rights rese
 - The app favicon now mirrors the OpenHands frontend assets: `public/favicon.ico`, `public/favicon-16x16.png`, and `public/favicon-32x32.png`, referenced explicitly via `app/layout.tsx` metadata.
 
 - `app/globals.css` plus `src/components/ui/{button,badge,card}.tsx` now mirror the OpenHands frontend palette more closely: gold primary accents (`#c9b974`/`#cfb755`), flatter dark surfaces, system sans body text, and IBM Plex Mono for code; admin/dashboard styling should stay aligned with those shared primitives.
+- Enabled dashboard/admin `<button>` controls should include pointer-cursor affordances. The shared `Button` primitive now carries `cursor-pointer`, but raw `<button>` wrappers (marketplace cards, kind selectors, segmented controls, disclosure rows) still need explicit `cursor-pointer` classes when added outside that primitive.
 

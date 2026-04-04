@@ -31,7 +31,7 @@ export const KindStep = ({
         key={option.kind}
         type="button"
         className={cn(
-          "rounded-xl border p-5 text-left transition-colors",
+          "cursor-pointer rounded-xl border p-5 text-left transition-colors",
           selectedKind === option.kind
             ? "border-[var(--color-accent)] bg-[var(--color-bg-active)]"
             : "border-[var(--color-border)] bg-[var(--color-surface-subtle)] hover:bg-[var(--color-bg-active)]",
