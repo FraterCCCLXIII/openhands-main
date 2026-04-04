@@ -2,6 +2,8 @@
 
 OpenHands Context Layer is a Next.js + TypeScript application that gives agents one authenticated tool surface while keeping connector setup, per-user credentials, approvals, and operational controls in a human-facing dashboard.
 
+Teams use it to connect SaaS tools and custom MCP servers, attach each user's own credentials, decide which functions agents can call, and require case-by-case human approval when needed. It also generates the REST, MCP, and OpenAPI connection details agents need so users can hand over a single controlled interface instead of exposing raw third-party credentials and scattered integration setup.
+
 ## Highlights
 
 - Unified agent runtime endpoint: `POST /api/context/[integrationKey]/[functionName]`

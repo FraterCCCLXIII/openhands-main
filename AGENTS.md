@@ -4,6 +4,8 @@
 
 This repository contains a Next.js/TypeScript implementation of an agent context layer. It exposes a single agent-facing context endpoint, supports DB-backed managed connectors plus Composio-backed and MCP SDK-backed integrations, provides fine-grained agent-class permissions plus temporary approval grants, and ships with a Tailwind admin dashboard styled after the OpenHands KPI tracker.
 
+The root `LICENSE` is proprietary: `Copyright All Hands AI, Inc. All rights reserved.`
+
 ## Common commands
 
 - Install dependencies: `npm install`
