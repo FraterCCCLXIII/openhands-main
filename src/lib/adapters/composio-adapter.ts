@@ -26,7 +26,7 @@ export class ComposioAdapter implements IntegrationAdapter {
     this.client = apiKey ? new Composio({ apiKey }) : null;
   }
 
-  async invoke({ agentId, integration, functionSpec, payload }: AdapterInvocationInput) {
+  async invoke({ agentId, integration, toolSpec, payload }: AdapterInvocationInput) {
     const resolvedAgentId = agentId?.trim() || "context-layer-agent";
     if (!this.client) {
       throw new ContextLayerError(
@@ -36,18 +36,18 @@ export class ComposioAdapter implements IntegrationAdapter {
     }
 
     const toolSlug =
-      (functionSpec.config.composioToolSlug as string | undefined) ??
+      (toolSpec.config.composioToolSlug as string | undefined) ??
       (integration.config.defaultToolSlug as string | undefined);
 
     if (!toolSlug) {
       throw new ContextLayerError(
-        `Function '${functionSpec.name}' is missing a composioToolSlug configuration.`,
+        `Function '${toolSpec.name}' is missing a composioToolSlug configuration.`,
         400,
       );
     }
 
     const connectedAccountId =
-      (functionSpec.config.connectedAccountId as string | undefined) ??
+      (toolSpec.config.connectedAccountId as string | undefined) ??
       (integration.credentials.connectedAccountId as string | undefined);
 
     const toolCall = {

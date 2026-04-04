@@ -3,7 +3,7 @@ import { z } from "zod";
 import {
   accessRequestDecisionSchema,
   accessRequestSchema,
-  functionSpecSchema,
+  toolSpecSchema,
   integrationCreateSchema,
   integrationSpecSchema,
   notificationRecordSchema,
@@ -76,13 +76,12 @@ export const buildAdminOpenApiDocument = ({
   baseUrl: string;
   integrations: IntegrationSpec[];
 }) => {
-  const exampleIntegration = selectExampleIntegration(integrations)?.integration;
-  const exampleFunction = exampleIntegration
-    ? Object.values(exampleIntegration.functions).find((candidate) => candidate.enabled)
-    : undefined;
+  const exampleSelection = selectExampleIntegration(integrations);
+  const exampleIntegration = exampleSelection?.integration;
+  const exampleTool = exampleSelection?.tools[0];
 
   const integrationKeyExample = exampleIntegration?.key ?? "integration-key";
-  const functionNameExample = exampleFunction?.name ?? "function-name";
+  const toolNameExample = exampleTool?.name ?? "tool-name";
 
   return {
     openapi: "3.0.3",
@@ -176,7 +175,7 @@ export const buildAdminOpenApiDocument = ({
       "/api/admin/integrations/{integrationKey}/functions/{functionName}": {
         patch: {
           tags: ["Admin Integrations"],
-          operationId: "updateAdminFunctionAccessMode",
+          operationId: "updateAdminToolAccessMode",
           summary: "Update a tool access mode",
           security: buildAdminSecurity(),
           parameters: [
@@ -192,7 +191,7 @@ export const buildAdminOpenApiDocument = ({
               in: "path",
               required: true,
               schema: { type: "string" },
-              example: functionNameExample,
+              example: toolNameExample,
             },
           ],
           requestBody: {
@@ -217,7 +216,7 @@ export const buildAdminOpenApiDocument = ({
               description: "Updated tool spec.",
               content: {
                 "application/json": {
-                  schema: { $ref: "#/components/schemas/FunctionSpec" },
+                  schema: { $ref: "#/components/schemas/ToolSpec" },
                 },
               },
             },
@@ -498,7 +497,7 @@ export const buildAdminOpenApiDocument = ({
       schemas: {
         IntegrationCreateRequest: toOpenApiSchema(integrationCreateSchema),
         IntegrationSpec: toOpenApiSchema(integrationSpecSchema),
-        FunctionSpec: toOpenApiSchema(functionSpecSchema),
+        ToolSpec: toOpenApiSchema(toolSpecSchema),
         IntegrationDiscoveryRequest: toOpenApiSchema(integrationDiscoveryRequestSchema),
         IntegrationConnection: toOpenApiSchema(integrationConnectionSchema),
         NotificationRecord: toOpenApiSchema(notificationRecordSchema),

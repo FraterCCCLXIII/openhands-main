@@ -3,7 +3,7 @@ import type {
   AuthStrategy,
   GenericHttpRequestTemplate,
   HttpRequestContentType,
-  ManagedConnectorFunctionDefinition,
+  ManagedConnectorToolDefinition,
 } from "@/src/types/context-layer";
 
 type HttpMethod = "get" | "post" | "put" | "patch" | "delete";
@@ -283,7 +283,7 @@ export const generateManagedConnectorFunctionsFromOpenApi = async ({
   openApiUrl,
   authStrategy,
 }: GenerateManagedConnectorFunctionsFromOpenApiOptions): Promise<
-  ManagedConnectorFunctionDefinition[]
+  ManagedConnectorToolDefinition[]
 > => {
   const response = await fetch(openApiUrl, {
     headers: {
@@ -306,7 +306,7 @@ export const generateManagedConnectorFunctionsFromOpenApi = async ({
     );
   }
 
-  const functions: ManagedConnectorFunctionDefinition[] = [];
+  const functions: ManagedConnectorToolDefinition[] = [];
 
   for (const [path, pathItem] of Object.entries(document.paths)) {
     for (const method of OPERATION_METHODS) {

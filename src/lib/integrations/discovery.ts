@@ -4,7 +4,7 @@ import { ContextLayerError } from "@/src/lib/core/errors";
 import type { ContextRepository } from "@/src/lib/core/repository";
 import { buildMcpHeaders, runMcpClientOperation } from "@/src/lib/mcp-client";
 import {
-  buildManagedConnectorFunctionSpecs,
+  buildManagedConnectorToolSpecs,
   buildManagedConnectorFunctions,
   getDefaultBuiltInConnector,
   getManagedConnectorApiBaseUrl,
@@ -17,7 +17,7 @@ import { generateManagedConnectorFunctionsFromOpenApi } from "@/src/lib/managed-
 import type {
   AuthStrategy,
   BuiltInConnectorOption,
-  FunctionSpec,
+  ToolSpec,
   IntegrationKind,
   IntegrationProvider,
 } from "@/src/types/context-layer";
@@ -111,12 +111,12 @@ export const inferMcpAuthStrategy = (
   return "none";
 };
 
-const buildFunctionSpec = (
+const buildToolSpec = (
   name: string,
   description: string,
   defaultScopes: string[],
   config: Record<string, unknown>,
-): FunctionSpec => ({
+): ToolSpec => ({
   name,
   description,
   enabled: true,
@@ -147,7 +147,7 @@ export interface IntegrationDiscoveryResult {
   authStrategy: AuthStrategy;
   config: Record<string, unknown>;
   credentials: Record<string, unknown>;
-  functions: Record<string, FunctionSpec>;
+  functions: Record<string, ToolSpec>;
 }
 
 const getComposioClient = () => {
@@ -318,7 +318,7 @@ const discoverDefaultBuiltInConnectorIntegration = async (
       apiBaseUrl: connector.apiBaseUrl,
     },
     credentials: resolveManagedConnectorCredentials(connector, input),
-    functions: buildManagedConnectorFunctionSpecs(functions),
+    functions: buildManagedConnectorToolSpecs(functions),
   };
 };
 
@@ -373,7 +373,7 @@ const discoverComposioIntegration = async (
         slugToFunctionName(tool.slug, toolkitSlug) || tool.slug.toLowerCase();
       return [
         functionName,
-        buildFunctionSpec(
+        buildToolSpec(
           functionName,
           tool.description ?? tool.name,
           tool.scopes ?? [],
@@ -433,7 +433,7 @@ const discoverMcpIntegration = async (
   const functions = Object.fromEntries(
     result.tools.map((tool) => [
       tool.name,
-      buildFunctionSpec(tool.name, tool.description ?? tool.title ?? "", [], {
+      buildToolSpec(tool.name, tool.description ?? tool.title ?? "", [], {
         toolName: tool.name,
         inputSchema: tool.inputSchema,
       }),

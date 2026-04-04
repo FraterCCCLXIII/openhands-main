@@ -12,7 +12,7 @@ import { getRequestOrigin } from "@/src/lib/request-context";
 import type {
   AccessRequestAgentData,
   ContextInvocationResult,
-  FunctionSpec,
+  ToolSpec,
   IntegrationSpec,
 } from "@/src/types/context-layer";
 
@@ -64,8 +64,8 @@ export const CONTEXT_LAYER_MCP_SET_AGENT_ID_TOOL_NAME = "set_agent_id";
 export const CONTEXT_LAYER_MCP_SET_AGENT_CLASS_TOOL_NAME = "set_agent_class";
 export const CONTEXT_LAYER_MCP_SET_AGENT_DATA_TOOL_NAME = "set_agent_data";
 
-const getFunctionAccessMode = (functionSpec: FunctionSpec) =>
-  functionSpec.accessMode ?? (functionSpec.enabled ? "enabled" : "disabled");
+const getToolAccessMode = (toolSpec: ToolSpec) =>
+  toolSpec.accessMode ?? (toolSpec.enabled ? "enabled" : "disabled");
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
@@ -94,13 +94,13 @@ const isMcpToolResult = (value: unknown): value is CallToolResult =>
 
 const buildToolDescription = (
   integration: IntegrationSpec,
-  functionSpec: FunctionSpec,
+  toolSpec: ToolSpec,
   toolName: string,
 ) => {
-  const mode = getFunctionAccessMode(functionSpec);
+  const mode = getToolAccessMode(toolSpec);
   const notes = [
-    functionSpec.description?.trim(),
-    `Invoke ${integration.key}.${functionSpec.name} through the context layer MCP bridge.`,
+    toolSpec.description?.trim(),
+    `Invoke ${integration.key}.${toolSpec.name} through the context layer MCP bridge.`,
     `Pass downstream tool arguments as top-level fields. Reserved fields: contextScopes, contextAgentId, contextAgentClass. If you omit agent identity, calls use the session identity when one is set; otherwise agentId and agentClass remain null. Use ${CONTEXT_LAYER_MCP_SET_AGENT_ID_TOOL_NAME}, ${CONTEXT_LAYER_MCP_SET_AGENT_CLASS_TOOL_NAME}, and ${CONTEXT_LAYER_MCP_SET_AGENT_DATA_TOOL_NAME} to set or clear the session identity or add conversation metadata for approvals.`,
   ].filter(Boolean);
 
@@ -110,8 +110,8 @@ const buildToolDescription = (
     );
   }
 
-  if (toolName !== functionSpec.name) {
-    notes.push(`Original function name: ${functionSpec.name}.`);
+  if (toolName !== toolSpec.name) {
+    notes.push(`Original function name: ${toolSpec.name}.`);
   }
 
   return notes.join(" ");
@@ -329,23 +329,23 @@ export const createContextLayerMcpServer = async ({
       continue;
     }
 
-    for (const functionSpec of Object.values(integration.functions)) {
-      const accessMode = getFunctionAccessMode(functionSpec);
-      if (!functionSpec.enabled || accessMode === "disabled") {
+    for (const toolSpec of Object.values(integration.functions)) {
+      const accessMode = getToolAccessMode(toolSpec);
+      if (!toolSpec.enabled || accessMode === "disabled") {
         continue;
       }
 
       const toolName = buildContextLayerMcpToolName(
         integration.key,
-        functionSpec.name,
+        toolSpec.name,
       );
 
       server.registerTool(
         toolName,
         {
-          title: `${integration.name} · ${functionSpec.name}`,
-          description: buildToolDescription(integration, functionSpec, toolName),
-          inputSchema: buildContextLayerToolInputShape(functionSpec),
+          title: `${integration.name} · ${toolSpec.name}`,
+          description: buildToolDescription(integration, toolSpec, toolName),
+          inputSchema: buildContextLayerToolInputShape(toolSpec),
         },
         async (args) => {
           const invocation = extractInvocationContext(
@@ -358,7 +358,7 @@ export const createContextLayerMcpServer = async ({
               invocation.agentId,
               invocation.agentClass,
               integration.key,
-              functionSpec.name,
+              toolSpec.name,
               invocation.scopes,
               { ownerId },
             );
@@ -370,7 +370,7 @@ export const createContextLayerMcpServer = async ({
                   {
                     type: "text" as const,
                     text: buildApprovalSetupMessage({
-                      functionName: functionSpec.name,
+                      functionName: toolSpec.name,
                       integrationKey: integration.key,
                     }),
                   },
@@ -384,7 +384,7 @@ export const createContextLayerMcpServer = async ({
               invocation.agentId,
               invocation.agentClass,
               integration.key,
-              functionSpec.name,
+              toolSpec.name,
               invocation.payload,
               invocation.scopes,
               {
@@ -406,7 +406,7 @@ export const createContextLayerMcpServer = async ({
                   {
                     type: "text" as const,
                     text: buildApprovalMessage({
-                      functionName: functionSpec.name,
+                      functionName: toolSpec.name,
                       integrationKey: integration.key,
                       approvalUrl,
                     }),

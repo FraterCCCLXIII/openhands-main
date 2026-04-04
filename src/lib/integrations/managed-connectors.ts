@@ -5,9 +5,9 @@ import { getOAuthProviderRegistrationDefaults } from "@/src/lib/integrations/oau
 import type {
   AuthStrategy,
   BuiltInConnectorOption,
-  FunctionSpec,
+  ToolSpec,
   ManagedConnectorDefinition,
-  ManagedConnectorFunctionDefinition,
+  ManagedConnectorToolDefinition,
   ManagedConnectorRecord,
   OAuthProviderCatalogOption,
 } from "@/src/types/context-layer";
@@ -205,9 +205,9 @@ export const managedConnectorToBuiltInOption = (
     apiKeyHeaderName: getConfiguredApiKeyHeaderName(connector.slug),
   });
 
-export const buildManagedConnectorFunctionSpecs = (
-  functions: ManagedConnectorFunctionDefinition[],
-): Record<string, FunctionSpec> =>
+export const buildManagedConnectorToolSpecs = (
+  functions: ManagedConnectorToolDefinition[],
+): Record<string, ToolSpec> =>
   Object.fromEntries(
     functions.map((tool) => [
       tool.name,
@@ -222,14 +222,14 @@ export const buildManagedConnectorFunctionSpecs = (
         config: {
           request: tool.request,
         },
-      } satisfies FunctionSpec,
+      } satisfies ToolSpec,
     ]),
   );
 
 export const buildManagedConnectorFunctions = (
   connector: Pick<ManagedConnectorRecord, "functions">,
-): Record<string, FunctionSpec> =>
-  buildManagedConnectorFunctionSpecs(connector.functions);
+): Record<string, ToolSpec> =>
+  buildManagedConnectorToolSpecs(connector.functions);
 
 export const resolveManagedConnectorCredentials = (
   connector: ConnectorCredentialDefaults,

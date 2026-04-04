@@ -141,9 +141,9 @@ export const IntegrationWizard = ({
         body: JSON.stringify(payload),
       }),
     onSuccess: async (_result, payload) => {
-      const functionCount = Object.keys(payload.functions).length;
+      const toolCount = Object.keys(payload.functions).length;
       onStatus(
-        `Created ${payload.name || payload.key} with ${functionCount} discovered tool${functionCount === 1 ? "" : "s"}.`,
+        `Created ${payload.name || payload.key} with ${toolCount} discovered tool${toolCount === 1 ? "" : "s"}.`,
       );
       await onCreated();
       state.resetAfterCreate();
@@ -231,17 +231,17 @@ export const IntegrationWizard = ({
           discovery={state.discovery}
           draftKey={state.draft.key}
           draftName={integrationDisplayName}
-          expandedFunctions={state.expandedFunctions}
-          filteredReviewedFunctions={state.filteredReviewedFunctions}
-          functionModes={state.functionModes}
-          functionSearch={state.functionSearch}
-          hasMatchingFunctions={state.hasMatchingFunctions}
+          expandedTools={state.expandedTools}
+          filteredReviewedTools={state.filteredReviewedTools}
+          toolModes={state.toolModes}
+          toolSearch={state.toolSearch}
+          hasMatchingTools={state.hasMatchingTools}
           kind={state.draft.kind ?? "built_in"}
-          matchingFunctionNames={state.matchingFunctionNames}
-          reviewedFunctions={state.reviewedFunctions}
-          selectedFunctionCount={state.selectedFunctionCount}
-          selectedFunctionNames={state.selectedFunctionNames}
-          selectedFunctions={state.selectedFunctions}
+          matchingToolNames={state.matchingToolNames}
+          reviewedTools={state.reviewedTools}
+          selectedToolCount={state.selectedToolCount}
+          selectedToolNames={state.selectedToolNames}
+          selectedTools={state.selectedTools}
           selectedMatchingCount={state.selectedMatchingCount}
           onBack={() => state.setStep(2)}
           onCreate={() =>
@@ -249,22 +249,22 @@ export const IntegrationWizard = ({
               buildCreatePayload(
                 state.draft,
                 state.discovery as DiscoveryResponse,
-                state.functionModes,
+                state.toolModes,
                 state.selectedConnector,
               ),
             )
           }
-          onFunctionSearchChange={state.setFunctionSearch}
-          onSetAccessModeForFunctions={state.setAccessModeForFunctions}
-          onSetFunctionMode={(name, nextMode) =>
-            state.setFunctionModes((current) => ({
+          onToolSearchChange={state.setToolSearch}
+          onSetAccessModeForTools={state.setAccessModeForTools}
+          onSetToolMode={(name, nextMode) =>
+            state.setToolModes((current) => ({
               ...current,
               [name]: nextMode,
             }))
           }
-          onSetSelectedFunctions={state.setSelectedFunctions}
-          onSetSelectedStateForFunctions={state.setSelectedStateForFunctions}
-          onToggleFunctionExpanded={state.toggleFunctionExpanded}
+          onSetSelectedTools={state.setSelectedTools}
+          onSetSelectedStateForTools={state.setSelectedStateForTools}
+          onToggleToolExpanded={state.toggleToolExpanded}
         />
       ) : null}
     </Card>

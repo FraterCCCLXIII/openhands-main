@@ -1,7 +1,7 @@
 import { cn } from "@/src/lib/utils";
-import type { FunctionAccessMode, FunctionSpec } from "@/src/types/context-layer";
+import type { ToolAccessMode, ToolSpec } from "@/src/types/context-layer";
 
-export const accessModeLabel = (mode: FunctionAccessMode) => {
+export const accessModeLabel = (mode: ToolAccessMode) => {
   switch (mode) {
     case "enabled":
       return "Enabled";
@@ -12,14 +12,15 @@ export const accessModeLabel = (mode: FunctionAccessMode) => {
   }
 };
 
-export const getFunctionAccessMode = (
-  functionSpec: FunctionSpec,
-): FunctionAccessMode =>
-  functionSpec.accessMode ?? (functionSpec.enabled ? "enabled" : "disabled");
+export const getToolAccessMode = (toolSpec: ToolSpec): ToolAccessMode =>
+  toolSpec.accessMode ?? (toolSpec.enabled ? "enabled" : "disabled");
 
-export const matchesFunctionSearch = (
+export const getFunctionAccessMode = (toolSpec: ToolSpec): ToolAccessMode =>
+  getToolAccessMode(toolSpec);
+
+export const matchesToolSearch = (
   name: string,
-  functionSpec: FunctionSpec,
+  toolSpec: ToolSpec,
   query: string,
 ) => {
   const normalizedQuery = query.trim().toLowerCase();
@@ -27,16 +28,18 @@ export const matchesFunctionSearch = (
     return true;
   }
 
-  return [
-    name,
-    functionSpec.description,
-    functionSpec.defaultScopes.join(" "),
-  ]
+  return [name, toolSpec.description, toolSpec.defaultScopes.join(" ")]
     .filter((value): value is string => Boolean(value))
     .some((value) => value.toLowerCase().includes(normalizedQuery));
 };
 
-export const accessModeButtonClassName: Record<FunctionAccessMode, string> = {
+export const matchesFunctionSearch = (
+  name: string,
+  toolSpec: ToolSpec,
+  query: string,
+) => matchesToolSearch(name, toolSpec, query);
+
+export const accessModeButtonClassName: Record<ToolAccessMode, string> = {
   enabled:
     "border-[color:rgba(165,231,94,0.3)] bg-[color:rgba(165,231,94,0.12)] text-[var(--color-success)] hover:bg-[color:rgba(165,231,94,0.18)]",
   approval_required:
@@ -45,7 +48,7 @@ export const accessModeButtonClassName: Record<FunctionAccessMode, string> = {
     "border-[color:rgba(231,106,94,0.3)] bg-[color:rgba(231,106,94,0.12)] text-[var(--color-danger)] hover:bg-[color:rgba(231,106,94,0.18)]",
 };
 
-const accessModeSegmentClassName: Record<FunctionAccessMode, string> = {
+const accessModeSegmentClassName: Record<ToolAccessMode, string> = {
   enabled: "bg-[color:rgba(165,231,94,0.16)] text-[var(--color-success)]",
   approval_required:
     "bg-[color:rgba(217,181,90,0.16)] text-[var(--color-warning)]",
@@ -53,7 +56,7 @@ const accessModeSegmentClassName: Record<FunctionAccessMode, string> = {
 };
 
 const accessModeOptions: Array<{
-  value: FunctionAccessMode;
+  value: ToolAccessMode;
   label: string;
 }> = [
   { value: "enabled", label: "Enabled" },
@@ -62,18 +65,18 @@ const accessModeOptions: Array<{
 ];
 
 export const AccessModeSlider = ({
-  functionName,
+  toolName,
   mode,
   onChange,
 }: {
-  functionName: string;
-  mode: FunctionAccessMode;
-  onChange: (mode: FunctionAccessMode) => void;
+  toolName: string;
+  mode: ToolAccessMode;
+  onChange: (mode: ToolAccessMode) => void;
 }) => (
   <div
     className="inline-flex flex-wrap items-center gap-1 rounded-full border border-[var(--color-border)] bg-[var(--color-bg-input)] p-1"
     role="group"
-    aria-label={`Default access for ${functionName}`}
+    aria-label={`Default access for ${toolName}`}
     data-access-mode={mode}
   >
     {accessModeOptions.map((option) => {
@@ -89,7 +92,7 @@ export const AccessModeSlider = ({
               : "text-[var(--color-text-base)] hover:bg-[var(--color-bg-active)] hover:text-white",
           )}
           aria-pressed={active}
-          aria-label={`${accessModeLabel(option.value)} access for ${functionName}`}
+          aria-label={`${accessModeLabel(option.value)} access for ${toolName}`}
           onClick={() => onChange(option.value)}
         >
           {option.label}

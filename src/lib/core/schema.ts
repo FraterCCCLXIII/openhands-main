@@ -20,7 +20,7 @@ const nullableAgentIdentitySchema = z.preprocess(
   z.string().min(1).nullable(),
 );
 
-export const functionSpecSchema = z.object({
+export const toolSpecSchema = z.object({
   name: z.string().min(1),
   description: z.string().optional().default(""),
   enabled: z.boolean().default(true),
@@ -33,6 +33,8 @@ export const functionSpecSchema = z.object({
   config: z.record(z.string(), z.unknown()).default({}),
   mockResponse: z.record(z.string(), z.unknown()).optional(),
 });
+
+export const functionSpecSchema = toolSpecSchema;
 
 export const integrationSpecSchema = z.object({
   key: z.string().min(1),
@@ -111,7 +113,8 @@ export const notificationRecordSchema = z.object({
 });
 
 export const integrationCreateSchema = integrationSpecSchema;
-export const functionCreateSchema = functionSpecSchema;
+export const toolCreateSchema = toolSpecSchema;
+export const functionCreateSchema = toolCreateSchema;
 export const policyUpdateSchema = z.object({
   rules: z.array(policyRuleSchema),
 });

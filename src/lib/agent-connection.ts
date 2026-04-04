@@ -7,7 +7,7 @@ import {
 import {
   buildExamplePayload,
   buildPermissionNote,
-  listExampleFunctions,
+  listExampleTools,
   selectExampleIntegration,
 } from "@/src/lib/tool-examples";
 import type { IntegrationSpec } from "@/src/types/context-layer";
@@ -19,7 +19,7 @@ export const OPENHANDS_CLOUD_SHTTP_MCP_URL =
 export interface AgentConnectionGuide {
   endpoint: string;
   integrationKey: string;
-  functionName: string;
+  toolName: string;
   mcpEndpoint: string;
   mcpToolName: string;
   mcpSetAgentIdToolName: string;
@@ -52,23 +52,23 @@ export const buildAgentConnectionGuide = ({
 }): AgentConnectionGuide => {
   const sampleIntegrationSelection = selectExampleIntegration(integrations);
   const sampleIntegration = sampleIntegrationSelection?.integration ?? integrations[0];
-  const sampleFunction = sampleIntegrationSelection
-    ? sampleIntegrationSelection.functions[0]
+  const sampleTool = sampleIntegrationSelection
+    ? sampleIntegrationSelection.tools[0]
     : sampleIntegration
-      ? listExampleFunctions(sampleIntegration)[0] ?? Object.values(sampleIntegration.functions)[0]
+      ? listExampleTools(sampleIntegration)[0] ?? Object.values(sampleIntegration.functions)[0]
       : undefined;
   const integrationKey = sampleIntegration?.key ?? "your-integration";
-  const functionName = sampleFunction?.name ?? "your-function";
-  const defaultScopes = sampleFunction?.defaultScopes ?? [];
+  const toolName = sampleTool?.name ?? "your-tool";
+  const defaultScopes = sampleTool?.defaultScopes ?? [];
   const requestPayload = {
     scopes: defaultScopes,
-    payload: sampleFunction ? buildExamplePayload(sampleFunction) : {},
+    payload: sampleTool ? buildExamplePayload(sampleTool) : {},
   };
   const normalizedBaseUrl = baseUrl.replace(/\/$/, "");
-  const endpoint = `${normalizedBaseUrl}/api/context/${integrationKey}/${functionName}`;
+  const endpoint = `${normalizedBaseUrl}/api/context/${integrationKey}/${toolName}`;
   const openApiSchemaEndpoint = `${normalizedBaseUrl}/api/context/openapi`;
   const mcpEndpoint = `${normalizedBaseUrl}/api/mcp`;
-  const mcpToolName = buildContextLayerMcpToolName(integrationKey, functionName);
+  const mcpToolName = buildContextLayerMcpToolName(integrationKey, toolName);
   const mcpSetAgentIdToolName = CONTEXT_LAYER_MCP_SET_AGENT_ID_TOOL_NAME;
   const mcpSetAgentClassToolName = CONTEXT_LAYER_MCP_SET_AGENT_CLASS_TOOL_NAME;
   const mcpSetAgentDataToolName = CONTEXT_LAYER_MCP_SET_AGENT_DATA_TOOL_NAME;
@@ -127,7 +127,7 @@ const result = await response.json();`;
   return {
     endpoint,
     integrationKey,
-    functionName,
+    toolName,
     mcpEndpoint,
     mcpToolName,
     mcpSetAgentIdToolName,
@@ -142,6 +142,6 @@ const result = await response.json();`;
     openApiCurlExample,
     mcpConfigExample,
     mcpSessionSetupExample,
-    permissionNote: buildPermissionNote(sampleFunction),
+    permissionNote: buildPermissionNote(sampleTool),
   };
 };

@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import type { FunctionSpec, GenericHttpRequestTemplate } from "@/src/types/context-layer";
+import type { ToolSpec, GenericHttpRequestTemplate } from "@/src/types/context-layer";
 
 const TEMPLATE = /\{\{\s*([a-zA-Z0-9_.]+)\s*\}\}/g;
 
@@ -162,10 +162,10 @@ export const CONTEXT_RESERVED_TOOL_INPUT_SHAPE = {
   contextScopes: z.array(z.string()).default([]),
 };
 
-export const buildContextLayerToolInputShape = (functionSpec: FunctionSpec) => {
-  const jsonSchemaShape = buildShapeFromJsonSchema(functionSpec.config.inputSchema as JsonSchema | undefined);
+export const buildContextLayerToolInputShape = (toolSpec: ToolSpec) => {
+  const jsonSchemaShape = buildShapeFromJsonSchema(toolSpec.config.inputSchema as JsonSchema | undefined);
   const requestTemplateShape = buildShapeFromRequestTemplate(
-    functionSpec.config.request as GenericHttpRequestTemplate | undefined,
+    toolSpec.config.request as GenericHttpRequestTemplate | undefined,
   );
 
   return z

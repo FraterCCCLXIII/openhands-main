@@ -29,8 +29,8 @@ import type {
   AgentClassPolicy,
   ContextInvocationResult,
   DisableUnusedFunctionsResult,
-  FunctionAccessMode,
-  FunctionSpec,
+  ToolAccessMode,
+  ToolSpec,
   GenericOAuthConfig,
   IntegrationConnectionRecord,
   IntegrationConnectionStatus,
@@ -61,13 +61,13 @@ const sameScopes = (left: string[], right: string[]) => {
   );
 };
 
-const getFunctionAccessMode = (
-  functionSpec: FunctionSpec,
-): FunctionAccessMode =>
+const getToolAccessMode = (
+  functionSpec: ToolSpec,
+): ToolAccessMode =>
   functionSpec.accessMode ?? (functionSpec.enabled ? "enabled" : "disabled");
 
-const normalizeFunctionSpec = (functionSpec: FunctionSpec): FunctionSpec => {
-  const accessMode = getFunctionAccessMode(functionSpec);
+const normalizeToolSpec = (functionSpec: ToolSpec): ToolSpec => {
+  const accessMode = getToolAccessMode(functionSpec);
 
   return {
     ...functionSpec,
@@ -76,11 +76,11 @@ const normalizeFunctionSpec = (functionSpec: FunctionSpec): FunctionSpec => {
   };
 };
 
-const normalizeFunctions = (functions: Record<string, FunctionSpec>) =>
+const normalizeTools = (functions: Record<string, ToolSpec>) =>
   Object.fromEntries(
     Object.entries(functions).map(([name, functionSpec]) => [
       name,
-      normalizeFunctionSpec(functionSpec),
+      normalizeToolSpec(functionSpec),
     ]),
   );
 
@@ -326,7 +326,7 @@ export class ContextLayerService {
       let changed = false;
 
       for (const [functionName, functionSpec] of Object.entries(integration.functions)) {
-        if (getFunctionAccessMode(functionSpec) === "disabled") {
+        if (getToolAccessMode(functionSpec) === "disabled") {
           continue;
         }
 
@@ -919,7 +919,7 @@ export class ContextLayerService {
   async registerOwnerIntegration(
     ownerId: string,
     spec: Omit<IntegrationSpec, "functions"> & {
-      functions?: Record<string, FunctionSpec>;
+      functions?: Record<string, ToolSpec>;
     },
   ) {
     await this.initialize();
@@ -933,7 +933,7 @@ export class ContextLayerService {
 
     const integration: IntegrationSpec = {
       ...spec,
-      functions: normalizeFunctions(spec.functions ?? {}),
+      functions: normalizeTools(spec.functions ?? {}),
     };
     return this.repository.upsertOwnerIntegration(
       normalizeAgentApiKeyOwner(ownerId),
@@ -944,14 +944,14 @@ export class ContextLayerService {
   async addOwnerFunction(
     ownerId: string,
     integrationKey: string,
-    functionSpec: FunctionSpec,
+    functionSpec: ToolSpec,
   ) {
     const normalizedOwnerId = normalizeAgentApiKeyOwner(ownerId);
     const integration = await this.getMutableOwnerIntegration(
       normalizedOwnerId,
       integrationKey,
     );
-    integration.functions[functionSpec.name] = normalizeFunctionSpec(functionSpec);
+    integration.functions[functionSpec.name] = normalizeToolSpec(functionSpec);
     await this.repository.upsertOwnerIntegration(normalizedOwnerId, integration);
     return integration.functions[functionSpec.name];
   }
@@ -993,7 +993,7 @@ export class ContextLayerService {
     const accessMode = enabled
       ? functionSpec.accessMode === "disabled"
         ? "enabled"
-        : getFunctionAccessMode(functionSpec)
+        : getToolAccessMode(functionSpec)
       : "disabled";
 
     functionSpec.enabled = accessMode !== "disabled";
@@ -1002,11 +1002,11 @@ export class ContextLayerService {
     return functionSpec;
   }
 
-  async setOwnerFunctionAccessMode(
+  async setOwnerToolAccessMode(
     ownerId: string,
     integrationKey: string,
     functionName: string,
-    accessMode: FunctionAccessMode,
+    accessMode: ToolAccessMode,
   ) {
     const normalizedOwnerId = normalizeAgentApiKeyOwner(ownerId);
     const integration = await this.getMutableOwnerIntegration(
@@ -1023,11 +1023,24 @@ export class ContextLayerService {
     }
 
     functionSpec.accessMode = accessMode;
-    functionSpec.enabled = accessMode !== 'disabled';
+    functionSpec.enabled = accessMode !== "disabled";
     await this.repository.upsertOwnerIntegration(normalizedOwnerId, integration);
     return functionSpec;
   }
 
+  async setOwnerFunctionAccessMode(
+    ownerId: string,
+    integrationKey: string,
+    functionName: string,
+    accessMode: ToolAccessMode,
+  ) {
+    return this.setOwnerToolAccessMode(
+      ownerId,
+      integrationKey,
+      functionName,
+      accessMode,
+    );
+  }
 
   async upsertAgentPolicy(agentClass: string, rules: PolicyRule[]) {
     await this.initialize();
@@ -1062,7 +1075,7 @@ export class ContextLayerService {
     const effectiveScopes = unique(
       requestedScopes.length > 0 ? requestedScopes : functionSpec.defaultScopes,
     );
-    const accessMode = getFunctionAccessMode(functionSpec);
+    const accessMode = getToolAccessMode(functionSpec);
 
     if (!integration.enabled) {
       return {
@@ -1257,7 +1270,7 @@ export class ContextLayerService {
       { ownerId: options.ownerId },
     );
     if (!decision.allowed) {
-      if (getFunctionAccessMode(functionSpec) === "approval_required") {
+      if (getToolAccessMode(functionSpec) === "approval_required") {
         await this.runOptionalSideEffect(
           "create a pending access request",
           async () => {
@@ -1307,13 +1320,13 @@ export class ContextLayerService {
           ? await this.adapters.invoke("mock", {
               agentId,
               integration: invocationIntegration,
-              functionSpec,
+              toolSpec: functionSpec,
               payload,
             })
           : await this.adapters.invoke(invocationIntegration.provider, {
               agentId,
               integration: invocationIntegration,
-              functionSpec,
+              toolSpec: functionSpec,
               payload,
             });
 

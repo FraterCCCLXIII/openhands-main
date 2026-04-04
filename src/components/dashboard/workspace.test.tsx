@@ -866,13 +866,13 @@ describe("DashboardWorkspace", () => {
 
     const getVisibleFunctionNames = () =>
       Array.from(
-        container.querySelectorAll('[data-integration-key="github"] [data-function-key]'),
-      ).map((row) => row.getAttribute("data-function-name"));
+        container.querySelectorAll('[data-integration-key="github"] [data-tool-key]'),
+      ).map((row) => row.getAttribute("data-tool-name"));
 
     const getFunctionMode = (name: string) =>
       container
         .querySelector(
-          `[data-function-key="github:${name}"] [data-access-mode]`,
+          `[data-tool-key="github:${name}"] [data-access-mode]`,
         )
         ?.getAttribute("data-access-mode");
 

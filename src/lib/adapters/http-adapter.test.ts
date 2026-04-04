@@ -22,7 +22,7 @@ const buildInput = (): AdapterInvocationInput => ({
     },
     functions: {},
   },
-  functionSpec: {
+  toolSpec: {
     name: "speech_to_text",
     description: "Transcribe uploaded audio.",
     enabled: true,

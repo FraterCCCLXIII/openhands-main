@@ -12,10 +12,10 @@ import { ProfileSection } from "@/src/components/dashboard/sections/profile-sect
 import { getConnectorLogoUrl } from "@/src/components/dashboard/shared";
 import {
   buildConnectorMap,
-  buildFunctionAccessPatch,
+  buildToolAccessPatch,
   buildInstalledIntegrationKeys,
   buildMarketplaceConnectors,
-  buildUnusedFunctionCandidates,
+  buildUnusedToolCandidates,
   countApprovalRequestsByStatus,
   filterIntegrationsForDisplay,
   matchesAccessRequestFilter,
@@ -48,10 +48,10 @@ import type {
   AdminApiKeyStatus,
   BuiltInConnectorOption,
   DisableUnusedFunctionsResult,
-  FunctionAccessMode,
+  ToolAccessMode,
   IntegrationSpec,
   NotificationRecord,
-  UnusedFunctionWindowUnit,
+  UnusedToolWindowUnit,
   UserApiKeyStatus,
 } from "@/src/types/context-layer";
 
@@ -93,16 +93,14 @@ export const DashboardWorkspace = ({
   const [showIntegrationWizard, setShowIntegrationWizard] = useState(false);
   const [addIntegrationSearch, setAddIntegrationSearch] = useState("");
   const [integrationSearch, setIntegrationSearch] = useState("");
-  const [hideDisabledSkills, setHideDisabledSkills] = useState(true);
+  const [hideDisabledTools, setHideDisabledTools] = useState(true);
   const [unusedThresholdValue, setUnusedThresholdValue] = useState("30");
   const [unusedThresholdUnit, setUnusedThresholdUnit] =
-    useState<UnusedFunctionWindowUnit>("days");
+    useState<UnusedToolWindowUnit>("days");
   const [expandedIntegrations, setExpandedIntegrations] = useState<
     Record<string, boolean>
   >({});
-  const [expandedFunctions, setExpandedFunctions] = useState<
-    Record<string, boolean>
-  >({});
+  const [expandedTools, setExpandedTools] = useState<Record<string, boolean>>({});
   const [approvalSearch, setApprovalSearch] = useState("");
   const [approvalFilter, setApprovalFilter] =
     useState<ApprovalRequestFilter>("pending");
@@ -195,7 +193,7 @@ export const DashboardWorkspace = ({
   const bulkDisableMutation = useMutation({
     mutationFn: async (payload: {
       thresholdValue: number;
-      thresholdUnit: UnusedFunctionWindowUnit;
+      thresholdUnit: UnusedToolWindowUnit;
     }) =>
       fetchJson<DisableUnusedFunctionsResult>("/api/integrations/disable-unused", {
         method: "POST",
@@ -268,7 +266,7 @@ export const DashboardWorkspace = ({
   const enabledIntegrationCount = integrations.filter(
     (integration) => integration.enabled,
   ).length;
-  const discoveredFunctionCount = integrations.reduce(
+  const discoveredToolCount = integrations.reduce(
     (count, integration) => count + Object.keys(integration.functions).length,
     0,
   );
@@ -348,12 +346,12 @@ export const DashboardWorkspace = ({
       filterIntegrationsForDisplay({
         integrations,
         integrationSearch,
-        hideDisabledSkills,
+        hideDisabledTools,
       }),
-    [hideDisabledSkills, integrationSearch, integrations],
+    [hideDisabledTools, integrationSearch, integrations],
   );
-  const visibleFunctionCount = filteredIntegrations.reduce(
-    (count, entry) => count + entry.visibleFunctions.length,
+  const visibleToolCount = filteredIntegrations.reduce(
+    (count, entry) => count + entry.visibleTools.length,
     0,
   );
   const unusedCutoffDate = useMemo(
@@ -365,9 +363,9 @@ export const DashboardWorkspace = ({
       ),
     [normalizedUnusedThresholdValue, unusedThresholdUnit],
   );
-  const unusedFunctionCandidates = useMemo(
+  const unusedToolCandidates = useMemo(
     () =>
-      buildUnusedFunctionCandidates({
+      buildUnusedToolCandidates({
         integrations,
         cutoffDate: unusedCutoffDate,
       }),
@@ -402,20 +400,20 @@ export const DashboardWorkspace = ({
     }));
   };
 
-  const toggleFunctionExpanded = (functionKey: string) => {
-    setExpandedFunctions((current) => ({
+  const toggleToolExpanded = (toolKey: string) => {
+    setExpandedTools((current) => ({
       ...current,
-      [functionKey]: !current[functionKey],
+      [toolKey]: !current[toolKey],
     }));
   };
 
-  const updateFunctionAccessMode = (
+  const updateToolAccessMode = (
     integrationKey: string,
-    functionName: string,
-    accessMode: FunctionAccessMode,
+    toolName: string,
+    accessMode: ToolAccessMode,
   ) => {
     actionMutation.mutate(
-      buildFunctionAccessPatch(integrationKey, functionName, accessMode),
+      buildToolAccessPatch(integrationKey, toolName, accessMode),
     );
   };
 
@@ -423,8 +421,8 @@ export const DashboardWorkspace = ({
     setUnusedThresholdValue(String(normalizedUnusedThresholdValue));
   };
 
-  const handleDisableUnusedFunctions = () => {
-    if (unusedFunctionCandidates.length === 0) {
+  const handleDisableUnusedTools = () => {
+    if (unusedToolCandidates.length === 0) {
       setStatusMessage("No tracked tools matched the selected unused window.");
       return;
     }
@@ -433,7 +431,7 @@ export const DashboardWorkspace = ({
       typeof window !== "undefined" &&
       typeof window.confirm === "function" &&
       !window.confirm(
-        `Disable ${unusedFunctionCandidates.length} tracked ${unusedFunctionCandidates.length === 1 ? "tool" : "tools"} that have not been used since ${unusedCutoffDate.toLocaleDateString()}?`,
+        `Disable ${unusedToolCandidates.length} tracked ${unusedToolCandidates.length === 1 ? "tool" : "tools"} that have not been used since ${unusedCutoffDate.toLocaleDateString()}?`,
       )
     ) {
       return;
@@ -557,7 +555,7 @@ export const DashboardWorkspace = ({
             userEmail={userEmail}
             badges={[
               <Badge key="pending">{pendingAccessRequests.length} pending</Badge>,
-              <Badge key="functions">{discoveredFunctionCount} tools</Badge>,
+              <Badge key="functions">{discoveredToolCount} tools</Badge>,
             ]}
             action={<DashboardSignOutButton />}
           />
@@ -638,12 +636,12 @@ export const DashboardWorkspace = ({
                 : null
             }
             builtInConnectorsPending={builtInConnectorsQuery.isPending}
-            expandedFunctions={expandedFunctions}
+            expandedTools={expandedTools}
             expandedIntegrations={expandedIntegrations}
             filteredIntegrations={filteredIntegrations}
             handleDeleteIntegration={handleDeleteIntegration}
-            handleDisableUnusedFunctions={handleDisableUnusedFunctions}
-            hideDisabledSkills={hideDisabledSkills}
+            handleDisableUnusedTools={handleDisableUnusedTools}
+            hideDisabledTools={hideDisabledTools}
             integrationCount={integrations.length}
             integrationSearch={integrationSearch}
             isActionPending={actionMutation.isPending}
@@ -652,10 +650,10 @@ export const DashboardWorkspace = ({
             onCreated={handleIntegrationCreated}
             onOpenIntegrationWizard={openIntegrationWizard}
             onStatus={setStatusMessage}
-            onToggleFunctionExpanded={toggleFunctionExpanded}
+            onToggleToolExpanded={toggleToolExpanded}
             onToggleIntegrationEnabled={handleToggleIntegrationEnabled}
             onToggleIntegrationExpanded={toggleIntegrationExpanded}
-            onUpdateFunctionAccessMode={updateFunctionAccessMode}
+            onUpdateToolAccessMode={updateToolAccessMode}
             onUnusedThresholdBlur={handleUnusedThresholdBlur}
             onUnusedThresholdUnitChange={setUnusedThresholdUnit}
             onUnusedThresholdValueChange={setUnusedThresholdValue}
@@ -667,14 +665,14 @@ export const DashboardWorkspace = ({
               })
             }
             setAddIntegrationSearch={setAddIntegrationSearch}
-            setHideDisabledSkills={setHideDisabledSkills}
+            setHideDisabledTools={setHideDisabledTools}
             setIntegrationSearch={setIntegrationSearch}
             showIntegrationWizard={showIntegrationWizard}
             unusedCutoffDateLabel={unusedCutoffDate.toLocaleDateString()}
-            unusedFunctionCandidateCount={unusedFunctionCandidates.length}
+            unusedToolCandidateCount={unusedToolCandidates.length}
             unusedThresholdUnit={unusedThresholdUnit}
             unusedThresholdValue={unusedThresholdValue}
-            visibleFunctionCount={visibleFunctionCount}
+            visibleToolCount={visibleToolCount}
           />
         ) : null}
 

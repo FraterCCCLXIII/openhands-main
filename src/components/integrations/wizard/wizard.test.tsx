@@ -618,8 +618,8 @@ describe("IntegrationWizard", () => {
     };
 
     const getVisibleFunctionNames = () =>
-      Array.from(container.querySelectorAll("[data-function-name]")).map((row) =>
-        row.getAttribute("data-function-name"),
+      Array.from(container.querySelectorAll("[data-tool-name]")).map((row) =>
+        row.getAttribute("data-tool-name"),
       );
 
     const getFunctionCheckbox = (name: string) =>
@@ -629,7 +629,7 @@ describe("IntegrationWizard", () => {
 
     const getFunctionMode = (name: string) =>
       container
-        .querySelector(`[data-function-name="${name}"] [data-access-mode]`)
+        .querySelector(`[data-tool-name="${name}"] [data-access-mode]`)
         ?.getAttribute("data-access-mode");
 
     await clickButton("Discover tools");

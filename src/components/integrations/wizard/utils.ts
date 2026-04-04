@@ -1,12 +1,12 @@
 import {
-  getFunctionAccessMode,
-  matchesFunctionSearch,
+  getToolAccessMode,
+  matchesToolSearch,
 } from "@/src/components/integrations/function-access-controls";
 import type {
   AuthStrategy,
   BuiltInConnectorOption,
-  FunctionAccessMode,
-  FunctionSpec,
+  ToolAccessMode,
+  ToolSpec,
 } from "@/src/types/context-layer";
 
 export type IntegrationKind = "built_in" | "mcp";
@@ -25,7 +25,7 @@ export interface DiscoveryResponse {
   authStrategy: AuthStrategy;
   config: Record<string, unknown>;
   credentials: Record<string, unknown>;
-  functions: Record<string, FunctionSpec>;
+  functions: Record<string, ToolSpec>;
 }
 
 export interface WizardDraft {
@@ -187,7 +187,7 @@ export const buildDiscoverPayload = (
 export const buildCreatePayload = (
   draft: WizardDraft,
   discovery: DiscoveryResponse,
-  functionModes: Record<string, FunctionAccessMode>,
+  toolModes: Record<string, ToolAccessMode>,
   connector: BuiltInConnectorOption | null,
 ) => {
   if (!draft.kind) {
@@ -216,12 +216,12 @@ export const buildCreatePayload = (
     config: discovery.config,
     credentials: discovery.credentials,
     functions: Object.fromEntries(
-      Object.entries(discovery.functions).map(([name, functionSpec]) => {
-        const accessMode = functionModes[name] ?? getFunctionAccessMode(functionSpec);
+      Object.entries(discovery.functions).map(([name, toolSpec]) => {
+        const accessMode = toolModes[name] ?? getToolAccessMode(toolSpec);
         return [
           name,
           {
-            ...functionSpec,
+            ...toolSpec,
             accessMode,
             enabled: accessMode !== "disabled",
           },
@@ -231,18 +231,18 @@ export const buildCreatePayload = (
   };
 };
 
-export const getReviewedFunctions = (discovery: DiscoveryResponse | null) =>
+export const getReviewedTools = (discovery: DiscoveryResponse | null) =>
   Object.entries(discovery?.functions ?? {}).sort(([leftName], [rightName]) =>
     leftName.localeCompare(rightName),
   );
 
-export const filterReviewedFunctions = ({
-  functionSearch,
-  reviewedFunctions,
+export const filterReviewedTools = ({
+  toolSearch,
+  reviewedTools,
 }: {
-  functionSearch: string;
-  reviewedFunctions: Array<[string, FunctionSpec]>;
+  toolSearch: string;
+  reviewedTools: Array<[string, ToolSpec]>;
 }) =>
-  reviewedFunctions.filter(([name, functionSpec]) =>
-    matchesFunctionSearch(name, functionSpec, functionSearch),
+  reviewedTools.filter(([name, toolSpec]) =>
+    matchesToolSearch(name, toolSpec, toolSearch),
   );

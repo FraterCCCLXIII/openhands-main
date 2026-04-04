@@ -145,7 +145,7 @@ describe("dashboard-workspace-utils", () => {
     const filtered = filterIntegrationsForDisplay({
       integrations,
       integrationSearch: "delete",
-      hideDisabledSkills: true,
+      hideDisabledTools: true,
     });
 
     expect(filtered).toHaveLength(0);
@@ -153,11 +153,11 @@ describe("dashboard-workspace-utils", () => {
     const visible = filterIntegrationsForDisplay({
       integrations,
       integrationSearch: "search",
-      hideDisabledSkills: true,
+      hideDisabledTools: true,
     });
 
     expect(visible).toHaveLength(1);
-    expect(visible[0]?.visibleFunctions.map((functionSpec) => functionSpec.name)).toEqual([
+    expect(visible[0]?.visibleTools.map((toolSpec) => toolSpec.name)).toEqual([
       "slack_search_public",
     ]);
   });

@@ -167,13 +167,13 @@ describe("agent-connection", () => {
     });
 
     expect(guide.endpoint).toBe(
-      "http://localhost:12000/api/context/your-integration/your-function",
+      "http://localhost:12000/api/context/your-integration/your-tool",
     );
     expect(guide.openApiSchemaEndpoint).toBe(
       "http://localhost:12000/api/context/openapi",
     );
-    expect(guide.mcpToolName).toBe("your-integration__your-function");
-    expect(guide.fetchExample).toContain("your-function");
+    expect(guide.mcpToolName).toBe("your-integration__your-tool");
+    expect(guide.fetchExample).toContain("your-tool");
     expect(guide.skillEndpoint).toBe("http://localhost:12000/api/context/skill");
     expect(guide.mcpSessionSetupExample).toContain("agentId and agentClass unset (null)");
     expect(guide.mcpSessionSetupExample).toContain("set_agent_id");

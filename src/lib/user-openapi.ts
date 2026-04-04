@@ -5,7 +5,7 @@ import type { IntegrationSpec } from "@/src/types/context-layer";
 
 const USER_OPENAPI_VERSION = "3.0.3";
 
-const functionAccessModeSchema = z.enum([
+const toolAccessModeSchema = z.enum([
   "enabled",
   "disabled",
   "approval_required",
@@ -28,11 +28,11 @@ const authStrategySchema = z.enum([
   "mcp_session",
 ]);
 
-const functionSpecSchema = z.object({
+const toolSpecSchema = z.object({
   name: z.string(),
   description: z.string().optional(),
   enabled: z.boolean(),
-  accessMode: functionAccessModeSchema.optional(),
+  accessMode: toolAccessModeSchema.optional(),
   fineGrainedPermissions: z.boolean(),
   defaultScopes: z.array(z.string()),
   executionMode: z.enum(["provider", "mock"]),
@@ -50,7 +50,7 @@ const integrationSpecSchema = z.object({
   fineGrainedPermissions: z.boolean(),
   config: z.record(z.string(), z.unknown()),
   credentials: z.record(z.string(), z.unknown()),
-  functions: z.record(z.string(), functionSpecSchema),
+  functions: z.record(z.string(), toolSpecSchema),
 });
 
 const accessRequestSchema = z.object({
@@ -82,8 +82,8 @@ const temporaryGrantSchema = z.object({
   expiresAt: z.string(),
 });
 
-const updateFunctionAccessRequestSchema = z.object({
-  accessMode: functionAccessModeSchema,
+const updateToolAccessRequestSchema = z.object({
+  accessMode: toolAccessModeSchema,
 });
 
 const approveAccessRequestSchema = z.object({
@@ -137,13 +137,12 @@ export const buildUserOpenApiDocument = ({
   integrations: IntegrationSpec[];
   isAdmin: boolean;
 }) => {
-  const exampleIntegration = selectExampleIntegration(integrations)?.integration;
-  const exampleFunction = exampleIntegration
-    ? Object.values(exampleIntegration.functions).find((candidate) => candidate.enabled)
-    : undefined;
+  const exampleSelection = selectExampleIntegration(integrations);
+  const exampleIntegration = exampleSelection?.integration;
+  const exampleTool = exampleSelection?.tools[0];
 
   const integrationKeyExample = exampleIntegration?.key ?? "integration-key";
-  const functionNameExample = exampleFunction?.name ?? "function-name";
+  const toolNameExample = exampleTool?.name ?? "tool-name";
 
   const paths: Record<string, Record<string, unknown>> = {
     "/api/user/integrations": {
@@ -173,7 +172,7 @@ export const buildUserOpenApiDocument = ({
     "/api/user/integrations/{integrationKey}/functions/{functionName}": {
       patch: {
         tags: ["User Integrations"],
-        operationId: "updateUserFunctionAccessMode",
+        operationId: "updateUserToolAccessMode",
         summary: "Update a tool access mode",
         description:
           "Updates the authenticated user's stored access mode for one installed integration tool.",
@@ -191,7 +190,7 @@ export const buildUserOpenApiDocument = ({
             in: "path",
             required: true,
             schema: { type: "string" },
-            example: functionNameExample,
+            example: toolNameExample,
           },
         ],
         requestBody: {
@@ -199,7 +198,7 @@ export const buildUserOpenApiDocument = ({
           content: {
             "application/json": {
               schema: {
-                $ref: "#/components/schemas/UpdateFunctionAccessRequest",
+                $ref: "#/components/schemas/UpdateToolAccessRequest",
               },
               examples: {
                 default: {
@@ -217,7 +216,7 @@ export const buildUserOpenApiDocument = ({
             content: {
               "application/json": {
                 schema: {
-                  $ref: "#/components/schemas/FunctionSpec",
+                  $ref: "#/components/schemas/ToolSpec",
                 },
               },
             },
@@ -399,12 +398,12 @@ export const buildUserOpenApiDocument = ({
         },
       },
       schemas: {
-        FunctionSpec: toOpenApiSchema(functionSpecSchema),
+        ToolSpec: toOpenApiSchema(toolSpecSchema),
         IntegrationSpec: toOpenApiSchema(integrationSpecSchema),
         AccessRequest: toOpenApiSchema(accessRequestSchema),
         TemporaryGrant: toOpenApiSchema(temporaryGrantSchema),
-        UpdateFunctionAccessRequest: toOpenApiSchema(
-          updateFunctionAccessRequestSchema,
+        UpdateToolAccessRequest: toOpenApiSchema(
+          updateToolAccessRequestSchema,
         ),
         ApproveAccessRequest: toOpenApiSchema(approveAccessRequestSchema),
         ErrorResponse: toOpenApiSchema(errorResponseSchema),

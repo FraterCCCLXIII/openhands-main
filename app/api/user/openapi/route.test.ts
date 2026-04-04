@@ -116,7 +116,7 @@ describe("GET /api/user/openapi", () => {
       scheme: "bearer",
     });
     expect(body.components.schemas.IntegrationSpec).toBeTruthy();
-    expect(body.components.schemas.FunctionSpec).toBeTruthy();
+    expect(body.components.schemas.ToolSpec).toBeTruthy();
     expect(body.components.schemas.AccessRequest).toBeTruthy();
     expect(body.components.schemas.TemporaryGrant).toBeTruthy();
   });
