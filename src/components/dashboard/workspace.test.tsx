@@ -26,7 +26,7 @@ vi.mock("next-auth/react", () => ({
   signOut: signOutMock,
 }));
 
-import { DashboardWorkspace } from "@/src/components/admin/dashboard-workspace";
+import { DashboardWorkspace } from "@/src/components/dashboard/workspace";
 import type {
   AccessRequest,
   BuiltInConnectorOption,

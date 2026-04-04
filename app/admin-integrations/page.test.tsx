@@ -13,7 +13,7 @@ vi.mock("@neondatabase/serverless", () => ({ neon: () => getActiveSql() }));
 
 import { createTestRepository, getActiveSql } from "@/src/lib/db/pglite-test-utils";
 
-import AdminIntegrationsPage from "../admin-integrations/page";
+import AdminIntegrationsPage from "./page";
 
 let testCleanup: () => Promise<void>;
 beforeAll(() => {
@@ -36,7 +36,7 @@ afterEach(async () => {
   await testCleanup();
 });
 
-describe("AdminIntegrationsPage", () => {
+describe("app/admin-integrations/page", () => {
   it("renders the dashboard sidebar chrome for signed-in regular users", async () => {
     vi.stubEnv("ADMIN_EMAIL", "");
 

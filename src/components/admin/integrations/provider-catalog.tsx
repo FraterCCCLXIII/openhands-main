@@ -271,7 +271,7 @@ const buildReadyBuiltInConnectorOption = (
   };
 };
 
-interface CuratedProviderListProps {
+interface ProviderCatalogProps {
   providerCatalog: OAuthProviderCatalogOption[];
   readyBuiltInConnectors: BuiltInConnectorOption[];
   canRegisterManagedConnectors?: boolean;
@@ -279,13 +279,13 @@ interface CuratedProviderListProps {
   onConnectorRegistered?: (connector: BuiltInConnectorOption) => void;
 }
 
-export function CuratedProviderList({
+export function ProviderCatalog({
   providerCatalog,
   readyBuiltInConnectors,
   canRegisterManagedConnectors = false,
   oauthCallbackBaseUrl = "",
   onConnectorRegistered,
-}: CuratedProviderListProps) {
+}: ProviderCatalogProps) {
   const [query, setQuery] = useState("");
   const [expandedSlug, setExpandedSlug] = useState<string | null>(null);
   const [registrationForms, setRegistrationForms] = useState<

@@ -4,7 +4,7 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { CuratedProviderList } from "@/src/components/admin/curated-provider-list";
+import { ProviderCatalog } from "@/src/components/admin/integrations/provider-catalog";
 import type {
   BuiltInConnectorOption,
   OAuthProviderCatalogOption,
@@ -184,7 +184,7 @@ const setInputValue = (element: Element | null, value: string) => {
   element.dispatchEvent(new Event("input", { bubbles: true }));
 };
 
-describe("CuratedProviderList", () => {
+describe("ProviderCatalog", () => {
   let container: HTMLDivElement;
   let root: Root;
   let fetchMock: ReturnType<typeof vi.fn>;
@@ -219,7 +219,7 @@ describe("CuratedProviderList", () => {
   it("renders a compact searchable list and lets app admins register a provider in-app", async () => {
     await act(async () => {
       root.render(
-        <CuratedProviderList
+        <ProviderCatalog
           providerCatalog={providerCatalog}
           readyBuiltInConnectors={readyBuiltInConnectors}
           canRegisterManagedConnectors
@@ -368,7 +368,7 @@ describe("CuratedProviderList", () => {
 
     await act(async () => {
       root.render(
-        <CuratedProviderList
+        <ProviderCatalog
           providerCatalog={providerCatalog}
           readyBuiltInConnectors={readyBuiltInConnectors}
           canRegisterManagedConnectors
@@ -489,7 +489,7 @@ describe("CuratedProviderList", () => {
 
     await act(async () => {
       root.render(
-        <CuratedProviderList
+        <ProviderCatalog
           providerCatalog={providerCatalog}
           readyBuiltInConnectors={readyBuiltInConnectors}
           canRegisterManagedConnectors
@@ -582,7 +582,7 @@ describe("CuratedProviderList", () => {
 
     await act(async () => {
       root.render(
-        <CuratedProviderList
+        <ProviderCatalog
           providerCatalog={providerCatalog}
           readyBuiltInConnectors={readyBuiltInConnectors}
           canRegisterManagedConnectors
@@ -662,7 +662,7 @@ describe("CuratedProviderList", () => {
 
     await act(async () => {
       root.render(
-        <CuratedProviderList
+        <ProviderCatalog
           providerCatalog={providerCatalog}
           readyBuiltInConnectors={readyBuiltInConnectors}
           canRegisterManagedConnectors
@@ -732,7 +732,7 @@ describe("CuratedProviderList", () => {
   it("does not render legacy Composio MCP template guidance", async () => {
     await act(async () => {
       root.render(
-        <CuratedProviderList
+        <ProviderCatalog
           providerCatalog={providerCatalog}
           readyBuiltInConnectors={readyBuiltInConnectors}
           canRegisterManagedConnectors
@@ -756,7 +756,7 @@ describe("CuratedProviderList", () => {
   it("requires OAuth client credentials before registering a connector", async () => {
     await act(async () => {
       root.render(
-        <CuratedProviderList
+        <ProviderCatalog
           providerCatalog={providerCatalog}
           readyBuiltInConnectors={readyBuiltInConnectors}
           canRegisterManagedConnectors
@@ -795,7 +795,7 @@ describe("CuratedProviderList", () => {
   it("shows an access notice instead of the registration form for non-admin users", async () => {
     await act(async () => {
       root.render(
-        <CuratedProviderList
+        <ProviderCatalog
           providerCatalog={providerCatalog}
           readyBuiltInConnectors={readyBuiltInConnectors}
         />,

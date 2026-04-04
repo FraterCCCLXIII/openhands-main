@@ -4,7 +4,7 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { ManagedConnectorAdminList } from "@/src/components/admin/managed-connector-admin-list";
+import { ManagedConnectorList } from "@/src/components/admin/integrations/managed-connector-list";
 import type { ManagedConnectorDefinition } from "@/src/types/context-layer";
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -60,7 +60,7 @@ const setInputValue = (element: Element | null, value: string) => {
   throw new Error("Expected input or select element");
 };
 
-describe("ManagedConnectorAdminList", () => {
+describe("ManagedConnectorList", () => {
   let container: HTMLDivElement;
   let root: Root;
   let fetchMock: ReturnType<typeof vi.fn>;
@@ -85,7 +85,7 @@ describe("ManagedConnectorAdminList", () => {
   it("shows connector logos and top-level delete buttons in the compact card view", async () => {
     await act(async () => {
       root.render(
-        <ManagedConnectorAdminList initialManagedConnectors={initialConnectors} />,
+        <ManagedConnectorList initialManagedConnectors={initialConnectors} />,
       );
     });
 
@@ -117,7 +117,7 @@ describe("ManagedConnectorAdminList", () => {
 
     await act(async () => {
       root.render(
-        <ManagedConnectorAdminList initialManagedConnectors={initialConnectors} />,
+        <ManagedConnectorList initialManagedConnectors={initialConnectors} />,
       );
     });
 
@@ -184,7 +184,7 @@ describe("ManagedConnectorAdminList", () => {
 
     await act(async () => {
       root.render(
-        <ManagedConnectorAdminList initialManagedConnectors={initialConnectors} />,
+        <ManagedConnectorList initialManagedConnectors={initialConnectors} />,
       );
     });
 
