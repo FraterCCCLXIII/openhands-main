@@ -14,6 +14,8 @@ The root `LICENSE` is proprietary: `Copyright All Hands AI, Inc. All rights rese
 - Run e2e tests only: `npm run test:e2e`
 - Typecheck: `npm run typecheck`
 - Production build check: `npm run build`
+- Audit shipped dependency graph: `npm run audit`
+- Lint: `npm run lint`
 
 ## Local DB-backed validation
 
@@ -25,6 +27,8 @@ The root `LICENSE` is proprietary: `Copyright All Hands AI, Inc. All rights rese
 
 
 ## Workflow notes
+
+- Next.js 16 removed the old `next lint` entrypoint in this repo's setup; keep `npm run lint` wired to `eslint .` with the root `eslint.config.mjs`. ESLint 10 works here with an explicit flat-config stack (`typescript-eslint` + `@next/eslint-plugin-next`) instead of `eslint-config-next`, which still pulled React lint internals that crashed under ESLint 10 in this repo.
 
 - For this workstream, when the user requests code changes, commit them and push them to the active PR branch.
 

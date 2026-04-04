@@ -21,7 +21,6 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { type ReactNode, useEffect, useMemo, useState } from "react";
 
 import {
-  accessModeLabel,
   AccessModeSlider,
   getFunctionAccessMode,
   matchesFunctionSearch,
@@ -44,11 +43,7 @@ import {
   approvalStatusLabel,
   normalizeApprovalDurationHours,
 } from "@/src/lib/access-requests";
-import {
-  buildAgentConnectionGuide,
-  OPENHANDS_CLOUD_SHTTP_MCP_URL,
-  OPENHANDS_CONTEXT_KEY_ENV,
-} from "@/src/lib/agent-connection";
+import { buildAgentConnectionGuide } from "@/src/lib/agent-connection";
 import { cn } from "@/src/lib/utils";
 import type {
   AccessRequest,
@@ -433,7 +428,6 @@ const IntegrationMarketplaceCard = ({
 export const DashboardWorkspace = ({
   initialIntegrations,
   initialAccessRequests,
-  initialNotifications: _initialNotifications,
   currentUser,
   contextApiBaseUrl,
   contextApiKey,
@@ -462,9 +456,6 @@ export const DashboardWorkspace = ({
     Record<string, boolean>
   >({});
   const [expandedFunctions, setExpandedFunctions] = useState<
-    Record<string, boolean>
-  >({});
-  const [expandedUsageSections, setExpandedUsageSections] = useState<
     Record<string, boolean>
   >({});
   const [approvalSearch, setApprovalSearch] = useState("");

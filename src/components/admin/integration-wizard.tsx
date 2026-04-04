@@ -9,7 +9,7 @@ import {
   Waypoints,
 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 import {
   AccessModeSlider,
@@ -250,14 +250,21 @@ const buildCreatePayload = (
   draft: WizardDraft,
   discovery: DiscoveryResponse,
   functionModes: Record<string, FunctionAccessMode>,
+  connector: BuiltInConnectorOption | null,
 ) => {
   if (!draft.kind) {
     throw new Error("Select Built-in connector or MCP first.");
   }
 
+  const key = draft.key.trim();
+  const name =
+    draft.kind === "built_in"
+      ? (connector?.name ?? draft.name.trim()) || key
+      : draft.name.trim() || key;
+
   return {
-    key: draft.key.trim(),
-    name: draft.name.trim() || draft.key.trim(),
+    key,
+    name,
     kind:
       draft.kind === "built_in"
         ? discovery.provider === "http"
@@ -327,8 +334,19 @@ export const IntegrationWizard = ({
   redirectSection = "integrations",
 }: IntegrationWizardProps) => {
   const searchParams = useSearchParams();
-  const [step, setStep] = useState<WizardStep>(1);
-  const [draft, setDraft] = useState<WizardDraft>(INITIAL_DRAFT);
+  const initialBuiltInSlug = searchParams.get("builtIn")?.trim() ?? "";
+  const [step, setStep] = useState<WizardStep>(initialBuiltInSlug ? 2 : 1);
+  const [draft, setDraft] = useState<WizardDraft>(() =>
+    initialBuiltInSlug
+      ? {
+          ...INITIAL_DRAFT,
+          kind: "built_in",
+          builtInSlug: initialBuiltInSlug,
+          key: initialBuiltInSlug,
+          name: initialBuiltInSlug,
+        }
+      : INITIAL_DRAFT,
+  );
   const [discovery, setDiscovery] = useState<DiscoveryResponse | null>(null);
   const [functionModes, setFunctionModes] = useState<
     Record<string, FunctionAccessMode>
@@ -339,7 +357,7 @@ export const IntegrationWizard = ({
   const [expandedFunctions, setExpandedFunctions] = useState<
     Record<string, boolean>
   >({});
-  const [connectorSearch, setConnectorSearch] = useState("");
+  const [connectorSearch, setConnectorSearch] = useState(initialBuiltInSlug);
   const [functionSearch, setFunctionSearch] = useState("");
   const [discoverFeedback, setDiscoverFeedback] =
     useState<DiscoverFeedback | null>(null);
@@ -381,62 +399,59 @@ export const IntegrationWizard = ({
     [connectionStatusesQuery.data, draft.builtInSlug, draft.key],
   );
 
-
-  useEffect(() => {
-    const builtInSlug = searchParams.get("builtIn")?.trim();
-    if (!builtInSlug) {
-      return;
-    }
-
-    if (draft.kind == null) {
-      setDraft((current) => ({
-        ...current,
-        kind: "built_in",
-      }));
-    }
-
-    if (step === 1) {
-      setStep(2);
-    }
-  }, [draft.kind, searchParams, step]);
-
-  useEffect(() => {
-    if (draft.kind !== "built_in") {
-      return;
-    }
-
-    const builtInSlug = searchParams.get("builtIn")?.trim();
-    if (!builtInSlug || draft.builtInSlug) {
-      return;
-    }
-
-    const connector = builtInConnectors.find(
-      (candidate) => candidate.slug === builtInSlug,
-    );
-    if (!connector) {
-      return;
-    }
-
-    handleConnectorSelect(connector);
-  }, [builtInConnectors, draft.builtInSlug, draft.kind, searchParams]);
+  const handleConnectorSelect = useCallback((connector: BuiltInConnectorOption) => {
+    setDraft((current) => ({
+      ...current,
+      builtInSlug: connector.slug,
+      key: connector.slug,
+      name: connector.name,
+      accessToken:
+        current.builtInSlug === connector.slug && connector.authStrategy === "bearer"
+          ? current.accessToken
+          : "",
+      apiKey:
+        current.builtInSlug === connector.slug && connector.authStrategy === "api_key"
+          ? current.apiKey
+          : "",
+      headerName:
+        connector.apiKeyHeaderName?.trim() ||
+        (current.builtInSlug === connector.slug && connector.authStrategy === "api_key"
+          ? current.headerName
+          : INITIAL_DRAFT.headerName),
+      username:
+        current.builtInSlug === connector.slug && connector.authStrategy === "basic"
+          ? current.username
+          : "",
+      password:
+        current.builtInSlug === connector.slug && connector.authStrategy === "basic"
+          ? current.password
+          : "",
+    }));
+    setConnectorSearch(connectorOptionLabel(connector));
+    setDiscoverFeedback(null);
+    onStatus(null);
+  }, [onStatus]);
 
   const discoverMutation = useMutation({
-    mutationFn: async () =>
+    mutationFn: async (input: {
+      draft: WizardDraft;
+      connector: BuiltInConnectorOption | null;
+    }) =>
       fetchJson<DiscoveryResponse>("/api/integrations/discover", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(buildDiscoverPayload(draft, selectedConnector)),
+        body: JSON.stringify(buildDiscoverPayload(input.draft, input.connector)),
       }),
-    onMutate: () => {
+    onMutate: (input) => {
       const providerName =
-        selectedConnector?.name || draft.name.trim() || draft.key.trim();
+        input.connector?.name || input.draft.name.trim() || input.draft.key.trim();
       setDiscoverFeedback({
         tone: "info",
         message: `Discovering functions for ${providerName}… Loading the connector's available function catalog.`,
       });
       onStatus(null);
     },
-    onSuccess: (result) => {
+    onSuccess: (result, input) => {
       setDiscovery(result);
       setFunctionModes(
         Object.fromEntries(
@@ -450,7 +465,9 @@ export const IntegrationWizard = ({
       setExpandedFunctions({});
       setFunctionSearch("");
       setStep(3);
-      const message = `Discovered ${Object.keys(result.functions).length} functions. Review their default access before saving.`;
+      const providerName =
+        input.connector?.name || input.draft.name.trim() || input.draft.key.trim();
+      const message = `Discovered ${Object.keys(result.functions).length} functions for ${providerName}. Review their default access before saving.`;
       setDiscoverFeedback({
         tone: "success",
         message,
@@ -470,25 +487,15 @@ export const IntegrationWizard = ({
   });
 
   const createMutation = useMutation({
-    mutationFn: async () =>
+    mutationFn: async (payload: ReturnType<typeof buildCreatePayload>) =>
       fetchJson("/api/integrations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(
-          buildCreatePayload(
-            draft,
-            discovery as DiscoveryResponse,
-            functionModes,
-          ),
-        ),
+        body: JSON.stringify(payload),
       }),
-    onSuccess: async () => {
-      const functionCount = discovery
-        ? Object.keys(discovery.functions).length
-        : 0;
-      onStatus(
-        `Created ${draft.name || draft.key} with ${functionCount} discovered functions.`,
-      );
+    onSuccess: async (_result, payload) => {
+      const functionCount = Object.keys(payload.functions).length;
+      onStatus(`Created ${payload.name || payload.key} with ${functionCount} discovered functions.`);
       await onCreated();
       setDraft(INITIAL_DRAFT);
       setDiscovery(null);
@@ -577,6 +584,10 @@ export const IntegrationWizard = ({
   const requiresOAuthConnection = builtInAuthStrategy === "oauth2";
   const oauthConnectionEnabled =
     !requiresOAuthConnection || selectedConnector?.oauthConfigured !== false;
+  const integrationDisplayName =
+    draft.kind === "built_in"
+      ? (selectedConnector?.name ?? draft.name.trim()) || draft.key.trim()
+      : draft.name.trim() || draft.key.trim();
 
   const canDiscover =
     !!draft.kind &&
@@ -588,39 +599,6 @@ export const IntegrationWizard = ({
           ? oauthConnectionEnabled && !!selectedConnection
           : hasBuiltInCredentialInput(draft, selectedConnector))
       : !!draft.serverUrl.trim());
-
-  const handleConnectorSelect = (connector: BuiltInConnectorOption) => {
-    setDraft((current) => ({
-      ...current,
-      builtInSlug: connector.slug,
-      key: connector.slug,
-      name: connector.name,
-      accessToken:
-        current.builtInSlug === connector.slug && connector.authStrategy === "bearer"
-          ? current.accessToken
-          : "",
-      apiKey:
-        current.builtInSlug === connector.slug && connector.authStrategy === "api_key"
-          ? current.apiKey
-          : "",
-      headerName:
-        connector.apiKeyHeaderName?.trim() ||
-        (current.builtInSlug === connector.slug && connector.authStrategy === "api_key"
-          ? current.headerName
-          : INITIAL_DRAFT.headerName),
-      username:
-        current.builtInSlug === connector.slug && connector.authStrategy === "basic"
-          ? current.username
-          : "",
-      password:
-        current.builtInSlug === connector.slug && connector.authStrategy === "basic"
-          ? current.password
-          : "",
-    }));
-    setConnectorSearch(connectorOptionLabel(connector));
-    setDiscoverFeedback(null);
-    onStatus(null);
-  };
 
   const handleConnectorSearchChange = (value: string) => {
     setConnectorSearch(value);
@@ -1162,7 +1140,12 @@ export const IntegrationWizard = ({
               <Button
                 type="button"
                 disabled={!canDiscover || discoverMutation.isPending}
-                onClick={() => discoverMutation.mutate()}
+                onClick={() =>
+                  discoverMutation.mutate({
+                    draft,
+                    connector: selectedConnector,
+                  })
+                }
               >
                 {discoverMutation.isPending
                   ? "Discovering…"
@@ -1253,7 +1236,7 @@ export const IntegrationWizard = ({
             <Badge>{authStrategyLabel(discovery.authStrategy)}</Badge>
             <span>
               {reviewedFunctions.length} functions discovered for{" "}
-              {draft.name || draft.key}
+              {integrationDisplayName}
             </span>
           </div>
 
@@ -1481,7 +1464,16 @@ export const IntegrationWizard = ({
               disabled={
                 reviewedFunctions.length === 0 || createMutation.isPending
               }
-              onClick={() => createMutation.mutate()}
+              onClick={() =>
+                createMutation.mutate(
+                  buildCreatePayload(
+                    draft,
+                    discovery as DiscoveryResponse,
+                    functionModes,
+                    selectedConnector,
+                  ),
+                )
+              }
             >
               {createMutation.isPending ? "Saving…" : "Create integration"}
               <ChevronRight className="ml-2 h-4 w-4" />
