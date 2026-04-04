@@ -36,9 +36,13 @@ The root `LICENSE` is proprietary: `Copyright All Hands AI, Inc. All rights rese
 
 - `app/` contains the App Router pages and API route handlers.
 - `src/lib/core/service.ts` contains the main permissioning, approval, and invocation orchestration logic.
+- Shared service helpers now live in `src/lib/core/access-policy.ts`, `src/lib/core/invocation-side-effects.ts`, and `src/lib/core/scoped-api-keys.ts`; prefer extending those modules before adding more local helper logic back into `service.ts`.
 - `src/lib/adapters/composio-adapter.ts` uses `@composio/core` for Composio-backed tool execution.
 - `src/lib/adapters/mcp-adapter.ts` uses `@modelcontextprotocol/sdk` to call remote MCP tools.
 - `src/lib/db/postgres-repository.ts` uses Neon with `POSTGRES_URL` or `DATABASE_URL`. There is no in-memory fallback; all tests use PGlite-backed `PostgresRepository` instances.
+- Postgres schema bootstrap and row mapping helpers now live in `src/lib/db/postgres-schema.ts` and `src/lib/db/postgres-records.ts`; keep `PostgresRepository` focused on query methods.
+- OpenAPI builders now share common schema/auth/response utilities in `src/lib/openapi/shared.ts`, and `src/lib/core/schema.ts` exports reusable Zod shapes used by admin/user/context OpenAPI documents.
+
 - Managed OAuth connectors store user-specific provider tokens server-side as per-user integration connection records instead of embedding them in the integration spec.
 - Integrations are installed strictly per user via `owner_integrations`; OAuth access tokens must live only in per-user integration connection records, and owner-scoped `oauth2` installs must not embed credentials in `IntegrationSpec.credentials`.
 - `src/lib/db/postgres-repository.ts` now drops the legacy shared `integrations` table during schema initialization so deployed environments converge on owner-only integration storage.

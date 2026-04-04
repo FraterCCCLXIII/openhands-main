@@ -129,6 +129,41 @@ describe("ContextLayerService", () => {
     expect(response.data).toEqual({ ok: true, payload: { limit: 5 } });
   });
 
+  it("supports object-form access evaluation and invocation requests", async () => {
+    const service = createService();
+    await installIntegration(service, baseIntegration);
+
+    const decision = await service.evaluateAccess({
+      agentId: "agent-object",
+      agentClass: "assistant",
+      integrationKey: "salesforce",
+      functionName: "accounts",
+      requestedScopes: ["accounts.read"],
+      ownerId: OWNER_ID,
+    });
+
+    expect(decision).toMatchObject({
+      allowed: true,
+      reason: "Allowed by enabled function default",
+      effectiveScopes: ["accounts.read"],
+    });
+
+    const response = await service.invokeContext({
+      agentId: "agent-object",
+      agentClass: "assistant",
+      integrationKey: "salesforce",
+      functionName: "accounts",
+      payload: { limit: 2 },
+      requestedScopes: ["accounts.read"],
+      ownerId: OWNER_ID,
+    });
+
+    expect(response.integration).toBe("salesforce");
+    expect(response.decision.allowed).toBe(true);
+    expect(response.data).toEqual({ ok: true, payload: { limit: 2 } });
+  });
+
+
   it("records successful invocation metadata and exposes usage summaries", async () => {
     const service = createService();
     await installIntegration(service, baseIntegration);
