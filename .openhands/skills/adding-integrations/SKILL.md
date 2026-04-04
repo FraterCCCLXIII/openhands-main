@@ -16,35 +16,38 @@ Use this skill when the task is to add or update provider support in this reposi
 
 In this codebase, most integration work should be **data-driven**, not framework-building. Start by choosing the closest existing shape and only add new runtime logic when the provider cannot fit the current managed-connector, OpenAPI, or MCP paths.
 
+When multiple provider options exist, prefer **official MCP over HTTP/OpenAPI**, and prefer **OAuth over static credentials**. Only fall back to lower-preference options when the provider does not offer the higher-preference path.
+
 ## Best reference PRs
 
 Start from the closest merged example instead of designing from scratch:
 
-- [#32 Add ElevenLabs managed connector support](https://github.com/OpenHands/context-layer/pull/32)
-  - API-key HTTP/OpenAPI connector
-  - good reference for `apiKeyHeaderName`, generated HTTP functions, multipart support, and binary responses
 - [#33 Use Slack's official hosted MCP connector defaults](https://github.com/OpenHands/context-layer/pull/33)
   - OAuth-backed hosted MCP connector
-- [#46 Add Ordinal MCP as a supported provider](https://github.com/OpenHands/context-layer/pull/46)
-  - bearer-token MCP connector
 - [#64 Add Webflow managed MCP integration](https://github.com/OpenHands/context-layer/pull/64)
   - catalog-driven hosted MCP registration
 - [#74 Fix Webflow MCP OAuth registration flow](https://github.com/OpenHands/context-layer/pull/74)
   - provider-specific OAuth details, PKCE, and dynamic client registration
+- [#46 Add Ordinal MCP as a supported provider](https://github.com/OpenHands/context-layer/pull/46)
+  - bearer-token MCP connector
+- [#32 Add ElevenLabs managed connector support](https://github.com/OpenHands/context-layer/pull/32)
+  - API-key HTTP/OpenAPI connector
+  - good reference for `apiKeyHeaderName`, generated HTTP functions, multipart support, and binary responses
 
 ## Step 1: Gather provider facts before writing code
 
 Do not start editing until you know:
 
-1. **Runtime surface**
-   - official MCP server, or
-   - stable REST API with an official OpenAPI schema, or
-   - manual HTTP fallback if neither exists
+1. **Runtime surface** (prefer in this order)
+   - official MCP server
+   - stable REST API with an official OpenAPI schema
+   - manual HTTP fallback only if neither exists
 
-2. **Auth model**
-   - `oauth2`, `api_key`, `bearer`, `basic`, or `none`
+2. **Auth model** (prefer in this order when supported)
+   - `oauth2`
+   - static or no-auth options such as `api_key`, `bearer`, `basic`, or `none`
    - for OAuth: auth URL, token URL, scopes, scope separator, PKCE, client authentication mode, and whether dynamic client registration is required
-   - for API keys: exact header name or parameter name
+   - for API keys or bearer tokens: exact header name or parameter name
 
 3. **Base URLs**
    - MCP server URL, API base URL, and OpenAPI schema URL if applicable
@@ -63,17 +66,19 @@ Sources should be official provider docs first, then the reference PRs above.
 
 ## Step 2: Choose the smallest integration shape
 
-Use this table:
+Use this table in preference order:
 
-| Shape | Usually update |
+| Preferred shape | Usually update |
 | --- | --- |
-| HTTP/OpenAPI + API key | `src/lib/integrations/oauth-provider-catalog.ts`, `src/lib/integrations/oauth-provider-registration-defaults.ts`, tests |
-| HTTP/OpenAPI + OAuth | same as above, plus OAuth-specific tests or runtime changes only if the provider is non-standard |
-| MCP + bearer/API key | catalog + registration defaults + discovery/runtime tests |
 | MCP + OAuth | catalog + registration defaults + OAuth tests; runtime only if the provider has transport/auth quirks |
+| MCP + bearer/API key | catalog + registration defaults + discovery/runtime tests |
+| HTTP/OpenAPI + OAuth | `src/lib/integrations/oauth-provider-catalog.ts`, `src/lib/integrations/oauth-provider-registration-defaults.ts`, plus OAuth-specific tests or runtime changes only if the provider is non-standard |
+| HTTP/OpenAPI + API key | `src/lib/integrations/oauth-provider-catalog.ts`, `src/lib/integrations/oauth-provider-registration-defaults.ts`, tests |
 | HTTP provider without usable OpenAPI | manual function definitions and possibly `src/lib/adapters/http-adapter.ts` / `src/lib/managed-connectors/openapi.ts` |
 
-If the provider matches ElevenLabs, Slack, Ordinal, Notion, or Webflow, copy that path first.
+Start at the top and move down only when the provider cannot support a higher-preference option.
+
+If the provider matches Slack, Webflow, Ordinal, Notion, or ElevenLabs, copy that path first.
 
 ## Step 3: Touch the right files
 
@@ -105,17 +110,25 @@ If the provider matches ElevenLabs, Slack, Ordinal, Notion, or Webflow, copy tha
 
 ## Step 4: Apply the common implementation pattern
 
-### For HTTP/OpenAPI + API key
+### For MCP + OAuth
 
-Use the ElevenLabs shape:
+Use the Slack or Webflow shape:
 
-- `provider: "http"`
-- `authStrategy: "api_key"`
-- `authModes: ["api_key"]`
-- `apiKeyHeaderName`
-- `apiBaseUrl`
-- `openApiUrl`
-- clear credential labels/help text
+- `provider: "mcp"`
+- `authStrategy: "oauth2"`
+- `authorizationUrl`
+- `tokenUrl`
+- `scopes`
+- `pkce`, `clientAuthentication`, and `registrationUrl` when needed
+
+### For MCP + bearer token
+
+Use the Ordinal shape:
+
+- `provider: "mcp"`
+- `authStrategy: "bearer"`
+- `serverUrl`
+- clean credential label/placeholder/help text
 
 ### For HTTP/OpenAPI + OAuth
 
@@ -128,25 +141,17 @@ Use the Notion shape:
 - OAuth URLs and scopes
 - one read-only operation suitable for validation
 
-### For MCP + bearer token
+### For HTTP/OpenAPI + API key
 
-Use the Ordinal shape:
+Use the ElevenLabs shape:
 
-- `provider: "mcp"`
-- `authStrategy: "bearer"`
-- `serverUrl`
-- clean credential label/placeholder/help text
-
-### For MCP + OAuth
-
-Use the Slack or Webflow shape:
-
-- `provider: "mcp"`
-- `authStrategy: "oauth2"`
-- `authorizationUrl`
-- `tokenUrl`
-- `scopes`
-- `pkce`, `clientAuthentication`, and `registrationUrl` when needed
+- `provider: "http"`
+- `authStrategy: "api_key"`
+- `authModes: ["api_key"]`
+- `apiKeyHeaderName`
+- `apiBaseUrl`
+- `openApiUrl`
+- clear credential labels/help text
 
 ## Step 5: Understand the runtime path you are validating
 
