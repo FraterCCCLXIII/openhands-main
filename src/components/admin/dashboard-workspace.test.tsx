@@ -1549,8 +1549,8 @@ describe("DashboardWorkspace", () => {
       },
       {
         id: "req-pending-newer",
-        agentId: "research-bot-01",
-        agentClass: "researcher",
+        agentId: null,
+        agentClass: null,
         integrationKey: "github",
         functionName: "delete_repo",
         scopes: ["repo:admin"],
@@ -1613,7 +1613,8 @@ describe("DashboardWorkspace", () => {
         'input[type="search"][aria-label="Search case-by-case approvals"]',
       ),
     ).toBeTruthy();
-    expect(container.textContent).toContain("default MCP identity");
+    expect(container.textContent).toContain("no agent identity provided");
+    expect(container.textContent).toContain("Invocation identity: Not provided · Not provided");
     const conversationLink = container.querySelector(
       'a[href="https://app.all-hands.dev/conversations/f3e731620cf147a1976b53050bbe039e"]',
     ) as HTMLAnchorElement | null;

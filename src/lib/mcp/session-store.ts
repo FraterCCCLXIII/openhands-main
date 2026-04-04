@@ -1,11 +1,12 @@
 import { neon } from "@neondatabase/serverless";
 
+import { normalizeAgentIdentityValue } from "@/src/lib/agent-defaults";
 import { hasPersistentContextLayerStorage } from "@/src/lib/persistence";
 import type { AccessRequestAgentData } from "@/src/types/context-layer";
 
 export type McpSessionDefaults = {
-  agentId: string;
-  agentClass: string;
+  agentId: string | null;
+  agentClass: string | null;
   agentData: AccessRequestAgentData;
 };
 
@@ -51,14 +52,18 @@ const ensureSessionSchema = async () => {
           CREATE TABLE IF NOT EXISTS mcp_sessions (
             session_id TEXT PRIMARY KEY,
             owner_id TEXT NOT NULL,
-            agent_id TEXT NOT NULL DEFAULT '',
-            agent_class TEXT NOT NULL DEFAULT '',
+            agent_id TEXT,
+            agent_class TEXT,
             agent_data JSONB NOT NULL DEFAULT '{}'::jsonb,
             expires_at TIMESTAMPTZ NOT NULL,
             updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
           )
         `,
         sql`ALTER TABLE mcp_sessions ADD COLUMN IF NOT EXISTS agent_data JSONB NOT NULL DEFAULT '{}'::jsonb`,
+        sql`ALTER TABLE mcp_sessions ALTER COLUMN agent_id DROP NOT NULL`,
+        sql`ALTER TABLE mcp_sessions ALTER COLUMN agent_class DROP NOT NULL`,
+        sql`ALTER TABLE mcp_sessions ALTER COLUMN agent_id DROP DEFAULT`,
+        sql`ALTER TABLE mcp_sessions ALTER COLUMN agent_class DROP DEFAULT`,
       ]);
 
       sessionSchemaReady = true;
@@ -95,8 +100,8 @@ export const getMcpSession = async (sessionId: string) => {
     sessionId: row.session_id,
     ownerId: row.owner_id,
     defaults: {
-      agentId: row.agent_id,
-      agentClass: row.agent_class,
+      agentId: normalizeAgentIdentityValue(row.agent_id),
+      agentClass: normalizeAgentIdentityValue(row.agent_class),
       agentData: ((typeof row.agent_data === "string"
         ? JSON.parse(row.agent_data)
         : row.agent_data) ?? {}) as AccessRequestAgentData,
@@ -129,8 +134,8 @@ export const upsertMcpSession = async (record: McpSessionRecord) => {
     [
       record.sessionId,
       record.ownerId,
-      record.defaults.agentId,
-      record.defaults.agentClass,
+      record.defaults.agentId ?? null,
+      record.defaults.agentClass ?? null,
       JSON.stringify(record.defaults.agentData ?? {}),
     ],
   );

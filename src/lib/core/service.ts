@@ -1034,8 +1034,8 @@ export class ContextLayerService {
   }
 
   async evaluateAccess(
-    agentId: string,
-    agentClass: string,
+    agentId: string | null,
+    agentClass: string | null,
     integrationKey: string,
     functionName: string,
     requestedScopes: string[] = [],
@@ -1108,7 +1108,7 @@ export class ContextLayerService {
       return { allowed: false, reason: "Permission required", effectiveScopes };
     }
 
-    const policy = await this.repository.getPolicy(agentClass);
+    const policy = agentClass ? await this.repository.getPolicy(agentClass) : null;
     if (!policy) {
       return {
         allowed: true,
@@ -1213,8 +1213,8 @@ export class ContextLayerService {
   }
 
   async invokeContext(
-    agentId: string,
-    agentClass: string,
+    agentId: string | null,
+    agentClass: string | null,
     integrationKey: string,
     functionName: string,
     payload: Record<string, unknown> = {},
@@ -1369,8 +1369,8 @@ export class ContextLayerService {
     errorMessage,
   }: {
     ownerId?: string;
-    agentId: string;
-    agentClass: string;
+    agentId: string | null;
+    agentClass: string | null;
     integration: Pick<IntegrationSpec, "key" | "provider" | "kind" | "authStrategy">;
     functionName: string;
     scopes: string[];
@@ -1536,8 +1536,8 @@ export class ContextLayerService {
     ownerId,
     agentData,
   }: {
-    agentId: string;
-    agentClass: string;
+    agentId: string | null;
+    agentClass: string | null;
     integrationKey: string;
     functionName: string;
     scopes: string[];

@@ -131,16 +131,16 @@ describe("agent-connection", () => {
       "1. Connect your MCP client to http://localhost:12000/api/mcp.",
     );
     expect(guide.mcpSessionSetupExample).toContain(
-      "2. Call github__search_repositories directly; if you omit agent identity, the session defaults to research-bot-01 (researcher).",
+      "2. Call github__search_repositories directly; if you omit agent identity, the session keeps agentId and agentClass unset (null).",
     );
     expect(guide.mcpSessionSetupExample).toContain(
-      "3. Optionally call set_agent_id and set_agent_class to override the identity for the rest of the session.",
+      "3. Optionally call set_agent_id and set_agent_class to set or clear the identity for the rest of the session.",
     );
     expect(guide.mcpSessionSetupExample).toContain(
       "4. If you plan to request case-by-case tools, call set_agent_data with your conversationLink first so humans can review the originating conversation.",
     );
     expect(guide.mcpSessionSetupExample).toContain(
-      "5. You can also pass contextAgentId and contextAgentClass per tool call when you need a one-off override.",
+      "5. You can also pass contextAgentId and contextAgentClass per tool call, including null when you need a one-off override.",
     );
   });
 
@@ -175,7 +175,7 @@ describe("agent-connection", () => {
     expect(guide.mcpToolName).toBe("your-integration__your-function");
     expect(guide.fetchExample).toContain("your-function");
     expect(guide.skillEndpoint).toBe("http://localhost:12000/api/context/skill");
-    expect(guide.mcpSessionSetupExample).toContain("defaults to research-bot-01 (researcher)");
+    expect(guide.mcpSessionSetupExample).toContain("agentId and agentClass unset (null)");
     expect(guide.mcpSessionSetupExample).toContain("set_agent_id");
     expect(guide.mcpSessionSetupExample).toContain("set_agent_class");
     expect(guide.mcpSessionSetupExample).toContain("set_agent_data");

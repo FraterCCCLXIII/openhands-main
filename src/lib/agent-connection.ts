@@ -1,4 +1,3 @@
-import { DEFAULT_AGENT_CLASS, DEFAULT_AGENT_ID } from "@/src/lib/agent-defaults";
 import {
   buildContextLayerMcpToolName,
   CONTEXT_LAYER_MCP_SET_AGENT_CLASS_TOOL_NAME,
@@ -115,10 +114,10 @@ const result = await response.json();`;
   );
   const mcpSessionSetupExample = [
     `1. Connect your MCP client to ${mcpEndpoint}.`,
-    `2. Call ${mcpToolName} directly; if you omit agent identity, the session defaults to ${DEFAULT_AGENT_ID} (${DEFAULT_AGENT_CLASS}).`,
-    `3. Optionally call ${mcpSetAgentIdToolName} and ${mcpSetAgentClassToolName} to override the identity for the rest of the session.`,
+    `2. Call ${mcpToolName} directly; if you omit agent identity, the session keeps agentId and agentClass unset (null).`,
+    `3. Optionally call ${mcpSetAgentIdToolName} and ${mcpSetAgentClassToolName} to set or clear the identity for the rest of the session.`,
     `4. If you plan to request case-by-case tools, call ${mcpSetAgentDataToolName} with your conversationLink first so humans can review the originating conversation.`,
-    "5. You can also pass contextAgentId and contextAgentClass per tool call when you need a one-off override.",
+    "5. You can also pass contextAgentId and contextAgentClass per tool call, including null when you need a one-off override.",
   ].join("\n");
 
   return {

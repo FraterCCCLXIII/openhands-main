@@ -49,7 +49,6 @@ import {
   OPENHANDS_CLOUD_SHTTP_MCP_URL,
   OPENHANDS_CONTEXT_KEY_ENV,
 } from "@/src/lib/agent-connection";
-import { DEFAULT_AGENT_CLASS, DEFAULT_AGENT_ID } from "@/src/lib/agent-defaults";
 import { cn } from "@/src/lib/utils";
 import type {
   AccessRequest,
@@ -201,8 +200,8 @@ const matchesAccessRequestSearch = (
   }
 
   return [
-    request.agentId,
-    request.agentClass,
+    request.agentId ?? "",
+    request.agentClass ?? "",
     request.integrationKey,
     request.functionName,
     request.justification ?? "",
@@ -212,8 +211,10 @@ const matchesAccessRequestSearch = (
   ].some((value) => value.toLowerCase().includes(normalizedQuery));
 };
 
-const usesDefaultApprovalIdentity = (request: AccessRequest) =>
-  request.agentId === DEFAULT_AGENT_ID && request.agentClass === DEFAULT_AGENT_CLASS;
+const hasMissingApprovalIdentity = (request: AccessRequest) =>
+  !request.agentId && !request.agentClass;
+
+const formatApprovalIdentityValue = (value: string | null) => value ?? "Not provided";
 
 const formatTimestamp = (value?: string) => {
   if (!value) {
@@ -1521,12 +1522,12 @@ export const DashboardWorkspace = ({
                                 <div className="flex flex-wrap items-center gap-2 sm:col-span-2 xl:col-span-3">
                                   <p>
                                     Invocation identity:{" "}
-                                    <span className="text-white">{request.agentId}</span>
+                                    <span className="text-white">{formatApprovalIdentityValue(request.agentId)}</span>
                                     <span className="text-[var(--color-text-muted)]"> · </span>
-                                    <span className="text-white">{request.agentClass}</span>
+                                    <span className="text-white">{formatApprovalIdentityValue(request.agentClass)}</span>
                                   </p>
-                                  {usesDefaultApprovalIdentity(request) ? (
-                                    <Badge>default MCP identity</Badge>
+                                  {hasMissingApprovalIdentity(request) ? (
+                                    <Badge>no agent identity provided</Badge>
                                   ) : null}
                                 </div>
                                 {request.agentData?.conversationLink ? (

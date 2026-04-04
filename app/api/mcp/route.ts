@@ -1,5 +1,6 @@
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 
+import { normalizeAgentIdentityValue } from "@/src/lib/agent-defaults";
 import { ContextLayerError } from "@/src/lib/core/errors";
 import { getContextLayerService } from "@/src/lib/core/runtime";
 import { createContextLayerMcpServer } from "@/src/lib/mcp/context-layer-server";
@@ -34,8 +35,8 @@ const getRequestSessionDefaults = (request: Request): McpSessionDefaults => {
   const url = new URL(request.url);
 
   return {
-    agentId: url.searchParams.get("agentId")?.trim() ?? "",
-    agentClass: url.searchParams.get("agentClass")?.trim() ?? "",
+    agentId: normalizeAgentIdentityValue(url.searchParams.get("agentId")),
+    agentClass: normalizeAgentIdentityValue(url.searchParams.get("agentClass")),
     agentData: {},
   };
 };

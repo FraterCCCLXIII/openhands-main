@@ -2,7 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 
-import { resolveInvocationIdentity } from "@/src/lib/agent-defaults";
+import { normalizeAgentIdentityValue, resolveInvocationIdentity } from "@/src/lib/agent-defaults";
 import { ContextLayerError } from "@/src/lib/core/errors";
 import type { ContextLayerService } from "@/src/lib/core/service";
 import { filterIntegrationsVisibleToOwner } from "@/src/lib/integrations/visible-integrations";
@@ -21,20 +21,31 @@ const CONTEXT_LAYER_MCP_SERVER_INFO = {
   version: "0.2.0",
 };
 
+const nullableAgentIdentitySchema = z.preprocess(
+  (value) => {
+    if (typeof value === "string") {
+      return normalizeAgentIdentityValue(value);
+    }
+
+    return value == null ? null : value;
+  },
+  z.string().trim().min(1).nullable(),
+);
+
 const CONTEXT_LAYER_MCP_TOOL_INPUT_SCHEMA = z
   .object({
-    contextAgentId: z.string().trim().min(1).optional(),
-    contextAgentClass: z.string().trim().min(1).optional(),
+    contextAgentId: nullableAgentIdentitySchema.optional(),
+    contextAgentClass: nullableAgentIdentitySchema.optional(),
     contextScopes: z.array(z.string()).default([]),
   })
   .passthrough();
 
 const SET_AGENT_ID_TOOL_INPUT_SCHEMA = z.object({
-  agentId: z.string().trim().min(1),
+  agentId: nullableAgentIdentitySchema,
 });
 
 const SET_AGENT_CLASS_TOOL_INPUT_SCHEMA = z.object({
-  agentClass: z.string().trim().min(1),
+  agentClass: nullableAgentIdentitySchema,
 });
 
 const SET_AGENT_DATA_TOOL_INPUT_SCHEMA = z.object({
@@ -90,7 +101,7 @@ const buildToolDescription = (
   const notes = [
     functionSpec.description?.trim(),
     `Invoke ${integration.key}.${functionSpec.name} through the context layer MCP bridge.`,
-    `Pass downstream tool arguments as top-level fields. Reserved fields: contextScopes, contextAgentId, contextAgentClass. If you omit agent identity, enabled tools use the default session identity; use ${CONTEXT_LAYER_MCP_SET_AGENT_ID_TOOL_NAME}, ${CONTEXT_LAYER_MCP_SET_AGENT_CLASS_TOOL_NAME}, and ${CONTEXT_LAYER_MCP_SET_AGENT_DATA_TOOL_NAME} to override the session identity or add conversation metadata for approvals.`,
+    `Pass downstream tool arguments as top-level fields. Reserved fields: contextScopes, contextAgentId, contextAgentClass. If you omit agent identity, calls use the session identity when one is set; otherwise agentId and agentClass remain null. Use ${CONTEXT_LAYER_MCP_SET_AGENT_ID_TOOL_NAME}, ${CONTEXT_LAYER_MCP_SET_AGENT_CLASS_TOOL_NAME}, and ${CONTEXT_LAYER_MCP_SET_AGENT_DATA_TOOL_NAME} to set or clear the session identity or add conversation metadata for approvals.`,
   ].filter(Boolean);
 
   if (mode === "approval_required") {
@@ -143,9 +154,11 @@ const extractInvocationContext = (args: Record<string, unknown>, defaults: McpSe
   }
 
   const parsedArgs = CONTEXT_LAYER_MCP_TOOL_INPUT_SCHEMA.parse(args);
+  const usesExplicitAgentId = Object.prototype.hasOwnProperty.call(parsedArgs, "contextAgentId");
+  const usesExplicitAgentClass = Object.prototype.hasOwnProperty.call(parsedArgs, "contextAgentClass");
   const { agentId, agentClass } = resolveInvocationIdentity({
-    agentId: parsedArgs.contextAgentId || defaults.agentId,
-    agentClass: parsedArgs.contextAgentClass || defaults.agentClass,
+    agentId: usesExplicitAgentId ? parsedArgs.contextAgentId : defaults.agentId,
+    agentClass: usesExplicitAgentClass ? parsedArgs.contextAgentClass : defaults.agentClass,
   });
 
   const payload = Object.fromEntries(
@@ -188,9 +201,17 @@ const formatToolResult = (
 
 const buildSessionSettingResult = (
   field: "agentId" | "agentClass",
-  value: string,
+  value: string | null,
 ): CallToolResult => ({
-  content: [{ type: "text" as const, text: `MCP session ${field} set to ${value}.` }],
+  content: [
+    {
+      type: "text" as const,
+      text:
+        value === null
+          ? `MCP session ${field} cleared.`
+          : `MCP session ${field} set to ${value}.`,
+    },
+  ],
   structuredContent: { [field]: value },
 });
 
@@ -233,8 +254,14 @@ export const createContextLayerMcpServer = async ({
   ).toString();
   const initialUrl = new URL(request.url);
   const resolvedIdentity = resolveInvocationIdentity({
-    agentId: sessionDefaults?.agentId ?? initialUrl.searchParams.get("agentId"),
-    agentClass: sessionDefaults?.agentClass ?? initialUrl.searchParams.get("agentClass"),
+    agentId:
+      sessionDefaults?.agentId !== undefined
+        ? sessionDefaults.agentId
+        : initialUrl.searchParams.get("agentId"),
+    agentClass:
+      sessionDefaults?.agentClass !== undefined
+        ? sessionDefaults.agentClass
+        : initialUrl.searchParams.get("agentClass"),
   });
   const sessionAgentDefaults: McpSessionDefaults = {
     ...resolvedIdentity,
@@ -256,11 +283,11 @@ export const createContextLayerMcpServer = async ({
     CONTEXT_LAYER_MCP_SET_AGENT_ID_TOOL_NAME,
     {
       title: "Set session agent ID",
-      description: "Set the default agentId for subsequent MCP tool calls in this session.",
+      description: "Set or clear the default agentId for subsequent MCP tool calls in this session.",
       inputSchema: SET_AGENT_ID_TOOL_INPUT_SCHEMA,
     },
     async ({ agentId }) => {
-      sessionAgentDefaults.agentId = agentId.trim();
+      sessionAgentDefaults.agentId = agentId;
       await persistSessionDefaults();
       return buildSessionSettingResult("agentId", sessionAgentDefaults.agentId);
     },
@@ -271,11 +298,11 @@ export const createContextLayerMcpServer = async ({
     {
       title: "Set session agent class",
       description:
-        "Set the default agentClass for subsequent MCP tool calls in this session.",
+        "Set or clear the default agentClass for subsequent MCP tool calls in this session.",
       inputSchema: SET_AGENT_CLASS_TOOL_INPUT_SCHEMA,
     },
     async ({ agentClass }) => {
-      sessionAgentDefaults.agentClass = agentClass.trim();
+      sessionAgentDefaults.agentClass = agentClass;
       await persistSessionDefaults();
       return buildSessionSettingResult("agentClass", sessionAgentDefaults.agentClass);
     },

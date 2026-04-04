@@ -2,7 +2,7 @@ import type { FunctionSpec, IntegrationProvider, IntegrationSpec } from "@/src/t
 import { ContextLayerError } from "@/src/lib/core/errors";
 
 export interface AdapterInvocationInput {
-  agentId: string;
+  agentId: string | null;
   integration: IntegrationSpec;
   functionSpec: FunctionSpec;
   payload: Record<string, unknown>;

@@ -201,8 +201,8 @@ export interface AccessRequestAgentData {
 
 export interface AccessRequest {
   id: string;
-  agentId: string;
-  agentClass: string;
+  agentId: string | null;
+  agentClass: string | null;
   integrationKey: string;
   functionName: string;
   scopes: string[];
@@ -219,8 +219,8 @@ export interface AccessRequest {
 
 export interface TemporaryGrant {
   id: string;
-  agentId: string;
-  agentClass: string;
+  agentId: string | null;
+  agentClass: string | null;
   integrationKey: string;
   functionName: string;
   scopes: string[];
@@ -328,8 +328,8 @@ export interface OAuthStateRecord {
 export interface ToolInvocationRecord {
   id: string;
   ownerId?: string;
-  agentId: string;
-  agentClass: string;
+  agentId: string | null;
+  agentClass: string | null;
   integrationKey: string;
   functionName: string;
   scopes: string[];

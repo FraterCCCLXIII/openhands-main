@@ -242,6 +242,8 @@ describe("/api/mcp", () => {
       {
         integrationKey: "crm",
         functionName: "contacts",
+        agentId: null,
+        agentClass: null,
         agentData: {
           conversationLink:
             "https://app.all-hands.dev/conversations/f3e731620cf147a1976b53050bbe039e",
@@ -270,10 +272,10 @@ describe("/api/mcp", () => {
         body: {},
         record_id: {},
         contextAgentId: {
-          type: "string",
+          anyOf: [{ type: "string" }, { type: "null" }],
         },
         contextAgentClass: {
-          type: "string",
+          anyOf: [{ type: "string" }, { type: "null" }],
         },
         contextScopes: {
           type: "array",

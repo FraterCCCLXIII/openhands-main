@@ -3,20 +3,22 @@ import { z } from "zod";
 import {
   MAX_CASE_BY_CASE_APPROVAL_MINUTES,
 } from "@/src/lib/access-requests";
-import { DEFAULT_AGENT_CLASS, DEFAULT_AGENT_ID } from "@/src/lib/agent-defaults";
 
-const defaultedAgentIdentitySchema = (fallback: string) =>
-  z.preprocess(
-    (value) => {
-      if (typeof value !== "string") {
-        return value;
-      }
+const nullableAgentIdentitySchema = z.preprocess(
+  (value) => {
+    if (value == null) {
+      return null;
+    }
 
-      const normalized = value.trim();
-      return normalized.length > 0 ? normalized : undefined;
-    },
-    z.string().min(1).default(fallback),
-  );
+    if (typeof value !== "string") {
+      return value;
+    }
+
+    const normalized = value.trim();
+    return normalized.length > 0 ? normalized : null;
+  },
+  z.string().min(1).nullable(),
+);
 
 export const functionSpecSchema = z.object({
   name: z.string().min(1),
@@ -70,8 +72,8 @@ export const accessRequestAgentDataSchema = z.object({
 
 export const accessRequestSchema = z.object({
   id: z.string().min(1),
-  agentId: z.string().min(1),
-  agentClass: z.string().min(1),
+  agentId: nullableAgentIdentitySchema,
+  agentClass: nullableAgentIdentitySchema,
   integrationKey: z.string().min(1),
   functionName: z.string().min(1),
   scopes: z.array(z.string()).default([]),
@@ -88,8 +90,8 @@ export const accessRequestSchema = z.object({
 
 export const temporaryGrantSchema = z.object({
   id: z.string().min(1),
-  agentId: z.string().min(1),
-  agentClass: z.string().min(1),
+  agentId: nullableAgentIdentitySchema,
+  agentClass: nullableAgentIdentitySchema,
   integrationKey: z.string().min(1),
   functionName: z.string().min(1),
   scopes: z.array(z.string()).default([]),
@@ -134,8 +136,8 @@ export const disableUnusedFunctionsSchema = z.object({
   thresholdUnit: z.enum(["days", "weeks", "months"]),
 });
 export const contextInvokeSchema = z.object({
-  agentId: defaultedAgentIdentitySchema(DEFAULT_AGENT_ID),
-  agentClass: defaultedAgentIdentitySchema(DEFAULT_AGENT_CLASS),
+  agentId: nullableAgentIdentitySchema.default(null),
+  agentClass: nullableAgentIdentitySchema.default(null),
   scopes: z.array(z.string()).default([]),
   payload: z.record(z.string(), z.unknown()).default({}),
 });
