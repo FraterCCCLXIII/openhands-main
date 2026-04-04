@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 import { getFunctionAccessMode } from "@/src/components/integrations/function-access-controls";
 import type { BuiltInConnectorOption, FunctionAccessMode } from "@/src/types/context-layer";
@@ -30,13 +30,24 @@ export const useWizardState = ({
   onStatus,
   searchParams,
 }: UseIntegrationWizardStateOptions) => {
-  const [step, setStep] = useState<WizardStep>(1);
-  const [draft, setDraft] = useState<WizardDraft>(INITIAL_DRAFT);
+  const initialBuiltInSlug = searchParams.get("builtIn")?.trim() ?? "";
+  const [step, setStep] = useState<WizardStep>(initialBuiltInSlug ? 2 : 1);
+  const [draft, setDraft] = useState<WizardDraft>(() =>
+    initialBuiltInSlug
+      ? {
+          ...INITIAL_DRAFT,
+          kind: "built_in",
+          builtInSlug: initialBuiltInSlug,
+          key: initialBuiltInSlug,
+          name: initialBuiltInSlug,
+        }
+      : INITIAL_DRAFT,
+  );
   const [discovery, setDiscovery] = useState<DiscoveryResponse | null>(null);
   const [functionModes, setFunctionModes] = useState<Record<string, FunctionAccessMode>>({});
   const [selectedFunctions, setSelectedFunctions] = useState<Record<string, boolean>>({});
   const [expandedFunctions, setExpandedFunctions] = useState<Record<string, boolean>>({});
-  const [connectorSearch, setConnectorSearch] = useState("");
+  const [connectorSearch, setConnectorSearch] = useState(initialBuiltInSlug);
   const [functionSearch, setFunctionSearch] = useState("");
   const [discoverFeedback, setDiscoverFeedback] =
     useState<DiscoverFeedback | null>(null);
@@ -47,44 +58,6 @@ export const useWizardState = ({
       null,
     [builtInConnectors, draft.builtInSlug],
   );
-
-  useEffect(() => {
-    const builtInSlug = searchParams.get("builtIn")?.trim();
-    if (!builtInSlug) {
-      return;
-    }
-
-    if (draft.kind == null) {
-      setDraft((current) => ({
-        ...current,
-        kind: "built_in",
-      }));
-    }
-
-    if (step === 1) {
-      setStep(2);
-    }
-  }, [draft.kind, searchParams, step]);
-
-  useEffect(() => {
-    if (draft.kind !== "built_in") {
-      return;
-    }
-
-    const builtInSlug = searchParams.get("builtIn")?.trim();
-    if (!builtInSlug || draft.builtInSlug) {
-      return;
-    }
-
-    const connector = builtInConnectors.find(
-      (candidate) => candidate.slug === builtInSlug,
-    );
-    if (!connector) {
-      return;
-    }
-
-    handleConnectorSelect(connector);
-  }, [builtInConnectors, draft.builtInSlug, draft.kind, searchParams]);
 
   const reviewedFunctions = useMemo(
     () => getReviewedFunctions(discovery),
@@ -120,38 +93,41 @@ export const useWizardState = ({
   const oauthConnectionEnabled =
     !requiresOAuthConnection || selectedConnector?.oauthConfigured !== false;
 
-  function handleConnectorSelect(connector: BuiltInConnectorOption) {
-    setDraft((current) => ({
-      ...current,
-      builtInSlug: connector.slug,
-      key: connector.slug,
-      name: connector.name,
-      accessToken:
-        current.builtInSlug === connector.slug && connector.authStrategy === "bearer"
-          ? current.accessToken
-          : "",
-      apiKey:
-        current.builtInSlug === connector.slug && connector.authStrategy === "api_key"
-          ? current.apiKey
-          : "",
-      headerName:
-        connector.apiKeyHeaderName?.trim() ||
-        (current.builtInSlug === connector.slug && connector.authStrategy === "api_key"
-          ? current.headerName
-          : INITIAL_DRAFT.headerName),
-      username:
-        current.builtInSlug === connector.slug && connector.authStrategy === "basic"
-          ? current.username
-          : "",
-      password:
-        current.builtInSlug === connector.slug && connector.authStrategy === "basic"
-          ? current.password
-          : "",
-    }));
-    setConnectorSearch(connectorOptionLabel(connector));
-    setDiscoverFeedback(null);
-    onStatus(null);
-  }
+  const handleConnectorSelect = useCallback(
+    (connector: BuiltInConnectorOption) => {
+      setDraft((current) => ({
+        ...current,
+        builtInSlug: connector.slug,
+        key: connector.slug,
+        name: connector.name,
+        accessToken:
+          current.builtInSlug === connector.slug && connector.authStrategy === "bearer"
+            ? current.accessToken
+            : "",
+        apiKey:
+          current.builtInSlug === connector.slug && connector.authStrategy === "api_key"
+            ? current.apiKey
+            : "",
+        headerName:
+          connector.apiKeyHeaderName?.trim() ||
+          (current.builtInSlug === connector.slug && connector.authStrategy === "api_key"
+            ? current.headerName
+            : INITIAL_DRAFT.headerName),
+        username:
+          current.builtInSlug === connector.slug && connector.authStrategy === "basic"
+            ? current.username
+            : "",
+        password:
+          current.builtInSlug === connector.slug && connector.authStrategy === "basic"
+            ? current.password
+            : "",
+      }));
+      setConnectorSearch(connectorOptionLabel(connector));
+      setDiscoverFeedback(null);
+      onStatus(null);
+    },
+    [onStatus],
+  );
 
   const handleConnectorSearchChange = (value: string) => {
     setConnectorSearch(value);

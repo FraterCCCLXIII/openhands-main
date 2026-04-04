@@ -41,6 +41,7 @@ const discovery: DiscoveryResponse = {
   authStrategy: "api_key",
   config: {
     apiBaseUrl: "https://api.elevenlabs.io",
+    builtInSlug: "elevenlabs",
   },
   credentials: {
     headerName: "xi-api-key",
@@ -85,15 +86,29 @@ describe("integration-wizard-utils", () => {
     });
   });
 
-  it("builds create payloads that preserve discovery config and updated access modes", () => {
-    const payload = buildCreatePayload(builtInDraft, discovery, {
-      delete_voice: "disabled",
-      list_models: "approval_required",
-    });
+  it("builds create payloads that preserve discovery metadata and updated access modes", () => {
+    const payload = buildCreatePayload(
+      { ...builtInDraft, name: "elevenlabs" },
+      discovery,
+      {
+        delete_voice: "disabled",
+        list_models: "approval_required",
+      },
+      elevenLabsConnector,
+    );
 
-    expect(payload.config).toEqual({
-      apiBaseUrl: "https://api.elevenlabs.io",
-      builtInSlug: "elevenlabs",
+    expect(payload).toMatchObject({
+      key: "elevenlabs",
+      name: "ElevenLabs",
+      kind: "api",
+      provider: "http",
+      authStrategy: "api_key",
+      enabled: true,
+      fineGrainedPermissions: true,
+      config: {
+        apiBaseUrl: "https://api.elevenlabs.io",
+        builtInSlug: "elevenlabs",
+      },
     });
     expect(payload.functions.list_models).toMatchObject({
       accessMode: "approval_required",

@@ -1,9 +1,8 @@
-export const DEFAULT_AGENT_ID = "research-bot-01";
-export const DEFAULT_AGENT_CLASS = "researcher";
-
-const normalizeOptionalString = (value: string | null | undefined) => {
+export const normalizeAgentIdentityValue = (
+  value: string | null | undefined,
+): string | null => {
   const normalized = value?.trim();
-  return normalized ? normalized : undefined;
+  return normalized ? normalized : null;
 };
 
 export const resolveInvocationIdentity = ({
@@ -13,6 +12,6 @@ export const resolveInvocationIdentity = ({
   agentId?: string | null;
   agentClass?: string | null;
 }) => ({
-  agentId: normalizeOptionalString(agentId) ?? DEFAULT_AGENT_ID,
-  agentClass: normalizeOptionalString(agentClass) ?? DEFAULT_AGENT_CLASS,
+  agentId: normalizeAgentIdentityValue(agentId),
+  agentClass: normalizeAgentIdentityValue(agentClass),
 });

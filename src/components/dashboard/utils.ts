@@ -131,15 +131,22 @@ export const matchesAccessRequestSearch = (
   }
 
   return [
-    request.agentId,
-    request.agentClass,
+    request.agentId ?? "",
+    request.agentClass ?? "",
     request.integrationKey,
     request.functionName,
     request.justification ?? "",
+    request.agentData?.conversationLink ?? "",
     approvalStatusLabel(request.status),
     ...request.scopes,
   ].some((value) => value.toLowerCase().includes(normalizedQuery));
 };
+
+export const hasMissingApprovalIdentity = (request: AccessRequest) =>
+  !request.agentId && !request.agentClass;
+
+export const formatApprovalIdentityValue = (value: string | null) =>
+  value ?? "Not provided";
 
 export const countApprovalRequestsByStatus = (requests: AccessRequest[]) => ({
   pending: requests.filter((request) => approvalStatusLabel(request.status) === "pending")

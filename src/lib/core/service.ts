@@ -22,6 +22,7 @@ import { resolveOAuthProvider } from "@/src/lib/oauth/provider-resolver";
 import type {
   AccessDecision,
   AccessRequest,
+  AccessRequestAgentData,
   AdminApiKeyRecord,
   AdminApiKeyStatus,
   AgentApiKeyRecord,
@@ -30,7 +31,6 @@ import type {
   DisableUnusedFunctionsResult,
   FunctionAccessMode,
   FunctionSpec,
-  FunctionUsageSummary,
   GenericOAuthConfig,
   IntegrationConnectionRecord,
   IntegrationConnectionStatus,
@@ -111,6 +111,21 @@ const summarizeErrorMessage = (error: unknown, maxLength = 500) => {
     ? normalized
     : `${normalized.slice(0, maxLength - 1)}…`;
 };
+
+const normalizeAccessRequestAgentData = (
+  agentData?: AccessRequestAgentData,
+): AccessRequestAgentData => {
+  const conversationLink = agentData?.conversationLink?.trim();
+
+  return conversationLink ? { conversationLink } : {};
+};
+
+const sameAccessRequestAgentData = (
+  left?: AccessRequestAgentData,
+  right?: AccessRequestAgentData,
+) =>
+  normalizeAccessRequestAgentData(left).conversationLink ===
+  normalizeAccessRequestAgentData(right).conversationLink;
 
 const subtractUnusedWindow = (
   referenceIso: string,
@@ -231,6 +246,9 @@ const permittedByRule = (
   return true;
 };
 
+/**
+ * Main orchestration service for integration lifecycle, API-key management, approvals, and runtime tool invocation.
+ */
 export class ContextLayerService {
   constructor(
     private readonly repository: ContextRepository,
@@ -1018,13 +1036,14 @@ export class ContextLayerService {
   }
 
   async evaluateAccess(
-    agentId: string,
-    agentClass: string,
+    agentId: string | null,
+    agentClass: string | null,
     integrationKey: string,
     functionName: string,
     requestedScopes: string[] = [],
     options: {
       ownerId?: string;
+      agentData?: AccessRequestAgentData;
     } = {},
   ): Promise<AccessDecision> {
     const integration = await this.getRuntimeIntegration(
@@ -1091,7 +1110,7 @@ export class ContextLayerService {
       return { allowed: false, reason: "Permission required", effectiveScopes };
     }
 
-    const policy = await this.repository.getPolicy(agentClass);
+    const policy = agentClass ? await this.repository.getPolicy(agentClass) : null;
     if (!policy) {
       return {
         allowed: true,
@@ -1133,6 +1152,8 @@ export class ContextLayerService {
     await this.initialize();
     const accessRequest: AccessRequest = {
       ...request,
+      justification: request.justification?.trim() || undefined,
+      agentData: normalizeAccessRequestAgentData(request.agentData),
       id: randomUUID(),
       createdAt: nowIso(),
       status: "pending",
@@ -1193,15 +1214,20 @@ export class ContextLayerService {
     return this.repository.purgeExpiredGrants(nowIso());
   }
 
+  /**
+   * Resolves an owner-scoped integration, enforces access policy, invokes the backing adapter,
+   * and records best-effort invocation metadata for auditing.
+   */
   async invokeContext(
-    agentId: string,
-    agentClass: string,
+    agentId: string | null,
+    agentClass: string | null,
     integrationKey: string,
     functionName: string,
     payload: Record<string, unknown> = {},
     requestedScopes: string[] = [],
     options: {
       ownerId?: string;
+      agentData?: AccessRequestAgentData;
     } = {},
   ): Promise<ContextInvocationResult> {
     const integration = await this.getRuntimeIntegration(
@@ -1242,6 +1268,7 @@ export class ContextLayerService {
               functionName,
               scopes: decision.effectiveScopes,
               ownerId: options.ownerId,
+              agentData: options.agentData,
             });
           },
         );
@@ -1348,8 +1375,8 @@ export class ContextLayerService {
     errorMessage,
   }: {
     ownerId?: string;
-    agentId: string;
-    agentClass: string;
+    agentId: string | null;
+    agentClass: string | null;
     integration: Pick<IntegrationSpec, "key" | "provider" | "kind" | "authStrategy">;
     functionName: string;
     scopes: string[];
@@ -1513,13 +1540,15 @@ export class ContextLayerService {
     functionName,
     scopes,
     ownerId,
+    agentData,
   }: {
-    agentId: string;
-    agentClass: string;
+    agentId: string | null;
+    agentClass: string | null;
     integrationKey: string;
     functionName: string;
     scopes: string[];
     ownerId?: string;
+    agentData?: AccessRequestAgentData;
   }) {
     await this.initialize();
     const pendingRequests = (await this.repository.listAccessRequests()).filter(
@@ -1535,6 +1564,19 @@ export class ContextLayerService {
     );
 
     if (existing) {
+      const normalizedAgentData = normalizeAccessRequestAgentData(agentData);
+      if (
+        normalizedAgentData.conversationLink &&
+        !sameAccessRequestAgentData(existing.agentData, normalizedAgentData)
+      ) {
+        const updated = {
+          ...existing,
+          agentData: normalizedAgentData,
+        } satisfies AccessRequest;
+        await this.repository.updateAccessRequest(updated);
+        return updated;
+      }
+
       return existing;
     }
 
@@ -1551,8 +1593,7 @@ export class ContextLayerService {
       notificationTargets: {
         in_app: notificationRecipient,
       },
-      justification:
-        "Auto-created after an agent attempted a case-by-case tool without an active approval.",
+      agentData,
     });
   }
 

@@ -4,8 +4,10 @@ import {
   buildInstalledIntegrationKeys,
   buildMarketplaceConnectors,
   filterIntegrationsForDisplay,
+  matchesAccessRequestSearch,
 } from "@/src/components/dashboard/utils";
 import type {
+  AccessRequest,
   BuiltInConnectorOption,
   IntegrationSpec,
 } from "@/src/types/context-layer";
@@ -104,6 +106,24 @@ const integrations: IntegrationSpec[] = [
   },
 ];
 
+const accessRequest: AccessRequest = {
+  id: "request-1",
+  agentId: null,
+  agentClass: null,
+  integrationKey: "slack",
+  functionName: "slack_search_public",
+  scopes: ["messages:read"],
+  requestedMinutes: 60,
+  channels: ["in_app"],
+  notificationTargets: {},
+  justification: "Need to debug a customer thread",
+  status: "pending",
+  agentData: {
+    conversationLink: "https://app.all-hands.dev/conversations/example",
+  },
+  createdAt: "2026-04-01T12:00:00.000Z",
+};
+
 describe("dashboard-workspace-utils", () => {
   it("builds marketplace rows in popular order while excluding installed connectors", () => {
     const installedKeys = buildInstalledIntegrationKeys(integrations);
@@ -140,5 +160,11 @@ describe("dashboard-workspace-utils", () => {
     expect(visible[0]?.visibleFunctions.map((functionSpec) => functionSpec.name)).toEqual([
       "slack_search_public",
     ]);
+  });
+
+  it("matches approval requests by conversation link and missing identity values", () => {
+    expect(matchesAccessRequestSearch(accessRequest, "conversations/example")).toBe(true);
+    expect(matchesAccessRequestSearch(accessRequest, "messages:read")).toBe(true);
+    expect(matchesAccessRequestSearch(accessRequest, "not provided")).toBe(false);
   });
 });

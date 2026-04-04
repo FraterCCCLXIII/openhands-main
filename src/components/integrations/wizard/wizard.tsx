@@ -89,24 +89,29 @@ export const IntegrationWizard = ({
       : !!state.draft.serverUrl.trim());
 
   const discoverMutation = useMutation({
-    mutationFn: async () =>
+    mutationFn: async (input: {
+      draft: typeof state.draft;
+      connector: BuiltInConnectorOption | null;
+    }) =>
       fetchJson<DiscoveryResponse>("/api/integrations/discover", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(buildDiscoverPayload(state.draft, state.selectedConnector)),
+        body: JSON.stringify(buildDiscoverPayload(input.draft, input.connector)),
       }),
-    onMutate: () => {
+    onMutate: (input) => {
       const providerName =
-        state.selectedConnector?.name || state.draft.name.trim() || state.draft.key.trim();
+        input.connector?.name || input.draft.name.trim() || input.draft.key.trim();
       state.setDiscoverFeedback({
         tone: "info",
         message: `Discovering functions for ${providerName}… Loading the connector's available function catalog.`,
       });
       onStatus(null);
     },
-    onSuccess: (result) => {
+    onSuccess: (result, input) => {
       state.applyDiscoveryResult(result);
-      const message = `Discovered ${Object.keys(result.functions).length} functions. Review their default access before saving.`;
+      const providerName =
+        input.connector?.name || input.draft.name.trim() || input.draft.key.trim();
+      const message = `Discovered ${Object.keys(result.functions).length} functions for ${providerName}. Review their default access before saving.`;
       state.setDiscoverFeedback({
         tone: "success",
         message,
@@ -126,24 +131,18 @@ export const IntegrationWizard = ({
   });
 
   const createMutation = useMutation({
-    mutationFn: async () =>
+    mutationFn: async (
+      payload: ReturnType<typeof buildCreatePayload>,
+    ) =>
       fetchJson("/api/integrations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(
-          buildCreatePayload(
-            state.draft,
-            state.discovery as DiscoveryResponse,
-            state.functionModes,
-          ),
-        ),
+        body: JSON.stringify(payload),
       }),
-    onSuccess: async () => {
-      const functionCount = state.discovery
-        ? Object.keys(state.discovery.functions).length
-        : 0;
+    onSuccess: async (_result, payload) => {
+      const functionCount = Object.keys(payload.functions).length;
       onStatus(
-        `Created ${state.draft.name || state.draft.key} with ${functionCount} discovered functions.`,
+        `Created ${payload.name || payload.key} with ${functionCount} discovered functions.`,
       );
       await onCreated();
       state.resetAfterCreate();
@@ -152,6 +151,11 @@ export const IntegrationWizard = ({
       onStatus(error.message);
     },
   });
+
+  const integrationDisplayName =
+    state.draft.kind === "built_in"
+      ? (state.selectedConnector?.name ?? state.draft.name.trim()) || state.draft.key.trim()
+      : state.draft.name.trim() || state.draft.key.trim();
 
   return (
     <Card className="p-6">
@@ -210,7 +214,12 @@ export const IntegrationWizard = ({
             state.setStep(1);
           }}
           onConnectorSearchChange={state.handleConnectorSearchChange}
-          onDiscover={() => discoverMutation.mutate()}
+          onDiscover={() =>
+            discoverMutation.mutate({
+              draft: state.draft,
+              connector: state.selectedConnector,
+            })
+          }
         />
       ) : null}
 
@@ -220,7 +229,7 @@ export const IntegrationWizard = ({
           createPending={createMutation.isPending}
           discovery={state.discovery}
           draftKey={state.draft.key}
-          draftName={state.draft.name}
+          draftName={integrationDisplayName}
           expandedFunctions={state.expandedFunctions}
           filteredReviewedFunctions={state.filteredReviewedFunctions}
           functionModes={state.functionModes}
@@ -234,7 +243,16 @@ export const IntegrationWizard = ({
           selectedFunctions={state.selectedFunctions}
           selectedMatchingCount={state.selectedMatchingCount}
           onBack={() => state.setStep(2)}
-          onCreate={() => createMutation.mutate()}
+          onCreate={() =>
+            createMutation.mutate(
+              buildCreatePayload(
+                state.draft,
+                state.discovery as DiscoveryResponse,
+                state.functionModes,
+                state.selectedConnector,
+              ),
+            )
+          }
           onFunctionSearchChange={state.setFunctionSearch}
           onSetAccessModeForFunctions={state.setAccessModeForFunctions}
           onSetFunctionMode={(name, nextMode) =>

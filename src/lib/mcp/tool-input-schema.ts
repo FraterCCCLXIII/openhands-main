@@ -157,8 +157,8 @@ const buildShapeFromRequestTemplate = (requestTemplate?: GenericHttpRequestTempl
 };
 
 export const CONTEXT_RESERVED_TOOL_INPUT_SHAPE = {
-  contextAgentId: z.string().trim().min(1).optional(),
-  contextAgentClass: z.string().trim().min(1).optional(),
+  contextAgentId: z.string().trim().min(1).nullable().optional(),
+  contextAgentClass: z.string().trim().min(1).nullable().optional(),
   contextScopes: z.array(z.string()).default([]),
 };
 

@@ -43,7 +43,6 @@ export default async function HomePage() {
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
-            <a href="/api/context/sample/mock" className="hidden" />
             <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)] px-4 py-2 text-sm text-[var(--color-text-base)]">
               Unified route: <code>POST /api/context/[integration]/[function]</code>
             </div>

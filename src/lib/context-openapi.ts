@@ -1,6 +1,5 @@
 import { z } from "zod";
 
-import { DEFAULT_AGENT_CLASS, DEFAULT_AGENT_ID } from "@/src/lib/agent-defaults";
 import { contextInvokeSchema } from "@/src/lib/core/schema";
 import {
   buildExamplePayload,
@@ -70,9 +69,7 @@ const buildOperationDescription = (
     details.push(`Default scopes: ${functionSpec.defaultScopes.join(", ")}`);
   }
 
-  details.push(
-    `Invocation identity defaults to ${DEFAULT_AGENT_ID} (${DEFAULT_AGENT_CLASS}) when agentId and agentClass are omitted.`,
-  );
+  details.push("Invocation identity is optional; agentId and agentClass default to null when omitted.");
 
   if (getFunctionAccessMode(functionSpec) === "approval_required") {
     details.push("Access mode: case-by-case approval");
@@ -83,6 +80,9 @@ const buildOperationDescription = (
   return `${integration.name} tool \`${functionSpec.name}\` exposed through the unified context-layer endpoint. ${details.join(" · ")}`;
 };
 
+/**
+ * Generates the agent runtime OpenAPI document for the caller's currently visible tools.
+ */
 export const buildContextOpenApiDocument = ({
   baseUrl,
   integrations,

@@ -188,34 +188,45 @@ export const buildCreatePayload = (
   draft: WizardDraft,
   discovery: DiscoveryResponse,
   functionModes: Record<string, FunctionAccessMode>,
+  connector: BuiltInConnectorOption | null,
 ) => {
   if (!draft.kind) {
     throw new Error("Select Built-in connector or MCP first.");
   }
 
+  const key = draft.key.trim();
+  const name =
+    draft.kind === "built_in"
+      ? (connector?.name ?? draft.name.trim()) || key
+      : draft.name.trim() || key;
+
   return {
-    key: draft.key.trim(),
-    name: draft.name.trim() || draft.key.trim(),
-    kind: draft.kind,
-    config:
+    key,
+    name,
+    kind:
       draft.kind === "built_in"
-        ? {
-            ...discovery.config,
-            builtInSlug: draft.builtInSlug.trim(),
-          }
-        : discovery.config,
+        ? discovery.provider === "http"
+          ? "api"
+          : "mcp"
+        : draft.kind,
+    provider: discovery.provider,
+    authStrategy: discovery.authStrategy,
+    enabled: true,
+    fineGrainedPermissions: true,
+    config: discovery.config,
     credentials: discovery.credentials,
     functions: Object.fromEntries(
-      Object.entries(discovery.functions).map(([name, functionSpec]) => [
-        name,
-        {
-          ...functionSpec,
-          accessMode: functionModes[name] ?? getFunctionAccessMode(functionSpec),
-          enabled:
-            (functionModes[name] ?? getFunctionAccessMode(functionSpec)) !==
-            "disabled",
-        },
-      ]),
+      Object.entries(discovery.functions).map(([name, functionSpec]) => {
+        const accessMode = functionModes[name] ?? getFunctionAccessMode(functionSpec);
+        return [
+          name,
+          {
+            ...functionSpec,
+            accessMode,
+            enabled: accessMode !== "disabled",
+          },
+        ];
+      }),
     ),
   };
 };
