@@ -1012,6 +1012,140 @@ describe("ContextLayerService", () => {
     });
   });
 
+  it("reduces but does not increase user-visible access when HTTP managed connector ceilings change", async () => {
+    const repository = testRepo;
+    const service = new ContextLayerService(
+      repository,
+      new AdapterRegistry({ mock: { invoke: async () => ({}) } }),
+      new NotificationPublisher(repository),
+    );
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            openapi: "3.1.0",
+            security: [{ bearerAuth: [] }],
+            components: {
+              parameters: {
+                notionVersion: {
+                  name: "Notion-Version",
+                  in: "header",
+                  required: true,
+                  schema: { enum: ["2026-03-11"] },
+                },
+              },
+            },
+            paths: {
+              "/v1/search": {
+                post: {
+                  operationId: "post-search",
+                  summary: "Search workspace",
+                  parameters: [{ $ref: "#/components/parameters/notionVersion" }],
+                  requestBody: {
+                    content: {
+                      "application/json": {
+                        schema: {
+                          type: "object",
+                          properties: {
+                            query: { type: "string" },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          }),
+          {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          },
+        ),
+      ),
+    );
+
+    const managedConnectorInput = {
+      slug: "notion",
+      name: "Notion",
+      description: "Managed Notion REST connector",
+      categories: ["Knowledge base"],
+      authStrategy: "oauth2" as const,
+      authModes: ["oauth2" as const],
+      provider: "http" as const,
+      credentialLabel: "Connect Notion",
+      credentialPlaceholder: "Connect Notion",
+      credentialHelp: "Connect Notion with OAuth.",
+      apiBaseUrl: "https://api.notion.com",
+      openApiUrl: "https://developers.notion.com/openapi.json",
+      oauthConfig: {
+        authorizationUrl: "https://api.notion.com/v1/oauth/authorize",
+        tokenUrl: "https://api.notion.com/v1/oauth/token",
+        scopes: [],
+      },
+      oauthClientId: "notion-client-id",
+      oauthClientSecret: "notion-client-secret",
+      functions: [],
+      enabled: true,
+    };
+
+    const connector = await service.upsertManagedConnector(managedConnectorInput);
+
+    await service.registerOwnerIntegration(OWNER_ID, {
+      key: "notion",
+      name: "Notion",
+      kind: "api",
+      provider: "http",
+      authStrategy: "oauth2",
+      enabled: true,
+      fineGrainedPermissions: true,
+      config: {
+        builtInSlug: "notion",
+        managedConnectorSlug: "notion",
+      },
+      credentials: {},
+      functions: {},
+    });
+
+    await service.upsertManagedConnector({
+      ...managedConnectorInput,
+      functions: connector.functions.map((functionSpec) =>
+        functionSpec.name === "post_search"
+          ? { ...functionSpec, accessMode: "approval_required" }
+          : functionSpec,
+      ),
+    });
+
+    let integrations = await service.listOwnerIntegrations(OWNER_ID);
+    expect(integrations[0]?.functions.post_search).toMatchObject({
+      accessMode: "approval_required",
+      maxAccessMode: "approval_required",
+      enabled: true,
+    });
+
+    await service.setOwnerFunctionAccessMode(
+      OWNER_ID,
+      "notion",
+      "post_search",
+      "disabled",
+    );
+
+    await service.upsertManagedConnector({
+      ...managedConnectorInput,
+      functions: connector.functions,
+    });
+
+    integrations = await service.listOwnerIntegrations(OWNER_ID);
+    expect(integrations[0]?.functions.post_search).toMatchObject({
+      accessMode: "disabled",
+      maxAccessMode: "enabled",
+      enabled: false,
+    });
+  });
+
+
   it("deletes an existing managed connector", async () => {
     const repository = testRepo;
     const service = new ContextLayerService(

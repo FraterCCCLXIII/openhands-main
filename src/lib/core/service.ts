@@ -139,6 +139,29 @@ const sanitizeManagedConnectorFunctionResponse = (
   connector: ManagedConnectorRecord,
 ): ManagedConnectorRecord => sanitizeManagedConnector(sanitizeManagedConnectorFunctionSource(connector));
 
+const getManagedConnectorFunctionAccessModes = (
+  functions: ManagedConnectorFunctionDefinition[],
+) =>
+  new Map(
+    functions.map((functionSpec) => [
+      functionSpec.name,
+      getManagedConnectorFunctionAccessMode(functionSpec),
+    ]),
+  );
+
+const applyManagedConnectorFunctionAccessModes = (
+  functions: ManagedConnectorFunctionDefinition[],
+  preferredAccessModes: Map<string, FunctionAccessMode>,
+  fallbackAccessModes?: Map<string, FunctionAccessMode>,
+) =>
+  functions.map((functionSpec) => ({
+    ...functionSpec,
+    accessMode:
+      preferredAccessModes.get(functionSpec.name) ??
+      fallbackAccessModes?.get(functionSpec.name) ??
+      getManagedConnectorFunctionAccessMode(functionSpec),
+  }));
+
 const mergeFunctionConfigs = (
   indexedConfig: Record<string, unknown>,
   installedConfig: Record<string, unknown>,
@@ -547,13 +570,19 @@ export class ContextLayerService {
             scopes: [...new Set(input.oauthConfig.scopes.map((scope) => scope.trim()).filter(Boolean))],
           }
         : undefined;
+    const requestedAccessModes = getManagedConnectorFunctionAccessModes(input.functions);
+    const existingAccessModes = getManagedConnectorFunctionAccessModes(existing?.functions ?? []);
 
     const generatedFunctions =
       provider === "http" && normalizedOpenApiUrl
-        ? await generateManagedConnectorFunctionsFromOpenApi({
-            openApiUrl: normalizedOpenApiUrl,
-            authStrategy: input.authStrategy,
-          })
+        ? applyManagedConnectorFunctionAccessModes(
+            await generateManagedConnectorFunctionsFromOpenApi({
+              openApiUrl: normalizedOpenApiUrl,
+              authStrategy: input.authStrategy,
+            }),
+            requestedAccessModes,
+            existingAccessModes,
+          )
         : undefined;
 
     let encryptedOAuthClient = existing?.encryptedOAuthClient;
@@ -655,12 +684,7 @@ export class ContextLayerService {
       throw new ContextLayerError("Managed connector not found.", 404);
     }
 
-    const existingAccessModes = new Map(
-      existing.functions.map((functionSpec) => [
-        functionSpec.name,
-        getManagedConnectorFunctionAccessMode(functionSpec),
-      ]),
-    );
+    const existingAccessModes = getManagedConnectorFunctionAccessModes(existing.functions);
 
     let functions: ManagedConnectorFunctionDefinition[];
     const provider = existing.provider ?? (existing.openApiUrl ? "http" : "mcp");
@@ -677,10 +701,10 @@ export class ContextLayerService {
         openApiUrl: existing.openApiUrl,
         authStrategy: existing.authStrategy,
       });
-      functions = generatedFunctions.map((functionSpec) => ({
-        ...functionSpec,
-        accessMode: existingAccessModes.get(functionSpec.name) ?? "enabled",
-      }));
+      functions = applyManagedConnectorFunctionAccessModes(
+        generatedFunctions,
+        existingAccessModes,
+      );
     } else {
       const credentials =
         existing.authStrategy === "oauth2" && ownerId

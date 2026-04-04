@@ -57,7 +57,7 @@ afterEach(async () => {
 });
 
 describe("POST /api/managed-connectors/[slug]/functions", () => {
-  it("re-indexes tools for allowlisted app administrators", async () => {
+  it("re-indexes tools for allowlisted app administrators while preserving existing access ceilings", async () => {
     vi.stubEnv("APP_ADMIN_EMAILS", "admin@example.com");
     const service = getContextLayerService();
     await service.upsertManagedConnector({
@@ -111,7 +111,7 @@ describe("POST /api/managed-connectors/[slug]/functions", () => {
     expect(body.functions).toContainEqual(
       expect.objectContaining({
         name: "list_pages",
-        accessMode: "enabled",
+        accessMode: "approval_required",
       }),
     );
     expect(generateManagedConnectorFunctionsFromOpenApiMock).toHaveBeenCalledTimes(1);
