@@ -25,7 +25,7 @@ Legacy redirects:
 - `POST /api/context/[integrationKey]/[functionName]`
 - Auth: personal agent/runtime API key (`cla_...`)
 - Generated schema: `GET /api/context/openapi`
-- Generated skill markdown: `GET /api/context/skill`
+- Generated tool catalog markdown: `GET /api/context/skill`
 
 ### MCP server
 
@@ -61,6 +61,6 @@ Legacy redirects:
 ## Related generated docs
 
 - `src/lib/agent-connection.ts` builds the connection examples shown in the dashboard
-- `src/lib/agent-skill.ts` builds the downloadable `SKILL.md`
+- `src/lib/agent-skill.ts` builds the downloadable `SKILL.md` tool catalog
 - `src/lib/context-openapi.ts` builds the agent runtime OpenAPI document
 - `src/lib/user-openapi.ts` and `src/lib/admin-openapi.ts` build the automation API documents

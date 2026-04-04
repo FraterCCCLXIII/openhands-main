@@ -259,7 +259,7 @@ describe("IntegrationWizard", () => {
     });
 
     const discoverButton = Array.from(container.querySelectorAll("button")).find(
-      (button) => button.textContent?.includes("Discover functions"),
+      (button) => button.textContent?.includes("Discover tools"),
     );
     expect(discoverButton).toBeTruthy();
     expect(discoverButton?.hasAttribute("disabled")).toBe(false);
@@ -272,7 +272,7 @@ describe("IntegrationWizard", () => {
       await new Promise((resolve) => setTimeout(resolve, 25));
     });
 
-    expect(container.textContent).toContain("1 functions discovered for ElevenLabs");
+    expect(container.textContent).toContain("1 tool discovered for ElevenLabs");
     expect(container.textContent).toContain("list_models");
   });
 
@@ -463,7 +463,7 @@ describe("IntegrationWizard", () => {
     });
 
     const discoverButton = Array.from(container.querySelectorAll("button")).find(
-      (button) => button.textContent?.includes("Discover functions"),
+      (button) => button.textContent?.includes("Discover tools"),
     );
     expect(discoverButton).toBeTruthy();
     expect(discoverButton?.hasAttribute("disabled")).toBe(false);
@@ -476,7 +476,7 @@ describe("IntegrationWizard", () => {
       await new Promise((resolve) => setTimeout(resolve, 25));
     });
 
-    expect(container.textContent).toContain("1 functions discovered for Notion");
+    expect(container.textContent).toContain("1 tool discovered for Notion");
     expect(container.textContent).toContain("searchPages");
   });
 
@@ -632,7 +632,7 @@ describe("IntegrationWizard", () => {
         .querySelector(`[data-function-name="${name}"] [data-access-mode]`)
         ?.getAttribute("data-access-mode");
 
-    await clickButton("Discover functions");
+    await clickButton("Discover tools");
 
     expect(getVisibleFunctionNames()).toEqual([
       "archiveDatabase",
@@ -641,7 +641,7 @@ describe("IntegrationWizard", () => {
     ]);
 
     const searchInput = container.querySelector(
-      'input[type="search"][aria-label="Search functions"]',
+      'input[type="search"][aria-label="Search tools"]',
     ) as HTMLInputElement | null;
     expect(searchInput).toBeTruthy();
 
@@ -894,7 +894,7 @@ describe("IntegrationWizard", () => {
     });
 
     const discoverButton = Array.from(container.querySelectorAll("button")).find(
-      (button) => button.textContent?.includes("Discover functions"),
+      (button) => button.textContent?.includes("Discover tools"),
     );
     expect(discoverButton).toBeTruthy();
     expect(discoverButton?.hasAttribute("disabled")).toBe(false);
@@ -914,7 +914,7 @@ describe("IntegrationWizard", () => {
     expect(feedback?.textContent).toContain("Admin diagnostics");
     expect(feedback?.textContent).toContain('"startsWithBearerPrefix": false');
     expect(feedback?.textContent).toContain('"operationName": "listTools"');
-    expect(container.textContent).toContain("Connect and discover functions");
+    expect(container.textContent).toContain("Connect and discover tools");
   });
 
 

@@ -103,7 +103,7 @@ export const IntegrationWizard = ({
         input.connector?.name || input.draft.name.trim() || input.draft.key.trim();
       state.setDiscoverFeedback({
         tone: "info",
-        message: `Discovering functions for ${providerName}… Loading the connector's available function catalog.`,
+        message: `Discovering tools for ${providerName}… Loading the connector's available tool catalog.`,
       });
       onStatus(null);
     },
@@ -111,7 +111,8 @@ export const IntegrationWizard = ({
       state.applyDiscoveryResult(result);
       const providerName =
         input.connector?.name || input.draft.name.trim() || input.draft.key.trim();
-      const message = `Discovered ${Object.keys(result.functions).length} functions for ${providerName}. Review their default access before saving.`;
+      const discoveredToolCount = Object.keys(result.functions).length;
+      const message = `Discovered ${discoveredToolCount} tool${discoveredToolCount === 1 ? "" : "s"} for ${providerName}. Review their default access before saving.`;
       state.setDiscoverFeedback({
         tone: "success",
         message,
@@ -142,7 +143,7 @@ export const IntegrationWizard = ({
     onSuccess: async (_result, payload) => {
       const functionCount = Object.keys(payload.functions).length;
       onStatus(
-        `Created ${payload.name || payload.key} with ${functionCount} discovered functions.`,
+        `Created ${payload.name || payload.key} with ${functionCount} discovered tool${functionCount === 1 ? "" : "s"}.`,
       );
       await onCreated();
       state.resetAfterCreate();
@@ -168,7 +169,7 @@ export const IntegrationWizard = ({
         />
         <StepBadge
           step={2}
-          label="Connect and discover functions"
+          label="Connect and discover tools"
           active={state.step === 2}
           complete={state.step > 2}
         />

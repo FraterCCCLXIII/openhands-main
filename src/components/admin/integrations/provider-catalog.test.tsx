@@ -263,7 +263,7 @@ describe("ProviderCatalog", () => {
     expect(container.textContent).toContain(
       "The standard OAuth URLs and scopes for Google Calendar are already filled in.",
     );
-    expect(container.textContent).toContain("Starter API function:");
+    expect(container.textContent).toContain("Starter API tool:");
     expect(container.textContent).toContain("list_events");
     expect(container.textContent).toContain("GET /calendars/primary/events");
     expect(container.textContent).not.toContain("OAuth docs");
@@ -393,7 +393,7 @@ describe("ProviderCatalog", () => {
     expect(container.textContent).toContain(`${oauthCallbackBaseUrl}/slack/callback`);
     expect(container.textContent).toContain("MCP server URL");
     expect(container.textContent).not.toContain("API base URL");
-    expect(container.textContent).not.toContain("Starter API function:");
+    expect(container.textContent).not.toContain("Starter API tool:");
 
     const urlInputs = Array.from(container.querySelectorAll('input[type="url"]'));
     expect(urlInputs).toHaveLength(1);

@@ -523,10 +523,10 @@ export function ProviderCatalog({
                           <p className="mt-1 text-sm text-[var(--color-text-base)]">
                             {usesOAuth
                               ? isHttpConnector
-                                ? `Enter the REST API details below to register this connector once for the whole service. Individual users will later connect their own account and discover the generated function catalog from the published API schema in the integrations wizard.`
+                                ? `Enter the REST API details below to register this connector once for the whole service. Individual users will later connect their own account and discover the generated tool catalog from the published API schema in the integrations wizard.`
                                 : `Enter the MCP details below to register this connector once for the whole service. Individual users will later connect their own account and discover the MCP server's full tool list from the integrations wizard.`
                               : isHttpConnector
-                                ? `Enter the REST API details below to register this connector once for the whole service. Individual users will later provide their own ${authStrategy === "api_key" ? "API key" : authStrategy.replace("_", " ")} when they use the integrations wizard, and the full function catalog will be generated automatically from the published API schema.`
+                                ? `Enter the REST API details below to register this connector once for the whole service. Individual users will later provide their own ${authStrategy === "api_key" ? "API key" : authStrategy.replace("_", " ")} when they use the integrations wizard, and the full tool catalog will be generated automatically from the published API schema.`
                                 : `Enter the MCP details below to register this connector once for the whole service. Individual users will later provide their own ${authStrategy === "api_key" ? "API key" : authStrategy.replace("_", " ")} when they use the integrations wizard.`}
                           </p>
                         </div>
@@ -557,7 +557,7 @@ export function ProviderCatalog({
                               <code className="mx-1 text-white">{registrationForm.openApiUrl}</code>
                             </p>
                             <p className="mt-1">
-                              This connector will fetch that machine-readable API schema server-side during registration and generate the HTTP function templates automatically.
+                              This connector will fetch that machine-readable API schema server-side during registration and generate the HTTP tool templates automatically.
                             </p>
                           </div>
                         ) : null}
@@ -568,7 +568,7 @@ export function ProviderCatalog({
                         provider.registrationDefaults?.requestPath ? (
                           <div className="md:col-span-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-[11px] leading-5 text-[var(--color-text-base)]">
                             <p>
-                              Starter API function:
+                              Starter API tool:
                               <code className="mx-1 text-white">
                                 {provider.registrationDefaults.functionName}
                               </code>
@@ -576,7 +576,7 @@ export function ProviderCatalog({
                               <code className="mx-1 text-white">
                                 {provider.registrationDefaults.requestMethod} {provider.registrationDefaults.requestPath}
                               </code>
-                              until you replace it with a richer generated catalog or additional custom function templates.
+                              until you replace it with a richer generated catalog or additional custom tool templates.
                             </p>
                           </div>
                         ) : null}
@@ -631,7 +631,7 @@ export function ProviderCatalog({
                                 ? `Register this connector once and the deployment will create its own ${provider.name} MCP OAuth client automatically. Individual users will still authorize their own ${provider.name} sites and workspaces later from the integrations wizard.${usesFixedOAuthDefaults ? ` The standard OAuth URLs for ${provider.name} are already filled in.` : ""}`
                                 : `Create a ${provider.name} OAuth app before saving this connector so you can paste the client ID and client secret below.${usesFixedOAuthDefaults ? ` The standard OAuth URLs and scopes for ${provider.name} are already filled in.` : ""}`
                               : `This provider does not require service-level OAuth client credentials. Register the connector once here, and each user will later provide their own ${authStrategy === "api_key" ? "API key" : authStrategy.replace("_", " ")} in the integrations wizard.`}
-                            {isHttpConnector ? " The API function catalog will be generated from the published schema shown above." : ""}
+                            {isHttpConnector ? " The API tool catalog will be generated from the published schema shown above." : ""}
                           </p>
                           {usesOAuth ? (
                             <p className="mt-1">

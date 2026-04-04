@@ -123,6 +123,7 @@ describe("GET /api/context/skill", () => {
     expect(body).toContain(
       "POST https://context-layer.example.com/api/context/github/search_repositories",
     );
+    expect(body).toContain("Generated tool catalog for the current OpenHands Context Layer profile.");
     expect(body).not.toContain("slack.slack_search_public");
   });
 

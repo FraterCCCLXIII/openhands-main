@@ -25,7 +25,7 @@ const renderAccessMode = (functionSpec: FunctionSpec) => {
 };
 
 /**
- * Generates the downloadable SKILL.md file for the authenticated owner profile.
+ * Generates the downloadable SKILL.md tool catalog for the authenticated owner profile.
  */
 export const buildAgentSkillMarkdown = ({
   baseUrl,
@@ -52,10 +52,10 @@ export const buildAgentSkillMarkdown = ({
   const lines = [
     "---",
     "name: context-layer-profile-tools",
-    "description: Generated skill for the current OpenHands Context Layer profile. Use it when an agent should call one of the registered tools through /api/context.",
+    "description: Generated tool catalog for the current OpenHands Context Layer profile. Use it when an agent should call one of the registered tools through /api/context.",
     "---",
     "",
-    "This generated skill lists the tools that are currently available through the OpenHands Context Layer profile.",
+    "This generated tool catalog lists the tools that are currently available through the OpenHands Context Layer profile.",
     "",
     "## Auth",
     "",
@@ -83,7 +83,7 @@ export const buildAgentSkillMarkdown = ({
 
   if (availableIntegrations.length === 0) {
     lines.push(
-      "No enabled tools are available yet. Add integrations in the dashboard and keep the tool toggles enabled to populate this generated skill.",
+      "No enabled tools are available yet. Add integrations in the dashboard and keep the tool toggles enabled to populate this generated tool catalog.",
     );
   } else {
     for (const integration of availableIntegrations) {

@@ -17,7 +17,7 @@ export const KindStep = ({
       {
         kind: "built_in" as const,
         title: "Built-in connector",
-        body: "Pick from the service-level managed connectors, connect your account when OAuth is available, and let the dashboard discover the available functions.",
+        body: "Pick from the service-level managed connectors, connect your account when OAuth is available, and let the dashboard discover the available tools.",
         icon: KeyRound,
       },
       {

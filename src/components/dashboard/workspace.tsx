@@ -205,8 +205,8 @@ export const DashboardWorkspace = ({
     onSuccess: async (result) => {
       setStatusMessage(
         result.disabledCount > 0
-          ? `Disabled ${result.disabledCount} tracked ${result.disabledCount === 1 ? "function" : "functions"} unused since ${new Date(result.cutoffIso).toLocaleDateString()}.`
-          : "No tracked functions matched the selected unused window.",
+          ? `Disabled ${result.disabledCount} tracked ${result.disabledCount === 1 ? "tool" : "tools"} unused since ${new Date(result.cutoffIso).toLocaleDateString()}.`
+          : "No tracked tools matched the selected unused window.",
       );
       await invalidateAll();
     },
@@ -425,7 +425,7 @@ export const DashboardWorkspace = ({
 
   const handleDisableUnusedFunctions = () => {
     if (unusedFunctionCandidates.length === 0) {
-      setStatusMessage("No tracked functions matched the selected unused window.");
+      setStatusMessage("No tracked tools matched the selected unused window.");
       return;
     }
 
@@ -433,7 +433,7 @@ export const DashboardWorkspace = ({
       typeof window !== "undefined" &&
       typeof window.confirm === "function" &&
       !window.confirm(
-        `Disable ${unusedFunctionCandidates.length} tracked ${unusedFunctionCandidates.length === 1 ? "function" : "functions"} that have not been used since ${unusedCutoffDate.toLocaleDateString()}?`,
+        `Disable ${unusedFunctionCandidates.length} tracked ${unusedFunctionCandidates.length === 1 ? "tool" : "tools"} that have not been used since ${unusedCutoffDate.toLocaleDateString()}?`,
       )
     ) {
       return;
@@ -557,7 +557,7 @@ export const DashboardWorkspace = ({
             userEmail={userEmail}
             badges={[
               <Badge key="pending">{pendingAccessRequests.length} pending</Badge>,
-              <Badge key="functions">{discoveredFunctionCount} functions</Badge>,
+              <Badge key="functions">{discoveredFunctionCount} tools</Badge>,
             ]}
             action={<DashboardSignOutButton />}
           />

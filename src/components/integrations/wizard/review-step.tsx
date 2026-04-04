@@ -80,13 +80,14 @@ export const ReviewStep = ({
       <Badge>{discovery.provider}</Badge>
       <Badge>{authStrategyLabel(discovery.authStrategy)}</Badge>
       <span>
-        {reviewedFunctions.length} functions discovered for {draftName || draftKey}
+        {reviewedFunctions.length} tool
+        {reviewedFunctions.length === 1 ? "" : "s"} discovered for {draftName || draftKey}
       </span>
     </div>
 
     {reviewedFunctions.length === 0 ? (
       <div className="rounded-xl border border-dashed border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-5 text-sm text-[var(--color-text-base)]">
-        No functions were discovered for this connector. Go back and confirm the
+        No tools were discovered for this connector. Go back and confirm the
         selected managed connector or MCP server URL.
       </div>
     ) : (
@@ -95,11 +96,11 @@ export const ReviewStep = ({
           <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
             <div className="space-y-1">
               <h3 className="text-sm font-semibold text-white">
-                Review function access defaults
+                Review tool access defaults
               </h3>
               <p className="text-xs leading-6 text-[var(--color-text-base)]">
-                Search, select, and update multiple functions at once. Bulk actions
-                apply to the currently selected functions, while select all and
+                Search, select, and update multiple tools at once. Bulk actions
+                apply to the currently selected tools, while select all and
                 deselect only affect the current search results.
               </p>
             </div>
@@ -117,8 +118,8 @@ export const ReviewStep = ({
               type="search"
               value={functionSearch}
               onChange={(event) => onFunctionSearchChange(event.target.value)}
-              placeholder="Search functions"
-              aria-label="Search functions"
+              placeholder="Search tools"
+              aria-label="Search tools"
               className={cn(integrationWizardInputClassName, "w-full lg:max-w-md")}
             />
             <div className="flex flex-wrap gap-2">
@@ -181,7 +182,7 @@ export const ReviewStep = ({
 
         {filteredReviewedFunctions.length === 0 ? (
           <div className="rounded-xl border border-dashed border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-5 text-sm text-[var(--color-text-base)]">
-            No functions match this search. Try a different term.
+            No tools match this search. Try a different term.
           </div>
         ) : (
           <div className="overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)]">

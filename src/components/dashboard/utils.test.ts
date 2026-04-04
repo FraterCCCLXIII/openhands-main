@@ -141,7 +141,7 @@ describe("dashboard-workspace-utils", () => {
     ]);
   });
 
-  it("filters integrations by search while hiding disabled skills", () => {
+  it("filters integrations by search while hiding disabled tools", () => {
     const filtered = filterIntegrationsForDisplay({
       integrations,
       integrationSearch: "delete",

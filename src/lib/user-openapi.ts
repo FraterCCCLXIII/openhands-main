@@ -152,7 +152,7 @@ export const buildUserOpenApiDocument = ({
         operationId: "listUserIntegrations",
         summary: "List installed integrations",
         description:
-          "Returns the authenticated user's installed integrations and current per-function access settings.",
+          "Returns the authenticated user's installed integrations and current per-tool access settings.",
         security: buildUserSecurity(),
         responses: {
           200: {
@@ -174,9 +174,9 @@ export const buildUserOpenApiDocument = ({
       patch: {
         tags: ["User Integrations"],
         operationId: "updateUserFunctionAccessMode",
-        summary: "Update a function access mode",
+        summary: "Update a tool access mode",
         description:
-          "Updates the authenticated user's stored access mode for one installed integration function.",
+          "Updates the authenticated user's stored access mode for one installed integration tool.",
         security: buildUserSecurity(),
         parameters: [
           {
@@ -213,7 +213,7 @@ export const buildUserOpenApiDocument = ({
         },
         responses: {
           200: {
-            description: "Updated function configuration.",
+            description: "Updated tool configuration.",
             content: {
               "application/json": {
                 schema: {
@@ -224,7 +224,7 @@ export const buildUserOpenApiDocument = ({
           },
           401: buildUnauthorizedResponse(),
           404: {
-            description: "Unknown integration or function for the authenticated user.",
+            description: "Unknown integration or tool for the authenticated user.",
             content: {
               "application/json": {
                 schema: {

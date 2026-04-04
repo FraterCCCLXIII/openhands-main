@@ -369,7 +369,7 @@ export function ManagedConnectorList({
           </div>
           <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--color-text-base)]">
             <Badge>{filteredConnectors.length} connectors</Badge>
-            <Badge>{visibleFunctionCount} functions</Badge>
+            <Badge>{visibleFunctionCount} tools</Badge>
           </div>
         </div>
 
@@ -424,7 +424,7 @@ export function ManagedConnectorList({
                         {connector.description}
                       </p>
                       <p className="mt-1 text-[11px] leading-5 text-[var(--color-text-base)]">
-                        {connector.slug} · {functionCount} function
+                        {connector.slug} · {functionCount} tool
                         {functionCount === 1 ? "" : "s"} · updated {formatUpdatedAt(connector.updatedAt)}
                       </p>
                     </div>
@@ -542,7 +542,7 @@ export function ManagedConnectorList({
                               )}
                             />
                             <span className="text-[11px] leading-5 text-[var(--color-text-base)]">
-                              Leave blank if you want to keep the current stored function
+                              Leave blank if you want to keep the current stored tool
                               templates instead of regenerating them from a schema.
                             </span>
                           </label>

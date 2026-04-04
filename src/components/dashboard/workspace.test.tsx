@@ -266,7 +266,7 @@ describe("DashboardWorkspace", () => {
 
     expect(container.textContent).toContain("Your integrations");
     expect(container.textContent).not.toContain(
-      "Connect accounts, enable integrations, and tune skill access for your personal key.",
+      "Connect accounts, enable integrations, and tune tool access for your personal key.",
     );
     const adminIntegrationLinks = Array.from(
       container.querySelectorAll('a[href="/admin-integrations"]'),
@@ -728,7 +728,7 @@ describe("DashboardWorkspace", () => {
         functions: {
           zetaWrite: {
             name: "zetaWrite",
-            description: "Disabled write skill",
+            description: "Disabled write tool",
             enabled: false,
             accessMode: "disabled",
             fineGrainedPermissions: true,
@@ -877,16 +877,16 @@ describe("DashboardWorkspace", () => {
         ?.getAttribute("data-access-mode");
 
     const searchInput = container.querySelector(
-      'input[type="search"][aria-label="Search integrations and skills"]',
+      'input[type="search"][aria-label="Search integrations and tools"]',
     ) as HTMLInputElement | null;
     expect(searchInput).toBeTruthy();
 
     const hideDisabledInput = container.querySelector(
-      'input[type="checkbox"][aria-label="Hide disabled skills"]',
+      'input[type="checkbox"][aria-label="Hide disabled tools"]',
     ) as HTMLInputElement | null;
     expect(hideDisabledInput?.checked).toBe(true);
 
-    await clickButton("Show skills");
+    await clickButton("Show tools");
 
     expect(getVisibleFunctionNames()).toEqual(["alphaList", "betaReview"]);
 
@@ -964,7 +964,7 @@ describe("DashboardWorkspace", () => {
     ]);
   });
 
-  it("bulk disables only tracked unused skills from the integrations page", async () => {
+  it("bulk disables only tracked unused tools from the integrations page", async () => {
     usePathnameMock.mockReturnValue("/integrations");
 
     let integrationsState: IntegrationSpec[] = [
@@ -981,7 +981,7 @@ describe("DashboardWorkspace", () => {
         functions: {
           staleRead: {
             name: "staleRead",
-            description: "Old tracked skill",
+            description: "Old tracked tool",
             enabled: true,
             accessMode: "enabled",
             fineGrainedPermissions: true,
@@ -994,7 +994,7 @@ describe("DashboardWorkspace", () => {
           },
           freshWrite: {
             name: "freshWrite",
-            description: "Recently used skill",
+            description: "Recently used tool",
             enabled: true,
             accessMode: "enabled",
             fineGrainedPermissions: true,
@@ -1113,15 +1113,15 @@ describe("DashboardWorkspace", () => {
       await Promise.resolve();
     });
 
-    expect(container.textContent).toContain("1 skill matched");
+    expect(container.textContent).toContain("1 tool matched");
     expect(
       Array.from(container.querySelectorAll("button"))
-        .find((button) => button.getAttribute("aria-label") === "Disable unused functions")
+        .find((button) => button.getAttribute("aria-label") === "Disable unused tools")
         ?.textContent,
     ).toContain("Disable");
     await act(async () => {
       Array.from(container.querySelectorAll("button"))
-        .find((button) => button.textContent?.includes("Show skills"))
+        .find((button) => button.textContent?.includes("Show tools"))
         ?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
     expect(container.textContent).toContain("Last tracked invocation:");
@@ -1130,7 +1130,7 @@ describe("DashboardWorkspace", () => {
 
     await act(async () => {
       Array.from(container.querySelectorAll("button"))
-        .find((button) => button.getAttribute("aria-label") === "Disable unused functions")
+        .find((button) => button.getAttribute("aria-label") === "Disable unused tools")
         ?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
 
@@ -1140,10 +1140,10 @@ describe("DashboardWorkspace", () => {
     });
 
     expect(confirmSpy).toHaveBeenCalledTimes(1);
-    expect(confirmSpy.mock.calls[0]?.[0]).toContain("Disable 1 tracked function");
+    expect(confirmSpy.mock.calls[0]?.[0]).toContain("Disable 1 tracked tool");
     expect(confirmSpy.mock.calls[0]?.[0]).toContain("since");
-    expect(container.textContent).toContain("Disabled 1 tracked function");
-    expect(container.textContent).toContain("0 skills matched");
+    expect(container.textContent).toContain("Disabled 1 tracked tool");
+    expect(container.textContent).toContain("0 tools matched");
     expect(integrationsState[0]?.functions.staleRead.accessMode).toBe("disabled");
 
     confirmSpy.mockRestore();

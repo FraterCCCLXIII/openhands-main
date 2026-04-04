@@ -177,7 +177,7 @@ export const buildAdminOpenApiDocument = ({
         patch: {
           tags: ["Admin Integrations"],
           operationId: "updateAdminFunctionAccessMode",
-          summary: "Update a function access mode",
+          summary: "Update a tool access mode",
           security: buildAdminSecurity(),
           parameters: [
             {
@@ -214,7 +214,7 @@ export const buildAdminOpenApiDocument = ({
           },
           responses: {
             200: {
-              description: "Updated function spec.",
+              description: "Updated tool spec.",
               content: {
                 "application/json": {
                   schema: { $ref: "#/components/schemas/FunctionSpec" },
@@ -376,7 +376,7 @@ export const buildAdminOpenApiDocument = ({
         post: {
           tags: ["Admin Discovery"],
           operationId: "discoverAdminIntegration",
-          summary: "Discover functions from an integration definition",
+          summary: "Discover tools from an integration definition",
           security: buildAdminSecurity(),
           requestBody: {
             required: true,

@@ -219,7 +219,7 @@ export const ConnectStep = ({
                   ? `${selectedConnector?.name ?? "This provider"} is not available on this deployment yet. Visit /admin-integrations to request it.`
                   : selectedConnection
                     ? `${selectedConnector?.name} is connected. Click Discover to save this integration with your stored OAuth credentials.`
-                    : `Connect ${selectedConnector?.name ?? "this provider"} before discovering functions.`}
+                    : `Connect ${selectedConnector?.name ?? "this provider"} before discovering tools.`}
               </div>
             ) : builtInAuthStrategy === "api_key" ? (
               <div className="grid gap-4 md:grid-cols-2">
@@ -309,7 +309,7 @@ export const ConnectStep = ({
               </div>
             ) : builtInAuthStrategy === "none" ? (
               <div className="rounded-xl border border-dashed border-[var(--color-border)] px-4 py-4 text-sm text-[var(--color-text-base)]">
-                No provider credential is required for {selectedConnector?.name ?? "this connector"}. Click Discover to load the available functions.
+                No provider credential is required for {selectedConnector?.name ?? "this connector"}. Click Discover to load the available tools.
               </div>
             ) : (
               <label className="grid gap-2 text-sm text-white">
@@ -472,7 +472,7 @@ export const ConnectStep = ({
             Back
           </Button>
           <Button type="button" disabled={!canDiscover || discoverPending} onClick={onDiscover}>
-            {discoverPending ? "Discovering…" : "Discover functions"}
+            {discoverPending ? "Discovering…" : "Discover tools"}
           </Button>
         </div>
 
@@ -500,7 +500,7 @@ export const ConnectStep = ({
             <li>• The dashboard loads the managed connectors registered for this service.</li>
             <li>• Choosing a connector auto-fills the integration key and display name, while still letting you customize them if needed.</li>
             <li>• For OAuth connectors, each user connects their own account and the token is stored server-side for that user only.</li>
-            <li>• Discover functions calls the MCP for the selected connector and brings its full tool list into the review step.</li>
+            <li>• Choosing Discover tools calls the MCP for the selected connector and brings its full tool list into the review step.</li>
           </ul>
         ) : (
           <ul className="mt-3 space-y-2">
@@ -512,7 +512,7 @@ export const ConnectStep = ({
               • For GitHub MCP, use <code className="text-white">https://api.githubcopilot.com/mcp/</code>{" "}
               plus a GitHub PAT in <span className="text-white">Access token</span>.
             </li>
-            <li>• Every discovered tool is prepared as an enabled function by default for the review step.</li>
+            <li>• Every discovered tool is prepared as enabled by default for the review step.</li>
           </ul>
         )}
       </div>

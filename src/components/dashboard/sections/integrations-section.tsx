@@ -173,17 +173,17 @@ export const IntegrationsSection = ({
             <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
               <div className="space-y-1">
                 <h3 className="text-sm font-semibold text-white">
-                  Search and review your integration skills
+                  Search and review your integration tools
                 </h3>
                 <p className="text-xs leading-6 text-[var(--color-text-base)]">
                   Use the compact expandable rows here to search your active
-                  integrations, tune access modes, and hide disabled skills by
+                  integrations, tune access modes, and hide disabled tools by
                   default.
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--color-text-base)]">
                 <Badge>{filteredIntegrations.length} integrations</Badge>
-                <Badge>{visibleFunctionCount} visible skills</Badge>
+                <Badge>{visibleFunctionCount} visible tools</Badge>
               </div>
             </div>
 
@@ -192,25 +192,25 @@ export const IntegrationsSection = ({
                 type="search"
                 value={integrationSearch}
                 onChange={(event) => setIntegrationSearch(event.target.value)}
-                placeholder="Search integrations and skills"
-                aria-label="Search integrations and skills"
+                placeholder="Search integrations and tools"
+                aria-label="Search integrations and tools"
                 className={cn(dashboardInputClassName, "w-full lg:max-w-md")}
               />
               <label className="inline-flex items-center gap-2 rounded-md border border-[var(--color-border)] bg-[var(--color-bg-input)] px-3 py-2 text-xs text-white">
                 <input
                   type="checkbox"
                   checked={hideDisabledSkills}
-                  aria-label="Hide disabled skills"
+                  aria-label="Hide disabled tools"
                   onChange={(event) => setHideDisabledSkills(event.target.checked)}
                 />
-                <span>Hide disabled skills</span>
+                <span>Hide disabled tools</span>
               </label>
             </div>
           </div>
 
           {filteredIntegrations.length === 0 ? (
             <div className="rounded-xl border border-dashed border-[var(--color-border)] bg-[var(--color-surface-subtle)] px-3 py-4 text-sm text-[var(--color-text-base)]">
-              No integrations or skills match the current filters.
+              No integrations or tools match the current filters.
             </div>
           ) : (
             <div className="space-y-3">
@@ -243,7 +243,7 @@ export const IntegrationsSection = ({
                             </Badge>
                           </div>
                           <p className="mt-1 text-xs leading-5 text-[var(--color-text-base)]">
-                            {integration.key} · auth: {integration.authStrategy} · {visibleFunctions.length} visible skill
+                            {integration.key} · auth: {integration.authStrategy} · {visibleFunctions.length} visible tool
                             {visibleFunctions.length === 1 ? "" : "s"}
                             {functions.length > 0 ? ` of ${functions.length}` : ""}
                           </p>
@@ -285,7 +285,7 @@ export const IntegrationsSection = ({
                             onToggleIntegrationExpanded(integration.key, isExpanded)
                           }
                         >
-                          {isExpanded ? "Hide skills" : "Show skills"}
+                          {isExpanded ? "Hide tools" : "Show tools"}
                           <ChevronRight
                             className={cn(
                               "ml-1 h-4 w-4 transition-transform",
@@ -303,11 +303,11 @@ export const IntegrationsSection = ({
                       >
                         {functions.length === 0 ? (
                           <p className="px-4 py-4 text-sm text-[var(--color-text-base)]">
-                            No skills registered yet.
+                            No tools registered yet.
                           </p>
                         ) : visibleFunctions.length === 0 ? (
                           <p className="px-4 py-4 text-sm text-[var(--color-text-base)]">
-                            No visible skills match the current filters.
+                            No visible tools match the current filters.
                           </p>
                         ) : (
                           <div className="divide-y divide-[var(--color-border)]">
@@ -399,11 +399,11 @@ export const IntegrationsSection = ({
             <div className="flex flex-col gap-4 xl:grid xl:grid-cols-[minmax(0,1fr)_auto] xl:items-end xl:gap-6">
               <div className="space-y-1 xl:max-w-2xl">
                 <h4 className="text-sm font-semibold text-white">
-                  One-time bulk disable for unused skills
+                  One-time bulk disable for unused tools
                 </h4>
                 <p className="text-xs leading-6 text-[var(--color-text-base)]">
-                  Disable enabled skills with tracked usage that has been inactive
-                  since before {unusedCutoffDateLabel}. Functions without tracked
+                  Disable enabled tools with tracked usage that has been inactive
+                  since before {unusedCutoffDateLabel}. Tools without tracked
                   invocation history are skipped until new tracking data exists.
                 </p>
               </div>
@@ -443,7 +443,7 @@ export const IntegrationsSection = ({
                 </label>
                 <div className="flex flex-col gap-2 sm:items-end">
                   <p className="text-xs text-[var(--color-text-base)]">
-                    {unusedFunctionCandidateCount} skill
+                    {unusedFunctionCandidateCount} tool
                     {unusedFunctionCandidateCount === 1 ? "" : "s"} matched
                   </p>
                   <Button
@@ -452,7 +452,7 @@ export const IntegrationsSection = ({
                     className="h-8 shrink-0 rounded-md px-4 text-xs"
                     onClick={handleDisableUnusedFunctions}
                     disabled={isBulkDisablePending}
-                    aria-label="Disable unused functions"
+                    aria-label="Disable unused tools"
                   >
                     Disable
                   </Button>
