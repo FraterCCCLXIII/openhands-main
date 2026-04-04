@@ -4,7 +4,7 @@ import {
   AccessModeSlider,
   accessModeButtonClassName,
   getFunctionAccessMode,
-} from "@/src/components/admin/function-access-controls";
+} from "@/src/components/integrations/function-access-controls";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
 import { cn } from "@/src/lib/utils";
@@ -13,7 +13,7 @@ import {
   integrationWizardInputClassName,
   type DiscoveryResponse,
   type IntegrationKind,
-} from "@/src/components/admin/integration-wizard-utils";
+} from "@/src/components/integrations/wizard/utils";
 import type { FunctionAccessMode, FunctionSpec } from "@/src/types/context-layer";
 
 interface IntegrationWizardStepReviewProps {

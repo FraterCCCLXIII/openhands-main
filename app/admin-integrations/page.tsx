@@ -1,10 +1,10 @@
 import { ArrowLeft, Mail, ShieldCheck, UserRound } from "lucide-react";
 import Link from "next/link";
 
-import { AdminIntegrationsCatalog } from "@/src/components/admin/admin-integrations-catalog";
-import { DashboardSidebar, DashboardSidebarUserPanel } from "@/src/components/admin/dashboard-sidebar";
-import { DashboardSignOutButton } from "@/src/components/admin/dashboard-sign-out-button";
-import { ServiceUnavailableScreen } from "@/src/components/service-unavailable-screen";
+import { AdminIntegrationsCatalog } from "@/src/components/admin/integrations/catalog";
+import { DashboardSidebar, DashboardSidebarUserPanel } from "@/src/components/layout/dashboard-sidebar";
+import { DashboardSignOutButton } from "@/src/components/layout/dashboard-sign-out-button";
+import { ServiceUnavailableScreen } from "@/src/components/feedback/service-unavailable-screen";
 import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
 import { buildAdminSectionHref } from "@/src/lib/admin-routes";

@@ -5,7 +5,7 @@ import {
   buildDiscoverPayload,
   type DiscoveryResponse,
   type WizardDraft,
-} from "@/src/components/admin/integration-wizard-utils";
+} from "@/src/components/integrations/wizard/utils";
 import type { BuiltInConnectorOption } from "@/src/types/context-layer";
 
 const elevenLabsConnector: BuiltInConnectorOption = {

@@ -1,7 +1,7 @@
 import {
   getFunctionAccessMode,
   matchesFunctionSearch,
-} from "@/src/components/admin/function-access-controls";
+} from "@/src/components/integrations/function-access-controls";
 import type {
   AuthStrategy,
   BuiltInConnectorOption,

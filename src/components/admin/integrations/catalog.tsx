@@ -2,8 +2,8 @@
 
 import { useMemo, useState } from "react";
 
-import { CuratedProviderList } from "@/src/components/admin/curated-provider-list";
-import { ManagedConnectorAdminList } from "@/src/components/admin/managed-connector-admin-list";
+import { CuratedProviderList } from "@/src/components/admin/integrations/provider-catalog";
+import { ManagedConnectorAdminList } from "@/src/components/admin/integrations/managed-connector-list";
 import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
 import type {

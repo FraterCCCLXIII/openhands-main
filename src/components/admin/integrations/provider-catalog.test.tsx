@@ -4,7 +4,7 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { CuratedProviderList } from "@/src/components/admin/curated-provider-list";
+import { CuratedProviderList } from "@/src/components/admin/integrations/provider-catalog";
 import type {
   BuiltInConnectorOption,
   OAuthProviderCatalogOption,

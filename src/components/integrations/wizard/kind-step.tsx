@@ -1,7 +1,7 @@
 import { KeyRound, Waypoints } from "lucide-react";
 
 import { cn } from "@/src/lib/utils";
-import type { IntegrationKind } from "@/src/components/admin/integration-wizard-utils";
+import type { IntegrationKind } from "@/src/components/integrations/wizard/utils";
 
 interface IntegrationWizardStepKindProps {
   selectedKind: IntegrationKind | null;

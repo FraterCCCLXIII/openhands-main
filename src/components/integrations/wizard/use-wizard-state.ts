@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 
-import { getFunctionAccessMode } from "@/src/components/admin/function-access-controls";
+import { getFunctionAccessMode } from "@/src/components/integrations/function-access-controls";
 import type { BuiltInConnectorOption, FunctionAccessMode } from "@/src/types/context-layer";
 import {
   connectorOptionLabel,
@@ -13,7 +13,7 @@ import {
   type DiscoveryResponse,
   type WizardDraft,
   type WizardStep,
-} from "@/src/components/admin/integration-wizard-utils";
+} from "@/src/components/integrations/wizard/utils";
 
 interface SearchParamsLike {
   get(name: string): string | null;

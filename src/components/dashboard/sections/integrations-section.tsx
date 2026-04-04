@@ -5,23 +5,23 @@ import {
   ConnectorLogo,
   IntegrationMarketplaceCard,
   dashboardInputClassName,
-} from "@/src/components/admin/dashboard-workspace-shared";
+} from "@/src/components/dashboard/shared";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
 import { cn } from "@/src/lib/utils";
-import { AccessModeSlider, getFunctionAccessMode } from "@/src/components/admin/function-access-controls";
+import { AccessModeSlider, getFunctionAccessMode } from "@/src/components/integrations/function-access-controls";
 import {
   formatTrackedUsage,
   UNUSED_FUNCTION_WINDOW_OPTIONS,
   type FilteredIntegrationEntry,
-} from "@/src/components/admin/dashboard-workspace-utils";
+} from "@/src/components/dashboard/utils";
 import type {
   BuiltInConnectorOption,
   FunctionAccessMode,
   IntegrationSpec,
   UnusedFunctionWindowUnit,
 } from "@/src/types/context-layer";
-import { IntegrationWizard } from "@/src/components/admin/integration-wizard";
+import { IntegrationWizard } from "@/src/components/integrations/wizard/wizard";
 
 interface DashboardIntegrationsSectionProps {
   addIntegrationSearch: string;

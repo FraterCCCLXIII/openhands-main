@@ -4,7 +4,7 @@ import {
   buildInstalledIntegrationKeys,
   buildMarketplaceConnectors,
   filterIntegrationsForDisplay,
-} from "@/src/components/admin/dashboard-workspace-utils";
+} from "@/src/components/dashboard/utils";
 import type {
   BuiltInConnectorOption,
   IntegrationSpec,

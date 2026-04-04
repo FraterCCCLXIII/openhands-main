@@ -4,7 +4,7 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { AdminIntegrationsCatalog } from "@/src/components/admin/admin-integrations-catalog";
+import { AdminIntegrationsCatalog } from "@/src/components/admin/integrations/catalog";
 import type {
   BuiltInConnectorOption,
   ManagedConnectorDefinition,

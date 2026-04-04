@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import {
   CompactPanel,
   KeyValueRow,
-} from "@/src/components/admin/dashboard-workspace-shared";
+} from "@/src/components/dashboard/shared";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
 
@@ -178,7 +178,7 @@ const DashboardConnectionDetails = ({
   </CompactPanel>
 );
 
-interface DashboardApiKeysSectionProps {
+interface DashboardAgentConnectionSectionProps {
   adminKey: {
     copied: boolean;
     handleCopy: () => void | Promise<void>;
@@ -215,7 +215,7 @@ interface DashboardApiKeysSectionProps {
   userRestPromptExample: string;
 }
 
-export const DashboardApiKeysSection = ({
+export const DashboardAgentConnectionSection = ({
   adminKey,
   adminPromptExample,
   adminSchemaEndpoint,
@@ -230,7 +230,7 @@ export const DashboardApiKeysSection = ({
   userKey,
   userOpenApiSchemaEndpoint,
   userRestPromptExample,
-}: DashboardApiKeysSectionProps) => (
+}: DashboardAgentConnectionSectionProps) => (
   <section className="space-y-3">
     <CompactPanel title="API keys" icon={KeyRound}>
       <div className="space-y-3">

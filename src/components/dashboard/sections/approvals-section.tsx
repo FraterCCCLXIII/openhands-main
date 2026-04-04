@@ -3,7 +3,7 @@ import { CheckCircle2 } from "lucide-react";
 import {
   CompactPanel,
   dashboardInputClassName,
-} from "@/src/components/admin/dashboard-workspace-shared";
+} from "@/src/components/dashboard/shared";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
 import { cn } from "@/src/lib/utils";
@@ -11,7 +11,7 @@ import {
   approvalStatusTone,
   formatTimestamp,
   type ApprovalRequestFilter,
-} from "@/src/components/admin/dashboard-workspace-utils";
+} from "@/src/components/dashboard/utils";
 import {
   DEFAULT_CASE_BY_CASE_APPROVAL_HOURS,
   MAX_CASE_BY_CASE_APPROVAL_HOURS,

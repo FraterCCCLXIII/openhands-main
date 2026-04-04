@@ -2,7 +2,7 @@ import { approvalStatusLabel } from "@/src/lib/access-requests";
 import {
   getFunctionAccessMode,
   matchesFunctionSearch,
-} from "@/src/components/admin/function-access-controls";
+} from "@/src/components/integrations/function-access-controls";
 import type {
   AccessRequest,
   BuiltInConnectorOption,

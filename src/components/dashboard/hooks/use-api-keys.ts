@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 
-import { fetchJson } from "@/src/components/admin/admin-fetch";
+import { fetchJson } from "@/src/lib/fetch-json";
 import {
   copyTextToClipboard,
   maskApiKey,
   maskStoredApiKey,
-} from "@/src/components/admin/dashboard-workspace-utils";
+} from "@/src/components/dashboard/utils";
 import type {
   AdminApiKeyStatus,
   UserApiKeyStatus,

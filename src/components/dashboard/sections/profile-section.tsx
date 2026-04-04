@@ -3,7 +3,7 @@ import { ShieldCheck, User } from "lucide-react";
 import {
   CompactPanel,
   KeyValueRow,
-} from "@/src/components/admin/dashboard-workspace-shared";
+} from "@/src/components/dashboard/shared";
 
 interface DashboardProfileSectionProps {
   userName: string;

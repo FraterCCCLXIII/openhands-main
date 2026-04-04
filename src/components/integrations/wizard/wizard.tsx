@@ -4,15 +4,15 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "next/navigation";
 import { useMemo } from "react";
 
-import { fetchJson, ApiRequestError } from "@/src/components/admin/admin-fetch";
-import { IntegrationWizardStepConnect } from "@/src/components/admin/integration-wizard-step-connect";
-import { IntegrationWizardStepKind } from "@/src/components/admin/integration-wizard-step-kind";
-import { IntegrationWizardStepReview } from "@/src/components/admin/integration-wizard-step-review";
+import { fetchJson, ApiRequestError } from "@/src/lib/fetch-json";
+import { IntegrationWizardStepConnect } from "@/src/components/integrations/wizard/connect-step";
+import { IntegrationWizardStepKind } from "@/src/components/integrations/wizard/kind-step";
+import { IntegrationWizardStepReview } from "@/src/components/integrations/wizard/review-step";
 import {
   IntegrationWizardIntro,
   StepBadge,
-} from "@/src/components/admin/integration-wizard-shared";
-import { useIntegrationWizardState } from "@/src/components/admin/use-integration-wizard-state";
+} from "@/src/components/integrations/wizard/shared";
+import { useIntegrationWizardState } from "@/src/components/integrations/wizard/use-wizard-state";
 import { Card } from "@/src/components/ui/card";
 import { filterReadyBuiltInConnectors } from "@/src/lib/integrations/connector-readiness";
 import type {
@@ -24,7 +24,7 @@ import {
   buildDiscoverPayload,
   hasBuiltInCredentialInput,
   type DiscoveryResponse,
-} from "@/src/components/admin/integration-wizard-utils";
+} from "@/src/components/integrations/wizard/utils";
 import { type AdminSection } from "@/src/lib/admin-routes";
 
 interface IntegrationWizardProps {

@@ -4,12 +4,12 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
-import { fetchJson } from "@/src/components/admin/admin-fetch";
-import { DashboardApiKeysSection } from "@/src/components/admin/dashboard-workspace-api-keys-section";
-import { DashboardApprovalsSection } from "@/src/components/admin/dashboard-workspace-approvals-section";
-import { DashboardIntegrationsSection } from "@/src/components/admin/dashboard-workspace-integrations-section";
-import { DashboardProfileSection } from "@/src/components/admin/dashboard-workspace-profile-section";
-import { getConnectorLogoUrl } from "@/src/components/admin/dashboard-workspace-shared";
+import { fetchJson } from "@/src/lib/fetch-json";
+import { DashboardAgentConnectionSection } from "@/src/components/dashboard/sections/agent-connection-section";
+import { DashboardApprovalsSection } from "@/src/components/dashboard/sections/approvals-section";
+import { DashboardIntegrationsSection } from "@/src/components/dashboard/sections/integrations-section";
+import { DashboardProfileSection } from "@/src/components/dashboard/sections/profile-section";
+import { getConnectorLogoUrl } from "@/src/components/dashboard/shared";
 import {
   buildConnectorMap,
   buildFunctionAccessPatch,
@@ -23,14 +23,14 @@ import {
   resolveIntegrationLogoUrl,
   subtractUnusedWindow,
   type ApprovalRequestFilter,
-} from "@/src/components/admin/dashboard-workspace-utils";
+} from "@/src/components/dashboard/utils";
 import {
   DashboardSidebar,
   DashboardSidebarUserPanel,
   getDashboardSections,
-} from "@/src/components/admin/dashboard-sidebar";
-import { DashboardSignOutButton } from "@/src/components/admin/dashboard-sign-out-button";
-import { useDashboardApiKeys } from "@/src/components/admin/use-dashboard-api-keys";
+} from "@/src/components/layout/dashboard-sidebar";
+import { DashboardSignOutButton } from "@/src/components/layout/dashboard-sign-out-button";
+import { useDashboardApiKeys } from "@/src/components/dashboard/hooks/use-api-keys";
 import { Badge } from "@/src/components/ui/badge";
 import {
   buildAdminSectionHref,
@@ -55,7 +55,7 @@ import type {
   UserApiKeyStatus,
 } from "@/src/types/context-layer";
 
-interface AdminDashboardProps {
+interface DashboardWorkspaceProps {
   initialIntegrations: IntegrationSpec[];
   initialAccessRequests: AccessRequest[];
   initialNotifications: NotificationRecord[];
@@ -81,7 +81,7 @@ export const DashboardWorkspace = ({
   adminApiKey = null,
   adminApiKeyValue: initialAdminApiKeyValue = null,
   isAdmin = true,
-}: AdminDashboardProps) => {
+}: DashboardWorkspaceProps) => {
   const queryClient = useQueryClient();
   const router = useRouter();
   const pathname = usePathname();
@@ -679,7 +679,7 @@ export const DashboardWorkspace = ({
         ) : null}
 
         {activeSection === "apiKeys" ? (
-          <DashboardApiKeysSection
+          <DashboardAgentConnectionSection
             adminKey={{
               copied: adminKey.copied,
               handleCopy: adminKey.handleCopy,

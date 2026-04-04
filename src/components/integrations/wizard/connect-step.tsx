@@ -12,8 +12,8 @@ import {
   integrationWizardInputClassName,
   type DiscoverFeedback,
   type WizardDraft,
-} from "@/src/components/admin/integration-wizard-utils";
-import { IntegrationWizardFeedback } from "@/src/components/admin/integration-wizard-shared";
+} from "@/src/components/integrations/wizard/utils";
+import { IntegrationWizardFeedback } from "@/src/components/integrations/wizard/shared";
 
 interface IntegrationWizardStepConnectProps {
   builtInConnectors: BuiltInConnectorOption[];

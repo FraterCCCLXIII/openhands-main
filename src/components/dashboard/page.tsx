@@ -1,8 +1,8 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
-import { AdminDashboard } from "@/src/components/admin/admin-dashboard";
-import { ServiceUnavailableScreen } from "@/src/components/service-unavailable-screen";
+import { DashboardWorkspace } from "@/src/components/dashboard/workspace";
+import { ServiceUnavailableScreen } from "@/src/components/feedback/service-unavailable-screen";
 import { isAppAdminEmail } from "@/src/lib/app-admins";
 import { auth, isAuthDisabled } from "@/src/lib/auth";
 import { getCurrentUserIdentity } from "@/src/lib/current-user";
@@ -10,7 +10,7 @@ import { getContextLayerService } from "@/src/lib/core/runtime";
 import { isEphemeralContextLayerStorage } from "@/src/lib/persistence";
 import { getRequestOrigin } from "@/src/lib/request-context";
 
-export async function AdminDashboardPage() {
+export async function DashboardPage() {
   const session = await auth();
 
   if (!session?.user && !isAuthDisabled()) {
@@ -49,7 +49,7 @@ export async function AdminDashboardPage() {
   return (
     <main className="min-h-screen px-6 py-8">
       <div className="mx-auto max-w-7xl">
-        <AdminDashboard
+        <DashboardWorkspace
           currentUser={currentUser}
           initialIntegrations={initialIntegrations}
           initialAccessRequests={initialAccessRequests}
