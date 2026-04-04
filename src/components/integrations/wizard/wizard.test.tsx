@@ -13,7 +13,7 @@ vi.mock("next/navigation", () => ({
   useSearchParams: useSearchParamsMock,
 }));
 
-import { IntegrationWizard } from "@/src/components/admin/integration-wizard";
+import { IntegrationWizard } from "@/src/components/integrations/wizard/wizard";
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 

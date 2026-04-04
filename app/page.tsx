@@ -4,7 +4,7 @@ import { ArrowRight, DatabaseZap, KeyRound, ShieldCheck, Waypoints } from "lucid
 import { auth } from "@/src/lib/auth";
 import { isAppAdminEmail } from "@/src/lib/app-admins";
 import { isEphemeralContextLayerStorage } from "@/src/lib/persistence";
-import { ServiceUnavailableScreen } from "@/src/components/service-unavailable-screen";
+import { ServiceUnavailableScreen } from "@/src/components/feedback/service-unavailable-screen";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
 import { Card } from "@/src/components/ui/card";

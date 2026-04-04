@@ -6,7 +6,7 @@ import { type FormEvent, useMemo, useState } from "react";
 import {
   AccessModeSlider,
   getFunctionAccessMode,
-} from "@/src/components/admin/function-access-controls";
+} from "@/src/components/integrations/function-access-controls";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
 import { cn } from "@/src/lib/utils";
@@ -15,7 +15,7 @@ import type {
   ManagedConnectorRecord,
 } from "@/src/types/context-layer";
 
-interface ManagedConnectorAdminListProps {
+interface ManagedConnectorListProps {
   initialManagedConnectors: ManagedConnectorDefinition[];
   onConnectorUpdated?: (connector: ManagedConnectorDefinition) => void;
   onConnectorDeleted?: (connector: ManagedConnectorDefinition) => void;
@@ -177,11 +177,11 @@ const ConnectorAvatar = ({ connector }: { connector: ManagedConnectorDefinition 
   );
 };
 
-export function ManagedConnectorAdminList({
+export function ManagedConnectorList({
   initialManagedConnectors,
   onConnectorUpdated,
   onConnectorDeleted,
-}: ManagedConnectorAdminListProps) {
+}: ManagedConnectorListProps) {
   const [managedConnectors, setManagedConnectors] = useState(initialManagedConnectors);
   const [expandedSlug, setExpandedSlug] = useState<string | null>(null);
   const [formStates, setFormStates] = useState<Record<string, ManagedConnectorFormState>>({});
