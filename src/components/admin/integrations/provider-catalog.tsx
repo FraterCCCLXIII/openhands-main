@@ -461,7 +461,7 @@ export function ProviderCatalog({
                   type="button"
                   onClick={() => setExpandedSlug(isExpanded ? null : provider.slug)}
                   aria-expanded={isExpanded}
-                  className="flex w-full items-center gap-3 overflow-x-auto whitespace-nowrap px-4 py-2.5 text-left text-sm"
+                  className="flex w-full cursor-pointer items-center gap-3 overflow-x-auto whitespace-nowrap px-4 py-2.5 text-left text-sm"
                 >
                   <span className="shrink-0 font-medium text-white">{provider.name}</span>
                   <span className="shrink-0 text-[var(--color-text-muted)]">({provider.slug})</span>

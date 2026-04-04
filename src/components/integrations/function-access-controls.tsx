@@ -83,7 +83,7 @@ export const AccessModeSlider = ({
           key={option.value}
           type="button"
           className={cn(
-            "rounded-full px-3 py-1.5 text-[11px] font-semibold transition-colors",
+            "cursor-pointer rounded-full px-3 py-1.5 text-[11px] font-semibold transition-colors",
             active
               ? accessModeSegmentClassName[option.value]
               : "text-[var(--color-text-base)] hover:bg-[var(--color-bg-active)] hover:text-white",
