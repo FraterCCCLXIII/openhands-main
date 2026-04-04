@@ -1,16 +1,9 @@
-import type { LucideIcon } from "lucide-react";
-import {
-  ArrowLeft,
-  KeyRound,
-  Mail,
-  PlugZap,
-  ShieldCheck,
-  User,
-  UserRound,
-} from "lucide-react";
+import { ArrowLeft, Mail, ShieldCheck, UserRound } from "lucide-react";
 import Link from "next/link";
 
 import { AdminIntegrationsCatalog } from "@/src/components/admin/admin-integrations-catalog";
+import { DashboardSidebar, DashboardSidebarUserPanel } from "@/src/components/admin/dashboard-sidebar";
+import { DashboardSignOutButton } from "@/src/components/admin/dashboard-sign-out-button";
 import { ServiceUnavailableScreen } from "@/src/components/service-unavailable-screen";
 import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
@@ -27,44 +20,8 @@ import {
 } from "@/src/lib/integrations/connector-requests";
 import { listOAuthProviderCatalog } from "@/src/lib/integrations/oauth-provider-catalog";
 import { isEphemeralContextLayerStorage } from "@/src/lib/persistence";
-import { cn } from "@/src/lib/utils";
 
 export const dynamic = "force-dynamic";
-
-const sidebarLinkClassName =
-  "flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm transition-colors";
-
-function SidebarLink({
-  href,
-  icon: Icon,
-  label,
-  active = false,
-}: {
-  href: string;
-  icon: LucideIcon;
-  label: string;
-  active?: boolean;
-}) {
-  return (
-    <Link
-      href={href}
-      className={cn(
-        sidebarLinkClassName,
-        active
-          ? "bg-[var(--color-bg-active)] text-white"
-          : "text-[var(--color-text-base)] hover:bg-[var(--color-bg-active)] hover:text-white",
-      )}
-    >
-      <Icon
-        className={cn(
-          "h-4 w-4 shrink-0",
-          active ? "text-[var(--color-accent)]" : "text-[var(--color-text-base)]",
-        )}
-      />
-      <span className="truncate font-medium">{label}</span>
-    </Link>
-  );
-}
 
 export default async function AdminIntegrationsPage() {
   const session = await auth();
@@ -85,6 +42,8 @@ export default async function AdminIntegrationsPage() {
   );
   const providerCatalog = listOAuthProviderCatalog();
   const canRegisterManagedConnectors = isAppAdminEmail(session?.user?.email ?? undefined);
+  const userName = session?.user?.name?.trim() || "Context Layer User";
+  const userEmail = session?.user?.email?.trim() || "Not provided";
   const oauthCallbackBaseUrl = getOAuthCallbackBaseUrl();
   const managedConnectors = canRegisterManagedConnectors
     ? await getContextLayerService().listManagedConnectors()
@@ -93,64 +52,30 @@ export default async function AdminIntegrationsPage() {
   return (
     <main className="min-h-screen px-6 py-8">
       <div className="mx-auto grid max-w-7xl gap-5 xl:grid-cols-[240px_minmax(0,1fr)] xl:gap-8">
-        <aside className="self-start rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-sidebar)] p-4 xl:sticky xl:top-6 xl:max-h-[calc(100vh-3rem)] xl:overflow-y-auto">
-          <div className="space-y-4">
-            <div className="border-b border-[var(--color-border)] pb-3">
-              <p className="text-[11px] uppercase tracking-[0.22em] text-[var(--color-text-base)]">
-                OpenHands
-              </p>
-              <div className="mt-2 flex items-center justify-between gap-3">
-                <p className="text-sm font-semibold text-white">Context Layer</p>
-                <Badge>
-                  {canRegisterManagedConnectors
-                    ? `${managedConnectors.length} registered`
-                    : `${readyBuiltInConnectors.length} ready`}
-                </Badge>
-              </div>
-            </div>
-
-            <nav className="space-y-1">
-              <SidebarLink href="/integrations" icon={PlugZap} label="Integrations" />
-              <SidebarLink
-                href="/agent-connection"
-                icon={KeyRound}
-                label="Agent Connection"
+        <DashboardSidebar
+          badge={
+            <Badge>
+              {canRegisterManagedConnectors
+                ? `${managedConnectors.length} registered`
+                : `${readyBuiltInConnectors.length} ready`}
+            </Badge>
+          }
+          activeItem="adminIntegrations"
+          showAdminIntegrationsLink
+          footer={
+            session?.user ? (
+              <DashboardSidebarUserPanel
+                userName={userName}
+                userEmail={userEmail}
+                badges={[
+                  <Badge key="ready">{readyBuiltInConnectors.length} ready</Badge>,
+                  <Badge key="catalog">{providerCatalog.length} catalog</Badge>,
+                ]}
+                action={<DashboardSignOutButton />}
               />
-              <SidebarLink href="/profile" icon={User} label="User Profile" />
-            </nav>
-
-            <div className="border-t border-[var(--color-border)] pt-3">
-              <SidebarLink
-                href="/admin-integrations"
-                icon={ShieldCheck}
-                label="Admin integrations"
-                active
-              />
-            </div>
-
-            {session?.user ? (
-              <div className="border-t border-[var(--color-border)] pt-3">
-                <div className="space-y-3">
-                  <div>
-                    <p className="text-[11px] uppercase tracking-[0.18em] text-[var(--color-text-base)]">
-                      Signed in as
-                    </p>
-                    <p className="mt-1 text-sm font-medium text-white">
-                      {session.user.name ?? "Context Layer User"}
-                    </p>
-                    <p className="mt-1 break-all text-xs text-[var(--color-text-base)]">
-                      {session.user.email}
-                    </p>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <Badge>{readyBuiltInConnectors.length} ready</Badge>
-                    <Badge>{providerCatalog.length} catalog</Badge>
-                  </div>
-                </div>
-              </div>
-            ) : null}
-          </div>
-        </aside>
+            ) : undefined
+          }
+        />
 
         <div className="space-y-4">
           <header className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">

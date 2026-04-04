@@ -17,16 +17,16 @@ import {
   Trash2,
   User,
 } from "lucide-react";
-import { signOut } from "next-auth/react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { type ReactNode, useEffect, useMemo, useState } from "react";
 
 import {
-  accessModeLabel,
   AccessModeSlider,
   getFunctionAccessMode,
   matchesFunctionSearch,
 } from "@/src/components/admin/function-access-controls";
+import { DashboardSidebar, DashboardSidebarUserPanel, getDashboardSections } from "@/src/components/admin/dashboard-sidebar";
+import { DashboardSignOutButton } from "@/src/components/admin/dashboard-sign-out-button";
 import { IntegrationWizard } from "@/src/components/admin/integration-wizard";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
@@ -43,11 +43,7 @@ import {
   approvalStatusLabel,
   normalizeApprovalDurationHours,
 } from "@/src/lib/access-requests";
-import {
-  buildAgentConnectionGuide,
-  OPENHANDS_CLOUD_SHTTP_MCP_URL,
-  OPENHANDS_CONTEXT_KEY_ENV,
-} from "@/src/lib/agent-connection";
+import { buildAgentConnectionGuide } from "@/src/lib/agent-connection";
 import { cn } from "@/src/lib/utils";
 import type {
   AccessRequest,
@@ -199,15 +195,21 @@ const matchesAccessRequestSearch = (
   }
 
   return [
-    request.agentId,
-    request.agentClass,
+    request.agentId ?? "",
+    request.agentClass ?? "",
     request.integrationKey,
     request.functionName,
     request.justification ?? "",
+    request.agentData?.conversationLink ?? "",
     approvalStatusLabel(request.status),
     ...request.scopes,
   ].some((value) => value.toLowerCase().includes(normalizedQuery));
 };
+
+const hasMissingApprovalIdentity = (request: AccessRequest) =>
+  !request.agentId && !request.agentClass;
+
+const formatApprovalIdentityValue = (value: string | null) => value ?? "Not provided";
 
 const formatTimestamp = (value?: string) => {
   if (!value) {
@@ -242,33 +244,6 @@ interface AdminApiKeyResponse {
   key: AdminApiKeyStatus | null;
   apiKey: string | null;
 }
-
-const getDashboardSections = (): Array<{
-  id: AdminSection;
-  label: string;
-  icon: LucideIcon;
-}> => [
-  {
-    id: "integrations",
-    label: "Integrations",
-    icon: PlugZap,
-  },
-  {
-    id: "caseByCaseApprovals",
-    label: "Case-by-case Approvals",
-    icon: CheckCircle2,
-  },
-  {
-    id: "apiKeys",
-    label: "Agent Connection",
-    icon: KeyRound,
-  },
-  {
-    id: "profile",
-    label: "User Profile",
-    icon: User,
-  },
-];
 
 const maskApiKey = (apiKey: string, revealed: boolean) => {
   const trimmed = apiKey.trim();
@@ -345,37 +320,6 @@ const CompactPanel = ({
     </div>
     {children}
   </Card>
-);
-
-const SidebarNavItem = ({
-  icon: Icon,
-  label,
-  active,
-  onClick,
-}: {
-  icon: LucideIcon;
-  label: string;
-  active: boolean;
-  onClick: () => void;
-}) => (
-  <button
-    type="button"
-    onClick={onClick}
-    className={cn(
-      "flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm transition-colors",
-      active
-        ? "bg-[var(--color-bg-active)] text-white"
-        : "text-[var(--color-text-base)] hover:bg-[var(--color-bg-active)] hover:text-white",
-    )}
-  >
-    <Icon
-      className={cn(
-        "h-4 w-4 shrink-0",
-        active ? "text-[var(--color-accent)]" : "text-[var(--color-text-base)]",
-      )}
-    />
-    <span className="truncate font-medium">{label}</span>
-  </button>
 );
 
 const KeyValueRow = ({
@@ -484,7 +428,6 @@ const IntegrationMarketplaceCard = ({
 export const DashboardWorkspace = ({
   initialIntegrations,
   initialAccessRequests,
-  initialNotifications: _initialNotifications,
   currentUser,
   contextApiBaseUrl,
   contextApiKey,
@@ -513,9 +456,6 @@ export const DashboardWorkspace = ({
     Record<string, boolean>
   >({});
   const [expandedFunctions, setExpandedFunctions] = useState<
-    Record<string, boolean>
-  >({});
-  const [expandedUsageSections, setExpandedUsageSections] = useState<
     Record<string, boolean>
   >({});
   const [approvalSearch, setApprovalSearch] = useState("");
@@ -630,11 +570,6 @@ export const DashboardWorkspace = ({
       window.clearTimeout(timeoutId);
     };
   }, [adminApiKeyCopied]);
-
-  const navigateToSection = (section: AdminSection) => {
-    setActiveSection(section);
-    router.push(buildAdminSectionHref(section));
-  };
 
   const integrationsQuery = useQuery({
     queryKey: ["integrations"],
@@ -1283,66 +1218,22 @@ export const DashboardWorkspace = ({
 
   return (
     <div className="grid gap-5 xl:grid-cols-[240px_minmax(0,1fr)] xl:gap-8">
-      <aside className="self-start rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-sidebar)] p-4 xl:sticky xl:top-6 xl:max-h-[calc(100vh-3rem)] xl:overflow-y-auto">
-        <div className="space-y-4">
-          <div className="border-b border-[var(--color-border)] pb-3">
-            <p className="text-[11px] uppercase tracking-[0.22em] text-[var(--color-text-base)]">
-              OpenHands
-            </p>
-            <div className="mt-2 flex items-center justify-between gap-3">
-              <p className="text-sm font-semibold text-white">Context Layer</p>
-              <Badge>{enabledIntegrationCount} live</Badge>
-            </div>
-          </div>
-
-          <nav className="space-y-1">
-            {sections.map((section) => (
-              <SidebarNavItem
-                key={section.id}
-                icon={section.icon}
-                label={section.label}
-                active={activeSection === section.id}
-                onClick={() => navigateToSection(section.id)}
-              />
-            ))}
-          </nav>
-
-          {isAdmin ? (
-            <div className="border-t border-[var(--color-border)] pt-3">
-              <a
-                href="/admin-integrations"
-                className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm text-[var(--color-text-base)] transition-colors hover:bg-[var(--color-bg-active)] hover:text-white"
-              >
-                <ShieldCheck className="h-4 w-4 shrink-0 text-[var(--color-text-base)]" />
-                <span className="truncate font-medium">Admin integrations</span>
-              </a>
-            </div>
-          ) : null}
-
-          <div className="border-t border-[var(--color-border)] pt-3">
-            <div className="space-y-3">
-              <div>
-                <p className="text-[11px] uppercase tracking-[0.18em] text-[var(--color-text-base)]">
-                  Signed in as
-                </p>
-                <p className="mt-1 text-sm font-medium text-white">{userName}</p>
-                <p className="mt-1 break-all text-xs text-[var(--color-text-base)]">{userEmail}</p>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <Badge>{pendingAccessRequests.length} pending</Badge>
-                <Badge>{discoveredFunctionCount} functions</Badge>
-              </div>
-              <Button
-                variant="secondary"
-                className="h-9 w-full rounded-md px-3 text-xs"
-                onClick={() => signOut({ redirectTo: "/" })}
-              >
-                Sign out
-              </Button>
-            </div>
-          </div>
-        </div>
-      </aside>
+      <DashboardSidebar
+        badge={<Badge>{enabledIntegrationCount} live</Badge>}
+        activeItem={activeSection}
+        showAdminIntegrationsLink={isAdmin}
+        footer={
+          <DashboardSidebarUserPanel
+            userName={userName}
+            userEmail={userEmail}
+            badges={[
+              <Badge key="pending">{pendingAccessRequests.length} pending</Badge>,
+              <Badge key="functions">{discoveredFunctionCount} functions</Badge>,
+            ]}
+            action={<DashboardSignOutButton />}
+          />
+        }
+      />
 
       <div className="space-y-4">
         <header className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
@@ -1619,12 +1510,31 @@ export const DashboardWorkspace = ({
                                 </Badge>
                               </div>
                               <div className="grid gap-2 text-xs text-[var(--color-text-base)] sm:grid-cols-2 xl:grid-cols-3">
-                                <p>
-                                  Agent: <span className="text-white">{request.agentId}</span>
-                                </p>
-                                <p>
-                                  Class: <span className="text-white">{request.agentClass}</span>
-                                </p>
+                                <div className="flex flex-wrap items-center gap-2 sm:col-span-2 xl:col-span-3">
+                                  <p>
+                                    Invocation identity:{" "}
+                                    <span className="text-white">{formatApprovalIdentityValue(request.agentId)}</span>
+                                    <span className="text-[var(--color-text-muted)]"> · </span>
+                                    <span className="text-white">{formatApprovalIdentityValue(request.agentClass)}</span>
+                                  </p>
+                                  {hasMissingApprovalIdentity(request) ? (
+                                    <Badge>no agent identity provided</Badge>
+                                  ) : null}
+                                </div>
+                                {request.agentData?.conversationLink ? (
+                                  <p className="sm:col-span-2 xl:col-span-3">
+                                    Conversation:{" "}
+                                    <a
+                                      href={request.agentData.conversationLink}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      className="inline-flex items-center gap-1 text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
+                                    >
+                                      <span>{request.agentData.conversationLink}</span>
+                                      <ArrowRight className="h-3.5 w-3.5" />
+                                    </a>
+                                  </p>
+                                ) : null}
                                 <p>
                                   Requested: <span className="text-white">{formatTimestamp(request.createdAt)}</span>
                                 </p>
@@ -2241,6 +2151,14 @@ export const DashboardWorkspace = ({
                       label="Example tool"
                       value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentConnectionGuide.mcpToolName}</code>}
                     />
+                  </div>
+                  <div className="mt-3 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)]">
+                    <div className="border-b border-[var(--color-border)] px-3 py-2 text-xs uppercase tracking-[0.18em] text-[var(--color-text-base)]">
+                      MCP config example
+                    </div>
+                    <pre className="overflow-x-auto whitespace-pre-wrap px-3 py-3 text-xs leading-6 text-[var(--color-text-base)]">
+                      {agentConnectionGuide.mcpConfigExample}
+                    </pre>
                   </div>
                 </div>
 

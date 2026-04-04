@@ -5,10 +5,16 @@ import { fromError } from "@/src/lib/api";
 
 export async function GET(request: Request) {
   try {
-    const secret = process.env.CRON_SECRET;
-    const authHeader = request.headers.get("authorization");
+    const secret = process.env.CRON_SECRET?.trim();
+    if (!secret) {
+      return NextResponse.json(
+        { detail: "CRON_SECRET must be configured for the expire-grants cron route." },
+        { status: 503 },
+      );
+    }
 
-    if (secret && authHeader !== `Bearer ${secret}`) {
+    const authHeader = request.headers.get("authorization");
+    if (authHeader !== `Bearer ${secret}`) {
       return NextResponse.json({ detail: "Unauthorized" }, { status: 401 });
     }
 

@@ -4,6 +4,8 @@
 
 This repository contains a Next.js/TypeScript implementation of an agent context layer. It exposes a single agent-facing context endpoint, supports DB-backed managed connectors plus Composio-backed and MCP SDK-backed integrations, provides fine-grained agent-class permissions plus temporary approval grants, and ships with a Tailwind admin dashboard styled after the OpenHands KPI tracker.
 
+The root `LICENSE` is proprietary: `Copyright All Hands AI, Inc. All rights reserved.`
+
 ## Common commands
 
 - Install dependencies: `npm install`
@@ -12,6 +14,8 @@ This repository contains a Next.js/TypeScript implementation of an agent context
 - Run e2e tests only: `npm run test:e2e`
 - Typecheck: `npm run typecheck`
 - Production build check: `npm run build`
+- Audit shipped dependency graph: `npm run audit`
+- Lint: `npm run lint`
 
 ## Local DB-backed validation
 
@@ -23,6 +27,8 @@ This repository contains a Next.js/TypeScript implementation of an agent context
 
 
 ## Workflow notes
+
+- Next.js 16 removed the old `next lint` entrypoint in this repo's setup; keep `npm run lint` wired to `eslint .` with the root `eslint.config.mjs`. ESLint 10 works here with an explicit flat-config stack (`typescript-eslint` + `@next/eslint-plugin-next`) instead of `eslint-config-next`, which still pulled React lint internals that crashed under ESLint 10 in this repo.
 
 - For this workstream, when the user requests code changes, commit them and push them to the active PR branch.
 
@@ -39,9 +45,11 @@ This repository contains a Next.js/TypeScript implementation of an agent context
 
 - OAuth onboarding uses `/api/oauth/[provider]/start` and `/api/oauth/[provider]/callback`, persists encrypted credentials plus short-lived state records in the repository, and `/api/context/*` resolves the calling user from the restricted agent/runtime context-layer API key so the correct per-user OAuth token is injected at invocation time.
 - `/api/mcp` now exposes the same per-user context layer as an MCP Streamable HTTP server authenticated by the restricted agent/runtime context-layer API key. Tool names are namespaced as `<integration>__<function>`, enabled plus `approval_required` functions are listed, MCP URL query params for `agentId` / `agentClass` are optional initial defaults, and callers can also set session-scoped defaults with the built-in `set_agent_id` / `set_agent_class` tools or override per call with `contextAgentId` / `contextAgentClass` plus optional `contextScopes`.
+- Case-by-case MCP approvals now support session-scoped agent metadata via `set_agent_data` (currently `conversationLink`). Approval-required MCP tools should refuse to create a pending request until that conversation link is set, so the approvals page can link humans back to the originating conversation.
 - User automation keys are now separate hashed-at-rest `clu_...` keys managed through the signed-in dashboard/API (`/api/user/key`) and authenticated against dedicated `/api/user/*` routes. Keep least privilege explicit: `cla_...` agent keys remain for runtime tool invocation only, while `/api/user/access-requests*` is admin-only and `/api/user/integrations*` is scoped to the authenticated owner.
 - MCP sessions must survive serverless request fan-out on Vercel. `/api/mcp` now persists session records (owner + session agent defaults) outside process memory and rebuilds a fresh `WebStandardStreamableHTTPServerTransport` per request instead of caching live transport objects in-memory.
-- Agent-facing usage guidance is generated from `src/lib/agent-connection.ts` and `src/lib/context-openapi.ts`. Keep REST/MCP examples aligned with runtime behavior: `agentId` / `agentClass` are optional and default to `research-bot-01` / `researcher`, while MCP tool schemas should expose real top-level connector arguments (for example `body` or path params) instead of only the context override fields.
+- Agent-facing usage guidance is generated from `src/lib/agent-connection.ts` and `src/lib/context-openapi.ts`. Keep REST/MCP examples aligned with runtime behavior: `agentId` / `agentClass` are optional and default to `null` when omitted, while MCP tool schemas should expose real top-level connector arguments (for example `body` or path params) instead of only the context override fields.
+- Root docs now include `README.md`, `API.md`, `CONTRIBUTING.md`, `CHANGELOG.md`, and `LICENSE`; keep README/API route references aligned with the canonical dashboard pages (`/integrations`, `/agent-connection`, `/profile`, `/case-by-case-approvals`, `/admin-integrations`) and generated OpenAPI endpoints.
 
 
 - Service OAuth callbacks now follow the same stable-domain preview proxy pattern as Auth.js: when `AUTH_REDIRECT_PROXY_URL` is configured, provider auth flows register and exchange against `<stable-origin>/api/oauth/<provider>/callback`, and the stable callback forwards back to the preview deployment callback URL stored in OAuth state before finishing the token exchange.
@@ -55,11 +63,12 @@ This repository contains a Next.js/TypeScript implementation of an agent context
 
 - `src/components/admin/admin-dashboard.tsx` is the OpenHands-inspired Tailwind dashboard using TanStack Query + Zustand.
 - `src/components/admin/dashboard-workspace.tsx` now contains the main sidebar-driven dashboard UX with Integrations as the default first section, followed by Agent Connection and User Profile; `src/components/admin/admin-dashboard.tsx` is a thin re-export so the admin page import stays stable.
+- Shared dashboard sidebar chrome now lives in `src/components/admin/dashboard-sidebar.tsx` and is reused by both the main user-facing dashboard routes and `/admin-integrations`; keep navigation labels/order in that shared component so the sidebars do not drift apart again.
 - OAuth callback success/error banners on the dashboard should be derived directly from URL search params (`oauth_status`, `oauth_error`) instead of only mutable wizard status state, so auto-initializing the integration wizard cannot silently clear them.
 - Admin dashboard sections now use clean top-level routes only: `/integrations`, `/agent-connection`, and `/profile`. `/home` remains available only as a legacy redirect to `/integrations`; new links and redirects should target the canonical routes directly, with no legacy `/admin` or `?section=` fallback behavior.
 
 - On the Agent Connection panel in `src/components/admin/dashboard-workspace.tsx`, successful API-key copy feedback should use the inline button pattern (temporary check icon) instead of posting a global status banner message.
-- The Agent Connection page should keep a compact layout: one top-level API keys card that contains both the restricted agent/runtime key (brief hint: "Give this key to your agent") and the user automation key (brief hint: "Use this key to programmatically set up APIs in the context layer"), followed by concise vertically stacked connection sections below named Agent MCP, Agent REST API, and User REST API. In Connection details, only surface the MCP endpoint plus the agent/user OpenAPI schema URLs; REST examples should be short example agent prompts rather than curl blocks. User-key reveal/copy should work for existing keys too: the signed-in dashboard session can re-fetch the current user key from `/api/user/key`, and if an older non-recoverable record is encountered, an explicit reveal/copy action may regenerate it so the user can access the full value again. When a signed-in user has no user automation key yet, the server page auto-issues one for that initial session so there is no separate issue button.
+- The Agent Connection page should keep a compact layout: one top-level API keys card that contains both the restricted agent/runtime key (brief hint: "Give this key to your agent") and the user automation key (brief hint: "Use this key to programmatically set up APIs in the context layer"), followed by concise vertically stacked connection sections below named Agent MCP, Agent REST API, and User REST API. In Connection details, keep surfacing the MCP endpoint plus a visible MCP config example, alongside the agent/user OpenAPI schema URLs; REST examples should be short example agent prompts rather than curl blocks. User-key reveal/copy should work for existing keys too: the signed-in dashboard session can re-fetch the current user key from `/api/user/key`, and if an older non-recoverable record is encountered, an explicit reveal/copy action may regenerate it so the user can access the full value again. When a signed-in user has no user automation key yet, the server page auto-issues one for that initial session so there is no separate issue button.
 - Function-level access controls now share `src/components/admin/function-access-controls.tsx`: the integration wizard review step clears bulk selections after apply, and the dashboard Integration catalog uses the same compact expandable searchable tri-state skill rows with `Hide disabled skills` enabled by default.
 
 - `src/components/admin/integration-wizard.tsx` powers the guided integration onboarding flow: choose the managed-connector catalog (still labeled "Built-in connector" in the UI) vs a raw MCP server, search the service-level managed connector list, connect OAuth-backed providers or enter manual credentials, discover functions, then review per-function access defaults before saving. Step 2 shows only ready-to-use managed connectors and links users to `/admin-integrations` when they need something new.
@@ -106,7 +115,8 @@ This repository contains a Next.js/TypeScript implementation of an agent context
 - MCP discovery should only infer `api_key` auth when a secret is present; a default header name by itself should still resolve to `none`, which matters for local proxy-based QA.
 - Local QA can be exercised with `DISABLE_AUTH=true npm run dev` on localhost plus a tiny localhost proxy that forwards `http://127.0.0.1:12001/` to GitHub's hosted MCP using `GITHUB_TOKEN`; the dashboard provisions a per-user context API key server-side, and agents cannot call `/api/context/*` until a user has opened `/integrations` once to provision that key.
 - `FunctionSpec.accessMode` now supports `enabled`, `disabled`, and `approval_required`; `approval_required` bypasses agent-class policy and requires a temporary grant, while `enabled` functions are callable by default unless a matching agent-class policy is configured to narrow access.
-- `app/api/cron/expire-grants/route.ts` is intended for a Vercel cron job to purge expired temporary grants.
+- Stored provider credentials now require explicit secret material (`CREDENTIAL_ENCRYPTION_KEY`, `AUTH_SECRET`, or `NEXTAUTH_SECRET`) in every environment; there is no longer a baked-in local-development encryption fallback.
+- `app/api/cron/expire-grants/route.ts` is intended for a Vercel cron job to purge expired temporary grants, and it must fail closed unless `CRON_SECRET` is configured and presented as a bearer token.
 - `.github/workflows/` now includes OpenHands PR review (`pr-review-by-openhands.yml`, `pr-review-evaluation.yml`) and vulnerability remediation (`vulnerability-scan.yml`) wrappers copied from `OpenHands/extensions` plugins.
 - The app favicon now mirrors the OpenHands frontend assets: `public/favicon.ico`, `public/favicon-16x16.png`, and `public/favicon-32x32.png`, referenced explicitly via `app/layout.tsx` metadata.
 

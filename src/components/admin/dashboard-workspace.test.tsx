@@ -376,7 +376,7 @@ describe("DashboardWorkspace", () => {
     expect(container.querySelector('[data-integration-key="slack"]')).toBeNull();
   });
 
-  it("updates the URL when switching admin sections", async () => {
+  it("renders canonical section links in the shared sidebar", async () => {
     await act(async () => {
       root.render(
         <QueryClientProvider client={queryClient}>
@@ -392,16 +392,11 @@ describe("DashboardWorkspace", () => {
       );
     });
 
-    const profileButton = Array.from(container.querySelectorAll("button")).find(
-      (button) => button.textContent?.includes("User Profile"),
+    const profileLink = Array.from(container.querySelectorAll('a[href="/profile"]')).find(
+      (link) => link.textContent?.includes("User Profile"),
     );
-    expect(profileButton).toBeTruthy();
-
-    await act(async () => {
-      profileButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-    });
-
-    expect(pushMock).toHaveBeenCalledWith("/profile");
+    expect(profileLink).toBeTruthy();
+    expect(profileLink?.getAttribute("href")).toBe("/profile");
   });
 
   it("shows integrations as the default section with a searchable add-integration panel", async () => {
@@ -686,6 +681,9 @@ describe("DashboardWorkspace", () => {
     );
     expect(text).toContain("Connection details");
     expect(text).toContain("Agent MCP");
+    expect(text).toContain("MCP config example");
+    expect(text).toContain('"transport": "streamable-http"');
+    expect(text).toContain('"context-layer"');
     expect(text).toContain("Agent REST API");
     expect(text).toContain("User REST API");
     expect(text).toContain("Admin REST API");
@@ -1554,15 +1552,18 @@ describe("DashboardWorkspace", () => {
       },
       {
         id: "req-pending-newer",
-        agentId: "agent-4",
-        agentClass: "assistant",
+        agentId: null,
+        agentClass: null,
         integrationKey: "github",
         functionName: "delete_repo",
         scopes: ["repo:admin"],
         requestedMinutes: 240,
         channels: ["in_app"],
         notificationTargets: { in_app: "owner@example.com" },
-        justification: "Need repo cleanup access",
+        agentData: {
+          conversationLink:
+            "https://app.all-hands.dev/conversations/f3e731620cf147a1976b53050bbe039e",
+        },
         createdAt: "2026-03-04T09:00:00.000Z",
         status: "pending",
       },
@@ -1615,6 +1616,18 @@ describe("DashboardWorkspace", () => {
         'input[type="search"][aria-label="Search case-by-case approvals"]',
       ),
     ).toBeTruthy();
+    expect(container.textContent).toContain("no agent identity provided");
+    expect(container.textContent).toContain("Invocation identity: Not provided · Not provided");
+    const conversationLink = container.querySelector(
+      'a[href="https://app.all-hands.dev/conversations/f3e731620cf147a1976b53050bbe039e"]',
+    ) as HTMLAnchorElement | null;
+    expect(conversationLink).toBeTruthy();
+    expect(conversationLink?.textContent).toContain(
+      "https://app.all-hands.dev/conversations/f3e731620cf147a1976b53050bbe039e",
+    );
+    expect(container.textContent).not.toContain(
+      "Auto-created after an agent attempted a case-by-case tool without an active approval.",
+    );
 
     const visibleRequestIds = Array.from(
       container.querySelectorAll("[data-request-id]"),

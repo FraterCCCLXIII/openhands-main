@@ -322,7 +322,6 @@ export function CuratedProviderList({
     event.preventDefault();
 
     const currentForm = getRegistrationForm(provider);
-    const authStrategy = getProviderAuthStrategy(provider);
     const managedConnectorProvider = getManagedConnectorProvider(provider);
     const isHttpConnector = managedConnectorProvider === "http";
 

@@ -5,6 +5,10 @@ dist/
 coverage/
 .env
 .env.local
+.env.development
+.env.production
+.env.test
+.env.*.local
 .vercel
 *.log
 *.tsbuildinfo

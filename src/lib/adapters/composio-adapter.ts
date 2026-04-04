@@ -27,6 +27,7 @@ export class ComposioAdapter implements IntegrationAdapter {
   }
 
   async invoke({ agentId, integration, functionSpec, payload }: AdapterInvocationInput) {
+    const resolvedAgentId = agentId?.trim() || "context-layer-agent";
     if (!this.client) {
       throw new ContextLayerError(
         "COMPOSIO_API_KEY is required to invoke Composio-backed integrations.",
@@ -58,7 +59,7 @@ export class ComposioAdapter implements IntegrationAdapter {
       },
     };
 
-    const result = await this.client.provider.executeToolCall(agentId, toolCall, {
+    const result = await this.client.provider.executeToolCall(resolvedAgentId, toolCall, {
       connectedAccountId,
     });
 
