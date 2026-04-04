@@ -332,6 +332,9 @@ describe("access requests", () => {
     channels: ["in_app" as const],
     notificationTargets: { email: "admin@test.com" },
     justification: "Need to post updates",
+    agentData: {
+      conversationLink: "https://app.all-hands.dev/conversations/repo-access-request",
+    },
     createdAt: new Date().toISOString(),
     status: "pending" as const,
   });
@@ -349,6 +352,9 @@ describe("access requests", () => {
     const retrieved = await repo.getAccessRequest("req-1");
     expect(retrieved).not.toBeNull();
     expect(retrieved!.functionName).toBe("send_message");
+    expect(retrieved!.agentData?.conversationLink).toBe(
+      "https://app.all-hands.dev/conversations/repo-access-request",
+    );
   });
 
   it("updates an access request", async () => {

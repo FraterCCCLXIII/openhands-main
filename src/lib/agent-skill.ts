@@ -66,8 +66,6 @@ export const buildAgentSkillMarkdown = ({
     "```json",
     JSON.stringify(
       {
-        agentId: "research-bot-01",
-        agentClass: "researcher",
         scopes: ["scope.read"],
         payload: {},
       },

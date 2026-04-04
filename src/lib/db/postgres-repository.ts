@@ -106,8 +106,8 @@ export class PostgresRepository implements ContextRepository {
       sql`
         CREATE TABLE IF NOT EXISTS access_requests (
           id TEXT PRIMARY KEY,
-          agent_id TEXT NOT NULL,
-          agent_class TEXT NOT NULL,
+          agent_id TEXT,
+          agent_class TEXT,
           integration_key TEXT NOT NULL,
           function_name TEXT NOT NULL,
           scopes JSONB NOT NULL DEFAULT '[]'::jsonb,
@@ -115,6 +115,7 @@ export class PostgresRepository implements ContextRepository {
           channels JSONB NOT NULL DEFAULT '[]'::jsonb,
           notification_targets JSONB NOT NULL DEFAULT '{}'::jsonb,
           justification TEXT NOT NULL DEFAULT '',
+          agent_data JSONB NOT NULL DEFAULT '{}'::jsonb,
           created_at TIMESTAMPTZ NOT NULL,
           status TEXT NOT NULL,
           decided_at TIMESTAMPTZ,
@@ -124,8 +125,8 @@ export class PostgresRepository implements ContextRepository {
       sql`
         CREATE TABLE IF NOT EXISTS temporary_grants (
           id TEXT PRIMARY KEY,
-          agent_id TEXT NOT NULL,
-          agent_class TEXT NOT NULL,
+          agent_id TEXT,
+          agent_class TEXT,
           integration_key TEXT NOT NULL,
           function_name TEXT NOT NULL,
           scopes JSONB NOT NULL DEFAULT '[]'::jsonb,
@@ -138,8 +139,8 @@ export class PostgresRepository implements ContextRepository {
         CREATE TABLE IF NOT EXISTS tool_invocations (
           id TEXT PRIMARY KEY,
           owner_id TEXT,
-          agent_id TEXT NOT NULL,
-          agent_class TEXT NOT NULL,
+          agent_id TEXT,
+          agent_class TEXT,
           integration_key TEXT NOT NULL,
           function_name TEXT NOT NULL,
           scopes JSONB NOT NULL DEFAULT '[]'::jsonb,
@@ -258,6 +259,13 @@ export class PostgresRepository implements ContextRepository {
       sql`ALTER TABLE managed_connectors ADD COLUMN IF NOT EXISTS provider TEXT`,
       sql`ALTER TABLE managed_connectors ADD COLUMN IF NOT EXISTS server_url TEXT`,
       sql`ALTER TABLE managed_connectors ADD COLUMN IF NOT EXISTS open_api_url TEXT`,
+      sql`ALTER TABLE access_requests ADD COLUMN IF NOT EXISTS agent_data JSONB NOT NULL DEFAULT '{}'::jsonb`,
+      sql`ALTER TABLE access_requests ALTER COLUMN agent_id DROP NOT NULL`,
+      sql`ALTER TABLE access_requests ALTER COLUMN agent_class DROP NOT NULL`,
+      sql`ALTER TABLE temporary_grants ALTER COLUMN agent_id DROP NOT NULL`,
+      sql`ALTER TABLE temporary_grants ALTER COLUMN agent_class DROP NOT NULL`,
+      sql`ALTER TABLE tool_invocations ALTER COLUMN agent_id DROP NOT NULL`,
+      sql`ALTER TABLE tool_invocations ALTER COLUMN agent_class DROP NOT NULL`,
       sql`ALTER TABLE user_api_keys ADD COLUMN IF NOT EXISTS key_suffix TEXT NOT NULL DEFAULT ''`,
       sql`ALTER TABLE user_api_keys ADD COLUMN IF NOT EXISTS encrypted_api_key TEXT`,
       sql`ALTER TABLE admin_api_keys ADD COLUMN IF NOT EXISTS key_suffix TEXT NOT NULL DEFAULT ''`,
@@ -362,8 +370,8 @@ export class PostgresRepository implements ContextRepository {
     const rows = await sql`SELECT * FROM access_requests ORDER BY created_at DESC`;
     return rows.map((row) => ({
       id: row.id,
-      agentId: row.agent_id,
-      agentClass: row.agent_class,
+      agentId: row.agent_id ?? null,
+      agentClass: row.agent_class ?? null,
       integrationKey: row.integration_key,
       functionName: row.function_name,
       scopes: parseJson<string[]>(row.scopes),
@@ -371,6 +379,7 @@ export class PostgresRepository implements ContextRepository {
       channels: parseJson<AccessRequest["channels"]>(row.channels),
       notificationTargets: parseJson<Record<string, string>>(row.notification_targets),
       justification: row.justification,
+      agentData: parseJson<AccessRequest["agentData"]>(row.agent_data),
       createdAt: new Date(row.created_at).toISOString(),
       status: row.status,
       decidedAt: row.decided_at ? new Date(row.decided_at).toISOString() : undefined,
@@ -389,11 +398,11 @@ export class PostgresRepository implements ContextRepository {
     await sql`
       INSERT INTO access_requests (
         id, agent_id, agent_class, integration_key, function_name, scopes,
-        requested_minutes, channels, notification_targets, justification,
+        requested_minutes, channels, notification_targets, justification, agent_data,
         created_at, status, decided_at, decided_by
       ) VALUES (
-        ${request.id}, ${request.agentId}, ${request.agentClass}, ${request.integrationKey}, ${request.functionName}, ${JSON.stringify(request.scopes)},
-        ${request.requestedMinutes}, ${JSON.stringify(request.channels)}, ${JSON.stringify(request.notificationTargets)}, ${request.justification ?? ""},
+        ${request.id}, ${request.agentId ?? null}, ${request.agentClass ?? null}, ${request.integrationKey}, ${request.functionName}, ${JSON.stringify(request.scopes)},
+        ${request.requestedMinutes}, ${JSON.stringify(request.channels)}, ${JSON.stringify(request.notificationTargets)}, ${request.justification ?? ""}, ${JSON.stringify(request.agentData ?? {})},
         ${request.createdAt}, ${request.status}, ${request.decidedAt ?? null}, ${request.decidedBy ?? null}
       )
     `;
@@ -406,8 +415,8 @@ export class PostgresRepository implements ContextRepository {
     await sql`
       UPDATE access_requests
       SET
-        agent_id = ${request.agentId},
-        agent_class = ${request.agentClass},
+        agent_id = ${request.agentId ?? null},
+        agent_class = ${request.agentClass ?? null},
         integration_key = ${request.integrationKey},
         function_name = ${request.functionName},
         scopes = ${JSON.stringify(request.scopes)},
@@ -415,6 +424,7 @@ export class PostgresRepository implements ContextRepository {
         channels = ${JSON.stringify(request.channels)},
         notification_targets = ${JSON.stringify(request.notificationTargets)},
         justification = ${request.justification ?? ""},
+        agent_data = ${JSON.stringify(request.agentData ?? {})},
         created_at = ${request.createdAt},
         status = ${request.status},
         decided_at = ${request.decidedAt ?? null},
@@ -430,8 +440,8 @@ export class PostgresRepository implements ContextRepository {
     const rows = await sql`SELECT * FROM temporary_grants ORDER BY created_at DESC`;
     return rows.map((row) => ({
       id: row.id,
-      agentId: row.agent_id,
-      agentClass: row.agent_class,
+      agentId: row.agent_id ?? null,
+      agentClass: row.agent_class ?? null,
       integrationKey: row.integration_key,
       functionName: row.function_name,
       scopes: parseJson<string[]>(row.scopes),
@@ -448,7 +458,7 @@ export class PostgresRepository implements ContextRepository {
       INSERT INTO temporary_grants (
         id, agent_id, agent_class, integration_key, function_name, scopes, granted_by, created_at, expires_at
       ) VALUES (
-        ${grant.id}, ${grant.agentId}, ${grant.agentClass}, ${grant.integrationKey}, ${grant.functionName}, ${JSON.stringify(grant.scopes)}, ${grant.grantedBy}, ${grant.createdAt}, ${grant.expiresAt}
+        ${grant.id}, ${grant.agentId ?? null}, ${grant.agentClass ?? null}, ${grant.integrationKey}, ${grant.functionName}, ${JSON.stringify(grant.scopes)}, ${grant.grantedBy}, ${grant.createdAt}, ${grant.expiresAt}
       )
       ON CONFLICT (id) DO UPDATE SET
         agent_id = EXCLUDED.agent_id,
@@ -479,7 +489,7 @@ export class PostgresRepository implements ContextRepository {
         scopes, provider, kind, auth_strategy, outcome, invoked_at, duration_ms,
         payload_keys, error_message
       ) VALUES (
-        ${record.id}, ${record.ownerId ?? null}, ${record.agentId}, ${record.agentClass}, ${record.integrationKey}, ${record.functionName},
+        ${record.id}, ${record.ownerId ?? null}, ${record.agentId ?? null}, ${record.agentClass ?? null}, ${record.integrationKey}, ${record.functionName},
         ${JSON.stringify(record.scopes)}, ${record.provider}, ${record.kind}, ${record.authStrategy}, ${record.outcome}, ${record.invokedAt}, ${record.durationMs ?? null},
         ${JSON.stringify(record.payloadKeys)}, ${record.errorMessage ?? null}
       )

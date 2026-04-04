@@ -55,8 +55,8 @@ const integrationSpecSchema = z.object({
 
 const accessRequestSchema = z.object({
   id: z.string(),
-  agentId: z.string(),
-  agentClass: z.string(),
+  agentId: z.string().nullable(),
+  agentClass: z.string().nullable(),
   integrationKey: z.string(),
   functionName: z.string(),
   scopes: z.array(z.string()),
@@ -72,8 +72,8 @@ const accessRequestSchema = z.object({
 
 const temporaryGrantSchema = z.object({
   id: z.string(),
-  agentId: z.string(),
-  agentClass: z.string(),
+  agentId: z.string().nullable(),
+  agentClass: z.string().nullable(),
   integrationKey: z.string(),
   functionName: z.string(),
   scopes: z.array(z.string()),
