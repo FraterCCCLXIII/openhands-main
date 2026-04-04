@@ -80,6 +80,9 @@ const buildOperationDescription = (
   return `${integration.name} tool \`${functionSpec.name}\` exposed through the unified context-layer endpoint. ${details.join(" · ")}`;
 };
 
+/**
+ * Generates the agent runtime OpenAPI document for the caller's currently visible tools.
+ */
 export const buildContextOpenApiDocument = ({
   baseUrl,
   integrations,

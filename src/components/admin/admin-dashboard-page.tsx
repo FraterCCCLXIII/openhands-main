@@ -10,6 +10,9 @@ import { getContextLayerService } from "@/src/lib/core/runtime";
 import { isEphemeralContextLayerStorage } from "@/src/lib/persistence";
 import { getRequestOrigin } from "@/src/lib/request-context";
 
+/**
+ * Shared server entry point for the dashboard routes backed by the same workspace shell.
+ */
 export async function AdminDashboardPage() {
   const session = await auth();
 

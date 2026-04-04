@@ -24,6 +24,9 @@ const renderAccessMode = (functionSpec: FunctionSpec) => {
   return accessMode;
 };
 
+/**
+ * Generates the downloadable SKILL.md file for the authenticated owner profile.
+ */
 export const buildAgentSkillMarkdown = ({
   baseUrl,
   integrations,

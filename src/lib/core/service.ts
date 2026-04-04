@@ -247,6 +247,9 @@ const permittedByRule = (
   return true;
 };
 
+/**
+ * Main orchestration service for integration lifecycle, API-key management, approvals, and runtime tool invocation.
+ */
 export class ContextLayerService {
   constructor(
     private readonly repository: ContextRepository,
@@ -1212,6 +1215,10 @@ export class ContextLayerService {
     return this.repository.purgeExpiredGrants(nowIso());
   }
 
+  /**
+   * Resolves an owner-scoped integration, enforces access policy, invokes the backing adapter,
+   * and records best-effort invocation metadata for auditing.
+   */
   async invokeContext(
     agentId: string | null,
     agentClass: string | null,
