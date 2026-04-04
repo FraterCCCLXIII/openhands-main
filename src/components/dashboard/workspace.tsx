@@ -5,10 +5,10 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
 import { fetchJson } from "@/src/lib/fetch-json";
-import { DashboardAgentConnectionSection } from "@/src/components/dashboard/sections/agent-connection-section";
-import { DashboardApprovalsSection } from "@/src/components/dashboard/sections/approvals-section";
-import { DashboardIntegrationsSection } from "@/src/components/dashboard/sections/integrations-section";
-import { DashboardProfileSection } from "@/src/components/dashboard/sections/profile-section";
+import { AgentConnectionSection } from "@/src/components/dashboard/sections/agent-connection-section";
+import { ApprovalsSection } from "@/src/components/dashboard/sections/approvals-section";
+import { IntegrationsSection } from "@/src/components/dashboard/sections/integrations-section";
+import { ProfileSection } from "@/src/components/dashboard/sections/profile-section";
 import { getConnectorLogoUrl } from "@/src/components/dashboard/shared";
 import {
   buildConnectorMap,
@@ -30,7 +30,7 @@ import {
   getDashboardSections,
 } from "@/src/components/layout/dashboard-sidebar";
 import { DashboardSignOutButton } from "@/src/components/layout/dashboard-sign-out-button";
-import { useDashboardApiKeys } from "@/src/components/dashboard/hooks/use-api-keys";
+import { useApiKeys } from "@/src/components/dashboard/hooks/use-api-keys";
 import { Badge } from "@/src/components/ui/badge";
 import {
   buildAdminSectionHref,
@@ -276,7 +276,7 @@ export const DashboardWorkspace = ({
     (request) => request.status === "pending",
   );
 
-  const { contextApiReady, agentKey, userKey, adminKey } = useDashboardApiKeys({
+  const { contextApiReady, agentKey, userKey, adminKey } = useApiKeys({
     contextApiKey,
     userApiKey,
     userApiKeyValue: initialUserApiKeyValue,
@@ -595,7 +595,7 @@ export const DashboardWorkspace = ({
         ) : null}
 
         {activeSection === "profile" ? (
-          <DashboardProfileSection
+          <ProfileSection
             userName={userName}
             userEmail={userEmail}
             authMode={authMode}
@@ -607,7 +607,7 @@ export const DashboardWorkspace = ({
         ) : null}
 
         {activeSection === "caseByCaseApprovals" ? (
-          <DashboardApprovalsSection
+          <ApprovalsSection
             approvalCounts={approvalCounts}
             approvalDurationHours={approvalDurationHours}
             approvalFilter={approvalFilter}
@@ -629,7 +629,7 @@ export const DashboardWorkspace = ({
         ) : null}
 
         {activeSection === "integrations" ? (
-          <DashboardIntegrationsSection
+          <IntegrationsSection
             addIntegrationSearch={addIntegrationSearch}
             availableConnectorCount={availableConnectorCount}
             builtInConnectorsError={
@@ -679,7 +679,7 @@ export const DashboardWorkspace = ({
         ) : null}
 
         {activeSection === "apiKeys" ? (
-          <DashboardAgentConnectionSection
+          <AgentConnectionSection
             adminKey={{
               copied: adminKey.copied,
               handleCopy: adminKey.handleCopy,

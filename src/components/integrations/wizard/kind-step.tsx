@@ -3,15 +3,15 @@ import { KeyRound, Waypoints } from "lucide-react";
 import { cn } from "@/src/lib/utils";
 import type { IntegrationKind } from "@/src/components/integrations/wizard/utils";
 
-interface IntegrationWizardStepKindProps {
+interface KindStepProps {
   selectedKind: IntegrationKind | null;
   onSelectKind: (kind: IntegrationKind) => void;
 }
 
-export const IntegrationWizardStepKind = ({
+export const KindStep = ({
   selectedKind,
   onSelectKind,
-}: IntegrationWizardStepKindProps) => (
+}: KindStepProps) => (
   <div className="grid gap-4 md:grid-cols-2">
     {[
       {

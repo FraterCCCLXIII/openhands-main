@@ -5,14 +5,14 @@ import { useSearchParams } from "next/navigation";
 import { useMemo } from "react";
 
 import { fetchJson, ApiRequestError } from "@/src/lib/fetch-json";
-import { IntegrationWizardStepConnect } from "@/src/components/integrations/wizard/connect-step";
-import { IntegrationWizardStepKind } from "@/src/components/integrations/wizard/kind-step";
-import { IntegrationWizardStepReview } from "@/src/components/integrations/wizard/review-step";
+import { ConnectStep } from "@/src/components/integrations/wizard/connect-step";
+import { KindStep } from "@/src/components/integrations/wizard/kind-step";
+import { ReviewStep } from "@/src/components/integrations/wizard/review-step";
 import {
-  IntegrationWizardIntro,
+  WizardIntro,
   StepBadge,
 } from "@/src/components/integrations/wizard/shared";
-import { useIntegrationWizardState } from "@/src/components/integrations/wizard/use-wizard-state";
+import { useWizardState } from "@/src/components/integrations/wizard/use-wizard-state";
 import { Card } from "@/src/components/ui/card";
 import { filterReadyBuiltInConnectors } from "@/src/lib/integrations/connector-readiness";
 import type {
@@ -61,7 +61,7 @@ export const IntegrationWizard = ({
     staleTime: 15_000,
   });
 
-  const state = useIntegrationWizardState({
+  const state = useWizardState({
     builtInConnectors,
     onStatus,
     searchParams,
@@ -176,17 +176,17 @@ export const IntegrationWizard = ({
         />
       </div>
 
-      <IntegrationWizardIntro />
+      <WizardIntro />
 
       {state.step === 1 ? (
-        <IntegrationWizardStepKind
+        <KindStep
           selectedKind={state.draft.kind}
           onSelectKind={state.selectKind}
         />
       ) : null}
 
       {state.step === 2 ? (
-        <IntegrationWizardStepConnect
+        <ConnectStep
           builtInConnectors={builtInConnectors}
           builtInConnectorsError={
             builtInConnectorsQuery.isError
@@ -215,7 +215,7 @@ export const IntegrationWizard = ({
       ) : null}
 
       {state.step === 3 && state.discovery ? (
-        <IntegrationWizardStepReview
+        <ReviewStep
           allMatchingSelected={state.allMatchingSelected}
           createPending={createMutation.isPending}
           discovery={state.discovery}

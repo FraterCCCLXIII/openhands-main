@@ -25,7 +25,7 @@ interface UseIntegrationWizardStateOptions {
   searchParams: SearchParamsLike;
 }
 
-export const useIntegrationWizardState = ({
+export const useWizardState = ({
   builtInConnectors,
   onStatus,
   searchParams,

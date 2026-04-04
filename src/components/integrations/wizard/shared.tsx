@@ -42,7 +42,7 @@ export const StepBadge = ({
   </div>
 );
 
-export const IntegrationWizardIntro = () => (
+export const WizardIntro = () => (
   <div className="mb-4 space-y-2">
     <div className="flex items-center gap-3">
       <PlugZap className="h-5 w-5 text-[var(--color-accent)]" />
@@ -58,7 +58,7 @@ export const IntegrationWizardIntro = () => (
   </div>
 );
 
-export const IntegrationWizardFeedback = ({
+export const WizardFeedback = ({
   children,
   tone,
 }: {

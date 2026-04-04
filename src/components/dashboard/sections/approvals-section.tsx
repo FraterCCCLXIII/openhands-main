@@ -19,7 +19,7 @@ import {
 } from "@/src/lib/access-requests";
 import type { AccessRequest } from "@/src/types/context-layer";
 
-interface DashboardApprovalsSectionProps {
+interface ApprovalsSectionProps {
   approvalCounts: Record<ApprovalRequestFilter, number>;
   approvalDurationHours: string;
   approvalFilter: ApprovalRequestFilter;
@@ -45,7 +45,7 @@ interface DashboardApprovalsSectionProps {
   ) => void;
 }
 
-export const DashboardApprovalsSection = ({
+export const ApprovalsSection = ({
   approvalCounts,
   approvalDurationHours,
   approvalFilter,
@@ -63,7 +63,7 @@ export const DashboardApprovalsSection = ({
   setApprovalFilter,
   setApprovalSearch,
   setSelectedStateForApprovalRequests,
-}: DashboardApprovalsSectionProps) => (
+}: ApprovalsSectionProps) => (
   <section className="space-y-4">
     <CompactPanel
       title="Case-by-case approvals"

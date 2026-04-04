@@ -16,7 +16,7 @@ import {
 } from "@/src/components/integrations/wizard/utils";
 import type { FunctionAccessMode, FunctionSpec } from "@/src/types/context-layer";
 
-interface IntegrationWizardStepReviewProps {
+interface ReviewStepProps {
   createPending: boolean;
   discovery: DiscoveryResponse;
   draftName: string;
@@ -47,7 +47,7 @@ interface IntegrationWizardStepReviewProps {
   onToggleFunctionExpanded: (name: string) => void;
 }
 
-export const IntegrationWizardStepReview = ({
+export const ReviewStep = ({
   createPending,
   discovery,
   draftName,
@@ -73,7 +73,7 @@ export const IntegrationWizardStepReview = ({
   onSetSelectedFunctions,
   onSetSelectedStateForFunctions,
   onToggleFunctionExpanded,
-}: IntegrationWizardStepReviewProps) => (
+}: ReviewStepProps) => (
   <div className="space-y-6">
     <div className="flex flex-wrap items-center gap-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-4 text-sm text-[var(--color-text-base)]">
       <Badge>{kind === "built_in" ? "Built-in" : "MCP"}</Badge>

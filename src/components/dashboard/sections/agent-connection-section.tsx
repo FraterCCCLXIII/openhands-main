@@ -178,7 +178,7 @@ const DashboardConnectionDetails = ({
   </CompactPanel>
 );
 
-interface DashboardAgentConnectionSectionProps {
+interface AgentConnectionSectionProps {
   adminKey: {
     copied: boolean;
     handleCopy: () => void | Promise<void>;
@@ -215,7 +215,7 @@ interface DashboardAgentConnectionSectionProps {
   userRestPromptExample: string;
 }
 
-export const DashboardAgentConnectionSection = ({
+export const AgentConnectionSection = ({
   adminKey,
   adminPromptExample,
   adminSchemaEndpoint,
@@ -230,7 +230,7 @@ export const DashboardAgentConnectionSection = ({
   userKey,
   userOpenApiSchemaEndpoint,
   userRestPromptExample,
-}: DashboardAgentConnectionSectionProps) => (
+}: AgentConnectionSectionProps) => (
   <section className="space-y-3">
     <CompactPanel title="API keys" icon={KeyRound}>
       <div className="space-y-3">

@@ -5,7 +5,7 @@ import {
   KeyValueRow,
 } from "@/src/components/dashboard/shared";
 
-interface DashboardProfileSectionProps {
+interface ProfileSectionProps {
   userName: string;
   userEmail: string;
   authMode: string;
@@ -15,7 +15,7 @@ interface DashboardProfileSectionProps {
   pendingAccessRequestCount: number;
 }
 
-export const DashboardProfileSection = ({
+export const ProfileSection = ({
   userName,
   userEmail,
   authMode,
@@ -23,7 +23,7 @@ export const DashboardProfileSection = ({
   contextApiReady,
   integrationCount,
   pendingAccessRequestCount,
-}: DashboardProfileSectionProps) => (
+}: ProfileSectionProps) => (
   <section className="grid gap-4 xl:grid-cols-[minmax(0,0.95fr)_minmax(320px,1.05fr)]">
     <CompactPanel title="User profile" icon={User}>
       <div className="divide-y divide-[var(--color-border)]">

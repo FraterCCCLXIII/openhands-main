@@ -1,7 +1,7 @@
 import { ArrowLeft, Mail, ShieldCheck, UserRound } from "lucide-react";
 import Link from "next/link";
 
-import { AdminIntegrationsCatalog } from "@/src/components/admin/integrations/catalog";
+import { IntegrationsCatalog } from "@/src/components/admin/integrations/catalog";
 import { DashboardSidebar, DashboardSidebarUserPanel } from "@/src/components/layout/dashboard-sidebar";
 import { DashboardSignOutButton } from "@/src/components/layout/dashboard-sign-out-button";
 import { ServiceUnavailableScreen } from "@/src/components/feedback/service-unavailable-screen";
@@ -234,7 +234,7 @@ export default async function AdminIntegrationsPage() {
             </Card>
           )}
 
-          <AdminIntegrationsCatalog
+          <IntegrationsCatalog
             providerCatalog={providerCatalog}
             initialReadyBuiltInConnectors={readyBuiltInConnectors}
             managedConnectors={managedConnectors}

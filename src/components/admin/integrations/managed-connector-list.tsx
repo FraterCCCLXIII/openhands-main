@@ -11,7 +11,7 @@ import type {
   ManagedConnectorRecord,
 } from "@/src/types/context-layer";
 
-interface ManagedConnectorAdminListProps {
+interface ManagedConnectorListProps {
   initialManagedConnectors: ManagedConnectorDefinition[];
   onConnectorUpdated?: (connector: ManagedConnectorDefinition) => void;
   onConnectorDeleted?: (connector: ManagedConnectorDefinition) => void;
@@ -171,11 +171,11 @@ const ConnectorAvatar = ({ connector }: { connector: ManagedConnectorDefinition 
   );
 };
 
-export function ManagedConnectorAdminList({
+export function ManagedConnectorList({
   initialManagedConnectors,
   onConnectorUpdated,
   onConnectorDeleted,
-}: ManagedConnectorAdminListProps) {
+}: ManagedConnectorListProps) {
   const [managedConnectors, setManagedConnectors] = useState(initialManagedConnectors);
   const [expandedSlug, setExpandedSlug] = useState<string | null>(null);
   const [formStates, setFormStates] = useState<Record<string, ManagedConnectorFormState>>({});

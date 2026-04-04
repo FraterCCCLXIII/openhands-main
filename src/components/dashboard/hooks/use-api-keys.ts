@@ -159,7 +159,7 @@ interface UseDashboardApiKeysOptions {
   onStatus: (message: string) => void;
 }
 
-export const useDashboardApiKeys = ({
+export const useApiKeys = ({
   contextApiKey,
   userApiKey,
   userApiKeyValue = null,

@@ -23,7 +23,7 @@ import type {
 } from "@/src/types/context-layer";
 import { IntegrationWizard } from "@/src/components/integrations/wizard/wizard";
 
-interface DashboardIntegrationsSectionProps {
+interface IntegrationsSectionProps {
   addIntegrationSearch: string;
   availableConnectorCount: number;
   builtInConnectorsError?: string | null;
@@ -65,7 +65,7 @@ interface DashboardIntegrationsSectionProps {
   visibleFunctionCount: number;
 }
 
-export const DashboardIntegrationsSection = ({
+export const IntegrationsSection = ({
   addIntegrationSearch,
   availableConnectorCount,
   builtInConnectorsError,
@@ -101,7 +101,7 @@ export const DashboardIntegrationsSection = ({
   expandedFunctions,
   expandedIntegrations,
   visibleFunctionCount,
-}: DashboardIntegrationsSectionProps) => (
+}: IntegrationsSectionProps) => (
   <section className="space-y-4">
     {showIntegrationWizard ? (
       <IntegrationWizard

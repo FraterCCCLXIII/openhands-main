@@ -2,8 +2,8 @@
 
 import { useMemo, useState } from "react";
 
-import { CuratedProviderList } from "@/src/components/admin/integrations/provider-catalog";
-import { ManagedConnectorAdminList } from "@/src/components/admin/integrations/managed-connector-list";
+import { ProviderCatalog } from "@/src/components/admin/integrations/provider-catalog";
+import { ManagedConnectorList } from "@/src/components/admin/integrations/managed-connector-list";
 import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
 import type {
@@ -12,7 +12,7 @@ import type {
   OAuthProviderCatalogOption,
 } from "@/src/types/context-layer";
 
-interface AdminIntegrationsCatalogProps {
+interface IntegrationsCatalogProps {
   providerCatalog: OAuthProviderCatalogOption[];
   initialReadyBuiltInConnectors: BuiltInConnectorOption[];
   managedConnectors: ManagedConnectorDefinition[];
@@ -93,13 +93,13 @@ const upsertReadyBuiltInConnector = (
     connector,
   ]);
 
-export function AdminIntegrationsCatalog({
+export function IntegrationsCatalog({
   providerCatalog,
   initialReadyBuiltInConnectors,
   managedConnectors,
   canRegisterManagedConnectors,
   oauthCallbackBaseUrl,
-}: AdminIntegrationsCatalogProps) {
+}: IntegrationsCatalogProps) {
   const [readyBuiltInConnectors, setReadyBuiltInConnectors] = useState(() =>
     sortReadyBuiltInConnectors(initialReadyBuiltInConnectors),
   );
@@ -142,7 +142,7 @@ export function AdminIntegrationsCatalog({
             <Badge>{managedConnectors.length} registered</Badge>
           </div>
 
-          <ManagedConnectorAdminList
+          <ManagedConnectorList
             initialManagedConnectors={managedConnectors}
             onConnectorUpdated={(connector) => {
               if (connector.enabled && connector.oauthConfigured !== false) {
@@ -172,7 +172,7 @@ export function AdminIntegrationsCatalog({
           <Badge>{providerCatalog.length} options</Badge>
         </div>
 
-        <CuratedProviderList
+        <ProviderCatalog
           providerCatalog={providerCatalog}
           readyBuiltInConnectors={readyBuiltInConnectors}
           canRegisterManagedConnectors={canRegisterManagedConnectors}

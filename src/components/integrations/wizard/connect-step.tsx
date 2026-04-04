@@ -13,9 +13,9 @@ import {
   type DiscoverFeedback,
   type WizardDraft,
 } from "@/src/components/integrations/wizard/utils";
-import { IntegrationWizardFeedback } from "@/src/components/integrations/wizard/shared";
+import { WizardFeedback } from "@/src/components/integrations/wizard/shared";
 
-interface IntegrationWizardStepConnectProps {
+interface ConnectStepProps {
   builtInConnectors: BuiltInConnectorOption[];
   builtInConnectorsError?: string | null;
   builtInConnectorsPending: boolean;
@@ -35,7 +35,7 @@ interface IntegrationWizardStepConnectProps {
   onDiscover: () => void;
 }
 
-export const IntegrationWizardStepConnect = ({
+export const ConnectStep = ({
   builtInConnectors,
   builtInConnectorsError,
   builtInConnectorsPending,
@@ -53,7 +53,7 @@ export const IntegrationWizardStepConnect = ({
   onBack,
   onConnectorSearchChange,
   onDiscover,
-}: IntegrationWizardStepConnectProps) => {
+}: ConnectStepProps) => {
   const builtInAuthStrategy = selectedConnector?.authStrategy ?? null;
 
   return (
@@ -477,7 +477,7 @@ export const IntegrationWizardStepConnect = ({
         </div>
 
         {discoverFeedback ? (
-          <IntegrationWizardFeedback tone={discoverFeedback.tone}>
+          <WizardFeedback tone={discoverFeedback.tone}>
             <p>{discoverFeedback.message}</p>
             {discoverFeedback.debugDetails ? (
               <div className="mt-3 rounded-lg border border-white/10 bg-black/20 p-3">
@@ -489,7 +489,7 @@ export const IntegrationWizardStepConnect = ({
                 </pre>
               </div>
             ) : null}
-          </IntegrationWizardFeedback>
+          </WizardFeedback>
         ) : null}
       </div>
 
