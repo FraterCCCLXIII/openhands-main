@@ -184,6 +184,24 @@ npm run typecheck
 npm run build
 ```
 
+## Test coverage
+
+Generate a test coverage report:
+
+```bash
+npm run test:coverage
+```
+
+This runs all tests with V8 coverage instrumentation and outputs a summary table showing statement, branch, function, and line coverage for each file.
+
+For an interactive HTML report, run:
+
+```bash
+npm run test:coverage -- --coverage.reporter=html
+```
+
+Then open `coverage/index.html` in your browser.
+
 ## Contributing
 
 Please read [CONTRIBUTING.md](./CONTRIBUTING.md) before opening a pull request.

@@ -195,10 +195,14 @@ export interface AgentClassPolicy {
   rules: PolicyRule[];
 }
 
+export interface AccessRequestAgentData {
+  conversationLink?: string;
+}
+
 export interface AccessRequest {
   id: string;
-  agentId: string;
-  agentClass: string;
+  agentId: string | null;
+  agentClass: string | null;
   integrationKey: string;
   functionName: string;
   scopes: string[];
@@ -206,6 +210,7 @@ export interface AccessRequest {
   channels: NotificationChannel[];
   notificationTargets: Record<string, string>;
   justification?: string;
+  agentData?: AccessRequestAgentData;
   createdAt: string;
   status: AccessRequestStatus;
   decidedAt?: string;
@@ -214,8 +219,8 @@ export interface AccessRequest {
 
 export interface TemporaryGrant {
   id: string;
-  agentId: string;
-  agentClass: string;
+  agentId: string | null;
+  agentClass: string | null;
   integrationKey: string;
   functionName: string;
   scopes: string[];
@@ -323,8 +328,8 @@ export interface OAuthStateRecord {
 export interface ToolInvocationRecord {
   id: string;
   ownerId?: string;
-  agentId: string;
-  agentClass: string;
+  agentId: string | null;
+  agentClass: string | null;
   integrationKey: string;
   functionName: string;
   scopes: string[];

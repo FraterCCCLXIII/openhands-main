@@ -254,7 +254,7 @@ describe("GET /api/context/openapi", () => {
       payload: {},
     });
     expect(body.paths["/api/context/github/get_self"]?.post?.description).toContain(
-      "Invocation identity defaults to research-bot-01 (researcher) when agentId and agentClass are omitted.",
+      "Invocation identity is optional; agentId and agentClass default to null when omitted.",
     );
     expect(body.paths["/api/context/github/get_self"]?.post?.description).toContain(
       "Enabled tools are callable by default unless you configure an agent-class policy to narrow access",
