@@ -30,7 +30,6 @@ import type {
   DisableUnusedFunctionsResult,
   FunctionAccessMode,
   FunctionSpec,
-  FunctionUsageSummary,
   GenericOAuthConfig,
   IntegrationConnectionRecord,
   IntegrationConnectionStatus,

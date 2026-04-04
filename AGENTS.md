@@ -26,7 +26,7 @@ This repository contains a Next.js/TypeScript implementation of an agent context
 
 ## Workflow notes
 
-- Next.js 16 removed the old `next lint` entrypoint in this repo's setup; keep `npm run lint` wired to `eslint .` with the root `eslint.config.mjs`, and keep ESLint on a 9.x release until `eslint-config-next@16.2.x` is verified against ESLint 10 here.
+- Next.js 16 removed the old `next lint` entrypoint in this repo's setup; keep `npm run lint` wired to `eslint .` with the root `eslint.config.mjs`. ESLint 10 works here with an explicit flat-config stack (`typescript-eslint` + `@next/eslint-plugin-next`) instead of `eslint-config-next`, which still pulled React lint internals that crashed under ESLint 10 in this repo.
 
 - For this workstream, when the user requests code changes, commit them and push them to the active PR branch.
 

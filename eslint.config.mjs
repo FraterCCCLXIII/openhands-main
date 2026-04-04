@@ -1,9 +1,45 @@
 import { defineConfig, globalIgnores } from "eslint/config";
-import nextCoreWebVitals from "eslint-config-next/core-web-vitals";
-import nextTypescript from "eslint-config-next/typescript";
+import nextPlugin from "@next/eslint-plugin-next";
+import globals from "globals";
+import tseslint from "typescript-eslint";
+
+const sourceFiles = ["**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}"];
 
 export default defineConfig([
-  ...nextCoreWebVitals,
-  ...nextTypescript,
-  globalIgnores([".next/**", "next-env.d.ts", "tsconfig.tsbuildinfo"]),
+  globalIgnores([
+    ".next/**",
+    "coverage/**",
+    "next-env.d.ts",
+    "tsconfig.tsbuildinfo",
+  ]),
+  ...tseslint.configs.recommended,
+  {
+    files: sourceFiles,
+    languageOptions: {
+      globals: {
+        ...globals.browser,
+        ...globals.node,
+      },
+      parserOptions: {
+        ecmaFeatures: {
+          jsx: true,
+        },
+      },
+    },
+  },
+  {
+    files: sourceFiles,
+    plugins: {
+      "@next/next": nextPlugin,
+    },
+    rules: {
+      ...nextPlugin.configs.recommended.rules,
+      ...nextPlugin.configs["core-web-vitals"].rules,
+    },
+    settings: {
+      next: {
+        rootDir: ".",
+      },
+    },
+  },
 ]);
