@@ -39,7 +39,7 @@ export const buildAgentSkillMarkdown = ({
     .filter((integration) => integration.enabled)
     .map((integration) => ({
       ...integration,
-      availableTools: Object.values(integration.functions)
+      availableTools: Object.values(integration.tools)
         .filter(isToolAvailable)
         .sort((left, right) => left.name.localeCompare(right.name)),
     }))
@@ -62,7 +62,7 @@ export const buildAgentSkillMarkdown = ({
     `- Store the personal context-layer API key in ${OPENHANDS_CONTEXT_KEY_ENV}.`,
     `- Send \`Authorization: Bearer ${OPENHANDS_CONTEXT_KEY_ENV}\`.`,
     `- Base URL: \`${normalizedBaseUrl}\``,
-    `- Endpoint pattern: \`POST ${normalizedBaseUrl}/api/context/{integrationKey}/{functionName}\``,
+    `- Endpoint pattern: \`POST ${normalizedBaseUrl}/api/context/{integrationKey}/{toolName}\``,
     "",
     "## Request body",
     "",

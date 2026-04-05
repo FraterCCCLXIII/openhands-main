@@ -106,7 +106,7 @@ const compareToolSpecs = (left: ToolSpec, right: ToolSpec) => {
 };
 
 export const listExampleTools = (integration: IntegrationSpec) =>
-  Object.values(integration.functions)
+  Object.values(integration.tools)
     .filter((toolSpec) => toolSpec.enabled && getToolAccessMode(toolSpec) !== "disabled")
     .sort(compareToolSpecs);
 

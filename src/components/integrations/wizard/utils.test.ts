@@ -47,7 +47,7 @@ const discovery: DiscoveryResponse = {
     headerName: "xi-api-key",
     secret: "secret-key",
   },
-  functions: {
+  tools: {
     list_models: {
       name: "list_models",
       description: "List models",
@@ -110,11 +110,11 @@ describe("integration-wizard-utils", () => {
         builtInSlug: "elevenlabs",
       },
     });
-    expect(payload.functions.list_models).toMatchObject({
+    expect(payload.tools.list_models).toMatchObject({
       accessMode: "approval_required",
       enabled: true,
     });
-    expect(payload.functions.delete_voice).toMatchObject({
+    expect(payload.tools.delete_voice).toMatchObject({
       accessMode: "disabled",
       enabled: false,
     });

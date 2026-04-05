@@ -55,7 +55,7 @@ export const buildAgentConnectionGuide = ({
   const sampleTool = sampleIntegrationSelection
     ? sampleIntegrationSelection.tools[0]
     : sampleIntegration
-      ? listExampleTools(sampleIntegration)[0] ?? Object.values(sampleIntegration.functions)[0]
+      ? listExampleTools(sampleIntegration)[0] ?? Object.values(sampleIntegration.tools)[0]
       : undefined;
   const integrationKey = sampleIntegration?.key ?? "your-integration";
   const toolName = sampleTool?.name ?? "your-tool";

@@ -7,7 +7,7 @@ import {
   fromUserApiError,
 } from "@/src/lib/user-api-auth";
 
-const updateFunctionSchema = z.object({
+const updateToolSchema = z.object({
   accessMode: z.enum(["enabled", "disabled", "approval_required"]),
 });
 
@@ -15,19 +15,19 @@ export async function PATCH(
   request: Request,
   {
     params,
-  }: { params: Promise<{ integrationKey: string; functionName: string }> },
+  }: { params: Promise<{ integrationKey: string; toolName: string }> },
 ) {
   try {
     const { ownerId } = await authenticateUserApiRequest(request);
-    const payload = updateFunctionSchema.parse(await request.json());
-    const { integrationKey, functionName } = await params;
+    const payload = updateToolSchema.parse(await request.json());
+    const { integrationKey, toolName } = await params;
     const service = getContextLayerService();
 
     return ok(
-      await service.setOwnerFunctionAccessMode(
+      await service.setOwnerToolAccessMode(
         ownerId,
         integrationKey,
-        functionName,
+        toolName,
         payload.accessMode,
       ),
     );

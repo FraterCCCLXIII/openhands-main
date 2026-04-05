@@ -36,7 +36,7 @@ const toReadyBuiltInConnector = (
   description: connector.description,
   logoUrl: connector.logoUrl,
   appUrl: connector.appUrl,
-  toolCount: inferManagedConnectorProvider(connector) === "http" ? connector.functions.length : 0,
+  toolCount: inferManagedConnectorProvider(connector) === "http" ? connector.tools.length : 0,
   categories: connector.categories,
   authModes: connector.authModes,
   authStrategy: connector.authStrategy,

@@ -118,28 +118,28 @@ const buildToolDescription = (
 };
 
 const buildApprovalMessage = ({
-  functionName,
+  toolName,
   integrationKey,
   approvalUrl,
 }: {
-  functionName: string;
+  toolName: string;
   integrationKey: string;
   approvalUrl: string;
 }) =>
   [
-    `Human approval is currently required before calling ${integrationKey}.${functionName}.`,
+    `Human approval is currently required before calling ${integrationKey}.${toolName}.`,
     `Ask your human to authorize access in the dashboard: ${approvalUrl}`,
   ].join(" ");
 
 const buildApprovalSetupMessage = ({
-  functionName,
+  toolName,
   integrationKey,
 }: {
-  functionName: string;
+  toolName: string;
   integrationKey: string;
 }) =>
   [
-    `Human approval is currently required before calling ${integrationKey}.${functionName}.`,
+    `Human approval is currently required before calling ${integrationKey}.${toolName}.`,
     `Before requesting approval, call ${CONTEXT_LAYER_MCP_SET_AGENT_DATA_TOOL_NAME} with conversationLink so the approvals page can link back to the conversation.`,
   ].join(" ");
 
@@ -231,8 +231,8 @@ const buildSessionAgentDataResult = (
 
 export const buildContextLayerMcpToolName = (
   integrationKey: string,
-  functionName: string,
-) => `${integrationKey}${CONTEXT_LAYER_MCP_TOOL_SEPARATOR}${functionName}`;
+  toolName: string,
+) => `${integrationKey}${CONTEXT_LAYER_MCP_TOOL_SEPARATOR}${toolName}`;
 
 export const createContextLayerMcpServer = async ({
   request,
@@ -329,7 +329,7 @@ export const createContextLayerMcpServer = async ({
       continue;
     }
 
-    for (const toolSpec of Object.values(integration.functions)) {
+    for (const toolSpec of Object.values(integration.tools)) {
       const accessMode = getToolAccessMode(toolSpec);
       if (!toolSpec.enabled || accessMode === "disabled") {
         continue;
@@ -370,7 +370,7 @@ export const createContextLayerMcpServer = async ({
                   {
                     type: "text" as const,
                     text: buildApprovalSetupMessage({
-                      functionName: toolSpec.name,
+                      toolName: toolSpec.name,
                       integrationKey: integration.key,
                     }),
                   },
@@ -406,7 +406,7 @@ export const createContextLayerMcpServer = async ({
                   {
                     type: "text" as const,
                     text: buildApprovalMessage({
-                      functionName: toolSpec.name,
+                      toolName: toolSpec.name,
                       integrationKey: integration.key,
                       approvalUrl,
                     }),

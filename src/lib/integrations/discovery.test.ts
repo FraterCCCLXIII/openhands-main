@@ -109,7 +109,7 @@ describe("listBuiltInConnectors", () => {
         clientId: "acme-client-id",
         clientSecret: "acme-client-secret",
       }),
-      functions: [],
+      tools: [],
       enabled: true,
       createdAt: "2026-03-09T00:00:00.000Z",
       updatedAt: "2026-03-09T00:00:00.000Z",
@@ -171,7 +171,7 @@ describe("listBuiltInConnectors", () => {
       credentialPlaceholder: "zeta_...",
       credentialHelp: "Use a Zeta access token.",
       serverUrl: "https://mcp.zeta.test/mcp",
-      functions: [],
+      tools: [],
       enabled: true,
       createdAt: "2026-03-09T00:00:00.000Z",
       updatedAt: "2026-03-09T00:00:00.000Z",
@@ -189,7 +189,7 @@ describe("listBuiltInConnectors", () => {
       credentialPlaceholder: "alpha_...",
       credentialHelp: "Use an Alpha access token.",
       serverUrl: "https://mcp.alpha.test/mcp",
-      functions: [],
+      tools: [],
       enabled: true,
       createdAt: "2026-03-09T00:00:00.000Z",
       updatedAt: "2026-03-09T00:00:00.000Z",
@@ -207,7 +207,7 @@ describe("listBuiltInConnectors", () => {
       credentialPlaceholder: "disabled_...",
       credentialHelp: "Use a token.",
       serverUrl: "https://mcp.disabled.test/mcp",
-      functions: [],
+      tools: [],
       enabled: false,
       createdAt: "2026-03-09T00:00:00.000Z",
       updatedAt: "2026-03-09T00:00:00.000Z",
@@ -240,7 +240,7 @@ describe("discoverIntegration", () => {
       credentialPlaceholder: "ghp_...",
       credentialHelp: "Use a GitHub token.",
       serverUrl: "https://api.githubcopilot.com/mcp/",
-      functions: [],
+      tools: [],
       enabled: true,
       createdAt: "2026-03-09T00:00:00.000Z",
       updatedAt: "2026-03-09T00:00:00.000Z",
@@ -285,7 +285,7 @@ describe("discoverIntegration", () => {
       credentials: {
         accessToken: "github-pat",
       },
-      functions: {
+      tools: {
         get_me: {
           description: "Get the authenticated user",
           config: {
@@ -357,7 +357,7 @@ describe("discoverIntegration", () => {
         headerName: "xi-api-key",
         secret: "eleven-secret",
       },
-      functions: {
+      tools: {
         list_models: {
           description: "List models",
           config: {
@@ -416,7 +416,7 @@ describe("discoverIntegration", () => {
         clientId: "acme-client-id",
         clientSecret: "acme-client-secret",
       }),
-      functions: [],
+      tools: [],
       enabled: true,
       createdAt: "2026-03-09T00:00:00.000Z",
       updatedAt: "2026-03-09T00:00:00.000Z",
@@ -470,7 +470,7 @@ describe("discoverIntegration", () => {
         serverUrl: "https://mcp.acme.test/mcp",
       },
       credentials: {},
-      functions: {
+      tools: {
         list_contacts: {
           description: "List contacts",
           config: {
@@ -500,7 +500,7 @@ describe("discoverIntegration", () => {
       credentialPlaceholder: "lin_api_...",
       credentialHelp: "Use a Linear API key.",
       apiBaseUrl: "https://api.linear.app",
-      functions: [
+      tools: [
         {
           name: "list_issues",
           description: "List Linear issues",
@@ -552,7 +552,7 @@ describe("discoverIntegration", () => {
         headerName: "X-Linear-Key",
         secret: "linear-secret",
       },
-      functions: {
+      tools: {
         list_issues: {
           description: "List Linear issues",
           defaultScopes: ["read"],
@@ -592,7 +592,7 @@ describe("discoverIntegration", () => {
         clientId: "notion-client-id",
         clientSecret: "notion-client-secret",
       }),
-      functions: [
+      tools: [
         {
           name: "post_search",
           description: "Search workspace Provide the request payload under `body`.",
@@ -637,7 +637,7 @@ describe("discoverIntegration", () => {
         apiBaseUrl: "https://api.notion.com",
       },
       credentials: {},
-      functions: {
+      tools: {
         post_search: {
           description: "Search workspace Provide the request payload under `body`.",
           config: {
@@ -679,7 +679,7 @@ describe("discoverIntegration", () => {
         serverUrl: "https://app.tryordinal.com/api/mcp",
       },
     });
-    expect(Object.keys(result.functions)).toEqual(["create_post", "list_profiles"]);
+    expect(Object.keys(result.tools)).toEqual(["create_post", "list_profiles"]);
     expect(mcpState.url).toBe("https://app.tryordinal.com/api/mcp");
     expect(mcpState.headers).toEqual({
       Authorization: "Bearer ord_test_key_123",

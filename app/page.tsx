@@ -63,7 +63,7 @@ export default async function HomePage() {
             },
             {
               title: "Fine-grained control",
-              body: "Toggle entire integrations, individual functions, and agent-class scopes.",
+              body: "Toggle entire integrations, individual tools, and agent-class scopes.",
               icon: ShieldCheck,
             },
             {

@@ -1,7 +1,7 @@
 import {
   getToolAccessMode,
   matchesToolSearch,
-} from "@/src/components/integrations/function-access-controls";
+} from "@/src/components/integrations/tool-access-controls";
 import type {
   AuthStrategy,
   BuiltInConnectorOption,
@@ -25,7 +25,7 @@ export interface DiscoveryResponse {
   authStrategy: AuthStrategy;
   config: Record<string, unknown>;
   credentials: Record<string, unknown>;
-  functions: Record<string, ToolSpec>;
+  tools: Record<string, ToolSpec>;
 }
 
 export interface WizardDraft {
@@ -215,8 +215,8 @@ export const buildCreatePayload = (
     fineGrainedPermissions: true,
     config: discovery.config,
     credentials: discovery.credentials,
-    functions: Object.fromEntries(
-      Object.entries(discovery.functions).map(([name, toolSpec]) => {
+    tools: Object.fromEntries(
+      Object.entries(discovery.tools).map(([name, toolSpec]) => {
         const accessMode = toolModes[name] ?? getToolAccessMode(toolSpec);
         return [
           name,
@@ -232,7 +232,7 @@ export const buildCreatePayload = (
 };
 
 export const getReviewedTools = (discovery: DiscoveryResponse | null) =>
-  Object.entries(discovery?.functions ?? {}).sort(([leftName], [rightName]) =>
+  Object.entries(discovery?.tools ?? {}).sort(([leftName], [rightName]) =>
     leftName.localeCompare(rightName),
   );
 

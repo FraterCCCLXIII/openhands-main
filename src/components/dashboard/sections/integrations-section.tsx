@@ -14,7 +14,7 @@ import {
 import {
   AccessModeSlider,
   getToolAccessMode,
-} from "@/src/components/integrations/function-access-controls";
+} from "@/src/components/integrations/tool-access-controls";
 import { IntegrationWizard } from "@/src/components/integrations/wizard/wizard";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";

@@ -2,7 +2,7 @@ import { approvalStatusLabel } from "@/src/lib/access-requests";
 import {
   getToolAccessMode,
   matchesToolSearch,
-} from "@/src/components/integrations/function-access-controls";
+} from "@/src/components/integrations/tool-access-controls";
 import type {
   AccessRequest,
   BuiltInConnectorOption,
@@ -137,7 +137,7 @@ export const matchesAccessRequestSearch = (
     request.agentId ?? "",
     request.agentClass ?? "",
     request.integrationKey,
-    request.functionName,
+    request.toolName,
     request.justification ?? "",
     request.agentData?.conversationLink ?? "",
     approvalStatusLabel(request.status),
@@ -243,7 +243,7 @@ export const filterIntegrationsForDisplay = ({
         integration,
         normalizedSearch,
       );
-      const tools = Object.values(integration.functions).sort((left, right) =>
+      const tools = Object.values(integration.tools).sort((left, right) =>
         left.name.localeCompare(right.name),
       );
       const visibleTools = tools.filter((toolSpec) => {
@@ -324,7 +324,7 @@ export const buildUnusedToolCandidates = ({
   cutoffDate: Date;
 }) =>
   integrations.flatMap((integration) =>
-    Object.values(integration.functions)
+    Object.values(integration.tools)
       .filter((toolSpec) => getToolAccessMode(toolSpec) !== "disabled")
       .filter(
         (toolSpec) =>
@@ -333,7 +333,7 @@ export const buildUnusedToolCandidates = ({
       )
       .map((toolSpec) => ({
         integrationKey: integration.key,
-        functionName: toolSpec.name,
+        toolName: toolSpec.name,
         lastInvokedAt: toolSpec.lastInvokedAt as string,
       })),
   );
@@ -378,7 +378,7 @@ export const buildToolAccessPatch = (
   toolName: string,
   accessMode: ToolAccessMode,
 ) => ({
-  url: `/api/integrations/${integrationKey}/functions/${toolName}`,
+  url: `/api/integrations/${integrationKey}/tools/${toolName}`,
   method: "PATCH",
   body: { accessMode },
 });

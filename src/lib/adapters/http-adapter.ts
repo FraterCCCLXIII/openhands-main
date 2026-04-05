@@ -232,7 +232,7 @@ export class HttpAdapter implements IntegrationAdapter {
 
     if (!requestTemplate) {
       throw new ContextLayerError(
-        `Function '${input.toolSpec.name}' is missing an HTTP request template.`,
+        `Tool '${input.toolSpec.name}' is missing an HTTP request template.`,
         400,
       );
     }
@@ -241,7 +241,7 @@ export class HttpAdapter implements IntegrationAdapter {
     const path = interpolateValue(requestTemplate.path, input.payload);
     if (typeof path !== "string" || !path.trim()) {
       throw new ContextLayerError(
-        `Function '${input.toolSpec.name}' produced an invalid request path.`,
+        `Tool '${input.toolSpec.name}' produced an invalid request path.`,
         400,
       );
     }

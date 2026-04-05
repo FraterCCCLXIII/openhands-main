@@ -137,13 +137,13 @@ const parseScopes = (value: string) =>
     .map((scope) => scope.trim())
     .filter(Boolean);
 
-const buildDefaultHttpFunctions = (provider: OAuthProviderCatalogOption) => {
+const buildDefaultHttpTools = (provider: OAuthProviderCatalogOption) => {
   const defaults = provider.registrationDefaults;
   if (
     !defaults ||
     defaults.openApiUrl ||
-    !defaults.functionName ||
-    !defaults.functionDescription ||
+    !defaults.toolName ||
+    !defaults.toolDescription ||
     !defaults.requestMethod ||
     !defaults.requestPath
   ) {
@@ -152,8 +152,8 @@ const buildDefaultHttpFunctions = (provider: OAuthProviderCatalogOption) => {
 
   return [
     {
-      name: defaults.functionName,
-      description: defaults.functionDescription,
+      name: defaults.toolName,
+      description: defaults.toolDescription,
       defaultScopes: defaults.scopes ?? [],
       request: {
         method: defaults.requestMethod,
@@ -238,8 +238,8 @@ const buildManagedConnectorPayload = (
     oauthClientId: authStrategy === "oauth2" ? form.oauthClientId.trim() : undefined,
     oauthClientSecret:
       authStrategy === "oauth2" ? form.oauthClientSecret.trim() : undefined,
-    functions:
-      managedConnectorProvider === "http" ? buildDefaultHttpFunctions(provider) : [],
+    tools:
+      managedConnectorProvider === "http" ? buildDefaultHttpTools(provider) : [],
     enabled: true,
   };
 };
@@ -255,7 +255,7 @@ const buildReadyBuiltInConnectorOption = (
     name: provider.name,
     description: provider.description,
     appUrl: provider.appUrl,
-    toolCount: getManagedConnectorProvider(provider) === "http" ? buildDefaultHttpFunctions(provider).length : 0,
+    toolCount: getManagedConnectorProvider(provider) === "http" ? buildDefaultHttpTools(provider).length : 0,
     categories: provider.categories,
     authModes:
       provider.registrationDefaults?.authModes?.length &&
@@ -461,7 +461,7 @@ export function ProviderCatalog({
                   type="button"
                   onClick={() => setExpandedSlug(isExpanded ? null : provider.slug)}
                   aria-expanded={isExpanded}
-                  className="flex w-full items-center gap-3 overflow-x-auto whitespace-nowrap px-4 py-2.5 text-left text-sm"
+                  className="flex w-full cursor-pointer items-center gap-3 overflow-x-auto whitespace-nowrap px-4 py-2.5 text-left text-sm"
                 >
                   <span className="shrink-0 font-medium text-white">{provider.name}</span>
                   <span className="shrink-0 text-[var(--color-text-muted)]">({provider.slug})</span>
@@ -563,14 +563,14 @@ export function ProviderCatalog({
                         ) : null}
                         {isHttpConnector &&
                         !registrationForm.openApiUrl &&
-                        provider.registrationDefaults?.functionName &&
+                        provider.registrationDefaults?.toolName &&
                         provider.registrationDefaults?.requestMethod &&
                         provider.registrationDefaults?.requestPath ? (
                           <div className="md:col-span-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-[11px] leading-5 text-[var(--color-text-base)]">
                             <p>
                               Starter API tool:
                               <code className="mx-1 text-white">
-                                {provider.registrationDefaults.functionName}
+                                {provider.registrationDefaults.toolName}
                               </code>
                               will call
                               <code className="mx-1 text-white">

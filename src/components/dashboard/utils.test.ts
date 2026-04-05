@@ -81,7 +81,7 @@ const integrations: IntegrationSpec[] = [
     fineGrainedPermissions: true,
     config: { builtInSlug: "slack" },
     credentials: {},
-    functions: {
+    tools: {
       slack_search_public: {
         name: "slack_search_public",
         description: "Search Slack",
@@ -111,7 +111,7 @@ const accessRequest: AccessRequest = {
   agentId: null,
   agentClass: null,
   integrationKey: "slack",
-  functionName: "slack_search_public",
+  toolName: "slack_search_public",
   scopes: ["messages:read"],
   requestedMinutes: 60,
   channels: ["in_app"],

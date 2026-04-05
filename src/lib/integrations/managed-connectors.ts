@@ -155,7 +155,7 @@ export const getDefaultBuiltInConnector = (slug: string) =>
 
 export const getManagedConnectorProvider = (connector: ManagedConnectorRecord) =>
   connector.provider ??
-  (connector.serverUrl || connector.functions.length === 0 ? "mcp" : "http");
+  (connector.serverUrl || connector.tools.length === 0 ? "mcp" : "http");
 
 export const getManagedConnectorServerUrl = (connector: ManagedConnectorRecord) => {
   if (getManagedConnectorProvider(connector) !== "mcp") {
@@ -194,7 +194,7 @@ export const managedConnectorToBuiltInOption = (
     logoUrl: connector.logoUrl,
     appUrl: connector.appUrl,
     toolCount:
-      getManagedConnectorProvider(connector) === "mcp" ? 0 : connector.functions.length,
+      getManagedConnectorProvider(connector) === "mcp" ? 0 : connector.tools.length,
     categories: connector.categories,
     authModes: connector.authModes,
     authStrategy: connector.authStrategy,
@@ -206,10 +206,10 @@ export const managedConnectorToBuiltInOption = (
   });
 
 export const buildManagedConnectorToolSpecs = (
-  functions: ManagedConnectorToolDefinition[],
+  tools: ManagedConnectorToolDefinition[],
 ): Record<string, ToolSpec> =>
   Object.fromEntries(
-    functions.map((tool) => [
+    tools.map((tool) => [
       tool.name,
       {
         name: tool.name,
@@ -226,10 +226,10 @@ export const buildManagedConnectorToolSpecs = (
     ]),
   );
 
-export const buildManagedConnectorFunctions = (
-  connector: Pick<ManagedConnectorRecord, "functions">,
+export const buildManagedConnectorTools = (
+  connector: Pick<ManagedConnectorRecord, "tools">,
 ): Record<string, ToolSpec> =>
-  buildManagedConnectorToolSpecs(connector.functions);
+  buildManagedConnectorToolSpecs(connector.tools);
 
 export const resolveManagedConnectorCredentials = (
   connector: ConnectorCredentialDefaults,
@@ -322,7 +322,7 @@ const defaultBuiltInToManagedDefinition = (
   apiBaseUrl: connector.apiBaseUrl,
   serverUrl: connector.serverUrl,
   openApiUrl: connector.openApiUrl,
-  functions: [],
+  tools: [],
   enabled: true,
   createdAt: "",
   updatedAt: "",

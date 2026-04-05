@@ -47,7 +47,7 @@ import type {
   AccessRequest,
   AdminApiKeyStatus,
   BuiltInConnectorOption,
-  DisableUnusedFunctionsResult,
+  DisableUnusedToolsResult,
   ToolAccessMode,
   IntegrationSpec,
   NotificationRecord,
@@ -195,7 +195,7 @@ export const DashboardWorkspace = ({
       thresholdValue: number;
       thresholdUnit: UnusedToolWindowUnit;
     }) =>
-      fetchJson<DisableUnusedFunctionsResult>("/api/integrations/disable-unused", {
+      fetchJson<DisableUnusedToolsResult>("/api/integrations/disable-unused", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -267,7 +267,7 @@ export const DashboardWorkspace = ({
     (integration) => integration.enabled,
   ).length;
   const discoveredToolCount = integrations.reduce(
-    (count, integration) => count + Object.keys(integration.functions).length,
+    (count, integration) => count + Object.keys(integration.tools).length,
     0,
   );
   const pendingAccessRequests = accessRequests.filter(
@@ -555,7 +555,7 @@ export const DashboardWorkspace = ({
             userEmail={userEmail}
             badges={[
               <Badge key="pending">{pendingAccessRequests.length} pending</Badge>,
-              <Badge key="functions">{discoveredToolCount} tools</Badge>,
+              <Badge key="tools">{discoveredToolCount} tools</Badge>,
             ]}
             action={<DashboardSignOutButton />}
           />

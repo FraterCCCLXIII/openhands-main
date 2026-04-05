@@ -43,7 +43,7 @@ const githubIntegration: IntegrationSpec = {
   fineGrainedPermissions: true,
   config: { serverUrl: "https://api.githubcopilot.com/mcp/" },
   credentials: {},
-  functions: {
+  tools: {
     search_repositories: {
       name: "search_repositories",
       description: "Search repositories",
@@ -77,7 +77,7 @@ const notionIntegration: IntegrationSpec = {
   fineGrainedPermissions: true,
   config: { apiBaseUrl: "https://api.notion.com/v1" },
   credentials: {},
-  functions: {
+  tools: {
     search_pages: {
       name: "search_pages",
       description: "Search pages",
@@ -101,7 +101,7 @@ const disabledIntegration: IntegrationSpec = {
   fineGrainedPermissions: true,
   config: { apiBaseUrl: "https://api.linear.app" },
   credentials: { accessToken: "linear-token" },
-  functions: {
+  tools: {
     list_issues: {
       name: "list_issues",
       description: "List issues",
@@ -125,7 +125,7 @@ const partiallyDisabledIntegration: IntegrationSpec = {
   fineGrainedPermissions: true,
   config: { serverUrl: "https://mcp.slack.com" },
   credentials: {},
-  functions: {
+  tools: {
     list_channels: {
       name: "list_channels",
       description: "List channels",

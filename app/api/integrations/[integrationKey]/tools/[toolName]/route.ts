@@ -4,23 +4,28 @@ import { fromError, ok } from "@/src/lib/api";
 import { getCurrentUserIdentity } from "@/src/lib/current-user";
 import { getContextLayerService } from "@/src/lib/core/runtime";
 
-const toggleSchema = z.object({ enabled: z.boolean() });
+const updateToolSchema = z.object({
+  accessMode: z.enum(["enabled", "disabled", "approval_required"]),
+});
 
-export async function POST(
+export async function PATCH(
   request: Request,
-  { params }: { params: Promise<{ integrationKey: string; functionName: string }> },
+  {
+    params,
+  }: { params: Promise<{ integrationKey: string; toolName: string }> },
 ) {
   try {
     const { ownerId } = await getCurrentUserIdentity();
-    const payload = toggleSchema.parse(await request.json());
-    const { integrationKey, functionName } = await params;
+    const payload = updateToolSchema.parse(await request.json());
+    const { integrationKey, toolName } = await params;
     const service = getContextLayerService();
+
     return ok(
-      await service.setOwnerFunctionEnabled(
+      await service.setOwnerToolAccessMode(
         ownerId,
         integrationKey,
-        functionName,
-        payload.enabled,
+        toolName,
+        payload.accessMode,
       ),
     );
   } catch (error) {

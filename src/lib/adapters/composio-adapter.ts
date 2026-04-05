@@ -41,7 +41,7 @@ export class ComposioAdapter implements IntegrationAdapter {
 
     if (!toolSlug) {
       throw new ContextLayerError(
-        `Function '${toolSpec.name}' is missing a composioToolSlug configuration.`,
+        `Tool '${toolSpec.name}' is missing a composioToolSlug configuration.`,
         400,
       );
     }

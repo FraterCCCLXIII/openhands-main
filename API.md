@@ -22,7 +22,7 @@ Legacy redirects:
 
 ### REST tool invocation
 
-- `POST /api/context/[integrationKey]/[functionName]`
+- `POST /api/context/[integrationKey]/[toolName]`
 - Auth: personal agent/runtime API key (`cla_...`)
 - Generated schema: `GET /api/context/openapi`
 - Generated tool catalog markdown: `GET /api/context/skill`
@@ -39,7 +39,7 @@ Legacy redirects:
 - Auth: user automation API key (`clu_...`)
 - Primary routes:
   - `GET /api/user/integrations`
-  - `PATCH /api/user/integrations/[integrationKey]/functions/[functionName]`
+  - `PATCH /api/user/integrations/[integrationKey]/tools/[toolName]`
   - `GET|POST /api/user/key`
   - `GET /api/user/access-requests`
   - `POST /api/user/access-requests/[requestId]/approve`

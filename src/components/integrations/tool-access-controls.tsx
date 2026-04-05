@@ -15,8 +15,6 @@ export const accessModeLabel = (mode: ToolAccessMode) => {
 export const getToolAccessMode = (toolSpec: ToolSpec): ToolAccessMode =>
   toolSpec.accessMode ?? (toolSpec.enabled ? "enabled" : "disabled");
 
-export const getFunctionAccessMode = (toolSpec: ToolSpec): ToolAccessMode =>
-  getToolAccessMode(toolSpec);
 
 export const matchesToolSearch = (
   name: string,
@@ -33,11 +31,6 @@ export const matchesToolSearch = (
     .some((value) => value.toLowerCase().includes(normalizedQuery));
 };
 
-export const matchesFunctionSearch = (
-  name: string,
-  toolSpec: ToolSpec,
-  query: string,
-) => matchesToolSearch(name, toolSpec, query);
 
 export const accessModeButtonClassName: Record<ToolAccessMode, string> = {
   enabled:
@@ -86,7 +79,7 @@ export const AccessModeSlider = ({
           key={option.value}
           type="button"
           className={cn(
-            "rounded-full px-3 py-1.5 text-[11px] font-semibold transition-colors",
+            "cursor-pointer rounded-full px-3 py-1.5 text-[11px] font-semibold transition-colors",
             active
               ? accessModeSegmentClassName[option.value]
               : "text-[var(--color-text-base)] hover:bg-[var(--color-bg-active)] hover:text-white",

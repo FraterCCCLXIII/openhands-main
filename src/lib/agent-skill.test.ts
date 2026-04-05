@@ -14,7 +14,7 @@ const integrations: IntegrationSpec[] = [
     fineGrainedPermissions: true,
     config: {},
     credentials: {},
-    functions: {
+    tools: {
       search_repositories: {
         name: "search_repositories",
         description: "Search repositories",
@@ -57,7 +57,7 @@ const integrations: IntegrationSpec[] = [
     fineGrainedPermissions: true,
     config: {},
     credentials: {},
-    functions: {
+    tools: {
       hidden_tool: {
         name: "hidden_tool",
         description: "Should stay hidden",
@@ -81,7 +81,7 @@ describe("agent-skill", () => {
 
     expect(markdown).toContain("name: context-layer-profile-tools");
     expect(markdown).toContain(
-      "Endpoint pattern: `POST https://context-layer.example.com/api/context/{integrationKey}/{functionName}`",
+      "Endpoint pattern: `POST https://context-layer.example.com/api/context/{integrationKey}/{toolName}`",
     );
     expect(markdown).toContain("Generated tool catalog for the current OpenHands Context Layer profile.");
     expect(markdown).toContain("## Available tools (2)");

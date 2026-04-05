@@ -60,8 +60,8 @@ const providerCatalog: OAuthProviderCatalogOption[] = [
       authorizationUrl: "https://accounts.google.com/o/oauth2/v2/auth",
       tokenUrl: "https://oauth2.googleapis.com/token",
       scopes: ["https://www.googleapis.com/auth/calendar.readonly"],
-      functionName: "list_events",
-      functionDescription: "List events from the user's primary Google Calendar.",
+      toolName: "list_events",
+      toolDescription: "List events from the user's primary Google Calendar.",
       requestMethod: "GET",
       requestPath: "/calendars/primary/events",
     },
@@ -314,7 +314,7 @@ describe("ProviderCatalog", () => {
       };
       oauthClientId: string;
       oauthClientSecret: string;
-      functions: Array<{
+      tools: Array<{
         name: string;
         description: string;
         defaultScopes: string[];
@@ -337,7 +337,7 @@ describe("ProviderCatalog", () => {
     ]);
     expect(body.oauthClientId).toBe("calendar-client-id");
     expect(body.oauthClientSecret).toBe("calendar-client-secret");
-    expect(body.functions).toEqual([
+    expect(body.tools).toEqual([
       {
         name: "list_events",
         description: "List events from the user's primary Google Calendar.",
@@ -434,7 +434,7 @@ describe("ProviderCatalog", () => {
       };
       oauthClientId: string;
       oauthClientSecret: string;
-      functions: Array<unknown>;
+      tools: Array<unknown>;
     };
 
     expect(body).toMatchObject({
@@ -443,7 +443,7 @@ describe("ProviderCatalog", () => {
       serverUrl: "https://mcp.slack.com/mcp",
       oauthClientId: "slack-client-id",
       oauthClientSecret: "slack-client-secret",
-      functions: [],
+      tools: [],
     });
     expect(body.apiBaseUrl).toBeUndefined();
     expect(body.oauthConfig).toMatchObject({
@@ -544,14 +544,14 @@ describe("ProviderCatalog", () => {
       };
       oauthClientId?: string;
       oauthClientSecret?: string;
-      functions: Array<unknown>;
+      tools: Array<unknown>;
     };
 
     expect(webflowBody).toMatchObject({
       slug: "webflow",
       provider: "mcp",
       serverUrl: "https://mcp.webflow.com/mcp",
-      functions: [],
+      tools: [],
     });
     expect(webflowBody.oauthConfig).toMatchObject({
       authorizationUrl: "https://mcp.webflow.com/oauth/authorize",
@@ -634,14 +634,14 @@ describe("ProviderCatalog", () => {
       apiBaseUrl: string;
       openApiUrl: string;
       serverUrl?: string;
-      functions: Array<unknown>;
+      tools: Array<unknown>;
     };
     expect(body).toMatchObject({
       slug: "notion",
       provider: "http",
       apiBaseUrl: "https://api.notion.com",
       openApiUrl: "https://developers.notion.com/openapi.json",
-      functions: [],
+      tools: [],
     });
     expect(body.serverUrl).toBeUndefined();
   });
@@ -709,7 +709,7 @@ describe("ProviderCatalog", () => {
       oauthConfig?: unknown;
       oauthClientId?: string;
       oauthClientSecret?: string;
-      functions: Array<unknown>;
+      tools: Array<unknown>;
     };
 
     expect(body).toMatchObject({
@@ -720,7 +720,7 @@ describe("ProviderCatalog", () => {
       apiBaseUrl: "https://api.elevenlabs.io",
       openApiUrl: "https://api.elevenlabs.io/openapi.json",
       credentialLabel: "ElevenLabs API key",
-      functions: [],
+      tools: [],
     });
     expect(body.oauthConfig).toBeUndefined();
     expect(body.oauthClientId).toBeUndefined();

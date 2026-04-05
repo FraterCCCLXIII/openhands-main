@@ -53,7 +53,7 @@ const githubIntegration: IntegrationSpec = {
   fineGrainedPermissions: true,
   config: { serverUrl: "https://api.githubcopilot.com/mcp/" },
   credentials: {},
-  functions: {
+  tools: {
     search_repositories: {
       name: "search_repositories",
       description: "Search repositories",

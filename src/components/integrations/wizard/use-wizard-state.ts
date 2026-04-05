@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 
-import { getToolAccessMode } from "@/src/components/integrations/function-access-controls";
+import { getToolAccessMode } from "@/src/components/integrations/tool-access-controls";
 import type { BuiltInConnectorOption, ToolAccessMode } from "@/src/types/context-layer";
 import {
   connectorOptionLabel,
@@ -168,7 +168,7 @@ export const useWizardState = ({
     setDiscovery(result);
     setToolModes(
       Object.fromEntries(
-        Object.entries(result.functions).map(([name, toolSpec]) => [
+        Object.entries(result.tools).map(([name, toolSpec]) => [
           name,
           getToolAccessMode(toolSpec),
         ]),

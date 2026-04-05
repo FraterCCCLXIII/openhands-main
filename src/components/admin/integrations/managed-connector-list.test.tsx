@@ -29,7 +29,7 @@ const initialConnectors: ManagedConnectorDefinition[] = [
       tokenUrl: "https://api.notion.com/v1/oauth/token",
       scopes: [],
     },
-    functions: [],
+    tools: [],
     enabled: true,
     createdAt: "2026-03-09T00:00:00.000Z",
     updatedAt: "2026-03-09T00:00:00.000Z",

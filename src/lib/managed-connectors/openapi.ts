@@ -64,7 +64,7 @@ const PATH_PLACEHOLDER = /\{([^}]+)\}/g;
 const isObject = (value: unknown): value is Record<string, unknown> =>
   Boolean(value) && typeof value === "object" && !Array.isArray(value);
 
-const normalizeFunctionName = (value: string) => {
+const normalizeToolName = (value: string) => {
   const normalized = value
     .replace(/[^a-zA-Z0-9]+/g, "_")
     .replace(/^_+|_+$/g, "")
@@ -274,15 +274,15 @@ const buildRequestTemplate = (
   };
 };
 
-export interface GenerateManagedConnectorFunctionsFromOpenApiOptions {
+export interface GenerateManagedConnectorToolsFromOpenApiOptions {
   openApiUrl: string;
   authStrategy: AuthStrategy;
 }
 
-export const generateManagedConnectorFunctionsFromOpenApi = async ({
+export const generateManagedConnectorToolsFromOpenApi = async ({
   openApiUrl,
   authStrategy,
-}: GenerateManagedConnectorFunctionsFromOpenApiOptions): Promise<
+}: GenerateManagedConnectorToolsFromOpenApiOptions): Promise<
   ManagedConnectorToolDefinition[]
 > => {
   const response = await fetch(openApiUrl, {
@@ -306,7 +306,7 @@ export const generateManagedConnectorFunctionsFromOpenApi = async ({
     );
   }
 
-  const functions: ManagedConnectorToolDefinition[] = [];
+  const tools: ManagedConnectorToolDefinition[] = [];
 
   for (const [path, pathItem] of Object.entries(document.paths)) {
     for (const method of OPERATION_METHODS) {
@@ -324,14 +324,14 @@ export const generateManagedConnectorFunctionsFromOpenApi = async ({
         continue;
       }
 
-      const functionName = normalizeFunctionName(
+      const toolName = normalizeToolName(
         operation.operationId || `${method}_${path.replace(/[^a-zA-Z0-9]+/g, "_")}`,
       );
       const pathParameters = parameters.filter((parameter) => parameter.in === "path");
       const queryParameters = parameters.filter((parameter) => parameter.in === "query");
 
-      functions.push({
-        name: functionName,
+      tools.push({
+        name: toolName,
         description: buildDescription(operation, pathParameters, queryParameters, requestBody),
         defaultScopes: [],
         request,
@@ -339,12 +339,12 @@ export const generateManagedConnectorFunctionsFromOpenApi = async ({
     }
   }
 
-  if (functions.length === 0) {
+  if (tools.length === 0) {
     throw new ContextLayerError(
-      `OpenAPI schema at ${openApiUrl} did not produce any supported HTTP functions.`,
+      `OpenAPI schema at ${openApiUrl} did not produce any supported HTTP tools.`,
       500,
     );
   }
 
-  return functions;
+  return tools;
 };

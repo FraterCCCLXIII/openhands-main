@@ -5,7 +5,7 @@ import type { ContextRepository } from "@/src/lib/core/repository";
 import { buildMcpHeaders, runMcpClientOperation } from "@/src/lib/mcp-client";
 import {
   buildManagedConnectorToolSpecs,
-  buildManagedConnectorFunctions,
+  buildManagedConnectorTools,
   getDefaultBuiltInConnector,
   getManagedConnectorApiBaseUrl,
   getManagedConnectorProvider,
@@ -13,7 +13,7 @@ import {
   listAvailableBuiltInConnectors,
   resolveManagedConnectorCredentials,
 } from "@/src/lib/integrations/managed-connectors";
-import { generateManagedConnectorFunctionsFromOpenApi } from "@/src/lib/managed-connectors/openapi";
+import { generateManagedConnectorToolsFromOpenApi } from "@/src/lib/managed-connectors/openapi";
 import type {
   AuthStrategy,
   BuiltInConnectorOption,
@@ -22,7 +22,7 @@ import type {
   IntegrationProvider,
 } from "@/src/types/context-layer";
 
-const slugToFunctionName = (slug: string, prefix?: string) => {
+const slugToToolName = (slug: string, prefix?: string) => {
   const normalizedPrefix = prefix?.replace(/[^a-z0-9]+/gi, "_").toLowerCase();
   const normalized = slug
     .replace(/[^a-z0-9]+/gi, "_")
@@ -147,7 +147,7 @@ export interface IntegrationDiscoveryResult {
   authStrategy: AuthStrategy;
   config: Record<string, unknown>;
   credentials: Record<string, unknown>;
-  functions: Record<string, ToolSpec>;
+  tools: Record<string, ToolSpec>;
 }
 
 const getComposioClient = () => {
@@ -175,7 +175,7 @@ const resolveManagedOAuthDiscoveryCredentials = async (
 ) => {
   if (!ownerId) {
     throw new ContextLayerError(
-      `Sign in before discovering functions for ${connectorName}.`,
+      `Sign in before discovering tools for ${connectorName}.`,
       401,
     );
   }
@@ -183,7 +183,7 @@ const resolveManagedOAuthDiscoveryCredentials = async (
   const connection = await repository.getIntegrationConnection(ownerId, integrationKey);
   if (!connection) {
     throw new ContextLayerError(
-      `Connect ${connectorName} for this user before discovering functions.`,
+      `Connect ${connectorName} for this user before discovering tools.`,
       403,
     );
   }
@@ -268,7 +268,7 @@ const discoverManagedConnectorIntegration = async (
       managedConnectorSlug: storedConnector.slug,
     },
     credentials: resolveManagedConnectorCredentials(storedConnector, input),
-    functions: buildManagedConnectorFunctions(storedConnector),
+    tools: buildManagedConnectorTools(storedConnector),
   };
 };
 
@@ -305,7 +305,7 @@ const discoverDefaultBuiltInConnectorIntegration = async (
     return null;
   }
 
-  const functions = await generateManagedConnectorFunctionsFromOpenApi({
+  const tools = await generateManagedConnectorToolsFromOpenApi({
     openApiUrl: connector.openApiUrl,
     authStrategy: connector.authStrategy,
   });
@@ -318,7 +318,7 @@ const discoverDefaultBuiltInConnectorIntegration = async (
       apiBaseUrl: connector.apiBaseUrl,
     },
     credentials: resolveManagedConnectorCredentials(connector, input),
-    functions: buildManagedConnectorToolSpecs(functions),
+    tools: buildManagedConnectorToolSpecs(tools),
   };
 };
 
@@ -362,19 +362,19 @@ const discoverComposioIntegration = async (
   const toolkitSlug =
     (input.config.toolkitSlug as string | undefined)?.trim() || input.key;
   const composio = getComposioClient();
-  const [toolkit, tools] = await Promise.all([
+  const [toolkit, rawTools] = await Promise.all([
     composio.toolkits.get(toolkitSlug),
     composio.tools.getRawComposioTools({ toolkits: [toolkitSlug], limit: 200 }),
   ]);
 
-  const functions = Object.fromEntries(
-    tools.map((tool) => {
-      const functionName =
-        slugToFunctionName(tool.slug, toolkitSlug) || tool.slug.toLowerCase();
+  const tools = Object.fromEntries(
+    rawTools.map((tool) => {
+      const toolName =
+        slugToToolName(tool.slug, toolkitSlug) || tool.slug.toLowerCase();
       return [
-        functionName,
+        toolName,
         buildToolSpec(
-          functionName,
+          toolName,
           tool.description ?? tool.name,
           tool.scopes ?? [],
           { composioToolSlug: tool.slug },
@@ -392,7 +392,7 @@ const discoverComposioIntegration = async (
     credentials: compactRecord({
       connectedAccountId: input.credentials.connectedAccountId,
     }),
-    functions,
+    tools,
   };
 };
 
@@ -430,7 +430,7 @@ const discoverMcpIntegration = async (
         (input.config.builtInSlug as string | undefined),
     },
   );
-  const functions = Object.fromEntries(
+  const tools = Object.fromEntries(
     result.tools.map((tool) => [
       tool.name,
       buildToolSpec(tool.name, tool.description ?? tool.title ?? "", [], {
@@ -445,7 +445,7 @@ const discoverMcpIntegration = async (
     authStrategy,
     config: compactRecord({ serverUrl }),
     credentials,
-    functions,
+    tools,
   };
 };
 

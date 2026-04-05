@@ -45,7 +45,7 @@ const githubIntegration: IntegrationSpec = {
   fineGrainedPermissions: true,
   config: { serverUrl: "https://api.githubcopilot.com/mcp/" },
   credentials: {},
-  functions: {
+  tools: {
     search_repositories: {
       name: "search_repositories",
       description: "Search repositories",
@@ -69,7 +69,7 @@ const otherOwnerIntegration: IntegrationSpec = {
   fineGrainedPermissions: true,
   config: { serverUrl: "https://mcp.slack.com/mcp" },
   credentials: {},
-  functions: {
+  tools: {
     slack_search_public: {
       name: "slack_search_public",
       description: "Search public Slack messages",

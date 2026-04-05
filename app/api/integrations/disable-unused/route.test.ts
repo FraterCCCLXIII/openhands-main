@@ -48,7 +48,7 @@ const createIntegration = (
   fineGrainedPermissions: true,
   config: {},
   credentials: {},
-  functions: {},
+  tools: {},
   ...overrides,
 });
 
@@ -60,7 +60,7 @@ afterEach(async () => {
 });
 
 describe("POST /api/integrations/disable-unused", () => {
-  it("disables only enabled functions whose tracked usage is older than the cutoff", async () => {
+  it("disables only enabled tools whose tracked usage is older than the cutoff", async () => {
     const repository = getContextLayerRepository();
 
     await repository.upsertOwnerIntegration(
@@ -71,7 +71,7 @@ describe("POST /api/integrations/disable-unused", () => {
         kind: "mcp",
         provider: "mcp",
         authStrategy: "bearer",
-        functions: {
+        tools: {
           staleRead: {
             name: "staleRead",
             description: "Stale function",
@@ -112,7 +112,7 @@ describe("POST /api/integrations/disable-unused", () => {
       agentId: "agent-1",
       agentClass: "assistant",
       integrationKey: "github",
-      functionName: "staleRead",
+      toolName: "staleRead",
       scopes: ["repo:read"],
       provider: "mcp",
       kind: "mcp",
@@ -128,7 +128,7 @@ describe("POST /api/integrations/disable-unused", () => {
       agentId: "agent-1",
       agentClass: "assistant",
       integrationKey: "github",
-      functionName: "recentWrite",
+      toolName: "recentWrite",
       scopes: ["repo:write"],
       provider: "mcp",
       kind: "mcp",
@@ -150,25 +150,25 @@ describe("POST /api/integrations/disable-unused", () => {
     );
     const body = (await response.json()) as {
       disabledCount: number;
-      disabledFunctions: Array<{ integrationKey: string; functionName: string }>;
+      disabledTools: Array<{ integrationKey: string; toolName: string }>;
     };
 
     expect(response.status).toBe(200);
     expect(body.disabledCount).toBe(1);
-    expect(body.disabledFunctions).toEqual([
-      { integrationKey: "github", functionName: "staleRead", lastInvokedAt: "2026-01-01T00:00:00.000Z" },
+    expect(body.disabledTools).toEqual([
+      { integrationKey: "github", toolName: "staleRead", lastInvokedAt: "2026-01-01T00:00:00.000Z" },
     ]);
 
     const updated = await repository.getOwnerIntegration("user@example.com", "github");
-    expect(updated?.functions.staleRead).toMatchObject({
+    expect(updated?.tools.staleRead).toMatchObject({
       accessMode: "disabled",
       enabled: false,
     });
-    expect(updated?.functions.recentWrite).toMatchObject({
+    expect(updated?.tools.recentWrite).toMatchObject({
       accessMode: "enabled",
       enabled: true,
     });
-    expect(updated?.functions.alreadyDisabled).toMatchObject({
+    expect(updated?.tools.alreadyDisabled).toMatchObject({
       accessMode: "disabled",
       enabled: false,
     });

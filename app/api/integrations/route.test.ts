@@ -40,7 +40,7 @@ const createIntegration = (
   fineGrainedPermissions: true,
   config: {},
   credentials: {},
-  functions: {},
+  tools: {},
   ...overrides,
 });
 
@@ -64,7 +64,7 @@ describe("GET /api/integrations", () => {
         kind: "mcp",
         provider: "mcp",
         authStrategy: "bearer",
-        functions: {
+        tools: {
           listRepos: {
             name: "listRepos",
             description: "List repositories",
@@ -105,7 +105,7 @@ describe("GET /api/integrations", () => {
       agentId: "agent-1",
       agentClass: "assistant",
       integrationKey: "github",
-      functionName: "listRepos",
+      toolName: "listRepos",
       scopes: ["repo:read"],
       provider: "mcp",
       kind: "mcp",
@@ -119,7 +119,7 @@ describe("GET /api/integrations", () => {
     const response = await GET();
     const body = (await response.json()) as Array<{
       key: string;
-      functions: Record<
+      tools: Record<
         string,
         { lastInvokedAt?: string; invocationCount?: number; lastInvocationOutcome?: string }
       >;
@@ -136,7 +136,7 @@ describe("GET /api/integrations", () => {
       "notion",
       "slack",
     ]);
-    expect(body[0]?.functions.listRepos).toMatchObject({
+    expect(body[0]?.tools.listRepos).toMatchObject({
       invocationCount: 1,
       lastInvocationOutcome: "success",
       lastInvokedAt: "2026-03-20T10:00:00.000Z",

@@ -3,7 +3,7 @@ import type {
   AdminApiKeyRecord,
   AgentApiKeyRecord,
   AgentClassPolicy,
-  FunctionUsageSummary,
+  ToolUsageSummary,
   IntegrationConnectionRecord,
   IntegrationSpec,
   ManagedConnectorRecord,
@@ -36,7 +36,7 @@ export interface ContextRepository {
   saveTemporaryGrant(grant: TemporaryGrant): Promise<TemporaryGrant>;
   purgeExpiredGrants(nowIso: string): Promise<number>;
   createToolInvocation(record: ToolInvocationRecord): Promise<ToolInvocationRecord>;
-  listOwnerFunctionUsageSummaries(ownerId: string): Promise<FunctionUsageSummary[]>;
+  listOwnerToolUsageSummaries(ownerId: string): Promise<ToolUsageSummary[]>;
   listNotifications(): Promise<NotificationRecord[]>;
   createNotification(notification: NotificationRecord): Promise<NotificationRecord>;
   getAgentApiKeyByOwner(ownerId: string): Promise<AgentApiKeyRecord | null>;

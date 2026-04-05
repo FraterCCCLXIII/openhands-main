@@ -4,7 +4,7 @@ import {
   AccessModeSlider,
   accessModeButtonClassName,
   getToolAccessMode,
-} from "@/src/components/integrations/function-access-controls";
+} from "@/src/components/integrations/tool-access-controls";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
 import { cn } from "@/src/lib/utils";

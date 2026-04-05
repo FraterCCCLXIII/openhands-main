@@ -111,7 +111,7 @@ export const IntegrationWizard = ({
       state.applyDiscoveryResult(result);
       const providerName =
         input.connector?.name || input.draft.name.trim() || input.draft.key.trim();
-      const discoveredToolCount = Object.keys(result.functions).length;
+      const discoveredToolCount = Object.keys(result.tools).length;
       const message = `Discovered ${discoveredToolCount} tool${discoveredToolCount === 1 ? "" : "s"} for ${providerName}. Review their default access before saving.`;
       state.setDiscoverFeedback({
         tone: "success",
@@ -141,7 +141,7 @@ export const IntegrationWizard = ({
         body: JSON.stringify(payload),
       }),
     onSuccess: async (_result, payload) => {
-      const toolCount = Object.keys(payload.functions).length;
+      const toolCount = Object.keys(payload.tools).length;
       onStatus(
         `Created ${payload.name || payload.key} with ${toolCount} discovered tool${toolCount === 1 ? "" : "s"}.`,
       );
