@@ -20,6 +20,8 @@ The root `LICENSE` is proprietary: `Copyright All Hands AI, Inc. All rights rese
 - Typecheck: `npm run typecheck`
 - Production build check: `npm run build`
 - Audit shipped dependency graph: `npm run audit`
+- Coverage workflow: `npm run test:coverage` emits text/html/lcov/json reports for `app/`, `src/components/`, and `src/lib/`, while `npm run coverage:branches` summarizes the highest-priority frontend/backend branch gaps from `coverage/coverage-summary.json`.
+
 - Lint: `npm run lint`
 
 ## Local DB-backed validation

@@ -13,6 +13,8 @@
     "test": "vitest run",
     "test:unit": "vitest run --exclude src/lib/db/e2e-repository.test.ts --exclude src/lib/e2e-integration.test.ts",
     "test:coverage": "vitest run --coverage",
+    "coverage:branches": "node ./scripts/report-branch-gaps.mjs",
+    "test:coverage:report": "npm run test:coverage && npm run coverage:branches",
     "test:e2e": "vitest run src/lib/db/e2e-repository.test.ts src/lib/e2e-integration.test.ts",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
