@@ -6,10 +6,10 @@ const parseThemeVariables = (css: string) => {
   const themeBlock = css.match(/@theme\s*\{([\s\S]*?)\}/)?.[1] ?? "";
 
   return Object.fromEntries(
-    Array.from(themeBlock.matchAll(/--([\w-]+):\s*([^;]+);/g)).map(([, name, value]) => [
-      `--${name}`,
-      value.trim(),
-    ]),
+    Array.from(themeBlock.matchAll(/--([\w-]+):\s*([^;]+);/g)).map((match) => {
+      const [, name = "", value = ""] = match;
+      return [`--${name}`, value.trim()];
+    }),
   );
 };
 
