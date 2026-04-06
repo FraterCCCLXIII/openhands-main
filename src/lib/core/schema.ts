@@ -48,6 +48,7 @@ export const toolSpecSchema = z.object({
   description: z.string().optional().default(""),
   enabled: z.boolean().default(true),
   accessMode: toolAccessModeSchema.default("enabled"),
+  maxAccessMode: toolAccessModeSchema.optional(),
   fineGrainedPermissions: z.boolean().default(true),
   defaultScopes: z.array(z.string()).default([]),
   executionMode: z.enum(["provider", "mock"]).default("provider"),

@@ -24,14 +24,17 @@ export type AccessRequestStatus =
   | "rejected"
   | "expired";
 export type ToolAccessMode = "enabled" | "disabled" | "approval_required";
+export type FunctionAccessMode = ToolAccessMode;
 export type ToolInvocationOutcome = "success" | "denied" | "error";
 export type UnusedToolWindowUnit = "days" | "weeks" | "months";
+export type UnusedFunctionWindowUnit = UnusedToolWindowUnit;
 
 export interface ToolSpec {
   name: string;
   description?: string;
   enabled: boolean;
   accessMode?: ToolAccessMode;
+  maxAccessMode?: ToolAccessMode;
   fineGrainedPermissions: boolean;
   defaultScopes: string[];
   executionMode: "provider" | "mock";
@@ -41,6 +44,8 @@ export interface ToolSpec {
   lastInvocationOutcome?: ToolInvocationOutcome;
   invocationCount?: number;
 }
+
+export type FunctionSpec = ToolSpec;
 
 
 export interface IntegrationSpec {
@@ -151,8 +156,12 @@ export interface ManagedConnectorToolDefinition {
   name: string;
   description: string;
   defaultScopes: string[];
-  request: GenericHttpRequestTemplate;
+  accessMode?: ToolAccessMode;
+  request?: GenericHttpRequestTemplate;
+  config?: Record<string, unknown>;
 }
+
+export type ManagedConnectorFunctionDefinition = ManagedConnectorToolDefinition;
 
 
 export interface ManagedConnectorDefinition {

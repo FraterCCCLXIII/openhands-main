@@ -193,8 +193,7 @@ export const managedConnectorToBuiltInOption = (
     description: connector.description,
     logoUrl: connector.logoUrl,
     appUrl: connector.appUrl,
-    toolCount:
-      getManagedConnectorProvider(connector) === "mcp" ? 0 : connector.tools.length,
+    toolCount: connector.tools.length,
     categories: connector.categories,
     authModes: connector.authModes,
     authStrategy: connector.authStrategy,
@@ -209,27 +208,37 @@ export const buildManagedConnectorToolSpecs = (
   tools: ManagedConnectorToolDefinition[],
 ): Record<string, ToolSpec> =>
   Object.fromEntries(
-    tools.map((tool) => [
-      tool.name,
-      {
-        name: tool.name,
-        description: tool.description,
-        enabled: true,
-        accessMode: "enabled",
-        fineGrainedPermissions: true,
-        defaultScopes: tool.defaultScopes,
-        executionMode: "provider",
-        config: {
-          request: tool.request,
-        },
-      } satisfies ToolSpec,
-    ]),
+    tools.map((tool) => {
+      const accessMode = tool.accessMode ?? "enabled";
+      const config = {
+        ...(tool.config ?? {}),
+        ...(tool.request ? { request: tool.request } : {}),
+      };
+
+      return [
+        tool.name,
+        {
+          name: tool.name,
+          description: tool.description,
+          enabled: accessMode !== "disabled",
+          accessMode,
+          maxAccessMode: accessMode,
+          fineGrainedPermissions: true,
+          defaultScopes: tool.defaultScopes,
+          executionMode: "provider",
+          config,
+        } satisfies ToolSpec,
+      ];
+    }),
   );
 
 export const buildManagedConnectorTools = (
   connector: Pick<ManagedConnectorRecord, "tools">,
 ): Record<string, ToolSpec> =>
   buildManagedConnectorToolSpecs(connector.tools);
+
+export const buildManagedConnectorFunctionSpecs = buildManagedConnectorToolSpecs;
+export const buildManagedConnectorFunctions = buildManagedConnectorTools;
 
 export const resolveManagedConnectorCredentials = (
   connector: ConnectorCredentialDefaults,

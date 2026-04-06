@@ -206,7 +206,7 @@ describe("ContextLayerService", () => {
     expect(integrations[0]?.tools.accounts.lastInvokedAt).toBeTruthy();
   });
 
-  it("records denied invocation metadata for approval-required tools", async () => {
+  it("records denied invocation metadata for approval-required functions", async () => {
     const repository = testRepo;
     const service = new ContextLayerService(
       repository,
@@ -364,7 +364,7 @@ describe("ContextLayerService", () => {
   });
 
 
-  it("blocks disabled tools", async () => {
+  it("blocks disabled functions", async () => {
     const service = createService();
     await installIntegration(service, {
       ...baseIntegration,
@@ -397,7 +397,7 @@ describe("ContextLayerService", () => {
     ).rejects.toThrow("Tool disabled");
   });
 
-  it("updates owner-scoped tool access modes and syncs enabled state", async () => {
+  it("updates owner-scoped function access modes and syncs enabled state", async () => {
     const service = createService();
     await installIntegration(service, baseIntegration);
 
@@ -428,6 +428,76 @@ describe("ContextLayerService", () => {
     expect(restored.accessMode).toBe("enabled");
     expect(restored.enabled).toBe(true);
   });
+
+  it("applies managed connector ceilings and injects indexed tools into user integrations", async () => {
+    const service = createService();
+    const timestamp = new Date().toISOString();
+
+    await testRepo.upsertManagedConnector({
+      slug: "salesforce",
+      name: "Salesforce",
+      description: "Managed Salesforce connector",
+      categories: ["CRM"],
+      authModes: ["bearer"],
+      authStrategy: "bearer",
+      provider: "mcp",
+      credentialLabel: "Salesforce token",
+      credentialPlaceholder: "Paste your Salesforce token",
+      credentialHelp: "Token used for Salesforce access.",
+      serverUrl: "https://salesforce.example.com/mcp",
+      tools: [
+        {
+          name: "accounts",
+          description: "List accounts",
+          defaultScopes: ["accounts.read"],
+          accessMode: "approval_required",
+          config: {
+            toolName: "accounts",
+          },
+        },
+        {
+          name: "reports",
+          description: "List reports",
+          defaultScopes: ["reports.read"],
+          accessMode: "disabled",
+          config: {
+            toolName: "reports",
+          },
+        },
+      ],
+      enabled: true,
+      oauthConfigured: false,
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    });
+
+    await service.registerOwnerIntegration(OWNER_ID, {
+      ...baseIntegration,
+      config: {
+        builtInSlug: "salesforce",
+        managedConnectorSlug: "salesforce",
+      },
+    });
+
+    const integrations = await service.listOwnerIntegrations(OWNER_ID);
+    expect(integrations[0]?.tools.accounts).toMatchObject({
+      accessMode: "approval_required",
+      maxAccessMode: "approval_required",
+      enabled: true,
+    });
+    expect(integrations[0]?.tools.reports).toMatchObject({
+      accessMode: "disabled",
+      maxAccessMode: "disabled",
+      enabled: false,
+    });
+
+    await expect(
+      service.setOwnerToolAccessMode(OWNER_ID, "salesforce", "accounts", "enabled"),
+    ).rejects.toThrow(
+      "Tool 'accounts' cannot exceed the organization-managed 'approval_required' access level.",
+    );
+  });
+
 
   it("requires temporary approval for case-by-case tools", async () => {
     const repository = testRepo;
@@ -605,7 +675,7 @@ describe("ContextLayerService", () => {
     );
   });
 
-  it("grants temporary access until expiry for case-by-case tools", async () => {
+  it("grants temporary access until expiry for case-by-case functions", async () => {
     const repository = testRepo;
     const service = new ContextLayerService(
       repository,
@@ -1047,6 +1117,140 @@ describe("ContextLayerService", () => {
       ],
     });
   });
+
+  it("reduces but does not increase user-visible access when HTTP managed connector ceilings change", async () => {
+    const repository = testRepo;
+    const service = new ContextLayerService(
+      repository,
+      new AdapterRegistry({ mock: { invoke: async () => ({}) } }),
+      new NotificationPublisher(repository),
+    );
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            openapi: "3.1.0",
+            security: [{ bearerAuth: [] }],
+            components: {
+              parameters: {
+                notionVersion: {
+                  name: "Notion-Version",
+                  in: "header",
+                  required: true,
+                  schema: { enum: ["2026-03-11"] },
+                },
+              },
+            },
+            paths: {
+              "/v1/search": {
+                post: {
+                  operationId: "post-search",
+                  summary: "Search workspace",
+                  parameters: [{ $ref: "#/components/parameters/notionVersion" }],
+                  requestBody: {
+                    content: {
+                      "application/json": {
+                        schema: {
+                          type: "object",
+                          properties: {
+                            query: { type: "string" },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          }),
+          {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          },
+        ),
+      ),
+    );
+
+    const managedConnectorInput = {
+      slug: "notion",
+      name: "Notion",
+      description: "Managed Notion REST connector",
+      categories: ["Knowledge base"],
+      authStrategy: "oauth2" as const,
+      authModes: ["oauth2" as const],
+      provider: "http" as const,
+      credentialLabel: "Connect Notion",
+      credentialPlaceholder: "Connect Notion",
+      credentialHelp: "Connect Notion with OAuth.",
+      apiBaseUrl: "https://api.notion.com",
+      openApiUrl: "https://developers.notion.com/openapi.json",
+      oauthConfig: {
+        authorizationUrl: "https://api.notion.com/v1/oauth/authorize",
+        tokenUrl: "https://api.notion.com/v1/oauth/token",
+        scopes: [],
+      },
+      oauthClientId: "notion-client-id",
+      oauthClientSecret: "notion-client-secret",
+      tools: [],
+      enabled: true,
+    };
+
+    const connector = await service.upsertManagedConnector(managedConnectorInput);
+
+    await service.registerOwnerIntegration(OWNER_ID, {
+      key: "notion",
+      name: "Notion",
+      kind: "api",
+      provider: "http",
+      authStrategy: "oauth2",
+      enabled: true,
+      fineGrainedPermissions: true,
+      config: {
+        builtInSlug: "notion",
+        managedConnectorSlug: "notion",
+      },
+      credentials: {},
+      tools: {},
+    });
+
+    await service.upsertManagedConnector({
+      ...managedConnectorInput,
+      tools: connector.tools.map((functionSpec) =>
+        functionSpec.name === "post_search"
+          ? { ...functionSpec, accessMode: "approval_required" }
+          : functionSpec,
+      ),
+    });
+
+    let integrations = await service.listOwnerIntegrations(OWNER_ID);
+    expect(integrations[0]?.tools.post_search).toMatchObject({
+      accessMode: "approval_required",
+      maxAccessMode: "approval_required",
+      enabled: true,
+    });
+
+    await service.setOwnerToolAccessMode(
+      OWNER_ID,
+      "notion",
+      "post_search",
+      "disabled",
+    );
+
+    await service.upsertManagedConnector({
+      ...managedConnectorInput,
+      tools: connector.tools,
+    });
+
+    integrations = await service.listOwnerIntegrations(OWNER_ID);
+    expect(integrations[0]?.tools.post_search).toMatchObject({
+      accessMode: "disabled",
+      maxAccessMode: "enabled",
+      enabled: false,
+    });
+  });
+
 
   it("deletes an existing managed connector", async () => {
     const repository = testRepo;

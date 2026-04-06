@@ -25,9 +25,6 @@ const sortReadyBuiltInConnectors = (connectors: BuiltInConnectorOption[]) =>
     (left, right) => left.name.localeCompare(right.name) || left.slug.localeCompare(right.slug),
   );
 
-const inferManagedConnectorProvider = (connector: ManagedConnectorDefinition) =>
-  connector.provider ?? (connector.openApiUrl ? "http" : "mcp");
-
 const toReadyBuiltInConnector = (
   connector: ManagedConnectorDefinition,
 ): BuiltInConnectorOption => ({
@@ -36,7 +33,7 @@ const toReadyBuiltInConnector = (
   description: connector.description,
   logoUrl: connector.logoUrl,
   appUrl: connector.appUrl,
-  toolCount: inferManagedConnectorProvider(connector) === "http" ? connector.tools.length : 0,
+  toolCount: connector.tools.length,
   categories: connector.categories,
   authModes: connector.authModes,
   authStrategy: connector.authStrategy,

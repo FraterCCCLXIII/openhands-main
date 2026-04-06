@@ -342,6 +342,7 @@ export const IntegrationsSection = ({
                                       <AccessModeSlider
                                         toolName={toolSpec.name}
                                         mode={accessMode}
+                                        maxMode={toolSpec.maxAccessMode}
                                         onChange={(nextMode) =>
                                           onUpdateToolAccessMode(
                                             integration.key,

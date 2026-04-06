@@ -532,7 +532,8 @@ describe("IntegrationWizard", () => {
                 name: "searchPages",
                 description: "Search all pages",
                 enabled: true,
-                accessMode: "enabled",
+                accessMode: "approval_required",
+                maxAccessMode: "approval_required",
                 fineGrainedPermissions: true,
                 defaultScopes: ["pages:read"],
                 executionMode: "provider",
@@ -639,6 +640,13 @@ describe("IntegrationWizard", () => {
       "createPage",
       "searchPages",
     ]);
+
+    const searchEnabledButton = container.querySelector(
+      'button[aria-label="Enabled access for searchPages"]',
+    ) as HTMLButtonElement | null;
+    expect(searchEnabledButton?.disabled).toBe(true);
+    expect(getToolMode("searchPages")).toBe("approval_required");
+
 
     const searchInput = container.querySelector(
       'input[type="search"][aria-label="Search tools"]',

@@ -227,6 +227,7 @@ export const ReviewStep = ({
                         <AccessModeSlider
                           toolName={name}
                           mode={accessMode}
+                          maxMode={toolSpec.maxAccessMode}
                           onChange={(nextMode) => onSetToolMode(name, nextMode)}
                         />
                         <Button

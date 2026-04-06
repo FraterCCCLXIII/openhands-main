@@ -1,3 +1,8 @@
+import {
+  functionAccessModes,
+  getAllowedFunctionAccessModes,
+  isFunctionAccessModeAllowed,
+} from "@/src/lib/function-access-mode";
 import { cn } from "@/src/lib/utils";
 import type { ToolAccessMode, ToolSpec } from "@/src/types/context-layer";
 
@@ -15,7 +20,6 @@ export const accessModeLabel = (mode: ToolAccessMode) => {
 export const getToolAccessMode = (toolSpec: ToolSpec): ToolAccessMode =>
   toolSpec.accessMode ?? (toolSpec.enabled ? "enabled" : "disabled");
 
-
 export const matchesToolSearch = (
   name: string,
   toolSpec: ToolSpec,
@@ -30,7 +34,6 @@ export const matchesToolSearch = (
     .filter((value): value is string => Boolean(value))
     .some((value) => value.toLowerCase().includes(normalizedQuery));
 };
-
 
 export const accessModeButtonClassName: Record<ToolAccessMode, string> = {
   enabled:
@@ -51,46 +54,65 @@ const accessModeSegmentClassName: Record<ToolAccessMode, string> = {
 const accessModeOptions: Array<{
   value: ToolAccessMode;
   label: string;
-}> = [
-  { value: "enabled", label: "Enabled" },
-  { value: "approval_required", label: "Case-by-case" },
-  { value: "disabled", label: "Disabled" },
-];
+}> = functionAccessModes.map((value) => ({
+  value,
+  label: accessModeLabel(value),
+}));
 
 export const AccessModeSlider = ({
   toolName,
   mode,
+  maxMode,
   onChange,
 }: {
   toolName: string;
   mode: ToolAccessMode;
+  maxMode?: ToolAccessMode;
   onChange: (mode: ToolAccessMode) => void;
-}) => (
-  <div
-    className="inline-flex flex-wrap items-center gap-1 rounded-full border border-[var(--color-border)] bg-[var(--color-bg-input)] p-1"
-    role="group"
-    aria-label={`Default access for ${toolName}`}
-    data-access-mode={mode}
-  >
-    {accessModeOptions.map((option) => {
-      const active = option.value === mode;
-      return (
-        <button
-          key={option.value}
-          type="button"
-          className={cn(
-            "cursor-pointer rounded-full px-3 py-1.5 text-[11px] font-semibold transition-colors",
-            active
-              ? accessModeSegmentClassName[option.value]
-              : "text-[var(--color-text-base)] hover:bg-[var(--color-bg-active)] hover:text-white",
-          )}
-          aria-pressed={active}
-          aria-label={`${accessModeLabel(option.value)} access for ${toolName}`}
-          onClick={() => onChange(option.value)}
-        >
-          {option.label}
-        </button>
-      );
-    })}
-  </div>
-);
+}) => {
+  const allowedModes = maxMode ? getAllowedFunctionAccessModes(maxMode) : functionAccessModes;
+
+  return (
+    <div
+      className="inline-flex flex-wrap items-center gap-1 rounded-full border border-[var(--color-border)] bg-[var(--color-bg-input)] p-1"
+      role="group"
+      aria-label={`Default access for ${toolName}`}
+      data-access-mode={mode}
+      data-max-access-mode={maxMode}
+    >
+      {accessModeOptions.map((option) => {
+        const active = option.value === mode;
+        const allowed = allowedModes.includes(option.value);
+
+        return (
+          <button
+            key={option.value}
+            type="button"
+            className={cn(
+              "cursor-pointer rounded-full px-3 py-1.5 text-[11px] font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50",
+              active
+                ? accessModeSegmentClassName[option.value]
+                : "text-[var(--color-text-base)] hover:bg-[var(--color-bg-active)] hover:text-white disabled:hover:bg-transparent disabled:hover:text-[var(--color-text-base)]",
+            )}
+            aria-pressed={active}
+            aria-label={`${accessModeLabel(option.value)} access for ${toolName}`}
+            disabled={!allowed}
+            onClick={() => {
+              if (!allowed) {
+                return;
+              }
+              onChange(option.value);
+            }}
+          >
+            {option.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+};
+
+export const isToolModeSelectable = (
+  requestedMode: ToolAccessMode,
+  toolSpec: ToolSpec,
+) => !toolSpec.maxAccessMode || isFunctionAccessModeAllowed(requestedMode, toolSpec.maxAccessMode);

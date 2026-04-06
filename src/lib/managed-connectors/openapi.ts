@@ -348,3 +348,6 @@ export const generateManagedConnectorToolsFromOpenApi = async ({
 
   return tools;
 };
+
+export const generateManagedConnectorFunctionsFromOpenApi =
+  generateManagedConnectorToolsFromOpenApi;

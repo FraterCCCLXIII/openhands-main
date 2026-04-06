@@ -36,6 +36,21 @@ const initialConnectors: ManagedConnectorDefinition[] = [
   },
 ];
 
+const indexedConnector: ManagedConnectorDefinition = {
+  ...initialConnectors[0],
+  tools: [
+    {
+      name: "list_pages",
+      description: "List pages",
+      defaultScopes: ["pages.read"],
+      accessMode: "enabled",
+      config: {
+        toolName: "list_pages",
+      },
+    },
+  ],
+};
+
 const setInputValue = (element: Element | null, value: string) => {
   if (element instanceof HTMLInputElement) {
     const valueSetter = Object.getOwnPropertyDescriptor(
@@ -172,6 +187,91 @@ describe("ManagedConnectorList", () => {
     });
     expect(body.serverUrl).toBeUndefined();
     expect(container.textContent).toContain("Connector updated.");
+  });
+
+  it("indexes connector tools and lets admins persist org-wide tool permissions", async () => {
+    fetchMock
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify(indexedConnector), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            ...indexedConnector,
+            tools: [
+              {
+                ...indexedConnector.tools[0],
+                accessMode: "approval_required",
+              },
+            ],
+          }),
+          {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          },
+        ),
+      );
+
+    await act(async () => {
+      root.render(
+        <ManagedConnectorList initialManagedConnectors={initialConnectors} />,
+      );
+    });
+
+    const expandButton = Array.from(container.querySelectorAll("button")).find((button) =>
+      button.textContent?.includes("Show details"),
+    );
+    expect(expandButton).toBeTruthy();
+
+    await act(async () => {
+      expandButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    const indexButton = Array.from(container.querySelectorAll("button")).find((button) =>
+      button.textContent?.includes("Index tools"),
+    );
+    expect(indexButton).toBeTruthy();
+
+    await act(async () => {
+      indexButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    expect(fetchMock).toHaveBeenNthCalledWith(1, "/api/managed-connectors/notion/functions", {
+      method: "POST",
+    });
+    expect(container.textContent).toContain("Indexed 1 tool.");
+    expect(container.textContent).toContain("list_pages");
+
+    const approvalRequiredButton = container.querySelector(
+      'button[aria-label="Case-by-case access for list_pages"]',
+    );
+    expect(approvalRequiredButton).toBeTruthy();
+
+    await act(async () => {
+      approvalRequiredButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      "/api/managed-connectors",
+      expect.objectContaining({ method: "POST" }),
+    );
+    const [, indexedRequestInit] = fetchMock.mock.calls[1] as [string, RequestInit];
+    const indexedBody = JSON.parse(String(indexedRequestInit.body)) as {
+      tools: Array<{ name: string; accessMode?: string }>;
+    };
+    expect(indexedBody.tools).toContainEqual(
+      expect.objectContaining({
+        name: "list_pages",
+        accessMode: "approval_required",
+      }),
+    );
+    expect(container.textContent).toContain("Connector permissions updated.");
   });
 
   it("deletes a managed connector from the card header without expanding first", async () => {
