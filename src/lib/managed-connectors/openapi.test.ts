@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { generateManagedConnectorFunctionsFromOpenApi } from "@/src/lib/managed-connectors/openapi";
+import { generateManagedConnectorToolsFromOpenApi } from "@/src/lib/managed-connectors/openapi";
 
 const openApiDocument = {
   openapi: "3.1.0",
@@ -98,7 +98,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-describe("generateManagedConnectorFunctionsFromOpenApi", () => {
+describe("generateManagedConnectorToolsFromOpenApi", () => {
   it("generates HTTP function templates from supported bearer-auth OpenAPI operations", async () => {
     vi.stubGlobal(
       "fetch",
@@ -110,12 +110,12 @@ describe("generateManagedConnectorFunctionsFromOpenApi", () => {
       ),
     );
 
-    const functions = await generateManagedConnectorFunctionsFromOpenApi({
+    const tools = await generateManagedConnectorToolsFromOpenApi({
       openApiUrl: "https://developers.notion.com/openapi.json",
       authStrategy: "oauth2",
     });
 
-    expect(functions).toEqual([
+    expect(tools).toEqual([
       {
         name: "retrieve_a_page",
         description:

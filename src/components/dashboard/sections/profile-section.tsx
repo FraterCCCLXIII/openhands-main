@@ -56,7 +56,7 @@ export const ProfileSection = ({
           label="Endpoint pattern"
           value={
             <code className="break-all text-xs text-[var(--color-text-active)]">
-              {`${contextApiBaseUrl}/api/context/{integrationKey}/{functionName}`}
+              {`${contextApiBaseUrl}/api/context/{integrationKey}/{toolName}`}
             </code>
           }
         />

@@ -62,7 +62,7 @@ const baseIntegration: IntegrationSpec = {
   fineGrainedPermissions: true,
   config: {},
   credentials: {},
-  functions: {
+  tools: {
     accounts: {
       name: "accounts",
       description: "List accounts",
@@ -82,7 +82,7 @@ const installIntegration = async (
 ) => service.registerOwnerIntegration(ownerId, integration);
 
 describe("ContextLayerService", () => {
-  it("allows enabled functions when no agent-class policy exists", async () => {
+  it("allows enabled tools when no agent-class policy exists", async () => {
     const service = createService();
     await installIntegration(service, baseIntegration);
 
@@ -98,7 +98,7 @@ describe("ContextLayerService", () => {
 
     expect(response.integration).toBe("salesforce");
     expect(response.decision.allowed).toBe(true);
-    expect(response.decision.reason).toBe("Allowed by enabled function default");
+    expect(response.decision.reason).toBe("Allowed by enabled tool default");
     expect(response.data).toEqual({ ok: true, payload: { limit: 5 } });
   });
 
@@ -108,7 +108,7 @@ describe("ContextLayerService", () => {
     await service.upsertAgentPolicy("assistant", [
       {
         integrationKey: "salesforce",
-        functionNames: ["accounts"],
+        toolNames: ["accounts"],
         scopes: ["accounts.read"],
         enabled: true,
       },
@@ -137,14 +137,14 @@ describe("ContextLayerService", () => {
       agentId: "agent-object",
       agentClass: "assistant",
       integrationKey: "salesforce",
-      functionName: "accounts",
+      toolName: "accounts",
       requestedScopes: ["accounts.read"],
       ownerId: OWNER_ID,
     });
 
     expect(decision).toMatchObject({
       allowed: true,
-      reason: "Allowed by enabled function default",
+      reason: "Allowed by enabled tool default",
       effectiveScopes: ["accounts.read"],
     });
 
@@ -152,7 +152,7 @@ describe("ContextLayerService", () => {
       agentId: "agent-object",
       agentClass: "assistant",
       integrationKey: "salesforce",
-      functionName: "accounts",
+      toolName: "accounts",
       payload: { limit: 2 },
       requestedScopes: ["accounts.read"],
       ownerId: OWNER_ID,
@@ -199,11 +199,11 @@ describe("ContextLayerService", () => {
     expect(row.error_message).toBeNull();
 
     const integrations = await service.listOwnerIntegrationsWithUsage(OWNER_ID);
-    expect(integrations[0]?.functions.accounts).toMatchObject({
+    expect(integrations[0]?.tools.accounts).toMatchObject({
       invocationCount: 1,
       lastInvocationOutcome: "success",
     });
-    expect(integrations[0]?.functions.accounts.lastInvokedAt).toBeTruthy();
+    expect(integrations[0]?.tools.accounts.lastInvokedAt).toBeTruthy();
   });
 
   it("records denied invocation metadata for approval-required functions", async () => {
@@ -219,9 +219,9 @@ describe("ContextLayerService", () => {
 
     await installIntegration(service, {
       ...baseIntegration,
-      functions: {
+      tools: {
         accounts: {
-          ...baseIntegration.functions.accounts,
+          ...baseIntegration.tools.accounts,
           accessMode: "approval_required",
         },
       },
@@ -248,7 +248,7 @@ describe("ContextLayerService", () => {
     expect(row.error_message).toBe("Permission required");
 
     const integrations = await service.listOwnerIntegrationsWithUsage(OWNER_ID);
-    expect(integrations[0]?.functions.accounts).toMatchObject({
+    expect(integrations[0]?.tools.accounts).toMatchObject({
       invocationCount: 1,
       lastInvocationOutcome: "denied",
     });
@@ -297,9 +297,9 @@ describe("ContextLayerService", () => {
     const service = createService(repository);
     await installIntegration(service, {
       ...baseIntegration,
-      functions: {
+      tools: {
         accounts: {
-          ...baseIntegration.functions.accounts,
+          ...baseIntegration.tools.accounts,
           accessMode: "approval_required",
         },
       },
@@ -368,9 +368,9 @@ describe("ContextLayerService", () => {
     const service = createService();
     await installIntegration(service, {
       ...baseIntegration,
-      functions: {
+      tools: {
         accounts: {
-          ...baseIntegration.functions.accounts,
+          ...baseIntegration.tools.accounts,
           enabled: false,
         },
       },
@@ -378,7 +378,7 @@ describe("ContextLayerService", () => {
     await service.upsertAgentPolicy("assistant", [
       {
         integrationKey: "salesforce",
-        functionNames: ["accounts"],
+        toolNames: ["accounts"],
         scopes: ["accounts.read"],
         enabled: true,
       },
@@ -394,14 +394,14 @@ describe("ContextLayerService", () => {
         ["accounts.read"],
         { ownerId: OWNER_ID },
       ),
-    ).rejects.toThrow("Function disabled");
+    ).rejects.toThrow("Tool disabled");
   });
 
   it("updates owner-scoped function access modes and syncs enabled state", async () => {
     const service = createService();
     await installIntegration(service, baseIntegration);
 
-    const approvalRequired = await service.setOwnerFunctionAccessMode(
+    const approvalRequired = await service.setOwnerToolAccessMode(
       OWNER_ID,
       "salesforce",
       "accounts",
@@ -410,7 +410,7 @@ describe("ContextLayerService", () => {
     expect(approvalRequired.accessMode).toBe("approval_required");
     expect(approvalRequired.enabled).toBe(true);
 
-    const disabled = await service.setOwnerFunctionAccessMode(
+    const disabled = await service.setOwnerToolAccessMode(
       OWNER_ID,
       "salesforce",
       "accounts",
@@ -419,7 +419,7 @@ describe("ContextLayerService", () => {
     expect(disabled.accessMode).toBe("disabled");
     expect(disabled.enabled).toBe(false);
 
-    const restored = await service.setOwnerFunctionAccessMode(
+    const restored = await service.setOwnerToolAccessMode(
       OWNER_ID,
       "salesforce",
       "accounts",
@@ -445,7 +445,7 @@ describe("ContextLayerService", () => {
       credentialPlaceholder: "Paste your Salesforce token",
       credentialHelp: "Token used for Salesforce access.",
       serverUrl: "https://salesforce.example.com/mcp",
-      functions: [
+      tools: [
         {
           name: "accounts",
           description: "List accounts",
@@ -480,26 +480,26 @@ describe("ContextLayerService", () => {
     });
 
     const integrations = await service.listOwnerIntegrations(OWNER_ID);
-    expect(integrations[0]?.functions.accounts).toMatchObject({
+    expect(integrations[0]?.tools.accounts).toMatchObject({
       accessMode: "approval_required",
       maxAccessMode: "approval_required",
       enabled: true,
     });
-    expect(integrations[0]?.functions.reports).toMatchObject({
+    expect(integrations[0]?.tools.reports).toMatchObject({
       accessMode: "disabled",
       maxAccessMode: "disabled",
       enabled: false,
     });
 
     await expect(
-      service.setOwnerFunctionAccessMode(OWNER_ID, "salesforce", "accounts", "enabled"),
+      service.setOwnerToolAccessMode(OWNER_ID, "salesforce", "accounts", "enabled"),
     ).rejects.toThrow(
-      "Function 'accounts' cannot exceed the organization-managed 'approval_required' access level.",
+      "Tool 'accounts' cannot exceed the organization-managed 'approval_required' access level.",
     );
   });
 
 
-  it("requires temporary approval for case-by-case functions", async () => {
+  it("requires temporary approval for case-by-case tools", async () => {
     const repository = testRepo;
     const service = new ContextLayerService(
       repository,
@@ -512,9 +512,9 @@ describe("ContextLayerService", () => {
 
     await installIntegration(service, {
       ...baseIntegration,
-      functions: {
+      tools: {
         accounts: {
-          ...baseIntegration.functions.accounts,
+          ...baseIntegration.tools.accounts,
           accessMode: "approval_required",
         },
       },
@@ -522,7 +522,7 @@ describe("ContextLayerService", () => {
     await service.upsertAgentPolicy("assistant", [
       {
         integrationKey: "salesforce",
-        functionNames: ["accounts"],
+        toolNames: ["accounts"],
         scopes: ["accounts.read"],
         enabled: true,
       },
@@ -552,7 +552,7 @@ describe("ContextLayerService", () => {
       agentId: "agent-4",
       agentClass: "assistant",
       integrationKey: "salesforce",
-      functionName: "accounts",
+      toolName: "accounts",
       scopes: ["accounts.read"],
       requestedMinutes: 240,
       status: "pending",
@@ -589,9 +589,9 @@ describe("ContextLayerService", () => {
     );
     await installIntegration(service, {
       ...baseIntegration,
-      functions: {
+      tools: {
         accounts: {
-          ...baseIntegration.functions.accounts,
+          ...baseIntegration.tools.accounts,
           accessMode: "approval_required",
         },
       },
@@ -630,7 +630,7 @@ describe("ContextLayerService", () => {
     await expect(repository.listAccessRequests()).resolves.toMatchObject([
       {
         agentId: "agent-5",
-        functionName: "accounts",
+        toolName: "accounts",
         agentData: {
           conversationLink:
             "https://app.all-hands.dev/conversations/updated-session-context",
@@ -652,7 +652,7 @@ describe("ContextLayerService", () => {
       agentId: "agent-2",
       agentClass: "reviewer",
       integrationKey: "salesforce",
-      functionName: "accounts",
+      toolName: "accounts",
       scopes: ["accounts.read"],
       requestedMinutes: 45,
       channels: ["email", "sms", "in_app"],
@@ -687,9 +687,9 @@ describe("ContextLayerService", () => {
     );
     await installIntegration(service, {
       ...baseIntegration,
-      functions: {
+      tools: {
         accounts: {
-          ...baseIntegration.functions.accounts,
+          ...baseIntegration.tools.accounts,
           accessMode: "approval_required",
         },
       },
@@ -699,7 +699,7 @@ describe("ContextLayerService", () => {
       agentId: "agent-3",
       agentClass: "writer",
       integrationKey: "salesforce",
-      functionName: "accounts",
+      toolName: "accounts",
       scopes: ["accounts.read"],
       requestedMinutes: 15,
       channels: [],
@@ -743,9 +743,9 @@ describe("ContextLayerService", () => {
     await installIntegration(service, {
       ...baseIntegration,
       provider: "mock",
-      functions: {
+      tools: {
         accounts: {
-          ...baseIntegration.functions.accounts,
+          ...baseIntegration.tools.accounts,
           executionMode: "mock",
         },
       },
@@ -753,7 +753,7 @@ describe("ContextLayerService", () => {
     await service.upsertAgentPolicy("assistant", [
       {
         integrationKey: "salesforce",
-        functionNames: ["accounts"],
+        toolNames: ["accounts"],
         scopes: ["accounts.read"],
         enabled: true,
       },
@@ -945,7 +945,7 @@ describe("ContextLayerService", () => {
           tokenUrl: "https://api.notion.com/v1/oauth/token",
           scopes: [],
         },
-        functions: [],
+        tools: [],
         enabled: true,
       }),
     ).rejects.toThrow(
@@ -994,7 +994,7 @@ describe("ContextLayerService", () => {
         pkce: true,
         scopes: [],
       },
-      functions: [],
+      tools: [],
       enabled: true,
     });
 
@@ -1016,7 +1016,7 @@ describe("ContextLayerService", () => {
     ).toEqual({ clientId: "webflow-mcp-client-id" });
   });
 
-  it("generates managed HTTP connector functions from an OpenAPI schema during registration", async () => {
+  it("generates managed HTTP connector tools from an OpenAPI schema during registration", async () => {
     const repository = testRepo;
     const service = new ContextLayerService(
       repository,
@@ -1091,7 +1091,7 @@ describe("ContextLayerService", () => {
       },
       oauthClientId: "notion-client-id",
       oauthClientSecret: "notion-client-secret",
-      functions: [],
+      tools: [],
       enabled: true,
     });
 
@@ -1101,7 +1101,7 @@ describe("ContextLayerService", () => {
       apiBaseUrl: "https://api.notion.com",
       openApiUrl: "https://developers.notion.com/openapi.json",
       oauthConfigured: true,
-      functions: [
+      tools: [
         {
           name: "post_search",
           request: {
@@ -1193,7 +1193,7 @@ describe("ContextLayerService", () => {
       },
       oauthClientId: "notion-client-id",
       oauthClientSecret: "notion-client-secret",
-      functions: [],
+      tools: [],
       enabled: true,
     };
 
@@ -1212,12 +1212,12 @@ describe("ContextLayerService", () => {
         managedConnectorSlug: "notion",
       },
       credentials: {},
-      functions: {},
+      tools: {},
     });
 
     await service.upsertManagedConnector({
       ...managedConnectorInput,
-      functions: connector.functions.map((functionSpec) =>
+      tools: connector.tools.map((functionSpec) =>
         functionSpec.name === "post_search"
           ? { ...functionSpec, accessMode: "approval_required" }
           : functionSpec,
@@ -1225,13 +1225,13 @@ describe("ContextLayerService", () => {
     });
 
     let integrations = await service.listOwnerIntegrations(OWNER_ID);
-    expect(integrations[0]?.functions.post_search).toMatchObject({
+    expect(integrations[0]?.tools.post_search).toMatchObject({
       accessMode: "approval_required",
       maxAccessMode: "approval_required",
       enabled: true,
     });
 
-    await service.setOwnerFunctionAccessMode(
+    await service.setOwnerToolAccessMode(
       OWNER_ID,
       "notion",
       "post_search",
@@ -1240,11 +1240,11 @@ describe("ContextLayerService", () => {
 
     await service.upsertManagedConnector({
       ...managedConnectorInput,
-      functions: connector.functions,
+      tools: connector.tools,
     });
 
     integrations = await service.listOwnerIntegrations(OWNER_ID);
-    expect(integrations[0]?.functions.post_search).toMatchObject({
+    expect(integrations[0]?.tools.post_search).toMatchObject({
       accessMode: "disabled",
       maxAccessMode: "enabled",
       enabled: false,
@@ -1280,7 +1280,7 @@ describe("ContextLayerService", () => {
       },
       oauthClientId: "notion-client-id",
       oauthClientSecret: "notion-client-secret",
-      functions: [],
+      tools: [],
       enabled: true,
     });
 
@@ -1315,7 +1315,7 @@ describe("ContextLayerService", () => {
       fineGrainedPermissions: true,
       config: { builtInSlug: "notion" },
       credentials: {},
-      functions: {
+      tools: {
         search: {
           name: "search",
           description: "Search Notion",
@@ -1330,7 +1330,7 @@ describe("ContextLayerService", () => {
     await service.upsertAgentPolicy("assistant", [
       {
         integrationKey: "notion",
-        functionNames: ["search"],
+        toolNames: ["search"],
         scopes: ["read"],
         enabled: true,
       },
@@ -1397,7 +1397,7 @@ describe("ContextLayerService", () => {
         managedConnectorSlug: "acme-crm",
       },
       credentials: {},
-      functions: {
+      tools: {
         get_contact: {
           name: "get_contact",
           description: "Get a contact",
@@ -1420,7 +1420,7 @@ describe("ContextLayerService", () => {
     await service.upsertAgentPolicy("assistant", [
       {
         integrationKey: "acme-crm",
-        functionNames: ["get_contact"],
+        toolNames: ["get_contact"],
         scopes: ["contacts.read"],
         enabled: true,
       },
@@ -1526,7 +1526,7 @@ describe("ContextLayerService", () => {
       fineGrainedPermissions: true,
       config: { serverUrl: "https://mcp.notion.com/mcp" },
       credentials: {},
-      functions: {
+      tools: {
         search: {
           name: "search",
           description: "Search Notion",
@@ -1541,7 +1541,7 @@ describe("ContextLayerService", () => {
     await service.upsertAgentPolicy("assistant", [
       {
         integrationKey: "notion",
-        functionNames: ["search"],
+        toolNames: ["search"],
         scopes: ["read"],
         enabled: true,
       },

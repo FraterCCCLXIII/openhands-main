@@ -29,7 +29,7 @@ const initialConnectors: ManagedConnectorDefinition[] = [
       tokenUrl: "https://api.notion.com/v1/oauth/token",
       scopes: [],
     },
-    functions: [],
+    tools: [],
     enabled: true,
     createdAt: "2026-03-09T00:00:00.000Z",
     updatedAt: "2026-03-09T00:00:00.000Z",
@@ -38,7 +38,7 @@ const initialConnectors: ManagedConnectorDefinition[] = [
 
 const indexedConnector: ManagedConnectorDefinition = {
   ...initialConnectors[0],
-  functions: [
+  tools: [
     {
       name: "list_pages",
       description: "List pages",
@@ -201,9 +201,9 @@ describe("ManagedConnectorList", () => {
         new Response(
           JSON.stringify({
             ...indexedConnector,
-            functions: [
+            tools: [
               {
-                ...indexedConnector.functions[0],
+                ...indexedConnector.tools[0],
                 accessMode: "approval_required",
               },
             ],
@@ -263,9 +263,9 @@ describe("ManagedConnectorList", () => {
     );
     const [, indexedRequestInit] = fetchMock.mock.calls[1] as [string, RequestInit];
     const indexedBody = JSON.parse(String(indexedRequestInit.body)) as {
-      functions: Array<{ name: string; accessMode?: string }>;
+      tools: Array<{ name: string; accessMode?: string }>;
     };
-    expect(indexedBody.functions).toContainEqual(
+    expect(indexedBody.tools).toContainEqual(
       expect.objectContaining({
         name: "list_pages",
         accessMode: "approval_required",

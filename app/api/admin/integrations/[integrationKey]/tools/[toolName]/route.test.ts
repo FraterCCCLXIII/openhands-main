@@ -45,7 +45,7 @@ const integration: IntegrationSpec = {
   fineGrainedPermissions: true,
   config: {},
   credentials: {},
-  functions: {
+  tools: {
     create_issue: {
       name: "create_issue",
       description: "Create a GitHub issue",
@@ -59,10 +59,10 @@ const integration: IntegrationSpec = {
   },
 };
 
-describe("PATCH /api/admin/integrations/[integrationKey]/functions/[functionName]", () => {
+describe("PATCH /api/admin/integrations/[integrationKey]/tools/[toolName]", () => {
   it("rejects requests without an admin API key", async () => {
     const response = await PATCH(
-      new Request("http://localhost/api/admin/integrations/github/functions/create_issue", {
+      new Request("http://localhost/api/admin/integrations/github/tools/create_issue", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ accessMode: "disabled" }),
@@ -70,7 +70,7 @@ describe("PATCH /api/admin/integrations/[integrationKey]/functions/[functionName
       {
         params: Promise.resolve({
           integrationKey: "github",
-          functionName: "create_issue",
+          toolName: "create_issue",
         }),
       },
     );
@@ -81,16 +81,16 @@ describe("PATCH /api/admin/integrations/[integrationKey]/functions/[functionName
     );
   });
 
-  it("updates only the authenticated admin user's integration function access mode", async () => {
+  it("updates only the authenticated admin user's integration tool access mode", async () => {
     vi.stubEnv("APP_ADMIN_EMAILS", "admin@example.com");
     const service = getContextLayerService();
     await service.registerOwnerIntegration("admin@example.com", integration);
     await service.registerOwnerIntegration("other-admin@example.com", {
       ...integration,
-      functions: {
-        ...integration.functions,
+      tools: {
+        ...integration.tools,
         create_issue: {
-          ...integration.functions.create_issue,
+          ...integration.tools.create_issue,
           accessMode: "disabled",
           enabled: false,
         },
@@ -99,7 +99,7 @@ describe("PATCH /api/admin/integrations/[integrationKey]/functions/[functionName
     const { apiKey } = await service.rotateAdminApiKey("admin@example.com");
 
     const response = await PATCH(
-      new Request("http://localhost/api/admin/integrations/github/functions/create_issue", {
+      new Request("http://localhost/api/admin/integrations/github/tools/create_issue", {
         method: "PATCH",
         headers: {
           Authorization: `Bearer ${apiKey}`,
@@ -110,7 +110,7 @@ describe("PATCH /api/admin/integrations/[integrationKey]/functions/[functionName
       {
         params: Promise.resolve({
           integrationKey: "github",
-          functionName: "create_issue",
+          toolName: "create_issue",
         }),
       },
     );
@@ -128,7 +128,7 @@ describe("PATCH /api/admin/integrations/[integrationKey]/functions/[functionName
     await expect(service.listOwnerIntegrations("admin@example.com")).resolves.toMatchObject([
       {
         key: "github",
-        functions: {
+        tools: {
           create_issue: {
             accessMode: "approval_required",
             enabled: true,
@@ -141,7 +141,7 @@ describe("PATCH /api/admin/integrations/[integrationKey]/functions/[functionName
     ).resolves.toMatchObject([
       {
         key: "github",
-        functions: {
+        tools: {
           create_issue: {
             accessMode: "disabled",
             enabled: false,

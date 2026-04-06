@@ -91,7 +91,7 @@ describe("listOAuthProviderCatalog", () => {
       openApiUrl: "https://developers.notion.com/openapi.json",
       authorizationUrl: "https://api.notion.com/v1/oauth/authorize",
       tokenUrl: "https://api.notion.com/v1/oauth/token",
-      functionName: "post_search",
+      toolName: "post_search",
       requestMethod: "POST",
       requestPath: "/v1/search",
     });
@@ -101,7 +101,7 @@ describe("listOAuthProviderCatalog", () => {
       authorizationUrl: "https://accounts.google.com/o/oauth2/v2/auth",
       tokenUrl: "https://oauth2.googleapis.com/token",
       scopes: ["https://www.googleapis.com/auth/calendar.readonly"],
-      functionName: "list_events",
+      toolName: "list_events",
       requestMethod: "GET",
       requestPath: "/calendars/primary/events",
     });

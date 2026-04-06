@@ -38,7 +38,7 @@ export const requestTemplateSchema = z.object({
   contentType: z.enum(["json", "form_urlencoded", "multipart_form_data", "text"]).optional(),
 });
 
-export const managedConnectorFunctionSchema = z.object({
+export const managedConnectorToolSchema = z.object({
   name: z.string().min(1),
   description: z.string().min(1),
   defaultScopes: z.array(z.string()).default([]),
@@ -67,7 +67,7 @@ const managedConnectorBaseSchema = z.object({
   oauthConfig: genericOAuthConfigSchema.optional(),
   oauthClientId: z.string().optional(),
   oauthClientSecret: z.string().optional(),
-  functions: z.array(managedConnectorFunctionSchema).default([]),
+  tools: z.array(managedConnectorToolSchema).default([]),
   enabled: z.boolean().default(true),
 });
 
@@ -93,12 +93,12 @@ export const managedConnectorUpsertSchema = managedConnectorBaseSchema.superRefi
         });
       }
 
-      if (!value.openApiUrl && value.functions.length === 0) {
+      if (!value.openApiUrl && value.tools.length === 0) {
         context.addIssue({
           code: z.ZodIssueCode.custom,
-          path: ["functions"],
+          path: ["tools"],
           message:
-            "HTTP managed connectors require at least one function template unless an openApiUrl is provided.",
+            "HTTP managed connectors require at least one tool template unless an openApiUrl is provided.",
         });
       }
     }

@@ -57,7 +57,7 @@ const seedManagedNotion = async (repository: ContextRepository) => {
       clientId: "managed-notion-client-id",
       clientSecret: "managed-notion-client-secret",
     }),
-    functions: [],
+    tools: [],
     enabled: true,
     createdAt: "2026-03-09T00:00:00.000Z",
     updatedAt: "2026-03-09T00:00:00.000Z",

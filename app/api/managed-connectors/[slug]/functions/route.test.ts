@@ -19,6 +19,8 @@ vi.mock("@/src/lib/auth", () => ({
 vi.mock("@/src/lib/managed-connectors/openapi", () => ({
   generateManagedConnectorFunctionsFromOpenApi:
     generateManagedConnectorFunctionsFromOpenApiMock,
+  generateManagedConnectorToolsFromOpenApi:
+    generateManagedConnectorFunctionsFromOpenApiMock,
 }));
 
 vi.mock("@neondatabase/serverless", () => ({ neon: () => getActiveSql() }));
@@ -80,7 +82,7 @@ describe("POST /api/managed-connectors/[slug]/functions", () => {
       },
       oauthClientId: "client-id",
       oauthClientSecret: "client-secret",
-      functions: [
+      tools: [
         {
           name: "list_pages",
           description: "Existing pages listing",
@@ -105,10 +107,10 @@ describe("POST /api/managed-connectors/[slug]/functions", () => {
     expect(response.status).toBe(200);
     const body = (await response.json()) as {
       slug: string;
-      functions: Array<{ name: string; accessMode?: string }>;
+      tools: Array<{ name: string; accessMode?: string }>;
     };
     expect(body.slug).toBe("notion");
-    expect(body.functions).toContainEqual(
+    expect(body.tools).toContainEqual(
       expect.objectContaining({
         name: "list_pages",
         accessMode: "approval_required",

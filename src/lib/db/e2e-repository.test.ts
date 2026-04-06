@@ -57,7 +57,7 @@ describe("owner integrations", () => {
       fineGrainedPermissions: false,
       config: { baseUrl: "https://slack.com/api" },
       credentials: { accessToken: "xoxb-test" },
-      functions: {},
+      tools: {},
     };
 
     await repo.upsertOwnerIntegration(ownerId, spec);
@@ -79,7 +79,7 @@ describe("owner integrations", () => {
       fineGrainedPermissions: false,
       config: {},
       credentials: {},
-      functions: {},
+      tools: {},
     };
 
     await repo.upsertOwnerIntegration(ownerId, { ...base, key: "notion", name: "Notion" });
@@ -101,7 +101,7 @@ describe("owner integrations", () => {
       fineGrainedPermissions: false,
       config: {},
       credentials: {},
-      functions: {},
+      tools: {},
     };
 
     await repo.upsertOwnerIntegration("alice", spec);
@@ -123,7 +123,7 @@ describe("owner integrations", () => {
       fineGrainedPermissions: false,
       config: {},
       credentials: { accessToken: "v1" },
-      functions: {},
+      tools: {},
     };
 
     await repo.upsertOwnerIntegration(ownerId, spec);
@@ -155,7 +155,7 @@ describe("managed connectors", () => {
     credentialPlaceholder: "Paste token",
     credentialHelp: "Help text",
     apiBaseUrl: `https://api.${slug}.com`,
-    functions: [],
+    tools: [],
     enabled: true,
     createdAt: now,
     updatedAt: now,
@@ -197,7 +197,7 @@ describe("managed connectors", () => {
   it("round-trips JSONB fields (functions, categories, oauthConfig)", async () => {
     const connector = makeConnector("full", {
       categories: ["productivity", "ai"],
-      functions: [
+      tools: [
         {
           name: "search",
           description: "Search items",
@@ -215,8 +215,8 @@ describe("managed connectors", () => {
 
     const retrieved = await repo.getManagedConnector("full");
     expect(retrieved!.categories).toEqual(["productivity", "ai"]);
-    expect(retrieved!.functions).toHaveLength(1);
-    expect(retrieved!.functions[0]!.name).toBe("search");
+    expect(retrieved!.tools).toHaveLength(1);
+    expect(retrieved!.tools[0]!.name).toBe("search");
     expect(retrieved!.oauthConfig?.authorizationUrl).toBe("https://auth.example.com/authorize");
   });
 });
@@ -298,7 +298,7 @@ describe("agent class policies", () => {
       rules: [
         {
           integrationKey: "github",
-          functionNames: ["list_repos"],
+          toolNames: ["list_repos"],
           scopes: ["repo"],
           enabled: true,
         },
@@ -326,7 +326,7 @@ describe("access requests", () => {
     agentId: "bot-1",
     agentClass: "researcher",
     integrationKey: "slack",
-    functionName: "send_message",
+    toolName: "send_message",
     scopes: ["chat:write"],
     requestedMinutes: 60,
     channels: ["in_app" as const],
@@ -351,7 +351,7 @@ describe("access requests", () => {
     await repo.createAccessRequest(makeRequest("req-1"));
     const retrieved = await repo.getAccessRequest("req-1");
     expect(retrieved).not.toBeNull();
-    expect(retrieved!.functionName).toBe("send_message");
+    expect(retrieved!.toolName).toBe("send_message");
     expect(retrieved!.agentData?.conversationLink).toBe(
       "https://app.all-hands.dev/conversations/repo-access-request",
     );
@@ -378,7 +378,7 @@ describe("temporary grants", () => {
       agentId: "bot-1",
       agentClass: "researcher",
       integrationKey: "github",
-      functionName: "create_issue",
+      toolName: "create_issue",
       scopes: ["repo"],
       grantedBy: "admin@test.com",
       createdAt: new Date().toISOString(),
@@ -400,7 +400,7 @@ describe("temporary grants", () => {
       agentId: "bot-1",
       agentClass: "researcher",
       integrationKey: "github",
-      functionName: "fn",
+      toolName: "fn",
       scopes: [],
       grantedBy: "admin",
       createdAt: past,
@@ -412,7 +412,7 @@ describe("temporary grants", () => {
       agentId: "bot-1",
       agentClass: "researcher",
       integrationKey: "github",
-      functionName: "fn",
+      toolName: "fn",
       scopes: [],
       grantedBy: "admin",
       createdAt: new Date().toISOString(),

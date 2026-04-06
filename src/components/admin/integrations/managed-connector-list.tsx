@@ -5,8 +5,8 @@ import { type FormEvent, useMemo, useState } from "react";
 
 import {
   AccessModeSlider,
-  getFunctionAccessMode,
-} from "@/src/components/integrations/function-access-controls";
+  getToolAccessMode,
+} from "@/src/components/integrations/tool-access-controls";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
 import { cn } from "@/src/lib/utils";
@@ -114,7 +114,7 @@ const buildManagedConnectorPayload = (
       : undefined,
   oauthClientId: form.oauthClientId.trim(),
   oauthClientSecret: form.oauthClientSecret.trim(),
-  functions: connector.functions,
+  tools: connector.tools,
   enabled: connector.enabled,
 });
 
@@ -203,10 +203,10 @@ export function ManagedConnectorList({
     [search, sortedConnectors],
   );
 
-  const visibleFunctionCount = useMemo(
+  const visibleToolCount = useMemo(
     () =>
       filteredConnectors.reduce(
-        (total, connector) => total + connector.functions.length,
+        (total, connector) => total + connector.tools.length,
         0,
       ),
     [filteredConnectors],
@@ -359,8 +359,8 @@ export function ManagedConnectorList({
           ...createFormState(updatedConnector),
           status: "success",
           message:
-            updatedConnector.functions.length > 0
-              ? `Indexed ${updatedConnector.functions.length} ${updatedConnector.functions.length === 1 ? "tool" : "tools"}.`
+            updatedConnector.tools.length > 0
+              ? `Indexed ${updatedConnector.tools.length} ${updatedConnector.tools.length === 1 ? "tool" : "tools"}.`
               : "No tools were returned while indexing this connector.",
         },
       }));
@@ -374,20 +374,20 @@ export function ManagedConnectorList({
     }
   };
 
-  const handleFunctionAccessModeChange = async (
+  const handleToolAccessModeChange = async (
     connector: ManagedConnectorDefinition,
-    functionName: string,
+    toolName: string,
     accessMode: "enabled" | "disabled" | "approval_required",
   ) => {
     const updatedConnector: ManagedConnectorDefinition = {
       ...connector,
-      functions: connector.functions.map((functionSpec) =>
-        functionSpec.name === functionName
+      tools: connector.tools.map((toolSpec) =>
+        toolSpec.name === toolName
           ? {
-              ...functionSpec,
+              ...toolSpec,
               accessMode,
             }
-          : functionSpec,
+          : toolSpec,
       ),
     };
 
@@ -472,7 +472,7 @@ export function ManagedConnectorList({
           </div>
           <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--color-text-base)]">
             <Badge>{filteredConnectors.length} connectors</Badge>
-            <Badge>{visibleFunctionCount} functions</Badge>
+            <Badge>{visibleToolCount} tools</Badge>
           </div>
         </div>
 
@@ -498,7 +498,7 @@ export function ManagedConnectorList({
             const form = getFormState(connector);
             const isExpanded = expandedSlug === connector.slug;
             const provider = inferProvider(connector);
-            const functionCount = connector.functions.length;
+            const toolCount = connector.tools.length;
 
             return (
               <div
@@ -527,8 +527,8 @@ export function ManagedConnectorList({
                         {connector.description}
                       </p>
                       <p className="mt-1 text-[11px] leading-5 text-[var(--color-text-base)]">
-                        {connector.slug} · {functionCount} function
-                        {functionCount === 1 ? "" : "s"} · updated {formatUpdatedAt(connector.updatedAt)}
+                        {connector.slug} · {toolCount} tool
+                        {toolCount === 1 ? "" : "s"} · updated {formatUpdatedAt(connector.updatedAt)}
                       </p>
                     </div>
                   </div>
@@ -594,53 +594,53 @@ export function ManagedConnectorList({
                           <RefreshCw className={cn("h-4 w-4", form.indexing && "animate-spin")} />
                           {form.indexing
                             ? "Indexing…"
-                            : connector.functions.length > 0
+                            : connector.tools.length > 0
                               ? "Refresh indexed tools"
                               : "Index tools"}
                         </Button>
                       </div>
 
-                      {connector.functions.length === 0 ? (
+                      {connector.tools.length === 0 ? (
                         <p className="mt-4 text-sm text-[var(--color-text-base)]">
                           No tools are indexed yet. Index this connector to review and constrain user-facing tool permissions.
                         </p>
                       ) : (
                         <div className="mt-4 space-y-3">
-                          {connector.functions
+                          {connector.tools
                             .slice()
                             .sort((left, right) => left.name.localeCompare(right.name))
-                            .map((functionSpec) => {
-                              const accessMode = getFunctionAccessMode({
-                                name: functionSpec.name,
-                                description: functionSpec.description,
-                                enabled: functionSpec.accessMode !== "disabled",
-                                accessMode: functionSpec.accessMode,
+                            .map((toolSpec) => {
+                              const accessMode = getToolAccessMode({
+                                name: toolSpec.name,
+                                description: toolSpec.description,
+                                enabled: toolSpec.accessMode !== "disabled",
+                                accessMode: toolSpec.accessMode,
                                 fineGrainedPermissions: true,
-                                defaultScopes: functionSpec.defaultScopes,
+                                defaultScopes: toolSpec.defaultScopes,
                                 executionMode: "provider",
                                 config: {},
                               });
 
                               return (
                                 <div
-                                  key={functionSpec.name}
+                                  key={toolSpec.name}
                                   className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] px-4 py-4"
-                                  data-managed-connector-function={functionSpec.name}
+                                  data-managed-connector-function={toolSpec.name}
                                 >
                                   <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
                                     <div className="min-w-0 flex-1">
-                                      <p className="text-sm font-semibold text-white">{functionSpec.name}</p>
+                                      <p className="text-sm font-semibold text-white">{toolSpec.name}</p>
                                       <p className="mt-1 text-xs leading-6 text-[var(--color-text-base)]">
-                                        {functionSpec.description || "No description provided."}
+                                        {toolSpec.description || "No description provided."}
                                       </p>
                                     </div>
                                     <AccessModeSlider
-                                      functionName={functionSpec.name}
+                                      toolName={toolSpec.name}
                                       mode={accessMode}
                                       onChange={(nextMode) =>
-                                        void handleFunctionAccessModeChange(
+                                        void handleToolAccessModeChange(
                                           connector,
-                                          functionSpec.name,
+                                          toolSpec.name,
                                           nextMode,
                                         )
                                       }
@@ -722,7 +722,7 @@ export function ManagedConnectorList({
                               )}
                             />
                             <span className="text-[11px] leading-5 text-[var(--color-text-base)]">
-                              Leave blank if you want to keep the current stored function
+                              Leave blank if you want to keep the current stored tool
                               templates instead of regenerating them from a schema.
                             </span>
                           </label>

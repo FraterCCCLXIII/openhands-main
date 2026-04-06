@@ -219,7 +219,7 @@ const parseResponse = async (response: Response) => {
 export class HttpAdapter implements IntegrationAdapter {
   async invoke(input: AdapterInvocationInput) {
     const apiBaseUrl = (input.integration.config.apiBaseUrl as string | undefined)?.trim();
-    const requestTemplate = input.functionSpec.config.request as
+    const requestTemplate = input.toolSpec.config.request as
       | GenericHttpRequestTemplate
       | undefined;
 
@@ -232,7 +232,7 @@ export class HttpAdapter implements IntegrationAdapter {
 
     if (!requestTemplate) {
       throw new ContextLayerError(
-        `Function '${input.functionSpec.name}' is missing an HTTP request template.`,
+        `Tool '${input.toolSpec.name}' is missing an HTTP request template.`,
         400,
       );
     }
@@ -241,7 +241,7 @@ export class HttpAdapter implements IntegrationAdapter {
     const path = interpolateValue(requestTemplate.path, input.payload);
     if (typeof path !== "string" || !path.trim()) {
       throw new ContextLayerError(
-        `Function '${input.functionSpec.name}' produced an invalid request path.`,
+        `Tool '${input.toolSpec.name}' produced an invalid request path.`,
         400,
       );
     }
@@ -282,7 +282,7 @@ export class HttpAdapter implements IntegrationAdapter {
     if (!response.ok) {
       const detail = await response.text();
       throw new ContextLayerError(
-        `${input.integration.name} ${input.functionSpec.name} failed (${response.status}): ${detail || response.statusText}`,
+        `${input.integration.name} ${input.toolSpec.name} failed (${response.status}): ${detail || response.statusText}`,
         502,
       );
     }

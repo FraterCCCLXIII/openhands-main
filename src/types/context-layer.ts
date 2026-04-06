@@ -23,16 +23,18 @@ export type AccessRequestStatus =
   | "approved"
   | "rejected"
   | "expired";
-export type FunctionAccessMode = "enabled" | "disabled" | "approval_required";
+export type ToolAccessMode = "enabled" | "disabled" | "approval_required";
+export type FunctionAccessMode = ToolAccessMode;
 export type ToolInvocationOutcome = "success" | "denied" | "error";
-export type UnusedFunctionWindowUnit = "days" | "weeks" | "months";
+export type UnusedToolWindowUnit = "days" | "weeks" | "months";
+export type UnusedFunctionWindowUnit = UnusedToolWindowUnit;
 
-export interface FunctionSpec {
+export interface ToolSpec {
   name: string;
   description?: string;
   enabled: boolean;
-  accessMode?: FunctionAccessMode;
-  maxAccessMode?: FunctionAccessMode;
+  accessMode?: ToolAccessMode;
+  maxAccessMode?: ToolAccessMode;
   fineGrainedPermissions: boolean;
   defaultScopes: string[];
   executionMode: "provider" | "mock";
@@ -42,6 +44,9 @@ export interface FunctionSpec {
   lastInvocationOutcome?: ToolInvocationOutcome;
   invocationCount?: number;
 }
+
+export type FunctionSpec = ToolSpec;
+
 
 export interface IntegrationSpec {
   key: string;
@@ -53,7 +58,7 @@ export interface IntegrationSpec {
   fineGrainedPermissions: boolean;
   config: Record<string, unknown>;
   credentials: Record<string, unknown>;
-  functions: Record<string, FunctionSpec>;
+  tools: Record<string, ToolSpec>;
 }
 
 export interface OwnerIntegrationRecord {
@@ -105,8 +110,8 @@ export interface OAuthProviderRegistrationDefaults {
   registrationUrl?: string;
   additionalAuthorizationParams?: Record<string, string>;
   additionalTokenParams?: Record<string, string>;
-  functionName?: string;
-  functionDescription?: string;
+  toolName?: string;
+  toolDescription?: string;
   requestMethod?: string;
   requestPath?: string;
 }
@@ -147,14 +152,17 @@ export interface GenericHttpRequestTemplate {
   contentType?: HttpRequestContentType;
 }
 
-export interface ManagedConnectorFunctionDefinition {
+export interface ManagedConnectorToolDefinition {
   name: string;
   description: string;
   defaultScopes: string[];
-  accessMode?: FunctionAccessMode;
+  accessMode?: ToolAccessMode;
   request?: GenericHttpRequestTemplate;
   config?: Record<string, unknown>;
 }
+
+export type ManagedConnectorFunctionDefinition = ManagedConnectorToolDefinition;
+
 
 export interface ManagedConnectorDefinition {
   slug: string;
@@ -175,7 +183,7 @@ export interface ManagedConnectorDefinition {
   serverUrl?: string;
   openApiUrl?: string;
   oauthConfig?: GenericOAuthConfig;
-  functions: ManagedConnectorFunctionDefinition[];
+  tools: ManagedConnectorToolDefinition[];
   enabled: boolean;
   createdAt: string;
   updatedAt: string;
@@ -188,7 +196,7 @@ export interface ManagedConnectorRecord extends ManagedConnectorDefinition {
 
 export interface PolicyRule {
   integrationKey: string;
-  functionNames: string[];
+  toolNames: string[];
   scopes: string[];
   enabled: boolean;
 }
@@ -207,7 +215,7 @@ export interface AccessRequest {
   agentId: string | null;
   agentClass: string | null;
   integrationKey: string;
-  functionName: string;
+  toolName: string;
   scopes: string[];
   requestedMinutes: number;
   channels: NotificationChannel[];
@@ -225,7 +233,7 @@ export interface TemporaryGrant {
   agentId: string | null;
   agentClass: string | null;
   integrationKey: string;
-  functionName: string;
+  toolName: string;
   scopes: string[];
   grantedBy: string;
   createdAt: string;
@@ -334,7 +342,7 @@ export interface ToolInvocationRecord {
   agentId: string | null;
   agentClass: string | null;
   integrationKey: string;
-  functionName: string;
+  toolName: string;
   scopes: string[];
   provider: IntegrationProvider;
   kind: IntegrationKind;
@@ -346,26 +354,26 @@ export interface ToolInvocationRecord {
   errorMessage?: string;
 }
 
-export interface FunctionUsageSummary {
+export interface ToolUsageSummary {
   integrationKey: string;
-  functionName: string;
+  toolName: string;
   lastInvokedAt: string;
   lastInvocationOutcome: ToolInvocationOutcome;
   invocationCount: number;
 }
 
-export interface DisabledFunctionSummary {
+export interface DisabledToolSummary {
   integrationKey: string;
-  functionName: string;
+  toolName: string;
   lastInvokedAt: string;
 }
 
-export interface DisableUnusedFunctionsResult {
+export interface DisableUnusedToolsResult {
   thresholdValue: number;
-  thresholdUnit: UnusedFunctionWindowUnit;
+  thresholdUnit: UnusedToolWindowUnit;
   cutoffIso: string;
   disabledCount: number;
-  disabledFunctions: DisabledFunctionSummary[];
+  disabledTools: DisabledToolSummary[];
 }
 
 export interface AccessDecision {
@@ -376,7 +384,7 @@ export interface AccessDecision {
 
 export interface ContextInvocationResult {
   integration: string;
-  function: string;
+  tool: string;
   provider: IntegrationProvider;
   kind: IntegrationKind;
   authStrategy: AuthStrategy;

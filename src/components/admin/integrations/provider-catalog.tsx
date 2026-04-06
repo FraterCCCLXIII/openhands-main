@@ -137,13 +137,13 @@ const parseScopes = (value: string) =>
     .map((scope) => scope.trim())
     .filter(Boolean);
 
-const buildDefaultHttpFunctions = (provider: OAuthProviderCatalogOption) => {
+const buildDefaultHttpTools = (provider: OAuthProviderCatalogOption) => {
   const defaults = provider.registrationDefaults;
   if (
     !defaults ||
     defaults.openApiUrl ||
-    !defaults.functionName ||
-    !defaults.functionDescription ||
+    !defaults.toolName ||
+    !defaults.toolDescription ||
     !defaults.requestMethod ||
     !defaults.requestPath
   ) {
@@ -152,8 +152,8 @@ const buildDefaultHttpFunctions = (provider: OAuthProviderCatalogOption) => {
 
   return [
     {
-      name: defaults.functionName,
-      description: defaults.functionDescription,
+      name: defaults.toolName,
+      description: defaults.toolDescription,
       defaultScopes: defaults.scopes ?? [],
       request: {
         method: defaults.requestMethod,
@@ -238,8 +238,8 @@ const buildManagedConnectorPayload = (
     oauthClientId: authStrategy === "oauth2" ? form.oauthClientId.trim() : undefined,
     oauthClientSecret:
       authStrategy === "oauth2" ? form.oauthClientSecret.trim() : undefined,
-    functions:
-      managedConnectorProvider === "http" ? buildDefaultHttpFunctions(provider) : [],
+    tools:
+      managedConnectorProvider === "http" ? buildDefaultHttpTools(provider) : [],
     enabled: true,
   };
 };
@@ -255,7 +255,7 @@ const buildReadyBuiltInConnectorOption = (
     name: provider.name,
     description: provider.description,
     appUrl: provider.appUrl,
-    toolCount: getManagedConnectorProvider(provider) === "http" ? buildDefaultHttpFunctions(provider).length : 0,
+    toolCount: getManagedConnectorProvider(provider) === "http" ? buildDefaultHttpTools(provider).length : 0,
     categories: provider.categories,
     authModes:
       provider.registrationDefaults?.authModes?.length &&
@@ -523,10 +523,10 @@ export function ProviderCatalog({
                           <p className="mt-1 text-sm text-[var(--color-text-base)]">
                             {usesOAuth
                               ? isHttpConnector
-                                ? `Enter the REST API details below to register this connector once for the whole service. Individual users will later connect their own account and discover the generated function catalog from the published API schema in the integrations wizard.`
+                                ? `Enter the REST API details below to register this connector once for the whole service. Individual users will later connect their own account and discover the generated tool catalog from the published API schema in the integrations wizard.`
                                 : `Enter the MCP details below to register this connector once for the whole service. Individual users will later connect their own account and discover the MCP server's full tool list from the integrations wizard.`
                               : isHttpConnector
-                                ? `Enter the REST API details below to register this connector once for the whole service. Individual users will later provide their own ${authStrategy === "api_key" ? "API key" : authStrategy.replace("_", " ")} when they use the integrations wizard, and the full function catalog will be generated automatically from the published API schema.`
+                                ? `Enter the REST API details below to register this connector once for the whole service. Individual users will later provide their own ${authStrategy === "api_key" ? "API key" : authStrategy.replace("_", " ")} when they use the integrations wizard, and the full tool catalog will be generated automatically from the published API schema.`
                                 : `Enter the MCP details below to register this connector once for the whole service. Individual users will later provide their own ${authStrategy === "api_key" ? "API key" : authStrategy.replace("_", " ")} when they use the integrations wizard.`}
                           </p>
                         </div>
@@ -557,26 +557,26 @@ export function ProviderCatalog({
                               <code className="mx-1 text-white">{registrationForm.openApiUrl}</code>
                             </p>
                             <p className="mt-1">
-                              This connector will fetch that machine-readable API schema server-side during registration and generate the HTTP function templates automatically.
+                              This connector will fetch that machine-readable API schema server-side during registration and generate the HTTP tool templates automatically.
                             </p>
                           </div>
                         ) : null}
                         {isHttpConnector &&
                         !registrationForm.openApiUrl &&
-                        provider.registrationDefaults?.functionName &&
+                        provider.registrationDefaults?.toolName &&
                         provider.registrationDefaults?.requestMethod &&
                         provider.registrationDefaults?.requestPath ? (
                           <div className="md:col-span-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-[11px] leading-5 text-[var(--color-text-base)]">
                             <p>
-                              Starter API function:
+                              Starter API tool:
                               <code className="mx-1 text-white">
-                                {provider.registrationDefaults.functionName}
+                                {provider.registrationDefaults.toolName}
                               </code>
                               will call
                               <code className="mx-1 text-white">
                                 {provider.registrationDefaults.requestMethod} {provider.registrationDefaults.requestPath}
                               </code>
-                              until you replace it with a richer generated catalog or additional custom function templates.
+                              until you replace it with a richer generated catalog or additional custom tool templates.
                             </p>
                           </div>
                         ) : null}
@@ -631,7 +631,7 @@ export function ProviderCatalog({
                                 ? `Register this connector once and the deployment will create its own ${provider.name} MCP OAuth client automatically. Individual users will still authorize their own ${provider.name} sites and workspaces later from the integrations wizard.${usesFixedOAuthDefaults ? ` The standard OAuth URLs for ${provider.name} are already filled in.` : ""}`
                                 : `Create a ${provider.name} OAuth app before saving this connector so you can paste the client ID and client secret below.${usesFixedOAuthDefaults ? ` The standard OAuth URLs and scopes for ${provider.name} are already filled in.` : ""}`
                               : `This provider does not require service-level OAuth client credentials. Register the connector once here, and each user will later provide their own ${authStrategy === "api_key" ? "API key" : authStrategy.replace("_", " ")} in the integrations wizard.`}
-                            {isHttpConnector ? " The API function catalog will be generated from the published schema shown above." : ""}
+                            {isHttpConnector ? " The API tool catalog will be generated from the published schema shown above." : ""}
                           </p>
                           {usesOAuth ? (
                             <p className="mt-1">

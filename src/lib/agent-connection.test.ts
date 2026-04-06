@@ -13,7 +13,7 @@ const disabledIntegration: IntegrationSpec = {
   fineGrainedPermissions: true,
   config: {},
   credentials: {},
-  functions: {
+  tools: {
     hidden_tool: {
       name: "hidden_tool",
       description: "Should not be used in examples",
@@ -38,7 +38,7 @@ const githubIntegration: IntegrationSpec = {
   fineGrainedPermissions: true,
   config: { serverUrl: "https://api.githubcopilot.com/mcp/" },
   credentials: { accessToken: "secret" },
-  functions: {
+  tools: {
     search_repositories: {
       name: "search_repositories",
       description: "Search repositories",
@@ -62,7 +62,7 @@ const notionIntegration: IntegrationSpec = {
   fineGrainedPermissions: true,
   config: { apiBaseUrl: "https://api.notion.com/v1" },
   credentials: { accessToken: "secret" },
-  functions: {
+  tools: {
     complete_file_upload: {
       name: "complete_file_upload",
       description: "Complete a file upload",
@@ -98,7 +98,7 @@ const notionIntegration: IntegrationSpec = {
 };
 
 describe("agent-connection", () => {
-  it("uses the first available enabled integration and function in examples", () => {
+  it("uses the first available enabled integration and tool in examples", () => {
     const guide = buildAgentConnectionGuide({
       baseUrl: "http://localhost:12000",
       apiKey: "context-key",
@@ -144,7 +144,7 @@ describe("agent-connection", () => {
     );
   });
 
-  it("prefers a non-approval function and omits fake payload placeholders", () => {
+  it("prefers a non-approval tool and omits fake payload placeholders", () => {
     const guide = buildAgentConnectionGuide({
       baseUrl: "http://localhost:12000",
       apiKey: "context-key",
@@ -167,13 +167,13 @@ describe("agent-connection", () => {
     });
 
     expect(guide.endpoint).toBe(
-      "http://localhost:12000/api/context/your-integration/your-function",
+      "http://localhost:12000/api/context/your-integration/your-tool",
     );
     expect(guide.openApiSchemaEndpoint).toBe(
       "http://localhost:12000/api/context/openapi",
     );
-    expect(guide.mcpToolName).toBe("your-integration__your-function");
-    expect(guide.fetchExample).toContain("your-function");
+    expect(guide.mcpToolName).toBe("your-integration__your-tool");
+    expect(guide.fetchExample).toContain("your-tool");
     expect(guide.skillEndpoint).toBe("http://localhost:12000/api/context/skill");
     expect(guide.mcpSessionSetupExample).toContain("agentId and agentClass unset (null)");
     expect(guide.mcpSessionSetupExample).toContain("set_agent_id");

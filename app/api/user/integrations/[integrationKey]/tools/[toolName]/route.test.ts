@@ -43,7 +43,7 @@ const integration: IntegrationSpec = {
   fineGrainedPermissions: true,
   config: {},
   credentials: {},
-  functions: {
+  tools: {
     send_message: {
       name: "send_message",
       description: "Send a message",
@@ -57,14 +57,14 @@ const integration: IntegrationSpec = {
   },
 };
 
-describe("PATCH /api/user/integrations/[integrationKey]/functions/[functionName]", () => {
-  it("updates the authenticated user's function access mode", async () => {
+describe("PATCH /api/user/integrations/[integrationKey]/tools/[toolName]", () => {
+  it("updates the authenticated user's tool access mode", async () => {
     const service = getContextLayerService();
     await service.registerOwnerIntegration("owner@example.com", integration);
     const { apiKey } = await service.rotateUserApiKey("owner@example.com");
 
     const response = await PATCH(
-      new Request("http://localhost/api/user/integrations/slack/functions/send_message", {
+      new Request("http://localhost/api/user/integrations/slack/tools/send_message", {
         method: "PATCH",
         headers: {
           Authorization: `Bearer ${apiKey}`,
@@ -75,7 +75,7 @@ describe("PATCH /api/user/integrations/[integrationKey]/functions/[functionName]
       {
         params: Promise.resolve({
           integrationKey: "slack",
-          functionName: "send_message",
+          toolName: "send_message",
         }),
       },
     );
@@ -93,7 +93,7 @@ describe("PATCH /api/user/integrations/[integrationKey]/functions/[functionName]
       service.listOwnerIntegrations("owner@example.com"),
     ).resolves.toMatchObject([
       {
-        functions: {
+        tools: {
           send_message: {
             accessMode: "approval_required",
           },
@@ -146,7 +146,7 @@ describe("PATCH /api/user/integrations/[integrationKey]/functions/[functionName]
     const { apiKey } = await service.rotateUserApiKey("owner@example.com");
 
     const response = await PATCH(
-      new Request("http://localhost/api/user/integrations/slack/functions/send_message", {
+      new Request("http://localhost/api/user/integrations/slack/tools/send_message", {
         method: "PATCH",
         headers: {
           Authorization: `Bearer ${apiKey}`,
@@ -157,7 +157,7 @@ describe("PATCH /api/user/integrations/[integrationKey]/functions/[functionName]
       {
         params: Promise.resolve({
           integrationKey: "slack",
-          functionName: "send_message",
+          toolName: "send_message",
         }),
       },
     );
@@ -165,7 +165,7 @@ describe("PATCH /api/user/integrations/[integrationKey]/functions/[functionName]
     expect(response.status).toBe(403);
     await expect(response.json()).resolves.toMatchObject({
       detail:
-        "Function 'send_message' cannot exceed the organization-managed 'approval_required' access level.",
+        "Tool 'send_message' cannot exceed the organization-managed 'approval_required' access level.",
     });
   });
 
@@ -177,7 +177,7 @@ describe("PATCH /api/user/integrations/[integrationKey]/functions/[functionName]
     await service.revokeUserApiKey("owner@example.com");
 
     const response = await PATCH(
-      new Request("http://localhost/api/user/integrations/slack/functions/send_message", {
+      new Request("http://localhost/api/user/integrations/slack/tools/send_message", {
         method: "PATCH",
         headers: {
           Authorization: `Bearer ${apiKey}`,
@@ -188,7 +188,7 @@ describe("PATCH /api/user/integrations/[integrationKey]/functions/[functionName]
       {
         params: Promise.resolve({
           integrationKey: "slack",
-          functionName: "send_message",
+          toolName: "send_message",
         }),
       },
     );

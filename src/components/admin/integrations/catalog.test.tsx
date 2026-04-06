@@ -30,8 +30,8 @@ const providerCatalog: OAuthProviderCatalogOption[] = [
       authorizationUrl: "https://accounts.google.com/o/oauth2/v2/auth",
       tokenUrl: "https://oauth2.googleapis.com/token",
       scopes: ["https://www.googleapis.com/auth/calendar.readonly"],
-      functionName: "list_events",
-      functionDescription: "List events from the user's primary Google Calendar.",
+      toolName: "list_events",
+      toolDescription: "List events from the user's primary Google Calendar.",
       requestMethod: "GET",
       requestPath: "/calendars/primary/events",
     },
@@ -74,7 +74,7 @@ const managedConnectors: ManagedConnectorDefinition[] = [
       tokenUrl: "https://oauth2.googleapis.com/token",
       scopes: ["https://www.googleapis.com/auth/calendar.readonly"],
     },
-    functions: [
+    tools: [
       {
         name: "list_events",
         description: "List events from the user's primary Google Calendar.",

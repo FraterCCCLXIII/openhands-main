@@ -33,7 +33,7 @@ const toReadyBuiltInConnector = (
   description: connector.description,
   logoUrl: connector.logoUrl,
   appUrl: connector.appUrl,
-  toolCount: connector.functions.length,
+  toolCount: connector.tools.length,
   categories: connector.categories,
   authModes: connector.authModes,
   authStrategy: connector.authStrategy,

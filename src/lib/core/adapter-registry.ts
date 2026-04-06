@@ -1,10 +1,10 @@
-import type { FunctionSpec, IntegrationProvider, IntegrationSpec } from "@/src/types/context-layer";
+import type { ToolSpec, IntegrationProvider, IntegrationSpec } from "@/src/types/context-layer";
 import { ContextLayerError } from "@/src/lib/core/errors";
 
 export interface AdapterInvocationInput {
   agentId: string | null;
   integration: IntegrationSpec;
-  functionSpec: FunctionSpec;
+  toolSpec: ToolSpec;
   payload: Record<string, unknown>;
 }
 

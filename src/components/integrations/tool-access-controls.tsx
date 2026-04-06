@@ -4,9 +4,9 @@ import {
   isFunctionAccessModeAllowed,
 } from "@/src/lib/function-access-mode";
 import { cn } from "@/src/lib/utils";
-import type { FunctionAccessMode, FunctionSpec } from "@/src/types/context-layer";
+import type { ToolAccessMode, ToolSpec } from "@/src/types/context-layer";
 
-export const accessModeLabel = (mode: FunctionAccessMode) => {
+export const accessModeLabel = (mode: ToolAccessMode) => {
   switch (mode) {
     case "enabled":
       return "Enabled";
@@ -17,14 +17,12 @@ export const accessModeLabel = (mode: FunctionAccessMode) => {
   }
 };
 
-export const getFunctionAccessMode = (
-  functionSpec: FunctionSpec,
-): FunctionAccessMode =>
-  functionSpec.accessMode ?? (functionSpec.enabled ? "enabled" : "disabled");
+export const getToolAccessMode = (toolSpec: ToolSpec): ToolAccessMode =>
+  toolSpec.accessMode ?? (toolSpec.enabled ? "enabled" : "disabled");
 
-export const matchesFunctionSearch = (
+export const matchesToolSearch = (
   name: string,
-  functionSpec: FunctionSpec,
+  toolSpec: ToolSpec,
   query: string,
 ) => {
   const normalizedQuery = query.trim().toLowerCase();
@@ -32,16 +30,12 @@ export const matchesFunctionSearch = (
     return true;
   }
 
-  return [
-    name,
-    functionSpec.description,
-    functionSpec.defaultScopes.join(" "),
-  ]
+  return [name, toolSpec.description, toolSpec.defaultScopes.join(" ")]
     .filter((value): value is string => Boolean(value))
     .some((value) => value.toLowerCase().includes(normalizedQuery));
 };
 
-export const accessModeButtonClassName: Record<FunctionAccessMode, string> = {
+export const accessModeButtonClassName: Record<ToolAccessMode, string> = {
   enabled:
     "border-[color:rgba(165,231,94,0.3)] bg-[color:rgba(165,231,94,0.12)] text-[var(--color-success)] hover:bg-[color:rgba(165,231,94,0.18)]",
   approval_required:
@@ -50,7 +44,7 @@ export const accessModeButtonClassName: Record<FunctionAccessMode, string> = {
     "border-[color:rgba(231,106,94,0.3)] bg-[color:rgba(231,106,94,0.12)] text-[var(--color-danger)] hover:bg-[color:rgba(231,106,94,0.18)]",
 };
 
-const accessModeSegmentClassName: Record<FunctionAccessMode, string> = {
+const accessModeSegmentClassName: Record<ToolAccessMode, string> = {
   enabled: "bg-[color:rgba(165,231,94,0.16)] text-[var(--color-success)]",
   approval_required:
     "bg-[color:rgba(217,181,90,0.16)] text-[var(--color-warning)]",
@@ -58,7 +52,7 @@ const accessModeSegmentClassName: Record<FunctionAccessMode, string> = {
 };
 
 const accessModeOptions: Array<{
-  value: FunctionAccessMode;
+  value: ToolAccessMode;
   label: string;
 }> = functionAccessModes.map((value) => ({
   value,
@@ -66,15 +60,15 @@ const accessModeOptions: Array<{
 }));
 
 export const AccessModeSlider = ({
-  functionName,
+  toolName,
   mode,
   maxMode,
   onChange,
 }: {
-  functionName: string;
-  mode: FunctionAccessMode;
-  maxMode?: FunctionAccessMode;
-  onChange: (mode: FunctionAccessMode) => void;
+  toolName: string;
+  mode: ToolAccessMode;
+  maxMode?: ToolAccessMode;
+  onChange: (mode: ToolAccessMode) => void;
 }) => {
   const allowedModes = maxMode ? getAllowedFunctionAccessModes(maxMode) : functionAccessModes;
 
@@ -82,7 +76,7 @@ export const AccessModeSlider = ({
     <div
       className="inline-flex flex-wrap items-center gap-1 rounded-full border border-[var(--color-border)] bg-[var(--color-bg-input)] p-1"
       role="group"
-      aria-label={`Default access for ${functionName}`}
+      aria-label={`Default access for ${toolName}`}
       data-access-mode={mode}
       data-max-access-mode={maxMode}
     >
@@ -101,7 +95,7 @@ export const AccessModeSlider = ({
                 : "text-[var(--color-text-base)] hover:bg-[var(--color-bg-active)] hover:text-white disabled:hover:bg-transparent disabled:hover:text-[var(--color-text-base)]",
             )}
             aria-pressed={active}
-            aria-label={`${accessModeLabel(option.value)} access for ${functionName}`}
+            aria-label={`${accessModeLabel(option.value)} access for ${toolName}`}
             disabled={!allowed}
             onClick={() => {
               if (!allowed) {
@@ -118,9 +112,7 @@ export const AccessModeSlider = ({
   );
 };
 
-export const isFunctionModeSelectable = (
-  requestedMode: FunctionAccessMode,
-  functionSpec: FunctionSpec,
-) =>
-  !functionSpec.maxAccessMode ||
-  isFunctionAccessModeAllowed(requestedMode, functionSpec.maxAccessMode);
+export const isToolModeSelectable = (
+  requestedMode: ToolAccessMode,
+  toolSpec: ToolSpec,
+) => !toolSpec.maxAccessMode || isFunctionAccessModeAllowed(requestedMode, toolSpec.maxAccessMode);

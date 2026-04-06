@@ -1,15 +1,15 @@
 import { approvalStatusLabel } from "@/src/lib/access-requests";
 import {
-  getFunctionAccessMode,
-  matchesFunctionSearch,
-} from "@/src/components/integrations/function-access-controls";
+  getToolAccessMode,
+  matchesToolSearch,
+} from "@/src/components/integrations/tool-access-controls";
 import type {
   AccessRequest,
   BuiltInConnectorOption,
-  FunctionSpec,
-  FunctionAccessMode,
+  ToolSpec,
+  ToolAccessMode,
   IntegrationSpec,
-  UnusedFunctionWindowUnit,
+  UnusedToolWindowUnit,
 } from "@/src/types/context-layer";
 
 const POPULAR_INTEGRATION_SLUGS = [
@@ -22,8 +22,8 @@ const POPULAR_INTEGRATION_SLUGS = [
 
 export type ApprovalRequestFilter = "pending" | "approved" | "denied";
 
-export const UNUSED_FUNCTION_WINDOW_OPTIONS: Array<{
-  value: UnusedFunctionWindowUnit;
+export const UNUSED_TOOL_WINDOW_OPTIONS: Array<{
+  value: UnusedToolWindowUnit;
   label: string;
 }> = [
   { value: "days", label: "days" },
@@ -31,10 +31,13 @@ export const UNUSED_FUNCTION_WINDOW_OPTIONS: Array<{
   { value: "months", label: "months" },
 ];
 
+export const UNUSED_FUNCTION_WINDOW_OPTIONS = UNUSED_TOOL_WINDOW_OPTIONS;
+
+
 export const subtractUnusedWindow = (
   reference: Date,
   amount: number,
-  unit: UnusedFunctionWindowUnit,
+  unit: UnusedToolWindowUnit,
 ) => {
   const next = new Date(reference);
 
@@ -53,15 +56,15 @@ export const subtractUnusedWindow = (
   return next;
 };
 
-export const formatTrackedUsage = (functionSpec: FunctionSpec) => {
-  if (!functionSpec.lastInvokedAt) {
+export const formatTrackedUsage = (toolSpec: ToolSpec) => {
+  if (!toolSpec.lastInvokedAt) {
     return "No tracked usage yet";
   }
 
-  const formatted = new Date(functionSpec.lastInvokedAt).toLocaleString();
-  const count = functionSpec.invocationCount ?? 0;
-  const outcomeLabel = functionSpec.lastInvocationOutcome
-    ? functionSpec.lastInvocationOutcome.replace(/_/g, " ")
+  const formatted = new Date(toolSpec.lastInvokedAt).toLocaleString();
+  const count = toolSpec.invocationCount ?? 0;
+  const outcomeLabel = toolSpec.lastInvocationOutcome
+    ? toolSpec.lastInvocationOutcome.replace(/_/g, " ")
     : "unknown";
 
   return count > 0
@@ -134,7 +137,7 @@ export const matchesAccessRequestSearch = (
     request.agentId ?? "",
     request.agentClass ?? "",
     request.integrationKey,
-    request.functionName,
+    request.toolName,
     request.justification ?? "",
     request.agentData?.conversationLink ?? "",
     approvalStatusLabel(request.status),
@@ -213,21 +216,21 @@ export const copyTextToClipboard = async (text: string) => {
   throw new Error("Clipboard API unavailable");
 };
 
-export interface FilteredIntegrationEntry {
+export interface FilteredIntegrationToolEntry {
   integration: IntegrationSpec;
-  functions: FunctionSpec[];
-  visibleFunctions: FunctionSpec[];
+  tools: ToolSpec[];
+  visibleTools: ToolSpec[];
 }
 
 export const filterIntegrationsForDisplay = ({
   integrations,
   integrationSearch,
-  hideDisabledSkills,
+  hideDisabledTools,
 }: {
   integrations: IntegrationSpec[];
   integrationSearch: string;
-  hideDisabledSkills: boolean;
-}): FilteredIntegrationEntry[] => {
+  hideDisabledTools: boolean;
+}): FilteredIntegrationToolEntry[] => {
   const normalizedSearch = integrationSearch.trim().toLowerCase();
 
   return [...integrations]
@@ -240,13 +243,13 @@ export const filterIntegrationsForDisplay = ({
         integration,
         normalizedSearch,
       );
-      const functions = Object.values(integration.functions).sort((left, right) =>
+      const tools = Object.values(integration.tools).sort((left, right) =>
         left.name.localeCompare(right.name),
       );
-      const visibleFunctions = functions.filter((functionSpec) => {
+      const visibleTools = tools.filter((toolSpec) => {
         if (
-          hideDisabledSkills &&
-          getFunctionAccessMode(functionSpec) === "disabled"
+          hideDisabledTools &&
+          getToolAccessMode(toolSpec) === "disabled"
         ) {
           return false;
         }
@@ -254,25 +257,25 @@ export const filterIntegrationsForDisplay = ({
         return (
           !normalizedSearch ||
           integrationMatchesSearch ||
-          matchesFunctionSearch(functionSpec.name, functionSpec, normalizedSearch)
+          matchesToolSearch(toolSpec.name, toolSpec, normalizedSearch)
         );
       });
 
       if (
         normalizedSearch &&
         !integrationMatchesSearch &&
-        visibleFunctions.length === 0
+        visibleTools.length === 0
       ) {
         return null;
       }
 
       return {
         integration,
-        functions,
-        visibleFunctions,
+        tools,
+        visibleTools,
       };
     })
-    .filter((value): value is FilteredIntegrationEntry => value !== null);
+    .filter((value): value is FilteredIntegrationToolEntry => value !== null);
 };
 
 export const buildInstalledIntegrationKeys = (integrations: IntegrationSpec[]) =>
@@ -313,7 +316,7 @@ export const buildMarketplaceConnectors = ({
     .slice(0, 5);
 };
 
-export const buildUnusedFunctionCandidates = ({
+export const buildUnusedToolCandidates = ({
   integrations,
   cutoffDate,
 }: {
@@ -321,17 +324,17 @@ export const buildUnusedFunctionCandidates = ({
   cutoffDate: Date;
 }) =>
   integrations.flatMap((integration) =>
-    Object.values(integration.functions)
-      .filter((functionSpec) => getFunctionAccessMode(functionSpec) !== "disabled")
+    Object.values(integration.tools)
+      .filter((toolSpec) => getToolAccessMode(toolSpec) !== "disabled")
       .filter(
-        (functionSpec) =>
-          Boolean(functionSpec.lastInvokedAt) &&
-          new Date(functionSpec.lastInvokedAt!).getTime() < cutoffDate.getTime(),
+        (toolSpec) =>
+          Boolean(toolSpec.lastInvokedAt) &&
+          new Date(toolSpec.lastInvokedAt!).getTime() < cutoffDate.getTime(),
       )
-      .map((functionSpec) => ({
+      .map((toolSpec) => ({
         integrationKey: integration.key,
-        functionName: functionSpec.name,
-        lastInvokedAt: functionSpec.lastInvokedAt as string,
+        toolName: toolSpec.name,
+        lastInvokedAt: toolSpec.lastInvokedAt as string,
       })),
   );
 
@@ -370,12 +373,12 @@ export const resolveIntegrationLogoUrl = ({
   return getConnectorLogoUrl({ appUrl });
 };
 
-export const buildFunctionAccessPatch = (
+export const buildToolAccessPatch = (
   integrationKey: string,
-  functionName: string,
-  accessMode: FunctionAccessMode,
+  toolName: string,
+  accessMode: ToolAccessMode,
 ) => ({
-  url: `/api/integrations/${integrationKey}/functions/${functionName}`,
+  url: `/api/integrations/${integrationKey}/tools/${toolName}`,
   method: "PATCH",
   body: { accessMode },
 });

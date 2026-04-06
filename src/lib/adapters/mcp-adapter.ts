@@ -6,9 +6,9 @@ import { ContextLayerError } from "@/src/lib/core/errors";
 import { buildMcpHeaders, runMcpClientOperation } from "@/src/lib/mcp-client";
 
 export class McpAdapter implements IntegrationAdapter {
-  async invoke({ integration, functionSpec, payload }: AdapterInvocationInput) {
+  async invoke({ integration, toolSpec, payload }: AdapterInvocationInput) {
     const serverUrl =
-      (functionSpec.config.serverUrl as string | undefined) ??
+      (toolSpec.config.serverUrl as string | undefined) ??
       (integration.config.serverUrl as string | undefined);
 
     if (!serverUrl) {
@@ -19,7 +19,7 @@ export class McpAdapter implements IntegrationAdapter {
     }
 
     const toolName =
-      (functionSpec.config.toolName as string | undefined) ?? functionSpec.name;
+      (toolSpec.config.toolName as string | undefined) ?? toolSpec.name;
 
     return runMcpClientOperation(
       serverUrl,

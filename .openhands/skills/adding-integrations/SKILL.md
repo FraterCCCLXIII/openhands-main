@@ -232,7 +232,7 @@ Useful agent/runtime surfaces:
 
 - `GET /api/context/skill`
 - `GET /api/context/openapi`
-- `POST /api/context/{integrationKey}/{functionName}`
+- `POST /api/context/{integrationKey}/{toolName}`
 - `POST /api/mcp`
 
 ## Common mistakes

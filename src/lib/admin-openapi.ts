@@ -3,7 +3,7 @@ import { z } from "zod";
 import {
   accessRequestDecisionSchema,
   accessRequestSchema,
-  functionSpecSchema,
+  toolSpecSchema,
   integrationConnectionStatusSchema,
   integrationCreateSchema,
   integrationSpecSchema,
@@ -52,12 +52,12 @@ export const buildAdminOpenApiDocument = ({
   integrations: IntegrationSpec[];
 }) => {
   const exampleIntegration = selectExampleIntegration(integrations)?.integration;
-  const exampleFunction = exampleIntegration
-    ? Object.values(exampleIntegration.functions).find((candidate) => candidate.enabled)
+  const exampleTool = exampleIntegration
+    ? Object.values(exampleIntegration.tools).find((candidate) => candidate.enabled)
     : undefined;
 
   const integrationKeyExample = exampleIntegration?.key ?? "integration-key";
-  const functionNameExample = exampleFunction?.name ?? "function-name";
+  const toolNameExample = exampleTool?.name ?? "tool-name";
   const security = buildApiKeySecurity("AdminApiKey");
   const unauthorizedResponse = buildUnauthorizedResponse(
     "Missing or invalid admin automation API key.",
@@ -121,15 +121,15 @@ export const buildAdminOpenApiDocument = ({
           },
         },
       },
-      "/api/admin/integrations/{integrationKey}/functions/{functionName}": {
+      "/api/admin/integrations/{integrationKey}/tools/{toolName}": {
         patch: {
           tags: ["Admin Integrations"],
-          operationId: "updateAdminFunctionAccessMode",
-          summary: "Update a function access mode",
+          operationId: "updateAdminToolAccessMode",
+          summary: "Update a tool access mode",
           security,
           parameters: [
             buildPathParameter("integrationKey", integrationKeyExample),
-            buildPathParameter("functionName", functionNameExample),
+            buildPathParameter("toolName", toolNameExample),
           ],
           requestBody: buildJsonRequestBody({
             type: "object",
@@ -142,7 +142,7 @@ export const buildAdminOpenApiDocument = ({
             },
           }),
           responses: {
-            200: buildJsonRefResponse("Updated function spec.", "FunctionSpec"),
+            200: buildJsonRefResponse("Updated tool spec.", "ToolSpec"),
             401: unauthorizedResponse,
           },
         },
@@ -262,7 +262,7 @@ export const buildAdminOpenApiDocument = ({
         post: {
           tags: ["Admin Discovery"],
           operationId: "discoverAdminIntegration",
-          summary: "Discover functions from an integration definition",
+          summary: "Discover tools from an integration definition",
           security,
           requestBody: buildJsonRequestBody({
             $ref: "#/components/schemas/IntegrationDiscoveryRequest",
@@ -345,7 +345,7 @@ export const buildAdminOpenApiDocument = ({
       schemas: {
         IntegrationCreateRequest: toOpenApiSchema(integrationCreateSchema),
         IntegrationSpec: toOpenApiSchema(integrationSpecSchema),
-        FunctionSpec: toOpenApiSchema(functionSpecSchema),
+        ToolSpec: toOpenApiSchema(toolSpecSchema),
         IntegrationDiscoveryRequest: toOpenApiSchema(integrationDiscoveryRequestSchema),
         IntegrationConnection: toOpenApiSchema(integrationConnectionStatusSchema),
         NotificationRecord: toOpenApiSchema(notificationRecordSchema),

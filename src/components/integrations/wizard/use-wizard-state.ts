@@ -1,12 +1,12 @@
 import { useCallback, useMemo, useState } from "react";
 
-import { getFunctionAccessMode } from "@/src/components/integrations/function-access-controls";
-import type { BuiltInConnectorOption, FunctionAccessMode } from "@/src/types/context-layer";
+import { getToolAccessMode } from "@/src/components/integrations/tool-access-controls";
+import type { BuiltInConnectorOption, ToolAccessMode } from "@/src/types/context-layer";
 import {
   connectorOptionLabel,
-  filterReviewedFunctions,
+  filterReviewedTools,
   findConnectorByQuery,
-  getReviewedFunctions,
+  getReviewedTools,
   hasBuiltInCredentialInput,
   INITIAL_DRAFT,
   type DiscoverFeedback,
@@ -44,11 +44,11 @@ export const useWizardState = ({
       : INITIAL_DRAFT,
   );
   const [discovery, setDiscovery] = useState<DiscoveryResponse | null>(null);
-  const [functionModes, setFunctionModes] = useState<Record<string, FunctionAccessMode>>({});
-  const [selectedFunctions, setSelectedFunctions] = useState<Record<string, boolean>>({});
-  const [expandedFunctions, setExpandedFunctions] = useState<Record<string, boolean>>({});
+  const [toolModes, setToolModes] = useState<Record<string, ToolAccessMode>>({});
+  const [selectedTools, setSelectedTools] = useState<Record<string, boolean>>({});
+  const [expandedTools, setExpandedTools] = useState<Record<string, boolean>>({});
   const [connectorSearch, setConnectorSearch] = useState(initialBuiltInSlug);
-  const [functionSearch, setFunctionSearch] = useState("");
+  const [toolSearch, setToolSearch] = useState("");
   const [discoverFeedback, setDiscoverFeedback] =
     useState<DiscoverFeedback | null>(null);
 
@@ -59,34 +59,34 @@ export const useWizardState = ({
     [builtInConnectors, draft.builtInSlug],
   );
 
-  const reviewedFunctions = useMemo(
-    () => getReviewedFunctions(discovery),
+  const reviewedTools = useMemo(
+    () => getReviewedTools(discovery),
     [discovery],
   );
 
-  const filteredReviewedFunctions = useMemo(
-    () => filterReviewedFunctions({ functionSearch, reviewedFunctions }),
-    [functionSearch, reviewedFunctions],
+  const filteredReviewedTools = useMemo(
+    () => filterReviewedTools({ toolSearch, reviewedTools }),
+    [toolSearch, reviewedTools],
   );
 
-  const matchingFunctionNames = useMemo(
-    () => filteredReviewedFunctions.map(([name]) => name),
-    [filteredReviewedFunctions],
+  const matchingToolNames = useMemo(
+    () => filteredReviewedTools.map(([name]) => name),
+    [filteredReviewedTools],
   );
 
-  const selectedFunctionNames = useMemo(
-    () => reviewedFunctions.map(([name]) => name).filter((name) => selectedFunctions[name]),
-    [reviewedFunctions, selectedFunctions],
+  const selectedToolNames = useMemo(
+    () => reviewedTools.map(([name]) => name).filter((name) => selectedTools[name]),
+    [reviewedTools, selectedTools],
   );
 
-  const selectedFunctionCount = selectedFunctionNames.length;
-  const selectedMatchingCount = matchingFunctionNames.filter(
-    (name) => selectedFunctions[name],
+  const selectedToolCount = selectedToolNames.length;
+  const selectedMatchingCount = matchingToolNames.filter(
+    (name) => selectedTools[name],
   ).length;
   const allMatchingSelected =
-    matchingFunctionNames.length > 0 &&
-    matchingFunctionNames.every((name) => selectedFunctions[name]);
-  const hasMatchingFunctions = matchingFunctionNames.length > 0;
+    matchingToolNames.length > 0 &&
+    matchingToolNames.every((name) => selectedTools[name]);
+  const hasMatchingTools = matchingToolNames.length > 0;
 
   const builtInAuthStrategy = selectedConnector?.authStrategy ?? null;
   const requiresOAuthConnection = builtInAuthStrategy === "oauth2";
@@ -154,11 +154,11 @@ export const useWizardState = ({
   const selectKind = (kind: WizardDraft["kind"]) => {
     setDraft({ ...INITIAL_DRAFT, kind });
     setDiscovery(null);
-    setFunctionModes({});
-    setSelectedFunctions({});
-    setExpandedFunctions({});
+    setToolModes({});
+    setSelectedTools({});
+    setExpandedTools({});
     setConnectorSearch("");
-    setFunctionSearch("");
+    setToolSearch("");
     setDiscoverFeedback(null);
     setStep(2);
     onStatus(null);
@@ -166,60 +166,60 @@ export const useWizardState = ({
 
   const applyDiscoveryResult = (result: DiscoveryResponse) => {
     setDiscovery(result);
-    setFunctionModes(
+    setToolModes(
       Object.fromEntries(
-        Object.entries(result.functions).map(([name, functionSpec]) => [
+        Object.entries(result.tools).map(([name, toolSpec]) => [
           name,
-          getFunctionAccessMode(functionSpec),
+          getToolAccessMode(toolSpec),
         ]),
       ),
     );
-    setSelectedFunctions({});
-    setExpandedFunctions({});
-    setFunctionSearch("");
+    setSelectedTools({});
+    setExpandedTools({});
+    setToolSearch("");
     setStep(3);
   };
 
   const resetAfterCreate = () => {
     setDraft(INITIAL_DRAFT);
     setDiscovery(null);
-    setFunctionModes({});
-    setSelectedFunctions({});
-    setExpandedFunctions({});
+    setToolModes({});
+    setSelectedTools({});
+    setExpandedTools({});
     setConnectorSearch("");
-    setFunctionSearch("");
+    setToolSearch("");
     setDiscoverFeedback(null);
     setStep(1);
   };
 
-  const setAccessModeForFunctions = (
+  const setAccessModeForTools = (
     names: string[],
-    accessMode: FunctionAccessMode,
+    accessMode: ToolAccessMode,
   ) => {
     if (names.length === 0) {
       return;
     }
 
-    setFunctionModes((current) => ({
+    setToolModes((current) => ({
       ...current,
       ...Object.fromEntries(names.map((name) => [name, accessMode])),
     }));
-    setSelectedFunctions({});
+    setSelectedTools({});
   };
 
-  const setSelectedStateForFunctions = (names: string[], selected: boolean) => {
+  const setSelectedStateForTools = (names: string[], selected: boolean) => {
     if (names.length === 0) {
       return;
     }
 
-    setSelectedFunctions((current) => ({
+    setSelectedTools((current) => ({
       ...current,
       ...Object.fromEntries(names.map((name) => [name, selected])),
     }));
   };
 
-  const toggleFunctionExpanded = (name: string) => {
-    setExpandedFunctions((current) => ({
+  const toggleToolExpanded = (name: string) => {
+    setExpandedTools((current) => ({
       ...current,
       [name]: !current[name],
     }));
@@ -231,19 +231,19 @@ export const useWizardState = ({
     discoverFeedback,
     discovery,
     draft,
-    expandedFunctions,
-    filteredReviewedFunctions,
-    functionModes,
-    functionSearch,
-    hasMatchingFunctions,
-    matchingFunctionNames,
+    expandedTools,
+    filteredReviewedTools,
+    toolModes,
+    toolSearch,
+    hasMatchingTools,
+    matchingToolNames,
     oauthConnectionEnabled,
     requiresOAuthConnection,
-    reviewedFunctions,
+    reviewedTools,
     selectedConnector,
-    selectedFunctionCount,
-    selectedFunctionNames,
-    selectedFunctions,
+    selectedToolCount,
+    selectedToolNames,
+    selectedTools,
     selectedMatchingCount,
     step,
     applyDiscoveryResult,
@@ -251,15 +251,15 @@ export const useWizardState = ({
     handleConnectorSelect,
     resetAfterCreate,
     selectKind,
-    setAccessModeForFunctions,
+    setAccessModeForTools,
     setConnectorSearch,
     setDiscoverFeedback,
     setDraft,
-    setFunctionModes,
-    setFunctionSearch,
-    setSelectedFunctions,
-    setSelectedStateForFunctions,
+    setToolModes,
+    setToolSearch,
+    setSelectedTools,
+    setSelectedStateForTools,
     setStep,
-    toggleFunctionExpanded,
+    toggleToolExpanded,
   };
 };

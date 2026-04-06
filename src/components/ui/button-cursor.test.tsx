@@ -5,7 +5,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { IntegrationMarketplaceCard } from "@/src/components/dashboard/shared";
-import { AccessModeSlider } from "@/src/components/integrations/function-access-controls";
+import { AccessModeSlider } from "@/src/components/integrations/tool-access-controls";
 import { KindStep } from "@/src/components/integrations/wizard/kind-step";
 import { Button } from "@/src/components/ui/button";
 
@@ -50,7 +50,7 @@ describe("button cursor affordances", () => {
             onClick={vi.fn()}
           />
           <KindStep selectedKind={null} onSelectKind={vi.fn()} />
-          <AccessModeSlider functionName="listIssues" mode="enabled" onChange={vi.fn()} />
+          <AccessModeSlider toolName="listIssues" mode="enabled" onChange={vi.fn()} />
         </div>,
       );
     });

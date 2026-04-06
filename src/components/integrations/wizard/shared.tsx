@@ -52,8 +52,8 @@ export const WizardIntro = () => (
     </div>
     <p className="text-sm leading-7 text-[var(--color-text-base)]">
       Choose a Built-in connector hosted in this deployment or a remote MCP server,
-      let the dashboard discover the available functions, then keep each function
-      enabled, disable it, or mark it as case-by-case approval.
+      let the dashboard discover the available tools, then keep each tool
+      enabled, disable it, or mark it for case-by-case approval.
     </p>
   </div>
 );

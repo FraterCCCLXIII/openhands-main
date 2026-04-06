@@ -14,7 +14,7 @@ const integrations: IntegrationSpec[] = [
     fineGrainedPermissions: true,
     config: {},
     credentials: {},
-    functions: {
+    tools: {
       search_repositories: {
         name: "search_repositories",
         description: "Search repositories",
@@ -57,7 +57,7 @@ const integrations: IntegrationSpec[] = [
     fineGrainedPermissions: true,
     config: {},
     credentials: {},
-    functions: {
+    tools: {
       hidden_tool: {
         name: "hidden_tool",
         description: "Should stay hidden",
@@ -81,8 +81,9 @@ describe("agent-skill", () => {
 
     expect(markdown).toContain("name: context-layer-profile-tools");
     expect(markdown).toContain(
-      "Endpoint pattern: `POST https://context-layer.example.com/api/context/{integrationKey}/{functionName}`",
+      "Endpoint pattern: `POST https://context-layer.example.com/api/context/{integrationKey}/{toolName}`",
     );
+    expect(markdown).toContain("Generated tool catalog for the current OpenHands Context Layer profile.");
     expect(markdown).toContain("## Available tools (2)");
     expect(markdown).toContain("#### `github.search_repositories`");
     expect(markdown).toContain("#### `github.delete_repository`");
@@ -92,7 +93,7 @@ describe("agent-skill", () => {
     expect(markdown).not.toContain("Should not appear");
   });
 
-  it("renders an empty-state skill when no tools are enabled", () => {
+  it("renders an empty-state tool catalog when no tools are enabled", () => {
     const markdown = buildAgentSkillMarkdown({
       baseUrl: "https://context-layer.example.com",
       integrations: [
@@ -105,5 +106,6 @@ describe("agent-skill", () => {
 
     expect(markdown).toContain("## Available tools (0)");
     expect(markdown).toContain("No enabled tools are available yet.");
+    expect(markdown).toContain("populate this generated tool catalog.");
   });
 });

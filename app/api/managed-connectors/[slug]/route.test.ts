@@ -55,7 +55,7 @@ const createManagedConnectorRequest = () =>
       },
       oauthClientId: "acme-client-id",
       oauthClientSecret: "acme-client-secret",
-      functions: [],
+      tools: [],
     }),
   });
 

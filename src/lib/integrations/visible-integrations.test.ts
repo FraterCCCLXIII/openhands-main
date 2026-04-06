@@ -13,7 +13,7 @@ const createIntegration = (
   fineGrainedPermissions: true,
   config: {},
   credentials: {},
-  functions: {},
+  tools: {},
   ...overrides,
 });
 

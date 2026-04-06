@@ -17,7 +17,7 @@ const integrations: IntegrationSpec[] = [
     fineGrainedPermissions: true,
     config: {},
     credentials: {},
-    functions: {
+    tools: {
       accounts: {
         name: "accounts",
         description: "List accounts",
@@ -98,6 +98,48 @@ describe("OpenAPI document builders", () => {
     expect(document.paths["/api/context/salesforce/accounts"]).toMatchObject({
       post: {
         operationId: "invoke_salesforce_accounts",
+      },
+    });
+  });
+
+  it("uses tool terminology in OpenAPI paths and schemas", () => {
+    const adminDocument = buildAdminOpenApiDocument({
+      baseUrl: "https://context.example.com",
+      integrations,
+    });
+    const userDocument = buildUserOpenApiDocument({
+      baseUrl: "https://context.example.com",
+      integrations,
+      isAdmin: true,
+    });
+    const contextDocument = buildContextOpenApiDocument({
+      baseUrl: "https://context.example.com",
+      integrations,
+    });
+
+    expect(adminDocument.paths["/api/admin/integrations/{integrationKey}/tools/{toolName}"]).toBeDefined();
+    expect(userDocument.paths["/api/user/integrations/{integrationKey}/tools/{toolName}"]).toBeDefined();
+    expect(
+      Object.prototype.hasOwnProperty.call(
+        adminDocument.paths,
+        "/api/admin/integrations/{integrationKey}/functions/{functionName}",
+      ),
+    ).toBe(false);
+    expect(
+      Object.prototype.hasOwnProperty.call(
+        userDocument.paths,
+        "/api/user/integrations/{integrationKey}/functions/{functionName}",
+      ),
+    ).toBe(false);
+
+    expect(contextDocument.components.schemas.ContextInvocationResult).toMatchObject({
+      properties: {
+        tool: { type: "string" },
+      },
+    });
+    expect(contextDocument.components.schemas.ContextInvocationResult).not.toMatchObject({
+      properties: {
+        function: expect.anything(),
       },
     });
   });
