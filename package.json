@@ -15,6 +15,8 @@
     "test:coverage": "vitest run --coverage",
     "test:e2e": "vitest run src/lib/db/e2e-repository.test.ts src/lib/e2e-integration.test.ts",
     "test:watch": "vitest",
+    "test:mutation": "stryker run",
+    "test:mutation:dry": "stryker run --dryRunOnly",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "audit": "npm audit --audit-level=moderate"
@@ -38,6 +40,9 @@
   "devDependencies": {
     "@electric-sql/pglite": "^0.4.2",
     "@next/eslint-plugin-next": "^16.2.1",
+    "@stryker-mutator/core": "^9.6.0",
+    "@stryker-mutator/typescript-checker": "^9.6.0",
+    "@stryker-mutator/vitest-runner": "^9.6.0",
     "@tailwindcss/postcss": "^4.2.2",
     "@types/node": "^25.5.0",
     "@types/react": "^19.2.14",
