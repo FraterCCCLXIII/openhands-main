@@ -218,6 +218,13 @@ const sanitizeIntegrationTools = (
     : normalizeTools(integration.tools),
 });
 
+const redactIntegrationCredentials = (
+  integration: IntegrationSpec,
+): IntegrationSpec => ({
+  ...integration,
+  credentials: {},
+});
+
 const sanitizeConnectionStatus = (
   record: IntegrationConnectionRecord,
 ): IntegrationConnectionStatus => ({
@@ -366,7 +373,9 @@ export class ContextLayerService {
 
     return (await Promise.all(
       integrations.map((integration) => this.applyManagedConnectorConstraints(integration)),
-    )).sort((a, b) => a.key.localeCompare(b.key));
+    ))
+      .sort((a, b) => a.key.localeCompare(b.key))
+      .map(redactIntegrationCredentials);
   }
 
   async listOwnerIntegrationsWithUsage(ownerId: string) {
@@ -388,25 +397,27 @@ export class ContextLayerService {
 
     return integrations
       .sort((a, b) => a.key.localeCompare(b.key))
-      .map((integration) => ({
-        ...integration,
-        tools: Object.fromEntries(
-          Object.entries(integration.tools).map(([toolName, toolSpec]) => {
-            const usage = usageByFunction.get(`${integration.key}:${toolName}`);
-            return [
-              toolName,
-              usage
-                ? {
-                    ...toolSpec,
-                    lastInvokedAt: usage.lastInvokedAt,
-                    lastInvocationOutcome: usage.lastInvocationOutcome,
-                    invocationCount: usage.invocationCount,
-                  }
-                : toolSpec,
-            ];
-          }),
-        ),
-      }));
+      .map((integration) =>
+        redactIntegrationCredentials({
+          ...integration,
+          tools: Object.fromEntries(
+            Object.entries(integration.tools).map(([toolName, toolSpec]) => {
+              const usage = usageByFunction.get(`${integration.key}:${toolName}`);
+              return [
+                toolName,
+                usage
+                  ? {
+                      ...toolSpec,
+                      lastInvokedAt: usage.lastInvokedAt,
+                      lastInvocationOutcome: usage.lastInvocationOutcome,
+                      invocationCount: usage.invocationCount,
+                    }
+                  : toolSpec,
+              ];
+            }),
+          ),
+        }),
+      );
   }
 
   async disableUnusedOwnerTools(
@@ -1125,9 +1136,11 @@ export class ContextLayerService {
       ...spec,
       tools: normalizeTools(spec.tools ?? spec.functions ?? {}),
     });
-    return this.repository.upsertOwnerIntegration(
-      normalizeAgentApiKeyOwner(ownerId),
-      integration,
+    return redactIntegrationCredentials(
+      await this.repository.upsertOwnerIntegration(
+        normalizeAgentApiKeyOwner(ownerId),
+        integration,
+      ),
     );
   }
 
@@ -1158,7 +1171,9 @@ export class ContextLayerService {
       integrationKey,
     );
     integration.enabled = enabled;
-    return this.repository.upsertOwnerIntegration(normalizedOwnerId, integration);
+    return redactIntegrationCredentials(
+      await this.repository.upsertOwnerIntegration(normalizedOwnerId, integration),
+    );
   }
 
   async setOwnerToolEnabled(

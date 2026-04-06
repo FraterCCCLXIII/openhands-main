@@ -42,7 +42,7 @@ export async function DashboardPage() {
     existingAdminApiKey,
   ] = await Promise.all([
     service.listOwnerIntegrationsWithUsage(contextApiOwner),
-    service.listAccessRequests(),
+    isAdmin ? service.listAccessRequests() : Promise.resolve([]),
     service.listNotifications(),
     service.getOrCreateAgentApiKey(contextApiOwner),
     service.getUserApiKeyStatus(contextApiOwner),

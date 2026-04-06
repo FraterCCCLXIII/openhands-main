@@ -164,6 +164,39 @@ describe("ContextLayerService", () => {
   });
 
 
+  it("redacts stored credentials from integration management responses", async () => {
+    const service = createService();
+    const storedCredentials = { secret: "top-secret-token" };
+
+    const created = await service.registerOwnerIntegration(OWNER_ID, {
+      ...baseIntegration,
+      key: "github",
+      name: "GitHub",
+      credentials: storedCredentials,
+    });
+
+    expect(created.credentials).toEqual({});
+    await expect(testRepo.getOwnerIntegration(OWNER_ID, "github")).resolves.toMatchObject({
+      credentials: storedCredentials,
+    });
+
+    const listed = await service.listOwnerIntegrations(OWNER_ID);
+    expect(listed).toContainEqual(
+      expect.objectContaining({
+        key: "github",
+        credentials: {},
+      }),
+    );
+
+    const toggled = await service.setOwnerIntegrationEnabled(OWNER_ID, "github", false);
+    expect(toggled).toMatchObject({
+      key: "github",
+      enabled: false,
+      credentials: {},
+    });
+  });
+
+
   it("records successful invocation metadata and exposes usage summaries", async () => {
     const service = createService();
     await installIntegration(service, baseIntegration);

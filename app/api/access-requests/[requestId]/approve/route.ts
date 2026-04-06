@@ -1,19 +1,26 @@
-import { accessRequestDecisionSchema } from "@/src/lib/core/schema";
-import { getContextLayerService } from "@/src/lib/core/runtime";
+import { z } from "zod";
+
 import { fromError, ok } from "@/src/lib/api";
+import { requireAppAdminSession } from "@/src/lib/app-admin-session";
+import { getContextLayerService } from "@/src/lib/core/runtime";
+
+const approveSchema = z.object({
+  durationMinutes: z.number().int().positive().optional(),
+});
 
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ requestId: string }> },
 ) {
   try {
-    const payload = accessRequestDecisionSchema.parse(await request.json());
+    const { ownerId } = await requireAppAdminSession();
+    const payload = approveSchema.parse(await request.json());
     const { requestId } = await params;
     const service = getContextLayerService();
     return ok(
       await service.approveAccessRequest(
         requestId,
-        payload.approver,
+        ownerId,
         payload.durationMinutes,
       ),
     );

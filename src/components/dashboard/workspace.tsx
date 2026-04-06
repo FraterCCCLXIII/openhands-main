@@ -129,8 +129,13 @@ export const DashboardWorkspace = ({
   }, [searchParams]);
 
   useEffect(() => {
-    setActiveSection(getAdminSectionFromPath(pathname));
-  }, [pathname]);
+    const nextSection = getAdminSectionFromPath(pathname);
+    setActiveSection(
+      !isAdmin && nextSection === "caseByCaseApprovals"
+        ? "integrations"
+        : nextSection,
+    );
+  }, [isAdmin, pathname]);
 
   useEffect(() => {
     if (searchParams.get("showIntegrationWizard") === "1") {
@@ -156,6 +161,7 @@ export const DashboardWorkspace = ({
     queryKey: ["access-requests"],
     queryFn: () => fetchJson<AccessRequest[]>("/api/access-requests"),
     initialData: initialAccessRequests,
+    enabled: isAdmin,
   });
 
   const invalidateAll = async () => {
@@ -215,8 +221,6 @@ export const DashboardWorkspace = ({
 
   const integrations = integrationsQuery.data ?? [];
   const accessRequests = accessRequestsQuery.data ?? [];
-  const approverIdentity =
-    currentUser.email?.trim() || currentUser.name?.trim() || "human-approver";
   const sortedAccessRequests = useMemo(
     () =>
       [...accessRequests].sort(
@@ -289,7 +293,7 @@ export const DashboardWorkspace = ({
     currentUser.email === "dev@localhost"
       ? "Local development session"
       : "Authenticated dashboard session";
-  const sections = getDashboardSections();
+  const sections = getDashboardSections(isAdmin);
   const activeSectionMeta =
     sections.find((section) => section.id === activeSection) ?? sections[0];
 
@@ -499,16 +503,14 @@ export const DashboardWorkspace = ({
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              approver: approverIdentity,
-              ...(action === "approve"
-                ? {
+            body:
+              action === "approve"
+                ? JSON.stringify({
                     durationMinutes: approvalHoursToMinutes(
                       normalizedApprovalDurationHours,
                     ),
-                  }
-                : {}),
-            }),
+                  })
+                : JSON.stringify({}),
           },
         );
       }
@@ -549,6 +551,7 @@ export const DashboardWorkspace = ({
         badge={<Badge>{enabledIntegrationCount} live</Badge>}
         activeItem={activeSection}
         showAdminIntegrationsLink={isAdmin}
+        showApprovalsLink={isAdmin}
         footer={
           <DashboardSidebarUserPanel
             userName={userName}

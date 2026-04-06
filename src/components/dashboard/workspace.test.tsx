@@ -1717,7 +1717,7 @@ describe("DashboardWorkspace", () => {
       },
     ];
 
-    let approvePayload: { approver: string; durationMinutes: number } | null = null;
+    let approvePayload: { durationMinutes: number } | null = null;
 
     fetchMock.mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = typeof input === "string" ? input : input.toString();
@@ -1734,7 +1734,6 @@ describe("DashboardWorkspace", () => {
 
       if (url === "/api/access-requests/req-pending/approve") {
         approvePayload = JSON.parse(String(init?.body)) as {
-          approver: string;
           durationMinutes: number;
         };
         return new Response(JSON.stringify({ ok: true }), {
@@ -1788,7 +1787,6 @@ describe("DashboardWorkspace", () => {
     });
 
     expect(approvePayload).toEqual({
-      approver: "admin@example.com",
       durationMinutes: 240,
     });
     expect(container.textContent).toContain(

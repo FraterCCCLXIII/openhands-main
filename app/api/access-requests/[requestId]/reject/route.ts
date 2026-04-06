@@ -1,16 +1,17 @@
-import { accessRequestDecisionSchema } from "@/src/lib/core/schema";
-import { getContextLayerService } from "@/src/lib/core/runtime";
 import { fromError, ok } from "@/src/lib/api";
+import { requireAppAdminSession } from "@/src/lib/app-admin-session";
+import { getContextLayerService } from "@/src/lib/core/runtime";
 
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ requestId: string }> },
 ) {
   try {
-    const payload = accessRequestDecisionSchema.parse(await request.json());
+    const { ownerId } = await requireAppAdminSession();
+    await request.json().catch(() => ({}));
     const { requestId } = await params;
     const service = getContextLayerService();
-    return ok(await service.rejectAccessRequest(requestId, payload.approver));
+    return ok(await service.rejectAccessRequest(requestId, ownerId));
   } catch (error) {
     return fromError(error);
   }

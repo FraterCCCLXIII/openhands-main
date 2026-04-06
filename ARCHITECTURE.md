@@ -89,7 +89,7 @@ There is also an **admin ceiling** on managed connectors:
 1. A user or admin marks a tool `approval_required`.
 2. The next runtime call for that tool is denied unless there is already a matching active temporary grant.
 3. The denial path can create a pending access request as a **best-effort** side effect; repeated requests for the same owner/agent/tool/scope tuple are deduplicated while still pending.
-4. A human reviewer approves or rejects the request from `/case-by-case-approvals` or the admin approval APIs.
+4. An allowlisted admin reviewer approves or rejects the request from `/case-by-case-approvals` or the admin approval APIs.
 5. Approval creates a temporary grant scoped to the agent metadata, tool, and scopes, with an expiry time.
 6. Future invocations succeed only while that grant remains active.
 7. Expired grants are purged by the cron route at `/api/cron/expire-grants` when called with `CRON_SECRET`.
@@ -100,13 +100,14 @@ MCP-specific note:
 
 ### Secret and credential storage
 
-The repository keeps credential material server-side and resolves it only at invocation time.
+The repository keeps credential material server-side and resolves it only at invocation time. User-facing dashboard and automation APIs should return redacted integration records rather than replaying stored third-party secrets back to clients.
 
 #### Stored secret types
 
 | Secret type | Where it lives | Storage model |
 | --- | --- | --- |
 | User OAuth / provider credentials | `integration_connections.encrypted_credentials` | Encrypted at rest |
+| Static per-user API key / bearer / basic credentials | `owner_integrations.credentials` | Stored server-side and redacted from user-facing responses; not yet covered by the encrypted connection-record path |
 | Managed connector OAuth client credentials | `managed_connectors.encrypted_oauth_client` | Encrypted at rest |
 | User automation keys | `user_api_keys` | SHA-256 hash for auth lookup plus encrypted recovery copy for explicit reveal/copy |
 | Admin automation keys | `admin_api_keys` | SHA-256 hash for auth lookup plus encrypted recovery copy for explicit reveal/copy |
