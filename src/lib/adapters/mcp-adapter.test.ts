@@ -84,17 +84,20 @@ describe("McpAdapter", () => {
     });
 
     expect(runMcpClientOperationMock).toHaveBeenCalledTimes(1);
-    const [serverUrl, headers, operationName, operation, metadata] =
+    const [serverUrl, headers, operationName, operation, options] =
       runMcpClientOperationMock.mock.calls[0] ?? [];
 
     expect(serverUrl).toBe("https://tool.example/mcp");
     expect(headers).toEqual({ Authorization: "Bearer notion-token" });
     expect(operationName).toBe("callTool(searchPages)");
-    expect(metadata).toEqual({
-      authStrategy: "bearer",
-      credentials: { accessToken: "notion-token" },
-      integrationKey: "notion",
-      managedConnectorSlug: "notion",
+    expect(options).toEqual({
+      debugContext: {
+        authStrategy: "bearer",
+        credentials: { accessToken: "notion-token" },
+        integrationKey: "notion",
+        managedConnectorSlug: "notion",
+      },
+      fallbackTransports: [],
     });
 
     const client = {
@@ -109,11 +112,20 @@ describe("McpAdapter", () => {
     });
   });
 
-  it("falls back to the integration server URL and original tool name", async () => {
+  it("passes configured fallback transports through invocation metadata", async () => {
     runMcpClientOperationMock.mockResolvedValueOnce({ ok: true });
 
     const adapter = new McpAdapter();
     const input = buildInput();
+    input.integration.config = {
+      ...input.integration.config,
+      mcpTransportFallbacks: [
+        {
+          transport: "sse",
+          url: "https://integration.example/sse",
+        },
+      ],
+    };
 
     await expect(adapter.invoke(input)).resolves.toEqual({ ok: true });
 
@@ -122,10 +134,18 @@ describe("McpAdapter", () => {
       { Authorization: "Bearer notion-token" },
       "callTool(search)",
       expect.any(Function),
-      expect.objectContaining({
-        integrationKey: "notion",
-        managedConnectorSlug: "notion",
-      }),
+      {
+        debugContext: expect.objectContaining({
+          integrationKey: "notion",
+          managedConnectorSlug: "notion",
+        }),
+        fallbackTransports: [
+          {
+            transport: "sse",
+            url: "https://integration.example/sse",
+          },
+        ],
+      },
     );
   });
 });

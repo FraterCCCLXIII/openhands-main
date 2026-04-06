@@ -3,6 +3,10 @@ import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 
 import { ContextLayerError } from "@/src/lib/core/errors";
+import type {
+  McpTransportFallback,
+  McpTransportKind,
+} from "@/src/lib/mcp-transport-policy";
 import type { AuthStrategy } from "@/src/types/context-layer";
 
 const MCP_OPERATION_TIMEOUT_MS = 10_000;
@@ -10,8 +14,6 @@ const MCP_CLIENT_INFO = {
   name: "agent-context-layer",
   version: "0.2.0",
 };
-
-type McpTransportKind = "streamable_http" | "sse";
 
 type McpClientOperation<T> = (client: Client) => Promise<T>;
 
@@ -28,6 +30,10 @@ interface McpAttemptDebug {
   error: string;
 }
 
+export interface RunMcpClientOperationOptions {
+  debugContext?: McpDebugContext;
+  fallbackTransports?: McpTransportFallback[];
+}
 
 const buildTimeoutError = (message: string) =>
   new ContextLayerError(message, 504);
@@ -62,25 +68,6 @@ const closeTransport = async (transport: { close?: () => Promise<void> | void })
   }
 };
 
-const getNotionFallbackUrl = (serverUrl: string) => {
-  const url = new URL(serverUrl);
-  if (url.hostname !== "mcp.notion.com") {
-    return null;
-  }
-
-  if (url.pathname === "/mcp" || url.pathname === "/mcp/") {
-    url.pathname = "/sse";
-    return url;
-  }
-
-  if (url.pathname === "/" || url.pathname === "") {
-    url.pathname = "/sse";
-    return url;
-  }
-
-  return null;
-};
-
 const createTransport = (
   kind: McpTransportKind,
   url: URL,
@@ -101,9 +88,12 @@ const createTransport = (
   });
 };
 
+const formatTransportName = (kind: McpTransportKind) =>
+  kind === "streamable_http" ? "Streamable HTTP" : "SSE";
+
 const formatAttemptError = (kind: McpTransportKind, url: URL, error: unknown) => {
   const message = error instanceof Error ? error.message : "Unknown MCP error";
-  return `${kind === "streamable_http" ? "Streamable HTTP" : "SSE"} transport failed for ${url.toString()}: ${message}`;
+  return `${formatTransportName(kind)} transport failed for ${url.toString()}: ${message}`;
 };
 
 const runTransportAttempt = async <T,>(
@@ -119,7 +109,7 @@ const runTransportAttempt = async <T,>(
   try {
     await withTimeout(
       client.connect(transport),
-      `Timed out connecting to ${url.toString()} over ${kind === "streamable_http" ? "Streamable HTTP" : "SSE"}.`,
+      `Timed out connecting to ${url.toString()} over ${formatTransportName(kind)}.`,
     );
     return await withTimeout(
       operation(client),
@@ -190,13 +180,11 @@ const summarizeTokenCredential = (value: unknown) => {
 const buildMcpDebugDetails = (
   operationName: string,
   serverUrl: string,
-  fallbackUrl: URL | null,
   debugContext: McpDebugContext | undefined,
   attempts: McpAttemptDebug[],
 ) => ({
   operationName,
   serverUrl,
-  fallbackUrl: fallbackUrl?.toString(),
   integrationKey: debugContext?.integrationKey,
   managedConnectorSlug: debugContext?.managedConnectorSlug,
   auth: debugContext
@@ -236,89 +224,85 @@ export const runMcpClientOperation = async <T,>(
   headers: Record<string, string>,
   operationName: string,
   operation: McpClientOperation<T>,
-  debugContext?: McpDebugContext,
+  options: RunMcpClientOperationOptions = {},
 ): Promise<T> => {
-  const primaryUrl = new URL(serverUrl);
-  const fallbackUrl = getNotionFallbackUrl(serverUrl);
+  const attempts: McpAttemptDebug[] = [];
+  const transportPlan: Array<{ transport: McpTransportKind; url: URL }> = [
+    {
+      transport: "streamable_http",
+      url: new URL(serverUrl),
+    },
+    ...(options.fallbackTransports ?? []).map((fallback) => ({
+      transport: fallback.transport,
+      url: new URL(fallback.url),
+    })),
+  ];
+  let firstError: unknown;
 
-  try {
-    return await runTransportAttempt(
-      "streamable_http",
-      primaryUrl,
-      headers,
-      operationName,
-      operation,
-    );
-  } catch (primaryError) {
-    const primaryMessage = formatAttemptError(
-      "streamable_http",
-      primaryUrl,
-      primaryError,
-    );
-    const attempts: McpAttemptDebug[] = [
-      {
-        transport: "streamable_http",
-        url: primaryUrl.toString(),
-        error: primaryMessage,
-      },
-    ];
-
-    if (!fallbackUrl) {
-      console.error(`[mcp] ${operationName} failed. ${primaryMessage}`);
-      throw toContextLayerError(
-        primaryMessage,
-        primaryError,
-        buildMcpDebugDetails(
-          operationName,
-          serverUrl,
-          fallbackUrl,
-          debugContext,
-          attempts,
-        ),
-      );
-    }
-
-    console.warn(
-      `[mcp] ${operationName} primary transport failed; retrying with SSE. ${primaryMessage}`,
-    );
-
+  for (const [index, attempt] of transportPlan.entries()) {
     try {
       const result = await runTransportAttempt(
-        "sse",
-        fallbackUrl,
+        attempt.transport,
+        attempt.url,
         headers,
         operationName,
         operation,
       );
-      console.warn(
-        `[mcp] ${operationName} succeeded via SSE fallback for ${fallbackUrl.toString()}.`,
-      );
+
+      if (index > 0) {
+        console.warn(
+          `[mcp] ${operationName} succeeded via ${formatTransportName(attempt.transport)} fallback for ${attempt.url.toString()}.`,
+        );
+      }
+
       return result;
-    } catch (fallbackError) {
-      const fallbackMessage = formatAttemptError("sse", fallbackUrl, fallbackError);
+    } catch (error) {
+      const message = formatAttemptError(attempt.transport, attempt.url, error);
       attempts.push({
-        transport: "sse",
-        url: fallbackUrl.toString(),
-        error: fallbackMessage,
+        transport: attempt.transport,
+        url: attempt.url.toString(),
+        error: message,
       });
+      firstError ??= error;
+
+      const nextAttempt = transportPlan[index + 1];
+      if (nextAttempt) {
+        console.warn(
+          `[mcp] ${operationName} transport failed; retrying with ${formatTransportName(nextAttempt.transport)}. ${message}`,
+        );
+        continue;
+      }
+
+      const combinedMessage = attempts.map((entry) => entry.error).join(" ");
       console.error(
-        `[mcp] ${operationName} failed after fallback. ${primaryMessage} ${fallbackMessage}`,
+        `[mcp] ${operationName} failed${attempts.length > 1 ? " after fallback" : ""}. ${combinedMessage}`,
       );
+
+      const debugDetails = buildMcpDebugDetails(
+        operationName,
+        serverUrl,
+        options.debugContext,
+        attempts,
+      );
+
+      if (attempts.length === 1) {
+        throw toContextLayerError(message, error, debugDetails);
+      }
+
       throw new ContextLayerError(
-        `${primaryMessage} ${fallbackMessage}`,
-        fallbackError instanceof ContextLayerError
-          ? fallbackError.statusCode
-          : primaryError instanceof ContextLayerError
-            ? primaryError.statusCode
+        combinedMessage,
+        error instanceof ContextLayerError
+          ? error.statusCode
+          : firstError instanceof ContextLayerError
+            ? firstError.statusCode
             : 502,
-        buildMcpDebugDetails(
-          operationName,
-          serverUrl,
-          fallbackUrl,
-          debugContext,
-          attempts,
-        ),
+        debugDetails,
       );
     }
   }
+
+  throw new ContextLayerError(
+    `No MCP transports configured for ${operationName}.`,
+    500,
+  );
 };

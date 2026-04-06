@@ -4,6 +4,7 @@ import type {
 } from "@/src/lib/core/adapter-registry";
 import { ContextLayerError } from "@/src/lib/core/errors";
 import { buildMcpHeaders, runMcpClientOperation } from "@/src/lib/mcp-client";
+import { getMcpTransportFallbacks } from "@/src/lib/mcp-transport-policy";
 
 export class McpAdapter implements IntegrationAdapter {
   async invoke({ integration, toolSpec, payload }: AdapterInvocationInput) {
@@ -20,6 +21,10 @@ export class McpAdapter implements IntegrationAdapter {
 
     const toolName =
       (toolSpec.config.toolName as string | undefined) ?? toolSpec.name;
+    const fallbackTransports = getMcpTransportFallbacks(
+      toolSpec.config,
+      integration.config,
+    );
 
     return runMcpClientOperation(
       serverUrl,
@@ -31,12 +36,15 @@ export class McpAdapter implements IntegrationAdapter {
           arguments: payload,
         }),
       {
-        authStrategy: integration.authStrategy,
-        credentials: integration.credentials,
-        integrationKey: integration.key,
-        managedConnectorSlug:
-          (integration.config.managedConnectorSlug as string | undefined) ??
-          (integration.config.builtInSlug as string | undefined),
+        debugContext: {
+          authStrategy: integration.authStrategy,
+          credentials: integration.credentials,
+          integrationKey: integration.key,
+          managedConnectorSlug:
+            (integration.config.managedConnectorSlug as string | undefined) ??
+            (integration.config.builtInSlug as string | undefined),
+        },
+        fallbackTransports,
       },
     );
   }
