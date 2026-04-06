@@ -1,6 +1,6 @@
 export type IntegrationKind = "api" | "mcp";
 
-export type IntegrationProvider = "composio" | "mcp" | "mock" | "http";
+export type IntegrationProvider = "mcp" | "mock" | "http";
 
 export type AuthStrategy =
   | "none"

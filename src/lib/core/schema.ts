@@ -16,7 +16,7 @@ export const accessRequestStatusSchema = z.enum([
   "expired",
 ]);
 export const notificationChannelSchema = z.enum(["email", "in_app", "sms"]);
-export const integrationProviderSchema = z.enum(["composio", "mcp", "mock", "http"]);
+export const integrationProviderSchema = z.enum(["mcp", "mock", "http"]);
 export const integrationKindSchema = z.enum(["api", "mcp"]);
 export const authStrategySchema = z.enum([
   "none",

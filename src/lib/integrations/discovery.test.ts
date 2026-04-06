@@ -43,7 +43,6 @@ import {
   discoverIntegration,
   inferMcpAuthStrategy,
   listBuiltInConnectors,
-  normalizeComposioAuthModes,
 } from "@/src/lib/integrations/discovery";
 
 let testRepo: ContextRepository;
@@ -66,18 +65,6 @@ beforeEach(() => {
 afterEach(async () => {
   await testCleanup();
   vi.unstubAllGlobals();
-});
-
-describe("normalizeComposioAuthModes", () => {
-  it("normalizes multiple auth schemes and preserves no-auth support", () => {
-    expect(
-      normalizeComposioAuthModes(["oauth2", "api_key", "bearer_token"], true),
-    ).toEqual(["oauth2", "api_key", "bearer", "none"]);
-  });
-
-  it("falls back to oauth2 when Composio provides no auth metadata", () => {
-    expect(normalizeComposioAuthModes()).toEqual(["oauth2"]);
-  });
 });
 
 describe("listBuiltInConnectors", () => {

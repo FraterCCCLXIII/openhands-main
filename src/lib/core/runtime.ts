@@ -1,4 +1,3 @@
-import { ComposioAdapter } from "@/src/lib/adapters/composio-adapter";
 import { HttpAdapter } from "@/src/lib/adapters/http-adapter";
 import { McpAdapter } from "@/src/lib/adapters/mcp-adapter";
 import { MockAdapter } from "@/src/lib/adapters/mock-adapter";
@@ -34,7 +33,6 @@ export const getContextLayerService = () => {
     const repository = getContextLayerRepository();
 
     const registry = new AdapterRegistry({
-      composio: new ComposioAdapter(),
       http: new HttpAdapter(),
       mcp: new McpAdapter(),
       mock: new MockAdapter(),

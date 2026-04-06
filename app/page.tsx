@@ -53,7 +53,7 @@ export default async function HomePage() {
           {[
             {
               title: "Connector breadth",
-              body: "Register managed connectors in the database, connect remote MCP servers directly, and still support broader Composio-based integrations.",
+              body: "Register managed connectors in the database and connect remote MCP servers directly without a separate integration layer.",
               icon: DatabaseZap,
             },
             {

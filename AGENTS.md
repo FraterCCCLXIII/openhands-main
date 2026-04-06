@@ -2,7 +2,7 @@
 
 ## Repository purpose
 
-This repository contains a Next.js/TypeScript implementation of an agent context layer. It exposes a single agent-facing context endpoint, supports DB-backed managed connectors plus Composio-backed and MCP SDK-backed integrations, provides fine-grained agent-class permissions plus temporary approval grants, and ships with a Tailwind admin dashboard styled after the OpenHands KPI tracker.
+This repository contains a Next.js/TypeScript implementation of an agent context layer. It exposes a single agent-facing context endpoint, supports DB-backed managed connectors plus MCP SDK-backed integrations, provides fine-grained agent-class permissions plus temporary approval grants, and ships with a Tailwind admin dashboard styled after the OpenHands KPI tracker.
 
 The root `LICENSE` is proprietary: `Copyright All Hands AI, Inc. All rights reserved.`
 
@@ -37,7 +37,6 @@ The root `LICENSE` is proprietary: `Copyright All Hands AI, Inc. All rights rese
 - `app/` contains the App Router pages and API route handlers.
 - `src/lib/core/service.ts` contains the main permissioning, approval, and invocation orchestration logic.
 - Shared service helpers now live in `src/lib/core/access-policy.ts`, `src/lib/core/invocation-side-effects.ts`, and `src/lib/core/scoped-api-keys.ts`; prefer extending those modules before adding more local helper logic back into `service.ts`.
-- `src/lib/adapters/composio-adapter.ts` uses `@composio/core` for Composio-backed tool execution.
 - `src/lib/adapters/mcp-adapter.ts` uses `@modelcontextprotocol/sdk` to call remote MCP tools.
 - `src/lib/db/postgres-repository.ts` uses Neon with `POSTGRES_URL` or `DATABASE_URL`. There is no in-memory fallback; all tests use PGlite-backed `PostgresRepository` instances.
 - Postgres schema bootstrap and row mapping helpers now live in `src/lib/db/postgres-schema.ts` and `src/lib/db/postgres-records.ts`; keep `PostgresRepository` focused on query methods.
@@ -93,7 +92,7 @@ The root `LICENSE` is proprietary: `Copyright All Hands AI, Inc. All rights rese
 
 - `app/api/add-connector/route.ts` stores add-connector form submissions as in-app notifications so the team can review requested providers from the existing dashboard notification feed.
 - `src/lib/integrations/oauth-provider-catalog.ts` and `app/api/integrations/oauth-provider-catalog/route.ts` expose the researched OAuth-capable provider catalog used by the admin-integrations UI.
-- `app/api/integrations/discover/route.ts` and `src/lib/integrations/discovery.ts` provide server-side function discovery for managed connectors, Composio toolkits, and remote MCP servers.
+- `app/api/integrations/discover/route.ts` and `src/lib/integrations/discovery.ts` provide server-side function discovery for managed connectors and remote MCP servers.
 - `app/api/context/openapi/route.ts` now generates an authenticated OpenAPI 3.0 document for the caller's currently available tools; it uses the same personal context-layer API key as `/api/context/*`, filters out disabled tools, hides OAuth integrations until that user has connected them, and should keep example payloads/scopes faithful to each function instead of fabricating placeholder args like `scope.read`.
 - Dashboard API keys are now split by privilege: the agent key is still the least-privileged tool invocation key, `/api/user/*` uses a distinct user automation key with dashboard-equivalent powers, and allowlisted admins also get a separate admin automation key for `/api/admin/*` QA/ops routes. Do not reuse user/admin auth for agent endpoints, and never expose plaintext key material outside explicit key-management responses.
 - `src/lib/admin-api-auth.ts` authenticates `/api/admin/*` bearer or `X-API-Key` requests against stored admin automation keys and re-checks `APP_ADMIN_EMAILS`; `app/api/admin/openapi/route.ts` documents the admin QA surface, while the dashboard shows the admin key/API docs only for admin users.

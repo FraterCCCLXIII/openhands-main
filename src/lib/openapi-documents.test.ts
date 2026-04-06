@@ -11,7 +11,7 @@ const integrations: IntegrationSpec[] = [
     key: "salesforce",
     name: "Salesforce",
     kind: "api",
-    provider: "composio",
+    provider: "http",
     authStrategy: "bearer",
     enabled: true,
     fineGrainedPermissions: true,

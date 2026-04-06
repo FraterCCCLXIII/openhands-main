@@ -40,7 +40,7 @@ const createService = (repository?: ContextRepository) => {
   const service = new ContextLayerService(
     repo,
     new AdapterRegistry({
-      composio: mockAdapter,
+      http: mockAdapter,
       mcp: mockAdapter,
       mock: mockAdapter,
     }),
@@ -56,7 +56,7 @@ const baseIntegration: IntegrationSpec = {
   key: "salesforce",
   name: "Salesforce",
   kind: "api",
-  provider: "composio",
+  provider: "http",
   authStrategy: "bearer",
   enabled: true,
   fineGrainedPermissions: true,
@@ -190,7 +190,7 @@ describe("ContextLayerService", () => {
     expect(row.agent_class).toBe("assistant");
     expect(row.integration_key).toBe("salesforce");
     expect(row.function_name).toBe("accounts");
-    expect(row.provider).toBe("composio");
+    expect(row.provider).toBe("http");
     expect(row.kind).toBe("api");
     expect(row.auth_strategy).toBe("bearer");
     expect(row.outcome).toBe("success");
@@ -211,7 +211,7 @@ describe("ContextLayerService", () => {
     const service = new ContextLayerService(
       repository,
       new AdapterRegistry({
-        composio: { invoke: async () => ({ ok: true }) },
+        http: { invoke: async () => ({ ok: true }) },
         mock: { invoke: async () => ({}) },
       }),
       new NotificationPublisher(repository),
@@ -338,7 +338,7 @@ describe("ContextLayerService", () => {
     const service = new ContextLayerService(
       repository,
       new AdapterRegistry({
-        composio: failingAdapter,
+        http: failingAdapter,
         mcp: failingAdapter,
         mock: failingAdapter,
       }),
@@ -434,7 +434,7 @@ describe("ContextLayerService", () => {
     const service = new ContextLayerService(
       repository,
       new AdapterRegistry({
-        composio: { invoke: async () => ({ ok: true }) },
+        http: { invoke: async () => ({ ok: true }) },
         mock: { invoke: async () => ({}) },
       }),
       new NotificationPublisher(repository),
@@ -514,7 +514,7 @@ describe("ContextLayerService", () => {
     const repository = testRepo;
     const service = new ContextLayerService(
       repository,
-      new AdapterRegistry({ composio: { invoke: async () => ({ ok: true }) } }),
+      new AdapterRegistry({ http: { invoke: async () => ({ ok: true }) } }),
       new NotificationPublisher(repository),
     );
     await installIntegration(service, {
@@ -610,7 +610,7 @@ describe("ContextLayerService", () => {
     const service = new ContextLayerService(
       repository,
       new AdapterRegistry({
-        composio: { invoke: async () => ({ ok: true }) },
+        http: { invoke: async () => ({ ok: true }) },
         mock: { invoke: async () => ({}) },
       }),
       new NotificationPublisher(repository),
