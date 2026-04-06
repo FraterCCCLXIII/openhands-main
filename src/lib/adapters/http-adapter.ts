@@ -3,6 +3,11 @@ import type {
   IntegrationAdapter,
 } from "@/src/lib/core/adapter-registry";
 import { ContextLayerError } from "@/src/lib/core/errors";
+import {
+  getOptionalString,
+  getOptionalTrimmedString,
+  isRecord,
+} from "@/src/lib/type-utils";
 import type {
   GenericHttpRequestTemplate,
   HttpRequestContentType,
@@ -13,12 +18,15 @@ const TEMPLATE = /\{\{\s*([a-zA-Z0-9_.]+)\s*\}\}/g;
 
 const getByPath = (source: Record<string, unknown>, path: string) =>
   path.split(".").reduce<unknown>((value, segment) => {
-    if (value == null || typeof value !== "object") {
+    if (!isRecord(value)) {
       return undefined;
     }
 
-    return (value as Record<string, unknown>)[segment];
+    return value[segment];
   }, source);
+
+const isHttpRequestTemplate = (value: unknown): value is GenericHttpRequestTemplate =>
+  isRecord(value) && typeof value.method === "string" && typeof value.path === "string";
 
 const interpolateValue = (
   template: unknown,
@@ -26,8 +34,9 @@ const interpolateValue = (
 ): unknown => {
   if (typeof template === "string") {
     const exact = template.match(EXACT_TEMPLATE);
-    if (exact) {
-      return getByPath(payload, exact[1]);
+    const exactKey = exact?.[1];
+    if (exactKey) {
+      return getByPath(payload, exactKey);
     }
 
     return template.replace(TEMPLATE, (_, key: string) => {
@@ -58,9 +67,8 @@ const buildAuthHeaders = (input: AdapterInvocationInput): Record<string, string>
   const credentials = integration.credentials;
 
   if (integration.authStrategy === "api_key") {
-    const headerName =
-      (credentials.headerName as string | undefined)?.trim() || "X-API-Key";
-    const secret = (credentials.secret as string | undefined)?.trim();
+    const headerName = getOptionalTrimmedString(credentials, "headerName") ?? "X-API-Key";
+    const secret = getOptionalTrimmedString(credentials, "secret");
     return secret ? { [headerName]: secret } : {};
   }
 
@@ -68,13 +76,13 @@ const buildAuthHeaders = (input: AdapterInvocationInput): Record<string, string>
     integration.authStrategy === "oauth2" ||
     integration.authStrategy === "bearer"
   ) {
-    const accessToken = (credentials.accessToken as string | undefined)?.trim();
+    const accessToken = getOptionalTrimmedString(credentials, "accessToken");
     return accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
   }
 
   if (integration.authStrategy === "basic") {
-    const username = (credentials.username as string | undefined)?.trim();
-    const password = (credentials.password as string | undefined)?.trim();
+    const username = getOptionalTrimmedString(credentials, "username");
+    const password = getOptionalTrimmedString(credentials, "password");
     if (username && password) {
       return {
         Authorization: `Basic ${Buffer.from(`${username}:${password}`).toString("base64")}`,
@@ -84,9 +92,6 @@ const buildAuthHeaders = (input: AdapterInvocationInput): Record<string, string>
 
   return {};
 };
-
-const isObject = (value: unknown): value is Record<string, unknown> =>
-  Boolean(value) && typeof value === "object" && !Array.isArray(value);
 
 const appendFormValue = (formData: FormData, key: string, value: unknown) => {
   if (value == null) {
@@ -105,40 +110,36 @@ const appendFormValue = (formData: FormData, key: string, value: unknown) => {
     return;
   }
 
-  if (isObject(value) && typeof value.contentBase64 === "string") {
-    const blob = new Blob([Buffer.from(value.contentBase64, "base64")], {
-      type:
-        typeof value.contentType === "string" && value.contentType.trim()
-          ? value.contentType
-          : "application/octet-stream",
-    });
-    formData.append(
-      key,
-      blob,
-      typeof value.filename === "string" && value.filename.trim()
-        ? value.filename
-        : key,
-    );
-    return;
-  }
-
-  if (isObject(value) && typeof value.text === "string") {
-    if (typeof value.filename === "string" && value.filename.trim()) {
-      const blob = new Blob([value.text], {
-        type:
-          typeof value.contentType === "string" && value.contentType.trim()
-            ? value.contentType
-            : "text/plain",
+  if (isRecord(value)) {
+    const contentBase64 = getOptionalString(value, "contentBase64");
+    if (contentBase64) {
+      const contentType = getOptionalTrimmedString(value, "contentType") ?? "application/octet-stream";
+      const filename = getOptionalTrimmedString(value, "filename") ?? key;
+      const blob = new Blob([Buffer.from(contentBase64, "base64")], {
+        type: contentType,
       });
-      formData.append(key, blob, value.filename);
+      formData.append(key, blob, filename);
       return;
     }
 
-    formData.append(key, value.text);
-    return;
+    const text = getOptionalString(value, "text");
+    if (text) {
+      const filename = getOptionalTrimmedString(value, "filename");
+      if (filename) {
+        const contentType = getOptionalTrimmedString(value, "contentType") ?? "text/plain";
+        const blob = new Blob([text], {
+          type: contentType,
+        });
+        formData.append(key, blob, filename);
+        return;
+      }
+
+      formData.append(key, text);
+      return;
+    }
   }
 
-  formData.append(key, isObject(value) ? JSON.stringify(value) : String(value));
+  formData.append(key, isRecord(value) ? JSON.stringify(value) : String(value));
 };
 
 const encodeBody = (
@@ -151,7 +152,8 @@ const encodeBody = (
 
   if (contentType === "form_urlencoded") {
     const params = new URLSearchParams();
-    for (const [key, value] of Object.entries((body as Record<string, unknown>) ?? {})) {
+    const bodyRecord = isRecord(body) ? body : {};
+    for (const [key, value] of Object.entries(bodyRecord)) {
       if (value == null) {
         continue;
       }
@@ -166,7 +168,8 @@ const encodeBody = (
 
   if (contentType === "multipart_form_data") {
     const formData = new FormData();
-    for (const [key, value] of Object.entries((body as Record<string, unknown>) ?? {})) {
+    const bodyRecord = isRecord(body) ? body : {};
+    for (const [key, value] of Object.entries(bodyRecord)) {
       appendFormValue(formData, key, value);
     }
 
@@ -218,10 +221,10 @@ const parseResponse = async (response: Response) => {
 
 export class HttpAdapter implements IntegrationAdapter {
   async invoke(input: AdapterInvocationInput) {
-    const apiBaseUrl = (input.integration.config.apiBaseUrl as string | undefined)?.trim();
-    const requestTemplate = input.toolSpec.config.request as
-      | GenericHttpRequestTemplate
-      | undefined;
+    const apiBaseUrl = getOptionalTrimmedString(input.integration.config, "apiBaseUrl");
+    const requestTemplate = isHttpRequestTemplate(input.toolSpec.config["request"])
+      ? input.toolSpec.config["request"]
+      : undefined;
 
     if (!apiBaseUrl) {
       throw new ContextLayerError(
@@ -248,7 +251,7 @@ export class HttpAdapter implements IntegrationAdapter {
 
     const url = new URL(path.replace(/^\//, ""), `${apiBaseUrl.replace(/\/$/, "")}/`);
     const query = interpolateValue(requestTemplate.query ?? {}, input.payload);
-    if (query && typeof query === "object" && !Array.isArray(query)) {
+    if (isRecord(query)) {
       for (const [key, value] of Object.entries(query)) {
         if (value == null) {
           continue;
@@ -257,11 +260,16 @@ export class HttpAdapter implements IntegrationAdapter {
       }
     }
 
+    const interpolatedHeaders = interpolateValue(requestTemplate.headers ?? {}, input.payload);
     const headers = {
       ...buildAuthHeaders(input),
-      ...((interpolateValue(requestTemplate.headers ?? {}, input.payload) as
-        | Record<string, string>
-        | undefined) ?? {}),
+      ...Object.fromEntries(
+        isRecord(interpolatedHeaders)
+          ? Object.entries(interpolatedHeaders)
+              .filter(([, value]) => value != null)
+              .map(([key, value]) => [key, String(value)])
+          : [],
+      ),
     };
 
     const contentType = requestTemplate.contentType ?? "json";

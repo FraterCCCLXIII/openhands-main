@@ -1,11 +1,12 @@
 import { getBaseUrl, isAuthDisabled } from "@/src/lib/auth-config";
+import { normalizeCaseInsensitiveText } from "@/src/lib/text-utils";
 
 const stripHostPort = (value: string) => {
   if (!value) {
     return "";
   }
 
-  const trimmed = value.trim().toLowerCase();
+  const trimmed = normalizeCaseInsensitiveText(value);
   if (!trimmed) {
     return "";
   }

@@ -8,11 +8,11 @@ import {
 } from "@/src/components/dashboard/utils";
 import type {
   AccessRequest,
-  BuiltInConnectorOption,
+  ManagedConnectorOption,
   IntegrationSpec,
 } from "@/src/types/context-layer";
 
-const connectors: BuiltInConnectorOption[] = [
+const connectors: ManagedConnectorOption[] = [
   {
     slug: "slack",
     name: "Slack",
@@ -79,7 +79,7 @@ const integrations: IntegrationSpec[] = [
     authStrategy: "oauth2",
     enabled: true,
     fineGrainedPermissions: true,
-    config: { builtInSlug: "slack" },
+    config: { managedConnectorSlug: "slack" },
     credentials: {},
     tools: {
       slack_search_public: {
@@ -129,7 +129,7 @@ describe("dashboard-workspace-utils", () => {
     const installedKeys = buildInstalledIntegrationKeys(integrations);
 
     const results = buildMarketplaceConnectors({
-      builtInConnectors: connectors,
+      managedConnectors: connectors,
       installedIntegrationKeys: installedKeys,
       search: "",
     });

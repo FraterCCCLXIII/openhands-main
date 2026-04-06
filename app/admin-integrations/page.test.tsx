@@ -30,7 +30,7 @@ const getCodeValues = (document: Document) =>
 
 let testCleanup: () => Promise<void>;
 beforeAll(() => {
-  vi.stubEnv("POSTGRES_URL", "pglite://add-connector-page-test");
+  vi.stubEnv("POSTGRES_URL", "pglite://admin-integrations-page-test");
 });
 beforeEach(async () => {
   const ctx = await createTestRepository();

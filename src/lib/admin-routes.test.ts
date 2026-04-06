@@ -25,8 +25,8 @@ describe("admin routes", () => {
     expect(
       buildAdminSectionHref("integrations", {
         showIntegrationWizard: "1",
-        builtIn: "notion",
+        managedConnector: "notion",
       }),
-    ).toBe("/integrations?showIntegrationWizard=1&builtIn=notion");
+    ).toBe("/integrations?showIntegrationWizard=1&managedConnector=notion");
   });
 });

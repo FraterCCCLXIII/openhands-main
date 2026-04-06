@@ -9,6 +9,7 @@ import {
 } from "@/src/components/integrations/tool-access-controls";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
+import { matchesSearchQuery } from "@/src/lib/text-utils";
 import { cn } from "@/src/lib/utils";
 import type {
   ManagedConnectorDefinition,
@@ -121,22 +122,19 @@ const buildManagedConnectorPayload = (
 const matchesManagedConnectorSearch = (
   connector: ManagedConnectorDefinition,
   query: string,
-) => {
-  const normalizedQuery = query.trim().toLowerCase();
-  if (!normalizedQuery) {
-    return true;
-  }
-
-  return [
-    connector.name,
-    connector.slug,
-    connector.description,
-    inferProvider(connector),
-    connector.authStrategy,
-    getCredentialStatusLabel(connector),
-    ...connector.categories,
-  ].some((value) => value.toLowerCase().includes(normalizedQuery));
-};
+) =>
+  matchesSearchQuery(
+    [
+      connector.name,
+      connector.slug,
+      connector.description,
+      inferProvider(connector),
+      connector.authStrategy,
+      getCredentialStatusLabel(connector),
+      ...connector.categories,
+    ],
+    query,
+  );
 
 const getConnectorInitials = (name: string) => {
   const parts = name

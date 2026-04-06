@@ -3,6 +3,7 @@ import {
   getAllowedFunctionAccessModes,
   isFunctionAccessModeAllowed,
 } from "@/src/lib/function-access-mode";
+import { matchesSearchQuery } from "@/src/lib/text-utils";
 import { cn } from "@/src/lib/utils";
 import type { ToolAccessMode, ToolSpec } from "@/src/types/context-layer";
 
@@ -24,16 +25,11 @@ export const matchesToolSearch = (
   name: string,
   toolSpec: ToolSpec,
   query: string,
-) => {
-  const normalizedQuery = query.trim().toLowerCase();
-  if (!normalizedQuery) {
-    return true;
-  }
-
-  return [name, toolSpec.description, toolSpec.defaultScopes.join(" ")]
-    .filter((value): value is string => Boolean(value))
-    .some((value) => value.toLowerCase().includes(normalizedQuery));
-};
+) =>
+  matchesSearchQuery(
+    [name, toolSpec.description, toolSpec.defaultScopes.join(" ")],
+    query,
+  );
 
 export const accessModeButtonClassName: Record<ToolAccessMode, string> = {
   enabled:

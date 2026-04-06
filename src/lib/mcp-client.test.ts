@@ -119,6 +119,22 @@ describe("buildMcpHeaders", () => {
   it("returns empty headers when no token is provided for bearer", () => {
     expect(buildMcpHeaders("bearer", {})).toEqual({});
   });
+
+  it("ignores malformed credential values instead of emitting invalid headers", () => {
+    expect(
+      buildMcpHeaders("api_key", {
+        headerName: { invalid: true },
+        secret: { invalid: true },
+      }),
+    ).toEqual({});
+
+    expect(
+      buildMcpHeaders("basic", {
+        username: "demo",
+        password: { invalid: true },
+      }),
+    ).toEqual({});
+  });
 });
 
 describe("runMcpClientOperation", () => {

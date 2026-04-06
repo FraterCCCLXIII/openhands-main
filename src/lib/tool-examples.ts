@@ -1,7 +1,11 @@
+import { isRecord } from "@/src/lib/type-utils";
 import type { ToolSpec, GenericHttpRequestTemplate, IntegrationSpec } from "@/src/types/context-layer";
 
 const TEMPLATE = /\{\{\s*([a-zA-Z0-9_.]+)\s*\}\}/g;
 const DEFAULT_PAYLOAD_EXAMPLE = "replace with the value for";
+
+const isHttpRequestTemplate = (value: unknown): value is GenericHttpRequestTemplate =>
+  isRecord(value) && typeof value.method === "string" && typeof value.path === "string";
 
 const getToolAccessMode = (toolSpec: ToolSpec) =>
   toolSpec.accessMode ?? (toolSpec.enabled ? "enabled" : "disabled");
@@ -44,17 +48,30 @@ const setNestedExampleValue = (
   let cursor: Record<string, unknown> = payload;
   for (const segment of segments.slice(0, -1)) {
     const existing = cursor[segment];
-    if (!existing || typeof existing !== "object" || Array.isArray(existing)) {
+    if (!isRecord(existing)) {
       cursor[segment] = {};
     }
-    cursor = cursor[segment] as Record<string, unknown>;
+
+    const nextCursor = cursor[segment];
+    if (!isRecord(nextCursor)) {
+      return;
+    }
+
+    cursor = nextCursor;
   }
 
-  cursor[segments[segments.length - 1]] = value;
+  const lastSegment = segments.at(-1);
+  if (!lastSegment) {
+    return;
+  }
+
+  cursor[lastSegment] = value;
 };
 
-const getRequestTemplate = (toolSpec: ToolSpec) =>
-  toolSpec.config.request as GenericHttpRequestTemplate | undefined;
+const getRequestTemplate = (toolSpec: ToolSpec) => {
+  const requestTemplate = toolSpec.config["request"];
+  return isHttpRequestTemplate(requestTemplate) ? requestTemplate : undefined;
+};
 
 export const buildExamplePayload = (toolSpec: ToolSpec) => {
   const requestTemplate = getRequestTemplate(toolSpec);
