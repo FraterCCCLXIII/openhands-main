@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildCreatePayload,
   buildDiscoverPayload,
+  findConnectorByQuery,
   type DiscoveryResponse,
   type WizardDraft,
 } from "@/src/components/integrations/wizard/utils";
@@ -84,6 +85,17 @@ describe("integration-wizard-utils", () => {
         secret: "secret-key",
       },
     });
+  });
+
+  it("finds built-in connectors by normalized name, slug, or option label", () => {
+    expect(findConnectorByQuery([elevenLabsConnector], " elevenlabs ")).toBe(
+      elevenLabsConnector,
+    );
+    expect(findConnectorByQuery([elevenLabsConnector], "ElevenLabs (ELEVENLABS)")).toBe(
+      elevenLabsConnector,
+    );
+    expect(findConnectorByQuery([elevenLabsConnector], "missing")).toBeNull();
+    expect(findConnectorByQuery([elevenLabsConnector], "   ")).toBeNull();
   });
 
   it("builds create payloads that preserve discovery metadata and updated access modes", () => {

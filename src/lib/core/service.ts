@@ -60,7 +60,6 @@ import type {
   AccessRequest,
   AccessRequestAgentData,
   AdminApiKeyRecord,
-  AdminApiKeyStatus,
   AgentApiKeyRecord,
   AgentClassPolicy,
   ContextInvocationResult,
@@ -79,10 +78,8 @@ import type {
   PolicyRule,
   TemporaryGrant,
   ToolInvocationOutcome,
-  ToolInvocationRecord,
   UnusedToolWindowUnit,
   UserApiKeyRecord,
-  UserApiKeyStatus,
 } from "@/src/types/context-layer";
 
 const getManagedConnectorSlug = (integration: IntegrationSpec) => {
@@ -180,6 +177,11 @@ const sanitizeManagedConnectorToolDefinitions = (
   for (const toolName of toolNames) {
     const indexedFunction = indexedFunctions[toolName];
     const installedFunction = integration.tools[toolName];
+    const baseFunction = installedFunction ?? indexedFunction;
+
+    if (!baseFunction) {
+      continue;
+    }
 
     const mergedFunction = normalizeToolSpec(
       indexedFunction && installedFunction
@@ -188,7 +190,7 @@ const sanitizeManagedConnectorToolDefinitions = (
             ...installedFunction,
             config: mergeToolConfigs(indexedFunction.config, installedFunction.config),
           }
-        : installedFunction ?? indexedFunction,
+        : baseFunction,
     );
 
     const maxAccessMode = hasIndexedFunctions

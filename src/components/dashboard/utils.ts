@@ -1,8 +1,12 @@
-import { approvalStatusLabel } from "@/src/lib/access-requests";
 import {
   getToolAccessMode,
   matchesToolSearch,
 } from "@/src/components/integrations/tool-access-controls";
+import { approvalStatusLabel } from "@/src/lib/access-requests";
+import {
+  matchesSearchQuery,
+  normalizeCaseInsensitiveText,
+} from "@/src/lib/text-utils";
 import type {
   AccessRequest,
   ManagedConnectorOption,
@@ -75,38 +79,32 @@ export const formatTrackedUsage = (toolSpec: ToolSpec) => {
 export const matchesIntegrationSearch = (
   integration: IntegrationSpec,
   query: string,
-) => {
-  const normalizedQuery = query.trim().toLowerCase();
-  if (!normalizedQuery) {
-    return true;
-  }
-
-  return [
-    integration.name,
-    integration.key,
-    integration.provider,
-    integration.kind,
-    integration.authStrategy,
-  ].some((value) => value.toLowerCase().includes(normalizedQuery));
-};
+) =>
+  matchesSearchQuery(
+    [
+      integration.name,
+      integration.key,
+      integration.provider,
+      integration.kind,
+      integration.authStrategy,
+    ],
+    query,
+  );
 
 export const matchesConnectorSearch = (
   connector: ManagedConnectorOption,
   query: string,
-) => {
-  const normalizedQuery = query.trim().toLowerCase();
-  if (!normalizedQuery) {
-    return true;
-  }
-
-  return [
-    connector.name,
-    connector.slug,
-    connector.description,
-    connector.authStrategy,
-    ...connector.categories,
-  ].some((value) => value.toLowerCase().includes(normalizedQuery));
-};
+) =>
+  matchesSearchQuery(
+    [
+      connector.name,
+      connector.slug,
+      connector.description,
+      connector.authStrategy,
+      ...connector.categories,
+    ],
+    query,
+  );
 
 export const approvalStatusTone = (status: AccessRequest["status"]) => {
   switch (approvalStatusLabel(status)) {
@@ -127,23 +125,20 @@ export const matchesAccessRequestFilter = (
 export const matchesAccessRequestSearch = (
   request: AccessRequest,
   query: string,
-) => {
-  const normalizedQuery = query.trim().toLowerCase();
-  if (!normalizedQuery) {
-    return true;
-  }
-
-  return [
-    request.agentId ?? "",
-    request.agentClass ?? "",
-    request.integrationKey,
-    request.toolName,
-    request.justification ?? "",
-    request.agentData?.conversationLink ?? "",
-    approvalStatusLabel(request.status),
-    ...request.scopes,
-  ].some((value) => value.toLowerCase().includes(normalizedQuery));
-};
+) =>
+  matchesSearchQuery(
+    [
+      request.agentId,
+      request.agentClass,
+      request.integrationKey,
+      request.toolName,
+      request.justification,
+      request.agentData?.conversationLink,
+      approvalStatusLabel(request.status),
+      ...request.scopes,
+    ],
+    query,
+  );
 
 export const hasMissingApprovalIdentity = (request: AccessRequest) =>
   !request.agentId && !request.agentClass;
@@ -231,7 +226,7 @@ export const filterIntegrationsForDisplay = ({
   integrationSearch: string;
   hideDisabledTools: boolean;
 }): FilteredIntegrationToolEntry[] => {
-  const normalizedSearch = integrationSearch.trim().toLowerCase();
+  const normalizedSearch = normalizeCaseInsensitiveText(integrationSearch);
 
   return [...integrations]
     .sort(

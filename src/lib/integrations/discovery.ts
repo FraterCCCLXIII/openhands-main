@@ -13,6 +13,7 @@ import {
   resolveManagedConnectorCredentials,
 } from "@/src/lib/integrations/managed-connectors";
 import { generateManagedConnectorToolsFromOpenApi } from "@/src/lib/managed-connectors/openapi";
+import { getOptionalTrimmedString } from "@/src/lib/type-utils";
 import type {
   AuthStrategy,
   ManagedConnectorOption,
@@ -38,10 +39,10 @@ const compactRecord = (record: Record<string, unknown>) =>
 export const inferMcpAuthStrategy = (
   credentials: Record<string, unknown>,
 ): AuthStrategy => {
-  const secret = credentials.secret as string | undefined;
-  const accessToken = credentials.accessToken as string | undefined;
-  const username = credentials.username as string | undefined;
-  const password = credentials.password as string | undefined;
+  const secret = getOptionalTrimmedString(credentials, "secret");
+  const accessToken = getOptionalTrimmedString(credentials, "accessToken");
+  const username = getOptionalTrimmedString(credentials, "username");
+  const password = getOptionalTrimmedString(credentials, "password");
 
   if (accessToken) {
     return "oauth2";
@@ -276,8 +277,8 @@ const discoverManagedConnectorSelection = async (
   options: IntegrationDiscoveryOptions,
 ): Promise<IntegrationDiscoveryResult> => {
   const slug =
-    (input.config.managedConnectorSlug as string | undefined)?.trim() ||
-    (input.config.builtInSlug as string | undefined)?.trim() ||
+    getOptionalTrimmedString(input.config, "managedConnectorSlug") ??
+    getOptionalTrimmedString(input.config, "builtInSlug") ??
     input.key.trim();
 
   if (options.repository) {
@@ -310,7 +311,7 @@ const discoverManagedConnectorSelection = async (
 const discoverMcpIntegration = async (
   input: IntegrationDiscoveryInput,
 ): Promise<IntegrationDiscoveryResult> => {
-  const serverUrl = (input.config.serverUrl as string | undefined)?.trim();
+  const serverUrl = getOptionalTrimmedString(input.config, "serverUrl");
   if (!serverUrl) {
     throw new ContextLayerError(
       "A serverUrl is required to discover MCP integrations.",
@@ -337,8 +338,8 @@ const discoverMcpIntegration = async (
       credentials,
       integrationKey: input.key,
       managedConnectorSlug:
-        (input.config.managedConnectorSlug as string | undefined) ??
-        (input.config.builtInSlug as string | undefined),
+        getOptionalTrimmedString(input.config, "managedConnectorSlug") ??
+        getOptionalTrimmedString(input.config, "builtInSlug"),
     },
   );
   const tools = Object.fromEntries(

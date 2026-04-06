@@ -791,20 +791,28 @@ describe("DashboardWorkspace", () => {
         const payload = JSON.parse(String(init?.body)) as {
           accessMode: "enabled" | "disabled" | "approval_required";
         };
-        integrationsState = integrationsState.map((integration) => ({
-          ...integration,
-          tools: {
-            ...integration.tools,
-            zetaWrite: {
-              ...integration.tools.zetaWrite,
-              accessMode: payload.accessMode,
-              enabled: payload.accessMode !== "disabled",
-            },
-          },
-        }));
+        integrationsState = integrationsState.map((integration) => {
+          const zetaWriteTool = integration.tools["zetaWrite"];
+          if (!zetaWriteTool) {
+            return integration;
+          }
 
+          return {
+            ...integration,
+            tools: {
+              ...integration.tools,
+              zetaWrite: {
+                ...zetaWriteTool,
+                accessMode: payload.accessMode,
+                enabled: payload.accessMode !== "disabled",
+              },
+            },
+          };
+        });
+
+        const updatedIntegration = integrationsState[0];
         return new Response(
-          JSON.stringify(integrationsState[0]?.tools.zetaWrite ?? null),
+          JSON.stringify(updatedIntegration?.tools["zetaWrite"] ?? null),
           {
             status: 200,
             headers: { "Content-Type": "application/json" },
@@ -1053,17 +1061,24 @@ describe("DashboardWorkspace", () => {
         };
         expect(payload).toEqual({ thresholdValue: 30, thresholdUnit: "days" });
 
-        integrationsState = integrationsState.map((integration) => ({
-          ...integration,
-          tools: {
-            ...integration.tools,
-            staleRead: {
-              ...integration.tools.staleRead,
-              enabled: false,
-              accessMode: "disabled",
+        integrationsState = integrationsState.map((integration) => {
+          const staleReadTool = integration.tools["staleRead"];
+          if (!staleReadTool) {
+            return integration;
+          }
+
+          return {
+            ...integration,
+            tools: {
+              ...integration.tools,
+              staleRead: {
+                ...staleReadTool,
+                enabled: false,
+                accessMode: "disabled",
+              },
             },
-          },
-        }));
+          };
+        });
 
         return new Response(
           JSON.stringify({
@@ -1144,7 +1159,8 @@ describe("DashboardWorkspace", () => {
     expect(confirmSpy.mock.calls[0]?.[0]).toContain("since");
     expect(container.textContent).toContain("Disabled 1 tracked tool");
     expect(container.textContent).toContain("0 tools matched");
-    expect(integrationsState[0]?.tools.staleRead.accessMode).toBe("disabled");
+    const updatedIntegration = integrationsState[0];
+    expect(updatedIntegration?.tools["staleRead"]?.accessMode).toBe("disabled");
 
     confirmSpy.mockRestore();
   });

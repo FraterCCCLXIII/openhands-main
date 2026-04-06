@@ -14,6 +14,8 @@ The root `LICENSE` is proprietary: `Copyright All Hands AI, Inc. All rights rese
 - Run locally with auth bypass: `DISABLE_AUTH=true npm run dev`
 - Run tests: `npm test`
 - Run unit tests only: `npm run test:unit`
+- TypeScript strictness now also enables `noUncheckedIndexedAccess`; when reading dynamic config/credential records or keyed collections, prefer shared narrowing helpers (for example `src/lib/type-utils.ts`) and explicit undefined handling over inline `as string` assertions.
+
 - Run e2e tests only: `npm run test:e2e`
 - Typecheck: `npm run typecheck`
 - Production build check: `npm run build`
@@ -66,6 +68,7 @@ The root `LICENSE` is proprietary: `Copyright All Hands AI, Inc. All rights rese
 - The old static connector concept has been removed; the integrations wizard now refers to service-level connector registrations simply as managed connectors.
 
 - `src/lib/auth.ts` configures Auth.js for GitHub OAuth on the hosted dashboard using the same preview-deployment redirect proxy pattern as `OpenHands/kpi-tracker`; the GitHub provider requests both `read:user` and `user:email` so the dashboard can populate signed-in email addresses more reliably. `DISABLE_AUTH=true` bypasses interactive auth for local development.
+- Shared case-insensitive text normalization and UI/backend search matching now live in `src/lib/text-utils.ts`; prefer reusing `normalizeCaseInsensitiveText`, `matchesSearchQuery`, and `matchesExactSearchQuery` instead of open-coding new `trim().toLowerCase()` search helpers.
 - `app/layout.tsx` passes `isAuthDisabled()` into `src/components/providers.tsx`; when auth is disabled, `Providers` must skip `SessionProvider` entirely so the client does not fetch `/api/auth/session` and trigger Auth.js configuration errors during local/shared preview QA.
 
 - `src/components/dashboard/workspace.tsx` is the OpenHands-inspired Tailwind dashboard workspace using TanStack Query + Zustand, coordinated by the server entrypoint in `src/components/dashboard/page.tsx`.

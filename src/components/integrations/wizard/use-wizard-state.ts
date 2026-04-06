@@ -7,7 +7,6 @@ import {
   filterReviewedTools,
   findConnectorByQuery,
   getReviewedTools,
-  hasManagedConnectorCredentialInput,
   INITIAL_DRAFT,
   type DiscoverFeedback,
   type DiscoveryResponse,

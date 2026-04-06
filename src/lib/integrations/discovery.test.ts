@@ -716,4 +716,15 @@ describe("inferMcpAuthStrategy", () => {
       }),
     ).toBe("basic");
   });
+
+  it("ignores malformed credential values when inferring auth", () => {
+    expect(
+      inferMcpAuthStrategy({
+        accessToken: { invalid: true },
+        secret: ["bad"],
+        username: "demo",
+        password: { invalid: true },
+      }),
+    ).toBe("none");
+  });
 });

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { act, useState, type SetStateAction } from "react";
-import { createRoot, type Root } from "react-dom/client";
+import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ConnectStep } from "@/src/components/integrations/wizard/connect-step";

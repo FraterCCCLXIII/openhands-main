@@ -72,7 +72,6 @@ interface DashboardWorkspaceProps {
 export const DashboardWorkspace = ({
   initialIntegrations,
   initialAccessRequests,
-  initialNotifications: _initialNotifications,
   currentUser,
   contextApiBaseUrl,
   contextApiKey,
@@ -291,7 +290,11 @@ export const DashboardWorkspace = ({
       : "Authenticated dashboard session";
   const sections = getDashboardSections();
   const activeSectionMeta =
-    sections.find((section) => section.id === activeSection) ?? sections[0];
+    sections.find((section) => section.id === activeSection) ?? {
+      id: activeSection,
+      label: "Dashboard",
+      icon: sections[0]?.icon ?? null,
+    };
 
   const managedConnectors = managedConnectorsQuery.data ?? [];
   const installedIntegrationKeys = useMemo(
