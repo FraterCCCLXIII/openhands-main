@@ -2,6 +2,10 @@ import {
   getToolAccessMode,
   matchesToolSearch,
 } from "@/src/components/integrations/tool-access-controls";
+import {
+  matchesExactSearchQuery,
+  normalizeCaseInsensitiveText,
+} from "@/src/lib/text-utils";
 import type {
   AuthStrategy,
   BuiltInConnectorOption,
@@ -86,15 +90,16 @@ export const findConnectorByQuery = (
   connectors: BuiltInConnectorOption[],
   query: string,
 ) => {
-  const normalizedQuery = query.trim().toLowerCase();
+  const normalizedQuery = normalizeCaseInsensitiveText(query);
   if (!normalizedQuery) {
     return null;
   }
 
   return (
     connectors.find((connector) =>
-      [connectorOptionLabel(connector), connector.name, connector.slug].some(
-        (value) => value.toLowerCase() === normalizedQuery,
+      matchesExactSearchQuery(
+        [connectorOptionLabel(connector), connector.name, connector.slug],
+        normalizedQuery,
       ),
     ) ?? null
   );
