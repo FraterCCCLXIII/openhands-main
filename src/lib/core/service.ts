@@ -1,11 +1,41 @@
-import { createHash, randomBytes, randomUUID } from "node:crypto";
+import { randomUUID } from "node:crypto";
 
 import { DEFAULT_CASE_BY_CASE_APPROVAL_MINUTES } from "@/src/lib/access-requests";
 import { isAppAdminEmail } from "@/src/lib/app-admins";
+
 import type { AdapterRegistry } from "@/src/lib/core/adapter-registry";
+import {
+  evaluateIntegrationAccess,
+  getFunctionAccessMode,
+  normalizeFunctions,
+  normalizeFunctionSpec,
+  normalizeScopes,
+  sameScopes,
+  subtractUnusedWindow,
+} from "@/src/lib/core/access-policy";
 import { addMinutes, nowIso } from "@/src/lib/core/date";
 import { ContextLayerError } from "@/src/lib/core/errors";
+import {
+  createToolInvocationRecord,
+  normalizePayloadKeys,
+  runOptionalSideEffect,
+  summarizeErrorMessage,
+} from "@/src/lib/core/invocation-side-effects";
 import type { ContextRepository } from "@/src/lib/core/repository";
+import {
+  createAdminApiKeyValue,
+  createAgentApiKeyValue,
+  createUserApiKeyValue,
+  decryptScopedApiKey,
+  encryptScopedApiKey,
+  getScopedApiKeyPrefix,
+  getScopedApiKeySuffix,
+  hashScopedApiKey,
+  normalizeOwnerId,
+  requireAdminApiKeyOwner,
+  toAdminApiKeyStatus,
+  toUserApiKeyStatus,
+} from "@/src/lib/core/scoped-api-keys";
 import { decryptCredentials, encryptCredentials } from "@/src/lib/credential-crypto";
 import { discoverIntegration } from "@/src/lib/integrations/discovery";
 import {
@@ -54,43 +84,6 @@ import type {
   UserApiKeyRecord,
   UserApiKeyStatus,
 } from "@/src/types/context-layer";
-
-const unique = (values: string[]) => [...new Set(values)];
-
-const normalizeScopes = (scopes: string[]) => [...scopes].sort();
-
-const sameScopes = (left: string[], right: string[]) => {
-  const normalizedLeft = normalizeScopes(left);
-  const normalizedRight = normalizeScopes(right);
-
-  return (
-    normalizedLeft.length === normalizedRight.length &&
-    normalizedLeft.every((scope, index) => scope === normalizedRight[index])
-  );
-};
-
-const getFunctionAccessMode = (
-  functionSpec: FunctionSpec,
-): FunctionAccessMode =>
-  functionSpec.accessMode ?? (functionSpec.enabled ? "enabled" : "disabled");
-
-const normalizeFunctionSpec = (functionSpec: FunctionSpec): FunctionSpec => {
-  const accessMode = getFunctionAccessMode(functionSpec);
-
-  return {
-    ...functionSpec,
-    accessMode,
-    enabled: accessMode !== "disabled",
-  };
-};
-
-const normalizeFunctions = (functions: Record<string, FunctionSpec>) =>
-  Object.fromEntries(
-    Object.entries(functions).map(([name, functionSpec]) => [
-      name,
-      normalizeFunctionSpec(functionSpec),
-    ]),
-  );
 
 const getManagedConnectorSlug = (integration: IntegrationSpec) => {
   const value = integration.config.managedConnectorSlug ?? integration.config.builtInSlug;
@@ -242,17 +235,6 @@ const sanitizeConnectionStatus = (
   updatedAt: record.updatedAt,
 });
 
-const normalizePayloadKeys = (payload: Record<string, unknown>) =>
-  Object.keys(payload).sort((left, right) => left.localeCompare(right));
-
-const summarizeErrorMessage = (error: unknown, maxLength = 500) => {
-  const message = error instanceof Error ? error.message : String(error);
-  const normalized = message.trim();
-  return normalized.length <= maxLength
-    ? normalized
-    : `${normalized.slice(0, maxLength - 1)}…`;
-};
-
 const normalizeAccessRequestAgentData = (
   agentData?: AccessRequestAgentData,
 ): AccessRequestAgentData => {
@@ -268,29 +250,6 @@ const sameAccessRequestAgentData = (
   normalizeAccessRequestAgentData(left).conversationLink ===
   normalizeAccessRequestAgentData(right).conversationLink;
 
-const subtractUnusedWindow = (
-  referenceIso: string,
-  value: number,
-  unit: UnusedFunctionWindowUnit,
-) => {
-  const reference = new Date(referenceIso);
-  const next = new Date(reference);
-
-  switch (unit) {
-    case "weeks":
-      next.setUTCDate(next.getUTCDate() - value * 7);
-      break;
-    case "months":
-      next.setUTCMonth(next.getUTCMonth() - value);
-      break;
-    default:
-      next.setUTCDate(next.getUTCDate() - value);
-      break;
-  }
-
-  return next.toISOString();
-};
-
 const isConnectionExpired = (expiresAt?: string, bufferMs = 60_000) => {
   if (!expiresAt) {
     return false;
@@ -299,93 +258,92 @@ const isConnectionExpired = (expiresAt?: string, bufferMs = 60_000) => {
   return new Date(expiresAt).getTime() <= Date.now() + bufferMs;
 };
 
+const normalizeAgentApiKeyOwner = normalizeOwnerId;
 
-const normalizeAgentApiKeyOwner = (ownerId: string) => ownerId.trim().toLowerCase();
+export interface AccessEvaluationRequest {
+  agentId: string | null;
+  agentClass: string | null;
+  integrationKey: string;
+  functionName: string;
+  requestedScopes?: string[];
+  ownerId?: string;
+  agentData?: AccessRequestAgentData;
+}
 
-const requireAdminApiKeyOwner = (ownerId: string) => {
-  const normalizedOwnerId = normalizeAgentApiKeyOwner(ownerId);
+export interface ContextInvocationRequest extends AccessEvaluationRequest {
+  payload?: Record<string, unknown>;
+}
 
-  if (!normalizedOwnerId) {
-    throw new ContextLayerError(
-      "A signed-in admin email is required before issuing an admin API key.",
-      400,
-    );
+const toAccessEvaluationRequest = (
+  agentIdOrRequest: string | null | AccessEvaluationRequest,
+  agentClass?: string | null,
+  integrationKey?: string,
+  functionName?: string,
+  requestedScopes: string[] = [],
+  options: {
+    ownerId?: string;
+    agentData?: AccessRequestAgentData;
+  } = {},
+): AccessEvaluationRequest => {
+  if (typeof agentIdOrRequest !== "string" && agentIdOrRequest !== null) {
+    return {
+      ...agentIdOrRequest,
+      requestedScopes: agentIdOrRequest.requestedScopes ?? [],
+      agentData: agentIdOrRequest.agentData,
+    };
   }
 
-  if (!isAppAdminEmail(normalizedOwnerId)) {
-    throw new ContextLayerError(
-      "Only allowlisted app administrators can manage admin API keys.",
-      403,
-    );
+  if (!integrationKey || !functionName) {
+    throw new ContextLayerError("Incomplete access evaluation request.", 400);
   }
 
-  return normalizedOwnerId;
+  return {
+    agentId: agentIdOrRequest,
+    agentClass: agentClass ?? null,
+    integrationKey,
+    functionName,
+    requestedScopes,
+    ownerId: options.ownerId,
+    agentData: options.agentData,
+  };
 };
 
-const createAgentApiKeyValue = () => `cla_${randomBytes(24).toString("base64url")}`;
-const createUserApiKeyValue = () => `clu_${randomBytes(32).toString("base64url")}`;
-const createAdminApiKeyValue = () => `clad_${randomBytes(32).toString("base64url")}`;
-const USER_API_KEY_PREFIX_LENGTH = 12;
-const USER_API_KEY_SUFFIX_LENGTH = 4;
+const toContextInvocationRequest = (
+  agentIdOrRequest: string | null | ContextInvocationRequest,
+  agentClass?: string | null,
+  integrationKey?: string,
+  functionName?: string,
+  payload: Record<string, unknown> = {},
+  requestedScopes: string[] = [],
+  options: {
+    ownerId?: string;
+    agentData?: AccessRequestAgentData;
+  } = {},
+): ContextInvocationRequest => {
+  if (typeof agentIdOrRequest !== "string" && agentIdOrRequest !== null) {
+    return {
+      ...agentIdOrRequest,
+      payload: agentIdOrRequest.payload ?? {},
+      requestedScopes: agentIdOrRequest.requestedScopes ?? [],
+      agentData: agentIdOrRequest.agentData,
+    };
+  }
 
-const hashScopedApiKey = (apiKey: string) =>
-  createHash("sha256").update(apiKey).digest("hex");
+  const accessRequest = toAccessEvaluationRequest(
+    agentIdOrRequest,
+    agentClass,
+    integrationKey,
+    functionName,
+    requestedScopes,
+    options,
+  );
 
-const getScopedApiKeyPrefix = (apiKey: string) =>
-  apiKey.slice(0, USER_API_KEY_PREFIX_LENGTH);
-
-const getScopedApiKeySuffix = (apiKey: string) =>
-  apiKey.slice(-USER_API_KEY_SUFFIX_LENGTH);
-
-const encryptScopedApiKey = (apiKey: string) =>
-  encryptCredentials({ apiKey });
-
-const decryptScopedApiKey = (payload: string) => {
-  const credentials = decryptCredentials<{ apiKey?: string }>(payload);
-  return typeof credentials.apiKey === "string" ? credentials.apiKey : null;
+  return {
+    ...accessRequest,
+    payload,
+  };
 };
 
-const toUserApiKeyStatus = (record: UserApiKeyRecord): UserApiKeyStatus => ({
-  keyPrefix: record.keyPrefix,
-  keySuffix: record.keySuffix,
-  createdAt: record.createdAt,
-  updatedAt: record.updatedAt,
-});
-
-const toAdminApiKeyStatus = (record: AdminApiKeyRecord): AdminApiKeyStatus => ({
-  keyPrefix: record.keyPrefix,
-  keySuffix: record.keySuffix,
-  createdAt: record.createdAt,
-  updatedAt: record.updatedAt,
-});
-
-const permittedByRule = (
-  rule: PolicyRule,
-  functionName: string,
-  requestedScopes: string[],
-  fineGrained: boolean,
-) => {
-  if (!rule.enabled) {
-    return false;
-  }
-
-  if (
-    fineGrained &&
-    rule.functionNames.length > 0 &&
-    !rule.functionNames.includes(functionName)
-  ) {
-    return false;
-  }
-
-  if (
-    rule.scopes.length > 0 &&
-    !requestedScopes.every((scope) => rule.scopes.includes(scope))
-  ) {
-    return false;
-  }
-
-  return true;
-};
 
 /**
  * Main orchestration service for integration lifecycle, API-key management, approvals, and runtime tool invocation.
@@ -1278,114 +1236,56 @@ export class ContextLayerService {
   }
 
   async evaluateAccess(
+    request: AccessEvaluationRequest,
+  ): Promise<AccessDecision>;
+  async evaluateAccess(
     agentId: string | null,
     agentClass: string | null,
     integrationKey: string,
     functionName: string,
+    requestedScopes?: string[],
+    options?: {
+      ownerId?: string;
+      agentData?: AccessRequestAgentData;
+    },
+  ): Promise<AccessDecision>;
+  async evaluateAccess(
+    agentIdOrRequest: string | null | AccessEvaluationRequest,
+    agentClass?: string | null,
+    integrationKey?: string,
+    functionName?: string,
     requestedScopes: string[] = [],
     options: {
       ownerId?: string;
       agentData?: AccessRequestAgentData;
     } = {},
   ): Promise<AccessDecision> {
-    const integration = await this.getRuntimeIntegration(
+    const request = toAccessEvaluationRequest(
+      agentIdOrRequest,
+      agentClass,
       integrationKey,
-      options.ownerId,
+      functionName,
+      requestedScopes,
+      options,
     );
-    const functionSpec = integration.functions[functionName];
-
-    if (!functionSpec) {
-      throw new ContextLayerError(
-        `Unknown function '${functionName}' for integration '${integrationKey}'.`,
-        404,
-      );
-    }
-
-    const effectiveScopes = unique(
-      requestedScopes.length > 0 ? requestedScopes : functionSpec.defaultScopes,
+    const integration = await this.getRuntimeIntegration(
+      request.integrationKey,
+      request.ownerId,
     );
-    const accessMode = getFunctionAccessMode(functionSpec);
+    const [temporaryGrants, policy] = await Promise.all([
+      this.repository.listTemporaryGrants(),
+      request.agentClass ? this.repository.getPolicy(request.agentClass) : Promise.resolve(null),
+    ]);
 
-    if (!integration.enabled) {
-      return {
-        allowed: false,
-        reason: "Integration disabled",
-        effectiveScopes,
-      };
-    }
-
-    if (!functionSpec.enabled || accessMode === "disabled") {
-      return { allowed: false, reason: "Function disabled", effectiveScopes };
-    }
-
-    const activeGrant = (await this.repository.listTemporaryGrants()).find(
-      (grant) => {
-        if (
-          grant.agentId !== agentId ||
-          grant.agentClass !== agentClass ||
-          grant.integrationKey !== integrationKey ||
-          grant.functionName !== functionName
-        ) {
-          return false;
-        }
-
-        if (grant.expiresAt <= nowIso()) {
-          return false;
-        }
-
-        return (
-          grant.scopes.length === 0 ||
-          effectiveScopes.every((scope) => grant.scopes.includes(scope))
-        );
-      },
-    );
-
-    if (accessMode === "approval_required") {
-      if (activeGrant) {
-        return {
-          allowed: true,
-          reason: "Allowed by temporary approval",
-          effectiveScopes,
-        };
-      }
-
-      return { allowed: false, reason: "Permission required", effectiveScopes };
-    }
-
-    const policy = agentClass ? await this.repository.getPolicy(agentClass) : null;
-    if (!policy) {
-      return {
-        allowed: true,
-        reason: "Allowed by enabled function default",
-        effectiveScopes,
-      };
-    }
-
-    for (const rule of policy.rules) {
-      if (rule.integrationKey !== integrationKey) {
-        continue;
-      }
-
-      const fineGrained =
-        integration.fineGrainedPermissions && functionSpec.fineGrainedPermissions;
-      if (permittedByRule(rule, functionName, effectiveScopes, fineGrained)) {
-        return {
-          allowed: true,
-          reason: "Allowed by agent class policy",
-          effectiveScopes,
-        };
-      }
-    }
-
-    if (activeGrant) {
-      return {
-        allowed: true,
-        reason: "Allowed by temporary approval",
-        effectiveScopes,
-      };
-    }
-
-    return { allowed: false, reason: "Permission required", effectiveScopes };
+    return evaluateIntegrationAccess({
+      agentId: request.agentId,
+      agentClass: request.agentClass,
+      integration,
+      functionName: request.functionName,
+      requestedScopes: request.requestedScopes,
+      temporaryGrants,
+      policy,
+    });
   }
 
   async createAccessRequest(
@@ -1461,10 +1361,25 @@ export class ContextLayerService {
    * and records best-effort invocation metadata for auditing.
    */
   async invokeContext(
+    request: ContextInvocationRequest,
+  ): Promise<ContextInvocationResult>;
+  async invokeContext(
     agentId: string | null,
     agentClass: string | null,
     integrationKey: string,
     functionName: string,
+    payload?: Record<string, unknown>,
+    requestedScopes?: string[],
+    options?: {
+      ownerId?: string;
+      agentData?: AccessRequestAgentData;
+    },
+  ): Promise<ContextInvocationResult>;
+  async invokeContext(
+    agentIdOrRequest: string | null | ContextInvocationRequest,
+    agentClass?: string | null,
+    integrationKey?: string,
+    functionName?: string,
     payload: Record<string, unknown> = {},
     requestedScopes: string[] = [],
     options: {
@@ -1472,57 +1387,58 @@ export class ContextLayerService {
       agentData?: AccessRequestAgentData;
     } = {},
   ): Promise<ContextInvocationResult> {
-    const integration = await this.getRuntimeIntegration(
+    const request = toContextInvocationRequest(
+      agentIdOrRequest,
+      agentClass,
       integrationKey,
-      options.ownerId,
+      functionName,
+      payload,
+      requestedScopes,
+      options,
     );
-    const functionSpec = integration.functions[functionName];
+    const integration = await this.getRuntimeIntegration(
+      request.integrationKey,
+      request.ownerId,
+    );
+    const functionSpec = integration.functions[request.functionName];
     if (!functionSpec) {
       throw new ContextLayerError(
-        `Unknown function '${functionName}' for integration '${integrationKey}'.`,
+        `Unknown function '${request.functionName}' for integration '${request.integrationKey}'.`,
         404,
       );
     }
 
     const invokedAt = nowIso();
     const startedAtMs = Date.now();
-    const payloadKeys = normalizePayloadKeys(payload);
+    const payloadKeys = normalizePayloadKeys(request.payload ?? {});
     const fallbackScopes = normalizeScopes(
-      requestedScopes.length > 0 ? requestedScopes : functionSpec.defaultScopes,
+      request.requestedScopes && request.requestedScopes.length > 0
+        ? request.requestedScopes
+        : functionSpec.defaultScopes,
     );
-    const decision = await this.evaluateAccess(
-      agentId,
-      agentClass,
-      integrationKey,
-      functionName,
-      requestedScopes,
-      { ownerId: options.ownerId },
-    );
+    const decision = await this.evaluateAccess(request);
     if (!decision.allowed) {
       if (getFunctionAccessMode(functionSpec) === "approval_required") {
-        await this.runOptionalSideEffect(
-          "create a pending access request",
-          async () => {
-            await this.ensurePendingAccessRequest({
-              agentId,
-              agentClass,
-              integrationKey,
-              functionName,
-              scopes: decision.effectiveScopes,
-              ownerId: options.ownerId,
-              agentData: options.agentData,
-            });
-          },
-        );
+        await runOptionalSideEffect("create a pending access request", async () => {
+          await this.ensurePendingAccessRequest({
+            agentId: request.agentId,
+            agentClass: request.agentClass,
+            integrationKey: request.integrationKey,
+            functionName: request.functionName,
+            scopes: decision.effectiveScopes,
+            ownerId: request.ownerId,
+            agentData: request.agentData,
+          });
+        });
       }
 
-      await this.runOptionalSideEffect("record a denied tool invocation", async () => {
-        await this.trackToolInvocation({
-          ownerId: options.ownerId,
-          agentId,
-          agentClass,
+      await runOptionalSideEffect("record a denied tool invocation", async () => {
+        await this.recordToolInvocation({
+          ownerId: request.ownerId,
+          agentId: request.agentId,
+          agentClass: request.agentClass,
           integration,
-          functionName,
+          functionName: request.functionName,
           scopes: decision.effectiveScopes,
           payloadKeys,
           invokedAt,
@@ -1540,39 +1456,42 @@ export class ContextLayerService {
     try {
       resolvedIntegration = await this.resolveIntegrationForOwner(
         integration,
-        options.ownerId,
+        request.ownerId,
       );
       const invocationIntegration = resolvedIntegration;
 
       const data =
         functionSpec.executionMode === "mock"
           ? await this.adapters.invoke("mock", {
-              agentId,
+              agentId: request.agentId,
               integration: invocationIntegration,
               functionSpec,
-              payload,
+              payload: request.payload ?? {},
             })
           : await this.adapters.invoke(invocationIntegration.provider, {
-              agentId,
+              agentId: request.agentId,
               integration: invocationIntegration,
               functionSpec,
-              payload,
+              payload: request.payload ?? {},
             });
 
-      await this.runOptionalSideEffect("record a successful tool invocation", async () => {
-        await this.trackToolInvocation({
-          ownerId: options.ownerId,
-          agentId,
-          agentClass,
-          integration: invocationIntegration,
-          functionName,
-          scopes: decision.effectiveScopes,
-          payloadKeys,
-          invokedAt,
-          outcome: "success",
-          durationMs: Date.now() - startedAtMs,
-        });
-      });
+      await runOptionalSideEffect(
+        "record a successful tool invocation",
+        async () => {
+          await this.recordToolInvocation({
+            ownerId: request.ownerId,
+            agentId: request.agentId,
+            agentClass: request.agentClass,
+            integration: invocationIntegration,
+            functionName: request.functionName,
+            scopes: decision.effectiveScopes,
+            payloadKeys,
+            invokedAt,
+            outcome: "success",
+            durationMs: Date.now() - startedAtMs,
+          });
+        },
+      );
 
       return {
         integration: invocationIntegration.key,
@@ -1584,14 +1503,17 @@ export class ContextLayerService {
         data,
       };
     } catch (error) {
-      await this.runOptionalSideEffect("record a failed tool invocation", async () => {
-        await this.trackToolInvocation({
-          ownerId: options.ownerId,
-          agentId,
-          agentClass,
+      await runOptionalSideEffect("record a failed tool invocation", async () => {
+        await this.recordToolInvocation({
+          ownerId: request.ownerId,
+          agentId: request.agentId,
+          agentClass: request.agentClass,
           integration: resolvedIntegration ?? integration,
-          functionName,
-          scopes: decision.effectiveScopes.length > 0 ? decision.effectiveScopes : fallbackScopes,
+          functionName: request.functionName,
+          scopes:
+            decision.effectiveScopes.length > 0
+              ? decision.effectiveScopes
+              : fallbackScopes,
           payloadKeys,
           invokedAt,
           outcome: "error",
@@ -1603,19 +1525,7 @@ export class ContextLayerService {
     }
   }
 
-  private async trackToolInvocation({
-    ownerId,
-    agentId,
-    agentClass,
-    integration,
-    functionName,
-    scopes,
-    payloadKeys,
-    invokedAt,
-    outcome,
-    durationMs,
-    errorMessage,
-  }: {
+  private async recordToolInvocation(args: {
     ownerId?: string;
     agentId: string | null;
     agentClass: string | null;
@@ -1628,35 +1538,7 @@ export class ContextLayerService {
     durationMs?: number;
     errorMessage?: string;
   }) {
-    const record: ToolInvocationRecord = {
-      id: randomUUID(),
-      ownerId: ownerId ? normalizeAgentApiKeyOwner(ownerId) : undefined,
-      agentId,
-      agentClass,
-      integrationKey: integration.key,
-      functionName,
-      scopes: normalizeScopes(scopes),
-      provider: integration.provider,
-      kind: integration.kind,
-      authStrategy: integration.authStrategy,
-      outcome,
-      invokedAt,
-      durationMs,
-      payloadKeys,
-      errorMessage,
-    };
-
-    await this.repository.createToolInvocation(record);
-  }
-
-  private async runOptionalSideEffect(action: string, operation: () => Promise<void>) {
-    try {
-      await operation();
-    } catch (error) {
-      console.warn(
-        `[ContextLayerService] Failed to ${action}: ${summarizeErrorMessage(error)}`,
-      );
-    }
+    await this.repository.createToolInvocation(createToolInvocationRecord(args));
   }
 
   private async refreshOAuthConnection(record: IntegrationConnectionRecord) {

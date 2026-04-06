@@ -60,6 +60,7 @@ Notes:
 - Prefer focused changes over broad refactors.
 - Update generated-doc helpers and route documentation together when agent/user/admin interfaces change.
 - Store per-user OAuth credentials only in user-scoped integration connection records.
+- For new provider work, start with [`.openhands/skills/adding-integrations/SKILL.md`](./.openhands/skills/adding-integrations/SKILL.md).
 
 ## Pull requests
 

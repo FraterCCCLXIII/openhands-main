@@ -4,16 +4,30 @@ import {
   accessRequestDecisionSchema,
   accessRequestSchema,
   functionSpecSchema,
+  integrationConnectionStatusSchema,
   integrationCreateSchema,
   integrationSpecSchema,
   notificationRecordSchema,
 } from "@/src/lib/core/schema";
 import {
-  errorResponseSchema,
   managedConnectorListSchema,
   managedConnectorResponseSchema,
   managedConnectorUpsertSchema,
 } from "@/src/lib/managed-connectors/api-schema";
+import {
+  OPENAPI_VERSION,
+  arbitraryObjectArraySchema,
+  arbitraryObjectSchema,
+  buildApiKeySecurity,
+  buildApiKeySecurityScheme,
+  buildJsonArrayRefResponse,
+  buildJsonRefResponse,
+  buildJsonRequestBody,
+  buildPathParameter,
+  buildUnauthorizedResponse,
+  errorResponseSchema,
+  toOpenApiSchema,
+} from "@/src/lib/openapi/shared";
 import { selectExampleIntegration } from "@/src/lib/tool-examples";
 import type { IntegrationSpec } from "@/src/types/context-layer";
 
@@ -24,49 +38,10 @@ const integrationDiscoveryRequestSchema = z.object({
   credentials: z.record(z.string(), z.unknown()).default({}),
 });
 
-const integrationConnectionSchema = z.object({
-  integrationKey: z.string(),
-  provider: z.string(),
-  authStrategy: z.enum(["none", "api_key", "bearer", "basic", "oauth2", "mcp_session"]),
-  tokenType: z.string().optional(),
-  scopes: z.array(z.string()),
-  expiresAt: z.string().optional(),
-  externalAccountId: z.string().optional(),
-  externalWorkspaceId: z.string().optional(),
-  displayName: z.string().optional(),
-  metadata: z.record(z.string(), z.unknown()),
-  createdAt: z.string(),
-  updatedAt: z.string(),
-});
-
-const arbitraryObjectSchema = z.record(z.string(), z.unknown());
-const arbitraryObjectArraySchema = z.array(arbitraryObjectSchema);
 const deleteResultSchema = z.object({
   deleted: z.boolean(),
   key: z.string().optional(),
   slug: z.string().optional(),
-});
-
-const toOpenApiSchema = (schema: z.ZodType) => {
-  const jsonSchema = z.toJSONSchema(schema, {
-    target: "openapi-3.0",
-  }) as Record<string, unknown>;
-
-  delete jsonSchema.$schema;
-  return jsonSchema;
-};
-
-const buildAdminSecurity = () => [{ AdminApiKey: [] }];
-
-const buildUnauthorizedResponse = () => ({
-  description: "Missing or invalid admin automation API key.",
-  content: {
-    "application/json": {
-      schema: {
-        $ref: "#/components/schemas/ErrorResponse",
-      },
-    },
-  },
 });
 
 export const buildAdminOpenApiDocument = ({
@@ -83,9 +58,13 @@ export const buildAdminOpenApiDocument = ({
 
   const integrationKeyExample = exampleIntegration?.key ?? "integration-key";
   const functionNameExample = exampleFunction?.name ?? "function-name";
+  const security = buildApiKeySecurity("AdminApiKey");
+  const unauthorizedResponse = buildUnauthorizedResponse(
+    "Missing or invalid admin automation API key.",
+  );
 
   return {
-    openapi: "3.0.3",
+    openapi: OPENAPI_VERSION,
     info: {
       title: "Context Layer Admin REST API",
       version: "1.0.0",
@@ -106,42 +85,26 @@ export const buildAdminOpenApiDocument = ({
           tags: ["Admin Integrations"],
           operationId: "listAdminIntegrations",
           summary: "List installed integrations",
-          security: buildAdminSecurity(),
+          security,
           responses: {
-            200: {
-              description: "Installed integrations for the authenticated admin user.",
-              content: {
-                "application/json": {
-                  schema: { type: "array", items: { $ref: "#/components/schemas/IntegrationSpec" } },
-                },
-              },
-            },
-            401: buildUnauthorizedResponse(),
+            200: buildJsonArrayRefResponse(
+              "Installed integrations for the authenticated admin user.",
+              "IntegrationSpec",
+            ),
+            401: unauthorizedResponse,
           },
         },
         post: {
           tags: ["Admin Integrations"],
           operationId: "createAdminIntegration",
           summary: "Install or update an integration",
-          security: buildAdminSecurity(),
-          requestBody: {
-            required: true,
-            content: {
-              "application/json": {
-                schema: { $ref: "#/components/schemas/IntegrationCreateRequest" },
-              },
-            },
-          },
+          security,
+          requestBody: buildJsonRequestBody({
+            $ref: "#/components/schemas/IntegrationCreateRequest",
+          }),
           responses: {
-            200: {
-              description: "Saved integration.",
-              content: {
-                "application/json": {
-                  schema: { $ref: "#/components/schemas/IntegrationSpec" },
-                },
-              },
-            },
-            401: buildUnauthorizedResponse(),
+            200: buildJsonRefResponse("Saved integration.", "IntegrationSpec"),
+            401: unauthorizedResponse,
           },
         },
       },
@@ -150,26 +113,11 @@ export const buildAdminOpenApiDocument = ({
           tags: ["Admin Integrations"],
           operationId: "deleteAdminIntegration",
           summary: "Delete an installed integration",
-          security: buildAdminSecurity(),
-          parameters: [
-            {
-              name: "integrationKey",
-              in: "path",
-              required: true,
-              schema: { type: "string" },
-              example: integrationKeyExample,
-            },
-          ],
+          security,
+          parameters: [buildPathParameter("integrationKey", integrationKeyExample)],
           responses: {
-            200: {
-              description: "Deletion result.",
-              content: {
-                "application/json": {
-                  schema: { $ref: "#/components/schemas/DeleteResult" },
-                },
-              },
-            },
-            401: buildUnauthorizedResponse(),
+            200: buildJsonRefResponse("Deletion result.", "DeleteResult"),
+            401: unauthorizedResponse,
           },
         },
       },
@@ -178,50 +126,24 @@ export const buildAdminOpenApiDocument = ({
           tags: ["Admin Integrations"],
           operationId: "updateAdminFunctionAccessMode",
           summary: "Update a function access mode",
-          security: buildAdminSecurity(),
+          security,
           parameters: [
-            {
-              name: "integrationKey",
-              in: "path",
-              required: true,
-              schema: { type: "string" },
-              example: integrationKeyExample,
-            },
-            {
-              name: "functionName",
-              in: "path",
-              required: true,
-              schema: { type: "string" },
-              example: functionNameExample,
-            },
+            buildPathParameter("integrationKey", integrationKeyExample),
+            buildPathParameter("functionName", functionNameExample),
           ],
-          requestBody: {
-            required: true,
-            content: {
-              "application/json": {
-                schema: {
-                  type: "object",
-                  required: ["accessMode"],
-                  properties: {
-                    accessMode: {
-                      type: "string",
-                      enum: ["enabled", "disabled", "approval_required"],
-                    },
-                  },
-                },
+          requestBody: buildJsonRequestBody({
+            type: "object",
+            required: ["accessMode"],
+            properties: {
+              accessMode: {
+                type: "string",
+                enum: ["enabled", "disabled", "approval_required"],
               },
             },
-          },
+          }),
           responses: {
-            200: {
-              description: "Updated function spec.",
-              content: {
-                "application/json": {
-                  schema: { $ref: "#/components/schemas/FunctionSpec" },
-                },
-              },
-            },
-            401: buildUnauthorizedResponse(),
+            200: buildJsonRefResponse("Updated function spec.", "FunctionSpec"),
+            401: unauthorizedResponse,
           },
         },
       },
@@ -230,17 +152,13 @@ export const buildAdminOpenApiDocument = ({
           tags: ["Admin Workspace"],
           operationId: "listAdminOauthConnections",
           summary: "List OAuth connection status",
-          security: buildAdminSecurity(),
+          security,
           responses: {
-            200: {
-              description: "OAuth connection state for the authenticated admin user.",
-              content: {
-                "application/json": {
-                  schema: { type: "array", items: { $ref: "#/components/schemas/IntegrationConnection" } },
-                },
-              },
-            },
-            401: buildUnauthorizedResponse(),
+            200: buildJsonArrayRefResponse(
+              "OAuth connection state for the authenticated admin user.",
+              "IntegrationConnection",
+            ),
+            401: unauthorizedResponse,
           },
         },
       },
@@ -249,17 +167,13 @@ export const buildAdminOpenApiDocument = ({
           tags: ["Admin Workspace"],
           operationId: "listAdminNotifications",
           summary: "List dashboard notifications",
-          security: buildAdminSecurity(),
+          security,
           responses: {
-            200: {
-              description: "In-app notifications visible in the dashboard.",
-              content: {
-                "application/json": {
-                  schema: { type: "array", items: { $ref: "#/components/schemas/NotificationRecord" } },
-                },
-              },
-            },
-            401: buildUnauthorizedResponse(),
+            200: buildJsonArrayRefResponse(
+              "In-app notifications visible in the dashboard.",
+              "NotificationRecord",
+            ),
+            401: unauthorizedResponse,
           },
         },
       },
@@ -268,17 +182,13 @@ export const buildAdminOpenApiDocument = ({
           tags: ["Admin Approvals"],
           operationId: "listAdminAccessRequests",
           summary: "List access requests",
-          security: buildAdminSecurity(),
+          security,
           responses: {
-            200: {
-              description: "Access requests visible to the admin user.",
-              content: {
-                "application/json": {
-                  schema: { type: "array", items: { $ref: "#/components/schemas/AccessRequest" } },
-                },
-              },
-            },
-            401: buildUnauthorizedResponse(),
+            200: buildJsonArrayRefResponse(
+              "Access requests visible to the admin user.",
+              "AccessRequest",
+            ),
+            401: unauthorizedResponse,
           },
         },
       },
@@ -287,28 +197,18 @@ export const buildAdminOpenApiDocument = ({
           tags: ["Admin Approvals"],
           operationId: "approveAdminAccessRequest",
           summary: "Approve an access request",
-          security: buildAdminSecurity(),
-          parameters: [
-            { name: "requestId", in: "path", required: true, schema: { type: "string" } },
-          ],
-          requestBody: {
-            required: false,
-            content: {
-              "application/json": {
-                schema: { $ref: "#/components/schemas/AccessRequestDecision" },
-              },
-            },
-          },
+          security,
+          parameters: [buildPathParameter("requestId")],
+          requestBody: buildJsonRequestBody(
+            { $ref: "#/components/schemas/AccessRequestDecision" },
+            { required: false },
+          ),
           responses: {
-            200: {
-              description: "Temporary grant created from the approval.",
-              content: {
-                "application/json": {
-                  schema: { $ref: "#/components/schemas/ArbitraryObject" },
-                },
-              },
-            },
-            401: buildUnauthorizedResponse(),
+            200: buildJsonRefResponse(
+              "Temporary grant created from the approval.",
+              "ArbitraryObject",
+            ),
+            401: unauthorizedResponse,
           },
         },
       },
@@ -317,20 +217,14 @@ export const buildAdminOpenApiDocument = ({
           tags: ["Admin Approvals"],
           operationId: "rejectAdminAccessRequest",
           summary: "Reject an access request",
-          security: buildAdminSecurity(),
-          parameters: [
-            { name: "requestId", in: "path", required: true, schema: { type: "string" } },
-          ],
+          security,
+          parameters: [buildPathParameter("requestId")],
           responses: {
-            200: {
-              description: "Updated access request after rejection.",
-              content: {
-                "application/json": {
-                  schema: { $ref: "#/components/schemas/AccessRequest" },
-                },
-              },
-            },
-            401: buildUnauthorizedResponse(),
+            200: buildJsonRefResponse(
+              "Updated access request after rejection.",
+              "AccessRequest",
+            ),
+            401: unauthorizedResponse,
           },
         },
       },
@@ -339,17 +233,13 @@ export const buildAdminOpenApiDocument = ({
           tags: ["Admin Discovery"],
           operationId: "listAdminBuiltInConnectors",
           summary: "List built-in connector catalog",
-          security: buildAdminSecurity(),
+          security,
           responses: {
-            200: {
-              description: "Available built-in connectors.",
-              content: {
-                "application/json": {
-                  schema: { $ref: "#/components/schemas/ArbitraryObjectArray" },
-                },
-              },
-            },
-            401: buildUnauthorizedResponse(),
+            200: buildJsonRefResponse(
+              "Available built-in connectors.",
+              "ArbitraryObjectArray",
+            ),
+            401: unauthorizedResponse,
           },
         },
       },
@@ -358,17 +248,13 @@ export const buildAdminOpenApiDocument = ({
           tags: ["Admin Discovery"],
           operationId: "listAdminOauthProviderCatalog",
           summary: "List provider catalog defaults",
-          security: buildAdminSecurity(),
+          security,
           responses: {
-            200: {
-              description: "OAuth-capable provider catalog entries.",
-              content: {
-                "application/json": {
-                  schema: { $ref: "#/components/schemas/ArbitraryObjectArray" },
-                },
-              },
-            },
-            401: buildUnauthorizedResponse(),
+            200: buildJsonRefResponse(
+              "OAuth-capable provider catalog entries.",
+              "ArbitraryObjectArray",
+            ),
+            401: unauthorizedResponse,
           },
         },
       },
@@ -377,25 +263,16 @@ export const buildAdminOpenApiDocument = ({
           tags: ["Admin Discovery"],
           operationId: "discoverAdminIntegration",
           summary: "Discover functions from an integration definition",
-          security: buildAdminSecurity(),
-          requestBody: {
-            required: true,
-            content: {
-              "application/json": {
-                schema: { $ref: "#/components/schemas/IntegrationDiscoveryRequest" },
-              },
-            },
-          },
+          security,
+          requestBody: buildJsonRequestBody({
+            $ref: "#/components/schemas/IntegrationDiscoveryRequest",
+          }),
           responses: {
-            200: {
-              description: "Discovered integration spec.",
-              content: {
-                "application/json": {
-                  schema: { $ref: "#/components/schemas/IntegrationSpec" },
-                },
-              },
-            },
-            401: buildUnauthorizedResponse(),
+            200: buildJsonRefResponse(
+              "Discovered integration spec.",
+              "IntegrationSpec",
+            ),
+            401: unauthorizedResponse,
           },
         },
       },
@@ -404,42 +281,29 @@ export const buildAdminOpenApiDocument = ({
           tags: ["Admin Connectors"],
           operationId: "listAdminManagedConnectors",
           summary: "List managed connectors",
-          security: buildAdminSecurity(),
+          security,
           responses: {
-            200: {
-              description: "Managed connectors visible to the admin user.",
-              content: {
-                "application/json": {
-                  schema: { $ref: "#/components/schemas/ManagedConnectorList" },
-                },
-              },
-            },
-            401: buildUnauthorizedResponse(),
+            200: buildJsonRefResponse(
+              "Managed connectors visible to the admin user.",
+              "ManagedConnectorList",
+            ),
+            401: unauthorizedResponse,
           },
         },
         post: {
           tags: ["Admin Connectors"],
           operationId: "saveAdminManagedConnector",
           summary: "Create or update a managed connector",
-          security: buildAdminSecurity(),
-          requestBody: {
-            required: true,
-            content: {
-              "application/json": {
-                schema: { $ref: "#/components/schemas/ManagedConnectorUpsert" },
-              },
-            },
-          },
+          security,
+          requestBody: buildJsonRequestBody({
+            $ref: "#/components/schemas/ManagedConnectorUpsert",
+          }),
           responses: {
-            200: {
-              description: "Saved managed connector.",
-              content: {
-                "application/json": {
-                  schema: { $ref: "#/components/schemas/ManagedConnector" },
-                },
-              },
-            },
-            401: buildUnauthorizedResponse(),
+            200: buildJsonRefResponse(
+              "Saved managed connector.",
+              "ManagedConnector",
+            ),
+            401: unauthorizedResponse,
           },
         },
       },
@@ -448,20 +312,11 @@ export const buildAdminOpenApiDocument = ({
           tags: ["Admin Connectors"],
           operationId: "deleteAdminManagedConnector",
           summary: "Delete a managed connector",
-          security: buildAdminSecurity(),
-          parameters: [
-            { name: "slug", in: "path", required: true, schema: { type: "string" } },
-          ],
+          security,
+          parameters: [buildPathParameter("slug")],
           responses: {
-            200: {
-              description: "Deletion result.",
-              content: {
-                "application/json": {
-                  schema: { $ref: "#/components/schemas/DeleteResult" },
-                },
-              },
-            },
-            401: buildUnauthorizedResponse(),
+            200: buildJsonRefResponse("Deletion result.", "DeleteResult"),
+            401: unauthorizedResponse,
           },
         },
       },
@@ -470,37 +325,29 @@ export const buildAdminOpenApiDocument = ({
           tags: ["Admin Connectors"],
           operationId: "getAdminManagedConnectorsOpenApi",
           summary: "Get managed connectors OpenAPI document",
-          security: buildAdminSecurity(),
+          security,
           responses: {
-            200: {
-              description: "Managed connectors OpenAPI document.",
-              content: {
-                "application/json": {
-                  schema: { $ref: "#/components/schemas/ArbitraryObject" },
-                },
-              },
-            },
-            401: buildUnauthorizedResponse(),
+            200: buildJsonRefResponse(
+              "Managed connectors OpenAPI document.",
+              "ArbitraryObject",
+            ),
+            401: unauthorizedResponse,
           },
         },
       },
     },
     components: {
       securitySchemes: {
-        AdminApiKey: {
-          type: "http",
-          scheme: "bearer",
-          bearerFormat: "API key",
-          description:
-            "Admin automation API key from the dashboard API keys section. You can also pass it in X-API-Key.",
-        },
+        AdminApiKey: buildApiKeySecurityScheme(
+          "Admin automation API key from the dashboard API keys section. You can also pass it in X-API-Key.",
+        ),
       },
       schemas: {
         IntegrationCreateRequest: toOpenApiSchema(integrationCreateSchema),
         IntegrationSpec: toOpenApiSchema(integrationSpecSchema),
         FunctionSpec: toOpenApiSchema(functionSpecSchema),
         IntegrationDiscoveryRequest: toOpenApiSchema(integrationDiscoveryRequestSchema),
-        IntegrationConnection: toOpenApiSchema(integrationConnectionSchema),
+        IntegrationConnection: toOpenApiSchema(integrationConnectionStatusSchema),
         NotificationRecord: toOpenApiSchema(notificationRecordSchema),
         AccessRequest: toOpenApiSchema(accessRequestSchema),
         AccessRequestDecision: toOpenApiSchema(accessRequestDecisionSchema.partial()),
