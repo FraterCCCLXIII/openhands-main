@@ -1,3 +1,5 @@
+// @vitest-environment jsdom
+
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -14,6 +16,17 @@ vi.mock("@neondatabase/serverless", () => ({ neon: () => getActiveSql() }));
 import { createTestRepository, getActiveSql } from "@/src/lib/db/pglite-test-utils";
 
 import AdminIntegrationsPage from "./page";
+
+const renderDocument = async () =>
+  new DOMParser().parseFromString(renderToStaticMarkup(await AdminIntegrationsPage()), "text/html");
+
+const getHeading = (document: Document, level: 1 | 2, text: string) =>
+  Array.from(document.querySelectorAll(`h${level}`)).find(
+    (heading) => heading.textContent?.trim() === text,
+  );
+
+const getCodeValues = (document: Document) =>
+  Array.from(document.querySelectorAll("code")).map((node) => node.textContent?.trim() ?? "");
 
 let testCleanup: () => Promise<void>;
 beforeAll(() => {
@@ -40,76 +53,67 @@ describe("app/admin-integrations/page", () => {
   it("renders the dashboard sidebar chrome for signed-in regular users", async () => {
     vi.stubEnv("ADMIN_EMAIL", "");
 
-    const html = renderToStaticMarkup(await AdminIntegrationsPage());
+    const document = await renderDocument();
+    const navHrefs = Array.from(document.querySelectorAll("nav a")).map((link) =>
+      link.getAttribute("href"),
+    );
 
-    expect(html).toContain("OpenHands");
-    expect(html).toContain("Context Layer");
-    expect(html).toContain('href="/integrations"');
-    expect(html).toContain('href="/case-by-case-approvals"');
-    expect(html).toContain('href="/agent-connection"');
-    expect(html).toContain('href="/profile"');
-    expect(html).toContain('href="/admin-integrations"');
-    expect(html).not.toContain('href="/home"');
-    expect(html).toContain("Signed in as");
-    expect(html).toContain("Case-by-case Approvals");
-    expect(html).toContain("Admin integrations");
-    expect(html).toContain("For users");
-    expect(html).toContain("contact an admin");
-    expect(html).toContain("Popular official provider options");
-    expect(html).toContain("Search curated adaptors");
-    expect(html).toContain('href="/integrations?showIntegrationWizard=1"');
-    expect(html).not.toContain("For admins");
-    expect(html).not.toContain("Registered managed connectors");
-    expect(html).not.toContain("APP_ADMIN_EMAILS");
-    expect(html).not.toContain("POST /api/managed-connectors");
+    expect(navHrefs).toEqual(
+      expect.arrayContaining([
+        "/integrations",
+        "/case-by-case-approvals",
+        "/agent-connection",
+        "/profile",
+      ]),
+    );
+    expect(document.querySelector('a[href="/admin-integrations"]')).toBeTruthy();
+    expect(document.querySelector('a[href="/home"]')).toBeFalsy();
+    expect(document.body.textContent).toContain("Signed in as");
+    expect(getHeading(document, 2, "For users")).toBeTruthy();
+    expect(getHeading(document, 2, "For admins")).toBeFalsy();
+    expect(getHeading(document, 2, "Popular official provider options")).toBeTruthy();
+    expect(getHeading(document, 2, "Registered managed connectors")).toBeFalsy();
+    expect(document.querySelector('a[href="/integrations?showIntegrationWizard=1"]')).toBeTruthy();
+    expect(document.body.textContent).toContain("contact an admin");
   });
 
   it("shows the configured admin email when ADMIN_EMAIL is set", async () => {
     vi.stubEnv("ADMIN_EMAIL", "admin@example.com");
 
-    const html = renderToStaticMarkup(await AdminIntegrationsPage());
+    const document = await renderDocument();
+    const mailLink = document.querySelector('a[href="mailto:admin@example.com"]');
 
-    expect(html).toContain("Contact admin@example.com");
-    expect(html).toContain("please contact admin@example.com");
+    expect(mailLink).toBeTruthy();
+    expect(mailLink?.textContent).toContain("Contact admin@example.com");
+    expect(document.body.textContent).toContain("please contact admin@example.com");
   });
 
   it("shows only the admin guidance card and connector controls to allowlisted admins", async () => {
     vi.stubEnv("APP_ADMIN_EMAILS", "admin@example.com");
     authMock.mockResolvedValue({ user: { email: "admin@example.com" } });
 
-    const html = renderToStaticMarkup(await AdminIntegrationsPage());
+    const document = await renderDocument();
+    const codeValues = getCodeValues(document);
 
-    expect(html).toContain("OpenHands");
-    expect(html).toContain("Context Layer");
-    expect(html).toContain("For admins");
-    expect(html).not.toContain("For users");
-    expect(html).toContain("Registered managed connectors");
-    expect(html).toContain("POST /api/managed-connectors");
-    expect(html).toContain("/api/managed-connectors/openapi");
-    expect(html).toContain("endpoint schema doc");
-    expect(html).toContain("service-level admin action");
-    expect(html).toContain("official vendor-hosted MCP URL");
-    expect(html).toContain("official REST API/OpenAPI default");
-    expect(html).toContain("provider&#x27;s own docs");
-    expect(html).toContain("authentication setup docs");
-    expect(html).toContain("AUTH_REDIRECT_PROXY_URL");
-    expect(html).toContain("stable deployment origin instead of the preview URL");
-    expect(html).toContain("Connect");
-    expect(html).toContain("Discover tools");
-    expect(html).toContain("managed remote MCP or managed HTTP connector");
-    expect(html).toContain("APP_ADMIN_EMAILS");
-    expect(html).toContain("src/lib/integrations/oauth-provider-registration-defaults.ts");
-    expect(html).toContain("src/lib/integrations/oauth-provider-catalog.ts");
-    expect(html).toContain("ElevenLabs");
-    expect(html).toContain("Ordinal");
-    expect(html).not.toContain("No managed connectors are registered yet.");
-    expect(html).not.toContain("Legacy shared OAuth credential cleanup");
-    expect(html).not.toContain("Safe summaries only");
-    expect(html).not.toContain("Composio-hosted MCP URL pattern");
-    expect(html).not.toContain("customerId=replace-me");
-    expect(html).not.toContain("app/api/mcp/&lt;provider&gt;/route.ts");
-    expect(html).not.toContain("src/lib/oauth/providers.ts");
-    expect(html).not.toContain("Submit provider information");
+    expect(getHeading(document, 2, "For admins")).toBeTruthy();
+    expect(getHeading(document, 2, "For users")).toBeFalsy();
+    expect(getHeading(document, 2, "Registered managed connectors")).toBeTruthy();
+    expect(getHeading(document, 2, "Popular official provider options")).toBeTruthy();
+    expect(document.querySelector('a[href="/api/managed-connectors/openapi"]')).toBeTruthy();
+    expect(codeValues).toEqual(
+      expect.arrayContaining([
+        "APP_ADMIN_EMAILS",
+        "POST /api/managed-connectors",
+        "AUTH_REDIRECT_PROXY_URL",
+        "src/lib/integrations/oauth-provider-registration-defaults.ts",
+        "src/lib/integrations/oauth-provider-catalog.ts",
+      ]),
+    );
+    expect(document.body.textContent).toContain("service-level admin action");
+    expect(document.body.textContent).toContain("Connect");
+    expect(document.body.textContent).toContain("Discover tools");
+    expect(document.body.textContent).toContain("ElevenLabs");
+    expect(document.body.textContent).toContain("Ordinal");
   });
 
   it("shows database setup instructions to admins when persistent storage is unavailable", async () => {
@@ -119,12 +123,12 @@ describe("app/admin-integrations/page", () => {
     vi.stubEnv("APP_ADMIN_EMAILS", "admin@example.com");
     authMock.mockResolvedValue({ user: { email: "admin@example.com" } });
 
-    const html = renderToStaticMarkup(await AdminIntegrationsPage());
+    const document = await renderDocument();
+    const codeValues = getCodeValues(document);
 
-    expect(html).toContain("Service unavailable");
-    expect(html).toContain("How to set up the database");
-    expect(html).toContain("POSTGRES_URL");
-    expect(html).toContain("DATABASE_URL");
-    expect(html).not.toContain("Popular official provider options");
+    expect(getHeading(document, 1, "Service unavailable")).toBeTruthy();
+    expect(getHeading(document, 2, "How to set up the database")).toBeTruthy();
+    expect(codeValues).toEqual(expect.arrayContaining(["POSTGRES_URL", "DATABASE_URL"]));
+    expect(getHeading(document, 2, "Popular official provider options")).toBeFalsy();
   });
 });

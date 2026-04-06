@@ -64,8 +64,6 @@ Notes:
 
 ## Test design checklist
 
-Use [`TEST_DESIGN_REVIEW.md`](./TEST_DESIGN_REVIEW.md) as the current suite baseline when you add or rewrite tests.
-
 - Prefer semantic assertions over raw HTML, markdown, CSS, or OpenAPI string matching.
 - Split large multi-purpose suites before adding substantial new coverage to them.
 - Use builders/helpers for repeated integration, connector, API-key, and access-request fixtures.
