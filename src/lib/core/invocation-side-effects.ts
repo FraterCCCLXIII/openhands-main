@@ -24,7 +24,7 @@ export const createToolInvocationRecord = ({
   agentId,
   agentClass,
   integration,
-  functionName,
+  toolName,
   scopes,
   payloadKeys,
   invokedAt,
@@ -36,7 +36,7 @@ export const createToolInvocationRecord = ({
   agentId: string | null;
   agentClass: string | null;
   integration: Pick<IntegrationSpec, "key" | "provider" | "kind" | "authStrategy">;
-  functionName: string;
+  toolName: string;
   scopes: string[];
   payloadKeys: string[];
   invokedAt: string;
@@ -49,7 +49,7 @@ export const createToolInvocationRecord = ({
   agentId,
   agentClass,
   integrationKey: integration.key,
-  functionName,
+  toolName,
   scopes: normalizeScopes(scopes),
   provider: integration.provider,
   kind: integration.kind,

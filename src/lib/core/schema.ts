@@ -4,7 +4,7 @@ import {
   MAX_CASE_BY_CASE_APPROVAL_MINUTES,
 } from "@/src/lib/access-requests";
 
-export const functionAccessModeSchema = z.enum([
+export const toolAccessModeSchema = z.enum([
   "enabled",
   "disabled",
   "approval_required",
@@ -43,17 +43,18 @@ const nullableAgentIdentitySchema = z.preprocess(
   z.string().min(1).nullable(),
 );
 
-export const functionSpecSchema = z.object({
+export const toolSpecSchema = z.object({
   name: z.string().min(1),
   description: z.string().optional().default(""),
   enabled: z.boolean().default(true),
-  accessMode: functionAccessModeSchema.default("enabled"),
+  accessMode: toolAccessModeSchema.default("enabled"),
   fineGrainedPermissions: z.boolean().default(true),
   defaultScopes: z.array(z.string()).default([]),
   executionMode: z.enum(["provider", "mock"]).default("provider"),
   config: z.record(z.string(), z.unknown()).default({}),
   mockResponse: z.record(z.string(), z.unknown()).optional(),
 });
+
 
 export const integrationSpecSchema = z.object({
   key: z.string().min(1),
@@ -65,12 +66,12 @@ export const integrationSpecSchema = z.object({
   fineGrainedPermissions: z.boolean().default(true),
   config: z.record(z.string(), z.unknown()).default({}),
   credentials: z.record(z.string(), z.unknown()).default({}),
-  functions: z.record(z.string(), functionSpecSchema).default({}),
+  tools: z.record(z.string(), toolSpecSchema).default({}),
 });
 
 export const policyRuleSchema = z.object({
   integrationKey: z.string().min(1),
-  functionNames: z.array(z.string()).default([]),
+  toolNames: z.array(z.string()).default([]),
   scopes: z.array(z.string()).default([]),
   enabled: z.boolean().default(true),
 });
@@ -89,7 +90,7 @@ export const accessRequestSchema = z.object({
   agentId: nullableAgentIdentitySchema,
   agentClass: nullableAgentIdentitySchema,
   integrationKey: z.string().min(1),
-  functionName: z.string().min(1),
+  toolName: z.string().min(1),
   scopes: z.array(z.string()).default([]),
   requestedMinutes: z.number().int().positive().default(30),
   channels: z.array(notificationChannelSchema).default([]),
@@ -107,7 +108,7 @@ export const temporaryGrantSchema = z.object({
   agentId: nullableAgentIdentitySchema,
   agentClass: nullableAgentIdentitySchema,
   integrationKey: z.string().min(1),
-  functionName: z.string().min(1),
+  toolName: z.string().min(1),
   scopes: z.array(z.string()).default([]),
   grantedBy: z.string().min(1),
   createdAt: z.string().datetime(),
@@ -137,7 +138,7 @@ export const accessDecisionSchema = z.object({
 
 export const contextInvocationResultSchema = z.object({
   integration: z.string(),
-  function: z.string(),
+  tool: z.string(),
   provider: integrationProviderSchema,
   kind: integrationKindSchema,
   authStrategy: authStrategySchema,
@@ -156,7 +157,7 @@ export const notificationRecordSchema = z.object({
 });
 
 export const integrationCreateSchema = integrationSpecSchema;
-export const functionCreateSchema = functionSpecSchema;
+export const toolCreateSchema = toolSpecSchema;
 export const policyUpdateSchema = z.object({
   rules: z.array(policyRuleSchema),
 });
@@ -176,7 +177,7 @@ export const accessRequestDecisionSchema = z.object({
     .max(MAX_CASE_BY_CASE_APPROVAL_MINUTES)
     .optional(),
 });
-export const disableUnusedFunctionsSchema = z.object({
+export const disableUnusedToolsSchema = z.object({
   thresholdValue: z.number().int().positive().max(3650),
   thresholdUnit: z.enum(["days", "weeks", "months"]),
 });

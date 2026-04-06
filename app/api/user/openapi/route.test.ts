@@ -51,7 +51,7 @@ const githubIntegration: IntegrationSpec = {
   fineGrainedPermissions: true,
   config: { serverUrl: "https://api.githubcopilot.com/mcp/" },
   credentials: {},
-  functions: {
+  tools: {
     search_repositories: {
       name: "search_repositories",
       description: "Search repositories",
@@ -105,7 +105,7 @@ describe("GET /api/user/openapi", () => {
     expect(body.servers).toEqual([{ url: "http://localhost:3000" }]);
     expect(body.paths["/api/user/integrations"]?.get).toBeTruthy();
     expect(
-      body.paths["/api/user/integrations/{integrationKey}/functions/{functionName}"]
+      body.paths["/api/user/integrations/{integrationKey}/tools/{toolName}"]
         ?.patch,
     ).toBeTruthy();
     expect(body.paths["/api/user/access-requests"]?.get).toBeTruthy();
@@ -116,7 +116,7 @@ describe("GET /api/user/openapi", () => {
       scheme: "bearer",
     });
     expect(body.components.schemas.IntegrationSpec).toBeTruthy();
-    expect(body.components.schemas.FunctionSpec).toBeTruthy();
+    expect(body.components.schemas.ToolSpec).toBeTruthy();
     expect(body.components.schemas.AccessRequest).toBeTruthy();
     expect(body.components.schemas.TemporaryGrant).toBeTruthy();
   });

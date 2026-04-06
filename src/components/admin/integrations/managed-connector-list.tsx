@@ -108,7 +108,7 @@ const buildManagedConnectorPayload = (
       : undefined,
   oauthClientId: form.oauthClientId.trim(),
   oauthClientSecret: form.oauthClientSecret.trim(),
-  functions: connector.functions,
+  tools: connector.tools,
   enabled: connector.enabled,
 });
 
@@ -197,10 +197,10 @@ export function ManagedConnectorList({
     [search, sortedConnectors],
   );
 
-  const visibleFunctionCount = useMemo(
+  const visibleToolCount = useMemo(
     () =>
       filteredConnectors.reduce(
-        (total, connector) => total + connector.functions.length,
+        (total, connector) => total + connector.tools.length,
         0,
       ),
     [filteredConnectors],
@@ -369,7 +369,7 @@ export function ManagedConnectorList({
           </div>
           <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--color-text-base)]">
             <Badge>{filteredConnectors.length} connectors</Badge>
-            <Badge>{visibleFunctionCount} functions</Badge>
+            <Badge>{visibleToolCount} tools</Badge>
           </div>
         </div>
 
@@ -395,7 +395,7 @@ export function ManagedConnectorList({
             const form = getFormState(connector);
             const isExpanded = expandedSlug === connector.slug;
             const provider = inferProvider(connector);
-            const functionCount = connector.functions.length;
+            const toolCount = connector.tools.length;
 
             return (
               <div
@@ -424,8 +424,8 @@ export function ManagedConnectorList({
                         {connector.description}
                       </p>
                       <p className="mt-1 text-[11px] leading-5 text-[var(--color-text-base)]">
-                        {connector.slug} · {functionCount} function
-                        {functionCount === 1 ? "" : "s"} · updated {formatUpdatedAt(connector.updatedAt)}
+                        {connector.slug} · {toolCount} tool
+                        {toolCount === 1 ? "" : "s"} · updated {formatUpdatedAt(connector.updatedAt)}
                       </p>
                     </div>
                   </div>
@@ -542,7 +542,7 @@ export function ManagedConnectorList({
                               )}
                             />
                             <span className="text-[11px] leading-5 text-[var(--color-text-base)]">
-                              Leave blank if you want to keep the current stored function
+                              Leave blank if you want to keep the current stored tool
                               templates instead of regenerating them from a schema.
                             </span>
                           </label>

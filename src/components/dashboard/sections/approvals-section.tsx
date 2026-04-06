@@ -257,7 +257,7 @@ export const ApprovalsSection = ({
                     <div className="space-y-3">
                       <div className="flex flex-wrap items-center gap-2">
                         <p className="text-sm font-semibold text-white">
-                          {request.integrationKey}.{request.functionName}
+                          {request.integrationKey}.{request.toolName}
                         </p>
                         <Badge tone={approvalStatusTone(request.status)}>
                           {approvalStatusLabel(request.status)}

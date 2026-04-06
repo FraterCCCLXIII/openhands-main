@@ -3,12 +3,12 @@ import { ContextLayerError } from "@/src/lib/core/errors";
 import type {
   AccessDecision,
   AgentClassPolicy,
-  FunctionAccessMode,
-  FunctionSpec,
+  ToolAccessMode,
+  ToolSpec,
   IntegrationSpec,
   PolicyRule,
   TemporaryGrant,
-  UnusedFunctionWindowUnit,
+  UnusedToolWindowUnit,
 } from "@/src/types/context-layer";
 
 const unique = (values: string[]) => [...new Set(values)];
@@ -25,32 +25,29 @@ export const sameScopes = (left: string[], right: string[]) => {
   );
 };
 
-export const getFunctionAccessMode = (
-  functionSpec: FunctionSpec,
-): FunctionAccessMode =>
-  functionSpec.accessMode ?? (functionSpec.enabled ? "enabled" : "disabled");
+export const getToolAccessMode = (
+  toolSpec: ToolSpec,
+): ToolAccessMode =>
+  toolSpec.accessMode ?? (toolSpec.enabled ? "enabled" : "disabled");
 
-export const normalizeFunctionSpec = (functionSpec: FunctionSpec): FunctionSpec => {
-  const accessMode = getFunctionAccessMode(functionSpec);
+export const normalizeToolSpec = (toolSpec: ToolSpec): ToolSpec => {
+  const accessMode = getToolAccessMode(toolSpec);
 
   return {
-    ...functionSpec,
+    ...toolSpec,
     accessMode,
     enabled: accessMode !== "disabled",
   };
 };
 
-export const normalizeFunctions = (functions: Record<string, FunctionSpec>) =>
+export const normalizeTools = (tools: Record<string, ToolSpec>) =>
   Object.fromEntries(
-    Object.entries(functions).map(([name, functionSpec]) => [
-      name,
-      normalizeFunctionSpec(functionSpec),
-    ]),
+    Object.entries(tools).map(([name, toolSpec]) => [name, normalizeToolSpec(toolSpec)]),
   );
 
 const permittedByRule = (
   rule: PolicyRule,
-  functionName: string,
+  toolName: string,
   requestedScopes: string[],
   fineGrained: boolean,
 ) => {
@@ -60,8 +57,8 @@ const permittedByRule = (
 
   if (
     fineGrained &&
-    rule.functionNames.length > 0 &&
-    !rule.functionNames.includes(functionName)
+    rule.toolNames.length > 0 &&
+    !rule.toolNames.includes(toolName)
   ) {
     return false;
   }
@@ -77,15 +74,15 @@ const permittedByRule = (
 };
 
 export const resolveEffectiveScopes = (
-  functionSpec: FunctionSpec,
+  toolSpec: ToolSpec,
   requestedScopes: string[] = [],
-) => unique(requestedScopes.length > 0 ? requestedScopes : functionSpec.defaultScopes);
+) => unique(requestedScopes.length > 0 ? requestedScopes : toolSpec.defaultScopes);
 
 const findActiveGrant = ({
   agentId,
   agentClass,
   integrationKey,
-  functionName,
+  toolName,
   effectiveScopes,
   temporaryGrants,
   currentTime = nowIso(),
@@ -93,7 +90,7 @@ const findActiveGrant = ({
   agentId: string | null;
   agentClass: string | null;
   integrationKey: string;
-  functionName: string;
+  toolName: string;
   effectiveScopes: string[];
   temporaryGrants: TemporaryGrant[];
   currentTime?: string;
@@ -103,7 +100,7 @@ const findActiveGrant = ({
       grant.agentId !== agentId ||
       grant.agentClass !== agentClass ||
       grant.integrationKey !== integrationKey ||
-      grant.functionName !== functionName
+      grant.toolName !== toolName
     ) {
       return false;
     }
@@ -118,26 +115,26 @@ const findActiveGrant = ({
     );
   });
 
-export const getFunctionSpecOrThrow = (
+export const getToolSpecOrThrow = (
   integration: IntegrationSpec,
-  functionName: string,
+  toolName: string,
 ) => {
-  const functionSpec = integration.functions[functionName];
-  if (!functionSpec) {
+  const toolSpec = integration.tools[toolName];
+  if (!toolSpec) {
     throw new ContextLayerError(
-      `Unknown function '${functionName}' for integration '${integration.key}'.`,
+      `Unknown tool '${toolName}' for integration '${integration.key}'.`,
       404,
     );
   }
 
-  return functionSpec;
+  return toolSpec;
 };
 
 export const evaluateIntegrationAccess = ({
   agentId,
   agentClass,
   integration,
-  functionName,
+  toolName,
   requestedScopes = [],
   temporaryGrants,
   policy,
@@ -146,15 +143,15 @@ export const evaluateIntegrationAccess = ({
   agentId: string | null;
   agentClass: string | null;
   integration: IntegrationSpec;
-  functionName: string;
+  toolName: string;
   requestedScopes?: string[];
   temporaryGrants: TemporaryGrant[];
   policy: AgentClassPolicy | null;
   currentTime?: string;
 }): AccessDecision => {
-  const functionSpec = getFunctionSpecOrThrow(integration, functionName);
-  const effectiveScopes = resolveEffectiveScopes(functionSpec, requestedScopes);
-  const accessMode = getFunctionAccessMode(functionSpec);
+  const toolSpec = getToolSpecOrThrow(integration, toolName);
+  const effectiveScopes = resolveEffectiveScopes(toolSpec, requestedScopes);
+  const accessMode = getToolAccessMode(toolSpec);
 
   if (!integration.enabled) {
     return {
@@ -164,15 +161,15 @@ export const evaluateIntegrationAccess = ({
     };
   }
 
-  if (!functionSpec.enabled || accessMode === "disabled") {
-    return { allowed: false, reason: "Function disabled", effectiveScopes };
+  if (!toolSpec.enabled || accessMode === "disabled") {
+    return { allowed: false, reason: "Tool disabled", effectiveScopes };
   }
 
   const activeGrant = findActiveGrant({
     agentId,
     agentClass,
     integrationKey: integration.key,
-    functionName,
+    toolName,
     effectiveScopes,
     temporaryGrants,
     currentTime,
@@ -193,7 +190,7 @@ export const evaluateIntegrationAccess = ({
   if (!policy) {
     return {
       allowed: true,
-      reason: "Allowed by enabled function default",
+      reason: "Allowed by enabled tool default",
       effectiveScopes,
     };
   }
@@ -204,8 +201,8 @@ export const evaluateIntegrationAccess = ({
     }
 
     const fineGrained =
-      integration.fineGrainedPermissions && functionSpec.fineGrainedPermissions;
-    if (permittedByRule(rule, functionName, effectiveScopes, fineGrained)) {
+      integration.fineGrainedPermissions && toolSpec.fineGrainedPermissions;
+    if (permittedByRule(rule, toolName, effectiveScopes, fineGrained)) {
       return {
         allowed: true,
         reason: "Allowed by agent class policy",
@@ -228,7 +225,7 @@ export const evaluateIntegrationAccess = ({
 export const subtractUnusedWindow = (
   referenceIso: string,
   value: number,
-  unit: UnusedFunctionWindowUnit,
+  unit: UnusedToolWindowUnit,
 ) => {
   const reference = new Date(referenceIso);
   const next = new Date(reference);

@@ -8,7 +8,7 @@ const BEARER_CHALLENGE = 'Bearer realm="agent-context-layer"';
 
 export async function POST(
   request: Request,
-  { params }: { params: Promise<{ integrationKey: string; functionName: string }> },
+  { params }: { params: Promise<{ integrationKey: string; toolName: string }> },
 ) {
   try {
     const service = getContextLayerService();
@@ -38,13 +38,13 @@ export async function POST(
     }
 
     const payload = contextInvokeSchema.parse(await request.json());
-    const { integrationKey, functionName } = await params;
+    const { integrationKey, toolName } = await params;
     return ok(
       await service.invokeContext(
         payload.agentId,
         payload.agentClass,
         integrationKey,
-        functionName,
+        toolName,
         payload.payload,
         payload.scopes,
         {

@@ -5,7 +5,7 @@ import type {
   AdminApiKeyRecord,
   AgentApiKeyRecord,
   AgentClassPolicy,
-  FunctionUsageSummary,
+  ToolUsageSummary,
   IntegrationConnectionRecord,
   IntegrationSpec,
   ManagedConnectorRecord,
@@ -20,7 +20,7 @@ import {
   mapAccessRequestRow,
   mapAdminApiKeyRow,
   mapAgentApiKeyRow,
-  mapFunctionUsageSummaryRow,
+  mapToolUsageSummaryRow,
   mapIntegrationConnectionRow,
   mapIntegrationRow,
   mapManagedConnectorRow,
@@ -97,7 +97,7 @@ export class PostgresRepository implements ContextRepository {
       )
       VALUES (
         ${ownerId}, ${spec.key}, ${spec.name}, ${spec.kind}, ${spec.provider}, ${spec.authStrategy}, ${spec.enabled},
-        ${spec.fineGrainedPermissions}, ${JSON.stringify(spec.config)}, ${JSON.stringify(spec.credentials)}, ${JSON.stringify(spec.functions)}, NOW(), NOW()
+        ${spec.fineGrainedPermissions}, ${JSON.stringify(spec.config)}, ${JSON.stringify(spec.credentials)}, ${JSON.stringify(spec.tools)}, NOW(), NOW()
       )
       ON CONFLICT (owner_id, key) DO UPDATE SET
         name = EXCLUDED.name,
@@ -172,7 +172,7 @@ export class PostgresRepository implements ContextRepository {
         requested_minutes, channels, notification_targets, justification, agent_data,
         created_at, status, decided_at, decided_by
       ) VALUES (
-        ${request.id}, ${request.agentId ?? null}, ${request.agentClass ?? null}, ${request.integrationKey}, ${request.functionName}, ${JSON.stringify(request.scopes)},
+        ${request.id}, ${request.agentId ?? null}, ${request.agentClass ?? null}, ${request.integrationKey}, ${request.toolName}, ${JSON.stringify(request.scopes)},
         ${request.requestedMinutes}, ${JSON.stringify(request.channels)}, ${JSON.stringify(request.notificationTargets)}, ${request.justification ?? ""}, ${JSON.stringify(request.agentData ?? {})},
         ${request.createdAt}, ${request.status}, ${request.decidedAt ?? null}, ${request.decidedBy ?? null}
       )
@@ -189,7 +189,7 @@ export class PostgresRepository implements ContextRepository {
         agent_id = ${request.agentId ?? null},
         agent_class = ${request.agentClass ?? null},
         integration_key = ${request.integrationKey},
-        function_name = ${request.functionName},
+        function_name = ${request.toolName},
         scopes = ${JSON.stringify(request.scopes)},
         requested_minutes = ${request.requestedMinutes},
         channels = ${JSON.stringify(request.channels)},
@@ -219,7 +219,7 @@ export class PostgresRepository implements ContextRepository {
       INSERT INTO temporary_grants (
         id, agent_id, agent_class, integration_key, function_name, scopes, granted_by, created_at, expires_at
       ) VALUES (
-        ${grant.id}, ${grant.agentId ?? null}, ${grant.agentClass ?? null}, ${grant.integrationKey}, ${grant.functionName}, ${JSON.stringify(grant.scopes)}, ${grant.grantedBy}, ${grant.createdAt}, ${grant.expiresAt}
+        ${grant.id}, ${grant.agentId ?? null}, ${grant.agentClass ?? null}, ${grant.integrationKey}, ${grant.toolName}, ${JSON.stringify(grant.scopes)}, ${grant.grantedBy}, ${grant.createdAt}, ${grant.expiresAt}
       )
       ON CONFLICT (id) DO UPDATE SET
         agent_id = EXCLUDED.agent_id,
@@ -250,7 +250,7 @@ export class PostgresRepository implements ContextRepository {
         scopes, provider, kind, auth_strategy, outcome, invoked_at, duration_ms,
         payload_keys, error_message
       ) VALUES (
-        ${record.id}, ${record.ownerId ?? null}, ${record.agentId ?? null}, ${record.agentClass ?? null}, ${record.integrationKey}, ${record.functionName},
+        ${record.id}, ${record.ownerId ?? null}, ${record.agentId ?? null}, ${record.agentClass ?? null}, ${record.integrationKey}, ${record.toolName},
         ${JSON.stringify(record.scopes)}, ${record.provider}, ${record.kind}, ${record.authStrategy}, ${record.outcome}, ${record.invokedAt}, ${record.durationMs ?? null},
         ${JSON.stringify(record.payloadKeys)}, ${record.errorMessage ?? null}
       )
@@ -258,7 +258,7 @@ export class PostgresRepository implements ContextRepository {
     return record;
   }
 
-  async listOwnerFunctionUsageSummaries(ownerId: string) {
+  async listOwnerToolUsageSummaries(ownerId: string) {
     await this.ensureSchema();
     const sql = getSql();
     const rows = await sql`
@@ -274,7 +274,7 @@ export class PostgresRepository implements ContextRepository {
       ORDER BY integration_key ASC, function_name ASC
     `;
 
-    return rows.map((row) => mapFunctionUsageSummaryRow(row));
+    return rows.map((row) => mapToolUsageSummaryRow(row));
   }
 
   async listNotifications() {
@@ -492,7 +492,7 @@ export class PostgresRepository implements ContextRepository {
         ${record.slug}, ${record.name}, ${record.description}, ${record.logoUrl ?? null}, ${record.appUrl ?? null}, ${record.docsUrl ?? null}, ${JSON.stringify(record.categories)},
         ${JSON.stringify(record.authModes)}, ${record.authStrategy}, ${record.provider ?? null}, ${record.credentialLabel}, ${record.credentialPlaceholder},
         ${record.credentialHelp}, ${record.apiBaseUrl ?? ""}, ${record.serverUrl ?? null}, ${record.openApiUrl ?? null}, ${record.oauthConfig ? JSON.stringify(record.oauthConfig) : null},
-        ${record.encryptedOAuthClient ?? null}, ${JSON.stringify(record.functions)}, ${record.enabled}, ${record.createdAt}, ${record.updatedAt}
+        ${record.encryptedOAuthClient ?? null}, ${JSON.stringify(record.tools)}, ${record.enabled}, ${record.createdAt}, ${record.updatedAt}
       )
       ON CONFLICT (slug) DO UPDATE SET
         name = EXCLUDED.name,

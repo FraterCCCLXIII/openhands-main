@@ -15,41 +15,41 @@ import {
 import {
   buildExamplePayload,
   buildPermissionNote,
-  getFunctionAccessMode,
-  listExampleFunctions,
+  getToolAccessMode,
+  listExampleTools,
 } from "@/src/lib/tool-examples";
-import type { FunctionSpec, IntegrationSpec } from "@/src/types/context-layer";
+import type { ToolSpec, IntegrationSpec } from "@/src/types/context-layer";
 
-const buildRequestExample = (functionSpec: FunctionSpec) => ({
-  scopes: functionSpec.defaultScopes,
-  payload: buildExamplePayload(functionSpec),
+const buildRequestExample = (toolSpec: ToolSpec) => ({
+  scopes: toolSpec.defaultScopes,
+  payload: buildExamplePayload(toolSpec),
 });
 
-const toOperationId = (integrationKey: string, functionName: string) =>
-  `invoke_${`${integrationKey}_${functionName}`.replace(/[^a-zA-Z0-9_]+/g, "_")}`;
+const toOperationId = (integrationKey: string, toolName: string) =>
+  `invoke_${`${integrationKey}_${toolName}`.replace(/[^a-zA-Z0-9_]+/g, "_")}`;
 
 const buildOperationDescription = (
   integration: IntegrationSpec,
-  functionSpec: FunctionSpec,
+  toolSpec: ToolSpec,
 ) => {
   const details = [
     `Integration key: ${integration.key}`,
     `Provider: ${integration.provider}`,
   ];
 
-  if (functionSpec.defaultScopes.length > 0) {
-    details.push(`Default scopes: ${functionSpec.defaultScopes.join(", ")}`);
+  if (toolSpec.defaultScopes.length > 0) {
+    details.push(`Default scopes: ${toolSpec.defaultScopes.join(", ")}`);
   }
 
   details.push("Invocation identity is optional; agentId and agentClass default to null when omitted.");
 
-  if (getFunctionAccessMode(functionSpec) === "approval_required") {
+  if (getToolAccessMode(toolSpec) === "approval_required") {
     details.push("Access mode: case-by-case approval");
   }
 
-  details.push(buildPermissionNote(functionSpec));
+  details.push(buildPermissionNote(toolSpec));
 
-  return `${integration.name} tool \`${functionSpec.name}\` exposed through the unified context-layer endpoint. ${details.join(" · ")}`;
+  return `${integration.name} tool \`${toolSpec.name}\` exposed through the unified context-layer endpoint. ${details.join(" · ")}`;
 };
 
 /**
@@ -66,30 +66,30 @@ export const buildContextOpenApiDocument = ({
     .filter((integration) => integration.enabled)
     .map((integration) => ({
       integration,
-      functions: listExampleFunctions(integration),
+      tools: listExampleTools(integration),
     }))
-    .filter(({ functions }) => functions.length > 0)
+    .filter(({ tools }) => tools.length > 0)
     .sort((left, right) => left.integration.key.localeCompare(right.integration.key));
 
   const paths = Object.fromEntries(
-    enabledIntegrations.flatMap(({ integration, functions }) =>
-      functions.map((functionSpec) => [
-        `/api/context/${integration.key}/${functionSpec.name}`,
+    enabledIntegrations.flatMap(({ integration, tools }) =>
+      tools.map((toolSpec) => [
+        `/api/context/${integration.key}/${toolSpec.name}`,
         {
           post: {
             tags: [integration.name],
-            operationId: toOperationId(integration.key, functionSpec.name),
+            operationId: toOperationId(integration.key, toolSpec.name),
             summary:
-              functionSpec.description?.trim() ||
-              `${integration.name}: ${functionSpec.name}`,
-            description: buildOperationDescription(integration, functionSpec),
+              toolSpec.description?.trim() ||
+              `${integration.name}: ${toolSpec.name}`,
+            description: buildOperationDescription(integration, toolSpec),
             security: buildApiKeySecurity("ContextApiKey"),
             requestBody: buildJsonRequestBody(
               { $ref: "#/components/schemas/ContextInvokeRequest" },
               {
                 examples: {
                   default: {
-                    value: buildRequestExample(functionSpec),
+                    value: buildRequestExample(toolSpec),
                   },
                 },
               },
@@ -107,7 +107,7 @@ export const buildContextOpenApiDocument = ({
                 "ErrorResponse",
               ),
               404: buildJsonRefResponse(
-                "Unknown integration or function.",
+                "Unknown integration or tool.",
                 "ErrorResponse",
               ),
               503: buildJsonRefResponse(

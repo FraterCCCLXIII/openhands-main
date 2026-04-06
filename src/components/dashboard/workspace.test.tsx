@@ -206,7 +206,7 @@ describe("DashboardWorkspace", () => {
         fineGrainedPermissions: true,
         config: {},
         credentials: {},
-        functions: {
+        tools: {
           slack_search_public: {
             name: "slack_search_public",
             description: "Search public Slack messages",
@@ -266,7 +266,7 @@ describe("DashboardWorkspace", () => {
 
     expect(container.textContent).toContain("Your integrations");
     expect(container.textContent).not.toContain(
-      "Connect accounts, enable integrations, and tune skill access for your personal key.",
+      "Connect accounts, enable integrations, and tune tool access for your personal key.",
     );
     const adminIntegrationLinks = Array.from(
       container.querySelectorAll('a[href="/admin-integrations"]'),
@@ -295,7 +295,7 @@ describe("DashboardWorkspace", () => {
         fineGrainedPermissions: true,
         config: {},
         credentials: {},
-        functions: {},
+        tools: {},
       },
     ];
 
@@ -462,7 +462,7 @@ describe("DashboardWorkspace", () => {
         fineGrainedPermissions: true,
         config: {},
         credentials: {},
-        functions: {},
+        tools: {},
       },
     ];
 
@@ -725,10 +725,10 @@ describe("DashboardWorkspace", () => {
         fineGrainedPermissions: true,
         config: { builtInSlug: "github" },
         credentials: {},
-        functions: {
+        tools: {
           zetaWrite: {
             name: "zetaWrite",
-            description: "Disabled write skill",
+            description: "Disabled write tool",
             enabled: false,
             accessMode: "disabled",
             fineGrainedPermissions: true,
@@ -787,16 +787,16 @@ describe("DashboardWorkspace", () => {
         });
       }
 
-      if (url === "/api/integrations/github/functions/zetaWrite" && method === "PATCH") {
+      if (url === "/api/integrations/github/tools/zetaWrite" && method === "PATCH") {
         const payload = JSON.parse(String(init?.body)) as {
           accessMode: "enabled" | "disabled" | "approval_required";
         };
         integrationsState = integrationsState.map((integration) => ({
           ...integration,
-          functions: {
-            ...integration.functions,
+          tools: {
+            ...integration.tools,
             zetaWrite: {
-              ...integration.functions.zetaWrite,
+              ...integration.tools.zetaWrite,
               accessMode: payload.accessMode,
               enabled: payload.accessMode !== "disabled",
             },
@@ -804,7 +804,7 @@ describe("DashboardWorkspace", () => {
         }));
 
         return new Response(
-          JSON.stringify(integrationsState[0]?.functions.zetaWrite ?? null),
+          JSON.stringify(integrationsState[0]?.tools.zetaWrite ?? null),
           {
             status: 200,
             headers: { "Content-Type": "application/json" },
@@ -864,31 +864,31 @@ describe("DashboardWorkspace", () => {
       });
     };
 
-    const getVisibleFunctionNames = () =>
+    const getVisibleToolNames = () =>
       Array.from(
-        container.querySelectorAll('[data-integration-key="github"] [data-function-key]'),
-      ).map((row) => row.getAttribute("data-function-name"));
+        container.querySelectorAll('[data-integration-key="github"] [data-tool-key]'),
+      ).map((row) => row.getAttribute("data-tool-name"));
 
-    const getFunctionMode = (name: string) =>
+    const getToolMode = (name: string) =>
       container
         .querySelector(
-          `[data-function-key="github:${name}"] [data-access-mode]`,
+          `[data-tool-key="github:${name}"] [data-access-mode]`,
         )
         ?.getAttribute("data-access-mode");
 
     const searchInput = container.querySelector(
-      'input[type="search"][aria-label="Search integrations and skills"]',
+      'input[type="search"][aria-label="Search integrations and tools"]',
     ) as HTMLInputElement | null;
     expect(searchInput).toBeTruthy();
 
     const hideDisabledInput = container.querySelector(
-      'input[type="checkbox"][aria-label="Hide disabled skills"]',
+      'input[type="checkbox"][aria-label="Hide disabled tools"]',
     ) as HTMLInputElement | null;
     expect(hideDisabledInput?.checked).toBe(true);
 
-    await clickButton("Show skills");
+    await clickButton("Show tools");
 
-    expect(getVisibleFunctionNames()).toEqual(["alphaList", "betaReview"]);
+    expect(getVisibleToolNames()).toEqual(["alphaList", "betaReview"]);
 
     await act(async () => {
       setInputValue(searchInput ?? undefined, "review");
@@ -898,7 +898,7 @@ describe("DashboardWorkspace", () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
     });
 
-    expect(getVisibleFunctionNames()).toEqual(["betaReview"]);
+    expect(getVisibleToolNames()).toEqual(["betaReview"]);
 
     await act(async () => {
       setInputValue(searchInput ?? undefined, "");
@@ -916,7 +916,7 @@ describe("DashboardWorkspace", () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
     });
 
-    expect(getVisibleFunctionNames()).toEqual([
+    expect(getVisibleToolNames()).toEqual([
       "alphaList",
       "betaReview",
       "zetaWrite",
@@ -930,8 +930,8 @@ describe("DashboardWorkspace", () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
     });
 
-    expect(getVisibleFunctionNames()).toEqual(["zetaWrite"]);
-    expect(getFunctionMode("zetaWrite")).toBe("disabled");
+    expect(getVisibleToolNames()).toEqual(["zetaWrite"]);
+    expect(getToolMode("zetaWrite")).toBe("disabled");
 
     const caseByCaseButton = container.querySelector(
       'button[aria-label="Case-by-case access for zetaWrite"]',
@@ -946,7 +946,7 @@ describe("DashboardWorkspace", () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
     });
 
-    expect(getFunctionMode("zetaWrite")).toBe("approval_required");
+    expect(getToolMode("zetaWrite")).toBe("approval_required");
 
     await act(async () => {
       hideDisabledInput?.click();
@@ -957,14 +957,14 @@ describe("DashboardWorkspace", () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
     });
 
-    expect(getVisibleFunctionNames()).toEqual([
+    expect(getVisibleToolNames()).toEqual([
       "alphaList",
       "betaReview",
       "zetaWrite",
     ]);
   });
 
-  it("bulk disables only tracked unused skills from the integrations page", async () => {
+  it("bulk disables only tracked unused tools from the integrations page", async () => {
     usePathnameMock.mockReturnValue("/integrations");
 
     let integrationsState: IntegrationSpec[] = [
@@ -978,10 +978,10 @@ describe("DashboardWorkspace", () => {
         fineGrainedPermissions: true,
         config: { builtInSlug: "github" },
         credentials: {},
-        functions: {
+        tools: {
           staleRead: {
             name: "staleRead",
-            description: "Old tracked skill",
+            description: "Old tracked tool",
             enabled: true,
             accessMode: "enabled",
             fineGrainedPermissions: true,
@@ -994,7 +994,7 @@ describe("DashboardWorkspace", () => {
           },
           freshWrite: {
             name: "freshWrite",
-            description: "Recently used skill",
+            description: "Recently used tool",
             enabled: true,
             accessMode: "enabled",
             fineGrainedPermissions: true,
@@ -1055,10 +1055,10 @@ describe("DashboardWorkspace", () => {
 
         integrationsState = integrationsState.map((integration) => ({
           ...integration,
-          functions: {
-            ...integration.functions,
+          tools: {
+            ...integration.tools,
             staleRead: {
-              ...integration.functions.staleRead,
+              ...integration.tools.staleRead,
               enabled: false,
               accessMode: "disabled",
             },
@@ -1071,10 +1071,10 @@ describe("DashboardWorkspace", () => {
             thresholdUnit: "days",
             cutoffIso: "2026-02-27T00:00:00.000Z",
             disabledCount: 1,
-            disabledFunctions: [
+            disabledTools: [
               {
                 integrationKey: "github",
-                functionName: "staleRead",
+                toolName: "staleRead",
                 lastInvokedAt: "2026-01-01T00:00:00.000Z",
               },
             ],
@@ -1113,15 +1113,15 @@ describe("DashboardWorkspace", () => {
       await Promise.resolve();
     });
 
-    expect(container.textContent).toContain("1 skill matched");
+    expect(container.textContent).toContain("1 tool matched");
     expect(
       Array.from(container.querySelectorAll("button"))
-        .find((button) => button.getAttribute("aria-label") === "Disable unused functions")
+        .find((button) => button.getAttribute("aria-label") === "Disable unused tools")
         ?.textContent,
     ).toContain("Disable");
     await act(async () => {
       Array.from(container.querySelectorAll("button"))
-        .find((button) => button.textContent?.includes("Show skills"))
+        .find((button) => button.textContent?.includes("Show tools"))
         ?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
     expect(container.textContent).toContain("Last tracked invocation:");
@@ -1130,7 +1130,7 @@ describe("DashboardWorkspace", () => {
 
     await act(async () => {
       Array.from(container.querySelectorAll("button"))
-        .find((button) => button.getAttribute("aria-label") === "Disable unused functions")
+        .find((button) => button.getAttribute("aria-label") === "Disable unused tools")
         ?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
 
@@ -1140,11 +1140,11 @@ describe("DashboardWorkspace", () => {
     });
 
     expect(confirmSpy).toHaveBeenCalledTimes(1);
-    expect(confirmSpy.mock.calls[0]?.[0]).toContain("Disable 1 tracked function");
+    expect(confirmSpy.mock.calls[0]?.[0]).toContain("Disable 1 tracked tool");
     expect(confirmSpy.mock.calls[0]?.[0]).toContain("since");
-    expect(container.textContent).toContain("Disabled 1 tracked function");
-    expect(container.textContent).toContain("0 skills matched");
-    expect(integrationsState[0]?.functions.staleRead.accessMode).toBe("disabled");
+    expect(container.textContent).toContain("Disabled 1 tracked tool");
+    expect(container.textContent).toContain("0 tools matched");
+    expect(integrationsState[0]?.tools.staleRead.accessMode).toBe("disabled");
 
     confirmSpy.mockRestore();
   });
@@ -1509,7 +1509,7 @@ describe("DashboardWorkspace", () => {
         agentId: "agent-1",
         agentClass: "assistant",
         integrationKey: "slack",
-        functionName: "send_message",
+        toolName: "send_message",
         scopes: ["chat:write"],
         requestedMinutes: 240,
         channels: ["in_app"],
@@ -1523,7 +1523,7 @@ describe("DashboardWorkspace", () => {
         agentId: "agent-2",
         agentClass: "assistant",
         integrationKey: "github",
-        functionName: "create_issue",
+        toolName: "create_issue",
         scopes: ["issues:write"],
         requestedMinutes: 240,
         channels: ["in_app"],
@@ -1539,7 +1539,7 @@ describe("DashboardWorkspace", () => {
         agentId: "agent-3",
         agentClass: "reviewer",
         integrationKey: "linear",
-        functionName: "delete_comment",
+        toolName: "delete_comment",
         scopes: ["comments:write"],
         requestedMinutes: 240,
         channels: ["in_app"],
@@ -1555,7 +1555,7 @@ describe("DashboardWorkspace", () => {
         agentId: null,
         agentClass: null,
         integrationKey: "github",
-        functionName: "delete_repo",
+        toolName: "delete_repo",
         scopes: ["repo:admin"],
         requestedMinutes: 240,
         channels: ["in_app"],
@@ -1706,7 +1706,7 @@ describe("DashboardWorkspace", () => {
         agentId: "agent-1",
         agentClass: "assistant",
         integrationKey: "github",
-        functionName: "delete_repo",
+        toolName: "delete_repo",
         scopes: ["repo:admin"],
         requestedMinutes: 240,
         channels: ["in_app"],

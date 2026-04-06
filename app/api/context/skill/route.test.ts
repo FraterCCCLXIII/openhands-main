@@ -45,7 +45,7 @@ const githubIntegration: IntegrationSpec = {
   fineGrainedPermissions: true,
   config: { serverUrl: "https://api.githubcopilot.com/mcp/" },
   credentials: {},
-  functions: {
+  tools: {
     search_repositories: {
       name: "search_repositories",
       description: "Search repositories",
@@ -69,7 +69,7 @@ const otherOwnerIntegration: IntegrationSpec = {
   fineGrainedPermissions: true,
   config: { serverUrl: "https://mcp.slack.com/mcp" },
   credentials: {},
-  functions: {
+  tools: {
     slack_search_public: {
       name: "slack_search_public",
       description: "Search public Slack messages",
@@ -123,6 +123,7 @@ describe("GET /api/context/skill", () => {
     expect(body).toContain(
       "POST https://context-layer.example.com/api/context/github/search_repositories",
     );
+    expect(body).toContain("Generated tool catalog for the current OpenHands Context Layer profile.");
     expect(body).not.toContain("slack.slack_search_public");
   });
 

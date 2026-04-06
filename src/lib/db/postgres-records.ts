@@ -3,7 +3,7 @@ import type {
   AdminApiKeyRecord,
   AgentApiKeyRecord,
   AgentClassPolicy,
-  FunctionUsageSummary,
+  ToolUsageSummary,
   IntegrationConnectionRecord,
   IntegrationSpec,
   ManagedConnectorRecord,
@@ -46,7 +46,7 @@ export const mapIntegrationRow = (row: PostgresRow): IntegrationSpec => ({
   fineGrainedPermissions: Boolean(row.fine_grained_permissions),
   config: parseJson<Record<string, unknown>>(row.config),
   credentials: parseJson<Record<string, unknown>>(row.credentials),
-  functions: parseJson<IntegrationSpec["functions"]>(row.functions),
+  tools: parseJson<IntegrationSpec["tools"]>(row.functions),
 });
 
 export const mapPolicyRow = (row: PostgresRow): AgentClassPolicy => ({
@@ -59,7 +59,7 @@ export const mapAccessRequestRow = (row: PostgresRow): AccessRequest => ({
   agentId: row.agent_id == null ? null : String(row.agent_id),
   agentClass: row.agent_class == null ? null : String(row.agent_class),
   integrationKey: String(row.integration_key),
-  functionName: String(row.function_name),
+  toolName: String(row.function_name),
   scopes: parseJson<string[]>(row.scopes),
   requestedMinutes: Number(row.requested_minutes),
   channels: parseJson<AccessRequest["channels"]>(row.channels),
@@ -77,22 +77,22 @@ export const mapTemporaryGrantRow = (row: PostgresRow): TemporaryGrant => ({
   agentId: row.agent_id == null ? null : String(row.agent_id),
   agentClass: row.agent_class == null ? null : String(row.agent_class),
   integrationKey: String(row.integration_key),
-  functionName: String(row.function_name),
+  toolName: String(row.function_name),
   scopes: parseJson<string[]>(row.scopes),
   grantedBy: String(row.granted_by),
   createdAt: toIsoString(row.created_at),
   expiresAt: toIsoString(row.expires_at),
 });
 
-export const mapFunctionUsageSummaryRow = (
+export const mapToolUsageSummaryRow = (
   row: PostgresRow,
-): FunctionUsageSummary => ({
+): ToolUsageSummary => ({
   integrationKey: String(row.integration_key),
-  functionName: String(row.function_name),
+  toolName: String(row.function_name),
   lastInvokedAt: toIsoString(row.last_invoked_at),
   lastInvocationOutcome: String(
     row.last_invocation_outcome,
-  ) as FunctionUsageSummary["lastInvocationOutcome"],
+  ) as ToolUsageSummary["lastInvocationOutcome"],
   invocationCount: Number(row.invocation_count),
 });
 
@@ -157,7 +157,7 @@ export const mapManagedConnectorRow = (
     ? parseJson<ManagedConnectorRecord["oauthConfig"]>(row.oauth_config)
     : undefined,
   encryptedOAuthClient: toOptionalString(row.encrypted_oauth_client),
-  functions: parseJson<ManagedConnectorRecord["functions"]>(row.functions),
+  tools: parseJson<ManagedConnectorRecord["tools"]>(row.functions),
   enabled: Boolean(row.enabled),
   createdAt: toIsoString(row.created_at),
   updatedAt: toIsoString(row.updated_at),

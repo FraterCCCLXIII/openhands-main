@@ -84,7 +84,7 @@ const baseIntegration: IntegrationSpec = {
   fineGrainedPermissions: true,
   config: {},
   credentials: {},
-  functions: {
+  tools: {
     accounts: {
       name: "accounts",
       description: "List accounts",
@@ -241,7 +241,7 @@ describe("/api/mcp", () => {
     await expect(service.listAccessRequests()).resolves.toMatchObject([
       {
         integrationKey: "crm",
-        functionName: "contacts",
+        toolName: "contacts",
         agentId: null,
         agentClass: null,
         agentData: {

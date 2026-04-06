@@ -95,7 +95,7 @@ describe("app/admin-integrations/page", () => {
     expect(html).toContain("AUTH_REDIRECT_PROXY_URL");
     expect(html).toContain("stable deployment origin instead of the preview URL");
     expect(html).toContain("Connect");
-    expect(html).toContain("Discover functions");
+    expect(html).toContain("Discover tools");
     expect(html).toContain("managed remote MCP or managed HTTP connector");
     expect(html).toContain("APP_ADMIN_EMAILS");
     expect(html).toContain("src/lib/integrations/oauth-provider-registration-defaults.ts");

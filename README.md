@@ -2,13 +2,13 @@
 
 OpenHands Context Layer is a Next.js + TypeScript application that gives agents one authenticated tool surface while keeping connector setup, per-user credentials, approvals, and operational controls in a human-facing dashboard.
 
-Teams use it to connect SaaS tools and custom MCP servers, attach each user's own credentials, decide which functions agents can call, and require case-by-case human approval when needed. It also generates the REST, MCP, and OpenAPI connection details agents need so users can hand over a single controlled interface instead of exposing raw third-party credentials and scattered integration setup.
+Teams use it to connect SaaS tools and custom MCP servers, attach each user's own credentials, decide which tools agents can call, and require case-by-case human approval when needed. It also generates the REST, MCP, and OpenAPI connection details agents need so users can hand over a single controlled interface instead of exposing raw third-party credentials and scattered integration setup.
 
 ## Highlights
 
-- Unified agent runtime endpoint: `POST /api/context/[integrationKey]/[functionName]`
+- Unified agent runtime endpoint: `POST /api/context/[integrationKey]/[toolName]`
 - Agent-facing MCP server at `POST /api/mcp`
-- Generated agent docs via `GET /api/context/skill` and `GET /api/context/openapi`
+- Generated agent docs via the downloadable tool catalog at `GET /api/context/skill` and the OpenAPI document at `GET /api/context/openapi`
 - Separate user and admin automation APIs with their own OpenAPI documents
 - Per-user managed connectors, OAuth connections, and remote MCP integrations
 - Function-level access modes: `enabled`, `disabled`, and `approval_required`
@@ -44,7 +44,7 @@ Legacy compatibility routes still exist, but new docs and links should target th
 
 ### Agent runtime
 
-- `POST /api/context/[integrationKey]/[functionName]`
+- `POST /api/context/[integrationKey]/[toolName]`
 - `GET /api/context/skill`
 - `GET /api/context/openapi`
 - `POST /api/mcp`
@@ -53,7 +53,7 @@ Legacy compatibility routes still exist, but new docs and links should target th
 
 - `GET /api/user/openapi`
 - `GET /api/user/integrations`
-- `PATCH /api/user/integrations/[integrationKey]/functions/[functionName]`
+- `PATCH /api/user/integrations/[integrationKey]/tools/[toolName]`
 - `GET|POST /api/user/key`
 
 ### Admin automation API

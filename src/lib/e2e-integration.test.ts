@@ -42,7 +42,7 @@ const { MockAdapter } = await import("./adapters/mock-adapter");
 const { HttpAdapter } = await import("./adapters/http-adapter");
 const { McpAdapter } = await import("./adapters/mcp-adapter");
 const { NotificationPublisher } = await import("./notifications/publisher");
-const { listAvailableBuiltInConnectors, listDefaultBuiltInConnectors, buildManagedConnectorFunctions, resolveManagedConnectorCredentials } =
+const { listAvailableBuiltInConnectors, listDefaultBuiltInConnectors, buildManagedConnectorTools, resolveManagedConnectorCredentials } =
   await import("./integrations/managed-connectors");
 
 beforeAll(() => {
@@ -124,7 +124,7 @@ describe("built-in connector listing", () => {
       credentialPlaceholder: "sk-...",
       credentialHelp: "Custom help",
       apiBaseUrl: "https://api.elevenlabs.io",
-      functions: [],
+      tools: [],
       enabled: true,
       oauthConfigured: false,
       createdAt: now,
@@ -157,7 +157,7 @@ describe("built-in connector listing", () => {
       credentialPlaceholder: "...",
       credentialHelp: "...",
       apiBaseUrl: "https://api.elevenlabs.io",
-      functions: [],
+      tools: [],
       enabled: false,
       oauthConfigured: false,
       createdAt: now,
@@ -191,7 +191,7 @@ describe("built-in connector → integration creation → listing flow", () => {
       credentialPlaceholder: "Paste your token",
       credentialHelp: "Get your token from the settings page.",
       apiBaseUrl: "https://api.test.example.com",
-      functions: [
+      tools: [
         {
           name: "list_items",
           description: "List all items",
@@ -218,12 +218,12 @@ describe("built-in connector → integration creation → listing flow", () => {
     expect(testApi!.toolCount).toBe(2);
     expect(testApi!.authStrategy).toBe("bearer");
 
-    // Step 3: Build function specs from the managed connector
+    // Step 3: Build tool specs from the managed connector
     const connector = await repo.getManagedConnector("test-api");
     expect(connector).not.toBeNull();
-    const functionSpecs = buildManagedConnectorFunctions(connector!);
-    expect(Object.keys(functionSpecs)).toEqual(["list_items", "create_item"]);
-    expect(functionSpecs["list_items"]!.description).toBe("List all items");
+    const toolSpecs = buildManagedConnectorTools(connector!);
+    expect(Object.keys(toolSpecs)).toEqual(["list_items", "create_item"]);
+    expect(toolSpecs["list_items"]!.description).toBe("List all items");
 
     // Step 4: Create an owner integration via the service
     const integration = await service.registerOwnerIntegration(TEST_OWNER, {
@@ -236,18 +236,18 @@ describe("built-in connector → integration creation → listing flow", () => {
       fineGrainedPermissions: true,
       config: { baseUrl: "https://api.test.example.com" },
       credentials: { accessToken: "test-token-123" },
-      functions: functionSpecs,
+      tools: toolSpecs,
     });
 
     expect(integration.key).toBe("test-api");
     expect(integration.enabled).toBe(true);
-    expect(Object.keys(integration.functions)).toHaveLength(2);
+    expect(Object.keys(integration.tools)).toHaveLength(2);
 
     // Step 5: List the owner's integrations via the service
     const ownerIntegrations = await service.listOwnerIntegrations(TEST_OWNER);
     expect(ownerIntegrations).toHaveLength(1);
     expect(ownerIntegrations[0]!.key).toBe("test-api");
-    expect(ownerIntegrations[0]!.functions["list_items"]).toBeDefined();
+    expect(ownerIntegrations[0]!.tools["list_items"]).toBeDefined();
   });
 
   it("resolves bearer credentials from a managed connector definition", () => {
@@ -325,7 +325,7 @@ describe("agent API key + integration lifecycle", () => {
       fineGrainedPermissions: false,
       config: { serverUrl: "https://mcp.example.com" },
       credentials: {},
-      functions: {},
+      tools: {},
     });
 
     // Step 4: Toggle integration enabled/disabled
@@ -391,7 +391,7 @@ describe("temporary grant lifecycle", () => {
       fineGrainedPermissions: true,
       config: {},
       credentials: { accessToken: "ghp_test" },
-      functions: {
+      tools: {
         create_issue: {
           name: "create_issue",
           description: "Create a GitHub issue",
@@ -411,7 +411,7 @@ describe("temporary grant lifecycle", () => {
       agentId: "bot-1",
       agentClass: "researcher",
       integrationKey: "github",
-      functionName: "create_issue",
+      toolName: "create_issue",
       scopes: ["repo"],
       grantedBy: "admin@test.com",
       createdAt: new Date().toISOString(),
@@ -422,7 +422,7 @@ describe("temporary grant lifecycle", () => {
 
     const grants = await repo.listTemporaryGrants();
     expect(grants).toHaveLength(1);
-    expect(grants[0]!.functionName).toBe("create_issue");
+    expect(grants[0]!.toolName).toBe("create_issue");
 
     // Purge should not remove active grants
     const purged = await repo.purgeExpiredGrants(new Date().toISOString());

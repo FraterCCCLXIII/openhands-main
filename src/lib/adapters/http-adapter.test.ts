@@ -20,9 +20,9 @@ const buildInput = (): AdapterInvocationInput => ({
       headerName: "xi-api-key",
       secret: "test-secret",
     },
-    functions: {},
+    tools: {},
   },
-  functionSpec: {
+  toolSpec: {
     name: "speech_to_text",
     description: "Transcribe uploaded audio.",
     enabled: true,

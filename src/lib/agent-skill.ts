@@ -1,21 +1,21 @@
 import { OPENHANDS_CONTEXT_KEY_ENV } from "@/src/lib/agent-connection";
 import type {
-  FunctionAccessMode,
-  FunctionSpec,
+  ToolAccessMode,
+  ToolSpec,
   IntegrationSpec,
 } from "@/src/types/context-layer";
 
-const getFunctionAccessMode = (functionSpec: FunctionSpec): FunctionAccessMode =>
-  functionSpec.accessMode ?? (functionSpec.enabled ? "enabled" : "disabled");
+const getToolAccessMode = (toolSpec: ToolSpec): ToolAccessMode =>
+  toolSpec.accessMode ?? (toolSpec.enabled ? "enabled" : "disabled");
 
-const isFunctionAvailable = (functionSpec: FunctionSpec) =>
-  functionSpec.enabled && getFunctionAccessMode(functionSpec) !== "disabled";
+const isToolAvailable = (toolSpec: ToolSpec) =>
+  toolSpec.enabled && getToolAccessMode(toolSpec) !== "disabled";
 
 const renderScopes = (scopes: string[]) =>
   scopes.length > 0 ? scopes.map((scope) => `\`${scope}\``).join(", ") : "none";
 
-const renderAccessMode = (functionSpec: FunctionSpec) => {
-  const accessMode = getFunctionAccessMode(functionSpec);
+const renderAccessMode = (toolSpec: ToolSpec) => {
+  const accessMode = getToolAccessMode(toolSpec);
 
   if (accessMode === "approval_required") {
     return "approval required";
@@ -25,7 +25,7 @@ const renderAccessMode = (functionSpec: FunctionSpec) => {
 };
 
 /**
- * Generates the downloadable SKILL.md file for the authenticated owner profile.
+ * Generates the downloadable SKILL.md tool catalog for the authenticated owner profile.
  */
 export const buildAgentSkillMarkdown = ({
   baseUrl,
@@ -39,30 +39,30 @@ export const buildAgentSkillMarkdown = ({
     .filter((integration) => integration.enabled)
     .map((integration) => ({
       ...integration,
-      availableFunctions: Object.values(integration.functions)
-        .filter(isFunctionAvailable)
+      availableTools: Object.values(integration.tools)
+        .filter(isToolAvailable)
         .sort((left, right) => left.name.localeCompare(right.name)),
     }))
-    .filter((integration) => integration.availableFunctions.length > 0);
-  const availableFunctionCount = availableIntegrations.reduce(
-    (count, integration) => count + integration.availableFunctions.length,
+    .filter((integration) => integration.availableTools.length > 0);
+  const availableToolCount = availableIntegrations.reduce(
+    (count, integration) => count + integration.availableTools.length,
     0,
   );
 
   const lines = [
     "---",
     "name: context-layer-profile-tools",
-    "description: Generated skill for the current OpenHands Context Layer profile. Use it when an agent should call one of the registered tools through /api/context.",
+    "description: Generated tool catalog for the current OpenHands Context Layer profile. Use it when an agent should call one of the registered tools through /api/context.",
     "---",
     "",
-    "This generated skill lists the tools that are currently available through the OpenHands Context Layer profile.",
+    "This generated tool catalog lists the tools that are currently available through the OpenHands Context Layer profile.",
     "",
     "## Auth",
     "",
     `- Store the personal context-layer API key in ${OPENHANDS_CONTEXT_KEY_ENV}.`,
     `- Send \`Authorization: Bearer ${OPENHANDS_CONTEXT_KEY_ENV}\`.`,
     `- Base URL: \`${normalizedBaseUrl}\``,
-    `- Endpoint pattern: \`POST ${normalizedBaseUrl}/api/context/{integrationKey}/{functionName}\``,
+    `- Endpoint pattern: \`POST ${normalizedBaseUrl}/api/context/{integrationKey}/{toolName}\``,
     "",
     "## Request body",
     "",
@@ -77,13 +77,13 @@ export const buildAgentSkillMarkdown = ({
     ),
     "```",
     "",
-    `## Available tools (${availableFunctionCount})`,
+    `## Available tools (${availableToolCount})`,
     "",
   ];
 
   if (availableIntegrations.length === 0) {
     lines.push(
-      "No enabled tools are available yet. Add integrations in the dashboard and keep the tool toggles enabled to populate this generated skill.",
+      "No enabled tools are available yet. Add integrations in the dashboard and keep the tool toggles enabled to populate this generated tool catalog.",
     );
   } else {
     for (const integration of availableIntegrations) {
@@ -95,14 +95,14 @@ export const buildAgentSkillMarkdown = ({
         "",
       );
 
-      for (const functionSpec of integration.availableFunctions) {
+      for (const toolSpec of integration.availableTools) {
         lines.push(
-          `#### \`${integration.key}.${functionSpec.name}\``,
+          `#### \`${integration.key}.${toolSpec.name}\``,
           "",
-          `- Description: ${functionSpec.description || "No description provided."}`,
-          `- Invoke with: \`POST ${normalizedBaseUrl}/api/context/${integration.key}/${functionSpec.name}\``,
-          `- Default scopes: ${renderScopes(functionSpec.defaultScopes)}`,
-          `- Access: ${renderAccessMode(functionSpec)}`,
+          `- Description: ${toolSpec.description || "No description provided."}`,
+          `- Invoke with: \`POST ${normalizedBaseUrl}/api/context/${integration.key}/${toolSpec.name}\``,
+          `- Default scopes: ${renderScopes(toolSpec.defaultScopes)}`,
+          `- Access: ${renderAccessMode(toolSpec)}`,
           "",
         );
       }
@@ -114,7 +114,7 @@ export const buildAgentSkillMarkdown = ({
     "",
     "- Each tool call should pass provider-specific arguments inside `payload`.",
     "- Tools marked as `approval required` need a temporary grant before invocation succeeds.",
-    "- Regenerate this file after changing integrations or function toggles so the tool list stays current.",
+    "- Regenerate this file after changing integrations or tool toggles so the tool list stays current.",
     "",
   );
 

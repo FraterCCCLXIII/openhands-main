@@ -3,8 +3,8 @@ import { ChevronRight } from "lucide-react";
 import {
   AccessModeSlider,
   accessModeButtonClassName,
-  getFunctionAccessMode,
-} from "@/src/components/integrations/function-access-controls";
+  getToolAccessMode,
+} from "@/src/components/integrations/tool-access-controls";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
 import { cn } from "@/src/lib/utils";
@@ -14,37 +14,37 @@ import {
   type DiscoveryResponse,
   type IntegrationKind,
 } from "@/src/components/integrations/wizard/utils";
-import type { FunctionAccessMode, FunctionSpec } from "@/src/types/context-layer";
+import type { ToolAccessMode, ToolSpec } from "@/src/types/context-layer";
 
 interface ReviewStepProps {
   createPending: boolean;
   discovery: DiscoveryResponse;
   draftName: string;
   draftKey: string;
-  filteredReviewedFunctions: Array<[string, FunctionSpec]>;
-  functionModes: Record<string, FunctionAccessMode>;
-  functionSearch: string;
-  hasMatchingFunctions: boolean;
+  filteredReviewedTools: Array<[string, ToolSpec]>;
+  toolModes: Record<string, ToolAccessMode>;
+  toolSearch: string;
+  hasMatchingTools: boolean;
   kind: IntegrationKind;
-  matchingFunctionNames: string[];
-  reviewedFunctions: Array<[string, FunctionSpec]>;
-  selectedFunctionCount: number;
-  selectedFunctionNames: string[];
-  selectedFunctions: Record<string, boolean>;
+  matchingToolNames: string[];
+  reviewedTools: Array<[string, ToolSpec]>;
+  selectedToolCount: number;
+  selectedToolNames: string[];
+  selectedTools: Record<string, boolean>;
   selectedMatchingCount: number;
   allMatchingSelected: boolean;
-  expandedFunctions: Record<string, boolean>;
+  expandedTools: Record<string, boolean>;
   onBack: () => void;
   onCreate: () => void;
-  onFunctionSearchChange: (value: string) => void;
-  onSetAccessModeForFunctions: (
+  onToolSearchChange: (value: string) => void;
+  onSetAccessModeForTools: (
     names: string[],
-    accessMode: FunctionAccessMode,
+    accessMode: ToolAccessMode,
   ) => void;
-  onSetFunctionMode: (name: string, nextMode: FunctionAccessMode) => void;
-  onSetSelectedFunctions: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
-  onSetSelectedStateForFunctions: (names: string[], selected: boolean) => void;
-  onToggleFunctionExpanded: (name: string) => void;
+  onSetToolMode: (name: string, nextMode: ToolAccessMode) => void;
+  onSetSelectedTools: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
+  onSetSelectedStateForTools: (names: string[], selected: boolean) => void;
+  onToggleToolExpanded: (name: string) => void;
 }
 
 export const ReviewStep = ({
@@ -52,27 +52,27 @@ export const ReviewStep = ({
   discovery,
   draftName,
   draftKey,
-  filteredReviewedFunctions,
-  functionModes,
-  functionSearch,
-  hasMatchingFunctions,
+  filteredReviewedTools,
+  toolModes,
+  toolSearch,
+  hasMatchingTools,
   kind,
-  matchingFunctionNames,
-  reviewedFunctions,
-  selectedFunctionCount,
-  selectedFunctionNames,
-  selectedFunctions,
+  matchingToolNames,
+  reviewedTools,
+  selectedToolCount,
+  selectedToolNames,
+  selectedTools,
   selectedMatchingCount,
   allMatchingSelected,
-  expandedFunctions,
+  expandedTools,
   onBack,
   onCreate,
-  onFunctionSearchChange,
-  onSetAccessModeForFunctions,
-  onSetFunctionMode,
-  onSetSelectedFunctions,
-  onSetSelectedStateForFunctions,
-  onToggleFunctionExpanded,
+  onToolSearchChange,
+  onSetAccessModeForTools,
+  onSetToolMode,
+  onSetSelectedTools,
+  onSetSelectedStateForTools,
+  onToggleToolExpanded,
 }: ReviewStepProps) => (
   <div className="space-y-6">
     <div className="flex flex-wrap items-center gap-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-4 text-sm text-[var(--color-text-base)]">
@@ -80,13 +80,14 @@ export const ReviewStep = ({
       <Badge>{discovery.provider}</Badge>
       <Badge>{authStrategyLabel(discovery.authStrategy)}</Badge>
       <span>
-        {reviewedFunctions.length} functions discovered for {draftName || draftKey}
+        {reviewedTools.length} tool
+        {reviewedTools.length === 1 ? "" : "s"} discovered for {draftName || draftKey}
       </span>
     </div>
 
-    {reviewedFunctions.length === 0 ? (
+    {reviewedTools.length === 0 ? (
       <div className="rounded-xl border border-dashed border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-5 text-sm text-[var(--color-text-base)]">
-        No functions were discovered for this connector. Go back and confirm the
+        No tools were discovered for this connector. Go back and confirm the
         selected managed connector or MCP server URL.
       </div>
     ) : (
@@ -95,18 +96,18 @@ export const ReviewStep = ({
           <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
             <div className="space-y-1">
               <h3 className="text-sm font-semibold text-white">
-                Review function access defaults
+                Review tool access defaults
               </h3>
               <p className="text-xs leading-6 text-[var(--color-text-base)]">
-                Search, select, and update multiple functions at once. Bulk actions
-                apply to the currently selected functions, while select all and
+                Search, select, and update multiple tools at once. Bulk actions
+                apply to the currently selected tools, while select all and
                 deselect only affect the current search results.
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--color-text-base)]">
-              <Badge>{filteredReviewedFunctions.length} matching</Badge>
-              <Badge>{selectedFunctionCount} selected</Badge>
-              {functionSearch.trim() ? (
+              <Badge>{filteredReviewedTools.length} matching</Badge>
+              <Badge>{selectedToolCount} selected</Badge>
+              {toolSearch.trim() ? (
                 <Badge>{selectedMatchingCount} selected in view</Badge>
               ) : null}
             </div>
@@ -115,10 +116,10 @@ export const ReviewStep = ({
           <div className="mt-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <input
               type="search"
-              value={functionSearch}
-              onChange={(event) => onFunctionSearchChange(event.target.value)}
-              placeholder="Search functions"
-              aria-label="Search functions"
+              value={toolSearch}
+              onChange={(event) => onToolSearchChange(event.target.value)}
+              placeholder="Search tools"
+              aria-label="Search tools"
               className={cn(integrationWizardInputClassName, "w-full lg:max-w-md")}
             />
             <div className="flex flex-wrap gap-2">
@@ -126,8 +127,8 @@ export const ReviewStep = ({
                 type="button"
                 variant="ghost"
                 className="h-9 rounded-md px-3 text-xs"
-                disabled={!hasMatchingFunctions || allMatchingSelected}
-                onClick={() => onSetSelectedStateForFunctions(matchingFunctionNames, true)}
+                disabled={!hasMatchingTools || allMatchingSelected}
+                onClick={() => onSetSelectedStateForTools(matchingToolNames, true)}
               >
                 Select all matches
               </Button>
@@ -135,8 +136,8 @@ export const ReviewStep = ({
                 type="button"
                 variant="ghost"
                 className="h-9 rounded-md px-3 text-xs"
-                disabled={!hasMatchingFunctions || selectedMatchingCount === 0}
-                onClick={() => onSetSelectedStateForFunctions(matchingFunctionNames, false)}
+                disabled={!hasMatchingTools || selectedMatchingCount === 0}
+                onClick={() => onSetSelectedStateForTools(matchingToolNames, false)}
               >
                 Deselect matches
               </Button>
@@ -148,8 +149,8 @@ export const ReviewStep = ({
               type="button"
               variant="ghost"
               className={cn("h-9 rounded-md px-3 text-xs", accessModeButtonClassName.enabled)}
-              disabled={selectedFunctionCount === 0}
-              onClick={() => onSetAccessModeForFunctions(selectedFunctionNames, "enabled")}
+              disabled={selectedToolCount === 0}
+              onClick={() => onSetAccessModeForTools(selectedToolNames, "enabled")}
             >
               Enable selected
             </Button>
@@ -160,9 +161,9 @@ export const ReviewStep = ({
                 "h-9 rounded-md px-3 text-xs",
                 accessModeButtonClassName.approval_required,
               )}
-              disabled={selectedFunctionCount === 0}
+              disabled={selectedToolCount === 0}
               onClick={() =>
-                onSetAccessModeForFunctions(selectedFunctionNames, "approval_required")
+                onSetAccessModeForTools(selectedToolNames, "approval_required")
               }
             >
               Case-by-case selected
@@ -171,32 +172,32 @@ export const ReviewStep = ({
               type="button"
               variant="ghost"
               className={cn("h-9 rounded-md px-3 text-xs", accessModeButtonClassName.disabled)}
-              disabled={selectedFunctionCount === 0}
-              onClick={() => onSetAccessModeForFunctions(selectedFunctionNames, "disabled")}
+              disabled={selectedToolCount === 0}
+              onClick={() => onSetAccessModeForTools(selectedToolNames, "disabled")}
             >
               Disable selected
             </Button>
           </div>
         </div>
 
-        {filteredReviewedFunctions.length === 0 ? (
+        {filteredReviewedTools.length === 0 ? (
           <div className="rounded-xl border border-dashed border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-5 text-sm text-[var(--color-text-base)]">
-            No functions match this search. Try a different term.
+            No tools match this search. Try a different term.
           </div>
         ) : (
           <div className="overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)]">
             <div className="divide-y divide-[var(--color-border)]">
-              {filteredReviewedFunctions.map(([name, functionSpec]) => {
+              {filteredReviewedTools.map(([name, toolSpec]) => {
                 const accessMode =
-                  functionModes[name] ?? getFunctionAccessMode(functionSpec);
-                const isExpanded = expandedFunctions[name] ?? false;
-                const isSelected = selectedFunctions[name] ?? false;
+                  toolModes[name] ?? getToolAccessMode(toolSpec);
+                const isExpanded = expandedTools[name] ?? false;
+                const isSelected = selectedTools[name] ?? false;
 
                 return (
                   <div
                     key={name}
                     className="px-4 py-4"
-                    data-function-name={name}
+                    data-tool-name={name}
                   >
                     <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
                       <div className="min-w-0 flex-1">
@@ -207,7 +208,7 @@ export const ReviewStep = ({
                             checked={isSelected}
                             aria-label={`Select ${name}`}
                             onChange={(event) =>
-                              onSetSelectedFunctions((current) => ({
+                              onSetSelectedTools((current) => ({
                                 ...current,
                                 [name]: event.target.checked,
                               }))
@@ -216,7 +217,7 @@ export const ReviewStep = ({
                           <div className="min-w-0 flex-1">
                             <p className="text-sm font-semibold text-white">{name}</p>
                             <p className="mt-1 truncate text-xs leading-6 text-[var(--color-text-base)]">
-                              {functionSpec.description || "No description provided."}
+                              {toolSpec.description || "No description provided."}
                             </p>
                           </div>
                         </div>
@@ -224,17 +225,17 @@ export const ReviewStep = ({
 
                       <div className="flex flex-wrap items-center gap-2 xl:justify-end">
                         <AccessModeSlider
-                          functionName={name}
+                          toolName={name}
                           mode={accessMode}
-                          onChange={(nextMode) => onSetFunctionMode(name, nextMode)}
+                          onChange={(nextMode) => onSetToolMode(name, nextMode)}
                         />
                         <Button
                           type="button"
                           variant="ghost"
                           className="h-8 rounded-md px-3 text-xs"
                           aria-expanded={isExpanded}
-                          aria-controls={`function-details-${name}`}
-                          onClick={() => onToggleFunctionExpanded(name)}
+                          aria-controls={`tool-details-${name}`}
+                          onClick={() => onToggleToolExpanded(name)}
                         >
                           {isExpanded ? "Hide details" : "Show details"}
                           <ChevronRight
@@ -249,14 +250,14 @@ export const ReviewStep = ({
 
                     {isExpanded ? (
                       <div
-                        id={`function-details-${name}`}
+                        id={`tool-details-${name}`}
                         className="mt-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-input)] p-4"
                       >
                         <p className="text-sm leading-7 text-[var(--color-text-base)]">
-                          {functionSpec.description || "No description provided."}
+                          {toolSpec.description || "No description provided."}
                         </p>
                         <p className="mt-2 text-xs leading-6 text-[var(--color-text-base)]">
-                          Default scopes: {functionSpec.defaultScopes.join(", ") || "none"}
+                          Default scopes: {toolSpec.defaultScopes.join(", ") || "none"}
                         </p>
                       </div>
                     ) : null}
@@ -275,7 +276,7 @@ export const ReviewStep = ({
       </Button>
       <Button
         type="button"
-        disabled={reviewedFunctions.length === 0 || createPending}
+        disabled={reviewedTools.length === 0 || createPending}
         onClick={onCreate}
       >
         {createPending ? "Saving…" : "Create integration"}

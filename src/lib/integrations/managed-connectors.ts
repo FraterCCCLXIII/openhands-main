@@ -5,9 +5,9 @@ import { getOAuthProviderRegistrationDefaults } from "@/src/lib/integrations/oau
 import type {
   AuthStrategy,
   BuiltInConnectorOption,
-  FunctionSpec,
+  ToolSpec,
   ManagedConnectorDefinition,
-  ManagedConnectorFunctionDefinition,
+  ManagedConnectorToolDefinition,
   ManagedConnectorRecord,
   OAuthProviderCatalogOption,
 } from "@/src/types/context-layer";
@@ -155,7 +155,7 @@ export const getDefaultBuiltInConnector = (slug: string) =>
 
 export const getManagedConnectorProvider = (connector: ManagedConnectorRecord) =>
   connector.provider ??
-  (connector.serverUrl || connector.functions.length === 0 ? "mcp" : "http");
+  (connector.serverUrl || connector.tools.length === 0 ? "mcp" : "http");
 
 export const getManagedConnectorServerUrl = (connector: ManagedConnectorRecord) => {
   if (getManagedConnectorProvider(connector) !== "mcp") {
@@ -194,7 +194,7 @@ export const managedConnectorToBuiltInOption = (
     logoUrl: connector.logoUrl,
     appUrl: connector.appUrl,
     toolCount:
-      getManagedConnectorProvider(connector) === "mcp" ? 0 : connector.functions.length,
+      getManagedConnectorProvider(connector) === "mcp" ? 0 : connector.tools.length,
     categories: connector.categories,
     authModes: connector.authModes,
     authStrategy: connector.authStrategy,
@@ -205,11 +205,11 @@ export const managedConnectorToBuiltInOption = (
     apiKeyHeaderName: getConfiguredApiKeyHeaderName(connector.slug),
   });
 
-export const buildManagedConnectorFunctionSpecs = (
-  functions: ManagedConnectorFunctionDefinition[],
-): Record<string, FunctionSpec> =>
+export const buildManagedConnectorToolSpecs = (
+  tools: ManagedConnectorToolDefinition[],
+): Record<string, ToolSpec> =>
   Object.fromEntries(
-    functions.map((tool) => [
+    tools.map((tool) => [
       tool.name,
       {
         name: tool.name,
@@ -222,14 +222,14 @@ export const buildManagedConnectorFunctionSpecs = (
         config: {
           request: tool.request,
         },
-      } satisfies FunctionSpec,
+      } satisfies ToolSpec,
     ]),
   );
 
-export const buildManagedConnectorFunctions = (
-  connector: Pick<ManagedConnectorRecord, "functions">,
-): Record<string, FunctionSpec> =>
-  buildManagedConnectorFunctionSpecs(connector.functions);
+export const buildManagedConnectorTools = (
+  connector: Pick<ManagedConnectorRecord, "tools">,
+): Record<string, ToolSpec> =>
+  buildManagedConnectorToolSpecs(connector.tools);
 
 export const resolveManagedConnectorCredentials = (
   connector: ConnectorCredentialDefaults,
@@ -322,7 +322,7 @@ const defaultBuiltInToManagedDefinition = (
   apiBaseUrl: connector.apiBaseUrl,
   serverUrl: connector.serverUrl,
   openApiUrl: connector.openApiUrl,
-  functions: [],
+  tools: [],
   enabled: true,
   createdAt: "",
   updatedAt: "",

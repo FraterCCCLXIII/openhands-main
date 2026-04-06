@@ -204,7 +204,7 @@ describe("IntegrationWizard", () => {
               headerName: "xi-api-key",
               secret: "eleven-secret",
             },
-            functions: {
+            tools: {
               list_models: {
                 name: "list_models",
                 description: "List models",
@@ -259,7 +259,7 @@ describe("IntegrationWizard", () => {
     });
 
     const discoverButton = Array.from(container.querySelectorAll("button")).find(
-      (button) => button.textContent?.includes("Discover functions"),
+      (button) => button.textContent?.includes("Discover tools"),
     );
     expect(discoverButton).toBeTruthy();
     expect(discoverButton?.hasAttribute("disabled")).toBe(false);
@@ -272,7 +272,7 @@ describe("IntegrationWizard", () => {
       await new Promise((resolve) => setTimeout(resolve, 25));
     });
 
-    expect(container.textContent).toContain("1 functions discovered for ElevenLabs");
+    expect(container.textContent).toContain("1 tool discovered for ElevenLabs");
     expect(container.textContent).toContain("list_models");
   });
 
@@ -426,7 +426,7 @@ describe("IntegrationWizard", () => {
               serverUrl: "https://mcp.notion.com/mcp",
             },
             credentials: {},
-            functions: {
+            tools: {
               searchPages: {
                 name: "searchPages",
                 description: "Search Notion pages",
@@ -463,7 +463,7 @@ describe("IntegrationWizard", () => {
     });
 
     const discoverButton = Array.from(container.querySelectorAll("button")).find(
-      (button) => button.textContent?.includes("Discover functions"),
+      (button) => button.textContent?.includes("Discover tools"),
     );
     expect(discoverButton).toBeTruthy();
     expect(discoverButton?.hasAttribute("disabled")).toBe(false);
@@ -476,7 +476,7 @@ describe("IntegrationWizard", () => {
       await new Promise((resolve) => setTimeout(resolve, 25));
     });
 
-    expect(container.textContent).toContain("1 functions discovered for Notion");
+    expect(container.textContent).toContain("1 tool discovered for Notion");
     expect(container.textContent).toContain("searchPages");
   });
 
@@ -527,7 +527,7 @@ describe("IntegrationWizard", () => {
             credentials: {
               accessToken: "ghp_test_token",
             },
-            functions: {
+            tools: {
               searchPages: {
                 name: "searchPages",
                 description: "Search all pages",
@@ -617,31 +617,31 @@ describe("IntegrationWizard", () => {
       });
     };
 
-    const getVisibleFunctionNames = () =>
-      Array.from(container.querySelectorAll("[data-function-name]")).map((row) =>
-        row.getAttribute("data-function-name"),
+    const getVisibleToolNames = () =>
+      Array.from(container.querySelectorAll("[data-tool-name]")).map((row) =>
+        row.getAttribute("data-tool-name"),
       );
 
-    const getFunctionCheckbox = (name: string) =>
+    const getToolCheckbox = (name: string) =>
       container.querySelector(`input[aria-label="Select ${name}"]`) as
         | HTMLInputElement
         | null;
 
-    const getFunctionMode = (name: string) =>
+    const getToolMode = (name: string) =>
       container
-        .querySelector(`[data-function-name="${name}"] [data-access-mode]`)
+        .querySelector(`[data-tool-name="${name}"] [data-access-mode]`)
         ?.getAttribute("data-access-mode");
 
-    await clickButton("Discover functions");
+    await clickButton("Discover tools");
 
-    expect(getVisibleFunctionNames()).toEqual([
+    expect(getVisibleToolNames()).toEqual([
       "archiveDatabase",
       "createPage",
       "searchPages",
     ]);
 
     const searchInput = container.querySelector(
-      'input[type="search"][aria-label="Search functions"]',
+      'input[type="search"][aria-label="Search tools"]',
     ) as HTMLInputElement | null;
     expect(searchInput).toBeTruthy();
 
@@ -653,7 +653,7 @@ describe("IntegrationWizard", () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
     });
 
-    expect(getVisibleFunctionNames()).toEqual(["createPage", "searchPages"]);
+    expect(getVisibleToolNames()).toEqual(["createPage", "searchPages"]);
 
     await clickButton("Select all matches");
 
@@ -665,9 +665,9 @@ describe("IntegrationWizard", () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
     });
 
-    expect(getFunctionCheckbox("archiveDatabase")?.checked).toBe(false);
-    expect(getFunctionCheckbox("createPage")?.checked).toBe(true);
-    expect(getFunctionCheckbox("searchPages")?.checked).toBe(true);
+    expect(getToolCheckbox("archiveDatabase")?.checked).toBe(false);
+    expect(getToolCheckbox("createPage")?.checked).toBe(true);
+    expect(getToolCheckbox("searchPages")?.checked).toBe(true);
 
     await act(async () => {
       setInputValue(searchInput ?? undefined, "page");
@@ -678,10 +678,10 @@ describe("IntegrationWizard", () => {
     });
 
     await clickButton("Disable selected");
-    expect(getFunctionMode("createPage")).toBe("disabled");
-    expect(getFunctionMode("searchPages")).toBe("disabled");
-    expect(getFunctionCheckbox("createPage")?.checked).toBe(false);
-    expect(getFunctionCheckbox("searchPages")?.checked).toBe(false);
+    expect(getToolMode("createPage")).toBe("disabled");
+    expect(getToolMode("searchPages")).toBe("disabled");
+    expect(getToolCheckbox("createPage")?.checked).toBe(false);
+    expect(getToolCheckbox("searchPages")?.checked).toBe(false);
 
     await act(async () => {
       setInputValue(searchInput ?? undefined, "search");
@@ -693,8 +693,8 @@ describe("IntegrationWizard", () => {
 
     await clickButton("Select all matches");
     await clickButton("Case-by-case selected");
-    expect(getFunctionMode("searchPages")).toBe("approval_required");
-    expect(getFunctionCheckbox("searchPages")?.checked).toBe(false);
+    expect(getToolMode("searchPages")).toBe("approval_required");
+    expect(getToolCheckbox("searchPages")?.checked).toBe(false);
 
     await act(async () => {
       setInputValue(searchInput ?? undefined, "archive");
@@ -706,7 +706,7 @@ describe("IntegrationWizard", () => {
 
     await clickButton("Select all matches");
     await clickButton("Enable selected");
-    expect(getFunctionCheckbox("archiveDatabase")?.checked).toBe(false);
+    expect(getToolCheckbox("archiveDatabase")?.checked).toBe(false);
 
     await act(async () => {
       setInputValue(searchInput ?? undefined, "");
@@ -716,9 +716,9 @@ describe("IntegrationWizard", () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
     });
 
-    expect(getFunctionMode("archiveDatabase")).toBe("enabled");
-    expect(getFunctionMode("createPage")).toBe("disabled");
-    expect(getFunctionMode("searchPages")).toBe("approval_required");
+    expect(getToolMode("archiveDatabase")).toBe("enabled");
+    expect(getToolMode("createPage")).toBe("disabled");
+    expect(getToolMode("searchPages")).toBe("approval_required");
 
     await clickButton("Create integration");
 
@@ -726,7 +726,7 @@ describe("IntegrationWizard", () => {
     expect(createPayload).toMatchObject({
       key: "github",
       name: "GitHub",
-      functions: {
+      tools: {
         archiveDatabase: expect.objectContaining({
           accessMode: "enabled",
           enabled: true,
@@ -894,7 +894,7 @@ describe("IntegrationWizard", () => {
     });
 
     const discoverButton = Array.from(container.querySelectorAll("button")).find(
-      (button) => button.textContent?.includes("Discover functions"),
+      (button) => button.textContent?.includes("Discover tools"),
     );
     expect(discoverButton).toBeTruthy();
     expect(discoverButton?.hasAttribute("disabled")).toBe(false);
@@ -914,7 +914,7 @@ describe("IntegrationWizard", () => {
     expect(feedback?.textContent).toContain("Admin diagnostics");
     expect(feedback?.textContent).toContain('"startsWithBearerPrefix": false');
     expect(feedback?.textContent).toContain('"operationName": "listTools"');
-    expect(container.textContent).toContain("Connect and discover functions");
+    expect(container.textContent).toContain("Connect and discover tools");
   });
 
 

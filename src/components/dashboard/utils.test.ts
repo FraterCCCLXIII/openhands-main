@@ -81,7 +81,7 @@ const integrations: IntegrationSpec[] = [
     fineGrainedPermissions: true,
     config: { builtInSlug: "slack" },
     credentials: {},
-    functions: {
+    tools: {
       slack_search_public: {
         name: "slack_search_public",
         description: "Search Slack",
@@ -111,7 +111,7 @@ const accessRequest: AccessRequest = {
   agentId: null,
   agentClass: null,
   integrationKey: "slack",
-  functionName: "slack_search_public",
+  toolName: "slack_search_public",
   scopes: ["messages:read"],
   requestedMinutes: 60,
   channels: ["in_app"],
@@ -141,11 +141,11 @@ describe("dashboard-workspace-utils", () => {
     ]);
   });
 
-  it("filters integrations by search while hiding disabled skills", () => {
+  it("filters integrations by search while hiding disabled tools", () => {
     const filtered = filterIntegrationsForDisplay({
       integrations,
       integrationSearch: "delete",
-      hideDisabledSkills: true,
+      hideDisabledTools: true,
     });
 
     expect(filtered).toHaveLength(0);
@@ -153,11 +153,11 @@ describe("dashboard-workspace-utils", () => {
     const visible = filterIntegrationsForDisplay({
       integrations,
       integrationSearch: "search",
-      hideDisabledSkills: true,
+      hideDisabledTools: true,
     });
 
     expect(visible).toHaveLength(1);
-    expect(visible[0]?.visibleFunctions.map((functionSpec) => functionSpec.name)).toEqual([
+    expect(visible[0]?.visibleTools.map((toolSpec) => toolSpec.name)).toEqual([
       "slack_search_public",
     ]);
   });

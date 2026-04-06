@@ -6,32 +6,35 @@ import {
   IntegrationMarketplaceCard,
   dashboardInputClassName,
 } from "@/src/components/dashboard/shared";
+import {
+  formatTrackedUsage,
+  UNUSED_TOOL_WINDOW_OPTIONS,
+  type FilteredIntegrationToolEntry,
+} from "@/src/components/dashboard/utils";
+import {
+  AccessModeSlider,
+  getToolAccessMode,
+} from "@/src/components/integrations/tool-access-controls";
+import { IntegrationWizard } from "@/src/components/integrations/wizard/wizard";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
 import { cn } from "@/src/lib/utils";
-import { AccessModeSlider, getFunctionAccessMode } from "@/src/components/integrations/function-access-controls";
-import {
-  formatTrackedUsage,
-  UNUSED_FUNCTION_WINDOW_OPTIONS,
-  type FilteredIntegrationEntry,
-} from "@/src/components/dashboard/utils";
 import type {
   BuiltInConnectorOption,
-  FunctionAccessMode,
   IntegrationSpec,
-  UnusedFunctionWindowUnit,
+  ToolAccessMode,
+  UnusedToolWindowUnit,
 } from "@/src/types/context-layer";
-import { IntegrationWizard } from "@/src/components/integrations/wizard/wizard";
 
 interface IntegrationsSectionProps {
   addIntegrationSearch: string;
   availableConnectorCount: number;
   builtInConnectorsError?: string | null;
   builtInConnectorsPending: boolean;
-  filteredIntegrations: FilteredIntegrationEntry[];
+  filteredIntegrations: FilteredIntegrationToolEntry[];
   handleDeleteIntegration: (integration: IntegrationSpec) => void;
-  handleDisableUnusedFunctions: () => void;
-  hideDisabledSkills: boolean;
+  handleDisableUnusedTools: () => void;
+  hideDisabledTools: boolean;
   integrationCount: number;
   integrationSearch: string;
   isActionPending: boolean;
@@ -41,28 +44,28 @@ interface IntegrationsSectionProps {
   onOpenIntegrationWizard: (builtInSlug?: string) => void;
   onStatus: (message: string | null) => void;
   onToggleIntegrationExpanded: (integrationKey: string, expanded: boolean) => void;
-  onToggleFunctionExpanded: (functionKey: string) => void;
+  onToggleToolExpanded: (toolKey: string) => void;
   onToggleIntegrationEnabled: (integration: IntegrationSpec) => void;
-  onUpdateFunctionAccessMode: (
+  onUpdateToolAccessMode: (
     integrationKey: string,
-    functionName: string,
-    accessMode: FunctionAccessMode,
+    toolName: string,
+    accessMode: ToolAccessMode,
   ) => void;
   resolveIntegrationLogoUrl: (integration: IntegrationSpec) => string | null;
   setAddIntegrationSearch: (value: string) => void;
-  setHideDisabledSkills: (value: boolean) => void;
+  setHideDisabledTools: (value: boolean) => void;
   setIntegrationSearch: (value: string) => void;
   showIntegrationWizard: boolean;
-  unusedFunctionCandidateCount: number;
-  unusedThresholdUnit: UnusedFunctionWindowUnit;
+  unusedToolCandidateCount: number;
+  unusedThresholdUnit: UnusedToolWindowUnit;
   unusedThresholdValue: string;
   unusedCutoffDateLabel: string;
   onUnusedThresholdValueChange: (value: string) => void;
-  onUnusedThresholdUnitChange: (value: UnusedFunctionWindowUnit) => void;
+  onUnusedThresholdUnitChange: (value: UnusedToolWindowUnit) => void;
   onUnusedThresholdBlur: () => void;
-  expandedFunctions: Record<string, boolean>;
+  expandedTools: Record<string, boolean>;
   expandedIntegrations: Record<string, boolean>;
-  visibleFunctionCount: number;
+  visibleToolCount: number;
 }
 
 export const IntegrationsSection = ({
@@ -72,8 +75,8 @@ export const IntegrationsSection = ({
   builtInConnectorsPending,
   filteredIntegrations,
   handleDeleteIntegration,
-  handleDisableUnusedFunctions,
-  hideDisabledSkills,
+  handleDisableUnusedTools,
+  hideDisabledTools,
   integrationCount,
   integrationSearch,
   isActionPending,
@@ -82,25 +85,25 @@ export const IntegrationsSection = ({
   onCreated,
   onOpenIntegrationWizard,
   onStatus,
-  onToggleFunctionExpanded,
+  onToggleToolExpanded,
   onToggleIntegrationEnabled,
   onToggleIntegrationExpanded,
-  onUpdateFunctionAccessMode,
+  onUpdateToolAccessMode,
   resolveIntegrationLogoUrl,
   setAddIntegrationSearch,
-  setHideDisabledSkills,
+  setHideDisabledTools,
   setIntegrationSearch,
   showIntegrationWizard,
-  unusedFunctionCandidateCount,
+  unusedToolCandidateCount,
   unusedThresholdUnit,
   unusedThresholdValue,
   unusedCutoffDateLabel,
   onUnusedThresholdValueChange,
   onUnusedThresholdUnitChange,
   onUnusedThresholdBlur,
-  expandedFunctions,
+  expandedTools,
   expandedIntegrations,
-  visibleFunctionCount,
+  visibleToolCount,
 }: IntegrationsSectionProps) => (
   <section className="space-y-4">
     {showIntegrationWizard ? (
@@ -173,17 +176,17 @@ export const IntegrationsSection = ({
             <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
               <div className="space-y-1">
                 <h3 className="text-sm font-semibold text-white">
-                  Search and review your integration skills
+                  Search and review your integration tools
                 </h3>
                 <p className="text-xs leading-6 text-[var(--color-text-base)]">
                   Use the compact expandable rows here to search your active
-                  integrations, tune access modes, and hide disabled skills by
+                  integrations, tune access modes, and hide disabled tools by
                   default.
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--color-text-base)]">
                 <Badge>{filteredIntegrations.length} integrations</Badge>
-                <Badge>{visibleFunctionCount} visible skills</Badge>
+                <Badge>{visibleToolCount} visible tools</Badge>
               </div>
             </div>
 
@@ -192,29 +195,29 @@ export const IntegrationsSection = ({
                 type="search"
                 value={integrationSearch}
                 onChange={(event) => setIntegrationSearch(event.target.value)}
-                placeholder="Search integrations and skills"
-                aria-label="Search integrations and skills"
+                placeholder="Search integrations and tools"
+                aria-label="Search integrations and tools"
                 className={cn(dashboardInputClassName, "w-full lg:max-w-md")}
               />
               <label className="inline-flex items-center gap-2 rounded-md border border-[var(--color-border)] bg-[var(--color-bg-input)] px-3 py-2 text-xs text-white">
                 <input
                   type="checkbox"
-                  checked={hideDisabledSkills}
-                  aria-label="Hide disabled skills"
-                  onChange={(event) => setHideDisabledSkills(event.target.checked)}
+                  checked={hideDisabledTools}
+                  aria-label="Hide disabled tools"
+                  onChange={(event) => setHideDisabledTools(event.target.checked)}
                 />
-                <span>Hide disabled skills</span>
+                <span>Hide disabled tools</span>
               </label>
             </div>
           </div>
 
           {filteredIntegrations.length === 0 ? (
             <div className="rounded-xl border border-dashed border-[var(--color-border)] bg-[var(--color-surface-subtle)] px-3 py-4 text-sm text-[var(--color-text-base)]">
-              No integrations or skills match the current filters.
+              No integrations or tools match the current filters.
             </div>
           ) : (
             <div className="space-y-3">
-              {filteredIntegrations.map(({ integration, functions, visibleFunctions }) => {
+              {filteredIntegrations.map(({ integration, tools, visibleTools }) => {
                 const isExpanded =
                   expandedIntegrations[integration.key] ?? Boolean(integrationSearch.trim());
 
@@ -243,9 +246,9 @@ export const IntegrationsSection = ({
                             </Badge>
                           </div>
                           <p className="mt-1 text-xs leading-5 text-[var(--color-text-base)]">
-                            {integration.key} · auth: {integration.authStrategy} · {visibleFunctions.length} visible skill
-                            {visibleFunctions.length === 1 ? "" : "s"}
-                            {functions.length > 0 ? ` of ${functions.length}` : ""}
+                            {integration.key} · auth: {integration.authStrategy} · {visibleTools.length} visible tool
+                            {visibleTools.length === 1 ? "" : "s"}
+                            {tools.length > 0 ? ` of ${tools.length}` : ""}
                           </p>
                         </div>
                       </div>
@@ -280,12 +283,12 @@ export const IntegrationsSection = ({
                           variant="ghost"
                           className="h-8 rounded-md px-3 text-xs"
                           aria-expanded={isExpanded}
-                          aria-controls={`integration-functions-${integration.key}`}
+                          aria-controls={`integration-tools-${integration.key}`}
                           onClick={() =>
                             onToggleIntegrationExpanded(integration.key, isExpanded)
                           }
                         >
-                          {isExpanded ? "Hide skills" : "Show skills"}
+                          {isExpanded ? "Hide tools" : "Show tools"}
                           <ChevronRight
                             className={cn(
                               "ml-1 h-4 w-4 transition-transform",
@@ -298,52 +301,51 @@ export const IntegrationsSection = ({
 
                     {isExpanded ? (
                       <div
-                        id={`integration-functions-${integration.key}`}
+                        id={`integration-tools-${integration.key}`}
                         className="mt-3 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-input)]"
                       >
-                        {functions.length === 0 ? (
+                        {tools.length === 0 ? (
                           <p className="px-4 py-4 text-sm text-[var(--color-text-base)]">
-                            No skills registered yet.
+                            No tools registered yet.
                           </p>
-                        ) : visibleFunctions.length === 0 ? (
+                        ) : visibleTools.length === 0 ? (
                           <p className="px-4 py-4 text-sm text-[var(--color-text-base)]">
-                            No visible skills match the current filters.
+                            No visible tools match the current filters.
                           </p>
                         ) : (
                           <div className="divide-y divide-[var(--color-border)]">
-                            {visibleFunctions.map((functionSpec) => {
-                              const functionKey = `${integration.key}:${functionSpec.name}`;
-                              const accessMode = getFunctionAccessMode(functionSpec);
-                              const isFunctionExpanded =
-                                expandedFunctions[functionKey] ?? false;
+                            {visibleTools.map((toolSpec) => {
+                              const toolKey = `${integration.key}:${toolSpec.name}`;
+                              const accessMode = getToolAccessMode(toolSpec);
+                              const isToolExpanded = expandedTools[toolKey] ?? false;
 
                               return (
                                 <div
-                                  key={functionKey}
+                                  key={toolKey}
                                   className="px-4 py-4"
-                                  data-function-key={functionKey}
-                                  data-function-name={functionSpec.name}
+                                  data-tool-key={toolKey}
+                                  data-tool-name={toolSpec.name}
                                 >
                                   <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
                                     <div className="min-w-0 flex-1">
                                       <p className="text-sm font-semibold text-white">
-                                        {functionSpec.name}
+                                        {toolSpec.name}
                                       </p>
                                       <p className="mt-1 truncate text-xs leading-6 text-[var(--color-text-base)]">
-                                        {functionSpec.description || "No description provided."}
+                                        {toolSpec.description || "No description provided."}
                                       </p>
                                       <p className="mt-1 text-[11px] leading-5 text-[var(--color-text-base)]">
-                                        {formatTrackedUsage(functionSpec)}
+                                        {formatTrackedUsage(toolSpec)}
                                       </p>
                                     </div>
                                     <div className="flex flex-wrap items-center gap-2 xl:justify-end">
                                       <AccessModeSlider
-                                        functionName={functionSpec.name}
+                                        toolName={toolSpec.name}
                                         mode={accessMode}
                                         onChange={(nextMode) =>
-                                          onUpdateFunctionAccessMode(
+                                          onUpdateToolAccessMode(
                                             integration.key,
-                                            functionSpec.name,
+                                            toolSpec.name,
                                             nextMode,
                                           )
                                         }
@@ -352,33 +354,31 @@ export const IntegrationsSection = ({
                                         type="button"
                                         variant="ghost"
                                         className="h-8 rounded-md px-3 text-xs"
-                                        aria-expanded={isFunctionExpanded}
-                                        aria-controls={`function-details-${functionKey}`}
-                                        onClick={() =>
-                                          onToggleFunctionExpanded(functionKey)
-                                        }
+                                        aria-expanded={isToolExpanded}
+                                        aria-controls={`tool-details-${toolKey}`}
+                                        onClick={() => onToggleToolExpanded(toolKey)}
                                       >
-                                        {isFunctionExpanded ? "Hide details" : "Show details"}
+                                        {isToolExpanded ? "Hide details" : "Show details"}
                                         <ChevronRight
                                           className={cn(
                                             "ml-1 h-4 w-4 transition-transform",
-                                            isFunctionExpanded && "rotate-90",
+                                            isToolExpanded && "rotate-90",
                                           )}
                                         />
                                       </Button>
                                     </div>
                                   </div>
 
-                                  {isFunctionExpanded ? (
+                                  {isToolExpanded ? (
                                     <div
-                                      id={`function-details-${functionKey}`}
+                                      id={`tool-details-${toolKey}`}
                                       className="mt-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-4"
                                     >
                                       <p className="text-sm leading-7 text-[var(--color-text-base)]">
-                                        {functionSpec.description || "No description provided."}
+                                        {toolSpec.description || "No description provided."}
                                       </p>
                                       <p className="mt-2 text-xs leading-6 text-[var(--color-text-base)]">
-                                        Default scopes: {functionSpec.defaultScopes.join(", ") || "none"}
+                                        Default scopes: {toolSpec.defaultScopes.join(", ") || "none"}
                                       </p>
                                     </div>
                                   ) : null}
@@ -399,11 +399,11 @@ export const IntegrationsSection = ({
             <div className="flex flex-col gap-4 xl:grid xl:grid-cols-[minmax(0,1fr)_auto] xl:items-end xl:gap-6">
               <div className="space-y-1 xl:max-w-2xl">
                 <h4 className="text-sm font-semibold text-white">
-                  One-time bulk disable for unused skills
+                  One-time bulk disable for unused tools
                 </h4>
                 <p className="text-xs leading-6 text-[var(--color-text-base)]">
-                  Disable enabled skills with tracked usage that has been inactive
-                  since before {unusedCutoffDateLabel}. Functions without tracked
+                  Disable enabled tools with tracked usage that has been inactive
+                  since before {unusedCutoffDateLabel}. Tools without tracked
                   invocation history are skipped until new tracking data exists.
                 </p>
               </div>
@@ -429,12 +429,12 @@ export const IntegrationsSection = ({
                     aria-label="Unused threshold unit"
                     onChange={(event) =>
                       onUnusedThresholdUnitChange(
-                        event.target.value as UnusedFunctionWindowUnit,
+                        event.target.value as UnusedToolWindowUnit,
                       )
                     }
                     className={cn(dashboardInputClassName, "w-32")}
                   >
-                    {UNUSED_FUNCTION_WINDOW_OPTIONS.map((option) => (
+                    {UNUSED_TOOL_WINDOW_OPTIONS.map((option) => (
                       <option key={option.value} value={option.value}>
                         {option.label}
                       </option>
@@ -443,16 +443,16 @@ export const IntegrationsSection = ({
                 </label>
                 <div className="flex flex-col gap-2 sm:items-end">
                   <p className="text-xs text-[var(--color-text-base)]">
-                    {unusedFunctionCandidateCount} skill
-                    {unusedFunctionCandidateCount === 1 ? "" : "s"} matched
+                    {unusedToolCandidateCount} tool
+                    {unusedToolCandidateCount === 1 ? "" : "s"} matched
                   </p>
                   <Button
                     type="button"
                     variant="secondary"
                     className="h-8 shrink-0 rounded-md px-4 text-xs"
-                    onClick={handleDisableUnusedFunctions}
+                    onClick={handleDisableUnusedTools}
                     disabled={isBulkDisablePending}
-                    aria-label="Disable unused functions"
+                    aria-label="Disable unused tools"
                   >
                     Disable
                   </Button>

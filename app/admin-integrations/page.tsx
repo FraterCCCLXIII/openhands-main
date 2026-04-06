@@ -177,14 +177,14 @@ export default async function AdminIntegrationsPage() {
                   </li>
                   <li>
                     <span className="font-medium text-white">4.</span> Have a real user
-                    open the integrations wizard, press <span className="text-white">Connect</span> and then <span className="text-white">Discover functions</span>. For
+                    open the integrations wizard, press <span className="text-white">Connect</span> and then <span className="text-white">Discover tools</span>. For
                     remote MCP connectors, that step loads the live tool list from the MCP
                     server. For managed HTTP/OpenAPI connectors, it loads the generated
                     function catalog stored on the managed connector.
                   </li>
                   <li>
                     <span className="font-medium text-white">5.</span> In the review step,
-                    choose which discovered functions should be enabled, disabled, or
+                    choose which discovered tools should be enabled, disabled, or
                     require approval by default.
                   </li>
                   <li>

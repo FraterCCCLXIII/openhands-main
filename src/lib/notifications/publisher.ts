@@ -27,8 +27,8 @@ export class NotificationPublisher {
       id: randomUUID(),
       channel,
       recipient,
-      subject: `Approval requested for ${request.integrationKey}.${request.functionName}`,
-      body: `${identitySummary} requested [${request.scopes.join(", ") || "default scopes"}] for ${request.integrationKey}.${request.functionName} for ${request.requestedMinutes} minutes.`,
+      subject: `Approval requested for ${request.integrationKey}.${request.toolName}`,
+      body: `${identitySummary} requested [${request.scopes.join(", ") || "default scopes"}] for ${request.integrationKey}.${request.toolName} for ${request.requestedMinutes} minutes.`,
       metadata: {
         requestId: request.id,
         agentClass: request.agentClass,
