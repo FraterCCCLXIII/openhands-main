@@ -1,7 +1,6 @@
 import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
 import { buildAdminSectionHref, type AdminSection } from "@/src/lib/admin-routes";
-import { cn } from "@/src/lib/utils";
 import type {
   BuiltInConnectorOption,
   IntegrationConnectionStatus,

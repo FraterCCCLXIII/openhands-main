@@ -75,6 +75,21 @@ const baseIntegration: IntegrationSpec = {
   },
 };
 
+const baseAccountsTool = baseIntegration.tools["accounts"];
+if (!baseAccountsTool) {
+  throw new Error("Missing accounts tool test fixture");
+}
+
+const getOnlyIntegration = (integrations: IntegrationSpec[]) => {
+  expect(integrations).toHaveLength(1);
+  const [integration] = integrations;
+  if (!integration) {
+    throw new Error("Expected a single integration result");
+  }
+
+  return integration;
+};
+
 const installIntegration = async (
   service: ContextLayerService,
   integration: IntegrationSpec = baseIntegration,
@@ -199,11 +214,12 @@ describe("ContextLayerService", () => {
     expect(row.error_message).toBeNull();
 
     const integrations = await service.listOwnerIntegrationsWithUsage(OWNER_ID);
-    expect(integrations[0]?.tools.accounts).toMatchObject({
+    const savedIntegration = getOnlyIntegration(integrations);
+    expect(savedIntegration.tools["accounts"]).toMatchObject({
       invocationCount: 1,
       lastInvocationOutcome: "success",
     });
-    expect(integrations[0]?.tools.accounts.lastInvokedAt).toBeTruthy();
+    expect(savedIntegration.tools["accounts"]?.lastInvokedAt).toBeTruthy();
   });
 
   it("records denied invocation metadata for approval-required functions", async () => {
@@ -221,7 +237,7 @@ describe("ContextLayerService", () => {
       ...baseIntegration,
       tools: {
         accounts: {
-          ...baseIntegration.tools.accounts,
+          ...baseAccountsTool,
           accessMode: "approval_required",
         },
       },
@@ -248,7 +264,8 @@ describe("ContextLayerService", () => {
     expect(row.error_message).toBe("Permission required");
 
     const integrations = await service.listOwnerIntegrationsWithUsage(OWNER_ID);
-    expect(integrations[0]?.tools.accounts).toMatchObject({
+    const savedIntegration = getOnlyIntegration(integrations);
+    expect(savedIntegration.tools["accounts"]).toMatchObject({
       invocationCount: 1,
       lastInvocationOutcome: "denied",
     });
@@ -299,7 +316,7 @@ describe("ContextLayerService", () => {
       ...baseIntegration,
       tools: {
         accounts: {
-          ...baseIntegration.tools.accounts,
+          ...baseAccountsTool,
           accessMode: "approval_required",
         },
       },
@@ -370,7 +387,7 @@ describe("ContextLayerService", () => {
       ...baseIntegration,
       tools: {
         accounts: {
-          ...baseIntegration.tools.accounts,
+          ...baseAccountsTool,
           enabled: false,
         },
       },
@@ -480,12 +497,13 @@ describe("ContextLayerService", () => {
     });
 
     const integrations = await service.listOwnerIntegrations(OWNER_ID);
-    expect(integrations[0]?.tools.accounts).toMatchObject({
+    const savedIntegration = getOnlyIntegration(integrations);
+    expect(savedIntegration.tools["accounts"]).toMatchObject({
       accessMode: "approval_required",
       maxAccessMode: "approval_required",
       enabled: true,
     });
-    expect(integrations[0]?.tools.reports).toMatchObject({
+    expect(savedIntegration.tools["reports"]).toMatchObject({
       accessMode: "disabled",
       maxAccessMode: "disabled",
       enabled: false,
@@ -514,7 +532,7 @@ describe("ContextLayerService", () => {
       ...baseIntegration,
       tools: {
         accounts: {
-          ...baseIntegration.tools.accounts,
+          ...baseAccountsTool,
           accessMode: "approval_required",
         },
       },
@@ -591,7 +609,7 @@ describe("ContextLayerService", () => {
       ...baseIntegration,
       tools: {
         accounts: {
-          ...baseIntegration.tools.accounts,
+          ...baseAccountsTool,
           accessMode: "approval_required",
         },
       },
@@ -689,7 +707,7 @@ describe("ContextLayerService", () => {
       ...baseIntegration,
       tools: {
         accounts: {
-          ...baseIntegration.tools.accounts,
+          ...baseAccountsTool,
           accessMode: "approval_required",
         },
       },
@@ -722,6 +740,10 @@ describe("ContextLayerService", () => {
     expect(allowed.decision.reason).toBe("Allowed by temporary approval");
 
     const grant = (await repository.listTemporaryGrants())[0];
+    expect(grant).toBeDefined();
+    if (!grant) {
+      throw new Error("Expected a temporary grant");
+    }
     grant.expiresAt = new Date(Date.now() - 60_000).toISOString();
     await repository.saveTemporaryGrant(grant);
 
@@ -745,7 +767,7 @@ describe("ContextLayerService", () => {
       provider: "mock",
       tools: {
         accounts: {
-          ...baseIntegration.tools.accounts,
+          ...baseAccountsTool,
           executionMode: "mock",
         },
       },
@@ -1225,7 +1247,8 @@ describe("ContextLayerService", () => {
     });
 
     let integrations = await service.listOwnerIntegrations(OWNER_ID);
-    expect(integrations[0]?.tools.post_search).toMatchObject({
+    let savedIntegration = getOnlyIntegration(integrations);
+    expect(savedIntegration.tools["post_search"]).toMatchObject({
       accessMode: "approval_required",
       maxAccessMode: "approval_required",
       enabled: true,
@@ -1244,7 +1267,8 @@ describe("ContextLayerService", () => {
     });
 
     integrations = await service.listOwnerIntegrations(OWNER_ID);
-    expect(integrations[0]?.tools.post_search).toMatchObject({
+    savedIntegration = getOnlyIntegration(integrations);
+    expect(savedIntegration.tools["post_search"]).toMatchObject({
       accessMode: "disabled",
       maxAccessMode: "enabled",
       enabled: false,
