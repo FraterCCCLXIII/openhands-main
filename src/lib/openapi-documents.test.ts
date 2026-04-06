@@ -119,8 +119,18 @@ describe("OpenAPI document builders", () => {
 
     expect(adminDocument.paths["/api/admin/integrations/{integrationKey}/tools/{toolName}"]).toBeDefined();
     expect(userDocument.paths["/api/user/integrations/{integrationKey}/tools/{toolName}"]).toBeDefined();
-    expect(adminDocument.paths["/api/admin/integrations/{integrationKey}/functions/{functionName}"]).toBeUndefined();
-    expect(userDocument.paths["/api/user/integrations/{integrationKey}/functions/{functionName}"]).toBeUndefined();
+    expect(
+      Object.prototype.hasOwnProperty.call(
+        adminDocument.paths,
+        "/api/admin/integrations/{integrationKey}/functions/{functionName}",
+      ),
+    ).toBe(false);
+    expect(
+      Object.prototype.hasOwnProperty.call(
+        userDocument.paths,
+        "/api/user/integrations/{integrationKey}/functions/{functionName}",
+      ),
+    ).toBe(false);
 
     expect(contextDocument.components.schemas.ContextInvocationResult).toMatchObject({
       properties: {
