@@ -25,6 +25,7 @@ The root `LICENSE` is proprietary: `Copyright All Hands AI, Inc. All rights rese
 ## Local DB-backed validation
 
 - All automated tests use PGlite via `src/lib/db/pglite-test-utils.ts`; the standard pattern is `vi.mock("@neondatabase/serverless", () => ({ neon: () => getActiveSql() }))`, `createTestRepository()` in `beforeEach`, and `cleanup()` in `afterEach`.
+- For direct MCP server unit coverage, mocking `@modelcontextprotocol/sdk/server/mcp.js` and asserting against captured `registerTool(...)` handlers is an effective way to exercise session-default, approval, and result-formatting branches without spinning up a transport client.
 - Full repo validation that already exercises the real SQL schema through PGlite: `npm run test:unit && npm run test:e2e && npm run typecheck && npm run build`.
 - For live localhost HTTP validation without a real Postgres instance, use a temporary local-only PGlite-backed Neon shim under `.agent_tmp/`, point the installed `@neondatabase/serverless` package at that shim locally (never commit `node_modules`), seed the runtime DB with `PostgresRepository`, then run `POSTGRES_URL='pglite://<name>' DISABLE_AUTH='true' npm run dev -- --hostname 127.0.0.1 --port 12000`.
 - Proven live validation pattern for `/api/context/skill`: seed `saveAgentApiKey(...)` plus `upsertOwnerIntegration(...)` for `dev@localhost`, start the app with the same `POSTGRES_URL`, then `curl -i http://127.0.0.1:12000/api/context/skill -H 'Authorization: Bearer <api-key>'` and expect `200 OK` plus `Content-Disposition: attachment; filename="SKILL.md"`.

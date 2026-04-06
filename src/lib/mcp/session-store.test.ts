@@ -139,4 +139,33 @@ describe("mcp session store", () => {
     `;
     expect(remainingRows).toHaveLength(0);
   });
+
+  it("uses DATABASE_URL when POSTGRES_URL is absent and preserves normalized null defaults", async () => {
+    vi.stubEnv("DATABASE_URL", "pglite://mcp-session-store-database-url");
+    vi.stubEnv("NODE_ENV", "development");
+    ctx = await createPgliteTestContext();
+
+    const { getMcpSession, upsertMcpSession } = await loadSessionStore();
+
+    await upsertMcpSession({
+      sessionId: "session-database-url",
+      ownerId: "owner@example.com",
+      defaults: {
+        agentId: "   ",
+        agentClass: null,
+        agentData: {},
+      },
+    });
+
+    await expect(getMcpSession("session-database-url")).resolves.toEqual({
+      sessionId: "session-database-url",
+      ownerId: "owner@example.com",
+      defaults: {
+        agentId: null,
+        agentClass: null,
+        agentData: {},
+      },
+    });
+  });
+
 });
