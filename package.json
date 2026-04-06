@@ -15,8 +15,9 @@
     "test:coverage": "vitest run --coverage",
     "test:e2e": "vitest run src/lib/db/e2e-repository.test.ts src/lib/e2e-integration.test.ts",
     "test:watch": "vitest",
-    "test:mutation": "stryker run",
-    "test:mutation:dry": "stryker run --dryRunOnly",
+    "test:mutation": "node ./scripts/run-mutation.mjs",
+    "test:mutation:dry": "node ./scripts/run-mutation.mjs --dry-run",
+    "test:mutation:all": "node ./scripts/run-mutation.mjs --all --soft-fail",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "audit": "npm audit --audit-level=moderate"

@@ -49,17 +49,24 @@ npm run typecheck
 npm run build
 ```
 
-Mutation testing pilot:
+Mutation testing for new code:
 
 ```bash
-npm run test:mutation
+npm run test:mutation -- src/path/to/new-file.ts
+```
+
+For exploratory full-repo runs:
+
+```bash
+npm run test:mutation:all
 ```
 
 Notes:
 
 - Repository tests use the PGlite-backed Postgres test utilities, not an in-memory repository.
-- `npm run test:mutation` is currently a recurring manual review step, not a CI gate. The initial pilot mutates `src/lib/core/access-policy.ts` and `src/lib/core/scoped-api-keys.ts`, writes an HTML report to `reports/mutation/mutation.html`, and it should be expanded only when the runtime cost and signal remain strong.
-- The current pilot baseline has no surviving mutants in those files. If future runs report survivors, capture them in the PR or issue you are working on and use them to drive follow-up test hardening before expanding the scope.
+- `npm run test:mutation` is a recurring manual review step for newly added code, not a CI gate. It infers the matching Vitest file when the test lives beside the source file (for example `src/example.ts` → `src/example.test.ts`) and writes an HTML report to `reports/mutation/mutation.html`.
+- Use `--testFile <path>` when a new file's tests live elsewhere, and use `npm run test:mutation:all` only for exploratory broad runs because it soft-fails the score threshold and can take much longer.
+- If a targeted mutation run reports surviving mutants, capture them in the PR or issue you are working on and use them to drive follow-up test hardening before merging.
 - Documentation-only changes do not require new tests, but you should still run the relevant existing checks when practical.
 
 ## Development guidelines

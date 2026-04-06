@@ -15,7 +15,8 @@ The root `LICENSE` is proprietary: `Copyright All Hands AI, Inc. All rights rese
 - Run tests: `npm test`
 - Run unit tests only: `npm run test:unit`
 - Run e2e tests only: `npm run test:e2e`
-- Run the mutation-testing pilot: `npm run test:mutation`
+- Run targeted mutation testing for a new file: `npm run test:mutation -- src/path/to/new-file.ts`
+- Run exploratory full-repo mutation testing: `npm run test:mutation:all`
 - Typecheck: `npm run typecheck`
 - Production build check: `npm run build`
 - Audit shipped dependency graph: `npm run audit`
@@ -34,7 +35,7 @@ The root `LICENSE` is proprietary: `Copyright All Hands AI, Inc. All rights rese
 
 - Next.js 16 removed the old `next lint` entrypoint in this repo's setup; keep `npm run lint` wired to `eslint .` with the root `eslint.config.mjs`. ESLint 10 works here with an explicit flat-config stack (`typescript-eslint` + `@next/eslint-plugin-next`) instead of `eslint-config-next`, which still pulled React lint internals that crashed under ESLint 10 in this repo.
 - `npm run audit` is part of the `e2e-tests.yml` CI gate and it scans transitive dev tooling; keep a direct patched `vite` devDependency pinned so advisories in the Vitest/Vite toolchain do not fail PRs.
-- Mutation testing now uses a focused Stryker pilot (`stryker.config.mjs`) against `src/lib/core/access-policy.ts` and `src/lib/core/scoped-api-keys.ts`, driven by dedicated unit tests and a manual `npm run test:mutation` review step that currently reports zero surviving mutants and writes `reports/mutation/mutation.html`.
+- Mutation testing now uses a reusable Stryker base config (`stryker.config.mjs`) plus `scripts/run-mutation.mjs`. Run `npm run test:mutation -- <new-source-file>` as a manual review step for newly added code; it infers sibling Vitest files by default, supports explicit `--testFile`, and writes `reports/mutation/mutation.html`. Use `npm run test:mutation:all` only for broad exploratory runs because it can take much longer and soft-fails the break threshold.
 
 - For this workstream, when the user requests code changes, commit them and push them to the active PR branch.
 
