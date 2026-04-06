@@ -8,7 +8,7 @@ import { Button } from "@/src/components/ui/button";
 import { buildAdminSectionHref } from "@/src/lib/admin-routes";
 import { matchesSearchQuery } from "@/src/lib/text-utils";
 import type {
-  BuiltInConnectorOption,
+  ManagedConnectorOption,
   OAuthProviderCatalogOption,
 } from "@/src/types/context-layer";
 
@@ -245,14 +245,14 @@ const buildManagedConnectorPayload = (
   };
 };
 
-const buildReadyBuiltInConnectorOption = (
+const buildReadyManagedConnectorOption = (
   provider: OAuthProviderCatalogOption,
-): BuiltInConnectorOption => {
+): ManagedConnectorOption => {
   const authStrategy = getProviderAuthStrategy(provider);
   const credentialCopy = getCredentialCopy(provider);
 
   return {
-    slug: provider.builtInSlug ?? provider.slug,
+    slug: provider.managedConnectorSlug ?? provider.slug,
     name: provider.name,
     description: provider.description,
     appUrl: provider.appUrl,
@@ -274,15 +274,15 @@ const buildReadyBuiltInConnectorOption = (
 
 interface ProviderCatalogProps {
   providerCatalog: OAuthProviderCatalogOption[];
-  readyBuiltInConnectors: BuiltInConnectorOption[];
+  readyManagedConnectors: ManagedConnectorOption[];
   canRegisterManagedConnectors?: boolean;
   oauthCallbackBaseUrl?: string;
-  onConnectorRegistered?: (connector: BuiltInConnectorOption) => void;
+  onConnectorRegistered?: (connector: ManagedConnectorOption) => void;
 }
 
 export function ProviderCatalog({
   providerCatalog,
-  readyBuiltInConnectors,
+  readyManagedConnectors,
   canRegisterManagedConnectors = false,
   oauthCallbackBaseUrl = "",
   onConnectorRegistered,
@@ -293,12 +293,12 @@ export function ProviderCatalog({
     Record<string, RegistrationFormState>
   >({});
   const [readyConnectorSlugs, setReadyConnectorSlugs] = useState(
-    () => new Set(readyBuiltInConnectors.map((connector) => connector.slug)),
+    () => new Set(readyManagedConnectors.map((connector) => connector.slug)),
   );
 
   useEffect(() => {
-    setReadyConnectorSlugs(new Set(readyBuiltInConnectors.map((connector) => connector.slug)));
-  }, [readyBuiltInConnectors]);
+    setReadyConnectorSlugs(new Set(readyManagedConnectors.map((connector) => connector.slug)));
+  }, [readyManagedConnectors]);
 
   const updateRegistrationForm = (
     provider: OAuthProviderCatalogOption,
@@ -378,10 +378,10 @@ export function ProviderCatalog({
         throw new Error(body?.detail || "Failed to register connector.");
       }
 
-      const connectorSlug = provider.builtInSlug ?? provider.slug;
+      const connectorSlug = provider.managedConnectorSlug ?? provider.slug;
       if (body?.oauthConfigured !== false) {
         setReadyConnectorSlugs((current) => new Set([...current, connectorSlug]));
-        onConnectorRegistered?.(buildReadyBuiltInConnectorOption(provider));
+        onConnectorRegistered?.(buildReadyManagedConnectorOption(provider));
       }
 
       updateRegistrationForm(provider, {
@@ -442,7 +442,7 @@ export function ProviderCatalog({
         <div className="overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] divide-y divide-[var(--color-border)]">
           {filteredProviders.map((provider) => {
             const authStrategy = getProviderAuthStrategy(provider);
-            const connectorSlug = provider.builtInSlug ?? provider.slug;
+            const connectorSlug = provider.managedConnectorSlug ?? provider.slug;
             const isReadyNow = readyConnectorSlugs.has(connectorSlug);
             const isExpanded = expandedSlug === provider.slug;
             const registrationForm = getRegistrationForm(provider);
@@ -496,7 +496,7 @@ export function ProviderCatalog({
                         <a
                           href={buildAdminSectionHref("integrations", {
                             showIntegrationWizard: "1",
-                            builtIn: connectorSlug,
+                            managedConnector: connectorSlug,
                           })}
                           className="inline-flex items-center gap-1 text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
                         >

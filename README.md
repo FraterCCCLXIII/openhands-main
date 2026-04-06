@@ -40,7 +40,6 @@ These are the canonical top-level routes in the current app:
 Legacy compatibility routes still exist, but new docs and links should target the canonical routes above:
 
 - `/home` redirects to `/integrations`
-- `/add-connector` redirects to `/admin-integrations`
 
 ## Core interfaces
 
