@@ -10,8 +10,9 @@ vi.mock("@/src/lib/auth", () => ({
 
 vi.mock("@neondatabase/serverless", () => ({ neon: () => getActiveSql() }));
 
-import { GET, POST } from "./route";
+import { GET } from "./route";
 
+import { getContextLayerService } from "@/src/lib/core/runtime";
 import { createTestRepository, getActiveSql } from "@/src/lib/db/pglite-test-utils";
 
 let testCleanup: () => Promise<void>;
@@ -26,7 +27,7 @@ const resetRuntime = () => {
 };
 
 beforeAll(() => {
-  vi.stubEnv("POSTGRES_URL", "pglite://legacy-access-requests-route-test");
+  vi.stubEnv("POSTGRES_URL", "pglite://case-by-case-approvals-route-test");
 });
 
 beforeEach(async () => {
@@ -38,12 +39,12 @@ afterEach(async () => {
   authMock.mockReset();
   authMock.mockResolvedValue({ user: { email: "admin@example.com" } });
   vi.unstubAllEnvs();
-  vi.stubEnv("POSTGRES_URL", "pglite://legacy-access-requests-route-test");
+  vi.stubEnv("POSTGRES_URL", "pglite://case-by-case-approvals-route-test");
   resetRuntime();
   await testCleanup();
 });
 
-describe("/api/access-requests", () => {
+describe("/api/case-by-case-approvals", () => {
   it("rejects non-admin dashboard sessions", async () => {
     vi.stubEnv("APP_ADMIN_EMAILS", "admin@example.com");
     authMock.mockResolvedValue({ user: { email: "user@example.com" } });
@@ -56,30 +57,20 @@ describe("/api/access-requests", () => {
     });
   });
 
-  it("lets allowlisted admins create and list access requests", async () => {
+  it("lets allowlisted admins list existing access requests", async () => {
     vi.stubEnv("APP_ADMIN_EMAILS", "admin@example.com,ops@example.com");
-
-    const createResponse = await POST(
-      new Request("http://localhost/api/access-requests", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          agentId: "agent-1",
-          agentClass: "assistant",
-          integrationKey: "github",
-          toolName: "delete_repo",
-          scopes: ["repo:admin"],
-          requestedMinutes: 30,
-          channels: ["in_app"],
-          notificationTargets: { in_app: "owner@example.com" },
-          justification: "Need repo cleanup access",
-        }),
-      }),
-    );
-    const created = (await createResponse.json()) as { id: string; status: string };
-
-    expect(createResponse.status).toBe(200);
-    expect(created.status).toBe("pending");
+    const service = getContextLayerService();
+    const created = await service.createAccessRequest({
+      agentId: "agent-1",
+      agentClass: "assistant",
+      integrationKey: "github",
+      toolName: "delete_repo",
+      scopes: ["repo:admin"],
+      requestedMinutes: 30,
+      channels: ["in_app"],
+      notificationTargets: { in_app: "owner@example.com" },
+      justification: "Need repo cleanup access",
+    });
 
     const listResponse = await GET();
     const listed = (await listResponse.json()) as Array<{ id: string; status: string }>;

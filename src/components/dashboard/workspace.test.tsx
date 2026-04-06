@@ -226,7 +226,7 @@ describe("DashboardWorkspace", () => {
 
       if (
         url === "/api/integrations" ||
-        url === "/api/access-requests" ||
+        url === "/api/case-by-case-approvals" ||
         url === "/api/notifications" ||
         url === "/api/integrations/built-in-connectors"
       ) {
@@ -304,7 +304,7 @@ describe("DashboardWorkspace", () => {
       const method = init?.method ?? "GET";
 
       if (
-        url === "/api/access-requests" ||
+        url === "/api/case-by-case-approvals" ||
         url === "/api/notifications" ||
         url === "/api/integrations/built-in-connectors"
       ) {
@@ -530,7 +530,7 @@ describe("DashboardWorkspace", () => {
 
       if (
         url === "/api/integrations" ||
-        url === "/api/access-requests" ||
+        url === "/api/case-by-case-approvals" ||
         url === "/api/notifications" ||
         url === "/api/oauth/connections"
       ) {
@@ -588,7 +588,7 @@ describe("DashboardWorkspace", () => {
 
       if (
         url === "/api/integrations" ||
-        url === "/api/access-requests" ||
+        url === "/api/case-by-case-approvals" ||
         url === "/api/notifications" ||
         url === "/api/oauth/connections"
       ) {
@@ -765,7 +765,7 @@ describe("DashboardWorkspace", () => {
       const method = init?.method ?? "GET";
 
       if (
-        url === "/api/access-requests" ||
+        url === "/api/case-by-case-approvals" ||
         url === "/api/notifications" ||
         url === "/api/integrations/built-in-connectors"
       ) {
@@ -1024,7 +1024,7 @@ describe("DashboardWorkspace", () => {
       const method = init?.method ?? "GET";
 
       if (
-        url === "/api/access-requests" ||
+        url === "/api/case-by-case-approvals" ||
         url === "/api/notifications" ||
         url === "/api/integrations/built-in-connectors"
       ) {
@@ -1579,7 +1579,7 @@ describe("DashboardWorkspace", () => {
         });
       }
 
-      if (url === "/api/access-requests") {
+      if (url === "/api/case-by-case-approvals") {
         return new Response(JSON.stringify(accessRequestsState), {
           status: 200,
           headers: { "Content-Type": "application/json" },
@@ -1722,7 +1722,7 @@ describe("DashboardWorkspace", () => {
     fetchMock.mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = typeof input === "string" ? input : input.toString();
 
-      if (url === "/api/integrations" || url === "/api/access-requests") {
+      if (url === "/api/integrations" || url === "/api/case-by-case-approvals") {
         return new Response(
           JSON.stringify(url === "/api/integrations" ? [] : accessRequestsState),
           {
@@ -1732,7 +1732,7 @@ describe("DashboardWorkspace", () => {
         );
       }
 
-      if (url === "/api/access-requests/req-pending/approve") {
+      if (url === "/api/case-by-case-approvals/req-pending/approve") {
         approvePayload = JSON.parse(String(init?.body)) as {
           durationMinutes: number;
         };

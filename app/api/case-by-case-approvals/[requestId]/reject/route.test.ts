@@ -27,7 +27,7 @@ const resetRuntime = () => {
 };
 
 beforeAll(() => {
-  vi.stubEnv("POSTGRES_URL", "pglite://legacy-access-request-approve-route-test");
+  vi.stubEnv("POSTGRES_URL", "pglite://case-by-case-approvals-reject-route-test");
 });
 
 beforeEach(async () => {
@@ -39,32 +39,13 @@ afterEach(async () => {
   authMock.mockReset();
   authMock.mockResolvedValue({ user: { email: "admin@example.com" } });
   vi.unstubAllEnvs();
-  vi.stubEnv("POSTGRES_URL", "pglite://legacy-access-request-approve-route-test");
+  vi.stubEnv("POSTGRES_URL", "pglite://case-by-case-approvals-reject-route-test");
   resetRuntime();
   await testCleanup();
 });
 
-describe("POST /api/access-requests/[requestId]/approve", () => {
-  it("rejects non-admin dashboard sessions", async () => {
-    vi.stubEnv("APP_ADMIN_EMAILS", "admin@example.com");
-    authMock.mockResolvedValue({ user: { email: "user@example.com" } });
-
-    const response = await POST(
-      new Request("http://localhost/api/access-requests/req-1/approve", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ durationMinutes: 10 }),
-      }),
-      { params: Promise.resolve({ requestId: "req-1" }) },
-    );
-
-    expect(response.status).toBe(403);
-    await expect(response.json()).resolves.toMatchObject({
-      detail: "Only app administrators can manage access requests.",
-    });
-  });
-
-  it("records the authenticated admin even when the client submits a spoofed approver", async () => {
+describe("POST /api/case-by-case-approvals/[requestId]/reject", () => {
+  it("records the authenticated admin as the rejecting reviewer", async () => {
     vi.stubEnv("APP_ADMIN_EMAILS", "admin@example.com");
     const service = getContextLayerService();
     const request = await service.createAccessRequest({
@@ -80,26 +61,19 @@ describe("POST /api/access-requests/[requestId]/approve", () => {
     });
 
     const response = await POST(
-      new Request(`http://localhost/api/access-requests/${request.id}/approve`, {
+      new Request(`http://localhost/api/case-by-case-approvals/${request.id}/reject`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          approver: "mallory@example.com",
-          durationMinutes: 10,
-        }),
+        body: JSON.stringify({ approver: "mallory@example.com" }),
       }),
       { params: Promise.resolve({ requestId: request.id }) },
     );
-    const grant = (await response.json()) as { grantedBy: string };
+    const rejected = (await response.json()) as { decidedBy: string; status: string };
 
     expect(response.status).toBe(200);
-    expect(grant.grantedBy).toBe("admin@example.com");
-    await expect(service.listAccessRequests()).resolves.toMatchObject([
-      expect.objectContaining({
-        id: request.id,
-        status: "approved",
-        decidedBy: "admin@example.com",
-      }),
-    ]);
+    expect(rejected).toMatchObject({
+      decidedBy: "admin@example.com",
+      status: "rejected",
+    });
   });
 });

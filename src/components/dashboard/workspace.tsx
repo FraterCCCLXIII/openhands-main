@@ -159,7 +159,7 @@ export const DashboardWorkspace = ({
 
   const accessRequestsQuery = useQuery({
     queryKey: ["access-requests"],
-    queryFn: () => fetchJson<AccessRequest[]>("/api/access-requests"),
+    queryFn: () => fetchJson<AccessRequest[]>("/api/case-by-case-approvals"),
     initialData: initialAccessRequests,
     enabled: isAdmin,
   });
@@ -499,7 +499,7 @@ export const DashboardWorkspace = ({
     try {
       for (const requestId of requestIds) {
         await fetchJson(
-          `/api/access-requests/${requestId}/${action === "approve" ? "approve" : "reject"}`,
+          `/api/case-by-case-approvals/${requestId}/${action === "approve" ? "approve" : "reject"}`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
