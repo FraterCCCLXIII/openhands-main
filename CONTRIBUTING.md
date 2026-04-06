@@ -38,6 +38,12 @@ Thanks for contributing to OpenHands Context Layer.
 
 5. Open `http://localhost:3000/integrations`.
 
+## Shared contributor references
+
+- [ARCHITECTURE.md](./ARCHITECTURE.md) — security model, testing strategy, and domain glossary
+- [API.md](./API.md) — route and surface map
+- [README.md](./README.md) — setup and product overview
+
 ## Validation
 
 Run the checks that match your change scope:
