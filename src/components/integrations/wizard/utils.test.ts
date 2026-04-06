@@ -6,9 +6,9 @@ import {
   type DiscoveryResponse,
   type WizardDraft,
 } from "@/src/components/integrations/wizard/utils";
-import type { BuiltInConnectorOption } from "@/src/types/context-layer";
+import type { ManagedConnectorOption } from "@/src/types/context-layer";
 
-const elevenLabsConnector: BuiltInConnectorOption = {
+const elevenLabsConnector: ManagedConnectorOption = {
   slug: "elevenlabs",
   name: "ElevenLabs",
   description: "Voice tools",
@@ -23,11 +23,11 @@ const elevenLabsConnector: BuiltInConnectorOption = {
   apiKeyHeaderName: "xi-api-key",
 };
 
-const builtInDraft: WizardDraft = {
-  kind: "built_in",
+const managedDraft: WizardDraft = {
+  kind: "managed",
   key: "elevenlabs",
   name: "ElevenLabs",
-  builtInSlug: "elevenlabs",
+  managedConnectorSlug: "elevenlabs",
   serverUrl: "",
   accessToken: "",
   apiKey: "secret-key",
@@ -41,7 +41,7 @@ const discovery: DiscoveryResponse = {
   authStrategy: "api_key",
   config: {
     apiBaseUrl: "https://api.elevenlabs.io",
-    builtInSlug: "elevenlabs",
+    managedConnectorSlug: "elevenlabs",
   },
   credentials: {
     headerName: "xi-api-key",
@@ -72,12 +72,12 @@ const discovery: DiscoveryResponse = {
 };
 
 describe("integration-wizard-utils", () => {
-  it("builds discovery payloads for built-in connectors with connector-specific header names", () => {
-    expect(buildDiscoverPayload(builtInDraft, elevenLabsConnector)).toEqual({
+  it("builds discovery payloads for managed connectors with connector-specific header names", () => {
+    expect(buildDiscoverPayload(managedDraft, elevenLabsConnector)).toEqual({
       key: "elevenlabs",
-      kind: "built_in",
+      kind: "managed",
       config: {
-        builtInSlug: "elevenlabs",
+        managedConnectorSlug: "elevenlabs",
       },
       credentials: {
         headerName: "xi-api-key",
@@ -88,7 +88,7 @@ describe("integration-wizard-utils", () => {
 
   it("builds create payloads that preserve discovery metadata and updated access modes", () => {
     const payload = buildCreatePayload(
-      { ...builtInDraft, name: "elevenlabs" },
+      { ...managedDraft, name: "elevenlabs" },
       discovery,
       {
         delete_voice: "disabled",
@@ -107,7 +107,7 @@ describe("integration-wizard-utils", () => {
       fineGrainedPermissions: true,
       config: {
         apiBaseUrl: "https://api.elevenlabs.io",
-        builtInSlug: "elevenlabs",
+        managedConnectorSlug: "elevenlabs",
       },
     });
     expect(payload.tools.list_models).toMatchObject({

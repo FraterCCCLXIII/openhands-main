@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ConnectStep } from "@/src/components/integrations/wizard/connect-step";
 import type {
-  BuiltInConnectorOption,
+  ManagedConnectorOption,
   IntegrationConnectionStatus,
 } from "@/src/types/context-layer";
 import type { DiscoverFeedback, WizardDraft } from "@/src/components/integrations/wizard/utils";
@@ -28,11 +28,11 @@ const setInputValue = (element: HTMLInputElement | null, value: string) => {
   element.dispatchEvent(new Event("change", { bubbles: true }));
 };
 
-const baseBuiltInDraft: WizardDraft = {
-  kind: "built_in",
+const baseManagedDraft: WizardDraft = {
+  kind: "managed",
   key: "",
   name: "",
-  builtInSlug: "",
+  managedConnectorSlug: "",
   serverUrl: "",
   accessToken: "",
   apiKey: "",
@@ -41,7 +41,7 @@ const baseBuiltInDraft: WizardDraft = {
   password: "",
 };
 
-const notionConnector: BuiltInConnectorOption = {
+const notionConnector: ManagedConnectorOption = {
   slug: "notion",
   name: "Notion",
   description: "Notion docs connector",
@@ -56,7 +56,7 @@ const notionConnector: BuiltInConnectorOption = {
   appUrl: "https://www.notion.so",
 };
 
-const elevenLabsConnector: BuiltInConnectorOption = {
+const elevenLabsConnector: ManagedConnectorOption = {
   slug: "elevenlabs",
   name: "ElevenLabs",
   description: "Voice generation connector",
@@ -73,7 +73,7 @@ const elevenLabsConnector: BuiltInConnectorOption = {
 
 type RenderOptions = {
   draft?: WizardDraft;
-  selectedConnector?: BuiltInConnectorOption | null;
+  selectedConnector?: ManagedConnectorOption | null;
   selectedConnection?: IntegrationConnectionStatus | null;
   requiresOAuthConnection?: boolean;
   oauthConnectionEnabled?: boolean;
@@ -92,7 +92,7 @@ const renderConnectStep = async (options: RenderOptions = {}) => {
   const onBack = vi.fn();
   const onConnectorSearchChange = vi.fn();
   const onDiscover = vi.fn();
-  const initialDraft = options.draft ?? baseBuiltInDraft;
+  const initialDraft = options.draft ?? baseManagedDraft;
 
   const TestHarness = () => {
     const [draft, setHarnessDraft] = useState(initialDraft);
@@ -105,8 +105,8 @@ const renderConnectStep = async (options: RenderOptions = {}) => {
     return (
       <>
         <ConnectStep
-          builtInConnectors={[notionConnector, elevenLabsConnector]}
-          builtInConnectorsPending={false}
+          managedConnectors={[notionConnector, elevenLabsConnector]}
+          managedConnectorsPending={false}
           canDiscover={options.canDiscover ?? true}
           connectorSearch=""
           discoverFeedback={options.discoverFeedback ?? null}
@@ -166,13 +166,13 @@ describe("ConnectStep", () => {
     });
   });
 
-  it("starts the per-user OAuth flow for built-in connectors", async () => {
+  it("starts the per-user OAuth flow for managed connectors", async () => {
     const { container, cleanup } = await renderConnectStep({
       draft: {
-        ...baseBuiltInDraft,
+        ...baseManagedDraft,
         key: "notion-workspace",
         name: "Notion Workspace",
-        builtInSlug: "notion",
+        managedConnectorSlug: "notion",
       },
       selectedConnector: notionConnector,
       requiresOAuthConnection: true,
@@ -193,7 +193,7 @@ describe("ConnectStep", () => {
     });
 
     expect(window.location.href).toBe(
-      "/api/oauth/notion/start?integrationKey=notion-workspace&redirectTo=%2Fintegrations%3FshowIntegrationWizard%3D1%26builtIn%3Dnotion",
+      "/api/oauth/notion/start?integrationKey=notion-workspace&redirectTo=%2Fintegrations%3FshowIntegrationWizard%3D1%26managedConnector%3Dnotion",
     );
 
     await cleanup();
@@ -202,10 +202,10 @@ describe("ConnectStep", () => {
   it("renders API-key connector guidance and updates the draft state", async () => {
     const { container, cleanup } = await renderConnectStep({
       draft: {
-        ...baseBuiltInDraft,
+        ...baseManagedDraft,
         key: "elevenlabs",
         name: "ElevenLabs",
-        builtInSlug: "elevenlabs",
+        managedConnectorSlug: "elevenlabs",
       },
       selectedConnector: elevenLabsConnector,
       statefulDraft: true,
@@ -231,7 +231,7 @@ describe("ConnectStep", () => {
   it("renders manual MCP fields, forwards navigation actions, and shows admin diagnostics", async () => {
     const { container, cleanup, onBack, onDiscover } = await renderConnectStep({
       draft: {
-        ...baseBuiltInDraft,
+        ...baseManagedDraft,
         kind: "mcp",
         key: "figma-mcp",
         name: "Figma MCP",

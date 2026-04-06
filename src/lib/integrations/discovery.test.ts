@@ -42,7 +42,7 @@ import { createTestRepository, getActiveSql } from "@/src/lib/db/pglite-test-uti
 import {
   discoverIntegration,
   inferMcpAuthStrategy,
-  listBuiltInConnectors,
+  listManagedConnectorOptions,
 } from "@/src/lib/integrations/discovery";
 
 let testRepo: ContextRepository;
@@ -67,9 +67,9 @@ afterEach(async () => {
   vi.unstubAllGlobals();
 });
 
-describe("listBuiltInConnectors", () => {
+describe("listManagedConnectorOptions", () => {
   it("returns an empty catalog when no repository is provided", async () => {
-    await expect(listBuiltInConnectors()).resolves.toEqual([]);
+    await expect(listManagedConnectorOptions()).resolves.toEqual([]);
   });
 
   it("returns enabled managed connectors when a repository is provided", async () => {
@@ -102,7 +102,7 @@ describe("listBuiltInConnectors", () => {
       updatedAt: "2026-03-09T00:00:00.000Z",
     });
 
-    const connectors = await listBuiltInConnectors(repository);
+    const connectors = await listManagedConnectorOptions(repository);
 
     expect(connectors).toContainEqual(
       expect.objectContaining({
@@ -116,7 +116,7 @@ describe("listBuiltInConnectors", () => {
   });
 
   it("includes default API-key connectors that need no admin registration", async () => {
-    const connectors = await listBuiltInConnectors(testRepo);
+    const connectors = await listManagedConnectorOptions(testRepo);
 
     expect(connectors).toContainEqual(
       expect.objectContaining({
@@ -130,7 +130,7 @@ describe("listBuiltInConnectors", () => {
   });
 
   it("includes default MCP bearer connectors that need no admin registration", async () => {
-    const connectors = await listBuiltInConnectors(testRepo);
+    const connectors = await listManagedConnectorOptions(testRepo);
 
     expect(connectors).toContainEqual(
       expect.objectContaining({
@@ -200,7 +200,7 @@ describe("listBuiltInConnectors", () => {
       updatedAt: "2026-03-09T00:00:00.000Z",
     });
 
-    const connectors = await listBuiltInConnectors(repository);
+    const connectors = await listManagedConnectorOptions(repository);
 
     expect(connectors.map((connector) => connector.name)).toEqual([
       "Alpha CRM",
@@ -249,9 +249,9 @@ describe("discoverIntegration", () => {
       discoverIntegration(
         {
           key: "github",
-          kind: "built_in",
+          kind: "managed",
           config: {
-            builtInSlug: "github",
+            managedConnectorSlug: "github",
           },
           credentials: {
             accessToken: "github-pat",
@@ -265,7 +265,6 @@ describe("discoverIntegration", () => {
       provider: "mcp",
       authStrategy: "bearer",
       config: {
-        builtInSlug: "github",
         managedConnectorSlug: "github",
         serverUrl: "https://api.githubcopilot.com/mcp/",
       },
@@ -321,9 +320,9 @@ describe("discoverIntegration", () => {
       discoverIntegration(
         {
           key: "elevenlabs",
-          kind: "built_in",
+          kind: "managed",
           config: {
-            builtInSlug: "elevenlabs",
+            managedConnectorSlug: "elevenlabs",
           },
           credentials: {
             secret: "eleven-secret",
@@ -337,7 +336,7 @@ describe("discoverIntegration", () => {
       provider: "http",
       authStrategy: "api_key",
       config: {
-        builtInSlug: "elevenlabs",
+        managedConnectorSlug: "elevenlabs",
         apiBaseUrl: "https://api.elevenlabs.io",
       },
       credentials: {
@@ -359,14 +358,14 @@ describe("discoverIntegration", () => {
   });
 
 
-  it("returns 404 when a built-in slug is not available", async () => {
+  it("returns 404 when a managed connector slug is not available", async () => {
     await expect(
       discoverIntegration(
         {
           key: "notion",
-          kind: "built_in",
+          kind: "managed",
           config: {
-            builtInSlug: "notion",
+            managedConnectorSlug: "notion",
           },
           credentials: {},
         },
@@ -375,7 +374,7 @@ describe("discoverIntegration", () => {
         },
       ),
     ).rejects.toMatchObject({
-      message: "Unknown built-in connector 'notion'.",
+      message: "Unknown managed connector 'notion'.",
     });
   });
 
@@ -437,9 +436,9 @@ describe("discoverIntegration", () => {
       discoverIntegration(
         {
           key: "acme-crm",
-          kind: "built_in",
+          kind: "managed",
           config: {
-            builtInSlug: "acme-crm",
+            managedConnectorSlug: "acme-crm",
           },
           credentials: {},
         },
@@ -452,7 +451,6 @@ describe("discoverIntegration", () => {
       provider: "mcp",
       authStrategy: "oauth2",
       config: {
-        builtInSlug: "acme-crm",
         managedConnectorSlug: "acme-crm",
         serverUrl: "https://mcp.acme.test/mcp",
       },
@@ -514,9 +512,9 @@ describe("discoverIntegration", () => {
       discoverIntegration(
         {
           key: "linear",
-          kind: "built_in",
+          kind: "managed",
           config: {
-            builtInSlug: "linear",
+            managedConnectorSlug: "linear",
           },
           credentials: {
             headerName: "X-Linear-Key",
@@ -531,7 +529,6 @@ describe("discoverIntegration", () => {
       provider: "http",
       authStrategy: "api_key",
       config: {
-        builtInSlug: "linear",
         managedConnectorSlug: "linear",
         apiBaseUrl: "https://api.linear.app",
       },
@@ -604,9 +601,9 @@ describe("discoverIntegration", () => {
       discoverIntegration(
         {
           key: "notion",
-          kind: "built_in",
+          kind: "managed",
           config: {
-            builtInSlug: "notion",
+            managedConnectorSlug: "notion",
           },
           credentials: {},
         },
@@ -619,7 +616,6 @@ describe("discoverIntegration", () => {
       provider: "http",
       authStrategy: "oauth2",
       config: {
-        builtInSlug: "notion",
         managedConnectorSlug: "notion",
         apiBaseUrl: "https://api.notion.com",
       },
@@ -641,7 +637,7 @@ describe("discoverIntegration", () => {
     });
   });
 
-  it("discovers default MCP built-in connectors with bearer auth", async () => {
+  it("discovers default MCP managed connectors with bearer auth", async () => {
     mcpListToolsMock.mockResolvedValue({
       tools: [
         { name: "create_post", description: "Create a social media post" },
@@ -652,8 +648,8 @@ describe("discoverIntegration", () => {
     const result = await discoverIntegration(
       {
         key: "ordinal",
-        kind: "built_in",
-        config: { builtInSlug: "ordinal" },
+        kind: "managed",
+        config: { managedConnectorSlug: "ordinal" },
         credentials: { accessToken: "ord_test_key_123" },
       },
     );
@@ -662,7 +658,7 @@ describe("discoverIntegration", () => {
       provider: "mcp",
       authStrategy: "bearer",
       config: {
-        builtInSlug: "ordinal",
+        managedConnectorSlug: "ordinal",
         serverUrl: "https://app.tryordinal.com/api/mcp",
       },
     });

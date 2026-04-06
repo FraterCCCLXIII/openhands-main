@@ -1,13 +1,13 @@
 import { useCallback, useMemo, useState } from "react";
 
 import { getToolAccessMode } from "@/src/components/integrations/tool-access-controls";
-import type { BuiltInConnectorOption, ToolAccessMode } from "@/src/types/context-layer";
+import type { ManagedConnectorOption, ToolAccessMode } from "@/src/types/context-layer";
 import {
   connectorOptionLabel,
   filterReviewedTools,
   findConnectorByQuery,
   getReviewedTools,
-  hasBuiltInCredentialInput,
+  hasManagedConnectorCredentialInput,
   INITIAL_DRAFT,
   type DiscoverFeedback,
   type DiscoveryResponse,
@@ -20,26 +20,29 @@ interface SearchParamsLike {
 }
 
 interface UseIntegrationWizardStateOptions {
-  builtInConnectors: BuiltInConnectorOption[];
+  managedConnectors: ManagedConnectorOption[];
   onStatus: (message: string | null) => void;
   searchParams: SearchParamsLike;
 }
 
 export const useWizardState = ({
-  builtInConnectors,
+  managedConnectors,
   onStatus,
   searchParams,
 }: UseIntegrationWizardStateOptions) => {
-  const initialBuiltInSlug = searchParams.get("builtIn")?.trim() ?? "";
-  const [step, setStep] = useState<WizardStep>(initialBuiltInSlug ? 2 : 1);
+  const initialManagedConnectorSlug =
+    searchParams.get("managedConnector")?.trim() ||
+    searchParams.get("builtIn")?.trim() ||
+    "";
+  const [step, setStep] = useState<WizardStep>(initialManagedConnectorSlug ? 2 : 1);
   const [draft, setDraft] = useState<WizardDraft>(() =>
-    initialBuiltInSlug
+    initialManagedConnectorSlug
       ? {
           ...INITIAL_DRAFT,
-          kind: "built_in",
-          builtInSlug: initialBuiltInSlug,
-          key: initialBuiltInSlug,
-          name: initialBuiltInSlug,
+          kind: "managed",
+          managedConnectorSlug: initialManagedConnectorSlug,
+          key: initialManagedConnectorSlug,
+          name: initialManagedConnectorSlug,
         }
       : INITIAL_DRAFT,
   );
@@ -47,16 +50,16 @@ export const useWizardState = ({
   const [toolModes, setToolModes] = useState<Record<string, ToolAccessMode>>({});
   const [selectedTools, setSelectedTools] = useState<Record<string, boolean>>({});
   const [expandedTools, setExpandedTools] = useState<Record<string, boolean>>({});
-  const [connectorSearch, setConnectorSearch] = useState(initialBuiltInSlug);
+  const [connectorSearch, setConnectorSearch] = useState(initialManagedConnectorSlug);
   const [toolSearch, setToolSearch] = useState("");
   const [discoverFeedback, setDiscoverFeedback] =
     useState<DiscoverFeedback | null>(null);
 
   const selectedConnector = useMemo(
     () =>
-      builtInConnectors.find((connector) => connector.slug === draft.builtInSlug) ??
+      managedConnectors.find((connector) => connector.slug === draft.managedConnectorSlug) ??
       null,
-    [builtInConnectors, draft.builtInSlug],
+    [managedConnectors, draft.managedConnectorSlug],
   );
 
   const reviewedTools = useMemo(
@@ -88,37 +91,37 @@ export const useWizardState = ({
     matchingToolNames.every((name) => selectedTools[name]);
   const hasMatchingTools = matchingToolNames.length > 0;
 
-  const builtInAuthStrategy = selectedConnector?.authStrategy ?? null;
-  const requiresOAuthConnection = builtInAuthStrategy === "oauth2";
+  const managedConnectorAuthStrategy = selectedConnector?.authStrategy ?? null;
+  const requiresOAuthConnection = managedConnectorAuthStrategy === "oauth2";
   const oauthConnectionEnabled =
     !requiresOAuthConnection || selectedConnector?.oauthConfigured !== false;
 
   const handleConnectorSelect = useCallback(
-    (connector: BuiltInConnectorOption) => {
+    (connector: ManagedConnectorOption) => {
       setDraft((current) => ({
         ...current,
-        builtInSlug: connector.slug,
+        managedConnectorSlug: connector.slug,
         key: connector.slug,
         name: connector.name,
         accessToken:
-          current.builtInSlug === connector.slug && connector.authStrategy === "bearer"
+          current.managedConnectorSlug === connector.slug && connector.authStrategy === "bearer"
             ? current.accessToken
             : "",
         apiKey:
-          current.builtInSlug === connector.slug && connector.authStrategy === "api_key"
+          current.managedConnectorSlug === connector.slug && connector.authStrategy === "api_key"
             ? current.apiKey
             : "",
         headerName:
           connector.apiKeyHeaderName?.trim() ||
-          (current.builtInSlug === connector.slug && connector.authStrategy === "api_key"
+          (current.managedConnectorSlug === connector.slug && connector.authStrategy === "api_key"
             ? current.headerName
             : INITIAL_DRAFT.headerName),
         username:
-          current.builtInSlug === connector.slug && connector.authStrategy === "basic"
+          current.managedConnectorSlug === connector.slug && connector.authStrategy === "basic"
             ? current.username
             : "",
         password:
-          current.builtInSlug === connector.slug && connector.authStrategy === "basic"
+          current.managedConnectorSlug === connector.slug && connector.authStrategy === "basic"
             ? current.password
             : "",
       }));
@@ -132,7 +135,7 @@ export const useWizardState = ({
   const handleConnectorSearchChange = (value: string) => {
     setConnectorSearch(value);
 
-    const connector = findConnectorByQuery(builtInConnectors, value);
+    const connector = findConnectorByQuery(managedConnectors, value);
     if (connector) {
       handleConnectorSelect(connector);
       return;
@@ -140,7 +143,7 @@ export const useWizardState = ({
 
     setDraft((current) => ({
       ...current,
-      builtInSlug: "",
+      managedConnectorSlug: "",
       accessToken: "",
       apiKey: "",
       headerName: INITIAL_DRAFT.headerName,
