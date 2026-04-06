@@ -94,11 +94,17 @@ describe("agent-skill", () => {
   });
 
   it("renders an empty-state tool catalog when no tools are enabled", () => {
+    const firstIntegration = integrations[0];
+    expect(firstIntegration).toBeDefined();
+    if (!firstIntegration) {
+      throw new Error("Missing integration test fixture");
+    }
+
     const markdown = buildAgentSkillMarkdown({
       baseUrl: "https://context-layer.example.com",
       integrations: [
         {
-          ...integrations[0],
+          ...firstIntegration,
           enabled: false,
         },
       ],

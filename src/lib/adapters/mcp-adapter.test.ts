@@ -128,4 +128,28 @@ describe("McpAdapter", () => {
       }),
     );
   });
+
+  it("ignores malformed tool override values and falls back to integration defaults", async () => {
+    runMcpClientOperationMock.mockResolvedValueOnce({ ok: true });
+
+    const adapter = new McpAdapter();
+    const input = buildInput();
+    input.toolSpec.config = {
+      serverUrl: { invalid: true },
+      toolName: ["searchPages"],
+    };
+
+    await expect(adapter.invoke(input)).resolves.toEqual({ ok: true });
+
+    expect(runMcpClientOperationMock).toHaveBeenCalledWith(
+      "https://integration.example/mcp",
+      { Authorization: "Bearer notion-token" },
+      "callTool(search)",
+      expect.any(Function),
+      expect.objectContaining({
+        integrationKey: "notion",
+        managedConnectorSlug: "notion",
+      }),
+    );
+  });
 });

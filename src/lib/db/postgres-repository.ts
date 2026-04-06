@@ -5,7 +5,6 @@ import type {
   AdminApiKeyRecord,
   AgentApiKeyRecord,
   AgentClassPolicy,
-  ToolUsageSummary,
   IntegrationConnectionRecord,
   IntegrationSpec,
   ManagedConnectorRecord,

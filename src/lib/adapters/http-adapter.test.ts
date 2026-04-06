@@ -97,4 +97,25 @@ describe("HttpAdapter", () => {
       contentBase64: Buffer.from("audio-bytes").toString("base64"),
     });
   });
+
+  it("ignores malformed auth credential values instead of throwing", async () => {
+    const input = buildInput();
+    input.integration.credentials = {
+      headerName: { invalid: true },
+      secret: { invalid: true },
+    };
+
+    const fetchMock = vi.fn(async (_url: URL | string, init?: RequestInit) => {
+      expect(init?.headers).toEqual({});
+      return new Response(JSON.stringify({ ok: true }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const adapter = new HttpAdapter();
+    await expect(adapter.invoke(input)).resolves.toEqual({ ok: true });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
 });

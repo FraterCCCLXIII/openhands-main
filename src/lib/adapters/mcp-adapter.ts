@@ -4,12 +4,13 @@ import type {
 } from "@/src/lib/core/adapter-registry";
 import { ContextLayerError } from "@/src/lib/core/errors";
 import { buildMcpHeaders, runMcpClientOperation } from "@/src/lib/mcp-client";
+import { getOptionalTrimmedString } from "@/src/lib/type-utils";
 
 export class McpAdapter implements IntegrationAdapter {
   async invoke({ integration, toolSpec, payload }: AdapterInvocationInput) {
     const serverUrl =
-      (toolSpec.config.serverUrl as string | undefined) ??
-      (integration.config.serverUrl as string | undefined);
+      getOptionalTrimmedString(toolSpec.config, "serverUrl") ??
+      getOptionalTrimmedString(integration.config, "serverUrl");
 
     if (!serverUrl) {
       throw new ContextLayerError(
@@ -18,8 +19,7 @@ export class McpAdapter implements IntegrationAdapter {
       );
     }
 
-    const toolName =
-      (toolSpec.config.toolName as string | undefined) ?? toolSpec.name;
+    const toolName = getOptionalTrimmedString(toolSpec.config, "toolName") ?? toolSpec.name;
 
     return runMcpClientOperation(
       serverUrl,
@@ -35,8 +35,8 @@ export class McpAdapter implements IntegrationAdapter {
         credentials: integration.credentials,
         integrationKey: integration.key,
         managedConnectorSlug:
-          (integration.config.managedConnectorSlug as string | undefined) ??
-          (integration.config.builtInSlug as string | undefined),
+          getOptionalTrimmedString(integration.config, "managedConnectorSlug") ??
+          getOptionalTrimmedString(integration.config, "builtInSlug"),
       },
     );
   }
