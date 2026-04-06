@@ -3,6 +3,7 @@ import { createHash, randomBytes } from "node:crypto";
 import { isAppAdminEmail } from "@/src/lib/app-admins";
 import { ContextLayerError } from "@/src/lib/core/errors";
 import { decryptCredentials, encryptCredentials } from "@/src/lib/credential-crypto";
+import { normalizeCaseInsensitiveText } from "@/src/lib/text-utils";
 import type {
   AdminApiKeyRecord,
   AdminApiKeyStatus,
@@ -13,7 +14,7 @@ import type {
 const USER_API_KEY_PREFIX_LENGTH = 12;
 const USER_API_KEY_SUFFIX_LENGTH = 4;
 
-export const normalizeOwnerId = (ownerId: string) => ownerId.trim().toLowerCase();
+export const normalizeOwnerId = normalizeCaseInsensitiveText;
 
 export const requireAdminApiKeyOwner = (ownerId: string) => {
   const normalizedOwnerId = normalizeOwnerId(ownerId);

@@ -66,6 +66,7 @@ The root `LICENSE` is proprietary: `Copyright All Hands AI, Inc. All rights rese
 - Static built-ins have been removed; the integrations wizard's "Built-in connector" path is now a compatibility label for service-level managed connectors stored in the repository.
 
 - `src/lib/auth.ts` configures Auth.js for GitHub OAuth on the hosted dashboard using the same preview-deployment redirect proxy pattern as `OpenHands/kpi-tracker`; the GitHub provider requests both `read:user` and `user:email` so the dashboard can populate signed-in email addresses more reliably. `DISABLE_AUTH=true` bypasses interactive auth for local development.
+- Shared case-insensitive text normalization and UI/backend search matching now live in `src/lib/text-utils.ts`; prefer reusing `normalizeCaseInsensitiveText`, `matchesSearchQuery`, and `matchesExactSearchQuery` instead of open-coding new `trim().toLowerCase()` search helpers.
 - `app/layout.tsx` passes `isAuthDisabled()` into `src/components/providers.tsx`; when auth is disabled, `Providers` must skip `SessionProvider` entirely so the client does not fetch `/api/auth/session` and trigger Auth.js configuration errors during local/shared preview QA.
 
 - `src/components/dashboard/workspace.tsx` is the OpenHands-inspired Tailwind dashboard workspace using TanStack Query + Zustand, coordinated by the server entrypoint in `src/components/dashboard/page.tsx`.
