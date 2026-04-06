@@ -21,6 +21,8 @@ Teams use it to connect SaaS tools and custom MCP servers, attach each user's ow
 - [CONTRIBUTING.md](./CONTRIBUTING.md) — local setup and contribution workflow
 - [CHANGELOG.md](./CHANGELOG.md) — notable unreleased and released changes
 - [AGENTS.md](./AGENTS.md) — repository memory for OpenHands agents and maintainers
+- [.openhands/setup.sh](./.openhands/setup.sh) — session bootstrap for OpenHands/local automation work
+- [.openhands/pre-commit.sh](./.openhands/pre-commit.sh) — fast typecheck/test gate before agent commits
 - [.openhands/skills/adding-integrations/SKILL.md](./.openhands/skills/adding-integrations/SKILL.md) — repository-specific guide for adding new integrations
 - [LICENSE](./LICENSE) — project license
 

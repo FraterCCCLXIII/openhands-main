@@ -8,6 +8,8 @@ The root `LICENSE` is proprietary: `Copyright All Hands AI, Inc. All rights rese
 
 ## Common commands
 
+- Bootstrap an OpenHands session: `.openhands/setup.sh`
+- Run the pre-commit validation gate: `.openhands/pre-commit.sh`
 - Install dependencies: `npm install`
 - Run locally with auth bypass: `DISABLE_AUTH=true npm run dev`
 - Run tests: `npm test`
@@ -122,7 +124,7 @@ The root `LICENSE` is proprietary: `Copyright All Hands AI, Inc. All rights rese
 - `ToolSpec.accessMode` now supports `enabled`, `disabled`, and `approval_required`; `approval_required` bypasses agent-class policy and requires a temporary grant, while `enabled` functions are callable by default unless a matching agent-class policy is configured to narrow access.
 - Stored provider credentials now require explicit secret material (`CREDENTIAL_ENCRYPTION_KEY`, `AUTH_SECRET`, or `NEXTAUTH_SECRET`) in every environment; there is no longer a baked-in local-development encryption fallback.
 - `app/api/cron/expire-grants/route.ts` is intended for a Vercel cron job to purge expired temporary grants, and it must fail closed unless `CRON_SECRET` is configured and presented as a bearer token.
-- `.github/workflows/` now includes OpenHands PR review (`pr-review-by-openhands.yml`, `pr-review-evaluation.yml`) and vulnerability remediation (`vulnerability-scan.yml`) wrappers copied from `OpenHands/extensions` plugins.
+- `.github/workflows/` now includes the OpenHands PR review pair (`pr-review.yml`, `pr-review-evaluation.yml`) plus the vulnerability remediation wrapper (`vulnerability-scan.yml`) copied from `OpenHands/extensions` plugins.
 - The app favicon now mirrors the OpenHands frontend assets: `public/favicon.ico`, `public/favicon-16x16.png`, and `public/favicon-32x32.png`, referenced explicitly via `app/layout.tsx` metadata.
 
 - `app/globals.css` plus `src/components/ui/{button,badge,card}.tsx` now mirror the OpenHands frontend palette more closely: gold primary accents (`#c9b974`/`#cfb755`), flatter dark surfaces, system sans body text, and IBM Plex Mono for code; admin/dashboard styling should stay aligned with those shared primitives.
