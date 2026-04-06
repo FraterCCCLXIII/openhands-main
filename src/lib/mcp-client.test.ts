@@ -122,7 +122,7 @@ describe("buildMcpHeaders", () => {
 });
 
 describe("runMcpClientOperation", () => {
-  it("retries only when fallback transports are explicitly configured", async () => {
+  it("retries transports in the configured order", async () => {
     vi.useFakeTimers();
     connectMock.mockImplementation((transport: { kind: string }) => {
       if (transport.kind === "streamable_http") {
@@ -141,7 +141,11 @@ describe("runMcpClientOperation", () => {
       "listTools",
       (client) => client.listTools(),
       {
-        fallbackTransports: [
+        transportOrder: [
+          {
+            transport: "streamable_http",
+            url: "https://mcp.acme.test/mcp",
+          },
           {
             transport: "sse",
             url: "https://mcp.acme.test/sse",
@@ -169,7 +173,7 @@ describe("runMcpClientOperation", () => {
     ]);
   });
 
-  it("does not retry when no fallback transport metadata is configured", async () => {
+  it("defaults to streamable HTTP when no transport order is configured", async () => {
     connectMock.mockRejectedValue(new Error("streamable failed"));
 
     await expect(
@@ -185,6 +189,43 @@ describe("runMcpClientOperation", () => {
       {
         kind: "streamable_http",
         url: "https://mcp.acme.test/mcp",
+        headers: { Authorization: "Bearer acme-token" },
+      },
+    ]);
+  });
+
+  it("honors a custom first transport in the configured order", async () => {
+    listToolsMock.mockResolvedValue({
+      tools: [{ name: "searchPages", description: "Search pages" }],
+    });
+
+    await expect(
+      runMcpClientOperation(
+        "https://mcp.acme.test/mcp",
+        { Authorization: "Bearer acme-token" },
+        "listTools",
+        (client) => client.listTools(),
+        {
+          transportOrder: [
+            {
+              transport: "sse",
+              url: "https://mcp.acme.test/sse",
+            },
+            {
+              transport: "streamable_http",
+              url: "https://mcp.acme.test/mcp",
+            },
+          ],
+        },
+      ),
+    ).resolves.toEqual({
+      tools: [{ name: "searchPages", description: "Search pages" }],
+    });
+
+    expect(transportAttempts).toEqual([
+      {
+        kind: "sse",
+        url: "https://mcp.acme.test/sse",
         headers: { Authorization: "Bearer acme-token" },
       },
     ]);

@@ -1,6 +1,6 @@
 export type McpTransportKind = "streamable_http" | "sse";
 
-export interface McpTransportFallback {
+export interface McpTransportTarget {
   transport: McpTransportKind;
   url: string;
 }
@@ -11,9 +11,9 @@ const hasOwn = (value: Record<string, unknown>, key: string) =>
 const isMcpTransportKind = (value: unknown): value is McpTransportKind =>
   value === "streamable_http" || value === "sse";
 
-const normalizeMcpTransportFallback = (
+const normalizeMcpTransportTarget = (
   value: unknown,
-): McpTransportFallback | null => {
+): McpTransportTarget | null => {
   if (!value || typeof value !== "object") {
     return null;
   }
@@ -41,28 +41,44 @@ const normalizeMcpTransportFallback = (
   };
 };
 
-export const parseMcpTransportFallbacks = (
+export const parseMcpTransportOrder = (
   value: unknown,
-): McpTransportFallback[] => {
+): McpTransportTarget[] => {
   if (!Array.isArray(value)) {
     return [];
   }
 
   return value
-    .map(normalizeMcpTransportFallback)
-    .filter((fallback): fallback is McpTransportFallback => fallback != null);
+    .map(normalizeMcpTransportTarget)
+    .filter((target): target is McpTransportTarget => target != null);
 };
 
-export const getMcpTransportFallbacks = (
+export const buildDefaultMcpTransportOrder = (
+  serverUrl: string,
+): McpTransportTarget[] => {
+  const trimmedUrl = serverUrl.trim();
+  return trimmedUrl
+    ? [
+        {
+          transport: "streamable_http",
+          url: trimmedUrl,
+        },
+      ]
+    : [];
+};
+
+export const getMcpTransportOrder = (
+  serverUrl: string,
   ...configs: Array<Record<string, unknown> | undefined>
-): McpTransportFallback[] => {
+): McpTransportTarget[] => {
   for (const config of configs) {
-    if (!config || !hasOwn(config, "mcpTransportFallbacks")) {
+    if (!config || !hasOwn(config, "mcpTransportOrder")) {
       continue;
     }
 
-    return parseMcpTransportFallbacks(config.mcpTransportFallbacks);
+    const parsed = parseMcpTransportOrder(config.mcpTransportOrder);
+    return parsed.length > 0 ? parsed : buildDefaultMcpTransportOrder(serverUrl);
   }
 
-  return [];
+  return buildDefaultMcpTransportOrder(serverUrl);
 };

@@ -1,14 +1,15 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  getMcpTransportFallbacks,
-  parseMcpTransportFallbacks,
+  buildDefaultMcpTransportOrder,
+  getMcpTransportOrder,
+  parseMcpTransportOrder,
 } from "@/src/lib/mcp-transport-policy";
 
-describe("parseMcpTransportFallbacks", () => {
-  it("keeps only valid fallback transport entries", () => {
+describe("parseMcpTransportOrder", () => {
+  it("keeps only valid transport targets", () => {
     expect(
-      parseMcpTransportFallbacks([
+      parseMcpTransportOrder([
         {
           transport: "sse",
           url: " https://mcp.acme.test/sse ",
@@ -35,36 +36,35 @@ describe("parseMcpTransportFallbacks", () => {
   });
 });
 
-describe("getMcpTransportFallbacks", () => {
-  it("uses the first config that explicitly defines MCP fallback metadata", () => {
+describe("buildDefaultMcpTransportOrder", () => {
+  it("defaults to streamable HTTP at the configured server URL", () => {
+    expect(buildDefaultMcpTransportOrder("https://mcp.acme.test/mcp")).toEqual([
+      {
+        transport: "streamable_http",
+        url: "https://mcp.acme.test/mcp",
+      },
+    ]);
+  });
+});
+
+describe("getMcpTransportOrder", () => {
+  it("uses the first config that explicitly defines transport order", () => {
     expect(
-      getMcpTransportFallbacks(
+      getMcpTransportOrder(
+        "https://mcp.acme.test/mcp",
         {
-          mcpTransportFallbacks: [],
-        },
-        {
-          mcpTransportFallbacks: [
+          mcpTransportOrder: [
             {
               transport: "sse",
               url: "https://mcp.acme.test/sse",
             },
           ],
         },
-      ),
-    ).toEqual([]);
-  });
-
-  it("falls back to later configs when earlier ones omit MCP fallback metadata", () => {
-    expect(
-      getMcpTransportFallbacks(
         {
-          serverUrl: "https://mcp.acme.test/mcp",
-        },
-        {
-          mcpTransportFallbacks: [
+          mcpTransportOrder: [
             {
-              transport: "sse",
-              url: "https://mcp.acme.test/sse",
+              transport: "streamable_http",
+              url: "https://mcp.acme.test/alternate-mcp",
             },
           ],
         },
@@ -73,6 +73,35 @@ describe("getMcpTransportFallbacks", () => {
       {
         transport: "sse",
         url: "https://mcp.acme.test/sse",
+      },
+    ]);
+  });
+
+  it("falls back to the default transport order when the explicit config is empty", () => {
+    expect(
+      getMcpTransportOrder(
+        "https://mcp.acme.test/mcp",
+        {
+          mcpTransportOrder: [],
+        },
+      ),
+    ).toEqual([
+      {
+        transport: "streamable_http",
+        url: "https://mcp.acme.test/mcp",
+      },
+    ]);
+  });
+
+  it("uses the default transport order when no config defines one", () => {
+    expect(
+      getMcpTransportOrder("https://mcp.acme.test/mcp", {
+        serverUrl: "https://mcp.acme.test/mcp",
+      }),
+    ).toEqual([
+      {
+        transport: "streamable_http",
+        url: "https://mcp.acme.test/mcp",
       },
     ]);
   });

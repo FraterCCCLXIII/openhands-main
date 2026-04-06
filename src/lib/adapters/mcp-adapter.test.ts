@@ -97,7 +97,12 @@ describe("McpAdapter", () => {
         integrationKey: "notion",
         managedConnectorSlug: "notion",
       },
-      fallbackTransports: [],
+      transportOrder: [
+        {
+          transport: "streamable_http",
+          url: "https://tool.example/mcp",
+        },
+      ],
     });
 
     const client = {
@@ -112,17 +117,21 @@ describe("McpAdapter", () => {
     });
   });
 
-  it("passes configured fallback transports through invocation metadata", async () => {
+  it("passes configured transport order through invocation metadata", async () => {
     runMcpClientOperationMock.mockResolvedValueOnce({ ok: true });
 
     const adapter = new McpAdapter();
     const input = buildInput();
     input.integration.config = {
       ...input.integration.config,
-      mcpTransportFallbacks: [
+      mcpTransportOrder: [
         {
           transport: "sse",
           url: "https://integration.example/sse",
+        },
+        {
+          transport: "streamable_http",
+          url: "https://integration.example/mcp",
         },
       ],
     };
@@ -139,10 +148,14 @@ describe("McpAdapter", () => {
           integrationKey: "notion",
           managedConnectorSlug: "notion",
         }),
-        fallbackTransports: [
+        transportOrder: [
           {
             transport: "sse",
             url: "https://integration.example/sse",
+          },
+          {
+            transport: "streamable_http",
+            url: "https://integration.example/mcp",
           },
         ],
       },

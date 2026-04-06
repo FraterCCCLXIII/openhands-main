@@ -2,7 +2,7 @@ import { decryptCredentials } from "@/src/lib/credential-crypto";
 import { ContextLayerError } from "@/src/lib/core/errors";
 import type { ContextRepository } from "@/src/lib/core/repository";
 import { buildMcpHeaders, runMcpClientOperation } from "@/src/lib/mcp-client";
-import { getMcpTransportFallbacks } from "@/src/lib/mcp-transport-policy";
+import { getMcpTransportOrder } from "@/src/lib/mcp-transport-policy";
 import {
   buildManagedConnectorToolSpecs,
   buildManagedConnectorTools,
@@ -343,7 +343,7 @@ const discoverMcpIntegration = async (
           (input.config.managedConnectorSlug as string | undefined) ??
           (input.config.builtInSlug as string | undefined),
       },
-      fallbackTransports: getMcpTransportFallbacks(input.config),
+      transportOrder: getMcpTransportOrder(serverUrl, input.config),
     },
   );
   const tools = Object.fromEntries(

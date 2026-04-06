@@ -4,8 +4,8 @@ import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/
 
 import { ContextLayerError } from "@/src/lib/core/errors";
 import type {
-  McpTransportFallback,
   McpTransportKind,
+  McpTransportTarget,
 } from "@/src/lib/mcp-transport-policy";
 import type { AuthStrategy } from "@/src/types/context-layer";
 
@@ -32,7 +32,7 @@ interface McpAttemptDebug {
 
 export interface RunMcpClientOperationOptions {
   debugContext?: McpDebugContext;
-  fallbackTransports?: McpTransportFallback[];
+  transportOrder?: McpTransportTarget[];
 }
 
 const buildTimeoutError = (message: string) =>
@@ -227,16 +227,19 @@ export const runMcpClientOperation = async <T,>(
   options: RunMcpClientOperationOptions = {},
 ): Promise<T> => {
   const attempts: McpAttemptDebug[] = [];
-  const transportPlan: Array<{ transport: McpTransportKind; url: URL }> = [
-    {
-      transport: "streamable_http",
-      url: new URL(serverUrl),
-    },
-    ...(options.fallbackTransports ?? []).map((fallback) => ({
-      transport: fallback.transport,
-      url: new URL(fallback.url),
-    })),
-  ];
+  const orderedTargets: McpTransportTarget[] = options.transportOrder?.length
+    ? options.transportOrder
+    : [
+        {
+          transport: "streamable_http",
+          url: serverUrl,
+        },
+      ];
+  const transportPlan: Array<{ transport: McpTransportKind; url: URL }> =
+    orderedTargets.map((target) => ({
+      transport: target.transport,
+      url: new URL(target.url),
+    }));
   let firstError: unknown;
 
   for (const [index, attempt] of transportPlan.entries()) {
@@ -251,7 +254,7 @@ export const runMcpClientOperation = async <T,>(
 
       if (index > 0) {
         console.warn(
-          `[mcp] ${operationName} succeeded via ${formatTransportName(attempt.transport)} fallback for ${attempt.url.toString()}.`,
+          `[mcp] ${operationName} succeeded via ${formatTransportName(attempt.transport)} after retrying transport order at ${attempt.url.toString()}.`,
         );
       }
 
@@ -275,7 +278,7 @@ export const runMcpClientOperation = async <T,>(
 
       const combinedMessage = attempts.map((entry) => entry.error).join(" ");
       console.error(
-        `[mcp] ${operationName} failed${attempts.length > 1 ? " after fallback" : ""}. ${combinedMessage}`,
+        `[mcp] ${operationName} failed${attempts.length > 1 ? " after trying multiple transports" : ""}. ${combinedMessage}`,
       );
 
       const debugDetails = buildMcpDebugDetails(
