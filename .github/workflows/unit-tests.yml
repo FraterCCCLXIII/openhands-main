@@ -8,7 +8,7 @@ on:
 
 jobs:
   unit:
-    name: Unit tests and static checks
+    name: Unit tests, coverage, and static checks
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -29,7 +29,20 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
-      - name: Run unit tests
-        run: npm run test:unit
+      - name: Run full Vitest coverage report
+        run: npm run test:coverage
         env:
           NODE_ENV: test
+
+      - name: Summarize branch coverage gaps
+        run: |
+          echo "## Branch coverage gap summary" >> "$GITHUB_STEP_SUMMARY"
+          npm run coverage:branches -- --format=markdown | tee coverage/branch-gaps.md
+          cat coverage/branch-gaps.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload coverage artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-coverage
+          path: coverage/
+          if-no-files-found: error
