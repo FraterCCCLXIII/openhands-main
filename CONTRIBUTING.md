@@ -62,6 +62,17 @@ Notes:
 - Store per-user OAuth credentials only in user-scoped integration connection records.
 - For new provider work, start with [`.openhands/skills/adding-integrations/SKILL.md`](./.openhands/skills/adding-integrations/SKILL.md).
 
+## Test design checklist
+
+Use [`TEST_DESIGN_REVIEW.md`](./TEST_DESIGN_REVIEW.md) as the current suite baseline when you add or rewrite tests.
+
+- Prefer semantic assertions over raw HTML, markdown, CSS, or OpenAPI string matching.
+- Split large multi-purpose suites before adding substantial new coverage to them.
+- Use builders/helpers for repeated integration, connector, API-key, and access-request fixtures.
+- Prefer PGlite-backed repository/service coverage over deep internal mocking.
+- Pair the public result with one meaningful side effect (persistence, visibility, logging, or auth outcome).
+- Avoid giant `toEqual(...)` payloads for generated structures unless the exact formatting is the contract.
+
 ## Pull requests
 
 - Reference the issue being fixed.
