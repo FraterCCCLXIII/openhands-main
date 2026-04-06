@@ -1,4 +1,3 @@
-import { Composio } from "@composio/core";
 import { decryptCredentials } from "@/src/lib/credential-crypto";
 import { ContextLayerError } from "@/src/lib/core/errors";
 import type { ContextRepository } from "@/src/lib/core/repository";
@@ -18,23 +17,8 @@ import type {
   AuthStrategy,
   BuiltInConnectorOption,
   ToolSpec,
-  IntegrationKind,
   IntegrationProvider,
 } from "@/src/types/context-layer";
-
-const slugToToolName = (slug: string, prefix?: string) => {
-  const normalizedPrefix = prefix?.replace(/[^a-z0-9]+/gi, "_").toLowerCase();
-  const normalized = slug
-    .replace(/[^a-z0-9]+/gi, "_")
-    .replace(/^_+|_+$/g, "")
-    .toLowerCase();
-
-  if (normalizedPrefix && normalized.startsWith(`${normalizedPrefix}_`)) {
-    return normalized.slice(normalizedPrefix.length + 1);
-  }
-
-  return normalized;
-};
 
 const compactRecord = (record: Record<string, unknown>) =>
   Object.fromEntries(
@@ -50,43 +34,6 @@ const compactRecord = (record: Record<string, unknown>) =>
       return true;
     }),
   );
-
-const normalizeComposioAuthStrategy = (modes: string[] = []): AuthStrategy =>
-  normalizeComposioAuthModes(modes)[0] ?? "oauth2";
-
-function uniqueValues<T>(values: T[]) {
-  return [...new Set(values)];
-}
-
-export function normalizeComposioAuthModes(
-  modes: string[] = [],
-  includesNoAuth = false,
-): AuthStrategy[] {
-  const normalized = uniqueValues(modes.map((mode) => mode.toLowerCase()));
-  const authModes: AuthStrategy[] = [];
-
-  if (normalized.some((mode) => mode.includes("oauth"))) {
-    authModes.push("oauth2");
-  }
-
-  if (normalized.includes("api_key")) {
-    authModes.push("api_key");
-  }
-
-  if (normalized.includes("bearer_token")) {
-    authModes.push("bearer");
-  }
-
-  if (normalized.some((mode) => mode.startsWith("basic"))) {
-    authModes.push("basic");
-  }
-
-  if (includesNoAuth || normalized.includes("no_auth")) {
-    authModes.push("none");
-  }
-
-  return authModes.length > 0 ? authModes : ["oauth2"];
-}
 
 export const inferMcpAuthStrategy = (
   credentials: Record<string, unknown>,
@@ -127,7 +74,7 @@ const buildToolSpec = (
   config,
 });
 
-export type IntegrationDiscoveryKind = IntegrationKind | "built_in";
+export type IntegrationDiscoveryKind = "mcp" | "built_in";
 
 export interface IntegrationDiscoveryInput {
   key: string;
@@ -149,18 +96,6 @@ export interface IntegrationDiscoveryResult {
   credentials: Record<string, unknown>;
   tools: Record<string, ToolSpec>;
 }
-
-const getComposioClient = () => {
-  const apiKey = process.env.COMPOSIO_API_KEY;
-  if (!apiKey) {
-    throw new ContextLayerError(
-      "COMPOSIO_API_KEY is required to use Composio-backed integrations.",
-      500,
-    );
-  }
-
-  return new Composio({ apiKey });
-};
 
 export const listBuiltInConnectors = async (
   repository?: ContextRepository,
@@ -356,46 +291,6 @@ const discoverBuiltInConnectorIntegration = async (
   throw new ContextLayerError(`Unknown built-in connector '${slug}'.`, 404);
 };
 
-const discoverComposioIntegration = async (
-  input: IntegrationDiscoveryInput,
-): Promise<IntegrationDiscoveryResult> => {
-  const toolkitSlug =
-    (input.config.toolkitSlug as string | undefined)?.trim() || input.key;
-  const composio = getComposioClient();
-  const [toolkit, rawTools] = await Promise.all([
-    composio.toolkits.get(toolkitSlug),
-    composio.tools.getRawComposioTools({ toolkits: [toolkitSlug], limit: 200 }),
-  ]);
-
-  const tools = Object.fromEntries(
-    rawTools.map((tool) => {
-      const toolName =
-        slugToToolName(tool.slug, toolkitSlug) || tool.slug.toLowerCase();
-      return [
-        toolName,
-        buildToolSpec(
-          toolName,
-          tool.description ?? tool.name,
-          tool.scopes ?? [],
-          { composioToolSlug: tool.slug },
-        ),
-      ];
-    }),
-  );
-
-  return {
-    provider: "composio",
-    authStrategy: normalizeComposioAuthStrategy(
-      (toolkit.authConfigDetails ?? []).map((detail) => detail.mode),
-    ),
-    config: compactRecord({ toolkitSlug }),
-    credentials: compactRecord({
-      connectedAccountId: input.credentials.connectedAccountId,
-    }),
-    tools,
-  };
-};
-
 const discoverMcpIntegration = async (
   input: IntegrationDiscoveryInput,
 ): Promise<IntegrationDiscoveryResult> => {
@@ -455,10 +350,6 @@ export const discoverIntegration = async (
 ): Promise<IntegrationDiscoveryResult> => {
   if (input.kind === "built_in") {
     return discoverBuiltInConnectorIntegration(input, options);
-  }
-
-  if (input.kind === "api") {
-    return discoverComposioIntegration(input);
   }
 
   return discoverMcpIntegration(input);

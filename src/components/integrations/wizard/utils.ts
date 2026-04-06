@@ -21,7 +21,7 @@ export interface DiscoverFeedback {
 }
 
 export interface DiscoveryResponse {
-  provider: "composio" | "mcp" | "mock" | "http";
+  provider: "mcp" | "mock" | "http";
   authStrategy: AuthStrategy;
   config: Record<string, unknown>;
   credentials: Record<string, unknown>;

@@ -33,7 +33,7 @@ import type { IntegrationSpec } from "@/src/types/context-layer";
 
 const integrationDiscoveryRequestSchema = z.object({
   key: z.string().min(1),
-  kind: z.enum(["api", "mcp", "built_in"]),
+  kind: z.enum(["mcp", "built_in"]),
   config: z.record(z.string(), z.unknown()).default({}),
   credentials: z.record(z.string(), z.unknown()).default({}),
 });

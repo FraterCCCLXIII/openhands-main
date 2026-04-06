@@ -26,15 +26,6 @@ vi.mock("@/src/lib/auth", () => ({
   isAuthDisabled: () => true,
 }));
 
-// Prevent Composio adapter from loading real credentials.
-vi.mock("@/src/lib/adapters/composio-adapter", () => ({
-  ComposioAdapter: class {
-    async invoke() {
-      return { data: {} };
-    }
-  },
-}));
-
 const { PostgresRepository } = await import("./db/postgres-repository");
 const { ContextLayerService } = await import("./core/service");
 const { AdapterRegistry } = await import("./core/adapter-registry");
@@ -62,7 +53,6 @@ beforeEach(async () => {
   await repo.ensureSchema();
 
   const registry = new AdapterRegistry({
-    composio: { invoke: async () => ({ data: {} }) } as never,
     http: new HttpAdapter(),
     mcp: new McpAdapter(),
     mock: new MockAdapter(),
