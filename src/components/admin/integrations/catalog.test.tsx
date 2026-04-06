@@ -91,6 +91,56 @@ const managedConnectors: ManagedConnectorDefinition[] = [
   },
 ];
 
+const googleManagedConnector = managedConnectors[0];
+if (!googleManagedConnector) {
+  throw new Error("Missing integrations catalog test fixture");
+}
+
+
+const manualTokenProvider: OAuthProviderCatalogOption = {
+  slug: "elevenlabs",
+  name: "ElevenLabs",
+  description: "Text to speech and audio generation",
+  categories: ["Audio"],
+  authStrategy: "api_key",
+  availability: "manual_token",
+  builtInSlug: "elevenlabs",
+  docsUrl: "https://elevenlabs.io/docs/api-reference/introduction",
+  notes: "Published API schema with manual user API keys.",
+  popularityRank: 2,
+  registrationDefaults: {
+    provider: "http",
+    authModes: ["api_key"],
+    authStrategy: "api_key",
+    credentialLabel: "ElevenLabs API key",
+    credentialPlaceholder: "Paste your ElevenLabs API key",
+    credentialHelp: "Workspace API key",
+    apiBaseUrl: "https://api.elevenlabs.io",
+    openApiUrl: "https://api.elevenlabs.io/openapi.json",
+    apiKeyHeaderName: "xi-api-key",
+  },
+};
+
+const manualTokenConnector: ManagedConnectorDefinition = {
+  slug: "elevenlabs",
+  name: "ElevenLabs",
+  description: "Internal ElevenLabs proxy connector",
+  categories: ["Audio"],
+  authModes: ["api_key"],
+  authStrategy: "api_key",
+  provider: "http",
+  oauthConfigured: false,
+  credentialLabel: "ElevenLabs API key",
+  credentialPlaceholder: "Paste your ElevenLabs API key",
+  credentialHelp: "Workspace API key",
+  apiBaseUrl: "https://internal.example.com/elevenlabs",
+  openApiUrl: "https://internal.example.com/elevenlabs/openapi.json",
+  tools: [],
+  enabled: true,
+  createdAt: "2026-03-10T00:00:00.000Z",
+  updatedAt: "2026-03-10T00:00:00.000Z",
+};
+
 describe("IntegrationsCatalog", () => {
   let container: HTMLDivElement;
   let root: Root;
@@ -170,6 +220,158 @@ describe("IntegrationsCatalog", () => {
 
     expect(container.textContent).toContain("Register this provider");
     expect(container.textContent).not.toContain(
+      "This provider is already available in the integration wizard, so no additional registration is needed.",
+    );
+  });
+
+  it("hides the registered managed connector panel for non-admin viewers", async () => {
+    await act(async () => {
+      root.render(
+        <IntegrationsCatalog
+          providerCatalog={providerCatalog}
+          initialReadyBuiltInConnectors={readyBuiltInConnectors}
+          managedConnectors={managedConnectors}
+          canRegisterManagedConnectors={false}
+          oauthCallbackBaseUrl="https://openhands-context-layer.vercel.app/api/oauth"
+        />,
+      );
+    });
+
+    expect(container.textContent).not.toContain("Registered managed connectors");
+    expect(container.textContent).toContain("Popular official provider options");
+  });
+
+  it("marks oauth providers ready after updating a managed connector", async () => {
+    fetchMock.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          ...googleManagedConnector,
+          oauthConfigured: true,
+          updatedAt: "2026-03-11T00:00:00.000Z",
+        }),
+        {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        },
+      ),
+    );
+
+    await act(async () => {
+      root.render(
+        <IntegrationsCatalog
+          providerCatalog={providerCatalog}
+          initialReadyBuiltInConnectors={[]}
+          managedConnectors={[{ ...googleManagedConnector, oauthConfigured: false }]}
+          canRegisterManagedConnectors
+          oauthCallbackBaseUrl="https://openhands-context-layer.vercel.app/api/oauth"
+        />,
+      );
+    });
+
+    const googleButtons = () =>
+      Array.from(container.querySelectorAll("button")).filter((button) =>
+        button.textContent?.includes("Google Calendar"),
+      );
+
+    await act(async () => {
+      googleButtons().at(-1)?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    expect(container.textContent).toContain("Register this provider");
+    expect(container.textContent).not.toContain("Use Google Calendar");
+
+    const expandManagedConnectorButton = Array.from(container.querySelectorAll("button")).find(
+      (button) => button.textContent?.includes("Show details"),
+    );
+    expect(expandManagedConnectorButton).toBeTruthy();
+
+    await act(async () => {
+      expandManagedConnectorButton?.dispatchEvent(
+        new MouseEvent("click", { bubbles: true }),
+      );
+    });
+
+    const form = container.querySelector("form");
+    expect(form).toBeTruthy();
+
+    await act(async () => {
+      form?.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    const providerButton = googleButtons().at(-1);
+    if (providerButton?.textContent?.includes("Show details")) {
+      await act(async () => {
+        providerButton.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      });
+    }
+
+    expect(container.textContent).toContain("Use Google Calendar");
+    expect(container.textContent).toContain(
+      "This provider is already available in the integration wizard, so no additional registration is needed.",
+    );
+  });
+
+  it("restores default ready manual-token providers after updating stored connectors", async () => {
+    fetchMock.mockResolvedValueOnce(
+      new Response(JSON.stringify(manualTokenConnector), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+
+    await act(async () => {
+      root.render(
+        <IntegrationsCatalog
+          providerCatalog={[manualTokenProvider]}
+          initialReadyBuiltInConnectors={[]}
+          managedConnectors={[manualTokenConnector]}
+          canRegisterManagedConnectors
+          oauthCallbackBaseUrl="https://openhands-context-layer.vercel.app/api/oauth"
+        />,
+      );
+    });
+
+    const elevenLabsButtons = () =>
+      Array.from(container.querySelectorAll("button")).filter((button) =>
+        button.textContent?.includes("ElevenLabs"),
+      );
+
+    await act(async () => {
+      elevenLabsButtons().at(-1)?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    expect(container.textContent).toContain("Register this provider");
+    expect(container.textContent).not.toContain("Use ElevenLabs");
+
+    const expandManagedConnectorButton = Array.from(container.querySelectorAll("button")).find(
+      (button) => button.textContent?.includes("Show details"),
+    );
+    expect(expandManagedConnectorButton).toBeTruthy();
+
+    await act(async () => {
+      expandManagedConnectorButton?.dispatchEvent(
+        new MouseEvent("click", { bubbles: true }),
+      );
+    });
+
+    const form = container.querySelector("form");
+    expect(form).toBeTruthy();
+
+    await act(async () => {
+      form?.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    const providerButton = elevenLabsButtons().at(-1);
+    if (providerButton?.textContent?.includes("Show details")) {
+      await act(async () => {
+        providerButton.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      });
+    }
+
+    expect(container.textContent).toContain("Use ElevenLabs");
+    expect(container.textContent).toContain(
       "This provider is already available in the integration wizard, so no additional registration is needed.",
     );
   });
