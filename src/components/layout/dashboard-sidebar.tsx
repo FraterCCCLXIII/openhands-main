@@ -50,11 +50,16 @@ const ADMIN_INTEGRATIONS_ITEM = {
   href: "/admin-integrations",
 };
 
-export const getDashboardSections = (): Array<{
+export const getDashboardSections = (
+  showApprovalsLink = true,
+): Array<{
   id: AdminSection;
   label: string;
   icon: LucideIcon;
-}> => DASHBOARD_SECTION_ITEMS.map(({ id, label, icon }) => ({ id, label, icon }));
+}> =>
+  DASHBOARD_SECTION_ITEMS.filter(
+    (item) => showApprovalsLink || item.id !== "caseByCaseApprovals",
+  ).map(({ id, label, icon }) => ({ id, label, icon }));
 
 const DashboardSidebarLink = ({
   href,
@@ -120,11 +125,13 @@ export const DashboardSidebar = ({
   badge,
   activeItem,
   showAdminIntegrationsLink = false,
+  showApprovalsLink = true,
   footer,
 }: {
   badge: ReactNode;
   activeItem: DashboardSidebarItemId;
   showAdminIntegrationsLink?: boolean;
+  showApprovalsLink?: boolean;
   footer?: ReactNode;
 }) => (
   <aside className="self-start rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-sidebar)] p-4 xl:sticky xl:top-6 xl:max-h-[calc(100vh-3rem)] xl:overflow-y-auto">
@@ -140,7 +147,9 @@ export const DashboardSidebar = ({
       </div>
 
       <nav className="space-y-1">
-        {DASHBOARD_SECTION_ITEMS.map((item) => (
+        {DASHBOARD_SECTION_ITEMS.filter(
+          (item) => showApprovalsLink || item.id !== "caseByCaseApprovals",
+        ).map((item) => (
           <DashboardSidebarLink
             key={item.id}
             href={item.href}

@@ -221,6 +221,13 @@ const sanitizeIntegrationTools = (
     : normalizeTools(integration.tools),
 });
 
+const redactIntegrationCredentials = (
+  integration: IntegrationSpec,
+): IntegrationSpec => ({
+  ...integration,
+  credentials: {},
+});
+
 const sanitizeConnectionStatus = (
   record: IntegrationConnectionRecord,
 ): IntegrationConnectionStatus => ({
@@ -262,6 +269,11 @@ const isConnectionExpired = (expiresAt?: string, bufferMs = 60_000) => {
 };
 
 const normalizeAgentApiKeyOwner = normalizeOwnerId;
+
+const getAccessRequestOwnerId = (request: AccessRequest) => {
+  const recipient = request.notificationTargets.in_app?.trim();
+  return recipient ? normalizeAgentApiKeyOwner(recipient) : null;
+};
 
 export interface AccessEvaluationRequest {
   agentId: string | null;
@@ -369,7 +381,9 @@ export class ContextLayerService {
 
     return (await Promise.all(
       integrations.map((integration) => this.applyManagedConnectorConstraints(integration)),
-    )).sort((a, b) => a.key.localeCompare(b.key));
+    ))
+      .sort((a, b) => a.key.localeCompare(b.key))
+      .map(redactIntegrationCredentials);
   }
 
   async listOwnerIntegrationsWithUsage(ownerId: string) {
@@ -391,25 +405,27 @@ export class ContextLayerService {
 
     return integrations
       .sort((a, b) => a.key.localeCompare(b.key))
-      .map((integration) => ({
-        ...integration,
-        tools: Object.fromEntries(
-          Object.entries(integration.tools).map(([toolName, toolSpec]) => {
-            const usage = usageByFunction.get(`${integration.key}:${toolName}`);
-            return [
-              toolName,
-              usage
-                ? {
-                    ...toolSpec,
-                    lastInvokedAt: usage.lastInvokedAt,
-                    lastInvocationOutcome: usage.lastInvocationOutcome,
-                    invocationCount: usage.invocationCount,
-                  }
-                : toolSpec,
-            ];
-          }),
-        ),
-      }));
+      .map((integration) =>
+        redactIntegrationCredentials({
+          ...integration,
+          tools: Object.fromEntries(
+            Object.entries(integration.tools).map(([toolName, toolSpec]) => {
+              const usage = usageByFunction.get(`${integration.key}:${toolName}`);
+              return [
+                toolName,
+                usage
+                  ? {
+                      ...toolSpec,
+                      lastInvokedAt: usage.lastInvokedAt,
+                      lastInvocationOutcome: usage.lastInvocationOutcome,
+                      invocationCount: usage.invocationCount,
+                    }
+                  : toolSpec,
+              ];
+            }),
+          ),
+        }),
+      );
   }
 
   async disableUnusedOwnerTools(
@@ -745,6 +761,13 @@ export class ContextLayerService {
   async listAccessRequests() {
     await this.initialize();
     return this.repository.listAccessRequests();
+  }
+
+  async listOwnerAccessRequests(ownerId: string) {
+    const normalizedOwnerId = normalizeAgentApiKeyOwner(ownerId);
+    return (await this.listAccessRequests()).filter(
+      (request) => getAccessRequestOwnerId(request) === normalizedOwnerId,
+    );
   }
 
   async listNotifications() {
@@ -1128,9 +1151,11 @@ export class ContextLayerService {
       ...spec,
       tools: normalizeTools(spec.tools ?? spec.functions ?? {}),
     });
-    return this.repository.upsertOwnerIntegration(
-      normalizeAgentApiKeyOwner(ownerId),
-      integration,
+    return redactIntegrationCredentials(
+      await this.repository.upsertOwnerIntegration(
+        normalizeAgentApiKeyOwner(ownerId),
+        integration,
+      ),
     );
   }
 
@@ -1161,7 +1186,9 @@ export class ContextLayerService {
       integrationKey,
     );
     integration.enabled = enabled;
-    return this.repository.upsertOwnerIntegration(normalizedOwnerId, integration);
+    return redactIntegrationCredentials(
+      await this.repository.upsertOwnerIntegration(normalizedOwnerId, integration),
+    );
   }
 
   async setOwnerToolEnabled(
@@ -1317,45 +1344,42 @@ export class ContextLayerService {
     approver: string,
     durationMinutes?: number,
   ) {
-    const request = await this.getAccessRequest(requestId);
-    const decidedAt = nowIso();
-    const approvedRequest: AccessRequest = {
-      ...request,
-      status: "approved",
-      decidedAt,
-      decidedBy: approver,
-    };
-    await this.repository.updateAccessRequest(approvedRequest);
+    return this.approveResolvedAccessRequest(
+      await this.getAccessRequest(requestId),
+      approver,
+      durationMinutes,
+    );
+  }
 
-    const grant: TemporaryGrant = {
-      id: randomUUID(),
-      agentId: request.agentId,
-      agentClass: request.agentClass,
-      integrationKey: request.integrationKey,
-      toolName: request.toolName,
-      scopes: request.scopes,
-      grantedBy: approver,
-      createdAt: decidedAt,
-      expiresAt: addMinutes(
-        decidedAt,
-        durationMinutes ?? request.requestedMinutes,
-      ),
-    };
-
-    await this.repository.saveTemporaryGrant(grant);
-    return grant;
+  async approveOwnerAccessRequest(
+    ownerId: string,
+    requestId: string,
+    approver: string,
+    durationMinutes?: number,
+  ) {
+    return this.approveResolvedAccessRequest(
+      await this.getAccessRequestForOwner(requestId, ownerId),
+      approver,
+      durationMinutes,
+    );
   }
 
   async rejectAccessRequest(requestId: string, approver: string) {
-    const request = await this.getAccessRequest(requestId);
-    const rejected: AccessRequest = {
-      ...request,
-      status: "rejected",
-      decidedAt: nowIso(),
-      decidedBy: approver,
-    };
-    await this.repository.updateAccessRequest(rejected);
-    return rejected;
+    return this.rejectResolvedAccessRequest(
+      await this.getAccessRequest(requestId),
+      approver,
+    );
+  }
+
+  async rejectOwnerAccessRequest(
+    ownerId: string,
+    requestId: string,
+    approver: string,
+  ) {
+    return this.rejectResolvedAccessRequest(
+      await this.getAccessRequestForOwner(requestId, ownerId),
+      approver,
+    );
   }
 
   async purgeExpiredGrants() {
@@ -1709,6 +1733,10 @@ export class ContextLayerService {
     agentData?: AccessRequestAgentData;
   }) {
     await this.initialize();
+    const notificationRecipient = ownerId?.trim() || "case-by-case-approvals";
+    const normalizedNotificationRecipient = normalizeAgentApiKeyOwner(
+      notificationRecipient,
+    );
     const pendingRequests = (await this.repository.listAccessRequests()).filter(
       (request) => request.status === "pending",
     );
@@ -1718,7 +1746,8 @@ export class ContextLayerService {
         request.agentClass === agentClass &&
         request.integrationKey === integrationKey &&
         request.toolName === toolName &&
-        sameScopes(request.scopes, scopes),
+        sameScopes(request.scopes, scopes) &&
+        getAccessRequestOwnerId(request) === normalizedNotificationRecipient,
     );
 
     if (existing) {
@@ -1737,8 +1766,6 @@ export class ContextLayerService {
 
       return existing;
     }
-
-    const notificationRecipient = ownerId?.trim() || "case-by-case-approvals";
 
     return this.createAccessRequest({
       agentId,
@@ -1781,5 +1808,66 @@ export class ContextLayerService {
       );
     }
     return request;
+  }
+
+  private async getAccessRequestForOwner(requestId: string, ownerId: string) {
+    const request = await this.getAccessRequest(requestId);
+    const normalizedOwnerId = normalizeAgentApiKeyOwner(ownerId);
+
+    if (getAccessRequestOwnerId(request) !== normalizedOwnerId) {
+      throw new ContextLayerError(
+        `Unknown access request '${requestId}'.`,
+        404,
+      );
+    }
+
+    return request;
+  }
+
+  private async approveResolvedAccessRequest(
+    request: AccessRequest,
+    approver: string,
+    durationMinutes?: number,
+  ) {
+    const decidedAt = nowIso();
+    const approvedRequest: AccessRequest = {
+      ...request,
+      status: "approved",
+      decidedAt,
+      decidedBy: approver,
+    };
+    await this.repository.updateAccessRequest(approvedRequest);
+
+    const grant: TemporaryGrant = {
+      id: randomUUID(),
+      agentId: request.agentId,
+      agentClass: request.agentClass,
+      integrationKey: request.integrationKey,
+      toolName: request.toolName,
+      scopes: request.scopes,
+      grantedBy: approver,
+      createdAt: decidedAt,
+      expiresAt: addMinutes(
+        decidedAt,
+        durationMinutes ?? request.requestedMinutes,
+      ),
+    };
+
+    await this.repository.saveTemporaryGrant(grant);
+    return grant;
+  }
+
+  private async rejectResolvedAccessRequest(
+    request: AccessRequest,
+    approver: string,
+  ) {
+    const rejected: AccessRequest = {
+      ...request,
+      status: "rejected",
+      decidedAt: nowIso(),
+      decidedBy: approver,
+    };
+    await this.repository.updateAccessRequest(rejected);
+    return rejected;
   }
 }

@@ -226,7 +226,7 @@ describe("DashboardWorkspace", () => {
 
       if (
         url === "/api/integrations" ||
-        url === "/api/access-requests" ||
+        url === "/api/case-by-case-approvals" ||
         url === "/api/notifications" ||
         url === "/api/integrations/managed-connectors"
       ) {
@@ -304,7 +304,7 @@ describe("DashboardWorkspace", () => {
       const method = init?.method ?? "GET";
 
       if (
-        url === "/api/access-requests" ||
+        url === "/api/case-by-case-approvals" ||
         url === "/api/notifications" ||
         url === "/api/integrations/managed-connectors"
       ) {
@@ -530,7 +530,7 @@ describe("DashboardWorkspace", () => {
 
       if (
         url === "/api/integrations" ||
-        url === "/api/access-requests" ||
+        url === "/api/case-by-case-approvals" ||
         url === "/api/notifications" ||
         url === "/api/oauth/connections"
       ) {
@@ -588,7 +588,7 @@ describe("DashboardWorkspace", () => {
 
       if (
         url === "/api/integrations" ||
-        url === "/api/access-requests" ||
+        url === "/api/case-by-case-approvals" ||
         url === "/api/notifications" ||
         url === "/api/oauth/connections"
       ) {
@@ -765,7 +765,7 @@ describe("DashboardWorkspace", () => {
       const method = init?.method ?? "GET";
 
       if (
-        url === "/api/access-requests" ||
+        url === "/api/case-by-case-approvals" ||
         url === "/api/notifications" ||
         url === "/api/integrations/managed-connectors"
       ) {
@@ -1032,7 +1032,7 @@ describe("DashboardWorkspace", () => {
       const method = init?.method ?? "GET";
 
       if (
-        url === "/api/access-requests" ||
+        url === "/api/case-by-case-approvals" ||
         url === "/api/notifications" ||
         url === "/api/integrations/managed-connectors"
       ) {
@@ -1595,7 +1595,7 @@ describe("DashboardWorkspace", () => {
         });
       }
 
-      if (url === "/api/access-requests") {
+      if (url === "/api/case-by-case-approvals") {
         return new Response(JSON.stringify(accessRequestsState), {
           status: 200,
           headers: { "Content-Type": "application/json" },
@@ -1733,12 +1733,12 @@ describe("DashboardWorkspace", () => {
       },
     ];
 
-    let approvePayload: { approver: string; durationMinutes: number } | null = null;
+    let approvePayload: { durationMinutes: number } | null = null;
 
     fetchMock.mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = typeof input === "string" ? input : input.toString();
 
-      if (url === "/api/integrations" || url === "/api/access-requests") {
+      if (url === "/api/integrations" || url === "/api/case-by-case-approvals") {
         return new Response(
           JSON.stringify(url === "/api/integrations" ? [] : accessRequestsState),
           {
@@ -1748,9 +1748,8 @@ describe("DashboardWorkspace", () => {
         );
       }
 
-      if (url === "/api/access-requests/req-pending/approve") {
+      if (url === "/api/case-by-case-approvals/req-pending/approve") {
         approvePayload = JSON.parse(String(init?.body)) as {
-          approver: string;
           durationMinutes: number;
         };
         return new Response(JSON.stringify({ ok: true }), {
@@ -1804,7 +1803,6 @@ describe("DashboardWorkspace", () => {
     });
 
     expect(approvePayload).toEqual({
-      approver: "admin@example.com",
       durationMinutes: 240,
     });
     expect(container.textContent).toContain(
@@ -2083,7 +2081,7 @@ describe("DashboardWorkspace", () => {
       },
     ];
 
-    let rejectPayload: { approver: string } | null = null;
+    let rejectPayload: Record<string, unknown> | null = null;
     fetchMock.mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = typeof input === "string" ? input : input.toString();
       const method = init?.method ?? "GET";
@@ -2095,15 +2093,15 @@ describe("DashboardWorkspace", () => {
         });
       }
 
-      if (url === "/api/access-requests" && method === "GET") {
+      if (url === "/api/case-by-case-approvals" && method === "GET") {
         return new Response(JSON.stringify(accessRequestsState), {
           status: 200,
           headers: { "Content-Type": "application/json" },
         });
       }
 
-      if (url === "/api/access-requests/req-pending/reject" && method === "POST") {
-        rejectPayload = JSON.parse(String(init?.body)) as { approver: string };
+      if (url === "/api/case-by-case-approvals/req-pending/reject" && method === "POST") {
+        rejectPayload = JSON.parse(String(init?.body)) as Record<string, unknown>;
         return new Response(JSON.stringify({ detail: "Reject failed." }), {
           status: 500,
           headers: { "Content-Type": "application/json" },
@@ -2157,7 +2155,7 @@ describe("DashboardWorkspace", () => {
       await Promise.resolve();
     });
 
-    expect(rejectPayload).toEqual({ approver: "human-approver" });
+    expect(rejectPayload).toEqual({});
     expect(container.textContent).toContain("Reject failed.");
 
     usePathnameMock.mockReturnValue("/integrations");

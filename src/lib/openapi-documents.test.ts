@@ -71,7 +71,7 @@ describe("OpenAPI document builders", () => {
     });
   });
 
-  it("only exposes admin approval paths in the user document for admins", () => {
+  it("exposes owner-scoped approval paths in the user document for all users", () => {
     const adminDocument = buildUserOpenApiDocument({
       baseUrl: "https://context.example.com",
       integrations,
@@ -84,9 +84,7 @@ describe("OpenAPI document builders", () => {
     });
 
     expect(adminDocument.paths["/api/user/access-requests"]).toBeDefined();
-    expect(
-      nonAdminDocument.paths["/api/user/access-requests"],
-    ).toBeUndefined();
+    expect(nonAdminDocument.paths["/api/user/access-requests"]).toBeDefined();
   });
 
   it("builds context tool operations from enabled integrations", () => {

@@ -17,6 +17,7 @@ Teams use it to connect SaaS tools and custom MCP servers, attach each user's ow
 
 ## Repository docs
 
+- [ARCHITECTURE.md](./ARCHITECTURE.md) — contributor reference for the security model, testing strategy, and domain glossary
 - [API.md](./API.md) — route map for the dashboard and REST/MCP surfaces
 - [CONTRIBUTING.md](./CONTRIBUTING.md) — local setup and contribution workflow
 - [CHANGELOG.md](./CHANGELOG.md) — notable unreleased and released changes

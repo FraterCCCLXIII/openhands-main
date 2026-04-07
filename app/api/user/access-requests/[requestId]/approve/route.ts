@@ -16,15 +16,14 @@ export async function POST(
   { params }: { params: Promise<{ requestId: string }> },
 ) {
   try {
-    const { ownerId } = await authenticateUserApiRequest(request, {
-      requireAdmin: true,
-    });
+    const { ownerId } = await authenticateUserApiRequest(request);
     const payload = approveSchema.parse(await request.json());
     const { requestId } = await params;
     const service = getContextLayerService();
 
     return ok(
-      await service.approveAccessRequest(
+      await service.approveOwnerAccessRequest(
+        ownerId,
         requestId,
         ownerId,
         payload.durationMinutes,

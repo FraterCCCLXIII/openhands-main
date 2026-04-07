@@ -10,7 +10,7 @@ This repository exposes three main surfaces: dashboard pages for humans, agent-f
 | `/integrations` | Signed-in users | Install integrations, manage function access, connect OAuth providers |
 | `/agent-connection` | Signed-in users | View keys plus REST/MCP connection examples |
 | `/profile` | Signed-in users | Profile details |
-| `/case-by-case-approvals` | Signed-in admins/users reviewing requests | Review and decide approval-required access requests |
+| `/case-by-case-approvals` | Allowlisted admins | Review and decide approval-required access requests |
 | `/admin-integrations` | Allowlisted admins | Manage service-level managed connectors and provider defaults |
 
 Legacy redirects:
