@@ -65,7 +65,7 @@ export const toDefaultReadyManagedConnector = (
     name: provider.name,
     description: provider.description,
     appUrl: provider.appUrl,
-    toolCount: defaults.provider === "http" ? 0 : 0,
+    toolCount: 0,
     categories: provider.categories,
     authModes:
       defaults.authModes?.length && defaults.authModes.every(Boolean)
@@ -101,15 +101,18 @@ export function IntegrationsCatalog({
     sortReadyManagedConnectors(initialReadyManagedConnectors),
   );
 
-  const defaultReadyManagedConnectors = useMemo(
-    () =>
-      new Map(
-        providerCatalog
-          .map((provider) => [provider.managedConnectorSlug ?? provider.slug, toDefaultReadyManagedConnector(provider)] as const)
-          .filter((entry): entry is [string, ManagedConnectorOption] => entry[1] != null),
-      ),
-    [providerCatalog],
-  );
+  const defaultReadyManagedConnectors = useMemo(() => {
+    const defaults = new Map<string, ManagedConnectorOption>();
+
+    for (const provider of providerCatalog) {
+      const connector = toDefaultReadyManagedConnector(provider);
+      if (connector) {
+        defaults.set(provider.managedConnectorSlug ?? provider.slug, connector);
+      }
+    }
+
+    return defaults;
+  }, [providerCatalog]);
 
   const resetReadyManagedConnector = (slug: string) => {
     setReadyManagedConnectors((current) => {

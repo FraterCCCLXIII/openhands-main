@@ -272,6 +272,44 @@ describe("catalog helper utilities", () => {
       toolCount: 0,
     });
   });
+
+  it("treats explicit OAuth defaults as unavailable and uses fallback copy for ready MCP defaults", () => {
+    const explicitOauthDefault = createProvider({
+      slug: "google-drive",
+      name: "Google Drive",
+      registrationDefaults: {
+        provider: "http",
+        authStrategy: "oauth2",
+        apiBaseUrl: "https://www.googleapis.com/drive/v3",
+        openApiUrl: "https://www.googleapis.com/discovery/v1/apis/drive/v3/rest",
+      },
+    });
+    const readyMcpDefault = createProvider({
+      slug: "ordinal",
+      name: "Ordinal",
+      managedConnectorSlug: "ordinal-managed",
+      authStrategy: "bearer",
+      registrationDefaults: {
+        provider: "mcp",
+        authStrategy: "bearer",
+        authModes: ["" as unknown as "bearer"],
+        serverUrl: "https://mcp.ordinal.app/mcp",
+      },
+    });
+
+    expect(toDefaultReadyManagedConnector(explicitOauthDefault)).toBeNull();
+    expect(toDefaultReadyManagedConnector(readyMcpDefault)).toMatchObject({
+      slug: "ordinal-managed",
+      name: "Ordinal",
+      authStrategy: "bearer",
+      authModes: ["bearer"],
+      credentialLabel: "Ordinal credential",
+      credentialPlaceholder: "Paste your Ordinal credential",
+      credentialHelp: "Credential required by Ordinal.",
+      toolCount: 0,
+    });
+  });
+
 });
 
 const findProviderToggle = (container: ParentNode, name: string) =>
@@ -497,5 +535,105 @@ describe("IntegrationsCatalog", () => {
     expect(container.textContent).toContain(
       "This provider is already available in the integration wizard, so no additional registration is needed.",
     );
+  });
+
+  it("adds a ready badge immediately after registering a new manual-token provider", async () => {
+    fetchMock.mockResolvedValueOnce(
+      new Response(JSON.stringify({ slug: "elevenlabs", oauthConfigured: true }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+
+    await act(async () => {
+      root.render(
+        <IntegrationsCatalog
+          providerCatalog={[manualTokenProvider]}
+          initialReadyManagedConnectors={[]}
+          managedConnectors={[]}
+          canRegisterManagedConnectors
+          oauthCallbackBaseUrl="https://openhands-context-layer.vercel.app/api/oauth"
+        />,
+      );
+    });
+
+    const providerToggle = findProviderToggle(container, "ElevenLabs");
+    expect(providerToggle).toBeTruthy();
+
+    await act(async () => {
+      providerToggle?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    expect(container.textContent).toContain("Register this provider");
+    expect(container.textContent).not.toContain("Use ElevenLabs");
+
+    const form = container.querySelector("form");
+    expect(form).toBeTruthy();
+
+    await act(async () => {
+      form?.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    expect(container.textContent).toContain("Use ElevenLabs");
+    expect(container.textContent).toContain(
+      "This provider is already available in the integration wizard, so no additional registration is needed.",
+    );
+  });
+
+  it("removes oauth providers from the ready list when the stored connector is disabled", async () => {
+    fetchMock.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          ...googleManagedConnector,
+          enabled: false,
+          oauthConfigured: true,
+          updatedAt: "2026-03-12T00:00:00.000Z",
+        }),
+        {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        },
+      ),
+    );
+
+    await act(async () => {
+      root.render(
+        <IntegrationsCatalog
+          providerCatalog={providerCatalog}
+          initialReadyManagedConnectors={readyManagedConnectors}
+          managedConnectors={[googleManagedConnector]}
+          canRegisterManagedConnectors
+          oauthCallbackBaseUrl="https://openhands-context-layer.vercel.app/api/oauth"
+        />,
+      );
+    });
+
+    const providerToggle = findProviderToggle(container, "Google Calendar");
+    expect(providerToggle).toBeTruthy();
+
+    await act(async () => {
+      providerToggle?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    expect(container.textContent).toContain("Use Google Calendar");
+
+    const managedConnectorToggle = findManagedConnectorToggle(container, "google-calendar");
+    expect(managedConnectorToggle).toBeTruthy();
+
+    await act(async () => {
+      managedConnectorToggle?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    const form = container.querySelector("form");
+    expect(form).toBeTruthy();
+
+    await act(async () => {
+      form?.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    expect(container.textContent).not.toContain("Use Google Calendar");
+    expect(container.textContent).toContain("Register this provider");
   });
 });

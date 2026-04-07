@@ -94,6 +94,9 @@ const customTokenConnector: ManagedConnectorOption = {
   authModes: ["api_key"],
   authStrategy: "api_key",
   oauthConfigured: true,
+  credentialLabel: undefined as unknown as string,
+  credentialPlaceholder: undefined as unknown as string,
+  credentialHelp: undefined as unknown as string,
 };
 
 
