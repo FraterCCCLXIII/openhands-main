@@ -2318,7 +2318,6 @@ describe("ContextLayerService", () => {
       key: "managed-salesforce",
       name: "Managed Salesforce",
       config: {
-        builtInSlug: "managed-salesforce",
         managedConnectorSlug: "managed-salesforce",
       },
       tools: {

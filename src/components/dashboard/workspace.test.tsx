@@ -1858,7 +1858,7 @@ describe("DashboardWorkspace", () => {
         authStrategy: "bearer",
         enabled: false,
         fineGrainedPermissions: true,
-        config: { builtInSlug: "github" },
+        config: { managedConnectorSlug: "github" },
         credentials: {},
         tools: {},
       },
@@ -1960,7 +1960,7 @@ describe("DashboardWorkspace", () => {
         authStrategy: "bearer",
         enabled: true,
         fineGrainedPermissions: true,
-        config: { builtInSlug: "github" },
+        config: { managedConnectorSlug: "github" },
         credentials: {},
         tools: {
           staleRead: {
@@ -2168,7 +2168,7 @@ describe("DashboardWorkspace", () => {
         authStrategy: "oauth2",
         enabled: true,
         fineGrainedPermissions: true,
-        config: { builtInSlug: "slack" },
+        config: { managedConnectorSlug: "slack" },
         credentials: {},
         tools: {
           noHistory: {

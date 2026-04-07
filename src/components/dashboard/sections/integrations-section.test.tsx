@@ -66,7 +66,7 @@ const baseIntegration: IntegrationSpec = {
   authStrategy: "bearer",
   enabled: false,
   fineGrainedPermissions: true,
-  config: { builtInSlug: "github" },
+  config: { managedConnectorSlug: "github" },
   credentials: {},
   tools: {
     delete_repo: {
