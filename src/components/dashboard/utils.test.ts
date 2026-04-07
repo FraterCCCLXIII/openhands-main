@@ -173,6 +173,16 @@ describe("dashboard-workspace-utils", () => {
     ]);
   });
 
+  it("builds exact tool access patch payloads", () => {
+    expect(
+      buildToolAccessPatch("slack", "slack_search_public", "approval_required"),
+    ).toEqual({
+      url: "/api/integrations/slack/tools/slack_search_public",
+      method: "PATCH",
+      body: { accessMode: "approval_required" },
+    });
+  });
+
   it("filters integrations by search while hiding disabled tools", () => {
     const filtered = filterIntegrationsForDisplay({
       integrations,
