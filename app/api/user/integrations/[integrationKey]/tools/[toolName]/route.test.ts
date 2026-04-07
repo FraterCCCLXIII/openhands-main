@@ -139,7 +139,7 @@ describe("PATCH /api/user/integrations/[integrationKey]/tools/[toolName]", () =>
     await service.registerOwnerIntegration("owner@example.com", {
       ...integration,
       config: {
-        builtInSlug: "slack",
+        managedConnectorSlug: "slack",
       },
     });
     const { apiKey } = await service.rotateUserApiKey("owner@example.com");

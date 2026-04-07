@@ -535,7 +535,7 @@ describe("ContextLayerService", () => {
     await service.registerOwnerIntegration(OWNER_ID, {
       ...baseIntegration,
       config: {
-        builtInSlug: "salesforce",
+        managedConnectorSlug: "salesforce",
       },
     });
 
@@ -1382,7 +1382,7 @@ describe("ContextLayerService", () => {
       enabled: true,
       fineGrainedPermissions: true,
       config: {
-        builtInSlug: "notion",
+        managedConnectorSlug: "notion",
       },
       credentials: {},
       tools: {},
@@ -1567,7 +1567,7 @@ describe("ContextLayerService", () => {
       enabled: true,
       fineGrainedPermissions: true,
       config: {
-        builtInSlug: "acme-crm",
+        managedConnectorSlug: "acme-crm",
         apiBaseUrl: "https://api.acme.test/v1",
       },
       credentials: {},
@@ -2318,7 +2318,6 @@ describe("ContextLayerService", () => {
       key: "managed-salesforce",
       name: "Managed Salesforce",
       config: {
-        builtInSlug: "managed-salesforce",
         managedConnectorSlug: "managed-salesforce",
       },
       tools: {

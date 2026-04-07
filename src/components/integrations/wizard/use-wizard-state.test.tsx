@@ -147,7 +147,7 @@ afterEach(async () => {
 });
 
 describe("useWizardState", () => {
-  it("initializes from the built-in search param and handles connector search transitions", async () => {
+  it("initializes from the managedConnector search param and handles connector search transitions", async () => {
     const { getState, onStatus } = await renderWizardState("managedConnector=notion");
 
     expect(getState().step).toBe(2);
@@ -239,6 +239,14 @@ describe("useWizardState", () => {
       apiKey: "",
       headerName: INITIAL_DRAFT.headerName,
     });
+  });
+
+  it("ignores the legacy builtIn search param", async () => {
+    const { getState } = await renderWizardState("builtIn=notion");
+
+    expect(getState().step).toBe(1);
+    expect(getState().selectedConnector).toBeNull();
+    expect(getState().draft).toEqual(INITIAL_DRAFT);
   });
 
   it("tracks review filtering, bulk selection, expansion, and reset flows", async () => {

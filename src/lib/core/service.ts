@@ -83,8 +83,7 @@ import type {
 } from "@/src/types/context-layer";
 
 const getManagedConnectorSlug = (integration: IntegrationSpec) => {
-  const value =
-    integration.config.managedConnectorSlug ?? integration.config.builtInSlug;
+  const value = integration.config.managedConnectorSlug;
   return typeof value === "string" && value.trim().length > 0 ? value.trim() : null;
 };
 
