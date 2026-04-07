@@ -20,7 +20,7 @@ import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
 import { cn } from "@/src/lib/utils";
 import type {
-  BuiltInConnectorOption,
+  ManagedConnectorOption,
   IntegrationSpec,
   ToolAccessMode,
   UnusedToolWindowUnit,
@@ -29,8 +29,8 @@ import type {
 interface IntegrationsSectionProps {
   addIntegrationSearch: string;
   availableConnectorCount: number;
-  builtInConnectorsError?: string | null;
-  builtInConnectorsPending: boolean;
+  managedConnectorsError?: string | null;
+  managedConnectorsPending: boolean;
   filteredIntegrations: FilteredIntegrationToolEntry[];
   handleDeleteIntegration: (integration: IntegrationSpec) => void;
   handleDisableUnusedTools: () => void;
@@ -39,9 +39,9 @@ interface IntegrationsSectionProps {
   integrationSearch: string;
   isActionPending: boolean;
   isBulkDisablePending: boolean;
-  marketplaceConnectors: BuiltInConnectorOption[];
+  marketplaceConnectors: ManagedConnectorOption[];
   onCreated: () => Promise<void>;
-  onOpenIntegrationWizard: (builtInSlug?: string) => void;
+  onOpenIntegrationWizard: (managedConnectorSlug?: string) => void;
   onStatus: (message: string | null) => void;
   onToggleIntegrationExpanded: (integrationKey: string, expanded: boolean) => void;
   onToggleToolExpanded: (toolKey: string) => void;
@@ -71,8 +71,8 @@ interface IntegrationsSectionProps {
 export const IntegrationsSection = ({
   addIntegrationSearch,
   availableConnectorCount,
-  builtInConnectorsError,
-  builtInConnectorsPending,
+  managedConnectorsError,
+  managedConnectorsPending,
   filteredIntegrations,
   handleDeleteIntegration,
   handleDisableUnusedTools,
@@ -132,13 +132,13 @@ export const IntegrationsSection = ({
         </div>
 
         <div className="mt-3 space-y-2.5">
-          {builtInConnectorsPending ? (
+          {managedConnectorsPending ? (
             <div className="rounded-xl border border-dashed border-[var(--color-border)] px-3 py-4 text-sm text-[var(--color-text-base)]">
               Loading available integrations...
             </div>
-          ) : builtInConnectorsError ? (
+          ) : managedConnectorsError ? (
             <div className="rounded-xl border border-dashed border-[var(--color-border)] px-3 py-4 text-sm text-[var(--color-text-base)]">
-              {builtInConnectorsError}
+              {managedConnectorsError}
             </div>
           ) : marketplaceConnectors.length === 0 ? (
             <div className="rounded-xl border border-dashed border-[var(--color-border)] px-3 py-4 text-sm text-[var(--color-text-base)]">
