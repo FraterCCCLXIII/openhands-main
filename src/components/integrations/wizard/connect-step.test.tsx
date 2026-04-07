@@ -80,9 +80,10 @@ const customTokenConnector: ManagedConnectorOption = {
   authModes: ["api_key"],
   authStrategy: "api_key",
   oauthConfigured: true,
-  credentialLabel: "",
-  credentialPlaceholder: "",
-  credentialHelp: "",
+  credentialLabel: "API key",
+  credentialPlaceholder: "Paste the provider API key",
+  credentialHelp:
+    "Provide the provider API key that this managed connector should use upstream.",
 };
 
 
