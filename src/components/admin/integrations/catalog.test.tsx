@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { IntegrationsCatalog } from "@/src/components/admin/integrations/catalog";
 import type {
-  BuiltInConnectorOption,
+  ManagedConnectorOption,
   ManagedConnectorDefinition,
   OAuthProviderCatalogOption,
 } from "@/src/types/context-layer";
@@ -38,7 +38,7 @@ const providerCatalog: OAuthProviderCatalogOption[] = [
   },
 ];
 
-const readyBuiltInConnectors: BuiltInConnectorOption[] = [
+const readyManagedConnectors: ManagedConnectorOption[] = [
   {
     slug: "google-calendar",
     name: "Google Calendar",
@@ -173,7 +173,7 @@ describe("IntegrationsCatalog", () => {
       root.render(
         <IntegrationsCatalog
           providerCatalog={providerCatalog}
-          initialReadyBuiltInConnectors={readyBuiltInConnectors}
+          initialReadyManagedConnectors={readyManagedConnectors}
           managedConnectors={managedConnectors}
           canRegisterManagedConnectors
           oauthCallbackBaseUrl="https://openhands-context-layer.vercel.app/api/oauth"
