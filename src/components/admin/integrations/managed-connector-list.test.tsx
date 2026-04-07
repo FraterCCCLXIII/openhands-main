@@ -109,6 +109,11 @@ const setInputValue = (element: Element | null, value: string) => {
   throw new Error("Expected input or select element");
 };
 
+const findConnectorDetailsToggle = (container: ParentNode, slug: string) =>
+  container.querySelector<HTMLButtonElement>(
+    `button[aria-controls="managed-connector-details-${slug}"]`,
+  );
+
 describe("ManagedConnectorList", () => {
   let container: HTMLDivElement;
   let root: Root;
@@ -170,9 +175,7 @@ describe("ManagedConnectorList", () => {
       );
     });
 
-    const expandButton = Array.from(container.querySelectorAll("button")).find((button) =>
-      button.textContent?.includes("Show details"),
-    );
+    const expandButton = findConnectorDetailsToggle(container, "notion");
     expect(expandButton).toBeTruthy();
 
     await act(async () => {
@@ -255,9 +258,7 @@ describe("ManagedConnectorList", () => {
       );
     });
 
-    const expandButton = Array.from(container.querySelectorAll("button")).find((button) =>
-      button.textContent?.includes("Show details"),
-    );
+    const expandButton = findConnectorDetailsToggle(container, "notion");
     expect(expandButton).toBeTruthy();
 
     await act(async () => {
@@ -308,7 +309,7 @@ describe("ManagedConnectorList", () => {
     expect(container.textContent).toContain("Connector permissions updated.");
   });
 
-  it("shows empty and filtered search states with derived connector metadata", async () => {
+  it("shows derived connector metadata in the compact card view", async () => {
     await act(async () => {
       root.render(
         <ManagedConnectorList
@@ -322,6 +323,16 @@ describe("ManagedConnectorList", () => {
     expect(container.textContent).toContain("Credentials missing");
     expect(container.textContent).toContain("disabled");
     expect(container.textContent).toContain("updated Unknown");
+  });
+
+  it("filters managed connectors and shows an empty search state", async () => {
+    await act(async () => {
+      root.render(
+        <ManagedConnectorList
+          initialManagedConnectors={[baseConnector, secondaryConnector]}
+        />,
+      );
+    });
 
     const searchInput = container.querySelector('input[aria-label="Search managed connectors"]');
     expect(searchInput).toBeTruthy();
@@ -344,33 +355,14 @@ describe("ManagedConnectorList", () => {
     expect(container.textContent).toContain("No managed connectors match the current search.");
   });
 
-  it("validates provider-specific URLs and surfaces save and delete failures", async () => {
-    fetchMock
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify({ detail: "Save failed." }), {
-          status: 500,
-          headers: { "Content-Type": "application/json" },
-        }),
-      )
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify({ detail: "Delete failed." }), {
-          status: 500,
-          headers: { "Content-Type": "application/json" },
-        }),
-      );
-
-    const confirmMock = vi.fn(() => false);
-    vi.stubGlobal("confirm", confirmMock);
-
+  it("validates provider-specific URLs before saving connector changes", async () => {
     await act(async () => {
       root.render(
         <ManagedConnectorList initialManagedConnectors={initialConnectors} />,
       );
     });
 
-    const expandButton = Array.from(container.querySelectorAll("button")).find((button) =>
-      button.textContent?.includes("Show details"),
-    );
+    const expandButton = findConnectorDetailsToggle(container, "notion");
     expect(expandButton).toBeTruthy();
 
     await act(async () => {
@@ -405,19 +397,75 @@ describe("ManagedConnectorList", () => {
 
     expect(fetchMock).not.toHaveBeenCalled();
     expect(container.textContent).toContain("Enter the API base URL before saving this connector.");
+  });
 
+  it("surfaces save failures after connector validation passes", async () => {
+    fetchMock.mockResolvedValueOnce(
+      new Response(JSON.stringify({ detail: "Save failed." }), {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+
+    await act(async () => {
+      root.render(
+        <ManagedConnectorList initialManagedConnectors={initialConnectors} />,
+      );
+    });
+
+    const expandButton = findConnectorDetailsToggle(container, "notion");
+    expect(expandButton).toBeTruthy();
+
+    await act(async () => {
+      expandButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    const form = container.querySelector("form");
+    expect(form).toBeTruthy();
+
+    const providerSelect = container.querySelector("select");
+    await act(async () => {
+      setInputValue(providerSelect, "http");
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    const httpUrlInputs = Array.from(container.querySelectorAll('input[type="url"]'));
     await act(async () => {
       setInputValue(httpUrlInputs[0] ?? null, "https://api.notion.com");
       form?.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
       await new Promise((resolve) => setTimeout(resolve, 0));
     });
 
-    expect(fetchMock).toHaveBeenNthCalledWith(
-      1,
+    expect(fetchMock).toHaveBeenCalledWith(
       "/api/managed-connectors",
       expect.objectContaining({ method: "POST" }),
     );
     expect(container.textContent).toContain("Save failed.");
+  });
+
+  it("skips cancelled deletes and surfaces delete failures", async () => {
+    fetchMock.mockResolvedValueOnce(
+      new Response(JSON.stringify({ detail: "Delete failed." }), {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+
+    const confirmMock = vi.fn(() => false);
+    vi.stubGlobal("confirm", confirmMock);
+
+    await act(async () => {
+      root.render(
+        <ManagedConnectorList initialManagedConnectors={initialConnectors} />,
+      );
+    });
+
+    const expandButton = findConnectorDetailsToggle(container, "notion");
+    expect(expandButton).toBeTruthy();
+
+    await act(async () => {
+      expandButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
 
     const deleteButton = container.querySelector(
       'button[aria-label="Delete Notion connector"]',
@@ -429,7 +477,8 @@ describe("ManagedConnectorList", () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
     });
 
-    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(confirmMock).toHaveBeenCalledTimes(1);
 
     vi.stubGlobal("confirm", vi.fn(() => true));
 
@@ -438,7 +487,7 @@ describe("ManagedConnectorList", () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
     });
 
-    expect(fetchMock).toHaveBeenNthCalledWith(2, "/api/managed-connectors/notion", {
+    expect(fetchMock).toHaveBeenCalledWith("/api/managed-connectors/notion", {
       method: "DELETE",
     });
     expect(container.textContent).toContain("Delete failed.");
@@ -465,9 +514,7 @@ describe("ManagedConnectorList", () => {
       );
     });
 
-    const expandButton = Array.from(container.querySelectorAll("button")).find((button) =>
-      button.textContent?.includes("Show details"),
-    );
+    const expandButton = findConnectorDetailsToggle(container, "notion");
     expect(expandButton).toBeTruthy();
 
     await act(async () => {

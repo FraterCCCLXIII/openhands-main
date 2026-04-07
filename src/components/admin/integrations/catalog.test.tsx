@@ -141,6 +141,16 @@ const manualTokenConnector: ManagedConnectorDefinition = {
   updatedAt: "2026-03-10T00:00:00.000Z",
 };
 
+const findProviderToggle = (container: ParentNode, name: string) =>
+  Array.from(container.querySelectorAll<HTMLButtonElement>('button[aria-expanded]')).find(
+    (button) => button.textContent?.includes(name),
+  ) ?? null;
+
+const findManagedConnectorToggle = (container: ParentNode, slug: string) =>
+  container.querySelector<HTMLButtonElement>(
+    `button[aria-controls="managed-connector-details-${slug}"]`,
+  );
+
 describe("IntegrationsCatalog", () => {
   let container: HTMLDivElement;
   let root: Root;
@@ -181,13 +191,11 @@ describe("IntegrationsCatalog", () => {
       );
     });
 
-    const googleButtons = () =>
-      Array.from(container.querySelectorAll("button")).filter((button) =>
-        button.textContent?.includes("Google Calendar"),
-      );
+    const providerToggle = findProviderToggle(container, "Google Calendar");
+    expect(providerToggle).toBeTruthy();
 
     await act(async () => {
-      googleButtons().at(-1)?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      providerToggle?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
 
     expect(container.textContent).toContain(
@@ -195,8 +203,11 @@ describe("IntegrationsCatalog", () => {
     );
     expect(container.textContent).toContain("Use Google Calendar");
 
+    const managedConnectorToggle = findManagedConnectorToggle(container, "google-calendar");
+    expect(managedConnectorToggle).toBeTruthy();
+
     await act(async () => {
-      googleButtons()[0]?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      managedConnectorToggle?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
 
     const deleteButton = container.querySelector(
@@ -214,10 +225,9 @@ describe("IntegrationsCatalog", () => {
     });
     expect(container.textContent).not.toContain("Use Google Calendar");
 
-    await act(async () => {
-      googleButtons().at(-1)?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-    });
-
+    expect(findProviderToggle(container, "Google Calendar")?.getAttribute("aria-expanded")).toBe(
+      "true",
+    );
     expect(container.textContent).toContain("Register this provider");
     expect(container.textContent).not.toContain(
       "This provider is already available in the integration wizard, so no additional registration is needed.",
@@ -268,27 +278,21 @@ describe("IntegrationsCatalog", () => {
       );
     });
 
-    const googleButtons = () =>
-      Array.from(container.querySelectorAll("button")).filter((button) =>
-        button.textContent?.includes("Google Calendar"),
-      );
+    const providerToggle = findProviderToggle(container, "Google Calendar");
+    expect(providerToggle).toBeTruthy();
 
     await act(async () => {
-      googleButtons().at(-1)?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      providerToggle?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
 
     expect(container.textContent).toContain("Register this provider");
     expect(container.textContent).not.toContain("Use Google Calendar");
 
-    const expandManagedConnectorButton = Array.from(container.querySelectorAll("button")).find(
-      (button) => button.textContent?.includes("Show details"),
-    );
-    expect(expandManagedConnectorButton).toBeTruthy();
+    const managedConnectorToggle = findManagedConnectorToggle(container, "google-calendar");
+    expect(managedConnectorToggle).toBeTruthy();
 
     await act(async () => {
-      expandManagedConnectorButton?.dispatchEvent(
-        new MouseEvent("click", { bubbles: true }),
-      );
+      managedConnectorToggle?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
 
     const form = container.querySelector("form");
@@ -299,13 +303,9 @@ describe("IntegrationsCatalog", () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
     });
 
-    const providerButton = googleButtons().at(-1);
-    if (providerButton?.textContent?.includes("Show details")) {
-      await act(async () => {
-        providerButton.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-      });
-    }
-
+    expect(findProviderToggle(container, "Google Calendar")?.getAttribute("aria-expanded")).toBe(
+      "true",
+    );
     expect(container.textContent).toContain("Use Google Calendar");
     expect(container.textContent).toContain(
       "This provider is already available in the integration wizard, so no additional registration is needed.",
@@ -332,27 +332,21 @@ describe("IntegrationsCatalog", () => {
       );
     });
 
-    const elevenLabsButtons = () =>
-      Array.from(container.querySelectorAll("button")).filter((button) =>
-        button.textContent?.includes("ElevenLabs"),
-      );
+    const providerToggle = findProviderToggle(container, "ElevenLabs");
+    expect(providerToggle).toBeTruthy();
 
     await act(async () => {
-      elevenLabsButtons().at(-1)?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      providerToggle?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
 
     expect(container.textContent).toContain("Register this provider");
     expect(container.textContent).not.toContain("Use ElevenLabs");
 
-    const expandManagedConnectorButton = Array.from(container.querySelectorAll("button")).find(
-      (button) => button.textContent?.includes("Show details"),
-    );
-    expect(expandManagedConnectorButton).toBeTruthy();
+    const managedConnectorToggle = findManagedConnectorToggle(container, "elevenlabs");
+    expect(managedConnectorToggle).toBeTruthy();
 
     await act(async () => {
-      expandManagedConnectorButton?.dispatchEvent(
-        new MouseEvent("click", { bubbles: true }),
-      );
+      managedConnectorToggle?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
 
     const form = container.querySelector("form");
@@ -363,13 +357,9 @@ describe("IntegrationsCatalog", () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
     });
 
-    const providerButton = elevenLabsButtons().at(-1);
-    if (providerButton?.textContent?.includes("Show details")) {
-      await act(async () => {
-        providerButton.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-      });
-    }
-
+    expect(findProviderToggle(container, "ElevenLabs")?.getAttribute("aria-expanded")).toBe(
+      "true",
+    );
     expect(container.textContent).toContain("Use ElevenLabs");
     expect(container.textContent).toContain(
       "This provider is already available in the integration wizard, so no additional registration is needed.",
