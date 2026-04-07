@@ -276,6 +276,66 @@ describe("ConnectStep", () => {
     await cleanup();
   });
 
+  it("shows OAuth connection status copy and disables unavailable connection actions", async () => {
+    const connected = await renderConnectStep({
+      draft: {
+        ...baseManagedDraft,
+        key: "notion-workspace",
+        name: "Notion Workspace",
+        managedConnectorSlug: "notion",
+      },
+      selectedConnector: { ...notionConnector, description: "" },
+      selectedConnection: {
+        integrationKey: "notion-workspace",
+        provider: "http",
+        authStrategy: "oauth2",
+        scopes: [],
+        displayName: "Acme Workspace",
+        expiresAt: "2026-04-08T12:00:00.000Z",
+        metadata: {},
+        createdAt: "2026-04-07T12:00:00.000Z",
+        updatedAt: "2026-04-07T12:00:00.000Z",
+      },
+      requiresOAuthConnection: true,
+      oauthConnectionEnabled: true,
+    });
+
+    expect(connected.container.textContent).toContain(
+      "This managed connector is registered for the current deployment.",
+    );
+    expect(connected.container.textContent).toContain("Acme Workspace");
+    expect(connected.container.textContent).toContain(
+      "This Notion token is stored per user in the database and will be injected automatically for agent calls.",
+    );
+    expect(connected.container.textContent).toContain(
+      "Notion is connected. Click Discover to save this integration with your stored OAuth credentials.",
+    );
+    expect(connected.container.textContent).toContain("Reconnect");
+    expect(connected.container.textContent).toContain("Expires");
+    await connected.cleanup();
+
+    const unavailable = await renderConnectStep({
+      draft: {
+        ...baseManagedDraft,
+        managedConnectorSlug: "notion",
+      },
+      selectedConnector: notionConnector,
+      requiresOAuthConnection: true,
+      oauthConnectionEnabled: false,
+    });
+    const unavailableButton = Array.from(
+      unavailable.container.querySelectorAll("button"),
+    ).find((button) => button.textContent?.includes("Not available"));
+
+    expect(unavailableButton).toBeTruthy();
+    expect((unavailableButton as HTMLButtonElement | undefined)?.disabled).toBe(true);
+    expect(unavailable.container.textContent).toContain(
+      "Notion is not available on this deployment yet. Visit the admin integrations page to request it.",
+    );
+
+    await unavailable.cleanup();
+  });
+
   it("falls back to generic API-key copy and keeps fields disabled for whitespace-only selections", async () => {
     const disabled = await renderConnectStep({
       draft: {
@@ -339,7 +399,6 @@ describe("ConnectStep", () => {
 
     await enabled.cleanup();
   });
-
 
   it("starts the per-user OAuth flow for managed connectors", async () => {
     const { container, cleanup } = await renderConnectStep({
