@@ -17,6 +17,9 @@
     "test:coverage:report": "npm run test:coverage && npm run coverage:branches",
     "test:e2e": "vitest run src/lib/db/e2e-repository.test.ts src/lib/e2e-integration.test.ts",
     "test:watch": "vitest",
+    "test:mutation": "node ./scripts/run-mutation.mjs",
+    "test:mutation:dry": "node ./scripts/run-mutation.mjs --dry-run",
+    "test:mutation:all": "node ./scripts/run-mutation.mjs --all --soft-fail",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "audit": "npm audit --audit-level=moderate"
@@ -40,6 +43,9 @@
   "devDependencies": {
     "@electric-sql/pglite": "^0.4.2",
     "@next/eslint-plugin-next": "^16.2.1",
+    "@stryker-mutator/core": "^9.6.0",
+    "@stryker-mutator/typescript-checker": "^9.6.0",
+    "@stryker-mutator/vitest-runner": "^9.6.0",
     "@tailwindcss/postcss": "^4.2.2",
     "@types/node": "^25.5.0",
     "@types/react": "^19.2.14",

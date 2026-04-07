@@ -3,6 +3,9 @@ node_modules/
 out/
 dist/
 coverage/
+reports/
+.stryker-tmp/
+
 .env
 .env.local
 .env.development
