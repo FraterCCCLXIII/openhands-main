@@ -85,6 +85,21 @@ const genericApiConnector: ManagedConnectorOption = {
   credentialHelp: "Provide a custom API key for this connector.",
 };
 
+const customTokenConnector: ManagedConnectorOption = {
+  slug: "custom-token",
+  name: "Custom Token",
+  description: "",
+  toolCount: 2,
+  categories: ["Operations"],
+  authModes: ["api_key"],
+  authStrategy: "api_key",
+  oauthConfigured: true,
+  credentialLabel: undefined as unknown as string,
+  credentialPlaceholder: undefined as unknown as string,
+  credentialHelp: undefined as unknown as string,
+};
+
+
 const basicConnector: ManagedConnectorOption = {
   slug: "basic-auth",
   name: "Basic Auth Service",
@@ -221,6 +236,110 @@ describe("ConnectStep", () => {
       value: originalLocation,
     });
   });
+
+  it("renders searchable managed connector options and forwards search changes", async () => {
+    const pendingRender = await renderConnectStep({ managedConnectorsPending: true });
+    const pendingSearchInput = pendingRender.container.querySelector(
+      'input[list="managed-connector-options"]',
+    ) as HTMLInputElement | null;
+
+    expect(pendingSearchInput?.placeholder).toBe("Loading supported connectors...");
+    expect(pendingSearchInput?.disabled).toBe(true);
+    await pendingRender.cleanup();
+
+    const { container, cleanup, onConnectorSearchChange } = await renderConnectStep({
+      connectorSearch: "Not",
+    });
+    const searchInput = container.querySelector(
+      'input[list="managed-connector-options"]',
+    ) as HTMLInputElement | null;
+    const optionValues = Array.from(
+      container.querySelectorAll('#managed-connector-options option'),
+    ).map((option) => (option as HTMLOptionElement).value);
+
+    expect(searchInput?.placeholder).toBe("Choose GitHub, Notion, Slack...");
+    expect(optionValues).toEqual([
+      "Notion (notion)",
+      "ElevenLabs (elevenlabs)",
+      "Generic API (generic-api)",
+      "Basic Auth Service (basic-auth)",
+      "Public Feed (public-feed)",
+    ]);
+
+    await act(async () => {
+      setInputValue(searchInput, "Notion");
+    });
+
+    expect(onConnectorSearchChange).toHaveBeenCalledWith("Notion");
+    expect(container.textContent).toContain("Click here.");
+
+    await cleanup();
+  });
+
+  it("falls back to generic API-key copy and keeps fields disabled for whitespace-only selections", async () => {
+    const disabled = await renderConnectStep({
+      draft: {
+        ...baseManagedDraft,
+        managedConnectorSlug: "   ",
+      },
+      selectedConnector: customTokenConnector,
+    });
+    const disabledApiInput = disabled.container.querySelector(
+      'input[placeholder="Paste the provider API key"]',
+    ) as HTMLInputElement | null;
+    const disabledHeaderInput = disabled.container.querySelector(
+      'input[placeholder="X-API-Key"]',
+    ) as HTMLInputElement | null;
+
+    expect(disabledApiInput?.disabled).toBe(true);
+    expect(disabledHeaderInput?.disabled).toBe(true);
+    await disabled.cleanup();
+
+    const enabled = await renderConnectStep({
+      draft: {
+        ...baseManagedDraft,
+        managedConnectorSlug: "custom-token",
+      },
+      selectedConnector: customTokenConnector,
+      managedConnectors: [
+        notionConnector,
+        elevenLabsConnector,
+        genericApiConnector,
+        basicConnector,
+        noAuthConnector,
+        customTokenConnector,
+      ],
+      statefulDraft: true,
+    });
+    const apiInput = enabled.container.querySelector(
+      'input[placeholder="Paste the provider API key"]',
+    ) as HTMLInputElement | null;
+    const headerInput = enabled.container.querySelector(
+      'input[placeholder="X-API-Key"]',
+    ) as HTMLInputElement | null;
+
+    expect(enabled.container.textContent).toContain("API key");
+    expect(enabled.container.textContent).toContain(
+      "Provide the provider API key that this managed connector should use upstream.",
+    );
+    expect(apiInput?.disabled).toBe(false);
+    expect(headerInput?.disabled).toBe(false);
+
+    await act(async () => {
+      setInputValue(apiInput, "token-123");
+      setInputValue(headerInput, "X-Test-Key");
+    });
+
+    expect(enabled.container.querySelector("[data-draft-state]")?.textContent).toContain(
+      '"apiKey":"token-123"',
+    );
+    expect(enabled.container.querySelector("[data-draft-state]")?.textContent).toContain(
+      '"headerName":"X-Test-Key"',
+    );
+
+    await enabled.cleanup();
+  });
+
 
   it("starts the per-user OAuth flow for managed connectors", async () => {
     const { container, cleanup } = await renderConnectStep({
