@@ -7,6 +7,7 @@ import type {
   McpTransportKind,
   McpTransportTarget,
 } from "@/src/lib/mcp-transport-policy";
+import { getOptionalString, getOptionalTrimmedString } from "@/src/lib/type-utils";
 import type { AuthStrategy } from "@/src/types/context-layer";
 
 const MCP_OPERATION_TIMEOUT_MS = 10_000;
@@ -125,20 +126,19 @@ export const buildMcpHeaders = (
   credentials: Record<string, unknown>,
 ): Record<string, string> => {
   if (authStrategy === "api_key") {
-    const headerName =
-      (credentials.headerName as string | undefined) ?? "X-API-Key";
-    const secret = credentials.secret as string | undefined;
+    const headerName = getOptionalTrimmedString(credentials, "headerName") ?? "X-API-Key";
+    const secret = getOptionalTrimmedString(credentials, "secret");
     return secret ? { [headerName]: secret } : {};
   }
 
   if (authStrategy === "bearer" || authStrategy === "oauth2") {
-    const token = credentials.accessToken as string | undefined;
+    const token = getOptionalTrimmedString(credentials, "accessToken");
     return token ? { Authorization: `Bearer ${token}` } : {};
   }
 
   if (authStrategy === "basic") {
-    const username = credentials.username as string | undefined;
-    const password = credentials.password as string | undefined;
+    const username = getOptionalTrimmedString(credentials, "username");
+    const password = getOptionalTrimmedString(credentials, "password");
 
     if (username && password) {
       return {
@@ -193,10 +193,7 @@ const buildMcpDebugDetails = (
         accessToken: summarizeTokenCredential(debugContext.credentials.accessToken),
         refreshToken: summarizeStringCredential(debugContext.credentials.refreshToken),
         secret: summarizeStringCredential(debugContext.credentials.secret),
-        headerName:
-          typeof debugContext.credentials.headerName === "string"
-            ? debugContext.credentials.headerName
-            : undefined,
+        headerName: getOptionalString(debugContext.credentials, "headerName"),
         usernameProvided:
           typeof debugContext.credentials.username === "string" &&
           debugContext.credentials.username.trim().length > 0,

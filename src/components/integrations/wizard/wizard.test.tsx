@@ -51,7 +51,7 @@ describe("IntegrationWizard", () => {
     fetchMock = vi.fn(async (input: RequestInfo | URL) => {
       const url = typeof input === "string" ? input : input.toString();
 
-      if (url === "/api/integrations/built-in-connectors") {
+      if (url === "/api/integrations/managed-connectors") {
         return new Response(
           JSON.stringify([
             {
@@ -107,7 +107,7 @@ describe("IntegrationWizard", () => {
     useSearchParamsMock.mockReset();
   });
 
-  it("shows only ready built-in connectors and links users to admin-integrations", async () => {
+  it("shows only ready managed connectors and links users to admin-integrations", async () => {
     await act(async () => {
       root.render(
         <QueryClientProvider client={queryClient}>
@@ -116,13 +116,13 @@ describe("IntegrationWizard", () => {
       );
     });
 
-    const builtInButton = Array.from(container.querySelectorAll("button")).find(
-      (button) => button.textContent?.includes("Built-in connector"),
+    const managedConnectorButton = Array.from(container.querySelectorAll("button")).find(
+      (button) => button.textContent?.includes("Managed connector"),
     );
-    expect(builtInButton).toBeTruthy();
+    expect(managedConnectorButton).toBeTruthy();
 
     await act(async () => {
-      builtInButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      managedConnectorButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
 
     await act(async () => {
@@ -130,7 +130,7 @@ describe("IntegrationWizard", () => {
     });
 
     expect(fetchMock).toHaveBeenCalledWith(
-      "/api/integrations/built-in-connectors",
+      "/api/integrations/managed-connectors",
       undefined,
     );
 
@@ -148,7 +148,7 @@ describe("IntegrationWizard", () => {
     fetchMock.mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = typeof input === "string" ? input : input.toString();
 
-      if (url === "/api/integrations/built-in-connectors") {
+      if (url === "/api/integrations/managed-connectors") {
         return new Response(
           JSON.stringify([
             {
@@ -182,9 +182,9 @@ describe("IntegrationWizard", () => {
         expect(init?.body).toBeTruthy();
         expect(JSON.parse(String(init?.body))).toMatchObject({
           key: "elevenlabs",
-          kind: "built_in",
+          kind: "managed",
           config: {
-            builtInSlug: "elevenlabs",
+            managedConnectorSlug: "elevenlabs",
           },
           credentials: {
             headerName: "xi-api-key",
@@ -197,7 +197,7 @@ describe("IntegrationWizard", () => {
             provider: "http",
             authStrategy: "api_key",
             config: {
-              builtInSlug: "elevenlabs",
+              managedConnectorSlug: "elevenlabs",
               apiBaseUrl: "https://api.elevenlabs.io",
             },
             credentials: {
@@ -229,7 +229,7 @@ describe("IntegrationWizard", () => {
       throw new Error(`Unexpected fetch: ${url}`);
     });
 
-    useSearchParamsMock.mockReturnValue(new URLSearchParams("builtIn=elevenlabs"));
+    useSearchParamsMock.mockReturnValue(new URLSearchParams("managedConnector=elevenlabs"));
 
     await act(async () => {
       root.render(
@@ -278,7 +278,7 @@ describe("IntegrationWizard", () => {
 
 
   it("refetches the connector catalog when step 2 opens even if React Query has cached data", async () => {
-    queryClient.setQueryData(["built-in-connectors"], [
+    queryClient.setQueryData(["managed-connectors"], [
       {
         slug: "github",
         name: "GitHub",
@@ -296,7 +296,7 @@ describe("IntegrationWizard", () => {
     fetchMock.mockImplementation(async (input: RequestInfo | URL) => {
       const url = typeof input === "string" ? input : input.toString();
 
-      if (url === "/api/integrations/built-in-connectors") {
+      if (url === "/api/integrations/managed-connectors") {
         return new Response(
           JSON.stringify([
             {
@@ -348,13 +348,13 @@ describe("IntegrationWizard", () => {
       );
     });
 
-    const builtInButton = Array.from(container.querySelectorAll("button")).find(
-      (button) => button.textContent?.includes("Built-in connector"),
+    const managedConnectorButton = Array.from(container.querySelectorAll("button")).find(
+      (button) => button.textContent?.includes("Managed connector"),
     );
-    expect(builtInButton).toBeTruthy();
+    expect(managedConnectorButton).toBeTruthy();
 
     await act(async () => {
-      builtInButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      managedConnectorButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
 
     await act(async () => {
@@ -362,7 +362,7 @@ describe("IntegrationWizard", () => {
     });
 
     expect(fetchMock).toHaveBeenCalledWith(
-      "/api/integrations/built-in-connectors",
+      "/api/integrations/managed-connectors",
       undefined,
     );
 
@@ -376,7 +376,7 @@ describe("IntegrationWizard", () => {
     fetchMock.mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = typeof input === "string" ? input : input.toString();
 
-      if (url === "/api/integrations/built-in-connectors") {
+      if (url === "/api/integrations/managed-connectors") {
         return new Response(
           JSON.stringify([
             {
@@ -422,7 +422,7 @@ describe("IntegrationWizard", () => {
             provider: "mcp",
             authStrategy: "oauth2",
             config: {
-              builtInSlug: "notion",
+              managedConnectorSlug: "notion",
               serverUrl: "https://mcp.notion.com/mcp",
             },
             credentials: {},
@@ -448,7 +448,7 @@ describe("IntegrationWizard", () => {
       throw new Error(`Unexpected fetch: ${url}`);
     });
 
-    useSearchParamsMock.mockReturnValue(new URLSearchParams("builtIn=notion"));
+    useSearchParamsMock.mockReturnValue(new URLSearchParams("managedConnector=notion"));
 
     await act(async () => {
       root.render(
@@ -487,7 +487,7 @@ describe("IntegrationWizard", () => {
     fetchMock.mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = typeof input === "string" ? input : input.toString();
 
-      if (url === "/api/integrations/built-in-connectors") {
+      if (url === "/api/integrations/managed-connectors") {
         return new Response(
           JSON.stringify([
             {
@@ -521,7 +521,7 @@ describe("IntegrationWizard", () => {
             provider: "mcp",
             authStrategy: "bearer",
             config: {
-              builtInSlug: "github",
+              managedConnectorSlug: "github",
               serverUrl: "https://api.githubcopilot.com/mcp/",
             },
             credentials: {
@@ -576,7 +576,7 @@ describe("IntegrationWizard", () => {
       throw new Error(`Unexpected fetch: ${url}`);
     });
 
-    useSearchParamsMock.mockReturnValue(new URLSearchParams("builtIn=github"));
+    useSearchParamsMock.mockReturnValue(new URLSearchParams("managedConnector=github"));
 
     await act(async () => {
       root.render(
@@ -755,7 +755,7 @@ describe("IntegrationWizard", () => {
     fetchMock.mockImplementation(async (input: RequestInfo | URL) => {
       const url = typeof input === "string" ? input : input.toString();
 
-      if (url === "/api/integrations/built-in-connectors") {
+      if (url === "/api/integrations/managed-connectors") {
         return new Response(
           JSON.stringify([
             {
@@ -787,7 +787,7 @@ describe("IntegrationWizard", () => {
       throw new Error(`Unexpected fetch: ${url}`);
     });
 
-    useSearchParamsMock.mockReturnValue(new URLSearchParams("builtIn=ordinal"));
+    useSearchParamsMock.mockReturnValue(new URLSearchParams("managedConnector=ordinal"));
 
     await act(async () => {
       root.render(
@@ -809,7 +809,7 @@ describe("IntegrationWizard", () => {
     fetchMock.mockImplementation(async (input: RequestInfo | URL) => {
       const url = typeof input === "string" ? input : input.toString();
 
-      if (url === "/api/integrations/built-in-connectors") {
+      if (url === "/api/integrations/managed-connectors") {
         return new Response(
           JSON.stringify([
             {
@@ -887,7 +887,7 @@ describe("IntegrationWizard", () => {
       throw new Error(`Unexpected fetch: ${url}`);
     });
 
-    useSearchParamsMock.mockReturnValue(new URLSearchParams("builtIn=notion"));
+    useSearchParamsMock.mockReturnValue(new URLSearchParams("managedConnector=notion"));
 
     await act(async () => {
       root.render(

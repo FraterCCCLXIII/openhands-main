@@ -1,11 +1,15 @@
-import { approvalStatusLabel } from "@/src/lib/access-requests";
 import {
   getToolAccessMode,
   matchesToolSearch,
 } from "@/src/components/integrations/tool-access-controls";
+import { approvalStatusLabel } from "@/src/lib/access-requests";
+import {
+  matchesSearchQuery,
+  normalizeCaseInsensitiveText,
+} from "@/src/lib/text-utils";
 import type {
   AccessRequest,
-  BuiltInConnectorOption,
+  ManagedConnectorOption,
   ToolSpec,
   ToolAccessMode,
   IntegrationSpec,
@@ -75,38 +79,32 @@ export const formatTrackedUsage = (toolSpec: ToolSpec) => {
 export const matchesIntegrationSearch = (
   integration: IntegrationSpec,
   query: string,
-) => {
-  const normalizedQuery = query.trim().toLowerCase();
-  if (!normalizedQuery) {
-    return true;
-  }
-
-  return [
-    integration.name,
-    integration.key,
-    integration.provider,
-    integration.kind,
-    integration.authStrategy,
-  ].some((value) => value.toLowerCase().includes(normalizedQuery));
-};
+) =>
+  matchesSearchQuery(
+    [
+      integration.name,
+      integration.key,
+      integration.provider,
+      integration.kind,
+      integration.authStrategy,
+    ],
+    query,
+  );
 
 export const matchesConnectorSearch = (
-  connector: BuiltInConnectorOption,
+  connector: ManagedConnectorOption,
   query: string,
-) => {
-  const normalizedQuery = query.trim().toLowerCase();
-  if (!normalizedQuery) {
-    return true;
-  }
-
-  return [
-    connector.name,
-    connector.slug,
-    connector.description,
-    connector.authStrategy,
-    ...connector.categories,
-  ].some((value) => value.toLowerCase().includes(normalizedQuery));
-};
+) =>
+  matchesSearchQuery(
+    [
+      connector.name,
+      connector.slug,
+      connector.description,
+      connector.authStrategy,
+      ...connector.categories,
+    ],
+    query,
+  );
 
 export const approvalStatusTone = (status: AccessRequest["status"]) => {
   switch (approvalStatusLabel(status)) {
@@ -127,23 +125,20 @@ export const matchesAccessRequestFilter = (
 export const matchesAccessRequestSearch = (
   request: AccessRequest,
   query: string,
-) => {
-  const normalizedQuery = query.trim().toLowerCase();
-  if (!normalizedQuery) {
-    return true;
-  }
-
-  return [
-    request.agentId ?? "",
-    request.agentClass ?? "",
-    request.integrationKey,
-    request.toolName,
-    request.justification ?? "",
-    request.agentData?.conversationLink ?? "",
-    approvalStatusLabel(request.status),
-    ...request.scopes,
-  ].some((value) => value.toLowerCase().includes(normalizedQuery));
-};
+) =>
+  matchesSearchQuery(
+    [
+      request.agentId,
+      request.agentClass,
+      request.integrationKey,
+      request.toolName,
+      request.justification,
+      request.agentData?.conversationLink,
+      approvalStatusLabel(request.status),
+      ...request.scopes,
+    ],
+    query,
+  );
 
 export const hasMissingApprovalIdentity = (request: AccessRequest) =>
   !request.agentId && !request.agentClass;
@@ -231,7 +226,7 @@ export const filterIntegrationsForDisplay = ({
   integrationSearch: string;
   hideDisabledTools: boolean;
 }): FilteredIntegrationToolEntry[] => {
-  const normalizedSearch = integrationSearch.trim().toLowerCase();
+  const normalizedSearch = normalizeCaseInsensitiveText(integrationSearch);
 
   return [...integrations]
     .sort(
@@ -281,32 +276,34 @@ export const filterIntegrationsForDisplay = ({
 export const buildInstalledIntegrationKeys = (integrations: IntegrationSpec[]) =>
   new Set(
     integrations.flatMap((integration) => {
-      const builtInSlug =
-        typeof integration.config.builtInSlug === "string"
-          ? integration.config.builtInSlug.trim()
-          : "";
+      const managedConnectorSlug =
+        typeof integration.config.managedConnectorSlug === "string"
+          ? integration.config.managedConnectorSlug.trim()
+          : typeof integration.config.builtInSlug === "string"
+            ? integration.config.builtInSlug.trim()
+            : "";
 
-      return [integration.key, builtInSlug].filter(Boolean);
+      return [integration.key, managedConnectorSlug].filter(Boolean);
     }),
   );
 
 export const buildMarketplaceConnectors = ({
-  builtInConnectors,
+  managedConnectors,
   installedIntegrationKeys,
   search,
 }: {
-  builtInConnectors: BuiltInConnectorOption[];
+  managedConnectors: ManagedConnectorOption[];
   installedIntegrationKeys: Set<string>;
   search: string;
 }) => {
-  const normalizeRank = (connector: BuiltInConnectorOption) => {
+  const normalizeRank = (connector: ManagedConnectorOption) => {
     const explicitIndex = POPULAR_INTEGRATION_SLUGS.indexOf(
       connector.slug as (typeof POPULAR_INTEGRATION_SLUGS)[number],
     );
     return explicitIndex >= 0 ? explicitIndex : POPULAR_INTEGRATION_SLUGS.length + 1;
   };
 
-  return [...builtInConnectors]
+  return [...managedConnectors]
     .filter((connector) => !installedIntegrationKeys.has(connector.slug))
     .sort((left, right) => {
       const rankDelta = normalizeRank(left) - normalizeRank(right);
@@ -338,7 +335,7 @@ export const buildUnusedToolCandidates = ({
       })),
   );
 
-export const buildConnectorMap = (connectors: BuiltInConnectorOption[]) =>
+export const buildConnectorMap = (connectors: ManagedConnectorOption[]) =>
   new Map(connectors.map((connector) => [connector.slug, connector] as const));
 
 export const resolveIntegrationLogoUrl = ({
@@ -347,15 +344,17 @@ export const resolveIntegrationLogoUrl = ({
   getConnectorLogoUrl,
 }: {
   integration: IntegrationSpec;
-  connectorBySlug: Map<string, BuiltInConnectorOption>;
+  connectorBySlug: Map<string, ManagedConnectorOption>;
   getConnectorLogoUrl: (connector: { appUrl?: string }) => string | null;
 }) => {
-  const builtInSlug =
-    typeof integration.config.builtInSlug === "string"
-      ? integration.config.builtInSlug.trim()
-      : "";
+  const managedConnectorSlug =
+    typeof integration.config.managedConnectorSlug === "string"
+      ? integration.config.managedConnectorSlug.trim()
+      : typeof integration.config.builtInSlug === "string"
+        ? integration.config.builtInSlug.trim()
+        : "";
   const connector =
-    connectorBySlug.get(builtInSlug) ?? connectorBySlug.get(integration.key.trim());
+    connectorBySlug.get(managedConnectorSlug) ?? connectorBySlug.get(integration.key.trim());
 
   if (connector) {
     return getConnectorLogoUrl(connector);

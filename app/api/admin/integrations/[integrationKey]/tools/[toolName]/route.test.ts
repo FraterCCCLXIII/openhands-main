@@ -84,13 +84,19 @@ describe("PATCH /api/admin/integrations/[integrationKey]/tools/[toolName]", () =
   it("updates only the authenticated admin user's integration tool access mode", async () => {
     vi.stubEnv("APP_ADMIN_EMAILS", "admin@example.com");
     const service = getContextLayerService();
+    const createIssueTool = integration.tools["create_issue"];
+    expect(createIssueTool).toBeDefined();
+    if (!createIssueTool) {
+      throw new Error("Missing create_issue test fixture");
+    }
+
     await service.registerOwnerIntegration("admin@example.com", integration);
     await service.registerOwnerIntegration("other-admin@example.com", {
       ...integration,
       tools: {
         ...integration.tools,
         create_issue: {
-          ...integration.tools.create_issue,
+          ...createIssueTool,
           accessMode: "disabled",
           enabled: false,
         },
