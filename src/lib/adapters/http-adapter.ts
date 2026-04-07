@@ -3,49 +3,57 @@ import type {
   IntegrationAdapter,
 } from "@/src/lib/core/adapter-registry";
 import { ContextLayerError } from "@/src/lib/core/errors";
+import {
+  collectHttpTemplateValidationIssues,
+  extractExactTemplateVariable,
+  formatHttpTemplateLocation,
+  replacePathTemplateVariables,
+} from "@/src/lib/http-request-template";
+import {
+  getOptionalString,
+  getOptionalTrimmedString,
+  isRecord,
+} from "@/src/lib/type-utils";
 import type {
   GenericHttpRequestTemplate,
   HttpRequestContentType,
 } from "@/src/types/context-layer";
 
-const EXACT_TEMPLATE = /^\{\{\s*([a-zA-Z0-9_.]+)\s*\}\}$/;
-const TEMPLATE = /\{\{\s*([a-zA-Z0-9_.]+)\s*\}\}/g;
-
 const getByPath = (source: Record<string, unknown>, path: string) =>
   path.split(".").reduce<unknown>((value, segment) => {
-    if (value == null || typeof value !== "object") {
+    if (!isRecord(value)) {
       return undefined;
     }
 
-    return (value as Record<string, unknown>)[segment];
+    return value[segment];
   }, source);
 
-const interpolateValue = (
+const isHttpRequestTemplate = (value: unknown): value is GenericHttpRequestTemplate =>
+  isRecord(value) && typeof value.method === "string" && typeof value.path === "string";
+
+const resolveTemplateValue = (
   template: unknown,
   payload: Record<string, unknown>,
 ): unknown => {
   if (typeof template === "string") {
-    const exact = template.match(EXACT_TEMPLATE);
-    if (exact) {
-      return getByPath(payload, exact[1]);
+    const exactVariable = extractExactTemplateVariable(template);
+    if (exactVariable) {
+      return getByPath(payload, exactVariable);
     }
 
-    return template.replace(TEMPLATE, (_, key: string) => {
-      const resolved = getByPath(payload, key);
-      return resolved == null ? "" : String(resolved);
-    });
+    return template;
   }
 
   if (Array.isArray(template)) {
     return template
-      .map((item) => interpolateValue(item, payload))
+      .map((item) => resolveTemplateValue(item, payload))
       .filter((item) => item !== undefined);
   }
 
-  if (template && typeof template === "object") {
+  if (isRecord(template)) {
     return Object.fromEntries(
       Object.entries(template)
-        .map(([key, value]) => [key, interpolateValue(value, payload)] as const)
+        .map(([key, value]) => [key, resolveTemplateValue(value, payload)] as const)
         .filter(([, value]) => value !== undefined),
     );
   }
@@ -53,14 +61,26 @@ const interpolateValue = (
   return template;
 };
 
+const resolvePathTemplate = (pathTemplate: string, payload: Record<string, unknown>) =>
+  replacePathTemplateVariables(pathTemplate, (variable) => {
+    const resolved = getByPath(payload, variable);
+    if (resolved == null || typeof resolved === "object") {
+      throw new ContextLayerError(
+        `Path placeholder '${variable}' must resolve to a string, number, or boolean.`,
+        400,
+      );
+    }
+
+    return encodeURIComponent(String(resolved));
+  });
+
 const buildAuthHeaders = (input: AdapterInvocationInput): Record<string, string> => {
   const { integration } = input;
   const credentials = integration.credentials;
 
   if (integration.authStrategy === "api_key") {
-    const headerName =
-      (credentials.headerName as string | undefined)?.trim() || "X-API-Key";
-    const secret = (credentials.secret as string | undefined)?.trim();
+    const headerName = getOptionalTrimmedString(credentials, "headerName") ?? "X-API-Key";
+    const secret = getOptionalTrimmedString(credentials, "secret");
     return secret ? { [headerName]: secret } : {};
   }
 
@@ -68,13 +88,13 @@ const buildAuthHeaders = (input: AdapterInvocationInput): Record<string, string>
     integration.authStrategy === "oauth2" ||
     integration.authStrategy === "bearer"
   ) {
-    const accessToken = (credentials.accessToken as string | undefined)?.trim();
+    const accessToken = getOptionalTrimmedString(credentials, "accessToken");
     return accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
   }
 
   if (integration.authStrategy === "basic") {
-    const username = (credentials.username as string | undefined)?.trim();
-    const password = (credentials.password as string | undefined)?.trim();
+    const username = getOptionalTrimmedString(credentials, "username");
+    const password = getOptionalTrimmedString(credentials, "password");
     if (username && password) {
       return {
         Authorization: `Basic ${Buffer.from(`${username}:${password}`).toString("base64")}`,
@@ -84,9 +104,6 @@ const buildAuthHeaders = (input: AdapterInvocationInput): Record<string, string>
 
   return {};
 };
-
-const isObject = (value: unknown): value is Record<string, unknown> =>
-  Boolean(value) && typeof value === "object" && !Array.isArray(value);
 
 const appendFormValue = (formData: FormData, key: string, value: unknown) => {
   if (value == null) {
@@ -105,40 +122,86 @@ const appendFormValue = (formData: FormData, key: string, value: unknown) => {
     return;
   }
 
-  if (isObject(value) && typeof value.contentBase64 === "string") {
-    const blob = new Blob([Buffer.from(value.contentBase64, "base64")], {
-      type:
-        typeof value.contentType === "string" && value.contentType.trim()
-          ? value.contentType
-          : "application/octet-stream",
-    });
-    formData.append(
-      key,
-      blob,
-      typeof value.filename === "string" && value.filename.trim()
-        ? value.filename
-        : key,
-    );
-    return;
-  }
-
-  if (isObject(value) && typeof value.text === "string") {
-    if (typeof value.filename === "string" && value.filename.trim()) {
-      const blob = new Blob([value.text], {
-        type:
-          typeof value.contentType === "string" && value.contentType.trim()
-            ? value.contentType
-            : "text/plain",
+  if (isRecord(value)) {
+    const contentBase64 = getOptionalString(value, "contentBase64");
+    if (contentBase64) {
+      const contentType = getOptionalTrimmedString(value, "contentType") ?? "application/octet-stream";
+      const filename = getOptionalTrimmedString(value, "filename") ?? key;
+      const blob = new Blob([Buffer.from(contentBase64, "base64")], {
+        type: contentType,
       });
-      formData.append(key, blob, value.filename);
+      formData.append(key, blob, filename);
       return;
     }
 
-    formData.append(key, value.text);
+    const text = getOptionalString(value, "text");
+    if (text) {
+      const filename = getOptionalTrimmedString(value, "filename");
+      if (filename) {
+        const contentType = getOptionalTrimmedString(value, "contentType") ?? "text/plain";
+        const blob = new Blob([text], {
+          type: contentType,
+        });
+        formData.append(key, blob, filename);
+        return;
+      }
+
+      formData.append(key, text);
+      return;
+    }
+  }
+
+  formData.append(key, isRecord(value) ? JSON.stringify(value) : String(value));
+};
+
+const isScalarRequestValue = (value: unknown): value is string | number | boolean =>
+  ["string", "number", "boolean"].includes(typeof value);
+
+const appendQueryValue = (url: URL, key: string, value: unknown, toolName: string) => {
+  if (value == null) {
     return;
   }
 
-  formData.append(key, isObject(value) ? JSON.stringify(value) : String(value));
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      appendQueryValue(url, key, item, toolName);
+    }
+    return;
+  }
+
+  if (!isScalarRequestValue(value)) {
+    throw new ContextLayerError(
+      `Tool '${toolName}' produced an invalid query parameter '${key}'.`,
+      400,
+    );
+  }
+
+  url.searchParams.append(key, String(value));
+};
+
+const resolveHeaderValues = (
+  headersTemplate: Record<string, unknown>,
+  payload: Record<string, unknown>,
+  toolName: string,
+) => {
+  const interpolatedHeaders = (resolveTemplateValue(headersTemplate, payload) as
+    | Record<string, unknown>
+    | undefined) ?? {};
+
+  return Object.fromEntries(
+    Object.entries(interpolatedHeaders)
+      .filter(([, value]) => value != null)
+      .map(([key, value]) => {
+        if (!isScalarRequestValue(value)) {
+          throw new ContextLayerError(
+            `Tool '${toolName}' produced an invalid header '${key}'.`,
+            400,
+          );
+        }
+
+        return [key, String(value)] as const;
+      }),
+  );
 };
 
 const encodeBody = (
@@ -151,7 +214,8 @@ const encodeBody = (
 
   if (contentType === "form_urlencoded") {
     const params = new URLSearchParams();
-    for (const [key, value] of Object.entries((body as Record<string, unknown>) ?? {})) {
+    const bodyRecord = isRecord(body) ? body : {};
+    for (const [key, value] of Object.entries(bodyRecord)) {
       if (value == null) {
         continue;
       }
@@ -166,7 +230,8 @@ const encodeBody = (
 
   if (contentType === "multipart_form_data") {
     const formData = new FormData();
-    for (const [key, value] of Object.entries((body as Record<string, unknown>) ?? {})) {
+    const bodyRecord = isRecord(body) ? body : {};
+    for (const [key, value] of Object.entries(bodyRecord)) {
       appendFormValue(formData, key, value);
     }
 
@@ -218,10 +283,10 @@ const parseResponse = async (response: Response) => {
 
 export class HttpAdapter implements IntegrationAdapter {
   async invoke(input: AdapterInvocationInput) {
-    const apiBaseUrl = (input.integration.config.apiBaseUrl as string | undefined)?.trim();
-    const requestTemplate = input.toolSpec.config.request as
-      | GenericHttpRequestTemplate
-      | undefined;
+    const apiBaseUrl = getOptionalTrimmedString(input.integration.config, "apiBaseUrl");
+    const requestTemplate = isHttpRequestTemplate(input.toolSpec.config["request"])
+      ? input.toolSpec.config["request"]
+      : undefined;
 
     if (!apiBaseUrl) {
       throw new ContextLayerError(
@@ -237,9 +302,17 @@ export class HttpAdapter implements IntegrationAdapter {
       );
     }
 
+    const [validationIssue] = collectHttpTemplateValidationIssues(requestTemplate);
+    if (validationIssue) {
+      throw new ContextLayerError(
+        `Tool '${input.toolSpec.name}' uses an unsupported HTTP request template at ${formatHttpTemplateLocation(validationIssue.path)}: ${validationIssue.message}`,
+        400,
+      );
+    }
+
     const method = requestTemplate.method.toUpperCase();
-    const path = interpolateValue(requestTemplate.path, input.payload);
-    if (typeof path !== "string" || !path.trim()) {
+    const path = resolvePathTemplate(requestTemplate.path, input.payload);
+    if (!path.trim()) {
       throw new ContextLayerError(
         `Tool '${input.toolSpec.name}' produced an invalid request path.`,
         400,
@@ -247,28 +320,20 @@ export class HttpAdapter implements IntegrationAdapter {
     }
 
     const url = new URL(path.replace(/^\//, ""), `${apiBaseUrl.replace(/\/$/, "")}/`);
-    const query = interpolateValue(requestTemplate.query ?? {}, input.payload);
-    if (query && typeof query === "object" && !Array.isArray(query)) {
+    const query = resolveTemplateValue(requestTemplate.query ?? {}, input.payload);
+    if (isRecord(query)) {
       for (const [key, value] of Object.entries(query)) {
-        if (value == null) {
-          continue;
-        }
-        url.searchParams.set(key, String(value));
+        appendQueryValue(url, key, value, input.toolSpec.name);
       }
     }
 
     const headers = {
       ...buildAuthHeaders(input),
-      ...((interpolateValue(requestTemplate.headers ?? {}, input.payload) as
-        | Record<string, string>
-        | undefined) ?? {}),
+      ...resolveHeaderValues(requestTemplate.headers ?? {}, input.payload, input.toolSpec.name),
     };
 
     const contentType = requestTemplate.contentType ?? "json";
-    const encoded = encodeBody(
-      interpolateValue(requestTemplate.body, input.payload),
-      contentType,
-    );
+    const encoded = encodeBody(resolveTemplateValue(requestTemplate.body, input.payload), contentType);
 
     const response = await fetch(url, {
       method,

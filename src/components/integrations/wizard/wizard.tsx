@@ -14,15 +14,15 @@ import {
 } from "@/src/components/integrations/wizard/shared";
 import { useWizardState } from "@/src/components/integrations/wizard/use-wizard-state";
 import { Card } from "@/src/components/ui/card";
-import { filterReadyBuiltInConnectors } from "@/src/lib/integrations/connector-readiness";
+import { filterReadyManagedConnectors } from "@/src/lib/integrations/connector-readiness";
 import type {
-  BuiltInConnectorOption,
+  ManagedConnectorOption,
   IntegrationConnectionStatus,
 } from "@/src/types/context-layer";
 import {
   buildCreatePayload,
   buildDiscoverPayload,
-  hasBuiltInCredentialInput,
+  hasManagedConnectorCredentialInput,
   type DiscoveryResponse,
 } from "@/src/components/integrations/wizard/utils";
 import { type AdminSection } from "@/src/lib/admin-routes";
@@ -40,18 +40,18 @@ export const IntegrationWizard = ({
 }: IntegrationWizardProps) => {
   const searchParams = useSearchParams();
 
-  const builtInConnectorsQuery = useQuery({
-    queryKey: ["built-in-connectors"],
+  const managedConnectorsQuery = useQuery({
+    queryKey: ["managed-connectors"],
     queryFn: () =>
-      fetchJson<BuiltInConnectorOption[]>("/api/integrations/built-in-connectors"),
+      fetchJson<ManagedConnectorOption[]>("/api/integrations/managed-connectors"),
     enabled: true,
     staleTime: 0,
     refetchOnMount: "always",
   });
 
-  const builtInConnectors = useMemo(
-    () => filterReadyBuiltInConnectors(builtInConnectorsQuery.data ?? []),
-    [builtInConnectorsQuery.data],
+  const managedConnectors = useMemo(
+    () => filterReadyManagedConnectors(managedConnectorsQuery.data ?? []),
+    [managedConnectorsQuery.data],
   );
 
   const connectionStatusesQuery = useQuery({
@@ -62,7 +62,7 @@ export const IntegrationWizard = ({
   });
 
   const state = useWizardState({
-    builtInConnectors,
+    managedConnectors,
     onStatus,
     searchParams,
   });
@@ -72,26 +72,26 @@ export const IntegrationWizard = ({
       connectionStatusesQuery.data?.find(
         (connection) =>
           connection.integrationKey ===
-          (state.draft.key.trim() || state.draft.builtInSlug),
+          (state.draft.key.trim() || state.draft.managedConnectorSlug),
       ) ?? null,
-    [connectionStatusesQuery.data, state.draft.builtInSlug, state.draft.key],
+    [connectionStatusesQuery.data, state.draft.managedConnectorSlug, state.draft.key],
   );
 
   const canDiscover =
     !!state.draft.kind &&
     !!state.draft.key.trim() &&
     !!state.draft.name.trim() &&
-    (state.draft.kind === "built_in"
-      ? !!state.draft.builtInSlug.trim() &&
+    (state.draft.kind === "managed"
+      ? !!state.draft.managedConnectorSlug.trim() &&
         (state.requiresOAuthConnection
           ? state.oauthConnectionEnabled && !!effectiveSelectedConnection
-          : hasBuiltInCredentialInput(state.draft, state.selectedConnector))
+          : hasManagedConnectorCredentialInput(state.draft, state.selectedConnector))
       : !!state.draft.serverUrl.trim());
 
   const discoverMutation = useMutation({
     mutationFn: async (input: {
       draft: typeof state.draft;
-      connector: BuiltInConnectorOption | null;
+      connector: ManagedConnectorOption | null;
     }) =>
       fetchJson<DiscoveryResponse>("/api/integrations/discover", {
         method: "POST",
@@ -154,7 +154,7 @@ export const IntegrationWizard = ({
   });
 
   const integrationDisplayName =
-    state.draft.kind === "built_in"
+    state.draft.kind === "managed"
       ? (state.selectedConnector?.name ?? state.draft.name.trim()) || state.draft.key.trim()
       : state.draft.name.trim() || state.draft.key.trim();
 
@@ -192,13 +192,13 @@ export const IntegrationWizard = ({
 
       {state.step === 2 ? (
         <ConnectStep
-          builtInConnectors={builtInConnectors}
-          builtInConnectorsError={
-            builtInConnectorsQuery.isError
-              ? (builtInConnectorsQuery.error as Error).message
+          managedConnectors={managedConnectors}
+          managedConnectorsError={
+            managedConnectorsQuery.isError
+              ? (managedConnectorsQuery.error as Error).message
               : null
           }
-          builtInConnectorsPending={builtInConnectorsQuery.isPending}
+          managedConnectorsPending={managedConnectorsQuery.isPending}
           canDiscover={canDiscover}
           connectorSearch={state.connectorSearch}
           discoverFeedback={state.discoverFeedback}
@@ -236,7 +236,7 @@ export const IntegrationWizard = ({
           toolModes={state.toolModes}
           toolSearch={state.toolSearch}
           hasMatchingTools={state.hasMatchingTools}
-          kind={state.draft.kind ?? "built_in"}
+          kind={state.draft.kind ?? "managed"}
           matchingToolNames={state.matchingToolNames}
           reviewedTools={state.reviewedTools}
           selectedToolCount={state.selectedToolCount}

@@ -36,8 +36,13 @@ const initialConnectors: ManagedConnectorDefinition[] = [
   },
 ];
 
+const baseConnector = initialConnectors[0];
+if (!baseConnector) {
+  throw new Error("Missing managed connector test fixture");
+}
+
 const indexedConnector: ManagedConnectorDefinition = {
-  ...initialConnectors[0],
+  ...baseConnector,
   tools: [
     {
       name: "list_pages",

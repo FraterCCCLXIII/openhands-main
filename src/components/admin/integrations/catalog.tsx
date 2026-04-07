@@ -7,27 +7,27 @@ import { ManagedConnectorList } from "@/src/components/admin/integrations/manage
 import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
 import type {
-  BuiltInConnectorOption,
+  ManagedConnectorOption,
   ManagedConnectorDefinition,
   OAuthProviderCatalogOption,
 } from "@/src/types/context-layer";
 
 interface IntegrationsCatalogProps {
   providerCatalog: OAuthProviderCatalogOption[];
-  initialReadyBuiltInConnectors: BuiltInConnectorOption[];
+  initialReadyManagedConnectors: ManagedConnectorOption[];
   managedConnectors: ManagedConnectorDefinition[];
   canRegisterManagedConnectors: boolean;
   oauthCallbackBaseUrl: string;
 }
 
-const sortReadyBuiltInConnectors = (connectors: BuiltInConnectorOption[]) =>
+const sortReadyManagedConnectors = (connectors: ManagedConnectorOption[]) =>
   [...connectors].sort(
     (left, right) => left.name.localeCompare(right.name) || left.slug.localeCompare(right.slug),
   );
 
-const toReadyBuiltInConnector = (
+const toReadyManagedConnector = (
   connector: ManagedConnectorDefinition,
-): BuiltInConnectorOption => ({
+): ManagedConnectorOption => ({
   slug: connector.slug,
   name: connector.name,
   description: connector.description,
@@ -43,9 +43,9 @@ const toReadyBuiltInConnector = (
   credentialHelp: connector.credentialHelp,
 });
 
-const toDefaultReadyBuiltInConnector = (
+const toDefaultReadyManagedConnector = (
   provider: OAuthProviderCatalogOption,
-): BuiltInConnectorOption | null => {
+): ManagedConnectorOption | null => {
   const defaults = provider.registrationDefaults;
   const authStrategy = defaults?.authStrategy ?? provider.authStrategy;
 
@@ -61,7 +61,7 @@ const toDefaultReadyBuiltInConnector = (
   }
 
   return {
-    slug: provider.builtInSlug ?? provider.slug,
+    slug: provider.managedConnectorSlug ?? provider.slug,
     name: provider.name,
     description: provider.description,
     appUrl: provider.appUrl,
@@ -81,48 +81,48 @@ const toDefaultReadyBuiltInConnector = (
   };
 };
 
-const upsertReadyBuiltInConnector = (
-  connectors: BuiltInConnectorOption[],
-  connector: BuiltInConnectorOption,
+const upsertReadyManagedConnector = (
+  connectors: ManagedConnectorOption[],
+  connector: ManagedConnectorOption,
 ) =>
-  sortReadyBuiltInConnectors([
+  sortReadyManagedConnectors([
     ...connectors.filter((candidate) => candidate.slug !== connector.slug),
     connector,
   ]);
 
 export function IntegrationsCatalog({
   providerCatalog,
-  initialReadyBuiltInConnectors,
+  initialReadyManagedConnectors,
   managedConnectors,
   canRegisterManagedConnectors,
   oauthCallbackBaseUrl,
 }: IntegrationsCatalogProps) {
-  const [readyBuiltInConnectors, setReadyBuiltInConnectors] = useState(() =>
-    sortReadyBuiltInConnectors(initialReadyBuiltInConnectors),
+  const [readyManagedConnectors, setReadyManagedConnectors] = useState(() =>
+    sortReadyManagedConnectors(initialReadyManagedConnectors),
   );
 
-  const defaultReadyBuiltInConnectors = useMemo(
+  const defaultReadyManagedConnectors = useMemo(
     () =>
       new Map(
         providerCatalog
-          .map((provider) => [provider.builtInSlug ?? provider.slug, toDefaultReadyBuiltInConnector(provider)] as const)
-          .filter((entry): entry is [string, BuiltInConnectorOption] => entry[1] != null),
+          .map((provider) => [provider.managedConnectorSlug ?? provider.slug, toDefaultReadyManagedConnector(provider)] as const)
+          .filter((entry): entry is [string, ManagedConnectorOption] => entry[1] != null),
       ),
     [providerCatalog],
   );
 
-  const resetReadyBuiltInConnector = (slug: string) => {
-    setReadyBuiltInConnectors((current) => {
+  const resetReadyManagedConnector = (slug: string) => {
+    setReadyManagedConnectors((current) => {
       const next = current.filter((connector) => connector.slug !== slug);
-      const fallback = defaultReadyBuiltInConnectors.get(slug);
-      return fallback ? upsertReadyBuiltInConnector(next, fallback) : next;
+      const fallback = defaultReadyManagedConnectors.get(slug);
+      return fallback ? upsertReadyManagedConnector(next, fallback) : next;
     });
   };
 
   return (
     <>
       <div className="flex flex-wrap gap-2">
-        {readyBuiltInConnectors.map((connector) => (
+        {readyManagedConnectors.map((connector) => (
           <Badge key={connector.slug}>{connector.name}</Badge>
         ))}
       </div>
@@ -143,16 +143,16 @@ export function IntegrationsCatalog({
             initialManagedConnectors={managedConnectors}
             onConnectorUpdated={(connector) => {
               if (connector.enabled && connector.oauthConfigured !== false) {
-                setReadyBuiltInConnectors((current) =>
-                  upsertReadyBuiltInConnector(current, toReadyBuiltInConnector(connector)),
+                setReadyManagedConnectors((current) =>
+                  upsertReadyManagedConnector(current, toReadyManagedConnector(connector)),
                 );
                 return;
               }
 
-              resetReadyBuiltInConnector(connector.slug);
+              resetReadyManagedConnector(connector.slug);
             }}
             onConnectorDeleted={(connector) => {
-              resetReadyBuiltInConnector(connector.slug);
+              resetReadyManagedConnector(connector.slug);
             }}
           />
         </Card>
@@ -171,12 +171,12 @@ export function IntegrationsCatalog({
 
         <ProviderCatalog
           providerCatalog={providerCatalog}
-          readyBuiltInConnectors={readyBuiltInConnectors}
+          readyManagedConnectors={readyManagedConnectors}
           canRegisterManagedConnectors={canRegisterManagedConnectors}
           oauthCallbackBaseUrl={oauthCallbackBaseUrl}
           onConnectorRegistered={(connector) => {
-            setReadyBuiltInConnectors((current) =>
-              upsertReadyBuiltInConnector(current, connector),
+            setReadyManagedConnectors((current) =>
+              upsertReadyManagedConnector(current, connector),
             );
           }}
         />
