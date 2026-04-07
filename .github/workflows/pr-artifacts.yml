@@ -1,0 +1,169 @@
+---
+name: PR Artifacts
+
+on:
+  workflow_dispatch:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main]
+  pull_request_review:
+    types: [submitted]
+
+jobs:
+  cleanup-on-approval:
+    concurrency:
+      group: cleanup-pr-artifacts-${{ github.event.pull_request.number }}
+      cancel-in-progress: false
+    if: github.event_name == 'pull_request_review' && github.event.review.state == 'approved'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Check if fork PR
+        id: check-fork
+        run: |
+          if [ "${{ github.event.pull_request.head.repo.full_name }}" != "${{ github.event.pull_request.base.repo.full_name }}" ]; then
+            echo "is_fork=true" >> $GITHUB_OUTPUT
+            echo "::notice::Fork PR detected - skipping auto-cleanup (manual removal required)"
+          else
+            echo "is_fork=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Validate PAT token
+        id: validate-pat
+        if: steps.check-fork.outputs.is_fork == 'false'
+        env:
+          PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
+        run: |
+          if [ -z "$PAT_TOKEN" ]; then
+            echo "::error::PAT_TOKEN secret not configured"
+            exit 1
+          fi
+
+          user_json="$(curl -fsSL \
+            -H "Authorization: Bearer $PAT_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/user)" || {
+            echo "::error::Failed to validate PAT_TOKEN against the GitHub API"
+            exit 1
+          }
+
+          python - "$user_json" "$GITHUB_OUTPUT" <<'PY'
+          import json
+          import sys
+
+          user = json.loads(sys.argv[1])
+          login = user.get("login")
+          user_id = user.get("id")
+          if not login or not user_id:
+              print("::error::PAT_TOKEN did not return a usable GitHub user identity")
+              raise SystemExit(1)
+
+          with open(sys.argv[2], "a", encoding="utf-8") as handle:
+              handle.write(f"git_name={login}\n")
+              handle.write(f"git_email={user_id}+{login}@users.noreply.github.com\n")
+          PY
+
+      - uses: actions/checkout@v6
+        if: steps.check-fork.outputs.is_fork == 'false'
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          token: ${{ secrets.PAT_TOKEN }}
+
+      - name: Remove .pr/ directory
+        id: remove
+        if: steps.check-fork.outputs.is_fork == 'false'
+        run: |
+          if [ -d ".pr" ]; then
+            git config user.name "${{ steps.validate-pat.outputs.git_name }}"
+            git config user.email "${{ steps.validate-pat.outputs.git_email }}"
+            git rm -rf .pr/
+            git commit -m "chore: Remove PR-only artifacts [automated]"
+            git push || {
+              echo "::error::Push failed. Check: 1) PAT_TOKEN has push access, 2) branch protection allows cleanup commits, 3) the token has not expired, 4) GitHub was reachable from Actions."
+              exit 1
+            }
+            echo "removed=true" >> $GITHUB_OUTPUT
+            echo "::notice::Removed .pr/ directory"
+          else
+            echo "removed=false" >> $GITHUB_OUTPUT
+            echo "::notice::No .pr/ directory to remove"
+          fi
+
+      - name: Update PR comment after cleanup
+        if: steps.check-fork.outputs.is_fork == 'false' && steps.remove.outputs.removed == 'true'
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const marker = '<!-- pr-artifacts-notice -->';
+            const body = `${marker}
+            ✅ **PR Artifacts Cleaned Up**
+
+            The \`.pr/\` directory has been automatically removed.
+            `;
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const existing = comments.find(c => c.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body: body,
+              });
+            }
+
+  check-pr-artifacts:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Check for .pr/ directory
+        id: check
+        run: |
+          if [ -d ".pr" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "::warning::.pr/ directory exists and will be automatically removed when the PR is approved. For fork PRs, manual removal is required before merging."
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Post or update PR comment
+        if: steps.check.outputs.exists == 'true'
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const marker = '<!-- pr-artifacts-notice -->';
+            const body = `${marker}
+            📁 **PR Artifacts Notice**
+
+            This PR contains a \`.pr/\` directory with PR-specific documents. This directory will be **automatically removed** when the PR is approved.
+
+            > For fork PRs: Manual removal is required before merging.
+            `;
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const existing = comments.find(c => c.body.includes(marker));
+            if (!existing) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: body,
+              });
+            }

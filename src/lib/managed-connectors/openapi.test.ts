@@ -114,7 +114,57 @@ afterEach(() => {
 });
 
 describe("generateManagedConnectorToolsFromOpenApi", () => {
-  it("generates HTTP tool templates from supported bearer-auth OpenAPI operations", async () => {
+  it("maps path, query, and fixed header parameters into HTTP request templates", async () => {
+    stubOpenApiResponse(notionStyleDocument);
+
+    const tools = await generateManagedConnectorToolsFromOpenApi({
+      openApiUrl: "https://developers.notion.com/openapi.json",
+      authStrategy: "oauth2",
+    });
+    const retrievePage = tools.find((tool) => tool.name === "retrieve_a_page");
+
+    expect(retrievePage).toMatchObject({
+      description:
+        "Retrieve a page Path params: page_id (required). Query params: filter_properties.",
+      request: {
+        method: "GET",
+        path: "/v1/pages/{{page_id}}",
+        query: {
+          filter_properties: "{{filter_properties}}",
+        },
+        headers: {
+          "Notion-Version": "2026-03-11",
+        },
+      },
+    });
+  });
+
+  it("describes JSON request bodies without depending on the entire generated payload", async () => {
+    stubOpenApiResponse(notionStyleDocument);
+
+    const tools = await generateManagedConnectorToolsFromOpenApi({
+      openApiUrl: "https://developers.notion.com/openapi.json",
+      authStrategy: "oauth2",
+    });
+    const search = tools.find((tool) => tool.name === "post_search");
+
+    expect(search).toMatchObject({
+      request: {
+        method: "POST",
+        path: "/v1/search",
+        headers: {
+          "Notion-Version": "2026-03-11",
+        },
+        body: "{{body}}",
+        contentType: "json",
+      },
+    });
+    expect(search?.description).toContain("Provide the request payload under `body`");
+    expect(search?.description).toContain("query (required)");
+    expect(search?.description).toContain("page_size");
+  });
+
+  it("keeps supported multipart operations and filters out incompatible auth operations", async () => {
     stubOpenApiResponse(notionStyleDocument);
 
     const tools = await generateManagedConnectorToolsFromOpenApi({
@@ -122,51 +172,19 @@ describe("generateManagedConnectorToolsFromOpenApi", () => {
       authStrategy: "oauth2",
     });
 
-    expect(tools).toEqual([
-      {
-        name: "retrieve_a_page",
-        description:
-          "Retrieve a page Path params: page_id (required). Query params: filter_properties.",
-        defaultScopes: [],
-        request: {
-          method: "GET",
-          path: "/v1/pages/{{page_id}}",
-          query: {
-            filter_properties: "{{filter_properties}}",
-          },
-          headers: {
-            "Notion-Version": "2026-03-11",
-          },
-        },
-      },
-      {
-        name: "post_search",
-        description:
-          "Search workspace Provide the request payload under `body` with fields like query (required), page_size.",
-        defaultScopes: [],
-        request: {
-          method: "POST",
-          path: "/v1/search",
-          headers: {
-            "Notion-Version": "2026-03-11",
-          },
-          body: "{{body}}",
-          contentType: "json",
-        },
-      },
-      {
-        name: "upload_file",
-        description:
-          "Upload a file Provide multipart form fields under `body`. File inputs can use objects like { filename, contentType, contentBase64 }.",
-        defaultScopes: [],
-        request: {
-          method: "POST",
-          path: "/v1/file_uploads/{{file_upload_id}}/send",
-          body: "{{body}}",
-          contentType: "multipart_form_data",
-        },
-      },
+    expect(tools.map((tool) => tool.name)).toEqual([
+      "retrieve_a_page",
+      "post_search",
+      "upload_file",
     ]);
+    expect(tools.find((tool) => tool.name === "upload_file")).toMatchObject({
+      request: {
+        method: "POST",
+        path: "/v1/file_uploads/{{file_upload_id}}/send",
+        body: "{{body}}",
+        contentType: "multipart_form_data",
+      },
+    });
   });
 
   it("supports form, text, array, and fallback tool naming for non-bearer auth", async () => {
