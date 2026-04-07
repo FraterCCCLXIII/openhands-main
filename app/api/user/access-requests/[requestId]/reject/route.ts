@@ -10,13 +10,11 @@ export async function POST(
   { params }: { params: Promise<{ requestId: string }> },
 ) {
   try {
-    const { ownerId } = await authenticateUserApiRequest(request, {
-      requireAdmin: true,
-    });
+    const { ownerId } = await authenticateUserApiRequest(request);
     const { requestId } = await params;
     const service = getContextLayerService();
 
-    return ok(await service.rejectAccessRequest(requestId, ownerId));
+    return ok(await service.rejectOwnerAccessRequest(ownerId, requestId, ownerId));
   } catch (error) {
     return fromUserApiError(error);
   }

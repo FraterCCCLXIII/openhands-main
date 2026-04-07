@@ -270,6 +270,11 @@ const isConnectionExpired = (expiresAt?: string, bufferMs = 60_000) => {
 
 const normalizeAgentApiKeyOwner = normalizeOwnerId;
 
+const getAccessRequestOwnerId = (request: AccessRequest) => {
+  const recipient = request.notificationTargets.in_app?.trim();
+  return recipient ? normalizeAgentApiKeyOwner(recipient) : null;
+};
+
 export interface AccessEvaluationRequest {
   agentId: string | null;
   agentClass: string | null;
@@ -756,6 +761,13 @@ export class ContextLayerService {
   async listAccessRequests() {
     await this.initialize();
     return this.repository.listAccessRequests();
+  }
+
+  async listOwnerAccessRequests(ownerId: string) {
+    const normalizedOwnerId = normalizeAgentApiKeyOwner(ownerId);
+    return (await this.listAccessRequests()).filter(
+      (request) => getAccessRequestOwnerId(request) === normalizedOwnerId,
+    );
   }
 
   async listNotifications() {
@@ -1332,45 +1344,42 @@ export class ContextLayerService {
     approver: string,
     durationMinutes?: number,
   ) {
-    const request = await this.getAccessRequest(requestId);
-    const decidedAt = nowIso();
-    const approvedRequest: AccessRequest = {
-      ...request,
-      status: "approved",
-      decidedAt,
-      decidedBy: approver,
-    };
-    await this.repository.updateAccessRequest(approvedRequest);
+    return this.approveResolvedAccessRequest(
+      await this.getAccessRequest(requestId),
+      approver,
+      durationMinutes,
+    );
+  }
 
-    const grant: TemporaryGrant = {
-      id: randomUUID(),
-      agentId: request.agentId,
-      agentClass: request.agentClass,
-      integrationKey: request.integrationKey,
-      toolName: request.toolName,
-      scopes: request.scopes,
-      grantedBy: approver,
-      createdAt: decidedAt,
-      expiresAt: addMinutes(
-        decidedAt,
-        durationMinutes ?? request.requestedMinutes,
-      ),
-    };
-
-    await this.repository.saveTemporaryGrant(grant);
-    return grant;
+  async approveOwnerAccessRequest(
+    ownerId: string,
+    requestId: string,
+    approver: string,
+    durationMinutes?: number,
+  ) {
+    return this.approveResolvedAccessRequest(
+      await this.getAccessRequestForOwner(requestId, ownerId),
+      approver,
+      durationMinutes,
+    );
   }
 
   async rejectAccessRequest(requestId: string, approver: string) {
-    const request = await this.getAccessRequest(requestId);
-    const rejected: AccessRequest = {
-      ...request,
-      status: "rejected",
-      decidedAt: nowIso(),
-      decidedBy: approver,
-    };
-    await this.repository.updateAccessRequest(rejected);
-    return rejected;
+    return this.rejectResolvedAccessRequest(
+      await this.getAccessRequest(requestId),
+      approver,
+    );
+  }
+
+  async rejectOwnerAccessRequest(
+    ownerId: string,
+    requestId: string,
+    approver: string,
+  ) {
+    return this.rejectResolvedAccessRequest(
+      await this.getAccessRequestForOwner(requestId, ownerId),
+      approver,
+    );
   }
 
   async purgeExpiredGrants() {
@@ -1724,6 +1733,10 @@ export class ContextLayerService {
     agentData?: AccessRequestAgentData;
   }) {
     await this.initialize();
+    const notificationRecipient = ownerId?.trim() || "case-by-case-approvals";
+    const normalizedNotificationRecipient = normalizeAgentApiKeyOwner(
+      notificationRecipient,
+    );
     const pendingRequests = (await this.repository.listAccessRequests()).filter(
       (request) => request.status === "pending",
     );
@@ -1733,7 +1746,8 @@ export class ContextLayerService {
         request.agentClass === agentClass &&
         request.integrationKey === integrationKey &&
         request.toolName === toolName &&
-        sameScopes(request.scopes, scopes),
+        sameScopes(request.scopes, scopes) &&
+        getAccessRequestOwnerId(request) === normalizedNotificationRecipient,
     );
 
     if (existing) {
@@ -1752,8 +1766,6 @@ export class ContextLayerService {
 
       return existing;
     }
-
-    const notificationRecipient = ownerId?.trim() || "case-by-case-approvals";
 
     return this.createAccessRequest({
       agentId,
@@ -1796,5 +1808,66 @@ export class ContextLayerService {
       );
     }
     return request;
+  }
+
+  private async getAccessRequestForOwner(requestId: string, ownerId: string) {
+    const request = await this.getAccessRequest(requestId);
+    const normalizedOwnerId = normalizeAgentApiKeyOwner(ownerId);
+
+    if (getAccessRequestOwnerId(request) !== normalizedOwnerId) {
+      throw new ContextLayerError(
+        `Unknown access request '${requestId}'.`,
+        404,
+      );
+    }
+
+    return request;
+  }
+
+  private async approveResolvedAccessRequest(
+    request: AccessRequest,
+    approver: string,
+    durationMinutes?: number,
+  ) {
+    const decidedAt = nowIso();
+    const approvedRequest: AccessRequest = {
+      ...request,
+      status: "approved",
+      decidedAt,
+      decidedBy: approver,
+    };
+    await this.repository.updateAccessRequest(approvedRequest);
+
+    const grant: TemporaryGrant = {
+      id: randomUUID(),
+      agentId: request.agentId,
+      agentClass: request.agentClass,
+      integrationKey: request.integrationKey,
+      toolName: request.toolName,
+      scopes: request.scopes,
+      grantedBy: approver,
+      createdAt: decidedAt,
+      expiresAt: addMinutes(
+        decidedAt,
+        durationMinutes ?? request.requestedMinutes,
+      ),
+    };
+
+    await this.repository.saveTemporaryGrant(grant);
+    return grant;
+  }
+
+  private async rejectResolvedAccessRequest(
+    request: AccessRequest,
+    approver: string,
+  ) {
+    const rejected: AccessRequest = {
+      ...request,
+      status: "rejected",
+      decidedAt: nowIso(),
+      decidedBy: approver,
+    };
+    await this.repository.updateAccessRequest(rejected);
+    return rejected;
   }
 }

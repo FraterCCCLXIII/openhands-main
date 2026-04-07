@@ -17,7 +17,7 @@ const {
   })),
   serviceMock: {
     listOwnerIntegrationsWithUsage: vi.fn(async () => []),
-    listAccessRequests: vi.fn(async () => [{ id: "req-1" }]),
+    listOwnerAccessRequests: vi.fn(async () => [{ id: "req-1" }]),
     listNotifications: vi.fn(async () => []),
     getOrCreateAgentApiKey: vi.fn(async () => ({ apiKey: "cla_test" })),
     getUserApiKeyStatus: vi.fn(async () => null),
@@ -71,8 +71,8 @@ beforeEach(() => {
   });
   serviceMock.listOwnerIntegrationsWithUsage.mockClear();
   serviceMock.listOwnerIntegrationsWithUsage.mockResolvedValue([]);
-  serviceMock.listAccessRequests.mockClear();
-  serviceMock.listAccessRequests.mockResolvedValue([{ id: "req-1" }]);
+  serviceMock.listOwnerAccessRequests.mockClear();
+  serviceMock.listOwnerAccessRequests.mockResolvedValue([{ id: "req-1" }]);
   serviceMock.listNotifications.mockClear();
   serviceMock.listNotifications.mockResolvedValue([]);
   serviceMock.getOrCreateAgentApiKey.mockClear();
@@ -88,15 +88,15 @@ afterEach(() => {
 });
 
 describe("DashboardPage", () => {
-  it("does not preload access requests for non-admin users", async () => {
+  it("preloads owner-scoped access requests for non-admin users", async () => {
     vi.stubEnv("APP_ADMIN_EMAILS", "admin@example.com");
 
     renderToStaticMarkup(await DashboardPage());
 
-    expect(serviceMock.listAccessRequests).not.toHaveBeenCalled();
+    expect(serviceMock.listOwnerAccessRequests).toHaveBeenCalledWith("user@example.com");
     expect(dashboardWorkspaceMock).toHaveBeenCalledWith(
       expect.objectContaining({
-        initialAccessRequests: [],
+        initialAccessRequests: [{ id: "req-1" }],
         isAdmin: false,
       }),
     );

@@ -30,12 +30,6 @@ const approveAccessRequestSchema = z.object({
   durationMinutes: z.number().int().positive().optional(),
 });
 
-const buildAdminForbiddenResponse = () =>
-  buildJsonRefResponse(
-    "The authenticated user API key does not have admin privileges.",
-    "ErrorResponse",
-  );
-
 export const buildUserOpenApiDocument = ({
   baseUrl,
   integrations,
@@ -56,6 +50,9 @@ export const buildUserOpenApiDocument = ({
   const unauthorizedResponse = buildUnauthorizedResponse(
     "Missing or invalid user automation API key.",
   );
+  const caseByCaseTagDescription = isAdmin
+    ? "Endpoints that let a user review and decide access requests from their own agents. Admins can additionally use the admin API for workspace-wide review."
+    : "Endpoints that let a user review and decide access requests from their own agents.";
 
   const paths: Record<string, Record<string, unknown>> = {
     "/api/user/integrations": {
@@ -114,72 +111,67 @@ export const buildUserOpenApiDocument = ({
     },
   };
 
-  if (isAdmin) {
-    paths["/api/user/access-requests"] = {
-      get: {
-        tags: ["Admin approvals"],
-        operationId: "listUserAccessRequests",
-        summary: "List pending and historical access requests",
-        description:
-          "Admin-only endpoint for reviewing access requests that were submitted through the dashboard or user API.",
-        security,
-        responses: {
-          200: buildJsonArrayRefResponse(
-            "Access requests visible to the admin user.",
-            "AccessRequest",
-          ),
-          401: unauthorizedResponse,
-          403: buildAdminForbiddenResponse(),
-        },
-      },
-    };
-
-    paths["/api/user/access-requests/{requestId}/approve"] = {
-      post: {
-        tags: ["Admin approvals"],
-        operationId: "approveUserAccessRequest",
-        summary: "Approve an access request",
-        description:
-          "Admin-only endpoint that approves a request and creates a temporary grant.",
-        security,
-        parameters: [buildPathParameter("requestId")],
-        requestBody: buildJsonRequestBody(
-          { $ref: "#/components/schemas/ApproveAccessRequest" },
-          { required: false },
+  paths["/api/user/access-requests"] = {
+    get: {
+      tags: ["Case-by-case approvals"],
+      operationId: "listUserAccessRequests",
+      summary: "List your pending and historical access requests",
+      description:
+        "Returns only the case-by-case access requests associated with the authenticated user's own agents.",
+      security,
+      responses: {
+        200: buildJsonArrayRefResponse(
+          "Access requests visible to the authenticated user.",
+          "AccessRequest",
         ),
-        responses: {
-          200: buildJsonRefResponse(
-            "Temporary grant created for the approved request.",
-            "TemporaryGrant",
-          ),
-          401: unauthorizedResponse,
-          403: buildAdminForbiddenResponse(),
-          404: buildJsonRefResponse("Unknown access request.", "ErrorResponse"),
-        },
+        401: unauthorizedResponse,
       },
-    };
+    },
+  };
 
-    paths["/api/user/access-requests/{requestId}/reject"] = {
-      post: {
-        tags: ["Admin approvals"],
-        operationId: "rejectUserAccessRequest",
-        summary: "Reject an access request",
-        description:
-          "Admin-only endpoint that rejects a pending access request.",
-        security,
-        parameters: [buildPathParameter("requestId")],
-        responses: {
-          200: buildJsonRefResponse(
-            "Updated access request after rejection.",
-            "AccessRequest",
-          ),
-          401: unauthorizedResponse,
-          403: buildAdminForbiddenResponse(),
-          404: buildJsonRefResponse("Unknown access request.", "ErrorResponse"),
-        },
+  paths["/api/user/access-requests/{requestId}/approve"] = {
+    post: {
+      tags: ["Case-by-case approvals"],
+      operationId: "approveUserAccessRequest",
+      summary: "Approve one of your access requests",
+      description:
+        "Approves one of the authenticated user's own access requests and creates a temporary grant.",
+      security,
+      parameters: [buildPathParameter("requestId")],
+      requestBody: buildJsonRequestBody(
+        { $ref: "#/components/schemas/ApproveAccessRequest" },
+        { required: false },
+      ),
+      responses: {
+        200: buildJsonRefResponse(
+          "Temporary grant created for the approved request.",
+          "TemporaryGrant",
+        ),
+        401: unauthorizedResponse,
+        404: buildJsonRefResponse("Unknown access request.", "ErrorResponse"),
       },
-    };
-  }
+    },
+  };
+
+  paths["/api/user/access-requests/{requestId}/reject"] = {
+    post: {
+      tags: ["Case-by-case approvals"],
+      operationId: "rejectUserAccessRequest",
+      summary: "Reject one of your access requests",
+      description:
+        "Rejects one of the authenticated user's own pending access requests.",
+      security,
+      parameters: [buildPathParameter("requestId")],
+      responses: {
+        200: buildJsonRefResponse(
+          "Updated access request after rejection.",
+          "AccessRequest",
+        ),
+        401: unauthorizedResponse,
+        404: buildJsonRefResponse("Unknown access request.", "ErrorResponse"),
+      },
+    },
+  };
 
   return {
     openapi: OPENAPI_VERSION,
@@ -196,15 +188,10 @@ export const buildUserOpenApiDocument = ({
         description:
           "Endpoints that read and update the authenticated user's installed integration settings.",
       },
-      ...(isAdmin
-        ? [
-            {
-              name: "Admin approvals",
-              description:
-                "Admin-only endpoints for reviewing and deciding access requests.",
-            },
-          ]
-        : []),
+      {
+        name: "Case-by-case approvals",
+        description: caseByCaseTagDescription,
+      },
     ],
     paths,
     components: {

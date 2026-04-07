@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import { fromError, ok } from "@/src/lib/api";
-import { requireAppAdminSession } from "@/src/lib/app-admin-session";
+import { getCurrentUserIdentity } from "@/src/lib/current-user";
 import { getContextLayerService } from "@/src/lib/core/runtime";
 
 const approveSchema = z.object({
@@ -13,12 +13,13 @@ export async function POST(
   { params }: { params: Promise<{ requestId: string }> },
 ) {
   try {
-    const { ownerId } = await requireAppAdminSession();
+    const { ownerId } = await getCurrentUserIdentity();
     const payload = approveSchema.parse(await request.json());
     const { requestId } = await params;
     const service = getContextLayerService();
     return ok(
-      await service.approveAccessRequest(
+      await service.approveOwnerAccessRequest(
+        ownerId,
         requestId,
         ownerId,
         payload.durationMinutes,

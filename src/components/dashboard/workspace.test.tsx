@@ -2081,7 +2081,7 @@ describe("DashboardWorkspace", () => {
       },
     ];
 
-    let rejectPayload: { approver: string } | null = null;
+    let rejectPayload: Record<string, unknown> | null = null;
     fetchMock.mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = typeof input === "string" ? input : input.toString();
       const method = init?.method ?? "GET";
@@ -2093,15 +2093,15 @@ describe("DashboardWorkspace", () => {
         });
       }
 
-      if (url === "/api/access-requests" && method === "GET") {
+      if (url === "/api/case-by-case-approvals" && method === "GET") {
         return new Response(JSON.stringify(accessRequestsState), {
           status: 200,
           headers: { "Content-Type": "application/json" },
         });
       }
 
-      if (url === "/api/access-requests/req-pending/reject" && method === "POST") {
-        rejectPayload = JSON.parse(String(init?.body)) as { approver: string };
+      if (url === "/api/case-by-case-approvals/req-pending/reject" && method === "POST") {
+        rejectPayload = JSON.parse(String(init?.body)) as Record<string, unknown>;
         return new Response(JSON.stringify({ detail: "Reject failed." }), {
           status: 500,
           headers: { "Content-Type": "application/json" },
@@ -2155,7 +2155,7 @@ describe("DashboardWorkspace", () => {
       await Promise.resolve();
     });
 
-    expect(rejectPayload).toEqual({ approver: "human-approver" });
+    expect(rejectPayload).toEqual({});
     expect(container.textContent).toContain("Reject failed.");
 
     usePathnameMock.mockReturnValue("/integrations");

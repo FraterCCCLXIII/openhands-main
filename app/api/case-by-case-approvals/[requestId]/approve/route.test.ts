@@ -1,11 +1,14 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { authMock } = vi.hoisted(() => ({
-  authMock: vi.fn(async () => ({ user: { email: "admin@example.com" } })),
+const { getCurrentUserIdentityMock } = vi.hoisted(() => ({
+  getCurrentUserIdentityMock: vi.fn(async () => ({
+    user: { email: "owner@example.com" },
+    ownerId: "owner@example.com",
+  })),
 }));
 
-vi.mock("@/src/lib/auth", () => ({
-  auth: authMock,
+vi.mock("@/src/lib/current-user", () => ({
+  getCurrentUserIdentity: getCurrentUserIdentityMock,
 }));
 
 vi.mock("@neondatabase/serverless", () => ({ neon: () => getActiveSql() }));
@@ -36,8 +39,11 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
-  authMock.mockReset();
-  authMock.mockResolvedValue({ user: { email: "admin@example.com" } });
+  getCurrentUserIdentityMock.mockReset();
+  getCurrentUserIdentityMock.mockResolvedValue({
+    user: { email: "owner@example.com" },
+    ownerId: "owner@example.com",
+  });
   vi.unstubAllEnvs();
   vi.stubEnv("POSTGRES_URL", "pglite://case-by-case-approvals-approve-route-test");
   resetRuntime();
@@ -45,27 +51,7 @@ afterEach(async () => {
 });
 
 describe("POST /api/case-by-case-approvals/[requestId]/approve", () => {
-  it("rejects non-admin dashboard sessions", async () => {
-    vi.stubEnv("APP_ADMIN_EMAILS", "admin@example.com");
-    authMock.mockResolvedValue({ user: { email: "user@example.com" } });
-
-    const response = await POST(
-      new Request("http://localhost/api/case-by-case-approvals/req-1/approve", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ durationMinutes: 10 }),
-      }),
-      { params: Promise.resolve({ requestId: "req-1" }) },
-    );
-
-    expect(response.status).toBe(403);
-    await expect(response.json()).resolves.toMatchObject({
-      detail: "Only app administrators can manage access requests.",
-    });
-  });
-
-  it("records the authenticated admin even when the client submits a spoofed approver", async () => {
-    vi.stubEnv("APP_ADMIN_EMAILS", "admin@example.com");
+  it("approves the signed-in user's own request and derives the approver from the session", async () => {
     const service = getContextLayerService();
     const request = await service.createAccessRequest({
       agentId: "bot-1",
@@ -75,7 +61,7 @@ describe("POST /api/case-by-case-approvals/[requestId]/approve", () => {
       scopes: ["repo:admin"],
       requestedMinutes: 30,
       channels: ["in_app"],
-      notificationTargets: {},
+      notificationTargets: { in_app: "owner@example.com" },
       justification: "Need cleanup rights",
     });
 
@@ -93,13 +79,42 @@ describe("POST /api/case-by-case-approvals/[requestId]/approve", () => {
     const grant = (await response.json()) as { grantedBy: string };
 
     expect(response.status).toBe(200);
-    expect(grant.grantedBy).toBe("admin@example.com");
+    expect(grant.grantedBy).toBe("owner@example.com");
     await expect(service.listAccessRequests()).resolves.toMatchObject([
       expect.objectContaining({
         id: request.id,
         status: "approved",
-        decidedBy: "admin@example.com",
+        decidedBy: "owner@example.com",
       }),
     ]);
+  });
+
+  it("does not allow a user to approve another owner's request", async () => {
+    const service = getContextLayerService();
+    const request = await service.createAccessRequest({
+      agentId: "bot-2",
+      agentClass: "assistant",
+      integrationKey: "github",
+      toolName: "delete_repo",
+      scopes: ["repo:admin"],
+      requestedMinutes: 30,
+      channels: ["in_app"],
+      notificationTargets: { in_app: "other@example.com" },
+      justification: "Need cleanup rights",
+    });
+
+    const response = await POST(
+      new Request(`http://localhost/api/case-by-case-approvals/${request.id}/approve`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ durationMinutes: 10 }),
+      }),
+      { params: Promise.resolve({ requestId: request.id }) },
+    );
+
+    expect(response.status).toBe(404);
+    await expect(response.json()).resolves.toMatchObject({
+      detail: `Unknown access request '${request.id}'.`,
+    });
   });
 });

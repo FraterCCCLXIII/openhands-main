@@ -1,5 +1,5 @@
 import { fromError, ok } from "@/src/lib/api";
-import { requireAppAdminSession } from "@/src/lib/app-admin-session";
+import { getCurrentUserIdentity } from "@/src/lib/current-user";
 import { getContextLayerService } from "@/src/lib/core/runtime";
 
 export async function POST(
@@ -7,11 +7,11 @@ export async function POST(
   { params }: { params: Promise<{ requestId: string }> },
 ) {
   try {
-    const { ownerId } = await requireAppAdminSession();
+    const { ownerId } = await getCurrentUserIdentity();
     await request.json().catch(() => ({}));
     const { requestId } = await params;
     const service = getContextLayerService();
-    return ok(await service.rejectAccessRequest(requestId, ownerId));
+    return ok(await service.rejectOwnerAccessRequest(ownerId, requestId, ownerId));
   } catch (error) {
     return fromError(error);
   }

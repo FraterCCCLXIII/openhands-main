@@ -1,11 +1,14 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { authMock } = vi.hoisted(() => ({
-  authMock: vi.fn(async () => ({ user: { email: "admin@example.com" } })),
+const { getCurrentUserIdentityMock } = vi.hoisted(() => ({
+  getCurrentUserIdentityMock: vi.fn(async () => ({
+    user: { email: "owner@example.com" },
+    ownerId: "owner@example.com",
+  })),
 }));
 
-vi.mock("@/src/lib/auth", () => ({
-  auth: authMock,
+vi.mock("@/src/lib/current-user", () => ({
+  getCurrentUserIdentity: getCurrentUserIdentityMock,
 }));
 
 vi.mock("@neondatabase/serverless", () => ({ neon: () => getActiveSql() }));
@@ -36,8 +39,11 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
-  authMock.mockReset();
-  authMock.mockResolvedValue({ user: { email: "admin@example.com" } });
+  getCurrentUserIdentityMock.mockReset();
+  getCurrentUserIdentityMock.mockResolvedValue({
+    user: { email: "owner@example.com" },
+    ownerId: "owner@example.com",
+  });
   vi.unstubAllEnvs();
   vi.stubEnv("POSTGRES_URL", "pglite://case-by-case-approvals-reject-route-test");
   resetRuntime();
@@ -45,8 +51,7 @@ afterEach(async () => {
 });
 
 describe("POST /api/case-by-case-approvals/[requestId]/reject", () => {
-  it("records the authenticated admin as the rejecting reviewer", async () => {
-    vi.stubEnv("APP_ADMIN_EMAILS", "admin@example.com");
+  it("rejects the signed-in user's own request and derives the reviewer from the session", async () => {
     const service = getContextLayerService();
     const request = await service.createAccessRequest({
       agentId: "bot-1",
@@ -56,7 +61,7 @@ describe("POST /api/case-by-case-approvals/[requestId]/reject", () => {
       scopes: ["repo:admin"],
       requestedMinutes: 30,
       channels: ["in_app"],
-      notificationTargets: {},
+      notificationTargets: { in_app: "owner@example.com" },
       justification: "Need cleanup rights",
     });
 
@@ -72,7 +77,7 @@ describe("POST /api/case-by-case-approvals/[requestId]/reject", () => {
 
     expect(response.status).toBe(200);
     expect(rejected).toMatchObject({
-      decidedBy: "admin@example.com",
+      decidedBy: "owner@example.com",
       status: "rejected",
     });
   });

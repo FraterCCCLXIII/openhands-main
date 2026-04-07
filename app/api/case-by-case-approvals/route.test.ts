@@ -1,11 +1,14 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { authMock } = vi.hoisted(() => ({
-  authMock: vi.fn(async () => ({ user: { email: "admin@example.com" } })),
+const { getCurrentUserIdentityMock } = vi.hoisted(() => ({
+  getCurrentUserIdentityMock: vi.fn(async () => ({
+    user: { email: "owner@example.com" },
+    ownerId: "owner@example.com",
+  })),
 }));
 
-vi.mock("@/src/lib/auth", () => ({
-  auth: authMock,
+vi.mock("@/src/lib/current-user", () => ({
+  getCurrentUserIdentity: getCurrentUserIdentityMock,
 }));
 
 vi.mock("@neondatabase/serverless", () => ({ neon: () => getActiveSql() }));
@@ -36,8 +39,11 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
-  authMock.mockReset();
-  authMock.mockResolvedValue({ user: { email: "admin@example.com" } });
+  getCurrentUserIdentityMock.mockReset();
+  getCurrentUserIdentityMock.mockResolvedValue({
+    user: { email: "owner@example.com" },
+    ownerId: "owner@example.com",
+  });
   vi.unstubAllEnvs();
   vi.stubEnv("POSTGRES_URL", "pglite://case-by-case-approvals-route-test");
   resetRuntime();
@@ -45,22 +51,9 @@ afterEach(async () => {
 });
 
 describe("/api/case-by-case-approvals", () => {
-  it("rejects non-admin dashboard sessions", async () => {
-    vi.stubEnv("APP_ADMIN_EMAILS", "admin@example.com");
-    authMock.mockResolvedValue({ user: { email: "user@example.com" } });
-
-    const response = await GET();
-
-    expect(response.status).toBe(403);
-    await expect(response.json()).resolves.toMatchObject({
-      detail: "Only app administrators can manage access requests.",
-    });
-  });
-
-  it("lets allowlisted admins list existing access requests", async () => {
-    vi.stubEnv("APP_ADMIN_EMAILS", "admin@example.com,ops@example.com");
+  it("lists only the signed-in user's own case-by-case requests", async () => {
     const service = getContextLayerService();
-    const created = await service.createAccessRequest({
+    const ownRequest = await service.createAccessRequest({
       agentId: "agent-1",
       agentClass: "assistant",
       integrationKey: "github",
@@ -71,13 +64,29 @@ describe("/api/case-by-case-approvals", () => {
       notificationTargets: { in_app: "owner@example.com" },
       justification: "Need repo cleanup access",
     });
+    await service.createAccessRequest({
+      agentId: "agent-2",
+      agentClass: "assistant",
+      integrationKey: "slack",
+      toolName: "send_message",
+      scopes: ["chat:write"],
+      requestedMinutes: 15,
+      channels: ["in_app"],
+      notificationTargets: { in_app: "other@example.com" },
+      justification: "Need to post updates",
+    });
 
-    const listResponse = await GET();
-    const listed = (await listResponse.json()) as Array<{ id: string; status: string }>;
+    const response = await GET();
+    const listed = (await response.json()) as Array<{
+      id: string;
+      notificationTargets: { in_app?: string };
+    }>;
 
-    expect(listResponse.status).toBe(200);
-    expect(listed).toContainEqual(
-      expect.objectContaining({ id: created.id, status: "pending" }),
-    );
+    expect(response.status).toBe(200);
+    expect(listed).toHaveLength(1);
+    expect(listed[0]).toMatchObject({
+      id: ownRequest.id,
+      notificationTargets: { in_app: "owner@example.com" },
+    });
   });
 });

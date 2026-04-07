@@ -1,12 +1,12 @@
 import { fromError, ok } from "@/src/lib/api";
-import { requireAppAdminSession } from "@/src/lib/app-admin-session";
+import { getCurrentUserIdentity } from "@/src/lib/current-user";
 import { getContextLayerService } from "@/src/lib/core/runtime";
 
 export async function GET() {
   try {
-    await requireAppAdminSession();
+    const { ownerId } = await getCurrentUserIdentity();
     const service = getContextLayerService();
-    return ok(await service.listAccessRequests());
+    return ok(await service.listOwnerAccessRequests(ownerId));
   } catch (error) {
     return fromError(error);
   }

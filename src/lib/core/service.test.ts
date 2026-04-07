@@ -22,7 +22,7 @@ import { createTestRepository, getActiveSql } from "@/src/lib/db/pglite-test-uti
 import { NotificationPublisher } from "@/src/lib/notifications/publisher";
 import * as discoveryModule from "@/src/lib/integrations/discovery";
 import * as providerResolverModule from "@/src/lib/oauth/provider-resolver";
-import type { IntegrationSpec } from "@/src/types/context-layer";
+import type { IntegrationSpec, ToolSpec } from "@/src/types/context-layer";
 
 vi.mock("@neondatabase/serverless", () => ({ neon: () => getActiveSql() }));
 
@@ -735,6 +735,115 @@ describe("ContextLayerService", () => {
       new Set(["owner@example.com", "+15551234567", "ops-inbox"]),
     );
   });
+
+  it("lists only owner-scoped access requests for the requested user", async () => {
+    const service = createService();
+
+    const ownRequest = await service.createAccessRequest({
+      agentId: "agent-2",
+      agentClass: "reviewer",
+      integrationKey: "salesforce",
+      toolName: "accounts",
+      scopes: ["accounts.read"],
+      requestedMinutes: 45,
+      channels: ["in_app"],
+      notificationTargets: {
+        in_app: OWNER_ID,
+      },
+      justification: "Need temporary access",
+    });
+    await service.createAccessRequest({
+      agentId: "agent-3",
+      agentClass: "reviewer",
+      integrationKey: "salesforce",
+      toolName: "accounts",
+      scopes: ["accounts.read"],
+      requestedMinutes: 45,
+      channels: ["in_app"],
+      notificationTargets: {
+        in_app: "other@example.com",
+      },
+      justification: "Need temporary access",
+    });
+
+    await expect(service.listOwnerAccessRequests(OWNER_ID)).resolves.toEqual([
+      expect.objectContaining({
+        id: ownRequest.id,
+        notificationTargets: {
+          in_app: OWNER_ID,
+        },
+      }),
+    ]);
+  });
+
+  it("creates separate pending access requests for different owners", async () => {
+    const repository = testRepo;
+    const service = new ContextLayerService(
+      repository,
+      new AdapterRegistry({
+        http: { invoke: async () => ({ ok: true }) },
+        mock: { invoke: async () => ({}) },
+      }),
+      new NotificationPublisher(repository),
+    );
+    const approvalRequiredAccountsTool: ToolSpec = {
+      name: "accounts",
+      description: "List accounts",
+      enabled: true,
+      fineGrainedPermissions: true,
+      defaultScopes: ["accounts.read"],
+      executionMode: "provider",
+      config: {},
+      accessMode: "approval_required",
+    };
+    const approvalRequiredIntegration: IntegrationSpec = {
+      ...baseIntegration,
+      tools: {
+        accounts: approvalRequiredAccountsTool,
+      },
+    };
+    await installIntegration(service, approvalRequiredIntegration, OWNER_ID);
+    await installIntegration(
+      service,
+      approvalRequiredIntegration,
+      "other@example.com",
+    );
+
+    await expect(
+      service.invokeContext(
+        "shared-agent",
+        "writer",
+        "salesforce",
+        "accounts",
+        {},
+        ["accounts.read"],
+        { ownerId: OWNER_ID },
+      ),
+    ).rejects.toThrow("Permission required");
+    await expect(
+      service.invokeContext(
+        "shared-agent",
+        "writer",
+        "salesforce",
+        "accounts",
+        {},
+        ["accounts.read"],
+        { ownerId: "other@example.com" },
+      ),
+    ).rejects.toThrow("Permission required");
+
+    await expect(repository.listAccessRequests()).resolves.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          notificationTargets: { in_app: OWNER_ID },
+        }),
+        expect.objectContaining({
+          notificationTargets: { in_app: "other@example.com" },
+        }),
+      ]),
+    );
+  });
+
 
   it("grants temporary access until expiry for case-by-case functions", async () => {
     const repository = testRepo;

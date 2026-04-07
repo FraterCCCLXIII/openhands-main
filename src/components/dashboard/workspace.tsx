@@ -128,13 +128,8 @@ export const DashboardWorkspace = ({
   }, [searchParams]);
 
   useEffect(() => {
-    const nextSection = getAdminSectionFromPath(pathname);
-    setActiveSection(
-      !isAdmin && nextSection === "caseByCaseApprovals"
-        ? "integrations"
-        : nextSection,
-    );
-  }, [isAdmin, pathname]);
+    setActiveSection(getAdminSectionFromPath(pathname));
+  }, [pathname]);
 
   useEffect(() => {
     if (searchParams.get("showIntegrationWizard") === "1") {
@@ -160,7 +155,7 @@ export const DashboardWorkspace = ({
     queryKey: ["access-requests"],
     queryFn: () => fetchJson<AccessRequest[]>("/api/case-by-case-approvals"),
     initialData: initialAccessRequests,
-    enabled: isAdmin,
+    enabled: activeSection === "caseByCaseApprovals",
   });
 
   const invalidateAll = async () => {
@@ -292,7 +287,7 @@ export const DashboardWorkspace = ({
     currentUser.email === "dev@localhost"
       ? "Local development session"
       : "Authenticated dashboard session";
-  const sections = getDashboardSections(isAdmin);
+  const sections = getDashboardSections();
   const activeSectionMeta =
     sections.find((section) => section.id === activeSection) ?? {
       id: activeSection,
@@ -554,7 +549,6 @@ export const DashboardWorkspace = ({
         badge={<Badge>{enabledIntegrationCount} live</Badge>}
         activeItem={activeSection}
         showAdminIntegrationsLink={isAdmin}
-        showApprovalsLink={isAdmin}
         footer={
           <DashboardSidebarUserPanel
             userName={userName}
