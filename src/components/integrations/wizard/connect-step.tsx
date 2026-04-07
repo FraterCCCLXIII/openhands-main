@@ -2,7 +2,7 @@ import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
 import { buildAdminSectionHref, type AdminSection } from "@/src/lib/admin-routes";
 import type {
-  BuiltInConnectorOption,
+  ManagedConnectorOption,
   IntegrationConnectionStatus,
 } from "@/src/types/context-layer";
 import {
@@ -15,9 +15,9 @@ import {
 import { WizardFeedback } from "@/src/components/integrations/wizard/shared";
 
 interface ConnectStepProps {
-  builtInConnectors: BuiltInConnectorOption[];
-  builtInConnectorsError?: string | null;
-  builtInConnectorsPending: boolean;
+  managedConnectors: ManagedConnectorOption[];
+  managedConnectorsError?: string | null;
+  managedConnectorsPending: boolean;
   canDiscover: boolean;
   connectorSearch: string;
   discoverFeedback: DiscoverFeedback | null;
@@ -27,7 +27,7 @@ interface ConnectStepProps {
   redirectSection: AdminSection;
   requiresOAuthConnection: boolean;
   selectedConnection: IntegrationConnectionStatus | null;
-  selectedConnector: BuiltInConnectorOption | null;
+  selectedConnector: ManagedConnectorOption | null;
   setDraft: React.Dispatch<React.SetStateAction<WizardDraft>>;
   onBack: () => void;
   onConnectorSearchChange: (value: string) => void;
@@ -35,9 +35,9 @@ interface ConnectStepProps {
 }
 
 export const ConnectStep = ({
-  builtInConnectors,
-  builtInConnectorsError,
-  builtInConnectorsPending,
+  managedConnectors,
+  managedConnectorsError,
+  managedConnectorsPending,
   canDiscover,
   connectorSearch,
   discoverFeedback,
@@ -53,29 +53,29 @@ export const ConnectStep = ({
   onConnectorSearchChange,
   onDiscover,
 }: ConnectStepProps) => {
-  const builtInAuthStrategy = selectedConnector?.authStrategy ?? null;
+  const managedConnectorAuthStrategy = selectedConnector?.authStrategy ?? null;
 
   return (
     <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
       <div className="grid gap-4">
-        {draft.kind === "built_in" ? (
+        {draft.kind === "managed" ? (
           <>
             <label className="grid gap-2 text-sm text-white">
-              <span className="font-medium">Built-in connector</span>
+              <span className="font-medium">Managed connector</span>
               <input
                 className={integrationWizardInputClassName}
-                list="built-in-connector-options"
+                list="managed-connector-options"
                 placeholder={
-                  builtInConnectorsPending
+                  managedConnectorsPending
                     ? "Loading supported connectors..."
                     : "Choose GitHub, Notion, Slack..."
                 }
                 value={connectorSearch}
                 onChange={(event) => onConnectorSearchChange(event.target.value)}
-                disabled={builtInConnectorsPending}
+                disabled={managedConnectorsPending}
               />
-              <datalist id="built-in-connector-options">
-                {builtInConnectors.map((connector) => (
+              <datalist id="managed-connector-options">
+                {managedConnectors.map((connector) => (
                   <option
                     key={connector.slug}
                     value={`${connector.name} (${connector.slug})`}
@@ -98,9 +98,9 @@ export const ConnectStep = ({
               </span>
             </label>
 
-            {builtInConnectorsError ? (
+            {managedConnectorsError ? (
               <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-4 text-sm text-amber-200">
-                {builtInConnectorsError}
+                {managedConnectorsError}
               </div>
             ) : null}
 
@@ -140,14 +140,15 @@ export const ConnectStep = ({
                       </div>
                       <Button
                         className="h-9 rounded-lg px-4 text-xs"
-                        disabled={!draft.builtInSlug.trim() || !oauthConnectionEnabled}
+                        disabled={!draft.managedConnectorSlug.trim() || !oauthConnectionEnabled}
                         onClick={() => {
                           window.location.href = `/api/oauth/${selectedConnector.slug}/start?integrationKey=${encodeURIComponent(
                             draft.key.trim() || selectedConnector.slug,
                           )}&redirectTo=${encodeURIComponent(
                             buildAdminSectionHref(redirectSection, {
                               showIntegrationWizard: "1",
-                              builtIn: draft.builtInSlug || selectedConnector.slug,
+                              managedConnector:
+                                draft.managedConnectorSlug || selectedConnector.slug,
                             }),
                           )}`;
                         }}
@@ -187,7 +188,7 @@ export const ConnectStep = ({
                       key: event.target.value,
                     }))
                   }
-                  disabled={!draft.builtInSlug.trim()}
+                  disabled={!draft.managedConnectorSlug.trim()}
                 />
                 <span className="text-xs leading-6 text-[var(--color-text-base)]">
                   Edit this if you want more than one saved connection for the same
@@ -207,7 +208,7 @@ export const ConnectStep = ({
                       name: event.target.value,
                     }))
                   }
-                  disabled={!draft.builtInSlug.trim()}
+                  disabled={!draft.managedConnectorSlug.trim()}
                 />
               </label>
             </div>
@@ -220,7 +221,7 @@ export const ConnectStep = ({
                     ? `${selectedConnector?.name} is connected. Click Discover to save this integration with your stored OAuth credentials.`
                     : `Connect ${selectedConnector?.name ?? "this provider"} before discovering tools.`}
               </div>
-            ) : builtInAuthStrategy === "api_key" ? (
+            ) : managedConnectorAuthStrategy === "api_key" ? (
               <div className="grid gap-4 md:grid-cols-2">
                 <label className="grid gap-2 text-sm text-white md:col-span-2">
                   <span className="font-medium">
@@ -239,7 +240,7 @@ export const ConnectStep = ({
                         apiKey: event.target.value,
                       }))
                     }
-                    disabled={!draft.builtInSlug.trim()}
+                    disabled={!draft.managedConnectorSlug.trim()}
                   />
                   <span className="text-xs leading-6 text-[var(--color-text-base)]">
                     {selectedConnector?.credentialHelp ??
@@ -263,12 +264,12 @@ export const ConnectStep = ({
                           headerName: event.target.value,
                         }))
                       }
-                      disabled={!draft.builtInSlug.trim()}
+                      disabled={!draft.managedConnectorSlug.trim()}
                     />
                   </label>
                 )}
               </div>
-            ) : builtInAuthStrategy === "basic" ? (
+            ) : managedConnectorAuthStrategy === "basic" ? (
               <div className="grid gap-4 md:grid-cols-2">
                 <label className="grid gap-2 text-sm text-white">
                   <span className="font-medium">Username</span>
@@ -282,7 +283,7 @@ export const ConnectStep = ({
                         username: event.target.value,
                       }))
                     }
-                    disabled={!draft.builtInSlug.trim()}
+                    disabled={!draft.managedConnectorSlug.trim()}
                   />
                 </label>
                 <label className="grid gap-2 text-sm text-white">
@@ -298,7 +299,7 @@ export const ConnectStep = ({
                         password: event.target.value,
                       }))
                     }
-                    disabled={!draft.builtInSlug.trim()}
+                    disabled={!draft.managedConnectorSlug.trim()}
                   />
                 </label>
                 <div className="text-xs leading-6 text-[var(--color-text-base)] md:col-span-2">
@@ -306,7 +307,7 @@ export const ConnectStep = ({
                     "Provide the provider credentials that this managed connector should use upstream."}
                 </div>
               </div>
-            ) : builtInAuthStrategy === "none" ? (
+            ) : managedConnectorAuthStrategy === "none" ? (
               <div className="rounded-xl border border-dashed border-[var(--color-border)] px-4 py-4 text-sm text-[var(--color-text-base)]">
                 No provider credential is required for {selectedConnector?.name ?? "this connector"}. Click Discover to load the available tools.
               </div>
@@ -327,7 +328,7 @@ export const ConnectStep = ({
                       accessToken: event.target.value,
                     }))
                   }
-                  disabled={!draft.builtInSlug.trim()}
+                  disabled={!draft.managedConnectorSlug.trim()}
                 />
                 <span className="text-xs leading-6 text-[var(--color-text-base)]">
                   {selectedConnector?.credentialHelp ??
@@ -494,7 +495,7 @@ export const ConnectStep = ({
 
       <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-5 text-sm leading-7 text-[var(--color-text-base)]">
         <p className="font-semibold text-white">What happens in this step</p>
-        {draft.kind === "built_in" ? (
+        {draft.kind === "managed" ? (
           <ul className="mt-3 space-y-2">
             <li>• The dashboard loads the managed connectors registered for this service.</li>
             <li>• Choosing a connector auto-fills the integration key and display name, while still letting you customize them if needed.</li>
