@@ -2,6 +2,7 @@ import { decryptCredentials } from "@/src/lib/credential-crypto";
 import { ContextLayerError } from "@/src/lib/core/errors";
 import type { ContextRepository } from "@/src/lib/core/repository";
 import { buildMcpHeaders, runMcpClientOperation } from "@/src/lib/mcp-client";
+import { getMcpTransportOrder } from "@/src/lib/mcp-transport-policy";
 import {
   buildManagedConnectorToolSpecs,
   buildManagedConnectorTools,
@@ -334,12 +335,15 @@ const discoverMcpIntegration = async (
     "listTools",
     (client) => client.listTools(),
     {
-      authStrategy,
-      credentials,
-      integrationKey: input.key,
-      managedConnectorSlug:
-        getOptionalTrimmedString(input.config, "managedConnectorSlug") ??
-        getOptionalTrimmedString(input.config, "builtInSlug"),
+      debugContext: {
+        authStrategy,
+        credentials,
+        integrationKey: input.key,
+        managedConnectorSlug:
+          getOptionalTrimmedString(input.config, "managedConnectorSlug") ??
+          getOptionalTrimmedString(input.config, "builtInSlug"),
+      },
+      transportOrder: getMcpTransportOrder(serverUrl, input.config),
     },
   );
   const tools = Object.fromEntries(
