@@ -279,9 +279,7 @@ export const buildInstalledIntegrationKeys = (integrations: IntegrationSpec[]) =
       const managedConnectorSlug =
         typeof integration.config.managedConnectorSlug === "string"
           ? integration.config.managedConnectorSlug.trim()
-          : typeof integration.config.builtInSlug === "string"
-            ? integration.config.builtInSlug.trim()
-            : "";
+          : "";
 
       return [integration.key, managedConnectorSlug].filter(Boolean);
     }),
@@ -350,9 +348,7 @@ export const resolveIntegrationLogoUrl = ({
   const managedConnectorSlug =
     typeof integration.config.managedConnectorSlug === "string"
       ? integration.config.managedConnectorSlug.trim()
-      : typeof integration.config.builtInSlug === "string"
-        ? integration.config.builtInSlug.trim()
-        : "";
+      : "";
   const connector =
     connectorBySlug.get(managedConnectorSlug) ?? connectorBySlug.get(integration.key.trim());
 

@@ -306,4 +306,159 @@ describe("runMcpClientOperation", () => {
       ],
     });
   });
+
+  it("supports oauth2, default api-key, and basic auth header construction", () => {
+    expect(buildMcpHeaders("oauth2", { accessToken: "oauth-token" })).toEqual({
+      Authorization: "Bearer oauth-token",
+    });
+    expect(buildMcpHeaders("api_key", { secret: "sk_default" })).toEqual({
+      "X-API-Key": "sk_default",
+    });
+    expect(
+      buildMcpHeaders("basic", {
+        username: "demo",
+        password: "s3cret",
+      }),
+    ).toEqual({
+      Authorization: `Basic ${Buffer.from("demo:s3cret").toString("base64")}`,
+    });
+  });
+
+  it("retries a configured fallback transport and ignores transport close errors", async () => {
+    connectMock.mockImplementation((transport: { kind: string }) => {
+      if (transport.kind === "streamable_http") {
+        return Promise.reject(new Error("streamable failed"));
+      }
+
+      return Promise.resolve();
+    });
+    closeMock.mockRejectedValue(new Error("close failed"));
+    listToolsMock.mockResolvedValue({
+      tools: [{ name: "search", description: "Search pages" }],
+    });
+
+    await expect(
+      runMcpClientOperation(
+        "https://mcp.acme.test/mcp",
+        { Authorization: "Bearer acme-token" },
+        "listTools",
+        (client) => client.listTools(),
+        {
+          transportOrder: [
+            {
+              transport: "streamable_http",
+              url: "https://mcp.acme.test/mcp",
+            },
+            {
+              transport: "sse",
+              url: "https://mcp.acme.test/sse",
+            },
+          ],
+        },
+      ),
+    ).resolves.toEqual({
+      tools: [{ name: "search", description: "Search pages" }],
+    });
+
+    expect(transportAttempts).toEqual([
+      {
+        kind: "streamable_http",
+        url: "https://mcp.acme.test/mcp",
+        headers: { Authorization: "Bearer acme-token" },
+      },
+      {
+        kind: "sse",
+        url: "https://mcp.acme.test/sse",
+        headers: { Authorization: "Bearer acme-token" },
+      },
+    ]);
+  });
+
+  it("surfaces multiple configured transport failures with sanitized debug details", async () => {
+    connectMock.mockImplementation((transport: { kind: string }) => {
+      if (transport.kind === "streamable_http") {
+        return Promise.reject(new ContextLayerError("streamable unavailable", 504));
+      }
+
+      return Promise.reject(new ContextLayerError("sse unavailable", 429));
+    });
+
+    let capturedError: unknown;
+    try {
+      await runMcpClientOperation(
+        "https://mcp.acme.test/mcp",
+        { Authorization: "Bearer acme-token" },
+        "callTool",
+        (client) => client.listTools(),
+        {
+          debugContext: {
+            authStrategy: "basic",
+            credentials: {
+              username: "demo",
+              password: "  pass with space  ",
+              refreshToken: " refresh-token ",
+            },
+          },
+          transportOrder: [
+            {
+              transport: "streamable_http",
+              url: "https://mcp.acme.test/mcp",
+            },
+            {
+              transport: "sse",
+              url: "https://mcp.acme.test/sse",
+            },
+          ],
+        },
+      );
+    } catch (error) {
+      capturedError = error;
+    }
+
+    expect(capturedError).toBeInstanceOf(ContextLayerError);
+    expect((capturedError as ContextLayerError).message).toContain(
+      "Streamable HTTP transport failed for https://mcp.acme.test/mcp: streamable unavailable",
+    );
+    expect((capturedError as ContextLayerError).message).toContain(
+      "SSE transport failed for https://mcp.acme.test/sse: sse unavailable",
+    );
+    expect((capturedError as ContextLayerError).statusCode).toBe(429);
+    expect((capturedError as ContextLayerError).debugDetails).toEqual({
+      operationName: "callTool",
+      serverUrl: "https://mcp.acme.test/mcp",
+      integrationKey: undefined,
+      managedConnectorSlug: undefined,
+      auth: {
+        authStrategy: "basic",
+        accessToken: {
+          present: false,
+        },
+        refreshToken: {
+          present: true,
+          length: 13,
+          containsWhitespace: true,
+        },
+        secret: {
+          present: false,
+        },
+        headerName: undefined,
+        usernameProvided: true,
+        passwordProvided: true,
+      },
+      attempts: [
+        {
+          transport: "streamable_http",
+          url: "https://mcp.acme.test/mcp",
+          error:
+            "Streamable HTTP transport failed for https://mcp.acme.test/mcp: streamable unavailable",
+        },
+        {
+          transport: "sse",
+          url: "https://mcp.acme.test/sse",
+          error: "SSE transport failed for https://mcp.acme.test/sse: sse unavailable",
+        },
+      ],
+    });
+  });
+
 });

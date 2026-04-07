@@ -7,10 +7,10 @@ import {
 
 export async function GET(request: Request) {
   try {
-    await authenticateUserApiRequest(request, { requireAdmin: true });
+    const { ownerId } = await authenticateUserApiRequest(request);
     const service = getContextLayerService();
 
-    return ok(await service.listAccessRequests());
+    return ok(await service.listOwnerAccessRequests(ownerId));
   } catch (error) {
     return fromUserApiError(error);
   }

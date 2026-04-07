@@ -107,4 +107,121 @@ describe("buildContextLayerToolInputShape", () => {
       contextScopes: ["scope.read"],
     });
   });
+
+  it("supports nullable scalar types, nested objects, and arrays extracted from JSON Schema", () => {
+    const shape = buildContextLayerToolInputShape(
+      buildToolSpec({
+        config: {
+          inputSchema: {
+            type: "object",
+            required: ["count", "price", "enabled", "details"],
+            properties: {
+              count: { type: "integer" },
+              price: { type: ["number", "null"] },
+              enabled: { type: "boolean" },
+              details: {
+                type: "object",
+                required: ["name"],
+                properties: {
+                  name: { type: "string" },
+                  tags: {
+                    type: "array",
+                    items: { type: "string" },
+                  },
+                },
+              },
+            },
+          },
+        },
+      }),
+    );
+
+    expect(
+      shape.parse({
+        count: 2,
+        price: null,
+        enabled: true,
+        details: {
+          name: "enterprise",
+          tags: ["crm", "priority"],
+        },
+      }),
+    ).toMatchObject({
+      count: 2,
+      price: null,
+      enabled: true,
+      details: {
+        name: "enterprise",
+        tags: ["crm", "priority"],
+      },
+    });
+
+    expect(() =>
+      shape.parse({
+        count: 2.5,
+        price: 19.99,
+        enabled: true,
+        details: { name: "enterprise" },
+      }),
+    ).toThrow();
+    expect(() =>
+      shape.parse({
+        count: 2,
+        price: 19.99,
+        enabled: "yes",
+        details: { name: "enterprise" },
+      }),
+    ).toThrow();
+  });
+
+  it("falls back to permissive unknown fields for unsupported enums and empty request templates", () => {
+    const shape = buildContextLayerToolInputShape(
+      buildToolSpec({
+        config: {
+          inputSchema: {
+            type: "object",
+            properties: {
+              mode: {
+                enum: [{ complex: true }, "basic"],
+              },
+              metadata: {
+                type: ["object", "null"],
+                properties: {
+                  labels: {
+                    type: "array",
+                    items: { type: "string" },
+                  },
+                },
+              },
+              misc: {
+                type: "funky",
+              },
+            },
+          },
+          request: {
+            method: "POST",
+            path: "/posts/static",
+            body: ["plain-text", { nested: ["still static"] }],
+          },
+        },
+      }),
+    );
+
+    expect(
+      shape.parse({
+        mode: { complex: true },
+        metadata: null,
+        misc: Symbol.for("unknown"),
+      }),
+    ).toMatchObject({
+      mode: { complex: true },
+      metadata: null,
+    });
+    expect(() =>
+      shape.parse({
+        metadata: { labels: [1] },
+      }),
+    ).toThrow();
+  });
+
 });
