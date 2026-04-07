@@ -113,12 +113,12 @@ describe("HttpAdapter", () => {
         skip: "{{filters.missing}}",
       },
       headers: {
-        "X-Trace": "trace-{{meta.id}}",
+        "X-Trace": "{{traceId}}",
         "X-Count": "{{meta.count}}",
         "X-Skip": "{{filters.missing}}",
       },
       body: {
-        prompt: "Hello {{user.name}}",
+        prompt: "{{prompt}}",
         config: "{{config}}",
         nested: {
           id: "{{meta.id}}",
@@ -132,6 +132,8 @@ describe("HttpAdapter", () => {
       meta: { id: "msg-42", count: 3 },
       filters: { query: "hello" },
       config: { voice: "nova" },
+      prompt: "Hello Ada",
+      traceId: "trace-msg-42",
     };
 
     const fetchMock = vi.fn(async (url: URL | string, init?: RequestInit) => {
@@ -456,7 +458,8 @@ describe("HttpAdapter", () => {
     invalidPath.payload = {};
     await expect(adapter.invoke(invalidPath)).rejects.toMatchObject({
       statusCode: 400,
-      message: "Tool 'speech_to_text' produced an invalid request path.",
+      message:
+        "Path placeholder 'missing.path' must resolve to a string, number, or boolean.",
     });
   });
 
