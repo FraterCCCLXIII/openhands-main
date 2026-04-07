@@ -18,15 +18,15 @@ import {
   buildManagedConnectorFunctionSpecs,
   buildManagedConnectorFunctions,
   buildManagedConnectorToolSpecs,
-  getDefaultBuiltInConnector,
+  getDefaultManagedConnector,
   getManagedConnectorApiBaseUrl,
   getManagedConnectorProvider,
   getManagedConnectorRecord,
   getManagedConnectorServerUrl,
   listAllManagedConnectorDefinitions,
-  listAvailableBuiltInConnectors,
-  listDefaultBuiltInConnectors,
-  managedConnectorToBuiltInOption,
+  listAvailableManagedConnectorOptions,
+  listDefaultManagedConnectorOptions,
+  managedConnectorToOption,
   resolveManagedConnectorCredentials,
   sanitizeManagedConnector,
 } from "@/src/lib/integrations/managed-connectors";
@@ -46,7 +46,7 @@ const makeProvider = (
   categories: overrides.categories ?? ["Operations"],
   authStrategy: overrides.authStrategy ?? "oauth2",
   availability: overrides.availability ?? "planned",
-  builtInSlug: overrides.builtInSlug,
+  managedConnectorSlug: overrides.managedConnectorSlug,
   appUrl: overrides.appUrl,
   docsUrl: overrides.docsUrl,
   notes: overrides.notes ?? "",
@@ -111,7 +111,7 @@ beforeEach(() => {
   mockState.providers = [
     makeProvider({
       slug: "api-service",
-      builtInSlug: "api-service-builtin",
+      managedConnectorSlug: "api-service-builtin",
       name: "API Service",
       authStrategy: "api_key",
       availability: "manual_token",
@@ -181,7 +181,7 @@ beforeEach(() => {
 
 describe("managed connector registry helpers", () => {
   it("lists only supported default built-in connectors with normalized defaults", () => {
-    expect(listDefaultBuiltInConnectors()).toEqual([
+    expect(listDefaultManagedConnectorOptions()).toEqual([
       {
         slug: "api-service-builtin",
         name: "API Service",
@@ -218,7 +218,7 @@ describe("managed connector registry helpers", () => {
   });
 
   it("resolves individual default connectors by built-in slug and ignores unsupported entries", () => {
-    expect(getDefaultBuiltInConnector("api-service-builtin")).toMatchObject({
+    expect(getDefaultManagedConnector("api-service-builtin")).toMatchObject({
       slug: "api-service-builtin",
       authStrategy: "api_key",
       provider: "http",
@@ -226,8 +226,8 @@ describe("managed connector registry helpers", () => {
       openApiUrl: "https://api.example.test/openapi.json",
       apiKeyHeaderName: "X-Service-Key",
     });
-    expect(getDefaultBuiltInConnector("oauth-only")).toBeNull();
-    expect(getDefaultBuiltInConnector("missing")).toBeNull();
+    expect(getDefaultManagedConnector("oauth-only")).toBeNull();
+    expect(getDefaultManagedConnector("missing")).toBeNull();
   });
 
   it("infers provider URLs and sanitizes connector records", () => {
@@ -314,13 +314,13 @@ describe("managed connector registry helpers", () => {
       },
     });
 
-    expect(managedConnectorToBuiltInOption(apiKeyConnector)).toMatchObject({
+    expect(managedConnectorToOption(apiKeyConnector)).toMatchObject({
       slug: "configured-key",
       toolCount: 1,
       apiKeyHeaderName: "X-From-Defaults",
       oauthConfigured: true,
     });
-    expect(managedConnectorToBuiltInOption(oauthConnector)).toMatchObject({
+    expect(managedConnectorToOption(oauthConnector)).toMatchObject({
       slug: "oauth-connector",
       oauthConfigured: false,
     });
@@ -542,7 +542,7 @@ describe("managed connector registry helpers", () => {
       }),
     ]);
 
-    await expect(listAvailableBuiltInConnectors(repository)).resolves.toEqual([
+    await expect(listAvailableManagedConnectorOptions(repository)).resolves.toEqual([
       expect.objectContaining({ slug: "gamma-desk", name: "Gamma Desk" }),
       expect.objectContaining({ slug: "mcp-service", name: "MCP Service" }),
     ]);
