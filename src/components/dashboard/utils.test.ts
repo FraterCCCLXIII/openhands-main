@@ -147,6 +147,16 @@ afterEach(() => {
 });
 
 describe("dashboard-workspace-utils", () => {
+  it("builds exact tool access patch payloads", () => {
+    expect(
+      buildToolAccessPatch("slack", "slack_search_public", "approval_required"),
+    ).toEqual({
+      url: "/api/integrations/slack/tools/slack_search_public",
+      method: "PATCH",
+      body: { accessMode: "approval_required" },
+    });
+  });
+
   it("builds marketplace rows in popular order while excluding installed connectors", () => {
     const installedKeys = buildInstalledIntegrationKeys(integrations);
 

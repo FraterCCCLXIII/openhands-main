@@ -146,6 +146,172 @@ const manualTokenConnector: ManagedConnectorDefinition = {
   updatedAt: "2026-03-10T00:00:00.000Z",
 };
 
+const createManagedConnectorOption = (
+  overrides: Partial<ManagedConnectorOption> & Pick<ManagedConnectorOption, "slug" | "name">,
+): ManagedConnectorOption => ({
+  description: `${overrides.name} connector`,
+  toolCount: 1,
+  categories: ["Engineering"],
+  authModes: ["oauth2"],
+  authStrategy: "oauth2",
+  oauthConfigured: true,
+  credentialLabel: `Connect ${overrides.name}`,
+  credentialPlaceholder: `Connect ${overrides.name}`,
+  credentialHelp: `Connect ${overrides.name} with OAuth.`,
+  ...overrides,
+});
+
+const createProvider = (
+  overrides: Partial<OAuthProviderCatalogOption> & Pick<OAuthProviderCatalogOption, "slug" | "name">,
+): OAuthProviderCatalogOption => ({
+  description: `${overrides.name} provider`,
+  categories: ["AI"],
+  authStrategy: "oauth2",
+  availability: "oauth_ready",
+  docsUrl: `https://example.com/${overrides.slug}`,
+  notes: `${overrides.name} notes`,
+  popularityRank: 99,
+  ...overrides,
+});
+
+describe("catalog helper utilities", () => {
+  it("sorts ready connectors by name and slug while replacing duplicate slugs", () => {
+    const sorted = sortReadyManagedConnectors([
+      createManagedConnectorOption({ slug: "zeta", name: "Zulu" }),
+      createManagedConnectorOption({ slug: "alpha-b", name: "Alpha" }),
+      createManagedConnectorOption({ slug: "alpha-a", name: "Alpha" }),
+    ]);
+
+    expect(sorted.map((connector) => `${connector.name}:${connector.slug}`)).toEqual([
+      "Alpha:alpha-a",
+      "Alpha:alpha-b",
+      "Zulu:zeta",
+    ]);
+
+    const updated = upsertReadyManagedConnector(
+      sorted,
+      createManagedConnectorOption({
+        slug: "alpha-b",
+        name: "Alpha",
+        description: "Updated Alpha connector",
+      }),
+    );
+
+    expect(updated.map((connector) => connector.slug)).toEqual([
+      "alpha-a",
+      "alpha-b",
+      "zeta",
+    ]);
+    expect(updated.filter((connector) => connector.slug === "alpha-b")).toHaveLength(1);
+    expect(updated.find((connector) => connector.slug === "alpha-b")?.description).toBe(
+      "Updated Alpha connector",
+    );
+  });
+
+  it("only builds default ready connectors for non-OAuth providers with complete defaults", () => {
+    const oauthProvider = createProvider({
+      slug: "google-calendar",
+      name: "Google Calendar",
+      registrationDefaults: {
+        provider: "http",
+        apiBaseUrl: "https://www.googleapis.com/calendar/v3",
+        openApiUrl: "https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest",
+      },
+    });
+    const incompleteHttpProvider = createProvider({
+      slug: "airtable",
+      name: "Airtable",
+      authStrategy: "api_key",
+      registrationDefaults: {
+        provider: "http",
+        authStrategy: "api_key",
+        apiBaseUrl: "https://api.airtable.com",
+      },
+    });
+    const incompleteMcpProvider = createProvider({
+      slug: "webflow",
+      name: "Webflow",
+      authStrategy: "bearer",
+      registrationDefaults: {
+        provider: "mcp",
+        authStrategy: "bearer",
+      },
+    });
+    const readyManualProvider = createProvider({
+      slug: "elevenlabs",
+      name: "ElevenLabs",
+      managedConnectorSlug: "elevenlabs",
+      authStrategy: "api_key",
+      appUrl: "https://elevenlabs.io",
+      registrationDefaults: {
+        provider: "http",
+        authStrategy: "api_key",
+        authModes: ["api_key"],
+        apiBaseUrl: "https://api.elevenlabs.io",
+        openApiUrl: "https://api.elevenlabs.io/openapi.json",
+        credentialLabel: "ElevenLabs API key",
+        credentialPlaceholder: "Paste your ElevenLabs API key",
+        credentialHelp: "Use a personal ElevenLabs key.",
+        apiKeyHeaderName: "xi-api-key",
+      },
+    });
+
+    expect(toDefaultReadyManagedConnector(oauthProvider)).toBeNull();
+    expect(toDefaultReadyManagedConnector(incompleteHttpProvider)).toBeNull();
+    expect(toDefaultReadyManagedConnector(incompleteMcpProvider)).toBeNull();
+    expect(toDefaultReadyManagedConnector(readyManualProvider)).toMatchObject({
+      slug: "elevenlabs",
+      name: "ElevenLabs",
+      authStrategy: "api_key",
+      authModes: ["api_key"],
+      oauthConfigured: true,
+      credentialLabel: "ElevenLabs API key",
+      credentialPlaceholder: "Paste your ElevenLabs API key",
+      credentialHelp: "Use a personal ElevenLabs key.",
+      apiKeyHeaderName: "xi-api-key",
+      toolCount: 0,
+    });
+  });
+
+  it("treats explicit OAuth defaults as unavailable and uses fallback copy for ready MCP defaults", () => {
+    const explicitOauthDefault = createProvider({
+      slug: "google-drive",
+      name: "Google Drive",
+      registrationDefaults: {
+        provider: "http",
+        authStrategy: "oauth2",
+        apiBaseUrl: "https://www.googleapis.com/drive/v3",
+        openApiUrl: "https://www.googleapis.com/discovery/v1/apis/drive/v3/rest",
+      },
+    });
+    const readyMcpDefault = createProvider({
+      slug: "ordinal",
+      name: "Ordinal",
+      managedConnectorSlug: "ordinal-managed",
+      authStrategy: "bearer",
+      registrationDefaults: {
+        provider: "mcp",
+        authStrategy: "bearer",
+        authModes: ["" as unknown as "bearer"],
+        serverUrl: "https://mcp.ordinal.app/mcp",
+      },
+    });
+
+    expect(toDefaultReadyManagedConnector(explicitOauthDefault)).toBeNull();
+    expect(toDefaultReadyManagedConnector(readyMcpDefault)).toMatchObject({
+      slug: "ordinal-managed",
+      name: "Ordinal",
+      authStrategy: "bearer",
+      authModes: ["bearer"],
+      credentialLabel: "Ordinal credential",
+      credentialPlaceholder: "Paste your Ordinal credential",
+      credentialHelp: "Credential required by Ordinal.",
+      toolCount: 0,
+    });
+  });
+
+});
+
 const findProviderToggle = (container: ParentNode, name: string) =>
   Array.from(container.querySelectorAll<HTMLButtonElement>('button[aria-expanded]')).find(
     (button) => button.textContent?.includes(name),
@@ -498,5 +664,105 @@ describe("IntegrationsCatalog", () => {
     expect(container.textContent).toContain(
       "This provider is already available in the integration wizard, so no additional registration is needed.",
     );
+  });
+
+  it("adds a ready badge immediately after registering a new manual-token provider", async () => {
+    fetchMock.mockResolvedValueOnce(
+      new Response(JSON.stringify({ slug: "elevenlabs", oauthConfigured: true }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+
+    await act(async () => {
+      root.render(
+        <IntegrationsCatalog
+          providerCatalog={[manualTokenProvider]}
+          initialReadyManagedConnectors={[]}
+          managedConnectors={[]}
+          canRegisterManagedConnectors
+          oauthCallbackBaseUrl="https://openhands-context-layer.vercel.app/api/oauth"
+        />,
+      );
+    });
+
+    const providerToggle = findProviderToggle(container, "ElevenLabs");
+    expect(providerToggle).toBeTruthy();
+
+    await act(async () => {
+      providerToggle?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    expect(container.textContent).toContain("Register this provider");
+    expect(container.textContent).not.toContain("Use ElevenLabs");
+
+    const form = container.querySelector("form");
+    expect(form).toBeTruthy();
+
+    await act(async () => {
+      form?.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    expect(container.textContent).toContain("Use ElevenLabs");
+    expect(container.textContent).toContain(
+      "This provider is already available in the integration wizard, so no additional registration is needed.",
+    );
+  });
+
+  it("removes oauth providers from the ready list when the stored connector is disabled", async () => {
+    fetchMock.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          ...googleManagedConnector,
+          enabled: false,
+          oauthConfigured: true,
+          updatedAt: "2026-03-12T00:00:00.000Z",
+        }),
+        {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        },
+      ),
+    );
+
+    await act(async () => {
+      root.render(
+        <IntegrationsCatalog
+          providerCatalog={providerCatalog}
+          initialReadyManagedConnectors={readyManagedConnectors}
+          managedConnectors={[googleManagedConnector]}
+          canRegisterManagedConnectors
+          oauthCallbackBaseUrl="https://openhands-context-layer.vercel.app/api/oauth"
+        />,
+      );
+    });
+
+    const providerToggle = findProviderToggle(container, "Google Calendar");
+    expect(providerToggle).toBeTruthy();
+
+    await act(async () => {
+      providerToggle?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    expect(container.textContent).toContain("Use Google Calendar");
+
+    const managedConnectorToggle = findManagedConnectorToggle(container, "google-calendar");
+    expect(managedConnectorToggle).toBeTruthy();
+
+    await act(async () => {
+      managedConnectorToggle?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    const form = container.querySelector("form");
+    expect(form).toBeTruthy();
+
+    await act(async () => {
+      form?.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    expect(container.textContent).not.toContain("Use Google Calendar");
+    expect(container.textContent).toContain("Register this provider");
   });
 });
