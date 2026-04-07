@@ -184,9 +184,10 @@ const resolveHeaderValues = (
   payload: Record<string, unknown>,
   toolName: string,
 ) => {
-  const interpolatedHeaders = (resolveTemplateValue(headersTemplate, payload) as
-    | Record<string, unknown>
-    | undefined) ?? {};
+  const interpolatedHeaders = resolveTemplateValue(headersTemplate, payload);
+  if (!isRecord(interpolatedHeaders)) {
+    return {};
+  }
 
   return Object.fromEntries(
     Object.entries(interpolatedHeaders)
