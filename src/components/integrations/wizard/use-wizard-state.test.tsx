@@ -9,13 +9,13 @@ import {
   INITIAL_DRAFT,
   type DiscoveryResponse,
 } from "@/src/components/integrations/wizard/utils";
-import type { BuiltInConnectorOption } from "@/src/types/context-layer";
+import type { ManagedConnectorOption } from "@/src/types/context-layer";
 
 (
   globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }
 ).IS_REACT_ACT_ENVIRONMENT = true;
 
-const notionConnector: BuiltInConnectorOption = {
+const notionConnector: ManagedConnectorOption = {
   slug: "notion",
   name: "Notion",
   description: "Notion workspace",
@@ -29,7 +29,7 @@ const notionConnector: BuiltInConnectorOption = {
   credentialHelp: "Connect your Notion account.",
 };
 
-const genericApiConnector: BuiltInConnectorOption = {
+const genericApiConnector: ManagedConnectorOption = {
   slug: "generic-api",
   name: "Generic API",
   description: "Manual API key connector",
@@ -43,7 +43,7 @@ const genericApiConnector: BuiltInConnectorOption = {
   credentialHelp: "Provide an API key.",
 };
 
-const ordinalConnector: BuiltInConnectorOption = {
+const ordinalConnector: ManagedConnectorOption = {
   slug: "ordinal",
   name: "Ordinal",
   description: "Ordinal bearer connector",
@@ -57,7 +57,7 @@ const ordinalConnector: BuiltInConnectorOption = {
   credentialHelp: "Provide an Ordinal token.",
 };
 
-const connectors: BuiltInConnectorOption[] = [
+const connectors: ManagedConnectorOption[] = [
   notionConnector,
   genericApiConnector,
   ordinalConnector,
@@ -106,7 +106,7 @@ const renderWizardState = async (search = "") => {
 
   const Harness = () => {
     latestState = useWizardState({
-      builtInConnectors: connectors,
+      managedConnectors: connectors,
       onStatus,
       searchParams: new URLSearchParams(search),
     });
@@ -148,12 +148,12 @@ afterEach(async () => {
 
 describe("useWizardState", () => {
   it("initializes from the built-in search param and handles connector search transitions", async () => {
-    const { getState, onStatus } = await renderWizardState("builtIn=notion");
+    const { getState, onStatus } = await renderWizardState("managedConnector=notion");
 
     expect(getState().step).toBe(2);
     expect(getState().draft).toMatchObject({
-      kind: "built_in",
-      builtInSlug: "notion",
+      kind: "managed",
+      managedConnectorSlug: "notion",
       key: "notion",
       name: "notion",
     });
@@ -166,7 +166,7 @@ describe("useWizardState", () => {
     await act(async () => {
       getState().setDraft((current) => ({
         ...current,
-        builtInSlug: "generic-api",
+        managedConnectorSlug: "generic-api",
         apiKey: "keep-me",
         headerName: "X-Custom-Key",
       }));
@@ -177,7 +177,7 @@ describe("useWizardState", () => {
     });
 
     expect(getState().draft).toMatchObject({
-      builtInSlug: "generic-api",
+      managedConnectorSlug: "generic-api",
       key: "generic-api",
       name: "Generic API",
       apiKey: "keep-me",
@@ -191,7 +191,7 @@ describe("useWizardState", () => {
     await act(async () => {
       getState().setDraft((current) => ({
         ...current,
-        builtInSlug: "ordinal",
+        managedConnectorSlug: "ordinal",
         accessToken: "ordinal-secret",
       }));
     });
@@ -217,7 +217,7 @@ describe("useWizardState", () => {
     expect(getState().selectedConnector).toBeNull();
     expect(getState().discoverFeedback).toBeNull();
     expect(getState().draft).toMatchObject({
-      builtInSlug: "",
+      managedConnectorSlug: "",
       accessToken: "",
       apiKey: "",
       username: "",
@@ -233,7 +233,7 @@ describe("useWizardState", () => {
     expect(getState().selectedConnector?.slug).toBe("generic-api");
     expect(getState().connectorSearch).toBe("Generic API (generic-api)");
     expect(getState().draft).toMatchObject({
-      builtInSlug: "generic-api",
+      managedConnectorSlug: "generic-api",
       key: "generic-api",
       name: "Generic API",
       apiKey: "",

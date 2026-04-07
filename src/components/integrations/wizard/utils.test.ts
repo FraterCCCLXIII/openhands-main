@@ -7,13 +7,13 @@ import {
   filterReviewedTools,
   findConnectorByQuery,
   getReviewedTools,
-  hasBuiltInCredentialInput,
+  hasManagedConnectorCredentialInput,
   type DiscoveryResponse,
   type WizardDraft,
 } from "@/src/components/integrations/wizard/utils";
-import type { BuiltInConnectorOption, ToolSpec } from "@/src/types/context-layer";
+import type { ManagedConnectorOption, ToolSpec } from "@/src/types/context-layer";
 
-const elevenLabsConnector: BuiltInConnectorOption = {
+const elevenLabsConnector: ManagedConnectorOption = {
   slug: "elevenlabs",
   name: "ElevenLabs",
   description: "Voice tools",
@@ -28,7 +28,7 @@ const elevenLabsConnector: BuiltInConnectorOption = {
   apiKeyHeaderName: "xi-api-key",
 };
 
-const basicConnector: BuiltInConnectorOption = {
+const basicConnector: ManagedConnectorOption = {
   slug: "basic-auth",
   name: "Basic Auth",
   description: "Username/password connector",
@@ -41,7 +41,7 @@ const basicConnector: BuiltInConnectorOption = {
   credentialHelp: "Provide a username and password.",
 };
 
-const noAuthConnector: BuiltInConnectorOption = {
+const noAuthConnector: ManagedConnectorOption = {
   slug: "public-feed",
   name: "Public Feed",
   description: "No-credential connector",
@@ -54,7 +54,7 @@ const noAuthConnector: BuiltInConnectorOption = {
   credentialHelp: "No credentials required.",
 };
 
-const oauthConnector: BuiltInConnectorOption = {
+const oauthConnector: ManagedConnectorOption = {
   slug: "notion",
   name: "Notion",
   description: "OAuth connector",
@@ -67,7 +67,7 @@ const oauthConnector: BuiltInConnectorOption = {
   credentialHelp: "Connect your Notion account.",
 };
 
-const bearerConnector: BuiltInConnectorOption = {
+const bearerConnector: ManagedConnectorOption = {
   slug: "ordinal",
   name: "Ordinal",
   description: "Bearer connector",
@@ -80,11 +80,11 @@ const bearerConnector: BuiltInConnectorOption = {
   credentialHelp: "Provide a bearer token.",
 };
 
-const baseDraft: WizardDraft = {
-  kind: "built_in",
+const managedDraft: WizardDraft = {
+  kind: "managed",
   key: "elevenlabs",
   name: "ElevenLabs",
-  builtInSlug: "elevenlabs",
+  managedConnectorSlug: "elevenlabs",
   serverUrl: "",
   accessToken: " bearer-secret ",
   apiKey: " secret-key ",
@@ -120,7 +120,7 @@ const discovery: DiscoveryResponse = {
   authStrategy: "api_key",
   config: {
     apiBaseUrl: "https://api.elevenlabs.io",
-    builtInSlug: "elevenlabs",
+    managedConnectorSlug: "elevenlabs",
   },
   credentials: {
     headerName: "xi-api-key",
@@ -142,12 +142,12 @@ describe("integration-wizard-utils", () => {
     expect(authStrategyLabel("mcp_session")).toBe("MCP session");
   });
 
-  it("builds built-in discovery payloads for every credential strategy", () => {
-    expect(buildDiscoverPayload(baseDraft, elevenLabsConnector)).toEqual({
+  it("builds managed discovery payloads for every credential strategy", () => {
+    expect(buildDiscoverPayload(managedDraft, elevenLabsConnector)).toEqual({
       key: "elevenlabs",
-      kind: "built_in",
+      kind: "managed",
       config: {
-        builtInSlug: "elevenlabs",
+        managedConnectorSlug: "elevenlabs",
       },
       credentials: {
         headerName: "xi-api-key",
@@ -157,7 +157,7 @@ describe("integration-wizard-utils", () => {
 
     expect(
       buildDiscoverPayload(
-        { ...baseDraft, builtInSlug: "basic-auth", key: "basic-auth" },
+        { ...managedDraft, managedConnectorSlug: "basic-auth", key: "basic-auth" },
         basicConnector,
       ),
     ).toMatchObject({
@@ -169,7 +169,7 @@ describe("integration-wizard-utils", () => {
 
     expect(
       buildDiscoverPayload(
-        { ...baseDraft, builtInSlug: "public-feed", key: "public-feed" },
+        { ...managedDraft, managedConnectorSlug: "public-feed", key: "public-feed" },
         noAuthConnector,
       ),
     ).toMatchObject({
@@ -178,7 +178,7 @@ describe("integration-wizard-utils", () => {
 
     expect(
       buildDiscoverPayload(
-        { ...baseDraft, builtInSlug: "notion", key: "notion" },
+        { ...managedDraft, managedConnectorSlug: "notion", key: "notion" },
         oauthConnector,
       ),
     ).toMatchObject({
@@ -187,7 +187,7 @@ describe("integration-wizard-utils", () => {
 
     expect(
       buildDiscoverPayload(
-        { ...baseDraft, builtInSlug: "ordinal", key: "ordinal" },
+        { ...managedDraft, managedConnectorSlug: "ordinal", key: "ordinal" },
         bearerConnector,
       ),
     ).toMatchObject({
@@ -198,39 +198,45 @@ describe("integration-wizard-utils", () => {
   });
 
   it("validates required wizard selections before building payloads", () => {
-    expect(() => buildDiscoverPayload({ ...baseDraft, kind: null }, elevenLabsConnector)).toThrow(
-      "Select Built-in connector or MCP first.",
+    expect(() => buildDiscoverPayload({ ...managedDraft, kind: null }, elevenLabsConnector)).toThrow(
+      "Select Managed connector or MCP first.",
     );
     expect(
       () =>
         buildDiscoverPayload(
-          { ...baseDraft, builtInSlug: " ", key: "elevenlabs" },
+          { ...managedDraft, managedConnectorSlug: " ", key: "elevenlabs" },
           elevenLabsConnector,
         ),
-    ).toThrow("Choose a built-in connector first.");
-    expect(() => buildCreatePayload({ ...baseDraft, kind: null }, discovery, {}, elevenLabsConnector)).toThrow(
-      "Select Built-in connector or MCP first.",
+    ).toThrow("Choose a managed connector first.");
+    expect(() => buildCreatePayload({ ...managedDraft, kind: null }, discovery, {}, elevenLabsConnector)).toThrow(
+      "Select Managed connector or MCP first.",
     );
   });
 
-  it("detects whether built-in credential input is ready for discovery", () => {
-    expect(hasBuiltInCredentialInput(baseDraft, elevenLabsConnector)).toBe(true);
-    expect(hasBuiltInCredentialInput({ ...baseDraft, apiKey: "   " }, elevenLabsConnector)).toBe(
-      false,
-    );
-    expect(hasBuiltInCredentialInput(baseDraft, basicConnector)).toBe(true);
-    expect(hasBuiltInCredentialInput({ ...baseDraft, password: " " }, basicConnector)).toBe(
-      false,
-    );
-    expect(hasBuiltInCredentialInput(baseDraft, bearerConnector)).toBe(true);
-    expect(hasBuiltInCredentialInput({ ...baseDraft, accessToken: " " }, bearerConnector)).toBe(
-      false,
-    );
-    expect(hasBuiltInCredentialInput(baseDraft, noAuthConnector)).toBe(true);
-    expect(hasBuiltInCredentialInput(baseDraft, oauthConnector)).toBe(false);
+  it("detects whether managed connector credential input is ready for discovery", () => {
+    expect(hasManagedConnectorCredentialInput(managedDraft, elevenLabsConnector)).toBe(true);
+    expect(
+      hasManagedConnectorCredentialInput(
+        { ...managedDraft, apiKey: "   " },
+        elevenLabsConnector,
+      ),
+    ).toBe(false);
+    expect(hasManagedConnectorCredentialInput(managedDraft, basicConnector)).toBe(true);
+    expect(
+      hasManagedConnectorCredentialInput({ ...managedDraft, password: " " }, basicConnector),
+    ).toBe(false);
+    expect(hasManagedConnectorCredentialInput(managedDraft, bearerConnector)).toBe(true);
+    expect(
+      hasManagedConnectorCredentialInput(
+        { ...managedDraft, accessToken: " " },
+        bearerConnector,
+      ),
+    ).toBe(false);
+    expect(hasManagedConnectorCredentialInput(managedDraft, noAuthConnector)).toBe(true);
+    expect(hasManagedConnectorCredentialInput(managedDraft, oauthConnector)).toBe(false);
   });
 
-  it("finds built-in connectors by normalized name, slug, or option label", () => {
+  it("finds managed connectors by normalized name, slug, or option label", () => {
     expect(findConnectorByQuery([elevenLabsConnector], " elevenlabs ")).toBe(
       elevenLabsConnector,
     );
@@ -243,7 +249,7 @@ describe("integration-wizard-utils", () => {
 
   it("builds create payloads that preserve discovery metadata and updated access modes", () => {
     const payload = buildCreatePayload(
-      { ...baseDraft, name: "elevenlabs" },
+      { ...managedDraft, name: "elevenlabs" },
       discovery,
       {
         delete_voice: "disabled",
@@ -262,7 +268,7 @@ describe("integration-wizard-utils", () => {
       fineGrainedPermissions: true,
       config: {
         apiBaseUrl: "https://api.elevenlabs.io",
-        builtInSlug: "elevenlabs",
+        managedConnectorSlug: "elevenlabs",
       },
     });
     expect(payload.tools.list_models).toMatchObject({
@@ -278,11 +284,11 @@ describe("integration-wizard-utils", () => {
   it("creates payloads for discovered MCP servers and falls back to the discovered tool defaults", () => {
     const mcpPayload = buildCreatePayload(
       {
-        ...baseDraft,
+        ...managedDraft,
         kind: "mcp",
         key: "custom-mcp",
         name: "",
-        builtInSlug: "",
+        managedConnectorSlug: "",
       },
       {
         provider: "mcp",

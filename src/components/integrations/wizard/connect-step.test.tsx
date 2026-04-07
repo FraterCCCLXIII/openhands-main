@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ConnectStep } from "@/src/components/integrations/wizard/connect-step";
 import type {
-  BuiltInConnectorOption,
+  ManagedConnectorOption,
   IntegrationConnectionStatus,
 } from "@/src/types/context-layer";
 import type { DiscoverFeedback, WizardDraft } from "@/src/components/integrations/wizard/utils";
@@ -28,11 +28,11 @@ const setInputValue = (element: HTMLInputElement | null, value: string) => {
   element.dispatchEvent(new Event("change", { bubbles: true }));
 };
 
-const baseBuiltInDraft: WizardDraft = {
-  kind: "built_in",
+const baseManagedDraft: WizardDraft = {
+  kind: "managed",
   key: "",
   name: "",
-  builtInSlug: "",
+  managedConnectorSlug: "",
   serverUrl: "",
   accessToken: "",
   apiKey: "",
@@ -41,7 +41,7 @@ const baseBuiltInDraft: WizardDraft = {
   password: "",
 };
 
-const notionConnector: BuiltInConnectorOption = {
+const notionConnector: ManagedConnectorOption = {
   slug: "notion",
   name: "Notion",
   description: "Notion docs connector",
@@ -56,7 +56,7 @@ const notionConnector: BuiltInConnectorOption = {
   appUrl: "https://www.notion.so",
 };
 
-const elevenLabsConnector: BuiltInConnectorOption = {
+const elevenLabsConnector: ManagedConnectorOption = {
   slug: "elevenlabs",
   name: "ElevenLabs",
   description: "Voice generation connector",
@@ -71,7 +71,7 @@ const elevenLabsConnector: BuiltInConnectorOption = {
   apiKeyHeaderName: "xi-api-key",
 };
 
-const genericApiConnector: BuiltInConnectorOption = {
+const genericApiConnector: ManagedConnectorOption = {
   slug: "generic-api",
   name: "Generic API",
   description: "Connector with a configurable header name",
@@ -85,7 +85,7 @@ const genericApiConnector: BuiltInConnectorOption = {
   credentialHelp: "Provide a custom API key for this connector.",
 };
 
-const basicConnector: BuiltInConnectorOption = {
+const basicConnector: ManagedConnectorOption = {
   slug: "basic-auth",
   name: "Basic Auth Service",
   description: "Connector that uses username and password",
@@ -99,7 +99,7 @@ const basicConnector: BuiltInConnectorOption = {
   credentialHelp: "Provide a username and password.",
 };
 
-const noAuthConnector: BuiltInConnectorOption = {
+const noAuthConnector: ManagedConnectorOption = {
   slug: "public-feed",
   name: "Public Feed",
   description: "Connector that requires no provider credentials",
@@ -114,12 +114,12 @@ const noAuthConnector: BuiltInConnectorOption = {
 };
 
 type RenderOptions = {
-  builtInConnectors?: BuiltInConnectorOption[];
-  builtInConnectorsError?: string | null;
-  builtInConnectorsPending?: boolean;
+  managedConnectors?: ManagedConnectorOption[];
+  managedConnectorsError?: string | null;
+  managedConnectorsPending?: boolean;
   connectorSearch?: string;
   draft?: WizardDraft;
-  selectedConnector?: BuiltInConnectorOption | null;
+  selectedConnector?: ManagedConnectorOption | null;
   selectedConnection?: IntegrationConnectionStatus | null;
   requiresOAuthConnection?: boolean;
   oauthConnectionEnabled?: boolean;
@@ -138,9 +138,9 @@ const renderConnectStep = async (options: RenderOptions = {}) => {
   const onBack = vi.fn();
   const onConnectorSearchChange = vi.fn();
   const onDiscover = vi.fn();
-  const initialDraft = options.draft ?? baseBuiltInDraft;
-  const builtInConnectors =
-    options.builtInConnectors ??
+  const initialDraft = options.draft ?? baseManagedDraft;
+  const managedConnectors =
+    options.managedConnectors ??
     [
       notionConnector,
       elevenLabsConnector,
@@ -160,9 +160,9 @@ const renderConnectStep = async (options: RenderOptions = {}) => {
     return (
       <>
         <ConnectStep
-          builtInConnectors={builtInConnectors}
-          builtInConnectorsError={options.builtInConnectorsError ?? null}
-          builtInConnectorsPending={options.builtInConnectorsPending ?? false}
+          managedConnectors={managedConnectors}
+          managedConnectorsError={options.managedConnectorsError ?? null}
+          managedConnectorsPending={options.managedConnectorsPending ?? false}
           canDiscover={options.canDiscover ?? true}
           connectorSearch={options.connectorSearch ?? ""}
           discoverFeedback={options.discoverFeedback ?? null}
@@ -222,13 +222,13 @@ describe("ConnectStep", () => {
     });
   });
 
-  it("starts the per-user OAuth flow for built-in connectors", async () => {
+  it("starts the per-user OAuth flow for managed connectors", async () => {
     const { container, cleanup } = await renderConnectStep({
       draft: {
-        ...baseBuiltInDraft,
+        ...baseManagedDraft,
         key: "notion-workspace",
         name: "Notion Workspace",
-        builtInSlug: "notion",
+        managedConnectorSlug: "notion",
       },
       selectedConnector: notionConnector,
       requiresOAuthConnection: true,
@@ -249,7 +249,7 @@ describe("ConnectStep", () => {
     });
 
     expect(window.location.href).toBe(
-      "/api/oauth/notion/start?integrationKey=notion-workspace&redirectTo=%2Fintegrations%3FshowIntegrationWizard%3D1%26builtIn%3Dnotion",
+      "/api/oauth/notion/start?integrationKey=notion-workspace&redirectTo=%2Fintegrations%3FshowIntegrationWizard%3D1%26managedConnector%3Dnotion",
     );
 
     await cleanup();
@@ -258,10 +258,10 @@ describe("ConnectStep", () => {
   it("renders API-key connector guidance and updates the draft state", async () => {
     const { container, cleanup } = await renderConnectStep({
       draft: {
-        ...baseBuiltInDraft,
+        ...baseManagedDraft,
         key: "elevenlabs",
         name: "ElevenLabs",
-        builtInSlug: "elevenlabs",
+        managedConnectorSlug: "elevenlabs",
       },
       selectedConnector: elevenLabsConnector,
       statefulDraft: true,
@@ -287,7 +287,7 @@ describe("ConnectStep", () => {
   it("renders manual MCP fields, forwards navigation actions, and shows admin diagnostics", async () => {
     const { container, cleanup, onBack, onDiscover } = await renderConnectStep({
       draft: {
-        ...baseBuiltInDraft,
+        ...baseManagedDraft,
         kind: "mcp",
         key: "figma-mcp",
         name: "Figma MCP",
@@ -336,8 +336,8 @@ describe("ConnectStep", () => {
   it("shows connected OAuth state, expiry details, and reconnects with the connector slug fallback", async () => {
     const { container, cleanup } = await renderConnectStep({
       draft: {
-        ...baseBuiltInDraft,
-        builtInSlug: "notion",
+        ...baseManagedDraft,
+        managedConnectorSlug: "notion",
       },
       selectedConnector: notionConnector,
       selectedConnection: {
@@ -371,7 +371,7 @@ describe("ConnectStep", () => {
     });
 
     expect(window.location.href).toBe(
-      "/api/oauth/notion/start?integrationKey=notion&redirectTo=%2Fprofile%3FshowIntegrationWizard%3D1%26builtIn%3Dnotion",
+      "/api/oauth/notion/start?integrationKey=notion&redirectTo=%2Fprofile%3FshowIntegrationWizard%3D1%26managedConnector%3Dnotion",
     );
 
     await cleanup();
@@ -379,15 +379,15 @@ describe("ConnectStep", () => {
 
   it("shows unavailable OAuth guidance, connector load errors, and disabled actions", async () => {
     const { container, cleanup } = await renderConnectStep({
-      builtInConnectorsError: "Could not load managed connectors.",
-      builtInConnectorsPending: true,
+      managedConnectorsError: "Could not load managed connectors.",
+      managedConnectorsPending: true,
       canDiscover: false,
       connectorSearch: "Notion",
       draft: {
-        ...baseBuiltInDraft,
+        ...baseManagedDraft,
         key: "notion",
         name: "Notion",
-        builtInSlug: "notion",
+        managedConnectorSlug: "notion",
       },
       selectedConnector: notionConnector,
       requiresOAuthConnection: true,
@@ -403,7 +403,7 @@ describe("ConnectStep", () => {
     );
 
     const connectorInput = container.querySelector(
-      'input[list="built-in-connector-options"]',
+      'input[list="managed-connector-options"]',
     ) as HTMLInputElement | null;
     expect(connectorInput?.getAttribute("placeholder")).toBe(
       "Loading supported connectors...",
@@ -426,10 +426,10 @@ describe("ConnectStep", () => {
   it("renders configurable API-key header inputs for connectors without a predefined header", async () => {
     const { container, cleanup } = await renderConnectStep({
       draft: {
-        ...baseBuiltInDraft,
+        ...baseManagedDraft,
         key: "generic-api",
         name: "Generic API",
-        builtInSlug: "generic-api",
+        managedConnectorSlug: "generic-api",
       },
       selectedConnector: genericApiConnector,
       statefulDraft: true,
@@ -462,10 +462,10 @@ describe("ConnectStep", () => {
   it("renders basic-auth credential inputs and persists username/password updates", async () => {
     const { container, cleanup } = await renderConnectStep({
       draft: {
-        ...baseBuiltInDraft,
+        ...baseManagedDraft,
         key: "basic-auth",
         name: "Basic Auth Service",
-        builtInSlug: "basic-auth",
+        managedConnectorSlug: "basic-auth",
       },
       selectedConnector: basicConnector,
       statefulDraft: true,
@@ -491,10 +491,10 @@ describe("ConnectStep", () => {
   it("shows no-auth guidance without additional credential fields", async () => {
     const { container, cleanup } = await renderConnectStep({
       draft: {
-        ...baseBuiltInDraft,
+        ...baseManagedDraft,
         key: "public-feed",
         name: "Public Feed",
-        builtInSlug: "public-feed",
+        managedConnectorSlug: "public-feed",
       },
       selectedConnector: noAuthConnector,
     });
@@ -507,5 +507,4 @@ describe("ConnectStep", () => {
 
     await cleanup();
   });
-
 });

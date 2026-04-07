@@ -172,7 +172,7 @@ describe("ReviewStep", () => {
     const { container, onBack } = await renderReviewStep({
       createPending: true,
       draftName: "Empty integration",
-      kind: "built_in",
+      kind: "managed",
       reviewedTools: [],
       filteredReviewedTools: [],
       matchingToolNames: [],
@@ -185,7 +185,7 @@ describe("ReviewStep", () => {
       expandedTools: {},
     });
 
-    expect(container.textContent).toContain("Built-in");
+    expect(container.textContent).toContain("Managed connector");
     expect(container.textContent).toContain(
       "No tools were discovered for this connector.",
     );
