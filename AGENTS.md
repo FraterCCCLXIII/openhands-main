@@ -104,6 +104,7 @@ The root `LICENSE` is proprietary: `Copyright All Hands AI, Inc. All rights rese
 
 - `app/admin-integrations/page.tsx` is the canonical user/admin-facing connector request page: regular users see only the “For users” request guidance, admins see only the “For admins” setup guidance plus the registered-connector management panel. In-app admin actions are gated by `APP_ADMIN_EMAILS` from Vercel environment variables.
 - `app/admin-integrations/page.tsx` should keep the same sidebar/header chrome and overall card density as the main integrations dashboard, while `src/components/admin/integrations/managed-connector-list.tsx` should keep mirroring the compact integration-card treatment with visible delete actions and logo/avatar tiles.
+- Admin integrations jsdom tests should prefer stable accessibility hooks that already exist in the UI (`button[aria-expanded]` for provider rows and `button[aria-controls="managed-connector-details-<slug>"]` for managed-connector cards) instead of relying on generic `Show details` text searches or button ordering.
 
 - `src/lib/integrations/oauth-provider-catalog.ts` and `app/api/integrations/oauth-provider-catalog/route.ts` expose the researched OAuth-capable provider catalog used by the admin-integrations UI.
 - `app/api/integrations/discover/route.ts` and `src/lib/integrations/discovery.ts` provide server-side function discovery for managed connectors and remote MCP servers.
