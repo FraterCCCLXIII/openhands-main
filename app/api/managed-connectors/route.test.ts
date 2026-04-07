@@ -10,7 +10,7 @@ vi.mock("@/src/lib/auth", () => ({
 
 vi.mock("@neondatabase/serverless", () => ({ neon: () => getActiveSql() }));
 
-import { GET as getBuiltInConnectors } from "@/app/api/integrations/built-in-connectors/route";
+import { GET as getManagedConnectors } from "@/app/api/integrations/managed-connectors/route";
 import { createTestRepository, getActiveSql } from "@/src/lib/db/pglite-test-utils";
 
 import { GET, POST } from "./route";
@@ -67,7 +67,7 @@ afterEach(async () => {
 });
 
 describe("/api/managed-connectors", () => {
-  it("stores a managed connector for allowlisted app administrators and exposes it through the built-in catalog", async () => {
+  it("stores a managed connector for allowlisted app administrators and exposes it through the managed catalog", async () => {
     vi.stubEnv("APP_ADMIN_EMAILS", "admin@example.com,ops@example.com");
 
     const response = await POST(createManagedConnectorRequest());
@@ -92,12 +92,13 @@ describe("/api/managed-connectors", () => {
     const connectors = (await listResponse.json()) as Array<{ slug: string }>;
     expect(connectors.some((connector) => connector.slug === "acme-crm")).toBe(true);
 
-    const builtInResponse = await getBuiltInConnectors();
-    const builtIns = (await builtInResponse.json()) as Array<{
+    const managedConnectorOptionsResponse = await getManagedConnectors();
+    const managedConnectorOptions =
+      (await managedConnectorOptionsResponse.json()) as Array<{
       slug: string;
       oauthConfigured?: boolean;
     }>;
-    expect(builtIns).toContainEqual(
+    expect(managedConnectorOptions).toContainEqual(
       expect.objectContaining({
         slug: "acme-crm",
         oauthConfigured: true,

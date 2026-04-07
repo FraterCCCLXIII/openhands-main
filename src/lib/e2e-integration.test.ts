@@ -2,7 +2,7 @@
  * End-to-end integration tests exercising the full service stack with a real
  * (PGlite-backed) database.
  *
- * These tests cover the built-in connector → discovery → integration creation
+ * These tests cover the managed connector → discovery → integration creation
  * path that is otherwise only exercised in production with a real Postgres
  * instance and Neon serverless driver.
  */
@@ -33,7 +33,7 @@ const { MockAdapter } = await import("./adapters/mock-adapter");
 const { HttpAdapter } = await import("./adapters/http-adapter");
 const { McpAdapter } = await import("./adapters/mcp-adapter");
 const { NotificationPublisher } = await import("./notifications/publisher");
-const { listAvailableBuiltInConnectors, listDefaultBuiltInConnectors, buildManagedConnectorTools, resolveManagedConnectorCredentials } =
+const { listAvailableManagedConnectors, listDefaultManagedConnectors, buildManagedConnectorTools, resolveManagedConnectorCredentials } =
   await import("./integrations/managed-connectors");
 
 beforeAll(() => {
@@ -72,13 +72,13 @@ afterEach(async () => {
 const TEST_OWNER = "e2e@test.local";
 
 // ---------------------------------------------------------------------------
-// Built-in connector listing
+// Managed connector listing
 // ---------------------------------------------------------------------------
-describe("built-in connector listing", () => {
+describe("managed connector listing", () => {
   it("returns catalog-backed default connectors when no DB records exist", async () => {
-    const connectors = await listAvailableBuiltInConnectors(repo);
+    const connectors = await listAvailableManagedConnectors(repo);
 
-    // Default built-ins are derived from the OAuth provider catalog where
+    // Default manageds are derived from the OAuth provider catalog where
     // registrationDefaults specifies provider=http + apiBaseUrl + openApiUrl.
     // ElevenLabs is the canonical example.
     const elevenlabs = connectors.find((c) => c.slug === "elevenlabs");
@@ -86,8 +86,8 @@ describe("built-in connector listing", () => {
     expect(elevenlabs!.authStrategy).toBe("api_key");
   });
 
-  it("returns static default built-in connectors from catalog", () => {
-    const defaults = listDefaultBuiltInConnectors();
+  it("returns static default managed connectors from catalog", () => {
+    const defaults = listDefaultManagedConnectors();
     expect(defaults.length).toBeGreaterThan(0);
 
     // Every default should have key fields populated
@@ -121,7 +121,7 @@ describe("built-in connector listing", () => {
       updatedAt: now,
     });
 
-    const connectors = await listAvailableBuiltInConnectors(repo);
+    const connectors = await listAvailableManagedConnectors(repo);
     const elevenlabs = connectors.find((c) => c.slug === "elevenlabs");
 
     expect(elevenlabs).toBeDefined();
@@ -154,7 +154,7 @@ describe("built-in connector listing", () => {
       updatedAt: now,
     });
 
-    const connectors = await listAvailableBuiltInConnectors(repo);
+    const connectors = await listAvailableManagedConnectors(repo);
     const elevenlabs = connectors.find((c) => c.slug === "elevenlabs");
 
     // Disabled DB record hides the catalog default
@@ -163,9 +163,9 @@ describe("built-in connector listing", () => {
 });
 
 // ---------------------------------------------------------------------------
-// Full flow: built-in connector → integration creation → list
+// Full flow: managed connector → integration creation → list
 // ---------------------------------------------------------------------------
-describe("built-in connector → integration creation → listing flow", () => {
+describe("managed connector → integration creation → listing flow", () => {
   it("creates an integration from a managed connector and retrieves it", async () => {
     const now = new Date().toISOString();
 
@@ -201,9 +201,9 @@ describe("built-in connector → integration creation → listing flow", () => {
       updatedAt: now,
     });
 
-    // Step 2: Verify it appears in the built-in connector list
-    const builtIns = await listAvailableBuiltInConnectors(repo);
-    const testApi = builtIns.find((c) => c.slug === "test-api");
+    // Step 2: Verify it appears in the managed connector list
+    const managedConnectorOptions = await listAvailableManagedConnectors(repo);
+    const testApi = managedConnectorOptions.find((c) => c.slug === "test-api");
     expect(testApi).toBeDefined();
     expect(testApi!.toolCount).toBe(2);
     expect(testApi!.authStrategy).toBe("bearer");

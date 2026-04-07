@@ -140,7 +140,6 @@ describe("PATCH /api/user/integrations/[integrationKey]/tools/[toolName]", () =>
       ...integration,
       config: {
         builtInSlug: "slack",
-        managedConnectorSlug: "slack",
       },
     });
     const { apiKey } = await service.rotateUserApiKey("owner@example.com");

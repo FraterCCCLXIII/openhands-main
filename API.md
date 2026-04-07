@@ -53,7 +53,7 @@ Legacy redirects:
   - `GET|POST /api/admin/managed-connectors`
   - `DELETE /api/admin/managed-connectors/[slug]`
   - `POST /api/admin/integrations/discover`
-  - `GET /api/admin/integrations/built-in-connectors`
+  - `GET /api/admin/integrations/managed-connectors`
   - `GET /api/admin/integrations/oauth-provider-catalog`
   - `GET /api/admin/notifications`
   - `GET /api/admin/access-requests`

@@ -4,7 +4,7 @@ import { listOAuthProviderCatalog } from "@/src/lib/integrations/oauth-provider-
 import { getOAuthProviderRegistrationDefaults } from "@/src/lib/integrations/oauth-provider-registration-defaults";
 import type {
   AuthStrategy,
-  BuiltInConnectorOption,
+  ManagedConnectorOption,
   ToolSpec,
   ManagedConnectorDefinition,
   ManagedConnectorToolDefinition,
@@ -20,7 +20,7 @@ interface ConnectorCredentialDefaults {
   apiKeyHeaderName?: string;
 }
 
-export interface DefaultBuiltInConnectorDefinition
+export interface DefaultManagedConnectorDefinition
   extends ConnectorCredentialDefaults {
   description: string;
   appUrl?: string;
@@ -41,9 +41,9 @@ const isManagedConnectorOAuthConfigured = (connector: ManagedConnectorRecord) =>
 const getConfiguredApiKeyHeaderName = (slug: string) =>
   getOAuthProviderRegistrationDefaults(slug)?.apiKeyHeaderName?.trim() || undefined;
 
-const toBuiltInConnectorOption = (
+const toManagedConnectorOption = (
   connector: Pick<
-    DefaultBuiltInConnectorDefinition,
+    DefaultManagedConnectorDefinition,
     | "slug"
     | "name"
     | "description"
@@ -60,7 +60,7 @@ const toBuiltInConnectorOption = (
     toolCount: number;
     oauthConfigured: boolean;
   },
-): BuiltInConnectorOption => ({
+): ManagedConnectorOption => ({
   slug: connector.slug,
   name: connector.name,
   description: connector.description,
@@ -77,7 +77,7 @@ const toBuiltInConnectorOption = (
   apiKeyHeaderName: connector.apiKeyHeaderName,
 });
 
-const isDefaultBuiltInProvider = (provider: OAuthProviderCatalogOption) => {
+const isDefaultManagedConnectorProvider = (provider: OAuthProviderCatalogOption) => {
   const defaults = provider.registrationDefaults;
   if (!defaults?.authStrategy || defaults.authStrategy === "oauth2") {
     return false;
@@ -94,10 +94,10 @@ const isDefaultBuiltInProvider = (provider: OAuthProviderCatalogOption) => {
   return false;
 };
 
-const toDefaultBuiltInConnector = (
+const toDefaultManagedConnector = (
   provider: OAuthProviderCatalogOption,
-): DefaultBuiltInConnectorDefinition | null => {
-  if (!isDefaultBuiltInProvider(provider)) {
+): DefaultManagedConnectorDefinition | null => {
+  if (!isDefaultManagedConnectorProvider(provider)) {
     return null;
   }
 
@@ -107,7 +107,7 @@ const toDefaultBuiltInConnector = (
   }
 
   return {
-    slug: provider.builtInSlug ?? provider.slug,
+    slug: provider.managedConnectorSlug ?? provider.slug,
     name: provider.name,
     description: provider.description,
     appUrl: provider.appUrl,
@@ -131,25 +131,25 @@ const toDefaultBuiltInConnector = (
   };
 };
 
-export const listDefaultBuiltInConnectors = (): BuiltInConnectorOption[] =>
+export const listDefaultManagedConnectors = (): ManagedConnectorOption[] =>
   listOAuthProviderCatalog()
-    .map(toDefaultBuiltInConnector)
-    .filter((connector): connector is DefaultBuiltInConnectorDefinition =>
+    .map(toDefaultManagedConnector)
+    .filter((connector): connector is DefaultManagedConnectorDefinition =>
       connector != null,
     )
     .map((connector) =>
-      toBuiltInConnectorOption({
+      toManagedConnectorOption({
         ...connector,
         toolCount: 0,
         oauthConfigured: true,
       }),
     );
 
-export const getDefaultBuiltInConnector = (slug: string) =>
+export const getDefaultManagedConnector = (slug: string) =>
   listOAuthProviderCatalog()
-    .filter((provider) => (provider.builtInSlug ?? provider.slug) === slug)
-    .map(toDefaultBuiltInConnector)
-    .find((connector): connector is DefaultBuiltInConnectorDefinition =>
+    .filter((provider) => (provider.managedConnectorSlug ?? provider.slug) === slug)
+    .map(toDefaultManagedConnector)
+    .find((connector): connector is DefaultManagedConnectorDefinition =>
       connector != null,
     ) ?? null;
 
@@ -184,10 +184,10 @@ export const sanitizeManagedConnector = (
   encryptedOAuthClient: undefined,
 });
 
-export const managedConnectorToBuiltInOption = (
+export const managedConnectorToOption = (
   connector: ManagedConnectorRecord,
-): BuiltInConnectorOption =>
-  toBuiltInConnectorOption({
+): ManagedConnectorOption =>
+  toManagedConnectorOption({
     slug: connector.slug,
     name: connector.name,
     description: connector.description,
@@ -297,24 +297,24 @@ export const resolveManagedConnectorCredentials = (
   }
 };
 
-export const listAvailableBuiltInConnectors = async (
+export const listAvailableManagedConnectors = async (
   repository: ContextRepository,
-): Promise<BuiltInConnectorOption[]> => {
+): Promise<ManagedConnectorOption[]> => {
   const managedConnectors = await repository.listManagedConnectors();
   const registeredSlugs = new Set(managedConnectors.map((connector) => connector.slug));
 
   return [
     ...managedConnectors
       .filter((candidate) => candidate.enabled)
-      .map(managedConnectorToBuiltInOption),
-    ...listDefaultBuiltInConnectors().filter(
+      .map(managedConnectorToOption),
+    ...listDefaultManagedConnectors().filter(
       (connector) => !registeredSlugs.has(connector.slug),
     ),
   ].sort((a, b) => a.name.localeCompare(b.name));
 };
 
-const defaultBuiltInToManagedDefinition = (
-  connector: DefaultBuiltInConnectorDefinition,
+const defaultManagedConnectorToDefinition = (
+  connector: DefaultManagedConnectorDefinition,
 ): ManagedConnectorDefinition => ({
   slug: connector.slug,
   name: connector.name,
@@ -344,10 +344,10 @@ export const listAllManagedConnectorDefinitions = async (
   const registeredSlugs = new Set(dbConnectors.map((c) => c.slug));
 
   const catalogDefaults = listOAuthProviderCatalog()
-    .map(toDefaultBuiltInConnector)
-    .filter((c): c is DefaultBuiltInConnectorDefinition => c != null)
+    .map(toDefaultManagedConnector)
+    .filter((c): c is DefaultManagedConnectorDefinition => c != null)
     .filter((c) => !registeredSlugs.has(c.slug))
-    .map(defaultBuiltInToManagedDefinition);
+    .map(defaultManagedConnectorToDefinition);
 
   return [...dbConnectors.map(sanitizeManagedConnector), ...catalogDefaults].sort(
     (a, b) => a.name.localeCompare(b.name),

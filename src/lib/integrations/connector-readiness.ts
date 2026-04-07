@@ -1,9 +1,9 @@
-import type { BuiltInConnectorOption } from "@/src/types/context-layer";
+import type { ManagedConnectorOption } from "@/src/types/context-layer";
 
-export const isBuiltInConnectorReady = (
-  connector: BuiltInConnectorOption,
+export const isManagedConnectorReady = (
+  connector: ManagedConnectorOption,
 ) => connector.oauthConfigured !== false;
 
-export const filterReadyBuiltInConnectors = (
-  connectors: BuiltInConnectorOption[],
-) => connectors.filter(isBuiltInConnectorReady);
+export const filterReadyManagedConnectors = (
+  connectors: ManagedConnectorOption[],
+) => connectors.filter(isManagedConnectorReady);

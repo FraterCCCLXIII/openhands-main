@@ -33,7 +33,7 @@ import type { IntegrationSpec } from "@/src/types/context-layer";
 
 const integrationDiscoveryRequestSchema = z.object({
   key: z.string().min(1),
-  kind: z.enum(["mcp", "built_in"]),
+  kind: z.enum(["mcp", "managed"]),
   config: z.record(z.string(), z.unknown()).default({}),
   credentials: z.record(z.string(), z.unknown()).default({}),
 });
@@ -228,15 +228,15 @@ export const buildAdminOpenApiDocument = ({
           },
         },
       },
-      "/api/admin/integrations/built-in-connectors": {
+      "/api/admin/integrations/managed-connectors": {
         get: {
           tags: ["Admin Discovery"],
-          operationId: "listAdminBuiltInConnectors",
-          summary: "List built-in connector catalog",
+          operationId: "listAdminManagedConnectors",
+          summary: "List managed connector catalog",
           security,
           responses: {
             200: buildJsonRefResponse(
-              "Available built-in connectors.",
+              "Available managed connectors.",
               "ArbitraryObjectArray",
             ),
             401: unauthorizedResponse,

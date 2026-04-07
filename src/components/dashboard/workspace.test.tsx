@@ -29,7 +29,7 @@ vi.mock("next-auth/react", () => ({
 import { DashboardWorkspace } from "@/src/components/dashboard/workspace";
 import type {
   AccessRequest,
-  BuiltInConnectorOption,
+  ManagedConnectorOption,
   IntegrationSpec,
 } from "@/src/types/context-layer";
 
@@ -49,7 +49,7 @@ const setInputValue = (element: HTMLInputElement | undefined, value: string) => 
   element.dispatchEvent(new Event("change", { bubbles: true }));
 };
 
-const builtInConnectors: BuiltInConnectorOption[] = [
+const managedConnectors: ManagedConnectorOption[] = [
   {
     slug: "elevenlabs",
     name: "ElevenLabs",
@@ -228,14 +228,14 @@ describe("DashboardWorkspace", () => {
         url === "/api/integrations" ||
         url === "/api/access-requests" ||
         url === "/api/notifications" ||
-        url === "/api/integrations/built-in-connectors"
+        url === "/api/integrations/managed-connectors"
       ) {
         return new Response(
           JSON.stringify(
             url === "/api/integrations"
               ? integrationsState
-              : url === "/api/integrations/built-in-connectors"
-                ? builtInConnectors
+              : url === "/api/integrations/managed-connectors"
+                ? managedConnectors
                 : [],
           ),
           {
@@ -306,11 +306,11 @@ describe("DashboardWorkspace", () => {
       if (
         url === "/api/access-requests" ||
         url === "/api/notifications" ||
-        url === "/api/integrations/built-in-connectors"
+        url === "/api/integrations/managed-connectors"
       ) {
         return new Response(
           JSON.stringify(
-            url === "/api/integrations/built-in-connectors" ? builtInConnectors : [],
+            url === "/api/integrations/managed-connectors" ? managedConnectors : [],
           ),
           {
             status: 200,
@@ -403,8 +403,8 @@ describe("DashboardWorkspace", () => {
     fetchMock.mockImplementation(async (input: RequestInfo | URL) => {
       const url = typeof input === "string" ? input : input.toString();
 
-      if (url === "/api/integrations/built-in-connectors") {
-        return new Response(JSON.stringify(builtInConnectors), {
+      if (url === "/api/integrations/managed-connectors") {
+        return new Response(JSON.stringify(managedConnectors), {
           status: 200,
           headers: { "Content-Type": "application/json" },
         });
@@ -469,8 +469,8 @@ describe("DashboardWorkspace", () => {
     fetchMock.mockImplementation(async (input: RequestInfo | URL) => {
       const url = typeof input === "string" ? input : input.toString();
 
-      if (url === "/api/integrations/built-in-connectors") {
-        return new Response(JSON.stringify(builtInConnectors), {
+      if (url === "/api/integrations/managed-connectors") {
+        return new Response(JSON.stringify(managedConnectors), {
           status: 200,
           headers: { "Content-Type": "application/json" },
         });
@@ -508,8 +508,8 @@ describe("DashboardWorkspace", () => {
       await new Promise((resolve) => setTimeout(resolve, 10));
     });
 
-    const addMenuSlugs = Array.from(container.querySelectorAll("[data-built-in-slug]")).map(
-      (element) => element.getAttribute("data-built-in-slug"),
+    const addMenuSlugs = Array.from(container.querySelectorAll("[data-managed-slug]")).map(
+      (element) => element.getAttribute("data-managed-slug"),
     );
 
     expect(addMenuSlugs).not.toContain("github");
@@ -521,8 +521,8 @@ describe("DashboardWorkspace", () => {
     fetchMock.mockImplementation(async (input: RequestInfo | URL) => {
       const url = typeof input === "string" ? input : input.toString();
 
-      if (url === "/api/integrations/built-in-connectors") {
-        return new Response(JSON.stringify(builtInConnectors), {
+      if (url === "/api/integrations/managed-connectors") {
+        return new Response(JSON.stringify(managedConnectors), {
           status: 200,
           headers: { "Content-Type": "application/json" },
         });
@@ -562,7 +562,7 @@ describe("DashboardWorkspace", () => {
       await new Promise((resolve) => setTimeout(resolve, 10));
     });
 
-    const githubCard = container.querySelector('[data-built-in-slug="github"]');
+    const githubCard = container.querySelector('[data-managed-slug="github"]');
     expect(githubCard).toBeTruthy();
 
     await act(async () => {
@@ -571,7 +571,7 @@ describe("DashboardWorkspace", () => {
 
     expect(container.textContent).toContain("Step-by-step integration setup");
     expect(pushMock).toHaveBeenCalledWith(
-      "/integrations?showIntegrationWizard=1&builtIn=github",
+      "/integrations?showIntegrationWizard=1&managedConnector=github",
     );
   });
 
@@ -579,8 +579,8 @@ describe("DashboardWorkspace", () => {
     fetchMock.mockImplementation(async (input: RequestInfo | URL) => {
       const url = typeof input === "string" ? input : input.toString();
 
-      if (url === "/api/integrations/built-in-connectors") {
-        return new Response(JSON.stringify(builtInConnectors), {
+      if (url === "/api/integrations/managed-connectors") {
+        return new Response(JSON.stringify(managedConnectors), {
           status: 200,
           headers: { "Content-Type": "application/json" },
         });
@@ -604,7 +604,7 @@ describe("DashboardWorkspace", () => {
     useSearchParamsMock.mockReturnValue(
       new URLSearchParams({
         showIntegrationWizard: "1",
-        builtIn: "notion",
+        managedConnector: "notion",
         oauth_provider: "webflow",
         oauth_status: "error",
         oauth_error:
@@ -723,7 +723,7 @@ describe("DashboardWorkspace", () => {
         authStrategy: "bearer",
         enabled: true,
         fineGrainedPermissions: true,
-        config: { builtInSlug: "github" },
+        config: { managedConnectorSlug: "github" },
         credentials: {},
         tools: {
           zetaWrite: {
@@ -767,11 +767,11 @@ describe("DashboardWorkspace", () => {
       if (
         url === "/api/access-requests" ||
         url === "/api/notifications" ||
-        url === "/api/integrations/built-in-connectors"
+        url === "/api/integrations/managed-connectors"
       ) {
         return new Response(
           JSON.stringify(
-            url === "/api/integrations/built-in-connectors" ? builtInConnectors : [],
+            url === "/api/integrations/managed-connectors" ? managedConnectors : [],
           ),
           {
             status: 200,
@@ -976,7 +976,7 @@ describe("DashboardWorkspace", () => {
         authStrategy: "bearer",
         enabled: true,
         fineGrainedPermissions: true,
-        config: { builtInSlug: "github" },
+        config: { managedConnectorSlug: "github" },
         credentials: {},
         tools: {
           staleRead: {
@@ -1026,11 +1026,11 @@ describe("DashboardWorkspace", () => {
       if (
         url === "/api/access-requests" ||
         url === "/api/notifications" ||
-        url === "/api/integrations/built-in-connectors"
+        url === "/api/integrations/managed-connectors"
       ) {
         return new Response(
           JSON.stringify(
-            url === "/api/integrations/built-in-connectors" ? builtInConnectors : [],
+            url === "/api/integrations/managed-connectors" ? managedConnectors : [],
           ),
           {
             status: 200,

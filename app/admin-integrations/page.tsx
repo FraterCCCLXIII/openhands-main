@@ -12,8 +12,8 @@ import { isAppAdminEmail } from "@/src/lib/app-admins";
 import { auth } from "@/src/lib/auth";
 import { getOAuthCallbackBaseUrl } from "@/src/lib/auth-config";
 import { getContextLayerRepository, getContextLayerService } from "@/src/lib/core/runtime";
-import { filterReadyBuiltInConnectors } from "@/src/lib/integrations/connector-readiness";
-import { listBuiltInConnectors } from "@/src/lib/integrations/discovery";
+import { filterReadyManagedConnectors } from "@/src/lib/integrations/connector-readiness";
+import { listManagedConnectors } from "@/src/lib/integrations/discovery";
 import {
   getAdminContactEmail,
   getAdminContactInstruction,
@@ -37,8 +37,8 @@ export default async function AdminIntegrationsPage() {
   const adminEmail = getAdminContactEmail();
   const adminInstruction = getAdminContactInstruction(adminEmail ?? undefined);
   const repository = getContextLayerRepository();
-  const readyBuiltInConnectors = filterReadyBuiltInConnectors(
-    await listBuiltInConnectors(repository),
+  const readyManagedConnectors = filterReadyManagedConnectors(
+    await listManagedConnectors(repository),
   );
   const providerCatalog = listOAuthProviderCatalog();
   const canRegisterManagedConnectors = isAppAdminEmail(session?.user?.email ?? undefined);
@@ -57,7 +57,7 @@ export default async function AdminIntegrationsPage() {
             <Badge>
               {canRegisterManagedConnectors
                 ? `${managedConnectors.length} registered`
-                : `${readyBuiltInConnectors.length} ready`}
+                : `${readyManagedConnectors.length} ready`}
             </Badge>
           }
           activeItem="adminIntegrations"
@@ -68,7 +68,7 @@ export default async function AdminIntegrationsPage() {
                 userName={userName}
                 userEmail={userEmail}
                 badges={[
-                  <Badge key="ready">{readyBuiltInConnectors.length} ready</Badge>,
+                  <Badge key="ready">{readyManagedConnectors.length} ready</Badge>,
                   <Badge key="catalog">{providerCatalog.length} catalog</Badge>,
                 ]}
                 action={<DashboardSignOutButton />}
@@ -95,7 +95,7 @@ export default async function AdminIntegrationsPage() {
               {canRegisterManagedConnectors ? (
                 <Badge>{managedConnectors.length} registered</Badge>
               ) : null}
-              <Badge>{readyBuiltInConnectors.length} ready now</Badge>
+              <Badge>{readyManagedConnectors.length} ready now</Badge>
               <Badge>{providerCatalog.length} catalog options</Badge>
             </div>
           </header>
@@ -110,7 +110,7 @@ export default async function AdminIntegrationsPage() {
               <ArrowLeft className="h-4 w-4" />
               Back to integrations
             </Link>
-            <Badge>{readyBuiltInConnectors.length} connectors ready now</Badge>
+            <Badge>{readyManagedConnectors.length} connectors ready now</Badge>
           </div>
 
           {canRegisterManagedConnectors ? (
@@ -236,7 +236,7 @@ export default async function AdminIntegrationsPage() {
 
           <IntegrationsCatalog
             providerCatalog={providerCatalog}
-            initialReadyBuiltInConnectors={readyBuiltInConnectors}
+            initialReadyManagedConnectors={readyManagedConnectors}
             managedConnectors={managedConnectors}
             canRegisterManagedConnectors={canRegisterManagedConnectors}
             oauthCallbackBaseUrl={oauthCallbackBaseUrl}

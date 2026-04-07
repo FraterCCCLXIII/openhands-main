@@ -475,7 +475,6 @@ describe("ContextLayerService", () => {
       ...baseIntegration,
       config: {
         builtInSlug: "salesforce",
-        managedConnectorSlug: "salesforce",
       },
     });
 
@@ -1209,7 +1208,6 @@ describe("ContextLayerService", () => {
       fineGrainedPermissions: true,
       config: {
         builtInSlug: "notion",
-        managedConnectorSlug: "notion",
       },
       credentials: {},
       tools: {},
@@ -1313,7 +1311,7 @@ describe("ContextLayerService", () => {
       authStrategy: "oauth2",
       enabled: true,
       fineGrainedPermissions: true,
-      config: { builtInSlug: "notion" },
+      config: { managedConnectorSlug: "notion" },
       credentials: {},
       tools: {
         search: {
@@ -1394,7 +1392,6 @@ describe("ContextLayerService", () => {
       config: {
         builtInSlug: "acme-crm",
         apiBaseUrl: "https://api.acme.test/v1",
-        managedConnectorSlug: "acme-crm",
       },
       credentials: {},
       tools: {
