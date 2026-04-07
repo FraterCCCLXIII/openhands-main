@@ -153,8 +153,9 @@ export const DashboardWorkspace = ({
 
   const accessRequestsQuery = useQuery({
     queryKey: ["access-requests"],
-    queryFn: () => fetchJson<AccessRequest[]>("/api/access-requests"),
+    queryFn: () => fetchJson<AccessRequest[]>("/api/case-by-case-approvals"),
     initialData: initialAccessRequests,
+    enabled: activeSection === "caseByCaseApprovals",
   });
 
   const invalidateAll = async () => {
@@ -214,8 +215,6 @@ export const DashboardWorkspace = ({
 
   const integrations = integrationsQuery.data ?? [];
   const accessRequests = accessRequestsQuery.data ?? [];
-  const approverIdentity =
-    currentUser.email?.trim() || currentUser.name?.trim() || "human-approver";
   const sortedAccessRequests = useMemo(
     () =>
       [...accessRequests].sort(
@@ -498,20 +497,18 @@ export const DashboardWorkspace = ({
     try {
       for (const requestId of requestIds) {
         await fetchJson(
-          `/api/access-requests/${requestId}/${action === "approve" ? "approve" : "reject"}`,
+          `/api/case-by-case-approvals/${requestId}/${action === "approve" ? "approve" : "reject"}`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              approver: approverIdentity,
-              ...(action === "approve"
-                ? {
+            body:
+              action === "approve"
+                ? JSON.stringify({
                     durationMinutes: approvalHoursToMinutes(
                       normalizedApprovalDurationHours,
                     ),
-                  }
-                : {}),
-            }),
+                  })
+                : JSON.stringify({}),
           },
         );
       }

@@ -277,10 +277,7 @@ const discoverManagedConnectorSelection = async (
   input: IntegrationDiscoveryInput,
   options: IntegrationDiscoveryOptions,
 ): Promise<IntegrationDiscoveryResult> => {
-  const slug =
-    getOptionalTrimmedString(input.config, "managedConnectorSlug") ??
-    getOptionalTrimmedString(input.config, "builtInSlug") ??
-    input.key.trim();
+  const slug = getOptionalTrimmedString(input.config, "managedConnectorSlug") ?? input.key.trim();
 
   if (options.repository) {
     const storedConnector = await options.repository.getManagedConnector(slug);
@@ -339,9 +336,7 @@ const discoverMcpIntegration = async (
         authStrategy,
         credentials,
         integrationKey: input.key,
-        managedConnectorSlug:
-          getOptionalTrimmedString(input.config, "managedConnectorSlug") ??
-          getOptionalTrimmedString(input.config, "builtInSlug"),
+        managedConnectorSlug: getOptionalTrimmedString(input.config, "managedConnectorSlug"),
       },
       transportOrder: getMcpTransportOrder(serverUrl, input.config),
     },

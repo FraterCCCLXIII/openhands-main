@@ -293,7 +293,7 @@ describe("dashboard-workspace-utils", () => {
         authStrategy: "bearer",
         enabled: false,
         fineGrainedPermissions: true,
-        config: { builtInSlug: " github ", serverUrl: "https://github.com/api" },
+        config: { managedConnectorSlug: " github ", serverUrl: "https://github.com/api" },
         credentials: {},
         tools: {
           delete_repo: {
