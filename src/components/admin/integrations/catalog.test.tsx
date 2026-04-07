@@ -4,7 +4,12 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { IntegrationsCatalog } from "@/src/components/admin/integrations/catalog";
+import {
+  IntegrationsCatalog,
+  sortReadyBuiltInConnectors,
+  toDefaultReadyBuiltInConnector,
+  upsertReadyBuiltInConnector,
+} from "@/src/components/admin/integrations/catalog";
 import type {
   BuiltInConnectorOption,
   ManagedConnectorDefinition,
@@ -90,6 +95,132 @@ const managedConnectors: ManagedConnectorDefinition[] = [
     updatedAt: "2026-03-09T00:00:00.000Z",
   },
 ];
+
+const createBuiltInConnector = (
+  overrides: Partial<BuiltInConnectorOption> & Pick<BuiltInConnectorOption, "slug" | "name">,
+): BuiltInConnectorOption => ({
+  description: `${overrides.name} connector`,
+  toolCount: 1,
+  categories: ["Engineering"],
+  authModes: ["oauth2"],
+  authStrategy: "oauth2",
+  oauthConfigured: true,
+  credentialLabel: `Connect ${overrides.name}`,
+  credentialPlaceholder: `Connect ${overrides.name}`,
+  credentialHelp: `Connect ${overrides.name} with OAuth.`,
+  ...overrides,
+});
+
+const createProvider = (
+  overrides: Partial<OAuthProviderCatalogOption> & Pick<OAuthProviderCatalogOption, "slug" | "name">,
+): OAuthProviderCatalogOption => ({
+  description: `${overrides.name} provider`,
+  categories: ["AI"],
+  authStrategy: "oauth2",
+  availability: "oauth_ready",
+  docsUrl: `https://example.com/${overrides.slug}`,
+  notes: `${overrides.name} notes`,
+  popularityRank: 99,
+  ...overrides,
+});
+
+describe("catalog helper utilities", () => {
+  it("sorts ready connectors by name and slug while replacing duplicate slugs", () => {
+    const sorted = sortReadyBuiltInConnectors([
+      createBuiltInConnector({ slug: "zeta", name: "Zulu" }),
+      createBuiltInConnector({ slug: "alpha-b", name: "Alpha" }),
+      createBuiltInConnector({ slug: "alpha-a", name: "Alpha" }),
+    ]);
+
+    expect(sorted.map((connector) => `${connector.name}:${connector.slug}`)).toEqual([
+      "Alpha:alpha-a",
+      "Alpha:alpha-b",
+      "Zulu:zeta",
+    ]);
+
+    const updated = upsertReadyBuiltInConnector(sorted, createBuiltInConnector({
+      slug: "alpha-b",
+      name: "Alpha",
+      description: "Updated Alpha connector",
+    }));
+
+    expect(updated.map((connector) => connector.slug)).toEqual([
+      "alpha-a",
+      "alpha-b",
+      "zeta",
+    ]);
+    expect(updated.filter((connector) => connector.slug === "alpha-b")).toHaveLength(1);
+    expect(updated.find((connector) => connector.slug === "alpha-b")?.description).toBe(
+      "Updated Alpha connector",
+    );
+  });
+
+  it("only builds default ready connectors for non-OAuth providers with complete defaults", () => {
+    const oauthProvider = createProvider({
+      slug: "google-calendar",
+      name: "Google Calendar",
+      registrationDefaults: {
+        provider: "http",
+        apiBaseUrl: "https://www.googleapis.com/calendar/v3",
+        openApiUrl: "https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest",
+      },
+    });
+    const incompleteHttpProvider = createProvider({
+      slug: "airtable",
+      name: "Airtable",
+      authStrategy: "api_key",
+      registrationDefaults: {
+        provider: "http",
+        authStrategy: "api_key",
+        apiBaseUrl: "https://api.airtable.com",
+      },
+    });
+    const incompleteMcpProvider = createProvider({
+      slug: "webflow",
+      name: "Webflow",
+      authStrategy: "bearer",
+      registrationDefaults: {
+        provider: "mcp",
+        authStrategy: "bearer",
+      },
+    });
+    const readyManualProvider = createProvider({
+      slug: "elevenlabs",
+      name: "ElevenLabs",
+      builtInSlug: "elevenlabs",
+      authStrategy: "api_key",
+      appUrl: "https://elevenlabs.io",
+      registrationDefaults: {
+        provider: "http",
+        authStrategy: "api_key",
+        authModes: ["api_key"],
+        apiBaseUrl: "https://api.elevenlabs.io",
+        openApiUrl: "https://api.elevenlabs.io/openapi.json",
+        credentialLabel: "ElevenLabs API key",
+        credentialPlaceholder: "Paste your ElevenLabs API key",
+        credentialHelp: "Use a personal ElevenLabs key.",
+        apiKeyHeaderName: "xi-api-key",
+      },
+    });
+
+    expect(toDefaultReadyBuiltInConnector(oauthProvider)).toBeNull();
+    expect(toDefaultReadyBuiltInConnector(incompleteHttpProvider)).toBeNull();
+    expect(toDefaultReadyBuiltInConnector(incompleteMcpProvider)).toBeNull();
+    expect(toDefaultReadyBuiltInConnector(readyManualProvider)).toMatchObject({
+      slug: "elevenlabs",
+      name: "ElevenLabs",
+      authStrategy: "api_key",
+      authModes: ["api_key"],
+      oauthConfigured: true,
+      credentialLabel: "ElevenLabs API key",
+      credentialPlaceholder: "Paste your ElevenLabs API key",
+      credentialHelp: "Use a personal ElevenLabs key.",
+      apiKeyHeaderName: "xi-api-key",
+      toolCount: 0,
+    });
+  });
+});
+
 
 describe("IntegrationsCatalog", () => {
   let container: HTMLDivElement;

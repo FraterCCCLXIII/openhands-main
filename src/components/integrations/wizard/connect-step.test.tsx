@@ -71,7 +71,22 @@ const elevenLabsConnector: BuiltInConnectorOption = {
   apiKeyHeaderName: "xi-api-key",
 };
 
+const customTokenConnector = {
+  slug: "custom-token",
+  name: "Custom Token",
+  description: "",
+  toolCount: 2,
+  categories: ["Operations"],
+  authModes: ["api_key"],
+  authStrategy: "api_key",
+  oauthConfigured: true,
+} as BuiltInConnectorOption;
+
+
 type RenderOptions = {
+  builtInConnectors?: BuiltInConnectorOption[];
+  builtInConnectorsPending?: boolean;
+  connectorSearch?: string;
   draft?: WizardDraft;
   selectedConnector?: BuiltInConnectorOption | null;
   selectedConnection?: IntegrationConnectionStatus | null;
@@ -105,10 +120,10 @@ const renderConnectStep = async (options: RenderOptions = {}) => {
     return (
       <>
         <ConnectStep
-          builtInConnectors={[notionConnector, elevenLabsConnector]}
-          builtInConnectorsPending={false}
+          builtInConnectors={options.builtInConnectors ?? [notionConnector, elevenLabsConnector]}
+          builtInConnectorsPending={options.builtInConnectorsPending ?? false}
           canDiscover={options.canDiscover ?? true}
-          connectorSearch=""
+          connectorSearch={options.connectorSearch ?? ""}
           discoverFeedback={options.discoverFeedback ?? null}
           discoverPending={options.discoverPending ?? false}
           draft={draft}
@@ -164,6 +179,159 @@ describe("ConnectStep", () => {
       configurable: true,
       value: originalLocation,
     });
+  });
+
+  it("renders searchable built-in connector options and forwards search changes", async () => {
+    const pendingRender = await renderConnectStep({ builtInConnectorsPending: true });
+    const pendingSearchInput = pendingRender.container.querySelector(
+      'input[list="built-in-connector-options"]',
+    ) as HTMLInputElement | null;
+
+    expect(pendingSearchInput?.placeholder).toBe("Loading supported connectors...");
+    expect(pendingSearchInput?.disabled).toBe(true);
+    await pendingRender.cleanup();
+
+    const { container, cleanup, onConnectorSearchChange } = await renderConnectStep({
+      connectorSearch: "Not",
+    });
+    const searchInput = container.querySelector(
+      'input[list="built-in-connector-options"]',
+    ) as HTMLInputElement | null;
+    const optionValues = Array.from(
+      container.querySelectorAll('#built-in-connector-options option'),
+    ).map((option) => (option as HTMLOptionElement).value);
+
+    expect(searchInput?.placeholder).toBe("Choose GitHub, Notion, Slack...");
+    expect(optionValues).toEqual(["Notion (notion)", "ElevenLabs (elevenlabs)"]);
+
+    await act(async () => {
+      setInputValue(searchInput, "Notion");
+    });
+
+    expect(onConnectorSearchChange).toHaveBeenCalledWith("Notion");
+    expect(container.textContent).toContain("Click here.");
+
+    await cleanup();
+  });
+
+  it("shows OAuth connection status copy and disables unavailable connection actions", async () => {
+    const connected = await renderConnectStep({
+      draft: {
+        ...baseBuiltInDraft,
+        key: "notion-workspace",
+        name: "Notion Workspace",
+        builtInSlug: "notion",
+      },
+      selectedConnector: { ...notionConnector, description: "" },
+      selectedConnection: {
+        integrationKey: "notion-workspace",
+        provider: "http",
+        authStrategy: "oauth2",
+        scopes: [],
+        displayName: "Acme Workspace",
+        expiresAt: "2026-04-08T12:00:00.000Z",
+        metadata: {},
+        createdAt: "2026-04-07T12:00:00.000Z",
+        updatedAt: "2026-04-07T12:00:00.000Z",
+      },
+      requiresOAuthConnection: true,
+      oauthConnectionEnabled: true,
+    });
+
+    expect(connected.container.textContent).toContain(
+      "This managed connector is registered for the current deployment.",
+    );
+    expect(connected.container.textContent).toContain("Acme Workspace");
+    expect(connected.container.textContent).toContain(
+      "This Notion token is stored per user in the database and will be injected automatically for agent calls.",
+    );
+    expect(connected.container.textContent).toContain(
+      "Notion is connected. Click Discover to save this integration with your stored OAuth credentials.",
+    );
+    expect(connected.container.textContent).toContain("Reconnect");
+    expect(connected.container.textContent).toContain("Expires");
+    await connected.cleanup();
+
+    const unavailable = await renderConnectStep({
+      draft: {
+        ...baseBuiltInDraft,
+        builtInSlug: "notion",
+      },
+      selectedConnector: notionConnector,
+      requiresOAuthConnection: true,
+      oauthConnectionEnabled: false,
+    });
+    const unavailableButton = Array.from(
+      unavailable.container.querySelectorAll("button"),
+    ).find((button) => button.textContent?.includes("Not available"));
+
+    expect(unavailableButton).toBeTruthy();
+    expect((unavailableButton as HTMLButtonElement | undefined)?.disabled).toBe(true);
+    expect(unavailable.container.textContent).toContain(
+      "Notion is not available on this deployment yet. Visit the admin integrations page to request it.",
+    );
+    expect(unavailable.container.textContent).toContain(
+      "Notion is not available on this deployment yet. Visit /admin-integrations to request it.",
+    );
+
+    await unavailable.cleanup();
+  });
+
+  it("falls back to generic API-key copy and keeps fields disabled for whitespace-only selections", async () => {
+    const disabled = await renderConnectStep({
+      draft: {
+        ...baseBuiltInDraft,
+        builtInSlug: "   ",
+      },
+      selectedConnector: customTokenConnector,
+    });
+    const disabledApiInput = disabled.container.querySelector(
+      'input[placeholder="Paste the provider API key"]',
+    ) as HTMLInputElement | null;
+    const disabledHeaderInput = disabled.container.querySelector(
+      'input[placeholder="X-API-Key"]',
+    ) as HTMLInputElement | null;
+
+    expect(disabledApiInput?.disabled).toBe(true);
+    expect(disabledHeaderInput?.disabled).toBe(true);
+    await disabled.cleanup();
+
+    const enabled = await renderConnectStep({
+      draft: {
+        ...baseBuiltInDraft,
+        builtInSlug: "custom-token",
+      },
+      selectedConnector: customTokenConnector,
+      builtInConnectors: [notionConnector, elevenLabsConnector, customTokenConnector],
+      statefulDraft: true,
+    });
+    const apiInput = enabled.container.querySelector(
+      'input[placeholder="Paste the provider API key"]',
+    ) as HTMLInputElement | null;
+    const headerInput = enabled.container.querySelector(
+      'input[placeholder="X-API-Key"]',
+    ) as HTMLInputElement | null;
+
+    expect(enabled.container.textContent).toContain("API key");
+    expect(enabled.container.textContent).toContain(
+      "Provide the provider API key that this managed connector should use upstream.",
+    );
+    expect(apiInput?.disabled).toBe(false);
+    expect(headerInput?.disabled).toBe(false);
+
+    await act(async () => {
+      setInputValue(apiInput, "token-123");
+      setInputValue(headerInput, "X-Test-Key");
+    });
+
+    expect(enabled.container.querySelector("[data-draft-state]")?.textContent).toContain(
+      '"apiKey":"token-123"',
+    );
+    expect(enabled.container.querySelector("[data-draft-state]")?.textContent).toContain(
+      '"headerName":"X-Test-Key"',
+    );
+
+    await enabled.cleanup();
   });
 
   it("starts the per-user OAuth flow for built-in connectors", async () => {

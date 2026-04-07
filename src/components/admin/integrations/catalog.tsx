@@ -20,12 +20,12 @@ interface IntegrationsCatalogProps {
   oauthCallbackBaseUrl: string;
 }
 
-const sortReadyBuiltInConnectors = (connectors: BuiltInConnectorOption[]) =>
+export const sortReadyBuiltInConnectors = (connectors: BuiltInConnectorOption[]) =>
   [...connectors].sort(
     (left, right) => left.name.localeCompare(right.name) || left.slug.localeCompare(right.slug),
   );
 
-const toReadyBuiltInConnector = (
+export const toReadyBuiltInConnector = (
   connector: ManagedConnectorDefinition,
 ): BuiltInConnectorOption => ({
   slug: connector.slug,
@@ -43,7 +43,7 @@ const toReadyBuiltInConnector = (
   credentialHelp: connector.credentialHelp,
 });
 
-const toDefaultReadyBuiltInConnector = (
+export const toDefaultReadyBuiltInConnector = (
   provider: OAuthProviderCatalogOption,
 ): BuiltInConnectorOption | null => {
   const defaults = provider.registrationDefaults;
@@ -81,7 +81,7 @@ const toDefaultReadyBuiltInConnector = (
   };
 };
 
-const upsertReadyBuiltInConnector = (
+export const upsertReadyBuiltInConnector = (
   connectors: BuiltInConnectorOption[],
   connector: BuiltInConnectorOption,
 ) =>

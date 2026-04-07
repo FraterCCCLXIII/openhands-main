@@ -11,7 +11,7 @@ import type {
   OAuthProviderCatalogOption,
 } from "@/src/types/context-layer";
 
-const availabilityTone = (availability: "oauth_ready" | "manual_token" | "planned") => {
+export const availabilityTone = (availability: "oauth_ready" | "manual_token" | "planned") => {
   switch (availability) {
     case "oauth_ready":
       return "success" as const;
@@ -22,7 +22,7 @@ const availabilityTone = (availability: "oauth_ready" | "manual_token" | "planne
   }
 };
 
-const availabilityLabel = (availability: "oauth_ready" | "manual_token" | "planned") => {
+export const availabilityLabel = (availability: "oauth_ready" | "manual_token" | "planned") => {
   switch (availability) {
     case "oauth_ready":
       return "OAuth ready";
@@ -53,15 +53,15 @@ const getProviderAuthStrategy = (provider: OAuthProviderCatalogOption) =>
 const usesOAuthConnector = (provider: OAuthProviderCatalogOption) =>
   getProviderAuthStrategy(provider) === "oauth2";
 
-const usesDynamicOAuthRegistration = (provider: OAuthProviderCatalogOption) =>
+export const usesDynamicOAuthRegistration = (provider: OAuthProviderCatalogOption) =>
   usesOAuthConnector(provider) &&
   provider.registrationDefaults?.clientAuthentication === "none" &&
   Boolean(provider.registrationDefaults?.registrationUrl);
 
-const requiresManualOAuthClientCredentials = (provider: OAuthProviderCatalogOption) =>
+export const requiresManualOAuthClientCredentials = (provider: OAuthProviderCatalogOption) =>
   usesOAuthConnector(provider) && !usesDynamicOAuthRegistration(provider);
 
-const getCredentialCopy = (provider: OAuthProviderCatalogOption) => {
+export const getCredentialCopy = (provider: OAuthProviderCatalogOption) => {
   const authStrategy = getProviderAuthStrategy(provider);
 
   if (authStrategy === "api_key") {
@@ -100,7 +100,7 @@ const getCredentialCopy = (provider: OAuthProviderCatalogOption) => {
   };
 };
 
-const createRegistrationFormState = (
+export const createRegistrationFormState = (
   provider: OAuthProviderCatalogOption,
 ): RegistrationFormState => {
   const defaults = provider.registrationDefaults;
@@ -120,7 +120,7 @@ const createRegistrationFormState = (
   };
 };
 
-const getManagedConnectorProvider = (provider: OAuthProviderCatalogOption) =>
+export const getManagedConnectorProvider = (provider: OAuthProviderCatalogOption) =>
   provider.registrationDefaults?.provider ??
   (provider.registrationDefaults?.serverUrl
     ? "mcp"
@@ -137,7 +137,7 @@ const parseScopes = (value: string) =>
     .map((scope) => scope.trim())
     .filter(Boolean);
 
-const buildDefaultHttpTools = (provider: OAuthProviderCatalogOption) => {
+export const buildDefaultHttpTools = (provider: OAuthProviderCatalogOption) => {
   const defaults = provider.registrationDefaults;
   if (
     !defaults ||
@@ -170,10 +170,10 @@ const hasFixedOAuthConfig = (provider: OAuthProviderCatalogOption) =>
       provider.registrationDefaults?.tokenUrl,
   );
 
-const buildCallbackUrl = (callbackBaseUrl: string, slug: string) =>
+export const buildCallbackUrl = (callbackBaseUrl: string, slug: string) =>
   `${callbackBaseUrl || "https://<your-deployment>/api/oauth"}/${slug}/callback`;
 
-const buildManagedConnectorPayload = (
+export const buildManagedConnectorPayload = (
   provider: OAuthProviderCatalogOption,
   form: RegistrationFormState,
 ) => {
@@ -244,7 +244,7 @@ const buildManagedConnectorPayload = (
   };
 };
 
-const buildReadyBuiltInConnectorOption = (
+export const buildReadyBuiltInConnectorOption = (
   provider: OAuthProviderCatalogOption,
 ): BuiltInConnectorOption => {
   const authStrategy = getProviderAuthStrategy(provider);

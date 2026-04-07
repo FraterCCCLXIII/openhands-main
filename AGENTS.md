@@ -37,6 +37,8 @@ The root `LICENSE` is proprietary: `Copyright All Hands AI, Inc. All rights rese
 - `npm run audit` is part of the `e2e-tests.yml` CI gate and it scans transitive dev tooling; keep a direct patched `vite` devDependency pinned so advisories in the Vitest/Vite toolchain do not fail PRs.
 - Mutation testing now uses a reusable Stryker base config (`stryker.config.mjs`) plus `scripts/run-mutation.mjs`. Run `npm run test:mutation -- <new-source-file>` as a manual review step for newly added code; it infers sibling Vitest files by default, supports explicit `--testFile`, and writes `reports/mutation/mutation.html`. Use `npm run test:mutation:all` only for broad exploratory runs because it can take much longer and soft-fails the break threshold.
 
+- The live GitHub repository is `OpenHands/context-layer`; some local clones/worktrees may still have a stale `all-hands-ai/context-layer` origin URL, so fix the remote before pushing or creating PRs if GitHub reports `Repository not found`.
+
 - For this workstream, when the user requests code changes, commit them and push them to the active PR branch.
 
 ## Architecture notes

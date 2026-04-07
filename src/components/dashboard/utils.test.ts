@@ -1,10 +1,12 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import {
   buildInstalledIntegrationKeys,
   buildMarketplaceConnectors,
+  buildToolAccessPatch,
   filterIntegrationsForDisplay,
   matchesAccessRequestSearch,
+  resolveIntegrationLogoUrl,
 } from "@/src/components/dashboard/utils";
 import type {
   AccessRequest,
@@ -139,6 +141,84 @@ describe("dashboard-workspace-utils", () => {
       "linear",
       "airtable",
     ]);
+  });
+
+  it("normalizes built-in slugs when collecting installed integration keys", () => {
+    const installedKeys = buildInstalledIntegrationKeys([
+      {
+        ...integrations[0],
+        key: "workspace-slack",
+        config: { builtInSlug: " slack " },
+      },
+    ]);
+
+    expect(installedKeys.has("workspace-slack")).toBe(true);
+    expect(installedKeys.has("slack")).toBe(true);
+    expect(installedKeys.has(" slack ")).toBe(false);
+  });
+
+  it("resolves logos from matching connectors before falling back to trimmed config URLs", () => {
+    const getConnectorLogoUrl = vi.fn(({ appUrl }: { appUrl?: string }) => appUrl ?? null);
+    const connectorBySlug = new Map([
+      ["slack", connectors[0]],
+      [
+        "workspace-slack",
+        {
+          ...connectors[0],
+          slug: "workspace-slack",
+          appUrl: "https://workspace.slack.com",
+        },
+      ],
+    ]);
+
+    const builtInLogo = resolveIntegrationLogoUrl({
+      integration: {
+        ...integrations[0],
+        key: "workspace-slack",
+        config: { builtInSlug: " slack " },
+      },
+      connectorBySlug,
+      getConnectorLogoUrl,
+    });
+    const serverLogo = resolveIntegrationLogoUrl({
+      integration: {
+        ...integrations[0],
+        key: "custom-server",
+        config: { serverUrl: " https://server.example.com/mcp " },
+      },
+      connectorBySlug,
+      getConnectorLogoUrl,
+    });
+    const apiLogo = resolveIntegrationLogoUrl({
+      integration: {
+        ...integrations[0],
+        key: "custom-api",
+        config: { apiBaseUrl: " https://api.example.com " },
+      },
+      connectorBySlug,
+      getConnectorLogoUrl,
+    });
+
+    expect(builtInLogo).toBe("https://slack.com");
+    expect(serverLogo).toBe("https://server.example.com/mcp");
+    expect(apiLogo).toBe("https://api.example.com");
+    expect(getConnectorLogoUrl).toHaveBeenNthCalledWith(1, connectors[0]);
+    expect(getConnectorLogoUrl).toHaveBeenNthCalledWith(2, {
+      appUrl: "https://server.example.com/mcp",
+    });
+    expect(getConnectorLogoUrl).toHaveBeenNthCalledWith(3, {
+      appUrl: "https://api.example.com",
+    });
+  });
+
+  it("builds exact tool access patch payloads", () => {
+    expect(
+      buildToolAccessPatch("slack", "slack_search_public", "approval_required"),
+    ).toEqual({
+      url: "/api/integrations/slack/tools/slack_search_public",
+      method: "PATCH",
+      body: { accessMode: "approval_required" },
+    });
   });
 
   it("filters integrations by search while hiding disabled tools", () => {
