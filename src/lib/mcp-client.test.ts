@@ -324,10 +324,10 @@ describe("runMcpClientOperation", () => {
     });
   });
 
-  it("retries the Notion root URL over SSE and ignores transport close errors", async () => {
+  it("retries a configured fallback transport and ignores transport close errors", async () => {
     connectMock.mockImplementation((transport: { kind: string }) => {
       if (transport.kind === "streamable_http") {
-        return Promise.reject(new Error("root streamable failed"));
+        return Promise.reject(new Error("streamable failed"));
       }
 
       return Promise.resolve();
@@ -339,10 +339,22 @@ describe("runMcpClientOperation", () => {
 
     await expect(
       runMcpClientOperation(
-        "https://mcp.notion.com/",
-        { Authorization: "Bearer notion-token" },
+        "https://mcp.acme.test/mcp",
+        { Authorization: "Bearer acme-token" },
         "listTools",
         (client) => client.listTools(),
+        {
+          transportOrder: [
+            {
+              transport: "streamable_http",
+              url: "https://mcp.acme.test/mcp",
+            },
+            {
+              transport: "sse",
+              url: "https://mcp.acme.test/sse",
+            },
+          ],
+        },
       ),
     ).resolves.toEqual({
       tools: [{ name: "search", description: "Search pages" }],
@@ -351,18 +363,18 @@ describe("runMcpClientOperation", () => {
     expect(transportAttempts).toEqual([
       {
         kind: "streamable_http",
-        url: "https://mcp.notion.com/",
-        headers: { Authorization: "Bearer notion-token" },
+        url: "https://mcp.acme.test/mcp",
+        headers: { Authorization: "Bearer acme-token" },
       },
       {
         kind: "sse",
-        url: "https://mcp.notion.com/sse",
-        headers: { Authorization: "Bearer notion-token" },
+        url: "https://mcp.acme.test/sse",
+        headers: { Authorization: "Bearer acme-token" },
       },
     ]);
   });
 
-  it("surfaces both primary and fallback transport failures with sanitized debug details", async () => {
+  it("surfaces multiple configured transport failures with sanitized debug details", async () => {
     connectMock.mockImplementation((transport: { kind: string }) => {
       if (transport.kind === "streamable_http") {
         return Promise.reject(new ContextLayerError("streamable unavailable", 504));
@@ -374,17 +386,29 @@ describe("runMcpClientOperation", () => {
     let capturedError: unknown;
     try {
       await runMcpClientOperation(
-        "https://mcp.notion.com",
-        { Authorization: "Bearer notion-token" },
+        "https://mcp.acme.test/mcp",
+        { Authorization: "Bearer acme-token" },
         "callTool",
         (client) => client.listTools(),
         {
-          authStrategy: "basic",
-          credentials: {
-            username: "demo",
-            password: "  pass with space  ",
-            refreshToken: " refresh-token ",
+          debugContext: {
+            authStrategy: "basic",
+            credentials: {
+              username: "demo",
+              password: "  pass with space  ",
+              refreshToken: " refresh-token ",
+            },
           },
+          transportOrder: [
+            {
+              transport: "streamable_http",
+              url: "https://mcp.acme.test/mcp",
+            },
+            {
+              transport: "sse",
+              url: "https://mcp.acme.test/sse",
+            },
+          ],
         },
       );
     } catch (error) {
@@ -393,16 +417,15 @@ describe("runMcpClientOperation", () => {
 
     expect(capturedError).toBeInstanceOf(ContextLayerError);
     expect((capturedError as ContextLayerError).message).toContain(
-      "Streamable HTTP transport failed for https://mcp.notion.com/: streamable unavailable",
+      "Streamable HTTP transport failed for https://mcp.acme.test/mcp: streamable unavailable",
     );
     expect((capturedError as ContextLayerError).message).toContain(
-      "SSE transport failed for https://mcp.notion.com/sse: sse unavailable",
+      "SSE transport failed for https://mcp.acme.test/sse: sse unavailable",
     );
     expect((capturedError as ContextLayerError).statusCode).toBe(429);
     expect((capturedError as ContextLayerError).debugDetails).toEqual({
       operationName: "callTool",
-      serverUrl: "https://mcp.notion.com",
-      fallbackUrl: "https://mcp.notion.com/sse",
+      serverUrl: "https://mcp.acme.test/mcp",
       integrationKey: undefined,
       managedConnectorSlug: undefined,
       auth: {
@@ -425,14 +448,14 @@ describe("runMcpClientOperation", () => {
       attempts: [
         {
           transport: "streamable_http",
-          url: "https://mcp.notion.com/",
+          url: "https://mcp.acme.test/mcp",
           error:
-            "Streamable HTTP transport failed for https://mcp.notion.com/: streamable unavailable",
+            "Streamable HTTP transport failed for https://mcp.acme.test/mcp: streamable unavailable",
         },
         {
           transport: "sse",
-          url: "https://mcp.notion.com/sse",
-          error: "SSE transport failed for https://mcp.notion.com/sse: sse unavailable",
+          url: "https://mcp.acme.test/sse",
+          error: "SSE transport failed for https://mcp.acme.test/sse: sse unavailable",
         },
       ],
     });
