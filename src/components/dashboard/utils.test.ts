@@ -239,10 +239,10 @@ describe("dashboard-workspace-utils", () => {
         executionMode: "provider",
         config: {},
         lastInvokedAt: "2026-04-01T12:00:00.000Z",
-        lastInvocationOutcome: "provider_error",
+        lastInvocationOutcome: "error",
         invocationCount: 3,
       }),
-    ).toContain("3 total · provider error");
+    ).toContain("3 total · error");
 
     const approvedRequest: AccessRequest = {
       ...accessRequest,
@@ -253,13 +253,13 @@ describe("dashboard-workspace-utils", () => {
     const deniedRequest: AccessRequest = {
       ...accessRequest,
       id: "request-3",
-      status: "denied",
+      status: "rejected",
       agentClass: "operator",
     };
 
     expect(approvalStatusTone("pending")).toBe("warning");
     expect(approvalStatusTone("approved")).toBe("success");
-    expect(approvalStatusTone("denied")).toBe("danger");
+    expect(approvalStatusTone("rejected")).toBe("danger");
     expect(matchesAccessRequestFilter(accessRequest, "pending")).toBe(true);
     expect(matchesAccessRequestFilter(approvedRequest, "pending")).toBe(false);
     expect(hasMissingApprovalIdentity(accessRequest)).toBe(true);
@@ -324,7 +324,7 @@ describe("dashboard-workspace-utils", () => {
         key: "custom",
         name: "Custom",
         provider: "http",
-        kind: "openapi",
+        kind: "api",
         authStrategy: "api_key",
         enabled: true,
         fineGrainedPermissions: true,

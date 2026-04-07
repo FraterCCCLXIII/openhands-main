@@ -17,7 +17,7 @@ vi.mock("@/src/components/integrations/wizard/wizard", () => ({
 
 import { IntegrationsSection } from "@/src/components/dashboard/sections/integrations-section";
 import type {
-  BuiltInConnectorOption,
+  ManagedConnectorOption,
   IntegrationSpec,
 } from "@/src/types/context-layer";
 import type { FilteredIntegrationToolEntry } from "@/src/components/dashboard/utils";
@@ -42,7 +42,7 @@ const setInputValue = (
   element.dispatchEvent(new Event("change", { bubbles: true }));
 };
 
-const connectors: BuiltInConnectorOption[] = [
+const connectors: ManagedConnectorOption[] = [
   {
     slug: "github",
     name: "GitHub",
@@ -94,8 +94,8 @@ const buildEntry = (
 const createDefaultProps = () => ({
   addIntegrationSearch: "",
   availableConnectorCount: 3,
-  builtInConnectorsError: null,
-  builtInConnectorsPending: false,
+  managedConnectorsError: null,
+  managedConnectorsPending: false,
   filteredIntegrations: [buildEntry()],
   handleDeleteIntegration: vi.fn(),
   handleDisableUnusedTools: vi.fn(),
@@ -152,7 +152,7 @@ describe("IntegrationsSection", () => {
     const props = createDefaultProps();
 
     await act(async () => {
-      root.render(<IntegrationsSection {...props} showIntegrationWizard builtInConnectorsPending />);
+      root.render(<IntegrationsSection {...props} showIntegrationWizard managedConnectorsPending />);
     });
 
     expect(container.textContent).toContain("Step-by-step integration setup");
@@ -164,8 +164,8 @@ describe("IntegrationsSection", () => {
         <IntegrationsSection
           {...props}
           showIntegrationWizard={false}
-          builtInConnectorsPending={false}
-          builtInConnectorsError="Unable to load connectors"
+          managedConnectorsPending={false}
+          managedConnectorsError="Unable to load connectors"
         />,
       );
     });
@@ -175,7 +175,7 @@ describe("IntegrationsSection", () => {
       root.render(
         <IntegrationsSection
           {...props}
-          builtInConnectorsError={null}
+          managedConnectorsError={null}
           marketplaceConnectors={[]}
         />,
       );
@@ -197,7 +197,7 @@ describe("IntegrationsSection", () => {
     expect(props.setAddIntegrationSearch).toHaveBeenCalledWith("git");
 
     const marketplaceCard = container.querySelector(
-      '[data-built-in-slug="github"]',
+      '[data-managed-connector-slug="github"]',
     ) as HTMLButtonElement | null;
     expect(marketplaceCard).toBeTruthy();
 
