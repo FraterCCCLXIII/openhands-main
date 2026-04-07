@@ -30,6 +30,41 @@ jobs:
             echo "is_fork=false" >> $GITHUB_OUTPUT
           fi
 
+      - name: Validate PAT token
+        id: validate-pat
+        if: steps.check-fork.outputs.is_fork == 'false'
+        env:
+          PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
+        run: |
+          if [ -z "$PAT_TOKEN" ]; then
+            echo "::error::PAT_TOKEN secret not configured"
+            exit 1
+          fi
+
+          user_json="$(curl -fsSL \
+            -H "Authorization: Bearer $PAT_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/user)" || {
+            echo "::error::Failed to validate PAT_TOKEN against the GitHub API"
+            exit 1
+          }
+
+          python - "$user_json" "$GITHUB_OUTPUT" <<'PY'
+          import json
+          import sys
+
+          user = json.loads(sys.argv[1])
+          login = user.get("login")
+          user_id = user.get("id")
+          if not login or not user_id:
+              print("::error::PAT_TOKEN did not return a usable GitHub user identity")
+              raise SystemExit(1)
+
+          with open(sys.argv[2], "a", encoding="utf-8") as handle:
+              handle.write(f"git_name={login}\n")
+              handle.write(f"git_email={user_id}+{login}@users.noreply.github.com\n")
+          PY
+
       - uses: actions/checkout@v6
         if: steps.check-fork.outputs.is_fork == 'false'
         with:
@@ -41,12 +76,12 @@ jobs:
         if: steps.check-fork.outputs.is_fork == 'false'
         run: |
           if [ -d ".pr" ]; then
-            git config user.name "allhands-bot"
-            git config user.email "allhands-bot@users.noreply.github.com"
+            git config user.name "${{ steps.validate-pat.outputs.git_name }}"
+            git config user.email "${{ steps.validate-pat.outputs.git_email }}"
             git rm -rf .pr/
             git commit -m "chore: Remove PR-only artifacts [automated]"
             git push || {
-              echo "::error::Failed to push cleanup commit. Check branch protection rules."
+              echo "::error::Push failed. Check: 1) PAT_TOKEN has push access, 2) branch protection allows cleanup commits, 3) the token has not expired, 4) GitHub was reachable from Actions."
               exit 1
             }
             echo "removed=true" >> $GITHUB_OUTPUT

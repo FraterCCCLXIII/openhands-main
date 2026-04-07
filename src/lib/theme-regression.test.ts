@@ -13,10 +13,21 @@ const parseThemeVariables = (css: string) => {
   );
 };
 
+const getGradientColors = (css: string) => {
+  const gradientDeclaration = css
+    .split("\n")
+    .find((line) => line.includes("radial-gradient(circle at top")) ?? "";
+
+  return Array.from(gradientDeclaration.matchAll(/rgba?\([^)]*\)/g)).map((match) =>
+    match[0].replace(/\s+/g, " ").trim(),
+  );
+};
+
 describe("global OpenHands theme", () => {
   it("keeps the dashboard palette aligned with OpenHands frontend tokens", () => {
     const css = readFileSync(new URL("../../app/globals.css", import.meta.url), "utf8");
     const themeVariables = parseThemeVariables(css);
+    const gradientColors = getGradientColors(css);
 
     expect(themeVariables).toMatchObject({
       "--color-accent": "#c9b974",
@@ -24,6 +35,6 @@ describe("global OpenHands theme", () => {
       "--color-accent-foreground": "#0d0f11",
       "--color-bg-active": "#454545",
     });
-    expect(css).toMatch(/radial-gradient\(circle at top, rgba\(201, 185, 116, 0\.08\), transparent 28%\)/);
+    expect(gradientColors).toContain("rgba(201, 185, 116, 0.08)");
   });
 });

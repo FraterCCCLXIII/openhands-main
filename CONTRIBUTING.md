@@ -88,7 +88,9 @@ If you introduce new modules that parse external payloads, default to explicit n
 - Use builders/helpers for repeated integration, connector, API-key, and access-request fixtures.
 - Prefer PGlite-backed repository/service coverage over deep internal mocking.
 - Pair the public result with one meaningful side effect (persistence, visibility, logging, or auth outcome).
-- Avoid giant `toEqual(...)` payloads for generated structures unless the exact formatting is the contract.
+- Avoid giant `toEqual(...)` payloads for generated structures unless the exact formatting is the contract. Instead of asserting 50 generated fields at once, assert the specific contract that matters, such as `status`, `tools.length`, or the key request-template fields.
+- Use table-driven cases when the setup is the same and only inputs vary, especially for auth/configuration matrices.
+- Treat tiny regression tests as smoke alarms, not full specs: keep them small, but deepen coverage as the module grows.
 
 ## Pull requests
 

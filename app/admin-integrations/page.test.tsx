@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
 
-import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+
+import { findHeading, getCodeValues, renderStaticDocument } from "@/src/test-utils/static-dom";
 
 const { authMock } = vi.hoisted(() => ({
   authMock: vi.fn(async () => ({ user: { email: "dev@localhost" } })),
@@ -17,16 +18,7 @@ import { createTestRepository, getActiveSql } from "@/src/lib/db/pglite-test-uti
 
 import AdminIntegrationsPage from "./page";
 
-const renderDocument = async () =>
-  new DOMParser().parseFromString(renderToStaticMarkup(await AdminIntegrationsPage()), "text/html");
-
-const getHeading = (document: Document, level: 1 | 2, text: string) =>
-  Array.from(document.querySelectorAll(`h${level}`)).find(
-    (heading) => heading.textContent?.trim() === text,
-  );
-
-const getCodeValues = (document: Document) =>
-  Array.from(document.querySelectorAll("code")).map((node) => node.textContent?.trim() ?? "");
+const renderDocument = async () => renderStaticDocument(await AdminIntegrationsPage());
 
 let testCleanup: () => Promise<void>;
 beforeAll(() => {
@@ -69,10 +61,10 @@ describe("app/admin-integrations/page", () => {
     expect(document.querySelector('a[href="/admin-integrations"]')).toBeTruthy();
     expect(document.querySelector('a[href="/home"]')).toBeFalsy();
     expect(document.body.textContent).toContain("Signed in as");
-    expect(getHeading(document, 2, "For users")).toBeTruthy();
-    expect(getHeading(document, 2, "For admins")).toBeFalsy();
-    expect(getHeading(document, 2, "Popular official provider options")).toBeTruthy();
-    expect(getHeading(document, 2, "Registered managed connectors")).toBeFalsy();
+    expect(document.querySelector('[data-testid="user-guidance-card"]')).toBeTruthy();
+    expect(document.querySelector('[data-testid="admin-guidance-card"]')).toBeFalsy();
+    expect(findHeading(document, 2, "Popular official provider options")).toBeTruthy();
+    expect(findHeading(document, 2, "Registered managed connectors")).toBeFalsy();
     expect(document.querySelector('a[href="/integrations?showIntegrationWizard=1"]')).toBeTruthy();
     expect(document.body.textContent).toContain("contact an admin");
   });
@@ -95,10 +87,10 @@ describe("app/admin-integrations/page", () => {
     const document = await renderDocument();
     const codeValues = getCodeValues(document);
 
-    expect(getHeading(document, 2, "For admins")).toBeTruthy();
-    expect(getHeading(document, 2, "For users")).toBeFalsy();
-    expect(getHeading(document, 2, "Registered managed connectors")).toBeTruthy();
-    expect(getHeading(document, 2, "Popular official provider options")).toBeTruthy();
+    expect(document.querySelector('[data-testid="admin-guidance-card"]')).toBeTruthy();
+    expect(document.querySelector('[data-testid="user-guidance-card"]')).toBeFalsy();
+    expect(findHeading(document, 2, "Registered managed connectors")).toBeTruthy();
+    expect(findHeading(document, 2, "Popular official provider options")).toBeTruthy();
     expect(document.querySelector('a[href="/api/managed-connectors/openapi"]')).toBeTruthy();
     expect(codeValues).toEqual(
       expect.arrayContaining([
@@ -126,9 +118,9 @@ describe("app/admin-integrations/page", () => {
     const document = await renderDocument();
     const codeValues = getCodeValues(document);
 
-    expect(getHeading(document, 1, "Service unavailable")).toBeTruthy();
-    expect(getHeading(document, 2, "How to set up the database")).toBeTruthy();
+    expect(findHeading(document, 1, "Service unavailable")).toBeTruthy();
+    expect(findHeading(document, 2, "How to set up the database")).toBeTruthy();
     expect(codeValues).toEqual(expect.arrayContaining(["POSTGRES_URL", "DATABASE_URL"]));
-    expect(getHeading(document, 2, "Popular official provider options")).toBeFalsy();
+    expect(findHeading(document, 2, "Popular official provider options")).toBeFalsy();
   });
 });

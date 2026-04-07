@@ -24,6 +24,8 @@ This document closes issue #123 by capturing a file-by-file test-design review o
 
 ## Priority rewrite queue
 
+This queue is intentionally larger than PR #131. That PR directly addressed items 3, 7, and 8; the remaining follow-up rewrites are tracked in #157.
+
 1. `src/components/dashboard/workspace.test.tsx` — split by route/feature area and move shared render/fetch helpers into local test utilities.
 2. `src/components/admin/integrations/provider-catalog.test.tsx` — convert repeated registration flows into data-driven cases plus payload-focused helpers.
 3. `app/admin-integrations/page.test.tsx` — replace raw markup string matching with semantic DOM assertions for nav, admin/user cards, and unavailable-state rendering.

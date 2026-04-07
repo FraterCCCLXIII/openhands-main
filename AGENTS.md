@@ -18,6 +18,8 @@ The root `LICENSE` is proprietary: `Copyright All Hands AI, Inc. All rights rese
 - TypeScript strictness now also enables `noUncheckedIndexedAccess`; when reading dynamic config/credential records or keyed collections, prefer shared narrowing helpers (for example `src/lib/type-utils.ts`) and explicit undefined handling over inline `as string` assertions.
 - For targeted HTTP adapter coverage work, run `npx vitest run src/lib/adapters/http-adapter.test.ts --coverage --coverage.include=src/lib/adapters/http-adapter.ts --coverage.reporter=text`; the suite now covers auth-mode differences, templated query/header/body shaping, multipart/form/text encoding, validation errors, and response parsing fallbacks.
 
+- Shared server-rendered page DOM test helpers now live in `src/test-utils/static-dom.tsx`; reuse `renderStaticDocument`, `findHeading`, and `getCodeValues` instead of re-creating local `DOMParser`/`renderToStaticMarkup` helpers in page tests.
+
 - Run e2e tests only: `npm run test:e2e`
 - Typecheck: `npm run typecheck`
 - Production build check: `npm run build`

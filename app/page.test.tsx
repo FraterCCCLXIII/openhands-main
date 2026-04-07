@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
 
-import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
+
+import { findHeading, getCodeValues, renderStaticDocument } from "@/src/test-utils/static-dom";
 
 const { authMock } = vi.hoisted(() => ({
   authMock: vi.fn(async () => ({ user: { email: "user@example.com" } })),
@@ -13,13 +14,7 @@ vi.mock("@/src/lib/auth", () => ({
 
 import HomePage from "./page";
 
-const renderDocument = async () =>
-  new DOMParser().parseFromString(renderToStaticMarkup(await HomePage()), "text/html");
-
-const getHeading = (document: Document, level: 1 | 2, text: string) =>
-  Array.from(document.querySelectorAll(`h${level}`)).find(
-    (heading) => heading.textContent?.trim() === text,
-  );
+const renderDocument = async () => renderStaticDocument(await HomePage());
 
 afterEach(() => {
   vi.unstubAllEnvs();
@@ -34,11 +29,11 @@ describe("HomePage", () => {
 
     const document = await renderDocument();
 
-    expect(getHeading(document, 1, "Service unavailable")).toBeTruthy();
+    expect(findHeading(document, 1, "Service unavailable")).toBeTruthy();
     expect(document.body.textContent).toContain(
       "Please contact your administrator and try again later.",
     );
-    expect(getHeading(document, 2, "How to set up the database")).toBeFalsy();
+    expect(findHeading(document, 2, "How to set up the database")).toBeFalsy();
   });
 
   it("shows setup instructions to signed-in admins when storage is unavailable", async () => {
@@ -48,9 +43,9 @@ describe("HomePage", () => {
 
     const document = await renderDocument();
 
-    expect(getHeading(document, 1, "Service unavailable")).toBeTruthy();
-    expect(getHeading(document, 2, "How to set up the database")).toBeTruthy();
-    const codeValues = Array.from(document.querySelectorAll("code")).map((node) => node.textContent?.trim());
+    expect(findHeading(document, 1, "Service unavailable")).toBeTruthy();
+    expect(findHeading(document, 2, "How to set up the database")).toBeTruthy();
+    const codeValues = getCodeValues(document);
     expect(codeValues).toContain("POSTGRES_URL");
     expect(codeValues).toContain("DATABASE_URL");
   });
