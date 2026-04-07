@@ -14,6 +14,7 @@ The root `LICENSE` is proprietary: `Copyright All Hands AI, Inc. All rights rese
 - Run locally with auth bypass: `DISABLE_AUTH=true npm run dev`
 - Run tests: `npm test`
 - Run unit tests only: `npm run test:unit`
+- Targeted integration-wizard coverage check: `npx vitest run src/components/integrations/wizard/utils.test.ts src/components/integrations/wizard/use-wizard-state.test.tsx src/components/integrations/wizard/review-step.test.tsx src/components/integrations/wizard/connect-step.test.tsx src/components/integrations/wizard/wizard.test.tsx --coverage.enabled --coverage.include='src/components/integrations/wizard/**/*.{ts,tsx}'`
 - TypeScript strictness now also enables `noUncheckedIndexedAccess`; when reading dynamic config/credential records or keyed collections, prefer shared narrowing helpers (for example `src/lib/type-utils.ts`) and explicit undefined handling over inline `as string` assertions.
 - For targeted HTTP adapter coverage work, run `npx vitest run src/lib/adapters/http-adapter.test.ts --coverage --coverage.include=src/lib/adapters/http-adapter.ts --coverage.reporter=text`; the suite now covers auth-mode differences, templated query/header/body shaping, multipart/form/text encoding, validation errors, and response parsing fallbacks.
 
