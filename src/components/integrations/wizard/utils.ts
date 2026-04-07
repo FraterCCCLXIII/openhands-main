@@ -8,12 +8,12 @@ import {
 } from "@/src/lib/text-utils";
 import type {
   AuthStrategy,
-  BuiltInConnectorOption,
+  ManagedConnectorOption,
   ToolAccessMode,
   ToolSpec,
 } from "@/src/types/context-layer";
 
-export type IntegrationKind = "built_in" | "mcp";
+export type IntegrationKind = "managed" | "mcp";
 export type WizardStep = 1 | 2 | 3;
 export type DiscoverFeedbackTone = "info" | "success" | "error";
 export type ApiDebugDetails = Record<string, unknown>;
@@ -36,7 +36,7 @@ export interface WizardDraft {
   kind: IntegrationKind | null;
   key: string;
   name: string;
-  builtInSlug: string;
+  managedConnectorSlug: string;
   serverUrl: string;
   accessToken: string;
   apiKey: string;
@@ -49,7 +49,7 @@ export const INITIAL_DRAFT: WizardDraft = {
   kind: null,
   key: "",
   name: "",
-  builtInSlug: "",
+  managedConnectorSlug: "",
   serverUrl: "",
   accessToken: "",
   apiKey: "",
@@ -83,11 +83,11 @@ export const authStrategyLabel = (strategy: AuthStrategy) => {
   }
 };
 
-export const connectorOptionLabel = (connector: BuiltInConnectorOption) =>
+export const connectorOptionLabel = (connector: ManagedConnectorOption) =>
   `${connector.name} (${connector.slug})`;
 
 export const findConnectorByQuery = (
-  connectors: BuiltInConnectorOption[],
+  connectors: ManagedConnectorOption[],
   query: string,
 ) => {
   const normalizedQuery = normalizeCaseInsensitiveText(query);
@@ -105,9 +105,9 @@ export const findConnectorByQuery = (
   );
 };
 
-export const buildBuiltInCredentials = (
+export const buildManagedConnectorCredentials = (
   draft: WizardDraft,
-  connector: BuiltInConnectorOption | null,
+  connector: ManagedConnectorOption | null,
 ) => {
   switch (connector?.authStrategy) {
     case "oauth2":
@@ -131,9 +131,9 @@ export const buildBuiltInCredentials = (
   }
 };
 
-export const hasBuiltInCredentialInput = (
+export const hasManagedConnectorCredentialInput = (
   draft: WizardDraft,
-  connector: BuiltInConnectorOption | null,
+  connector: ManagedConnectorOption | null,
 ) => {
   switch (connector?.authStrategy) {
     case "oauth2":
@@ -152,24 +152,24 @@ export const hasBuiltInCredentialInput = (
 
 export const buildDiscoverPayload = (
   draft: WizardDraft,
-  connector: BuiltInConnectorOption | null,
+  connector: ManagedConnectorOption | null,
 ) => {
   if (!draft.kind) {
-    throw new Error("Select Built-in connector or MCP first.");
+    throw new Error("Select Managed connector or MCP first.");
   }
 
-  if (draft.kind === "built_in") {
-    if (!draft.builtInSlug.trim()) {
-      throw new Error("Choose a built-in connector first.");
+  if (draft.kind === "managed") {
+    if (!draft.managedConnectorSlug.trim()) {
+      throw new Error("Choose a managed connector first.");
     }
 
     return {
       key: draft.key.trim(),
-      kind: "built_in" as const,
+      kind: "managed" as const,
       config: {
-        builtInSlug: draft.builtInSlug.trim(),
+        managedConnectorSlug: draft.managedConnectorSlug.trim(),
       },
-      credentials: buildBuiltInCredentials(draft, connector),
+      credentials: buildManagedConnectorCredentials(draft, connector),
     };
   }
 
@@ -193,15 +193,15 @@ export const buildCreatePayload = (
   draft: WizardDraft,
   discovery: DiscoveryResponse,
   toolModes: Record<string, ToolAccessMode>,
-  connector: BuiltInConnectorOption | null,
+  connector: ManagedConnectorOption | null,
 ) => {
   if (!draft.kind) {
-    throw new Error("Select Built-in connector or MCP first.");
+    throw new Error("Select Managed connector or MCP first.");
   }
 
   const key = draft.key.trim();
   const name =
-    draft.kind === "built_in"
+    draft.kind === "managed"
       ? (connector?.name ?? draft.name.trim()) || key
       : draft.name.trim() || key;
 
@@ -209,7 +209,7 @@ export const buildCreatePayload = (
     key,
     name,
     kind:
-      draft.kind === "built_in"
+      draft.kind === "managed"
         ? discovery.provider === "http"
           ? "api"
           : "mcp"

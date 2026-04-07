@@ -1,7 +1,7 @@
+import { collectHttpTemplateVariables } from "@/src/lib/http-request-template";
 import { isRecord } from "@/src/lib/type-utils";
 import type { ToolSpec, GenericHttpRequestTemplate, IntegrationSpec } from "@/src/types/context-layer";
 
-const TEMPLATE = /\{\{\s*([a-zA-Z0-9_.]+)\s*\}\}/g;
 const DEFAULT_PAYLOAD_EXAMPLE = "replace with the value for";
 
 const isHttpRequestTemplate = (value: unknown): value is GenericHttpRequestTemplate =>
@@ -9,31 +9,6 @@ const isHttpRequestTemplate = (value: unknown): value is GenericHttpRequestTempl
 
 const getToolAccessMode = (toolSpec: ToolSpec) =>
   toolSpec.accessMode ?? (toolSpec.enabled ? "enabled" : "disabled");
-
-const collectTemplateVariables = (template: unknown, target: Set<string>) => {
-  if (typeof template === "string") {
-    for (const match of template.matchAll(TEMPLATE)) {
-      const variable = match[1]?.trim();
-      if (variable) {
-        target.add(variable);
-      }
-    }
-    return;
-  }
-
-  if (Array.isArray(template)) {
-    for (const entry of template) {
-      collectTemplateVariables(entry, target);
-    }
-    return;
-  }
-
-  if (template && typeof template === "object") {
-    for (const value of Object.values(template)) {
-      collectTemplateVariables(value, target);
-    }
-  }
-};
 
 const setNestedExampleValue = (
   payload: Record<string, unknown>,
@@ -79,11 +54,10 @@ export const buildExamplePayload = (toolSpec: ToolSpec) => {
     return {};
   }
 
-  const variables = new Set<string>();
-  collectTemplateVariables(requestTemplate, variables);
-
   const payload: Record<string, unknown> = {};
-  for (const variable of [...variables].sort((left, right) => left.localeCompare(right))) {
+  for (const variable of [...collectHttpTemplateVariables(requestTemplate)].sort((left, right) =>
+    left.localeCompare(right),
+  )) {
     if (variable === "body") {
       payload.body = {
         example: "replace with the request body",
