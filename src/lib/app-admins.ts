@@ -1,4 +1,6 @@
-const normalizeEmail = (value: string) => value.trim().toLowerCase();
+import { normalizeCaseInsensitiveText } from "@/src/lib/text-utils";
+
+const normalizeEmail = normalizeCaseInsensitiveText;
 
 export const getAppAdminEmails = (raw = process.env.APP_ADMIN_EMAILS ?? "") =>
   raw

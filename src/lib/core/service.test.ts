@@ -8,11 +8,21 @@ import {
   type IntegrationAdapter,
 } from "@/src/lib/core/adapter-registry";
 import type { ContextRepository } from "@/src/lib/core/repository";
+import { ContextLayerService } from "@/src/lib/core/service";
+import {
+  createToolInvocationRecord,
+} from "@/src/lib/core/invocation-side-effects";
+import {
+  encryptScopedApiKey,
+  getScopedApiKeyPrefix,
+  hashScopedApiKey,
+} from "@/src/lib/core/scoped-api-keys";
 import { decryptCredentials } from "@/src/lib/credential-crypto";
 import { createTestRepository, getActiveSql } from "@/src/lib/db/pglite-test-utils";
 import { NotificationPublisher } from "@/src/lib/notifications/publisher";
-import { ContextLayerService } from "@/src/lib/core/service";
-import type { IntegrationSpec } from "@/src/types/context-layer";
+import * as discoveryModule from "@/src/lib/integrations/discovery";
+import * as providerResolverModule from "@/src/lib/oauth/provider-resolver";
+import type { IntegrationSpec, ToolSpec } from "@/src/types/context-layer";
 
 vi.mock("@neondatabase/serverless", () => ({ neon: () => getActiveSql() }));
 
@@ -27,6 +37,7 @@ beforeEach(async () => {
 });
 afterEach(async () => {
   await testCleanup();
+  vi.restoreAllMocks();
   vi.unstubAllGlobals();
 });
 
@@ -73,6 +84,21 @@ const baseIntegration: IntegrationSpec = {
       config: {},
     },
   },
+};
+
+const baseAccountsTool = baseIntegration.tools["accounts"];
+if (!baseAccountsTool) {
+  throw new Error("Missing accounts tool test fixture");
+}
+
+const getOnlyIntegration = (integrations: IntegrationSpec[]) => {
+  expect(integrations).toHaveLength(1);
+  const [integration] = integrations;
+  if (!integration) {
+    throw new Error("Expected a single integration result");
+  }
+
+  return integration;
 };
 
 const installIntegration = async (
@@ -164,6 +190,39 @@ describe("ContextLayerService", () => {
   });
 
 
+  it("redacts stored credentials from integration management responses", async () => {
+    const service = createService();
+    const storedCredentials = { secret: "top-secret-token" };
+
+    const created = await service.registerOwnerIntegration(OWNER_ID, {
+      ...baseIntegration,
+      key: "github",
+      name: "GitHub",
+      credentials: storedCredentials,
+    });
+
+    expect(created.credentials).toEqual({});
+    await expect(testRepo.getOwnerIntegration(OWNER_ID, "github")).resolves.toMatchObject({
+      credentials: storedCredentials,
+    });
+
+    const listed = await service.listOwnerIntegrations(OWNER_ID);
+    expect(listed).toContainEqual(
+      expect.objectContaining({
+        key: "github",
+        credentials: {},
+      }),
+    );
+
+    const toggled = await service.setOwnerIntegrationEnabled(OWNER_ID, "github", false);
+    expect(toggled).toMatchObject({
+      key: "github",
+      enabled: false,
+      credentials: {},
+    });
+  });
+
+
   it("records successful invocation metadata and exposes usage summaries", async () => {
     const service = createService();
     await installIntegration(service, baseIntegration);
@@ -199,11 +258,12 @@ describe("ContextLayerService", () => {
     expect(row.error_message).toBeNull();
 
     const integrations = await service.listOwnerIntegrationsWithUsage(OWNER_ID);
-    expect(integrations[0]?.tools.accounts).toMatchObject({
+    const savedIntegration = getOnlyIntegration(integrations);
+    expect(savedIntegration.tools["accounts"]).toMatchObject({
       invocationCount: 1,
       lastInvocationOutcome: "success",
     });
-    expect(integrations[0]?.tools.accounts.lastInvokedAt).toBeTruthy();
+    expect(savedIntegration.tools["accounts"]?.lastInvokedAt).toBeTruthy();
   });
 
   it("records denied invocation metadata for approval-required functions", async () => {
@@ -221,7 +281,7 @@ describe("ContextLayerService", () => {
       ...baseIntegration,
       tools: {
         accounts: {
-          ...baseIntegration.tools.accounts,
+          ...baseAccountsTool,
           accessMode: "approval_required",
         },
       },
@@ -248,7 +308,8 @@ describe("ContextLayerService", () => {
     expect(row.error_message).toBe("Permission required");
 
     const integrations = await service.listOwnerIntegrationsWithUsage(OWNER_ID);
-    expect(integrations[0]?.tools.accounts).toMatchObject({
+    const savedIntegration = getOnlyIntegration(integrations);
+    expect(savedIntegration.tools["accounts"]).toMatchObject({
       invocationCount: 1,
       lastInvocationOutcome: "denied",
     });
@@ -299,7 +360,7 @@ describe("ContextLayerService", () => {
       ...baseIntegration,
       tools: {
         accounts: {
-          ...baseIntegration.tools.accounts,
+          ...baseAccountsTool,
           accessMode: "approval_required",
         },
       },
@@ -370,7 +431,7 @@ describe("ContextLayerService", () => {
       ...baseIntegration,
       tools: {
         accounts: {
-          ...baseIntegration.tools.accounts,
+          ...baseAccountsTool,
           enabled: false,
         },
       },
@@ -474,18 +535,18 @@ describe("ContextLayerService", () => {
     await service.registerOwnerIntegration(OWNER_ID, {
       ...baseIntegration,
       config: {
-        builtInSlug: "salesforce",
         managedConnectorSlug: "salesforce",
       },
     });
 
     const integrations = await service.listOwnerIntegrations(OWNER_ID);
-    expect(integrations[0]?.tools.accounts).toMatchObject({
+    const savedIntegration = getOnlyIntegration(integrations);
+    expect(savedIntegration.tools["accounts"]).toMatchObject({
       accessMode: "approval_required",
       maxAccessMode: "approval_required",
       enabled: true,
     });
-    expect(integrations[0]?.tools.reports).toMatchObject({
+    expect(savedIntegration.tools["reports"]).toMatchObject({
       accessMode: "disabled",
       maxAccessMode: "disabled",
       enabled: false,
@@ -514,7 +575,7 @@ describe("ContextLayerService", () => {
       ...baseIntegration,
       tools: {
         accounts: {
-          ...baseIntegration.tools.accounts,
+          ...baseAccountsTool,
           accessMode: "approval_required",
         },
       },
@@ -591,7 +652,7 @@ describe("ContextLayerService", () => {
       ...baseIntegration,
       tools: {
         accounts: {
-          ...baseIntegration.tools.accounts,
+          ...baseAccountsTool,
           accessMode: "approval_required",
         },
       },
@@ -675,6 +736,115 @@ describe("ContextLayerService", () => {
     );
   });
 
+  it("lists only owner-scoped access requests for the requested user", async () => {
+    const service = createService();
+
+    const ownRequest = await service.createAccessRequest({
+      agentId: "agent-2",
+      agentClass: "reviewer",
+      integrationKey: "salesforce",
+      toolName: "accounts",
+      scopes: ["accounts.read"],
+      requestedMinutes: 45,
+      channels: ["in_app"],
+      notificationTargets: {
+        in_app: OWNER_ID,
+      },
+      justification: "Need temporary access",
+    });
+    await service.createAccessRequest({
+      agentId: "agent-3",
+      agentClass: "reviewer",
+      integrationKey: "salesforce",
+      toolName: "accounts",
+      scopes: ["accounts.read"],
+      requestedMinutes: 45,
+      channels: ["in_app"],
+      notificationTargets: {
+        in_app: "other@example.com",
+      },
+      justification: "Need temporary access",
+    });
+
+    await expect(service.listOwnerAccessRequests(OWNER_ID)).resolves.toEqual([
+      expect.objectContaining({
+        id: ownRequest.id,
+        notificationTargets: {
+          in_app: OWNER_ID,
+        },
+      }),
+    ]);
+  });
+
+  it("creates separate pending access requests for different owners", async () => {
+    const repository = testRepo;
+    const service = new ContextLayerService(
+      repository,
+      new AdapterRegistry({
+        http: { invoke: async () => ({ ok: true }) },
+        mock: { invoke: async () => ({}) },
+      }),
+      new NotificationPublisher(repository),
+    );
+    const approvalRequiredAccountsTool: ToolSpec = {
+      name: "accounts",
+      description: "List accounts",
+      enabled: true,
+      fineGrainedPermissions: true,
+      defaultScopes: ["accounts.read"],
+      executionMode: "provider",
+      config: {},
+      accessMode: "approval_required",
+    };
+    const approvalRequiredIntegration: IntegrationSpec = {
+      ...baseIntegration,
+      tools: {
+        accounts: approvalRequiredAccountsTool,
+      },
+    };
+    await installIntegration(service, approvalRequiredIntegration, OWNER_ID);
+    await installIntegration(
+      service,
+      approvalRequiredIntegration,
+      "other@example.com",
+    );
+
+    await expect(
+      service.invokeContext(
+        "shared-agent",
+        "writer",
+        "salesforce",
+        "accounts",
+        {},
+        ["accounts.read"],
+        { ownerId: OWNER_ID },
+      ),
+    ).rejects.toThrow("Permission required");
+    await expect(
+      service.invokeContext(
+        "shared-agent",
+        "writer",
+        "salesforce",
+        "accounts",
+        {},
+        ["accounts.read"],
+        { ownerId: "other@example.com" },
+      ),
+    ).rejects.toThrow("Permission required");
+
+    await expect(repository.listAccessRequests()).resolves.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          notificationTargets: { in_app: OWNER_ID },
+        }),
+        expect.objectContaining({
+          notificationTargets: { in_app: "other@example.com" },
+        }),
+      ]),
+    );
+  });
+
+
   it("grants temporary access until expiry for case-by-case functions", async () => {
     const repository = testRepo;
     const service = new ContextLayerService(
@@ -689,7 +859,7 @@ describe("ContextLayerService", () => {
       ...baseIntegration,
       tools: {
         accounts: {
-          ...baseIntegration.tools.accounts,
+          ...baseAccountsTool,
           accessMode: "approval_required",
         },
       },
@@ -722,6 +892,10 @@ describe("ContextLayerService", () => {
     expect(allowed.decision.reason).toBe("Allowed by temporary approval");
 
     const grant = (await repository.listTemporaryGrants())[0];
+    expect(grant).toBeDefined();
+    if (!grant) {
+      throw new Error("Expected a temporary grant");
+    }
     grant.expiresAt = new Date(Date.now() - 60_000).toISOString();
     await repository.saveTemporaryGrant(grant);
 
@@ -745,7 +919,7 @@ describe("ContextLayerService", () => {
       provider: "mock",
       tools: {
         accounts: {
-          ...baseIntegration.tools.accounts,
+          ...baseAccountsTool,
           executionMode: "mock",
         },
       },
@@ -1208,7 +1382,6 @@ describe("ContextLayerService", () => {
       enabled: true,
       fineGrainedPermissions: true,
       config: {
-        builtInSlug: "notion",
         managedConnectorSlug: "notion",
       },
       credentials: {},
@@ -1225,7 +1398,8 @@ describe("ContextLayerService", () => {
     });
 
     let integrations = await service.listOwnerIntegrations(OWNER_ID);
-    expect(integrations[0]?.tools.post_search).toMatchObject({
+    let savedIntegration = getOnlyIntegration(integrations);
+    expect(savedIntegration.tools["post_search"]).toMatchObject({
       accessMode: "approval_required",
       maxAccessMode: "approval_required",
       enabled: true,
@@ -1244,7 +1418,8 @@ describe("ContextLayerService", () => {
     });
 
     integrations = await service.listOwnerIntegrations(OWNER_ID);
-    expect(integrations[0]?.tools.post_search).toMatchObject({
+    savedIntegration = getOnlyIntegration(integrations);
+    expect(savedIntegration.tools["post_search"]).toMatchObject({
       accessMode: "disabled",
       maxAccessMode: "enabled",
       enabled: false,
@@ -1313,7 +1488,7 @@ describe("ContextLayerService", () => {
       authStrategy: "oauth2",
       enabled: true,
       fineGrainedPermissions: true,
-      config: { builtInSlug: "notion" },
+      config: { managedConnectorSlug: "notion" },
       credentials: {},
       tools: {
         search: {
@@ -1392,9 +1567,8 @@ describe("ContextLayerService", () => {
       enabled: true,
       fineGrainedPermissions: true,
       config: {
-        builtInSlug: "acme-crm",
-        apiBaseUrl: "https://api.acme.test/v1",
         managedConnectorSlug: "acme-crm",
+        apiBaseUrl: "https://api.acme.test/v1",
       },
       credentials: {},
       tools: {
@@ -1502,6 +1676,887 @@ describe("ContextLayerService", () => {
       "Integration 'slack' is not installed for this user. Install it from the integrations wizard first.",
     );
     await expect(repository.getOwnerIntegration(OWNER_ID, "slack")).resolves.toBeNull();
+  });
+
+  it("disables only stale tools with tracked usage", async () => {
+    const service = createService();
+    const staleInvokedAt = new Date(Date.now() - 40 * 24 * 60 * 60 * 1000).toISOString();
+    const recentInvokedAt = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString();
+
+    await installIntegration(service, {
+      ...baseIntegration,
+      tools: {
+        accounts: {
+          ...baseAccountsTool,
+        },
+        reports: {
+          ...baseAccountsTool,
+          name: "reports",
+          description: "List reports",
+          defaultScopes: ["reports.read"],
+        },
+        archived: {
+          ...baseAccountsTool,
+          name: "archived",
+          description: "Archived tool",
+          defaultScopes: ["archived.read"],
+          accessMode: "disabled",
+          enabled: false,
+        },
+      },
+    });
+
+    await testRepo.createToolInvocation(
+      createToolInvocationRecord({
+        ownerId: OWNER_ID,
+        agentId: "agent-stale",
+        agentClass: "assistant",
+        integration: {
+          key: "salesforce",
+          provider: "http",
+          kind: "api",
+          authStrategy: "bearer",
+        },
+        toolName: "accounts",
+        scopes: ["accounts.read"],
+        payloadKeys: [],
+        invokedAt: staleInvokedAt,
+        outcome: "success",
+      }),
+    );
+    await testRepo.createToolInvocation(
+      createToolInvocationRecord({
+        ownerId: OWNER_ID,
+        agentId: "agent-recent",
+        agentClass: "assistant",
+        integration: {
+          key: "salesforce",
+          provider: "http",
+          kind: "api",
+          authStrategy: "bearer",
+        },
+        toolName: "reports",
+        scopes: ["reports.read"],
+        payloadKeys: [],
+        invokedAt: recentInvokedAt,
+        outcome: "success",
+      }),
+    );
+
+    const result = await service.disableUnusedOwnerTools(OWNER_ID, 30, "days");
+
+    expect(result.disabledCount).toBe(1);
+    expect(result.disabledTools).toEqual([
+      {
+        integrationKey: "salesforce",
+        toolName: "accounts",
+        lastInvokedAt: staleInvokedAt,
+      },
+    ]);
+
+    const savedIntegration = getOnlyIntegration(await service.listOwnerIntegrations(OWNER_ID));
+    expect(savedIntegration.tools["accounts"]).toMatchObject({
+      accessMode: "disabled",
+      enabled: false,
+    });
+    expect(savedIntegration.tools["reports"]).toMatchObject({
+      enabled: true,
+    });
+    expect(savedIntegration.tools["archived"]).toMatchObject({
+      accessMode: "disabled",
+      enabled: false,
+    });
+  });
+
+  it("validates and deletes owner integrations", async () => {
+    const service = createService();
+
+    await expect(service.deleteOwnerIntegration(OWNER_ID, "   ")).rejects.toThrow(
+      "Integration key is required.",
+    );
+    await expect(service.deleteOwnerIntegration(OWNER_ID, "slack")).rejects.toThrow(
+      "Integration not found.",
+    );
+
+    await installIntegration(service, baseIntegration);
+
+    await expect(
+      service.deleteOwnerIntegration(" Owner@Example.com ", "salesforce"),
+    ).resolves.toEqual({
+      deleted: true,
+      key: "salesforce",
+    });
+    await expect(testRepo.getOwnerIntegration(OWNER_ID, "salesforce")).resolves.toBeNull();
+  });
+
+  it("backfills legacy user and admin API key suffixes from encrypted recovery values", async () => {
+    vi.stubEnv("APP_ADMIN_EMAILS", "admin@example.com");
+    const service = createService();
+    const timestamp = new Date().toISOString();
+    const legacyUserApiKey = "clu_legacy_user_key_value";
+    const legacyAdminApiKey = "clad_legacy_admin_key_value";
+
+    await testRepo.saveUserApiKey({
+      ownerId: OWNER_ID,
+      apiKeyHash: hashScopedApiKey(legacyUserApiKey),
+      keyPrefix: getScopedApiKeyPrefix(legacyUserApiKey),
+      keySuffix: "",
+      encryptedApiKey: encryptScopedApiKey(legacyUserApiKey),
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    });
+    await testRepo.saveAdminApiKey({
+      ownerId: "admin@example.com",
+      apiKeyHash: hashScopedApiKey(legacyAdminApiKey),
+      keyPrefix: getScopedApiKeyPrefix(legacyAdminApiKey),
+      keySuffix: "",
+      encryptedApiKey: encryptScopedApiKey(legacyAdminApiKey),
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    });
+
+    expect(await service.getUserApiKeyStatus(OWNER_ID)).toMatchObject({
+      keyPrefix: getScopedApiKeyPrefix(legacyUserApiKey),
+      keySuffix: legacyUserApiKey.slice(-4),
+    });
+    expect(await service.getAdminApiKeyStatus("admin@example.com")).toMatchObject({
+      keyPrefix: getScopedApiKeyPrefix(legacyAdminApiKey),
+      keySuffix: legacyAdminApiKey.slice(-4),
+    });
+
+    expect((await testRepo.getUserApiKeyByOwner(OWNER_ID))?.keySuffix).toBe(
+      legacyUserApiKey.slice(-4),
+    );
+    expect((await testRepo.getAdminApiKeyByOwner("admin@example.com"))?.keySuffix).toBe(
+      legacyAdminApiKey.slice(-4),
+    );
+  });
+
+  it("rejects blank owners and blank scoped API keys", async () => {
+    vi.stubEnv("APP_ADMIN_EMAILS", "admin@example.com");
+    const service = createService();
+
+    await expect(service.getOrCreateAgentApiKey("   ")).rejects.toThrow(
+      "A signed-in user email or name is required before issuing a context-layer API key.",
+    );
+    await expect(service.rotateUserApiKey("   ")).rejects.toThrow(
+      "A signed-in user email or name is required before issuing a user API key.",
+    );
+    expect(await service.getStoredAgentApiKey("   ")).toBeNull();
+    expect(await service.getStoredUserApiKey("   ")).toBeNull();
+    expect(await service.getStoredAdminApiKey("   ")).toBeNull();
+    expect(await service.isStoredAgentApiKeyAuthorized("   ")).toBe(false);
+  });
+
+  it("lists sanitized connection statuses and validates OAuth state lifecycle", async () => {
+    const service = createService();
+    const future = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+    const past = new Date(Date.now() - 60 * 1000).toISOString();
+
+    await service.saveOAuthConnection(
+      "Owner@Example.com",
+      "notion",
+      "notion",
+      {
+        accessToken: "access-token",
+        refreshToken: "refresh-token",
+      },
+      {
+        authStrategy: "oauth2",
+        tokenType: "bearer",
+        scopes: ["read"],
+        expiresAt: future,
+        externalAccountId: "bot_123",
+        externalWorkspaceId: "workspace_123",
+        displayName: "Team Wiki",
+        metadata: { workspaceSlug: "team-wiki" },
+      },
+    );
+
+    await expect(service.listIntegrationConnections(OWNER_ID)).resolves.toEqual([
+      expect.objectContaining({
+        integrationKey: "notion",
+        provider: "notion",
+        authStrategy: "oauth2",
+        tokenType: "bearer",
+        scopes: ["read"],
+        expiresAt: future,
+        externalAccountId: "bot_123",
+        externalWorkspaceId: "workspace_123",
+        displayName: "Team Wiki",
+        metadata: { workspaceSlug: "team-wiki" },
+      }),
+    ]);
+    expect(await service.getIntegrationConnectionStatus(OWNER_ID, "notion")).toMatchObject({
+      integrationKey: "notion",
+      provider: "notion",
+      authStrategy: "oauth2",
+      metadata: { workspaceSlug: "team-wiki" },
+    });
+
+    await expect(service.getOAuthState("missing", "notion")).rejects.toThrow(
+      "OAuth state not found or already used.",
+    );
+
+    await service.saveOAuthState({
+      state: "state-provider-mismatch",
+      ownerId: "Owner@Example.com",
+      integrationKey: "notion",
+      provider: "notion",
+      redirectTo: "/integrations",
+      expiresAt: future,
+    });
+    await expect(
+      service.getOAuthState("state-provider-mismatch", "slack"),
+    ).rejects.toThrow("OAuth state provider mismatch.");
+
+    await service.saveOAuthState({
+      state: "state-expired",
+      ownerId: OWNER_ID,
+      integrationKey: "notion",
+      provider: "notion",
+      redirectTo: "/integrations",
+      expiresAt: past,
+    });
+    await expect(service.getOAuthState("state-expired", "notion")).rejects.toThrow(
+      "OAuth state has expired. Try connecting again.",
+    );
+
+    await service.saveOAuthState({
+      state: "state-active",
+      ownerId: OWNER_ID,
+      integrationKey: "notion",
+      provider: "notion",
+      redirectTo: "/integrations",
+      codeVerifier: "code-verifier",
+      redirectUri: "https://context-layer.example.com/api/oauth/notion/callback",
+      callbackUrl: "https://preview.example.com/api/oauth/notion/callback",
+      expiresAt: future,
+    });
+
+    expect(await service.getOAuthState("state-active", "notion")).toMatchObject({
+      ownerId: OWNER_ID,
+      integrationKey: "notion",
+      provider: "notion",
+      codeVerifier: "code-verifier",
+      redirectUri: "https://context-layer.example.com/api/oauth/notion/callback",
+      callbackUrl: "https://preview.example.com/api/oauth/notion/callback",
+    });
+    expect(await service.consumeOAuthState("state-active", "notion")).toMatchObject({
+      state: "state-active",
+      provider: "notion",
+    });
+    await expect(service.getOAuthState("state-active", "notion")).rejects.toThrow(
+      "OAuth state not found or already used.",
+    );
+  });
+
+  it("validates managed connector registration inputs", async () => {
+    const service = createService();
+
+    await expect(
+      service.upsertManagedConnector({
+        slug: "   ",
+        name: "Broken connector",
+        description: "Broken connector",
+        categories: ["Docs"],
+        authStrategy: "bearer",
+        authModes: ["bearer"],
+        provider: "http",
+        credentialLabel: "Token",
+        credentialPlaceholder: "Token",
+        credentialHelp: "Token",
+        apiBaseUrl: "https://api.example.com",
+        tools: [],
+        enabled: true,
+      }),
+    ).rejects.toThrow("Managed connectors require a slug.");
+
+    await expect(
+      service.upsertManagedConnector({
+        slug: "missing-mcp-url",
+        name: "Broken MCP",
+        description: "Broken MCP",
+        categories: ["Docs"],
+        authStrategy: "bearer",
+        authModes: ["bearer"],
+        provider: "mcp",
+        credentialLabel: "Token",
+        credentialPlaceholder: "Token",
+        credentialHelp: "Token",
+        serverUrl: "   ",
+        apiBaseUrl: "   ",
+        tools: [],
+        enabled: true,
+      }),
+    ).rejects.toThrow("Managed MCP connectors require a serverUrl.");
+
+    await expect(
+      service.upsertManagedConnector({
+        slug: "missing-http-url",
+        name: "Broken HTTP",
+        description: "Broken HTTP",
+        categories: ["Docs"],
+        authStrategy: "bearer",
+        authModes: ["bearer"],
+        provider: "http",
+        credentialLabel: "Token",
+        credentialPlaceholder: "Token",
+        credentialHelp: "Token",
+        apiBaseUrl: "   ",
+        tools: [],
+        enabled: true,
+      }),
+    ).rejects.toThrow("Managed HTTP connectors require an apiBaseUrl.");
+
+    await expect(
+      service.upsertManagedConnector({
+        slug: "missing-oauth-config",
+        name: "Broken OAuth",
+        description: "Broken OAuth",
+        categories: ["Docs"],
+        authStrategy: "oauth2",
+        authModes: ["oauth2"],
+        provider: "http",
+        credentialLabel: "Connect",
+        credentialPlaceholder: "Connect",
+        credentialHelp: "Connect",
+        apiBaseUrl: "https://api.example.com",
+        oauthClientId: "client-id",
+        oauthClientSecret: "client-secret",
+        tools: [],
+        enabled: true,
+      }),
+    ).rejects.toThrow("OAuth-managed connectors require an oauthConfig.");
+  });
+
+  it("stores public OAuth clients without a secret and clears them on non-OAuth updates", async () => {
+    const service = createService();
+
+    const connector = await service.upsertManagedConnector({
+      slug: "public-oauth",
+      name: "Public OAuth",
+      description: "Public OAuth connector",
+      categories: ["Docs", " Docs "],
+      authStrategy: "oauth2",
+      authModes: ["oauth2", "oauth2"],
+      provider: "http",
+      credentialLabel: "Connect",
+      credentialPlaceholder: "Connect",
+      credentialHelp: "Connect",
+      apiBaseUrl: " https://api.example.com ",
+      oauthConfig: {
+        authorizationUrl: "https://auth.example.com/authorize",
+        tokenUrl: "https://auth.example.com/token",
+        clientAuthentication: "none",
+        scopes: [" read ", "", "write", "read"],
+      },
+      oauthClientId: " public-client ",
+      tools: [],
+      enabled: true,
+    });
+
+    expect(connector.oauthConfig?.scopes).toEqual(["read", "write"]);
+    const stored = await testRepo.getManagedConnector("public-oauth");
+    expect(stored?.oauthConfigured).toBe(true);
+    expect(
+      decryptCredentials<{ clientId?: string; clientSecret?: string }>(
+        stored!.encryptedOAuthClient!,
+      ),
+    ).toEqual({ clientId: "public-client" });
+
+    await service.upsertManagedConnector({
+      slug: "public-oauth",
+      name: "Public OAuth",
+      description: "Now bearer",
+      categories: ["Docs"],
+      authStrategy: "bearer",
+      authModes: ["bearer"],
+      provider: "http",
+      credentialLabel: "Token",
+      credentialPlaceholder: "Token",
+      credentialHelp: "Token",
+      apiBaseUrl: "https://api.example.com",
+      tools: [],
+      enabled: false,
+    });
+
+    expect((await testRepo.getManagedConnector("public-oauth"))?.encryptedOAuthClient).toBeFalsy();
+  });
+
+  it("indexes HTTP managed connector tools and preserves saved access modes", async () => {
+    const service = createService();
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            openapi: "3.1.0",
+            paths: {
+              "/v1/search": {
+                post: {
+                  operationId: "post-search",
+                  summary: "Search workspace",
+                },
+              },
+            },
+          }),
+          {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          },
+        ),
+      ),
+    );
+
+    await service.upsertManagedConnector({
+      slug: "notion-http",
+      name: "Notion HTTP",
+      description: "Managed Notion REST connector",
+      categories: ["Knowledge base"],
+      authStrategy: "bearer",
+      authModes: ["bearer"],
+      provider: "http",
+      credentialLabel: "Token",
+      credentialPlaceholder: "Token",
+      credentialHelp: "Token",
+      apiBaseUrl: "https://api.notion.com",
+      openApiUrl: "https://developers.notion.com/openapi.json",
+      tools: [
+        {
+          name: "post_search",
+          description: "Search workspace",
+          defaultScopes: [],
+          accessMode: "approval_required",
+        },
+      ],
+      enabled: true,
+    });
+
+    expect(await service.indexManagedConnectorFunctions("notion-http")).toMatchObject({
+      slug: "notion-http",
+      tools: [
+        expect.objectContaining({
+          name: "post_search",
+          accessMode: "approval_required",
+        }),
+      ],
+    });
+
+    const timestamp = new Date().toISOString();
+    await testRepo.upsertManagedConnector({
+      slug: "http-no-openapi",
+      name: "HTTP without OpenAPI",
+      description: "Missing schema",
+      categories: ["Docs"],
+      authModes: ["bearer"],
+      authStrategy: "bearer",
+      provider: "http",
+      credentialLabel: "Token",
+      credentialPlaceholder: "Token",
+      credentialHelp: "Token",
+      apiBaseUrl: "https://api.example.com",
+      tools: [],
+      enabled: true,
+      oauthConfigured: false,
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    });
+
+    await expect(service.indexManagedConnectorFunctions("http-no-openapi")).rejects.toThrow(
+      "Managed HTTP connectors need an OpenAPI URL before their tools can be indexed.",
+    );
+  });
+
+  it("indexes MCP managed connector tools using saved owner discovery credentials", async () => {
+    const service = createService();
+    const discoverySpy = vi.spyOn(discoveryModule, "discoverIntegration").mockResolvedValue({
+      provider: "mcp",
+      authStrategy: "oauth2",
+      config: { serverUrl: "https://mcp.notion.com/mcp" },
+      credentials: {},
+      tools: {
+        search: {
+          name: "search",
+          description: "Search documents",
+          enabled: true,
+          fineGrainedPermissions: true,
+          defaultScopes: ["read"],
+          executionMode: "provider",
+          config: {},
+        },
+      },
+    } as unknown as Awaited<ReturnType<typeof discoveryModule.discoverIntegration>>);
+    const timestamp = new Date().toISOString();
+
+    await testRepo.upsertManagedConnector({
+      slug: "notion-mcp",
+      name: "Notion MCP",
+      description: "Managed Notion MCP connector",
+      categories: ["Knowledge base"],
+      authModes: ["oauth2"],
+      authStrategy: "oauth2",
+      provider: "mcp",
+      credentialLabel: "Connect Notion",
+      credentialPlaceholder: "Connect Notion",
+      credentialHelp: "Connect Notion with OAuth.",
+      apiBaseUrl: "https://mcp.notion.com/mcp",
+      serverUrl: "https://mcp.notion.com/mcp",
+      oauthConfig: {
+        authorizationUrl: "https://api.notion.com/v1/oauth/authorize",
+        tokenUrl: "https://api.notion.com/v1/oauth/token",
+        scopes: ["read"],
+      },
+      tools: [
+        {
+          name: "search",
+          description: "Search documents",
+          defaultScopes: ["read"],
+          accessMode: "approval_required",
+        },
+      ],
+      enabled: true,
+      oauthConfigured: true,
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    });
+    await service.saveOAuthConnection(
+      OWNER_ID,
+      "notion-mcp",
+      "notion",
+      {
+        accessToken: "owner-access-token",
+        refreshToken: "owner-refresh-token",
+      },
+      {
+        authStrategy: "oauth2",
+        tokenType: "bearer",
+        scopes: ["read"],
+        metadata: {},
+      },
+    );
+
+    const indexed = await service.indexManagedConnectorFunctions("notion-mcp", OWNER_ID);
+
+    expect(discoverySpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        key: "notion-mcp",
+        credentials: {
+          accessToken: "owner-access-token",
+          refreshToken: "owner-refresh-token",
+        },
+      }),
+      expect.objectContaining({
+        ownerId: OWNER_ID,
+        repository: testRepo,
+      }),
+    );
+    expect(indexed.tools).toEqual([
+      expect.objectContaining({
+        name: "search",
+        accessMode: "approval_required",
+      }),
+    ]);
+  });
+
+  it("supports owner integration and tool mutations while clamping managed ceilings", async () => {
+    const service = createService();
+    const timestamp = new Date().toISOString();
+
+    await installIntegration(service, baseIntegration);
+    expect(
+      await service.addOwnerTool(OWNER_ID, "salesforce", {
+        name: "contacts",
+        description: "List contacts",
+        enabled: true,
+        fineGrainedPermissions: true,
+        defaultScopes: ["contacts.read"],
+        executionMode: "provider",
+        config: {},
+      }),
+    ).toMatchObject({
+      name: "contacts",
+      enabled: true,
+      defaultScopes: ["contacts.read"],
+    });
+    expect(
+      await service.setOwnerIntegrationEnabled(OWNER_ID, "salesforce", false),
+    ).toMatchObject({ enabled: false });
+    await expect(
+      service.setOwnerToolEnabled(OWNER_ID, "salesforce", "missing", true),
+    ).rejects.toThrow("Unknown tool 'missing' for integration 'salesforce'.");
+
+    await testRepo.upsertManagedConnector({
+      slug: "managed-salesforce",
+      name: "Managed Salesforce",
+      description: "Managed Salesforce connector",
+      categories: ["CRM"],
+      authModes: ["bearer"],
+      authStrategy: "bearer",
+      provider: "mcp",
+      credentialLabel: "Token",
+      credentialPlaceholder: "Token",
+      credentialHelp: "Token",
+      apiBaseUrl: "https://salesforce.example.com/mcp",
+      serverUrl: "https://salesforce.example.com/mcp",
+      tools: [
+        {
+          name: "accounts",
+          description: "List accounts",
+          defaultScopes: ["accounts.read"],
+          accessMode: "approval_required",
+        },
+      ],
+      enabled: true,
+      oauthConfigured: false,
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    });
+    await service.registerOwnerIntegration(OWNER_ID, {
+      ...baseIntegration,
+      key: "managed-salesforce",
+      name: "Managed Salesforce",
+      config: {
+        managedConnectorSlug: "managed-salesforce",
+      },
+      tools: {
+        accounts: {
+          ...baseAccountsTool,
+          accessMode: "disabled",
+          enabled: false,
+        },
+      },
+    });
+
+    expect(
+      await service.setOwnerToolEnabled(OWNER_ID, "managed-salesforce", "accounts", true),
+    ).toMatchObject({
+      accessMode: "approval_required",
+      enabled: true,
+      maxAccessMode: "approval_required",
+    });
+  });
+
+  it("rejects ownerless and unknown-tool invocations and missing access requests", async () => {
+    const service = createService();
+    await installIntegration(service, baseIntegration);
+
+    await expect(
+      service.invokeContext({
+        agentId: "agent-ownerless",
+        agentClass: "assistant",
+        integrationKey: "salesforce",
+        toolName: "accounts",
+      }),
+    ).rejects.toThrow(
+      "Integration 'salesforce' must be installed for a specific user before invocation.",
+    );
+    await expect(
+      service.invokeContext(
+        "agent-missing-tool",
+        "assistant",
+        "salesforce",
+        "missing",
+        {},
+        ["accounts.read"],
+        { ownerId: OWNER_ID },
+      ),
+    ).rejects.toThrow("Unknown tool 'missing' for integration 'salesforce'.");
+    await expect(service.rejectAccessRequest("missing-request", "approver")).rejects.toThrow(
+      "Unknown access request 'missing-request'.",
+    );
+  });
+
+  it("refreshes expired OAuth connections before invocation", async () => {
+    const repository = testRepo;
+    const mcpInvoke = vi.fn(async ({ integration }) => integration.credentials);
+    const refreshToken = vi.fn(async () => ({
+      accessToken: "refreshed-access-token",
+      refreshToken: "rotated-refresh-token",
+      tokenType: "bearer",
+      scopes: ["read", "write"],
+      expiresAt: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+      externalAccountId: "bot_refreshed",
+      externalWorkspaceId: "workspace_refreshed",
+      displayName: "Knowledge Base",
+      metadata: { workspaceSlug: "team-wiki" },
+    }));
+    vi.spyOn(providerResolverModule, "resolveOAuthProvider").mockResolvedValue({
+      refreshToken,
+    } as unknown as Awaited<ReturnType<typeof providerResolverModule.resolveOAuthProvider>>);
+    const service = new ContextLayerService(
+      repository,
+      new AdapterRegistry({
+        mcp: { invoke: mcpInvoke },
+        mock: { invoke: async () => ({}) },
+      }),
+      new NotificationPublisher(repository),
+    );
+
+    await installIntegration(service, {
+      key: "notion-refresh",
+      name: "Notion",
+      kind: "mcp",
+      provider: "mcp",
+      authStrategy: "oauth2",
+      enabled: true,
+      fineGrainedPermissions: true,
+      config: { serverUrl: "https://mcp.notion.com/mcp" },
+      credentials: {},
+      tools: {
+        search: {
+          name: "search",
+          description: "Search Notion",
+          enabled: true,
+          fineGrainedPermissions: true,
+          defaultScopes: ["read"],
+          executionMode: "provider",
+          config: {},
+        },
+      },
+    });
+    await service.upsertAgentPolicy("assistant", [
+      {
+        integrationKey: "notion-refresh",
+        toolNames: ["search"],
+        scopes: ["read"],
+        enabled: true,
+      },
+    ]);
+    await service.saveOAuthConnection(
+      OWNER_ID,
+      "notion-refresh",
+      "notion",
+      {
+        accessToken: "expired-access-token",
+        refreshToken: "refresh-me",
+      },
+      {
+        authStrategy: "oauth2",
+        tokenType: "bearer",
+        scopes: ["read"],
+        expiresAt: new Date(Date.now() - 60 * 1000).toISOString(),
+        externalAccountId: "bot_old",
+        externalWorkspaceId: "workspace_old",
+        displayName: "Old Name",
+        metadata: { region: "eu" },
+      },
+    );
+
+    expect(
+      await service.invokeContext(
+        "agent-refresh",
+        "assistant",
+        "notion-refresh",
+        "search",
+        { query: "docs" },
+        ["read"],
+        { ownerId: OWNER_ID },
+      ),
+    ).toMatchObject({
+      data: {
+        accessToken: "refreshed-access-token",
+        refreshToken: "rotated-refresh-token",
+      },
+    });
+    expect(refreshToken).toHaveBeenCalledWith({ refreshToken: "refresh-me" });
+    expect(mcpInvoke).toHaveBeenCalledTimes(1);
+
+    const refreshedConnection = await testRepo.getIntegrationConnection(OWNER_ID, "notion-refresh");
+    expect(
+      decryptCredentials<{ accessToken?: string; refreshToken?: string }>(
+        refreshedConnection!.encryptedCredentials,
+      ),
+    ).toEqual({
+      accessToken: "refreshed-access-token",
+      refreshToken: "rotated-refresh-token",
+    });
+    expect(refreshedConnection).toMatchObject({
+      scopes: ["read", "write"],
+      externalAccountId: "bot_refreshed",
+      externalWorkspaceId: "workspace_refreshed",
+      displayName: "Knowledge Base",
+      metadata: {
+        region: "eu",
+        workspaceSlug: "team-wiki",
+      },
+    });
+  });
+
+  it("requires a refresh token before renewing expired OAuth connections", async () => {
+    const repository = testRepo;
+    const mcpInvoke = vi.fn(async ({ integration }) => integration.credentials);
+    vi.spyOn(providerResolverModule, "resolveOAuthProvider").mockResolvedValue({
+      refreshToken: vi.fn(),
+    } as unknown as Awaited<ReturnType<typeof providerResolverModule.resolveOAuthProvider>>);
+    const service = new ContextLayerService(
+      repository,
+      new AdapterRegistry({
+        mcp: { invoke: mcpInvoke },
+        mock: { invoke: async () => ({}) },
+      }),
+      new NotificationPublisher(repository),
+    );
+
+    await installIntegration(service, {
+      key: "notion-expired",
+      name: "Notion",
+      kind: "mcp",
+      provider: "mcp",
+      authStrategy: "oauth2",
+      enabled: true,
+      fineGrainedPermissions: true,
+      config: { serverUrl: "https://mcp.notion.com/mcp" },
+      credentials: {},
+      tools: {
+        search: {
+          name: "search",
+          description: "Search Notion",
+          enabled: true,
+          fineGrainedPermissions: true,
+          defaultScopes: ["read"],
+          executionMode: "provider",
+          config: {},
+        },
+      },
+    });
+    await service.upsertAgentPolicy("assistant", [
+      {
+        integrationKey: "notion-expired",
+        toolNames: ["search"],
+        scopes: ["read"],
+        enabled: true,
+      },
+    ]);
+    await service.saveOAuthConnection(
+      OWNER_ID,
+      "notion-expired",
+      "notion",
+      {
+        accessToken: "expired-access-token",
+      },
+      {
+        authStrategy: "oauth2",
+        tokenType: "bearer",
+        scopes: ["read"],
+        expiresAt: new Date(Date.now() - 60 * 1000).toISOString(),
+        metadata: {},
+      },
+    );
+
+    await expect(
+      service.invokeContext(
+        "agent-expired",
+        "assistant",
+        "notion-expired",
+        "search",
+        { query: "docs" },
+        ["read"],
+        { ownerId: OWNER_ID },
+      ),
+    ).rejects.toThrow("Reconnect notion to refresh the expired access token.");
+    expect(mcpInvoke).not.toHaveBeenCalled();
   });
 
   it("requires a personal OAuth connection before invoking an installed OAuth integration", async () => {

@@ -15,8 +15,8 @@ export const KindStep = ({
   <div className="grid gap-4 md:grid-cols-2">
     {[
       {
-        kind: "built_in" as const,
-        title: "Built-in connector",
+        kind: "managed" as const,
+        title: "Managed connector",
         body: "Pick from the service-level managed connectors, connect your account when OAuth is available, and let the dashboard discover the available tools.",
         icon: KeyRound,
       },

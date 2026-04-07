@@ -45,7 +45,7 @@ export async function GET(
     url.searchParams.get("redirectTo")?.trim() ||
     buildAdminSectionHref("integrations", {
       showIntegrationWizard: "1",
-      builtIn: provider.slug,
+      managedConnector: provider.slug,
     });
 
   try {

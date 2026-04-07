@@ -46,7 +46,7 @@ import { buildAgentConnectionGuide } from "@/src/lib/agent-connection";
 import type {
   AccessRequest,
   AdminApiKeyStatus,
-  BuiltInConnectorOption,
+  ManagedConnectorOption,
   DisableUnusedToolsResult,
   ToolAccessMode,
   IntegrationSpec,
@@ -72,7 +72,6 @@ interface DashboardWorkspaceProps {
 export const DashboardWorkspace = ({
   initialIntegrations,
   initialAccessRequests,
-  initialNotifications: _initialNotifications,
   currentUser,
   contextApiBaseUrl,
   contextApiKey,
@@ -144,18 +143,19 @@ export const DashboardWorkspace = ({
     initialData: initialIntegrations,
   });
 
-  const builtInConnectorsQuery = useQuery({
-    queryKey: ["built-in-connectors"],
+  const managedConnectorsQuery = useQuery({
+    queryKey: ["managed-connectors"],
     queryFn: () =>
-      fetchJson<BuiltInConnectorOption[]>("/api/integrations/built-in-connectors"),
+      fetchJson<ManagedConnectorOption[]>("/api/integrations/managed-connectors"),
     enabled: activeSection === "integrations",
     staleTime: Number.POSITIVE_INFINITY,
   });
 
   const accessRequestsQuery = useQuery({
     queryKey: ["access-requests"],
-    queryFn: () => fetchJson<AccessRequest[]>("/api/access-requests"),
+    queryFn: () => fetchJson<AccessRequest[]>("/api/case-by-case-approvals"),
     initialData: initialAccessRequests,
+    enabled: activeSection === "caseByCaseApprovals",
   });
 
   const invalidateAll = async () => {
@@ -215,8 +215,6 @@ export const DashboardWorkspace = ({
 
   const integrations = integrationsQuery.data ?? [];
   const accessRequests = accessRequestsQuery.data ?? [];
-  const approverIdentity =
-    currentUser.email?.trim() || currentUser.name?.trim() || "human-approver";
   const sortedAccessRequests = useMemo(
     () =>
       [...accessRequests].sort(
@@ -291,32 +289,36 @@ export const DashboardWorkspace = ({
       : "Authenticated dashboard session";
   const sections = getDashboardSections();
   const activeSectionMeta =
-    sections.find((section) => section.id === activeSection) ?? sections[0];
+    sections.find((section) => section.id === activeSection) ?? {
+      id: activeSection,
+      label: "Dashboard",
+      icon: sections[0]?.icon ?? null,
+    };
 
-  const builtInConnectors = builtInConnectorsQuery.data ?? [];
+  const managedConnectors = managedConnectorsQuery.data ?? [];
   const installedIntegrationKeys = useMemo(
     () => buildInstalledIntegrationKeys(integrations),
     [integrations],
   );
   const connectorBySlug = useMemo(
-    () => buildConnectorMap(builtInConnectors),
-    [builtInConnectors],
+    () => buildConnectorMap(managedConnectors),
+    [managedConnectors],
   );
   const availableConnectorCount = useMemo(
     () =>
-      builtInConnectors.filter(
+      managedConnectors.filter(
         (connector) => !installedIntegrationKeys.has(connector.slug),
       ).length,
-    [builtInConnectors, installedIntegrationKeys],
+    [managedConnectors, installedIntegrationKeys],
   );
   const marketplaceConnectors = useMemo(
     () =>
       buildMarketplaceConnectors({
-        builtInConnectors,
+        managedConnectors,
         installedIntegrationKeys,
         search: addIntegrationSearch,
       }),
-    [addIntegrationSearch, builtInConnectors, installedIntegrationKeys],
+    [addIntegrationSearch, managedConnectors, installedIntegrationKeys],
   );
 
   const agentConnectionGuide = useMemo(
@@ -372,13 +374,13 @@ export const DashboardWorkspace = ({
     [integrations, unusedCutoffDate],
   );
 
-  const openIntegrationWizard = (builtInSlug?: string) => {
+  const openIntegrationWizard = (managedConnectorSlug?: string) => {
     setShowIntegrationWizard(true);
     setActiveSection("integrations");
     router.push(
       buildAdminSectionHref("integrations", {
         showIntegrationWizard: "1",
-        builtIn: builtInSlug,
+        managedConnector: managedConnectorSlug,
       }),
     );
   };
@@ -495,20 +497,18 @@ export const DashboardWorkspace = ({
     try {
       for (const requestId of requestIds) {
         await fetchJson(
-          `/api/access-requests/${requestId}/${action === "approve" ? "approve" : "reject"}`,
+          `/api/case-by-case-approvals/${requestId}/${action === "approve" ? "approve" : "reject"}`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              approver: approverIdentity,
-              ...(action === "approve"
-                ? {
+            body:
+              action === "approve"
+                ? JSON.stringify({
                     durationMinutes: approvalHoursToMinutes(
                       normalizedApprovalDurationHours,
                     ),
-                  }
-                : {}),
-            }),
+                  })
+                : JSON.stringify({}),
           },
         );
       }
@@ -630,12 +630,12 @@ export const DashboardWorkspace = ({
           <IntegrationsSection
             addIntegrationSearch={addIntegrationSearch}
             availableConnectorCount={availableConnectorCount}
-            builtInConnectorsError={
-              builtInConnectorsQuery.isError
-                ? (builtInConnectorsQuery.error as Error).message
+            managedConnectorsError={
+              managedConnectorsQuery.isError
+                ? (managedConnectorsQuery.error as Error).message
                 : null
             }
-            builtInConnectorsPending={builtInConnectorsQuery.isPending}
+            managedConnectorsPending={managedConnectorsQuery.isPending}
             expandedTools={expandedTools}
             expandedIntegrations={expandedIntegrations}
             filteredIntegrations={filteredIntegrations}

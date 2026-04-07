@@ -87,7 +87,7 @@ If the provider matches Slack, Webflow, Ordinal, Notion, or ElevenLabs, copy tha
 - `src/types/context-layer.ts`
   - only if the provider genuinely needs a new shared type or auth/config field
 - `src/lib/integrations/oauth-provider-catalog.ts`
-  - curated metadata: slug, name, availability, docs URL, notes, categories, `builtInSlug`
+  - curated metadata: slug, name, availability, docs URL, notes, categories, `managedConnectorSlug`
 - `src/lib/integrations/oauth-provider-registration-defaults.ts`
   - runtime defaults: `provider`, `authStrategy`, URLs, scopes, credential labels, and OpenAPI or MCP defaults
 - matching tests for the files above
@@ -95,7 +95,7 @@ If the provider matches Slack, Webflow, Ordinal, Notion, or ElevenLabs, copy tha
 ### Touch only when needed
 
 - `src/lib/integrations/discovery.ts`
-  - discovery branching for built-ins, managed connectors, HTTP/OpenAPI, and MCP
+  - discovery branching for managed connectors, HTTP/OpenAPI, and MCP
 - `src/lib/managed-connectors/openapi.ts`
   - when the provider's schema uses request-body or parameter features not already supported
 - `src/lib/adapters/http-adapter.ts`
@@ -157,7 +157,7 @@ Use the ElevenLabs shape:
 
 ### Discovery
 
-`src/lib/integrations/discovery.ts` decides whether a built-in or managed connector is discovered through:
+`src/lib/integrations/discovery.ts` decides whether a managed connector is discovered through:
 
 - MCP discovery, or
 - OpenAPI-generated HTTP function definitions

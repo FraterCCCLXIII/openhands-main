@@ -11,7 +11,7 @@ import {
   buildCallbackUrl,
   buildDefaultHttpTools,
   buildManagedConnectorPayload,
-  buildReadyBuiltInConnectorOption,
+  buildReadyManagedConnectorOption,
   createRegistrationFormState,
   getCredentialCopy,
   getManagedConnectorProvider,
@@ -19,13 +19,13 @@ import {
   usesDynamicOAuthRegistration,
 } from "@/src/components/admin/integrations/provider-catalog";
 import type {
-  BuiltInConnectorOption,
+  ManagedConnectorOption,
   OAuthProviderCatalogOption,
 } from "@/src/types/context-layer";
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
-const readyBuiltInConnectors: BuiltInConnectorOption[] = [
+const readyManagedConnectors: ManagedConnectorOption[] = [
   {
     slug: "github",
     name: "GitHub",
@@ -51,10 +51,10 @@ const providerCatalog: OAuthProviderCatalogOption[] = [
     categories: ["Engineering"],
     authStrategy: "oauth2",
     availability: "oauth_ready",
-    builtInSlug: "github",
+    managedConnectorSlug: "github",
     appUrl: "https://github.com",
     docsUrl: "https://docs.github.com/apps/oauth-apps",
-    notes: "Available now as a built-in connector.",
+    notes: "Available now as a managed connector.",
     popularityRank: 1,
   },
   {
@@ -86,7 +86,7 @@ const providerCatalog: OAuthProviderCatalogOption[] = [
     categories: ["Knowledge base"],
     authStrategy: "oauth2",
     availability: "oauth_ready",
-    builtInSlug: "notion",
+    managedConnectorSlug: "notion",
     docsUrl: "https://developers.notion.com/docs/authorization",
     notes: "Uses the official REST OpenAPI schema.",
     popularityRank: 3,
@@ -106,7 +106,7 @@ const providerCatalog: OAuthProviderCatalogOption[] = [
     categories: ["Communication", "Operations"],
     authStrategy: "oauth2",
     availability: "oauth_ready",
-    builtInSlug: "slack",
+    managedConnectorSlug: "slack",
     docsUrl: "https://docs.slack.dev/ai/slack-mcp-server",
     notes: "Uses Slack's official hosted MCP server with confidential OAuth user-token auth.",
     popularityRank: 4,
@@ -143,7 +143,7 @@ const providerCatalog: OAuthProviderCatalogOption[] = [
     categories: ["CMS", "Marketing"],
     authStrategy: "oauth2",
     availability: "oauth_ready",
-    builtInSlug: "webflow",
+    managedConnectorSlug: "webflow",
     docsUrl: "https://developers.webflow.com/mcp/reference/getting-started",
     notes: "Uses Webflow's hosted MCP server and deployment-scoped OAuth registration.",
     popularityRank: 5,
@@ -166,7 +166,7 @@ const providerCatalog: OAuthProviderCatalogOption[] = [
     categories: ["Audio", "AI"],
     authStrategy: "api_key",
     availability: "manual_token",
-    builtInSlug: "elevenlabs",
+    managedConnectorSlug: "elevenlabs",
     docsUrl: "https://elevenlabs.io/docs/api-reference/introduction",
     notes: "Uses the published API schema and user API keys.",
     popularityRank: 5,
@@ -293,7 +293,7 @@ describe("provider catalog helper utilities", () => {
       oauthClientSecret: "calendar-client-secret",
       tools: buildDefaultHttpTools(googleCalendar),
     });
-    expect(buildReadyBuiltInConnectorOption(elevenlabs)).toMatchObject({
+    expect(buildReadyManagedConnectorOption(elevenlabs)).toMatchObject({
       slug: "elevenlabs",
       toolCount: 0,
       authModes: ["api_key"],
@@ -357,7 +357,7 @@ describe("ProviderCatalog", () => {
       root.render(
         <ProviderCatalog
           providerCatalog={providerCatalog}
-          readyBuiltInConnectors={readyBuiltInConnectors}
+          readyManagedConnectors={readyManagedConnectors}
           canRegisterManagedConnectors
           oauthCallbackBaseUrl={oauthCallbackBaseUrl}
         />,
@@ -506,7 +506,7 @@ describe("ProviderCatalog", () => {
       root.render(
         <ProviderCatalog
           providerCatalog={providerCatalog}
-          readyBuiltInConnectors={readyBuiltInConnectors}
+          readyManagedConnectors={readyManagedConnectors}
           canRegisterManagedConnectors
           oauthCallbackBaseUrl={oauthCallbackBaseUrl}
         />,
@@ -627,7 +627,7 @@ describe("ProviderCatalog", () => {
       root.render(
         <ProviderCatalog
           providerCatalog={providerCatalog}
-          readyBuiltInConnectors={readyBuiltInConnectors}
+          readyManagedConnectors={readyManagedConnectors}
           canRegisterManagedConnectors
           oauthCallbackBaseUrl={oauthCallbackBaseUrl}
         />,
@@ -720,7 +720,7 @@ describe("ProviderCatalog", () => {
       root.render(
         <ProviderCatalog
           providerCatalog={providerCatalog}
-          readyBuiltInConnectors={readyBuiltInConnectors}
+          readyManagedConnectors={readyManagedConnectors}
           canRegisterManagedConnectors
           oauthCallbackBaseUrl={oauthCallbackBaseUrl}
         />,
@@ -800,7 +800,7 @@ describe("ProviderCatalog", () => {
       root.render(
         <ProviderCatalog
           providerCatalog={providerCatalog}
-          readyBuiltInConnectors={readyBuiltInConnectors}
+          readyManagedConnectors={readyManagedConnectors}
           canRegisterManagedConnectors
           oauthCallbackBaseUrl={oauthCallbackBaseUrl}
         />,
@@ -870,7 +870,7 @@ describe("ProviderCatalog", () => {
       root.render(
         <ProviderCatalog
           providerCatalog={providerCatalog}
-          readyBuiltInConnectors={readyBuiltInConnectors}
+          readyManagedConnectors={readyManagedConnectors}
           canRegisterManagedConnectors
           oauthCallbackBaseUrl={oauthCallbackBaseUrl}
         />,
@@ -894,7 +894,7 @@ describe("ProviderCatalog", () => {
       root.render(
         <ProviderCatalog
           providerCatalog={providerCatalog}
-          readyBuiltInConnectors={readyBuiltInConnectors}
+          readyManagedConnectors={readyManagedConnectors}
           canRegisterManagedConnectors
           oauthCallbackBaseUrl={oauthCallbackBaseUrl}
         />,
@@ -933,7 +933,7 @@ describe("ProviderCatalog", () => {
       root.render(
         <ProviderCatalog
           providerCatalog={providerCatalog}
-          readyBuiltInConnectors={readyBuiltInConnectors}
+          readyManagedConnectors={readyManagedConnectors}
         />,
       );
     });

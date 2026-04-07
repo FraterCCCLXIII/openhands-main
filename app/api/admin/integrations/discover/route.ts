@@ -7,7 +7,7 @@ import { discoverIntegration } from "@/src/lib/integrations/discovery";
 
 const integrationDiscoverySchema = z.object({
   key: z.string().min(1),
-  kind: z.enum(["mcp", "built_in"]),
+  kind: z.enum(["mcp", "managed"]),
   config: z.record(z.string(), z.unknown()).default({}),
   credentials: z.record(z.string(), z.unknown()).default({}),
 });

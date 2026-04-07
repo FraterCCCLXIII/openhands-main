@@ -4,6 +4,7 @@ import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/
 
 import { getContextLayerService } from "@/src/lib/core/runtime";
 import { createTestRepository, getActiveSql } from "@/src/lib/db/pglite-test-utils";
+import { upsertMcpSession } from "@/src/lib/mcp/session-store";
 import type { IntegrationSpec } from "@/src/types/context-layer";
 
 import { DELETE, GET, POST, resetMcpSessionsForTests } from "./route";
@@ -156,7 +157,7 @@ afterEach(async () => {
 });
 
 describe("/api/mcp", () => {
-  it("lists built-in tools and forwards enabled invocations without requiring session defaults", async () => {
+  it("lists managed connector tools and forwards enabled invocations without requiring session defaults", async () => {
     const service = getContextLayerService();
     await service.registerOwnerIntegration("owner@example.com", baseIntegration);
     const apiKey = (await service.getOrCreateAgentApiKey("owner@example.com")).apiKey;
@@ -325,6 +326,130 @@ describe("/api/mcp", () => {
     );
 
     await transport.close();
+  });
+
+  it("returns a bearer challenge when the authorization header is missing", async () => {
+    const response = await POST(
+      new Request("http://localhost:3000/api/mcp", {
+        method: "POST",
+      }),
+    );
+
+    expect(response.status).toBe(401);
+    expect(response.headers.get("www-authenticate")).toBe(
+      'Bearer realm="agent-context-layer-mcp"',
+    );
+    await expect(response.json()).resolves.toEqual({
+      detail:
+        "Provide a valid personal context-layer API key in the Authorization bearer header before connecting to MCP.",
+    });
+  });
+
+  it("returns service unavailable until a personal API key has been provisioned", async () => {
+    const response = await POST(
+      new Request("http://localhost:3000/api/mcp", {
+        method: "POST",
+        headers: {
+          Authorization: "Bearer cla_missing",
+        },
+      }),
+    );
+
+    expect(response.status).toBe(503);
+    await expect(response.json()).resolves.toEqual({
+      detail:
+        "Open the dashboard once to provision a personal context-layer API key before agents connect to MCP.",
+    });
+  });
+
+  it("rejects GET requests without a session id before routing to the MCP transport", async () => {
+    const response = await GET(
+      new Request("http://localhost:3000/api/mcp", {
+        method: "GET",
+      }),
+    );
+
+    expect(response.status).toBe(405);
+    expect(response.headers.get("allow")).toBe("POST");
+    await expect(response.text()).resolves.toBe("Method Not Allowed");
+  });
+
+  it("requires a session header for MCP session termination", async () => {
+    const service = getContextLayerService();
+    const apiKey = (await service.getOrCreateAgentApiKey("owner@example.com")).apiKey;
+
+    const response = await DELETE(
+      new Request("http://localhost:3000/api/mcp", {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+        },
+      }),
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({
+      detail: "MCP session termination requires an mcp-session-id header.",
+    });
+  });
+
+  it("returns not found for unknown or unauthorized stored MCP sessions", async () => {
+    const service = getContextLayerService();
+    const ownerApiKey = (await service.getOrCreateAgentApiKey("owner@example.com")).apiKey;
+    const otherApiKey = (await service.getOrCreateAgentApiKey("other-owner@example.com")).apiKey;
+
+    await upsertMcpSession({
+      sessionId: "session-owned-by-owner",
+      ownerId: "owner@example.com",
+      defaults: {
+        agentId: "agent-1",
+        agentClass: "assistant",
+        agentData: {},
+      },
+    });
+
+    const missingSessionResponse = await GET(
+      new Request("http://localhost:3000/api/mcp", {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${ownerApiKey}`,
+          "mcp-session-id": "missing-session",
+        },
+      }),
+    );
+    expect(missingSessionResponse.status).toBe(404);
+
+    const wrongOwnerResponse = await GET(
+      new Request("http://localhost:3000/api/mcp", {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${otherApiKey}`,
+          "mcp-session-id": "session-owned-by-owner",
+        },
+      }),
+    );
+    expect(wrongOwnerResponse.status).toBe(404);
+    await expect(wrongOwnerResponse.json()).resolves.toEqual({
+      detail: "MCP session not found. Reconnect to create a fresh MCP session.",
+    });
+  });
+
+  it("returns method not allowed for unsupported MCP verbs after authentication", async () => {
+    const service = getContextLayerService();
+    const apiKey = (await service.getOrCreateAgentApiKey("owner@example.com")).apiKey;
+
+    const response = await GET(
+      new Request("http://localhost:3000/api/mcp", {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+        },
+      }),
+    );
+
+    expect(response.status).toBe(405);
+    expect(response.headers.get("allow")).toBe("GET, POST, DELETE");
+    await expect(response.text()).resolves.toBe("Method Not Allowed");
   });
 
 });
