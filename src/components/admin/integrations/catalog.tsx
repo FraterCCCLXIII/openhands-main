@@ -20,12 +20,12 @@ interface IntegrationsCatalogProps {
   oauthCallbackBaseUrl: string;
 }
 
-const sortReadyManagedConnectors = (connectors: ManagedConnectorOption[]) =>
+export const sortReadyManagedConnectors = (connectors: ManagedConnectorOption[]) =>
   [...connectors].sort(
     (left, right) => left.name.localeCompare(right.name) || left.slug.localeCompare(right.slug),
   );
 
-const toReadyManagedConnector = (
+export const toReadyManagedConnector = (
   connector: ManagedConnectorDefinition,
 ): ManagedConnectorOption => ({
   slug: connector.slug,
@@ -43,7 +43,7 @@ const toReadyManagedConnector = (
   credentialHelp: connector.credentialHelp,
 });
 
-const toDefaultReadyManagedConnector = (
+export const toDefaultReadyManagedConnector = (
   provider: OAuthProviderCatalogOption,
 ): ManagedConnectorOption | null => {
   const defaults = provider.registrationDefaults;
@@ -65,7 +65,7 @@ const toDefaultReadyManagedConnector = (
     name: provider.name,
     description: provider.description,
     appUrl: provider.appUrl,
-    toolCount: defaults.provider === "http" ? 0 : 0,
+    toolCount: 0,
     categories: provider.categories,
     authModes:
       defaults.authModes?.length && defaults.authModes.every(Boolean)
@@ -81,7 +81,7 @@ const toDefaultReadyManagedConnector = (
   };
 };
 
-const upsertReadyManagedConnector = (
+export const upsertReadyManagedConnector = (
   connectors: ManagedConnectorOption[],
   connector: ManagedConnectorOption,
 ) =>
@@ -101,15 +101,18 @@ export function IntegrationsCatalog({
     sortReadyManagedConnectors(initialReadyManagedConnectors),
   );
 
-  const defaultReadyManagedConnectors = useMemo(
-    () =>
-      new Map(
-        providerCatalog
-          .map((provider) => [provider.managedConnectorSlug ?? provider.slug, toDefaultReadyManagedConnector(provider)] as const)
-          .filter((entry): entry is [string, ManagedConnectorOption] => entry[1] != null),
-      ),
-    [providerCatalog],
-  );
+  const defaultReadyManagedConnectors = useMemo(() => {
+    const defaults = new Map<string, ManagedConnectorOption>();
+
+    for (const provider of providerCatalog) {
+      const connector = toDefaultReadyManagedConnector(provider);
+      if (connector) {
+        defaults.set(provider.managedConnectorSlug ?? provider.slug, connector);
+      }
+    }
+
+    return defaults;
+  }, [providerCatalog]);
 
   const resetReadyManagedConnector = (slug: string) => {
     setReadyManagedConnectors((current) => {

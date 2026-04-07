@@ -4,7 +4,20 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { ProviderCatalog } from "@/src/components/admin/integrations/provider-catalog";
+import {
+  ProviderCatalog,
+  availabilityLabel,
+  availabilityTone,
+  buildCallbackUrl,
+  buildDefaultHttpTools,
+  buildManagedConnectorPayload,
+  buildReadyManagedConnectorOption,
+  createRegistrationFormState,
+  getCredentialCopy,
+  getManagedConnectorProvider,
+  requiresManualOAuthClientCredentials,
+  usesDynamicOAuthRegistration,
+} from "@/src/components/admin/integrations/provider-catalog";
 import type {
   ManagedConnectorOption,
   OAuthProviderCatalogOption,
@@ -170,6 +183,129 @@ const providerCatalog: OAuthProviderCatalogOption[] = [
     },
   },
 ];
+
+const getProvider = (slug: string) => {
+  const provider = providerCatalog.find((candidate) => candidate.slug === slug);
+  if (!provider) {
+    throw new Error(`Missing provider: ${slug}`);
+  }
+  return provider;
+};
+
+const bearerProvider: OAuthProviderCatalogOption = {
+  slug: "ordinal",
+  name: "Ordinal",
+  description: "Social scheduling",
+  categories: ["Marketing"],
+  authStrategy: "bearer",
+  availability: "manual_token",
+  docsUrl: "https://ordinal.app/docs",
+  notes: "Uses bearer tokens.",
+  popularityRank: 10,
+  registrationDefaults: {
+    provider: "mcp",
+    authStrategy: "bearer",
+    credentialLabel: "Ordinal bearer token",
+    credentialPlaceholder: "Paste your Ordinal bearer token",
+    credentialHelp: "Bearer token for Ordinal.",
+    serverUrl: "https://mcp.ordinal.app/mcp",
+  },
+};
+
+describe("provider catalog helper utilities", () => {
+  it("returns the expected availability tone and label for each catalog state", () => {
+    expect(availabilityTone("oauth_ready")).toBe("success");
+    expect(availabilityLabel("oauth_ready")).toBe("OAuth ready");
+    expect(availabilityTone("manual_token")).toBe("default");
+    expect(availabilityLabel("manual_token")).toBe("Manual token today");
+    expect(availabilityTone("planned")).toBe("warning");
+    expect(availabilityLabel("planned")).toBe("Planned");
+  });
+
+  it("distinguishes dynamic OAuth registration from manual client credentials", () => {
+    expect(usesDynamicOAuthRegistration(getProvider("webflow"))).toBe(true);
+    expect(requiresManualOAuthClientCredentials(getProvider("webflow"))).toBe(false);
+    expect(usesDynamicOAuthRegistration(getProvider("slack"))).toBe(false);
+    expect(requiresManualOAuthClientCredentials(getProvider("slack"))).toBe(true);
+    expect(requiresManualOAuthClientCredentials(getProvider("elevenlabs"))).toBe(false);
+  });
+
+  it("builds credential copy, default form state, and payloads for HTTP and MCP connectors", () => {
+    const googleCalendar = getProvider("google-calendar");
+    const elevenlabs = getProvider("elevenlabs");
+
+    expect(getCredentialCopy(elevenlabs)).toEqual({
+      label: "ElevenLabs API key",
+      placeholder: "Paste your ElevenLabs API key",
+      help: "Personal or workspace ElevenLabs API key sent in the xi-api-key header.",
+    });
+    expect(getCredentialCopy(bearerProvider)).toEqual({
+      label: "Ordinal bearer token",
+      placeholder: "Paste your Ordinal bearer token",
+      help: "Bearer token for Ordinal.",
+    });
+    expect(getCredentialCopy(getProvider("github"))).toEqual({
+      label: "Connect GitHub",
+      placeholder: "Connect GitHub",
+      help: "OAuth connection for GitHub.",
+    });
+
+    const googleForm = createRegistrationFormState(googleCalendar);
+    expect(googleForm).toMatchObject({
+      apiBaseUrl: "https://www.googleapis.com/calendar/v3",
+      authorizationUrl: "https://accounts.google.com/o/oauth2/v2/auth",
+      tokenUrl: "https://oauth2.googleapis.com/token",
+      scopes: "https://www.googleapis.com/auth/calendar.readonly",
+      oauthClientId: "",
+      oauthClientSecret: "",
+      submitting: false,
+      status: "idle",
+      message: "",
+    });
+
+    expect(getManagedConnectorProvider(googleCalendar)).toBe("http");
+    expect(getManagedConnectorProvider(getProvider("slack"))).toBe("mcp");
+    expect(buildDefaultHttpTools(googleCalendar)).toEqual([
+      {
+        name: "list_events",
+        description: "List events from the user's primary Google Calendar.",
+        defaultScopes: ["https://www.googleapis.com/auth/calendar.readonly"],
+        request: {
+          method: "GET",
+          path: "/calendars/primary/events",
+        },
+      },
+    ]);
+    expect(buildDefaultHttpTools(getProvider("notion"))).toEqual([]);
+
+    expect(
+      buildManagedConnectorPayload(googleCalendar, {
+        ...googleForm,
+        oauthClientId: "calendar-client-id",
+        oauthClientSecret: "calendar-client-secret",
+      }),
+    ).toMatchObject({
+      slug: "google-calendar",
+      provider: "http",
+      apiBaseUrl: "https://www.googleapis.com/calendar/v3",
+      credentialLabel: "Connect Google Calendar",
+      oauthClientId: "calendar-client-id",
+      oauthClientSecret: "calendar-client-secret",
+      tools: buildDefaultHttpTools(googleCalendar),
+    });
+    expect(buildReadyManagedConnectorOption(elevenlabs)).toMatchObject({
+      slug: "elevenlabs",
+      toolCount: 0,
+      authModes: ["api_key"],
+      authStrategy: "api_key",
+      credentialLabel: "ElevenLabs API key",
+    });
+    expect(buildCallbackUrl("", "webflow")).toBe(
+      "https://<your-deployment>/api/oauth/webflow/callback",
+    );
+  });
+});
+
 
 const setInputValue = (element: Element | null, value: string) => {
   if (!(element instanceof HTMLInputElement)) {

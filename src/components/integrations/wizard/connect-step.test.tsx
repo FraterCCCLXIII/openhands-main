@@ -71,22 +71,6 @@ const elevenLabsConnector: ManagedConnectorOption = {
   apiKeyHeaderName: "xi-api-key",
 };
 
-const customTokenConnector: ManagedConnectorOption = {
-  slug: "custom-token",
-  name: "Custom Token",
-  description: "",
-  toolCount: 2,
-  categories: ["Operations"],
-  authModes: ["api_key"],
-  authStrategy: "api_key",
-  oauthConfigured: true,
-  credentialLabel: "API key",
-  credentialPlaceholder: "Paste the provider API key",
-  credentialHelp:
-    "Provide the provider API key that this managed connector should use upstream.",
-};
-
-
 const genericApiConnector: ManagedConnectorOption = {
   slug: "generic-api",
   name: "Generic API",
@@ -100,6 +84,21 @@ const genericApiConnector: ManagedConnectorOption = {
   credentialPlaceholder: "Paste the provider key",
   credentialHelp: "Provide a custom API key for this connector.",
 };
+
+const customTokenConnector: ManagedConnectorOption = {
+  slug: "custom-token",
+  name: "Custom Token",
+  description: "",
+  toolCount: 2,
+  categories: ["Operations"],
+  authModes: ["api_key"],
+  authStrategy: "api_key",
+  oauthConfigured: true,
+  credentialLabel: undefined as unknown as string,
+  credentialPlaceholder: undefined as unknown as string,
+  credentialHelp: undefined as unknown as string,
+};
+
 
 const basicConnector: ManagedConnectorOption = {
   slug: "basic-auth",
@@ -250,7 +249,6 @@ describe("ConnectStep", () => {
 
     const { container, cleanup, onConnectorSearchChange } = await renderConnectStep({
       connectorSearch: "Not",
-      managedConnectors: [notionConnector, elevenLabsConnector],
     });
     const searchInput = container.querySelector(
       'input[list="managed-connector-options"]',
@@ -260,7 +258,13 @@ describe("ConnectStep", () => {
     ).map((option) => (option as HTMLOptionElement).value);
 
     expect(searchInput?.placeholder).toBe("Choose GitHub, Notion, Slack...");
-    expect(optionValues).toEqual(["Notion (notion)", "ElevenLabs (elevenlabs)"]);
+    expect(optionValues).toEqual([
+      "Notion (notion)",
+      "ElevenLabs (elevenlabs)",
+      "Generic API (generic-api)",
+      "Basic Auth Service (basic-auth)",
+      "Public Feed (public-feed)",
+    ]);
 
     await act(async () => {
       setInputValue(searchInput, "Notion");
