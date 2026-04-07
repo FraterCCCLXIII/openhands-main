@@ -32,6 +32,8 @@ The root `LICENSE` is proprietary: `Copyright All Hands AI, Inc. All rights rese
 - Full repo validation that already exercises the real SQL schema through PGlite: `npm run test:unit && npm run test:e2e && npm run typecheck && npm run build`.
 - For live localhost HTTP validation without a real Postgres instance, use a temporary local-only PGlite-backed Neon shim under `.agent_tmp/`, point the installed `@neondatabase/serverless` package at that shim locally (never commit `node_modules`), seed the runtime DB with `PostgresRepository`, then run `POSTGRES_URL='pglite://<name>' DISABLE_AUTH='true' npm run dev -- --hostname 127.0.0.1 --port 12000`.
 - Proven live validation pattern for `/api/context/skill`: seed `saveAgentApiKey(...)` plus `upsertOwnerIntegration(...)` for `dev@localhost`, start the app with the same `POSTGRES_URL`, then `curl -i http://127.0.0.1:12000/api/context/skill -H 'Authorization: Bearer <api-key>'` and expect `200 OK` plus `Content-Disposition: attachment; filename="SKILL.md"`.
+- OAuth branch-coverage work is concentrated in `src/lib/oauth/provider-resolver.test.ts` and `src/lib/oauth/managed-oauth-client.test.ts`; for quick verification of provider/client-flow regressions, run `npm test -- src/lib/oauth/provider-resolver.test.ts src/lib/oauth/managed-oauth-client.test.ts --coverage --coverage.include='src/lib/oauth/provider-resolver.ts' --coverage.include='src/lib/oauth/managed-oauth-client.ts'`.
+
 - When `DISABLE_AUTH=true`, localhost requests are allowed but non-loopback hosts are rejected; open `/integrations` locally if you need the app to provision a fresh personal API key instead of seeding one directly. `/home` is now a legacy redirect.
 
 
