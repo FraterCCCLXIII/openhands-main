@@ -514,4 +514,192 @@ describe("HttpAdapter", () => {
     await expect(adapter.invoke(input)).resolves.toEqual({ ok: true });
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
+
+  it("resolves supported path, query, header, and body placeholders", async () => {
+    const input = buildInput();
+    input.toolSpec.config.request = {
+      method: "POST",
+      path: "/v1/files/{{path.fileId}}",
+      query: {
+        tags: "{{query.tags}}",
+        include: "{{query.include}}",
+        verbose: true,
+      },
+      headers: {
+        "x-trace-id": "{{headers.traceId}}",
+        "x-static": "always",
+        "x-skip": "{{headers.skip}}",
+      },
+      body: {
+        items: ["{{body.first}}", "{{body.second}}", "static"],
+      },
+      contentType: "json",
+    };
+    input.payload = {
+      path: {
+        fileId: "folder/clip.txt",
+      },
+      query: {
+        tags: ["ready", null, "queued"],
+        include: false,
+      },
+      headers: {
+        traceId: 42,
+        skip: null,
+      },
+      body: {
+        first: "alpha",
+        second: "beta",
+      },
+    };
+
+    const fetchMock = vi.fn(async (url: URL | string, init?: RequestInit) => {
+      const resolvedUrl = url instanceof URL ? url : new URL(url);
+      expect(resolvedUrl.pathname).toBe("/v1/files/folder%2Fclip.txt");
+      expect(resolvedUrl.searchParams.getAll("tags")).toEqual(["ready", "queued"]);
+      expect(resolvedUrl.searchParams.get("include")).toBe("false");
+      expect(resolvedUrl.searchParams.get("verbose")).toBe("true");
+      expect(init?.headers).toMatchObject({
+        "xi-api-key": "test-secret",
+        "x-trace-id": "42",
+        "x-static": "always",
+        "Content-Type": "application/json",
+      });
+      expect(init?.headers).not.toHaveProperty("x-skip");
+      expect(init?.body).toBe(JSON.stringify({
+        items: ["alpha", "beta", "static"],
+      }));
+
+      return new Response(JSON.stringify({ ok: true }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const adapter = new HttpAdapter();
+    await expect(adapter.invoke(input)).resolves.toEqual({ ok: true });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("rejects mixed interpolation outside request paths", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+
+    const input = buildInput();
+    input.toolSpec.config.request = {
+      method: "GET",
+      path: "/v1/files/{{path.fileId}}",
+      query: {
+        search: "status:{{query.term}}",
+      },
+    };
+    input.payload = {
+      path: {
+        fileId: "folder/clip.txt",
+      },
+      query: {
+        term: "ready",
+      },
+    };
+
+    const adapter = new HttpAdapter();
+
+    await expect(adapter.invoke(input)).rejects.toThrow(
+      /unsupported HTTP request template at query.search/,
+    );
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects invalid path placeholder values", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+
+    const input = buildInput();
+    input.toolSpec.config.request = {
+      method: "GET",
+      path: "/v1/files/{{path.fileId}}",
+    };
+    input.payload = {
+      path: {
+        fileId: { nested: true },
+      },
+    };
+
+    const adapter = new HttpAdapter();
+
+    await expect(adapter.invoke(input)).rejects.toThrow(
+      /Path placeholder 'path.fileId' must resolve to a string, number, or boolean/,
+    );
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects blank resolved request paths", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+
+    const input = buildInput();
+    input.toolSpec.config.request = {
+      method: "GET",
+      path: "   ",
+    };
+    input.payload = {};
+
+    const adapter = new HttpAdapter();
+
+    await expect(adapter.invoke(input)).rejects.toThrow(/produced an invalid request path/);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects invalid resolved query parameter values", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+
+    const input = buildInput();
+    input.toolSpec.config.request = {
+      method: "GET",
+      path: "/v1/files",
+      query: {
+        filter: "{{query.filter}}",
+      },
+    };
+    input.payload = {
+      query: {
+        filter: { nested: true },
+      },
+    };
+
+    const adapter = new HttpAdapter();
+
+    await expect(adapter.invoke(input)).rejects.toThrow(
+      /produced an invalid query parameter 'filter'/,
+    );
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects invalid resolved header values", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+
+    const input = buildInput();
+    input.toolSpec.config.request = {
+      method: "GET",
+      path: "/v1/files",
+      headers: {
+        "x-meta": "{{headers.meta}}",
+      },
+    };
+    input.payload = {
+      headers: {
+        meta: { nested: true },
+      },
+    };
+
+    const adapter = new HttpAdapter();
+
+    await expect(adapter.invoke(input)).rejects.toThrow(
+      /produced an invalid header 'x-meta'/,
+    );
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
 });

@@ -64,7 +64,7 @@ export const buildConnectorRequestNotification = (
     subject: `Connector request: ${submission.providerName}`,
     body: `${requester} requested OAuth setup guidance for ${submission.providerName}. ${submission.useCase}`,
     metadata: {
-      source: "add-connector",
+      source: "connector-request",
       requesterName: normalizeOptional(submission.requesterName),
       requesterEmail: normalizeOptional(submission.requesterEmail),
       providerName: submission.providerName,

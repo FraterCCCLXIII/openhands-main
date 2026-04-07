@@ -1,8 +1,7 @@
 import { z } from "zod";
 
+import { collectHttpTemplateVariables } from "@/src/lib/http-request-template";
 import type { ToolSpec, GenericHttpRequestTemplate } from "@/src/types/context-layer";
-
-const TEMPLATE = /\{\{\s*([a-zA-Z0-9_.]+)\s*\}\}/g;
 
 type JsonLiteral = string | number | boolean | null;
 
@@ -14,34 +13,6 @@ type JsonSchema = {
   required?: string[];
   additionalProperties?: boolean | JsonSchema;
   description?: string;
-};
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  Boolean(value) && typeof value === "object" && !Array.isArray(value);
-
-const collectTemplateVariables = (template: unknown, target: Set<string>) => {
-  if (typeof template === "string") {
-    for (const match of template.matchAll(TEMPLATE)) {
-      const variable = match[1]?.trim();
-      if (variable) {
-        target.add(variable);
-      }
-    }
-    return;
-  }
-
-  if (Array.isArray(template)) {
-    for (const entry of template) {
-      collectTemplateVariables(entry, target);
-    }
-    return;
-  }
-
-  if (isRecord(template)) {
-    for (const value of Object.values(template)) {
-      collectTemplateVariables(value, target);
-    }
-  }
 };
 
 const toRootVariableName = (value: string) => value.split(".").find(Boolean)?.trim() ?? "";
@@ -141,10 +112,7 @@ const buildShapeFromRequestTemplate = (requestTemplate?: GenericHttpRequestTempl
     return null;
   }
 
-  const variables = new Set<string>();
-  collectTemplateVariables(requestTemplate, variables);
-
-  const rootVariables = [...variables]
+  const rootVariables = [...collectHttpTemplateVariables(requestTemplate)]
     .map(toRootVariableName)
     .filter(Boolean)
     .sort((left, right) => left.localeCompare(right));

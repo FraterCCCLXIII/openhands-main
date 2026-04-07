@@ -68,7 +68,7 @@ export interface OwnerIntegrationRecord {
   updatedAt: string;
 }
 
-export interface BuiltInConnectorOption {
+export interface ManagedConnectorOption {
   slug: string;
   name: string;
   description: string;
@@ -123,7 +123,7 @@ export interface OAuthProviderCatalogOption {
   categories: string[];
   authStrategy: Exclude<AuthStrategy, "mcp_session">;
   availability: OAuthProviderAvailability;
-  builtInSlug?: string;
+  managedConnectorSlug?: string;
   appUrl?: string;
   docsUrl?: string;
   notes: string;

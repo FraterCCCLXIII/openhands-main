@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
 import { cn } from "@/src/lib/utils";
-import type { BuiltInConnectorOption } from "@/src/types/context-layer";
+import type { ManagedConnectorOption } from "@/src/types/context-layer";
 
 export const dashboardInputClassName =
   "rounded-md border border-[var(--color-border)] bg-[var(--color-bg-input)] px-4 py-3 text-white outline-none transition-colors focus:border-[var(--color-accent)]";
@@ -107,7 +107,7 @@ export const ConnectorLogo = ({
 };
 
 interface IntegrationMarketplaceCardProps {
-  connector: BuiltInConnectorOption;
+  connector: ManagedConnectorOption;
   onClick: () => void;
 }
 
@@ -121,7 +121,7 @@ export const IntegrationMarketplaceCard = ({
     <button
       type="button"
       onClick={onClick}
-      data-built-in-slug={connector.slug}
+      data-managed-connector-slug={connector.slug}
       className="flex w-full cursor-pointer items-center justify-between gap-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)] px-4 py-3 text-left transition-colors hover:bg-[var(--color-bg-active)]"
     >
       <div className="flex min-w-0 items-center gap-3">

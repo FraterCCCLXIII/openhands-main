@@ -2,21 +2,22 @@ import { decryptCredentials } from "@/src/lib/credential-crypto";
 import { ContextLayerError } from "@/src/lib/core/errors";
 import type { ContextRepository } from "@/src/lib/core/repository";
 import { buildMcpHeaders, runMcpClientOperation } from "@/src/lib/mcp-client";
+import { getMcpTransportOrder } from "@/src/lib/mcp-transport-policy";
 import {
   buildManagedConnectorToolSpecs,
   buildManagedConnectorTools,
-  getDefaultBuiltInConnector,
+  getDefaultManagedConnector,
   getManagedConnectorApiBaseUrl,
   getManagedConnectorProvider,
   getManagedConnectorServerUrl,
-  listAvailableBuiltInConnectors,
+  listAvailableManagedConnectorOptions,
   resolveManagedConnectorCredentials,
 } from "@/src/lib/integrations/managed-connectors";
 import { generateManagedConnectorToolsFromOpenApi } from "@/src/lib/managed-connectors/openapi";
 import { getOptionalTrimmedString } from "@/src/lib/type-utils";
 import type {
   AuthStrategy,
-  BuiltInConnectorOption,
+  ManagedConnectorOption,
   ToolSpec,
   IntegrationProvider,
 } from "@/src/types/context-layer";
@@ -75,7 +76,7 @@ const buildToolSpec = (
   config,
 });
 
-export type IntegrationDiscoveryKind = "mcp" | "built_in";
+export type IntegrationDiscoveryKind = "mcp" | "managed";
 
 export interface IntegrationDiscoveryInput {
   key: string;
@@ -98,10 +99,10 @@ export interface IntegrationDiscoveryResult {
   tools: Record<string, ToolSpec>;
 }
 
-export const listBuiltInConnectors = async (
+export const listManagedConnectorOptions = async (
   repository?: ContextRepository,
-): Promise<BuiltInConnectorOption[]> =>
-  repository ? listAvailableBuiltInConnectors(repository) : [];
+): Promise<ManagedConnectorOption[]> =>
+  repository ? listAvailableManagedConnectorOptions(repository) : [];
 
 const resolveManagedOAuthDiscoveryCredentials = async (
   repository: ContextRepository,
@@ -161,7 +162,6 @@ const discoverManagedConnectorIntegration = async (
         provider: "mcp",
         authStrategy: storedConnector.authStrategy,
         config: compactRecord({
-          builtInSlug: storedConnector.slug,
           managedConnectorSlug: storedConnector.slug,
           serverUrl,
         }),
@@ -196,7 +196,6 @@ const discoverManagedConnectorIntegration = async (
       ...result,
       authStrategy: storedConnector.authStrategy,
       config: compactRecord({
-        builtInSlug: storedConnector.slug,
         managedConnectorSlug: storedConnector.slug,
         serverUrl,
       }),
@@ -216,20 +215,19 @@ const discoverManagedConnectorIntegration = async (
     provider: "http",
     authStrategy: storedConnector.authStrategy,
     config: {
-      builtInSlug: storedConnector.slug,
-      apiBaseUrl,
       managedConnectorSlug: storedConnector.slug,
+      apiBaseUrl,
     },
     credentials: resolveManagedConnectorCredentials(storedConnector, input),
     tools: buildManagedConnectorTools(storedConnector),
   };
 };
 
-const discoverDefaultBuiltInConnectorIntegration = async (
+const discoverDefaultManagedConnectorIntegration = async (
   input: IntegrationDiscoveryInput,
   slug: string,
 ): Promise<IntegrationDiscoveryResult | null> => {
-  const connector = getDefaultBuiltInConnector(slug);
+  const connector = getDefaultManagedConnector(slug);
   if (!connector) {
     return null;
   }
@@ -247,7 +245,7 @@ const discoverDefaultBuiltInConnectorIntegration = async (
       ...result,
       authStrategy: connector.authStrategy,
       config: compactRecord({
-        builtInSlug: connector.slug,
+        managedConnectorSlug: connector.slug,
         serverUrl: connector.serverUrl,
       }),
       credentials: result.credentials,
@@ -267,7 +265,7 @@ const discoverDefaultBuiltInConnectorIntegration = async (
     provider: "http",
     authStrategy: connector.authStrategy,
     config: {
-      builtInSlug: connector.slug,
+      managedConnectorSlug: connector.slug,
       apiBaseUrl: connector.apiBaseUrl,
     },
     credentials: resolveManagedConnectorCredentials(connector, input),
@@ -275,16 +273,19 @@ const discoverDefaultBuiltInConnectorIntegration = async (
   };
 };
 
-const discoverBuiltInConnectorIntegration = async (
+const discoverManagedConnectorSelection = async (
   input: IntegrationDiscoveryInput,
   options: IntegrationDiscoveryOptions,
 ): Promise<IntegrationDiscoveryResult> => {
-  const slug = getOptionalTrimmedString(input.config, "builtInSlug") ?? input.key.trim();
+  const slug =
+    getOptionalTrimmedString(input.config, "managedConnectorSlug") ??
+    getOptionalTrimmedString(input.config, "builtInSlug") ??
+    input.key.trim();
 
   if (options.repository) {
     const storedConnector = await options.repository.getManagedConnector(slug);
     if (storedConnector && !storedConnector.enabled) {
-      throw new ContextLayerError(`Unknown built-in connector '${slug}'.`, 404);
+      throw new ContextLayerError(`Unknown managed connector '${slug}'.`, 404);
     }
   }
 
@@ -297,7 +298,7 @@ const discoverBuiltInConnectorIntegration = async (
     return managedConnectorResult;
   }
 
-  const defaultConnectorResult = await discoverDefaultBuiltInConnectorIntegration(
+  const defaultConnectorResult = await discoverDefaultManagedConnectorIntegration(
     input,
     slug,
   );
@@ -305,7 +306,7 @@ const discoverBuiltInConnectorIntegration = async (
     return defaultConnectorResult;
   }
 
-  throw new ContextLayerError(`Unknown built-in connector '${slug}'.`, 404);
+  throw new ContextLayerError(`Unknown managed connector '${slug}'.`, 404);
 };
 
 const discoverMcpIntegration = async (
@@ -334,12 +335,15 @@ const discoverMcpIntegration = async (
     "listTools",
     (client) => client.listTools(),
     {
-      authStrategy,
-      credentials,
-      integrationKey: input.key,
-      managedConnectorSlug:
-        getOptionalTrimmedString(input.config, "managedConnectorSlug") ??
-        getOptionalTrimmedString(input.config, "builtInSlug"),
+      debugContext: {
+        authStrategy,
+        credentials,
+        integrationKey: input.key,
+        managedConnectorSlug:
+          getOptionalTrimmedString(input.config, "managedConnectorSlug") ??
+          getOptionalTrimmedString(input.config, "builtInSlug"),
+      },
+      transportOrder: getMcpTransportOrder(serverUrl, input.config),
     },
   );
   const tools = Object.fromEntries(
@@ -365,8 +369,8 @@ export const discoverIntegration = async (
   input: IntegrationDiscoveryInput,
   options: IntegrationDiscoveryOptions = {},
 ): Promise<IntegrationDiscoveryResult> => {
-  if (input.kind === "built_in") {
-    return discoverBuiltInConnectorIntegration(input, options);
+  if (input.kind === "managed") {
+    return discoverManagedConnectorSelection(input, options);
   }
 
   return discoverMcpIntegration(input);

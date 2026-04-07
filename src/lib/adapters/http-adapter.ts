@@ -4,6 +4,12 @@ import type {
 } from "@/src/lib/core/adapter-registry";
 import { ContextLayerError } from "@/src/lib/core/errors";
 import {
+  collectHttpTemplateValidationIssues,
+  extractExactTemplateVariable,
+  formatHttpTemplateLocation,
+  replacePathTemplateVariables,
+} from "@/src/lib/http-request-template";
+import {
   getOptionalString,
   getOptionalTrimmedString,
   isRecord,
@@ -12,9 +18,6 @@ import type {
   GenericHttpRequestTemplate,
   HttpRequestContentType,
 } from "@/src/types/context-layer";
-
-const EXACT_TEMPLATE = /^\{\{\s*([a-zA-Z0-9_.]+)\s*\}\}$/;
-const TEMPLATE = /\{\{\s*([a-zA-Z0-9_.]+)\s*\}\}/g;
 
 const getByPath = (source: Record<string, unknown>, path: string) =>
   path.split(".").reduce<unknown>((value, segment) => {
@@ -28,39 +31,48 @@ const getByPath = (source: Record<string, unknown>, path: string) =>
 const isHttpRequestTemplate = (value: unknown): value is GenericHttpRequestTemplate =>
   isRecord(value) && typeof value.method === "string" && typeof value.path === "string";
 
-const interpolateValue = (
+const resolveTemplateValue = (
   template: unknown,
   payload: Record<string, unknown>,
 ): unknown => {
   if (typeof template === "string") {
-    const exact = template.match(EXACT_TEMPLATE);
-    const exactKey = exact?.[1];
-    if (exactKey) {
-      return getByPath(payload, exactKey);
+    const exactVariable = extractExactTemplateVariable(template);
+    if (exactVariable) {
+      return getByPath(payload, exactVariable);
     }
 
-    return template.replace(TEMPLATE, (_, key: string) => {
-      const resolved = getByPath(payload, key);
-      return resolved == null ? "" : String(resolved);
-    });
+    return template;
   }
 
   if (Array.isArray(template)) {
     return template
-      .map((item) => interpolateValue(item, payload))
+      .map((item) => resolveTemplateValue(item, payload))
       .filter((item) => item !== undefined);
   }
 
-  if (template && typeof template === "object") {
+  if (isRecord(template)) {
     return Object.fromEntries(
       Object.entries(template)
-        .map(([key, value]) => [key, interpolateValue(value, payload)] as const)
+        .map(([key, value]) => [key, resolveTemplateValue(value, payload)] as const)
         .filter(([, value]) => value !== undefined),
     );
   }
 
   return template;
 };
+
+const resolvePathTemplate = (pathTemplate: string, payload: Record<string, unknown>) =>
+  replacePathTemplateVariables(pathTemplate, (variable) => {
+    const resolved = getByPath(payload, variable);
+    if (resolved == null || typeof resolved === "object") {
+      throw new ContextLayerError(
+        `Path placeholder '${variable}' must resolve to a string, number, or boolean.`,
+        400,
+      );
+    }
+
+    return encodeURIComponent(String(resolved));
+  });
 
 const buildAuthHeaders = (input: AdapterInvocationInput): Record<string, string> => {
   const { integration } = input;
@@ -140,6 +152,56 @@ const appendFormValue = (formData: FormData, key: string, value: unknown) => {
   }
 
   formData.append(key, isRecord(value) ? JSON.stringify(value) : String(value));
+};
+
+const isScalarRequestValue = (value: unknown): value is string | number | boolean =>
+  ["string", "number", "boolean"].includes(typeof value);
+
+const appendQueryValue = (url: URL, key: string, value: unknown, toolName: string) => {
+  if (value == null) {
+    return;
+  }
+
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      appendQueryValue(url, key, item, toolName);
+    }
+    return;
+  }
+
+  if (!isScalarRequestValue(value)) {
+    throw new ContextLayerError(
+      `Tool '${toolName}' produced an invalid query parameter '${key}'.`,
+      400,
+    );
+  }
+
+  url.searchParams.append(key, String(value));
+};
+
+const resolveHeaderValues = (
+  headersTemplate: Record<string, unknown>,
+  payload: Record<string, unknown>,
+  toolName: string,
+) => {
+  const interpolatedHeaders = (resolveTemplateValue(headersTemplate, payload) as
+    | Record<string, unknown>
+    | undefined) ?? {};
+
+  return Object.fromEntries(
+    Object.entries(interpolatedHeaders)
+      .filter(([, value]) => value != null)
+      .map(([key, value]) => {
+        if (!isScalarRequestValue(value)) {
+          throw new ContextLayerError(
+            `Tool '${toolName}' produced an invalid header '${key}'.`,
+            400,
+          );
+        }
+
+        return [key, String(value)] as const;
+      }),
+  );
 };
 
 const encodeBody = (
@@ -240,9 +302,17 @@ export class HttpAdapter implements IntegrationAdapter {
       );
     }
 
+    const [validationIssue] = collectHttpTemplateValidationIssues(requestTemplate);
+    if (validationIssue) {
+      throw new ContextLayerError(
+        `Tool '${input.toolSpec.name}' uses an unsupported HTTP request template at ${formatHttpTemplateLocation(validationIssue.path)}: ${validationIssue.message}`,
+        400,
+      );
+    }
+
     const method = requestTemplate.method.toUpperCase();
-    const path = interpolateValue(requestTemplate.path, input.payload);
-    if (typeof path !== "string" || !path.trim()) {
+    const path = resolvePathTemplate(requestTemplate.path, input.payload);
+    if (!path.trim()) {
       throw new ContextLayerError(
         `Tool '${input.toolSpec.name}' produced an invalid request path.`,
         400,
@@ -250,33 +320,20 @@ export class HttpAdapter implements IntegrationAdapter {
     }
 
     const url = new URL(path.replace(/^\//, ""), `${apiBaseUrl.replace(/\/$/, "")}/`);
-    const query = interpolateValue(requestTemplate.query ?? {}, input.payload);
+    const query = resolveTemplateValue(requestTemplate.query ?? {}, input.payload);
     if (isRecord(query)) {
       for (const [key, value] of Object.entries(query)) {
-        if (value == null) {
-          continue;
-        }
-        url.searchParams.set(key, String(value));
+        appendQueryValue(url, key, value, input.toolSpec.name);
       }
     }
 
-    const interpolatedHeaders = interpolateValue(requestTemplate.headers ?? {}, input.payload);
     const headers = {
       ...buildAuthHeaders(input),
-      ...Object.fromEntries(
-        isRecord(interpolatedHeaders)
-          ? Object.entries(interpolatedHeaders)
-              .filter(([, value]) => value != null)
-              .map(([key, value]) => [key, String(value)])
-          : [],
-      ),
+      ...resolveHeaderValues(requestTemplate.headers ?? {}, input.payload, input.toolSpec.name),
     };
 
     const contentType = requestTemplate.contentType ?? "json";
-    const encoded = encodeBody(
-      interpolateValue(requestTemplate.body, input.payload),
-      contentType,
-    );
+    const encoded = encodeBody(resolveTemplateValue(requestTemplate.body, input.payload), contentType);
 
     const response = await fetch(url, {
       method,
