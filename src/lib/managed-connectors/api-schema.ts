@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { collectHttpTemplateValidationIssues } from "@/src/lib/http-request-template";
+
 export const managedConnectorAuthModeSchema = z.enum([
   "none",
   "api_key",
@@ -29,14 +31,24 @@ export const genericOAuthConfigSchema = z.object({
   additionalTokenParams: z.record(z.string(), z.string()).optional(),
 });
 
-export const requestTemplateSchema = z.object({
-  method: z.string().min(1),
-  path: z.string().min(1),
-  query: z.record(z.string(), z.unknown()).optional(),
-  headers: z.record(z.string(), z.unknown()).optional(),
-  body: z.unknown().optional(),
-  contentType: z.enum(["json", "form_urlencoded", "multipart_form_data", "text"]).optional(),
-});
+export const requestTemplateSchema = z
+  .object({
+    method: z.string().min(1),
+    path: z.string().min(1),
+    query: z.record(z.string(), z.unknown()).optional(),
+    headers: z.record(z.string(), z.unknown()).optional(),
+    body: z.unknown().optional(),
+    contentType: z.enum(["json", "form_urlencoded", "multipart_form_data", "text"]).optional(),
+  })
+  .superRefine((value, context) => {
+    for (const issue of collectHttpTemplateValidationIssues(value)) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: issue.path,
+        message: issue.message,
+      });
+    }
+  });
 
 export const managedConnectorToolSchema = z.object({
   name: z.string().min(1),

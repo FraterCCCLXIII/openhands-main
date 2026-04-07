@@ -21,11 +21,11 @@ describe("listOAuthProviderCatalog", () => {
     const webflow = providers.find((provider) => provider.slug === "webflow");
     const github = providers.find((provider) => provider.slug === "github");
 
-    expect(notion).toMatchObject({ availability: "oauth_ready", builtInSlug: "notion" });
-    expect(figma).toMatchObject({ availability: "oauth_ready", builtInSlug: "figma" });
-    expect(slack).toMatchObject({ availability: "oauth_ready", builtInSlug: "slack" });
-    expect(webflow).toMatchObject({ availability: "oauth_ready", builtInSlug: "webflow" });
-    expect(github).toMatchObject({ availability: "manual_token", builtInSlug: "github" });
+    expect(notion).toMatchObject({ availability: "oauth_ready", managedConnectorSlug: "notion" });
+    expect(figma).toMatchObject({ availability: "oauth_ready", managedConnectorSlug: "figma" });
+    expect(slack).toMatchObject({ availability: "oauth_ready", managedConnectorSlug: "slack" });
+    expect(webflow).toMatchObject({ availability: "oauth_ready", managedConnectorSlug: "webflow" });
+    expect(github).toMatchObject({ availability: "manual_token", managedConnectorSlug: "github" });
   });
 
   it("provides concrete managed-connector defaults for every catalog provider", () => {
@@ -72,7 +72,7 @@ describe("listOAuthProviderCatalog", () => {
     });
     expect(webflow).toMatchObject({
       availability: "oauth_ready",
-      builtInSlug: "webflow",
+      managedConnectorSlug: "webflow",
       docsUrl: "https://developers.webflow.com/mcp/reference/getting-started",
     });
     expect(webflow?.registrationDefaults).toMatchObject({
@@ -108,7 +108,7 @@ describe("listOAuthProviderCatalog", () => {
     expect(elevenlabs).toMatchObject({
       authStrategy: "api_key",
       availability: "manual_token",
-      builtInSlug: "elevenlabs",
+      managedConnectorSlug: "elevenlabs",
     });
     expect(elevenlabs?.registrationDefaults).toMatchObject({
       provider: "http",
@@ -125,7 +125,7 @@ describe("listOAuthProviderCatalog", () => {
     expect(ordinal).toMatchObject({
       authStrategy: "bearer",
       availability: "manual_token",
-      builtInSlug: "ordinal",
+      managedConnectorSlug: "ordinal",
     });
     expect(ordinal?.registrationDefaults).toMatchObject({
       provider: "mcp",

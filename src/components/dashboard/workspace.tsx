@@ -46,7 +46,7 @@ import { buildAgentConnectionGuide } from "@/src/lib/agent-connection";
 import type {
   AccessRequest,
   AdminApiKeyStatus,
-  BuiltInConnectorOption,
+  ManagedConnectorOption,
   DisableUnusedToolsResult,
   ToolAccessMode,
   IntegrationSpec,
@@ -143,10 +143,10 @@ export const DashboardWorkspace = ({
     initialData: initialIntegrations,
   });
 
-  const builtInConnectorsQuery = useQuery({
-    queryKey: ["built-in-connectors"],
+  const managedConnectorsQuery = useQuery({
+    queryKey: ["managed-connectors"],
     queryFn: () =>
-      fetchJson<BuiltInConnectorOption[]>("/api/integrations/built-in-connectors"),
+      fetchJson<ManagedConnectorOption[]>("/api/integrations/managed-connectors"),
     enabled: activeSection === "integrations",
     staleTime: Number.POSITIVE_INFINITY,
   });
@@ -296,30 +296,30 @@ export const DashboardWorkspace = ({
       icon: sections[0]?.icon ?? null,
     };
 
-  const builtInConnectors = builtInConnectorsQuery.data ?? [];
+  const managedConnectors = managedConnectorsQuery.data ?? [];
   const installedIntegrationKeys = useMemo(
     () => buildInstalledIntegrationKeys(integrations),
     [integrations],
   );
   const connectorBySlug = useMemo(
-    () => buildConnectorMap(builtInConnectors),
-    [builtInConnectors],
+    () => buildConnectorMap(managedConnectors),
+    [managedConnectors],
   );
   const availableConnectorCount = useMemo(
     () =>
-      builtInConnectors.filter(
+      managedConnectors.filter(
         (connector) => !installedIntegrationKeys.has(connector.slug),
       ).length,
-    [builtInConnectors, installedIntegrationKeys],
+    [managedConnectors, installedIntegrationKeys],
   );
   const marketplaceConnectors = useMemo(
     () =>
       buildMarketplaceConnectors({
-        builtInConnectors,
+        managedConnectors,
         installedIntegrationKeys,
         search: addIntegrationSearch,
       }),
-    [addIntegrationSearch, builtInConnectors, installedIntegrationKeys],
+    [addIntegrationSearch, managedConnectors, installedIntegrationKeys],
   );
 
   const agentConnectionGuide = useMemo(
@@ -375,13 +375,13 @@ export const DashboardWorkspace = ({
     [integrations, unusedCutoffDate],
   );
 
-  const openIntegrationWizard = (builtInSlug?: string) => {
+  const openIntegrationWizard = (managedConnectorSlug?: string) => {
     setShowIntegrationWizard(true);
     setActiveSection("integrations");
     router.push(
       buildAdminSectionHref("integrations", {
         showIntegrationWizard: "1",
-        builtIn: builtInSlug,
+        managedConnector: managedConnectorSlug,
       }),
     );
   };
@@ -633,12 +633,12 @@ export const DashboardWorkspace = ({
           <IntegrationsSection
             addIntegrationSearch={addIntegrationSearch}
             availableConnectorCount={availableConnectorCount}
-            builtInConnectorsError={
-              builtInConnectorsQuery.isError
-                ? (builtInConnectorsQuery.error as Error).message
+            managedConnectorsError={
+              managedConnectorsQuery.isError
+                ? (managedConnectorsQuery.error as Error).message
                 : null
             }
-            builtInConnectorsPending={builtInConnectorsQuery.isPending}
+            managedConnectorsPending={managedConnectorsQuery.isPending}
             expandedTools={expandedTools}
             expandedIntegrations={expandedIntegrations}
             filteredIntegrations={filteredIntegrations}

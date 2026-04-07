@@ -40,7 +40,6 @@ These are the canonical top-level routes in the current app:
 Legacy compatibility routes still exist, but new docs and links should target the canonical routes above:
 
 - `/home` redirects to `/integrations`
-- `/add-connector` redirects to `/admin-integrations`
 
 ## Core interfaces
 
@@ -189,21 +188,27 @@ npm run build
 
 ## Test coverage
 
-Generate a test coverage report:
+Generate the full coverage report:
 
 ```bash
 npm run test:coverage
 ```
 
-This runs all tests with V8 coverage instrumentation and outputs a summary table showing statement, branch, function, and line coverage for each file.
+Vitest is configured to emit text, HTML, LCOV, `coverage-summary.json`, and `coverage-final.json` outputs for the main frontend and backend codepaths under `app/`, `src/components/`, and `src/lib/`. Coverage runs include branch coverage, even for files that were not imported during the test run.
 
-For an interactive HTML report, run:
+To print the branch-gap summary used in CI after the coverage run completes, use:
 
 ```bash
-npm run test:coverage -- --coverage.reporter=html
+npm run coverage:branches
 ```
 
-Then open `coverage/index.html` in your browser.
+Or run both steps together:
+
+```bash
+npm run test:coverage:report
+```
+
+For an interactive HTML report, open `coverage/index.html` in your browser after the run finishes.
 
 ## Contributing
 

@@ -4,6 +4,7 @@ import type {
 } from "@/src/lib/core/adapter-registry";
 import { ContextLayerError } from "@/src/lib/core/errors";
 import { buildMcpHeaders, runMcpClientOperation } from "@/src/lib/mcp-client";
+import { getMcpTransportOrder } from "@/src/lib/mcp-transport-policy";
 import { getOptionalTrimmedString } from "@/src/lib/type-utils";
 
 export class McpAdapter implements IntegrationAdapter {
@@ -20,6 +21,11 @@ export class McpAdapter implements IntegrationAdapter {
     }
 
     const toolName = getOptionalTrimmedString(toolSpec.config, "toolName") ?? toolSpec.name;
+    const transportOrder = getMcpTransportOrder(
+      serverUrl,
+      toolSpec.config,
+      integration.config,
+    );
 
     return runMcpClientOperation(
       serverUrl,
@@ -31,12 +37,15 @@ export class McpAdapter implements IntegrationAdapter {
           arguments: payload,
         }),
       {
-        authStrategy: integration.authStrategy,
-        credentials: integration.credentials,
-        integrationKey: integration.key,
-        managedConnectorSlug:
-          getOptionalTrimmedString(integration.config, "managedConnectorSlug") ??
-          getOptionalTrimmedString(integration.config, "builtInSlug"),
+        debugContext: {
+          authStrategy: integration.authStrategy,
+          credentials: integration.credentials,
+          integrationKey: integration.key,
+          managedConnectorSlug:
+            getOptionalTrimmedString(integration.config, "managedConnectorSlug") ??
+            getOptionalTrimmedString(integration.config, "builtInSlug"),
+        },
+        transportOrder,
       },
     );
   }
