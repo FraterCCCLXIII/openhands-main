@@ -20,12 +20,12 @@ interface IntegrationsCatalogProps {
   oauthCallbackBaseUrl: string;
 }
 
-const sortReadyManagedConnectors = (connectors: ManagedConnectorOption[]) =>
+export const sortReadyManagedConnectors = (connectors: ManagedConnectorOption[]) =>
   [...connectors].sort(
     (left, right) => left.name.localeCompare(right.name) || left.slug.localeCompare(right.slug),
   );
 
-const toReadyManagedConnector = (
+export const toReadyManagedConnector = (
   connector: ManagedConnectorDefinition,
 ): ManagedConnectorOption => ({
   slug: connector.slug,
@@ -43,7 +43,7 @@ const toReadyManagedConnector = (
   credentialHelp: connector.credentialHelp,
 });
 
-const toDefaultReadyManagedConnector = (
+export const toDefaultReadyManagedConnector = (
   provider: OAuthProviderCatalogOption,
 ): ManagedConnectorOption | null => {
   const defaults = provider.registrationDefaults;
@@ -81,7 +81,7 @@ const toDefaultReadyManagedConnector = (
   };
 };
 
-const upsertReadyManagedConnector = (
+export const upsertReadyManagedConnector = (
   connectors: ManagedConnectorOption[],
   connector: ManagedConnectorOption,
 ) =>
