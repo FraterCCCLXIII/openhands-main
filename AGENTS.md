@@ -14,7 +14,9 @@ The root `LICENSE` is proprietary: `Copyright All Hands AI, Inc. All rights rese
 - Run locally with auth bypass: `DISABLE_AUTH=true npm run dev`
 - Run tests: `npm test`
 - Run unit tests only: `npm run test:unit`
+- Targeted integration-wizard coverage check: `npx vitest run src/components/integrations/wizard/utils.test.ts src/components/integrations/wizard/use-wizard-state.test.tsx src/components/integrations/wizard/review-step.test.tsx src/components/integrations/wizard/connect-step.test.tsx src/components/integrations/wizard/wizard.test.tsx --coverage.enabled --coverage.include='src/components/integrations/wizard/**/*.{ts,tsx}'`
 - TypeScript strictness now also enables `noUncheckedIndexedAccess`; when reading dynamic config/credential records or keyed collections, prefer shared narrowing helpers (for example `src/lib/type-utils.ts`) and explicit undefined handling over inline `as string` assertions.
+- For targeted HTTP adapter coverage work, run `npx vitest run src/lib/adapters/http-adapter.test.ts --coverage --coverage.include=src/lib/adapters/http-adapter.ts --coverage.reporter=text`; the suite now covers auth-mode differences, templated query/header/body shaping, multipart/form/text encoding, validation errors, and response parsing fallbacks.
 
 - Run e2e tests only: `npm run test:e2e`
 - Typecheck: `npm run typecheck`
@@ -31,6 +33,8 @@ The root `LICENSE` is proprietary: `Copyright All Hands AI, Inc. All rights rese
 - Full repo validation that already exercises the real SQL schema through PGlite: `npm run test:unit && npm run test:e2e && npm run typecheck && npm run build`.
 - For live localhost HTTP validation without a real Postgres instance, use a temporary local-only PGlite-backed Neon shim under `.agent_tmp/`, point the installed `@neondatabase/serverless` package at that shim locally (never commit `node_modules`), seed the runtime DB with `PostgresRepository`, then run `POSTGRES_URL='pglite://<name>' DISABLE_AUTH='true' npm run dev -- --hostname 127.0.0.1 --port 12000`.
 - Proven live validation pattern for `/api/context/skill`: seed `saveAgentApiKey(...)` plus `upsertOwnerIntegration(...)` for `dev@localhost`, start the app with the same `POSTGRES_URL`, then `curl -i http://127.0.0.1:12000/api/context/skill -H 'Authorization: Bearer <api-key>'` and expect `200 OK` plus `Content-Disposition: attachment; filename="SKILL.md"`.
+- OAuth branch-coverage work is concentrated in `src/lib/oauth/provider-resolver.test.ts` and `src/lib/oauth/managed-oauth-client.test.ts`; for quick verification of provider/client-flow regressions, run `npm test -- src/lib/oauth/provider-resolver.test.ts src/lib/oauth/managed-oauth-client.test.ts --coverage --coverage.include='src/lib/oauth/provider-resolver.ts' --coverage.include='src/lib/oauth/managed-oauth-client.ts'`.
+
 - When `DISABLE_AUTH=true`, localhost requests are allowed but non-loopback hosts are rejected; open `/integrations` locally if you need the app to provision a fresh personal API key instead of seeding one directly. `/home` is now a legacy redirect.
 
 
@@ -76,6 +80,7 @@ The root `LICENSE` is proprietary: `Copyright All Hands AI, Inc. All rights rese
 
 - `src/components/dashboard/workspace.tsx` is the OpenHands-inspired Tailwind dashboard workspace using TanStack Query + Zustand, coordinated by the server entrypoint in `src/components/dashboard/page.tsx`.
 - `src/components/dashboard/workspace.tsx` now contains the main sidebar-driven dashboard UX with Integrations as the default first section, followed by Agent Connection and User Profile; the server entrypoint for signed-in user routes now lives at `src/components/dashboard/page.tsx`.
+- Dashboard branch-coverage regressions are easiest to catch with focused jsdom Vitest suites in `src/components/dashboard/workspace.test.tsx`, `src/components/dashboard/utils.test.ts`, and the section-level test files under `src/components/dashboard/sections/`; these tests use direct `createRoot(...)` rendering plus native DOM events instead of Testing Library in this repo.
 - User-facing dashboard and integration UI no longer live under `src/components/admin`. The dashboard is organized under `src/components/dashboard/` (`sections/`, `hooks/`, `shared.tsx`, `utils.ts`), while the integration flow lives under `src/components/integrations/` (`tool-access-controls.tsx` and `wizard/` with step components, state hook, and utilities).
 - Shared dashboard sidebar chrome now lives in `src/components/layout/dashboard-sidebar.tsx` and is reused by both the main user-facing dashboard routes and `/admin-integrations`; keep navigation labels/order in that shared component so the sidebars do not drift apart again.
 - OAuth callback success/error banners on the dashboard should be derived directly from URL search params (`oauth_status`, `oauth_error`) instead of only mutable wizard status state, so auto-initializing the integration wizard cannot silently clear them.
@@ -102,6 +107,8 @@ The root `LICENSE` is proprietary: `Copyright All Hands AI, Inc. All rights rese
 
 - `src/lib/integrations/oauth-provider-catalog.ts` and `app/api/integrations/oauth-provider-catalog/route.ts` expose the researched OAuth-capable provider catalog used by the admin-integrations UI.
 - `app/api/integrations/discover/route.ts` and `src/lib/integrations/discovery.ts` provide server-side function discovery for managed connectors and remote MCP servers.
+- Managed connector helper coverage lives in `src/lib/integrations/managed-connectors.test.ts`, `src/lib/managed-connectors/openapi.test.ts`, and `src/lib/managed-connectors/api-schema.test.ts`; extend those focused suites for catalog merge/suppression, schema translation, and generated request-template edge cases instead of relying only on service-level tests.
+
 - `app/api/context/openapi/route.ts` now generates an authenticated OpenAPI 3.0 document for the caller's currently available tools; it uses the same personal context-layer API key as `/api/context/*`, filters out disabled tools, hides OAuth integrations until that user has connected them, and should keep example payloads/scopes faithful to each function instead of fabricating placeholder args like `scope.read`.
 - Dashboard API keys are now split by privilege: the agent key is still the least-privileged tool invocation key, `/api/user/*` uses a distinct user automation key with dashboard-equivalent powers, and allowlisted admins also get a separate admin automation key for `/api/admin/*` QA/ops routes. Do not reuse user/admin auth for agent endpoints, and never expose plaintext key material outside explicit key-management responses.
 - `src/lib/admin-api-auth.ts` authenticates `/api/admin/*` bearer or `X-API-Key` requests against stored admin automation keys and re-checks `APP_ADMIN_EMAILS`; `app/api/admin/openapi/route.ts` documents the admin QA surface, while the dashboard shows the admin key/API docs only for admin users.
