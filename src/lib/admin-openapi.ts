@@ -231,7 +231,7 @@ export const buildAdminOpenApiDocument = ({
       "/api/admin/integrations/managed-connectors": {
         get: {
           tags: ["Admin Discovery"],
-          operationId: "listAdminManagedConnectors",
+          operationId: "listAdminManagedConnectorCatalog",
           summary: "List managed connector catalog",
           security,
           responses: {

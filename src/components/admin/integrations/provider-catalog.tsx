@@ -6,6 +6,7 @@ import { ExternalLink } from "lucide-react";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
 import { buildAdminSectionHref } from "@/src/lib/admin-routes";
+import { matchesSearchQuery } from "@/src/lib/text-utils";
 import type {
   ManagedConnectorOption,
   OAuthProviderCatalogOption,
@@ -400,25 +401,22 @@ export function ProviderCatalog({
     }
   };
 
-  const filteredProviders = useMemo(() => {
-    const normalizedQuery = query.trim().toLowerCase();
-    if (!normalizedQuery) {
-      return providerCatalog;
-    }
-
-    return providerCatalog.filter((provider) =>
-      [
-        provider.name,
-        provider.slug,
-        provider.description,
-        provider.notes,
-        ...provider.categories,
-      ]
-        .join(" ")
-        .toLowerCase()
-        .includes(normalizedQuery),
-    );
-  }, [providerCatalog, query]);
+  const filteredProviders = useMemo(
+    () =>
+      providerCatalog.filter((provider) =>
+        matchesSearchQuery(
+          [
+            provider.name,
+            provider.slug,
+            provider.description,
+            provider.notes,
+            ...provider.categories,
+          ],
+          query,
+        ),
+      ),
+    [providerCatalog, query],
+  );
 
   return (
     <div className="mt-6 space-y-4">

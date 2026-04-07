@@ -13,7 +13,7 @@ import { auth } from "@/src/lib/auth";
 import { getOAuthCallbackBaseUrl } from "@/src/lib/auth-config";
 import { getContextLayerRepository, getContextLayerService } from "@/src/lib/core/runtime";
 import { filterReadyManagedConnectors } from "@/src/lib/integrations/connector-readiness";
-import { listManagedConnectors } from "@/src/lib/integrations/discovery";
+import { listManagedConnectorOptions } from "@/src/lib/integrations/discovery";
 import {
   getAdminContactEmail,
   getAdminContactInstruction,
@@ -38,7 +38,7 @@ export default async function AdminIntegrationsPage() {
   const adminInstruction = getAdminContactInstruction(adminEmail ?? undefined);
   const repository = getContextLayerRepository();
   const readyManagedConnectors = filterReadyManagedConnectors(
-    await listManagedConnectors(repository),
+    await listManagedConnectorOptions(repository),
   );
   const providerCatalog = listOAuthProviderCatalog();
   const canRegisterManagedConnectors = isAppAdminEmail(session?.user?.email ?? undefined);

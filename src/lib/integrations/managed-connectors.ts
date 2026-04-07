@@ -131,7 +131,7 @@ const toDefaultManagedConnector = (
   };
 };
 
-export const listDefaultManagedConnectors = (): ManagedConnectorOption[] =>
+export const listDefaultManagedConnectorOptions = (): ManagedConnectorOption[] =>
   listOAuthProviderCatalog()
     .map(toDefaultManagedConnector)
     .filter((connector): connector is DefaultManagedConnectorDefinition =>
@@ -297,7 +297,7 @@ export const resolveManagedConnectorCredentials = (
   }
 };
 
-export const listAvailableManagedConnectors = async (
+export const listAvailableManagedConnectorOptions = async (
   repository: ContextRepository,
 ): Promise<ManagedConnectorOption[]> => {
   const managedConnectors = await repository.listManagedConnectors();
@@ -307,7 +307,7 @@ export const listAvailableManagedConnectors = async (
     ...managedConnectors
       .filter((candidate) => candidate.enabled)
       .map(managedConnectorToOption),
-    ...listDefaultManagedConnectors().filter(
+    ...listDefaultManagedConnectorOptions().filter(
       (connector) => !registeredSlugs.has(connector.slug),
     ),
   ].sort((a, b) => a.name.localeCompare(b.name));

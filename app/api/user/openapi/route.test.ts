@@ -121,7 +121,7 @@ describe("GET /api/user/openapi", () => {
     expect(body.components.schemas.TemporaryGrant).toBeTruthy();
   });
 
-  it("omits admin-only paths for non-admin users", async () => {
+  it("includes owner-scoped access request paths for non-admin users", async () => {
     const apiKey = await seedUserKey("user@example.com");
 
     const response = await GET(
@@ -139,8 +139,10 @@ describe("GET /api/user/openapi", () => {
     };
 
     expect(body.paths["/api/user/integrations"]?.get).toBeTruthy();
-    expect(body.paths["/api/user/access-requests"]).toBeUndefined();
-    expect(body.tags.map((tag) => tag.name)).not.toContain("Admin approvals");
+    expect(body.paths["/api/user/access-requests"]?.get).toBeTruthy();
+    expect(body.paths["/api/user/access-requests/{requestId}/approve"]?.post).toBeTruthy();
+    expect(body.paths["/api/user/access-requests/{requestId}/reject"]?.post).toBeTruthy();
+    expect(body.tags.map((tag) => tag.name)).toContain("Case-by-case approvals");
   });
 
   it("returns a bearer challenge when the user API key is missing", async () => {

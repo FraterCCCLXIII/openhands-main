@@ -1,5 +1,4 @@
 import { CheckCircle2, Copy, Eye, EyeOff, KeyRound, ShieldCheck } from "lucide-react";
-import type { ReactNode } from "react";
 
 import {
   CompactPanel,

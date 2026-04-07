@@ -33,7 +33,7 @@ const { MockAdapter } = await import("./adapters/mock-adapter");
 const { HttpAdapter } = await import("./adapters/http-adapter");
 const { McpAdapter } = await import("./adapters/mcp-adapter");
 const { NotificationPublisher } = await import("./notifications/publisher");
-const { listAvailableManagedConnectors, listDefaultManagedConnectors, buildManagedConnectorTools, resolveManagedConnectorCredentials } =
+const { listAvailableManagedConnectorOptions, listDefaultManagedConnectorOptions, buildManagedConnectorTools, resolveManagedConnectorCredentials } =
   await import("./integrations/managed-connectors");
 
 beforeAll(() => {
@@ -76,9 +76,9 @@ const TEST_OWNER = "e2e@test.local";
 // ---------------------------------------------------------------------------
 describe("managed connector listing", () => {
   it("returns catalog-backed default connectors when no DB records exist", async () => {
-    const connectors = await listAvailableManagedConnectors(repo);
+    const connectors = await listAvailableManagedConnectorOptions(repo);
 
-    // Default manageds are derived from the OAuth provider catalog where
+    // Default managed connectors are derived from the OAuth provider catalog where
     // registrationDefaults specifies provider=http + apiBaseUrl + openApiUrl.
     // ElevenLabs is the canonical example.
     const elevenlabs = connectors.find((c) => c.slug === "elevenlabs");
@@ -87,7 +87,7 @@ describe("managed connector listing", () => {
   });
 
   it("returns static default managed connectors from catalog", () => {
-    const defaults = listDefaultManagedConnectors();
+    const defaults = listDefaultManagedConnectorOptions();
     expect(defaults.length).toBeGreaterThan(0);
 
     // Every default should have key fields populated
@@ -121,7 +121,7 @@ describe("managed connector listing", () => {
       updatedAt: now,
     });
 
-    const connectors = await listAvailableManagedConnectors(repo);
+    const connectors = await listAvailableManagedConnectorOptions(repo);
     const elevenlabs = connectors.find((c) => c.slug === "elevenlabs");
 
     expect(elevenlabs).toBeDefined();
@@ -154,7 +154,7 @@ describe("managed connector listing", () => {
       updatedAt: now,
     });
 
-    const connectors = await listAvailableManagedConnectors(repo);
+    const connectors = await listAvailableManagedConnectorOptions(repo);
     const elevenlabs = connectors.find((c) => c.slug === "elevenlabs");
 
     // Disabled DB record hides the catalog default
@@ -202,7 +202,7 @@ describe("managed connector → integration creation → listing flow", () => {
     });
 
     // Step 2: Verify it appears in the managed connector list
-    const managedConnectorOptions = await listAvailableManagedConnectors(repo);
+    const managedConnectorOptions = await listAvailableManagedConnectorOptions(repo);
     const testApi = managedConnectorOptions.find((c) => c.slug === "test-api");
     expect(testApi).toBeDefined();
     expect(testApi!.toolCount).toBe(2);

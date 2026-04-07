@@ -30,8 +30,8 @@ export const useWizardState = ({
   searchParams,
 }: UseIntegrationWizardStateOptions) => {
   const initialManagedConnectorSlug =
-    searchParams.get("managedConnector")?.trim() ??
-    searchParams.get("builtIn")?.trim() ??
+    searchParams.get("managedConnector")?.trim() ||
+    searchParams.get("builtIn")?.trim() ||
     "";
   const [step, setStep] = useState<WizardStep>(initialManagedConnectorSlug ? 2 : 1);
   const [draft, setDraft] = useState<WizardDraft>(() =>

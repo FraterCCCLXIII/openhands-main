@@ -1,59 +1,101 @@
-import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { ContextRepository } from "@/src/lib/core/repository";
+import { ContextLayerError } from "@/src/lib/core/errors";
 import { encryptCredentials } from "@/src/lib/credential-crypto";
 import { createTestRepository, getActiveSql } from "@/src/lib/db/pglite-test-utils";
-import { resolveOAuthProvider } from "@/src/lib/oauth/provider-resolver";
+import {
+  isOAuthProviderResolvedAndConfigured,
+  resolveOAuthProvider,
+} from "@/src/lib/oauth/provider-resolver";
+import type { ManagedConnectorRecord } from "@/src/types/context-layer";
 
 vi.mock("@neondatabase/serverless", () => ({ neon: () => getActiveSql() }));
 
 let testRepo: ContextRepository;
 let testCleanup: () => Promise<void>;
 
-beforeAll(() => { vi.stubEnv("POSTGRES_URL", "pglite://provider-resolver-test"); });
+const createManagedConnector = (
+  overrides: Partial<ManagedConnectorRecord> = {},
+): ManagedConnectorRecord => {
+  const defaultOAuthConfig = {
+    authorizationUrl: "https://auth.acme.test/authorize",
+    tokenUrl: "https://auth.acme.test/token",
+    scopes: ["contacts.read", "contacts.write"],
+    scopeSeparator: "space" as const,
+    clientAuthentication: "basic" as const,
+    pkce: false,
+  };
+  const hasOAuthConfigOverride = Object.prototype.hasOwnProperty.call(
+    overrides,
+    "oauthConfig",
+  );
+  const oauthConfig = hasOAuthConfigOverride
+    ? overrides.oauthConfig
+      ? { ...defaultOAuthConfig, ...overrides.oauthConfig }
+      : undefined
+    : defaultOAuthConfig;
+
+  return {
+    slug: "acme-crm",
+    name: "Acme CRM",
+    description: "Configurable CRM connector",
+    categories: ["CRM"],
+    authModes: ["oauth2"],
+    authStrategy: "oauth2",
+    provider: "http",
+    oauthConfigured: true,
+    credentialLabel: "Connect Acme CRM",
+    credentialPlaceholder: "Connect Acme CRM",
+    credentialHelp: "Use OAuth to connect Acme CRM.",
+    apiBaseUrl: "https://api.acme.test",
+    openApiUrl: "https://api.acme.test/openapi.json",
+    encryptedOAuthClient: encryptCredentials({
+      clientId: "acme-client-id",
+      clientSecret: "acme-client-secret",
+    }),
+    tools: [],
+    enabled: true,
+    createdAt: "2026-03-09T00:00:00.000Z",
+    updatedAt: "2026-03-09T00:00:00.000Z",
+    ...overrides,
+    oauthConfig,
+  };
+};
+
 beforeEach(async () => {
+  vi.stubEnv("POSTGRES_URL", "pglite://provider-resolver-test");
+  vi.stubEnv("AUTH_SECRET", "test-secret");
+  vi.stubEnv("AUTH_URL", "https://context.test");
+
   const ctx = await createTestRepository();
   testRepo = ctx.repository;
   testCleanup = ctx.cleanup;
 });
+
 afterEach(async () => {
   await testCleanup();
   vi.unstubAllGlobals();
+  vi.unstubAllEnvs();
 });
 
 describe("resolveOAuthProvider", () => {
   it("builds a generic OAuth provider from a managed connector record", async () => {
     const repository = testRepo;
-    await repository.upsertManagedConnector({
-      slug: "acme-crm",
-      name: "Acme CRM",
-      description: "Configurable CRM connector",
-      categories: ["CRM"],
-      authModes: ["oauth2"],
-      authStrategy: "oauth2",
-      provider: "mcp",
-      oauthConfigured: true,
-      credentialLabel: "Connect Acme CRM",
-      credentialPlaceholder: "Connect Acme CRM",
-      credentialHelp: "Use OAuth to connect Acme CRM.",
-      serverUrl: "https://mcp.acme.test/mcp",
-      oauthConfig: {
-        authorizationUrl: "https://auth.acme.test/authorize",
-        tokenUrl: "https://auth.acme.test/token",
-        scopes: ["contacts.read", "contacts.write"],
-        scopeSeparator: "space",
-        clientAuthentication: "body",
-        pkce: true,
-      },
-      encryptedOAuthClient: encryptCredentials({
-        clientId: "acme-client-id",
-        clientSecret: "acme-client-secret",
+    await repository.upsertManagedConnector(
+      createManagedConnector({
+        provider: "mcp",
+        serverUrl: "https://mcp.acme.test/mcp",
+        oauthConfig: {
+          authorizationUrl: "https://auth.acme.test/authorize",
+          tokenUrl: "https://auth.acme.test/token",
+          scopes: ["contacts.read", "contacts.write"],
+          scopeSeparator: "space",
+          clientAuthentication: "body",
+          pkce: true,
+        },
       }),
-      tools: [],
-      enabled: true,
-      createdAt: "2026-03-09T00:00:00.000Z",
-      updatedAt: "2026-03-09T00:00:00.000Z",
-    });
+    );
 
     const provider = await resolveOAuthProvider(repository, "acme-crm");
     expect(provider).toBeTruthy();
@@ -119,38 +161,220 @@ describe("resolveOAuthProvider", () => {
     });
   });
 
+  it("adds comma-separated scopes and custom auth params without PKCE", async () => {
+    const repository = testRepo;
+    await repository.upsertManagedConnector(
+      createManagedConnector({
+        oauthConfig: {
+          authorizationUrl: "https://auth.acme.test/authorize",
+          tokenUrl: "https://auth.acme.test/token",
+          scopes: ["contacts.read", "contacts.write"],
+          scopeSeparator: "comma",
+          clientAuthentication: "basic",
+          additionalAuthorizationParams: {
+            audience: "api://acme",
+            prompt: "consent",
+          },
+        },
+      }),
+    );
+
+    const provider = await resolveOAuthProvider(repository, "acme-crm");
+    const start = provider!.startAuth({
+      state: "state-456",
+      redirectUri: "https://context.test/api/oauth/acme-crm/callback",
+    });
+    const authorizationUrl = new URL(start.authorizationUrl);
+
+    expect(start.codeVerifier).toBeUndefined();
+    expect(authorizationUrl.searchParams.get("scope")).toBe(
+      "contacts.read,contacts.write",
+    );
+    expect(authorizationUrl.searchParams.get("audience")).toBe("api://acme");
+    expect(authorizationUrl.searchParams.get("prompt")).toBe("consent");
+    expect(authorizationUrl.searchParams.get("code_challenge")).toBeNull();
+  });
+
+  it("uses basic auth for confidential client exchange and refreshes with fallbacks", async () => {
+    const repository = testRepo;
+    await repository.upsertManagedConnector(
+      createManagedConnector({
+        oauthConfig: {
+          authorizationUrl: "https://auth.acme.test/authorize",
+          tokenUrl: "https://auth.acme.test/token",
+          scopes: ["contacts.read", "contacts.write"],
+          clientAuthentication: "basic",
+          additionalTokenParams: {
+            resource: "contacts",
+          },
+        },
+      }),
+    );
+
+    const fetchMock = vi
+      .fn(async () =>
+        new Response(
+          JSON.stringify({
+            access_token: "access-basic",
+            refresh_token: "refresh-basic",
+            token_type: "Bearer",
+            scope: ["contacts.read", "contacts.write", "contacts.admin"],
+          }),
+          {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          },
+        ),
+      )
+      .mockImplementationOnce(async () =>
+        new Response(
+          JSON.stringify({
+            access_token: "access-basic",
+            refresh_token: "refresh-basic",
+            token_type: "Bearer",
+            scope: ["contacts.read", "contacts.write", "contacts.admin"],
+          }),
+          {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          },
+        ),
+      )
+      .mockImplementationOnce(async () =>
+        new Response(
+          JSON.stringify({
+            access_token: "access-refreshed",
+            token_type: "Bearer",
+            scope: 42,
+            expires_in: 0,
+          }),
+          {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          },
+        ),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const provider = await resolveOAuthProvider(repository, "acme-crm");
+    const exchange = await provider!.exchangeCode({
+      code: "code-basic",
+      redirectUri: "https://context.test/api/oauth/acme-crm/callback",
+    });
+    const refreshed = await provider!.refreshToken({ refreshToken: "refresh-basic" });
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    const [exchangeUrl, exchangeInit] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+    expect(exchangeUrl).toBe("https://auth.acme.test/token");
+    expect((exchangeInit.headers as Record<string, string>).Authorization).toBe(
+      `Basic ${Buffer.from("acme-client-id:acme-client-secret").toString("base64")}`,
+    );
+    expect(String(exchangeInit.body)).toContain("resource=contacts");
+    expect(String(exchangeInit.body)).not.toContain("client_id=");
+    expect(exchange).toMatchObject({
+      accessToken: "access-basic",
+      refreshToken: "refresh-basic",
+      scopes: ["contacts.read", "contacts.write", "contacts.admin"],
+    });
+
+    const [refreshUrl, refreshInit] = fetchMock.mock.calls[1] as unknown as [string, RequestInit];
+    expect(refreshUrl).toBe("https://auth.acme.test/token");
+    expect((refreshInit.headers as Record<string, string>).Authorization).toBe(
+      `Basic ${Buffer.from("acme-client-id:acme-client-secret").toString("base64")}`,
+    );
+    expect(String(refreshInit.body)).toContain("grant_type=refresh_token");
+    expect(String(refreshInit.body)).toContain("refresh_token=refresh-basic");
+    expect(String(refreshInit.body)).toContain("resource=contacts");
+    expect(refreshed).toMatchObject({
+      accessToken: "access-refreshed",
+      refreshToken: "refresh-basic",
+      tokenType: "Bearer",
+      scopes: ["contacts.read", "contacts.write"],
+      displayName: "Acme CRM",
+      expiresAt: undefined,
+    });
+  });
+
+  it("reuses previously registered public OAuth clients and refreshes without basic auth", async () => {
+    const repository = testRepo;
+    await repository.upsertManagedConnector(
+      createManagedConnector({
+        slug: "webflow",
+        name: "Webflow",
+        provider: "mcp",
+        serverUrl: "https://mcp.webflow.com/mcp",
+        oauthConfig: {
+          authorizationUrl: "https://mcp.webflow.com/oauth/authorize",
+          tokenUrl: "https://mcp.webflow.com/oauth/token",
+          registrationUrl: "https://mcp.webflow.com/oauth/register",
+          scopes: ["cms:read"],
+          clientAuthentication: "none",
+          pkce: false,
+        },
+        encryptedOAuthClient: encryptCredentials({
+          clientId: "webflow-public-client",
+        }),
+      }),
+    );
+
+    const fetchMock = vi.fn(async () =>
+      new Response(
+        JSON.stringify({
+          access_token: "wf-access-456",
+          scope: "cms:read,cms:write",
+          expires_in: 1800,
+        }),
+        {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        },
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const provider = await resolveOAuthProvider(repository, "webflow");
+    const refreshed = await provider!.refreshToken({ refreshToken: "wf-refresh-existing" });
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe("https://mcp.webflow.com/oauth/token");
+    expect(init.headers).toEqual({
+      "Content-Type": "application/x-www-form-urlencoded",
+    });
+    expect(String(init.body)).toContain("client_id=webflow-public-client");
+    expect(String(init.body)).not.toContain("client_secret=");
+    expect(refreshed).toMatchObject({
+      accessToken: "wf-access-456",
+      refreshToken: "wf-refresh-existing",
+      scopes: ["cms:read", "cms:write"],
+      displayName: "Webflow",
+    });
+  });
+
   it("dynamically registers public MCP OAuth clients and exchanges tokens without basic auth", async () => {
     const repository = testRepo;
-    await repository.upsertManagedConnector({
-      slug: "webflow",
-      name: "Webflow",
-      description: "Managed Webflow MCP",
-      categories: ["CMS", "Marketing"],
-      authModes: ["oauth2"],
-      authStrategy: "oauth2",
-      provider: "mcp",
-      oauthConfigured: true,
-      credentialLabel: "Connect Webflow",
-      credentialPlaceholder: "Connect Webflow",
-      credentialHelp: "Use OAuth to connect Webflow.",
-      serverUrl: "https://mcp.webflow.com/mcp",
-      oauthConfig: {
-        authorizationUrl: "https://mcp.webflow.com/oauth/authorize",
-        tokenUrl: "https://mcp.webflow.com/oauth/token",
-        registrationUrl: "https://mcp.webflow.com/oauth/register",
-        scopes: [],
-        clientAuthentication: "none",
-        pkce: true,
-      },
-      encryptedOAuthClient: encryptCredentials({
-        clientId: "old-webflow-client-id",
-        clientSecret: "old-webflow-client-secret",
+    await repository.upsertManagedConnector(
+      createManagedConnector({
+        slug: "webflow",
+        name: "Webflow",
+        description: "Managed Webflow MCP",
+        categories: ["CMS", "Marketing"],
+        provider: "mcp",
+        serverUrl: "https://mcp.webflow.com/mcp",
+        oauthConfig: {
+          authorizationUrl: "https://mcp.webflow.com/oauth/authorize",
+          tokenUrl: "https://mcp.webflow.com/oauth/token",
+          registrationUrl: "https://mcp.webflow.com/oauth/register",
+          scopes: [],
+          clientAuthentication: "none",
+          pkce: true,
+        },
+        encryptedOAuthClient: encryptCredentials({
+          clientId: "old-webflow-client-id",
+          clientSecret: "old-webflow-client-secret",
+        }),
       }),
-      tools: [],
-      enabled: true,
-      createdAt: "2026-03-09T00:00:00.000Z",
-      updatedAt: "2026-03-09T00:00:00.000Z",
-    });
+    );
 
     const fetchMock = vi
       .fn(async () =>
@@ -214,10 +438,7 @@ describe("resolveOAuthProvider", () => {
     });
 
     expect(fetchMock).toHaveBeenCalledTimes(2);
-    const [registrationUrl, registrationInit] = fetchMock.mock.calls[0] as unknown as [
-      string,
-      RequestInit,
-    ];
+    const [registrationUrl, registrationInit] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
     expect(registrationUrl).toBe("https://mcp.webflow.com/oauth/register");
     expect(String(registrationInit.body)).toContain(
       '"token_endpoint_auth_method":"none"',
@@ -238,35 +459,64 @@ describe("resolveOAuthProvider", () => {
     });
   });
 
-
-  it("returns null when no enabled managed OAuth connector exists for the provider", async () => {
+  it("normalizes upstream token exchange failures into context layer errors", async () => {
     const repository = testRepo;
+    await repository.upsertManagedConnector(createManagedConnector());
 
-    await repository.upsertManagedConnector({
-      slug: "notion",
-      name: "Notion",
-      description: "Managed Notion MCP",
-      categories: ["Knowledge base"],
-      authModes: ["oauth2"],
-      authStrategy: "oauth2",
-      provider: "mcp",
-      oauthConfigured: false,
-      credentialLabel: "Connect Notion",
-      credentialPlaceholder: "Connect Notion",
-      credentialHelp: "Use OAuth to connect Notion.",
-      serverUrl: "https://mcp.notion.com/mcp",
-      oauthConfig: {
-        authorizationUrl: "https://auth.managed-notion.test/authorize",
-        tokenUrl: "https://auth.managed-notion.test/token",
-        scopes: ["workspace.read"],
-      },
-      tools: [],
-      enabled: false,
-      createdAt: "2026-03-09T00:00:00.000Z",
-      updatedAt: "2026-03-09T00:00:00.000Z",
-    });
+    const fetchMock = vi.fn(async () =>
+      new Response("provider denied", {
+        status: 401,
+        statusText: "Unauthorized",
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const provider = await resolveOAuthProvider(repository, "acme-crm");
+
+    await expect(
+      provider!.exchangeCode({
+        code: "bad-code",
+        redirectUri: "https://context.test/api/oauth/acme-crm/callback",
+      }),
+    ).rejects.toThrowError(
+      new ContextLayerError("Acme CRM token exchange failed (401): provider denied", 502),
+    );
+  });
+
+  it("returns null when the connector is disabled, missing, or not OAuth-enabled", async () => {
+    const repository = testRepo;
+    await repository.upsertManagedConnector(createManagedConnector());
+    await repository.upsertManagedConnector(
+      createManagedConnector({
+        slug: "notion",
+        name: "Notion",
+        provider: "mcp",
+        serverUrl: "https://mcp.notion.com/mcp",
+        enabled: false,
+      }),
+    );
+    await repository.upsertManagedConnector(
+      createManagedConnector({
+        slug: "slack-token",
+        name: "Slack token",
+        authModes: ["bearer"],
+        authStrategy: "bearer",
+        oauthConfigured: false,
+        oauthConfig: undefined,
+        credentialLabel: "Slack token",
+        credentialPlaceholder: "Slack token",
+        credentialHelp: "Use a bearer token.",
+      }),
+    );
 
     await expect(resolveOAuthProvider(repository, "notion")).resolves.toBeNull();
+    await expect(resolveOAuthProvider(repository, "slack-token")).resolves.toBeNull();
     await expect(resolveOAuthProvider(repository, "github")).resolves.toBeNull();
+    await expect(isOAuthProviderResolvedAndConfigured(repository, "acme-crm")).resolves.toBe(
+      true,
+    );
+    await expect(
+      isOAuthProviderResolvedAndConfigured(repository, "slack-token"),
+    ).resolves.toBe(false);
   });
 });

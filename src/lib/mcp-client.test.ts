@@ -119,10 +119,26 @@ describe("buildMcpHeaders", () => {
   it("returns empty headers when no token is provided for bearer", () => {
     expect(buildMcpHeaders("bearer", {})).toEqual({});
   });
+
+  it("ignores malformed credential values instead of emitting invalid headers", () => {
+    expect(
+      buildMcpHeaders("api_key", {
+        headerName: { invalid: true },
+        secret: { invalid: true },
+      }),
+    ).toEqual({});
+
+    expect(
+      buildMcpHeaders("basic", {
+        username: "demo",
+        password: { invalid: true },
+      }),
+    ).toEqual({});
+  });
 });
 
 describe("runMcpClientOperation", () => {
-  it("falls back to Notion SSE when streamable HTTP times out", async () => {
+  it("retries transports in the configured order", async () => {
     vi.useFakeTimers();
     connectMock.mockImplementation((transport: { kind: string }) => {
       if (transport.kind === "streamable_http") {
@@ -136,10 +152,22 @@ describe("runMcpClientOperation", () => {
     });
 
     const operation = runMcpClientOperation(
-      "https://mcp.notion.com/mcp",
-      { Authorization: "Bearer notion-token" },
+      "https://mcp.acme.test/mcp",
+      { Authorization: "Bearer acme-token" },
       "listTools",
       (client) => client.listTools(),
+      {
+        transportOrder: [
+          {
+            transport: "streamable_http",
+            url: "https://mcp.acme.test/mcp",
+          },
+          {
+            transport: "sse",
+            url: "https://mcp.acme.test/sse",
+          },
+        ],
+      },
     );
 
     await vi.advanceTimersByTimeAsync(10_000);
@@ -150,18 +178,18 @@ describe("runMcpClientOperation", () => {
     expect(transportAttempts).toEqual([
       {
         kind: "streamable_http",
-        url: "https://mcp.notion.com/mcp",
-        headers: { Authorization: "Bearer notion-token" },
+        url: "https://mcp.acme.test/mcp",
+        headers: { Authorization: "Bearer acme-token" },
       },
       {
         kind: "sse",
-        url: "https://mcp.notion.com/sse",
-        headers: { Authorization: "Bearer notion-token" },
+        url: "https://mcp.acme.test/sse",
+        headers: { Authorization: "Bearer acme-token" },
       },
     ]);
   });
 
-  it("does not attempt SSE fallback for non-Notion MCP servers", async () => {
+  it("defaults to streamable HTTP when no transport order is configured", async () => {
     connectMock.mockRejectedValue(new Error("streamable failed"));
 
     await expect(
@@ -182,6 +210,43 @@ describe("runMcpClientOperation", () => {
     ]);
   });
 
+  it("honors a custom first transport in the configured order", async () => {
+    listToolsMock.mockResolvedValue({
+      tools: [{ name: "searchPages", description: "Search pages" }],
+    });
+
+    await expect(
+      runMcpClientOperation(
+        "https://mcp.acme.test/mcp",
+        { Authorization: "Bearer acme-token" },
+        "listTools",
+        (client) => client.listTools(),
+        {
+          transportOrder: [
+            {
+              transport: "sse",
+              url: "https://mcp.acme.test/sse",
+            },
+            {
+              transport: "streamable_http",
+              url: "https://mcp.acme.test/mcp",
+            },
+          ],
+        },
+      ),
+    ).resolves.toEqual({
+      tools: [{ name: "searchPages", description: "Search pages" }],
+    });
+
+    expect(transportAttempts).toEqual([
+      {
+        kind: "sse",
+        url: "https://mcp.acme.test/sse",
+        headers: { Authorization: "Bearer acme-token" },
+      },
+    ]);
+  });
+
   it("captures sanitized credential diagnostics on MCP failures", async () => {
     connectMock.mockRejectedValue(new Error("invalid token"));
 
@@ -193,12 +258,14 @@ describe("runMcpClientOperation", () => {
         "listTools",
         (client) => client.listTools(),
         {
-          authStrategy: "oauth2",
-          credentials: {
-            accessToken: "Bearer malformed-token\n",
+          debugContext: {
+            authStrategy: "oauth2",
+            credentials: {
+              accessToken: "Bearer malformed-token\n",
+            },
+            integrationKey: "notion",
+            managedConnectorSlug: "notion",
           },
-          integrationKey: "notion",
-          managedConnectorSlug: "notion",
         },
       );
     } catch (error) {
@@ -209,7 +276,6 @@ describe("runMcpClientOperation", () => {
     expect((capturedError as ContextLayerError).debugDetails).toEqual({
       operationName: "listTools",
       serverUrl: "https://mcp.acme.test/mcp",
-      fallbackUrl: undefined,
       integrationKey: "notion",
       managedConnectorSlug: "notion",
       auth: {

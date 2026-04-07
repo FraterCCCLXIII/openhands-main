@@ -226,7 +226,7 @@ describe("DashboardWorkspace", () => {
 
       if (
         url === "/api/integrations" ||
-        url === "/api/access-requests" ||
+        url === "/api/case-by-case-approvals" ||
         url === "/api/notifications" ||
         url === "/api/integrations/managed-connectors"
       ) {
@@ -304,7 +304,7 @@ describe("DashboardWorkspace", () => {
       const method = init?.method ?? "GET";
 
       if (
-        url === "/api/access-requests" ||
+        url === "/api/case-by-case-approvals" ||
         url === "/api/notifications" ||
         url === "/api/integrations/managed-connectors"
       ) {
@@ -508,8 +508,8 @@ describe("DashboardWorkspace", () => {
       await new Promise((resolve) => setTimeout(resolve, 10));
     });
 
-    const addMenuSlugs = Array.from(container.querySelectorAll("[data-managed-slug]")).map(
-      (element) => element.getAttribute("data-managed-slug"),
+    const addMenuSlugs = Array.from(container.querySelectorAll("[data-managed-connector-slug]")).map(
+      (element) => element.getAttribute("data-managed-connector-slug"),
     );
 
     expect(addMenuSlugs).not.toContain("github");
@@ -530,7 +530,7 @@ describe("DashboardWorkspace", () => {
 
       if (
         url === "/api/integrations" ||
-        url === "/api/access-requests" ||
+        url === "/api/case-by-case-approvals" ||
         url === "/api/notifications" ||
         url === "/api/oauth/connections"
       ) {
@@ -562,7 +562,7 @@ describe("DashboardWorkspace", () => {
       await new Promise((resolve) => setTimeout(resolve, 10));
     });
 
-    const githubCard = container.querySelector('[data-managed-slug="github"]');
+    const githubCard = container.querySelector('[data-managed-connector-slug="github"]');
     expect(githubCard).toBeTruthy();
 
     await act(async () => {
@@ -588,7 +588,7 @@ describe("DashboardWorkspace", () => {
 
       if (
         url === "/api/integrations" ||
-        url === "/api/access-requests" ||
+        url === "/api/case-by-case-approvals" ||
         url === "/api/notifications" ||
         url === "/api/oauth/connections"
       ) {
@@ -765,7 +765,7 @@ describe("DashboardWorkspace", () => {
       const method = init?.method ?? "GET";
 
       if (
-        url === "/api/access-requests" ||
+        url === "/api/case-by-case-approvals" ||
         url === "/api/notifications" ||
         url === "/api/integrations/managed-connectors"
       ) {
@@ -791,20 +791,28 @@ describe("DashboardWorkspace", () => {
         const payload = JSON.parse(String(init?.body)) as {
           accessMode: "enabled" | "disabled" | "approval_required";
         };
-        integrationsState = integrationsState.map((integration) => ({
-          ...integration,
-          tools: {
-            ...integration.tools,
-            zetaWrite: {
-              ...integration.tools.zetaWrite,
-              accessMode: payload.accessMode,
-              enabled: payload.accessMode !== "disabled",
-            },
-          },
-        }));
+        integrationsState = integrationsState.map((integration) => {
+          const zetaWriteTool = integration.tools["zetaWrite"];
+          if (!zetaWriteTool) {
+            return integration;
+          }
 
+          return {
+            ...integration,
+            tools: {
+              ...integration.tools,
+              zetaWrite: {
+                ...zetaWriteTool,
+                accessMode: payload.accessMode,
+                enabled: payload.accessMode !== "disabled",
+              },
+            },
+          };
+        });
+
+        const updatedIntegration = integrationsState[0];
         return new Response(
-          JSON.stringify(integrationsState[0]?.tools.zetaWrite ?? null),
+          JSON.stringify(updatedIntegration?.tools["zetaWrite"] ?? null),
           {
             status: 200,
             headers: { "Content-Type": "application/json" },
@@ -1024,7 +1032,7 @@ describe("DashboardWorkspace", () => {
       const method = init?.method ?? "GET";
 
       if (
-        url === "/api/access-requests" ||
+        url === "/api/case-by-case-approvals" ||
         url === "/api/notifications" ||
         url === "/api/integrations/managed-connectors"
       ) {
@@ -1053,17 +1061,24 @@ describe("DashboardWorkspace", () => {
         };
         expect(payload).toEqual({ thresholdValue: 30, thresholdUnit: "days" });
 
-        integrationsState = integrationsState.map((integration) => ({
-          ...integration,
-          tools: {
-            ...integration.tools,
-            staleRead: {
-              ...integration.tools.staleRead,
-              enabled: false,
-              accessMode: "disabled",
+        integrationsState = integrationsState.map((integration) => {
+          const staleReadTool = integration.tools["staleRead"];
+          if (!staleReadTool) {
+            return integration;
+          }
+
+          return {
+            ...integration,
+            tools: {
+              ...integration.tools,
+              staleRead: {
+                ...staleReadTool,
+                enabled: false,
+                accessMode: "disabled",
+              },
             },
-          },
-        }));
+          };
+        });
 
         return new Response(
           JSON.stringify({
@@ -1144,7 +1159,8 @@ describe("DashboardWorkspace", () => {
     expect(confirmSpy.mock.calls[0]?.[0]).toContain("since");
     expect(container.textContent).toContain("Disabled 1 tracked tool");
     expect(container.textContent).toContain("0 tools matched");
-    expect(integrationsState[0]?.tools.staleRead.accessMode).toBe("disabled");
+    const updatedIntegration = integrationsState[0];
+    expect(updatedIntegration?.tools["staleRead"]?.accessMode).toBe("disabled");
 
     confirmSpy.mockRestore();
   });
@@ -1579,7 +1595,7 @@ describe("DashboardWorkspace", () => {
         });
       }
 
-      if (url === "/api/access-requests") {
+      if (url === "/api/case-by-case-approvals") {
         return new Response(JSON.stringify(accessRequestsState), {
           status: 200,
           headers: { "Content-Type": "application/json" },
@@ -1717,12 +1733,12 @@ describe("DashboardWorkspace", () => {
       },
     ];
 
-    let approvePayload: { approver: string; durationMinutes: number } | null = null;
+    let approvePayload: { durationMinutes: number } | null = null;
 
     fetchMock.mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = typeof input === "string" ? input : input.toString();
 
-      if (url === "/api/integrations" || url === "/api/access-requests") {
+      if (url === "/api/integrations" || url === "/api/case-by-case-approvals") {
         return new Response(
           JSON.stringify(url === "/api/integrations" ? [] : accessRequestsState),
           {
@@ -1732,9 +1748,8 @@ describe("DashboardWorkspace", () => {
         );
       }
 
-      if (url === "/api/access-requests/req-pending/approve") {
+      if (url === "/api/case-by-case-approvals/req-pending/approve") {
         approvePayload = JSON.parse(String(init?.body)) as {
-          approver: string;
           durationMinutes: number;
         };
         return new Response(JSON.stringify({ ok: true }), {
@@ -1788,12 +1803,444 @@ describe("DashboardWorkspace", () => {
     });
 
     expect(approvePayload).toEqual({
-      approver: "admin@example.com",
       durationMinutes: 240,
     });
     expect(container.textContent).toContain(
       "If you want to approve for more than 100 hours",
     );
   });
+
+  it("shows the connected OAuth banner, local session copy, and agent-key warning on the profile route", async () => {
+    usePathnameMock.mockReturnValue("/profile");
+    useSearchParamsMock.mockReturnValue(
+      new URLSearchParams({
+        oauth_status: "connected",
+        oauth_provider: "slack",
+      }),
+    );
+
+    await act(async () => {
+      root.render(
+        <QueryClientProvider client={queryClient}>
+          <DashboardWorkspace
+            initialIntegrations={[]}
+            initialAccessRequests={[]}
+            initialNotifications={[]}
+            currentUser={{ name: "", email: "dev@localhost" }}
+            contextApiBaseUrl="https://example.com"
+            contextApiKey=""
+            isAdmin={false}
+          />
+        </QueryClientProvider>,
+      );
+    });
+
+    expect(container.textContent).toContain(
+      "Slack connected successfully. Finish saving the integration to use it.",
+    );
+    expect(container.textContent).toContain("Local development session");
+    expect(container.textContent).toContain("Agent key status");
+    expect(container.textContent).toContain("Not available yet");
+    expect(container.textContent).toContain(
+      "Open /integrations once to provision the agent key before agents call /api/context/*.",
+    );
+  });
+
+  it("does not delete an integration when confirmation is cancelled and surfaces toggle errors", async () => {
+    usePathnameMock.mockReturnValue("/integrations");
+
+    const integrationsState: IntegrationSpec[] = [
+      {
+        key: "github",
+        name: "GitHub",
+        kind: "mcp",
+        provider: "mcp",
+        authStrategy: "bearer",
+        enabled: false,
+        fineGrainedPermissions: true,
+        config: { builtInSlug: "github" },
+        credentials: {},
+        tools: {},
+      },
+    ];
+
+    let deleteCalls = 0;
+    fetchMock.mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = typeof input === "string" ? input : input.toString();
+      const method = init?.method ?? "GET";
+
+      if (url === "/api/access-requests" || url === "/api/notifications") {
+        return new Response(JSON.stringify([]), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+
+      if (url === "/api/integrations/managed-connectors") {
+        return new Response(JSON.stringify(managedConnectors), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+
+      if (url === "/api/integrations" && method === "GET") {
+        return new Response(JSON.stringify(integrationsState), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+
+      if (url === "/api/integrations/github/toggle" && method === "POST") {
+        return new Response(JSON.stringify({ detail: "Unable to enable GitHub right now." }), {
+          status: 500,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+
+      if (url === "/api/integrations/github" && method === "DELETE") {
+        deleteCalls += 1;
+        return new Response(JSON.stringify({ deleted: true }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+
+      throw new Error(`Unexpected fetch: ${method} ${url}`);
+    });
+
+    const confirmMock = vi.fn(() => false);
+    vi.stubGlobal("confirm", confirmMock);
+
+    await act(async () => {
+      root.render(
+        <QueryClientProvider client={queryClient}>
+          <DashboardWorkspace
+            initialIntegrations={integrationsState}
+            initialAccessRequests={[]}
+            initialNotifications={[]}
+            currentUser={{ name: "User", email: "user@example.com" }}
+            contextApiBaseUrl="https://example.com"
+            contextApiKey="test-key"
+            isAdmin={false}
+          />
+        </QueryClientProvider>,
+      );
+    });
+
+    const deleteButton = Array.from(container.querySelectorAll("button")).find((button) =>
+      button.textContent?.includes("Delete"),
+    );
+    const enableButton = Array.from(container.querySelectorAll("button")).find((button) =>
+      button.textContent?.includes("Enable"),
+    );
+
+    await act(async () => {
+      deleteButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      enableButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(confirmMock).toHaveBeenCalledWith(
+      'Delete the integration "GitHub"? This removes it from your personal dashboard and disconnects any saved credentials for this tool.',
+    );
+    expect(deleteCalls).toBe(0);
+    expect(container.textContent).toContain("Unable to enable GitHub right now.");
+  });
+
+  it("normalizes invalid unused-tool thresholds before submitting a failing bulk disable request", async () => {
+    usePathnameMock.mockReturnValue("/integrations");
+
+    const integrationsState: IntegrationSpec[] = [
+      {
+        key: "github",
+        name: "GitHub",
+        kind: "mcp",
+        provider: "mcp",
+        authStrategy: "bearer",
+        enabled: true,
+        fineGrainedPermissions: true,
+        config: { builtInSlug: "github" },
+        credentials: {},
+        tools: {
+          staleRead: {
+            name: "staleRead",
+            description: "Old tracked tool",
+            enabled: true,
+            accessMode: "enabled",
+            fineGrainedPermissions: true,
+            defaultScopes: [],
+            executionMode: "provider",
+            config: {},
+            lastInvokedAt: "2026-01-01T00:00:00.000Z",
+          },
+        },
+      },
+    ];
+
+    fetchMock.mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = typeof input === "string" ? input : input.toString();
+      const method = init?.method ?? "GET";
+
+      if (url === "/api/access-requests" || url === "/api/notifications") {
+        return new Response(JSON.stringify([]), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+
+      if (url === "/api/integrations/managed-connectors") {
+        return new Response(JSON.stringify(managedConnectors), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+
+      if (url === "/api/integrations" && method === "GET") {
+        return new Response(JSON.stringify(integrationsState), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+
+      if (url === "/api/integrations/disable-unused" && method === "POST") {
+        expect(JSON.parse(String(init?.body))).toEqual({
+          thresholdValue: 30,
+          thresholdUnit: "days",
+        });
+        return new Response(JSON.stringify({ detail: "Bulk disable failed." }), {
+          status: 500,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+
+      throw new Error(`Unexpected fetch: ${method} ${url}`);
+    });
+
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-03-29T00:00:00.000Z"));
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+
+    await act(async () => {
+      root.render(
+        <QueryClientProvider client={queryClient}>
+          <DashboardWorkspace
+            initialIntegrations={integrationsState}
+            initialAccessRequests={[]}
+            initialNotifications={[]}
+            currentUser={{ name: "User", email: "user@example.com" }}
+            contextApiBaseUrl="https://example.com"
+            contextApiKey="test-key"
+            isAdmin={false}
+          />
+        </QueryClientProvider>,
+      );
+    });
+
+    const thresholdInput = container.querySelector(
+      'input[aria-label="Unused threshold value"]',
+    ) as HTMLInputElement | null;
+    const disableUnusedButton = container.querySelector(
+      'button[aria-label="Disable unused tools"]',
+    ) as HTMLButtonElement | null;
+
+    await act(async () => {
+      thresholdInput?.focus();
+      setInputValue(thresholdInput ?? undefined, "0");
+      thresholdInput?.blur();
+      await Promise.resolve();
+    });
+
+    expect(thresholdInput?.value).toBe("30");
+
+    await act(async () => {
+      disableUnusedButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(container.textContent).toContain("Bulk disable failed.");
+  });
+
+  it("shows an empty unused-tool state and resets invalid approval durations before a deny failure", async () => {
+    usePathnameMock.mockReturnValue("/case-by-case-approvals");
+
+    const accessRequestsState: AccessRequest[] = [
+      {
+        id: "req-pending",
+        agentId: null,
+        agentClass: null,
+        integrationKey: "github",
+        toolName: "delete_repo",
+        scopes: ["repo:admin"],
+        requestedMinutes: 240,
+        channels: ["in_app"],
+        notificationTargets: {},
+        createdAt: "2026-03-04T09:00:00.000Z",
+        status: "pending",
+      },
+    ];
+
+    let rejectPayload: Record<string, unknown> | null = null;
+    fetchMock.mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = typeof input === "string" ? input : input.toString();
+      const method = init?.method ?? "GET";
+
+      if (url === "/api/integrations" && method === "GET") {
+        return new Response(JSON.stringify([]), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+
+      if (url === "/api/case-by-case-approvals" && method === "GET") {
+        return new Response(JSON.stringify(accessRequestsState), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+
+      if (url === "/api/case-by-case-approvals/req-pending/reject" && method === "POST") {
+        rejectPayload = JSON.parse(String(init?.body)) as Record<string, unknown>;
+        return new Response(JSON.stringify({ detail: "Reject failed." }), {
+          status: 500,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+
+      throw new Error(`Unexpected fetch: ${method} ${url}`);
+    });
+
+    await act(async () => {
+      root.render(
+        <QueryClientProvider client={queryClient}>
+          <DashboardWorkspace
+            initialIntegrations={[]}
+            initialAccessRequests={accessRequestsState}
+            initialNotifications={[]}
+            currentUser={{ name: "", email: "" }}
+            contextApiBaseUrl="https://example.com"
+            contextApiKey="test-key"
+          />
+        </QueryClientProvider>,
+      );
+    });
+
+    const approvalDurationInput = container.querySelector(
+      'input[aria-label="Approval duration in hours"]',
+    ) as HTMLInputElement | null;
+    const selectAllButton = Array.from(container.querySelectorAll("button")).find((button) =>
+      button.textContent?.includes("Select all matches"),
+    );
+    const denySelectedButton = Array.from(container.querySelectorAll("button")).find((button) =>
+      button.textContent?.includes("Deny selected"),
+    );
+
+    await act(async () => {
+      approvalDurationInput?.focus();
+      setInputValue(approvalDurationInput ?? undefined, "0");
+      approvalDurationInput?.blur();
+      await Promise.resolve();
+    });
+
+    expect(approvalDurationInput?.value).toBe("4");
+
+    await act(async () => {
+      selectAllButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    await act(async () => {
+      denySelectedButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(rejectPayload).toEqual({});
+    expect(container.textContent).toContain("Reject failed.");
+
+    usePathnameMock.mockReturnValue("/integrations");
+    const integrationsWithoutTrackedUsage: IntegrationSpec[] = [
+      {
+        key: "slack",
+        name: "Slack",
+        kind: "mcp",
+        provider: "mcp",
+        authStrategy: "oauth2",
+        enabled: true,
+        fineGrainedPermissions: true,
+        config: { builtInSlug: "slack" },
+        credentials: {},
+        tools: {
+          noHistory: {
+            name: "noHistory",
+            description: "No tracked usage yet",
+            enabled: true,
+            accessMode: "enabled",
+            fineGrainedPermissions: true,
+            defaultScopes: [],
+            executionMode: "provider",
+            config: {},
+          },
+        },
+      },
+    ];
+
+    fetchMock.mockImplementation(async (input: RequestInfo | URL) => {
+      const url = typeof input === "string" ? input : input.toString();
+      if (
+        url === "/api/integrations" ||
+        url === "/api/access-requests" ||
+        url === "/api/notifications" ||
+        url === "/api/integrations/managed-connectors"
+      ) {
+        return new Response(
+          JSON.stringify(
+            url === "/api/integrations"
+              ? integrationsWithoutTrackedUsage
+              : url === "/api/integrations/managed-connectors"
+                ? managedConnectors
+                : [],
+          ),
+          {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          },
+        );
+      }
+
+      throw new Error(`Unexpected fetch: ${url}`);
+    });
+
+    await act(async () => {
+      queryClient.clear();
+      root.render(
+        <QueryClientProvider client={queryClient}>
+          <DashboardWorkspace
+            initialIntegrations={integrationsWithoutTrackedUsage}
+            initialAccessRequests={[]}
+            initialNotifications={[]}
+            currentUser={{ name: "User", email: "user@example.com" }}
+            contextApiBaseUrl="https://example.com"
+            contextApiKey="test-key"
+            isAdmin={false}
+          />
+        </QueryClientProvider>,
+      );
+      await Promise.resolve();
+    });
+
+    const disableUnusedButton = container.querySelector(
+      'button[aria-label="Disable unused tools"]',
+    ) as HTMLButtonElement | null;
+
+    await act(async () => {
+      disableUnusedButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    expect(container.textContent).toContain(
+      "No tracked tools matched the selected unused window.",
+    );
+  });
+
 
 });

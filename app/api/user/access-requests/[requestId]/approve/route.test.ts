@@ -35,8 +35,7 @@ afterEach(async () => {
 });
 
 describe("POST /api/user/access-requests/[requestId]/approve", () => {
-  it("requires an admin user API key", async () => {
-    vi.stubEnv("APP_ADMIN_EMAILS", "admin@example.com");
+  it("approves the authenticated user's own request", async () => {
     const service = getContextLayerService();
     const request = await service.createAccessRequest({
       agentId: "bot-1",
@@ -46,44 +45,10 @@ describe("POST /api/user/access-requests/[requestId]/approve", () => {
       scopes: ["chat:write"],
       requestedMinutes: 30,
       channels: ["in_app"],
-      notificationTargets: {},
+      notificationTargets: { in_app: "owner@example.com" },
       justification: "Need to post updates",
     });
     const { apiKey } = await service.rotateUserApiKey("owner@example.com");
-
-    const response = await POST(
-      new Request(`http://localhost/api/user/access-requests/${request.id}/approve`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ durationMinutes: 10 }),
-      }),
-      { params: Promise.resolve({ requestId: request.id }) },
-    );
-
-    expect(response.status).toBe(403);
-    await expect(response.json()).resolves.toMatchObject({
-      detail: "This endpoint requires an admin user API key.",
-    });
-  });
-
-  it("approves requests and records the authenticated admin as approver", async () => {
-    vi.stubEnv("APP_ADMIN_EMAILS", "admin@example.com");
-    const service = getContextLayerService();
-    const request = await service.createAccessRequest({
-      agentId: "bot-1",
-      agentClass: "researcher",
-      integrationKey: "slack",
-      toolName: "send_message",
-      scopes: ["chat:write"],
-      requestedMinutes: 30,
-      channels: ["in_app"],
-      notificationTargets: {},
-      justification: "Need to post updates",
-    });
-    const { apiKey } = await service.rotateUserApiKey("admin@example.com");
 
     const response = await POST(
       new Request(`http://localhost/api/user/access-requests/${request.id}/approve`, {
@@ -102,15 +67,48 @@ describe("POST /api/user/access-requests/[requestId]/approve", () => {
     };
 
     expect(response.status).toBe(200);
-    expect(body.grantedBy).toBe("admin@example.com");
+    expect(body.grantedBy).toBe("owner@example.com");
     expect(new Date(body.expiresAt).getTime()).toBeGreaterThan(Date.now());
 
     await expect(service.listAccessRequests()).resolves.toMatchObject([
       {
         id: request.id,
         status: "approved",
-        decidedBy: "admin@example.com",
+        decidedBy: "owner@example.com",
       },
     ]);
+  });
+
+  it("does not allow a user API key to approve another owner's request", async () => {
+    const service = getContextLayerService();
+    const request = await service.createAccessRequest({
+      agentId: "bot-2",
+      agentClass: "researcher",
+      integrationKey: "slack",
+      toolName: "send_message",
+      scopes: ["chat:write"],
+      requestedMinutes: 30,
+      channels: ["in_app"],
+      notificationTargets: { in_app: "other@example.com" },
+      justification: "Need to post updates",
+    });
+    const { apiKey } = await service.rotateUserApiKey("owner@example.com");
+
+    const response = await POST(
+      new Request(`http://localhost/api/user/access-requests/${request.id}/approve`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ durationMinutes: 10 }),
+      }),
+      { params: Promise.resolve({ requestId: request.id }) },
+    );
+
+    expect(response.status).toBe(404);
+    await expect(response.json()).resolves.toMatchObject({
+      detail: `Unknown access request '${request.id}'.`,
+    });
   });
 });

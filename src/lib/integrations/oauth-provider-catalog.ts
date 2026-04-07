@@ -27,7 +27,7 @@ const oauthProviderCatalog = [
     managedConnectorSlug: "github",
     appUrl: "https://github.com",
     docsUrl: "https://docs.github.com/apps/oauth-apps/building-oauth-apps",
-    notes: "Current managed works with bearer tokens today; GitHub OAuth is a strong candidate for a future one-click connect flow.",
+    notes: "Current managed connector works with bearer tokens today; GitHub OAuth is a strong candidate for a future one-click connect flow.",
   }),
   provider(2, {
     slug: "google-docs",
@@ -38,7 +38,7 @@ const oauthProviderCatalog = [
     managedConnectorSlug: "google-docs",
     appUrl: "https://workspace.google.com/products/docs/",
     docsUrl: "https://developers.google.com/identity/protocols/oauth2",
-    notes: "Current managed accepts a Google access token manually; a full OAuth connect flow can remove token copy/paste.",
+    notes: "Current managed connector accepts a Google access token manually; a full OAuth connect flow can remove token copy/paste.",
   }),
   provider(3, {
     slug: "slack",

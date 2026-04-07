@@ -67,7 +67,7 @@ afterEach(async () => {
 });
 
 describe("/api/managed-connectors", () => {
-  it("stores a managed connector for allowlisted app administrators and exposes it through the managed catalog", async () => {
+  it("stores a managed connector for allowlisted app administrators and exposes it through the managed connector catalog", async () => {
     vi.stubEnv("APP_ADMIN_EMAILS", "admin@example.com,ops@example.com");
 
     const response = await POST(createManagedConnectorRequest());
@@ -92,9 +92,8 @@ describe("/api/managed-connectors", () => {
     const connectors = (await listResponse.json()) as Array<{ slug: string }>;
     expect(connectors.some((connector) => connector.slug === "acme-crm")).toBe(true);
 
-    const managedConnectorOptionsResponse = await getManagedConnectors();
-    const managedConnectorOptions =
-      (await managedConnectorOptionsResponse.json()) as Array<{
+    const managedConnectorResponse = await getManagedConnectors();
+    const managedConnectorOptions = (await managedConnectorResponse.json()) as Array<{
       slug: string;
       oauthConfigured?: boolean;
     }>;

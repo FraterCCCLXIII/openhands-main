@@ -42,7 +42,7 @@ import { createTestRepository, getActiveSql } from "@/src/lib/db/pglite-test-uti
 import {
   discoverIntegration,
   inferMcpAuthStrategy,
-  listManagedConnectors,
+  listManagedConnectorOptions,
 } from "@/src/lib/integrations/discovery";
 
 let testRepo: ContextRepository;
@@ -67,9 +67,9 @@ afterEach(async () => {
   vi.unstubAllGlobals();
 });
 
-describe("listManagedConnectors", () => {
+describe("listManagedConnectorOptions", () => {
   it("returns an empty catalog when no repository is provided", async () => {
-    await expect(listManagedConnectors()).resolves.toEqual([]);
+    await expect(listManagedConnectorOptions()).resolves.toEqual([]);
   });
 
   it("returns enabled managed connectors when a repository is provided", async () => {
@@ -102,7 +102,7 @@ describe("listManagedConnectors", () => {
       updatedAt: "2026-03-09T00:00:00.000Z",
     });
 
-    const connectors = await listManagedConnectors(repository);
+    const connectors = await listManagedConnectorOptions(repository);
 
     expect(connectors).toContainEqual(
       expect.objectContaining({
@@ -116,7 +116,7 @@ describe("listManagedConnectors", () => {
   });
 
   it("includes default API-key connectors that need no admin registration", async () => {
-    const connectors = await listManagedConnectors(testRepo);
+    const connectors = await listManagedConnectorOptions(testRepo);
 
     expect(connectors).toContainEqual(
       expect.objectContaining({
@@ -130,7 +130,7 @@ describe("listManagedConnectors", () => {
   });
 
   it("includes default MCP bearer connectors that need no admin registration", async () => {
-    const connectors = await listManagedConnectors(testRepo);
+    const connectors = await listManagedConnectorOptions(testRepo);
 
     expect(connectors).toContainEqual(
       expect.objectContaining({
@@ -200,7 +200,7 @@ describe("listManagedConnectors", () => {
       updatedAt: "2026-03-09T00:00:00.000Z",
     });
 
-    const connectors = await listManagedConnectors(repository);
+    const connectors = await listManagedConnectorOptions(repository);
 
     expect(connectors.map((connector) => connector.name)).toEqual([
       "Alpha CRM",
@@ -358,7 +358,7 @@ describe("discoverIntegration", () => {
   });
 
 
-  it("returns 404 when a managed slug is not available", async () => {
+  it("returns 404 when a managed connector slug is not available", async () => {
     await expect(
       discoverIntegration(
         {
@@ -715,5 +715,16 @@ describe("inferMcpAuthStrategy", () => {
         password: "secret",
       }),
     ).toBe("basic");
+  });
+
+  it("ignores malformed credential values when inferring auth", () => {
+    expect(
+      inferMcpAuthStrategy({
+        accessToken: { invalid: true },
+        secret: ["bad"],
+        username: "demo",
+        password: { invalid: true },
+      }),
+    ).toBe("none");
   });
 });

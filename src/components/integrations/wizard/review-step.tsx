@@ -76,7 +76,7 @@ export const ReviewStep = ({
 }: ReviewStepProps) => (
   <div className="space-y-6">
     <div className="flex flex-wrap items-center gap-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-4 text-sm text-[var(--color-text-base)]">
-      <Badge>{kind === "managed" ? "Managed" : "MCP"}</Badge>
+      <Badge>{kind === "managed" ? "Managed connector" : "MCP"}</Badge>
       <Badge>{discovery.provider}</Badge>
       <Badge>{authStrategyLabel(discovery.authStrategy)}</Badge>
       <span>

@@ -156,7 +156,7 @@ afterEach(async () => {
 });
 
 describe("/api/mcp", () => {
-  it("lists managed tools and forwards enabled invocations without requiring session defaults", async () => {
+  it("lists managed connector tools and forwards enabled invocations without requiring session defaults", async () => {
     const service = getContextLayerService();
     await service.registerOwnerIntegration("owner@example.com", baseIntegration);
     const apiKey = (await service.getOrCreateAgentApiKey("owner@example.com")).apiKey;

@@ -1,12 +1,13 @@
-import { ContextLayerError } from "@/src/lib/core/errors";
 import { auth, isAuthDisabled } from "@/src/lib/auth";
+import { ContextLayerError } from "@/src/lib/core/errors";
+import { normalizeCaseInsensitiveText } from "@/src/lib/text-utils";
 
 const DEV_USER = {
   name: "Local Dev User",
   email: "dev@localhost",
 };
 
-export const normalizeOwnerId = (value: string) => value.trim().toLowerCase();
+export const normalizeOwnerId = normalizeCaseInsensitiveText;
 
 export const getCurrentUserIdentity = async () => {
   const session = await auth();
