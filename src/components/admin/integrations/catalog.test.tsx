@@ -104,7 +104,7 @@ const manualTokenProvider: OAuthProviderCatalogOption = {
   categories: ["Audio"],
   authStrategy: "api_key",
   availability: "manual_token",
-  builtInSlug: "elevenlabs",
+  managedConnectorSlug: "elevenlabs",
   docsUrl: "https://elevenlabs.io/docs/api-reference/introduction",
   notes: "Published API schema with manual user API keys.",
   popularityRank: 2,
@@ -229,7 +229,7 @@ describe("IntegrationsCatalog", () => {
       root.render(
         <IntegrationsCatalog
           providerCatalog={providerCatalog}
-          initialReadyBuiltInConnectors={readyBuiltInConnectors}
+          initialReadyManagedConnectors={readyManagedConnectors}
           managedConnectors={managedConnectors}
           canRegisterManagedConnectors={false}
           oauthCallbackBaseUrl="https://openhands-context-layer.vercel.app/api/oauth"
@@ -260,7 +260,7 @@ describe("IntegrationsCatalog", () => {
       root.render(
         <IntegrationsCatalog
           providerCatalog={providerCatalog}
-          initialReadyBuiltInConnectors={[]}
+          initialReadyManagedConnectors={[]}
           managedConnectors={[{ ...googleManagedConnector, oauthConfigured: false }]}
           canRegisterManagedConnectors
           oauthCallbackBaseUrl="https://openhands-context-layer.vercel.app/api/oauth"
@@ -324,7 +324,7 @@ describe("IntegrationsCatalog", () => {
       root.render(
         <IntegrationsCatalog
           providerCatalog={[manualTokenProvider]}
-          initialReadyBuiltInConnectors={[]}
+          initialReadyManagedConnectors={[]}
           managedConnectors={[manualTokenConnector]}
           canRegisterManagedConnectors
           oauthCallbackBaseUrl="https://openhands-context-layer.vercel.app/api/oauth"
