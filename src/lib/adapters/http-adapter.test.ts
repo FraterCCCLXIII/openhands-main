@@ -98,7 +98,7 @@ describe("HttpAdapter", () => {
     });
   });
 
-  it("builds JSON requests from exact templates and oauth2 credentials", async () => {
+  it("builds JSON requests from nested templates and oauth2 credentials", async () => {
     const input = buildInput();
     input.integration.authStrategy = "oauth2";
     input.integration.credentials = {
@@ -113,12 +113,12 @@ describe("HttpAdapter", () => {
         skip: "{{filters.missing}}",
       },
       headers: {
-        "X-Trace": "{{meta.trace}}",
+        "X-Trace": "{{traceId}}",
         "X-Count": "{{meta.count}}",
         "X-Skip": "{{filters.missing}}",
       },
       body: {
-        prompt: "{{message.prompt}}",
+        prompt: "{{prompt}}",
         config: "{{config}}",
         nested: {
           id: "{{meta.id}}",
@@ -129,10 +129,11 @@ describe("HttpAdapter", () => {
     };
     input.payload = {
       user: { name: "Ada" },
-      message: { prompt: "Hello Ada" },
-      meta: { id: "msg-42", trace: "trace-msg-42", count: 3 },
+      meta: { id: "msg-42", count: 3 },
       filters: { query: "hello" },
       config: { voice: "nova" },
+      prompt: "Hello Ada",
+      traceId: "trace-msg-42",
     };
 
     const fetchMock = vi.fn(async (url: URL | string, init?: RequestInit) => {
@@ -457,7 +458,8 @@ describe("HttpAdapter", () => {
     invalidPath.payload = {};
     await expect(adapter.invoke(invalidPath)).rejects.toMatchObject({
       statusCode: 400,
-      message: "Path placeholder 'missing.path' must resolve to a string, number, or boolean.",
+      message:
+        "Path placeholder 'missing.path' must resolve to a string, number, or boolean.",
     });
   });
 

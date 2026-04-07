@@ -184,13 +184,13 @@ const resolveHeaderValues = (
   payload: Record<string, unknown>,
   toolName: string,
 ) => {
-  const resolvedHeaders = resolveTemplateValue(headersTemplate, payload);
-  if (!isRecord(resolvedHeaders)) {
+  const interpolatedHeaders = resolveTemplateValue(headersTemplate, payload);
+  if (!isRecord(interpolatedHeaders)) {
     return {};
   }
 
   return Object.fromEntries(
-    Object.entries(resolvedHeaders)
+    Object.entries(interpolatedHeaders)
       .filter(([, value]) => value != null)
       .map(([key, value]) => {
         if (!isScalarRequestValue(value)) {
