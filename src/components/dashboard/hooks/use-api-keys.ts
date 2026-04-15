@@ -190,12 +190,20 @@ export const useApiKeys = ({
   onStatus,
 }: UseDashboardApiKeysOptions) => {
   const [agentApiKey, setAgentApiKey] = useState(contextApiKey);
+  const [hasLocalAgentKeyOverride, setHasLocalAgentKeyOverride] = useState(false);
   const [revealAgentKey, setRevealAgentKey] = useState(false);
   const { copied: agentKeyCopied, setCopied: setAgentKeyCopied } = useCopiedFlag();
 
   useEffect(() => {
-    setAgentApiKey(contextApiKey);
-  }, [contextApiKey]);
+    if (!hasLocalAgentKeyOverride) {
+      setAgentApiKey(contextApiKey);
+      return;
+    }
+
+    if (contextApiKey && contextApiKey === agentApiKey) {
+      setHasLocalAgentKeyOverride(false);
+    }
+  }, [agentApiKey, contextApiKey, hasLocalAgentKeyOverride]);
 
   const contextApiReady = agentApiKey.trim().length > 0;
 
@@ -244,6 +252,7 @@ export const useApiKeys = ({
         method: "POST",
       });
       setAgentApiKey(rotated.apiKey);
+      setHasLocalAgentKeyOverride(true);
       setRevealAgentKey(true);
       setAgentKeyCopied(false);
       onStatus(

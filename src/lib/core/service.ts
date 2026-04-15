@@ -818,6 +818,8 @@ export class ContextLayerService {
     const existing = await this.repository.getAgentApiKeyByOwner(normalizedOwnerId);
     const timestamp = nowIso();
 
+    // Agent keys are stored one-per-owner, so this upsert replaces the prior key and
+    // immediately invalidates the old bearer token for that owner.
     return this.repository.saveAgentApiKey({
       ownerId: normalizedOwnerId,
       apiKey: createAgentApiKeyValue(),
