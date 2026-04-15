@@ -13,6 +13,7 @@ const createDefaultProps = () => ({
     copied: false,
     handleCopy: vi.fn(),
     handleReveal: vi.fn(),
+    handleRotate: vi.fn(),
     hasKey: false,
     maskedValue: "",
     revealed: false,
@@ -22,6 +23,7 @@ const createDefaultProps = () => ({
   agentKey: {
     copied: false,
     handleCopy: vi.fn(),
+    handleRotate: vi.fn(),
     maskedValue: "cla_••••••••",
     revealed: false,
     toggleReveal: vi.fn(),
@@ -37,6 +39,7 @@ const createDefaultProps = () => ({
     copied: false,
     handleCopy: vi.fn(),
     handleReveal: vi.fn(),
+    handleRotate: vi.fn(),
     hasKey: false,
     maskedValue: "",
     revealed: false,
@@ -154,21 +157,36 @@ describe("AgentConnectionSection", () => {
     const copyAdminButton = container.querySelector(
       'button[aria-label="Copy admin automation key"]',
     ) as HTMLButtonElement | null;
+    const rotateAgentButton = container.querySelector(
+      'button[aria-label="Rotate agent key"]',
+    ) as HTMLButtonElement | null;
+    const rotateUserButton = container.querySelector(
+      'button[aria-label="Rotate user automation key"]',
+    ) as HTMLButtonElement | null;
+    const rotateAdminButton = container.querySelector(
+      'button[aria-label="Rotate admin automation key"]',
+    ) as HTMLButtonElement | null;
 
     await act(async () => {
       hideButtons[0]?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
       revealButtons[0]?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
       copyAgentButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      rotateAgentButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
       copyUserButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      rotateUserButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
       revealButtons[1]?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
       copyAdminButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      rotateAdminButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
 
     expect(props.agentKey.toggleReveal).toHaveBeenCalledTimes(1);
     expect(props.userKey.handleReveal).toHaveBeenCalledTimes(1);
     expect(props.adminKey.handleReveal).toHaveBeenCalledTimes(1);
     expect(props.agentKey.handleCopy).toHaveBeenCalledTimes(1);
+    expect(props.agentKey.handleRotate).toHaveBeenCalledTimes(1);
     expect(props.userKey.handleCopy).toHaveBeenCalledTimes(1);
+    expect(props.userKey.handleRotate).toHaveBeenCalledTimes(1);
     expect(props.adminKey.handleCopy).toHaveBeenCalledTimes(1);
+    expect(props.adminKey.handleRotate).toHaveBeenCalledTimes(1);
   });
 });

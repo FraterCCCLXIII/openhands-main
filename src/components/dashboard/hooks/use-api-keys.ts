@@ -11,6 +11,13 @@ import type {
   UserApiKeyStatus,
 } from "@/src/types/context-layer";
 
+interface AgentApiKeyResponse {
+  ownerId: string;
+  apiKey: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 interface UserApiKeyResponse {
   hasKey: boolean;
   key: UserApiKeyStatus | null;
@@ -75,6 +82,22 @@ const useStoredApiKey = <TStatus extends { keyPrefix: string; keySuffix: string 
     setValue(initialValue ?? "");
   }, [initialValue]);
 
+  const rotateKey = async (hadKey: boolean) => {
+    const rotated = await fetchJson<{
+      apiKey: string;
+      key: TStatus;
+    }>(fetchUrl, {
+      method: "POST",
+    });
+
+    setStatus(rotated.key);
+    setValue(rotated.apiKey);
+    setRevealed(true);
+    setCopied(false);
+    onStatus(hadKey ? regenerateMessage : createMessage);
+    return rotated.apiKey;
+  };
+
   const ensureValue = async () => {
     const currentValue = value.trim();
     if (currentValue) {
@@ -95,17 +118,7 @@ const useStoredApiKey = <TStatus extends { keyPrefix: string; keySuffix: string 
       return current.apiKey;
     }
 
-    const rotated = await fetchJson<{
-      apiKey: string;
-      key: TStatus;
-    }>(fetchUrl, {
-      method: "POST",
-    });
-
-    setStatus(rotated.key);
-    setValue(rotated.apiKey);
-    onStatus(current.hasKey ? regenerateMessage : createMessage);
-    return rotated.apiKey;
+    return rotateKey(current.hasKey);
   };
 
   const handleReveal = async () => {
@@ -134,6 +147,14 @@ const useStoredApiKey = <TStatus extends { keyPrefix: string; keySuffix: string 
     }
   };
 
+  const handleRotate = async () => {
+    try {
+      await rotateKey(status !== null);
+    } catch {
+      onStatus(unavailableMessage);
+    }
+  };
+
   return {
     hasKey: status !== null,
     status,
@@ -147,6 +168,7 @@ const useStoredApiKey = <TStatus extends { keyPrefix: string; keySuffix: string 
         : "",
     handleReveal,
     handleCopy,
+    handleRotate,
   };
 };
 
@@ -167,10 +189,23 @@ export const useApiKeys = ({
   adminApiKeyValue = null,
   onStatus,
 }: UseDashboardApiKeysOptions) => {
+  const [agentApiKey, setAgentApiKey] = useState(contextApiKey);
+  const [hasLocalAgentKeyOverride, setHasLocalAgentKeyOverride] = useState(false);
   const [revealAgentKey, setRevealAgentKey] = useState(false);
   const { copied: agentKeyCopied, setCopied: setAgentKeyCopied } = useCopiedFlag();
 
-  const contextApiReady = contextApiKey.trim().length > 0;
+  useEffect(() => {
+    if (!hasLocalAgentKeyOverride) {
+      setAgentApiKey(contextApiKey);
+      return;
+    }
+
+    if (contextApiKey && contextApiKey === agentApiKey) {
+      setHasLocalAgentKeyOverride(false);
+    }
+  }, [agentApiKey, contextApiKey, hasLocalAgentKeyOverride]);
+
+  const contextApiReady = agentApiKey.trim().length > 0;
 
   const userKey = useStoredApiKey<UserApiKeyStatus>({
     initialStatus: userApiKey,
@@ -203,11 +238,28 @@ export const useApiKeys = ({
     }
 
     try {
-      await copyTextToClipboard(contextApiKey);
+      await copyTextToClipboard(agentApiKey);
       setAgentKeyCopied(true);
     } catch {
       setAgentKeyCopied(false);
       onStatus("Unable to copy the API key from this browser session.");
+    }
+  };
+
+  const handleRotateAgentKey = async () => {
+    try {
+      const rotated = await fetchJson<AgentApiKeyResponse>("/api/user/agent-key", {
+        method: "POST",
+      });
+      setAgentApiKey(rotated.apiKey);
+      setHasLocalAgentKeyOverride(true);
+      setRevealAgentKey(true);
+      setAgentKeyCopied(false);
+      onStatus(
+        "Rotated your agent key. Update any existing agents or clients using the previous key.",
+      );
+    } catch {
+      onStatus("Unable to rotate the agent key right now.");
     }
   };
 
@@ -216,13 +268,14 @@ export const useApiKeys = ({
     agentKey: {
       copied: agentKeyCopied,
       revealed: revealAgentKey,
-      maskedValue: maskApiKey(contextApiKey, revealAgentKey),
+      maskedValue: maskApiKey(agentApiKey, revealAgentKey),
       toggleReveal: () => setRevealAgentKey((current) => !current),
       handleCopy: handleCopyAgentKey,
+      handleRotate: handleRotateAgentKey,
     },
     userKey,
     adminKey,
   };
 };
 
-export type { AdminApiKeyResponse, UserApiKeyResponse };
+export type { AgentApiKeyResponse, AdminApiKeyResponse, UserApiKeyResponse };

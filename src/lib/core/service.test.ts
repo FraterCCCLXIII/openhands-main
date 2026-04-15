@@ -960,6 +960,24 @@ describe("ContextLayerService", () => {
     expect(await service.isStoredAgentApiKeyAuthorized("not-a-real-key")).toBe(false);
   });
 
+  it("rotates per-user context API keys and invalidates the previous value", async () => {
+    const service = createService();
+
+    const first = await service.getOrCreateAgentApiKey("Owner@Example.com");
+    const second = await service.rotateAgentApiKey("owner@example.com");
+
+    expect(second.ownerId).toBe("owner@example.com");
+    expect(second.apiKey).not.toBe(first.apiKey);
+    expect(second.createdAt).toBe(first.createdAt);
+    expect(second.updatedAt).not.toBe(first.updatedAt);
+    expect(await service.isStoredAgentApiKeyAuthorized(first.apiKey)).toBe(false);
+    expect(await service.getStoredAgentApiKey(first.apiKey)).toBeNull();
+    expect(await service.getStoredAgentApiKey(second.apiKey)).toMatchObject({
+      ownerId: "owner@example.com",
+    });
+  });
+
+
   it("rotates and revokes user API keys with hashed auth and encrypted recovery", async () => {
     const service = createService();
 

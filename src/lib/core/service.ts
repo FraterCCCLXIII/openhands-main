@@ -804,6 +804,30 @@ export class ContextLayerService {
     });
   }
 
+  async rotateAgentApiKey(ownerId: string): Promise<AgentApiKeyRecord> {
+    await this.initialize();
+    const normalizedOwnerId = normalizeAgentApiKeyOwner(ownerId);
+
+    if (!normalizedOwnerId) {
+      throw new ContextLayerError(
+        "A signed-in user email or name is required before issuing a context-layer API key.",
+        400,
+      );
+    }
+
+    const existing = await this.repository.getAgentApiKeyByOwner(normalizedOwnerId);
+    const timestamp = nowIso();
+
+    // Agent keys are stored one-per-owner, so this upsert replaces the prior key and
+    // immediately invalidates the old bearer token for that owner.
+    return this.repository.saveAgentApiKey({
+      ownerId: normalizedOwnerId,
+      apiKey: createAgentApiKeyValue(),
+      createdAt: existing?.createdAt ?? timestamp,
+      updatedAt: timestamp,
+    });
+  }
+
   async hasStoredAgentApiKeys() {
     await this.initialize();
     return this.repository.hasAgentApiKeys();

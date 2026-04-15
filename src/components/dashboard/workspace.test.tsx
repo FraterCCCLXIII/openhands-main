@@ -1223,6 +1223,156 @@ describe("DashboardWorkspace", () => {
     ).toContain("lucide-copy");
   });
 
+  it("rotates the agent key from the dashboard", async () => {
+    usePathnameMock.mockReturnValue("/agent-connection");
+
+    fetchMock.mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = typeof input === "string" ? input : input.toString();
+      const method = init?.method ?? "GET";
+
+      if (url === "/api/user/agent-key" && method === "POST") {
+        return new Response(
+          JSON.stringify({
+            ownerId: "admin@example.com",
+            apiKey: "cla_rotated_1234567890abcdefghijklmnop",
+            createdAt: "2026-03-29T10:00:00.000Z",
+            updatedAt: "2026-03-29T11:00:00.000Z",
+          }),
+          {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          },
+        );
+      }
+
+      return new Response(JSON.stringify([]), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    });
+
+    await act(async () => {
+      root.render(
+        <QueryClientProvider client={queryClient}>
+          <DashboardWorkspace
+            initialIntegrations={[]}
+            initialAccessRequests={[]}
+            initialNotifications={[]}
+            currentUser={{ name: "Admin User", email: "admin@example.com" }}
+            contextApiBaseUrl="https://example.com"
+            contextApiKey="cla_original_1234567890abcdefghijkl"
+          />
+        </QueryClientProvider>,
+      );
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    const rotateButton = container.querySelector(
+      'button[aria-label="Rotate agent key"]',
+    ) as HTMLButtonElement | null;
+    expect(rotateButton).toBeTruthy();
+
+    await act(async () => {
+      rotateButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(
+      fetchMock.mock.calls.some(
+        ([input, init]) =>
+          String(input) === "/api/user/agent-key" && (init?.method ?? "GET") === "POST",
+      ),
+    ).toBe(true);
+    expect(container.textContent).toContain("cla_rotated_1234567890abcdefghijklmnop");
+    expect(container.textContent).toContain(
+      "Rotated your agent key. Update any existing agents or clients using the previous key.",
+    );
+  });
+
+  it("keeps a locally rotated agent key visible across stale parent rerenders", async () => {
+    usePathnameMock.mockReturnValue("/agent-connection");
+
+    fetchMock.mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = typeof input === "string" ? input : input.toString();
+      const method = init?.method ?? "GET";
+
+      if (url === "/api/user/agent-key" && method === "POST") {
+        return new Response(
+          JSON.stringify({
+            ownerId: "admin@example.com",
+            apiKey: "cla_rotated_stale_safe_1234567890",
+            createdAt: "2026-03-29T10:00:00.000Z",
+            updatedAt: "2026-03-29T11:00:00.000Z",
+          }),
+          {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          },
+        );
+      }
+
+      return new Response(JSON.stringify([]), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    });
+
+    const staleContextApiKey = "cla_original_stale_prop_1234567890";
+
+    await act(async () => {
+      root.render(
+        <QueryClientProvider client={queryClient}>
+          <DashboardWorkspace
+            initialIntegrations={[]}
+            initialAccessRequests={[]}
+            initialNotifications={[]}
+            currentUser={{ name: "Admin User", email: "admin@example.com" }}
+            contextApiBaseUrl="https://example.com"
+            contextApiKey={staleContextApiKey}
+          />
+        </QueryClientProvider>,
+      );
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    const rotateButton = container.querySelector(
+      'button[aria-label="Rotate agent key"]',
+    ) as HTMLButtonElement | null;
+
+    await act(async () => {
+      rotateButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(container.textContent).toContain("cla_rotated_stale_safe_1234567890");
+
+    await act(async () => {
+      root.render(
+        <QueryClientProvider client={queryClient}>
+          <DashboardWorkspace
+            initialIntegrations={[]}
+            initialAccessRequests={[]}
+            initialNotifications={[]}
+            currentUser={{ name: "Admin User", email: "admin@example.com" }}
+            contextApiBaseUrl="https://example.com"
+            contextApiKey={staleContextApiKey}
+          />
+        </QueryClientProvider>,
+      );
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(container.textContent).toContain("cla_rotated_stale_safe_1234567890");
+    expect(container.textContent).not.toContain(staleContextApiKey);
+  });
+
+
+
   it("reveals and copies the user automation key even when only metadata is initially rendered", async () => {
     usePathnameMock.mockReturnValue("/agent-connection");
     vi.useFakeTimers();
@@ -1417,7 +1567,6 @@ describe("DashboardWorkspace", () => {
       "Created a new user automation key. Save it somewhere secure because the full value is only shown when you explicitly reveal or copy it.",
     );
   });
-
 
   it("reveals and copies the admin automation key only after an explicit action", async () => {
     usePathnameMock.mockReturnValue("/agent-connection");
