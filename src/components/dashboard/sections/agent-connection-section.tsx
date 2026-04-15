@@ -1,4 +1,4 @@
-import { CheckCircle2, Copy, Eye, EyeOff, KeyRound, ShieldCheck } from "lucide-react";
+import { CheckCircle2, Copy, Eye, EyeOff, KeyRound, RotateCw, ShieldCheck } from "lucide-react";
 
 import {
   CompactPanel,
@@ -16,8 +16,10 @@ interface DashboardApiKeyCardProps {
   label: string;
   onCopy: () => void | Promise<void>;
   onRevealToggle: () => void | Promise<void>;
+  onRotate: () => void | Promise<void>;
   revealDisabled?: boolean;
   revealed: boolean;
+  rotateLabel?: string;
 }
 
 const DashboardApiKeyCard = ({
@@ -29,8 +31,10 @@ const DashboardApiKeyCard = ({
   label,
   onCopy,
   onRevealToggle,
+  onRotate,
   revealDisabled = false,
   revealed,
+  rotateLabel = "Rotate",
 }: DashboardApiKeyCardProps) => (
   <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-4">
     <div className="flex items-start justify-between gap-3">
@@ -62,6 +66,16 @@ const DashboardApiKeyCard = ({
       >
         {copied ? <CheckCircle2 className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
         Copy
+      </Button>
+      <Button
+        variant="secondary"
+        className="h-8 gap-2 rounded-md px-3 text-xs"
+        onClick={onRotate}
+        disabled={revealDisabled}
+        aria-label={`${rotateLabel} ${label.toLowerCase()}`}
+      >
+        <RotateCw className="h-4 w-4" />
+        {rotateLabel}
       </Button>
     </div>
   </div>
@@ -182,6 +196,7 @@ interface AgentConnectionSectionProps {
     copied: boolean;
     handleCopy: () => void | Promise<void>;
     handleReveal: () => void | Promise<void>;
+    handleRotate: () => void | Promise<void>;
     hasKey: boolean;
     maskedValue: string;
     revealed: boolean;
@@ -191,6 +206,7 @@ interface AgentConnectionSectionProps {
   agentKey: {
     copied: boolean;
     handleCopy: () => void | Promise<void>;
+    handleRotate: () => void | Promise<void>;
     maskedValue: string;
     revealed: boolean;
     toggleReveal: () => void;
@@ -206,6 +222,7 @@ interface AgentConnectionSectionProps {
     copied: boolean;
     handleCopy: () => void | Promise<void>;
     handleReveal: () => void | Promise<void>;
+    handleRotate: () => void | Promise<void>;
     hasKey: boolean;
     maskedValue: string;
     revealed: boolean;
@@ -242,6 +259,7 @@ export const AgentConnectionSection = ({
           copied={agentKey.copied}
           onRevealToggle={agentKey.toggleReveal}
           onCopy={agentKey.handleCopy}
+          onRotate={agentKey.handleRotate}
           revealDisabled={!contextApiReady}
           revealed={agentKey.revealed}
         />
@@ -254,7 +272,9 @@ export const AgentConnectionSection = ({
           copied={userKey.copied}
           onRevealToggle={userKey.handleReveal}
           onCopy={userKey.handleCopy}
+          onRotate={userKey.handleRotate}
           revealed={userKey.revealed}
+          rotateLabel={userKey.hasKey ? "Rotate" : "Create"}
         />
         {isAdmin ? (
           <DashboardApiKeyCard
@@ -266,7 +286,9 @@ export const AgentConnectionSection = ({
             copied={adminKey.copied}
             onRevealToggle={adminKey.handleReveal}
             onCopy={adminKey.handleCopy}
+            onRotate={adminKey.handleRotate}
             revealed={adminKey.revealed}
+            rotateLabel={adminKey.hasKey ? "Rotate" : "Create"}
           />
         ) : null}
       </div>

@@ -40,6 +40,7 @@ Legacy redirects:
   - `GET /api/user/integrations`
   - `PATCH /api/user/integrations/[integrationKey]/tools/[toolName]`
   - `GET|POST /api/user/key`
+  - `GET|POST /api/user/agent-key`
   - `GET /api/user/access-requests`
   - `POST /api/user/access-requests/[requestId]/approve`
   - `POST /api/user/access-requests/[requestId]/reject`

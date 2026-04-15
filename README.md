@@ -57,6 +57,7 @@ Legacy compatibility routes still exist, but new docs and links should target th
 - `GET /api/user/integrations`
 - `PATCH /api/user/integrations/[integrationKey]/tools/[toolName]`
 - `GET|POST /api/user/key`
+- `GET|POST /api/user/agent-key`
 
 ### Admin automation API
 
