@@ -6,7 +6,6 @@ import { PATCH } from "./route";
 
 import { getContextLayerService } from "@/src/lib/core/runtime";
 import { createTestRepository, getActiveSql } from "@/src/lib/db/pglite-test-utils";
-import type { IntegrationSpec } from "@/src/types/context-layer";
 
 let testCleanup: () => Promise<void>;
 
@@ -35,30 +34,6 @@ afterEach(async () => {
   await testCleanup();
 });
 
-const integration: IntegrationSpec = {
-  key: "github",
-  name: "GitHub",
-  kind: "mcp",
-  provider: "mcp",
-  authStrategy: "bearer",
-  enabled: true,
-  fineGrainedPermissions: true,
-  config: {},
-  credentials: {},
-  tools: {
-    create_issue: {
-      name: "create_issue",
-      description: "Create a GitHub issue",
-      enabled: true,
-      accessMode: "enabled",
-      fineGrainedPermissions: true,
-      defaultScopes: ["issues:write"],
-      executionMode: "provider",
-      config: {},
-    },
-  },
-};
-
 describe("PATCH /api/admin/integrations/[integrationKey]/tools/[toolName]", () => {
   it("rejects requests without an admin API key", async () => {
     const response = await PATCH(
@@ -81,27 +56,9 @@ describe("PATCH /api/admin/integrations/[integrationKey]/tools/[toolName]", () =
     );
   });
 
-  it("updates only the authenticated admin user's integration tool access mode", async () => {
+  it("returns gone and directs callers to the user API", async () => {
     vi.stubEnv("APP_ADMIN_EMAILS", "admin@example.com");
     const service = getContextLayerService();
-    const createIssueTool = integration.tools["create_issue"];
-    expect(createIssueTool).toBeDefined();
-    if (!createIssueTool) {
-      throw new Error("Missing create_issue test fixture");
-    }
-
-    await service.registerOwnerIntegration("admin@example.com", integration);
-    await service.registerOwnerIntegration("other-admin@example.com", {
-      ...integration,
-      tools: {
-        ...integration.tools,
-        create_issue: {
-          ...createIssueTool,
-          accessMode: "disabled",
-          enabled: false,
-        },
-      },
-    });
     const { apiKey } = await service.rotateAdminApiKey("admin@example.com");
 
     const response = await PATCH(
@@ -120,40 +77,11 @@ describe("PATCH /api/admin/integrations/[integrationKey]/tools/[toolName]", () =
         }),
       },
     );
-    const body = (await response.json()) as {
-      accessMode: string;
-      enabled: boolean;
-    };
 
-    expect(response.status).toBe(200);
-    expect(body).toMatchObject({
-      accessMode: "approval_required",
-      enabled: true,
+    expect(response.status).toBe(410);
+    await expect(response.json()).resolves.toMatchObject({
+      detail:
+        "Admin API keys can no longer update self-scoped tool access. Use the user API key with /api/user/integrations/{integrationKey}/tools/{toolName} instead.",
     });
-
-    await expect(service.listOwnerIntegrations("admin@example.com")).resolves.toMatchObject([
-      {
-        key: "github",
-        tools: {
-          create_issue: {
-            accessMode: "approval_required",
-            enabled: true,
-          },
-        },
-      },
-    ]);
-    await expect(
-      service.listOwnerIntegrations("other-admin@example.com"),
-    ).resolves.toMatchObject([
-      {
-        key: "github",
-        tools: {
-          create_issue: {
-            accessMode: "disabled",
-            enabled: false,
-          },
-        },
-      },
-    ]);
   });
 });

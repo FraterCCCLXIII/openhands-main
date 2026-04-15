@@ -1,13 +1,17 @@
 import { fromAdminApiError, authenticateAdminApiRequest } from "@/src/lib/admin-api-auth";
-import { ok } from "@/src/lib/api";
-import { integrationCreateSchema } from "@/src/lib/core/schema";
-import { getContextLayerService } from "@/src/lib/core/runtime";
+import { ContextLayerError } from "@/src/lib/core/errors";
+
+const DEPRECATED_ADMIN_INTEGRATIONS_MESSAGE =
+  "Admin API keys can no longer manage self-scoped integrations. Use the user API key with /api/user/integrations instead.";
+
+const throwDeprecatedAdminIntegrationsError = () => {
+  throw new ContextLayerError(DEPRECATED_ADMIN_INTEGRATIONS_MESSAGE, 410);
+};
 
 export async function GET(request: Request) {
   try {
-    const { ownerId } = await authenticateAdminApiRequest(request);
-    const service = getContextLayerService();
-    return ok(await service.listOwnerIntegrations(ownerId));
+    await authenticateAdminApiRequest(request);
+    throwDeprecatedAdminIntegrationsError();
   } catch (error) {
     return fromAdminApiError(error);
   }
@@ -15,10 +19,8 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const { ownerId } = await authenticateAdminApiRequest(request);
-    const payload = integrationCreateSchema.parse(await request.json());
-    const service = getContextLayerService();
-    return ok(await service.registerOwnerIntegration(ownerId, payload));
+    await authenticateAdminApiRequest(request);
+    throwDeprecatedAdminIntegrationsError();
   } catch (error) {
     return fromAdminApiError(error);
   }

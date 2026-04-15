@@ -94,7 +94,7 @@ describe("GET /api/user/openapi", () => {
     const body = (await response.json()) as {
       openapi: string;
       servers: Array<{ url: string }>;
-      paths: Record<string, { get?: unknown; patch?: unknown; post?: unknown }>;
+      paths: Record<string, { get?: unknown; patch?: unknown; post?: unknown; delete?: unknown }>;
       components: {
         securitySchemes: Record<string, unknown>;
         schemas: Record<string, unknown>;
@@ -104,10 +104,13 @@ describe("GET /api/user/openapi", () => {
     expect(body.openapi).toBe("3.0.3");
     expect(body.servers).toEqual([{ url: "http://localhost:3000" }]);
     expect(body.paths["/api/user/integrations"]?.get).toBeTruthy();
+    expect(body.paths["/api/user/integrations"]?.post).toBeTruthy();
+    expect(body.paths["/api/user/integrations/{integrationKey}"]?.delete).toBeTruthy();
     expect(
       body.paths["/api/user/integrations/{integrationKey}/tools/{toolName}"]
         ?.patch,
     ).toBeTruthy();
+    expect(body.paths["/api/user/connections"]?.get).toBeTruthy();
     expect(body.paths["/api/user/access-requests"]?.get).toBeTruthy();
     expect(body.paths["/api/user/access-requests/{requestId}/approve"]?.post).toBeTruthy();
     expect(body.paths["/api/user/access-requests/{requestId}/reject"]?.post).toBeTruthy();
@@ -134,11 +137,14 @@ describe("GET /api/user/openapi", () => {
 
     expect(response.status).toBe(200);
     const body = (await response.json()) as {
-      paths: Record<string, { get?: unknown; patch?: unknown; post?: unknown }>;
+      paths: Record<string, { get?: unknown; patch?: unknown; post?: unknown; delete?: unknown }>;
       tags: Array<{ name: string }>;
     };
 
     expect(body.paths["/api/user/integrations"]?.get).toBeTruthy();
+    expect(body.paths["/api/user/integrations"]?.post).toBeTruthy();
+    expect(body.paths["/api/user/integrations/{integrationKey}"]?.delete).toBeTruthy();
+    expect(body.paths["/api/user/connections"]?.get).toBeTruthy();
     expect(body.paths["/api/user/access-requests"]?.get).toBeTruthy();
     expect(body.paths["/api/user/access-requests/{requestId}/approve"]?.post).toBeTruthy();
     expect(body.paths["/api/user/access-requests/{requestId}/reject"]?.post).toBeTruthy();
