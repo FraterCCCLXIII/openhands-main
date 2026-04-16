@@ -42,18 +42,12 @@ export const getAdminSectionFromPath = (
  */
 export const buildAdminSectionHref = (
   section: AdminSection,
-  params?: URLSearchParams | Record<string, string | undefined>,
+  params?: Record<string, string | undefined>,
 ) => {
   const pathname = getAdminSectionPath(section);
   const searchParams = new URLSearchParams();
 
-  if (params instanceof URLSearchParams) {
-    for (const [key, value] of params.entries()) {
-      if (value) {
-        searchParams.append(key, value);
-      }
-    }
-  } else if (params) {
+  if (params) {
     for (const [key, value] of Object.entries(params)) {
       if (value) {
         searchParams.set(key, value);
