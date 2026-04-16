@@ -26,8 +26,8 @@ const stripHostPort = (value: string) => {
 export const getRequestHost = (requestHeaders: Headers) =>
   requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host") ?? "";
 
-export const isLoopbackHost = (value: string | null | undefined) => {
-  const host = stripHostPort(value ?? "");
+export const isLoopbackHost = (value: string) => {
+  const host = stripHostPort(value);
   return (
     host === "localhost" ||
     host === "127.0.0.1" ||

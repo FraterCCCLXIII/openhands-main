@@ -20,9 +20,7 @@ const ADMIN_SECTION_PATHS: Record<AdminSection, string> = {
 export const getAdminSectionPath = (section: AdminSection) =>
   ADMIN_SECTION_PATHS[section];
 
-export const getAdminSectionFromPath = (
-  pathname: string | null | undefined,
-): AdminSection => {
+export const getAdminSectionFromPath = (pathname: string): AdminSection => {
   switch (pathname) {
     case "/profile":
       return "profile";
