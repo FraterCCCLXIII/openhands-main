@@ -155,7 +155,7 @@ describe("ContextLayerService", () => {
     expect(response.data).toEqual({ ok: true, payload: { limit: 5 } });
   });
 
-  it("supports object-form access evaluation and invocation requests", async () => {
+  it("supports object-form access evaluation requests", async () => {
     const service = createService();
     await installIntegration(service, baseIntegration);
 
@@ -174,15 +174,15 @@ describe("ContextLayerService", () => {
       effectiveScopes: ["accounts.read"],
     });
 
-    const response = await service.invokeContext({
-      agentId: "agent-object",
-      agentClass: "assistant",
-      integrationKey: "salesforce",
-      toolName: "accounts",
-      payload: { limit: 2 },
-      requestedScopes: ["accounts.read"],
-      ownerId: OWNER_ID,
-    });
+    const response = await service.invokeContext(
+      "agent-object",
+      "assistant",
+      "salesforce",
+      "accounts",
+      { limit: 2 },
+      ["accounts.read"],
+      { ownerId: OWNER_ID },
+    );
 
     expect(response.integration).toBe("salesforce");
     expect(response.decision.allowed).toBe(true);
@@ -2361,12 +2361,7 @@ describe("ContextLayerService", () => {
     await installIntegration(service, baseIntegration);
 
     await expect(
-      service.invokeContext({
-        agentId: "agent-ownerless",
-        agentClass: "assistant",
-        integrationKey: "salesforce",
-        toolName: "accounts",
-      }),
+      service.invokeContext("agent-ownerless", "assistant", "salesforce", "accounts"),
     ).rejects.toThrow(
       "Integration 'salesforce' must be installed for a specific user before invocation.",
     );

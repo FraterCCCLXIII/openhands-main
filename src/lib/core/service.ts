@@ -323,7 +323,7 @@ const toAccessEvaluationRequest = (
 };
 
 const toContextInvocationRequest = (
-  agentIdOrRequest: string | null | ContextInvocationRequest,
+  agentId: string | null,
   agentClass?: string | null,
   integrationKey?: string,
   toolName?: string,
@@ -334,17 +334,8 @@ const toContextInvocationRequest = (
     agentData?: AccessRequestAgentData;
   } = {},
 ): ContextInvocationRequest => {
-  if (typeof agentIdOrRequest !== "string" && agentIdOrRequest !== null) {
-    return {
-      ...agentIdOrRequest,
-      payload: agentIdOrRequest.payload ?? {},
-      requestedScopes: agentIdOrRequest.requestedScopes ?? [],
-      agentData: agentIdOrRequest.agentData,
-    };
-  }
-
   const accessRequest = toAccessEvaluationRequest(
-    agentIdOrRequest,
+    agentId,
     agentClass,
     integrationKey,
     toolName,
@@ -1415,9 +1406,6 @@ export class ContextLayerService {
    * and records best-effort invocation metadata for auditing.
    */
   async invokeContext(
-    request: ContextInvocationRequest,
-  ): Promise<ContextInvocationResult>;
-  async invokeContext(
     agentId: string | null,
     agentClass: string | null,
     integrationKey: string,
@@ -1430,7 +1418,7 @@ export class ContextLayerService {
     },
   ): Promise<ContextInvocationResult>;
   async invokeContext(
-    agentIdOrRequest: string | null | ContextInvocationRequest,
+    agentId: string | null,
     agentClass?: string | null,
     integrationKey?: string,
     toolName?: string,
@@ -1442,7 +1430,7 @@ export class ContextLayerService {
     } = {},
   ): Promise<ContextInvocationResult> {
     const request = toContextInvocationRequest(
-      agentIdOrRequest,
+      agentId,
       agentClass,
       integrationKey,
       toolName,
