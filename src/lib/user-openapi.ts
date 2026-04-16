@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import {
   accessRequestSchema,
+  integrationConnectionStatusSchema,
   toolAccessModeSchema,
   toolSpecSchema,
   integrationSpecSchema,
@@ -28,6 +29,11 @@ const updateToolAccessRequestSchema = z.object({
 
 const approveAccessRequestSchema = z.object({
   durationMinutes: z.number().int().positive().optional(),
+});
+
+const integrationDeleteResultSchema = z.object({
+  deleted: z.boolean(),
+  key: z.string(),
 });
 
 export const buildUserOpenApiDocument = ({
@@ -71,6 +77,42 @@ export const buildUserOpenApiDocument = ({
           401: unauthorizedResponse,
         },
       },
+      post: {
+        tags: ["User Integrations"],
+        operationId: "createUserIntegration",
+        summary: "Install or update an integration",
+        description:
+          "Creates or updates one installed integration for the authenticated user.",
+        security,
+        requestBody: buildJsonRequestBody({
+          $ref: "#/components/schemas/IntegrationSpec",
+        }),
+        responses: {
+          200: buildJsonRefResponse(
+            "Saved integration for the authenticated user.",
+            "IntegrationSpec",
+          ),
+          401: unauthorizedResponse,
+        },
+      },
+    },
+    "/api/user/integrations/{integrationKey}": {
+      delete: {
+        tags: ["User Integrations"],
+        operationId: "deleteUserIntegration",
+        summary: "Delete an installed integration",
+        description:
+          "Deletes one installed integration for the authenticated user.",
+        security,
+        parameters: [buildPathParameter("integrationKey", integrationKeyExample)],
+        responses: {
+          200: buildJsonRefResponse(
+            "Deletion result for the authenticated user.",
+            "IntegrationDeleteResult",
+          ),
+          401: unauthorizedResponse,
+        },
+      },
     },
     "/api/user/integrations/{integrationKey}/tools/{toolName}": {
       patch: {
@@ -106,6 +148,23 @@ export const buildUserOpenApiDocument = ({
             "Unknown integration or tool for the authenticated user.",
             "ErrorResponse",
           ),
+        },
+      },
+    },
+    "/api/user/connections": {
+      get: {
+        tags: ["User Integrations"],
+        operationId: "listUserConnections",
+        summary: "List integration connection status",
+        description:
+          "Returns the authenticated user's saved integration connection statuses.",
+        security,
+        responses: {
+          200: buildJsonArrayRefResponse(
+            "Connection statuses for the authenticated user.",
+            "IntegrationConnectionStatus",
+          ),
+          401: unauthorizedResponse,
         },
       },
     },
@@ -205,6 +264,10 @@ export const buildUserOpenApiDocument = ({
         IntegrationSpec: toOpenApiSchema(integrationSpecSchema),
         AccessRequest: toOpenApiSchema(accessRequestSchema),
         TemporaryGrant: toOpenApiSchema(temporaryGrantSchema),
+        IntegrationConnectionStatus: toOpenApiSchema(
+          integrationConnectionStatusSchema,
+        ),
+        IntegrationDeleteResult: toOpenApiSchema(integrationDeleteResultSchema),
         UpdateToolAccessRequest: toOpenApiSchema(
           updateToolAccessRequestSchema,
         ),
