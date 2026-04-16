@@ -824,8 +824,8 @@ export class ContextLayerService {
     return this.repository.hasAgentApiKeys();
   }
 
-  async getStoredAgentApiKey(apiKey: string | null | undefined) {
-    const normalizedApiKey = apiKey?.trim();
+  async getStoredAgentApiKey(apiKey: string) {
+    const normalizedApiKey = apiKey.trim();
     if (!normalizedApiKey) {
       return null;
     }
@@ -916,8 +916,8 @@ export class ContextLayerService {
     return { revoked: true as const };
   }
 
-  async getStoredUserApiKey(apiKey: string | null | undefined) {
-    const normalizedApiKey = apiKey?.trim();
+  async getStoredUserApiKey(apiKey: string) {
+    const normalizedApiKey = apiKey.trim();
     if (!normalizedApiKey) {
       return null;
     }
@@ -1001,8 +1001,8 @@ export class ContextLayerService {
     return { revoked: true as const };
   }
 
-  async getStoredAdminApiKey(apiKey: string | null | undefined) {
-    const normalizedApiKey = apiKey?.trim();
+  async getStoredAdminApiKey(apiKey: string) {
+    const normalizedApiKey = apiKey.trim();
     if (!normalizedApiKey) {
       return null;
     }

@@ -5,7 +5,7 @@ import { z } from "zod";
 import { nowIso } from "@/src/lib/core/date";
 import type { NotificationRecord } from "@/src/types/context-layer";
 
-const normalizeOptional = (value?: string | null) => {
+const normalizeOptional = (value?: string) => {
   const trimmed = value?.trim();
   return trimmed ? trimmed : null;
 };
