@@ -140,4 +140,40 @@ describe("/api/user/integrations", () => {
     });
   });
 
+  it("allows admin users to save raw connector endpoints via user API", async () => {
+    vi.stubEnv("APP_ADMIN_EMAILS", "admin@example.com");
+    const service = getContextLayerService();
+    const { apiKey } = await service.rotateUserApiKey("admin@example.com");
+
+    const response = await POST(
+      new Request("http://localhost/api/user/integrations", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          key: "custom-http",
+          name: "Custom HTTP",
+          kind: "api",
+          provider: "http",
+          authStrategy: "none",
+          enabled: true,
+          fineGrainedPermissions: true,
+          config: {
+            apiBaseUrl: "https://internal.example/api",
+          },
+          credentials: {},
+          tools: {},
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      key: "custom-http",
+      config: { apiBaseUrl: "https://internal.example/api" },
+    });
+  });
+
 });

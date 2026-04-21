@@ -195,4 +195,34 @@ describe("GET /api/integrations", () => {
     });
   });
 
+  it("allows admin users to save raw connector endpoints", async () => {
+    vi.stubEnv("APP_ADMIN_EMAILS", "admin@example.com");
+    authMock.mockResolvedValue({ user: { email: "admin@example.com" } });
+
+    const response = await POST(
+      new Request("http://localhost/api/integrations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(
+          createIntegration({
+            key: "custom-mcp",
+            name: "Custom MCP",
+            kind: "mcp",
+            provider: "mcp",
+            authStrategy: "none",
+            config: {
+              serverUrl: "https://internal.example/mcp",
+            },
+          }),
+        ),
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      key: "custom-mcp",
+      config: { serverUrl: "https://internal.example/mcp" },
+    });
+  });
+
 });

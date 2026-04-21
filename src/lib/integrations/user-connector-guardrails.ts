@@ -23,6 +23,8 @@ export const assertUserCanSaveIntegration = (
   const apiBaseUrl = getOptionalTrimmedString(spec.config, "apiBaseUrl");
   const serverUrl = getOptionalTrimmedString(spec.config, "serverUrl");
 
+  // Non-admins may only install managed connectors, and they cannot override
+  // the managed connector's stored URLs with raw endpoint values.
   if (!managedConnectorSlug || apiBaseUrl || serverUrl) {
     throw new ContextLayerError(RAW_CONNECTOR_INSTALL_FORBIDDEN_DETAIL, 403);
   }

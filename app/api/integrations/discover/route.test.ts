@@ -55,4 +55,70 @@ describe("POST /api/integrations/discover", () => {
     });
     expect(discoverIntegrationMock).not.toHaveBeenCalled();
   });
+
+  it("allows admins to discover raw MCP servers", async () => {
+    vi.stubEnv("APP_ADMIN_EMAILS", "admin@example.com");
+    getCurrentUserIdentityMock.mockResolvedValue({
+      ownerId: "admin@example.com",
+      user: { email: "admin@example.com", name: "Admin" },
+    });
+
+    const response = await POST(
+      new Request("https://example.com/api/integrations/discover", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          key: "custom-mcp",
+          kind: "mcp",
+          config: { serverUrl: "https://internal.example/mcp" },
+          credentials: {},
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({ tools: {} });
+    expect(discoverIntegrationMock).toHaveBeenCalledWith(
+      {
+        key: "custom-mcp",
+        kind: "mcp",
+        config: { serverUrl: "https://internal.example/mcp" },
+        credentials: {},
+      },
+      expect.objectContaining({
+        baseUrl: "https://example.com",
+        ownerId: "admin@example.com",
+      }),
+    );
+  });
+
+  it("allows non-admins to discover managed connectors", async () => {
+    const response = await POST(
+      new Request("https://example.com/api/integrations/discover", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          key: "slack-test",
+          kind: "managed",
+          config: { managedConnectorSlug: "slack" },
+          credentials: {},
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({ tools: {} });
+    expect(discoverIntegrationMock).toHaveBeenCalledWith(
+      {
+        key: "slack-test",
+        kind: "managed",
+        config: { managedConnectorSlug: "slack" },
+        credentials: {},
+      },
+      expect.objectContaining({
+        baseUrl: "https://example.com",
+        ownerId: "user@example.com",
+      }),
+    );
+  });
 });
