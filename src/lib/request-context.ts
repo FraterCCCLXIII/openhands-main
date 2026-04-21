@@ -23,8 +23,10 @@ const stripHostPort = (value: string) => {
   return trimmed.split(":")[0] ?? "";
 };
 
+const getDirectRequestHost = (requestHeaders: Headers) => requestHeaders.get("host") ?? "";
+
 export const getRequestHost = (requestHeaders: Headers) =>
-  requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host") ?? "";
+  requestHeaders.get("x-forwarded-host") ?? getDirectRequestHost(requestHeaders);
 
 export const isLoopbackHost = (value: string) => {
   const host = stripHostPort(value);
@@ -39,7 +41,7 @@ export const isLoopbackHost = (value: string) => {
 export const isAllowedWhenAuthDisabled = (
   requestHeaders: Headers,
   env: NodeJS.ProcessEnv = process.env,
-) => !isAuthDisabled(env) || isLoopbackHost(getRequestHost(requestHeaders));
+) => !isAuthDisabled(env) || isLoopbackHost(getDirectRequestHost(requestHeaders));
 
 export const getRequestOrigin = (
   requestHeaders: Headers,

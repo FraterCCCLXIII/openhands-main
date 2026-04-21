@@ -155,4 +155,26 @@ describe("GET /api/oauth/[provider]/start", () => {
       "managed-notion-client-id",
     );
   });
+
+  it("falls back to the integrations page when redirectTo points at an external origin", async () => {
+    await seedManagedNotion();
+    getCurrentUserIdentityMock.mockRejectedValue(new Error("Authentication is required."));
+
+    const { GET } = await import("./route");
+
+    const response = await GET(
+      new Request(
+        "http://localhost:3000/api/oauth/notion/start?integrationKey=notion&redirectTo=https%3A%2F%2Fevil.example%2Fpoc",
+      ),
+      {
+        params: Promise.resolve({ provider: "notion" }),
+      },
+    );
+
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toBe(
+      "http://localhost:3000/integrations?showIntegrationWizard=1&managedConnector=notion&oauth_provider=notion&oauth_status=error&oauth_error=Authentication+is+required.",
+    );
+  });
+
 });
