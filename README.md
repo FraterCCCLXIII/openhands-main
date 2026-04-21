@@ -117,7 +117,8 @@ For a fuller route map and auth breakdown, see [API.md](./API.md).
 Core variables:
 
 - `POSTGRES_URL` or `DATABASE_URL`
-- `AUTH_SECRET` (or `NEXTAUTH_SECRET`)
+- `AUTH_SECRET` (or `NEXTAUTH_SECRET`) for Auth.js session security
+- `CREDENTIAL_ENCRYPTION_KEY` for stored third-party provider credentials
 - `GITHUB_CLIENT_ID`
 - `GITHUB_CLIENT_SECRET`
 - `CRON_SECRET`
