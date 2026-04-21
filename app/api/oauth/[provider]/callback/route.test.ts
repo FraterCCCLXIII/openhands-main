@@ -64,14 +64,17 @@ const seedManagedNotion = async (repository: ContextRepository) => {
   });
 };
 
-const saveOAuthState = async (repository: ContextRepository) => {
+const saveOAuthState = async (
+  repository: ContextRepository,
+  overrides: Partial<{ redirectTo: string }> = {},
+) => {
   await seedManagedNotion(repository);
   await repository.saveOAuthState({
     state: "state-123",
     ownerId: "dev@localhost",
     integrationKey: "notion",
     provider: "notion",
-    redirectTo: "/integrations",
+    redirectTo: overrides.redirectTo ?? "/integrations",
     redirectUri: "https://openhands-context-layer.vercel.app/api/oauth/notion/callback",
     callbackUrl: "https://context-layer-git-feature.vercel.app/api/oauth/notion/callback",
     createdAt: "2026-03-09T00:00:00.000Z",
@@ -173,5 +176,44 @@ describe("GET /api/oauth/[provider]/callback", () => {
       Authorization: expect.stringMatching(/^Basic\s+/),
     });
     expect(await repository.getOAuthState("state-123")).toBeNull();
+  });
+
+  it("ignores externally supplied redirect targets stored in OAuth state", async () => {
+    const fetchMock = vi.fn(async () =>
+      new Response(
+        JSON.stringify({
+          access_token: "access-123",
+          token_type: "Bearer",
+          scope: "workspace.read",
+        }),
+        {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        },
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const repository = testRepo;
+    await saveOAuthState(repository, {
+      redirectTo: "https://evil.example/poc",
+    });
+    setRuntimeRepository(repository);
+
+    const { GET } = await import("./route");
+
+    const response = await GET(
+      new Request(
+        "https://context-layer-git-feature.vercel.app/api/oauth/notion/callback?code=code-123&state=state-123",
+      ),
+      {
+        params: Promise.resolve({ provider: "notion" }),
+      },
+    );
+
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toBe(
+      "https://context-layer-git-feature.vercel.app/integrations?oauth_provider=notion&oauth_status=connected",
+    );
   });
 });
