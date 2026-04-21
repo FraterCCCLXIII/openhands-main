@@ -8,6 +8,7 @@ import {
   getContextLayerService,
 } from "@/src/lib/core/runtime";
 import { resolveOAuthProvider } from "@/src/lib/oauth/provider-resolver";
+import { normalizeSafeRedirectTarget } from "@/src/lib/oauth/redirect-targets";
 
 const buildRedirect = (
   requestUrl: string,
@@ -58,15 +59,20 @@ export async function GET(
     return NextResponse.json({ detail: "Missing OAuth state." }, { status: 400 });
   }
 
-  let redirectTo = buildAdminSectionHref("integrations", {
+  const defaultRedirectTo = buildAdminSectionHref("integrations", {
     showIntegrationWizard: "1",
   });
+  let redirectTo = defaultRedirectTo;
 
   try {
     const requestCallbackUrl = `${url.origin}/api/oauth/${provider.slug}/callback`;
     const proxyCallbackUrl = getOAuthCallbackUrl(provider.slug);
     const stateRecord = await service.getOAuthState(state, provider.slug);
-    redirectTo = stateRecord.redirectTo;
+    redirectTo = normalizeSafeRedirectTarget(
+      request.url,
+      stateRecord.redirectTo,
+      defaultRedirectTo,
+    );
 
     if (
       stateRecord.callbackUrl &&
