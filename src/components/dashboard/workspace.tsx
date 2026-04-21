@@ -57,7 +57,6 @@ import type {
 interface DashboardWorkspaceProps {
   initialIntegrations: IntegrationSpec[];
   initialAccessRequests: AccessRequest[];
-  initialNotifications?: unknown[];
   currentUser: { name?: string | null; email?: string | null };
   contextApiBaseUrl: string;
   contextApiKey: string;

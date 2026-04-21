@@ -176,7 +176,6 @@ describe("DashboardWorkspace", () => {
           <DashboardWorkspace
             initialIntegrations={[]}
             initialAccessRequests={[]}
-            initialNotifications={[]}
             currentUser={{ name: "Admin User", email: "admin@example.com" }}
             contextApiBaseUrl="https://example.com"
             contextApiKey="test-key"
@@ -254,7 +253,6 @@ describe("DashboardWorkspace", () => {
           <DashboardWorkspace
             initialIntegrations={integrationsState}
             initialAccessRequests={[]}
-            initialNotifications={[]}
             currentUser={{ name: "User", email: "user@example.com" }}
             contextApiBaseUrl="https://example.com"
             contextApiKey="test-key"
@@ -346,7 +344,6 @@ describe("DashboardWorkspace", () => {
           <DashboardWorkspace
             initialIntegrations={integrationsState}
             initialAccessRequests={[]}
-            initialNotifications={[]}
             currentUser={{ name: "User", email: "user@example.com" }}
             contextApiBaseUrl="https://example.com"
             contextApiKey="test-key"
@@ -383,7 +380,6 @@ describe("DashboardWorkspace", () => {
           <DashboardWorkspace
             initialIntegrations={[]}
             initialAccessRequests={[]}
-            initialNotifications={[]}
             currentUser={{ name: "Admin User", email: "admin@example.com" }}
             contextApiBaseUrl="https://example.com"
             contextApiKey="test-key"
@@ -422,7 +418,6 @@ describe("DashboardWorkspace", () => {
           <DashboardWorkspace
             initialIntegrations={[]}
             initialAccessRequests={[]}
-            initialNotifications={[]}
             currentUser={{ name: "Admin User", email: "admin@example.com" }}
             contextApiBaseUrl="https://example.com"
             contextApiKey="test-key"
@@ -495,7 +490,6 @@ describe("DashboardWorkspace", () => {
           <DashboardWorkspace
             initialIntegrations={integrationsState}
             initialAccessRequests={[]}
-            initialNotifications={[]}
             currentUser={{ name: "Admin User", email: "admin@example.com" }}
             contextApiBaseUrl="https://example.com"
             contextApiKey="test-key"
@@ -549,7 +543,6 @@ describe("DashboardWorkspace", () => {
           <DashboardWorkspace
             initialIntegrations={[]}
             initialAccessRequests={[]}
-            initialNotifications={[]}
             currentUser={{ name: "Admin User", email: "admin@example.com" }}
             contextApiBaseUrl="https://example.com"
             contextApiKey="test-key"
@@ -618,7 +611,6 @@ describe("DashboardWorkspace", () => {
           <DashboardWorkspace
             initialIntegrations={[]}
             initialAccessRequests={[]}
-            initialNotifications={[]}
             currentUser={{ name: "Admin User", email: "admin@example.com" }}
             contextApiBaseUrl="https://example.com"
             contextApiKey="test-key"
@@ -646,7 +638,6 @@ describe("DashboardWorkspace", () => {
           <DashboardWorkspace
             initialIntegrations={[]}
             initialAccessRequests={[]}
-            initialNotifications={[]}
             currentUser={{ name: "Admin User", email: "admin@example.com" }}
             contextApiBaseUrl="https://example.com"
             contextApiKey="test-key"
@@ -829,7 +820,6 @@ describe("DashboardWorkspace", () => {
           <DashboardWorkspace
             initialIntegrations={integrationsState}
             initialAccessRequests={[]}
-            initialNotifications={[]}
             currentUser={{ name: "Admin User", email: "admin@example.com" }}
             contextApiBaseUrl="https://example.com"
             contextApiKey="test-key"
@@ -1114,7 +1104,6 @@ describe("DashboardWorkspace", () => {
           <DashboardWorkspace
             initialIntegrations={integrationsState}
             initialAccessRequests={[]}
-            initialNotifications={[]}
             currentUser={{ name: "Admin User", email: "admin@example.com" }}
             contextApiBaseUrl="https://example.com"
             contextApiKey="test-key"
@@ -1182,7 +1171,6 @@ describe("DashboardWorkspace", () => {
           <DashboardWorkspace
             initialIntegrations={[]}
             initialAccessRequests={[]}
-            initialNotifications={[]}
             currentUser={{ name: "Admin User", email: "admin@example.com" }}
             contextApiBaseUrl="https://example.com"
             contextApiKey="test-key"
@@ -1257,7 +1245,6 @@ describe("DashboardWorkspace", () => {
           <DashboardWorkspace
             initialIntegrations={[]}
             initialAccessRequests={[]}
-            initialNotifications={[]}
             currentUser={{ name: "Admin User", email: "admin@example.com" }}
             contextApiBaseUrl="https://example.com"
             contextApiKey="cla_original_1234567890abcdefghijkl"
@@ -1327,7 +1314,6 @@ describe("DashboardWorkspace", () => {
           <DashboardWorkspace
             initialIntegrations={[]}
             initialAccessRequests={[]}
-            initialNotifications={[]}
             currentUser={{ name: "Admin User", email: "admin@example.com" }}
             contextApiBaseUrl="https://example.com"
             contextApiKey={staleContextApiKey}
@@ -1356,7 +1342,6 @@ describe("DashboardWorkspace", () => {
           <DashboardWorkspace
             initialIntegrations={[]}
             initialAccessRequests={[]}
-            initialNotifications={[]}
             currentUser={{ name: "Admin User", email: "admin@example.com" }}
             contextApiBaseUrl="https://example.com"
             contextApiKey={staleContextApiKey}
@@ -1419,7 +1404,6 @@ describe("DashboardWorkspace", () => {
           <DashboardWorkspace
             initialIntegrations={[]}
             initialAccessRequests={[]}
-            initialNotifications={[]}
             currentUser={{ name: "Admin User", email: "admin@example.com" }}
             contextApiBaseUrl="https://example.com"
             contextApiKey="test-key"
@@ -1528,7 +1512,6 @@ describe("DashboardWorkspace", () => {
           <DashboardWorkspace
             initialIntegrations={[]}
             initialAccessRequests={[]}
-            initialNotifications={[]}
             currentUser={{ name: "Admin User", email: "admin@example.com" }}
             contextApiBaseUrl="https://example.com"
             contextApiKey="test-key"
@@ -1614,7 +1597,6 @@ describe("DashboardWorkspace", () => {
           <DashboardWorkspace
             initialIntegrations={[]}
             initialAccessRequests={[]}
-            initialNotifications={[]}
             currentUser={{ name: "Admin User", email: "admin@example.com" }}
             contextApiBaseUrl="https://example.com"
             contextApiKey="test-key"
@@ -1760,7 +1742,6 @@ describe("DashboardWorkspace", () => {
           <DashboardWorkspace
             initialIntegrations={[]}
             initialAccessRequests={accessRequestsState}
-            initialNotifications={[]}
             currentUser={{ name: "Admin User", email: "admin@example.com" }}
             contextApiBaseUrl="https://example.com"
             contextApiKey="test-key"
@@ -1916,7 +1897,6 @@ describe("DashboardWorkspace", () => {
           <DashboardWorkspace
             initialIntegrations={[]}
             initialAccessRequests={accessRequestsState}
-            initialNotifications={[]}
             currentUser={{ name: "Admin User", email: "admin@example.com" }}
             contextApiBaseUrl="https://example.com"
             contextApiKey="test-key"
@@ -1974,7 +1954,6 @@ describe("DashboardWorkspace", () => {
           <DashboardWorkspace
             initialIntegrations={[]}
             initialAccessRequests={[]}
-            initialNotifications={[]}
             currentUser={{ name: "", email: "dev@localhost" }}
             contextApiBaseUrl="https://example.com"
             contextApiKey=""
@@ -2066,7 +2045,6 @@ describe("DashboardWorkspace", () => {
           <DashboardWorkspace
             initialIntegrations={integrationsState}
             initialAccessRequests={[]}
-            initialNotifications={[]}
             currentUser={{ name: "User", email: "user@example.com" }}
             contextApiBaseUrl="https://example.com"
             contextApiKey="test-key"
@@ -2176,7 +2154,6 @@ describe("DashboardWorkspace", () => {
           <DashboardWorkspace
             initialIntegrations={integrationsState}
             initialAccessRequests={[]}
-            initialNotifications={[]}
             currentUser={{ name: "User", email: "user@example.com" }}
             contextApiBaseUrl="https://example.com"
             contextApiKey="test-key"
@@ -2266,7 +2243,6 @@ describe("DashboardWorkspace", () => {
           <DashboardWorkspace
             initialIntegrations={[]}
             initialAccessRequests={accessRequestsState}
-            initialNotifications={[]}
             currentUser={{ name: "", email: "" }}
             contextApiBaseUrl="https://example.com"
             contextApiKey="test-key"
@@ -2367,7 +2343,6 @@ describe("DashboardWorkspace", () => {
           <DashboardWorkspace
             initialIntegrations={integrationsWithoutTrackedUsage}
             initialAccessRequests={[]}
-            initialNotifications={[]}
             currentUser={{ name: "User", email: "user@example.com" }}
             contextApiBaseUrl="https://example.com"
             contextApiKey="test-key"

@@ -101,5 +101,8 @@ describe("DashboardPage", () => {
         isAdmin: false,
       }),
     );
+
+    const workspaceProps = dashboardWorkspaceMock.mock.calls[0]?.[0];
+    expect(workspaceProps).not.toHaveProperty("initialNotifications");
   });
 });
