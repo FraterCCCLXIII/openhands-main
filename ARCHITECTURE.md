@@ -115,11 +115,11 @@ The repository keeps credential material server-side and resolves it only at inv
 
 #### Encryption behavior
 
-Stored credential encryption uses `CREDENTIAL_ENCRYPTION_KEY`, `AUTH_SECRET`, or `NEXTAUTH_SECRET`.
+Stored credential encryption uses `CREDENTIAL_ENCRYPTION_KEY` only.
 
 Important operational rules:
 
-- At least one of those values must be configured anywhere encrypted credential storage is used.
+- `CREDENTIAL_ENCRYPTION_KEY` must be configured anywhere encrypted credential storage is used.
 - There is no baked-in development fallback key.
 - Provider credentials should live in per-user integration connection records, not inside shared integration specs.
 - Agents receive generated docs and invocation results, not raw provider secrets.

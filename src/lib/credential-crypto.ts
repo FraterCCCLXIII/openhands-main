@@ -3,14 +3,13 @@ import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:
 const ALGORITHM = "aes-256-gcm";
 const IV_LENGTH = 12;
 
-const getRawKeyMaterial = (env: NodeJS.ProcessEnv = process.env) =>
-  env.CREDENTIAL_ENCRYPTION_KEY || env.AUTH_SECRET || env.NEXTAUTH_SECRET || "";
+const getRawKeyMaterial = (env: NodeJS.ProcessEnv = process.env) => env.CREDENTIAL_ENCRYPTION_KEY || "";
 
 const getKey = (env: NodeJS.ProcessEnv = process.env) => {
   const rawKeyMaterial = getRawKeyMaterial(env);
   if (!rawKeyMaterial) {
     throw new Error(
-      "CREDENTIAL_ENCRYPTION_KEY, AUTH_SECRET, or NEXTAUTH_SECRET must be configured to encrypt stored provider credentials.",
+      "CREDENTIAL_ENCRYPTION_KEY must be configured to encrypt stored provider credentials.",
     );
   }
 
