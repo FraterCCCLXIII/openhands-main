@@ -37,6 +37,17 @@ describe("request-context", () => {
     expect(isAllowedWhenAuthDisabled(externalHeaders, env({ DISABLE_AUTH: "false" }))).toBe(true);
   });
 
+  it("does not trust forwarded hosts when gating DISABLE_AUTH access", () => {
+    const spoofedHeaders = new Headers({
+      host: "context-layer.example.com",
+      "x-forwarded-host": "localhost:3000",
+    });
+
+    expect(isAllowedWhenAuthDisabled(spoofedHeaders, env({ DISABLE_AUTH: "true" }))).toBe(
+      false,
+    );
+  });
+
   it("derives the current origin from request headers", () => {
     const localHeaders = new Headers({ host: "localhost:12000" });
     expect(getRequestOrigin(localHeaders)).toBe("http://localhost:12000");

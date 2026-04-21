@@ -46,4 +46,24 @@ describe("proxy", () => {
         "DISABLE_AUTH is only available for localhost requests. Use GitHub sign-in for shared or deployed environments.",
     });
   });
+
+  it("rejects spoofed loopback forwarded hosts when auth is disabled", async () => {
+    process.env.DISABLE_AUTH = "true";
+
+    const response = proxy(
+      new NextRequest("https://context-layer.example.com/api/integrations", {
+        headers: {
+          host: "context-layer.example.com",
+          "x-forwarded-host": "localhost:3000",
+        },
+      }),
+    );
+
+    expect(response.status).toBe(403);
+    await expect(response.json()).resolves.toEqual({
+      detail:
+        "DISABLE_AUTH is only available for localhost requests. Use GitHub sign-in for shared or deployed environments.",
+    });
+  });
+
 });
