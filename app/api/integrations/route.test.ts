@@ -11,7 +11,7 @@ vi.mock("@/src/lib/auth", () => ({
 
 vi.mock("@neondatabase/serverless", () => ({ neon: () => getActiveSql() }));
 
-import { GET } from "./route";
+import { GET, POST } from "./route";
 
 import { getContextLayerRepository } from "@/src/lib/core/runtime";
 import { getActiveSql, createTestRepository } from "@/src/lib/db/pglite-test-utils";
@@ -165,4 +165,34 @@ describe("GET /api/integrations", () => {
     expect(response.status).toBe(200);
     expect(body.map((integration) => integration.key)).toEqual(["github"]);
   });
+
+  it("rejects non-admin attempts to save raw connector endpoints", async () => {
+    vi.stubEnv("APP_ADMIN_EMAILS", "admin@example.com");
+
+    const response = await POST(
+      new Request("http://localhost/api/integrations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(
+          createIntegration({
+            key: "custom-mcp",
+            name: "Custom MCP",
+            kind: "mcp",
+            provider: "mcp",
+            authStrategy: "none",
+            config: {
+              serverUrl: "https://tenant-controlled.example/mcp",
+            },
+          }),
+        ),
+      }),
+    );
+
+    expect(response.status).toBe(403);
+    await expect(response.json()).resolves.toMatchObject({
+      detail:
+        "Only app administrators can install integrations from arbitrary connector URLs. Use a managed connector instead.",
+    });
+  });
+
 });
