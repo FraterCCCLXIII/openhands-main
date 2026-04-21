@@ -213,7 +213,7 @@ describe("GET /api/oauth/[provider]/callback", () => {
 
     expect(response.status).toBe(307);
     expect(response.headers.get("location")).toBe(
-      "https://context-layer-git-feature.vercel.app/integrations?oauth_provider=notion&oauth_status=connected",
+      "https://context-layer-git-feature.vercel.app/integrations?showIntegrationWizard=1&oauth_provider=notion&oauth_status=connected",
     );
   });
 });

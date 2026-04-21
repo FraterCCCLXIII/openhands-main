@@ -9,6 +9,7 @@ import {
   getContextLayerService,
 } from "@/src/lib/core/runtime";
 import { createOAuthStateExpiry } from "@/src/lib/oauth/providers";
+import { normalizeSafeRedirectTarget } from "@/src/lib/oauth/redirect-targets";
 import { resolveOAuthProvider } from "@/src/lib/oauth/provider-resolver";
 
 const buildRedirect = (
@@ -41,12 +42,15 @@ export async function GET(
     );
   }
 
-  const redirectTo =
-    url.searchParams.get("redirectTo")?.trim() ||
-    buildAdminSectionHref("integrations", {
-      showIntegrationWizard: "1",
-      managedConnector: provider.slug,
-    });
+  const defaultRedirectTo = buildAdminSectionHref("integrations", {
+    showIntegrationWizard: "1",
+    managedConnector: provider.slug,
+  });
+  const redirectTo = normalizeSafeRedirectTarget(
+    request.url,
+    url.searchParams.get("redirectTo"),
+    defaultRedirectTo,
+  );
 
   try {
     const { ownerId } = await getCurrentUserIdentity();

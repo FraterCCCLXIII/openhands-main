@@ -173,7 +173,7 @@ describe("GET /api/oauth/[provider]/start", () => {
 
     expect(response.status).toBe(307);
     expect(response.headers.get("location")).toBe(
-      "http://localhost:3000/integrations?oauth_provider=notion&oauth_status=error&oauth_error=Authentication+is+required.",
+      "http://localhost:3000/integrations?showIntegrationWizard=1&managedConnector=notion&oauth_provider=notion&oauth_status=error&oauth_error=Authentication+is+required.",
     );
   });
 
