@@ -41,7 +41,9 @@ const integration: IntegrationSpec = {
   authStrategy: "oauth2",
   enabled: true,
   fineGrainedPermissions: true,
-  config: {},
+  config: {
+    managedConnectorSlug: "slack",
+  },
   credentials: {},
   tools: {
     send_message: {
