@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 type AuthSession = { user: { email: string } } | null;
 
@@ -36,6 +36,26 @@ describe("/api/notifications", () => {
     authMock.mockReset();
     authMock.mockResolvedValue({ user: { email: "admin@example.com" } });
     serviceMock.listNotifications.mockClear();
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it("returns notifications for authenticated admin users", async () => {
+    vi.stubEnv("APP_ADMIN_EMAILS", "admin@example.com");
+
+    const response = await GET();
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("Cache-Control")).toBe("no-store");
+    expect(serviceMock.listNotifications).toHaveBeenCalledTimes(1);
+    await expect(response.json()).resolves.toEqual([
+      expect.objectContaining({
+        id: "notification-1",
+        subject: "Approval requested",
+      }),
+    ]);
   });
 
   it("requires an authenticated session", async () => {
