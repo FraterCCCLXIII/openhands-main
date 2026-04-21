@@ -1,7 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+type AuthSession = { user: { email: string } } | null;
+
 const { authMock, serviceMock } = vi.hoisted(() => ({
-  authMock: vi.fn(async () => ({ user: { email: "admin@example.com" } })),
+  authMock: vi.fn<() => Promise<AuthSession>>(async () => ({
+    user: { email: "admin@example.com" },
+  })),
   serviceMock: {
     listNotifications: vi.fn(async () => [
       {
