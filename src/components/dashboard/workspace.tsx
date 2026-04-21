@@ -50,7 +50,6 @@ import type {
   DisableUnusedToolsResult,
   ToolAccessMode,
   IntegrationSpec,
-  NotificationRecord,
   UnusedToolWindowUnit,
   UserApiKeyStatus,
 } from "@/src/types/context-layer";
@@ -58,7 +57,7 @@ import type {
 interface DashboardWorkspaceProps {
   initialIntegrations: IntegrationSpec[];
   initialAccessRequests: AccessRequest[];
-  initialNotifications: NotificationRecord[];
+  initialNotifications?: unknown[];
   currentUser: { name?: string | null; email?: string | null };
   contextApiBaseUrl: string;
   contextApiKey: string;

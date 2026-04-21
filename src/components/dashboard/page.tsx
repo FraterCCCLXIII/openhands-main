@@ -36,14 +36,12 @@ export async function DashboardPage() {
   const [
     initialIntegrations,
     initialAccessRequests,
-    initialNotifications,
     contextApiAuth,
     existingUserApiKey,
     existingAdminApiKey,
   ] = await Promise.all([
     service.listOwnerIntegrationsWithUsage(contextApiOwner),
     service.listOwnerAccessRequests(contextApiOwner),
-    service.listNotifications(),
     service.getOrCreateAgentApiKey(contextApiOwner),
     service.getUserApiKeyStatus(contextApiOwner),
     isAdmin ? service.getAdminApiKeyStatus(contextApiOwner) : Promise.resolve(null),
@@ -56,7 +54,6 @@ export async function DashboardPage() {
           currentUser={currentUser}
           initialIntegrations={initialIntegrations}
           initialAccessRequests={initialAccessRequests}
-          initialNotifications={initialNotifications}
           contextApiBaseUrl={getRequestOrigin(requestHeaders)}
           contextApiKey={contextApiAuth.apiKey}
           userApiKey={existingUserApiKey}
