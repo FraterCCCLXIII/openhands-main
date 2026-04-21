@@ -88,12 +88,13 @@ afterEach(() => {
 });
 
 describe("DashboardPage", () => {
-  it("preloads owner-scoped access requests for non-admin users", async () => {
+  it("preloads owner-scoped access requests for non-admin users without loading global notifications", async () => {
     vi.stubEnv("APP_ADMIN_EMAILS", "admin@example.com");
 
     renderToStaticMarkup(await DashboardPage());
 
     expect(serviceMock.listOwnerAccessRequests).toHaveBeenCalledWith("user@example.com");
+    expect(serviceMock.listNotifications).not.toHaveBeenCalled();
     expect(dashboardWorkspaceMock).toHaveBeenCalledWith(
       expect.objectContaining({
         initialAccessRequests: [{ id: "req-1" }],
