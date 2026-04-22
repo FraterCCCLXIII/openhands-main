@@ -124,6 +124,9 @@ export const managedConnectorResponseSchema = managedConnectorBaseSchema
   })
   .extend({
     oauthConfigured: z.boolean(),
+    oauthClientStatus: z
+      .enum(["not_applicable", "missing", "decryptable", "unreadable"])
+      .optional(),
     createdAt: z.string().min(1),
     updatedAt: z.string().min(1),
   });

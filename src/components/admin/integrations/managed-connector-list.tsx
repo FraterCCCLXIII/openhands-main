@@ -53,10 +53,34 @@ const inferProvider = (connector: ManagedConnectorDefinition) =>
 
 const getCredentialStatusLabel = (connector: ManagedConnectorDefinition) => {
   if (connector.authStrategy === "oauth2") {
-    return connector.oauthConfigured ? "OAuth ready" : "OAuth credentials missing";
+    switch (connector.oauthClientStatus) {
+      case "decryptable":
+        return "OAuth ready";
+      case "unreadable":
+        return "OAuth credentials unreadable";
+      case "missing":
+        return "OAuth credentials missing";
+      default:
+        return connector.oauthConfigured ? "OAuth ready" : "OAuth credentials missing";
+    }
   }
 
   return connector.oauthConfigured ? "Credentials configured" : "Credentials missing";
+};
+
+const getCredentialStatusTone = (connector: ManagedConnectorDefinition) => {
+  if (connector.authStrategy === "oauth2") {
+    switch (connector.oauthClientStatus) {
+      case "decryptable":
+        return "success" as const;
+      case "unreadable":
+        return "danger" as const;
+      default:
+        return "warning" as const;
+    }
+  }
+
+  return connector.oauthConfigured ? ("success" as const) : ("warning" as const);
 };
 
 const createFormState = (
@@ -517,7 +541,7 @@ export function ManagedConnectorList({
                         <Badge tone={connector.enabled ? "success" : "danger"}>
                           {connector.enabled ? "enabled" : "disabled"}
                         </Badge>
-                        <Badge tone={connector.oauthConfigured ? "success" : "warning"}>
+                        <Badge tone={getCredentialStatusTone(connector)}>
                           {getCredentialStatusLabel(connector)}
                         </Badge>
                       </div>
@@ -573,6 +597,13 @@ export function ManagedConnectorList({
                       Edit stale provider URLs or credential settings here. Saving updates the
                       existing service-level managed connector in place; deleting removes it
                       until an admin registers it again.
+                      {connector.authStrategy === "oauth2" && connector.oauthClientStatus === "unreadable" ? (
+                        <p className="mt-2 text-sm text-[var(--color-danger)]">
+                          Stored OAuth client credentials cannot be decrypted with the current
+                          encryption key. Re-enter the OAuth client ID and secret below, then save
+                          this connector to repair it.
+                        </p>
+                      ) : null}
                     </div>
                     <div className="border-b border-[var(--color-border)] px-4 py-4">
                       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">

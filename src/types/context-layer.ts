@@ -90,6 +90,12 @@ export type OAuthProviderAvailability =
   | "manual_token"
   | "planned";
 
+export type ManagedConnectorOAuthClientStatus =
+  | "not_applicable"
+  | "missing"
+  | "decryptable"
+  | "unreadable";
+
 export interface OAuthProviderRegistrationDefaults {
   provider?: "mcp" | "http";
   authModes?: AuthStrategy[];
@@ -176,6 +182,7 @@ export interface ManagedConnectorDefinition {
   authStrategy: AuthStrategy;
   provider?: "mcp" | "http";
   oauthConfigured?: boolean;
+  oauthClientStatus?: ManagedConnectorOAuthClientStatus;
   credentialLabel: string;
   credentialPlaceholder: string;
   credentialHelp: string;
