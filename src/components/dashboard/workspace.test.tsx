@@ -511,7 +511,14 @@ describe("DashboardWorkspace", () => {
     expect(container.textContent).toContain("4 available");
   });
 
-  it("opens the setup flow from a marketplace card and keeps the selection in the URL", async () => {
+  it("opens the setup flow from a marketplace card and auto-selects the managed connector", async () => {
+    let currentSearchParams = new URLSearchParams();
+    let pushedHref = "";
+    useSearchParamsMock.mockImplementation(() => currentSearchParams);
+    pushMock.mockImplementation((href: string) => {
+      pushedHref = href;
+    });
+
     fetchMock.mockImplementation(async (input: RequestInfo | URL) => {
       const url = typeof input === "string" ? input : input.toString();
 
@@ -537,19 +544,23 @@ describe("DashboardWorkspace", () => {
       throw new Error(`Unexpected fetch: ${url}`);
     });
 
-    await act(async () => {
-      root.render(
-        <QueryClientProvider client={queryClient}>
-          <DashboardWorkspace
-            initialIntegrations={[]}
-            initialAccessRequests={[]}
-            currentUser={{ name: "Admin User", email: "admin@example.com" }}
-            contextApiBaseUrl="https://example.com"
-            contextApiKey="test-key"
-          />
-        </QueryClientProvider>,
-      );
-    });
+    const renderWorkspace = async () => {
+      await act(async () => {
+        root.render(
+          <QueryClientProvider client={queryClient}>
+            <DashboardWorkspace
+              initialIntegrations={[]}
+              initialAccessRequests={[]}
+              currentUser={{ name: "Admin User", email: "admin@example.com" }}
+              contextApiBaseUrl="https://example.com"
+              contextApiKey="test-key"
+            />
+          </QueryClientProvider>,
+        );
+      });
+    };
+
+    await renderWorkspace();
 
     await act(async () => {
       await new Promise((resolve) => setTimeout(resolve, 10));
@@ -566,6 +577,24 @@ describe("DashboardWorkspace", () => {
     expect(pushMock).toHaveBeenCalledWith(
       "/integrations?showIntegrationWizard=1&managedConnector=github",
     );
+
+    currentSearchParams = new URLSearchParams(pushedHref.split("?")[1] ?? "");
+
+    await renderWorkspace();
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    });
+
+    const managedConnectorInput = Array.from(container.querySelectorAll("input")).find(
+      (input) => input.getAttribute("placeholder") === "Choose GitHub, Notion, Slack...",
+    ) as HTMLInputElement | undefined;
+    expect(managedConnectorInput?.value).toBe("GitHub (github)");
+
+    const tokenInput = Array.from(container.querySelectorAll("input")).find(
+      (input) => input.getAttribute("placeholder") === "Paste your GitHub token",
+    );
+    expect(tokenInput).toBeTruthy();
   });
 
   it("keeps OAuth callback errors visible after the wizard auto-selects the connector", async () => {
