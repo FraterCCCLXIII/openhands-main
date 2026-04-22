@@ -19,6 +19,7 @@ const initialConnectors: ManagedConnectorDefinition[] = [
     authStrategy: "oauth2",
     provider: "mcp",
     oauthConfigured: true,
+    oauthClientStatus: "decryptable",
     credentialLabel: "Connect Notion",
     credentialPlaceholder: "Connect Notion",
     credentialHelp: "Connect Notion with OAuth.",
@@ -82,6 +83,15 @@ const secondaryConnector: ManagedConnectorDefinition = {
   enabled: false,
   createdAt: "2026-03-10T00:00:00.000Z",
   updatedAt: "",
+};
+
+const unreadableOauthConnector: ManagedConnectorDefinition = {
+  ...baseConnector,
+  slug: "broken-notion",
+  name: "Broken Notion",
+  oauthConfigured: false,
+  oauthClientStatus: "unreadable",
+  updatedAt: "2026-03-12T00:00:00.000Z",
 };
 
 
@@ -323,6 +333,27 @@ describe("ManagedConnectorList", () => {
     expect(container.textContent).toContain("Credentials missing");
     expect(container.textContent).toContain("disabled");
     expect(container.textContent).toContain("updated Unknown");
+  });
+
+  it("surfaces unreadable OAuth credentials with a repair hint for admins", async () => {
+    await act(async () => {
+      root.render(
+        <ManagedConnectorList initialManagedConnectors={[unreadableOauthConnector]} />,
+      );
+    });
+
+    expect(container.textContent).toContain("OAuth credentials unreadable");
+
+    const expandButton = findConnectorDetailsToggle(container, "broken-notion");
+    expect(expandButton).toBeTruthy();
+
+    await act(async () => {
+      expandButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    expect(container.textContent).toContain(
+      "Stored OAuth client credentials cannot be decrypted with the current encryption key.",
+    );
   });
 
   it("filters managed connectors and shows an empty search state", async () => {

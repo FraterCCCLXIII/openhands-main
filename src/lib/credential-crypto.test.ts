@@ -16,6 +16,25 @@ describe("credential-crypto", () => {
     });
   });
 
+  it("does not fall back to auth secrets for credential decryption", () => {
+    const payload = encryptCredentials(
+      { accessToken: "token-123", refreshToken: "refresh-456" },
+      env({ CREDENTIAL_ENCRYPTION_KEY: "top-secret" }),
+    );
+
+    expect(() =>
+      decryptCredentials(
+        payload,
+        env({
+          AUTH_SECRET: "top-secret",
+          NEXTAUTH_SECRET: "nextauth-secret",
+        }),
+      ),
+    ).toThrow(
+      "CREDENTIAL_ENCRYPTION_KEY must be configured to encrypt stored provider credentials.",
+    );
+  });
+
   it("does not fall back to auth secrets for credential encryption", () => {
     const authOnlyEnv = env({ AUTH_SECRET: "top-secret", NEXTAUTH_SECRET: "nextauth-secret" });
 
@@ -24,10 +43,10 @@ describe("credential-crypto", () => {
     );
   });
 
-  it("requires explicit secret material even outside production", () => {
-    const developmentEnv = env({ NODE_ENV: "development" });
+  it("requires some decryptable secret material", () => {
+    const payload = encryptCredentials({ accessToken: "token-123" }, env({ CREDENTIAL_ENCRYPTION_KEY: "top-secret" }));
 
-    expect(() => encryptCredentials({ accessToken: "token-123" }, developmentEnv)).toThrow(
+    expect(() => decryptCredentials(payload, env({ NODE_ENV: "development" }))).toThrow(
       "CREDENTIAL_ENCRYPTION_KEY must be configured to encrypt stored provider credentials.",
     );
   });

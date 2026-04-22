@@ -181,10 +181,12 @@ describe("managedConnectorResponseSchema", () => {
       ],
       enabled: true,
       oauthConfigured: true,
+      oauthClientStatus: "decryptable",
       createdAt: "2026-04-06T00:00:00.000Z",
       updatedAt: "2026-04-06T00:00:00.000Z",
     });
 
+    expect(response.oauthClientStatus).toBe("decryptable");
     expect(response).not.toHaveProperty("oauthClientId");
     expect(response).not.toHaveProperty("oauthClientSecret");
     expect(managedConnectorListSchema.parse([response])).toEqual([response]);

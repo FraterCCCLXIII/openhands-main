@@ -3,17 +3,17 @@ import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:
 const ALGORITHM = "aes-256-gcm";
 const IV_LENGTH = 12;
 
-const getRawKeyMaterial = (env: NodeJS.ProcessEnv = process.env) => env.CREDENTIAL_ENCRYPTION_KEY || "";
+const createKey = (rawKeyMaterial: string) => createHash("sha256").update(rawKeyMaterial).digest();
 
 const getKey = (env: NodeJS.ProcessEnv = process.env) => {
-  const rawKeyMaterial = getRawKeyMaterial(env);
+  const rawKeyMaterial = env.CREDENTIAL_ENCRYPTION_KEY?.trim() ?? "";
   if (!rawKeyMaterial) {
     throw new Error(
       "CREDENTIAL_ENCRYPTION_KEY must be configured to encrypt stored provider credentials.",
     );
   }
 
-  return createHash("sha256").update(rawKeyMaterial).digest();
+  return createKey(rawKeyMaterial);
 };
 
 export const encryptCredentials = (
@@ -37,6 +37,7 @@ export const decryptCredentials = <T extends Record<string, unknown>>(
   const iv = buffer.subarray(0, IV_LENGTH);
   const authTag = buffer.subarray(IV_LENGTH, IV_LENGTH + 16);
   const ciphertext = buffer.subarray(IV_LENGTH + 16);
+
   const decipher = createDecipheriv(ALGORITHM, getKey(env), iv);
   decipher.setAuthTag(authTag);
   const plaintext = Buffer.concat([
