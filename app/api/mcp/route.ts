@@ -31,6 +31,50 @@ const getBearerToken = (request: Request) => {
 
 const getSessionId = (request: Request) => request.headers.get("mcp-session-id")?.trim() ?? "";
 
+const acceptsContentType = (request: Request, value: string) =>
+  request.headers.get("accept")?.toLowerCase().includes(value.toLowerCase()) ?? false;
+
+const hasContentType = (request: Request, value: string) =>
+  request.headers.get("content-type")?.toLowerCase().includes(value.toLowerCase()) ?? false;
+
+const getProtocolVersion = (request: Request) =>
+  request.headers.get("mcp-protocol-version")?.trim() ?? "";
+
+const validateMcpStreamableHttpRequest = (request: Request, hasSessionId: boolean) => {
+  if (request.method === "GET" && hasSessionId && !acceptsContentType(request, "text/event-stream")) {
+    throw new ContextLayerError(
+      "MCP session GET requests must accept text/event-stream.",
+      406,
+    );
+  }
+
+  if (request.method === "POST") {
+    if (
+      !acceptsContentType(request, "application/json") ||
+      !acceptsContentType(request, "text/event-stream")
+    ) {
+      throw new ContextLayerError(
+        "MCP Streamable HTTP POST requests must accept both application/json and text/event-stream.",
+        406,
+      );
+    }
+
+    if (!hasContentType(request, "application/json")) {
+      throw new ContextLayerError(
+        "MCP Streamable HTTP POST requests must use Content-Type: application/json.",
+        415,
+      );
+    }
+  }
+
+  if (hasSessionId && !getProtocolVersion(request)) {
+    throw new ContextLayerError(
+      "MCP session requests must include the mcp-protocol-version header.",
+      400,
+    );
+  }
+};
+
 const getRequestSessionDefaults = (request: Request): McpSessionDefaults => {
   const url = new URL(request.url);
 
@@ -161,6 +205,7 @@ const handleMcpRoute = async (request: Request) => {
 
     const apiKeyRecord = await authorizeApiKey(apiKey);
     const sessionId = getSessionId(request);
+    validateMcpStreamableHttpRequest(request, sessionId.length > 0);
 
     if (request.method === "POST") {
       if (sessionId) {

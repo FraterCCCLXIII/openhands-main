@@ -362,6 +362,126 @@ describe("/api/mcp", () => {
     });
   });
 
+  it("rejects session GET requests that do not accept event streams", async () => {
+    const service = getContextLayerService();
+    const apiKey = (await service.getOrCreateAgentApiKey("owner@example.com")).apiKey;
+
+    await upsertMcpSession({
+      sessionId: "session-without-accept",
+      ownerId: "owner@example.com",
+      defaults: {
+        agentId: null,
+        agentClass: null,
+        agentData: {},
+      },
+    });
+
+    const response = await GET(
+      new Request("http://localhost:3000/api/mcp", {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "mcp-session-id": "session-without-accept",
+          "mcp-protocol-version": "2025-03-26",
+        },
+      }),
+    );
+
+    expect(response.status).toBe(406);
+    await expect(response.json()).resolves.toEqual({
+      detail: "MCP session GET requests must accept text/event-stream.",
+    });
+  });
+
+  it("rejects POST requests that do not advertise streamable HTTP response types", async () => {
+    const service = getContextLayerService();
+    const apiKey = (await service.getOrCreateAgentApiKey("owner@example.com")).apiKey;
+
+    const response = await POST(
+      new Request("http://localhost:3000/api/mcp", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          id: 1,
+          method: "initialize",
+          params: {
+            protocolVersion: "2025-03-26",
+            capabilities: {},
+            clientInfo: {
+              name: "test-client",
+              version: "1.0.0",
+            },
+          },
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(406);
+    await expect(response.json()).resolves.toEqual({
+      detail:
+        "MCP Streamable HTTP POST requests must accept both application/json and text/event-stream.",
+    });
+  });
+
+  it("rejects POST requests with a non-JSON content type", async () => {
+    const service = getContextLayerService();
+    const apiKey = (await service.getOrCreateAgentApiKey("owner@example.com")).apiKey;
+
+    const response = await POST(
+      new Request("http://localhost:3000/api/mcp", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          Accept: "application/json, text/event-stream",
+          "Content-Type": "text/plain",
+        },
+        body: "{}",
+      }),
+    );
+
+    expect(response.status).toBe(415);
+    await expect(response.json()).resolves.toEqual({
+      detail: "MCP Streamable HTTP POST requests must use Content-Type: application/json.",
+    });
+  });
+
+  it("rejects session requests that omit the MCP protocol version header", async () => {
+    const service = getContextLayerService();
+    const apiKey = (await service.getOrCreateAgentApiKey("owner@example.com")).apiKey;
+
+    await upsertMcpSession({
+      sessionId: "session-without-version",
+      ownerId: "owner@example.com",
+      defaults: {
+        agentId: null,
+        agentClass: null,
+        agentData: {},
+      },
+    });
+
+    const response = await GET(
+      new Request("http://localhost:3000/api/mcp", {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          Accept: "text/event-stream",
+          "mcp-session-id": "session-without-version",
+        },
+      }),
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({
+      detail: "MCP session requests must include the mcp-protocol-version header.",
+    });
+  });
+
+
   it("rejects GET requests without a session id before routing to the MCP transport", async () => {
     const response = await GET(
       new Request("http://localhost:3000/api/mcp", {
@@ -413,7 +533,9 @@ describe("/api/mcp", () => {
         method: "GET",
         headers: {
           Authorization: `Bearer ${ownerApiKey}`,
+          Accept: "text/event-stream",
           "mcp-session-id": "missing-session",
+          "mcp-protocol-version": "2025-03-26",
         },
       }),
     );
@@ -424,7 +546,9 @@ describe("/api/mcp", () => {
         method: "GET",
         headers: {
           Authorization: `Bearer ${otherApiKey}`,
+          Accept: "text/event-stream",
           "mcp-session-id": "session-owned-by-owner",
+          "mcp-protocol-version": "2025-03-26",
         },
       }),
     );
