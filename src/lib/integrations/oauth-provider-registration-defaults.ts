@@ -72,13 +72,11 @@ const hubspotDefaultScopes = [
   "crm.objects.companies.write",
   "crm.objects.deals.read",
   "crm.objects.deals.write",
-  "crm.objects.tickets.read",
-  "crm.objects.tickets.write",
+  "tickets",
   "crm.objects.owners.read",
   "crm.schemas.contacts.read",
   "crm.schemas.companies.read",
   "crm.schemas.deals.read",
-  "crm.schemas.tickets.read",
 ] as const;
 
 const registrationDefaults: Record<string, OAuthProviderRegistrationDefaults> = {
