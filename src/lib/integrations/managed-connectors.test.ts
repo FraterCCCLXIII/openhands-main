@@ -1,8 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import type {
+  OAuthProviderCatalogOption,
+  OAuthProviderRegistrationDefaults,
+} from "@/src/types/context-layer";
+
 const mockState = vi.hoisted(() => ({
-  providers: [] as Array<any>,
-  registrationDefaults: {} as Record<string, any>,
+  providers: [] as OAuthProviderCatalogOption[],
+  registrationDefaults: {} as Record<string, OAuthProviderRegistrationDefaults | undefined>,
 }));
 
 vi.mock("@/src/lib/integrations/oauth-provider-catalog", () => ({
@@ -30,10 +35,10 @@ import {
   resolveManagedConnectorCredentials,
   sanitizeManagedConnector,
 } from "@/src/lib/integrations/managed-connectors";
+import { encryptManagedOAuthClient } from "@/src/lib/oauth/managed-oauth-client";
 import type {
   ManagedConnectorRecord,
   ManagedConnectorToolDefinition,
-  OAuthProviderCatalogOption,
 } from "@/src/types/context-layer";
 
 const makeProvider = (
@@ -260,7 +265,10 @@ describe("managed connector registry helpers", () => {
         tokenUrl: "https://auth.http.test/token",
         scopes: ["records.read"],
       },
-      encryptedOAuthClient: "encrypted-client",
+      encryptedOAuthClient: encryptManagedOAuthClient({
+        clientId: "inferred-http-client",
+        clientSecret: "inferred-http-secret",
+      }),
       tools: [makeTool({ name: "list_records", description: "List records" })],
     });
 
@@ -280,14 +288,27 @@ describe("managed connector registry helpers", () => {
       apiBaseUrl: "https://api.http.test",
       serverUrl: undefined,
       oauthConfigured: true,
+      oauthClientStatus: "decryptable",
       encryptedOAuthClient: undefined,
     });
     expect(
       sanitizeManagedConnector({
         ...inferredHttp,
         encryptedOAuthClient: undefined,
-      }).oauthConfigured,
-    ).toBe(false);
+      }),
+    ).toMatchObject({
+      oauthConfigured: false,
+      oauthClientStatus: "missing",
+    });
+    expect(
+      sanitizeManagedConnector({
+        ...inferredHttp,
+        encryptedOAuthClient: "broken-client-record",
+      }),
+    ).toMatchObject({
+      oauthConfigured: false,
+      oauthClientStatus: "unreadable",
+    });
   });
 
   it("translates managed connectors to built-in options using configured header defaults", () => {
@@ -565,6 +586,20 @@ describe("managed connector registry helpers", () => {
         tools: [makeTool({ name: "list_contacts", description: "List contacts" })],
       }),
       makeConnector({
+        slug: "broken-oauth",
+        name: "Broken OAuth",
+        provider: "http",
+        authStrategy: "oauth2",
+        authModes: ["oauth2"],
+        apiBaseUrl: "https://broken-oauth.example.test",
+        oauthConfig: {
+          authorizationUrl: "https://broken-oauth.example.test/authorize",
+          tokenUrl: "https://broken-oauth.example.test/token",
+          scopes: ["contacts.read"],
+        },
+        encryptedOAuthClient: "broken-client-record",
+      }),
+      makeConnector({
         slug: "api-service-builtin",
         name: "Shadow API Service",
         authStrategy: "api_key",
@@ -579,6 +614,7 @@ describe("managed connector registry helpers", () => {
     const definitions = await listAllManagedConnectorDefinitions(repository);
 
     expect(definitions.map((connector) => connector.name)).toEqual([
+      "Broken OAuth",
       "Custom HTTP",
       "MCP Service",
       "Shadow API Service",
@@ -589,6 +625,15 @@ describe("managed connector registry helpers", () => {
         provider: "http",
         apiBaseUrl: "https://api.custom-http.test",
         oauthConfigured: false,
+        oauthClientStatus: "missing",
+      }),
+    );
+    expect(definitions).toContainEqual(
+      expect.objectContaining({
+        slug: "broken-oauth",
+        provider: "http",
+        oauthConfigured: false,
+        oauthClientStatus: "unreadable",
       }),
     );
     expect(definitions).toContainEqual(

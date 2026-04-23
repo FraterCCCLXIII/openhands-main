@@ -2,11 +2,13 @@ import { ContextLayerError } from "@/src/lib/core/errors";
 import type { ContextRepository } from "@/src/lib/core/repository";
 import { listOAuthProviderCatalog } from "@/src/lib/integrations/oauth-provider-catalog";
 import { getOAuthProviderRegistrationDefaults } from "@/src/lib/integrations/oauth-provider-registration-defaults";
+import { readManagedOAuthClient } from "@/src/lib/oauth/managed-oauth-client";
 import type {
   AuthStrategy,
   ManagedConnectorOption,
   ToolSpec,
   ManagedConnectorDefinition,
+  ManagedConnectorOAuthClientStatus,
   ManagedConnectorToolDefinition,
   ManagedConnectorRecord,
   OAuthProviderCatalogOption,
@@ -34,9 +36,27 @@ export interface DefaultManagedConnectorDefinition
   serverUrl?: string;
 }
 
+export const getManagedConnectorOAuthClientStatus = (
+  connector: Pick<ManagedConnectorRecord, "authStrategy" | "oauthConfig" | "encryptedOAuthClient" | "name">,
+): ManagedConnectorOAuthClientStatus => {
+  if (connector.authStrategy !== "oauth2") {
+    return "not_applicable";
+  }
+
+  if (!connector.oauthConfig || !connector.encryptedOAuthClient) {
+    return "missing";
+  }
+
+  try {
+    return readManagedOAuthClient(connector) ? "decryptable" : "missing";
+  } catch {
+    return "unreadable";
+  }
+};
+
 const isManagedConnectorOAuthConfigured = (connector: ManagedConnectorRecord) =>
   connector.authStrategy !== "oauth2" ||
-  (!!connector.oauthConfig && !!connector.encryptedOAuthClient);
+  getManagedConnectorOAuthClientStatus(connector) === "decryptable";
 
 const getConfiguredApiKeyHeaderName = (slug: string) =>
   getOAuthProviderRegistrationDefaults(slug)?.apiKeyHeaderName?.trim() || undefined;
@@ -175,14 +195,19 @@ export const getManagedConnectorApiBaseUrl = (connector: ManagedConnectorRecord)
 
 export const sanitizeManagedConnector = (
   connector: ManagedConnectorRecord,
-): ManagedConnectorRecord => ({
-  ...connector,
-  provider: getManagedConnectorProvider(connector),
-  serverUrl: getManagedConnectorServerUrl(connector),
-  apiBaseUrl: getManagedConnectorApiBaseUrl(connector),
-  oauthConfigured: isManagedConnectorOAuthConfigured(connector),
-  encryptedOAuthClient: undefined,
-});
+): ManagedConnectorRecord => {
+  const oauthClientStatus = getManagedConnectorOAuthClientStatus(connector);
+
+  return {
+    ...connector,
+    provider: getManagedConnectorProvider(connector),
+    serverUrl: getManagedConnectorServerUrl(connector),
+    apiBaseUrl: getManagedConnectorApiBaseUrl(connector),
+    oauthConfigured: isManagedConnectorOAuthConfigured(connector),
+    oauthClientStatus,
+    encryptedOAuthClient: undefined,
+  };
+};
 
 export const managedConnectorToOption = (
   connector: ManagedConnectorRecord,
@@ -325,6 +350,7 @@ const defaultManagedConnectorToDefinition = (
   authStrategy: connector.authStrategy,
   provider: connector.provider,
   oauthConfigured: true,
+  oauthClientStatus: "not_applicable",
   credentialLabel: connector.credentialLabel,
   credentialPlaceholder: connector.credentialPlaceholder,
   credentialHelp: connector.credentialHelp,

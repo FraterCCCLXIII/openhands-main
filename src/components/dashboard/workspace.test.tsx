@@ -2003,6 +2003,96 @@ describe("DashboardWorkspace", () => {
     );
   });
 
+  it("prioritizes direct action failures over the OAuth status banner", async () => {
+    usePathnameMock.mockReturnValue("/integrations");
+    useSearchParamsMock.mockReturnValue(
+      new URLSearchParams({
+        oauth_status: "connected",
+        oauth_provider: "slack",
+      }),
+    );
+
+    const integrationsState: IntegrationSpec[] = [
+      {
+        key: "github",
+        name: "GitHub",
+        kind: "mcp",
+        provider: "mcp",
+        authStrategy: "bearer",
+        enabled: false,
+        fineGrainedPermissions: true,
+        config: { managedConnectorSlug: "github" },
+        credentials: {},
+        tools: {},
+      },
+    ];
+
+    fetchMock.mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = typeof input === "string" ? input : input.toString();
+      const method = init?.method ?? "GET";
+
+      if (url === "/api/access-requests" || url === "/api/notifications") {
+        return new Response(JSON.stringify([]), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+
+      if (url === "/api/integrations/managed-connectors") {
+        return new Response(JSON.stringify(managedConnectors), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+
+      if (url === "/api/integrations" && method === "GET") {
+        return new Response(JSON.stringify(integrationsState), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+
+      if (url === "/api/integrations/github/toggle" && method === "POST") {
+        return new Response(JSON.stringify({ detail: "Unable to enable GitHub right now." }), {
+          status: 500,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+
+      throw new Error(`Unexpected fetch: ${method} ${url}`);
+    });
+
+    await act(async () => {
+      root.render(
+        <QueryClientProvider client={queryClient}>
+          <DashboardWorkspace
+            initialIntegrations={integrationsState}
+            initialAccessRequests={[]}
+            currentUser={{ name: "User", email: "user@example.com" }}
+            contextApiBaseUrl="https://example.com"
+            contextApiKey="test-key"
+            isAdmin={false}
+          />
+        </QueryClientProvider>,
+      );
+    });
+
+    const enableButton = Array.from(container.querySelectorAll("button")).find((button) =>
+      button.textContent?.includes("Enable"),
+    );
+
+    await act(async () => {
+      enableButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(container.textContent).toContain("Unable to enable GitHub right now.");
+    expect(container.textContent).not.toContain(
+      "Slack connected successfully. Finish saving the integration to use it.",
+    );
+  });
+
   it("does not delete an integration when confirmation is cancelled and surfaces toggle errors", async () => {
     usePathnameMock.mockReturnValue("/integrations");
 

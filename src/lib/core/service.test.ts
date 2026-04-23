@@ -2347,6 +2347,15 @@ describe("ContextLayerService", () => {
       },
     });
 
+    await expect(
+      testRepo.getOwnerIntegration(OWNER_ID, "managed-salesforce"),
+    ).resolves.toMatchObject({
+      config: {
+        managedConnectorSlug: "managed-salesforce",
+        serverUrl: "https://salesforce.example.com/mcp",
+      },
+    });
+
     expect(
       await service.setOwnerToolEnabled(OWNER_ID, "managed-salesforce", "accounts", true),
     ).toMatchObject({
