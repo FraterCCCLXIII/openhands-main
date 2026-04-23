@@ -103,6 +103,7 @@ const createDefaultProps = () => ({
   integrationCount: 1,
   integrationSearch: "github",
   isActionPending: false,
+  isAdmin: true,
   isBulkDisablePending: false,
   marketplaceConnectors: connectors,
   onCreated: vi.fn(async () => undefined),

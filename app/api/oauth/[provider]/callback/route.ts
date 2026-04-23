@@ -9,6 +9,7 @@ import {
 } from "@/src/lib/core/runtime";
 import { resolveOAuthProvider } from "@/src/lib/oauth/provider-resolver";
 import { normalizeSafeRedirectTarget } from "@/src/lib/oauth/redirect-targets";
+import { logRouteInfo, summarizeRouteError } from "@/src/lib/route-logging";
 
 const buildRedirect = (
   requestUrl: string,
@@ -44,6 +45,9 @@ export async function GET(
   );
 
   if (!provider) {
+    logRouteInfo("/api/oauth/[provider]/callback", "oauth_callback_unknown_provider", {
+      provider: providerParam,
+    });
     return NextResponse.json(
       { detail: `Unknown OAuth provider '${providerParam}'.` },
       { status: 404 },
@@ -56,6 +60,9 @@ export async function GET(
   const code = url.searchParams.get("code")?.trim();
 
   if (!state) {
+    logRouteInfo("/api/oauth/[provider]/callback", "oauth_callback_missing_state", {
+      provider: provider.slug,
+    });
     return NextResponse.json({ detail: "Missing OAuth state." }, { status: 400 });
   }
 
@@ -63,11 +70,15 @@ export async function GET(
     showIntegrationWizard: "1",
   });
   let redirectTo = defaultRedirectTo;
+  let ownerId: string | null = null;
+  let integrationKey: string | null = null;
 
   try {
     const requestCallbackUrl = `${url.origin}/api/oauth/${provider.slug}/callback`;
     const proxyCallbackUrl = getOAuthCallbackUrl(provider.slug);
     const stateRecord = await service.getOAuthState(state, provider.slug);
+    ownerId = stateRecord.ownerId;
+    integrationKey = stateRecord.integrationKey;
     redirectTo = normalizeSafeRedirectTarget(
       request.url,
       stateRecord.redirectTo,
@@ -79,12 +90,23 @@ export async function GET(
       stateRecord.callbackUrl !== requestCallbackUrl &&
       proxyCallbackUrl === requestCallbackUrl
     ) {
+      logRouteInfo("/api/oauth/[provider]/callback", "oauth_callback_proxy_redirect", {
+        ownerId,
+        integrationKey,
+        provider: provider.slug,
+      });
       return buildCallbackRedirect(request.url, stateRecord.callbackUrl);
     }
 
     await service.consumeOAuthState(state, provider.slug);
 
     if (error) {
+      logRouteInfo("/api/oauth/[provider]/callback", "oauth_callback_provider_error", {
+        ownerId,
+        integrationKey,
+        provider: provider.slug,
+        errorMessage: errorDescription || error,
+      });
       return buildRedirect(request.url, redirectTo, {
         oauth_provider: provider.slug,
         oauth_status: "error",
@@ -123,11 +145,26 @@ export async function GET(
       },
     );
 
+    logRouteInfo("/api/oauth/[provider]/callback", "oauth_callback_connected", {
+      ownerId,
+      integrationKey,
+      provider: provider.slug,
+      tokenType: exchange.tokenType,
+      scopeCount: exchange.scopes.length,
+      expiresAt: exchange.expiresAt ?? null,
+    });
+
     return buildRedirect(request.url, redirectTo, {
       oauth_provider: provider.slug,
       oauth_status: "connected",
     });
   } catch (error) {
+    logRouteInfo("/api/oauth/[provider]/callback", "oauth_callback_failed", {
+      ownerId,
+      integrationKey,
+      provider: provider.slug,
+      ...summarizeRouteError(error),
+    });
     const message =
       error instanceof Error ? error.message : "OAuth connection failed.";
     return buildRedirect(request.url, redirectTo, {

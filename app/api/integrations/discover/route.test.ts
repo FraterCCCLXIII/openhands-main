@@ -23,6 +23,8 @@ vi.mock("@/src/lib/core/runtime", () => ({
 import { POST } from "./route";
 
 describe("POST /api/integrations/discover", () => {
+  const consoleInfoSpy = vi.spyOn(console, "info").mockImplementation(() => {});
+
   beforeEach(() => {
     discoverIntegrationMock.mockClear();
     getCurrentUserIdentityMock.mockReset();
@@ -30,6 +32,7 @@ describe("POST /api/integrations/discover", () => {
       ownerId: "user@example.com",
       user: { email: "user@example.com", name: "User" },
     });
+    consoleInfoSpy.mockClear();
   });
 
   it("rejects non-admin discovery of raw MCP servers", async () => {
@@ -54,6 +57,17 @@ describe("POST /api/integrations/discover", () => {
         "Only app administrators can discover tools from arbitrary MCP server URLs. Ask an administrator to register a managed connector instead.",
     });
     expect(discoverIntegrationMock).not.toHaveBeenCalled();
+    expect(consoleInfoSpy).toHaveBeenCalledWith(
+      "[route]",
+      expect.objectContaining({
+        route: "/api/integrations/discover",
+        event: "discover_failed",
+        ownerId: "user@example.com",
+        integrationKey: "custom-mcp",
+        kind: "mcp",
+        statusCode: 403,
+      }),
+    );
   });
 
   it("allows admins to discover raw MCP servers", async () => {
@@ -118,6 +132,17 @@ describe("POST /api/integrations/discover", () => {
       expect.objectContaining({
         baseUrl: "https://example.com",
         ownerId: "user@example.com",
+      }),
+    );
+    expect(consoleInfoSpy).toHaveBeenCalledWith(
+      "[route]",
+      expect.objectContaining({
+        route: "/api/integrations/discover",
+        event: "discover_succeeded",
+        ownerId: "user@example.com",
+        integrationKey: "slack-test",
+        managedConnectorSlug: "slack",
+        kind: "managed",
       }),
     );
   });

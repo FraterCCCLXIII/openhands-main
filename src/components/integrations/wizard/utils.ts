@@ -218,7 +218,12 @@ export const buildCreatePayload = (
     authStrategy: discovery.authStrategy,
     enabled: true,
     fineGrainedPermissions: true,
-    config: discovery.config,
+    config:
+      draft.kind === "managed"
+        ? {
+            managedConnectorSlug: draft.managedConnectorSlug.trim(),
+          }
+        : discovery.config,
     credentials: discovery.credentials,
     tools: Object.fromEntries(
       Object.entries(discovery.tools).map(([name, toolSpec]) => {
