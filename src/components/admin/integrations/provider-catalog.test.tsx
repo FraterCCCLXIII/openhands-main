@@ -278,13 +278,12 @@ describe("provider catalog helper utilities", () => {
     ]);
     expect(buildDefaultHttpTools(getProvider("notion"))).toEqual([]);
 
-    expect(
-      buildManagedConnectorPayload(googleCalendar, {
-        ...googleForm,
-        oauthClientId: "calendar-client-id",
-        oauthClientSecret: "calendar-client-secret",
-      }),
-    ).toMatchObject({
+    const googlePayload = buildManagedConnectorPayload(googleCalendar, {
+      ...googleForm,
+      oauthClientId: "calendar-client-id",
+      oauthClientSecret: "calendar-client-secret",
+    });
+    expect(googlePayload).toMatchObject({
       slug: "google-calendar",
       provider: "http",
       apiBaseUrl: "https://www.googleapis.com/calendar/v3",
@@ -293,6 +292,7 @@ describe("provider catalog helper utilities", () => {
       oauthClientSecret: "calendar-client-secret",
       tools: buildDefaultHttpTools(googleCalendar),
     });
+    expect(googlePayload.openApiUrl).toBeUndefined();
     expect(buildReadyManagedConnectorOption(elevenlabs)).toMatchObject({
       slug: "elevenlabs",
       toolCount: 0,
