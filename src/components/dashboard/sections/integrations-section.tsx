@@ -38,6 +38,7 @@ interface IntegrationsSectionProps {
   integrationCount: number;
   integrationSearch: string;
   isActionPending: boolean;
+  isAdmin: boolean;
   isBulkDisablePending: boolean;
   marketplaceConnectors: ManagedConnectorOption[];
   onCreated: () => Promise<void>;
@@ -80,6 +81,7 @@ export const IntegrationsSection = ({
   integrationCount,
   integrationSearch,
   isActionPending,
+  isAdmin,
   isBulkDisablePending,
   marketplaceConnectors,
   onCreated,
@@ -108,6 +110,7 @@ export const IntegrationsSection = ({
   <section className="space-y-4">
     {showIntegrationWizard ? (
       <IntegrationWizard
+        isAdmin={isAdmin}
         onCreated={onCreated}
         onStatus={onStatus}
         redirectSection="integrations"

@@ -267,7 +267,6 @@ describe("integration-wizard-utils", () => {
       enabled: true,
       fineGrainedPermissions: true,
       config: {
-        apiBaseUrl: "https://api.elevenlabs.io",
         managedConnectorSlug: "elevenlabs",
       },
     });

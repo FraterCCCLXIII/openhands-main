@@ -11,6 +11,7 @@ import {
 import { createOAuthStateExpiry } from "@/src/lib/oauth/providers";
 import { normalizeSafeRedirectTarget } from "@/src/lib/oauth/redirect-targets";
 import { resolveOAuthProvider } from "@/src/lib/oauth/provider-resolver";
+import { logRouteInfo, summarizeRouteError } from "@/src/lib/route-logging";
 
 const buildRedirect = (
   requestUrl: string,
@@ -36,6 +37,9 @@ export async function GET(
   );
 
   if (!provider) {
+    logRouteInfo("/api/oauth/[provider]/start", "oauth_start_unknown_provider", {
+      provider: providerParam,
+    });
     return NextResponse.json(
       { detail: `Unknown OAuth provider '${providerParam}'.` },
       { status: 404 },
@@ -52,10 +56,17 @@ export async function GET(
     defaultRedirectTo,
   );
 
+  let ownerId: string | null = null;
+  const integrationKey = url.searchParams.get("integrationKey")?.trim() || provider.slug;
+
   try {
-    const { ownerId } = await getCurrentUserIdentity();
-    const integrationKey =
-      url.searchParams.get("integrationKey")?.trim() || provider.slug;
+    ({ ownerId } = await getCurrentUserIdentity());
+    logRouteInfo("/api/oauth/[provider]/start", "oauth_start_requested", {
+      ownerId,
+      provider: provider.slug,
+      integrationKey,
+    });
+
     const state = randomBytes(24).toString("base64url");
     const callbackUrl = `${url.origin}/api/oauth/${provider.slug}/callback`;
     const redirectUri = getOAuthCallbackUrl(provider.slug);
@@ -73,8 +84,20 @@ export async function GET(
       expiresAt: createOAuthStateExpiry(),
     });
 
+    logRouteInfo("/api/oauth/[provider]/start", "oauth_start_redirected", {
+      ownerId,
+      provider: provider.slug,
+      integrationKey,
+    });
+
     return NextResponse.redirect(start.authorizationUrl);
   } catch (error) {
+    logRouteInfo("/api/oauth/[provider]/start", "oauth_start_failed", {
+      ownerId,
+      provider: provider.slug,
+      integrationKey,
+      ...summarizeRouteError(error),
+    });
     const message =
       error instanceof Error ? error.message : "OAuth connection could not start.";
     return buildRedirect(request.url, redirectTo, {

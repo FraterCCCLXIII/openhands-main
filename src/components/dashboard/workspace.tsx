@@ -577,9 +577,9 @@ export const DashboardWorkspace = ({
           </div>
         </header>
 
-        {oauthStatusMessage || statusMessage ? (
+        {statusMessage || oauthStatusMessage ? (
           <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] px-3 py-2 text-sm text-[var(--color-text-active)]">
-            {oauthStatusMessage || statusMessage}
+            {statusMessage || oauthStatusMessage}
           </div>
         ) : null}
 
@@ -643,6 +643,7 @@ export const DashboardWorkspace = ({
             integrationCount={integrations.length}
             integrationSearch={integrationSearch}
             isActionPending={actionMutation.isPending}
+            isAdmin={isAdmin}
             isBulkDisablePending={bulkDisableMutation.isPending}
             marketplaceConnectors={marketplaceConnectors}
             onCreated={handleIntegrationCreated}

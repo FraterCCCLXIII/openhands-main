@@ -40,6 +40,8 @@ import { decryptCredentials, encryptCredentials } from "@/src/lib/credential-cry
 import { discoverIntegration } from "@/src/lib/integrations/discovery";
 import {
   buildManagedConnectorTools,
+  getManagedConnectorApiBaseUrl,
+  getManagedConnectorServerUrl,
   listAllManagedConnectorDefinitions,
   sanitizeManagedConnector,
 } from "@/src/lib/integrations/managed-connectors";
@@ -210,15 +212,39 @@ const sanitizeManagedConnectorToolDefinitions = (
   return nextFunctions;
 };
 
+const applyManagedConnectorConfig = (
+  integration: IntegrationSpec,
+  connector: ManagedConnectorRecord,
+): IntegrationSpec => {
+  const serverUrl = getManagedConnectorServerUrl(connector);
+  const apiBaseUrl = getManagedConnectorApiBaseUrl(connector);
+
+  return {
+    ...integration,
+    config: {
+      ...integration.config,
+      managedConnectorSlug: connector.slug,
+      ...(apiBaseUrl ? { apiBaseUrl } : {}),
+      ...(serverUrl ? { serverUrl } : {}),
+    },
+  };
+};
+
 const sanitizeIntegrationTools = (
   integration: IntegrationSpec,
   connector: ManagedConnectorRecord | null,
-): IntegrationSpec => ({
-  ...integration,
-  tools: connector
-    ? sanitizeManagedConnectorToolDefinitions(connector, integration)
-    : normalizeTools(integration.tools),
-});
+): IntegrationSpec => {
+  const constrainedIntegration = connector
+    ? applyManagedConnectorConfig(integration, connector)
+    : integration;
+
+  return {
+    ...constrainedIntegration,
+    tools: connector
+      ? sanitizeManagedConnectorToolDefinitions(connector, constrainedIntegration)
+      : normalizeTools(constrainedIntegration.tools),
+  };
+};
 
 const redactIntegrationCredentials = (
   integration: IntegrationSpec,

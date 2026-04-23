@@ -61,9 +61,11 @@ export const WizardIntro = () => (
 export const WizardFeedback = ({
   children,
   tone,
+  testId,
 }: {
   children: ReactNode;
   tone: "error" | "success" | "info";
+  testId?: string;
 }) => (
   <div
     className={cn(
@@ -74,7 +76,7 @@ export const WizardFeedback = ({
           ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-100"
           : "border-[var(--color-border)] bg-[var(--color-surface-subtle)] text-[var(--color-text-base)]",
     )}
-    data-testid="discover-feedback"
+    data-testid={testId}
   >
     {children}
   </div>

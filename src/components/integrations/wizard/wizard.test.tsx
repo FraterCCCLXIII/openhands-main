@@ -144,6 +144,26 @@ describe("IntegrationWizard", () => {
     expect(container.textContent).not.toContain("Notion (notion)");
   });
 
+  it("disables raw MCP installs for non-admin users", async () => {
+    await act(async () => {
+      root.render(
+        <QueryClientProvider client={queryClient}>
+          <IntegrationWizard isAdmin={false} onCreated={async () => {}} onStatus={() => {}} />
+        </QueryClientProvider>,
+      );
+    });
+
+    const mcpButton = Array.from(container.querySelectorAll("button")).find((button) =>
+      button.textContent?.includes("MCP server"),
+    );
+
+    expect(mcpButton).toBeTruthy();
+    expect((mcpButton as HTMLButtonElement | null)?.disabled).toBe(true);
+    expect(container.textContent).toContain(
+      "Only app administrators can add raw MCP server URLs. Ask an admin to register a managed connector instead.",
+    );
+  });
+
   it("discovers default API-key connectors with their configured header name", async () => {
     fetchMock.mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = typeof input === "string" ? input : input.toString();
@@ -734,6 +754,9 @@ describe("IntegrationWizard", () => {
     expect(createPayload).toMatchObject({
       key: "github",
       name: "GitHub",
+      config: {
+        managedConnectorSlug: "github",
+      },
       tools: {
         archiveDatabase: expect.objectContaining({
           accessMode: "enabled",
@@ -749,6 +772,130 @@ describe("IntegrationWizard", () => {
         }),
       },
     });
+  });
+
+  it("shows inline create feedback when integration creation fails", async () => {
+    const onCreated = vi.fn(async () => {});
+    const onStatus = vi.fn();
+
+    fetchMock.mockImplementation(async (input: RequestInfo | URL) => {
+      const url = typeof input === "string" ? input : input.toString();
+
+      if (url === "/api/integrations/managed-connectors") {
+        return new Response(
+          JSON.stringify([
+            {
+              slug: "github",
+              name: "GitHub",
+              description: "GitHub connector",
+              toolCount: 4,
+              categories: ["Engineering"],
+              authModes: ["bearer"],
+              authStrategy: "bearer",
+              oauthConfigured: true,
+              credentialLabel: "GitHub token",
+              credentialPlaceholder: "ghp_...",
+              credentialHelp: "Use a GitHub token.",
+            },
+          ]),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      }
+
+      if (url === "/api/oauth/connections") {
+        return new Response(JSON.stringify([]), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+
+      if (url === "/api/integrations/discover") {
+        return new Response(
+          JSON.stringify({
+            provider: "mcp",
+            authStrategy: "bearer",
+            config: {
+              managedConnectorSlug: "github",
+              serverUrl: "https://api.githubcopilot.com/mcp/",
+            },
+            credentials: {
+              accessToken: "ghp_test_token",
+            },
+            tools: {
+              listIssues: {
+                name: "listIssues",
+                description: "List issues",
+                enabled: true,
+                accessMode: "enabled",
+                fineGrainedPermissions: true,
+                defaultScopes: ["issues:read"],
+                executionMode: "provider",
+                config: { toolName: "listIssues" },
+              },
+            },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      }
+
+      if (url === "/api/integrations") {
+        return new Response(
+          JSON.stringify({ detail: "Only app administrators can install integrations from arbitrary connector URLs. Use a managed connector instead." }),
+          { status: 403, headers: { "Content-Type": "application/json" } },
+        );
+      }
+
+      throw new Error(`Unexpected fetch: ${url}`);
+    });
+
+    useSearchParamsMock.mockReturnValue(new URLSearchParams("managedConnector=github"));
+
+    await act(async () => {
+      root.render(
+        <QueryClientProvider client={queryClient}>
+          <IntegrationWizard onCreated={onCreated} onStatus={onStatus} />
+        </QueryClientProvider>,
+      );
+    });
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    });
+
+    const tokenInput = Array.from(container.querySelectorAll("input")).find(
+      (input) => input.getAttribute("placeholder") === "ghp_...",
+    ) as HTMLInputElement | undefined;
+    expect(tokenInput).toBeTruthy();
+
+    await act(async () => {
+      setInputValue(tokenInput, "ghp_test_token");
+    });
+
+    const clickButton = async (label: string) => {
+      const button = Array.from(container.querySelectorAll("button")).find((candidate) =>
+        candidate.textContent?.includes(label),
+      );
+      expect(button, `Missing button: ${label}`).toBeTruthy();
+
+      await act(async () => {
+        button?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      });
+
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 0));
+      });
+    };
+
+    await clickButton("Discover tools");
+    await clickButton("Create integration");
+
+    expect(onCreated).not.toHaveBeenCalled();
+    expect(onStatus).toHaveBeenLastCalledWith(
+      "Create failed: Only app administrators can install integrations from arbitrary connector URLs. Use a managed connector instead.",
+    );
+    expect(container.querySelector('[data-testid="create-feedback"]')?.textContent).toContain(
+      "Create failed: Only app administrators can install integrations from arbitrary connector URLs. Use a managed connector instead.",
+    );
   });
 
   it("shows bearer credential input without API key header name for Ordinal", async () => {

@@ -18,10 +18,12 @@ import { getActiveSql, createTestRepository } from "@/src/lib/db/pglite-test-uti
 import type { IntegrationSpec } from "@/src/types/context-layer";
 
 let testCleanup: () => Promise<void>;
+let consoleInfoSpy: ReturnType<typeof vi.spyOn>;
 beforeAll(() => { vi.stubEnv("POSTGRES_URL", "pglite://integrations-route-test"); });
 beforeEach(async () => {
   const ctx = await createTestRepository();
   testCleanup = ctx.cleanup;
+  consoleInfoSpy = vi.spyOn(console, "info").mockImplementation(() => {});
 });
 
 const resetRuntime = () => {
@@ -47,6 +49,7 @@ const createIntegration = (
 afterEach(async () => {
   authMock.mockReset();
   authMock.mockResolvedValue({ user: { email: "user@example.com" } });
+  consoleInfoSpy.mockRestore();
   resetRuntime();
   await testCleanup();
 });
@@ -193,6 +196,18 @@ describe("GET /api/integrations", () => {
       detail:
         "Only app administrators can install integrations from arbitrary connector URLs. Use a managed connector instead.",
     });
+    expect(consoleInfoSpy).toHaveBeenCalledWith(
+      "[route]",
+      expect.objectContaining({
+        route: "/api/integrations",
+        event: "create_failed",
+        ownerId: "user@example.com",
+        integrationKey: "custom-mcp",
+        errorMessage:
+          "Only app administrators can install integrations from arbitrary connector URLs. Use a managed connector instead.",
+        statusCode: 403,
+      }),
+    );
   });
 
   it("allows admin users to save raw connector endpoints", async () => {
@@ -223,6 +238,15 @@ describe("GET /api/integrations", () => {
       key: "custom-mcp",
       config: { serverUrl: "https://internal.example/mcp" },
     });
+    expect(consoleInfoSpy).toHaveBeenCalledWith(
+      "[route]",
+      expect.objectContaining({
+        route: "/api/integrations",
+        event: "create_succeeded",
+        ownerId: "admin@example.com",
+        integrationKey: "custom-mcp",
+      }),
+    );
   });
 
 });

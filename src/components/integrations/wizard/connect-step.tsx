@@ -477,7 +477,7 @@ export const ConnectStep = ({
         </div>
 
         {discoverFeedback ? (
-          <WizardFeedback tone={discoverFeedback.tone}>
+          <WizardFeedback tone={discoverFeedback.tone} testId="discover-feedback">
             <p>{discoverFeedback.message}</p>
             {discoverFeedback.debugDetails ? (
               <div className="mt-3 rounded-lg border border-white/10 bg-black/20 p-3">
