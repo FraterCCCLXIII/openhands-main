@@ -303,7 +303,7 @@ const registrationDefaults: Record<string, OAuthProviderRegistrationDefaults> = 
     apiBaseUrl: "https://api.hubapi.com",
     authorizationUrl: "https://app.hubspot.com/oauth/authorize",
     tokenUrl: "https://api.hubapi.com/oauth/v1/token",
-    scopes: ["crm.objects.contacts.read"],
+    scopes: ["oauth", "crm.objects.contacts.read"],
     toolName: "list_contacts",
     toolDescription: "List HubSpot contacts for the connected portal.",
     requestMethod: "GET",
