@@ -97,14 +97,15 @@ const discoveryResult: DiscoveryResponse = {
 
 const mountedRoots: Array<{ container: HTMLDivElement; root: Root }> = [];
 
-const renderWizardState = async (search = "") => {
+const renderWizardState = async (initialSearch = "") => {
   const container = document.createElement("div");
   document.body.appendChild(container);
   const root = createRoot(container);
   const onStatus = vi.fn();
   let latestState: ReturnType<typeof useWizardState> | null = null;
+  let currentSearch = initialSearch;
 
-  const Harness = () => {
+  const Harness = ({ search }: { search: string }) => {
     latestState = useWizardState({
       managedConnectors: connectors,
       onStatus,
@@ -114,9 +115,13 @@ const renderWizardState = async (search = "") => {
     return null;
   };
 
-  await act(async () => {
-    root.render(<Harness />);
-  });
+  const renderHarness = async () => {
+    await act(async () => {
+      root.render(<Harness search={currentSearch} />);
+    });
+  };
+
+  await renderHarness();
 
   mountedRoots.push({ container, root });
 
@@ -128,6 +133,10 @@ const renderWizardState = async (search = "") => {
       }
 
       return latestState;
+    },
+    rerender: async (search: string) => {
+      currentSearch = search;
+      await renderHarness();
     },
   };
 };
@@ -240,6 +249,33 @@ describe("useWizardState", () => {
       headerName: INITIAL_DRAFT.headerName,
     });
   });
+
+  it("syncs to a managedConnector search param that appears after mount", async () => {
+    const { getState, onStatus, rerender } = await renderWizardState();
+
+    expect(getState().step).toBe(1);
+    expect(getState().draft).toEqual(INITIAL_DRAFT);
+
+    onStatus.mockClear();
+
+    await rerender("managedConnector=generic-api");
+
+    expect(getState().step).toBe(2);
+    expect(getState().selectedConnector?.slug).toBe("generic-api");
+    expect(getState().connectorSearch).toBe("Generic API (generic-api)");
+    expect(getState().draft).toMatchObject({
+      kind: "managed",
+      managedConnectorSlug: "generic-api",
+      key: "generic-api",
+      name: "Generic API",
+      apiKey: "",
+      headerName: INITIAL_DRAFT.headerName,
+    });
+    expect(getState().requiresOAuthConnection).toBe(false);
+    expect(getState().oauthConnectionEnabled).toBe(true);
+    expect(onStatus).toHaveBeenLastCalledWith(null);
+  });
+
 
   it("ignores the legacy builtIn search param", async () => {
     const { getState } = await renderWizardState("builtIn=notion");

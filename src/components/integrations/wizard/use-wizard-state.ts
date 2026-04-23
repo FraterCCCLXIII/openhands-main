@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { getToolAccessMode } from "@/src/components/integrations/tool-access-controls";
 import type { ManagedConnectorOption, ToolAccessMode } from "@/src/types/context-layer";
@@ -50,6 +50,7 @@ export const useWizardState = ({
   const [toolSearch, setToolSearch] = useState("");
   const [discoverFeedback, setDiscoverFeedback] =
     useState<DiscoverFeedback | null>(null);
+  const lastSyncedManagedConnectorSlug = useRef(initialManagedConnectorSlug);
 
   const selectedConnector = useMemo(
     () =>
@@ -96,6 +97,7 @@ export const useWizardState = ({
     (connector: ManagedConnectorOption) => {
       setDraft((current) => ({
         ...current,
+        kind: "managed",
         managedConnectorSlug: connector.slug,
         key: connector.slug,
         name: connector.name,
@@ -149,6 +151,49 @@ export const useWizardState = ({
     setDiscoverFeedback(null);
     onStatus(null);
   };
+
+  useEffect(() => {
+    if (!initialManagedConnectorSlug) {
+      lastSyncedManagedConnectorSlug.current = "";
+      return;
+    }
+
+    if (lastSyncedManagedConnectorSlug.current === initialManagedConnectorSlug) {
+      return;
+    }
+
+    const connector =
+      managedConnectors.find((candidate) => candidate.slug === initialManagedConnectorSlug) ??
+      null;
+
+    if (connector) {
+      handleConnectorSelect(connector);
+    } else {
+      setDraft({
+        ...INITIAL_DRAFT,
+        kind: "managed",
+        managedConnectorSlug: initialManagedConnectorSlug,
+        key: initialManagedConnectorSlug,
+        name: initialManagedConnectorSlug,
+      });
+      setConnectorSearch(initialManagedConnectorSlug);
+      setDiscoverFeedback(null);
+      onStatus(null);
+    }
+
+    setDiscovery(null);
+    setToolModes({});
+    setSelectedTools({});
+    setExpandedTools({});
+    setToolSearch("");
+    setStep(2);
+    lastSyncedManagedConnectorSlug.current = initialManagedConnectorSlug;
+  }, [
+    handleConnectorSelect,
+    initialManagedConnectorSlug,
+    managedConnectors,
+    onStatus,
+  ]);
 
   const selectKind = (kind: WizardDraft["kind"]) => {
     setDraft({ ...INITIAL_DRAFT, kind });
