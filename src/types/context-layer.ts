@@ -110,6 +110,8 @@ export interface OAuthProviderRegistrationDefaults {
   authorizationUrl?: string;
   tokenUrl?: string;
   scopes?: string[];
+  optionalScopes?: string[];
+  toolScopes?: string[];
   scopeSeparator?: "space" | "comma";
   pkce?: boolean;
   clientAuthentication?: OAuthClientAuthentication;
@@ -141,6 +143,7 @@ export interface GenericOAuthConfig {
   authorizationUrl: string;
   tokenUrl: string;
   scopes: string[];
+  optionalScopes?: string[];
   scopeSeparator?: "space" | "comma";
   pkce?: boolean;
   clientAuthentication?: OAuthClientAuthentication;

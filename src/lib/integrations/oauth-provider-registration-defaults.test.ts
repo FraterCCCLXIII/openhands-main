@@ -3,10 +3,11 @@ import { describe, expect, it } from "vitest";
 import { getOAuthProviderRegistrationDefaults } from "@/src/lib/integrations/oauth-provider-registration-defaults";
 
 describe("getOAuthProviderRegistrationDefaults", () => {
-  it("returns a broad default HubSpot scope bundle including the baseline oauth scope", () => {
-    expect(getOAuthProviderRegistrationDefaults("hubspot")?.scopes).toEqual([
-      "oauth",
-      "crm.objects.contacts.read",
+  it("returns split HubSpot required and optional scopes with narrow tool defaults", () => {
+    const defaults = getOAuthProviderRegistrationDefaults("hubspot");
+
+    expect(defaults?.scopes).toEqual(["oauth", "crm.objects.contacts.read"]);
+    expect(defaults?.optionalScopes).toEqual([
       "crm.objects.contacts.write",
       "crm.objects.companies.read",
       "crm.objects.companies.write",
@@ -18,5 +19,6 @@ describe("getOAuthProviderRegistrationDefaults", () => {
       "crm.schemas.companies.read",
       "crm.schemas.deals.read",
     ]);
+    expect(defaults?.toolScopes).toEqual(["crm.objects.contacts.read"]);
   });
 });

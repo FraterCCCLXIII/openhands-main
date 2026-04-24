@@ -16,6 +16,19 @@ vi.mock("@/src/lib/integrations/oauth-provider-catalog", () => ({
 
 vi.mock("@/src/lib/integrations/oauth-provider-registration-defaults", () => ({
   getOAuthProviderRegistrationDefaults: (slug: string) => mockState.registrationDefaults[slug],
+  hubspotRequiredScopes: ["oauth", "crm.objects.contacts.read"],
+  hubspotOptionalScopes: [
+    "crm.objects.contacts.write",
+    "crm.objects.companies.read",
+    "crm.objects.companies.write",
+    "crm.objects.deals.read",
+    "crm.objects.deals.write",
+    "tickets",
+    "crm.objects.owners.read",
+    "crm.schemas.contacts.read",
+    "crm.schemas.companies.read",
+    "crm.schemas.deals.read",
+  ],
 }));
 
 import type { ContextRepository } from "@/src/lib/core/repository";
@@ -32,6 +45,7 @@ import {
   listAvailableManagedConnectorOptions,
   listDefaultManagedConnectorOptions,
   managedConnectorToOption,
+  normalizeManagedConnectorRecord,
   resolveManagedConnectorCredentials,
   sanitizeManagedConnector,
 } from "@/src/lib/integrations/managed-connectors";
@@ -310,6 +324,68 @@ describe("managed connector registry helpers", () => {
       oauthClientStatus: "unreadable",
     });
   });
+
+  it("normalizes legacy HubSpot connectors into required plus optional OAuth scopes", () => {
+    const legacyHubspotScopes = [
+      "oauth",
+      "crm.objects.contacts.read",
+      "crm.objects.contacts.write",
+      "crm.objects.companies.read",
+      "crm.objects.companies.write",
+      "crm.objects.deals.read",
+      "crm.objects.deals.write",
+      "tickets",
+      "crm.objects.owners.read",
+      "crm.schemas.contacts.read",
+      "crm.schemas.companies.read",
+      "crm.schemas.deals.read",
+    ];
+    const hubspotConnector = makeConnector({
+      slug: "hubspot",
+      name: "HubSpot",
+      authStrategy: "oauth2",
+      authModes: ["oauth2"],
+      provider: "http",
+      apiBaseUrl: "https://api.hubapi.com",
+      oauthConfig: {
+        authorizationUrl: "https://app.hubspot.com/oauth/authorize",
+        tokenUrl: "https://api.hubapi.com/oauth/v1/token",
+        scopes: legacyHubspotScopes,
+      },
+      tools: [
+        makeTool({
+          name: "list_contacts",
+          description: "List contacts",
+          defaultScopes: legacyHubspotScopes,
+        }),
+      ],
+    });
+
+    expect(normalizeManagedConnectorRecord(hubspotConnector)).toMatchObject({
+      oauthConfig: {
+        scopes: ["oauth", "crm.objects.contacts.read"],
+        optionalScopes: [
+          "crm.objects.contacts.write",
+          "crm.objects.companies.read",
+          "crm.objects.companies.write",
+          "crm.objects.deals.read",
+          "crm.objects.deals.write",
+          "tickets",
+          "crm.objects.owners.read",
+          "crm.schemas.contacts.read",
+          "crm.schemas.companies.read",
+          "crm.schemas.deals.read",
+        ],
+      },
+      tools: [
+        expect.objectContaining({
+          name: "list_contacts",
+          defaultScopes: ["crm.objects.contacts.read"],
+        }),
+      ],
+    });
+  });
+
 
   it("translates managed connectors to built-in options using configured header defaults", () => {
     const apiKeyConnector = makeConnector({

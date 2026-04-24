@@ -65,9 +65,12 @@ const officialManagedMcpServerUrls: Record<string, string> = {
   ordinal: "https://app.tryordinal.com/api/mcp",
 };
 
-const hubspotDefaultScopes = [
+export const hubspotRequiredScopes = [
   "oauth",
   "crm.objects.contacts.read",
+] as const;
+
+export const hubspotOptionalScopes = [
   "crm.objects.contacts.write",
   "crm.objects.companies.read",
   "crm.objects.companies.write",
@@ -318,7 +321,9 @@ const registrationDefaults: Record<string, OAuthProviderRegistrationDefaults> = 
     apiBaseUrl: "https://api.hubapi.com",
     authorizationUrl: "https://app.hubspot.com/oauth/authorize",
     tokenUrl: "https://api.hubapi.com/oauth/v1/token",
-    scopes: [...hubspotDefaultScopes],
+    scopes: [...hubspotRequiredScopes],
+    optionalScopes: [...hubspotOptionalScopes],
+    toolScopes: ["crm.objects.contacts.read"],
     toolName: "list_contacts",
     toolDescription: "List HubSpot contacts for the connected portal.",
     requestMethod: "GET",
