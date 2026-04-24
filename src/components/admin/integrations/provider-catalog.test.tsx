@@ -80,6 +80,42 @@ const providerCatalog: OAuthProviderCatalogOption[] = [
     },
   },
   {
+    slug: "hubspot",
+    name: "HubSpot",
+    description: "CRM contacts, companies, deals, and tickets",
+    categories: ["CRM"],
+    authStrategy: "oauth2",
+    availability: "planned",
+    docsUrl: "https://developers.hubspot.com/docs/apps/developer-platform/build-apps/authentication/oauth/working-with-oauth",
+    notes: "Supports required and optional OAuth scopes.",
+    popularityRank: 3,
+    registrationDefaults: {
+      provider: "http",
+      apiBaseUrl: "https://api.hubapi.com",
+      authorizationUrl: "https://app.hubspot.com/oauth/authorize",
+      tokenUrl: "https://api.hubapi.com/oauth/v1/token",
+      scopes: ["oauth", "crm.objects.contacts.read"],
+      optionalScopes: [
+        "crm.objects.contacts.write",
+        "crm.objects.companies.read",
+        "crm.objects.companies.write",
+        "crm.objects.deals.read",
+        "crm.objects.deals.write",
+        "tickets",
+        "crm.objects.owners.read",
+        "crm.schemas.contacts.read",
+        "crm.schemas.companies.read",
+        "crm.schemas.deals.read",
+      ],
+      toolScopes: ["crm.objects.contacts.read"],
+      toolName: "list_contacts",
+      toolDescription: "List HubSpot contacts for the connected portal.",
+      requestMethod: "GET",
+      requestPath: "/crm/v3/objects/contacts",
+    },
+  },
+
+  {
     slug: "notion",
     name: "Notion",
     description: "Workspace search, pages, databases, and knowledge management",
@@ -232,6 +268,7 @@ describe("provider catalog helper utilities", () => {
 
   it("builds credential copy, default form state, and payloads for HTTP and MCP connectors", () => {
     const googleCalendar = getProvider("google-calendar");
+    const hubspot = getProvider("hubspot");
     const elevenlabs = getProvider("elevenlabs");
 
     expect(getCredentialCopy(elevenlabs)).toEqual({
@@ -256,11 +293,22 @@ describe("provider catalog helper utilities", () => {
       authorizationUrl: "https://accounts.google.com/o/oauth2/v2/auth",
       tokenUrl: "https://oauth2.googleapis.com/token",
       scopes: "https://www.googleapis.com/auth/calendar.readonly",
+      optionalScopes: "",
       oauthClientId: "",
       oauthClientSecret: "",
       submitting: false,
       status: "idle",
       message: "",
+    });
+
+    const hubspotForm = createRegistrationFormState(hubspot);
+    expect(hubspotForm).toMatchObject({
+      apiBaseUrl: "https://api.hubapi.com",
+      authorizationUrl: "https://app.hubspot.com/oauth/authorize",
+      tokenUrl: "https://api.hubapi.com/oauth/v1/token",
+      scopes: "oauth, crm.objects.contacts.read",
+      optionalScopes:
+        "crm.objects.contacts.write, crm.objects.companies.read, crm.objects.companies.write, crm.objects.deals.read, crm.objects.deals.write, tickets, crm.objects.owners.read, crm.schemas.contacts.read, crm.schemas.companies.read, crm.schemas.deals.read",
     });
 
     expect(getManagedConnectorProvider(googleCalendar)).toBe("http");
@@ -273,6 +321,17 @@ describe("provider catalog helper utilities", () => {
         request: {
           method: "GET",
           path: "/calendars/primary/events",
+        },
+      },
+    ]);
+    expect(buildDefaultHttpTools(hubspot)).toEqual([
+      {
+        name: "list_contacts",
+        description: "List HubSpot contacts for the connected portal.",
+        defaultScopes: ["crm.objects.contacts.read"],
+        request: {
+          method: "GET",
+          path: "/crm/v3/objects/contacts",
         },
       },
     ]);
@@ -293,6 +352,29 @@ describe("provider catalog helper utilities", () => {
       tools: buildDefaultHttpTools(googleCalendar),
     });
     expect(googlePayload.openApiUrl).toBeUndefined();
+
+    const hubspotPayload = buildManagedConnectorPayload(hubspot, {
+      ...hubspotForm,
+      oauthClientId: "hubspot-client-id",
+      oauthClientSecret: "hubspot-client-secret",
+    });
+    expect(hubspotPayload.oauthConfig).toMatchObject({
+      scopes: ["oauth", "crm.objects.contacts.read"],
+      optionalScopes: [
+        "crm.objects.contacts.write",
+        "crm.objects.companies.read",
+        "crm.objects.companies.write",
+        "crm.objects.deals.read",
+        "crm.objects.deals.write",
+        "tickets",
+        "crm.objects.owners.read",
+        "crm.schemas.contacts.read",
+        "crm.schemas.companies.read",
+        "crm.schemas.deals.read",
+      ],
+    });
+    expect(hubspotPayload.tools).toEqual(buildDefaultHttpTools(hubspot));
+
     expect(buildReadyManagedConnectorOption(elevenlabs)).toMatchObject({
       slug: "elevenlabs",
       toolCount: 0,

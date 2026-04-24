@@ -11,6 +11,7 @@ import {
   getManagedConnectorProvider,
   getManagedConnectorServerUrl,
   listAvailableManagedConnectorOptions,
+  normalizeManagedConnectorRecord,
   resolveManagedConnectorCredentials,
 } from "@/src/lib/integrations/managed-connectors";
 import { generateManagedConnectorToolsFromOpenApi } from "@/src/lib/managed-connectors/openapi";
@@ -144,44 +145,45 @@ const discoverManagedConnectorIntegration = async (
     return null;
   }
 
-  if (!storedConnector.enabled) {
+  const normalizedConnector = normalizeManagedConnectorRecord(storedConnector);
+  if (!normalizedConnector.enabled) {
     return null;
   }
 
-  if (getManagedConnectorProvider(storedConnector) === "mcp") {
-    const serverUrl = getManagedConnectorServerUrl(storedConnector);
+  if (getManagedConnectorProvider(normalizedConnector) === "mcp") {
+    const serverUrl = getManagedConnectorServerUrl(normalizedConnector);
     if (!serverUrl) {
       throw new ContextLayerError(
-        `Managed MCP connector '${storedConnector.slug}' is missing a serverUrl.`,
+        `Managed MCP connector '${normalizedConnector.slug}' is missing a serverUrl.`,
         500,
       );
     }
 
-    if (storedConnector.tools.length > 0) {
+    if (normalizedConnector.tools.length > 0) {
       return {
         provider: "mcp",
-        authStrategy: storedConnector.authStrategy,
+        authStrategy: normalizedConnector.authStrategy,
         config: compactRecord({
-          managedConnectorSlug: storedConnector.slug,
+          managedConnectorSlug: normalizedConnector.slug,
           serverUrl,
         }),
         credentials:
-          storedConnector.authStrategy === "oauth2"
+          normalizedConnector.authStrategy === "oauth2"
             ? {}
-            : resolveManagedConnectorCredentials(storedConnector, input),
-        tools: buildManagedConnectorTools(storedConnector),
+            : resolveManagedConnectorCredentials(normalizedConnector, input),
+        tools: buildManagedConnectorTools(normalizedConnector),
       };
     }
 
     const credentials =
-      storedConnector.authStrategy === "oauth2"
+      normalizedConnector.authStrategy === "oauth2"
         ? await resolveManagedOAuthDiscoveryCredentials(
             options.repository,
             options.ownerId,
             input.key.trim(),
-            storedConnector.name,
+            normalizedConnector.name,
           )
-        : resolveManagedConnectorCredentials(storedConnector, input);
+        : resolveManagedConnectorCredentials(normalizedConnector, input);
 
     const result = await discoverMcpIntegration({
       ...input,
@@ -194,32 +196,32 @@ const discoverManagedConnectorIntegration = async (
 
     return {
       ...result,
-      authStrategy: storedConnector.authStrategy,
+      authStrategy: normalizedConnector.authStrategy,
       config: compactRecord({
-        managedConnectorSlug: storedConnector.slug,
+        managedConnectorSlug: normalizedConnector.slug,
         serverUrl,
       }),
-      credentials: storedConnector.authStrategy === "oauth2" ? {} : result.credentials,
+      credentials: normalizedConnector.authStrategy === "oauth2" ? {} : result.credentials,
     };
   }
 
-  const apiBaseUrl = getManagedConnectorApiBaseUrl(storedConnector);
+  const apiBaseUrl = getManagedConnectorApiBaseUrl(normalizedConnector);
   if (!apiBaseUrl) {
     throw new ContextLayerError(
-      `Managed HTTP connector '${storedConnector.slug}' is missing an apiBaseUrl.`,
+      `Managed HTTP connector '${normalizedConnector.slug}' is missing an apiBaseUrl.`,
       500,
     );
   }
 
   return {
     provider: "http",
-    authStrategy: storedConnector.authStrategy,
+    authStrategy: normalizedConnector.authStrategy,
     config: {
-      managedConnectorSlug: storedConnector.slug,
+      managedConnectorSlug: normalizedConnector.slug,
       apiBaseUrl,
     },
-    credentials: resolveManagedConnectorCredentials(storedConnector, input),
-    tools: buildManagedConnectorTools(storedConnector),
+    credentials: resolveManagedConnectorCredentials(normalizedConnector, input),
+    tools: buildManagedConnectorTools(normalizedConnector),
   };
 };
 

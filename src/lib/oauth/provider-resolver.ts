@@ -2,6 +2,7 @@ import { createHash, randomBytes } from "node:crypto";
 
 import type { ContextRepository } from "@/src/lib/core/repository";
 import { ContextLayerError } from "@/src/lib/core/errors";
+import { normalizeManagedConnectorRecord } from "@/src/lib/integrations/managed-connectors";
 import {
   encryptManagedOAuthClient,
   readManagedOAuthClient,
@@ -59,6 +60,25 @@ const splitScopes = (value: unknown) => {
   return [];
 };
 
+const joinScopes = (scopes: string[], separator: "space" | "comma" | undefined) =>
+  scopes.join(separator === "comma" ? "," : " ");
+
+const getOptionalAuthorizationScopes = (connector: ManagedConnectorRecord) => {
+  const oauthConfig = connector.oauthConfig;
+  if (!oauthConfig) {
+    return [];
+  }
+
+  if ((oauthConfig.optionalScopes?.length ?? 0) > 0) {
+    return oauthConfig.optionalScopes ?? [];
+  }
+
+  return splitScopes(oauthConfig.additionalAuthorizationParams?.optional_scope);
+};
+
+const getRequestedAuthorizationScopes = (connector: ManagedConnectorRecord) =>
+  [...new Set([...connector.oauthConfig!.scopes, ...getOptionalAuthorizationScopes(connector)])];
+
 const ensureDynamicManagedOAuthClient = async (
   repository: ContextRepository,
   connector: ManagedConnectorRecord,
@@ -108,15 +128,27 @@ const buildGenericOAuthProvider = (
       if (connector.oauthConfig!.scopes.length > 0) {
         authorizationUrl.searchParams.set(
           "scope",
-          connector.oauthConfig!.scopes.join(
-            connector.oauthConfig!.scopeSeparator === "comma" ? "," : " ",
-          ),
+          joinScopes(connector.oauthConfig!.scopes, connector.oauthConfig!.scopeSeparator),
+        );
+      }
+
+      const optionalScopes = getOptionalAuthorizationScopes(connector);
+      if (optionalScopes.length > 0) {
+        authorizationUrl.searchParams.set(
+          "optional_scope",
+          joinScopes(optionalScopes, connector.oauthConfig!.scopeSeparator),
         );
       }
 
       for (const [key, value] of Object.entries(
         connector.oauthConfig!.additionalAuthorizationParams ?? {},
       )) {
+        if (key === "scope" && connector.oauthConfig!.scopes.length > 0) {
+          continue;
+        }
+        if (key === "optional_scope" && optionalScopes.length > 0) {
+          continue;
+        }
         authorizationUrl.searchParams.set(key, value);
       }
 
@@ -193,7 +225,7 @@ const buildGenericOAuthProvider = (
         scopes:
           splitScopes(response.scope).length > 0
             ? splitScopes(response.scope)
-            : connector.oauthConfig!.scopes,
+            : getRequestedAuthorizationScopes(connector),
         expiresAt: resolveExpiresAt(
           typeof response.expires_in === "number" ? response.expires_in : undefined,
         ),
@@ -252,7 +284,7 @@ const buildGenericOAuthProvider = (
         scopes:
           splitScopes(response.scope).length > 0
             ? splitScopes(response.scope)
-            : connector.oauthConfig!.scopes,
+            : getRequestedAuthorizationScopes(connector),
         expiresAt: resolveExpiresAt(
           typeof response.expires_in === "number" ? response.expires_in : undefined,
         ),
@@ -272,8 +304,12 @@ export const resolveOAuthProvider = async (
     return null;
   }
 
-  const resolvedConnector = await ensureDynamicManagedOAuthClient(repository, connector);
-  return buildGenericOAuthProvider(resolvedConnector);
+  const normalizedConnector = normalizeManagedConnectorRecord(connector);
+  const resolvedConnector = await ensureDynamicManagedOAuthClient(
+    repository,
+    normalizedConnector,
+  );
+  return buildGenericOAuthProvider(normalizeManagedConnectorRecord(resolvedConnector));
 };
 
 export const isOAuthProviderResolvedAndConfigured = async (

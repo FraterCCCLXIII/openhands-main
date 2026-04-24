@@ -1,10 +1,15 @@
 import { ContextLayerError } from "@/src/lib/core/errors";
 import type { ContextRepository } from "@/src/lib/core/repository";
 import { listOAuthProviderCatalog } from "@/src/lib/integrations/oauth-provider-catalog";
-import { getOAuthProviderRegistrationDefaults } from "@/src/lib/integrations/oauth-provider-registration-defaults";
+import {
+  getOAuthProviderRegistrationDefaults,
+  hubspotOptionalScopes,
+  hubspotRequiredScopes,
+} from "@/src/lib/integrations/oauth-provider-registration-defaults";
 import { readManagedOAuthClient } from "@/src/lib/oauth/managed-oauth-client";
 import type {
   AuthStrategy,
+  GenericOAuthConfig,
   ManagedConnectorOption,
   ToolSpec,
   ManagedConnectorDefinition,
@@ -57,6 +62,97 @@ export const getManagedConnectorOAuthClientStatus = (
 const isManagedConnectorOAuthConfigured = (connector: ManagedConnectorRecord) =>
   connector.authStrategy !== "oauth2" ||
   getManagedConnectorOAuthClientStatus(connector) === "decryptable";
+
+const normalizeOAuthScopeList = (scopes: string[] | undefined) =>
+  [...new Set((scopes ?? []).map((scope) => scope.trim()).filter(Boolean))];
+
+const sortScopes = (scopes: string[]) =>
+  [...scopes].sort((left, right) => left.localeCompare(right));
+
+const sameScopeSet = (left: string[], right: string[]) => {
+  const normalizedLeft = sortScopes(normalizeOAuthScopeList(left));
+  const normalizedRight = sortScopes(normalizeOAuthScopeList(right));
+  return (
+    normalizedLeft.length === normalizedRight.length &&
+    normalizedLeft.every((scope, index) => scope === normalizedRight[index])
+  );
+};
+
+const hubspotLegacyScopeBundle = [...hubspotRequiredScopes, ...hubspotOptionalScopes];
+const hubspotLegacyScopeBundleWithoutOauth = hubspotLegacyScopeBundle.filter(
+  (scope) => scope !== "oauth",
+);
+
+const normalizeManagedOAuthConfig = (
+  connector: Pick<ManagedConnectorRecord, "slug" | "authStrategy" | "oauthConfig">,
+): GenericOAuthConfig | undefined => {
+  const oauthConfig = connector.oauthConfig;
+  if (!oauthConfig) {
+    return undefined;
+  }
+
+  const scopes = normalizeOAuthScopeList(oauthConfig.scopes);
+  const scopeSet = new Set(scopes);
+  const optionalScopes = normalizeOAuthScopeList(oauthConfig.optionalScopes).filter(
+    (scope) => !scopeSet.has(scope),
+  );
+  const normalizedConfig: GenericOAuthConfig = {
+    ...oauthConfig,
+    scopes,
+    optionalScopes: optionalScopes.length > 0 ? optionalScopes : undefined,
+  };
+
+  const hasExplicitOptionalScopes = Boolean(normalizedConfig.optionalScopes?.length);
+  const hasLegacyOptionalScopeParam = Boolean(
+    normalizedConfig.additionalAuthorizationParams?.optional_scope,
+  );
+  const hasLegacyHubspotScopes =
+    connector.slug === "hubspot" &&
+    connector.authStrategy === "oauth2" &&
+    (sameScopeSet(scopes, hubspotLegacyScopeBundle) ||
+      sameScopeSet(scopes, hubspotLegacyScopeBundleWithoutOauth));
+
+  if (
+    hasLegacyHubspotScopes &&
+    !hasExplicitOptionalScopes &&
+    !hasLegacyOptionalScopeParam
+  ) {
+    return {
+      ...normalizedConfig,
+      scopes: [...hubspotRequiredScopes],
+      optionalScopes: [...hubspotOptionalScopes],
+    };
+  }
+
+  return normalizedConfig;
+};
+
+export const normalizeManagedConnectorRecord = (
+  connector: ManagedConnectorRecord,
+): ManagedConnectorRecord => {
+  const oauthConfig = normalizeManagedOAuthConfig(connector);
+  const tools = connector.tools.map((tool) => {
+    if (
+      connector.slug === "hubspot" &&
+      tool.name === "list_contacts" &&
+      (sameScopeSet(tool.defaultScopes, hubspotLegacyScopeBundle) ||
+        sameScopeSet(tool.defaultScopes, hubspotLegacyScopeBundleWithoutOauth))
+    ) {
+      return {
+        ...tool,
+        defaultScopes: ["crm.objects.contacts.read"],
+      };
+    }
+
+    return tool;
+  });
+
+  return {
+    ...connector,
+    oauthConfig,
+    tools,
+  };
+};
 
 const getConfiguredApiKeyHeaderName = (slug: string) =>
   getOAuthProviderRegistrationDefaults(slug)?.apiKeyHeaderName?.trim() || undefined;
@@ -196,14 +292,15 @@ export const getManagedConnectorApiBaseUrl = (connector: ManagedConnectorRecord)
 export const sanitizeManagedConnector = (
   connector: ManagedConnectorRecord,
 ): ManagedConnectorRecord => {
-  const oauthClientStatus = getManagedConnectorOAuthClientStatus(connector);
+  const normalizedConnector = normalizeManagedConnectorRecord(connector);
+  const oauthClientStatus = getManagedConnectorOAuthClientStatus(normalizedConnector);
 
   return {
-    ...connector,
-    provider: getManagedConnectorProvider(connector),
-    serverUrl: getManagedConnectorServerUrl(connector),
-    apiBaseUrl: getManagedConnectorApiBaseUrl(connector),
-    oauthConfigured: isManagedConnectorOAuthConfigured(connector),
+    ...normalizedConnector,
+    provider: getManagedConnectorProvider(normalizedConnector),
+    serverUrl: getManagedConnectorServerUrl(normalizedConnector),
+    apiBaseUrl: getManagedConnectorApiBaseUrl(normalizedConnector),
+    oauthConfigured: isManagedConnectorOAuthConfigured(normalizedConnector),
     oauthClientStatus,
     encryptedOAuthClient: undefined,
   };
@@ -389,5 +486,5 @@ export const getManagedConnectorRecord = async (
     return null;
   }
 
-  return connector;
+  return normalizeManagedConnectorRecord(connector);
 };

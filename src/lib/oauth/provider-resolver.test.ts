@@ -161,7 +161,7 @@ describe("resolveOAuthProvider", () => {
     });
   });
 
-  it("adds comma-separated scopes and custom auth params without PKCE", async () => {
+  it("adds comma-separated required and optional scopes with custom auth params", async () => {
     const repository = testRepo;
     await repository.upsertManagedConnector(
       createManagedConnector({
@@ -169,6 +169,7 @@ describe("resolveOAuthProvider", () => {
           authorizationUrl: "https://auth.acme.test/authorize",
           tokenUrl: "https://auth.acme.test/token",
           scopes: ["contacts.read", "contacts.write"],
+          optionalScopes: ["contacts.admin"],
           scopeSeparator: "comma",
           clientAuthentication: "basic",
           additionalAuthorizationParams: {
@@ -190,6 +191,9 @@ describe("resolveOAuthProvider", () => {
     expect(authorizationUrl.searchParams.get("scope")).toBe(
       "contacts.read,contacts.write",
     );
+    expect(authorizationUrl.searchParams.get("optional_scope")).toBe(
+      "contacts.admin",
+    );
     expect(authorizationUrl.searchParams.get("audience")).toBe("api://acme");
     expect(authorizationUrl.searchParams.get("prompt")).toBe("consent");
     expect(authorizationUrl.searchParams.get("code_challenge")).toBeNull();
@@ -203,6 +207,7 @@ describe("resolveOAuthProvider", () => {
           authorizationUrl: "https://auth.acme.test/authorize",
           tokenUrl: "https://auth.acme.test/token",
           scopes: ["contacts.read", "contacts.write"],
+          optionalScopes: ["contacts.admin"],
           clientAuthentication: "basic",
           additionalTokenParams: {
             resource: "contacts",
@@ -289,7 +294,7 @@ describe("resolveOAuthProvider", () => {
       accessToken: "access-refreshed",
       refreshToken: "refresh-basic",
       tokenType: "Bearer",
-      scopes: ["contacts.read", "contacts.write"],
+      scopes: ["contacts.read", "contacts.write", "contacts.admin"],
       displayName: "Acme CRM",
       expiresAt: undefined,
     });

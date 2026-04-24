@@ -41,6 +41,7 @@ interface RegistrationFormState {
   authorizationUrl: string;
   tokenUrl: string;
   scopes: string;
+  optionalScopes: string;
   oauthClientId: string;
   oauthClientSecret: string;
   submitting: boolean;
@@ -113,6 +114,7 @@ export const createRegistrationFormState = (
     authorizationUrl: defaults?.authorizationUrl ?? "",
     tokenUrl: defaults?.tokenUrl ?? "",
     scopes: defaults?.scopes?.join(", ") ?? "",
+    optionalScopes: defaults?.optionalScopes?.join(", ") ?? "",
     oauthClientId: "",
     oauthClientSecret: "",
     submitting: false,
@@ -155,7 +157,7 @@ export const buildDefaultHttpTools = (provider: OAuthProviderCatalogOption) => {
     {
       name: defaults.toolName,
       description: defaults.toolDescription,
-      defaultScopes: defaults.scopes ?? [],
+      defaultScopes: defaults.toolScopes ?? defaults.scopes ?? [],
       request: {
         method: defaults.requestMethod,
         path: defaults.requestPath,
@@ -185,6 +187,10 @@ export const buildManagedConnectorPayload = (
     parseScopes(form.scopes).length > 0
       ? parseScopes(form.scopes)
       : provider.registrationDefaults?.scopes ?? [];
+  const optionalScopes =
+    parseScopes(form.optionalScopes).length > 0
+      ? parseScopes(form.optionalScopes)
+      : provider.registrationDefaults?.optionalScopes ?? [];
 
   return {
     slug: provider.slug,
@@ -225,6 +231,7 @@ export const buildManagedConnectorPayload = (
             tokenUrl:
               form.tokenUrl.trim() || provider.registrationDefaults?.tokenUrl || "",
             scopes,
+            optionalScopes,
             scopeSeparator: provider.registrationDefaults?.scopeSeparator,
             pkce: provider.registrationDefaults?.pkce,
             clientAuthentication:
@@ -607,7 +614,7 @@ export function ProviderCatalog({
                               />
                             </label>
                             <label className="flex flex-col gap-1 text-xs text-[var(--color-text-muted)] md:col-span-2">
-                              Scopes (comma separated)
+                              Required scopes (comma separated)
                               <input
                                 type="text"
                                 value={registrationForm.scopes}
@@ -617,6 +624,20 @@ export function ProviderCatalog({
                                   })
                                 }
                                 placeholder="repo, read:user"
+                                className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-white outline-none placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-accent)]"
+                              />
+                            </label>
+                            <label className="flex flex-col gap-1 text-xs text-[var(--color-text-muted)] md:col-span-2">
+                              Optional scopes (comma separated)
+                              <input
+                                type="text"
+                                value={registrationForm.optionalScopes}
+                                onChange={(event) =>
+                                  updateRegistrationForm(provider, {
+                                    optionalScopes: event.target.value,
+                                  })
+                                }
+                                placeholder="contacts.write, settings.read"
                                 className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-white outline-none placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-accent)]"
                               />
                             </label>

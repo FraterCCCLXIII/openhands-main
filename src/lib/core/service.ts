@@ -43,6 +43,7 @@ import {
   getManagedConnectorApiBaseUrl,
   getManagedConnectorServerUrl,
   listAllManagedConnectorDefinitions,
+  normalizeManagedConnectorRecord,
   sanitizeManagedConnector,
 } from "@/src/lib/integrations/managed-connectors";
 import { generateManagedConnectorToolsFromOpenApi } from "@/src/lib/managed-connectors/openapi";
@@ -119,6 +120,29 @@ const sanitizeIndexedToolDefinitions = (
     ...toolSpec,
     accessMode: getManagedConnectorToolAccessMode(toolSpec),
   }));
+
+const normalizeOAuthScopeList = (scopes: string[] | undefined) =>
+  [...new Set((scopes ?? []).map((scope) => scope.trim()).filter(Boolean))];
+
+const normalizeManagedOAuthConfig = (
+  oauthConfig: GenericOAuthConfig | undefined,
+): GenericOAuthConfig | undefined => {
+  if (!oauthConfig) {
+    return undefined;
+  }
+
+  const scopes = normalizeOAuthScopeList(oauthConfig.scopes);
+  const scopeSet = new Set(scopes);
+  const optionalScopes = normalizeOAuthScopeList(oauthConfig.optionalScopes).filter(
+    (scope) => !scopeSet.has(scope),
+  );
+
+  return {
+    ...oauthConfig,
+    scopes,
+    optionalScopes: optionalScopes.length > 0 ? optionalScopes : undefined,
+  };
+};
 
 const sanitizeManagedConnectorToolSource = (
   connector: ManagedConnectorRecord,
@@ -577,11 +601,8 @@ export class ContextLayerService {
     }
 
     const normalizedOAuthConfig: GenericOAuthConfig | undefined =
-      input.authStrategy === "oauth2" && input.oauthConfig
-        ? {
-            ...input.oauthConfig,
-            scopes: [...new Set(input.oauthConfig.scopes.map((scope) => scope.trim()).filter(Boolean))],
-          }
+      input.authStrategy === "oauth2"
+        ? normalizeManagedOAuthConfig(input.oauthConfig)
         : undefined;
     const requestedTools = input.tools ?? input.functions ?? [];
     const requestedAccessModes = getManagedConnectorToolAccessModes(requestedTools);
@@ -1708,7 +1729,10 @@ export class ContextLayerService {
     }
 
     const connector = await this.repository.getManagedConnector(managedConnectorSlug);
-    return sanitizeIntegrationTools(integration, connector);
+    return sanitizeIntegrationTools(
+      integration,
+      connector ? normalizeManagedConnectorRecord(connector) : null,
+    );
   }
 
   private async getManagedConnectorDiscoveryCredentials(

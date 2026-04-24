@@ -30,6 +30,7 @@ interface ManagedConnectorFormState {
   authorizationUrl: string;
   tokenUrl: string;
   scopes: string;
+  optionalScopes: string;
   oauthClientId: string;
   oauthClientSecret: string;
   submitting: boolean;
@@ -93,6 +94,7 @@ const createFormState = (
   authorizationUrl: connector.oauthConfig?.authorizationUrl ?? "",
   tokenUrl: connector.oauthConfig?.tokenUrl ?? "",
   scopes: connector.oauthConfig?.scopes.join(", ") ?? "",
+  optionalScopes: connector.oauthConfig?.optionalScopes?.join(", ") ?? "",
   oauthClientId: "",
   oauthClientSecret: "",
   submitting: false,
@@ -129,6 +131,7 @@ const buildManagedConnectorPayload = (
           authorizationUrl: form.authorizationUrl.trim(),
           tokenUrl: form.tokenUrl.trim(),
           scopes: parseScopes(form.scopes),
+          optionalScopes: parseScopes(form.optionalScopes),
           pkce: connector.oauthConfig?.pkce,
           clientAuthentication: connector.oauthConfig?.clientAuthentication,
           registrationUrl: connector.oauthConfig?.registrationUrl,
@@ -787,13 +790,26 @@ export function ManagedConnectorList({
                             />
                           </label>
                           <label className="flex flex-col gap-1 text-xs text-[var(--color-text-base)] md:col-span-2">
-                            Scopes (comma separated)
+                            Required scopes (comma separated)
                             <input
                               type="text"
                               value={form.scopes}
                               onChange={(event) =>
                                 updateFormState(connector.slug, connector, {
                                   scopes: event.target.value,
+                                })
+                              }
+                              className={inputClassName}
+                            />
+                          </label>
+                          <label className="flex flex-col gap-1 text-xs text-[var(--color-text-base)] md:col-span-2">
+                            Optional scopes (comma separated)
+                            <input
+                              type="text"
+                              value={form.optionalScopes}
+                              onChange={(event) =>
+                                updateFormState(connector.slug, connector, {
+                                  optionalScopes: event.target.value,
                                 })
                               }
                               className={inputClassName}

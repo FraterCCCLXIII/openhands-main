@@ -23,6 +23,7 @@ export const genericOAuthConfigSchema = z.object({
   authorizationUrl: z.string().url(),
   tokenUrl: z.string().url(),
   scopes: z.array(z.string()).default([]),
+  optionalScopes: z.array(z.string()).optional(),
   scopeSeparator: z.enum(["space", "comma"]).optional(),
   pkce: z.boolean().optional(),
   clientAuthentication: z.enum(["basic", "body", "none"]).optional(),

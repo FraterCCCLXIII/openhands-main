@@ -2068,6 +2068,7 @@ describe("ContextLayerService", () => {
         tokenUrl: "https://auth.example.com/token",
         clientAuthentication: "none",
         scopes: [" read ", "", "write", "read"],
+        optionalScopes: [" admin ", "read", "", "admin"],
       },
       oauthClientId: " public-client ",
       tools: [],
@@ -2075,6 +2076,7 @@ describe("ContextLayerService", () => {
     });
 
     expect(connector.oauthConfig?.scopes).toEqual(["read", "write"]);
+    expect(connector.oauthConfig?.optionalScopes).toEqual(["admin"]);
     const stored = await testRepo.getManagedConnector("public-oauth");
     expect(stored?.oauthConfigured).toBe(true);
     expect(
