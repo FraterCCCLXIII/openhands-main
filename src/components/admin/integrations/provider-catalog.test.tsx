@@ -375,6 +375,18 @@ describe("provider catalog helper utilities", () => {
     });
     expect(hubspotPayload.tools).toEqual(buildDefaultHttpTools(hubspot));
 
+    const hubspotClearedOptionalScopesPayload = buildManagedConnectorPayload(
+      hubspot,
+      {
+        ...hubspotForm,
+        optionalScopes: "",
+        oauthClientId: "hubspot-client-id",
+        oauthClientSecret: "hubspot-client-secret",
+      },
+    );
+    expect(hubspotClearedOptionalScopesPayload.oauthConfig?.optionalScopes).toEqual([]);
+
+
     expect(buildReadyManagedConnectorOption(elevenlabs)).toMatchObject({
       slug: "elevenlabs",
       toolCount: 0,

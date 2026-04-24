@@ -44,6 +44,7 @@ import {
   getManagedConnectorServerUrl,
   listAllManagedConnectorDefinitions,
   normalizeManagedConnectorRecord,
+  normalizeOAuthScopeList,
   sanitizeManagedConnector,
 } from "@/src/lib/integrations/managed-connectors";
 import { generateManagedConnectorToolsFromOpenApi } from "@/src/lib/managed-connectors/openapi";
@@ -121,10 +122,7 @@ const sanitizeIndexedToolDefinitions = (
     accessMode: getManagedConnectorToolAccessMode(toolSpec),
   }));
 
-const normalizeOAuthScopeList = (scopes: string[] | undefined) =>
-  [...new Set((scopes ?? []).map((scope) => scope.trim()).filter(Boolean))];
-
-const normalizeManagedOAuthConfig = (
+const normalizeOAuthConfigInput = (
   oauthConfig: GenericOAuthConfig | undefined,
 ): GenericOAuthConfig | undefined => {
   if (!oauthConfig) {
@@ -602,7 +600,7 @@ export class ContextLayerService {
 
     const normalizedOAuthConfig: GenericOAuthConfig | undefined =
       input.authStrategy === "oauth2"
-        ? normalizeManagedOAuthConfig(input.oauthConfig)
+        ? normalizeOAuthConfigInput(input.oauthConfig)
         : undefined;
     const requestedTools = input.tools ?? input.functions ?? [];
     const requestedAccessModes = getManagedConnectorToolAccessModes(requestedTools);

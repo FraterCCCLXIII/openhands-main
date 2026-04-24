@@ -812,6 +812,7 @@ export function ManagedConnectorList({
                                   optionalScopes: event.target.value,
                                 })
                               }
+                              placeholder="contacts.write, settings.read"
                               className={inputClassName}
                             />
                           </label>

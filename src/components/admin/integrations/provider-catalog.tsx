@@ -183,14 +183,8 @@ export const buildManagedConnectorPayload = (
   const authStrategy = getProviderAuthStrategy(provider);
   const credentialCopy = getCredentialCopy(provider);
   const managedConnectorProvider = getManagedConnectorProvider(provider);
-  const scopes =
-    parseScopes(form.scopes).length > 0
-      ? parseScopes(form.scopes)
-      : provider.registrationDefaults?.scopes ?? [];
-  const optionalScopes =
-    parseScopes(form.optionalScopes).length > 0
-      ? parseScopes(form.optionalScopes)
-      : provider.registrationDefaults?.optionalScopes ?? [];
+  const scopes = parseScopes(form.scopes);
+  const optionalScopes = parseScopes(form.optionalScopes);
 
   return {
     slug: provider.slug,

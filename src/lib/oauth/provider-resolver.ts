@@ -76,8 +76,14 @@ const getOptionalAuthorizationScopes = (connector: ManagedConnectorRecord) => {
   return splitScopes(oauthConfig.additionalAuthorizationParams?.optional_scope);
 };
 
-const getRequestedAuthorizationScopes = (connector: ManagedConnectorRecord) =>
-  [...new Set([...connector.oauthConfig!.scopes, ...getOptionalAuthorizationScopes(connector)])];
+const getRequestedAuthorizationScopes = (connector: ManagedConnectorRecord) => {
+  const oauthConfig = connector.oauthConfig;
+  if (!oauthConfig) {
+    return [];
+  }
+
+  return [...new Set([...oauthConfig.scopes, ...getOptionalAuthorizationScopes(connector)])];
+};
 
 const ensureDynamicManagedOAuthClient = async (
   repository: ContextRepository,
@@ -309,7 +315,7 @@ export const resolveOAuthProvider = async (
     repository,
     normalizedConnector,
   );
-  return buildGenericOAuthProvider(normalizeManagedConnectorRecord(resolvedConnector));
+  return buildGenericOAuthProvider(resolvedConnector);
 };
 
 export const isOAuthProviderResolvedAndConfigured = async (

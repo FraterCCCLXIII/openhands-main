@@ -63,7 +63,7 @@ const isManagedConnectorOAuthConfigured = (connector: ManagedConnectorRecord) =>
   connector.authStrategy !== "oauth2" ||
   getManagedConnectorOAuthClientStatus(connector) === "decryptable";
 
-const normalizeOAuthScopeList = (scopes: string[] | undefined) =>
+export const normalizeOAuthScopeList = (scopes: string[] | undefined) =>
   [...new Set((scopes ?? []).map((scope) => scope.trim()).filter(Boolean))];
 
 const sortScopes = (scopes: string[]) =>
