@@ -213,7 +213,7 @@ export const buildManagedConnectorPayload = (
         : undefined,
     openApiUrl:
       managedConnectorProvider === "http"
-        ? form.openApiUrl.trim() || provider.registrationDefaults?.openApiUrl || ""
+        ? form.openApiUrl.trim() || provider.registrationDefaults?.openApiUrl || undefined
         : undefined,
     oauthConfig:
       authStrategy === "oauth2"
