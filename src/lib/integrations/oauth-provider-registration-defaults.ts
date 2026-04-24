@@ -66,6 +66,7 @@ const officialManagedMcpServerUrls: Record<string, string> = {
 };
 
 const hubspotDefaultScopes = [
+  "oauth",
   "crm.objects.contacts.read",
   "crm.objects.contacts.write",
   "crm.objects.companies.read",
