@@ -19,12 +19,14 @@ describe("listOAuthProviderCatalog", () => {
     const figma = providers.find((provider) => provider.slug === "figma");
     const slack = providers.find((provider) => provider.slug === "slack");
     const webflow = providers.find((provider) => provider.slug === "webflow");
+    const hubspot = providers.find((provider) => provider.slug === "hubspot");
     const github = providers.find((provider) => provider.slug === "github");
 
     expect(notion).toMatchObject({ availability: "oauth_ready", managedConnectorSlug: "notion" });
     expect(figma).toMatchObject({ availability: "oauth_ready", managedConnectorSlug: "figma" });
     expect(slack).toMatchObject({ availability: "oauth_ready", managedConnectorSlug: "slack" });
     expect(webflow).toMatchObject({ availability: "oauth_ready", managedConnectorSlug: "webflow" });
+    expect(hubspot).toMatchObject({ availability: "oauth_ready", managedConnectorSlug: "hubspot" });
     expect(github).toMatchObject({ availability: "manual_token", managedConnectorSlug: "github" });
   });
 
@@ -56,6 +58,7 @@ describe("listOAuthProviderCatalog", () => {
     const googleCalendar = providers.find((provider) => provider.slug === "google-calendar");
     const slack = providers.find((provider) => provider.slug === "slack");
     const webflow = providers.find((provider) => provider.slug === "webflow");
+    const hubspot = providers.find((provider) => provider.slug === "hubspot");
     const github = providers.find((provider) => provider.slug === "github");
     const elevenlabs = providers.find((provider) => provider.slug === "elevenlabs");
 
@@ -82,6 +85,21 @@ describe("listOAuthProviderCatalog", () => {
       tokenUrl: "https://mcp.webflow.com/oauth/token",
       registrationUrl: "https://mcp.webflow.com/oauth/register",
       clientAuthentication: "none",
+      pkce: true,
+      scopes: [],
+    });
+    expect(hubspot).toMatchObject({
+      availability: "oauth_ready",
+      managedConnectorSlug: "hubspot",
+      docsUrl:
+        "https://developers.hubspot.com/docs/apps/developer-platform/build-apps/integrate-with-the-remote-hubspot-mcp-server",
+    });
+    expect(hubspot?.registrationDefaults).toMatchObject({
+      provider: "mcp",
+      serverUrl: "https://mcp.hubspot.com",
+      authorizationUrl: "https://mcp.hubspot.com/oauth/authorize/user",
+      tokenUrl: "https://mcp.hubspot.com/oauth/v3/token",
+      clientAuthentication: "body",
       pkce: true,
       scopes: [],
     });

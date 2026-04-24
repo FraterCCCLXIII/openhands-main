@@ -268,10 +268,12 @@ const oauthProviderCatalog = [
     name: "HubSpot",
     description: "CRM, marketing, tickets, and customer lifecycle workflows.",
     categories: ["CRM", "Marketing"],
-    availability: "planned",
+    availability: "oauth_ready",
+    managedConnectorSlug: "hubspot",
     appUrl: "https://www.hubspot.com",
-    docsUrl: "https://developers.hubspot.com/docs/apps/legacy-apps/authentication/oauth-quickstart-guide",
-    notes: "Broad customer platform with clear OAuth app support.",
+    docsUrl:
+      "https://developers.hubspot.com/docs/apps/developer-platform/build-apps/integrate-with-the-remote-hubspot-mcp-server",
+    notes: "Uses HubSpot's official remote MCP server plus MCP auth apps with PKCE.",
   }),
   provider(26, {
     slug: "zendesk",

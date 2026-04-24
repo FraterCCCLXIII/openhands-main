@@ -2189,6 +2189,87 @@ describe("ContextLayerService", () => {
     );
   });
 
+  it("indexes legacy HubSpot connectors via the MCP server after normalizing them", async () => {
+    const service = createService();
+    const discoverySpy = vi.spyOn(discoveryModule, "discoverIntegration").mockResolvedValue({
+      provider: "mcp",
+      authStrategy: "oauth2",
+      config: { serverUrl: "https://mcp.hubspot.com" },
+      credentials: {},
+      tools: {
+        get_user_details: {
+          name: "get_user_details",
+          description: "Get current HubSpot user details",
+          enabled: true,
+          fineGrainedPermissions: true,
+          defaultScopes: [],
+          executionMode: "provider",
+          config: {},
+        },
+      },
+    } as unknown as Awaited<ReturnType<typeof discoveryModule.discoverIntegration>>);
+    const timestamp = new Date().toISOString();
+
+    await testRepo.upsertManagedConnector({
+      slug: "hubspot",
+      name: "HubSpot",
+      description: "Legacy HubSpot HTTP connector",
+      categories: ["CRM"],
+      authModes: ["oauth2"],
+      authStrategy: "oauth2",
+      provider: "http",
+      credentialLabel: "Connect HubSpot",
+      credentialPlaceholder: "Connect HubSpot",
+      credentialHelp: "Use OAuth to connect HubSpot.",
+      apiBaseUrl: "https://api.hubapi.com",
+      openApiUrl: "https://api.hubapi.com/openapi.json",
+      oauthConfig: {
+        authorizationUrl: "https://app.hubspot.com/oauth/authorize",
+        tokenUrl: "https://api.hubapi.com/oauth/v1/token",
+        scopes: ["oauth", "crm.objects.contacts.read"],
+        optionalScopes: ["crm.objects.contacts.write"],
+      },
+      tools: [
+        {
+          name: "list_contacts",
+          description: "List contacts",
+          defaultScopes: ["crm.objects.contacts.read"],
+          accessMode: "approval_required",
+        },
+      ],
+      enabled: true,
+      oauthConfigured: true,
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    });
+
+    const indexed = await service.indexManagedConnectorFunctions("hubspot");
+
+    expect(discoverySpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        key: "hubspot",
+        kind: "mcp",
+        config: {
+          serverUrl: "https://mcp.hubspot.com",
+        },
+      }),
+      expect.objectContaining({
+        repository: testRepo,
+      }),
+    );
+    expect(indexed).toMatchObject({
+      slug: "hubspot",
+      provider: "mcp",
+      serverUrl: "https://mcp.hubspot.com",
+      tools: [
+        expect.objectContaining({
+          name: "get_user_details",
+        }),
+      ],
+    });
+  });
+
+
   it("indexes MCP managed connector tools using saved owner discovery credentials", async () => {
     const service = createService();
     const discoverySpy = vi.spyOn(discoveryModule, "discoverIntegration").mockResolvedValue({

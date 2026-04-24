@@ -668,7 +668,7 @@ export class ContextLayerService {
       encryptedOAuthClient = undefined;
     }
 
-    const record: ManagedConnectorRecord = {
+    const record: ManagedConnectorRecord = normalizeManagedConnectorRecord({
       slug,
       name: input.name.trim(),
       description: input.description.trim(),
@@ -697,7 +697,7 @@ export class ContextLayerService {
       enabled: input.enabled,
       createdAt: existing?.createdAt ?? timestamp,
       updatedAt: timestamp,
-    };
+    });
 
     return sanitizeManagedConnectorToolResponse(
       await this.repository.upsertManagedConnector(record),
@@ -717,13 +717,16 @@ export class ContextLayerService {
       throw new ContextLayerError("Managed connector not found.", 404);
     }
 
-    const existingAccessModes = getManagedConnectorToolAccessModes(existing.tools);
+    const normalizedConnector = normalizeManagedConnectorRecord(existing);
+    const existingAccessModes = getManagedConnectorToolAccessModes(normalizedConnector.tools);
 
     let tools: ManagedConnectorToolDefinition[];
-    const provider = existing.provider ?? (existing.openApiUrl ? "http" : "mcp");
+    const provider =
+      normalizedConnector.provider ??
+      (normalizedConnector.openApiUrl ? "http" : "mcp");
 
     if (provider === "http") {
-      if (!existing.openApiUrl) {
+      if (!normalizedConnector.openApiUrl) {
         throw new ContextLayerError(
           "Managed HTTP connectors need an OpenAPI URL before their tools can be indexed.",
           400,
@@ -731,8 +734,8 @@ export class ContextLayerService {
       }
 
       const generatedTools = await generateManagedConnectorToolsFromOpenApi({
-        openApiUrl: existing.openApiUrl,
-        authStrategy: existing.authStrategy,
+        openApiUrl: normalizedConnector.openApiUrl,
+        authStrategy: normalizedConnector.authStrategy,
       });
       tools = applyManagedConnectorToolAccessModes(
         generatedTools,
@@ -740,7 +743,7 @@ export class ContextLayerService {
       );
     } else {
       const credentials =
-        existing.authStrategy === "oauth2" && ownerId
+        normalizedConnector.authStrategy === "oauth2" && ownerId
           ? await this.getManagedConnectorDiscoveryCredentials(ownerId, normalizedSlug)
           : {};
       const discovery = await discoverIntegration(
@@ -748,7 +751,7 @@ export class ContextLayerService {
           key: normalizedSlug,
           kind: "mcp",
           config: {
-            serverUrl: existing.serverUrl,
+            serverUrl: normalizedConnector.serverUrl,
           },
           credentials,
         },
@@ -766,7 +769,7 @@ export class ContextLayerService {
     }
 
     const updated = await this.repository.upsertManagedConnector({
-      ...existing,
+      ...normalizedConnector,
       tools: sanitizeIndexedToolDefinitions(tools),
       updatedAt: nowIso(),
     });

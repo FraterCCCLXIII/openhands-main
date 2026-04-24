@@ -16,6 +16,9 @@ vi.mock("@/src/lib/integrations/oauth-provider-catalog", () => ({
 
 vi.mock("@/src/lib/integrations/oauth-provider-registration-defaults", () => ({
   getOAuthProviderRegistrationDefaults: (slug: string) => mockState.registrationDefaults[slug],
+  hubspotMcpAuthorizationUrl: "https://mcp.hubspot.com/oauth/authorize/user",
+  hubspotMcpServerUrl: "https://mcp.hubspot.com",
+  hubspotMcpTokenUrl: "https://mcp.hubspot.com/oauth/v3/token",
   hubspotRequiredScopes: ["oauth", "crm.objects.contacts.read"],
   hubspotOptionalScopes: [
     "crm.objects.contacts.write",
@@ -325,7 +328,7 @@ describe("managed connector registry helpers", () => {
     });
   });
 
-  it("normalizes legacy HubSpot connectors into required plus optional OAuth scopes", () => {
+  it("migrates legacy HubSpot HTTP connectors to the official MCP defaults", () => {
     const legacyHubspotScopes = [
       "oauth",
       "crm.objects.contacts.read",
@@ -362,28 +365,18 @@ describe("managed connector registry helpers", () => {
     });
 
     expect(normalizeManagedConnectorRecord(hubspotConnector)).toMatchObject({
+      provider: "mcp",
+      serverUrl: "https://mcp.hubspot.com",
+      apiBaseUrl: undefined,
+      openApiUrl: undefined,
       oauthConfig: {
+        authorizationUrl: "https://mcp.hubspot.com/oauth/authorize/user",
+        tokenUrl: "https://mcp.hubspot.com/oauth/v3/token",
         clientAuthentication: "body",
-        scopes: ["oauth", "crm.objects.contacts.read"],
-        optionalScopes: [
-          "crm.objects.contacts.write",
-          "crm.objects.companies.read",
-          "crm.objects.companies.write",
-          "crm.objects.deals.read",
-          "crm.objects.deals.write",
-          "tickets",
-          "crm.objects.owners.read",
-          "crm.schemas.contacts.read",
-          "crm.schemas.companies.read",
-          "crm.schemas.deals.read",
-        ],
+        pkce: true,
+        scopes: [],
       },
-      tools: [
-        expect.objectContaining({
-          name: "list_contacts",
-          defaultScopes: ["crm.objects.contacts.read"],
-        }),
-      ],
+      tools: [],
     });
   });
 
