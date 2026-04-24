@@ -363,6 +363,7 @@ describe("managed connector registry helpers", () => {
 
     expect(normalizeManagedConnectorRecord(hubspotConnector)).toMatchObject({
       oauthConfig: {
+        clientAuthentication: "body",
         scopes: ["oauth", "crm.objects.contacts.read"],
         optionalScopes: [
           "crm.objects.contacts.write",

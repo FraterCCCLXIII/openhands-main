@@ -161,6 +161,67 @@ describe("resolveOAuthProvider", () => {
     });
   });
 
+  it("backfills body client authentication for legacy HubSpot connectors during token exchange", async () => {
+    const repository = testRepo;
+    await repository.upsertManagedConnector(
+      createManagedConnector({
+        slug: "hubspot",
+        name: "HubSpot",
+        oauthConfig: {
+          authorizationUrl: "https://app.hubspot.com/oauth/authorize",
+          tokenUrl: "https://api.hubapi.com/oauth/v1/token",
+          scopes: ["oauth", "crm.objects.contacts.read"],
+          optionalScopes: ["crm.objects.contacts.write"],
+          scopeSeparator: "space",
+          clientAuthentication: undefined,
+        },
+      }),
+    );
+
+    const provider = await resolveOAuthProvider(repository, "hubspot");
+    expect(provider).toBeTruthy();
+
+    const fetchMock = vi.fn(async () =>
+      new Response(
+        JSON.stringify({
+          access_token: "hubspot-access",
+          refresh_token: "hubspot-refresh",
+          token_type: "Bearer",
+          expires_in: 3600,
+          scope: "oauth crm.objects.contacts.read crm.objects.contacts.write",
+        }),
+        {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        },
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const exchange = await provider!.exchangeCode({
+      code: "hubspot-code",
+      redirectUri: "https://context.test/api/oauth/hubspot/callback",
+    });
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe("https://api.hubapi.com/oauth/v1/token");
+    expect(init.headers).toMatchObject({
+      "Content-Type": "application/x-www-form-urlencoded",
+    });
+    expect(init.headers).not.toHaveProperty("Authorization");
+    expect(String(init.body)).toContain("client_id=acme-client-id");
+    expect(String(init.body)).toContain("client_secret=acme-client-secret");
+    expect(exchange).toMatchObject({
+      accessToken: "hubspot-access",
+      refreshToken: "hubspot-refresh",
+      tokenType: "Bearer",
+      scopes: ["oauth", "crm.objects.contacts.read", "crm.objects.contacts.write"],
+      displayName: "HubSpot",
+    });
+  });
+
+
   it("adds comma-separated required and optional scopes with custom auth params", async () => {
     const repository = testRepo;
     await repository.upsertManagedConnector(

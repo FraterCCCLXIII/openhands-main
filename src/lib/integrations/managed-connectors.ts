@@ -98,6 +98,10 @@ const normalizeManagedOAuthConfig = (
   );
   const normalizedConfig: GenericOAuthConfig = {
     ...oauthConfig,
+    clientAuthentication:
+      connector.slug === "hubspot" && connector.authStrategy === "oauth2"
+        ? (oauthConfig.clientAuthentication ?? "body")
+        : oauthConfig.clientAuthentication,
     scopes,
     optionalScopes: optionalScopes.length > 0 ? optionalScopes : undefined,
   };
