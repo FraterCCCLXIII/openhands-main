@@ -6,6 +6,7 @@ describe("getOAuthProviderRegistrationDefaults", () => {
   it("returns split HubSpot required and optional scopes with narrow tool defaults", () => {
     const defaults = getOAuthProviderRegistrationDefaults("hubspot");
 
+    expect(defaults?.clientAuthentication).toBe("body");
     expect(defaults?.scopes).toEqual(["oauth", "crm.objects.contacts.read"]);
     expect(defaults?.optionalScopes).toEqual([
       "crm.objects.contacts.write",

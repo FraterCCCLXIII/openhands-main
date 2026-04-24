@@ -321,6 +321,7 @@ const registrationDefaults: Record<string, OAuthProviderRegistrationDefaults> = 
     apiBaseUrl: "https://api.hubapi.com",
     authorizationUrl: "https://app.hubspot.com/oauth/authorize",
     tokenUrl: "https://api.hubapi.com/oauth/v1/token",
+    clientAuthentication: "body",
     scopes: [...hubspotRequiredScopes],
     optionalScopes: [...hubspotOptionalScopes],
     toolScopes: ["crm.objects.contacts.read"],
