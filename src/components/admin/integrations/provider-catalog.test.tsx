@@ -85,33 +85,22 @@ const providerCatalog: OAuthProviderCatalogOption[] = [
     description: "CRM contacts, companies, deals, and tickets",
     categories: ["CRM"],
     authStrategy: "oauth2",
-    availability: "planned",
-    docsUrl: "https://developers.hubspot.com/docs/apps/developer-platform/build-apps/authentication/oauth/working-with-oauth",
-    notes: "Supports required and optional OAuth scopes.",
+    availability: "oauth_ready",
+    managedConnectorSlug: "hubspot",
+    docsUrl:
+      "https://developers.hubspot.com/docs/apps/developer-platform/build-apps/integrate-with-the-remote-hubspot-mcp-server",
+    notes: "Uses HubSpot's official remote MCP server plus MCP auth apps with PKCE.",
     popularityRank: 3,
     registrationDefaults: {
-      provider: "http",
-      apiBaseUrl: "https://api.hubapi.com",
-      authorizationUrl: "https://app.hubspot.com/oauth/authorize",
-      tokenUrl: "https://api.hubapi.com/oauth/v1/token",
-      scopes: ["oauth", "crm.objects.contacts.read"],
-      optionalScopes: [
-        "crm.objects.contacts.write",
-        "crm.objects.companies.read",
-        "crm.objects.companies.write",
-        "crm.objects.deals.read",
-        "crm.objects.deals.write",
-        "tickets",
-        "crm.objects.owners.read",
-        "crm.schemas.contacts.read",
-        "crm.schemas.companies.read",
-        "crm.schemas.deals.read",
-      ],
-      toolScopes: ["crm.objects.contacts.read"],
-      toolName: "list_contacts",
-      toolDescription: "List HubSpot contacts for the connected portal.",
-      requestMethod: "GET",
-      requestPath: "/crm/v3/objects/contacts",
+      provider: "mcp",
+      serverUrl: "https://mcp.hubspot.com",
+      authorizationUrl: "https://mcp.hubspot.com/oauth/authorize/user",
+      tokenUrl: "https://mcp.hubspot.com/oauth/v3/token",
+      clientAuthentication: "body",
+      pkce: true,
+      scopes: [],
+      credentialHelp:
+        "Use the client ID and secret from a HubSpot MCP auth app (Development → MCP Auth Apps). Standard HubSpot OAuth apps and private apps will not authenticate with mcp.hubspot.com.",
     },
   },
 
@@ -286,6 +275,12 @@ describe("provider catalog helper utilities", () => {
       placeholder: "Connect GitHub",
       help: "OAuth connection for GitHub.",
     });
+    expect(getCredentialCopy(hubspot)).toEqual({
+      label: "Connect HubSpot",
+      placeholder: "Connect HubSpot",
+      help:
+        "Use the client ID and secret from a HubSpot MCP auth app (Development → MCP Auth Apps). Standard HubSpot OAuth apps and private apps will not authenticate with mcp.hubspot.com.",
+    });
 
     const googleForm = createRegistrationFormState(googleCalendar);
     expect(googleForm).toMatchObject({
@@ -303,16 +298,16 @@ describe("provider catalog helper utilities", () => {
 
     const hubspotForm = createRegistrationFormState(hubspot);
     expect(hubspotForm).toMatchObject({
-      apiBaseUrl: "https://api.hubapi.com",
-      authorizationUrl: "https://app.hubspot.com/oauth/authorize",
-      tokenUrl: "https://api.hubapi.com/oauth/v1/token",
-      scopes: "oauth, crm.objects.contacts.read",
-      optionalScopes:
-        "crm.objects.contacts.write, crm.objects.companies.read, crm.objects.companies.write, crm.objects.deals.read, crm.objects.deals.write, tickets, crm.objects.owners.read, crm.schemas.contacts.read, crm.schemas.companies.read, crm.schemas.deals.read",
+      serverUrl: "https://mcp.hubspot.com",
+      authorizationUrl: "https://mcp.hubspot.com/oauth/authorize/user",
+      tokenUrl: "https://mcp.hubspot.com/oauth/v3/token",
+      scopes: "",
+      optionalScopes: "",
     });
 
     expect(getManagedConnectorProvider(googleCalendar)).toBe("http");
     expect(getManagedConnectorProvider(getProvider("slack"))).toBe("mcp");
+    expect(getManagedConnectorProvider(hubspot)).toBe("mcp");
     expect(buildDefaultHttpTools(googleCalendar)).toEqual([
       {
         name: "list_events",
@@ -324,17 +319,7 @@ describe("provider catalog helper utilities", () => {
         },
       },
     ]);
-    expect(buildDefaultHttpTools(hubspot)).toEqual([
-      {
-        name: "list_contacts",
-        description: "List HubSpot contacts for the connected portal.",
-        defaultScopes: ["crm.objects.contacts.read"],
-        request: {
-          method: "GET",
-          path: "/crm/v3/objects/contacts",
-        },
-      },
-    ]);
+    expect(buildDefaultHttpTools(hubspot)).toEqual([]);
     expect(buildDefaultHttpTools(getProvider("notion"))).toEqual([]);
 
     const googlePayload = buildManagedConnectorPayload(googleCalendar, {
@@ -358,22 +343,19 @@ describe("provider catalog helper utilities", () => {
       oauthClientId: "hubspot-client-id",
       oauthClientSecret: "hubspot-client-secret",
     });
-    expect(hubspotPayload.oauthConfig).toMatchObject({
-      scopes: ["oauth", "crm.objects.contacts.read"],
-      optionalScopes: [
-        "crm.objects.contacts.write",
-        "crm.objects.companies.read",
-        "crm.objects.companies.write",
-        "crm.objects.deals.read",
-        "crm.objects.deals.write",
-        "tickets",
-        "crm.objects.owners.read",
-        "crm.schemas.contacts.read",
-        "crm.schemas.companies.read",
-        "crm.schemas.deals.read",
-      ],
+    expect(hubspotPayload).toMatchObject({
+      provider: "mcp",
+      serverUrl: "https://mcp.hubspot.com",
+      tools: [],
     });
-    expect(hubspotPayload.tools).toEqual(buildDefaultHttpTools(hubspot));
+    expect(hubspotPayload.oauthConfig).toMatchObject({
+      authorizationUrl: "https://mcp.hubspot.com/oauth/authorize/user",
+      tokenUrl: "https://mcp.hubspot.com/oauth/v3/token",
+      clientAuthentication: "body",
+      pkce: true,
+      scopes: [],
+      optionalScopes: [],
+    });
 
     const hubspotClearedOptionalScopesPayload = buildManagedConnectorPayload(
       hubspot,

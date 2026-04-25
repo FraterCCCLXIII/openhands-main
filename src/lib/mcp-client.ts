@@ -29,6 +29,7 @@ interface McpAttemptDebug {
   transport: McpTransportKind;
   url: string;
   error: string;
+  statusCode?: number;
 }
 
 export interface RunMcpClientOperationOptions {
@@ -92,9 +93,68 @@ const createTransport = (
 const formatTransportName = (kind: McpTransportKind) =>
   kind === "streamable_http" ? "Streamable HTTP" : "SSE";
 
-const formatAttemptError = (kind: McpTransportKind, url: URL, error: unknown) => {
-  const message = error instanceof Error ? error.message : "Unknown MCP error";
-  return `${formatTransportName(kind)} transport failed for ${url.toString()}: ${message}`;
+const getErrorStatusCode = (error: unknown) => {
+  if (error instanceof ContextLayerError) {
+    return error.statusCode;
+  }
+
+  if (!error || typeof error !== "object") {
+    return undefined;
+  }
+
+  const candidate = error as {
+    code?: unknown;
+    status?: unknown;
+    statusCode?: unknown;
+  };
+  if (typeof candidate.statusCode === "number" && Number.isFinite(candidate.statusCode)) {
+    return candidate.statusCode;
+  }
+
+  if (typeof candidate.code === "number" && Number.isFinite(candidate.code)) {
+    return candidate.code;
+  }
+
+  if (typeof candidate.status === "number" && Number.isFinite(candidate.status)) {
+    return candidate.status;
+  }
+
+  return undefined;
+};
+
+const getManagedConnectorErrorHint = (
+  debugContext: McpDebugContext | undefined,
+  statusCode: number | undefined,
+) => {
+  if (debugContext?.managedConnectorSlug !== "hubspot") {
+    return undefined;
+  }
+
+  if (statusCode === 401) {
+    return "HubSpot MCP requires a user-level OAuth token from a HubSpot MCP auth app. Reconnect HubSpot with an MCP auth app instead of a standard HubSpot OAuth app or private app.";
+  }
+
+  if (statusCode === 403) {
+    return "HubSpot MCP may need reauthorization to grant the current server tool scopes. Disconnect and reconnect HubSpot, then try discovery again.";
+  }
+
+  return undefined;
+};
+
+const formatAttemptError = (
+  kind: McpTransportKind,
+  url: URL,
+  error: unknown,
+  debugContext?: McpDebugContext,
+) => {
+  const message = error instanceof Error ? error.message.trim() : "Unknown MCP error";
+  const statusCode = getErrorStatusCode(error);
+  const statusText = statusCode ? ` (HTTP ${statusCode})` : "";
+  const hint = getManagedConnectorErrorHint(debugContext, statusCode);
+
+  return `${formatTransportName(kind)} transport failed for ${url.toString()}${statusText}: ${
+    message || "No response body returned."
+  }${hint ? ` ${hint}` : ""}`;
 };
 
 const runTransportAttempt = async <T,>(
@@ -212,7 +272,7 @@ const toContextLayerError = (
 ) =>
   new ContextLayerError(
     message,
-    error instanceof ContextLayerError ? error.statusCode : 502,
+    error instanceof ContextLayerError ? error.statusCode : getErrorStatusCode(error) ?? 502,
     debugDetails,
   );
 
@@ -257,11 +317,18 @@ export const runMcpClientOperation = async <T,>(
 
       return result;
     } catch (error) {
-      const message = formatAttemptError(attempt.transport, attempt.url, error);
+      const statusCode = getErrorStatusCode(error);
+      const message = formatAttemptError(
+        attempt.transport,
+        attempt.url,
+        error,
+        options.debugContext,
+      );
       attempts.push({
         transport: attempt.transport,
         url: attempt.url.toString(),
         error: message,
+        ...(statusCode ? { statusCode } : {}),
       });
       firstError ??= error;
 

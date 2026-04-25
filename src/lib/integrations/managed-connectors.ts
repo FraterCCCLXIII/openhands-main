@@ -3,6 +3,9 @@ import type { ContextRepository } from "@/src/lib/core/repository";
 import { listOAuthProviderCatalog } from "@/src/lib/integrations/oauth-provider-catalog";
 import {
   getOAuthProviderRegistrationDefaults,
+  hubspotMcpAuthorizationUrl,
+  hubspotMcpServerUrl,
+  hubspotMcpTokenUrl,
   hubspotOptionalScopes,
   hubspotRequiredScopes,
 } from "@/src/lib/integrations/oauth-provider-registration-defaults";
@@ -83,8 +86,15 @@ const hubspotLegacyScopeBundleWithoutOauth = hubspotLegacyScopeBundle.filter(
   (scope) => scope !== "oauth",
 );
 
+const isHubspotManagedConnector = (
+  connector: Pick<ManagedConnectorRecord, "slug" | "authStrategy">,
+) => connector.slug === "hubspot" && connector.authStrategy === "oauth2";
+
 const normalizeManagedOAuthConfig = (
-  connector: Pick<ManagedConnectorRecord, "slug" | "authStrategy" | "oauthConfig">,
+  connector: Pick<
+    ManagedConnectorRecord,
+    "slug" | "authStrategy" | "oauthConfig" | "provider" | "apiBaseUrl" | "openApiUrl" | "serverUrl"
+  >,
 ): GenericOAuthConfig | undefined => {
   const oauthConfig = connector.oauthConfig;
   if (!oauthConfig) {
@@ -96,65 +106,69 @@ const normalizeManagedOAuthConfig = (
   const optionalScopes = normalizeOAuthScopeList(oauthConfig.optionalScopes).filter(
     (scope) => !scopeSet.has(scope),
   );
-  const normalizedConfig: GenericOAuthConfig = {
-    ...oauthConfig,
-    clientAuthentication:
-      connector.slug === "hubspot" && connector.authStrategy === "oauth2"
-        ? (oauthConfig.clientAuthentication ?? "body")
-        : oauthConfig.clientAuthentication,
-    scopes,
-    optionalScopes: optionalScopes.length > 0 ? optionalScopes : undefined,
-  };
 
-  const hasExplicitOptionalScopes = Boolean(normalizedConfig.optionalScopes?.length);
-  const hasLegacyOptionalScopeParam = Boolean(
-    normalizedConfig.additionalAuthorizationParams?.optional_scope,
-  );
-  const hasLegacyHubspotScopes =
-    connector.slug === "hubspot" &&
-    connector.authStrategy === "oauth2" &&
-    (sameScopeSet(scopes, hubspotLegacyScopeBundle) ||
-      sameScopeSet(scopes, hubspotLegacyScopeBundleWithoutOauth));
-
-  if (
-    hasLegacyHubspotScopes &&
-    !hasExplicitOptionalScopes &&
-    !hasLegacyOptionalScopeParam
-  ) {
+  if (isHubspotManagedConnector(connector)) {
     return {
-      ...normalizedConfig,
-      scopes: [...hubspotRequiredScopes],
-      optionalScopes: [...hubspotOptionalScopes],
+      authorizationUrl: hubspotMcpAuthorizationUrl,
+      tokenUrl: hubspotMcpTokenUrl,
+      clientAuthentication: "body",
+      pkce: true,
+      scopes: [],
     };
   }
 
-  return normalizedConfig;
+  return {
+    ...oauthConfig,
+    scopes,
+    optionalScopes: optionalScopes.length > 0 ? optionalScopes : undefined,
+  };
+};
+
+const isLegacyHubspotManagedConnector = (connector: ManagedConnectorRecord) => {
+  if (!isHubspotManagedConnector(connector) || !connector.oauthConfig) {
+    return false;
+  }
+
+  const scopes = normalizeOAuthScopeList(connector.oauthConfig.scopes);
+  const optionalScopes = normalizeOAuthScopeList(connector.oauthConfig.optionalScopes);
+
+  return (
+    connector.provider !== "mcp" ||
+    connector.serverUrl?.trim() !== hubspotMcpServerUrl ||
+    Boolean(connector.apiBaseUrl?.trim()) ||
+    Boolean(connector.openApiUrl?.trim()) ||
+    connector.oauthConfig.authorizationUrl !== hubspotMcpAuthorizationUrl ||
+    connector.oauthConfig.tokenUrl !== hubspotMcpTokenUrl ||
+    connector.oauthConfig.clientAuthentication !== "body" ||
+    connector.oauthConfig.pkce !== true ||
+    scopes.length > 0 ||
+    optionalScopes.length > 0 ||
+    sameScopeSet(scopes, hubspotLegacyScopeBundle) ||
+    sameScopeSet(scopes, hubspotLegacyScopeBundleWithoutOauth) ||
+    Boolean(connector.oauthConfig.additionalAuthorizationParams?.optional_scope)
+  );
 };
 
 export const normalizeManagedConnectorRecord = (
   connector: ManagedConnectorRecord,
 ): ManagedConnectorRecord => {
   const oauthConfig = normalizeManagedOAuthConfig(connector);
-  const tools = connector.tools.map((tool) => {
-    if (
-      connector.slug === "hubspot" &&
-      tool.name === "list_contacts" &&
-      (sameScopeSet(tool.defaultScopes, hubspotLegacyScopeBundle) ||
-        sameScopeSet(tool.defaultScopes, hubspotLegacyScopeBundleWithoutOauth))
-    ) {
-      return {
-        ...tool,
-        defaultScopes: ["crm.objects.contacts.read"],
-      };
-    }
 
-    return tool;
-  });
+  if (isHubspotManagedConnector(connector)) {
+    return {
+      ...connector,
+      provider: "mcp",
+      serverUrl: hubspotMcpServerUrl,
+      apiBaseUrl: undefined,
+      openApiUrl: undefined,
+      oauthConfig,
+      tools: isLegacyHubspotManagedConnector(connector) ? [] : connector.tools,
+    };
+  }
 
   return {
     ...connector,
     oauthConfig,
-    tools,
   };
 };
 

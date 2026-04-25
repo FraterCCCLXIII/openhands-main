@@ -161,12 +161,16 @@ describe("resolveOAuthProvider", () => {
     });
   });
 
-  it("backfills body client authentication for legacy HubSpot connectors during token exchange", async () => {
+  it("migrates legacy HubSpot connectors onto the MCP PKCE auth flow", async () => {
     const repository = testRepo;
     await repository.upsertManagedConnector(
       createManagedConnector({
         slug: "hubspot",
         name: "HubSpot",
+        provider: "http",
+        serverUrl: undefined,
+        apiBaseUrl: "https://api.hubapi.com",
+        openApiUrl: "https://api.hubapi.com/openapi.json",
         oauthConfig: {
           authorizationUrl: "https://app.hubspot.com/oauth/authorize",
           tokenUrl: "https://api.hubapi.com/oauth/v1/token",
@@ -174,12 +178,30 @@ describe("resolveOAuthProvider", () => {
           optionalScopes: ["crm.objects.contacts.write"],
           scopeSeparator: "space",
           clientAuthentication: undefined,
+          pkce: false,
         },
       }),
     );
 
     const provider = await resolveOAuthProvider(repository, "hubspot");
     expect(provider).toBeTruthy();
+
+    const start = provider!.startAuth({
+      state: "hubspot-state",
+      redirectUri: "https://context.test/api/oauth/hubspot/callback",
+    });
+    const authorizationUrl = new URL(start.authorizationUrl);
+    expect(authorizationUrl.origin + authorizationUrl.pathname).toBe(
+      "https://mcp.hubspot.com/oauth/authorize/user",
+    );
+    expect(authorizationUrl.searchParams.get("client_id")).toBe("acme-client-id");
+    expect(authorizationUrl.searchParams.get("redirect_uri")).toBe(
+      "https://context.test/api/oauth/hubspot/callback",
+    );
+    expect(authorizationUrl.searchParams.get("scope")).toBeNull();
+    expect(authorizationUrl.searchParams.get("optional_scope")).toBeNull();
+    expect(authorizationUrl.searchParams.get("code_challenge_method")).toBe("S256");
+    expect(start.codeVerifier).toBeTruthy();
 
     const fetchMock = vi.fn(async () =>
       new Response(
@@ -188,7 +210,6 @@ describe("resolveOAuthProvider", () => {
           refresh_token: "hubspot-refresh",
           token_type: "Bearer",
           expires_in: 3600,
-          scope: "oauth crm.objects.contacts.read crm.objects.contacts.write",
         }),
         {
           status: 200,
@@ -201,22 +222,24 @@ describe("resolveOAuthProvider", () => {
     const exchange = await provider!.exchangeCode({
       code: "hubspot-code",
       redirectUri: "https://context.test/api/oauth/hubspot/callback",
+      codeVerifier: start.codeVerifier,
     });
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
     const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
-    expect(url).toBe("https://api.hubapi.com/oauth/v1/token");
+    expect(url).toBe("https://mcp.hubspot.com/oauth/v3/token");
     expect(init.headers).toMatchObject({
       "Content-Type": "application/x-www-form-urlencoded",
     });
     expect(init.headers).not.toHaveProperty("Authorization");
     expect(String(init.body)).toContain("client_id=acme-client-id");
     expect(String(init.body)).toContain("client_secret=acme-client-secret");
+    expect(String(init.body)).toContain("code_verifier=");
     expect(exchange).toMatchObject({
       accessToken: "hubspot-access",
       refreshToken: "hubspot-refresh",
       tokenType: "Bearer",
-      scopes: ["oauth", "crm.objects.contacts.read", "crm.objects.contacts.write"],
+      scopes: [],
       displayName: "HubSpot",
     });
   });

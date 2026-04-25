@@ -307,6 +307,75 @@ describe("runMcpClientOperation", () => {
     });
   });
 
+  it("preserves SDK HTTP status codes and adds HubSpot guidance for blank transport errors", async () => {
+    connectMock.mockRejectedValue(Object.assign(new Error("Error POSTing to endpoint: "), { code: 401 }));
+
+    let capturedError: unknown;
+    try {
+      await runMcpClientOperation(
+        "https://mcp.hubspot.com",
+        { Authorization: "Bearer hubspot-token" },
+        "listTools",
+        (client) => client.listTools(),
+        {
+          debugContext: {
+            authStrategy: "oauth2",
+            credentials: {
+              accessToken: "hubspot-token",
+            },
+            integrationKey: "hubspot",
+            managedConnectorSlug: "hubspot",
+          },
+        },
+      );
+    } catch (error) {
+      capturedError = error;
+    }
+
+    expect(capturedError).toBeInstanceOf(ContextLayerError);
+    expect((capturedError as ContextLayerError).statusCode).toBe(401);
+    expect((capturedError as ContextLayerError).message).toContain(
+      "Streamable HTTP transport failed for https://mcp.hubspot.com/ (HTTP 401): Error POSTing to endpoint:",
+    );
+    expect((capturedError as ContextLayerError).message).toContain(
+      "HubSpot MCP requires a user-level OAuth token from a HubSpot MCP auth app.",
+    );
+    expect((capturedError as ContextLayerError).debugDetails).toEqual({
+      operationName: "listTools",
+      serverUrl: "https://mcp.hubspot.com",
+      integrationKey: "hubspot",
+      managedConnectorSlug: "hubspot",
+      auth: {
+        authStrategy: "oauth2",
+        accessToken: {
+          present: true,
+          length: 13,
+          containsWhitespace: false,
+          startsWithBearerPrefix: false,
+        },
+        refreshToken: {
+          present: false,
+        },
+        secret: {
+          present: false,
+        },
+        headerName: undefined,
+        usernameProvided: false,
+        passwordProvided: false,
+      },
+      attempts: [
+        {
+          transport: "streamable_http",
+          url: "https://mcp.hubspot.com/",
+          error:
+            "Streamable HTTP transport failed for https://mcp.hubspot.com/ (HTTP 401): Error POSTing to endpoint: HubSpot MCP requires a user-level OAuth token from a HubSpot MCP auth app. Reconnect HubSpot with an MCP auth app instead of a standard HubSpot OAuth app or private app.",
+          statusCode: 401,
+        },
+      ],
+    });
+  });
+
+
   it("supports oauth2, default api-key, and basic auth header construction", () => {
     expect(buildMcpHeaders("oauth2", { accessToken: "oauth-token" })).toEqual({
       Authorization: "Bearer oauth-token",
@@ -417,10 +486,10 @@ describe("runMcpClientOperation", () => {
 
     expect(capturedError).toBeInstanceOf(ContextLayerError);
     expect((capturedError as ContextLayerError).message).toContain(
-      "Streamable HTTP transport failed for https://mcp.acme.test/mcp: streamable unavailable",
+      "Streamable HTTP transport failed for https://mcp.acme.test/mcp (HTTP 504): streamable unavailable",
     );
     expect((capturedError as ContextLayerError).message).toContain(
-      "SSE transport failed for https://mcp.acme.test/sse: sse unavailable",
+      "SSE transport failed for https://mcp.acme.test/sse (HTTP 429): sse unavailable",
     );
     expect((capturedError as ContextLayerError).statusCode).toBe(429);
     expect((capturedError as ContextLayerError).debugDetails).toEqual({
@@ -450,12 +519,14 @@ describe("runMcpClientOperation", () => {
           transport: "streamable_http",
           url: "https://mcp.acme.test/mcp",
           error:
-            "Streamable HTTP transport failed for https://mcp.acme.test/mcp: streamable unavailable",
+            "Streamable HTTP transport failed for https://mcp.acme.test/mcp (HTTP 504): streamable unavailable",
+          statusCode: 504,
         },
         {
           transport: "sse",
           url: "https://mcp.acme.test/sse",
-          error: "SSE transport failed for https://mcp.acme.test/sse: sse unavailable",
+          error: "SSE transport failed for https://mcp.acme.test/sse (HTTP 429): sse unavailable",
+          statusCode: 429,
         },
       ],
     });

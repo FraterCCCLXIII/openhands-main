@@ -58,8 +58,13 @@ const atlassianPreset = (
   requestPath,
 });
 
+export const hubspotMcpServerUrl = "https://mcp.hubspot.com";
+export const hubspotMcpAuthorizationUrl = `${hubspotMcpServerUrl}/oauth/authorize/user`;
+export const hubspotMcpTokenUrl = `${hubspotMcpServerUrl}/oauth/v3/token`;
+
 const officialManagedMcpServerUrls: Record<string, string> = {
   github: "https://api.githubcopilot.com/mcp/",
+  hubspot: hubspotMcpServerUrl,
   slack: "https://mcp.slack.com/mcp",
   webflow: "https://mcp.webflow.com/mcp",
   ordinal: "https://app.tryordinal.com/api/mcp",
@@ -318,17 +323,14 @@ const registrationDefaults: Record<string, OAuthProviderRegistrationDefaults> = 
     requestPath: "/sobjects/Account",
   },
   hubspot: {
-    apiBaseUrl: "https://api.hubapi.com",
-    authorizationUrl: "https://app.hubspot.com/oauth/authorize",
-    tokenUrl: "https://api.hubapi.com/oauth/v1/token",
+    provider: "mcp",
+    authorizationUrl: hubspotMcpAuthorizationUrl,
+    tokenUrl: hubspotMcpTokenUrl,
     clientAuthentication: "body",
-    scopes: [...hubspotRequiredScopes],
-    optionalScopes: [...hubspotOptionalScopes],
-    toolScopes: ["crm.objects.contacts.read"],
-    toolName: "list_contacts",
-    toolDescription: "List HubSpot contacts for the connected portal.",
-    requestMethod: "GET",
-    requestPath: "/crm/v3/objects/contacts",
+    pkce: true,
+    scopes: [],
+    credentialHelp:
+      "Use the client ID and secret from a HubSpot MCP auth app (Development → MCP Auth Apps). Standard HubSpot OAuth apps and private apps will not authenticate with mcp.hubspot.com.",
   },
   zendesk: {
     apiBaseUrl: "https://{subdomain}.zendesk.com/api/v2",
