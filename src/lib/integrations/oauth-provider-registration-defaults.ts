@@ -329,6 +329,8 @@ const registrationDefaults: Record<string, OAuthProviderRegistrationDefaults> = 
     clientAuthentication: "body",
     pkce: true,
     scopes: [],
+    credentialHelp:
+      "Use the client ID and secret from a HubSpot MCP auth app (Development → MCP Auth Apps). Standard HubSpot OAuth apps and private apps will not authenticate with mcp.hubspot.com.",
   },
   zendesk: {
     apiBaseUrl: "https://{subdomain}.zendesk.com/api/v2",

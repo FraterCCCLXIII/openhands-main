@@ -15,6 +15,7 @@ describe("getOAuthProviderRegistrationDefaults", () => {
       pkce: true,
       scopes: [],
     });
+    expect(defaults?.credentialHelp).toContain("HubSpot MCP auth app");
     expect(defaults?.optionalScopes).toBeUndefined();
     expect(defaults?.toolScopes).toBeUndefined();
   });

@@ -102,6 +102,7 @@ describe("listOAuthProviderCatalog", () => {
       clientAuthentication: "body",
       pkce: true,
       scopes: [],
+      credentialHelp: expect.stringContaining("HubSpot MCP auth app"),
     });
     expect(notion?.registrationDefaults).toMatchObject({
       provider: "http",

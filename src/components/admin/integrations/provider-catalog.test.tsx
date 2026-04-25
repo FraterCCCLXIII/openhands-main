@@ -99,6 +99,8 @@ const providerCatalog: OAuthProviderCatalogOption[] = [
       clientAuthentication: "body",
       pkce: true,
       scopes: [],
+      credentialHelp:
+        "Use the client ID and secret from a HubSpot MCP auth app (Development → MCP Auth Apps). Standard HubSpot OAuth apps and private apps will not authenticate with mcp.hubspot.com.",
     },
   },
 
@@ -272,6 +274,12 @@ describe("provider catalog helper utilities", () => {
       label: "Connect GitHub",
       placeholder: "Connect GitHub",
       help: "OAuth connection for GitHub.",
+    });
+    expect(getCredentialCopy(hubspot)).toEqual({
+      label: "Connect HubSpot",
+      placeholder: "Connect HubSpot",
+      help:
+        "Use the client ID and secret from a HubSpot MCP auth app (Development → MCP Auth Apps). Standard HubSpot OAuth apps and private apps will not authenticate with mcp.hubspot.com.",
     });
 
     const googleForm = createRegistrationFormState(googleCalendar);
