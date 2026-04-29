@@ -56,7 +56,6 @@ npm run parity:checklist  # Crawl openhands.dev and compare against local site
 - `.github/workflows/pr-artifacts.yml` is intended to remove `.pr/` from the base branch after a PR merges.
 - For a production-style local parity check, build first and then run: `PORT=12001 npx react-router-serve build/server/nodejs_eyJydW50aW1lIjoibm9kZWpzIn0/index.js`.
 
-
 ## Homepage Parity Notes
 - The live `/` page uses a 32px desktop heading for `Start with a proven workflow`; other homepage major headings remain 44px.
 - Homepage CTA buttons that compare against live cards/FAQ should use square corners (`rounded-none`) and dark-card outline buttons should use `text-brand-bg` instead of pure white for parity.
@@ -84,4 +83,3 @@ npm run parity:checklist  # Crawl openhands.dev and compare against local site
 - Live `/pricing` parity depends on rendering comparison-table copy in visible `p`/`label` elements; checklist extraction does not inspect plain `th`/`td` text reliably.
 - Live `/community` uses a dark `Latest Community Call` block and a dark `Start contributing` block, with event titles as `h2` elements and event descriptions using ASCII apostrophes (`We'll`).
 - After issue #278 work, parity checklist counts dropped to: `/product` 1 fail, `/enterprise` 2 fails, `/pricing` 2 fails, `/community` 0 fails using `PARITY_MAX_PAGES=12 PARITY_DISCOVERY_LIMIT=20 TEST_ORIGIN=http://127.0.0.1:12001 LIVE_ORIGIN=https://openhands.dev npm run parity:checklist`.
-
