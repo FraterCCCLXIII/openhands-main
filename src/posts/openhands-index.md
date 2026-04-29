@@ -3,7 +3,8 @@ title: "Introducing the OpenHands Index"
 slug: "openhands-index"
 excerpt: "The OpenHands Index is a comprehensive benchmark that tests agentic software engineering models across a broad variety of tasks."
 coverImage: "https://cdn.prod.website-files.com/68ff4058b35616cdd47d5b59/697ae6f1c56e6677913f97ae_openhands-index-hero.png"
-date: "2026-02-13T16:24:01.379Z"
+date: "2026-01-29T12:00:00.000Z"
+seoTitleDate: "Jan 28, 2026"
 authors:
   - name: "OpenHands Team"
 ogImage:

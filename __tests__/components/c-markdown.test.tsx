@@ -18,7 +18,8 @@ describe('CMarkdown', () => {
     expect(title.className).toContain('lg:text-[44px]');
     expect(subtitle.className).toContain('font-medium');
     expect(link.className).toContain('text-brand-brown');
+    expect(link.className).toContain('leading-[22.4px]');
     expect(screen.getByText('code').className).toContain('bg-brand-fg');
-    expect(image.className).toContain('rounded-[16px]');
+    expect(image.className).toContain('rounded-[8px]');
   });
 });

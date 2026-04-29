@@ -3,7 +3,8 @@ title: "EvoClaw: Evaluating AI Agents on Continuous Software Evolution"
 slug: "evoclaw-benchmark"
 excerpt: "EvoClaw evaluates coding agents on milestone-level, long-horizon software evolution. The early results show a clear pattern: agents keep adding new functionality, but regressions and technical debt compound faster than they can repair them."
 coverImage: "https://cdn.prod.website-files.com/68ff4058b35616cdd47d5b59/69c2a00864acdcfca728ebfc_202603-evoblog-1.webp"
-date: "2026-03-24T23:54:50.784Z"
+date: "2026-03-23T12:00:00.000Z"
+seoTitleDate: "Mar 20, 2026"
 authors:
   - name: "Gangda Deng and Zhaoling Chen"
 ogImage:

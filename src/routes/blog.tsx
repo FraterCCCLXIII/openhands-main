@@ -1,16 +1,19 @@
-import { Link, useActionData, useLoaderData, useNavigation } from 'react-router';
+import React from 'react';
+import { useActionData, useLoaderData, useNavigation } from 'react-router';
 import { blogAPI, getBlogSlug } from '~/api/blog';
 import { BlogCard, FeaturedBlogCard } from '~/components/blog-card';
+import { MarketingFooterCta } from '~/components/marketing-footer-cta';
 import { NewsletterForm } from '~/components/newsletter-form';
 import { handleNewsletterSubscription } from '~/utils/newsletter-subscription';
 import type { Route } from './+types/blog';
 
+const INITIAL_GRID_POSTS = 6;
+
 export const loader = async () => {
-  const blogs = blogAPI.getAllBlogs();
-  blogs.sort(
-    (a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime()
-  );
-  return { blogs };
+  const featuredBlog = blogAPI.getFeaturedBlog() ?? null;
+  const gridBlogs = blogAPI.getBlogGridBlogs();
+
+  return { featuredBlog, gridBlogs };
 };
 
 export const action = handleNewsletterSubscription;
@@ -67,8 +70,13 @@ export const meta: Route.MetaFunction = ({ location }) => {
 const Blog = () => {
   const navigation = useNavigation();
   const data = useActionData<typeof action>();
-  const { blogs } = useLoaderData() as { blogs: Post[] };
-  const [latestBlog, ...remainingBlogs] = blogs;
+  const { featuredBlog, gridBlogs } = useLoaderData() as {
+    featuredBlog: Post | null;
+    gridBlogs: Post[];
+  };
+  const [visibleGridPosts, setVisibleGridPosts] = React.useState(INITIAL_GRID_POSTS);
+  const visibleBlogs = gridBlogs.slice(0, visibleGridPosts);
+  const hasMoreBlogs = visibleGridPosts < gridBlogs.length;
 
   return (
     <main className='flex flex-col items-center px-5 pb-16 pt-[100px] lg:px-10'>
@@ -79,7 +87,7 @@ const Blog = () => {
         <p className='mt-3 text-[18px] leading-[1.2] font-medium text-[#5f5f5f] lg:text-[20px]'>
           Insights and updates from the OpenHands team
         </p>
-        <p className='mt-8 text-[18px] leading-[1.5] text-[#5f5f5f]'>
+        <p className='mt-8 text-[18px] leading-[1.5] text-[#22150d]'>
           Sign up for our newsletter for updates, events, and community insights.
         </p>
         <div className='mt-4 flex justify-center'>
@@ -92,31 +100,49 @@ const Blog = () => {
         </div>
       </section>
 
-      {latestBlog && (
+      {featuredBlog && (
         <section className='mt-14 w-full max-w-[1238px]'>
-          <Link to={getBlogSlug(latestBlog)} className='block'>
-            <FeaturedBlogCard
-              title={latestBlog.data.title}
-              description={latestBlog.data.excerpt}
-              img={latestBlog.data.coverImage}
-            />
-          </Link>
+          <FeaturedBlogCard
+            href={`/blog/${getBlogSlug(featuredBlog)}`}
+            title={featuredBlog.data.title}
+            description={featuredBlog.data.excerpt}
+            img={featuredBlog.data.coverImage}
+          />
         </section>
       )}
 
-      <section className='mt-12 w-full max-w-[1238px]'>
+      <section id='blog-grid' className='mt-12 w-full max-w-[1238px]'>
         <div className='grid grid-cols-1 gap-x-8 gap-y-12 md:grid-cols-2 xl:grid-cols-3'>
-          {remainingBlogs.map((blog) => (
-            <Link key={getBlogSlug(blog)} to={getBlogSlug(blog)} className='block'>
-              <BlogCard
-                title={blog.data.title}
-                date={blog.data.date}
-                img={blog.data.coverImage}
-              />
-            </Link>
+          {visibleBlogs.map((blog) => (
+            <BlogCard
+              key={getBlogSlug(blog)}
+              href={`/blog/${getBlogSlug(blog)}`}
+              title={blog.data.title}
+              date={blog.data.date}
+              img={blog.data.coverImage}
+            />
           ))}
         </div>
+
+        {hasMoreBlogs && (
+          <div className='mt-12 flex justify-center'>
+            <a
+              href='#blog-grid'
+              className='btn btn-outline rounded-none'
+              onClick={(event) => {
+                event.preventDefault();
+                setVisibleGridPosts((count) => count + INITIAL_GRID_POSTS);
+              }}
+            >
+              Load more
+            </a>
+          </div>
+        )}
       </section>
+
+      <div className='mt-20 w-full max-w-[1238px]'>
+        <MarketingFooterCta />
+      </div>
     </main>
   );
 };

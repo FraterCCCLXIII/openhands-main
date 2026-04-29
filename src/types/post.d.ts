@@ -5,8 +5,10 @@ interface Post {
     slug?: string;
     aliases?: string[];
     published?: boolean;
+    seoTitleDate?: string;
     excerpt: string;
     coverImage: string | undefined;
+    coverRadius?: 'none';
     date: string; // ISO string
     authors: {
       name: string;

@@ -1,0 +1,2 @@
+http://127.0.0.1:12000/blog/agent-control-plane
+The Software Agent Control Plane | Mar 30, 2026

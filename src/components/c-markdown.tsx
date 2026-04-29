@@ -37,7 +37,7 @@ export const CMarkdown: React.FC<CMarkdownProps> = ({
               className={clsx(
                 'underline decoration-[1px] underline-offset-[0.18em] transition-colors',
                 isBlog
-                  ? 'font-medium text-brand-brown hover:text-brand-fg'
+                  ? 'font-medium leading-[22.4px] text-brand-brown hover:text-brand-fg'
                   : 'text-blue-600'
               )}
               {...props}
@@ -134,7 +134,7 @@ export const CMarkdown: React.FC<CMarkdownProps> = ({
           img: ({ alt, ...props }) => (
             <img
               className={clsx(
-                isBlog ? 'my-10 w-full rounded-[16px] object-cover' : 'rounded-lg'
+                isBlog ? 'my-10 w-full rounded-[8px] object-cover leading-[22.4px]' : 'rounded-lg'
               )}
               {...props}
               alt={alt}

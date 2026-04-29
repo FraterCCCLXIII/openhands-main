@@ -3,7 +3,7 @@ title: "How to Create Effective Agent Skills"
 slug: "20260227-creating-effective-agent-skills"
 excerpt: "Skills are specialised knowledge packages that extend coding agents with domain-specific expertise. Learn how to create, deploy, monitor, and improve skills to automate your repetitive workflows."
 coverImage: "https://cdn.prod.website-files.com/68ff4058b35616cdd47d5b59/69a1c2205f3bc4043684b411_69a1c21db643dd0e30ac9596_blog-20260227-agent-skills-cover-v2.png"
-date: "2026-03-04T03:52:42.901Z"
+date: "2026-02-27T12:00:00.000Z"
 authors:
   - name: "Juan Michelini, Graham Neubig"
 ogImage:

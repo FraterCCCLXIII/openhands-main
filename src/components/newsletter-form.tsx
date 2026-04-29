@@ -36,13 +36,12 @@ export const NewsletterForm: React.FC<NewsletterFormProps> = ({
             pattern='[^@]+@[^.]+\..+'
             className='min-h-[58px] w-full rounded-[8px] border border-black/5 bg-white px-6 text-[16px] leading-[1.5] text-[#5f5f5f] outline-none transition-colors placeholder:text-[#b3a88c] focus:border-brand-accent'
           />
-          <button
+          <input
             type='submit'
+            value='Subscribe'
             disabled={disabled}
-            className='btn btn-primary m-0 min-h-[58px] whitespace-nowrap disabled:cursor-not-allowed disabled:opacity-50'
-          >
-            Subscribe
-          </button>
+            className='btn btn-primary m-0 min-h-[58px] whitespace-nowrap rounded-[8px] disabled:cursor-not-allowed disabled:opacity-50'
+          />
         </div>
 
         <p className='m-0 max-w-[400px] text-left text-[12px] leading-[1.4] text-[#5f5f5f]'>
@@ -51,7 +50,7 @@ export const NewsletterForm: React.FC<NewsletterFormProps> = ({
             href='/privacy'
             target='_blank'
             rel='noreferrer'
-            className='font-medium text-brand-brown underline decoration-[1px] underline-offset-[0.18em]'
+            className='font-medium text-[#5f5f5f] underline decoration-[1px] underline-offset-[0.18em] transition-colors hover:text-brand-fg'
           >
             Privacy Policy
           </a>

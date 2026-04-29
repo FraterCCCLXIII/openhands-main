@@ -16,7 +16,7 @@ describe('NewsletterForm', () => {
 
     const privacyLink = screen.getByRole('link', { name: 'Privacy Policy' });
     expect(privacyLink).toHaveAttribute('href', '/privacy');
-    expect(privacyLink.className).toContain('text-brand-brown');
+    expect(privacyLink.className).toContain('text-[#5f5f5f]');
   });
 
   it('should display an error message', () => {

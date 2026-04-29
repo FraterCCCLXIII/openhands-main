@@ -3,7 +3,7 @@ title: "Learning to Verify AI-Generated Code"
 slug: "20260305-learning-to-verify-ai-generated-code"
 excerpt: "LLMs made generating code cheap. The real bottleneck is verification: checking that a change is correct, follows repo conventions, and is something your team can trust, review, and merge. This post introduces the first layer of our verification stack."
 coverImage: "https://cdn.prod.website-files.com/68ff4058b35616cdd47d5b59/69a9cda1891afcb3b36a12c4_69a9cd87d9459af1c09c6a1b_learning-to-verify-ai-cover.png"
-date: "2026-03-25T18:16:11.813Z"
+date: "2026-03-05T12:00:00.000Z"
 authors:
   - name: "Xingyao Wang"
 ogImage:

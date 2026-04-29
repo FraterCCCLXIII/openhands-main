@@ -1,30 +1,32 @@
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
-const mockBlogs = [
-  {
-    content: 'Featured',
-    data: {
-      title: 'Featured Post',
-      excerpt: 'Featured excerpt',
-      coverImage: '/featured.png',
-      date: '2026-06-10T12:00:00.000Z',
-      authors: [{ name: 'Author One', picture: '', link: '' }],
-      ogImage: { url: '/featured.png' },
-    },
+const mockFeaturedBlog = {
+  content: 'Featured',
+  data: {
+    title: 'Introducing the OpenHands Index',
+    excerpt: 'Featured excerpt',
+    coverImage: '/featured.png',
+    date: '2026-01-29T12:00:00.000Z',
+    authors: [{ name: 'Author One', picture: '', link: '' }],
+    ogImage: { url: '/featured.png' },
+    slug: 'openhands-index',
   },
-  {
-    content: 'Secondary',
-    data: {
-      title: 'Second Post',
-      excerpt: 'Second excerpt',
-      coverImage: '/second.png',
-      date: '2026-06-01T12:00:00.000Z',
-      authors: [{ name: 'Author Two', picture: '', link: '' }],
-      ogImage: { url: '/second.png' },
-    },
+} as Post;
+
+const mockGridBlogs = Array.from({ length: 7 }, (_, index) => ({
+  content: `Post ${index + 1}`,
+  data: {
+    title: `Grid Post ${index + 1}`,
+    excerpt: `Excerpt ${index + 1}`,
+    coverImage: `/grid-${index + 1}.png`,
+    date: `2026-03-0${index + 1}T12:00:00.000Z`,
+    authors: [{ name: 'Author Two', picture: '', link: '' }],
+    ogImage: { url: `/grid-${index + 1}.png` },
+    slug: `grid-post-${index + 1}`,
   },
-] as Post[];
+})) as Post[];
 
 vi.mock('react-router', async () => {
   const actual = await vi.importActual<typeof import('react-router')>('react-router');
@@ -37,7 +39,7 @@ vi.mock('react-router', async () => {
     ),
     Form: ({ children, ...props }: any) => <form {...props}>{children}</form>,
     useActionData: () => undefined,
-    useLoaderData: () => ({ blogs: mockBlogs }),
+    useLoaderData: () => ({ featuredBlog: mockFeaturedBlog, gridBlogs: mockGridBlogs }),
     useNavigation: () => ({ state: 'idle' }),
   };
 });
@@ -45,13 +47,23 @@ vi.mock('react-router', async () => {
 import Blog from '../../src/routes/blog';
 
 describe('Blog route', () => {
-  it('renders the parity-aligned hero and all blog cards without the old CTA buttons', () => {
+  it('renders the pinned featured post and progressively reveals the blog grid', async () => {
+    const user = userEvent.setup();
+
     render(<Blog />);
 
     expect(screen.getByText('Insights and updates from the OpenHands team')).toBeInTheDocument();
-    expect(screen.queryByText('Try it live')).not.toBeInTheDocument();
-    expect(screen.queryByText('Build with SDK')).not.toBeInTheDocument();
-    expect(screen.getByText('Featured Post')).toBeInTheDocument();
-    expect(screen.getByText('June 1, 2026')).toBeInTheDocument();
+    expect(screen.getByText('Introducing the OpenHands Index')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Read more' })).toHaveAttribute(
+      'href',
+      '/blog/openhands-index'
+    );
+    expect(screen.getByText('Grid Post 6')).toBeInTheDocument();
+    expect(screen.queryByText('Grid Post 7')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('link', { name: 'Load more' }));
+
+    expect(screen.getByText('Grid Post 7')).toBeInTheDocument();
+    expect(screen.getByText('Building the open standard for autonomous software development.')).toBeInTheDocument();
   });
 });

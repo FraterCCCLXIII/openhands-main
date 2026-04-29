@@ -88,6 +88,10 @@ npm run parity:checklist  # Crawl openhands.dev and compare against local site
 - Use frontmatter `slug` to pin a live blog route when the canonical URL does not match the title-derived slug.
 - Use frontmatter `published: false` to keep retired posts in the repo while excluding them from the live/local blog inventory.
 - Support known live blog slug aliases locally, and redirect unknown live-only slugs to `https://openhands.dev/blog/:slug` instead of returning a 404/500 from our app.
+- Current live parity expects the featured `/blog` story to stay pinned to `openhands-index`; the article grid and article-footer related posts should come from the remaining reverse-chronological posts.
+- Some live blog posts need frontmatter dates that differ from Webflow's `<title>` metadata date. Use frontmatter `seoTitleDate` when the visible publication date and the browser title date diverge.
+- Shared article-template parity now depends on three template details: a `← Back to Blog` link, related-post cards whose title itself is the anchor text, and the marketing footer CTA block beneath the newsletter section.
+- Most article hero images still use 16px rounding, but `agent-control-plane` currently needs a square hero image for parity; use frontmatter `coverRadius: "none"` for one-off overrides.
 
 ## Product / Enterprise / Pricing / Community Parity Notes
 - Live `/product` uses dark interface cards: `Terminal / CLI`, `Web GUI`, and `SDK` headings plus `Learn more` links render in light text on a dark background.

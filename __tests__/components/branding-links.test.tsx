@@ -53,11 +53,11 @@ describe('shared branding links', () => {
     render(<RouterProvider router={router} />);
 
     expect(
-      screen.getByText('Get the latest updates from OpenHands delivered to your inbox.')
+      screen.getByText('Sign up for our newsletter for updates, events, and community insights.')
     ).toBeInTheDocument();
 
-    fireEvent.click(screen.getByTitle('Expand BibTeX'));
+    fireEvent.click(screen.getByTitle('Expand Citation'));
 
-    expect(screen.getByText(/journal = \{OpenHands Blog\}/)).toBeInTheDocument();
+    expect(screen.getByText(/organization = \{OpenHands Blog\}/)).toBeInTheDocument();
   });
 });

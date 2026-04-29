@@ -1,20 +1,29 @@
 import React from 'react';
 import {
+  Link,
   redirect,
   type LoaderFunctionArgs,
   isRouteErrorResponse,
   useLoaderData,
   useRouteError,
 } from 'react-router';
-import { blogAPI } from '~/api/blog';
+import { blogAPI, getBlogSlug } from '~/api/blog';
 import { BlogFooter } from '~/components/blog-footer';
 import { CMarkdown } from '~/components/c-markdown';
+import { MarketingFooterCta } from '~/components/marketing-footer-cta';
 import { PlaceholderImage } from '~/components/placeholder-image';
 import { getOpenHandsBlogUrl, resolveBlogSlug } from '~/utils/blog-slug-aliases';
 import { formatDate } from '~/utils/format-date';
 import { handleNewsletterSubscription } from '~/utils/newsletter-subscription';
 import type { Route } from './+types/blog.$slug';
 import 'katex/dist/katex.min.css';
+
+const formatSeoTitleDate = (date: string) =>
+  new Date(date).toLocaleDateString('en-US', {
+    month: 'short',
+    day: '2-digit',
+    year: 'numeric',
+  });
 
 export const action = handleNewsletterSubscription;
 
@@ -41,6 +50,7 @@ export const loader = ({ params, request }: LoaderFunctionArgs) => {
     title: data.title,
     date: data.date,
     cover: data.coverImage || null,
+    coverRadius: data.coverRadius || null,
     authors: data.authors.map((author) => ({
       name: author.name,
       picture: author.picture || null,
@@ -48,6 +58,13 @@ export const loader = ({ params, request }: LoaderFunctionArgs) => {
     })),
     excerpt: data.excerpt,
     ogImage: data.ogImage.url.startsWith('http') ? data.ogImage.url : origin + data.ogImage.url,
+    articleHighlights: blogAPI.getArticleHighlightBlogs().map((highlight) => ({
+      title: highlight.data.title,
+      date: highlight.data.date,
+      cover: highlight.data.coverImage || null,
+      href: `/blog/${getBlogSlug(highlight)}`,
+    })),
+    seoTitleDate: data.seoTitleDate || formatSeoTitleDate(data.date),
     url,
   };
 };
@@ -86,7 +103,7 @@ export const meta: Route.MetaFunction = ({ data }) => {
     ];
   }
   return [
-    { title: data.title },
+    { title: `${data.title} | ${data.seoTitleDate}` },
     { name: 'description', content: data.excerpt },
     { property: 'og:title', content: data.title },
     { property: 'og:description', content: data.excerpt },
@@ -148,34 +165,47 @@ const BlogDetails = () => {
 
   return (
     <article className='flex flex-col items-center px-5 pb-16 pt-[100px] lg:px-10'>
-      <div className='w-full max-w-[960px]'>
-        <figure className='w-full'>
-          {!data.cover && <PlaceholderImage className='aspect-[3/2] w-full rounded-[16px]' />}
-          {data.cover && (
-            <img
-              src={data.cover}
-              alt='blog cover'
-              className='aspect-[3/2] w-full rounded-[16px] object-cover'
-            />
-          )}
-        </figure>
-      </div>
+      <div className='w-full max-w-[1240px]'>
+        <div className='mx-auto w-full max-w-[1240px]'>
+          <Link
+            to='/blog'
+            className='inline-flex text-[18px] leading-[1.2] font-medium text-brand-fg transition-colors hover:text-brand-brown'
+          >
+            ← Back to Blog
+          </Link>
+        </div>
 
-      <main className='mt-10 flex w-full max-w-[960px] flex-col gap-10'>
-        <header className='mx-auto flex w-full max-w-[820px] flex-col gap-6'>
-          <h1 className='font-inter text-[32px] leading-[1.1] font-medium tracking-[-0.03em] text-brand-fg lg:text-[44px]'>
-            {data.title}
-          </h1>
+        <header className='mx-auto mt-6 flex w-full max-w-[1240px] flex-col gap-8'>
+          <div className='max-w-[560px]'>
+            <h1 className='font-inter text-[32px] leading-[1.1] font-medium tracking-[-0.03em] text-brand-fg lg:text-[44px]'>
+              {data.title}
+            </h1>
+          </div>
 
-          <div className='grid grid-cols-1 gap-4 border-t border-black/10 pt-6 md:grid-cols-2'>
+          <figure className='w-full'>
+            {!data.cover && (
+              <PlaceholderImage
+                className={`aspect-[3/2] w-full ${data.coverRadius === 'none' ? 'rounded-none' : 'rounded-[16px]'}`}
+              />
+            )}
+            {data.cover && (
+              <img
+                src={data.cover}
+                alt={`${data.title} cover image`}
+                className={`aspect-[3/2] w-full object-cover ${data.coverRadius === 'none' ? 'rounded-none' : 'rounded-[16px]'}`}
+              />
+            )}
+          </figure>
+
+          <div className='grid grid-cols-1 gap-4 pt-4 md:grid-cols-2'>
             <div>
               <p className='m-0 text-[14px] leading-[1.5] text-[#5f5f5f]'>Written by</p>
-              <p className='mt-1 text-[18px] leading-[1.2] font-medium text-brand-fg'>
+              <p className='mt-2 text-[18px] leading-[1.2] font-medium text-brand-fg'>
                 {data.authors.map((author, index) => {
                   const content = author.link ? (
                     <a
                       href={author.link}
-                      className='text-brand-brown underline decoration-[1px] underline-offset-[0.18em] transition-colors hover:text-brand-fg'
+                      className='text-brand-fg transition-colors hover:text-brand-brown'
                       target='_blank'
                       rel='noreferrer'
                     >
@@ -197,28 +227,34 @@ const BlogDetails = () => {
 
             <div className='md:text-right'>
               <p className='m-0 text-[14px] leading-[1.5] text-[#5f5f5f]'>Published on</p>
-              <time
-                dateTime={data.date}
-                className='mt-1 block text-[18px] leading-[1.2] font-medium text-brand-fg'
-              >
-                {formatDate(data.date)}
-              </time>
+              <p className='mt-2 text-[18px] leading-[1.2] font-medium text-brand-fg'>
+                <time dateTime={data.date}>{formatDate(data.date)}</time>
+              </p>
             </div>
           </div>
         </header>
+      </div>
 
+      <main className='mt-12 flex w-full max-w-[1240px] flex-col gap-10'>
         <section className='mx-auto w-full max-w-[820px]'>
           <CMarkdown variant='blog' codeElementWidth={codeElementWidth}>
             {data.content}
           </CMarkdown>
+        </section>
 
+        <section className='w-full'>
           <BlogFooter
             title={data.title}
             authors={data.authors}
             date={data.date}
             url={data.url}
+            articleHighlights={data.articleHighlights}
           />
         </section>
+
+        <div className='w-full'>
+          <MarketingFooterCta />
+        </div>
       </main>
     </article>
   );

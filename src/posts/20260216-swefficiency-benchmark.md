@@ -3,7 +3,7 @@ title: "SWE-fficiency: Evaluating How to Fix Code, Not Just What to Fix"
 slug: "20260216-swefficiency-benchmark"
 excerpt: "Introducing SWE-fficiency, a new benchmark that evaluates AI agents on performance engineering—measuring not just if code works, but if agents can make it fast and efficient like senior engineers."
 coverImage: "https://cdn.prod.website-files.com/68ff4058b35616cdd47d5b59/69936dda67ea701b1d78a840_69936dd927897f474402c56f_swefficiency-cover-final.png"
-date: "2026-02-17T19:52:02.513Z"
+date: "2026-02-16T12:00:00.000Z"
 authors:
   - name: "Jeffrey Ma and Vijay Janapa Reddi"
 ogImage:
