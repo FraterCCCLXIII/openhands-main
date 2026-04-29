@@ -11,7 +11,7 @@ test("blog loader resolves synced live slugs", () => {
   expect(data.url).toBe("https://example.com/blog/agent-control-plane");
 });
 
-test("blog loader throws a 404 response for unknown slugs", () => {
+test("blog loader redirects unknown live-only slugs to openhands.dev", () => {
   try {
     loader({
       params: { slug: "does-not-exist" },
@@ -20,7 +20,9 @@ test("blog loader throws a 404 response for unknown slugs", () => {
     throw new Error("Expected loader to throw for a missing blog slug");
   } catch (error) {
     expect(error).toBeInstanceOf(Response);
-    expect((error as Response).status).toBe(404);
-    expect((error as Response).statusText).toBe("");
+    expect((error as Response).status).toBe(302);
+    expect((error as Response).headers.get("Location")).toBe(
+      "https://openhands.dev/blog/does-not-exist"
+    );
   }
 });

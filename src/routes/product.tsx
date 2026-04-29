@@ -5,21 +5,21 @@ const INTERFACES = [
     title: 'Terminal / CLI',
     description:
       'Run, inspect, and automate OpenHands agents directly from the terminal or headlessly in your pipelines with full visibility and control.',
-    link: 'https://docs.openhands.dev/openhands/usage/cli/installation',
+    link: '/product/cli',
     image: '/assets/webflow/misc/699490d1d9729682e0daf0a5_cli.png',
   },
   {
     title: 'Web GUI',
     description:
       'Plan, run, and review agent work together in a collaborative UI.',
-    link: 'https://docs.openhands.dev/openhands/usage/run-openhands/local-setup',
+    link: '/product/gui',
     image: '/assets/webflow/misc/6994c3bfa634f5f3966d2150_4c76230966d0d54a446a009e4f4a19c2_gui.png',
   },
   {
     title: 'SDK',
     description:
       'Create specialized agents, integrate internal tools, and orchestrate complex workflows programmatically.',
-    link: 'https://docs.openhands.dev/sdk',
+    link: '/product/sdk',
     image: '/assets/webflow/misc/699f4b0b80190eeea4ba3eb9_sdk-1.png',
   },
 ];
@@ -103,8 +103,8 @@ const Product = () => {
               </p>
               <a
                 href={item.link}
-                target='_blank'
-                rel='noopener noreferrer'
+                target={item.link.startsWith('http') ? '_blank' : undefined}
+                rel={item.link.startsWith('http') ? 'noopener noreferrer' : undefined}
                 className='mt-4 text-[16px] font-medium leading-[1.4] text-brand-bg underline underline-offset-4'
               >
                 Learn more

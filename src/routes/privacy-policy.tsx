@@ -11,17 +11,32 @@ import type { Route } from './+types/privacy-policy';
 export const meta: Route.MetaFunction = ({ location }) => {
   return [
     { title: 'Privacy Policy' },
-    { name: 'description', content: 'OpenHands Privacy Policy' },
+    {
+      name: 'description',
+      content:
+        'Learn how OpenHands and All Hands AI collect, use, and protect personal information across our website and services.',
+    },
     { property: 'og:title', content: 'Privacy Policy' },
-    { property: 'og:description', content: 'OpenHands Privacy Policy' },
+    {
+      property: 'og:description',
+      content:
+        'Learn how OpenHands and All Hands AI collect, use, and protect personal information across our website and services.',
+    },
     { property: 'og:image', content: 'https://openhands.dev/assets/webflow/og/69161b32abf448a2df921a73_openhands_opengraph_01.png' },
     { property: 'og:url', content: 'https://openhands.dev' + location.pathname },
     { property: 'og:type', content: 'website' },
     { property: 'og:site_name', content: 'OpenHands' },
     { name: 'twitter:card', content: 'summary_large_image' },
     { name: 'twitter:title', content: 'Privacy Policy' },
-    { name: 'twitter:description', content: 'OpenHands Privacy Policy' },
-    { name: 'twitter:image', content: 'https://openhands.dev/assets/webflow/og/69161b32abf448a2df921a73_openhands_opengraph_01.png' },
+    {
+      name: 'twitter:description',
+      content:
+        'Learn how OpenHands and All Hands AI collect, use, and protect personal information across our website and services.',
+    },
+    {
+      name: 'twitter:image',
+      content: 'https://openhands.dev/assets/webflow/og/69161b32abf448a2df921a73_openhands_opengraph_01.png',
+    },
     { rel: 'canonical', href: 'https://openhands.dev' + location.pathname },
     { name: 'robots', content: 'noindex, nofollow' },
   ];
@@ -30,7 +45,7 @@ export const meta: Route.MetaFunction = ({ location }) => {
 
 function PrivacyPolicy() {
   return (
-    <main className="flex flex-col px-80 py-10 gap-10">
+    <main className='mx-auto flex max-w-5xl flex-col gap-10 px-6 py-10 lg:px-10'>
       <h1 className="heading">Privacy Policy</h1>
 
       <Paragraph>
@@ -42,7 +57,7 @@ function PrivacyPolicy() {
       </Paragraph>
 
       <Paragraph>
-        This Privacy Policy explains how we handle personal information that we collect or generate through the Services, and the personal information we collect when you visit our website, located at <ExternalLink>https://all-hands.dev</ExternalLink> or <ExternalLink>https://app.all-hands.dev/</ExternalLink> (the "Site"), and any other website or service that links to this Privacy Policy.
+        This Privacy Policy explains how we handle personal information that we collect or generate through the Services, and the personal information we collect when you visit our website, located at <ExternalLink>https://openhands.dev</ExternalLink> or <ExternalLink>https://app.all-hands.dev/</ExternalLink> (the "Site"), and any other website or service that links to this Privacy Policy.
       </Paragraph>
 
       <Section title="Personal information we collect">

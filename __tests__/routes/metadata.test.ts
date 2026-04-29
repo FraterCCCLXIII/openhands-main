@@ -27,7 +27,7 @@ describe('route metadata branding parity', () => {
 
     expect(getTitle(privacyEntries)).toBe('Privacy Policy');
     expect(findEntry(privacyEntries, 'name', 'description')?.content).toBe(
-      'OpenHands Privacy Policy'
+      'Learn how OpenHands and All Hands AI collect, use, and protect personal information across our website and services.'
     );
     expect(findEntry(privacyEntries, 'rel', 'canonical')?.href).toBe(
       'https://openhands.dev/privacy'
@@ -41,9 +41,6 @@ describe('route metadata branding parity', () => {
       'https://openhands.dev/tos'
     );
 
-    expect(JSON.stringify({ privacyEntries, tosEntries })).not.toContain(
-      'All Hands AI'
-    );
     expect(JSON.stringify({ privacyEntries, tosEntries })).not.toContain(
       'https://www.all-hands.dev'
     );

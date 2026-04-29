@@ -1,5 +1,6 @@
 import matter from "gray-matter";
 import { RAW_POSTS } from "~/posts";
+import { resolveBlogSlug } from "~/utils/blog-slug-aliases";
 import { stringToSlug } from "~/utils/string-to-slug";
 
 type BlogPost = Post & {
@@ -48,7 +49,7 @@ class BlogAPI {
   }
 
   public getBlogBySlug(slug: string): BlogPost | undefined {
-    return this.postsBySlug.get(slug);
+    return this.postsBySlug.get(slug) ?? this.postsBySlug.get(resolveBlogSlug(slug));
   }
 }
 

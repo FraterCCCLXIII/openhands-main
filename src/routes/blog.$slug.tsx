@@ -1,5 +1,6 @@
 import React from 'react';
 import {
+  redirect,
   type LoaderFunctionArgs,
   isRouteErrorResponse,
   useLoaderData,
@@ -9,8 +10,9 @@ import { blogAPI } from '~/api/blog';
 import { BlogFooter } from '~/components/blog-footer';
 import { CMarkdown } from '~/components/c-markdown';
 import { PlaceholderImage } from '~/components/placeholder-image';
-import { handleNewsletterSubscription } from '~/utils/newsletter-subscription';
+import { getOpenHandsBlogUrl, resolveBlogSlug } from '~/utils/blog-slug-aliases';
 import { formatDate } from '~/utils/format-date';
+import { handleNewsletterSubscription } from '~/utils/newsletter-subscription';
 import type { Route } from './+types/blog.$slug';
 import 'katex/dist/katex.min.css';
 
@@ -22,10 +24,11 @@ export const loader = ({ params, request }: LoaderFunctionArgs) => {
   }
 
   const slug = params.slug.toString();
-  const blog = blogAPI.getBlogBySlug(slug);
+  const resolvedSlug = resolveBlogSlug(slug);
+  const blog = blogAPI.getBlogBySlug(resolvedSlug);
 
   if (!blog) {
-    throw new Response('Blog not found', { status: 404 });
+    throw redirect(getOpenHandsBlogUrl(slug));
   }
 
   const { content, data } = blog;
