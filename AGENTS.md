@@ -92,3 +92,7 @@ npm run parity:checklist  # Crawl openhands.dev and compare against local site
 - After issue #278 work, parity checklist counts dropped to: `/product` 1 fail, `/enterprise` 2 fails, `/pricing` 2 fails, `/community` 0 fails using `PARITY_MAX_PAGES=12 PARITY_DISCOVERY_LIMIT=20 TEST_ORIGIN=http://127.0.0.1:12001 LIVE_ORIGIN=https://openhands.dev npm run parity:checklist`.
 - Keep dedicated product detail pages at `/product/sdk`, `/product/gui`, and `/product/cli`, and wire the main product interface cards to those routes.
 - `joinslack` should behave as a server redirect, not a client-only redirect, so crawlers and non-JS clients match the live `301` to `https://dub.sh/openhands`.
+
+## Legal Page Parity Notes
+- Live `/privacy` renders the body as a narrow legal-rich-text block with a centered 32px desktop title, real `h2`/`h3` hierarchy, and the shared `MarketingFooterCta` above the global footer.
+- Current live `/privacy` parity expects a duplicated `Changes to this Privacy Policy` subsection and a trailing zero-width paragraph (`‍`) in the legal copy; keep both if parity checks regress on that route.
