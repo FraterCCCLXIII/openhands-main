@@ -19,6 +19,10 @@ export default [
   route("/manifesto", "routes/manifesto.tsx"),
   route("/press", "routes/press.tsx"),
   route("/contact", "routes/contact.tsx"),
+  route(
+    "/whitepapers/modernize-legacy-systems-with-ai-agents",
+    "routes/whitepapers.modernize-legacy-systems-with-ai-agents.tsx",
+  ),
   route("/joinslack", "routes/joinslack.tsx"),
   route("/sdk", "routes/sdk.tsx"),
   route("/survey", "routes/survey.tsx"),

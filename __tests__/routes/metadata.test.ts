@@ -7,6 +7,7 @@ import { meta as privacyMeta } from '../../src/routes/privacy-policy';
 import { meta as disclosureMeta } from '../../src/routes/responsible-disclosure-policy';
 import { meta as shareMeta } from '../../src/routes/share';
 import { meta as tosMeta } from '../../src/routes/tos';
+import { meta as whitepaperMeta } from '../../src/routes/whitepapers.modernize-legacy-systems-with-ai-agents';
 
 type MetaEntry = Record<string, unknown>;
 
@@ -99,6 +100,9 @@ describe('route metadata branding parity', () => {
     const disclosureEntries = (disclosureMeta as any)({
       location: { pathname: '/responsible-disclosure-policy' },
     }) as MetaEntry[];
+    const whitepaperEntries = (whitepaperMeta as any)({
+      location: { pathname: '/whitepapers/modernize-legacy-systems-with-ai-agents' },
+    }) as MetaEntry[];
 
     expect(findEntry(homeEntries, 'rel', 'canonical')?.href).toBe(
       'https://openhands.dev'
@@ -109,11 +113,20 @@ describe('route metadata branding parity', () => {
     expect(findEntry(disclosureEntries, 'rel', 'canonical')?.href).toBe(
       'https://openhands.dev/responsible-disclosure-policy'
     );
+    expect(findEntry(whitepaperEntries, 'rel', 'canonical')?.href).toBe(
+      'https://openhands.dev/whitepapers/modernize-legacy-systems-with-ai-agents'
+    );
     expect(findEntry(disclosureEntries, 'name', 'description')?.content).toBe(
       'OpenHands Responsible Disclosure Policy'
     );
+    expect(findEntry(whitepaperEntries, 'name', 'description')?.content).toBe(
+      '74% of legacy modernization projects fail. Learn how OpenHands uses AI agents and dependency-aware orchestration to safely migrate COBOL and large codebases at enterprise scale. Download the whitepaper and apply for the Q2 2026 PoC.'
+    );
 
     expect(findEntry(blogPostEntries, 'property', 'og:site_name')?.content).toBe(
+      'OpenHands'
+    );
+    expect(findEntry(whitepaperEntries, 'property', 'og:site_name')?.content).toBe(
       'OpenHands'
     );
 
@@ -123,5 +136,6 @@ describe('route metadata branding parity', () => {
 
     expect(String(structuredData)).toContain('"name":"OpenHands"');
     expect(String(structuredData)).not.toContain('All Hands AI');
+    expect(JSON.stringify(whitepaperEntries)).not.toContain('All Hands AI');
   });
 });
