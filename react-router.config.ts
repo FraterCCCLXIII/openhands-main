@@ -9,19 +9,28 @@ const stringToSlug = (str: string) => str
   .replace(/ /g, "-")
   .replace(/[^a-z0-9-]/g, "");
 
+const getPostSlug = (data: { title: string; slug?: string }) =>
+  data.slug ?? stringToSlug(data.title);
+
 export default {
   ssr: true,
   appDirectory: 'src',
   presets: [vercelPreset()],
   async prerender() {
-    // Read all blog post files and extract slugs from titles
     const postsDir = path.join(process.cwd(), 'src/posts');
-    const postFiles = fs.readdirSync(postsDir).filter(f => f.endsWith('.md'));
-    
-    const blogSlugs = postFiles.map(file => {
+    const postFiles = fs.readdirSync(postsDir).filter((file) => file.endsWith('.md'));
+
+    const blogSlugs = postFiles.flatMap((file) => {
       const content = fs.readFileSync(path.join(postsDir, file), 'utf-8');
-      const { data } = matter(content);
-      return `/blog/${stringToSlug(data.title)}`;
+      const { data } = matter(content) as {
+        data: { title: string; published?: boolean; slug?: string };
+      };
+
+      if (data.published === false) {
+        return [];
+      }
+
+      return [`/blog/${getPostSlug(data)}`];
     });
 
     return [

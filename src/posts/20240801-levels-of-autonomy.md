@@ -1,5 +1,6 @@
 ---
 title: "Levels of Autonomy in AI-enhanced Software Engineering"
+published: false
 excerpt: "What are some different levels of autonomy in software development agents, and how do they relate to existing tools? Read on to learn more!"
 coverImage: "/assets/blog/20240801-levels-of-autonomy/cover.jpg"
 date: "2024-08-01T08:00:00.000Z"

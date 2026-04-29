@@ -4,8 +4,12 @@ import rehypeRaw from 'rehype-raw';
 import rehypeKatex from 'rehype-katex';
 import remarkMath from 'remark-math';
 import remarkGfm from 'remark-gfm';
-import { type LoaderFunctionArgs, useLoaderData } from 'react-router';
-import invariant from 'tiny-invariant';
+import {
+  type LoaderFunctionArgs,
+  isRouteErrorResponse,
+  useLoaderData,
+  useRouteError,
+} from 'react-router';
 import { blogAPI } from '~/api/blog';
 import { PlaceholderImage } from '~/components/placeholder-image';
 import { formatDate } from '~/utils/format-date';
@@ -18,12 +22,17 @@ import { LazyCode } from '~/components/lazy-code';
 export const action = handleNewsletterSubscription;
 
 export const loader = ({ params, request }: LoaderFunctionArgs) => {
-  invariant(params.slug, 'No blog ID provided');
+  if (!params.slug) {
+    throw new Response('Blog not found', { status: 404 });
+  }
 
   const slug = params.slug.toString();
   const blog = blogAPI.getBlogBySlug(slug);
 
-  invariant(blog, 'No blog found');
+  if (!blog) {
+    throw new Response('Blog not found', { status: 404 });
+  }
+
   const { content, data } = blog;
 
   // Get the current URL for citation
@@ -46,12 +55,25 @@ export const loader = ({ params, request }: LoaderFunctionArgs) => {
   };
 };
 
-export const ErrorBoundary = () => (
-  <div className='flex flex-col items-center gap-4 text-center py-[45px]'>
-    <h1 className='heading'>Error</h1>
-    <p className='paragraph'>There was an error loading the blog.</p>
-  </div>
-);
+export const ErrorBoundary = () => {
+  const error = useRouteError();
+
+  if (isRouteErrorResponse(error) && error.status === 404) {
+    return (
+      <div className='flex flex-col items-center gap-4 text-center py-[45px]'>
+        <h1 className='heading'>404</h1>
+        <p className='paragraph'>Blog post not found.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className='flex flex-col items-center gap-4 text-center py-[45px]'>
+      <h1 className='heading'>Error</h1>
+      <p className='paragraph'>There was an error loading the blog.</p>
+    </div>
+  );
+};
 
 export const meta: Route.MetaFunction = ({ data }) => {
   if (!data) {

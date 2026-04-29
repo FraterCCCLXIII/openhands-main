@@ -1,142 +1,43 @@
 ---
-title: "Use OpenHands in Your Favorite Editor Through the Agent Client Protocol"
-excerpt: "Learn how to bring OpenHands' powerful AI coding capabilities directly into your editor using the Agent Client Protocol. Whether you use Zed, JetBrains, neovim, or Obsidian, you can now access OpenHands without leaving your editor."
-coverImage: "/assets/blog/20251207-use-openhands-in-your-ide-with-acp/cover.png"
-date: "2025-12-07T12:00:00.000Z"
+title: "Use AI Agents in Your Favorite Editor through the Agent Client Protocol"
+slug: "20251209-use-openhands-in-your-ide-with-acp"
+excerpt: "Learn how to bring OpenHands' powerful AI coding capabilities directly into your editor using the Agent Client Protocol. Whether you use Zed, JetBrains, neovim, Obsidian, or more you can now access OpenHands without leaving your editor."
+coverImage: "https://cdn.prod.website-files.com/68ff4058b35616cdd47d5b59/693817516e4d3f7532687380_cover.png"
+date: "2026-01-06T19:13:52.947Z"
 authors:
-  - name: OpenHands Team
-    picture: "/assets/blog/members/openhands-team.jpg"
+  - name: "Graham Neubig"
 ogImage:
-  url: "/assets/blog/20251207-use-openhands-in-your-ide-with-acp/cover.png"
+  url: "https://cdn.prod.website-files.com/68ff4058b35616cdd47d5b59/693817516e4d3f7532687380_cover.png"
 ---
 
-Developers are creatures of habit. We each have our favorite code editor, carefully configured with our preferred keybindings, color schemes, and plugins. Some of us swear by [Zed](https://zed.dev/)'s speed, others by [JetBrains](https://www.jetbrains.com/)' powerful refactoring tools, and still others can't imagine leaving [neovim](https://neovim.io/).
-
-But when it comes to AI coding assistants, we've often had to adapt to whatever interface each agent provides—whether that's a web UI, a separate CLI window, or a built-in experience limited to a specific editor. What if you could use any AI agent in any editor?
-
-That's the promise of the [Agent Client Protocol](https://agentclientprotocol.com/) (ACP), and today we're going to show you how to bring [OpenHands](https://github.com/OpenHands/OpenHands) directly into your favorite editor.
-
-# What is the Agent Client Protocol?
-
-The Agent Client Protocol (ACP) is a standardized communication protocol that enables code editors to interact with AI coding agents. Think of it as the [Language Server Protocol](https://microsoft.github.io/language-server-protocol/) (LSP), but for AI agents instead of language servers.
-
-Before LSP, each editor needed custom integrations for every language's tooling—code completion, go-to-definition, refactoring, and more. LSP changed that by creating a universal protocol that let any editor communicate with any language server. This meant that language tooling developers could write their server once and have it work across all editors that supported LSP.
-
-ACP does the same thing for AI coding agents. Instead of each agent needing to build custom integrations for every editor, and each editor needing custom support for every agent, ACP provides a standardized [JSON-RPC](https://www.jsonrpc.org/specification) interface. Agents that implement ACP work with any compatible editor. Editors that support ACP gain access to the entire ecosystem of ACP-compatible agents.
-
-The protocol assumes that users are primarily working in their editor and want to invoke AI agents for specific tasks without context-switching. Agents run as sub-processes of the code editor and communicate using JSON-RPC over stdio, making integration seamless and lightweight.
-
-# Which Editors Support ACP?
-
-The ACP ecosystem is growing rapidly, with several major editors already implementing support:
-
-- **Zed**: The fast, collaborative code editor was one of the first to implement ACP support, making it easy to integrate any ACP-compatible agent.
-- **JetBrains IDEs**: JetBrains has joined as a co-developer of the ACP protocol and plans to bring support to their entire editor lineup, including [IntelliJ IDEA](https://www.jetbrains.com/idea/), [PyCharm](https://www.jetbrains.com/pycharm/), [WebStorm](https://www.jetbrains.com/webstorm/), and more.
-- **Neovim**: Through community plugins like [CodeCompanion.nvim](https://github.com/olimorris/codecompanion.nvim), neovim users can now leverage ACP to bring AI agents into their workflow.
-- **Obsidian**: The knowledge management and note-taking app [Obsidian](https://obsidian.md/) supports ACP, enabling AI-assisted writing and content generation workflows.
-
-You can find the full list of ACP-compatible clients and agents at [agentclientprotocol.com/overview/clients](https://agentclientprotocol.com/overview/clients).
-
-# Configuring ACP for OpenHands
-
-OpenHands provides built-in support for ACP through the OpenHands CLI. The configuration is straightforward, but let's break down what you need to know.
-
-## ACP Configuration Format
-
-ACP agents are configured using a JSON object that specifies how the editor should launch and communicate with the agent. The basic structure looks like this:
-
-```json
-{
-  "agent_servers": {
-    "AgentName": {
-      "command": "executable",
-      "args": ["arg1", "arg2"],
-      "env": {
-        "ENV_VAR": "value"
-      }
-    }
-  }
-}
-```
-
-For OpenHands specifically, the configuration is even simpler. OpenHands uses [`uvx`](https://docs.astral.sh/uv/guides/tools/) to run the CLI in ACP mode:
-
-```json
-{
-  "agent_servers": {
-    "OpenHands": {
-      "command": "uvx",
-      "args": [
-        "openhands",
-        "acp"
-      ],
-      "env": {}
-    }
-  }
-}
-```
-
-The `uvx` command automatically handles downloading and running the latest version of OpenHands CLI, so you don't need to worry about installation or updates. The `acp` argument tells OpenHands to start in ACP server mode, where it listens for JSON-RPC messages from your editor.
-
-For more details on ACP configuration and troubleshooting, check out the [OpenHands ACP documentation](https://docs.openhands.dev/openhands/usage/run-openhands/acp).
-
-# Setting Up OpenHands in Zed
-
-Let's walk through setting up OpenHands in Zed, which currently has the most mature ACP support.
-
-## Prerequisites
-
-Before you begin, make sure you've configured your OpenHands settings. You'll need an API key for your preferred LLM provider. You can set this up by running:
-
-```bash
-openhands config
-```
-
-Follow the prompts to configure your LLM provider, API key, and other settings.
-
-## Adding OpenHands to Zed
-
-1. **Open the command palette** in Zed by pressing `Cmd+Shift+P` on macOS or `Ctrl+Shift+P` on Linux/Windows.
-
-2. **Search for "agent: open settings"** and select it. This will open Zed's agent configuration settings.
-
-![Zed Command Palette](/assets/blog/20251207-use-openhands-in-your-ide-with-acp/acp-zed-settings.png)
-
-3. **Click "+ Add Agent"** at the bottom of the settings panel, then select **"Add Custom Agent"**.
-
-![Zed Add Custom Agent](/assets/blog/20251207-use-openhands-in-your-ide-with-acp/acp-zed-add-agent.png)
-
-4. **Add the OpenHands configuration** to the `"agent_servers"` section:
-
-```json
-{
-  "agent_servers": {
-    "OpenHands": {
-      "command": "uvx",
-      "args": [
-        "openhands",
-        "acp"
-      ],
-      "env": {}
-    }
-  }
-}
-```
-
-5. **Save the settings** and close the panel.
-
-Now you can invoke OpenHands directly from Zed! Select some code or place your cursor where you want the agent to work, open the command palette, and type "agent" to see the available agent commands. Choose "OpenHands" from the list, and the agent will start working right in your editor.
-
-![Zed Use OpenHands Agent](/assets/blog/20251207-use-openhands-in-your-ide-with-acp/acp-zed-use-openhands.png)
-
-## Troubleshooting
-
-If you run into issues, Zed provides a helpful debug log. Open the command palette and search for "acp debug log" to see detailed information about agent communication. This can help identify configuration problems, network issues, or other errors.
-
-# Get Started Today
-
-If you're ready to try OpenHands in your editor, head over to the [ACP documentation](https://docs.openhands.dev/openhands/usage/run-openhands/acp) for detailed setup instructions for your editor of choice.
-
-And if you're interested in how OpenHands works under the hood, check out our [GitHub repository](https://github.com/OpenHands/OpenHands) or join our [Slack community](https://dub.sh/openhands) to chat with the team and other developers using OpenHands in their daily workflows.
-
-The future of AI-assisted development is here, and it works in whatever editor you prefer.
+<p>Developers are creatures of habit. We each have our favorite code editor, carefully configured with our preferred keybindings, color schemes, and plugins. Some of us swear by <a href="https://zed.dev/">Zed</a>&#x27;s speed, others by <a href="https://www.jetbrains.com/">JetBrains</a>&#x27; powerful refactoring tools, and still others can&#x27;t imagine leaving <a href="https://neovim.io/">neovim</a>.</p><p>But when it comes to AI coding assistants, we&#x27;ve often had to adapt to whatever interface each agent provides—whether that&#x27;s a web UI, a separate CLI window, or a built-in experience limited to a specific editor. What if you could use any AI agent in any editor?</p><p>That&#x27;s the promise of the <a href="https://agentclientprotocol.com/">Agent Client Protocol</a> (ACP), and today we&#x27;re going to show you how to bring <a href="https://github.com/OpenHands/OpenHands">OpenHands</a> directly into your favorite editor.</p><h1>What is the Agent Client Protocol?</h1><p>The Agent Client Protocol (ACP) is a standardized communication protocol that enables code editors to interact with AI coding agents. Think of it as the <a href="https://microsoft.github.io/language-server-protocol/">Language Server Protocol</a> (LSP), but for AI agents instead of language servers.</p><p>Before LSP, each editor needed custom integrations for every language&#x27;s tooling—code completion, go-to-definition, refactoring, and more. LSP changed that by creating a universal protocol that let any editor communicate with any language server. This meant that language tooling developers could write their server once and have it work across all editors that supported LSP.</p><p>ACP does the same thing for AI coding agents. Instead of each agent needing to build custom integrations for every editor, and each editor needing custom support for every agent, ACP provides a standardized <a href="https://www.jsonrpc.org/specification">JSON-RPC</a> interface. Agents that implement ACP work with any compatible editor. Editors that support ACP gain access to the entire ecosystem of ACP-compatible agents.</p><p>The protocol assumes that users are primarily working in their editor and want to invoke AI agents for specific tasks without context-switching. Agents run as sub-processes of the code editor and communicate using JSON-RPC over stdio, making integration seamless and lightweight.</p><h1>Which Editors Support ACP?</h1><p>The ACP ecosystem is growing rapidly, with several major editors already implementing support:</p><ul role="list"><li><strong>Zed</strong>: The fast, collaborative code editor was one of the first to implement ACP support, making it easy to integrate any ACP-compatible agent.</li><li><strong>JetBrains IDEs</strong>: JetBrains has joined as a co-developer of the ACP protocol and plans to bring support to their entire editor lineup, including <a href="https://www.jetbrains.com/idea/">IntelliJ IDEA</a>, <a href="https://www.jetbrains.com/pycharm/">PyCharm</a>, <a href="https://www.jetbrains.com/webstorm/">WebStorm</a>, and more.</li><li><strong>Neovim</strong>: Through community plugins like <a href="https://github.com/olimorris/codecompanion.nvim">CodeCompanion.nvim</a>, neovim users can now leverage ACP to bring AI agents into their workflow.</li><li><strong>Obsidian</strong>: The knowledge management and note-taking app <a href="https://obsidian.md/">Obsidian</a> supports ACP, enabling AI-assisted writing and content generation workflows.</li></ul><p>You can find the full list of ACP-compatible clients and agents at <a href="https://agentclientprotocol.com/overview/clients">agentclientprotocol.com/overview/clients</a>.</p><h1>Configuring ACP for OpenHands</h1><p>OpenHands provides built-in support for ACP through the OpenHands CLI. The configuration is straightforward, but let&#x27;s break down what you need to know.</p><h2>ACP Configuration Format</h2><p>ACP agents are configured using a JSON object that specifies how the editor should launch and communicate with the agent. The basic structure looks like this:</p><pre contenteditable="false" class="w-code-block" style="display:block;overflow-x:auto;background:#2b2b2b;color:#f8f8f2;padding:0.5em"><code class="language-json" style="white-space:pre-wrap"><span><span>{
+</span></span><span><span>	</span><span class="hljs-attr">&quot;agent_servers&quot;</span><span>: {
+</span></span><span><span>    	</span><span class="hljs-attr">&quot;AgentName&quot;</span><span>: {
+</span></span><span><span>        	</span><span class="hljs-attr">&quot;command&quot;</span><span>: </span><span style="color:#abe338">&quot;executable&quot;</span><span>,
+</span></span><span><span>            </span><span class="hljs-attr">&quot;args&quot;</span><span>: [</span><span style="color:#abe338">&quot;arg1&quot;</span><span>, </span><span style="color:#abe338">&quot;arg2&quot;</span><span>],
+</span></span><span><span>            </span><span class="hljs-attr">&quot;env&quot;</span><span>: {
+</span></span><span><span>            	</span><span class="hljs-attr">&quot;ENV_VAR&quot;</span><span>: </span><span style="color:#abe338">&quot;value&quot;</span><span>
+</span></span><span>            }
+</span><span>        }
+</span><span>    }
+</span><span>}</span></code></pre><p>For OpenHands specifically, after you install the <a href="https://docs.openhands.dev/openhands/usage/run-openhands/cli-mode">OpenHands CLI</a>, you can use the following configuration:</p><pre contenteditable="false" class="w-code-block" style="display:block;overflow-x:auto;background:#2b2b2b;color:#f8f8f2;padding:0.5em"><code class="language-json" style="white-space:pre-wrap"><span><span>{
+</span></span><span><span>	</span><span class="hljs-attr">&quot;agent_servers&quot;</span><span>: {
+</span></span><span><span>    	</span><span class="hljs-attr">&quot;OpenHands&quot;</span><span>: {
+</span></span><span><span>        	</span><span class="hljs-attr">&quot;command&quot;</span><span>: </span><span style="color:#abe338">&quot;openhands&quot;</span><span>,
+</span></span><span><span>            </span><span class="hljs-attr">&quot;args&quot;</span><span>: [
+</span></span><span><span>            	</span><span style="color:#abe338">&quot;acp&quot;</span><span>
+</span></span><span>            ],
+</span><span><span>            </span><span class="hljs-attr">&quot;env&quot;</span><span>: {}
+</span></span><span>        }
+</span><span>    }
+</span><span>}</span></code></pre><p>For more details on ACP configuration and troubleshooting, check out the <a href="https://docs.openhands.dev/openhands/usage/run-openhands/acp">OpenHands ACP documentation</a>.</p><h1>Setting Up OpenHands in Zed</h1><p>Let&#x27;s walk through setting up OpenHands in Zed, an open source editor with robust ACP support.</p><h2>Prerequisites</h2><p>Before you begin, make sure you&#x27;ve configured your OpenHands settings. You&#x27;ll need an API key for your preferred LLM provider. You can set this up by running:</p><p><code><br/>openhands<br/>‍<br/></code></p><p>Follow the prompts to configure your LLM provider, API key, and other settings.</p><h2>Adding OpenHands to Zed</h2><ul role="list"><li><strong>Open the command palette</strong> in Zed by pressing <code>Cmd+Shift+P</code> on macOS or <code>Ctrl+Shift+P</code> on Linux/Windows.</li><li><strong>Search for &quot;agent: open settings&quot;</strong> and select it. This will open Zed&#x27;s agent configuration settings.</li></ul><figure class="w-richtext-align-center w-richtext-figure-type-image"><div><img src="https://cdn.prod.website-files.com/68ff4058b35616cdd47d5b59/693816f225265552e8348dff_acp-zed-settings.avif" loading="lazy" alt=""/></div></figure><ul role="list"><li><strong>Click &quot;+ Add Agent&quot;</strong> at the bottom of the settings panel, then select <strong>&quot;Add Custom Agent&quot;</strong>.</li></ul><figure class="w-richtext-align-center w-richtext-figure-type-image"><div><img src="https://cdn.prod.website-files.com/68ff4058b35616cdd47d5b59/69381705f355878e79327f44_acp-zed-add-agent.avif" loading="lazy" alt=""/></div></figure><ul role="list"><li><strong>Add the OpenHands configuration</strong> to the <code>&quot;agent_servers&quot;</code> section:</li></ul><pre contenteditable="false" class="w-code-block" style="display:block;overflow-x:auto;background:#2b2b2b;color:#f8f8f2;padding:0.5em"><code class="language-json" style="white-space:pre-wrap"><span><span>{
+</span></span><span><span>	</span><span class="hljs-attr">&quot;agent_servers&quot;</span><span>: {
+</span></span><span><span>    	</span><span class="hljs-attr">&quot;OpenHands&quot;</span><span>: {
+</span></span><span><span>        	</span><span class="hljs-attr">&quot;command&quot;</span><span>: </span><span style="color:#abe338">&quot;openhands&quot;</span><span>,
+</span></span><span><span>            </span><span class="hljs-attr">&quot;args&quot;</span><span>: [
+</span></span><span><span>            	</span><span style="color:#abe338">&quot;acp&quot;</span><span>
+</span></span><span>            ],
+</span><span><span>            </span><span class="hljs-attr">&quot;env&quot;</span><span>: {}
+</span></span><span>        }
+</span><span>    }
+</span><span>}</span></code></pre><ul role="list"><li><strong>Save the settings</strong> and close the panel.</li></ul><p>Now you can invoke OpenHands directly from Zed! Select some code or place your cursor where you want the agent to work, open the command palette, and type &quot;agent&quot; to see the available agent commands. Choose &quot;OpenHands&quot; from the list, and the agent will start working right in your editor.</p><h1>Get Started Today</h1><p>If you&#x27;re ready to try OpenHands in your editor, head over to the <a href="https://docs.openhands.dev/openhands/usage/run-openhands/acp">ACP documentation</a> for detailed setup instructions for your editor of choice.</p><p>And if you&#x27;re interested in how OpenHands works under the hood, check out our <a href="https://github.com/OpenHands/OpenHands">GitHub repository</a> or join our <a href="https://dub.sh/openhands">Slack community</a> to chat with the team and other developers using OpenHands in their daily workflows.</p>

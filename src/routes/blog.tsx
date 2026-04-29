@@ -5,14 +5,12 @@ import {
   useLoaderData,
   useNavigation,
 } from 'react-router';
-import { blogAPI } from '~/api/blog';
+import { blogAPI, getBlogSlug } from '~/api/blog';
 import { BlogCard, FeaturedBlogCard } from '~/components/blog-card';
 import { NewsletterForm } from '~/components/newsletter-form';
 import { RegularButton } from '~/components/regular-button';
-import { SectionHeading } from '~/components/section-heading';
 import { useWidth } from '~/hooks/use-media';
 import { handleNewsletterSubscription } from '~/utils/newsletter-subscription';
-import { stringToSlug } from '~/utils/string-to-slug';
 import type { Route } from './+types/blog';
 
 export const loader = async () => {
@@ -80,7 +78,7 @@ const Blog = () => {
 
       <section className='max-w-[1440px] monitor:self-center'>
         <section className='hidden lg:block'>
-          <Link to={stringToSlug(latestBlog.data.title)}>
+          <Link to={getBlogSlug(latestBlog)}>
             <FeaturedBlogCard
               title={latestBlog.data.title}
               description={latestBlog.data.excerpt}
@@ -98,8 +96,8 @@ const Blog = () => {
               )
               .map((blog) => (
                 <Link
-                  key={stringToSlug(blog.data.title)}
-                  to={stringToSlug(blog.data.title)}
+                  key={getBlogSlug(blog)}
+                  to={getBlogSlug(blog)}
                 >
                   <BlogCard
                     title={blog.data.title}
