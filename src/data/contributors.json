@@ -8,16 +8,16 @@
     "login": "xingyaoww"
   },
   {
+    "id": 17094895,
+    "login": "tofarr"
+  },
+  {
     "id": 7611973,
     "login": "rbren"
   },
   {
     "id": 6080905,
     "login": "enyst"
-  },
-  {
-    "id": 17094895,
-    "login": "tofarr"
   },
   {
     "id": 83104063,
@@ -60,16 +60,16 @@
     "login": "raymyers"
   },
   {
+    "id": 254506604,
+    "login": "aivong-openhands"
+  },
+  {
     "id": 79442223,
     "login": "ryanhoangt"
   },
   {
     "id": 78865055,
     "login": "chuckbutkus"
-  },
-  {
-    "id": 254506604,
-    "login": "aivong-openhands"
   },
   {
     "id": 16201837,
@@ -96,12 +96,12 @@
     "login": "llamantino"
   },
   {
-    "id": 1708914,
-    "login": "assertion"
-  },
-  {
     "id": 182006032,
     "login": "all-hands-bot"
+  },
+  {
+    "id": 1708914,
+    "login": "assertion"
   },
   {
     "id": 95044293,
@@ -112,12 +112,20 @@
     "login": "mislavlukach"
   },
   {
+    "id": 6738274,
+    "login": "frankxu2004"
+  },
+  {
     "id": 93481273,
     "login": "young010101"
   },
   {
-    "id": 6738274,
-    "login": "frankxu2004"
+    "id": 81847,
+    "login": "claude"
+  },
+  {
+    "id": 54480367,
+    "login": "HeyItsChloe"
   },
   {
     "id": 20578281,
@@ -132,32 +140,32 @@
     "login": "huybery"
   },
   {
-    "id": 54480367,
-    "login": "HeyItsChloe"
-  },
-  {
     "id": 65051545,
     "login": "bashwara"
   },
   {
-    "id": 97225946,
-    "login": "808vita"
+    "id": 157206163,
+    "login": "simonrosenberg"
   },
   {
     "id": 2945814,
     "login": "happyherp"
   },
   {
+    "id": 97225946,
+    "login": "808vita"
+  },
+  {
     "id": 182316592,
     "login": "nehaaprasad"
   },
   {
-    "id": 25279767,
-    "login": "idagelic"
+    "id": 12579618,
+    "login": "jlav"
   },
   {
-    "id": 228736368,
-    "login": "ak684"
+    "id": 25279767,
+    "login": "idagelic"
   },
   {
     "id": 728167,
@@ -172,28 +180,28 @@
     "login": "jpshackelford"
   },
   {
-    "id": 81847,
-    "login": "claude"
+    "id": 115561717,
+    "login": "VascoSch92"
   },
   {
-    "id": 44589723,
-    "login": "jpelletier1"
+    "id": 228736368,
+    "login": "ak684"
   },
   {
     "id": 8560257,
     "login": "foragerr"
   },
   {
+    "id": 44589723,
+    "login": "jpelletier1"
+  },
+  {
     "id": 20098977,
     "login": "RainRat"
   },
   {
-    "id": 138990495,
-    "login": "Umpire2018"
-  },
-  {
-    "id": 115561717,
-    "login": "VascoSch92"
+    "id": 877641,
+    "login": "cbagwell"
   },
   {
     "id": 605806,
@@ -204,16 +212,12 @@
     "login": "RajWorking"
   },
   {
-    "id": 18455687,
-    "login": "pandukamuditha"
+    "id": 138990495,
+    "login": "Umpire2018"
   },
   {
-    "id": 12579618,
-    "login": "jlav"
-  },
-  {
-    "id": 62982824,
-    "login": "zeul22"
+    "id": 22633385,
+    "login": "eltociear"
   },
   {
     "id": 133818254,
@@ -224,15 +228,11 @@
     "login": "WannaTen"
   },
   {
-    "id": 877641,
-    "login": "cbagwell"
+    "id": 18455687,
+    "login": "pandukamuditha"
   },
   {
-    "id": 22633385,
-    "login": "eltociear"
-  },
-  {
-    "id": 33360440,
-    "login": "AlexCuadron"
+    "id": 62982824,
+    "login": "zeul22"
   }
 ]
