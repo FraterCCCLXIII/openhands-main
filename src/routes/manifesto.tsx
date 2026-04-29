@@ -4,13 +4,13 @@ import type { Route } from './+types/manifesto';
 export const meta: Route.MetaFunction = ({ location }) => {
   return [
     { title: 'OpenHands Manifesto | The Future of Open, Autonomous Software Development' },
-    { name: 'description', content: 'We believe software development should be open, transparent, and autonomous. Discover OpenHands\' vision for the future of coding.' },
+    { name: 'description', content: 'We believe software development should be open, transparent, and autonomous. Discover OpenHands’ vision for the next era of agentic software development.' },
     { property: 'og:title', content: 'OpenHands Manifesto | The Future of Open, Autonomous Software Development' },
-    { property: 'og:description', content: 'We believe software development should be open, transparent, and autonomous. Discover OpenHands\' vision for the future of coding.' },
-    { property: 'og:url', content: 'https://www.all-hands.dev' + location.pathname },
+    { property: 'og:description', content: 'We believe software development should be open, transparent, and autonomous. Discover OpenHands’ vision for the next era of agentic software development.' },
+    { property: 'og:url', content: 'https://openhands.dev' + location.pathname },
     { property: 'og:type', content: 'website' },
     { name: 'twitter:card', content: 'summary_large_image' },
-    { rel: 'canonical', href: 'https://www.all-hands.dev' + location.pathname },
+    { rel: 'canonical', href: 'https://openhands.dev' + location.pathname },
   ];
 };
 

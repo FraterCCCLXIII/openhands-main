@@ -9,13 +9,13 @@ import type { Route } from './+types/community';
 export const meta: Route.MetaFunction = ({ location }) => {
   return [
     { title: 'OpenHands Community' },
-    { name: 'description', content: 'Meet OpenHands, the open-source, model-agnostic platform for cloud coding agents. Join our community of developers.' },
+    { name: 'description', content: 'Meet OpenHands, the open-source, model-agnostic platform for cloud coding agents. Automate real engineering work securely and transparently. Build faster with full control.' },
     { property: 'og:title', content: 'OpenHands Community' },
-    { property: 'og:description', content: 'Meet OpenHands, the open-source, model-agnostic platform for cloud coding agents. Join our community of developers.' },
-    { property: 'og:url', content: 'https://www.all-hands.dev' + location.pathname },
+    { property: 'og:description', content: 'Meet OpenHands, the open-source, model-agnostic platform for cloud coding agents. Automate real engineering work securely and transparently. Build faster with full control.' },
+    { property: 'og:url', content: 'https://openhands.dev' + location.pathname },
     { property: 'og:type', content: 'website' },
     { name: 'twitter:card', content: 'summary_large_image' },
-    { rel: 'canonical', href: 'https://www.all-hands.dev' + location.pathname },
+    { rel: 'canonical', href: 'https://openhands.dev' + location.pathname },
   ];
 };
 

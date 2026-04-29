@@ -101,7 +101,7 @@ export function GitHubModal({ isOpen, onClose }: GitHubModalProps) {
               <WebUIGraphic />
             </div>
             <a
-              href="https://docs.all-hands.dev/usage/local-setup#start-the-app"
+              href="https://docs.openhands.dev/openhands/usage/run-openhands/local-setup#start-the-app"
               target="_blank"
               rel="noopener noreferrer"
               className="w-3/4 bg-black text-white px-6 py-3 rounded-lg font-semibold text-center hover:bg-gray-800 transition-colors"
@@ -119,7 +119,7 @@ export function GitHubModal({ isOpen, onClose }: GitHubModalProps) {
               <CLIGraphic />
             </div>
             <a
-              href="https://docs.all-hands.dev/usage/how-to/cli-mode#getting-started"
+              href="https://docs.openhands.dev/openhands/usage/run-openhands/cli-mode#getting-started"
               target="_blank"
               rel="noopener noreferrer"
               className="w-3/4 bg-black text-white px-6 py-3 rounded-lg font-semibold text-center hover:bg-gray-800 transition-colors"

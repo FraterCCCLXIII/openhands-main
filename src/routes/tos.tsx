@@ -5,19 +5,19 @@ import type { Route } from './+types/tos';
 
 export const meta: Route.MetaFunction = ({ location }) => {
   return [
-    { title: 'All Hands AI - Terms of Service' },
-    { name: 'description', content: 'Read the terms of service for All Hands AI products and services.' },
-    { property: 'og:title', content: 'All Hands AI - Terms of Service' },
-    { property: 'og:description', content: 'Read the terms of service for All Hands AI products and services.' },
-    { property: 'og:image', content: 'https://www.all-hands.dev/assets/all-hands-text-logo.png' },
-    { property: 'og:url', content: 'https://www.all-hands.dev' + location.pathname },
+    { title: 'Terms of Service' },
+    { name: 'description', content: 'OpenHands Terms of Service' },
+    { property: 'og:title', content: 'Terms of Service' },
+    { property: 'og:description', content: 'OpenHands Terms of Service' },
+    { property: 'og:image', content: 'https://openhands.dev/assets/webflow/og/69161b32abf448a2df921a73_openhands_opengraph_01.png' },
+    { property: 'og:url', content: 'https://openhands.dev' + location.pathname },
     { property: 'og:type', content: 'website' },
-    { property: 'og:site_name', content: 'All Hands AI' },
+    { property: 'og:site_name', content: 'OpenHands' },
     { name: 'twitter:card', content: 'summary_large_image' },
-    { name: 'twitter:title', content: 'All Hands AI - Terms of Service' },
-    { name: 'twitter:description', content: 'Read the terms of service for All Hands AI products and services.' },
-    { name: 'twitter:image', content: 'https://www.all-hands.dev/assets/all-hands-text-logo.png' },
-    { rel: 'canonical', href: 'https://www.all-hands.dev' + location.pathname },
+    { name: 'twitter:title', content: 'Terms of Service' },
+    { name: 'twitter:description', content: 'OpenHands Terms of Service' },
+    { name: 'twitter:image', content: 'https://openhands.dev/assets/webflow/og/69161b32abf448a2df921a73_openhands_opengraph_01.png' },
+    { rel: 'canonical', href: 'https://openhands.dev' + location.pathname },
     { name: 'robots', content: 'noindex, nofollow' },
   ];
 };

@@ -4,18 +4,18 @@ import type { Route } from './+types/contact';
 export const meta: Route.MetaFunction = ({ location }) => {
   return [
     { title: 'Get in Touch | OpenHands Sales & Support' },
-    { name: 'description', content: 'Connect with the OpenHands team to explore cloud coding agents, enterprise deployments, support, or partnerships.' },
+    { name: 'description', content: "Connect with the OpenHands team to explore cloud coding agents, enterprise deployments, support, or partnerships. We're here to help." },
     { property: 'og:title', content: 'Get in Touch | OpenHands Sales & Support' },
-    { property: 'og:description', content: 'Connect with the OpenHands team to explore cloud coding agents, enterprise deployments, support, or partnerships.' },
-    { property: 'og:image', content: 'https://www.all-hands.dev/assets/all-hands-logo.png' },
-    { property: 'og:url', content: 'https://www.all-hands.dev' + location.pathname },
+    { property: 'og:description', content: "Connect with the OpenHands team to explore cloud coding agents, enterprise deployments, support, or partnerships. We're here to help." },
+    { property: 'og:image', content: 'https://openhands.dev/assets/webflow/og/69161b32abf448a2df921a73_openhands_opengraph_01.png' },
+    { property: 'og:url', content: 'https://openhands.dev' + location.pathname },
     { property: 'og:type', content: 'website' },
     { property: 'og:site_name', content: 'OpenHands' },
     { name: 'twitter:card', content: 'summary_large_image' },
     { name: 'twitter:title', content: 'Get in Touch | OpenHands Sales & Support' },
-    { name: 'twitter:description', content: 'Connect with the OpenHands team to explore cloud coding agents, enterprise deployments, support, or partnerships.' },
-    { name: 'twitter:image', content: 'https://www.all-hands.dev/assets/all-hands-logo.png' },
-    { rel: 'canonical', href: 'https://www.all-hands.dev' + location.pathname },
+    { name: 'twitter:description', content: "Connect with the OpenHands team to explore cloud coding agents, enterprise deployments, support, or partnerships. We're here to help." },
+    { name: 'twitter:image', content: 'https://openhands.dev/assets/webflow/og/69161b32abf448a2df921a73_openhands_opengraph_01.png' },
+    { rel: 'canonical', href: 'https://openhands.dev' + location.pathname },
   ];
 };
 

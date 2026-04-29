@@ -4,13 +4,13 @@ import type { Route } from './+types/press';
 export const meta: Route.MetaFunction = ({ location }) => {
   return [
     { title: 'OpenHands Newsroom | Press, Media, and Brand Resources' },
-    { name: 'description', content: 'Access the latest news, press releases, and brand assets from OpenHands, the open-source standard for autonomous software development.' },
+    { name: 'description', content: 'Access the latest news, press releases, and brand assets from OpenHands, the open-source standard for cloud coding agents.' },
     { property: 'og:title', content: 'OpenHands Newsroom | Press, Media, and Brand Resources' },
-    { property: 'og:description', content: 'Access the latest news, press releases, and brand assets from OpenHands, the open-source standard for autonomous software development.' },
-    { property: 'og:url', content: 'https://www.all-hands.dev' + location.pathname },
+    { property: 'og:description', content: 'Access the latest news, press releases, and brand assets from OpenHands, the open-source standard for cloud coding agents.' },
+    { property: 'og:url', content: 'https://openhands.dev' + location.pathname },
     { property: 'og:type', content: 'website' },
     { name: 'twitter:card', content: 'summary_large_image' },
-    { rel: 'canonical', href: 'https://www.all-hands.dev' + location.pathname },
+    { rel: 'canonical', href: 'https://openhands.dev' + location.pathname },
   ];
 };
 

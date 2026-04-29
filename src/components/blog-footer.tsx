@@ -37,7 +37,7 @@ export const BlogFooter: React.FC<BlogFooterProps> = ({
     return `@article{${citationKey},
   title = {${title}},
   author = {${authors.map((author) => author.name).join(' and ')}},
-  journal = {All Hands AI Blog},
+  journal = {OpenHands Blog},
   year = {${year}},
   month = {${month}},
   day = {${day}},
@@ -136,7 +136,7 @@ export const BlogFooter: React.FC<BlogFooterProps> = ({
           Subscribe to our newsletter
         </h3>
         <p className='text-description mb-4'>
-          Get the latest updates from All Hands AI delivered to your inbox.
+          Get the latest updates from OpenHands delivered to your inbox.
         </p>
         <NewsletterForm
           error={data?.result === 'error' ? data.msg : undefined}

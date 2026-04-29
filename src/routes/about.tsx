@@ -12,18 +12,18 @@ import { founders, members } from '~/constants/members';
 export const meta: Route.MetaFunction = ({ location }) => {
   return [
     { title: 'About OpenHands | Our Mission, Team, and Community' },
-    { name: 'description', content: 'Learn about OpenHands - the open, model-agnostic AI platform redefining how software gets built. Backed by a global community of contributors.' },
+    { name: 'description', content: 'Learn about OpenHands - the open, model-agnostic AI platform redefining how software gets built. Backed by a global OSS community and trusted by enterprises.' },
     { property: 'og:title', content: 'About OpenHands | Our Mission, Team, and Community' },
-    { property: 'og:description', content: 'Learn about OpenHands - the open, model-agnostic AI platform redefining how software gets built. Backed by a global community of contributors.' },
-    { property: 'og:image', content: 'https://www.all-hands.dev/assets/all-hands-logo.png' },
-    { property: 'og:url', content: 'https://www.all-hands.dev' + location.pathname },
+    { property: 'og:description', content: 'Learn about OpenHands - the open, model-agnostic AI platform redefining how software gets built. Backed by a global OSS community and trusted by enterprises.' },
+    { property: 'og:image', content: 'https://openhands.dev/assets/webflow/og/69161b32abf448a2df921a73_openhands_opengraph_01.png' },
+    { property: 'og:url', content: 'https://openhands.dev' + location.pathname },
     { property: 'og:type', content: 'website' },
     { property: 'og:site_name', content: 'OpenHands' },
     { name: 'twitter:card', content: 'summary_large_image' },
     { name: 'twitter:title', content: 'About OpenHands | Our Mission, Team, and Community' },
-    { name: 'twitter:description', content: 'Learn about OpenHands - the open, model-agnostic AI platform redefining how software gets built. Backed by a global community of contributors.' },
-    { name: 'twitter:image', content: 'https://www.all-hands.dev/assets/all-hands-logo.png' },
-    { rel: 'canonical', href: 'https://www.all-hands.dev' + location.pathname },
+    { name: 'twitter:description', content: 'Learn about OpenHands - the open, model-agnostic AI platform redefining how software gets built. Backed by a global OSS community and trusted by enterprises.' },
+    { name: 'twitter:image', content: 'https://openhands.dev/assets/webflow/og/69161b32abf448a2df921a73_openhands_opengraph_01.png' },
+    { rel: 'canonical', href: 'https://openhands.dev' + location.pathname },
   ];
 };
 
@@ -139,7 +139,7 @@ const About = () => {
           heading='Ready to join us?'
           cta={{
             text: 'Join us',
-            to: 'https://allhandsai.applytojob.com/apply/',
+            to: 'https://jobs.ashbyhq.com/OpenHands',
           }}
         />
       </section>

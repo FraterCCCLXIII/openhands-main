@@ -7,10 +7,10 @@ export const meta: Route.MetaFunction = ({ location }) => {
     { name: 'description', content: 'Explore how OpenHands revolutionizes software development with secure, model-agnostic cloud coding agents. Delegate, execute, and review code autonomously.' },
     { property: 'og:title', content: 'OpenHands Product | Autonomous Cloud Coding Agents' },
     { property: 'og:description', content: 'Explore how OpenHands revolutionizes software development with secure, model-agnostic cloud coding agents. Delegate, execute, and review code autonomously.' },
-    { property: 'og:url', content: 'https://www.all-hands.dev' + location.pathname },
+    { property: 'og:url', content: 'https://openhands.dev' + location.pathname },
     { property: 'og:type', content: 'website' },
     { name: 'twitter:card', content: 'summary_large_image' },
-    { rel: 'canonical', href: 'https://www.all-hands.dev' + location.pathname },
+    { rel: 'canonical', href: 'https://openhands.dev' + location.pathname },
   ];
 };
 

@@ -283,19 +283,19 @@ export const meta: Route.MetaFunction = () => {
     {
       name: 'description',
       content:
-        'Meet OpenHands, the open-source, model-agnostic platform for cloud coding agents. Automate real engineering tasks securely in sandboxed environments.',
+        'Meet OpenHands, the open-source, model-agnostic platform for cloud coding agents. Automate real engineering work securely and transparently. Build faster with full control.',
     },
     { property: 'og:title', content: 'OpenHands | The Open Platform for Cloud Coding Agents' },
     {
       property: 'og:description',
       content:
-        'Meet OpenHands, the open-source, model-agnostic platform for cloud coding agents. Automate real engineering tasks securely in sandboxed environments.',
+        'Meet OpenHands, the open-source, model-agnostic platform for cloud coding agents. Automate real engineering work securely and transparently. Build faster with full control.',
     },
-    { property: 'og:image', content: '/assets/webflow/og/69161b32abf448a2df921a73_openhands_opengraph_01.png' },
-    { property: 'og:url', content: 'https://www.all-hands.dev' },
+    { property: 'og:image', content: 'https://openhands.dev/assets/webflow/og/69161b32abf448a2df921a73_openhands_opengraph_01.png' },
+    { property: 'og:url', content: 'https://openhands.dev' },
     { property: 'og:type', content: 'website' },
     { name: 'twitter:card', content: 'summary_large_image' },
-    { rel: 'canonical', href: 'https://www.all-hands.dev' },
+    { rel: 'canonical', href: 'https://openhands.dev' },
   ];
 };
 

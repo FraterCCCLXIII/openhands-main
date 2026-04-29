@@ -5,30 +5,30 @@ import rdp from "../legal/responsible-disclosure-policy.md?raw";
 
 export const meta: Route.MetaFunction = ({ location }) => {
   return [
-    { title: "OpenHands - Responsible Disclosure Policy" },
+    { title: "Responsible Disclosure Policy" },
     {
       name: "description",
-      content: "Guidelines for reporting security vulnerabilites",
+      content: "OpenHands Responsible Disclosure Policy",
     },
     {
       property: "og:title",
-      content: "OpenHands - Responsible Disclosure Policy",
+      content: "Responsible Disclosure Policy",
     },
     {
       property: "og:description",
-      content: "Guidelines for reporting security vulnerabilites",
+      content: "OpenHands Responsible Disclosure Policy",
     },
     {
       property: "og:image",
-      content: "https://www.all-hands.dev/assets/all-hands-logo.png",
+      content: "https://openhands.dev/assets/webflow/og/69161b32abf448a2df921a73_openhands_opengraph_01.png",
     },
     {
       property: "og:url",
-      content: "https://www.all-hands.dev" + location.pathname,
+      content: "https://openhands.dev" + location.pathname,
     },
     { property: "og:type", content: "website" },
-    { property: "og:site_name", content: "All Hands AI" },
-    { rel: "canonical", href: "https://www.all-hands.dev" + location.pathname },
+    { property: "og:site_name", content: "OpenHands" },
+    { rel: "canonical", href: "https://openhands.dev" + location.pathname },
   ];
 };
 

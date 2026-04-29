@@ -90,7 +90,7 @@ export const meta: Route.MetaFunction = ({ data }) => {
     { property: 'og:image', content: data.ogImage },
     { property: 'og:url', content: data.url },
     { property: 'og:type', content: 'article' },
-    { property: 'og:site_name', content: 'All Hands AI' },
+    { property: 'og:site_name', content: 'OpenHands' },
     { property: 'article:published_time', content: data.date },
     { property: 'article:author', content: data.authors.map((author) => author.name).join(', ') },
     { name: 'twitter:card', content: 'summary_large_image' },
@@ -114,7 +114,7 @@ export const meta: Route.MetaFunction = ({ data }) => {
         })),
         publisher: {
           '@type': 'Organization',
-          name: 'All Hands AI',
+          name: 'OpenHands',
         },
         articleBody: data.content,
         wordCount: data.content.split(' ').length,

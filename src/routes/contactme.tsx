@@ -2,10 +2,10 @@ import React, { useEffect } from 'react';
 import type { Route } from './+types/contactme';
 
 export const meta: Route.MetaFunction = () => [
-  { title: 'Contact All-Hands AI - Opening Email...' },
+  { title: 'Contact OpenHands - Opening Email...' },
   {
     name: 'description',
-    content: 'Opening email client to contact All-Hands AI team',
+    content: 'Opening email client to contact the OpenHands team',
   },
 ];
 
@@ -21,7 +21,7 @@ export default function ContactMe() {
       <div className="text-center max-w-2xl mx-auto px-4">
         <h1 className="heading-large mb-4">Opening Email Client...</h1>
         <p className="paragraph mb-6">
-          Your email client should open automatically with a pre-filled message to contact the All-Hands AI team.
+          Your email client should open automatically with a pre-filled message to contact the OpenHands team.
         </p>
         <div className="bg-white rounded-lg p-6 shadow-sm mb-6">
           <h2 className="font-semibold text-lg mb-3">Email Details:</h2>

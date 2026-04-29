@@ -4,13 +4,13 @@ import type { Route } from './+types/enterprise';
 export const meta: Route.MetaFunction = ({ location }) => {
   return [
     { title: 'OpenHands for Enterprise | Secure, Scalable Agentic Software Development' },
-    { name: 'description', content: 'Deploy OpenHands securely across your organization. Enterprise-grade governance, compliance, and custom deployment options for agentic software development.' },
+    { name: 'description', content: 'Deploy OpenHands securely across your organization. Enterprise-grade governance, compliance, and customization for regulated industries.' },
     { property: 'og:title', content: 'OpenHands for Enterprise | Secure, Scalable Agentic Software Development' },
-    { property: 'og:description', content: 'Deploy OpenHands securely across your organization. Enterprise-grade governance, compliance, and custom deployment options for agentic software development.' },
-    { property: 'og:url', content: 'https://www.all-hands.dev' + location.pathname },
+    { property: 'og:description', content: 'Deploy OpenHands securely across your organization. Enterprise-grade governance, compliance, and customization for regulated industries.' },
+    { property: 'og:url', content: 'https://openhands.dev' + location.pathname },
     { property: 'og:type', content: 'website' },
     { name: 'twitter:card', content: 'summary_large_image' },
-    { rel: 'canonical', href: 'https://www.all-hands.dev' + location.pathname },
+    { rel: 'canonical', href: 'https://openhands.dev' + location.pathname },
   ];
 };
 

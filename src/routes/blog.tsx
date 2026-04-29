@@ -26,18 +26,18 @@ export const action = handleNewsletterSubscription;
 export const meta: Route.MetaFunction = ({ location }) => {
   return [
     { title: 'OpenHands Blog | Cloud Coding Agents, AI Development, and Open Source Insights' },
-    { name: 'description', content: 'Explore the latest in cloud coding agents, autonomous development, and open-source engineering. Deep dives, tutorials, and news from the OpenHands team.' },
+    { name: 'description', content: 'Explore the latest in cloud coding agents, autonomous development, and open-source engineering. Deep dives, tutorials, benchmarks, and OpenHands product updates.' },
     { property: 'og:title', content: 'OpenHands Blog | Cloud Coding Agents, AI Development, and Open Source Insights' },
-    { property: 'og:description', content: 'Explore the latest in cloud coding agents, autonomous development, and open-source engineering. Deep dives, tutorials, and news from the OpenHands team.' },
-    { property: 'og:image', content: 'https://www.all-hands.dev/assets/all-hands-text-logo.png' },
-    { property: 'og:url', content: 'https://www.all-hands.dev' + location.pathname },
+    { property: 'og:description', content: 'Explore the latest in cloud coding agents, autonomous development, and open-source engineering. Deep dives, tutorials, benchmarks, and OpenHands product updates.' },
+    { property: 'og:image', content: 'https://openhands.dev/assets/webflow/og/69161b32abf448a2df921a73_openhands_opengraph_01.png' },
+    { property: 'og:url', content: 'https://openhands.dev' + location.pathname },
     { property: 'og:type', content: 'website' },
     { property: 'og:site_name', content: 'OpenHands' },
     { name: 'twitter:card', content: 'summary_large_image' },
     { name: 'twitter:title', content: 'OpenHands Blog | Cloud Coding Agents, AI Development, and Open Source Insights' },
-    { name: 'twitter:description', content: 'Explore the latest in cloud coding agents, autonomous development, and open-source engineering. Deep dives, tutorials, and news from the OpenHands team.' },
-    { name: 'twitter:image', content: 'https://www.all-hands.dev/assets/all-hands-text-logo.png' },
-    { rel: 'canonical', href: 'https://www.all-hands.dev' + location.pathname },
+    { name: 'twitter:description', content: 'Explore the latest in cloud coding agents, autonomous development, and open-source engineering. Deep dives, tutorials, benchmarks, and OpenHands product updates.' },
+    { name: 'twitter:image', content: 'https://openhands.dev/assets/webflow/og/69161b32abf448a2df921a73_openhands_opengraph_01.png' },
+    { rel: 'canonical', href: 'https://openhands.dev' + location.pathname },
   ];
 };
 

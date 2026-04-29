@@ -103,18 +103,18 @@ const PricingCard = ({
 export const meta: Route.MetaFunction = ({ location }) => {
   return [
     { title: 'OpenHands Pricing | Start Building for Free' },
-    { name: 'description', content: 'Choose the right plan for your team. Start for free with OpenHands Open Source or upgrade to Team and Enterprise plans.' },
+    { name: 'description', content: 'Choose the right plan for your team. Start for free with OpenHands Open Source or upgrade to Team and Enterprise plans for advanced control and scalability.' },
     { property: 'og:title', content: 'OpenHands Pricing | Start Building for Free' },
-    { property: 'og:description', content: 'Choose the right plan for your team. Start for free with OpenHands Open Source or upgrade to Team and Enterprise plans.' },
-    { property: 'og:image', content: 'https://www.all-hands.dev/assets/all-hands-logo.png' },
-    { property: 'og:url', content: 'https://www.all-hands.dev' + location.pathname },
+    { property: 'og:description', content: 'Choose the right plan for your team. Start for free with OpenHands Open Source or upgrade to Team and Enterprise plans for advanced control and scalability.' },
+    { property: 'og:image', content: 'https://openhands.dev/assets/webflow/og/69161b32abf448a2df921a73_openhands_opengraph_01.png' },
+    { property: 'og:url', content: 'https://openhands.dev' + location.pathname },
     { property: 'og:type', content: 'website' },
     { property: 'og:site_name', content: 'OpenHands' },
     { name: 'twitter:card', content: 'summary_large_image' },
     { name: 'twitter:title', content: 'OpenHands Pricing | Start Building for Free' },
-    { name: 'twitter:description', content: 'Choose the right plan for your team. Start for free with OpenHands Open Source or upgrade to Team and Enterprise plans.' },
-    { name: 'twitter:image', content: 'https://www.all-hands.dev/assets/all-hands-logo.png' },
-    { rel: 'canonical', href: 'https://www.all-hands.dev' + location.pathname },
+    { name: 'twitter:description', content: 'Choose the right plan for your team. Start for free with OpenHands Open Source or upgrade to Team and Enterprise plans for advanced control and scalability.' },
+    { name: 'twitter:image', content: 'https://openhands.dev/assets/webflow/og/69161b32abf448a2df921a73_openhands_opengraph_01.png' },
+    { rel: 'canonical', href: 'https://openhands.dev' + location.pathname },
   ];
 };
 
