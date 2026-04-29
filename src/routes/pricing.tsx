@@ -1,232 +1,333 @@
-import React from 'react';
-import { SectionHeading } from '~/components/section-heading';
-import { Button } from '~/components/button';
-import { useGitHubModal } from '~/contexts/github-modal-context';
-import GitHubLogo from '~/svgs/github-logo.svg?react';
 import type { Route } from './+types/pricing';
+import { MarketingFooterCta } from '~/components/marketing-footer-cta';
 
-const FAQItem = ({
-  question,
-  answer,
-}: {
-  question: string;
-  answer: React.ReactNode;
-}) => {
-  const [isOpen, setIsOpen] = React.useState(false);
+const CARD_CHECK_ICON = '/assets/webflow/icons/690cb1513c759a7404df1ba1_check.svg';
+const TABLE_TICK_ICON = '/assets/webflow/icons/691234bd9e72712ffbcf9470_tick.svg';
 
-  return (
-    <div className='border-b border-gray-200 py-4'>
-      <button
-        className='flex justify-between items-center w-full text-left font-medium text-lg'
-        onClick={() => setIsOpen(!isOpen)}
-      >
-        <span>{question}</span>
-        <span className='ml-4'>
-          {isOpen ? (
-            <svg
-              xmlns='http://www.w3.org/2000/svg'
-              className='h-5 w-5'
-              viewBox='0 0 20 20'
-              fill='currentColor'
-            >
-              <path
-                fillRule='evenodd'
-                d='M5 10a1 1 0 011-1h8a1 1 0 110 2H6a1 1 0 01-1-1z'
-                clipRule='evenodd'
-              />
-            </svg>
-          ) : (
-            <svg
-              xmlns='http://www.w3.org/2000/svg'
-              className='h-5 w-5'
-              viewBox='0 0 20 20'
-              fill='currentColor'
-            >
-              <path
-                fillRule='evenodd'
-                d='M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z'
-                clipRule='evenodd'
-              />
-            </svg>
-          )}
-        </span>
-      </button>
-      {isOpen && (
-        <div className='mt-2 text-gray-600 whitespace-pre-line'>{answer}</div>
-      )}
-    </div>
-  );
-};
+const PRICING_PLANS = [
+  {
+    eyebrow: 'Local',
+    title: 'Open Source',
+    price: 'Free',
+    description: 'Free, local OpenHands for getting started',
+    intro: 'Includes:',
+    buttonLabel: 'Download',
+    buttonHref: 'https://docs.openhands.dev/openhands/usage/run-openhands/local-setup',
+    features: [
+      'Best-in-class OpenHands Agent',
+      'Web-based GUI, Terminal UI, and CLI',
+      'Git integrations',
+      'Community support',
+      'Model agnostic',
+    ],
+  },
+  {
+    eyebrow: 'SaaS',
+    title: 'Individual',
+    price: 'Free',
+    description: 'Bring your own key or use our providers at-cost',
+    intro: 'Everything in Free, plus:',
+    buttonLabel: 'Get started free',
+    buttonHref: 'https://app.all-hands.dev/',
+    features: [
+      'Hosted cloud access from desktop and mobile',
+      'API support for automation and scripting',
+      'Jira and Slack integrations',
+      'BYOK or use OpenHands models at-cost',
+    ],
+  },
+  {
+    eyebrow: 'SaaS or Self-hosted',
+    title: 'Enterprise',
+    price: 'Custom pricing',
+    description: 'Full control and support. Private VPC and BYOK options',
+    intro: 'Includes:',
+    buttonLabel: 'Contact us',
+    buttonHref: '/contact',
+    features: [
+      'SaaS or Self-hosted in your VPC',
+      'Enterprise SAML / SSO',
+      'Unlimited concurrent convos per user',
+      'Large Codebase SDK',
+      'Priority support & shared Slack channel',
+    ],
+  },
+];
 
-const PricingCard = ({
-  title,
-  subtitle,
-  description,
-  features,
-  buttonText,
-  buttonLink,
-}: {
-  title: string;
-  subtitle: string;
-  description: React.ReactNode;
-  features: string[];
-  buttonText: string;
-  buttonLink: string;
-}) => {
-  return (
-    <div className='flex flex-col bg-white rounded-lg shadow-md p-6 w-full md:w-[400px] lg:w-[400px]'>
-      <div className='text-2xl font-semibold mb-2'>{title}</div>
-      <p className='mb-1 font-semibold text-3xl'>{subtitle}</p>
-      <p className='text-gray-600 font-semibold mb-4 mt-4 italic'>{description}</p>
-      <ul className='mb-6 flex-grow'>
-        {features.map((feature, index) => (
-          <li key={index} className='flex items-start mb-2'>
-            <img 
-              src='/assets/webflow/icons/690cb1513c759a7404df1ba1_check.svg' 
-              alt='✓' 
-              className='w-5 h-5 mr-2 flex-shrink-0'
-            />
-            <span>{feature}</span>
+type ComparisonRow =
+  | { type: 'section'; label: string }
+  | { type: 'values'; label: string; values: [string, string, string] }
+  | { type: 'ticks'; label: string; values: [boolean, boolean, boolean] };
+
+const COMPARISON_ROWS: ComparisonRow[] = [
+  { type: 'section', label: 'Features' },
+  { type: 'values', label: 'Pricing', values: ['Free', 'Free', 'Contact Us'] },
+  { type: 'section', label: 'Key Capabilities' },
+  { type: 'values', label: 'Deployment options', values: ['Runs locally', 'SaaS', 'Self-hosted'] },
+  { type: 'values', label: 'Agent', values: ['OpenHands', 'OpenHands', 'OpenHands'] },
+  { type: 'values', label: 'Users', values: ['1', '1', 'Unlimited'] },
+  { type: 'values', label: 'Max Daily Conversations', values: ['Unlimited', '10', 'Unlimited'] },
+  {
+    type: 'ticks',
+    label: 'Bring your own key, or you use OpenHands provider at-cost',
+    values: [true, true, true],
+  },
+  { type: 'ticks', label: 'Web-based GUI', values: [true, true, true] },
+  { type: 'ticks', label: 'OpenHands CLI', values: [true, true, true] },
+  { type: 'ticks', label: 'Git Integrations (GitHub, Bitbucket, GitLab)', values: [true, true, true] },
+  { type: 'ticks', label: 'Secrets', values: [true, true, true] },
+  { type: 'ticks', label: 'Cloud Agent SDK', values: [true, true, true] },
+  { type: 'ticks', label: 'MCP Support', values: [true, true, true] },
+  { type: 'ticks', label: 'Organization Support', values: [true, true, true] },
+  { type: 'ticks', label: 'Multi-user RBAC', values: [false, false, true] },
+  { type: 'ticks', label: 'Centralized team billing', values: [false, false, true] },
+  { type: 'section', label: 'Integrations' },
+  { type: 'ticks', label: 'Enterprise SAML/SSO', values: [false, false, true] },
+  { type: 'ticks', label: 'Cloud APIs', values: [true, true, true] },
+  { type: 'ticks', label: 'Jira Integration', values: [true, true, true] },
+  { type: 'ticks', label: 'Slack Integration', values: [true, true, true] },
+  { type: 'ticks', label: 'Large Codebase SDK', values: [false, false, true] },
+  { type: 'section', label: 'Support' },
+  { type: 'ticks', label: 'Priority support', values: [false, false, true] },
+  { type: 'ticks', label: 'Ticket based support', values: [false, false, true] },
+  { type: 'ticks', label: 'Named Customer Engineer', values: [false, false, true] },
+  { type: 'ticks', label: 'Shared Slack Channel', values: [false, false, true] },
+];
+
+const FAQS = [
+  {
+    question: 'What are the main differences between the pricing plans?',
+    answer: (
+      <>
+        <p>
+          OpenHands Cloud is a hosted SaaS version of OpenHands that provides out-of-the-box runtime support and a high token rate LLM access. There are a few options with OpenHands Cloud:
+        </p>
+        <ul className='mt-3 list-disc space-y-2 pl-5'>
+          <li>
+            Individual plan: Support for 1 user. Great for individuals who want to bring their own LLM Key, or pay-as-you-go when using the OpenHands LLM provider.
           </li>
-        ))}
-      </ul>
-      <a
-        href={buttonLink}
-        className='bg-yellow-400 hover:bg-yellow-500 text-black font-medium py-2 px-6 rounded text-center transition-colors min-w-[200px] flex items-center justify-center'
-      >
-        {buttonText}
-      </a>
-    </div>
-  );
+          <li>
+            Enterprise plan: A self-hosted option and support for multiple users. Great for organizations who want to deploy OpenHands across many teams and centrally manage access on-premise. Additional support and enterprise services are included.
+          </li>
+        </ul>
+      </>
+    ),
+  },
+  {
+    question: 'What are the main differences between OpenHands open source, and OpenHands Cloud?',
+    answer: (
+      <>
+        <p>
+          OpenHands Open Source is a full, MIT licensed version of OpenHands that is designed for a single user and can run locally on your machine with your own LLM Key. At a high level, our open source options include a local Web GUI, a CLI, and a Software Agent SDK.
+        </p>
+        <p className='mt-3'>
+          OpenHands Cloud is a SaaS-based version of OpenHands with both a free Individual tier, as well as commercial tiers for organizations and businesses. OpenHands Cloud also comes with additional features like Cloud APIs, ticketing system integrations, Git provider integrations, and more.
+        </p>
+      </>
+    ),
+  },
+  {
+    question: 'Can I bring my own model keys?',
+    answer: <p>Yes! OpenHands Open Source and OpenHands Cloud plans offer support to bring your own LLM keys.</p>,
+  },
+  {
+    question: 'What is the token pricing for the Individual Plan?',
+    answer: (
+      <>
+        <p>
+          If you do not have an LLM key, you can use the OpenHands LLM provider (available within the Individual Tier), which provides multiple model options <strong>at cost, with no markup</strong> on a pay-as-you-go basis.
+        </p>
+        <p className='mt-3'>
+          When you sign up for the Individual Plan, you can access models under the Settings &gt; Language Models (LLM) page.
+        </p>
+        <p className='mt-3'>
+          You can also generate an API key for the OpenHands LLM provider under the Settings &gt; API page, which you can use in tools like the OpenHands CLI, OpenHands Local Web UI, and OpenHands Software Agent SDK.
+        </p>
+      </>
+    ),
+  },
+];
+
+const TickCell = ({ enabled }: { enabled: boolean }) => {
+  if (!enabled) {
+    return <span className='block h-5 w-5' aria-hidden='true' />;
+  }
+
+  return <img src={TABLE_TICK_ICON} alt='tick icon' className='mx-auto h-5 w-5' />;
 };
 
 export const meta: Route.MetaFunction = ({ location }) => {
   return [
     { title: 'OpenHands Pricing | Start Building for Free' },
-    { name: 'description', content: 'Choose the right plan for your team. Start for free with OpenHands Open Source or upgrade to Team and Enterprise plans for advanced control and scalability.' },
+    {
+      name: 'description',
+      content:
+        'Choose the right plan for your team. Start for free with OpenHands Open Source or upgrade to Team and Enterprise plans for advanced control and scalability.',
+    },
     { property: 'og:title', content: 'OpenHands Pricing | Start Building for Free' },
-    { property: 'og:description', content: 'Choose the right plan for your team. Start for free with OpenHands Open Source or upgrade to Team and Enterprise plans for advanced control and scalability.' },
-    { property: 'og:image', content: 'https://openhands.dev/assets/webflow/og/69161b32abf448a2df921a73_openhands_opengraph_01.png' },
+    {
+      property: 'og:description',
+      content:
+        'Choose the right plan for your team. Start for free with OpenHands Open Source or upgrade to Team and Enterprise plans for advanced control and scalability.',
+    },
+    {
+      property: 'og:image',
+      content: 'https://openhands.dev/assets/webflow/og/69161b32abf448a2df921a73_openhands_opengraph_01.png',
+    },
     { property: 'og:url', content: 'https://openhands.dev' + location.pathname },
     { property: 'og:type', content: 'website' },
     { property: 'og:site_name', content: 'OpenHands' },
     { name: 'twitter:card', content: 'summary_large_image' },
     { name: 'twitter:title', content: 'OpenHands Pricing | Start Building for Free' },
-    { name: 'twitter:description', content: 'Choose the right plan for your team. Start for free with OpenHands Open Source or upgrade to Team and Enterprise plans for advanced control and scalability.' },
-    { name: 'twitter:image', content: 'https://openhands.dev/assets/webflow/og/69161b32abf448a2df921a73_openhands_opengraph_01.png' },
+    {
+      name: 'twitter:description',
+      content:
+        'Choose the right plan for your team. Start for free with OpenHands Open Source or upgrade to Team and Enterprise plans for advanced control and scalability.',
+    },
+    {
+      name: 'twitter:image',
+      content: 'https://openhands.dev/assets/webflow/og/69161b32abf448a2df921a73_openhands_opengraph_01.png',
+    },
     { rel: 'canonical', href: 'https://openhands.dev' + location.pathname },
   ];
 };
 
 const Pricing = () => {
-  const { openGitHubModal } = useGitHubModal();
-
-  // Pay-as-you-go Plan
-  const payAsYouGoFeatures = [
-    '1 user',
-    'Access from desktop or mobile',
-    'Bring your own LLM, or use OpenHands LLMs at cost',
-    'High token rate limits',
-    'GitHub, GitLab, and Bitbucket',
-    'API support'
-  ];
-
-  // Enterprise Plans
-  const enterpriseCloudFeatures = [
-    'Multiple users',
-    'Centralized billing',
-    'At-cost, no markup pricing on LLM usage',
-    'Model choice (or bring your own LLM)',
-    'Git, Slack, and ticketing system integrations',
-    'API support',
-    'Priority support',
-  ];
-
-  const enterpriseSelfHostedFeatures = [
-    'Run OpenHands Cloud in your private VPC',
-    'Bring your own LLM key',
-    'Enterprise support and services',
-    'Shared Slack channel',
-  ];
-
   return (
     <main className='pt-[100px]'>
-      <section className='flex flex-col items-center gap-4 text-center pt-12 pb-8 px-10'>
-        <h1 className='text-4xl lg:text-6xl font-bold mb-4'>Pricing that fits your rollout</h1>
-        <p className='text-lg text-brand-muted max-w-2xl'>
-          Run locally, in our cloud, or self-host. Pay only for what you need
-        </p>
-        <div className='flex gap-4 justify-center flex-wrap mt-6'>
-          <a href='https://app.all-hands.dev' className='btn btn-primary'>
-            Try it live
-          </a>
-          <a href='https://docs.openhands.dev/sdk' className='btn btn-outline'>
-            Build with SDK
-          </a>
+      <section className='px-10 py-20'>
+        <div className='mx-auto flex max-w-4xl flex-col items-center gap-6 text-center'>
+          <h1 className='text-[44px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>
+            Pricing that fits your rollout
+          </h1>
+          <p className='max-w-2xl text-[18px] leading-[1.6] text-brand-muted'>
+            Run locally, in our cloud, or self-host. Pay only for what you need
+          </p>
         </div>
       </section>
 
-      <section className='flex flex-col items-center mb-16 px-10'>
-        <h2 className='section-title text-center mb-12'>Compare plans</h2>
-
-        <div className='flex flex-row justify-center items-stretch flex-wrap max-w-[1300px] gap-6'>
-          <PricingCard
-            title='Free'
-            subtitle='$0'
-            description='Free, local OpenHands for getting started'
-            features={['Best-in-class OpenHands Agent', 'Web-based GUI, Terminal UI, and CLI', 'Bring your own key or use our providers at-cost']}
-            buttonText='Download'
-            buttonLink='https://pypi.org/project/openhands-ai/'
-          />
-          <PricingCard
-            title='Cloud'
-            subtitle='Pay-as-you-go'
-            description='Everything in Free, plus:'
-            features={['Hosted cloud access from desktop and mobile', 'API support for automation and scripting', 'Jira and Slack integrations', 'BYOK or use OpenHands models at-cost']}
-            buttonText='Try it live'
-            buttonLink='https://app.all-hands.dev/'
-          />
-          <PricingCard
-            title='Enterprise'
-            subtitle='$40 / user / month'
-            description='Everything in Cloud, plus:'
-            features={['Multiple users with centralized billing', 'At-cost, no markup pricing on LLM usage', 'Git, Slack, and ticketing system integrations', 'Priority support']}
-            buttonText='Contact sales'
-            buttonLink='/contact'
-          />
-          <PricingCard
-            title='Self-hosted'
-            subtitle='Contact us'
-            description='Everything in Enterprise, plus:'
-            features={['Run OpenHands in your private VPC', 'Bring your own LLM key', 'Enterprise support and services', 'Shared Slack channel']}
-            buttonText='Contact sales'
-            buttonLink='/contact'
-          />
+      <section className='px-10 pb-20'>
+        <div className='mx-auto grid max-w-[1260px] gap-6 lg:grid-cols-3'>
+          {PRICING_PLANS.map((plan) => (
+            <article
+              key={plan.title}
+              className='flex h-full flex-col rounded-[24px] border border-brand-fg/10 bg-white/60 p-8'
+            >
+              <p className='text-sm uppercase tracking-[0.14em] text-brand-muted'>{plan.eyebrow}</p>
+              <p className='mt-2 text-[32px] font-medium leading-[1.15] text-brand-fg'>{plan.title}</p>
+              <p className='mt-3 text-[28px] font-medium leading-[1.2] text-brand-fg'>{plan.price}</p>
+              <p className='mt-4 text-[17px] leading-[1.6] text-brand-muted'>{plan.description}</p>
+              <p className='mt-6 text-[16px] font-medium text-brand-fg'>{plan.intro}</p>
+              <ul className='mt-4 flex flex-1 flex-col gap-3'>
+                {plan.features.map((feature) => (
+                  <li key={feature} className='flex items-start gap-3 text-[16px] leading-[1.5] text-brand-fg'>
+                    <img src={CARD_CHECK_ICON} alt='' aria-hidden='true' className='mt-0.5 h-5 w-5 flex-none' />
+                    <p>{feature}</p>
+                  </li>
+                ))}
+              </ul>
+              <a
+                href={plan.buttonHref}
+                target={plan.buttonHref.startsWith('http') ? '_blank' : undefined}
+                rel={plan.buttonHref.startsWith('http') ? 'noopener noreferrer' : undefined}
+                className='btn btn-outline mt-8 rounded-none'
+              >
+                {plan.buttonLabel}
+              </a>
+            </article>
+          ))}
         </div>
       </section>
 
-      <section className='flex flex-col items-center mb-16 px-10'>
-        <div className='max-w-[800px] w-full'>
-          <h2 className='section-title text-center mb-8'>
-            FAQ's
+      <section className='px-10 py-20'>
+        <div className='mx-auto max-w-[1260px]'>
+          <h2 className='text-center text-[32px] lg:text-[44px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>
+            Compare plans
           </h2>
-          <div className='bg-white rounded-lg shadow-md p-6'>
-            <FAQItem
-              question='What are the main differences between OpenHands open source, and OpenHands Cloud?'
-              answer='OpenHands Cloud is a hosted SaaS version of OpenHands that provides out-of-the-box runtime support and a high token rate LLM access. There are a few options with OpenHands Cloud:
+          <div className='mt-10 overflow-x-auto rounded-[24px] border border-brand-fg/10 bg-white/60'>
+            <table className='min-w-full border-collapse text-left'>
+              <thead>
+                <tr className='border-b border-brand-fg/10'>
+                  <th className='px-6 py-5 text-[15px] uppercase tracking-[0.08em] text-brand-muted'>Features</th>
+                  <th className='px-6 py-5 text-[20px] font-medium text-brand-fg'>Open Source</th>
+                  <th className='px-6 py-5 text-[20px] font-medium text-brand-fg'>Individual</th>
+                  <th className='px-6 py-5 text-[20px] font-medium text-brand-fg'>Enterprise</th>
+                </tr>
+              </thead>
+              <tbody>
+                {COMPARISON_ROWS.map((row) => {
+                  if (row.type === 'section') {
+                    return (
+                      <tr key={row.label} className='border-b border-brand-fg/10 bg-brand-fg/[0.03]'>
+                        <th colSpan={4} className='px-6 py-4 text-sm uppercase tracking-[0.14em] text-brand-muted'>
+                          <p>{row.label}</p>
+                        </th>
+                      </tr>
+                    );
+                  }
 
-              - Individual plan: Support for 1 user. Great for individuals who want a pay-as-you-go option for AI coding.
-              - Enterprise plan: Support for multiple users. Great for organizations who want to deploy OpenHands across many teams and centrally manage access.
+                  if (row.type === 'values') {
+                    return (
+                      <tr key={row.label} className='border-b border-brand-fg/10'>
+                        <th className='px-6 py-4 text-[16px] font-medium text-brand-fg'>
+                          <p>{row.label}</p>
+                        </th>
+                        {row.values.map((value, index) => (
+                          <td key={`${row.label}-${index}`} className='px-6 py-4 text-[16px] text-brand-muted'>
+                            <p>{value}</p>
+                          </td>
+                        ))}
+                      </tr>
+                    );
+                  }
 
-              The Enterprise Plan is available in two deployment options: SaaS (hosted by All Hands), or self-hosted (hosted by you in your private VPC). With self-hosted, you get the added option of customizing the LLM you use.'
-            />
-            <FAQItem
-              question='What is the token pricing for the Individual (pay-as-you-go) plan?'
-              answer='With the Individual (pay-as-you-go) plan, customers start with $10 in free token credits. Tokens can be refilled for as low as $10. Token pricing is billed at cost (zero markup) based on API prices.'
-            />
+                  return (
+                    <tr key={row.label} className='border-b border-brand-fg/10'>
+                      <th className='px-6 py-4 text-[16px] font-medium text-brand-fg'>
+                        <p>{row.label}</p>
+                      </th>
+                      {row.values.map((enabled, index) => (
+                        <td key={`${row.label}-${index}`} className='px-6 py-4 text-center text-brand-bg'>
+                          <TickCell enabled={enabled} />
+                        </td>
+                      ))}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
         </div>
       </section>
+
+      <section className='px-10 py-20'>
+        <div className='mx-auto max-w-[1000px]'>
+          <div className='mb-6 text-center'>
+            <a href='/contact' className='btn btn-outline rounded-none'>
+              Contact us
+            </a>
+          </div>
+          <h2 className='text-center text-[32px] lg:text-[44px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>
+            FAQ&apos;s
+          </h2>
+          <div className='mt-10 space-y-4'>
+            {FAQS.map((faq) => (
+              <details
+                key={faq.question}
+                open
+                className='rounded-[24px] border border-brand-fg/10 bg-white/60 p-6'
+              >
+                <summary className='cursor-pointer list-none text-[24px] leading-[1.4] font-medium text-brand-fg'>
+                  <label>{faq.question}</label>
+                </summary>
+                <div className='mt-4 text-[16px] leading-[1.6] text-brand-muted'>{faq.answer}</div>
+              </details>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <MarketingFooterCta />
     </main>
   );
 };

@@ -1,65 +1,34 @@
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import Pricing from '../../src/routes/pricing';
-import { GitHubModalProvider } from '../../src/contexts/github-modal-context';
 
-describe('Pricing Page', () => {
-  it('renders the pricing page with correct content', () => {
-    const mockOpenGitHubModal = vi.fn();
-    
+describe('Pricing page', () => {
+  it('renders the live pricing sections and plan details', () => {
     render(
       <MemoryRouter>
-        <GitHubModalProvider openGitHubModal={mockOpenGitHubModal}>
-          <Pricing />
-        </GitHubModalProvider>
-      </MemoryRouter>
+        <Pricing />
+      </MemoryRouter>,
     );
 
-    // Check main heading (matches Webflow design)
-    expect(screen.getByText('Pricing that fits your rollout')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Pricing that fits your rollout/i })).toBeInTheDocument();
 
-    // Check the 4 pricing tiers
-    expect(screen.getByText('Free')).toBeInTheDocument();
-    expect(screen.getByText('Cloud')).toBeInTheDocument();
-    expect(screen.getByText('Enterprise')).toBeInTheDocument();
-    expect(screen.getByText('Self-hosted')).toBeInTheDocument();
+    expect(screen.getAllByText('Open Source').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Individual').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Enterprise').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Free').length).toBeGreaterThanOrEqual(2);
+    expect(screen.getByText('Custom pricing')).toBeInTheDocument();
 
-    // Check pricing
-    expect(screen.getByText('$0')).toBeInTheDocument();
-    expect(screen.getByText('Pay-as-you-go')).toBeInTheDocument();
-    expect(screen.getByText('$40 / user / month')).toBeInTheDocument();
-    expect(screen.getByText('Contact us')).toBeInTheDocument();
+    expect(screen.getByText('Git integrations')).toBeInTheDocument();
+    expect(screen.getByText('Priority support & shared Slack channel')).toBeInTheDocument();
 
-    // Check buttons
-    expect(screen.getByText('Download')).toBeInTheDocument();
-    expect(screen.getAllByText('Try it live').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('Contact sales').length).toBeGreaterThan(0);
+    expect(screen.getByRole('heading', { name: /Compare plans/i })).toBeInTheDocument();
+    expect(screen.getByText('Git Integrations (GitHub, Bitbucket, GitLab)')).toBeInTheDocument();
+    expect(screen.getByText('Shared Slack Channel')).toBeInTheDocument();
+    expect(screen.getAllByAltText('tick icon').length).toBeGreaterThanOrEqual(30);
 
-    // Check Free plan features
-    expect(screen.getByText('Best-in-class OpenHands Agent')).toBeInTheDocument();
-    expect(screen.getByText('Web-based GUI, Terminal UI, and CLI')).toBeInTheDocument();
-    expect(screen.getByText('Bring your own key or use our providers at-cost')).toBeInTheDocument();
-
-    // Check Cloud plan features
-    expect(screen.getByText('Hosted cloud access from desktop and mobile')).toBeInTheDocument();
-    expect(screen.getByText('API support for automation and scripting')).toBeInTheDocument();
-    expect(screen.getByText('Jira and Slack integrations')).toBeInTheDocument();
-    expect(screen.getByText('BYOK or use OpenHands models at-cost')).toBeInTheDocument();
-
-    // Check Enterprise plan features
-    expect(screen.getByText('Multiple users with centralized billing')).toBeInTheDocument();
-    expect(screen.getByText('At-cost, no markup pricing on LLM usage')).toBeInTheDocument();
-    expect(screen.getByText('Git, Slack, and ticketing system integrations')).toBeInTheDocument();
-    expect(screen.getByText('Priority support')).toBeInTheDocument();
-
-    // Check Self-hosted plan features
-    expect(screen.getByText('Run OpenHands in your private VPC')).toBeInTheDocument();
-    expect(screen.getByText('Bring your own LLM key')).toBeInTheDocument();
-    expect(screen.getByText('Enterprise support and services')).toBeInTheDocument();
-    expect(screen.getByText('Shared Slack channel')).toBeInTheDocument();
-
-    // Check FAQ section (matches Webflow H2)
-    expect(screen.getByText("FAQ's")).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /FAQ/i })).toBeInTheDocument();
+    expect(screen.getByText('What are the main differences between the pricing plans?')).toBeInTheDocument();
+    expect(screen.getByText('Can I bring my own model keys?')).toBeInTheDocument();
   });
 });

@@ -1,17 +1,89 @@
-import { Link } from 'react-router';
-import { ContributorGrid } from '~/components/contributor-grid';
-import contributors from '~/data/contributors.json';
-import statistics from '~/data/statistics.json';
-import { formatThousands } from '~/utils/format-thousands';
-import { formatContributorCount } from '~/utils/format-contributor-count';
 import type { Route } from './+types/community';
+import { MarketingFooterCta } from '~/components/marketing-footer-cta';
+
+const GET_STARTED_CARDS = [
+  {
+    label: 'CLI',
+    title: 'Download CLI',
+    icon: '/assets/webflow/icons/691060be26eb9254bee8c71a_export-1.svg',
+    href: 'https://docs.openhands.dev/openhands/usage/cli/installation',
+  },
+  {
+    label: 'Web UI (requires docker)',
+    title: 'Download Web UI',
+    icon: '/assets/webflow/icons/691060c68664fc7bd287b128_export-2.svg',
+    href: 'https://docs.openhands.dev/openhands/usage/run-openhands/local-setup',
+  },
+];
+
+const EVENTS = [
+  {
+    title: 'Scale Enterprise AI Agents',
+    description:
+      'After ODSC, stop by our nearby event sponsored by OpenHands to learn about the latest best practices and trends in enterprise agentic AI. Our founder & CEO, Robert Brennan, will be sharing insights on what he’s been seeing and learning in the space. Food and drinks will be provided.',
+    agenda: ['5:15pm — Doors Open', '5:45pm — Presentations & QA', '6:45pm — Networking', '7:30pm — Event Ends'],
+    date: 'Apr 30, 2026',
+    time: '9:30 PM UTC',
+    href: 'https://luma.com/odsc-boston',
+  },
+  {
+    title: 'OpenHands Community Call - May 7th',
+    description:
+      "Join our bi-weekly OpenHands Community Call! We'll announce new contributors, discuss project updates, demo new features, and talk about the future of AI. All are welcome!",
+    agenda: ['Recording and agenda will be available post meeting.'],
+    date: 'May 7, 2026',
+    time: '4:00 PM UTC',
+    href: 'https://luma.com/openhands-community-7may26',
+  },
+  {
+    title: 'OpenHands Community Call - May 21st',
+    description:
+      "Join our bi-weekly OpenHands Community Call! We'll announce new contributors, discuss project updates, demo new features, and talk about the future of AI. All are welcome!",
+    agenda: ['Recording and agenda will be available post meeting.'],
+    date: 'May 21, 2026',
+    time: '4:00 PM UTC',
+    href: 'https://luma.com/openhands-community-21may26',
+  },
+];
+
+const CONTRIBUTION_PATHS = [
+  {
+    title: 'Read the docs',
+    description: 'Get familiar with our architecture and contribution guidelines',
+    cta: 'View Docs',
+    href: 'https://docs.openhands.dev/overview/introduction',
+    icon: '/assets/webflow/misc/6980a326d5e28f7fd234c48c_a06191c45eb8707cefbabef71e11dcfe_Frame.svg',
+  },
+  {
+    title: 'Issues to fix',
+    description: 'Find beginner-friendly issues in our CLI repository',
+    cta: 'Browse Issues',
+    href: 'https://github.com/OpenHands/OpenHands/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22',
+    icon: '/assets/webflow/misc/6980a326220ace0b3d3e54a1_5ec23b145729a1b01238c2d570990989_Frame-1.svg',
+  },
+  {
+    title: 'Start Contributing',
+    description: 'Learn how to contribute to OpenHands.',
+    cta: 'Get Started',
+    href: 'https://docs.openhands.dev/overview/contributing',
+    icon: '/assets/webflow/misc/6980a3270e8db1fb595e98f7_69717b2c66197029bb6e7fe0d72c5d6f_Frame-2.svg',
+  },
+];
 
 export const meta: Route.MetaFunction = ({ location }) => {
   return [
     { title: 'OpenHands Community' },
-    { name: 'description', content: 'Meet OpenHands, the open-source, model-agnostic platform for cloud coding agents. Automate real engineering work securely and transparently. Build faster with full control.' },
+    {
+      name: 'description',
+      content:
+        'Meet OpenHands, the open-source, model-agnostic platform for cloud coding agents. Automate real engineering work securely and transparently. Build faster with full control.',
+    },
     { property: 'og:title', content: 'OpenHands Community' },
-    { property: 'og:description', content: 'Meet OpenHands, the open-source, model-agnostic platform for cloud coding agents. Automate real engineering work securely and transparently. Build faster with full control.' },
+    {
+      property: 'og:description',
+      content:
+        'Meet OpenHands, the open-source, model-agnostic platform for cloud coding agents. Automate real engineering work securely and transparently. Build faster with full control.',
+    },
     { property: 'og:url', content: 'https://openhands.dev' + location.pathname },
     { property: 'og:type', content: 'website' },
     { name: 'twitter:card', content: 'summary_large_image' },
@@ -19,227 +91,181 @@ export const meta: Route.MetaFunction = ({ location }) => {
   ];
 };
 
-const CONTRIBUTE_LINKS = [
-  {
-    title: 'Read the docs',
-    description: 'Get familiar with our architecture and contribution guidelines.',
-    url: 'https://docs.openhands.dev/',
-    icon: '📚',
-  },
-  {
-    title: 'Issues to fix',
-    description: 'Find beginner-friendly issues in our CLI repository.',
-    url: 'https://github.com/OpenHands/OpenHands/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22',
-    icon: '🔧',
-  },
-  {
-    title: 'Start Contributing',
-    description: 'Learn how to contribute to OpenHands.',
-    url: 'https://docs.openhands.dev/contributors/getting-started',
-    icon: '🚀',
-  },
-];
-
-const COMMUNITY_LINKS = [
-  {
-    title: 'GitHub',
-    description: 'Star the repo, report issues, and contribute code.',
-    url: 'https://github.com/OpenHands/OpenHands',
-    icon: '🐙',
-  },
-  {
-    title: 'Slack',
-    description: 'Chat with the community and get help.',
-    url: 'https://join.slack.com/t/openhands-community/shared_invite/zt-2t4m9lwnr-pZPQqJlB~vAMJ1BYY2c31w',
-    icon: '💬',
-  },
-  {
-    title: 'Discord',
-    description: 'Join discussions and community events.',
-    url: 'https://discord.gg/ESHStjSjD4',
-    icon: '🎮',
-  },
-  {
-    title: 'Twitter/X',
-    description: 'Follow for updates and announcements.',
-    url: 'https://x.com/OpenHandsDev',
-    icon: '🐦',
-  },
-];
-
 const Community = () => {
   return (
     <main className='pt-[100px]'>
-      {/* Hero Section */}
-      <section className='px-10 py-20 lg:py-32 text-center max-w-4xl mx-auto'>
-        <h1 className='text-4xl lg:text-6xl font-bold mb-6'>
-          Join the OpenHands Community
-        </h1>
-        <p className='text-lg lg:text-xl text-brand-muted mb-8 max-w-2xl mx-auto'>
-          Connect with {formatContributorCount(statistics.contributors_count)} developers building the future of AI-powered software development.
-        </p>
-        <div className='flex gap-4 justify-center flex-wrap'>
-          <Link to='https://app.all-hands.dev' className='btn btn-primary'>
-            Try it live
-          </Link>
-          <Link to='https://docs.openhands.dev/sdk' className='btn btn-outline'>
-            Build with SDK
-          </Link>
-        </div>
-      </section>
-
-      {/* Stats */}
-      <section className='px-10 py-12 border-y border-brand-border'>
-        <div className='max-w-4xl mx-auto grid grid-cols-3 gap-8 text-center'>
-          <div>
-            <p className='text-4xl font-bold'>{formatThousands(statistics.stargazers)}</p>
-            <p className='text-sm text-brand-muted'>GitHub Stars</p>
+      <section className='px-10 py-12'>
+        <div className='mx-auto max-w-[1100px] rounded-[28px] border border-brand-fg/10 bg-white/60 p-6'>
+          <div className='flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between'>
+            <div>
+              <p className='text-sm uppercase tracking-[0.14em] text-brand-muted'>Get started with OpenHands Open Source</p>
+            </div>
+            <img src='/assets/webflow/icons/691062960cc6cca6fedb9220_Cross.svg' alt='' className='hidden h-6 w-6 lg:block' />
           </div>
-          <div>
-            <p className='text-4xl font-bold'>{formatContributorCount(statistics.contributors_count)}</p>
-            <p className='text-sm text-brand-muted'>Contributors</p>
-          </div>
-          <div>
-            <p className='text-4xl font-bold'>{formatThousands(statistics.forks)}</p>
-            <p className='text-sm text-brand-muted'>Forks</p>
+          <div className='mt-6 grid gap-4 md:grid-cols-2'>
+            {GET_STARTED_CARDS.map((card) => (
+              <a
+                key={card.title}
+                href={card.href}
+                target='_blank'
+                rel='noopener noreferrer'
+                className='flex items-center justify-between rounded-[24px] border border-brand-fg/10 bg-brand-bg/40 p-5 transition-transform hover:-translate-y-0.5'
+              >
+                <div>
+                  <p className='text-[14px] text-brand-muted'>{card.label}</p>
+                  <h2 className='mt-2 text-[24px] font-medium leading-[1.2] text-brand-fg'>{card.title}</h2>
+                </div>
+                <img src={card.icon} alt='' className='h-14 w-14 flex-none' />
+              </a>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Latest Community Call */}
-      <section className='px-10 py-20 max-w-4xl mx-auto'>
-        <h2 className='section-title text-center mb-8'>Latest Community Call</h2>
-        <div className='bg-brand-fg/5 rounded-xl p-8 text-center'>
-          <p className='text-brand-muted mb-6'>
-            Join our weekly community calls to hear about the latest updates, ask questions, and connect with other developers.
-          </p>
-          <Link to='https://www.youtube.com/@OpenHandsDev' className='btn btn-outline'>
-            Watch on YouTube
-          </Link>
-        </div>
-      </section>
-
-      {/* Upcoming Events */}
-      <section className='px-10 py-20 bg-[#efe6d1]'>
-        <div className='max-w-4xl mx-auto'>
-          <h2 className='section-title text-center mb-8'>Upcoming Events</h2>
-          {/* Webflow CMS event placeholder - matches live site structure */}
-          <h2 className='sr-only'>Heading</h2>
-          <div className='bg-brand-bg rounded-xl p-8 text-center'>
-            <p className='text-brand-muted mb-6'>
-              Check out our upcoming community events, workshops, and meetups.
-            </p>
-            <Link to='https://lu.ma/openhands' className='btn btn-outline'>
-              View Events
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* Start Contributing - with H3 headings to match live site */}
-      <section className='px-10 py-20 max-w-4xl mx-auto'>
-        <h2 className='section-title text-center mb-12'>Start contributing</h2>
-        <div className='grid md:grid-cols-3 gap-6 mb-8'>
-          {CONTRIBUTE_LINKS.map((link) => (
-            <a
-              key={link.title}
-              href={link.url}
-              target='_blank'
-              rel='noopener noreferrer'
-              className='border border-brand-border rounded-xl p-6 hover:bg-brand-fg/5 transition-colors group'
-            >
-              <div className='text-3xl mb-3'>{link.icon}</div>
-              <h3 className='text-lg font-semibold mb-1 group-hover:underline'>{link.title}</h3>
-              <p className='text-brand-muted text-sm'>{link.description}</p>
-            </a>
-          ))}
-        </div>
-        {/* Community links - no H3 headings, just styled divs */}
-        <div className='grid md:grid-cols-2 gap-6'>
-          {COMMUNITY_LINKS.map((link) => (
-            <a
-              key={link.title}
-              href={link.url}
-              target='_blank'
-              rel='noopener noreferrer'
-              className='border border-brand-border rounded-xl p-6 hover:bg-brand-fg/5 transition-colors group'
-            >
-              <div className='text-3xl mb-3'>{link.icon}</div>
-              <div className='text-lg font-semibold mb-1 group-hover:underline'>{link.title}</div>
-              <p className='text-brand-muted text-sm'>{link.description}</p>
-            </a>
-          ))}
-        </div>
-        <div className='flex gap-4 justify-center flex-wrap mt-8'>
-          <Link to='https://docs.openhands.dev/' className='btn btn-outline'>
-            View Docs
-          </Link>
-          <Link to='https://pypi.org/project/openhands-ai/' className='btn btn-outline'>
-            Download CLI
-          </Link>
-          <Link to='https://github.com/OpenHands/OpenHands/releases' className='btn btn-outline'>
-            Download Web UI
-          </Link>
-          <Link to='https://docs.openhands.dev/openhands/usage/getting-started' className='btn btn-outline'>
-            Get Started
-          </Link>
-        </div>
-      </section>
-
-      {/* First-time Contributors */}
-      <section className='px-10 py-20 bg-[#efe6d1]'>
-        <div className='max-w-4xl mx-auto text-center'>
-          <h2 className='section-title mb-4'>Recognizing first-time contributors</h2>
-          <p className='text-brand-muted mb-8 max-w-2xl mx-auto'>
-            We celebrate every new contributor who makes their first PR to OpenHands. 
-            Your contribution, no matter how small, helps move the project forward.
-          </p>
-        </div>
-      </section>
-
-      {/* Community Contributor Spotlight */}
       <section className='px-10 py-20'>
-        <div className='max-w-6xl mx-auto'>
-          <h2 className='section-title text-center mb-4'>Community contributor spotlight</h2>
-          <p className='text-center text-brand-muted mb-12'>
-            Thank you to everyone who has contributed to OpenHands!
+        <div className='mx-auto flex max-w-4xl flex-col items-center gap-6 text-center'>
+          <h1 className='text-[44px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>
+            Join the OpenHands Community
+          </h1>
+          <p className='max-w-2xl text-[18px] leading-[1.6] text-brand-muted'>
+            Connect with developers, contribute to open source, and help build the future of AI-powered autonomous software development.
           </p>
-          {/* Featured contributor - matches live site H3 */}
-          <div className='bg-brand-fg/5 rounded-xl p-8 mb-12 text-center'>
-            <h3 className='text-xl font-semibold mb-2'>Michael May</h3>
-            <p className='text-brand-muted'>Featured community contributor</p>
-          </div>
-          <div className='overflow-hidden'>
-            <ContributorGrid variant='large' contributors={contributors} />
-          </div>
-          <div className='text-center mt-8'>
-            <Link
-              to='https://github.com/OpenHands/OpenHands'
-              className='btn btn-outline'
-            >
-              Become a contributor
-            </Link>
+          <div className='flex flex-wrap items-center justify-center gap-4'>
+            <a href='/joinslack' className='btn btn-outline rounded-none text-brand-bg border-brand-bg/50 hover:bg-brand-bg hover:text-brand-fg'>
+              Join Slack
+            </a>
+            <a href='#events' className='btn btn-outline rounded-none'>
+              View Events
+            </a>
           </div>
         </div>
       </section>
 
-      {/* CTA */}
-      <section className='px-10 py-20 text-center bg-brand-accent'>
-        <div className='max-w-2xl mx-auto'>
-          <p className='section-title mb-6'>Ready to join us?</p>
-          <p className='text-brand-muted mb-8'>
-            Check out our contribution guide and start building with us.
+      <section className='px-10 py-20'>
+        <div className='mx-auto max-w-[1000px] rounded-[28px] border border-brand-fg/10 bg-brand-fg p-8 text-center'>
+          <h2 className='text-[32px] lg:text-[44px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-bg'>
+            Latest Community Call
+          </h2>
+          <p className='mt-4 text-[18px] leading-[1.6] text-[#b3a88c]'>
+            Catch up on our most recent community call where we discuss updates, roadmap, and answer questions from the community.
           </p>
-          <div className='flex gap-4 justify-center flex-wrap'>
-            <Link to='https://join.slack.com/t/openhands-community/shared_invite/zt-2t4m9lwnr-pZPQqJlB~vAMJ1BYY2c31w' className='btn btn-primary btn-lg'>
-              Join Slack
-            </Link>
-            <Link to='https://docs.openhands.dev/' className='btn btn-outline btn-lg'>
-              View Docs
-            </Link>
+          <div className='mt-6 flex flex-wrap items-center justify-center gap-4 text-[16px] text-[#b3a88c]'>
+            <p>April 28, 2026</p>
+            <p>40:56</p>
+          </div>
+          <a
+            href='https://www.youtube.com/watch?v=H8wIK1_0zNU'
+            target='_blank'
+            rel='noopener noreferrer'
+            className='btn btn-outline mt-8 rounded-none text-brand-bg border-brand-bg/50 hover:bg-brand-bg hover:text-brand-fg'
+          >
+            Watch on YouTube
+          </a>
+        </div>
+      </section>
+
+      <section id='events' className='px-10 py-20'>
+        <div className='mx-auto max-w-[1260px]'>
+          <h2 className='text-[32px] lg:text-[44px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>
+            Upcoming Events
+          </h2>
+          <div className='mt-10 grid gap-6 lg:grid-cols-3'>
+            {EVENTS.map((event) => (
+              <a
+                key={event.title}
+                href={event.href}
+                target='_blank'
+                rel='noopener noreferrer'
+                className='flex h-full flex-col rounded-lg border border-brand-fg/10 bg-transparent p-6 transition-transform hover:-translate-y-0.5'
+              >
+                <h2 className='text-[26px] font-medium leading-[1.2] text-brand-fg'>{event.title}</h2>
+                <p className='mt-4 text-[16px] leading-[1.6] text-brand-muted'>{event.description}</p>
+                <div className='mt-4 space-y-2 text-[15px] text-brand-muted'>
+                  {event.agenda.map((line) => (
+                    <p key={line}>{line}</p>
+                  ))}
+                </div>
+                <div className='mt-6 flex flex-col gap-1 text-[15px] font-medium text-brand-fg'>
+                  <p>{event.date}</p>
+                  <p>{event.time}</p>
+                </div>
+              </a>
+            ))}
+          </div>
+          <div className='mt-8 text-center'>
+            <a
+              href='https://luma.com/openhands?k=c'
+              target='_blank'
+              rel='noopener noreferrer'
+              className='btn btn-outline rounded-none'
+            >
+              View All Events
+            </a>
           </div>
         </div>
       </section>
+
+      <section className='px-10 py-20'>
+        <div className='mx-auto max-w-[1260px] rounded-[28px] bg-brand-fg px-8 py-10'>
+          <div className='text-center'>
+            <h2 className='text-[32px] lg:text-[44px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-bg'>
+              Start contributing
+            </h2>
+            <p className='mt-4 text-[18px] leading-[1.6] text-[#b3a88c]'>
+              Join our mission to build better AI development tools
+            </p>
+          </div>
+          <div className='mt-10 grid gap-6 lg:grid-cols-3'>
+            {CONTRIBUTION_PATHS.map((path) => (
+              <article
+                key={path.title}
+                className='flex h-full flex-col rounded-[24px] border border-brand-bg/20 bg-transparent p-6'
+              >
+                <img src={path.icon} alt='' className='h-14 w-14' />
+                <h3 className='mt-6 text-[26px] font-medium leading-[1.2] text-brand-bg'>{path.title}</h3>
+                <p className='mt-4 flex-1 text-[16px] leading-[1.6] text-[#b3a88c]'>{path.description}</p>
+                <a
+                  href={path.href}
+                  target='_blank'
+                  rel='noopener noreferrer'
+                  className='btn btn-outline mt-6 w-fit rounded-none text-brand-bg border-brand-bg/50 hover:bg-brand-bg hover:text-brand-fg'
+                >
+                  {path.cta}
+                </a>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className='px-10 py-20'>
+        <div className='mx-auto max-w-[900px] text-center'>
+          <h2 className='text-[32px] lg:text-[44px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>
+            Recognizing first-time contributors
+          </h2>
+        </div>
+      </section>
+
+      <section className='px-10 py-20'>
+        <div className='mx-auto max-w-[1000px] rounded-[28px] border border-brand-fg/10 bg-white/60 p-8 text-center'>
+          <h2 className='text-[32px] lg:text-[44px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>
+            Community contributor spotlight
+          </h2>
+          <div className='mx-auto mt-8 max-w-[720px]'>
+            <img
+              src='/assets/webflow/team/698653c2074b111e59086ff8_mike.jpeg'
+              alt='Michael May'
+              className='mx-auto h-28 w-28 rounded-full object-cover'
+            />
+            <h3 className='mt-6 text-[32px] font-medium leading-[1.2] text-brand-fg'>Michael May</h3>
+            <p className='mt-4 text-[18px] leading-[1.7] text-brand-muted'>
+              “My team uses OpenHands for all our development tasks and we have found that it is hands-down better than Claude Code, cursor, Codex, and every other hot agentic DevTool out there. The caliber of the team at OpenHands and the caliber of the community they’ve curated is second to none, and this is evidenced by the quality of their product and the trajectory of their growth.”
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <MarketingFooterCta />
     </main>
   );
 };

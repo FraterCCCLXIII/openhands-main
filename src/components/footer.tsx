@@ -15,7 +15,7 @@ const FooterContent = () => {
             key={item.name}
             to={item.to}
             className={({ isActive }) =>
-              clsx('transition-colors hover:text-[#8a5f45]', isActive && 'text-[#8a5f45]')
+              clsx('transition-colors hover:text-[#8a5f45]', isActive && 'text-brand-fg')
             }
           >
             {item.name}

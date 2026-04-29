@@ -73,7 +73,7 @@ export const Header: React.FC<HeaderProps> = ({
                       className={({ isActive }) =>
                         clsx(
                           'text-base font-normal leading-[22.4px] transition-colors hover:text-[#8a5f45]',
-                          isActive && 'text-[#8a5f45]'
+                          isActive && 'text-brand-fg'
                         )
                       }
                     >

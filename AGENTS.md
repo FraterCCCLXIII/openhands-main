@@ -77,3 +77,11 @@ npm run parity:checklist  # Crawl openhands.dev and compare against local site
 - Use frontmatter `slug` to pin a live blog route when the canonical URL does not match the title-derived slug.
 - Use frontmatter `published: false` to keep retired posts in the repo while excluding them from the live/local blog inventory.
 
+## Product / Enterprise / Pricing / Community Parity Notes
+- Live `/product` uses dark interface cards: `Terminal / CLI`, `Web GUI`, and `SDK` headings plus `Learn more` links render in light text on a dark background.
+- Live `/product` includes the comparison heading `The only open, secure, and scalable agent platform built for real engineering work` and a second `See developer docs` CTA near the page footer.
+- Live `/enterprise` uses paragraph tags for the six feature titles, `Powering enterprise AI with the world’s best` is 32px (not 44px), and the page-specific closing CTA copy is `Bring agentic development to your organization.` / `Deploy securely. Scale confidently. Stay in control.`
+- Live `/pricing` parity depends on rendering comparison-table copy in visible `p`/`label` elements; checklist extraction does not inspect plain `th`/`td` text reliably.
+- Live `/community` uses a dark `Latest Community Call` block and a dark `Start contributing` block, with event titles as `h2` elements and event descriptions using ASCII apostrophes (`We'll`).
+- After issue #278 work, parity checklist counts dropped to: `/product` 1 fail, `/enterprise` 2 fails, `/pricing` 2 fails, `/community` 0 fails using `PARITY_MAX_PAGES=12 PARITY_DISCOVERY_LIMIT=20 TEST_ORIGIN=http://127.0.0.1:12001 LIVE_ORIGIN=https://openhands.dev npm run parity:checklist`.
+
