@@ -102,6 +102,7 @@ npm run parity:checklist  # Crawl openhands.dev and compare against local site
 - After issue #278 work, parity checklist counts dropped to: `/product` 1 fail, `/enterprise` 2 fails, `/pricing` 2 fails, `/community` 0 fails using `PARITY_MAX_PAGES=12 PARITY_DISCOVERY_LIMIT=20 TEST_ORIGIN=http://127.0.0.1:12001 LIVE_ORIGIN=https://openhands.dev npm run parity:checklist`.
 - Keep dedicated product detail pages at `/product/sdk`, `/product/gui`, and `/product/cli`, and wire the main product interface cards to those routes.
 - `joinslack` should behave as a server redirect, not a client-only redirect, so crawlers and non-JS clients match the live `301` to `https://dub.sh/openhands`.
+- Do not keep or add `mirror-*.tsx` marketing routes or `~/utils/webflow-mirror-route`; implement live pages natively instead. The remaining native whitepaper work is tracked in issue `#298`.
 
 ## Product Subpage Parity Notes
 - `/product/cli`, `/product/gui`, and `/product/sdk` now share product-page helpers in `src/components/product-feature-page.tsx`, while the main `/product` surface cards are sourced from `src/constants/product-surfaces.ts`; update those shared files first when parity issues affect more than one product surface.
