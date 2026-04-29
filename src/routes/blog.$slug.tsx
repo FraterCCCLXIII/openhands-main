@@ -1,9 +1,4 @@
 import React from 'react';
-import Markdown from 'react-markdown';
-import rehypeRaw from 'rehype-raw';
-import rehypeKatex from 'rehype-katex';
-import remarkMath from 'remark-math';
-import remarkGfm from 'remark-gfm';
 import {
   type LoaderFunctionArgs,
   isRouteErrorResponse,
@@ -11,13 +6,13 @@ import {
   useRouteError,
 } from 'react-router';
 import { blogAPI } from '~/api/blog';
-import { PlaceholderImage } from '~/components/placeholder-image';
-import { formatDate } from '~/utils/format-date';
 import { BlogFooter } from '~/components/blog-footer';
+import { CMarkdown } from '~/components/c-markdown';
+import { PlaceholderImage } from '~/components/placeholder-image';
 import { handleNewsletterSubscription } from '~/utils/newsletter-subscription';
-import 'katex/dist/katex.min.css';
+import { formatDate } from '~/utils/format-date';
 import type { Route } from './+types/blog.$slug';
-import { LazyCode } from '~/components/lazy-code';
+import 'katex/dist/katex.min.css';
 
 export const action = handleNewsletterSubscription;
 
@@ -35,7 +30,6 @@ export const loader = ({ params, request }: LoaderFunctionArgs) => {
 
   const { content, data } = blog;
 
-  // Get the current URL for citation
   const url = new URL(request.url).origin + '/blog/' + slug;
   const origin = new URL(request.url).origin;
 
@@ -60,17 +54,23 @@ export const ErrorBoundary = () => {
 
   if (isRouteErrorResponse(error) && error.status === 404) {
     return (
-      <div className='flex flex-col items-center gap-4 text-center py-[45px]'>
-        <h1 className='heading'>404</h1>
-        <p className='paragraph'>Blog post not found.</p>
+      <div className='flex flex-col items-center gap-4 py-[45px] text-center'>
+        <h1 className='font-inter text-[32px] leading-[1.1] font-medium tracking-[-0.03em] lg:text-[44px]'>
+          404
+        </h1>
+        <p className='text-[18px] leading-[1.5] text-[#5f5f5f]'>Blog post not found.</p>
       </div>
     );
   }
 
   return (
-    <div className='flex flex-col items-center gap-4 text-center py-[45px]'>
-      <h1 className='heading'>Error</h1>
-      <p className='paragraph'>There was an error loading the blog.</p>
+    <div className='flex flex-col items-center gap-4 py-[45px] text-center'>
+      <h1 className='font-inter text-[32px] leading-[1.1] font-medium tracking-[-0.03em] lg:text-[44px]'>
+        Error
+      </h1>
+      <p className='text-[18px] leading-[1.5] text-[#5f5f5f]'>
+        There was an error loading the blog.
+      </p>
     </div>
   );
 };
@@ -92,7 +92,10 @@ export const meta: Route.MetaFunction = ({ data }) => {
     { property: 'og:type', content: 'article' },
     { property: 'og:site_name', content: 'OpenHands' },
     { property: 'article:published_time', content: data.date },
-    { property: 'article:author', content: data.authors.map((author) => author.name).join(', ') },
+    {
+      property: 'article:author',
+      content: data.authors.map((author) => author.name).join(', '),
+    },
     { name: 'twitter:card', content: 'summary_large_image' },
     { name: 'twitter:title', content: data.title },
     { name: 'twitter:description', content: data.excerpt },
@@ -127,144 +130,84 @@ export const meta: Route.MetaFunction = ({ data }) => {
 const BlogDetails = () => {
   const data = useLoaderData() as ReturnType<typeof loader>;
   const [codeElementWidth, setCodeElementWidth] = React.useState(800);
-  
+
   React.useEffect(() => {
-    const baseWidth = window.innerWidth;
-    const padding = baseWidth >= 1024 ? 84 : 40; // 42px or 20px padding on each side
-    const maxWidth = Math.min(baseWidth - padding, 800); // Max width of 800px for larger screens
-    setCodeElementWidth(maxWidth);
+    const updateWidth = () => {
+      const baseWidth = window.innerWidth;
+      const padding = baseWidth >= 1024 ? 84 : 40;
+      setCodeElementWidth(Math.min(baseWidth - padding, 800));
+    };
+
+    updateWidth();
+    window.addEventListener('resize', updateWidth);
+    return () => window.removeEventListener('resize', updateWidth);
   }, []);
 
   return (
-    <article className='flex flex-col items-center py-[30px] lg:py-[45px] gap-4 lg:gap-8'>
-      <figure className='w-full lg:max-w-[800px] px-[20px] lg:px-[42px]'>
-        {!data.cover && <PlaceholderImage className='aspect-video' />}
-        {data.cover && (
-          <img
-            src={data.cover}
-            alt='blog cover'
-            className='w-full rounded-[7px] lg:rounded-[10px] flex items-center justify-center aspect-video object-cover'
-          />
-        )}
-      </figure>
+    <article className='flex flex-col items-center px-5 pb-16 pt-[100px] lg:px-10'>
+      <div className='w-full max-w-[960px]'>
+        <figure className='w-full'>
+          {!data.cover && <PlaceholderImage className='aspect-[3/2] w-full rounded-[16px]' />}
+          {data.cover && (
+            <img
+              src={data.cover}
+              alt='blog cover'
+              className='aspect-[3/2] w-full rounded-[16px] object-cover'
+            />
+          )}
+        </figure>
+      </div>
 
-      <main className='flex flex-col gap-4 w-full lg:max-w-[800px] px-[20px] lg:px-[42px]'>
-        <h1 className='heading font-bold'>{data.title}</h1>
+      <main className='mt-10 flex w-full max-w-[960px] flex-col gap-10'>
+        <header className='mx-auto flex w-full max-w-[820px] flex-col gap-6'>
+          <h1 className='font-inter text-[32px] leading-[1.1] font-medium tracking-[-0.03em] text-brand-fg lg:text-[44px]'>
+            {data.title}
+          </h1>
 
-        <header className='flex flex-col gap-2'>
-          <div className='flex items-center gap-2 lg:gap-4 text-[17px] leading-6 font-semibold text-description'>
-            <div className='flex flex-col items-start lg:flex-row lg:items-center lg:gap-4'>
-              <span>
-                By{' '}
-                {data.authors.map((author, index) => (
-                  <React.Fragment key={author.name}>
-                    {index > 0 && ', '}
+          <div className='grid grid-cols-1 gap-4 border-t border-black/10 pt-6 md:grid-cols-2'>
+            <div>
+              <p className='m-0 text-[14px] leading-[1.5] text-[#5f5f5f]'>Written by</p>
+              <p className='mt-1 text-[18px] leading-[1.2] font-medium text-brand-fg'>
+                {data.authors.map((author, index) => {
+                  const content = author.link ? (
                     <a
-                      href={author.link || undefined}
-                      className='text-blue-600'
+                      href={author.link}
+                      className='text-brand-brown underline decoration-[1px] underline-offset-[0.18em] transition-colors hover:text-brand-fg'
                       target='_blank'
                       rel='noreferrer'
                     >
                       {author.name}
                     </a>
-                  </React.Fragment>
-                ))}
-              </span>
-              <span className='hidden lg:block'>&#8226;</span>
-              <time dateTime={data.date}>{formatDate(data.date)}</time>
+                  ) : (
+                    <span>{author.name}</span>
+                  );
+
+                  return (
+                    <React.Fragment key={author.name}>
+                      {index > 0 && ', '}
+                      {content}
+                    </React.Fragment>
+                  );
+                })}
+              </p>
+            </div>
+
+            <div className='md:text-right'>
+              <p className='m-0 text-[14px] leading-[1.5] text-[#5f5f5f]'>Published on</p>
+              <time
+                dateTime={data.date}
+                className='mt-1 block text-[18px] leading-[1.2] font-medium text-brand-fg'
+              >
+                {formatDate(data.date)}
+              </time>
             </div>
           </div>
         </header>
 
-        <section className='paragraph flex flex-col gap-4'>
-          <Markdown
-            children={data.content}
-            remarkPlugins={[remarkMath, remarkGfm]}
-            rehypePlugins={[rehypeRaw, rehypeKatex]}
-            components={{
-              a: (props) => (
-                <a
-                  rel='noreferrer'
-                  target='_blank'
-                  className='text-blue-600'
-                  {...props}
-                >
-                  {props.children}
-                </a>
-              ),
-              h2: (props) => (
-                <h2 className='font-quincy font-bold text-5xl' {...props}>
-                  {props.children}
-                </h2>
-              ),
-              h3: (props) => (
-                <h3 className='font-quincy font-bold text-3xl' {...props}>
-                  {props.children}
-                </h3>
-              ),
-              li: (props) => (
-                <li className='list-disc ml-5' {...props}>
-                  {props.children}
-                </li>
-              ),
-              img: (props) => (
-                <img className='rounded-lg' {...props} alt={props.alt} />
-              ),
-              p: (props) => (
-                <p className='text-description' {...props}>
-                  {props.children}
-                </p>
-              ),
-              code: ({ children, className }) => (
-                <LazyCode
-                  className={className}
-                  customStyle={{ maxWidth: codeElementWidth }}
-                >
-                  {children}
-                </LazyCode>
-              ),
-              iframe: (props) => {
-                const { node, ...rest } = props;
-                return (
-                  <div className='w-full flex justify-center my-4'>
-                    <iframe {...rest} />
-                  </div>
-                );
-              },
-              table: (props) => (
-                <div className='overflow-x-auto my-6'>
-                  <table className='min-w-full border-collapse border border-gray-300' {...props}>
-                    {props.children}
-                  </table>
-                </div>
-              ),
-              thead: (props) => (
-                <thead className='bg-gray-50' {...props}>
-                  {props.children}
-                </thead>
-              ),
-              tbody: (props) => (
-                <tbody {...props}>
-                  {props.children}
-                </tbody>
-              ),
-              tr: (props) => (
-                <tr className='border-b border-gray-200' {...props}>
-                  {props.children}
-                </tr>
-              ),
-              th: (props) => (
-                <th className='border border-gray-300 px-4 py-2 text-left font-semibold bg-gray-100' {...props}>
-                  {props.children}
-                </th>
-              ),
-              td: (props) => (
-                <td className='border border-gray-300 px-4 py-2' {...props}>
-                  {props.children}
-                </td>
-              ),
-            }}
-          />
+        <section className='mx-auto w-full max-w-[820px]'>
+          <CMarkdown variant='blog' codeElementWidth={codeElementWidth}>
+            {data.content}
+          </CMarkdown>
 
           <BlogFooter
             title={data.title}

@@ -69,6 +69,10 @@ npm run parity:checklist  # Crawl openhands.dev and compare against local site
 - Current external destinations: docs links should point to `https://docs.openhands.dev/openhands/usage/run-openhands/...` and careers links should point to `https://jobs.ashbyhq.com/OpenHands`.
 
 ## Blog Parity Notes
+- Live `/blog` uses a centered hero with only the newsletter signup (no `Try it live` / `Build with SDK` CTA buttons), followed by one featured story card and a full grid of post cards.
+- Live blog index grid cards show publication date plus title only; featured card uses a dark overlay with `Read more` CTA copy.
+- Live blog/article links use the brand brown accent (`#8a5f45`) rather than bright blue, and article headings use medium-weight 44px desktop sizing instead of Quincy 48px/60px styles.
+- Live blog article imagery uses softer 16px radius treatments, and the newsletter form uses `Share your email` placeholder plus the privacy-policy disclaimer.
 - Blog inventory is auto-loaded from `src/posts/*.md` via `import.meta.glob`; adding a new Markdown file is enough to include it.
 - Use frontmatter `slug` to pin a live blog route when the canonical URL does not match the title-derived slug.
 - Use frontmatter `published: false` to keep retired posts in the repo while excluding them from the live/local blog inventory.
