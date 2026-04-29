@@ -119,6 +119,10 @@ npm run parity:checklist  # Crawl openhands.dev and compare against local site
 
 - After the screenshot-driven parity pass on issue #291, the product routes were rebuilt around shared data-driven sections instead of ad hoc page-specific layouts, which made the screenshot structure much closer to live even though the automated parity checklist still reports many false-positive content/style mismatches.
 
+## Legacy Route / 404 Parity Notes
+- The legacy whitepaper path `/whitepapers/modernize-legacy-systems-with-ai-agents` is implemented as a first-class local route, not a redirect or iframe mirror, because the parity checklist reads visible DOM text directly.
+- Unknown marketing routes now fall through to `route("*", "routes/not-found.tsx")`, which returns a 404 status via `data(null, { status: 404 })` while still rendering inside the normal marketing chrome so the live-style nav/footer signatures remain visible.
+
 ## Legal Page Parity Notes
 - Live `/privacy` renders the body as a narrow legal-rich-text block with a centered 32px desktop title, real `h2`/`h3` hierarchy, and the shared `MarketingFooterCta` above the global footer.
 - Current live `/privacy` parity expects a duplicated `Changes to this Privacy Policy` subsection and a trailing zero-width paragraph (`‍`) in the legal copy; keep both if parity checks regress on that route.

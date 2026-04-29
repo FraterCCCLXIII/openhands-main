@@ -32,4 +32,5 @@ export default [
     "/responsible-disclosure-policy",
     "routes/responsible-disclosure-policy.tsx",
   ),
+  route("*", "routes/not-found.tsx"),
 ] satisfies RouteConfig;
