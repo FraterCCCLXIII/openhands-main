@@ -1,194 +1,377 @@
 import { Link } from 'react-router';
 import type { ProductFeaturePageData } from '~/data/product-feature-pages';
 
-const COMPARISON_ROWS = [
-  'Open-source',
-  'Model-agnostic',
-  'Sandbox runtime',
-  'Self-hosted',
-  'Coding Agent SDK',
+export interface ProductPageAction {
+  label: string;
+  href: string;
+  variant?: 'primary' | 'outline';
+  screenReaderLabel?: string;
+}
+
+export interface ProductFaqItem {
+  question: string;
+  answer: string;
+}
+
+const TABLE_TICK_ICON = '/assets/webflow/icons/691234bd9e72712ffbcf9470_tick.svg';
+
+export const PRODUCT_COMPARISON_ROWS = [
+  { label: 'Open-source', values: [true, false, false, false] },
+  { label: 'Model-agnostic', values: [true, false, false, true] },
+  { label: 'Sandbox runtime', values: [true, true, false, true] },
+  { label: 'Self-hosted', values: [true, false, true, false] },
+  { label: 'Coding Agent SDK', values: [true, false, true, false] },
 ] as const;
 
-const isExternalHref = (href: string) => href.startsWith('http');
+const isExternalLink = (href: string) => /^https?:\/\//.test(href);
 
-const CTAButton = ({
+const classNames = (...values: Array<string | false | null | undefined>) =>
+  values.filter(Boolean).join(' ');
+
+const AsciiBackdrop = ({ opacity = 'opacity-[0.12]' }: { opacity?: string }) => (
+  <div className={classNames('pointer-events-none absolute inset-0', opacity)}>
+    <img
+      src='/assets/webflow/backgrounds/6908d170831c19b2b6976323_ascii-art_(16)_1.svg'
+      alt=''
+      className='h-full w-full object-cover'
+    />
+  </div>
+);
+
+const ProductEyebrow = ({ label }: { label: string }) => (
+  <div className='inline-flex rounded-[4px] bg-brand-accent px-5 py-2 text-[13px] font-medium leading-none text-brand-fg'>
+    {label}
+  </div>
+);
+
+export const ProductPageActionLink = ({
   href,
   label,
-  variant,
-}: {
-  href: string;
-  label: string;
-  variant: 'primary' | 'outline';
-}) => {
-  const className = `btn btn-${variant}`;
+  variant = 'primary',
+  className = '',
+  screenReaderLabel,
+}: ProductPageAction & { className?: string }) => {
+  const classes = classNames(
+    'btn',
+    variant === 'primary' ? 'btn-primary' : 'btn-outline',
+    'rounded-none whitespace-nowrap',
+    className,
+  );
 
-  if (isExternalHref(href)) {
+  const assistiveLabel = screenReaderLabel ?? label;
+
+  if (isExternalLink(href)) {
     return (
-      <a href={href} target='_blank' rel='noopener noreferrer' className={className}>
+      <a
+        href={href}
+        target='_blank'
+        rel='noopener noreferrer'
+        className={classes}
+        aria-label={assistiveLabel}
+      >
         {label}
       </a>
     );
   }
 
   return (
-    <Link to={href} className={className}>
+    <Link to={href} className={classes} aria-label={assistiveLabel}>
       {label}
     </Link>
   );
 };
 
-export const ProductFeaturePage = ({ page }: { page: ProductFeaturePageData }) => {
+const ProductFeatureIntroBand = ({
+  title,
+  description,
+}: {
+  title: string;
+  description: string;
+}) => (
+  <section className='relative overflow-hidden bg-brand-accent px-6 py-20 lg:px-10'>
+    <AsciiBackdrop opacity='opacity-[0.14]' />
+    <div className='relative mx-auto max-w-[860px] text-center'>
+      <h2 className='text-[34px] font-medium leading-[1.08] tracking-[-0.03em] text-brand-fg lg:text-[44px]'>
+        {title}
+      </h2>
+      <p className='mx-auto mt-5 max-w-[720px] text-[18px] leading-[1.45] text-brand-fg/80'>
+        {description}
+      </p>
+    </div>
+  </section>
+);
+
+const ProductFeatureProofBand = ({
+  title,
+  description,
+}: {
+  title: string;
+  description: string;
+}) => (
+  <section className='relative overflow-hidden bg-brand-fg px-6 py-20 lg:px-10'>
+    <div className='pointer-events-none absolute inset-0 opacity-[0.28]'>
+      <img
+        src='/assets/webflow/backgrounds/690b397ae76441160bed52b6_asci-art-hole.png'
+        alt=''
+        className='h-full w-full object-cover'
+      />
+    </div>
+    <div className='relative mx-auto max-w-[860px] text-center'>
+      <h2 className='text-[34px] font-medium leading-[1.08] tracking-[-0.03em] text-brand-bg lg:text-[44px]'>
+        {title}
+      </h2>
+      <p className='mx-auto mt-5 max-w-[760px] text-[18px] leading-[1.45] text-[#d6caab]'>
+        {description}
+      </p>
+    </div>
+  </section>
+);
+
+const ProductGuiIntroSection = ({
+  image,
+  title,
+  description,
+}: {
+  image: ProductFeaturePageData['heroImage'];
+  title: string;
+  description: string;
+}) => (
+  <section className='bg-brand-fg px-6 py-16 lg:px-10 lg:py-20'>
+    <div className='mx-auto grid max-w-[1260px] gap-10 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:items-center'>
+      <div className='rounded-[18px] bg-brand-bg p-7 shadow-[0_0_0_1px_rgba(249,240,217,0.08)]'>
+        <img src={image.src} alt={image.alt} className='w-full rounded-[8px]' />
+      </div>
+      <div className='text-brand-bg'>
+        <h2 className='text-[34px] font-medium leading-[1.08] tracking-[-0.03em] lg:text-[44px]'>{title}</h2>
+        <p className='mt-5 max-w-[500px] text-[18px] leading-[1.45] text-[#d6caab]'>{description}</p>
+      </div>
+    </div>
+  </section>
+);
+
+const ProductList = ({ items }: { items: readonly string[] }) => (
+  <div className='mt-6 border-t border-brand-fg/15'>
+    {items.map((item) => (
+      <div key={item} className='border-b border-brand-fg/15 py-4 text-[17px] leading-[1.45] text-brand-fg/80'>
+        {item}
+      </div>
+    ))}
+  </div>
+);
+
+const ProductImageCard = ({
+  src,
+  alt,
+  className = '',
+}: {
+  src: string;
+  alt: string;
+  className?: string;
+}) => (
+  <div className={classNames('rounded-[18px] border border-brand-fg/10 bg-brand-bg p-5 shadow-[0_10px_35px_rgba(34,21,13,0.04)]', className)}>
+    <img src={src} alt={alt} className='w-full rounded-[8px]' />
+  </div>
+);
+
+export const ProductComparisonTable = ({
+  dark = false,
+  ctaHref,
+  ctaLabel,
+}: {
+  dark?: boolean;
+  ctaHref?: string;
+  ctaLabel?: string;
+}) => {
+  const sectionClass = dark ? 'bg-brand-fg text-brand-bg' : 'bg-brand-bg text-brand-fg';
+  const headingClass = dark ? 'text-brand-bg' : 'text-brand-fg';
+  const cellClass = dark ? 'text-brand-bg/90' : 'text-brand-fg/85';
+  const borderClass = dark ? 'border-brand-bg/20' : 'border-brand-fg/12';
+  const crossClass = dark ? 'text-brand-bg/55' : 'text-brand-fg/35';
+
   return (
-    <main className='bg-brand-bg pt-[100px] text-brand-fg'>
-      <section className='px-6 py-16 lg:px-10 lg:py-24'>
-        <div className='mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-[minmax(0,1.05fr)_minmax(320px,0.95fr)]'>
-          <div>
-            <p className='mb-4 text-sm font-semibold uppercase tracking-[0.18em] text-brand-muted'>
-              {page.eyebrow}
-            </p>
-            <h1 className='mb-6 max-w-3xl text-[44px] font-bold leading-[1.02] lg:text-[72px]'>
-              {page.heading}
-            </h1>
-            <p className='paragraph mb-8 max-w-2xl text-brand-muted'>{page.description}</p>
-            <div className='flex flex-wrap gap-4'>
-              <CTAButton {...page.primaryCta} variant='primary' />
-              <CTAButton {...page.secondaryCta} variant='outline' />
-            </div>
-          </div>
-          <div className='overflow-hidden rounded-[28px] border border-brand-fg/10 bg-[#16110d] p-3 shadow-[0_30px_80px_rgba(34,21,13,0.12)]'>
-            <img
-              src={page.heroImage.src}
-              alt={page.heroImage.alt}
-              className='w-full rounded-[20px] object-cover'
-            />
-          </div>
-        </div>
-      </section>
-
-      <section className='px-6 py-12 lg:px-10 lg:py-16'>
-        <div className='mx-auto grid max-w-6xl items-center gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(280px,0.85fr)]'>
-          <div>
-            <h2 className='section-title mb-5 max-w-3xl'>{page.introTitle}</h2>
-            <p className='paragraph max-w-2xl text-brand-muted'>{page.introDescription}</p>
-          </div>
-          <div className='overflow-hidden rounded-[28px] bg-[#16110d] p-4 shadow-[0_24px_60px_rgba(34,21,13,0.12)]'>
-            <img
-              src={page.accentImage.src}
-              alt={page.accentImage.alt}
-              className='w-full rounded-[20px] object-cover'
-            />
-          </div>
-        </div>
-      </section>
-
-      <section className='px-6 py-12 lg:px-10 lg:py-16'>
-        <div className='mx-auto max-w-6xl rounded-[32px] bg-[#efe6d1] p-8 lg:p-12'>
-          <h2 className='section-title mb-5 max-w-3xl'>{page.proofTitle}</h2>
-          <p className='paragraph max-w-3xl text-brand-muted'>{page.proofDescription}</p>
-        </div>
-      </section>
-
-      <section className='px-6 py-12 lg:px-10 lg:py-16'>
-        <div className='mx-auto max-w-6xl rounded-[32px] border border-brand-fg/10 bg-white/55 p-8 lg:p-10'>
-          <h2 className='section-title mb-8'>Key capabilities</h2>
-          <ul className='space-y-4'>
-            {page.capabilities.map((capability) => (
-              <li key={capability} className='flex items-start gap-3 text-[18px] leading-[1.45] text-brand-fg'>
-                <span className='mt-1 inline-flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-brand-fg text-brand-bg'>
-                  ✓
-                </span>
-                <span>{capability}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </section>
-
-      <section className='px-6 py-12 lg:px-10 lg:py-16'>
-        <div className='mx-auto max-w-6xl space-y-8'>
-          <div className='grid gap-6 md:grid-cols-2'>
-            {page.showcaseImages.map((image) => (
-              <div
-                key={image.src}
-                className='overflow-hidden rounded-[28px] bg-[#16110d] p-3 shadow-[0_24px_60px_rgba(34,21,13,0.12)]'
-              >
-                <img src={image.src} alt={image.alt} className='w-full rounded-[20px] object-cover' />
-              </div>
-            ))}
-          </div>
-          <div className='rounded-[32px] border border-brand-fg/10 bg-[#16110d] p-8 text-brand-bg lg:p-10'>
-            <h2 className='section-title mb-8 text-brand-bg'>How teams use it</h2>
-            <ul className='space-y-4'>
-              {page.useCases.map((useCase) => (
-                <li key={useCase} className='flex items-start gap-3 text-[18px] leading-[1.45] text-brand-bg/90'>
-                  <span className='mt-1 inline-flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-brand-accent text-brand-fg'>
-                    →
-                  </span>
-                  <span>{useCase}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      </section>
-
-      <section className='px-6 py-12 lg:px-10 lg:py-16'>
-        <div className='mx-auto max-w-6xl rounded-[32px] bg-white/45 p-8 lg:p-12'>
-          <div className='section-title mb-8 max-w-3xl'>
-            The only open, secure, and scalable agent platform built for real engineering work
-          </div>
-          <div className='overflow-x-auto'>
-            <table className='w-full min-w-[640px] border-collapse text-left'>
-              <thead>
-                <tr className='border-b border-brand-fg/15'>
-                  <th className='px-4 py-4 text-sm font-semibold uppercase tracking-[0.16em] text-brand-muted'>
-                    Feature
-                  </th>
-                  <th className='px-4 py-4 text-sm font-semibold uppercase tracking-[0.16em] text-brand-muted'>
-                    OpenHands
-                  </th>
-                  <th className='px-4 py-4 text-sm font-semibold uppercase tracking-[0.16em] text-brand-muted'>
-                    Devin
-                  </th>
-                  <th className='px-4 py-4 text-sm font-semibold uppercase tracking-[0.16em] text-brand-muted'>
-                    Claude Code
-                  </th>
-                  <th className='px-4 py-4 text-sm font-semibold uppercase tracking-[0.16em] text-brand-muted'>
-                    Factory
-                  </th>
+    <section className={classNames('px-6 py-20 lg:px-10', sectionClass)}>
+      <div className='mx-auto max-w-[1260px]'>
+        <h2 className={classNames('mx-auto max-w-[760px] text-center text-[34px] font-medium leading-[1.08] tracking-[-0.03em] lg:text-[44px]', headingClass)}>
+          The only open, secure, and scalable agent platform built for real engineering work
+        </h2>
+        <div className='mt-10 overflow-x-auto'>
+          <table className='min-w-full border-collapse text-left'>
+            <thead>
+              <tr className={classNames('border-b text-[13px] uppercase tracking-[0.08em]', borderClass, dark ? 'text-brand-bg/70' : 'text-brand-fg/60')}>
+                <th className='py-4 pr-6 font-medium'>Feature</th>
+                <th className='px-6 py-4 text-center font-medium'>OpenHands</th>
+                <th className='px-6 py-4 text-center font-medium'>Devin</th>
+                <th className='px-6 py-4 text-center font-medium'>Claude Code</th>
+                <th className='px-6 py-4 text-center font-medium'>Factory</th>
+              </tr>
+            </thead>
+            <tbody>
+              {PRODUCT_COMPARISON_ROWS.map((row) => (
+                <tr key={row.label} className={classNames('border-b last:border-b-0', borderClass)}>
+                  <td className={classNames('py-4 pr-6 text-[16px] font-medium', cellClass)}>{row.label}</td>
+                  {row.values.map((value, index) => (
+                    <td key={`${row.label}-${index}`} className='px-6 py-4 text-center'>
+                      {value ? (
+                        <img src={TABLE_TICK_ICON} alt='' aria-hidden='true' className='mx-auto h-5 w-5' />
+                      ) : (
+                        <span className={classNames('text-[18px] leading-none', crossClass)}>×</span>
+                      )}
+                    </td>
+                  ))}
                 </tr>
-              </thead>
-              <tbody>
-                {COMPARISON_ROWS.map((row) => (
-                  <tr key={row} className='border-b border-brand-fg/10 last:border-b-0'>
-                    <td className='px-4 py-4 text-[18px] font-medium'>{row}</td>
-                    <td className='px-4 py-4 text-[18px] font-semibold'>✓</td>
-                    <td className='px-4 py-4 text-[18px] text-brand-muted'>—</td>
-                    <td className='px-4 py-4 text-[18px] text-brand-muted'>—</td>
-                    <td className='px-4 py-4 text-[18px] text-brand-muted'>—</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        {ctaHref && ctaLabel ? (
+          <div className='mt-10 text-center'>
+            <ProductPageActionLink
+              href={ctaHref}
+              label={ctaLabel}
+              className={dark ? 'border-transparent bg-[#6f5a4a] text-brand-bg hover:bg-[#816956]' : ''}
+            />
+          </div>
+        ) : null}
+      </div>
+    </section>
+  );
+};
+
+export const ProductFaqSection = ({ faqs }: { faqs: readonly ProductFaqItem[] }) => {
+  return (
+    <section className='bg-brand-bg px-6 py-20 lg:px-10'>
+      <div className='mx-auto grid max-w-[1260px] gap-10 lg:grid-cols-[240px_minmax(0,1fr)] lg:gap-16'>
+        <div>
+          <ProductPageActionLink href='/contact' label='Contact us' variant='outline' className='mb-8' />
+          <h2 className='text-[34px] font-medium leading-[1.08] tracking-[-0.03em] text-brand-fg lg:text-[44px]'>
+            FAQ&apos;s
+          </h2>
+        </div>
+        <div className='border-t border-brand-fg/15'>
+          {faqs.map((faq) => (
+            <details key={faq.question} className='group border-b border-brand-fg/15 py-4'>
+              <summary className='flex cursor-pointer list-none items-start justify-between gap-6 text-[20px] font-medium leading-[1.35] text-brand-fg'>
+                <span>{faq.question}</span>
+                <span className='mt-1 text-[22px] leading-none transition-transform group-open:rotate-45'>+</span>
+              </summary>
+              <p className='max-w-[680px] pt-4 text-[16px] leading-[1.6] text-brand-fg/75'>{faq.answer}</p>
+            </details>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+export const ProductPageFooterCta = ({
+  title,
+  description,
+  actions,
+}: {
+  title: string;
+  description: string;
+  actions: readonly ProductPageAction[];
+}) => {
+  return (
+    <section className='relative overflow-hidden bg-brand-accent px-6 py-20 text-center lg:px-10'>
+      <AsciiBackdrop opacity='opacity-[0.18]' />
+      <div className='relative mx-auto flex max-w-[760px] flex-col items-center gap-6'>
+        <h2 className='text-[34px] font-medium leading-[1.08] tracking-[-0.03em] text-brand-fg lg:text-[44px]'>
+          {title}
+        </h2>
+        <p className='max-w-[620px] text-[18px] leading-[1.45] text-brand-fg/80'>{description}</p>
+        <div className='flex flex-wrap items-center justify-center gap-4'>
+          {actions.map((action) => (
+            <ProductPageActionLink key={`${action.label}-${action.href}`} {...action} />
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+export const ProductFeaturePage = ({
+  page,
+  faqs,
+  variant,
+}: {
+  page: ProductFeaturePageData;
+  faqs: readonly ProductFaqItem[];
+  variant: 'cli' | 'gui' | 'sdk';
+}) => {
+  const isGui = variant === 'gui';
+
+  return (
+    <main className='bg-brand-bg pt-[100px]'>
+      <section className='relative overflow-hidden bg-brand-bg px-6 pb-16 pt-10 lg:px-10 lg:pb-20 lg:pt-12'>
+        <AsciiBackdrop />
+        <div className='relative mx-auto flex max-w-[860px] flex-col items-center text-center'>
+          <ProductEyebrow label={page.eyebrow} />
+          <h1 className='mt-8 text-[40px] font-medium leading-[1.02] tracking-[-0.04em] text-brand-fg lg:text-[58px]'>
+            {page.heading}
+          </h1>
+          <p className='mt-4 max-w-[620px] text-[18px] leading-[1.45] text-brand-fg/75'>{page.description}</p>
+          <div className='mt-8 flex flex-wrap items-center justify-center gap-4'>
+            <ProductPageActionLink href={page.primaryCta.href} label={page.primaryCta.label} />
+            <ProductPageActionLink
+              href={page.secondaryCta.href}
+              label={page.secondaryCta.label}
+              variant='outline'
+            />
           </div>
         </div>
       </section>
 
-      <section className='bg-brand-accent px-6 py-16 lg:px-10 lg:pb-10 lg:pt-20'>
-        <div className='mx-auto max-w-4xl text-center'>
-          <p className='mb-4 text-sm font-semibold uppercase tracking-[0.18em] text-brand-fg/70'>
-            Try it live
-          </p>
-          <p className='section-title mb-4'>{page.closingTitle}</p>
-          <p className='paragraph mx-auto mb-8 max-w-2xl text-brand-muted'>
-            {page.closingDescription}
-          </p>
-          <div className='flex flex-wrap justify-center gap-4'>
-            <CTAButton {...page.closingPrimaryCta} variant='primary' />
-            <CTAButton {...page.closingSecondaryCta} variant='outline' />
+      {isGui ? (
+        <>
+          <ProductGuiIntroSection
+            image={page.heroImage}
+            title={page.introTitle}
+            description={page.introDescription}
+          />
+          <ProductFeatureIntroBand title={page.proofTitle} description={page.proofDescription} />
+        </>
+      ) : (
+        <>
+          <ProductFeatureIntroBand title={page.introTitle} description={page.introDescription} />
+          <ProductFeatureProofBand title={page.proofTitle} description={page.proofDescription} />
+        </>
+      )}
+
+      <section className='bg-brand-bg px-6 py-16 lg:px-10 lg:py-20'>
+        <div className='mx-auto grid max-w-[1260px] gap-12 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:items-center'>
+          <div>
+            <h2 className='text-[34px] font-medium leading-[1.08] tracking-[-0.03em] text-brand-fg lg:text-[44px]'>
+              Key capabilities
+            </h2>
+            <ProductList items={page.capabilities} />
+          </div>
+          <ProductImageCard src={page.showcaseImages[0].src} alt={page.showcaseImages[0].alt} />
+        </div>
+      </section>
+
+      <section className='bg-brand-bg px-6 pb-16 lg:px-10 lg:pb-20'>
+        <div className='mx-auto grid max-w-[1260px] gap-12 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:items-center'>
+          <ProductImageCard src={page.showcaseImages[1].src} alt={page.showcaseImages[1].alt} />
+          <div>
+            <h2 className='text-[34px] font-medium leading-[1.08] tracking-[-0.03em] text-brand-fg lg:text-[44px]'>
+              How teams use it
+            </h2>
+            <ProductList items={page.useCases} />
           </div>
         </div>
       </section>
+
+      <ProductComparisonTable dark ctaHref='https://app.all-hands.dev/' ctaLabel='Try it live' />
+      <ProductFaqSection faqs={faqs} />
+      <ProductPageFooterCta
+        title={page.closingTitle}
+        description={page.closingDescription}
+        actions={[
+          page.closingPrimaryCta,
+          { ...page.closingSecondaryCta, variant: 'outline' as const },
+        ]}
+      />
     </main>
   );
 };

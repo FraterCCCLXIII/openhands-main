@@ -1,0 +1,1285 @@
+# Site parity checklist
+
+Generated: 2026-04-29T03:58:42.827Z
+Live origin: https://openhands.dev
+Test origin: http://127.0.0.1:12002
+
+## Summary
+
+- Routes checked: 20
+- Route/status mismatches: 2
+- Title mismatches: 5
+- Element checklist items failing: 305
+- Missing element signatures: 234
+- Appearance mismatches: 71
+
+## /
+
+- [x] Route exists on company-website (304 vs 200)
+- [x] Title matches
+- [x] A:72.3k
+- [x] A:about
+- [x] A:benchmarks
+- [x] A:blog
+- [x] A:build with sdk
+- [x] A:careers
+- [x] A:community
+- [x] A:contact
+- [x] A:contact us
+- [x] A:docs
+- [x] A:enterprise
+- [x] A:explore the repo
+- [x] A:get the sdk
+- [ ] A:home — appearance mismatch: color: live=rgb(138, 95, 69) test=rgb(34, 21, 13)
+- [x] A:learn about enterprise
+- [x] A:manifesto
+- [x] A:press
+- [x] A:pricing
+- [x] A:privacy policy
+- [x] A:product
+- [x] A:read the whitepaper
+- [x] A:resources
+- [x] A:try it live
+- [x] BUTTON:resources
+- [x] H2:developers love openhands
+- [x] H2:faq's
+- [x] H2:sdk
+- [x] H2:start with a proven workflow
+- [x] H3:automate the outer loop with ai
+- [x] H3:fix vulnerabilities
+- [x] H3:migrate code
+- [x] H3:review prs
+- [x] H3:why teams choose openhands
+- [x] IMG:ascii art depicting a large black hole with light and particles swirling around it.
+- [x] IMG:christian genco
+- [x] IMG:dan kempe
+- [x] IMG:esteban puerta
+- [x] IMG:fisherman
+- [x] IMG:jingyi zhao
+- [x] IMG:leonardo gonzalez
+- [x] IMG:nacho martínez rincón
+- [x] IMG:wil - e/acc
+- [x] LABEL:can openhands work with large or legacy codebases?
+- [x] LABEL:how is openhands different from ai coding tools like github copilot or chatgpt?
+- [x] LABEL:is openhands secure for enterprise use?
+- [x] LABEL:what is openhands?
+- [x] LABEL:what types of teams use openhands?
+- [ ] P:‍ — missing count 1
+- [x] P:adapt openhands to any model, ci/cd pipeline, or codebase with fine-grained configurability.
+- [x] P:also that general workflow is the future. just opening github issues and the ai figures it out and writes tests and then pushes a pr is magi
+- [x] P:at this point, there isn't much of a need to roll your own especially when claude code sdk and openhands sdk are offering nice api's to util
+- [x] P:automate docs & release notes
+- [x] P:build and orchestrate your own agents with open sdks, apis, and micro-agents.
+- [x] P:cloud coding agents that scale
+- [x] P:community that compounds velocity
+- [x] P:control every layer of your environment with fine-grained access control, model-agnostic architecture, and flexible self-hosted or private c
+- [x] P:decompose monoliths, clean up tech debt, and modernize legacy codebases automatically without slowing down the roadmap.
+- [x] P:delegate tasks directly from github, gitlab, slack, or via the api and sdk
+- [x] P:deploy agents to analyze logs, pinpoint root causes, and generate fixed prs ready for your team to review and approve.
+- [x] P:deploy in isolated docker or kubernetes environments, self-hosted or cloud, with full access control and auditability.
+- [x] P:eliminate security debt
+- [x] P:enterprise-grade security and control
+- [x] P:expand test coverage
+- [x] P:extensible and customizable for any workflow
+- [x] P:from a single task to thousands of parallel runs.
+- [x] P:full visibility into every agent and artifact.
+- [x] P:generate accurate documentation and release notes directly from commits and pull requests, no manual updates required.
+- [x] P:generate and maintain tests for new features to boost reliability and catch regressions before they ship.
+- [x] P:harness openhands to upgrade dependencies, fix security vulnerabilities, and reduce complexity for large scale, multi-repo changes.
+- [x] P:i fvkn love vibe coding with openhands. it's not like your editor is doing things for you, it's like an idiot internal that literally knows 
+- [x] P:i haven't tried devin yet but i freakin' love openhands. i prefer having more control over how it's working.
+- [x] P:i just don't get why everybody is so silent about your work...
+- [x] P:i love this project because it is the first of its kind in coding agent space and you have the freedom to configure your own way. it also in
+- [x] P:i love using autonomous agents like @allhands_ai openhands for 80% of the work (esp. backend), and then an interactive ide like @windsurf or
+- [x] P:instead of helping you write code faster, openhands helps you ship changes end-to-end. tools such as github copilot or chatgpt generate code
+- [x] P:it saves tons of my time and saves a lot of money too with the right models/plans.
+- [x] P:join millions of developers to build software autonomously
+- [x] P:migrates legacy cobol systems to java with testing and validation built in.
+- [x] P:model-agnostic
+- [x] P:modernize legacy systems before your expertise disappears
+- [x] P:native integrations with github, gitlab, ci/cd, slack, and ticketing tools. openhands fits seamlessly into enterprise governance systems and
+- [x] P:open source and transparent by design
+- [x] P:openhands is an ai agent platform for software development that can execute real engineering work, not just suggest code. it runs autonomous
+- [x] P:openhands is the foundation for secure, transparent, model-agnostic coding agents - empowering every software team to build faster with full
+- [x] P:openhands is used by platform teams automating engineering workflows at scale, teams building internal developer platforms or ai-powered too
+- [x] P:openhands raised $18.8m to build cloud coding agents that solve 87% of bug tickets same day.
+- [x] P:openhands runs in your environment, whether on-prem or private cloud, so your code never leaves your control. since agents operate inside se
+- [x] P:plays well with your stack
+- [x] P:refactor old code
+- [x] P:reposting till people wake up.
+- [x] P:reviews prs for quality, security, and best practices.
+- [x] P:scans repositories, fixes vulnerabilities, and opens reviewable prs.
+- [x] P:secure, sandboxed runtime you control
+- [x] P:speed up code reviews
+- [x] P:summarize pull requests, apply feedback, fix tests, and push fixes instantly so code reviews move from hours to minutes.
+- [x] P:the openhands sdk is one of the most complete sdks for agent harness and agentic ai development - including enabling vibecoding with opensou
+- [x] P:this is what ai coding tools should be. not another chat interface. actual autonomous problem solving that ships to production.
+- [x] P:this is where it gets interesting.
+- [x] P:triage & fix prod issues
+- [x] P:use the sdk to embed openhands into apps and workflows
+- [x] P:with 65k+ github stars and a thriving open-source ecosystem, openhands evolves through collective innovation - every contribution makes the 
+- [x] P:works where you do
+- [x] P:yes. openhands is specifically designed to handle large, complex, and legacy codebases. with its large codebase sdk, it maps dependencies ac
+- [x] P:your agents are so underrated, but even though there are many benchmarks, which are testing agentic coding and are using your work as refere
+
+## /about
+
+- [x] Route exists on company-website (200 vs 200)
+- [x] Title matches
+- [x] A:72.3k
+- [ ] A:about — appearance mismatch: color: live=rgb(138, 95, 69) test=rgb(34, 21, 13)
+- [x] A:benchmarks
+- [x] A:blog
+- [ ] A:build with sdk — missing count 1
+- [x] A:careers
+- [x] A:community
+- [x] A:contact
+- [x] A:docs
+- [x] A:enterprise
+- [x] A:home
+- [ ] A:join us — appearance mismatch: color: live=rgb(34, 21, 13) test=rgb(249, 240, 217); backgroundColor: live=rgba(0, 0, 0, 0) test=rgb(34, 21, 13); borderRadius: live=0px test=8px
+- [x] A:manifesto
+- [x] A:press
+- [x] A:pricing
+- [x] A:privacy policy
+- [x] A:product
+- [x] A:resources
+- [ ] A:try it live — missing count 1
+- [x] BUTTON:resources
+- [ ] H1:empowering every team to build software autonomously. — appearance mismatch: fontSize: live=44px test=60px; lineHeight: live=48.4px test=57px
+- [ ] H2:milestones — appearance mismatch: fontWeight: live=500 test=700; lineHeight: live=48.4px test=55px
+- [ ] H3:team — missing count 1
+- [ ] P:account executive — missing count 2
+- [ ] P:ash clarke — missing count 1
+- [ ] P:ben solari — missing count 1
+- [ ] P:built by developers, for developers. — missing count 1
+- [ ] P:business development representative — missing count 1
+- [ ] P:calvin smith — missing count 1
+- [ ] P:ceo — missing count 1
+- [ ] P:chief ai officer — missing count 1
+- [ ] P:chief architect — missing count 1
+- [ ] P:chief scientist — missing count 1
+- [ ] P:chloe aribo — missing count 1
+- [ ] P:chris nelson — missing count 1
+- [ ] P:chuck butkus — missing count 1
+- [ ] P:clarke shipley — missing count 1
+- [ ] P:cliff yang — missing count 1
+- [ ] P:community manager — missing count 1
+- [ ] P:cro — missing count 1
+- [ ] P:developer relations advocate — missing count 1
+- [ ] P:devin vinson — missing count 1
+- [ ] P:engineering manager — missing count 2
+- [ ] P:forward deployed engineer — missing count 1
+- [ ] P:founding customer success manager — missing count 1
+- [ ] P:founding principal engineer — missing count 1
+- [ ] P:graham neubig — missing count 1
+- [ ] P:head of product and operations — missing count 1
+- [ ] P:jamie steinberg — missing count 1
+- [ ] P:joe laverty — missing count 1
+- [ ] P:joe pelletier — missing count 1
+- [ ] P:john-mason shackleford — missing count 1
+- [ ] P:juan michelini — missing count 1
+- [ ] P:lila garcia — missing count 1
+- [ ] P:mahmoud hosseini — missing count 1
+- [ ] P:member of the technical staff, agent r&d — missing count 1
+- [ ] P:openhands is the foundation for secure, transparent, model-agnostic coding agents - empowering every software team to build faster with full — missing count 1
+- [x] P:openhands is the open, secure, and model-agnostic platform
+- [ ] P:owen sweeney — missing count 1
+- [ ] P:principal engineer — missing count 1
+- [ ] P:principal software engineer — missing count 1
+- [ ] P:product manager — missing count 1
+- [ ] P:ray myers — missing count 1
+- [ ] P:robert brennan — missing count 1
+- [ ] P:rohit malhotra — missing count 1
+- [ ] P:saurya velagapudi — missing count 1
+- [ ] P:senior agent researcher — missing count 2
+- [ ] P:senior researcher — missing count 1
+- [ ] P:senior software engineer — missing count 1
+- [ ] P:simon rosenberg — missing count 1
+- [ ] P:software engineer — missing count 2
+- [ ] P:staff software engineer — missing count 1
+- [ ] P:stephan psaras — missing count 1
+- [ ] P:tim o’farrell — missing count 1
+- [ ] P:vasco schiavo — missing count 1
+- [ ] P:xingyao wang — missing count 1
+
+## /blog
+
+- [x] Route exists on company-website (304 vs 200)
+- [x] Title matches
+- [x] A:72.3k
+- [x] A:about
+- [ ] A:april 3, 2026 the software agent control plane — missing count 1
+- [x] A:benchmarks
+- [x] A:blog
+- [ ] A:build with sdk — missing count 1
+- [x] A:careers
+- [x] A:community
+- [x] A:contact
+- [x] A:docs
+- [x] A:enterprise
+- [x] A:home
+- [ ] A:load more — missing count 1
+- [x] A:manifesto
+- [x] A:march 18, 2026 how to evaluate agent skills (and why you should)
+- [ ] A:march 23, 2026 evoclaw: evaluating ai agents on continuous software evolution — missing count 1
+- [ ] A:march 3, 2026 the openhands vulnerability fixer: automated security remediation with ai agents — missing count 1
+- [ ] A:march 5, 2026 learning to verify ai-generated code — missing count 1
+- [ ] A:march 6, 2026 openhands product update - march 2026 — missing count 1
+- [x] A:press
+- [x] A:pricing
+- [ ] A:privacy policy — appearance mismatch: color: live=rgb(95, 95, 95) test=rgb(138, 95, 69)
+- [x] A:product
+- [ ] A:read more — missing count 1
+- [x] A:resources
+- [ ] A:try it live — missing count 1
+- [x] BUTTON:resources
+- [x] H1:openhands blog
+- [ ] IMG:the software agent control plane cover image — missing count 1
+- [x] INPUT:share your email
+- [ ] INPUT:subscribe — missing count 1
+- [ ] P:april 3, 2026 — missing count 1
+- [x] P:by submitting your email you agree to our privacy policy
+- [x] P:evoclaw: evaluating ai agents on continuous software evolution
+- [x] P:how to evaluate agent skills (and why you should)
+- [x] P:insights and updates from the openhands team
+- [x] P:introducing the openhands index
+- [x] P:learning to verify ai-generated code
+- [x] P:march 18, 2026
+- [ ] P:march 23, 2026 — missing count 1
+- [ ] P:march 3, 2026 — missing count 1
+- [x] P:march 5, 2026
+- [ ] P:march 6, 2026 — missing count 1
+- [ ] P:openhands is the foundation for secure, transparent, model-agnostic coding agents - empowering every software team to build faster with full — missing count 1
+- [x] P:openhands product update - march 2026
+- [x] P:sign up for our newsletter for updates, events, and community insights.
+- [ ] P:the openhands index is a comprehensive benchmark that tests agentic software engineering models across a broad variety of tasks. — missing count 1
+- [x] P:the openhands vulnerability fixer: automated security remediation with ai agents
+- [x] P:the software agent control plane
+
+## /blog/agent-control-plane
+
+- [x] Route exists on company-website (200 vs 200)
+- [ ] Title matches (live: The Software Agent Control Plane | Mar 30, 2026 | test: The Software Agent Control Plane)
+- [ ] A:← back to blog — missing count 1
+- [x] A:72.3k
+- [x] A:about
+- [x] A:benchmarks
+- [x] A:blog
+- [ ] A:build with sdk — missing count 1
+- [x] A:careers
+- [ ] A:chat with us — appearance mismatch: lineHeight: live=22.4px test=27px
+- [x] A:community
+- [x] A:contact
+- [x] A:docs
+- [x] A:enterprise
+- [ ] A:evoclaw: evaluating ai agents on continuous software evolution — missing count 1
+- [ ] A:forge — appearance mismatch: lineHeight: live=22.4px test=27px
+- [x] A:home
+- [ ] A:how to evaluate agent skills (and why you should) — missing count 1
+- [x] A:manifesto
+- [ ] A:minions — appearance mismatch: lineHeight: live=22.4px test=27px
+- [x] A:press
+- [x] A:pricing
+- [ ] A:privacy policy — appearance mismatch: color: live=rgb(95, 95, 95) test=rgb(138, 95, 69)
+- [x] A:product
+- [x] A:resources
+- [ ] A:the software agent control plane — missing count 1
+- [ ] A:try it live — missing count 1
+- [ ] BUTTON:citation — missing count 1
+- [x] BUTTON:resources
+- [ ] H1:get useful insights in our blog — missing count 1
+- [x] H1:the software agent control plane
+- [x] H2:build or buy
+- [x] H2:what is an agent control plane?
+- [x] H2:why do we need a control plane?
+- [x] H3:cost control
+- [x] H3:productivity
+- [x] H3:security
+- [ ] IMG:diagram of the openhands agent control plane with runtime environments, routing, budgets, policies, and observability — appearance mismatch: lineHeight: live=22.4px test=27px; borderRadius: live=8px test=16px
+- [ ] IMG:the software agent control plane cover image — missing count 2
+- [ ] IMG:three pillars of the software agent stack: harness, orchestrator, and control plane — appearance mismatch: lineHeight: live=22.4px test=27px; borderRadius: live=8px test=16px
+- [x] INPUT:share your email
+- [ ] INPUT:subscribe — missing count 1
+- [x] P:agents are powerful. but they are also expensive, chaotic, and dangerous. you need guardrails and visibility in place if you are going to ru
+- [x] P:agents can be dangerous. we have seen countless instances where agents have innocently deleted a production database or exposed secrets. pro
+- [x] P:an agent control plane gives you a central place to define all sorts of guardrails:
+- [x] P:an agent control plane helps tackle the security problem from two angles:
+- [x] P:an agent control plane solves this. not only is every token tracked, it is also associated with a user, a session, a git repository, related
+- [x] P:and it provides a central pane of glass, letting you observe and audit every agentic workflow in your organization.
+- [ ] P:april 3, 2026 — missing count 1
+- [x] P:as one example, we had a client detect an agent attempting to access pastebin, contrary to company policy. while the agent was acting innoce
+- [x] P:at openhands, for example, we get a lot of use out of our code review plugin. but we also measure how often the automated suggestions are ac
+- [x] P:at openhands, we are specifically focused on the control plane for software agents—agents that are making modifications to your codebase, to
+- [x] P:at openhands, we encourage our customers to use kubernetes-based runtimes, running each agent inside a container on cloud infrastructure. we
+- [x] P:at this point, most organizations can at least segment their token spend by user. but if you ask questions like “how much are you spending o
+- [x] P:but as the technology matures in 2026, we are seeing cfos start to push back. llm bills are growing quickly as engineers find more and more 
+- [x] P:but your laptop does not really scale. it is a sensitive environment with all sorts of files and secrets the agent does not need access to. 
+- [x] P:by submitting your email you agree to our privacy policy
+- [x] P:even better, you can start setting up budgets on a per-project or per-use-case basis. instead of just giving each developer a chunk of money
+- [ ] P:evoclaw: evaluating ai agents on continuous software evolution — missing count 1
+- [x] P:fortunately, at openhands, we have been close to this problem since the early days of agents. we have been running agents in the cloud since
+- [ ] P:how to evaluate agent skills (and why you should) — missing count 1
+- [x] P:if you are interested in what the world looks like after claude code, chat with us!
+- [x] P:in 2025, most organizations were happy to spend aggressively on agent projects, desperate to keep up with the pace of innovation.
+- [x] P:in short, it is a way to control your agents.
+- [x] P:insights and updates from the openhands team
+- [x] P:most developers today are comfortable with the harness. they are running claude code or cursor directly on their desktop against their local
+- [x] P:once you have agents running in the cloud, observability and control become major issues. often these agents are not directly monitored—engi
+- [ ] P:openhands is the foundation for secure, transparent, model-agnostic coding agents - empowering every software team to build faster with full — missing count 1
+- [x] P:platform teams need a way to understand how agents are being used and where they are being successful. they need ways to incorporate feedbac
+- [x] P:platform, security, and finance teams need a way to understand what is happening and make global changes.
+- [x] P:published on
+- [x] P:robert brennan
+- [ ] P:sign up for our newsletter for updates, events, and community insights. — missing count 1
+- [x] P:some large companies are leading the charge here by building homegrown control planes. stripe has minions, and coinbase has forge. it is und
+- [x] P:the control plane is an emerging category. while other projects can claim pieces of the control plane—litellm for budgeting, openrouter for 
+- [x] P:the former is important for prevention. when an agent runs locally, it has access to all of that developer's secrets. when it runs behind a 
+- [x] P:the latter is important for detecting problems and improving your prevention measures. you can periodically review audit logs for suspicious
+- [ ] P:the software agent control plane — missing count 1
+- [x] P:the tech stack for running software agents—agents that write, test, and ship code—is still growing and evolving. at openhands, we see three 
+- [x] P:this is where the control plane comes in.
+- [x] P:when agents are running behind a control plane, it is much easier to measure your successes and failures. you can define metrics for any giv
+- [x] P:written by
+
+## /blog/evaluating-agent-skills
+
+- [x] Route exists on company-website (200 vs 200)
+- [ ] Title matches (live: How to Evaluate Agent Skills (And Why You Should) | Mar 18, 2026 | test: How to Evaluate Agent Skills (And Why You Should))
+- [ ] A:← back to blog — missing count 1
+- [x] A:72.3k
+- [x] A:about
+- [x] A:benchmarks
+- [x] A:blog
+- [ ] A:build with sdk — missing count 1
+- [x] A:careers
+- [x] A:community
+- [x] A:contact
+- [x] A:docs
+- [x] A:enterprise
+- [ ] A:evaluating-skills-tutorial — appearance mismatch: lineHeight: live=22.4px test=27px
+- [ ] A:evoclaw: evaluating ai agents on continuous software evolution — missing count 1
+- [x] A:home
+- [ ] A:how to create effective agent skills — appearance mismatch: lineHeight: live=22.4px test=27px
+- [ ] A:how to evaluate agent skills (and why you should) — missing count 1
+- [ ] A:laminar — appearance mismatch: lineHeight: live=22.4px test=27px
+- [x] A:manifesto
+- [x] A:press
+- [x] A:pricing
+- [ ] A:privacy policy — appearance mismatch: color: live=rgb(95, 95, 95) test=rgb(138, 95, 69)
+- [x] A:product
+- [ ] A:put it this way — appearance mismatch: lineHeight: live=22.4px test=27px
+- [x] A:resources
+- [ ] A:skillsbench — appearance mismatch: lineHeight: live=22.4px test=27px
+- [ ] A:the software agent control plane — missing count 1
+- [ ] A:try it live — missing count 1
+- [ ] BUTTON:citation — missing count 1
+- [x] BUTTON:resources
+- [ ] H1:get useful insights in our blog — missing count 1
+- [x] H1:how to evaluate agent skills (and why you should)
+- [x] H2:a hands-on evaluation setup
+- [x] H2:how to evaluate your own skills
+- [x] H2:the bigger lesson
+- [x] H2:three tasks, three different stories
+- [x] H2:try it yourself
+- [x] H2:what makes a skill evaluation useful?
+- [x] H2:what traces add
+- [x] H2:why evaluate skills?
+- [x] H3:1. dependency audit: the skill is essential
+- [x] H3:2. financial report extraction: the skill is a safety net
+- [x] H3:3. sales pivot analysis: the skill can help or hurt
+- [ ] IMG:the software agent control plane cover image — missing count 1
+- [ ] IMG:trace example from laminar — appearance mismatch: lineHeight: live=22.4px test=27px; borderRadius: live=8px test=16px
+- [x] INPUT:share your email
+- [ ] INPUT:subscribe — missing count 1
+- [x] P:"the capability changes with every model. the thing that you want is do the minimal possible thing in order to get the model on track. delet
+- [x] P:a good skill evaluation has three ingredients:
+- [x] P:all three conclusions would be incomplete.
+- [x] P:and finally, skills are model-dependent. a workflow that helps one model may be unnecessary, or harmful, for another.
+- [x] P:because poorly written skills can reduce performance. in skillsbench, most skills helped, but some produced negative deltas. in other words,
+- [x] P:but a useful skill is not just something that sounds smart. it is something that measurably improves outcomes on a real task. some skills ar
+- [x] P:but that aggregate number hides the interesting part: the effect varies by model and backend.
+- [x] P:by submitting your email you agree to our privacy policy
+- [x] P:do not assume a skill is helping just because it exists. measure it.
+- [ ] P:evoclaw: evaluating ai agents on continuous software evolution — missing count 1
+- [x] P:here is an example trace from a sales pivot analysis run, viewed in laminar:
+- [ ] P:how to evaluate agent skills (and why you should) — missing count 1
+- [x] P:if skills just codify knowledge, why bother evaluating them?
+- [x] P:if you only evaluate one task, it is easy to overgeneralize.
+- [x] P:if you only tested the dependency audit, you would conclude that skills are transformative.
+- [x] P:if you only tested the financial report, you might conclude they are modest quality-of-life improvements.
+- [x] P:if you only tested the sales pivot task, you might conclude skills are overengineering.
+- [x] P:if you want to test whether a skill actually helps, use a loop like this:
+- [x] P:in the tutorial repo, we used laminar for observability, but the evaluation loop is not tied to one tracing stack. openhands is otel-compati
+- [x] P:insights and updates from the openhands team
+- [x] P:instead, the improved skill adds:
+- [x] P:it includes the task definitions, skills, verifiers, result summaries, and scripts needed to reproduce the runs or adapt the setup for your 
+- [ ] P:march 18, 2026 — missing count 1
+- [x] P:most strong models can already do this kind of task. the data is right there in the files. so the skill is not unlocking a hidden capability
+- [ ] P:openhands is the foundation for secure, transparent, model-agnostic coding agents - empowering every software team to build faster with full — missing count 1
+- [x] P:pass/fail is the primary metric. runtime, event count, and tool usage are useful secondary metrics because they tell you whether the skill a
+- [x] P:pass/fail tells you whether the skill worked. traces tell you why.
+- [x] P:published on
+- [x] P:rajiv shah
+- [ ] P:sign up for our newsletter for updates, events, and community insights. — missing count 1
+- [x] P:skills are becoming a core building block for ai coding agents. research is documenting their value. for example, skillsbench found large ga
+- [x] P:so the minimum comparison is:
+- [x] P:that is enough to give you a signal.
+- [x] P:that is why evaluation matters. "improved skill" is just a hypothesis until it is measured.
+- [x] P:that last point is the one teams most often skip. if you only test the skill-enabled version, success tells you almost nothing. maybe the mo
+- [x] P:that makes traces especially useful for improving a skill after the first round of evaluation. the verifier tells you whether you won or los
+- [x] P:the first task asks the agent to inspect a package-lock.json and produce a report.json containing only high and critical vulnerabilities.
+- [x] P:the full repo is available here:
+- [x] P:the improved skill fixes that by encoding a specific workflow:
+- [x] P:the main point of the project is simple:
+- [x] P:the overall result looks mildly positive:
+- [x] P:the point was not to produce one grand benchmark number. it was to show how different tasks reveal different kinds of skill value.
+- [x] P:the result is dramatic:
+- [x] P:the result:
+- [x] P:the right takeaway is that skill quality is task-dependent and model-dependent.
+- [x] P:the second task asks the agent to read two quarterly financial reports and write a structured answers.json with extracted metrics and derive
+- [ ] P:the software agent control plane — missing count 1
+- [x] P:the third task asks the agent to combine an excel workbook and a pdf into a new workbook with two sheets: combineddata and summary.
+- [x] P:there is a second reason too: as models improve, some skills stop mattering. boris cherny, a developer on claude code, put it this way:
+- [x] P:these three tasks produce three different conclusions:
+- [x] P:this is a different pattern. the skill helps with consistency more than capability. it acts as a guardrail and reduces the chance that one m
+- [x] P:this is the clearest example of a high-value skill. it does not just polish the output. it teaches the agent the actual workflow the task re
+- [x] P:this is the key lesson: skills can be counterproductive. if a skill nudges the model into a brittle implementation path, it may reduce robus
+- [x] P:this post and accompanying repo look at the other side of the problem: how to evaluate whether a skill is helping at all.
+- [x] P:this skill provides a detailed no-install parsing path using python built-ins like zipfile and xml.etree.elementtree, plus exact sheet-struc
+- [x] P:this task is procedural. without guidance, agents tend to improvise: they try different scanners, refresh vulnerability databases, or includ
+- [x] P:this tutorial was inspired by skillsbench and adapts its core idea of evaluating skills on deterministic tasks with local verifiers.
+- [x] P:to make this concrete, i built the evaluating-skills-tutorial repo. it contains:
+- [x] P:we ran the tasks across five models:
+- [x] P:when you inspect traces, you can often see patterns like:
+- [x] P:written by
+- [x] P:you do not need a huge benchmark to start. a small number of carefully designed tasks is often enough to show whether your skill is adding r
+
+## /blog/evoclaw-benchmark
+
+- [x] Route exists on company-website (200 vs 200)
+- [ ] Title matches (live: EvoClaw: Evaluating AI Agents on Continuous Software Evolution | Mar 20, 2026 | test: EvoClaw: Evaluating AI Agents on Continuous Software Evolution)
+- [ ] A:← back to blog — missing count 1
+- [x] A:72.3k
+- [x] A:about
+- [x] A:benchmarks
+- [x] A:blog
+- [ ] A:build with sdk — missing count 1
+- [x] A:careers
+- [ ] A:code — appearance mismatch: lineHeight: live=22.4px test=27px
+- [x] A:community
+- [x] A:contact
+- [ ] A:dataset — appearance mismatch: lineHeight: live=22.4px test=27px
+- [x] A:docs
+- [x] A:enterprise
+- [ ] A:evoclaw — appearance mismatch: lineHeight: live=22.4px test=27px
+- [ ] A:evoclaw: evaluating ai agents on continuous software evolution — missing count 1
+- [ ] A:gangda deng — appearance mismatch: lineHeight: live=22.4px test=27px
+- [x] A:home
+- [ ] A:how to evaluate agent skills (and why you should) — missing count 1
+- [ ] A:leaderboard — appearance mismatch: lineHeight: live=22.4px test=27px
+- [x] A:manifesto
+- [ ] A:openclaw — appearance mismatch: lineHeight: live=22.4px test=27px
+- [ ] A:paper (arxiv) — appearance mismatch: lineHeight: live=22.4px test=27px
+- [x] A:press
+- [x] A:pricing
+- [ ] A:privacy policy — appearance mismatch: color: live=rgb(95, 95, 95) test=rgb(138, 95, 69)
+- [x] A:product
+- [x] A:resources
+- [ ] A:the second half — appearance mismatch: lineHeight: live=22.4px test=27px
+- [ ] A:the software agent control plane — missing count 1
+- [ ] A:try it live — missing count 1
+- [ ] A:zhaoling chen — appearance mismatch: lineHeight: live=22.4px test=27px
+- [ ] BUTTON:citation — missing count 1
+- [x] BUTTON:resources
+- [x] H1:evoclaw: evaluating ai agents on continuous software evolution
+- [ ] H1:get useful insights in our blog — missing count 1
+- [x] H2:evolution eventually stalls
+- [x] H2:from code generation to system governance
+- [x] H2:from isolated tasks to continuous evolution
+- [x] H2:technical debt compounds faster than agents can repair it
+- [x] H2:the headline result
+- [x] H2:what evoclaw measures
+- [x] H2:why milestones matter
+- [ ] IMG:the software agent control plane cover image — missing count 1
+- [x] INPUT:share your email
+- [ ] INPUT:subscribe — missing count 1
+- [x] P:‍
+- [x] P:a more interesting pattern appears when the overall score is decomposed into recall and precision.
+- [x] P:a natural question is whether a strong coding agent could eventually finish the whole project if you simply gave it enough iterations.
+- [x] P:a single commit is often too small and too noisy to serve as a meaningful development objective. at the other extreme, release-level changes
+- [x] P:ai coding has entered a new phase. in early 2026, stronger llms and projects like openclaw started pushing agents toward long-running, itera
+- [x] P:by submitting your email you agree to our privacy policy
+- [x] P:continuous development is where software engineering really begins. early implementation choices constrain later work, regressions accumulat
+- [x] P:even the strongest system, opus 4.6, plateaus at roughly 45% overall score under saturation-based extrapolation. the differences across mode
+- [x] P:evoclaw covers repositories across five programming languages. for each repository, it selects a real development window spanning multiple r
+- [x] P:evoclaw is built around a simple observation: one-shot code generation is not how most software is developed. requirements arrive over time,
+- [x] P:evoclaw suggests the answer is no.
+- [ ] P:evoclaw: evaluating ai agents on continuous software evolution — missing count 1
+- [x] P:gangda deng and zhaoling chen
+- [ ] P:how to evaluate agent skills (and why you should) — missing count 1
+- [x] P:if evoclaw makes one thing clear, it is that code generation alone is not enough. the real entry point for ai systems into software engineer
+- [x] P:if you want to dig deeper, the full project is available here:
+- [x] P:insights and updates from the openhands team
+- [ ] P:march 23, 2026 — missing count 1
+- [x] P:milestone-level task granularity is the key design choice in evoclaw.
+- [x] P:most benchmarks still evaluate isolated tasks. agents are getting good at those. but real engineering work is not one isolated task. teams c
+- [x] P:on isolated-task settings, frontier agents can often score above 80%. but under evoclaw's continuous setting, the best system in the initial
+- [ ] P:openhands is the foundation for secure, transparent, model-agnostic coding agents - empowering every software team to build faster with full — missing count 1
+- [x] P:published on
+- [x] P:recall keeps rising almost linearly. even as the codebase becomes messier and more fragile, agents remain fairly good at implementing new re
+- [ ] P:sign up for our newsletter for updates, events, and community insights. — missing count 1
+- [x] P:that gap is the central point of the benchmark: isolated-task performance still overestimates how well an agent will behave once earlier cho
+- [x] P:that is what evoclaw is designed to measure. it evaluates agents on continuous software evolution by asking them to complete a sequence of d
+- [x] P:that is what ultimately causes long-horizon development to stall.
+- [x] P:that points to where the next breakthroughs need to happen: proactive refactoring, long-term memory, better planning, and much stronger awar
+- [x] P:the benchmark captures that setting by reconstructing milestone trajectories from real repositories and evaluating agents across those traje
+- [x] P:the benchmark focuses on two complementary dimensions:
+- [x] P:the pattern is clear. agents do sometimes repair earlier mistakes, but unresolved regressions accumulate faster than they can be fixed. thos
+- [x] P:the results drop sharply once evaluation moves from isolated tasks to continuous evolution.
+- [ ] P:the software agent control plane — missing count 1
+- [x] P:this framing matters because the hard part of real software evolution is often not adding new code. it is keeping the existing system from b
+- [x] P:this is a guest blog by gangda deng and zhaoling chen, introducing evoclaw—a benchmark built with openhands to move beyond isolated coding t
+- [x] P:those two signals are then combined into a milestone-level score using an f1-style aggregation.
+- [x] P:to build those trajectories at scale, the authors introduce deepcommit. starting from real open-source history, deepcommit aggregates relate
+- [x] P:to understand how failures compound over time, the benchmark introduces an error chain analysis that tracks how problems propagate across mi
+- [x] P:today's frontier models still behave more like on-demand code generators than like senior engineers maintaining a living codebase. they are 
+- [x] P:written by
+
+## /blog/openhands-index
+
+- [x] Route exists on company-website (200 vs 200)
+- [ ] Title matches (live: Introducing the OpenHands Index | Jan 28, 2026 | test: Introducing the OpenHands Index)
+- [ ] A:← back to blog — missing count 1
+- [x] A:72.3k
+- [x] A:about
+- [ ] A:ai expert andrej karpathy’s post — appearance mismatch: lineHeight: live=22.4px test=27px
+- [ ] A:benchmarking code — appearance mismatch: lineHeight: live=22.4px test=27px
+- [x] A:benchmarks
+- [ ] A:benchmarks repo — appearance mismatch: lineHeight: live=22.4px test=27px
+- [x] A:blog
+- [ ] A:build with sdk — missing count 1
+- [x] A:careers
+- [ ] A:cerebras — appearance mismatch: lineHeight: live=22.4px test=27px
+- [ ] A:commit0 — appearance mismatch: lineHeight: live=22.4px test=27px
+- [x] A:community
+- [x] A:contact
+- [ ] A:cursor ceo michael truell posted — appearance mismatch: lineHeight: live=22.4px test=27px
+- [ ] A:deepseek-v3.2 — appearance mismatch: lineHeight: live=22.4px test=27px
+- [x] A:docs
+- [ ] A:email — appearance mismatch: lineHeight: live=22.4px test=27px
+- [x] A:enterprise
+- [ ] A:evoclaw: evaluating ai agents on continuous software evolution — missing count 1
+- [ ] A:gaia benchmark — appearance mismatch: lineHeight: live=22.4px test=27px
+- [ ] A:gemini 3 flash — appearance mismatch: lineHeight: live=22.4px test=27px
+- [ ] A:gemini 3 pro — appearance mismatch: lineHeight: live=22.4px test=27px
+- [ ] A:groq — appearance mismatch: lineHeight: live=22.4px test=27px
+- [x] A:home
+- [ ] A:how to evaluate agent skills (and why you should) — missing count 1
+- [ ] A:join our slack — appearance mismatch: lineHeight: live=22.4px test=27px
+- [ ] A:long-horizon greenfield development tasks — appearance mismatch: lineHeight: live=22.4px test=27px
+- [x] A:manifesto
+- [ ] A:openhands cloud — appearance mismatch: lineHeight: live=22.4px test=27px
+- [ ] A:openhands index — appearance mismatch: lineHeight: live=22.4px test=27px
+- [ ] A:openhands index site — appearance mismatch: lineHeight: live=22.4px test=27px
+- [ ] A:openhands software agent sdk — appearance mismatch: lineHeight: live=22.4px test=27px
+- [ ] A:openhands/benchmarks — appearance mismatch: lineHeight: live=22.4px test=27px
+- [ ] A:openhands/openhands-index-results — appearance mismatch: lineHeight: live=22.4px test=27px
+- [x] A:press
+- [x] A:pricing
+- [ ] A:privacy policy — appearance mismatch: color: live=rgb(95, 95, 95) test=rgb(138, 95, 69)
+- [x] A:product
+- [x] A:resources
+- [ ] A:swe-bench issue resolution — appearance mismatch: lineHeight: live=22.4px test=27px
+- [ ] A:swe-bench leaderboard — appearance mismatch: lineHeight: live=22.4px test=27px
+- [ ] A:swe-bench multimodal — appearance mismatch: lineHeight: live=22.4px test=27px
+- [ ] A:swe-bench-verified — appearance mismatch: lineHeight: live=22.4px test=27px
+- [ ] A:swt-bench — appearance mismatch: lineHeight: live=22.4px test=27px
+- [ ] A:the software agent control plane — missing count 1
+- [ ] A:try it live — missing count 1
+- [ ] A:try out openhands — appearance mismatch: lineHeight: live=22.4px test=27px
+- [ ] BUTTON:citation — missing count 1
+- [x] BUTTON:resources
+- [ ] H1:get useful insights in our blog — missing count 1
+- [x] H1:introducing the openhands index
+- [x] H2:the benchmark
+- [x] H2:the takeaways
+- [x] H2:what’s next?
+- [x] H2:why build this?
+- [x] H3:affordable but powerful: gemini flash, deepseek 3.2 reasoner
+- [x] H3:claude 4.5 opus: the overall winner
+- [x] H3:gpt 5.2 codex: a powerful tool for long-term tasks
+- [x] H3:task resolution speed
+- [ ] IMG:the software agent control plane cover image — missing count 1
+- [x] INPUT:share your email
+- [ ] INPUT:subscribe — missing count 1
+- [x] P:‍
+- [x] P:ai agents are now accelerating all aspects of software engineering, from fixing issues, to building new frontend apps, debugging software, a
+- [x] P:all of these are implemented and open sourced in the openhands/benchmarks repo.
+- [x] P:another notable finding is that the closed models were generally quite a bit faster than the open models at solving tasks as well. this may 
+- [x] P:but when compared across the full openhands index, the difference becomes clear, claude opus and openai gpt-5.2-codex are clear leaders, whi
+- [x] P:by submitting your email you agree to our privacy policy
+- [x] P:claude 4.5 opus, the flagship model by anthropic, has been a favorite for users of coding agents of all stripes. it was released in nov 24, 
+- [x] P:current solutions for benchmarking typically are limited in scope. the popular swe-bench leaderboard, for instance, considers only issue res
+- [ ] P:evoclaw: evaluating ai agents on continuous software evolution — missing count 1
+- [x] P:for datasets, we took a systematic approach. first, we looked at statistics from production traffic to the openhands cloud, found several im
+- [x] P:for our agent framework, as the benchmark name suggests, we use the openhands software agent sdk, a production grade agent framework that is
+- [x] P:for some popular coding agents such as claude code by anthropic and the codex cli by openai, the answer about what language model to use is 
+- [x] P:going forward, in the near future, we’re planning on adding more models of interest, both ones that have been released already, and new ones
+- [ ] P:how to evaluate agent skills (and why you should) — missing count 1
+- [x] P:however, two characteristics of claude opus and gpt 5.2 is that they are somewhat pricy. looking at the cost-accuracy curve, there were two 
+- [x] P:if you look at just the traditional benchmark of swe-bench issue resolution, the story is not very clear, there is only a small gap when com
+- [x] P:in addition to cost, the efficiency with which tasks can be resolved is another important point — more speedy resolution means that users ca
+- [x] P:in particular, it was the top system in resolving issues, frontend development, and writing unit tests to debug existing issues, and second 
+- [x] P:insights and updates from the openhands team
+- [x] P:interestingly, and somewhat surprisingly, claude 4.5 opus, despite being a relatively large model (which means that it may take more compute
+- [ ] P:january 29, 2026 — missing count 1
+- [x] P:on the other hand, other coding agents like openhands and opencode are language model agnostic, they can be used with a wide variety of mode
+- [ ] P:openhands is the foundation for secure, transparent, model-agnostic coding agents - empowering every software team to build faster with full — missing count 1
+- [x] P:openhands team
+- [x] P:published on
+- [ ] P:sign up for our newsletter for updates, events, and community insights. — missing count 1
+- [x] P:that being said, the open models were generally evaluated using inference providers using standard gpu hardware, and not specialized hardwar
+- [ ] P:the software agent control plane — missing count 1
+- [x] P:this indicates that gpt 5.2 codex is a strong companion if you want to perform these sorts of these long-running tasks.
+- [x] P:this is also reflects anecdotes from the community. for instance, cursor ceo michael truell posted an anecdote that the model ran for a week
+- [x] P:this is just a taste of some of the interesting takeaways from the benchmark, so we’d encourage you to dive in to the data yourself on the o
+- [x] P:today, we are happy to introduce the openhands index, the first broad-coverage, continually updated leaderboard that evaluates a variety of 
+- [x] P:together with our release, we have benchmarked 9 language models from top providers such as anthropic, openai, google, deepseek, and alibaba
+- [x] P:want to explore more? if you are:
+- [x] P:when setting up a benchmark for language models in agentic tasks, there are two decisions to make. the first is what agent framework to use,
+- [x] P:when using ai agents for software engineering, we have two choices: which coding agent to use, and which language model to use to power that
+- [x] P:while claude 4.5 opus excels overall, gpt 5.2 codex, openai’s newly released model for coding tasks, was also quite powerful. it was a close
+- [x] P:written by
+
+## /community
+
+- [x] Route exists on company-website (304 vs 200)
+- [x] Title matches
+- [x] A:72.3k
+- [x] A:about
+- [x] A:benchmarks
+- [x] A:blog
+- [x] A:browse issues
+- [x] A:build with sdk
+- [x] A:careers
+- [x] A:community
+- [x] A:contact
+- [x] A:docs
+- [x] A:enterprise
+- [x] A:get started
+- [x] A:home
+- [x] A:join slack
+- [x] A:manifesto
+- [x] A:openhands community call - may 21st join our bi-weekly openhands community call! we'll announce new contributors, discuss project updates, d
+- [x] A:openhands community call - may 7th join our bi-weekly openhands community call! we'll announce new contributors, discuss project updates, de
+- [x] A:press
+- [x] A:pricing
+- [x] A:privacy policy
+- [x] A:product
+- [x] A:resources
+- [x] A:scale enterprise ai agents after odsc, stop by our nearby event sponsored by openhands to learn about the latest best practices and trends i
+- [x] A:try it live
+- [x] A:view all events
+- [x] A:view docs
+- [x] A:view events
+- [x] A:watch on youtube
+- [x] BUTTON:resources
+- [x] H1:join the openhands community
+- [x] H2:community contributor spotlight
+- [x] H2:latest community call
+- [x] H2:openhands community call - may 21st
+- [x] H2:openhands community call - may 7th
+- [x] H2:recognizing first-time contributors
+- [x] H2:scale enterprise ai agents
+- [x] H2:start contributing
+- [x] H2:upcoming events
+- [x] H3:issues to fix
+- [x] H3:michael may
+- [x] H3:read the docs
+- [x] H3:start contributing
+- [x] P:“my team uses openhands for all our development tasks and we have found that it is hands-down better than claude code, cursor, codex, and ev
+- [x] P:4:00 pm utc
+- [x] P:40:56
+- [x] P:9:30 pm utc
+- [x] P:after odsc, stop by our nearby event sponsored by openhands to learn about the latest best practices and trends in enterprise agentic ai. ou
+- [x] P:apr 30, 2026
+- [x] P:april 28, 2026
+- [x] P:catch up on our most recent community call where we discuss updates, roadmap, and answer questions from the community.
+- [x] P:connect with developers, contribute to open source, and help build the future of ai-powered autonomous software development.
+- [x] P:find beginner-friendly issues in our cli repository
+- [x] P:get familiar with our architecture and contribution guidelines
+- [x] P:join our bi-weekly openhands community call! we'll announce new contributors, discuss project updates, demo new features, and talk about the
+- [x] P:join our mission to build better ai development tools
+- [x] P:learn how to contribute to openhands.
+- [x] P:may 21, 2026
+- [x] P:may 7, 2026
+- [x] P:openhands is the foundation for secure, transparent, model-agnostic coding agents - empowering every software team to build faster with full
+
+## /contact
+
+- [x] Route exists on company-website (200 vs 200)
+- [x] Title matches
+- [x] A:72.3k
+- [x] A:about
+- [x] A:benchmarks
+- [x] A:blog
+- [ ] A:build with sdk — missing count 1
+- [x] A:careers
+- [x] A:community
+- [ ] A:contact — appearance mismatch: color: live=rgb(138, 95, 69) test=rgb(34, 21, 13)
+- [x] A:docs
+- [x] A:enterprise
+- [x] A:home
+- [x] A:manifesto
+- [x] A:press
+- [x] A:pricing
+- [x] A:privacy policy
+- [x] A:product
+- [x] A:resources
+- [ ] A:try it live — missing count 1
+- [x] BUTTON:resources
+- [ ] H1:talk to the openhands team — appearance mismatch: fontSize: live=44px test=60px; lineHeight: live=48.4px test=57px
+- [ ] INPUT:acme — appearance mismatch: lineHeight: live=20px test=24px; color: live=rgb(51, 51, 51) test=rgb(34, 21, 13); backgroundColor: live=rgba(255, 255, 255, 0.34) test=rgba(0, 0, 0, 0); borderRadius: live=6.4px test=0px
+- [ ] INPUT:email@company.com — appearance mismatch: lineHeight: live=20px test=24px; color: live=rgb(51, 51, 51) test=rgb(34, 21, 13); backgroundColor: live=rgba(255, 255, 255, 0.34) test=rgba(0, 0, 0, 0); borderRadius: live=6.4px test=0px
+- [ ] INPUT:james — appearance mismatch: lineHeight: live=20px test=24px; color: live=rgb(51, 51, 51) test=rgb(34, 21, 13); backgroundColor: live=rgba(255, 255, 255, 0.34) test=rgba(0, 0, 0, 0); borderRadius: live=6.4px test=0px
+- [ ] INPUT:smith — appearance mismatch: lineHeight: live=20px test=24px; color: live=rgb(51, 51, 51) test=rgb(34, 21, 13); backgroundColor: live=rgba(255, 255, 255, 0.34) test=rgba(0, 0, 0, 0); borderRadius: live=6.4px test=0px
+- [ ] INPUT:submit — missing count 1
+- [x] P:access to proprietary sdk kits and custom applications
+- [ ] P:company email * — missing count 1
+- [ ] P:company name * — missing count 1
+- [x] P:containerized sandbox runtime for safe autonomy
+- [x] P:designated support, training, and services offerings
+- [ ] P:engineering team size* — missing count 1
+- [ ] P:first name * — missing count 1
+- [x] P:get a custom demo and explore pricing, private deployments, and white-glove training, support and services for your org
+- [ ] P:last name * — missing count 1
+- [ ] P:message * — missing count 1
+- [x] P:model agnostic - use any llm provider you want
+- [x] P:open source and transparent by design
+- [ ] P:openhands is the foundation for secure, transparent, model-agnostic coding agents - empowering every software team to build faster with full — missing count 1
+- [x] P:self-hosted or private cloud deployments - 'fully air gapped'
+- [x] TEXTAREA:send us a note here....
+
+## /enterprise
+
+- [x] Route exists on company-website (304 vs 200)
+- [x] Title matches
+- [x] A:72.3k
+- [x] A:about
+- [x] A:benchmarks
+- [x] A:blog
+- [ ] A:book a demo — appearance mismatch: color: live=rgb(249, 240, 217) test=rgb(34, 21, 13)
+- [x] A:build with sdk
+- [x] A:careers
+- [x] A:community
+- [x] A:contact
+- [x] A:contact us
+- [x] A:docs
+- [ ] A:download the whitepaper — appearance mismatch: color: live=rgb(249, 240, 217) test=rgb(34, 21, 13)
+- [x] A:enterprise
+- [x] A:home
+- [x] A:manifesto
+- [x] A:press
+- [x] A:pricing
+- [x] A:privacy policy
+- [x] A:product
+- [x] A:resources
+- [x] A:trust center
+- [x] A:try it live
+- [x] BUTTON:resources
+- [x] H2:“the integration of lemonade server with openhands reflects amd’s commitment to open-source innovation and developer choice. this collaborat
+- [x] H2:powering enterprise ai with the world’s best
+- [x] H2:why enterprises choose openhands
+- [x] H3:proven results across industries
+- [x] H3:whitepaper: modernize legacy systems before your expertise disappears
+- [x] IMG:asci art
+- [x] IMG:ascii art depicting a large black hole with light and particles swirling around it.
+- [x] P:bring your own llm via anthropic, openai, bedrock, or any other model provider
+- [x] P:containerized sandbox runtime for safe autonomy
+- [x] P:dedicated technical and account-level support
+- [x] P:deploy securely. scale confidently. stay in control.
+- [x] P:enterprises use openhands to fix thousands of vulnerabilities, refactor codebases, and ship faster with less risk
+- [x] P:integrations with enterprise ecosystems
+- [x] P:legacy modernization projects fail 74% of the time and the engineers who understand your cobol, mainframe, and legacy systems are retiring f
+- [x] P:openhands partners with the leading ai infrastructure providers to ensure our platform is optimized for the latest generation of compute so 
+- [x] P:secure enterprise platform with fine-grained access control
+- [x] P:self-host or private-cloud deployment
+- [x] P:thousands of vulnerabilities fixed
+- [x] P:up to 30× productivity gains
+- [x] P:weeks of work done in hours
+
+## /joinslack
+
+- [ ] Route exists on company-website (403 vs 403)
+- [x] Title matches
+- [x] P:|
+- [x] P:sfo1::1777435110-6ileywp5pj9ukau1h3aslgban880uleg
+- [x] P:vercel security checkpoint
+- [x] P:we're verifying your browser
+
+## /manifesto
+
+- [x] Route exists on company-website (304 vs 200)
+- [x] Title matches
+- [x] A:72.3k
+- [x] A:about
+- [x] A:benchmarks
+- [x] A:blog
+- [ ] A:build with sdk — missing count 1
+- [x] A:careers
+- [x] A:community
+- [x] A:contact
+- [x] A:docs
+- [x] A:enterprise
+- [x] A:home
+- [x] A:manifesto
+- [x] A:press
+- [x] A:pricing
+- [x] A:privacy policy
+- [x] A:product
+- [x] A:resources
+- [ ] A:try it live — missing count 1
+- [x] BUTTON:resources
+- [ ] H1:hands on the future — appearance mismatch: fontSize: live=44px test=60px; lineHeight: live=48.4px test=57px
+- [ ] H3:we're at the beginning of a new era in software development. work is shifting from keystrokes to delegated tasks, from single laptops to coo — missing count 1
+- [ ] H3:what this asks of you — appearance mismatch: fontSize: live=32px test=20px; lineHeight: live=38.4px test=28px
+- [ ] H3:what this means for openhands — appearance mismatch: fontSize: live=32px test=20px; lineHeight: live=38.4px test=28px
+- [ ] P:‍ — missing count 4
+- [ ] P:a new class of engineers are emerging most engineers write lines of code, maybe with an ai assistant. but agentic engineers tackle code main — missing count 1
+- [x] P:adopt an agentic mindset. identify toil. delegate clearly. measure success. invest in agent orchestration as a core engineering skill.
+- [ ] P:model choice is a right we believe you should pick the best model for each job and switch when economics or quality change. this will only b — missing count 1
+- [ ] P:openhands is the foundation for secure, transparent, model-agnostic coding agents - empowering every software team to build faster with full — missing count 1
+- [ ] P:openness is non-negotiable ai agents are a transformative technology and an increasingly critical part of the world's infrastructure. we nee — missing count 1
+- [ ] P:scale lives in the cloud we believe local agents are a bridge, not the destination. real leverage comes from agents that run in the cloud or — missing count 1
+- [ ] P:security is a runtime, not a promise we believe agents must run in isolated, auditable environments with scoped credentials and a clear blas — missing count 1
+- [ ] P:the future of software development must be written by engineers software development is changing. that change needs to happen in the open, d — missing count 1
+- [x] P:we are building the open, secure, and model-agnostic platform for cloud coding agents. every agent runs in a containerized sandbox you contr
+- [x] P:we believe in an open, autonomous future for software development
+
+## /press
+
+- [x] Route exists on company-website (200 vs 200)
+- [x] Title matches
+- [x] A:72.3k
+- [x] A:about
+- [x] A:benchmarks
+- [x] A:blog
+- [ ] A:build with sdk — missing count 1
+- [x] A:careers
+- [x] A:community
+- [x] A:contact
+- [ ] A:contact us — appearance mismatch: backgroundColor: live=rgba(0, 0, 0, 0) test=rgb(34, 21, 13)
+- [x] A:docs
+- [x] A:enterprise
+- [x] A:home
+- [x] A:manifesto
+- [x] A:press
+- [x] A:pricing
+- [x] A:privacy policy
+- [x] A:product
+- [x] A:read more
+- [x] A:resources
+- [ ] A:try it live — missing count 1
+- [x] BUTTON:resources
+- [ ] H1:in the news — appearance mismatch: fontSize: live=44px test=60px; lineHeight: live=48.4px test=57px
+- [ ] P:all hands ai announces $5m to advance open-source ai agents for developers — missing count 1
+- [ ] P:all hands ai raises $5m to build open source agents for developers — missing count 1
+- [x] P:november 18, 2025
+- [ ] P:openhands is the foundation for secure, transparent, model-agnostic coding agents - empowering every software team to build faster with full — missing count 1
+- [ ] P:openhands raises $18.8m series a to bring open-source cloud coding agents to enterprises — missing count 1
+- [x] P:read how openhands is reshaping the future of ai-powered software development.
+- [x] P:september 8, 2024
+
+## /pricing
+
+- [x] Route exists on company-website (304 vs 200)
+- [x] Title matches
+- [x] A:72.3k
+- [x] A:about
+- [x] A:benchmarks
+- [x] A:blog
+- [x] A:build with sdk
+- [x] A:careers
+- [x] A:community
+- [x] A:contact
+- [x] A:contact us
+- [x] A:docs
+- [x] A:download
+- [x] A:enterprise
+- [x] A:get started free
+- [x] A:home
+- [x] A:manifesto
+- [x] A:press
+- [x] A:pricing
+- [x] A:privacy policy
+- [x] A:product
+- [x] A:resources
+- [x] A:try it live
+- [x] BUTTON:resources
+- [x] H1:pricing that fits your rollout
+- [x] H2:faq's
+- [x] IMG:tick icon
+- [x] LABEL:can i bring my own model keys?
+- [x] LABEL:what are the main differences between openhands open source, and openhands cloud?
+- [x] LABEL:what are the main differences between the pricing plans?
+- [x] LABEL:what is the token pricing for the individual plan?
+- [ ] P:‍ — missing count 3
+- [x] P:1
+- [x] P:10
+- [x] P:agent
+- [x] P:api support for automation and scripting
+- [x] P:best-in-class openhands agent
+- [x] P:bring your own key or use our providers at-cost
+- [x] P:bring your own key, or you use openhands provider at-cost
+- [x] P:byok or use openhands models at-cost
+- [x] P:centralized team billing
+- [x] P:cloud agent sdk
+- [x] P:cloud apis
+- [x] P:community support
+- [x] P:contact us
+- [x] P:custom pricing
+- [x] P:deployment options
+- [x] P:enterprise
+- [x] P:enterprise saml / sso
+- [x] P:enterprise saml/sso
+- [x] P:everything in free, plus:
+- [x] P:features
+- [x] P:free
+- [x] P:free, local openhands for getting started
+- [x] P:full control and support. private vpc and byok options
+- [x] P:git integrations
+- [x] P:git integrations (github, bitbucket, gitlab)
+- [x] P:hosted cloud access from desktop and mobile
+- [ ] P:if you do not have an llm key, you can use theopenhands llm provider (available within the individual tier), which provides multiple model o — missing count 1
+- [x] P:includes:
+- [x] P:individual
+- [x] P:jira and slack integrations
+- [x] P:jira integration
+- [x] P:large codebase sdk
+- [x] P:max daily conversations
+- [x] P:mcp support
+- [x] P:model agnostic
+- [x] P:multi-user rbac
+- [x] P:named customer engineer
+- [x] P:open source
+- [x] P:openhands
+- [x] P:openhands cli
+- [x] P:openhands cloud is a hosted saas version of openhands that provides out-of-the-box runtime support and a high token rate llm access. there a
+- [x] P:openhands cloud is a saas-based version of openhands with both a free individual tier, as well as commercial tiers for organizations and bus
+- [x] P:openhands is the foundation for secure, transparent, model-agnostic coding agents - empowering every software team to build faster with full
+- [x] P:openhands open source is a full, mit licensed version of openhands that is designed for a single user and can run locally on your machine wi
+- [x] P:organization support
+- [x] P:pricing
+- [x] P:priority support
+- [x] P:priority support & shared slack channel
+- [x] P:run locally, in our cloud, or self-host. pay only for what you need
+- [x] P:runs locally
+- [x] P:saas
+- [x] P:saas or self-hosted in your vpc
+- [x] P:secrets
+- [x] P:self-hosted
+- [x] P:shared slack channel
+- [x] P:slack integration
+- [x] P:ticket based support
+- [x] P:unlimited
+- [x] P:unlimited concurrent convos per user
+- [x] P:users
+- [x] P:web-based gui
+- [x] P:web-based gui, terminal ui, and cli
+- [x] P:when you sign up for the individual plan, you can access models under the settings > language models (llm) page.
+- [x] P:yes! openhands open source and openhands cloud plans offer support to bring your own llm keys.
+- [x] P:you can also generate an api key for the openhands llm provider under the settings > api page, which you can use in tools like the openhands
+
+## /privacy
+
+- [x] Route exists on company-website (200 vs 200)
+- [x] Title matches
+- [x] A:72.3k
+- [x] A:about
+- [x] A:benchmarks
+- [x] A:blog
+- [ ] A:build with sdk — missing count 1
+- [x] A:careers
+- [x] A:community
+- [x] A:contact
+- [x] A:docs
+- [x] A:enterprise
+- [x] A:home
+- [x] A:manifesto
+- [x] A:press
+- [x] A:pricing
+- [x] A:privacy policy
+- [x] A:product
+- [x] A:resources
+- [ ] A:try it live — missing count 1
+- [x] BUTTON:resources
+- [ ] H1:privacy policy — appearance mismatch: fontSize: live=32px test=60px; lineHeight: live=38.4px test=60px
+- [ ] H2:how we share your personal information — missing count 1
+- [ ] H2:how we use personal information — missing count 1
+- [ ] H2:other sites, mobile applications and services — missing count 1
+- [ ] H2:personal information we collect — missing count 1
+- [ ] H2:your choices — missing count 1
+- [ ] H3:account information. this includes: — missing count 1
+- [ ] H3:authorities and others. — missing count 1
+- [ ] H3:automatic data collection. — missing count 1
+- [ ] H3:business transferees. — missing count 1
+- [ ] H3:changes to this privacy policy — missing count 2
+- [ ] H3:children — missing count 1
+- [ ] H3:content. — missing count 1
+- [ ] H3:data security — missing count 1
+- [ ] H3:do not track. — missing count 1
+- [ ] H3:for marketing and advertising. — missing count 1
+- [ ] H3:how to contact us — missing count 1
+- [ ] H3:limit online tracking: here are some of the ways you can limit online tracking: — missing count 1
+- [ ] H3:professional advisors. — missing count 1
+- [ ] H3:retention — missing count 1
+- [ ] H3:service providers. — missing count 1
+- [ ] H3:to develop and improve the site and services. — missing count 1
+- [ ] H3:to operate our site and services. — missing count 1
+- [ ] H3:unsubscribe from marketing. — missing count 1
+- [ ] H3:update your account and manage your content. — missing count 1
+- [ ] P:‍ — missing count 1
+- [ ] P:acquirers and other relevant participants in business transactions (or negotiations for such transactions) involving a corporate divestiture — missing count 1
+- [ ] P:all hands ai (“all hands ai”, “we,” or “us”) offers online services designed to allow software developers to efficiently and effectively dev — missing count 1
+- [ ] P:companies and individuals that provide services on our behalf or help us operate our services or our business (such as hosting, information  — missing count 1
+- [x] P:compliance and protection, including to comply with applicable laws, lawful requests, and legal process, such as to respond to subpoenas or 
+- [x] P:effective date: september 3, 2025
+- [ ] P:law enforcement, government authorities, and private parties, as we believe in good faith to be necessary or appropriate for the compliance  — missing count 1
+- [x] P:note that the above opt-out mechanisms are specific to the device or browser on which they are exercised. you will need to opt out on every 
+- [ ] P:openhands is the foundation for secure, transparent, model-agnostic coding agents - empowering every software team to build faster with full — missing count 1
+- [x] P:our services are not intended for children under 13. if we learn that we have collected personal information from a child under 13 without t
+- [x] P:our site and services may contain links to other websites, mobile applications, and other online services operated by third parties. these l
+- [x] P:please direct any questions or comments about this privacy policy or site to contact@all-hands.dev or send a letter to all hands ai, 24 oak 
+- [ ] P:professional advisors, such as lawyers, auditors, bankers, and insurers, where necessary in the course of the professional services that the — missing count 1
+- [ ] P:some internet browsers may be configured to send “do not track” signals to the online services that you visit. we currently do not respond t — missing count 1
+- [ ] P:this includes any information you submit to the services or permit the services to access (including through github), where such content con — missing count 1
+- [x] P:this privacy policy explains how we handle personal information that we collect or generate through the services, and the personal informati
+- [x] P:we employ a number of technical, organizational and physical safeguards designed to protect the personal information we collect. however, no
+- [x] P:we keep personal information for as long as reasonably necessary for the purposes described in this privacy policy, while we have a business
+- [ ] P:we may automatically log information about you, your computer or mobile device, and your interaction over time with our site and services, o — missing count 1
+- [ ] P:we may collect and use personal information for the following marketing and advertising purposes: — missing count 1
+- [x] P:we may collect this information using cookies and other similar technologies. cookies, which are text files that websites store on a visitor
+- [x] P:we may share your personal information with the following categories of third parties:
+- [ ] P:we reserve the right to modify this privacy policy at any time. if we make material changes to this privacy policy, we will notify you by up — missing count 1
+- [x] P:we use personal information for the following purposes:
+- [ ] P:we use personal information to monitor use of our site and services, analyze the functioning of our site and services, improve the site and  — missing count 1
+- [ ] P:we use personal information to provide, operate, maintain, secure and improve our site and services. this includes using your personal infor — missing count 1
+- [ ] P:you can opt out of receiving marketing emails at any time by clicking “unsubscribe” within the email footer. — missing count 1
+- [ ] P:you may be able to update information within your account, including managing and deleting the content you store on the services. — missing count 1
+
+## /product
+
+- [x] Route exists on company-website (304 vs 200)
+- [x] Title matches
+- [x] A:72.3k
+- [x] A:about
+- [x] A:benchmarks
+- [x] A:blog
+- [x] A:build with sdk
+- [x] A:careers
+- [x] A:community
+- [x] A:contact
+- [x] A:docs
+- [x] A:enterprise
+- [x] A:home
+- [ ] A:join slack — appearance mismatch: backgroundColor: live=rgba(0, 0, 0, 0) test=rgb(34, 21, 13)
+- [x] A:learn more
+- [x] A:manifesto
+- [x] A:press
+- [x] A:pricing
+- [x] A:privacy policy
+- [x] A:product
+- [x] A:resources
+- [x] A:see developer docs
+- [x] A:try it live
+- [x] BUTTON:resources
+- [x] H1:build better software with autonomous cloud agent
+- [x] H2:sdk
+- [x] H2:terminal / cli
+- [x] H2:web gui
+- [x] P:create specialized agents, integrate internal tools, and orchestrate complex workflows programmatically.
+- [x] P:offload toil, ship faster. openhands automates real development tasks with transparency, governance, and choice.
+- [x] P:openhands is the foundation for secure, transparent, model-agnostic coding agents - empowering every software team to build faster with full
+- [x] P:plan, run, and review agent work together in a collaborative ui.
+- [x] P:run, inspect, and automate openhands agents directly from the terminal or headlessly in your pipelines with full visibility and control.
+
+## /product/cli
+
+- [x] Route exists on company-website (304 vs 200)
+- [x] Title matches
+- [x] A:72.3k
+- [x] A:about
+- [x] A:benchmarks
+- [x] A:blog
+- [x] A:build with sdk
+- [x] A:careers
+- [x] A:community
+- [x] A:contact
+- [x] A:contact us
+- [x] A:docs
+- [x] A:enterprise
+- [x] A:get started
+- [x] A:home
+- [x] A:join slack
+- [x] A:manifesto
+- [x] A:press
+- [x] A:pricing
+- [x] A:privacy policy
+- [x] A:product
+- [x] A:resources
+- [x] A:try it live
+- [x] A:view cli docs
+- [x] BUTTON:resources
+- [x] H1:agentic power from the command line.
+- [x] H2:a first-class terminal and cli interface for autonomous agents.
+- [x] H2:faq's
+- [x] H2:how teams use it
+- [x] H2:key capabilities
+- [x] H2:real autonomy needs observability and repeatability.
+- [x] IMG:asci art
+- [x] IMG:ascii art depicting a large black hole with light and particles swirling around it.
+- [x] LABEL:can i use the openhands cli with my existing tools?
+- [x] LABEL:does the openhands cli require cloud connectivity?
+- [x] LABEL:how does the openhands cli improve developer productivity?
+- [x] LABEL:is the openhands cli suitable for advanced engineering workflows?
+- [x] LABEL:what is the openhands cli?
+- [x] P:ide assistants are fine for small edits. real agentic work requires visibility into what ran, where it ran, and what changed. openhands’ ter
+- [x] P:openhands can be deployed in cloud or self-hosted environments, allowing teams to run the cli in secure, isolated setups depending on their 
+- [x] P:run openhands from the terminal or automate it end to end with the cli.
+- [x] P:run, inspect, and automate openhands agents directly from the terminal or headlessly in your pipelines with full visibility and control.
+- [x] P:the cli enables developers to delegate repetitive or complex tasks to ai agents while staying in their existing workflow. this reduces conte
+- [x] P:the openhands cli is built for developers who want to delegate real tasks to agents without leaving their terminal, from refactoring code to
+- [x] P:the openhands terminal / cli gives developers direct, low-latency control over cloud-based coding agents. use it interactively from your ter
+- [x] P:yes. the cli is designed for experienced developers who want fine-grained control over agent behavior, task execution, and system-level oper
+- [x] P:yes. the openhands cli integrates with standard developer tools, environments, and workflows, making it easy to adopt without changing your 
+
+## /product/gui
+
+- [x] Route exists on company-website (304 vs 200)
+- [x] Title matches
+- [x] A:72.3k
+- [x] A:about
+- [x] A:benchmarks
+- [x] A:blog
+- [x] A:build with sdk
+- [x] A:careers
+- [x] A:community
+- [x] A:contact
+- [x] A:contact us
+- [x] A:docs
+- [x] A:download local gui
+- [x] A:enterprise
+- [x] A:home
+- [x] A:join slack
+- [x] A:manifesto
+- [x] A:press
+- [x] A:pricing
+- [x] A:privacy policy
+- [x] A:product
+- [x] A:resources
+- [x] A:try it live
+- [x] BUTTON:resources
+- [x] H1:agentic development, made human.
+- [x] H2:a collaborative interface for agentic workflows.
+- [x] H2:faq's
+- [x] H2:how teams use it
+- [x] H2:key capabilities
+- [x] H2:trust requires visibility.
+- [x] IMG:ascii art depicting a large black hole with light and particles swirling around it.
+- [x] LABEL:can the openhands gui be used in enterprise environments?
+- [x] LABEL:how does the gui help with understanding agent behavior?
+- [x] LABEL:what can i do with the openhands gui?
+- [x] LABEL:what is the openhands gui?
+- [x] LABEL:who is the openhands gui designed for?
+- [x] P:enterprises don’t adopt black boxes. the gui makes agent behavior transparent, reviewable, and auditable so teams feel confident delegating 
+- [x] P:plan, run, and review agent work together in a collaborative ui.
+- [x] P:the gui is ideal for developers, technical operators, and cross-functional teams, giving them visibility into what agents are doing. the vis
+- [x] P:the gui provides visibility into agent actions, execution steps, and outcomes, making it easier to audit, debug, and trust ai-driven changes
+- [x] P:the openhands gui is a web-based interface that provides a visual environment for interacting with ai agents, managing tasks, and monitoring
+- [x] P:the openhands web gui gives teams a shared workspace to scope tasks, monitor execution, and review results. it turns autonomous agents into 
+- [x] P:use the openhands web gui to collaborate with agents.
+- [x] P:with the gui, you can launch and monitor agent tasks, review code changes, visualize execution flows, and manage development workflows witho
+- [x] P:yes. the gui supports secure deployment options and integrates with enterprise infrastructure, making it suitable for teams that require gov
+
+## /product/sdk
+
+- [x] Route exists on company-website (304 vs 200)
+- [x] Title matches
+- [x] A:72.3k
+- [x] A:about
+- [x] A:benchmarks
+- [x] A:blog
+- [x] A:build with sdk
+- [x] A:careers
+- [x] A:community
+- [x] A:contact
+- [x] A:contact us
+- [x] A:docs
+- [x] A:enterprise
+- [x] A:get started
+- [x] A:home
+- [x] A:join slack
+- [x] A:manifesto
+- [x] A:press
+- [x] A:pricing
+- [x] A:privacy policy
+- [x] A:product
+- [x] A:resources
+- [x] A:try it live
+- [x] A:view sdk docs
+- [x] BUTTON:resources
+- [x] H1:build agents your way.
+- [x] H2:an open sdk for building custom agents and workflows.
+- [x] H2:faq's
+- [x] H2:how teams use it
+- [x] H2:key capabilities
+- [x] H2:solve real edge cases.
+- [x] IMG:asci art
+- [x] IMG:ascii art depicting a large black hole with light and particles swirling around it.
+- [x] LABEL:how can developers use the openhands sdk?
+- [x] LABEL:is the openhands sdk model-agnostic?
+- [x] LABEL:what is the large codebase sdk?
+- [x] LABEL:what is the openhands sdk?
+- [x] LABEL:who should use the openhands sdk?
+- [x] P:closed platforms force you into predefined behaviors. openhands gives you primitives, not prescriptions, so you can adapt agents to your cod
+- [x] P:developers can use the sdk to build custom agent workflows, automate engineering processes, and extend openhands to fit their specific infra
+- [x] P:extend openhands with code, not constraints.
+- [x] P:start building with the sdk.
+- [x] P:the large codebase sdk is a specialized component that enables openhands to understand and operate on complex codebases. it maps dependencie
+- [x] P:the openhands sdk is a developer toolkit for building, customizing, and orchestrating ai coding agents. it allows teams to integrate openhan
+- [x] P:the openhands sdk lets teams create specialized agents, integrate internal tools, and orchestrate complex workflows programmatically.
+- [x] P:the sdk is best suited for platform teams, infrastructure engineers, and organizations looking to deeply integrate ai-driven development int
+- [x] P:yes. the sdk is designed to be model-agnostic, allowing teams to use different large language models depending on performance, cost, or comp
+
+## /whitepapers/modernize-legacy-systems-with-ai-agents
+
+- [ ] Route exists on company-website (200 vs 404)
+- [ ] Title matches (live: Modernize Legacy Systems with AI Agents | OpenHands Whitepaper | test: )
+- [ ] A:72.3k — missing count 1
+- [ ] A:about — missing count 1
+- [ ] A:benchmarks — missing count 1
+- [ ] A:blog — missing count 1
+- [ ] A:build with sdk — missing count 1
+- [ ] A:careers — missing count 1
+- [ ] A:community — missing count 2
+- [ ] A:contact — missing count 1
+- [ ] A:docs — missing count 1
+- [ ] A:download local gui — missing count 1
+- [ ] A:enterprise — missing count 2
+- [ ] A:home — missing count 1
+- [ ] A:manifesto — missing count 1
+- [ ] A:press — missing count 1
+- [ ] A:pricing — missing count 2
+- [ ] A:privacy policy — missing count 1
+- [ ] A:product — missing count 2
+- [ ] A:resources — missing count 1
+- [ ] A:try it live — missing count 2
+- [ ] BUTTON:resources — missing count 1
+- [ ] H1:whitepaper: modernize legacy systems before your expertise disappears — missing count 1
+- [ ] H2:download the whitepaper to learn how it works and to apply for our q2 2026 proof-of-concept program. — missing count 1
+- [ ] H3:what you'll learn in the whitepaper: — missing count 1
+- [ ] P:legacy modernization projects fail 74% of the time and the engineers who understand your cobol, mainframe, and legacy systems are retiring f — missing count 1
+- [ ] P:the large codebase sdk from openhands fills that gap. by combining ai coding agents with static analysis, it maps the full dependency struct — missing count 1
+- [ ] P:use the openhands web gui to collaborate with agents. — missing count 1
+

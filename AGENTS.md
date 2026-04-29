@@ -13,6 +13,12 @@ Located at: `scripts/validate-visual-styles.cjs`
 - Use: `node scripts/validate-visual-styles.cjs`
 - **Important**: The position validator doesn't catch CSS visual properties like backgrounds, font sizes, or colors. Always run BOTH validators when comparing to live site.
 
+### Cross-route parity checklist
+Located at: `scripts/generate-site-parity-checklist.cjs`
+- Checks: visible text/signature inventory, heading order, style mismatches, first-instance layout mismatches, unexpected extra elements on the test site, and screenshot pixel diffs for the first `PARITY_SCREENSHOT_PAGE_LIMIT` routes
+- Use: `PARITY_MAX_PAGES=12 PARITY_DISCOVERY_LIMIT=20 PARITY_SCREENSHOT_PAGE_LIMIT=12 TEST_ORIGIN=http://127.0.0.1:12001 LIVE_ORIGIN=https://openhands.dev node scripts/generate-site-parity-checklist.cjs`
+- Output: Markdown/JSON parity reports plus screenshot artifacts under `PARITY_OUTPUT_DIR`
+
 ## Common Discrepancy Patterns
 
 ### Background Colors
@@ -92,6 +98,13 @@ npm run parity:checklist  # Crawl openhands.dev and compare against local site
 - After issue #278 work, parity checklist counts dropped to: `/product` 1 fail, `/enterprise` 2 fails, `/pricing` 2 fails, `/community` 0 fails using `PARITY_MAX_PAGES=12 PARITY_DISCOVERY_LIMIT=20 TEST_ORIGIN=http://127.0.0.1:12001 LIVE_ORIGIN=https://openhands.dev npm run parity:checklist`.
 - Keep dedicated product detail pages at `/product/sdk`, `/product/gui`, and `/product/cli`, and wire the main product interface cards to those routes.
 - `joinslack` should behave as a server redirect, not a client-only redirect, so crawlers and non-JS clients match the live `301` to `https://dub.sh/openhands`.
+
+## Product Subpage Parity Notes
+- `/product/cli`, `/product/gui`, and `/product/sdk` now share product-page helpers in `src/components/product-feature-page.tsx`, while the main `/product` surface cards are sourced from `src/constants/product-surfaces.ts`; update those shared files first when parity issues affect more than one product surface.
+- Live product subpages use dedicated `/product/...` routes rather than external docs links from the surface cards on `/product`.
+- Screenshot review can catch major parity regressions that the checklist crawler misses. For `/product`, `/product/cli`, `/product/gui`, and `/product/sdk`, always inspect local-vs-live full-page screenshots for eyebrow badges, section order, alternating dark feature rows, dark comparison sections, two-column FAQ layout, and yellow ASCII footer CTAs.
+- For button/link parity on the product subpages, the live Webflow pages expose different visible CTA labels vs. extracted anchor text in some hero buttons; preserve the `screenReaderLabel` support in `ProductPageActionLink` if parity regressions reappear.
+- After the screenshot-driven parity pass on issue #291, the product routes were rebuilt around shared data-driven sections instead of ad hoc page-specific layouts, which made the screenshot structure much closer to live even though the automated parity checklist still reports many false-positive content/style mismatches.
 
 ## Legal Page Parity Notes
 - Live `/privacy` renders the body as a narrow legal-rich-text block with a centered 32px desktop title, real `h2`/`h3` hierarchy, and the shared `MarketingFooterCta` above the global footer.

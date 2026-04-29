@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import type { ReactElement } from 'react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
@@ -34,26 +34,16 @@ describe('Product parity routes', () => {
       expect(link).toHaveAttribute('href', 'https://docs.openhands.dev/overview/introduction');
     });
 
-    const cliCard = screen.getByRole('heading', { name: 'Terminal / CLI' }).closest('article');
-    const guiCard = screen.getByRole('heading', { name: 'Web GUI' }).closest('article');
-    const sdkCard = screen.getByRole('heading', { name: 'SDK' }).closest('article');
+    expect(screen.getByRole('heading', { name: 'Terminal / CLI' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Web GUI' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'SDK' })).toBeInTheDocument();
 
-    expect(cliCard).not.toBeNull();
-    expect(guiCard).not.toBeNull();
-    expect(sdkCard).not.toBeNull();
-
-    expect(within(cliCard!).getByRole('link', { name: /learn more/i })).toHaveAttribute(
-      'href',
-      '/product/cli'
-    );
-    expect(within(guiCard!).getByRole('link', { name: /learn more/i })).toHaveAttribute(
-      'href',
-      '/product/gui'
-    );
-    expect(within(sdkCard!).getByRole('link', { name: /learn more/i })).toHaveAttribute(
-      'href',
-      '/product/sdk'
-    );
+    const learnMoreLinks = screen.getAllByRole('link', { name: /learn more/i });
+    expect(learnMoreLinks.map((link) => link.getAttribute('href'))).toEqual([
+      '/product/cli',
+      '/product/gui',
+      '/product/sdk',
+    ]);
 
     expect(screen.queryByRole('button', { name: 'Resources' })).not.toBeInTheDocument();
   });

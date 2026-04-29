@@ -1,20 +1,33 @@
 #!/usr/bin/env node
 
-const fs = require('fs/promises');
+const fs = require('fs');
+const fsp = fs.promises;
 const path = require('path');
 const puppeteer = require('puppeteer');
+const { PNG } = require('pngjs');
+const pixelmatchModule = require('pixelmatch');
+
+const pixelmatch = pixelmatchModule.default || pixelmatchModule;
 
 const LIVE_ORIGIN = process.env.LIVE_ORIGIN || 'https://openhands.dev';
 const TEST_ORIGIN = process.env.TEST_ORIGIN || process.argv[2] || 'http://localhost:12001';
-const OUTPUT_DIR = path.resolve(
-  process.cwd(),
-  process.env.PARITY_OUTPUT_DIR || '.agent_tmp/parity',
-);
+const OUTPUT_DIR = path.resolve(process.cwd(), process.env.PARITY_OUTPUT_DIR || '.agent_tmp/parity');
 const MAX_PAGES = Number(process.env.PARITY_MAX_PAGES || 200);
 const DISCOVERY_PAGE_LIMIT = Number(process.env.PARITY_DISCOVERY_LIMIT || 60);
 const VIEWPORT = { width: 1440, height: 2400 };
-const STYLE_PROPS = ['fontSize', 'fontWeight', 'lineHeight', 'color', 'backgroundColor', 'borderRadius'];
+const SCREENSHOT_PAGE_LIMIT = Number(process.env.PARITY_SCREENSHOT_PAGE_LIMIT || Math.min(MAX_PAGES, 20));
+const SCREENSHOT_DIFF_THRESHOLD = Number(process.env.PARITY_SCREENSHOT_DIFF_THRESHOLD || 2);
+const STYLE_PROPS = [
+  'fontSize',
+  'fontWeight',
+  'lineHeight',
+  'color',
+  'backgroundColor',
+  'borderRadius',
+  'backgroundImage',
+];
 const STYLE_CHECK_TAGS = new Set(['H1', 'H2', 'H3', 'H4', 'A', 'BUTTON', 'LABEL', 'INPUT', 'IMG']);
+const LAYOUT_CHECK_TAGS = new Set(['H1', 'H2', 'H3', 'H4', 'A', 'BUTTON', 'LABEL', 'INPUT', 'IMG', 'P']);
 
 function normalizeWhitespace(value) {
   return (value || '').replace(/\s+/g, ' ').trim();
@@ -43,8 +56,9 @@ function normalizePath(input, origin = LIVE_ORIGIN) {
   }
 }
 
-function signatureLabel(signature) {
-  return signature.replace(/^[A-Z0-9_]+:/, '');
+function sanitizePathForFile(routePath) {
+  if (routePath === '/') return 'root';
+  return routePath.replace(/^\//, '').replace(/[^a-z0-9]+/gi, '-').replace(/^-+|-+$/g, '') || 'route';
 }
 
 function parsePx(value) {
@@ -94,6 +108,11 @@ function compareStyleValue(prop, liveValue, testValue) {
     if (Math.abs(livePx - testPx) <= tolerance) return null;
   }
 
+  if (prop === 'backgroundImage') {
+    const simplify = (value) => (value || '').replace(/^url\(["']?/, '').replace(/["']?\)$/, '');
+    if (simplify(liveValue) === simplify(testValue)) return null;
+  }
+
   return `${prop}: live=${liveValue} test=${testValue}`;
 }
 
@@ -102,6 +121,26 @@ function compareStyles(liveStyle, testStyle) {
   for (const prop of STYLE_PROPS) {
     const diff = compareStyleValue(prop, liveStyle?.[prop], testStyle?.[prop]);
     if (diff) diffs.push(diff);
+  }
+  return diffs;
+}
+
+function compareLayout(tag, liveRect, testRect) {
+  if (!liveRect || !testRect) return [];
+
+  const tolerance = {
+    top: tag === 'IMG' ? 140 : tag.startsWith('H') ? 90 : tag === 'P' ? 80 : 70,
+    left: tag === 'IMG' ? 120 : 80,
+    width: tag === 'IMG' ? 140 : 120,
+    height: tag === 'IMG' ? 140 : 100,
+  };
+
+  const diffs = [];
+  for (const key of ['top', 'left', 'width', 'height']) {
+    const delta = Math.abs((liveRect[key] || 0) - (testRect[key] || 0));
+    if (delta > tolerance[key]) {
+      diffs.push(`${key}: live=${liveRect[key]} test=${testRect[key]}`);
+    }
   }
   return diffs;
 }
@@ -166,8 +205,7 @@ async function extractPageInventory(page) {
       return true;
     };
 
-    const nodes = document.querySelectorAll(selectors);
-    nodes.forEach((element) => {
+    document.querySelectorAll(selectors).forEach((element) => {
       if (!isVisible(element)) return;
 
       const tag = element.tagName;
@@ -190,6 +228,7 @@ async function extractPageInventory(page) {
       if (normalizedText.startsWith('http://') || normalizedText.startsWith('https://')) return;
 
       const computed = window.getComputedStyle(element);
+      const rect = element.getBoundingClientRect();
       const signature = `${tag}:${normalizedText.slice(0, 140)}`;
       const style = Object.fromEntries(styleProps.map((prop) => [prop, computed[prop]]));
 
@@ -198,6 +237,12 @@ async function extractPageInventory(page) {
         text,
         signature,
         style,
+        rect: {
+          top: Math.round(rect.top + window.scrollY),
+          left: Math.round(rect.left + window.scrollX),
+          width: Math.round(rect.width),
+          height: Math.round(rect.height),
+        },
       });
     });
 
@@ -210,12 +255,31 @@ async function extractPageInventory(page) {
     return {
       title,
       headings,
+      headingSequence: elements
+        .filter((element) => ['H1', 'H2', 'H3', 'H4'].includes(element.tag))
+        .map((element) => `${element.tag}:${element.text}`),
       elements,
     };
   }, STYLE_PROPS);
 }
 
-function summarizeRouteComparison(routePath, livePage, testPage) {
+function analyzeHeadingSequence(liveSequence, testSequence) {
+  if (JSON.stringify(liveSequence) === JSON.stringify(testSequence)) {
+    return { matches: true, diffs: [] };
+  }
+
+  const diffs = [];
+  const maxLength = Math.max(liveSequence.length, testSequence.length);
+  for (let index = 0; index < maxLength; index += 1) {
+    if (liveSequence[index] === testSequence[index]) continue;
+    diffs.push(`index ${index + 1}: live=${liveSequence[index] || '∅'} test=${testSequence[index] || '∅'}`);
+    if (diffs.length >= 8) break;
+  }
+
+  return { matches: false, diffs };
+}
+
+function summarizeRouteComparison(routePath, livePage, testPage, screenshotDiff) {
   const liveMap = new Map();
   for (const element of livePage.inventory.elements) {
     const existing = liveMap.get(element.signature) || {
@@ -226,7 +290,10 @@ function summarizeRouteComparison(routePath, livePage, testPage) {
       testCount: 0,
       liveStyle: element.style,
       testStyle: null,
+      liveRect: element.rect,
+      testRect: null,
       styleDiffs: [],
+      layoutDiffs: [],
     };
     existing.liveCount += 1;
     liveMap.set(element.signature, existing);
@@ -237,9 +304,13 @@ function summarizeRouteComparison(routePath, livePage, testPage) {
     const existing = testMap.get(element.signature) || {
       count: 0,
       style: element.style,
+      rect: element.rect,
+      tag: element.tag,
+      text: element.text,
     };
     existing.count += 1;
     if (!existing.style) existing.style = element.style;
+    if (!existing.rect) existing.rect = element.rect;
     testMap.set(element.signature, existing);
   }
 
@@ -248,20 +319,33 @@ function summarizeRouteComparison(routePath, livePage, testPage) {
       const testMatch = testMap.get(item.signature);
       item.testCount = testMatch?.count || 0;
       item.testStyle = testMatch?.style || null;
-      item.styleDiffs =
-        item.testCount > 0 && STYLE_CHECK_TAGS.has(item.tag)
-          ? compareStyles(item.liveStyle, item.testStyle)
-          : [];
+      item.testRect = testMatch?.rect || null;
+      item.styleDiffs = item.testCount > 0 && STYLE_CHECK_TAGS.has(item.tag)
+        ? compareStyles(item.liveStyle, item.testStyle)
+        : [];
+      item.layoutDiffs = item.testCount > 0 && LAYOUT_CHECK_TAGS.has(item.tag)
+        ? compareLayout(item.tag, item.liveRect, item.testRect)
+        : [];
       return {
         ...item,
-        passed: item.testCount >= item.liveCount && item.styleDiffs.length === 0,
+        passed: item.testCount >= item.liveCount && item.styleDiffs.length === 0 && item.layoutDiffs.length === 0,
       };
     })
     .sort((left, right) => left.signature.localeCompare(right.signature));
 
-  const missingElements = checklist.filter((item) => item.testCount < item.liveCount);
-  const styleMismatches = checklist.filter(
-    (item) => item.testCount >= item.liveCount && item.styleDiffs.length > 0,
+  const extraElements = Array.from(testMap.entries())
+    .filter(([signature]) => !liveMap.has(signature))
+    .map(([signature, item]) => ({
+      signature,
+      tag: item.tag,
+      text: item.text,
+      count: item.count,
+    }))
+    .sort((left, right) => left.signature.localeCompare(right.signature));
+
+  const headingSequence = analyzeHeadingSequence(
+    livePage.inventory.headingSequence,
+    testPage.inventory.headingSequence,
   );
 
   return {
@@ -273,9 +357,76 @@ function summarizeRouteComparison(routePath, livePage, testPage) {
     testTitle: testPage.inventory.title,
     liveHeadings: livePage.inventory.headings,
     testHeadings: testPage.inventory.headings,
+    headingSequenceMatches: headingSequence.matches,
+    headingSequenceDiffs: headingSequence.diffs,
     checklist,
-    missingElementsCount: missingElements.length,
-    styleMismatchCount: styleMismatches.length,
+    extraElements,
+    missingElementsCount: checklist.filter((item) => item.testCount < item.liveCount).length,
+    styleMismatchCount: checklist.filter((item) => item.styleDiffs.length > 0).length,
+    layoutMismatchCount: checklist.filter((item) => item.layoutDiffs.length > 0).length,
+    extraElementsCount: extraElements.length,
+    screenshotDiff,
+  };
+}
+
+function padImage(image, width, height) {
+  if (image.width === width && image.height === height) return image.data;
+
+  const data = Buffer.alloc(width * height * 4, 255);
+  for (let y = 0; y < image.height; y += 1) {
+    for (let x = 0; x < image.width; x += 1) {
+      const sourceIndex = (y * image.width + x) * 4;
+      const targetIndex = (y * width + x) * 4;
+      data[targetIndex] = image.data[sourceIndex];
+      data[targetIndex + 1] = image.data[sourceIndex + 1];
+      data[targetIndex + 2] = image.data[sourceIndex + 2];
+      data[targetIndex + 3] = image.data[sourceIndex + 3];
+    }
+  }
+  return data;
+}
+
+async function captureScreenshotDiff(livePage, testPage, routePath) {
+  const screenshotDir = path.join(OUTPUT_DIR, 'screenshots');
+  await fsp.mkdir(screenshotDir, { recursive: true });
+
+  const slug = sanitizePathForFile(routePath);
+  const livePath = path.join(screenshotDir, `${slug}-live.png`);
+  const testPath = path.join(screenshotDir, `${slug}-test.png`);
+  const diffPath = path.join(screenshotDir, `${slug}-diff.png`);
+
+  await Promise.all([
+    livePage.screenshot({ path: livePath, fullPage: true }),
+    testPage.screenshot({ path: testPath, fullPage: true }),
+  ]);
+
+  const [liveBuffer, testBuffer] = await Promise.all([fsp.readFile(livePath), fsp.readFile(testPath)]);
+  const liveImage = PNG.sync.read(liveBuffer);
+  const testImage = PNG.sync.read(testBuffer);
+  const width = Math.max(liveImage.width, testImage.width);
+  const height = Math.max(liveImage.height, testImage.height);
+  const diffImage = new PNG({ width, height });
+
+  const diffPixels = pixelmatch(
+    padImage(liveImage, width, height),
+    padImage(testImage, width, height),
+    diffImage.data,
+    width,
+    height,
+    { threshold: 0.1, includeAA: true },
+  );
+
+  await fsp.writeFile(diffPath, PNG.sync.write(diffImage));
+
+  const diffPercent = Number(((diffPixels / (width * height)) * 100).toFixed(2));
+  return {
+    diffPixels,
+    diffPercent,
+    threshold: SCREENSHOT_DIFF_THRESHOLD,
+    passed: diffPercent <= SCREENSHOT_DIFF_THRESHOLD,
+    livePath: path.relative(process.cwd(), livePath),
+    testPath: path.relative(process.cwd(), testPath),
+    diffPath: path.relative(process.cwd(), diffPath),
   };
 }
 
@@ -292,20 +443,28 @@ function renderMarkdown(report) {
   lines.push(`- Routes checked: ${report.routes.length}`);
   lines.push(`- Route/status mismatches: ${report.summary.routeMismatches}`);
   lines.push(`- Title mismatches: ${report.summary.titleMismatches}`);
-  lines.push(`- Element checklist items failing: ${report.summary.failedChecklistItems}`);
+  lines.push(`- Heading order mismatches: ${report.summary.headingSequenceMismatches}`);
   lines.push(`- Missing element signatures: ${report.summary.missingElements}`);
+  lines.push(`- Unexpected test-only signatures: ${report.summary.extraElements}`);
   lines.push(`- Appearance mismatches: ${report.summary.styleMismatches}`);
+  lines.push(`- Layout mismatches: ${report.summary.layoutMismatches}`);
+  lines.push(`- Screenshot mismatches (> ${SCREENSHOT_DIFF_THRESHOLD}%): ${report.summary.screenshotMismatches}`);
+  lines.push(`- Total failing checks: ${report.summary.failedChecklistItems}`);
   lines.push('');
 
   for (const route of report.routes) {
     lines.push(`## ${route.path}`);
     lines.push('');
-    lines.push(
-      `- [${route.testStatus < 400 ? 'x' : ' '}] Route exists on company-website (${route.liveStatus} vs ${route.testStatus})`,
-    );
-    lines.push(
-      `- [${route.titleMatches ? 'x' : ' '}] Title matches${route.titleMatches ? '' : ` (live: ${route.liveTitle} | test: ${route.testTitle})`}`,
-    );
+    lines.push(`- [${route.testStatus < 400 ? 'x' : ' '}] Route exists on company-website (${route.liveStatus} vs ${route.testStatus})`);
+    lines.push(`- [${route.titleMatches ? 'x' : ' '}] Title matches${route.titleMatches ? '' : ` (live: ${route.liveTitle} | test: ${route.testTitle})`}`);
+    lines.push(`- [${route.headingSequenceMatches ? 'x' : ' '}] Heading order matches${route.headingSequenceMatches ? '' : ` (${route.headingSequenceDiffs.join(' | ')})`}`);
+
+    if (route.screenshotDiff) {
+      lines.push(`- [${route.screenshotDiff.passed ? 'x' : ' '}] Screenshot diff within threshold (${route.screenshotDiff.diffPercent}% vs threshold ${route.screenshotDiff.threshold}%)`);
+      lines.push(`  - live screenshot: ${route.screenshotDiff.livePath}`);
+      lines.push(`  - test screenshot: ${route.screenshotDiff.testPath}`);
+      lines.push(`  - diff screenshot: ${route.screenshotDiff.diffPath}`);
+    }
 
     for (const item of route.checklist) {
       const details = [];
@@ -315,8 +474,15 @@ function renderMarkdown(report) {
       if (item.styleDiffs.length > 0) {
         details.push(`appearance mismatch: ${item.styleDiffs.join('; ')}`);
       }
+      if (item.layoutDiffs.length > 0) {
+        details.push(`layout mismatch: ${item.layoutDiffs.join('; ')}`);
+      }
       const suffix = details.length > 0 ? ` — ${details.join(' | ')}` : '';
       lines.push(`- [${item.passed ? 'x' : ' '}] ${item.signature}${suffix}`);
+    }
+
+    for (const extra of route.extraElements) {
+      lines.push(`- [ ] EXTRA:${extra.signature} — unexpected on test site (count ${extra.count})`);
     }
 
     lines.push('');
@@ -375,10 +541,11 @@ async function discoverPaths(browser) {
 }
 
 async function main() {
-  await fs.mkdir(OUTPUT_DIR, { recursive: true });
+  await fsp.mkdir(OUTPUT_DIR, { recursive: true });
 
   const browser = await puppeteer.launch({
     headless: 'new',
+    protocolTimeout: 120000,
     args: ['--no-sandbox', '--disable-setuid-sandbox'],
   });
 
@@ -386,11 +553,8 @@ async function main() {
     const paths = await discoverPaths(browser);
     const routes = [];
 
-    for (const routePath of paths) {
-      const [livePage, testPage] = await Promise.all([
-        browser.newPage(),
-        browser.newPage(),
-      ]);
+    for (const [index, routePath] of paths.entries()) {
+      const [livePage, testPage] = await Promise.all([browser.newPage(), browser.newPage()]);
 
       try {
         await Promise.all([livePage.setViewport(VIEWPORT), testPage.setViewport(VIEWPORT)]);
@@ -398,7 +562,17 @@ async function main() {
           loadPage(livePage, LIVE_ORIGIN, routePath),
           loadPage(testPage, TEST_ORIGIN, routePath),
         ]);
-        routes.push(summarizeRouteComparison(routePath, liveData, testData));
+
+        let screenshotDiff = null;
+        if (index < SCREENSHOT_PAGE_LIMIT) {
+          try {
+            screenshotDiff = await captureScreenshotDiff(livePage, testPage, routePath);
+          } catch (error) {
+            console.warn(`Screenshot diff unavailable for ${routePath}: ${error.message}`);
+          }
+        }
+
+        routes.push(summarizeRouteComparison(routePath, liveData, testData, screenshotDiff));
         console.log(`Compared ${routePath}`);
       } catch (error) {
         console.warn(`Failed to compare ${routePath}: ${error.message}`);
@@ -412,26 +586,34 @@ async function main() {
       liveOrigin: LIVE_ORIGIN,
       testOrigin: TEST_ORIGIN,
       summary: {
-        routeMismatches: routes.filter(
-          (route) => route.testStatus >= 400 || route.liveStatus >= 400,
-        ).length,
+        routeMismatches: routes.filter((route) => route.testStatus >= 400 || route.liveStatus >= 400).length,
         titleMismatches: routes.filter((route) => !route.titleMatches).length,
-        failedChecklistItems: routes.reduce(
-          (total, route) => total + route.checklist.filter((item) => !item.passed).length,
-          0,
-        ),
+        headingSequenceMismatches: routes.filter((route) => !route.headingSequenceMatches).length,
         missingElements: routes.reduce((total, route) => total + route.missingElementsCount, 0),
+        extraElements: routes.reduce((total, route) => total + route.extraElementsCount, 0),
         styleMismatches: routes.reduce((total, route) => total + route.styleMismatchCount, 0),
+        layoutMismatches: routes.reduce((total, route) => total + route.layoutMismatchCount, 0),
+        screenshotMismatches: routes.filter((route) => route.screenshotDiff && !route.screenshotDiff.passed).length,
       },
       routes,
     };
+
+    report.summary.failedChecklistItems =
+      report.summary.routeMismatches +
+      report.summary.titleMismatches +
+      report.summary.headingSequenceMismatches +
+      report.summary.missingElements +
+      report.summary.extraElements +
+      report.summary.styleMismatches +
+      report.summary.layoutMismatches +
+      report.summary.screenshotMismatches;
 
     const jsonPath = path.join(OUTPUT_DIR, 'site-parity-checklist.json');
     const markdownPath = path.join(OUTPUT_DIR, 'site-parity-checklist.md');
 
     await Promise.all([
-      fs.writeFile(jsonPath, JSON.stringify(report, null, 2)),
-      fs.writeFile(markdownPath, renderMarkdown(report)),
+      fsp.writeFile(jsonPath, JSON.stringify(report, null, 2)),
+      fsp.writeFile(markdownPath, renderMarkdown(report)),
     ]);
 
     console.log(`\nWrote JSON report to ${jsonPath}`);

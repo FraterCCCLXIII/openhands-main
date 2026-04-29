@@ -2,6 +2,9 @@ import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
 import Product from '../../src/routes/product';
+import ProductCli from '../../src/routes/product-cli';
+import ProductGui from '../../src/routes/product-gui';
+import ProductSdk from '../../src/routes/product-sdk';
 import Enterprise from '../../src/routes/enterprise';
 import Community from '../../src/routes/community';
 
@@ -13,18 +16,60 @@ describe('Marketing parity routes', () => {
   it('renders the updated product page content', () => {
     renderRoute(<Product />);
 
+    expect(screen.getByText('Product')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /Build better software with autonomous cloud agent/i })).toBeInTheDocument();
-    expect(screen.getByText('Join Slack')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Terminal / CLI' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Web GUI' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'SDK' })).toBeInTheDocument();
     expect(screen.getAllByText('Learn more')).toHaveLength(3);
+    expect(screen.getAllByRole('link', { name: 'Learn more' }).map((link) => link.getAttribute('href'))).toEqual([
+      '/product/cli',
+      '/product/gui',
+      '/product/sdk',
+    ]);
     expect(
       screen.getByRole('heading', {
         name: /The only open, secure, and scalable agent platform built for real engineering work/i,
       }),
     ).toBeInTheDocument();
     expect(screen.getByText('Coding Agent SDK')).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', {
+        name: /Building the open standard for autonomous software development/i,
+      }),
+    ).toBeInTheDocument();
+  });
+
+  it('renders the CLI product page content', () => {
+    renderRoute(<ProductCli />);
+
+    expect(screen.getByText('Terminal / CLI')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Agentic power from the command line/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /A first-class terminal and CLI interface for autonomous agents/i })).toBeInTheDocument();
+    expect(screen.getByText('Intuitive and powerful Terminal UX')).toBeInTheDocument();
+    expect(screen.getByText('Fix bugs before standup')).toBeInTheDocument();
+    expect(screen.getByText('Does the OpenHands CLI require cloud connectivity?')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Control your agents like real infrastructure/i })).toBeInTheDocument();
+  });
+
+  it('renders the GUI product page content', () => {
+    renderRoute(<ProductGui />);
+
+    expect(screen.getByRole('heading', { name: /Agentic development, made human/i })).toBeInTheDocument();
+    expect(screen.getByText('Generate technical plans and PRDs')).toBeInTheDocument();
+    expect(screen.getByText('Break epics into agent-sized tasks')).toBeInTheDocument();
+    expect(screen.getByText('What is the OpenHands GUI?')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Bring your team into the loop/i })).toBeInTheDocument();
+  });
+
+  it('renders the SDK product page content', () => {
+    renderRoute(<ProductSdk />);
+
+    expect(screen.getByRole('heading', { name: /Build agents your way/i })).toBeInTheDocument();
+    expect(screen.getByText('Programmatic task creation')).toBeInTheDocument();
+    expect(screen.getByText('Build domain-specific agents')).toBeInTheDocument();
+    expect(screen.getByText('What is the Large Codebase SDK?')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Turn OpenHands into your agent platform/i })).toBeInTheDocument();
   });
 
   it('renders the updated enterprise page content', () => {

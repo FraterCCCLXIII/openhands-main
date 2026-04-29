@@ -1,36 +1,11 @@
 import type { Route } from './+types/product';
-
-const INTERFACES = [
-  {
-    title: 'Terminal / CLI',
-    description:
-      'Run, inspect, and automate OpenHands agents directly from the terminal or headlessly in your pipelines with full visibility and control.',
-    link: '/product/cli',
-    image: '/assets/webflow/misc/699490d1d9729682e0daf0a5_cli.png',
-  },
-  {
-    title: 'Web GUI',
-    description:
-      'Plan, run, and review agent work together in a collaborative UI.',
-    link: '/product/gui',
-    image: '/assets/webflow/misc/6994c3bfa634f5f3966d2150_4c76230966d0d54a446a009e4f4a19c2_gui.png',
-  },
-  {
-    title: 'SDK',
-    description:
-      'Create specialized agents, integrate internal tools, and orchestrate complex workflows programmatically.',
-    link: '/product/sdk',
-    image: '/assets/webflow/misc/699f4b0b80190eeea4ba3eb9_sdk-1.png',
-  },
-];
-
-const COMPARISON_ROWS = [
-  ['Open-source', 'Yes', 'No', 'No', 'No'],
-  ['Model-agnostic', 'Yes', 'No', 'No', 'No'],
-  ['Sandbox runtime', 'Yes', 'No', 'No', 'No'],
-  ['Self-hosted', 'Yes', 'No', 'No', 'No'],
-  ['Coding Agent SDK', 'Yes', 'No', 'No', 'No'],
-];
+import { Link } from 'react-router';
+import {
+  ProductComparisonTable,
+  ProductPageActionLink,
+  ProductPageFooterCta,
+} from '~/components/product-feature-page';
+import { PRODUCT_SURFACES } from '~/constants/product-surfaces';
 
 export const meta: Route.MetaFunction = ({ location }) => {
   return [
@@ -55,147 +30,97 @@ export const meta: Route.MetaFunction = ({ location }) => {
 
 const Product = () => {
   return (
-    <main className='pt-[100px]'>
-      <section className='px-10 py-20'>
-        <div className='mx-auto flex max-w-4xl flex-col items-center gap-6 text-center'>
-          <h1 className='text-[44px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>
+    <main className='bg-brand-bg pt-[100px]'>
+      <section className='relative overflow-hidden bg-brand-bg px-6 pb-16 pt-10 lg:px-10 lg:pb-20 lg:pt-12'>
+        <div className='pointer-events-none absolute inset-0 opacity-[0.12]'>
+          <img
+            src='/assets/webflow/backgrounds/6908d170831c19b2b6976323_ascii-art_(16)_1.svg'
+            alt=''
+            className='h-full w-full object-cover'
+          />
+        </div>
+        <div className='relative mx-auto flex max-w-[860px] flex-col items-center text-center'>
+          <div className='inline-flex rounded-[4px] bg-brand-accent px-5 py-2 text-[13px] font-medium leading-none text-brand-fg'>
+            Product
+          </div>
+          <h1 className='mt-8 text-[40px] font-medium leading-[1.02] tracking-[-0.04em] text-brand-fg lg:text-[58px]'>
             Build better software with autonomous cloud agent
           </h1>
-          <p className='max-w-2xl text-[18px] leading-[1.6] text-brand-muted'>
+          <p className='mt-4 max-w-[640px] text-[18px] leading-[1.45] text-brand-fg/75'>
             Offload toil, ship faster. OpenHands automates real development tasks with transparency, governance, and choice.
           </p>
-          <div className='flex flex-wrap items-center justify-center gap-4'>
-            <a
-              href='https://app.all-hands.dev/'
-              target='_blank'
-              rel='noopener noreferrer'
-              className='btn btn-primary rounded-none'
-            >
-              Try it live
-            </a>
-            <a href='/joinslack' className='btn btn-primary rounded-none'>
-              Join Slack
-            </a>
-            <a
+          <div className='mt-8 flex flex-wrap items-center justify-center gap-4'>
+            <ProductPageActionLink href='https://app.all-hands.dev/' label='Try it live' />
+            <ProductPageActionLink
               href='https://docs.openhands.dev/overview/introduction'
-              target='_blank'
-              rel='noopener noreferrer'
-              className='btn btn-outline rounded-none'
-            >
-              See developer docs
-            </a>
+              label='See developer docs'
+              variant='outline'
+            />
           </div>
         </div>
       </section>
 
-      <section className='px-10 py-20'>
-        <div className='mx-auto grid max-w-[1260px] gap-8 lg:grid-cols-3'>
-          {INTERFACES.map((item) => (
-            <article
-              key={item.title}
-              className='flex h-full flex-col rounded-[24px] border border-brand-fg/10 bg-brand-fg p-6'
-            >
-              <h2 className='text-[32px] lg:text-[44px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-bg'>
-                {item.title}
-              </h2>
-              <p className='mt-4 text-[17px] leading-[1.6] text-[#b3a88c]'>
-                {item.description}
-              </p>
-              <a
-                href={item.link}
-                target={item.link.startsWith('http') ? '_blank' : undefined}
-                rel={item.link.startsWith('http') ? 'noopener noreferrer' : undefined}
-                className='mt-4 text-[16px] font-medium leading-[1.4] text-brand-bg underline underline-offset-4'
+      <section className='bg-brand-fg px-6 py-16 lg:px-10 lg:py-20'>
+        <div className='mx-auto max-w-[1260px] space-y-16 lg:space-y-20'>
+          {PRODUCT_SURFACES.map((item, index) => {
+            const imageCard = (
+              <div className='rounded-[18px] bg-brand-bg p-7 shadow-[0_0_0_1px_rgba(249,240,217,0.08)]'>
+                <img src={item.image} alt={item.title} className='w-full rounded-[8px]' />
+              </div>
+            );
+
+            const textBlock = (
+              <div className={index === 1 ? 'lg:pl-8' : 'lg:pr-8'}>
+                <h2 className='text-[34px] font-medium leading-[1.08] tracking-[-0.03em] text-brand-bg lg:text-[44px]'>
+                  {item.title}
+                </h2>
+                <p className='mt-5 max-w-[460px] text-[18px] leading-[1.45] text-[#d6caab]'>
+                  {item.description}
+                </p>
+                <Link
+                  to={item.href}
+                  className='mt-8 inline-flex rounded-[6px] bg-[#6f5a4a] px-5 py-3 text-[16px] font-medium leading-none text-brand-bg transition hover:bg-[#816956]'
+                >
+                  Learn more
+                </Link>
+              </div>
+            );
+
+            return (
+              <div
+                key={item.title}
+                className='grid gap-10 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:items-center'
               >
-                Learn more
-              </a>
-              <img
-                src={item.image}
-                alt={item.title}
-                className='mt-8 w-full rounded-[20px] border border-brand-fg/10 bg-brand-bg object-cover'
-              />
-            </article>
-          ))}
+                {index === 1 ? (
+                  <>
+                    {imageCard}
+                    {textBlock}
+                  </>
+                ) : (
+                  <>
+                    {textBlock}
+                    {imageCard}
+                  </>
+                )}
+              </div>
+            );
+          })}
         </div>
       </section>
 
-      <section className='px-10 py-20'>
-        <div className='mx-auto flex max-w-[1260px] flex-col items-center gap-10 text-center'>
-          <div className='max-w-4xl'>
-            <h2 className='text-[32px] lg:text-[44px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>
-              The only open, secure, and scalable agent platform built for real engineering work
-            </h2>
-          </div>
-          <div className='w-full overflow-x-auto rounded-[24px] border border-brand-fg/10 bg-white/50'>
-            <table className='min-w-full border-collapse text-left'>
-              <thead>
-                <tr className='border-b border-brand-fg/10 text-[15px] uppercase tracking-[0.08em] text-brand-muted'>
-                  <th className='px-6 py-4 font-medium'>Feature</th>
-                  <th className='px-6 py-4 font-medium'>OpenHands</th>
-                  <th className='px-6 py-4 font-medium'>Devin</th>
-                  <th className='px-6 py-4 font-medium'>Claude Code</th>
-                  <th className='px-6 py-4 font-medium'>Factory</th>
-                </tr>
-              </thead>
-              <tbody>
-                {COMPARISON_ROWS.map((row) => (
-                  <tr key={row[0]} className='border-b border-brand-fg/10 last:border-b-0'>
-                    {row.map((cell, index) => (
-                      <td
-                        key={`${row[0]}-${index}`}
-                        className={
-                          index === 0
-                            ? 'px-6 py-4 text-[18px] font-medium text-brand-fg'
-                            : 'px-6 py-4 text-[16px] text-brand-muted'
-                        }
-                      >
-                        {cell}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <a
-            href='https://app.all-hands.dev/'
-            target='_blank'
-            rel='noopener noreferrer'
-            className='btn btn-primary rounded-none'
-          >
-            Try it live
-          </a>
-        </div>
-      </section>
-
-      <section className='px-10 py-20 text-center'>
-        <div className='mx-auto flex max-w-3xl flex-col items-center gap-6'>
-          <h2 className='text-[44px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>
-            Building the open standard for autonomous software development.
-          </h2>
-          <p className='max-w-2xl text-[18px] leading-[1.6] text-brand-muted'>
-            OpenHands is the foundation for secure, transparent, model-agnostic coding agents - empowering every software team to build faster with full control.
-          </p>
-          <div className='flex flex-wrap items-center justify-center gap-4'>
-            <a
-              href='https://app.all-hands.dev/'
-              target='_blank'
-              rel='noopener noreferrer'
-              className='btn btn-primary rounded-none'
-            >
-              Try it live
-            </a>
-            <a
-              href='https://docs.openhands.dev/overview/introduction'
-              target='_blank'
-              rel='noopener noreferrer'
-              className='btn btn-outline rounded-none'
-            >
-              See developer docs
-            </a>
-          </div>
-        </div>
-      </section>
+      <ProductComparisonTable ctaHref='https://app.all-hands.dev/' ctaLabel='Try it live' />
+      <ProductPageFooterCta
+        title='Building the open standard for autonomous software development.'
+        description='OpenHands is the foundation for secure, transparent, model-agnostic coding agents - empowering every software team to build faster with full control.'
+        actions={[
+          { href: 'https://app.all-hands.dev/', label: 'Try it live' },
+          {
+            href: 'https://docs.openhands.dev/overview/introduction',
+            label: 'See developer docs',
+            variant: 'outline',
+          },
+        ]}
+      />
     </main>
   );
 };
