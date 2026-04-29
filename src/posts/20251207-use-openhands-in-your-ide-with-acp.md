@@ -4,6 +4,7 @@ slug: "20251209-use-openhands-in-your-ide-with-acp"
 excerpt: "Learn how to bring OpenHands' powerful AI coding capabilities directly into your editor using the Agent Client Protocol. Whether you use Zed, JetBrains, neovim, Obsidian, or more you can now access OpenHands without leaving your editor."
 coverImage: "https://cdn.prod.website-files.com/68ff4058b35616cdd47d5b59/693817516e4d3f7532687380_cover.png"
 date: "2026-01-06T19:13:52.947Z"
+seoTitleDate: "Dec 07, 2025"
 authors:
   - name: "Graham Neubig"
 ogImage:

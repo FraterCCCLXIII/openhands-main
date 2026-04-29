@@ -11,8 +11,8 @@ interface BlogFooterProps {
   url: string;
   articleHighlights?: Array<{
     title: string;
-    date: string;
     cover: string | null;
+    coverAlt?: string;
     href: string;
   }>;
 }
@@ -127,8 +127,9 @@ export const BlogFooter: React.FC<BlogFooterProps> = ({
               key={highlight.href}
               href={highlight.href}
               title={highlight.title}
-              date={highlight.date}
               img={highlight.cover ?? undefined}
+              imgAlt={highlight.coverAlt ?? ''}
+              showDate={false}
               titleLinkOnly
             />
           ))}

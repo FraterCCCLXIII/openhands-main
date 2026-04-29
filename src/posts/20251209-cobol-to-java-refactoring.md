@@ -4,6 +4,7 @@ slug: "20251218-cobol-to-java-refactoring"
 excerpt: "Learn how to use AI agents to modernize legacy COBOL codebases to Java. We walk through an iterative refinement approach that uses multiple agents to convert and verify code quality until it meets your standards."
 coverImage: "https://cdn.prod.website-files.com/68ff4058b35616cdd47d5b59/69440b1f5fe2cccb76212e08_cover.png"
 date: "2026-01-13T16:37:37.152Z"
+seoTitleDate: "Dec 18, 2025"
 authors:
   - name: "Graham Neubig"
 ogImage:

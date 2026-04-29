@@ -2,7 +2,9 @@
 title: "Introducing the OpenHands Cloud"
 excerpt: "Experience the power of OpenHands AI in the cloud! With seamless GitHub integration, multi-modal communication, and parallel agent capabilities, OpenHands Cloud brings state-of-the-art AI software development to your browser."
 coverImage: "/assets/blog/20250331-introducing-openhands-cloud/cover.png"
+coverAlt: "Image from blog post"
 date: "2025-03-31T12:00:00.000Z"
+seoTitleDate: "Nov 12, 2025"
 authors:
   - name: Graham Neubig
     picture: "/assets/blog/authors/graham.jpg"

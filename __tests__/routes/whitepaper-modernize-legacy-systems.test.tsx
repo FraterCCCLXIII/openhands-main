@@ -25,7 +25,8 @@ describe('modernize legacy systems whitepaper route', () => {
     expect(screen.getByRole('heading', { name: /What you'll learn in the whitepaper:/i })).toBeInTheDocument();
     expect(screen.getByText(/How dependency-aware orchestration unlocks safe parallel refactoring/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Download Whitepaper' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: /Bring your team into the loop/i })).toBeInTheDocument();
+    expect(screen.getByText(/Bring your team into the loop/i)).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: /Bring your team into the loop/i })).not.toBeInTheDocument();
   });
 
   it('reveals the direct download CTA after a valid form submission', async () => {

@@ -63,16 +63,10 @@ export const NewsletterForm: React.FC<NewsletterFormProps> = ({
         </p>
       )}
 
-      {success && (
-        <div className='mt-4 text-center text-[#22150d]'>
-          <h3 className='text-[18px] font-medium leading-[1.2]'>
-            Thank you for your submission!
-          </h3>
-          <p className='mt-1 text-[14px] leading-[1.5] text-[#5f5f5f]'>
-            {success}
-          </p>
-        </div>
-      )}
+      <div className={clsx('mt-4 text-center text-[#22150d]', !success && 'hidden')}>
+        <h3 className='text-[18px] font-medium leading-[1.2]'>Thank you for your submission!</h3>
+        {success && <p className='mt-1 text-[14px] leading-[1.5] text-[#5f5f5f]'>{success}</p>}
+      </div>
     </div>
   );
 };

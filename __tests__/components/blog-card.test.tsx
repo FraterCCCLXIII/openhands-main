@@ -28,6 +28,26 @@ describe('BlogCard', () => {
     expect(screen.queryByText('Read More')).not.toBeInTheDocument();
   });
 
+  it('supports title-only related cards without visible dates', () => {
+    render(
+      <BlogCard
+        title='The Software Agent Control Plane'
+        href='/blog/agent-control-plane'
+        img='/assets/agent-control-plane.png'
+        imgAlt=''
+        showDate={false}
+        titleLinkOnly
+      />
+    );
+
+    expect(screen.getByRole('link', { name: 'The Software Agent Control Plane' })).toHaveAttribute(
+      'href',
+      '/blog/agent-control-plane'
+    );
+    expect(screen.queryByText(/2026/)).not.toBeInTheDocument();
+    expect(document.querySelector('img')?.getAttribute('alt')).toBe('');
+  });
+
   it('renders the featured overlay card copy', () => {
     render(
       <FeaturedBlogCard
@@ -35,6 +55,7 @@ describe('BlogCard', () => {
         title='Introducing the OpenHands Index'
         description='A comprehensive benchmark for agentic software engineering models.'
         img='/assets/featured.png'
+        imgAlt=''
       />
     );
 
@@ -44,5 +65,6 @@ describe('BlogCard', () => {
       'href',
       '/blog/openhands-index'
     );
+    expect(screen.getByTestId('featured-blog-card').querySelector('img')?.getAttribute('alt')).toBe('');
   });
 });

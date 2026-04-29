@@ -2,7 +2,9 @@
 title: "Building a Provably Versatile Agent"
 excerpt: "OpenHands Versa is a versatile agent that excels across multiple benchmarks, from software engineering to web browsing and frontend development."
 coverImage: "/assets/blog/20250604-openhands-versa/image2.png"
+coverAlt: "Image from blog post"
 date: "2025-06-04T09:00:00.000Z"
+seoTitleDate: "Nov 12, 2025"
 authors:
   - name: Juan Michelini
     picture: "/assets/blog/authors/juan.jpg"

@@ -4,6 +4,7 @@ slug: "20251218-openhands-toad-collaboration"
 excerpt: "OpenHands is sponsoring the development of Toad, a universal terminal interface for AI agents. Toad provides a polished, consistent experience for agentic coding tools, and OpenHands is one of its recommended agents."
 coverImage: "https://cdn.prod.website-files.com/68ff4058b35616cdd47d5b59/694412959429f7fe869af4ce_cover-1.png"
 date: "2026-01-08T17:58:28.120Z"
+seoTitleDate: "Dec 18, 2025"
 authors:
   - name: "OpenHands Team"
 ogImage:

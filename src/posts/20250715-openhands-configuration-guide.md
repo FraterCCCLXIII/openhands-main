@@ -2,7 +2,9 @@
 title: "Access State-of-the-Art LLM models at cost via OpenHands GUI and CLI"
 excerpt: "Announcing a new OpenHands LLM provider that enables access to state-of-the-art (SOTA) agentic coding models like Claude Sonnet 4, Devstral Small, Devstral Medium, Gemini 2.5 Pro, and o4-mini at cost – without any additional pricing markup."
 coverImage: "/assets/blog/20250715-openhands-provider/ai-routing-llms.png"
+coverAlt: "Cover image"
 date: "2025-07-15T12:00:00.000Z"
+seoTitleDate: "Nov 12, 2025"
 authors:
   - name: Joe Pelletier
     picture: "/assets/blog/authors/joe.png"

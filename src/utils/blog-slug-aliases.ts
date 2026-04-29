@@ -6,8 +6,8 @@ const BLOG_SLUG_ALIASES: Record<string, string> = {
   'introducing-openhands-lm-32b-a-strong-open-coding-agent-model':
     'introducing-openhands-lm-32b----a-strong-open-coding-agent-model',
   '20251202-agents-in-the-outer-loop': 'agents-in-the-outer-loop',
-  '20251209-use-openhands-in-your-ide-with-acp':
-    'use-openhands-in-your-favorite-editor-through-the-agent-client-protocol',
+  'use-openhands-in-your-favorite-editor-through-the-agent-client-protocol':
+    '20251209-use-openhands-in-your-ide-with-acp',
   '20251218-cobol-to-java-refactoring':
     'refactoring-cobol-to-java-with-ai-agents',
   '20260219-velocity-is-dead':

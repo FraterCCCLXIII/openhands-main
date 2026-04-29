@@ -4,6 +4,7 @@ slug: "weve-just-raised-18-8m-to-build-the-open-standard-for-autonomous-software
 excerpt: "OpenHands raised $18.8M in a Series A led by Madrona to build the open, secure, and model-agnostic platform for cloud coding agents. Plus, we're collaborating with AMD to make local agents even better. This funding helps us stick to our mission: powerful coding agents for every developer, for free, forever."
 coverImage: "https://cdn.prod.website-files.com/68ff4058b35616cdd47d5b59/691c9975d3d2ac84cfb3577f_LinkedIn.png"
 date: "2026-01-29T18:46:47.671Z"
+seoTitleDate: "Nov 17, 2025"
 authors:
   - name: "Robert Brennan"
 ogImage:

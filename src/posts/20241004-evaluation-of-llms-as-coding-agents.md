@@ -2,7 +2,9 @@
 title: "Evaluation of LLMs as Coding Agents on SWE-Bench (at 30x Speed!)"
 excerpt: "We evaluated LLMs as coding agents on SWE-Bench Lite, using an evaluation framework we built for efficient evaluation of coding agents."
 coverImage: "/assets/blog/20241004-evaluation-of-llms-as-coding-agents/accuracy-bar-chart.png"
+coverAlt: "Cover image"
 date: "2024-10-04T08:00:00.000Z"
+seoTitleDate: "Nov 12, 2025"
 authors:
   - name: Graham Neubig
     picture: "/assets/blog/authors/graham.jpg"

@@ -2,7 +2,9 @@
 title: "The Path to OpenHands v1"
 excerpt: "A look at how we’re stabilizing the OpenHands platform for a v1: a lightweight SDK, a streamlined CLI, and a server architecture built on a synchronous conversation model."
 coverImage: "/assets/blog/20250908-openhands-v1/image.png"
+coverAlt: "Cover image"
 date: "2025-09-04T12:00:00.000Z"
+seoTitleDate: "Nov 12, 2025"
 authors:
   - name: Robert Brennan
     picture: "/assets/blog/authors/robert.webp"

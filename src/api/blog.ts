@@ -9,6 +9,7 @@ type BlogPost = Post & {
     aliases?: string[];
     published?: boolean;
     seoTitleDate?: string;
+    coverAlt?: string;
     coverRadius?: 'none';
   };
 };

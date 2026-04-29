@@ -2,7 +2,9 @@
 title: "OpenHands: From README to open source movement"
 excerpt: "OpenHands exists because our community willed it. Here’s how it all started."
 coverImage: "/assets/blog/20241015-readme-to-open-source-movement/all-hands-founders-full.jpg"
+coverAlt: "Cover image"
 date: "2024-10-17T08:00:00.000Z"
+seoTitleDate: "Nov 12, 2025"
 authors:
   - name: Ana Hevesi
     link: https://hachyderm.io/@anthrocypher

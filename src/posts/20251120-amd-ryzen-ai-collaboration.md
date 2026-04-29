@@ -4,6 +4,7 @@ slug: "20251119-amd-ryzen-ai-collaboration"
 excerpt: "Coding agents can automate many software development tasks, but running them typically requires expensive cloud APIs. With AMD's Ryzen AI Max+ 395 and Lemonade Server, you can run coding agents like OpenHands directly on your workstation while maintaining privacy and controlling costs."
 coverImage: "https://cdn.prod.website-files.com/68ff4058b35616cdd47d5b59/691d13ad79e8cfff622626d9_cover-1.png"
 date: "2025-11-19T17:15:47.204Z"
+seoTitleDate: "Nov 17, 2025"
 authors:
   - name: "Xingyao Wang, Graham Neubig"
 ogImage:

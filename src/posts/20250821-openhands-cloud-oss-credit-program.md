@@ -2,7 +2,9 @@
 title: "OpenHands Cloud OSS Credit Program: Supporting Open Source Maintainers"
 excerpt: "Get $100 to $500 in OpenHands Cloud credits to offload routine maintenance tasks to AI. We're giving back to active maintainers of established open-source projects who spend real time on upkeep."
 coverImage: "/assets/blog/20250821-oss-credit-program/cover.png"
+coverAlt: "Image from blog post"
 date: "2025-08-21T12:00:00.000Z"
+seoTitleDate: "Nov 12, 2025"
 authors:
   - name: OpenHands Team
     picture: "/assets/blog/authors/openhands-team.png"

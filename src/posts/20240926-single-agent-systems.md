@@ -2,7 +2,9 @@
 title: "Don't Sleep on Single-agent Systems"
 excerpt: "This post discusses some of the benefits of single-agent systems, and contrasts them with multi-agent systems."
 coverImage: "/assets/blog/20240926-single-agent-systems/single-agent-systems.png"
+coverAlt: "Cover image"
 date: "2024-09-26T08:00:00.000Z"
+seoTitleDate: "Nov 12, 2025"
 authors:
   - name: Graham Neubig
     picture: "/assets/blog/authors/graham.jpg"

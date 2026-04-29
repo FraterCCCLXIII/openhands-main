@@ -4,6 +4,7 @@ slug: "agentic-coding-vs-code-completion"
 excerpt: ""
 coverImage: "https://cdn.prod.website-files.com/68ff4058b35616cdd47d5b59/69710b341570ae855ad60b38_Agents%20vs%20Assistants.png"
 date: "2026-01-27T04:29:17.628Z"
+seoTitleDate: "Jan 21, 2026"
 authors:
   - name: "Mathew Pregasen"
 ogImage:

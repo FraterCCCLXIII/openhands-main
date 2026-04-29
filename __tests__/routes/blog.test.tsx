@@ -8,6 +8,7 @@ const mockFeaturedBlog = {
     title: 'Introducing the OpenHands Index',
     excerpt: 'Featured excerpt',
     coverImage: '/featured.png',
+    coverAlt: '',
     date: '2026-01-29T12:00:00.000Z',
     authors: [{ name: 'Author One', picture: '', link: '' }],
     ogImage: { url: '/featured.png' },
@@ -49,8 +50,7 @@ import Blog from '../../src/routes/blog';
 describe('Blog route', () => {
   it('renders the pinned featured post and progressively reveals the blog grid', async () => {
     const user = userEvent.setup();
-
-    render(<Blog />);
+    const { container } = render(<Blog />);
 
     expect(screen.getByText('Insights and updates from the OpenHands team')).toBeInTheDocument();
     expect(screen.getByText('Introducing the OpenHands Index')).toBeInTheDocument();
@@ -58,12 +58,22 @@ describe('Blog route', () => {
       'href',
       '/blog/openhands-index'
     );
+    expect(container.querySelector('[data-testid="featured-blog-card"] img')?.getAttribute('alt')).toBe(
+      ''
+    );
     expect(screen.getByText('Grid Post 6')).toBeInTheDocument();
     expect(screen.queryByText('Grid Post 7')).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('link', { name: 'Load more' }));
 
     expect(screen.getByText('Grid Post 7')).toBeInTheDocument();
-    expect(screen.getByText('Building the open standard for autonomous software development.')).toBeInTheDocument();
+    expect(
+      screen.getByText('Building the open standard for autonomous software development.')
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('heading', {
+        name: 'Building the open standard for autonomous software development.',
+      })
+    ).not.toBeInTheDocument();
   });
 });

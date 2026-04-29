@@ -2,7 +2,9 @@
 title: "Devstral: A new state-of-the-art open model for coding agents"
 excerpt: "Devstral is an agentic LLM for software engineering tasks that outperforms all open-source models on SWE-Bench Verified by a large margin."
 coverImage: "/assets/blog/20250520-devstral-web-post/image2.png"
+coverAlt: "Cover image"
 date: "2025-05-20T09:00:00.000Z"
+seoTitleDate: "Nov 12, 2025"
 authors:
   - name: Xingyao Wang
     picture: "/assets/blog/authors/xingyao.webp"

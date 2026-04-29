@@ -7,6 +7,7 @@ interface FeaturedBlogCardProps {
   description: string;
   href: string;
   img?: string;
+  imgAlt?: string;
 }
 
 export const FeaturedBlogCard: React.FC<FeaturedBlogCardProps> = ({
@@ -14,6 +15,7 @@ export const FeaturedBlogCard: React.FC<FeaturedBlogCardProps> = ({
   description,
   href,
   img,
+  imgAlt = '',
 }) => (
   <article
     data-testid='featured-blog-card'
@@ -24,7 +26,7 @@ export const FeaturedBlogCard: React.FC<FeaturedBlogCardProps> = ({
       {img && (
         <img
           src={img}
-          alt={`${title} cover image`}
+          alt={imgAlt}
           className='h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]'
         />
       )}
@@ -53,9 +55,11 @@ export const FeaturedBlogCard: React.FC<FeaturedBlogCardProps> = ({
 
 interface BlogCardProps {
   title: string;
-  date: string;
+  date?: string;
   href: string;
   img?: string;
+  imgAlt?: string;
+  showDate?: boolean;
   titleLinkOnly?: boolean;
 }
 
@@ -64,6 +68,8 @@ export const BlogCard: React.FC<BlogCardProps> = ({
   date,
   href,
   img,
+  imgAlt,
+  showDate = true,
   titleLinkOnly = false,
 }) => {
   const image = !img ? (
@@ -71,7 +77,7 @@ export const BlogCard: React.FC<BlogCardProps> = ({
   ) : (
     <img
       src={img}
-      alt={`${title} cover image`}
+      alt={imgAlt !== undefined ? imgAlt : `${title} cover image`}
       className='aspect-[3/2] w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]'
     />
   );
@@ -84,7 +90,9 @@ export const BlogCard: React.FC<BlogCardProps> = ({
         </Link>
 
         <div className='max-w-[32rem] space-y-2'>
-          <p className='m-0 text-[14px] leading-[1.5] text-[#5f5f5f]'>{formatDate(date)}</p>
+          {showDate && date && (
+            <p className='m-0 text-[14px] leading-[1.5] text-[#5f5f5f]'>{formatDate(date)}</p>
+          )}
           <p className='m-0 font-inter text-[18px] leading-[1.2] font-medium tracking-[-0.01em] text-brand-fg lg:text-[20px]'>
             <Link
               to={href}
@@ -104,7 +112,9 @@ export const BlogCard: React.FC<BlogCardProps> = ({
         <div className='overflow-hidden rounded-[6px]'>{image}</div>
 
         <div className='max-w-[32rem] space-y-2'>
-          <p className='m-0 text-[14px] leading-[1.5] text-[#5f5f5f]'>{formatDate(date)}</p>
+          {showDate && date && (
+            <p className='m-0 text-[14px] leading-[1.5] text-[#5f5f5f]'>{formatDate(date)}</p>
+          )}
           <p className='m-0 font-inter text-[18px] leading-[1.2] font-medium tracking-[-0.01em] text-brand-fg lg:text-[20px]'>
             {title}
           </p>

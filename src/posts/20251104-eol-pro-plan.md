@@ -2,7 +2,9 @@
 title: "Bring your own LLM is now available to all OpenHands Cloud users"
 excerpt: "We’re excited to announce the expansion of our Bring your own Key (BYOK) support, making this available to all new and existing users of OpenHands Cloud"
 coverImage: "/assets/blog/20251104-eol-pro-plan/eol-pro-plan-graphic.png"
+coverAlt: "Cover image"
 date: "2025-11-04T12:35:00.000Z"
+seoTitleDate: "Nov 12, 2025"
 authors:
   - name: Joe Pelletier
     picture: "/assets/blog/authors/openhands-team.png"

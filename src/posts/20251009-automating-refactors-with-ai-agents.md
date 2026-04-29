@@ -2,7 +2,9 @@
 title: "Automating Massive Refactors with Parallel Agents"
 excerpt: "Discover how AI-powered coding agents can tackle large-scale refactoring projects in days instead of months, using parallel workflows and the refactor-sdk toolkit."
 coverImage: "/assets/blog/20251009-automating-refactors/cover.png"
+coverAlt: "Image from blog post"
 date: "2025-10-09T12:00:00.000Z"
+seoTitleDate: "Nov 12, 2025"
 authors:
   - name: Robert Brennan
     picture: "/assets/blog/authors/robert.jpg"

@@ -2,7 +2,9 @@
 title: "One Year of OpenHands: A Journey of Open Source AI Development"
 excerpt: "Celebrating one year of OpenHands, reflecting on our growth, milestones, and looking ahead to the future of AI-powered software development."
 coverImage: "/assets/blog/20250317-openhands-anniversary/growth.png"
+coverAlt: "Cover image"
 date: "2025-03-17T09:00:00.000Z"
+seoTitleDate: "Nov 12, 2025"
 authors:
   - name: Graham Neubig
     picture: "/assets/blog/authors/graham.jpg"

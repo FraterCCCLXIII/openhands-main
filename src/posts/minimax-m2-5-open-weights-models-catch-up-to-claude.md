@@ -4,6 +4,7 @@ slug: "minimax-m2-5-open-weights-models-catch-up-to-claude"
 excerpt: "With the new release of MiniMax M2.5, there is now an open model that is basically up to the quality of Claude Sonnet. We got early access to test it."
 coverImage: "https://cdn.prod.website-files.com/68ff4058b35616cdd47d5b59/698d3e776bb478dd78d52a14_Screenshot_2026-02-12_at_1.56.30_AM.png"
 date: "2026-02-13T16:24:01.379Z"
+seoTitleDate: "Feb 11, 2026"
 authors:
   - name: "Organization"
 ogImage:

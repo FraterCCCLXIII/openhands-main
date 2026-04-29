@@ -8,7 +8,31 @@ test("blog loader resolves synced live slugs", () => {
   } as never);
 
   expect(data.title).toBe("The Software Agent Control Plane");
+  expect(data.coverAlt).toBe("The Software Agent Control Plane cover image");
   expect(data.url).toBe("https://example.com/blog/agent-control-plane");
+});
+
+test("blog loader resolves canonical ACP slugs without redirecting away", () => {
+  const data = loader({
+    params: { slug: "20251209-use-openhands-in-your-ide-with-acp" },
+    request: new Request(
+      "https://example.com/blog/20251209-use-openhands-in-your-ide-with-acp"
+    ),
+  } as never);
+
+  expect(data.title).toBe(
+    "Use AI Agents in Your Favorite Editor through the Agent Client Protocol"
+  );
+  expect(data.seoTitleDate).toBe("Dec 07, 2025");
+});
+
+test("blog loader preserves live title dates via seoTitleDate metadata", () => {
+  const data = loader({
+    params: { slug: "20251119-amd-ryzen-ai-collaboration" },
+    request: new Request("https://example.com/blog/20251119-amd-ryzen-ai-collaboration"),
+  } as never);
+
+  expect(data.seoTitleDate).toBe("Nov 17, 2025");
 });
 
 test("blog loader redirects unknown live-only slugs to openhands.dev", () => {

@@ -9,8 +9,8 @@ describe('blog slug aliases', () => {
     expect(resolveBlogSlug('20260219-velocity-is-dead')).toBe(
       'velocity-is-dead-ai-generated-compilers-and-the-future-of-software'
     );
-    expect(resolveBlogSlug('20251209-use-openhands-in-your-ide-with-acp')).toBe(
-      'use-openhands-in-your-favorite-editor-through-the-agent-client-protocol'
+    expect(resolveBlogSlug('use-openhands-in-your-favorite-editor-through-the-agent-client-protocol')).toBe(
+      '20251209-use-openhands-in-your-ide-with-acp'
     );
   });
 

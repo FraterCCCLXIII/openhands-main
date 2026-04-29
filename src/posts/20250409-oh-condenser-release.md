@@ -2,7 +2,9 @@
 title: "OpenHands Context Condensensation for More Efficient AI Agents"
 excerpt: "Say 'goodbye' to long conversation frustrations. Our context condenser intelligently summarizes conversation history to maintain performance, cuts API costs by 50%, and keeps your agents responsive through even the longest problem-solving sessions."
 coverImage: "/assets/blog/20250409-oh-condenser-release/cost-per-turn.png" 
+coverAlt: "Cover image"
 date: "2025-04-09T09:00:00.000Z"
+seoTitleDate: "Nov 12, 2025"
 authors:
   - name: Calvin Smith
     picture: "/assets/blog/authors/calvin.png"

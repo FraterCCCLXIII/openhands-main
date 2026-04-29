@@ -2,7 +2,9 @@
 title: "OpenHands CodeAct 2.1: An Open, State-of-the-Art Software Development Agent"
 excerpt: "We introduce CodeAct 2.1, achieving state-of-the-art 53% resolve rate on SWE-Bench Verified."
 coverImage: "/assets/blog/20241101-codeact2-1-swebench/swebench-leaderboard.jpg"
+coverAlt: "Cover image"
 date: "2024-11-01T08:00:00.000Z"
+seoTitleDate: "Nov 12, 2025"
 authors:
   - name: Graham Neubig
     picture: "/assets/blog/authors/graham.jpg"

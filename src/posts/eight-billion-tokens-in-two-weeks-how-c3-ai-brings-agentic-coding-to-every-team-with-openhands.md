@@ -4,6 +4,7 @@ slug: "eight-billion-tokens-in-two-weeks-how-c3-ai-brings-agentic-coding-to-ever
 excerpt: "C3 AI adopted OpenHands Cloud as enterprise-grade, self-hosted agentic coding infrastructure, letting sales, solution engineers, and builders collaborate through a chat interface while workflows run directly against C3 AI’s Ontology Objects for production-aligned code. In early rollout, they processed ~8B tokens in two weeks and cut a representative workflow from ~3,000 lines to ~254, shrinking delivery time from months to hours."
 coverImage: "https://cdn.prod.website-files.com/68ff4058b35616cdd47d5b59/694301052b3d4c5b35784c67_1.png"
 date: "2026-01-05T15:13:34.146Z"
+seoTitleDate: "Dec 17, 2025"
 authors:
   - name: "Robert Brennan"
 ogImage:

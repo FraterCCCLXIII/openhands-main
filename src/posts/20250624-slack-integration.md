@@ -2,7 +2,9 @@
 title: "OpenHands Meets Slack: AI-Powered Development in Your Workspace"
 excerpt: "Bring the power of OpenHands AI development agents directly into your Slack workspace. Start conversations, get code assistance, and collaborate with AI seamlessly within your team's communication hub."
 coverImage: "/assets/blog/20250624-slack-integration/cover.png"
+coverAlt: "Image from blog post"
 date: "2025-06-24T12:00:00.000Z"
+seoTitleDate: "Nov 12, 2025"
 authors:
   - name: Rohit Malhotra
     picture: "/assets/blog/authors/rohit.png"

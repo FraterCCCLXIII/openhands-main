@@ -2,7 +2,9 @@
 title: "Announcing All Hands Online (Beta)"
 excerpt: "Today we're excited to announce our official hosted version of the OpenHands AI software developer! Learn about our new features including GitHub integration and improved multi-session support."
 coverImage: "/assets/blog/20241104-beta-rollout/cover.png"
+coverAlt: "Image from blog post"
 date: "2024-11-04T09:00:00.000Z"
+seoTitleDate: "Nov 12, 2025"
 authors:
   - name: Robert Brennan
     picture: "/assets/blog/members/robert-brennan.jpg"

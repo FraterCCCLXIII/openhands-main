@@ -107,6 +107,7 @@ const Blog = () => {
             title={featuredBlog.data.title}
             description={featuredBlog.data.excerpt}
             img={featuredBlog.data.coverImage}
+            imgAlt={featuredBlog.data.coverAlt ?? ''}
           />
         </section>
       )}
@@ -120,6 +121,7 @@ const Blog = () => {
               title={blog.data.title}
               date={blog.data.date}
               img={blog.data.coverImage}
+              imgAlt={blog.data.coverAlt ?? ''}
             />
           ))}
         </div>
@@ -141,7 +143,7 @@ const Blog = () => {
       </section>
 
       <div className='mt-20 w-full max-w-[1238px]'>
-        <MarketingFooterCta />
+        <MarketingFooterCta semanticHeading={false} />
       </div>
     </main>
   );

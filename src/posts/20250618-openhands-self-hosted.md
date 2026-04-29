@@ -2,7 +2,9 @@
 title: "OpenHands Cloud Self-hosted: Secure, Convenient Deployment of AI Software Development Agents"
 excerpt: "OpenHands Cloud is now available as a self-hosted solution, providing secure, convenient deployment of AI software development agents. It features a 30-day free trial and is available as a source-available Helm Chart."
 coverImage: "/assets/blog/20250618-openhands-self-hosted/cover.png"
+coverAlt: "Image from blog post"
 date: "2025-06-18T15:00:00.000Z"
+seoTitleDate: "Nov 12, 2025"
 authors:
   - name: Robert Brennan
     picture: "/assets/blog/authors/robert.jpg"

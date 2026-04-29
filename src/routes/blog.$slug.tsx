@@ -12,7 +12,7 @@ import { BlogFooter } from '~/components/blog-footer';
 import { CMarkdown } from '~/components/c-markdown';
 import { MarketingFooterCta } from '~/components/marketing-footer-cta';
 import { PlaceholderImage } from '~/components/placeholder-image';
-import { getOpenHandsBlogUrl, resolveBlogSlug } from '~/utils/blog-slug-aliases';
+import { getOpenHandsBlogUrl } from '~/utils/blog-slug-aliases';
 import { formatDate } from '~/utils/format-date';
 import { handleNewsletterSubscription } from '~/utils/newsletter-subscription';
 import type { Route } from './+types/blog.$slug';
@@ -33,8 +33,7 @@ export const loader = ({ params, request }: LoaderFunctionArgs) => {
   }
 
   const slug = params.slug.toString();
-  const resolvedSlug = resolveBlogSlug(slug);
-  const blog = blogAPI.getBlogBySlug(resolvedSlug);
+  const blog = blogAPI.getBlogBySlug(slug);
 
   if (!blog) {
     throw redirect(getOpenHandsBlogUrl(slug));
@@ -50,6 +49,7 @@ export const loader = ({ params, request }: LoaderFunctionArgs) => {
     title: data.title,
     date: data.date,
     cover: data.coverImage || null,
+    coverAlt: data.coverAlt ?? '',
     coverRadius: data.coverRadius || null,
     authors: data.authors.map((author) => ({
       name: author.name,
@@ -60,8 +60,8 @@ export const loader = ({ params, request }: LoaderFunctionArgs) => {
     ogImage: data.ogImage.url.startsWith('http') ? data.ogImage.url : origin + data.ogImage.url,
     articleHighlights: blogAPI.getArticleHighlightBlogs().map((highlight) => ({
       title: highlight.data.title,
-      date: highlight.data.date,
       cover: highlight.data.coverImage || null,
+      coverAlt: highlight.data.coverAlt ?? '',
       href: `/blog/${getBlogSlug(highlight)}`,
     })),
     seoTitleDate: data.seoTitleDate || formatSeoTitleDate(data.date),
@@ -191,7 +191,7 @@ const BlogDetails = () => {
             {data.cover && (
               <img
                 src={data.cover}
-                alt={`${data.title} cover image`}
+                alt={data.coverAlt}
                 className={`aspect-[3/2] w-full object-cover ${data.coverRadius === 'none' ? 'rounded-none' : 'rounded-[16px]'}`}
               />
             )}
@@ -253,7 +253,7 @@ const BlogDetails = () => {
         </section>
 
         <div className='w-full'>
-          <MarketingFooterCta />
+          <MarketingFooterCta semanticHeading={false} />
         </div>
       </main>
     </article>

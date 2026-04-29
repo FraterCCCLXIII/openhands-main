@@ -2,7 +2,9 @@
 title: "Vibe Coding Higher Quality Code"
 excerpt: "Vibe coding relies on AI agents to generate code, but how do we ensure the code is of high quality?"
 date: "2025-05-01T09:00:00.000Z"
+seoTitleDate: "Nov 12, 2025"
 coverImage: "/assets/blog/20250501-vibe-coding-higher-quality-code/vibe-coding-fig.png"
+coverAlt: "Cover image"
 authors:
   - name: Graham Neubig
     picture: "/assets/blog/authors/graham.png"

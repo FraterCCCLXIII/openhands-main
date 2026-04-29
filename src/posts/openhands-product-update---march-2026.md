@@ -4,6 +4,7 @@ slug: "openhands-product-update---march-2026"
 excerpt: ""
 coverImage: "https://cdn.prod.website-files.com/68ff4058b35616cdd47d5b59/69a8470f9d00e34ff3c8d8df_openhands_product_update_v3.png"
 date: "2026-03-06T12:00:00.000Z"
+seoTitleDate: "Mar 04, 2026"
 authors:
   - name: "Joe Pelletier"
 ogImage:

@@ -3,6 +3,7 @@ title: "Press Release: All Hands Announces $5M to Scale AI Agent for Software De
 excerpt: " All Hands AI, a company making open source AI to help developers build software, today announced that it’s raised $5 million in seed funding. Menlo led the round, with additional investors including Pillar VC, Betaworks, and Rebellion."
 coverImage: "/assets/blog/placeholder.png"
 date: "2024-09-05T08:00:00.000Z"
+seoTitleDate: "Nov 12, 2025"
 authors:
   - name: Robert Brennan
     picture: "/assets/blog/authors/robert.webp"

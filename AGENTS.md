@@ -91,6 +91,10 @@ npm run parity:checklist  # Crawl openhands.dev and compare against local site
 - Current live parity expects the featured `/blog` story to stay pinned to `openhands-index`; the article grid and article-footer related posts should come from the remaining reverse-chronological posts.
 - Some live blog posts need frontmatter dates that differ from Webflow's `<title>` metadata date. Use frontmatter `seoTitleDate` when the visible publication date and the browser title date diverge.
 - Shared article-template parity now depends on three template details: a `← Back to Blog` link, related-post cards whose title itself is the anchor text, and the marketing footer CTA block beneath the newsletter section.
+- The shared `MarketingFooterCta` title currently needs to render as plain text (`div`) by default for parity-sensitive routes/tests; only opt into `semanticHeading={true}` if a route explicitly needs heading semantics.
+- Live Webflow newsletter markup always includes a hidden `Thank you for your submission!` success block in the DOM, even before form submission; keep the hidden success heading in `NewsletterForm` so prerendered heading inventories match parity checks.
+- Blog frontmatter now supports `coverAlt` for live image-alt parity and `seoTitleDate` for browser-title date parity; prefer those fields over mutating visible publication dates when only metadata differs from live.
+
 - Most article hero images still use 16px rounding, but `agent-control-plane` currently needs a square hero image for parity; use frontmatter `coverRadius: "none"` for one-off overrides.
 
 ## Product / Enterprise / Pricing / Community Parity Notes

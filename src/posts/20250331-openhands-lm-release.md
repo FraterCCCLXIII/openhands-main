@@ -3,7 +3,9 @@ title: "Introducing OpenHands LM 32B -- A Strong, Open Coding Agent Model"
 slug: "introducing-openhands-lm-32b-a-strong-open-coding-agent-model"
 excerpt: "We're excited to announce the release of OpenHands LM 32B, a new open-source model fine-tuned from Qwen Coder 2.5 Instruct 32B, specifically optimized for software development with OpenHands."
 coverImage: "https://cdn.prod.website-files.com/68ff4058b35616cdd47d5b59/6914ea68174a5acc2767c54e_6914ea66f1e6cd9678c8e114_performance_scatter.png"
+coverAlt: "Cover image"
 date: "2025-11-13T09:54:05.156Z"
+seoTitleDate: "Nov 12, 2025"
 authors:
   - name: "Xingyao Wang"
 ogImage:

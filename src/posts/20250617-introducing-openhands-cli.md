@@ -2,7 +2,9 @@
 title: "The OpenHands CLI: AI-Powered Development in Your Terminal"
 excerpt: "Experience the full power of OpenHands development agents directly from your command line. No Docker required, just install and start coding with AI assistance in seconds."
 coverImage: "/assets/blog/20250617-introducing-openhands-cli/cover.png"
+coverAlt: "Image from blog post"
 date: "2025-06-17T14:00:00.000Z"
+seoTitleDate: "Nov 12, 2025"
 authors:
   - name: Graham Neubig
     picture: "/assets/blog/authors/graham.png"

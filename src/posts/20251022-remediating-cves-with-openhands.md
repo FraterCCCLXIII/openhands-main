@@ -2,7 +2,9 @@
 title: "Remediating CVEs at Scale with Agents"
 excerpt: "While developers adapt to terminal-based agents, forward-thinking organizations are automating CVE remediation at scale. Learn how OpenHands enables teams to tackle millions of vulnerabilities with AI-powered agents, custom dashboards, and cloud-based automation."
 coverImage: "/assets/blog/20251022-remediating-cves/cover.png"
+coverAlt: "Image from blog post"
 date: "2025-10-22T12:00:00.000Z"
+seoTitleDate: "Nov 12, 2025"
 authors:
   - name: Robert Brennan
     picture: "/assets/blog/authors/robert.webp"

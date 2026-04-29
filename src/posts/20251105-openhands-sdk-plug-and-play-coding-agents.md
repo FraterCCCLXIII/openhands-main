@@ -2,7 +2,9 @@
 title: "Introducing the OpenHands Software Agent SDK"
 excerpt: "Open-source, simple to use, powerful, and highly customizable. The OpenHands software agent SDK makes it possible to build plug-and-play coding agents for any workflow."
 coverImage: "/assets/blog/20251105-openhands-sdk-plug-and-play-coding-agents/cover.png"
+coverAlt: "Image from blog post"
 date: "2025-11-05T14:00:00.000Z"
+seoTitleDate: "Nov 12, 2025"
 authors:
   - name: Graham Neubig
     picture: "/assets/blog/authors/graham.png"

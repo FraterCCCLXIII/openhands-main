@@ -2,7 +2,9 @@
 title: "Open-source Coding Agents in your GitHub, Fixing your Issues"
 excerpt: "We introduce the OpenHands resolver, an open-source coding agent that can automatically fix issues in your GitHub repositories."
 coverImage: "/assets/blog/20241010-open-source-coding-agents-in-your-github/fixed-issues.png"
+coverAlt: "Cover image"
 date: "2024-10-10T08:00:00.000Z"
+seoTitleDate: "Nov 12, 2025"
 authors:
   - name: Graham Neubig
     picture: "/assets/blog/authors/graham.jpg"

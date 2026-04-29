@@ -2,7 +2,9 @@
 title: "8 Use Cases for Generalist Software Development Agents"
 excerpt: "Exploring practical applications of generalist software development agents in real-world scenarios, with example prompts and use cases."
 coverImage: "/assets/blog/20250116-use-cases-for-generalist-software-development-agents/header.png"
+coverAlt: "Cover image"
 date: "2025-01-16T12:00:00.000Z"
+seoTitleDate: "Nov 12, 2025"
 authors:
   - name: Graham Neubig
     link: https://phontron.com

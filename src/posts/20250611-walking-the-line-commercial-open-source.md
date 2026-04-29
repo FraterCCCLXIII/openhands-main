@@ -2,7 +2,9 @@
 title: "Walking the Line with Commercial Open Source"
 excerpt: "Navigating the challenges and opportunities of building commercial open source software, and how we're approaching it with OpenHands."
 coverImage: "/assets/blog/20250611-walking-the-line-commercial-open-source/cover.png"
+coverAlt: "Image from blog post"
 date: "2025-06-11T09:00:00.000Z"
+seoTitleDate: "Nov 12, 2025"
 authors:
   - name: Robert Brennan
     picture: "/assets/blog/authors/robert.webp"

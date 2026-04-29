@@ -2,7 +2,9 @@
 title: "Case Study: How US Mobile Supercharges Software Engineering with OpenHands"
 excerpt: "Learn how US Mobile leveraged OpenHands to reduce development time by 80% and transform an 8-point user story into a 2-point task, enabling their engineers to focus on higher-value work while delivering features faster."
 coverImage: "/assets/blog/20250909-us-mobile-case-study/cover.png"
+coverAlt: "Image from blog post"
 date: "2025-09-09T12:00:00.000Z"
+seoTitleDate: "Nov 12, 2025"
 authors:
   - name: OpenHands Team
     picture: "/assets/blog/authors/openhands-team.png"

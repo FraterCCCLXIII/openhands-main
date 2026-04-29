@@ -2,7 +2,9 @@
 title: "Programmatically Access Coding Agents with the OpenHands Cloud API"
 excerpt: "The new OpenHands Cloud API allows you to start coding tasks with a single funciton call."
 coverImage: "/assets/blog/20250507-openhands-cloud-api/openhands-cloud-api.png"
+coverAlt: "Cover image"
 date: "2025-05-07T09:00:00.000Z"
+seoTitleDate: "Nov 12, 2025"
 authors:
   - name: Graham Neubig
     picture: "/assets/blog/authors/graham.jpg"

@@ -18,6 +18,7 @@ vi.mock('react-router', async () => {
       title: 'Introducing the OpenHands Index',
       date: '2026-01-29T12:00:00.000Z',
       cover: '/cover.png',
+      coverAlt: '',
       authors: [{ name: 'OpenHands Team', picture: null, link: null }],
       excerpt: 'Featured excerpt',
       ogImage: '/cover.png',
@@ -26,14 +27,14 @@ vi.mock('react-router', async () => {
       articleHighlights: [
         {
           title: 'The Software Agent Control Plane',
-          date: '2026-04-03T12:00:00.000Z',
           cover: '/agent-control-plane.png',
+          coverAlt: 'The Software Agent Control Plane cover image',
           href: '/blog/agent-control-plane',
         },
         {
           title: 'EvoClaw: Evaluating AI Agents on Continuous Software Evolution',
-          date: '2026-03-23T12:00:00.000Z',
           cover: '/evoclaw.png',
+          coverAlt: '',
           href: '/blog/evoclaw-benchmark',
         },
       ],
@@ -45,7 +46,7 @@ vi.mock('react-router', async () => {
 
 describe('Blog article route', () => {
   it('renders the live-style article chrome and footer sections', () => {
-    render(<BlogDetails />);
+    const { container } = render(<BlogDetails />);
 
     expect(screen.getByRole('link', { name: '← Back to Blog' })).toHaveAttribute('href', '/blog');
     expect(screen.getByText('Published on')).toBeInTheDocument();
@@ -56,7 +57,16 @@ describe('Blog article route', () => {
       .closest('a');
 
     expect(relatedPostLink).toHaveAttribute('href', '/blog/agent-control-plane');
+    expect(screen.queryByText('April 3, 2026')).not.toBeInTheDocument();
+    expect(container.querySelector('article > div img')?.getAttribute('alt')).toBe('');
     expect(screen.getByRole('heading', { level: 1, name: 'Get useful insights in our blog' })).toBeInTheDocument();
-    expect(screen.getByText('Building the open standard for autonomous software development.')).toBeInTheDocument();
+    expect(
+      screen.getByText('Building the open standard for autonomous software development.')
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('heading', {
+        name: 'Building the open standard for autonomous software development.',
+      })
+    ).not.toBeInTheDocument();
   });
 });

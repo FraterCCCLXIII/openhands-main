@@ -4,6 +4,7 @@ slug: "20251202-agents-in-the-outer-loop"
 excerpt: "Most developers using AI are accelerating the inner loop of development. But there's an emerging paradigm of cloud-based agents that shine in the outer loop. Learn how the most effective development teams are using both."
 coverImage: "https://cdn.prod.website-files.com/68ff4058b35616cdd47d5b59/692f0cd9ebb3308d777da90d_agentsintheloop-large.png"
 date: "2026-01-13T16:37:47.674Z"
+seoTitleDate: "Dec 02, 2025"
 authors:
   - name: "Robert Brennan"
 ogImage:

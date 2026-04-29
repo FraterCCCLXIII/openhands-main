@@ -2,7 +2,9 @@
 title: "Introducing All Hands AI"
 excerpt: "Introducing All Hands AI -- we build AI software development agents for everyone, in the open."
 coverImage: "/assets/blog/20240715-introducing-allhands/cover.jpg"
+coverAlt: "Image from blog post"
 date: "2024-07-15T12:35:00.000Z"
+seoTitleDate: "Nov 12, 2025"
 authors:
   - name: Graham Neubig
     picture: "/assets/blog/authors/graham.jpg"
