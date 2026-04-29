@@ -131,6 +131,52 @@ export const integrationConnectionStatusSchema = z.object({
   updatedAt: z.string(),
 });
 
+export const adminIntegrationConnectionSummarySchema = z.object({
+  ownerId: z.string(),
+  integrationKey: z.string(),
+  provider: z.string(),
+  authStrategy: authStrategySchema,
+  tokenType: z.string().optional(),
+  scopes: z.array(z.string()),
+  expiresAt: z.string().optional(),
+  externalAccountId: z.string().optional(),
+  externalWorkspaceId: z.string().optional(),
+  displayName: z.string().optional(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+
+export const adminDuplicateExternalAccountSummarySchema = z.object({
+  provider: z.string(),
+  externalAccountId: z.string(),
+  ownerIds: z.array(z.string()),
+  ownerCount: z.number().int().nonnegative(),
+  displayNames: z.array(z.string()),
+});
+
+export const adminOperationalOverviewUserSummarySchema = z.object({
+  ownerId: z.string(),
+  totalConnections: z.number().int().nonnegative(),
+  integrations: z.array(z.string()),
+  providers: z.array(z.string()),
+  totalAccessRequests: z.number().int().nonnegative(),
+  pendingAccessRequests: z.number().int().nonnegative(),
+  notifications: z.number().int().nonnegative(),
+  duplicateExternalAccounts: z.array(adminDuplicateExternalAccountSummarySchema),
+  connections: z.array(adminIntegrationConnectionSummarySchema),
+});
+
+export const adminOperationalOverviewSchema = z.object({
+  totalConnections: z.number().int().nonnegative(),
+  connectedOwners: z.number().int().nonnegative(),
+  managedConnectors: z.number().int().nonnegative(),
+  totalAccessRequests: z.number().int().nonnegative(),
+  pendingAccessRequests: z.number().int().nonnegative(),
+  notifications: z.number().int().nonnegative(),
+  duplicateExternalAccounts: z.array(adminDuplicateExternalAccountSummarySchema),
+  users: z.array(adminOperationalOverviewUserSummarySchema),
+});
+
 export const accessDecisionSchema = z.object({
   allowed: z.boolean(),
   reason: z.string(),

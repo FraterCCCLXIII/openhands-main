@@ -169,7 +169,7 @@ describe("DashboardWorkspace", () => {
     signOutMock.mockReset();
   });
 
-  it("shows an Admin sidebar link to the admin-integrations page", async () => {
+  it("shows admin-only sidebar links for overview and admin integrations", async () => {
     await act(async () => {
       root.render(
         <QueryClientProvider client={queryClient}>
@@ -184,9 +184,13 @@ describe("DashboardWorkspace", () => {
       );
     });
 
-    const adminLink = container.querySelector('a[href="/admin-integrations"]');
-    expect(adminLink).toBeTruthy();
-    expect(adminLink?.textContent).toContain("Admin integrations");
+    const adminOverviewLink = container.querySelector('a[href="/admin-overview"]');
+    const adminIntegrationsLink = container.querySelector('a[href="/admin-integrations"]');
+
+    expect(adminOverviewLink).toBeTruthy();
+    expect(adminOverviewLink?.textContent).toContain("Operational overview");
+    expect(adminIntegrationsLink).toBeTruthy();
+    expect(adminIntegrationsLink?.textContent).toContain("Admin integrations");
   });
 
 
@@ -269,6 +273,7 @@ describe("DashboardWorkspace", () => {
     const adminIntegrationLinks = Array.from(
       container.querySelectorAll('a[href="/admin-integrations"]'),
     );
+    expect(container.querySelector('a[href="/admin-overview"]')).toBeFalsy();
     expect(
       adminIntegrationLinks.some((link) => link.textContent?.includes("Admin integrations")),
     ).toBe(false);

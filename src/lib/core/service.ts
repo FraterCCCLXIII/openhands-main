@@ -49,6 +49,7 @@ import {
 } from "@/src/lib/integrations/managed-connectors";
 import { generateManagedConnectorToolsFromOpenApi } from "@/src/lib/managed-connectors/openapi";
 import type { NotificationPublisher } from "@/src/lib/notifications/publisher";
+import { matchesSearchQuery, normalizeCaseInsensitiveText } from "@/src/lib/text-utils";
 import {
   encryptManagedOAuthClient,
   registerManagedOAuthClient,
@@ -64,6 +65,8 @@ import type {
   AccessRequest,
   AccessRequestAgentData,
   AdminApiKeyRecord,
+  AdminIntegrationConnectionSummary,
+  AdminOperationalOverview,
   AgentApiKeyRecord,
   AgentClassPolicy,
   ContextInvocationResult,
@@ -288,6 +291,23 @@ const sanitizeConnectionStatus = (
   externalWorkspaceId: record.externalWorkspaceId,
   displayName: record.displayName,
   metadata: record.metadata,
+  createdAt: record.createdAt,
+  updatedAt: record.updatedAt,
+});
+
+const sanitizeAdminConnectionSummary = (
+  record: IntegrationConnectionRecord,
+): AdminIntegrationConnectionSummary => ({
+  ownerId: record.ownerId,
+  integrationKey: record.integrationKey,
+  provider: record.provider,
+  authStrategy: record.authStrategy,
+  tokenType: record.tokenType,
+  scopes: record.scopes,
+  expiresAt: record.expiresAt,
+  externalAccountId: record.externalAccountId,
+  externalWorkspaceId: record.externalWorkspaceId,
+  displayName: record.displayName,
   createdAt: record.createdAt,
   updatedAt: record.updatedAt,
 });
@@ -1074,6 +1094,221 @@ export class ContextLayerService {
       normalizedOwnerId,
     );
     return connections.map(sanitizeConnectionStatus);
+  }
+
+  async listAdminIntegrationConnections(filters?: {
+    ownerId?: string;
+    provider?: string;
+    integrationKey?: string;
+    query?: string;
+    limit?: number;
+    offset?: number;
+  }) {
+    await this.initialize();
+    const connections = await this.repository.listAllIntegrationConnections({
+      ownerId: normalizeCaseInsensitiveText(filters?.ownerId) || undefined,
+      provider: normalizeCaseInsensitiveText(filters?.provider) || undefined,
+      integrationKey: normalizeCaseInsensitiveText(filters?.integrationKey) || undefined,
+      limit: filters?.limit ?? 100,
+      offset: filters?.offset ?? 0,
+    });
+    const query = filters?.query ?? "";
+
+    return connections
+      .filter((record) =>
+        matchesSearchQuery(
+          [
+            record.ownerId,
+            record.provider,
+            record.integrationKey,
+            record.displayName,
+            record.externalAccountId,
+            record.externalWorkspaceId,
+          ],
+          query,
+        ),
+      )
+      .map(sanitizeAdminConnectionSummary);
+  }
+
+  async getAdminOperationalOverview(): Promise<AdminOperationalOverview> {
+    await this.initialize();
+    const [connections, managedConnectors, accessRequests, notifications] = await Promise.all([
+      this.repository.listAllIntegrationConnections(),
+      this.repository.listManagedConnectors(),
+      this.repository.listAccessRequests(),
+      this.repository.listNotifications(),
+    ]);
+
+    const duplicateGroups = new Map<
+      string,
+      {
+        provider: string;
+        externalAccountId: string;
+        ownerIds: Set<string>;
+        displayNames: Set<string>;
+      }
+    >();
+
+    for (const record of connections) {
+      const normalizedProvider = normalizeCaseInsensitiveText(record.provider);
+      const normalizedExternalAccountId = normalizeCaseInsensitiveText(record.externalAccountId);
+      if (!normalizedProvider || !normalizedExternalAccountId) {
+        continue;
+      }
+
+      const normalizedOwnerId = normalizeAgentApiKeyOwner(record.ownerId);
+      if (!normalizedOwnerId) {
+        continue;
+      }
+
+      const key = `${normalizedProvider}:${normalizedExternalAccountId}`;
+      const existing = duplicateGroups.get(key);
+      if (existing) {
+        existing.ownerIds.add(normalizedOwnerId);
+        if (record.displayName) {
+          existing.displayNames.add(record.displayName);
+        }
+        continue;
+      }
+
+      duplicateGroups.set(key, {
+        provider: normalizedProvider,
+        externalAccountId: normalizedExternalAccountId,
+        ownerIds: new Set([normalizedOwnerId]),
+        displayNames: new Set(record.displayName ? [record.displayName] : []),
+      });
+    }
+
+    const duplicateExternalAccounts = [...duplicateGroups.values()]
+      .map((group) => ({
+        provider: group.provider,
+        externalAccountId: group.externalAccountId,
+        ownerIds: [...group.ownerIds].sort(),
+        ownerCount: group.ownerIds.size,
+        displayNames: [...group.displayNames].sort(),
+      }))
+      .filter((group) => group.ownerCount > 1)
+      .sort(
+        (left, right) =>
+          left.provider.localeCompare(right.provider) ||
+          left.externalAccountId.localeCompare(right.externalAccountId),
+      );
+
+    const sanitizedConnections = connections
+      .map(sanitizeAdminConnectionSummary)
+      .map((record) => ({
+        ...record,
+        ownerId: normalizeAgentApiKeyOwner(record.ownerId),
+        provider: normalizeCaseInsensitiveText(record.provider),
+      }))
+      .filter((record) => record.ownerId);
+
+    const connectionsByOwner = new Map<string, AdminIntegrationConnectionSummary[]>();
+    for (const record of sanitizedConnections) {
+      const existing = connectionsByOwner.get(record.ownerId);
+      if (existing) {
+        existing.push(record);
+      } else {
+        connectionsByOwner.set(record.ownerId, [record]);
+      }
+    }
+
+    const requestCountsByOwner = new Map<
+      string,
+      { totalAccessRequests: number; pendingAccessRequests: number }
+    >();
+    for (const request of accessRequests) {
+      const ownerId = getAccessRequestOwnerId(request);
+      if (!ownerId || ownerId === "case-by-case-approvals") {
+        continue;
+      }
+
+      const current = requestCountsByOwner.get(ownerId) ?? {
+        totalAccessRequests: 0,
+        pendingAccessRequests: 0,
+      };
+      current.totalAccessRequests += 1;
+      if (request.status === "pending") {
+        current.pendingAccessRequests += 1;
+      }
+      requestCountsByOwner.set(ownerId, current);
+    }
+
+    const notificationCountsByOwner = new Map<string, number>();
+    for (const notification of notifications) {
+      const ownerId = normalizeAgentApiKeyOwner(notification.recipient);
+      if (!ownerId || ownerId === "case-by-case-approvals") {
+        continue;
+      }
+
+      notificationCountsByOwner.set(ownerId, (notificationCountsByOwner.get(ownerId) ?? 0) + 1);
+    }
+
+    const duplicateGroupsByOwner = new Map<string, typeof duplicateExternalAccounts>();
+    for (const group of duplicateExternalAccounts) {
+      for (const ownerId of group.ownerIds) {
+        const existing = duplicateGroupsByOwner.get(ownerId);
+        if (existing) {
+          existing.push(group);
+        } else {
+          duplicateGroupsByOwner.set(ownerId, [group]);
+        }
+      }
+    }
+
+    const userIds = new Set<string>([
+      ...connectionsByOwner.keys(),
+      ...requestCountsByOwner.keys(),
+      ...notificationCountsByOwner.keys(),
+    ]);
+
+    const users = [...userIds]
+      .sort((left, right) => left.localeCompare(right))
+      .map((ownerId) => {
+        const ownerConnections = [...(connectionsByOwner.get(ownerId) ?? [])].sort(
+          (left, right) =>
+            right.updatedAt.localeCompare(left.updatedAt) ||
+            left.integrationKey.localeCompare(right.integrationKey) ||
+            left.provider.localeCompare(right.provider),
+        );
+        const requestCounts = requestCountsByOwner.get(ownerId) ?? {
+          totalAccessRequests: 0,
+          pendingAccessRequests: 0,
+        };
+        const duplicateOwnerGroups = [...(duplicateGroupsByOwner.get(ownerId) ?? [])].sort(
+          (left, right) =>
+            left.provider.localeCompare(right.provider) ||
+            left.externalAccountId.localeCompare(right.externalAccountId),
+        );
+
+        return {
+          ownerId,
+          totalConnections: ownerConnections.length,
+          integrations: [...new Set(ownerConnections.map((record) => record.integrationKey))].sort(),
+          providers: [...new Set(ownerConnections.map((record) => record.provider))].sort(),
+          totalAccessRequests: requestCounts.totalAccessRequests,
+          pendingAccessRequests: requestCounts.pendingAccessRequests,
+          notifications: notificationCountsByOwner.get(ownerId) ?? 0,
+          duplicateExternalAccounts: duplicateOwnerGroups,
+          connections: ownerConnections,
+        };
+      });
+
+    return {
+      totalConnections: connections.length,
+      connectedOwners: new Set(
+        connections
+          .map((record) => normalizeAgentApiKeyOwner(record.ownerId))
+          .filter(Boolean),
+      ).size,
+      managedConnectors: managedConnectors.length,
+      totalAccessRequests: accessRequests.length,
+      pendingAccessRequests: accessRequests.filter((request) => request.status === "pending").length,
+      notifications: notifications.length,
+      duplicateExternalAccounts,
+      users,
+    };
   }
 
   async getIntegrationConnectionStatus(ownerId: string, integrationKey: string) {

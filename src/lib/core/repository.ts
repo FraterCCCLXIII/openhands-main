@@ -59,6 +59,13 @@ export interface ContextRepository {
 
   hasAgentApiKeys(): Promise<boolean>;
   listIntegrationConnections(ownerId: string): Promise<IntegrationConnectionRecord[]>;
+  listAllIntegrationConnections(filters?: {
+    ownerId?: string;
+    provider?: string;
+    integrationKey?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<IntegrationConnectionRecord[]>;
   getIntegrationConnection(
     ownerId: string,
     integrationKey: string,

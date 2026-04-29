@@ -63,6 +63,8 @@ Legacy compatibility routes still exist, but new docs and links should target th
 
 - `GET /api/admin/openapi`
 - `GET|POST /api/admin/key`
+- `GET /api/admin/connections`
+- `GET /api/admin/overview`
 - `GET|POST /api/admin/managed-connectors`
 - `POST /api/admin/integrations/discover`
 

@@ -61,6 +61,7 @@ export default async function AdminIntegrationsPage() {
             </Badge>
           }
           activeItem="adminIntegrations"
+          showAdminOverviewLink={canRegisterManagedConnectors}
           showAdminIntegrationsLink
           footer={
             session?.user ? (

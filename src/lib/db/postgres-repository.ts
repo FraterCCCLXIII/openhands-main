@@ -536,6 +536,32 @@ export class PostgresRepository implements ContextRepository {
     return rows.map((row) => mapIntegrationConnectionRow(row));
   }
 
+  async listAllIntegrationConnections(filters?: {
+    ownerId?: string;
+    provider?: string;
+    integrationKey?: string;
+    limit?: number;
+    offset?: number;
+  }) {
+    await this.ensureSchema();
+    const sql = getSql();
+    const ownerId = filters?.ownerId ?? null;
+    const provider = filters?.provider ?? null;
+    const integrationKey = filters?.integrationKey ?? null;
+    const limit = filters?.limit ?? 100;
+    const offset = filters?.offset ?? 0;
+    const rows = await sql`
+      SELECT * FROM integration_connections
+      WHERE (${ownerId}::text IS NULL OR LOWER(owner_id) = LOWER(${ownerId}::text))
+        AND (${provider}::text IS NULL OR LOWER(provider) = LOWER(${provider}::text))
+        AND (${integrationKey}::text IS NULL OR LOWER(integration_key) = LOWER(${integrationKey}::text))
+      ORDER BY provider ASC, external_account_id ASC NULLS LAST, owner_id ASC, integration_key ASC
+      LIMIT ${limit}
+      OFFSET ${offset}
+    `;
+    return rows.map((row) => mapIntegrationConnectionRow(row));
+  }
+
   async getIntegrationConnection(ownerId: string, integrationKey: string) {
     await this.ensureSchema();
     const sql = getSql();

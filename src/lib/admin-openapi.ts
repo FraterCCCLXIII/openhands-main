@@ -3,9 +3,8 @@ import { z } from "zod";
 import {
   accessRequestDecisionSchema,
   accessRequestSchema,
-  toolSpecSchema,
-  integrationConnectionStatusSchema,
-  integrationCreateSchema,
+  adminIntegrationConnectionSummarySchema,
+  adminOperationalOverviewSchema,
   integrationSpecSchema,
   notificationRecordSchema,
 } from "@/src/lib/core/schema";
@@ -28,8 +27,6 @@ import {
   errorResponseSchema,
   toOpenApiSchema,
 } from "@/src/lib/openapi/shared";
-import { selectExampleIntegration } from "@/src/lib/tool-examples";
-import type { IntegrationSpec } from "@/src/types/context-layer";
 
 const integrationDiscoveryRequestSchema = z.object({
   key: z.string().min(1),
@@ -46,18 +43,9 @@ const deleteResultSchema = z.object({
 
 export const buildAdminOpenApiDocument = ({
   baseUrl,
-  integrations,
 }: {
   baseUrl: string;
-  integrations: IntegrationSpec[];
 }) => {
-  const exampleIntegration = selectExampleIntegration(integrations)?.integration;
-  const exampleTool = exampleIntegration
-    ? Object.values(exampleIntegration.tools).find((candidate) => candidate.enabled)
-    : undefined;
-
-  const integrationKeyExample = exampleIntegration?.key ?? "integration-key";
-  const toolNameExample = exampleTool?.name ?? "tool-name";
   const security = buildApiKeySecurity("AdminApiKey");
   const unauthorizedResponse = buildUnauthorizedResponse(
     "Missing or invalid admin automation API key.",
@@ -73,95 +61,14 @@ export const buildAdminOpenApiDocument = ({
     },
     servers: [{ url: baseUrl }],
     tags: [
-      { name: "Admin Integrations" },
       { name: "Admin Discovery" },
       { name: "Admin Approvals" },
       { name: "Admin Connectors" },
+      { name: "Admin Connections" },
+      { name: "Admin Overview" },
       { name: "Admin Workspace" },
     ],
     paths: {
-      "/api/admin/integrations": {
-        get: {
-          tags: ["Admin Integrations"],
-          operationId: "listAdminIntegrations",
-          summary: "List installed integrations",
-          security,
-          responses: {
-            200: buildJsonArrayRefResponse(
-              "Installed integrations for the authenticated admin user.",
-              "IntegrationSpec",
-            ),
-            401: unauthorizedResponse,
-          },
-        },
-        post: {
-          tags: ["Admin Integrations"],
-          operationId: "createAdminIntegration",
-          summary: "Install or update an integration",
-          security,
-          requestBody: buildJsonRequestBody({
-            $ref: "#/components/schemas/IntegrationCreateRequest",
-          }),
-          responses: {
-            200: buildJsonRefResponse("Saved integration.", "IntegrationSpec"),
-            401: unauthorizedResponse,
-          },
-        },
-      },
-      "/api/admin/integrations/{integrationKey}": {
-        delete: {
-          tags: ["Admin Integrations"],
-          operationId: "deleteAdminIntegration",
-          summary: "Delete an installed integration",
-          security,
-          parameters: [buildPathParameter("integrationKey", integrationKeyExample)],
-          responses: {
-            200: buildJsonRefResponse("Deletion result.", "DeleteResult"),
-            401: unauthorizedResponse,
-          },
-        },
-      },
-      "/api/admin/integrations/{integrationKey}/tools/{toolName}": {
-        patch: {
-          tags: ["Admin Integrations"],
-          operationId: "updateAdminToolAccessMode",
-          summary: "Update a tool access mode",
-          security,
-          parameters: [
-            buildPathParameter("integrationKey", integrationKeyExample),
-            buildPathParameter("toolName", toolNameExample),
-          ],
-          requestBody: buildJsonRequestBody({
-            type: "object",
-            required: ["accessMode"],
-            properties: {
-              accessMode: {
-                type: "string",
-                enum: ["enabled", "disabled", "approval_required"],
-              },
-            },
-          }),
-          responses: {
-            200: buildJsonRefResponse("Updated tool spec.", "ToolSpec"),
-            401: unauthorizedResponse,
-          },
-        },
-      },
-      "/api/admin/oauth/connections": {
-        get: {
-          tags: ["Admin Workspace"],
-          operationId: "listAdminOauthConnections",
-          summary: "List OAuth connection status",
-          security,
-          responses: {
-            200: buildJsonArrayRefResponse(
-              "OAuth connection state for the authenticated admin user.",
-              "IntegrationConnection",
-            ),
-            401: unauthorizedResponse,
-          },
-        },
-      },
       "/api/admin/notifications": {
         get: {
           tags: ["Admin Workspace"],
@@ -172,6 +79,87 @@ export const buildAdminOpenApiDocument = ({
             200: buildJsonArrayRefResponse(
               "In-app notifications visible in the dashboard.",
               "NotificationRecord",
+            ),
+            401: unauthorizedResponse,
+          },
+        },
+      },
+      "/api/admin/connections": {
+        get: {
+          tags: ["Admin Connections"],
+          operationId: "listAdminConnections",
+          summary: "List deployment-wide connection identities",
+          security,
+          parameters: [
+            {
+              name: "ownerId",
+              in: "query",
+              required: false,
+              schema: { type: "string" },
+            },
+            {
+              name: "provider",
+              in: "query",
+              required: false,
+              schema: { type: "string" },
+            },
+            {
+              name: "integrationKey",
+              in: "query",
+              required: false,
+              schema: { type: "string" },
+            },
+            {
+              name: "q",
+              in: "query",
+              required: false,
+              schema: { type: "string" },
+              description:
+                "Case-insensitive substring search across ownerId, provider, integrationKey, displayName, externalAccountId, and externalWorkspaceId.",
+            },
+            {
+              name: "limit",
+              in: "query",
+              required: false,
+              schema: {
+                type: "integer",
+                minimum: 1,
+                maximum: 1000,
+                default: 100,
+              },
+              description: "Maximum number of connection summaries to return.",
+            },
+            {
+              name: "offset",
+              in: "query",
+              required: false,
+              schema: {
+                type: "integer",
+                minimum: 0,
+                default: 0,
+              },
+              description: "Number of matching connection summaries to skip before returning results.",
+            },
+          ],
+          responses: {
+            200: buildJsonArrayRefResponse(
+              "Sanitized deployment-wide integration connection summaries.",
+              "AdminIntegrationConnectionSummary",
+            ),
+            401: unauthorizedResponse,
+          },
+        },
+      },
+      "/api/admin/overview": {
+        get: {
+          tags: ["Admin Overview"],
+          operationId: "getAdminOperationalOverview",
+          summary: "Get concise deployment-wide operational stats",
+          security,
+          responses: {
+            200: buildJsonRefResponse(
+              "Concise deployment-wide operational summary for admin review.",
+              "AdminOperationalOverview",
             ),
             401: unauthorizedResponse,
           },
@@ -343,12 +331,13 @@ export const buildAdminOpenApiDocument = ({
         ),
       },
       schemas: {
-        IntegrationCreateRequest: toOpenApiSchema(integrationCreateSchema),
         IntegrationSpec: toOpenApiSchema(integrationSpecSchema),
-        ToolSpec: toOpenApiSchema(toolSpecSchema),
         IntegrationDiscoveryRequest: toOpenApiSchema(integrationDiscoveryRequestSchema),
-        IntegrationConnection: toOpenApiSchema(integrationConnectionStatusSchema),
         NotificationRecord: toOpenApiSchema(notificationRecordSchema),
+        AdminIntegrationConnectionSummary: toOpenApiSchema(
+          adminIntegrationConnectionSummarySchema,
+        ),
+        AdminOperationalOverview: toOpenApiSchema(adminOperationalOverviewSchema),
         AccessRequest: toOpenApiSchema(accessRequestSchema),
         AccessRequestDecision: toOpenApiSchema(accessRequestDecisionSchema.partial()),
         ManagedConnectorUpsert: toOpenApiSchema(managedConnectorUpsertSchema),

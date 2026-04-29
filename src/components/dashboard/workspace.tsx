@@ -546,6 +546,7 @@ export const DashboardWorkspace = ({
       <DashboardSidebar
         badge={<Badge>{enabledIntegrationCount} live</Badge>}
         activeItem={activeSection}
+        showAdminOverviewLink={isAdmin}
         showAdminIntegrationsLink={isAdmin}
         footer={
           <DashboardSidebarUserPanel

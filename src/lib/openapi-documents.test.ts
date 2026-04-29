@@ -35,7 +35,6 @@ describe("OpenAPI document builders", () => {
   it("reuses the shared error schema and bearer security schemes", () => {
     const adminDocument = buildAdminOpenApiDocument({
       baseUrl: "https://context.example.com",
-      integrations,
     });
     const userDocument = buildUserOpenApiDocument({
       baseUrl: "https://context.example.com",
@@ -103,7 +102,6 @@ describe("OpenAPI document builders", () => {
   it("uses tool terminology in OpenAPI paths and schemas", () => {
     const adminDocument = buildAdminOpenApiDocument({
       baseUrl: "https://context.example.com",
-      integrations,
     });
     const userDocument = buildUserOpenApiDocument({
       baseUrl: "https://context.example.com",
@@ -115,8 +113,15 @@ describe("OpenAPI document builders", () => {
       integrations,
     });
 
-    expect(adminDocument.paths["/api/admin/integrations/{integrationKey}/tools/{toolName}"]).toBeDefined();
+    expect(
+      Object.prototype.hasOwnProperty.call(
+        adminDocument.paths,
+        "/api/admin/integrations/{integrationKey}/tools/{toolName}",
+      ),
+    ).toBe(false);
     expect(userDocument.paths["/api/user/integrations/{integrationKey}/tools/{toolName}"]).toBeDefined();
+    expect(adminDocument.paths["/api/admin/connections"]).toBeDefined();
+    expect(adminDocument.paths["/api/admin/overview"]).toBeDefined();
     expect(
       Object.prototype.hasOwnProperty.call(
         adminDocument.paths,

@@ -14,14 +14,14 @@ const integrationDiscoverySchema = z.object({
 
 export async function POST(request: Request) {
   try {
-    const { ownerId } = await authenticateAdminApiRequest(request);
+    const identity = await authenticateAdminApiRequest(request);
     const payload = integrationDiscoverySchema.parse(await request.json());
     const baseUrl = new URL(request.url).origin;
     return ok(
       await discoverIntegration(payload, {
         baseUrl,
         repository: getContextLayerRepository(),
-        ownerId,
+        ownerId: identity.adminOwnerId,
       }),
     );
   } catch (error) {

@@ -333,6 +333,52 @@ export interface IntegrationConnectionStatus {
   updatedAt: string;
 }
 
+export interface AdminIntegrationConnectionSummary {
+  ownerId: string;
+  integrationKey: string;
+  provider: string;
+  authStrategy: AuthStrategy;
+  tokenType?: string;
+  scopes: string[];
+  expiresAt?: string;
+  externalAccountId?: string;
+  externalWorkspaceId?: string;
+  displayName?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AdminDuplicateExternalAccountSummary {
+  provider: string;
+  externalAccountId: string;
+  ownerIds: string[];
+  ownerCount: number;
+  displayNames: string[];
+}
+
+export interface AdminOperationalOverviewUserSummary {
+  ownerId: string;
+  totalConnections: number;
+  integrations: string[];
+  providers: string[];
+  totalAccessRequests: number;
+  pendingAccessRequests: number;
+  notifications: number;
+  duplicateExternalAccounts: AdminDuplicateExternalAccountSummary[];
+  connections: AdminIntegrationConnectionSummary[];
+}
+
+export interface AdminOperationalOverview {
+  totalConnections: number;
+  connectedOwners: number;
+  managedConnectors: number;
+  totalAccessRequests: number;
+  pendingAccessRequests: number;
+  notifications: number;
+  duplicateExternalAccounts: AdminDuplicateExternalAccountSummary[];
+  users: AdminOperationalOverviewUserSummary[];
+}
+
 export interface OAuthStateRecord {
   state: string;
   ownerId: string;

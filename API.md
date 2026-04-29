@@ -50,6 +50,8 @@ Legacy redirects:
 - Base docs: `GET /api/admin/openapi`
 - Auth: admin automation API key (`clad_...`)
 - Primary routes:
+  - `GET /api/admin/connections`
+  - `GET /api/admin/overview`
   - `GET|POST /api/admin/managed-connectors`
   - `DELETE /api/admin/managed-connectors/[slug]`
   - `POST /api/admin/integrations/discover`

@@ -1866,6 +1866,43 @@ describe("ContextLayerService", () => {
     expect(await service.isStoredAgentApiKeyAuthorized("   ")).toBe(false);
   });
 
+
+  it("pushes exact-match admin connection filters to the repository", async () => {
+    const service = createService();
+    await service.saveOAuthConnection(
+      "Owner@Example.com",
+      "github",
+      "github",
+      {
+        accessToken: "access-token",
+      },
+      {
+        authStrategy: "oauth2",
+        tokenType: "bearer",
+        scopes: ["read"],
+        externalAccountId: "bot_123",
+        displayName: "Team Wiki",
+        metadata: { login: "team-wiki" },
+      },
+    );
+    const listAllSpy = vi.spyOn(testRepo, "listAllIntegrationConnections");
+
+    await service.listAdminIntegrationConnections({
+      ownerId: " OWNER@example.com ",
+      provider: "GitHub",
+      integrationKey: " GitHub ",
+      query: "team",
+    });
+
+    expect(listAllSpy).toHaveBeenCalledWith({
+      ownerId: "owner@example.com",
+      provider: "github",
+      integrationKey: "github",
+      limit: 100,
+      offset: 0,
+    });
+  });
+
   it("lists sanitized connection statuses and validates OAuth state lifecycle", async () => {
     const service = createService();
     const future = new Date(Date.now() + 60 * 60 * 1000).toISOString();

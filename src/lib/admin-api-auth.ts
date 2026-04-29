@@ -11,7 +11,7 @@ export const ADMIN_API_FORBIDDEN_DETAIL =
   "This endpoint requires an active admin API key for an allowlisted admin user.";
 
 export interface AdminApiRequestIdentity {
-  ownerId: string;
+  adminOwnerId: string;
   email: string;
   isAdmin: true;
 }
@@ -32,7 +32,7 @@ export const authenticateAdminApiRequest = async (
   }
 
   return {
-    ownerId: apiKeyRecord.ownerId,
+    adminOwnerId: apiKeyRecord.ownerId,
     email: apiKeyRecord.ownerId,
     isAdmin: true,
   };

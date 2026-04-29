@@ -1,5 +1,3 @@
-import { createHash } from "node:crypto";
-
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { GET } from "./route";
@@ -11,7 +9,6 @@ import {
   ADMIN_API_BEARER_CHALLENGE,
   ADMIN_API_UNAUTHORIZED_DETAIL,
 } from "@/src/lib/admin-api-auth";
-import type { IntegrationSpec } from "@/src/types/context-layer";
 
 vi.mock("@neondatabase/serverless", () => ({ neon: () => getActiveSql() }));
 
@@ -43,32 +40,7 @@ const setRuntimeRepository = (repository?: ContextRepository) => {
   delete runtime.contextLayerService;
 };
 
-const githubIntegration: IntegrationSpec = {
-  key: "github",
-  name: "GitHub",
-  kind: "mcp",
-  provider: "mcp",
-  authStrategy: "oauth2",
-  enabled: true,
-  fineGrainedPermissions: true,
-  config: { serverUrl: "https://api.githubcopilot.com/mcp/" },
-  credentials: {},
-  tools: {
-    search_repositories: {
-      name: "search_repositories",
-      description: "Search repositories",
-      enabled: true,
-      accessMode: "enabled",
-      fineGrainedPermissions: true,
-      defaultScopes: ["repo"],
-      executionMode: "provider",
-      config: { toolName: "search_repositories" },
-    },
-  },
-};
-
 const seedAdminKey = async (ownerId: string) => {
-  await testRepo.upsertOwnerIntegration(ownerId, githubIntegration);
   setRuntimeRepository(testRepo);
   const service = getContextLayerService();
   const rotated = await service.rotateAdminApiKey(ownerId);
@@ -76,6 +48,7 @@ const seedAdminKey = async (ownerId: string) => {
 };
 
 afterEach(async () => {
+  vi.stubEnv("APP_ADMIN_EMAILS", "admin@example.com");
   setRuntimeRepository();
   await testCleanup();
 });
@@ -105,13 +78,25 @@ describe("GET /api/admin/openapi", () => {
 
     expect(body.openapi).toBe("3.0.3");
     expect(body.servers).toEqual([{ url: "http://localhost:3000" }]);
-    expect(body.paths["/api/admin/integrations"]?.get).toBeTruthy();
-    expect(body.paths["/api/admin/integrations"]?.post).toBeTruthy();
     expect(body.paths["/api/admin/integrations/discover"]?.post).toBeTruthy();
+    expect(body.paths["/api/admin/integrations/managed-connectors"]?.get).toBeTruthy();
+    expect(body.paths["/api/admin/integrations/oauth-provider-catalog"]?.get).toBeTruthy();
     expect(body.paths["/api/admin/managed-connectors"]?.get).toBeTruthy();
     expect(body.paths["/api/admin/managed-connectors"]?.post).toBeTruthy();
     expect(body.paths["/api/admin/access-requests/{requestId}/approve"]?.post).toBeTruthy();
     expect(body.paths["/api/admin/notifications"]?.get).toBeTruthy();
+    const adminConnectionsPath = body.paths["/api/admin/connections"]?.get;
+    expect(adminConnectionsPath).toBeTruthy();
+    expect((adminConnectionsPath as { parameters?: Array<{ name?: string }> }).parameters).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ name: "q" }),
+        expect.objectContaining({ name: "limit" }),
+        expect.objectContaining({ name: "offset" }),
+      ]),
+    );
+    expect(body.paths["/api/admin/overview"]?.get).toBeTruthy();
+    expect(body.paths["/api/admin/integrations"]).toBeUndefined();
+    expect(body.paths["/api/admin/oauth/connections"]).toBeUndefined();
     expect(body.components.securitySchemes.AdminApiKey).toMatchObject({
       type: "http",
       scheme: "bearer",
@@ -122,17 +107,8 @@ describe("GET /api/admin/openapi", () => {
   });
 
   it("rejects admin keys for users who are no longer allowlisted", async () => {
-    const apiKey = "clad_deallowlisted_user_key_value";
-    await testRepo.saveAdminApiKey({
-      ownerId: "user@example.com",
-      apiKeyHash: createHash("sha256").update(apiKey).digest("hex"),
-      keyPrefix: apiKey.slice(0, 12),
-      keySuffix: apiKey.slice(-4),
-      encryptedApiKey: null,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    });
-    setRuntimeRepository(testRepo);
+    const apiKey = await seedAdminKey("admin@example.com");
+    vi.stubEnv("APP_ADMIN_EMAILS", "other-admin@example.com");
 
     const response = await GET(
       new Request("http://localhost:3000/api/admin/openapi", {

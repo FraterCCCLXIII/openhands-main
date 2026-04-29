@@ -1,12 +1,22 @@
 import type { LucideIcon } from "lucide-react";
-import { CheckCircle2, KeyRound, PlugZap, ShieldCheck, User } from "lucide-react";
+import {
+  Activity,
+  CheckCircle2,
+  KeyRound,
+  PlugZap,
+  ShieldCheck,
+  User,
+} from "lucide-react";
 import Link from "next/link";
 import { Fragment, type ReactNode } from "react";
 
 import { getAdminSectionPath, type AdminSection } from "@/src/lib/admin-routes";
 import { cn } from "@/src/lib/utils";
 
-export type DashboardSidebarItemId = AdminSection | "adminIntegrations";
+export type DashboardSidebarItemId =
+  | AdminSection
+  | "adminOverview"
+  | "adminIntegrations";
 
 const sidebarLinkClassName =
   "flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm transition-colors";
@@ -42,6 +52,13 @@ const DASHBOARD_SECTION_ITEMS: Array<{
     href: getAdminSectionPath("profile"),
   },
 ];
+
+const ADMIN_OVERVIEW_ITEM = {
+  id: "adminOverview" as const,
+  label: "Operational overview",
+  icon: Activity,
+  href: "/admin-overview",
+};
 
 const ADMIN_INTEGRATIONS_ITEM = {
   id: "adminIntegrations" as const,
@@ -124,12 +141,14 @@ export const DashboardSidebarUserPanel = ({
 export const DashboardSidebar = ({
   badge,
   activeItem,
+  showAdminOverviewLink = false,
   showAdminIntegrationsLink = false,
   showApprovalsLink = true,
   footer,
 }: {
   badge: ReactNode;
   activeItem: DashboardSidebarItemId;
+  showAdminOverviewLink?: boolean;
   showAdminIntegrationsLink?: boolean;
   showApprovalsLink?: boolean;
   footer?: ReactNode;
@@ -160,14 +179,26 @@ export const DashboardSidebar = ({
         ))}
       </nav>
 
-      {showAdminIntegrationsLink ? (
+      {showAdminOverviewLink || showAdminIntegrationsLink ? (
         <div className="border-t border-[var(--color-border)] pt-3">
-          <DashboardSidebarLink
-            href={ADMIN_INTEGRATIONS_ITEM.href}
-            icon={ADMIN_INTEGRATIONS_ITEM.icon}
-            label={ADMIN_INTEGRATIONS_ITEM.label}
-            active={activeItem === ADMIN_INTEGRATIONS_ITEM.id}
-          />
+          <div className="space-y-1">
+            {showAdminOverviewLink ? (
+              <DashboardSidebarLink
+                href={ADMIN_OVERVIEW_ITEM.href}
+                icon={ADMIN_OVERVIEW_ITEM.icon}
+                label={ADMIN_OVERVIEW_ITEM.label}
+                active={activeItem === ADMIN_OVERVIEW_ITEM.id}
+              />
+            ) : null}
+            {showAdminIntegrationsLink ? (
+              <DashboardSidebarLink
+                href={ADMIN_INTEGRATIONS_ITEM.href}
+                icon={ADMIN_INTEGRATIONS_ITEM.icon}
+                label={ADMIN_INTEGRATIONS_ITEM.label}
+                active={activeItem === ADMIN_INTEGRATIONS_ITEM.id}
+              />
+            ) : null}
+          </div>
         </div>
       ) : null}
 
