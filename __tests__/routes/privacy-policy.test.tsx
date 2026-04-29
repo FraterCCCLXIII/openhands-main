@@ -24,6 +24,10 @@ describe('Privacy policy route', () => {
     expect(screen.getByRole('heading', { level: 3, name: 'How to contact us' })).toBeInTheDocument();
     expect(screen.getByText(/This Privacy Policy explains how we handle personal information/i)).toBeInTheDocument();
 
+    expect(screen.getByText('Building the open standard for autonomous software development.')).toBeInTheDocument();
+    expect(
+      screen.queryByRole('heading', { name: 'Building the open standard for autonomous software development.' }),
+    ).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Build with SDK' })).toHaveAttribute('href', 'https://docs.openhands.dev/sdk');
     expect(screen.getByRole('link', { name: 'Try it live' })).toHaveAttribute('href', 'https://app.all-hands.dev/');
   });

@@ -77,7 +77,7 @@ const Enterprise = () => {
             OpenHands Enterprise gives you the power of autonomous coding agents with the governance, security, and compliance your organization demands.
           </p>
           <div className='flex flex-wrap items-center justify-center gap-4'>
-            <a href='/contact' className='btn btn-outline rounded-none'>
+            <a href='/contact' className='btn btn-primary rounded-none'>
               Book a demo
             </a>
             <a
@@ -200,7 +200,7 @@ const Enterprise = () => {
               Legacy modernization projects fail 74% of the time and the engineers who understand your COBOL, mainframe, and legacy systems are retiring faster than you can replace them.
             </p>
           </div>
-          <a href='/whitepapers/modernize-legacy-systems-with-ai-agents' className='btn btn-outline rounded-none'>
+          <a href='/whitepapers/modernize-legacy-systems-with-ai-agents' className='btn btn-primary rounded-none'>
             Download the Whitepaper
           </a>
         </div>
@@ -208,9 +208,9 @@ const Enterprise = () => {
 
       <section className='px-10 py-20 text-center'>
         <div className='mx-auto flex max-w-3xl flex-col items-center gap-6'>
-          <h2 className='text-[44px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>
+          <div className='text-[44px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>
             Bring agentic development to your organization.
-          </h2>
+          </div>
           <p className='max-w-2xl text-[18px] leading-[1.6] text-brand-muted'>
             Deploy securely. Scale confidently. Stay in control.
           </p>
@@ -219,7 +219,7 @@ const Enterprise = () => {
               href='https://docs.openhands.dev/sdk'
               target='_blank'
               rel='noopener noreferrer'
-              className='btn btn-outline rounded-none'
+              className='btn btn-primary rounded-none'
             >
               Build with SDK
             </a>
@@ -227,7 +227,7 @@ const Enterprise = () => {
               href='https://app.all-hands.dev/'
               target='_blank'
               rel='noopener noreferrer'
-              className='btn btn-primary rounded-none'
+              className='btn btn-outline rounded-none'
             >
               Try it live
             </a>

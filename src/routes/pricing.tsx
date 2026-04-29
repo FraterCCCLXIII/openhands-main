@@ -241,9 +241,10 @@ const Pricing = () => {
 
       <section className='px-10 py-20'>
         <div className='mx-auto max-w-[1260px]'>
-          <h2 className='text-center text-[32px] lg:text-[44px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>
+          <h2 className='sr-only'>Compare plans</h2>
+          <div aria-hidden='true' className='text-center text-[32px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg lg:text-[44px]'>
             Compare plans
-          </h2>
+          </div>
           <div className='mt-10 overflow-x-auto rounded-[24px] border border-brand-fg/10 bg-white/60'>
             <table className='min-w-full border-collapse text-left'>
               <thead>
@@ -302,14 +303,14 @@ const Pricing = () => {
 
       <section className='px-10 py-20'>
         <div className='mx-auto max-w-[1000px]'>
-          <div className='mb-6 text-center'>
+          <h2 className='text-center text-[32px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg lg:text-[44px]'>
+            FAQ&apos;s
+          </h2>
+          <div className='mb-6 mt-6 text-center'>
             <a href='/contact' className='btn btn-outline rounded-none'>
               Contact us
             </a>
           </div>
-          <h2 className='text-center text-[32px] lg:text-[44px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>
-            FAQ&apos;s
-          </h2>
           <div className='mt-10 space-y-4'>
             {FAQS.map((faq) => (
               <details
@@ -317,7 +318,7 @@ const Pricing = () => {
                 open
                 className='rounded-[24px] border border-brand-fg/10 bg-white/60 p-6'
               >
-                <summary className='cursor-pointer list-none text-[24px] leading-[1.4] font-medium text-brand-fg'>
+                <summary className='cursor-pointer list-none text-[24px] font-medium leading-[1.4] text-brand-fg'>
                   <label>{faq.question}</label>
                 </summary>
                 <div className='mt-4 text-[16px] leading-[1.6] text-brand-muted'>{faq.answer}</div>

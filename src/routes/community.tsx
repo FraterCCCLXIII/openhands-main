@@ -1,21 +1,6 @@
 import type { Route } from './+types/community';
 import { MarketingFooterCta } from '~/components/marketing-footer-cta';
 
-const GET_STARTED_CARDS = [
-  {
-    label: 'CLI',
-    title: 'Download CLI',
-    icon: '/assets/webflow/icons/691060be26eb9254bee8c71a_export-1.svg',
-    href: 'https://docs.openhands.dev/openhands/usage/cli/installation',
-  },
-  {
-    label: 'Web UI (requires docker)',
-    title: 'Download Web UI',
-    icon: '/assets/webflow/icons/691060c68664fc7bd287b128_export-2.svg',
-    href: 'https://docs.openhands.dev/openhands/usage/run-openhands/local-setup',
-  },
-];
-
 const EVENTS = [
   {
     title: 'Scale Enterprise AI Agents',
@@ -94,34 +79,6 @@ export const meta: Route.MetaFunction = ({ location }) => {
 const Community = () => {
   return (
     <main className='pt-[100px]'>
-      <section className='px-10 py-12'>
-        <div className='mx-auto max-w-[1100px] rounded-[28px] border border-brand-fg/10 bg-white/60 p-6'>
-          <div className='flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between'>
-            <div>
-              <p className='text-sm uppercase tracking-[0.14em] text-brand-muted'>Get started with OpenHands Open Source</p>
-            </div>
-            <img src='/assets/webflow/icons/691062960cc6cca6fedb9220_Cross.svg' alt='' className='hidden h-6 w-6 lg:block' />
-          </div>
-          <div className='mt-6 grid gap-4 md:grid-cols-2'>
-            {GET_STARTED_CARDS.map((card) => (
-              <a
-                key={card.title}
-                href={card.href}
-                target='_blank'
-                rel='noopener noreferrer'
-                className='flex items-center justify-between rounded-[24px] border border-brand-fg/10 bg-brand-bg/40 p-5 transition-transform hover:-translate-y-0.5'
-              >
-                <div>
-                  <p className='text-[14px] text-brand-muted'>{card.label}</p>
-                  <h2 className='mt-2 text-[24px] font-medium leading-[1.2] text-brand-fg'>{card.title}</h2>
-                </div>
-                <img src={card.icon} alt='' className='h-14 w-14 flex-none' />
-              </a>
-            ))}
-          </div>
-        </div>
-      </section>
-
       <section className='px-10 py-20'>
         <div className='mx-auto flex max-w-4xl flex-col items-center gap-6 text-center'>
           <h1 className='text-[44px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>

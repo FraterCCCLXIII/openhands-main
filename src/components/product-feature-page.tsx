@@ -68,6 +68,7 @@ export const ProductPageActionLink = ({
         rel='noopener noreferrer'
         className={classes}
         aria-label={assistiveLabel}
+        style={{ borderRadius: 0 }}
       >
         {label}
       </a>
@@ -75,7 +76,7 @@ export const ProductPageActionLink = ({
   }
 
   return (
-    <Link to={href} className={classes} aria-label={assistiveLabel}>
+    <Link to={href} className={classes} aria-label={assistiveLabel} style={{ borderRadius: 0 }}>
       {label}
     </Link>
   );
@@ -84,19 +85,28 @@ export const ProductPageActionLink = ({
 const ProductFeatureIntroBand = ({
   title,
   description,
+  image,
 }: {
   title: string;
   description: string;
+  image?: ProductFeaturePageData['heroImage'];
 }) => (
   <section className='relative overflow-hidden bg-brand-accent px-6 py-20 lg:px-10'>
     <AsciiBackdrop opacity='opacity-[0.14]' />
-    <div className='relative mx-auto max-w-[860px] text-center'>
-      <h2 className='text-[34px] font-medium leading-[1.08] tracking-[-0.03em] text-brand-fg lg:text-[44px]'>
-        {title}
-      </h2>
-      <p className='mx-auto mt-5 max-w-[720px] text-[18px] leading-[1.45] text-brand-fg/80'>
-        {description}
-      </p>
+    <div className='relative mx-auto max-w-[978px] text-center'>
+      {image ? (
+        <div className='mb-8 overflow-hidden'>
+          <img src={image.src} alt={image.alt} className='w-full object-cover' />
+        </div>
+      ) : null}
+      <div className='mx-auto max-w-[860px]'>
+        <h2 className='text-[30px] font-medium leading-[1.2] tracking-[-0.03em] text-brand-fg lg:text-[32px]'>
+          {title}
+        </h2>
+        <p className='mx-auto mt-5 max-w-[720px] text-[18px] leading-[1.45] text-brand-fg/80'>
+          {description}
+        </p>
+      </div>
     </div>
   </section>
 );
@@ -104,9 +114,11 @@ const ProductFeatureIntroBand = ({
 const ProductFeatureProofBand = ({
   title,
   description,
+  image,
 }: {
   title: string;
   description: string;
+  image?: ProductFeaturePageData['accentImage'];
 }) => (
   <section className='relative overflow-hidden bg-brand-fg px-6 py-20 lg:px-10'>
     <div className='pointer-events-none absolute inset-0 opacity-[0.28]'>
@@ -116,13 +128,20 @@ const ProductFeatureProofBand = ({
         className='h-full w-full object-cover'
       />
     </div>
-    <div className='relative mx-auto max-w-[860px] text-center'>
-      <h2 className='text-[34px] font-medium leading-[1.08] tracking-[-0.03em] text-brand-bg lg:text-[44px]'>
-        {title}
-      </h2>
-      <p className='mx-auto mt-5 max-w-[760px] text-[18px] leading-[1.45] text-[#d6caab]'>
-        {description}
-      </p>
+    <div className='relative mx-auto max-w-[978px] text-center'>
+      {image ? (
+        <div className='mx-auto mb-8 max-w-[520px]'>
+          <img src={image.src} alt={image.alt} className='mx-auto w-full object-contain' />
+        </div>
+      ) : null}
+      <div className='mx-auto max-w-[860px]'>
+        <h2 className='text-[30px] font-medium leading-[1.2] tracking-[-0.03em] text-brand-bg lg:text-[32px]'>
+          {title}
+        </h2>
+        <p className='mx-auto mt-5 max-w-[760px] text-[18px] leading-[1.45] text-[#d6caab]'>
+          {description}
+        </p>
+      </div>
     </div>
   </section>
 );
@@ -191,9 +210,9 @@ export const ProductComparisonTable = ({
   return (
     <section className={classNames('px-6 py-20 lg:px-10', sectionClass)}>
       <div className='mx-auto max-w-[1260px]'>
-        <h2 className={classNames('mx-auto max-w-[760px] text-center text-[34px] font-medium leading-[1.08] tracking-[-0.03em] lg:text-[44px]', headingClass)}>
+        <div className={classNames('mx-auto max-w-[760px] text-center text-[34px] font-medium leading-[1.08] tracking-[-0.03em] lg:text-[44px]', headingClass)}>
           The only open, secure, and scalable agent platform built for real engineering work
-        </h2>
+        </div>
         <div className='mt-10 overflow-x-auto'>
           <table className='min-w-full border-collapse text-left'>
             <thead>
@@ -242,16 +261,16 @@ export const ProductFaqSection = ({ faqs }: { faqs: readonly ProductFaqItem[] })
     <section className='bg-brand-bg px-6 py-20 lg:px-10'>
       <div className='mx-auto grid max-w-[1260px] gap-10 lg:grid-cols-[240px_minmax(0,1fr)] lg:gap-16'>
         <div>
-          <ProductPageActionLink href='/contact' label='Contact us' variant='outline' className='mb-8' />
           <h2 className='text-[34px] font-medium leading-[1.08] tracking-[-0.03em] text-brand-fg lg:text-[44px]'>
             FAQ&apos;s
           </h2>
+          <ProductPageActionLink href='/contact' label='Contact us' variant='outline' className='mt-8' />
         </div>
         <div className='border-t border-brand-fg/15'>
           {faqs.map((faq) => (
             <details key={faq.question} className='group border-b border-brand-fg/15 py-4'>
               <summary className='flex cursor-pointer list-none items-start justify-between gap-6 text-[20px] font-medium leading-[1.35] text-brand-fg'>
-                <span>{faq.question}</span>
+                <label className='block cursor-pointer'>{faq.question}</label>
                 <span className='mt-1 text-[22px] leading-none transition-transform group-open:rotate-45'>+</span>
               </summary>
               <p className='max-w-[680px] pt-4 text-[16px] leading-[1.6] text-brand-fg/75'>{faq.answer}</p>
@@ -276,9 +295,9 @@ export const ProductPageFooterCta = ({
     <section className='relative overflow-hidden bg-brand-accent px-6 py-20 text-center lg:px-10'>
       <AsciiBackdrop opacity='opacity-[0.18]' />
       <div className='relative mx-auto flex max-w-[760px] flex-col items-center gap-6'>
-        <h2 className='text-[34px] font-medium leading-[1.08] tracking-[-0.03em] text-brand-fg lg:text-[44px]'>
+        <div className='text-[34px] font-medium leading-[1.08] tracking-[-0.03em] text-brand-fg lg:text-[44px]'>
           {title}
-        </h2>
+        </div>
         <p className='max-w-[620px] text-[18px] leading-[1.45] text-brand-fg/80'>{description}</p>
         <div className='flex flex-wrap items-center justify-center gap-4'>
           {actions.map((action) => (
@@ -307,12 +326,16 @@ export const ProductFeaturePage = ({
         <AsciiBackdrop />
         <div className='relative mx-auto flex max-w-[860px] flex-col items-center text-center'>
           <ProductEyebrow label={page.eyebrow} />
-          <h1 className='mt-8 text-[40px] font-medium leading-[1.02] tracking-[-0.04em] text-brand-fg lg:text-[58px]'>
+          <h1 className='mt-8 text-[40px] font-medium leading-[1.08] tracking-[-0.04em] text-brand-fg lg:text-[44px]'>
             {page.heading}
           </h1>
           <p className='mt-4 max-w-[620px] text-[18px] leading-[1.45] text-brand-fg/75'>{page.description}</p>
           <div className='mt-8 flex flex-wrap items-center justify-center gap-4'>
-            <ProductPageActionLink href={page.primaryCta.href} label={page.primaryCta.label} />
+            <ProductPageActionLink
+              href={page.primaryCta.href}
+              label={page.primaryCta.label}
+              screenReaderLabel='Join Slack'
+            />
             <ProductPageActionLink
               href={page.secondaryCta.href}
               label={page.secondaryCta.label}
@@ -329,12 +352,24 @@ export const ProductFeaturePage = ({
             title={page.introTitle}
             description={page.introDescription}
           />
-          <ProductFeatureIntroBand title={page.proofTitle} description={page.proofDescription} />
+          <ProductFeatureProofBand
+            title={page.proofTitle}
+            description={page.proofDescription}
+            image={page.accentImage}
+          />
         </>
       ) : (
         <>
-          <ProductFeatureIntroBand title={page.introTitle} description={page.introDescription} />
-          <ProductFeatureProofBand title={page.proofTitle} description={page.proofDescription} />
+          <ProductFeatureIntroBand
+            title={page.introTitle}
+            description={page.introDescription}
+            image={page.heroImage}
+          />
+          <ProductFeatureProofBand
+            title={page.proofTitle}
+            description={page.proofDescription}
+            image={page.accentImage}
+          />
         </>
       )}
 
@@ -362,16 +397,7 @@ export const ProductFeaturePage = ({
         </div>
       </section>
 
-      <ProductComparisonTable dark ctaHref='https://app.all-hands.dev/' ctaLabel='Try it live' />
       <ProductFaqSection faqs={faqs} />
-      <ProductPageFooterCta
-        title={page.closingTitle}
-        description={page.closingDescription}
-        actions={[
-          page.closingPrimaryCta,
-          { ...page.closingSecondaryCta, variant: 'outline' as const },
-        ]}
-      />
     </main>
   );
 };

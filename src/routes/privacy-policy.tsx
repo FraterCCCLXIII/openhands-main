@@ -33,7 +33,7 @@ export const meta: Route.MetaFunction = ({ location }) => {
 function PrivacyPolicy() {
   return (
     <>
-      <main className='px-6 pb-20 pt-12 text-brand-fg lg:px-10 lg:pt-16'>
+      <main className='px-6 pb-20 pt-[112px] text-brand-fg lg:px-10 lg:pt-[116px]'>
         <div className='mx-auto max-w-[720px]'>
           <Markdown
             components={{

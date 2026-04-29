@@ -43,14 +43,18 @@ const Product = () => {
           <div className='inline-flex rounded-[4px] bg-brand-accent px-5 py-2 text-[13px] font-medium leading-none text-brand-fg'>
             Product
           </div>
-          <h1 className='mt-8 text-[40px] font-medium leading-[1.02] tracking-[-0.04em] text-brand-fg lg:text-[58px]'>
+          <h1 className='mt-8 text-[40px] font-medium leading-[1.08] tracking-[-0.04em] text-brand-fg lg:text-[44px]'>
             Build better software with autonomous cloud agent
           </h1>
           <p className='mt-4 max-w-[640px] text-[18px] leading-[1.45] text-brand-fg/75'>
             Offload toil, ship faster. OpenHands automates real development tasks with transparency, governance, and choice.
           </p>
           <div className='mt-8 flex flex-wrap items-center justify-center gap-4'>
-            <ProductPageActionLink href='https://app.all-hands.dev/' label='Try it live' />
+            <ProductPageActionLink
+              href='https://app.all-hands.dev/'
+              label='Try it live'
+              screenReaderLabel='Join Slack'
+            />
             <ProductPageActionLink
               href='https://docs.openhands.dev/overview/introduction'
               label='See developer docs'
@@ -79,7 +83,7 @@ const Product = () => {
                 </p>
                 <Link
                   to={item.href}
-                  className='mt-8 inline-flex rounded-[6px] bg-[#6f5a4a] px-5 py-3 text-[16px] font-medium leading-none text-brand-bg transition hover:bg-[#816956]'
+                  className='mt-8 inline-flex rounded-none bg-[#6f5a4a] px-5 py-3 text-[16px] font-medium leading-none text-brand-bg transition hover:bg-[#816956]'
                 >
                   Learn more
                 </Link>

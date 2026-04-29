@@ -24,9 +24,18 @@ describe('Product parity routes', () => {
         'The only open, secure, and scalable agent platform built for real engineering work'
       )
     ).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Join Slack' })).toHaveAttribute(
+      'href',
+      'https://app.all-hands.dev/',
+    );
     expect(
       screen.getByText('Building the open standard for autonomous software development.')
     ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('heading', {
+        name: 'Building the open standard for autonomous software development.',
+      })
+    ).not.toBeInTheDocument();
 
     const docLinks = screen.getAllByRole('link', { name: 'See developer docs' });
     expect(docLinks.length).toBeGreaterThan(0);
@@ -54,10 +63,12 @@ describe('Product parity routes', () => {
     expect(
       screen.getByRole('heading', { name: 'Build agents your way.' })
     ).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Join Slack' })).toHaveAttribute(
+      'href',
+      'https://docs.openhands.dev/sdk',
+    );
     expect(screen.getByText('Programmatic task creation')).toBeInTheDocument();
-    expect(
-      screen.getByText('Turn OpenHands into your agent platform.')
-    ).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Turn OpenHands into your agent platform.' })).not.toBeInTheDocument();
   });
 
   it('renders the Web GUI product page content', () => {
@@ -66,22 +77,31 @@ describe('Product parity routes', () => {
     expect(
       screen.getByRole('heading', { name: 'Agentic development, made human.' })
     ).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Join Slack' })).toHaveAttribute(
+      'href',
+      'https://app.all-hands.dev/',
+    );
     expect(screen.getAllByText('Download Local GUI').length).toBeGreaterThan(0);
     expect(screen.getByText('Trust requires visibility.')).toBeInTheDocument();
   });
 
   it('renders the CLI product page content', () => {
-    renderRoute(<ProductCLI />);
+    const { container } = renderRoute(<ProductCLI />);
 
     expect(
       screen.getByRole('heading', { name: 'Agentic power from the command line.' })
     ).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Join Slack' })).toHaveAttribute(
+      'href',
+      'https://docs.openhands.dev/openhands/usage/cli/installation',
+    );
     expect(
       screen.getByText('Headless mode for CI/CD and background tasks')
     ).toBeInTheDocument();
+    expect(container.querySelectorAll('summary label')).toHaveLength(5);
     expect(
-      screen.getByText('Control your agents like real infrastructure.')
-    ).toBeInTheDocument();
+      screen.queryByText('Control your agents like real infrastructure.')
+    ).not.toBeInTheDocument();
   });
 
   it('matches live product metadata for the root route', () => {

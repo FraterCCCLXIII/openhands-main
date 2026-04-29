@@ -109,6 +109,9 @@ npm run parity:checklist  # Crawl openhands.dev and compare against local site
 - Live product subpages use dedicated `/product/...` routes rather than external docs links from the surface cards on `/product`.
 - Screenshot review can catch major parity regressions that the checklist crawler misses. For `/product`, `/product/cli`, `/product/gui`, and `/product/sdk`, always inspect local-vs-live full-page screenshots for eyebrow badges, section order, alternating dark feature rows, dark comparison sections, two-column FAQ layout, and yellow ASCII footer CTAs.
 - For button/link parity on the product subpages, the live Webflow pages expose different visible CTA labels vs. extracted anchor text in some hero buttons; preserve the `screenReaderLabel` support in `ProductPageActionLink` if parity regressions reappear.
+- Live product/commercial parity depends on a few non-obvious semantics from the Webflow export: product hero primary CTAs keep visible labels like `Try it live` / `Get Started`, but their accessible label should be `Join Slack`; comparison/footer CTA titles often render as styled `div` text instead of semantic `h2`, while FAQ question text should stay inside `label` elements within `summary` rows.
+- On `/product/cli` and `/product/sdk`, the first post-hero section must render the standalone hero image asset (no rounded card treatment), and the dark proof band should render the separate ASCII accent image (`page.accentImage`) so parity audits can match the live image inventory.
+
 - After the screenshot-driven parity pass on issue #291, the product routes were rebuilt around shared data-driven sections instead of ad hoc page-specific layouts, which made the screenshot structure much closer to live even though the automated parity checklist still reports many false-positive content/style mismatches.
 
 ## Legal Page Parity Notes
