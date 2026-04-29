@@ -15,6 +15,7 @@ import { motion } from 'framer-motion';
 import React from 'react';
 import { Footer } from './components/footer';
 import { Header } from './components/header';
+import { MarketingFooterCta } from './components/marketing-footer-cta';
 import { Sidebar } from './components/sidebar/sidebar';
 import { GitHubModal } from './components/github-modal';
 import { GitHubModalProvider } from './contexts/github-modal-context';
@@ -77,6 +78,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
+const MARKETING_FOOTER_PATHS = new Set(['/about', '/contact', '/manifesto', '/press']);
+
 export default function App() {
   const [isSidebarHidden, setIsSidebarHidden] = React.useState(true);
   const [isGitHubModalOpen, setIsGitHubModalOpen] = React.useState(false);
@@ -85,6 +88,7 @@ export default function App() {
   const width = useWidth();
   const isDesktop = width >= 1024;
   const showGlobalFooter = location.pathname !== '/';
+  const useMarketingFooter = MARKETING_FOOTER_PATHS.has(location.pathname);
 
   const handleOpenGitHubModal = () => {
     setIsGitHubModalOpen(true);
@@ -139,7 +143,15 @@ export default function App() {
         <div className='flex-1'>
           <GitHubModalProvider openGitHubModal={handleOpenGitHubModal}>
             <Outlet />
-            {showGlobalFooter && <Footer standalone />}
+            {showGlobalFooter &&
+              (useMarketingFooter ? (
+                <>
+                  <MarketingFooterCta />
+                  <Footer standalone />
+                </>
+              ) : (
+                <Footer standalone />
+              ))}
           </GitHubModalProvider>
         </div>
       </motion.div>

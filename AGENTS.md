@@ -62,6 +62,12 @@ npm run parity:checklist  # Crawl openhands.dev and compare against local site
 - The homepage testimonial/social quote cards on live split some posts into multiple paragraphs; if parity audit reports missing `P:` items, check whether the local card collapsed multiple lines into one paragraph.
 - `PARITY_MAX_PAGES=10 npm run parity:checklist` is enough to recheck `/` plus major top-level routes during homepage work.
 
+## Company Page Parity Notes
+- `/about`, `/contact`, `/press`, and `/manifesto` now use live Webflow copy patterns rather than the older marketing-page placeholders.
+- The about page roster is sourced from `src/constants/members.ts` as an ordered `teamMembers` list that matches the live team names and roles.
+- The contact page intentionally mirrors the live enterprise lead form fields/placeholders (`James`, `Smith`, `Acme`, `email@company.com`, `Send us a note here....`) for parity tests.
+- Company pages should render the shared bottom CTA via `src/components/marketing-footer-cta.tsx` before the standalone site footer.
+
 ## Metadata / Branding Parity Notes
 - Route meta tags should use `https://openhands.dev` for canonical and `og:url` values; avoid `https://www.all-hands.dev` on marketing routes.
 - Shared static OG image for updated marketing/legal routes: `https://openhands.dev/assets/webflow/og/69161b32abf448a2df921a73_openhands_opengraph_01.png`.

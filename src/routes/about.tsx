@@ -1,13 +1,6 @@
-import { Link } from 'react-router';
-import { ContributorGrid } from '~/components/contributor-grid';
 import { MemberCard } from '~/components/member-card';
-import { SectionHeading } from '~/components/section-heading';
-import { YellowWaveSection } from '~/components/yellow-wave-section';
-import contributors from '~/data/contributors.json';
-import statistics from '~/data/statistics.json';
-import { formatContributorCount } from '~/utils/format-contributor-count';
+import { teamMembers } from '~/constants/members';
 import type { Route } from './+types/about';
-import { founders, members } from '~/constants/members';
 
 export const meta: Route.MetaFunction = ({ location }) => {
   return [
@@ -28,120 +21,89 @@ export const meta: Route.MetaFunction = ({ location }) => {
 };
 
 const MILESTONES = [
-  { date: 'March 2024', title: 'Project Launch', description: 'OpenHands launched as an open-source project.' },
-  { date: 'June 2024', title: '100K+ GitHub Stars Milestone', description: 'Reached over 100,000 stars on GitHub.' },
-  { date: 'November 2024', title: 'Series A Funding', description: 'Raised $18.8M to build the open standard for autonomous software development.' },
+  {
+    value: '65k',
+    suffix: '+',
+    label: 'GitHub stars',
+    icon: 'https://cdn.prod.website-files.com/68ff4057b35616cdd47d5ac7/690e2b7b51667746d95adc9d_Vector-2.svg',
+  },
+  {
+    value: '400',
+    suffix: '+',
+    label: 'OSS contributors',
+    icon: 'https://cdn.prod.website-files.com/68ff4057b35616cdd47d5ac7/690e2b7b9fc429c82f202491_Vector-1.svg',
+  },
+  {
+    value: '5M+',
+    label: 'Over 5 million open source downloads',
+    icon: 'https://cdn.prod.website-files.com/68ff4057b35616cdd47d5ac7/690e2b7b8bbe39907a82a9a7_Vector.svg',
+  },
 ];
 
 const About = () => {
-  const shuffledMembers = [...members].sort(() => Math.random() - 0.5);
-
   return (
     <main className='pt-[100px]'>
-      <section className='flex flex-col items-center gap-4 text-center py-16 px-10'>
-        <h1 className='text-4xl lg:text-6xl font-bold max-w-[900px]'>
-          Empowering every team to build software autonomously.
-        </h1>
-        <p className='text-lg text-brand-muted max-w-2xl mt-4'>
-          OpenHands is the open, secure, and model-agnostic platform for cloud coding agents.
-        </p>
-        <div className='flex gap-4 justify-center flex-wrap mt-6'>
-          <Link to='https://app.all-hands.dev' className='btn btn-primary'>
-            Try it live
-          </Link>
-          <Link to='https://docs.openhands.dev/sdk' className='btn btn-outline'>
-            Build with SDK
-          </Link>
+      <section className='px-6 pb-16 pt-16 lg:px-10 lg:pb-24 lg:pt-24'>
+        <div className='mx-auto max-w-[720px] text-center'>
+          <h1 className='font-quincy text-[44px] font-normal leading-[0.95] tracking-[-0.04em] lg:text-[60px]'>
+            Empowering every team to build software autonomously.
+          </h1>
+          <p className='mx-auto mt-4 max-w-[540px] text-lg leading-[1.5] text-brand-muted'>
+            OpenHands is the open, secure, and model-agnostic platform
+          </p>
         </div>
-      </section>
 
-      {/* Stats Section */}
-      <section className='px-10 py-16'>
-        <div className='max-w-4xl mx-auto'>
-          <div className='grid md:grid-cols-2 gap-8 text-center'>
-            <div className='border border-brand-border rounded-xl p-8'>
-              <div className='text-5xl font-bold text-brand-accent mb-2'>{formatContributorCount(statistics.contributors_count)}+</div>
-              <p className='text-brand-muted'>OSS contributors</p>
-            </div>
-            <div className='border border-brand-border rounded-xl p-8'>
-              <div className='text-5xl font-bold text-brand-accent mb-2'>5M+</div>
-              <p className='text-brand-muted'>Over 5 million open source downloads</p>
+        <div className='mx-auto mt-12 max-w-[1238px]'>
+          <h2 className='section-title text-center'>Milestones</h2>
+          <div className='relative mt-6 overflow-hidden rounded-[28px] bg-brand-fg px-6 py-8 text-brand-bg lg:px-10 lg:py-10'>
+            <img
+              src='https://cdn.prod.website-files.com/68ff4057b35616cdd47d5ac7/690e289157a957d4d32ee88d_ascii-art%20(20)%201.png'
+              alt='Grid of multiple black-and-white ASCII art portraits of various people and objects, arranged in rows and columns.'
+              className='pointer-events-none absolute inset-0 h-full w-full object-cover opacity-15'
+            />
+            <div className='relative grid gap-4 lg:grid-cols-3'>
+              {MILESTONES.map((milestone) => (
+                <div key={milestone.label} className='rounded-[24px] border border-white/10 bg-white/8 p-6 backdrop-blur-sm'>
+                  <div className='flex items-end justify-center gap-1 text-center lg:justify-end'>
+                    <span className='font-quincy text-[52px] font-normal leading-none tracking-[-0.04em] lg:text-[64px]'>
+                      {milestone.value}
+                    </span>
+                    {milestone.suffix ? <span className='pb-1 text-[36px] leading-none'>{milestone.suffix}</span> : null}
+                  </div>
+                  <div className='mt-4 flex items-center justify-center gap-3 text-center lg:justify-start lg:text-left'>
+                    <img src={milestone.icon} alt='' className='h-6 w-6 shrink-0' />
+                    <p className='text-base leading-[1.4] text-brand-bg'>{milestone.label}</p>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
       </section>
 
-      {/* Built by developers */}
-      <section className='px-10 py-16 bg-brand-fg text-white'>
-        <div className='max-w-4xl mx-auto text-center'>
-          <p className='text-3xl font-bold mb-4'>Built by developers, for developers.</p>
-          <p className='text-white/70'>
-            OpenHands is shaped by a global community of engineers who believe in open, autonomous software development.
-          </p>
-        </div>
-      </section>
+      <section className='px-6 pb-16 lg:px-10 lg:pb-24'>
+        <div className='mx-auto max-w-[1238px]'>
+          <div className='mb-10 text-center'>
+            <p className='text-sm font-semibold uppercase tracking-[0.2em] text-brand-muted'>Team</p>
+            <h2 className='mt-3 text-[32px] font-medium leading-[1.15] tracking-[-0.03em] text-brand-fg lg:text-[44px]'>
+              Built by developers, for developers.
+            </h2>
+            <a
+              href='https://jobs.ashbyhq.com/OpenHands'
+              target='_blank'
+              rel='noopener noreferrer'
+              className='btn btn-primary mt-6'
+            >
+              Join us
+            </a>
+          </div>
 
-      {/* Milestones */}
-      <section className='px-10 py-16 bg-[#efe6d1]'>
-        <div className='max-w-4xl mx-auto'>
-          <h2 className='section-title text-center mb-12'>Milestones</h2>
-          <div className='space-y-8'>
-            {MILESTONES.map((milestone) => (
-              <div key={milestone.title} className='flex gap-6 items-start'>
-                <div className='text-sm font-semibold text-brand-muted min-w-[120px]'>{milestone.date}</div>
-                <div>
-                  <div className='font-semibold mb-1'>{milestone.title}</div>
-                  <p className='text-brand-muted'>{milestone.description}</p>
-                </div>
-              </div>
+          <div className='flex flex-wrap justify-center'>
+            {teamMembers.map((member) => (
+              <MemberCard key={member.name} member={member} />
             ))}
           </div>
         </div>
-      </section>
-
-      <section className='flex flex-col items-center'>
-        <SectionHeading subheading='OUR CONTRIBUTORS'>
-          <p className='paragraph h-[75px]'>
-            {formatContributorCount(statistics.contributors_count)} developers
-            have contributed.{' '}
-            <a
-              className='underline'
-              href='https://github.com/OpenHands/OpenHands'
-              target='_blank'
-              rel='noopener noreferrer'
-            >
-              Come join us!
-            </a>
-          </p>
-          <div className='h-[calc(88px*4+40px)] lg:h-auto overflow-hidden relative'>
-            <ContributorGrid variant='large' contributors={contributors} />
-            <div className='lg:hidden absolute bottom-0 bg-gradient-to-t from-[#F1EAE0] to-transparent h-[40px] w-full' />
-          </div>
-        </SectionHeading>
-      </section>
-
-      <section className='flex flex-col items-center'>
-        <SectionHeading subheading='THE ALL HANDS TEAM' />
-        <h3 className='sr-only'>Team</h3>
-
-        <div className='flex flex-col justify-center lg:flex-row flex-wrap max-w-[1228px]'>
-          {founders.map((founder) => (
-            <MemberCard key={founder.name} member={founder} />
-          ))}
-          {shuffledMembers.map((member) => (
-            <MemberCard key={member.name} member={member} />
-          ))}
-        </div>
-      </section>
-
-      <section className='mb-16'>
-        <YellowWaveSection
-          heading='Ready to join us?'
-          cta={{
-            text: 'Join us',
-            to: 'https://jobs.ashbyhq.com/OpenHands',
-          }}
-        />
       </section>
     </main>
   );

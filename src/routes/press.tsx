@@ -14,113 +14,69 @@ export const meta: Route.MetaFunction = ({ location }) => {
   ];
 };
 
-const PRESS_RELEASES = [
+const PRESS_ITEMS = [
   {
-    date: 'November 2024',
-    title: 'OpenHands Raises $18.8M Series A to Build the Open Standard for Autonomous Software Development',
-    url: '/blog/weve-just-raised-18-8m-to-build-the-open-standard-for-autonomous-software-development',
-    source: 'Company Announcement',
+    date: 'November 18, 2025',
+    title: 'OpenHands Raises $18.8M Series A to Bring Open-Source Cloud Coding Agents to Enterprises',
+    url: 'https://www.businesswire.com/news/home/20251118768131/en/OpenHands-Raises-%2418.8M-Series-A-to-Bring-Open-Source-Cloud-Coding-Agents-to-Enterprises',
+    image: 'https://cdn.prod.website-files.com/68ff4058b35616cdd47d5b59/6925c7cdaac33e588733075c_blog-media.webp',
   },
   {
-    date: 'October 2024',
-    title: 'OpenHands Partners with AMD to Enable Local AI Coding Agents on Ryzen AI PCs',
-    url: '/blog/openhands-amd-lemonade',
-    source: 'Company Announcement',
-  },
-];
-
-const MEDIA_COVERAGE = [
-  {
-    title: 'The Rise of AI Coding Agents',
-    source: 'TechCrunch',
-    date: 'November 2024',
-    url: '#',
+    date: 'September 8, 2024',
+    title: 'All Hands AI Announces $5M to Advance Open-source AI Agents for Developers',
+    url: 'https://theaiinsider.tech/2024/09/08/all-hands-ai-announces-5m-to-advance-open-source-ai-agents-for-developers/',
+    image: 'https://cdn.prod.website-files.com/68ff4058b35616cdd47d5b59/69162ffa4334ae0267ee1c57_Screenshot%202025-11-13%20at%2011.22.26%20AM.png',
   },
   {
-    title: 'Open Source AI Tools Gaining Enterprise Traction',
-    source: 'InfoWorld',
-    date: 'October 2024',
-    url: '#',
+    date: 'September 8, 2024',
+    title: 'All Hands AI raises $5M to build open source agents for developers',
+    url: 'https://techcrunch.com/2024/09/05/all-hands-ai-raises-5m-to-build-open-source-agents-for-developers',
+    image: 'https://cdn.prod.website-files.com/68ff4058b35616cdd47d5b59/6915e88c874e7050ff5b8094_Screenshot%202025-11-13%20at%206.09.19%20AM.png',
   },
 ];
 
 const Press = () => {
   return (
     <main className='pt-[100px]'>
-      {/* Hero Section */}
-      <section className='px-10 py-20 lg:py-32 text-center max-w-4xl mx-auto'>
-        <h1 className='text-4xl lg:text-6xl font-bold mb-6'>
-          In the news
-        </h1>
-        <p className='text-lg lg:text-xl text-brand-muted max-w-2xl mx-auto'>
-          Latest news, press releases, and media coverage about OpenHands
-        </p>
-        <div className='flex gap-4 justify-center flex-wrap mt-8'>
-          <Link to='https://app.all-hands.dev' className='btn btn-primary'>
-            Try it live
-          </Link>
-          <Link to='https://docs.openhands.dev/sdk' className='btn btn-outline'>
-            Build with SDK
-          </Link>
-        </div>
-      </section>
-
-      {/* Press Releases */}
-      <section className='px-10 py-20 max-w-4xl mx-auto'>
-        <div className='section-title mb-12'>Press Releases</div>
-        <div className='space-y-8'>
-          {PRESS_RELEASES.map((release) => (
-            <a
-              key={release.title}
-              href={release.url}
-              className='block border border-brand-border rounded-xl p-6 hover:bg-brand-fg/5 transition-colors'
-            >
-              <div className='flex items-center gap-4 mb-2'>
-                <span className='text-sm text-brand-muted'>{release.date}</span>
-                <span className='text-sm text-brand-accent'>{release.source}</span>
-              </div>
-              <div className='text-lg font-semibold hover:underline'>{release.title}</div>
-            </a>
-          ))}
-        </div>
-      </section>
-
-      {/* Media Kit */}
-      <section className='px-10 py-20 bg-[#efe6d1]'>
-        <div className='max-w-4xl mx-auto'>
-          <div className='section-title mb-4'>Media Kit</div>
-          <p className='text-brand-muted mb-8'>
-            Download logos, screenshots, and brand guidelines for press use.
+      <section className='px-6 pb-10 pt-16 lg:px-10 lg:pb-12 lg:pt-24'>
+        <div className='mx-auto max-w-[720px] text-center'>
+          <h1 className='font-quincy text-[44px] font-normal leading-[0.95] tracking-[-0.04em] text-brand-fg lg:text-[60px]'>
+            In the news
+          </h1>
+          <p className='mt-4 text-lg leading-[1.5] text-brand-muted'>
+            Read how OpenHands is reshaping the future of AI-powered software development.
           </p>
-          <div className='grid md:grid-cols-2 gap-6'>
-            <div className='bg-brand-bg rounded-xl p-6'>
-              <div className='font-semibold mb-2'>Logo Package</div>
-              <p className='text-sm text-brand-muted mb-4'>
-                OpenHands logos in various formats (SVG, PNG)
-              </p>
-              <button className='btn btn-outline text-sm'>Download</button>
-            </div>
-            <div className='bg-brand-bg rounded-xl p-6'>
-              <div className='font-semibold mb-2'>Brand Guidelines</div>
-              <p className='text-sm text-brand-muted mb-4'>
-                Color palette, typography, and usage guidelines
-              </p>
-              <button className='btn btn-outline text-sm'>Download</button>
-            </div>
+          <div className='mt-8 flex justify-center'>
+            <Link to='/contact' className='btn btn-primary rounded-none'>
+              Contact Us
+            </Link>
           </div>
         </div>
       </section>
 
-      {/* Contact */}
-      <section className='px-10 py-20 text-center'>
-        <div className='max-w-2xl mx-auto'>
-          <div className='section-title mb-6'>Press Inquiries</div>
-          <p className='text-brand-muted mb-8'>
-            For press and media inquiries, please contact us at:
-          </p>
-          <a href='mailto:press@all-hands.dev' className='text-xl font-semibold hover:underline'>
-            press@all-hands.dev
-          </a>
+      <section className='px-6 pb-16 lg:px-10 lg:pb-24'>
+        <div className='mx-auto grid max-w-[1238px] gap-8 md:grid-cols-2 xl:grid-cols-3'>
+          {PRESS_ITEMS.map((item) => (
+            <article key={item.title} className='flex flex-col'>
+              <div className='overflow-hidden rounded-[18px] border border-brand-border bg-brand-fg/5'>
+                <img src={item.image} alt='' className='h-full w-full object-cover' />
+              </div>
+              <p className='mt-4 text-base leading-[1.5] text-brand-muted'>{item.date}</p>
+              <h2 className='mt-2 text-[28px] font-medium leading-[1.2] tracking-[-0.03em] text-brand-fg'>
+                {item.title}
+              </h2>
+              <div className='mt-4'>
+                <a
+                  href={item.url}
+                  target='_blank'
+                  rel='noopener noreferrer'
+                  className='btn btn-outline rounded-none text-sm'
+                >
+                  Read more
+                </a>
+              </div>
+            </article>
+          ))}
         </div>
       </section>
     </main>

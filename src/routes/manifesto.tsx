@@ -1,4 +1,3 @@
-import { Link } from 'react-router';
 import type { Route } from './+types/manifesto';
 
 export const meta: Route.MetaFunction = ({ location }) => {
@@ -14,68 +13,83 @@ export const meta: Route.MetaFunction = ({ location }) => {
   ];
 };
 
+const MANIFESTO_POINTS = [
+  {
+    heading: 'The future of software development must be written by engineers',
+    body: "Software development is changing. That change needs to happen in the open, driven by a community of professional developers. That's why OpenHands' software agent is MIT-licensed and trusted by a growing community.",
+  },
+  {
+    heading: 'A new class of engineers are emerging',
+    body: "Most engineers write lines of code, maybe with an AI assistant. But Agentic Engineers tackle code maintenance at scale by orchestrating tens to thousands of cloud-based agents. Agent orchestras aren't appropriate for every engineering task, but Agentic Engineers will automate away the toil and busywork weighing down their teams.",
+  },
+  {
+    heading: 'Scale lives in the cloud',
+    body: 'We believe local agents are a bridge, not the destination. Real leverage comes from agents that run in the cloud or your own VPC, so teams can parallelize thousands of tasks and treat automation as infrastructure.',
+  },
+  {
+    heading: 'Openness is non-negotiable',
+    body: "AI agents are a transformative technology and an increasingly critical part of the world's infrastructure. We need agents that are open source, transparent, and inspectable if we're going to deploy AI safely and responsibly.",
+  },
+  {
+    heading: 'Model choice is a right',
+    body: 'We believe you should pick the best model for each job and switch when economics or quality change. This will only become more important as models improve and new tradeoffs emerge. Vendor flexibility is a feature, not a footnote.',
+  },
+  {
+    heading: 'Security is a runtime, not a promise',
+    body: 'We believe agents must run in isolated, auditable environments with scoped credentials and a clear blast radius. Teams need visibility into how agents are behaving, and the ability to intervene when something breaks.',
+  },
+];
+
 const Manifesto = () => {
   return (
     <main className='pt-[100px]'>
-      {/* Hero Section */}
-      <section className='px-10 py-20 lg:py-32 text-center max-w-4xl mx-auto'>
-        <h1 className='text-4xl lg:text-6xl font-bold mb-6'>
-          Hands on the Future
-        </h1>
-        <p className='text-lg lg:text-xl text-brand-muted max-w-2xl mx-auto'>
-          We believe in an open, autonomous future for software development
-        </p>
-      </section>
-
-      {/* Opening Statement - H3 to match live site */}
-      <section className='px-10 py-20 max-w-3xl mx-auto'>
-        <h3 className='text-xl font-semibold mb-8'>
-          We're at the beginning of a new era in software development. Work is shifting from keystrokes to delegated tasks, from single laptops to coordinated fleets of agents running in environments you control.This is our point of view on how we build, what we ship, and why it matters… we believe:‍
-        </h3>
-        <div className='prose prose-lg'>
-          <ul className='space-y-4 text-lg'>
-            <li>The future of software development must be written by engineers</li>
-            <li>A new class of engineers are emerging</li>
-            <li>Scale lives in the cloud</li>
-            <li>Openness is non-negotiable</li>
-            <li>Model choice is a right</li>
-          </ul>
-        </div>
-      </section>
-
-      {/* What this means for OpenHands - H3 */}
-      <section className='px-10 py-20 bg-[#efe6d1]'>
-        <div className='max-w-3xl mx-auto'>
-          <h3 className='text-xl font-semibold mb-8'>What this means for OpenHands</h3>
-          <div className='prose prose-lg'>
-            <p className='text-lg leading-relaxed mb-6'>
-              We are building an open platform for cloud coding agents that embodies these principles.
-              OpenHands is transparent, customizable, and accessible to all developers.
-            </p>
-            <p className='text-lg leading-relaxed'>
-              We believe developers deserve AI coding tools they can trust, inspect, and modify.
-              Tools that respect their autonomy and don't lock them into proprietary ecosystems.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* What this asks of you - H3 */}
-      <section className='px-10 py-20 max-w-3xl mx-auto'>
-        <h3 className='text-xl font-semibold mb-8'>What this asks of you</h3>
-        <div className='prose prose-lg'>
-          <p className='text-lg leading-relaxed mb-8'>
-            Join us in building the future of software development.
-            A future that is open, transparent, and works for everyone.
+      <section className='px-6 pb-10 pt-16 lg:px-10 lg:pb-12 lg:pt-24'>
+        <div className='mx-auto max-w-[720px] text-center'>
+          <h1 className='font-quincy text-[48px] font-normal leading-[0.95] tracking-[-0.04em] text-brand-fg lg:text-[60px]'>
+            Hands on the Future
+          </h1>
+          <p className='mt-4 text-lg leading-[1.5] text-brand-muted'>
+            We believe in an open, autonomous future for software development
           </p>
         </div>
-        <div className='flex gap-4 justify-center flex-wrap'>
-          <Link to='https://app.all-hands.dev' className='btn btn-primary btn-lg'>
-            Try it live
-          </Link>
-          <Link to='https://docs.openhands.dev/sdk' className='btn btn-outline btn-lg'>
-            Build with SDK
-          </Link>
+      </section>
+
+      <section className='px-6 pb-16 lg:px-10 lg:pb-24'>
+        <div className='mx-auto max-w-[980px]'>
+          <img
+            src='https://cdn.prod.website-files.com/68ff4058b35616cdd47d5b59/691645a7832560da97f475c5_Featured%20manifesto.png'
+            alt='Hands on the Future manifesto artwork'
+            className='w-full rounded-[28px] object-cover'
+          />
+
+          <div className='mx-auto mt-12 max-w-[860px]'>
+            <h2 className='text-[20px] font-medium leading-[1.6] text-brand-fg'>
+              We&apos;re at the beginning of a new era in software <em>development. Work is shifting from keystrokes to delegated tasks,</em> from single laptops to coordinated fleets of agents running in environments you control. <em>This is</em> our point of view <em>on how we build, what we ship, and</em> why it matters… <em>We believe</em>:
+            </h2>
+
+            <div className='mt-10 space-y-8'>
+              {MANIFESTO_POINTS.map((point) => (
+                <section key={point.heading} className='space-y-3'>
+                  <h3 className='text-[20px] font-semibold leading-[1.4] text-brand-fg'>{point.heading}</h3>
+                  <p className='text-lg leading-[1.7] text-brand-fg'>{point.body}</p>
+                </section>
+              ))}
+            </div>
+
+            <section className='mt-12 space-y-3'>
+              <h3 className='text-[20px] font-semibold leading-[1.4] text-brand-fg'>What this means for OpenHands</h3>
+              <p className='text-lg leading-[1.7] text-brand-fg'>
+                <strong>We are building the open, secure, and model-agnostic platform for cloud coding agents.</strong> Every agent runs in a containerized sandbox you control. Every outcome can be measured and reviewed. You can self-host the open source, or use our cloud. You can bring your own models and switch without drama. You can start local, then scale to thousands of concurrent agents running throughout your codebase.
+              </p>
+            </section>
+
+            <section className='mt-10 space-y-3'>
+              <h3 className='text-[20px] font-semibold leading-[1.4] text-brand-fg'>What this asks of you</h3>
+              <p className='text-lg leading-[1.7] text-brand-fg'>
+                <strong>Adopt an agentic mindset. Identify toil. Delegate clearly. Measure success. Invest in agent orchestration as a core engineering skill.</strong>
+              </p>
+            </section>
+          </div>
         </div>
       </section>
     </main>
