@@ -7,17 +7,7 @@ import { NavLink } from 'react-router';
 import { MainButton } from '../main-button';
 import { AnimatedListItem } from './animated-list-item';
 import { ExternalAnchor } from './external-anchor';
-
-const INTERNAL_NAV_MAP = [
-  { name: 'Home', to: '/' },
-  { name: 'Product', to: '/features' },
-  { name: 'Pricing', to: '/pricing' },
-  { name: 'Blog', to: '/blog' },
-  { name: 'Careers', to: 'https://allhandsai.applytojob.com/apply/' },
-  { name: 'About Us', to: '/about' },
-];
-
-const EXTERNAL_NAV_MAP = [{ name: 'Docs', to: 'https://docs.all-hands.dev/' }];
+import { SIDEBAR_NAV_ITEMS } from '~/constants/site-shell';
 
 interface SidebarProps {
   isHidden: boolean;
@@ -48,9 +38,9 @@ export const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
 
       <nav className='lg:mt-[122px]'>
         <ul className='text-center flex flex-col gap-8'>
-          {INTERNAL_NAV_MAP.map((item) => (
+          {SIDEBAR_NAV_ITEMS.map((item) => (
             <AnimatedListItem key={item.name}>
-              {item.to.startsWith('http') ? (
+              {item.external ? (
                 <ExternalAnchor to={item.to}>{item.name}</ExternalAnchor>
               ) : (
                 <NavLink to={item.to} className='relative' onClick={onClose}>
@@ -68,11 +58,6 @@ export const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
                   )}
                 </NavLink>
               )}
-            </AnimatedListItem>
-          ))}
-          {EXTERNAL_NAV_MAP.map((item) => (
-            <AnimatedListItem key={item.name}>
-              <ExternalAnchor to={item.to}>{item.name}</ExternalAnchor>
             </AnimatedListItem>
           ))}
           <li>

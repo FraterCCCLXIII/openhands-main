@@ -7,25 +7,7 @@ import clsx from 'clsx';
 import GitHubLogoBlack from '~/svgs/github-logo-black.svg?react';
 import statistics from '~/data/statistics.json';
 import { formatThousands } from '~/utils/format-thousands';
-
-// Navigation items matching Webflow design
-const DESKTOP_NAV_ITEMS = [
-  { name: 'Product', to: '/product' },
-  { name: 'Enterprise', to: '/enterprise' },
-  { name: 'Pricing', to: '/pricing' },
-  { name: 'Benchmarks', to: 'https://index.openhands.dev/home' },
-  { name: 'Community', to: '/community' },
-];
-
-const RESOURCES_DROPDOWN = [
-  { name: 'Docs', to: 'https://docs.openhands.dev/', description: 'Build, integrate, and scale with ease.' },
-  { name: 'Manifesto', to: '/manifesto', description: 'Our vision of an open future.' },
-  { name: 'Blog', to: '/blog', description: 'Ideas, updates, and insights that inspire.' },
-  { name: 'Press', to: '/press', description: '' },
-  { name: 'Careers', to: 'https://jobs.ashbyhq.com/OpenHands', description: '' },
-  { name: 'About', to: '/about', description: '' },
-  { name: 'Contact', to: '/contact', description: '' },
-];
+import { DESKTOP_NAV_ITEMS, RESOURCE_LINK_GROUPS } from '~/constants/site-shell';
 
 interface HeaderProps {
   onClickMenuButton: () => void;
@@ -76,12 +58,25 @@ export const Header: React.FC<HeaderProps> = ({
             <ul className='flex items-center space-x-8'>
               {DESKTOP_NAV_ITEMS.map((item) => (
                 <li key={item.name}>
-                  {item.to.startsWith('http') ? (
-                    <a href={item.to} target='_blank' rel='noopener noreferrer' className='text-base font-medium hover:opacity-70 transition-opacity'>
+                  {item.external ? (
+                    <a
+                      href={item.to}
+                      target='_blank'
+                      rel='noopener noreferrer'
+                      className='text-base font-normal leading-[22.4px] transition-colors hover:text-[#8a5f45]'
+                    >
                       {item.name}
                     </a>
                   ) : (
-                    <NavLink to={item.to} className={({ isActive }) => clsx('text-base font-medium hover:opacity-70 transition-opacity', isActive && 'font-semibold')}>
+                    <NavLink
+                      to={item.to}
+                      className={({ isActive }) =>
+                        clsx(
+                          'text-base font-normal leading-[22.4px] transition-colors hover:text-[#8a5f45]',
+                          isActive && 'text-[#8a5f45]'
+                        )
+                      }
+                    >
                       {item.name}
                     </NavLink>
                   )}
@@ -89,29 +84,47 @@ export const Header: React.FC<HeaderProps> = ({
               ))}
               <li className='relative'>
                 <button
-                  className='text-base font-medium hover:opacity-70 transition-opacity flex items-center gap-1'
+                  className='flex items-center gap-1 text-base font-normal leading-[22.4px] transition-colors hover:text-[#8a5f45]'
                   onClick={() => setResourcesOpen(!resourcesOpen)}
                   onBlur={() => setTimeout(() => setResourcesOpen(false), 150)}
+                  type='button'
                 >
-                  Resources
-                  <svg className={clsx('w-3 h-3 transition-transform', resourcesOpen && 'rotate-180')} fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                  <span>Resources</span>
+                  <svg className={clsx('h-3 w-3 transition-transform', resourcesOpen && 'rotate-180')} fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                     <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M19 9l-7 7-7-7' />
                   </svg>
                 </button>
                 {resourcesOpen && (
-                  <div className='absolute top-full left-0 mt-2 w-72 bg-brand-bg border border-brand-border rounded-lg shadow-lg py-2 z-50'>
-                    {RESOURCES_DROPDOWN.map((item) => (
-                      item.to.startsWith('http') ? (
-                        <a key={item.name} href={item.to} target='_blank' rel='noopener noreferrer' className='block px-4 py-2 hover:bg-brand-fg/5 transition-colors'>
-                          <span className='text-base font-medium'>{item.name}</span>
-                          {item.description && <span className='block text-xs text-brand-muted'>{item.description}</span>}
-                        </a>
-                      ) : (
-                        <Link key={item.name} to={item.to} className='block px-4 py-2 hover:bg-brand-fg/5 transition-colors'>
-                          <span className='text-base font-medium'>{item.name}</span>
-                          {item.description && <span className='block text-xs text-brand-muted'>{item.description}</span>}
-                        </Link>
-                      )
+                  <div className='absolute left-0 top-full z-50 mt-2 w-[280px] rounded-lg border border-brand-border bg-brand-bg p-4 shadow-lg'>
+                    {RESOURCE_LINK_GROUPS.map((group) => (
+                      <div key={group.title} className='mb-4 last:mb-0'>
+                        <div className='mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-brand-muted'>
+                          {group.title}
+                        </div>
+                        <ul className='flex flex-col gap-1'>
+                          {group.links.map((item) => (
+                            <li key={item.name}>
+                              {item.external ? (
+                                <a
+                                  href={item.to}
+                                  target='_blank'
+                                  rel='noopener noreferrer'
+                                  className='block rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-brand-fg/5'
+                                >
+                                  {item.name}
+                                </a>
+                              ) : (
+                                <Link
+                                  to={item.to}
+                                  className='block rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-brand-fg/5'
+                                >
+                                  {item.name}
+                                </Link>
+                              )}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
                     ))}
                   </div>
                 )}
@@ -120,21 +133,37 @@ export const Header: React.FC<HeaderProps> = ({
           </nav>
         </div>
 
-        <div className='hidden lg:flex items-center gap-3 flex-shrink-0'>
-          {/* GitHub badge - matches Webflow .nav-menu_gh_count styling */}
-          <a href='https://github.com/OpenHands/OpenHands' target='_blank' rel='noopener noreferrer' className='flex items-center gap-1.5 text-sm transition-colors hover:opacity-80 whitespace-nowrap'>
-            <GitHubLogoBlack className='w-4 h-4 flex-shrink-0' style={{ width: '16px', height: '16px' }} />
+        <div className='hidden flex-shrink-0 items-center gap-3 lg:flex'>
+          <a
+            href='https://github.com/OpenHands/OpenHands'
+            target='_blank'
+            rel='noopener noreferrer'
+            className='flex items-center gap-1.5 whitespace-nowrap text-sm transition-colors hover:opacity-80'
+          >
+            <GitHubLogoBlack className='h-4 w-4 flex-shrink-0' style={{ width: '16px', height: '16px' }} />
             <span style={{ fontWeight: 400 }}>{formatThousands(statistics.stargazers)}</span>
           </a>
-          {/* Webflow buttons use outer div for padding, inner a for link coverage */}
-          {/* .button has padding: 0.9em 1.9em (14.4px 30.4px at 16px) */}
-          <div className='btn btn-outline whitespace-nowrap flex-shrink-0' style={{ padding: '0.9em 1.9em', margin: 0 }}>
-            <Link to='https://docs.openhands.dev/sdk' className='absolute inset-0' aria-label='Build with SDK' />
-            <span aria-hidden='true'>Build with SDK</span>
+          <div className='btn btn-outline relative whitespace-nowrap' style={{ padding: '0.9em 1.9em', margin: 0 }}>
+            <div aria-hidden='true'>Build with SDK</div>
+            <a
+              href='https://docs.openhands.dev/sdk'
+              target='_blank'
+              rel='noopener noreferrer'
+              className='absolute inset-0'
+            >
+              <span className='sr-only'>Build with SDK</span>
+            </a>
           </div>
-          <div className='btn btn-primary whitespace-nowrap flex-shrink-0' style={{ padding: '0.9em 1.9em', margin: 0 }}>
-            <Link to='https://app.all-hands.dev' className='absolute inset-0' aria-label='Try it live' />
-            <span aria-hidden='true'>Try it live</span>
+          <div className='btn btn-primary relative whitespace-nowrap' style={{ padding: '0.9em 1.9em', margin: 0 }}>
+            <div aria-hidden='true'>Try it live</div>
+            <a
+              href='https://app.all-hands.dev/'
+              target='_blank'
+              rel='noopener noreferrer'
+              className='absolute inset-0'
+            >
+              <span className='sr-only'>Try it live</span>
+            </a>
           </div>
         </div>
       </div>

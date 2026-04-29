@@ -49,3 +49,17 @@ npm run parity:checklist  # Crawl openhands.dev and compare against local site
 - `brand-fg`: `#22150d` (dark brown)
 - `brand-accent`: `#FFFF8B` (yellow)
 - `brand-muted`: `#7b6d5d` (muted brown)
+
+## Shared Shell Parity Notes
+- Shared marketing chrome/nav/footer links are centralized in `src/constants/site-shell.ts`.
+- For parity work on issue-based PRs, store browser screenshots under `.pr/issue-<number>/` and include both local and live captures for the analogous page.
+- `.github/workflows/pr-artifacts.yml` is intended to remove `.pr/` from the base branch after a PR merges.
+- For a production-style local parity check, build first and then run: `PORT=12001 npx react-router-serve build/server/nodejs_eyJydW50aW1lIjoibm9kZWpzIn0/index.js`.
+
+
+## Homepage Parity Notes
+- The live `/` page uses a 32px desktop heading for `Start with a proven workflow`; other homepage major headings remain 44px.
+- Homepage CTA buttons that compare against live cards/FAQ should use square corners (`rounded-none`) and dark-card outline buttons should use `text-brand-bg` instead of pure white for parity.
+- The homepage testimonial/social quote cards on live split some posts into multiple paragraphs; if parity audit reports missing `P:` items, check whether the local card collapsed multiple lines into one paragraph.
+- `PARITY_MAX_PAGES=10 npm run parity:checklist` is enough to recheck `/` plus major top-level routes during homepage work.
+

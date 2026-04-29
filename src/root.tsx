@@ -5,6 +5,7 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useLocation,
   useRouteError,
 } from 'react-router';
 import { Analytics } from '@vercel/analytics/react';
@@ -12,7 +13,7 @@ import { Analytics } from '@vercel/analytics/react';
 import type { Route } from './+types/root';
 import { motion } from 'framer-motion';
 import React from 'react';
-// Footer is rendered inside each page's CTA section, not globally
+import { Footer } from './components/footer';
 import { Header } from './components/header';
 import { Sidebar } from './components/sidebar/sidebar';
 import { GitHubModal } from './components/github-modal';
@@ -80,8 +81,10 @@ export default function App() {
   const [isSidebarHidden, setIsSidebarHidden] = React.useState(true);
   const [isGitHubModalOpen, setIsGitHubModalOpen] = React.useState(false);
   const sidebarRef = React.useRef<HTMLDivElement>(null);
+  const location = useLocation();
   const width = useWidth();
   const isDesktop = width >= 1024;
+  const showGlobalFooter = location.pathname !== '/';
 
   const handleOpenGitHubModal = () => {
     setIsGitHubModalOpen(true);
@@ -136,6 +139,7 @@ export default function App() {
         <div className='flex-1'>
           <GitHubModalProvider openGitHubModal={handleOpenGitHubModal}>
             <Outlet />
+            {showGlobalFooter && <Footer standalone />}
           </GitHubModalProvider>
         </div>
       </motion.div>

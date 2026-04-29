@@ -1,102 +1,95 @@
 import { Link, NavLink } from 'react-router';
-import { useState } from 'react';
+import clsx from 'clsx';
+import { FOOTER_NAV_ITEMS, FOOTER_RESOURCE_LINKS } from '~/constants/site-shell';
 
-// Footer nav links matching openhands.dev exactly
-const MAIN_NAV = [
-  { name: 'Home', to: '/' },
-  { name: 'Product', to: '/product' },
-  { name: 'Enterprise', to: '/enterprise' },
-  { name: 'Pricing', to: '/pricing' },
-  { name: 'About', to: '/about' },
-];
+interface FooterProps {
+  standalone?: boolean;
+}
 
-const RESOURCES_DROPDOWN = [
-  { name: 'Community', to: '/community' },
-  { name: 'Manifesto', to: '/manifesto' },
-  { name: 'Docs', to: 'https://docs.openhands.dev/' },
-  { name: 'Blog', to: '/blog' },
-  { name: 'Press', to: '/press' },
-  { name: 'Careers', to: 'https://jobs.ashbyhq.com/OpenHands' },
-];
-
-// Footer is rendered INSIDE the yellow CTA section on the live site
-// This component only renders the nav links, copyright, and logo
-export const Footer = () => {
-  const [resourcesOpen, setResourcesOpen] = useState(false);
-
+const FooterContent = () => {
   return (
-    <div className='text-center'>
-      {/* Horizontal nav links */}
-      <div className='flex flex-wrap justify-center gap-x-8 gap-y-2 mb-4'>
-        {MAIN_NAV.map((item) => (
+    <div className='text-center text-brand-fg'>
+      <div className='mb-3 flex flex-wrap items-center justify-center gap-x-8 gap-y-2 text-sm leading-[20.8px]'>
+        {FOOTER_NAV_ITEMS.map((item) => (
           <NavLink
             key={item.name}
             to={item.to}
             className={({ isActive }) =>
-              `text-sm hover:opacity-70 transition-opacity ${isActive ? 'font-semibold' : ''}`
+              clsx('transition-colors hover:text-[#8a5f45]', isActive && 'text-[#8a5f45]')
             }
           >
             {item.name}
           </NavLink>
         ))}
-        {/* Resources dropdown */}
-        <div className='relative'>
-          <button
-            onClick={() => setResourcesOpen(!resourcesOpen)}
-            className='text-sm hover:opacity-70 transition-opacity'
-          >
-            Resources
-          </button>
-          {resourcesOpen && (
-            <div className='absolute top-full left-0 mt-2 bg-brand-bg border border-brand-border rounded-lg shadow-lg py-2 min-w-[140px] z-50'>
-              {RESOURCES_DROPDOWN.map((item) =>
-                item.to.startsWith('http') ? (
-                  <a
-                    key={item.name}
-                    href={item.to}
-                    target='_blank'
-                    rel='noopener noreferrer'
-                    className='block px-4 py-1.5 text-sm hover:bg-brand-fg/10 transition-colors'
-                  >
-                    {item.name}
-                  </a>
-                ) : (
-                  <Link
-                    key={item.name}
-                    to={item.to}
-                    className='block px-4 py-1.5 text-sm hover:bg-brand-fg/10 transition-colors'
-                  >
-                    {item.name}
-                  </Link>
-                )
-              )}
-            </div>
-          )}
-        </div>
-        <NavLink to='/contact' className='text-sm hover:opacity-70 transition-opacity'>
-          Contact
-        </NavLink>
       </div>
 
-      {/* Divider */}
-      <div className='w-full max-w-3xl mx-auto border-t border-brand-fg/20 my-6' />
+      <div id='footer-resources' className='mb-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-2'>
+        <a
+          href='#footer-resources'
+          className='text-base font-medium leading-[22.4px] transition-colors hover:text-[#8a5f45]'
+        >
+          Resources
+        </a>
+        {FOOTER_RESOURCE_LINKS.map((item) =>
+          item.external ? (
+            <a
+              key={item.name}
+              href={item.to}
+              target='_blank'
+              rel='noopener noreferrer'
+              className='text-[14px] font-normal leading-[19.6px] transition-colors hover:text-[#8a5f45]'
+            >
+              {item.name}
+            </a>
+          ) : (
+            <Link
+              key={item.name}
+              to={item.to}
+              className='text-[14px] font-normal leading-[19.6px] transition-colors hover:text-[#8a5f45]'
+            >
+              {item.name}
+            </Link>
+          )
+        )}
+      </div>
 
-      {/* Copyright and Privacy */}
-      <div className='text-xs font-mono mb-2'>
+      <div className='my-6 w-full max-w-3xl mx-auto border-t border-brand-fg/20' />
+
+      <div className='mb-2 text-[14px] font-normal leading-[16.9px]'>
         © {new Date().getFullYear()} OpenHands - All rights reserved
       </div>
-      <Link to='/privacy' className='text-xs font-mono hover:underline'>
+      <Link to='/privacy' className='text-[14px] font-normal leading-[16.9px] transition-colors hover:text-[#8a5f45]'>
         Privacy Policy
       </Link>
 
-      {/* Large OpenHands logo */}
       <div className='mt-8 flex justify-center'>
         <img
           src='/assets/webflow/brand/openhands-logo-full.svg'
           alt='OpenHands'
-          className='h-16 lg:h-20'
+          className='h-16 w-auto lg:h-20'
         />
       </div>
     </div>
+  );
+};
+
+export const Footer = ({ standalone = false }: FooterProps) => {
+  if (!standalone) {
+    return <FooterContent />;
+  }
+
+  return (
+    <footer className='relative overflow-hidden bg-brand-accent px-6 py-16 text-brand-fg'>
+      <div className='absolute inset-0 pointer-events-none opacity-20'>
+        <img
+          src='/assets/webflow/backgrounds/6908d170831c19b2b6976323_ascii-art_(16)_1.svg'
+          alt=''
+          className='h-full w-full object-cover'
+        />
+      </div>
+      <div className='relative z-10 mx-auto max-w-[1238px]'>
+        <FooterContent />
+      </div>
+    </footer>
   );
 };
