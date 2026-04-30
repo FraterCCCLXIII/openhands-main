@@ -195,9 +195,16 @@ export const meta: Route.MetaFunction = ({ location }) => {
 
 const Pricing = () => {
   return (
-    <main className='pt-[100px]'>
-      <section className='px-10 py-20'>
-        <div className='mx-auto flex max-w-4xl flex-col items-center gap-6 text-center'>
+    <main className='bg-brand-bg pt-[100px]'>
+      <section className='relative overflow-hidden bg-brand-bg px-10 pb-20 pt-10 lg:pt-12'>
+        <div className='pointer-events-none absolute inset-0 opacity-[0.12]'>
+          <img
+            src='/assets/webflow/backgrounds/6908d170831c19b2b6976323_ascii-art_(16)_1.svg'
+            alt=''
+            className='h-full w-full object-cover'
+          />
+        </div>
+        <div className='relative mx-auto flex max-w-4xl flex-col items-center gap-6 py-10 text-center'>
           <h1 className='text-[44px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>
             Pricing that fits your rollout
           </h1>
@@ -205,14 +212,11 @@ const Pricing = () => {
             Run locally, in our cloud, or self-host. Pay only for what you need
           </p>
         </div>
-      </section>
-
-      <section className='px-10 pb-20'>
-        <div className='mx-auto grid max-w-[1260px] gap-6 lg:grid-cols-3'>
+        <div className='relative mx-auto mt-4 grid max-w-[1260px] gap-6 lg:grid-cols-3'>
           {PRICING_PLANS.map((plan) => (
             <article
               key={plan.title}
-              className='flex h-full flex-col rounded-[24px] border border-brand-fg/10 bg-white/60 p-8'
+              className='flex h-full flex-col rounded-[16px] border border-brand-fg/20 bg-[#f5ecd6]/90 p-8 shadow-[0_0_0_1px_rgba(34,21,13,0.02)]'
             >
               <div className='text-sm uppercase tracking-[0.14em] text-brand-muted'>{plan.eyebrow}</div>
               <p className='mt-2 text-[32px] font-medium leading-[1.15] text-brand-fg'>{plan.title}</p>
@@ -239,28 +243,25 @@ const Pricing = () => {
         </div>
       </section>
 
-      <section className='px-10 py-20'>
+      <section className='px-10 pb-20 pt-8'>
         <div className='mx-auto max-w-[1260px]'>
           <h2 className='sr-only'>Compare plans</h2>
-          <div aria-hidden='true' className='text-center text-[32px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg lg:text-[44px]'>
-            Compare plans
-          </div>
-          <div className='mt-10 overflow-x-auto rounded-[24px] border border-brand-fg/10 bg-white/60'>
+          <div className='overflow-x-auto rounded-[24px] bg-brand-fg px-6 py-6 text-brand-bg lg:px-8 lg:py-8'>
             <table className='min-w-full border-collapse text-left'>
               <thead>
-                <tr className='border-b border-brand-fg/10'>
-                  <th className='px-6 py-5 text-[15px] uppercase tracking-[0.08em] text-brand-muted'>Features</th>
-                  <th className='px-6 py-5 text-[20px] font-medium text-brand-fg'>Open Source</th>
-                  <th className='px-6 py-5 text-[20px] font-medium text-brand-fg'>Individual</th>
-                  <th className='px-6 py-5 text-[20px] font-medium text-brand-fg'>Enterprise</th>
+                <tr className='border-b border-brand-bg/18 text-[13px] uppercase tracking-[0.08em] text-brand-bg/70'>
+                  <th className='py-4 pr-6 font-medium'>Features</th>
+                  <th className='px-6 py-4 font-medium text-brand-bg'>Open Source</th>
+                  <th className='px-6 py-4 font-medium text-brand-bg'>Individual</th>
+                  <th className='px-6 py-4 font-medium text-brand-bg'>Enterprise</th>
                 </tr>
               </thead>
               <tbody>
                 {COMPARISON_ROWS.map((row) => {
                   if (row.type === 'section') {
                     return (
-                      <tr key={row.label} className='border-b border-brand-fg/10 bg-brand-fg/[0.03]'>
-                        <th colSpan={4} className='px-6 py-4 text-sm uppercase tracking-[0.14em] text-brand-muted'>
+                      <tr key={row.label} className='border-b border-brand-bg/18'>
+                        <th colSpan={4} className='py-5 pr-6 text-sm uppercase tracking-[0.14em] text-brand-bg/70'>
                           <p>{row.label}</p>
                         </th>
                       </tr>
@@ -269,12 +270,12 @@ const Pricing = () => {
 
                   if (row.type === 'values') {
                     return (
-                      <tr key={row.label} className='border-b border-brand-fg/10'>
-                        <th className='px-6 py-4 text-[16px] font-medium text-brand-fg'>
+                      <tr key={row.label} className='border-b border-brand-bg/12 last:border-b-0'>
+                        <th className='py-4 pr-6 text-[16px] font-medium text-brand-bg'>
                           <p>{row.label}</p>
                         </th>
                         {row.values.map((value, index) => (
-                          <td key={`${row.label}-${index}`} className='px-6 py-4 text-[16px] text-brand-muted'>
+                          <td key={`${row.label}-${index}`} className='px-6 py-4 text-[16px] text-brand-bg/85'>
                             <p>{value}</p>
                           </td>
                         ))}
@@ -283,12 +284,12 @@ const Pricing = () => {
                   }
 
                   return (
-                    <tr key={row.label} className='border-b border-brand-fg/10'>
-                      <th className='px-6 py-4 text-[16px] font-medium text-brand-fg'>
+                    <tr key={row.label} className='border-b border-brand-bg/12 last:border-b-0'>
+                      <th className='py-4 pr-6 text-[16px] font-medium text-brand-bg'>
                         <p>{row.label}</p>
                       </th>
                       {row.values.map((enabled, index) => (
-                        <td key={`${row.label}-${index}`} className='px-6 py-4 text-center text-brand-bg'>
+                        <td key={`${row.label}-${index}`} className='px-6 py-4 text-center'>
                           <TickCell enabled={enabled} />
                         </td>
                       ))}
@@ -302,24 +303,21 @@ const Pricing = () => {
       </section>
 
       <section className='px-10 py-20'>
-        <div className='mx-auto max-w-[1000px]'>
-          <h2 className='text-center text-[32px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg lg:text-[44px]'>
-            FAQ&apos;s
-          </h2>
-          <div className='mb-6 mt-6 text-center'>
-            <OverlayLinkButton href='/contact' label='Contact us' variant='outline' />
+        <div className='mx-auto grid max-w-[1260px] gap-10 lg:grid-cols-[240px_minmax(0,1fr)] lg:gap-16'>
+          <div>
+            <h2 className='text-[34px] font-medium leading-[1.08] tracking-[-0.03em] text-brand-fg lg:text-[44px]'>
+              FAQ&apos;s
+            </h2>
+            <OverlayLinkButton href='/contact' label='Contact us' variant='outline' className='mt-8' />
           </div>
-          <div className='mt-10 space-y-4'>
+          <div className='border-t border-brand-fg/15'>
             {FAQS.map((faq) => (
-              <details
-                key={faq.question}
-                open
-                className='rounded-[24px] border border-brand-fg/10 bg-white/60 p-6'
-              >
-                <summary className='cursor-pointer list-none text-[24px] font-medium leading-[1.4] text-brand-fg'>
-                  <label>{faq.question}</label>
+              <details key={faq.question} className='group border-b border-brand-fg/15 py-4'>
+                <summary className='flex cursor-pointer list-none items-start justify-between gap-6 text-[24px] font-medium leading-[1.4] text-brand-fg'>
+                  <label className='block cursor-pointer'>{faq.question}</label>
+                  <span className='mt-1 text-[22px] leading-none transition-transform group-open:rotate-45'>+</span>
                 </summary>
-                <div className='mt-4 text-[16px] leading-[1.6] text-brand-muted'>{faq.answer}</div>
+                <div className='max-w-[680px] pt-4 text-[16px] leading-[1.6] text-brand-fg/75'>{faq.answer}</div>
               </details>
             ))}
           </div>
