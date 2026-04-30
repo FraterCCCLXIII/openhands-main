@@ -22,7 +22,7 @@ export const meta: Route.MetaFunction = ({ location }) => {
 
 const MILESTONES = [
   {
-    value: '65k',
+    value: '72K',
     suffix: '+',
     label: 'GitHub stars',
     icon: 'https://cdn.prod.website-files.com/68ff4057b35616cdd47d5ac7/690e2b7b51667746d95adc9d_Vector-2.svg',
@@ -38,43 +38,51 @@ const MILESTONES = [
     label: 'Over 5 million open source downloads',
     icon: 'https://cdn.prod.website-files.com/68ff4057b35616cdd47d5ac7/690e2b7b8bbe39907a82a9a7_Vector.svg',
   },
-];
+] as const;
 
 const About = () => {
   return (
-    <main className='pt-[100px]'>
-      <section className='px-6 pb-16 pt-16 lg:px-10 lg:pb-24 lg:pt-24'>
-        <div className='mx-auto max-w-[720px] text-center'>
-          <h1 className='mx-auto max-w-[560px] text-[37px] font-medium leading-[40.7px] tracking-[-0.03em] text-brand-fg lg:text-[44px] lg:leading-[48.4px]'>
+    <main>
+      <section className='px-6 pb-16 pt-12 lg:px-10 lg:pb-24 lg:pt-12'>
+        <div className='mx-auto max-w-[560px] text-center'>
+          <h1 className='text-[37px] font-medium leading-[40.7px] tracking-[-0.03em] text-brand-fg lg:text-[44px] lg:leading-[48.4px]'>
             Empowering every team to build software autonomously.
           </h1>
-          <p className='mx-auto mt-4 max-w-[540px] text-[20.8px] font-medium leading-[24.96px] text-[#5f5f5f]'>
+          <p className='mt-4 text-[20.8px] font-medium leading-[24.96px] text-[#5f5f5f]'>
             OpenHands is the open, secure, and model-agnostic platform
           </p>
         </div>
 
         <div className='mx-auto mt-12 max-w-[1238px]'>
-          <h2 className='text-center text-[32px] font-medium leading-[38.4px] tracking-[-0.02em] text-brand-fg lg:text-[44px] lg:leading-[48.4px]'>
-            Milestones
-          </h2>
-          <div className='relative mt-6 overflow-hidden rounded-[28px] bg-brand-fg px-6 py-8 text-brand-bg lg:px-10 lg:py-10'>
-            <img
-              src='https://cdn.prod.website-files.com/68ff4057b35616cdd47d5ac7/690e289157a957d4d32ee88d_ascii-art%20(20)%201.png'
-              alt='Grid of multiple black-and-white ASCII art portraits of various people and objects, arranged in rows and columns.'
-              className='pointer-events-none absolute inset-0 h-full w-full object-cover opacity-15'
+          <div className='flex justify-center'>
+            <h2 className='inline-block text-[32px] font-medium leading-[38.4px] tracking-[-0.02em] text-brand-fg lg:text-[44px] lg:leading-[48.4px]'>
+              Milestones
+            </h2>
+          </div>
+
+          <div className='relative mt-6 min-h-[740px] overflow-hidden rounded-[28px] bg-brand-fg px-6 py-8 text-brand-bg lg:px-10 lg:py-10'>
+            <div
+              className='pointer-events-none absolute inset-0 opacity-15'
+              style={{
+                backgroundImage:
+                  'url(https://cdn.prod.website-files.com/68ff4057b35616cdd47d5ac7/690e289157a957d4d32ee88d_ascii-art%20(20)%201.png)',
+                backgroundPosition: 'center',
+                backgroundSize: 'cover',
+              }}
             />
+
             <div className='relative grid gap-4 lg:grid-cols-3'>
               {MILESTONES.map((milestone) => (
                 <div key={milestone.label} className='rounded-[24px] border border-white/10 bg-white/8 p-6 backdrop-blur-sm'>
-                  <div className='flex items-end justify-center gap-1 text-center lg:justify-end'>
+                  <div className='flex items-end justify-end gap-1'>
                     <span className='text-[52px] font-medium leading-none tracking-[-0.04em] lg:text-[64px]'>
                       {milestone.value}
                     </span>
                     {milestone.suffix ? <span className='pb-1 text-[36px] leading-none'>{milestone.suffix}</span> : null}
                   </div>
-                  <div className='mt-4 flex items-center justify-center gap-3 text-center lg:justify-start lg:text-left'>
+                  <div className='mt-4 flex items-center gap-3'>
                     <img src={milestone.icon} alt='' className='h-6 w-6 shrink-0' />
-                    <p className='text-base leading-[1.4] text-brand-bg'>{milestone.label}</p>
+                    <div className='text-base leading-[1.4] text-brand-bg'>{milestone.label}</div>
                   </div>
                 </div>
               ))}
@@ -85,7 +93,7 @@ const About = () => {
 
       <section className='px-6 pb-16 lg:px-10 lg:pb-24'>
         <div className='mx-auto max-w-[1238px]'>
-          <div className='text-center'>
+          <div>
             <h3 className='text-[32px] font-medium leading-[38.4px] tracking-[-0.02em] text-brand-fg lg:text-[44px] lg:leading-[48.4px]'>
               Team
             </h3>
@@ -96,13 +104,13 @@ const About = () => {
               href='https://jobs.ashbyhq.com/OpenHands'
               target='_blank'
               rel='noopener noreferrer'
-              className='btn btn-outline mt-6 border-brand-fg bg-white/35'
+              className='btn btn-outline mt-6 rounded-none'
             >
               Join us
             </a>
           </div>
 
-          <div className='-mx-5 mt-16 flex flex-wrap gap-y-10'>
+          <div className='mt-16 grid gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-4'>
             {teamMembers.map((member) => (
               <MemberCard key={member.name} member={member} />
             ))}

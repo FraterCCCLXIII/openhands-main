@@ -1,13 +1,14 @@
 import React from 'react';
 import { useMotionValueEvent, useScroll } from 'framer-motion';
 import MenuIcon from '~/svgs/menu.svg?react';
-import { Link, NavLink } from 'react-router';
+import { Link, useLocation } from 'react-router';
 import { AnimatedHeaderLogo } from './animated-header-logo';
 import clsx from 'clsx';
 import GitHubLogoBlack from '~/svgs/github-logo-black.svg?react';
 import statistics from '~/data/statistics.json';
-import { formatThousands } from '~/utils/format-thousands';
 import { DESKTOP_NAV_ITEMS, RESOURCE_LINK_GROUPS } from '~/constants/site-shell';
+import { formatThousands } from '~/utils/format-thousands';
+import { isPathActive, normalizePathname } from '~/utils/normalize-pathname';
 
 interface HeaderProps {
   onClickMenuButton: () => void;
@@ -21,6 +22,8 @@ export const Header: React.FC<HeaderProps> = ({
   onClickMenuButton,
 }) => {
   const { scrollY } = useScroll();
+  const location = useLocation();
+  const pathname = normalizePathname(location.pathname);
   const [textIsVisible, setTextIsVisible] = React.useState(true);
   const [resourcesOpen, setResourcesOpen] = React.useState(false);
 
@@ -68,17 +71,15 @@ export const Header: React.FC<HeaderProps> = ({
                       {item.name}
                     </a>
                   ) : (
-                    <NavLink
+                    <Link
                       to={item.to}
-                      className={({ isActive }) =>
-                        clsx(
-                          'text-base font-normal leading-[22.4px] transition-colors hover:text-[#8a5f45]',
-                          isActive && 'text-brand-fg'
-                        )
-                      }
+                      className={clsx(
+                        'text-base font-normal leading-[22.4px] transition-colors hover:text-[#8a5f45]',
+                        isPathActive(pathname, item.to) && 'text-brand-fg'
+                      )}
                     >
                       {item.name}
-                    </NavLink>
+                    </Link>
                   )}
                 </li>
               ))}
@@ -116,7 +117,7 @@ export const Header: React.FC<HeaderProps> = ({
                               ) : (
                                 <Link
                                   to={item.to}
-                                  className='block rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-brand-fg/5'
+                                  className='block rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-brand-fg/5 hover:text-[#8a5f45]'
                                 >
                                   {item.name}
                                 </Link>

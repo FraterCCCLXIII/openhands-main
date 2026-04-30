@@ -33,13 +33,13 @@ const PRESS_ITEMS = [
     url: 'https://techcrunch.com/2024/09/05/all-hands-ai-raises-5m-to-build-open-source-agents-for-developers',
     image: 'https://cdn.prod.website-files.com/68ff4058b35616cdd47d5b59/6915e88c874e7050ff5b8094_Screenshot%202025-11-13%20at%206.09.19%20AM.png',
   },
-];
+] as const;
 
 const Press = () => {
   return (
-    <main className='pt-[100px]'>
-      <section className='px-6 pb-10 pt-16 lg:px-10 lg:pb-12 lg:pt-24'>
-        <div className='mx-auto max-w-[720px] text-center'>
+    <main>
+      <section className='px-6 pb-10 pt-12 lg:px-10 lg:pb-12 lg:pt-12'>
+        <div className='mx-auto max-w-[599px] text-center'>
           <h1 className='text-[37px] font-medium leading-[40.7px] tracking-[-0.03em] text-brand-fg lg:text-[44px] lg:leading-[48.4px]'>
             In the news
           </h1>
@@ -47,7 +47,7 @@ const Press = () => {
             Read how OpenHands is reshaping the future of AI-powered software development.
           </p>
           <div className='mt-8 flex justify-center'>
-            <Link to='/contact' className='btn btn-primary'>
+            <Link to='/contact' className='btn btn-outline rounded-none border-brand-bg/50 text-brand-bg hover:bg-brand-bg hover:text-brand-fg'>
               Contact Us
             </Link>
           </div>
@@ -59,8 +59,8 @@ const Press = () => {
           {PRESS_ITEMS.map((item) => (
             <article key={item.title} className='space-y-4 px-3'>
               <img src={item.image} alt='' className='h-[300px] w-full object-cover' />
-              <p className='text-[16px] leading-[22.4px] text-[#5f5f5f]'>{item.date}</p>
-              <p className='text-[20.8px] font-medium leading-[24.96px] text-brand-fg'>
+              <p className='inline-block text-[16px] leading-[22.4px] text-[#5f5f5f]'>{item.date}</p>
+              <p className='max-w-[397px] text-[20.8px] font-medium leading-[24.96px] text-brand-fg'>
                 {item.title}
               </p>
               <a

@@ -7,7 +7,7 @@ export const MarketingFooterCta = ({ semanticHeading = false }: MarketingFooterC
 
   return (
     <section className='px-10 py-24 text-center'>
-      <div className='mx-auto flex max-w-3xl flex-col items-center gap-6'>
+      <div className='mx-auto flex max-w-[980px] flex-col items-center gap-6'>
         <HeadingTag className='text-[44px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>
           Building the open standard for autonomous software development.
         </HeadingTag>

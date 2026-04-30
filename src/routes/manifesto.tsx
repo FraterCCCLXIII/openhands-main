@@ -38,13 +38,15 @@ const MANIFESTO_POINTS = [
     heading: 'Security is a runtime, not a promise',
     body: 'We believe agents must run in isolated, auditable environments with scoped credentials and a clear blast radius. Teams need visibility into how agents are behaving, and the ability to intervene when something breaks.',
   },
-];
+] as const;
+
+const SeparatorParagraph = () => <p className='h-4 text-transparent'>‍</p>;
 
 const Manifesto = () => {
   return (
-    <main className='pt-[100px]'>
-      <section className='px-6 pb-10 pt-16 lg:px-10 lg:pb-12 lg:pt-24'>
-        <div className='mx-auto max-w-[720px] text-center'>
+    <main>
+      <section className='px-6 pb-10 pt-12 lg:px-10 lg:pb-12 lg:pt-12'>
+        <div className='mx-auto max-w-[493px] text-center'>
           <h1 className='text-[37px] font-medium leading-[40.7px] tracking-[-0.03em] text-brand-fg lg:text-[44px] lg:leading-[48.4px]'>
             Hands on the Future
           </h1>
@@ -58,16 +60,18 @@ const Manifesto = () => {
         <div className='mx-auto max-w-[980px]'>
           <img
             src='https://cdn.prod.website-files.com/68ff4058b35616cdd47d5b59/691645a7832560da97f475c5_Featured%20manifesto.png'
-            alt='Hands on the Future manifesto artwork'
+            alt=''
             className='w-full object-cover'
           />
 
-          <div className='mx-auto mt-12 max-w-[860px]'>
+          <div className='mx-auto mt-32 max-w-[820px]'>
             <h3 className='text-[28px] font-medium leading-[33.6px] tracking-[-0.02em] text-brand-fg lg:text-[32px] lg:leading-[38.4px]'>
               We&apos;re at the beginning of a new era in software <em>development. Work is shifting from keystrokes to delegated tasks,</em> from single laptops to coordinated fleets of agents running in environments you control. <em>This is</em> our point of view <em>on how we build, what we ship, and</em> why it matters… <em>We believe</em>:
             </h3>
 
-            <div className='mt-10 space-y-6'>
+            <SeparatorParagraph />
+
+            <div className='mt-6 space-y-6'>
               {MANIFESTO_POINTS.map((point) => (
                 <p key={point.heading} className='text-[16px] leading-[22.4px] text-[#5f5f5f]'>
                   <strong className='font-bold text-black'>{point.heading}</strong>{' '}
@@ -76,15 +80,19 @@ const Manifesto = () => {
               ))}
             </div>
 
+            <SeparatorParagraph />
+
             <section className='mt-12 space-y-3'>
               <h3 className='text-[28px] font-medium leading-[33.6px] tracking-[-0.02em] text-brand-fg lg:text-[32px] lg:leading-[38.4px]'>
                 What this means for OpenHands
               </h3>
               <p className='text-[16px] leading-[22.4px] text-[#5f5f5f]'>
-                <strong className='font-bold text-black'>We are building the open, secure, and model-agnostic platform for cloud coding agents.</strong>{' '}
-                Every agent runs in a containerized sandbox you control. Every outcome can be measured and reviewed. You can self-host the open source, or use our cloud. You can bring your own models and switch without drama. You can start local, then scale to thousands of concurrent agents running throughout your codebase.
+                <strong className='font-bold text-black'>We are building the open, secure, and model-agnostic platform for cloud coding agents. Every agent runs in a containerized sandbox you control.</strong>{' '}
+                Every outcome can be measured and reviewed. You can self-host the open source, or use our cloud. You can bring your own models and switch without drama. You can start local, then scale to thousands of concurrent agents running throughout your codebase.
               </p>
             </section>
+
+            <SeparatorParagraph />
 
             <section className='mt-10 space-y-3'>
               <h3 className='text-[28px] font-medium leading-[33.6px] tracking-[-0.02em] text-brand-fg lg:text-[32px] lg:leading-[38.4px]'>
@@ -94,6 +102,8 @@ const Manifesto = () => {
                 <strong className='font-bold text-black'>Adopt an agentic mindset. Identify toil. Delegate clearly. Measure success. Invest in agent orchestration as a core engineering skill.</strong>
               </p>
             </section>
+
+            <SeparatorParagraph />
           </div>
         </div>
       </section>

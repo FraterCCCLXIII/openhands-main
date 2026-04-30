@@ -20,6 +20,7 @@ import { Sidebar } from './components/sidebar/sidebar';
 import { GitHubModal } from './components/github-modal';
 import { GitHubModalProvider } from './contexts/github-modal-context';
 import { useWidth } from './hooks/use-media';
+import { normalizePathname } from './utils/normalize-pathname';
 import './index.css';
 import { PHProvider } from './provider';
 
@@ -85,10 +86,11 @@ export default function App() {
   const [isGitHubModalOpen, setIsGitHubModalOpen] = React.useState(false);
   const sidebarRef = React.useRef<HTMLDivElement>(null);
   const location = useLocation();
+  const pathname = normalizePathname(location.pathname);
   const width = useWidth();
   const isDesktop = width >= 1024;
-  const showGlobalFooter = location.pathname !== '/';
-  const useMarketingFooter = MARKETING_FOOTER_PATHS.has(location.pathname);
+  const showGlobalFooter = pathname !== '/';
+  const useMarketingFooter = MARKETING_FOOTER_PATHS.has(pathname);
 
   const handleOpenGitHubModal = () => {
     setIsGitHubModalOpen(true);

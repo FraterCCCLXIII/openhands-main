@@ -1,6 +1,7 @@
-import { Link, NavLink } from 'react-router';
+import { Link, useLocation } from 'react-router';
 import clsx from 'clsx';
 import { FOOTER_NAV_ITEMS, FOOTER_RESOURCE_LINKS } from '~/constants/site-shell';
+import { isPathActive, normalizePathname } from '~/utils/normalize-pathname';
 
 interface FooterProps {
   standalone?: boolean;
@@ -28,6 +29,9 @@ const SOCIAL_LINKS = [
 ] as const;
 
 const FooterContent = ({ showSocialLinks = false }: Pick<FooterProps, 'showSocialLinks'>) => {
+  const location = useLocation();
+  const pathname = normalizePathname(location.pathname);
+
   return (
     <div className='text-center text-brand-fg'>
       {showSocialLinks ? (
@@ -51,15 +55,16 @@ const FooterContent = ({ showSocialLinks = false }: Pick<FooterProps, 'showSocia
       <div className='mb-8 flex justify-center'>
         <div className='flex max-w-[940px] flex-wrap items-start justify-center gap-x-8 gap-y-3 text-sm leading-[20.8px]'>
           {FOOTER_NAV_ITEMS.map((item) => (
-            <NavLink
+            <Link
               key={item.name}
               to={item.to}
-              className={({ isActive }) =>
-                clsx('text-base font-medium leading-[22.4px] transition-colors hover:text-[#8a5f45]', isActive && 'text-[#8a5f45]')
-              }
+              className={clsx(
+                'text-base font-medium leading-[22.4px] transition-colors hover:text-[#8a5f45]',
+                isPathActive(pathname, item.to) && 'text-[#8a5f45]'
+              )}
             >
               {item.name}
-            </NavLink>
+            </Link>
           ))}
 
           <div id='footer-resources' className='flex max-w-[220px] flex-wrap items-start gap-x-5 gap-y-2 text-left'>
@@ -89,7 +94,13 @@ const FooterContent = ({ showSocialLinks = false }: Pick<FooterProps, 'showSocia
             )}
           </div>
 
-          <Link to='/contact' className='text-base font-medium leading-[22.4px] transition-colors hover:text-[#8a5f45]'>
+          <Link
+            to='/contact'
+            className={clsx(
+              'text-base font-medium leading-[22.4px] transition-colors hover:text-[#8a5f45]',
+              isPathActive(pathname, '/contact') && 'text-[#8a5f45]'
+            )}
+          >
             Contact
           </Link>
         </div>

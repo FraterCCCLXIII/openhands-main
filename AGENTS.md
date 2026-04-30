@@ -55,3 +55,82 @@ npm run parity:checklist  # Crawl openhands.dev and compare against local site
 - `brand-fg`: `#22150d` (dark brown)
 - `brand-accent`: `#FFFF8B` (yellow)
 - `brand-muted`: `#7b6d5d` (muted brown)
+
+## Shared Shell Parity Notes
+- Shared marketing chrome/nav/footer links are centralized in `src/constants/site-shell.ts`.
+- For parity work on issue-based PRs, store browser screenshots under `.pr/issue-<number>/` and include both local and live captures for the analogous page.
+- `.github/workflows/pr-artifacts.yml` is intended to remove `.pr/` from the base branch after a PR merges.
+- For a production-style local parity check, build first and then run: `PORT=12001 npx react-router-serve build/server/nodejs_eyJydW50aW1lIjoibm9kZWpzIn0/index.js`.
+
+## Homepage Parity Notes
+- The live `/` page uses a 32px desktop heading for `Start with a proven workflow`; other homepage major headings remain 44px.
+- Homepage CTA buttons that compare against live cards/FAQ should use square corners (`rounded-none`) and dark-card outline buttons should use `text-brand-bg` instead of pure white for parity.
+- The homepage testimonial/social quote cards on live split some posts into multiple paragraphs; if parity audit reports missing `P:` items, check whether the local card collapsed multiple lines into one paragraph.
+- Homepage parity on `/` is sensitive to semantic visibility, not just visuals: the checker only inventories visible `h*`, `a`, `button`, `p`, `label`, and `img` elements. Use non-heading/container tags for hero/quote/footer display text when live Webflow renders them as styled `div`s, and keep workflow/footer icon controls textless if the live site exposes only icon buttons.
+- Live homepage footer layout is a single combined nav/resources/contact block with social icons above it. Keeping `Contact` outside the stacked resource list and tinting the active `Home` link with `#8a5f45` avoids recurring shared-shell mismatches.
+
+- `PARITY_MAX_PAGES=10 npm run parity:checklist` is enough to recheck `/` plus major top-level routes during homepage work.
+
+## Company Page Parity Notes
+- `/about`, `/contact`, `/press`, and `/manifesto` now use live Webflow copy patterns rather than the older marketing-page placeholders.
+- The about page roster is sourced from `src/constants/members.ts` as an ordered `teamMembers` list that matches the live team names and roles.
+- The contact page intentionally mirrors the live enterprise lead form fields/placeholders (`James`, `Smith`, `Acme`, `email@company.com`, `Send us a note here....`) for parity tests.
+- Company pages should render the shared bottom CTA via `src/components/marketing-footer-cta.tsx` before the standalone site footer, and the footer-gating logic must normalize trailing slashes (`/about/` should behave like `/about`).
+- Live `/about` semantics use `H3: Team`, a paragraph subtitle, and paragraph-only member name/title text; the roster is a vertical image-above-text grid, and the milestone labels should not be rendered as visible `p` elements.
+- Live `/contact` uses a centered hero above the two-column content, a visible non-heading `Why enterprises choose OpenHands` block, a visible `Trusted by engineers at` logo area, paragraph-style form labels, and an `input[type="submit"]` control.
+- Live `/press` uses paragraph dates/titles plus plain text `Read more` links instead of heading-based cards or outline buttons.
+- Live `/manifesto` uses an `H3` intro block plus `H3` closing sections, while the manifesto principles themselves are paragraph blocks with bold lead-ins rather than separate headings.
+- For these company routes, avoid adding an extra top padding offset to `<main>`; the shared sticky header already occupies layout space on the live pages.
+
+## Metadata / Branding Parity Notes
+- Route meta tags should use `https://openhands.dev` for canonical and `og:url` values; avoid `https://www.all-hands.dev` on marketing routes.
+- Shared static OG image for updated marketing/legal routes: `https://openhands.dev/assets/webflow/og/69161b32abf448a2df921a73_openhands_opengraph_01.png`.
+- Current external destinations: docs links should point to `https://docs.openhands.dev/openhands/usage/run-openhands/...` and careers links should point to `https://jobs.ashbyhq.com/OpenHands`.
+
+## Blog Parity Notes
+- Live `/blog` uses a centered hero with only the newsletter signup (no `Try it live` / `Build with SDK` CTA buttons), followed by one featured story card and a full grid of post cards.
+- Live blog index grid cards show publication date plus title only; featured card uses a dark overlay with `Read more` CTA copy.
+- Live blog/article links use the brand brown accent (`#8a5f45`) rather than bright blue, and article headings use medium-weight 44px desktop sizing instead of Quincy 48px/60px styles.
+- Live blog article imagery uses softer 16px radius treatments, and the newsletter form uses `Share your email` placeholder plus the privacy-policy disclaimer.
+- Blog inventory is auto-loaded from `src/posts/*.md` via `import.meta.glob`; adding a new Markdown file is enough to include it.
+- Use frontmatter `slug` to pin a live blog route when the canonical URL does not match the title-derived slug.
+- Use frontmatter `published: false` to keep retired posts in the repo while excluding them from the live/local blog inventory.
+- Support known live blog slug aliases locally, and redirect unknown live-only slugs to `https://openhands.dev/blog/:slug` instead of returning a 404/500 from our app.
+- Current live parity expects the featured `/blog` story to stay pinned to `openhands-index`; the article grid and article-footer related posts should come from the remaining reverse-chronological posts.
+- Some live blog posts need frontmatter dates that differ from Webflow's `<title>` metadata date. Use frontmatter `seoTitleDate` when the visible publication date and the browser title date diverge.
+- Shared article-template parity now depends on three template details: a `← Back to Blog` link, related-post cards whose title itself is the anchor text, and the marketing footer CTA block beneath the newsletter section.
+- The shared `MarketingFooterCta` title currently needs to render as plain text (`div`) by default for parity-sensitive routes/tests; only opt into `semanticHeading={true}` if a route explicitly needs heading semantics.
+- Live Webflow newsletter markup always includes a hidden `Thank you for your submission!` success block in the DOM, even before form submission; keep the hidden success heading in `NewsletterForm` so prerendered heading inventories match parity checks.
+- Blog frontmatter now supports `coverAlt` for live image-alt parity and `seoTitleDate` for browser-title date parity; prefer those fields over mutating visible publication dates when only metadata differs from live.
+
+- Most article hero images still use 16px rounding, but `agent-control-plane` currently needs a square hero image for parity; use frontmatter `coverRadius: "none"` for one-off overrides.
+
+## Product / Enterprise / Pricing / Community Parity Notes
+- Live `/product` uses dark interface cards: `Terminal / CLI`, `Web GUI`, and `SDK` headings plus `Learn more` links render in light text on a dark background.
+- Live `/product` includes the comparison heading `The only open, secure, and scalable agent platform built for real engineering work` and a second `See developer docs` CTA near the page footer.
+- Live `/enterprise` uses paragraph tags for the six feature titles, `Powering enterprise AI with the world’s best` is 32px (not 44px), and the page-specific closing CTA copy is `Bring agentic development to your organization.` / `Deploy securely. Scale confidently. Stay in control.`
+- Live `/pricing` parity depends on rendering comparison-table copy in visible `p`/`label` elements; checklist extraction does not inspect plain `th`/`td` text reliably.
+- Live `/community` uses a dark `Latest Community Call` block and a dark `Start contributing` block, with event titles as `h2` elements and event descriptions using ASCII apostrophes (`We'll`).
+- After issue #278 work, parity checklist counts dropped to: `/product` 1 fail, `/enterprise` 2 fails, `/pricing` 2 fails, `/community` 0 fails using `PARITY_MAX_PAGES=12 PARITY_DISCOVERY_LIMIT=20 TEST_ORIGIN=http://127.0.0.1:12001 LIVE_ORIGIN=https://openhands.dev npm run parity:checklist`.
+- Keep dedicated product detail pages at `/product/sdk`, `/product/gui`, and `/product/cli`, and wire the main product interface cards to those routes.
+- `joinslack` should behave as a server redirect, not a client-only redirect, so crawlers and non-JS clients match the live `301` to `https://dub.sh/openhands`.
+- Do not keep or add `mirror-*.tsx` marketing routes or `~/utils/webflow-mirror-route`; implement live pages natively instead.
+- The whitepaper route `/whitepapers/modernize-legacy-systems-with-ai-agents` now lives in `src/routes/whitepapers.modernize-legacy-systems-with-ai-agents.tsx`; tests cover route registration, metadata, and the client-side PDF download reveal using the CDN PDF URL `https://cdn.prod.website-files.com/68ff4057b35616cdd47d5ac7/69d3bc19b5bb78ea951cc08c_openhands-whitepaper.pdf`.
+
+## Product Subpage Parity Notes
+- `/product/cli`, `/product/gui`, and `/product/sdk` now share product-page helpers in `src/components/product-feature-page.tsx`, while the main `/product` surface cards are sourced from `src/constants/product-surfaces.ts`; update those shared files first when parity issues affect more than one product surface.
+- Live product subpages use dedicated `/product/...` routes rather than external docs links from the surface cards on `/product`.
+- Screenshot review can catch major parity regressions that the checklist crawler misses. For `/product`, `/product/cli`, `/product/gui`, and `/product/sdk`, always inspect local-vs-live full-page screenshots for eyebrow badges, section order, alternating dark feature rows, dark comparison sections, two-column FAQ layout, and yellow ASCII footer CTAs.
+- For button/link parity on the product subpages, the live Webflow pages expose different visible CTA labels vs. extracted anchor text in some hero buttons; preserve the `screenReaderLabel` support in `ProductPageActionLink` if parity regressions reappear.
+- Live product/commercial parity depends on a few non-obvious semantics from the Webflow export: product hero primary CTAs keep visible labels like `Try it live` / `Get Started`, but their accessible label should be `Join Slack`; comparison/footer CTA titles often render as styled `div` text instead of semantic `h2`, while FAQ question text should stay inside `label` elements within `summary` rows.
+- On `/product/cli` and `/product/sdk`, the first post-hero section must render the standalone hero image asset (no rounded card treatment), and the dark proof band should render the separate ASCII accent image (`page.accentImage`) so parity audits can match the live image inventory.
+
+- After the screenshot-driven parity pass on issue #291, the product routes were rebuilt around shared data-driven sections instead of ad hoc page-specific layouts, which made the screenshot structure much closer to live even though the automated parity checklist still reports many false-positive content/style mismatches.
+
+## Legacy Route / 404 Parity Notes
+- The legacy whitepaper path `/whitepapers/modernize-legacy-systems-with-ai-agents` is implemented as a first-class local route, not a redirect or iframe mirror, because the parity checklist reads visible DOM text directly.
+- Unknown marketing routes now fall through to `route("*", "routes/not-found.tsx")`, which returns a 404 status via `data(null, { status: 404 })` while still rendering inside the normal marketing chrome so the live-style nav/footer signatures remain visible.
+
+## Legal Page Parity Notes
+- Live `/privacy` renders the body as a narrow legal-rich-text block with a centered 32px desktop title, real `h2`/`h3` hierarchy, and the shared `MarketingFooterCta` above the global footer.
+- Current live `/privacy` parity expects a duplicated `Changes to this Privacy Policy` subsection and a trailing zero-width paragraph (`‍`) in the legal copy; keep both if parity checks regress on that route.
