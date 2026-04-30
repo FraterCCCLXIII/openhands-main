@@ -14,6 +14,15 @@ interface CMarkdownProps {
   codeElementWidth?: number;
 }
 
+const normalizeRawPreBlocks = (content: string) =>
+  content.replace(
+    /<pre\b([^>]*)>\s*<code\b([^>]*)>([\s\S]*?)<\/code>\s*<\/pre>/g,
+    (_match, preAttributes: string, codeAttributes: string, codeContent: string) => {
+      const trimmedCodeContent = codeContent.replace(/^\n+|\n+$/g, '');
+      return `\n\n<pre${preAttributes}><code${codeAttributes}>\n${trimmedCodeContent}\n</code></pre>\n\n`;
+    }
+  );
+
 export const CMarkdown: React.FC<CMarkdownProps> = ({
   children,
   variant = 'default',
@@ -23,6 +32,10 @@ export const CMarkdown: React.FC<CMarkdownProps> = ({
   const codeStyle = codeElementWidth
     ? { maxWidth: codeElementWidth }
     : undefined;
+  const normalizedChildren = React.useMemo(
+    () => normalizeRawPreBlocks(children),
+    [children]
+  );
 
   return (
     <div className={isBlog ? 'flex flex-col gap-6' : 'flex flex-col gap-4'}>
@@ -249,7 +262,7 @@ export const CMarkdown: React.FC<CMarkdownProps> = ({
           ),
         }}
       >
-        {children}
+        {normalizedChildren}
       </Markdown>
     </div>
   );
