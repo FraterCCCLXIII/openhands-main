@@ -43,7 +43,6 @@ export const FOOTER_NAV_ITEMS: SiteLink[] = [
   { name: 'Enterprise', to: '/enterprise' },
   { name: 'Pricing', to: '/pricing' },
   { name: 'About', to: '/about' },
-  { name: 'Contact', to: '/contact' },
 ];
 
 export const FOOTER_RESOURCE_LINKS: SiteLink[] = [

@@ -210,6 +210,7 @@ const DEVELOPER_QUOTES = [
     lines: [
       'Your agents are so underrated, but even though there are many benchmarks, which are testing agentic coding and are using your work as reference - OpenHands agent with tested model...',
       "I just don't get why everybody is so silent about your work...",
+      '‍',
       'Reposting till people wake up.',
     ],
   },
@@ -301,6 +302,19 @@ export const meta: Route.MetaFunction = () => {
 
 const Home = () => {
   const [activeTestimonial, setActiveTestimonial] = React.useState(0);
+  const [workflowOffset, setWorkflowOffset] = React.useState(0);
+
+  const visibleWorkflows = React.useMemo(
+    () => Array.from({ length: 3 }, (_, index) => WORKFLOWS[(workflowOffset + index) % WORKFLOWS.length]),
+    [workflowOffset],
+  );
+
+  const activeSurface = PRODUCT_SURFACES[0];
+  const openExternal = (href: string) => {
+    if (typeof window !== 'undefined') {
+      window.open(href, '_blank', 'noopener,noreferrer');
+    }
+  };
 
   return (
     <main data-testid='home-content'>
@@ -322,12 +336,12 @@ const Home = () => {
           </div>
 
           <div className='mx-auto max-w-[860px] text-center'>
-            <h1 className='mb-4 text-[44px] font-medium leading-[0.98] tracking-[-0.04em] text-brand-fg md:text-[56px]'>
+            <div className='mb-4 text-[44px] font-medium leading-[0.98] tracking-[-0.04em] text-brand-fg md:text-[56px]'>
               Build with coding agents, your way.
-            </h1>
-            <p className='mx-auto mb-8 max-w-[690px] text-lg leading-[1.45] text-brand-muted'>
+            </div>
+            <div className='mx-auto mb-8 max-w-[690px] text-lg leading-[1.45] text-brand-muted'>
               Open-source, customizable. Run locally or at scale.
-            </p>
+            </div>
             <div className='mb-4 flex flex-wrap items-center justify-center gap-4'>
               <a href='https://app.all-hands.dev/' target='_blank' rel='noopener noreferrer' className='btn btn-primary'>
                 Try it live
@@ -336,48 +350,64 @@ const Home = () => {
                 Build with SDK
               </a>
             </div>
-            <p className='text-base text-brand-muted'>
-              Need a self-hosted or air-gapped deployment?{' '}
-              <Link to='/contact' className='font-medium text-brand-fg hover:text-[#8a5f45]'>
-                Talk to us
-              </Link>
-            </p>
+            <div className='text-base text-brand-muted'>
+              Need a self-hosted or air-gapped deployment? <span className='font-medium text-brand-fg'>Talk to us</span>
+            </div>
           </div>
         </div>
       </section>
 
-      <section className='bg-brand-bg px-6 py-16 lg:px-10 lg:py-24'>
+      <section className='bg-brand-bg px-6 pb-16 lg:px-10 lg:pb-24'>
         <div className='mx-auto max-w-[1220px]'>
-          <div className='mb-10 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between'>
+          <div className='mb-10 flex items-end justify-between gap-4'>
             <div>
               <h2 className='mb-3 text-[32px] font-medium leading-[1.1] tracking-[-0.03em] text-brand-fg'>
                 Start with a proven workflow
               </h2>
-              <p className='max-w-[640px] text-lg text-brand-muted'>
+              <div className='max-w-[640px] text-lg text-brand-muted'>
                 Launch repeatable coding-agent workflows for the highest-value engineering tasks first.
-              </p>
+              </div>
             </div>
-            <a
-              href='https://docs.openhands.dev/openhands/usage/use-cases/overview'
-              target='_blank'
-              rel='noopener noreferrer'
-              className='btn btn-outline'
-            >
-              View docs
-            </a>
+            <div className='hidden items-center gap-3 md:flex'>
+              <button
+                type='button'
+                onClick={() => setWorkflowOffset((current) => (current === 0 ? WORKFLOWS.length - 1 : current - 1))}
+                className='flex h-11 w-11 items-center justify-center rounded-none border border-brand-fg/20 text-brand-fg hover:bg-brand-fg/5'
+              >
+                <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' className='h-5 w-5 fill-current' aria-hidden='true'>
+                  <path d='M30 16c0 .265-.105.52-.293.707A.997.997 0 0 1 29 17H5.414l6.294 6.292A1 1 0 0 1 11 25a1 1 0 0 1-.708-.292l-8-8A.997.997 0 0 1 2 16c0-.132.026-.262.075-.383.05-.12.124-.23.217-.325l8-8A1 1 0 0 1 12 8c0 .266-.105.52-.292.708L5.414 15H29c.265 0 .52.105.707.293.188.187.293.441.293.707Z' />
+                </svg>
+              </button>
+              <button
+                type='button'
+                onClick={() => setWorkflowOffset((current) => (current + 1) % WORKFLOWS.length)}
+                className='flex h-11 w-11 items-center justify-center rounded-none border border-brand-fg/20 text-brand-fg hover:bg-brand-fg/5'
+              >
+                <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' className='h-5 w-5 fill-current' aria-hidden='true'>
+                  <path d='M2 16c0-.265.105-.52.293-.707A.997.997 0 0 1 3 15h23.586l-6.294-6.292A1 1 0 0 1 20 8a1 1 0 0 1 .708-.292l8 8c.093.094.167.204.217.325.049.12.075.25.075.383 0 .132-.026.262-.075.383-.05.12-.124.23-.217.325l-8 8A1 1 0 0 1 20 24c0-.266.105-.52.292-.708L26.586 17H3a.997.997 0 0 1-.707-.293A.997.997 0 0 1 2 16Z' />
+                </svg>
+              </button>
+            </div>
           </div>
 
-          <div className='grid gap-5 md:grid-cols-2 xl:grid-cols-4'>
-            {WORKFLOWS.map((workflow) => (
+          <div className='grid gap-5 lg:grid-cols-3'>
+            {visibleWorkflows.map((workflow) => (
               <article key={workflow.title} className='rounded-none border border-brand-fg/15 bg-white/70 p-6 shadow-[0_18px_60px_rgba(34,21,13,0.05)]'>
                 <div className='mb-5 flex h-12 w-12 items-center justify-center rounded-none bg-brand-accent text-2xl'>
                   <span aria-hidden='true'>{workflow.icon}</span>
                 </div>
                 <h3 className='mb-3 text-[24px] font-medium leading-[1.2] text-brand-fg'>{workflow.title}</h3>
                 <p className='mb-6 text-base leading-[1.5] text-brand-muted'>{workflow.description}</p>
-                <a href={workflow.href} target='_blank' rel='noopener noreferrer' className='text-base font-medium hover:text-[#8a5f45]'>
-                  Launch
-                </a>
+                <button
+                  type='button'
+                  data-testid='workflow-launch'
+                  onClick={() => openExternal(workflow.href)}
+                  className='flex h-10 w-10 items-center justify-center rounded-none border border-brand-fg/20 text-brand-fg hover:bg-brand-fg/5'
+                >
+                  <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' className='h-5 w-5 fill-current' aria-hidden='true'>
+                    <path d='M2 16c0-.265.105-.52.293-.707A.997.997 0 0 1 3 15h23.586l-6.294-6.292A1 1 0 0 1 20 8a1 1 0 0 1 .708-.292l8 8c.093.094.167.204.217.325.049.12.075.25.075.383 0 .132-.026.262-.075.383-.05.12-.124.23-.217.325l-8 8A1 1 0 0 1 20 24c0-.266.105-.52.292-.708L26.586 17H3a.997.997 0 0 1-.707-.293A.997.997 0 0 1 2 16Z' />
+                  </svg>
+                </button>
               </article>
             ))}
           </div>
@@ -386,45 +416,43 @@ const Home = () => {
 
       <section className='bg-brand-bg px-6 pb-16 lg:px-10 lg:pb-24'>
         <div className='mx-auto max-w-[1220px]'>
-          <p className='mb-8 text-center text-base font-medium text-brand-fg'>Trusted by engineers at</p>
+          <div className='mb-8 text-center text-base font-medium text-brand-fg'>Trusted by engineers at</div>
           <div className='logo-grid'>
             {CLIENT_LOGOS.concat(CLIENT_LOGOS).map((logo, index) => (
-              <img key={`${logo.name}-${index}`} src={logo.url} alt={logo.name} />
+              <img key={`${logo.name}-${index}`} src={logo.url} alt='' />
             ))}
           </div>
         </div>
       </section>
 
       <section className='bg-brand-bg px-6 py-16 lg:px-10 lg:py-24'>
-        <div className='mx-auto grid max-w-[1220px] gap-6 lg:grid-cols-3'>
-          {PRODUCT_SURFACES.map((surface) => (
-            <article key={surface.title} className='overflow-hidden rounded-none border border-brand-fg/15 bg-white/70 shadow-[0_18px_60px_rgba(34,21,13,0.05)]'>
-              <div className='border-b border-brand-fg/10 px-6 py-6'>
-                <h2 className='mb-3 text-[44px] font-medium leading-[1.1] tracking-[-0.03em] text-brand-fg'>{surface.title}</h2>
-                <p className='mb-5 text-base leading-[1.5] text-brand-muted'>{surface.description}</p>
-                <a href={surface.href} target='_blank' rel='noopener noreferrer' className='btn btn-outline inline-flex rounded-none'>
-                  {surface.cta}
-                </a>
-              </div>
-              <div className='bg-[#efe6d1] p-4'>
-                <img src={surface.image} alt={surface.title} className='h-[280px] w-full object-cover' />
-              </div>
-            </article>
-          ))}
+        <div className='mx-auto grid max-w-[1220px] gap-8 lg:grid-cols-[0.38fr_0.62fr] lg:items-center'>
+          <div>
+            <div className='mb-4 flex flex-wrap gap-2'>
+              {PRODUCT_SURFACES.map((surface) => (
+                <div key={surface.title} className='rounded-none bg-brand-fg px-3 py-1 text-sm font-medium text-brand-bg'>
+                  {surface.title}
+                </div>
+              ))}
+            </div>
+            <div className='rounded-none border border-brand-fg/15 bg-white/70 p-6 shadow-[0_18px_60px_rgba(34,21,13,0.05)]'>
+              <h2 className='mb-3 text-[44px] font-medium leading-[1.1] tracking-[-0.03em] text-brand-fg'>{activeSurface.title}</h2>
+              <p className='mb-5 text-lg leading-[1.5] text-brand-muted'>{activeSurface.description}</p>
+              <a href={activeSurface.href} target='_blank' rel='noopener noreferrer' className='btn btn-outline inline-flex rounded-none'>
+                {activeSurface.cta}
+              </a>
+            </div>
+          </div>
+          <div className='bg-[#efe6d1] p-4'>
+            <img src={activeSurface.image} alt='' className='h-[360px] w-full object-cover' />
+          </div>
         </div>
       </section>
 
       <section className='bg-brand-bg px-6 py-16 lg:px-10 lg:py-24'>
-        <div className='mx-auto grid max-w-[1220px] gap-10 lg:grid-cols-[0.9fr_1.1fr]'>
+        <div className='mx-auto grid max-w-[1220px] gap-10 lg:grid-cols-[0.32fr_0.68fr]'>
           <div className='flex flex-col justify-between gap-8'>
-            <div>
-              <h3 className='mb-4 text-[44px] font-medium leading-[1.1] tracking-[-0.03em] text-brand-fg'>
-                Why teams choose OpenHands
-              </h3>
-              <p className='max-w-[360px] text-lg text-brand-muted'>
-                Open source flexibility, secure execution, and model choice for real engineering work.
-              </p>
-            </div>
+            <h3 className='text-[44px] font-medium leading-[1.1] tracking-[-0.03em] text-brand-fg'>Why teams choose OpenHands</h3>
             <a href='https://app.all-hands.dev/' target='_blank' rel='noopener noreferrer' className='btn btn-primary w-fit'>
               Try it live
             </a>
@@ -449,14 +477,16 @@ const Home = () => {
           <h3 className='mb-10 text-[44px] font-medium leading-[1.1] tracking-[-0.03em] text-brand-fg'>
             Automate the Outer Loop with AI
           </h3>
-          <div className='grid gap-6 lg:grid-cols-2'>
+          <div className='space-y-6'>
             {USE_CASE_COLUMNS.map((column) => (
-              <div key={column.label} className='rounded-none border border-brand-fg/15 bg-[#efe6d1] p-7'>
-                <p className='mb-6 text-sm font-medium uppercase tracking-[0.12em] text-brand-muted'>{column.label}</p>
-                <div className='space-y-4'>
+              <div key={column.label} className='overflow-hidden rounded-none border border-brand-fg/15 bg-[#efe6d1]'>
+                <div className='border-b border-brand-fg/15 px-6 py-4 text-sm font-medium uppercase tracking-[0.12em] text-brand-muted'>
+                  {column.label}
+                </div>
+                <div className='grid gap-6 p-6 lg:grid-cols-3'>
                   {column.cards.map((card) => (
-                    <article key={card.title} className='rounded-none bg-white/70 p-5'>
-                      <div className='mb-4 flex h-14 w-14 items-center justify-center rounded-none bg-brand-fg'>
+                    <article key={card.title} className='rounded-none bg-transparent'>
+                      <div className='mb-4 flex h-14 w-14 items-center justify-center rounded-none bg-white'>
                         <img src={card.icon} alt='' className='h-8 w-8' />
                       </div>
                       <p className='mb-2 text-[20px] font-medium leading-[1.25] text-brand-fg'>{card.title}</p>
@@ -480,42 +510,39 @@ const Home = () => {
             />
           </div>
           <div>
-            <h2 className='mb-6 text-[44px] font-medium leading-[1.1] tracking-[-0.03em] text-brand-fg'>
+            <div className='mb-6 text-[44px] font-medium leading-[1.1] tracking-[-0.03em] text-brand-fg'>
               {TESTIMONIALS[activeTestimonial].quote}
-            </h2>
+            </div>
             <div className='mb-8 flex items-center gap-4'>
-              <img
-                src={TESTIMONIALS[activeTestimonial].photo}
-                alt={TESTIMONIALS[activeTestimonial].name}
-                className='h-14 w-14 object-cover'
-                style={{ borderRadius: '100%' }}
-              />
+              <img src={TESTIMONIALS[activeTestimonial].photo} alt='' className='h-14 w-14 object-cover' style={{ borderRadius: '100%' }} />
               <div>
-                <p className='text-base font-medium text-brand-fg'>{TESTIMONIALS[activeTestimonial].name}</p>
-                <p className='text-sm text-brand-muted'>{TESTIMONIALS[activeTestimonial].title}</p>
+                <div className='text-base font-medium text-brand-fg'>{TESTIMONIALS[activeTestimonial].name}</div>
+                <div className='text-sm text-brand-muted'>{TESTIMONIALS[activeTestimonial].title}</div>
               </div>
               <img src={TESTIMONIALS[activeTestimonial].logo} alt='' className='ml-auto h-8 max-w-[110px] object-contain' />
             </div>
             <div className='flex items-center justify-between'>
-              <span className='text-base font-medium text-brand-fg'>
+              <div className='text-base font-medium text-brand-fg'>
                 {activeTestimonial + 1}/{TESTIMONIALS.length}
-              </span>
+              </div>
               <div className='flex gap-3'>
                 <button
                   type='button'
                   onClick={() => setActiveTestimonial((current) => (current === 0 ? TESTIMONIALS.length - 1 : current - 1))}
-                  className='flex h-11 w-11 items-center justify-center rounded-none border border-brand-fg/20 hover:bg-brand-fg/5'
-                  aria-label='Previous testimonial'
+                  className='flex h-11 w-11 items-center justify-center rounded-none border border-brand-fg/20 text-brand-fg hover:bg-brand-fg/5'
                 >
-                  ←
+                  <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' className='h-5 w-5 fill-current' aria-hidden='true'>
+                    <path d='M30 16c0 .265-.105.52-.293.707A.997.997 0 0 1 29 17H5.414l6.294 6.292A1 1 0 0 1 11 25a1 1 0 0 1-.708-.292l-8-8A.997.997 0 0 1 2 16c0-.132.026-.262.075-.383.05-.12.124-.23.217-.325l8-8A1 1 0 0 1 12 8c0 .266-.105.52-.292.708L5.414 15H29c.265 0 .52.105.707.293.188.187.293.441.293.707Z' />
+                  </svg>
                 </button>
                 <button
                   type='button'
                   onClick={() => setActiveTestimonial((current) => (current === TESTIMONIALS.length - 1 ? 0 : current + 1))}
-                  className='flex h-11 w-11 items-center justify-center rounded-none border border-brand-fg/20 hover:bg-brand-fg/5'
-                  aria-label='Next testimonial'
+                  className='flex h-11 w-11 items-center justify-center rounded-none border border-brand-fg/20 text-brand-fg hover:bg-brand-fg/5'
                 >
-                  →
+                  <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' className='h-5 w-5 fill-current' aria-hidden='true'>
+                    <path d='M2 16c0-.265.105-.52.293-.707A.997.997 0 0 1 3 15h23.586l-6.294-6.292A1 1 0 0 1 20 8a1 1 0 0 1 .708-.292l8 8c.093.094.167.204.217.325.049.12.075.25.075.383 0 .132-.026.262-.075.383-.05.12-.124.23-.217.325l-8 8A1 1 0 0 1 20 24c0-.266.105-.52.292-.708L26.586 17H3a.997.997 0 0 1-.707-.293A.997.997 0 0 1 2 16Z' />
+                  </svg>
                 </button>
               </div>
             </div>
@@ -557,8 +584,8 @@ const Home = () => {
                   ['/assets/webflow/icons/6908c8dde7fa5732b9ed5cb4_Vector.svg', 'GitLab'],
                 ].map(([icon, label]) => (
                   <div key={label} className='rounded-none border border-white/10 bg-white/5 p-4 text-center'>
-                    <img src={icon} alt={label} className='mx-auto mb-3 h-8 w-auto' />
-                    <span className='text-sm text-white/70'>{label}</span>
+                    <img src={icon} alt='' className='mx-auto mb-3 h-8 w-auto' />
+                    <div className='text-sm text-white/70'>{label}</div>
                   </div>
                 ))}
               </div>
@@ -596,8 +623,8 @@ const Home = () => {
                 <div className='mb-4 flex items-center gap-3'>
                   <img src={quote.avatar} alt={quote.name} className='h-11 w-11 object-cover' style={{ borderRadius: '100%' }} />
                   <div>
-                    <p className='text-sm font-medium text-brand-fg'>{quote.name}</p>
-                    <p className='text-xs text-brand-muted'>{quote.title}</p>
+                    <div className='text-sm font-medium text-brand-fg'>{quote.name}</div>
+                    <div className='text-xs text-brand-muted'>{quote.title}</div>
                   </div>
                 </div>
                 <div className='space-y-2'>
@@ -615,25 +642,24 @@ const Home = () => {
       </section>
 
       <section className='bg-brand-bg px-6 py-16 lg:px-10 lg:py-24'>
-        <div className='mx-auto max-w-[1080px] rounded-none border border-brand-fg/12 bg-white/70 p-7 md:p-10'>
-          <div className='mb-10 flex flex-col gap-4 md:flex-row md:items-end md:justify-between'>
+        <div className='mx-auto max-w-[1220px]'>
+          <div className='grid gap-8 lg:grid-cols-[0.4fr_0.6fr] lg:items-start'>
             <div>
-              <h2 className='mb-3 text-[44px] font-medium leading-[1.1] tracking-[-0.03em] text-brand-fg'>FAQ&apos;s</h2>
-              <p className='text-lg text-brand-muted'>Answers for teams evaluating autonomous software-development agents.</p>
+              <h2 className='mb-4 text-[44px] font-medium leading-[1.1] tracking-[-0.03em] text-brand-fg'>FAQ&apos;s</h2>
+              <Link to='/contact' className='btn btn-outline w-fit rounded-none'>
+                Contact us
+              </Link>
             </div>
-            <Link to='/contact' className='btn btn-outline w-fit rounded-none'>
-              Contact us
-            </Link>
-          </div>
-          <div className='space-y-4'>
-            {FAQS.map((faq) => (
-              <details key={faq.question} className='border-t border-brand-fg/12 pt-4 last:border-b last:pb-4'>
-                <summary className='cursor-pointer list-none'>
-                  <label className='cursor-pointer text-[24px] font-medium leading-[1.4] text-brand-fg'>{faq.question}</label>
-                </summary>
-                <p className='mt-3 max-w-[860px] text-base leading-[1.65] text-brand-muted'>{faq.answer}</p>
-              </details>
-            ))}
+            <div className='space-y-4'>
+              {FAQS.map((faq) => (
+                <details key={faq.question} className='border-t border-brand-fg/12 pt-4 last:border-b last:pb-4'>
+                  <summary className='cursor-pointer list-none'>
+                    <label className='cursor-pointer text-[24px] font-medium leading-[1.4] text-brand-fg'>{faq.question}</label>
+                  </summary>
+                  <p className='mt-3 max-w-[860px] text-base leading-[1.65] text-brand-muted'>{faq.answer}</p>
+                </details>
+              ))}
+            </div>
           </div>
         </div>
       </section>
@@ -647,9 +673,9 @@ const Home = () => {
           />
         </div>
         <div className='relative z-10 mx-auto max-w-[1238px]'>
-          <h2 className='mx-auto mb-4 max-w-[960px] text-[44px] font-medium leading-[1.05] tracking-[-0.04em]'>
+          <div className='mx-auto mb-4 max-w-[960px] text-[44px] font-medium leading-[1.05] tracking-[-0.04em]'>
             Building the open standard for autonomous software development.
-          </h2>
+          </div>
           <p className='mx-auto mb-8 max-w-[900px] text-lg leading-[1.5] text-brand-muted'>
             OpenHands is the foundation for secure, transparent, model-agnostic coding agents - empowering every software team to build faster with full control.
           </p>
@@ -661,7 +687,7 @@ const Home = () => {
               Try it live
             </a>
           </div>
-          <Footer />
+          <Footer showSocialLinks />
         </div>
       </section>
     </main>

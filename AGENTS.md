@@ -66,6 +66,9 @@ npm run parity:checklist  # Crawl openhands.dev and compare against local site
 - The live `/` page uses a 32px desktop heading for `Start with a proven workflow`; other homepage major headings remain 44px.
 - Homepage CTA buttons that compare against live cards/FAQ should use square corners (`rounded-none`) and dark-card outline buttons should use `text-brand-bg` instead of pure white for parity.
 - The homepage testimonial/social quote cards on live split some posts into multiple paragraphs; if parity audit reports missing `P:` items, check whether the local card collapsed multiple lines into one paragraph.
+- Homepage parity on `/` is sensitive to semantic visibility, not just visuals: the checker only inventories visible `h*`, `a`, `button`, `p`, `label`, and `img` elements. Use non-heading/container tags for hero/quote/footer display text when live Webflow renders them as styled `div`s, and keep workflow/footer icon controls textless if the live site exposes only icon buttons.
+- Live homepage footer layout is a single combined nav/resources/contact block with social icons above it. Keeping `Contact` outside the stacked resource list and tinting the active `Home` link with `#8a5f45` avoids recurring shared-shell mismatches.
+
 - `PARITY_MAX_PAGES=10 npm run parity:checklist` is enough to recheck `/` plus major top-level routes during homepage work.
 
 ## Company Page Parity Notes
