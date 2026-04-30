@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest';
 import { CMarkdown } from '../../src/components/c-markdown';
 
 describe('CMarkdown', () => {
-  it('applies blog variant typography and link styling', () => {
-    render(
+  it('applies blog variant typography without adding wrapper gap spacing', () => {
+    const { container } = render(
       <CMarkdown variant='blog'>
         {'# Title\n\n## Subtitle\n\nA [link](https://example.com) with `code`.\n\n![Alt text](https://example.com/image.png)'}
       </CMarkdown>
@@ -15,12 +15,14 @@ describe('CMarkdown', () => {
     const link = screen.getByRole('link', { name: 'link' });
     const image = screen.getByAltText('Alt text');
 
+    expect(container.firstElementChild?.className).toBe('');
     expect(title.className).toContain('lg:text-[44px]');
     expect(subtitle.className).toContain('font-medium');
     expect(link.className).toContain('text-brand-brown');
+    expect(link.className).toContain('text-[16px]');
     expect(link.className).toContain('leading-[22.4px]');
     expect(screen.getByText('code').className).toContain('bg-brand-fg');
-    expect(image.className).toContain('rounded-[8px]');
+    expect(image.className).toContain('rounded-[16px]');
   });
 
   it('keeps markdown-like content inside raw HTML pre blocks out of the document structure', () => {

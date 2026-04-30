@@ -20,8 +20,10 @@ const regressionSlugs = [
   "evoclaw-benchmark",
   "introducing-openhands-lm-32b-a-strong-open-coding-agent-model",
   "minimax-m2-5-open-weights-models-catch-up-to-claude",
+  "mitigating-prompt-injection-attacks-in-software-agents",
   "openhands-index",
   "openhands-product-update---march-2026",
+  "sota-on-swe-bench-verified-with-inference-time-scaling-and-critic-model",
   "weve-just-raised-18-8m-to-build-the-open-standard-for-autonomous-software-development",
 ] as const;
 
@@ -54,5 +56,26 @@ describe("blogAPI", () => {
         "levels-of-autonomy-in-ai-enhanced-software-engineering",
       ),
     ).toBeUndefined();
+  });
+
+  test("keeps representative blog parity content synced to live", () => {
+    const outerLoop = blogAPI.getBlogBySlug("20251202-agents-in-the-outer-loop");
+    const promptInjection = blogAPI.getBlogBySlug(
+      "mitigating-prompt-injection-attacks-in-software-agents",
+    );
+    const sota = blogAPI.getBlogBySlug(
+      "sota-on-swe-bench-verified-with-inference-time-scaling-and-critic-model",
+    );
+
+    expect(outerLoop?.data.date).toBe("2025-12-02T12:00:00.000Z");
+
+    expect(promptInjection?.content).not.toContain("written extensively");
+    expect(promptInjection?.content).not.toContain("automated discovery");
+    expect(promptInjection?.content).not.toContain("paper on measuring agent safety");
+
+    expect(sota?.content).not.toContain("cloud solution");
+    expect(sota?.content).not.toContain("context condensation");
+    expect(sota?.content).not.toContain("GitHub repository");
+    expect(sota?.content).not.toContain("our submission");
   });
 });

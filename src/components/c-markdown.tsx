@@ -38,7 +38,7 @@ export const CMarkdown: React.FC<CMarkdownProps> = ({
   );
 
   return (
-    <div className={isBlog ? 'flex flex-col gap-6' : 'flex flex-col gap-4'}>
+    <div className={isBlog ? undefined : 'flex flex-col gap-4'}>
       <Markdown
         remarkPlugins={[remarkMath, remarkGfm]}
         rehypePlugins={[rehypeRaw, rehypeKatex]}
@@ -50,7 +50,7 @@ export const CMarkdown: React.FC<CMarkdownProps> = ({
               className={clsx(
                 'underline decoration-[1px] underline-offset-[0.18em] transition-colors',
                 isBlog
-                  ? 'font-medium leading-[22.4px] text-brand-brown hover:text-brand-fg'
+                  ? 'text-[16px] leading-[22.4px] text-brand-brown hover:text-brand-fg'
                   : 'text-blue-600'
               )}
               {...props}
@@ -111,24 +111,12 @@ export const CMarkdown: React.FC<CMarkdownProps> = ({
             </h4>
           ),
           ul: ({ children: listChildren, ...props }) => (
-            <ul
-              className={clsx(
-                'mb-6 list-disc pl-5',
-                isBlog ? 'space-y-3' : 'space-y-1'
-              )}
-              {...props}
-            >
+            <ul className={clsx('mb-4 list-disc pl-5', isBlog ? undefined : 'space-y-1')} {...props}>
               {listChildren}
             </ul>
           ),
           ol: ({ children: listChildren, ...props }) => (
-            <ol
-              className={clsx(
-                'mb-6 list-decimal pl-5',
-                isBlog ? 'space-y-3' : 'space-y-1'
-              )}
-              {...props}
-            >
+            <ol className={clsx('mb-4 list-decimal pl-5', isBlog ? undefined : 'space-y-1')} {...props}>
               {listChildren}
             </ol>
           ),
@@ -136,7 +124,7 @@ export const CMarkdown: React.FC<CMarkdownProps> = ({
             <li
               className={clsx(
                 isBlog
-                  ? 'text-[18px] leading-[1.5] text-[#5f5f5f] marker:text-brand-fg'
+                  ? 'mb-[4.8px] text-[16px] leading-[22.4px] text-[#5f5f5f] marker:text-brand-fg last:mb-0'
                   : 'ml-5 list-disc'
               )}
               {...props}
@@ -147,7 +135,7 @@ export const CMarkdown: React.FC<CMarkdownProps> = ({
           img: ({ alt, ...props }) => (
             <img
               className={clsx(
-                isBlog ? 'my-10 w-full rounded-[8px] object-cover leading-[22.4px]' : 'rounded-lg'
+                isBlog ? 'my-10 w-full rounded-[16px] object-cover leading-[22.4px]' : 'rounded-lg'
               )}
               {...props}
               alt={alt}
@@ -157,7 +145,7 @@ export const CMarkdown: React.FC<CMarkdownProps> = ({
             <p
               className={clsx(
                 isBlog
-                  ? 'mb-6 mt-0 text-[18px] leading-[1.5] text-[#5f5f5f]'
+                  ? 'mb-4 mt-0 text-[16px] leading-[22.4px] text-[#5f5f5f]'
                   : 'text-description'
               )}
               {...props}
@@ -252,7 +240,7 @@ export const CMarkdown: React.FC<CMarkdownProps> = ({
               className={clsx(
                 'py-3 pr-10 align-top',
                 isBlog
-                  ? 'text-[18px] leading-[1.5] text-[#5f5f5f]'
+                  ? 'text-[16px] leading-[22.4px] text-[#5f5f5f]'
                   : 'border border-gray-300 px-4'
               )}
               {...props}

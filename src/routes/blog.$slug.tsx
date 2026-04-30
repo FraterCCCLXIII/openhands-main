@@ -185,14 +185,14 @@ const BlogDetails = () => {
           <figure className='w-full'>
             {!data.cover && (
               <PlaceholderImage
-                className={`aspect-[3/2] w-full ${data.coverRadius === 'none' ? 'rounded-none' : 'rounded-[16px]'}`}
+                className={`w-full ${data.coverRadius === 'none' ? 'rounded-none' : 'rounded-[16px]'}`}
               />
             )}
             {data.cover && (
               <img
                 src={data.cover}
                 alt={data.coverAlt}
-                className={`aspect-[3/2] w-full object-cover ${data.coverRadius === 'none' ? 'rounded-none' : 'rounded-[16px]'}`}
+                className={`h-auto w-full ${data.coverRadius === 'none' ? 'rounded-none' : 'rounded-[16px]'}`}
               />
             )}
           </figure>

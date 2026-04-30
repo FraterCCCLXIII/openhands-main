@@ -58,7 +58,12 @@ describe('Blog article route', () => {
 
     expect(relatedPostLink).toHaveAttribute('href', '/blog/agent-control-plane');
     expect(screen.queryByText('April 3, 2026')).not.toBeInTheDocument();
-    expect(container.querySelector('article > div img')?.getAttribute('alt')).toBe('');
+
+    const coverImage = container.querySelector('article > div img');
+
+    expect(coverImage?.getAttribute('alt')).toBe('');
+    expect(coverImage?.className).toContain('h-auto');
+    expect(coverImage?.className).not.toContain('aspect-[3/2]');
     expect(screen.getByRole('heading', { level: 1, name: 'Get useful insights in our blog' })).toBeInTheDocument();
     expect(
       screen.getByText('Building the open standard for autonomous software development.')
