@@ -68,6 +68,8 @@ npm run parity:checklist  # Crawl openhands.dev and compare against local site
 - The homepage testimonial/social quote cards on live split some posts into multiple paragraphs; if parity audit reports missing `P:` items, check whether the local card collapsed multiple lines into one paragraph.
 - Homepage parity on `/` is sensitive to semantic visibility, not just visuals: the checker only inventories visible `h*`, `a`, `button`, `p`, `label`, and `img` elements. Use non-heading/container tags for hero/quote/footer display text when live Webflow renders them as styled `div`s, and keep workflow/footer icon controls textless if the live site exposes only icon buttons.
 - Live homepage footer layout is a single combined nav/resources/contact block with social icons above it. Keeping `Contact` outside the stacked resource list and tinting the active `Home` link with `#8a5f45` avoids recurring shared-shell mismatches.
+- Homepage workflow cards should use the live Webflow SVG icons instead of emoji, and if you show visible `Launch` text, keep it out of the actual `<button>` text content (for example, visible `div` text plus an overlay button) so the parity checker does not add unexpected `BUTTON:` signatures.
+- The homepage `Developers love OpenHands` wall aligns closer to live with a 3-column desktop grid and slightly taller cards; this section materially affects downstream FAQ/footer Y-position parity.
 
 - `PARITY_MAX_PAGES=10 npm run parity:checklist` is enough to recheck `/` plus major top-level routes during homepage work.
 

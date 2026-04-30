@@ -53,7 +53,7 @@ const FooterContent = ({ showSocialLinks = false }: Pick<FooterProps, 'showSocia
       ) : null}
 
       <div className='mb-8 flex justify-center'>
-        <div className='flex max-w-[940px] flex-wrap items-start justify-center gap-x-8 gap-y-3 text-sm leading-[20.8px]'>
+        <div className='flex max-w-[825px] flex-wrap items-start justify-center gap-x-8 gap-y-3 text-sm leading-[20.8px]'>
           {FOOTER_NAV_ITEMS.map((item) => (
             <Link
               key={item.name}

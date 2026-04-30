@@ -28,25 +28,29 @@ const WORKFLOWS = [
     title: 'Fix Vulnerabilities',
     description: 'Scans repositories, fixes vulnerabilities, and opens reviewable PRs.',
     href: 'https://app.all-hands.dev/login',
-    icon: '🛡️',
+    iconSrc:
+      'https://cdn.prod.website-files.com/68ff4058b35616cdd47d5b59/69c325c02839d67f16aa2af7_Tools%20Icon.svg',
   },
   {
     title: 'Review PRs',
     description: 'Reviews PRs for quality, security, and best practices.',
     href: 'https://app.all-hands.dev/login',
-    icon: '🔎',
+    iconSrc:
+      'https://cdn.prod.website-files.com/68ff4058b35616cdd47d5b59/69c325c66ad997e4b0159442_Search%20Icon.svg',
   },
   {
     title: 'Migrate Code',
     description: 'Migrates legacy COBOL systems to Java with testing and validation built in.',
     href: 'https://app.all-hands.dev/login',
-    icon: '➡️',
+    iconSrc:
+      'https://cdn.prod.website-files.com/68ff4058b35616cdd47d5b59/69c325cd022fd95513931648_Arrow%20Right%20Circle.svg',
   },
   {
     title: 'Triage Incidents',
     description: 'Investigates errors, finds root causes, and posts actionable debugging insights.',
     href: 'https://app.all-hands.dev/login',
-    icon: '🚨',
+    iconSrc:
+      'https://cdn.prod.website-files.com/68ff4058b35616cdd47d5b59/69c325d42839d67f16aa2e86_Exclamation%20Triangle%20Icon.svg',
   },
 ];
 
@@ -360,7 +364,7 @@ const Home = () => {
 
       <section className='bg-brand-bg px-6 pb-10 lg:px-10 lg:pb-14'>
         <div className='mx-auto max-w-[1238px]'>
-          <div className='mb-7 flex items-end justify-between gap-4'>
+          <div className='mb-5 flex items-end justify-between gap-4'>
             <div className='max-w-[384px]'>
               <h2 className='text-[32px] font-medium leading-[1.1] tracking-[-0.03em] text-brand-fg'>
                 Start with a proven workflow
@@ -390,29 +394,30 @@ const Home = () => {
 
           <div className='grid gap-5 lg:grid-cols-3'>
             {visibleWorkflows.map((workflow) => (
-              <article key={workflow.title} className='rounded-none border border-brand-fg/15 bg-white/70 p-6 shadow-[0_18px_60px_rgba(34,21,13,0.05)]'>
-                <div className='mb-5 flex h-12 w-12 items-center justify-center rounded-none bg-brand-accent text-2xl'>
-                  <span aria-hidden='true'>{workflow.icon}</span>
+              <article
+                key={workflow.title}
+                className='flex h-full flex-col rounded-none border border-brand-fg/15 bg-white/70 p-5 shadow-[0_18px_60px_rgba(34,21,13,0.05)]'
+              >
+                <img src={workflow.iconSrc} alt='' className='mb-4 h-8 w-8 object-contain' />
+                <h3 className='mb-2 text-[24px] font-medium leading-[1.2] text-brand-fg'>{workflow.title}</h3>
+                <p className='mb-5 text-base leading-[1.5] text-brand-muted'>{workflow.description}</p>
+                <div className='relative mt-auto inline-flex w-full items-center justify-center rounded-none bg-brand-accent px-5 py-3 text-base font-medium text-brand-fg'>
+                  <div aria-hidden='true'>Launch</div>
+                  <button
+                    type='button'
+                    aria-label={`Launch ${workflow.title}`}
+                    data-testid='workflow-launch'
+                    onClick={() => openExternal(workflow.href)}
+                    className='absolute inset-0 rounded-none hover:bg-brand-fg/5'
+                  />
                 </div>
-                <h3 className='mb-3 text-[24px] font-medium leading-[1.2] text-brand-fg'>{workflow.title}</h3>
-                <p className='mb-6 text-base leading-[1.5] text-brand-muted'>{workflow.description}</p>
-                <button
-                  type='button'
-                  data-testid='workflow-launch'
-                  onClick={() => openExternal(workflow.href)}
-                  className='flex h-10 w-10 items-center justify-center rounded-none border border-brand-fg/20 text-brand-fg hover:bg-brand-fg/5'
-                >
-                  <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' className='h-5 w-5 fill-current' aria-hidden='true'>
-                    <path d='M2 16c0-.265.105-.52.293-.707A.997.997 0 0 1 3 15h23.586l-6.294-6.292A1 1 0 0 1 20 8a1 1 0 0 1 .708-.292l8 8c.093.094.167.204.217.325.049.12.075.25.075.383 0 .132-.026.262-.075.383-.05.12-.124.23-.217.325l-8 8A1 1 0 0 1 20 24c0-.266.105-.52.292-.708L26.586 17H3a.997.997 0 0 1-.707-.293A.997.997 0 0 1 2 16Z' />
-                  </svg>
-                </button>
               </article>
             ))}
           </div>
         </div>
       </section>
 
-      <section className='bg-brand-bg px-6 pb-8 lg:px-10 lg:pb-10'>
+      <section className='bg-brand-bg px-6 pb-4 lg:px-10 lg:pb-6'>
         <div className='mx-auto max-w-[1238px]'>
           <div className='mb-5 text-center text-base font-medium text-brand-fg'>Trusted by engineers at</div>
           <div className='logo-grid'>
@@ -423,17 +428,17 @@ const Home = () => {
         </div>
       </section>
 
-      <section className='bg-brand-bg px-6 py-10 lg:px-10 lg:py-16'>
+      <section className='bg-brand-bg px-6 pb-10 pt-6 lg:px-10 lg:pb-12 lg:pt-8'>
         <div className='mx-auto grid max-w-[1238px] gap-8 lg:grid-cols-[280px_minmax(0,1fr)] lg:items-start'>
           <div>
-            <div className='mb-4 flex flex-wrap gap-2'>
+            <div className='mb-3 flex flex-wrap gap-2'>
               {PRODUCT_SURFACES.map((surface) => (
                 <div key={surface.title} className='rounded-full bg-brand-fg px-3 py-1 text-sm font-medium text-brand-bg'>
                   {surface.title}
                 </div>
               ))}
             </div>
-            <div className='max-w-[270px] rounded-[24px] border border-brand-fg/15 bg-white/70 p-6 shadow-[0_18px_60px_rgba(34,21,13,0.05)]'>
+            <div className='max-w-[270px] rounded-[24px] border border-brand-fg/15 bg-white/70 p-5 shadow-[0_18px_60px_rgba(34,21,13,0.05)]'>
               <h2 className='mb-3 text-[44px] font-medium leading-[1.1] tracking-[-0.03em] text-brand-fg'>{activeSurface.title}</h2>
               <p className='mb-5 max-w-[270px] text-lg leading-[1.5] text-brand-muted'>{activeSurface.description}</p>
               <a href={activeSurface.href} target='_blank' rel='noopener noreferrer' className='btn btn-outline inline-flex rounded-none'>
@@ -441,17 +446,17 @@ const Home = () => {
               </a>
             </div>
           </div>
-          <div className='overflow-hidden bg-[#efe6d1] lg:min-h-[1500px]'>
+          <div className='overflow-hidden bg-[#efe6d1] lg:min-h-[1320px]'>
             <img src={activeSurface.image} alt='' className='h-full min-h-[620px] w-full object-cover object-top' />
           </div>
         </div>
       </section>
 
       <section className='bg-brand-bg px-6 py-16 lg:px-10 lg:py-24'>
-        <div className='mx-auto grid max-w-[1220px] gap-10 lg:grid-cols-[0.32fr_0.68fr]'>
+        <div className='mx-auto grid max-w-[1220px] gap-10 lg:grid-cols-[360px_546px] lg:justify-between'>
           <div className='flex flex-col justify-between gap-8'>
-            <h3 className='text-[44px] font-medium leading-[1.1] tracking-[-0.03em] text-brand-fg'>Why teams choose OpenHands</h3>
-            <a href='https://app.all-hands.dev/' target='_blank' rel='noopener noreferrer' className='btn btn-primary w-fit'>
+            <h3 className='max-w-[360px] text-[44px] font-medium leading-[1.1] tracking-[-0.03em] text-brand-fg'>Why teams choose OpenHands</h3>
+            <a href='https://app.all-hands.dev/' target='_blank' rel='noopener noreferrer' className='btn btn-primary w-fit rounded-none'>
               Try it live
             </a>
           </div>
@@ -548,10 +553,10 @@ const Home = () => {
         </div>
       </section>
 
-      <section className='bg-brand-bg px-6 py-16 lg:px-10 lg:py-24'>
+      <section className='bg-brand-bg px-6 py-20 lg:px-10 lg:py-28'>
         <div className='mx-auto max-w-[1220px] space-y-6'>
           <div className='grid gap-6 lg:grid-cols-2'>
-            <article className='card-dark min-h-[520px] rounded-none p-8'>
+            <article className='card-dark min-h-[520px] rounded-none p-8 lg:min-h-[600px]'>
               <p className='mb-3 text-lg font-medium text-brand-accent'>Community that compounds velocity</p>
               <p className='mb-8 max-w-[510px] text-lg leading-[1.55] text-white/75'>
                 With 65K+ GitHub stars and a thriving open-source ecosystem, OpenHands evolves through collective innovation - every contribution makes the platform faster, safer, and smarter.
@@ -569,7 +574,7 @@ const Home = () => {
               </div>
             </article>
 
-            <article className='card-dark min-h-[520px] rounded-none p-8'>
+            <article className='card-dark min-h-[520px] rounded-none p-8 lg:min-h-[600px]'>
               <p className='mb-3 text-lg font-medium text-brand-accent'>Plays well with your stack</p>
               <p className='mb-10 max-w-[520px] text-lg leading-[1.55] text-white/75'>
                 Native integrations with GitHub, GitLab, CI/CD, Slack, and ticketing tools. OpenHands fits seamlessly into enterprise governance systems and your preferred model providers.
@@ -609,15 +614,15 @@ const Home = () => {
         </div>
       </section>
 
-      <section className='bg-brand-bg px-6 py-16 lg:px-10 lg:py-24'>
+      <section className='bg-brand-bg px-6 py-20 lg:px-10 lg:py-28'>
         <div className='mx-auto max-w-[1220px]'>
           <div className='mb-12 text-center'>
             <h2 className='mb-3 text-[44px] font-medium leading-[1.1] tracking-[-0.03em] text-brand-fg'>Developers love OpenHands</h2>
             <p className='text-lg text-brand-muted'>Join millions of developers to build software autonomously</p>
           </div>
-          <div className='grid gap-5 md:grid-cols-2 xl:grid-cols-4'>
+          <div className='grid gap-5 md:grid-cols-2 lg:grid-cols-3'>
             {DEVELOPER_QUOTES.map((quote) => (
-              <article key={quote.name} className='rounded-none border border-brand-fg/12 bg-white/80 p-5 shadow-[0_18px_60px_rgba(34,21,13,0.04)]'>
+              <article key={quote.name} className='rounded-none border border-brand-fg/12 bg-white/80 p-5 shadow-[0_18px_60px_rgba(34,21,13,0.04)] lg:min-h-[260px]'>
                 <div className='mb-4 flex items-center gap-3'>
                   <img src={quote.avatar} alt={quote.name} className='h-11 w-11 object-cover' style={{ borderRadius: '100%' }} />
                   <div>
@@ -639,7 +644,7 @@ const Home = () => {
         </div>
       </section>
 
-      <section className='bg-brand-bg px-6 py-16 lg:px-10 lg:py-24'>
+      <section className='bg-brand-bg px-6 py-20 lg:px-10 lg:py-28'>
         <div className='mx-auto max-w-[1220px]'>
           <div className='grid gap-8 lg:grid-cols-[0.4fr_0.6fr] lg:items-start'>
             <div>
@@ -662,7 +667,7 @@ const Home = () => {
         </div>
       </section>
 
-      <section className='relative overflow-hidden bg-brand-accent px-6 py-16 text-center text-brand-fg lg:px-10 lg:py-24'>
+      <section className='relative overflow-hidden bg-brand-accent px-6 py-20 text-center text-brand-fg lg:px-10 lg:py-28'>
         <div className='absolute inset-0 pointer-events-none opacity-20'>
           <img
             src='/assets/webflow/backgrounds/6908d170831c19b2b6976323_ascii-art_(16)_1.svg'
@@ -678,10 +683,10 @@ const Home = () => {
             OpenHands is the foundation for secure, transparent, model-agnostic coding agents - empowering every software team to build faster with full control.
           </p>
           <div className='mb-12 flex flex-wrap items-center justify-center gap-4'>
-            <a href='https://docs.openhands.dev/sdk' target='_blank' rel='noopener noreferrer' className='btn btn-outline'>
+            <a href='https://docs.openhands.dev/sdk' target='_blank' rel='noopener noreferrer' className='btn btn-outline rounded-none'>
               Build with SDK
             </a>
-            <a href='https://app.all-hands.dev/' target='_blank' rel='noopener noreferrer' className='btn btn-primary'>
+            <a href='https://app.all-hands.dev/' target='_blank' rel='noopener noreferrer' className='btn btn-primary rounded-none'>
               Try it live
             </a>
           </div>

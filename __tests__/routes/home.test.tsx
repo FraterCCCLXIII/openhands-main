@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import Home from '../../src/routes/home';
 
 const renderRoute = () => {
-  render(
+  return render(
     <MemoryRouter initialEntries={['/']}>
       <Home />
     </MemoryRouter>,
@@ -35,13 +35,16 @@ describe('home route parity structure', () => {
   });
 
   it('uses live-like CTA and footer behavior on the homepage', () => {
-    renderRoute();
+    const { container } = renderRoute();
 
     expect(screen.getAllByTestId('workflow-launch')).toHaveLength(3);
+    expect((container.innerHTML.match(/>Launch</g) ?? []).length).toBe(3);
     expect(screen.queryByRole('link', { name: 'Download CLI' })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'View docs' })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Talk to us' })).not.toBeInTheDocument();
 
+    expect(container.innerHTML).toContain('lg:grid-cols-3');
+    expect(container.innerHTML).not.toContain('xl:grid-cols-4');
     expect(screen.getByRole('link', { name: 'Home' })).toHaveClass('text-[#8a5f45]');
     expect(screen.getAllByTestId('footer-social-link')).toHaveLength(3);
   });
