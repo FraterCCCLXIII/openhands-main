@@ -55,4 +55,3 @@ npm run parity:checklist  # Crawl openhands.dev and compare against local site
 - `brand-fg`: `#22150d` (dark brown)
 - `brand-accent`: `#FFFF8B` (yellow)
 - `brand-muted`: `#7b6d5d` (muted brown)
-- 

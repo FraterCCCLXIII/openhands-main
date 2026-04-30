@@ -318,7 +318,7 @@ const Home = () => {
 
   return (
     <main data-testid='home-content'>
-      <section className='relative overflow-hidden bg-brand-bg px-6 pb-16 pt-10 lg:px-10 lg:pb-24'>
+      <section className='relative overflow-hidden bg-brand-bg px-6 pb-10 pt-6 lg:px-10 lg:pb-14 lg:pt-4'>
         <div className='absolute inset-0 opacity-[0.08] pointer-events-none'>
           <img
             src='/assets/webflow/backgrounds/6908d170831c19b2b6976323_ascii-art_(16)_1.svg'
@@ -327,26 +327,27 @@ const Home = () => {
           />
         </div>
 
-        <div className='relative z-10 mx-auto max-w-[1220px]'>
-          <div className='mx-auto mb-10 max-w-[780px] rounded-none border border-brand-fg/15 bg-white/70 px-5 py-4 text-center backdrop-blur-sm'>
-            <p className='mb-2 text-sm font-medium text-brand-muted'>Modernize legacy systems before your expertise disappears</p>
-            <Link to='/whitepapers/modernize-legacy-systems-with-ai-agents' className='text-base font-medium hover:text-[#8a5f45]'>
+        <div className='relative z-10 mx-auto max-w-[1238px]'>
+          <div className='mx-auto mb-8 flex max-w-[688px] flex-col items-center justify-center gap-3 bg-brand-accent px-6 py-4 text-center sm:flex-row sm:gap-5'>
+            <p className='text-sm font-medium leading-[1.3] text-brand-fg'>Modernize legacy systems before your expertise disappears</p>
+            <div className='hidden h-8 w-px bg-brand-fg/20 sm:block' aria-hidden='true' />
+            <Link to='/whitepapers/modernize-legacy-systems-with-ai-agents' className='text-base font-medium leading-[22.4px] hover:text-[#8a5f45]'>
               Read the whitepaper
             </Link>
           </div>
 
-          <div className='mx-auto max-w-[860px] text-center'>
-            <div className='mb-4 text-[44px] font-medium leading-[0.98] tracking-[-0.04em] text-brand-fg md:text-[56px]'>
+          <div className='mx-auto max-w-[640px] text-center'>
+            <div className='mb-4 text-[44px] font-medium leading-[0.96] tracking-[-0.04em] text-brand-fg md:text-[56px]'>
               Build with coding agents, your way.
             </div>
-            <div className='mx-auto mb-8 max-w-[690px] text-lg leading-[1.45] text-brand-muted'>
+            <div className='mx-auto mb-7 max-w-[520px] text-lg leading-[1.45] text-brand-muted'>
               Open-source, customizable. Run locally or at scale.
             </div>
             <div className='mb-4 flex flex-wrap items-center justify-center gap-4'>
-              <a href='https://app.all-hands.dev/' target='_blank' rel='noopener noreferrer' className='btn btn-primary'>
+              <a href='https://app.all-hands.dev/' target='_blank' rel='noopener noreferrer' className='btn btn-primary rounded-none'>
                 Try it live
               </a>
-              <a href='https://docs.openhands.dev/sdk' target='_blank' rel='noopener noreferrer' className='btn btn-outline'>
+              <a href='https://docs.openhands.dev/sdk' target='_blank' rel='noopener noreferrer' className='btn btn-outline rounded-none'>
                 Build with SDK
               </a>
             </div>
@@ -357,16 +358,13 @@ const Home = () => {
         </div>
       </section>
 
-      <section className='bg-brand-bg px-6 pb-16 lg:px-10 lg:pb-24'>
-        <div className='mx-auto max-w-[1220px]'>
-          <div className='mb-10 flex items-end justify-between gap-4'>
-            <div>
-              <h2 className='mb-3 text-[32px] font-medium leading-[1.1] tracking-[-0.03em] text-brand-fg'>
+      <section className='bg-brand-bg px-6 pb-10 lg:px-10 lg:pb-14'>
+        <div className='mx-auto max-w-[1238px]'>
+          <div className='mb-7 flex items-end justify-between gap-4'>
+            <div className='max-w-[384px]'>
+              <h2 className='text-[32px] font-medium leading-[1.1] tracking-[-0.03em] text-brand-fg'>
                 Start with a proven workflow
               </h2>
-              <div className='max-w-[640px] text-lg text-brand-muted'>
-                Launch repeatable coding-agent workflows for the highest-value engineering tasks first.
-              </div>
             </div>
             <div className='hidden items-center gap-3 md:flex'>
               <button
@@ -414,37 +412,37 @@ const Home = () => {
         </div>
       </section>
 
-      <section className='bg-brand-bg px-6 pb-16 lg:px-10 lg:pb-24'>
-        <div className='mx-auto max-w-[1220px]'>
-          <div className='mb-8 text-center text-base font-medium text-brand-fg'>Trusted by engineers at</div>
+      <section className='bg-brand-bg px-6 pb-8 lg:px-10 lg:pb-10'>
+        <div className='mx-auto max-w-[1238px]'>
+          <div className='mb-5 text-center text-base font-medium text-brand-fg'>Trusted by engineers at</div>
           <div className='logo-grid'>
-            {CLIENT_LOGOS.concat(CLIENT_LOGOS).map((logo, index) => (
-              <img key={`${logo.name}-${index}`} src={logo.url} alt='' />
+            {CLIENT_LOGOS.map((logo) => (
+              <img key={logo.name} src={logo.url} alt='' />
             ))}
           </div>
         </div>
       </section>
 
-      <section className='bg-brand-bg px-6 py-16 lg:px-10 lg:py-24'>
-        <div className='mx-auto grid max-w-[1220px] gap-8 lg:grid-cols-[0.38fr_0.62fr] lg:items-center'>
+      <section className='bg-brand-bg px-6 py-10 lg:px-10 lg:py-16'>
+        <div className='mx-auto grid max-w-[1238px] gap-8 lg:grid-cols-[280px_minmax(0,1fr)] lg:items-start'>
           <div>
             <div className='mb-4 flex flex-wrap gap-2'>
               {PRODUCT_SURFACES.map((surface) => (
-                <div key={surface.title} className='rounded-none bg-brand-fg px-3 py-1 text-sm font-medium text-brand-bg'>
+                <div key={surface.title} className='rounded-full bg-brand-fg px-3 py-1 text-sm font-medium text-brand-bg'>
                   {surface.title}
                 </div>
               ))}
             </div>
-            <div className='rounded-none border border-brand-fg/15 bg-white/70 p-6 shadow-[0_18px_60px_rgba(34,21,13,0.05)]'>
+            <div className='max-w-[270px] rounded-[24px] border border-brand-fg/15 bg-white/70 p-6 shadow-[0_18px_60px_rgba(34,21,13,0.05)]'>
               <h2 className='mb-3 text-[44px] font-medium leading-[1.1] tracking-[-0.03em] text-brand-fg'>{activeSurface.title}</h2>
-              <p className='mb-5 text-lg leading-[1.5] text-brand-muted'>{activeSurface.description}</p>
+              <p className='mb-5 max-w-[270px] text-lg leading-[1.5] text-brand-muted'>{activeSurface.description}</p>
               <a href={activeSurface.href} target='_blank' rel='noopener noreferrer' className='btn btn-outline inline-flex rounded-none'>
                 {activeSurface.cta}
               </a>
             </div>
           </div>
-          <div className='bg-[#efe6d1] p-4'>
-            <img src={activeSurface.image} alt='' className='h-[360px] w-full object-cover' />
+          <div className='overflow-hidden bg-[#efe6d1] lg:min-h-[1500px]'>
+            <img src={activeSurface.image} alt='' className='h-full min-h-[620px] w-full object-cover object-top' />
           </div>
         </div>
       </section>
