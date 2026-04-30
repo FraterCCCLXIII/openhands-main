@@ -42,6 +42,13 @@ describe('company information pages parity', () => {
     expect(screen.queryByRole('heading', { name: 'Built by developers, for developers.' })).not.toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'CEO' })).not.toBeInTheDocument();
     expect(container.querySelector('img[alt="Ash Clarke"]')).not.toBeInTheDocument();
+    expect(screen.getByTestId('company-page-background')).toBeInTheDocument();
+    expect(screen.getAllByTestId('member-card-media')[0]?.className).toContain('h-[190px]');
+    expect(
+      Array.from(container.querySelectorAll('article img')).some((image) =>
+        image.getAttribute('src')?.includes('%20')
+      )
+    ).toBe(true);
   });
 
   it('renders the synced contact page copy, supporting sections, and paragraph-style form labels', () => {
@@ -85,9 +92,12 @@ describe('company information pages parity', () => {
   it('renders the synced manifesto copy with live heading and paragraph semantics', () => {
     renderRoute(<Manifesto />);
 
+    const introHeading = screen.getByRole('heading', { level: 3, name: /We're at the beginning of a new era in software/i });
+
     expect(screen.getByRole('heading', { level: 1, name: 'Hands on the Future' })).toBeInTheDocument();
     expect(screen.getByText('We believe in an open, autonomous future for software development')).toBeInTheDocument();
-    expect(screen.getByRole('heading', { level: 3, name: /We're at the beginning of a new era in software/i })).toBeInTheDocument();
+    expect(introHeading).toBeInTheDocument();
+    expect(introHeading.textContent).toContain('We believe:‍');
     expect(screen.getByText(/The future of software development must be written by engineers/).closest('p')?.tagName).toBe('P');
     expect(screen.getByText(/A new class of engineers are emerging/).closest('p')?.tagName).toBe('P');
     expect(screen.getByText(/Scale lives in the cloud/).closest('p')?.tagName).toBe('P');

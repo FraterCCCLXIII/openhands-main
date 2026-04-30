@@ -149,7 +149,7 @@ export default function App() {
               (useMarketingFooter ? (
                 <>
                   <MarketingFooterCta />
-                  <Footer standalone />
+                  <Footer standalone compactNav />
                 </>
               ) : (
                 <Footer standalone />

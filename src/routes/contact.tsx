@@ -1,25 +1,47 @@
 import type { FormEvent } from 'react';
+import { CompanyPageShell } from '~/components/company-page-shell';
 import type { Route } from './+types/contact';
 
 export const meta: Route.MetaFunction = ({ location }) => {
   return [
     { title: 'Get in Touch | OpenHands Sales & Support' },
-    { name: 'description', content: "Connect with the OpenHands team to explore cloud coding agents, enterprise deployments, support, or partnerships. We're here to help." },
+    {
+      name: 'description',
+      content:
+        "Connect with the OpenHands team to explore cloud coding agents, enterprise deployments, support, or partnerships. We're here to help.",
+    },
     { property: 'og:title', content: 'Get in Touch | OpenHands Sales & Support' },
-    { property: 'og:description', content: "Connect with the OpenHands team to explore cloud coding agents, enterprise deployments, support, or partnerships. We're here to help." },
-    { property: 'og:image', content: 'https://openhands.dev/assets/webflow/og/69161b32abf448a2df921a73_openhands_opengraph_01.png' },
+    {
+      property: 'og:description',
+      content:
+        "Connect with the OpenHands team to explore cloud coding agents, enterprise deployments, support, or partnerships. We're here to help.",
+    },
+    {
+      property: 'og:image',
+      content:
+        'https://openhands.dev/assets/webflow/og/69161b32abf448a2df921a73_openhands_opengraph_01.png',
+    },
     { property: 'og:url', content: 'https://openhands.dev' + location.pathname },
     { property: 'og:type', content: 'website' },
     { property: 'og:site_name', content: 'OpenHands' },
     { name: 'twitter:card', content: 'summary_large_image' },
     { name: 'twitter:title', content: 'Get in Touch | OpenHands Sales & Support' },
-    { name: 'twitter:description', content: "Connect with the OpenHands team to explore cloud coding agents, enterprise deployments, support, or partnerships. We're here to help." },
-    { name: 'twitter:image', content: 'https://openhands.dev/assets/webflow/og/69161b32abf448a2df921a73_openhands_opengraph_01.png' },
+    {
+      name: 'twitter:description',
+      content:
+        "Connect with the OpenHands team to explore cloud coding agents, enterprise deployments, support, or partnerships. We're here to help.",
+    },
+    {
+      name: 'twitter:image',
+      content:
+        'https://openhands.dev/assets/webflow/og/69161b32abf448a2df921a73_openhands_opengraph_01.png',
+    },
     { rel: 'canonical', href: 'https://openhands.dev' + location.pathname },
   ];
 };
 
-const CHECK_ICON = 'https://cdn.prod.website-files.com/68ff4057b35616cdd47d5ac7/690cb1513c759a7404df1ba1_check.svg';
+const CHECK_ICON =
+  'https://cdn.prod.website-files.com/68ff4057b35616cdd47d5ac7/690cb1513c759a7404df1ba1_check.svg';
 
 const CONTACT_FEATURES = [
   'Containerized sandbox runtime for safe autonomy',
@@ -59,8 +81,8 @@ const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
 
 const Contact = () => {
   return (
-    <main>
-      <section className='px-6 pb-24 pt-12 lg:px-10 lg:pb-24 lg:pt-12'>
+    <CompanyPageShell>
+      <section className='px-6 pb-28 pt-12 lg:px-10 lg:pb-28 lg:pt-12'>
         <div className='mx-auto flex max-w-[720px] flex-col items-center text-center'>
           <h1 className='max-w-[560px] text-[37px] font-medium leading-[40.7px] tracking-[-0.03em] text-brand-fg lg:text-[44px] lg:leading-[48.4px]'>
             Talk to the OpenHands Team
@@ -71,7 +93,7 @@ const Contact = () => {
         </div>
       </section>
 
-      <section className='px-6 pb-16 pt-12 lg:px-10 lg:pb-24 lg:pt-16'>
+      <section className='px-6 pb-16 pt-16 lg:px-10 lg:pb-20 lg:pt-16'>
         <div className='mx-auto max-w-[1238px]'>
           <div className='grid gap-10 lg:grid-cols-[1fr_1fr] lg:items-start'>
             <div>
@@ -83,7 +105,7 @@ const Contact = () => {
                 {CONTACT_FEATURES.map((feature) => (
                   <div key={feature} className='grid grid-cols-[20px_1fr] items-start gap-3'>
                     <img src={CHECK_ICON} alt='' className='mt-1 h-5 w-5' />
-                    <p className='m-0 text-[16px] leading-[22.4px] text-[#5f5f5f]'>{feature}</p>
+                    <p className='m-0 text-[20px] leading-[28px] text-[#5f5f5f]'>{feature}</p>
                   </div>
                 ))}
               </div>
@@ -92,9 +114,9 @@ const Contact = () => {
                 Trusted by engineers at
               </div>
 
-              <div className='mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4'>
+              <div className='mt-4 grid grid-cols-4 items-center justify-items-center gap-y-4 sm:grid-cols-6 lg:grid-cols-8'>
                 {CUSTOMER_LOGOS.map((logo) => (
-                  <div key={logo} className='flex min-h-[56px] items-center justify-center'>
+                  <div key={logo} className='flex h-[32px] w-full items-center justify-center'>
                     <img src={logo} alt='' className='max-h-[32px] w-auto max-w-full object-contain' />
                   </div>
                 ))}
@@ -163,7 +185,7 @@ const Contact = () => {
           </div>
         </div>
       </section>
-    </main>
+    </CompanyPageShell>
   );
 };
 

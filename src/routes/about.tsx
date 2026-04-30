@@ -1,3 +1,4 @@
+import { CompanyPageShell } from '~/components/company-page-shell';
 import { MemberCard } from '~/components/member-card';
 import { teamMembers } from '~/constants/members';
 import type { Route } from './+types/about';
@@ -5,17 +6,37 @@ import type { Route } from './+types/about';
 export const meta: Route.MetaFunction = ({ location }) => {
   return [
     { title: 'About OpenHands | Our Mission, Team, and Community' },
-    { name: 'description', content: 'Learn about OpenHands - the open, model-agnostic AI platform redefining how software gets built. Backed by a global OSS community and trusted by enterprises.' },
+    {
+      name: 'description',
+      content:
+        'Learn about OpenHands - the open, model-agnostic AI platform redefining how software gets built. Backed by a global OSS community and trusted by enterprises.',
+    },
     { property: 'og:title', content: 'About OpenHands | Our Mission, Team, and Community' },
-    { property: 'og:description', content: 'Learn about OpenHands - the open, model-agnostic AI platform redefining how software gets built. Backed by a global OSS community and trusted by enterprises.' },
-    { property: 'og:image', content: 'https://openhands.dev/assets/webflow/og/69161b32abf448a2df921a73_openhands_opengraph_01.png' },
+    {
+      property: 'og:description',
+      content:
+        'Learn about OpenHands - the open, model-agnostic AI platform redefining how software gets built. Backed by a global OSS community and trusted by enterprises.',
+    },
+    {
+      property: 'og:image',
+      content:
+        'https://openhands.dev/assets/webflow/og/69161b32abf448a2df921a73_openhands_opengraph_01.png',
+    },
     { property: 'og:url', content: 'https://openhands.dev' + location.pathname },
     { property: 'og:type', content: 'website' },
     { property: 'og:site_name', content: 'OpenHands' },
     { name: 'twitter:card', content: 'summary_large_image' },
     { name: 'twitter:title', content: 'About OpenHands | Our Mission, Team, and Community' },
-    { name: 'twitter:description', content: 'Learn about OpenHands - the open, model-agnostic AI platform redefining how software gets built. Backed by a global OSS community and trusted by enterprises.' },
-    { name: 'twitter:image', content: 'https://openhands.dev/assets/webflow/og/69161b32abf448a2df921a73_openhands_opengraph_01.png' },
+    {
+      name: 'twitter:description',
+      content:
+        'Learn about OpenHands - the open, model-agnostic AI platform redefining how software gets built. Backed by a global OSS community and trusted by enterprises.',
+    },
+    {
+      name: 'twitter:image',
+      content:
+        'https://openhands.dev/assets/webflow/og/69161b32abf448a2df921a73_openhands_opengraph_01.png',
+    },
     { rel: 'canonical', href: 'https://openhands.dev' + location.pathname },
   ];
 };
@@ -42,8 +63,8 @@ const MILESTONES = [
 
 const About = () => {
   return (
-    <main>
-      <section className='px-6 pb-16 pt-12 lg:px-10 lg:pb-24 lg:pt-12'>
+    <CompanyPageShell>
+      <section className='px-6 pb-16 pt-12 lg:px-10 lg:pb-20 lg:pt-12'>
         <div className='mx-auto max-w-[560px] text-center'>
           <h1 className='text-[37px] font-medium leading-[40.7px] tracking-[-0.03em] text-brand-fg lg:text-[44px] lg:leading-[48.4px]'>
             Empowering every team to build software autonomously.
@@ -60,29 +81,33 @@ const About = () => {
             </h2>
           </div>
 
-          <div className='relative mt-6 min-h-[740px] overflow-hidden rounded-[28px] bg-brand-fg px-6 py-8 text-brand-bg lg:px-10 lg:py-10'>
+          <div className='relative mt-6 min-h-[740px] overflow-hidden rounded-[8px] bg-brand-fg px-6 py-8 text-brand-bg lg:px-8 lg:py-10'>
             <div
-              className='pointer-events-none absolute inset-0 opacity-15'
+              aria-hidden='true'
+              className='absolute inset-0 bg-cover bg-center bg-no-repeat opacity-20'
               style={{
                 backgroundImage:
-                  'url(https://cdn.prod.website-files.com/68ff4057b35616cdd47d5ac7/690e289157a957d4d32ee88d_ascii-art%20(20)%201.png)',
-                backgroundPosition: 'center',
-                backgroundSize: 'cover',
+                  "url('/assets/webflow/backgrounds/690e289157a957d4d32ee88d_ascii-art_(20)_1.png')",
               }}
             />
 
-            <div className='relative grid gap-4 lg:grid-cols-3'>
+            <div className='relative grid gap-4 md:grid-cols-3'>
               {MILESTONES.map((milestone) => (
-                <div key={milestone.label} className='rounded-[24px] border border-white/10 bg-white/8 p-6 backdrop-blur-sm'>
+                <div
+                  key={milestone.label}
+                  className='flex min-h-[195px] flex-col justify-between rounded-[8px] bg-white/8 p-5 backdrop-blur-sm'
+                >
                   <div className='flex items-end justify-end gap-1'>
-                    <span className='text-[52px] font-medium leading-none tracking-[-0.04em] lg:text-[64px]'>
+                    <span className='text-[56px] font-medium leading-none tracking-[-0.04em] lg:text-[72px]'>
                       {milestone.value}
                     </span>
                     {milestone.suffix ? <span className='pb-1 text-[36px] leading-none'>{milestone.suffix}</span> : null}
                   </div>
-                  <div className='mt-4 flex items-center gap-3'>
-                    <img src={milestone.icon} alt='' className='h-6 w-6 shrink-0' />
-                    <div className='text-base leading-[1.4] text-brand-bg'>{milestone.label}</div>
+                  <div className='mt-6 flex items-center gap-3'>
+                    <img src={milestone.icon} alt='' className='h-[17px] w-auto shrink-0' />
+                    <div className='font-mono text-[14px] leading-[1.2] text-brand-bg'>
+                      {milestone.label}
+                    </div>
                   </div>
                 </div>
               ))}
@@ -91,7 +116,7 @@ const About = () => {
         </div>
       </section>
 
-      <section className='px-6 pb-16 lg:px-10 lg:pb-24'>
+      <section className='px-6 pb-20 lg:px-10 lg:pb-48'>
         <div className='mx-auto max-w-[1238px]'>
           <div>
             <h3 className='text-[32px] font-medium leading-[38.4px] tracking-[-0.02em] text-brand-fg lg:text-[44px] lg:leading-[48.4px]'>
@@ -110,14 +135,14 @@ const About = () => {
             </a>
           </div>
 
-          <div className='mt-16 grid gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-4'>
+          <div className='mt-16 grid justify-items-start gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-4'>
             {teamMembers.map((member) => (
               <MemberCard key={member.name} member={member} />
             ))}
           </div>
         </div>
       </section>
-    </main>
+    </CompanyPageShell>
   );
 };
 

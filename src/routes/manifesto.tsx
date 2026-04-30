@@ -1,11 +1,23 @@
+import { CompanyPageShell } from '~/components/company-page-shell';
 import type { Route } from './+types/manifesto';
 
 export const meta: Route.MetaFunction = ({ location }) => {
   return [
     { title: 'OpenHands Manifesto | The Future of Open, Autonomous Software Development' },
-    { name: 'description', content: 'We believe software development should be open, transparent, and autonomous. Discover OpenHands’ vision for the next era of agentic software development.' },
-    { property: 'og:title', content: 'OpenHands Manifesto | The Future of Open, Autonomous Software Development' },
-    { property: 'og:description', content: 'We believe software development should be open, transparent, and autonomous. Discover OpenHands’ vision for the next era of agentic software development.' },
+    {
+      name: 'description',
+      content:
+        'We believe software development should be open, transparent, and autonomous. Discover OpenHands’ vision for the next era of agentic software development.',
+    },
+    {
+      property: 'og:title',
+      content: 'OpenHands Manifesto | The Future of Open, Autonomous Software Development',
+    },
+    {
+      property: 'og:description',
+      content:
+        'We believe software development should be open, transparent, and autonomous. Discover OpenHands’ vision for the next era of agentic software development.',
+    },
     { property: 'og:url', content: 'https://openhands.dev' + location.pathname },
     { property: 'og:type', content: 'website' },
     { name: 'twitter:card', content: 'summary_large_image' },
@@ -16,27 +28,33 @@ export const meta: Route.MetaFunction = ({ location }) => {
 const MANIFESTO_POINTS = [
   {
     heading: 'The future of software development must be written by engineers',
-    body: "Software development is changing. That change needs to happen in the open, driven by a community of professional developers. That's why OpenHands' software agent is MIT-licensed and trusted by a growing community.",
+    body:
+      "Software development is changing. That change needs to happen in the open, driven by a community of professional developers. That's why OpenHands' software agent is MIT-licensed and trusted by a growing community.",
   },
   {
     heading: 'A new class of engineers are emerging',
-    body: "Most engineers write lines of code, maybe with an AI assistant. But Agentic Engineers tackle code maintenance at scale by orchestrating tens to thousands of cloud-based agents. Agent orchestras aren't appropriate for every engineering task, but Agentic Engineers will automate away the toil and busywork weighing down their teams.",
+    body:
+      "Most engineers write lines of code, maybe with an AI assistant. But Agentic Engineers tackle code maintenance at scale by orchestrating tens to thousands of cloud-based agents. Agent orchestras aren't appropriate for every engineering task, but Agentic Engineers will automate away the toil and busywork weighing down their teams",
   },
   {
     heading: 'Scale lives in the cloud',
-    body: 'We believe local agents are a bridge, not the destination. Real leverage comes from agents that run in the cloud or your own VPC, so teams can parallelize thousands of tasks and treat automation as infrastructure.',
+    body:
+      'We believe local agents are a bridge, not the destination. Real leverage comes from agents that run in the cloud or your own VPC, so teams can parallelize thousands of tasks and treat automation as infrastructure.',
   },
   {
     heading: 'Openness is non-negotiable',
-    body: "AI agents are a transformative technology and an increasingly critical part of the world's infrastructure. We need agents that are open source, transparent, and inspectable if we're going to deploy AI safely and responsibly.",
+    body:
+      "AI agents are a transformative technology and an increasingly critical part of the world's infrastructure. We need agents that are open source, transparent, and inspectable if we're going to deploy AI safely and responsibly.",
   },
   {
     heading: 'Model choice is a right',
-    body: 'We believe you should pick the best model for each job and switch when economics or quality change. This will only become more important as models improve and new tradeoffs emerge. Vendor flexibility is a feature, not a footnote.',
+    body:
+      'We believe you should pick the best model for each job and switch when economics or quality change. This will only become more important as models improve and new tradeoffs emerge. Vendor flexibility is a feature, not a footnote.',
   },
   {
     heading: 'Security is a runtime, not a promise',
-    body: 'We believe agents must run in isolated, auditable environments with scoped credentials and a clear blast radius. Teams need visibility into how agents are behaving, and the ability to intervene when something breaks.',
+    body:
+      'We believe agents must run in isolated, auditable environments with scoped credentials and a clear blast radius. Teams need visibility into how agents are behaving, and the ability to intervene when something breaks',
   },
 ] as const;
 
@@ -44,9 +62,9 @@ const SeparatorParagraph = () => <p className='h-4 text-transparent'>‍</p>;
 
 const Manifesto = () => {
   return (
-    <main>
-      <section className='px-6 pb-10 pt-12 lg:px-10 lg:pb-12 lg:pt-12'>
-        <div className='mx-auto max-w-[493px] text-center'>
+    <CompanyPageShell>
+      <section className='px-6 pb-10 pt-12 lg:px-10 lg:pb-10 lg:pt-12'>
+        <div className='mx-auto max-w-[520px] text-center'>
           <h1 className='text-[37px] font-medium leading-[40.7px] tracking-[-0.03em] text-brand-fg lg:text-[44px] lg:leading-[48.4px]'>
             Hands on the Future
           </h1>
@@ -56,30 +74,37 @@ const Manifesto = () => {
         </div>
       </section>
 
-      <section className='px-6 pb-16 lg:px-10 lg:pb-24'>
+      <section className='px-6 pb-16 lg:px-10 lg:pb-20'>
         <div className='mx-auto max-w-[980px]'>
           <img
-            src='https://cdn.prod.website-files.com/68ff4058b35616cdd47d5b59/691645a7832560da97f475c5_Featured%20manifesto.png'
+            src='/assets/webflow/misc/691645a7832560da97f475c5_Featured_manifesto.png'
             alt=''
-            className='w-full object-cover'
+            className='w-full rounded-[8px] object-cover'
           />
 
           <div className='mx-auto mt-32 max-w-[820px]'>
-            <h3 className='text-[28px] font-medium leading-[33.6px] tracking-[-0.02em] text-brand-fg lg:text-[32px] lg:leading-[38.4px]'>
-              We&apos;re at the beginning of a new era in software <em>development. Work is shifting from keystrokes to delegated tasks,</em> from single laptops to coordinated fleets of agents running in environments you control. <em>This is</em> our point of view <em>on how we build, what we ship, and</em> why it matters… <em>We believe</em>:
+            <h3 className='text-[28px] font-medium leading-[1.25] tracking-[-0.02em] text-brand-fg lg:text-[32px] lg:leading-[1.2]'>
+              We&apos;re at the beginning of a new era in software <em>development. Work is shifting from keystrokes to delegated tasks,</em> from single laptops to coordinated fleets of agents running in environments you control.
+              <br />
+              <br />
+              <em>This is</em> our point of view <em>on how we build, what we ship, and</em> why it matters… <em>We believe</em>:
+              <br />‍
             </h3>
 
-            <SeparatorParagraph />
-
-            <div className='mt-6 space-y-6'>
-              {MANIFESTO_POINTS.map((point) => (
-                <p key={point.heading} className='text-[16px] leading-[22.4px] text-[#5f5f5f]'>
-                  <strong className='font-bold text-black'>{point.heading}</strong>{' '}
-                  {point.body}
-                </p>
+            <div className='mt-8 space-y-8'>
+              {MANIFESTO_POINTS.map((point, index) => (
+                <div key={point.heading}>
+                  <p className='text-[16px] leading-[22.4px] text-[#5f5f5f]'>
+                    <strong className='font-bold text-black'>{point.heading}</strong>
+                    <br />
+                    {point.body}
+                  </p>
+                  {index < MANIFESTO_POINTS.length - 1 ? <SeparatorParagraph /> : null}
+                </div>
               ))}
             </div>
 
+            <SeparatorParagraph />
             <SeparatorParagraph />
 
             <section className='mt-12 space-y-3'>
@@ -99,15 +124,13 @@ const Manifesto = () => {
                 What this asks of you
               </h3>
               <p className='text-[16px] leading-[22.4px] text-[#5f5f5f]'>
-                <strong className='font-bold text-black'>Adopt an agentic mindset. Identify toil. Delegate clearly. Measure success. Invest in agent orchestration as a core engineering skill.</strong>
+                <strong className='font-bold text-black'>Adopt an agentic mindset. Identify toil. Delegate clearly. Measure success. Invest in agent orchestration as a core engineering skill</strong>.
               </p>
             </section>
-
-            <SeparatorParagraph />
           </div>
         </div>
       </section>
-    </main>
+    </CompanyPageShell>
   );
 };
 

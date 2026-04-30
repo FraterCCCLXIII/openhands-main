@@ -79,9 +79,13 @@ npm run parity:checklist  # Crawl openhands.dev and compare against local site
 - The contact page intentionally mirrors the live enterprise lead form fields/placeholders (`James`, `Smith`, `Acme`, `email@company.com`, `Send us a note here....`) for parity tests.
 - Company pages should render the shared bottom CTA via `src/components/marketing-footer-cta.tsx` before the standalone site footer, and the footer-gating logic must normalize trailing slashes (`/about/` should behave like `/about`).
 - Live `/about` semantics use `H3: Team`, a paragraph subtitle, and paragraph-only member name/title text; the roster is a vertical image-above-text grid, and the milestone labels should not be rendered as visible `p` elements.
+- `/about` team headshots should render in fixed `190px × 190px` media frames; expanding them to full column width creates large cumulative Y-offset drift across the roster.
+- `/about` milestone parity is sensitive to the dark panel height and should use a CSS background layer (not a visible `<img>`) so screenshot/layout parity improves without introducing extra `IMG:` signatures.
 - Live `/contact` uses a centered hero above the two-column content, a visible non-heading `Why enterprises choose OpenHands` block, a visible `Trusted by engineers at` logo area, paragraph-style form labels, and an `input[type="submit"]` control.
+- `/contact` logo parity matches best with an eight-column desktop logo grid (two rows) instead of a taller four-column stack or a horizontally overflowing marquee.
 - Live `/press` uses paragraph dates/titles plus plain text `Read more` links instead of heading-based cards or outline buttons.
 - Live `/manifesto` uses an `H3` intro block plus `H3` closing sections, while the manifesto principles themselves are paragraph blocks with bold lead-ins rather than separate headings.
+- `/manifesto` heading-order parity depends on preserving the trailing zero-width paragraph marker (`‍`) after the intro `We believe:` heading block.
 - For these company routes, avoid adding an extra top padding offset to `<main>`; the shared sticky header already occupies layout space on the live pages.
 
 ## Metadata / Branding Parity Notes

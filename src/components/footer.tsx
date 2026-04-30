@@ -6,6 +6,7 @@ import { isPathActive, normalizePathname } from '~/utils/normalize-pathname';
 interface FooterProps {
   standalone?: boolean;
   showSocialLinks?: boolean;
+  compactNav?: boolean;
 }
 
 const SOCIAL_LINKS = [
@@ -28,7 +29,10 @@ const SOCIAL_LINKS = [
   },
 ] as const;
 
-const FooterContent = ({ showSocialLinks = false }: Pick<FooterProps, 'showSocialLinks'>) => {
+const FooterContent = ({
+  showSocialLinks = false,
+  compactNav = false,
+}: Pick<FooterProps, 'showSocialLinks' | 'compactNav'>) => {
   const location = useLocation();
   const pathname = normalizePathname(location.pathname);
 
@@ -53,57 +57,114 @@ const FooterContent = ({ showSocialLinks = false }: Pick<FooterProps, 'showSocia
       ) : null}
 
       <div className='mb-8 flex justify-center'>
-        <div className='flex max-w-[825px] flex-wrap items-start justify-center gap-x-8 gap-y-3 text-sm leading-[20.8px]'>
-          {FOOTER_NAV_ITEMS.map((item) => (
+        {compactNav ? (
+          <div className='flex w-full max-w-[825px] flex-wrap items-start justify-between gap-x-6 gap-y-4 border-b border-[#b3a88c] pb-4 text-left'>
+            {FOOTER_NAV_ITEMS.map((item) => (
+              <Link
+                key={item.name}
+                to={item.to}
+                className={clsx(
+                  'inline-flex whitespace-nowrap px-[5px] py-[14.4px] text-base font-medium leading-[22.4px] transition-colors hover:text-[#8a5f45]',
+                  isPathActive(pathname, item.to) && 'text-[#8a5f45]'
+                )}
+              >
+                {item.name}
+              </Link>
+            ))}
+
+            <div id='footer-resources' className='flex flex-col items-start'>
+              <a
+                href='#footer-resources'
+                className='inline-flex whitespace-nowrap px-[5px] py-[14.4px] text-base font-medium leading-[22.4px] transition-colors hover:text-[#8a5f45]'
+              >
+                Resources
+              </a>
+              {FOOTER_RESOURCE_LINKS.map((item) =>
+                item.external ? (
+                  <a
+                    key={item.name}
+                    href={item.to}
+                    target='_blank'
+                    rel='noopener noreferrer'
+                    className='px-[5px] text-[14px] font-normal leading-[19.6px] transition-colors hover:text-[#8a5f45]'
+                  >
+                    {item.name}
+                  </a>
+                ) : (
+                  <Link
+                    key={item.name}
+                    to={item.to}
+                    className='px-[5px] text-[14px] font-normal leading-[19.6px] transition-colors hover:text-[#8a5f45]'
+                  >
+                    {item.name}
+                  </Link>
+                ),
+              )}
+            </div>
+
             <Link
-              key={item.name}
-              to={item.to}
+              to='/contact'
               className={clsx(
-                'text-base font-medium leading-[22.4px] transition-colors hover:text-[#8a5f45]',
-                isPathActive(pathname, item.to) && 'text-[#8a5f45]'
+                'inline-flex whitespace-nowrap px-[5px] py-[14.4px] text-base font-medium leading-[22.4px] transition-colors hover:text-[#8a5f45]',
+                isPathActive(pathname, '/contact') && 'text-[#8a5f45]'
               )}
             >
-              {item.name}
+              Contact
             </Link>
-          ))}
-
-          <div id='footer-resources' className='flex max-w-[220px] flex-wrap items-start gap-x-5 gap-y-2 text-left'>
-            <a href='#footer-resources' className='text-base font-medium leading-[22.4px] transition-colors hover:text-[#8a5f45]'>
-              Resources
-            </a>
-            {FOOTER_RESOURCE_LINKS.map((item) =>
-              item.external ? (
-                <a
-                  key={item.name}
-                  href={item.to}
-                  target='_blank'
-                  rel='noopener noreferrer'
-                  className='text-[14px] font-normal leading-[19.6px] transition-colors hover:text-[#8a5f45]'
-                >
-                  {item.name}
-                </a>
-              ) : (
-                <Link
-                  key={item.name}
-                  to={item.to}
-                  className='text-[14px] font-normal leading-[19.6px] transition-colors hover:text-[#8a5f45]'
-                >
-                  {item.name}
-                </Link>
-              ),
-            )}
           </div>
+        ) : (
+          <div className='flex max-w-[825px] flex-wrap items-start justify-center gap-x-8 gap-y-3 text-sm leading-[20.8px]'>
+            {FOOTER_NAV_ITEMS.map((item) => (
+              <Link
+                key={item.name}
+                to={item.to}
+                className={clsx(
+                  'text-base font-medium leading-[22.4px] transition-colors hover:text-[#8a5f45]',
+                  isPathActive(pathname, item.to) && 'text-[#8a5f45]'
+                )}
+              >
+                {item.name}
+              </Link>
+            ))}
 
-          <Link
-            to='/contact'
-            className={clsx(
-              'text-base font-medium leading-[22.4px] transition-colors hover:text-[#8a5f45]',
-              isPathActive(pathname, '/contact') && 'text-[#8a5f45]'
-            )}
-          >
-            Contact
-          </Link>
-        </div>
+            <div id='footer-resources' className='flex max-w-[220px] flex-wrap items-start gap-x-5 gap-y-2 text-left'>
+              <a href='#footer-resources' className='text-base font-medium leading-[22.4px] transition-colors hover:text-[#8a5f45]'>
+                Resources
+              </a>
+              {FOOTER_RESOURCE_LINKS.map((item) =>
+                item.external ? (
+                  <a
+                    key={item.name}
+                    href={item.to}
+                    target='_blank'
+                    rel='noopener noreferrer'
+                    className='text-[14px] font-normal leading-[19.6px] transition-colors hover:text-[#8a5f45]'
+                  >
+                    {item.name}
+                  </a>
+                ) : (
+                  <Link
+                    key={item.name}
+                    to={item.to}
+                    className='text-[14px] font-normal leading-[19.6px] transition-colors hover:text-[#8a5f45]'
+                  >
+                    {item.name}
+                  </Link>
+                ),
+              )}
+            </div>
+
+            <Link
+              to='/contact'
+              className={clsx(
+                'text-base font-medium leading-[22.4px] transition-colors hover:text-[#8a5f45]',
+                isPathActive(pathname, '/contact') && 'text-[#8a5f45]'
+              )}
+            >
+              Contact
+            </Link>
+          </div>
+        )}
       </div>
 
       <div className='mb-2 text-[14px] font-normal leading-[16.9px]'>© {new Date().getFullYear()} OpenHands - All rights reserved</div>
@@ -118,9 +179,13 @@ const FooterContent = ({ showSocialLinks = false }: Pick<FooterProps, 'showSocia
   );
 };
 
-export const Footer = ({ standalone = false, showSocialLinks = standalone }: FooterProps) => {
+export const Footer = ({
+  standalone = false,
+  showSocialLinks = standalone,
+  compactNav = false,
+}: FooterProps) => {
   if (!standalone) {
-    return <FooterContent showSocialLinks={showSocialLinks} />;
+    return <FooterContent showSocialLinks={showSocialLinks} compactNav={compactNav} />;
   }
 
   return (
@@ -133,7 +198,7 @@ export const Footer = ({ standalone = false, showSocialLinks = standalone }: Foo
         />
       </div>
       <div className='relative z-10 mx-auto max-w-[1238px]'>
-        <FooterContent showSocialLinks={showSocialLinks} />
+        <FooterContent showSocialLinks={showSocialLinks} compactNav={compactNav} />
       </div>
     </footer>
   );
