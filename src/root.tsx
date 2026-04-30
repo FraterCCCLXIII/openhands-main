@@ -91,6 +91,7 @@ export default function App() {
   const isDesktop = width >= 1024;
   const showGlobalFooter = pathname !== '/';
   const useMarketingFooter = MARKETING_FOOTER_PATHS.has(pathname);
+  const useParityFooterLayout = pathname === '/blog' || pathname === '/community';
 
   const handleOpenGitHubModal = () => {
     setIsGitHubModalOpen(true);
@@ -152,7 +153,7 @@ export default function App() {
                   <Footer standalone compactNav />
                 </>
               ) : (
-                <Footer standalone />
+                <Footer standalone navWidthClass={useParityFooterLayout ? 'max-w-[760px]' : undefined} />
               ))}
           </GitHubModalProvider>
         </div>

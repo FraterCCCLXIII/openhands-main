@@ -7,6 +7,7 @@ interface FooterProps {
   standalone?: boolean;
   showSocialLinks?: boolean;
   compactNav?: boolean;
+  navWidthClass?: string;
 }
 
 const SOCIAL_LINKS = [
@@ -32,7 +33,8 @@ const SOCIAL_LINKS = [
 const FooterContent = ({
   showSocialLinks = false,
   compactNav = false,
-}: Pick<FooterProps, 'showSocialLinks' | 'compactNav'>) => {
+  navWidthClass,
+}: Pick<FooterProps, 'showSocialLinks' | 'compactNav' | 'navWidthClass'>) => {
   const location = useLocation();
   const pathname = normalizePathname(location.pathname);
 
@@ -58,7 +60,12 @@ const FooterContent = ({
 
       <div className='mb-8 flex justify-center'>
         {compactNav ? (
-          <div className='flex w-full max-w-[825px] flex-wrap items-start justify-between gap-x-6 gap-y-4 border-b border-[#b3a88c] pb-4 text-left'>
+          <div
+            className={clsx(
+              'flex w-full flex-wrap items-start justify-between gap-x-6 gap-y-4 border-b border-[#b3a88c] pb-4 text-left',
+              navWidthClass ?? 'max-w-[825px]'
+            )}
+          >
             {FOOTER_NAV_ITEMS.map((item) => (
               <Link
                 key={item.name}
@@ -113,7 +120,12 @@ const FooterContent = ({
             </Link>
           </div>
         ) : (
-          <div className='flex max-w-[825px] flex-wrap items-start justify-center gap-x-8 gap-y-3 text-sm leading-[20.8px]'>
+          <div
+            className={clsx(
+              'flex w-full flex-wrap items-start justify-center gap-x-8 gap-y-3 text-sm leading-[20.8px]',
+              navWidthClass ?? 'max-w-[825px]'
+            )}
+          >
             {FOOTER_NAV_ITEMS.map((item) => (
               <Link
                 key={item.name}
@@ -183,9 +195,10 @@ export const Footer = ({
   standalone = false,
   showSocialLinks = standalone,
   compactNav = false,
+  navWidthClass,
 }: FooterProps) => {
   if (!standalone) {
-    return <FooterContent showSocialLinks={showSocialLinks} compactNav={compactNav} />;
+    return <FooterContent showSocialLinks={showSocialLinks} compactNav={compactNav} navWidthClass={navWidthClass} />;
   }
 
   return (
@@ -198,7 +211,7 @@ export const Footer = ({
         />
       </div>
       <div className='relative z-10 mx-auto max-w-[1238px]'>
-        <FooterContent showSocialLinks={showSocialLinks} compactNav={compactNav} />
+        <FooterContent showSocialLinks={showSocialLinks} compactNav={compactNav} navWidthClass={navWidthClass} />
       </div>
     </footer>
   );

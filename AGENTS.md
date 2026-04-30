@@ -60,6 +60,7 @@ npm run parity:checklist  # Crawl openhands.dev and compare against local site
 - Shared marketing chrome/nav/footer links are centralized in `src/constants/site-shell.ts`.
 - For parity work on issue-based PRs, store browser screenshots under `.pr/issue-<number>/` and include both local and live captures for the analogous page.
 - `.github/workflows/pr-artifacts.yml` is intended to remove `.pr/` from the base branch after a PR merges.
+- The shared footer nav wrapper now defaults to `max-w-[825px]`; parity-sensitive routes can still tighten it (for example `max-w-[760px]`) via the `Footer` component’s `navWidthClass` prop.
 - For a production-style local parity check, build first and then run: `PORT=12001 npx react-router-serve build/server/nodejs_eyJydW50aW1lIjoibm9kZWpzIn0/index.js`.
 
 ## Homepage Parity Notes

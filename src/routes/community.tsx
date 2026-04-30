@@ -14,7 +14,7 @@ const EVENTS = [
   {
     title: 'Scale Enterprise AI Agents',
     description:
-      'After ODSC, stop by our nearby event sponsored by OpenHands to learn about the latest best practices and trends in enterprise agentic AI. Our founder & CEO, Robert Brennan, will be sharing insights on what he’s been seeing and learning in the space. Food and drinks will be provided.',
+      "After ODSC, stop by our nearby event sponsored by OpenHands to learn about the latest best practices and trends in enterprise agentic AI. Our founder & CEO, Robert Brennan, will be sharing insights on what he's been seeing and learning in the space. Food and drinks will be provided. 5:15pm — Doors Open 5:45pm — Presentations & Q&A 6:45pm — Networking 7:30pm — Event Ends By RSVP'ing, you consent to receive marketing emails from the hosts. You can withdraw consent at any time via the unsubscribe link.",
     date: 'Apr 30, 2026',
     time: '9:30 PM UTC',
     href: 'https://luma.com/odsc-boston',
@@ -22,7 +22,7 @@ const EVENTS = [
   {
     title: 'OpenHands Community Call - May 7th',
     description:
-      "Join our bi-weekly OpenHands Community Call! We'll announce new contributors, discuss project updates, demo new features, and talk about the future of AI. All are welcome!",
+      "Join our bi-weekly OpenHands Community Call! We'll announce new contributors, discuss project updates, demo new features, and talk about the future of AI. All are welcome! Recording and agenda will be available post meeting.",
     date: 'May 7, 2026',
     time: '4:00 PM UTC',
     href: 'https://luma.com/openhands-community-7may26',
@@ -30,12 +30,14 @@ const EVENTS = [
   {
     title: 'OpenHands Community Call - May 21st',
     description:
-      "Join our bi-weekly OpenHands Community Call! We'll announce new contributors, discuss project updates, demo new features, and talk about the future of AI. All are welcome!",
+      "Join our bi-weekly OpenHands Community Call! We'll announce new contributors, discuss project updates, demo new features, and talk about the future of AI. All are welcome! Recording and agenda will be available post meeting.",
     date: 'May 21, 2026',
     time: '4:00 PM UTC',
     href: 'https://luma.com/openhands-community-21may26',
   },
 ];
+
+const MICHAEL_MAY_IMAGE = '/assets/webflow/team/698653c2074b111e59086ff8_mike.jpeg';
 
 const CONTRIBUTION_PATHS = [
   {
@@ -82,6 +84,48 @@ export const meta: Route.MetaFunction = ({ location }) => {
   ];
 };
 
+const MetadataIcon = ({ type }: { type: 'calendar' | 'clock' }) => {
+  if (type === 'calendar') {
+    return (
+      <svg aria-hidden='true' viewBox='0 0 16 16' className='h-4 w-4 shrink-0'>
+        <path
+          fill='currentColor'
+          d='M4.5 1a.75.75 0 0 1 .75.75V2.5h5.5v-.75a.75.75 0 0 1 1.5 0V2.5h.25A2.25 2.25 0 0 1 14.75 4.75v7A2.25 2.25 0 0 1 12.5 14h-9A2.25 2.25 0 0 1 1.25 11.75v-7A2.25 2.25 0 0 1 3.5 2.5h.25v-.75A.75.75 0 0 1 4.5 1Zm8.75 5h-10.5v5.75c0 .414.336.75.75.75h9a.75.75 0 0 0 .75-.75V6Z'
+        />
+      </svg>
+    );
+  }
+
+  return (
+    <svg aria-hidden='true' viewBox='0 0 16 16' className='h-4 w-4 shrink-0'>
+      <path
+        fill='currentColor'
+        d='M8 1.25a6.75 6.75 0 1 1 0 13.5a6.75 6.75 0 0 1 0-13.5Zm0 1.5a5.25 5.25 0 1 0 0 10.5a5.25 5.25 0 0 0 0-10.5Zm.75 1.5v3.19l2.22 1.48a.75.75 0 1 1-.84 1.24L7.58 8.46a.75.75 0 0 1-.33-.62V4.25a.75.75 0 0 1 1.5 0Z'
+      />
+    </svg>
+  );
+};
+
+const MetadataItem = ({
+  type,
+  tone,
+  children,
+}: {
+  type: 'calendar' | 'clock';
+  tone: 'dark' | 'light';
+  children: string;
+}) => (
+  <p
+    className={[
+      'inline-flex items-center gap-2 whitespace-nowrap text-[13px] font-medium leading-none',
+      tone === 'light' ? 'text-brand-bg' : 'text-brand-fg',
+    ].join(' ')}
+  >
+    <MetadataIcon type={type} />
+    <span>{children}</span>
+  </p>
+);
+
 const Community = () => {
   return (
     <main className='pt-[100px]'>
@@ -94,23 +138,31 @@ const Community = () => {
             Connect with developers, contribute to open source, and help build the future of AI-powered autonomous software development.
           </p>
           <div className='mt-6 flex flex-wrap items-center justify-center gap-4'>
-            <a href='/joinslack' className='btn btn-primary rounded-none flex items-center gap-3 whitespace-nowrap'>
-              <img
-                src='/assets/webflow/icons/6908c8dd7162d7d09526a0fd_Slack_Technologies_Logo2.svg'
-                alt=''
-                className='h-5 w-5'
-              />
-              <span>Join Slack</span>
+            <a
+              href='/joinslack'
+              className='inline-flex whitespace-nowrap text-[16px] leading-[20.8px] font-medium text-brand-bg'
+            >
+              <span className='btn btn-primary rounded-none flex items-center gap-3'>
+                <img
+                  src='/assets/webflow/icons/6908c8dd7162d7d09526a0fd_Slack_Technologies_Logo2.svg'
+                  alt=''
+                  className='h-5 w-5'
+                />
+                <span>Join Slack</span>
+              </span>
             </a>
-            <a href='#events' className='btn btn-outline rounded-none whitespace-nowrap'>
-              View Events
+            <a
+              href='#events'
+              className='inline-flex whitespace-nowrap text-[16px] leading-[20.8px] font-medium text-brand-fg'
+            >
+              <span className='btn btn-outline rounded-none'>View Events</span>
             </a>
           </div>
         </div>
       </section>
 
       <section className='bg-brand-fg px-10 py-16 text-brand-bg'>
-        <div className='mx-auto grid max-w-[1238px] gap-10 lg:grid-cols-[0.95fr_1.05fr] lg:items-center'>
+        <div className='mx-auto grid max-w-[1238px] gap-10 lg:grid-cols-[0.92fr_1.08fr] lg:items-center'>
           <div className='max-w-[560px]'>
             <h2 className='text-[32px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-bg lg:text-[44px]'>
               Latest Community Call
@@ -118,9 +170,13 @@ const Community = () => {
             <p className='mt-4 text-[18px] leading-[1.45] text-brand-bg'>
               {LATEST_COMMUNITY_CALL.description}
             </p>
-            <div className='mt-8 flex flex-wrap items-center gap-8 text-[16px] font-medium text-brand-bg'>
-              <p>{LATEST_COMMUNITY_CALL.date}</p>
-              <p>{LATEST_COMMUNITY_CALL.duration}</p>
+            <div className='mt-8 flex flex-wrap items-center gap-x-8 gap-y-3'>
+              <MetadataItem type='calendar' tone='light'>
+                {LATEST_COMMUNITY_CALL.date}
+              </MetadataItem>
+              <MetadataItem type='clock' tone='light'>
+                {LATEST_COMMUNITY_CALL.duration}
+              </MetadataItem>
             </div>
             <a
               href={LATEST_COMMUNITY_CALL.videoUrl}
@@ -132,7 +188,7 @@ const Community = () => {
             </a>
           </div>
 
-          <div className='overflow-hidden rounded-[10px] bg-black/10'>
+          <div className='overflow-hidden rounded-[4px] bg-black/10'>
             <iframe
               title='Latest OpenHands community call'
               src={LATEST_COMMUNITY_CALL.embedUrl}
@@ -162,11 +218,19 @@ const Community = () => {
                 rel='noopener noreferrer'
                 className='flex h-full flex-col rounded-[8px] border border-brand-fg/10 bg-transparent p-6 transition-transform hover:-translate-y-0.5'
               >
-                <h2 className='text-[26px] font-medium leading-[1.2] text-brand-fg'>{event.title}</h2>
-                <p className='mt-4 flex-1 text-[16px] leading-[1.6] text-brand-muted'>{event.description}</p>
-                <div className='mt-6 flex flex-col gap-1 text-[15px] font-medium text-brand-fg'>
-                  <p>{event.date}</p>
-                  <p>{event.time}</p>
+                <h2 className='text-[24px] font-medium leading-[1.4] text-brand-fg'>
+                  {event.title}
+                </h2>
+                <p className='mt-4 flex-1 text-[14px] leading-[1.5] text-brand-muted'>
+                  {event.description}
+                </p>
+                <div className='mt-6 flex flex-wrap items-center gap-x-6 gap-y-2'>
+                  <MetadataItem type='calendar' tone='dark'>
+                    {event.date}
+                  </MetadataItem>
+                  <MetadataItem type='clock' tone='dark'>
+                    {event.time}
+                  </MetadataItem>
                 </div>
               </a>
             ))}
@@ -185,8 +249,8 @@ const Community = () => {
         </div>
       </section>
 
-      <section className='px-10 py-16'>
-        <div className='mx-auto max-w-[1238px] rounded-[28px] bg-brand-fg px-8 py-10 lg:px-12 lg:py-14'>
+      <section className='bg-brand-fg px-10 py-16 text-brand-bg'>
+        <div className='mx-auto max-w-[1238px]'>
           <div className='text-center'>
             <h2 className='inline-block text-[32px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-bg lg:text-[44px]'>
               Start contributing
@@ -200,18 +264,24 @@ const Community = () => {
             {CONTRIBUTION_PATHS.map((path) => (
               <article
                 key={path.title}
-                className='flex h-full flex-col rounded-[24px] border border-brand-bg/20 bg-transparent p-6 text-center'
+                className='flex h-full flex-col rounded-[8px] border border-brand-bg/20 bg-transparent p-6 text-center'
               >
                 <img src={path.icon} alt='' className='mx-auto h-14 w-14' />
-                <h3 className='mt-6 text-[26px] font-medium leading-[1.2] text-brand-bg'>{path.title}</h3>
-                <p className='mt-4 flex-1 text-[16px] leading-[1.6] text-[#b3a88c]'>{path.description}</p>
+                <h3 className='mt-6 text-[24px] font-medium leading-[1.4] text-brand-bg'>
+                  {path.title}
+                </h3>
+                <p className='mt-4 flex-1 text-[16px] leading-[1.6] text-[#b3a88c]'>
+                  {path.description}
+                </p>
                 <a
                   href={path.href}
                   target='_blank'
                   rel='noopener noreferrer'
-                  className='btn btn-outline rounded-none mt-6 w-fit self-center text-brand-bg border-brand-bg/30 hover:bg-brand-bg hover:text-brand-fg'
+                  className='mt-6 inline-flex w-fit self-center text-[16px] leading-[20.8px] font-medium text-brand-bg'
                 >
-                  {path.cta}
+                  <span className='btn btn-outline rounded-none text-brand-bg border-brand-bg/30 hover:bg-brand-bg hover:text-brand-fg'>
+                    {path.cta}
+                  </span>
                 </a>
               </article>
             ))}
@@ -230,7 +300,7 @@ const Community = () => {
         </div>
       </section>
 
-      <section className='px-10 py-16'>
+      <section className='px-10 pb-8 pt-0'>
         <div className='mx-auto max-w-[1238px]'>
           <div className='text-center'>
             <h2 className='text-[32px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg lg:text-[44px]'>
@@ -238,16 +308,23 @@ const Community = () => {
             </h2>
           </div>
 
-          <div className='mx-auto mt-6 max-w-[1000px] rounded-[28px] border border-brand-fg/10 bg-white/60 px-8 py-8 text-center'>
-            <h3 className='inline-block text-[32px] font-medium leading-[1.2] text-brand-fg'>Michael May</h3>
-            <p className='mx-auto mt-4 max-w-[720px] text-[18px] leading-[1.7] text-brand-muted'>
-              “My team uses OpenHands for all our development tasks and we have found that it is hands-down better than Claude Code, cursor, Codex, and every other hot agentic DevTool out there. The caliber of the team at OpenHands and the caliber of the community they’ve curated is second to none, and this is evidenced by the quality of their product and the trajectory of their growth.”
+          <div className='mx-auto mt-10 max-w-[1238px] rounded-[6px] border border-brand-fg/10 bg-transparent px-8 py-10 text-center lg:px-12'>
+            <img
+              src={MICHAEL_MAY_IMAGE}
+              alt=''
+              className='mx-auto h-20 w-20 rounded-full object-cover'
+            />
+            <h3 className='mt-5 inline-block text-[32px] font-medium leading-[1.2] text-brand-fg'>
+              Michael May
+            </h3>
+            <p className='mx-auto mt-6 max-w-[910px] text-[18px] leading-[1.65] text-brand-fg'>
+              “My team uses OpenHands for all our development tasks and we have found that it is hands-down better than Claude Code, cursor, Codex, and every other hot agentic DevTool out there. The caliber of the team at OpenHands and the caliber of the community they've curated is second to none, and this is evidenced by the quality of their product and the trajectory of their growth.”
             </p>
           </div>
         </div>
       </section>
 
-      <MarketingFooterCta />
+      <MarketingFooterCta className='py-28' />
     </main>
   );
 };

@@ -1,12 +1,18 @@
+import clsx from 'clsx';
+
 interface MarketingFooterCtaProps {
   semanticHeading?: boolean;
+  className?: string;
 }
 
-export const MarketingFooterCta = ({ semanticHeading = false }: MarketingFooterCtaProps) => {
+export const MarketingFooterCta = ({
+  semanticHeading = false,
+  className,
+}: MarketingFooterCtaProps) => {
   const HeadingTag = semanticHeading ? 'h2' : 'div';
 
   return (
-    <section className='px-10 py-24 text-center'>
+    <section className={clsx('px-10 py-24 text-center', className)}>
       <div className='mx-auto flex max-w-[980px] flex-col items-center gap-6'>
         <HeadingTag className='text-[44px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>
           Building the open standard for autonomous software development.

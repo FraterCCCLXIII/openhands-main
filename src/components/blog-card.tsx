@@ -21,7 +21,7 @@ export const FeaturedBlogCard: React.FC<FeaturedBlogCardProps> = ({
     data-testid='featured-blog-card'
     className='group relative overflow-hidden rounded-[16px] bg-card-bg text-brand-bg'
   >
-    <div className='aspect-[16/10] w-full lg:aspect-[21/9]'>
+    <div className='aspect-[2/1] w-full'>
       {!img && <PlaceholderImage className='h-full w-full' />}
       {img && (
         <img
@@ -32,21 +32,23 @@ export const FeaturedBlogCard: React.FC<FeaturedBlogCardProps> = ({
       )}
     </div>
 
-    <div className='absolute inset-0 bg-gradient-to-t from-[#22150d] via-[#22150d]/78 to-transparent' />
+    <div className='absolute inset-0 bg-gradient-to-t from-[#22150d] via-[#22150d]/58 to-transparent' />
 
-    <div className='absolute inset-x-0 bottom-0 p-6 lg:p-10'>
-      <div className='max-w-[560px] space-y-3 lg:space-y-4'>
-        <p className='m-0 font-inter text-[24px] leading-[1.1] font-medium tracking-[-0.03em] text-brand-accent lg:text-[44px]'>
+    <div className='absolute inset-x-0 bottom-0 p-6 lg:p-6'>
+      <div className='max-w-[456px] space-y-3'>
+        <p className='m-0 font-inter text-[24px] leading-[1.08] font-medium tracking-[-0.03em] text-brand-accent lg:text-[32px]'>
           {title}
         </p>
-        <p className='m-0 text-[18px] leading-[1.2] font-medium text-brand-bg lg:text-[20px]'>
+        <p className='m-0 text-[16px] leading-[1.25] font-medium text-brand-bg lg:text-[18px]'>
           {description}
         </p>
         <Link
           to={href}
-          className='inline-flex items-center text-[18px] leading-[1.2] font-medium text-brand-bg transition-colors hover:text-brand-accent'
+          className='inline-flex text-[16px] leading-[20.8px] font-medium text-brand-bg'
         >
-          Read more
+          <span className='inline-flex items-center justify-center rounded-[6px] border border-[#342117] bg-[#22150d] px-6 py-3 text-[15px] leading-none transition-colors hover:bg-[#342117]'>
+            Read more
+          </span>
         </Link>
       </div>
     </div>

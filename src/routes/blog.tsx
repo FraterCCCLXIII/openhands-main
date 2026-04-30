@@ -101,7 +101,7 @@ const Blog = () => {
       </section>
 
       {featuredBlog && (
-        <section className='mt-44 w-full max-w-[1238px]'>
+        <section className='mt-20 w-full max-w-[1238px]'>
           <FeaturedBlogCard
             href={`/blog/${getBlogSlug(featuredBlog)}`}
             title={featuredBlog.data.title}
@@ -112,8 +112,8 @@ const Blog = () => {
         </section>
       )}
 
-      <section id='blog-grid' className='mt-12 w-full max-w-[1238px]'>
-        <div className='grid grid-cols-1 gap-x-8 gap-y-12 md:grid-cols-2 xl:grid-cols-3'>
+      <section id='blog-grid' className='mt-20 w-full max-w-[1238px]'>
+        <div className='grid grid-cols-1 gap-x-8 gap-y-20 md:grid-cols-2 xl:grid-cols-3'>
           {visibleBlogs.map((blog) => (
             <BlogCard
               key={getBlogSlug(blog)}
@@ -127,7 +127,7 @@ const Blog = () => {
         </div>
 
         {hasMoreBlogs && (
-          <div className='mt-12 flex justify-center'>
+          <div className='mt-16 flex justify-center'>
             <a
               href='#blog-grid'
               className='btn btn-outline rounded-none'
@@ -142,7 +142,7 @@ const Blog = () => {
         )}
       </section>
 
-      <div className='mt-20 w-full max-w-[1238px]'>
+      <div className='mt-6 w-full'>
         <MarketingFooterCta semanticHeading={false} />
       </div>
     </main>
