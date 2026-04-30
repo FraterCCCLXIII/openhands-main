@@ -80,14 +80,14 @@ const Blog = () => {
 
   return (
     <main className='flex flex-col items-center px-5 pb-16 pt-[100px] lg:px-10'>
-      <section className='w-full max-w-[640px] text-center'>
+      <section className='w-full max-w-[1238px] text-center'>
         <h1 className='font-inter text-[32px] leading-[1.1] font-medium tracking-[-0.03em] text-brand-fg lg:text-[44px]'>
           OpenHands Blog
         </h1>
         <p className='mt-3 text-[18px] leading-[1.2] font-medium text-[#5f5f5f] lg:text-[20px]'>
           Insights and updates from the OpenHands team
         </p>
-        <p className='mt-8 text-[18px] leading-[1.5] text-[#22150d]'>
+        <p className='mx-auto mt-8 max-w-[503px] text-[18px] leading-[1.5] text-[#22150d]'>
           Sign up for our newsletter for updates, events, and community insights.
         </p>
         <div className='mt-4 flex justify-center'>
@@ -101,12 +101,12 @@ const Blog = () => {
       </section>
 
       {featuredBlog && (
-        <section className='mt-14 w-full max-w-[1238px]'>
+        <section className='mt-44 w-full max-w-[1238px]'>
           <FeaturedBlogCard
             href={`/blog/${getBlogSlug(featuredBlog)}`}
             title={featuredBlog.data.title}
             description={featuredBlog.data.excerpt}
-            img={featuredBlog.data.coverImage}
+            img={featuredBlog.data.featuredImage ?? featuredBlog.data.coverImage}
             imgAlt={featuredBlog.data.coverAlt ?? ''}
           />
         </section>

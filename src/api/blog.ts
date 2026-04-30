@@ -11,6 +11,7 @@ type BlogPost = Post & {
     seoTitleDate?: string;
     coverAlt?: string;
     coverRadius?: 'none';
+    featuredImage?: string;
   };
 };
 

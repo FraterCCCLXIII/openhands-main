@@ -8,6 +8,7 @@ const mockFeaturedBlog = {
     title: 'Introducing the OpenHands Index',
     excerpt: 'Featured excerpt',
     coverImage: '/featured.png',
+    featuredImage: '/featured-card.png',
     coverAlt: '',
     date: '2026-01-29T12:00:00.000Z',
     authors: [{ name: 'Author One', picture: '', link: '' }],
@@ -57,6 +58,9 @@ describe('Blog route', () => {
     expect(screen.getByRole('link', { name: 'Read more' })).toHaveAttribute(
       'href',
       '/blog/openhands-index'
+    );
+    expect(container.querySelector('[data-testid="featured-blog-card"] img')?.getAttribute('src')).toBe(
+      '/featured-card.png'
     );
     expect(container.querySelector('[data-testid="featured-blog-card"] img')?.getAttribute('alt')).toBe(
       ''

@@ -103,6 +103,10 @@ npm run parity:checklist  # Crawl openhands.dev and compare against local site
 - Blog frontmatter now supports `coverAlt` for live image-alt parity and `seoTitleDate` for browser-title date parity; prefer those fields over mutating visible publication dates when only metadata differs from live.
 
 - Most article hero images still use 16px rounding, but `agent-control-plane` currently needs a square hero image for parity; use frontmatter `coverRadius: "none"` for one-off overrides.
+- The top-level `/blog` route matches live more closely when the hero intro text spans the full content width, the newsletter blurb is constrained to ~503px, the featured story uses the `featuredImage` frontmatter override when present, and the shared footer CTA paragraph is widened to ~812px.
+- The live `/community` page currently shows an empty visual gap beneath `Recognizing first-time contributors`; avoid rendering decorative contributor cards there unless parity screenshots show them returning.
+- The live `/community` contributor spotlight currently renders without the headshot image, so keep `Michael May` as text-only content for parity-sensitive updates.
+
 
 ## Product / Enterprise / Pricing / Community Parity Notes
 - Live `/product` uses dark interface cards: `Terminal / CLI`, `Web GUI`, and `SDK` headings plus `Learn more` links render in light text on a dark background.

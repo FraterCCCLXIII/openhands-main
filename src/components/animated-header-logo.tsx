@@ -17,7 +17,7 @@ export const AnimatedHeaderLogo: React.FC<AnimatedHeaderLogoProps> = () => {
       {/* Desktop: full logo with text */}
       <img
         src='/assets/webflow/brand/openhands-logo-full.svg'
-        alt='OpenHands'
+        alt=''
         className='h-full w-auto'
         style={{ height: '29.5px' }}
       />

@@ -93,17 +93,26 @@ describe('Marketing parity routes', () => {
   });
 
   it('renders the updated community page content', () => {
-    renderRoute(<Community />);
+    const { container } = renderRoute(<Community />);
 
     expect(screen.queryByRole('heading', { name: 'Download CLI' })).not.toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Download Web UI' })).not.toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /Join the OpenHands Community/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /Latest Community Call/i })).toBeInTheDocument();
+    expect(screen.getByTitle('Latest OpenHands community call')).toHaveAttribute(
+      'src',
+      'https://www.youtube.com/embed/H8wIK1_0zNU'
+    );
     expect(screen.getByText('April 28, 2026')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /Upcoming Events/i })).toBeInTheDocument();
     expect(screen.getByText('Scale Enterprise AI Agents')).toBeInTheDocument();
     expect(screen.getByText('OpenHands Community Call - May 21st')).toBeInTheDocument();
+    expect(screen.queryByText('5:15pm — Doors Open')).not.toBeInTheDocument();
+    expect(screen.queryByText('Recording and agenda will be available post meeting.')).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Recognizing first-time contributors/i })).toBeInTheDocument();
+    expect(screen.queryByText('@alexdev')).not.toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /Community contributor spotlight/i })).toBeInTheDocument();
+    expect(container.querySelector('img[src="/assets/webflow/team/698653c2074b111e59086ff8_mike.jpeg"]')).toBeNull();
     expect(screen.getByText(/My team uses OpenHands for all our development tasks/i)).toBeInTheDocument();
   });
 });

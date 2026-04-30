@@ -107,7 +107,7 @@ const FooterContent = ({ showSocialLinks = false }: Pick<FooterProps, 'showSocia
   );
 };
 
-export const Footer = ({ standalone = false, showSocialLinks = false }: FooterProps) => {
+export const Footer = ({ standalone = false, showSocialLinks = standalone }: FooterProps) => {
   if (!standalone) {
     return <FooterContent showSocialLinks={showSocialLinks} />;
   }
