@@ -40,14 +40,14 @@ const Press = () => {
     <main className='pt-[100px]'>
       <section className='px-6 pb-10 pt-16 lg:px-10 lg:pb-12 lg:pt-24'>
         <div className='mx-auto max-w-[720px] text-center'>
-          <h1 className='font-quincy text-[44px] font-normal leading-[0.95] tracking-[-0.04em] text-brand-fg lg:text-[60px]'>
+          <h1 className='text-[37px] font-medium leading-[40.7px] tracking-[-0.03em] text-brand-fg lg:text-[44px] lg:leading-[48.4px]'>
             In the news
           </h1>
-          <p className='mt-4 text-lg leading-[1.5] text-brand-muted'>
+          <p className='mt-4 text-[20.8px] font-medium leading-[24.96px] text-[#5f5f5f]'>
             Read how OpenHands is reshaping the future of AI-powered software development.
           </p>
           <div className='mt-8 flex justify-center'>
-            <Link to='/contact' className='btn btn-primary rounded-none'>
+            <Link to='/contact' className='btn btn-primary'>
               Contact Us
             </Link>
           </div>
@@ -55,26 +55,22 @@ const Press = () => {
       </section>
 
       <section className='px-6 pb-16 lg:px-10 lg:pb-24'>
-        <div className='mx-auto grid max-w-[1238px] gap-8 md:grid-cols-2 xl:grid-cols-3'>
+        <div className='mx-auto grid max-w-[1238px] gap-y-10 md:grid-cols-2 xl:grid-cols-3'>
           {PRESS_ITEMS.map((item) => (
-            <article key={item.title} className='flex flex-col'>
-              <div className='overflow-hidden rounded-[18px] border border-brand-border bg-brand-fg/5'>
-                <img src={item.image} alt='' className='h-full w-full object-cover' />
-              </div>
-              <p className='mt-4 text-base leading-[1.5] text-brand-muted'>{item.date}</p>
-              <h2 className='mt-2 text-[28px] font-medium leading-[1.2] tracking-[-0.03em] text-brand-fg'>
+            <article key={item.title} className='space-y-4 px-3'>
+              <img src={item.image} alt='' className='h-[300px] w-full object-cover' />
+              <p className='text-[16px] leading-[22.4px] text-[#5f5f5f]'>{item.date}</p>
+              <p className='text-[20.8px] font-medium leading-[24.96px] text-brand-fg'>
                 {item.title}
-              </h2>
-              <div className='mt-4'>
-                <a
-                  href={item.url}
-                  target='_blank'
-                  rel='noopener noreferrer'
-                  className='btn btn-outline rounded-none text-sm'
-                >
-                  Read more
-                </a>
-              </div>
+              </p>
+              <a
+                href={item.url}
+                target='_blank'
+                rel='noopener noreferrer'
+                className='inline-block text-[16px] font-medium leading-[20.8px] text-brand-fg'
+              >
+                Read more
+              </a>
             </article>
           ))}
         </div>

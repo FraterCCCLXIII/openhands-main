@@ -45,16 +45,18 @@ const About = () => {
     <main className='pt-[100px]'>
       <section className='px-6 pb-16 pt-16 lg:px-10 lg:pb-24 lg:pt-24'>
         <div className='mx-auto max-w-[720px] text-center'>
-          <h1 className='font-quincy text-[44px] font-normal leading-[0.95] tracking-[-0.04em] lg:text-[60px]'>
+          <h1 className='mx-auto max-w-[560px] text-[37px] font-medium leading-[40.7px] tracking-[-0.03em] text-brand-fg lg:text-[44px] lg:leading-[48.4px]'>
             Empowering every team to build software autonomously.
           </h1>
-          <p className='mx-auto mt-4 max-w-[540px] text-lg leading-[1.5] text-brand-muted'>
+          <p className='mx-auto mt-4 max-w-[540px] text-[20.8px] font-medium leading-[24.96px] text-[#5f5f5f]'>
             OpenHands is the open, secure, and model-agnostic platform
           </p>
         </div>
 
         <div className='mx-auto mt-12 max-w-[1238px]'>
-          <h2 className='section-title text-center'>Milestones</h2>
+          <h2 className='text-center text-[32px] font-medium leading-[38.4px] tracking-[-0.02em] text-brand-fg lg:text-[44px] lg:leading-[48.4px]'>
+            Milestones
+          </h2>
           <div className='relative mt-6 overflow-hidden rounded-[28px] bg-brand-fg px-6 py-8 text-brand-bg lg:px-10 lg:py-10'>
             <img
               src='https://cdn.prod.website-files.com/68ff4057b35616cdd47d5ac7/690e289157a957d4d32ee88d_ascii-art%20(20)%201.png'
@@ -65,7 +67,7 @@ const About = () => {
               {MILESTONES.map((milestone) => (
                 <div key={milestone.label} className='rounded-[24px] border border-white/10 bg-white/8 p-6 backdrop-blur-sm'>
                   <div className='flex items-end justify-center gap-1 text-center lg:justify-end'>
-                    <span className='font-quincy text-[52px] font-normal leading-none tracking-[-0.04em] lg:text-[64px]'>
+                    <span className='text-[52px] font-medium leading-none tracking-[-0.04em] lg:text-[64px]'>
                       {milestone.value}
                     </span>
                     {milestone.suffix ? <span className='pb-1 text-[36px] leading-none'>{milestone.suffix}</span> : null}
@@ -83,22 +85,24 @@ const About = () => {
 
       <section className='px-6 pb-16 lg:px-10 lg:pb-24'>
         <div className='mx-auto max-w-[1238px]'>
-          <div className='mb-10 text-center'>
-            <p className='text-sm font-semibold uppercase tracking-[0.2em] text-brand-muted'>Team</p>
-            <h2 className='mt-3 text-[32px] font-medium leading-[1.15] tracking-[-0.03em] text-brand-fg lg:text-[44px]'>
+          <div className='text-center'>
+            <h3 className='text-[32px] font-medium leading-[38.4px] tracking-[-0.02em] text-brand-fg lg:text-[44px] lg:leading-[48.4px]'>
+              Team
+            </h3>
+            <p className='mt-3 text-[20.8px] font-medium leading-[24.96px] text-[#5f5f5f]'>
               Built by developers, for developers.
-            </h2>
+            </p>
             <a
               href='https://jobs.ashbyhq.com/OpenHands'
               target='_blank'
               rel='noopener noreferrer'
-              className='btn btn-primary mt-6'
+              className='btn btn-outline mt-6 border-brand-fg bg-white/35'
             >
               Join us
             </a>
           </div>
 
-          <div className='flex flex-wrap justify-center'>
+          <div className='-mx-5 mt-16 flex flex-wrap gap-y-10'>
             {teamMembers.map((member) => (
               <MemberCard key={member.name} member={member} />
             ))}

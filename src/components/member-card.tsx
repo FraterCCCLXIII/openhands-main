@@ -3,11 +3,15 @@ interface MemberCardProps {
 }
 
 export const MemberCard: React.FC<MemberCardProps> = ({ member }) => (
-  <div className="flex flex-col gap-8 px-[42px] py-[45px] min-w-[360px] max-w-[360px] flex-1 items-center text-center">
-    <img src={member.src} alt={member.name} className="w-[220px] aspect-square rounded-[10px] bg-party object-cover" />
-    <div className="flex flex-col gap-4">
-      <div className="font-quincy text-[33px] leading-[33px] font-normal">{member.name}</div>
-      <h4 className="font-semibold text-lg leading-[25px] text-description">{member.title}</h4>
+  <div className='flex w-full items-center gap-4 px-5 sm:w-1/2 lg:w-1/4'>
+    <img src={member.src} alt='' className='h-[190px] w-[190px] shrink-0 object-cover' />
+    <div className='space-y-1'>
+      <p className='m-0 text-[20.8px] font-medium leading-[24.96px] text-brand-fg'>
+        {member.name}
+      </p>
+      <p className='m-0 text-[14.4px] leading-[21.6px] text-[#5f5f5f]'>
+        {member.title}
+      </p>
     </div>
   </div>
 );

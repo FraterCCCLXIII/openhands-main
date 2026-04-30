@@ -73,6 +73,10 @@ npm run parity:checklist  # Crawl openhands.dev and compare against local site
 - The about page roster is sourced from `src/constants/members.ts` as an ordered `teamMembers` list that matches the live team names and roles.
 - The contact page intentionally mirrors the live enterprise lead form fields/placeholders (`James`, `Smith`, `Acme`, `email@company.com`, `Send us a note here....`) for parity tests.
 - Company pages should render the shared bottom CTA via `src/components/marketing-footer-cta.tsx` before the standalone site footer.
+- Live `/about` semantics use `H3: Team`, a paragraph subtitle, and paragraph-only member name/title text; desktop member cards are horizontal with 190px square images.
+- Live `/contact` uses a centered hero above the two-column content, plain paragraph feature bullets (no extra section heading or trusted-logo block), paragraph-style form labels, and an `input[type="submit"]` control.
+- Live `/press` uses paragraph dates/titles plus plain text `Read more` links instead of heading-based cards or outline buttons.
+- Live `/manifesto` uses an `H3` intro block plus `H3` closing sections, while the manifesto principles themselves are paragraph blocks with bold lead-ins rather than separate headings.
 
 ## Metadata / Branding Parity Notes
 - Route meta tags should use `https://openhands.dev` for canonical and `og:url` values; avoid `https://www.all-hands.dev` on marketing routes.
