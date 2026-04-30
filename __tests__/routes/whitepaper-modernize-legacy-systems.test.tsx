@@ -22,8 +22,11 @@ describe('modernize legacy systems whitepaper route', () => {
       }),
     ).toBeInTheDocument();
     expect(screen.getByText(/The Large Codebase SDK from OpenHands fills that gap/i)).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: /What you'll learn in the whitepaper:/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { level: 3, name: /What you'll learn in the whitepaper:/i })
+    ).toBeInTheDocument();
     expect(screen.getByText(/How dependency-aware orchestration unlocks safe parallel refactoring/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('First Name*')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Download Whitepaper' })).toBeInTheDocument();
     expect(screen.getByText(/Bring your team into the loop/i)).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: /Bring your team into the loop/i })).not.toBeInTheDocument();

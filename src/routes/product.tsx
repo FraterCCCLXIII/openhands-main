@@ -1,10 +1,10 @@
 import type { Route } from './+types/product';
-import { Link } from 'react-router';
 import {
   ProductComparisonTable,
   ProductPageActionLink,
   ProductPageFooterCta,
 } from '~/components/product-feature-page';
+import { OverlayLinkButton } from '~/components/overlay-link-button';
 import { PRODUCT_SURFACES } from '~/constants/product-surfaces';
 
 export const meta: Route.MetaFunction = ({ location }) => {
@@ -69,7 +69,7 @@ const Product = () => {
           {PRODUCT_SURFACES.map((item, index) => {
             const imageCard = (
               <div className='rounded-[18px] bg-brand-bg p-7 shadow-[0_0_0_1px_rgba(249,240,217,0.08)]'>
-                <img src={item.image} alt={item.title} className='w-full rounded-[8px]' />
+                <img src={item.image} alt='' className='w-full rounded-[8px]' />
               </div>
             );
 
@@ -81,12 +81,12 @@ const Product = () => {
                 <p className='mt-5 max-w-[460px] text-[18px] leading-[1.45] text-[#d6caab]'>
                   {item.description}
                 </p>
-                <Link
-                  to={item.href}
-                  className='mt-8 inline-flex rounded-none bg-[#6f5a4a] px-5 py-3 text-[16px] font-medium leading-none text-brand-bg transition hover:bg-[#816956]'
-                >
-                  Learn more
-                </Link>
+                <OverlayLinkButton
+                  href={item.href}
+                  label='Learn more'
+                  variant='lightbrown'
+                  className='mt-8 whitespace-nowrap'
+                />
               </div>
             );
 

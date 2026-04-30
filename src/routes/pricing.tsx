@@ -1,5 +1,6 @@
 import type { Route } from './+types/pricing';
 import { MarketingFooterCta } from '~/components/marketing-footer-cta';
+import { OverlayLinkButton } from '~/components/overlay-link-button';
 
 const CARD_CHECK_ICON = '/assets/webflow/icons/690cb1513c759a7404df1ba1_check.svg';
 const TABLE_TICK_ICON = '/assets/webflow/icons/691234bd9e72712ffbcf9470_tick.svg';
@@ -107,6 +108,9 @@ const FAQS = [
             Individual plan: Support for 1 user. Great for individuals who want to bring their own LLM Key, or pay-as-you-go when using the OpenHands LLM provider.
           </li>
           <li>
+            Growth Plan: Support for multiple users. Great for small organizations who want the on-demand convenience of OpenHands Cloud and additional support.
+          </li>
+          <li>
             Enterprise plan: A self-hosted option and support for multiple users. Great for organizations who want to deploy OpenHands across many teams and centrally manage access on-premise. Additional support and enterprise services are included.
           </li>
         </ul>
@@ -135,10 +139,7 @@ const FAQS = [
     answer: (
       <>
         <p>
-          If you do not have an LLM key, you can use the OpenHands LLM provider (available within the Individual Tier), which provides multiple model options <strong>at cost, with no markup</strong> on a pay-as-you-go basis.
-        </p>
-        <p className='mt-3'>
-          When you sign up for the Individual Plan, you can access models under the Settings &gt; Language Models (LLM) page.
+          <strong>At cost, with no markup.</strong> When you sign up for the Individual Plan, you can access models under the Settings &gt; Language Models (LLM) page.
         </p>
         <p className='mt-3'>
           You can also generate an API key for the OpenHands LLM provider under the Settings &gt; API page, which you can use in tools like the OpenHands CLI, OpenHands Local Web UI, and OpenHands Software Agent SDK.
@@ -213,11 +214,11 @@ const Pricing = () => {
               key={plan.title}
               className='flex h-full flex-col rounded-[24px] border border-brand-fg/10 bg-white/60 p-8'
             >
-              <p className='text-sm uppercase tracking-[0.14em] text-brand-muted'>{plan.eyebrow}</p>
+              <div className='text-sm uppercase tracking-[0.14em] text-brand-muted'>{plan.eyebrow}</div>
               <p className='mt-2 text-[32px] font-medium leading-[1.15] text-brand-fg'>{plan.title}</p>
               <p className='mt-3 text-[28px] font-medium leading-[1.2] text-brand-fg'>{plan.price}</p>
               <p className='mt-4 text-[17px] leading-[1.6] text-brand-muted'>{plan.description}</p>
-              <p className='mt-6 text-[16px] font-medium text-brand-fg'>{plan.intro}</p>
+              <div className='mt-6 text-[16px] font-medium text-brand-fg'>{plan.intro}</div>
               <ul className='mt-4 flex flex-1 flex-col gap-3'>
                 {plan.features.map((feature) => (
                   <li key={feature} className='flex items-start gap-3 text-[16px] leading-[1.5] text-brand-fg'>
@@ -226,14 +227,13 @@ const Pricing = () => {
                   </li>
                 ))}
               </ul>
-              <a
+              <OverlayLinkButton
                 href={plan.buttonHref}
-                target={plan.buttonHref.startsWith('http') ? '_blank' : undefined}
-                rel={plan.buttonHref.startsWith('http') ? 'noopener noreferrer' : undefined}
-                className='btn btn-outline mt-8 rounded-none'
-              >
-                {plan.buttonLabel}
-              </a>
+                label={plan.buttonLabel}
+                variant='outline'
+                className='mt-8'
+                fullWidth
+              />
             </article>
           ))}
         </div>
@@ -307,9 +307,7 @@ const Pricing = () => {
             FAQ&apos;s
           </h2>
           <div className='mb-6 mt-6 text-center'>
-            <a href='/contact' className='btn btn-outline rounded-none'>
-              Contact us
-            </a>
+            <OverlayLinkButton href='/contact' label='Contact us' variant='outline' />
           </div>
           <div className='mt-10 space-y-4'>
             {FAQS.map((faq) => (

@@ -29,6 +29,9 @@ describe('Pricing page', () => {
 
     expect(screen.getByRole('heading', { name: /FAQ/i })).toBeInTheDocument();
     expect(screen.getByText('What are the main differences between the pricing plans?')).toBeInTheDocument();
+    expect(screen.getByText('Growth Plan: Support for multiple users. Great for small organizations who want the on-demand convenience of OpenHands Cloud and additional support.')).toBeInTheDocument();
     expect(screen.getByText('Can I bring my own model keys?')).toBeInTheDocument();
+    expect(screen.getByText(/At cost, with no markup\./i)).toBeInTheDocument();
+    expect(screen.getAllByRole('link', { name: 'Contact us' }).length).toBeGreaterThan(0);
   });
 });

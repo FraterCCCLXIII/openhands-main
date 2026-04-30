@@ -46,6 +46,9 @@ describe('Product parity routes', () => {
     expect(screen.getByRole('heading', { name: 'Terminal / CLI' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Web GUI' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'SDK' })).toBeInTheDocument();
+    expect(screen.queryByAltText('Terminal / CLI')).not.toBeInTheDocument();
+    expect(screen.queryByAltText('Web GUI')).not.toBeInTheDocument();
+    expect(screen.queryByAltText('SDK')).not.toBeInTheDocument();
 
     const learnMoreLinks = screen.getAllByRole('link', { name: /learn more/i });
     expect(learnMoreLinks.map((link) => link.getAttribute('href'))).toEqual([
@@ -68,6 +71,9 @@ describe('Product parity routes', () => {
       'https://docs.openhands.dev/sdk',
     );
     expect(screen.getByText('Programmatic task creation')).toBeInTheDocument();
+    expect(screen.getByAltText('asci art')).toBeInTheDocument();
+    expect(screen.queryByAltText('OpenHands SDK interface preview.')).not.toBeInTheDocument();
+    expect(screen.queryByAltText('OpenHands comparison illustration.')).not.toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Turn OpenHands into your agent platform.' })).not.toBeInTheDocument();
   });
 
@@ -83,6 +89,8 @@ describe('Product parity routes', () => {
     );
     expect(screen.getAllByText('Download Local GUI').length).toBeGreaterThan(0);
     expect(screen.getByText('Trust requires visibility.')).toBeInTheDocument();
+    expect(screen.queryByAltText('OpenHands Web GUI review interface.')).not.toBeInTheDocument();
+    expect(screen.queryByAltText('OpenHands Web GUI planning interface.')).not.toBeInTheDocument();
   });
 
   it('renders the CLI product page content', () => {
@@ -98,6 +106,9 @@ describe('Product parity routes', () => {
     expect(
       screen.getByText('Headless mode for CI/CD and background tasks')
     ).toBeInTheDocument();
+    expect(screen.getByAltText('asci art')).toBeInTheDocument();
+    expect(screen.queryByAltText('OpenHands CLI interface screenshot.')).not.toBeInTheDocument();
+    expect(screen.queryByAltText('OpenHands comparison illustration.')).not.toBeInTheDocument();
     expect(container.querySelectorAll('summary label')).toHaveLength(5);
     expect(
       screen.queryByText('Control your agents like real infrastructure.')

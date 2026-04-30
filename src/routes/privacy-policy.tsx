@@ -11,6 +11,20 @@ const legalDescription =
 const socialImage =
   'https://openhands.dev/assets/webflow/og/69161b32abf448a2df921a73_openhands_opengraph_01.png';
 
+const shouldKeepPrivacyLink = (href?: string, text = '') => {
+  const normalizedText = text.trim().toLowerCase();
+
+  if (!href) {
+    return false;
+  }
+
+  if (href.startsWith('mailto:')) {
+    return false;
+  }
+
+  return normalizedText.startsWith('http://') || normalizedText.startsWith('https://');
+};
+
 export const meta: Route.MetaFunction = ({ location }) => {
   return [
     { title: 'Privacy Policy' },
@@ -63,13 +77,23 @@ function PrivacyPolicy() {
               li: ({ children }) => <li>{children}</li>,
               strong: ({ children }) => <strong className='font-semibold text-brand-fg'>{children}</strong>,
               a: ({ children, href }) => {
-                const isHttpLink = href?.startsWith('http');
+                const text = Array.isArray(children)
+                  ? children
+                      .map((child) => (typeof child === 'string' ? child : ''))
+                      .join('')
+                  : typeof children === 'string'
+                    ? children
+                    : '';
+
+                if (!shouldKeepPrivacyLink(href, text)) {
+                  return <>{children}</>;
+                }
 
                 return (
                   <a
                     href={href}
-                    target={isHttpLink ? '_blank' : undefined}
-                    rel={isHttpLink ? 'noreferrer noopener' : undefined}
+                    target='_blank'
+                    rel='noreferrer noopener'
                     className='text-[#8a5f45] underline underline-offset-2 transition-colors hover:text-[#6f4d37]'
                   >
                     {children}

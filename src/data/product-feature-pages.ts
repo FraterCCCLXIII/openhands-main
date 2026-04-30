@@ -71,7 +71,7 @@ const productFeaturePages: Record<'sdk' | 'gui' | 'cli', ProductFeaturePageData>
       'The OpenHands SDK lets teams create specialized agents, integrate internal tools, and orchestrate complex workflows programmatically.',
     accentImage: {
       src: '/assets/webflow/backgrounds/690b50c95a72e7b17a1412a8_09a6ecb11584c3309a64a00d57130313_ascii-art_%2815%29_1.svg',
-      alt: 'ASCII art accent used on the OpenHands SDK page.',
+      alt: 'asci art',
     },
     proofTitle: 'Solve real edge cases.',
     proofDescription:
@@ -86,11 +86,11 @@ const productFeaturePages: Record<'sdk' | 'gui' | 'cli', ProductFeaturePageData>
     showcaseImages: [
       {
         src: '/assets/webflow/misc/699f4b0b80190eeea4ba3eb9_sdk-1.png',
-        alt: 'OpenHands SDK interface preview.',
+        alt: '',
       },
       {
         src: 'https://cdn.prod.website-files.com/68ff4057b35616cdd47d5ac7/699491cb3ea6280fb42ab4e3_how.png',
-        alt: 'OpenHands comparison illustration.',
+        alt: '',
       },
     ],
     useCases: [
@@ -150,11 +150,11 @@ const productFeaturePages: Record<'sdk' | 'gui' | 'cli', ProductFeaturePageData>
     showcaseImages: [
       {
         src: 'https://cdn.prod.website-files.com/68ff4057b35616cdd47d5ac7/699f4b0b700aaf1a46a44819_gui-2.png',
-        alt: 'OpenHands Web GUI review interface.',
+        alt: '',
       },
       {
         src: 'https://cdn.prod.website-files.com/68ff4057b35616cdd47d5ac7/699f4b0bc8caf7c118989676_gui-3.png',
-        alt: 'OpenHands Web GUI planning interface.',
+        alt: '',
       },
     ],
     useCases: [
@@ -200,7 +200,7 @@ const productFeaturePages: Record<'sdk' | 'gui' | 'cli', ProductFeaturePageData>
       'The OpenHands Terminal / CLI gives developers direct, low-latency control over cloud-based coding agents. Use it interactively from your terminal or run it headlessly from CI, cron jobs, or internal systems. Same agent. Same runtime. Two modes of control.',
     accentImage: {
       src: '/assets/webflow/backgrounds/690b50c95a72e7b17a1412a8_09a6ecb11584c3309a64a00d57130313_ascii-art_%2815%29_1.svg',
-      alt: 'ASCII art accent used on the OpenHands CLI page.',
+      alt: 'asci art',
     },
     proofTitle: 'Real autonomy needs observability and repeatability.',
     proofDescription:
@@ -216,11 +216,11 @@ const productFeaturePages: Record<'sdk' | 'gui' | 'cli', ProductFeaturePageData>
     showcaseImages: [
       {
         src: '/assets/webflow/misc/699490d1d9729682e0daf0a5_cli.png',
-        alt: 'OpenHands CLI interface screenshot.',
+        alt: '',
       },
       {
         src: 'https://cdn.prod.website-files.com/68ff4057b35616cdd47d5ac7/699491cb3ea6280fb42ab4e3_how.png',
-        alt: 'OpenHands comparison illustration.',
+        alt: '',
       },
     ],
     useCases: [

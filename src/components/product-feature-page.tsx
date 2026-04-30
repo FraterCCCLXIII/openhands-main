@@ -1,5 +1,5 @@
-import { Link } from 'react-router';
 import type { ProductFeaturePageData } from '~/data/product-feature-pages';
+import { OverlayLinkButton } from '~/components/overlay-link-button';
 
 export interface ProductPageAction {
   label: string;
@@ -22,8 +22,6 @@ export const PRODUCT_COMPARISON_ROWS = [
   { label: 'Self-hosted', values: [true, false, true, false] },
   { label: 'Coding Agent SDK', values: [true, false, true, false] },
 ] as const;
-
-const isExternalLink = (href: string) => /^https?:\/\//.test(href);
 
 const classNames = (...values: Array<string | false | null | undefined>) =>
   values.filter(Boolean).join(' ');
@@ -51,34 +49,14 @@ export const ProductPageActionLink = ({
   className = '',
   screenReaderLabel,
 }: ProductPageAction & { className?: string }) => {
-  const classes = classNames(
-    'btn',
-    variant === 'primary' ? 'btn-primary' : 'btn-outline',
-    'rounded-none whitespace-nowrap',
-    className,
-  );
-
-  const assistiveLabel = screenReaderLabel ?? label;
-
-  if (isExternalLink(href)) {
-    return (
-      <a
-        href={href}
-        target='_blank'
-        rel='noopener noreferrer'
-        className={classes}
-        aria-label={assistiveLabel}
-        style={{ borderRadius: 0 }}
-      >
-        {label}
-      </a>
-    );
-  }
-
   return (
-    <Link to={href} className={classes} aria-label={assistiveLabel} style={{ borderRadius: 0 }}>
-      {label}
-    </Link>
+    <OverlayLinkButton
+      href={href}
+      label={label}
+      srLabel={screenReaderLabel}
+      variant={variant}
+      className={classNames('whitespace-nowrap', className)}
+    />
   );
 };
 

@@ -69,9 +69,9 @@ export default function WhitepaperModernizeLegacySystemsWithAiAgents() {
               </p>
 
               <div className='mt-12'>
-                <h2 className='text-[28px] font-medium leading-[1.18] tracking-[-0.03em] text-brand-fg lg:text-[32px]'>
+                <h3 className='text-[18px] font-medium leading-[1.45] text-brand-fg'>
                   What you&apos;ll learn in the whitepaper:
-                </h2>
+                </h3>
                 <div className='mt-8 border-t border-brand-fg/15'>
                   {WHITEPAPER_LEARNINGS.map((item) => (
                     <div key={item} className='border-b border-brand-fg/15 py-5'>
@@ -89,75 +89,90 @@ export default function WhitepaperModernizeLegacySystemsWithAiAgents() {
 
               <form className='mt-10 space-y-5' onSubmit={handleSubmit}>
                 <div className='grid gap-5 md:grid-cols-2'>
-                  <label className='flex flex-col gap-2 text-sm font-medium text-brand-fg'>
-                    <span>First Name*</span>
-                    <input
-                      type='text'
-                      name='firstname'
-                      required
-                      className='rounded-none border border-brand-fg/25 bg-white/60 px-4 py-3 text-base text-brand-fg outline-none transition-colors focus:border-brand-fg'
-                    />
+                  <label className='sr-only' htmlFor='whitepaper-firstname'>
+                    First Name*
                   </label>
-                  <label className='flex flex-col gap-2 text-sm font-medium text-brand-fg'>
-                    <span>Last Name*</span>
-                    <input
-                      type='text'
-                      name='lastname'
-                      required
-                      className='rounded-none border border-brand-fg/25 bg-white/60 px-4 py-3 text-base text-brand-fg outline-none transition-colors focus:border-brand-fg'
-                    />
+                  <input
+                    id='whitepaper-firstname'
+                    type='text'
+                    name='firstname'
+                    aria-label='First Name*'
+                    placeholder='First Name*'
+                    required
+                    className='rounded-none border border-brand-fg/25 bg-white/60 px-4 py-3 text-base text-brand-fg outline-none transition-colors focus:border-brand-fg'
+                  />
+                  <label className='sr-only' htmlFor='whitepaper-lastname'>
+                    Last Name*
                   </label>
-                  <label className='flex flex-col gap-2 text-sm font-medium text-brand-fg'>
-                    <span>Company Email*</span>
-                    <input
-                      type='email'
-                      name='email'
-                      required
-                      className='rounded-none border border-brand-fg/25 bg-white/60 px-4 py-3 text-base text-brand-fg outline-none transition-colors focus:border-brand-fg'
-                    />
+                  <input
+                    id='whitepaper-lastname'
+                    type='text'
+                    name='lastname'
+                    aria-label='Last Name*'
+                    placeholder='Last Name*'
+                    required
+                    className='rounded-none border border-brand-fg/25 bg-white/60 px-4 py-3 text-base text-brand-fg outline-none transition-colors focus:border-brand-fg'
+                  />
+                  <label className='sr-only' htmlFor='whitepaper-email'>
+                    Company Email*
                   </label>
-                  <label className='flex flex-col gap-2 text-sm font-medium text-brand-fg'>
-                    <span>Role Title*</span>
-                    <input
-                      type='text'
-                      name='jobtitle'
-                      required
-                      className='rounded-none border border-brand-fg/25 bg-white/60 px-4 py-3 text-base text-brand-fg outline-none transition-colors focus:border-brand-fg'
-                    />
+                  <input
+                    id='whitepaper-email'
+                    type='email'
+                    name='email'
+                    aria-label='Company Email*'
+                    placeholder='Company Email*'
+                    required
+                    className='rounded-none border border-brand-fg/25 bg-white/60 px-4 py-3 text-base text-brand-fg outline-none transition-colors focus:border-brand-fg'
+                  />
+                  <label className='sr-only' htmlFor='whitepaper-jobtitle'>
+                    Role Title*
                   </label>
-                  <label className='flex flex-col gap-2 text-sm font-medium text-brand-fg'>
-                    <span>Company Name*</span>
-                    <input
-                      type='text'
-                      name='company'
-                      required
-                      className='rounded-none border border-brand-fg/25 bg-white/60 px-4 py-3 text-base text-brand-fg outline-none transition-colors focus:border-brand-fg'
-                    />
+                  <input
+                    id='whitepaper-jobtitle'
+                    type='text'
+                    name='jobtitle'
+                    aria-label='Role Title*'
+                    placeholder='Role Title*'
+                    required
+                    className='rounded-none border border-brand-fg/25 bg-white/60 px-4 py-3 text-base text-brand-fg outline-none transition-colors focus:border-brand-fg'
+                  />
+                  <label className='sr-only' htmlFor='whitepaper-company'>
+                    Company Name*
                   </label>
-                  <label className='flex flex-col gap-2 text-sm font-medium text-brand-fg'>
-                    <span>Engineering Team Size*</span>
-                    <select
-                      name='engineering_team_size'
-                      defaultValue=''
-                      required
-                      className='rounded-none border border-brand-fg/25 bg-white/60 px-4 py-3 text-base text-brand-fg outline-none transition-colors focus:border-brand-fg'
-                    >
-                      <option value='' disabled>
-                        Select one...
+                  <input
+                    id='whitepaper-company'
+                    type='text'
+                    name='company'
+                    aria-label='Company Name*'
+                    placeholder='Company Name*'
+                    required
+                    className='rounded-none border border-brand-fg/25 bg-white/60 px-4 py-3 text-base text-brand-fg outline-none transition-colors focus:border-brand-fg'
+                  />
+                  <label className='sr-only' htmlFor='whitepaper-team-size'>
+                    Engineering Team Size*
+                  </label>
+                  <select
+                    id='whitepaper-team-size'
+                    name='engineering_team_size'
+                    aria-label='Engineering Team Size*'
+                    defaultValue=''
+                    required
+                    className='rounded-none border border-brand-fg/25 bg-white/60 px-4 py-3 text-base text-brand-fg outline-none transition-colors focus:border-brand-fg'
+                  >
+                    <option value='' disabled>
+                      Engineering Team Size*
+                    </option>
+                    {TEAM_SIZE_OPTIONS.map((option) => (
+                      <option key={option} value={option}>
+                        {option}
                       </option>
-                      {TEAM_SIZE_OPTIONS.map((option) => (
-                        <option key={option} value={option}>
-                          {option}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
+                    ))}
+                  </select>
                 </div>
 
                 <div className='pt-2'>
-                  <button type='submit' className='btn btn-primary rounded-none'>
-                    Download Whitepaper
-                  </button>
+                  <input type='submit' value='Download Whitepaper' className='btn btn-primary rounded-none' />
                 </div>
 
                 {isDownloadReady ? (

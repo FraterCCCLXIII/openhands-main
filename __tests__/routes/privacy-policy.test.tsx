@@ -23,6 +23,12 @@ describe('Privacy policy route', () => {
     expect(screen.getByRole('heading', { level: 3, name: 'Retention' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { level: 3, name: 'How to contact us' })).toBeInTheDocument();
     expect(screen.getByText(/This Privacy Policy explains how we handle personal information/i)).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Brave' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'contact@all-hands.dev' })).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'https://all-hands.dev' })).toHaveAttribute(
+      'href',
+      'https://all-hands.dev',
+    );
 
     expect(screen.getByText('Building the open standard for autonomous software development.')).toBeInTheDocument();
     expect(

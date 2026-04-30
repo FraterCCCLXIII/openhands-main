@@ -1,4 +1,5 @@
 import type { Route } from './+types/enterprise';
+import { OverlayLinkButton } from '~/components/overlay-link-button';
 
 const ENTERPRISE_FEATURES = [
   {
@@ -68,26 +69,22 @@ export const meta: Route.MetaFunction = ({ location }) => {
 const Enterprise = () => {
   return (
     <main className='pt-[100px]'>
-      <section className='px-10 py-20'>
+      <section className='px-10 pb-20 pt-10 lg:pt-12'>
         <div className='mx-auto flex max-w-4xl flex-col items-center gap-6 text-center'>
-          <h1 className='text-[44px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>
-            Enterprise control meets open-source innovation
-          </h1>
-          <p className='max-w-2xl text-[18px] leading-[1.6] text-brand-muted'>
-            OpenHands Enterprise gives you the power of autonomous coding agents with the governance, security, and compliance your organization demands.
-          </p>
+          <h1 className='sr-only'>Open source agent infrastructure for code modernization</h1>
+          <div className='text-[44px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>
+            Open source agent infrastructure for code modernization
+          </div>
+          <div className='max-w-2xl text-[18px] leading-[1.6] text-brand-muted'>
+            Build AI coding agents around your stack, your rules, your team.
+          </div>
           <div className='flex flex-wrap items-center justify-center gap-4'>
-            <a href='/contact' className='btn btn-primary rounded-none'>
-              Book a demo
-            </a>
-            <a
+            <OverlayLinkButton href='/contact' label='Book a demo' />
+            <OverlayLinkButton
               href='https://app.vanta.com/openhands.dev/trust/an0kgh9goh7xyqkhsb6tlp'
-              target='_blank'
-              rel='noopener noreferrer'
-              className='btn btn-outline rounded-none'
-            >
-              Trust Center
-            </a>
+              label='Trust Center'
+              variant='outline'
+            />
           </div>
         </div>
       </section>
@@ -98,9 +95,7 @@ const Enterprise = () => {
             <h2 className='text-[32px] lg:text-[44px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>
               Why Enterprises Choose OpenHands
             </h2>
-            <a href='/contact' className='btn btn-outline rounded-none'>
-              Contact us
-            </a>
+            <OverlayLinkButton href='/contact' label='Contact us' variant='outline' />
           </div>
           <div className='grid gap-6 md:grid-cols-2 xl:grid-cols-3'>
             {ENTERPRISE_FEATURES.map((feature) => (
@@ -129,16 +124,14 @@ const Enterprise = () => {
             “The integration of Lemonade Server with OpenHands reflects AMD’s commitment to open-source innovation and developer choice. This collaboration enables local coding agents that prioritize privacy, cost efficiency, and flexible model selection – while taking advantage of acceleration on Ryzen AI PCs. Together, we’re supporting a range of workflows and staying true to open-source values.”
           </h2>
           <div className='flex flex-col items-center gap-3'>
-            <p className='text-[18px] font-medium text-brand-bg'>
+            <div className='text-[18px] font-medium text-brand-bg'>
               Adrian Macias,
               <br />
               Sr. Director, Developer Acceleration at AMD
-            </p>
+            </div>
             <img src='/assets/webflow/logos/690b53e4ae0418e84e83578b_amd.svg' alt='amd logo' className='h-10 w-auto' />
           </div>
-          <a href='/contact' className='btn btn-outline rounded-none'>
-            Contact us
-          </a>
+          <OverlayLinkButton href='/contact' label='Contact us' variant='outline' />
         </div>
       </section>
 
@@ -153,7 +146,7 @@ const Enterprise = () => {
             </p>
             <div className='logo-grid mt-10 justify-start'>
               {LOGOS.map((logo) => (
-                <img key={logo.name} src={logo.url} alt={logo.name} />
+                <img key={logo.name} src={logo.url} alt='' />
               ))}
             </div>
           </div>
@@ -169,7 +162,7 @@ const Enterprise = () => {
 
       <section className='px-10 py-20'>
         <div className='mx-auto max-w-[1260px]'>
-          <p className='mb-2 text-sm uppercase tracking-[0.14em] text-brand-muted'>Measured impact</p>
+          <div className='mb-2 text-sm uppercase tracking-[0.14em] text-brand-muted'>Measured impact</div>
           <h3 className='text-[32px] lg:text-[44px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>
             Proven results across industries
           </h3>
@@ -192,17 +185,17 @@ const Enterprise = () => {
       <section className='px-10 py-20'>
         <div className='mx-auto flex max-w-[1000px] flex-col gap-6 rounded-[28px] border border-brand-fg/10 bg-white/50 px-8 py-10 lg:flex-row lg:items-center lg:justify-between'>
           <div className='max-w-2xl'>
-            <p className='text-sm uppercase tracking-[0.14em] text-brand-muted'>Whitepaper</p>
-            <h3 className='mt-3 text-[32px] lg:text-[44px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>
+            <h3 className='text-[32px] lg:text-[44px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>
               Whitepaper: Modernize legacy systems before your expertise disappears
             </h3>
             <p className='mt-4 text-[18px] leading-[1.6] text-brand-muted'>
               Legacy modernization projects fail 74% of the time and the engineers who understand your COBOL, mainframe, and legacy systems are retiring faster than you can replace them.
             </p>
           </div>
-          <a href='/whitepapers/modernize-legacy-systems-with-ai-agents' className='btn btn-primary rounded-none'>
-            Download the Whitepaper
-          </a>
+          <OverlayLinkButton
+            href='/whitepapers/modernize-legacy-systems-with-ai-agents'
+            label='Download the Whitepaper'
+          />
         </div>
       </section>
 
@@ -215,22 +208,12 @@ const Enterprise = () => {
             Deploy securely. Scale confidently. Stay in control.
           </p>
           <div className='flex flex-wrap items-center justify-center gap-4'>
-            <a
-              href='https://docs.openhands.dev/sdk'
-              target='_blank'
-              rel='noopener noreferrer'
-              className='btn btn-primary rounded-none'
-            >
-              Build with SDK
-            </a>
-            <a
+            <OverlayLinkButton href='https://docs.openhands.dev/sdk' label='Build with SDK' />
+            <OverlayLinkButton
               href='https://app.all-hands.dev/'
-              target='_blank'
-              rel='noopener noreferrer'
-              className='btn btn-outline rounded-none'
-            >
-              Try it live
-            </a>
+              label='Try it live'
+              variant='outline'
+            />
           </div>
         </div>
       </section>

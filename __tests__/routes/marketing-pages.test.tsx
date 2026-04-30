@@ -23,7 +23,7 @@ describe('Marketing parity routes', () => {
     expect(screen.getByRole('heading', { name: 'Terminal / CLI' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Web GUI' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'SDK' })).toBeInTheDocument();
-    expect(screen.getAllByText('Learn more')).toHaveLength(3);
+    expect(screen.getAllByRole('link', { name: 'Learn more' })).toHaveLength(3);
     expect(screen.getAllByRole('link', { name: 'Learn more' }).map((link) => link.getAttribute('href'))).toEqual([
       '/product/cli',
       '/product/gui',
@@ -83,13 +83,29 @@ describe('Marketing parity routes', () => {
   it('renders the updated enterprise page content', () => {
     renderRoute(<Enterprise />);
 
-    expect(screen.getByRole('heading', { name: /Enterprise control meets open-source innovation/i })).toBeInTheDocument();
-    expect(screen.getByText('Trust Center')).toBeInTheDocument();
+    expect(
+      screen.getByText(/Open source agent infrastructure for code modernization/i, { selector: 'div' })
+    ).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Open source agent infrastructure for code modernization/i })).toHaveClass(
+      'sr-only'
+    );
+    expect(screen.getByRole('link', { name: 'Trust Center' })).toHaveAttribute(
+      'href',
+      'https://app.vanta.com/openhands.dev/trust/an0kgh9goh7xyqkhsb6tlp',
+    );
     expect(screen.getByRole('heading', { name: /Why Enterprises Choose OpenHands/i })).toBeInTheDocument();
     expect(screen.getByText('Dedicated technical and account-level support')).toBeInTheDocument();
+    expect(screen.queryByAltText('Amazon')).not.toBeInTheDocument();
+    expect(screen.queryByAltText('Netflix')).not.toBeInTheDocument();
+    expect(screen.queryByAltText('Google')).not.toBeInTheDocument();
+    expect(screen.queryByAltText('AMD')).not.toBeInTheDocument();
+    expect(screen.queryByAltText('NVIDIA')).not.toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /Powering enterprise AI with the world’s best/i })).toBeInTheDocument();
     expect(screen.getByText('Measured impact')).toBeInTheDocument();
-    expect(screen.getByText('Download the Whitepaper')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Download the Whitepaper' })).toHaveAttribute(
+      'href',
+      '/whitepapers/modernize-legacy-systems-with-ai-agents',
+    );
   });
 
   it('renders the updated community page content', () => {
