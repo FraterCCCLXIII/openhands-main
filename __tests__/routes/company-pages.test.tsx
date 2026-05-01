@@ -45,8 +45,8 @@ describe('company information pages parity', () => {
     expect(screen.getByTestId('company-page-background')).toBeInTheDocument();
     expect(screen.getAllByTestId('member-card-media')[0]?.className).toContain('h-[190px]');
     expect(
-      Array.from(container.querySelectorAll('article img')).some((image) =>
-        image.getAttribute('src')?.includes('%20')
+      Array.from(container.querySelectorAll('article img')).every((image) =>
+        image.getAttribute('src')?.startsWith('/assets/')
       )
     ).toBe(true);
   });

@@ -36,14 +36,14 @@ const PRESS_ITEMS = [
     title: 'All Hands AI Announces $5M to Advance Open-source AI Agents for Developers',
     url: 'https://theaiinsider.tech/2024/09/08/all-hands-ai-announces-5m-to-advance-open-source-ai-agents-for-developers/',
     image:
-      'https://cdn.prod.website-files.com/68ff4058b35616cdd47d5b59/69162ffa4334ae0267ee1c57_Screenshot%202025-11-13%20at%2011.22.26%20AM.png',
+      '/assets/webflow/blog/69162ffa4334ae0267ee1c57_Screenshot_2025-11-13_at_11.22.26_AM.png',
   },
   {
     date: 'September 8, 2024',
     title: 'All Hands AI raises $5M to build open source agents for developers',
     url: 'https://techcrunch.com/2024/09/05/all-hands-ai-raises-5m-to-build-open-source-agents-for-developers',
     image:
-      'https://cdn.prod.website-files.com/68ff4058b35616cdd47d5b59/6915e88c874e7050ff5b8094_Screenshot%202025-11-13%20at%206.09.19%20AM.png',
+      '/assets/webflow/blog/6915e88c874e7050ff5b8094_Screenshot_2025-11-13_at_6.09.19_AM.png',
   },
 ] as const;
 

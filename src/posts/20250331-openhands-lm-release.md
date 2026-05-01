@@ -2,14 +2,14 @@
 title: "Introducing OpenHands LM 32B -- A Strong, Open Coding Agent Model"
 slug: "introducing-openhands-lm-32b-a-strong-open-coding-agent-model"
 excerpt: "We're excited to announce the release of OpenHands LM 32B, a new open-source model fine-tuned from Qwen Coder 2.5 Instruct 32B, specifically optimized for software development with OpenHands."
-coverImage: "https://cdn.prod.website-files.com/68ff4058b35616cdd47d5b59/6914ea68174a5acc2767c54e_6914ea66f1e6cd9678c8e114_performance_scatter.png"
+coverImage: "/assets/webflow/misc/6914ea68174a5acc2767c54e_6914ea66f1e6cd9678c8e114_performance_scatter.png"
 coverAlt: "Cover image"
 date: "2025-11-13T09:54:05.156Z"
 seoTitleDate: "Nov 12, 2025"
 authors:
   - name: "Xingyao Wang"
 ogImage:
-  url: "https://cdn.prod.website-files.com/68ff4058b35616cdd47d5b59/6914ea68174a5acc2767c54e_6914ea66f1e6cd9678c8e114_performance_scatter.png"
+  url: "/assets/webflow/misc/6914ea68174a5acc2767c54e_6914ea66f1e6cd9678c8e114_performance_scatter.png"
 ---
 
 <p>Autonomous agents for software development are already contributing to a <a href="/blog/8-use-cases-for-generalist-software-development-agents">wide range of software development tasks</a>.
@@ -36,7 +36,7 @@ But up to this point, strong coding agents have relied on proprietary models, wh
 <li>Performance comparable to models with <strong>20x more parameters</strong>, including Deepseek V3 0324 (38.8%) with 671B parameters</li>
 </ul>
 <p>Here's how OpenHands LM compares to other leading open-source models:</p>
-<p><img alt="OpenHands LM Performance Comparison" src="https://cdn.prod.website-files.com/68ff4058b35616cdd47d5b59/6914ea68174a5acc2767c54e_6914ea66f1e6cd9678c8e114_performance_scatter.png"></p>
+<p><img alt="OpenHands LM Performance Comparison" src="/assets/webflow/misc/6914ea68174a5acc2767c54e_6914ea66f1e6cd9678c8e114_performance_scatter.png"></p>
 <p>As the plot demonstrates, our 32B parameter model achieves efficiency that approaches much larger models. While the largest models (671B parameters) achieve slightly higher scores, our 32B parameter model performs remarkably well, opening up possibilities for local deployment that are not possible with larger models.</p>
 <h2 id="getting-started-how-to-use-openhands-lm-today">Getting Started: How to Use OpenHands LM Today</h2>
 <p>You can start using OpenHands LM immediately through these channels:</p>

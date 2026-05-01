@@ -41,7 +41,7 @@ export const meta: Route.MetaFunction = ({ location }) => {
 };
 
 const CHECK_ICON =
-  'https://cdn.prod.website-files.com/68ff4057b35616cdd47d5ac7/690cb1513c759a7404df1ba1_check.svg';
+  '/assets/webflow/icons/690cb1513c759a7404df1ba1_check.svg';
 
 const CONTACT_FEATURES = [
   'Containerized sandbox runtime for safe autonomy',
@@ -53,22 +53,22 @@ const CONTACT_FEATURES = [
 ] as const;
 
 const CUSTOMER_LOGOS = [
-  'https://cdn.prod.website-files.com/68ff4058b35616cdd47d5b59/6915b02ded45d0b434a0974d_flextract.png',
-  'https://cdn.prod.website-files.com/68ff4058b35616cdd47d5b59/69137f6974b71a1a4a932f82_TikTok_logo.svg',
-  'https://cdn.prod.website-files.com/68ff4058b35616cdd47d5b59/69137f523b08f91a5aa905b9_Vmware.svg',
-  'https://cdn.prod.website-files.com/68ff4058b35616cdd47d5b59/69137f2cb537758796a9dba1_Roche_Logo.svg',
-  'https://cdn.prod.website-files.com/68ff4058b35616cdd47d5b59/69137f10c3975e28b3932320_Amazon_logo%201.svg',
-  'https://cdn.prod.website-files.com/68ff4058b35616cdd47d5b59/69137efe8466ac374a9bc8a1_idlJcLIGV__1761186158095%201.svg',
-  'https://cdn.prod.website-files.com/68ff4058b35616cdd47d5b59/69137eedd7c29cc9046de43f_Group.svg',
-  'https://cdn.prod.website-files.com/68ff4058b35616cdd47d5b59/69137ec5a6f77dd174e557ce_C3ai_logo%201.svg',
-  'https://cdn.prod.website-files.com/68ff4058b35616cdd47d5b59/69137eac8f27ca27f5e48420_Netflix_2015_logo%201.svg',
-  'https://cdn.prod.website-files.com/68ff4058b35616cdd47d5b59/69137e8df2c028b9e1506ede_mastercard%201.svg',
-  'https://cdn.prod.website-files.com/68ff4058b35616cdd47d5b59/69137e783790933dd06f9d59_Red_Hat_Logo_2019%201.svg',
-  'https://cdn.prod.website-files.com/68ff4058b35616cdd47d5b59/69137e5fa006d963a1d1904d_mongodb-ar21%201.svg',
-  'https://cdn.prod.website-files.com/68ff4058b35616cdd47d5b59/69137e47b45195da10c50f49_apple-11%201.svg',
-  'https://cdn.prod.website-files.com/68ff4058b35616cdd47d5b59/69137e34e3a5ab71e37082a7_NVIDIA_logo%201.svg',
-  'https://cdn.prod.website-files.com/68ff4058b35616cdd47d5b59/69137e199ce2cb594b0210ab_google-ar21%201.svg',
-  'https://cdn.prod.website-files.com/68ff4058b35616cdd47d5b59/690b9e5400fdae4c12eedd75_small-client-logo.svg',
+  '/assets/webflow/logos/6915b02ded45d0b434a0974d_flextract.png',
+  '/assets/webflow/logos/69137f6974b71a1a4a932f82_TikTok_logo.svg',
+  '/assets/webflow/logos/69137f523b08f91a5aa905b9_Vmware.svg',
+  '/assets/webflow/logos/69137f2cb537758796a9dba1_Roche_Logo.svg',
+  '/assets/webflow/logos/69137f10c3975e28b3932320_Amazon_logo1.svg',
+  '/assets/webflow/misc/69137efe8466ac374a9bc8a1_idlJcLIGV__17611861580951.svg',
+  '/assets/webflow/misc/69137eedd7c29cc9046de43f_Group.svg',
+  '/assets/webflow/logos/69137ec5a6f77dd174e557ce_C3ai_logo1.svg',
+  '/assets/webflow/logos/69137eac8f27ca27f5e48420_Netflix_2015_logo1.svg',
+  '/assets/webflow/misc/69137e8df2c028b9e1506ede_mastercard1.svg',
+  '/assets/webflow/logos/69137e783790933dd06f9d59_Red_Hat_Logo_20191.svg',
+  '/assets/webflow/logos/69137e5fa006d963a1d1904d_mongodb-ar211.svg',
+  '/assets/webflow/logos/69137e47b45195da10c50f49_apple-111.svg',
+  '/assets/webflow/logos/69137e34e3a5ab71e37082a7_NVIDIA_logo1.svg',
+  '/assets/webflow/logos/69137e199ce2cb594b0210ab_google-ar211.svg',
+  '/assets/webflow/logos/690b9e5400fdae4c12eedd75_small-client-logo.svg',
 ] as const;
 
 const fieldLabelClass = 'text-[14.4px] leading-[21.6px] text-brand-fg';

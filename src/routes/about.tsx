@@ -46,18 +46,18 @@ const MILESTONES = [
     value: '72K',
     suffix: '+',
     label: 'GitHub stars',
-    icon: 'https://cdn.prod.website-files.com/68ff4057b35616cdd47d5ac7/690e2b7b51667746d95adc9d_Vector-2.svg',
+    icon: '/assets/webflow/icons/690e2b7b51667746d95adc9d_Vector-2.svg',
   },
   {
     value: '400',
     suffix: '+',
     label: 'OSS contributors',
-    icon: 'https://cdn.prod.website-files.com/68ff4057b35616cdd47d5ac7/690e2b7b9fc429c82f202491_Vector-1.svg',
+    icon: '/assets/webflow/icons/690e2b7b9fc429c82f202491_Vector-1.svg',
   },
   {
     value: '5M+',
     label: 'Over 5 million open source downloads',
-    icon: 'https://cdn.prod.website-files.com/68ff4057b35616cdd47d5ac7/690e2b7b8bbe39907a82a9a7_Vector.svg',
+    icon: '/assets/webflow/icons/690e2b7b8bbe39907a82a9a7_Vector.svg',
   },
 ] as const;
 

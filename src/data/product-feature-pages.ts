@@ -1,5 +1,5 @@
 export const PRODUCT_OG_IMAGE =
-  'https://cdn.prod.website-files.com/68ff4057b35616cdd47d5ac7/69161b32abf448a2df921a73_openhands_opengraph_01.png';
+  'https://openhands.dev/assets/webflow/og/69161b32abf448a2df921a73_openhands_opengraph_01.png';
 
 export interface ProductFeaturePageData {
   pageTitle: string;
@@ -89,7 +89,7 @@ const productFeaturePages: Record<'sdk' | 'gui' | 'cli', ProductFeaturePageData>
         alt: '',
       },
       {
-        src: 'https://cdn.prod.website-files.com/68ff4057b35616cdd47d5ac7/699491cb3ea6280fb42ab4e3_how.png',
+        src: '/assets/webflow/product/how.png',
         alt: '',
       },
     ],
@@ -149,11 +149,11 @@ const productFeaturePages: Record<'sdk' | 'gui' | 'cli', ProductFeaturePageData>
     ],
     showcaseImages: [
       {
-        src: 'https://cdn.prod.website-files.com/68ff4057b35616cdd47d5ac7/699f4b0b700aaf1a46a44819_gui-2.png',
+        src: '/assets/webflow/product/gui-2.png',
         alt: '',
       },
       {
-        src: 'https://cdn.prod.website-files.com/68ff4057b35616cdd47d5ac7/699f4b0bc8caf7c118989676_gui-3.png',
+        src: '/assets/webflow/product/gui-3.png',
         alt: '',
       },
     ],
@@ -219,7 +219,7 @@ const productFeaturePages: Record<'sdk' | 'gui' | 'cli', ProductFeaturePageData>
         alt: '',
       },
       {
-        src: 'https://cdn.prod.website-files.com/68ff4057b35616cdd47d5ac7/699491cb3ea6280fb42ab4e3_how.png',
+        src: '/assets/webflow/product/how.png',
         alt: '',
       },
     ],

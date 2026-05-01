@@ -6,7 +6,7 @@ const WHITEPAPER_TITLE = 'Modernize Legacy Systems with AI Agents | OpenHands Wh
 const WHITEPAPER_DESCRIPTION =
   '74% of legacy modernization projects fail. Learn how OpenHands uses AI agents and dependency-aware orchestration to safely migrate COBOL and large codebases at enterprise scale. Download the whitepaper and apply for the Q2 2026 PoC.';
 const WHITEPAPER_PDF_URL =
-  'https://cdn.prod.website-files.com/68ff4057b35616cdd47d5ac7/69d3bc19b5bb78ea951cc08c_openhands-whitepaper.pdf';
+  '/assets/webflow/whitepapers/openhands-whitepaper.pdf';
 
 const WHITEPAPER_LEARNINGS = [
   'Why 74% of modernization projects fail (and what’s actually missing)',

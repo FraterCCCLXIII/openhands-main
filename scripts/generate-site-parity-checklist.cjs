@@ -6,6 +6,7 @@ const path = require('path');
 const puppeteer = require('puppeteer');
 const { PNG } = require('pngjs');
 const pixelmatchModule = require('pixelmatch');
+const { backgroundImagesMatch } = require('./lib/webflow-asset-parity.cjs');
 
 const pixelmatch = pixelmatchModule.default || pixelmatchModule;
 
@@ -109,6 +110,8 @@ function compareStyleValue(prop, liveValue, testValue) {
   }
 
   if (prop === 'backgroundImage') {
+    if (backgroundImagesMatch(liveValue, testValue, LIVE_ORIGIN, TEST_ORIGIN)) return null;
+
     const simplify = (value) => (value || '').replace(/^url\(["']?/, '').replace(/["']?\)$/, '');
     if (simplify(liveValue) === simplify(testValue)) return null;
   }

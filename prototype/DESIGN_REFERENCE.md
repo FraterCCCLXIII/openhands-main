@@ -156,18 +156,18 @@ color: #f9f0d9;
 - Dark background on feature cards
 - Slight shadow/elevation on light cards
 
-## CDN Assets
+## Local Assets
 
 ### Logo
-- Main: `https://cdn.prod.website-files.com/68ff4057b35616cdd47d5ac7/6903891b9597f86d920507d1_Logo.svg`
-- Black version: `https://cdn.prod.website-files.com/68ff4057b35616cdd47d5ac7/6908d2235830415ac045d25d_openhands_logo_black.svg`
+- Main: `public/all-hands-logo-1.svg`
+- Black version: `public/assets/webflow/backgrounds/openhands_logo_black.svg`
 
 ### Feature Icons
-- Located at `https://cdn.prod.website-files.com/68ff4058b35616cdd47d5b59/`
-- Various SVG files for each feature
+- Located under `public/assets/webflow/icons/` and `public/assets/webflow/features/`
+- SVG files are stored locally in the repo for parity-safe rendering
 
 ### Client Logos
-- Located at `https://cdn.prod.website-files.com/68ff4058b35616cdd47d5b59/`
+- Located under `public/assets/webflow/logos/`
 - SVG format for scalability
 
 ## Responsive Behavior

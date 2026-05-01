@@ -49,7 +49,7 @@ describe('modernize legacy systems whitepaper route', () => {
     const downloadLink = screen.getByRole('link', { name: 'Download now' });
     expect(downloadLink).toHaveAttribute(
       'href',
-      'https://cdn.prod.website-files.com/68ff4057b35616cdd47d5ac7/69d3bc19b5bb78ea951cc08c_openhands-whitepaper.pdf',
+      '/assets/webflow/whitepapers/openhands-whitepaper.pdf',
     );
     expect(screen.getByRole('link', { name: 'Talk to the team' })).toHaveAttribute('href', '/contact');
   });

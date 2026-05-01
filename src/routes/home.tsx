@@ -29,28 +29,28 @@ const WORKFLOWS = [
     description: 'Scans repositories, fixes vulnerabilities, and opens reviewable PRs.',
     href: 'https://app.all-hands.dev/login',
     iconSrc:
-      'https://cdn.prod.website-files.com/68ff4058b35616cdd47d5b59/69c325c02839d67f16aa2af7_Tools%20Icon.svg',
+      '/assets/webflow/icons/Tools_Icon.svg',
   },
   {
     title: 'Review PRs',
     description: 'Reviews PRs for quality, security, and best practices.',
     href: 'https://app.all-hands.dev/login',
     iconSrc:
-      'https://cdn.prod.website-files.com/68ff4058b35616cdd47d5b59/69c325c66ad997e4b0159442_Search%20Icon.svg',
+      '/assets/webflow/icons/Search_Icon.svg',
   },
   {
     title: 'Migrate Code',
     description: 'Migrates legacy COBOL systems to Java with testing and validation built in.',
     href: 'https://app.all-hands.dev/login',
     iconSrc:
-      'https://cdn.prod.website-files.com/68ff4058b35616cdd47d5b59/69c325cd022fd95513931648_Arrow%20Right%20Circle.svg',
+      '/assets/webflow/icons/Arrow_Right_Circle.svg',
   },
   {
     title: 'Triage Incidents',
     description: 'Investigates errors, finds root causes, and posts actionable debugging insights.',
     href: 'https://app.all-hands.dev/login',
     iconSrc:
-      'https://cdn.prod.website-files.com/68ff4058b35616cdd47d5b59/69c325d42839d67f16aa2e86_Exclamation%20Triangle%20Icon.svg',
+      '/assets/webflow/icons/Exclamation_Triangle_Icon.svg',
   },
 ];
 
