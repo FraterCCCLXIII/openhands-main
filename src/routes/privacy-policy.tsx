@@ -70,7 +70,7 @@ function PrivacyPolicy() {
                 <p className='mx-auto mb-[14px] max-w-[900px] text-[14px] leading-[1.6] tracking-[-0.015em] text-brand-fg'>{children}</p>
               ),
               ul: ({ children }) => (
-                <ul className='mb-[14px] ml-5 list-disc text-[14px] leading-[1.6] tracking-[-0.015em] text-brand-fg'>
+                <ul className='mb-[14px] ml-4 list-none text-[14px] leading-[1.6] tracking-[-0.015em] text-brand-fg'>
                   {children}
                 </ul>
               ),

@@ -79,10 +79,10 @@ const Manifesto = () => {
           <img
             src='/assets/webflow/misc/691645a7832560da97f475c5_Featured_manifesto.png'
             alt=''
-            className='w-full rounded-[8px] object-cover'
+            className='w-full rounded-[16px] object-cover'
           />
 
-          <div className='mx-auto mt-32 max-w-[820px]'>
+          <div className='mx-auto mt-20 max-w-[820px] lg:mt-28'>
             <h3 className='text-[28px] font-medium leading-[1.25] tracking-[-0.02em] text-brand-fg lg:text-[32px] lg:leading-[1.2]'>
               We&apos;re at the beginning of a new era in software <em>development. Work is shifting from keystrokes to delegated tasks,</em> from single laptops to coordinated fleets of agents running in environments you control.
               <br />

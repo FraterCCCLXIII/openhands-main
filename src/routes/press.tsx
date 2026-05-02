@@ -50,7 +50,7 @@ const PRESS_ITEMS = [
 const Press = () => {
   return (
     <CompanyPageShell>
-      <section className='px-6 pb-24 pt-12 lg:px-10 lg:pb-24 lg:pt-12'>
+      <section className='px-6 pb-12 pt-12 lg:px-10 lg:pb-16 lg:pt-12'>
         <div className='mx-auto max-w-[640px] text-center'>
           <h1 className='text-[37px] font-medium leading-[40.7px] tracking-[-0.03em] text-brand-fg lg:text-[44px] lg:leading-[48.4px]'>
             In the news

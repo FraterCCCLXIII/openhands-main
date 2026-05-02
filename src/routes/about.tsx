@@ -118,7 +118,7 @@ const About = () => {
         </div>
       </section>
 
-      <section className='px-6 pb-20 lg:px-10 lg:pb-48'>
+      <section className='px-6 pb-20 pt-8 lg:px-10 lg:pb-48 lg:pt-12'>
         <div className='mx-auto max-w-[1238px]'>
           <div>
             <h3 className='text-[32px] font-medium leading-[38.4px] tracking-[-0.02em] text-brand-fg lg:text-[44px] lg:leading-[48.4px]'>

@@ -82,8 +82,8 @@ const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
 const Contact = () => {
   return (
     <CompanyPageShell>
-      <section className='px-6 pb-28 pt-12 lg:px-10 lg:pb-28 lg:pt-12'>
-        <div className='mx-auto flex max-w-[720px] flex-col items-center text-center'>
+      <section className='px-6 pb-16 pt-12 lg:px-10 lg:pb-20 lg:pt-12'>
+        <div className='mx-auto mb-16 flex max-w-[720px] flex-col items-center text-center'>
           <h1 className='max-w-[560px] text-[37px] font-medium leading-[40.7px] tracking-[-0.03em] text-brand-fg lg:text-[44px] lg:leading-[48.4px]'>
             Talk to the OpenHands Team
           </h1>
@@ -91,9 +91,6 @@ const Contact = () => {
             Get a custom demo and explore pricing, private deployments, and white-glove training, support and services for your org
           </p>
         </div>
-      </section>
-
-      <section className='px-6 pb-16 pt-16 lg:px-10 lg:pb-20 lg:pt-16'>
         <div className='mx-auto max-w-[1238px]'>
           <div className='grid gap-10 lg:grid-cols-[1fr_1fr] lg:items-start'>
             <div>
