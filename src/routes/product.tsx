@@ -31,7 +31,7 @@ export const meta: Route.MetaFunction = ({ location }) => {
 const Product = () => {
   return (
     <main className='bg-brand-bg'>
-      <section className='relative overflow-hidden bg-brand-bg px-6 pb-16 pt-10 lg:px-10 lg:pb-20 lg:pt-12'>
+      <section className='relative overflow-hidden bg-brand-bg px-6 pb-10 pt-10 lg:px-10 lg:pb-6 lg:pt-12'>
         <div className='pointer-events-none absolute inset-0 opacity-[0.12]'>
           <img
             src='/assets/webflow/backgrounds/6908d170831c19b2b6976323_ascii-art_(16)_1.svg'
@@ -43,13 +43,13 @@ const Product = () => {
           <div className='inline-flex rounded-[4px] bg-brand-accent px-5 py-2 text-[13px] font-medium leading-none text-brand-fg'>
             Product
           </div>
-          <h1 className='mt-8 text-[40px] font-medium leading-[1.08] tracking-[-0.04em] text-brand-fg lg:text-[44px]'>
+          <h1 className='mt-6 text-[40px] font-medium leading-[1.08] tracking-[-0.04em] text-brand-fg lg:text-[44px]'>
             Build better software with autonomous cloud agent
           </h1>
           <p className='mt-4 max-w-[640px] text-[18px] leading-[1.45] text-brand-fg/75'>
             Offload toil, ship faster. OpenHands automates real development tasks with transparency, governance, and choice.
           </p>
-          <div className='mt-8 flex flex-wrap items-center justify-center gap-4'>
+          <div className='mt-6 flex flex-wrap items-center justify-center gap-4'>
             <ProductPageActionLink
               href='https://app.all-hands.dev/'
               label='Try it live'
@@ -64,11 +64,11 @@ const Product = () => {
         </div>
       </section>
 
-      <section className='bg-brand-fg px-6 pb-16 pt-0 lg:px-10 lg:pb-20 lg:pt-0'>
-        <div className='mx-auto max-w-[1260px] space-y-16 lg:space-y-20'>
+      <section className='bg-brand-fg px-6 pb-10 pt-0 lg:px-10 lg:pb-12 lg:pt-0'>
+        <div className='mx-auto max-w-[1260px] space-y-10 lg:space-y-4'>
           {PRODUCT_SURFACES.map((item, index) => {
             const imageCard = (
-              <div className='rounded-[18px] bg-brand-bg p-7 shadow-[0_0_0_1px_rgba(249,240,217,0.08)]'>
+              <div className='rounded-[18px] bg-brand-bg p-4 shadow-[0_0_0_1px_rgba(249,240,217,0.08)]'>
                 <img src={item.image} alt='' className='w-full rounded-[8px]' />
               </div>
             );
