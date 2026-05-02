@@ -101,7 +101,9 @@ const About = () => {
                     <span className='text-[56px] font-medium leading-none tracking-[-0.04em] lg:text-[72px]'>
                       {milestone.value}
                     </span>
-                    {milestone.suffix ? <span className='pb-1 text-[36px] leading-none'>{milestone.suffix}</span> : null}
+                    {'suffix' in milestone && milestone.suffix ? (
+                      <span className='pb-1 text-[36px] leading-none'>{milestone.suffix}</span>
+                    ) : null}
                   </div>
                   <div className='mt-6 flex items-center gap-3'>
                     <img src={milestone.icon} alt='' className='h-[17px] w-auto shrink-0' />

@@ -8,6 +8,7 @@ interface Post {
     seoTitleDate?: string;
     excerpt: string;
     coverImage: string | undefined;
+    featuredImage?: string;
     coverAlt?: string;
     coverRadius?: 'none';
     date: string; // ISO string

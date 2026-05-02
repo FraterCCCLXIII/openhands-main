@@ -47,7 +47,7 @@ const FooterContent = ({
               <a
                 key={item.label}
                 href={item.href}
-                {...(item.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                {...('external' in item && item.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
                 className='flex h-10 w-10 items-center justify-center'
                 data-testid='footer-social-link'
               >

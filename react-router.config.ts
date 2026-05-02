@@ -22,7 +22,7 @@ export default {
 
     const blogSlugs = postFiles.flatMap((file) => {
       const content = fs.readFileSync(path.join(postsDir, file), 'utf-8');
-      const { data } = matter(content) as {
+      const { data } = matter(content) as unknown as {
         data: { title: string; published?: boolean; slug?: string };
       };
 

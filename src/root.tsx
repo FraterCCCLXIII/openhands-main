@@ -6,6 +6,7 @@ import {
   Scripts,
   ScrollRestoration,
   useLocation,
+  useMatches,
   useRouteError,
 } from 'react-router';
 import { Analytics } from '@vercel/analytics/react';
@@ -86,10 +87,14 @@ export default function App() {
   const [isGitHubModalOpen, setIsGitHubModalOpen] = React.useState(false);
   const sidebarRef = React.useRef<HTMLDivElement>(null);
   const location = useLocation();
+  const matches = useMatches();
   const pathname = normalizePathname(location.pathname);
   const width = useWidth();
   const isDesktop = width >= 1024;
-  const showGlobalFooter = pathname !== '/';
+  const hideGlobalFooter = matches.some(
+    (match) => (match.handle as { hideGlobalFooter?: boolean } | undefined)?.hideGlobalFooter,
+  );
+  const showGlobalFooter = pathname !== '/' && !hideGlobalFooter;
   const useMarketingFooter = MARKETING_FOOTER_PATHS.has(pathname);
   const usePrivacyFooterLayout = pathname === '/privacy';
   const useParityFooterLayout = pathname === '/blog' || pathname === '/community';

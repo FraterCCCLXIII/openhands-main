@@ -3,6 +3,7 @@ import type { ReactElement } from 'react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
 import NotFoundRoute, {
+  handle as notFoundHandle,
   loader as notFoundLoader,
   meta as notFoundMeta,
 } from '../../src/routes/not-found';
@@ -12,9 +13,7 @@ import WhitepaperModernizeLegacySystemsWithAiAgents, {
 
 type MetaEntry = Record<string, unknown>;
 
-const renderRoute = (element: ReactElement) => {
-  render(<MemoryRouter>{element}</MemoryRouter>);
-};
+const renderRoute = (element: ReactElement) => render(<MemoryRouter>{element}</MemoryRouter>);
 
 const getTitle = (entries: MetaEntry[]) =>
   entries.find((entry) => 'title' in entry)?.title;
@@ -48,12 +47,13 @@ describe('legacy routes parity', () => {
 
   it('returns the live-style branded not found content and metadata', () => {
     const response = notFoundLoader() as any;
-    const entries = notFoundMeta({}) as MetaEntry[];
+    const entries = notFoundMeta({} as any) as MetaEntry[];
 
-    renderRoute(<NotFoundRoute />);
+    const { container } = renderRoute(<NotFoundRoute />);
 
     expect(response.init?.status ?? response.status).toBe(404);
     expect(getTitle(entries)).toBe('Not Found');
+    expect(notFoundHandle).toEqual({ hideGlobalFooter: true });
     expect(screen.getByText('404')).toBeInTheDocument();
     expect(
       screen.getByRole('heading', {
@@ -64,6 +64,7 @@ describe('legacy routes parity', () => {
       screen.getByText("The page you are looking for doesn't exist or has been moved")
     ).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Go home' })).toHaveAttribute('href', '/');
+    expect(container.querySelectorAll('p')).toHaveLength(0);
   });
 
   it('uses live metadata for the whitepaper route', () => {

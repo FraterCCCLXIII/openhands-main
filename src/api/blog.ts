@@ -41,7 +41,9 @@ class BlogAPI {
 
   constructor() {
     this.posts = sortBlogsByDate(
-      RAW_POSTS.map((post) => matter(post) as BlogPost).filter((post) => post.data.published !== false),
+      RAW_POSTS.map((post) => matter(post) as unknown as BlogPost).filter(
+        (post) => post.data.published !== false,
+      ),
     );
 
     for (const post of this.posts) {
