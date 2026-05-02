@@ -164,7 +164,7 @@ const TickCell = ({ enabled }: { enabled: boolean }) => {
     return <span className='block h-5 w-5' aria-hidden='true' />;
   }
 
-  return <img src={TABLE_TICK_ICON} alt='tick icon' className='mx-auto h-5 w-5' />;
+  return <img src={TABLE_TICK_ICON} alt='tick icon' className='h-5 w-5' />;
 };
 
 export const meta: Route.MetaFunction = ({ location }) => {
@@ -256,64 +256,66 @@ const Pricing = () => {
       <section className='px-10 pb-20 pt-8'>
         <div className='mx-auto max-w-[1260px]'>
           <h2 className='sr-only'>Compare plans</h2>
-          <div className='overflow-x-auto rounded-[24px] bg-brand-fg px-6 py-6 text-brand-bg lg:px-8 lg:py-8'>
-            <table className='min-w-full border-collapse text-left'>
-              <thead>
-                <tr className='border-b border-brand-bg/18 text-[13px] uppercase tracking-[0.08em] text-brand-bg/70'>
-                  <th className='py-4 pr-6 font-medium'><p>Features</p></th>
-                  <th className='px-6 py-4 font-medium text-brand-bg'><p>Open Source</p></th>
-                  <th className='px-6 py-4 font-medium text-brand-bg'><p>Individual</p></th>
-                  <th className='px-6 py-4 font-medium text-brand-bg'><p>Enterprise</p></th>
-                </tr>
-              </thead>
-              <tbody>
-                {COMPARISON_ROWS.map((row) => {
-                  if (row.type === 'section') {
-                    return (
-                      <tr key={row.label} className='border-b border-brand-bg/18'>
-                        <th colSpan={4} className='py-5 pr-6 text-sm uppercase tracking-[0.14em] text-brand-bg/70'>
-                          <span>{row.label}</span>
-                        </th>
-                      </tr>
-                    );
-                  }
+          <div className='rounded-[24px] bg-brand-fg px-6 py-6 text-brand-bg lg:px-8 lg:py-8'>
+            {/* Header row */}
+            <div className='grid border-b border-brand-bg/18' style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
+              <div className='py-4 text-[13px] uppercase tracking-[0.08em] text-brand-bg/70 font-medium'>
+                <p>Features</p>
+              </div>
+              <div className='py-4 text-[13px] uppercase tracking-[0.08em] font-medium text-brand-bg'>
+                <p>Open Source</p>
+              </div>
+              <div className='py-4 text-[13px] uppercase tracking-[0.08em] font-medium text-brand-bg'>
+                <p>Individual</p>
+              </div>
+              <div className='py-4 text-[13px] uppercase tracking-[0.08em] font-medium text-brand-bg'>
+                <p>Enterprise</p>
+              </div>
+            </div>
 
-                  if (row.type === 'values') {
-                    return (
-                      <tr key={row.label} className='border-b border-brand-bg/12 last:border-b-0'>
-                        <th className='py-4 pr-6 text-[16px] font-medium text-brand-bg'>
-                          <p>{row.label}</p>
-                        </th>
-                        {row.values.map((value, index) => (
-                          <td key={`${row.label}-${index}`} className='px-6 py-4 text-[16px] text-brand-bg/85'>
-                            <p>{value}</p>
-                          </td>
-                        ))}
-                      </tr>
-                    );
-                  }
+            {COMPARISON_ROWS.map((row) => {
+              if (row.type === 'section') {
+                return (
+                  <div key={row.label} className='border-b border-brand-bg/18 py-5 text-sm uppercase tracking-[0.14em] text-brand-bg/70'>
+                    <span>{row.label}</span>
+                  </div>
+                );
+              }
 
-                  return (
-                    <tr key={row.label} className='border-b border-brand-bg/12 last:border-b-0'>
-                      <th className='py-4 pr-6 text-[16px] font-medium text-brand-bg'>
-                        <p>{row.label}</p>
-                      </th>
-                      {row.values.map((enabled, index) => (
-                        <td key={`${row.label}-${index}`} className='px-6 py-4 text-center'>
-                          <TickCell enabled={enabled} />
-                        </td>
-                      ))}
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+              if (row.type === 'values') {
+                return (
+                  <div key={row.label} className='grid border-b border-brand-bg/12' style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
+                    <div className='py-4 text-[16px] font-medium text-brand-bg'>
+                      <p>{row.label}</p>
+                    </div>
+                    {row.values.map((value, index) => (
+                      <div key={`${row.label}-${index}`} className='py-4 text-[16px] text-brand-bg/85'>
+                        <p>{value}</p>
+                      </div>
+                    ))}
+                  </div>
+                );
+              }
+
+              return (
+                <div key={row.label} className='grid border-b border-brand-bg/12' style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
+                  <div className='py-4 text-[16px] font-medium text-brand-bg'>
+                    <p>{row.label}</p>
+                  </div>
+                  {row.values.map((enabled, index) => (
+                    <div key={`${row.label}-${index}`} className='py-4'>
+                      <TickCell enabled={enabled} />
+                    </div>
+                  ))}
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
 
       <section className='px-10 py-20'>
-        <div className='mx-auto grid max-w-[1260px] gap-10 lg:grid-cols-[240px_minmax(0,1fr)] lg:gap-16'>
+        <div className='mx-auto grid max-w-[1260px] gap-10 lg:grid-cols-[490px_minmax(0,1fr)] lg:gap-20'>
           <div>
             <h2 className='text-[34px] font-medium leading-[1.08] tracking-[-0.03em] text-brand-fg lg:text-[44px]'>
               FAQ&apos;s
