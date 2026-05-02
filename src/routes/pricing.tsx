@@ -206,7 +206,7 @@ export const meta: Route.MetaFunction = ({ location }) => {
 const Pricing = () => {
   return (
     <main className='bg-brand-bg'>
-      <section className='relative overflow-hidden bg-brand-bg px-10 pb-16 pt-10 lg:pt-12'>
+      <section className='relative overflow-hidden bg-brand-bg px-10 pb-10 pt-10 lg:pt-12'>
         <div className='pointer-events-none absolute inset-0 opacity-[0.12]'>
           <img
             src='/assets/webflow/backgrounds/6908d170831c19b2b6976323_ascii-art_(16)_1.svg'
@@ -214,7 +214,7 @@ const Pricing = () => {
             className='h-full w-full object-cover'
           />
         </div>
-        <div className='relative mx-auto flex max-w-4xl flex-col items-center gap-6 pb-8 text-center'>
+        <div className='relative mx-auto flex max-w-4xl flex-col items-center gap-4 pb-4 text-center'>
           <h1 className='text-[44px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>
             Pricing that fits your rollout
           </h1>
@@ -253,7 +253,7 @@ const Pricing = () => {
         </div>
       </section>
 
-      <section className='px-10 pb-16 pt-8'>
+      <section className='px-10 pb-20 pt-12'>
         <div className='mx-auto max-w-[1260px]'>
           <h2 className='sr-only'>Compare plans</h2>
           <div className='overflow-x-auto rounded-[24px] bg-brand-fg px-6 py-6 text-brand-bg lg:px-8 lg:py-6'>
@@ -318,7 +318,7 @@ const Pricing = () => {
         </div>
       </section>
 
-      <section className='px-10 py-20'>
+      <section className='px-10 py-32'>
         <div className='mx-auto grid max-w-[1260px] gap-10 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:gap-16'>
           <div>
             <h2 className='text-[34px] font-medium leading-[1.08] tracking-[-0.03em] text-brand-fg lg:text-[44px]'>
