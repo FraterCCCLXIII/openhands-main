@@ -47,34 +47,34 @@ export const meta: Route.MetaFunction = ({ location }) => {
 function PrivacyPolicy() {
   return (
     <>
-      <main className='px-6 pb-20 pt-[112px] text-brand-fg lg:px-10 lg:pt-[116px]'>
-        <div className='mx-auto max-w-[720px]'>
+      <main className='px-6 pb-20 pt-16 text-brand-fg lg:px-10'>
+        <div className='mx-auto max-w-[900px]'>
           <Markdown
             components={{
               h1: ({ children }) => (
-                <h1 className={`${legalHeadingClass} mb-3 text-center text-[28px] lg:text-[32px]`}>
+                <h1 className={`${legalHeadingClass} mb-12 text-center text-[28px] leading-[1.2] lg:text-[32px]`}>
                   {children}
                 </h1>
               ),
               h2: ({ children }) => (
-                <h2 className={`${legalHeadingClass} mt-7 text-[20px] leading-[22px] lg:text-[22px]`}>
+                <h2 className={`${legalHeadingClass} mx-auto mt-7 mb-2 max-w-[900px] text-[20px] leading-[22px]`}>
                   {children}
                 </h2>
               ),
               h3: ({ children }) => (
-                <h3 className={`${legalHeadingClass} mt-[18px] text-[16px]`}>
+                <h3 className={`${legalHeadingClass} mx-auto mt-[18px] mb-[6px] max-w-[900px] text-[16px] leading-[1.2]`}>
                   {children}
                 </h3>
               ),
               p: ({ children }) => (
-                <p className='mb-[14px] text-[14px] leading-[1.55] text-brand-fg/90'>{children}</p>
+                <p className='mx-auto mb-[14px] max-w-[900px] text-[14px] leading-[1.6] tracking-[-0.015em] text-brand-fg'>{children}</p>
               ),
               ul: ({ children }) => (
-                <ul className='mb-[14px] ml-5 list-disc space-y-1 text-[14px] leading-[1.55] text-brand-fg/90'>
+                <ul className='mb-[14px] ml-5 list-disc text-[14px] leading-[1.6] tracking-[-0.015em] text-brand-fg'>
                   {children}
                 </ul>
               ),
-              li: ({ children }) => <li>{children}</li>,
+              li: ({ children }) => <li className='mb-[6px]'>{children}</li>,
               strong: ({ children }) => <strong className='font-semibold text-brand-fg'>{children}</strong>,
               a: ({ children, href }) => {
                 const text = Array.isArray(children)

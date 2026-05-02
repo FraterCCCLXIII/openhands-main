@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import PrivacyPolicy from '../../src/routes/privacy-policy';
 
 const renderRoute = () => {
-  render(
+  return render(
     <MemoryRouter>
       <PrivacyPolicy />
     </MemoryRouter>,
@@ -13,9 +13,16 @@ const renderRoute = () => {
 
 describe('Privacy policy route', () => {
   it('renders the live privacy heading hierarchy and CTA block', () => {
-    renderRoute();
+    const { container } = renderRoute();
 
-    expect(screen.getByRole('heading', { level: 1, name: 'Privacy Policy' })).toBeInTheDocument();
+    expect(container.querySelector('main')).toHaveClass('pt-16', 'pb-20');
+    expect(container.querySelector('main > div')).toHaveClass('max-w-[900px]');
+    expect(screen.getByRole('heading', { level: 1, name: 'Privacy Policy' })).toHaveClass('mb-12', 'leading-[1.2]');
+    expect(screen.getByText('Effective Date: September 3, 2025').closest('p')).toHaveClass(
+      'tracking-[-0.015em]',
+      'leading-[1.6]',
+    );
+
     expect(screen.getByRole('heading', { level: 2, name: 'Personal information we collect' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { level: 2, name: 'How we use personal information' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { level: 2, name: 'How we share your personal information' })).toBeInTheDocument();

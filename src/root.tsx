@@ -91,6 +91,7 @@ export default function App() {
   const isDesktop = width >= 1024;
   const showGlobalFooter = pathname !== '/';
   const useMarketingFooter = MARKETING_FOOTER_PATHS.has(pathname);
+  const usePrivacyFooterLayout = pathname === '/privacy';
   const useParityFooterLayout = pathname === '/blog' || pathname === '/community';
 
   const handleOpenGitHubModal = () => {
@@ -153,7 +154,11 @@ export default function App() {
                   <Footer standalone compactNav />
                 </>
               ) : (
-                <Footer standalone navWidthClass={useParityFooterLayout ? 'max-w-[760px]' : undefined} />
+                <Footer
+                  standalone
+                  compactNav={usePrivacyFooterLayout}
+                  navWidthClass={useParityFooterLayout ? 'max-w-[760px]' : undefined}
+                />
               ))}
           </GitHubModalProvider>
         </div>

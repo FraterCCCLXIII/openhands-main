@@ -20,4 +20,15 @@ describe('site shell parity helpers', () => {
 
     expect(screen.getAllByTestId('footer-social-link')).toHaveLength(3);
   });
+
+  it('can render the compact Webflow-style footer navigation', () => {
+    const { container } = render(
+      <MemoryRouter>
+        <Footer standalone compactNav />
+      </MemoryRouter>
+    );
+
+    expect(container.querySelector('#footer-resources')?.parentElement).toHaveClass('justify-between');
+    expect(screen.getByRole('link', { name: 'About' })).toHaveClass('py-[14.4px]');
+  });
 });
