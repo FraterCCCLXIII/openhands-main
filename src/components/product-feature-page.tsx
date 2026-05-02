@@ -94,14 +94,19 @@ const ProductFeatureProofBand = ({
   image,
   headingClassName = 'text-white',
   wideDescription = false,
+  compact = false,
 }: {
   title: string;
   description: string;
   image?: ProductFeaturePageData['accentImage'];
   headingClassName?: string;
   wideDescription?: boolean;
+  compact?: boolean;
 }) => (
-  <section className='relative min-h-[571px] overflow-hidden bg-brand-fg px-6 pb-20 pt-36 lg:px-10'>
+  <section className={classNames(
+    'relative overflow-hidden bg-brand-fg px-6 pb-20 lg:px-10',
+    compact ? 'min-h-[442px] pt-36' : 'min-h-[571px] pt-36'
+  )}>
     {image ? (
       <img src={image.src} alt={image.alt} className='absolute inset-0 h-full w-full object-cover' />
     ) : (
@@ -133,7 +138,7 @@ const ProductGuiIntroSection = ({
   title: string;
   description: string;
 }) => (
-  <section className='bg-brand-fg px-6 py-16 lg:px-10 lg:py-0'>
+  <section className='bg-brand-fg px-6 py-16 lg:px-10 lg:py-20'>
     <div className='mx-auto grid max-w-[1260px] gap-10 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:items-center'>
       <div className='rounded-[18px] bg-brand-bg p-7 shadow-[0_0_0_1px_rgba(249,240,217,0.08)]'>
         <img src={image.src} alt={image.alt} className='w-full rounded-[8px]' />
@@ -174,40 +179,43 @@ export const ProductComparisonTable = ({
   dark = false,
   ctaHref,
   ctaLabel,
+  spacious = false,
 }: {
   dark?: boolean;
   ctaHref?: string;
   ctaLabel?: string;
+  spacious?: boolean;
 }) => {
   const sectionClass = dark ? 'bg-brand-fg text-brand-bg' : 'bg-brand-bg text-brand-fg';
   const headingClass = dark ? 'text-brand-bg' : 'text-brand-fg';
   const cellClass = dark ? 'text-brand-bg/90' : 'text-brand-fg/85';
   const borderClass = dark ? 'border-brand-bg/20' : 'border-brand-fg/12';
   const crossClass = dark ? 'text-brand-bg/55' : 'text-brand-fg/35';
+  const cellPy = spacious ? 'py-5' : 'py-4';
 
   return (
     <section className={classNames('px-6 py-20 lg:px-10', sectionClass)}>
-      <div className='mx-auto max-w-[1260px]'>
+      <div className={classNames('mx-auto max-w-[1260px]', spacious && 'lg:py-20')}>
         <div className={classNames('mx-auto max-w-[760px] text-center text-[34px] font-medium leading-[1.08] tracking-[-0.03em] lg:text-[44px]', headingClass)}>
           The only open, secure, and scalable agent platform built for real engineering work
         </div>
-        <div className='mt-10 overflow-x-auto'>
+        <div className={classNames('overflow-x-auto', spacious ? 'mt-16' : 'mt-10')}>
           <table className='min-w-full border-collapse text-left'>
             <thead>
               <tr className={classNames('border-b text-[13px] uppercase tracking-[0.08em]', borderClass, dark ? 'text-brand-bg/70' : 'text-brand-fg/60')}>
-                <th className='py-4 pr-6 font-medium'>Feature</th>
-                <th className='px-6 py-4 text-center font-medium'>OpenHands</th>
-                <th className='px-6 py-4 text-center font-medium'>Devin</th>
-                <th className='px-6 py-4 text-center font-medium'>Claude Code</th>
-                <th className='px-6 py-4 text-center font-medium'>Factory</th>
+                <th className={classNames(cellPy, 'pr-6 font-medium')}>Feature</th>
+                <th className={classNames('px-6 text-center font-medium', cellPy)}>OpenHands</th>
+                <th className={classNames('px-6 text-center font-medium', cellPy)}>Devin</th>
+                <th className={classNames('px-6 text-center font-medium', cellPy)}>Claude Code</th>
+                <th className={classNames('px-6 text-center font-medium', cellPy)}>Factory</th>
               </tr>
             </thead>
             <tbody>
               {PRODUCT_COMPARISON_ROWS.map((row) => (
                 <tr key={row.label} className={classNames('border-b last:border-b-0', borderClass)}>
-                  <td className={classNames('py-4 pr-6 text-[16px] font-medium', cellClass)}>{row.label}</td>
+                  <td className={classNames(cellPy, 'pr-6 text-[16px] font-medium', cellClass)}>{row.label}</td>
                   {row.values.map((value, index) => (
-                    <td key={`${row.label}-${index}`} className='px-6 py-4 text-center'>
+                    <td key={`${row.label}-${index}`} className={classNames('px-6 text-center', cellPy)}>
                       {value ? (
                         <img src={TABLE_TICK_ICON} alt='' aria-hidden='true' className='mx-auto h-5 w-5' />
                       ) : (
@@ -221,7 +229,7 @@ export const ProductComparisonTable = ({
           </table>
         </div>
         {ctaHref && ctaLabel ? (
-          <div className='mt-10 text-center'>
+          <div className={classNames('text-center', spacious ? 'mt-16' : 'mt-10')}>
             <ProductPageActionLink
               href={ctaHref}
               label={ctaLabel}
@@ -303,8 +311,8 @@ export const ProductFeaturePage = ({
     <main className='bg-brand-bg'>
       <section
         className={classNames(
-          'relative overflow-hidden bg-brand-bg px-6 pb-16 pt-10 lg:px-10 lg:pt-12',
-          isGui ? 'lg:pb-20' : 'lg:pb-[108px]'
+          'relative overflow-hidden bg-brand-bg px-6 pb-16 pt-10 lg:px-10',
+          isGui ? 'lg:pb-20 lg:pt-20' : 'lg:pb-[108px] lg:pt-12'
         )}
       >
         <AsciiBackdrop />
@@ -341,6 +349,7 @@ export const ProductFeaturePage = ({
             description={page.proofDescription}
             image={page.accentImage}
             headingClassName='text-brand-fg'
+            compact
           />
         </>
       ) : (
@@ -372,7 +381,7 @@ export const ProductFeaturePage = ({
         </div>
       </section>
 
-      <section className='bg-brand-bg px-6 pb-16 lg:px-10 lg:pb-20'>
+      <section className='bg-brand-bg px-6 py-16 lg:px-10 lg:py-20'>
         <div className='mx-auto grid max-w-[1260px] gap-12 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:items-center'>
           <ProductImageCard src={page.showcaseImages[1].src} alt={page.showcaseImages[1].alt} />
           <div>
@@ -384,7 +393,7 @@ export const ProductFeaturePage = ({
         </div>
       </section>
 
-      <ProductComparisonTable dark ctaHref='https://app.all-hands.dev/' ctaLabel='Try it live' />
+      <ProductComparisonTable dark ctaHref='https://app.all-hands.dev/' ctaLabel='Try it live' spacious={isGui} />
       <div className={classNames('bg-brand-fg', comparisonSpacerClass)} aria-hidden='true' />
       <ProductFaqSection faqs={faqs} />
       <ProductPageFooterCta
