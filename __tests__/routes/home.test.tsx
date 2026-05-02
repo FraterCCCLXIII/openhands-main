@@ -44,7 +44,16 @@ describe('home route parity structure', () => {
     expect(screen.queryByRole('link', { name: 'Talk to us' })).not.toBeInTheDocument();
 
     expect(container.innerHTML).toContain('lg:grid-cols-3');
+    expect(container.innerHTML).toContain('margin-top: 233px');
+    expect(container.innerHTML).toContain('relative h-[800px] overflow-hidden bg-brand-accent');
+    expect(container.innerHTML).toContain('absolute inset-0 h-full w-full object-cover');
+    expect(container.innerHTML).toContain('lg:pb-[191px]');
     expect(container.innerHTML).not.toContain('xl:grid-cols-4');
+    expect(screen.getByRole('img', { name: 'ASCII art depicting a large black hole with light and particles swirling around it.' })).toHaveClass(
+      'h-full',
+      'w-full',
+      'object-cover',
+    );
     expect(screen.getByRole('link', { name: 'Home' })).toHaveClass('text-[#8a5f45]');
     expect(screen.getAllByTestId('footer-social-link')).toHaveLength(3);
   });

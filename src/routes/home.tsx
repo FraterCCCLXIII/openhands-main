@@ -481,8 +481,12 @@ const Home = () => {
             Automate the Outer Loop with AI
           </h3>
           <div className='space-y-6'>
-            {USE_CASE_COLUMNS.map((column) => (
-              <div key={column.label} className='overflow-hidden rounded-none border border-brand-fg/15 bg-[#efe6d1]'>
+            {USE_CASE_COLUMNS.map((column, index) => (
+              <div
+                key={column.label}
+                className='overflow-hidden rounded-none border border-brand-fg/15 bg-[#efe6d1]'
+                style={index > 0 ? { marginTop: '233px' } : undefined}
+              >
                 <div className='border-b border-brand-fg/15 px-6 py-4 text-sm font-medium uppercase tracking-[0.12em] text-brand-muted'>
                   {column.label}
                 </div>
@@ -503,21 +507,19 @@ const Home = () => {
         </div>
       </section>
 
-      <section className='overflow-hidden bg-brand-accent px-6 py-16 lg:px-10 lg:py-24'>
-        <div className='mx-auto grid max-w-[1220px] gap-10 lg:grid-cols-[0.95fr_1.05fr] lg:items-center'>
-          <div>
-            <img
-              src='/assets/webflow/backgrounds/690b397ae76441160bed52b6_asci-art-hole.png'
-              alt='ASCII art depicting a large black hole with light and particles swirling around it.'
-              className='w-full object-contain'
-            />
-          </div>
-          <div>
+      <section className='relative h-[800px] overflow-hidden bg-brand-accent text-brand-fg'>
+        <img
+          src='/assets/webflow/backgrounds/690b397ae76441160bed52b6_asci-art-hole.png'
+          alt='ASCII art depicting a large black hole with light and particles swirling around it.'
+          className='absolute inset-0 h-full w-full object-cover'
+        />
+        <div className='relative z-10 mx-auto flex h-full max-w-[1238px] items-end px-6 pb-24 lg:px-10'>
+          <div className='ml-auto max-w-[760px] bg-brand-accent/90 p-8'>
             <div className='mb-6 text-[44px] font-medium leading-[1.1] tracking-[-0.03em] text-brand-fg'>
               {TESTIMONIALS[activeTestimonial].quote}
             </div>
             <div className='mb-8 flex items-center gap-4'>
-              <img src={TESTIMONIALS[activeTestimonial].photo} alt='' className='h-14 w-14 object-cover' style={{ borderRadius: '100%' }} />
+              <img src={TESTIMONIALS[activeTestimonial].photo} alt='' className='h-12 w-12 object-cover' style={{ borderRadius: '100%' }} />
               <div>
                 <div className='text-base font-medium text-brand-fg'>{TESTIMONIALS[activeTestimonial].name}</div>
                 <div className='text-sm text-brand-muted'>{TESTIMONIALS[activeTestimonial].title}</div>
@@ -553,12 +555,12 @@ const Home = () => {
         </div>
       </section>
 
-      <section className='bg-brand-bg px-6 py-20 lg:px-10 lg:py-28'>
+      <section className='bg-brand-bg px-6 pb-20 pt-20 lg:px-10 lg:pb-[191px] lg:pt-28'>
         <div className='mx-auto max-w-[1220px] space-y-6'>
           <div className='grid gap-6 lg:grid-cols-2'>
-            <article className='card-dark min-h-[520px] rounded-none p-8 lg:min-h-[600px]'>
-              <p className='mb-3 text-lg font-medium text-brand-accent'>Community that compounds velocity</p>
-              <p className='mb-8 max-w-[510px] text-lg leading-[1.55] text-white/75'>
+            <article className='card-dark min-h-[520px] rounded-none p-8 lg:min-h-[680px]'>
+              <p className='mb-3 max-w-[350px] text-lg font-medium text-brand-accent'>Community that compounds velocity</p>
+              <p className='mb-8 max-w-[350px] text-lg leading-[1.55] text-white/75'>
                 With 65K+ GitHub stars and a thriving open-source ecosystem, OpenHands evolves through collective innovation - every contribution makes the platform faster, safer, and smarter.
               </p>
               <a href='https://github.com/OpenHands/OpenHands' target='_blank' rel='noopener noreferrer' className='btn mb-12 inline-flex rounded-none border border-brand-bg/40 bg-transparent text-brand-bg hover:bg-brand-bg/10'>
@@ -574,9 +576,9 @@ const Home = () => {
               </div>
             </article>
 
-            <article className='card-dark min-h-[520px] rounded-none p-8 lg:min-h-[600px]'>
-              <p className='mb-3 text-lg font-medium text-brand-accent'>Plays well with your stack</p>
-              <p className='mb-10 max-w-[520px] text-lg leading-[1.55] text-white/75'>
+            <article className='card-dark min-h-[520px] rounded-none p-8 lg:min-h-[680px]'>
+              <p className='mb-3 max-w-[330px] text-lg font-medium text-brand-accent'>Plays well with your stack</p>
+              <p className='mb-10 max-w-[330px] text-lg leading-[1.55] text-white/75'>
                 Native integrations with GitHub, GitLab, CI/CD, Slack, and ticketing tools. OpenHands fits seamlessly into enterprise governance systems and your preferred model providers.
               </p>
               <div className='grid grid-cols-2 gap-5 sm:grid-cols-4'>
@@ -598,8 +600,8 @@ const Home = () => {
           <article className='card-dark rounded-none p-8'>
             <div className='grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-center'>
               <div>
-                <p className='mb-3 text-lg font-medium text-brand-accent'>Enterprise-grade security and control</p>
-                <p className='mb-6 max-w-[680px] text-lg leading-[1.55] text-white/75'>
+                <p className='mb-3 max-w-[369px] text-lg font-medium text-brand-accent'>Enterprise-grade security and control</p>
+                <p className='mb-6 max-w-[369px] text-lg leading-[1.55] text-white/75'>
                   Control every layer of your environment with fine-grained access control, model-agnostic architecture, and flexible self-hosted or private cloud deployment options that keep your code and data secure.
                 </p>
                 <Link to='/enterprise' className='btn inline-flex rounded-none border border-brand-bg/40 bg-transparent text-brand-bg hover:bg-brand-bg/10'>
@@ -624,7 +626,7 @@ const Home = () => {
             {DEVELOPER_QUOTES.map((quote) => (
               <article key={quote.name} className='rounded-none border border-brand-fg/12 bg-white/80 p-5 shadow-[0_18px_60px_rgba(34,21,13,0.04)] lg:min-h-[260px]'>
                 <div className='mb-4 flex items-center gap-3'>
-                  <img src={quote.avatar} alt={quote.name} className='h-11 w-11 object-cover' style={{ borderRadius: '100%' }} />
+                  <img src={quote.avatar} alt={quote.name} className='h-12 w-12 object-cover' style={{ borderRadius: '100%' }} />
                   <div>
                     <div className='text-sm font-medium text-brand-fg'>{quote.name}</div>
                     <div className='text-xs text-brand-muted'>{quote.title}</div>

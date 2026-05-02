@@ -119,8 +119,8 @@ describe('Marketing parity routes', () => {
     );
     expect(screen.getByText('April 28, 2026')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /Upcoming Events/i })).toBeInTheDocument();
-    expect(screen.getByText('Scale Enterprise AI Agents')).toBeInTheDocument();
-    expect(screen.getByText(/5:15pm — Doors Open/i)).toBeInTheDocument();
+    expect(screen.queryByText('Scale Enterprise AI Agents')).not.toBeInTheDocument();
+    expect(screen.queryByText(/5:15pm — Doors Open/i)).not.toBeInTheDocument();
     expect(screen.getAllByText(/Recording and agenda will be available post meeting\./i)).toHaveLength(2);
     expect(screen.getByRole('heading', { name: /Recognizing first-time contributors/i })).toBeInTheDocument();
     expect(screen.queryByText('@alexdev')).not.toBeInTheDocument();

@@ -71,6 +71,7 @@ npm run parity:checklist  # Crawl openhands.dev and compare against local site
 - Live homepage footer layout is a single combined nav/resources/contact block with social icons above it. Keeping `Contact` outside the stacked resource list and tinting the active `Home` link with `#8a5f45` avoids recurring shared-shell mismatches.
 - Homepage workflow cards should use the live Webflow SVG icons instead of emoji, and if you show visible `Launch` text, keep it out of the actual `<button>` text content (for example, visible `div` text plus an overlay button) so the parity checker does not add unexpected `BUTTON:` signatures.
 - The homepage `Developers love OpenHands` wall aligns closer to live with a 3-column desktop grid and slightly taller cards; this section materially affects downstream FAQ/footer Y-position parity.
+- For homepage parity spacing that uses exact one-off pixel values, prefer inline styles or static Tailwind class strings; dynamically assembled arbitrary classes may not be emitted into the production CSS.
 
 - `PARITY_MAX_PAGES=10 npm run parity:checklist` is enough to recheck `/` plus major top-level routes during homepage work.
 

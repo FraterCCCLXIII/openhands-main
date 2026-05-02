@@ -12,14 +12,6 @@ const LATEST_COMMUNITY_CALL = {
 
 const EVENTS = [
   {
-    title: 'Scale Enterprise AI Agents',
-    description:
-      "After ODSC, stop by our nearby event sponsored by OpenHands to learn about the latest best practices and trends in enterprise agentic AI. Our founder & CEO, Robert Brennan, will be sharing insights on what he's been seeing and learning in the space. Food and drinks will be provided. 5:15pm — Doors Open 5:45pm — Presentations & Q&A 6:45pm — Networking 7:30pm — Event Ends By RSVP'ing, you consent to receive marketing emails from the hosts. You can withdraw consent at any time via the unsubscribe link.",
-    date: 'Apr 30, 2026',
-    time: '9:30 PM UTC',
-    href: 'https://luma.com/odsc-boston',
-  },
-  {
     title: 'OpenHands Community Call - May 7th',
     description:
       "Join our bi-weekly OpenHands Community Call! We'll announce new contributors, discuss project updates, demo new features, and talk about the future of AI. All are welcome! Recording and agenda will be available post meeting.",
