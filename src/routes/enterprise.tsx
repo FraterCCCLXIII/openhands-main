@@ -76,7 +76,7 @@ const Enterprise = () => {
   return (
     <main>
       {/* Hero with ASCII background */}
-      <section className='relative overflow-hidden px-10 pb-20 pt-10 lg:pt-12'>
+      <section className='relative overflow-hidden px-10 pb-12 pt-10 lg:pt-12'>
         <div className='pointer-events-none absolute inset-0 opacity-[0.12]'>
           <img
             src='/assets/webflow/backgrounds/6908d170831c19b2b6976323_ascii-art_(16)_1.svg'
@@ -130,7 +130,7 @@ const Enterprise = () => {
       </section>
 
       {/* AMD Quote — full-width dark section with ASCII background */}
-      <section className='relative overflow-hidden bg-brand-fg px-10 py-20'>
+      <section className='relative overflow-hidden bg-brand-fg px-10 py-28'>
         <div className='pointer-events-none absolute inset-0'>
           <img
             src='/assets/webflow/backgrounds/690b50c95a72e7b17a1412a8_09a6ecb11584c3309a64a00d57130313_ascii-art_%2815%29_1.svg'
@@ -181,7 +181,7 @@ const Enterprise = () => {
       </section>
 
       {/* Results */}
-      <section className='px-10 py-20'>
+      <section className='px-10 py-28'>
         <div className='mx-auto max-w-[1260px] text-center'>
           <h3 className='mx-auto w-fit text-[32px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg lg:text-[44px]'>
             Proven results across industries
@@ -206,7 +206,7 @@ const Enterprise = () => {
       </section>
 
       {/* Whitepaper — centered layout */}
-      <section className='px-10 py-20'>
+      <section className='px-10 py-28'>
         <div className='mx-auto max-w-[860px] text-center'>
           <h3 className='text-[32px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg lg:text-[44px]'>
             Whitepaper: Modernize legacy systems before your expertise disappears
@@ -224,7 +224,7 @@ const Enterprise = () => {
       </section>
 
       {/* Footer CTA */}
-      <section className='px-10 py-20 text-center'>
+      <section className='px-10 py-28 text-center'>
         <div className='mx-auto flex max-w-[812px] flex-col items-center gap-6'>
           <div className='text-[44px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>
             Bring agentic development to your organization.

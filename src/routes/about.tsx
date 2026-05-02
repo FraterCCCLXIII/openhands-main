@@ -65,7 +65,7 @@ const About = () => {
   return (
     <CompanyPageShell>
       <section className='px-6 pb-16 pt-12 lg:px-10 lg:pb-20 lg:pt-12'>
-        <div className='mx-auto max-w-[560px] text-center lg:max-w-[639px]'>
+        <div className='mx-auto max-w-[560px] text-center'>
           <h1 className='text-[37px] font-medium leading-[40.7px] tracking-[-0.03em] text-brand-fg lg:text-[44px] lg:leading-[48.4px]'>
             Empowering every team to build software autonomously.
           </h1>
@@ -81,7 +81,7 @@ const About = () => {
             </h2>
           </div>
 
-          <div className='relative mt-6 min-h-[716px] overflow-hidden rounded-[8px] bg-brand-fg px-6 py-8 text-brand-bg lg:px-8 lg:py-10'>
+          <div className='relative mt-6 min-h-[740px] overflow-hidden rounded-[8px] bg-brand-fg px-6 py-8 text-brand-bg lg:px-8 lg:py-10'>
             <div
               aria-hidden='true'
               className='absolute inset-0 bg-cover bg-center bg-no-repeat opacity-20'
@@ -118,7 +118,7 @@ const About = () => {
         </div>
       </section>
 
-      <section className='px-6 pb-20 pt-8 lg:px-10 lg:pb-48 lg:pt-12'>
+      <section className='px-6 pb-20 pt-8 lg:px-10 lg:pb-24 lg:pt-12'>
         <div className='mx-auto max-w-[1238px]'>
           <div>
             <h3 className='text-[32px] font-medium leading-[38.4px] tracking-[-0.02em] text-brand-fg lg:text-[44px] lg:leading-[48.4px]'>
