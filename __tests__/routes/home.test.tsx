@@ -44,6 +44,11 @@ describe('home route parity structure', () => {
     expect(screen.queryByRole('link', { name: 'Talk to us' })).not.toBeInTheDocument();
 
     expect(container.innerHTML).toContain('lg:grid-cols-3');
+    expect(container.innerHTML).toContain('lg:translate-y-[68px]');
+    expect(container.innerHTML).toContain('whitespace-nowrap text-[32px]');
+    expect(container.innerHTML).toContain('lg:-translate-y-[58px]');
+    expect(container.innerHTML).toContain('mt-[145px]');
+    expect(container.innerHTML).toContain('lg:pt-[114px]');
     expect(container.innerHTML).toContain('margin-top: 233px');
     expect(container.innerHTML).toContain('relative h-[800px] overflow-hidden bg-brand-accent');
     expect(container.innerHTML).toContain('absolute inset-0 h-full w-full object-cover');

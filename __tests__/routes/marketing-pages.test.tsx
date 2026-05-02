@@ -125,6 +125,8 @@ describe('Marketing parity routes', () => {
     expect(screen.getByRole('heading', { name: /Recognizing first-time contributors/i })).toBeInTheDocument();
     expect(screen.queryByText('@alexdev')).not.toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /Community contributor spotlight/i })).toBeInTheDocument();
+    expect(container.innerHTML).toContain('pt-[40px]');
+    expect(container.innerHTML).toContain('mt-[60px] bg-brand-fg');
     expect(container.querySelector('img[src="/assets/webflow/team/698653c2074b111e59086ff8_mike.jpeg"]')).not.toBeNull();
     expect(screen.getByText(/My team uses OpenHands for all our development tasks/i)).toBeInTheDocument();
   });

@@ -364,9 +364,9 @@ const Home = () => {
 
       <section className='-mt-[82px] bg-brand-bg px-6 pb-10 lg:px-10 lg:pb-[138px]'>
         <div className='mx-auto max-w-[1238px]'>
-          <div className='mb-5 flex items-end justify-between gap-4'>
+          <div className='mb-5 flex items-end justify-between gap-4 lg:translate-y-[68px]'>
             <div className='max-w-[384px]'>
-              <h2 className='text-[32px] font-medium leading-[1.1] tracking-[-0.03em] text-brand-fg'>
+              <h2 className='whitespace-nowrap text-[32px] font-medium leading-[1.1] tracking-[-0.03em] text-brand-fg'>
                 Start with a proven workflow
               </h2>
             </div>
@@ -429,7 +429,7 @@ const Home = () => {
       </section>
 
       <section className='bg-brand-bg px-6 pb-10 pt-6 lg:px-10 lg:pb-12 lg:pt-0'>
-        <div className='mx-auto grid max-w-[1238px] gap-8 lg:grid-cols-[280px_minmax(0,1fr)] lg:items-start'>
+        <div className='mx-auto grid max-w-[1238px] gap-8 lg:-translate-y-[58px] lg:grid-cols-[280px_minmax(0,1fr)] lg:items-start'>
           <div>
             <div className='mb-3 flex flex-wrap gap-2'>
               {PRODUCT_SURFACES.map((surface) => (
@@ -646,7 +646,7 @@ const Home = () => {
         </div>
       </section>
 
-      <section className='bg-brand-bg px-6 py-20 lg:px-10 lg:py-28'>
+      <section className='bg-brand-bg px-6 py-20 lg:px-10 lg:pb-28 lg:pt-[114px]'>
         <div className='mx-auto max-w-[1220px]'>
           <div className='grid gap-8 lg:grid-cols-[0.4fr_0.6fr] lg:items-start'>
             <div>
@@ -692,7 +692,7 @@ const Home = () => {
               Try it live
             </a>
           </div>
-          <div className='mt-[107px]'>
+          <div className='mt-[145px]'>
             <Footer showSocialLinks compactNav />
           </div>
         </div>

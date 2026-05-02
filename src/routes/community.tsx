@@ -120,7 +120,7 @@ const MetadataItem = ({
 
 const Community = () => {
   return (
-    <main className='pt-[100px]'>
+    <main className='pt-[40px]'>
       <section className='px-10 pb-10 pt-0 lg:pb-14'>
         <div className='mx-auto flex max-w-[1238px] flex-col items-center gap-5 text-center'>
           <h1 className='max-w-[920px] text-[44px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>
@@ -241,7 +241,7 @@ const Community = () => {
         </div>
       </section>
 
-      <section className='bg-brand-fg px-10 py-16 text-brand-bg'>
+      <section className='mt-[60px] bg-brand-fg px-10 py-16 text-brand-bg'>
         <div className='mx-auto max-w-[1238px]'>
           <div className='text-center'>
             <h2 className='inline-block text-[32px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-bg lg:text-[44px]'>
