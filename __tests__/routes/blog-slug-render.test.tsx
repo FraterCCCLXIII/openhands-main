@@ -48,6 +48,7 @@ describe('Blog article route', () => {
   it('renders the live-style article chrome and footer sections', () => {
     const { container } = render(<BlogDetails />);
 
+    expect(container.querySelector('article')?.className).toContain('pt-[45px]');
     expect(screen.getByRole('link', { name: '← Back to Blog' })).toHaveAttribute('href', '/blog');
     expect(screen.getByText('Published on')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Citation/i })).toBeInTheDocument();

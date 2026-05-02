@@ -19,9 +19,52 @@ const normalizeRawPreBlocks = (content: string) =>
     /<pre\b([^>]*)>\s*<code\b([^>]*)>([\s\S]*?)<\/code>\s*<\/pre>/g,
     (_match, preAttributes: string, codeAttributes: string, codeContent: string) => {
       const trimmedCodeContent = codeContent.replace(/^\n+|\n+$/g, '');
-      return `\n\n<pre${preAttributes}><code${codeAttributes}>\n${trimmedCodeContent}\n</code></pre>\n\n`;
+      return `\n\n<pre${preAttributes}><code${codeAttributes}>${trimmedCodeContent}</code></pre>\n\n`;
     }
   );
+
+const BLOG_INITIAL_LAZY_IMAGE_COUNT = 7;
+const BLOG_LAZY_IMAGE_ROOT_MARGIN = '1200px 0px';
+
+type BlogImageProps = React.ImgHTMLAttributes<HTMLImageElement> & {
+  initiallyLoad?: boolean;
+  isBlog: boolean;
+};
+
+const BlogImage: React.FC<BlogImageProps> = ({ initiallyLoad = false, isBlog, src, loading, ...props }) => {
+  const shouldDefer = isBlog && loading === 'lazy' && typeof src === 'string' && !initiallyLoad;
+  const imageRef = React.useRef<HTMLImageElement>(null);
+  const [shouldLoad, setShouldLoad] = React.useState(!shouldDefer);
+
+  React.useEffect(() => {
+    if (!shouldDefer) {
+      setShouldLoad(true);
+      return;
+    }
+
+    const image = imageRef.current;
+    if (!image || typeof IntersectionObserver === 'undefined') {
+      setShouldLoad(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setShouldLoad(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: BLOG_LAZY_IMAGE_ROOT_MARGIN }
+    );
+
+    observer.observe(image);
+    return () => observer.disconnect();
+  }, [shouldDefer]);
+
+  return <img ref={imageRef} src={shouldLoad ? src : undefined} loading={loading} {...props} />;
+};
+
 
 export const CMarkdown: React.FC<CMarkdownProps> = ({
   children,
@@ -36,6 +79,7 @@ export const CMarkdown: React.FC<CMarkdownProps> = ({
     () => normalizeRawPreBlocks(children),
     [children]
   );
+  let blogLazyImageCount = 0;
 
   return (
     <div className={isBlog ? undefined : 'flex flex-col gap-4'}>
@@ -61,7 +105,7 @@ export const CMarkdown: React.FC<CMarkdownProps> = ({
           h1: ({ children: headingChildren, ...props }) => (
             <h1
               className={clsx(
-                'mb-4 mt-12 first:mt-0',
+                isBlog ? 'mb-[8.8px] mt-[44px] first:mt-0' : 'mb-4 mt-12 first:mt-0',
                 isBlog
                   ? 'font-inter text-[32px] leading-[1.1] font-medium tracking-[-0.03em] text-brand-fg lg:text-[44px]'
                   : 'font-quincy text-5xl'
@@ -74,7 +118,7 @@ export const CMarkdown: React.FC<CMarkdownProps> = ({
           h2: ({ children: headingChildren, ...props }) => (
             <h2
               className={clsx(
-                'mb-4 mt-12 first:mt-0',
+                isBlog ? 'mb-[8.8px] mt-[44px] first:mt-0' : 'mb-4 mt-12 first:mt-0',
                 isBlog
                   ? 'font-inter text-[32px] leading-[1.1] font-medium tracking-[-0.03em] text-brand-fg lg:text-[44px]'
                   : 'font-quincy text-5xl'
@@ -87,7 +131,7 @@ export const CMarkdown: React.FC<CMarkdownProps> = ({
           h3: ({ children: headingChildren, ...props }) => (
             <h3
               className={clsx(
-                'mb-4 mt-10',
+                isBlog ? 'mb-[9.6px] mt-8' : 'mb-4 mt-10',
                 isBlog
                   ? 'font-inter text-[24px] leading-[1.2] font-medium tracking-[-0.02em] text-brand-fg lg:text-[32px]'
                   : 'font-quincy text-3xl'
@@ -100,7 +144,7 @@ export const CMarkdown: React.FC<CMarkdownProps> = ({
           h4: ({ children: headingChildren, ...props }) => (
             <h4
               className={clsx(
-                'mb-4 mt-8',
+                isBlog ? 'mb-[9.6px] mt-8' : 'mb-4 mt-8',
                 isBlog
                   ? 'font-inter text-[20px] leading-[1.3] font-medium text-brand-fg lg:text-[24px]'
                   : 'font-quincy text-2xl'
@@ -132,14 +176,53 @@ export const CMarkdown: React.FC<CMarkdownProps> = ({
               {listChildren}
             </li>
           ),
-          img: ({ alt, ...props }) => (
-            <img
+          img: ({ alt, className, ...props }) => {
+            const lazyImageIndex = isBlog && props.loading === 'lazy' ? ++blogLazyImageCount : 0;
+
+            return (
+              <BlogImage
+                initiallyLoad={lazyImageIndex > 0 && lazyImageIndex <= BLOG_INITIAL_LAZY_IMAGE_COUNT}
+                isBlog={isBlog}
+                className={clsx(
+                  isBlog ? 'w-full rounded-[8px] object-cover leading-[22.4px]' : 'rounded-lg',
+                  className
+                )}
+                {...props}
+                alt={alt}
+              />
+            );
+          },
+          figure: ({ children: figureChildren, className, ...props }) => {
+            const isFullWidthFigure =
+              typeof className === 'string' && className.includes('w-richtext-align-fullwidth');
+
+            return (
+              <figure
+                className={clsx(
+                  isBlog && 'my-10 flex justify-center',
+                  isBlog && isFullWidthFigure
+                    ? '[&_img]:max-w-full [&_img]:w-full [&_img]:text-[0px] [&_img]:leading-[0] [&_img]:text-transparent'
+                    : undefined,
+                  isBlog && !isFullWidthFigure ? '[&_img]:max-w-full [&_img]:w-auto' : undefined,
+                  className
+                )}
+                {...props}
+              >
+                {figureChildren}
+              </figure>
+            );
+          },
+          pre: ({ children: preChildren, ...props }) => (
+            <pre
               className={clsx(
-                isBlog ? 'my-10 w-full rounded-[16px] object-cover leading-[22.4px]' : 'rounded-lg'
+                isBlog
+                  ? 'my-[15px] overflow-x-auto text-[15px] leading-[21px] [&_code]:!inline-block [&_code]:!rounded-none [&_code]:!bg-transparent [&_code]:!px-[6.75px] [&_code]:!py-0 [&_code]:!text-[13.5px] [&_code]:!leading-[18.9px] [&_code]:!text-inherit'
+                  : undefined
               )}
               {...props}
-              alt={alt}
-            />
+            >
+              {preChildren}
+            </pre>
           ),
           p: ({ children: paragraphChildren, ...props }) => (
             <p
@@ -154,7 +237,7 @@ export const CMarkdown: React.FC<CMarkdownProps> = ({
             </p>
           ),
           strong: ({ children: strongChildren, ...props }) => (
-            <strong className={isBlog ? 'font-medium text-brand-fg' : undefined} {...props}>
+            <strong className={isBlog ? 'font-bold text-brand-fg' : undefined} {...props}>
               {strongChildren}
             </strong>
           ),

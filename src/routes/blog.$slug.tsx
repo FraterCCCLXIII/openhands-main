@@ -164,7 +164,7 @@ const BlogDetails = () => {
   }, []);
 
   return (
-    <article className='flex flex-col items-center px-5 pb-16 pt-[100px] lg:px-10'>
+    <article className='flex flex-col items-center px-5 pb-16 pt-[45px] lg:px-10'>
       <div className='w-full max-w-[1240px]'>
         <div className='mx-auto w-full max-w-[1240px]'>
           <Link

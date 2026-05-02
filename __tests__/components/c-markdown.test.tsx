@@ -22,7 +22,29 @@ describe('CMarkdown', () => {
     expect(link.className).toContain('text-[16px]');
     expect(link.className).toContain('leading-[22.4px]');
     expect(screen.getByText('code').className).toContain('bg-brand-fg');
-    expect(image.className).toContain('rounded-[16px]');
+    expect(image.className).toContain('rounded-[8px]');
+    expect(image.className).not.toContain('my-10');
+    expect(title.className).toContain('mt-[44px]');
+    expect(subtitle.className).toContain('mb-[8.8px]');
+  });
+
+
+  it('centers Webflow rich text figures at the live image width', () => {
+    const { container } = render(
+      <CMarkdown variant='blog'>
+        {'<figure class="w-richtext-align-center w-richtext-figure-type-image"><div><img src="https://example.com/chart.png" alt="Chart" /></div></figure>'}
+      </CMarkdown>
+    );
+
+    const figure = container.querySelector('figure');
+    const image = screen.getByAltText('Chart');
+
+    expect(figure?.className).toContain('my-10');
+    expect(figure?.className).toContain('justify-center');
+    expect(figure?.className).toContain('[&_img]:max-w-full');
+    expect(figure?.className).toContain('[&_img]:w-auto');
+    expect(image.className).toContain('rounded-[8px]');
+    expect(image.className).not.toContain('my-10');
   });
 
   it('keeps markdown-like content inside raw HTML pre blocks out of the document structure', () => {
@@ -41,6 +63,9 @@ describe('CMarkdown', () => {
     expect(pre?.textContent).toContain(
       '[GitHub repository](https://github.com/OpenHands/OpenHands)'
     );
+    expect(pre?.textContent?.startsWith('---')).toBe(true);
+    expect(pre?.className).toContain('my-[15px]');
+    expect(pre?.className).toContain('[&_code]:!inline-block');
     expect(
       screen.queryByRole('heading', { level: 1, name: 'Python Code Review' })
     ).not.toBeInTheDocument();

@@ -40,10 +40,10 @@ describe('BlogCard', () => {
       />
     );
 
-    expect(screen.getByRole('link', { name: 'The Software Agent Control Plane' })).toHaveAttribute(
-      'href',
-      '/blog/agent-control-plane'
-    );
+    const relatedLink = screen.getByRole('link', { name: 'The Software Agent Control Plane' });
+
+    expect(relatedLink).toHaveAttribute('href', '/blog/agent-control-plane');
+    expect(relatedLink.querySelector('img')).toBeInTheDocument();
     expect(screen.queryByText(/2026/)).not.toBeInTheDocument();
     expect(document.querySelector('img')?.getAttribute('alt')).toBe('');
   });

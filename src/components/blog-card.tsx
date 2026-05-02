@@ -86,25 +86,22 @@ export const BlogCard: React.FC<BlogCardProps> = ({
 
   if (titleLinkOnly) {
     return (
-      <article data-testid='blog-card' className='flex flex-col gap-4'>
-        <Link to={href} className='group block'>
+      <Link to={href} className='group block' data-testid='blog-card'>
+        <article className='flex flex-col gap-4'>
           <div className='overflow-hidden rounded-[6px]'>{image}</div>
-        </Link>
 
-        <div className='max-w-[32rem] space-y-2'>
-          {showDate && date && (
-            <p className='m-0 text-[14px] leading-[1.5] text-[#5f5f5f]'>{formatDate(date)}</p>
-          )}
-          <p className='m-0 font-inter text-[18px] leading-[1.2] font-medium tracking-[-0.01em] text-brand-fg lg:text-[20px]'>
-            <Link
-              to={href}
-              className='text-[16px] leading-[1.4] transition-colors hover:text-brand-brown'
-            >
-              {title}
-            </Link>
-          </p>
-        </div>
-      </article>
+          <div className='max-w-[32rem] space-y-2'>
+            {showDate && date && (
+              <p className='m-0 text-[14px] leading-[1.5] text-[#5f5f5f]'>{formatDate(date)}</p>
+            )}
+            <p className='m-0 font-inter text-[18px] leading-[1.2] font-medium tracking-[-0.01em] text-brand-fg lg:text-[20px]'>
+              <span className='text-[16px] leading-[1.4] transition-colors group-hover:text-brand-brown'>
+                {title}
+              </span>
+            </p>
+          </div>
+        </article>
+      </Link>
     );
   }
 
