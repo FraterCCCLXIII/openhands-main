@@ -119,7 +119,7 @@ const productFeaturePages: Record<'sdk' | 'gui' | 'cli', ProductFeaturePageData>
     description: 'Plan, run, and review agent work together in a collaborative UI.',
     heroImage: {
       src: '/assets/webflow/misc/6994c3bfa634f5f3966d2150_4c76230966d0d54a446a009e4f4a19c2_gui.png',
-      alt: 'OpenHands Web GUI screenshot.',
+      alt: '',
     },
     primaryCta: {
       label: 'Try it live',

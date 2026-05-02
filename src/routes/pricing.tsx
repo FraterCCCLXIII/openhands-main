@@ -114,6 +114,7 @@ const FAQS = [
             Enterprise plan: A self-hosted option and support for multiple users. Great for organizations who want to deploy OpenHands across many teams and centrally manage access on-premise. Additional support and enterprise services are included.
           </li>
         </ul>
+        <p className='mt-3'>‍</p>
       </>
     ),
   },
@@ -122,24 +123,33 @@ const FAQS = [
     answer: (
       <>
         <p>
-          OpenHands Open Source is a full, MIT licensed version of OpenHands that is designed for a single user and can run locally on your machine with your own LLM Key. At a high level, our open source options include a local Web GUI, a CLI, and a Software Agent SDK.
+          OpenHands Open Source is a full, MIT licensed version of OpenHands that is designed for a single user and can run locally on your machine with your own LLM key. At a high level, our open source options include a local Web GUI, a CLI, and a Software Agent SDK.
         </p>
         <p className='mt-3'>
           OpenHands Cloud is a SaaS-based version of OpenHands with both a free Individual tier, as well as commercial tiers for organizations and businesses. OpenHands Cloud also comes with additional features like Cloud APIs, ticketing system integrations, Git provider integrations, and more.
         </p>
+        <p className='mt-3'>‍</p>
       </>
     ),
   },
   {
     question: 'Can I bring my own model keys?',
-    answer: <p>Yes! OpenHands Open Source and OpenHands Cloud plans offer support to bring your own LLM keys.</p>,
+    answer: (
+      <>
+        <p>Yes! OpenHands Open Source and OpenHands Cloud plans offer support to bring your own LLM keys.</p>
+        <p className='mt-3'>‍</p>
+      </>
+    ),
   },
   {
     question: 'What is the token pricing for the Individual Plan?',
     answer: (
       <>
         <p>
-          <strong>At cost, with no markup.</strong> When you sign up for the Individual Plan, you can access models under the Settings &gt; Language Models (LLM) page.
+          If you do not have an LLM key, you can use theOpenHands LLM provider (available within the Individual Tier), which provides multiple model options at cost, with no markup on a pay-as-you-go basis.
+        </p>
+        <p className='mt-3'>
+          When you sign up for the Individual Plan, you can access models under the Settings &gt; Language Models (LLM) page.
         </p>
         <p className='mt-3'>
           You can also generate an API key for the OpenHands LLM provider under the Settings &gt; API page, which you can use in tools like the OpenHands CLI, OpenHands Local Web UI, and OpenHands Software Agent SDK.
@@ -219,10 +229,10 @@ const Pricing = () => {
               className='flex h-full flex-col rounded-[16px] border border-brand-fg/20 bg-[#f5ecd6]/90 p-8 shadow-[0_0_0_1px_rgba(34,21,13,0.02)]'
             >
               <div className='text-sm uppercase tracking-[0.14em] text-brand-muted'>{plan.eyebrow}</div>
-              <p className='mt-2 text-[32px] font-medium leading-[1.15] text-brand-fg'>{plan.title}</p>
+              <div className='mt-2 text-[32px] font-medium leading-[1.15] text-brand-fg'>{plan.title}</div>
               <p className='mt-3 text-[28px] font-medium leading-[1.2] text-brand-fg'>{plan.price}</p>
               <p className='mt-4 text-[17px] leading-[1.6] text-brand-muted'>{plan.description}</p>
-              <div className='mt-6 text-[16px] font-medium text-brand-fg'>{plan.intro}</div>
+              <p className='mt-6 text-[16px] font-medium text-brand-fg'>{plan.intro}</p>
               <ul className='mt-4 flex flex-1 flex-col gap-3'>
                 {plan.features.map((feature) => (
                   <li key={feature} className='flex items-start gap-3 text-[16px] leading-[1.5] text-brand-fg'>
@@ -250,10 +260,10 @@ const Pricing = () => {
             <table className='min-w-full border-collapse text-left'>
               <thead>
                 <tr className='border-b border-brand-bg/18 text-[13px] uppercase tracking-[0.08em] text-brand-bg/70'>
-                  <th className='py-4 pr-6 font-medium'>Features</th>
-                  <th className='px-6 py-4 font-medium text-brand-bg'>Open Source</th>
-                  <th className='px-6 py-4 font-medium text-brand-bg'>Individual</th>
-                  <th className='px-6 py-4 font-medium text-brand-bg'>Enterprise</th>
+                  <th className='py-4 pr-6 font-medium'><p>Features</p></th>
+                  <th className='px-6 py-4 font-medium text-brand-bg'><p>Open Source</p></th>
+                  <th className='px-6 py-4 font-medium text-brand-bg'><p>Individual</p></th>
+                  <th className='px-6 py-4 font-medium text-brand-bg'><p>Enterprise</p></th>
                 </tr>
               </thead>
               <tbody>
@@ -262,7 +272,7 @@ const Pricing = () => {
                     return (
                       <tr key={row.label} className='border-b border-brand-bg/18'>
                         <th colSpan={4} className='py-5 pr-6 text-sm uppercase tracking-[0.14em] text-brand-bg/70'>
-                          <p>{row.label}</p>
+                          <span>{row.label}</span>
                         </th>
                       </tr>
                     );

@@ -93,10 +93,12 @@ const ProductFeatureProofBand = ({
   title,
   description,
   image,
+  headingClassName = 'text-white',
 }: {
   title: string;
   description: string;
   image?: ProductFeaturePageData['accentImage'];
+  headingClassName?: string;
 }) => (
   <section className='relative overflow-hidden bg-brand-fg px-6 py-20 lg:px-10'>
     <div className='pointer-events-none absolute inset-0 opacity-[0.28]'>
@@ -113,7 +115,7 @@ const ProductFeatureProofBand = ({
         </div>
       ) : null}
       <div className='mx-auto max-w-[860px]'>
-        <h2 className='text-[30px] font-medium leading-[1.2] tracking-[-0.03em] text-brand-bg lg:text-[32px]'>
+        <h2 className={classNames('text-[30px] font-medium leading-[1.2] tracking-[-0.03em] lg:text-[32px]', headingClassName)}>
           {title}
         </h2>
         <p className='mx-auto mt-5 max-w-[760px] text-[18px] leading-[1.45] text-[#d6caab]'>
@@ -247,7 +249,7 @@ export const ProductFaqSection = ({ faqs }: { faqs: readonly ProductFaqItem[] })
         <div className='border-t border-brand-fg/15'>
           {faqs.map((faq) => (
             <details key={faq.question} className='group border-b border-brand-fg/15 py-4'>
-              <summary className='flex cursor-pointer list-none items-start justify-between gap-6 text-[20px] font-medium leading-[1.35] text-brand-fg'>
+              <summary className='flex cursor-pointer list-none items-start justify-between gap-6 text-[24px] font-medium leading-[1.4] text-brand-fg'>
                 <label className='block cursor-pointer'>{faq.question}</label>
                 <span className='mt-1 text-[22px] leading-none transition-transform group-open:rotate-45'>+</span>
               </summary>
@@ -334,6 +336,7 @@ export const ProductFeaturePage = ({
             title={page.proofTitle}
             description={page.proofDescription}
             image={page.accentImage}
+            headingClassName='text-brand-fg'
           />
         </>
       ) : (
@@ -375,7 +378,16 @@ export const ProductFeaturePage = ({
         </div>
       </section>
 
+      <ProductComparisonTable dark ctaHref='https://app.all-hands.dev/' ctaLabel='Try it live' />
       <ProductFaqSection faqs={faqs} />
+      <ProductPageFooterCta
+        title={page.closingTitle}
+        description={page.closingDescription}
+        actions={[
+          page.closingPrimaryCta,
+          { ...page.closingSecondaryCta, variant: 'outline' },
+        ]}
+      />
     </main>
   );
 };

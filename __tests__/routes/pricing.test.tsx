@@ -31,7 +31,8 @@ describe('Pricing page', () => {
     expect(screen.getByText('What are the main differences between the pricing plans?')).toBeInTheDocument();
     expect(screen.getByText('Growth Plan: Support for multiple users. Great for small organizations who want the on-demand convenience of OpenHands Cloud and additional support.')).toBeInTheDocument();
     expect(screen.getByText('Can I bring my own model keys?')).toBeInTheDocument();
-    expect(screen.getByText(/At cost, with no markup\./i)).toBeInTheDocument();
+    expect(screen.getByText(/theOpenHands LLM provider/)).toBeInTheDocument();
+    expect(screen.getByText('When you sign up for the Individual Plan, you can access models under the Settings > Language Models (LLM) page.')).toBeInTheDocument();
     expect(screen.getAllByRole('link', { name: 'Contact us' }).length).toBeGreaterThan(0);
   });
 });

@@ -61,7 +61,7 @@ describe('Product parity routes', () => {
   });
 
   it('renders the SDK product page content', () => {
-    renderRoute(<ProductSDK />);
+    const { container } = renderRoute(<ProductSDK />);
 
     expect(
       screen.getByRole('heading', { name: 'Build agents your way.' })
@@ -74,7 +74,10 @@ describe('Product parity routes', () => {
     expect(screen.getByAltText('asci art')).toBeInTheDocument();
     expect(screen.queryByAltText('OpenHands SDK interface preview.')).not.toBeInTheDocument();
     expect(screen.queryByAltText('OpenHands comparison illustration.')).not.toBeInTheDocument();
-    expect(screen.queryByRole('heading', { name: 'Turn OpenHands into your agent platform.' })).not.toBeInTheDocument();
+    expect(screen.getByText('Turn OpenHands into your agent platform.')).toBeInTheDocument();
+    expect(screen.getByText('Start building with the SDK.')).toBeInTheDocument();
+    expect(screen.getAllByRole('link', { name: 'Try it live' }).length).toBeGreaterThan(0);
+    expect(container.querySelector('summary label')?.closest('summary')).toHaveClass('text-[24px]');
   });
 
   it('renders the Web GUI product page content', () => {
@@ -89,6 +92,9 @@ describe('Product parity routes', () => {
     );
     expect(screen.getAllByText('Download Local GUI').length).toBeGreaterThan(0);
     expect(screen.getByText('Trust requires visibility.')).toBeInTheDocument();
+    expect(screen.getByText('Bring your team into the loop.')).toBeInTheDocument();
+    expect(screen.getByText('Use the OpenHands Web GUI to collaborate with agents.')).toBeInTheDocument();
+    expect(screen.getAllByRole('link', { name: 'Try it live' }).length).toBeGreaterThan(1);
     expect(screen.queryByAltText('OpenHands Web GUI review interface.')).not.toBeInTheDocument();
     expect(screen.queryByAltText('OpenHands Web GUI planning interface.')).not.toBeInTheDocument();
   });
@@ -110,9 +116,10 @@ describe('Product parity routes', () => {
     expect(screen.queryByAltText('OpenHands CLI interface screenshot.')).not.toBeInTheDocument();
     expect(screen.queryByAltText('OpenHands comparison illustration.')).not.toBeInTheDocument();
     expect(container.querySelectorAll('summary label')).toHaveLength(5);
-    expect(
-      screen.queryByText('Control your agents like real infrastructure.')
-    ).not.toBeInTheDocument();
+    expect(container.querySelector('summary label')?.closest('summary')).toHaveClass('text-[24px]');
+    expect(screen.getByText('Control your agents like real infrastructure.')).toBeInTheDocument();
+    expect(screen.getByText('Run OpenHands from the terminal or automate it end to end with the CLI.')).toBeInTheDocument();
+    expect(screen.getAllByRole('link', { name: 'Try it live' }).length).toBeGreaterThan(0);
   });
 
   it('matches live product metadata for the root route', () => {
