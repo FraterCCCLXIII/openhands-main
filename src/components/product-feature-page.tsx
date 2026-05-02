@@ -237,7 +237,7 @@ export const ProductComparisonTable = ({
 export const ProductFaqSection = ({ faqs }: { faqs: readonly ProductFaqItem[] }) => {
   return (
     <section className='bg-brand-bg px-6 py-20 lg:px-10'>
-      <div className='mx-auto grid max-w-[1260px] gap-10 lg:grid-cols-[240px_minmax(0,1fr)] lg:gap-16'>
+      <div className='mx-auto grid max-w-[1260px] gap-10 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:gap-16'>
         <div>
           <h2 className='text-[34px] font-medium leading-[1.08] tracking-[-0.03em] text-brand-fg lg:text-[44px]'>
             FAQ&apos;s

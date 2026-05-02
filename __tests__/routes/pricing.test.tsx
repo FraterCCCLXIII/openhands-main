@@ -59,4 +59,53 @@ describe('Pricing page', () => {
     expect(paragraphTexts).not.toContain('support');
     expect(paragraphTexts).not.toContain('at cost, with no markup');
   });
+
+  it('uses table-layout: fixed with constrained column widths for comparison table', () => {
+    const { container } = renderPricing();
+
+    const table = container.querySelector('table');
+    expect(table).not.toBeNull();
+    expect(table!.style.tableLayout).toBe('fixed');
+
+    const cols = table!.querySelectorAll('colgroup col');
+    expect(cols).toHaveLength(4);
+    const widths = Array.from(cols).map((col) => (col as HTMLElement).style.width);
+    expect(widths[0]).toBe('28%');
+    expect(widths[1]).toBe('24%');
+    expect(widths[2]).toBe('24%');
+    expect(widths[3]).toBe('24%');
+  });
+
+  it('does not center tick icons in comparison table (left-aligned for live parity)', () => {
+    renderPricing();
+
+    const ticks = screen.getAllByAltText('tick icon');
+    ticks.forEach((tick) => {
+      expect(tick.className).not.toContain('mx-auto');
+    });
+
+    const tickCell = ticks[0].closest('td');
+    expect(tickCell).not.toBeNull();
+    expect(tickCell!.className).not.toContain('text-center');
+  });
+
+  it('uses two-column FAQ layout wider than 240px for the heading column', () => {
+    const { container } = renderPricing();
+
+    const faqHeading = screen.getByRole('heading', { name: /FAQ/i });
+    const faqGrid = faqHeading.closest('[class*="grid"]');
+    expect(faqGrid).not.toBeNull();
+    expect(faqGrid!.className).not.toContain('grid-cols-[240px');
+    expect(faqGrid!.className).toContain('grid-cols-[minmax(0,2fr)_minmax(0,3fr)]');
+  });
+
+  it('renders card feature paragraphs with flex-1 for full-width layout', () => {
+    const { container } = renderPricing();
+
+    const featureListItems = container.querySelectorAll('ul li p');
+    expect(featureListItems.length).toBeGreaterThan(0);
+    featureListItems.forEach((p) => {
+      expect(p.className).toContain('flex-1');
+    });
+  });
 });

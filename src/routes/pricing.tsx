@@ -206,7 +206,7 @@ export const meta: Route.MetaFunction = ({ location }) => {
 const Pricing = () => {
   return (
     <main className='bg-brand-bg'>
-      <section className='relative overflow-hidden bg-brand-bg px-10 pb-20 pt-10 lg:pt-12'>
+      <section className='relative overflow-hidden bg-brand-bg px-10 pb-16 pt-10 lg:pt-12'>
         <div className='pointer-events-none absolute inset-0 opacity-[0.12]'>
           <img
             src='/assets/webflow/backgrounds/6908d170831c19b2b6976323_ascii-art_(16)_1.svg'
@@ -214,7 +214,7 @@ const Pricing = () => {
             className='h-full w-full object-cover'
           />
         </div>
-        <div className='relative mx-auto flex max-w-4xl flex-col items-center gap-6 pb-10 text-center'>
+        <div className='relative mx-auto flex max-w-4xl flex-col items-center gap-6 pb-8 text-center'>
           <h1 className='text-[44px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>
             Pricing that fits your rollout
           </h1>
@@ -237,7 +237,7 @@ const Pricing = () => {
                 {plan.features.map((feature) => (
                   <li key={feature} className='flex items-start gap-3 text-[16px] leading-[1.5] text-brand-fg'>
                     <img src={CARD_CHECK_ICON} alt='' aria-hidden='true' className='mt-0.5 h-5 w-5 flex-none' />
-                    <p>{feature}</p>
+                    <p className='flex-1'>{feature}</p>
                   </li>
                 ))}
               </ul>
@@ -253,69 +253,73 @@ const Pricing = () => {
         </div>
       </section>
 
-      <section className='px-10 pb-20 pt-8'>
+      <section className='px-10 pb-16 pt-8'>
         <div className='mx-auto max-w-[1260px]'>
           <h2 className='sr-only'>Compare plans</h2>
-          <div className='rounded-[24px] bg-brand-fg px-6 py-6 text-brand-bg lg:px-8 lg:py-8'>
-            {/* Header row */}
-            <div className='grid border-b border-brand-bg/18' style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
-              <div className='py-4 text-[13px] uppercase tracking-[0.08em] text-brand-bg/70 font-medium'>
-                <p>Features</p>
-              </div>
-              <div className='py-4 text-[13px] uppercase tracking-[0.08em] font-medium text-brand-bg'>
-                <p>Open Source</p>
-              </div>
-              <div className='py-4 text-[13px] uppercase tracking-[0.08em] font-medium text-brand-bg'>
-                <p>Individual</p>
-              </div>
-              <div className='py-4 text-[13px] uppercase tracking-[0.08em] font-medium text-brand-bg'>
-                <p>Enterprise</p>
-              </div>
-            </div>
+          <div className='overflow-x-auto rounded-[24px] bg-brand-fg px-6 py-6 text-brand-bg lg:px-8 lg:py-6'>
+            <table className='w-full border-collapse text-left' style={{ tableLayout: 'fixed' }}>
+              <colgroup>
+                <col style={{ width: '28%' }} />
+                <col style={{ width: '24%' }} />
+                <col style={{ width: '24%' }} />
+                <col style={{ width: '24%' }} />
+              </colgroup>
+              <thead>
+                <tr className='border-b border-brand-bg/18 text-[13px] uppercase tracking-[0.08em] text-brand-bg/70'>
+                  <th className='py-3 pr-6 font-medium'><p>Features</p></th>
+                  <th className='py-3 font-medium text-brand-bg'><p>Open Source</p></th>
+                  <th className='py-3 font-medium text-brand-bg'><p>Individual</p></th>
+                  <th className='py-3 font-medium text-brand-bg'><p>Enterprise</p></th>
+                </tr>
+              </thead>
+              <tbody>
+                {COMPARISON_ROWS.map((row) => {
+                  if (row.type === 'section') {
+                    return (
+                      <tr key={row.label} className='border-b border-brand-bg/18'>
+                        <th colSpan={4} className='py-4 pr-6 text-sm uppercase tracking-[0.14em] text-brand-bg/70'>
+                          <span>{row.label}</span>
+                        </th>
+                      </tr>
+                    );
+                  }
 
-            {COMPARISON_ROWS.map((row) => {
-              if (row.type === 'section') {
-                return (
-                  <div key={row.label} className='border-b border-brand-bg/18 py-5 text-sm uppercase tracking-[0.14em] text-brand-bg/70'>
-                    <span>{row.label}</span>
-                  </div>
-                );
-              }
+                  if (row.type === 'values') {
+                    return (
+                      <tr key={row.label} className='border-b border-brand-bg/12 last:border-b-0'>
+                        <th className='py-3 pr-6 text-[16px] font-medium text-brand-bg'>
+                          <p>{row.label}</p>
+                        </th>
+                        {row.values.map((value, index) => (
+                          <td key={`${row.label}-${index}`} className='py-3 text-[16px] text-brand-bg/85'>
+                            <p>{value}</p>
+                          </td>
+                        ))}
+                      </tr>
+                    );
+                  }
 
-              if (row.type === 'values') {
-                return (
-                  <div key={row.label} className='grid border-b border-brand-bg/12' style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
-                    <div className='py-4 text-[16px] font-medium text-brand-bg'>
-                      <p>{row.label}</p>
-                    </div>
-                    {row.values.map((value, index) => (
-                      <div key={`${row.label}-${index}`} className='py-4 text-[16px] text-brand-bg/85'>
-                        <p>{value}</p>
-                      </div>
-                    ))}
-                  </div>
-                );
-              }
-
-              return (
-                <div key={row.label} className='grid border-b border-brand-bg/12' style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
-                  <div className='py-4 text-[16px] font-medium text-brand-bg'>
-                    <p>{row.label}</p>
-                  </div>
-                  {row.values.map((enabled, index) => (
-                    <div key={`${row.label}-${index}`} className='py-4'>
-                      <TickCell enabled={enabled} />
-                    </div>
-                  ))}
-                </div>
-              );
-            })}
+                  return (
+                    <tr key={row.label} className='border-b border-brand-bg/12 last:border-b-0'>
+                      <th className='py-3 pr-6 text-[16px] font-medium text-brand-bg'>
+                        <p>{row.label}</p>
+                      </th>
+                      {row.values.map((enabled, index) => (
+                        <td key={`${row.label}-${index}`} className='py-3'>
+                          <TickCell enabled={enabled} />
+                        </td>
+                      ))}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
         </div>
       </section>
 
       <section className='px-10 py-20'>
-        <div className='mx-auto grid max-w-[1260px] gap-10 lg:grid-cols-[490px_minmax(0,1fr)] lg:gap-20'>
+        <div className='mx-auto grid max-w-[1260px] gap-10 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:gap-16'>
           <div>
             <h2 className='text-[34px] font-medium leading-[1.08] tracking-[-0.03em] text-brand-fg lg:text-[44px]'>
               FAQ&apos;s
