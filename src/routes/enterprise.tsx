@@ -68,7 +68,7 @@ export const meta: Route.MetaFunction = ({ location }) => {
 
 const Enterprise = () => {
   return (
-    <main className='pt-[100px]'>
+    <main>
       <section className='px-10 pb-20 pt-10 lg:pt-12'>
         <div className='mx-auto flex max-w-4xl flex-col items-center gap-6 text-center'>
           <h1 className='sr-only'>Open source agent infrastructure for code modernization</h1>
@@ -90,23 +90,24 @@ const Enterprise = () => {
       </section>
 
       <section className='px-10 py-20'>
-        <div className='mx-auto max-w-[1260px]'>
-          <div className='mb-10 flex flex-col items-center gap-6 text-center'>
-            <h2 className='text-[32px] lg:text-[44px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>
+        <div className='mx-auto grid max-w-[1260px] gap-10 lg:grid-cols-[minmax(0,0.48fr)_minmax(0,0.52fr)] lg:justify-between'>
+          <div>
+            <h2 className='mb-6 text-[32px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg lg:text-[44px]'>
               Why Enterprises Choose OpenHands
             </h2>
             <OverlayLinkButton href='/contact' label='Contact us' variant='outline' />
           </div>
-          <div className='grid gap-6 md:grid-cols-2 xl:grid-cols-3'>
+          <div className='space-y-0'>
             {ENTERPRISE_FEATURES.map((feature) => (
-              <article
-                key={feature.title}
-                className='flex h-full items-start gap-4 rounded-[24px] border border-brand-fg/10 bg-white/50 p-6'
-              >
-                <img src={feature.icon} alt='' className='mt-1 h-14 w-14 flex-none' />
-                <p className='text-[22px] font-medium leading-[1.35] text-brand-fg'>
-                  {feature.title}
-                </p>
+              <article key={feature.title} className='grid grid-cols-[64px_minmax(0,1fr)] gap-5'>
+                <div className='pt-4'>
+                  <img src={feature.icon} alt='' className='h-10 w-10' />
+                </div>
+                <div className='border-t border-brand-fg/20 py-4'>
+                  <p className='text-[22px] font-medium leading-[1.35] text-brand-fg'>
+                    {feature.title}
+                  </p>
+                </div>
               </article>
             ))}
           </div>
@@ -129,7 +130,7 @@ const Enterprise = () => {
               <br />
               Sr. Director, Developer Acceleration at AMD
             </div>
-            <img src='/assets/webflow/logos/690b53e4ae0418e84e83578b_amd.svg' alt='amd logo' className='h-10 w-auto' />
+            <img src='/assets/webflow/logos/690b53e4ae0418e84e83578b_amd.svg' alt='' className='h-10 w-auto' />
           </div>
           <OverlayLinkButton href='/contact' label='Contact us' variant='outline' />
         </div>

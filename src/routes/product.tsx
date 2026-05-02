@@ -30,7 +30,7 @@ export const meta: Route.MetaFunction = ({ location }) => {
 
 const Product = () => {
   return (
-    <main className='bg-brand-bg pt-[100px]'>
+    <main className='bg-brand-bg'>
       <section className='relative overflow-hidden bg-brand-bg px-6 pb-16 pt-10 lg:px-10 lg:pb-20 lg:pt-12'>
         <div className='pointer-events-none absolute inset-0 opacity-[0.12]'>
           <img
@@ -64,7 +64,7 @@ const Product = () => {
         </div>
       </section>
 
-      <section className='bg-brand-fg px-6 py-16 lg:px-10 lg:py-20'>
+      <section className='bg-brand-fg px-6 pb-16 pt-0 lg:px-10 lg:pb-20 lg:pt-0'>
         <div className='mx-auto max-w-[1260px] space-y-16 lg:space-y-20'>
           {PRODUCT_SURFACES.map((item, index) => {
             const imageCard = (

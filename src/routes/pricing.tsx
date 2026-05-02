@@ -205,7 +205,7 @@ export const meta: Route.MetaFunction = ({ location }) => {
 
 const Pricing = () => {
   return (
-    <main className='bg-brand-bg pt-[100px]'>
+    <main className='bg-brand-bg'>
       <section className='relative overflow-hidden bg-brand-bg px-10 pb-20 pt-10 lg:pt-12'>
         <div className='pointer-events-none absolute inset-0 opacity-[0.12]'>
           <img
@@ -214,7 +214,7 @@ const Pricing = () => {
             className='h-full w-full object-cover'
           />
         </div>
-        <div className='relative mx-auto flex max-w-4xl flex-col items-center gap-6 py-10 text-center'>
+        <div className='relative mx-auto flex max-w-4xl flex-col items-center gap-6 pb-10 text-center'>
           <h1 className='text-[44px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>
             Pricing that fits your rollout
           </h1>

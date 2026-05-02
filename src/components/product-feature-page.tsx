@@ -69,14 +69,13 @@ const ProductFeatureIntroBand = ({
   description: string;
   image?: ProductFeaturePageData['heroImage'];
 }) => (
-  <section className='relative overflow-hidden bg-brand-accent px-6 py-20 lg:px-10'>
-    <AsciiBackdrop opacity='opacity-[0.14]' />
+  <section className='relative min-h-[467px] overflow-hidden bg-brand-accent px-6 pb-20 pt-36 lg:px-10'>
+    {image ? (
+      <img src={image.src} alt={image.alt} className='absolute inset-0 h-full w-full object-cover' />
+    ) : (
+      <AsciiBackdrop opacity='opacity-[0.14]' />
+    )}
     <div className='relative mx-auto max-w-[978px] text-center'>
-      {image ? (
-        <div className='mb-8 overflow-hidden'>
-          <img src={image.src} alt={image.alt} className='w-full object-cover' />
-        </div>
-      ) : null}
       <div className='mx-auto max-w-[860px]'>
         <h2 className='text-[30px] font-medium leading-[1.2] tracking-[-0.03em] text-brand-fg lg:text-[32px]'>
           {title}
@@ -100,20 +99,19 @@ const ProductFeatureProofBand = ({
   image?: ProductFeaturePageData['accentImage'];
   headingClassName?: string;
 }) => (
-  <section className='relative overflow-hidden bg-brand-fg px-6 py-20 lg:px-10'>
-    <div className='pointer-events-none absolute inset-0 opacity-[0.28]'>
-      <img
-        src='/assets/webflow/backgrounds/690b397ae76441160bed52b6_asci-art-hole.png'
-        alt=''
-        className='h-full w-full object-cover'
-      />
-    </div>
+  <section className='relative min-h-[571px] overflow-hidden bg-brand-fg px-6 pb-20 pt-36 lg:px-10'>
+    {image ? (
+      <img src={image.src} alt={image.alt} className='absolute inset-0 h-full w-full object-cover' />
+    ) : (
+      <div className='pointer-events-none absolute inset-0 opacity-[0.28]'>
+        <img
+          src='/assets/webflow/backgrounds/690b397ae76441160bed52b6_asci-art-hole.png'
+          alt=''
+          className='h-full w-full object-cover'
+        />
+      </div>
+    )}
     <div className='relative mx-auto max-w-[978px] text-center'>
-      {image ? (
-        <div className='mx-auto mb-8 max-w-[520px]'>
-          <img src={image.src} alt={image.alt} className='mx-auto w-full object-contain' />
-        </div>
-      ) : null}
       <div className='mx-auto max-w-[860px]'>
         <h2 className={classNames('text-[30px] font-medium leading-[1.2] tracking-[-0.03em] lg:text-[32px]', headingClassName)}>
           {title}
@@ -135,7 +133,7 @@ const ProductGuiIntroSection = ({
   title: string;
   description: string;
 }) => (
-  <section className='bg-brand-fg px-6 py-16 lg:px-10 lg:py-20'>
+  <section className='bg-brand-fg px-6 py-16 lg:px-10 lg:py-0'>
     <div className='mx-auto grid max-w-[1260px] gap-10 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:items-center'>
       <div className='rounded-[18px] bg-brand-bg p-7 shadow-[0_0_0_1px_rgba(249,240,217,0.08)]'>
         <img src={image.src} alt={image.alt} className='w-full rounded-[8px]' />
@@ -299,10 +297,16 @@ export const ProductFeaturePage = ({
   variant: 'cli' | 'gui' | 'sdk';
 }) => {
   const isGui = variant === 'gui';
+  const comparisonSpacerClass = variant === 'cli' ? 'h-[300px]' : 'h-[84px]';
 
   return (
-    <main className='bg-brand-bg pt-[100px]'>
-      <section className='relative overflow-hidden bg-brand-bg px-6 pb-16 pt-10 lg:px-10 lg:pb-20 lg:pt-12'>
+    <main className='bg-brand-bg'>
+      <section
+        className={classNames(
+          'relative overflow-hidden bg-brand-bg px-6 pb-16 pt-10 lg:px-10 lg:pt-12',
+          isGui ? 'lg:pb-20' : 'lg:pb-[108px]'
+        )}
+      >
         <AsciiBackdrop />
         <div className='relative mx-auto flex max-w-[860px] flex-col items-center text-center'>
           <ProductEyebrow label={page.eyebrow} />
@@ -379,6 +383,7 @@ export const ProductFeaturePage = ({
       </section>
 
       <ProductComparisonTable dark ctaHref='https://app.all-hands.dev/' ctaLabel='Try it live' />
+      <div className={classNames('bg-brand-fg', comparisonSpacerClass)} aria-hidden='true' />
       <ProductFaqSection faqs={faqs} />
       <ProductPageFooterCta
         title={page.closingTitle}
