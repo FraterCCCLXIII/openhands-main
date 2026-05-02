@@ -15,9 +15,10 @@ Located at: `scripts/validate-visual-styles.cjs`
 
 ### Cross-route parity checklist
 Located at: `scripts/generate-site-parity-checklist.cjs`
-- Checks: visible text/signature inventory, heading order, style mismatches, first-instance layout mismatches, unexpected extra elements on the test site, and screenshot pixel diffs for the first `PARITY_SCREENSHOT_PAGE_LIMIT` routes
+- Checks: visible text/signature inventory, heading order, style mismatches (including font family, cursor, text-decoration, letter-spacing), first-instance layout mismatches, container/section background style auditing, interactive element inventory and behavior comparison (cursor, transitions, pointer-events), hover effect comparison, unexpected extra elements on the test site, and screenshot pixel diffs for the first `PARITY_SCREENSHOT_PAGE_LIMIT` routes
 - Use: `PARITY_MAX_PAGES=12 PARITY_DISCOVERY_LIMIT=20 PARITY_SCREENSHOT_PAGE_LIMIT=12 TEST_ORIGIN=http://127.0.0.1:12001 LIVE_ORIGIN=https://openhands.dev node scripts/generate-site-parity-checklist.cjs`
 - Output: Markdown/JSON parity reports plus screenshot artifacts under `PARITY_OUTPUT_DIR`
+- The report now includes per-route sections for: container/section style mismatches, missing/extra interactive elements, interactivity behavior mismatches, and hover effect mismatches
 
 ## Common Discrepancy Patterns
 

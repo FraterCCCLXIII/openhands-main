@@ -25,15 +25,36 @@ const SCREENSHOT_CHUNK_HEIGHT = Number(process.env.PARITY_SCREENSHOT_CHUNK_HEIGH
 const SCREENSHOT_CHUNK_TRIGGER_HEIGHT = Number(process.env.PARITY_SCREENSHOT_CHUNK_TRIGGER_HEIGHT || 12000);
 const STYLE_PROPS = [
   'fontSize',
+  'fontFamily',
   'fontWeight',
   'lineHeight',
   'color',
   'backgroundColor',
   'borderRadius',
   'backgroundImage',
+  'cursor',
+  'textDecoration',
+  'letterSpacing',
 ];
-const STYLE_CHECK_TAGS = new Set(['H1', 'H2', 'H3', 'H4', 'A', 'BUTTON', 'LABEL', 'INPUT', 'IMG']);
+const STYLE_CHECK_TAGS = new Set(['H1', 'H2', 'H3', 'H4', 'A', 'BUTTON', 'LABEL', 'INPUT', 'IMG', 'P', 'SPAN']);
 const LAYOUT_CHECK_TAGS = new Set(['H1', 'H2', 'H3', 'H4', 'A', 'BUTTON', 'LABEL', 'INPUT', 'IMG', 'P']);
+
+const CONTAINER_STYLE_PROPS = [
+  'backgroundColor',
+  'backgroundImage',
+  'borderRadius',
+  'paddingTop',
+  'paddingBottom',
+  'paddingLeft',
+  'paddingRight',
+];
+
+const INTERACTIVE_STYLE_PROPS = [
+  'cursor',
+  'transition',
+  'transform',
+  'pointerEvents',
+];
 
 function normalizeWhitespace(value) {
   return (value || '').replace(/\s+/g, ' ').trim();
@@ -84,8 +105,36 @@ function parseColor(value) {
   };
 }
 
+function normalizeFontFamily(value) {
+  if (!value) return [];
+  return value
+    .split(',')
+    .map((f) => f.trim().replace(/^["']|["']$/g, '').toLowerCase())
+    .filter(Boolean);
+}
+
+function primaryFontMatches(liveValue, testValue) {
+  const liveFonts = normalizeFontFamily(liveValue);
+  const testFonts = normalizeFontFamily(testValue);
+  if (liveFonts.length === 0 && testFonts.length === 0) return true;
+  if (liveFonts.length === 0 || testFonts.length === 0) return false;
+  return liveFonts[0] === testFonts[0];
+}
+
+function normalizeTransition(value) {
+  if (!value || value === 'none' || value === 'all 0s ease 0s') return 'none';
+  return value;
+}
+
 function compareStyleValue(prop, liveValue, testValue) {
   if (liveValue === testValue) return null;
+
+  if (prop === 'fontFamily') {
+    if (primaryFontMatches(liveValue, testValue)) return null;
+    const livePrimary = normalizeFontFamily(liveValue)[0] || '(none)';
+    const testPrimary = normalizeFontFamily(testValue)[0] || '(none)';
+    return `fontFamily: live=${livePrimary} test=${testPrimary}`;
+  }
 
   if (prop === 'color' || prop === 'backgroundColor') {
     const liveColor = parseColor(liveValue);
@@ -101,6 +150,24 @@ function compareStyleValue(prop, liveValue, testValue) {
     }
   }
 
+  if (prop === 'textDecoration') {
+    const normalize = (v) => (v || 'none').replace(/\s+/g, ' ').trim().toLowerCase();
+    if (normalize(liveValue) === normalize(testValue)) return null;
+  }
+
+  if (prop === 'letterSpacing') {
+    if ((liveValue === 'normal' && testValue === '0px') ||
+        (liveValue === '0px' && testValue === 'normal')) return null;
+  }
+
+  if (prop === 'cursor') {
+    if (liveValue === testValue) return null;
+  }
+
+  if (prop === 'transition') {
+    if (normalizeTransition(liveValue) === normalizeTransition(testValue)) return null;
+  }
+
   const livePx = parsePx(liveValue);
   const testPx = parsePx(testValue);
   if (livePx !== null && testPx !== null) {
@@ -109,6 +176,11 @@ function compareStyleValue(prop, liveValue, testValue) {
       fontWeight: 100,
       lineHeight: 3,
       borderRadius: 3,
+      letterSpacing: 1,
+      paddingTop: 8,
+      paddingBottom: 8,
+      paddingLeft: 8,
+      paddingRight: 8,
     };
     const tolerance = toleranceByProp[prop] || 2;
     if (Math.abs(livePx - testPx) <= tolerance) return null;
@@ -271,6 +343,293 @@ async function extractPageInventory(page) {
   }, STYLE_PROPS);
 }
 
+async function extractContainerStyles(page) {
+  return page.evaluate((containerProps) => {
+    const selector = 'section, nav, main, header, footer, [role="banner"], [role="main"], [role="contentinfo"], [role="navigation"]';
+    const containers = [];
+
+    const isContainerVisible = (element) => {
+      const rect = element.getBoundingClientRect();
+      if (rect.width < 10 || rect.height < 10) return false;
+      const style = window.getComputedStyle(element);
+      return style.display !== 'none' && style.visibility !== 'hidden' && Number(style.opacity) > 0;
+    };
+
+    document.querySelectorAll(selector).forEach((element, index) => {
+      if (!isContainerVisible(element)) return;
+
+      const computed = window.getComputedStyle(element);
+      const rect = element.getBoundingClientRect();
+      const tag = element.tagName;
+      const id = element.id || '';
+      const role = element.getAttribute('role') || '';
+      const classList = Array.from(element.classList).join(' ');
+      const label = id || role || classList.split(' ').slice(0, 3).join('.') || `${tag}#${index}`;
+
+      containers.push({
+        tag,
+        label: label.slice(0, 80),
+        index,
+        style: Object.fromEntries(containerProps.map((prop) => [prop, computed[prop]])),
+        rect: {
+          top: Math.round(rect.top + window.scrollY),
+          left: Math.round(rect.left + window.scrollX),
+          width: Math.round(rect.width),
+          height: Math.round(rect.height),
+        },
+      });
+    });
+
+    return containers;
+  }, CONTAINER_STYLE_PROPS);
+}
+
+async function extractInteractivity(page) {
+  return page.evaluate((interactiveProps) => {
+    const results = [];
+
+    const isVisible = (element) => {
+      const rect = element.getBoundingClientRect();
+      if (rect.width < 4 || rect.height < 4) return false;
+      let current = element;
+      while (current) {
+        const style = window.getComputedStyle(current);
+        if (style.display === 'none' || style.visibility === 'hidden' || Number(style.opacity) === 0) return false;
+        if (current.hasAttribute('hidden') || current.getAttribute('aria-hidden') === 'true') return false;
+        current = current.parentElement;
+      }
+      return true;
+    };
+
+    const getLabel = (element) => {
+      const tag = element.tagName;
+      const text = (element.innerText || element.textContent || '').replace(/\s+/g, ' ').trim();
+      const ariaLabel = element.getAttribute('aria-label') || '';
+      const title = element.getAttribute('title') || '';
+      return (text || ariaLabel || title).slice(0, 80) || `${tag}(unlabeled)`;
+    };
+
+    const allInteractive = document.querySelectorAll(
+      'a[href], button, [role="button"], [role="tab"], [tabindex], input, select, textarea, [onclick], [data-action], details > summary',
+    );
+
+    allInteractive.forEach((element) => {
+      if (!isVisible(element)) return;
+
+      const computed = window.getComputedStyle(element);
+      const tag = element.tagName;
+      const label = getLabel(element);
+      const role = element.getAttribute('role') || '';
+      const tabindex = element.getAttribute('tabindex');
+      const href = element.getAttribute('href') || '';
+      const hasTransition = computed.transition && computed.transition !== 'none' && computed.transition !== 'all 0s ease 0s';
+      const hasTransform = computed.transform && computed.transform !== 'none';
+      const hasAnimation = computed.animationName && computed.animationName !== 'none';
+
+      const style = Object.fromEntries(interactiveProps.map((prop) => [prop, computed[prop]]));
+
+      results.push({
+        tag,
+        label,
+        signature: `${tag}:${label.toLowerCase().slice(0, 80)}`,
+        role,
+        tabindex,
+        href: href ? 'yes' : 'no',
+        cursor: computed.cursor,
+        hasTransition,
+        hasTransform,
+        hasAnimation,
+        pointerEvents: computed.pointerEvents,
+        style,
+      });
+    });
+
+    return results;
+  }, INTERACTIVE_STYLE_PROPS);
+}
+
+async function extractHoverDiffs(page, selectors) {
+  const maxChecks = 20;
+  const results = [];
+
+  const elements = await page.$$(selectors);
+  const toCheck = elements.slice(0, maxChecks);
+
+  for (const handle of toCheck) {
+    try {
+      const pre = await page.evaluate((el) => {
+        const c = window.getComputedStyle(el);
+        const text = (el.innerText || el.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 80);
+        return {
+          tag: el.tagName,
+          label: text || el.getAttribute('aria-label') || '(unlabeled)',
+          bg: c.backgroundColor,
+          color: c.color,
+          borderColor: c.borderColor,
+          transform: c.transform,
+          boxShadow: c.boxShadow,
+          opacity: c.opacity,
+          textDecoration: c.textDecoration,
+        };
+      }, handle);
+
+      await handle.hover();
+      await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => setTimeout(r, 60))));
+
+      const post = await page.evaluate((el) => {
+        const c = window.getComputedStyle(el);
+        return {
+          bg: c.backgroundColor,
+          color: c.color,
+          borderColor: c.borderColor,
+          transform: c.transform,
+          boxShadow: c.boxShadow,
+          opacity: c.opacity,
+          textDecoration: c.textDecoration,
+        };
+      }, handle);
+
+      const changes = [];
+      for (const prop of Object.keys(post)) {
+        if (pre[prop] !== post[prop]) {
+          changes.push({ prop, before: pre[prop], after: post[prop] });
+        }
+      }
+
+      results.push({
+        tag: pre.tag,
+        label: pre.label,
+        signature: `${pre.tag}:${pre.label.toLowerCase().slice(0, 80)}`,
+        hasHoverEffect: changes.length > 0,
+        hoverChanges: changes,
+      });
+    } catch {
+      // element may have been removed or is not hoverable
+    }
+  }
+
+  // Reset mouse position
+  await page.mouse.move(0, 0);
+  return results;
+}
+
+function compareContainerStyles(liveContainers, testContainers) {
+  const diffs = [];
+  const maxIndex = Math.min(liveContainers.length, testContainers.length);
+
+  for (let i = 0; i < maxIndex; i++) {
+    const live = liveContainers[i];
+    const test = testContainers[i];
+    const propDiffs = [];
+
+    for (const prop of CONTAINER_STYLE_PROPS) {
+      const diff = compareStyleValue(prop, live.style?.[prop], test.style?.[prop]);
+      if (diff) propDiffs.push(diff);
+    }
+
+    if (propDiffs.length > 0) {
+      diffs.push({
+        index: i,
+        liveLabel: live.label,
+        testLabel: test.label,
+        tag: live.tag,
+        diffs: propDiffs,
+        passed: false,
+      });
+    }
+  }
+
+  return diffs;
+}
+
+function compareInteractivity(liveInteractive, testInteractive) {
+  const liveMap = new Map();
+  for (const item of liveInteractive) {
+    if (!liveMap.has(item.signature)) {
+      liveMap.set(item.signature, item);
+    }
+  }
+
+  const testMap = new Map();
+  for (const item of testInteractive) {
+    if (!testMap.has(item.signature)) {
+      testMap.set(item.signature, item);
+    }
+  }
+
+  const missingInteractive = [];
+  const interactivityDiffs = [];
+
+  for (const [sig, liveItem] of liveMap) {
+    const testItem = testMap.get(sig);
+    if (!testItem) {
+      missingInteractive.push({
+        signature: sig,
+        tag: liveItem.tag,
+        label: liveItem.label,
+        cursor: liveItem.cursor,
+      });
+      continue;
+    }
+
+    const diffs = [];
+    if (liveItem.cursor !== testItem.cursor) {
+      diffs.push(`cursor: live=${liveItem.cursor} test=${testItem.cursor}`);
+    }
+    if (liveItem.hasTransition !== testItem.hasTransition) {
+      diffs.push(`transition: live=${liveItem.hasTransition} test=${testItem.hasTransition}`);
+    }
+    if (liveItem.pointerEvents !== testItem.pointerEvents) {
+      diffs.push(`pointerEvents: live=${liveItem.pointerEvents} test=${testItem.pointerEvents}`);
+    }
+    if (diffs.length > 0) {
+      interactivityDiffs.push({ signature: sig, diffs });
+    }
+  }
+
+  const extraInteractive = [];
+  for (const [sig, testItem] of testMap) {
+    if (!liveMap.has(sig)) {
+      extraInteractive.push({
+        signature: sig,
+        tag: testItem.tag,
+        label: testItem.label,
+        cursor: testItem.cursor,
+      });
+    }
+  }
+
+  return { missingInteractive, interactivityDiffs, extraInteractive };
+}
+
+function compareHoverEffects(liveHovers, testHovers) {
+  const liveMap = new Map();
+  for (const item of liveHovers) liveMap.set(item.signature, item);
+
+  const testMap = new Map();
+  for (const item of testHovers) testMap.set(item.signature, item);
+
+  const diffs = [];
+  for (const [sig, liveItem] of liveMap) {
+    const testItem = testMap.get(sig);
+    if (!testItem) continue;
+    if (liveItem.hasHoverEffect && !testItem.hasHoverEffect) {
+      diffs.push({
+        signature: sig,
+        issue: 'hover effect present on live but missing on test',
+        liveChanges: liveItem.hoverChanges.map((c) => `${c.prop}: ${c.before} → ${c.after}`),
+      });
+    } else if (!liveItem.hasHoverEffect && testItem.hasHoverEffect) {
+      diffs.push({
+        signature: sig,
+        issue: 'hover effect present on test but missing on live',
+        testChanges: testItem.hoverChanges.map((c) => `${c.prop}: ${c.before} → ${c.after}`),
+      });
+    }
+  }
+  return diffs;
+}
+
 function analyzeHeadingSequence(liveSequence, testSequence) {
   if (JSON.stringify(liveSequence) === JSON.stringify(testSequence)) {
     return { matches: true, diffs: [] };
@@ -356,6 +715,24 @@ function summarizeRouteComparison(routePath, livePage, testPage, screenshotDiff)
     testPage.inventory.headingSequence,
   );
 
+  // Container style comparison
+  const containerDiffs = compareContainerStyles(
+    livePage.containers || [],
+    testPage.containers || [],
+  );
+
+  // Interactivity comparison
+  const interactivity = compareInteractivity(
+    livePage.interactive || [],
+    testPage.interactive || [],
+  );
+
+  // Hover effect comparison
+  const hoverDiffs = compareHoverEffects(
+    livePage.hoverEffects || [],
+    testPage.hoverEffects || [],
+  );
+
   return {
     path: routePath,
     liveStatus: livePage.status,
@@ -373,6 +750,14 @@ function summarizeRouteComparison(routePath, livePage, testPage, screenshotDiff)
     styleMismatchCount: checklist.filter((item) => item.styleDiffs.length > 0).length,
     layoutMismatchCount: checklist.filter((item) => item.layoutDiffs.length > 0).length,
     extraElementsCount: extraElements.length,
+    containerDiffs,
+    containerMismatchCount: containerDiffs.length,
+    interactivity,
+    missingInteractiveCount: interactivity.missingInteractive.length,
+    interactivityDiffCount: interactivity.interactivityDiffs.length,
+    extraInteractiveCount: interactivity.extraInteractive.length,
+    hoverDiffs,
+    hoverMismatchCount: hoverDiffs.length,
     screenshotDiff,
   };
 }
@@ -564,6 +949,10 @@ function renderMarkdown(report) {
   lines.push(`- Unexpected test-only signatures: ${report.summary.extraElements}`);
   lines.push(`- Appearance mismatches: ${report.summary.styleMismatches}`);
   lines.push(`- Layout mismatches: ${report.summary.layoutMismatches}`);
+  lines.push(`- Container/section style mismatches: ${report.summary.containerMismatches}`);
+  lines.push(`- Missing interactive elements: ${report.summary.missingInteractive}`);
+  lines.push(`- Interactivity behavior mismatches: ${report.summary.interactivityDiffs}`);
+  lines.push(`- Hover effect mismatches: ${report.summary.hoverMismatches}`);
   lines.push(`- Screenshot mismatches (> ${SCREENSHOT_DIFF_THRESHOLD}% or unavailable): ${report.summary.screenshotMismatches}`);
   lines.push(`- Screenshot capture failures: ${report.summary.screenshotUnavailable || 0}`);
   lines.push(`- Total failing checks: ${report.summary.failedChecklistItems}`);
@@ -606,6 +995,49 @@ function renderMarkdown(report) {
       lines.push(`- [ ] EXTRA:${extra.signature} — unexpected on test site (count ${extra.count})`);
     }
 
+    // Container/section style mismatches
+    if (route.containerDiffs && route.containerDiffs.length > 0) {
+      lines.push('');
+      lines.push('### Container/section style mismatches');
+      for (const diff of route.containerDiffs) {
+        lines.push(`- [ ] ${diff.tag}[${diff.liveLabel}] — ${diff.diffs.join('; ')}`);
+      }
+    }
+
+    // Interactivity mismatches
+    const inter = route.interactivity || {};
+    if ((inter.missingInteractive || []).length > 0) {
+      lines.push('');
+      lines.push('### Missing interactive elements');
+      for (const item of inter.missingInteractive) {
+        lines.push(`- [ ] ${item.signature} — interactive on live (cursor: ${item.cursor}) but missing on test`);
+      }
+    }
+    if ((inter.interactivityDiffs || []).length > 0) {
+      lines.push('');
+      lines.push('### Interactivity behavior mismatches');
+      for (const item of inter.interactivityDiffs) {
+        lines.push(`- [ ] ${item.signature} — ${item.diffs.join('; ')}`);
+      }
+    }
+    if ((inter.extraInteractive || []).length > 0) {
+      lines.push('');
+      lines.push('### Extra interactive elements (test only)');
+      for (const item of inter.extraInteractive) {
+        lines.push(`- [ ] ${item.signature} — interactive on test (cursor: ${item.cursor}) but not on live`);
+      }
+    }
+
+    // Hover effect mismatches
+    if (route.hoverDiffs && route.hoverDiffs.length > 0) {
+      lines.push('');
+      lines.push('### Hover effect mismatches');
+      for (const diff of route.hoverDiffs) {
+        const changes = diff.liveChanges || diff.testChanges || [];
+        lines.push(`- [ ] ${diff.signature} — ${diff.issue}${changes.length > 0 ? ` (${changes.join('; ')})` : ''}`);
+      }
+    }
+
     lines.push('');
   }
 
@@ -617,10 +1049,25 @@ async function loadPage(page, origin, routePath) {
     waitUntil: 'networkidle0',
     timeout: 60000,
   });
-  const inventory = await extractPageInventory(page);
+  const [inventory, containers, interactive] = await Promise.all([
+    extractPageInventory(page),
+    extractContainerStyles(page),
+    extractInteractivity(page),
+  ]);
+
+  let hoverEffects = [];
+  try {
+    hoverEffects = await extractHoverDiffs(page, 'a[href], button, [role="button"], [role="tab"]');
+  } catch {
+    // hover extraction is best-effort
+  }
+
   return {
     status: response?.status() || 0,
     inventory,
+    containers,
+    interactive,
+    hoverEffects,
   };
 }
 
@@ -715,6 +1162,10 @@ async function main() {
         extraElements: routes.reduce((total, route) => total + route.extraElementsCount, 0),
         styleMismatches: routes.reduce((total, route) => total + route.styleMismatchCount, 0),
         layoutMismatches: routes.reduce((total, route) => total + route.layoutMismatchCount, 0),
+        containerMismatches: routes.reduce((total, route) => total + (route.containerMismatchCount || 0), 0),
+        missingInteractive: routes.reduce((total, route) => total + (route.missingInteractiveCount || 0), 0),
+        interactivityDiffs: routes.reduce((total, route) => total + (route.interactivityDiffCount || 0), 0),
+        hoverMismatches: routes.reduce((total, route) => total + (route.hoverMismatchCount || 0), 0),
         screenshotMismatches: routes.filter((route) => route.screenshotDiff && !route.screenshotDiff.passed).length,
         screenshotUnavailable: routes.filter((route) => route.screenshotDiff?.error).length,
       },
@@ -729,6 +1180,10 @@ async function main() {
       report.summary.extraElements +
       report.summary.styleMismatches +
       report.summary.layoutMismatches +
+      report.summary.containerMismatches +
+      report.summary.missingInteractive +
+      report.summary.interactivityDiffs +
+      report.summary.hoverMismatches +
       report.summary.screenshotMismatches;
 
     const jsonPath = path.join(OUTPUT_DIR, 'site-parity-checklist.json');
@@ -750,9 +1205,16 @@ module.exports = {
   capturePageScreenshot,
   capturePageScreenshotInChunks,
   captureScreenshotDiff,
+  compareContainerStyles,
+  compareHoverEffects,
+  compareInteractivity,
+  compareStyleValue,
   copyPngInto,
   getScreenshotMetrics,
+  normalizeFontFamily,
+  normalizeTransition,
   padImage,
+  primaryFontMatches,
 };
 
 if (require.main === module) {

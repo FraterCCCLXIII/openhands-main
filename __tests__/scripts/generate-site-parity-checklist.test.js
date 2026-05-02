@@ -7,7 +7,16 @@ import path from 'node:path';
 import { PNG } from 'pngjs';
 
 const require = createRequire(import.meta.url);
-const { capturePageScreenshot } = require('../../scripts/generate-site-parity-checklist.cjs');
+const {
+  capturePageScreenshot,
+  compareContainerStyles,
+  compareHoverEffects,
+  compareInteractivity,
+  compareStyleValue,
+  normalizeFontFamily,
+  normalizeTransition,
+  primaryFontMatches,
+} = require('../../scripts/generate-site-parity-checklist.cjs');
 
 class FakeScreenshotPage {
   constructor({ width, height, color, failFullPage = false }) {
@@ -128,5 +137,235 @@ describe('parity screenshot capture', () => {
     expect(warn).toHaveBeenCalledWith(
       expect.stringContaining('retrying chunked capture: Page.captureScreenshot timed out'),
     );
+  });
+});
+
+describe('font family comparison', () => {
+  it('normalizes font family strings by removing quotes and lowercasing', () => {
+    const result = normalizeFontFamily('"Quincy CF", Georgia, serif');
+    expect(result).toEqual(['quincy cf', 'georgia', 'serif']);
+  });
+
+  it('returns empty array for empty input', () => {
+    expect(normalizeFontFamily('')).toEqual([]);
+    expect(normalizeFontFamily(null)).toEqual([]);
+    expect(normalizeFontFamily(undefined)).toEqual([]);
+  });
+
+  it('matches when primary font is the same regardless of fallbacks', () => {
+    expect(primaryFontMatches('"Quincy CF", serif', '"Quincy CF", Georgia, serif')).toBe(true);
+  });
+
+  it('detects mismatch when primary fonts differ', () => {
+    expect(primaryFontMatches('"Quincy CF", serif', '"Arial", sans-serif')).toBe(false);
+  });
+
+  it('matches when both are empty', () => {
+    expect(primaryFontMatches('', '')).toBe(true);
+  });
+
+  it('compareStyleValue reports fontFamily mismatch with primary font names', () => {
+    const result = compareStyleValue('fontFamily', '"Quincy CF", serif', '"Inter", sans-serif');
+    expect(result).toBe('fontFamily: live=quincy cf test=inter');
+  });
+
+  it('compareStyleValue passes when primary font matches', () => {
+    const result = compareStyleValue('fontFamily', '"Inter", sans-serif', '"Inter", Arial, sans-serif');
+    expect(result).toBeNull();
+  });
+});
+
+describe('transition normalization', () => {
+  it('normalizes "all 0s ease 0s" to "none"', () => {
+    expect(normalizeTransition('all 0s ease 0s')).toBe('none');
+  });
+
+  it('preserves real transition values', () => {
+    expect(normalizeTransition('opacity 0.3s ease')).toBe('opacity 0.3s ease');
+  });
+
+  it('normalizes falsy values to "none"', () => {
+    expect(normalizeTransition('')).toBe('none');
+    expect(normalizeTransition(null)).toBe('none');
+    expect(normalizeTransition(undefined)).toBe('none');
+    expect(normalizeTransition('none')).toBe('none');
+  });
+});
+
+describe('compareStyleValue extended properties', () => {
+  it('detects cursor mismatch', () => {
+    const result = compareStyleValue('cursor', 'pointer', 'auto');
+    expect(result).toBe('cursor: live=pointer test=auto');
+  });
+
+  it('passes when cursor values match', () => {
+    expect(compareStyleValue('cursor', 'pointer', 'pointer')).toBeNull();
+  });
+
+  it('normalizes letterSpacing: normal vs 0px', () => {
+    expect(compareStyleValue('letterSpacing', 'normal', '0px')).toBeNull();
+    expect(compareStyleValue('letterSpacing', '0px', 'normal')).toBeNull();
+  });
+
+  it('detects letterSpacing mismatch beyond tolerance', () => {
+    const result = compareStyleValue('letterSpacing', '0px', '3px');
+    expect(result).toBe('letterSpacing: live=0px test=3px');
+  });
+
+  it('normalizes textDecoration whitespace differences', () => {
+    expect(compareStyleValue('textDecoration', 'none solid rgb(0, 0, 0)', 'none  solid  rgb(0, 0, 0)')).toBeNull();
+  });
+
+  it('passes transition comparison when both are effectively none', () => {
+    expect(compareStyleValue('transition', 'none', 'all 0s ease 0s')).toBeNull();
+  });
+
+  it('detects real transition difference', () => {
+    const result = compareStyleValue('transition', 'opacity 0.3s ease', 'none');
+    expect(result).toContain('transition');
+  });
+
+  it('detects padding mismatch beyond tolerance', () => {
+    const result = compareStyleValue('paddingTop', '10px', '25px');
+    expect(result).toBe('paddingTop: live=10px test=25px');
+  });
+
+  it('allows padding within tolerance', () => {
+    expect(compareStyleValue('paddingTop', '10px', '16px')).toBeNull();
+  });
+});
+
+describe('container style comparison', () => {
+  it('detects background color mismatch between containers', () => {
+    const liveContainers = [
+      { tag: 'SECTION', label: 'hero', style: { backgroundColor: 'rgb(249, 240, 217)' } },
+    ];
+    const testContainers = [
+      { tag: 'SECTION', label: 'hero', style: { backgroundColor: 'rgb(255, 255, 255)' } },
+    ];
+    const diffs = compareContainerStyles(liveContainers, testContainers);
+    expect(diffs).toHaveLength(1);
+    expect(diffs[0].diffs[0]).toContain('backgroundColor');
+  });
+
+  it('passes when container styles match', () => {
+    const containers = [
+      { tag: 'SECTION', label: 'hero', style: { backgroundColor: 'rgb(249, 240, 217)' } },
+    ];
+    const diffs = compareContainerStyles(containers, containers);
+    expect(diffs).toHaveLength(0);
+  });
+
+  it('only compares up to the shorter container list', () => {
+    const live = [
+      { tag: 'SECTION', label: 's1', style: { backgroundColor: 'rgb(0,0,0)' } },
+      { tag: 'SECTION', label: 's2', style: { backgroundColor: 'rgb(255,255,255)' } },
+    ];
+    const test = [
+      { tag: 'SECTION', label: 's1', style: { backgroundColor: 'rgb(0,0,0)' } },
+    ];
+    const diffs = compareContainerStyles(live, test);
+    expect(diffs).toHaveLength(0);
+  });
+});
+
+describe('interactivity comparison', () => {
+  it('detects missing interactive elements on test', () => {
+    const live = [
+      { signature: 'BUTTON:sdk', tag: 'BUTTON', label: 'SDK', cursor: 'pointer', hasTransition: true, pointerEvents: 'auto' },
+      { signature: 'BUTTON:gui', tag: 'BUTTON', label: 'GUI', cursor: 'pointer', hasTransition: true, pointerEvents: 'auto' },
+    ];
+    const test = [
+      { signature: 'BUTTON:sdk', tag: 'BUTTON', label: 'SDK', cursor: 'pointer', hasTransition: true, pointerEvents: 'auto' },
+    ];
+    const result = compareInteractivity(live, test);
+    expect(result.missingInteractive).toHaveLength(1);
+    expect(result.missingInteractive[0].signature).toBe('BUTTON:gui');
+  });
+
+  it('detects cursor mismatch between interactive elements', () => {
+    const live = [
+      { signature: 'BUTTON:sdk', tag: 'BUTTON', label: 'SDK', cursor: 'pointer', hasTransition: false, pointerEvents: 'auto' },
+    ];
+    const test = [
+      { signature: 'BUTTON:sdk', tag: 'BUTTON', label: 'SDK', cursor: 'auto', hasTransition: false, pointerEvents: 'auto' },
+    ];
+    const result = compareInteractivity(live, test);
+    expect(result.interactivityDiffs).toHaveLength(1);
+    expect(result.interactivityDiffs[0].diffs[0]).toContain('cursor');
+  });
+
+  it('detects transition mismatch between interactive elements', () => {
+    const live = [
+      { signature: 'A:learn more', tag: 'A', label: 'Learn more', cursor: 'pointer', hasTransition: true, pointerEvents: 'auto' },
+    ];
+    const test = [
+      { signature: 'A:learn more', tag: 'A', label: 'Learn more', cursor: 'pointer', hasTransition: false, pointerEvents: 'auto' },
+    ];
+    const result = compareInteractivity(live, test);
+    expect(result.interactivityDiffs).toHaveLength(1);
+    expect(result.interactivityDiffs[0].diffs[0]).toContain('transition');
+  });
+
+  it('detects extra interactive elements on test', () => {
+    const live = [];
+    const test = [
+      { signature: 'BUTTON:extra', tag: 'BUTTON', label: 'Extra', cursor: 'pointer', hasTransition: false, pointerEvents: 'auto' },
+    ];
+    const result = compareInteractivity(live, test);
+    expect(result.extraInteractive).toHaveLength(1);
+    expect(result.extraInteractive[0].signature).toBe('BUTTON:extra');
+  });
+
+  it('passes when interactive elements match', () => {
+    const items = [
+      { signature: 'BUTTON:sdk', tag: 'BUTTON', label: 'SDK', cursor: 'pointer', hasTransition: true, pointerEvents: 'auto' },
+    ];
+    const result = compareInteractivity(items, items);
+    expect(result.missingInteractive).toHaveLength(0);
+    expect(result.interactivityDiffs).toHaveLength(0);
+    expect(result.extraInteractive).toHaveLength(0);
+  });
+});
+
+describe('hover effect comparison', () => {
+  it('detects hover effect present on live but missing on test', () => {
+    const live = [
+      { signature: 'BUTTON:sdk', hasHoverEffect: true, hoverChanges: [{ prop: 'bg', before: 'white', after: 'blue' }] },
+    ];
+    const test = [
+      { signature: 'BUTTON:sdk', hasHoverEffect: false, hoverChanges: [] },
+    ];
+    const diffs = compareHoverEffects(live, test);
+    expect(diffs).toHaveLength(1);
+    expect(diffs[0].issue).toBe('hover effect present on live but missing on test');
+    expect(diffs[0].liveChanges).toEqual(['bg: white → blue']);
+  });
+
+  it('detects hover effect present on test but missing on live', () => {
+    const live = [
+      { signature: 'A:link', hasHoverEffect: false, hoverChanges: [] },
+    ];
+    const test = [
+      { signature: 'A:link', hasHoverEffect: true, hoverChanges: [{ prop: 'color', before: 'black', after: 'red' }] },
+    ];
+    const diffs = compareHoverEffects(live, test);
+    expect(diffs).toHaveLength(1);
+    expect(diffs[0].issue).toBe('hover effect present on test but missing on live');
+  });
+
+  it('passes when hover effects match', () => {
+    const items = [
+      { signature: 'BUTTON:go', hasHoverEffect: true, hoverChanges: [{ prop: 'bg', before: 'a', after: 'b' }] },
+    ];
+    const diffs = compareHoverEffects(items, items);
+    expect(diffs).toHaveLength(0);
+  });
+
+  it('ignores elements only present on one side', () => {
+    const live = [{ signature: 'BUTTON:only-live', hasHoverEffect: true, hoverChanges: [] }];
+    const test = [{ signature: 'BUTTON:only-test', hasHoverEffect: true, hoverChanges: [] }];
+    const diffs = compareHoverEffects(live, test);
+    expect(diffs).toHaveLength(0);
   });
 });
