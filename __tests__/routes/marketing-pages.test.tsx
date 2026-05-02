@@ -99,6 +99,7 @@ describe('Marketing parity routes', () => {
     expect(screen.queryByAltText('Netflix')).not.toBeInTheDocument();
     expect(screen.queryByAltText('Google')).not.toBeInTheDocument();
     expect(screen.queryByAltText('AMD')).not.toBeInTheDocument();
+    expect(screen.queryByAltText(/amd logo/i)).not.toBeInTheDocument();
     expect(screen.queryByAltText('NVIDIA')).not.toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /Powering enterprise AI with the world’s best/i })).toBeInTheDocument();
     expect(screen.getByText('Measured impact')).toBeInTheDocument();

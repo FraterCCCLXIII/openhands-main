@@ -17,12 +17,20 @@ describe('modernize legacy systems whitepaper route', () => {
       screen.getByRole('heading', {
         name: /Whitepaper: Modernize legacy systems before your expertise disappears/i,
       }),
-    ).toBeInTheDocument();
+    ).toHaveClass('text-[40px]', 'lg:text-[44px]');
     expect(screen.getByText(/The Large Codebase SDK from OpenHands fills that gap/i)).toBeInTheDocument();
     expect(
       screen.getByRole('heading', { level: 3, name: /What you'll learn in the whitepaper:/i }),
     ).toBeInTheDocument();
-    expect(screen.getByText(/How dependency-aware orchestration unlocks safe parallel refactoring/i)).toBeInTheDocument();
+    const learning = screen.getByText(/How dependency-aware orchestration unlocks safe parallel refactoring/i);
+    expect(learning.tagName).toBe('LI');
+    expect(learning.closest('p')).toBeNull();
+    expect(
+      screen.getByRole('heading', {
+        level: 2,
+        name: /Download the whitepaper to learn how it works/i,
+      }),
+    ).toHaveClass('text-[24px]', 'leading-[33.6px]');
     expect(screen.getByTitle('Download whitepaper form')).toBeInTheDocument();
     expect(container.querySelector('form, input, select, button')).not.toBeInTheDocument();
     expect(screen.getByText(/Bring your team into the loop/i)).toBeInTheDocument();

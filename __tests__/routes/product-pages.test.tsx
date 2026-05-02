@@ -122,6 +122,53 @@ describe('Product parity routes', () => {
     expect(screen.getAllByRole('link', { name: 'Try it live' }).length).toBeGreaterThan(0);
   });
 
+  it('locks live product detail CTA, proof heading, and FAQ typography parity', () => {
+    const detailPages: Array<{
+      element: ReactElement;
+      proofHeading: string;
+      proofHeadingClass: string;
+      closingDescription: string;
+      forbiddenImageAlt: RegExp;
+    }> = [
+      {
+        element: <ProductSDK />,
+        proofHeading: 'Solve real edge cases.',
+        proofHeadingClass: 'text-white',
+        closingDescription: 'Start building with the SDK.',
+        forbiddenImageAlt: /sdk interface preview|comparison illustration/i,
+      },
+      {
+        element: <ProductGUI />,
+        proofHeading: 'Trust requires visibility.',
+        proofHeadingClass: 'text-brand-fg',
+        closingDescription: 'Use the OpenHands Web GUI to collaborate with agents.',
+        forbiddenImageAlt: /web gui screenshot|web gui review interface|web gui planning interface/i,
+      },
+      {
+        element: <ProductCLI />,
+        proofHeading: 'Real autonomy needs observability and repeatability.',
+        proofHeadingClass: 'text-white',
+        closingDescription: 'Run OpenHands from the terminal or automate it end to end with the CLI.',
+        forbiddenImageAlt: /cli interface screenshot|comparison illustration/i,
+      },
+    ];
+
+    detailPages.forEach(({ element, proofHeading, proofHeadingClass, closingDescription, forbiddenImageAlt }) => {
+      const { container, unmount } = renderRoute(element);
+
+      expect(screen.getByRole('heading', { name: proofHeading })).toHaveClass(proofHeadingClass);
+      expect(screen.getByText(closingDescription)).toBeInTheDocument();
+      container.querySelectorAll('summary').forEach((summary) => {
+        expect(summary).toHaveClass('text-[24px]', 'leading-[1.4]');
+      });
+      Array.from(container.querySelectorAll('img[alt]')).forEach((image) => {
+        expect(image.getAttribute('alt') ?? '').not.toMatch(forbiddenImageAlt);
+      });
+
+      unmount();
+    });
+  });
+
   it('matches live product metadata for the root route', () => {
     expect(productMeta({ location: { pathname: '/product' } } as never)).toEqual([
       { title: 'OpenHands Product | Autonomous Cloud Coding Agents' },
