@@ -52,6 +52,14 @@ const WORKFLOWS = [
     iconSrc:
       '/assets/webflow/icons/Exclamation_Triangle_Icon.svg',
   },
+  {
+    title: 'See all use cases',
+    description: 'Explore more workflows and integrations to automate your development process.',
+    href: 'https://docs.openhands.dev/openhands/usage/use-cases/overview',
+    iconSrc:
+      '/assets/webflow/icons/Search_Icon.svg',
+    isLink: true,
+  },
 ];
 
 const PRODUCT_SURFACES = [
@@ -310,7 +318,7 @@ const Home = () => {
   const [activeSurfaceIndex, setActiveSurfaceIndex] = React.useState(0);
 
   const visibleWorkflows = React.useMemo(
-    () => Array.from({ length: 3 }, (_, index) => WORKFLOWS[(workflowOffset + index) % WORKFLOWS.length]),
+    () => Array.from({ length: WORKFLOWS.length }, (_, index) => WORKFLOWS[(workflowOffset + index) % WORKFLOWS.length]),
     [workflowOffset],
   );
 
@@ -357,7 +365,8 @@ const Home = () => {
               </a>
             </div>
             <div className='text-base text-brand-muted'>
-              Need a self-hosted or air-gapped deployment? <span className='font-medium text-brand-fg'>Talk to us</span>
+              Need a self-hosted or air-gapped deployment?{' '}
+              <Link to='/contact' className='font-medium text-brand-fg underline decoration-brand-fg/40 underline-offset-2 hover:decoration-brand-fg'>Talk to us</Link>
             </div>
           </div>
         </div>
@@ -403,17 +412,28 @@ const Home = () => {
                 <img src={workflow.iconSrc} alt='' className='mb-4 h-8 w-8 object-contain' />
                 <h3 className='mb-2 text-[24px] font-medium leading-[1.2] text-brand-fg'>{workflow.title}</h3>
                 <p className='mb-5 font-mono text-sm leading-[1.5] text-brand-muted'>{workflow.description}</p>
-                <div className='relative mt-auto inline-flex w-full items-center justify-center bg-brand-accent px-5 py-3 text-base font-medium text-brand-fg' style={{ borderRadius: 'var(--btn-border-radius)' }}>
-                  <div aria-hidden='true'>Launch</div>
-                  <button
-                    type='button'
-                    aria-label={`Launch ${workflow.title}`}
-                    data-testid='workflow-launch'
-                    onClick={() => openExternal(workflow.href)}
-                    className='absolute inset-0 transition-colors hover:bg-brand-fg/5'
-                    style={{ borderRadius: 'var(--btn-border-radius)' }}
-                  />
-                </div>
+                {workflow.isLink ? (
+                  <a
+                    href={workflow.href}
+                    target='_blank'
+                    rel='noopener noreferrer'
+                    className='btn btn-outline mt-auto text-center'
+                  >
+                    View docs
+                  </a>
+                ) : (
+                  <div className='relative mt-auto inline-flex w-full items-center justify-center bg-brand-accent px-5 py-3 text-base font-medium text-brand-fg' style={{ borderRadius: 'var(--btn-border-radius)' }}>
+                    <div aria-hidden='true'>Launch</div>
+                    <button
+                      type='button'
+                      aria-label={`Launch ${workflow.title}`}
+                      data-testid='workflow-launch'
+                      onClick={() => openExternal(workflow.href)}
+                      className='absolute inset-0 transition-colors hover:bg-brand-fg/5'
+                      style={{ borderRadius: 'var(--btn-border-radius)' }}
+                    />
+                  </div>
+                )}
               </article>
             ))}
           </div>

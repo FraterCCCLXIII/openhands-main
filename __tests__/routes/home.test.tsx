@@ -22,6 +22,8 @@ describe('home route parity structure', () => {
       'Fix Vulnerabilities',
       'Review PRs',
       'Migrate Code',
+      'Triage Incidents',
+      'See all use cases',
       'SDK',
       'Why teams choose OpenHands',
       'Automate the Outer Loop with AI',
@@ -37,11 +39,11 @@ describe('home route parity structure', () => {
   it('uses live-like CTA and footer behavior on the homepage', () => {
     const { container } = renderRoute();
 
-    expect(screen.getAllByTestId('workflow-launch')).toHaveLength(3);
-    expect((container.innerHTML.match(/>Launch</g) ?? []).length).toBe(3);
+    expect(screen.getAllByTestId('workflow-launch')).toHaveLength(4);
+    expect((container.innerHTML.match(/>Launch</g) ?? []).length).toBe(4);
     expect(screen.queryByRole('link', { name: 'Download CLI' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: 'View docs' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: 'Talk to us' })).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'View docs' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Talk to us' })).toBeInTheDocument();
 
     expect(container.innerHTML).toContain('lg:grid-cols-3');
     expect(container.innerHTML).toContain('lg:translate-y-[68px]');
