@@ -75,10 +75,10 @@ const Product = () => {
 
             const textBlock = (
               <div className={index === 1 ? 'lg:pl-8' : 'lg:pr-8'}>
-                <h2 className='text-[34px] font-medium leading-[1.08] tracking-[-0.03em] text-brand-bg lg:text-[44px]'>
+                <h2 className='w-fit text-[34px] font-medium leading-[1.08] tracking-[-0.03em] text-brand-bg lg:text-[44px]'>
                   {item.title}
                 </h2>
-                <p className='mt-5 max-w-[460px] text-[18px] leading-[1.45] text-[#d6caab]'>
+                <p className='mt-5 max-w-[571px] text-[18px] leading-[1.45] text-[#d6caab]'>
                   {item.description}
                 </p>
                 <OverlayLinkButton

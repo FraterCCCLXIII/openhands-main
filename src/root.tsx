@@ -98,6 +98,7 @@ export default function App() {
   const useMarketingFooter = MARKETING_FOOTER_PATHS.has(pathname);
   const usePrivacyFooterLayout = pathname === '/privacy';
   const useParityFooterLayout = pathname === '/blog' || pathname === '/community';
+  const useProductFooterLayout = pathname === '/product' || pathname.startsWith('/product/');
 
   const handleOpenGitHubModal = () => {
     setIsGitHubModalOpen(true);
@@ -161,7 +162,7 @@ export default function App() {
               ) : (
                 <Footer
                   standalone
-                  compactNav={usePrivacyFooterLayout || useParityFooterLayout}
+                  compactNav={usePrivacyFooterLayout || useParityFooterLayout || useProductFooterLayout}
                   navWidthClass={useParityFooterLayout ? 'max-w-[760px]' : undefined}
                 />
               ))}
