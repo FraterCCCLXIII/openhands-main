@@ -292,7 +292,7 @@ const Community = () => {
         </div>
       </section>
 
-      <section className='px-10 pb-8 pt-0'>
+      <section className='px-10 pb-[138px] pt-0'>
         <div className='mx-auto max-w-[1238px]'>
           <div className='text-center'>
             <h2 className='text-[32px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg lg:text-[44px]'>

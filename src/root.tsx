@@ -161,7 +161,7 @@ export default function App() {
               ) : (
                 <Footer
                   standalone
-                  compactNav={usePrivacyFooterLayout}
+                  compactNav={usePrivacyFooterLayout || useParityFooterLayout}
                   navWidthClass={useParityFooterLayout ? 'max-w-[760px]' : undefined}
                 />
               ))}

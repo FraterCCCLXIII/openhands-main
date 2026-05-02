@@ -362,7 +362,7 @@ const Home = () => {
         </div>
       </section>
 
-      <section className='bg-brand-bg px-6 pb-10 lg:px-10 lg:pb-14'>
+      <section className='-mt-[82px] bg-brand-bg px-6 pb-10 lg:px-10 lg:pb-[138px]'>
         <div className='mx-auto max-w-[1238px]'>
           <div className='mb-5 flex items-end justify-between gap-4'>
             <div className='max-w-[384px]'>
@@ -392,7 +392,7 @@ const Home = () => {
             </div>
           </div>
 
-          <div className='grid gap-5 lg:grid-cols-3'>
+          <div className='grid gap-5 lg:grid-cols-[repeat(3,352px)]'>
             {visibleWorkflows.map((workflow) => (
               <article
                 key={workflow.title}
@@ -428,7 +428,7 @@ const Home = () => {
         </div>
       </section>
 
-      <section className='bg-brand-bg px-6 pb-10 pt-6 lg:px-10 lg:pb-12 lg:pt-8'>
+      <section className='bg-brand-bg px-6 pb-10 pt-6 lg:px-10 lg:pb-12 lg:pt-0'>
         <div className='mx-auto grid max-w-[1238px] gap-8 lg:grid-cols-[280px_minmax(0,1fr)] lg:items-start'>
           <div>
             <div className='mb-3 flex flex-wrap gap-2'>
@@ -438,7 +438,7 @@ const Home = () => {
                 </div>
               ))}
             </div>
-            <div className='max-w-[270px] rounded-[24px] border border-brand-fg/15 bg-white/70 p-5 shadow-[0_18px_60px_rgba(34,21,13,0.05)]'>
+            <div className='max-w-[270px] rounded-[24px] border border-transparent bg-transparent p-0 shadow-none'>
               <h2 className='mb-3 text-[44px] font-medium leading-[1.1] tracking-[-0.03em] text-brand-fg'>{activeSurface.title}</h2>
               <p className='mb-5 max-w-[270px] text-lg leading-[1.5] text-brand-muted'>{activeSurface.description}</p>
               <a href={activeSurface.href} target='_blank' rel='noopener noreferrer' className='btn btn-outline inline-flex rounded-none'>
@@ -453,7 +453,7 @@ const Home = () => {
       </section>
 
       <section className='bg-brand-bg px-6 py-16 lg:px-10 lg:py-24'>
-        <div className='mx-auto grid max-w-[1220px] gap-10 lg:grid-cols-[360px_546px] lg:justify-between'>
+        <div className='mx-auto grid max-w-[1278px] gap-10 lg:grid-cols-[599px_639px]'>
           <div className='flex flex-col justify-between gap-8'>
             <h3 className='max-w-[360px] text-[44px] font-medium leading-[1.1] tracking-[-0.03em] text-brand-fg'>Why teams choose OpenHands</h3>
             <a href='https://app.all-hands.dev/' target='_blank' rel='noopener noreferrer' className='btn btn-primary w-fit rounded-none'>
@@ -465,7 +465,7 @@ const Home = () => {
             {FEATURES.map((feature) => (
               <div key={feature.title} className='feature-item-stacked'>
                 <img src={feature.icon} alt='' className='mt-1 h-8 w-8 flex-shrink-0' />
-                <div>
+                <div className='min-w-0 flex-1'>
                   <p className='mb-1 text-[20px] font-medium leading-[1.25] text-brand-fg'>{feature.title}</p>
                   <p className='text-base leading-[1.5] text-brand-muted'>{feature.description}</p>
                 </div>
@@ -477,7 +477,7 @@ const Home = () => {
 
       <section className='bg-brand-bg px-6 py-16 lg:px-10 lg:py-24'>
         <div className='mx-auto max-w-[1220px]'>
-          <h3 className='mb-10 text-[44px] font-medium leading-[1.1] tracking-[-0.03em] text-brand-fg'>
+          <h3 className='mb-[217px] text-[44px] font-medium leading-[1.1] tracking-[-0.03em] text-brand-fg'>
             Automate the Outer Loop with AI
           </h3>
           <div className='space-y-6'>
@@ -558,7 +558,7 @@ const Home = () => {
       <section className='bg-brand-bg px-6 pb-20 pt-20 lg:px-10 lg:pb-[191px] lg:pt-28'>
         <div className='mx-auto max-w-[1220px] space-y-6'>
           <div className='grid gap-6 lg:grid-cols-2'>
-            <article className='card-dark min-h-[520px] rounded-none p-8 lg:min-h-[680px]'>
+            <article className='card-dark min-h-[520px] rounded-none p-8 lg:min-h-[595px]'>
               <p className='mb-3 max-w-[350px] text-lg font-medium text-brand-accent'>Community that compounds velocity</p>
               <p className='mb-8 max-w-[350px] text-lg leading-[1.55] text-white/75'>
                 With 65K+ GitHub stars and a thriving open-source ecosystem, OpenHands evolves through collective innovation - every contribution makes the platform faster, safer, and smarter.
@@ -576,7 +576,7 @@ const Home = () => {
               </div>
             </article>
 
-            <article className='card-dark min-h-[520px] rounded-none p-8 lg:min-h-[680px]'>
+            <article className='card-dark min-h-[520px] rounded-none p-8 lg:min-h-[595px]'>
               <p className='mb-3 max-w-[330px] text-lg font-medium text-brand-accent'>Plays well with your stack</p>
               <p className='mb-10 max-w-[330px] text-lg leading-[1.55] text-white/75'>
                 Native integrations with GitHub, GitLab, CI/CD, Slack, and ticketing tools. OpenHands fits seamlessly into enterprise governance systems and your preferred model providers.
@@ -692,7 +692,9 @@ const Home = () => {
               Try it live
             </a>
           </div>
-          <Footer showSocialLinks />
+          <div className='mt-[107px]'>
+            <Footer showSocialLinks compactNav />
+          </div>
         </div>
       </section>
     </main>
