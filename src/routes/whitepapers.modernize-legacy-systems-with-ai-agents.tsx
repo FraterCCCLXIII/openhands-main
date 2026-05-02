@@ -1,5 +1,5 @@
-import { type FormEvent, useState } from 'react';
-import { Link, type MetaFunction } from 'react-router';
+import { useEffect, useState } from 'react';
+import { type MetaFunction } from 'react-router';
 import { ProductPageFooterCta } from '~/components/product-feature-page';
 
 const WHITEPAPER_TITLE = 'Modernize Legacy Systems with AI Agents | OpenHands Whitepaper';
@@ -7,6 +7,7 @@ const WHITEPAPER_DESCRIPTION =
   '74% of legacy modernization projects fail. Learn how OpenHands uses AI agents and dependency-aware orchestration to safely migrate COBOL and large codebases at enterprise scale. Download the whitepaper and apply for the Q2 2026 PoC.';
 const WHITEPAPER_PDF_URL =
   '/assets/webflow/whitepapers/openhands-whitepaper.pdf';
+const WHITEPAPER_FORM_SUBMITTED_EVENT = 'openhands:whitepaper-form-submitted';
 
 const WHITEPAPER_LEARNINGS = [
   'Why 74% of modernization projects fail (and what’s actually missing)',
@@ -17,7 +18,109 @@ const WHITEPAPER_LEARNINGS = [
   'How to evaluate if your system is a fit',
 ] as const;
 
-const TEAM_SIZE_OPTIONS = ['1-50', '50-500', '500+'] as const;
+const HUBSPOT_FORM_FRAME_SRC_DOC = `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: transparent;
+      color: #212d3a;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 16px;
+    }
+    form {
+      display: grid;
+      grid-template-columns: 222px 222px;
+      column-gap: 30px;
+      row-gap: 20px;
+      padding: 40px;
+    }
+    label {
+      display: block;
+      margin-bottom: 10px;
+      font-size: 16px;
+      font-weight: 400;
+      line-height: normal;
+    }
+    input,
+    select {
+      display: block;
+      width: 222px;
+      height: 41px;
+      border: 1px solid #cbd6e2;
+      border-radius: 3px;
+      background: #f5f8fa;
+      color: #212d3a;
+      font: inherit;
+      padding: 9px 10px;
+    }
+    button {
+      grid-column: 2;
+      justify-self: end;
+      width: 248px;
+      height: 43px;
+      margin-top: 20px;
+      border: 0;
+      border-radius: 3px;
+      background: #ff7a59;
+      color: #fff;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+  <form>
+    <div>
+      <label for="firstname">First Name*</label>
+      <input id="firstname" name="firstname" type="text" required />
+    </div>
+    <div>
+      <label for="lastname">Last Name*</label>
+      <input id="lastname" name="lastname" type="text" required />
+    </div>
+    <div>
+      <label for="email">Company Email*</label>
+      <input id="email" name="email" type="email" required />
+    </div>
+    <div>
+      <label for="jobtitle">Role Title*</label>
+      <input id="jobtitle" name="jobtitle" type="text" required />
+    </div>
+    <div>
+      <label for="company">Company Name*</label>
+      <input id="company" name="company" type="text" required />
+    </div>
+    <div>
+      <label for="engineering-team-size">Engineering Team Size*</label>
+      <select id="engineering-team-size" name="engineering_team_size" required>
+        <option value=""></option>
+        <option value="1-50">1-50</option>
+        <option value="50-500">50-500</option>
+        <option value="500+">500+</option>
+      </select>
+    </div>
+    <button type="submit">Download Whitepaper</button>
+  </form>
+  <script>
+    document.querySelector('form').addEventListener('submit', function (event) {
+      event.preventDefault();
+      window.parent.postMessage({ type: '${WHITEPAPER_FORM_SUBMITTED_EVENT}' }, '*');
+    });
+  </script>
+</body>
+</html>`;
+
+const isWhitepaperFormSubmittedMessage = (data: unknown) => (
+  typeof data === 'object' &&
+  data !== null &&
+  'type' in data &&
+  data.type === WHITEPAPER_FORM_SUBMITTED_EVENT
+);
 
 export const meta: MetaFunction = ({ location }) => [
   { title: WHITEPAPER_TITLE },
@@ -44,159 +147,79 @@ export const meta: MetaFunction = ({ location }) => [
 export default function WhitepaperModernizeLegacySystemsWithAiAgents() {
   const [isDownloadReady, setIsDownloadReady] = useState(false);
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setIsDownloadReady(true);
-  };
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (isWhitepaperFormSubmittedMessage(event.data)) {
+        setIsDownloadReady(true);
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
 
   return (
-    <main className='bg-brand-bg pt-[100px]'>
+    <main className='bg-brand-bg'>
       <section className='px-6 pb-16 pt-10 lg:px-10 lg:pb-20 lg:pt-14'>
-        <div className='mx-auto max-w-[1260px]'>
+        <div className='mx-auto max-w-[1238px]'>
           <div className='mx-auto max-w-[920px] text-center'>
-            <h1 className='text-[40px] font-medium leading-[1.02] tracking-[-0.04em] text-brand-fg lg:text-[60px]'>
+            <h1 className='mx-auto max-w-[834px] text-[40px] font-medium leading-[1.1] tracking-[-0.04em] text-brand-fg lg:text-[44px] lg:leading-[48.4px]'>
               Whitepaper: Modernize legacy systems before your expertise disappears
             </h1>
-            <p className='mx-auto mt-4 max-w-[820px] text-[18px] leading-[1.45] text-brand-fg/70 lg:text-[20px]'>
+            <p className='mx-auto mt-4 max-w-[657px] text-[18px] font-medium leading-[1.35] text-[#5f5f5f] lg:text-[20.8px] lg:leading-[24.96px]'>
               Legacy modernization projects fail 74% of the time and the engineers who understand your COBOL, mainframe, and legacy systems are retiring faster than you can replace them.
             </p>
           </div>
 
-          <div className='mt-14 grid gap-12 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:items-start'>
+          <div className='mt-14 grid gap-12 lg:grid-cols-[526px_603px] lg:items-start lg:gap-[109px]'>
             <div>
-              <p className='max-w-[700px] text-[18px] font-medium leading-[1.6] text-brand-fg'>
+              <p className='text-[16px] leading-[22.4px] text-brand-fg'>
                 The Large Codebase SDK from OpenHands fills that gap. By combining AI coding agents with static analysis, it maps the full dependency structure of your codebase and orchestrates migration work in the right order so agents can run in parallel without producing conflicting changes, making enterprise-scale refactors practical for the first time. Model-agnostic and deployable on-prem or in the cloud, it&apos;s built for organizations where data sensitivity and regulatory compliance aren&apos;t optional.
               </p>
 
-              <div className='mt-12'>
-                <h3 className='text-[18px] font-medium leading-[1.45] text-brand-fg'>
+              <div className='mt-10'>
+                <h3 className='text-[20.8px] font-medium leading-[24.96px] text-brand-fg'>
                   What you&apos;ll learn in the whitepaper:
                 </h3>
-                <div className='mt-8 border-t border-brand-fg/15'>
+                <ul className='mt-5'>
                   {WHITEPAPER_LEARNINGS.map((item) => (
-                    <div key={item} className='border-b border-brand-fg/15 py-5'>
-                      <p className='text-[18px] leading-[1.45] text-brand-fg/72'>{item}</p>
-                    </div>
+                    <li key={item} className='min-h-[55px] list-none text-[16px] leading-[22.4px] text-[#5f5f5f]'>
+                      {item}
+                    </li>
                   ))}
-                </div>
+                </ul>
               </div>
             </div>
 
-            <div className='rounded-[12px] border border-brand-fg/20 bg-brand-bg/60 p-6 shadow-[0_20px_60px_rgba(34,21,13,0.05)] backdrop-blur-sm lg:p-8'>
-              <h2 className='max-w-[600px] text-[32px] font-medium leading-[1.18] tracking-[-0.03em] text-brand-fg'>
-                Download the whitepaper to learn how it works and to apply for our Q2 2026 Proof-of-Concept program.
-              </h2>
-
-              <form className='mt-10 space-y-5' onSubmit={handleSubmit}>
-                <div className='grid gap-5 md:grid-cols-2'>
-                  <label className='sr-only' htmlFor='whitepaper-firstname'>
-                    First Name*
-                  </label>
-                  <input
-                    id='whitepaper-firstname'
-                    type='text'
-                    name='firstname'
-                    aria-label='First Name*'
-                    placeholder='First Name*'
-                    required
-                    className='rounded-none border border-brand-fg/25 bg-white/60 px-4 py-3 text-base text-brand-fg outline-none transition-colors focus:border-brand-fg'
-                  />
-                  <label className='sr-only' htmlFor='whitepaper-lastname'>
-                    Last Name*
-                  </label>
-                  <input
-                    id='whitepaper-lastname'
-                    type='text'
-                    name='lastname'
-                    aria-label='Last Name*'
-                    placeholder='Last Name*'
-                    required
-                    className='rounded-none border border-brand-fg/25 bg-white/60 px-4 py-3 text-base text-brand-fg outline-none transition-colors focus:border-brand-fg'
-                  />
-                  <label className='sr-only' htmlFor='whitepaper-email'>
-                    Company Email*
-                  </label>
-                  <input
-                    id='whitepaper-email'
-                    type='email'
-                    name='email'
-                    aria-label='Company Email*'
-                    placeholder='Company Email*'
-                    required
-                    className='rounded-none border border-brand-fg/25 bg-white/60 px-4 py-3 text-base text-brand-fg outline-none transition-colors focus:border-brand-fg'
-                  />
-                  <label className='sr-only' htmlFor='whitepaper-jobtitle'>
-                    Role Title*
-                  </label>
-                  <input
-                    id='whitepaper-jobtitle'
-                    type='text'
-                    name='jobtitle'
-                    aria-label='Role Title*'
-                    placeholder='Role Title*'
-                    required
-                    className='rounded-none border border-brand-fg/25 bg-white/60 px-4 py-3 text-base text-brand-fg outline-none transition-colors focus:border-brand-fg'
-                  />
-                  <label className='sr-only' htmlFor='whitepaper-company'>
-                    Company Name*
-                  </label>
-                  <input
-                    id='whitepaper-company'
-                    type='text'
-                    name='company'
-                    aria-label='Company Name*'
-                    placeholder='Company Name*'
-                    required
-                    className='rounded-none border border-brand-fg/25 bg-white/60 px-4 py-3 text-base text-brand-fg outline-none transition-colors focus:border-brand-fg'
-                  />
-                  <label className='sr-only' htmlFor='whitepaper-team-size'>
-                    Engineering Team Size*
-                  </label>
-                  <select
-                    id='whitepaper-team-size'
-                    name='engineering_team_size'
-                    aria-label='Engineering Team Size*'
-                    defaultValue=''
-                    required
-                    className='rounded-none border border-brand-fg/25 bg-white/60 px-4 py-3 text-base text-brand-fg outline-none transition-colors focus:border-brand-fg'
-                  >
-                    <option value='' disabled>
-                      Engineering Team Size*
-                    </option>
-                    {TEAM_SIZE_OPTIONS.map((option) => (
-                      <option key={option} value={option}>
-                        {option}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className='pt-2'>
-                  <input type='submit' value='Download Whitepaper' className='btn btn-primary rounded-none' />
-                </div>
-
-                {isDownloadReady ? (
-                  <div role='status' className='rounded-[8px] border border-brand-fg/15 bg-white/75 p-4 text-brand-fg'>
-                    <p className='text-base font-medium'>Your whitepaper is ready.</p>
-                    <p className='mt-1 text-sm leading-[1.6] text-brand-fg/75'>
-                      Download the PDF now, then contact our team if you&apos;d like to apply for the Q2 2026 Proof-of-Concept program.
-                    </p>
-                    <div className='mt-4 flex flex-wrap gap-3'>
-                      <a
-                        href={WHITEPAPER_PDF_URL}
-                        target='_blank'
-                        rel='noopener noreferrer'
-                        className='btn btn-primary rounded-none'
-                      >
-                        Download now
-                      </a>
-                      <Link to='/contact' className='btn btn-outline rounded-none'>
-                        Talk to the team
-                      </Link>
-                    </div>
+            <div className='min-h-[573px] rounded-[8px] border border-brand-fg p-6'>
+              {isDownloadReady ? (
+                <div role='status' className='whitepaper-link'>
+                  <h3 className='text-[32px] font-medium leading-[38.4px] text-brand-fg'>Download the Whitepaper</h3>
+                  <div className='mt-6 inline-flex rounded-[8px] bg-brand-fg px-5 py-3 text-[16px] font-medium leading-[20.8px] text-brand-bg'>
+                    <a
+                      href={WHITEPAPER_PDF_URL}
+                      target='_blank'
+                      rel='noopener noreferrer'
+                      className='text-brand-bg'
+                    >
+                      Download now
+                    </a>
                   </div>
-                ) : null}
-              </form>
+                </div>
+              ) : (
+                <>
+                  <h2 className='text-[24px] font-medium leading-[33.6px] tracking-[-0.03em] text-brand-fg'>
+                    Download the whitepaper to learn how it works and to apply for our Q2 2026 Proof-of-Concept program.
+                  </h2>
+
+                  <iframe
+                    title='Download whitepaper form'
+                    srcDoc={HUBSPOT_FORM_FRAME_SRC_DOC}
+                    sandbox='allow-forms allow-scripts'
+                    className='mt-2 h-[413px] w-full border-0'
+                  />
+                </>
+              )}
             </div>
           </div>
         </div>

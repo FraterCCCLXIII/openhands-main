@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import type { ReactElement } from 'react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
@@ -22,8 +22,9 @@ const findEntry = (entries: MetaEntry[], key: string, value: string) =>
   entries.find((entry) => entry[key] === value);
 
 describe('legacy routes parity', () => {
-  it('renders the legacy whitepaper page with the live copy and download actions', () => {
+  it('renders the legacy whitepaper page with the live copy and iframe-boundary form semantics', () => {
     renderRoute(<WhitepaperModernizeLegacySystemsWithAiAgents />);
+    const main = screen.getByRole('main');
 
     expect(
       screen.getByRole('heading', {
@@ -36,12 +37,34 @@ describe('legacy routes parity', () => {
       )
     ).toBeInTheDocument();
     expect(
+      screen.getByRole('heading', { level: 3, name: /What you'll learn in the whitepaper:/i })
+    ).toBeInTheDocument();
+    expect(
       screen.getByText('How dependency-aware orchestration unlocks safe parallel refactoring')
     ).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Download Whitepaper' })).toBeInTheDocument();
+    expect(screen.getByTitle('Download whitepaper form')).toBeInTheDocument();
+    expect(main.querySelector('form, input, select, button')).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Download Local GUI' })).toHaveAttribute(
       'href',
       'https://docs.openhands.dev/openhands/usage/run-openhands/local-setup'
+    );
+  });
+
+  it('reveals the legacy whitepaper direct download after the embedded form reports success', async () => {
+    renderRoute(<WhitepaperModernizeLegacySystemsWithAiAgents />);
+
+    fireEvent(
+      window,
+      new MessageEvent('message', {
+        data: { type: 'openhands:whitepaper-form-submitted' },
+      })
+    );
+
+    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('Download the Whitepaper'));
+
+    expect(screen.getByRole('link', { name: 'Download now' })).toHaveAttribute(
+      'href',
+      '/assets/webflow/whitepapers/openhands-whitepaper.pdf'
     );
   });
 
