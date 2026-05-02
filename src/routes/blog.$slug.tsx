@@ -185,7 +185,7 @@ const BlogDetails = () => {
           <figure className='w-full'>
             {!data.cover && (
               <PlaceholderImage
-                className={`w-full ${data.coverRadius === 'none' ? 'rounded-none' : 'rounded-[16px]'}`}
+                className={`w-full ${data.coverRadius === 'none' ? 'rounded-none' : 'rounded-[8px]'}`}
               />
             )}
             {data.cover && (
@@ -194,7 +194,7 @@ const BlogDetails = () => {
                 alt={data.coverAlt}
                 loading='lazy'
                 decoding='async'
-                className={`h-auto w-full ${data.coverRadius === 'none' ? 'rounded-none' : 'rounded-[16px]'}`}
+                className={`h-auto w-full ${data.coverRadius === 'none' ? 'rounded-none' : 'rounded-[8px]'}`}
               />
             )}
           </figure>

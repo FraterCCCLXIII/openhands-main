@@ -199,11 +199,11 @@ export const CMarkdown: React.FC<CMarkdownProps> = ({
             return (
               <figure
                 className={clsx(
-                  isBlog && 'my-10 flex justify-center',
+                  isBlog && 'mx-auto my-[3em] overflow-hidden rounded-[8px]',
                   isBlog && isFullWidthFigure
-                    ? '[&_img]:max-w-full [&_img]:w-full [&_img]:text-[0px] [&_img]:leading-[0] [&_img]:text-transparent'
+                    ? 'w-full max-w-full [&_img]:max-w-full [&_img]:w-full [&_img]:text-[0px] [&_img]:leading-[0] [&_img]:text-transparent'
                     : undefined,
-                  isBlog && !isFullWidthFigure ? '[&_img]:max-w-full [&_img]:w-auto' : undefined,
+                  isBlog && !isFullWidthFigure ? 'max-w-[60%] [&_img]:max-w-full [&_img]:w-auto' : undefined,
                   className
                 )}
                 {...props}

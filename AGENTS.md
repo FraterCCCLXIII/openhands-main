@@ -99,7 +99,7 @@ npm run parity:checklist  # Crawl openhands.dev and compare against local site
 - Live `/blog` uses a centered hero with only the newsletter signup (no `Try it live` / `Build with SDK` CTA buttons), followed by one featured story card and a full grid of post cards.
 - Live blog index grid cards show publication date plus title only; featured card uses a dark overlay with `Read more` CTA copy.
 - Live blog/article links use the brand brown accent (`#8a5f45`) rather than bright blue, and article headings use medium-weight 44px desktop sizing instead of Quincy 48px/60px styles.
-- Live blog article imagery uses softer 16px radius treatments, and the newsletter form uses `Share your email` placeholder plus the privacy-policy disclaimer.
+- Live blog article cover images use 8px border-radius (`--card-border-radius: 0.5rem`), and the newsletter form uses `Share your email` placeholder plus the privacy-policy disclaimer.
 - Blog inventory is auto-loaded from `src/posts/*.md` via `import.meta.glob`; adding a new Markdown file is enough to include it.
 - Use frontmatter `slug` to pin a live blog route when the canonical URL does not match the title-derived slug.
 - Use frontmatter `published: false` to keep retired posts in the repo while excluding them from the live/local blog inventory.
@@ -107,12 +107,12 @@ npm run parity:checklist  # Crawl openhands.dev and compare against local site
 - Current live parity expects the featured `/blog` story to stay pinned to `openhands-index`; the article grid and article-footer related posts should come from the remaining reverse-chronological posts.
 - Some live blog posts need frontmatter dates that differ from Webflow's `<title>` metadata date. Use frontmatter `seoTitleDate` when the visible publication date and the browser title date diverge.
 - Shared article-template parity now depends on three template details: a `← Back to Blog` link, related-post cards whose title itself is the anchor text, and the marketing footer CTA block beneath the newsletter section.
-- Blog article body parity is sensitive to Webflow-like rich text spacing: paragraph body images use 8px rounding with no extra image margins, centered Webflow figure images keep their natural width up to the article column, raw `<pre><code>` blocks should not gain leading/trailing blank lines, and related-post card links should wrap the full card so their link rectangle stays card-height.
+- Blog article body parity is sensitive to Webflow-like rich text spacing: paragraph body images use 8px rounding with no extra image margins, centered Webflow figure images use `max-width: 60%` (the Webflow `.w-richtext figure` default) with `margin: 3em 0` and `border-radius: 0.5rem; overflow: hidden` matching live `.rich-text figure` CSS, raw `<pre><code>` blocks should not gain leading/trailing blank lines, and related-post card links should wrap the full card so their link rectangle stays card-height.
 - The shared `MarketingFooterCta` title currently needs to render as plain text (`div`) by default for parity-sensitive routes/tests; only opt into `semanticHeading={true}` if a route explicitly needs heading semantics.
 - Live Webflow newsletter markup always includes a hidden `Thank you for your submission!` success block in the DOM, even before form submission; keep the hidden success heading in `NewsletterForm` so prerendered heading inventories match parity checks.
 - Blog frontmatter now supports `coverAlt` for live image-alt parity and `seoTitleDate` for browser-title date parity; prefer those fields over mutating visible publication dates when only metadata differs from live.
 
-- Most article hero images still use 16px rounding, but `agent-control-plane` currently needs a square hero image for parity; use frontmatter `coverRadius: "none"` for one-off overrides.
+- Article hero/cover images now use 8px rounding by default, but `agent-control-plane` currently needs a square hero image for parity; use frontmatter `coverRadius: "none"` for one-off overrides.
 
 ## Product / Enterprise / Pricing / Community Parity Notes
 - Live `/product` uses dark interface cards: `Terminal / CLI`, `Web GUI`, and `SDK` headings plus `Learn more` links render in light text on a dark background.
