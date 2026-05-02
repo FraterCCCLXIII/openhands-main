@@ -157,7 +157,7 @@ const Enterprise = () => {
       </section>
 
       {/* Proof band — centered layout with ASCII background */}
-      <section className='relative overflow-hidden px-10 py-32'>
+      <section className='relative overflow-hidden px-10 py-44'>
         <div className='pointer-events-none absolute inset-0'>
           <img
             src='/assets/webflow/backgrounds/690b397ae76441160bed52b6_asci-art-hole.png'
@@ -224,7 +224,7 @@ const Enterprise = () => {
       </section>
 
       {/* Footer CTA */}
-      <section className='px-10 py-28 text-center'>
+      <section className='px-10 py-20 text-center'>
         <div className='mx-auto flex max-w-[812px] flex-col items-center gap-6'>
           <div className='text-[44px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>
             Bring agentic development to your organization.
