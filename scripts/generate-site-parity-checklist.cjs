@@ -16,9 +16,13 @@ const OUTPUT_DIR = path.resolve(process.cwd(), process.env.PARITY_OUTPUT_DIR || 
 const MAX_PAGES = Number(process.env.PARITY_MAX_PAGES || 200);
 const DISCOVERY_PAGE_LIMIT = Number(process.env.PARITY_DISCOVERY_LIMIT || 60);
 const VIEWPORT = { width: 1440, height: 2400 };
+const PROTOCOL_TIMEOUT = Number(
+  process.env.PARITY_PROTOCOL_TIMEOUT || process.env.PARITY_PROTOCOL_TIMEOUT_MS || 300000,
+);
 const SCREENSHOT_PAGE_LIMIT = Number(process.env.PARITY_SCREENSHOT_PAGE_LIMIT || Math.min(MAX_PAGES, 20));
 const SCREENSHOT_DIFF_THRESHOLD = Number(process.env.PARITY_SCREENSHOT_DIFF_THRESHOLD || 2);
-const BROWSER_PROTOCOL_TIMEOUT = Number(process.env.PARITY_PROTOCOL_TIMEOUT_MS || 300000);
+const SCREENSHOT_CHUNK_HEIGHT = Number(process.env.PARITY_SCREENSHOT_CHUNK_HEIGHT || 6000);
+const SCREENSHOT_CHUNK_TRIGGER_HEIGHT = Number(process.env.PARITY_SCREENSHOT_CHUNK_TRIGGER_HEIGHT || 12000);
 const STYLE_PROPS = [
   'fontSize',
   'fontWeight',
@@ -390,6 +394,93 @@ function padImage(image, width, height) {
   return data;
 }
 
+async function getScreenshotMetrics(page) {
+  const metrics = await page.evaluate(() => {
+    const body = document.body;
+    const documentElement = document.documentElement;
+    return {
+      width: Math.ceil(Math.max(
+        documentElement?.scrollWidth || 0,
+        body?.scrollWidth || 0,
+        window.innerWidth || 0,
+      )),
+      height: Math.ceil(Math.max(
+        documentElement?.scrollHeight || 0,
+        body?.scrollHeight || 0,
+        window.innerHeight || 0,
+      )),
+    };
+  });
+
+  return {
+    width: Math.max(1, Math.floor(metrics?.width || VIEWPORT.width)),
+    height: Math.max(1, Math.floor(metrics?.height || VIEWPORT.height)),
+  };
+}
+
+function copyPngInto(target, source, offsetY) {
+  const width = Math.min(target.width, source.width);
+  const height = Math.min(source.height, target.height - offsetY);
+
+  for (let y = 0; y < height; y += 1) {
+    const sourceStart = y * source.width * 4;
+    const targetStart = ((offsetY + y) * target.width) * 4;
+    source.data.copy(target.data, targetStart, sourceStart, sourceStart + width * 4);
+  }
+}
+
+async function settleAfterScroll(page) {
+  await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => resolve())));
+}
+
+async function capturePageScreenshotInChunks(page, outputPath, metrics, options = {}) {
+  const chunkHeight = Math.max(1, Math.floor(options.chunkHeight || SCREENSHOT_CHUNK_HEIGHT));
+  const composite = new PNG({ width: metrics.width, height: metrics.height });
+  composite.data.fill(255);
+  let chunks = 0;
+
+  for (let y = 0; y < metrics.height; y += chunkHeight) {
+    const height = Math.min(chunkHeight, metrics.height - y);
+    await page.evaluate((scrollY) => window.scrollTo(0, scrollY), y);
+    await settleAfterScroll(page);
+
+    const buffer = await page.screenshot({
+      captureBeyondViewport: true,
+      optimizeForSpeed: true,
+      clip: {
+        x: 0,
+        y,
+        width: metrics.width,
+        height,
+      },
+    });
+    copyPngInto(composite, PNG.sync.read(Buffer.from(buffer)), y);
+    chunks += 1;
+  }
+
+  await fsp.writeFile(outputPath, PNG.sync.write(composite));
+  return { mode: 'chunked', chunks, width: metrics.width, height: metrics.height };
+}
+
+async function capturePageScreenshot(page, outputPath, options = {}) {
+  const metrics = await getScreenshotMetrics(page);
+  const chunkTriggerHeight = Math.max(
+    1,
+    Math.floor(options.chunkTriggerHeight || SCREENSHOT_CHUNK_TRIGGER_HEIGHT),
+  );
+
+  if (metrics.height <= chunkTriggerHeight) {
+    try {
+      await page.screenshot({ path: outputPath, fullPage: true, optimizeForSpeed: true });
+      return { mode: 'fullPage', chunks: 1, width: metrics.width, height: metrics.height };
+    } catch (error) {
+      console.warn(`Full-page screenshot failed for ${options.label || outputPath}; retrying chunked capture: ${error.message}`);
+    }
+  }
+
+  return capturePageScreenshotInChunks(page, outputPath, metrics, options);
+}
+
 async function captureScreenshotDiff(livePage, testPage, routePath) {
   const screenshotDir = path.join(OUTPUT_DIR, 'screenshots');
   await fsp.mkdir(screenshotDir, { recursive: true });
@@ -399,9 +490,9 @@ async function captureScreenshotDiff(livePage, testPage, routePath) {
   const testPath = path.join(screenshotDir, `${slug}-test.png`);
   const diffPath = path.join(screenshotDir, `${slug}-diff.png`);
 
-  await Promise.all([
-    livePage.screenshot({ path: livePath, fullPage: true }),
-    testPage.screenshot({ path: testPath, fullPage: true }),
+  const [liveCapture, testCapture] = await Promise.all([
+    capturePageScreenshot(livePage, livePath, { label: `${routePath} live` }),
+    capturePageScreenshot(testPage, testPath, { label: `${routePath} test` }),
   ]);
 
   const [liveBuffer, testBuffer] = await Promise.all([fsp.readFile(livePath), fsp.readFile(testPath)]);
@@ -437,6 +528,10 @@ async function captureScreenshotDiff(livePage, testPage, routePath) {
     testHeight: testImage.height,
     comparedWidth: width,
     comparedHeight: height,
+    capture: {
+      live: liveCapture,
+      test: testCapture,
+    },
   };
 }
 
@@ -571,7 +666,7 @@ async function main() {
 
   const browser = await puppeteer.launch({
     headless: 'new',
-    protocolTimeout: BROWSER_PROTOCOL_TIMEOUT,
+    protocolTimeout: PROTOCOL_TIMEOUT,
     args: ['--no-sandbox', '--disable-setuid-sandbox'],
   });
 
@@ -651,7 +746,18 @@ async function main() {
   }
 }
 
-main().catch((error) => {
-  console.error(error);
-  process.exit(1);
-});
+module.exports = {
+  capturePageScreenshot,
+  capturePageScreenshotInChunks,
+  captureScreenshotDiff,
+  copyPngInto,
+  getScreenshotMetrics,
+  padImage,
+};
+
+if (require.main === module) {
+  main().catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
+}

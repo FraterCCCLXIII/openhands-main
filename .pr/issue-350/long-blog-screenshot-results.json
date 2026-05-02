@@ -1,0 +1,63 @@
+{
+  "generatedAt": "2026-05-02T01:27:07.375Z",
+  "liveOrigin": "https://openhands.dev",
+  "testOrigin": "http://127.0.0.1:12001",
+  "results": [
+    {
+      "routePath": "/blog/20260227-creating-effective-agent-skills",
+      "liveStatus": 200,
+      "testStatus": 200,
+      "screenshotDiff": {
+        "diffPixels": 3353169,
+        "diffPercent": 20.63,
+        "threshold": 2,
+        "passed": false,
+        "livePath": ".pr/issue-350/screenshots/blog-20260227-creating-effective-agent-skills-live.png",
+        "testPath": ".pr/issue-350/screenshots/blog-20260227-creating-effective-agent-skills-test.png",
+        "diffPath": ".pr/issue-350/screenshots/blog-20260227-creating-effective-agent-skills-diff.png",
+        "capture": {
+          "live": {
+            "mode": "fullPage",
+            "chunks": 1,
+            "width": 1440,
+            "height": 10943
+          },
+          "test": {
+            "mode": "fullPage",
+            "chunks": 1,
+            "width": 1440,
+            "height": 11286
+          }
+        }
+      }
+    },
+    {
+      "routePath": "/blog/agent-control-plane",
+      "liveStatus": 200,
+      "testStatus": 200,
+      "screenshotDiff": {
+        "diffPixels": 1640957,
+        "diffPercent": 16.03,
+        "threshold": 2,
+        "passed": false,
+        "livePath": ".pr/issue-350/screenshots/blog-agent-control-plane-live.png",
+        "testPath": ".pr/issue-350/screenshots/blog-agent-control-plane-test.png",
+        "diffPath": ".pr/issue-350/screenshots/blog-agent-control-plane-diff.png",
+        "capture": {
+          "live": {
+            "mode": "fullPage",
+            "chunks": 1,
+            "width": 1440,
+            "height": 6902
+          },
+          "test": {
+            "mode": "fullPage",
+            "chunks": 1,
+            "width": 1440,
+            "height": 7110
+          }
+        }
+      }
+    }
+  ]
+}
