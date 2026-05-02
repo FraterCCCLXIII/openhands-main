@@ -18,6 +18,7 @@ const DISCOVERY_PAGE_LIMIT = Number(process.env.PARITY_DISCOVERY_LIMIT || 60);
 const VIEWPORT = { width: 1440, height: 2400 };
 const SCREENSHOT_PAGE_LIMIT = Number(process.env.PARITY_SCREENSHOT_PAGE_LIMIT || Math.min(MAX_PAGES, 20));
 const SCREENSHOT_DIFF_THRESHOLD = Number(process.env.PARITY_SCREENSHOT_DIFF_THRESHOLD || 2);
+const BROWSER_PROTOCOL_TIMEOUT = Number(process.env.PARITY_PROTOCOL_TIMEOUT_MS || 300000);
 const STYLE_PROPS = [
   'fontSize',
   'fontWeight',
@@ -430,6 +431,23 @@ async function captureScreenshotDiff(livePage, testPage, routePath) {
     livePath: path.relative(process.cwd(), livePath),
     testPath: path.relative(process.cwd(), testPath),
     diffPath: path.relative(process.cwd(), diffPath),
+    liveWidth: liveImage.width,
+    liveHeight: liveImage.height,
+    testWidth: testImage.width,
+    testHeight: testImage.height,
+    comparedWidth: width,
+    comparedHeight: height,
+  };
+}
+
+function createScreenshotError(routePath, error) {
+  return {
+    diffPixels: null,
+    diffPercent: null,
+    threshold: SCREENSHOT_DIFF_THRESHOLD,
+    passed: false,
+    routePath,
+    error: error.message,
   };
 }
 
@@ -451,7 +469,8 @@ function renderMarkdown(report) {
   lines.push(`- Unexpected test-only signatures: ${report.summary.extraElements}`);
   lines.push(`- Appearance mismatches: ${report.summary.styleMismatches}`);
   lines.push(`- Layout mismatches: ${report.summary.layoutMismatches}`);
-  lines.push(`- Screenshot mismatches (> ${SCREENSHOT_DIFF_THRESHOLD}%): ${report.summary.screenshotMismatches}`);
+  lines.push(`- Screenshot mismatches (> ${SCREENSHOT_DIFF_THRESHOLD}% or unavailable): ${report.summary.screenshotMismatches}`);
+  lines.push(`- Screenshot capture failures: ${report.summary.screenshotUnavailable || 0}`);
   lines.push(`- Total failing checks: ${report.summary.failedChecklistItems}`);
   lines.push('');
 
@@ -463,10 +482,14 @@ function renderMarkdown(report) {
     lines.push(`- [${route.headingSequenceMatches ? 'x' : ' '}] Heading order matches${route.headingSequenceMatches ? '' : ` (${route.headingSequenceDiffs.join(' | ')})`}`);
 
     if (route.screenshotDiff) {
-      lines.push(`- [${route.screenshotDiff.passed ? 'x' : ' '}] Screenshot diff within threshold (${route.screenshotDiff.diffPercent}% vs threshold ${route.screenshotDiff.threshold}%)`);
-      lines.push(`  - live screenshot: ${route.screenshotDiff.livePath}`);
-      lines.push(`  - test screenshot: ${route.screenshotDiff.testPath}`);
-      lines.push(`  - diff screenshot: ${route.screenshotDiff.diffPath}`);
+      if (route.screenshotDiff.error) {
+        lines.push(`- [ ] Screenshot diff unavailable: ${route.screenshotDiff.error}`);
+      } else {
+        lines.push(`- [${route.screenshotDiff.passed ? 'x' : ' '}] Screenshot diff within threshold (${route.screenshotDiff.diffPercent}% vs threshold ${route.screenshotDiff.threshold}%)`);
+        lines.push(`  - live screenshot: ${route.screenshotDiff.livePath} (${route.screenshotDiff.liveWidth}×${route.screenshotDiff.liveHeight})`);
+        lines.push(`  - test screenshot: ${route.screenshotDiff.testPath} (${route.screenshotDiff.testWidth}×${route.screenshotDiff.testHeight})`);
+        lines.push(`  - diff screenshot: ${route.screenshotDiff.diffPath}`);
+      }
     }
 
     for (const item of route.checklist) {
@@ -548,7 +571,7 @@ async function main() {
 
   const browser = await puppeteer.launch({
     headless: 'new',
-    protocolTimeout: 120000,
+    protocolTimeout: BROWSER_PROTOCOL_TIMEOUT,
     args: ['--no-sandbox', '--disable-setuid-sandbox'],
   });
 
@@ -571,6 +594,7 @@ async function main() {
           try {
             screenshotDiff = await captureScreenshotDiff(livePage, testPage, routePath);
           } catch (error) {
+            screenshotDiff = createScreenshotError(routePath, error);
             console.warn(`Screenshot diff unavailable for ${routePath}: ${error.message}`);
           }
         }
@@ -597,6 +621,7 @@ async function main() {
         styleMismatches: routes.reduce((total, route) => total + route.styleMismatchCount, 0),
         layoutMismatches: routes.reduce((total, route) => total + route.layoutMismatchCount, 0),
         screenshotMismatches: routes.filter((route) => route.screenshotDiff && !route.screenshotDiff.passed).length,
+        screenshotUnavailable: routes.filter((route) => route.screenshotDiff?.error).length,
       },
       routes,
     };
