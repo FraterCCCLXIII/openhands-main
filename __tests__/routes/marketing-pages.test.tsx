@@ -81,7 +81,7 @@ describe('Marketing parity routes', () => {
   });
 
   it('renders the updated enterprise page content', () => {
-    renderRoute(<Enterprise />);
+    const { container } = renderRoute(<Enterprise />);
 
     expect(
       screen.getByText(/Open source agent infrastructure for code modernization/i, { selector: 'div' })
@@ -95,18 +95,42 @@ describe('Marketing parity routes', () => {
     );
     expect(screen.getByRole('heading', { name: /Why Enterprises Choose OpenHands/i })).toBeInTheDocument();
     expect(screen.getByText('Dedicated technical and account-level support')).toBeInTheDocument();
+
+    // ASCII art images render as full-width backgrounds (not small inline images)
+    const asciArtImg = screen.getByAltText('asci art');
+    expect(asciArtImg.closest('div')).toHaveClass('pointer-events-none', 'absolute', 'inset-0');
+    const blackHoleImg = screen.getByAltText(/ASCII art depicting a large black hole/i);
+    expect(blackHoleImg.closest('div')).toHaveClass('pointer-events-none', 'absolute', 'inset-0');
+
+    // AMD quote section is full-width dark background, not a contained card
+    const amdSection = asciArtImg.closest('section');
+    expect(amdSection).toHaveClass('bg-brand-fg');
+
+    // No individual company alt-text logos (partner logos have empty alt)
     expect(screen.queryByAltText('Amazon')).not.toBeInTheDocument();
     expect(screen.queryByAltText('Netflix')).not.toBeInTheDocument();
     expect(screen.queryByAltText('Google')).not.toBeInTheDocument();
     expect(screen.queryByAltText('AMD')).not.toBeInTheDocument();
     expect(screen.queryByAltText(/amd logo/i)).not.toBeInTheDocument();
     expect(screen.queryByAltText('NVIDIA')).not.toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: /Powering enterprise AI with the world’s best/i })).toBeInTheDocument();
+
+    // Proof band section is centered text layout
+    expect(screen.getByRole('heading', { name: /Powering enterprise AI with the world/i })).toBeInTheDocument();
+    const proofSection = blackHoleImg.closest('section');
+    expect(proofSection?.querySelector('.text-center')).not.toBeNull();
+
+    // Results section with icon images and measured impact bar
     expect(screen.getByText('Measured impact')).toBeInTheDocument();
+    const resultIcons = container.querySelectorAll('img[src*="Frame_48095783"]');
+    expect(resultIcons).toHaveLength(3);
+
+    // Whitepaper section centered layout (no horizontal card)
     expect(screen.getByRole('link', { name: 'Download the Whitepaper' })).toHaveAttribute(
       'href',
       '/whitepapers/modernize-legacy-systems-with-ai-agents',
     );
+    const whitepaperHeading = screen.getByRole('heading', { name: /Whitepaper: Modernize legacy/i });
+    expect(whitepaperHeading.closest('div')).toHaveClass('text-center');
   });
 
   it('renders the updated community page content', () => {

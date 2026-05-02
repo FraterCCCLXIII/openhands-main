@@ -28,18 +28,24 @@ const ENTERPRISE_FEATURES = [
   },
 ];
 
-const LOGOS = [
-  { name: 'Amazon', url: '/assets/webflow/logos/69137f10c3975e28b3932320_Amazon_logo1.svg' },
-  { name: 'Netflix', url: '/assets/webflow/logos/69137eac8f27ca27f5e48420_Netflix_2015_logo1.svg' },
-  { name: 'Google', url: '/assets/webflow/logos/69137e199ce2cb594b0210ab_google-ar211.svg' },
-  { name: 'AMD', url: '/assets/webflow/logos/690b9e5400fdae4c12eedd75_small-client-logo.svg' },
-  { name: 'NVIDIA', url: '/assets/webflow/logos/69137e34e3a5ab71e37082a7_NVIDIA_logo1.svg' },
+const PARTNER_LOGOS = [
+  { url: '/assets/webflow/logos/69137e34e3a5ab71e37082a7_NVIDIA_logo1.svg' },
+  { url: '/assets/webflow/logos/690b9e5400fdae4c12eedd75_small-client-logo.svg' },
 ];
 
 const RESULTS = [
-  'Up to 30× productivity gains',
-  'Thousands of vulnerabilities fixed',
-  'Weeks of work done in hours',
+  {
+    text: 'Up to 30\u00d7 productivity gains',
+    icon: '/assets/webflow/misc/6908c811a8fa726a4aa72efc_Frame_48095783.svg',
+  },
+  {
+    text: 'Thousands of vulnerabilities fixed',
+    icon: '/assets/webflow/misc/6908c811d0cad14d06a87f29_Frame_48095783-4.svg',
+  },
+  {
+    text: 'Weeks of work done in hours',
+    icon: '/assets/webflow/misc/6908c811c8dbad82a69f7814_Frame_48095783-5.svg',
+  },
 ];
 
 export const meta: Route.MetaFunction = ({ location }) => {
@@ -69,8 +75,16 @@ export const meta: Route.MetaFunction = ({ location }) => {
 const Enterprise = () => {
   return (
     <main>
-      <section className='px-10 pb-20 pt-10 lg:pt-12'>
-        <div className='mx-auto flex max-w-4xl flex-col items-center gap-6 text-center'>
+      {/* Hero with ASCII background */}
+      <section className='relative overflow-hidden px-10 pb-20 pt-10 lg:pt-12'>
+        <div className='pointer-events-none absolute inset-0 opacity-[0.12]'>
+          <img
+            src='/assets/webflow/backgrounds/6908d170831c19b2b6976323_ascii-art_(16)_1.svg'
+            alt=''
+            className='h-full w-full object-cover'
+          />
+        </div>
+        <div className='relative mx-auto flex max-w-4xl flex-col items-center gap-6 text-center'>
           <h1 className='sr-only'>Open source agent infrastructure for code modernization</h1>
           <div className='text-[44px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>
             Open source agent infrastructure for code modernization
@@ -89,6 +103,7 @@ const Enterprise = () => {
         </div>
       </section>
 
+      {/* Features */}
       <section className='px-10 py-20'>
         <div className='mx-auto grid max-w-[1260px] gap-10 lg:grid-cols-[minmax(0,0.48fr)_minmax(0,0.52fr)] lg:justify-between'>
           <div>
@@ -114,98 +129,107 @@ const Enterprise = () => {
         </div>
       </section>
 
-      <section className='px-10 py-20'>
-        <div className='mx-auto flex max-w-5xl flex-col items-center gap-8 rounded-[28px] bg-brand-fg px-8 py-12 text-center'>
+      {/* AMD Quote — full-width dark section with ASCII background */}
+      <section className='relative overflow-hidden bg-brand-fg px-10 py-20'>
+        <div className='pointer-events-none absolute inset-0'>
           <img
             src='/assets/webflow/backgrounds/690b50c95a72e7b17a1412a8_09a6ecb11584c3309a64a00d57130313_ascii-art_%2815%29_1.svg'
             alt='asci art'
-            className='h-24 w-auto object-contain'
+            className='h-full w-full object-cover'
           />
+        </div>
+        <div className='relative mx-auto flex max-w-[812px] flex-col items-center gap-8 text-center'>
           <h2 className='testimonial-quote text-[#b3a88c]'>
-            “The integration of Lemonade Server with OpenHands reflects AMD’s commitment to open-source innovation and developer choice. This collaboration enables local coding agents that prioritize privacy, cost efficiency, and flexible model selection – while taking advantage of acceleration on Ryzen AI PCs. Together, we’re supporting a range of workflows and staying true to open-source values.”
+            {'\u201c'}The integration of Lemonade Server with OpenHands reflects AMD{'\u2019'}s commitment to open-source innovation and developer choice. This collaboration enables local coding agents that prioritize privacy, cost efficiency, and flexible model selection {'\u2013'} while taking advantage of acceleration on Ryzen AI PCs. Together, we{'\u2019'}re supporting a range of workflows and staying true to open-source values.{'\u201d'}
           </h2>
-          <div className='flex flex-col items-center gap-3'>
+          <div className='flex items-center gap-4'>
             <div className='text-[18px] font-medium text-brand-bg'>
               Adrian Macias,
-              <br />
+            </div>
+            <div className='text-[18px] font-medium text-brand-bg'>
               Sr. Director, Developer Acceleration at AMD
             </div>
+            <div className='mx-2 h-8 w-px bg-brand-bg/30' />
             <img src='/assets/webflow/logos/690b53e4ae0418e84e83578b_amd.svg' alt='' className='h-10 w-auto' />
           </div>
           <OverlayLinkButton href='/contact' label='Contact us' variant='outline' />
         </div>
       </section>
 
-      <section className='px-10 py-20'>
-        <div className='mx-auto grid max-w-[1260px] items-center gap-10 lg:grid-cols-[1.15fr_0.85fr]'>
-          <div>
-            <h2 className='text-[32px] font-medium leading-[1.2] tracking-[-0.02em] text-brand-fg'>
-              Powering enterprise AI with the world’s best
-            </h2>
-            <p className='mt-4 max-w-2xl text-[18px] leading-[1.6] text-brand-muted'>
-              OpenHands partners with the leading AI infrastructure providers to ensure our platform is optimized for the latest generation of compute so your team can build on top of it faster.
-            </p>
-            <div className='logo-grid mt-10 justify-start'>
-              {LOGOS.map((logo) => (
-                <img key={logo.name} src={logo.url} alt='' />
-              ))}
-            </div>
-          </div>
-          <div className='overflow-hidden rounded-[28px] border border-brand-fg/10 bg-white/50'>
-            <img
-              src='/assets/webflow/backgrounds/690b397ae76441160bed52b6_asci-art-hole.png'
-              alt='ASCII art depicting a large black hole with light and particles swirling around it.'
-              className='h-full w-full object-cover'
-            />
-          </div>
+      {/* Proof band — centered layout with ASCII background */}
+      <section className='relative overflow-hidden px-10 py-20'>
+        <div className='pointer-events-none absolute inset-0'>
+          <img
+            src='/assets/webflow/backgrounds/690b397ae76441160bed52b6_asci-art-hole.png'
+            alt='ASCII art depicting a large black hole with light and particles swirling around it.'
+            className='h-full w-full object-cover'
+          />
         </div>
-      </section>
-
-      <section className='px-10 py-20'>
-        <div className='mx-auto max-w-[1260px]'>
-          <div className='mb-2 text-sm uppercase tracking-[0.14em] text-brand-muted'>Measured impact</div>
-          <h3 className='text-[32px] lg:text-[44px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>
-            Proven results across industries
-          </h3>
-          <p className='mt-4 max-w-2xl text-[18px] leading-[1.6] text-brand-muted'>
-            Enterprises use OpenHands to fix thousands of vulnerabilities, refactor codebases, and ship faster with less risk
+        <div className='relative mx-auto max-w-[1260px] text-center'>
+          <h2 className='text-[32px] font-medium leading-[1.2] tracking-[-0.02em] text-brand-fg'>
+            Powering enterprise AI with the world{'\u2019'}s best
+          </h2>
+          <p className='mx-auto mt-4 max-w-[860px] text-[18px] leading-[1.6] text-brand-muted'>
+            OpenHands partners with the leading AI infrastructure providers to ensure our platform is optimized for the latest generation of compute so your team can build on top of it faster.
           </p>
-          <div className='mt-10 grid gap-6 md:grid-cols-3'>
-            {RESULTS.map((result) => (
-              <article
-                key={result}
-                className='rounded-[24px] border border-brand-fg/10 bg-white/50 p-6'
-              >
-                <p className='text-[28px] font-medium leading-[1.2] text-brand-fg'>{result}</p>
-              </article>
+          <div className='mt-10 flex items-center justify-center gap-12'>
+            {PARTNER_LOGOS.map((logo) => (
+              <img key={logo.url} src={logo.url} alt='' className='h-12 w-auto object-contain' />
             ))}
           </div>
         </div>
       </section>
 
+      {/* Results */}
       <section className='px-10 py-20'>
-        <div className='mx-auto flex max-w-[1000px] flex-col gap-6 rounded-[28px] border border-brand-fg/10 bg-white/50 px-8 py-10 lg:flex-row lg:items-center lg:justify-between'>
-          <div className='max-w-2xl'>
-            <h3 className='text-[32px] lg:text-[44px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>
-              Whitepaper: Modernize legacy systems before your expertise disappears
-            </h3>
-            <p className='mt-4 text-[18px] leading-[1.6] text-brand-muted'>
-              Legacy modernization projects fail 74% of the time and the engineers who understand your COBOL, mainframe, and legacy systems are retiring faster than you can replace them.
-            </p>
+        <div className='mx-auto max-w-[1260px] text-center'>
+          <h3 className='text-[32px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg lg:text-[44px]'>
+            Proven results across industries
+          </h3>
+          <p className='mx-auto mt-4 max-w-[660px] text-[18px] leading-[1.6] text-brand-muted'>
+            Enterprises use OpenHands to fix thousands of vulnerabilities, refactor codebases, and ship faster with less risk
+          </p>
+          <div className='mt-10 overflow-hidden rounded-[24px] border border-brand-fg/10'>
+            <div className='bg-brand-fg/20 px-6 py-4 text-left'>
+              <span className='font-mono text-sm text-brand-fg'>Measured impact</span>
+            </div>
+            <div className='grid gap-px bg-brand-fg/10 md:grid-cols-3'>
+              {RESULTS.map((result) => (
+                <article key={result.text} className='flex flex-col items-center gap-4 bg-brand-bg p-8'>
+                  <img src={result.icon} alt='' className='h-32 w-32' />
+                  <p className='text-[18px] font-medium leading-[1.3] text-brand-fg'>{result.text}</p>
+                </article>
+              ))}
+            </div>
           </div>
-          <OverlayLinkButton
-            href='/whitepapers/modernize-legacy-systems-with-ai-agents'
-            label='Download the Whitepaper'
-          />
         </div>
       </section>
 
+      {/* Whitepaper — centered layout */}
+      <section className='px-10 py-20'>
+        <div className='mx-auto max-w-[860px] text-center'>
+          <h3 className='text-[32px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg lg:text-[44px]'>
+            Whitepaper: Modernize legacy systems before your expertise disappears
+          </h3>
+          <p className='mx-auto mt-4 max-w-[660px] text-[18px] leading-[1.6] text-brand-muted'>
+            Legacy modernization projects fail 74% of the time and the engineers who understand your COBOL, mainframe, and legacy systems are retiring faster than you can replace them.
+          </p>
+          <div className='mt-8'>
+            <OverlayLinkButton
+              href='/whitepapers/modernize-legacy-systems-with-ai-agents'
+              label='Download the Whitepaper'
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* Footer CTA */}
       <section className='px-10 py-20 text-center'>
-        <div className='mx-auto flex max-w-3xl flex-col items-center gap-6'>
+        <div className='mx-auto flex max-w-[812px] flex-col items-center gap-6'>
           <div className='text-[44px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>
             Bring agentic development to your organization.
           </div>
-          <p className='max-w-2xl text-[18px] leading-[1.6] text-brand-muted'>
+          <p className='text-[18px] leading-[1.6] text-brand-muted'>
             Deploy securely. Scale confidently. Stay in control.
           </p>
           <div className='flex flex-wrap items-center justify-center gap-4'>
