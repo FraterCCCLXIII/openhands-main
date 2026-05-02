@@ -53,7 +53,15 @@ describe('Blog route', () => {
     const user = userEvent.setup();
     const { container } = render(<Blog />);
 
+    const newsletterPrompt = screen.getByText(
+      'Sign up for our newsletter for updates, events, and community insights.'
+    );
+
+    expect(container.querySelector('main')?.className).toContain('pt-[40px]');
     expect(screen.getByText('Insights and updates from the OpenHands team')).toBeInTheDocument();
+    expect(newsletterPrompt.className).toContain('mt-[70px]');
+    expect(newsletterPrompt.className).toContain('whitespace-nowrap');
+    expect(newsletterPrompt.className).toContain('text-[16px]');
     expect(screen.getByText('Introducing the OpenHands Index')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Read more' })).toHaveAttribute(
       'href',

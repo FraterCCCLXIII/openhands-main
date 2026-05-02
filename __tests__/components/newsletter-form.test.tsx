@@ -11,8 +11,13 @@ describe('NewsletterForm', () => {
   it('renders the live-style email field and privacy copy', () => {
     render(<NewsletterForm centered />);
 
-    expect(screen.getByPlaceholderText('Share your email')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Subscribe' })).toBeInTheDocument();
+    const emailField = screen.getByPlaceholderText('Share your email');
+    const submitButton = screen.getByRole('button', { name: 'Subscribe' });
+
+    expect(emailField).toBeInTheDocument();
+    expect(emailField.className).toContain('min-h-[52px]');
+    expect(submitButton).toBeInTheDocument();
+    expect(submitButton.className).toContain('min-h-[52px]');
 
     const privacyLink = screen.getByRole('link', { name: 'Privacy Policy' });
     expect(privacyLink).toHaveAttribute('href', '/privacy');

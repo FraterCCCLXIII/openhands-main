@@ -63,6 +63,8 @@ describe('Blog article route', () => {
     const coverImage = container.querySelector('article > div img');
 
     expect(coverImage?.getAttribute('alt')).toBe('');
+    expect(coverImage?.getAttribute('loading')).toBe('lazy');
+    expect(coverImage?.getAttribute('decoding')).toBe('async');
     expect(coverImage?.className).toContain('h-auto');
     expect(coverImage?.className).not.toContain('aspect-[3/2]');
     expect(screen.getByRole('heading', { level: 1, name: 'Get useful insights in our blog' })).toBeInTheDocument();

@@ -79,7 +79,7 @@ const Blog = () => {
   const hasMoreBlogs = visibleGridPosts < gridBlogs.length;
 
   return (
-    <main className='flex flex-col items-center px-5 pb-16 pt-[100px] lg:px-10'>
+    <main className='flex flex-col items-center px-5 pb-16 pt-[40px] lg:px-10'>
       <section className='w-full max-w-[1238px] text-center'>
         <h1 className='font-inter text-[32px] leading-[1.1] font-medium tracking-[-0.03em] text-brand-fg lg:text-[44px]'>
           OpenHands Blog
@@ -87,7 +87,7 @@ const Blog = () => {
         <p className='mt-3 text-[18px] leading-[1.2] font-medium text-[#5f5f5f] lg:text-[20px]'>
           Insights and updates from the OpenHands team
         </p>
-        <p className='mx-auto mt-8 max-w-[503px] text-[18px] leading-[1.5] text-[#22150d]'>
+        <p className='mx-auto mt-[70px] max-w-[503px] whitespace-nowrap text-[16px] leading-[22.4px] text-[#22150d]'>
           Sign up for our newsletter for updates, events, and community insights.
         </p>
         <div className='mt-4 flex justify-center'>
@@ -101,7 +101,7 @@ const Blog = () => {
       </section>
 
       {featuredBlog && (
-        <section className='mt-20 w-full max-w-[1238px]'>
+        <section className='mt-[140px] w-full max-w-[1238px]'>
           <FeaturedBlogCard
             href={`/blog/${getBlogSlug(featuredBlog)}`}
             title={featuredBlog.data.title}

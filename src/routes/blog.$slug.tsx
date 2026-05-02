@@ -192,6 +192,8 @@ const BlogDetails = () => {
               <img
                 src={data.cover}
                 alt={data.coverAlt}
+                loading='lazy'
+                decoding='async'
                 className={`h-auto w-full ${data.coverRadius === 'none' ? 'rounded-none' : 'rounded-[16px]'}`}
               />
             )}

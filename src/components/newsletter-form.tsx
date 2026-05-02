@@ -34,13 +34,13 @@ export const NewsletterForm: React.FC<NewsletterFormProps> = ({
             placeholder='Share your email'
             required
             pattern='[^@]+@[^.]+\..+'
-            className='min-h-[58px] w-full rounded-[8px] border border-black/5 bg-white px-6 text-[16px] leading-[1.5] text-[#5f5f5f] outline-none transition-colors placeholder:text-[#b3a88c] focus:border-brand-accent'
+            className='min-h-[52px] w-full rounded-[8px] border border-black/5 bg-white px-6 text-[16px] leading-[1.5] text-[#5f5f5f] outline-none transition-colors placeholder:text-[#b3a88c] focus:border-brand-accent'
           />
           <input
             type='submit'
             value='Subscribe'
             disabled={disabled}
-            className='btn btn-primary m-0 min-h-[58px] whitespace-nowrap rounded-[8px] disabled:cursor-not-allowed disabled:opacity-50'
+            className='btn btn-primary m-0 min-h-[52px] whitespace-nowrap rounded-[8px] disabled:cursor-not-allowed disabled:opacity-50'
           />
         </div>
 
