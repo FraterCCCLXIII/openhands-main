@@ -63,7 +63,7 @@ const PRODUCT_SURFACES = [
     image: '/assets/webflow/misc/691b30aa3c700dcb47a96c00_SDK.webp',
   },
   {
-    title: 'Cloud',
+    title: 'Web GUI',
     description: 'Plan and execute complex tasks via the desktop or mobile web',
     href: 'https://app.all-hands.dev/',
     cta: 'Try it live',
@@ -307,13 +307,14 @@ export const meta: Route.MetaFunction = () => {
 const Home = () => {
   const [activeTestimonial, setActiveTestimonial] = React.useState(0);
   const [workflowOffset, setWorkflowOffset] = React.useState(0);
+  const [activeSurfaceIndex, setActiveSurfaceIndex] = React.useState(0);
 
   const visibleWorkflows = React.useMemo(
     () => Array.from({ length: 3 }, (_, index) => WORKFLOWS[(workflowOffset + index) % WORKFLOWS.length]),
     [workflowOffset],
   );
 
-  const activeSurface = PRODUCT_SURFACES[0];
+  const activeSurface = PRODUCT_SURFACES[activeSurfaceIndex];
   const openExternal = (href: string) => {
     if (typeof window !== 'undefined') {
       window.open(href, '_blank', 'noopener,noreferrer');
@@ -341,17 +342,17 @@ const Home = () => {
           </div>
 
           <div className='mx-auto max-w-[640px] text-center'>
-            <div className='mb-4 text-[44px] font-medium leading-[0.96] tracking-[-0.04em] text-brand-fg md:text-[56px]'>
+            <div className='mb-4 font-quincy text-[44px] font-medium leading-[0.96] tracking-[-0.04em] text-brand-fg md:text-[56px]'>
               Build with coding agents, your way.
             </div>
             <div className='mx-auto mb-7 max-w-[520px] text-lg leading-[1.45] text-brand-muted'>
               Open-source, customizable. Run locally or at scale.
             </div>
             <div className='mb-4 flex flex-wrap items-center justify-center gap-4'>
-              <a href='https://app.all-hands.dev/' target='_blank' rel='noopener noreferrer' className='btn btn-primary rounded-none'>
+              <a href='https://app.all-hands.dev/' target='_blank' rel='noopener noreferrer' className='btn btn-primary'>
                 Try it live
               </a>
-              <a href='https://docs.openhands.dev/sdk' target='_blank' rel='noopener noreferrer' className='btn btn-outline rounded-none'>
+              <a href='https://docs.openhands.dev/sdk' target='_blank' rel='noopener noreferrer' className='btn btn-outline'>
                 Build with SDK
               </a>
             </div>
@@ -362,7 +363,7 @@ const Home = () => {
         </div>
       </section>
 
-      <section className='-mt-[82px] bg-brand-bg px-6 pb-10 lg:px-10 lg:pb-[138px]'>
+      <section className='-mt-[82px] bg-brand-bg px-6 pb-6 lg:px-10 lg:pb-10'>
         <div className='mx-auto max-w-[1238px]'>
           <div className='mb-5 flex items-end justify-between gap-4 lg:translate-y-[68px]'>
             <div className='max-w-[384px]'>
@@ -374,7 +375,7 @@ const Home = () => {
               <button
                 type='button'
                 onClick={() => setWorkflowOffset((current) => (current === 0 ? WORKFLOWS.length - 1 : current - 1))}
-                className='flex h-11 w-11 items-center justify-center rounded-none border border-brand-fg/20 text-brand-fg hover:bg-brand-fg/5'
+                className='flex h-11 w-11 items-center justify-center rounded-full border border-brand-fg/20 text-brand-fg transition-colors hover:bg-brand-fg/5'
               >
                 <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' className='h-5 w-5 fill-current' aria-hidden='true'>
                   <path d='M30 16c0 .265-.105.52-.293.707A.997.997 0 0 1 29 17H5.414l6.294 6.292A1 1 0 0 1 11 25a1 1 0 0 1-.708-.292l-8-8A.997.997 0 0 1 2 16c0-.132.026-.262.075-.383.05-.12.124-.23.217-.325l8-8A1 1 0 0 1 12 8c0 .266-.105.52-.292.708L5.414 15H29c.265 0 .52.105.707.293.188.187.293.441.293.707Z' />
@@ -383,7 +384,7 @@ const Home = () => {
               <button
                 type='button'
                 onClick={() => setWorkflowOffset((current) => (current + 1) % WORKFLOWS.length)}
-                className='flex h-11 w-11 items-center justify-center rounded-none border border-brand-fg/20 text-brand-fg hover:bg-brand-fg/5'
+                className='flex h-11 w-11 items-center justify-center rounded-full border border-brand-fg/20 text-brand-fg transition-colors hover:bg-brand-fg/5'
               >
                 <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' className='h-5 w-5 fill-current' aria-hidden='true'>
                   <path d='M2 16c0-.265.105-.52.293-.707A.997.997 0 0 1 3 15h23.586l-6.294-6.292A1 1 0 0 1 20 8a1 1 0 0 1 .708-.292l8 8c.093.094.167.204.217.325.049.12.075.25.075.383 0 .132-.026.262-.075.383-.05.12-.124.23-.217.325l-8 8A1 1 0 0 1 20 24c0-.266.105-.52.292-.708L26.586 17H3a.997.997 0 0 1-.707-.293A.997.997 0 0 1 2 16Z' />
@@ -392,23 +393,25 @@ const Home = () => {
             </div>
           </div>
 
-          <div className='grid gap-5 lg:grid-cols-[repeat(3,352px)]'>
+          <div className='flex gap-5 overflow-x-auto pb-4 lg:overflow-visible' style={{ scrollSnapType: 'x mandatory' }}>
             {visibleWorkflows.map((workflow) => (
               <article
                 key={workflow.title}
-                className='flex h-full flex-col rounded-none border border-brand-fg/15 bg-white/70 p-5 shadow-[0_18px_60px_rgba(34,21,13,0.05)]'
+                className='flex min-w-[300px] flex-shrink-0 flex-col border border-brand-fg/15 bg-white/70 p-5 shadow-[0_18px_60px_rgba(34,21,13,0.05)] lg:w-[352px]'
+                style={{ borderRadius: 'var(--btn-border-radius)', scrollSnapAlign: 'start' }}
               >
                 <img src={workflow.iconSrc} alt='' className='mb-4 h-8 w-8 object-contain' />
                 <h3 className='mb-2 text-[24px] font-medium leading-[1.2] text-brand-fg'>{workflow.title}</h3>
-                <p className='mb-5 text-base leading-[1.5] text-brand-muted'>{workflow.description}</p>
-                <div className='relative mt-auto inline-flex w-full items-center justify-center rounded-none bg-brand-accent px-5 py-3 text-base font-medium text-brand-fg'>
+                <p className='mb-5 font-mono text-sm leading-[1.5] text-brand-muted'>{workflow.description}</p>
+                <div className='relative mt-auto inline-flex w-full items-center justify-center bg-brand-accent px-5 py-3 text-base font-medium text-brand-fg' style={{ borderRadius: 'var(--btn-border-radius)' }}>
                   <div aria-hidden='true'>Launch</div>
                   <button
                     type='button'
                     aria-label={`Launch ${workflow.title}`}
                     data-testid='workflow-launch'
                     onClick={() => openExternal(workflow.href)}
-                    className='absolute inset-0 rounded-none hover:bg-brand-fg/5'
+                    className='absolute inset-0 transition-colors hover:bg-brand-fg/5'
+                    style={{ borderRadius: 'var(--btn-border-radius)' }}
                   />
                 </div>
               </article>
@@ -428,25 +431,36 @@ const Home = () => {
         </div>
       </section>
 
-      <section className='bg-brand-bg px-6 pb-10 pt-6 lg:px-10 lg:pb-12 lg:pt-0'>
+      <section className='bg-brand-bg px-6 pb-6 pt-4 lg:px-10 lg:pb-8 lg:pt-0'>
         <div className='mx-auto grid max-w-[1238px] gap-8 lg:-translate-y-[58px] lg:grid-cols-[280px_minmax(0,1fr)] lg:items-start'>
           <div>
-            <div className='mb-3 flex flex-wrap gap-2'>
-              {PRODUCT_SURFACES.map((surface) => (
-                <div key={surface.title} className='rounded-full bg-brand-fg px-3 py-1 text-sm font-medium text-brand-bg'>
+            <div className='mb-3 flex flex-wrap gap-2' role='tablist'>
+              {PRODUCT_SURFACES.map((surface, index) => (
+                <button
+                  key={surface.title}
+                  type='button'
+                  role='tab'
+                  aria-selected={index === activeSurfaceIndex}
+                  onClick={() => setActiveSurfaceIndex(index)}
+                  className={`cursor-pointer rounded-full px-3 py-1 text-sm font-medium transition-colors ${
+                    index === activeSurfaceIndex
+                      ? 'bg-brand-fg text-brand-bg'
+                      : 'bg-brand-fg/10 text-brand-fg hover:bg-brand-fg/20'
+                  }`}
+                >
                   {surface.title}
-                </div>
+                </button>
               ))}
             </div>
-            <div className='max-w-[270px] rounded-[24px] border border-transparent bg-transparent p-0 shadow-none'>
+            <div className='max-w-[270px]'>
               <h2 className='mb-3 text-[44px] font-medium leading-[1.1] tracking-[-0.03em] text-brand-fg'>{activeSurface.title}</h2>
               <p className='mb-5 max-w-[270px] text-lg leading-[1.5] text-brand-muted'>{activeSurface.description}</p>
-              <a href={activeSurface.href} target='_blank' rel='noopener noreferrer' className='btn btn-outline inline-flex rounded-none'>
+              <a href={activeSurface.href} target='_blank' rel='noopener noreferrer' className='btn btn-outline inline-flex'>
                 {activeSurface.cta}
               </a>
             </div>
           </div>
-          <div className='overflow-hidden bg-[#efe6d1] lg:min-h-[1320px]'>
+          <div className='overflow-hidden bg-[#efe6d1] lg:min-h-[1320px]' style={{ borderRadius: 'var(--btn-border-radius)' }}>
             <img src={activeSurface.image} alt='' className='h-full min-h-[620px] w-full object-cover object-top' />
           </div>
         </div>
@@ -456,7 +470,7 @@ const Home = () => {
         <div className='mx-auto grid max-w-[1278px] gap-10 lg:grid-cols-[599px_639px]'>
           <div className='flex flex-col justify-between gap-8'>
             <h3 className='max-w-[360px] text-[44px] font-medium leading-[1.1] tracking-[-0.03em] text-brand-fg'>Why teams choose OpenHands</h3>
-            <a href='https://app.all-hands.dev/' target='_blank' rel='noopener noreferrer' className='btn btn-primary w-fit rounded-none'>
+            <a href='https://app.all-hands.dev/' target='_blank' rel='noopener noreferrer' className='btn btn-primary w-fit'>
               Try it live
             </a>
           </div>
@@ -534,7 +548,7 @@ const Home = () => {
                 <button
                   type='button'
                   onClick={() => setActiveTestimonial((current) => (current === 0 ? TESTIMONIALS.length - 1 : current - 1))}
-                  className='flex h-11 w-11 items-center justify-center rounded-none border border-brand-fg/20 text-brand-fg hover:bg-brand-fg/5'
+                  className='flex h-11 w-11 items-center justify-center rounded-full border border-brand-fg/20 text-brand-fg transition-colors hover:bg-brand-fg/5'
                 >
                   <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' className='h-5 w-5 fill-current' aria-hidden='true'>
                     <path d='M30 16c0 .265-.105.52-.293.707A.997.997 0 0 1 29 17H5.414l6.294 6.292A1 1 0 0 1 11 25a1 1 0 0 1-.708-.292l-8-8A.997.997 0 0 1 2 16c0-.132.026-.262.075-.383.05-.12.124-.23.217-.325l8-8A1 1 0 0 1 12 8c0 .266-.105.52-.292.708L5.414 15H29c.265 0 .52.105.707.293.188.187.293.441.293.707Z' />
@@ -543,7 +557,7 @@ const Home = () => {
                 <button
                   type='button'
                   onClick={() => setActiveTestimonial((current) => (current === TESTIMONIALS.length - 1 ? 0 : current + 1))}
-                  className='flex h-11 w-11 items-center justify-center rounded-none border border-brand-fg/20 text-brand-fg hover:bg-brand-fg/5'
+                  className='flex h-11 w-11 items-center justify-center rounded-full border border-brand-fg/20 text-brand-fg transition-colors hover:bg-brand-fg/5'
                 >
                   <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' className='h-5 w-5 fill-current' aria-hidden='true'>
                     <path d='M2 16c0-.265.105-.52.293-.707A.997.997 0 0 1 3 15h23.586l-6.294-6.292A1 1 0 0 1 20 8a1 1 0 0 1 .708-.292l8 8c.093.094.167.204.217.325.049.12.075.25.075.383 0 .132-.026.262-.075.383-.05.12-.124.23-.217.325l-8 8A1 1 0 0 1 20 24c0-.266.105-.52.292-.708L26.586 17H3a.997.997 0 0 1-.707-.293A.997.997 0 0 1 2 16Z' />
@@ -563,7 +577,7 @@ const Home = () => {
               <p className='mb-8 max-w-[350px] text-lg leading-[1.55] text-white/75'>
                 With 65K+ GitHub stars and a thriving open-source ecosystem, OpenHands evolves through collective innovation - every contribution makes the platform faster, safer, and smarter.
               </p>
-              <a href='https://github.com/OpenHands/OpenHands' target='_blank' rel='noopener noreferrer' className='btn mb-12 inline-flex rounded-none border border-brand-bg/40 bg-transparent text-brand-bg hover:bg-brand-bg/10'>
+              <a href='https://github.com/OpenHands/OpenHands' target='_blank' rel='noopener noreferrer' className='btn mb-12 inline-flex border border-brand-bg/40 bg-transparent text-brand-bg hover:bg-brand-bg/10'>
                 Explore the repo
               </a>
               <div className='mt-auto flex items-end gap-3'>
@@ -604,7 +618,7 @@ const Home = () => {
                 <p className='mb-6 max-w-[369px] text-lg leading-[1.55] text-white/75'>
                   Control every layer of your environment with fine-grained access control, model-agnostic architecture, and flexible self-hosted or private cloud deployment options that keep your code and data secure.
                 </p>
-                <Link to='/enterprise' className='btn inline-flex rounded-none border border-brand-bg/40 bg-transparent text-brand-bg hover:bg-brand-bg/10'>
+                <Link to='/enterprise' className='btn inline-flex border border-brand-bg/40 bg-transparent text-brand-bg hover:bg-brand-bg/10'>
                   Learn about Enterprise
                 </Link>
               </div>
@@ -651,7 +665,7 @@ const Home = () => {
           <div className='grid gap-8 lg:grid-cols-[0.4fr_0.6fr] lg:items-start'>
             <div>
               <h2 className='mb-4 text-[44px] font-medium leading-[1.1] tracking-[-0.03em] text-brand-fg'>FAQ&apos;s</h2>
-              <Link to='/contact' className='btn btn-outline w-fit rounded-none'>
+              <Link to='/contact' className='btn btn-outline w-fit'>
                 Contact us
               </Link>
             </div>
@@ -685,10 +699,10 @@ const Home = () => {
             OpenHands is the foundation for secure, transparent, model-agnostic coding agents - empowering every software team to build faster with full control.
           </p>
           <div className='mb-12 flex flex-wrap items-center justify-center gap-4'>
-            <a href='https://docs.openhands.dev/sdk' target='_blank' rel='noopener noreferrer' className='btn btn-outline rounded-none'>
+            <a href='https://docs.openhands.dev/sdk' target='_blank' rel='noopener noreferrer' className='btn btn-outline'>
               Build with SDK
             </a>
-            <a href='https://app.all-hands.dev/' target='_blank' rel='noopener noreferrer' className='btn btn-primary rounded-none'>
+            <a href='https://app.all-hands.dev/' target='_blank' rel='noopener noreferrer' className='btn btn-primary'>
               Try it live
             </a>
           </div>

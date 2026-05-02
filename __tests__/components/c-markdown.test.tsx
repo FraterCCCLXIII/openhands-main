@@ -39,12 +39,12 @@ describe('CMarkdown', () => {
     const figure = container.querySelector('figure');
     const image = screen.getByAltText('Chart');
 
-    expect(figure?.className).toContain('my-10');
-    expect(figure?.className).toContain('justify-center');
+    expect(figure?.className).toContain('my-[3em]');
+    expect(figure?.className).toContain('mx-auto');
     expect(figure?.className).toContain('[&_img]:max-w-full');
     expect(figure?.className).toContain('[&_img]:w-auto');
     expect(image.className).toContain('rounded-[8px]');
-    expect(image.className).not.toContain('my-10');
+    expect(image.className).not.toContain('my-[3em]');
   });
 
   it('keeps markdown-like content inside raw HTML pre blocks out of the document structure', () => {
