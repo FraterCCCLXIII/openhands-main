@@ -94,14 +94,16 @@ const ProductFeatureProofBand = ({
   image,
   headingClassName = 'text-white',
   wideDescription = false,
+  minHeightClass = 'min-h-[571px]',
 }: {
   title: string;
   description: string;
   image?: ProductFeaturePageData['accentImage'];
   headingClassName?: string;
   wideDescription?: boolean;
+  minHeightClass?: string;
 }) => (
-  <section className='relative min-h-[571px] overflow-hidden bg-brand-fg px-6 pb-20 pt-36 lg:px-10'>
+  <section className={classNames('relative overflow-hidden bg-brand-fg px-6 pb-20 pt-36 lg:px-10', minHeightClass)}>
     {image ? (
       <img src={image.src} alt={image.alt} className='absolute inset-0 h-full w-full object-cover' />
     ) : (
@@ -298,7 +300,9 @@ export const ProductFeaturePage = ({
 }) => {
   const isGui = variant === 'gui';
   const isCli = variant === 'cli';
-  const comparisonSpacerClass = isCli ? 'h-[300px]' : 'h-[84px]';
+  const isSdk = variant === 'sdk';
+  const comparisonSpacerClass = isCli ? 'h-[355px]' : isGui ? 'h-[298px]' : 'h-[300px]';
+  const proofBandMinHeight = isGui ? 'min-h-[420px]' : isSdk ? 'min-h-[407px]' : 'min-h-[571px]';
   return (
     <main className='bg-brand-bg'>
       <section
@@ -341,6 +345,7 @@ export const ProductFeaturePage = ({
             description={page.proofDescription}
             image={page.accentImage}
             headingClassName='text-brand-fg'
+            minHeightClass={proofBandMinHeight}
           />
         </>
       ) : (
@@ -356,6 +361,7 @@ export const ProductFeaturePage = ({
             description={page.proofDescription}
             image={page.accentImage}
             wideDescription={isCli}
+            minHeightClass={proofBandMinHeight}
           />
         </>
       )}
