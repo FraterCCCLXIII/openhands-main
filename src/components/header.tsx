@@ -66,7 +66,7 @@ export const Header: React.FC<HeaderProps> = ({
                       href={item.to}
                       target='_blank'
                       rel='noopener noreferrer'
-                      className='text-base font-normal leading-[22.4px] transition-colors hover:text-[#8a5f45]'
+                      className='text-base font-medium leading-[22.4px] transition-colors hover:text-[#8a5f45]'
                     >
                       {item.name}
                     </a>
@@ -74,7 +74,7 @@ export const Header: React.FC<HeaderProps> = ({
                     <Link
                       to={item.to}
                       className={clsx(
-                        'text-base font-normal leading-[22.4px] transition-colors hover:text-[#8a5f45]',
+                        'text-base font-medium leading-[22.4px] transition-colors hover:text-[#8a5f45]',
                         isPathActive(pathname, item.to) && 'text-brand-fg'
                       )}
                     >
@@ -85,7 +85,7 @@ export const Header: React.FC<HeaderProps> = ({
               ))}
               <li className='relative'>
                 <button
-                  className='flex items-center gap-1 text-base font-normal leading-[22.4px] transition-colors hover:text-[#8a5f45]'
+                  className='flex cursor-default items-center gap-1 text-base font-medium leading-[22.4px] transition-colors hover:text-[#8a5f45]'
                   onClick={() => setResourcesOpen(!resourcesOpen)}
                   onBlur={() => setTimeout(() => setResourcesOpen(false), 150)}
                   type='button'

@@ -218,7 +218,7 @@ const Pricing = () => {
           <h1 className='text-[44px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>
             Pricing that fits your rollout
           </h1>
-          <p className='max-w-2xl text-[18px] leading-[1.6] text-brand-muted'>
+          <p className='max-w-2xl text-[20.8px] leading-[1.2] text-brand-muted'>
             Run locally, in our cloud, or self-host. Pay only for what you need
           </p>
         </div>

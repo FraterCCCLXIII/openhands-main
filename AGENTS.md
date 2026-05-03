@@ -15,10 +15,11 @@ Located at: `scripts/validate-visual-styles.cjs`
 
 ### Cross-route parity checklist
 Located at: `scripts/generate-site-parity-checklist.cjs`
-- Checks: visible text/signature inventory, heading order, style mismatches (including font family, cursor, text-decoration, letter-spacing), first-instance layout mismatches, container/section background style auditing, interactive element inventory and behavior comparison (cursor, transitions, pointer-events), hover effect comparison, unexpected extra elements on the test site, and screenshot pixel diffs for the first `PARITY_SCREENSHOT_PAGE_LIMIT` routes
+- Checks: visible text/signature inventory, heading order, style mismatches (including font family, cursor, text-decoration, letter-spacing), first-instance layout mismatches, container/section background style auditing, interactive element inventory and behavior comparison (cursor, transitions, pointer-events), per-element interactivity audit (cursor, pointerEvents, clickable role/semantics), hover effect comparison, unexpected extra elements on the test site, and screenshot pixel diffs for the first `PARITY_SCREENSHOT_PAGE_LIMIT` routes
 - Use: `PARITY_MAX_PAGES=12 PARITY_DISCOVERY_LIMIT=20 PARITY_SCREENSHOT_PAGE_LIMIT=12 TEST_ORIGIN=http://127.0.0.1:12001 LIVE_ORIGIN=https://openhands.dev node scripts/generate-site-parity-checklist.cjs`
 - Output: Markdown/JSON parity reports plus screenshot artifacts under `PARITY_OUTPUT_DIR`
-- The report now includes per-route sections for: container/section style mismatches, missing/extra interactive elements, interactivity behavior mismatches, and hover effect mismatches
+- The report now includes per-route sections for: container/section style mismatches, per-element interactivity mismatches, missing/extra interactive elements, interactivity behavior mismatches, and hover effect mismatches
+- Per-element interactivity captures: cursor (pointer vs default), pointerEvents (none vs auto), and clickable semantics (button/link/form-control role mismatches)
 
 ## Common Discrepancy Patterns
 
@@ -29,8 +30,26 @@ Located at: `scripts/generate-site-parity-checklist.cjs`
 
 ### Font Sizes
 - h2 elements on live site consistently use 44px
+- Body paragraph text on live site uses `20.8px` (= `1.3rem`), not 16px or 18px
 - Test site may use different sizes (40px, 48px from Tailwind classes)
-- Fix: Use explicit `text-[44px]` instead of `text-5xl` or similar
+- Fix: Use explicit `text-[44px]` for headings, `text-[20.8px] leading-[1.2]` for body paragraphs on desktop
+- Pattern: `text-lg text-brand-muted lg:text-[20.8px] lg:leading-[1.2]` for responsive body text
+
+### Button/CTA Styles
+- Live Webflow CTAs use **square corners** (`border-radius: 0px`) and **underline text decoration** (`underline 1.6px`)
+- `--btn-border-radius` CSS variable controls this globally
+- CTA buttons use the `.btn` class which includes underline styling
+
+### Text Colors
+- Live muted text: `rgb(95, 95, 95)` = `#5f5f5f` — a neutral gray, NOT warm brown
+- Dark section muted text: `#b3a88c` — a warm muted tan on dark backgrounds
+- Use `text-brand-muted` for light-bg sections (resolves to `#5f5f5f`)
+- Use `text-[#b3a88c]` for dark card sections directly
+
+### Cursor Styles
+- Live FAQ labels use `cursor: default`, not `pointer`
+- Live nav dropdown buttons (Resources) use `cursor: default`
+- Live carousel/workflow cards use `cursor: grab` for draggable feel
 
 ### Section Classes
 - `section-title`: 44px on desktop (not 40px)

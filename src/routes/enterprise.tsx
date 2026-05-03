@@ -89,7 +89,7 @@ const Enterprise = () => {
           <div className='text-[44px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>
             Open source agent infrastructure for code modernization
           </div>
-          <div className='max-w-2xl text-[18px] leading-[1.6] text-brand-muted'>
+          <div className='max-w-2xl text-[20.8px] leading-[1.2] text-brand-muted'>
             Build AI coding agents around your stack, your rules, your team.
           </div>
           <div className='flex flex-wrap items-center justify-center gap-4'>
@@ -169,7 +169,7 @@ const Enterprise = () => {
           <h2 className='mx-auto w-fit text-[32px] font-medium leading-[1.2] tracking-[-0.02em] text-brand-fg'>
             Powering enterprise AI with the world{'\u2019'}s best
           </h2>
-          <p className='mx-auto mt-4 text-[18px] leading-[1.6] text-brand-muted'>
+          <p className='mx-auto mt-4 text-[20.8px] leading-[1.2] text-brand-muted'>
             OpenHands partners with the leading AI infrastructure providers to ensure our platform is optimized for the latest generation of compute so your team can build on top of it faster.
           </p>
           <div className='mt-10 flex items-center justify-center gap-12'>
@@ -186,7 +186,7 @@ const Enterprise = () => {
           <h3 className='mx-auto w-fit text-[32px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg lg:text-[44px]'>
             Proven results across industries
           </h3>
-          <p className='mx-auto mt-4 max-w-[660px] text-[18px] leading-[1.6] text-brand-muted'>
+          <p className='mx-auto mt-4 max-w-[660px] text-[20.8px] leading-[1.2] text-brand-muted'>
             Enterprises use OpenHands to fix thousands of vulnerabilities, refactor codebases, and ship faster with less risk
           </p>
           <div className='mt-10 overflow-hidden rounded-[24px] border border-brand-fg/10'>
@@ -211,7 +211,7 @@ const Enterprise = () => {
           <h3 className='text-[32px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg lg:text-[44px]'>
             Whitepaper: Modernize legacy systems before your expertise disappears
           </h3>
-          <p className='mx-auto mt-4 max-w-[660px] text-[18px] leading-[1.6] text-brand-muted'>
+          <p className='mx-auto mt-4 max-w-[660px] text-[20.8px] leading-[1.2] text-brand-muted'>
             Legacy modernization projects fail 74% of the time and the engineers who understand your COBOL, mainframe, and legacy systems are retiring faster than you can replace them.
           </p>
           <div className='mt-8'>
@@ -229,7 +229,7 @@ const Enterprise = () => {
           <div className='text-[44px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>
             Bring agentic development to your organization.
           </div>
-          <p className='w-full text-[18px] leading-[1.6] text-brand-muted'>
+          <p className='w-full text-[20.8px] leading-[1.2] text-brand-muted'>
             Deploy securely. Scale confidently. Stay in control.
           </p>
           <div className='flex flex-wrap items-center justify-center gap-4'>

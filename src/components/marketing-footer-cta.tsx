@@ -17,7 +17,7 @@ export const MarketingFooterCta = ({
         <HeadingTag className='text-[44px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>
           Building the open standard for autonomous software development.
         </HeadingTag>
-        <p className='max-w-[812px] text-[18px] leading-[1.6] text-brand-muted'>
+        <p className='max-w-[812px] text-[20.8px] leading-[1.2] text-brand-muted'>
           OpenHands is the foundation for secure, transparent, model-agnostic coding agents - empowering every software team to build faster with full control.
         </p>
         <div className='flex flex-wrap items-center justify-center gap-4'>

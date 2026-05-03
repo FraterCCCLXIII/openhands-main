@@ -126,7 +126,7 @@ const Community = () => {
           <h1 className='max-w-[920px] text-[44px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>
             Join the OpenHands Community
           </h1>
-          <p className='max-w-[560px] text-[18px] leading-[1.35] font-medium text-brand-muted lg:text-[20px]'>
+          <p className='max-w-[560px] text-[18px] leading-[1.35] font-medium text-brand-muted lg:text-[20.8px] lg:leading-[1.2]'>
             Connect with developers, contribute to open source, and help build the future of AI-powered autonomous software development.
           </p>
           <div className='mt-6 flex flex-wrap items-center justify-center gap-4'>

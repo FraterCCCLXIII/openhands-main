@@ -81,7 +81,7 @@ const ProductFeatureIntroBand = ({
       <h2 className='mx-auto w-fit text-[30px] font-medium leading-[1.2] tracking-[-0.03em] text-brand-fg lg:text-[32px]'>
         {title}
       </h2>
-      <p className={classNames('mx-auto mt-5 text-[18px] leading-[1.45] text-brand-fg/80', wideDescription ? '' : 'max-w-[560px]')}>
+      <p className={classNames('mx-auto mt-5 text-[20.8px] leading-[1.2] text-brand-fg/80', wideDescription ? '' : 'max-w-[560px]')}>
         {description}
       </p>
     </div>
@@ -119,7 +119,7 @@ const ProductFeatureProofBand = ({
       <h2 className={classNames('mx-auto w-fit text-[30px] font-medium leading-[1.2] tracking-[-0.03em] lg:text-[32px]', headingClassName)}>
         {title}
       </h2>
-      <p className={classNames('mx-auto mt-5 text-[18px] leading-[1.45] text-[#d6caab]', wideDescription ? '' : 'max-w-[560px]')}>
+      <p className={classNames('mx-auto mt-5 text-[20.8px] leading-[1.2] text-[#d6caab]', wideDescription ? '' : 'max-w-[560px]')}>
         {description}
       </p>
     </div>
@@ -142,7 +142,7 @@ const ProductGuiIntroSection = ({
       </div>
       <div className='text-brand-bg'>
         <h2 className='text-[34px] font-medium leading-[1.08] tracking-[-0.03em] lg:text-[44px]'>{title}</h2>
-        <p className='mt-5 max-w-[500px] text-[18px] leading-[1.45] text-[#d6caab]'>{description}</p>
+        <p className='mt-5 max-w-[500px] text-[20.8px] leading-[1.2] text-[#d6caab]'>{description}</p>
       </div>
     </div>
   </section>
@@ -278,7 +278,7 @@ export const ProductPageFooterCta = ({
         <div className='text-[34px] font-medium leading-[1.08] tracking-[-0.03em] text-brand-fg lg:text-[44px]'>
           {title}
         </div>
-        <p className='w-full text-[18px] leading-[1.45] text-brand-fg/80'>{description}</p>
+        <p className='w-full text-[20.8px] leading-[1.2] text-brand-fg/80'>{description}</p>
         <div className='flex flex-wrap items-center justify-center gap-4'>
           {actions.map((action) => (
             <ProductPageActionLink key={`${action.label}-${action.href}`} {...action} />
@@ -317,7 +317,7 @@ export const ProductFeaturePage = ({
           <h1 className='mt-8 text-[40px] font-medium leading-[1.08] tracking-[-0.04em] text-brand-fg lg:text-[44px]'>
             {page.heading}
           </h1>
-          <p className='mt-4 max-w-[620px] text-[18px] leading-[1.45] text-brand-fg/75'>{page.description}</p>
+          <p className='mt-4 max-w-[620px] text-[20.8px] leading-[1.2] text-brand-fg/75'>{page.description}</p>
           <div className='mt-8 flex flex-wrap items-center justify-center gap-4'>
             <ProductPageActionLink
               href={page.primaryCta.href}

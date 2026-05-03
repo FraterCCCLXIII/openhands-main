@@ -342,18 +342,18 @@ const Home = () => {
 
         <div className='relative z-10 mx-auto max-w-[1238px]'>
           <div className='mx-auto mb-8 flex max-w-[688px] flex-col items-center justify-center gap-3 bg-brand-accent px-6 py-4 text-center sm:flex-row sm:gap-5'>
-            <p className='text-sm font-medium leading-[1.3] text-brand-fg'>Modernize legacy systems before your expertise disappears</p>
+            <p className='text-sm font-normal leading-[1.6] text-brand-fg'>Modernize legacy systems before your expertise disappears</p>
             <div className='hidden h-8 w-px bg-brand-fg/20 sm:block' aria-hidden='true' />
-            <Link to='/whitepapers/modernize-legacy-systems-with-ai-agents' className='text-base font-medium leading-[22.4px] hover:text-[#8a5f45]'>
+            <Link to='/whitepapers/modernize-legacy-systems-with-ai-agents' className='text-base font-normal leading-[22.4px] hover:text-[#8a5f45]'>
               Read the whitepaper
             </Link>
           </div>
 
           <div className='mx-auto max-w-[640px] text-center'>
-            <div className='mb-4 font-quincy text-[44px] font-medium leading-[0.96] tracking-[-0.04em] text-brand-fg md:text-[56px]'>
+            <div className='mb-4 font-quincy text-[44px] font-medium leading-[0.96] tracking-[-0.03em] text-brand-fg md:text-[56px]'>
               Build with coding agents, your way.
             </div>
-            <div className='mx-auto mb-7 max-w-[520px] text-lg leading-[1.45] text-brand-muted'>
+            <div className='mx-auto mb-7 max-w-[520px] text-lg font-medium leading-[1.45] text-brand-muted lg:text-[20.8px] lg:leading-[1.2]'>
               Open-source, customizable. Run locally or at scale.
             </div>
             <div className='mb-4 flex flex-wrap items-center justify-center gap-4'>
@@ -364,9 +364,9 @@ const Home = () => {
                 Build with SDK
               </a>
             </div>
-            <div className='text-base text-brand-muted'>
+            <div className='text-base text-brand-fg'>
               Need a self-hosted or air-gapped deployment?{' '}
-              <Link to='/contact' className='font-medium text-brand-fg underline decoration-brand-fg/40 underline-offset-2 hover:decoration-brand-fg'>Talk to us</Link>
+              <Link to='/contact' className='font-normal text-brand-fg underline decoration-brand-fg/40 underline-offset-2 hover:decoration-brand-fg'>Talk to us</Link>
             </div>
           </div>
         </div>
@@ -376,7 +376,7 @@ const Home = () => {
         <div className='mx-auto max-w-[1238px]'>
           <div className='mb-5 flex items-end justify-between gap-4 lg:translate-y-[68px]'>
             <div className='max-w-[384px]'>
-              <h2 className='whitespace-nowrap text-[32px] font-medium leading-[1.1] tracking-[-0.03em] text-brand-fg'>
+              <h2 className='whitespace-nowrap text-[32px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>
                 Start with a proven workflow
               </h2>
             </div>
@@ -402,16 +402,16 @@ const Home = () => {
             </div>
           </div>
 
-          <div className='flex gap-5 overflow-x-auto pb-4 lg:overflow-visible' style={{ scrollSnapType: 'x mandatory' }}>
+          <div className='flex cursor-grab gap-5 overflow-x-auto pb-4 lg:overflow-visible' style={{ scrollSnapType: 'x mandatory' }}>
             {visibleWorkflows.map((workflow) => (
               <article
                 key={workflow.title}
-                className='flex min-w-[300px] flex-shrink-0 flex-col border border-brand-fg/15 bg-white/70 p-5 shadow-[0_18px_60px_rgba(34,21,13,0.05)] lg:w-[352px]'
+                className='flex min-w-[300px] flex-shrink-0 cursor-grab flex-col border border-brand-fg/15 bg-white/70 p-5 shadow-[0_18px_60px_rgba(34,21,13,0.05)] lg:w-[352px]'
                 style={{ borderRadius: 'var(--btn-border-radius)', scrollSnapAlign: 'start' }}
               >
                 <img src={workflow.iconSrc} alt='' className='mb-4 h-8 w-8 object-contain' />
                 <h3 className='mb-2 text-[24px] font-medium leading-[1.2] text-brand-fg'>{workflow.title}</h3>
-                <p className='mb-5 font-mono text-sm leading-[1.5] text-brand-muted'>{workflow.description}</p>
+                <p className='mb-5 font-mono text-sm leading-[1.5] text-brand-fg'>{workflow.description}</p>
                 {workflow.isLink ? (
                   <a
                     href={workflow.href}
@@ -473,8 +473,8 @@ const Home = () => {
               ))}
             </div>
             <div className='max-w-[270px]'>
-              <h2 className='mb-3 text-[44px] font-medium leading-[1.1] tracking-[-0.03em] text-brand-fg'>{activeSurface.title}</h2>
-              <p className='mb-5 max-w-[270px] text-lg leading-[1.5] text-brand-muted'>{activeSurface.description}</p>
+              <h2 className='mb-3 text-[44px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>{activeSurface.title}</h2>
+              <p className='mb-5 max-w-[270px] text-lg font-medium leading-[1.5] text-brand-muted lg:text-[20.8px] lg:leading-[1.2]'>{activeSurface.description}</p>
               <a href={activeSurface.href} target='_blank' rel='noopener noreferrer' className='btn btn-outline inline-flex'>
                 {activeSurface.cta}
               </a>
@@ -489,7 +489,7 @@ const Home = () => {
       <section className='bg-brand-bg px-6 py-16 lg:px-10 lg:py-24'>
         <div className='mx-auto grid max-w-[1278px] gap-10 lg:grid-cols-[599px_639px]'>
           <div className='flex flex-col justify-between gap-8'>
-            <h3 className='max-w-[360px] text-[44px] font-medium leading-[1.1] tracking-[-0.03em] text-brand-fg'>Why teams choose OpenHands</h3>
+            <h3 className='max-w-[360px] text-[44px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>Why teams choose OpenHands</h3>
             <a href='https://app.all-hands.dev/' target='_blank' rel='noopener noreferrer' className='btn btn-primary w-fit'>
               Try it live
             </a>
@@ -501,7 +501,7 @@ const Home = () => {
                 <img src={feature.icon} alt='' className='mt-1 h-8 w-8 flex-shrink-0' />
                 <div className='min-w-0 flex-1'>
                   <p className='mb-1 text-[20px] font-medium leading-[1.25] text-brand-fg'>{feature.title}</p>
-                  <p className='text-base leading-[1.5] text-brand-muted'>{feature.description}</p>
+                  <p className='text-base font-medium leading-[1.5] text-brand-muted lg:text-[20.8px] lg:leading-[1.2]'>{feature.description}</p>
                 </div>
               </div>
             ))}
@@ -511,7 +511,7 @@ const Home = () => {
 
       <section className='bg-brand-bg px-6 py-16 lg:px-10 lg:py-24'>
         <div className='mx-auto max-w-[1220px]'>
-          <h3 className='mb-[217px] text-[44px] font-medium leading-[1.1] tracking-[-0.03em] text-brand-fg'>
+          <h3 className='mb-[217px] text-[44px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>
             Automate the Outer Loop with AI
           </h3>
           <div className='space-y-6'>
@@ -521,7 +521,7 @@ const Home = () => {
                 className='overflow-hidden rounded-none border border-brand-fg/15 bg-[#efe6d1]'
                 style={index > 0 ? { marginTop: '233px' } : undefined}
               >
-                <div className='border-b border-brand-fg/15 px-6 py-4 text-sm font-medium uppercase tracking-[0.12em] text-brand-muted'>
+                <div className='border-b border-brand-fg/15 px-6 py-4 text-sm font-normal uppercase tracking-normal text-brand-fg'>
                   {column.label}
                 </div>
                 <div className='grid gap-6 p-6 lg:grid-cols-3'>
@@ -531,7 +531,7 @@ const Home = () => {
                         <img src={card.icon} alt='' className='h-8 w-8' />
                       </div>
                       <p className='mb-2 text-[20px] font-medium leading-[1.25] text-brand-fg'>{card.title}</p>
-                      <p className='text-base leading-[1.55] text-brand-muted'>{card.description}</p>
+                      <p className='text-base font-medium leading-[1.55] text-brand-muted lg:text-[20.8px] lg:leading-[1.2]'>{card.description}</p>
                     </article>
                   ))}
                 </div>
@@ -549,14 +549,14 @@ const Home = () => {
         />
         <div className='relative z-10 mx-auto flex h-full max-w-[1238px] items-end px-6 pb-24 lg:px-10'>
           <div className='ml-auto max-w-[760px] bg-brand-accent/90 p-8'>
-            <div className='mb-6 text-[44px] font-medium leading-[1.1] tracking-[-0.03em] text-brand-fg'>
+            <div className='mb-6 text-[44px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>
               {TESTIMONIALS[activeTestimonial].quote}
             </div>
             <div className='mb-8 flex items-center gap-4'>
               <img src={TESTIMONIALS[activeTestimonial].photo} alt='' className='h-12 w-12 object-cover' style={{ borderRadius: '100%' }} />
               <div>
                 <div className='text-base font-medium text-brand-fg'>{TESTIMONIALS[activeTestimonial].name}</div>
-                <div className='text-sm text-brand-muted'>{TESTIMONIALS[activeTestimonial].title}</div>
+                <div className='text-sm font-medium text-brand-fg'>{TESTIMONIALS[activeTestimonial].title}</div>
               </div>
               <img src={TESTIMONIALS[activeTestimonial].logo} alt='' className='ml-auto h-8 max-w-[110px] object-contain' />
             </div>
@@ -593,26 +593,26 @@ const Home = () => {
         <div className='mx-auto max-w-[1220px] space-y-6'>
           <div className='grid gap-6 lg:grid-cols-2'>
             <article className='card-dark min-h-[520px] rounded-none p-8 lg:min-h-[595px]'>
-              <p className='mb-3 max-w-[350px] text-lg font-medium text-brand-accent'>Community that compounds velocity</p>
-              <p className='mb-8 max-w-[350px] text-lg leading-[1.55] text-white/75'>
+              <p className='mb-3 max-w-[350px] text-lg font-medium text-brand-accent lg:text-[20.8px] lg:leading-[1.2]'>Community that compounds velocity</p>
+              <p className='mb-8 max-w-[350px] text-lg leading-[1.55] text-[#b3a88c] lg:text-[20.8px] lg:leading-[1.2]'>
                 With 65K+ GitHub stars and a thriving open-source ecosystem, OpenHands evolves through collective innovation - every contribution makes the platform faster, safer, and smarter.
               </p>
-              <a href='https://github.com/OpenHands/OpenHands' target='_blank' rel='noopener noreferrer' className='btn mb-12 inline-flex border border-brand-bg/40 bg-transparent text-brand-bg hover:bg-brand-bg/10'>
+              <a href='https://github.com/OpenHands/OpenHands' target='_blank' rel='noopener noreferrer' className='btn mb-12 inline-flex border-none bg-transparent text-center text-brand-bg hover:bg-brand-bg/10'>
                 Explore the repo
               </a>
               <div className='mt-auto flex items-end gap-3'>
                 <span className='text-7xl font-medium leading-none text-brand-accent'>{formatThousands(statistics.stargazers)}</span>
                 <span className='mb-2 text-4xl font-medium text-white'>+</span>
               </div>
-              <div className='mt-3 flex items-center gap-2 text-base text-white/70'>
+              <div className='mt-3 flex items-center gap-2 text-base text-[#b3a88c]'>
                 <span>GitHub stars</span>
                 <span aria-hidden='true'>⭐</span>
               </div>
             </article>
 
             <article className='card-dark min-h-[520px] rounded-none p-8 lg:min-h-[595px]'>
-              <p className='mb-3 max-w-[330px] text-lg font-medium text-brand-accent'>Plays well with your stack</p>
-              <p className='mb-10 max-w-[330px] text-lg leading-[1.55] text-white/75'>
+              <p className='mb-3 max-w-[330px] text-lg font-medium text-brand-accent lg:text-[20.8px] lg:leading-[1.2]'>Plays well with your stack</p>
+              <p className='mb-10 max-w-[330px] text-lg leading-[1.55] text-[#b3a88c] lg:text-[20.8px] lg:leading-[1.2]'>
                 Native integrations with GitHub, GitLab, CI/CD, Slack, and ticketing tools. OpenHands fits seamlessly into enterprise governance systems and your preferred model providers.
               </p>
               <div className='grid grid-cols-2 gap-5 sm:grid-cols-4'>
@@ -624,7 +624,7 @@ const Home = () => {
                 ].map(([icon, label]) => (
                   <div key={label} className='rounded-none border border-white/10 bg-white/5 p-4 text-center'>
                     <img src={icon} alt='' className='mx-auto mb-3 h-8 w-auto' />
-                    <div className='text-sm text-white/70'>{label}</div>
+                    <div className='text-sm text-brand-bg'>{label}</div>
                   </div>
                 ))}
               </div>
@@ -634,11 +634,11 @@ const Home = () => {
           <article className='card-dark rounded-none p-8'>
             <div className='grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-center'>
               <div>
-                <p className='mb-3 max-w-[369px] text-lg font-medium text-brand-accent'>Enterprise-grade security and control</p>
-                <p className='mb-6 max-w-[369px] text-lg leading-[1.55] text-white/75'>
+                <p className='mb-3 max-w-[369px] text-lg font-medium text-brand-accent lg:text-[20.8px] lg:leading-[1.2]'>Enterprise-grade security and control</p>
+                <p className='mb-6 max-w-[369px] text-lg leading-[1.55] text-[#b3a88c] lg:text-[20.8px] lg:leading-[1.2]'>
                   Control every layer of your environment with fine-grained access control, model-agnostic architecture, and flexible self-hosted or private cloud deployment options that keep your code and data secure.
                 </p>
-                <Link to='/enterprise' className='btn inline-flex border border-brand-bg/40 bg-transparent text-brand-bg hover:bg-brand-bg/10'>
+                <Link to='/enterprise' className='btn inline-flex border-none bg-transparent text-center text-brand-bg hover:bg-brand-bg/10'>
                   Learn about Enterprise
                 </Link>
               </div>
@@ -653,8 +653,8 @@ const Home = () => {
       <section className='bg-brand-bg px-6 py-20 lg:px-10 lg:py-28'>
         <div className='mx-auto max-w-[1220px]'>
           <div className='mb-12 text-center'>
-            <h2 className='mb-3 text-[44px] font-medium leading-[1.1] tracking-[-0.03em] text-brand-fg'>Developers love OpenHands</h2>
-            <p className='text-lg text-brand-muted'>Join millions of developers to build software autonomously</p>
+            <h2 className='mb-3 text-[44px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>Developers love OpenHands</h2>
+            <p className='text-lg font-medium text-brand-muted lg:text-[20.8px] lg:leading-[1.2]'>Join millions of developers to build software autonomously</p>
           </div>
           <div className='grid gap-5 md:grid-cols-2 lg:grid-cols-3'>
             {DEVELOPER_QUOTES.map((quote) => (
@@ -662,7 +662,7 @@ const Home = () => {
                 <div className='mb-4 flex items-center gap-3'>
                   <img src={quote.avatar} alt={quote.name} className='h-12 w-12 object-cover' style={{ borderRadius: '100%' }} />
                   <div>
-                    <div className='text-sm font-medium text-brand-fg'>{quote.name}</div>
+                    <div className='text-sm font-normal text-brand-fg'>{quote.name}</div>
                     <div className='text-xs text-brand-muted'>{quote.title}</div>
                   </div>
                 </div>
@@ -684,7 +684,7 @@ const Home = () => {
         <div className='mx-auto max-w-[1220px]'>
           <div className='grid gap-8 lg:grid-cols-[0.4fr_0.6fr] lg:items-start'>
             <div>
-              <h2 className='mb-4 text-[44px] font-medium leading-[1.1] tracking-[-0.03em] text-brand-fg'>FAQ&apos;s</h2>
+              <h2 className='mb-4 text-[44px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>FAQ&apos;s</h2>
               <Link to='/contact' className='btn btn-outline w-fit'>
                 Contact us
               </Link>
@@ -692,10 +692,10 @@ const Home = () => {
             <div className='space-y-4'>
               {FAQS.map((faq) => (
                 <details key={faq.question} className='border-t border-brand-fg/12 pt-4 last:border-b last:pb-4'>
-                  <summary className='cursor-pointer list-none'>
-                    <label className='cursor-pointer text-[24px] font-medium leading-[1.4] text-brand-fg'>{faq.question}</label>
+                  <summary className='cursor-default list-none'>
+                    <label className='pointer-events-none cursor-default text-[24px] font-medium leading-[1.4] text-brand-fg'>{faq.question}</label>
                   </summary>
-                  <p className='mt-3 max-w-[860px] text-base leading-[1.65] text-brand-muted'>{faq.answer}</p>
+                  <p className='mt-3 max-w-[860px] text-base leading-[1.4] text-brand-muted'>{faq.answer}</p>
                 </details>
               ))}
             </div>
@@ -712,10 +712,10 @@ const Home = () => {
           />
         </div>
         <div className='relative z-10 mx-auto max-w-[1238px]'>
-          <div className='mx-auto mb-4 max-w-[960px] text-[44px] font-medium leading-[1.05] tracking-[-0.04em]'>
+          <div className='mx-auto mb-4 max-w-[960px] text-[44px] font-medium leading-[1.05] tracking-[-0.03em]'>
             Building the open standard for autonomous software development.
           </div>
-          <p className='mx-auto mb-8 max-w-[900px] text-lg leading-[1.5] text-brand-muted'>
+          <p className='mx-auto mb-8 max-w-[900px] text-lg font-medium leading-[1.5] text-brand-muted lg:text-[20.8px] lg:leading-[1.2]'>
             OpenHands is the foundation for secure, transparent, model-agnostic coding agents - empowering every software team to build faster with full control.
           </p>
           <div className='mb-12 flex flex-wrap items-center justify-center gap-4'>

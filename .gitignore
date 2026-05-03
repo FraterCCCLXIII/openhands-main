@@ -39,3 +39,6 @@ dist-ssr
 build*.zip
 
 build/
+
+# Parity/snapshot working files
+.agent_tmp/

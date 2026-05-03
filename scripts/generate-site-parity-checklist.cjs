@@ -23,20 +23,38 @@ const SCREENSHOT_PAGE_LIMIT = Number(process.env.PARITY_SCREENSHOT_PAGE_LIMIT ||
 const SCREENSHOT_DIFF_THRESHOLD = Number(process.env.PARITY_SCREENSHOT_DIFF_THRESHOLD || 2);
 const SCREENSHOT_CHUNK_HEIGHT = Number(process.env.PARITY_SCREENSHOT_CHUNK_HEIGHT || 6000);
 const SCREENSHOT_CHUNK_TRIGGER_HEIGHT = Number(process.env.PARITY_SCREENSHOT_CHUNK_TRIGGER_HEIGHT || 12000);
+// ── Visual style properties compared per-element ──
+// Grouped by category for clarity in diff reports
 const STYLE_PROPS = [
+  // Typography
   'fontSize',
   'fontFamily',
   'fontWeight',
+  'fontStyle',
   'lineHeight',
+  'letterSpacing',
+  'textAlign',
+  'textTransform',
+  'textDecoration',
+  'textDecorationColor',
+  'textDecorationThickness',
+  'textUnderlineOffset',
+  'whiteSpace',
+  // Color
   'color',
   'backgroundColor',
-  'borderRadius',
   'backgroundImage',
+  // Border  (borderWidth=0 diffs are filtered out at comparison time)
+  'borderRadius',
+  'borderWidth',
+  'borderStyle',
+  'borderColor',
+  // Effects / interactivity
   'cursor',
-  'textDecoration',
-  'letterSpacing',
+  'opacity',
+  'boxShadow',
 ];
-const STYLE_CHECK_TAGS = new Set(['H1', 'H2', 'H3', 'H4', 'A', 'BUTTON', 'LABEL', 'INPUT', 'IMG', 'P', 'SPAN']);
+const STYLE_CHECK_TAGS = new Set(['H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'A', 'BUTTON', 'LABEL', 'INPUT', 'IMG', 'P', 'SPAN', 'DIV', 'SUMMARY', 'DETAILS', 'NAV', 'SECTION', 'ARTICLE', 'UL', 'LI']);
 const LAYOUT_CHECK_TAGS = new Set(['H1', 'H2', 'H3', 'H4', 'A', 'BUTTON', 'LABEL', 'INPUT', 'IMG', 'P']);
 
 const CONTAINER_STYLE_PROPS = [
@@ -47,6 +65,11 @@ const CONTAINER_STYLE_PROPS = [
   'paddingBottom',
   'paddingLeft',
   'paddingRight',
+  'display',
+  'flexDirection',
+  'justifyContent',
+  'alignItems',
+  'gap',
 ];
 
 const INTERACTIVE_STYLE_PROPS = [
@@ -126,7 +149,7 @@ function normalizeTransition(value) {
   return value;
 }
 
-function compareStyleValue(prop, liveValue, testValue) {
+function compareStyleValue(prop, liveValue, testValue, liveStyle, testStyle) {
   if (liveValue === testValue) return null;
 
   if (prop === 'fontFamily') {
@@ -136,7 +159,8 @@ function compareStyleValue(prop, liveValue, testValue) {
     return `fontFamily: live=${livePrimary} test=${testPrimary}`;
   }
 
-  if (prop === 'color' || prop === 'backgroundColor') {
+  if (prop === 'color' || prop === 'backgroundColor' ||
+      prop === 'borderColor' || prop === 'textDecorationColor') {
     const liveColor = parseColor(liveValue);
     const testColor = parseColor(testValue);
     if (liveColor && testColor) {
@@ -150,6 +174,14 @@ function compareStyleValue(prop, liveValue, testValue) {
     }
   }
 
+  // Filter out border noise: ignore borderStyle/borderColor diffs when both
+  // sides have borderWidth=0 (invisible borders from CSS resets like Tailwind)
+  if (prop === 'borderStyle' || prop === 'borderColor') {
+    const liveBW = parsePx(liveStyle?.borderWidth || '0');
+    const testBW = parsePx(testStyle?.borderWidth || '0');
+    if ((liveBW === null || liveBW === 0) && (testBW === null || testBW === 0)) return null;
+  }
+
   if (prop === 'textDecoration') {
     const normalize = (v) => (v || 'none').replace(/\s+/g, ' ').trim().toLowerCase();
     if (normalize(liveValue) === normalize(testValue)) return null;
@@ -158,6 +190,24 @@ function compareStyleValue(prop, liveValue, testValue) {
   if (prop === 'letterSpacing') {
     if ((liveValue === 'normal' && testValue === '0px') ||
         (liveValue === '0px' && testValue === 'normal')) return null;
+  }
+
+  // textAlign: treat 'start' and 'left' as equivalent (they are for LTR)
+  if (prop === 'textAlign') {
+    const normalizeAlign = (v) => (v === 'start' ? 'left' : v === 'end' ? 'right' : v);
+    if (normalizeAlign(liveValue) === normalizeAlign(testValue)) return null;
+  }
+
+  // opacity: ignore small differences
+  if (prop === 'opacity') {
+    const diff = Math.abs(parseFloat(liveValue || '1') - parseFloat(testValue || '1'));
+    if (diff <= 0.05) return null;
+  }
+
+  // boxShadow: normalize 'none'
+  if (prop === 'boxShadow') {
+    const normShadow = (v) => (v || 'none').toLowerCase().trim();
+    if (normShadow(liveValue) === normShadow(testValue)) return null;
   }
 
   if (prop === 'cursor') {
@@ -177,6 +227,8 @@ function compareStyleValue(prop, liveValue, testValue) {
       lineHeight: 3,
       borderRadius: 3,
       letterSpacing: 1,
+      textUnderlineOffset: 2,
+      textDecorationThickness: 1,
       paddingTop: 8,
       paddingBottom: 8,
       paddingLeft: 8,
@@ -199,9 +251,40 @@ function compareStyleValue(prop, liveValue, testValue) {
 function compareStyles(liveStyle, testStyle) {
   const diffs = [];
   for (const prop of STYLE_PROPS) {
-    const diff = compareStyleValue(prop, liveStyle?.[prop], testStyle?.[prop]);
+    const diff = compareStyleValue(prop, liveStyle?.[prop], testStyle?.[prop], liveStyle, testStyle);
     if (diff) diffs.push(diff);
   }
+  return diffs;
+}
+
+function compareElementInteractivity(liveInt, testInt) {
+  if (!liveInt || !testInt) return [];
+  const diffs = [];
+
+  // Cursor mismatch: e.g. live has pointer (clickable) but test has default (not clickable)
+  if (liveInt.cursor !== testInt.cursor) {
+    const isClickCursor = (c) => c === 'pointer';
+    if (isClickCursor(liveInt.cursor) !== isClickCursor(testInt.cursor)) {
+      diffs.push(`cursor: live=${liveInt.cursor} test=${testInt.cursor}`);
+    }
+  }
+
+  // pointerEvents mismatch: live allows clicks but test blocks them (or vice versa)
+  if (liveInt.pointerEvents !== testInt.pointerEvents) {
+    const liveBlocked = liveInt.pointerEvents === 'none';
+    const testBlocked = testInt.pointerEvents === 'none';
+    if (liveBlocked !== testBlocked) {
+      diffs.push(`pointerEvents: live=${liveInt.pointerEvents} test=${testInt.pointerEvents}`);
+    }
+  }
+
+  // Button/link role mismatch: live is interactive but test is not (or vice versa)
+  const liveClickable = liveInt.isButton || liveInt.isLink || liveInt.isFormControl || liveInt.role === 'button';
+  const testClickable = testInt.isButton || testInt.isLink || testInt.isFormControl || testInt.role === 'button';
+  if (liveClickable !== testClickable) {
+    diffs.push(`clickable: live=${liveClickable} test=${testClickable}`);
+  }
+
   return diffs;
 }
 
@@ -331,6 +414,19 @@ async function extractPageInventory(page) {
         entry.renderedWidth = Math.round(rect.width);
         entry.renderedHeight = Math.round(rect.height);
       }
+
+      // Interactivity audit: capture cursor, clickability, and interactive state
+      entry.interactive = {
+        cursor: computed.cursor,
+        pointerEvents: computed.pointerEvents,
+        hasClickHandler: element.onclick !== null || element.hasAttribute('onclick'),
+        hasHref: tag === 'A' ? !!element.href : false,
+        role: element.getAttribute('role') || '',
+        tabIndex: element.tabIndex,
+        isButton: tag === 'BUTTON' || element.getAttribute('role') === 'button',
+        isLink: tag === 'A' && !!element.href,
+        isFormControl: ['INPUT', 'TEXTAREA', 'SELECT'].includes(tag),
+      };
 
       elements.push(entry);
     });
@@ -553,7 +649,7 @@ function compareContainerStyles(liveContainers, testContainers) {
     const propDiffs = [];
 
     for (const prop of CONTAINER_STYLE_PROPS) {
-      const diff = compareStyleValue(prop, live.style?.[prop], test.style?.[prop]);
+      const diff = compareStyleValue(prop, live.style?.[prop], test.style?.[prop], live.style, test.style);
       if (diff) propDiffs.push(diff);
     }
 
@@ -689,8 +785,11 @@ function summarizeRouteComparison(routePath, livePage, testPage, screenshotDiff)
       testStyle: null,
       liveRect: element.rect,
       testRect: null,
+      liveInteractive: element.interactive || null,
+      testInteractive: null,
       styleDiffs: [],
       layoutDiffs: [],
+      interactivityDiffs: [],
     };
     existing.liveCount += 1;
     liveMap.set(element.signature, existing);
@@ -702,12 +801,14 @@ function summarizeRouteComparison(routePath, livePage, testPage, screenshotDiff)
       count: 0,
       style: element.style,
       rect: element.rect,
+      interactive: element.interactive || null,
       tag: element.tag,
       text: element.text,
     };
     existing.count += 1;
     if (!existing.style) existing.style = element.style;
     if (!existing.rect) existing.rect = element.rect;
+    if (!existing.interactive) existing.interactive = element.interactive || null;
     testMap.set(element.signature, existing);
   }
 
@@ -717,15 +818,20 @@ function summarizeRouteComparison(routePath, livePage, testPage, screenshotDiff)
       item.testCount = testMatch?.count || 0;
       item.testStyle = testMatch?.style || null;
       item.testRect = testMatch?.rect || null;
+      item.testInteractive = testMatch?.interactive || null;
       item.styleDiffs = item.testCount > 0 && STYLE_CHECK_TAGS.has(item.tag)
         ? compareStyles(item.liveStyle, item.testStyle)
         : [];
       item.layoutDiffs = item.testCount > 0 && LAYOUT_CHECK_TAGS.has(item.tag)
         ? compareLayout(item.tag, item.liveRect, item.testRect)
         : [];
+      item.interactivityDiffs = item.testCount > 0
+        ? compareElementInteractivity(item.liveInteractive, item.testInteractive)
+        : [];
       return {
         ...item,
-        passed: item.testCount >= item.liveCount && item.styleDiffs.length === 0 && item.layoutDiffs.length === 0,
+        passed: item.testCount >= item.liveCount && item.styleDiffs.length === 0 &&
+          item.layoutDiffs.length === 0 && item.interactivityDiffs.length === 0,
       };
     })
     .sort((left, right) => left.signature.localeCompare(right.signature));
@@ -813,6 +919,7 @@ function summarizeRouteComparison(routePath, livePage, testPage, screenshotDiff)
     missingElementsCount: checklist.filter((item) => item.testCount < item.liveCount).length,
     styleMismatchCount: checklist.filter((item) => item.styleDiffs.length > 0).length,
     layoutMismatchCount: checklist.filter((item) => item.layoutDiffs.length > 0).length,
+    elementInteractivityMismatchCount: checklist.filter((item) => item.interactivityDiffs.length > 0).length,
     extraElementsCount: extraElements.length,
     containerDiffs,
     containerMismatchCount: containerDiffs.length,
@@ -1018,6 +1125,7 @@ function renderMarkdown(report) {
   lines.push(`- Appearance mismatches: ${report.summary.styleMismatches}`);
   lines.push(`- Layout mismatches: ${report.summary.layoutMismatches}`);
   lines.push(`- Container/section style mismatches: ${report.summary.containerMismatches}`);
+  lines.push(`- Element interactivity mismatches: ${report.summary.elementInteractivityMismatches || 0}`);
   lines.push(`- Missing interactive elements: ${report.summary.missingInteractive}`);
   lines.push(`- Interactivity behavior mismatches: ${report.summary.interactivityDiffs}`);
   lines.push(`- Hover effect mismatches: ${report.summary.hoverMismatches}`);
@@ -1055,6 +1163,9 @@ function renderMarkdown(report) {
       }
       if (item.layoutDiffs.length > 0) {
         details.push(`layout mismatch: ${item.layoutDiffs.join('; ')}`);
+      }
+      if (item.interactivityDiffs.length > 0) {
+        details.push(`interactivity mismatch: ${item.interactivityDiffs.join('; ')}`);
       }
       const suffix = details.length > 0 ? ` — ${details.join(' | ')}` : '';
       lines.push(`- [${item.passed ? 'x' : ' '}] ${item.signature}${suffix}`);
@@ -1131,22 +1242,48 @@ function renderMarkdown(report) {
   return `${lines.join('\n')}\n`;
 }
 
-async function loadPage(page, origin, routePath) {
-  const response = await page.goto(new URL(routePath, origin).toString(), {
-    waitUntil: 'load',
-    timeout: 60000,
-  });
-  await page.evaluate(() => new Promise((r) => setTimeout(r, 2000)));
-  const [inventory, containers, interactive, cssVars] = await Promise.all([
-    extractPageInventory(page),
-    extractContainerStyles(page),
-    extractInteractivity(page),
-    extractCSSCustomProperties(page),
+function withTimeout(promise, ms, label) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error(`Timeout: ${label} after ${ms}ms`)), ms)),
   ]);
+}
+
+async function loadPage(page, origin, routePath) {
+  const pageTimeout = 30000;
+  const extractTimeout = 20000;
+  const url = new URL(routePath, origin).toString();
+
+  const response = await withTimeout(
+    page.goto(url, { waitUntil: 'load', timeout: pageTimeout }),
+    pageTimeout + 5000,
+    `goto ${url}`,
+  );
+
+  await withTimeout(
+    page.evaluate(() => new Promise((r) => setTimeout(r, 2000))),
+    10000,
+    `settle delay ${url}`,
+  );
+
+  const [inventory, containers, interactive, cssVars] = await withTimeout(
+    Promise.all([
+      extractPageInventory(page),
+      extractContainerStyles(page),
+      extractInteractivity(page),
+      extractCSSCustomProperties(page),
+    ]),
+    extractTimeout,
+    `extraction ${url}`,
+  );
 
   let hoverEffects = [];
   try {
-    hoverEffects = await extractHoverDiffs(page, 'a[href], button, [role="button"], [role="tab"]');
+    hoverEffects = await withTimeout(
+      extractHoverDiffs(page, 'a[href], button, [role="button"], [role="tab"]'),
+      15000,
+      `hover diffs ${url}`,
+    );
   } catch {
     // hover extraction is best-effort
   }
@@ -1219,12 +1356,12 @@ async function main() {
 
       try {
         await Promise.all([livePage.setViewport(VIEWPORT), testPage.setViewport(VIEWPORT)]);
-        console.log(`[parity] Loading ${routePath} from both origins...`);
+        console.log(`[parity] Loading ${routePath} (${index + 1}/${paths.length})...`);
         const [liveData, testData] = await Promise.all([
           loadPage(livePage, LIVE_ORIGIN, routePath),
           loadPage(testPage, TEST_ORIGIN, routePath),
         ]);
-        console.log(`[parity] Loaded ${routePath}, live status=${liveData.status}, test status=${testData.status}`);
+        console.log(`[parity] Loaded ${routePath}, live=${liveData.status} test=${testData.status}`);
 
         let screenshotDiff = null;
         if (index < SCREENSHOT_PAGE_LIMIT) {
@@ -1258,6 +1395,7 @@ async function main() {
         styleMismatches: routes.reduce((total, route) => total + route.styleMismatchCount, 0),
         layoutMismatches: routes.reduce((total, route) => total + route.layoutMismatchCount, 0),
         containerMismatches: routes.reduce((total, route) => total + (route.containerMismatchCount || 0), 0),
+        elementInteractivityMismatches: routes.reduce((total, route) => total + (route.elementInteractivityMismatchCount || 0), 0),
         missingInteractive: routes.reduce((total, route) => total + (route.missingInteractiveCount || 0), 0),
         interactivityDiffs: routes.reduce((total, route) => total + (route.interactivityDiffCount || 0), 0),
         hoverMismatches: routes.reduce((total, route) => total + (route.hoverMismatchCount || 0), 0),
@@ -1277,6 +1415,7 @@ async function main() {
       report.summary.styleMismatches +
       report.summary.layoutMismatches +
       report.summary.containerMismatches +
+      (report.summary.elementInteractivityMismatches || 0) +
       report.summary.missingInteractive +
       report.summary.interactivityDiffs +
       report.summary.hoverMismatches +

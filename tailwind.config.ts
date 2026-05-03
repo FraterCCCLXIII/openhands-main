@@ -17,7 +17,7 @@ export default {
           accent: "#ffff8b",
           "accent-hover": "#e6e67a",
           brown: "#8a5f45",
-          muted: "rgba(34, 21, 13, 0.7)",
+          muted: "#5f5f5f",
           border: "rgba(34, 21, 13, 0.1)",
         },
         card: {
