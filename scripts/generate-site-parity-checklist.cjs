@@ -312,7 +312,7 @@ async function extractPageInventory(page) {
       const signature = `${tag}:${normalizedText.slice(0, 140)}`;
       const style = Object.fromEntries(styleProps.map((prop) => [prop, computed[prop]]));
 
-      elements.push({
+      const entry = {
         tag,
         text,
         signature,
@@ -323,7 +323,16 @@ async function extractPageInventory(page) {
           width: Math.round(rect.width),
           height: Math.round(rect.height),
         },
-      });
+      };
+
+      if (tag === 'IMG') {
+        entry.naturalWidth = element.naturalWidth || 0;
+        entry.naturalHeight = element.naturalHeight || 0;
+        entry.renderedWidth = Math.round(rect.width);
+        entry.renderedHeight = Math.round(rect.height);
+      }
+
+      elements.push(entry);
     });
 
     const title = document.title || '';
@@ -341,6 +350,27 @@ async function extractPageInventory(page) {
       elements,
     };
   }, STYLE_PROPS);
+}
+
+async function extractCSSCustomProperties(page) {
+  return page.evaluate(() => {
+    const root = document.documentElement;
+    const computed = window.getComputedStyle(root);
+    const knownVars = [
+      '--btn-border-radius',
+      '--card-border-radius',
+      '--font-family',
+      '--brand-bg',
+      '--brand-fg',
+      '--brand-accent',
+    ];
+    const result = {};
+    for (const name of knownVars) {
+      const val = computed.getPropertyValue(name).trim();
+      if (val) result[name] = val;
+    }
+    return result;
+  });
 }
 
 async function extractContainerStyles(page) {
@@ -733,6 +763,40 @@ function summarizeRouteComparison(routePath, livePage, testPage, screenshotDiff)
     testPage.hoverEffects || [],
   );
 
+  // CSS custom property comparison
+  const cssVarDiffs = [];
+  const allVarNames = new Set([
+    ...Object.keys(livePage.cssVars || {}),
+    ...Object.keys(testPage.cssVars || {}),
+  ]);
+  for (const name of allVarNames) {
+    const liveVal = (livePage.cssVars || {})[name] || '(unset)';
+    const testVal = (testPage.cssVars || {})[name] || '(unset)';
+    if (liveVal !== testVal) {
+      cssVarDiffs.push({ name, live: liveVal, test: testVal });
+    }
+  }
+
+  // Image dimension comparison
+  const imageDiffs = [];
+  const liveImages = livePage.inventory.elements.filter((el) => el.tag === 'IMG' && el.renderedWidth);
+  const testImages = testPage.inventory.elements.filter((el) => el.tag === 'IMG' && el.renderedWidth);
+  for (const liveImg of liveImages) {
+    const testImg = testImages.find((t) => t.signature === liveImg.signature);
+    if (!testImg) continue;
+    const widthDelta = Math.abs(liveImg.renderedWidth - testImg.renderedWidth);
+    const heightDelta = Math.abs(liveImg.renderedHeight - testImg.renderedHeight);
+    if (widthDelta > 20 || heightDelta > 20) {
+      imageDiffs.push({
+        signature: liveImg.signature,
+        liveRendered: `${liveImg.renderedWidth}×${liveImg.renderedHeight}`,
+        testRendered: `${testImg.renderedWidth}×${testImg.renderedHeight}`,
+        liveNatural: `${liveImg.naturalWidth}×${liveImg.naturalHeight}`,
+        testNatural: `${testImg.naturalWidth}×${testImg.naturalHeight}`,
+      });
+    }
+  }
+
   return {
     path: routePath,
     liveStatus: livePage.status,
@@ -758,6 +822,10 @@ function summarizeRouteComparison(routePath, livePage, testPage, screenshotDiff)
     extraInteractiveCount: interactivity.extraInteractive.length,
     hoverDiffs,
     hoverMismatchCount: hoverDiffs.length,
+    imageDiffs,
+    imageDiffCount: imageDiffs.length,
+    cssVarDiffs,
+    cssVarDiffCount: cssVarDiffs.length,
     screenshotDiff,
   };
 }
@@ -953,6 +1021,7 @@ function renderMarkdown(report) {
   lines.push(`- Missing interactive elements: ${report.summary.missingInteractive}`);
   lines.push(`- Interactivity behavior mismatches: ${report.summary.interactivityDiffs}`);
   lines.push(`- Hover effect mismatches: ${report.summary.hoverMismatches}`);
+  lines.push(`- Image dimension mismatches: ${report.summary.imageDimensionMismatches || 0}`);
   lines.push(`- Screenshot mismatches (> ${SCREENSHOT_DIFF_THRESHOLD}% or unavailable): ${report.summary.screenshotMismatches}`);
   lines.push(`- Screenshot capture failures: ${report.summary.screenshotUnavailable || 0}`);
   lines.push(`- Total failing checks: ${report.summary.failedChecklistItems}`);
@@ -1038,6 +1107,24 @@ function renderMarkdown(report) {
       }
     }
 
+    // Image dimension mismatches
+    if (route.imageDiffs && route.imageDiffs.length > 0) {
+      lines.push('');
+      lines.push('### Image dimension mismatches');
+      for (const diff of route.imageDiffs) {
+        lines.push(`- [ ] ${diff.signature} — rendered: live=${diff.liveRendered} test=${diff.testRendered}; natural: live=${diff.liveNatural} test=${diff.testNatural}`);
+      }
+    }
+
+    // CSS custom property mismatches
+    if (route.cssVarDiffs && route.cssVarDiffs.length > 0) {
+      lines.push('');
+      lines.push('### CSS custom property mismatches');
+      for (const diff of route.cssVarDiffs) {
+        lines.push(`- [ ] ${diff.name} — live=${diff.live} test=${diff.test}`);
+      }
+    }
+
     lines.push('');
   }
 
@@ -1046,13 +1133,15 @@ function renderMarkdown(report) {
 
 async function loadPage(page, origin, routePath) {
   const response = await page.goto(new URL(routePath, origin).toString(), {
-    waitUntil: 'networkidle0',
+    waitUntil: 'load',
     timeout: 60000,
   });
-  const [inventory, containers, interactive] = await Promise.all([
+  await page.evaluate(() => new Promise((r) => setTimeout(r, 2000)));
+  const [inventory, containers, interactive, cssVars] = await Promise.all([
     extractPageInventory(page),
     extractContainerStyles(page),
     extractInteractivity(page),
+    extractCSSCustomProperties(page),
   ]);
 
   let hoverEffects = [];
@@ -1068,6 +1157,7 @@ async function loadPage(page, origin, routePath) {
     containers,
     interactive,
     hoverEffects,
+    cssVars,
   };
 }
 
@@ -1085,7 +1175,7 @@ async function discoverPaths(browser) {
 
     try {
       await page.goto(new URL(currentPath, LIVE_ORIGIN).toString(), {
-        waitUntil: 'networkidle0',
+        waitUntil: 'load',
         timeout: 60000,
       });
       const links = await collectInternalLinks(page, LIVE_ORIGIN);
@@ -1110,6 +1200,7 @@ async function discoverPaths(browser) {
 
 async function main() {
   await fsp.mkdir(OUTPUT_DIR, { recursive: true });
+  console.log('[parity] Launching browser...');
 
   const browser = await puppeteer.launch({
     headless: 'new',
@@ -1118,7 +1209,9 @@ async function main() {
   });
 
   try {
+    console.log('[parity] Discovering paths...');
     const paths = await discoverPaths(browser);
+    console.log(`[parity] Found ${paths.length} paths: ${paths.join(', ')}`);
     const routes = [];
 
     for (const [index, routePath] of paths.entries()) {
@@ -1126,10 +1219,12 @@ async function main() {
 
       try {
         await Promise.all([livePage.setViewport(VIEWPORT), testPage.setViewport(VIEWPORT)]);
+        console.log(`[parity] Loading ${routePath} from both origins...`);
         const [liveData, testData] = await Promise.all([
           loadPage(livePage, LIVE_ORIGIN, routePath),
           loadPage(testPage, TEST_ORIGIN, routePath),
         ]);
+        console.log(`[parity] Loaded ${routePath}, live status=${liveData.status}, test status=${testData.status}`);
 
         let screenshotDiff = null;
         if (index < SCREENSHOT_PAGE_LIMIT) {
@@ -1146,7 +1241,7 @@ async function main() {
       } catch (error) {
         console.warn(`Failed to compare ${routePath}: ${error.message}`);
       } finally {
-        await Promise.all([livePage.close(), testPage.close()]);
+        await Promise.all([livePage.close().catch(() => {}), testPage.close().catch(() => {})]);
       }
     }
 
@@ -1166,6 +1261,7 @@ async function main() {
         missingInteractive: routes.reduce((total, route) => total + (route.missingInteractiveCount || 0), 0),
         interactivityDiffs: routes.reduce((total, route) => total + (route.interactivityDiffCount || 0), 0),
         hoverMismatches: routes.reduce((total, route) => total + (route.hoverMismatchCount || 0), 0),
+        imageDimensionMismatches: routes.reduce((total, route) => total + (route.imageDiffCount || 0), 0),
         screenshotMismatches: routes.filter((route) => route.screenshotDiff && !route.screenshotDiff.passed).length,
         screenshotUnavailable: routes.filter((route) => route.screenshotDiff?.error).length,
       },
@@ -1184,6 +1280,7 @@ async function main() {
       report.summary.missingInteractive +
       report.summary.interactivityDiffs +
       report.summary.hoverMismatches +
+      report.summary.imageDimensionMismatches +
       report.summary.screenshotMismatches;
 
     const jsonPath = path.join(OUTPUT_DIR, 'site-parity-checklist.json');
