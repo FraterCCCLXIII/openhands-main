@@ -131,7 +131,7 @@ const About = () => {
               href='https://jobs.ashbyhq.com/OpenHands'
               target='_blank'
               rel='noopener noreferrer'
-              className='btn btn-outline mt-6 rounded-none'
+              className='btn btn-outline border-none mt-6 rounded-none'
             >
               Join us
             </a>

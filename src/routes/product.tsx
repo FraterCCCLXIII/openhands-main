@@ -85,7 +85,7 @@ const Product = () => {
                   href={item.href}
                   label='Learn more'
                   variant='lightbrown'
-                  className='mt-8 whitespace-nowrap'
+                  className='mt-8'
                 />
               </div>
             );

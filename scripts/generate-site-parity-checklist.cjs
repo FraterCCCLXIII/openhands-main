@@ -639,6 +639,203 @@ async function extractHoverDiffs(page, selectors) {
   return results;
 }
 
+// ── Click-behavior audit ──
+// Tests whether interactive elements (tabs, accordions, toggles) produce visible
+// DOM changes when clicked, comparing behavior between live and test sites.
+async function extractClickBehavior(page) {
+  const maxChecks = 15;
+  const results = [];
+
+  const selectors = '[role="tab"], [role="button"], details > summary, [data-tab], [aria-controls], button[aria-expanded], [aria-selected]';
+  const handles = await page.$$(selectors);
+  const toCheck = handles.slice(0, maxChecks);
+
+  for (const handle of toCheck) {
+    try {
+      // Capture state before click
+      const preState = await page.evaluate((el) => {
+        const text = (el.innerText || el.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 80);
+        const tag = el.tagName;
+        const role = el.getAttribute('role') || '';
+        const ariaSelected = el.getAttribute('aria-selected');
+        const ariaExpanded = el.getAttribute('aria-expanded');
+        const ariaControls = el.getAttribute('aria-controls') || '';
+        const controlledEl = ariaControls ? document.getElementById(ariaControls) : null;
+        const controlledVisible = controlledEl
+          ? window.getComputedStyle(controlledEl).display !== 'none'
+          : null;
+
+        // Snapshot nearby sibling text for tab panels
+        const parent = el.parentElement;
+        const siblingText = parent
+          ? Array.from(parent.children)
+              .filter((c) => c !== el && c.offsetHeight > 0)
+              .map((c) => (c.innerText || '').slice(0, 40))
+              .join('|')
+              .slice(0, 120)
+          : '';
+
+        return {
+          tag,
+          label: text || el.getAttribute('aria-label') || '(unlabeled)',
+          role,
+          ariaSelected,
+          ariaExpanded,
+          controlledVisible,
+          siblingText,
+          isDetailsOpen: tag === 'SUMMARY' ? el.parentElement?.open || false : null,
+        };
+      }, handle);
+
+      // Click the element
+      await handle.click({ delay: 50 });
+      await page.evaluate(() => new Promise((r) => setTimeout(r, 350)));
+
+      // Capture state after click
+      const postState = await page.evaluate((el) => {
+        const ariaSelected = el.getAttribute('aria-selected');
+        const ariaExpanded = el.getAttribute('aria-expanded');
+        const ariaControls = el.getAttribute('aria-controls') || '';
+        const controlledEl = ariaControls ? document.getElementById(ariaControls) : null;
+        const controlledVisible = controlledEl
+          ? window.getComputedStyle(controlledEl).display !== 'none'
+          : null;
+
+        const parent = el.parentElement;
+        const siblingText = parent
+          ? Array.from(parent.children)
+              .filter((c) => c !== el && c.offsetHeight > 0)
+              .map((c) => (c.innerText || '').slice(0, 40))
+              .join('|')
+              .slice(0, 120)
+          : '';
+
+        return {
+          ariaSelected,
+          ariaExpanded,
+          controlledVisible,
+          siblingText,
+          isDetailsOpen: el.tagName === 'SUMMARY' ? el.parentElement?.open || false : null,
+        };
+      }, handle);
+
+      const changes = [];
+      if (preState.ariaSelected !== postState.ariaSelected) {
+        changes.push(`aria-selected: ${preState.ariaSelected}→${postState.ariaSelected}`);
+      }
+      if (preState.ariaExpanded !== postState.ariaExpanded) {
+        changes.push(`aria-expanded: ${preState.ariaExpanded}→${postState.ariaExpanded}`);
+      }
+      if (preState.controlledVisible !== postState.controlledVisible) {
+        changes.push(`controlled-panel: ${preState.controlledVisible}→${postState.controlledVisible}`);
+      }
+      if (preState.siblingText !== postState.siblingText) {
+        changes.push('sibling-content-changed');
+      }
+      if (preState.isDetailsOpen !== null && preState.isDetailsOpen !== postState.isDetailsOpen) {
+        changes.push(`details: ${preState.isDetailsOpen ? 'open' : 'closed'}→${postState.isDetailsOpen ? 'open' : 'closed'}`);
+      }
+
+      results.push({
+        tag: preState.tag,
+        label: preState.label,
+        signature: `${preState.tag}:${preState.label.toLowerCase().slice(0, 80)}`,
+        role: preState.role,
+        respondsToClick: changes.length > 0,
+        clickChanges: changes,
+      });
+    } catch {
+      // element may have triggered navigation or been removed
+    }
+  }
+
+  return results;
+}
+
+function compareClickBehavior(liveClicks, testClicks) {
+  const diffs = [];
+  const liveMap = new Map(liveClicks.map((c) => [c.signature, c]));
+  const testMap = new Map(testClicks.map((c) => [c.signature, c]));
+
+  for (const [sig, live] of liveMap) {
+    const test = testMap.get(sig);
+    if (!test) {
+      if (live.respondsToClick) {
+        diffs.push({
+          signature: sig,
+          issue: 'clickable on live but missing on test',
+          liveChanges: live.clickChanges,
+          testChanges: [],
+        });
+      }
+      continue;
+    }
+    if (live.respondsToClick && !test.respondsToClick) {
+      diffs.push({
+        signature: sig,
+        issue: 'responds to click on live but NOT on test',
+        liveChanges: live.clickChanges,
+        testChanges: [],
+      });
+    } else if (!live.respondsToClick && test.respondsToClick) {
+      diffs.push({
+        signature: sig,
+        issue: 'responds to click on test but NOT on live',
+        liveChanges: [],
+        testChanges: test.clickChanges,
+      });
+    }
+  }
+
+  return diffs;
+}
+
+// ── Style-diff category summary ──
+// Groups style diffs into user-visible categories for easy scanning.
+function categorizeStyleDiffs(routes) {
+  const categories = {
+    fontSize: { label: 'Font sizes', count: 0, examples: [] },
+    fontFamily: { label: 'Font families', count: 0, examples: [] },
+    borderRadius: { label: 'Border radius / rounded corners', count: 0, examples: [] },
+    backgroundColor: { label: 'Background colors', count: 0, examples: [] },
+    backgroundImage: { label: 'Background images / gradients', count: 0, examples: [] },
+    color: { label: 'Text colors', count: 0, examples: [] },
+    fontWeight: { label: 'Font weights', count: 0, examples: [] },
+    lineHeight: { label: 'Line heights', count: 0, examples: [] },
+    letterSpacing: { label: 'Letter spacing', count: 0, examples: [] },
+    textAlign: { label: 'Text alignment', count: 0, examples: [] },
+    textTransform: { label: 'Text transform (uppercase/lowercase)', count: 0, examples: [] },
+    textDecoration: { label: 'Text decoration (underline)', count: 0, examples: [] },
+    textDecorationColor: { label: 'Text decoration color', count: 0, examples: [] },
+    borderStyle: { label: 'Border style', count: 0, examples: [] },
+    borderWidth: { label: 'Border width', count: 0, examples: [] },
+    borderColor: { label: 'Border color', count: 0, examples: [] },
+    whiteSpace: { label: 'White-space', count: 0, examples: [] },
+    cursor: { label: 'Cursor style', count: 0, examples: [] },
+    opacity: { label: 'Opacity', count: 0, examples: [] },
+    boxShadow: { label: 'Box shadow', count: 0, examples: [] },
+    other: { label: 'Other', count: 0, examples: [] },
+  };
+
+  for (const route of routes) {
+    for (const item of route.checklist || []) {
+      for (const diff of item.styleDiffs || []) {
+        const prop = diff.split(':')[0].trim();
+        const cat = categories[prop] || categories.other;
+        cat.count += 1;
+        if (cat.examples.length < 3) {
+          cat.examples.push({ route: route.path, signature: item.signature, diff });
+        }
+      }
+    }
+  }
+
+  return Object.entries(categories)
+    .filter(([, v]) => v.count > 0)
+    .sort((a, b) => b[1].count - a[1].count)
+    .map(([key, v]) => ({ property: key, label: v.label, count: v.count, examples: v.examples }));
+}
+
 function compareContainerStyles(liveContainers, testContainers) {
   const diffs = [];
   const maxIndex = Math.min(liveContainers.length, testContainers.length);
@@ -869,6 +1066,12 @@ function summarizeRouteComparison(routePath, livePage, testPage, screenshotDiff)
     testPage.hoverEffects || [],
   );
 
+  // Click behavior comparison (tabs, accordions, toggles)
+  const clickBehaviorDiffs = compareClickBehavior(
+    livePage.clickBehavior || [],
+    testPage.clickBehavior || [],
+  );
+
   // CSS custom property comparison
   const cssVarDiffs = [];
   const allVarNames = new Set([
@@ -929,6 +1132,8 @@ function summarizeRouteComparison(routePath, livePage, testPage, screenshotDiff)
     extraInteractiveCount: interactivity.extraInteractive.length,
     hoverDiffs,
     hoverMismatchCount: hoverDiffs.length,
+    clickBehaviorDiffs,
+    clickBehaviorDiffCount: clickBehaviorDiffs.length,
     imageDiffs,
     imageDiffCount: imageDiffs.length,
     cssVarDiffs,
@@ -1129,11 +1334,25 @@ function renderMarkdown(report) {
   lines.push(`- Missing interactive elements: ${report.summary.missingInteractive}`);
   lines.push(`- Interactivity behavior mismatches: ${report.summary.interactivityDiffs}`);
   lines.push(`- Hover effect mismatches: ${report.summary.hoverMismatches}`);
+  lines.push(`- Click behavior mismatches (tabs/accordions): ${report.summary.clickBehaviorMismatches || 0}`);
   lines.push(`- Image dimension mismatches: ${report.summary.imageDimensionMismatches || 0}`);
   lines.push(`- Screenshot mismatches (> ${SCREENSHOT_DIFF_THRESHOLD}% or unavailable): ${report.summary.screenshotMismatches}`);
   lines.push(`- Screenshot capture failures: ${report.summary.screenshotUnavailable || 0}`);
   lines.push(`- Total failing checks: ${report.summary.failedChecklistItems}`);
   lines.push('');
+
+  // Style-diff category breakdown
+  if (report.summary.styleDiffsByProperty && report.summary.styleDiffsByProperty.length > 0) {
+    lines.push('### Appearance mismatches by CSS property');
+    lines.push('');
+    for (const cat of report.summary.styleDiffsByProperty) {
+      lines.push(`- **${cat.label}** (${cat.property}): ${cat.count} mismatches`);
+      for (const ex of cat.examples) {
+        lines.push(`  - ${ex.route} | ${ex.signature} | ${ex.diff}`);
+      }
+    }
+    lines.push('');
+  }
 
   for (const route of report.routes) {
     lines.push(`## ${route.path}`);
@@ -1218,6 +1437,16 @@ function renderMarkdown(report) {
       }
     }
 
+    // Click behavior mismatches (tabs, accordions, toggles)
+    if (route.clickBehaviorDiffs && route.clickBehaviorDiffs.length > 0) {
+      lines.push('');
+      lines.push('### Click behavior mismatches (tabs/accordions)');
+      for (const diff of route.clickBehaviorDiffs) {
+        const changes = diff.liveChanges || diff.testChanges || [];
+        lines.push(`- [ ] ${diff.signature} — ${diff.issue}${changes.length > 0 ? ` (${changes.join('; ')})` : ''}`);
+      }
+    }
+
     // Image dimension mismatches
     if (route.imageDiffs && route.imageDiffs.length > 0) {
       lines.push('');
@@ -1288,12 +1517,24 @@ async function loadPage(page, origin, routePath) {
     // hover extraction is best-effort
   }
 
+  let clickBehavior = [];
+  try {
+    clickBehavior = await withTimeout(
+      extractClickBehavior(page),
+      20000,
+      `click behavior ${url}`,
+    );
+  } catch {
+    // click behavior extraction is best-effort
+  }
+
   return {
     status: response?.status() || 0,
     inventory,
     containers,
     interactive,
     hoverEffects,
+    clickBehavior,
     cssVars,
   };
 }
@@ -1399,12 +1640,16 @@ async function main() {
         missingInteractive: routes.reduce((total, route) => total + (route.missingInteractiveCount || 0), 0),
         interactivityDiffs: routes.reduce((total, route) => total + (route.interactivityDiffCount || 0), 0),
         hoverMismatches: routes.reduce((total, route) => total + (route.hoverMismatchCount || 0), 0),
+        clickBehaviorMismatches: routes.reduce((total, route) => total + (route.clickBehaviorDiffCount || 0), 0),
         imageDimensionMismatches: routes.reduce((total, route) => total + (route.imageDiffCount || 0), 0),
         screenshotMismatches: routes.filter((route) => route.screenshotDiff && !route.screenshotDiff.passed).length,
         screenshotUnavailable: routes.filter((route) => route.screenshotDiff?.error).length,
       },
       routes,
     };
+
+    // Add per-property style-diff category breakdown
+    report.summary.styleDiffsByProperty = categorizeStyleDiffs(routes);
 
     report.summary.failedChecklistItems =
       report.summary.routeMismatches +
@@ -1419,6 +1664,7 @@ async function main() {
       report.summary.missingInteractive +
       report.summary.interactivityDiffs +
       report.summary.hoverMismatches +
+      (report.summary.clickBehaviorMismatches || 0) +
       report.summary.imageDimensionMismatches +
       report.summary.screenshotMismatches;
 
@@ -1441,6 +1687,8 @@ module.exports = {
   capturePageScreenshot,
   capturePageScreenshotInChunks,
   captureScreenshotDiff,
+  categorizeStyleDiffs,
+  compareClickBehavior,
   compareContainerStyles,
   compareHoverEffects,
   compareInteractivity,

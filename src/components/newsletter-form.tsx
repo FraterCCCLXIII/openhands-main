@@ -40,7 +40,7 @@ export const NewsletterForm: React.FC<NewsletterFormProps> = ({
             type='submit'
             value='Subscribe'
             disabled={disabled}
-            className='btn btn-primary m-0 min-h-[52px] whitespace-nowrap rounded-[8px] disabled:cursor-not-allowed disabled:opacity-50'
+            className='btn btn-primary m-0 min-h-[52px] rounded-[8px] disabled:cursor-not-allowed disabled:opacity-50'
           />
         </div>
 

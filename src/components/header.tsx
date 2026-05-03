@@ -139,12 +139,12 @@ export const Header: React.FC<HeaderProps> = ({
             href='https://github.com/OpenHands/OpenHands'
             target='_blank'
             rel='noopener noreferrer'
-            className='flex items-center gap-1.5 whitespace-nowrap text-sm transition-colors hover:opacity-80'
+            className='flex items-center gap-1.5 text-sm transition-colors hover:opacity-80'
           >
             <GitHubLogoBlack className='h-4 w-4 flex-shrink-0' style={{ width: '16px', height: '16px' }} />
             <span style={{ fontWeight: 400 }}>{formatThousands(statistics.stargazers)}</span>
           </a>
-          <div className='btn btn-outline relative whitespace-nowrap' style={{ padding: '0.9em 1.9em', margin: 0 }}>
+          <div className='btn btn-outline relative' style={{ padding: '0.9em 1.9em', margin: 0 }}>
             <div aria-hidden='true'>Build with SDK</div>
             <a
               href='https://docs.openhands.dev/sdk'
@@ -155,7 +155,7 @@ export const Header: React.FC<HeaderProps> = ({
               <span className='sr-only'>Build with SDK</span>
             </a>
           </div>
-          <div className='btn btn-primary relative whitespace-nowrap' style={{ padding: '0.9em 1.9em', margin: 0 }}>
+          <div className='btn btn-primary relative' style={{ padding: '0.9em 1.9em', margin: 0 }}>
             <div aria-hidden='true'>Try it live</div>
             <a
               href='https://app.all-hands.dev/'

@@ -77,7 +77,7 @@ const Press = () => {
               <p className='m-0 max-w-[397px] text-[20.8px] font-medium leading-[24.96px] text-brand-fg'>
                 {item.title}
               </p>
-              <a href={item.url} target='_blank' rel='noopener noreferrer' className='btn btn-outline w-fit rounded-none'>
+              <a href={item.url} target='_blank' rel='noopener noreferrer' className='btn btn-outline border-none w-fit rounded-none'>
                 Read more
               </a>
             </article>

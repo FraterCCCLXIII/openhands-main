@@ -135,7 +135,7 @@ const Enterprise = () => {
           <img
             src='/assets/webflow/backgrounds/690b50c95a72e7b17a1412a8_09a6ecb11584c3309a64a00d57130313_ascii-art_%2815%29_1.svg'
             alt='asci art'
-            className='h-full w-full object-cover'
+            className='pointer-events-auto h-full w-full object-cover'
           />
         </div>
         <div className='relative mx-auto flex max-w-[812px] flex-col items-center gap-8 text-center'>
@@ -162,7 +162,7 @@ const Enterprise = () => {
           <img
             src='/assets/webflow/backgrounds/690b397ae76441160bed52b6_asci-art-hole.png'
             alt='ASCII art depicting a large black hole with light and particles swirling around it.'
-            className='h-full w-full object-cover'
+            className='pointer-events-auto h-full w-full object-cover'
           />
         </div>
         <div className='relative mx-auto max-w-[1260px] text-center'>

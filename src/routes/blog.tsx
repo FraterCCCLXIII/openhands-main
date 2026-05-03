@@ -87,7 +87,7 @@ const Blog = () => {
         <p className='mt-3 text-[18px] leading-[1.2] font-medium text-[#5f5f5f] lg:text-[20px]'>
           Insights and updates from the OpenHands team
         </p>
-        <p className='mx-auto mt-[70px] max-w-[503px] whitespace-nowrap text-[16px] leading-[22.4px] text-[#22150d]'>
+        <p className='mx-auto mt-[70px] max-w-[503px] text-[16px] leading-[22.4px] text-[#22150d]'>
           Sign up for our newsletter for updates, events, and community insights.
         </p>
         <div className='mt-4 flex justify-center'>
@@ -130,7 +130,7 @@ const Blog = () => {
           <div className='mt-16 flex justify-center'>
             <a
               href='#blog-grid'
-              className='btn btn-outline rounded-none'
+              className='btn btn-outline border-none rounded-none'
               onClick={(event) => {
                 event.preventDefault();
                 setVisibleGridPosts((count) => count + INITIAL_GRID_POSTS);

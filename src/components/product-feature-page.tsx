@@ -55,7 +55,7 @@ export const ProductPageActionLink = ({
       label={label}
       srLabel={screenReaderLabel}
       variant={variant}
-      className={classNames('whitespace-nowrap', className)}
+      className={className}
     />
   );
 };
@@ -250,7 +250,7 @@ export const ProductFaqSection = ({ faqs }: { faqs: readonly ProductFaqItem[] })
           {faqs.map((faq) => (
             <details key={faq.question} className='group border-b border-brand-fg/15 py-4'>
               <summary className='flex cursor-pointer list-none items-start justify-between gap-6 text-[24px] font-medium leading-[1.4] text-brand-fg'>
-                <label className='block cursor-pointer'>{faq.question}</label>
+                <label className='block pointer-events-none cursor-default'>{faq.question}</label>
                 <span className='mt-1 text-[22px] leading-none transition-transform group-open:rotate-45'>+</span>
               </summary>
               <p className='max-w-[680px] pt-4 text-[16px] leading-[1.6] text-brand-fg/75'>{faq.answer}</p>

@@ -109,7 +109,7 @@ const MetadataItem = ({
 }) => (
   <p
     className={[
-      'inline-flex items-center gap-2 whitespace-nowrap text-[13px] font-medium leading-none',
+      'inline-flex items-center gap-2 text-[13px] font-medium leading-none',
       tone === 'light' ? 'text-brand-bg' : 'text-brand-fg',
     ].join(' ')}
   >
@@ -132,7 +132,7 @@ const Community = () => {
           <div className='mt-6 flex flex-wrap items-center justify-center gap-4'>
             <a
               href='/joinslack'
-              className='inline-flex whitespace-nowrap text-[16px] leading-[20.8px] font-medium text-brand-bg'
+              className='inline-flex text-[16px] leading-[20.8px] font-medium text-brand-bg'
             >
               <span className='btn btn-primary rounded-none flex items-center gap-3'>
                 <img
@@ -145,9 +145,9 @@ const Community = () => {
             </a>
             <a
               href='#events'
-              className='inline-flex whitespace-nowrap text-[16px] leading-[20.8px] font-medium text-brand-fg'
+              className='inline-flex text-[16px] leading-[20.8px] font-medium text-brand-fg'
             >
-              <span className='btn btn-outline rounded-none'>View Events</span>
+              <span className='btn btn-outline border-none rounded-none'>View Events</span>
             </a>
           </div>
         </div>
@@ -174,7 +174,7 @@ const Community = () => {
               href={LATEST_COMMUNITY_CALL.videoUrl}
               target='_blank'
               rel='noopener noreferrer'
-              className='btn btn-outline rounded-none mt-8 text-brand-bg border-brand-bg/30 hover:bg-brand-bg hover:text-brand-fg'
+              className='btn btn-outline border-none rounded-none mt-8 text-brand-bg border-brand-bg/30 hover:bg-brand-bg hover:text-brand-fg'
             >
               Watch on YouTube
             </a>
@@ -233,7 +233,7 @@ const Community = () => {
               href='https://luma.com/openhands?k=c'
               target='_blank'
               rel='noopener noreferrer'
-              className='btn btn-outline rounded-none whitespace-nowrap'
+              className='btn btn-outline border-none rounded-none'
             >
               View All Events
             </a>
@@ -271,7 +271,7 @@ const Community = () => {
                   rel='noopener noreferrer'
                   className='mt-6 inline-flex w-fit self-center text-[16px] leading-[20.8px] font-medium text-brand-bg'
                 >
-                  <span className='btn btn-outline rounded-none text-brand-bg border-brand-bg/30 hover:bg-brand-bg hover:text-brand-fg'>
+                  <span className='btn btn-outline border-none rounded-none text-brand-bg border-brand-bg/30 hover:bg-brand-bg hover:text-brand-fg'>
                     {path.cta}
                   </span>
                 </a>

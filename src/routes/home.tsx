@@ -376,7 +376,7 @@ const Home = () => {
         <div className='mx-auto max-w-[1238px]'>
           <div className='mb-5 flex items-end justify-between gap-4 lg:translate-y-[68px]'>
             <div className='max-w-[384px]'>
-              <h2 className='whitespace-nowrap text-[32px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>
+              <h2 className='text-[32px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>
                 Start with a proven workflow
               </h2>
             </div>
@@ -475,7 +475,7 @@ const Home = () => {
             <div className='max-w-[270px]'>
               <h2 className='mb-3 text-[44px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>{activeSurface.title}</h2>
               <p className='mb-5 max-w-[270px] text-lg font-medium leading-[1.5] text-brand-muted lg:text-[20.8px] lg:leading-[1.2]'>{activeSurface.description}</p>
-              <a href={activeSurface.href} target='_blank' rel='noopener noreferrer' className='btn btn-outline inline-flex'>
+              <a href={activeSurface.href} target='_blank' rel='noopener noreferrer' className='btn btn-outline border-none inline-flex'>
                 {activeSurface.cta}
               </a>
             </div>
@@ -685,7 +685,7 @@ const Home = () => {
           <div className='grid gap-8 lg:grid-cols-[0.4fr_0.6fr] lg:items-start'>
             <div>
               <h2 className='mb-4 text-[44px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>FAQ&apos;s</h2>
-              <Link to='/contact' className='btn btn-outline w-fit'>
+              <Link to='/contact' className='btn btn-outline border-none w-fit'>
                 Contact us
               </Link>
             </div>
