@@ -52,7 +52,7 @@ function PrivacyPolicy() {
           <Markdown
             components={{
               h1: ({ children }) => (
-                <h1 className={`${legalHeadingClass} mb-12 text-center text-[28px] leading-[1.2] lg:text-[32px]`}>
+                <h1 className={`${legalHeadingClass} mb-12 text-center fluid-h3`}>
                   {children}
                 </h1>
               ),

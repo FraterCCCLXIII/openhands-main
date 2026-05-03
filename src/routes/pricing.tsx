@@ -215,10 +215,10 @@ const Pricing = () => {
           />
         </div>
         <div className='relative mx-auto flex max-w-4xl flex-col items-center gap-4 pb-4 text-center'>
-          <h1 className='text-[44px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>
+          <h1 className='fluid-h1 text-brand-fg'>
             Pricing that fits your rollout
           </h1>
-          <p className='max-w-2xl text-[20.8px] leading-[1.2] text-brand-muted'>
+          <p className='max-w-2xl fluid-body-lg text-brand-muted'>
             Run locally, in our cloud, or self-host. Pay only for what you need
           </p>
         </div>
@@ -229,13 +229,13 @@ const Pricing = () => {
               className='flex h-full flex-col rounded-[16px] border border-brand-fg/20 bg-[#f5ecd6]/90 p-8 shadow-[0_0_0_1px_rgba(34,21,13,0.02)]'
             >
               <div className='text-sm uppercase tracking-[0.14em] text-brand-muted'>{plan.eyebrow}</div>
-              <div className='mt-2 text-[32px] font-medium leading-[1.15] text-brand-fg'>{plan.title}</div>
+              <div className='mt-2 fluid-h3 text-brand-fg'>{plan.title}</div>
               <p className='mt-3 text-[20px] font-medium leading-[28px] text-[#5f5f5f]'>{plan.price}</p>
               <p className='mt-4 text-[16px] leading-[22.4px] text-brand-muted'>{plan.description}</p>
-              <p className='mt-6 text-[16px] font-medium text-[#5f5f5f]'>{plan.intro}</p>
+              <p className='mt-6 fluid-sm font-medium text-[#5f5f5f]'>{plan.intro}</p>
               <ul className='mt-4 flex flex-1 flex-col gap-3'>
                 {plan.features.map((feature) => (
-                  <li key={feature} className='flex items-start gap-3 font-sohne-buch text-[16px] leading-[1.5] text-[#5f5f5f]'>
+                  <li key={feature} className='flex items-start gap-3 font-sohne-buch fluid-sm leading-[1.5] text-[#5f5f5f]'>
                     <img src={CARD_CHECK_ICON} alt='' aria-hidden='true' className='mt-0.5 h-5 w-5 flex-none' />
                     <p className='flex-1'>{feature}</p>
                   </li>
@@ -287,11 +287,11 @@ const Pricing = () => {
                   if (row.type === 'values') {
                     return (
                       <tr key={row.label} className='border-b border-brand-bg/12 last:border-b-0'>
-                        <th className='py-3 pr-6 font-sohne-buch text-[16px] font-medium text-[#b3a88c]'>
+                        <th className='py-3 pr-6 font-sohne-buch fluid-sm font-medium text-[#b3a88c]'>
                           <p>{row.label}</p>
                         </th>
                         {row.values.map((value, index) => (
-                          <td key={`${row.label}-${index}`} className='py-3 font-sohne-buch text-[16px] text-[#b3a88c]'>
+                          <td key={`${row.label}-${index}`} className='py-3 font-sohne-buch fluid-sm text-[#b3a88c]'>
                             <p>{value}</p>
                           </td>
                         ))}
@@ -301,7 +301,7 @@ const Pricing = () => {
 
                   return (
                     <tr key={row.label} className='border-b border-brand-bg/12 last:border-b-0'>
-                      <th className='py-3 pr-6 font-sohne-buch text-[16px] font-medium text-[#b3a88c]'>
+                      <th className='py-3 pr-6 font-sohne-buch fluid-sm font-medium text-[#b3a88c]'>
                         <p>{row.label}</p>
                       </th>
                       {row.values.map((enabled, index) => (
@@ -321,7 +321,7 @@ const Pricing = () => {
       <section className='px-10 py-32'>
         <div className='mx-auto grid max-w-[1260px] gap-10 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:gap-16'>
           <div>
-            <h2 className='text-[34px] font-medium leading-[1.08] tracking-[-0.03em] text-brand-fg lg:text-[44px]'>
+            <h2 className='section-title text-brand-fg'>
               FAQ&apos;s
             </h2>
             <OverlayLinkButton href='/contact' label='Contact us' variant='outline' className='mt-8' />
@@ -329,7 +329,7 @@ const Pricing = () => {
           <div className='border-t border-brand-fg/15'>
             {FAQS.map((faq) => (
               <details key={faq.question} className='group border-b border-brand-fg/15 py-4'>
-                <summary className='flex cursor-pointer list-none items-start justify-between gap-6 text-[24px] font-medium leading-[1.4] text-brand-fg'>
+                <summary className='flex cursor-pointer list-none items-start justify-between gap-6 fluid-h4 leading-[1.4] text-brand-fg'>
                   <label className='block pointer-events-none cursor-default'>{faq.question}</label>
                   <span className='mt-1 text-[22px] leading-none transition-transform group-open:rotate-45'>+</span>
                 </summary>

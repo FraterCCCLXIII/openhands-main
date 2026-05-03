@@ -43,10 +43,10 @@ const Product = () => {
           <div className='inline-flex rounded-[4px] bg-brand-accent px-5 py-2 text-[13px] font-medium leading-none text-brand-fg'>
             Product
           </div>
-          <h1 className='mt-6 text-[40px] font-medium leading-[1.08] tracking-[-0.04em] text-brand-fg lg:text-[44px]'>
+          <h1 className='mt-6 fluid-h1 text-brand-fg'>
             Build better software with autonomous cloud agent
           </h1>
-          <p className='mt-4 max-w-[640px] text-[20.8px] leading-[1.2] text-[#5f5f5f]'>
+          <p className='mt-4 max-w-[640px] fluid-body-lg text-[#5f5f5f]'>
             Offload toil, ship faster. OpenHands automates real development tasks with transparency, governance, and choice.
           </p>
           <div className='mt-6 flex flex-wrap items-center justify-center gap-4'>
@@ -75,10 +75,10 @@ const Product = () => {
 
             const textBlock = (
               <div className={index === 1 ? 'lg:pl-8' : 'lg:pr-8'}>
-                <h2 className='w-fit text-[34px] font-medium leading-[1.08] tracking-[-0.03em] text-brand-bg lg:text-[44px]'>
+                <h2 className='w-fit section-title text-brand-bg'>
                   {item.title}
                 </h2>
-                <p className='mt-5 max-w-[571px] text-[20.8px] leading-[1.2] text-[#b3a88c]'>
+                <p className='mt-5 max-w-[571px] fluid-body-lg text-[#b3a88c]'>
                   {item.description}
                 </p>
                 <OverlayLinkButton

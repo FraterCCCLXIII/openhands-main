@@ -65,10 +65,10 @@ const Manifesto = () => {
     <CompanyPageShell>
       <section className='px-6 pb-10 pt-12 lg:px-10 lg:pb-10 lg:pt-12'>
         <div className='mx-auto max-w-[520px] text-center'>
-          <h1 className='text-[37px] font-medium leading-[40.7px] tracking-[-0.03em] text-brand-fg lg:text-[44px] lg:leading-[48.4px]'>
+          <h1 className='fluid-h1 text-brand-fg'>
             Hands on the Future
           </h1>
-          <p className='mt-4 text-[20.8px] font-medium leading-[24.96px] text-[#5f5f5f]'>
+          <p className='mt-4 fluid-body-lg font-medium text-[#5f5f5f]'>
             We believe in an open, autonomous future for software development
           </p>
         </div>
@@ -83,7 +83,7 @@ const Manifesto = () => {
           />
 
           <div className='mx-auto mt-20 max-w-[820px] lg:mt-28'>
-            <h3 className='text-[28px] font-medium leading-[1.25] text-brand-fg lg:text-[32px] lg:leading-[1.2]'>
+            <h3 className='fluid-h3 text-brand-fg'>
               We&apos;re at the beginning of a new era in software <em>development. Work is shifting from keystrokes to delegated tasks,</em> from single laptops to coordinated fleets of agents running in environments you control.
               <br />
               <br />
@@ -108,7 +108,7 @@ const Manifesto = () => {
             <SeparatorParagraph />
 
             <section className='mt-12 space-y-3'>
-              <h3 className='text-[28px] font-medium leading-[33.6px] text-brand-fg lg:text-[32px] lg:leading-[38.4px]'>
+              <h3 className='fluid-h3 text-brand-fg'>
                 What this means for OpenHands
               </h3>
               <p className='font-sohne-buch text-[16px] leading-[22.4px] text-[#5f5f5f]'>
@@ -120,7 +120,7 @@ const Manifesto = () => {
             <SeparatorParagraph />
 
             <section className='mt-10 space-y-3'>
-              <h3 className='text-[28px] font-medium leading-[33.6px] text-brand-fg lg:text-[32px] lg:leading-[38.4px]'>
+              <h3 className='fluid-h3 text-brand-fg'>
                 What this asks of you
               </h3>
               <p className='font-sohne-buch text-[16px] leading-[22.4px] text-[#5f5f5f]'>

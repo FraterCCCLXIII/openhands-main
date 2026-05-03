@@ -47,23 +47,30 @@
   /* Container */
   --container-max-width: 1238px;
   
-  /* Typography - exact Webflow computed values */
-  --h1-font-size: 37.14px;
+  /* ── Fluid typography — replicate Webflow's clamp() system ──
+     Live site uses fluid--min=20, fluid--max=90 with rem-based min/max.
+     Formula: clamp(MIN_REM, INTERCEPT + SLOPE*100vw, MAX_REM)
+     where slope = (max-min)/70, intercept = min - slope*20            */
+  --h1-font-size: clamp(2rem, 1.78571rem + 1.07143vw, 2.75rem);       /* 32–44px */
   --h1-line-height: 1.1;
   --h1-font-weight: 500;
   --h1-letter-spacing: -0.03em;
   
-  --h2-font-size: 35.31px;
+  --h2-font-size: clamp(1.8rem, 1.52857rem + 1.35714vw, 2.75rem); /* 28.8–44px */
   --h2-line-height: 1.1;
   --h2-font-weight: 500;
   --h2-letter-spacing: -0.02em;
   
-  --h3-font-size: 27.43px;
+  --h3-font-size: clamp(1.5rem, 1.35714rem + 0.71429vw, 2rem);    /* 24–32px */
   --h3-line-height: 1.2;
   --h3-font-weight: 500;
   
   --paragraph-line-height: 1.4;
-  --paragraph-lg-line-height: 1.3;
+  --paragraph-lg-line-height: 1.2;
+
+  --h4-font-size: clamp(1.3rem, 1.24286rem + 0.28571vw, 1.5rem);     /* 20.8–24px */
+  --paragraph-lg-font-size: clamp(1.1rem, 1.04286rem + 0.28571vw, 1.3rem); /* 17.6–20.8px */
+  --paragraph-sm-font-size: clamp(0.805rem, 0.73634rem + 0.29296vw, 1rem); /* 12.88–16px */
   
   /* Button - exact Webflow values */
   --btn-padding-y: 14.4px;
@@ -218,9 +225,47 @@
     font-size: 1.1rem;
   }
 
-  /* Section styles */
+  /* ── Fluid typography utility classes — mirror Webflow's clamp() system ── */
+
+  /* Matches Webflow .h1 / .h1-2: page headings (≈32–44px) */
+  .fluid-h1 {
+    font-size: var(--h1-font-size);
+    line-height: var(--h1-line-height);
+    font-weight: var(--h1-font-weight);
+    letter-spacing: var(--h1-letter-spacing);
+  }
+
+  /* Matches Webflow .h2 / .h2-2: section headings (≈28.8–44px) */
   .section-title {
-    @apply text-[28px] lg:text-[44px] font-bold leading-tight;
+    font-size: var(--h2-font-size);
+    line-height: var(--h2-line-height);
+    font-weight: var(--h2-font-weight);
+    letter-spacing: var(--h2-letter-spacing);
+  }
+
+  /* Matches Webflow .h3: sub-section headings (≈24–32px) */
+  .fluid-h3 {
+    font-size: var(--h3-font-size);
+    line-height: var(--h3-line-height);
+    font-weight: var(--h3-font-weight);
+  }
+
+  /* Matches Webflow .h4: card headings (≈20.8–24px) */
+  .fluid-h4 {
+    font-size: var(--h4-font-size);
+    line-height: 1.2;
+    font-weight: 500;
+  }
+
+  /* Matches Webflow paragraph-lg (≈17.6–20.8px) */
+  .fluid-body-lg {
+    font-size: var(--paragraph-lg-font-size);
+    line-height: var(--paragraph-lg-line-height);
+  }
+
+  /* Matches Webflow paragraph-sm (≈12.88–16px) */
+  .fluid-sm {
+    font-size: var(--paragraph-sm-font-size);
   }
 
   /* Card styles */
@@ -286,10 +331,12 @@
     @apply w-3 h-3 rounded-full;
   }
 
-  /* Testimonial styles */
-  /* Live site: 44px font, 48.4px line-height */
+  /* Testimonial styles — same scale as Webflow .h2 */
   .testimonial-quote {
-    @apply text-xl lg:text-[44px] lg:leading-[1.1] lg:tracking-[-0.02em] font-medium text-center;
+    font-size: var(--h2-font-size);
+    line-height: var(--h2-line-height);
+    letter-spacing: var(--h2-letter-spacing);
+    @apply font-medium text-center;
   }
 }
 

@@ -366,7 +366,7 @@ const Home = () => {
                 <h1 className='mb-4 text-[44px] font-medium leading-[0.96] tracking-[-0.03em] text-brand-fg md:text-[56px]'>
                   Build with coding agents, your way.
                 </h1>
-                <div className='mx-auto mb-7 max-w-[520px] text-lg font-medium leading-[1.45] text-brand-muted lg:text-[20.8px] lg:leading-[1.2]'>
+                <div className='mx-auto mb-7 max-w-[520px] fluid-body-lg font-medium text-brand-muted'>
                   Open-source, customizable. Run locally or at scale.
                 </div>
                 <div data-wf-el='hero_btn_wrap' className='mb-4 flex flex-wrap items-center justify-center gap-4'>
@@ -391,7 +391,7 @@ const Home = () => {
             {/* Workflow carousel (inside hero section) */}
             <div data-wf-el='hero-splide_top' className='mb-5 flex justify-between gap-4' style={{ alignItems: 'center' }}>
             <div className='max-w-[384px]'>
-              <h2 data-wf-el='hero-splide_heading' className='text-[32px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>
+              <h2 data-wf-el='hero-splide_heading' className='fluid-h3 text-brand-fg'>
                 Start with a proven workflow
               </h2>
             </div>
@@ -460,7 +460,7 @@ const Home = () => {
           {/* Logo grid (inside hero section) */}
           <div data-wf-el='logo-grid-component_wrap' className='w-full' style={{ paddingTop: '56px' }}>
             <div data-wf-el='logo-grid-component_heading_container' className='mx-auto max-w-[1238px]' style={{ textAlign: 'center' }}>
-              <div data-wf-el='logo-grid-component_heading_heading' className='mb-5 text-center text-[32px] font-medium leading-[1.2] text-brand-fg'>Trusted by engineers at</div>
+              <div data-wf-el='logo-grid-component_heading_heading' className='mb-5 text-center fluid-h3 text-brand-fg'>Trusted by engineers at</div>
             </div>
             <div data-wf-el='logo-grid-component_container' className='mx-auto max-w-[1238px]'>
               <div data-wf-el='logo-grid-component_cms_wrap' style={{ paddingTop: '24px' }}>
@@ -507,8 +507,8 @@ const Home = () => {
               ))}
             </div>
             <div data-wf-el='standard-wrap' className='max-w-[270px]' style={{ borderRadius: '0px' }}>
-              <h2 className='mb-3 text-[44px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>{activeSurface.title}</h2>
-              <p data-wf-el='paragraph-lg' className='mb-5 max-w-[270px] text-lg font-medium leading-[1.5] text-brand-muted lg:text-[20.8px] lg:leading-[1.2]'>{activeSurface.description}</p>
+              <h2 className='mb-3 section-title text-brand-fg'>{activeSurface.title}</h2>
+              <p data-wf-el='paragraph-lg' className='mb-5 max-w-[270px] fluid-body-lg font-medium text-brand-muted'>{activeSurface.description}</p>
               <span className='btn-wrap'>
                 <a href={activeSurface.href} target='_blank' rel='noopener noreferrer' className='btn btn-outline border-none'>
                   {activeSurface.cta}
@@ -529,7 +529,7 @@ const Home = () => {
       <section style={{ display: 'block', backgroundColor: 'rgba(0, 0, 0, 0)', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px', position: 'relative' }}>
         <div className='mx-auto grid max-w-[1278px] gap-10 lg:grid-cols-[598px_640px]'>
           <div className='flex flex-col justify-between gap-8'>
-            <h3 className='max-w-[386px] text-[44px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>Why teams choose OpenHands</h3>
+            <h3 className='max-w-[386px] section-title text-brand-fg'>Why teams choose OpenHands</h3>
             <span className='btn-wrap w-fit'>
               <a href='https://app.all-hands.dev/' target='_blank' rel='noopener noreferrer' className='btn btn-outline'>
                 Try it live
@@ -542,8 +542,8 @@ const Home = () => {
               <div key={feature.title} className='feature-item-stacked'>
                 <img src={feature.icon} alt='' className='mt-1 h-8 w-8 flex-shrink-0' />
                 <div className='min-w-0 flex-1'>
-                  <p className='mb-1 text-[20px] font-medium leading-[1.25] text-brand-fg'>{feature.title}</p>
-                  <p className='text-base font-medium leading-[1.5] text-brand-muted lg:text-[20.8px] lg:leading-[1.2]'>{feature.description}</p>
+                  <p className='mb-1 fluid-body-lg font-medium text-brand-fg'>{feature.title}</p>
+                  <p className='fluid-body-lg font-medium text-brand-muted'>{feature.description}</p>
                 </div>
               </div>
             ))}
@@ -554,7 +554,7 @@ const Home = () => {
       {/* SECTION 2: Automate the Outer Loop (py:80, transparent) */}
       <section style={{ display: 'block', backgroundColor: 'rgba(0, 0, 0, 0)', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px', position: 'relative' }}>
         <div data-wf-el='container' className='mx-auto max-w-[1238px]'>
-          <h3 className='mb-[217px] max-w-[1216px] text-[44px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>
+          <h3 className='mb-[217px] max-w-[1216px] section-title text-brand-fg'>
             Automate the Outer Loop with AI
           </h3>
           <div className='space-y-6'>
@@ -574,8 +574,8 @@ const Home = () => {
                       <div className='mb-4 flex h-14 w-14 items-center justify-center rounded-none bg-white'>
                         <img src={card.icon} alt='' className='h-8 w-8' />
                       </div>
-                      <p className='mb-2 text-[20px] font-medium leading-[1.25] text-brand-fg'>{card.title}</p>
-                      <p className='text-base font-medium leading-[1.55] text-brand-muted lg:text-[20.8px] lg:leading-[1.2]'>{card.description}</p>
+                      <p className='mb-2 fluid-body-lg font-medium text-brand-fg'>{card.title}</p>
+                      <p className='fluid-body-lg font-medium text-brand-muted'>{card.description}</p>
                     </article>
                   ))}
                 </div>
@@ -599,7 +599,7 @@ const Home = () => {
         <div data-wf-el='hero-track' className='relative z-10 mx-auto flex h-full max-w-[1238px]' style={{ paddingBottom: '0px', paddingLeft: '0px', paddingRight: '0px', justifyContent: 'center', alignItems: 'center', gap: '10%' }}>
           {TESTIMONIALS.map((t, i) => (
             <div key={t.name} data-wf-el='card-body' className='max-w-[760px] p-8' style={{ backgroundColor: 'rgba(0, 0, 0, 0)', display: 'block', color: 'rgb(249, 240, 217)', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', position: i === activeTestimonial ? 'static' : 'absolute', opacity: i === activeTestimonial ? 1 : 0, pointerEvents: i === activeTestimonial ? 'auto' : 'none', left: i === activeTestimonial ? undefined : '-9999px' }}>
-              <h2 className='mb-6 text-[44px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>
+              <h2 className='mb-6 section-title text-brand-fg'>
                 {t.quote}
               </h2>
               <div className='mb-8 flex items-center gap-4'>
@@ -646,8 +646,8 @@ const Home = () => {
           <div className='grid gap-6 lg:grid-cols-2'>
             <article className='card-dark min-h-[520px] lg:min-h-[595px]'>
               <div className='flex h-full flex-col p-6'>
-                <p className='mb-3 max-w-[350px] text-lg font-medium text-brand-accent lg:text-[20.8px] lg:leading-[1.2]'>Community that compounds velocity</p>
-                <p className='mb-8 max-w-[350px] text-lg leading-[1.55] text-[#b3a88c] lg:text-[20.8px] lg:leading-[1.2]'>
+                <p className='mb-3 max-w-[350px] fluid-body-lg font-medium text-brand-accent'>Community that compounds velocity</p>
+                <p className='mb-8 max-w-[350px] fluid-body-lg text-[#b3a88c]'>
                   With 65K+ GitHub stars and a thriving open-source ecosystem, OpenHands evolves through collective innovation - every contribution makes the platform faster, safer, and smarter.
                 </p>
                 <span className='btn-wrap-dark mb-12'>
@@ -668,8 +668,8 @@ const Home = () => {
 
             <article className='card-dark min-h-[520px] lg:min-h-[595px]'>
               <div className='flex h-full flex-col p-6'>
-                <p className='mb-3 max-w-[330px] text-lg font-medium text-brand-accent lg:text-[20.8px] lg:leading-[1.2]'>Plays well with your stack</p>
-                <p className='mb-10 max-w-[330px] text-lg leading-[1.55] text-[#b3a88c] lg:text-[20.8px] lg:leading-[1.2]'>
+                <p className='mb-3 max-w-[330px] fluid-body-lg font-medium text-brand-accent'>Plays well with your stack</p>
+                <p className='mb-10 max-w-[330px] fluid-body-lg text-[#b3a88c]'>
                   Native integrations with GitHub, GitLab, CI/CD, Slack, and ticketing tools. OpenHands fits seamlessly into enterprise governance systems and your preferred model providers.
                 </p>
                 <div className='grid grid-cols-2 gap-5 sm:grid-cols-4'>
@@ -693,8 +693,8 @@ const Home = () => {
             <div className='p-6'>
               <div className='grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-center'>
                 <div>
-                  <p className='mb-3 max-w-[369px] text-lg font-medium text-brand-accent lg:text-[20.8px] lg:leading-[1.2]'>Enterprise-grade security and control</p>
-                  <p className='mb-6 max-w-[369px] text-lg leading-[1.55] text-[#b3a88c] lg:text-[20.8px] lg:leading-[1.2]'>
+                  <p className='mb-3 max-w-[369px] fluid-body-lg font-medium text-brand-accent'>Enterprise-grade security and control</p>
+                  <p className='mb-6 max-w-[369px] fluid-body-lg text-[#b3a88c]'>
                     Control every layer of your environment with fine-grained access control, model-agnostic architecture, and flexible self-hosted or private cloud deployment options that keep your code and data secure.
                   </p>
                   <span className='btn-wrap-dark'>
@@ -716,8 +716,8 @@ const Home = () => {
       <section data-wf-el='cc-themed' style={{ display: 'block', backgroundColor: 'rgb(249, 240, 217)', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px', position: 'relative' }}>
         <div data-wf-el='lovewall_wrap' className='mx-auto max-w-[1238px]'>
           <div data-wf-el='lovewall_heading_wrap' className='mb-12 text-center'>
-            <div data-wf-el='heading-component'><h2 className='mb-3 text-[44px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>Developers love OpenHands</h2></div>
-            <p className='text-lg font-medium text-brand-muted lg:text-[20.8px] lg:leading-[1.2]'>Join millions of developers to build software autonomously</p>
+            <div data-wf-el='heading-component'><h2 className='mb-3 section-title text-brand-fg'>Developers love OpenHands</h2></div>
+            <p className='fluid-body-lg font-medium text-brand-muted'>Join millions of developers to build software autonomously</p>
           </div>
           <div data-wf-el='lovewall_cms_list' className='grid gap-6 md:grid-cols-2 lg:grid-cols-3'>
             {DEVELOPER_QUOTES.map((quote) => (
@@ -750,7 +750,7 @@ const Home = () => {
         <div className='mx-auto max-w-[1238px]'>
           <div className='flex flex-col gap-8 lg:-mx-5 lg:flex-row lg:gap-0'>
             <div className='flex flex-col lg:flex-[0_0_41.67%] lg:px-5'>
-              <h2 className='mb-4 text-[44px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>FAQ&apos;s</h2>
+              <h2 className='mb-4 section-title text-brand-fg'>FAQ&apos;s</h2>
               <span className='btn-wrap w-fit'>
                 <Link to='/contact' className='btn btn-outline border-none'>
                   Contact us
@@ -761,7 +761,7 @@ const Home = () => {
               {FAQS.map((faq) => (
                 <details key={faq.question} data-wf-el='accordion-item' className='flex flex-col rounded-lg border border-brand-bg'>
                   <summary data-wf-el='accordion-trigger' className='flex cursor-pointer list-none items-center justify-between p-6'>
-                    <label data-wf-el='accordion-title' className='pointer-events-none block cursor-default pr-3 text-[24px] font-medium leading-[1.4] text-brand-fg'>{faq.question}</label>
+                    <label data-wf-el='accordion-title' className='pointer-events-none block cursor-default pr-3 fluid-h4 leading-[1.4] text-brand-fg'>{faq.question}</label>
                     <div data-wf-el='accordion-icon' className='h-8 w-8 flex-shrink-0 overflow-hidden text-brand-fg' style={{ display: 'block' }} aria-hidden='true'>
                       <svg width='32' height='32' viewBox='0 0 32 32' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M10 13l6 6 6-6' stroke='currentColor' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round'/></svg>
                     </div>
@@ -790,10 +790,10 @@ const Home = () => {
           />
         </div>
         <div className='relative z-10 mx-auto max-w-[1238px]'>
-          <div className='mx-auto mb-4 max-w-[960px] text-[44px] font-medium leading-[1.05] tracking-[-0.03em]'>
+          <div className='mx-auto mb-4 max-w-[960px] section-title'>
             Building the open standard for autonomous software development.
           </div>
-          <p className='mx-auto mb-8 max-w-[812px] text-lg font-medium leading-[1.5] text-brand-muted lg:text-[20.8px] lg:leading-[1.2]'>
+          <p className='mx-auto mb-8 max-w-[812px] fluid-body-lg font-medium text-brand-muted'>
             OpenHands is the foundation for secure, transparent, model-agnostic coding agents - empowering every software team to build faster with full control.
           </p>
           <div className='mb-12 flex flex-wrap items-center justify-center gap-4'>

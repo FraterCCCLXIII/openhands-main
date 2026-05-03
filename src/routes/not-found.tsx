@@ -18,10 +18,10 @@ export default function NotFoundRoute() {
     <main className='px-6 pt-[20.2vh] lg:px-10'>
       <section className='mx-auto flex max-w-[600px] flex-col items-center text-center'>
         <div className='text-[16px] leading-[22.4px] text-brand-fg'>404</div>
-        <h1 className='mt-[22px] w-full text-[32px] font-medium leading-[1.1] tracking-[-0.03em] text-brand-fg lg:text-[44px] lg:leading-[48.4px]'>
+        <h1 className='mt-[22px] w-full section-title text-brand-fg'>
           Page Not Found
         </h1>
-        <div className='mt-1 text-[18px] font-semibold leading-[25.2px] text-brand-fg lg:text-[20px] lg:leading-[28px]'>
+        <div className='mt-1 fluid-body-lg font-semibold text-brand-fg'>
           The page you are looking for doesn't exist or has been moved
         </div>
         <OverlayLinkButton href='/' label='Go home' className='mt-[9px]' />

@@ -66,17 +66,17 @@ const About = () => {
     <CompanyPageShell>
       <section className='px-6 pb-16 pt-12 lg:px-10 lg:pb-20 lg:pt-12'>
         <div className='mx-auto max-w-[560px] text-center'>
-          <h1 className='text-[37px] font-medium leading-[40.7px] tracking-[-0.03em] text-brand-fg lg:text-[44px] lg:leading-[48.4px]'>
+          <h1 className='fluid-h1 text-brand-fg'>
             Empowering every team to build software autonomously.
           </h1>
-          <p className='mt-4 text-[20.8px] font-medium leading-[24.96px] text-[#5f5f5f]'>
+          <p className='mt-4 fluid-body-lg font-medium text-[#5f5f5f]'>
             OpenHands is the open, secure, and model-agnostic platform
           </p>
         </div>
 
         <div className='mx-auto mt-12 max-w-[1238px]'>
           <div className='flex justify-center'>
-            <h2 className='inline-block text-[32px] font-medium leading-[38.4px] tracking-[-0.02em] text-brand-fg lg:text-[44px] lg:leading-[48.4px]'>
+            <h2 className='inline-block section-title text-brand-fg'>
               Milestones
             </h2>
           </div>
@@ -121,10 +121,10 @@ const About = () => {
       <section className='px-6 pb-20 pt-8 lg:px-10 lg:pb-24 lg:pt-12'>
         <div className='mx-auto max-w-[1238px]'>
           <div>
-            <h3 className='text-[32px] font-medium leading-[38.4px] tracking-[-0.02em] text-brand-fg lg:text-[44px] lg:leading-[48.4px]'>
+            <h3 className='section-title text-brand-fg'>
               Team
             </h3>
-            <p className='mt-3 text-[20.8px] font-medium leading-[24.96px] text-[#5f5f5f]'>
+            <p className='mt-3 fluid-body-lg font-medium text-[#5f5f5f]'>
               Built by developers, for developers.
             </p>
             <a

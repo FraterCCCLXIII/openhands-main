@@ -52,10 +52,10 @@ const Press = () => {
     <CompanyPageShell>
       <section className='px-6 pb-12 pt-12 lg:px-10 lg:pb-16 lg:pt-12'>
         <div className='mx-auto max-w-[640px] text-center'>
-          <h1 className='text-[37px] font-medium leading-[40.7px] tracking-[-0.03em] text-brand-fg lg:text-[44px] lg:leading-[48.4px]'>
+          <h1 className='fluid-h1 text-brand-fg'>
             In the news
           </h1>
-          <p className='mt-4 text-[20.8px] font-medium leading-[24.96px] text-[#5f5f5f]'>
+          <p className='mt-4 fluid-body-lg font-medium text-[#5f5f5f]'>
             Read how OpenHands is reshaping the future of AI-powered software development.
           </p>
           <div className='mt-10 flex justify-center'>
@@ -74,7 +74,7 @@ const Press = () => {
             <article key={item.title} className='flex flex-col gap-5'>
               <img src={item.image} alt='' className='h-[300px] w-full rounded-[8px] object-cover' />
               <p className='m-0 inline-block self-start text-[16px] leading-[22.4px] text-[#5f5f5f]'>{item.date}</p>
-              <p className='m-0 max-w-[397px] text-[20.8px] font-medium leading-[24.96px] text-brand-fg'>
+              <p className='m-0 max-w-[397px] fluid-body-lg font-medium text-brand-fg'>
                 {item.title}
               </p>
               <a href={item.url} target='_blank' rel='noopener noreferrer' className='btn btn-outline border-none w-fit rounded-none'>

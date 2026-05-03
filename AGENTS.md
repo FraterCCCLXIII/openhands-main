@@ -31,6 +31,19 @@ Located at: `scripts/validate-visual-styles.cjs`
 - Quincy CF is no longer used for headings on the homepage (live uses sans-serif everywhere). Quincy CF still exists in the repo for potential use on other pages.
 - If test fonts are not installed, the fallback chain is `Inter, Arial, sans-serif`.
 
+### Fluid Typography System
+- The live Webflow site uses **viewport-fluid font sizes** (equivalent to CSS `clamp()`) — NOT fixed breakpoint jumps. Text scales smoothly between 375px and 1440px viewports.
+- CSS custom properties in `src/index.css` define the type scales:
+  - `--h1-font-size: clamp(2rem, 1.786rem + 1.071vw, 2.75rem)` — 32px (375px) → 44px (1440px)
+  - `--h2-font-size: clamp(1.8rem, 1.529rem + 1.357vw, 2.75rem)` — 28.8px → 44px
+  - `--h3-font-size: clamp(1.525rem, 1.354rem + 0.857vw, 2rem)` — 24.4px → 32px
+  - `--h4-font-size: clamp(1.3rem, 1.243rem + 0.286vw, 1.5rem)` — 20.8px → 24px
+  - `--paragraph-lg-font-size: clamp(1.1rem, 1.043rem + 0.286vw, 1.3rem)` — 17.6px → 20.8px
+  - `--paragraph-sm-font-size: clamp(0.805rem, 0.736rem + 0.293vw, 1rem)` — 12.88px → 16px
+- **Utility classes** apply these scales: `.fluid-h1`, `.section-title` (= h2 scale), `.fluid-h3`, `.fluid-h4`, `.fluid-body-lg`, `.fluid-sm`, `.testimonial-quote`
+- **Do NOT use breakpoint-based font pairs** like `text-[30px] lg:text-[44px]` — always use the fluid classes instead.
+- Some elements (e.g., capability card headings at 24px, pricing plan descriptions) use fixed sizes because the live site does too; only use fluid classes where the live site scales.
+
 ### Per-Instance Matching
 - The parity script now compares **all instances** of each signature (`tag:normalizedText`) independently, not just the first. Each element carries an `occurrenceIndex` from extraction.
 - **Equal counts**: DOM-order (index-based) one-to-one matching: `live[0]↔test[0]`, `live[1]↔test[1]`, etc.
@@ -50,6 +63,7 @@ Located at: `scripts/validate-visual-styles.cjs`
 Located at: `scripts/generate-site-parity-checklist.cjs`
 - Checks: visible text/signature inventory, heading order, style mismatches (including font family, cursor, text-decoration, letter-spacing), first-instance layout mismatches, container/section background style auditing, interactive element inventory and behavior comparison (cursor, transitions, pointer-events), per-element interactivity audit (cursor, pointerEvents, clickable role/semantics), hover effect comparison, unexpected extra elements on the test site, and screenshot pixel diffs for the first `PARITY_SCREENSHOT_PAGE_LIMIT` routes
 - Use: `PARITY_MAX_PAGES=12 PARITY_DISCOVERY_LIMIT=20 PARITY_SCREENSHOT_PAGE_LIMIT=12 TEST_ORIGIN=http://127.0.0.1:12001 LIVE_ORIGIN=https://openhands.dev node scripts/generate-site-parity-checklist.cjs`
+- Mobile use: `PARITY_VIEWPORT_WIDTH=375 PARITY_VIEWPORT_HEIGHT=812 PARITY_OUTPUT_DIR=.agent_tmp/parity-mobile PARITY_MAX_PAGES=10 TEST_ORIGIN=http://127.0.0.1:12001 LIVE_ORIGIN=https://openhands.dev node scripts/generate-site-parity-checklist.cjs`
 - Output: Markdown/JSON parity reports plus screenshot artifacts under `PARITY_OUTPUT_DIR`
 - The report now includes per-route sections for: container/section style mismatches, per-element interactivity mismatches, missing/extra interactive elements, interactivity behavior mismatches, and hover effect mismatches
 - Per-element interactivity captures: cursor (pointer vs default), pointerEvents (none vs auto), and clickable semantics (button/link/form-control role mismatches)
@@ -61,12 +75,22 @@ Located at: `scripts/generate-site-parity-checklist.cjs`
 - Test site may incorrectly add gradients or colors to individual sections
 - Check: Section backgrounds should typically be transparent
 
-### Font Sizes
-- h2 elements on live site consistently use 44px
-- Body paragraph text on live site uses `20.8px` (= `1.3rem`), not 16px or 18px
-- Test site may use different sizes (40px, 48px from Tailwind classes)
-- Fix: Use explicit `text-[44px]` for headings, `text-[20.8px] leading-[1.2]` for body paragraphs on desktop
-- Pattern: `text-lg text-brand-muted lg:text-[20.8px] lg:leading-[1.2]` for responsive body text
+### Font Sizes — Fluid Typography System
+- Live site uses **fluid `clamp()` typography**, NOT fixed breakpoint sizes.
+- CSS custom variables in `:root` replicate Webflow's fluid system (`--_layout---fluid--min: 20`, `--_layout---fluid--max: 90`):
+  - `--h1-font-size: clamp(2rem, 1.78571rem + 1.07143vw, 2.75rem)` — 32–44px
+  - `--h2-font-size: clamp(1.8rem, 1.52857rem + 1.35714vw, 2.75rem)` — 28.8–44px
+  - `--h3-font-size: clamp(1.5rem, 1.35714rem + 0.71429vw, 2rem)` — 24–32px
+  - `--h4-font-size: clamp(1.3rem, 1.24286rem + 0.28571vw, 1.5rem)` — 20.8–24px
+  - `--paragraph-lg-font-size: clamp(1.1rem, 1.04286rem + 0.28571vw, 1.3rem)` — 17.6–20.8px
+- **Utility classes** (use these instead of `text-[Npx] lg:text-[Mpx]` pairs):
+  - `.fluid-h1` — page H1 headings (h1 scale)
+  - `.section-title` — section H2 headings (h2 scale, includes weight/tracking)
+  - `.fluid-h3` — sub-section headings (h3 scale)
+  - `.fluid-h4` — card headings, FAQ items (h4 scale)
+  - `.fluid-body-lg` — body paragraph text (paragraph-lg scale, replaces `text-lg lg:text-[20.8px]`)
+  - `.testimonial-quote` — testimonial text (uses h2 scale)
+- **Never hardcode** `text-[30px] lg:text-[44px]` etc. — the clamp handles all viewports automatically.
 
 ### Button/CTA Styles
 - Live Webflow CTAs use **square corners** (`border-radius: 0px`) and **underline text decoration** (`underline 1.6px`)
@@ -85,8 +109,8 @@ Located at: `scripts/generate-site-parity-checklist.cjs`
 - Live carousel/workflow cards use `cursor: grab` for draggable feel
 
 ### Section Classes
-- `section-title`: 44px on desktop (not 40px)
-- `testimonial-quote`: 44px on desktop
+- `section-title`: fluid h2 scale (clamp ≈28.8–44px), includes weight/tracking/line-height
+- `testimonial-quote`: fluid h2 scale (same clamp as section-title)
 
 ## Build & Test Commands
 ```bash

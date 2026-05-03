@@ -163,10 +163,10 @@ export default function WhitepaperModernizeLegacySystemsWithAiAgents() {
       <section className='px-6 pb-16 pt-10 lg:px-10 lg:pb-20 lg:pt-14'>
         <div className='mx-auto max-w-[1238px]'>
           <div className='mx-auto max-w-[920px] text-center'>
-            <h1 className='mx-auto max-w-[834px] text-[40px] font-medium leading-[1.1] tracking-[-0.04em] text-brand-fg lg:text-[44px] lg:leading-[48.4px]'>
+            <h1 className='mx-auto max-w-[834px] fluid-h1 text-brand-fg'>
               Whitepaper: Modernize legacy systems before your expertise disappears
             </h1>
-            <p className='mx-auto mt-4 max-w-[657px] text-[18px] font-medium leading-[1.35] text-[#5f5f5f] lg:text-[20.8px] lg:leading-[24.96px]'>
+            <p className='mx-auto mt-4 max-w-[657px] fluid-body-lg font-medium text-[#5f5f5f]'>
               Legacy modernization projects fail 74% of the time and the engineers who understand your COBOL, mainframe, and legacy systems are retiring faster than you can replace them.
             </p>
           </div>
@@ -178,7 +178,7 @@ export default function WhitepaperModernizeLegacySystemsWithAiAgents() {
               </p>
 
               <div className='mt-10'>
-                <h3 className='text-[20.8px] font-medium leading-[24.96px] text-brand-fg'>
+                <h3 className='fluid-body-lg font-medium text-brand-fg'>
                   What you&apos;ll learn in the whitepaper:
                 </h3>
                 <ul className='mt-5'>
@@ -194,7 +194,7 @@ export default function WhitepaperModernizeLegacySystemsWithAiAgents() {
             <div className='min-h-[573px] rounded-[8px] border border-brand-fg p-6'>
               {isDownloadReady ? (
                 <div role='status' className='whitepaper-link'>
-                  <h3 className='text-[32px] font-medium leading-[38.4px] text-brand-fg'>Download the Whitepaper</h3>
+                  <h3 className='fluid-h3 text-brand-fg'>Download the Whitepaper</h3>
                   <div className='mt-6 inline-flex rounded-[8px] bg-brand-fg px-5 py-3 text-[16px] font-medium leading-[20.8px] text-brand-bg'>
                     <a
                       href={WHITEPAPER_PDF_URL}
@@ -208,7 +208,7 @@ export default function WhitepaperModernizeLegacySystemsWithAiAgents() {
                 </div>
               ) : (
                 <>
-                  <h2 className='text-[24px] font-medium leading-[33.6px] tracking-[-0.03em] text-brand-fg'>
+                  <h2 className='fluid-h4 text-brand-fg'>
                     Download the whitepaper to learn how it works and to apply for our Q2 2026 Proof-of-Concept program.
                   </h2>
 

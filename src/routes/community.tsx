@@ -123,10 +123,10 @@ const Community = () => {
     <main className='pt-[40px]'>
       <section className='px-10 pb-10 pt-0 lg:pb-14'>
         <div className='mx-auto flex max-w-[1238px] flex-col items-center gap-5 text-center'>
-          <h1 className='max-w-[920px] text-[44px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>
+          <h1 className='max-w-[920px] fluid-h1 text-brand-fg'>
             Join the OpenHands Community
           </h1>
-          <p className='max-w-[560px] text-[18px] leading-[1.35] font-medium text-brand-muted lg:text-[20.8px] lg:leading-[1.2]'>
+          <p className='max-w-[560px] fluid-body-lg font-medium text-brand-muted'>
             Connect with developers, contribute to open source, and help build the future of AI-powered autonomous software development.
           </p>
           <div className='mt-6 flex flex-wrap items-center justify-center gap-4'>
@@ -154,7 +154,7 @@ const Community = () => {
       <section className='bg-brand-fg px-10 py-16 text-brand-bg'>
         <div className='mx-auto grid max-w-[1238px] gap-10 lg:grid-cols-[0.92fr_1.08fr] lg:items-center'>
           <div className='max-w-[560px]'>
-            <h2 className='text-[32px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-bg lg:text-[44px]'>
+            <h2 className='section-title text-brand-bg'>
               Latest Community Call
             </h2>
             <p className='mt-4 text-[16px] leading-[22.4px] text-brand-bg'>
@@ -194,7 +194,7 @@ const Community = () => {
       <section id='events' className='px-10 py-20'>
         <div className='mx-auto max-w-[1238px]'>
           <div className='text-center'>
-            <h2 className='text-[32px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg lg:text-[44px]'>
+            <h2 className='section-title text-brand-fg'>
               Upcoming Events
             </h2>
           </div>
@@ -208,7 +208,7 @@ const Community = () => {
                 rel='noopener noreferrer'
                 className='flex h-full flex-col rounded-[8px] border border-[#b3a88c] bg-transparent p-6 transition-transform hover:-translate-y-0.5'
               >
-                <h2 className='text-[24px] font-medium leading-[1.4] text-brand-fg'>
+                <h2 className='fluid-h4 leading-[1.4] text-brand-fg'>
                   {event.title}
                 </h2>
                 <p className='mt-4 flex-1 text-[14px] leading-[1.5] text-brand-muted'>
@@ -242,10 +242,10 @@ const Community = () => {
       <section className='mt-[60px] bg-brand-fg px-10 py-16 text-brand-bg'>
         <div className='mx-auto max-w-[1238px]'>
           <div className='text-center'>
-            <h2 className='inline-block text-[32px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-bg lg:text-[44px]'>
+            <h2 className='inline-block section-title text-brand-bg'>
               Start contributing
             </h2>
-            <p className='mx-auto mt-4 max-w-[520px] text-[20.8px] leading-[24.96px] text-brand-bg'>
+            <p className='mx-auto mt-4 max-w-[520px] fluid-body-lg text-brand-bg'>
               Join our mission to build better AI development tools
             </p>
           </div>
@@ -257,7 +257,7 @@ const Community = () => {
                 className='flex h-full flex-col rounded-[8px] border border-brand-bg/20 bg-transparent p-6 text-center'
               >
                 <img src={path.icon} alt='' className='mx-auto h-14 w-14' />
-                <h3 className='mt-6 text-[24px] font-medium leading-[1.4] text-brand-bg'>
+                <h3 className='mt-6 fluid-h4 leading-[1.4] text-brand-bg'>
                   {path.title}
                 </h3>
                 <p className='mt-4 flex-1 text-[16px] leading-[22.4px] text-brand-bg'>
@@ -280,7 +280,7 @@ const Community = () => {
       <section className='px-10 py-16'>
         <div className='mx-auto max-w-[1238px]'>
           <div className='text-center'>
-            <h2 className='text-[32px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg lg:text-[44px]'>
+            <h2 className='section-title text-brand-fg'>
               Recognizing first-time contributors
             </h2>
           </div>
@@ -291,7 +291,7 @@ const Community = () => {
       <section className='px-10 pb-[138px] pt-0'>
         <div className='mx-auto max-w-[1238px]'>
           <div className='text-center'>
-            <h2 className='text-[32px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg lg:text-[44px]'>
+            <h2 className='section-title text-brand-fg'>
               Community contributor spotlight
             </h2>
           </div>
@@ -302,7 +302,7 @@ const Community = () => {
               alt=''
               className='mx-auto h-20 w-20 rounded-full object-cover'
             />
-            <h3 className='mt-5 inline-block text-[32px] font-medium leading-[1.2] text-brand-fg'>
+            <h3 className='mt-5 inline-block fluid-h3 text-brand-fg'>
               Michael May
             </h3>
             <p className='mx-auto mt-6 max-w-[910px] text-[24px] leading-[33.6px] text-brand-fg'>

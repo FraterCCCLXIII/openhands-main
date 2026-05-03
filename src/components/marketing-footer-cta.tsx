@@ -14,10 +14,10 @@ export const MarketingFooterCta = ({
   return (
     <section className={clsx('px-10 py-24 text-center', className)}>
       <div className='mx-auto flex max-w-[980px] flex-col items-center gap-6'>
-        <HeadingTag className='text-[44px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>
+        <HeadingTag className='text-[30px] lg:text-[44px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>
           Building the open standard for autonomous software development.
         </HeadingTag>
-        <p className='max-w-[812px] text-[20.8px] leading-[1.2] text-brand-muted'>
+        <p className='max-w-[812px] text-lg lg:text-[20.8px] leading-[1.2] text-brand-muted'>
           OpenHands is the foundation for secure, transparent, model-agnostic coding agents - empowering every software team to build faster with full control.
         </p>
         <div className='flex flex-wrap items-center justify-center gap-4'>

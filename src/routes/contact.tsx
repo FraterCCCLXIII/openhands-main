@@ -84,17 +84,17 @@ const Contact = () => {
     <CompanyPageShell>
       <section className='px-6 pb-16 pt-12 lg:px-10 lg:pb-20 lg:pt-12'>
         <div className='mx-auto mb-16 flex max-w-[720px] flex-col items-center text-center'>
-          <h1 className='max-w-[560px] text-[37px] font-medium leading-[40.7px] tracking-[-0.03em] text-brand-fg lg:text-[44px] lg:leading-[48.4px]'>
+          <h1 className='max-w-[560px] fluid-h1 text-brand-fg'>
             Talk to the OpenHands Team
           </h1>
-          <p className='mt-4 max-w-[560px] text-[20.8px] font-medium leading-[24.96px] text-[#5f5f5f]'>
+          <p className='mt-4 max-w-[560px] fluid-body-lg font-medium text-[#5f5f5f]'>
             Get a custom demo and explore pricing, private deployments, and white-glove training, support and services for your org
           </p>
         </div>
         <div className='mx-auto max-w-[1238px]'>
           <div className='grid gap-10 lg:grid-cols-[1fr_1fr] lg:items-start'>
             <div>
-              <div className='text-[28px] font-medium leading-[33.6px] tracking-[-0.02em] text-brand-fg lg:text-[32px] lg:leading-[38.4px]'>
+              <div className='fluid-h3 text-brand-fg'>
                 Why enterprises <br />choose OpenHands
               </div>
 

@@ -86,10 +86,10 @@ const Enterprise = () => {
         </div>
         <div className='relative mx-auto flex max-w-4xl flex-col items-center gap-6 text-center'>
           <h1 className='sr-only'>Open source agent infrastructure for code modernization</h1>
-          <div className='text-[44px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>
+          <div className='section-title text-brand-fg'>
             Open source agent infrastructure for code modernization
           </div>
-          <div className='max-w-2xl text-[20.8px] leading-[1.2] text-brand-muted'>
+          <div className='max-w-2xl fluid-body-lg text-brand-muted'>
             Build AI coding agents around your stack, your rules, your team.
           </div>
           <div className='flex flex-wrap items-center justify-center gap-4'>
@@ -107,7 +107,7 @@ const Enterprise = () => {
       <section className='px-10 py-20'>
         <div className='mx-auto grid max-w-[1260px] gap-10 lg:grid-cols-[minmax(0,0.48fr)_minmax(0,0.52fr)] lg:justify-between'>
           <div>
-            <h2 className='mb-6 max-w-[386px] text-[32px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg lg:text-[44px]'>
+            <h2 className='mb-6 max-w-[386px] section-title text-brand-fg'>
               Why Enterprises Choose OpenHands
             </h2>
             <OverlayLinkButton href='/contact' label='Contact us' variant='outline' />
@@ -119,7 +119,7 @@ const Enterprise = () => {
                   <img src={feature.icon} alt='' className='h-10 w-10' />
                 </div>
                 <div className='border-t border-brand-fg/20 py-4'>
-                  <p className='text-[20.8px] font-medium leading-[24.96px] text-brand-fg'>
+                  <p className='fluid-body-lg font-medium text-brand-fg'>
                     {feature.title}
                   </p>
                 </div>
@@ -168,10 +168,10 @@ const Enterprise = () => {
           />
         </div>
         <div className='relative mx-auto max-w-[1260px] text-center'>
-          <h2 className='mx-auto w-fit text-[32px] font-medium leading-[1.2] text-brand-fg'>
+          <h2 className='mx-auto w-fit fluid-h3 text-brand-fg'>
             Powering enterprise AI with the world{'\u2019'}s best
           </h2>
-          <p className='mx-auto mt-4 text-[20.8px] leading-[1.2] text-brand-muted'>
+          <p className='mx-auto mt-4 fluid-body-lg text-brand-muted'>
             OpenHands partners with the leading AI infrastructure providers to ensure our platform is optimized for the latest generation of compute so your team can build on top of it faster.
           </p>
           <div className='mt-10 flex items-center justify-center gap-12'>
@@ -185,10 +185,10 @@ const Enterprise = () => {
       {/* Results */}
       <section className='px-10 py-28'>
         <div className='mx-auto max-w-[1260px] text-center'>
-          <h3 className='mx-auto w-fit text-[32px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg lg:text-[44px]'>
+          <h3 className='mx-auto w-fit section-title text-brand-fg'>
             Proven results across industries
           </h3>
-          <p className='mx-auto mt-4 max-w-[660px] text-[20.8px] leading-[1.2] text-brand-muted'>
+          <p className='mx-auto mt-4 max-w-[660px] fluid-body-lg text-brand-muted'>
             Enterprises use OpenHands to fix thousands of vulnerabilities, refactor codebases, and ship faster with less risk
           </p>
           <div className='mt-10 overflow-hidden rounded-[24px] border border-brand-fg/10'>
@@ -199,7 +199,7 @@ const Enterprise = () => {
               {RESULTS.map((result) => (
                 <article key={result.text} className='flex flex-col items-center gap-4 bg-brand-bg p-8 text-center'>
                   <img src={result.icon} alt='' className='h-32 w-32' />
-                  <p className='w-full text-[20.8px] font-medium leading-[1.2] text-[#5f5f5f]'>{result.text}</p>
+                  <p className='w-full fluid-body-lg font-medium text-[#5f5f5f]'>{result.text}</p>
                 </article>
               ))}
             </div>
@@ -210,10 +210,10 @@ const Enterprise = () => {
       {/* Whitepaper — centered layout */}
       <section className='px-10 py-28'>
         <div className='mx-auto max-w-[860px] text-center'>
-          <h3 className='text-[32px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg lg:text-[44px]'>
+          <h3 className='section-title text-brand-fg'>
             Whitepaper: Modernize legacy systems before your expertise disappears
           </h3>
-          <p className='mx-auto mt-4 max-w-[660px] text-[20.8px] leading-[1.2] text-brand-muted'>
+          <p className='mx-auto mt-4 max-w-[660px] fluid-body-lg text-brand-muted'>
             Legacy modernization projects fail 74% of the time and the engineers who understand your COBOL, mainframe, and legacy systems are retiring faster than you can replace them.
           </p>
           <div className='mt-8'>
@@ -228,10 +228,10 @@ const Enterprise = () => {
       {/* Footer CTA */}
       <section className='px-10 py-20 text-center'>
         <div className='mx-auto flex max-w-[812px] flex-col items-center gap-6'>
-          <div className='text-[44px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>
+          <div className='section-title text-brand-fg'>
             Bring agentic development to your organization.
           </div>
-          <p className='w-full text-[20.8px] leading-[1.2] text-brand-muted'>
+          <p className='w-full fluid-body-lg text-brand-muted'>
             Deploy securely. Scale confidently. Stay in control.
           </p>
           <div className='flex flex-wrap items-center justify-center gap-4'>

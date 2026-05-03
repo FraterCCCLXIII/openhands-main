@@ -75,7 +75,7 @@ export const ErrorBoundary = () => {
   if (isRouteErrorResponse(error) && error.status === 404) {
     return (
       <div className='flex flex-col items-center gap-4 py-[45px] text-center'>
-        <h1 className='font-sohne text-[32px] leading-[1.1] font-medium tracking-[-0.03em] lg:text-[44px]'>
+        <h1 className='fluid-h1 font-sohne'>
           404
         </h1>
         <p className='text-[18px] leading-[1.5] text-[#5f5f5f]'>Blog post not found.</p>
@@ -85,7 +85,7 @@ export const ErrorBoundary = () => {
 
   return (
     <div className='flex flex-col items-center gap-4 py-[45px] text-center'>
-      <h1 className='font-sohne text-[32px] leading-[1.1] font-medium tracking-[-0.03em] lg:text-[44px]'>
+      <h1 className='fluid-h1 font-sohne'>
         Error
       </h1>
       <p className='text-[18px] leading-[1.5] text-[#5f5f5f]'>
@@ -177,7 +177,7 @@ const BlogDetails = () => {
 
         <header className='mx-auto mt-6 flex w-full max-w-[1240px] flex-col gap-8'>
           <div className='max-w-[560px]'>
-            <h1 className='font-sohne text-[32px] leading-[1.1] font-medium tracking-[-0.03em] text-brand-fg lg:text-[44px]'>
+            <h1 className='fluid-h1 font-sohne text-brand-fg'>
               {data.title}
             </h1>
           </div>

@@ -11,7 +11,7 @@ export const MemberCard: React.FC<MemberCardProps> = ({ member }) => (
       <img src={member.src} alt='' className='h-full w-full object-cover grayscale' />
     </div>
     <div className='w-fit'>
-      <p className='m-0 text-[20.8px] font-medium leading-[24.96px] text-brand-fg'>
+      <p className='m-0 text-lg lg:text-[20.8px] font-medium leading-[24.96px] text-brand-fg'>
         {member.name}
       </p>
       <p className='m-0 text-[14.4px] leading-[21.6px] text-[#5f5f5f]'>

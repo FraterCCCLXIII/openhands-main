@@ -36,10 +36,10 @@ export const FeaturedBlogCard: React.FC<FeaturedBlogCardProps> = ({
 
     <div className='absolute inset-x-0 bottom-0 p-6 lg:p-6'>
       <div className='max-w-[456px] space-y-3'>
-        <p className='m-0 font-sohne text-[20.8px] leading-[24.96px] font-medium text-brand-accent'>
+        <p className='m-0 font-sohne text-lg lg:text-[20.8px] leading-[24.96px] font-medium text-brand-accent'>
           {title}
         </p>
-        <p className='m-0 text-[20.8px] leading-[1.2] font-medium text-white'>
+        <p className='m-0 text-lg lg:text-[20.8px] leading-[1.2] font-medium text-white'>
           {description}
         </p>
         <Link

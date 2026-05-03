@@ -15,7 +15,10 @@ const TEST_ORIGIN = process.env.TEST_ORIGIN || process.argv[2] || 'http://localh
 const OUTPUT_DIR = path.resolve(process.cwd(), process.env.PARITY_OUTPUT_DIR || '.agent_tmp/parity');
 const MAX_PAGES = Number(process.env.PARITY_MAX_PAGES || 200);
 const DISCOVERY_PAGE_LIMIT = Number(process.env.PARITY_DISCOVERY_LIMIT || 60);
-const VIEWPORT = { width: 1440, height: 2400 };
+const VIEWPORT = {
+  width: Number(process.env.PARITY_VIEWPORT_WIDTH || 1440),
+  height: Number(process.env.PARITY_VIEWPORT_HEIGHT || 2400),
+};
 const PROTOCOL_TIMEOUT = Number(
   process.env.PARITY_PROTOCOL_TIMEOUT || process.env.PARITY_PROTOCOL_TIMEOUT_MS || 300000,
 );
@@ -1671,6 +1674,7 @@ function renderMarkdown(report) {
   lines.push(`Generated: ${report.generatedAt}`);
   lines.push(`Live origin: ${report.liveOrigin}`);
   lines.push(`Test origin: ${report.testOrigin}`);
+  lines.push(`Viewport: ${report.viewport.width}×${report.viewport.height}`);
   lines.push('');
   lines.push('## Summary');
   lines.push('');
@@ -1964,7 +1968,7 @@ async function discoverPaths(browser) {
 
 async function main() {
   await fsp.mkdir(OUTPUT_DIR, { recursive: true });
-  console.log('[parity] Launching browser...');
+  console.log(`[parity] Launching browser (viewport ${VIEWPORT.width}×${VIEWPORT.height})...`);
 
   const browser = await puppeteer.launch({
     headless: 'new',
@@ -2013,6 +2017,7 @@ async function main() {
       generatedAt: new Date().toISOString(),
       liveOrigin: LIVE_ORIGIN,
       testOrigin: TEST_ORIGIN,
+      viewport: VIEWPORT,
       summary: {
         routeMismatches: routes.filter((route) => route.testStatus >= 400 || route.liveStatus >= 400).length,
         titleMismatches: routes.filter((route) => !route.titleMatches).length,
