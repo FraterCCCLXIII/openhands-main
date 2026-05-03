@@ -21,22 +21,26 @@ export const MarketingFooterCta = ({
           OpenHands is the foundation for secure, transparent, model-agnostic coding agents - empowering every software team to build faster with full control.
         </p>
         <div className='flex flex-wrap items-center justify-center gap-4'>
-          <a
-            href='https://docs.openhands.dev/sdk'
-            target='_blank'
-            rel='noopener noreferrer'
-            className='btn btn-primary rounded-none'
-          >
-            Build with SDK
-          </a>
-          <a
-            href='https://app.all-hands.dev/'
-            target='_blank'
-            rel='noopener noreferrer'
-            className='btn btn-outline rounded-none'
-          >
-            Try it live
-          </a>
+          <span className='btn-wrap-primary'>
+            <a
+              href='https://docs.openhands.dev/sdk'
+              target='_blank'
+              rel='noopener noreferrer'
+              className='btn btn-primary'
+            >
+              Build with SDK
+            </a>
+          </span>
+          <span className='btn-wrap'>
+            <a
+              href='https://app.all-hands.dev/'
+              target='_blank'
+              rel='noopener noreferrer'
+              className='btn btn-outline'
+            >
+              Try it live
+            </a>
+          </span>
         </div>
       </div>
     </section>

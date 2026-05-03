@@ -176,6 +176,12 @@
     background-color: rgba(255, 255, 255, 0.34);
     padding: var(--btn-padding-y) var(--btn-padding-x);
   }
+  .btn-wrap-primary {
+    display: inline-flex;
+    border-radius: 8px;
+    background-color: rgb(34, 21, 13);
+    padding: var(--btn-padding-y) var(--btn-padding-x);
+  }
   .btn-wrap-dark {
     display: inline-flex;
     border-radius: 8px;
@@ -185,10 +191,22 @@
   /* Wrapper owns visual style (radius, bg); inner .btn keeps padding but
      delegates radius to the wrapper so bounding boxes match live. */
   .btn-wrap > .btn,
+  .btn-wrap-primary > .btn,
   .btn-wrap-dark > .btn {
     border-radius: 0;
     background: transparent;
     border-color: transparent;
+    border-style: none;
+  }
+  /* Dark-context wrappers show beige text on dark/muted backgrounds.
+     The descendant selector also captures <a> inside overlay-link patterns.
+     text-decoration-color auto-inherits from color — no explicit override
+     needed (avoids false-positive textDecoration shorthand diffs). */
+  .btn-wrap-primary > .btn,
+  .btn-wrap-dark > .btn,
+  .btn-wrap-primary .btn a,
+  .btn-wrap-dark .btn a {
+    color: #F9F0D9;
   }
 
   .btn-outline-light {

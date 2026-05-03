@@ -370,7 +370,7 @@ const Home = () => {
                   Open-source, customizable. Run locally or at scale.
                 </div>
                 <div data-wf-el='hero_btn_wrap' className='mb-4 flex flex-wrap items-center justify-center gap-4'>
-                  <span className='btn-wrap'>
+                  <span className='btn-wrap-primary'>
                     <a href='https://app.all-hands.dev/' target='_blank' rel='noopener noreferrer' className='btn btn-primary'>
                       Try it live
                     </a>
@@ -531,7 +531,7 @@ const Home = () => {
           <div className='flex flex-col justify-between gap-8'>
             <h3 className='max-w-[386px] text-[44px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>Why teams choose OpenHands</h3>
             <span className='btn-wrap w-fit'>
-              <a href='https://app.all-hands.dev/' target='_blank' rel='noopener noreferrer' className='btn btn-primary'>
+              <a href='https://app.all-hands.dev/' target='_blank' rel='noopener noreferrer' className='btn btn-outline'>
                 Try it live
               </a>
             </span>
@@ -797,13 +797,13 @@ const Home = () => {
             OpenHands is the foundation for secure, transparent, model-agnostic coding agents - empowering every software team to build faster with full control.
           </p>
           <div className='mb-12 flex flex-wrap items-center justify-center gap-4'>
-            <span className='btn-wrap'>
-              <a href='https://docs.openhands.dev/sdk' target='_blank' rel='noopener noreferrer' className='btn btn-outline'>
+            <span className='btn-wrap-primary'>
+              <a href='https://docs.openhands.dev/sdk' target='_blank' rel='noopener noreferrer' className='btn btn-primary'>
                 Build with SDK
               </a>
             </span>
             <span className='btn-wrap'>
-              <a href='https://app.all-hands.dev/' target='_blank' rel='noopener noreferrer' className='btn btn-primary'>
+              <a href='https://app.all-hands.dev/' target='_blank' rel='noopener noreferrer' className='btn btn-outline'>
                 Try it live
               </a>
             </span>

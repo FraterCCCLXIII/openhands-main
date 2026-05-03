@@ -31,6 +31,21 @@ Located at: `scripts/validate-visual-styles.cjs`
 - Quincy CF is no longer used for headings on the homepage (live uses sans-serif everywhere). Quincy CF still exists in the repo for potential use on other pages.
 - If test fonts are not installed, the fallback chain is `Inter, Arial, sans-serif`.
 
+### Per-Instance Matching
+- The parity script now compares **all instances** of each signature (`tag:normalizedText`) independently, not just the first. Each element carries an `occurrenceIndex` from extraction.
+- **Equal counts**: DOM-order (index-based) one-to-one matching: `live[0]↔test[0]`, `live[1]↔test[1]`, etc.
+- **Unequal counts**: globally-sorted proximity assignment that builds all `(live, test)` candidate pairs, sorts by position distance (Y-primary, X-secondary), and greedily assigns the closest overall pair first — guaranteeing one-to-one without order-dependent bias.
+- Checklist items for multi-instance signatures show labels like `A:try it live #2`.
+- This caught 12 hidden appearance mismatches on CTA buttons that were previously invisible because the nav-bar instance (which matched fine) was the only one compared.
+
+### CTA Button Wrapper Variants
+- `.btn-wrap`: glassmorphic background `rgba(255,255,255,0.34)` — for outline/secondary buttons.
+- `.btn-wrap-primary`: solid dark background `rgb(34,21,13)` — for primary CTA buttons.
+- `.btn-wrap-dark`: muted warm background `rgba(241,234,224,0.2)` — for buttons on dark sections.
+- All three set `border-style: none` on wrapped `.btn` children (matching live Webflow).
+- `.btn-wrap-primary` and `.btn-wrap-dark` override text color to `#F9F0D9` (beige) for wrapped buttons and their descendant `<a>` elements.
+- Live Webflow CTA pairs swap roles between nav/hero (Try it live = primary) and footer CTA (Build with SDK = primary).
+
 ### Cross-route parity checklist
 Located at: `scripts/generate-site-parity-checklist.cjs`
 - Checks: visible text/signature inventory, heading order, style mismatches (including font family, cursor, text-decoration, letter-spacing), first-instance layout mismatches, container/section background style auditing, interactive element inventory and behavior comparison (cursor, transitions, pointer-events), per-element interactivity audit (cursor, pointerEvents, clickable role/semantics), hover effect comparison, unexpected extra elements on the test site, and screenshot pixel diffs for the first `PARITY_SCREENSHOT_PAGE_LIMIT` routes

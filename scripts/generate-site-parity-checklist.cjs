@@ -407,6 +407,7 @@ async function extractPageInventory(page) {
     const normalizeWhitespaceInner = (value) => (value || '').replace(/\s+/g, ' ').trim();
     const normalizeTextInner = (value) => normalizeWhitespaceInner(value).toLowerCase();
     const elements = [];
+    const signatureCounter = new Map();
 
     const isVisible = (element) => {
       const rect = element.getBoundingClientRect();
@@ -454,10 +455,17 @@ async function extractPageInventory(page) {
       const signature = `${tag}:${normalizedText.slice(0, 140)}`;
       const style = Object.fromEntries(styleProps.map((prop) => [prop, computed[prop]]));
 
+      // Track per-signature occurrence index so downstream matching can
+      // pair the Nth live instance with the Nth test instance.
+      if (!signatureCounter.has(signature)) signatureCounter.set(signature, 0);
+      const occurrenceIndex = signatureCounter.get(signature);
+      signatureCounter.set(signature, occurrenceIndex + 1);
+
       const entry = {
         tag,
         text,
         signature,
+        occurrenceIndex,
         style,
         rect: {
           top: Math.round(rect.top + window.scrollY),
@@ -1246,86 +1254,134 @@ function analyzeHeadingSequence(liveSequence, testSequence) {
 }
 
 function summarizeRouteComparison(routePath, livePage, testPage, screenshotDiff) {
-  const liveMap = new Map();
+  // ── Per-instance matching ──
+  // Group all instances by signature, then match instance-by-instance using
+  // DOM-order (when counts are equal) or position-proximity (when counts differ).
+  // This prevents the old first-only dedup from hiding mismatches on later
+  // instances that share the same tag:text signature.
+
+  const liveGrouped = new Map();
   for (const element of livePage.inventory.elements) {
-    const existing = liveMap.get(element.signature) || {
-      signature: element.signature,
-      tag: element.tag,
-      text: element.text,
-      liveCount: 0,
-      testCount: 0,
-      liveStyle: element.style,
-      testStyle: null,
-      liveRect: element.rect,
-      testRect: null,
-      liveInteractive: element.interactive || null,
-      testInteractive: null,
-      liveAncestorStyle: element.ancestorStyle || null,
-      testAncestorStyle: null,
-      styleDiffs: [],
-      layoutDiffs: [],
-      interactivityDiffs: [],
-      ancestorDiffs: [],
-    };
-    existing.liveCount += 1;
-    liveMap.set(element.signature, existing);
+    if (!liveGrouped.has(element.signature)) {
+      liveGrouped.set(element.signature, { tag: element.tag, text: element.text, instances: [] });
+    }
+    liveGrouped.get(element.signature).instances.push(element);
   }
 
-  const testMap = new Map();
+  const testGrouped = new Map();
   for (const element of testPage.inventory.elements) {
-    const existing = testMap.get(element.signature) || {
-      count: 0,
-      style: element.style,
-      rect: element.rect,
-      interactive: element.interactive || null,
-      ancestorStyle: element.ancestorStyle || null,
-      tag: element.tag,
-      text: element.text,
-    };
-    existing.count += 1;
-    if (!existing.style) existing.style = element.style;
-    if (!existing.rect) existing.rect = element.rect;
-    if (!existing.interactive) existing.interactive = element.interactive || null;
-    if (!existing.ancestorStyle) existing.ancestorStyle = element.ancestorStyle || null;
-    testMap.set(element.signature, existing);
+    if (!testGrouped.has(element.signature)) {
+      testGrouped.set(element.signature, { tag: element.tag, text: element.text, instances: [] });
+    }
+    testGrouped.get(element.signature).instances.push(element);
   }
 
-  const checklist = Array.from(liveMap.values())
-    .map((item) => {
-      const testMatch = testMap.get(item.signature);
-      item.testCount = testMatch?.count || 0;
-      item.testStyle = testMatch?.style || null;
-      item.testRect = testMatch?.rect || null;
-      item.testInteractive = testMatch?.interactive || null;
-      item.testAncestorStyle = testMatch?.ancestorStyle || null;
-      item.styleDiffs = item.testCount > 0 && STYLE_CHECK_TAGS.has(item.tag)
-        ? compareStyles(item.liveStyle, item.testStyle)
-        : [];
-      item.layoutDiffs = item.testCount > 0 && LAYOUT_CHECK_TAGS.has(item.tag)
-        ? compareLayout(item.tag, item.liveRect, item.testRect)
-        : [];
-      item.interactivityDiffs = item.testCount > 0
-        ? compareElementInteractivity(item.liveInteractive, item.testInteractive)
-        : [];
-      item.ancestorDiffs = item.testCount > 0
-        ? compareAncestorStyles(item.liveAncestorStyle, item.testAncestorStyle)
-        : [];
-      return {
-        ...item,
-        passed: item.testCount >= item.liveCount && item.styleDiffs.length === 0 &&
-          item.layoutDiffs.length === 0 && item.interactivityDiffs.length === 0 &&
-          item.ancestorDiffs.length === 0,
-      };
-    })
-    .sort((left, right) => left.signature.localeCompare(right.signature));
+  // Position-distance scorer (Y primary, X secondary)
+  const positionDistance = (a, b) => {
+    const dy = Math.abs((a.rect?.top || 0) - (b.rect?.top || 0));
+    const dx = Math.abs((a.rect?.left || 0) - (b.rect?.left || 0));
+    return dy * 2 + dx;
+  };
 
-  const extraElements = Array.from(testMap.entries())
-    .filter(([signature]) => !liveMap.has(signature))
-    .map(([signature, item]) => ({
+  // One-to-one matching: build every (live, test) candidate pair, sort by
+  // distance globally, then greedily assign the closest unused pair first.
+  // This avoids the order-dependent bias of iterating live elements first.
+  const matchInstances = (liveInstances, testInstances) => {
+    if (liveInstances.length === 0) return [];
+    if (testInstances.length === 0) {
+      return liveInstances.map((li) => ({ live: li, test: null }));
+    }
+    // Equal counts → index-based (DOM-order) matching: live[0]↔test[0], etc.
+    if (liveInstances.length === testInstances.length) {
+      return liveInstances.map((li, i) => ({ live: li, test: testInstances[i] }));
+    }
+    // Unequal counts → globally-sorted one-to-one assignment
+    const candidates = [];
+    for (let i = 0; i < liveInstances.length; i++) {
+      for (let j = 0; j < testInstances.length; j++) {
+        candidates.push({ i, j, dist: positionDistance(liveInstances[i], testInstances[j]) });
+      }
+    }
+    candidates.sort((a, b) => a.dist - b.dist);
+    const usedLive = new Set();
+    const usedTest = new Set();
+    const pairMap = new Map(); // liveIndex → testIndex
+    for (const { i, j } of candidates) {
+      if (usedLive.has(i) || usedTest.has(j)) continue;
+      usedLive.add(i);
+      usedTest.add(j);
+      pairMap.set(i, j);
+      if (usedLive.size === Math.min(liveInstances.length, testInstances.length)) break;
+    }
+    return liveInstances.map((li, i) => ({
+      live: li,
+      test: pairMap.has(i) ? testInstances[pairMap.get(i)] : null,
+    }));
+  };
+
+  const checklist = [];
+  for (const [sig, liveGroup] of liveGrouped) {
+    const testGroup = testGrouped.get(sig);
+    const testInstances = testGroup ? testGroup.instances : [];
+    const pairs = matchInstances(liveGroup.instances, testInstances);
+
+    for (let idx = 0; idx < pairs.length; idx++) {
+      const { live: li, test: ti } = pairs[idx];
+      const instanceLabel = liveGroup.instances.length > 1 ? ` #${idx + 1}` : '';
+      const hasTest = ti !== null;
+
+      const styleDiffs = hasTest && STYLE_CHECK_TAGS.has(liveGroup.tag)
+        ? compareStyles(li.style, ti.style)
+        : [];
+      const layoutDiffs = hasTest && LAYOUT_CHECK_TAGS.has(liveGroup.tag)
+        ? compareLayout(liveGroup.tag, li.rect, ti.rect)
+        : [];
+      const interactivityDiffs = hasTest
+        ? compareElementInteractivity(li.interactive, ti.interactive)
+        : [];
+      const ancestorDiffs = hasTest
+        ? compareAncestorStyles(li.ancestorStyle || null, ti.ancestorStyle || null)
+        : [];
+
+      checklist.push({
+        signature: sig,
+        instanceLabel,
+        tag: liveGroup.tag,
+        text: liveGroup.text,
+        liveCount: liveGroup.instances.length,
+        testCount: testInstances.length,
+        liveStyle: li.style,
+        testStyle: ti ? ti.style : null,
+        liveRect: li.rect,
+        testRect: ti ? ti.rect : null,
+        liveInteractive: li.interactive || null,
+        testInteractive: ti ? (ti.interactive || null) : null,
+        liveAncestorStyle: li.ancestorStyle || null,
+        testAncestorStyle: ti ? (ti.ancestorStyle || null) : null,
+        styleDiffs,
+        layoutDiffs,
+        interactivityDiffs,
+        ancestorDiffs,
+        passed: hasTest && styleDiffs.length === 0 &&
+          layoutDiffs.length === 0 && interactivityDiffs.length === 0 &&
+          ancestorDiffs.length === 0,
+      });
+    }
+  }
+  checklist.sort((left, right) => {
+    const sigCmp = left.signature.localeCompare(right.signature);
+    if (sigCmp !== 0) return sigCmp;
+    return (left.instanceLabel || '').localeCompare(right.instanceLabel || '');
+  });
+
+  // Extra elements: test-only signatures not present on live
+  const extraElements = Array.from(testGrouped.entries())
+    .filter(([signature]) => !liveGrouped.has(signature))
+    .map(([signature, group]) => ({
       signature,
-      tag: item.tag,
-      text: item.text,
-      count: item.count,
+      tag: group.tag,
+      text: group.text,
+      count: group.instances.length,
     }))
     .sort((left, right) => left.signature.localeCompare(right.signature));
 
@@ -1411,7 +1467,7 @@ function summarizeRouteComparison(routePath, livePage, testPage, screenshotDiff)
     headingSequenceDiffs: headingSequence.diffs,
     checklist,
     extraElements,
-    missingElementsCount: checklist.filter((item) => item.testCount < item.liveCount).length,
+    missingElementsCount: checklist.filter((item) => item.testStyle === null).length,
     styleMismatchCount: checklist.filter((item) => item.styleDiffs.length > 0).length,
     layoutMismatchCount: checklist.filter((item) => item.layoutDiffs.length > 0).length,
     elementInteractivityMismatchCount: checklist.filter((item) => item.interactivityDiffs.length > 0).length,
@@ -1674,8 +1730,8 @@ function renderMarkdown(report) {
 
     for (const item of route.checklist) {
       const details = [];
-      if (item.testCount < item.liveCount) {
-        details.push(`missing count ${item.liveCount - item.testCount}`);
+      if (item.testStyle === null) {
+        details.push('missing on test');
       }
       if (item.styleDiffs.length > 0) {
         details.push(`appearance mismatch: ${item.styleDiffs.join('; ')}`);
@@ -1690,7 +1746,8 @@ function renderMarkdown(report) {
         details.push(`container mismatch: ${item.ancestorDiffs.join('; ')}`);
       }
       const suffix = details.length > 0 ? ` — ${details.join(' | ')}` : '';
-      lines.push(`- [${item.passed ? 'x' : ' '}] ${item.signature}${suffix}`);
+      const label = item.signature + (item.instanceLabel || '');
+      lines.push(`- [${item.passed ? 'x' : ' '}] ${label}${suffix}`);
     }
 
     for (const extra of route.extraElements) {

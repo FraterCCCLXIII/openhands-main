@@ -152,7 +152,9 @@ const Enterprise = () => {
             <div className='mx-2 h-8 w-px bg-brand-bg/30' />
             <img src='/assets/webflow/logos/690b53e4ae0418e84e83578b_amd.svg' alt='' className='h-10 w-auto' />
           </div>
-          <OverlayLinkButton href='/contact' label='Contact us' variant='outline' />
+          <span className='btn-wrap-dark'>
+            <OverlayLinkButton href='/contact' label='Contact us' variant='outline' />
+          </span>
         </div>
       </section>
 
