@@ -119,7 +119,7 @@ const Enterprise = () => {
                   <img src={feature.icon} alt='' className='h-10 w-10' />
                 </div>
                 <div className='border-t border-brand-fg/20 py-4'>
-                  <p className='text-[22px] font-medium leading-[1.35] text-brand-fg'>
+                  <p className='text-[20.8px] font-medium leading-[24.96px] text-brand-fg'>
                     {feature.title}
                   </p>
                 </div>
@@ -166,7 +166,7 @@ const Enterprise = () => {
           />
         </div>
         <div className='relative mx-auto max-w-[1260px] text-center'>
-          <h2 className='mx-auto w-fit text-[32px] font-medium leading-[1.2] tracking-[-0.02em] text-brand-fg'>
+          <h2 className='mx-auto w-fit text-[32px] font-medium leading-[1.2] text-brand-fg'>
             Powering enterprise AI with the world{'\u2019'}s best
           </h2>
           <p className='mx-auto mt-4 text-[20.8px] leading-[1.2] text-brand-muted'>
@@ -197,7 +197,7 @@ const Enterprise = () => {
               {RESULTS.map((result) => (
                 <article key={result.text} className='flex flex-col items-center gap-4 bg-brand-bg p-8 text-center'>
                   <img src={result.icon} alt='' className='h-32 w-32' />
-                  <p className='w-full text-[18px] font-medium leading-[1.3] text-brand-fg'>{result.text}</p>
+                  <p className='w-full text-[20.8px] font-medium leading-[1.2] text-[#5f5f5f]'>{result.text}</p>
                 </article>
               ))}
             </div>

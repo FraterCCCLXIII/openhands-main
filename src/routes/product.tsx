@@ -46,7 +46,7 @@ const Product = () => {
           <h1 className='mt-6 text-[40px] font-medium leading-[1.08] tracking-[-0.04em] text-brand-fg lg:text-[44px]'>
             Build better software with autonomous cloud agent
           </h1>
-          <p className='mt-4 max-w-[640px] text-[20.8px] leading-[1.2] text-brand-fg/75'>
+          <p className='mt-4 max-w-[640px] text-[20.8px] leading-[1.2] text-[#5f5f5f]'>
             Offload toil, ship faster. OpenHands automates real development tasks with transparency, governance, and choice.
           </p>
           <div className='mt-6 flex flex-wrap items-center justify-center gap-4'>
@@ -78,7 +78,7 @@ const Product = () => {
                 <h2 className='w-fit text-[34px] font-medium leading-[1.08] tracking-[-0.03em] text-brand-bg lg:text-[44px]'>
                   {item.title}
                 </h2>
-                <p className='mt-5 max-w-[571px] text-[20.8px] leading-[1.2] text-[#d6caab]'>
+                <p className='mt-5 max-w-[571px] text-[20.8px] leading-[1.2] text-[#b3a88c]'>
                   {item.description}
                 </p>
                 <OverlayLinkButton

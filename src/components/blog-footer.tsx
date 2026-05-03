@@ -137,7 +137,7 @@ export const BlogFooter: React.FC<BlogFooterProps> = ({
       )}
 
       <section className='flex flex-col items-center gap-4 text-center'>
-        <h1 className='font-inter text-[32px] leading-[1.1] font-medium tracking-[-0.03em] text-brand-fg lg:text-[44px]'>
+        <h1 className='font-sohne text-[32px] leading-[1.1] font-medium tracking-[-0.03em] text-brand-fg lg:text-[44px]'>
           Get useful insights in our blog
         </h1>
         <p className='max-w-[560px] text-[18px] leading-[1.2] font-medium text-[#5f5f5f] lg:text-[20px]'>

@@ -230,12 +230,12 @@ const Pricing = () => {
             >
               <div className='text-sm uppercase tracking-[0.14em] text-brand-muted'>{plan.eyebrow}</div>
               <div className='mt-2 text-[32px] font-medium leading-[1.15] text-brand-fg'>{plan.title}</div>
-              <p className='mt-3 text-[28px] font-medium leading-[1.2] text-brand-fg'>{plan.price}</p>
-              <p className='mt-4 text-[17px] leading-[1.6] text-brand-muted'>{plan.description}</p>
-              <p className='mt-6 text-[16px] font-medium text-brand-fg'>{plan.intro}</p>
+              <p className='mt-3 text-[20px] font-medium leading-[28px] text-[#5f5f5f]'>{plan.price}</p>
+              <p className='mt-4 text-[16px] leading-[22.4px] text-brand-muted'>{plan.description}</p>
+              <p className='mt-6 text-[16px] font-medium text-[#5f5f5f]'>{plan.intro}</p>
               <ul className='mt-4 flex flex-1 flex-col gap-3'>
                 {plan.features.map((feature) => (
-                  <li key={feature} className='flex items-start gap-3 text-[16px] leading-[1.5] text-brand-fg'>
+                  <li key={feature} className='flex items-start gap-3 font-sohne-buch text-[16px] leading-[1.5] text-[#5f5f5f]'>
                     <img src={CARD_CHECK_ICON} alt='' aria-hidden='true' className='mt-0.5 h-5 w-5 flex-none' />
                     <p className='flex-1'>{feature}</p>
                   </li>
@@ -265,7 +265,7 @@ const Pricing = () => {
                 <col style={{ width: '24%' }} />
               </colgroup>
               <thead>
-                <tr className='border-b border-brand-bg/18 text-[13px] tracking-[0.08em] text-brand-bg/70'>
+                <tr className='border-b border-brand-bg/18 text-[13px] text-brand-bg'>
                   <th className='py-3 pr-6 font-medium'><p>Features</p></th>
                   <th className='py-3 font-medium text-brand-bg'><p>Open Source</p></th>
                   <th className='py-3 font-medium text-brand-bg'><p>Individual</p></th>
@@ -287,11 +287,11 @@ const Pricing = () => {
                   if (row.type === 'values') {
                     return (
                       <tr key={row.label} className='border-b border-brand-bg/12 last:border-b-0'>
-                        <th className='py-3 pr-6 text-[16px] font-medium text-brand-bg'>
+                        <th className='py-3 pr-6 font-sohne-buch text-[16px] font-medium text-[#b3a88c]'>
                           <p>{row.label}</p>
                         </th>
                         {row.values.map((value, index) => (
-                          <td key={`${row.label}-${index}`} className='py-3 text-[16px] text-brand-bg/85'>
+                          <td key={`${row.label}-${index}`} className='py-3 font-sohne-buch text-[16px] text-[#b3a88c]'>
                             <p>{value}</p>
                           </td>
                         ))}
@@ -301,7 +301,7 @@ const Pricing = () => {
 
                   return (
                     <tr key={row.label} className='border-b border-brand-bg/12 last:border-b-0'>
-                      <th className='py-3 pr-6 text-[16px] font-medium text-brand-bg'>
+                      <th className='py-3 pr-6 font-sohne-buch text-[16px] font-medium text-[#b3a88c]'>
                         <p>{row.label}</p>
                       </th>
                       {row.values.map((enabled, index) => (
@@ -333,7 +333,7 @@ const Pricing = () => {
                   <label className='block pointer-events-none cursor-default'>{faq.question}</label>
                   <span className='mt-1 text-[22px] leading-none transition-transform group-open:rotate-45'>+</span>
                 </summary>
-                <div className='max-w-[680px] pt-4 text-[16px] leading-[1.6] text-brand-fg/75'>{faq.answer}</div>
+                <div className='max-w-[680px] pt-4 font-sohne-buch text-[16px] leading-[22.4px] text-[#5f5f5f]'>{faq.answer}</div>
               </details>
             ))}
           </div>

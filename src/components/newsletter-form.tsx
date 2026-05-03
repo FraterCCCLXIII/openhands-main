@@ -34,23 +34,24 @@ export const NewsletterForm: React.FC<NewsletterFormProps> = ({
             placeholder='Share your email'
             required
             pattern='[^@]+@[^.]+\..+'
-            className='min-h-[52px] w-full rounded-[8px] border border-black/5 bg-white px-6 text-[16px] leading-[1.5] text-[#5f5f5f] outline-none transition-colors placeholder:text-[#b3a88c] focus:border-brand-accent'
+            className='min-h-[52px] w-full rounded-[8px] border-none bg-white px-6 text-[16px] leading-[1.5] text-[#5f5f5f] outline-none transition-colors placeholder:text-[#b3a88c] focus:ring-1 focus:ring-brand-accent'
           />
           <input
             type='submit'
             value='Subscribe'
             disabled={disabled}
-            className='btn btn-primary m-0 min-h-[52px] rounded-[8px] disabled:cursor-not-allowed disabled:opacity-50'
+            className='btn-primary m-0 inline-flex min-h-[52px] cursor-pointer items-center justify-center rounded-[8px] px-[24px] py-[12px] text-[16px] font-medium leading-[1.3] disabled:cursor-not-allowed disabled:opacity-50'
+            style={{ boxShadow: 'rgba(0, 0, 0, 0) 0px 0px 0px 0px inset' }}
           />
         </div>
 
-        <p className='m-0 max-w-[400px] text-left text-[12px] leading-[1.4] text-[#5f5f5f]'>
+        <p className='m-0 max-w-[400px] text-center font-mono text-[12px] leading-[1.4] text-[#5f5f5f]'>
           By submitting your email you agree to our{' '}
           <a
             href='/privacy'
             target='_blank'
             rel='noreferrer'
-            className='font-medium text-[#5f5f5f] underline decoration-[1px] underline-offset-[0.18em] transition-colors hover:text-brand-fg'
+            className='font-mono font-medium text-[#5f5f5f] underline decoration-[1.2px] underline-offset-[0.18em] transition-colors hover:text-brand-fg'
           >
             Privacy Policy
           </a>

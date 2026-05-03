@@ -36,19 +36,17 @@ export const FeaturedBlogCard: React.FC<FeaturedBlogCardProps> = ({
 
     <div className='absolute inset-x-0 bottom-0 p-6 lg:p-6'>
       <div className='max-w-[456px] space-y-3'>
-        <p className='m-0 font-inter text-[24px] leading-[1.08] font-medium tracking-[-0.03em] text-brand-accent lg:text-[32px]'>
+        <p className='m-0 font-sohne text-[20.8px] leading-[24.96px] font-medium text-brand-accent'>
           {title}
         </p>
-        <p className='m-0 text-[16px] leading-[1.25] font-medium text-brand-bg lg:text-[18px]'>
+        <p className='m-0 text-[20.8px] leading-[1.2] font-medium text-white'>
           {description}
         </p>
         <Link
           to={href}
-          className='inline-flex text-[16px] leading-[20.8px] font-medium text-brand-bg'
+          className='btn text-[16px] leading-[20.8px] text-brand-bg'
         >
-          <span className='inline-flex items-center justify-center rounded-[6px] border border-[#342117] bg-[#22150d] px-6 py-3 text-[15px] leading-none transition-colors hover:bg-[#342117]'>
-            Read more
-          </span>
+          Read more
         </Link>
       </div>
     </div>
@@ -94,7 +92,7 @@ export const BlogCard: React.FC<BlogCardProps> = ({
             {showDate && date && (
               <p className='m-0 text-[14px] leading-[1.5] text-[#5f5f5f]'>{formatDate(date)}</p>
             )}
-            <p className='m-0 font-inter text-[18px] leading-[1.2] font-medium tracking-[-0.01em] text-brand-fg lg:text-[20px]'>
+            <p className='m-0 font-sohne text-[18px] leading-[1.2] font-medium text-brand-fg lg:text-[20px]'>
               <span className='text-[16px] leading-[1.4] transition-colors group-hover:text-brand-brown'>
                 {title}
               </span>
@@ -114,7 +112,7 @@ export const BlogCard: React.FC<BlogCardProps> = ({
           {showDate && date && (
             <p className='m-0 text-[14px] leading-[1.5] text-[#5f5f5f]'>{formatDate(date)}</p>
           )}
-          <p className='m-0 font-inter text-[18px] leading-[1.2] font-medium tracking-[-0.01em] text-brand-fg lg:text-[20px]'>
+          <p className='m-0 font-sohne text-[18px] leading-[1.2] font-medium text-brand-fg lg:text-[20px]'>
             {title}
           </p>
         </div>

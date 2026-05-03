@@ -136,12 +136,21 @@ function normalizeFontFamily(value) {
     .filter(Boolean);
 }
 
+// Accepted font substitutions: live proprietary → local equivalent.
+// When Klim test fonts are installed locally, the font-family name matches
+// the live site exactly ("Sohne Kraftig") so no equivalence is needed.
+// Keep mappings here only for fonts we genuinely substitute.
+const FONT_EQUIVALENTS = {
+  'geistmono': 'ui-monospace',
+};
+
 function primaryFontMatches(liveValue, testValue) {
   const liveFonts = normalizeFontFamily(liveValue);
   const testFonts = normalizeFontFamily(testValue);
   if (liveFonts.length === 0 && testFonts.length === 0) return true;
   if (liveFonts.length === 0 || testFonts.length === 0) return false;
-  return liveFonts[0] === testFonts[0];
+  if (liveFonts[0] === testFonts[0]) return true;
+  return FONT_EQUIVALENTS[liveFonts[0]] === testFonts[0];
 }
 
 function normalizeTransition(value) {
@@ -257,6 +266,59 @@ function compareStyles(liveStyle, testStyle) {
   return diffs;
 }
 
+// Compare ancestor (wrapper/container) styles captured during extraction.
+// Catches visual mismatches on parent elements like button wrappers with
+// borderRadius or backgroundColor that the text-matched child doesn't carry.
+const ANCESTOR_COMPARE_PROPS = ['borderRadius', 'backgroundColor', 'boxShadow', 'padding'];
+function compareAncestorStyles(liveAncestor, testAncestor) {
+  if (!liveAncestor && !testAncestor) return [];
+  if (!liveAncestor || !testAncestor) {
+    // One side has a visual ancestor within 4 levels, the other doesn't.
+    // Only flag for interactive ancestors (A, BUTTON) — section/div wrappers
+    // with background colors are usually structural differences (transparent
+    // sections on live vs colored sections on test) and produce too much noise.
+    const present = liveAncestor || testAncestor;
+    if (!['A', 'BUTTON'].includes(present._tag)) return [];
+    const side = liveAncestor ? 'live-only' : 'test-only';
+    return [`ancestor.container: ${side} (${present._tag})`];
+  }
+  const diffs = [];
+  for (const prop of ANCESTOR_COMPARE_PROPS) {
+    const lv = liveAncestor[prop];
+    const tv = testAncestor[prop];
+    if (lv === tv) continue;
+    // Reuse numeric tolerance for px values
+    const lPx = parsePx(lv);
+    const tPx = parsePx(tv);
+    if (lPx !== null && tPx !== null) {
+      const tol = prop === 'borderRadius' ? 3 : prop === 'padding' ? 8 : 2;
+      if (Math.abs(lPx - tPx) <= tol) continue;
+    }
+    // Color tolerance for backgroundColor
+    if (prop === 'backgroundColor') {
+      const lc = parseColor(lv);
+      const tc = parseColor(tv);
+      if (lc && tc) {
+        const cd = Math.abs(lc.r - tc.r) + Math.abs(lc.g - tc.g) + Math.abs(lc.b - tc.b);
+        if (cd <= 48 && Math.abs(lc.a - tc.a) <= 0.15) continue;
+      }
+    }
+    // boxShadow normalize — treat zero-extent shadows as equivalent to 'none'
+    if (prop === 'boxShadow') {
+      const normShadow = (v) => {
+        const s = (v || 'none').toLowerCase().trim();
+        if (s === 'none') return 'none';
+        // Zero-extent inset/outset shadows (0px 0px 0px 0px) are invisible
+        if (/^[\w(),.\s]*0px\s+0px\s+0px\s+0px/.test(s)) return 'none';
+        return s;
+      };
+      if (normShadow(lv) === normShadow(tv)) continue;
+    }
+    diffs.push(`ancestor.${prop}: live=${lv} test=${tv}`);
+  }
+  return diffs;
+}
+
 function compareElementInteractivity(liveInt, testInt) {
   if (!liveInt || !testInt) return [];
   const diffs = [];
@@ -291,18 +353,15 @@ function compareElementInteractivity(liveInt, testInt) {
 function compareLayout(tag, liveRect, testRect) {
   if (!liveRect || !testRect) return [];
 
-  const tolerance = {
-    top: tag === 'IMG' ? 140 : tag.startsWith('H') ? 90 : tag === 'P' ? 80 : 70,
-    left: tag === 'IMG' ? 120 : 80,
-    width: tag === 'IMG' ? 140 : 120,
-    height: tag === 'IMG' ? 140 : 100,
-  };
-
   const diffs = [];
   for (const key of ['top', 'left', 'width', 'height']) {
-    const delta = Math.abs((liveRect[key] || 0) - (testRect[key] || 0));
-    if (delta > tolerance[key]) {
-      diffs.push(`${key}: live=${liveRect[key]} test=${testRect[key]}`);
+    const lv = liveRect[key] || 0;
+    const tv = testRect[key] || 0;
+    // Allow ±1px tolerance for width/height to handle sub-pixel rounding,
+    // and ±2px for top/left to handle cascading position drift.
+    const tolerance = (key === 'top' || key === 'left') ? 2 : 1;
+    if (Math.abs(lv - tv) > tolerance) {
+      diffs.push(`${key}: live=${lv} test=${tv}`);
     }
   }
   return diffs;
@@ -415,6 +474,31 @@ async function extractPageInventory(page) {
         entry.renderedHeight = Math.round(rect.height);
       }
 
+      // Ancestor style capture: walk up to the nearest visual container and
+      // record its key properties so we can catch mismatches on wrapper elements
+      // (e.g. a button wrapper with borderRadius that the text child doesn't have).
+      const ANCESTOR_PROPS = ['borderRadius', 'backgroundColor', 'boxShadow', 'padding'];
+      let ancestor = element.parentElement;
+      const maxDepth = 4;
+      let depth = 0;
+      let ancestorStyle = null;
+      while (ancestor && depth < maxDepth) {
+        const aComp = window.getComputedStyle(ancestor);
+        const hasBorderRadius = aComp.borderRadius && aComp.borderRadius !== '0px';
+        const hasBg = aComp.backgroundColor && aComp.backgroundColor !== 'rgba(0, 0, 0, 0)' && aComp.backgroundColor !== 'transparent';
+        const hasShadow = aComp.boxShadow && aComp.boxShadow !== 'none';
+        const isInteractive = ['A', 'BUTTON'].includes(ancestor.tagName);
+        if (hasBorderRadius || hasBg || hasShadow || isInteractive) {
+          ancestorStyle = Object.fromEntries(ANCESTOR_PROPS.map((p) => [p, aComp[p]]));
+          ancestorStyle._tag = ancestor.tagName;
+          ancestorStyle._depth = depth + 1;
+          break;
+        }
+        ancestor = ancestor.parentElement;
+        depth++;
+      }
+      entry.ancestorStyle = ancestorStyle;
+
       // Interactivity audit: capture cursor, clickability, and interactive state
       entry.interactive = {
         cursor: computed.cursor,
@@ -446,6 +530,182 @@ async function extractPageInventory(page) {
       elements,
     };
   }, STYLE_PROPS);
+}
+
+// ── Webflow-element extraction ──
+// On live: collect visible elements that carry a Webflow semantic class name.
+// On test: collect visible elements that carry a data-wf-el attribute.
+// Both produce { key, tag, style, rect } entries keyed by the Webflow class name.
+const WF_STYLE_PROPS = [...STYLE_PROPS, ...CONTAINER_STYLE_PROPS.filter((p) => !STYLE_PROPS.includes(p))];
+
+// Utility class prefixes to skip when picking the "semantic" class on live.
+const WF_UTILITY_PREFIXES = [
+  'lg:', 'md:', 'sm:', 'hover:', 'focus:', 'dark:', 'group-', 'peer-',
+  'w-dyn', 'w-embed', 'w-richtext', 'w-variant', 'w-',
+  'u-', 'col-lg', 'col-md', 'col-sm', 'col-v', 'col-first', 'col-shrink',
+  'row-align', 'row-gap', 'row-justify', 'splide',
+];
+const WF_STATE_CLASSES = new Set([
+  'active', 'manual', 'key', 'is-active', 'is-visible', 'is-next',
+  'is-initialized', 'is-overflow', 'is-center', 'is-home',
+]);
+
+async function extractWebflowElements(page, isLiveSite) {
+  return page.evaluate((propsToCapture, utilPrefixes, stateClasses, isLive) => {
+    function isSemanticClass(c) {
+      if (stateClasses.indexOf(c) >= 0) return false;
+      for (var i = 0; i < utilPrefixes.length; i++) {
+        if (c.indexOf(utilPrefixes[i]) === 0) return false;
+      }
+      // Must contain underscore or hyphen (Webflow naming) or be a known component name
+      if (c.indexOf('_') >= 0 || c.indexOf('-') >= 0) return true;
+      var known = ['hero', 'container', 'card', 'button', 'icon', 'eyebrow', 'slot', 'bubble'];
+      return known.indexOf(c) >= 0;
+    }
+
+    function isVisible(el) {
+      var rect = el.getBoundingClientRect();
+      if (rect.width < 4 || rect.height < 4) return false;
+      var st = window.getComputedStyle(el);
+      return st.display !== 'none' && st.visibility !== 'hidden' && Number(st.opacity) > 0;
+    }
+
+    var results = [];
+    var elements;
+
+    if (isLive) {
+      // On live site: pick every visible element with at least one semantic class
+      elements = document.querySelectorAll('*');
+    } else {
+      // On test site: pick every element with a data-wf-el attribute
+      elements = document.querySelectorAll('[data-wf-el]');
+    }
+
+    for (var i = 0; i < elements.length; i++) {
+      var el = elements[i];
+      if (!isVisible(el)) continue;
+
+      var wfKey = null;
+      if (isLive) {
+        // Find the first semantic class name
+        for (var j = 0; j < el.classList.length; j++) {
+          if (isSemanticClass(el.classList[j])) { wfKey = el.classList[j]; break; }
+        }
+      } else {
+        wfKey = el.getAttribute('data-wf-el');
+      }
+      if (!wfKey) continue;
+
+      var computed = window.getComputedStyle(el);
+      var rect = el.getBoundingClientRect();
+
+      results.push({
+        key: wfKey,
+        tag: el.tagName,
+        style: Object.fromEntries(propsToCapture.map(function(p) { return [p, computed[p]]; })),
+        rect: {
+          top: Math.round(rect.top + window.scrollY),
+          left: Math.round(rect.left + window.scrollX),
+          width: Math.round(rect.width),
+          height: Math.round(rect.height),
+        },
+      });
+    }
+    return results;
+  }, WF_STYLE_PROPS, WF_UTILITY_PREFIXES, [...WF_STATE_CLASSES], isLiveSite);
+}
+
+function compareWebflowElements(liveElements, testElements) {
+  // Group live elements by key — there may be multiple instances per class.
+  const liveByKey = new Map();
+  for (const el of liveElements) {
+    if (!liveByKey.has(el.key)) liveByKey.set(el.key, []);
+    liveByKey.get(el.key).push(el);
+  }
+  // Group test elements by key.
+  const testByKey = new Map();
+  for (const el of testElements) {
+    if (!testByKey.has(el.key)) testByKey.set(el.key, []);
+    testByKey.get(el.key).push(el);
+  }
+
+  // Match elements with the same key.  When both sides have equal counts,
+  // use DOM-order (index-based) matching — this avoids cross-pairing
+  // repeated siblings in grids/lists where positions differ.
+  // When counts differ, fall back to proximity-based best-match.
+  function proximityScore(a, b) {
+    return (
+      Math.abs((a.rect.top || 0) - (b.rect.top || 0)) +
+      Math.abs((a.rect.left || 0) - (b.rect.left || 0)) * 0.5 +
+      Math.abs((a.rect.width || 0) - (b.rect.width || 0)) * 0.3 +
+      Math.abs((a.rect.height || 0) - (b.rect.height || 0)) * 0.3
+    );
+  }
+
+  function buildMatchedEntry(key, liveEl, testEl) {
+    const diffs = [];
+    for (const prop of WF_STYLE_PROPS) {
+      const diff = compareStyleValue(prop, liveEl.style?.[prop], testEl.style?.[prop], liveEl.style, testEl.style);
+      if (diff) diffs.push(diff);
+    }
+    const layoutDiffs = compareLayout(liveEl.tag || 'DIV', liveEl.rect, testEl.rect);
+    return {
+      key,
+      tag: liveEl.tag,
+      passed: diffs.length === 0 && layoutDiffs.length === 0,
+      styleDiffs: diffs,
+      layoutDiffs,
+      liveRect: liveEl.rect,
+      testRect: testEl.rect,
+    };
+  }
+
+  const matched = [];
+
+  for (const [key, testEls] of testByKey) {
+    const liveEls = liveByKey.get(key);
+    if (!liveEls) continue;
+
+    if (liveEls.length === testEls.length) {
+      // Index-based matching: pair 1st↔1st, 2nd↔2nd, etc.
+      for (let i = 0; i < testEls.length; i++) {
+        matched.push(buildMatchedEntry(key, liveEls[i], testEls[i]));
+      }
+    } else {
+      // Proximity-based matching for unequal counts
+      const usedLive = new Set();
+      for (const testEl of testEls) {
+        let bestIdx = -1;
+        let bestScore = Infinity;
+        for (let i = 0; i < liveEls.length; i++) {
+          if (usedLive.has(i)) continue;
+          const score = proximityScore(liveEls[i], testEl);
+          if (score < bestScore) { bestScore = score; bestIdx = i; }
+        }
+        if (bestIdx < 0) continue;
+        usedLive.add(bestIdx);
+        matched.push(buildMatchedEntry(key, liveEls[bestIdx], testEl));
+      }
+    }
+  }
+
+  // Unmatched: live keys with no test counterpart at all
+  const missingOnTest = [];
+  for (const [key, liveEls] of liveByKey) {
+    if (!testByKey.has(key)) {
+      missingOnTest.push({ key, tag: liveEls[0].tag, count: liveEls.length });
+    }
+  }
+
+  // Extra: test keys with no live counterpart at all
+  const extraOnTest = [];
+  for (const [key, testEls] of testByKey) {
+    if (!liveByKey.has(key)) {
+      extraOnTest.push({ key, tag: testEls[0].tag, count: testEls.length });
+    }
+  }
+
+  return { matched, missingOnTest, extraOnTest };
 }
 
 async function extractCSSCustomProperties(page) {
@@ -838,27 +1098,43 @@ function categorizeStyleDiffs(routes) {
 
 function compareContainerStyles(liveContainers, testContainers) {
   const diffs = [];
-  const maxIndex = Math.min(liveContainers.length, testContainers.length);
 
-  for (let i = 0; i < maxIndex; i++) {
-    const live = liveContainers[i];
-    const test = testContainers[i];
-    const propDiffs = [];
+  // Group containers by tag for tag-aware matching
+  const liveByTag = {};
+  const testByTag = {};
+  for (const c of liveContainers) {
+    (liveByTag[c.tag] = liveByTag[c.tag] || []).push(c);
+  }
+  for (const c of testContainers) {
+    (testByTag[c.tag] = testByTag[c.tag] || []).push(c);
+  }
 
-    for (const prop of CONTAINER_STYLE_PROPS) {
-      const diff = compareStyleValue(prop, live.style?.[prop], test.style?.[prop], live.style, test.style);
-      if (diff) propDiffs.push(diff);
-    }
+  // Match within each tag group by index
+  for (const tag of Object.keys(liveByTag)) {
+    const liveGroup = liveByTag[tag] || [];
+    const testGroup = testByTag[tag] || [];
+    const maxIdx = Math.min(liveGroup.length, testGroup.length);
 
-    if (propDiffs.length > 0) {
-      diffs.push({
-        index: i,
-        liveLabel: live.label,
-        testLabel: test.label,
-        tag: live.tag,
-        diffs: propDiffs,
-        passed: false,
-      });
+    for (let i = 0; i < maxIdx; i++) {
+      const live = liveGroup[i];
+      const test = testGroup[i];
+      const propDiffs = [];
+
+      for (const prop of CONTAINER_STYLE_PROPS) {
+        const diff = compareStyleValue(prop, live.style?.[prop], test.style?.[prop], live.style, test.style);
+        if (diff) propDiffs.push(diff);
+      }
+
+      if (propDiffs.length > 0) {
+        diffs.push({
+          index: live.index,
+          liveLabel: live.label,
+          testLabel: test.label,
+          tag: live.tag,
+          diffs: propDiffs,
+          passed: false,
+        });
+      }
     }
   }
 
@@ -984,9 +1260,12 @@ function summarizeRouteComparison(routePath, livePage, testPage, screenshotDiff)
       testRect: null,
       liveInteractive: element.interactive || null,
       testInteractive: null,
+      liveAncestorStyle: element.ancestorStyle || null,
+      testAncestorStyle: null,
       styleDiffs: [],
       layoutDiffs: [],
       interactivityDiffs: [],
+      ancestorDiffs: [],
     };
     existing.liveCount += 1;
     liveMap.set(element.signature, existing);
@@ -999,6 +1278,7 @@ function summarizeRouteComparison(routePath, livePage, testPage, screenshotDiff)
       style: element.style,
       rect: element.rect,
       interactive: element.interactive || null,
+      ancestorStyle: element.ancestorStyle || null,
       tag: element.tag,
       text: element.text,
     };
@@ -1006,6 +1286,7 @@ function summarizeRouteComparison(routePath, livePage, testPage, screenshotDiff)
     if (!existing.style) existing.style = element.style;
     if (!existing.rect) existing.rect = element.rect;
     if (!existing.interactive) existing.interactive = element.interactive || null;
+    if (!existing.ancestorStyle) existing.ancestorStyle = element.ancestorStyle || null;
     testMap.set(element.signature, existing);
   }
 
@@ -1016,6 +1297,7 @@ function summarizeRouteComparison(routePath, livePage, testPage, screenshotDiff)
       item.testStyle = testMatch?.style || null;
       item.testRect = testMatch?.rect || null;
       item.testInteractive = testMatch?.interactive || null;
+      item.testAncestorStyle = testMatch?.ancestorStyle || null;
       item.styleDiffs = item.testCount > 0 && STYLE_CHECK_TAGS.has(item.tag)
         ? compareStyles(item.liveStyle, item.testStyle)
         : [];
@@ -1025,10 +1307,14 @@ function summarizeRouteComparison(routePath, livePage, testPage, screenshotDiff)
       item.interactivityDiffs = item.testCount > 0
         ? compareElementInteractivity(item.liveInteractive, item.testInteractive)
         : [];
+      item.ancestorDiffs = item.testCount > 0
+        ? compareAncestorStyles(item.liveAncestorStyle, item.testAncestorStyle)
+        : [];
       return {
         ...item,
         passed: item.testCount >= item.liveCount && item.styleDiffs.length === 0 &&
-          item.layoutDiffs.length === 0 && item.interactivityDiffs.length === 0,
+          item.layoutDiffs.length === 0 && item.interactivityDiffs.length === 0 &&
+          item.ancestorDiffs.length === 0,
       };
     })
     .sort((left, right) => left.signature.localeCompare(right.signature));
@@ -1086,6 +1372,12 @@ function summarizeRouteComparison(routePath, livePage, testPage, screenshotDiff)
     }
   }
 
+  // Webflow element comparison (data-wf-el ↔ semantic class matching)
+  const wfComparison = compareWebflowElements(
+    livePage.wfElements || [],
+    testPage.wfElements || [],
+  );
+
   // Image dimension comparison
   const imageDiffs = [];
   const liveImages = livePage.inventory.elements.filter((el) => el.tag === 'IMG' && el.renderedWidth);
@@ -1123,6 +1415,7 @@ function summarizeRouteComparison(routePath, livePage, testPage, screenshotDiff)
     styleMismatchCount: checklist.filter((item) => item.styleDiffs.length > 0).length,
     layoutMismatchCount: checklist.filter((item) => item.layoutDiffs.length > 0).length,
     elementInteractivityMismatchCount: checklist.filter((item) => item.interactivityDiffs.length > 0).length,
+    ancestorMismatchCount: checklist.filter((item) => (item.ancestorDiffs || []).length > 0).length,
     extraElementsCount: extraElements.length,
     containerDiffs,
     containerMismatchCount: containerDiffs.length,
@@ -1138,6 +1431,10 @@ function summarizeRouteComparison(routePath, livePage, testPage, screenshotDiff)
     imageDiffCount: imageDiffs.length,
     cssVarDiffs,
     cssVarDiffCount: cssVarDiffs.length,
+    wfComparison,
+    wfMismatchCount: wfComparison.matched.filter((m) => !m.passed).length,
+    wfMissingCount: wfComparison.missingOnTest.length,
+    wfExtraCount: wfComparison.extraOnTest.length,
     screenshotDiff,
   };
 }
@@ -1336,6 +1633,9 @@ function renderMarkdown(report) {
   lines.push(`- Hover effect mismatches: ${report.summary.hoverMismatches}`);
   lines.push(`- Click behavior mismatches (tabs/accordions): ${report.summary.clickBehaviorMismatches || 0}`);
   lines.push(`- Image dimension mismatches: ${report.summary.imageDimensionMismatches || 0}`);
+  lines.push(`- Webflow element style mismatches (data-wf-el): ${report.summary.wfElementMismatches || 0}`);
+  lines.push(`- Webflow elements unmatched on test: ${report.summary.wfElementsMissing || 0}`);
+  lines.push(`- Webflow elements extra on test: ${report.summary.wfElementsExtra || 0}`);
   lines.push(`- Screenshot mismatches (> ${SCREENSHOT_DIFF_THRESHOLD}% or unavailable): ${report.summary.screenshotMismatches}`);
   lines.push(`- Screenshot capture failures: ${report.summary.screenshotUnavailable || 0}`);
   lines.push(`- Total failing checks: ${report.summary.failedChecklistItems}`);
@@ -1385,6 +1685,9 @@ function renderMarkdown(report) {
       }
       if (item.interactivityDiffs.length > 0) {
         details.push(`interactivity mismatch: ${item.interactivityDiffs.join('; ')}`);
+      }
+      if (item.ancestorDiffs && item.ancestorDiffs.length > 0) {
+        details.push(`container mismatch: ${item.ancestorDiffs.join('; ')}`);
       }
       const suffix = details.length > 0 ? ` — ${details.join(' | ')}` : '';
       lines.push(`- [${item.passed ? 'x' : ' '}] ${item.signature}${suffix}`);
@@ -1465,6 +1768,29 @@ function renderMarkdown(report) {
       }
     }
 
+    // Webflow element (data-wf-el) comparison
+    if (route.wfComparison) {
+      const wf = route.wfComparison;
+      const failedMatches = wf.matched.filter((m) => !m.passed);
+      if (failedMatches.length > 0 || wf.missingOnTest.length > 0 || wf.extraOnTest.length > 0) {
+        lines.push('');
+        lines.push('### Webflow element mismatches (data-wf-el)');
+        for (const m of wf.matched) {
+          const details = [];
+          if (m.styleDiffs.length > 0) details.push(`style: ${m.styleDiffs.join('; ')}`);
+          if (m.layoutDiffs.length > 0) details.push(`layout: ${m.layoutDiffs.join('; ')}`);
+          const suffix = details.length > 0 ? ` — ${details.join(' | ')}` : '';
+          lines.push(`- [${m.passed ? 'x' : ' '}] ${m.key} (${m.tag})${suffix}`);
+        }
+        for (const m of wf.missingOnTest) {
+          lines.push(`- [ ] ${m.key} (${m.tag}) — live element has no data-wf-el match on test`);
+        }
+        for (const m of wf.extraOnTest) {
+          lines.push(`- [ ] ${m.key} (${m.tag}) — test has data-wf-el="${m.key}" but no matching class on live`);
+        }
+      }
+    }
+
     lines.push('');
   }
 
@@ -1495,12 +1821,14 @@ async function loadPage(page, origin, routePath) {
     `settle delay ${url}`,
   );
 
-  const [inventory, containers, interactive, cssVars] = await withTimeout(
+  const isLiveSite = origin === LIVE_ORIGIN;
+  const [inventory, containers, interactive, cssVars, wfElements] = await withTimeout(
     Promise.all([
       extractPageInventory(page),
       extractContainerStyles(page),
       extractInteractivity(page),
       extractCSSCustomProperties(page),
+      extractWebflowElements(page, isLiveSite),
     ]),
     extractTimeout,
     `extraction ${url}`,
@@ -1536,6 +1864,7 @@ async function loadPage(page, origin, routePath) {
     hoverEffects,
     clickBehavior,
     cssVars,
+    wfElements,
   };
 }
 
@@ -1642,6 +1971,9 @@ async function main() {
         hoverMismatches: routes.reduce((total, route) => total + (route.hoverMismatchCount || 0), 0),
         clickBehaviorMismatches: routes.reduce((total, route) => total + (route.clickBehaviorDiffCount || 0), 0),
         imageDimensionMismatches: routes.reduce((total, route) => total + (route.imageDiffCount || 0), 0),
+        wfElementMismatches: routes.reduce((total, route) => total + (route.wfMismatchCount || 0), 0),
+        wfElementsMissing: routes.reduce((total, route) => total + (route.wfMissingCount || 0), 0),
+        wfElementsExtra: routes.reduce((total, route) => total + (route.wfExtraCount || 0), 0),
         screenshotMismatches: routes.filter((route) => route.screenshotDiff && !route.screenshotDiff.passed).length,
         screenshotUnavailable: routes.filter((route) => route.screenshotDiff?.error).length,
       },
@@ -1666,6 +1998,7 @@ async function main() {
       report.summary.hoverMismatches +
       (report.summary.clickBehaviorMismatches || 0) +
       report.summary.imageDimensionMismatches +
+      (report.summary.wfElementMismatches || 0) +
       report.summary.screenshotMismatches;
 
     const jsonPath = path.join(OUTPUT_DIR, 'site-parity-checklist.json');
@@ -1693,7 +2026,9 @@ module.exports = {
   compareHoverEffects,
   compareInteractivity,
   compareStyleValue,
+  compareWebflowElements,
   copyPngInto,
+  extractWebflowElements,
   getScreenshotMetrics,
   normalizeFontFamily,
   normalizeTransition,

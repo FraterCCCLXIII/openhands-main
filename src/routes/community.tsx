@@ -109,7 +109,7 @@ const MetadataItem = ({
 }) => (
   <p
     className={[
-      'inline-flex items-center gap-2 text-[13px] font-medium leading-none',
+      'inline-flex items-center gap-2 text-[16px] font-medium leading-[22.4px]',
       tone === 'light' ? 'text-brand-bg' : 'text-brand-fg',
     ].join(' ')}
   >
@@ -132,22 +132,20 @@ const Community = () => {
           <div className='mt-6 flex flex-wrap items-center justify-center gap-4'>
             <a
               href='/joinslack'
-              className='inline-flex text-[16px] leading-[20.8px] font-medium text-brand-bg'
+              className='btn rounded-none flex items-center gap-3 text-brand-bg'
             >
-              <span className='btn btn-primary rounded-none flex items-center gap-3'>
-                <img
-                  src='/assets/webflow/icons/6908c8dd7162d7d09526a0fd_Slack_Technologies_Logo2.svg'
-                  alt=''
-                  className='h-5 w-5'
-                />
-                <span>Join Slack</span>
-              </span>
+              <img
+                src='/assets/webflow/icons/6908c8dd7162d7d09526a0fd_Slack_Technologies_Logo2.svg'
+                alt=''
+                className='h-5 w-5'
+              />
+              <span>Join Slack</span>
             </a>
             <a
               href='#events'
-              className='inline-flex text-[16px] leading-[20.8px] font-medium text-brand-fg'
+              className='btn btn-outline border-none rounded-none'
             >
-              <span className='btn btn-outline border-none rounded-none'>View Events</span>
+              View Events
             </a>
           </div>
         </div>
@@ -159,7 +157,7 @@ const Community = () => {
             <h2 className='text-[32px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-bg lg:text-[44px]'>
               Latest Community Call
             </h2>
-            <p className='mt-4 text-[18px] leading-[1.45] text-brand-bg'>
+            <p className='mt-4 text-[16px] leading-[22.4px] text-brand-bg'>
               {LATEST_COMMUNITY_CALL.description}
             </p>
             <div className='mt-8 flex flex-wrap items-center gap-x-8 gap-y-3'>
@@ -208,7 +206,7 @@ const Community = () => {
                 href={event.href}
                 target='_blank'
                 rel='noopener noreferrer'
-                className='flex h-full flex-col rounded-[8px] border border-brand-fg/10 bg-transparent p-6 transition-transform hover:-translate-y-0.5'
+                className='flex h-full flex-col rounded-[8px] border border-[#b3a88c] bg-transparent p-6 transition-transform hover:-translate-y-0.5'
               >
                 <h2 className='text-[24px] font-medium leading-[1.4] text-brand-fg'>
                   {event.title}
@@ -247,7 +245,7 @@ const Community = () => {
             <h2 className='inline-block text-[32px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-bg lg:text-[44px]'>
               Start contributing
             </h2>
-            <p className='mx-auto mt-4 max-w-[520px] text-[18px] leading-[1.6] text-[#b3a88c]'>
+            <p className='mx-auto mt-4 max-w-[520px] text-[20.8px] leading-[24.96px] text-brand-bg'>
               Join our mission to build better AI development tools
             </p>
           </div>
@@ -262,18 +260,16 @@ const Community = () => {
                 <h3 className='mt-6 text-[24px] font-medium leading-[1.4] text-brand-bg'>
                   {path.title}
                 </h3>
-                <p className='mt-4 flex-1 text-[16px] leading-[1.6] text-[#b3a88c]'>
+                <p className='mt-4 flex-1 text-[16px] leading-[22.4px] text-brand-bg'>
                   {path.description}
                 </p>
                 <a
                   href={path.href}
                   target='_blank'
                   rel='noopener noreferrer'
-                  className='mt-6 inline-flex w-fit self-center text-[16px] leading-[20.8px] font-medium text-brand-bg'
+                  className='btn btn-outline border-none rounded-none mt-6 inline-flex w-fit self-center text-brand-bg border-brand-bg/30 hover:bg-brand-bg hover:text-brand-fg'
                 >
-                  <span className='btn btn-outline border-none rounded-none text-brand-bg border-brand-bg/30 hover:bg-brand-bg hover:text-brand-fg'>
-                    {path.cta}
-                  </span>
+                  {path.cta}
                 </a>
               </article>
             ))}
@@ -309,7 +305,7 @@ const Community = () => {
             <h3 className='mt-5 inline-block text-[32px] font-medium leading-[1.2] text-brand-fg'>
               Michael May
             </h3>
-            <p className='mx-auto mt-6 max-w-[910px] text-[18px] leading-[1.65] text-brand-fg'>
+            <p className='mx-auto mt-6 max-w-[910px] text-[24px] leading-[33.6px] text-brand-fg'>
               “My team uses OpenHands for all our development tasks and we have found that it is hands-down better than Claude Code, cursor, Codex, and every other hot agentic DevTool out there. The caliber of the team at OpenHands and the caliber of the community they've curated is second to none, and this is evidenced by the quality of their product and the trajectory of their growth.”
             </p>
           </div>

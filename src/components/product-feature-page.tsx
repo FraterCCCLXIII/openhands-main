@@ -78,10 +78,10 @@ const ProductFeatureIntroBand = ({
       <AsciiBackdrop opacity='opacity-[0.14]' />
     )}
     <div className={classNames('relative mx-auto text-center', wideDescription ? 'max-w-[1238px]' : 'max-w-[978px]')}>
-      <h2 className='mx-auto w-fit text-[30px] font-medium leading-[1.2] tracking-[-0.03em] text-brand-fg lg:text-[32px]'>
+      <h2 className='mx-auto w-fit text-[30px] font-medium leading-[1.2] text-brand-fg lg:text-[32px]'>
         {title}
       </h2>
-      <p className={classNames('mx-auto mt-5 text-[20.8px] leading-[1.2] text-brand-fg/80', wideDescription ? '' : 'max-w-[560px]')}>
+      <p className={classNames('mx-auto mt-5 text-[20.8px] leading-[1.2] text-[#5f5f5f]', wideDescription ? '' : 'max-w-[560px]')}>
         {description}
       </p>
     </div>
@@ -95,6 +95,7 @@ const ProductFeatureProofBand = ({
   headingClassName = 'text-white',
   wideDescription = false,
   minHeightClass = 'min-h-[571px]',
+  descriptionClassName,
 }: {
   title: string;
   description: string;
@@ -102,6 +103,7 @@ const ProductFeatureProofBand = ({
   headingClassName?: string;
   wideDescription?: boolean;
   minHeightClass?: string;
+  descriptionClassName?: string;
 }) => (
   <section className={classNames('relative overflow-hidden bg-brand-fg px-6 pb-20 pt-36 lg:px-10', minHeightClass)}>
     {image ? (
@@ -116,10 +118,10 @@ const ProductFeatureProofBand = ({
       </div>
     )}
     <div className={classNames('relative mx-auto text-center', wideDescription ? 'max-w-[1238px]' : 'max-w-[978px]')}>
-      <h2 className={classNames('mx-auto w-fit text-[30px] font-medium leading-[1.2] tracking-[-0.03em] lg:text-[32px]', headingClassName)}>
+      <h2 className={classNames('mx-auto w-fit text-[30px] font-medium leading-[1.2] lg:text-[32px]', headingClassName)}>
         {title}
       </h2>
-      <p className={classNames('mx-auto mt-5 text-[20.8px] leading-[1.2] text-[#d6caab]', wideDescription ? '' : 'max-w-[560px]')}>
+      <p className={classNames('mx-auto mt-5 text-[20.8px] leading-[1.2]', descriptionClassName ?? 'text-[#b3a88c]', wideDescription ? '' : 'max-w-[560px]')}>
         {description}
       </p>
     </div>
@@ -141,8 +143,8 @@ const ProductGuiIntroSection = ({
         <img src={image.src} alt={image.alt} className='w-full rounded-[8px]' />
       </div>
       <div className='text-brand-bg'>
-        <h2 className='text-[34px] font-medium leading-[1.08] tracking-[-0.03em] lg:text-[44px]'>{title}</h2>
-        <p className='mt-5 max-w-[500px] text-[20.8px] leading-[1.2] text-[#d6caab]'>{description}</p>
+        <h2 className='text-[34px] font-medium leading-[1.08] tracking-[-0.02em] lg:text-[44px]'>{title}</h2>
+        <p className='mt-5 max-w-[500px] text-[20.8px] leading-[1.2] text-[#b3a88c]'>{description}</p>
       </div>
     </div>
   </section>
@@ -151,7 +153,7 @@ const ProductGuiIntroSection = ({
 const ProductList = ({ items }: { items: readonly string[] }) => (
   <div className='mt-6 border-t border-brand-fg/15'>
     {items.map((item) => (
-      <div key={item} className='border-b border-brand-fg/15 py-4 text-[17px] leading-[1.45] text-brand-fg/80'>
+      <div key={item} className='border-b border-brand-fg/15 py-4 text-[17px] leading-[1.45] text-[#5f5f5f]'>
         {item}
       </div>
     ))}
@@ -183,14 +185,14 @@ export const ProductComparisonTable = ({
 }) => {
   const sectionClass = dark ? 'bg-brand-fg text-brand-bg' : 'bg-brand-bg text-brand-fg';
   const headingClass = dark ? 'text-brand-bg' : 'text-brand-fg';
-  const cellClass = dark ? 'text-brand-bg/90' : 'text-brand-fg/85';
+  const cellClass = dark ? 'font-sohne-buch text-[#b3a88c]' : 'font-sohne-buch text-[#5f5f5f]';
   const borderClass = dark ? 'border-brand-bg/20' : 'border-brand-fg/12';
   const crossClass = dark ? 'text-brand-bg/55' : 'text-brand-fg/35';
 
   return (
     <section className={classNames('px-6 py-20 lg:px-10', sectionClass)}>
       <div className='mx-auto max-w-[1260px]'>
-        <div className={classNames('mx-auto max-w-[760px] text-center text-[34px] font-medium leading-[1.08] tracking-[-0.03em] lg:text-[44px]', headingClass)}>
+        <div className={classNames('mx-auto max-w-[760px] text-center text-[34px] font-medium leading-[1.08] tracking-[-0.02em] lg:text-[44px]', headingClass)}>
           The only open, secure, and scalable agent platform built for real engineering work
         </div>
         <div className='mt-10 overflow-x-auto'>
@@ -241,7 +243,7 @@ export const ProductFaqSection = ({ faqs }: { faqs: readonly ProductFaqItem[] })
     <section className='bg-brand-bg px-6 py-20 lg:px-10'>
       <div className='mx-auto grid max-w-[1260px] gap-10 lg:grid-cols-[490px_minmax(0,1fr)] lg:gap-20'>
         <div>
-          <h2 className='text-[34px] font-medium leading-[1.08] tracking-[-0.03em] text-brand-fg lg:text-[44px]'>
+          <h2 className='text-[34px] font-medium leading-[1.08] tracking-[-0.02em] text-brand-fg lg:text-[44px]'>
             FAQ&apos;s
           </h2>
           <ProductPageActionLink href='/contact' label='Contact us' variant='outline' className='mt-8' />
@@ -253,7 +255,7 @@ export const ProductFaqSection = ({ faqs }: { faqs: readonly ProductFaqItem[] })
                 <label className='block pointer-events-none cursor-default'>{faq.question}</label>
                 <span className='mt-1 text-[22px] leading-none transition-transform group-open:rotate-45'>+</span>
               </summary>
-              <p className='max-w-[680px] pt-4 text-[16px] leading-[1.6] text-brand-fg/75'>{faq.answer}</p>
+              <p className='max-w-[680px] pt-4 font-sohne-buch text-[16px] leading-[22.4px] text-[#5f5f5f]'>{faq.answer}</p>
             </details>
           ))}
         </div>
@@ -275,10 +277,10 @@ export const ProductPageFooterCta = ({
     <section className='relative overflow-hidden bg-brand-accent px-6 py-20 text-center lg:px-10'>
       <AsciiBackdrop opacity='opacity-[0.18]' />
       <div className='relative mx-auto flex max-w-[812px] flex-col items-center gap-6'>
-        <div className='text-[34px] font-medium leading-[1.08] tracking-[-0.03em] text-brand-fg lg:text-[44px]'>
+        <div className='text-[34px] font-medium leading-[1.08] tracking-[-0.02em] text-brand-fg lg:text-[44px]'>
           {title}
         </div>
-        <p className='w-full text-[20.8px] leading-[1.2] text-brand-fg/80'>{description}</p>
+        <p className='w-full text-[20.8px] leading-[1.2] text-[#5f5f5f]'>{description}</p>
         <div className='flex flex-wrap items-center justify-center gap-4'>
           {actions.map((action) => (
             <ProductPageActionLink key={`${action.label}-${action.href}`} {...action} />
@@ -314,10 +316,10 @@ export const ProductFeaturePage = ({
         <AsciiBackdrop />
         <div className='relative mx-auto flex max-w-[860px] flex-col items-center text-center'>
           <ProductEyebrow label={page.eyebrow} />
-          <h1 className='mt-8 text-[40px] font-medium leading-[1.08] tracking-[-0.04em] text-brand-fg lg:text-[44px]'>
+          <h1 className='mt-8 text-[40px] font-medium leading-[1.08] tracking-[-0.03em] text-brand-fg lg:text-[44px]'>
             {page.heading}
           </h1>
-          <p className='mt-4 max-w-[620px] text-[20.8px] leading-[1.2] text-brand-fg/75'>{page.description}</p>
+          <p className='mt-4 max-w-[620px] text-[20.8px] leading-[1.2] text-[#5f5f5f]'>{page.description}</p>
           <div className='mt-8 flex flex-wrap items-center justify-center gap-4'>
             <ProductPageActionLink
               href={page.primaryCta.href}
@@ -345,6 +347,7 @@ export const ProductFeaturePage = ({
             description={page.proofDescription}
             image={page.accentImage}
             headingClassName='text-brand-fg'
+            descriptionClassName='text-[#5f5f5f]'
             minHeightClass={proofBandMinHeight}
           />
         </>
@@ -369,7 +372,7 @@ export const ProductFeaturePage = ({
       <section className='bg-brand-bg px-6 py-16 lg:px-10 lg:py-20'>
         <div className='mx-auto grid max-w-[1260px] gap-12 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:items-center'>
           <div>
-            <h2 className='text-[34px] font-medium leading-[1.08] tracking-[-0.03em] text-brand-fg lg:text-[44px]'>
+            <h2 className='text-[34px] font-medium leading-[1.08] tracking-[-0.02em] text-brand-fg lg:text-[44px]'>
               Key capabilities
             </h2>
             <ProductList items={page.capabilities} />
@@ -382,7 +385,7 @@ export const ProductFeaturePage = ({
         <div className='mx-auto grid max-w-[1260px] gap-12 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:items-center'>
           <ProductImageCard src={page.showcaseImages[1].src} alt={page.showcaseImages[1].alt} />
           <div>
-            <h2 className='text-[34px] font-medium leading-[1.08] tracking-[-0.03em] text-brand-fg lg:text-[44px]'>
+            <h2 className='text-[34px] font-medium leading-[1.08] tracking-[-0.02em] text-brand-fg lg:text-[44px]'>
               How teams use it
             </h2>
             <ProductList items={page.useCases} />

@@ -29,6 +29,9 @@ export default {
         poppins: ["Poppins", "sans-serif"],
         quincy: ["Quincy CF", "sans-serif"],
         inter: ["Inter", "sans-serif"],
+        'sohne': ['"Sohne Kraftig"', "Arial", "sans-serif"],
+        'sohne-buch': ['"Sohne Buch"', "Arial", "sans-serif"],
+        'mono': ['"GeistMono"', "ui-monospace", "monospace"],
       },
       screens: {
         'monitor': '1800px',

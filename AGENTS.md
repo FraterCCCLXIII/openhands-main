@@ -13,6 +13,24 @@ Located at: `scripts/validate-visual-styles.cjs`
 - Use: `node scripts/validate-visual-styles.cjs`
 - **Important**: The position validator doesn't catch CSS visual properties like backgrounds, font sizes, or colors. Always run BOTH validators when comparing to live site.
 
+### Webflow Element Matching (data-wf-el)
+- The parity script now supports matching `div` and other non-semantic elements between live Webflow and local sites via `data-wf-el` attributes.
+- On the live site, elements are identified by their first Webflow semantic class name (e.g. `capabilities_card_wrap`). On the local site, elements carry `data-wf-el="capabilities_card_wrap"` to create the same anchor.
+- **Proximity-based matching**: When a Webflow class appears multiple times on the live page (e.g. `card` ×4, `lovewall_cms_item` ×8), the script uses position + size similarity to match each local `data-wf-el` element to the closest live counterpart, rather than always picking the first DOM occurrence.
+- The script compares computed styles and layout between matched pairs, reporting mismatches in a new "Webflow element mismatches (data-wf-el)" section.
+- To add a new mapping: tag the local JSX element with `data-wf-el="webflow_class_name"`, then re-run the parity check.
+- Unmatched elements (live classes without a local `data-wf-el`, or vice versa) are reported separately so coverage can be expanded incrementally.
+- This was needed because the existing signature-based matching (`tag:normalizedText`) can't uniquely identify `div` elements (hundreds of visible divs per page with no text), and the two sites share zero semantic class names (Webflow uses names like `capabilities_card_wrap`, local uses pure Tailwind utilities).
+
+### Font Strategy
+- Live site uses **Sohne Kraftig** (proprietary, by Klim Type Foundry) for ALL text — body, headings, nav, cards, everything. Also loads Sohne Buch and General Sans.
+- Local site uses **Klim test fonts** (`test-soehne-*.woff2`) registered as `"Sohne Kraftig"` so the computed `fontFamily` matches the live site exactly. These test fonts are metrically identical to the retail fonts but include a watermark overlay.
+- Test font files live in `public/assets/fonts/test-soehne-*.woff2` and are **gitignored** (not committed). To set up locally, extract the needed weights from the Klim test font zip into that directory.
+- Weight mapping: 300 → Leicht, 400 → Buch, 500 → Kräftig, 600 → Halbfett.
+- The parity script's `FONT_EQUIVALENTS` map only has `geistmono → ui-monospace`. No Sohne equivalence is needed since the font name matches live exactly.
+- Quincy CF is no longer used for headings on the homepage (live uses sans-serif everywhere). Quincy CF still exists in the repo for potential use on other pages.
+- If test fonts are not installed, the fallback chain is `Inter, Arial, sans-serif`.
+
 ### Cross-route parity checklist
 Located at: `scripts/generate-site-parity-checklist.cjs`
 - Checks: visible text/signature inventory, heading order, style mismatches (including font family, cursor, text-decoration, letter-spacing), first-instance layout mismatches, container/section background style auditing, interactive element inventory and behavior comparison (cursor, transitions, pointer-events), per-element interactivity audit (cursor, pointerEvents, clickable role/semantics), hover effect comparison, unexpected extra elements on the test site, and screenshot pixel diffs for the first `PARITY_SCREENSHOT_PAGE_LIMIT` routes
@@ -170,3 +188,9 @@ npm run parity:checklist  # Crawl openhands.dev and compare against local site
 ## Legal Page Parity Notes
 - Live `/privacy` renders the body as a narrow legal-rich-text block with a centered 32px desktop title, real `h2`/`h3` hierarchy, and the shared `MarketingFooterCta` above the global footer.
 - Current live `/privacy` parity expects a duplicated `Changes to this Privacy Policy` subsection and a trailing zero-width paragraph (`‍`) in the legal copy; keep both if parity checks regress on that route.
+
+- Proximity scoring in `compareWebflowElements` should weight top/left position higher than width/height, since cross-site elements share approximate page positions more reliably than exact dimensions.
+- When live and test have equal counts of elements with the same `data-wf-el` key, index-based (DOM-order) matching eliminates cross-pairing in repeated grid/list items.
+- Live Webflow pages reuse class names across semantically different contexts (e.g. `eyebrow` for tab pills AND section labels, `lovewall_cms_item_top_name` for both author names AND titles). Tag each distinct usage separately and ensure counts match for index-based matching.
+- SVG elements don't reliably compute `textUnderlineOffset`; wrap SVGs in a `<div>` with the `data-wf-el` attribute to get correct computed style values.
+- Live sections use `display: block`, transparent backgrounds, and `padding: 80px 0`. The tan page color comes from the body/page-wrapper, not individual sections.

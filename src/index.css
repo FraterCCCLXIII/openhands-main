@@ -1,9 +1,32 @@
-/* Google Fonts - Inter - must be first */
+/* Google Fonts - Inter - fallback */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Sohne fonts — exact OTF files from the live Webflow CDN.
+   The live site uses a single Kräftig file for all weights. */
+@font-face {
+  font-family: "Sohne Kraftig";
+  src: url("/assets/fonts/Sohne-Kraftig.otf") format("opentype");
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Sohne Buch";
+  src: url("/assets/fonts/Sohne-Buch.otf") format("opentype");
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "GeistMono";
+  src: url("/assets/fonts/GeistMono-Regular.otf") format("opentype");
+  font-weight: 400;
+  font-display: swap;
+}
 
 @font-face {
   font-family: "Quincy CF";
@@ -54,7 +77,7 @@
 @layer base {
   html,
   body {
-    @apply font-inter overscroll-y-none bg-brand-bg text-brand-fg;
+    @apply font-sohne overscroll-y-none bg-brand-bg text-brand-fg;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -117,7 +140,7 @@
 @layer components {
   /* Button styles - exact Webflow computed values */
   .btn {
-    @apply inline-flex items-center justify-center font-medium cursor-pointer transition-all duration-300 relative;
+    @apply inline-flex items-center justify-center font-medium cursor-pointer transition-all duration-300 relative text-center;
     padding: var(--btn-padding-y) var(--btn-padding-x);
     border-radius: var(--btn-border-radius);
     font-size: 16px;
@@ -143,6 +166,31 @@
     @apply bg-brand-fg text-brand-bg;
   }
 
+  /* Button wrapper — matches live Webflow .capabilities_card_wrap div that
+     wraps CTA buttons with rounded corners and glassmorphic background.
+     On live Webflow, the wrapper carries the padding and border-radius,
+     while the inner <a> has no padding or radius. */
+  .btn-wrap {
+    display: inline-flex;
+    border-radius: 8px;
+    background-color: rgba(255, 255, 255, 0.34);
+    padding: var(--btn-padding-y) var(--btn-padding-x);
+  }
+  .btn-wrap-dark {
+    display: inline-flex;
+    border-radius: 8px;
+    background-color: rgba(241, 234, 224, 0.2);
+    padding: var(--btn-padding-y) var(--btn-padding-x);
+  }
+  /* Wrapper owns visual style (radius, bg); inner .btn keeps padding but
+     delegates radius to the wrapper so bounding boxes match live. */
+  .btn-wrap > .btn,
+  .btn-wrap-dark > .btn {
+    border-radius: 0;
+    background: transparent;
+    border-color: transparent;
+  }
+
   .btn-outline-light {
     @apply bg-transparent text-white border border-white/50 hover:bg-white/10;
   }
@@ -159,7 +207,7 @@
 
   /* Card styles */
   .card-dark {
-    @apply bg-card-bg text-card-text rounded-lg p-6;
+    @apply bg-card-bg text-card-text rounded-lg;
   }
 
   /* Feature list item */
@@ -174,7 +222,7 @@
 
   /* Stacked feature items for Why teams section - matches live site ~120px height */
   .feature-item-stacked {
-    @apply flex gap-5 py-6 px-5 border-t border-brand-border;
+    @apply flex gap-5 py-6 border-t border-brand-border;
     min-height: 120px;
   }
 
@@ -223,7 +271,7 @@
   /* Testimonial styles */
   /* Live site: 44px font, 48.4px line-height */
   .testimonial-quote {
-    @apply text-xl lg:text-[44px] lg:leading-[1.1] font-medium text-center;
+    @apply text-xl lg:text-[44px] lg:leading-[1.1] lg:tracking-[-0.02em] font-medium text-center;
   }
 }
 

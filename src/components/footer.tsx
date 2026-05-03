@@ -93,7 +93,7 @@ const FooterContent = ({
                     href={item.to}
                     target='_blank'
                     rel='noopener noreferrer'
-                    className='px-[5px] text-[14px] font-normal leading-[19.6px] transition-colors hover:text-[#8a5f45]'
+                    className='px-[5px] font-sohne-buch text-[14px] font-normal leading-[19.6px] transition-colors hover:text-[#8a5f45]'
                   >
                     {item.name}
                   </a>
@@ -101,7 +101,7 @@ const FooterContent = ({
                   <Link
                     key={item.name}
                     to={item.to}
-                    className='px-[5px] text-[14px] font-normal leading-[19.6px] transition-colors hover:text-[#8a5f45]'
+                    className='px-[5px] font-sohne-buch text-[14px] font-normal leading-[19.6px] transition-colors hover:text-[#8a5f45]'
                   >
                     {item.name}
                   </Link>
@@ -131,7 +131,7 @@ const FooterContent = ({
                 key={item.name}
                 to={item.to}
                 className={clsx(
-                  'text-base font-medium leading-[22.4px] transition-colors hover:text-[#8a5f45]',
+                  'whitespace-nowrap text-left text-base font-medium leading-[22.4px] transition-colors hover:text-[#8a5f45]',
                   isPathActive(pathname, item.to) && 'text-[#8a5f45]'
                 )}
               >
@@ -140,7 +140,7 @@ const FooterContent = ({
             ))}
 
             <div id='footer-resources' className='flex max-w-[220px] flex-wrap items-start gap-x-5 gap-y-2 text-left'>
-              <a href='#footer-resources' className='text-base font-medium leading-[22.4px] transition-colors hover:text-[#8a5f45]'>
+              <a href='#footer-resources' className='whitespace-nowrap text-base font-medium leading-[22.4px] transition-colors hover:text-[#8a5f45]'>
                 Resources
               </a>
               {FOOTER_RESOURCE_LINKS.map((item) =>
@@ -150,7 +150,7 @@ const FooterContent = ({
                     href={item.to}
                     target='_blank'
                     rel='noopener noreferrer'
-                    className='text-[14px] font-normal leading-[19.6px] transition-colors hover:text-[#8a5f45]'
+                    className='font-sohne-buch text-[14px] font-normal leading-[19.6px] transition-colors hover:text-[#8a5f45]'
                   >
                     {item.name}
                   </a>
@@ -158,7 +158,7 @@ const FooterContent = ({
                   <Link
                     key={item.name}
                     to={item.to}
-                    className='text-[14px] font-normal leading-[19.6px] transition-colors hover:text-[#8a5f45]'
+                    className='font-sohne-buch text-[14px] font-normal leading-[19.6px] transition-colors hover:text-[#8a5f45]'
                   >
                     {item.name}
                   </Link>
@@ -169,7 +169,7 @@ const FooterContent = ({
             <Link
               to='/contact'
               className={clsx(
-                'text-base font-medium leading-[22.4px] transition-colors hover:text-[#8a5f45]',
+                'whitespace-nowrap text-left text-base font-medium leading-[22.4px] transition-colors hover:text-[#8a5f45]',
                 isPathActive(pathname, '/contact') && 'text-[#8a5f45]'
               )}
             >
@@ -180,7 +180,7 @@ const FooterContent = ({
       </div>
 
       <div className='mb-2 text-[14px] font-normal leading-[16.9px]'>© {new Date().getFullYear()} OpenHands - All rights reserved</div>
-      <Link to='/privacy' className='text-[14px] font-normal leading-[16.9px] transition-colors hover:text-[#8a5f45]'>
+      <Link to='/privacy' className='font-mono text-[14px] font-normal leading-[16.9px] transition-colors hover:text-[#8a5f45]'>
         Privacy Policy
       </Link>
 

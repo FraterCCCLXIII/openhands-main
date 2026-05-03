@@ -330,57 +330,72 @@ const Home = () => {
   };
 
   return (
-    <main data-testid='home-content'>
-      <section className='relative overflow-hidden bg-brand-bg px-6 pb-10 pt-6 lg:px-10 lg:pb-14 lg:pt-4'>
-        <div className='absolute inset-0 opacity-[0.08] pointer-events-none'>
-          <img
-            src='/assets/webflow/backgrounds/6908d170831c19b2b6976323_ascii-art_(16)_1.svg'
-            alt=''
-            className='h-full w-full object-cover'
-          />
-        </div>
-
-        <div className='relative z-10 mx-auto max-w-[1238px]'>
-          <div className='mx-auto mb-8 flex max-w-[688px] flex-col items-center justify-center gap-3 bg-brand-accent px-6 py-4 text-center sm:flex-row sm:gap-5'>
-            <p className='text-sm font-normal leading-[1.6] text-brand-fg'>Modernize legacy systems before your expertise disappears</p>
-            <div className='hidden h-8 w-px bg-brand-fg/20 sm:block' aria-hidden='true' />
-            <Link to='/whitepapers/modernize-legacy-systems-with-ai-agents' className='text-base font-normal leading-[22.4px] hover:text-[#8a5f45]'>
-              Read the whitepaper
-            </Link>
+    <main data-testid='home-content' data-wf-el='page-main' style={{ display: 'flex', flexDirection: 'column', backgroundColor: 'rgba(0, 0, 0, 0)' }}>
+      {/* SECTION 0: section-hero — contains hero+carousel+logos+SDK (matches live 1761px mega-section) */}
+      <section data-wf-el='section-hero' className='relative overflow-hidden' style={{ display: 'block', backgroundColor: 'rgba(0, 0, 0, 0)', paddingTop: '0px', paddingBottom: '0px', paddingLeft: '0px', paddingRight: '0px' }}>
+        <div data-wf-el='hero' className='relative' style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', justifyContent: 'flex-start', alignItems: 'center' }}>
+          <div data-wf-el='asci-wrap' className='absolute inset-0 pointer-events-none' style={{ backgroundColor: 'rgba(0, 0, 0, 0)' }}>
+            <img
+              src='/assets/webflow/backgrounds/6908d170831c19b2b6976323_ascii-art_(16)_1.svg'
+              alt=''
+              className='h-full w-full object-cover'
+            />
           </div>
 
-          <div className='mx-auto max-w-[640px] text-center'>
-            <div className='mb-4 font-quincy text-[44px] font-medium leading-[0.96] tracking-[-0.03em] text-brand-fg md:text-[56px]'>
-              Build with coding agents, your way.
-            </div>
-            <div className='mx-auto mb-7 max-w-[520px] text-lg font-medium leading-[1.45] text-brand-muted lg:text-[20.8px] lg:leading-[1.2]'>
-              Open-source, customizable. Run locally or at scale.
-            </div>
-            <div className='mb-4 flex flex-wrap items-center justify-center gap-4'>
-              <a href='https://app.all-hands.dev/' target='_blank' rel='noopener noreferrer' className='btn btn-primary'>
-                Try it live
-              </a>
-              <a href='https://docs.openhands.dev/sdk' target='_blank' rel='noopener noreferrer' className='btn btn-outline'>
-                Build with SDK
-              </a>
-            </div>
-            <div className='text-base text-brand-fg'>
-              Need a self-hosted or air-gapped deployment?{' '}
-              <Link to='/contact' className='font-normal text-brand-fg underline decoration-brand-fg/40 underline-offset-2 hover:decoration-brand-fg'>Talk to us</Link>
-            </div>
-          </div>
-        </div>
-      </section>
+          <div data-wf-el='container' className='relative z-10 mx-auto w-full max-w-[1238px]'>
+            <div data-wf-el='hero-content' className='mx-auto max-w-[1238px]' style={{ textAlign: 'center', paddingTop: '56px', paddingBottom: '72px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: '32px' }}>
+              <div data-wf-el='banner-wrap' className='mx-auto max-w-[688px] text-center' style={{ backgroundColor: 'rgba(0, 0, 0, 0)', borderRadius: '0px', paddingTop: '12.8px', paddingBottom: '12.8px', paddingLeft: '32px', paddingRight: '32px' }}>
+                <div>
+                  <div className='flex flex-col items-center justify-center sm:flex-row'>
+                    <div className='sm:flex-1' style={{ padding: '0 12px' }}>
+                      <p className='text-sm font-normal leading-[1.6] text-brand-fg'>Modernize legacy systems before your expertise disappears</p>
+                    </div>
+                    <div className='hidden flex-shrink-0 sm:block' style={{ padding: '0 12px' }}>
+                      <div className='h-8 w-px bg-brand-fg/20' aria-hidden='true' />
+                    </div>
+                    <div className='flex-shrink-0' style={{ padding: '0 12px' }}>
+                      <Link to='/whitepapers/modernize-legacy-systems-with-ai-agents' className='font-sohne-buch text-base font-normal leading-[22.4px] hover:text-[#8a5f45]'>
+                        Read the whitepaper
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-      <section className='-mt-[82px] bg-brand-bg px-6 pb-6 lg:px-10 lg:pb-10'>
-        <div className='mx-auto max-w-[1238px]'>
-          <div className='mb-5 flex items-end justify-between gap-4 lg:translate-y-[68px]'>
+              <div data-wf-el='hero-heading_wrap' className='mx-auto flex max-w-[640px] flex-col items-center gap-2 text-center' style={{ justifyContent: 'center' }}>
+                <h1 className='mb-4 text-[44px] font-medium leading-[0.96] tracking-[-0.03em] text-brand-fg md:text-[56px]'>
+                  Build with coding agents, your way.
+                </h1>
+                <div className='mx-auto mb-7 max-w-[520px] text-lg font-medium leading-[1.45] text-brand-muted lg:text-[20.8px] lg:leading-[1.2]'>
+                  Open-source, customizable. Run locally or at scale.
+                </div>
+                <div data-wf-el='hero_btn_wrap' className='mb-4 flex flex-wrap items-center justify-center gap-4'>
+                  <span className='btn-wrap'>
+                    <a href='https://app.all-hands.dev/' target='_blank' rel='noopener noreferrer' className='btn btn-primary'>
+                      Try it live
+                    </a>
+                  </span>
+                  <span className='btn-wrap'>
+                    <a href='https://docs.openhands.dev/sdk' target='_blank' rel='noopener noreferrer' className='btn btn-outline'>
+                      Build with SDK
+                    </a>
+                  </span>
+                </div>
+                <div data-wf-el='hero_sublink_text' className='text-base text-brand-fg'>
+                  Need a self-hosted or air-gapped deployment?{' '}
+                  <Link to='/contact' className='font-normal text-brand-fg underline decoration-brand-fg/40 underline-offset-2 hover:decoration-brand-fg'>Talk to us</Link>
+                </div>
+              </div>
+            </div>
+
+            {/* Workflow carousel (inside hero section) */}
+            <div data-wf-el='hero-splide_top' className='mb-5 flex justify-between gap-4' style={{ alignItems: 'center' }}>
             <div className='max-w-[384px]'>
-              <h2 className='text-[32px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>
+              <h2 data-wf-el='hero-splide_heading' className='text-[32px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>
                 Start with a proven workflow
               </h2>
             </div>
-            <div className='hidden items-center gap-3 md:flex'>
+            <div data-wf-el='hero-splide_buttons' className='hidden items-center gap-4 md:flex' style={{ justifyContent: 'flex-start' }}>
               <button
                 type='button'
                 onClick={() => setWorkflowOffset((current) => (current === 0 ? WORKFLOWS.length - 1 : current - 1))}
@@ -406,12 +421,15 @@ const Home = () => {
             {visibleWorkflows.map((workflow) => (
               <article
                 key={workflow.title}
-                className='flex min-w-[300px] flex-shrink-0 cursor-grab flex-col border border-brand-fg/15 bg-white/70 p-5 shadow-[0_18px_60px_rgba(34,21,13,0.05)] lg:w-[352px]'
-                style={{ borderRadius: 'var(--btn-border-radius)', scrollSnapAlign: 'start' }}
+                data-wf-el='capabilities_card_wrap'
+                className='flex min-w-[300px] flex-shrink-0 cursor-grab flex-col gap-4 rounded-2xl border border-[rgba(30,21,15,0.2)] bg-[#f9f6e9] p-6 lg:w-[352px]'
+                style={{ scrollSnapAlign: 'start', justifyContent: 'flex-start', alignItems: 'flex-start' }}
               >
-                <img src={workflow.iconSrc} alt='' className='mb-4 h-8 w-8 object-contain' />
-                <h3 className='mb-2 text-[24px] font-medium leading-[1.2] text-brand-fg'>{workflow.title}</h3>
-                <p className='mb-5 font-mono text-sm leading-[1.5] text-brand-fg'>{workflow.description}</p>
+                <img data-wf-el='capabilities_card_icon' src={workflow.iconSrc} alt='' className='mb-4 h-8 w-8 object-contain' />
+                <div data-wf-el='capabilities_card_content' className='flex flex-col gap-1'>
+                  <h3 data-wf-el='capabilities_card_heading' className='text-[24px] font-medium leading-[1.2] text-brand-fg'>{workflow.title}</h3>
+                  <p data-wf-el='capabilities_card_paragraph' className='mb-5 font-mono text-sm leading-[1.5] text-brand-fg'>{workflow.description}</p>
+                </div>
                 {workflow.isLink ? (
                   <a
                     href={workflow.href}
@@ -437,65 +455,89 @@ const Home = () => {
               </article>
             ))}
           </div>
-        </div>
-      </section>
-
-      <section className='bg-brand-bg px-6 pb-4 lg:px-10 lg:pb-6'>
-        <div className='mx-auto max-w-[1238px]'>
-          <div className='mb-5 text-center text-base font-medium text-brand-fg'>Trusted by engineers at</div>
-          <div className='logo-grid'>
-            {CLIENT_LOGOS.map((logo) => (
-              <img key={logo.name} src={logo.url} alt='' />
-            ))}
           </div>
-        </div>
-      </section>
 
-      <section className='bg-brand-bg px-6 pb-6 pt-4 lg:px-10 lg:pb-8 lg:pt-0'>
-        <div className='mx-auto grid max-w-[1238px] gap-8 lg:-translate-y-[58px] lg:grid-cols-[280px_minmax(0,1fr)] lg:items-start'>
-          <div>
-            <div className='mb-3 flex flex-wrap gap-2' role='tablist'>
+          {/* Logo grid (inside hero section) */}
+          <div data-wf-el='logo-grid-component_wrap' className='w-full' style={{ paddingTop: '56px' }}>
+            <div data-wf-el='logo-grid-component_heading_container' className='mx-auto max-w-[1238px]' style={{ textAlign: 'center' }}>
+              <div data-wf-el='logo-grid-component_heading_heading' className='mb-5 text-center text-[32px] font-medium leading-[1.2] text-brand-fg'>Trusted by engineers at</div>
+            </div>
+            <div data-wf-el='logo-grid-component_container' className='mx-auto max-w-[1238px]'>
+              <div data-wf-el='logo-grid-component_cms_wrap' style={{ paddingTop: '24px' }}>
+                <div data-wf-el='logo-grid-component_cms_list' className='logo-grid'>
+                  {CLIENT_LOGOS.map((logo) => (
+                    <img key={logo.name} src={logo.url} alt='' />
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* SDK collection (inside hero section) */}
+          <div data-wf-el='standard-collection' className='w-full' style={{ display: 'block' }}>
+          <div data-wf-el='card' style={{ borderRadius: '8px', display: 'block', flexDirection: 'column', justifyContent: 'flex-start' }}>
+            <div className='mb-3 flex gap-2 font-mono' role='tablist' style={{ lineHeight: '16.896px' }}>
               {PRODUCT_SURFACES.map((surface, index) => (
-                <button
+                <div
                   key={surface.title}
-                  type='button'
+                  data-wf-el='eyebrow'
                   role='tab'
+                  tabIndex={0}
                   aria-selected={index === activeSurfaceIndex}
                   onClick={() => setActiveSurfaceIndex(index)}
-                  className={`cursor-pointer rounded-full px-3 py-1 text-sm font-medium transition-colors ${
-                    index === activeSurfaceIndex
-                      ? 'bg-brand-fg text-brand-bg'
-                      : 'bg-brand-fg/10 text-brand-fg hover:bg-brand-fg/20'
-                  }`}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveSurfaceIndex(index); } }}
+                  className='inline-block text-sm font-medium transition-colors'
+                  style={{
+                    display: 'block',
+                    cursor: 'pointer',
+                    borderRadius: '20px',
+                    paddingLeft: '9.6px',
+                    paddingRight: '9.6px',
+                    paddingTop: '4px',
+                    paddingBottom: '4px',
+                    lineHeight: '16.896px',
+                    textAlign: 'start',
+                    color: 'rgb(249, 240, 217)',
+                    backgroundColor: 'rgb(34, 21, 13)',
+                    borderColor: 'rgb(0, 0, 0)',
+                  }}
                 >
                   {surface.title}
-                </button>
+                </div>
               ))}
             </div>
-            <div className='max-w-[270px]'>
+            <div data-wf-el='standard-wrap' className='max-w-[270px]' style={{ borderRadius: '0px' }}>
               <h2 className='mb-3 text-[44px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>{activeSurface.title}</h2>
-              <p className='mb-5 max-w-[270px] text-lg font-medium leading-[1.5] text-brand-muted lg:text-[20.8px] lg:leading-[1.2]'>{activeSurface.description}</p>
-              <a href={activeSurface.href} target='_blank' rel='noopener noreferrer' className='btn btn-outline border-none inline-flex'>
-                {activeSurface.cta}
-              </a>
+              <p data-wf-el='paragraph-lg' className='mb-5 max-w-[270px] text-lg font-medium leading-[1.5] text-brand-muted lg:text-[20.8px] lg:leading-[1.2]'>{activeSurface.description}</p>
+              <span className='btn-wrap'>
+                <a href={activeSurface.href} target='_blank' rel='noopener noreferrer' className='btn btn-outline border-none'>
+                  {activeSurface.cta}
+                </a>
+              </span>
             </div>
           </div>
-          <div className='overflow-hidden bg-[#efe6d1] lg:min-h-[1320px]' style={{ borderRadius: 'var(--btn-border-radius)' }}>
-            <img src={activeSurface.image} alt='' className='h-full min-h-[620px] w-full object-cover object-top' />
+          <div data-wf-el='hero-media' className='overflow-hidden rounded-lg bg-[#efe6d1] lg:min-h-[1320px]'>
+            <div data-wf-el='hero-media-bg' style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'stretch', backgroundColor: 'rgb(34, 21, 13)', borderRadius: '24px', paddingTop: '47.1875px', paddingBottom: '47.1875px' }} className='h-full w-full'>
+              <img src={activeSurface.image} alt='' className='h-full min-h-[620px] w-full object-cover object-top' />
+            </div>
+          </div>
           </div>
         </div>
       </section>
 
-      <section className='bg-brand-bg px-6 py-16 lg:px-10 lg:py-24'>
-        <div className='mx-auto grid max-w-[1278px] gap-10 lg:grid-cols-[599px_639px]'>
+      {/* SECTION 1: Why teams choose OpenHands (py:80, transparent) */}
+      <section style={{ display: 'block', backgroundColor: 'rgba(0, 0, 0, 0)', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px', position: 'relative' }}>
+        <div className='mx-auto grid max-w-[1278px] gap-10 lg:grid-cols-[598px_640px]'>
           <div className='flex flex-col justify-between gap-8'>
-            <h3 className='max-w-[360px] text-[44px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>Why teams choose OpenHands</h3>
-            <a href='https://app.all-hands.dev/' target='_blank' rel='noopener noreferrer' className='btn btn-primary w-fit'>
-              Try it live
-            </a>
+            <h3 className='max-w-[386px] text-[44px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>Why teams choose OpenHands</h3>
+            <span className='btn-wrap w-fit'>
+              <a href='https://app.all-hands.dev/' target='_blank' rel='noopener noreferrer' className='btn btn-primary'>
+                Try it live
+              </a>
+            </span>
           </div>
 
-          <div className='rounded-none border border-brand-fg/15 bg-white/70 px-5'>
+          <div className='rounded-none border border-brand-fg/15 bg-white/70 px-5 py-0'>
             {FEATURES.map((feature) => (
               <div key={feature.title} className='feature-item-stacked'>
                 <img src={feature.icon} alt='' className='mt-1 h-8 w-8 flex-shrink-0' />
@@ -509,22 +551,24 @@ const Home = () => {
         </div>
       </section>
 
-      <section className='bg-brand-bg px-6 py-16 lg:px-10 lg:py-24'>
-        <div className='mx-auto max-w-[1220px]'>
-          <h3 className='mb-[217px] text-[44px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>
+      {/* SECTION 2: Automate the Outer Loop (py:80, transparent) */}
+      <section style={{ display: 'block', backgroundColor: 'rgba(0, 0, 0, 0)', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px', position: 'relative' }}>
+        <div data-wf-el='container' className='mx-auto max-w-[1238px]'>
+          <h3 className='mb-[217px] max-w-[1216px] text-[44px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>
             Automate the Outer Loop with AI
           </h3>
           <div className='space-y-6'>
             {USE_CASE_COLUMNS.map((column, index) => (
               <div
                 key={column.label}
-                className='overflow-hidden rounded-none border border-brand-fg/15 bg-[#efe6d1]'
+               
+                className='overflow-hidden rounded-[19.2px] border border-brand-fg/15'
                 style={index > 0 ? { marginTop: '233px' } : undefined}
               >
                 <div className='border-b border-brand-fg/15 px-6 py-4 text-sm font-normal uppercase tracking-normal text-brand-fg'>
                   {column.label}
                 </div>
-                <div className='grid gap-6 p-6 lg:grid-cols-3'>
+                <div className='grid gap-6 p-6 lg:grid-cols-3 lg:gap-x-10 lg:px-[31px] lg:pt-[50px]'>
                   {column.cards.map((card) => (
                     <article key={card.title} className='rounded-none bg-transparent'>
                       <div className='mb-4 flex h-14 w-14 items-center justify-center rounded-none bg-white'>
@@ -541,137 +585,158 @@ const Home = () => {
         </div>
       </section>
 
-      <section className='relative h-[800px] overflow-hidden bg-brand-accent text-brand-fg'>
-        <img
-          src='/assets/webflow/backgrounds/690b397ae76441160bed52b6_asci-art-hole.png'
-          alt='ASCII art depicting a large black hole with light and particles swirling around it.'
-          className='absolute inset-0 h-full w-full object-cover'
-        />
-        <div className='relative z-10 mx-auto flex h-full max-w-[1238px] items-end px-6 pb-24 lg:px-10'>
-          <div className='ml-auto max-w-[760px] bg-brand-accent/90 p-8'>
-            <div className='mb-6 text-[44px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>
-              {TESTIMONIALS[activeTestimonial].quote}
-            </div>
-            <div className='mb-8 flex items-center gap-4'>
-              <img src={TESTIMONIALS[activeTestimonial].photo} alt='' className='h-12 w-12 object-cover' style={{ borderRadius: '100%' }} />
-              <div>
-                <div className='text-base font-medium text-brand-fg'>{TESTIMONIALS[activeTestimonial].name}</div>
-                <div className='text-sm font-medium text-brand-fg'>{TESTIMONIALS[activeTestimonial].title}</div>
+      {/* SECTION 3: Testimonials / black hole (p:0, h:800, transparent, position:relative) */}
+      <section style={{ display: 'block', backgroundColor: 'rgba(0, 0, 0, 0)', paddingTop: '0px', paddingBottom: '0px', paddingLeft: '0px', paddingRight: '0px', position: 'relative', height: '800px', overflow: 'visible' }}>
+        <div data-wf-el='asci-wrap' className='absolute inset-0' style={{ backgroundColor: 'rgb(255, 255, 139)' }}>
+          <img
+            data-wf-el='asci-media'
+            src='/assets/webflow/backgrounds/690b397ae76441160bed52b6_asci-art-hole.png'
+            alt='ASCII art depicting a large black hole with light and particles swirling around it.'
+            className='h-full w-full object-cover'
+            style={{ display: 'inline-block' }}
+          />
+        </div>
+        <div data-wf-el='hero-track' className='relative z-10 mx-auto flex h-full max-w-[1238px]' style={{ paddingBottom: '0px', paddingLeft: '0px', paddingRight: '0px', justifyContent: 'center', alignItems: 'center', gap: '10%' }}>
+          {TESTIMONIALS.map((t, i) => (
+            <div key={t.name} data-wf-el='card-body' className='max-w-[760px] p-8' style={{ backgroundColor: 'rgba(0, 0, 0, 0)', display: 'block', color: 'rgb(249, 240, 217)', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', position: i === activeTestimonial ? 'static' : 'absolute', opacity: i === activeTestimonial ? 1 : 0, pointerEvents: i === activeTestimonial ? 'auto' : 'none', left: i === activeTestimonial ? undefined : '-9999px' }}>
+              <h2 className='mb-6 text-[44px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>
+                {t.quote}
+              </h2>
+              <div className='mb-8 flex items-center gap-4'>
+                <div data-wf-el='quote-author-media' style={{ backgroundColor: 'rgb(34, 21, 13)', borderRadius: '50%', color: 'rgb(34, 21, 13)' }}><img src={t.photo} alt='' className='h-12 w-12 object-cover' style={{ borderRadius: '100%' }} /></div>
+                <div data-wf-el='paragraph-xl' style={{ fontSize: '24px', lineHeight: '33.6px', color: 'rgb(34, 21, 13)' }}>
+                  <div className='text-base font-medium text-brand-fg'>{t.name}</div>
+                  <div className='text-sm font-medium text-brand-fg'>{t.title}</div>
+                </div>
+                <img src={t.logo} alt='' className='ml-auto h-8 max-w-[110px] object-contain' />
               </div>
-              <img src={TESTIMONIALS[activeTestimonial].logo} alt='' className='ml-auto h-8 max-w-[110px] object-contain' />
-            </div>
-            <div className='flex items-center justify-between'>
-              <div className='text-base font-medium text-brand-fg'>
-                {activeTestimonial + 1}/{TESTIMONIALS.length}
+              <div data-wf-el='slide-controls' style={{ display: 'block', color: 'rgb(34, 21, 13)' }}>
+                <div className='text-base font-medium text-brand-fg'>
+                  {i + 1}/{TESTIMONIALS.length}
+                </div>
+                <div className='flex gap-3'>
+                  <button
+                    type='button'
+                    onClick={() => setActiveTestimonial((current) => (current === 0 ? TESTIMONIALS.length - 1 : current - 1))}
+                    className='flex h-11 w-11 items-center justify-center rounded-full border border-brand-fg/20 text-brand-fg transition-colors hover:bg-brand-fg/5'
+                  >
+                    <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' className='h-5 w-5 fill-current' aria-hidden='true'>
+                      <path d='M30 16c0 .265-.105.52-.293.707A.997.997 0 0 1 29 17H5.414l6.294 6.292A1 1 0 0 1 11 25a1 1 0 0 1-.708-.292l-8-8A.997.997 0 0 1 2 16c0-.132.026-.262.075-.383.05-.12.124-.23.217-.325l8-8A1 1 0 0 1 12 8c0 .266-.105.52-.292.708L5.414 15H29c.265 0 .52.105.707.293.188.187.293.441.293.707Z' />
+                    </svg>
+                  </button>
+                  <button
+                    type='button'
+                    onClick={() => setActiveTestimonial((current) => (current === TESTIMONIALS.length - 1 ? 0 : current + 1))}
+                    className='flex h-11 w-11 items-center justify-center rounded-full border border-brand-fg/20 text-brand-fg transition-colors hover:bg-brand-fg/5'
+                  >
+                    <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' className='h-5 w-5 fill-current' aria-hidden='true'>
+                      <path d='M2 16c0-.265.105-.52.293-.707A.997.997 0 0 1 3 15h23.586l-6.294-6.292A1 1 0 0 1 20 8a1 1 0 0 1 .708-.292l8 8c.093.094.167.204.217.325.049.12.075.25.075.383 0 .132-.026.262-.075.383-.05.12-.124.23-.217.325l-8 8A1 1 0 0 1 20 24c0-.266.105-.52.292-.708L26.586 17H3a.997.997 0 0 1-.707-.293A.997.997 0 0 1 2 16Z' />
+                    </svg>
+                  </button>
+                </div>
               </div>
-              <div className='flex gap-3'>
-                <button
-                  type='button'
-                  onClick={() => setActiveTestimonial((current) => (current === 0 ? TESTIMONIALS.length - 1 : current - 1))}
-                  className='flex h-11 w-11 items-center justify-center rounded-full border border-brand-fg/20 text-brand-fg transition-colors hover:bg-brand-fg/5'
-                >
-                  <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' className='h-5 w-5 fill-current' aria-hidden='true'>
-                    <path d='M30 16c0 .265-.105.52-.293.707A.997.997 0 0 1 29 17H5.414l6.294 6.292A1 1 0 0 1 11 25a1 1 0 0 1-.708-.292l-8-8A.997.997 0 0 1 2 16c0-.132.026-.262.075-.383.05-.12.124-.23.217-.325l8-8A1 1 0 0 1 12 8c0 .266-.105.52-.292.708L5.414 15H29c.265 0 .52.105.707.293.188.187.293.441.293.707Z' />
-                  </svg>
-                </button>
-                <button
-                  type='button'
-                  onClick={() => setActiveTestimonial((current) => (current === TESTIMONIALS.length - 1 ? 0 : current + 1))}
-                  className='flex h-11 w-11 items-center justify-center rounded-full border border-brand-fg/20 text-brand-fg transition-colors hover:bg-brand-fg/5'
-                >
-                  <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' className='h-5 w-5 fill-current' aria-hidden='true'>
-                    <path d='M2 16c0-.265.105-.52.293-.707A.997.997 0 0 1 3 15h23.586l-6.294-6.292A1 1 0 0 1 20 8a1 1 0 0 1 .708-.292l8 8c.093.094.167.204.217.325.049.12.075.25.075.383 0 .132-.026.262-.075.383-.05.12-.124.23-.217.325l-8 8A1 1 0 0 1 20 24c0-.266.105-.52.292-.708L26.586 17H3a.997.997 0 0 1-.707-.293A.997.997 0 0 1 2 16Z' />
-                  </svg>
-                </button>
-              </div>
             </div>
-          </div>
+          ))}
         </div>
       </section>
 
-      <section className='bg-brand-bg px-6 pb-20 pt-20 lg:px-10 lg:pb-[191px] lg:pt-28'>
-        <div className='mx-auto max-w-[1220px] space-y-6'>
+      {/* SECTION 4: Dark cards continued (py:80, transparent) */}
+      <section style={{ display: 'block', backgroundColor: 'rgba(0, 0, 0, 0)', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px', position: 'relative' }}>
+        <div data-wf-el='container' className='mx-auto max-w-[1238px] space-y-6'>
           <div className='grid gap-6 lg:grid-cols-2'>
-            <article className='card-dark min-h-[520px] rounded-none p-8 lg:min-h-[595px]'>
-              <p className='mb-3 max-w-[350px] text-lg font-medium text-brand-accent lg:text-[20.8px] lg:leading-[1.2]'>Community that compounds velocity</p>
-              <p className='mb-8 max-w-[350px] text-lg leading-[1.55] text-[#b3a88c] lg:text-[20.8px] lg:leading-[1.2]'>
-                With 65K+ GitHub stars and a thriving open-source ecosystem, OpenHands evolves through collective innovation - every contribution makes the platform faster, safer, and smarter.
-              </p>
-              <a href='https://github.com/OpenHands/OpenHands' target='_blank' rel='noopener noreferrer' className='btn mb-12 inline-flex border-none bg-transparent text-center text-brand-bg hover:bg-brand-bg/10'>
-                Explore the repo
-              </a>
-              <div className='mt-auto flex items-end gap-3'>
-                <span className='text-7xl font-medium leading-none text-brand-accent'>{formatThousands(statistics.stargazers)}</span>
-                <span className='mb-2 text-4xl font-medium text-white'>+</span>
-              </div>
-              <div className='mt-3 flex items-center gap-2 text-base text-[#b3a88c]'>
-                <span>GitHub stars</span>
-                <span aria-hidden='true'>⭐</span>
+            <article className='card-dark min-h-[520px] lg:min-h-[595px]'>
+              <div className='flex h-full flex-col p-6'>
+                <p className='mb-3 max-w-[350px] text-lg font-medium text-brand-accent lg:text-[20.8px] lg:leading-[1.2]'>Community that compounds velocity</p>
+                <p className='mb-8 max-w-[350px] text-lg leading-[1.55] text-[#b3a88c] lg:text-[20.8px] lg:leading-[1.2]'>
+                  With 65K+ GitHub stars and a thriving open-source ecosystem, OpenHands evolves through collective innovation - every contribution makes the platform faster, safer, and smarter.
+                </p>
+                <span className='btn-wrap-dark mb-12'>
+                  <a href='https://github.com/OpenHands/OpenHands' target='_blank' rel='noopener noreferrer' className='btn border-none bg-transparent text-center text-brand-bg hover:bg-brand-bg/10'>
+                    Explore the repo
+                  </a>
+                </span>
+                <div className='mt-auto flex items-end gap-3'>
+                  <span className='text-7xl font-medium leading-none text-brand-accent'>{formatThousands(statistics.stargazers)}</span>
+                  <span className='mb-2 text-4xl font-medium text-white'>+</span>
+                </div>
+                <div className='mt-3 flex items-center gap-2 text-base text-[#b3a88c]'>
+                  <span>GitHub stars</span>
+                  <span aria-hidden='true'>⭐</span>
+                </div>
               </div>
             </article>
 
-            <article className='card-dark min-h-[520px] rounded-none p-8 lg:min-h-[595px]'>
-              <p className='mb-3 max-w-[330px] text-lg font-medium text-brand-accent lg:text-[20.8px] lg:leading-[1.2]'>Plays well with your stack</p>
-              <p className='mb-10 max-w-[330px] text-lg leading-[1.55] text-[#b3a88c] lg:text-[20.8px] lg:leading-[1.2]'>
-                Native integrations with GitHub, GitLab, CI/CD, Slack, and ticketing tools. OpenHands fits seamlessly into enterprise governance systems and your preferred model providers.
-              </p>
-              <div className='grid grid-cols-2 gap-5 sm:grid-cols-4'>
-                {[
-                  ['/assets/webflow/icons/6908c8dc26f3de5a93212b4c_loop-1--multimedia-multi-button-repeat-media-loop-infinity-controls.svg', 'CI/CD'],
-                  ['/assets/webflow/icons/6908c8dd7162d7d09526a0fd_Slack_Technologies_Logo2.svg', 'Slack'],
-                  ['/assets/webflow/icons/6908c8dc24685e3f5e172012_github-mark4.svg', 'GitHub'],
-                  ['/assets/webflow/icons/6908c8dde7fa5732b9ed5cb4_Vector.svg', 'GitLab'],
-                ].map(([icon, label]) => (
-                  <div key={label} className='rounded-none border border-white/10 bg-white/5 p-4 text-center'>
-                    <img src={icon} alt='' className='mx-auto mb-3 h-8 w-auto' />
-                    <div className='text-sm text-brand-bg'>{label}</div>
-                  </div>
-                ))}
+            <article className='card-dark min-h-[520px] lg:min-h-[595px]'>
+              <div className='flex h-full flex-col p-6'>
+                <p className='mb-3 max-w-[330px] text-lg font-medium text-brand-accent lg:text-[20.8px] lg:leading-[1.2]'>Plays well with your stack</p>
+                <p className='mb-10 max-w-[330px] text-lg leading-[1.55] text-[#b3a88c] lg:text-[20.8px] lg:leading-[1.2]'>
+                  Native integrations with GitHub, GitLab, CI/CD, Slack, and ticketing tools. OpenHands fits seamlessly into enterprise governance systems and your preferred model providers.
+                </p>
+                <div className='grid grid-cols-2 gap-5 sm:grid-cols-4'>
+                  {[
+                    ['/assets/webflow/icons/6908c8dc26f3de5a93212b4c_loop-1--multimedia-multi-button-repeat-media-loop-infinity-controls.svg', 'CI/CD'],
+                    ['/assets/webflow/icons/6908c8dd7162d7d09526a0fd_Slack_Technologies_Logo2.svg', 'Slack'],
+                    ['/assets/webflow/icons/6908c8dc24685e3f5e172012_github-mark4.svg', 'GitHub'],
+                    ['/assets/webflow/icons/6908c8dde7fa5732b9ed5cb4_Vector.svg', 'GitLab'],
+                  ].map(([icon, label]) => (
+                    <div key={label} className='rounded-none border border-white/10 bg-white/5 p-4 text-center'>
+                      <img src={icon} alt='' className='mx-auto mb-3 h-8 w-auto' />
+                      <div className='text-sm text-brand-bg'>{label}</div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </article>
           </div>
 
-          <article className='card-dark rounded-none p-8'>
-            <div className='grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-center'>
-              <div>
-                <p className='mb-3 max-w-[369px] text-lg font-medium text-brand-accent lg:text-[20.8px] lg:leading-[1.2]'>Enterprise-grade security and control</p>
-                <p className='mb-6 max-w-[369px] text-lg leading-[1.55] text-[#b3a88c] lg:text-[20.8px] lg:leading-[1.2]'>
-                  Control every layer of your environment with fine-grained access control, model-agnostic architecture, and flexible self-hosted or private cloud deployment options that keep your code and data secure.
-                </p>
-                <Link to='/enterprise' className='btn inline-flex border-none bg-transparent text-center text-brand-bg hover:bg-brand-bg/10'>
-                  Learn about Enterprise
-                </Link>
-              </div>
-              <div className='flex justify-center lg:justify-end'>
-                <img src='/assets/webflow/misc/6908c923f44bb0269a602378_last-icon.svg' alt='' className='h-32 w-32' />
+          <article className='card-dark'>
+            <div className='p-6'>
+              <div className='grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-center'>
+                <div>
+                  <p className='mb-3 max-w-[369px] text-lg font-medium text-brand-accent lg:text-[20.8px] lg:leading-[1.2]'>Enterprise-grade security and control</p>
+                  <p className='mb-6 max-w-[369px] text-lg leading-[1.55] text-[#b3a88c] lg:text-[20.8px] lg:leading-[1.2]'>
+                    Control every layer of your environment with fine-grained access control, model-agnostic architecture, and flexible self-hosted or private cloud deployment options that keep your code and data secure.
+                  </p>
+                  <span className='btn-wrap-dark'>
+                    <Link to='/enterprise' className='btn border-none bg-transparent text-center text-brand-bg hover:bg-brand-bg/10'>
+                      Learn about Enterprise
+                    </Link>
+                  </span>
+                </div>
+                <div className='flex justify-center lg:justify-end'>
+                  <img src='/assets/webflow/misc/6908c923f44bb0269a602378_last-icon.svg' alt='' className='h-32 w-32' />
+                </div>
               </div>
             </div>
           </article>
         </div>
       </section>
 
-      <section className='bg-brand-bg px-6 py-20 lg:px-10 lg:py-28'>
-        <div className='mx-auto max-w-[1220px]'>
-          <div className='mb-12 text-center'>
-            <h2 className='mb-3 text-[44px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>Developers love OpenHands</h2>
+      {/* SECTION 5: Lovewall (cc-themed, py:80, brand-bg) */}
+      <section data-wf-el='cc-themed' style={{ display: 'block', backgroundColor: 'rgb(249, 240, 217)', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px', position: 'relative' }}>
+        <div data-wf-el='lovewall_wrap' className='mx-auto max-w-[1238px]'>
+          <div data-wf-el='lovewall_heading_wrap' className='mb-12 text-center'>
+            <div data-wf-el='heading-component'><h2 className='mb-3 text-[44px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>Developers love OpenHands</h2></div>
             <p className='text-lg font-medium text-brand-muted lg:text-[20.8px] lg:leading-[1.2]'>Join millions of developers to build software autonomously</p>
           </div>
-          <div className='grid gap-5 md:grid-cols-2 lg:grid-cols-3'>
+          <div data-wf-el='lovewall_cms_list' className='grid gap-6 md:grid-cols-2 lg:grid-cols-3'>
             {DEVELOPER_QUOTES.map((quote) => (
-              <article key={quote.name} className='rounded-none border border-brand-fg/12 bg-white/80 p-5 shadow-[0_18px_60px_rgba(34,21,13,0.04)] lg:min-h-[260px]'>
-                <div className='mb-4 flex items-center gap-3'>
-                  <img src={quote.avatar} alt={quote.name} className='h-12 w-12 object-cover' style={{ borderRadius: '100%' }} />
-                  <div>
-                    <div className='text-sm font-normal text-brand-fg'>{quote.name}</div>
-                    <div className='text-xs text-brand-muted'>{quote.title}</div>
+              <article key={quote.name} data-wf-el='lovewall_cms_item' className='flex flex-col rounded-lg border border-[#b3a88c] bg-white lg:min-h-[260px]' style={{ justifyContent: 'flex-start' }}>
+                <div data-wf-el='card-body' className='flex-1 p-6' style={{ display: 'block', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start' }}>
+                  <div data-wf-el='lovewall_cms_item_top' className='mb-4 flex items-center gap-3' style={{ justifyContent: 'flex-start' }}>
+                    <img data-wf-el='lovewall_cms_item_avatar' src={quote.avatar} alt={quote.name} className='h-12 w-12 object-cover' style={{ borderRadius: '100%' }} />
+                    <div data-wf-el='lovewall_cms_item_top_meta'>
+                      <div data-wf-el='lovewall_cms_item_top_name' className='font-normal' style={{ color: 'rgb(34, 21, 13)', fontSize: '14.08px' }}>{quote.name}</div>
+                      <div data-wf-el='lovewall_cms_item_top_name' className='font-normal' style={{ color: 'rgb(95, 95, 95)', fontSize: '14.08px' }}>{quote.title}</div>
+                    </div>
                   </div>
-                </div>
-                <div className='space-y-2'>
+                  <div data-wf-el='lovewall_cms_rt' className='space-y-2'>
                   {quote.lines.map((line) => (
-                    <p key={line} className='text-sm leading-[1.6] text-brand-fg'>
+                    <p key={line} className='text-base leading-[1.4] text-brand-fg'>
                       {line}
                     </p>
                   ))}
+                </div>
                 </div>
               </article>
             ))}
@@ -680,22 +745,34 @@ const Home = () => {
         </div>
       </section>
 
-      <section className='bg-brand-bg px-6 py-20 lg:px-10 lg:pb-28 lg:pt-[114px]'>
-        <div className='mx-auto max-w-[1220px]'>
-          <div className='grid gap-8 lg:grid-cols-[0.4fr_0.6fr] lg:items-start'>
-            <div>
+      {/* SECTION 6: FAQ (py:80, transparent) */}
+      <section data-wf-el='section-faq' style={{ display: 'block', backgroundColor: 'rgba(0, 0, 0, 0)', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px', position: 'relative' }}>
+        <div className='mx-auto max-w-[1238px]'>
+          <div className='flex flex-col gap-8 lg:-mx-5 lg:flex-row lg:gap-0'>
+            <div className='flex flex-col lg:flex-[0_0_41.67%] lg:px-5'>
               <h2 className='mb-4 text-[44px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>FAQ&apos;s</h2>
-              <Link to='/contact' className='btn btn-outline border-none w-fit'>
-                Contact us
-              </Link>
+              <span className='btn-wrap w-fit'>
+                <Link to='/contact' className='btn btn-outline border-none'>
+                  Contact us
+                </Link>
+              </span>
             </div>
-            <div className='space-y-4'>
+            <div className='space-y-4 lg:flex-1 lg:px-5'>
               {FAQS.map((faq) => (
-                <details key={faq.question} className='border-t border-brand-fg/12 pt-4 last:border-b last:pb-4'>
-                  <summary className='cursor-default list-none'>
-                    <label className='pointer-events-none cursor-default text-[24px] font-medium leading-[1.4] text-brand-fg'>{faq.question}</label>
+                <details key={faq.question} data-wf-el='accordion-item' className='flex flex-col rounded-lg border border-brand-bg'>
+                  <summary data-wf-el='accordion-trigger' className='flex cursor-pointer list-none items-center justify-between p-6'>
+                    <label data-wf-el='accordion-title' className='pointer-events-none block cursor-default pr-3 text-[24px] font-medium leading-[1.4] text-brand-fg'>{faq.question}</label>
+                    <div data-wf-el='accordion-icon' className='h-8 w-8 flex-shrink-0 overflow-hidden text-brand-fg' style={{ display: 'block' }} aria-hidden='true'>
+                      <svg width='32' height='32' viewBox='0 0 32 32' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M10 13l6 6 6-6' stroke='currentColor' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round'/></svg>
+                    </div>
                   </summary>
-                  <p className='mt-3 max-w-[860px] text-base leading-[1.4] text-brand-muted'>{faq.answer}</p>
+                  <div data-wf-el='accordion-content_spacer' style={{ paddingLeft: '0px', paddingRight: '0px', paddingBottom: '24px' }}>
+                    <div data-wf-el='rich-text-component'>
+                      <div data-wf-el='rich-text' className='font-sohne-buch' style={{ maxWidth: '820px' }}>
+                        <p className='mt-3 text-base leading-[1.4] text-brand-muted'>{faq.answer}</p>
+                      </div>
+                    </div>
+                  </div>
                 </details>
               ))}
             </div>
@@ -703,7 +780,8 @@ const Home = () => {
         </div>
       </section>
 
-      <section className='relative overflow-hidden bg-brand-accent px-6 py-20 text-center text-brand-fg lg:px-10 lg:py-28'>
+      {/* SECTION 7: CTA (u-bg-primary, py:80, yellow bg) */}
+      <section data-wf-el='section-cta' style={{ display: 'block', backgroundColor: 'rgb(255, 255, 139)', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px', position: 'relative' }} className='text-center text-brand-fg'>
         <div className='absolute inset-0 pointer-events-none opacity-20'>
           <img
             src='/assets/webflow/backgrounds/6908d170831c19b2b6976323_ascii-art_(16)_1.svg'
@@ -715,18 +793,22 @@ const Home = () => {
           <div className='mx-auto mb-4 max-w-[960px] text-[44px] font-medium leading-[1.05] tracking-[-0.03em]'>
             Building the open standard for autonomous software development.
           </div>
-          <p className='mx-auto mb-8 max-w-[900px] text-lg font-medium leading-[1.5] text-brand-muted lg:text-[20.8px] lg:leading-[1.2]'>
+          <p className='mx-auto mb-8 max-w-[812px] text-lg font-medium leading-[1.5] text-brand-muted lg:text-[20.8px] lg:leading-[1.2]'>
             OpenHands is the foundation for secure, transparent, model-agnostic coding agents - empowering every software team to build faster with full control.
           </p>
           <div className='mb-12 flex flex-wrap items-center justify-center gap-4'>
-            <a href='https://docs.openhands.dev/sdk' target='_blank' rel='noopener noreferrer' className='btn btn-outline'>
-              Build with SDK
-            </a>
-            <a href='https://app.all-hands.dev/' target='_blank' rel='noopener noreferrer' className='btn btn-primary'>
-              Try it live
-            </a>
+            <span className='btn-wrap'>
+              <a href='https://docs.openhands.dev/sdk' target='_blank' rel='noopener noreferrer' className='btn btn-outline'>
+                Build with SDK
+              </a>
+            </span>
+            <span className='btn-wrap'>
+              <a href='https://app.all-hands.dev/' target='_blank' rel='noopener noreferrer' className='btn btn-primary'>
+                Try it live
+              </a>
+            </span>
           </div>
-          <div className='mt-[145px]'>
+          <div data-wf-el='footer-nav' className='mt-[145px]' style={{ textAlign: 'start', paddingBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <Footer showSocialLinks compactNav />
           </div>
         </div>

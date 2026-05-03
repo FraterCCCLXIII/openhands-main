@@ -81,7 +81,7 @@ const Blog = () => {
   return (
     <main className='flex flex-col items-center px-5 pb-16 pt-[40px] lg:px-10'>
       <section className='w-full max-w-[1238px] text-center'>
-        <h1 className='font-inter text-[32px] leading-[1.1] font-medium tracking-[-0.03em] text-brand-fg lg:text-[44px]'>
+        <h1 className='font-sohne text-[32px] leading-[1.1] font-medium tracking-[-0.03em] text-brand-fg lg:text-[44px]'>
           OpenHands Blog
         </h1>
         <p className='mt-3 text-[18px] leading-[1.2] font-medium text-[#5f5f5f] lg:text-[20px]'>
