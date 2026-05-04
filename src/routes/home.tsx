@@ -620,33 +620,35 @@ const Home = () => {
                 </div>
                 <img src={t.logo} alt='' className='ml-auto h-8 max-w-[110px] object-contain' />
               </div>
-              <div data-wf-el='slide-controls' style={{ display: 'block', color: 'rgb(34, 21, 13)' }}>
-                <div className='text-base font-medium text-brand-fg'>
-                  {i + 1}/{TESTIMONIALS.length}
-                </div>
-                <div className='flex gap-3'>
-                  <button
-                    type='button'
-                    onClick={() => setActiveTestimonial((current) => (current === 0 ? TESTIMONIALS.length - 1 : current - 1))}
-                    className='flex h-11 w-11 items-center justify-center rounded-full border border-brand-fg/20 text-brand-fg transition-colors hover:bg-brand-fg/5'
-                  >
-                    <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' className='h-5 w-5 fill-current' aria-hidden='true'>
-                      <path d='M30 16c0 .265-.105.52-.293.707A.997.997 0 0 1 29 17H5.414l6.294 6.292A1 1 0 0 1 11 25a1 1 0 0 1-.708-.292l-8-8A.997.997 0 0 1 2 16c0-.132.026-.262.075-.383.05-.12.124-.23.217-.325l8-8A1 1 0 0 1 12 8c0 .266-.105.52-.292.708L5.414 15H29c.265 0 .52.105.707.293.188.187.293.441.293.707Z' />
-                    </svg>
-                  </button>
-                  <button
-                    type='button'
-                    onClick={() => setActiveTestimonial((current) => (current === TESTIMONIALS.length - 1 ? 0 : current + 1))}
-                    className='flex h-11 w-11 items-center justify-center rounded-full border border-brand-fg/20 text-brand-fg transition-colors hover:bg-brand-fg/5'
-                  >
-                    <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' className='h-5 w-5 fill-current' aria-hidden='true'>
-                      <path d='M2 16c0-.265.105-.52.293-.707A.997.997 0 0 1 3 15h23.586l-6.294-6.292A1 1 0 0 1 20 8a1 1 0 0 1 .708-.292l8 8c.093.094.167.204.217.325.049.12.075.25.075.383 0 .132-.026.262-.075.383-.05.12-.124.23-.217.325l-8 8A1 1 0 0 1 20 24c0-.266.105-.52.292-.708L26.586 17H3a.997.997 0 0 1-.707-.293A.997.997 0 0 1 2 16Z' />
-                    </svg>
-                  </button>
-                </div>
-              </div>
             </div>
           ))}
+        </div>
+        <div data-wf-el='slide-controls' style={{ zIndex: 50, width: '100%', height: 'auto', position: 'absolute', inset: 'auto 0% 0%', color: 'rgb(34, 21, 13)' }}>
+          <div className='mx-auto flex max-w-[1238px] items-end justify-between px-8'>
+            <div className='text-base font-medium text-brand-fg'>
+              {activeTestimonial + 1}/{TESTIMONIALS.length}
+            </div>
+            <div className='flex gap-3'>
+              <button
+                type='button'
+                onClick={() => setActiveTestimonial((current) => (current === 0 ? TESTIMONIALS.length - 1 : current - 1))}
+                className='flex h-11 w-11 items-center justify-center rounded-full border border-brand-fg/20 text-brand-fg transition-colors hover:bg-brand-fg/5'
+              >
+                <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' className='h-5 w-5 fill-current' aria-hidden='true'>
+                  <path d='M30 16c0 .265-.105.52-.293.707A.997.997 0 0 1 29 17H5.414l6.294 6.292A1 1 0 0 1 11 25a1 1 0 0 1-.708-.292l-8-8A.997.997 0 0 1 2 16c0-.132.026-.262.075-.383.05-.12.124-.23.217-.325l8-8A1 1 0 0 1 12 8c0 .266-.105.52-.292.708L5.414 15H29c.265 0 .52.105.707.293.188.187.293.441.293.707Z' />
+                </svg>
+              </button>
+              <button
+                type='button'
+                onClick={() => setActiveTestimonial((current) => (current === TESTIMONIALS.length - 1 ? 0 : current + 1))}
+                className='flex h-11 w-11 items-center justify-center rounded-full border border-brand-fg/20 text-brand-fg transition-colors hover:bg-brand-fg/5'
+              >
+                <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' className='h-5 w-5 fill-current' aria-hidden='true'>
+                  <path d='M2 16c0-.265.105-.52.293-.707A.997.997 0 0 1 3 15h23.586l-6.294-6.292A1 1 0 0 1 20 8a1 1 0 0 1 .708-.292l8 8c.093.094.167.204.217.325.049.12.075.25.075.383 0 .132-.026.262-.075.383-.05.12-.124.23-.217.325l-8 8A1 1 0 0 1 20 24c0-.266.105-.52.292-.708L26.586 17H3a.997.997 0 0 1-.707-.293A.997.997 0 0 1 2 16Z' />
+                </svg>
+              </button>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -818,7 +820,7 @@ const Home = () => {
               </a>
             </span>
           </div>
-          <div data-wf-el='footer-nav' className='mt-[145px]' style={{ textAlign: 'start', paddingBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div data-wf-el='footer-nav' className='mx-auto mt-[145px] max-w-[825px]' style={{ textAlign: 'start', paddingBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid rgb(179, 168, 140)' }}>
             <Footer showSocialLinks compactNav />
           </div>
         </div>

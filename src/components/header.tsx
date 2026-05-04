@@ -36,9 +36,9 @@ export const Header: React.FC<HeaderProps> = ({
   });
 
   return (
-    <header data-wf-el='nav_wrap' className='sticky top-0 left-0 right-0 z-50 w-full backdrop-blur-md' style={{ display: 'block', height: '84px', backgroundColor: 'rgb(249, 240, 217)', paddingTop: '16px', paddingBottom: '16px' }}>
-      <div data-wf-el='nav_contain' style={{ display: 'block', maxWidth: '1440px', paddingLeft: '0px', paddingRight: '0px' }}>
-        <div data-wf-el='nav_grid' className='hidden lg:grid mx-auto' style={{ display: 'grid', gap: '16px', gridTemplateColumns: 'auto 1fr auto', maxWidth: '1368px', paddingLeft: '0px', paddingRight: '0px' }}>
+    <header data-wf-el='nav_wrap' className='sticky top-0 left-0 right-0 z-50 w-full backdrop-blur-md' style={{ display: 'block', height: '84px', backgroundColor: 'rgb(249, 240, 217)', paddingTop: '1rem', paddingBottom: '1rem', containerType: 'inline-size' as React.CSSProperties['containerType'] }}>
+      <div data-wf-el='nav_contain' style={{ display: 'block', width: '95%', marginLeft: 'auto', marginRight: 'auto' }}>
+        <div data-wf-el='nav_grid' className='hidden lg:grid' style={{ display: 'grid', gap: '16px', gridTemplateColumns: '1fr min-content 1fr', alignContent: 'center', position: 'relative' }}>
           <div className='flex justify-start'>
             <Link data-wf-el='nav_logo_link' to='/' aria-label='Go to Home' style={{ lineHeight: '16px', textDecorationLine: 'underline', textDecorationThickness: '1.6px', color: 'rgb(255, 255, 139)' }}>
               <AnimatedHeaderLogo renderText={textIsVisible} />
@@ -46,7 +46,7 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
 
           <nav className='flex items-stretch justify-center'>
-            <ul data-wf-el='nav_links_list' style={{ display: 'flex', justifyContent: 'center', gap: '21.6px', alignItems: 'stretch' }}>
+            <ul data-wf-el='nav_links_list' style={{ display: 'flex', justifyContent: 'center', gap: '1.5cqw', alignItems: 'stretch', width: 'min-content', position: 'relative' }}>
               {DESKTOP_NAV_ITEMS.map((item) => (
                 <li data-wf-el='nav_links_li' key={item.name} style={{ display: 'list-item' }}>
                   {item.external ? (
