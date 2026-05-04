@@ -4,6 +4,7 @@ import type { Route } from './+types/home';
 import statistics from '~/data/statistics.json';
 import { Footer } from '~/components/footer';
 import { formatThousands } from '~/utils/format-thousands';
+import { ASCIIAnimation } from '~/components/ascii-animation';
 
 const CLIENT_LOGOS = [
   { name: 'TikTok', url: '/assets/webflow/logos/69137f6974b71a1a4a932f82_TikTok_logo.svg' },
@@ -334,12 +335,8 @@ const Home = () => {
       {/* SECTION 0: section-hero — contains hero+carousel+logos+SDK (matches live 1761px mega-section) */}
       <section data-wf-el='section-hero' className='relative overflow-hidden' style={{ display: 'block', backgroundColor: 'rgba(0, 0, 0, 0)', paddingTop: '0px', paddingBottom: '0px', paddingLeft: '0px', paddingRight: '0px' }}>
         <div data-wf-el='hero' className='relative' style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', justifyContent: 'flex-start', alignItems: 'center' }}>
-          <div data-wf-el='asci-wrap' className='absolute inset-0 pointer-events-none' style={{ backgroundColor: 'rgba(0, 0, 0, 0)' }}>
-            <img
-              src='/assets/webflow/backgrounds/6908d170831c19b2b6976323_ascii-art_(16)_1.svg'
-              alt=''
-              className='h-full w-full object-cover'
-            />
+          <div data-wf-el='asci-wrap' className='absolute inset-0 z-0 overflow-hidden' style={{ backgroundColor: 'rgba(0, 0, 0, 0)', pointerEvents: 'auto' }}>
+            <ASCIIAnimation />
           </div>
 
           <div data-wf-el='container' className='relative z-10 mx-auto w-full max-w-[1238px]'>

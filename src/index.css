@@ -351,24 +351,21 @@
   position: absolute;
   inset: 0;
   margin: 0;
-  padding: 0;
+  overflow: hidden;
   color: var(--fg, #22150d);
   background: transparent;
-  font-family: monospace;
-  /* Match openhands.dev: 16px font-size */
-  font-size: 16px;
-  line-height: 16px;
-  overflow: hidden;
+  opacity: var(--ascii-opacity, 0.12);
+  font: 12px/12px ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
   white-space: pre;
-  pointer-events: auto;
   user-select: none;
+  letter-spacing: 0.5px;
+  pointer-events: auto;
 }
 
 @media (min-width: 900px) {
   .ascii-pre {
-    /* Match openhands.dev: 16px on desktop too */
-    font-size: 16px;
-    line-height: 16px;
+    font-size: 14px;
+    line-height: 14px;
   }
 }
 

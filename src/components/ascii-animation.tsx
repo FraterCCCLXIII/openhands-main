@@ -444,6 +444,8 @@ export const ASCIIAnimation: React.FC<ASCIIAnimationProps> = ({ className = '' }
   }, []);
 
   useEffect(() => {
+    if (typeof window === 'undefined' || typeof ResizeObserver === 'undefined') return;
+
     const state = stateRef.current;
     state.t0 = performance.now();
 
@@ -489,22 +491,6 @@ export const ASCIIAnimation: React.FC<ASCIIAnimationProps> = ({ className = '' }
         ref={preRef}
         className="ascii-pre"
         aria-hidden="true"
-        style={{
-          position: 'absolute',
-          inset: 0,
-          margin: 0,
-          padding: 0,
-          color: 'rgb(34, 21, 13)',
-          backgroundColor: 'transparent',
-          fontFamily: 'monospace',
-          // Match openhands.dev: 12px font-size, 0.12 opacity
-          fontSize: '12px',
-          lineHeight: '12px',
-          opacity: 0.12,
-          overflow: 'hidden',
-          whiteSpace: 'pre',
-          pointerEvents: 'auto',
-        }}
       />
     </div>
   );
