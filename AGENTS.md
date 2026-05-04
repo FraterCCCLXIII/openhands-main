@@ -22,6 +22,13 @@ Located at: `scripts/validate-visual-styles.cjs`
 - Unmatched elements (live classes without a local `data-wf-el`, or vice versa) are reported separately so coverage can be expanded incrementally.
 - This was needed because the existing signature-based matching (`tag:normalizedText`) can't uniquely identify `div` elements (hundreds of visible divs per page with no text), and the two sites share zero semantic class names (Webflow uses names like `capabilities_card_wrap`, local uses pure Tailwind utilities).
 
+### Image/Video Signature Matching
+- The parity script now includes `IMG` and `VIDEO` elements with empty `alt=""` in the element inventory, using `src`-filename-derived signatures like `IMG:[src:sdk]`.
+- Filename normalization strips: Webflow hex hash prefixes (`^[a-f0-9]{20,}_`), responsive suffixes (`-p-500`, etc.), file extensions, URL-encoded characters (`%20` etc.), underscores/spaces, then lowercases.
+- Double-hash filenames (e.g. `6994c3bfa634f5f3966d2150_4c76230966d0d54a446a009e4f4a19c2_gui.png`) are handled by applying the hex-prefix strip twice.
+- When local image files exist with different names than the live CDN versions, prefer using the exact live CDN filenames if they're already in the repo (check `public/assets/webflow/misc/`).
+- Product surface images (SDK/CLI/GUI) are defined in `src/constants/product-surfaces.ts` and should reference the same filenames as the live Webflow CDN.
+
 ### Font Strategy
 - Live site uses **Sohne Kraftig** (proprietary, by Klim Type Foundry) for ALL text — body, headings, nav, cards, everything. Also loads Sohne Buch and General Sans.
 - Local site uses **Klim test fonts** (`test-soehne-*.woff2`) registered as `"Sohne Kraftig"` so the computed `fontFamily` matches the live site exactly. These test fonts are metrically identical to the retail fonts but include a watermark overlay.

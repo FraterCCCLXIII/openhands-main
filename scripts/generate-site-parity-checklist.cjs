@@ -463,12 +463,33 @@ async function extractPageInventory(page) {
 
       const text = normalizeWhitespaceInner(rawText);
       const normalizedText = normalizeTextInner(text);
-      if (!normalizedText) return;
-      if (normalizedText.startsWith('http://') || normalizedText.startsWith('https://')) return;
+
+      // For IMG/VIDEO with no text, derive a signature from the src filename
+      // so decorative images can still be matched cross-site.
+      let srcFilename = '';
+      if (!normalizedText && (tag === 'IMG' || tag === 'VIDEO')) {
+        const src = element.getAttribute('src') || '';
+        // Extract filename without extension/query from either CDN or local paths
+        const lastSegment = src.split('/').pop() || '';
+        srcFilename = lastSegment
+          .replace(/[-_]p-\d+.*$/, '')   // strip responsive suffix (-p-500, etc.)
+          .replace(/\.[^.]+$/, '')        // strip extension
+          .replace(/[?#].*$/, '')         // strip query/hash
+          .replace(/^[a-f0-9]{20,}_/g, '') // strip leading Webflow hex hash prefix
+          .replace(/^[a-f0-9]{20,}_/g, '') // strip a second hash prefix (double-hash filenames)
+          .replace(/%[0-9A-Fa-f]{2}/g, '') // strip URL-encoded characters
+          .replace(/[_ ]+/g, '')         // strip underscores & spaces
+          .toLowerCase();
+      }
+
+      if (!normalizedText && !srcFilename) return;
+      if (normalizedText && (normalizedText.startsWith('http://') || normalizedText.startsWith('https://'))) return;
 
       const computed = window.getComputedStyle(element);
       const rect = element.getBoundingClientRect();
-      const signature = `${tag}:${normalizedText.slice(0, 140)}`;
+      const signature = normalizedText
+        ? `${tag}:${normalizedText.slice(0, 140)}`
+        : `${tag}:[src:${srcFilename}]`;
       const style = Object.fromEntries(styleProps.map((prop) => [prop, computed[prop]]));
 
       // Track per-signature occurrence index so downstream matching can

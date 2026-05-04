@@ -85,7 +85,7 @@ const productFeaturePages: Record<'sdk' | 'gui' | 'cli', ProductFeaturePageData>
     ],
     showcaseImages: [
       {
-        src: '/assets/webflow/misc/699f4b0b80190eeea4ba3eb9_sdk-1.png',
+        src: '/assets/webflow/misc/691b30aa3c700dcb47a96c00_SDK.webp',
         alt: '',
       },
       {
@@ -118,7 +118,7 @@ const productFeaturePages: Record<'sdk' | 'gui' | 'cli', ProductFeaturePageData>
     heading: 'Agentic development, made human.',
     description: 'Plan, run, and review agent work together in a collaborative UI.',
     heroImage: {
-      src: '/assets/webflow/misc/6994c3bfa634f5f3966d2150_4c76230966d0d54a446a009e4f4a19c2_gui.png',
+      src: '/assets/webflow/misc/691b30afadf69b956d353513_Cloud.webp',
       alt: '',
     },
     primaryCta: {
@@ -215,7 +215,7 @@ const productFeaturePages: Record<'sdk' | 'gui' | 'cli', ProductFeaturePageData>
     ],
     showcaseImages: [
       {
-        src: '/assets/webflow/misc/699490d1d9729682e0daf0a5_cli.png',
+        src: '/assets/webflow/misc/691b30b28b25626f4d315588_CLI.webp',
         alt: '',
       },
       {

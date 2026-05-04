@@ -473,54 +473,64 @@ const Home = () => {
             </div>
           </div>
 
-          {/* SDK collection (inside hero section) */}
+          {/* SDK collection (inside hero section) — live uses flex row: shrink text left + flex-1 image right */}
           <div data-wf-el='standard-collection' className='w-full' style={{ display: 'block' }}>
-          <div data-wf-el='card' style={{ borderRadius: '8px', display: 'block', flexDirection: 'column', justifyContent: 'flex-start' }}>
-            <div className='mb-3 flex gap-2 font-mono' role='tablist' style={{ lineHeight: '16.896px' }}>
-              {PRODUCT_SURFACES.map((surface, index) => (
-                <div
-                  key={surface.title}
-                  data-wf-el='eyebrow'
-                  role='tab'
-                  tabIndex={0}
-                  aria-selected={index === activeSurfaceIndex}
-                  onClick={() => setActiveSurfaceIndex(index)}
-                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveSurfaceIndex(index); } }}
-                  className='inline-block text-sm font-medium transition-colors'
-                  style={{
-                    display: 'block',
-                    cursor: 'pointer',
-                    borderRadius: '20px',
-                    paddingLeft: '9.6px',
-                    paddingRight: '9.6px',
-                    paddingTop: '4px',
-                    paddingBottom: '4px',
-                    lineHeight: '16.896px',
-                    textAlign: 'start',
-                    color: 'rgb(249, 240, 217)',
-                    backgroundColor: 'rgb(34, 21, 13)',
-                    borderColor: 'rgb(0, 0, 0)',
-                  }}
-                >
-                  {surface.title}
+            <div className='mx-auto max-w-[1238px]'>
+              <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'center', gap: '24px' }}>
+                {/* Left column: col wrapper (flex: 0 1 auto) > card (display: block) */}
+                <div style={{ flex: '0 1 auto', display: 'flex', flexDirection: 'column', justifyContent: 'flex-start' }}>
+                  <div data-wf-el='card' style={{ borderRadius: '8px', display: 'block' }}>
+                    <div className='mb-3 flex gap-2 font-mono' role='tablist' style={{ lineHeight: '16.896px' }}>
+                      {PRODUCT_SURFACES.map((surface, index) => (
+                        <div
+                          key={surface.title}
+                          data-wf-el='eyebrow'
+                          role='tab'
+                          tabIndex={0}
+                          aria-selected={index === activeSurfaceIndex}
+                          onClick={() => setActiveSurfaceIndex(index)}
+                          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveSurfaceIndex(index); } }}
+                          className='inline-block text-sm font-medium transition-colors'
+                          style={{
+                            display: 'block',
+                            cursor: 'pointer',
+                            borderRadius: '20px',
+                            paddingLeft: '9.6px',
+                            paddingRight: '9.6px',
+                            paddingTop: '4px',
+                            paddingBottom: '4px',
+                            lineHeight: '16.896px',
+                            textAlign: 'start',
+                            color: 'rgb(249, 240, 217)',
+                            backgroundColor: 'rgb(34, 21, 13)',
+                            borderColor: 'rgb(0, 0, 0)',
+                          }}
+                        >
+                          {surface.title}
+                        </div>
+                      ))}
+                    </div>
+                    <div data-wf-el='standard-wrap' className='max-w-[270px]' style={{ borderRadius: '0px' }}>
+                      <h2 className='mb-3 section-title text-brand-fg'>{activeSurface.title}</h2>
+                      <p data-wf-el='paragraph-lg' className='mb-5 max-w-[270px] fluid-body-lg font-medium text-brand-muted'>{activeSurface.description}</p>
+                      <span className='btn-wrap'>
+                        <a href={activeSurface.href} target='_blank' rel='noopener noreferrer' className='btn btn-outline border-none'>
+                          {activeSurface.cta}
+                        </a>
+                      </span>
+                    </div>
+                  </div>
                 </div>
-              ))}
+                {/* Right column: hero-media image (flex: 1 1 0%, ~968px) */}
+                <div style={{ flex: '1 1 0%', display: 'flex' }}>
+                  <div data-wf-el='hero-media' className='w-full overflow-hidden' style={{ display: 'block' }}>
+                    <div data-wf-el='hero-media-bg' style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'stretch', backgroundColor: 'rgb(34, 21, 13)', borderRadius: '24px', paddingTop: '47.1875px', paddingBottom: '47.1875px' }} className='h-full w-full'>
+                      <img src={activeSurface.image} alt='' className='h-full w-full object-cover object-top' />
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div data-wf-el='standard-wrap' className='max-w-[270px]' style={{ borderRadius: '0px' }}>
-              <h2 className='mb-3 section-title text-brand-fg'>{activeSurface.title}</h2>
-              <p data-wf-el='paragraph-lg' className='mb-5 max-w-[270px] fluid-body-lg font-medium text-brand-muted'>{activeSurface.description}</p>
-              <span className='btn-wrap'>
-                <a href={activeSurface.href} target='_blank' rel='noopener noreferrer' className='btn btn-outline border-none'>
-                  {activeSurface.cta}
-                </a>
-              </span>
-            </div>
-          </div>
-          <div data-wf-el='hero-media' className='overflow-hidden rounded-lg bg-[#efe6d1] lg:min-h-[1320px]'>
-            <div data-wf-el='hero-media-bg' style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'stretch', backgroundColor: 'rgb(34, 21, 13)', borderRadius: '24px', paddingTop: '47.1875px', paddingBottom: '47.1875px' }} className='h-full w-full'>
-              <img src={activeSurface.image} alt='' className='h-full min-h-[620px] w-full object-cover object-top' />
-            </div>
-          </div>
           </div>
         </div>
       </section>
