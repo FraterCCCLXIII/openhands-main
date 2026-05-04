@@ -27,11 +27,12 @@ const classNames = (...values: Array<string | false | null | undefined>) =>
   values.filter(Boolean).join(' ');
 
 const AsciiBackdrop = ({ opacity = 'opacity-[0.12]' }: { opacity?: string }) => (
-  <div className={classNames('pointer-events-none absolute inset-0', opacity)}>
+  <div className={classNames('absolute inset-0', opacity)}>
     <img
       src='/assets/webflow/backgrounds/6908d170831c19b2b6976323_ascii-art_(16)_1.svg'
       alt=''
       className='h-full w-full object-cover'
+      style={{ textAlign: 'start' }}
     />
   </div>
 );
@@ -109,11 +110,12 @@ const ProductFeatureProofBand = ({
     {image ? (
       <img src={image.src} alt={image.alt} className='absolute inset-0 h-full w-full object-cover' />
     ) : (
-      <div className='pointer-events-none absolute inset-0 opacity-[0.28]'>
+      <div className='absolute inset-0 opacity-[0.28]'>
         <img
           src='/assets/webflow/backgrounds/690b397ae76441160bed52b6_asci-art-hole.png'
           alt=''
           className='h-full w-full object-cover'
+          style={{ textAlign: 'start' }}
         />
       </div>
     )}
@@ -191,6 +193,7 @@ export const ProductComparisonTable = ({
   const borderClass = dark ? 'border-brand-bg/20' : 'border-brand-fg/12';
   const crossClass = dark ? 'text-brand-bg/55' : 'text-brand-fg/35';
   const trColor = headerColor ?? (dark ? '#b3a88c' : '#8a5f45');
+  const tickColor = headerColor ?? (dark ? 'rgb(179, 168, 140)' : 'rgb(138, 95, 69)');
 
   return (
     <section className={classNames('px-6 py-20 lg:px-10', sectionClass)}>
@@ -216,7 +219,7 @@ export const ProductComparisonTable = ({
                   {row.values.map((value, index) => (
                     <td key={`${row.label}-${index}`} className='px-6 py-4 text-center'>
                       {value ? (
-                        <img src={TABLE_TICK_ICON} alt='' aria-hidden='true' className='mx-auto h-5 w-5' />
+                        <img src={TABLE_TICK_ICON} alt='' aria-hidden='true' className='mx-auto h-5 w-5' style={{ fontSize: '20px', lineHeight: '28px', color: tickColor }} />
                       ) : (
                         <span className={classNames('text-[18px] leading-none', crossClass)}>×</span>
                       )}
@@ -258,7 +261,7 @@ export const ProductFaqSection = ({ faqs }: { faqs: readonly ProductFaqItem[] })
                 <label data-wf-el='accordion-title' className='block pointer-events-none cursor-default' style={{ paddingRight: '12px', fontSize: '24px', lineHeight: '33.6px' }}>{faq.question}</label>
                 <span data-wf-el='accordion-icon' className='transition-transform group-open:rotate-45' style={{ fontSize: '16px', lineHeight: '22.4px' }}>+</span>
               </summary>
-              <p data-wf-el='accordion-content_spacer' className='max-w-[680px] text-[16px] leading-[22.4px] text-brand-fg' style={{ fontFamily: '"Sohne Kraftig", Inter, Arial, sans-serif', paddingTop: '0', paddingBottom: '24px', paddingLeft: '0', paddingRight: '0' }}>{faq.answer}</p>
+              <p data-wf-el='accordion-content_spacer' className='max-w-[680px] text-[16px] leading-[22.4px]' style={{ fontFamily: '"Sohne Buch", Inter, Arial, sans-serif', color: 'rgb(95, 95, 95)', paddingTop: '0', paddingBottom: '24px', paddingLeft: '0', paddingRight: '0' }}>{faq.answer}</p>
             </details>
           ))}
         </div>
@@ -318,7 +321,7 @@ export const ProductFeaturePage = ({
         <AsciiBackdrop />
         <div data-wf-el='hero' className='relative mx-auto flex max-w-[860px] flex-col items-center' style={{ textAlign: 'start', justifyContent: 'flex-start' }}>
           <ProductEyebrow label={page.eyebrow} />
-          <h1 className='fluid-h1 mt-8 text-brand-fg'>
+          <h1 className='fluid-h1 mt-8 text-brand-fg' style={{ textAlign: 'center' }}>
             {page.heading}
           </h1>
           <p data-wf-el='paragraph-lg' className='fluid-body-lg mt-4 max-w-[620px] text-[#5f5f5f]' style={{ textAlign: 'center' }}>{page.description}</p>
@@ -374,7 +377,7 @@ export const ProductFeaturePage = ({
       <section className='px-6 py-16 lg:px-10 lg:py-20'>
         <div data-wf-el='container' className='mx-auto max-w-[1260px]' style={{ display: 'block' }}>
           <div data-wf-el='heading-stack' style={{ textAlign: 'center', paddingTop: '64px', paddingBottom: '64px', paddingLeft: '0', paddingRight: '0', display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'center' }}>
-            <h2 className='section-title text-brand-fg'>
+            <h2 className='section-title text-brand-fg' style={{ textAlign: 'start' }}>
               Key capabilities
             </h2>
             <ProductList items={page.capabilities} />
@@ -387,7 +390,7 @@ export const ProductFeaturePage = ({
         <div className='mx-auto max-w-[1260px]' style={{ display: 'block' }}>
           <ProductImageCard src={page.showcaseImages[1].src} alt={page.showcaseImages[1].alt} />
           <div data-wf-el='heading-stack' style={{ textAlign: 'center', paddingTop: '64px', paddingBottom: '64px', paddingLeft: '0', paddingRight: '0', display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'center' }}>
-            <h2 className='section-title text-brand-fg'>
+            <h2 className='section-title text-brand-fg' style={{ textAlign: 'start' }}>
               How teams use it
             </h2>
             <ProductList items={page.useCases} />

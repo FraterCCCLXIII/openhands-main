@@ -79,7 +79,8 @@ const Manifesto = () => {
           <img
             src='/assets/webflow/misc/691645a7832560da97f475c5_Featured_manifesto.png'
             alt=''
-            className='w-full rounded-[16px] object-cover'
+            className='w-full object-cover'
+            style={{ borderRadius: '0px' }}
           />
 
           <div className='mx-auto mt-20 max-w-[820px] lg:mt-28'>

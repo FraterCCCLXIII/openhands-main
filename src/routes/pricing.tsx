@@ -207,11 +207,12 @@ const Pricing = () => {
   return (
     <main data-wf-el='page-main' style={{ display: 'flex', flexDirection: 'column' }}>
       <section className='relative overflow-hidden bg-brand-bg px-10 pb-10 pt-10 lg:pt-12'>
-        <div className='pointer-events-none absolute inset-0 opacity-[0.12]'>
+        <div className='absolute inset-0 opacity-[0.12]'>
           <img
             src='/assets/webflow/backgrounds/6908d170831c19b2b6976323_ascii-art_(16)_1.svg'
             alt=''
             className='h-full w-full object-cover'
+            style={{ textAlign: 'start' }}
           />
         </div>
         <div className='relative mx-auto flex max-w-4xl flex-col items-center gap-4 pb-4 text-center'>

@@ -77,11 +77,12 @@ const Enterprise = () => {
     <main data-wf-el='page-main' style={{ display: 'flex', flexDirection: 'column' }}>
       {/* Hero with ASCII background */}
       <section className='relative overflow-hidden px-10 pb-12 pt-10 lg:pt-12'>
-        <div className='pointer-events-none absolute inset-0 opacity-[0.12]'>
+        <div className='absolute inset-0 opacity-[0.12]'>
           <img
             src='/assets/webflow/backgrounds/6908d170831c19b2b6976323_ascii-art_(16)_1.svg'
             alt=''
             className='h-full w-full object-cover'
+            style={{ textAlign: 'start' }}
           />
         </div>
         <div className='relative mx-auto flex max-w-4xl flex-col items-center gap-6 text-center'>
@@ -131,11 +132,12 @@ const Enterprise = () => {
 
       {/* AMD Quote — full-width dark section with ASCII background */}
       <section className='relative overflow-hidden bg-brand-fg px-10 py-28'>
-        <div className='pointer-events-none absolute inset-0'>
+        <div className='absolute inset-0'>
           <img
             src='/assets/webflow/backgrounds/690b50c95a72e7b17a1412a8_09a6ecb11584c3309a64a00d57130313_ascii-art_%2815%29_1.svg'
             alt='asci art'
-            className='pointer-events-auto h-full w-full object-cover'
+            className='h-full w-full object-cover'
+            style={{ textAlign: 'start' }}
           />
         </div>
         <div className='relative mx-auto flex max-w-[812px] flex-col items-center gap-8 text-center'>
@@ -160,11 +162,12 @@ const Enterprise = () => {
 
       {/* Proof band — centered layout with ASCII background */}
       <section className='relative overflow-hidden px-10 py-44'>
-        <div className='pointer-events-none absolute inset-0'>
+        <div className='absolute inset-0'>
           <img
             src='/assets/webflow/backgrounds/690b397ae76441160bed52b6_asci-art-hole.png'
             alt='ASCII art depicting a large black hole with light and particles swirling around it.'
-            className='pointer-events-auto h-full w-full object-cover'
+            className='h-full w-full object-cover'
+            style={{ textAlign: 'start' }}
           />
         </div>
         <div className='relative mx-auto max-w-[1260px] text-center'>
@@ -198,7 +201,7 @@ const Enterprise = () => {
             <div className='grid gap-px bg-brand-fg/10 md:grid-cols-3'>
               {RESULTS.map((result) => (
                 <article key={result.text} className='flex flex-col items-center gap-4 bg-brand-bg p-8 text-center'>
-                  <img src={result.icon} alt='' className='h-32 w-32' />
+                  <img src={result.icon} alt='' className='h-32 w-32' style={{ textAlign: 'start' }} />
                   <p className='w-full fluid-body-lg font-medium text-[#5f5f5f]'>{result.text}</p>
                 </article>
               ))}

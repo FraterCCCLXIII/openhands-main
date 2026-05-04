@@ -37,7 +37,7 @@ export const OverlayLinkButton = ({
       )}
       style={{ borderRadius: 0 }}
     >
-      <div aria-hidden='true' className={textClassName}>
+      <div aria-hidden='true' className={textClassName} style={{ whiteSpace: 'nowrap', cursor: 'auto', textUnderlineOffset: 'auto', pointerEvents: 'none' }}>
         {label}
       </div>
       <a

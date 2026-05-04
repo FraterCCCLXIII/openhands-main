@@ -32,11 +32,12 @@ const Product = () => {
   return (
     <main data-wf-el='page-main' style={{ display: 'flex', flexDirection: 'column' }}>
       <section className='relative overflow-hidden bg-brand-bg px-6 pb-10 pt-10 lg:px-10 lg:pb-6 lg:pt-12'>
-        <div className='pointer-events-none absolute inset-0 opacity-[0.12]'>
+        <div className='absolute inset-0 opacity-[0.12]'>
           <img
             src='/assets/webflow/backgrounds/6908d170831c19b2b6976323_ascii-art_(16)_1.svg'
             alt=''
             className='h-full w-full object-cover'
+            style={{ textAlign: 'start' }}
           />
         </div>
         <div className='relative mx-auto flex max-w-[860px] flex-col items-center text-center'>
@@ -69,7 +70,7 @@ const Product = () => {
           {PRODUCT_SURFACES.map((item, index) => {
             const imageCard = (
               <div className='rounded-[18px] bg-brand-bg p-4 shadow-[0_0_0_1px_rgba(249,240,217,0.08)]'>
-                <img src={item.image} alt='' className='w-full rounded-[8px]' />
+                <img src={item.image} alt='' className='w-full' style={{ borderRadius: '0px', color: 'rgb(249, 240, 217)' }} />
               </div>
             );
 

@@ -98,9 +98,9 @@ describe('Marketing parity routes', () => {
 
     // ASCII art images render as full-width backgrounds (not small inline images)
     const asciArtImg = screen.getByAltText('asci art');
-    expect(asciArtImg.closest('div')).toHaveClass('pointer-events-none', 'absolute', 'inset-0');
+    expect(asciArtImg.closest('div')).toHaveClass('absolute', 'inset-0');
     const blackHoleImg = screen.getByAltText(/ASCII art depicting a large black hole/i);
-    expect(blackHoleImg.closest('div')).toHaveClass('pointer-events-none', 'absolute', 'inset-0');
+    expect(blackHoleImg.closest('div')).toHaveClass('absolute', 'inset-0');
 
     // AMD quote section is full-width dark background, not a contained card
     const amdSection = asciArtImg.closest('section');

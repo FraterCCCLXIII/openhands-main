@@ -86,7 +86,7 @@ const FooterContent = ({
                 href='#footer-resources'
                 data-wf-el='eyebrow'
                 className='px-[5px] text-base font-medium transition-colors hover:text-[#8a5f45]'
-                style={{ display: 'block', fontFamily: 'geistmono, ui-monospace, monospace', lineHeight: '16.896px', textAlign: 'center', paddingTop: '0px', paddingBottom: '0px' }}
+                style={{ display: 'block', lineHeight: '22.4px', textAlign: 'start', whiteSpace: 'nowrap', paddingTop: '0px', paddingBottom: '0px' }}
               >
                 Resources
               </a>
@@ -150,7 +150,7 @@ const FooterContent = ({
             ))}
 
             <div data-wf-el='footer-drop' id='footer-resources' className='flex max-w-[220px] flex-wrap items-start gap-x-5 gap-y-2 text-left' style={{ justifyContent: 'flex-start' }}>
-              <a href='#footer-resources' data-wf-el='eyebrow' className='text-base font-medium transition-colors hover:text-[#8a5f45]' style={{ display: 'block', fontFamily: 'geistmono, ui-monospace, monospace', lineHeight: '16.896px', textAlign: 'center', paddingTop: '0px', paddingBottom: '0px' }}>
+              <a href='#footer-resources' data-wf-el='eyebrow' className='text-base font-medium transition-colors hover:text-[#8a5f45]' style={{ display: 'block', fontFamily: '"Sohne Kraftig", Inter, Arial, sans-serif', lineHeight: '22.4px', textAlign: 'start', whiteSpace: 'nowrap', paddingTop: '0px', paddingBottom: '0px' }}>
                 Resources
               </a>
               {FOOTER_RESOURCE_LINKS.map((item) =>
@@ -216,14 +216,14 @@ export const Footer = ({
   }
 
   return (
-    <footer className='relative overflow-hidden bg-brand-accent px-6 py-16 text-brand-fg'>
-      <div data-wf-el='asci-wrap' className='absolute inset-0 pointer-events-none opacity-20'>
+    <footer className='relative overflow-hidden bg-brand-accent text-brand-fg' style={{ padding: '80px 0px' }}>
+      <div data-wf-el='asci-wrap' className='absolute inset-0 opacity-20'>
         <img
           data-wf-el='asci-media'
           src='/assets/webflow/backgrounds/6908d170831c19b2b6976323_ascii-art_(16)_1.svg'
           alt=''
           className='h-full w-full object-cover'
-          style={{ display: 'inline-block' }}
+          style={{ display: 'inline-block', textAlign: 'start' }}
         />
       </div>
       <div className='relative z-10 mx-auto max-w-[1238px]'>

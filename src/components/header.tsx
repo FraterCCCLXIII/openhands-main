@@ -143,13 +143,13 @@ export const Header: React.FC<HeaderProps> = ({
                 <div data-wf-el='nav-menu_gh_num'><span style={{ fontWeight: 400 }}>{formatThousands(statistics.stargazers)}</span></div>
               </a>
               <div className='btn btn-outline relative' style={{ padding: '0.9em 1.9em', margin: 0, borderRadius: '8px', backgroundColor: 'rgba(255,255,255,0.34)', borderColor: 'transparent' }}>
-                <div aria-hidden='true'>Build with SDK</div>
+                <div aria-hidden='true' style={{ whiteSpace: 'nowrap', cursor: 'auto', textUnderlineOffset: 'auto', pointerEvents: 'none' }}>Build with SDK</div>
                 <a href='https://docs.openhands.dev/sdk' target='_blank' rel='noopener noreferrer' className='absolute inset-0'>
                   <span className='sr-only'>Build with SDK</span>
                 </a>
               </div>
               <div className='btn btn-primary relative' style={{ padding: '0.9em 1.9em', margin: 0, borderRadius: '8px' }}>
-                <div aria-hidden='true'>Try it live</div>
+                <div aria-hidden='true' style={{ whiteSpace: 'nowrap', cursor: 'auto', textUnderlineOffset: 'auto', pointerEvents: 'none' }}>Try it live</div>
                 <a href='https://app.all-hands.dev/' target='_blank' rel='noopener noreferrer' className='absolute inset-0'>
                   <span className='sr-only'>Try it live</span>
                 </a>

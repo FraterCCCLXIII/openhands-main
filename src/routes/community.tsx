@@ -300,7 +300,8 @@ const Community = () => {
             <img
               src={MICHAEL_MAY_IMAGE}
               alt=''
-              className='mx-auto h-20 w-20 rounded-full object-cover'
+              className='mx-auto h-20 w-20 object-cover'
+              style={{ borderRadius: '100%' }}
             />
             <h3 className='mt-5 inline-block fluid-h3 text-brand-fg'>
               Michael May

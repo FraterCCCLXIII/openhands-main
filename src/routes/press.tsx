@@ -72,7 +72,7 @@ const Press = () => {
         <div className='mx-auto grid max-w-[1238px] gap-x-6 gap-y-14 md:grid-cols-2 xl:grid-cols-3'>
           {PRESS_ITEMS.map((item) => (
             <article key={item.title} className='flex flex-col gap-5'>
-              <img src={item.image} alt='' className='h-[300px] w-full rounded-[8px] object-cover' />
+              <img src={item.image} alt='' className='h-[300px] w-full object-cover' style={{ borderRadius: '0px' }} />
               <p className='m-0 inline-block self-start text-[16px] leading-[22.4px] text-[#5f5f5f]'>{item.date}</p>
               <p className='m-0 max-w-[397px] fluid-body-lg font-medium text-brand-fg'>
                 {item.title}

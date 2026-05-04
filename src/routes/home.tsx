@@ -577,8 +577,8 @@ const Home = () => {
                 </div>
                 <div className='grid gap-6 p-6 lg:grid-cols-3 lg:gap-x-10 lg:px-[31px] lg:pt-[50px]'>
                   {column.cards.map((card) => (
-                    <article key={card.title} className='rounded-none bg-transparent'>
-                      <div className='mb-4 flex h-14 w-14 items-center justify-center rounded-none bg-white'>
+                    <article key={card.title} className='bg-transparent' style={{ borderRadius: '19.2px' }}>
+                      <div className='mb-4 flex h-14 w-14 items-center justify-center' style={{ borderRadius: '19.2px', backgroundColor: 'rgba(0, 0, 0, 0)' }}>
                         <img src={card.icon} alt='' className='h-8 w-8' />
                       </div>
                       <p className='mb-2 fluid-body-lg font-medium text-brand-fg'>{card.title}</p>
@@ -688,8 +688,8 @@ const Home = () => {
                     ['/assets/webflow/icons/6908c8dc24685e3f5e172012_github-mark4.svg', 'GitHub'],
                     ['/assets/webflow/icons/6908c8dde7fa5732b9ed5cb4_Vector.svg', 'GitLab'],
                   ].map(([icon, label]) => (
-                    <div key={label} className='rounded-none border border-white/10 bg-white/5 p-4 text-center'>
-                      <img src={icon} alt='' className='mx-auto mb-3 h-8 w-auto' />
+                    <div key={label} className='border border-white/10 text-center' style={{ borderRadius: '8px', backgroundColor: 'rgb(34, 21, 13)', padding: '0px' }}>
+                      <img src={icon} alt='' className='mx-auto mb-3 h-8 w-auto' style={{ textAlign: 'start' }} />
                       <div className='text-sm text-brand-bg'>{label}</div>
                     </div>
                   ))}
@@ -791,11 +791,12 @@ const Home = () => {
 
       {/* SECTION 7: CTA (u-bg-primary, py:80, yellow bg) */}
       <section data-wf-el='section-cta' style={{ display: 'block', backgroundColor: 'rgb(255, 255, 139)', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px', position: 'relative' }} className='text-center text-brand-fg'>
-        <div className='absolute inset-0 pointer-events-none opacity-20'>
+        <div className='absolute inset-0 opacity-20'>
           <img
             src='/assets/webflow/backgrounds/6908d170831c19b2b6976323_ascii-art_(16)_1.svg'
             alt=''
             className='h-full w-full object-cover'
+            style={{ textAlign: 'start' }}
           />
         </div>
         <div className='relative z-10 mx-auto max-w-[1238px]'>

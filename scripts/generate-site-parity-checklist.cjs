@@ -58,7 +58,7 @@ const STYLE_PROPS = [
   'boxShadow',
 ];
 const STYLE_CHECK_TAGS = new Set(['H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'A', 'BUTTON', 'LABEL', 'INPUT', 'IMG', 'P', 'SPAN', 'DIV', 'SUMMARY', 'DETAILS', 'NAV', 'SECTION', 'ARTICLE', 'UL', 'LI']);
-const LAYOUT_CHECK_TAGS = new Set(['H1', 'H2', 'H3', 'H4', 'A', 'BUTTON', 'LABEL', 'INPUT', 'IMG', 'P']);
+const LAYOUT_CHECK_TAGS = new Set(['H1', 'H2', 'H3', 'H4', 'A', 'BUTTON', 'LABEL', 'INPUT', 'IMG', 'P', 'DIV']);
 
 const CONTAINER_STYLE_PROPS = [
   'backgroundColor',
@@ -404,6 +404,9 @@ async function collectInternalLinks(page, origin) {
 
 async function extractPageInventory(page) {
   return page.evaluate((styleProps) => {
+    // Include semantic elements plus div elements that have ARIA roles or
+    // aria-hidden (CTA overlay-link pattern) so tab pills, buttons with
+    // visually-hidden link text, and dropdown triggers are inventoried.
     const selectors = [
       'h1',
       'h2',
@@ -418,6 +421,8 @@ async function extractPageInventory(page) {
       'select',
       'img',
       'video',
+      'div[role]',
+      'div[aria-hidden]',
     ].join(',');
 
     const normalizeWhitespaceInner = (value) => (value || '').replace(/\s+/g, ' ').trim();
@@ -435,7 +440,12 @@ async function extractPageInventory(page) {
         if (style.display === 'none' || style.visibility === 'hidden' || Number(style.opacity) === 0) {
           return false;
         }
-        if (current.hasAttribute('hidden') || current.getAttribute('aria-hidden') === 'true') {
+        // Skip hidden elements, but do NOT skip aria-hidden="true" since
+        // those elements are often visually rendered (e.g. CTA buttons
+        // using the overlay-link pattern where the visible label lives in
+        // an aria-hidden wrapper).  Visual parity cares about what's
+        // painted on screen, not ARIA semantics.
+        if (current.hasAttribute('hidden')) {
           return false;
         }
         current = current.parentElement;
@@ -952,6 +962,179 @@ async function extractHoverDiffs(page, selectors) {
   return results;
 }
 
+// ── Dropdown audit ──
+// Identifies nav dropdown triggers, clicks them, and captures the revealed
+// dropdown panel content so we can compare dropdown existence and visual design
+// between live and test sites.
+async function extractDropdownContent(page) {
+  const results = [];
+  try {
+    // Find nav dropdown triggers: buttons/links with aria-expanded, or elements
+    // that contain a chevron/arrow icon inside a nav area.
+    const triggerSelector = 'nav button[aria-expanded], nav button:has(svg), header button:has(svg), [data-wf-el*="dropdown"] ~ button, button[class*="dropdown"], a[class*="dropdown-toggle"]';
+    const triggers = await page.$$(triggerSelector);
+
+    // Also find nav links that look like dropdown triggers (have child arrow icons)
+    const navLinkTriggers = await page.$$('nav a:has(svg[class*="chevron"]), nav a:has(svg[class*="arrow"]), header a:has(svg)');
+    const allTriggers = [...triggers, ...navLinkTriggers].slice(0, 10);
+
+    for (const handle of allTriggers) {
+      try {
+        // Get trigger info before click
+        const triggerInfo = await page.evaluate((el) => {
+          const text = (el.innerText || el.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 80);
+          const tag = el.tagName;
+          const ariaExpanded = el.getAttribute('aria-expanded');
+          return { tag, text: text || '(unlabeled)', ariaExpanded };
+        }, handle);
+
+        // Click to open dropdown
+        await handle.click({ delay: 50 });
+        await page.evaluate(() => new Promise((r) => setTimeout(r, 400)));
+
+        // Extract revealed dropdown content
+        const dropdownContent = await page.evaluate((el) => {
+          // Look for sibling/child dropdown panel that became visible after click
+          const parent = el.parentElement;
+          if (!parent) return null;
+          const candidates = parent.querySelectorAll('[class*="dropdown"], [role="menu"], [role="listbox"], [data-wf-el*="dropdown"], ul, div');
+          for (const candidate of candidates) {
+            if (candidate === el) continue;
+            const style = window.getComputedStyle(candidate);
+            const rect = candidate.getBoundingClientRect();
+            if (rect.width < 10 || rect.height < 10) continue;
+            if (style.display === 'none') continue;
+            if (style.visibility === 'hidden' && Number(style.opacity) === 0) continue;
+
+            // Found a visible dropdown panel - extract its content
+            const links = Array.from(candidate.querySelectorAll('a')).map((a) => ({
+              text: (a.innerText || '').trim().slice(0, 80),
+              href: a.getAttribute('href') || '',
+            })).filter((l) => l.text);
+            const headings = Array.from(candidate.querySelectorAll('div, span, h1, h2, h3, h4, h5, h6'))
+              .filter((h) => {
+                const s = window.getComputedStyle(h);
+                return s.fontWeight >= 600 || s.textTransform === 'uppercase';
+              })
+              .map((h) => (h.innerText || '').trim().slice(0, 80))
+              .filter(Boolean);
+
+            const cStyle = window.getComputedStyle(candidate);
+            return {
+              width: Math.round(rect.width),
+              height: Math.round(rect.height),
+              linkCount: links.length,
+              links,
+              headings,
+              backgroundColor: cStyle.backgroundColor,
+              borderRadius: cStyle.borderRadius,
+              boxShadow: cStyle.boxShadow,
+              padding: cStyle.padding,
+            };
+          }
+          return null;
+        }, handle);
+
+        // Click again to close dropdown
+        await handle.click({ delay: 50 });
+        await page.evaluate(() => new Promise((r) => setTimeout(r, 200)));
+
+        results.push({
+          trigger: triggerInfo.text,
+          triggerTag: triggerInfo.tag,
+          hasDropdown: dropdownContent !== null,
+          dropdown: dropdownContent,
+        });
+      } catch {
+        // element may have triggered navigation
+      }
+    }
+  } catch {
+    // dropdown extraction is best-effort
+  }
+  return results;
+}
+
+function compareDropdowns(liveDropdowns, testDropdowns) {
+  const diffs = [];
+
+  // Match by trigger label
+  const liveMap = new Map(liveDropdowns.map((d) => [d.trigger.toLowerCase(), d]));
+  const testMap = new Map(testDropdowns.map((d) => [d.trigger.toLowerCase(), d]));
+
+  for (const [label, live] of liveMap) {
+    const test = testMap.get(label);
+    if (!test) {
+      if (live.hasDropdown) {
+        diffs.push({
+          trigger: live.trigger,
+          issue: 'dropdown exists on live but trigger missing on test',
+          liveLinks: live.dropdown?.links?.length || 0,
+          testLinks: 0,
+        });
+      }
+      continue;
+    }
+    if (live.hasDropdown && !test.hasDropdown) {
+      diffs.push({
+        trigger: live.trigger,
+        issue: 'dropdown exists on live but NOT on test',
+        liveLinks: live.dropdown?.links?.length || 0,
+        testLinks: 0,
+      });
+    } else if (!live.hasDropdown && test.hasDropdown) {
+      diffs.push({
+        trigger: live.trigger,
+        issue: 'dropdown exists on test but NOT on live',
+        liveLinks: 0,
+        testLinks: test.dropdown?.links?.length || 0,
+      });
+    } else if (live.hasDropdown && test.hasDropdown) {
+      // Both have dropdowns - compare structure
+      const ll = live.dropdown;
+      const tl = test.dropdown;
+      const issues = [];
+      if (ll.linkCount !== tl.linkCount) {
+        issues.push(`link count: live=${ll.linkCount} test=${tl.linkCount}`);
+      }
+      // Compare link text
+      const liveLinkTexts = (ll.links || []).map((l) => l.text.toLowerCase()).sort();
+      const testLinkTexts = (tl.links || []).map((l) => l.text.toLowerCase()).sort();
+      const missingLinks = liveLinkTexts.filter((t) => !testLinkTexts.includes(t));
+      const extraLinks = testLinkTexts.filter((t) => !liveLinkTexts.includes(t));
+      if (missingLinks.length > 0) issues.push(`missing links: ${missingLinks.join(', ')}`);
+      if (extraLinks.length > 0) issues.push(`extra links: ${extraLinks.join(', ')}`);
+      // Compare visual style
+      const sizeDiff = Math.abs((ll.width || 0) - (tl.width || 0)) + Math.abs((ll.height || 0) - (tl.height || 0));
+      if (sizeDiff > 40) issues.push(`size: live=${ll.width}×${ll.height} test=${tl.width}×${tl.height}`);
+      if (ll.borderRadius !== tl.borderRadius) issues.push(`borderRadius: live=${ll.borderRadius} test=${tl.borderRadius}`);
+      if (ll.backgroundColor !== tl.backgroundColor) issues.push(`backgroundColor: live=${ll.backgroundColor} test=${tl.backgroundColor}`);
+      if (issues.length > 0) {
+        diffs.push({
+          trigger: live.trigger,
+          issue: issues.join('; '),
+          liveLinks: ll.linkCount,
+          testLinks: tl.linkCount,
+        });
+      }
+    }
+  }
+
+  // Test-only dropdowns
+  for (const [label, test] of testMap) {
+    if (!liveMap.has(label) && test.hasDropdown) {
+      diffs.push({
+        trigger: test.trigger,
+        issue: 'dropdown exists on test but trigger missing on live',
+        liveLinks: 0,
+        testLinks: test.dropdown?.links?.length || 0,
+      });
+    }
+  }
+
+  return diffs;
+}
+
 // ── Click-behavior audit ──
 // Tests whether interactive elements (tabs, accordions, toggles) produce visible
 // DOM changes when clicked, comparing behavior between live and test sites.
@@ -1460,6 +1643,12 @@ function summarizeRouteComparison(routePath, livePage, testPage, screenshotDiff)
     testPage.clickBehavior || [],
   );
 
+  // Dropdown comparison
+  const dropdownDiffs = compareDropdowns(
+    livePage.dropdowns || [],
+    testPage.dropdowns || [],
+  );
+
   // CSS custom property comparison
   const cssVarDiffs = [];
   const allVarNames = new Set([
@@ -1529,6 +1718,8 @@ function summarizeRouteComparison(routePath, livePage, testPage, screenshotDiff)
     hoverMismatchCount: hoverDiffs.length,
     clickBehaviorDiffs,
     clickBehaviorDiffCount: clickBehaviorDiffs.length,
+    dropdownDiffs,
+    dropdownDiffCount: dropdownDiffs.length,
     imageDiffs,
     imageDiffCount: imageDiffs.length,
     cssVarDiffs,
@@ -1735,6 +1926,7 @@ function renderMarkdown(report) {
   lines.push(`- Interactivity behavior mismatches: ${report.summary.interactivityDiffs}`);
   lines.push(`- Hover effect mismatches: ${report.summary.hoverMismatches}`);
   lines.push(`- Click behavior mismatches (tabs/accordions): ${report.summary.clickBehaviorMismatches || 0}`);
+  lines.push(`- Dropdown mismatches (nav dropdowns): ${report.summary.dropdownMismatches || 0}`);
   lines.push(`- Image dimension mismatches: ${report.summary.imageDimensionMismatches || 0}`);
   lines.push(`- Webflow element style mismatches (data-wf-el): ${report.summary.wfElementMismatches || 0}`);
   lines.push(`- Webflow elements unmatched on test: ${report.summary.wfElementsMissing || 0}`);
@@ -1854,6 +2046,15 @@ function renderMarkdown(report) {
       }
     }
 
+    // Dropdown mismatches (nav dropdowns)
+    if (route.dropdownDiffs && route.dropdownDiffs.length > 0) {
+      lines.push('');
+      lines.push('### Dropdown mismatches (nav menus)');
+      for (const diff of route.dropdownDiffs) {
+        lines.push(`- [ ] "${diff.trigger}" — ${diff.issue} (live links: ${diff.liveLinks}, test links: ${diff.testLinks})`);
+      }
+    }
+
     // Image dimension mismatches
     if (route.imageDiffs && route.imageDiffs.length > 0) {
       lines.push('');
@@ -1960,6 +2161,17 @@ async function loadPage(page, origin, routePath) {
     // click behavior extraction is best-effort
   }
 
+  let dropdowns = [];
+  try {
+    dropdowns = await withTimeout(
+      extractDropdownContent(page),
+      20000,
+      `dropdown content ${url}`,
+    );
+  } catch {
+    // dropdown extraction is best-effort
+  }
+
   return {
     status: response?.status() || 0,
     inventory,
@@ -1967,6 +2179,7 @@ async function loadPage(page, origin, routePath) {
     interactive,
     hoverEffects,
     clickBehavior,
+    dropdowns,
     cssVars,
     wfElements,
   };
@@ -2075,6 +2288,7 @@ async function main() {
         interactivityDiffs: routes.reduce((total, route) => total + (route.interactivityDiffCount || 0), 0),
         hoverMismatches: routes.reduce((total, route) => total + (route.hoverMismatchCount || 0), 0),
         clickBehaviorMismatches: routes.reduce((total, route) => total + (route.clickBehaviorDiffCount || 0), 0),
+        dropdownMismatches: routes.reduce((total, route) => total + (route.dropdownDiffCount || 0), 0),
         imageDimensionMismatches: routes.reduce((total, route) => total + (route.imageDiffCount || 0), 0),
         wfElementMismatches: routes.reduce((total, route) => total + (route.wfMismatchCount || 0), 0),
         wfElementsMissing: routes.reduce((total, route) => total + (route.wfMissingCount || 0), 0),
@@ -2102,6 +2316,7 @@ async function main() {
       report.summary.interactivityDiffs +
       report.summary.hoverMismatches +
       (report.summary.clickBehaviorMismatches || 0) +
+      (report.summary.dropdownMismatches || 0) +
       report.summary.imageDimensionMismatches +
       (report.summary.wfElementMismatches || 0) +
       report.summary.screenshotMismatches;
@@ -2128,11 +2343,13 @@ module.exports = {
   categorizeStyleDiffs,
   compareClickBehavior,
   compareContainerStyles,
+  compareDropdowns,
   compareHoverEffects,
   compareInteractivity,
   compareStyleValue,
   compareWebflowElements,
   copyPngInto,
+  extractDropdownContent,
   extractWebflowElements,
   getScreenshotMetrics,
   normalizeFontFamily,
