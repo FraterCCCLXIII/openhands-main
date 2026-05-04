@@ -67,6 +67,7 @@ Located at: `scripts/generate-site-parity-checklist.cjs`
 - Output: Markdown/JSON parity reports plus screenshot artifacts under `PARITY_OUTPUT_DIR`
 - The report now includes per-route sections for: container/section style mismatches, per-element interactivity mismatches, missing/extra interactive elements, interactivity behavior mismatches, and hover effect mismatches
 - Per-element interactivity captures: cursor (pointer vs default), pointerEvents (none vs auto), and clickable semantics (button/link/form-control role mismatches)
+- Ancestor walk uses `maxDepth = 8` to find visual wrapper elements (bg, borderRadius, boxShadow) above each text element. One-sided ancestor mismatches are only flagged when the ancestor has a **visible** backgroundColor or boxShadow — not borderRadius alone on a transparent container. Additionally, ancestors whose bg matches the page-level body/html background are silently skipped, since the page bg is always visible and finding it on a different structural container (Webflow page-wrapper div vs React body) is not a meaningful visual difference.
 
 ## Common Discrepancy Patterns
 

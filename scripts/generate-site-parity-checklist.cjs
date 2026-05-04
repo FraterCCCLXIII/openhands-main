@@ -273,15 +273,28 @@ function compareStyles(liveStyle, testStyle) {
 // Catches visual mismatches on parent elements like button wrappers with
 // borderRadius or backgroundColor that the text-matched child doesn't carry.
 const ANCESTOR_COMPARE_PROPS = ['borderRadius', 'backgroundColor', 'boxShadow', 'padding'];
-function compareAncestorStyles(liveAncestor, testAncestor) {
+function compareAncestorStyles(liveAncestor, testAncestor, livePageBg, testPageBg) {
   if (!liveAncestor && !testAncestor) return [];
   if (!liveAncestor || !testAncestor) {
-    // One side has a visual ancestor within 4 levels, the other doesn't.
-    // Only flag for interactive ancestors (A, BUTTON) — section/div wrappers
-    // with background colors are usually structural differences (transparent
-    // sections on live vs colored sections on test) and produce too much noise.
+    // One side has a visual ancestor within maxDepth levels, the other doesn't.
+    // Only flag when the ancestor carries a *visible* property — a non-transparent
+    // backgroundColor or a non-zero boxShadow.  BorderRadius alone on a transparent
+    // container is invisible and creates noise from Webflow/React structural
+    // differences (e.g. <nav> vs <header>, extra wrapper divs).
+    // Also skip when the ancestor bg matches the page-level background — both
+    // sites use the same page bg, so finding it on different wrapper elements
+    // (e.g. Webflow page-wrapper div vs body) is not a meaningful visual diff.
     const present = liveAncestor || testAncestor;
-    if (!['A', 'BUTTON'].includes(present._tag)) return [];
+    const ancestorBg = present.backgroundColor;
+    const hasBg = ancestorBg &&
+                  ancestorBg !== 'rgba(0, 0, 0, 0)' &&
+                  ancestorBg !== 'transparent';
+    const hasShadow = present.boxShadow &&
+                      present.boxShadow !== 'none' &&
+                      !/0px\s+0px\s+0px\s+0px/.test(present.boxShadow);
+    if (!hasBg && !hasShadow) return [];
+    // Ancestor bg matches page-level background on either side → not a visual diff
+    if (hasBg && (ancestorBg === livePageBg || ancestorBg === testPageBg)) return [];
     const side = liveAncestor ? 'live-only' : 'test-only';
     return [`ancestor.container: ${side} (${present._tag})`];
   }
@@ -490,7 +503,7 @@ async function extractPageInventory(page) {
       // (e.g. a button wrapper with borderRadius that the text child doesn't have).
       const ANCESTOR_PROPS = ['borderRadius', 'backgroundColor', 'boxShadow', 'padding'];
       let ancestor = element.parentElement;
-      const maxDepth = 4;
+      const maxDepth = 8;
       let depth = 0;
       let ancestorStyle = null;
       while (ancestor && depth < maxDepth) {
@@ -532,6 +545,13 @@ async function extractPageInventory(page) {
       headings[tag] = elements.filter((element) => element.tag === tag).map((element) => element.text);
     }
 
+    // Capture page-level background so ancestor comparison can ignore it.
+    const bodyBg = window.getComputedStyle(document.body).backgroundColor;
+    const htmlBg = window.getComputedStyle(document.documentElement).backgroundColor;
+    const pageBg = (bodyBg && bodyBg !== 'rgba(0, 0, 0, 0)' && bodyBg !== 'transparent')
+      ? bodyBg
+      : htmlBg;
+
     return {
       title,
       headings,
@@ -539,6 +559,7 @@ async function extractPageInventory(page) {
         .filter((element) => ['H1', 'H2', 'H3', 'H4'].includes(element.tag))
         .map((element) => `${element.tag}:${element.text}`),
       elements,
+      pageBg,
     };
   }, STYLE_PROPS);
 }
@@ -570,7 +591,7 @@ async function extractWebflowElements(page, isLiveSite) {
       }
       // Must contain underscore or hyphen (Webflow naming) or be a known component name
       if (c.indexOf('_') >= 0 || c.indexOf('-') >= 0) return true;
-      var known = ['hero', 'container', 'card', 'button', 'icon', 'eyebrow', 'slot', 'bubble'];
+      var known = ['hero', 'container', 'card', 'button', 'icon', 'eyebrow', 'slot', 'bubble', 'banner'];
       return known.indexOf(c) >= 0;
     }
 
@@ -1343,7 +1364,8 @@ function summarizeRouteComparison(routePath, livePage, testPage, screenshotDiff)
         ? compareElementInteractivity(li.interactive, ti.interactive)
         : [];
       const ancestorDiffs = hasTest
-        ? compareAncestorStyles(li.ancestorStyle || null, ti.ancestorStyle || null)
+        ? compareAncestorStyles(li.ancestorStyle || null, ti.ancestorStyle || null,
+            livePage.inventory.pageBg, testPage.inventory.pageBg)
         : [];
 
       checklist.push({

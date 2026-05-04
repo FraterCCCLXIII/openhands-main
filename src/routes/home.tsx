@@ -344,8 +344,8 @@ const Home = () => {
 
           <div data-wf-el='container' className='relative z-10 mx-auto w-full max-w-[1238px]'>
             <div data-wf-el='hero-content' className='mx-auto max-w-[1238px]' style={{ textAlign: 'center', paddingTop: '56px', paddingBottom: '72px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: '32px' }}>
-              <div data-wf-el='banner-wrap' className='mx-auto max-w-[688px] text-center' style={{ backgroundColor: 'rgba(0, 0, 0, 0)', borderRadius: '0px', paddingTop: '12.8px', paddingBottom: '12.8px', paddingLeft: '32px', paddingRight: '32px' }}>
-                <div>
+              <div data-wf-el='banner' style={{ backgroundColor: 'rgb(255, 255, 139)', borderRadius: '6.4px' }}>
+                <div data-wf-el='banner-wrap' className='mx-auto max-w-[688px] text-center' style={{ backgroundColor: 'rgba(0, 0, 0, 0)', borderRadius: '0px', paddingTop: '12.8px', paddingBottom: '12.8px', paddingLeft: '32px', paddingRight: '32px' }}>
                   <div className='flex flex-col items-center justify-center sm:flex-row'>
                     <div className='sm:flex-1' style={{ padding: '0 12px' }}>
                       <p className='text-sm font-normal leading-[1.6] text-brand-fg'>Modernize legacy systems before your expertise disappears</p>
@@ -537,7 +537,7 @@ const Home = () => {
             </span>
           </div>
 
-          <div className='rounded-none border border-brand-fg/15 bg-white/70 px-5 py-0'>
+          <div className='rounded-none px-5 py-0'>
             {FEATURES.map((feature) => (
               <div key={feature.title} className='feature-item-stacked'>
                 <img src={feature.icon} alt='' className='mt-1 h-8 w-8 flex-shrink-0' />
