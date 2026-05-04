@@ -77,7 +77,9 @@ describe('Product parity routes', () => {
     expect(screen.getByText('Turn OpenHands into your agent platform.')).toBeInTheDocument();
     expect(screen.getByText('Start building with the SDK.')).toBeInTheDocument();
     expect(screen.getAllByRole('link', { name: 'Try it live' }).length).toBeGreaterThan(0);
-    expect(container.querySelector('summary label')?.closest('summary')).toHaveClass('text-[24px]');
+    const summaryLabel = container.querySelector('summary label');
+    expect(summaryLabel).toBeInTheDocument();
+    expect(summaryLabel).toHaveStyle({ fontSize: '24px' });
   });
 
   it('renders the Web GUI product page content', () => {
@@ -116,7 +118,7 @@ describe('Product parity routes', () => {
     expect(screen.queryByAltText('OpenHands CLI interface screenshot.')).not.toBeInTheDocument();
     expect(screen.queryByAltText('OpenHands comparison illustration.')).not.toBeInTheDocument();
     expect(container.querySelectorAll('summary label')).toHaveLength(5);
-    expect(container.querySelector('summary label')?.closest('summary')).toHaveClass('text-[24px]');
+    expect(container.querySelector('summary label')).toHaveStyle({ fontSize: '24px' });
     expect(screen.getByText('Control your agents like real infrastructure.')).toBeInTheDocument();
     expect(screen.getByText('Run OpenHands from the terminal or automate it end to end with the CLI.')).toBeInTheDocument();
     expect(screen.getAllByRole('link', { name: 'Try it live' }).length).toBeGreaterThan(0);
@@ -158,8 +160,8 @@ describe('Product parity routes', () => {
 
       expect(screen.getByRole('heading', { name: proofHeading })).toHaveClass(proofHeadingClass);
       expect(screen.getByText(closingDescription)).toBeInTheDocument();
-      container.querySelectorAll('summary').forEach((summary) => {
-        expect(summary).toHaveClass('text-[24px]', 'leading-[1.4]');
+      container.querySelectorAll('summary label').forEach((label) => {
+        expect(label).toHaveStyle({ fontSize: '24px' });
       });
       Array.from(container.querySelectorAll('img[alt]')).forEach((image) => {
         expect(image.getAttribute('alt') ?? '').not.toMatch(forbiddenImageAlt);

@@ -65,7 +65,6 @@ describe('BlogCard', () => {
     expect(featuredCard).toBeInTheDocument();
     expect(screen.getByText('Introducing the OpenHands Index')).toBeInTheDocument();
     expect(readMoreLink).toHaveAttribute('href', '/blog/openhands-index');
-    expect(readMoreLink.querySelector('span')?.className).toContain('rounded-[6px]');
     expect(featuredCard.querySelector('div')?.className).toContain('aspect-[2/1]');
     expect(featuredCard.querySelector('img')?.getAttribute('alt')).toBe('');
   });

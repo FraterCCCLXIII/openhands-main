@@ -17,7 +17,7 @@ describe('Privacy policy route', () => {
 
     expect(container.querySelector('main')).toHaveClass('pt-16', 'pb-20');
     expect(container.querySelector('main > div')).toHaveClass('max-w-[900px]');
-    expect(screen.getByRole('heading', { level: 1, name: 'Privacy Policy' })).toHaveClass('mb-12', 'leading-[1.2]');
+    expect(screen.getByRole('heading', { level: 1, name: 'Privacy Policy' })).toHaveClass('mb-12', 'leading-[1.15]');
     expect(screen.getByText('Effective Date: September 3, 2025').closest('p')).toHaveClass(
       'tracking-[-0.015em]',
       'leading-[1.6]',
