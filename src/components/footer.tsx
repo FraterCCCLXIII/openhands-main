@@ -58,7 +58,7 @@ const FooterContent = ({
         </div>
       ) : null}
 
-      <div className='mb-8 flex justify-center'>
+      <div data-wf-el='footer-nav' className='mb-8' style={compactNav ? { display: 'flex', textAlign: 'start', paddingBottom: '16px', justifyContent: 'space-between', alignItems: 'flex-start' } : { display: 'flex', justifyContent: 'center' }}>
         {compactNav ? (
           <div
             className={clsx(
@@ -70,19 +70,23 @@ const FooterContent = ({
               <Link
                 key={item.name}
                 to={item.to}
+                data-wf-el='nav-link'
                 className={clsx(
-                  'inline-flex whitespace-nowrap px-[5px] py-[14.4px] text-base font-medium leading-[22.4px] transition-colors hover:text-[#8a5f45]',
+                  'whitespace-nowrap px-[5px] py-[14.4px] text-base font-medium leading-[22.4px] transition-colors hover:text-[#8a5f45]',
                   isPathActive(pathname, item.to) && 'text-[#8a5f45]'
                 )}
+                style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '4.8px' }}
               >
                 {item.name}
               </Link>
             ))}
 
-            <div id='footer-resources' className='flex flex-col items-start'>
+            <div data-wf-el='footer-drop' id='footer-resources' className='flex flex-col items-start' style={{ justifyContent: 'flex-start' }}>
               <a
                 href='#footer-resources'
-                className='inline-flex whitespace-nowrap px-[5px] py-[14.4px] text-base font-medium leading-[22.4px] transition-colors hover:text-[#8a5f45]'
+                data-wf-el='eyebrow'
+                className='px-[5px] text-base font-medium transition-colors hover:text-[#8a5f45]'
+                style={{ display: 'block', fontFamily: 'geistmono, ui-monospace, monospace', lineHeight: '16.896px', textAlign: 'center', paddingTop: '0px', paddingBottom: '0px' }}
               >
                 Resources
               </a>
@@ -93,6 +97,7 @@ const FooterContent = ({
                     href={item.to}
                     target='_blank'
                     rel='noopener noreferrer'
+                    data-wf-el='footer-nav-link'
                     className='px-[5px] font-sohne-buch text-[14px] font-normal leading-[19.6px] transition-colors hover:text-[#8a5f45]'
                   >
                     {item.name}
@@ -101,6 +106,7 @@ const FooterContent = ({
                   <Link
                     key={item.name}
                     to={item.to}
+                    data-wf-el='footer-nav-link'
                     className='px-[5px] font-sohne-buch text-[14px] font-normal leading-[19.6px] transition-colors hover:text-[#8a5f45]'
                   >
                     {item.name}
@@ -111,10 +117,12 @@ const FooterContent = ({
 
             <Link
               to='/contact'
+              data-wf-el='nav-link'
               className={clsx(
-                'inline-flex whitespace-nowrap px-[5px] py-[14.4px] text-base font-medium leading-[22.4px] transition-colors hover:text-[#8a5f45]',
+                'whitespace-nowrap px-[5px] py-[14.4px] text-base font-medium leading-[22.4px] transition-colors hover:text-[#8a5f45]',
                 isPathActive(pathname, '/contact') && 'text-[#8a5f45]'
               )}
+              style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '4.8px' }}
             >
               Contact
             </Link>
@@ -130,17 +138,19 @@ const FooterContent = ({
               <Link
                 key={item.name}
                 to={item.to}
+                data-wf-el='nav-link'
                 className={clsx(
                   'whitespace-nowrap text-left text-base font-medium leading-[22.4px] transition-colors hover:text-[#8a5f45]',
                   isPathActive(pathname, item.to) && 'text-[#8a5f45]'
                 )}
+                style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '4.8px' }}
               >
                 {item.name}
               </Link>
             ))}
 
-            <div id='footer-resources' className='flex max-w-[220px] flex-wrap items-start gap-x-5 gap-y-2 text-left'>
-              <a href='#footer-resources' className='whitespace-nowrap text-base font-medium leading-[22.4px] transition-colors hover:text-[#8a5f45]'>
+            <div data-wf-el='footer-drop' id='footer-resources' className='flex max-w-[220px] flex-wrap items-start gap-x-5 gap-y-2 text-left' style={{ justifyContent: 'flex-start' }}>
+              <a href='#footer-resources' data-wf-el='eyebrow' className='text-base font-medium transition-colors hover:text-[#8a5f45]' style={{ display: 'block', fontFamily: 'geistmono, ui-monospace, monospace', lineHeight: '16.896px', textAlign: 'center', paddingTop: '0px', paddingBottom: '0px' }}>
                 Resources
               </a>
               {FOOTER_RESOURCE_LINKS.map((item) =>
@@ -150,6 +160,7 @@ const FooterContent = ({
                     href={item.to}
                     target='_blank'
                     rel='noopener noreferrer'
+                    data-wf-el='footer-nav-link'
                     className='font-sohne-buch text-[14px] font-normal leading-[19.6px] transition-colors hover:text-[#8a5f45]'
                   >
                     {item.name}
@@ -158,6 +169,7 @@ const FooterContent = ({
                   <Link
                     key={item.name}
                     to={item.to}
+                    data-wf-el='footer-nav-link'
                     className='font-sohne-buch text-[14px] font-normal leading-[19.6px] transition-colors hover:text-[#8a5f45]'
                   >
                     {item.name}
@@ -168,10 +180,12 @@ const FooterContent = ({
 
             <Link
               to='/contact'
+              data-wf-el='nav-link'
               className={clsx(
                 'whitespace-nowrap text-left text-base font-medium leading-[22.4px] transition-colors hover:text-[#8a5f45]',
                 isPathActive(pathname, '/contact') && 'text-[#8a5f45]'
               )}
+              style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '4.8px' }}
             >
               Contact
             </Link>
@@ -184,8 +198,8 @@ const FooterContent = ({
         Privacy Policy
       </Link>
 
-      <div className='mt-8 flex justify-center'>
-        <img src='/assets/webflow/backgrounds/openhands_logo_black.svg' alt='' className='h-16 w-auto lg:h-20' />
+      <div data-wf-el='standard-media' className='mt-8 flex justify-center' style={{ textAlign: 'start', alignItems: 'center' }}>
+        <img data-wf-el='standard-media-img' src='/assets/webflow/backgrounds/openhands_logo_black.svg' alt='' className='h-16 w-auto lg:h-20' style={{ textAlign: 'start' }} />
       </div>
     </div>
   );
@@ -203,11 +217,13 @@ export const Footer = ({
 
   return (
     <footer className='relative overflow-hidden bg-brand-accent px-6 py-16 text-brand-fg'>
-      <div className='absolute inset-0 pointer-events-none opacity-20'>
+      <div data-wf-el='asci-wrap' className='absolute inset-0 pointer-events-none opacity-20'>
         <img
+          data-wf-el='asci-media'
           src='/assets/webflow/backgrounds/6908d170831c19b2b6976323_ascii-art_(16)_1.svg'
           alt=''
           className='h-full w-full object-cover'
+          style={{ display: 'inline-block' }}
         />
       </div>
       <div className='relative z-10 mx-auto max-w-[1238px]'>

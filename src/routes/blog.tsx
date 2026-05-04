@@ -79,7 +79,7 @@ const Blog = () => {
   const hasMoreBlogs = visibleGridPosts < gridBlogs.length;
 
   return (
-    <main className='flex flex-col items-center px-5 pb-16 pt-[40px] lg:px-10'>
+    <main data-wf-el='page-main' className='flex flex-col items-center px-5 pb-16 pt-[40px] lg:px-10'>
       <section className='w-full max-w-[1238px] text-center'>
         <h1 className='fluid-h1 font-sohne text-brand-fg'>
           OpenHands Blog

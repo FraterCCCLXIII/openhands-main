@@ -90,40 +90,42 @@ export const Header: React.FC<HeaderProps> = ({
                     </svg>
                   </div>
                 </button>
-                {resourcesOpen && (
-                  <div data-wf-el='nav_links_dropdown' className='absolute left-0 top-full z-50 mt-2 w-[280px] rounded-lg border border-brand-border bg-brand-bg p-4 shadow-lg'>
-                    {RESOURCE_LINK_GROUPS.map((group) => (
-                      <div key={group.title} data-wf-el='nav_links_dropdown_group' className='mb-4 last:mb-0'>
-                        <div data-wf-el='dropdown-eyebrow' className='mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-brand-muted'>
-                          {group.title}
-                        </div>
-                        <ul className='flex flex-col gap-1'>
-                          {group.links.map((item) => (
-                            <li key={item.name}>
-                              {item.external ? (
-                                <a
-                                  href={item.to}
-                                  target='_blank'
-                                  rel='noopener noreferrer'
-                                  className='block rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-brand-fg/5'
-                                >
-                                  {item.name}
-                                </a>
-                              ) : (
-                                <Link
-                                  to={item.to}
-                                  className='block rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-brand-fg/5 hover:text-[#8a5f45]'
-                                >
-                                  {item.name}
-                                </Link>
-                              )}
-                            </li>
-                          ))}
-                        </ul>
+                <div
+                  data-wf-el='nav_links_dropdown'
+                  className='absolute left-0 top-full z-50 mt-2 w-[280px] rounded-lg border border-brand-border bg-brand-bg p-4 shadow-lg'
+                  style={{ display: 'block', visibility: resourcesOpen ? 'visible' : 'hidden', opacity: resourcesOpen ? 1 : 0, pointerEvents: resourcesOpen ? 'auto' : 'none' }}
+                >
+                  {RESOURCE_LINK_GROUPS.map((group) => (
+                    <div key={group.title} data-wf-el='nav_links_dropdown_group' className='mb-4 last:mb-0'>
+                      <div data-wf-el='dropdown-eyebrow' className='mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-brand-muted'>
+                        {group.title}
                       </div>
-                    ))}
-                  </div>
-                )}
+                      <ul className='flex flex-col gap-1'>
+                        {group.links.map((item) => (
+                          <li key={item.name}>
+                            {item.external ? (
+                              <a
+                                href={item.to}
+                                target='_blank'
+                                rel='noopener noreferrer'
+                                className='block rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-brand-fg/5'
+                              >
+                                {item.name}
+                              </a>
+                            ) : (
+                              <Link
+                                to={item.to}
+                                className='block rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-brand-fg/5 hover:text-[#8a5f45]'
+                              >
+                                {item.name}
+                              </Link>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
               </li>
             </ul>
           </nav>

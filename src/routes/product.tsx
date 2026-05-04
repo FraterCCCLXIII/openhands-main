@@ -30,7 +30,7 @@ export const meta: Route.MetaFunction = ({ location }) => {
 
 const Product = () => {
   return (
-    <main className='bg-brand-bg'>
+    <main data-wf-el='page-main' style={{ display: 'flex', flexDirection: 'column' }}>
       <section className='relative overflow-hidden bg-brand-bg px-6 pb-10 pt-10 lg:px-10 lg:pb-6 lg:pt-12'>
         <div className='pointer-events-none absolute inset-0 opacity-[0.12]'>
           <img
@@ -112,7 +112,7 @@ const Product = () => {
         </div>
       </section>
 
-      <ProductComparisonTable ctaHref='https://app.all-hands.dev/' ctaLabel='Try it live' />
+      <ProductComparisonTable dark headerColor='#8a5f45' ctaHref='https://app.all-hands.dev/' ctaLabel='Try it live' />
       <ProductPageFooterCta
         title='Building the open standard for autonomous software development.'
         description='OpenHands is the foundation for secure, transparent, model-agnostic coding agents - empowering every software team to build faster with full control.'

@@ -74,7 +74,7 @@ export const meta: Route.MetaFunction = ({ location }) => {
 
 const Enterprise = () => {
   return (
-    <main>
+    <main data-wf-el='page-main' style={{ display: 'flex', flexDirection: 'column' }}>
       {/* Hero with ASCII background */}
       <section className='relative overflow-hidden px-10 pb-12 pt-10 lg:pt-12'>
         <div className='pointer-events-none absolute inset-0 opacity-[0.12]'>

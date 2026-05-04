@@ -205,7 +205,7 @@ export const meta: Route.MetaFunction = ({ location }) => {
 
 const Pricing = () => {
   return (
-    <main className='bg-brand-bg'>
+    <main data-wf-el='page-main' style={{ display: 'flex', flexDirection: 'column' }}>
       <section className='relative overflow-hidden bg-brand-bg px-10 pb-10 pt-10 lg:pt-12'>
         <div className='pointer-events-none absolute inset-0 opacity-[0.12]'>
           <img

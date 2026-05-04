@@ -126,7 +126,7 @@ export default function App() {
   }, []);
 
   return (
-    <div className='relative'>
+    <div data-wf-el='page-wrapper' className='relative' style={{ display: 'flex', flexDirection: 'column', backgroundColor: 'rgb(249, 240, 217)' }}>
       <Sidebar
         ref={sidebarRef}
         isHidden={isSidebarHidden}

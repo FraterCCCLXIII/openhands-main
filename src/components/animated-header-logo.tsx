@@ -8,7 +8,7 @@ interface AnimatedHeaderLogoProps {
 export const AnimatedHeaderLogo: React.FC<AnimatedHeaderLogoProps> = () => {
   return (
     // Match openhands.dev nav_logo_link: width 12rem (192px)
-    <picture className='nav_logo_img' style={{ width: '192px', height: '29.5px' }}>
+    <picture data-wf-el='nav_logo_img' className='nav_logo_img' style={{ display: 'inline-block', width: '192px', height: '29.5px' }}>
       {/* Mobile: smaller logo for narrow screens */}
       <source
         media='(max-width: 85rem)'

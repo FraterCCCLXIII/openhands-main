@@ -37,8 +37,8 @@ const AsciiBackdrop = ({ opacity = 'opacity-[0.12]' }: { opacity?: string }) => 
 );
 
 const ProductEyebrow = ({ label }: { label: string }) => (
-  <div className='inline-flex rounded-[4px] bg-brand-accent px-5 py-2 text-[13px] font-medium leading-none text-brand-fg'>
-    {label}
+  <div data-wf-el='banner' className='rounded-[4px] bg-brand-accent font-medium text-brand-fg' style={{ display: 'block', fontSize: '16px', lineHeight: '22.4px', padding: '0', textAlign: 'center' }}>
+    <div data-wf-el='banner-wrap' style={{ fontSize: '16px', lineHeight: '22.4px', paddingTop: '12.8px', paddingBottom: '12.8px', paddingLeft: '32px', paddingRight: '32px', textAlign: 'center' }}>{label}</div>
   </div>
 );
 
@@ -77,7 +77,7 @@ const ProductFeatureIntroBand = ({
     ) : (
       <AsciiBackdrop opacity='opacity-[0.14]' />
     )}
-    <div className={classNames('relative mx-auto text-center', wideDescription ? 'max-w-[1238px]' : 'max-w-[978px]')}>
+    <div data-wf-el='heading-stack' className={classNames('relative mx-auto text-center', wideDescription ? 'max-w-[1238px]' : 'max-w-[978px]')} style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'center', paddingTop: '64px', paddingBottom: '64px' }}>
       <h2 className='fluid-h3 mx-auto w-fit text-brand-fg'>
         {title}
       </h2>
@@ -117,7 +117,7 @@ const ProductFeatureProofBand = ({
         />
       </div>
     )}
-    <div className={classNames('relative mx-auto text-center', wideDescription ? 'max-w-[1238px]' : 'max-w-[978px]')}>
+    <div data-wf-el='heading-stack' className={classNames('relative mx-auto text-center', headingClassName === 'text-white' ? 'text-white' : '', wideDescription ? 'max-w-[1238px]' : 'max-w-[978px]')} style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'center', paddingTop: '64px', paddingBottom: '64px' }}>
       <h2 className={classNames('fluid-h3 mx-auto w-fit', headingClassName)}>
         {title}
       </h2>
@@ -142,7 +142,7 @@ const ProductGuiIntroSection = ({
       <div className='rounded-[18px] bg-brand-bg p-7 shadow-[0_0_0_1px_rgba(249,240,217,0.08)]'>
         <img src={image.src} alt={image.alt} className='w-full rounded-[8px]' />
       </div>
-      <div className='text-brand-bg'>
+      <div data-wf-el='heading-stack' className='text-brand-bg' style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-start' }}>
         <h2 className='section-title'>{title}</h2>
         <p className='fluid-body-lg mt-5 max-w-[500px] text-[#b3a88c]'>{description}</p>
       </div>
@@ -151,9 +151,9 @@ const ProductGuiIntroSection = ({
 );
 
 const ProductList = ({ items }: { items: readonly string[] }) => (
-  <div className='mt-6 border-t border-brand-fg/15'>
+  <div data-wf-el='product-list_ul' className='mt-6' style={{ borderStyle: 'none', textAlign: 'start' }}>
     {items.map((item) => (
-      <div key={item} className='border-b border-brand-fg/15 py-4 text-[17px] leading-[1.45] text-[#5f5f5f]'>
+      <div data-wf-el='product-list_element' key={item} className='py-4 text-[#5f5f5f]' style={{ fontSize: '20.8px', lineHeight: '24.96px', display: 'list-item', textAlign: 'start' }}>
         {item}
       </div>
     ))}
@@ -169,17 +169,19 @@ const ProductImageCard = ({
   alt: string;
   className?: string;
 }) => (
-  <div className={classNames('rounded-[18px] border border-brand-fg/10 bg-brand-bg p-5 shadow-[0_10px_35px_rgba(34,21,13,0.04)]', className)}>
-    <img src={src} alt={alt} className='w-full rounded-[8px]' />
+  <div data-wf-el='product-list_img_wrap' className={classNames('rounded-[18px]', className)} style={{ backgroundColor: 'rgba(0,0,0,0)', borderWidth: '1px', borderStyle: 'solid', borderColor: 'rgb(179, 168, 140)', boxShadow: 'none', padding: '64px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+    <img data-wf-el='product-list_img' src={src} alt={alt} className='w-full' style={{ borderRadius: '0px' }} />
   </div>
 );
 
 export const ProductComparisonTable = ({
   dark = false,
+  headerColor,
   ctaHref,
   ctaLabel,
 }: {
   dark?: boolean;
+  headerColor?: string;
   ctaHref?: string;
   ctaLabel?: string;
 }) => {
@@ -188,22 +190,23 @@ export const ProductComparisonTable = ({
   const cellClass = dark ? 'font-sohne-buch text-[#b3a88c]' : 'font-sohne-buch text-[#5f5f5f]';
   const borderClass = dark ? 'border-brand-bg/20' : 'border-brand-fg/12';
   const crossClass = dark ? 'text-brand-bg/55' : 'text-brand-fg/35';
+  const trColor = headerColor ?? (dark ? '#b3a88c' : '#8a5f45');
 
   return (
     <section className={classNames('px-6 py-20 lg:px-10', sectionClass)}>
-      <div className='mx-auto max-w-[1260px]'>
+      <div data-wf-el='container' className='mx-auto max-w-[1260px]' style={{ display: 'block', color: 'rgb(34, 21, 13)' }}>
         <div className={classNames('section-title mx-auto max-w-[760px] text-center', headingClass)}>
           The only open, secure, and scalable agent platform built for real engineering work
         </div>
-        <div className='mt-10 overflow-x-auto'>
+        <div data-wf-el='product-table' className='mt-10 overflow-x-auto' style={{ display: 'table', color: dark ? 'rgb(249, 240, 217)' : 'rgb(34, 21, 13)' }}>
           <table className='min-w-full border-collapse text-left'>
             <thead>
-              <tr className={classNames('border-b text-[13px] uppercase tracking-[0.08em]', borderClass, dark ? 'text-brand-bg/70' : 'text-brand-fg/60')}>
-                <th className='py-4 pr-6 font-medium'>Feature</th>
-                <th className='px-6 py-4 text-center font-medium'>OpenHands</th>
-                <th className='px-6 py-4 text-center font-medium'>Devin</th>
-                <th className='px-6 py-4 text-center font-medium'>Claude Code</th>
-                <th className='px-6 py-4 text-center font-medium'>Factory</th>
+              <tr data-wf-el='product-table_tr' className={classNames('border-b text-[20px] leading-[28px]', borderClass)} style={{ color: trColor }}>
+                <th data-wf-el='product-table_th' className='py-4 font-medium' style={{ paddingRight: '0px', letterSpacing: 'normal', textTransform: 'none', color: 'inherit' }}>Feature</th>
+                <th data-wf-el='product-table_th' className='py-4 text-center font-medium' style={{ paddingLeft: '0', paddingRight: '0', letterSpacing: 'normal', textTransform: 'none', color: 'inherit' }}>OpenHands</th>
+                <th data-wf-el='product-table_th' className='py-4 text-center font-medium' style={{ paddingLeft: '0', paddingRight: '0', letterSpacing: 'normal', textTransform: 'none', color: 'inherit' }}>Devin</th>
+                <th data-wf-el='product-table_th' className='py-4 text-center font-medium' style={{ paddingLeft: '0', paddingRight: '0', letterSpacing: 'normal', textTransform: 'none', color: 'inherit' }}>Claude Code</th>
+                <th data-wf-el='product-table_th' className='py-4 text-center font-medium' style={{ paddingLeft: '0', paddingRight: '0', letterSpacing: 'normal', textTransform: 'none', color: 'inherit' }}>Factory</th>
               </tr>
             </thead>
             <tbody>
@@ -240,7 +243,7 @@ export const ProductComparisonTable = ({
 
 export const ProductFaqSection = ({ faqs }: { faqs: readonly ProductFaqItem[] }) => {
   return (
-    <section className='bg-brand-bg px-6 py-20 lg:px-10'>
+    <section data-wf-el='standard-wrap' style={{ padding: '0' }}>
       <div className='mx-auto grid max-w-[1260px] gap-10 lg:grid-cols-[490px_minmax(0,1fr)] lg:gap-20'>
         <div>
           <h2 className='section-title text-brand-fg'>
@@ -248,14 +251,14 @@ export const ProductFaqSection = ({ faqs }: { faqs: readonly ProductFaqItem[] })
           </h2>
           <ProductPageActionLink href='/contact' label='Contact us' variant='outline' className='mt-8' />
         </div>
-        <div className='border-t border-brand-fg/15'>
+        <div data-wf-el='standard-collection' className='border-brand-fg/15' style={{ borderStyle: 'none' }}>
           {faqs.map((faq) => (
-            <details key={faq.question} className='group border-b border-brand-fg/15 py-4'>
-              <summary className='flex cursor-pointer list-none items-start justify-between gap-6 font-medium leading-[1.4] text-brand-fg' style={{ fontSize: 'var(--h4-font-size)' }}>
-                <label className='block pointer-events-none cursor-default'>{faq.question}</label>
-                <span className='mt-1 text-[22px] leading-none transition-transform group-open:rotate-45'>+</span>
+            <details data-wf-el='accordion-item' key={faq.question} className='group' style={{ borderRadius: '8px', borderWidth: '1px', borderStyle: 'solid', borderColor: 'rgb(249, 240, 217)', display: 'flex', flexDirection: 'column', padding: '0' }}>
+              <summary data-wf-el='accordion-trigger' className='flex cursor-pointer list-none items-center justify-between font-medium text-brand-fg' style={{ fontSize: '16px', lineHeight: '22.4px', padding: '24px', gap: 'normal' }}>
+                <label data-wf-el='accordion-title' className='block pointer-events-none cursor-default' style={{ paddingRight: '12px', fontSize: '24px', lineHeight: '33.6px' }}>{faq.question}</label>
+                <span data-wf-el='accordion-icon' className='transition-transform group-open:rotate-45' style={{ fontSize: '16px', lineHeight: '22.4px' }}>+</span>
               </summary>
-              <p className='max-w-[680px] pt-4 font-sohne-buch text-[16px] leading-[22.4px] text-[#5f5f5f]'>{faq.answer}</p>
+              <p data-wf-el='accordion-content_spacer' className='max-w-[680px] text-[16px] leading-[22.4px] text-brand-fg' style={{ fontFamily: '"Sohne Kraftig", Inter, Arial, sans-serif', paddingTop: '0', paddingBottom: '24px', paddingLeft: '0', paddingRight: '0' }}>{faq.answer}</p>
             </details>
           ))}
         </div>
@@ -306,21 +309,20 @@ export const ProductFeaturePage = ({
   const comparisonSpacerClass = isCli ? 'h-[355px]' : isGui ? 'h-[298px]' : 'h-[300px]';
   const proofBandMinHeight = isGui ? 'min-h-[420px]' : isSdk ? 'min-h-[407px]' : 'min-h-[571px]';
   return (
-    <main className='bg-brand-bg'>
+    <main data-wf-el='page-main' style={{ display: 'flex', flexDirection: 'column' }}>
       <section
-        className={classNames(
-          'relative overflow-hidden bg-brand-bg px-6 pb-16 pt-10 lg:px-10 lg:pt-12',
-          isGui ? 'lg:pb-20' : 'lg:pb-[108px]'
-        )}
+        data-wf-el='section-product_hero'
+        className='relative overflow-hidden'
+        style={{ padding: '0' }}
       >
         <AsciiBackdrop />
-        <div className='relative mx-auto flex max-w-[860px] flex-col items-center text-center'>
+        <div data-wf-el='hero' className='relative mx-auto flex max-w-[860px] flex-col items-center' style={{ textAlign: 'start', justifyContent: 'flex-start' }}>
           <ProductEyebrow label={page.eyebrow} />
           <h1 className='fluid-h1 mt-8 text-brand-fg'>
             {page.heading}
           </h1>
-          <p className='fluid-body-lg mt-4 max-w-[620px] text-[#5f5f5f]'>{page.description}</p>
-          <div className='mt-8 flex flex-wrap items-center justify-center gap-4'>
+          <p data-wf-el='paragraph-lg' className='fluid-body-lg mt-4 max-w-[620px] text-[#5f5f5f]' style={{ textAlign: 'center' }}>{page.description}</p>
+          <div data-wf-el='hero_btn_wrap' className='flex flex-wrap' style={{ paddingTop: '32px', gap: '8px 16px', textAlign: 'center' }}>
             <ProductPageActionLink
               href={page.primaryCta.href}
               label={page.primaryCta.label}
@@ -369,9 +371,9 @@ export const ProductFeaturePage = ({
         </>
       )}
 
-      <section className='bg-brand-bg px-6 py-16 lg:px-10 lg:py-20'>
-        <div className='mx-auto grid max-w-[1260px] gap-12 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:items-center'>
-          <div>
+      <section className='px-6 py-16 lg:px-10 lg:py-20'>
+        <div data-wf-el='container' className='mx-auto max-w-[1260px]' style={{ display: 'block' }}>
+          <div data-wf-el='heading-stack' style={{ textAlign: 'center', paddingTop: '64px', paddingBottom: '64px', paddingLeft: '0', paddingRight: '0', display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'center' }}>
             <h2 className='section-title text-brand-fg'>
               Key capabilities
             </h2>
@@ -381,10 +383,10 @@ export const ProductFeaturePage = ({
         </div>
       </section>
 
-      <section className='bg-brand-bg px-6 pb-16 lg:px-10 lg:pb-20'>
-        <div className='mx-auto grid max-w-[1260px] gap-12 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:items-center'>
+      <section className='px-6 pb-16 lg:px-10 lg:pb-20'>
+        <div className='mx-auto max-w-[1260px]' style={{ display: 'block' }}>
           <ProductImageCard src={page.showcaseImages[1].src} alt={page.showcaseImages[1].alt} />
-          <div>
+          <div data-wf-el='heading-stack' style={{ textAlign: 'center', paddingTop: '64px', paddingBottom: '64px', paddingLeft: '0', paddingRight: '0', display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'center' }}>
             <h2 className='section-title text-brand-fg'>
               How teams use it
             </h2>

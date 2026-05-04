@@ -10,7 +10,7 @@ export const CompanyPageShell = ({
   backgroundClassName = 'opacity-[0.12]',
 }: CompanyPageShellProps) => {
   return (
-    <main className='relative overflow-hidden'>
+    <main data-wf-el='page-main' className='relative overflow-hidden' style={{ display: 'flex', flexDirection: 'column' }}>
       <div
         aria-hidden='true'
         data-testid='company-page-background'

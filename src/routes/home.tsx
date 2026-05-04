@@ -388,7 +388,7 @@ const Home = () => {
             {/* Workflow carousel (inside hero section) */}
             <div data-wf-el='hero-splide_top' className='mb-5 flex justify-between gap-4' style={{ alignItems: 'center' }}>
             <div className='max-w-[384px]'>
-              <h2 data-wf-el='hero-splide_heading' className='fluid-h3 text-brand-fg'>
+              <h2 data-wf-el='hero-splide_heading' className='fluid-h3 text-brand-fg' style={{ lineHeight: '1.1', letterSpacing: '-0.02em' }}>
                 Start with a proven workflow
               </h2>
             </div>
@@ -476,7 +476,7 @@ const Home = () => {
               <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'center', gap: '24px' }}>
                 {/* Left column: col wrapper (flex: 0 1 auto) > card (display: block) */}
                 <div style={{ flex: '0 1 auto', display: 'flex', flexDirection: 'column', justifyContent: 'flex-start' }}>
-                  <div data-wf-el='card' style={{ borderRadius: '8px', display: 'block' }}>
+                  <div data-wf-el='card' style={{ borderRadius: '8px', display: 'block', flexDirection: 'column', justifyContent: 'flex-start' }}>
                     <div className='mb-3 flex gap-2 font-mono' role='tablist' style={{ lineHeight: '16.896px' }}>
                       {PRODUCT_SURFACES.map((surface, index) => (
                         <div
@@ -699,7 +699,7 @@ const Home = () => {
           </div>
 
           <article className='card-dark'>
-            <div className='p-6'>
+            <div data-wf-el='card-body' className='p-6' style={{ display: 'block', color: 'rgb(249, 240, 217)', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start' }}>
               <div className='grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-center'>
                 <div>
                   <p className='mb-3 max-w-[369px] fluid-body-lg font-medium text-brand-accent'>Enterprise-grade security and control</p>

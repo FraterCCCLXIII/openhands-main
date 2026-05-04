@@ -120,7 +120,7 @@ const MetadataItem = ({
 
 const Community = () => {
   return (
-    <main className='pt-[40px]'>
+    <main data-wf-el='page-main' className='pt-[40px]' style={{ display: 'flex', flexDirection: 'column' }}>
       <section className='px-10 pb-10 pt-0 lg:pb-14'>
         <div className='mx-auto flex max-w-[1238px] flex-col items-center gap-5 text-center'>
           <h1 className='max-w-[920px] fluid-h1 text-brand-fg'>
