@@ -28,7 +28,7 @@ import type {
   AccessRequest,
   ManagedConnectorOption,
   IntegrationSpec,
-} from "@/src/types/context-layer";
+} from "@/src/types/integrations-hub";
 
 const connectors: ManagedConnectorOption[] = [
   {

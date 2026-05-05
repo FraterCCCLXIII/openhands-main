@@ -2,7 +2,7 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vite
 
 import { GET } from "./route";
 
-import { getContextLayerService } from "@/src/lib/core/runtime";
+import { getIntegrationsHubService } from "@/src/lib/core/runtime";
 import type { ContextRepository } from "@/src/lib/core/repository";
 import { createTestRepository, getActiveSql } from "@/src/lib/db/pglite-test-utils";
 import {
@@ -28,21 +28,21 @@ beforeEach(async () => {
 
 const setRuntimeRepository = (repository?: ContextRepository) => {
   const runtime = globalThis as typeof globalThis & {
-    contextLayerRepository?: unknown;
-    contextLayerService?: unknown;
+    integrationsHubRepository?: unknown;
+    integrationsHubService?: unknown;
   };
 
   if (repository) {
-    runtime.contextLayerRepository = repository;
+    runtime.integrationsHubRepository = repository;
   } else {
-    delete runtime.contextLayerRepository;
+    delete runtime.integrationsHubRepository;
   }
-  delete runtime.contextLayerService;
+  delete runtime.integrationsHubService;
 };
 
 const seedAdminKey = async (ownerId: string) => {
   setRuntimeRepository(testRepo);
-  const service = getContextLayerService();
+  const service = getIntegrationsHubService();
   const rotated = await service.rotateAdminApiKey(ownerId);
   return rotated.apiKey;
 };

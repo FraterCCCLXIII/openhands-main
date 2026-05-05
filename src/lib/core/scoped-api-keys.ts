@@ -1,7 +1,7 @@
 import { createHash, randomBytes } from "node:crypto";
 
 import { isAppAdminEmail } from "@/src/lib/app-admins";
-import { ContextLayerError } from "@/src/lib/core/errors";
+import { IntegrationsHubError } from "@/src/lib/core/errors";
 import { decryptCredentials, encryptCredentials } from "@/src/lib/credential-crypto";
 import { normalizeCaseInsensitiveText } from "@/src/lib/text-utils";
 import type {
@@ -9,7 +9,7 @@ import type {
   AdminApiKeyStatus,
   UserApiKeyRecord,
   UserApiKeyStatus,
-} from "@/src/types/context-layer";
+} from "@/src/types/integrations-hub";
 
 const USER_API_KEY_PREFIX_LENGTH = 12;
 const USER_API_KEY_SUFFIX_LENGTH = 4;
@@ -20,14 +20,14 @@ export const requireAdminApiKeyOwner = (ownerId: string) => {
   const normalizedOwnerId = normalizeOwnerId(ownerId);
 
   if (!normalizedOwnerId) {
-    throw new ContextLayerError(
+    throw new IntegrationsHubError(
       "A signed-in admin email is required before issuing an admin API key.",
       400,
     );
   }
 
   if (!isAppAdminEmail(normalizedOwnerId)) {
-    throw new ContextLayerError(
+    throw new IntegrationsHubError(
       "Only allowlisted app administrators can manage admin API keys.",
       403,
     );

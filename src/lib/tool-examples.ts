@@ -1,6 +1,6 @@
 import { collectHttpTemplateVariables } from "@/src/lib/http-request-template";
 import { isRecord } from "@/src/lib/type-utils";
-import type { ToolSpec, GenericHttpRequestTemplate, IntegrationSpec } from "@/src/types/context-layer";
+import type { ToolSpec, GenericHttpRequestTemplate, IntegrationSpec } from "@/src/types/integrations-hub";
 
 const DEFAULT_PAYLOAD_EXAMPLE = "replace with the value for";
 

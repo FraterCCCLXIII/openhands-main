@@ -2,7 +2,7 @@ import { z } from "zod";
 
 import { fromAdminApiError, authenticateAdminApiRequest } from "@/src/lib/admin-api-auth";
 import { ok } from "@/src/lib/api";
-import { getContextLayerService } from "@/src/lib/core/runtime";
+import { getIntegrationsHubService } from "@/src/lib/core/runtime";
 
 const approveRequestSchema = z.object({
   durationMinutes: z.number().int().positive().optional(),
@@ -15,7 +15,7 @@ export async function POST(
   try {
     const identity = await authenticateAdminApiRequest(request);
     const payload = approveRequestSchema.parse(await request.json().catch(() => ({})));
-    const service = getContextLayerService();
+    const service = getIntegrationsHubService();
     const { requestId } = await params;
 
     return ok(

@@ -14,7 +14,7 @@ import {
   subtractUnusedWindow,
 } from "@/src/lib/core/access-policy";
 import { addMinutes, nowIso } from "@/src/lib/core/date";
-import { ContextLayerError } from "@/src/lib/core/errors";
+import { IntegrationsHubError } from "@/src/lib/core/errors";
 import {
   createToolInvocationRecord,
   normalizePayloadKeys,
@@ -87,7 +87,7 @@ import type {
   ToolInvocationOutcome,
   UnusedToolWindowUnit,
   UserApiKeyRecord,
-} from "@/src/types/context-layer";
+} from "@/src/types/integrations-hub";
 
 const getManagedConnectorSlug = (integration: IntegrationSpec) => {
   const value = integration.config.managedConnectorSlug;
@@ -376,7 +376,7 @@ const toAccessEvaluationRequest = (
   }
 
   if (!integrationKey || !toolName) {
-    throw new ContextLayerError("Incomplete access evaluation request.", 400);
+    throw new IntegrationsHubError("Incomplete access evaluation request.", 400);
   }
 
   return {
@@ -421,7 +421,7 @@ const toContextInvocationRequest = (
 /**
  * Main orchestration service for integration lifecycle, API-key management, approvals, and runtime tool invocation.
  */
-export class ContextLayerService {
+export class IntegrationsHubService {
   constructor(
     private readonly repository: ContextRepository,
     private readonly adapters: AdapterRegistry,
@@ -557,7 +557,7 @@ export class ContextLayerService {
     const normalizedOwnerId = normalizeAgentApiKeyOwner(ownerId);
     const normalizedIntegrationKey = integrationKey.trim();
     if (!normalizedIntegrationKey) {
-      throw new ContextLayerError("Integration key is required.", 400);
+      throw new IntegrationsHubError("Integration key is required.", 400);
     }
 
     const existing = await this.repository.getOwnerIntegration(
@@ -565,7 +565,7 @@ export class ContextLayerService {
       normalizedIntegrationKey,
     );
     if (!existing) {
-      throw new ContextLayerError("Integration not found.", 404);
+      throw new IntegrationsHubError("Integration not found.", 404);
     }
 
     await this.repository.deleteOwnerIntegration(normalizedOwnerId, normalizedIntegrationKey);
@@ -596,7 +596,7 @@ export class ContextLayerService {
 
     const slug = input.slug.trim();
     if (!slug) {
-      throw new ContextLayerError("Managed connectors require a slug.", 400);
+      throw new IntegrationsHubError("Managed connectors require a slug.", 400);
     }
 
     const timestamp = nowIso();
@@ -611,11 +611,11 @@ export class ContextLayerService {
     const normalizedOpenApiUrl = input.openApiUrl?.trim() || undefined;
 
     if (provider === "mcp" && !normalizedServerUrl && !normalizedApiBaseUrl) {
-      throw new ContextLayerError("Managed MCP connectors require a serverUrl.", 400);
+      throw new IntegrationsHubError("Managed MCP connectors require a serverUrl.", 400);
     }
 
     if (provider === "http" && !normalizedApiBaseUrl) {
-      throw new ContextLayerError("Managed HTTP connectors require an apiBaseUrl.", 400);
+      throw new IntegrationsHubError("Managed HTTP connectors require an apiBaseUrl.", 400);
     }
 
     const normalizedOAuthConfig: GenericOAuthConfig | undefined =
@@ -641,7 +641,7 @@ export class ContextLayerService {
     let encryptedOAuthClient = existing?.encryptedOAuthClient;
     if (input.authStrategy === "oauth2") {
       if (!normalizedOAuthConfig) {
-        throw new ContextLayerError(
+        throw new IntegrationsHubError(
           "OAuth-managed connectors require an oauthConfig.",
           400,
         );
@@ -663,7 +663,7 @@ export class ContextLayerService {
           !oauthClientId ||
           (!oauthClientSecret && normalizedOAuthConfig.clientAuthentication !== "none")
         ) {
-          throw new ContextLayerError(
+          throw new IntegrationsHubError(
             normalizedOAuthConfig.clientAuthentication === "none"
               ? "Provide an oauthClientId when updating OAuth credentials."
               : "Provide both oauthClientId and oauthClientSecret when updating OAuth credentials.",
@@ -677,7 +677,7 @@ export class ContextLayerService {
             : { clientId: oauthClientId },
         );
       } else if (!encryptedOAuthClient) {
-        throw new ContextLayerError(
+        throw new IntegrationsHubError(
           normalizedOAuthConfig.clientAuthentication === "none"
             ? "New OAuth-managed connectors require an oauthClientId or a registrationUrl."
             : "New OAuth-managed connectors require both oauthClientId and oauthClientSecret.",
@@ -729,12 +729,12 @@ export class ContextLayerService {
 
     const normalizedSlug = slug.trim();
     if (!normalizedSlug) {
-      throw new ContextLayerError("Managed connectors require a slug.", 400);
+      throw new IntegrationsHubError("Managed connectors require a slug.", 400);
     }
 
     const existing = await this.repository.getManagedConnector(normalizedSlug);
     if (!existing) {
-      throw new ContextLayerError("Managed connector not found.", 404);
+      throw new IntegrationsHubError("Managed connector not found.", 404);
     }
 
     const normalizedConnector = normalizeManagedConnectorRecord(existing);
@@ -747,7 +747,7 @@ export class ContextLayerService {
 
     if (provider === "http") {
       if (!normalizedConnector.openApiUrl) {
-        throw new ContextLayerError(
+        throw new IntegrationsHubError(
           "Managed HTTP connectors need an OpenAPI URL before their tools can be indexed.",
           400,
         );
@@ -803,12 +803,12 @@ export class ContextLayerService {
 
     const normalizedSlug = slug.trim();
     if (!normalizedSlug) {
-      throw new ContextLayerError("Managed connectors require a slug.", 400);
+      throw new IntegrationsHubError("Managed connectors require a slug.", 400);
     }
 
     const existing = await this.repository.getManagedConnector(normalizedSlug);
     if (!existing) {
-      throw new ContextLayerError("Managed connector not found.", 404);
+      throw new IntegrationsHubError("Managed connector not found.", 404);
     }
 
     await this.repository.deleteManagedConnector(normalizedSlug);
@@ -843,8 +843,8 @@ export class ContextLayerService {
     const normalizedOwnerId = normalizeAgentApiKeyOwner(ownerId);
 
     if (!normalizedOwnerId) {
-      throw new ContextLayerError(
-        "A signed-in user email or name is required before issuing a context-layer API key.",
+      throw new IntegrationsHubError(
+        "A signed-in user email or name is required before issuing a integrations-hub API key.",
         400,
       );
     }
@@ -868,8 +868,8 @@ export class ContextLayerService {
     const normalizedOwnerId = normalizeAgentApiKeyOwner(ownerId);
 
     if (!normalizedOwnerId) {
-      throw new ContextLayerError(
-        "A signed-in user email or name is required before issuing a context-layer API key.",
+      throw new IntegrationsHubError(
+        "A signed-in user email or name is required before issuing a integrations-hub API key.",
         400,
       );
     }
@@ -944,7 +944,7 @@ export class ContextLayerService {
     const normalizedOwnerId = normalizeAgentApiKeyOwner(ownerId);
 
     if (!normalizedOwnerId) {
-      throw new ContextLayerError(
+      throw new IntegrationsHubError(
         "A signed-in user email or name is required before issuing a user API key.",
         400,
       );
@@ -1393,15 +1393,15 @@ export class ContextLayerService {
     await this.initialize();
     const record = await this.repository.getOAuthState(state);
     if (!record) {
-      throw new ContextLayerError("OAuth state not found or already used.", 400);
+      throw new IntegrationsHubError("OAuth state not found or already used.", 400);
     }
 
     if (record.provider !== provider) {
-      throw new ContextLayerError("OAuth state provider mismatch.", 400);
+      throw new IntegrationsHubError("OAuth state provider mismatch.", 400);
     }
 
     if (record.expiresAt <= nowIso()) {
-      throw new ContextLayerError("OAuth state has expired. Try connecting again.", 400);
+      throw new IntegrationsHubError("OAuth state has expired. Try connecting again.", 400);
     }
 
     return record;
@@ -1438,7 +1438,7 @@ export class ContextLayerService {
     await this.initialize();
 
     if (spec.authStrategy === "oauth2" && Object.keys(spec.credentials).length > 0) {
-      throw new ContextLayerError(
+      throw new IntegrationsHubError(
         "OAuth integrations cannot store credentials directly. Save per-user OAuth connections instead.",
         400,
       );
@@ -1502,7 +1502,7 @@ export class ContextLayerService {
     const toolSpec = integration.tools[toolName];
 
     if (!toolSpec) {
-      throw new ContextLayerError(
+      throw new IntegrationsHubError(
         `Unknown tool '${toolName}' for integration '${integrationKey}'.`,
         404,
       );
@@ -1537,7 +1537,7 @@ export class ContextLayerService {
     const toolSpec = integration.tools[toolName];
 
     if (!toolSpec) {
-      throw new ContextLayerError(
+      throw new IntegrationsHubError(
         `Unknown tool '${toolName}' for integration '${integrationKey}'.`,
         404,
       );
@@ -1547,7 +1547,7 @@ export class ContextLayerService {
       toolSpec.maxAccessMode &&
       !isFunctionAccessModeAllowed(accessMode, toolSpec.maxAccessMode)
     ) {
-      throw new ContextLayerError(
+      throw new IntegrationsHubError(
         `Tool '${toolName}' cannot exceed the organization-managed '${toolSpec.maxAccessMode}' access level.`,
         403,
       );
@@ -1727,7 +1727,7 @@ export class ContextLayerService {
     );
     const toolSpec = integration.tools[request.toolName];
     if (!toolSpec) {
-      throw new ContextLayerError(
+      throw new IntegrationsHubError(
         `Unknown tool '${request.toolName}' for integration '${request.integrationKey}'.`,
         404,
       );
@@ -1773,7 +1773,7 @@ export class ContextLayerService {
         });
       });
 
-      throw new ContextLayerError(decision.reason, 403);
+      throw new IntegrationsHubError(decision.reason, 403);
     }
 
     let resolvedIntegration: IntegrationSpec | null = null;
@@ -1870,7 +1870,7 @@ export class ContextLayerService {
     const provider = await resolveOAuthProvider(this.repository, record.provider);
 
     if (!provider) {
-      throw new ContextLayerError(
+      throw new IntegrationsHubError(
         `OAuth provider '${record.provider}' is not configured.`,
         500,
       );
@@ -1882,7 +1882,7 @@ export class ContextLayerService {
     }>(record.encryptedCredentials);
 
     if (!storedCredentials.refreshToken) {
-      throw new ContextLayerError(
+      throw new IntegrationsHubError(
         `Reconnect ${record.provider} to refresh the expired access token.`,
         403,
       );
@@ -1934,7 +1934,7 @@ export class ContextLayerService {
         integration.authStrategy === "oauth2" &&
         Object.keys(integration.credentials).length === 0
       ) {
-        throw new ContextLayerError(
+        throw new IntegrationsHubError(
           `Connect ${integration.name} for this user before invoking '${integration.key}'.`,
           403,
         );
@@ -1989,7 +1989,7 @@ export class ContextLayerService {
 
   private async getRuntimeIntegration(key: string, ownerId?: string) {
     if (!ownerId) {
-      throw new ContextLayerError(
+      throw new IntegrationsHubError(
         `Integration '${key}' must be installed for a specific user before invocation.`,
         400,
       );
@@ -2006,7 +2006,7 @@ export class ContextLayerService {
       return this.applyManagedConnectorConstraints(existing);
     }
 
-    throw new ContextLayerError(
+    throw new IntegrationsHubError(
       `Integration '${key}' is not installed for this user. Install it from the integrations wizard first.`,
       404,
     );
@@ -2089,7 +2089,7 @@ export class ContextLayerService {
       return this.applyManagedConnectorConstraints(integration);
     }
 
-    throw new ContextLayerError(
+    throw new IntegrationsHubError(
       `Integration '${key}' is not installed for this user. Install it from the integrations wizard first.`,
       404,
     );
@@ -2099,7 +2099,7 @@ export class ContextLayerService {
     await this.initialize();
     const request = await this.repository.getAccessRequest(requestId);
     if (!request) {
-      throw new ContextLayerError(
+      throw new IntegrationsHubError(
         `Unknown access request '${requestId}'.`,
         404,
       );
@@ -2112,7 +2112,7 @@ export class ContextLayerService {
     const normalizedOwnerId = normalizeAgentApiKeyOwner(ownerId);
 
     if (getAccessRequestOwnerId(request) !== normalizedOwnerId) {
-      throw new ContextLayerError(
+      throw new IntegrationsHubError(
         `Unknown access request '${requestId}'.`,
         404,
       );

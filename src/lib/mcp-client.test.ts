@@ -84,7 +84,7 @@ vi.mock("@modelcontextprotocol/sdk/client/sse.js", () => ({
   },
 }));
 
-import { ContextLayerError } from "@/src/lib/core/errors";
+import { IntegrationsHubError } from "@/src/lib/core/errors";
 import { buildMcpHeaders, runMcpClientOperation } from "@/src/lib/mcp-client";
 
 beforeEach(() => {
@@ -272,8 +272,8 @@ describe("runMcpClientOperation", () => {
       capturedError = error;
     }
 
-    expect(capturedError).toBeInstanceOf(ContextLayerError);
-    expect((capturedError as ContextLayerError).debugDetails).toEqual({
+    expect(capturedError).toBeInstanceOf(IntegrationsHubError);
+    expect((capturedError as IntegrationsHubError).debugDetails).toEqual({
       operationName: "listTools",
       serverUrl: "https://mcp.acme.test/mcp",
       integrationKey: "notion",
@@ -332,15 +332,15 @@ describe("runMcpClientOperation", () => {
       capturedError = error;
     }
 
-    expect(capturedError).toBeInstanceOf(ContextLayerError);
-    expect((capturedError as ContextLayerError).statusCode).toBe(401);
-    expect((capturedError as ContextLayerError).message).toContain(
+    expect(capturedError).toBeInstanceOf(IntegrationsHubError);
+    expect((capturedError as IntegrationsHubError).statusCode).toBe(401);
+    expect((capturedError as IntegrationsHubError).message).toContain(
       "Streamable HTTP transport failed for https://mcp.hubspot.com/ (HTTP 401): Error POSTing to endpoint:",
     );
-    expect((capturedError as ContextLayerError).message).toContain(
+    expect((capturedError as IntegrationsHubError).message).toContain(
       "HubSpot MCP requires a user-level OAuth token from a HubSpot MCP auth app.",
     );
-    expect((capturedError as ContextLayerError).debugDetails).toEqual({
+    expect((capturedError as IntegrationsHubError).debugDetails).toEqual({
       operationName: "listTools",
       serverUrl: "https://mcp.hubspot.com",
       integrationKey: "hubspot",
@@ -446,10 +446,10 @@ describe("runMcpClientOperation", () => {
   it("surfaces multiple configured transport failures with sanitized debug details", async () => {
     connectMock.mockImplementation((transport: { kind: string }) => {
       if (transport.kind === "streamable_http") {
-        return Promise.reject(new ContextLayerError("streamable unavailable", 504));
+        return Promise.reject(new IntegrationsHubError("streamable unavailable", 504));
       }
 
-      return Promise.reject(new ContextLayerError("sse unavailable", 429));
+      return Promise.reject(new IntegrationsHubError("sse unavailable", 429));
     });
 
     let capturedError: unknown;
@@ -484,15 +484,15 @@ describe("runMcpClientOperation", () => {
       capturedError = error;
     }
 
-    expect(capturedError).toBeInstanceOf(ContextLayerError);
-    expect((capturedError as ContextLayerError).message).toContain(
+    expect(capturedError).toBeInstanceOf(IntegrationsHubError);
+    expect((capturedError as IntegrationsHubError).message).toContain(
       "Streamable HTTP transport failed for https://mcp.acme.test/mcp (HTTP 504): streamable unavailable",
     );
-    expect((capturedError as ContextLayerError).message).toContain(
+    expect((capturedError as IntegrationsHubError).message).toContain(
       "SSE transport failed for https://mcp.acme.test/sse (HTTP 429): sse unavailable",
     );
-    expect((capturedError as ContextLayerError).statusCode).toBe(429);
-    expect((capturedError as ContextLayerError).debugDetails).toEqual({
+    expect((capturedError as IntegrationsHubError).statusCode).toBe(429);
+    expect((capturedError as IntegrationsHubError).debugDetails).toEqual({
       operationName: "callTool",
       serverUrl: "https://mcp.acme.test/mcp",
       integrationKey: undefined,

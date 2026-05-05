@@ -1,20 +1,20 @@
 import {
-  buildContextLayerMcpToolName,
-  CONTEXT_LAYER_MCP_SET_AGENT_CLASS_TOOL_NAME,
-  CONTEXT_LAYER_MCP_SET_AGENT_DATA_TOOL_NAME,
-  CONTEXT_LAYER_MCP_SET_AGENT_ID_TOOL_NAME,
-} from "@/src/lib/mcp/context-layer-server";
+  buildIntegrationsHubMcpToolName,
+  INTEGRATIONS_HUB_MCP_SET_AGENT_CLASS_TOOL_NAME,
+  INTEGRATIONS_HUB_MCP_SET_AGENT_DATA_TOOL_NAME,
+  INTEGRATIONS_HUB_MCP_SET_AGENT_ID_TOOL_NAME,
+} from "@/src/lib/mcp/integrations-hub-server";
 import {
   buildExamplePayload,
   buildPermissionNote,
   listExampleTools,
   selectExampleIntegration,
 } from "@/src/lib/tool-examples";
-import type { IntegrationSpec } from "@/src/types/context-layer";
+import type { IntegrationSpec } from "@/src/types/integrations-hub";
 
 export const OPENHANDS_CONTEXT_KEY_ENV = "$OPENHANDS_CONTEXT_KEY";
 export const OPENHANDS_CLOUD_SHTTP_MCP_URL =
-  "https://openhands-context-layer.vercel.app/api/mcp";
+  "https://openhands-integrations-hub.vercel.app/api/mcp";
 
 export interface AgentConnectionGuide {
   endpoint: string;
@@ -68,10 +68,10 @@ export const buildAgentConnectionGuide = ({
   const endpoint = `${normalizedBaseUrl}/api/context/${integrationKey}/${toolName}`;
   const openApiSchemaEndpoint = `${normalizedBaseUrl}/api/context/openapi`;
   const mcpEndpoint = `${normalizedBaseUrl}/api/mcp`;
-  const mcpToolName = buildContextLayerMcpToolName(integrationKey, toolName);
-  const mcpSetAgentIdToolName = CONTEXT_LAYER_MCP_SET_AGENT_ID_TOOL_NAME;
-  const mcpSetAgentClassToolName = CONTEXT_LAYER_MCP_SET_AGENT_CLASS_TOOL_NAME;
-  const mcpSetAgentDataToolName = CONTEXT_LAYER_MCP_SET_AGENT_DATA_TOOL_NAME;
+  const mcpToolName = buildIntegrationsHubMcpToolName(integrationKey, toolName);
+  const mcpSetAgentIdToolName = INTEGRATIONS_HUB_MCP_SET_AGENT_ID_TOOL_NAME;
+  const mcpSetAgentClassToolName = INTEGRATIONS_HUB_MCP_SET_AGENT_CLASS_TOOL_NAME;
+  const mcpSetAgentDataToolName = INTEGRATIONS_HUB_MCP_SET_AGENT_DATA_TOOL_NAME;
   const requestBody = JSON.stringify(requestPayload, null, 2);
   const escapedRequestBody = requestBody.replace(/'/g, "'\\''");
   const curlExample = [
@@ -104,7 +104,7 @@ const result = await response.json();`;
   const mcpConfigExample = JSON.stringify(
     {
       mcpServers: {
-        "context-layer": {
+        "integrations-hub": {
           transport: "streamable-http",
           url: mcpEndpoint,
           headers: {

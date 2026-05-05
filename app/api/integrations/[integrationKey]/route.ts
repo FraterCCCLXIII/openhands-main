@@ -1,6 +1,6 @@
 import { fromError, ok } from "@/src/lib/api";
 import { getCurrentUserIdentity } from "@/src/lib/current-user";
-import { getContextLayerService } from "@/src/lib/core/runtime";
+import { getIntegrationsHubService } from "@/src/lib/core/runtime";
 
 export async function DELETE(
   _request: Request,
@@ -9,7 +9,7 @@ export async function DELETE(
   try {
     const { ownerId } = await getCurrentUserIdentity();
     const { integrationKey } = await context.params;
-    const service = getContextLayerService();
+    const service = getIntegrationsHubService();
     return ok(await service.deleteOwnerIntegration(ownerId, integrationKey));
   } catch (error) {
     return fromError(error);

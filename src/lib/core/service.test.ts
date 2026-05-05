@@ -8,7 +8,7 @@ import {
   type IntegrationAdapter,
 } from "@/src/lib/core/adapter-registry";
 import type { ContextRepository } from "@/src/lib/core/repository";
-import { ContextLayerService } from "@/src/lib/core/service";
+import { IntegrationsHubService } from "@/src/lib/core/service";
 import {
   createToolInvocationRecord,
 } from "@/src/lib/core/invocation-side-effects";
@@ -22,7 +22,7 @@ import { createTestRepository, getActiveSql } from "@/src/lib/db/pglite-test-uti
 import { NotificationPublisher } from "@/src/lib/notifications/publisher";
 import * as discoveryModule from "@/src/lib/integrations/discovery";
 import * as providerResolverModule from "@/src/lib/oauth/provider-resolver";
-import type { IntegrationSpec, ToolSpec } from "@/src/types/context-layer";
+import type { IntegrationSpec, ToolSpec } from "@/src/types/integrations-hub";
 
 vi.mock("@neondatabase/serverless", () => ({ neon: () => getActiveSql() }));
 
@@ -48,7 +48,7 @@ const createService = (repository?: ContextRepository) => {
     invoke: async ({ payload }) => ({ ok: true, payload }),
   };
 
-  const service = new ContextLayerService(
+  const service = new IntegrationsHubService(
     repo,
     new AdapterRegistry({
       http: mockAdapter,
@@ -102,12 +102,12 @@ const getOnlyIntegration = (integrations: IntegrationSpec[]) => {
 };
 
 const installIntegration = async (
-  service: ContextLayerService,
+  service: IntegrationsHubService,
   integration: IntegrationSpec = baseIntegration,
   ownerId = OWNER_ID,
 ) => service.registerOwnerIntegration(ownerId, integration);
 
-describe("ContextLayerService", () => {
+describe("IntegrationsHubService", () => {
   it("allows enabled tools when no agent-class policy exists", async () => {
     const service = createService();
     await installIntegration(service, baseIntegration);
@@ -268,7 +268,7 @@ describe("ContextLayerService", () => {
 
   it("records denied invocation metadata for approval-required functions", async () => {
     const repository = testRepo;
-    const service = new ContextLayerService(
+    const service = new IntegrationsHubService(
       repository,
       new AdapterRegistry({
         http: { invoke: async () => ({ ok: true }) },
@@ -396,7 +396,7 @@ describe("ContextLayerService", () => {
         throw new Error("adapter boom");
       },
     };
-    const service = new ContextLayerService(
+    const service = new IntegrationsHubService(
       repository,
       new AdapterRegistry({
         http: failingAdapter,
@@ -562,7 +562,7 @@ describe("ContextLayerService", () => {
 
   it("requires temporary approval for case-by-case tools", async () => {
     const repository = testRepo;
-    const service = new ContextLayerService(
+    const service = new IntegrationsHubService(
       repository,
       new AdapterRegistry({
         http: { invoke: async () => ({ ok: true }) },
@@ -643,7 +643,7 @@ describe("ContextLayerService", () => {
 
   it("updates an existing pending access request when richer agent data arrives later", async () => {
     const repository = testRepo;
-    const service = new ContextLayerService(
+    const service = new IntegrationsHubService(
       repository,
       new AdapterRegistry({ http: { invoke: async () => ({ ok: true }) } }),
       new NotificationPublisher(repository),
@@ -702,7 +702,7 @@ describe("ContextLayerService", () => {
 
   it("creates notifications for multiple channels when access is requested", async () => {
     const repository = testRepo;
-    const service = new ContextLayerService(
+    const service = new IntegrationsHubService(
       repository,
       new AdapterRegistry({ mock: { invoke: async () => ({}) } }),
       new NotificationPublisher(repository),
@@ -778,7 +778,7 @@ describe("ContextLayerService", () => {
 
   it("creates separate pending access requests for different owners", async () => {
     const repository = testRepo;
-    const service = new ContextLayerService(
+    const service = new IntegrationsHubService(
       repository,
       new AdapterRegistry({
         http: { invoke: async () => ({ ok: true }) },
@@ -847,7 +847,7 @@ describe("ContextLayerService", () => {
 
   it("grants temporary access until expiry for case-by-case functions", async () => {
     const repository = testRepo;
-    const service = new ContextLayerService(
+    const service = new IntegrationsHubService(
       repository,
       new AdapterRegistry({
         http: { invoke: async () => ({ ok: true }) },
@@ -1113,7 +1113,7 @@ describe("ContextLayerService", () => {
 
   it("requires OAuth client credentials when first registering an OAuth managed connector", async () => {
     const repository = testRepo;
-    const service = new ContextLayerService(
+    const service = new IntegrationsHubService(
       repository,
       new AdapterRegistry({ mock: { invoke: async () => ({}) } }),
       new NotificationPublisher(repository),
@@ -1147,7 +1147,7 @@ describe("ContextLayerService", () => {
 
   it("auto-registers public MCP OAuth clients for Webflow-style connectors", async () => {
     const repository = testRepo;
-    const service = new ContextLayerService(
+    const service = new IntegrationsHubService(
       repository,
       new AdapterRegistry({ mock: { invoke: async () => ({}) } }),
       new NotificationPublisher(repository),
@@ -1210,7 +1210,7 @@ describe("ContextLayerService", () => {
 
   it("generates managed HTTP connector tools from an OpenAPI schema during registration", async () => {
     const repository = testRepo;
-    const service = new ContextLayerService(
+    const service = new IntegrationsHubService(
       repository,
       new AdapterRegistry({ mock: { invoke: async () => ({}) } }),
       new NotificationPublisher(repository),
@@ -1312,7 +1312,7 @@ describe("ContextLayerService", () => {
 
   it("reduces but does not increase user-visible access when HTTP managed connector ceilings change", async () => {
     const repository = testRepo;
-    const service = new ContextLayerService(
+    const service = new IntegrationsHubService(
       repository,
       new AdapterRegistry({ mock: { invoke: async () => ({}) } }),
       new NotificationPublisher(repository),
@@ -1447,7 +1447,7 @@ describe("ContextLayerService", () => {
 
   it("deletes an existing managed connector", async () => {
     const repository = testRepo;
-    const service = new ContextLayerService(
+    const service = new IntegrationsHubService(
       repository,
       new AdapterRegistry({ mock: { invoke: async () => ({}) } }),
       new NotificationPublisher(repository),
@@ -1489,7 +1489,7 @@ describe("ContextLayerService", () => {
   it("injects saved per-user OAuth credentials during invocation", async () => {
     const repository = testRepo;
     const mcpInvoke = vi.fn(async ({ integration }) => integration.credentials);
-    const service = new ContextLayerService(
+    const service = new IntegrationsHubService(
       repository,
       new AdapterRegistry({
         mcp: { invoke: mcpInvoke },
@@ -1567,7 +1567,7 @@ describe("ContextLayerService", () => {
 
   it("invokes managed HTTP connectors with stored OAuth credentials", async () => {
     const repository = testRepo;
-    const service = new ContextLayerService(
+    const service = new IntegrationsHubService(
       repository,
       new AdapterRegistry({
         http: new HttpAdapter(),
@@ -1682,7 +1682,7 @@ describe("ContextLayerService", () => {
 
   it("requires an explicit owner install before owner mutations", async () => {
     const repository = testRepo;
-    const service = new ContextLayerService(
+    const service = new IntegrationsHubService(
       repository,
       new AdapterRegistry({ mock: { invoke: async () => ({}) } }),
       new NotificationPublisher(repository),
@@ -1855,7 +1855,7 @@ describe("ContextLayerService", () => {
     const service = createService();
 
     await expect(service.getOrCreateAgentApiKey("   ")).rejects.toThrow(
-      "A signed-in user email or name is required before issuing a context-layer API key.",
+      "A signed-in user email or name is required before issuing a integrations-hub API key.",
     );
     await expect(service.rotateUserApiKey("   ")).rejects.toThrow(
       "A signed-in user email or name is required before issuing a user API key.",
@@ -1984,7 +1984,7 @@ describe("ContextLayerService", () => {
       provider: "notion",
       redirectTo: "/integrations",
       codeVerifier: "code-verifier",
-      redirectUri: "https://context-layer.example.com/api/oauth/notion/callback",
+      redirectUri: "https://integrations-hub.example.com/api/oauth/notion/callback",
       callbackUrl: "https://preview.example.com/api/oauth/notion/callback",
       expiresAt: future,
     });
@@ -1994,7 +1994,7 @@ describe("ContextLayerService", () => {
       integrationKey: "notion",
       provider: "notion",
       codeVerifier: "code-verifier",
-      redirectUri: "https://context-layer.example.com/api/oauth/notion/callback",
+      redirectUri: "https://integrations-hub.example.com/api/oauth/notion/callback",
       callbackUrl: "https://preview.example.com/api/oauth/notion/callback",
     });
     expect(await service.consumeOAuthState("state-active", "notion")).toMatchObject({
@@ -2527,7 +2527,7 @@ describe("ContextLayerService", () => {
     vi.spyOn(providerResolverModule, "resolveOAuthProvider").mockResolvedValue({
       refreshToken,
     } as unknown as Awaited<ReturnType<typeof providerResolverModule.resolveOAuthProvider>>);
-    const service = new ContextLayerService(
+    const service = new IntegrationsHubService(
       repository,
       new AdapterRegistry({
         mcp: { invoke: mcpInvoke },
@@ -2632,7 +2632,7 @@ describe("ContextLayerService", () => {
     vi.spyOn(providerResolverModule, "resolveOAuthProvider").mockResolvedValue({
       refreshToken: vi.fn(),
     } as unknown as Awaited<ReturnType<typeof providerResolverModule.resolveOAuthProvider>>);
-    const service = new ContextLayerService(
+    const service = new IntegrationsHubService(
       repository,
       new AdapterRegistry({
         mcp: { invoke: mcpInvoke },
@@ -2704,7 +2704,7 @@ describe("ContextLayerService", () => {
   it("requires a personal OAuth connection before invoking an installed OAuth integration", async () => {
     const repository = testRepo;
     const mcpInvoke = vi.fn(async ({ integration }) => integration.credentials);
-    const service = new ContextLayerService(
+    const service = new IntegrationsHubService(
       repository,
       new AdapterRegistry({
         mcp: { invoke: mcpInvoke },

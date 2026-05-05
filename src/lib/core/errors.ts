@@ -1,16 +1,16 @@
-export type ContextLayerDebugDetails = Record<string, unknown>;
+export type IntegrationsHubDebugDetails = Record<string, unknown>;
 
-export class ContextLayerError extends Error {
+export class IntegrationsHubError extends Error {
   public readonly statusCode: number;
-  public readonly debugDetails?: ContextLayerDebugDetails;
+  public readonly debugDetails?: IntegrationsHubDebugDetails;
 
   constructor(
     message: string,
     statusCode = 400,
-    debugDetails?: ContextLayerDebugDetails,
+    debugDetails?: IntegrationsHubDebugDetails,
   ) {
     super(message);
-    this.name = "ContextLayerError";
+    this.name = "IntegrationsHubError";
     this.statusCode = statusCode;
     this.debugDetails = debugDetails;
   }

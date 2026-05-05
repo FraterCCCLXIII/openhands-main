@@ -4,19 +4,19 @@ vi.mock("@neondatabase/serverless", () => ({ neon: () => getActiveSql() }));
 
 import { PATCH } from "./route";
 
-import { getContextLayerService } from "@/src/lib/core/runtime";
+import { getIntegrationsHubService } from "@/src/lib/core/runtime";
 import { createTestRepository, getActiveSql } from "@/src/lib/db/pglite-test-utils";
-import type { IntegrationSpec } from "@/src/types/context-layer";
+import type { IntegrationSpec } from "@/src/types/integrations-hub";
 
 let testCleanup: () => Promise<void>;
 
 const resetRuntime = () => {
   const runtime = globalThis as typeof globalThis & {
-    contextLayerRepository?: unknown;
-    contextLayerService?: unknown;
+    integrationsHubRepository?: unknown;
+    integrationsHubService?: unknown;
   };
-  delete runtime.contextLayerRepository;
-  delete runtime.contextLayerService;
+  delete runtime.integrationsHubRepository;
+  delete runtime.integrationsHubService;
 };
 
 beforeAll(() => {
@@ -59,7 +59,7 @@ const integration: IntegrationSpec = {
 
 describe("PATCH /api/user/integrations/[integrationKey]/tools/[toolName]", () => {
   it("updates the authenticated user's tool access mode", async () => {
-    const service = getContextLayerService();
+    const service = getIntegrationsHubService();
     await service.registerOwnerIntegration("owner@example.com", integration);
     const { apiKey } = await service.rotateUserApiKey("owner@example.com");
 
@@ -103,7 +103,7 @@ describe("PATCH /api/user/integrations/[integrationKey]/tools/[toolName]", () =>
   });
 
   it("rejects user access changes above the managed connector maximum", async () => {
-    const service = getContextLayerService();
+    const service = getIntegrationsHubService();
     await service.upsertManagedConnector({
       slug: "slack",
       name: "Slack",
@@ -170,7 +170,7 @@ describe("PATCH /api/user/integrations/[integrationKey]/tools/[toolName]", () =>
 
 
   it("rejects revoked user API keys immediately", async () => {
-    const service = getContextLayerService();
+    const service = getIntegrationsHubService();
     await service.registerOwnerIntegration("owner@example.com", integration);
     const { apiKey } = await service.rotateUserApiKey("owner@example.com");
     await service.revokeUserApiKey("owner@example.com");
@@ -194,7 +194,7 @@ describe("PATCH /api/user/integrations/[integrationKey]/tools/[toolName]", () =>
 
     expect(response.status).toBe(401);
     expect(response.headers.get("WWW-Authenticate")).toBe(
-      'Bearer realm="context-layer-user-api"',
+      'Bearer realm="integrations-hub-user-api"',
     );
     await expect(response.json()).resolves.toMatchObject({
       detail:

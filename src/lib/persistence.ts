@@ -1,20 +1,20 @@
-import { ContextLayerError } from "@/src/lib/core/errors";
+import { IntegrationsHubError } from "@/src/lib/core/errors";
 
-export const hasPersistentContextLayerStorage = () =>
+export const hasPersistentIntegrationsHubStorage = () =>
   Boolean(process.env.POSTGRES_URL || process.env.DATABASE_URL);
 
-export const canUseEphemeralContextLayerStorage = () => process.env.NODE_ENV === "test";
+export const canUseEphemeralIntegrationsHubStorage = () => process.env.NODE_ENV === "test";
 
-export const isContextLayerStorageAvailable = () =>
-  hasPersistentContextLayerStorage() || canUseEphemeralContextLayerStorage();
+export const isIntegrationsHubStorageAvailable = () =>
+  hasPersistentIntegrationsHubStorage() || canUseEphemeralIntegrationsHubStorage();
 
-export const isEphemeralContextLayerStorage = () =>
-  !hasPersistentContextLayerStorage() && !canUseEphemeralContextLayerStorage();
+export const isEphemeralIntegrationsHubStorage = () =>
+  !hasPersistentIntegrationsHubStorage() && !canUseEphemeralIntegrationsHubStorage();
 
-export const assertContextLayerStorageAvailable = () => {
-  if (!isContextLayerStorageAvailable()) {
-    throw new ContextLayerError(
-      "Service unavailable. This deployment requires POSTGRES_URL or DATABASE_URL before the context layer can be used.",
+export const assertIntegrationsHubStorageAvailable = () => {
+  if (!isIntegrationsHubStorageAvailable()) {
+    throw new IntegrationsHubError(
+      "Service unavailable. This deployment requires POSTGRES_URL or DATABASE_URL before the integrations hub can be used.",
       503,
     );
   }

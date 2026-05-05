@@ -1,14 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { ContextRepository } from "@/src/lib/core/repository";
-import { ContextLayerError } from "@/src/lib/core/errors";
+import { IntegrationsHubError } from "@/src/lib/core/errors";
 import { encryptCredentials } from "@/src/lib/credential-crypto";
 import { createTestRepository, getActiveSql } from "@/src/lib/db/pglite-test-utils";
 import {
   isOAuthProviderResolvedAndConfigured,
   resolveOAuthProvider,
 } from "@/src/lib/oauth/provider-resolver";
-import type { ManagedConnectorRecord } from "@/src/types/context-layer";
+import type { ManagedConnectorRecord } from "@/src/types/integrations-hub";
 
 vi.mock("@neondatabase/serverless", () => ({ neon: () => getActiveSql() }));
 
@@ -548,7 +548,7 @@ describe("resolveOAuthProvider", () => {
     });
   });
 
-  it("normalizes upstream token exchange failures into context layer errors", async () => {
+  it("normalizes upstream token exchange failures into integrations hub errors", async () => {
     const repository = testRepo;
     await repository.upsertManagedConnector(createManagedConnector());
 
@@ -568,7 +568,7 @@ describe("resolveOAuthProvider", () => {
         redirectUri: "https://context.test/api/oauth/acme-crm/callback",
       }),
     ).rejects.toThrowError(
-      new ContextLayerError("Acme CRM token exchange failed (401): provider denied", 502),
+      new IntegrationsHubError("Acme CRM token exchange failed (401): provider denied", 502),
     );
   });
 

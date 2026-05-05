@@ -6,18 +6,18 @@ const purgeExpiredGrantsMock = vi.fn<() => Promise<number>>();
 
 const setRuntimeService = () => {
   const runtime = globalThis as typeof globalThis & {
-    contextLayerService?: unknown;
+    integrationsHubService?: unknown;
   };
-  runtime.contextLayerService = {
+  runtime.integrationsHubService = {
     purgeExpiredGrants: purgeExpiredGrantsMock,
   };
 };
 
 const resetRuntime = () => {
   const runtime = globalThis as typeof globalThis & {
-    contextLayerService?: unknown;
+    integrationsHubService?: unknown;
   };
-  delete runtime.contextLayerService;
+  delete runtime.integrationsHubService;
 };
 
 afterEach(() => {
@@ -31,7 +31,7 @@ describe("GET /api/cron/expire-grants", () => {
     setRuntimeService();
 
     const response = await GET(
-      new Request("https://context-layer.example.com/api/cron/expire-grants"),
+      new Request("https://integrations-hub.example.com/api/cron/expire-grants"),
     );
 
     expect(response.status).toBe(503);
@@ -46,7 +46,7 @@ describe("GET /api/cron/expire-grants", () => {
     setRuntimeService();
 
     const response = await GET(
-      new Request("https://context-layer.example.com/api/cron/expire-grants", {
+      new Request("https://integrations-hub.example.com/api/cron/expire-grants", {
         headers: {
           authorization: "Bearer wrong-secret",
         },
@@ -64,7 +64,7 @@ describe("GET /api/cron/expire-grants", () => {
     setRuntimeService();
 
     const response = await GET(
-      new Request("https://context-layer.example.com/api/cron/expire-grants", {
+      new Request("https://integrations-hub.example.com/api/cron/expire-grants", {
         headers: {
           authorization: "Bearer cron-secret",
         },

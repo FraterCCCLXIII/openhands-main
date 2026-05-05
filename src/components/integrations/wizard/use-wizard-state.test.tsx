@@ -9,7 +9,7 @@ import {
   INITIAL_DRAFT,
   type DiscoveryResponse,
 } from "@/src/components/integrations/wizard/utils";
-import type { ManagedConnectorOption } from "@/src/types/context-layer";
+import type { ManagedConnectorOption } from "@/src/types/integrations-hub";
 
 (
   globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }

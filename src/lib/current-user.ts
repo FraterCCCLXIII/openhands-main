@@ -1,5 +1,5 @@
 import { auth, isAuthDisabled } from "@/src/lib/auth";
-import { ContextLayerError } from "@/src/lib/core/errors";
+import { IntegrationsHubError } from "@/src/lib/core/errors";
 import { normalizeCaseInsensitiveText } from "@/src/lib/text-utils";
 
 const DEV_USER = {
@@ -13,7 +13,7 @@ export const getCurrentUserIdentity = async () => {
   const session = await auth();
 
   if (!session?.user && !isAuthDisabled()) {
-    throw new ContextLayerError("Authentication is required.", 401);
+    throw new IntegrationsHubError("Authentication is required.", 401);
   }
 
   const user = session?.user ?? DEV_USER;

@@ -26,7 +26,7 @@ vi.mock("@/src/lib/auth", () => ({
 }));
 
 vi.mock("@/src/lib/core/runtime", () => ({
-  getContextLayerService: () => serviceMock,
+  getIntegrationsHubService: () => serviceMock,
 }));
 
 import { GET } from "./route";

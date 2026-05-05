@@ -2,17 +2,17 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 
-import { ContextLayerError } from "@/src/lib/core/errors";
+import { IntegrationsHubError } from "@/src/lib/core/errors";
 import type {
   McpTransportKind,
   McpTransportTarget,
 } from "@/src/lib/mcp-transport-policy";
 import { getOptionalString, getOptionalTrimmedString } from "@/src/lib/type-utils";
-import type { AuthStrategy } from "@/src/types/context-layer";
+import type { AuthStrategy } from "@/src/types/integrations-hub";
 
 const MCP_OPERATION_TIMEOUT_MS = 10_000;
 const MCP_CLIENT_INFO = {
-  name: "agent-context-layer",
+  name: "agent-integrations-hub",
   version: "0.2.0",
 };
 
@@ -38,7 +38,7 @@ export interface RunMcpClientOperationOptions {
 }
 
 const buildTimeoutError = (message: string) =>
-  new ContextLayerError(message, 504);
+  new IntegrationsHubError(message, 504);
 
 const withTimeout = async <T,>(
   promise: Promise<T>,
@@ -94,7 +94,7 @@ const formatTransportName = (kind: McpTransportKind) =>
   kind === "streamable_http" ? "Streamable HTTP" : "SSE";
 
 const getErrorStatusCode = (error: unknown) => {
-  if (error instanceof ContextLayerError) {
+  if (error instanceof IntegrationsHubError) {
     return error.statusCode;
   }
 
@@ -265,14 +265,14 @@ const buildMcpDebugDetails = (
   attempts,
 });
 
-const toContextLayerError = (
+const toIntegrationsHubError = (
   message: string,
   error: unknown,
   debugDetails: Record<string, unknown>,
 ) =>
-  new ContextLayerError(
+  new IntegrationsHubError(
     message,
-    error instanceof ContextLayerError ? error.statusCode : getErrorStatusCode(error) ?? 502,
+    error instanceof IntegrationsHubError ? error.statusCode : getErrorStatusCode(error) ?? 502,
     debugDetails,
   );
 
@@ -353,14 +353,14 @@ export const runMcpClientOperation = async <T,>(
       );
 
       if (attempts.length === 1) {
-        throw toContextLayerError(message, error, debugDetails);
+        throw toIntegrationsHubError(message, error, debugDetails);
       }
 
-      throw new ContextLayerError(
+      throw new IntegrationsHubError(
         combinedMessage,
-        error instanceof ContextLayerError
+        error instanceof IntegrationsHubError
           ? error.statusCode
-          : firstError instanceof ContextLayerError
+          : firstError instanceof IntegrationsHubError
             ? firstError.statusCode
             : 502,
         debugDetails,
@@ -368,7 +368,7 @@ export const runMcpClientOperation = async <T,>(
     }
   }
 
-  throw new ContextLayerError(
+  throw new IntegrationsHubError(
     `No MCP transports configured for ${operationName}.`,
     500,
   );

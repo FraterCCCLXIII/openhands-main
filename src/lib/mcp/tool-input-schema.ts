@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import { collectHttpTemplateVariables } from "@/src/lib/http-request-template";
-import type { ToolSpec, GenericHttpRequestTemplate } from "@/src/types/context-layer";
+import type { ToolSpec, GenericHttpRequestTemplate } from "@/src/types/integrations-hub";
 
 type JsonLiteral = string | number | boolean | null;
 
@@ -130,7 +130,7 @@ export const CONTEXT_RESERVED_TOOL_INPUT_SHAPE = {
   contextScopes: z.array(z.string()).default([]),
 };
 
-export const buildContextLayerToolInputShape = (toolSpec: ToolSpec) => {
+export const buildIntegrationsHubToolInputShape = (toolSpec: ToolSpec) => {
   const jsonSchemaShape = buildShapeFromJsonSchema(toolSpec.config.inputSchema as JsonSchema | undefined);
   const requestTemplateShape = buildShapeFromRequestTemplate(
     toolSpec.config.request as GenericHttpRequestTemplate | undefined,

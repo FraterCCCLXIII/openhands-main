@@ -1,23 +1,23 @@
 import { fromError, ok } from "@/src/lib/api";
 import { extractContextApiKey } from "@/src/lib/context-api-auth";
-import { ContextLayerError } from "@/src/lib/core/errors";
+import { IntegrationsHubError } from "@/src/lib/core/errors";
 import { contextInvokeSchema } from "@/src/lib/core/schema";
-import { getContextLayerService } from "@/src/lib/core/runtime";
+import { getIntegrationsHubService } from "@/src/lib/core/runtime";
 
-const BEARER_CHALLENGE = 'Bearer realm="agent-context-layer"';
+const BEARER_CHALLENGE = 'Bearer realm="agent-integrations-hub"';
 
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ integrationKey: string; toolName: string }> },
 ) {
   try {
-    const service = getContextLayerService();
+    const service = getIntegrationsHubService();
     const providedApiKey = extractContextApiKey(request.headers);
     const hasStoredAgentApiKeys = await service.hasStoredAgentApiKeys();
 
     if (!hasStoredAgentApiKeys) {
-      throw new ContextLayerError(
-        "Open the dashboard once to provision a personal context-layer API key before agents call /api/context.",
+      throw new IntegrationsHubError(
+        "Open the dashboard once to provision a personal integrations-hub API key before agents call /api/context.",
         503,
       );
     }
@@ -28,7 +28,7 @@ export async function POST(
       return Response.json(
         {
           detail:
-            "Provide a valid personal context-layer API key in the Authorization bearer header or X-API-Key.",
+            "Provide a valid personal integrations-hub API key in the Authorization bearer header or X-API-Key.",
         },
         {
           status: 401,

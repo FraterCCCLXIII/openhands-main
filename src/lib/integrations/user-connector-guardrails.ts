@@ -1,7 +1,7 @@
-import { ContextLayerError } from "@/src/lib/core/errors";
+import { IntegrationsHubError } from "@/src/lib/core/errors";
 import type { IntegrationDiscoveryInput } from "@/src/lib/integrations/discovery";
 import { getOptionalTrimmedString } from "@/src/lib/type-utils";
-import type { IntegrationSpec, ToolSpec } from "@/src/types/context-layer";
+import type { IntegrationSpec, ToolSpec } from "@/src/types/integrations-hub";
 
 export const RAW_CONNECTOR_INSTALL_FORBIDDEN_DETAIL =
   "Only app administrators can install integrations from arbitrary connector URLs. Use a managed connector instead.";
@@ -26,7 +26,7 @@ export const assertUserCanSaveIntegration = (
   // Non-admins may only install managed connectors, and they cannot override
   // the managed connector's stored URLs with raw endpoint values.
   if (!managedConnectorSlug || apiBaseUrl || serverUrl) {
-    throw new ContextLayerError(RAW_CONNECTOR_INSTALL_FORBIDDEN_DETAIL, 403);
+    throw new IntegrationsHubError(RAW_CONNECTOR_INSTALL_FORBIDDEN_DETAIL, 403);
   }
 };
 
@@ -38,5 +38,5 @@ export const assertUserCanDiscoverIntegration = (
     return;
   }
 
-  throw new ContextLayerError(RAW_CONNECTOR_DISCOVERY_FORBIDDEN_DETAIL, 403);
+  throw new IntegrationsHubError(RAW_CONNECTOR_DISCOVERY_FORBIDDEN_DETAIL, 403);
 };

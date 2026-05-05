@@ -5,7 +5,7 @@ import {
 } from "@/src/lib/function-access-mode";
 import { matchesSearchQuery } from "@/src/lib/text-utils";
 import { cn } from "@/src/lib/utils";
-import type { ToolAccessMode, ToolSpec } from "@/src/types/context-layer";
+import type { ToolAccessMode, ToolSpec } from "@/src/types/integrations-hub";
 
 export const accessModeLabel = (mode: ToolAccessMode) => {
   switch (mode) {

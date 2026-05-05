@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { buildAgentConnectionGuide } from "@/src/lib/agent-connection";
-import type { IntegrationSpec } from "@/src/types/context-layer";
+import type { IntegrationSpec } from "@/src/types/integrations-hub";
 
 const disabledIntegration: IntegrationSpec = {
   key: "disabled",

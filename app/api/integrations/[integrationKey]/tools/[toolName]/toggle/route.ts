@@ -2,7 +2,7 @@ import { z } from "zod";
 
 import { fromError, ok } from "@/src/lib/api";
 import { getCurrentUserIdentity } from "@/src/lib/current-user";
-import { getContextLayerService } from "@/src/lib/core/runtime";
+import { getIntegrationsHubService } from "@/src/lib/core/runtime";
 
 const toggleSchema = z.object({ enabled: z.boolean() });
 
@@ -14,7 +14,7 @@ export async function POST(
     const { ownerId } = await getCurrentUserIdentity();
     const payload = toggleSchema.parse(await request.json());
     const { integrationKey, toolName } = await params;
-    const service = getContextLayerService();
+    const service = getIntegrationsHubService();
     return ok(
       await service.setOwnerToolEnabled(
         ownerId,

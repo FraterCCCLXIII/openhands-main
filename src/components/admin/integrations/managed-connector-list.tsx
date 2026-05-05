@@ -14,7 +14,7 @@ import { cn } from "@/src/lib/utils";
 import type {
   ManagedConnectorDefinition,
   ManagedConnectorRecord,
-} from "@/src/types/context-layer";
+} from "@/src/types/integrations-hub";
 
 interface ManagedConnectorListProps {
   initialManagedConnectors: ManagedConnectorDefinition[];

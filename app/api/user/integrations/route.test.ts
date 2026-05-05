@@ -4,19 +4,19 @@ vi.mock("@neondatabase/serverless", () => ({ neon: () => getActiveSql() }));
 
 import { GET, POST } from "./route";
 
-import { getContextLayerService } from "@/src/lib/core/runtime";
+import { getIntegrationsHubService } from "@/src/lib/core/runtime";
 import { createTestRepository, getActiveSql } from "@/src/lib/db/pglite-test-utils";
-import type { IntegrationSpec } from "@/src/types/context-layer";
+import type { IntegrationSpec } from "@/src/types/integrations-hub";
 
 let testCleanup: () => Promise<void>;
 
 const resetRuntime = () => {
   const runtime = globalThis as typeof globalThis & {
-    contextLayerRepository?: unknown;
-    contextLayerService?: unknown;
+    integrationsHubRepository?: unknown;
+    integrationsHubService?: unknown;
   };
-  delete runtime.contextLayerRepository;
-  delete runtime.contextLayerService;
+  delete runtime.integrationsHubRepository;
+  delete runtime.integrationsHubService;
 };
 
 beforeAll(() => {
@@ -61,7 +61,7 @@ const integration: IntegrationSpec = {
 
 describe("/api/user/integrations", () => {
   it("lists integrations for the authenticated user", async () => {
-    const service = getContextLayerService();
+    const service = getIntegrationsHubService();
     await service.registerOwnerIntegration("owner@example.com", integration);
     const { apiKey } = await service.rotateUserApiKey("owner@example.com");
 
@@ -80,7 +80,7 @@ describe("/api/user/integrations", () => {
   });
 
   it("creates or updates an integration for the authenticated user", async () => {
-    const service = getContextLayerService();
+    const service = getIntegrationsHubService();
     const { apiKey } = await service.rotateUserApiKey("owner@example.com");
 
     const response = await POST(
@@ -106,7 +106,7 @@ describe("/api/user/integrations", () => {
   });
 
   it("rejects non-admin user API attempts to save raw connector endpoints", async () => {
-    const service = getContextLayerService();
+    const service = getIntegrationsHubService();
     const { apiKey } = await service.rotateUserApiKey("owner@example.com");
 
     const response = await POST(
@@ -142,7 +142,7 @@ describe("/api/user/integrations", () => {
 
   it("allows admin users to save raw connector endpoints via user API", async () => {
     vi.stubEnv("APP_ADMIN_EMAILS", "admin@example.com");
-    const service = getContextLayerService();
+    const service = getIntegrationsHubService();
     const { apiKey } = await service.rotateUserApiKey("admin@example.com");
 
     const response = await POST(

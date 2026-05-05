@@ -4,7 +4,7 @@ import { GET } from "./route";
 
 import type { ContextRepository } from "@/src/lib/core/repository";
 import { createTestRepository, getActiveSql } from "@/src/lib/db/pglite-test-utils";
-import type { IntegrationSpec } from "@/src/types/context-layer";
+import type { IntegrationSpec } from "@/src/types/integrations-hub";
 
 vi.mock("@neondatabase/serverless", () => ({ neon: () => getActiveSql() }));
 
@@ -23,16 +23,16 @@ beforeEach(async () => {
 
 const setRuntimeRepository = (repository?: ContextRepository) => {
   const runtime = globalThis as typeof globalThis & {
-    contextLayerRepository?: unknown;
-    contextLayerService?: unknown;
+    integrationsHubRepository?: unknown;
+    integrationsHubService?: unknown;
   };
 
   if (repository) {
-    runtime.contextLayerRepository = repository;
+    runtime.integrationsHubRepository = repository;
   } else {
-    delete runtime.contextLayerRepository;
+    delete runtime.integrationsHubRepository;
   }
-  delete runtime.contextLayerService;
+  delete runtime.integrationsHubService;
 };
 
 const githubIntegration: IntegrationSpec = {
@@ -106,10 +106,10 @@ describe("GET /api/context/skill", () => {
     await seedRepository();
 
     const response = await GET(
-      new Request("https://context-layer.example.com/api/context/skill", {
+      new Request("https://integrations-hub.example.com/api/context/skill", {
         headers: {
           Authorization: "Bearer context-key",
-          "x-forwarded-host": "context-layer.example.com",
+          "x-forwarded-host": "integrations-hub.example.com",
           "x-forwarded-proto": "https",
         },
       }),
@@ -121,9 +121,9 @@ describe("GET /api/context/skill", () => {
 
     const body = await response.text();
     expect(body).toContain(
-      "POST https://context-layer.example.com/api/context/github/search_repositories",
+      "POST https://integrations-hub.example.com/api/context/github/search_repositories",
     );
-    expect(body).toContain("Generated tool catalog for the current OpenHands Context Layer profile.");
+    expect(body).toContain("Generated tool catalog for the current OpenHands Integrations Hub profile.");
     expect(body).not.toContain("slack.slack_search_public");
   });
 
@@ -131,16 +131,16 @@ describe("GET /api/context/skill", () => {
     await seedRepository();
 
     const response = await GET(
-      new Request("https://context-layer.example.com/api/context/skill"),
+      new Request("https://integrations-hub.example.com/api/context/skill"),
     );
 
     expect(response.status).toBe(401);
     expect(response.headers.get("WWW-Authenticate")).toBe(
-      'Bearer realm="agent-context-layer"',
+      'Bearer realm="agent-integrations-hub"',
     );
     await expect(response.json()).resolves.toMatchObject({
       detail:
-        "Provide a valid personal context-layer API key in the Authorization bearer header or X-API-Key.",
+        "Provide a valid personal integrations-hub API key in the Authorization bearer header or X-API-Key.",
     });
   });
 
@@ -148,13 +148,13 @@ describe("GET /api/context/skill", () => {
     setRuntimeRepository(testRepo);
 
     const response = await GET(
-      new Request("https://context-layer.example.com/api/context/skill"),
+      new Request("https://integrations-hub.example.com/api/context/skill"),
     );
 
     expect(response.status).toBe(503);
     await expect(response.json()).resolves.toMatchObject({
       detail:
-        "Open the dashboard once to provision a personal context-layer API key before agents call /api/context.",
+        "Open the dashboard once to provision a personal integrations-hub API key before agents call /api/context.",
     });
   });
 });

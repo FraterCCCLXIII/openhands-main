@@ -4,7 +4,7 @@ vi.mock("@neondatabase/serverless", () => ({ neon: () => getActiveSql() }));
 
 import { GET } from "./route";
 
-import { getContextLayerService } from "@/src/lib/core/runtime";
+import { getIntegrationsHubService } from "@/src/lib/core/runtime";
 import { createTestRepository, getActiveSql } from "@/src/lib/db/pglite-test-utils";
 import {
   ADMIN_API_BEARER_CHALLENGE,
@@ -15,11 +15,11 @@ let testCleanup: () => Promise<void>;
 
 const resetRuntime = () => {
   const runtime = globalThis as typeof globalThis & {
-    contextLayerRepository?: unknown;
-    contextLayerService?: unknown;
+    integrationsHubRepository?: unknown;
+    integrationsHubService?: unknown;
   };
-  delete runtime.contextLayerRepository;
-  delete runtime.contextLayerService;
+  delete runtime.integrationsHubRepository;
+  delete runtime.integrationsHubService;
 };
 
 beforeAll(() => {
@@ -39,7 +39,7 @@ afterEach(async () => {
 
 describe("GET /api/admin/connections", () => {
   it("lists deployment-wide connection summaries and supports GitHub identity filtering", async () => {
-    const service = getContextLayerService();
+    const service = getIntegrationsHubService();
     await service.saveOAuthConnection(
       "owner-a@example.com",
       "github",
@@ -116,7 +116,7 @@ describe("GET /api/admin/connections", () => {
   });
 
   it("pushes exact-match filters to the repository layer and paginates results", async () => {
-    const service = getContextLayerService();
+    const service = getIntegrationsHubService();
     await service.saveOAuthConnection(
       "owner-a@example.com",
       "github",

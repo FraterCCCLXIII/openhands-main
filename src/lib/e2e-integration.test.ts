@@ -27,7 +27,7 @@ vi.mock("@/src/lib/auth", () => ({
 }));
 
 const { PostgresRepository } = await import("./db/postgres-repository");
-const { ContextLayerService } = await import("./core/service");
+const { IntegrationsHubService } = await import("./core/service");
 const { AdapterRegistry } = await import("./core/adapter-registry");
 const { MockAdapter } = await import("./adapters/mock-adapter");
 const { HttpAdapter } = await import("./adapters/http-adapter");
@@ -45,7 +45,7 @@ afterAll(() => {
 });
 
 let repo: InstanceType<typeof PostgresRepository>;
-let service: InstanceType<typeof ContextLayerService>;
+let service: InstanceType<typeof IntegrationsHubService>;
 
 beforeEach(async () => {
   ctx = await createPgliteTestContext();
@@ -58,7 +58,7 @@ beforeEach(async () => {
     mock: new MockAdapter(),
   });
 
-  service = new ContextLayerService(
+  service = new IntegrationsHubService(
     repo,
     registry,
     new NotificationPublisher(repo),

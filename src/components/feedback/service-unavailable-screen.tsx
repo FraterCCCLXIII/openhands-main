@@ -26,8 +26,8 @@ export const ServiceUnavailableScreen = ({
           </h1>
           <p className="text-base leading-8 text-[var(--color-text-base)]">
             {isAdmin
-              ? "This deployment cannot load the context layer because persistent Postgres storage is not configured."
-              : "The context layer is temporarily unavailable. Please contact your administrator and try again later."}
+              ? "This deployment cannot load the integrations hub because persistent Postgres storage is not configured."
+              : "The integrations hub is temporarily unavailable. Please contact your administrator and try again later."}
           </p>
         </div>
       </header>

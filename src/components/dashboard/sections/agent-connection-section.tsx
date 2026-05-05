@@ -265,7 +265,7 @@ export const AgentConnectionSection = ({
         />
         <DashboardApiKeyCard
           label="User automation key"
-          description="Use this key to programmatically manage user-scoped context-layer settings."
+          description="Use this key to programmatically manage user-scoped integrations-hub settings."
           maskedValue={userKey.maskedValue || "No user automation key yet. Reveal or copy to create one."}
           badgeTone={userKey.hasKey ? "warning" : "default"}
           badgeLabel="user"

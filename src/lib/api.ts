@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { ContextLayerError } from "@/src/lib/core/errors";
+import { IntegrationsHubError } from "@/src/lib/core/errors";
 
 export const ok = (data: unknown, init?: ResponseInit) => NextResponse.json(data, init);
 
@@ -20,7 +20,7 @@ const shouldIncludeAdminDebug = async () => {
 export const fromError = async (error: unknown) => {
   const includeAdminDebug = await shouldIncludeAdminDebug();
 
-  if (error instanceof ContextLayerError) {
+  if (error instanceof IntegrationsHubError) {
     return NextResponse.json(
       {
         detail: error.message,

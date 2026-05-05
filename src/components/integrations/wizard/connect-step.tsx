@@ -4,7 +4,7 @@ import { buildAdminSectionHref, type AdminSection } from "@/src/lib/admin-routes
 import type {
   ManagedConnectorOption,
   IntegrationConnectionStatus,
-} from "@/src/types/context-layer";
+} from "@/src/types/integrations-hub";
 import {
   authStrategyLabel,
   formatDebugDetails,

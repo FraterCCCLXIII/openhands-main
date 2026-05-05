@@ -16,7 +16,7 @@ import type {
   IntegrationSpec,
   TemporaryGrant,
   ToolSpec,
-} from "@/src/types/context-layer";
+} from "@/src/types/integrations-hub";
 
 const baseTool = (overrides: Partial<ToolSpec> = {}): ToolSpec => ({
   name: "accounts",

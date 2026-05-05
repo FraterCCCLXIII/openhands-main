@@ -23,18 +23,18 @@ vi.mock("@neondatabase/serverless", () => ({ neon: () => getActiveSql() }));
 
 import { DELETE, GET, POST } from "./route";
 
-import { getContextLayerService } from "@/src/lib/core/runtime";
+import { getIntegrationsHubService } from "@/src/lib/core/runtime";
 import { createTestRepository, getActiveSql } from "@/src/lib/db/pglite-test-utils";
 
 let testCleanup: () => Promise<void>;
 
 const resetRuntime = () => {
   const runtime = globalThis as typeof globalThis & {
-    contextLayerRepository?: unknown;
-    contextLayerService?: unknown;
+    integrationsHubRepository?: unknown;
+    integrationsHubService?: unknown;
   };
-  delete runtime.contextLayerRepository;
-  delete runtime.contextLayerService;
+  delete runtime.integrationsHubRepository;
+  delete runtime.integrationsHubService;
 };
 
 beforeAll(() => {
@@ -61,7 +61,7 @@ afterEach(async () => {
 
 describe("/api/admin/key", () => {
   it("returns metadata plus the recoverable plaintext to the authenticated admin session", async () => {
-    const service = getContextLayerService();
+    const service = getIntegrationsHubService();
     const created = await service.rotateAdminApiKey("admin@example.com");
 
     const response = await GET();
@@ -95,7 +95,7 @@ describe("/api/admin/key", () => {
 
     const secondResponse = await POST();
     const secondBody = (await secondResponse.json()) as typeof firstBody;
-    const service = getContextLayerService();
+    const service = getIntegrationsHubService();
 
     expect(secondBody.apiKey).not.toBe(firstBody.apiKey);
     expect(secondBody.key.createdAt).toBe(firstBody.key.createdAt);
@@ -106,7 +106,7 @@ describe("/api/admin/key", () => {
   });
 
   it("revokes the current admin user's key", async () => {
-    const service = getContextLayerService();
+    const service = getIntegrationsHubService();
     const { apiKey } = await service.rotateAdminApiKey("admin@example.com");
 
     const response = await DELETE();

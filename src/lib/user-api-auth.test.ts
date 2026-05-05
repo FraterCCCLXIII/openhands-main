@@ -1,6 +1,6 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { getContextLayerService } from "@/src/lib/core/runtime";
+import { getIntegrationsHubService } from "@/src/lib/core/runtime";
 import { createTestRepository, getActiveSql } from "@/src/lib/db/pglite-test-utils";
 import {
   USER_API_ADMIN_REQUIRED_DETAIL,
@@ -14,11 +14,11 @@ let testCleanup: () => Promise<void>;
 
 const resetRuntime = () => {
   const runtime = globalThis as typeof globalThis & {
-    contextLayerRepository?: unknown;
-    contextLayerService?: unknown;
+    integrationsHubRepository?: unknown;
+    integrationsHubService?: unknown;
   };
-  delete runtime.contextLayerRepository;
-  delete runtime.contextLayerService;
+  delete runtime.integrationsHubRepository;
+  delete runtime.integrationsHubService;
 };
 
 beforeAll(() => {
@@ -39,7 +39,7 @@ afterEach(async () => {
 
 describe("user-api-auth", () => {
   it("authenticates valid user API keys", async () => {
-    const service = getContextLayerService();
+    const service = getIntegrationsHubService();
     const { apiKey } = await service.rotateUserApiKey("owner@example.com");
 
     await expect(
@@ -79,7 +79,7 @@ describe("user-api-auth", () => {
 
   it("enforces admin-only user API endpoints", async () => {
     vi.stubEnv("APP_ADMIN_EMAILS", "admin@example.com");
-    const service = getContextLayerService();
+    const service = getIntegrationsHubService();
     const userKey = (await service.rotateUserApiKey("owner@example.com")).apiKey;
     const adminKey = (await service.rotateUserApiKey("admin@example.com")).apiKey;
 

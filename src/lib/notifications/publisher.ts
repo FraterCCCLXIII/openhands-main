@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 
 import type { ContextRepository } from "@/src/lib/core/repository";
 import { nowIso } from "@/src/lib/core/date";
-import type { AccessRequest, NotificationChannel, NotificationRecord } from "@/src/types/context-layer";
+import type { AccessRequest, NotificationChannel, NotificationRecord } from "@/src/types/integrations-hub";
 
 export class NotificationPublisher {
   constructor(private readonly repository: ContextRepository) {}

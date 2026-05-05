@@ -18,7 +18,7 @@ import {
   getToolAccessMode,
   listExampleTools,
 } from "@/src/lib/tool-examples";
-import type { ToolSpec, IntegrationSpec } from "@/src/types/context-layer";
+import type { ToolSpec, IntegrationSpec } from "@/src/types/integrations-hub";
 
 const buildRequestExample = (toolSpec: ToolSpec) => ({
   scopes: toolSpec.defaultScopes,
@@ -49,7 +49,7 @@ const buildOperationDescription = (
 
   details.push(buildPermissionNote(toolSpec));
 
-  return `${integration.name} tool \`${toolSpec.name}\` exposed through the unified context-layer endpoint. ${details.join(" · ")}`;
+  return `${integration.name} tool \`${toolSpec.name}\` exposed through the unified integrations-hub endpoint. ${details.join(" · ")}`;
 };
 
 /**
@@ -100,7 +100,7 @@ export const buildContextOpenApiDocument = ({
                 "ContextInvocationResult",
               ),
               401: buildUnauthorizedResponse(
-                "Missing or invalid personal context-layer API key.",
+                "Missing or invalid personal integrations-hub API key.",
               ),
               403: buildJsonRefResponse(
                 "Permission required, case-by-case approval needed, or the user connection is missing.",
@@ -111,7 +111,7 @@ export const buildContextOpenApiDocument = ({
                 "ErrorResponse",
               ),
               503: buildJsonRefResponse(
-                "Context-layer key provisioning or storage unavailable.",
+                "Integrations-hub key provisioning or storage unavailable.",
                 "ErrorResponse",
               ),
             },
@@ -124,10 +124,10 @@ export const buildContextOpenApiDocument = ({
   return {
     openapi: OPENAPI_VERSION,
     info: {
-      title: "Context Layer Tool API",
+      title: "Integrations Hub Tool API",
       version: "1.0.0",
       description:
-        "OpenAPI-compatible document for the authenticated user's currently available context-layer tools.",
+        "OpenAPI-compatible document for the authenticated user's currently available integrations-hub tools.",
     },
     servers: [{ url: baseUrl }],
     tags: enabledIntegrations.map(({ integration }) => ({
@@ -138,7 +138,7 @@ export const buildContextOpenApiDocument = ({
     components: {
       securitySchemes: {
         ContextApiKey: buildApiKeySecurityScheme(
-          "Personal context-layer API key sent as an Authorization bearer token. X-API-Key is also accepted by the runtime.",
+          "Personal integrations-hub API key sent as an Authorization bearer token. X-API-Key is also accepted by the runtime.",
         ),
       },
       schemas: {

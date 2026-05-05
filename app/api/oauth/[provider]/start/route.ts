@@ -5,8 +5,8 @@ import { buildAdminSectionHref } from "@/src/lib/admin-routes";
 import { getOAuthCallbackUrl } from "@/src/lib/auth-config";
 import { getCurrentUserIdentity } from "@/src/lib/current-user";
 import {
-  getContextLayerRepository,
-  getContextLayerService,
+  getIntegrationsHubRepository,
+  getIntegrationsHubService,
 } from "@/src/lib/core/runtime";
 import { createOAuthStateExpiry } from "@/src/lib/oauth/providers";
 import { normalizeSafeRedirectTarget } from "@/src/lib/oauth/redirect-targets";
@@ -32,7 +32,7 @@ export async function GET(
   const url = new URL(request.url);
   const { provider: providerParam } = await params;
   const provider = await resolveOAuthProvider(
-    getContextLayerRepository(),
+    getIntegrationsHubRepository(),
     providerParam,
   );
 
@@ -72,7 +72,7 @@ export async function GET(
     const redirectUri = getOAuthCallbackUrl(provider.slug);
     const start = provider.startAuth({ state, redirectUri });
 
-    await getContextLayerService().saveOAuthState({
+    await getIntegrationsHubService().saveOAuthState({
       state,
       ownerId,
       integrationKey,

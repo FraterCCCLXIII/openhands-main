@@ -35,8 +35,8 @@ describe("proxy", () => {
     process.env.DISABLE_AUTH = "true";
 
     const response = proxy(
-      new NextRequest("https://context-layer.example.com/api/integrations", {
-        headers: { "x-forwarded-host": "context-layer.example.com" },
+      new NextRequest("https://integrations-hub.example.com/api/integrations", {
+        headers: { "x-forwarded-host": "integrations-hub.example.com" },
       }),
     );
 
@@ -49,8 +49,8 @@ describe("proxy", () => {
 
   it("applies baseline security headers to successful responses", () => {
     const response = proxy(
-      new NextRequest("https://context-layer.example.com/integrations", {
-        headers: { host: "context-layer.example.com" },
+      new NextRequest("https://integrations-hub.example.com/integrations", {
+        headers: { host: "integrations-hub.example.com" },
       }),
     );
 
@@ -70,8 +70,8 @@ describe("proxy", () => {
     process.env.DISABLE_AUTH = "true";
 
     const response = proxy(
-      new NextRequest("https://context-layer.example.com/api/integrations", {
-        headers: { host: "context-layer.example.com" },
+      new NextRequest("https://integrations-hub.example.com/api/integrations", {
+        headers: { host: "integrations-hub.example.com" },
       }),
     );
 
@@ -91,9 +91,9 @@ describe("proxy", () => {
     process.env.DISABLE_AUTH = "true";
 
     const response = proxy(
-      new NextRequest("https://context-layer.example.com/api/integrations", {
+      new NextRequest("https://integrations-hub.example.com/api/integrations", {
         headers: {
-          host: "context-layer.example.com",
+          host: "integrations-hub.example.com",
           "x-forwarded-host": "localhost:3000",
         },
       }),

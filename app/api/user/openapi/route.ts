@@ -1,5 +1,5 @@
 import { ok } from "@/src/lib/api";
-import { getContextLayerService } from "@/src/lib/core/runtime";
+import { getIntegrationsHubService } from "@/src/lib/core/runtime";
 import {
   authenticateUserApiRequest,
   fromUserApiError,
@@ -9,7 +9,7 @@ import { buildUserOpenApiDocument } from "@/src/lib/user-openapi";
 export async function GET(request: Request) {
   try {
     const identity = await authenticateUserApiRequest(request);
-    const service = getContextLayerService();
+    const service = getIntegrationsHubService();
     const integrations = await service.listOwnerIntegrations(identity.ownerId);
 
     return ok(

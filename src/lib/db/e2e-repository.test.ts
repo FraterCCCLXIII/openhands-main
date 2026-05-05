@@ -144,7 +144,7 @@ describe("owner integrations", () => {
 describe("managed connectors", () => {
   const now = new Date().toISOString();
 
-  const makeConnector = (slug: string, overrides?: Partial<import("@/src/types/context-layer").ManagedConnectorRecord>) => ({
+  const makeConnector = (slug: string, overrides?: Partial<import("@/src/types/integrations-hub").ManagedConnectorRecord>) => ({
     slug,
     name: slug.charAt(0).toUpperCase() + slug.slice(1),
     description: `${slug} connector`,

@@ -5,7 +5,7 @@ import { GET } from "./route";
 import type { ContextRepository } from "@/src/lib/core/repository";
 import { encryptCredentials } from "@/src/lib/credential-crypto";
 import { createTestRepository, getActiveSql } from "@/src/lib/db/pglite-test-utils";
-import type { IntegrationSpec } from "@/src/types/context-layer";
+import type { IntegrationSpec } from "@/src/types/integrations-hub";
 
 vi.mock("@neondatabase/serverless", () => ({ neon: () => getActiveSql() }));
 
@@ -21,16 +21,16 @@ beforeEach(async () => {
 
 const setRuntimeRepository = (repository?: ContextRepository) => {
   const runtime = globalThis as typeof globalThis & {
-    contextLayerRepository?: unknown;
-    contextLayerService?: unknown;
+    integrationsHubRepository?: unknown;
+    integrationsHubService?: unknown;
   };
 
   if (repository) {
-    runtime.contextLayerRepository = repository;
+    runtime.integrationsHubRepository = repository;
   } else {
-    delete runtime.contextLayerRepository;
+    delete runtime.integrationsHubRepository;
   }
-  delete runtime.contextLayerService;
+  delete runtime.integrationsHubService;
 };
 
 const githubIntegration: IntegrationSpec = {
@@ -283,11 +283,11 @@ describe("GET /api/context/openapi", () => {
 
     expect(response.status).toBe(401);
     expect(response.headers.get("WWW-Authenticate")).toBe(
-      'Bearer realm="agent-context-layer"',
+      'Bearer realm="agent-integrations-hub"',
     );
     await expect(response.json()).resolves.toMatchObject({
       detail:
-        "Provide a valid personal context-layer API key in the Authorization bearer header or X-API-Key.",
+        "Provide a valid personal integrations-hub API key in the Authorization bearer header or X-API-Key.",
     });
   });
 });

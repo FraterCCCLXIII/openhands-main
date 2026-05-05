@@ -1,7 +1,7 @@
 import { createHash, randomBytes } from "node:crypto";
 
 import type { ContextRepository } from "@/src/lib/core/repository";
-import { ContextLayerError } from "@/src/lib/core/errors";
+import { IntegrationsHubError } from "@/src/lib/core/errors";
 import { normalizeManagedConnectorRecord } from "@/src/lib/integrations/managed-connectors";
 import {
   encryptManagedOAuthClient,
@@ -16,7 +16,7 @@ import type {
   OAuthStartResult,
   OAuthTokenExchangeResult,
 } from "@/src/lib/oauth/providers";
-import type { ManagedConnectorRecord } from "@/src/types/context-layer";
+import type { ManagedConnectorRecord } from "@/src/types/integrations-hub";
 
 const encodeBasicAuth = (clientId: string, clientSecret: string) =>
   Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
@@ -39,7 +39,7 @@ const fetchJson = async <T,>(
   const response = await fetch(input, init);
   const body = await response.text();
   if (!response.ok) {
-    throw new ContextLayerError(
+    throw new IntegrationsHubError(
       `${label} failed (${response.status}): ${body || response.statusText}`,
       502,
     );

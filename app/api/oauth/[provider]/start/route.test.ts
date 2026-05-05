@@ -32,16 +32,16 @@ beforeEach(async () => {
 
 const setRuntimeRepository = (repository?: ContextRepository) => {
   const runtime = globalThis as typeof globalThis & {
-    contextLayerRepository?: unknown;
-    contextLayerService?: unknown;
+    integrationsHubRepository?: unknown;
+    integrationsHubService?: unknown;
   };
 
   if (repository) {
-    runtime.contextLayerRepository = repository;
+    runtime.integrationsHubRepository = repository;
   } else {
-    delete runtime.contextLayerRepository;
+    delete runtime.integrationsHubRepository;
   }
-  delete runtime.contextLayerService;
+  delete runtime.integrationsHubService;
 };
 
 const seedManagedNotion = async () => {
@@ -110,16 +110,16 @@ describe("GET /api/oauth/[provider]/start", () => {
     vi.stubEnv("DISABLE_AUTH", "true");
     vi.stubEnv(
       "AUTH_REDIRECT_PROXY_URL",
-      "https://openhands-context-layer.vercel.app/api/auth",
+      "https://openhands-integrations-hub.vercel.app/api/auth",
     );
-    vi.stubEnv("VERCEL_URL", "context-layer-git-feature.vercel.app");
+    vi.stubEnv("VERCEL_URL", "integrations-hub-git-feature.vercel.app");
     await seedManagedNotion();
 
     const { GET } = await import("./route");
 
     const response = await GET(
       new Request(
-        "https://context-layer-git-feature.vercel.app/api/oauth/notion/start?integrationKey=notion",
+        "https://integrations-hub-git-feature.vercel.app/api/oauth/notion/start?integrationKey=notion",
       ),
       {
         params: Promise.resolve({ provider: "notion" }),
@@ -130,7 +130,7 @@ describe("GET /api/oauth/[provider]/start", () => {
     const location = response.headers.get("location");
     expect(location).toBeTruthy();
     expect(new URL(location ?? "http://localhost").searchParams.get("redirect_uri")).toBe(
-      "https://openhands-context-layer.vercel.app/api/oauth/notion/callback",
+      "https://openhands-integrations-hub.vercel.app/api/oauth/notion/callback",
     );
   });
 

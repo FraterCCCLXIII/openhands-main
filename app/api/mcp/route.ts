@@ -1,9 +1,9 @@
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 
 import { normalizeAgentIdentityValue } from "@/src/lib/agent-defaults";
-import { ContextLayerError } from "@/src/lib/core/errors";
-import { getContextLayerService } from "@/src/lib/core/runtime";
-import { createContextLayerMcpServer } from "@/src/lib/mcp/context-layer-server";
+import { IntegrationsHubError } from "@/src/lib/core/errors";
+import { getIntegrationsHubService } from "@/src/lib/core/runtime";
+import { createIntegrationsHubMcpServer } from "@/src/lib/mcp/integrations-hub-server";
 import {
   deleteMcpSession,
   getMcpSession,
@@ -12,7 +12,7 @@ import {
   type McpSessionDefaults,
 } from "@/src/lib/mcp/session-store";
 
-const BEARER_CHALLENGE = 'Bearer realm="agent-context-layer-mcp"';
+const BEARER_CHALLENGE = 'Bearer realm="agent-integrations-hub-mcp"';
 
 type HydratableSessionTransport = {
   sessionId?: string;
@@ -42,7 +42,7 @@ const getProtocolVersion = (request: Request) =>
 
 const validateMcpStreamableHttpRequest = (request: Request, hasSessionId: boolean) => {
   if (request.method === "GET" && hasSessionId && !acceptsContentType(request, "text/event-stream")) {
-    throw new ContextLayerError(
+    throw new IntegrationsHubError(
       "MCP session GET requests must accept text/event-stream.",
       406,
     );
@@ -53,14 +53,14 @@ const validateMcpStreamableHttpRequest = (request: Request, hasSessionId: boolea
       !acceptsContentType(request, "application/json") ||
       !acceptsContentType(request, "text/event-stream")
     ) {
-      throw new ContextLayerError(
+      throw new IntegrationsHubError(
         "MCP Streamable HTTP POST requests must accept both application/json and text/event-stream.",
         406,
       );
     }
 
     if (!hasContentType(request, "application/json")) {
-      throw new ContextLayerError(
+      throw new IntegrationsHubError(
         "MCP Streamable HTTP POST requests must use Content-Type: application/json.",
         415,
       );
@@ -68,7 +68,7 @@ const validateMcpStreamableHttpRequest = (request: Request, hasSessionId: boolea
   }
 
   if (hasSessionId && !getProtocolVersion(request)) {
-    throw new ContextLayerError(
+    throw new IntegrationsHubError(
       "MCP session requests must include the mcp-protocol-version header.",
       400,
     );
@@ -86,20 +86,20 @@ const getRequestSessionDefaults = (request: Request): McpSessionDefaults => {
 };
 
 const authorizeApiKey = async (apiKey: string) => {
-  const service = getContextLayerService();
+  const service = getIntegrationsHubService();
   const hasStoredAgentApiKeys = await service.hasStoredAgentApiKeys();
 
   if (!hasStoredAgentApiKeys) {
-    throw new ContextLayerError(
-      "Open the dashboard once to provision a personal context-layer API key before agents connect to MCP.",
+    throw new IntegrationsHubError(
+      "Open the dashboard once to provision a personal integrations-hub API key before agents connect to MCP.",
       503,
     );
   }
 
   const apiKeyRecord = await service.getStoredAgentApiKey(apiKey);
   if (!apiKeyRecord) {
-    throw new ContextLayerError(
-      "Provide a valid personal context-layer API key in the Authorization bearer header before connecting to MCP.",
+    throw new IntegrationsHubError(
+      "Provide a valid personal integrations-hub API key in the Authorization bearer header before connecting to MCP.",
       401,
     );
   }
@@ -111,7 +111,7 @@ const getAuthorizedSession = async (sessionId: string, ownerId: string) => {
   const session = await getMcpSession(sessionId);
 
   if (!session || session.ownerId !== ownerId) {
-    throw new ContextLayerError(
+    throw new IntegrationsHubError(
       "MCP session not found. Reconnect to create a fresh MCP session.",
       404,
     );
@@ -140,7 +140,7 @@ const createSessionTransport = async ({
   sessionId?: string;
   sessionDefaults: McpSessionDefaults;
 }) => {
-  const service = getContextLayerService();
+  const service = getIntegrationsHubService();
   const transport = new WebStandardStreamableHTTPServerTransport({
     enableJsonResponse: true,
     sessionIdGenerator: () => sessionId ?? crypto.randomUUID(),
@@ -162,7 +162,7 @@ const createSessionTransport = async ({
     hydrateTransportSession(transport, sessionId);
   }
 
-  const server = await createContextLayerMcpServer({
+  const server = await createIntegrationsHubMcpServer({
     request,
     service,
     ownerId,
@@ -197,8 +197,8 @@ const handleMcpRoute = async (request: Request) => {
 
     const apiKey = getBearerToken(request);
     if (!apiKey) {
-      throw new ContextLayerError(
-        "Provide a valid personal context-layer API key in the Authorization bearer header before connecting to MCP.",
+      throw new IntegrationsHubError(
+        "Provide a valid personal integrations-hub API key in the Authorization bearer header before connecting to MCP.",
         401,
       );
     }
@@ -243,7 +243,7 @@ const handleMcpRoute = async (request: Request) => {
 
     if (request.method === "DELETE") {
       if (!sessionId) {
-        throw new ContextLayerError(
+        throw new IntegrationsHubError(
           "MCP session termination requires an mcp-session-id header.",
           400,
         );
@@ -265,7 +265,7 @@ const handleMcpRoute = async (request: Request) => {
       headers: { Allow: "GET, POST, DELETE" },
     });
   } catch (error) {
-    if (error instanceof ContextLayerError) {
+    if (error instanceof IntegrationsHubError) {
       return Response.json(
         { detail: error.message },
         {

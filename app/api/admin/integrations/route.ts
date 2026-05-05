@@ -1,11 +1,11 @@
 import { fromAdminApiError, authenticateAdminApiRequest } from "@/src/lib/admin-api-auth";
-import { ContextLayerError } from "@/src/lib/core/errors";
+import { IntegrationsHubError } from "@/src/lib/core/errors";
 
 const DEPRECATED_ADMIN_INTEGRATIONS_MESSAGE =
   "Admin API keys can no longer manage self-scoped integrations. Use the user API key with /api/user/integrations instead.";
 
 const throwDeprecatedAdminIntegrationsError = () => {
-  throw new ContextLayerError(DEPRECATED_ADMIN_INTEGRATIONS_MESSAGE, 410);
+  throw new IntegrationsHubError(DEPRECATED_ADMIN_INTEGRATIONS_MESSAGE, 410);
 };
 
 export async function GET(request: Request) {

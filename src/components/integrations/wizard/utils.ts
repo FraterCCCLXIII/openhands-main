@@ -11,7 +11,7 @@ import type {
   ManagedConnectorOption,
   ToolAccessMode,
   ToolSpec,
-} from "@/src/types/context-layer";
+} from "@/src/types/integrations-hub";
 
 export type IntegrationKind = "managed" | "mcp";
 export type WizardStep = 1 | 2 | 3;

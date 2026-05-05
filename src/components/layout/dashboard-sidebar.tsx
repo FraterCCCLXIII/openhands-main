@@ -160,7 +160,7 @@ export const DashboardSidebar = ({
           OpenHands
         </p>
         <div className="mt-2 flex items-center justify-between gap-3">
-          <p className="text-sm font-semibold text-white">Context Layer</p>
+          <p className="text-sm font-semibold text-white">Integrations Hub</p>
           {badge}
         </div>
       </div>

@@ -1,6 +1,6 @@
 import { fromError, ok } from "@/src/lib/api";
 import { getCurrentUserIdentity } from "@/src/lib/current-user";
-import { getContextLayerService } from "@/src/lib/core/runtime";
+import { getIntegrationsHubService } from "@/src/lib/core/runtime";
 
 export async function POST(
   request: Request,
@@ -10,7 +10,7 @@ export async function POST(
     const { ownerId } = await getCurrentUserIdentity();
     await request.json().catch(() => ({}));
     const { requestId } = await params;
-    const service = getContextLayerService();
+    const service = getIntegrationsHubService();
     return ok(await service.rejectOwnerAccessRequest(ownerId, requestId, ownerId));
   } catch (error) {
     return fromError(error);

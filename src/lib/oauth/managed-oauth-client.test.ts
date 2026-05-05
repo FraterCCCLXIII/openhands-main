@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { ContextLayerError } from "@/src/lib/core/errors";
+import { IntegrationsHubError } from "@/src/lib/core/errors";
 import {
   encryptManagedOAuthClient,
   readManagedOAuthClient,
@@ -8,7 +8,7 @@ import {
   requireManagedOAuthClient,
   usesDynamicOAuthClientRegistration,
 } from "@/src/lib/oauth/managed-oauth-client";
-import type { GenericOAuthConfig, ManagedConnectorRecord } from "@/src/types/context-layer";
+import type { GenericOAuthConfig, ManagedConnectorRecord } from "@/src/types/integrations-hub";
 
 const createConnector = (
   overrides: Partial<Pick<ManagedConnectorRecord, "name" | "oauthConfig" | "encryptedOAuthClient">> = {},
@@ -78,7 +78,7 @@ describe("managed-oauth-client", () => {
     });
 
     expect(() => readManagedOAuthClient(connector)).toThrowError(
-      new ContextLayerError("Webflow is missing stored OAuth client credentials.", 500),
+      new IntegrationsHubError("Webflow is missing stored OAuth client credentials.", 500),
     );
   });
 
@@ -89,7 +89,7 @@ describe("managed-oauth-client", () => {
           encryptedOAuthClient: undefined,
         }),
       ),
-    ).toThrowError(new ContextLayerError("Webflow is missing stored OAuth client credentials.", 500));
+    ).toThrowError(new IntegrationsHubError("Webflow is missing stored OAuth client credentials.", 500));
 
     expect(
       requireManagedOAuthClient(
@@ -111,7 +111,7 @@ describe("managed-oauth-client", () => {
           encryptedOAuthClient: encryptManagedOAuthClient({ clientId: "confidential-client" }),
         }),
       ),
-    ).toThrowError(new ContextLayerError("Webflow is missing stored OAuth client credentials.", 500));
+    ).toThrowError(new IntegrationsHubError("Webflow is missing stored OAuth client credentials.", 500));
   });
 
   it("rejects automatic registration for connectors without dynamic OAuth support", async () => {
@@ -127,7 +127,7 @@ describe("managed-oauth-client", () => {
         },
       }),
     ).rejects.toThrowError(
-      new ContextLayerError("Notion does not support automatic OAuth client registration.", 500),
+      new IntegrationsHubError("Notion does not support automatic OAuth client registration.", 500),
     );
   });
 
@@ -160,7 +160,7 @@ describe("managed-oauth-client", () => {
     expect(init.method).toBe("POST");
     expect(init.headers).toEqual({ "Content-Type": "application/json" });
     expect(JSON.parse(String(init.body))).toEqual({
-      client_name: "OpenHands Context Layer (Webflow)",
+      client_name: "OpenHands Integrations Hub (Webflow)",
       redirect_uris: ["https://stable.example.dev/api/oauth/webflow/callback"],
       grant_types: ["authorization_code", "refresh_token"],
       response_types: ["code"],
@@ -185,7 +185,7 @@ describe("managed-oauth-client", () => {
         oauthConfig: createConnector().oauthConfig as GenericOAuthConfig,
       }),
     ).rejects.toThrowError(
-      new ContextLayerError("Webflow OAuth client registration failed (400): Bad Request", 502),
+      new IntegrationsHubError("Webflow OAuth client registration failed (400): Bad Request", 502),
     );
 
     await expect(
@@ -195,7 +195,7 @@ describe("managed-oauth-client", () => {
         oauthConfig: createConnector().oauthConfig as GenericOAuthConfig,
       }),
     ).rejects.toThrowError(
-      new ContextLayerError("Webflow OAuth client registration returned an invalid response.", 502),
+      new IntegrationsHubError("Webflow OAuth client registration returned an invalid response.", 502),
     );
 
     await expect(
@@ -205,7 +205,7 @@ describe("managed-oauth-client", () => {
         oauthConfig: createConnector().oauthConfig as GenericOAuthConfig,
       }),
     ).rejects.toThrowError(
-      new ContextLayerError("Webflow OAuth client registration did not return a client_id.", 502),
+      new IntegrationsHubError("Webflow OAuth client registration did not return a client_id.", 502),
     );
   });
 });

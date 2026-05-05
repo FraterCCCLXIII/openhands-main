@@ -52,7 +52,7 @@ import type {
   IntegrationSpec,
   UnusedToolWindowUnit,
   UserApiKeyStatus,
-} from "@/src/types/context-layer";
+} from "@/src/types/integrations-hub";
 
 interface DashboardWorkspaceProps {
   initialIntegrations: IntegrationSpec[];
@@ -332,13 +332,13 @@ export const DashboardWorkspace = ({
   const userOpenApiSchemaEndpoint = `${normalizedBaseUrl}/api/user/openapi`;
   const adminOpenApiSchemaEndpoint = `${normalizedBaseUrl}/api/admin/openapi`;
   const agentRestPromptExample =
-    "I have provided you with an API key in $OPENHANDS_CONTEXT_LAYER_KEY, and you can see the API schema at " +
+    "I have provided you with an API key in $OPENHANDS_INTEGRATIONS_HUB_KEY, and you can see the API schema at " +
     `${agentConnectionGuide.openApiSchemaEndpoint}, feel free to access any tools there.`;
   const userRestPromptExample =
-    "I have provided you with a user API key in $OPENHANDS_CONTEXT_LAYER_USER_KEY, and you can see the API schema at " +
-    `${userOpenApiSchemaEndpoint}, feel free to manage my context-layer settings there.`;
+    "I have provided you with a user API key in $OPENHANDS_INTEGRATIONS_HUB_USER_KEY, and you can see the API schema at " +
+    `${userOpenApiSchemaEndpoint}, feel free to manage my integrations-hub settings there.`;
   const adminRestPromptExample =
-    "I have provided you with an admin API key in $OPENHANDS_CONTEXT_LAYER_ADMIN_KEY, and you can see the API schema at " +
+    "I have provided you with an admin API key in $OPENHANDS_INTEGRATIONS_HUB_ADMIN_KEY, and you can see the API schema at " +
     `${adminOpenApiSchemaEndpoint}, feel free to manage admin QA and connector workflows there.`;
 
   const filteredIntegrations = useMemo(
@@ -565,7 +565,7 @@ export const DashboardWorkspace = ({
         <header className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <div className="min-w-0">
             <p className="text-[11px] uppercase tracking-[0.22em] text-[var(--color-text-base)]">
-              OpenHands Context Layer
+              OpenHands Integrations Hub
             </p>
             <h1 className="mt-1 text-2xl font-semibold text-white">
               {activeSectionMeta.label}

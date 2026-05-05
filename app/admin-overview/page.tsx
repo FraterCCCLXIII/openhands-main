@@ -13,9 +13,9 @@ import { Card } from "@/src/components/ui/card";
 import { buildAdminSectionHref } from "@/src/lib/admin-routes";
 import { isAppAdminEmail } from "@/src/lib/app-admins";
 import { auth } from "@/src/lib/auth";
-import { getContextLayerService } from "@/src/lib/core/runtime";
-import { isEphemeralContextLayerStorage } from "@/src/lib/persistence";
-import type { AdminIntegrationConnectionSummary } from "@/src/types/context-layer";
+import { getIntegrationsHubService } from "@/src/lib/core/runtime";
+import { isEphemeralIntegrationsHubStorage } from "@/src/lib/persistence";
+import type { AdminIntegrationConnectionSummary } from "@/src/types/integrations-hub";
 
 export const dynamic = "force-dynamic";
 
@@ -35,14 +35,14 @@ export default async function AdminOverviewPage() {
   const session = await auth();
   const isAdmin = isAppAdminEmail(session?.user?.email ?? undefined);
 
-  if (session?.user && isEphemeralContextLayerStorage()) {
+  if (session?.user && isEphemeralIntegrationsHubStorage()) {
     return <ServiceUnavailableScreen isAdmin={isAdmin} />;
   }
 
   const overview = isAdmin
-    ? await getContextLayerService().getAdminOperationalOverview()
+    ? await getIntegrationsHubService().getAdminOperationalOverview()
     : null;
-  const userName = session?.user?.name?.trim() || "Context Layer User";
+  const userName = session?.user?.name?.trim() || "Integrations Hub User";
   const userEmail = session?.user?.email?.trim() || "Not provided";
 
   return (
@@ -76,7 +76,7 @@ export default async function AdminOverviewPage() {
           <header className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
             <div className="min-w-0">
               <p className="text-[11px] uppercase tracking-[0.22em] text-[var(--color-text-base)]">
-                OpenHands Context Layer
+                OpenHands Integrations Hub
               </p>
               <h1 className="mt-1 text-2xl font-semibold text-white">
                 Operational overview

@@ -3,7 +3,7 @@ import { z } from "zod";
 import { fromError, ok } from "@/src/lib/api";
 import { isAppAdminEmail } from "@/src/lib/app-admins";
 import { getCurrentUserIdentity } from "@/src/lib/current-user";
-import { getContextLayerRepository } from "@/src/lib/core/runtime";
+import { getIntegrationsHubRepository } from "@/src/lib/core/runtime";
 import { discoverIntegration } from "@/src/lib/integrations/discovery";
 import { assertUserCanDiscoverIntegration } from "@/src/lib/integrations/user-connector-guardrails";
 import { logRouteInfo, summarizeRouteError } from "@/src/lib/route-logging";
@@ -42,7 +42,7 @@ export async function POST(request: Request) {
     assertUserCanDiscoverIntegration(isAppAdminEmail(ownerId), payload);
     const discovery = await discoverIntegration(payload, {
       baseUrl,
-      repository: getContextLayerRepository(),
+      repository: getIntegrationsHubRepository(),
       ownerId,
     });
 

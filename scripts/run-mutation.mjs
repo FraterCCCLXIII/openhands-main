@@ -139,7 +139,7 @@ const configOverrides = {
       },
 };
 
-const tempDir = mkdtempSync(resolve(tmpdir(), 'context-layer-stryker-'));
+const tempDir = mkdtempSync(resolve(tmpdir(), 'integrations-hub-stryker-'));
 const tempConfigPath = resolve(tempDir, 'stryker.generated.mjs');
 writeFileSync(
   tempConfigPath,

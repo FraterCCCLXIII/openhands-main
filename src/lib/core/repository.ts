@@ -12,7 +12,7 @@ import type {
   TemporaryGrant,
   ToolInvocationRecord,
   UserApiKeyRecord,
-} from "@/src/types/context-layer";
+} from "@/src/types/integrations-hub";
 
 export interface ContextRepository {
   ensureSchema(): Promise<void>;

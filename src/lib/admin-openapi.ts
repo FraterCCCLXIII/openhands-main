@@ -54,7 +54,7 @@ export const buildAdminOpenApiDocument = ({
   return {
     openapi: OPENAPI_VERSION,
     info: {
-      title: "Context Layer Admin REST API",
+      title: "Integrations Hub Admin REST API",
       version: "1.0.0",
       description:
         "Admin-only automation API for QA and operational workflows that match admin dashboard capabilities.",

@@ -8,7 +8,7 @@ import { ConnectStep } from "@/src/components/integrations/wizard/connect-step";
 import type {
   ManagedConnectorOption,
   IntegrationConnectionStatus,
-} from "@/src/types/context-layer";
+} from "@/src/types/integrations-hub";
 import type { DiscoverFeedback, WizardDraft } from "@/src/components/integrations/wizard/utils";
 import type { AdminSection } from "@/src/lib/admin-routes";
 

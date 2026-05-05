@@ -27,7 +27,7 @@ afterEach(() => {
 });
 
 beforeEach(() => {
-  vi.stubEnv("POSTGRES_URL", "postgres://user:pass@example.com:5432/context_layer");
+  vi.stubEnv("POSTGRES_URL", "postgres://user:pass@example.com:5432/integrations_hub");
 });
 
 describe("PostgresRepository.ensureSchema", () => {

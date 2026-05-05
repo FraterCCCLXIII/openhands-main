@@ -10,7 +10,7 @@ import { matchesSearchQuery } from "@/src/lib/text-utils";
 import type {
   ManagedConnectorOption,
   OAuthProviderCatalogOption,
-} from "@/src/types/context-layer";
+} from "@/src/types/integrations-hub";
 
 export const availabilityTone = (availability: "oauth_ready" | "manual_token" | "planned") => {
   switch (availability) {

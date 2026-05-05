@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { ContextLayerError } from "@/src/lib/core/errors";
+import { IntegrationsHubError } from "@/src/lib/core/errors";
 import { summarizeRouteError } from "@/src/lib/route-logging";
 
 describe("summarizeRouteError", () => {
-  it("preserves explicit ContextLayerError messages", () => {
-    expect(summarizeRouteError(new ContextLayerError("Permission denied.", 403))).toEqual({
-      errorName: "ContextLayerError",
+  it("preserves explicit IntegrationsHubError messages", () => {
+    expect(summarizeRouteError(new IntegrationsHubError("Permission denied.", 403))).toEqual({
+      errorName: "IntegrationsHubError",
       errorMessage: "Permission denied.",
       statusCode: 403,
     });

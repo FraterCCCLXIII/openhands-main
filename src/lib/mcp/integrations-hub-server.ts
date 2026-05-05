@@ -3,10 +3,10 @@ import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 
 import { normalizeAgentIdentityValue, resolveInvocationIdentity } from "@/src/lib/agent-defaults";
-import { ContextLayerError } from "@/src/lib/core/errors";
-import type { ContextLayerService } from "@/src/lib/core/service";
+import { IntegrationsHubError } from "@/src/lib/core/errors";
+import type { IntegrationsHubService } from "@/src/lib/core/service";
 import { filterIntegrationsVisibleToOwner } from "@/src/lib/integrations/visible-integrations";
-import { buildContextLayerToolInputShape } from "@/src/lib/mcp/tool-input-schema";
+import { buildIntegrationsHubToolInputShape } from "@/src/lib/mcp/tool-input-schema";
 import type { McpSessionDefaults } from "@/src/lib/mcp/session-store";
 import { getRequestOrigin } from "@/src/lib/request-context";
 import type {
@@ -14,10 +14,10 @@ import type {
   ContextInvocationResult,
   ToolSpec,
   IntegrationSpec,
-} from "@/src/types/context-layer";
+} from "@/src/types/integrations-hub";
 
-const CONTEXT_LAYER_MCP_SERVER_INFO = {
-  name: "agent-context-layer",
+const INTEGRATIONS_HUB_MCP_SERVER_INFO = {
+  name: "agent-integrations-hub",
   version: "0.2.0",
 };
 
@@ -32,7 +32,7 @@ const nullableAgentIdentitySchema = z.preprocess(
   z.string().trim().min(1).nullable(),
 );
 
-const CONTEXT_LAYER_MCP_TOOL_INPUT_SCHEMA = z
+const INTEGRATIONS_HUB_MCP_TOOL_INPUT_SCHEMA = z
   .object({
     contextAgentId: nullableAgentIdentitySchema.optional(),
     contextAgentClass: nullableAgentIdentitySchema.optional(),
@@ -59,10 +59,10 @@ const RESERVED_TOOL_ARGUMENT_KEYS = new Set([
 ]);
 const LEGACY_RESERVED_TOOL_ARGUMENT_KEYS = ["_agentId", "_agentClass", "_scopes"] as const;
 const APPROVAL_DASHBOARD_PATH = "/case-by-case-approvals";
-export const CONTEXT_LAYER_MCP_TOOL_SEPARATOR = "__";
-export const CONTEXT_LAYER_MCP_SET_AGENT_ID_TOOL_NAME = "set_agent_id";
-export const CONTEXT_LAYER_MCP_SET_AGENT_CLASS_TOOL_NAME = "set_agent_class";
-export const CONTEXT_LAYER_MCP_SET_AGENT_DATA_TOOL_NAME = "set_agent_data";
+export const INTEGRATIONS_HUB_MCP_TOOL_SEPARATOR = "__";
+export const INTEGRATIONS_HUB_MCP_SET_AGENT_ID_TOOL_NAME = "set_agent_id";
+export const INTEGRATIONS_HUB_MCP_SET_AGENT_CLASS_TOOL_NAME = "set_agent_class";
+export const INTEGRATIONS_HUB_MCP_SET_AGENT_DATA_TOOL_NAME = "set_agent_data";
 
 const getToolAccessMode = (toolSpec: ToolSpec) =>
   toolSpec.accessMode ?? (toolSpec.enabled ? "enabled" : "disabled");
@@ -100,8 +100,8 @@ const buildToolDescription = (
   const mode = getToolAccessMode(toolSpec);
   const notes = [
     toolSpec.description?.trim(),
-    `Invoke ${integration.key}.${toolSpec.name} through the context layer MCP bridge.`,
-    `Pass downstream tool arguments as top-level fields. Reserved fields: contextScopes, contextAgentId, contextAgentClass. If you omit agent identity, calls use the session identity when one is set; otherwise agentId and agentClass remain null. Use ${CONTEXT_LAYER_MCP_SET_AGENT_ID_TOOL_NAME}, ${CONTEXT_LAYER_MCP_SET_AGENT_CLASS_TOOL_NAME}, and ${CONTEXT_LAYER_MCP_SET_AGENT_DATA_TOOL_NAME} to set or clear the session identity or add conversation metadata for approvals.`,
+    `Invoke ${integration.key}.${toolSpec.name} through the integrations hub MCP bridge.`,
+    `Pass downstream tool arguments as top-level fields. Reserved fields: contextScopes, contextAgentId, contextAgentClass. If you omit agent identity, calls use the session identity when one is set; otherwise agentId and agentClass remain null. Use ${INTEGRATIONS_HUB_MCP_SET_AGENT_ID_TOOL_NAME}, ${INTEGRATIONS_HUB_MCP_SET_AGENT_CLASS_TOOL_NAME}, and ${INTEGRATIONS_HUB_MCP_SET_AGENT_DATA_TOOL_NAME} to set or clear the session identity or add conversation metadata for approvals.`,
   ].filter(Boolean);
 
   if (mode === "approval_required") {
@@ -140,20 +140,20 @@ const buildApprovalSetupMessage = ({
 }) =>
   [
     `Human approval is currently required before calling ${integrationKey}.${toolName}.`,
-    `Before requesting approval, call ${CONTEXT_LAYER_MCP_SET_AGENT_DATA_TOOL_NAME} with conversationLink so the approvals page can link back to the conversation.`,
+    `Before requesting approval, call ${INTEGRATIONS_HUB_MCP_SET_AGENT_DATA_TOOL_NAME} with conversationLink so the approvals page can link back to the conversation.`,
   ].join(" ");
 
 const extractInvocationContext = (args: Record<string, unknown>, defaults: McpSessionDefaults) => {
   const legacyKeys = LEGACY_RESERVED_TOOL_ARGUMENT_KEYS.filter((key) => key in args);
 
   if (legacyKeys.length > 0) {
-    throw new ContextLayerError(
+    throw new IntegrationsHubError(
       `Unsupported MCP tool argument(s): ${legacyKeys.join(", ")}. Use contextAgentId, contextAgentClass, and contextScopes instead.`,
       400,
     );
   }
 
-  const parsedArgs = CONTEXT_LAYER_MCP_TOOL_INPUT_SCHEMA.parse(args);
+  const parsedArgs = INTEGRATIONS_HUB_MCP_TOOL_INPUT_SCHEMA.parse(args);
   const usesExplicitAgentId = Object.prototype.hasOwnProperty.call(parsedArgs, "contextAgentId");
   const usesExplicitAgentClass = Object.prototype.hasOwnProperty.call(parsedArgs, "contextAgentClass");
   const { agentId, agentClass } = resolveInvocationIdentity({
@@ -229,12 +229,12 @@ const buildSessionAgentDataResult = (
   },
 });
 
-export const buildContextLayerMcpToolName = (
+export const buildIntegrationsHubMcpToolName = (
   integrationKey: string,
   toolName: string,
-) => `${integrationKey}${CONTEXT_LAYER_MCP_TOOL_SEPARATOR}${toolName}`;
+) => `${integrationKey}${INTEGRATIONS_HUB_MCP_TOOL_SEPARATOR}${toolName}`;
 
-export const createContextLayerMcpServer = async ({
+export const createIntegrationsHubMcpServer = async ({
   request,
   service,
   ownerId,
@@ -242,12 +242,12 @@ export const createContextLayerMcpServer = async ({
   onSessionDefaultsChanged,
 }: {
   request: Request;
-  service: ContextLayerService;
+  service: IntegrationsHubService;
   ownerId: string;
   sessionDefaults?: Partial<McpSessionDefaults>;
   onSessionDefaultsChanged?: (defaults: McpSessionDefaults) => Promise<void> | void;
 }) => {
-  const server = new McpServer(CONTEXT_LAYER_MCP_SERVER_INFO);
+  const server = new McpServer(INTEGRATIONS_HUB_MCP_SERVER_INFO);
   const approvalUrl = new URL(
     APPROVAL_DASHBOARD_PATH,
     getRequestOrigin(request.headers),
@@ -280,7 +280,7 @@ export const createContextLayerMcpServer = async ({
   );
 
   server.registerTool(
-    CONTEXT_LAYER_MCP_SET_AGENT_ID_TOOL_NAME,
+    INTEGRATIONS_HUB_MCP_SET_AGENT_ID_TOOL_NAME,
     {
       title: "Set session agent ID",
       description: "Set or clear the default agentId for subsequent MCP tool calls in this session.",
@@ -294,7 +294,7 @@ export const createContextLayerMcpServer = async ({
   );
 
   server.registerTool(
-    CONTEXT_LAYER_MCP_SET_AGENT_CLASS_TOOL_NAME,
+    INTEGRATIONS_HUB_MCP_SET_AGENT_CLASS_TOOL_NAME,
     {
       title: "Set session agent class",
       description:
@@ -310,7 +310,7 @@ export const createContextLayerMcpServer = async ({
 
 
   server.registerTool(
-    CONTEXT_LAYER_MCP_SET_AGENT_DATA_TOOL_NAME,
+    INTEGRATIONS_HUB_MCP_SET_AGENT_DATA_TOOL_NAME,
     {
       title: "Set session agent data",
       description:
@@ -335,7 +335,7 @@ export const createContextLayerMcpServer = async ({
         continue;
       }
 
-      const toolName = buildContextLayerMcpToolName(
+      const toolName = buildIntegrationsHubMcpToolName(
         integration.key,
         toolSpec.name,
       );
@@ -345,7 +345,7 @@ export const createContextLayerMcpServer = async ({
         {
           title: `${integration.name} · ${toolSpec.name}`,
           description: buildToolDescription(integration, toolSpec, toolName),
-          inputSchema: buildContextLayerToolInputShape(toolSpec),
+          inputSchema: buildIntegrationsHubToolInputShape(toolSpec),
         },
         async (args) => {
           const invocation = extractInvocationContext(
@@ -397,7 +397,7 @@ export const createContextLayerMcpServer = async ({
           } catch (error) {
             if (
               accessMode === "approval_required" &&
-              error instanceof ContextLayerError &&
+              error instanceof IntegrationsHubError &&
               error.statusCode === 403
             ) {
               return {

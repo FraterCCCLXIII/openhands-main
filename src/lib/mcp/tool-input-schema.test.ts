@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { buildContextLayerToolInputShape } from "@/src/lib/mcp/tool-input-schema";
-import type { ToolSpec } from "@/src/types/context-layer";
+import { buildIntegrationsHubToolInputShape } from "@/src/lib/mcp/tool-input-schema";
+import type { ToolSpec } from "@/src/types/integrations-hub";
 
 const buildToolSpec = (overrides?: Partial<ToolSpec>): ToolSpec => ({
   name: "create_post",
@@ -14,9 +14,9 @@ const buildToolSpec = (overrides?: Partial<ToolSpec>): ToolSpec => ({
   ...overrides,
 });
 
-describe("buildContextLayerToolInputShape", () => {
+describe("buildIntegrationsHubToolInputShape", () => {
   it("merges MCP input schemas, request-template variables, and reserved context overrides", () => {
-    const shape = buildContextLayerToolInputShape(
+    const shape = buildIntegrationsHubToolInputShape(
       buildToolSpec({
         config: {
           inputSchema: {
@@ -93,7 +93,7 @@ describe("buildContextLayerToolInputShape", () => {
   });
 
   it("returns a permissive reserved-only shape when no provider schema is available", () => {
-    const shape = buildContextLayerToolInputShape(buildToolSpec());
+    const shape = buildIntegrationsHubToolInputShape(buildToolSpec());
 
     const parsed = shape.parse({
       arbitrary: { nested: true },
@@ -109,7 +109,7 @@ describe("buildContextLayerToolInputShape", () => {
   });
 
   it("supports nullable scalar types, nested objects, and arrays extracted from JSON Schema", () => {
-    const shape = buildContextLayerToolInputShape(
+    const shape = buildIntegrationsHubToolInputShape(
       buildToolSpec({
         config: {
           inputSchema: {
@@ -175,7 +175,7 @@ describe("buildContextLayerToolInputShape", () => {
   });
 
   it("falls back to permissive unknown fields for unsupported enums and empty request templates", () => {
-    const shape = buildContextLayerToolInputShape(
+    const shape = buildIntegrationsHubToolInputShape(
       buildToolSpec({
         config: {
           inputSchema: {

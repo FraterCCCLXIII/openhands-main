@@ -1,5 +1,5 @@
 import { getOAuthProviderRegistrationDefaults } from "@/src/lib/integrations/oauth-provider-registration-defaults";
-import type { OAuthProviderCatalogOption } from "@/src/types/context-layer";
+import type { OAuthProviderCatalogOption } from "@/src/types/integrations-hub";
 
 const provider = (
   popularityRank: number,

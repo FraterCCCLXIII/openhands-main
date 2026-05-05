@@ -31,7 +31,7 @@ import type {
   AccessRequest,
   ManagedConnectorOption,
   IntegrationSpec,
-} from "@/src/types/context-layer";
+} from "@/src/types/integrations-hub";
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -698,7 +698,7 @@ describe("DashboardWorkspace", () => {
     expect(text).toContain("Give this key to your agent.");
     expect(text).toContain("User automation key");
     expect(text).toContain(
-      "Use this key to programmatically manage user-scoped context-layer settings.",
+      "Use this key to programmatically manage user-scoped integrations-hub settings.",
     );
     expect(text).toContain("Admin automation key");
     expect(text).toContain(
@@ -708,7 +708,7 @@ describe("DashboardWorkspace", () => {
     expect(text).toContain("Agent MCP");
     expect(text).toContain("MCP config example");
     expect(text).toContain('"transport": "streamable-http"');
-    expect(text).toContain('"context-layer"');
+    expect(text).toContain('"integrations-hub"');
     expect(text).toContain("Agent REST API");
     expect(text).toContain("User REST API");
     expect(text).toContain("Admin REST API");
@@ -716,9 +716,9 @@ describe("DashboardWorkspace", () => {
     expect(text).toContain("https://example.com/api/context/openapi");
     expect(text).toContain("https://example.com/api/user/openapi");
     expect(text).toContain("https://example.com/api/admin/openapi");
-    expect(text).toContain("I have provided you with an API key in $OPENHANDS_CONTEXT_LAYER_KEY");
-    expect(text).toContain("I have provided you with a user API key in $OPENHANDS_CONTEXT_LAYER_USER_KEY");
-    expect(text).toContain("I have provided you with an admin API key in $OPENHANDS_CONTEXT_LAYER_ADMIN_KEY");
+    expect(text).toContain("I have provided you with an API key in $OPENHANDS_INTEGRATIONS_HUB_KEY");
+    expect(text).toContain("I have provided you with a user API key in $OPENHANDS_INTEGRATIONS_HUB_USER_KEY");
+    expect(text).toContain("I have provided you with an admin API key in $OPENHANDS_INTEGRATIONS_HUB_ADMIN_KEY");
     expect(text).not.toContain("Works with /api/context/*");
     expect(text).not.toContain("Works with /api/user/*");
     expect(text).not.toContain("https://example.com/api/context/skill");

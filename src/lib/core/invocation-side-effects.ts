@@ -6,7 +6,7 @@ import type {
   IntegrationSpec,
   ToolInvocationOutcome,
   ToolInvocationRecord,
-} from "@/src/types/context-layer";
+} from "@/src/types/integrations-hub";
 
 export const normalizePayloadKeys = (payload: Record<string, unknown>) =>
   Object.keys(payload).sort((left, right) => left.localeCompare(right));
@@ -69,7 +69,7 @@ export const runOptionalSideEffect = async (
     await operation();
   } catch (error) {
     console.warn(
-      `[ContextLayerService] Failed to ${action}: ${summarizeErrorMessage(error)}`,
+      `[IntegrationsHubService] Failed to ${action}: ${summarizeErrorMessage(error)}`,
     );
   }
 };

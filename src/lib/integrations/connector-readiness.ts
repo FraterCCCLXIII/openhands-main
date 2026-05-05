@@ -1,4 +1,4 @@
-import type { ManagedConnectorOption } from "@/src/types/context-layer";
+import type { ManagedConnectorOption } from "@/src/types/integrations-hub";
 
 export const isManagedConnectorReady = (
   connector: ManagedConnectorOption,

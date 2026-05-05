@@ -1,4 +1,4 @@
-import type { OAuthProviderRegistrationDefaults } from "@/src/types/context-layer";
+import type { OAuthProviderRegistrationDefaults } from "@/src/types/integrations-hub";
 
 const googleAuthorizationUrl = "https://accounts.google.com/o/oauth2/v2/auth";
 const googleTokenUrl = "https://oauth2.googleapis.com/token";

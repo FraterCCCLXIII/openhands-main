@@ -1,5 +1,5 @@
 import { ok } from "@/src/lib/api";
-import { getContextLayerService } from "@/src/lib/core/runtime";
+import { getIntegrationsHubService } from "@/src/lib/core/runtime";
 import {
   authenticateUserApiRequest,
   fromUserApiError,
@@ -12,7 +12,7 @@ export async function POST(
   try {
     const { ownerId } = await authenticateUserApiRequest(request);
     const { requestId } = await params;
-    const service = getContextLayerService();
+    const service = getIntegrationsHubService();
 
     return ok(await service.rejectOwnerAccessRequest(ownerId, requestId, ownerId));
   } catch (error) {

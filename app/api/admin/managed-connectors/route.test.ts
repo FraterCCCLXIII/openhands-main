@@ -4,18 +4,18 @@ vi.mock("@neondatabase/serverless", () => ({ neon: () => getActiveSql() }));
 
 import { GET, POST } from "./route";
 
-import { getContextLayerService } from "@/src/lib/core/runtime";
+import { getIntegrationsHubService } from "@/src/lib/core/runtime";
 import { createTestRepository, getActiveSql } from "@/src/lib/db/pglite-test-utils";
 
 let testCleanup: () => Promise<void>;
 
 const resetRuntime = () => {
   const runtime = globalThis as typeof globalThis & {
-    contextLayerRepository?: unknown;
-    contextLayerService?: unknown;
+    integrationsHubRepository?: unknown;
+    integrationsHubService?: unknown;
   };
-  delete runtime.contextLayerRepository;
-  delete runtime.contextLayerService;
+  delete runtime.integrationsHubRepository;
+  delete runtime.integrationsHubService;
 };
 
 beforeAll(() => {
@@ -64,7 +64,7 @@ const createManagedConnectorRequest = (apiKey: string) =>
 
 describe("/api/admin/managed-connectors", () => {
   it("stores and lists managed connectors for authenticated admin API keys", async () => {
-    const service = getContextLayerService();
+    const service = getIntegrationsHubService();
     const { apiKey } = await service.rotateAdminApiKey("admin@example.com");
 
     const response = await POST(createManagedConnectorRequest(apiKey));

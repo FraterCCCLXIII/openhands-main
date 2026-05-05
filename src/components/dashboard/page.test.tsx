@@ -46,11 +46,11 @@ vi.mock("@/src/lib/current-user", () => ({
 }));
 
 vi.mock("@/src/lib/core/runtime", () => ({
-  getContextLayerService: () => serviceMock,
+  getIntegrationsHubService: () => serviceMock,
 }));
 
 vi.mock("@/src/lib/persistence", () => ({
-  isEphemeralContextLayerStorage: () => false,
+  isEphemeralIntegrationsHubStorage: () => false,
 }));
 
 vi.mock("@/src/lib/request-context", () => ({

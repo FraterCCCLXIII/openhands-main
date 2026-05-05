@@ -19,7 +19,7 @@ import {
   MAX_CASE_BY_CASE_APPROVAL_HOURS,
   approvalStatusLabel,
 } from "@/src/lib/access-requests";
-import type { AccessRequest } from "@/src/types/context-layer";
+import type { AccessRequest } from "@/src/types/integrations-hub";
 
 interface ApprovalsSectionProps {
   approvalCounts: Record<ApprovalRequestFilter, number>;

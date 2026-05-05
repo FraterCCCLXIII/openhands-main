@@ -6,12 +6,12 @@ describe("context-api-auth", () => {
   it("extracts API keys from bearer auth or X-API-Key headers", () => {
     expect(
       extractContextApiKey(
-        new Headers({ authorization: "Bearer context-layer-key" }),
+        new Headers({ authorization: "Bearer integrations-hub-key" }),
       ),
-    ).toBe("context-layer-key");
+    ).toBe("integrations-hub-key");
     expect(
-      extractContextApiKey(new Headers({ "x-api-key": "context-layer-key" })),
-    ).toBe("context-layer-key");
+      extractContextApiKey(new Headers({ "x-api-key": "integrations-hub-key" })),
+    ).toBe("integrations-hub-key");
   });
 
   it("returns an empty string when no API key is present", () => {

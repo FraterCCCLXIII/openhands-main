@@ -4,18 +4,18 @@ vi.mock("@neondatabase/serverless", () => ({ neon: () => getActiveSql() }));
 
 import { POST } from "./route";
 
-import { getContextLayerService } from "@/src/lib/core/runtime";
+import { getIntegrationsHubService } from "@/src/lib/core/runtime";
 import { createTestRepository, getActiveSql } from "@/src/lib/db/pglite-test-utils";
 
 let testCleanup: () => Promise<void>;
 
 const resetRuntime = () => {
   const runtime = globalThis as typeof globalThis & {
-    contextLayerRepository?: unknown;
-    contextLayerService?: unknown;
+    integrationsHubRepository?: unknown;
+    integrationsHubService?: unknown;
   };
-  delete runtime.contextLayerRepository;
-  delete runtime.contextLayerService;
+  delete runtime.integrationsHubRepository;
+  delete runtime.integrationsHubService;
 };
 
 beforeAll(() => {
@@ -36,7 +36,7 @@ afterEach(async () => {
 
 describe("POST /api/user/access-requests/[requestId]/reject", () => {
   it("rejects the authenticated user's own request", async () => {
-    const service = getContextLayerService();
+    const service = getIntegrationsHubService();
     const request = await service.createAccessRequest({
       agentId: "bot-1",
       agentClass: "researcher",

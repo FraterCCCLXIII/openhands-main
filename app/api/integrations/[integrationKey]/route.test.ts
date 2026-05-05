@@ -13,9 +13,9 @@ vi.mock("@neondatabase/serverless", () => ({ neon: () => getActiveSql() }));
 
 import { DELETE } from "./route";
 
-import { getContextLayerRepository } from "@/src/lib/core/runtime";
+import { getIntegrationsHubRepository } from "@/src/lib/core/runtime";
 import { createTestRepository, getActiveSql } from "@/src/lib/db/pglite-test-utils";
-import type { IntegrationConnectionRecord, IntegrationSpec } from "@/src/types/context-layer";
+import type { IntegrationConnectionRecord, IntegrationSpec } from "@/src/types/integrations-hub";
 
 let testCleanup: () => Promise<void>;
 
@@ -30,11 +30,11 @@ beforeEach(async () => {
 
 const resetRuntime = () => {
   const runtime = globalThis as typeof globalThis & {
-    contextLayerRepository?: unknown;
-    contextLayerService?: unknown;
+    integrationsHubRepository?: unknown;
+    integrationsHubService?: unknown;
   };
-  delete runtime.contextLayerRepository;
-  delete runtime.contextLayerService;
+  delete runtime.integrationsHubRepository;
+  delete runtime.integrationsHubService;
 };
 
 const createIntegration = (
@@ -70,7 +70,7 @@ afterEach(async () => {
 
 describe("DELETE /api/integrations/[integrationKey]", () => {
   it("removes the current user's installed integration and connection record", async () => {
-    const repository = getContextLayerRepository();
+    const repository = getIntegrationsHubRepository();
 
     await repository.upsertOwnerIntegration(
       "user@example.com",

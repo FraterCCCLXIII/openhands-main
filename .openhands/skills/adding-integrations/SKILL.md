@@ -1,6 +1,6 @@
 ---
 name: adding-integrations
-description: Add a new integration to the OpenHands Context Layer codebase. Use when implementing a new provider, choosing between MCP and HTTP/OpenAPI, wiring OAuth or API-key auth, or validating that a connector actually works.
+description: Add a new integration to the OpenHands Integrations Hub codebase. Use when implementing a new provider, choosing between MCP and HTTP/OpenAPI, wiring OAuth or API-key auth, or validating that a connector actually works.
 triggers:
 - add integration
 - new integration
@@ -22,15 +22,15 @@ When multiple provider options exist, prefer **official MCP over HTTP/OpenAPI**,
 
 Start from the closest merged example instead of designing from scratch:
 
-- [#33 Use Slack's official hosted MCP connector defaults](https://github.com/OpenHands/context-layer/pull/33)
+- [#33 Use Slack's official hosted MCP connector defaults](https://github.com/OpenHands/integrations-hub/pull/33)
   - OAuth-backed hosted MCP connector
-- [#64 Add Webflow managed MCP integration](https://github.com/OpenHands/context-layer/pull/64)
+- [#64 Add Webflow managed MCP integration](https://github.com/OpenHands/integrations-hub/pull/64)
   - catalog-driven hosted MCP registration
-- [#74 Fix Webflow MCP OAuth registration flow](https://github.com/OpenHands/context-layer/pull/74)
+- [#74 Fix Webflow MCP OAuth registration flow](https://github.com/OpenHands/integrations-hub/pull/74)
   - provider-specific OAuth details, PKCE, and dynamic client registration
-- [#46 Add Ordinal MCP as a supported provider](https://github.com/OpenHands/context-layer/pull/46)
+- [#46 Add Ordinal MCP as a supported provider](https://github.com/OpenHands/integrations-hub/pull/46)
   - bearer-token MCP connector
-- [#32 Add ElevenLabs managed connector support](https://github.com/OpenHands/context-layer/pull/32)
+- [#32 Add ElevenLabs managed connector support](https://github.com/OpenHands/integrations-hub/pull/32)
   - API-key HTTP/OpenAPI connector
   - good reference for `apiKeyHeaderName`, generated HTTP functions, multipart support, and binary responses
 
@@ -84,7 +84,7 @@ If the provider matches Slack, Webflow, Ordinal, Notion, or ElevenLabs, copy tha
 
 ### Usually touched
 
-- `src/types/context-layer.ts`
+- `src/types/integrations-hub.ts`
   - only if the provider genuinely needs a new shared type or auth/config field
 - `src/lib/integrations/oauth-provider-catalog.ts`
   - curated metadata: slug, name, availability, docs URL, notes, categories, `managedConnectorSlug`

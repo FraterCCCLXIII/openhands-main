@@ -24,7 +24,7 @@ import type {
   IntegrationSpec,
   ToolAccessMode,
   UnusedToolWindowUnit,
-} from "@/src/types/context-layer";
+} from "@/src/types/integrations-hub";
 
 interface IntegrationsSectionProps {
   addIntegrationSearch: string;

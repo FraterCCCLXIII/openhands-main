@@ -3,7 +3,7 @@ import { ArrowRight, DatabaseZap, KeyRound, ShieldCheck, Waypoints } from "lucid
 
 import { auth } from "@/src/lib/auth";
 import { isAppAdminEmail } from "@/src/lib/app-admins";
-import { isEphemeralContextLayerStorage } from "@/src/lib/persistence";
+import { isEphemeralIntegrationsHubStorage } from "@/src/lib/persistence";
 import { ServiceUnavailableScreen } from "@/src/components/feedback/service-unavailable-screen";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
@@ -12,7 +12,7 @@ import { Card } from "@/src/components/ui/card";
 export default async function HomePage() {
   const session = await auth();
 
-  if (session?.user && isEphemeralContextLayerStorage()) {
+  if (session?.user && isEphemeralIntegrationsHubStorage()) {
     return (
       <ServiceUnavailableScreen
         isAdmin={isAppAdminEmail(session.user.email ?? undefined)}
@@ -30,7 +30,7 @@ export default async function HomePage() {
           </div>
           <div className="max-w-3xl space-y-5">
             <h1 className="text-5xl font-bold tracking-tight text-white">
-              OpenHands Context Layer
+              OpenHands Integrations Hub
             </h1>
             <p className="text-lg leading-8 text-[var(--color-text-base)]">
               A unified endpoint and admin workspace for AI agents to access APIs and MCP tools with agent-class policies, temporary approvals, and persistent integration storage.

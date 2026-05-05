@@ -9,14 +9,14 @@ vi.mock("@/src/lib/auth", () => ({
 }));
 
 import { fromError } from "@/src/lib/api";
-import { ContextLayerError } from "@/src/lib/core/errors";
+import { IntegrationsHubError } from "@/src/lib/core/errors";
 
 describe("fromError", () => {
   it("includes sanitized debug details for app admins", async () => {
     vi.stubEnv("APP_ADMIN_EMAILS", "admin@example.com,ops@example.com");
 
     const response = await fromError(
-      new ContextLayerError("Discovery failed.", 504, {
+      new IntegrationsHubError("Discovery failed.", 504, {
         operationName: "listTools",
         auth: {
           authStrategy: "oauth2",
@@ -51,7 +51,7 @@ describe("fromError", () => {
     authMock.mockResolvedValueOnce({ user: { email: "user@example.com" } });
 
     const response = await fromError(
-      new ContextLayerError("Discovery failed.", 504, {
+      new IntegrationsHubError("Discovery failed.", 504, {
         operationName: "listTools",
       }),
     );

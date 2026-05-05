@@ -2,14 +2,14 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vite
 
 import { GET } from "./route";
 
-import { getContextLayerService } from "@/src/lib/core/runtime";
+import { getIntegrationsHubService } from "@/src/lib/core/runtime";
 import type { ContextRepository } from "@/src/lib/core/repository";
 import { createTestRepository, getActiveSql } from "@/src/lib/db/pglite-test-utils";
 import {
   USER_API_BEARER_CHALLENGE,
   USER_API_UNAUTHORIZED_DETAIL,
 } from "@/src/lib/user-api-auth";
-import type { IntegrationSpec } from "@/src/types/context-layer";
+import type { IntegrationSpec } from "@/src/types/integrations-hub";
 
 vi.mock("@neondatabase/serverless", () => ({ neon: () => getActiveSql() }));
 
@@ -29,16 +29,16 @@ beforeEach(async () => {
 
 const setRuntimeRepository = (repository?: ContextRepository) => {
   const runtime = globalThis as typeof globalThis & {
-    contextLayerRepository?: unknown;
-    contextLayerService?: unknown;
+    integrationsHubRepository?: unknown;
+    integrationsHubService?: unknown;
   };
 
   if (repository) {
-    runtime.contextLayerRepository = repository;
+    runtime.integrationsHubRepository = repository;
   } else {
-    delete runtime.contextLayerRepository;
+    delete runtime.integrationsHubRepository;
   }
-  delete runtime.contextLayerService;
+  delete runtime.integrationsHubService;
 };
 
 const githubIntegration: IntegrationSpec = {
@@ -68,7 +68,7 @@ const githubIntegration: IntegrationSpec = {
 const seedUserKey = async (ownerId: string) => {
   await testRepo.upsertOwnerIntegration(ownerId, githubIntegration);
   setRuntimeRepository(testRepo);
-  const service = getContextLayerService();
+  const service = getIntegrationsHubService();
   const rotated = await service.rotateUserApiKey(ownerId);
   return rotated.apiKey;
 };

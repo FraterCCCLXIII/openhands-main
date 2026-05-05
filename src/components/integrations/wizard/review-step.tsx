@@ -14,7 +14,7 @@ import {
   type DiscoveryResponse,
   type IntegrationKind,
 } from "@/src/components/integrations/wizard/utils";
-import type { ToolAccessMode, ToolSpec } from "@/src/types/context-layer";
+import type { ToolAccessMode, ToolSpec } from "@/src/types/integrations-hub";
 
 interface ReviewStepProps {
   createPending: boolean;

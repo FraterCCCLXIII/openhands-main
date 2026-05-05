@@ -6,8 +6,8 @@ import { ServiceUnavailableScreen } from "@/src/components/feedback/service-unav
 import { isAppAdminEmail } from "@/src/lib/app-admins";
 import { auth, isAuthDisabled } from "@/src/lib/auth";
 import { getCurrentUserIdentity } from "@/src/lib/current-user";
-import { getContextLayerService } from "@/src/lib/core/runtime";
-import { isEphemeralContextLayerStorage } from "@/src/lib/persistence";
+import { getIntegrationsHubService } from "@/src/lib/core/runtime";
+import { isEphemeralIntegrationsHubStorage } from "@/src/lib/persistence";
 import { getRequestOrigin } from "@/src/lib/request-context";
 
 /**
@@ -20,7 +20,7 @@ export async function DashboardPage() {
     redirect("/signin");
   }
 
-  if (isEphemeralContextLayerStorage()) {
+  if (isEphemeralIntegrationsHubStorage()) {
     return (
       <ServiceUnavailableScreen
         isAdmin={isAppAdminEmail(session?.user?.email ?? undefined)}
@@ -32,7 +32,7 @@ export async function DashboardPage() {
     await getCurrentUserIdentity();
   const isAdmin = isAppAdminEmail(currentUser.email ?? undefined);
   const requestHeaders = await headers();
-  const service = getContextLayerService();
+  const service = getIntegrationsHubService();
   const [
     initialIntegrations,
     initialAccessRequests,

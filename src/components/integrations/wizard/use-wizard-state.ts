@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { getToolAccessMode } from "@/src/components/integrations/tool-access-controls";
-import type { ManagedConnectorOption, ToolAccessMode } from "@/src/types/context-layer";
+import type { ManagedConnectorOption, ToolAccessMode } from "@/src/types/integrations-hub";
 import {
   connectorOptionLabel,
   filterReviewedTools,

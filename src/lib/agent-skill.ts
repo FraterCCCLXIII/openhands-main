@@ -3,7 +3,7 @@ import type {
   ToolAccessMode,
   ToolSpec,
   IntegrationSpec,
-} from "@/src/types/context-layer";
+} from "@/src/types/integrations-hub";
 
 const getToolAccessMode = (toolSpec: ToolSpec): ToolAccessMode =>
   toolSpec.accessMode ?? (toolSpec.enabled ? "enabled" : "disabled");
@@ -51,15 +51,15 @@ export const buildAgentSkillMarkdown = ({
 
   const lines = [
     "---",
-    "name: context-layer-profile-tools",
-    "description: Generated tool catalog for the current OpenHands Context Layer profile. Use it when an agent should call one of the registered tools through /api/context.",
+    "name: integrations-hub-profile-tools",
+    "description: Generated tool catalog for the current OpenHands Integrations Hub profile. Use it when an agent should call one of the registered tools through /api/context.",
     "---",
     "",
-    "This generated tool catalog lists the tools that are currently available through the OpenHands Context Layer profile.",
+    "This generated tool catalog lists the tools that are currently available through the OpenHands Integrations Hub profile.",
     "",
     "## Auth",
     "",
-    `- Store the personal context-layer API key in ${OPENHANDS_CONTEXT_KEY_ENV}.`,
+    `- Store the personal integrations-hub API key in ${OPENHANDS_CONTEXT_KEY_ENV}.`,
     `- Send \`Authorization: Bearer ${OPENHANDS_CONTEXT_KEY_ENV}\`.`,
     `- Base URL: \`${normalizedBaseUrl}\``,
     `- Endpoint pattern: \`POST ${normalizedBaseUrl}/api/context/{integrationKey}/{toolName}\``,

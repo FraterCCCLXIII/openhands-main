@@ -11,7 +11,7 @@ import {
   type DiscoveryResponse,
   type WizardDraft,
 } from "@/src/components/integrations/wizard/utils";
-import type { ManagedConnectorOption, ToolSpec } from "@/src/types/context-layer";
+import type { ManagedConnectorOption, ToolSpec } from "@/src/types/integrations-hub";
 
 const elevenLabsConnector: ManagedConnectorOption = {
   slug: "elevenlabs",

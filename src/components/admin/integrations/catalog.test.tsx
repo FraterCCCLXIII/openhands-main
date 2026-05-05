@@ -14,7 +14,7 @@ import type {
   ManagedConnectorOption,
   ManagedConnectorDefinition,
   OAuthProviderCatalogOption,
-} from "@/src/types/context-layer";
+} from "@/src/types/integrations-hub";
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -357,7 +357,7 @@ describe("IntegrationsCatalog", () => {
           initialReadyManagedConnectors={readyManagedConnectors}
           managedConnectors={managedConnectors}
           canRegisterManagedConnectors
-          oauthCallbackBaseUrl="https://openhands-context-layer.vercel.app/api/oauth"
+          oauthCallbackBaseUrl="https://openhands-integrations-hub.vercel.app/api/oauth"
         />,
       );
     });
@@ -413,7 +413,7 @@ describe("IntegrationsCatalog", () => {
           initialReadyManagedConnectors={readyManagedConnectors}
           managedConnectors={managedConnectors}
           canRegisterManagedConnectors={false}
-          oauthCallbackBaseUrl="https://openhands-context-layer.vercel.app/api/oauth"
+          oauthCallbackBaseUrl="https://openhands-integrations-hub.vercel.app/api/oauth"
         />,
       );
     });
@@ -444,7 +444,7 @@ describe("IntegrationsCatalog", () => {
           initialReadyManagedConnectors={[]}
           managedConnectors={[{ ...googleManagedConnector, oauthConfigured: false }]}
           canRegisterManagedConnectors
-          oauthCallbackBaseUrl="https://openhands-context-layer.vercel.app/api/oauth"
+          oauthCallbackBaseUrl="https://openhands-integrations-hub.vercel.app/api/oauth"
         />,
       );
     });
@@ -498,7 +498,7 @@ describe("IntegrationsCatalog", () => {
           initialReadyManagedConnectors={[]}
           managedConnectors={[manualTokenConnector]}
           canRegisterManagedConnectors
-          oauthCallbackBaseUrl="https://openhands-context-layer.vercel.app/api/oauth"
+          oauthCallbackBaseUrl="https://openhands-integrations-hub.vercel.app/api/oauth"
         />,
       );
     });
@@ -552,7 +552,7 @@ describe("IntegrationsCatalog", () => {
           initialReadyManagedConnectors={[]}
           managedConnectors={[]}
           canRegisterManagedConnectors
-          oauthCallbackBaseUrl="https://openhands-context-layer.vercel.app/api/oauth"
+          oauthCallbackBaseUrl="https://openhands-integrations-hub.vercel.app/api/oauth"
         />,
       );
     });
@@ -604,7 +604,7 @@ describe("IntegrationsCatalog", () => {
           initialReadyManagedConnectors={readyManagedConnectors}
           managedConnectors={[googleManagedConnector]}
           canRegisterManagedConnectors
-          oauthCallbackBaseUrl="https://openhands-context-layer.vercel.app/api/oauth"
+          oauthCallbackBaseUrl="https://openhands-integrations-hub.vercel.app/api/oauth"
         />,
       );
     });

@@ -5,9 +5,9 @@ import { Providers } from "@/src/components/providers";
 import { isAuthDisabled } from "@/src/lib/auth-config";
 
 export const metadata: Metadata = {
-  title: "OpenHands Context Layer",
+  title: "OpenHands Integrations Hub",
   description:
-    "A context layer for AI agents with managed connectors, MCP, approvals, and scoped permissions.",
+    "A integrations hub for AI agents with managed connectors, MCP, approvals, and scoped permissions.",
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "any" },

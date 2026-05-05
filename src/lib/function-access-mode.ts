@@ -1,4 +1,4 @@
-import type { FunctionAccessMode } from "@/src/types/context-layer";
+import type { FunctionAccessMode } from "@/src/types/integrations-hub";
 
 const accessModePriority: Record<FunctionAccessMode, number> = {
   disabled: 0,

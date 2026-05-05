@@ -28,8 +28,8 @@ describe("auth-config", () => {
   });
 
   it("derives the base URL from Vercel when explicit auth URLs are absent", () => {
-    expect(getBaseUrl(env({ VERCEL_URL: "openhands-context-layer.vercel.app" }))).toBe(
-      "https://openhands-context-layer.vercel.app",
+    expect(getBaseUrl(env({ VERCEL_URL: "openhands-integrations-hub.vercel.app" }))).toBe(
+      "https://openhands-integrations-hub.vercel.app",
     );
   });
 
@@ -55,28 +55,28 @@ describe("auth-config", () => {
 
   it("uses the redirect proxy URL when preview deployment support is enabled", () => {
     const previewEnv = env({
-      AUTH_REDIRECT_PROXY_URL: "https://openhands-context-layer.vercel.app/api/auth/",
-      VERCEL_URL: "openhands-context-layer-git-feature.vercel.app",
+      AUTH_REDIRECT_PROXY_URL: "https://openhands-integrations-hub.vercel.app/api/auth/",
+      VERCEL_URL: "openhands-integrations-hub-git-feature.vercel.app",
     });
 
-    expect(getRedirectProxyUrl(previewEnv)).toBe("https://openhands-context-layer.vercel.app/api/auth");
+    expect(getRedirectProxyUrl(previewEnv)).toBe("https://openhands-integrations-hub.vercel.app/api/auth");
     expect(getGithubCallbackUrl(previewEnv)).toBe(
-      "https://openhands-context-layer.vercel.app/api/auth/callback/github",
+      "https://openhands-integrations-hub.vercel.app/api/auth/callback/github",
     );
   });
 
 
   it("uses the redirect proxy origin for service OAuth callbacks on preview deployments", () => {
     const previewEnv = env({
-      AUTH_REDIRECT_PROXY_URL: "https://openhands-context-layer.vercel.app/api/auth/",
-      VERCEL_URL: "openhands-context-layer-git-feature.vercel.app",
+      AUTH_REDIRECT_PROXY_URL: "https://openhands-integrations-hub.vercel.app/api/auth/",
+      VERCEL_URL: "openhands-integrations-hub-git-feature.vercel.app",
     });
 
     expect(getOAuthCallbackBaseUrl(previewEnv)).toBe(
-      "https://openhands-context-layer.vercel.app/api/oauth",
+      "https://openhands-integrations-hub.vercel.app/api/oauth",
     );
     expect(getOAuthCallbackUrl("notion", previewEnv)).toBe(
-      "https://openhands-context-layer.vercel.app/api/oauth/notion/callback",
+      "https://openhands-integrations-hub.vercel.app/api/oauth/notion/callback",
     );
   });
 
@@ -96,17 +96,17 @@ describe("auth-config", () => {
           GITHUB_CLIENT_ID: "github-id",
           GITHUB_CLIENT_SECRET: "github-secret",
           AUTH_SECRET: "secret",
-          NEXTAUTH_URL: "https://openhands-context-layer.vercel.app",
-          AUTH_REDIRECT_PROXY_URL: "https://openhands-context-layer.vercel.app/api/auth",
+          NEXTAUTH_URL: "https://openhands-integrations-hub.vercel.app",
+          AUTH_REDIRECT_PROXY_URL: "https://openhands-integrations-hub.vercel.app/api/auth",
         }),
       ),
     ).toMatchObject({
       configured: true,
       missing: [],
-      baseUrl: "https://openhands-context-layer.vercel.app",
-      callbackUrl: "https://openhands-context-layer.vercel.app/api/auth/callback/github",
+      baseUrl: "https://openhands-integrations-hub.vercel.app",
+      callbackUrl: "https://openhands-integrations-hub.vercel.app/api/auth/callback/github",
       previewDeploymentsEnabled: true,
-      redirectProxyUrl: "https://openhands-context-layer.vercel.app/api/auth",
+      redirectProxyUrl: "https://openhands-integrations-hub.vercel.app/api/auth",
     });
   });
 });

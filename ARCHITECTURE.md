@@ -1,6 +1,6 @@
 # Architecture, Security Model, and Testing Strategy
 
-This document gives contributors one place to understand how the context layer is secured, how it is tested, and what the main domain concepts mean.
+This document gives contributors one place to understand how the integrations hub is secured, how it is tested, and what the main domain concepts mean.
 
 It complements:
 
@@ -17,7 +17,7 @@ At a high level, the repository separates three concerns:
 2. **Agent runtime surfaces**: the restricted REST and MCP interfaces that agents call.
 3. **Connector execution**: managed HTTP/OpenAPI integrations and remote MCP integrations that resolve each user's credentials server-side at invocation time.
 
-That split is the core security idea of the repo: agents get a narrow context-layer interface, while humans keep control over connector registration, per-user credentials, and approval workflows.
+That split is the core security idea of the repo: agents get a narrow integrations-hub interface, while humans keep control over connector registration, per-user credentials, and approval workflows.
 
 ## Security model
 
@@ -28,7 +28,7 @@ That split is the core security idea of the repo: agents get a narrow context-la
 | Signed-in user / owner | Install integrations for themselves, connect OAuth accounts, manage their own tool access, use the user automation API | Other users' credentials, admin-only APIs, service-level connector control unless they are allowlisted admins |
 | Allowlisted admin | Everything a normal signed-in user can do, plus manage service-level connectors, admin automation keys, and approval review flows | Direct access to raw provider credentials in client-side UI |
 | Agent | Call the restricted runtime interfaces with a `cla_...` key and the owner's currently available tools | Dashboard-equivalent powers, admin APIs, raw third-party credentials |
-| Provider / remote tool server | Receive the final outbound request after the context layer resolves credentials and access checks | Other unrelated connector secrets or dashboard session state |
+| Provider / remote tool server | Receive the final outbound request after the integrations hub resolves credentials and access checks | Other unrelated connector secrets or dashboard session state |
 
 Important boundaries:
 
@@ -81,7 +81,7 @@ There is also an **admin ceiling** on managed connectors:
 
 1. A user installs an integration and keeps a tool `enabled`.
 2. An agent calls `/api/context/...` or `/api/mcp` with a `cla_...` key.
-3. The context layer resolves the owner, validates the integration, loads that owner's connection details if needed, and invokes the downstream connector.
+3. The integrations hub resolves the owner, validates the integration, loads that owner's connection details if needed, and invokes the downstream connector.
 4. Invocation metadata is recorded as a best-effort audit side effect.
 
 #### Approval-required tool flow
@@ -236,7 +236,7 @@ Current CI mapping:
 
 | Term | Meaning in this repository |
 | --- | --- |
-| Context layer | The owner-scoped service that sits between agents and external providers and exposes the controlled REST/MCP runtime surfaces |
+| Integrations hub | The owner-scoped service that sits between agents and external providers and exposes the controlled REST/MCP runtime surfaces |
 | Owner | The normalized signed-in identity that owns runtime keys, installed integrations, and per-user connection records |
 | Allowlisted admin | An owner whose email is present in `APP_ADMIN_EMAILS`, unlocking service-level connector and admin API operations |
 | Agent runtime key (`cla_...`) | Least-privileged key used only for `/api/context/*`, `/api/context/openapi`, `/api/context/skill`, and `/api/mcp` |

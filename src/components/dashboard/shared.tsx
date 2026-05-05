@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
 import { cn } from "@/src/lib/utils";
-import type { ManagedConnectorOption } from "@/src/types/context-layer";
+import type { ManagedConnectorOption } from "@/src/types/integrations-hub";
 
 export const dashboardInputClassName =
   "rounded-md border border-[var(--color-border)] bg-[var(--color-bg-input)] px-4 py-3 text-white outline-none transition-colors focus:border-[var(--color-accent)]";

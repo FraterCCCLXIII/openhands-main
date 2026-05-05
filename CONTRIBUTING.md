@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for contributing to OpenHands Context Layer.
+Thanks for contributing to OpenHands Integrations Hub.
 
 ## Prerequisites
 

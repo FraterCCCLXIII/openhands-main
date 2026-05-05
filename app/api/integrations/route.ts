@@ -2,7 +2,7 @@ import { fromError, ok } from "@/src/lib/api";
 import { isAppAdminEmail } from "@/src/lib/app-admins";
 import { getCurrentUserIdentity } from "@/src/lib/current-user";
 import { integrationCreateSchema } from "@/src/lib/core/schema";
-import { getContextLayerService } from "@/src/lib/core/runtime";
+import { getIntegrationsHubService } from "@/src/lib/core/runtime";
 import { assertUserCanSaveIntegration } from "@/src/lib/integrations/user-connector-guardrails";
 import { logRouteInfo, summarizeRouteError } from "@/src/lib/route-logging";
 import { getOptionalTrimmedString } from "@/src/lib/type-utils";
@@ -10,7 +10,7 @@ import { getOptionalTrimmedString } from "@/src/lib/type-utils";
 export async function GET() {
   try {
     const { ownerId } = await getCurrentUserIdentity();
-    const service = getContextLayerService();
+    const service = getIntegrationsHubService();
     return ok(await service.listOwnerIntegrationsWithUsage(ownerId));
   } catch (error) {
     return fromError(error);
@@ -39,7 +39,7 @@ export async function POST(request: Request) {
     });
 
     assertUserCanSaveIntegration(isAppAdminEmail(ownerId), payload);
-    const service = getContextLayerService();
+    const service = getIntegrationsHubService();
     const integration = await service.registerOwnerIntegration(ownerId, payload);
 
     logRouteInfo("/api/integrations", "create_succeeded", {

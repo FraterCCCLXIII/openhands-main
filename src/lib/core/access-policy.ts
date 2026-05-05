@@ -1,5 +1,5 @@
 import { nowIso } from "@/src/lib/core/date";
-import { ContextLayerError } from "@/src/lib/core/errors";
+import { IntegrationsHubError } from "@/src/lib/core/errors";
 import type {
   AccessDecision,
   AgentClassPolicy,
@@ -9,7 +9,7 @@ import type {
   PolicyRule,
   TemporaryGrant,
   UnusedToolWindowUnit,
-} from "@/src/types/context-layer";
+} from "@/src/types/integrations-hub";
 
 const unique = (values: string[]) => [...new Set(values)];
 
@@ -121,7 +121,7 @@ export const getToolSpecOrThrow = (
 ) => {
   const toolSpec = integration.tools[toolName];
   if (!toolSpec) {
-    throw new ContextLayerError(
+    throw new IntegrationsHubError(
       `Unknown tool '${toolName}' for integration '${integration.key}'.`,
       404,
     );

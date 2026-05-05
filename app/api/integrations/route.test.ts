@@ -13,9 +13,9 @@ vi.mock("@neondatabase/serverless", () => ({ neon: () => getActiveSql() }));
 
 import { GET, POST } from "./route";
 
-import { getContextLayerRepository } from "@/src/lib/core/runtime";
+import { getIntegrationsHubRepository } from "@/src/lib/core/runtime";
 import { getActiveSql, createTestRepository } from "@/src/lib/db/pglite-test-utils";
-import type { IntegrationSpec } from "@/src/types/context-layer";
+import type { IntegrationSpec } from "@/src/types/integrations-hub";
 
 let testCleanup: () => Promise<void>;
 let consoleInfoSpy: ReturnType<typeof vi.spyOn>;
@@ -28,11 +28,11 @@ beforeEach(async () => {
 
 const resetRuntime = () => {
   const runtime = globalThis as typeof globalThis & {
-    contextLayerRepository?: unknown;
-    contextLayerService?: unknown;
+    integrationsHubRepository?: unknown;
+    integrationsHubService?: unknown;
   };
-  delete runtime.contextLayerRepository;
-  delete runtime.contextLayerService;
+  delete runtime.integrationsHubRepository;
+  delete runtime.integrationsHubService;
 };
 
 const createIntegration = (
@@ -57,7 +57,7 @@ afterEach(async () => {
 describe("GET /api/integrations", () => {
   it("returns only integrations installed for the current non-admin user", async () => {
     vi.stubEnv("APP_ADMIN_EMAILS", "admin@example.com");
-    const repository = getContextLayerRepository();
+    const repository = getIntegrationsHubRepository();
 
     await repository.upsertOwnerIntegration(
       "user@example.com",
@@ -149,7 +149,7 @@ describe("GET /api/integrations", () => {
   it("returns the same personal integration view for app administrators", async () => {
     vi.stubEnv("APP_ADMIN_EMAILS", "admin@example.com");
     authMock.mockResolvedValue({ user: { email: "admin@example.com" } });
-    const repository = getContextLayerRepository();
+    const repository = getIntegrationsHubRepository();
 
     await repository.upsertOwnerIntegration(
       "admin@example.com",

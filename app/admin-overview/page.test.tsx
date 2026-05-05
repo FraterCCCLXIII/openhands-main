@@ -15,7 +15,7 @@ vi.mock("@/src/lib/auth", () => ({
 vi.mock("@neondatabase/serverless", () => ({ neon: () => getActiveSql() }));
 
 import { nowIso } from "@/src/lib/core/date";
-import { getContextLayerService } from "@/src/lib/core/runtime";
+import { getIntegrationsHubService } from "@/src/lib/core/runtime";
 import { createTestRepository, getActiveSql } from "@/src/lib/db/pglite-test-utils";
 
 import AdminOverviewPage from "./page";
@@ -24,11 +24,11 @@ const renderDocument = async () => renderStaticDocument(await AdminOverviewPage(
 
 const resetRuntime = () => {
   const runtime = globalThis as typeof globalThis & {
-    contextLayerRepository?: unknown;
-    contextLayerService?: unknown;
+    integrationsHubRepository?: unknown;
+    integrationsHubService?: unknown;
   };
-  delete runtime.contextLayerRepository;
-  delete runtime.contextLayerService;
+  delete runtime.integrationsHubRepository;
+  delete runtime.integrationsHubService;
 };
 
 let testCleanup: () => Promise<void>;
@@ -54,7 +54,7 @@ describe("app/admin-overview/page", () => {
     vi.stubEnv("APP_ADMIN_EMAILS", "admin@example.com");
     authMock.mockResolvedValue({ user: { email: "admin@example.com" } });
 
-    const service = getContextLayerService();
+    const service = getIntegrationsHubService();
     await service.saveOAuthConnection(
       "owner-a@example.com",
       "github",

@@ -1,7 +1,7 @@
 import { getOAuthCallbackUrl } from "@/src/lib/auth-config";
-import { ContextLayerError } from "@/src/lib/core/errors";
+import { IntegrationsHubError } from "@/src/lib/core/errors";
 import { decryptCredentials, encryptCredentials } from "@/src/lib/credential-crypto";
-import type { GenericOAuthConfig, ManagedConnectorRecord } from "@/src/types/context-layer";
+import type { GenericOAuthConfig, ManagedConnectorRecord } from "@/src/types/integrations-hub";
 
 export interface ManagedOAuthClientCredentials {
   clientId: string;
@@ -26,7 +26,7 @@ export const readManagedOAuthClient = (
 
   const clientId = credentials.clientId?.trim() ?? "";
   if (!clientId) {
-    throw new ContextLayerError(
+    throw new IntegrationsHubError(
       `${connector.name} is missing stored OAuth client credentials.`,
       500,
     );
@@ -41,7 +41,7 @@ export const requireManagedOAuthClient = (
 ): ManagedOAuthClientCredentials => {
   const credentials = readManagedOAuthClient(connector);
   if (!credentials) {
-    throw new ContextLayerError(
+    throw new IntegrationsHubError(
       `${connector.name} is missing stored OAuth client credentials.`,
       500,
     );
@@ -51,7 +51,7 @@ export const requireManagedOAuthClient = (
     connector.oauthConfig?.clientAuthentication !== "none" &&
     !credentials.clientSecret
   ) {
-    throw new ContextLayerError(
+    throw new IntegrationsHubError(
       `${connector.name} is missing stored OAuth client credentials.`,
       500,
     );
@@ -78,7 +78,7 @@ export const registerManagedOAuthClient = async ({
   oauthConfig: GenericOAuthConfig;
 }): Promise<ManagedOAuthClientCredentials> => {
   if (!usesDynamicOAuthClientRegistration(oauthConfig)) {
-    throw new ContextLayerError(
+    throw new IntegrationsHubError(
       `${connectorName} does not support automatic OAuth client registration.`,
       500,
     );
@@ -91,7 +91,7 @@ export const registerManagedOAuthClient = async ({
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      client_name: `OpenHands Context Layer (${connectorName})`,
+      client_name: `OpenHands Integrations Hub (${connectorName})`,
       redirect_uris: [callbackUrl],
       grant_types: ["authorization_code", "refresh_token"],
       response_types: ["code"],
@@ -101,7 +101,7 @@ export const registerManagedOAuthClient = async ({
 
   const body = await response.text();
   if (!response.ok) {
-    throw new ContextLayerError(
+    throw new IntegrationsHubError(
       `${connectorName} OAuth client registration failed (${response.status}): ${body || response.statusText}`,
       502,
     );
@@ -111,7 +111,7 @@ export const registerManagedOAuthClient = async ({
   try {
     parsed = JSON.parse(body) as Record<string, unknown>;
   } catch {
-    throw new ContextLayerError(
+    throw new IntegrationsHubError(
       `${connectorName} OAuth client registration returned an invalid response.`,
       502,
     );
@@ -122,14 +122,14 @@ export const registerManagedOAuthClient = async ({
     typeof parsed.client_secret === "string" ? parsed.client_secret.trim() || undefined : undefined;
 
   if (!clientId) {
-    throw new ContextLayerError(
+    throw new IntegrationsHubError(
       `${connectorName} OAuth client registration did not return a client_id.`,
       502,
     );
   }
 
   if (oauthConfig.clientAuthentication !== "none" && !clientSecret) {
-    throw new ContextLayerError(
+    throw new IntegrationsHubError(
       `${connectorName} OAuth client registration did not return a client_secret.`,
       502,
     );

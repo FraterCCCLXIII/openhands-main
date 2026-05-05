@@ -19,7 +19,7 @@ import { filterReadyManagedConnectors } from "@/src/lib/integrations/connector-r
 import type {
   ManagedConnectorOption,
   IntegrationConnectionStatus,
-} from "@/src/types/context-layer";
+} from "@/src/types/integrations-hub";
 import {
   buildCreatePayload,
   buildDiscoverPayload,

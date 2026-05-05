@@ -1,15 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { ContextLayerError } from "@/src/lib/core/errors";
+import { IntegrationsHubError } from "@/src/lib/core/errors";
 import {
-  CONTEXT_LAYER_MCP_SET_AGENT_CLASS_TOOL_NAME,
-  CONTEXT_LAYER_MCP_SET_AGENT_DATA_TOOL_NAME,
-  CONTEXT_LAYER_MCP_SET_AGENT_ID_TOOL_NAME,
-  buildContextLayerMcpToolName,
-  createContextLayerMcpServer,
-} from "@/src/lib/mcp/context-layer-server";
-import type { ContextLayerService } from "@/src/lib/core/service";
-import type { IntegrationSpec } from "@/src/types/context-layer";
+  INTEGRATIONS_HUB_MCP_SET_AGENT_CLASS_TOOL_NAME,
+  INTEGRATIONS_HUB_MCP_SET_AGENT_DATA_TOOL_NAME,
+  INTEGRATIONS_HUB_MCP_SET_AGENT_ID_TOOL_NAME,
+  buildIntegrationsHubMcpToolName,
+  createIntegrationsHubMcpServer,
+} from "@/src/lib/mcp/integrations-hub-server";
+import type { IntegrationsHubService } from "@/src/lib/core/service";
+import type { IntegrationSpec } from "@/src/types/integrations-hub";
 
 const { registeredTools } = vi.hoisted(() => ({
   registeredTools: new Map<
@@ -88,11 +88,11 @@ const getRegisteredTool = (name: string) => {
 
 const createService = () => {
   const service = {
-    listOwnerIntegrations: vi.fn<ContextLayerService["listOwnerIntegrations"]>(),
-    listIntegrationConnections: vi.fn<ContextLayerService["listIntegrationConnections"]>(),
-    evaluateAccess: vi.fn<ContextLayerService["evaluateAccess"]>(),
-    invokeContext: vi.fn<ContextLayerService["invokeContext"]>(),
-  } as unknown as ContextLayerService & {
+    listOwnerIntegrations: vi.fn<IntegrationsHubService["listOwnerIntegrations"]>(),
+    listIntegrationConnections: vi.fn<IntegrationsHubService["listIntegrationConnections"]>(),
+    evaluateAccess: vi.fn<IntegrationsHubService["evaluateAccess"]>(),
+    invokeContext: vi.fn<IntegrationsHubService["invokeContext"]>(),
+  } as unknown as IntegrationsHubService & {
     listOwnerIntegrations: ReturnType<typeof vi.fn>;
     listIntegrationConnections: ReturnType<typeof vi.fn>;
     evaluateAccess: ReturnType<typeof vi.fn>;
@@ -113,7 +113,7 @@ beforeEach(() => {
   registeredTools.clear();
 });
 
-describe("createContextLayerMcpServer", () => {
+describe("createIntegrationsHubMcpServer", () => {
   it("registers only enabled tools and annotates approval-required descriptions", async () => {
     const service = createService();
     service.listOwnerIntegrations.mockResolvedValue([
@@ -121,7 +121,7 @@ describe("createContextLayerMcpServer", () => {
       buildIntegration({ key: "disabled", enabled: false, tools: {} }),
     ]);
 
-    await createContextLayerMcpServer({
+    await createIntegrationsHubMcpServer({
       request: new Request("https://api.example.test/api/mcp"),
       service,
       ownerId: "owner@example.com",
@@ -130,9 +130,9 @@ describe("createContextLayerMcpServer", () => {
     expect([...registeredTools.keys()].sort()).toEqual([
       "crm__accounts",
       "crm__contacts",
-      CONTEXT_LAYER_MCP_SET_AGENT_CLASS_TOOL_NAME,
-      CONTEXT_LAYER_MCP_SET_AGENT_DATA_TOOL_NAME,
-      CONTEXT_LAYER_MCP_SET_AGENT_ID_TOOL_NAME,
+      INTEGRATIONS_HUB_MCP_SET_AGENT_CLASS_TOOL_NAME,
+      INTEGRATIONS_HUB_MCP_SET_AGENT_DATA_TOOL_NAME,
+      INTEGRATIONS_HUB_MCP_SET_AGENT_ID_TOOL_NAME,
     ]);
     expect(registeredTools.has("crm__hidden")).toBe(false);
     expect(registeredTools.has("disabled__accounts")).toBe(false);
@@ -150,7 +150,7 @@ describe("createContextLayerMcpServer", () => {
     service.listOwnerIntegrations.mockResolvedValue([buildIntegration()]);
     const persistedDefaults: unknown[] = [];
 
-    await createContextLayerMcpServer({
+    await createIntegrationsHubMcpServer({
       request: new Request("https://api.example.test/api/mcp"),
       service,
       ownerId: "owner@example.com",
@@ -159,7 +159,7 @@ describe("createContextLayerMcpServer", () => {
       },
     });
 
-    const setAgentId = getRegisteredTool(CONTEXT_LAYER_MCP_SET_AGENT_ID_TOOL_NAME);
+    const setAgentId = getRegisteredTool(INTEGRATIONS_HUB_MCP_SET_AGENT_ID_TOOL_NAME);
     const parsedAgentId = setAgentId.metadata.inputSchema?.parse({ agentId: "  agent-42  " }) as {
       agentId: string | null;
     };
@@ -176,7 +176,7 @@ describe("createContextLayerMcpServer", () => {
       content: [{ text: "MCP session agentId cleared." }],
     });
 
-    const setAgentClass = getRegisteredTool(CONTEXT_LAYER_MCP_SET_AGENT_CLASS_TOOL_NAME);
+    const setAgentClass = getRegisteredTool(INTEGRATIONS_HUB_MCP_SET_AGENT_CLASS_TOOL_NAME);
     const parsedAgentClass = setAgentClass.metadata.inputSchema?.parse({
       agentClass: " reviewer ",
     }) as { agentClass: string | null };
@@ -208,7 +208,7 @@ describe("createContextLayerMcpServer", () => {
       data: 7,
     });
 
-    await createContextLayerMcpServer({
+    await createIntegrationsHubMcpServer({
       request: new Request(
         "https://api.example.test/api/mcp?agentId=%20agent-123%20&agentClass=%20reviewer%20",
         {
@@ -262,7 +262,7 @@ describe("createContextLayerMcpServer", () => {
       data: true,
     });
 
-    await createContextLayerMcpServer({
+    await createIntegrationsHubMcpServer({
       request: new Request("https://api.example.test/api/mcp"),
       service,
       ownerId: "owner@example.com",
@@ -273,7 +273,7 @@ describe("createContextLayerMcpServer", () => {
       },
     });
 
-    const result = await getRegisteredTool(buildContextLayerMcpToolName("crm", "accounts")).handler({
+    const result = await getRegisteredTool(buildIntegrationsHubMcpToolName("crm", "accounts")).handler({
       contextAgentId: null,
       contextAgentClass: null,
     });
@@ -330,7 +330,7 @@ describe("createContextLayerMcpServer", () => {
         },
       });
 
-    await createContextLayerMcpServer({
+    await createIntegrationsHubMcpServer({
       request: new Request("https://api.example.test/api/mcp"),
       service,
       ownerId: "owner@example.com",
@@ -362,7 +362,7 @@ describe("createContextLayerMcpServer", () => {
     service.listOwnerIntegrations.mockResolvedValue([buildIntegration()]);
     service.invokeContext.mockRejectedValue(new Error("upstream exploded"));
 
-    await createContextLayerMcpServer({
+    await createIntegrationsHubMcpServer({
       request: new Request("https://api.example.test/api/mcp"),
       service,
       ownerId: "owner@example.com",
@@ -385,7 +385,7 @@ describe("createContextLayerMcpServer", () => {
       effectiveScopes: ["crm.read"],
     });
 
-    await createContextLayerMcpServer({
+    await createIntegrationsHubMcpServer({
       request: new Request("https://api.example.test/api/mcp"),
       service,
       ownerId: "owner@example.com",
@@ -403,11 +403,11 @@ describe("createContextLayerMcpServer", () => {
     expect(service.invokeContext).not.toHaveBeenCalled();
   });
 
-  it("wraps legacy override keys in a ContextLayerError", async () => {
+  it("wraps legacy override keys in a IntegrationsHubError", async () => {
     const service = createService();
     service.listOwnerIntegrations.mockResolvedValue([buildIntegration()]);
 
-    await createContextLayerMcpServer({
+    await createIntegrationsHubMcpServer({
       request: new Request("https://api.example.test/api/mcp"),
       service,
       ownerId: "owner@example.com",
@@ -415,6 +415,6 @@ describe("createContextLayerMcpServer", () => {
 
     await expect(
       getRegisteredTool("crm__accounts").handler({ _agentId: "legacy-agent" }),
-    ).rejects.toBeInstanceOf(ContextLayerError);
+    ).rejects.toBeInstanceOf(IntegrationsHubError);
   });
 });

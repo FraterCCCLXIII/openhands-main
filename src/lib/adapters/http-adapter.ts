@@ -2,7 +2,7 @@ import type {
   AdapterInvocationInput,
   IntegrationAdapter,
 } from "@/src/lib/core/adapter-registry";
-import { ContextLayerError } from "@/src/lib/core/errors";
+import { IntegrationsHubError } from "@/src/lib/core/errors";
 import {
   collectHttpTemplateValidationIssues,
   extractExactTemplateVariable,
@@ -17,7 +17,7 @@ import {
 import type {
   GenericHttpRequestTemplate,
   HttpRequestContentType,
-} from "@/src/types/context-layer";
+} from "@/src/types/integrations-hub";
 
 const getByPath = (source: Record<string, unknown>, path: string) =>
   path.split(".").reduce<unknown>((value, segment) => {
@@ -65,7 +65,7 @@ const resolvePathTemplate = (pathTemplate: string, payload: Record<string, unkno
   replacePathTemplateVariables(pathTemplate, (variable) => {
     const resolved = getByPath(payload, variable);
     if (resolved == null || typeof resolved === "object") {
-      throw new ContextLayerError(
+      throw new IntegrationsHubError(
         `Path placeholder '${variable}' must resolve to a string, number, or boolean.`,
         400,
       );
@@ -170,7 +170,7 @@ const appendQueryValue = (url: URL, key: string, value: unknown, toolName: strin
   }
 
   if (!isScalarRequestValue(value)) {
-    throw new ContextLayerError(
+    throw new IntegrationsHubError(
       `Tool '${toolName}' produced an invalid query parameter '${key}'.`,
       400,
     );
@@ -194,7 +194,7 @@ const resolveHeaderValues = (
       .filter(([, value]) => value != null)
       .map(([key, value]) => {
         if (!isScalarRequestValue(value)) {
-          throw new ContextLayerError(
+          throw new IntegrationsHubError(
             `Tool '${toolName}' produced an invalid header '${key}'.`,
             400,
           );
@@ -290,14 +290,14 @@ export class HttpAdapter implements IntegrationAdapter {
       : undefined;
 
     if (!apiBaseUrl) {
-      throw new ContextLayerError(
+      throw new IntegrationsHubError(
         `Integration '${input.integration.key}' is missing an apiBaseUrl configuration.`,
         400,
       );
     }
 
     if (!requestTemplate) {
-      throw new ContextLayerError(
+      throw new IntegrationsHubError(
         `Tool '${input.toolSpec.name}' is missing an HTTP request template.`,
         400,
       );
@@ -305,7 +305,7 @@ export class HttpAdapter implements IntegrationAdapter {
 
     const [validationIssue] = collectHttpTemplateValidationIssues(requestTemplate);
     if (validationIssue) {
-      throw new ContextLayerError(
+      throw new IntegrationsHubError(
         `Tool '${input.toolSpec.name}' uses an unsupported HTTP request template at ${formatHttpTemplateLocation(validationIssue.path)}: ${validationIssue.message}`,
         400,
       );
@@ -314,7 +314,7 @@ export class HttpAdapter implements IntegrationAdapter {
     const method = requestTemplate.method.toUpperCase();
     const path = resolvePathTemplate(requestTemplate.path, input.payload);
     if (!path.trim()) {
-      throw new ContextLayerError(
+      throw new IntegrationsHubError(
         `Tool '${input.toolSpec.name}' produced an invalid request path.`,
         400,
       );
@@ -347,7 +347,7 @@ export class HttpAdapter implements IntegrationAdapter {
 
     if (!response.ok) {
       const detail = await response.text();
-      throw new ContextLayerError(
+      throw new IntegrationsHubError(
         `${input.integration.name} ${input.toolSpec.name} failed (${response.status}): ${detail || response.statusText}`,
         502,
       );

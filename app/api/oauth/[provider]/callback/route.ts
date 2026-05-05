@@ -2,10 +2,10 @@ import { NextResponse } from "next/server";
 
 import { buildAdminSectionHref } from "@/src/lib/admin-routes";
 import { getOAuthCallbackUrl } from "@/src/lib/auth-config";
-import { ContextLayerError } from "@/src/lib/core/errors";
+import { IntegrationsHubError } from "@/src/lib/core/errors";
 import {
-  getContextLayerRepository,
-  getContextLayerService,
+  getIntegrationsHubRepository,
+  getIntegrationsHubService,
 } from "@/src/lib/core/runtime";
 import { resolveOAuthProvider } from "@/src/lib/oauth/provider-resolver";
 import { normalizeSafeRedirectTarget } from "@/src/lib/oauth/redirect-targets";
@@ -36,11 +36,11 @@ export async function GET(
   request: Request,
   { params }: { params: Promise<{ provider: string }> },
 ) {
-  const service = getContextLayerService();
+  const service = getIntegrationsHubService();
   const url = new URL(request.url);
   const { provider: providerParam } = await params;
   const provider = await resolveOAuthProvider(
-    getContextLayerRepository(),
+    getIntegrationsHubRepository(),
     providerParam,
   );
 
@@ -115,7 +115,7 @@ export async function GET(
     }
 
     if (!code) {
-      throw new ContextLayerError("Missing OAuth authorization code.", 400);
+      throw new IntegrationsHubError("Missing OAuth authorization code.", 400);
     }
 
     const redirectUri = stateRecord.redirectUri ?? proxyCallbackUrl;

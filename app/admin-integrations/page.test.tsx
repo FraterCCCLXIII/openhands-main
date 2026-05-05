@@ -33,11 +33,11 @@ afterEach(async () => {
   authMock.mockReset();
   authMock.mockResolvedValue({ user: { email: "dev@localhost" } });
   const runtime = globalThis as typeof globalThis & {
-    contextLayerRepository?: unknown;
-    contextLayerService?: unknown;
+    integrationsHubRepository?: unknown;
+    integrationsHubService?: unknown;
   };
-  delete runtime.contextLayerRepository;
-  delete runtime.contextLayerService;
+  delete runtime.integrationsHubRepository;
+  delete runtime.integrationsHubService;
   await testCleanup();
 });
 

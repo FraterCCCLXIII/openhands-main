@@ -62,7 +62,7 @@ describe("McpAdapter", () => {
     input.integration.config = {};
 
     await expect(adapter.invoke(input)).rejects.toMatchObject({
-      name: "ContextLayerError",
+      name: "IntegrationsHubError",
       statusCode: 400,
       message: "Integration 'notion' is missing an MCP serverUrl configuration.",
     });

@@ -11,7 +11,7 @@ import { buildAdminSectionHref } from "@/src/lib/admin-routes";
 import { isAppAdminEmail } from "@/src/lib/app-admins";
 import { auth } from "@/src/lib/auth";
 import { getOAuthCallbackBaseUrl } from "@/src/lib/auth-config";
-import { getContextLayerRepository, getContextLayerService } from "@/src/lib/core/runtime";
+import { getIntegrationsHubRepository, getIntegrationsHubService } from "@/src/lib/core/runtime";
 import { filterReadyManagedConnectors } from "@/src/lib/integrations/connector-readiness";
 import { listManagedConnectorOptions } from "@/src/lib/integrations/discovery";
 import {
@@ -19,14 +19,14 @@ import {
   getAdminContactInstruction,
 } from "@/src/lib/integrations/connector-requests";
 import { listOAuthProviderCatalog } from "@/src/lib/integrations/oauth-provider-catalog";
-import { isEphemeralContextLayerStorage } from "@/src/lib/persistence";
+import { isEphemeralIntegrationsHubStorage } from "@/src/lib/persistence";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminIntegrationsPage() {
   const session = await auth();
 
-  if (session?.user && isEphemeralContextLayerStorage()) {
+  if (session?.user && isEphemeralIntegrationsHubStorage()) {
     return (
       <ServiceUnavailableScreen
         isAdmin={isAppAdminEmail(session.user.email ?? undefined)}
@@ -36,17 +36,17 @@ export default async function AdminIntegrationsPage() {
 
   const adminEmail = getAdminContactEmail();
   const adminInstruction = getAdminContactInstruction(adminEmail ?? undefined);
-  const repository = getContextLayerRepository();
+  const repository = getIntegrationsHubRepository();
   const readyManagedConnectors = filterReadyManagedConnectors(
     await listManagedConnectorOptions(repository),
   );
   const providerCatalog = listOAuthProviderCatalog();
   const canRegisterManagedConnectors = isAppAdminEmail(session?.user?.email ?? undefined);
-  const userName = session?.user?.name?.trim() || "Context Layer User";
+  const userName = session?.user?.name?.trim() || "Integrations Hub User";
   const userEmail = session?.user?.email?.trim() || "Not provided";
   const oauthCallbackBaseUrl = getOAuthCallbackBaseUrl();
   const managedConnectors = canRegisterManagedConnectors
-    ? await getContextLayerService().listManagedConnectors()
+    ? await getIntegrationsHubService().listManagedConnectors()
     : [];
 
   return (
@@ -82,7 +82,7 @@ export default async function AdminIntegrationsPage() {
           <header className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
             <div className="min-w-0">
               <p className="text-[11px] uppercase tracking-[0.22em] text-[var(--color-text-base)]">
-                OpenHands Context Layer
+                OpenHands Integrations Hub
               </p>
               <h1 className="mt-1 text-2xl font-semibold text-white">Admin integrations</h1>
               <p className="mt-2 max-w-3xl text-sm leading-7 text-[var(--color-text-base)]">

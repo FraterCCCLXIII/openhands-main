@@ -2,10 +2,10 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vite
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 
-import { getContextLayerService } from "@/src/lib/core/runtime";
+import { getIntegrationsHubService } from "@/src/lib/core/runtime";
 import { createTestRepository, getActiveSql } from "@/src/lib/db/pglite-test-utils";
 import { upsertMcpSession } from "@/src/lib/mcp/session-store";
-import type { IntegrationSpec } from "@/src/types/context-layer";
+import type { IntegrationSpec } from "@/src/types/integrations-hub";
 
 import { DELETE, GET, POST, resetMcpSessionsForTests } from "./route";
 
@@ -20,11 +20,11 @@ beforeEach(async () => {
 
 const resetRuntime = () => {
   const runtime = globalThis as typeof globalThis & {
-    contextLayerRepository?: unknown;
-    contextLayerService?: unknown;
+    integrationsHubRepository?: unknown;
+    integrationsHubService?: unknown;
   };
-  delete runtime.contextLayerRepository;
-  delete runtime.contextLayerService;
+  delete runtime.integrationsHubRepository;
+  delete runtime.integrationsHubService;
 };
 
 const routeFetch: typeof fetch = async (input, init) => {
@@ -158,7 +158,7 @@ afterEach(async () => {
 
 describe("/api/mcp", () => {
   it("lists managed connector tools and forwards enabled invocations without requiring session defaults", async () => {
-    const service = getContextLayerService();
+    const service = getIntegrationsHubService();
     await service.registerOwnerIntegration("owner@example.com", baseIntegration);
     const apiKey = (await service.getOrCreateAgentApiKey("owner@example.com")).apiKey;
 
@@ -195,7 +195,7 @@ describe("/api/mcp", () => {
   });
 
   it("requires set_agent_data before creating case-by-case approval requests and stores the conversation link", async () => {
-    const service = getContextLayerService();
+    const service = getIntegrationsHubService();
     await service.registerOwnerIntegration("owner@example.com", baseIntegration);
     const apiKey = (await service.getOrCreateAgentApiKey("owner@example.com")).apiKey;
 
@@ -256,7 +256,7 @@ describe("/api/mcp", () => {
   });
 
   it("publishes function-specific input schemas and accepts body arguments", async () => {
-    const service = getContextLayerService();
+    const service = getIntegrationsHubService();
     await service.registerOwnerIntegration("owner@example.com", baseIntegration);
     const apiKey = (await service.getOrCreateAgentApiKey("owner@example.com")).apiKey;
 
@@ -305,7 +305,7 @@ describe("/api/mcp", () => {
 
 
   it("rejects legacy underscore MCP override arguments", async () => {
-    const service = getContextLayerService();
+    const service = getIntegrationsHubService();
     await service.registerOwnerIntegration("owner@example.com", baseIntegration);
     const apiKey = (await service.getOrCreateAgentApiKey("owner@example.com")).apiKey;
 
@@ -337,11 +337,11 @@ describe("/api/mcp", () => {
 
     expect(response.status).toBe(401);
     expect(response.headers.get("www-authenticate")).toBe(
-      'Bearer realm="agent-context-layer-mcp"',
+      'Bearer realm="agent-integrations-hub-mcp"',
     );
     await expect(response.json()).resolves.toEqual({
       detail:
-        "Provide a valid personal context-layer API key in the Authorization bearer header before connecting to MCP.",
+        "Provide a valid personal integrations-hub API key in the Authorization bearer header before connecting to MCP.",
     });
   });
 
@@ -358,12 +358,12 @@ describe("/api/mcp", () => {
     expect(response.status).toBe(503);
     await expect(response.json()).resolves.toEqual({
       detail:
-        "Open the dashboard once to provision a personal context-layer API key before agents connect to MCP.",
+        "Open the dashboard once to provision a personal integrations-hub API key before agents connect to MCP.",
     });
   });
 
   it("rejects session GET requests that do not accept event streams", async () => {
-    const service = getContextLayerService();
+    const service = getIntegrationsHubService();
     const apiKey = (await service.getOrCreateAgentApiKey("owner@example.com")).apiKey;
 
     await upsertMcpSession({
@@ -394,7 +394,7 @@ describe("/api/mcp", () => {
   });
 
   it("rejects POST requests that do not advertise streamable HTTP response types", async () => {
-    const service = getContextLayerService();
+    const service = getIntegrationsHubService();
     const apiKey = (await service.getOrCreateAgentApiKey("owner@example.com")).apiKey;
 
     const response = await POST(
@@ -429,7 +429,7 @@ describe("/api/mcp", () => {
   });
 
   it("rejects POST requests with a non-JSON content type", async () => {
-    const service = getContextLayerService();
+    const service = getIntegrationsHubService();
     const apiKey = (await service.getOrCreateAgentApiKey("owner@example.com")).apiKey;
 
     const response = await POST(
@@ -451,7 +451,7 @@ describe("/api/mcp", () => {
   });
 
   it("rejects session requests that omit the MCP protocol version header", async () => {
-    const service = getContextLayerService();
+    const service = getIntegrationsHubService();
     const apiKey = (await service.getOrCreateAgentApiKey("owner@example.com")).apiKey;
 
     await upsertMcpSession({
@@ -495,7 +495,7 @@ describe("/api/mcp", () => {
   });
 
   it("requires a session header for MCP session termination", async () => {
-    const service = getContextLayerService();
+    const service = getIntegrationsHubService();
     const apiKey = (await service.getOrCreateAgentApiKey("owner@example.com")).apiKey;
 
     const response = await DELETE(
@@ -514,7 +514,7 @@ describe("/api/mcp", () => {
   });
 
   it("returns not found for unknown or unauthorized stored MCP sessions", async () => {
-    const service = getContextLayerService();
+    const service = getIntegrationsHubService();
     const ownerApiKey = (await service.getOrCreateAgentApiKey("owner@example.com")).apiKey;
     const otherApiKey = (await service.getOrCreateAgentApiKey("other-owner@example.com")).apiKey;
 
@@ -559,7 +559,7 @@ describe("/api/mcp", () => {
   });
 
   it("returns method not allowed for unsupported MCP verbs after authentication", async () => {
-    const service = getContextLayerService();
+    const service = getIntegrationsHubService();
     const apiKey = (await service.getOrCreateAgentApiKey("owner@example.com")).apiKey;
 
     const response = await GET(

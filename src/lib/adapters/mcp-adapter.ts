@@ -2,7 +2,7 @@ import type {
   AdapterInvocationInput,
   IntegrationAdapter,
 } from "@/src/lib/core/adapter-registry";
-import { ContextLayerError } from "@/src/lib/core/errors";
+import { IntegrationsHubError } from "@/src/lib/core/errors";
 import { buildMcpHeaders, runMcpClientOperation } from "@/src/lib/mcp-client";
 import { getMcpTransportOrder } from "@/src/lib/mcp-transport-policy";
 import { getOptionalTrimmedString } from "@/src/lib/type-utils";
@@ -14,7 +14,7 @@ export class McpAdapter implements IntegrationAdapter {
       getOptionalTrimmedString(integration.config, "serverUrl");
 
     if (!serverUrl) {
-      throw new ContextLayerError(
+      throw new IntegrationsHubError(
         `Integration '${integration.key}' is missing an MCP serverUrl configuration.`,
         400,
       );

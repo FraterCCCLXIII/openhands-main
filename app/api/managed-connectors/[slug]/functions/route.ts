@@ -1,8 +1,8 @@
 import { fromError, ok } from "@/src/lib/api";
 import { auth } from "@/src/lib/auth";
 import { isAppAdminEmail } from "@/src/lib/app-admins";
-import { ContextLayerError } from "@/src/lib/core/errors";
-import { getContextLayerService } from "@/src/lib/core/runtime";
+import { IntegrationsHubError } from "@/src/lib/core/errors";
+import { getIntegrationsHubService } from "@/src/lib/core/runtime";
 
 export async function POST(
   _request: Request,
@@ -11,12 +11,12 @@ export async function POST(
   try {
     const session = await auth();
     if (!isAppAdminEmail(session?.user?.email ?? undefined)) {
-      throw new ContextLayerError("Only app administrators can manage connector tools.", 403);
+      throw new IntegrationsHubError("Only app administrators can manage connector tools.", 403);
     }
 
     const { slug } = await params;
     return ok(
-      await getContextLayerService().indexManagedConnectorFunctions(
+      await getIntegrationsHubService().indexManagedConnectorFunctions(
         slug,
         session?.user?.email ?? undefined,
       ),

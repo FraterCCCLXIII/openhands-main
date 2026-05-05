@@ -4,7 +4,7 @@ import { filterIntegrationsVisibleToOwner } from "@/src/lib/integrations/visible
 import type {
   IntegrationConnectionStatus,
   IntegrationSpec,
-} from "@/src/types/context-layer";
+} from "@/src/types/integrations-hub";
 
 const createIntegration = (
   overrides: Partial<IntegrationSpec> & Pick<IntegrationSpec, "key" | "name" | "kind" | "provider" | "authStrategy">,

@@ -18,20 +18,20 @@ beforeEach(async () => {
 
 const resetRuntimeService = () => {
   const runtime = globalThis as typeof globalThis & {
-    contextLayerRepository?: unknown;
-    contextLayerService?: unknown;
+    integrationsHubRepository?: unknown;
+    integrationsHubService?: unknown;
   };
-  delete runtime.contextLayerRepository;
-  delete runtime.contextLayerService;
+  delete runtime.integrationsHubRepository;
+  delete runtime.integrationsHubService;
 };
 
 const setRuntimeRepository = (repository: ContextRepository) => {
   const runtime = globalThis as typeof globalThis & {
-    contextLayerRepository?: unknown;
-    contextLayerService?: unknown;
+    integrationsHubRepository?: unknown;
+    integrationsHubService?: unknown;
   };
-  runtime.contextLayerRepository = repository;
-  delete runtime.contextLayerService;
+  runtime.integrationsHubRepository = repository;
+  delete runtime.integrationsHubService;
 };
 
 const seedManagedNotion = async (repository: ContextRepository) => {
@@ -75,8 +75,8 @@ const saveOAuthState = async (
     integrationKey: "notion",
     provider: "notion",
     redirectTo: overrides.redirectTo ?? "/integrations",
-    redirectUri: "https://openhands-context-layer.vercel.app/api/oauth/notion/callback",
-    callbackUrl: "https://context-layer-git-feature.vercel.app/api/oauth/notion/callback",
+    redirectUri: "https://openhands-integrations-hub.vercel.app/api/oauth/notion/callback",
+    callbackUrl: "https://integrations-hub-git-feature.vercel.app/api/oauth/notion/callback",
     createdAt: "2026-03-09T00:00:00.000Z",
     expiresAt: "2999-03-09T00:10:00.000Z",
   });
@@ -93,7 +93,7 @@ describe("GET /api/oauth/[provider]/callback", () => {
   it("proxies stable-domain callbacks back to the preview deployment callback URL", async () => {
     vi.stubEnv(
       "AUTH_REDIRECT_PROXY_URL",
-      "https://openhands-context-layer.vercel.app/api/auth",
+      "https://openhands-integrations-hub.vercel.app/api/auth",
     );
 
     const repository = testRepo;
@@ -104,7 +104,7 @@ describe("GET /api/oauth/[provider]/callback", () => {
 
     const response = await GET(
       new Request(
-        "https://openhands-context-layer.vercel.app/api/oauth/notion/callback?code=code-123&state=state-123",
+        "https://openhands-integrations-hub.vercel.app/api/oauth/notion/callback?code=code-123&state=state-123",
       ),
       {
         params: Promise.resolve({ provider: "notion" }),
@@ -113,17 +113,17 @@ describe("GET /api/oauth/[provider]/callback", () => {
 
     expect(response.status).toBe(307);
     expect(response.headers.get("location")).toBe(
-      "https://context-layer-git-feature.vercel.app/api/oauth/notion/callback?code=code-123&state=state-123",
+      "https://integrations-hub-git-feature.vercel.app/api/oauth/notion/callback?code=code-123&state=state-123",
     );
     expect(await repository.getOAuthState("state-123")).toMatchObject({
-      callbackUrl: "https://context-layer-git-feature.vercel.app/api/oauth/notion/callback",
+      callbackUrl: "https://integrations-hub-git-feature.vercel.app/api/oauth/notion/callback",
     });
   });
 
   it("exchanges the code with the stable redirect URI after the preview callback resumes", async () => {
     vi.stubEnv(
       "AUTH_REDIRECT_PROXY_URL",
-      "https://openhands-context-layer.vercel.app/api/auth",
+      "https://openhands-integrations-hub.vercel.app/api/auth",
     );
 
     const fetchMock = vi.fn(async () =>
@@ -152,7 +152,7 @@ describe("GET /api/oauth/[provider]/callback", () => {
 
     const response = await GET(
       new Request(
-        "https://context-layer-git-feature.vercel.app/api/oauth/notion/callback?code=code-123&state=state-123",
+        "https://integrations-hub-git-feature.vercel.app/api/oauth/notion/callback?code=code-123&state=state-123",
       ),
       {
         params: Promise.resolve({ provider: "notion" }),
@@ -168,7 +168,7 @@ describe("GET /api/oauth/[provider]/callback", () => {
     expect(url).toBe("https://auth.managed-notion.test/token");
     expect(String(init.body)).toContain("code=code-123");
     expect(String(init.body)).toContain(
-      "redirect_uri=https%3A%2F%2Fopenhands-context-layer.vercel.app%2Fapi%2Foauth%2Fnotion%2Fcallback",
+      "redirect_uri=https%3A%2F%2Fopenhands-integrations-hub.vercel.app%2Fapi%2Foauth%2Fnotion%2Fcallback",
     );
     expect(String(init.body)).not.toContain("client_id=");
     expect(init.headers).toMatchObject({
@@ -204,7 +204,7 @@ describe("GET /api/oauth/[provider]/callback", () => {
 
     const response = await GET(
       new Request(
-        "https://context-layer-git-feature.vercel.app/api/oauth/notion/callback?code=code-123&state=state-123",
+        "https://integrations-hub-git-feature.vercel.app/api/oauth/notion/callback?code=code-123&state=state-123",
       ),
       {
         params: Promise.resolve({ provider: "notion" }),
@@ -213,7 +213,7 @@ describe("GET /api/oauth/[provider]/callback", () => {
 
     expect(response.status).toBe(307);
     expect(response.headers.get("location")).toBe(
-      "https://context-layer-git-feature.vercel.app/integrations?showIntegrationWizard=1&oauth_provider=notion&oauth_status=connected",
+      "https://integrations-hub-git-feature.vercel.app/integrations?showIntegrationWizard=1&oauth_provider=notion&oauth_status=connected",
     );
   });
 });

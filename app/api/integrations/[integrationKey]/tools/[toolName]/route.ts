@@ -2,7 +2,7 @@ import { z } from "zod";
 
 import { fromError, ok } from "@/src/lib/api";
 import { getCurrentUserIdentity } from "@/src/lib/current-user";
-import { getContextLayerService } from "@/src/lib/core/runtime";
+import { getIntegrationsHubService } from "@/src/lib/core/runtime";
 
 const updateToolSchema = z.object({
   accessMode: z.enum(["enabled", "disabled", "approval_required"]),
@@ -18,7 +18,7 @@ export async function PATCH(
     const { ownerId } = await getCurrentUserIdentity();
     const payload = updateToolSchema.parse(await request.json());
     const { integrationKey, toolName } = await params;
-    const service = getContextLayerService();
+    const service = getIntegrationsHubService();
 
     return ok(
       await service.setOwnerToolAccessMode(

@@ -2,7 +2,7 @@ import { z } from "zod";
 
 import { fromError, ok } from "@/src/lib/api";
 import { getCurrentUserIdentity } from "@/src/lib/current-user";
-import { getContextLayerService } from "@/src/lib/core/runtime";
+import { getIntegrationsHubService } from "@/src/lib/core/runtime";
 
 const approveSchema = z.object({
   durationMinutes: z.number().int().positive().optional(),
@@ -16,7 +16,7 @@ export async function POST(
     const { ownerId } = await getCurrentUserIdentity();
     const payload = approveSchema.parse(await request.json());
     const { requestId } = await params;
-    const service = getContextLayerService();
+    const service = getIntegrationsHubService();
     return ok(
       await service.approveOwnerAccessRequest(
         ownerId,

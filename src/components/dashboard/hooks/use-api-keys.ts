@@ -9,7 +9,7 @@ import {
 import type {
   AdminApiKeyStatus,
   UserApiKeyStatus,
-} from "@/src/types/context-layer";
+} from "@/src/types/integrations-hub";
 
 interface AgentApiKeyResponse {
   ownerId: string;

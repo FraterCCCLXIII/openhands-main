@@ -14,7 +14,7 @@ import type {
   ToolAccessMode,
   IntegrationSpec,
   UnusedToolWindowUnit,
-} from "@/src/types/context-layer";
+} from "@/src/types/integrations-hub";
 
 const POPULAR_INTEGRATION_SLUGS = [
   "github",

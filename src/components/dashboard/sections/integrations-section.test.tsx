@@ -19,7 +19,7 @@ import { IntegrationsSection } from "@/src/components/dashboard/sections/integra
 import type {
   ManagedConnectorOption,
   IntegrationSpec,
-} from "@/src/types/context-layer";
+} from "@/src/types/integrations-hub";
 import type { FilteredIntegrationToolEntry } from "@/src/components/dashboard/utils";
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;

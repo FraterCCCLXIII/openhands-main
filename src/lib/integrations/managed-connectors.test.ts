@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type {
   OAuthProviderCatalogOption,
   OAuthProviderRegistrationDefaults,
-} from "@/src/types/context-layer";
+} from "@/src/types/integrations-hub";
 
 const mockState = vi.hoisted(() => ({
   providers: [] as OAuthProviderCatalogOption[],
@@ -56,7 +56,7 @@ import { encryptManagedOAuthClient } from "@/src/lib/oauth/managed-oauth-client"
 import type {
   ManagedConnectorRecord,
   ManagedConnectorToolDefinition,
-} from "@/src/types/context-layer";
+} from "@/src/types/integrations-hub";
 
 const makeProvider = (
   overrides: Partial<OAuthProviderCatalogOption> &

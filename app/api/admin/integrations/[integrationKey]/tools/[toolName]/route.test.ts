@@ -4,18 +4,18 @@ vi.mock("@neondatabase/serverless", () => ({ neon: () => getActiveSql() }));
 
 import { PATCH } from "./route";
 
-import { getContextLayerService } from "@/src/lib/core/runtime";
+import { getIntegrationsHubService } from "@/src/lib/core/runtime";
 import { createTestRepository, getActiveSql } from "@/src/lib/db/pglite-test-utils";
 
 let testCleanup: () => Promise<void>;
 
 const resetRuntime = () => {
   const runtime = globalThis as typeof globalThis & {
-    contextLayerRepository?: unknown;
-    contextLayerService?: unknown;
+    integrationsHubRepository?: unknown;
+    integrationsHubService?: unknown;
   };
-  delete runtime.contextLayerRepository;
-  delete runtime.contextLayerService;
+  delete runtime.integrationsHubRepository;
+  delete runtime.integrationsHubService;
 };
 
 beforeAll(() => {
@@ -52,13 +52,13 @@ describe("PATCH /api/admin/integrations/[integrationKey]/tools/[toolName]", () =
 
     expect(response.status).toBe(401);
     expect(response.headers.get("WWW-Authenticate")).toContain(
-      "context-layer-admin-api",
+      "integrations-hub-admin-api",
     );
   });
 
   it("returns gone and directs callers to the user API", async () => {
     vi.stubEnv("APP_ADMIN_EMAILS", "admin@example.com");
-    const service = getContextLayerService();
+    const service = getIntegrationsHubService();
     const { apiKey } = await service.rotateAdminApiKey("admin@example.com");
 
     const response = await PATCH(

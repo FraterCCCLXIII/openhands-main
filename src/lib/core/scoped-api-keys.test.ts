@@ -15,7 +15,7 @@ import {
   toUserApiKeyStatus,
 } from "@/src/lib/core/scoped-api-keys";
 import { encryptCredentials } from "@/src/lib/credential-crypto";
-import type { AdminApiKeyRecord, UserApiKeyRecord } from "@/src/types/context-layer";
+import type { AdminApiKeyRecord, UserApiKeyRecord } from "@/src/types/integrations-hub";
 
 const timestamp = "2026-04-06T12:00:00.000Z";
 

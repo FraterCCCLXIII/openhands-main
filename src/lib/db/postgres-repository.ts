@@ -13,7 +13,7 @@ import type {
   TemporaryGrant,
   ToolInvocationRecord,
   UserApiKeyRecord,
-} from "@/src/types/context-layer";
+} from "@/src/types/integrations-hub";
 import type { ContextRepository } from "@/src/lib/core/repository";
 import {
   mapAccessRequestRow,

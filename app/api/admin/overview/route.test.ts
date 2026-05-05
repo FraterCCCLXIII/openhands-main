@@ -9,18 +9,18 @@ import {
   ADMIN_API_UNAUTHORIZED_DETAIL,
 } from "@/src/lib/admin-api-auth";
 import { nowIso } from "@/src/lib/core/date";
-import { getContextLayerService } from "@/src/lib/core/runtime";
+import { getIntegrationsHubService } from "@/src/lib/core/runtime";
 import { createTestRepository, getActiveSql } from "@/src/lib/db/pglite-test-utils";
 
 let testCleanup: () => Promise<void>;
 
 const resetRuntime = () => {
   const runtime = globalThis as typeof globalThis & {
-    contextLayerRepository?: unknown;
-    contextLayerService?: unknown;
+    integrationsHubRepository?: unknown;
+    integrationsHubService?: unknown;
   };
-  delete runtime.contextLayerRepository;
-  delete runtime.contextLayerService;
+  delete runtime.integrationsHubRepository;
+  delete runtime.integrationsHubService;
 };
 
 beforeAll(() => {
@@ -40,7 +40,7 @@ afterEach(async () => {
 
 describe("GET /api/admin/overview", () => {
   it("returns concise deployment-wide operational stats including duplicate external accounts", async () => {
-    const service = getContextLayerService();
+    const service = getIntegrationsHubService();
 
     await service.saveOAuthConnection(
       "owner-a@example.com",
@@ -235,7 +235,7 @@ describe("GET /api/admin/overview", () => {
   });
 
   it("returns zeroed stats when no operational data exists", async () => {
-    const service = getContextLayerService();
+    const service = getIntegrationsHubService();
     const { apiKey } = await service.rotateAdminApiKey("admin@example.com");
     const response = await GET(
       new Request("http://localhost/api/admin/overview", {
@@ -257,7 +257,7 @@ describe("GET /api/admin/overview", () => {
   });
 
   it("normalizes duplicate identities and skips connections without an external account id", async () => {
-    const service = getContextLayerService();
+    const service = getIntegrationsHubService();
 
     await service.saveOAuthConnection(
       "owner-a@example.com",

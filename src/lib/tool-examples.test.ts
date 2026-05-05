@@ -5,7 +5,7 @@ import {
   buildPermissionNote,
   selectExampleIntegration,
 } from "@/src/lib/tool-examples";
-import type { IntegrationSpec, ToolSpec } from "@/src/types/context-layer";
+import type { IntegrationSpec, ToolSpec } from "@/src/types/integrations-hub";
 
 const buildToolSpec = (overrides?: Partial<ToolSpec>): ToolSpec => ({
   name: "create_page",

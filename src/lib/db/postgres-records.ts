@@ -11,7 +11,7 @@ import type {
   OAuthStateRecord,
   TemporaryGrant,
   UserApiKeyRecord,
-} from "@/src/types/context-layer";
+} from "@/src/types/integrations-hub";
 
 export type PostgresRow = Record<string, unknown>;
 

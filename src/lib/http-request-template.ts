@@ -1,4 +1,4 @@
-import type { GenericHttpRequestTemplate } from "@/src/types/context-layer";
+import type { GenericHttpRequestTemplate } from "@/src/types/integrations-hub";
 
 const EXACT_TEMPLATE = /^\{\{\s*([a-zA-Z0-9_.]+)\s*\}\}$/;
 const TEMPLATE = /\{\{\s*([a-zA-Z0-9_.]+)\s*\}\}/g;

@@ -13,9 +13,9 @@ vi.mock("@neondatabase/serverless", () => ({ neon: () => getActiveSql() }));
 
 import { POST } from "./route";
 
-import { getContextLayerRepository } from "@/src/lib/core/runtime";
+import { getIntegrationsHubRepository } from "@/src/lib/core/runtime";
 import { createTestRepository, getActiveSql } from "@/src/lib/db/pglite-test-utils";
-import type { IntegrationSpec } from "@/src/types/context-layer";
+import type { IntegrationSpec } from "@/src/types/integrations-hub";
 
 let testCleanup: () => Promise<void>;
 
@@ -30,11 +30,11 @@ beforeEach(async () => {
 
 const resetRuntime = () => {
   const runtime = globalThis as typeof globalThis & {
-    contextLayerRepository?: unknown;
-    contextLayerService?: unknown;
+    integrationsHubRepository?: unknown;
+    integrationsHubService?: unknown;
   };
-  delete runtime.contextLayerRepository;
-  delete runtime.contextLayerService;
+  delete runtime.integrationsHubRepository;
+  delete runtime.integrationsHubService;
 };
 
 const createIntegration = (
@@ -61,7 +61,7 @@ afterEach(async () => {
 
 describe("POST /api/integrations/disable-unused", () => {
   it("disables only enabled tools whose tracked usage is older than the cutoff", async () => {
-    const repository = getContextLayerRepository();
+    const repository = getIntegrationsHubRepository();
 
     await repository.upsertOwnerIntegration(
       "user@example.com",

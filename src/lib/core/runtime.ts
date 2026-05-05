@@ -3,34 +3,34 @@ import { McpAdapter } from "@/src/lib/adapters/mcp-adapter";
 import { MockAdapter } from "@/src/lib/adapters/mock-adapter";
 import { AdapterRegistry } from "@/src/lib/core/adapter-registry";
 import type { ContextRepository } from "@/src/lib/core/repository";
-import { ContextLayerService } from "@/src/lib/core/service";
+import { IntegrationsHubService } from "@/src/lib/core/service";
 import { PostgresRepository } from "@/src/lib/db/postgres-repository";
 import { NotificationPublisher } from "@/src/lib/notifications/publisher";
-import { assertContextLayerStorageAvailable, hasPersistentContextLayerStorage } from "@/src/lib/persistence";
+import { assertIntegrationsHubStorageAvailable, hasPersistentIntegrationsHubStorage } from "@/src/lib/persistence";
 
-const globalForContextLayer = globalThis as typeof globalThis & {
-  contextLayerRepository?: ContextRepository;
-  contextLayerService?: ContextLayerService;
+const globalForIntegrationsHub = globalThis as typeof globalThis & {
+  integrationsHubRepository?: ContextRepository;
+  integrationsHubService?: IntegrationsHubService;
 };
 
-export const getContextLayerRepository = () => {
-  if (!globalForContextLayer.contextLayerRepository) {
-    if (hasPersistentContextLayerStorage()) {
-      globalForContextLayer.contextLayerRepository = new PostgresRepository();
+export const getIntegrationsHubRepository = () => {
+  if (!globalForIntegrationsHub.integrationsHubRepository) {
+    if (hasPersistentIntegrationsHubStorage()) {
+      globalForIntegrationsHub.integrationsHubRepository = new PostgresRepository();
     } else {
       // No DB configured — hard-fail in production/development.
       // Tests inject a PGlite-backed PostgresRepository via the neon mock
       // and set POSTGRES_URL so this branch is never reached in CI.
-      assertContextLayerStorageAvailable();
+      assertIntegrationsHubStorageAvailable();
     }
   }
 
-  return globalForContextLayer.contextLayerRepository!;
+  return globalForIntegrationsHub.integrationsHubRepository!;
 };
 
-export const getContextLayerService = () => {
-  if (!globalForContextLayer.contextLayerService) {
-    const repository = getContextLayerRepository();
+export const getIntegrationsHubService = () => {
+  if (!globalForIntegrationsHub.integrationsHubService) {
+    const repository = getIntegrationsHubRepository();
 
     const registry = new AdapterRegistry({
       http: new HttpAdapter(),
@@ -38,12 +38,12 @@ export const getContextLayerService = () => {
       mock: new MockAdapter(),
     });
 
-    globalForContextLayer.contextLayerService = new ContextLayerService(
+    globalForIntegrationsHub.integrationsHubService = new IntegrationsHubService(
       repository,
       registry,
       new NotificationPublisher(repository),
     );
   }
 
-  return globalForContextLayer.contextLayerService;
+  return globalForIntegrationsHub.integrationsHubService;
 };

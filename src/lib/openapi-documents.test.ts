@@ -4,7 +4,7 @@ import { buildAdminOpenApiDocument } from "@/src/lib/admin-openapi";
 import { buildContextOpenApiDocument } from "@/src/lib/context-openapi";
 import { errorResponseSchema, toOpenApiSchema } from "@/src/lib/openapi/shared";
 import { buildUserOpenApiDocument } from "@/src/lib/user-openapi";
-import type { IntegrationSpec } from "@/src/types/context-layer";
+import type { IntegrationSpec } from "@/src/types/integrations-hub";
 
 const integrations: IntegrationSpec[] = [
   {

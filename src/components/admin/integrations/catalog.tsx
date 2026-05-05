@@ -10,7 +10,7 @@ import type {
   ManagedConnectorOption,
   ManagedConnectorDefinition,
   OAuthProviderCatalogOption,
-} from "@/src/types/context-layer";
+} from "@/src/types/integrations-hub";
 
 interface IntegrationsCatalogProps {
   providerCatalog: OAuthProviderCatalogOption[];

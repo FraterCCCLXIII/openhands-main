@@ -1,4 +1,4 @@
-import { ContextLayerError } from "@/src/lib/core/errors";
+import { IntegrationsHubError } from "@/src/lib/core/errors";
 
 export type RouteLogDetails = Record<string, unknown>;
 
@@ -13,7 +13,7 @@ export const logRouteInfo = (route: string, event: string, details: RouteLogDeta
 };
 
 export const summarizeRouteError = (error: unknown): RouteLogDetails => {
-  if (error instanceof ContextLayerError) {
+  if (error instanceof IntegrationsHubError) {
     return {
       errorName: error.name,
       errorMessage: error.message,

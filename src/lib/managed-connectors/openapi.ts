@@ -1,10 +1,10 @@
-import { ContextLayerError } from "@/src/lib/core/errors";
+import { IntegrationsHubError } from "@/src/lib/core/errors";
 import type {
   AuthStrategy,
   GenericHttpRequestTemplate,
   HttpRequestContentType,
   ManagedConnectorToolDefinition,
-} from "@/src/types/context-layer";
+} from "@/src/types/integrations-hub";
 
 type HttpMethod = "get" | "post" | "put" | "patch" | "delete";
 
@@ -75,7 +75,7 @@ const normalizeToolName = (value: string) => {
 
 const resolveLocalRef = <T>(ref: string, document: OpenApiDocument): T => {
   if (!ref.startsWith("#/")) {
-    throw new ContextLayerError(`Unsupported OpenAPI reference '${ref}'.`, 500);
+    throw new IntegrationsHubError(`Unsupported OpenAPI reference '${ref}'.`, 500);
   }
 
   const resolved = ref
@@ -90,7 +90,7 @@ const resolveLocalRef = <T>(ref: string, document: OpenApiDocument): T => {
     }, document as unknown);
 
   if (resolved === undefined) {
-    throw new ContextLayerError(`Could not resolve OpenAPI reference '${ref}'.`, 500);
+    throw new IntegrationsHubError(`Could not resolve OpenAPI reference '${ref}'.`, 500);
   }
 
   return resolved as T;
@@ -292,7 +292,7 @@ export const generateManagedConnectorToolsFromOpenApi = async ({
   });
 
   if (!response.ok) {
-    throw new ContextLayerError(
+    throw new IntegrationsHubError(
       `Failed to load OpenAPI schema from ${openApiUrl} (${response.status}).`,
       502,
     );
@@ -300,7 +300,7 @@ export const generateManagedConnectorToolsFromOpenApi = async ({
 
   const document = (await response.json()) as OpenApiDocument;
   if (!document.paths || !isObject(document.paths)) {
-    throw new ContextLayerError(
+    throw new IntegrationsHubError(
       `OpenAPI schema at ${openApiUrl} does not contain any paths.`,
       500,
     );
@@ -340,7 +340,7 @@ export const generateManagedConnectorToolsFromOpenApi = async ({
   }
 
   if (tools.length === 0) {
-    throw new ContextLayerError(
+    throw new IntegrationsHubError(
       `OpenAPI schema at ${openApiUrl} did not produce any supported HTTP tools.`,
       500,
     );

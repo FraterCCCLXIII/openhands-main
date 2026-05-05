@@ -17,7 +17,7 @@ vi.mock("@/src/lib/integrations/discovery", () => ({
 }));
 
 vi.mock("@/src/lib/core/runtime", () => ({
-  getContextLayerRepository: () => ({ mocked: true }),
+  getIntegrationsHubRepository: () => ({ mocked: true }),
 }));
 
 import { POST } from "./route";

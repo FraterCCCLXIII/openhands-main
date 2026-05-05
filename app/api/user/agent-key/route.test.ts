@@ -15,18 +15,18 @@ vi.mock("@neondatabase/serverless", () => ({ neon: () => getActiveSql() }));
 
 import { GET, POST } from "./route";
 
-import { getContextLayerService } from "@/src/lib/core/runtime";
+import { getIntegrationsHubService } from "@/src/lib/core/runtime";
 import { createTestRepository, getActiveSql } from "@/src/lib/db/pglite-test-utils";
 
 let testCleanup: () => Promise<void>;
 
 const resetRuntime = () => {
   const runtime = globalThis as typeof globalThis & {
-    contextLayerRepository?: unknown;
-    contextLayerService?: unknown;
+    integrationsHubRepository?: unknown;
+    integrationsHubService?: unknown;
   };
-  delete runtime.contextLayerRepository;
-  delete runtime.contextLayerService;
+  delete runtime.integrationsHubRepository;
+  delete runtime.integrationsHubService;
 };
 
 beforeAll(() => {
@@ -47,7 +47,7 @@ afterEach(async () => {
 
 describe("/api/user/agent-key", () => {
   it("returns the current user's agent key to the authenticated session", async () => {
-    const service = getContextLayerService();
+    const service = getIntegrationsHubService();
     const created = await service.getOrCreateAgentApiKey("user@example.com");
 
     const response = await GET();
@@ -64,7 +64,7 @@ describe("/api/user/agent-key", () => {
   });
 
   it("rotates the current user's agent key and invalidates the previous key", async () => {
-    const service = getContextLayerService();
+    const service = getIntegrationsHubService();
     const first = await service.getOrCreateAgentApiKey("user@example.com");
 
     const response = await POST();

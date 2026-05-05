@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { buildAgentSkillMarkdown } from "@/src/lib/agent-skill";
-import type { IntegrationSpec } from "@/src/types/context-layer";
+import type { IntegrationSpec } from "@/src/types/integrations-hub";
 
 const integrations: IntegrationSpec[] = [
   {
@@ -75,15 +75,15 @@ const integrations: IntegrationSpec[] = [
 describe("agent-skill", () => {
   it("renders a SKILL.md document for enabled tools only", () => {
     const markdown = buildAgentSkillMarkdown({
-      baseUrl: "https://context-layer.example.com/",
+      baseUrl: "https://integrations-hub.example.com/",
       integrations,
     });
 
-    expect(markdown).toContain("name: context-layer-profile-tools");
+    expect(markdown).toContain("name: integrations-hub-profile-tools");
     expect(markdown).toContain(
-      "Endpoint pattern: `POST https://context-layer.example.com/api/context/{integrationKey}/{toolName}`",
+      "Endpoint pattern: `POST https://integrations-hub.example.com/api/context/{integrationKey}/{toolName}`",
     );
-    expect(markdown).toContain("Generated tool catalog for the current OpenHands Context Layer profile.");
+    expect(markdown).toContain("Generated tool catalog for the current OpenHands Integrations Hub profile.");
     expect(markdown).toContain("## Available tools (2)");
     expect(markdown).toContain("#### `github.search_repositories`");
     expect(markdown).toContain("#### `github.delete_repository`");
@@ -101,7 +101,7 @@ describe("agent-skill", () => {
     }
 
     const markdown = buildAgentSkillMarkdown({
-      baseUrl: "https://context-layer.example.com",
+      baseUrl: "https://integrations-hub.example.com",
       integrations: [
         {
           ...firstIntegration,

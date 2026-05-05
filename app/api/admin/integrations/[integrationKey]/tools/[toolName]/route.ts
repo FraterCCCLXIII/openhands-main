@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import { fromAdminApiError, authenticateAdminApiRequest } from "@/src/lib/admin-api-auth";
-import { ContextLayerError } from "@/src/lib/core/errors";
+import { IntegrationsHubError } from "@/src/lib/core/errors";
 
 const updateToolSchema = z.object({
   accessMode: z.enum(["enabled", "disabled", "approval_required"]),
@@ -20,7 +20,7 @@ export async function PATCH(
     await authenticateAdminApiRequest(request);
     updateToolSchema.parse(await request.json());
     await params;
-    throw new ContextLayerError(DEPRECATED_ADMIN_TOOL_ACCESS_MESSAGE, 410);
+    throw new IntegrationsHubError(DEPRECATED_ADMIN_TOOL_ACCESS_MESSAGE, 410);
   } catch (error) {
     return fromAdminApiError(error);
   }

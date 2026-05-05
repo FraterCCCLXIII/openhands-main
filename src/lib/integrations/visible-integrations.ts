@@ -1,7 +1,7 @@
 import type {
   IntegrationConnectionStatus,
   IntegrationSpec,
-} from "@/src/types/context-layer";
+} from "@/src/types/integrations-hub";
 
 export const filterIntegrationsVisibleToOwner = (
   integrations: IntegrationSpec[],

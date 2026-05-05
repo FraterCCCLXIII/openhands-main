@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 import { z } from "zod";
 
 import { nowIso } from "@/src/lib/core/date";
-import type { NotificationRecord } from "@/src/types/context-layer";
+import type { NotificationRecord } from "@/src/types/integrations-hub";
 
 const normalizeOptional = (value?: string) => {
   const trimmed = value?.trim();

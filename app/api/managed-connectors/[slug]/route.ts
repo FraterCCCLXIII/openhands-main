@@ -1,9 +1,9 @@
 import { fromError, ok } from "@/src/lib/api";
 import { isAppAdminEmail } from "@/src/lib/app-admins";
 import { auth } from "@/src/lib/auth";
-import { ContextLayerError } from "@/src/lib/core/errors";
-import { getContextLayerService } from "@/src/lib/core/runtime";
-import { hasPersistentContextLayerStorage } from "@/src/lib/persistence";
+import { IntegrationsHubError } from "@/src/lib/core/errors";
+import { getIntegrationsHubService } from "@/src/lib/core/runtime";
+import { hasPersistentIntegrationsHubStorage } from "@/src/lib/persistence";
 
 export async function DELETE(
   _request: Request,
@@ -12,18 +12,18 @@ export async function DELETE(
   try {
     const session = await auth();
     if (!isAppAdminEmail(session?.user?.email ?? undefined)) {
-      throw new ContextLayerError("Only app administrators can delete managed connectors.", 403);
+      throw new IntegrationsHubError("Only app administrators can delete managed connectors.", 403);
     }
 
-    if (process.env.NODE_ENV !== "test" && !hasPersistentContextLayerStorage()) {
-      throw new ContextLayerError(
+    if (process.env.NODE_ENV !== "test" && !hasPersistentIntegrationsHubStorage()) {
+      throw new IntegrationsHubError(
         "Managed connector deletion requires POSTGRES_URL or DATABASE_URL. This deployment has no persistent database configured.",
         503,
       );
     }
 
     const { slug } = await params;
-    return ok(await getContextLayerService().deleteManagedConnector(slug));
+    return ok(await getIntegrationsHubService().deleteManagedConnector(slug));
   } catch (error) {
     return fromError(error);
   }

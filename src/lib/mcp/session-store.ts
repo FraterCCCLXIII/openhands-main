@@ -1,8 +1,8 @@
 import { neon } from "@neondatabase/serverless";
 
 import { normalizeAgentIdentityValue } from "@/src/lib/agent-defaults";
-import { hasPersistentContextLayerStorage } from "@/src/lib/persistence";
-import type { AccessRequestAgentData } from "@/src/types/context-layer";
+import { hasPersistentIntegrationsHubStorage } from "@/src/lib/persistence";
+import type { AccessRequestAgentData } from "@/src/types/integrations-hub";
 
 export type McpSessionDefaults = {
   agentId: string | null;
@@ -22,7 +22,7 @@ const SESSION_TTL_SQL = "INTERVAL '12 hours'";
 const inMemorySessions = new Map<string, McpSessionRecord>();
 
 const shouldUsePersistentSessionStore = () =>
-  hasPersistentContextLayerStorage() && process.env.NODE_ENV !== "test";
+  hasPersistentIntegrationsHubStorage() && process.env.NODE_ENV !== "test";
 
 const getSql = () => {
   const databaseUrl = process.env.POSTGRES_URL ?? process.env.DATABASE_URL;

@@ -1,4 +1,4 @@
-import { ContextLayerError } from "@/src/lib/core/errors";
+import { IntegrationsHubError } from "@/src/lib/core/errors";
 import type { ContextRepository } from "@/src/lib/core/repository";
 import { listOAuthProviderCatalog } from "@/src/lib/integrations/oauth-provider-catalog";
 import {
@@ -20,7 +20,7 @@ import type {
   ManagedConnectorToolDefinition,
   ManagedConnectorRecord,
   OAuthProviderCatalogOption,
-} from "@/src/types/context-layer";
+} from "@/src/types/integrations-hub";
 
 interface ConnectorCredentialDefaults {
   slug: string;
@@ -392,7 +392,7 @@ export const resolveManagedConnectorCredentials = (
       const accessToken =
         (input.credentials.accessToken as string | undefined)?.trim() ?? "";
       if (!accessToken) {
-        throw new ContextLayerError(
+        throw new IntegrationsHubError(
           `${connector.credentialLabel} is required to use the ${connector.name} connector.`,
           400,
         );
@@ -402,7 +402,7 @@ export const resolveManagedConnectorCredentials = (
     case "api_key": {
       const secret = (input.credentials.secret as string | undefined)?.trim() ?? "";
       if (!secret) {
-        throw new ContextLayerError(
+        throw new IntegrationsHubError(
           `${connector.credentialLabel} is required to use the ${connector.name} connector.`,
           400,
         );
@@ -422,7 +422,7 @@ export const resolveManagedConnectorCredentials = (
       const password =
         (input.credentials.password as string | undefined)?.trim() ?? "";
       if (!username || !password) {
-        throw new ContextLayerError(
+        throw new IntegrationsHubError(
           `${connector.credentialLabel} is required to use the ${connector.name} connector.`,
           400,
         );
@@ -430,7 +430,7 @@ export const resolveManagedConnectorCredentials = (
       return { username, password };
     }
     default:
-      throw new ContextLayerError(
+      throw new IntegrationsHubError(
         `Managed connector '${connector.slug}' uses unsupported auth strategy '${connector.authStrategy}'.`,
         400,
       );

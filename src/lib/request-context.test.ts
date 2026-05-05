@@ -39,7 +39,7 @@ describe("request-context", () => {
 
   it("does not trust forwarded hosts when gating DISABLE_AUTH access", () => {
     const spoofedHeaders = new Headers({
-      host: "context-layer.example.com",
+      host: "integrations-hub.example.com",
       "x-forwarded-host": "localhost:3000",
     });
 
@@ -54,11 +54,11 @@ describe("request-context", () => {
 
     const proxiedHeaders = new Headers({
       host: "localhost:12000",
-      "x-forwarded-host": "context-layer.example.com",
+      "x-forwarded-host": "integrations-hub.example.com",
       "x-forwarded-proto": "https",
     });
     expect(getRequestOrigin(proxiedHeaders)).toBe(
-      "https://context-layer.example.com",
+      "https://integrations-hub.example.com",
     );
   });
 });

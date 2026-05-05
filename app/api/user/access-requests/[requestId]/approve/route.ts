@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import { ok } from "@/src/lib/api";
-import { getContextLayerService } from "@/src/lib/core/runtime";
+import { getIntegrationsHubService } from "@/src/lib/core/runtime";
 import {
   authenticateUserApiRequest,
   fromUserApiError,
@@ -19,7 +19,7 @@ export async function POST(
     const { ownerId } = await authenticateUserApiRequest(request);
     const payload = approveSchema.parse(await request.json());
     const { requestId } = await params;
-    const service = getContextLayerService();
+    const service = getIntegrationsHubService();
 
     return ok(
       await service.approveOwnerAccessRequest(

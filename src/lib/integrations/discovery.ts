@@ -1,5 +1,5 @@
 import { decryptCredentials } from "@/src/lib/credential-crypto";
-import { ContextLayerError } from "@/src/lib/core/errors";
+import { IntegrationsHubError } from "@/src/lib/core/errors";
 import type { ContextRepository } from "@/src/lib/core/repository";
 import { buildMcpHeaders, runMcpClientOperation } from "@/src/lib/mcp-client";
 import { getMcpTransportOrder } from "@/src/lib/mcp-transport-policy";
@@ -21,7 +21,7 @@ import type {
   ManagedConnectorOption,
   ToolSpec,
   IntegrationProvider,
-} from "@/src/types/context-layer";
+} from "@/src/types/integrations-hub";
 
 const compactRecord = (record: Record<string, unknown>) =>
   Object.fromEntries(
@@ -112,7 +112,7 @@ const resolveManagedOAuthDiscoveryCredentials = async (
   connectorName: string,
 ) => {
   if (!ownerId) {
-    throw new ContextLayerError(
+    throw new IntegrationsHubError(
       `Sign in before discovering tools for ${connectorName}.`,
       401,
     );
@@ -120,7 +120,7 @@ const resolveManagedOAuthDiscoveryCredentials = async (
 
   const connection = await repository.getIntegrationConnection(ownerId, integrationKey);
   if (!connection) {
-    throw new ContextLayerError(
+    throw new IntegrationsHubError(
       `Connect ${connectorName} for this user before discovering tools.`,
       403,
     );
@@ -153,7 +153,7 @@ const discoverManagedConnectorIntegration = async (
   if (getManagedConnectorProvider(normalizedConnector) === "mcp") {
     const serverUrl = getManagedConnectorServerUrl(normalizedConnector);
     if (!serverUrl) {
-      throw new ContextLayerError(
+      throw new IntegrationsHubError(
         `Managed MCP connector '${normalizedConnector.slug}' is missing a serverUrl.`,
         500,
       );
@@ -207,7 +207,7 @@ const discoverManagedConnectorIntegration = async (
 
   const apiBaseUrl = getManagedConnectorApiBaseUrl(normalizedConnector);
   if (!apiBaseUrl) {
-    throw new ContextLayerError(
+    throw new IntegrationsHubError(
       `Managed HTTP connector '${normalizedConnector.slug}' is missing an apiBaseUrl.`,
       500,
     );
@@ -284,7 +284,7 @@ const discoverManagedConnectorSelection = async (
   if (options.repository) {
     const storedConnector = await options.repository.getManagedConnector(slug);
     if (storedConnector && !storedConnector.enabled) {
-      throw new ContextLayerError(`Unknown managed connector '${slug}'.`, 404);
+      throw new IntegrationsHubError(`Unknown managed connector '${slug}'.`, 404);
     }
   }
 
@@ -305,7 +305,7 @@ const discoverManagedConnectorSelection = async (
     return defaultConnectorResult;
   }
 
-  throw new ContextLayerError(`Unknown managed connector '${slug}'.`, 404);
+  throw new IntegrationsHubError(`Unknown managed connector '${slug}'.`, 404);
 };
 
 const discoverMcpIntegration = async (
@@ -313,7 +313,7 @@ const discoverMcpIntegration = async (
 ): Promise<IntegrationDiscoveryResult> => {
   const serverUrl = getOptionalTrimmedString(input.config, "serverUrl");
   if (!serverUrl) {
-    throw new ContextLayerError(
+    throw new IntegrationsHubError(
       "A serverUrl is required to discover MCP integrations.",
       400,
     );

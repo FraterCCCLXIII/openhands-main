@@ -21,7 +21,7 @@ import {
   toOpenApiSchema,
 } from "@/src/lib/openapi/shared";
 import { selectExampleIntegration } from "@/src/lib/tool-examples";
-import type { IntegrationSpec } from "@/src/types/context-layer";
+import type { IntegrationSpec } from "@/src/types/integrations-hub";
 
 const updateToolAccessRequestSchema = z.object({
   accessMode: toolAccessModeSchema,
@@ -235,7 +235,7 @@ export const buildUserOpenApiDocument = ({
   return {
     openapi: OPENAPI_VERSION,
     info: {
-      title: "Context Layer User REST API",
+      title: "Integrations Hub User REST API",
       version: "1.0.0",
       description:
         "OpenAPI schema for the authenticated user's dashboard-equivalent REST API endpoints.",

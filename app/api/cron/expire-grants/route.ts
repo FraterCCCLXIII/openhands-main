@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { getContextLayerService } from "@/src/lib/core/runtime";
+import { getIntegrationsHubService } from "@/src/lib/core/runtime";
 import { fromError } from "@/src/lib/api";
 
 export async function GET(request: Request) {
@@ -18,7 +18,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ detail: "Unauthorized" }, { status: 401 });
     }
 
-    const service = getContextLayerService();
+    const service = getIntegrationsHubService();
     const purged = await service.purgeExpiredGrants();
     return NextResponse.json({ purged });
   } catch (error) {

@@ -27,18 +27,18 @@ vi.mock("@neondatabase/serverless", () => ({ neon: () => getActiveSql() }));
 
 import { POST } from "./route";
 
-import { getContextLayerService } from "@/src/lib/core/runtime";
+import { getIntegrationsHubService } from "@/src/lib/core/runtime";
 import { createTestRepository, getActiveSql } from "@/src/lib/db/pglite-test-utils";
 
 let testCleanup: () => Promise<void>;
 
 const resetRuntime = () => {
   const runtime = globalThis as typeof globalThis & {
-    contextLayerRepository?: unknown;
-    contextLayerService?: unknown;
+    integrationsHubRepository?: unknown;
+    integrationsHubService?: unknown;
   };
-  delete runtime.contextLayerRepository;
-  delete runtime.contextLayerService;
+  delete runtime.integrationsHubRepository;
+  delete runtime.integrationsHubService;
 };
 
 beforeAll(() => {
@@ -61,7 +61,7 @@ afterEach(async () => {
 describe("POST /api/managed-connectors/[slug]/functions", () => {
   it("re-indexes tools for allowlisted app administrators while preserving existing access ceilings", async () => {
     vi.stubEnv("APP_ADMIN_EMAILS", "admin@example.com");
-    const service = getContextLayerService();
+    const service = getIntegrationsHubService();
     await service.upsertManagedConnector({
       slug: "notion",
       name: "Notion",

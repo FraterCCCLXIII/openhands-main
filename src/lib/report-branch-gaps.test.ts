@@ -10,27 +10,27 @@ const {
 } = branchGapReport;
 
 describe("branch coverage reporting", () => {
-  const rootDir = "/workspace/project/context-layer";
+  const rootDir = "/workspace/project/integrations-hub";
   const coverageSummary = {
     total: {
       branches: { total: 100, covered: 80, skipped: 0, pct: 80 },
     },
-    "/workspace/project/context-layer/app/page.tsx": {
+    "/workspace/project/integrations-hub/app/page.tsx": {
       branches: { total: 4, covered: 3, skipped: 0, pct: 75 },
     },
-    "/workspace/project/context-layer/app/api/context/route.ts": {
+    "/workspace/project/integrations-hub/app/api/context/route.ts": {
       branches: { total: 12, covered: 7, skipped: 0, pct: 58.33 },
     },
-    "/workspace/project/context-layer/src/components/dashboard/workspace.tsx": {
+    "/workspace/project/integrations-hub/src/components/dashboard/workspace.tsx": {
       branches: { total: 20, covered: 12, skipped: 0, pct: 60 },
     },
-    "/workspace/project/context-layer/src/lib/core/service.ts": {
+    "/workspace/project/integrations-hub/src/lib/core/service.ts": {
       branches: { total: 30, covered: 15, skipped: 0, pct: 50 },
     },
-    "/workspace/project/context-layer/src/lib/db/pglite-test-utils.ts": {
+    "/workspace/project/integrations-hub/src/lib/db/pglite-test-utils.ts": {
       branches: { total: 20, covered: 20, skipped: 0, pct: 100 },
     },
-    "/workspace/project/context-layer/src/lib/core/service.test.ts": {
+    "/workspace/project/integrations-hub/src/lib/core/service.test.ts": {
       branches: { total: 10, covered: 0, skipped: 0, pct: 0 },
     },
   };

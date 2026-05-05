@@ -1,6 +1,6 @@
 import { ok } from "@/src/lib/api";
 import { integrationCreateSchema } from "@/src/lib/core/schema";
-import { getContextLayerService } from "@/src/lib/core/runtime";
+import { getIntegrationsHubService } from "@/src/lib/core/runtime";
 import { assertUserCanSaveIntegration } from "@/src/lib/integrations/user-connector-guardrails";
 import {
   authenticateUserApiRequest,
@@ -10,7 +10,7 @@ import {
 export async function GET(request: Request) {
   try {
     const { ownerId } = await authenticateUserApiRequest(request);
-    const service = getContextLayerService();
+    const service = getIntegrationsHubService();
 
     return ok(await service.listOwnerIntegrations(ownerId));
   } catch (error) {
@@ -23,7 +23,7 @@ export async function POST(request: Request) {
     const identity = await authenticateUserApiRequest(request);
     const payload = integrationCreateSchema.parse(await request.json());
     assertUserCanSaveIntegration(identity.isAdmin, payload);
-    const service = getContextLayerService();
+    const service = getIntegrationsHubService();
 
     return ok(await service.registerOwnerIntegration(identity.ownerId, payload));
   } catch (error) {

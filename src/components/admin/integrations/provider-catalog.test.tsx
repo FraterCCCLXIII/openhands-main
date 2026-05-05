@@ -21,7 +21,7 @@ import {
 import type {
   ManagedConnectorOption,
   OAuthProviderCatalogOption,
-} from "@/src/types/context-layer";
+} from "@/src/types/integrations-hub";
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -41,7 +41,7 @@ const readyManagedConnectors: ManagedConnectorOption[] = [
   },
 ];
 
-const oauthCallbackBaseUrl = "https://openhands-context-layer.vercel.app/api/oauth";
+const oauthCallbackBaseUrl = "https://openhands-integrations-hub.vercel.app/api/oauth";
 
 const providerCatalog: OAuthProviderCatalogOption[] = [
   {

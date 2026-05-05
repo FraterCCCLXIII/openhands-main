@@ -2,7 +2,7 @@ import { z } from "zod";
 
 import { fromAdminApiError, authenticateAdminApiRequest } from "@/src/lib/admin-api-auth";
 import { ok } from "@/src/lib/api";
-import { getContextLayerRepository } from "@/src/lib/core/runtime";
+import { getIntegrationsHubRepository } from "@/src/lib/core/runtime";
 import { discoverIntegration } from "@/src/lib/integrations/discovery";
 
 const integrationDiscoverySchema = z.object({
@@ -20,7 +20,7 @@ export async function POST(request: Request) {
     return ok(
       await discoverIntegration(payload, {
         baseUrl,
-        repository: getContextLayerRepository(),
+        repository: getIntegrationsHubRepository(),
         ownerId: identity.adminOwnerId,
       }),
     );

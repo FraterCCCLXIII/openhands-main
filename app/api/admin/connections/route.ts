@@ -2,7 +2,7 @@ import { z } from "zod";
 
 import { fromAdminApiError, authenticateAdminApiRequest } from "@/src/lib/admin-api-auth";
 import { ok } from "@/src/lib/api";
-import { getContextLayerService } from "@/src/lib/core/runtime";
+import { getIntegrationsHubService } from "@/src/lib/core/runtime";
 
 const adminConnectionsQuerySchema = z.object({
   ownerId: z.string().optional(),
@@ -16,7 +16,7 @@ const adminConnectionsQuerySchema = z.object({
 export async function GET(request: Request) {
   try {
     await authenticateAdminApiRequest(request);
-    const service = getContextLayerService();
+    const service = getIntegrationsHubService();
     const filters = adminConnectionsQuerySchema.parse(
       Object.fromEntries(new URL(request.url).searchParams.entries()),
     );

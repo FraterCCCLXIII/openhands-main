@@ -1,5 +1,5 @@
-import type { ToolSpec, IntegrationProvider, IntegrationSpec } from "@/src/types/context-layer";
-import { ContextLayerError } from "@/src/lib/core/errors";
+import type { ToolSpec, IntegrationProvider, IntegrationSpec } from "@/src/types/integrations-hub";
+import { IntegrationsHubError } from "@/src/lib/core/errors";
 
 export interface AdapterInvocationInput {
   agentId: string | null;
@@ -18,7 +18,7 @@ export class AdapterRegistry {
   async invoke(provider: IntegrationProvider, input: AdapterInvocationInput) {
     const adapter = this.adapters[provider];
     if (!adapter) {
-      throw new ContextLayerError(`No adapter configured for provider '${provider}'`, 501);
+      throw new IntegrationsHubError(`No adapter configured for provider '${provider}'`, 501);
     }
 
     return adapter.invoke(input);
