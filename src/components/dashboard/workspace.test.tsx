@@ -594,223 +594,243 @@ describe("DashboardWorkspace", () => {
     );
   });
 
-  it("shows a combined keys card with connection details on the top-level agent connection route", async () => {
-    usePathnameMock.mockReturnValue("/agent-connection");
+  describe("on the top-level agent connection route", () => {
+    const renderAgentConnectionRoute = async (currentRoot: Root) => {
+      usePathnameMock.mockReturnValue("/agent-connection");
 
-    await act(async () => {
-      root.render(
-        <QueryClientProvider client={queryClient}>
-          <DashboardWorkspace
-            initialIntegrations={[]}
-            initialAccessRequests={[]}
-            currentUser={{ name: "Admin User", email: "admin@example.com" }}
-            contextApiBaseUrl="https://example.com"
-            contextApiKey="test-key"
-            userApiKey={{
-              keyPrefix: "clu_12345678",
-              keySuffix: "mnop",
-              createdAt: "2026-03-29T10:00:00.000Z",
-              updatedAt: "2026-03-29T10:00:00.000Z",
-            }}
-            adminApiKey={{
-              keyPrefix: "clad_123456",
-              keySuffix: "wxyz",
-              createdAt: "2026-03-29T10:00:00.000Z",
-              updatedAt: "2026-03-29T10:00:00.000Z",
-            }}
-          />
-        </QueryClientProvider>,
+      await act(async () => {
+        currentRoot.render(
+          <QueryClientProvider client={queryClient}>
+            <DashboardWorkspace
+              initialIntegrations={[]}
+              initialAccessRequests={[]}
+              currentUser={{ name: "Admin User", email: "admin@example.com" }}
+              contextApiBaseUrl="https://example.com"
+              contextApiKey="test-key"
+              userApiKey={{
+                keyPrefix: "clu_12345678",
+                keySuffix: "mnop",
+                createdAt: "2026-03-29T10:00:00.000Z",
+                updatedAt: "2026-03-29T10:00:00.000Z",
+              }}
+              adminApiKey={{
+                keyPrefix: "clad_123456",
+                keySuffix: "wxyz",
+                createdAt: "2026-03-29T10:00:00.000Z",
+                updatedAt: "2026-03-29T10:00:00.000Z",
+              }}
+            />
+          </QueryClientProvider>,
+        );
+      });
+    };
+
+    it("renders all three API key sections with their hints", async () => {
+      await renderAgentConnectionRoute(root);
+
+      const text = container.textContent ?? "";
+      expect(text).toContain("API keys");
+      expect(text).toContain("Agent key");
+      expect(text).toContain("Give this key to your agent.");
+      expect(text).toContain("User automation key");
+      expect(text).toContain(
+        "Use this key to programmatically manage user-scoped integrations-hub settings.",
+      );
+      expect(text).toContain("Admin automation key");
+      expect(text).toContain(
+        "Use this key for admin-only QA and operational automation surfaces.",
       );
     });
 
-    const text = container.textContent ?? "";
-    expect(text).toContain("API keys");
-    expect(text).toContain("Agent key");
-    expect(text).toContain("Give this key to your agent.");
-    expect(text).toContain("User automation key");
-    expect(text).toContain(
-      "Use this key to programmatically manage user-scoped integrations-hub settings.",
-    );
-    expect(text).toContain("Admin automation key");
-    expect(text).toContain(
-      "Use this key for admin-only QA and operational automation surfaces.",
-    );
-    expect(text).toContain("Connection details");
-    expect(text).toContain("Agent MCP");
-    expect(text).toContain("MCP config example");
-    expect(text).toContain('"transport": "streamable-http"');
-    expect(text).toContain('"integrations-hub"');
-    expect(text).toContain("Agent REST API");
-    expect(text).toContain("User REST API");
-    expect(text).toContain("Admin REST API");
-    expect(text).toContain("https://example.com/api/mcp");
-    expect(text).toContain("https://example.com/api/context/openapi");
-    expect(text).toContain("https://example.com/api/user/openapi");
-    expect(text).toContain("https://example.com/api/admin/openapi");
-    expect(text).toContain("I have provided you with an API key in $OPENHANDS_INTEGRATIONS_HUB_KEY");
-    expect(text).toContain("I have provided you with a user API key in $OPENHANDS_INTEGRATIONS_HUB_USER_KEY");
-    expect(text).toContain("I have provided you with an admin API key in $OPENHANDS_INTEGRATIONS_HUB_ADMIN_KEY");
-    expect(text).not.toContain("Works with /api/context/*");
-    expect(text).not.toContain("Works with /api/user/*");
-    expect(text).not.toContain("https://example.com/api/context/skill");
-    expect(text).not.toContain("Generate");
-    expect(text).not.toContain("Revoke");
+    it("renders MCP connection details with the config example", async () => {
+      await renderAgentConnectionRoute(root);
 
-    const copyButtons = Array.from(container.querySelectorAll("button")).filter((button) =>
-      button.textContent?.includes("Copy"),
-    );
-    const revealButtons = Array.from(container.querySelectorAll("button")).filter((button) =>
-      button.textContent?.includes("Reveal"),
-    );
+      const text = container.textContent ?? "";
+      expect(text).toContain("Connection details");
+      expect(text).toContain("Agent MCP");
+      expect(text).toContain("MCP config example");
+      expect(text).toContain('"transport": "streamable-http"');
+      expect(text).toContain('"integrations-hub"');
+      expect(text).toContain("https://example.com/api/mcp");
+    });
 
-    expect(copyButtons).toHaveLength(3);
-    expect(revealButtons).toHaveLength(3);
+    it("renders REST API connection details with example agent prompts", async () => {
+      await renderAgentConnectionRoute(root);
+
+      const text = container.textContent ?? "";
+      expect(text).toContain("Agent REST API");
+      expect(text).toContain("User REST API");
+      expect(text).toContain("Admin REST API");
+      expect(text).toContain("https://example.com/api/context/openapi");
+      expect(text).toContain("https://example.com/api/user/openapi");
+      expect(text).toContain("https://example.com/api/admin/openapi");
+      expect(text).toContain(
+        "I have provided you with an API key in $OPENHANDS_INTEGRATIONS_HUB_KEY",
+      );
+      expect(text).toContain(
+        "I have provided you with a user API key in $OPENHANDS_INTEGRATIONS_HUB_USER_KEY",
+      );
+      expect(text).toContain(
+        "I have provided you with an admin API key in $OPENHANDS_INTEGRATIONS_HUB_ADMIN_KEY",
+      );
+      expect(text).not.toContain("Works with /api/context/*");
+      expect(text).not.toContain("Works with /api/user/*");
+      expect(text).not.toContain("https://example.com/api/context/skill");
+      expect(text).not.toContain("Generate");
+      expect(text).not.toContain("Revoke");
+    });
+
+    it("shows three copy and three reveal buttons, one per key type", async () => {
+      await renderAgentConnectionRoute(root);
+
+      const copyButtons = Array.from(container.querySelectorAll("button")).filter((button) =>
+        button.textContent?.includes("Copy"),
+      );
+      const revealButtons = Array.from(container.querySelectorAll("button")).filter((button) =>
+        button.textContent?.includes("Reveal"),
+      );
+
+      expect(copyButtons).toHaveLength(3);
+      expect(revealButtons).toHaveLength(3);
+    });
   });
 
-  it("shows the integration catalog from the top-level integrations route", async () => {
-    usePathnameMock.mockReturnValue("/integrations");
-
-    let integrationsState: IntegrationSpec[] = [
-      {
-        key: "github",
-        name: "GitHub",
-        kind: "mcp",
-        provider: "mcp",
-        authStrategy: "bearer",
-        enabled: true,
-        fineGrainedPermissions: true,
-        config: { managedConnectorSlug: "github" },
-        credentials: {},
-        tools: {
-          zetaWrite: {
-            name: "zetaWrite",
-            description: "Disabled write tool",
-            enabled: false,
-            accessMode: "disabled",
-            fineGrainedPermissions: true,
-            defaultScopes: ["repo:write"],
-            executionMode: "provider",
-            config: {},
-          },
-          alphaList: {
-            name: "alphaList",
-            description: "List repositories",
-            enabled: true,
-            accessMode: "enabled",
-            fineGrainedPermissions: true,
-            defaultScopes: ["repo:read"],
-            executionMode: "provider",
-            config: {},
-          },
-          betaReview: {
-            name: "betaReview",
-            description: "Review pull requests",
-            enabled: true,
-            accessMode: "approval_required",
-            fineGrainedPermissions: true,
-            defaultScopes: ["pull_requests:write"],
-            executionMode: "provider",
-            config: {},
-          },
+  describe("integration catalog on the top-level integrations route", () => {
+    const buildGitHubIntegration = (): IntegrationSpec => ({
+      key: "github",
+      name: "GitHub",
+      kind: "mcp",
+      provider: "mcp",
+      authStrategy: "bearer",
+      enabled: true,
+      fineGrainedPermissions: true,
+      config: { managedConnectorSlug: "github" },
+      credentials: {},
+      tools: {
+        zetaWrite: {
+          name: "zetaWrite",
+          description: "Disabled write tool",
+          enabled: false,
+          accessMode: "disabled",
+          fineGrainedPermissions: true,
+          defaultScopes: ["repo:write"],
+          executionMode: "provider",
+          config: {},
+        },
+        alphaList: {
+          name: "alphaList",
+          description: "List repositories",
+          enabled: true,
+          accessMode: "enabled",
+          fineGrainedPermissions: true,
+          defaultScopes: ["repo:read"],
+          executionMode: "provider",
+          config: {},
+        },
+        betaReview: {
+          name: "betaReview",
+          description: "Review pull requests",
+          enabled: true,
+          accessMode: "approval_required",
+          fineGrainedPermissions: true,
+          defaultScopes: ["pull_requests:write"],
+          executionMode: "provider",
+          config: {},
         },
       },
-    ];
+    });
 
-    fetchMock.mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
-      const url = typeof input === "string" ? input : input.toString();
-      const method = init?.method ?? "GET";
+    const renderIntegrationCatalog = async () => {
+      usePathnameMock.mockReturnValue("/integrations");
 
-      if (
-        url === "/api/case-by-case-approvals" ||
-        url === "/api/notifications" ||
-        url === "/api/integrations/managed-connectors"
-      ) {
-        return new Response(
-          JSON.stringify(
-            url === "/api/integrations/managed-connectors" ? managedConnectors : [],
-          ),
-          {
-            status: 200,
-            headers: { "Content-Type": "application/json" },
-          },
-        );
-      }
+      let integrationsState: IntegrationSpec[] = [buildGitHubIntegration()];
 
-      if (url === "/api/integrations" && method === "GET") {
-        return new Response(JSON.stringify(integrationsState), {
-          status: 200,
-          headers: { "Content-Type": "application/json" },
-        });
-      }
+      fetchMock.mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
+        const url = typeof input === "string" ? input : input.toString();
+        const method = init?.method ?? "GET";
 
-      if (url === "/api/integrations/github/tools/zetaWrite" && method === "PATCH") {
-        const payload = JSON.parse(String(init?.body)) as {
-          accessMode: "enabled" | "disabled" | "approval_required";
-        };
-        integrationsState = integrationsState.map((integration) => {
-          const zetaWriteTool = integration.tools["zetaWrite"];
-          if (!zetaWriteTool) {
-            return integration;
-          }
-
-          return {
-            ...integration,
-            tools: {
-              ...integration.tools,
-              zetaWrite: {
-                ...zetaWriteTool,
-                accessMode: payload.accessMode,
-                enabled: payload.accessMode !== "disabled",
-              },
+        if (
+          url === "/api/case-by-case-approvals" ||
+          url === "/api/notifications" ||
+          url === "/api/integrations/managed-connectors"
+        ) {
+          return new Response(
+            JSON.stringify(
+              url === "/api/integrations/managed-connectors" ? managedConnectors : [],
+            ),
+            {
+              status: 200,
+              headers: { "Content-Type": "application/json" },
             },
-          };
-        });
+          );
+        }
 
-        const updatedIntegration = integrationsState[0];
-        return new Response(
-          JSON.stringify(updatedIntegration?.tools["zetaWrite"] ?? null),
-          {
+        if (url === "/api/integrations" && method === "GET") {
+          return new Response(JSON.stringify(integrationsState), {
             status: 200,
             headers: { "Content-Type": "application/json" },
-          },
+          });
+        }
+
+        if (url === "/api/integrations/github/tools/zetaWrite" && method === "PATCH") {
+          const payload = JSON.parse(String(init?.body)) as {
+            accessMode: "enabled" | "disabled" | "approval_required";
+          };
+          integrationsState = integrationsState.map((integration) => {
+            const zetaWriteTool = integration.tools["zetaWrite"];
+            if (!zetaWriteTool) {
+              return integration;
+            }
+
+            return {
+              ...integration,
+              tools: {
+                ...integration.tools,
+                zetaWrite: {
+                  ...zetaWriteTool,
+                  accessMode: payload.accessMode,
+                  enabled: payload.accessMode !== "disabled",
+                },
+              },
+            };
+          });
+
+          const updatedIntegration = integrationsState[0];
+          return new Response(
+            JSON.stringify(updatedIntegration?.tools["zetaWrite"] ?? null),
+            {
+              status: 200,
+              headers: { "Content-Type": "application/json" },
+            },
+          );
+        }
+
+        throw new Error(`Unexpected fetch: ${method} ${url}`);
+      });
+
+      await act(async () => {
+        root.render(
+          <QueryClientProvider client={queryClient}>
+            <DashboardWorkspace
+              initialIntegrations={integrationsState}
+              initialAccessRequests={[]}
+              currentUser={{ name: "Admin User", email: "admin@example.com" }}
+              contextApiBaseUrl="https://example.com"
+              contextApiKey="test-key"
+            />
+          </QueryClientProvider>,
         );
-      }
+      });
 
-      throw new Error(`Unexpected fetch: ${method} ${url}`);
-    });
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 10));
+      });
+    };
 
-    await act(async () => {
-      root.render(
-        <QueryClientProvider client={queryClient}>
-          <DashboardWorkspace
-            initialIntegrations={integrationsState}
-            initialAccessRequests={[]}
-            currentUser={{ name: "Admin User", email: "admin@example.com" }}
-            contextApiBaseUrl="https://example.com"
-            contextApiKey="test-key"
-          />
-        </QueryClientProvider>,
-      );
-    });
-
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 10));
-    });
-
-
-    expect(container.textContent).toContain("Add integration");
-    expect(
-      container.querySelector('input[type="search"][aria-label="Search integrations"]'),
-    ).toBeTruthy();
-    expect(
-      Array.from(container.querySelectorAll('a[href="/admin-integrations"]')).some(
-        (link) => link.textContent?.includes("Click here"),
-      ),
-    ).toBe(true);
-    expect(
-      container.querySelector('[data-integration-key="github"] img[alt="GitHub logo"]'),
-    ).toBeTruthy();
-
+    const flushTimers = async () =>
+      act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 0));
+      });
 
     const clickButton = async (label: string) => {
       const button = Array.from(container.querySelectorAll("button")).find((candidate) =>
@@ -822,9 +842,7 @@ describe("DashboardWorkspace", () => {
         button?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
       });
 
-      await act(async () => {
-        await new Promise((resolve) => setTimeout(resolve, 0));
-      });
+      await flushTimers();
     };
 
     const getVisibleToolNames = () =>
@@ -839,92 +857,107 @@ describe("DashboardWorkspace", () => {
         )
         ?.getAttribute("data-access-mode");
 
-    const searchInput = container.querySelector(
-      'input[type="search"][aria-label="Search integrations and tools"]',
-    ) as HTMLInputElement | null;
-    expect(searchInput).toBeTruthy();
+    const getSearchInput = () =>
+      container.querySelector(
+        'input[type="search"][aria-label="Search integrations and tools"]',
+      ) as HTMLInputElement | null;
 
-    const hideDisabledInput = container.querySelector(
-      'input[type="checkbox"][aria-label="Hide disabled tools"]',
-    ) as HTMLInputElement | null;
-    expect(hideDisabledInput?.checked).toBe(true);
+    const getHideDisabledInput = () =>
+      container.querySelector(
+        'input[type="checkbox"][aria-label="Hide disabled tools"]',
+      ) as HTMLInputElement | null;
 
-    await clickButton("Show tools");
+    it("renders installed integrations with the GitHub catalog row and search input", async () => {
+      await renderIntegrationCatalog();
 
-    expect(getVisibleToolNames()).toEqual(["alphaList", "betaReview"]);
+      expect(container.textContent).toContain("Add integration");
+      expect(
+        container.querySelector('input[type="search"][aria-label="Search integrations"]'),
+      ).toBeTruthy();
+      expect(
+        Array.from(container.querySelectorAll('a[href="/admin-integrations"]')).some(
+          (link) => link.textContent?.includes("Click here"),
+        ),
+      ).toBe(true);
+      expect(
+        container.querySelector('[data-integration-key="github"] img[alt="GitHub logo"]'),
+      ).toBeTruthy();
+      expect(getSearchInput()).toBeTruthy();
+      expect(getHideDisabledInput()?.checked).toBe(true);
 
-    await act(async () => {
-      setInputValue(searchInput ?? undefined, "review");
+      await clickButton("Show tools");
+
+      // With Hide disabled tools enabled by default, only enabled and
+      // approval_required tools are listed.
+      expect(getVisibleToolNames()).toEqual(["alphaList", "betaReview"]);
     });
 
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 0));
+    it("filters visible tools by search query", async () => {
+      await renderIntegrationCatalog();
+      await clickButton("Show tools");
+
+      const searchInput = getSearchInput();
+      expect(searchInput).toBeTruthy();
+
+      await act(async () => {
+        setInputValue(searchInput ?? undefined, "review");
+      });
+      await flushTimers();
+
+      expect(getVisibleToolNames()).toEqual(["betaReview"]);
+
+      await act(async () => {
+        setInputValue(searchInput ?? undefined, "");
+      });
+      await flushTimers();
+
+      expect(getVisibleToolNames()).toEqual(["alphaList", "betaReview"]);
     });
 
-    expect(getVisibleToolNames()).toEqual(["betaReview"]);
+    it("reveals disabled tools when the Hide disabled toggle is unchecked", async () => {
+      await renderIntegrationCatalog();
+      await clickButton("Show tools");
 
-    await act(async () => {
-      setInputValue(searchInput ?? undefined, "");
+      const hideDisabledInput = getHideDisabledInput();
+
+      await act(async () => {
+        hideDisabledInput?.click();
+      });
+      await flushTimers();
+
+      expect(getVisibleToolNames()).toEqual([
+        "alphaList",
+        "betaReview",
+        "zetaWrite",
+      ]);
+      expect(getToolMode("zetaWrite")).toBe("disabled");
     });
 
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 0));
+    it("switches a disabled tool to approval_required via the case-by-case button", async () => {
+      await renderIntegrationCatalog();
+      await clickButton("Show tools");
+
+      const hideDisabledInput = getHideDisabledInput();
+      await act(async () => {
+        hideDisabledInput?.click();
+      });
+      await flushTimers();
+
+      const caseByCaseButton = container.querySelector(
+        'button[aria-label="Case-by-case access for zetaWrite"]',
+      ) as HTMLButtonElement | null;
+      expect(caseByCaseButton).toBeTruthy();
+
+      await act(async () => {
+        caseByCaseButton?.dispatchEvent(
+          new MouseEvent("click", { bubbles: true }),
+        );
+        await new Promise((resolve) => setTimeout(resolve, 0));
+        await new Promise((resolve) => setTimeout(resolve, 0));
+      });
+
+      expect(getToolMode("zetaWrite")).toBe("approval_required");
     });
-
-    await act(async () => {
-      hideDisabledInput?.click();
-    });
-
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 0));
-    });
-
-    expect(getVisibleToolNames()).toEqual([
-      "alphaList",
-      "betaReview",
-      "zetaWrite",
-    ]);
-
-    await act(async () => {
-      setInputValue(searchInput ?? undefined, "zeta");
-    });
-
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 0));
-    });
-
-    expect(getVisibleToolNames()).toEqual(["zetaWrite"]);
-    expect(getToolMode("zetaWrite")).toBe("disabled");
-
-    const caseByCaseButton = container.querySelector(
-      'button[aria-label="Case-by-case access for zetaWrite"]',
-    ) as HTMLButtonElement | null;
-    expect(caseByCaseButton).toBeTruthy();
-
-    await act(async () => {
-      caseByCaseButton?.dispatchEvent(
-        new MouseEvent("click", { bubbles: true }),
-      );
-      await new Promise((resolve) => setTimeout(resolve, 0));
-      await new Promise((resolve) => setTimeout(resolve, 0));
-    });
-
-    expect(getToolMode("zetaWrite")).toBe("approval_required");
-
-    await act(async () => {
-      hideDisabledInput?.click();
-      setInputValue(searchInput ?? undefined, "");
-    });
-
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 0));
-    });
-
-    expect(getVisibleToolNames()).toEqual([
-      "alphaList",
-      "betaReview",
-      "zetaWrite",
-    ]);
   });
 
   it("bulk disables only tracked unused tools from the integrations page", async () => {
@@ -1612,10 +1645,8 @@ describe("DashboardWorkspace", () => {
     );
   });
 
-  it("shows the case-by-case approvals page with pending requests sorted newest first and filterable statuses", async () => {
-    usePathnameMock.mockReturnValue("/case-by-case-approvals");
-
-    const accessRequestsState: AccessRequest[] = [
+  describe("case-by-case approvals page", () => {
+    const buildAccessRequests = (): AccessRequest[] => [
       {
         id: "req-pending-older",
         agentId: "agent-1",
@@ -1681,131 +1712,139 @@ describe("DashboardWorkspace", () => {
       },
     ];
 
-    fetchMock.mockImplementation(async (input: RequestInfo | URL) => {
-      const url = typeof input === "string" ? input : input.toString();
+    const renderApprovalsPage = async () => {
+      usePathnameMock.mockReturnValue("/case-by-case-approvals");
+      const accessRequestsState = buildAccessRequests();
 
-      if (url === "/api/integrations") {
-        return new Response(JSON.stringify([]), {
-          status: 200,
-          headers: { "Content-Type": "application/json" },
-        });
-      }
+      fetchMock.mockImplementation(async (input: RequestInfo | URL) => {
+        const url = typeof input === "string" ? input : input.toString();
 
-      if (url === "/api/case-by-case-approvals") {
-        return new Response(JSON.stringify(accessRequestsState), {
-          status: 200,
-          headers: { "Content-Type": "application/json" },
-        });
-      }
+        if (url === "/api/integrations") {
+          return new Response(JSON.stringify([]), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          });
+        }
 
-      throw new Error(`Unexpected fetch: ${url}`);
-    });
+        if (url === "/api/case-by-case-approvals") {
+          return new Response(JSON.stringify(accessRequestsState), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          });
+        }
 
-    await act(async () => {
-      root.render(
-        <QueryClientProvider client={queryClient}>
-          <DashboardWorkspace
-            initialIntegrations={[]}
-            initialAccessRequests={accessRequestsState}
-            currentUser={{ name: "Admin User", email: "admin@example.com" }}
-            contextApiBaseUrl="https://example.com"
-            contextApiKey="test-key"
-          />
-        </QueryClientProvider>,
+        throw new Error(`Unexpected fetch: ${url}`);
+      });
+
+      await act(async () => {
+        root.render(
+          <QueryClientProvider client={queryClient}>
+            <DashboardWorkspace
+              initialIntegrations={[]}
+              initialAccessRequests={accessRequestsState}
+              currentUser={{ name: "Admin User", email: "admin@example.com" }}
+              contextApiBaseUrl="https://example.com"
+              contextApiKey="test-key"
+            />
+          </QueryClientProvider>,
+        );
+      });
+
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 0));
+      });
+    };
+
+    const visibleRequestIds = () =>
+      Array.from(container.querySelectorAll("[data-request-id]")).map((element) =>
+        element.getAttribute("data-request-id"),
       );
+
+    const findFilterButton = (label: string) =>
+      Array.from(container.querySelectorAll("button")).find((button) =>
+        button.textContent?.includes(label),
+      );
+
+    it("renders pending requests sorted newest first with the conversation link", async () => {
+      await renderApprovalsPage();
+
+      expect(container.querySelector("h1")?.textContent).toBe("Case-by-case Approvals");
+      expect(
+        container.querySelector(
+          'input[type="search"][aria-label="Search case-by-case approvals"]',
+        ),
+      ).toBeTruthy();
+      expect(container.textContent).toContain("no agent identity provided");
+      expect(container.textContent).toContain(
+        "Invocation identity: Not provided · Not provided",
+      );
+
+      const conversationLink = container.querySelector(
+        'a[href="https://app.all-hands.dev/conversations/f3e731620cf147a1976b53050bbe039e"]',
+      ) as HTMLAnchorElement | null;
+      expect(conversationLink).toBeTruthy();
+      expect(conversationLink?.textContent).toContain(
+        "https://app.all-hands.dev/conversations/f3e731620cf147a1976b53050bbe039e",
+      );
+      expect(container.textContent).not.toContain(
+        "Auto-created after an agent attempted a case-by-case tool without an active approval.",
+      );
+
+      expect(visibleRequestIds()).toEqual([
+        "req-pending-newer",
+        "req-pending-older",
+      ]);
     });
 
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 0));
-    });
+    it("searches requests by text content", async () => {
+      await renderApprovalsPage();
 
-    expect(container.querySelector("h1")?.textContent).toBe(
-      "Case-by-case Approvals",
-    );
-    expect(
-      container.querySelector(
+      const searchInput = container.querySelector(
         'input[type="search"][aria-label="Search case-by-case approvals"]',
-      ),
-    ).toBeTruthy();
-    expect(container.textContent).toContain("no agent identity provided");
-    expect(container.textContent).toContain("Invocation identity: Not provided · Not provided");
-    const conversationLink = container.querySelector(
-      'a[href="https://app.all-hands.dev/conversations/f3e731620cf147a1976b53050bbe039e"]',
-    ) as HTMLAnchorElement | null;
-    expect(conversationLink).toBeTruthy();
-    expect(conversationLink?.textContent).toContain(
-      "https://app.all-hands.dev/conversations/f3e731620cf147a1976b53050bbe039e",
-    );
-    expect(container.textContent).not.toContain(
-      "Auto-created after an agent attempted a case-by-case tool without an active approval.",
-    );
+      ) as HTMLInputElement;
 
-    const visibleRequestIds = Array.from(
-      container.querySelectorAll("[data-request-id]"),
-    ).map((element) => element.getAttribute("data-request-id"));
-    expect(visibleRequestIds).toEqual([
-      "req-pending-newer",
-      "req-pending-older",
-    ]);
+      await act(async () => {
+        setInputValue(searchInput, "github");
+      });
 
-    await act(async () => {
-      setInputValue(
-        container.querySelector(
-          'input[type="search"][aria-label="Search case-by-case approvals"]',
-        ) as HTMLInputElement,
-        "github",
-      );
+      expect(visibleRequestIds()).toEqual(["req-pending-newer"]);
+
+      await act(async () => {
+        setInputValue(searchInput, "");
+      });
+
+      expect(visibleRequestIds()).toEqual([
+        "req-pending-newer",
+        "req-pending-older",
+      ]);
     });
 
-    expect(
-      Array.from(container.querySelectorAll("[data-request-id]")).map((element) =>
-        element.getAttribute("data-request-id"),
-      ),
-    ).toEqual(["req-pending-newer"]);
+    it("filters requests by approved or denied status", async () => {
+      await renderApprovalsPage();
 
-    await act(async () => {
-      setInputValue(
-        container.querySelector(
-          'input[type="search"][aria-label="Search case-by-case approvals"]',
-        ) as HTMLInputElement,
-        "",
-      );
+      const approvedFilterButton = findFilterButton("approved");
+      expect(approvedFilterButton).toBeTruthy();
+
+      await act(async () => {
+        approvedFilterButton?.dispatchEvent(
+          new MouseEvent("click", { bubbles: true }),
+        );
+      });
+
+      expect(visibleRequestIds()).toEqual(["req-approved"]);
+
+      const deniedFilterButton = findFilterButton("denied");
+      expect(deniedFilterButton).toBeTruthy();
+
+      await act(async () => {
+        deniedFilterButton?.dispatchEvent(
+          new MouseEvent("click", { bubbles: true }),
+        );
+      });
+
+      expect(container.textContent).toContain("denied");
+      expect(visibleRequestIds()).toEqual(["req-denied"]);
     });
-
-    const approvedFilterButton = Array.from(
-      container.querySelectorAll("button"),
-    ).find((button) => button.textContent?.includes("approved"));
-    expect(approvedFilterButton).toBeTruthy();
-
-    await act(async () => {
-      approvedFilterButton?.dispatchEvent(
-        new MouseEvent("click", { bubbles: true }),
-      );
-    });
-
-    expect(
-      Array.from(container.querySelectorAll("[data-request-id]")).map((element) =>
-        element.getAttribute("data-request-id"),
-      ),
-    ).toEqual(["req-approved"]);
-
-    const deniedFilterButton = Array.from(container.querySelectorAll("button")).find(
-      (button) => button.textContent?.includes("denied"),
-    );
-    expect(deniedFilterButton).toBeTruthy();
-
-    await act(async () => {
-      deniedFilterButton?.dispatchEvent(
-        new MouseEvent("click", { bubbles: true }),
-      );
-    });
-
-    expect(container.textContent).toContain("denied");
-    expect(
-      Array.from(container.querySelectorAll("[data-request-id]")).map((element) =>
-        element.getAttribute("data-request-id"),
-      ),
-    ).toEqual(["req-denied"]);
   });
 
   it("approves selected case-by-case requests using the default 4 hour duration", async () => {
