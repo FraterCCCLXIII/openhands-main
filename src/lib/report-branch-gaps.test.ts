@@ -1,4 +1,4 @@
-// @ts-ignore -- this test imports the local ESM CLI script directly.
+// @ts-expect-error -- this test imports the local ESM CLI script directly.
 import * as branchGapReport from "../../scripts/report-branch-gaps.mjs";
 import { describe, expect, it } from "vitest";
 
