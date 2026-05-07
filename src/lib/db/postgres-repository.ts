@@ -30,12 +30,21 @@ import {
   mapUserApiKeyRow,
 } from "@/src/lib/db/postgres-records";
 import { initializePostgresSchema } from "@/src/lib/db/postgres-schema";
+import { createStandardPgSql } from "@/src/lib/db/standard-pg-adapter";
+
+// Row type for query results
+type Row = Record<string, unknown>;
 
 const getSql = () => {
   const databaseUrl = process.env.POSTGRES_URL ?? process.env.DATABASE_URL;
 
   if (!databaseUrl) {
     throw new Error("POSTGRES_URL or DATABASE_URL must be configured for PostgresRepository.");
+  }
+
+  // Use standard pg driver for local development, Neon serverless driver for production
+  if (process.env.USE_STANDARD_PG === "true") {
+    return createStandardPgSql(databaseUrl);
   }
 
   return neon(databaseUrl);
@@ -67,18 +76,18 @@ export class PostgresRepository implements ContextRepository {
   async listOwnerIntegrations(ownerId: string) {
     await this.ensureSchema();
     const sql = getSql();
-    const rows = await sql`
+    const rows: Row[] = await sql`
       SELECT * FROM owner_integrations
       WHERE owner_id = ${ownerId}
       ORDER BY key ASC
     `;
-    return rows.map((row) => mapIntegrationRow(row));
+    return rows.map((row: Row) => mapIntegrationRow(row));
   }
 
   async getOwnerIntegration(ownerId: string, integrationKey: string) {
     await this.ensureSchema();
     const sql = getSql();
-    const rows = await sql`
+    const rows: Row[] = await sql`
       SELECT * FROM owner_integrations
       WHERE owner_id = ${ownerId} AND key = ${integrationKey}
     `;
@@ -142,7 +151,7 @@ export class PostgresRepository implements ContextRepository {
   async getPolicy(agentClass: string) {
     await this.ensureSchema();
     const sql = getSql();
-    const rows = await sql`SELECT * FROM agent_class_policies WHERE agent_class = ${agentClass}`;
+    const rows: Row[] = await sql`SELECT * FROM agent_class_policies WHERE agent_class = ${agentClass}`;
     const row = rows[0];
     if (!row) {
       return null;
@@ -153,8 +162,8 @@ export class PostgresRepository implements ContextRepository {
   async listAccessRequests() {
     await this.ensureSchema();
     const sql = getSql();
-    const rows = await sql`SELECT * FROM access_requests ORDER BY created_at DESC`;
-    return rows.map((row) => mapAccessRequestRow(row));
+    const rows: Row[] = await sql`SELECT * FROM access_requests ORDER BY created_at DESC`;
+    return rows.map((row: Row) => mapAccessRequestRow(row));
   }
 
   async getAccessRequest(id: string) {
@@ -207,8 +216,8 @@ export class PostgresRepository implements ContextRepository {
   async listTemporaryGrants() {
     await this.ensureSchema();
     const sql = getSql();
-    const rows = await sql`SELECT * FROM temporary_grants ORDER BY created_at DESC`;
-    return rows.map((row) => mapTemporaryGrantRow(row));
+    const rows: Row[] = await sql`SELECT * FROM temporary_grants ORDER BY created_at DESC`;
+    return rows.map((row: Row) => mapTemporaryGrantRow(row));
   }
 
   async saveTemporaryGrant(grant: TemporaryGrant) {
@@ -236,7 +245,7 @@ export class PostgresRepository implements ContextRepository {
   async purgeExpiredGrants(nowIso: string) {
     await this.ensureSchema();
     const sql = getSql();
-    const rows = await sql`DELETE FROM temporary_grants WHERE expires_at <= ${nowIso} RETURNING id`;
+    const rows: Row[] = await sql`DELETE FROM temporary_grants WHERE expires_at <= ${nowIso} RETURNING id`;
     return rows.length;
   }
 
@@ -260,7 +269,7 @@ export class PostgresRepository implements ContextRepository {
   async listOwnerToolUsageSummaries(ownerId: string) {
     await this.ensureSchema();
     const sql = getSql();
-    const rows = await sql`
+    const rows: Row[] = await sql`
       SELECT
         integration_key,
         function_name,
@@ -273,14 +282,14 @@ export class PostgresRepository implements ContextRepository {
       ORDER BY integration_key ASC, function_name ASC
     `;
 
-    return rows.map((row) => mapToolUsageSummaryRow(row));
+    return rows.map((row: Row) => mapToolUsageSummaryRow(row));
   }
 
   async listNotifications() {
     await this.ensureSchema();
     const sql = getSql();
-    const rows = await sql`SELECT * FROM notifications ORDER BY created_at DESC`;
-    return rows.map((row) => mapNotificationRow(row));
+    const rows: Row[] = await sql`SELECT * FROM notifications ORDER BY created_at DESC`;
+    return rows.map((row: Row) => mapNotificationRow(row));
   }
 
   async createNotification(notification: NotificationRecord) {
@@ -298,7 +307,7 @@ export class PostgresRepository implements ContextRepository {
   async getAgentApiKeyByOwner(ownerId: string) {
     await this.ensureSchema();
     const sql = getSql();
-    const rows = await sql`SELECT * FROM agent_api_keys WHERE owner_id = ${ownerId}`;
+    const rows: Row[] = await sql`SELECT * FROM agent_api_keys WHERE owner_id = ${ownerId}`;
     const row = rows[0];
     if (!row) {
       return null;
@@ -309,7 +318,7 @@ export class PostgresRepository implements ContextRepository {
   async findAgentApiKey(apiKey: string) {
     await this.ensureSchema();
     const sql = getSql();
-    const rows = await sql`SELECT * FROM agent_api_keys WHERE api_key = ${apiKey}`;
+    const rows: Row[] = await sql`SELECT * FROM agent_api_keys WHERE api_key = ${apiKey}`;
     const row = rows[0];
     if (!row) {
       return null;
@@ -334,7 +343,7 @@ export class PostgresRepository implements ContextRepository {
   async getUserApiKeyByOwner(ownerId: string) {
     await this.ensureSchema();
     const sql = getSql();
-    const rows = await sql`SELECT * FROM user_api_keys WHERE owner_id = ${ownerId}`;
+    const rows: Row[] = await sql`SELECT * FROM user_api_keys WHERE owner_id = ${ownerId}`;
     const row = rows[0];
     if (!row) {
       return null;
@@ -345,7 +354,7 @@ export class PostgresRepository implements ContextRepository {
   async findUserApiKeyByHash(apiKeyHash: string) {
     await this.ensureSchema();
     const sql = getSql();
-    const rows = await sql`SELECT * FROM user_api_keys WHERE api_key_hash = ${apiKeyHash}`;
+    const rows: Row[] = await sql`SELECT * FROM user_api_keys WHERE api_key_hash = ${apiKeyHash}`;
     const row = rows[0];
     if (!row) {
       return null;
@@ -395,7 +404,7 @@ export class PostgresRepository implements ContextRepository {
   async getAdminApiKeyByOwner(ownerId: string) {
     await this.ensureSchema();
     const sql = getSql();
-    const rows = await sql`SELECT * FROM admin_api_keys WHERE owner_id = ${ownerId}`;
+    const rows: Row[] = await sql`SELECT * FROM admin_api_keys WHERE owner_id = ${ownerId}`;
     const row = rows[0];
     if (!row) {
       return null;
@@ -406,7 +415,7 @@ export class PostgresRepository implements ContextRepository {
   async findAdminApiKeyByHash(apiKeyHash: string) {
     await this.ensureSchema();
     const sql = getSql();
-    const rows = await sql`SELECT * FROM admin_api_keys WHERE api_key_hash = ${apiKeyHash}`;
+    const rows: Row[] = await sql`SELECT * FROM admin_api_keys WHERE api_key_hash = ${apiKeyHash}`;
     const row = rows[0];
     if (!row) {
       return null;
@@ -456,21 +465,21 @@ export class PostgresRepository implements ContextRepository {
   async hasAgentApiKeys() {
     await this.ensureSchema();
     const sql = getSql();
-    const rows = await sql`SELECT 1 FROM agent_api_keys LIMIT 1`;
+    const rows: Row[] = await sql`SELECT 1 FROM agent_api_keys LIMIT 1`;
     return rows.length > 0;
   }
 
   async listManagedConnectors() {
     await this.ensureSchema();
     const sql = getSql();
-    const rows = await sql`SELECT * FROM managed_connectors ORDER BY slug ASC`;
-    return rows.map((row) => mapManagedConnectorRow(row));
+    const rows: Row[] = await sql`SELECT * FROM managed_connectors ORDER BY slug ASC`;
+    return rows.map((row: Row) => mapManagedConnectorRow(row));
   }
 
   async getManagedConnector(slug: string) {
     await this.ensureSchema();
     const sql = getSql();
-    const rows = await sql`SELECT * FROM managed_connectors WHERE slug = ${slug}`;
+    const rows: Row[] = await sql`SELECT * FROM managed_connectors WHERE slug = ${slug}`;
     const row = rows[0];
     if (!row) {
       return null;
@@ -528,12 +537,12 @@ export class PostgresRepository implements ContextRepository {
   async listIntegrationConnections(ownerId: string) {
     await this.ensureSchema();
     const sql = getSql();
-    const rows = await sql`
+    const rows: Row[] = await sql`
       SELECT * FROM integration_connections
       WHERE owner_id = ${ownerId}
       ORDER BY integration_key ASC
     `;
-    return rows.map((row) => mapIntegrationConnectionRow(row));
+    return rows.map((row: Row) => mapIntegrationConnectionRow(row));
   }
 
   async listAllIntegrationConnections(filters?: {
@@ -550,7 +559,7 @@ export class PostgresRepository implements ContextRepository {
     const integrationKey = filters?.integrationKey ?? null;
     const limit = filters?.limit ?? 100;
     const offset = filters?.offset ?? 0;
-    const rows = await sql`
+    const rows: Row[] = await sql`
       SELECT * FROM integration_connections
       WHERE (${ownerId}::text IS NULL OR LOWER(owner_id) = LOWER(${ownerId}::text))
         AND (${provider}::text IS NULL OR LOWER(provider) = LOWER(${provider}::text))
@@ -559,13 +568,13 @@ export class PostgresRepository implements ContextRepository {
       LIMIT ${limit}
       OFFSET ${offset}
     `;
-    return rows.map((row) => mapIntegrationConnectionRow(row));
+    return rows.map((row: Row) => mapIntegrationConnectionRow(row));
   }
 
   async getIntegrationConnection(ownerId: string, integrationKey: string) {
     await this.ensureSchema();
     const sql = getSql();
-    const rows = await sql`
+    const rows: Row[] = await sql`
       SELECT * FROM integration_connections
       WHERE owner_id = ${ownerId} AND integration_key = ${integrationKey}
     `;
@@ -632,7 +641,7 @@ export class PostgresRepository implements ContextRepository {
   async getOAuthState(state: string) {
     await this.ensureSchema();
     const sql = getSql();
-    const rows = await sql`SELECT * FROM oauth_states WHERE state = ${state}`;
+    const rows: Row[] = await sql`SELECT * FROM oauth_states WHERE state = ${state}`;
     const row = rows[0];
     if (!row) {
       return null;

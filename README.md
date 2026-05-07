@@ -96,6 +96,48 @@ For a fuller route map and auth breakdown, see [API.md](./API.md).
 
 3. Configure storage. The app requires `POSTGRES_URL` or `DATABASE_URL` for the dashboard/runtime; without one, signed-in users will see the service-unavailable screen.
 
+   <details>
+   <summary>Option A: Local Docker Postgres (recommended for local dev)</summary>
+
+   Start a local Postgres container:
+
+   ```bash
+   docker run -d --name integrations-hub-postgres \
+     -e POSTGRES_USER=postgres \
+     -e POSTGRES_PASSWORD=postgres \
+     -e POSTGRES_DB=integrationshub \
+     -p 5432:5432 \
+     postgres:17
+   ```
+
+   Then set the connection in `.env.local`:
+
+   ```bash
+   POSTGRES_URL="postgresql://postgres:postgres@localhost:5432/integrationshub"
+   USE_STANDARD_PG=true
+   ```
+
+   The `USE_STANDARD_PG=true` flag tells the app to use the standard `pg` driver instead of the Neon serverless driver.
+
+   </details>
+
+   <details>
+   <summary>Option B: Use Neon's free tier</summary>
+
+   For cloud-hosted Postgres (required for Vercel deployments):
+
+   1. Create a free account at [neon.tech](https://neon.tech)
+   2. Create a new project and database
+   3. Copy the connection string from the Neon dashboard and add it to `.env.local`:
+
+   ```bash
+   POSTGRES_URL="postgresql://user:password@ep-example-123456.us-east-2.aws.neon.tech/integrationshub?sslmode=require"
+   ```
+
+   Do **not** set `USE_STANDARD_PG` when using Neon.
+
+   </details>
+
 4. Start the app:
 
    ```bash
@@ -119,6 +161,7 @@ For a fuller route map and auth breakdown, see [API.md](./API.md).
 Core variables:
 
 - `POSTGRES_URL` or `DATABASE_URL`
+- `USE_STANDARD_PG` set to `true` for local Docker Postgres (uses standard `pg` driver instead of Neon serverless)
 - `AUTH_SECRET` (or `NEXTAUTH_SECRET`) for Auth.js session security
 - `CREDENTIAL_ENCRYPTION_KEY` for stored third-party provider credentials
 - `GITHUB_CLIENT_ID`
