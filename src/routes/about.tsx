@@ -64,8 +64,11 @@ const MILESTONES = [
 const About = () => {
   return (
     <CompanyPageShell>
-      <section className='px-6 pb-16 pt-12 lg:px-10 lg:pb-20 lg:pt-12'>
-        <div className='mx-auto max-w-[560px] text-center'>
+      <section data-wf-el='section-hero' className='pt-0 pb-0'>
+        {/* Live wraps hero content in `.hero-content` (`padding: 4rem 0 4rem`).
+            Move that padding onto the inner content wrappers so the SECTION
+            keeps `padding: 0` (matches live) while H1 still starts at top:140. */}
+        <div className='mx-auto max-w-[560px] pt-14 text-center'>
           <h1 className='fluid-h1 text-brand-fg'>
             Empowering every team to build software autonomously.
           </h1>
@@ -74,14 +77,14 @@ const About = () => {
           </p>
         </div>
 
-        <div className='mx-auto mt-12 max-w-[1238px]'>
-          <div className='flex justify-center'>
+        <div className='mx-auto mt-[120px] max-w-[1238px]'>
+          <div className='mb-12 flex justify-center'>
             <h2 className='inline-block section-title text-brand-fg'>
               Milestones
             </h2>
           </div>
 
-          <div className='relative mt-6 min-h-[740px] overflow-hidden rounded-[8px] bg-brand-fg px-6 py-8 text-brand-bg lg:px-8 lg:py-10'>
+          <div className='relative min-h-[663px] overflow-hidden rounded-[8px] bg-brand-fg px-6 py-8 text-brand-bg lg:px-8 lg:py-10'>
             <div
               aria-hidden='true'
               className='absolute inset-0 bg-cover bg-center bg-no-repeat opacity-20'
@@ -118,7 +121,7 @@ const About = () => {
         </div>
       </section>
 
-      <section className='px-6 pb-20 pt-8 lg:px-10 lg:pb-24 lg:pt-12'>
+      <section data-wf-el='section' className='pt-20 pb-20'>
         <div className='mx-auto max-w-[1238px]'>
           <div>
             <h3 className='section-title text-brand-fg'>
@@ -137,7 +140,7 @@ const About = () => {
             </a>
           </div>
 
-          <div className='mt-16 grid justify-items-start gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-4'>
+          <div className='mt-[128px] grid justify-items-start gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-4'>
             {teamMembers.map((member) => (
               <MemberCard key={member.name} member={member} />
             ))}

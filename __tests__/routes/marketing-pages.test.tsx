@@ -81,56 +81,77 @@ describe('Marketing parity routes', () => {
   });
 
   it('renders the updated enterprise page content', () => {
-    const { container } = renderRoute(<Enterprise />);
+    renderRoute(<Enterprise />);
 
+    // New live hero
+    expect(screen.getByRole('heading', { level: 1, name: /From agents to systems/i })).toBeInTheDocument();
     expect(
-      screen.getByText(/Open source agent infrastructure for code modernization/i, { selector: 'div' })
+      screen.getByText(/Scale AI agents in production with the control, visibility, and repeatability/i),
     ).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: /Open source agent infrastructure for code modernization/i })).toHaveClass(
-      'sr-only'
-    );
+    expect(screen.getByRole('link', { name: 'Book a demo' })).toHaveAttribute('href', '/contact');
     expect(screen.getByRole('link', { name: 'Trust Center' })).toHaveAttribute(
       'href',
       'https://app.vanta.com/openhands.dev/trust/an0kgh9goh7xyqkhsb6tlp',
     );
-    expect(screen.getByRole('heading', { name: /Why Enterprises Choose OpenHands/i })).toBeInTheDocument();
-    expect(screen.getByText('Dedicated technical and account-level support')).toBeInTheDocument();
 
-    // ASCII art images render as full-width backgrounds (not small inline images)
-    const asciArtImg = screen.getByAltText('asci art');
-    expect(asciArtImg.closest('div')).toHaveClass('absolute', 'inset-0');
-    const blackHoleImg = screen.getByAltText(/ASCII art depicting a large black hole/i);
-    expect(blackHoleImg.closest('div')).toHaveClass('absolute', 'inset-0');
+    // Control plane intro section
+    expect(
+      screen.getByRole('heading', { name: /A control plane for every layer of your agent stack/i }),
+    ).toBeInTheDocument();
 
-    // AMD quote section is full-width dark background, not a contained card
-    const amdSection = asciArtImg.closest('section');
-    expect(amdSection).toHaveClass('bg-brand-fg');
+    // Govern agents grid: each of the five card headings present
+    expect(
+      screen.getByRole('heading', { name: /Agents that run themselves, on your terms\./i }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Know where every token goes/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: /Agents get access to what they need\. Nothing more\./i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: /Measure what's working\. Improve what isn't\./i }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /One view for every team\./i })).toBeInTheDocument();
 
-    // No individual company alt-text logos (partner logos have empty alt)
-    expect(screen.queryByAltText('Amazon')).not.toBeInTheDocument();
-    expect(screen.queryByAltText('Netflix')).not.toBeInTheDocument();
-    expect(screen.queryByAltText('Google')).not.toBeInTheDocument();
-    expect(screen.queryByAltText('AMD')).not.toBeInTheDocument();
-    expect(screen.queryByAltText(/amd logo/i)).not.toBeInTheDocument();
-    expect(screen.queryByAltText('NVIDIA')).not.toBeInTheDocument();
+    // Event-to-PR dark section
+    expect(
+      screen.getByRole('heading', { name: /From event to PR, no human in the loop\./i }),
+    ).toBeInTheDocument();
 
-    // Proof band section is centered text layout
-    expect(screen.getByRole('heading', { name: /Powering enterprise AI with the world/i })).toBeInTheDocument();
-    const proofSection = blackHoleImg.closest('section');
-    expect(proofSection?.querySelector('.text-center')).not.toBeNull();
+    // C3.ai quote (rendered as paragraph, not heading)
+    expect(
+      screen.getByText(/OpenHands was the only solution that let us prompt an autonomous coding agent/i),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Sina Pakazad, VP of Data Science at C3\.ai/i)).toBeInTheDocument();
 
-    // Results section with icon images and measured impact bar
-    expect(screen.getByText('Measured impact')).toBeInTheDocument();
-    const resultIcons = container.querySelectorAll('img[src*="Frame_48095783"]');
-    expect(resultIcons).toHaveLength(3);
+    // Built-for-teams grid
+    expect(
+      screen.getByRole('heading', { name: /Built for teams running agents at scale\./i }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Self-hosted in your VPC' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Source-available' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Research team access' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Enterprise integrations included' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Bring your own LLM' })).toBeInTheDocument();
 
-    // Whitepaper section centered layout (no horizontal card)
+    // Whitepaper dark section
     expect(screen.getByRole('link', { name: 'Download the Whitepaper' })).toHaveAttribute(
       'href',
       '/whitepapers/modernize-legacy-systems-with-ai-agents',
     );
-    const whitepaperHeading = screen.getByRole('heading', { name: /Whitepaper: Modernize legacy/i });
-    expect(whitepaperHeading.closest('div')).toHaveClass('text-center');
+
+    // Closing "What comes after Claude Code?" CTA now lives inside
+    // the global footer (wired through root.tsx via
+    // PRODUCT_SUBPAGE_CTA['/enterprise']) rather than as a separate
+    // section on the page itself, matching live's structure.  The
+    // route component therefore should NOT render that text directly;
+    // the footer is rendered by the layout, not the route in tests.
+    expect(screen.queryByText(/What comes after Claude Code\?/i)).not.toBeInTheDocument();
+
+    // Old marketing-page placeholders should be gone now
+    expect(screen.queryByText(/Why Enterprises Choose OpenHands/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Powering enterprise AI with the world/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Proven results across industries/i)).not.toBeInTheDocument();
+    expect(screen.queryByText('Measured impact')).not.toBeInTheDocument();
   });
 
   it('renders the updated community page content', () => {
@@ -146,7 +167,7 @@ describe('Marketing parity routes', () => {
     expect(screen.getByRole('heading', { name: /Upcoming Events/i })).toBeInTheDocument();
     expect(screen.queryByText('Scale Enterprise AI Agents')).not.toBeInTheDocument();
     expect(screen.queryByText(/5:15pm — Doors Open/i)).not.toBeInTheDocument();
-    expect(screen.getAllByText(/Recording and agenda will be available post meeting\./i)).toHaveLength(2);
+    expect(screen.getAllByText(/Recording and agenda will be available post meeting\./i)).toHaveLength(3);
     expect(screen.getByRole('heading', { name: /Recognizing first-time contributors/i })).toBeInTheDocument();
     expect(screen.queryByText('@alexdev')).not.toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /Community contributor spotlight/i })).toBeInTheDocument();

@@ -82,7 +82,7 @@ const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
 const Contact = () => {
   return (
     <CompanyPageShell>
-      <section className='px-6 pb-16 pt-12 lg:px-10 lg:pb-20 lg:pt-12'>
+      <section data-wf-el='section' className='px-6 pb-16 pt-12 lg:px-10 lg:pb-20 lg:pt-12'>
         <div className='mx-auto mb-16 flex max-w-[720px] flex-col items-center text-center'>
           <h1 className='max-w-[560px] fluid-h1 text-brand-fg'>
             Talk to the OpenHands Team

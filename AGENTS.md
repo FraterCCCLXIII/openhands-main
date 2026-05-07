@@ -232,6 +232,19 @@ npm run parity:checklist  # Crawl openhands.dev and compare against local site
 - The legacy whitepaper path `/whitepapers/modernize-legacy-systems-with-ai-agents` is implemented as a first-class local route, not a redirect or iframe mirror, because the parity checklist reads visible DOM text directly.
 - Unknown marketing routes now fall through to `route("*", "routes/not-found.tsx")`, which returns a 404 status via `data(null, { status: 404 })` while still rendering inside the normal marketing chrome so the live-style nav/footer signatures remain visible.
 
+## Enterprise / Pricing Parity Notes (issue #408)
+
+- `/enterprise`'s govern grid (`acp_features_layout`) is a 1+2+2 layout where the first card spans both columns; render via `grid-cols-1 md:grid-cols-2` with `md:col-span-2` on the first article.
+- `/enterprise`'s built-for-teams grid (`acp_features_layout.is-enterprise`) is a 3+2 layout (3-col grid, last 2 cards on row 2).
+- Live `/enterprise` uses `<h3>` (with Webflow's `h2-2` / `h2` size classes) for the section titles "A control plane for every layer of your agent stack" and "Everything you need to govern agents in production." — render those as `<h3 className='section-title'>` rather than `<h2>` to keep heading order matching live.
+- Live `/enterprise` card paragraphs use ASCII apostrophes (`&#x27;`) — keep `don't`, `developer's`, `isn't` in plain ASCII for parity-sensitive copy.
+- The closing "What comes after Claude Code?" CTA is rendered inside the live global footer's yellow `section.u-bg-primary` block; locally render it as a separate yellow-bg section so the parity audit's ancestor backgroundColor pairs correctly.
+- Live's `<main>` resolves to `display: flex; flex-direction: column`. Match that on every route, but note the parity script now normalizes `minHeight/minWidth: auto` vs `0px` so block-vs-flex on plain block boxes is treated as equivalent.
+- The shared `MarketingFooterCta` SECTION now paints `rgb(255, 255, 139)` because live always wraps its "Building the open standard..." CTA in `section.u-bg-primary` — paint the bg directly on the SECTION so the parity audit's ancestor backgroundColor pairs with live.
+- `.fluid-h4` uses `line-height: 1.4` (Webflow's default for `.h4`); 1.2 was producing a 28.8px vs 33.6px mismatch on every card heading.
+- `/pricing` FAQ details: live's `.accordion-item` has no border-radius and no padding on the `<details>` element itself; padding lives on the inner trigger/content blocks. Drop `rounded-lg` / `border` on the `<details>`, keep padding (`py-6` / `pb-6`) on the summary children and content div.
+- The pricing comparison-table wrapper currently uses `rounded-[24px] bg-brand-fg px-6 py-6 lg:px-8 lg:py-6`; live's equivalent is a Webflow `.card` that resolves to `display: grid; gap: 8px` with no border-radius or padding, which is the source of ~87 lingering ancestor mismatches on `/pricing`.
+
 ## Legal Page Parity Notes
 - Live `/privacy` renders the body as a narrow legal-rich-text block with a centered 32px desktop title, real `h2`/`h3` hierarchy, and the shared `MarketingFooterCta` above the global footer.
 - Current live `/privacy` parity expects a duplicated `Changes to this Privacy Policy` subsection and a trailing zero-width paragraph (`‍`) in the legal copy; keep both if parity checks regress on that route.

@@ -50,8 +50,10 @@ const PRESS_ITEMS = [
 const Press = () => {
   return (
     <CompanyPageShell>
-      <section className='px-6 pb-12 pt-12 lg:px-10 lg:pb-16 lg:pt-12'>
-        <div className='mx-auto max-w-[640px] text-center'>
+      <section data-wf-el='section-hero' className='pb-0 pt-0'>
+        {/* Live wraps hero in `.hero-content` (`padding: 4rem 0 4rem`); replicate
+            with pt/pb on the inner content wrapper so the H1's top:140 matches. */}
+        <div className='mx-auto max-w-[640px] pb-16 pt-14 text-center'>
           <h1 className='fluid-h1 text-brand-fg'>
             In the news
           </h1>
@@ -59,21 +61,27 @@ const Press = () => {
             Read how OpenHands is reshaping the future of AI-powered software development.
           </p>
           <div className='mt-10 flex justify-center'>
-            <div className='btn btn-primary rounded-none p-0'>
-              <Link to='/contact' className='block bg-transparent px-4 py-4 text-brand-bg'>
-                Contact Us
+            <div className='btn btn-primary relative rounded-none'>
+              <span aria-hidden='true'>Contact Us</span>
+              <Link
+                to='/contact'
+                className='absolute inset-0 flex items-center justify-center bg-transparent text-brand-bg'
+                style={{ borderStyle: 'none' }}
+                aria-label='Contact Us'
+              >
+                <span className='sr-only'>Contact Us</span>
               </Link>
             </div>
           </div>
         </div>
       </section>
 
-      <section className='px-6 pb-28 lg:px-10 lg:pb-[16rem]'>
+      <section data-wf-el='section' className='pb-20'>
         <div className='mx-auto grid max-w-[1238px] gap-x-6 gap-y-14 md:grid-cols-2 xl:grid-cols-3'>
           {PRESS_ITEMS.map((item) => (
             <article key={item.title} className='flex flex-col gap-5'>
-              <img src={item.image} alt='' className='h-[300px] w-full object-cover' style={{ borderRadius: '0px' }} />
-              <p className='m-0 inline-block self-start text-[16px] leading-[22.4px] text-[#5f5f5f]'>{item.date}</p>
+              <img src={item.image} alt='' className='h-[300px] w-full object-cover' style={{ borderRadius: '0px', display: 'inline-block' }} />
+              <p className='m-0 inline-block text-[16px] leading-[22.4px] text-[#5f5f5f]'>{item.date}</p>
               <p className='m-0 max-w-[397px] fluid-body-lg font-medium text-brand-fg'>
                 {item.title}
               </p>

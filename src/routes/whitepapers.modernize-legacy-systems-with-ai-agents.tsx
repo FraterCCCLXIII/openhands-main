@@ -160,7 +160,7 @@ export default function WhitepaperModernizeLegacySystemsWithAiAgents() {
 
   return (
     <main className='bg-brand-bg'>
-      <section className='px-6 pb-16 pt-10 lg:px-10 lg:pb-20 lg:pt-14'>
+      <section data-wf-el='section' className='px-6 pb-16 pt-10 lg:px-10 lg:pb-20 lg:pt-14'>
         <div className='mx-auto max-w-[1238px]'>
           <div className='mx-auto max-w-[920px] text-center'>
             <h1 className='mx-auto max-w-[834px] fluid-h1 text-brand-fg'>

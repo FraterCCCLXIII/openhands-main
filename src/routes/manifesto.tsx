@@ -63,7 +63,7 @@ const SeparatorParagraph = () => <p className='h-4 font-sohne-buch text-[#5f5f5f
 const Manifesto = () => {
   return (
     <CompanyPageShell>
-      <section className='px-6 pb-10 pt-12 lg:px-10 lg:pb-10 lg:pt-12'>
+      <section data-wf-el='section-hero' className='px-6 pb-10 pt-12 lg:px-10 lg:pb-10 lg:pt-12'>
         <div className='mx-auto max-w-[520px] text-center'>
           <h1 className='fluid-h1 text-brand-fg'>
             Hands on the Future
@@ -74,12 +74,12 @@ const Manifesto = () => {
         </div>
       </section>
 
-      <section className='px-6 pb-16 lg:px-10 lg:pb-20'>
-        <div className='mx-auto max-w-[980px]'>
+      <section data-wf-el='section' className='px-6 pb-16 lg:px-10 lg:pb-20'>
+        <div className='mx-auto max-w-[919px]'>
           <img
             src='/assets/webflow/misc/691645a7832560da97f475c5_Featured_manifesto.png'
             alt=''
-            className='w-full object-cover'
+            className='img-block w-full object-cover'
             style={{ borderRadius: '0px' }}
           />
 
@@ -108,7 +108,7 @@ const Manifesto = () => {
             <SeparatorParagraph />
             <SeparatorParagraph />
 
-            <section className='mt-12 space-y-3'>
+            <section data-wf-el='section' className='mt-12 space-y-3'>
               <h3 className='fluid-h3 text-brand-fg'>
                 What this means for OpenHands
               </h3>
@@ -120,7 +120,7 @@ const Manifesto = () => {
 
             <SeparatorParagraph />
 
-            <section className='mt-10 space-y-3'>
+            <section data-wf-el='section' className='mt-10 space-y-3'>
               <h3 className='fluid-h3 text-brand-fg'>
                 What this asks of you
               </h3>

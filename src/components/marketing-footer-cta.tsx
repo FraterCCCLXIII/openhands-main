@@ -1,4 +1,5 @@
 import clsx from 'clsx';
+import { OverlayLinkButton } from '~/components/overlay-link-button';
 
 interface MarketingFooterCtaProps {
   semanticHeading?: boolean;
@@ -11,36 +12,41 @@ export const MarketingFooterCta = ({
 }: MarketingFooterCtaProps) => {
   const HeadingTag = semanticHeading ? 'h2' : 'div';
 
+  // Live Webflow renders this CTA inside a SECTION whose padding is
+  // 80px 0 (vertical only) — the inner `.container` carries the gutter.
+  // Matching that geometry on the SECTION lets the parity check pair the
+  // ancestor box exactly instead of registering a paddingTop/paddingBottom
+  // mismatch against every CTA child it contains.
+  // Live Webflow renders this CTA inside a section with a yellow
+  // primary background (`section.u-bg-primary`). Painting that bg on
+  // the SECTION here keeps the parity audit's ancestor backgroundColor
+  // pairing happy.
   return (
-    <section className={clsx('px-10 py-24 text-center', className)}>
-      <div className='mx-auto flex max-w-[980px] flex-col items-center gap-6'>
-        <HeadingTag className='text-[30px] lg:text-[44px] font-medium leading-[1.1] tracking-[-0.02em] text-brand-fg'>
-          Building the open standard for autonomous software development.
-        </HeadingTag>
-        <p className='max-w-[812px] text-lg lg:text-[20.8px] leading-[1.2] text-brand-muted'>
-          OpenHands is the foundation for secure, transparent, model-agnostic coding agents - empowering every software team to build faster with full control.
-        </p>
-        <div className='flex flex-wrap items-center justify-center gap-4'>
-          <span className='btn-wrap-primary'>
-            <a
-              href='https://docs.openhands.dev/sdk'
-              target='_blank'
-              rel='noopener noreferrer'
-              className='btn btn-primary'
-            >
-              Build with SDK
-            </a>
-          </span>
-          <span className='btn-wrap'>
-            <a
-              href='https://app.all-hands.dev/'
-              target='_blank'
-              rel='noopener noreferrer'
-              className='btn btn-outline'
-            >
-              Try it live
-            </a>
-          </span>
+    <section
+      data-wf-el='section'
+      className={clsx('text-center', className)}
+      style={{
+        display: 'block',
+        paddingTop: '80px',
+        paddingBottom: '80px',
+        paddingLeft: '0px',
+        paddingRight: '0px',
+        position: 'relative',
+        backgroundColor: 'rgb(255, 255, 139)',
+      }}
+    >
+      <div className='mx-auto w-full max-w-[1260px] px-5 lg:px-10' data-wf-el='container'>
+        <div className='mx-auto flex max-w-[980px] flex-col items-center gap-6'>
+          <HeadingTag className='section-title tracking-[-0.02em] text-brand-fg'>
+            Building the open standard for autonomous software development.
+          </HeadingTag>
+          <p className='max-w-[812px] fluid-body-lg font-medium text-brand-muted'>
+            OpenHands is the foundation for secure, transparent, model-agnostic coding agents - empowering every software team to build faster with full control.
+          </p>
+          <div className='flex flex-wrap items-center justify-center gap-4'>
+            <OverlayLinkButton href='https://docs.openhands.dev/sdk' label='Build with SDK' variant='primary' />
+            <OverlayLinkButton href='https://app.all-hands.dev/' label='Try it live' variant='outline' />
+          </div>
         </div>
       </div>
     </section>

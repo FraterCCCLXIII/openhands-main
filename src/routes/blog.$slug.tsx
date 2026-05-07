@@ -238,13 +238,13 @@ const BlogDetails = () => {
       </div>
 
       <main className='mt-12 flex w-full max-w-[1240px] flex-col gap-10'>
-        <section className='mx-auto w-full max-w-[820px]'>
+        <section data-wf-el='section' className='mx-auto w-full max-w-[820px]'>
           <CMarkdown variant='blog' codeElementWidth={codeElementWidth}>
             {data.content}
           </CMarkdown>
         </section>
 
-        <section className='w-full'>
+        <section data-wf-el='section' className='w-full'>
           <BlogFooter
             title={data.title}
             authors={data.authors}

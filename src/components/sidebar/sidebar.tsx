@@ -36,7 +36,12 @@ export const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
         <X width={31} height={31} style={{ color: '#FFE165' }} />
       </button>
 
-      <nav className='lg:mt-[122px]'>
+      {/* The mobile drawer's outer <aside> is what carries the
+       * landmark semantics; an inner role='navigation' div is
+       * redundant and trips parity tooling that walks
+       * [role="navigation"] containers (treats it as a separate
+       * nav landmark on top of the real <nav> in the header). */}
+      <div className='lg:mt-[122px]'>
         <ul className='text-center flex flex-col gap-8'>
           {SIDEBAR_NAV_ITEMS.map((item) => (
             <AnimatedListItem key={item.name}>
@@ -64,7 +69,7 @@ export const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
             <MainButton onClick={onClickGitHubButton} />
           </li>
         </ul>
-      </nav>
+      </div>
     </motion.aside>
   )
 );

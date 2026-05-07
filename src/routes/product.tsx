@@ -2,7 +2,6 @@ import type { Route } from './+types/product';
 import {
   ProductComparisonTable,
   ProductPageActionLink,
-  ProductPageFooterCta,
 } from '~/components/product-feature-page';
 import { OverlayLinkButton } from '~/components/overlay-link-button';
 import { PRODUCT_SURFACES } from '~/constants/product-surfaces';
@@ -31,15 +30,14 @@ export const meta: Route.MetaFunction = ({ location }) => {
 const Product = () => {
   return (
     <main data-wf-el='page-main' style={{ display: 'flex', flexDirection: 'column' }}>
-      <section className='relative overflow-hidden bg-brand-bg px-6 pb-10 pt-10 lg:px-10 lg:pb-6 lg:pt-12'>
-        <div className='absolute inset-0 opacity-[0.12]'>
-          <img
-            src='/assets/webflow/backgrounds/6908d170831c19b2b6976323_ascii-art_(16)_1.svg'
-            alt=''
-            className='h-full w-full object-cover'
-            style={{ textAlign: 'start' }}
-          />
-        </div>
+      {/*
+        Live openhands.dev/product nests the dark "interface cards"
+        section inside section-product_hero (look for the two
+        consecutive </section> closing tags after the dark u-bg-darkbrown
+        block on live's HTML).  Mirroring that structure keeps the
+        section count and per-section heights aligned with live.
+      */}
+      <section data-wf-el='section-product_hero' style={{ display: 'block', backgroundColor: 'rgba(0, 0, 0, 0)', paddingTop: '0px', paddingBottom: '0px', paddingLeft: '0px', paddingRight: '0px' }} className='relative overflow-hidden'>
         <div className='relative mx-auto flex max-w-[860px] flex-col items-center text-center'>
           <div className='inline-flex rounded-[4px] bg-brand-accent px-5 py-2 text-[13px] font-medium leading-none text-brand-fg'>
             Product
@@ -63,14 +61,14 @@ const Product = () => {
             />
           </div>
         </div>
-      </section>
 
-      <section className='bg-brand-fg px-6 pb-10 pt-0 lg:px-10 lg:pb-12 lg:pt-0'>
+        {/* Nested dark interface-cards section — see comment above */}
+        <section data-wf-el='section' style={{ display: 'block', backgroundColor: 'rgb(34, 21, 13)', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px', marginTop: '80px' }}>
         <div className='mx-auto max-w-[1260px] space-y-10 lg:space-y-4'>
           {PRODUCT_SURFACES.map((item, index) => {
             const imageCard = (
-              <div className='rounded-[18px] bg-brand-bg p-4 shadow-[0_0_0_1px_rgba(249,240,217,0.08)]'>
-                <img src={item.image} alt='' className='w-full' style={{ borderRadius: '0px', color: 'rgb(249, 240, 217)' }} />
+              <div style={{ width: '489px', maxWidth: '100%' }}>
+                <img src={item.image} alt='' className='img-block product-list_img' style={{ width: '489px', maxWidth: '100%', height: 'auto', borderRadius: '0px', color: 'rgb(249, 240, 217)' }} />
               </div>
             );
 
@@ -111,21 +109,16 @@ const Product = () => {
             );
           })}
         </div>
+        </section>
       </section>
 
-      <ProductComparisonTable dark headerColor='#8a5f45' ctaHref='https://app.all-hands.dev/' ctaLabel='Try it live' />
-      <ProductPageFooterCta
-        title='Building the open standard for autonomous software development.'
-        description='OpenHands is the foundation for secure, transparent, model-agnostic coding agents - empowering every software team to build faster with full control.'
-        actions={[
-          { href: 'https://app.all-hands.dev/', label: 'Try it live' },
-          {
-            href: 'https://docs.openhands.dev/overview/introduction',
-            label: 'See developer docs',
-            variant: 'outline',
-          },
-        ]}
-      />
+      <ProductComparisonTable headerColor='rgb(138, 95, 69)' ctaHref='https://app.all-hands.dev/' ctaLabel='Try it live' />
+      {/*
+        Live /product does NOT have a separate yellow ASCII CTA section
+        — the "Building the open standard..." copy is rendered inside
+        the global footer (section.u-bg-primary) by FooterMarketingCta.
+        Adding ProductPageFooterCta here was a structural divergence.
+      */}
     </main>
   );
 };

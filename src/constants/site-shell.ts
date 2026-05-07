@@ -9,6 +9,19 @@ export interface SiteLinkGroup {
   links: SiteLink[];
 }
 
+export interface ProductDropdownItem {
+  name: string;
+  to: string;
+  description: string;
+  icon: 'cli' | 'gui' | 'sdk';
+}
+
+export const PRODUCT_DROPDOWN_ITEMS: ProductDropdownItem[] = [
+  { name: 'Terminal / CLI', to: '/product/cli', description: 'Agentic power from the command line', icon: 'cli' },
+  { name: 'Web GUI', to: '/product/gui', description: 'Agentic development, made human.', icon: 'gui' },
+  { name: 'SDK', to: '/product/sdk', description: 'Build agents your way.', icon: 'sdk' },
+];
+
 export const DESKTOP_NAV_ITEMS: SiteLink[] = [
   { name: 'Product', to: '/product' },
   { name: 'Enterprise', to: '/enterprise' },

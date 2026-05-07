@@ -80,7 +80,7 @@ const Blog = () => {
 
   return (
     <main data-wf-el='page-main' className='flex flex-col items-center px-5 pb-16 pt-[40px] lg:px-10'>
-      <section className='w-full max-w-[1238px] text-center'>
+      <section data-wf-el='section-hero' className='w-full max-w-[1238px] text-center'>
         <h1 className='fluid-h1 font-sohne text-brand-fg'>
           OpenHands Blog
         </h1>
@@ -101,7 +101,7 @@ const Blog = () => {
       </section>
 
       {featuredBlog && (
-        <section className='mt-[140px] w-full max-w-[1238px]'>
+        <section data-wf-el='section' className='mt-[140px] w-full max-w-[1238px]'>
           <FeaturedBlogCard
             href={`/blog/${getBlogSlug(featuredBlog)}`}
             title={featuredBlog.data.title}
@@ -112,8 +112,8 @@ const Blog = () => {
         </section>
       )}
 
-      <section id='blog-grid' className='mt-20 w-full max-w-[1238px]'>
-        <div className='grid grid-cols-1 gap-x-8 gap-y-20 md:grid-cols-2 xl:grid-cols-3'>
+      <section data-wf-el='section' id='blog-grid' className='mt-20 w-full max-w-[1238px]'>
+        <div className='grid grid-cols-1 items-start gap-x-10 gap-y-20 md:grid-cols-2 xl:grid-cols-3'>
           {visibleBlogs.map((blog) => (
             <BlogCard
               key={getBlogSlug(blog)}

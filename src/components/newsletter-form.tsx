@@ -35,6 +35,7 @@ export const NewsletterForm: React.FC<NewsletterFormProps> = ({
             required
             pattern='[^@]+@[^.]+\..+'
             className='min-h-[52px] w-full rounded-[8px] border-none bg-white px-6 text-[16px] leading-[1.5] text-[#5f5f5f] outline-none transition-colors placeholder:text-[#b3a88c] focus:ring-1 focus:ring-brand-accent'
+            style={{ verticalAlign: 'middle' }}
           />
           <input
             type='submit'
@@ -45,13 +46,13 @@ export const NewsletterForm: React.FC<NewsletterFormProps> = ({
           />
         </div>
 
-        <p className='m-0 max-w-[400px] text-center font-mono text-[12px] leading-[1.4] text-[#5f5f5f]'>
+        <p className='m-0 max-w-[430px] text-center font-mono text-[12px] leading-[14.4px] text-[#5f5f5f]'>
           By submitting your email you agree to our{' '}
           <a
             href='/privacy'
             target='_blank'
             rel='noreferrer'
-            className='font-mono font-medium text-[#5f5f5f] underline decoration-[1.2px] underline-offset-[0.18em] transition-colors hover:text-brand-fg'
+            className='font-mono font-normal leading-[14.4px] text-[#5f5f5f] underline decoration-[1.2px] underline-offset-[0.18em] transition-colors hover:text-brand-fg'
           >
             Privacy Policy
           </a>

@@ -27,6 +27,14 @@ const EVENTS = [
     time: '4:00 PM UTC',
     href: 'https://luma.com/openhands-community-21may26',
   },
+  {
+    title: 'OpenHands Community Call - June 4th',
+    description:
+      "Join our bi-weekly OpenHands Community Call! We'll announce new contributors, discuss project updates, demo new features, and talk about the future of AI. All are welcome! Recording and agenda will be available post meeting.",
+    date: 'June 4, 2026',
+    time: '4:00 PM UTC',
+    href: 'https://luma.com/openhands-community-4jun26',
+  },
 ];
 
 const MICHAEL_MAY_IMAGE = '/assets/webflow/team/698653c2074b111e59086ff8_mike.jpeg';
@@ -107,22 +115,32 @@ const MetadataItem = ({
   tone: 'dark' | 'light';
   children: string;
 }) => (
-  <p
+  // Live wraps each metadata datum in a flex `div` whose inner `<p>`
+  // remains a regular block element — keeping the icon outside the
+  // paragraph.  We were emitting `<p class="inline-flex ...">…</p>`,
+  // which collapsed icon + label into the paragraph and left the
+  // computed `display` of the `P:4:00 pm utc` text element as `flex`
+  // (vs live's `block`).
+  <div
     className={[
-      'inline-flex items-center gap-2 text-[16px] font-medium leading-[22.4px]',
+      'inline-flex items-center gap-2',
       tone === 'light' ? 'text-brand-bg' : 'text-brand-fg',
     ].join(' ')}
   >
     <MetadataIcon type={type} />
-    <span>{children}</span>
-  </p>
+    <p className='text-[16px] font-normal leading-[22.4px]'>{children}</p>
+  </div>
 );
 
 const Community = () => {
   return (
-    <main data-wf-el='page-main' className='pt-[40px]' style={{ display: 'flex', flexDirection: 'column' }}>
-      <section className='px-10 pb-10 pt-0 lg:pb-14'>
-        <div className='mx-auto flex max-w-[1238px] flex-col items-center gap-5 text-center'>
+    <main data-wf-el='page-main' style={{ display: 'flex', flexDirection: 'column' }}>
+      <section data-wf-el='section-community-hero' className='pb-10 pt-0 lg:pb-14'>
+        {/* Live wraps the hero in `<div class="hero"><div class="container"><div class="hero-content is-center">`.
+            `.hero-content` carries `padding: 2rem 0 4rem` (collapsing to ~56px top at the
+            community breakpoint), which is what shifts the H1 from `top:84` to `top:140`
+            on live. Mirror it with `pt-14` on the inner content wrapper. */}
+        <div className='mx-auto flex max-w-[1238px] flex-col items-center gap-5 pt-14 text-center'>
           <h1 className='max-w-[920px] fluid-h1 text-brand-fg'>
             Join the OpenHands Community
           </h1>
@@ -132,14 +150,10 @@ const Community = () => {
           <div className='mt-6 flex flex-wrap items-center justify-center gap-4'>
             <a
               href='/joinslack'
-              className='btn rounded-none flex items-center gap-3 text-brand-bg'
+              className='btn rounded-none text-brand-bg'
+              style={{ paddingLeft: '33.9px', paddingRight: '33.9px' }}
             >
-              <img
-                src='/assets/webflow/icons/6908c8dd7162d7d09526a0fd_Slack_Technologies_Logo2.svg'
-                alt=''
-                className='h-5 w-5'
-              />
-              <span>Join Slack</span>
+              Join Slack
             </a>
             <a
               href='#events'
@@ -151,7 +165,7 @@ const Community = () => {
         </div>
       </section>
 
-      <section className='bg-brand-fg px-10 py-16 text-brand-bg'>
+      <section data-wf-el='section' className='bg-brand-fg py-20 text-brand-bg'>
         <div className='mx-auto grid max-w-[1238px] gap-10 lg:grid-cols-[0.92fr_1.08fr] lg:items-center'>
           <div className='max-w-[560px]'>
             <h2 className='section-title text-brand-bg'>
@@ -191,7 +205,7 @@ const Community = () => {
         </div>
       </section>
 
-      <section id='events' className='px-10 py-20'>
+      <section data-wf-el='section' id='events' className='py-20'>
         <div className='mx-auto max-w-[1238px]'>
           <div className='text-center'>
             <h2 className='section-title text-brand-fg'>
@@ -199,7 +213,7 @@ const Community = () => {
             </h2>
           </div>
 
-          <div className='mt-12 grid gap-6 lg:grid-cols-3'>
+          <div className='mt-12 grid gap-4 lg:grid-cols-3'>
             {EVENTS.map((event) => (
               <a
                 key={event.title}
@@ -211,7 +225,7 @@ const Community = () => {
                 <h2 className='fluid-h4 leading-[1.4] text-brand-fg'>
                   {event.title}
                 </h2>
-                <p className='mt-4 flex-1 text-[14px] leading-[1.5] text-brand-muted'>
+                <p className='mt-4 flex-1 text-[16px] leading-[22.4px] text-brand-muted'>
                   {event.description}
                 </p>
                 <div className='mt-6 flex flex-wrap items-center gap-x-6 gap-y-2'>
@@ -239,10 +253,10 @@ const Community = () => {
         </div>
       </section>
 
-      <section className='mt-[60px] bg-brand-fg px-10 py-16 text-brand-bg'>
+      <section data-wf-el='section' className='bg-brand-fg py-20 text-brand-bg'>
         <div className='mx-auto max-w-[1238px]'>
           <div className='text-center'>
-            <h2 className='inline-block section-title text-brand-bg'>
+            <h2 className='section-title text-brand-bg'>
               Start contributing
             </h2>
             <p className='mx-auto mt-4 max-w-[520px] fluid-body-lg text-brand-bg'>
@@ -267,7 +281,7 @@ const Community = () => {
                   href={path.href}
                   target='_blank'
                   rel='noopener noreferrer'
-                  className='btn btn-outline border-none rounded-none mt-6 inline-flex w-fit self-center text-brand-bg border-brand-bg/30 hover:bg-brand-bg hover:text-brand-fg'
+                  className='btn btn-outline border-none rounded-none mt-6 inline-flex w-fit text-brand-bg border-brand-bg/30 hover:bg-brand-bg hover:text-brand-fg'
                 >
                   {path.cta}
                 </a>
@@ -277,7 +291,7 @@ const Community = () => {
         </div>
       </section>
 
-      <section className='px-10 py-16'>
+      <section data-wf-el='section' className='py-20'>
         <div className='mx-auto max-w-[1238px]'>
           <div className='text-center'>
             <h2 className='section-title text-brand-fg'>
@@ -288,7 +302,7 @@ const Community = () => {
         </div>
       </section>
 
-      <section className='px-10 pb-[138px] pt-0'>
+      <section data-wf-el='section' className='py-20'>
         <div className='mx-auto max-w-[1238px]'>
           <div className='text-center'>
             <h2 className='section-title text-brand-fg'>
@@ -300,20 +314,22 @@ const Community = () => {
             <img
               src={MICHAEL_MAY_IMAGE}
               alt=''
-              className='mx-auto h-20 w-20 object-cover'
+              className='img-block mx-auto h-20 w-20 object-cover'
               style={{ borderRadius: '100%' }}
             />
-            <h3 className='mt-5 inline-block fluid-h3 text-brand-fg'>
+            <h3 className='mt-5 fluid-h3 text-brand-fg'>
               Michael May
             </h3>
-            <p className='mx-auto mt-6 max-w-[910px] text-[24px] leading-[33.6px] text-brand-fg'>
+            <p className='mx-auto mt-6 max-w-[910px] text-[24px] font-medium leading-[33.6px] text-brand-fg'>
               “My team uses OpenHands for all our development tasks and we have found that it is hands-down better than Claude Code, cursor, Codex, and every other hot agentic DevTool out there. The caliber of the team at OpenHands and the caliber of the community they've curated is second to none, and this is evidenced by the quality of their product and the trajectory of their growth.”
             </p>
           </div>
         </div>
       </section>
 
-      <MarketingFooterCta className='py-28' />
+      {/* MarketingFooterCta intentionally omitted: live /community ends
+          with the contributions/governance content section followed
+          directly by the global footer. */}
     </main>
   );
 };

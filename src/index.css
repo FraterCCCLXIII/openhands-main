@@ -70,12 +70,11 @@
 
   --h4-font-size: clamp(1.3rem, 1.24286rem + 0.28571vw, 1.5rem);     /* 20.8–24px */
   --paragraph-lg-font-size: clamp(1.1rem, 1.04286rem + 0.28571vw, 1.3rem); /* 17.6–20.8px */
-  --paragraph-sm-font-size: clamp(0.805rem, 0.73634rem + 0.29296vw, 1rem); /* 12.88–16px */
+  --paragraph-sm-font-size: clamp(0.8rem, 0.77143rem + 0.14286vw, 0.9rem); /* 12.8–14.4px (live caps at 0.9rem) */
   
   /* Button - exact Webflow values */
   --btn-padding-y: 14.4px;
   --btn-padding-x: 30.4px;
-  --btn-border-radius: 0px;
   
   /* Banner */
   --banner-border-radius: 6.4px;
@@ -87,10 +86,46 @@
     @apply font-sohne overscroll-y-none bg-brand-bg text-brand-fg;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    /* Match live Webflow body line-height (--_typography---paragraph-body--line-height: 1.4).
+       Browser default 'normal' computes to ~1.5 (~24px on 16px text); live uses 22.4px.
+       The 1.6px-per-line difference compounds across long pages and shifts every
+       downstream element upward, manifesting as cumulative top-position layout drift. */
+    line-height: 1.4;
   }
 
   a {
     text-underline-offset: 1.6px;
+  }
+
+  /* Live Webflow gives FAQ <summary> rows a `transition: color 0.3s` so the
+     question text fades when the row toggles open/closed. The plain `<a>`
+     tag does NOT inherit a global transition on live (only specific link
+     wrappers do), so keep the transition scoped to summary here. */
+  summary {
+    transition: color 0.3s;
+  }
+
+  /* Live's nav/footer links use `transition: color 0.3s` (single property,
+     0.3s duration). Tailwind's `transition-colors` utility instead emits a
+     6-property transition at 0.15s, which the parity script flags as an
+     "extra" animation. Use `.link-hover` on header/footer links to match
+     live's exact transition string. */
+  .link-hover {
+    transition: color 0.3s;
+  }
+
+  /* Match Webflow's normalize:  most live images render as `inline-block`.
+     Tailwind preflight resets <img> to `display: block`, so without this rule
+     the parity script flags ~58 image elements (team headshots, hero/marketing
+     imagery, content figures) as a `display` mismatch.  A handful of live
+     images render as `display: block` instead — those use the
+     `.img-block` utility below to opt back in. */
+  img {
+    display: inline-block;
+    vertical-align: middle;
+  }
+  .img-block {
+    display: block;
   }
 
   ::selection {
@@ -147,7 +182,10 @@
 @layer components {
   /* Button styles - exact Webflow computed values */
   .btn {
-    @apply inline-flex items-center justify-center font-medium cursor-pointer transition-all duration-300 relative text-center;
+    @apply inline-flex items-center justify-center font-medium cursor-pointer relative text-center;
+    /* Live's inner anchor does NOT carry a transition (the wrapper
+       .btn-wrap* div does). Keep this rule transition-free so the hover
+       behavior fires from the wrapper, matching live exactly. */
     padding: var(--btn-padding-y) var(--btn-padding-x);
     border-radius: var(--btn-border-radius);
     font-size: 16px;
@@ -173,30 +211,46 @@
     @apply bg-brand-fg text-brand-bg;
   }
 
-  /* Button wrapper — matches live Webflow .capabilities_card_wrap div that
-     wraps CTA buttons with rounded corners and glassmorphic background.
-     On live Webflow, the wrapper carries the padding and border-radius,
-     while the inner <a> has no padding or radius. */
-  .btn-wrap {
-    display: inline-flex;
-    border-radius: 8px;
-    background-color: rgba(255, 255, 255, 0.34);
-    padding: var(--btn-padding-y) var(--btn-padding-x);
-  }
-  .btn-wrap-primary {
-    display: inline-flex;
-    border-radius: 8px;
-    background-color: rgb(34, 21, 13);
-    padding: var(--btn-padding-y) var(--btn-padding-x);
-  }
+  /* Button wrapper — matches live Webflow CTA wrapper divs that provide
+     rounded corners, glassmorphic/dark background, padding, and text styling.
+     All three variants share the base btn text appearance. */
+  .btn-wrap,
+  .btn-wrap-primary,
   .btn-wrap-dark {
     display: inline-flex;
+    align-items: center;
+    justify-content: center;
     border-radius: 8px;
-    background-color: rgba(241, 234, 224, 0.2);
+    border: 1px solid transparent;
+    box-sizing: border-box;
     padding: var(--btn-padding-y) var(--btn-padding-x);
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 1.3;
+    text-align: center;
+    /* Live's `.button*` outer wrap uses `text-decoration: none`.  The
+     * underline AGENTS.md notes referenced earlier applies to the inner
+     * btn-text element, not the wrapper; keeping underline on the wrap
+     * was producing a visible mismatch with live's clean cap. */
+    text-decoration: none;
+    cursor: pointer;
+    /* Live carries the hover transition on the wrapper div, not the inner
+       anchor. Match by transitioning border-color and box-shadow on hover. */
+    transition: box-shadow 0.3s, border-color 0.3s;
   }
-  /* Wrapper owns visual style (radius, bg); inner .btn keeps padding but
-     delegates radius to the wrapper so bounding boxes match live. */
+  .btn-wrap {
+    background-color: rgba(255, 255, 255, 0.34);
+  }
+  .btn-wrap-primary {
+    background-color: rgb(34, 21, 13);
+    color: #F9F0D9;
+  }
+  .btn-wrap-dark {
+    background-color: rgba(241, 234, 224, 0.2);
+    color: #F9F0D9;
+  }
+  /* Inner .btn inside a wrapper: wrapper carries the padding, so strip it
+     from the inner element to avoid doubling. */
   .btn-wrap > .btn,
   .btn-wrap-primary > .btn,
   .btn-wrap-dark > .btn {
@@ -204,16 +258,7 @@
     background: transparent;
     border-color: transparent;
     border-style: none;
-  }
-  /* Dark-context wrappers show beige text on dark/muted backgrounds.
-     The descendant selector also captures <a> inside overlay-link patterns.
-     text-decoration-color auto-inherits from color — no explicit override
-     needed (avoids false-positive textDecoration shorthand diffs). */
-  .btn-wrap-primary > .btn,
-  .btn-wrap-dark > .btn,
-  .btn-wrap-primary .btn a,
-  .btn-wrap-dark .btn a {
-    color: #F9F0D9;
+    padding: 0;
   }
 
   .btn-outline-light {
@@ -227,12 +272,23 @@
 
   /* ── Fluid typography utility classes — mirror Webflow's clamp() system ── */
 
-  /* Matches Webflow .h1 / .h1-2: page headings (≈32–44px) */
+  /* Matches Webflow .h1 / .h1-2: page headings (≈32–44px).
+   *
+   * Live also adds `position: relative` and `flex: 0 auto` to `.h1`
+   * (independent of any flex parent — `flex: 0 auto` is just a
+   * shorthand for `flex-grow:0; flex-shrink:1; flex-basis:auto` and
+   * has no effect outside a flex container, but it does remove the
+   * default `static` positioning).  Without `position: relative` the
+   * page-level H1 falls back to `static`, which surfaced as a
+   * persistent style mismatch on `/`, `/about`, and the product
+   * pages.  Add `position: relative` here so every fluid-h1 mirrors
+   * live's `.h1` rule. */
   .fluid-h1 {
     font-size: var(--h1-font-size);
     line-height: var(--h1-line-height);
     font-weight: var(--h1-font-weight);
     letter-spacing: var(--h1-letter-spacing);
+    position: relative;
   }
 
   /* Matches Webflow .h2 / .h2-2: section headings (≈28.8–44px) */
@@ -250,22 +306,27 @@
     font-weight: var(--h3-font-weight);
   }
 
-  /* Matches Webflow .h4: card headings (≈20.8–24px) */
+  /* Matches Webflow .h4: card headings (≈20.8–24px).
+   * Webflow's default .h4 line-height is 1.4 (verified against
+   * computed style on /enterprise — live=33.6px / 24px = 1.4). */
   .fluid-h4 {
     font-size: var(--h4-font-size);
-    line-height: 1.2;
+    line-height: 1.4;
     font-weight: 500;
   }
 
-  /* Matches Webflow paragraph-lg (≈17.6–20.8px) */
+  /* Matches Webflow paragraph-lg (≈17.6–20.8px, font-weight 500) */
   .fluid-body-lg {
     font-size: var(--paragraph-lg-font-size);
     line-height: var(--paragraph-lg-line-height);
+    font-weight: 500;
   }
 
-  /* Matches Webflow paragraph-sm (≈12.88–16px) */
+  /* Matches Webflow paragraph-sm (≈12.8–14.4px, line-height 1.5, font-weight 400) */
   .fluid-sm {
     font-size: var(--paragraph-sm-font-size);
+    line-height: 1.5;
+    font-weight: 400;
   }
 
   /* Card styles */
@@ -283,10 +344,13 @@
     @apply border-b border-brand-border;
   }
 
-  /* Stacked feature items for Why teams section - matches live site ~120px height */
+  /* Stacked feature items for Why teams section.  Live's average row
+   * height is ~97px (873px section minus paddings, divided by 6 rows);
+   * tuned via section-level wfComparison height tracking to keep the
+   * why-teams section within +/- 5px of live. */
   .feature-item-stacked {
     @apply flex gap-5 py-6 border-t border-brand-border;
-    min-height: 120px;
+    min-height: 97px;
   }
 
   .feature-item-stacked:last-child {
@@ -385,11 +449,37 @@
 }
 
 .nav_logo_link {
-  @apply flex items-center gap-2;
+  /* Live Webflow nav_logo_link computed styles: display:block,
+   * position:relative, max-width:100%. The 192px wide rect comes from
+   * a parent grid column, but setting position:relative here matches
+   * live and avoids cascading nav_links_link layout drift. */
+  position: relative;
+  display: block;
+  max-width: 100%;
+  align-self: center;
 }
 
 .nav_logo_img {
-  @apply h-[30px] w-auto;
+  /* Live Webflow nav_logo_img CSS resolves to:
+   *   display: inline; width: 100%; height: auto; max-width: 100%;
+   *   vertical-align: baseline.
+   * The visible width comes from the parent .nav_logo_link being 12rem wide.
+   * Setting width:192px directly on the img keeps the layout right when the
+   * link itself doesn't get a width via its own grid column. */
+  display: inline;
+  width: 192px;
+  height: auto;
+  max-width: 100%;
+  vertical-align: baseline;
+}
+
+/* Bootstrap Icons-style svgs ([data-wf-el^="bi-"]) inherit vertical-align:
+ * baseline on live (Bootstrap Icons default uses -0.125em but Webflow's
+ * stylesheet overrides to baseline).  Without this rule, inline <svg>
+ * default browser rule sets vertical-align: middle which causes a
+ * 1px size/y-offset drift on every icon and cascades through nav layout. */
+[data-wf-el^='bi-'] {
+  vertical-align: baseline;
 }
 
 .nav_links {
@@ -401,7 +491,25 @@
 }
 
 .nav_links_li {
-  @apply relative;
+  /* Live Webflow .nav_links_li resolves to position: static.  Trigger items
+   * (Product / Resources) opt into position:relative on the JSX side via
+   * className='relative' so dropdown panels still anchor correctly. */
+}
+
+.nav_links_link,
+[data-wf-el='nav_links_link'] {
+  /* Live's `.nav_links_link` defaults to max-width: none.  Only the
+   * dropdown-item variant (which Webflow wraps in `.w-inline-block`)
+   * inherits the 100% cap.  Top-level plain links (Enterprise, Pricing,
+   * Benchmarks, Community, Resources) keep `none`. */
+  max-width: none;
+}
+
+.nav_links_link.is-dropdown,
+.nav_links_link.w-inline-block,
+[data-wf-el='nav_links_link'].is-dropdown,
+[data-wf-el='nav_links_link'].w-inline-block {
+  max-width: 100%;
 }
 
 .nav_links_link {
@@ -417,7 +525,11 @@
 }
 
 .nav_links_dropdown_wrap {
-  @apply absolute top-full left-0 pt-2 opacity-0 invisible transition-all;
+  /* Live Webflow leaves a 6px gap between the nav trigger and the
+   * dropdown panel; we previously used pt-2 (8px), which pushed the
+   * panel and every child 2px further down than live. */
+  @apply absolute top-full left-0 opacity-0 invisible transition-all;
+  padding-top: 6px;
 }
 
 .nav_links_li:hover .nav_links_dropdown_wrap {

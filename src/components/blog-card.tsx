@@ -74,27 +74,27 @@ export const BlogCard: React.FC<BlogCardProps> = ({
   titleLinkOnly = false,
 }) => {
   const image = !img ? (
-    <PlaceholderImage variant='robot' className='aspect-[3/2] w-full' />
+    <PlaceholderImage variant='robot' className='aspect-[10/7] w-full' />
   ) : (
     <img
       src={img}
       alt={imgAlt !== undefined ? imgAlt : `${title} cover image`}
-      className='aspect-[3/2] w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]'
+      className='aspect-[10/7] w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]'
     />
   );
 
   if (titleLinkOnly) {
     return (
-      <Link to={href} className='group block' data-testid='blog-card'>
-        <article className='flex flex-col gap-4'>
+      <Link to={href} className='group relative block' data-testid='blog-card'>
+        <article className='flex flex-col gap-6'>
           <div className='overflow-hidden rounded-[6px]'>{image}</div>
 
-          <div className='max-w-[32rem] space-y-2'>
+          <div className='flex max-w-[32rem] flex-col gap-[14px]'>
             {showDate && date && (
-              <p className='m-0 text-[14px] leading-[1.5] text-[#5f5f5f]'>{formatDate(date)}</p>
+              <p className='m-0 text-[14.4px] leading-[21.6px] text-[#5f5f5f]'>{formatDate(date)}</p>
             )}
-            <p className='m-0 font-sohne text-[18px] leading-[1.2] font-medium text-brand-fg lg:text-[20px]'>
-              <span className='text-[16px] leading-[1.4] transition-colors group-hover:text-brand-brown'>
+            <p className='m-0 font-sohne text-[20.8px] leading-[24.96px] font-medium text-brand-fg'>
+              <span className='transition-colors group-hover:text-brand-brown'>
                 {title}
               </span>
             </p>
@@ -105,15 +105,15 @@ export const BlogCard: React.FC<BlogCardProps> = ({
   }
 
   return (
-    <Link to={href} className='group block' data-testid='blog-card'>
-      <article className='flex flex-col gap-4'>
+    <Link to={href} className='group relative block' data-testid='blog-card'>
+      <article className='flex flex-col gap-6'>
         <div className='overflow-hidden rounded-[6px]'>{image}</div>
 
-        <div className='max-w-[32rem] space-y-2'>
+        <div className='flex max-w-[32rem] flex-col gap-[14px]'>
           {showDate && date && (
-            <p className='m-0 text-[14px] leading-[1.5] text-[#5f5f5f]'>{formatDate(date)}</p>
+            <p className='m-0 text-[14.4px] leading-[21.6px] text-[#5f5f5f]'>{formatDate(date)}</p>
           )}
-          <p className='m-0 font-sohne text-[18px] leading-[1.2] font-medium text-brand-fg lg:text-[20px]'>
+          <p className='m-0 font-sohne text-[20.8px] leading-[24.96px] font-medium text-brand-fg'>
             {title}
           </p>
         </div>

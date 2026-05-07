@@ -13,7 +13,7 @@ export const PRODUCT_SURFACES: ProductSurface[] = [
     description:
       'Run, inspect, and automate OpenHands agents directly from the terminal or headlessly in your pipelines with full visibility and control.',
     href: '/product/cli',
-    image: '/assets/webflow/misc/691b30b28b25626f4d315588_CLI.webp',
+    image: '/assets/webflow/misc/699490d1d9729682e0daf0a5_cli.png',
   },
   {
     title: 'Web GUI',
@@ -21,7 +21,7 @@ export const PRODUCT_SURFACES: ProductSurface[] = [
     description:
       'Plan, run, and review agent work together in a collaborative UI.',
     href: '/product/gui',
-    image: '/assets/webflow/misc/691b30afadf69b956d353513_Cloud.webp',
+    image: '/assets/webflow/misc/6994c3bfa634f5f3966d2150_4c76230966d0d54a446a009e4f4a19c2_gui.png',
   },
   {
     title: 'SDK',
@@ -29,6 +29,6 @@ export const PRODUCT_SURFACES: ProductSurface[] = [
     description:
       'Create specialized agents, integrate internal tools, and orchestrate complex workflows programmatically.',
     href: '/product/sdk',
-    image: '/assets/webflow/misc/691b30aa3c700dcb47a96c00_SDK.webp',
+    image: '/assets/webflow/misc/699f4b0b80190eeea4ba3eb9_sdk-1.png',
   },
 ];

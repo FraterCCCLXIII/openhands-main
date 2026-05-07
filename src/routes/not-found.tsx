@@ -16,7 +16,7 @@ export const meta: MetaFunction = () => [
 export default function NotFoundRoute() {
   return (
     <main className='px-6 pt-[20.2vh] lg:px-10'>
-      <section className='mx-auto flex max-w-[600px] flex-col items-center text-center'>
+      <section data-wf-el='section' className='mx-auto flex max-w-[600px] flex-col items-center text-center'>
         <div className='text-[16px] leading-[22.4px] text-brand-fg'>404</div>
         <h1 className='mt-[22px] w-full section-title text-brand-fg'>
           Page Not Found

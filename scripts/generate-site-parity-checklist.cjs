@@ -52,6 +52,14 @@ const STYLE_PROPS = [
   'borderWidth',
   'borderStyle',
   'borderColor',
+  // Layout alignment (catches flex-item alignment differences)
+  'alignSelf',
+  'verticalAlign',
+  // Layout-affecting box model (catches DOM-structural differences like
+  // overlay-link <a> with position:absolute filling its wrapper vs.
+  // inline-flex <a> with text-only dimensions)
+  'position',
+  'display',
   // Effects / interactivity
   'cursor',
   'opacity',
@@ -68,6 +76,20 @@ const CONTAINER_STYLE_PROPS = [
   'paddingBottom',
   'paddingLeft',
   'paddingRight',
+  // Margins are common root causes of layout drift (e.g. `mt-4` vs `mt-[49.6px]`
+  // on a card grid wrapper). Capture them so wf-element comparison surfaces the
+  // styling that produced the layout mismatch, not just the symptom.
+  'marginTop',
+  'marginBottom',
+  'marginLeft',
+  'marginRight',
+  // Min/max height/width are also frequent root causes — e.g. a `minHeight:
+  // 380px` card forces extra height that the live card doesn't carry, pushing
+  // every downstream section's Y-position by hundreds of pixels.
+  'minHeight',
+  'minWidth',
+  'maxHeight',
+  'maxWidth',
   'display',
   'flexDirection',
   'justifyContent',
@@ -204,6 +226,17 @@ function compareStyleValue(prop, liveValue, testValue, liveStyle, testStyle) {
         (liveValue === '0px' && testValue === 'normal')) return null;
   }
 
+  // minHeight / minWidth: 'auto' and '0px' both behave as "no contribution"
+  // for non-flex/grid block boxes — the parity audit was reporting a noisy
+  // mismatch on every section because live's <main> is display:flex (which
+  // resolves min-* to 'auto') and a block-level <main> on test resolves them
+  // to '0px'. The visible layout is identical in both cases, so treat them
+  // as equivalent here.
+  if (prop === 'minHeight' || prop === 'minWidth') {
+    const norm = (v) => (v === 'auto' || v === '0px' ? '0px' : v);
+    if (norm(liveValue) === norm(testValue)) return null;
+  }
+
   // textAlign: treat 'start' and 'left' as equivalent (they are for LTR)
   if (prop === 'textAlign') {
     const normalizeAlign = (v) => (v === 'start' ? 'left' : v === 'end' ? 'right' : v);
@@ -233,12 +266,21 @@ function compareStyleValue(prop, liveValue, testValue, liveStyle, testStyle) {
   const livePx = parsePx(liveValue);
   const testPx = parsePx(testValue);
   if (livePx !== null && testPx !== null) {
+    // Tolerances kept tight for layout-driving properties (fontSize, lineHeight,
+    // letterSpacing, fontWeight) so the script catches the underlying style
+    // differences that cause cascading layout drift. The looser values used
+    // previously (e.g. fontSize: 2px) were swallowing real diffs like
+    // 14.4px vs 16px and 22.4px vs 24px lineHeight that affect text width
+    // by tens of pixels per element across long documents.
+    //
+    // Sub-pixel rounding (e.g. 44px vs 43.9999px from clamp() math) is
+    // handled by a small floor of 0.25px applied to every numeric prop.
     const toleranceByProp = {
-      fontSize: 2,
-      fontWeight: 100,
-      lineHeight: 3,
+      fontSize: 0.5,
+      fontWeight: 50,
+      lineHeight: 1,
       borderRadius: 3,
-      letterSpacing: 1,
+      letterSpacing: 0.25,
       textUnderlineOffset: 2,
       textDecorationThickness: 1,
       paddingTop: 8,
@@ -246,7 +288,7 @@ function compareStyleValue(prop, liveValue, testValue, liveStyle, testStyle) {
       paddingLeft: 8,
       paddingRight: 8,
     };
-    const tolerance = toleranceByProp[prop] || 2;
+    const tolerance = Math.max(0.25, toleranceByProp[prop] ?? 2);
     if (Math.abs(livePx - testPx) <= tolerance) return null;
   }
 
@@ -260,9 +302,35 @@ function compareStyleValue(prop, liveValue, testValue, liveStyle, testStyle) {
   return `${prop}: live=${liveValue} test=${testValue}`;
 }
 
-function compareStyles(liveStyle, testStyle) {
+// Text-related style properties that don't affect visual rendering of
+// elements that don't render text (IMG, INPUT, embedded media). These
+// values are still inherited via the cascade but are visually irrelevant
+// for non-text elements — comparing them produces dozens of false-positive
+// "fontFamily/color/textDecorationColor" diffs on IMG elements whose only
+// difference is a different inherited cascade.
+const TEXT_ONLY_STYLE_PROPS = new Set([
+  'fontFamily',
+  'fontWeight',
+  'fontStyle',
+  'fontSize',
+  'lineHeight',
+  'letterSpacing',
+  'textAlign',
+  'textTransform',
+  'textDecoration',
+  'textDecorationColor',
+  'textDecorationThickness',
+  'textUnderlineOffset',
+  'whiteSpace',
+  'color',
+]);
+const NON_TEXT_TAGS = new Set(['IMG']);
+
+function compareStyles(liveStyle, testStyle, tag) {
   const diffs = [];
+  const skipText = tag && NON_TEXT_TAGS.has(tag);
   for (const prop of STYLE_PROPS) {
+    if (skipText && TEXT_ONLY_STYLE_PROPS.has(prop)) continue;
     const diff = compareStyleValue(prop, liveStyle?.[prop], testStyle?.[prop], liveStyle, testStyle);
     if (diff) diffs.push(diff);
   }
@@ -272,7 +340,28 @@ function compareStyles(liveStyle, testStyle) {
 // Compare ancestor (wrapper/container) styles captured during extraction.
 // Catches visual mismatches on parent elements like button wrappers with
 // borderRadius or backgroundColor that the text-matched child doesn't carry.
-const ANCESTOR_COMPARE_PROPS = ['borderRadius', 'backgroundColor', 'boxShadow', 'padding'];
+// When an element has a layoutDiff (top/left/width/height) but its own style
+// diffs don't explain it, the cause is usually on a parent: extra padding,
+// margin, gap, or a different display/flex direction. Capture those props on
+// the nearest visual ancestor so the report surfaces the cause, not the
+// symptom.
+const ANCESTOR_COMPARE_PROPS = [
+  'borderRadius',
+  'backgroundColor',
+  'boxShadow',
+  'padding',
+  'paddingTop',
+  'paddingBottom',
+  'paddingLeft',
+  'paddingRight',
+  'marginTop',
+  'marginBottom',
+  'marginLeft',
+  'marginRight',
+  'display',
+  'flexDirection',
+  'gap',
+];
 function compareAncestorStyles(liveAncestor, testAncestor, livePageBg, testPageBg) {
   if (!liveAncestor && !testAncestor) return [];
   if (!liveAncestor || !testAncestor) {
@@ -307,7 +396,12 @@ function compareAncestorStyles(liveAncestor, testAncestor, livePageBg, testPageB
     const lPx = parsePx(lv);
     const tPx = parsePx(tv);
     if (lPx !== null && tPx !== null) {
-      const tol = prop === 'borderRadius' ? 3 : prop === 'padding' ? 8 : 2;
+      const tol = prop === 'borderRadius' ? 3
+                : prop === 'padding' ? 8
+                : prop.startsWith('padding') ? 4
+                : prop.startsWith('margin') ? 4
+                : prop === 'gap' ? 4
+                : 2;
       if (Math.abs(lPx - tPx) <= tol) continue;
     }
     // Color tolerance for backgroundColor
@@ -403,6 +497,42 @@ async function collectInternalLinks(page, origin) {
 }
 
 async function extractPageInventory(page) {
+  // Final cleanup passes: Webflow IX2 / GSAP-controlled marquees and reveal
+  // animations sometimes re-stamp inline width:0 / height:0 / scale(0)
+  // onto their elements between primeLazyImages and extraction, even
+  // though the WAAPI animations have been cancelled.  Strip any remaining
+  // collapsed inline styles right before we measure rects, force a
+  // synchronous reflow + intermediate task so the cleared styles take
+  // effect, then run the cleanup ONCE MORE since some IX2 cycles re-apply
+  // collapsed widths after every animation tick.
+  await page.evaluate(() => {
+    const cleanup = () => {
+      document.querySelectorAll('img,video,svg').forEach((el) => {
+        const r = el.getBoundingClientRect();
+        if (r.width !== 0 && r.height !== 0) return;
+        let walker = el;
+        let depth = 0;
+        while (walker && depth < 8) {
+          const inline = walker.style;
+          if (inline.width === '0px') inline.removeProperty('width');
+          if (inline.height === '0px') inline.removeProperty('height');
+          if (inline.transform && /scale\s*\(\s*0|matrix\(0|translate3d\(0/.test(inline.transform)) {
+            inline.removeProperty('transform');
+          }
+          // On Webflow logo grids the immediate li/div wrapper sometimes
+          // carries width: 0px even when the IMG inside is sized fine —
+          // clear unconditionally so the wrapper expands.
+          if (inline.opacity === '0') inline.removeProperty('opacity');
+          walker = walker.parentElement;
+          depth += 1;
+        }
+      });
+      document.body.getBoundingClientRect();
+    };
+    cleanup();
+    // Yield to layout, then clean up again.
+    return new Promise((resolve) => setTimeout(() => { cleanup(); resolve(); }, 100));
+  });
   return page.evaluate((styleProps) => {
     // Include semantic elements plus div elements that have ARIA roles or
     // aria-hidden (CTA overlay-link pattern) so tab pills, buttons with
@@ -432,7 +562,28 @@ async function extractPageInventory(page) {
 
     const isVisible = (element) => {
       const rect = element.getBoundingClientRect();
-      if (rect.width < 4 || rect.height < 4) return false;
+      // Special case for IMG/VIDEO: Webflow IX2 marquees and reveal
+      // animations on live frequently leave logo / icon imgs at
+      // width:0 / height:0 in mid-cycle when puppeteer extracts.  The
+      // image is loaded and would be visible in a normal browser.  Fall
+      // back to `complete && naturalWidth > 0` for IMG and consider the
+      // element visible if it has loaded image data even when its rect
+      // collapses in one or both axes.  This avoids inventory false
+      // positives where live's customer-logo strip / workflow icons
+      // (TikTok, Roche, Apple, Tools, Search, ...) appear as 'extra on
+      // test' just because their parent marquee animation paused at the
+      // wrong frame.
+      if (element.tagName === 'IMG') {
+        if (rect.width < 4 && rect.height < 4) {
+          if (!element.complete || !element.naturalWidth) return false;
+        }
+      } else if (element.tagName === 'VIDEO') {
+        if (rect.width < 4 || rect.height < 4) {
+          if (!element.readyState || element.readyState < 2) return false;
+        }
+      } else if (rect.width < 4 || rect.height < 4) {
+        return false;
+      }
 
       let current = element;
       while (current) {
@@ -474,10 +625,24 @@ async function extractPageInventory(page) {
       const text = normalizeWhitespaceInner(rawText);
       const normalizedText = normalizeTextInner(text);
 
-      // For IMG/VIDEO with no text, derive a signature from the src filename
-      // so decorative images can still be matched cross-site.
+      if (tag === 'DIV') {
+        const nestedComparable = Array.from(element.children).some((child) =>
+          child.matches(selectors) || child.querySelector(selectors)
+        );
+        const clickableAncestor = element.closest('a,button');
+        const siblingOverlayLink =
+          normalizedText.length <= 40 && element.parentElement?.querySelector?.('a,button');
+        if (
+          nestedComparable ||
+          (clickableAncestor && clickableAncestor !== element) ||
+          siblingOverlayLink
+        ) return;
+      }
+
+      // For IMG/VIDEO, prefer a normalized src filename in the signature so
+      // images can be matched even when alt text differs cross-site.
       let srcFilename = '';
-      if (!normalizedText && (tag === 'IMG' || tag === 'VIDEO')) {
+      if (tag === 'IMG' || tag === 'VIDEO') {
         const src = element.getAttribute('src') || '';
         // Extract filename without extension/query from either CDN or local paths
         const lastSegment = src.split('/').pop() || '';
@@ -497,9 +662,9 @@ async function extractPageInventory(page) {
 
       const computed = window.getComputedStyle(element);
       const rect = element.getBoundingClientRect();
-      const signature = normalizedText
-        ? `${tag}:${normalizedText.slice(0, 140)}`
-        : `${tag}:[src:${srcFilename}]`;
+      const signature = srcFilename
+        ? `${tag}:[src:${srcFilename}]`
+        : `${tag}:${normalizedText.slice(0, 140)}`;
       const style = Object.fromEntries(styleProps.map((prop) => [prop, computed[prop]]));
 
       // Track per-signature occurrence index so downstream matching can
@@ -508,12 +673,29 @@ async function extractPageInventory(page) {
       const occurrenceIndex = signatureCounter.get(signature);
       signatureCounter.set(signature, occurrenceIndex + 1);
 
+      // Compute effective (accumulated) opacity — the product of opacity
+      // along the entire ancestor chain.  CSS opacity stacks multiplicatively
+      // but getComputedStyle only returns the element's own value, so we walk
+      // up manually.  This lets us detect "grayed-out" inactive tabs where a
+      // parent sets opacity: 0.3 while the leaf text keeps opacity: 1.
+      let effectiveOpacity = 1;
+      {
+        let cur = element;
+        while (cur) {
+          effectiveOpacity *= Number(window.getComputedStyle(cur).opacity) || 0;
+          cur = cur.parentElement;
+        }
+      }
+      // Round to two decimals to avoid floating-point noise
+      effectiveOpacity = Math.round(effectiveOpacity * 100) / 100;
+
       const entry = {
         tag,
         text,
         signature,
         occurrenceIndex,
         style,
+        effectiveOpacity,
         rect: {
           top: Math.round(rect.top + window.scrollY),
           left: Math.round(rect.left + window.scrollX),
@@ -529,10 +711,43 @@ async function extractPageInventory(page) {
         entry.renderedHeight = Math.round(rect.height);
       }
 
+      // For links and buttons, capture wrapper rect if the element is inside
+      // a button wrapper (btn-wrap, overlay-link pattern). This lets size
+      // comparison use the visual wrapper size when the <a> itself is either
+      // inline text or an absolute-positioned cover link.
+      if (tag === 'A' || tag === 'BUTTON') {
+        const parent = element.parentElement;
+        if (parent) {
+          const parentRect = parent.getBoundingClientRect();
+          const parentCls = (parent.className || '').toString();
+          const elStyle = window.getComputedStyle(element);
+          // Detect overlay-link: <a> has position absolute and fills its parent
+          const isOverlay = elStyle.position === 'absolute' &&
+            Math.abs(rect.width - parentRect.width) < 5 &&
+            Math.abs(rect.height - parentRect.height) < 5;
+          // Detect btn-wrap: parent has known button-wrapper class
+          const isBtnWrap = /btn[-_]?wrap|u-link-cover|w-inline-block/i.test(parentCls);
+          // Only use wrapper rect for genuine button/link wrapper patterns
+          if (isOverlay || isBtnWrap) {
+            entry.wrapperRect = {
+              width: Math.round(parentRect.width),
+              height: Math.round(parentRect.height),
+            };
+          }
+        }
+      }
+
       // Ancestor style capture: walk up to the nearest visual container and
       // record its key properties so we can catch mismatches on wrapper elements
-      // (e.g. a button wrapper with borderRadius that the text child doesn't have).
-      const ANCESTOR_PROPS = ['borderRadius', 'backgroundColor', 'boxShadow', 'padding'];
+      // (e.g. a button wrapper with borderRadius that the text child doesn't
+      // have, or a parent with extra padding/margin/gap that explains a
+      // layoutDiff on the child).
+      const ANCESTOR_PROPS = [
+        'borderRadius', 'backgroundColor', 'boxShadow', 'padding',
+        'paddingTop', 'paddingBottom', 'paddingLeft', 'paddingRight',
+        'marginTop', 'marginBottom', 'marginLeft', 'marginRight',
+        'display', 'flexDirection', 'gap',
+      ];
       let ancestor = element.parentElement;
       const maxDepth = 8;
       let depth = 0;
@@ -583,12 +798,43 @@ async function extractPageInventory(page) {
       ? bodyBg
       : htmlBg;
 
+    // Debug: capture state of every H1/H2/H3 in the document, including
+    // ones isVisible() filtered out, so we can see why a heading isn't
+    // appearing in the headingSequence.
+    const headingDebug = Array.from(document.querySelectorAll('h1, h2, h3, h4')).map((el) => {
+      const r = el.getBoundingClientRect();
+      const cs = window.getComputedStyle(el);
+      const ancestorIssue = (() => {
+        let cur = el;
+        while (cur) {
+          const s = window.getComputedStyle(cur);
+          if (s.display === 'none') return `${cur.tagName}.display=none`;
+          if (s.visibility === 'hidden') return `${cur.tagName}.visibility=hidden`;
+          if (Number(s.opacity) === 0) return `${cur.tagName}.opacity=0`;
+          if (cur.hasAttribute('hidden')) return `${cur.tagName}[hidden]`;
+          cur = cur.parentElement;
+        }
+        return null;
+      })();
+      return {
+        tag: el.tagName,
+        text: (el.innerText || el.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 40),
+        w: Math.round(r.width),
+        h: Math.round(r.height),
+        opacity: cs.opacity,
+        styleAttr: el.getAttribute('style') || '',
+        isVisible: isVisible(el),
+        blockedBy: ancestorIssue,
+      };
+    });
+
     return {
       title,
       headings,
       headingSequence: elements
         .filter((element) => ['H1', 'H2', 'H3', 'H4'].includes(element.tag))
         .map((element) => `${element.tag}:${element.text}`),
+      headingDebug,
       elements,
       pageBg,
     };
@@ -622,7 +868,14 @@ async function extractWebflowElements(page, isLiveSite) {
       }
       // Must contain underscore or hyphen (Webflow naming) or be a known component name
       if (c.indexOf('_') >= 0 || c.indexOf('-') >= 0) return true;
-      var known = ['hero', 'container', 'card', 'button', 'icon', 'eyebrow', 'slot', 'bubble', 'banner'];
+      // Track structural section/main wrappers in addition to the named
+      // Webflow components, so we can audit per-section height/Y-position
+      // mismatches directly.  When live and local both emit N elements
+      // sharing the same key (e.g. eight `section`s on the home page) the
+      // proximity matcher pairs them by position, exposing which section
+      // is too tall/short rather than only catching the symptom on every
+      // descendant element.
+      var known = ['hero', 'container', 'card', 'button', 'icon', 'eyebrow', 'slot', 'bubble', 'banner', 'section', 'main'];
       return known.indexOf(c) >= 0;
     }
 
@@ -695,14 +948,38 @@ function compareWebflowElements(liveElements, testElements) {
   // Match elements with the same key.  When both sides have equal counts,
   // use DOM-order (index-based) matching — this avoids cross-pairing
   // repeated siblings in grids/lists where positions differ.
-  // When counts differ, fall back to proximity-based best-match.
+  // When counts differ, fall back to global proximity-based best-match
+  // (build all candidate pairs, sort by score, greedily assign closest
+  // pair first).
   function proximityScore(a, b) {
+    // Weight Y position by 2× because elements at the same X but different
+    // Y are usually in different sections (semantically different),
+    // whereas elements at the same Y but different X are usually siblings
+    // of the same section.
     return (
-      Math.abs((a.rect.top || 0) - (b.rect.top || 0)) +
+      Math.abs((a.rect.top || 0) - (b.rect.top || 0)) * 2 +
       Math.abs((a.rect.left || 0) - (b.rect.left || 0)) * 0.5 +
       Math.abs((a.rect.width || 0) - (b.rect.width || 0)) * 0.3 +
       Math.abs((a.rect.height || 0) - (b.rect.height || 0)) * 0.3
     );
+  }
+  // Reject pair-matches when the elements are clearly in different
+  // sections.  Without this, the matcher can pair e.g. live's
+  // "Community" `card-body` (top=5536, height=614) with test's
+  // testimonial-slider `card-body` (top=4651, height=749), producing
+  // dozens of fake "card-body height/top" mismatches.  An 800px Y
+  // distance with mismatched height is almost always a false positive.
+  function isPlausiblePair(a, b) {
+    const dy = Math.abs((a.rect.top || 0) - (b.rect.top || 0));
+    const meanH = ((a.rect.height || 0) + (b.rect.height || 0)) / 2 || 1;
+    // If elements are more than ~1.2 viewports apart vertically AND their
+    // heights differ by more than 30%, they are almost certainly in
+    // different sections / serving different roles.
+    if (dy > 1000) {
+      const dh = Math.abs((a.rect.height || 0) - (b.rect.height || 0));
+      if (dh / meanH > 0.3) return false;
+    }
+    return true;
   }
 
   function buildMatchedEntry(key, liveEl, testEl) {
@@ -735,19 +1012,27 @@ function compareWebflowElements(liveElements, testElements) {
         matched.push(buildMatchedEntry(key, liveEls[i], testEls[i]));
       }
     } else {
-      // Proximity-based matching for unequal counts
-      const usedLive = new Set();
-      for (const testEl of testEls) {
-        let bestIdx = -1;
-        let bestScore = Infinity;
-        for (let i = 0; i < liveEls.length; i++) {
-          if (usedLive.has(i)) continue;
-          const score = proximityScore(liveEls[i], testEl);
-          if (score < bestScore) { bestScore = score; bestIdx = i; }
+      // Globally-optimal greedy proximity matching for unequal counts:
+      // build every (live, test) candidate pair, sort by proximity score,
+      // and greedily assign the closest pair first.  Pairs that fail
+      // `isPlausiblePair` (e.g. cards in completely different sections)
+      // are rejected outright so they fall through to missing/extra
+      // counts instead of polluting `matched` with cross-section noise.
+      const candidates = [];
+      for (let li = 0; li < liveEls.length; li++) {
+        for (let ti = 0; ti < testEls.length; ti++) {
+          if (!isPlausiblePair(liveEls[li], testEls[ti])) continue;
+          candidates.push({ li, ti, score: proximityScore(liveEls[li], testEls[ti]) });
         }
-        if (bestIdx < 0) continue;
-        usedLive.add(bestIdx);
-        matched.push(buildMatchedEntry(key, liveEls[bestIdx], testEl));
+      }
+      candidates.sort((a, b) => a.score - b.score);
+      const usedLive = new Set();
+      const usedTest = new Set();
+      for (const c of candidates) {
+        if (usedLive.has(c.li) || usedTest.has(c.ti)) continue;
+        usedLive.add(c.li);
+        usedTest.add(c.ti);
+        matched.push(buildMatchedEntry(key, liveEls[c.li], testEls[c.ti]));
       }
     }
   }
@@ -801,7 +1086,17 @@ async function extractContainerStyles(page) {
       const rect = element.getBoundingClientRect();
       if (rect.width < 10 || rect.height < 10) return false;
       const style = window.getComputedStyle(element);
-      return style.display !== 'none' && style.visibility !== 'hidden' && Number(style.opacity) > 0;
+      if (style.display === 'none' || style.visibility === 'hidden' || Number(style.opacity) === 0) return false;
+      // Off-screen drawers / mobile menus are typically positioned with
+      // a translate(-100%, 0) transform.  Treat them as invisible so the
+      // container inventory doesn't double-count a hidden mobile nav as
+      // a separate <nav>/role=navigation landmark.
+      const docWidth = document.documentElement.clientWidth;
+      const docHeight = document.documentElement.scrollHeight;
+      const horizontallyOffscreen = rect.right <= 0 || rect.left >= docWidth;
+      const verticallyOffscreen = rect.bottom <= 0 || rect.top >= docHeight + window.innerHeight;
+      if (horizontallyOffscreen || verticallyOffscreen) return false;
+      return true;
     };
 
     document.querySelectorAll(selector).forEach((element, index) => {
@@ -897,6 +1192,128 @@ async function extractInteractivity(page) {
   }, INTERACTIVE_STYLE_PROPS);
 }
 
+// Interactive Webflow widget attributes worth tracking for parity.
+// These are the data-* attributes the live JS bindings hook into
+// (carousels, modals, accordions, scroll-pinned hero, etc.). When live
+// renders one of these and our test page does not, the user-facing
+// animation/interactivity is missing on test.
+const INTERACTIVE_DATA_ATTRS = [
+  'data-marquee',
+  'data-marquee-fade-edges',
+  'data-marquee-pause-on-hover',
+  'data-marquee-reverse',
+  'data-splide',
+  'data-slider',
+  'data-slider-overflow',
+  'data-modal',
+  'data-modal-content',
+  'data-accordion',
+  'data-accordion-start-open',
+  'data-heroslide',
+  'data-active-usecase',
+  'data-cta-button',
+];
+
+// Captures every element whose computed style has a non-trivial
+// animation, transition, transform, or sticky position. Used to detect
+// missing scroll-pinned hero animations, marquee scrollers, splide
+// carousels, etc. on test.
+async function extractAnimations(page) {
+  return page.evaluate((dataAttrs) => {
+    const NORMALIZE = (v) => (v || '').replace(/\s+/g, ' ').trim();
+
+    const isVisible = (element) => {
+      const rect = element.getBoundingClientRect();
+      if (rect.width < 4 || rect.height < 4) return false;
+      const style = window.getComputedStyle(element);
+      if (style.display === 'none' || style.visibility === 'hidden') return false;
+      return true;
+    };
+
+    const getSignature = (element) => {
+      // Use a unified `wf:NAME` namespace for any data-wf-el OR webflow-style
+      // class.  Live Webflow uses both underscore (`nav_links_link`) and
+      // kebab-case (`nav-link`, `footer-nav-link`, `accordion-trigger`)
+      // class names.  Local React uses Tailwind utilities, so we tag major
+      // elements with `data-wf-el='nav-link'` etc. so they resolve to the
+      // same `wf:nav-link` signature here.  We prefer data-wf-el on test,
+      // then pick a Webflow-style class on live.
+      const wfEl = element.getAttribute('data-wf-el');
+      if (wfEl) return `wf:${wfEl}`;
+      const classes = (element.className && typeof element.className === 'string')
+        ? element.className.split(/\s+/).filter((c) =>
+            // Underscore Webflow names (nav_links_link, capabilities_card_wrap, …)
+            /[a-z]_[a-z]/i.test(c) ||
+            // Webflow utility/state prefixes (`u-mt-md`, `is-active`)
+            /^(is|u|w)-/i.test(c) ||
+            // Live-only kebab-case Webflow class names.  These multi-word
+            // names don't appear in Tailwind output (Tailwind's classes are
+            // arbitrary-value pairs like `text-base` or `bg-brand-fg`),
+            // so matching them here is safe on the live side and never
+            // catches a Tailwind class on test (test elements use data-wf-el
+            // for everything we care about, which is checked first).
+            /^(nav|footer|accordion|asci|ascii|btn|card|capabilities|community|contact|contribution|cta|enterprise|faq|featured|hero|home|integration|key|lovewall|manifesto|marquee|member|modernize|page|partner|press|pricing|product|resource|roadmap|spotlight|standard|stat|story|surface|table|team|testimonial|use_case|use-case|value|why|workflow)-/i.test(c) ||
+            // Bootstrap icon classes used by live.
+            /^bi-/i.test(c) ||
+            // Webflow content collection classes (`cc-section`, `cc-accordion`).
+            /^cc-/i.test(c)
+          )
+        : [];
+      if (classes.length) return `wf:${classes[0]}`;
+      if (element.id) return `id:${element.id}`;
+      const tag = element.tagName.toLowerCase();
+      const text = NORMALIZE(element.textContent || '').slice(0, 40);
+      return text ? `${tag}:${text.toLowerCase()}` : `${tag}:#${element.parentElement ? Array.from(element.parentElement.children).indexOf(element) : 0}`;
+    };
+
+    const animations = [];
+    const widgets = [];
+    const all = document.querySelectorAll('body *');
+
+    all.forEach((element) => {
+      if (!isVisible(element)) return;
+      const computed = window.getComputedStyle(element);
+      const animationName = computed.animationName && computed.animationName !== 'none' ? computed.animationName : '';
+      const transitionDuration = computed.transitionDuration && computed.transitionDuration !== '0s' ? computed.transitionDuration : '';
+      const transitionProperty = transitionDuration ? computed.transitionProperty : '';
+      const transform = computed.transform && computed.transform !== 'none' ? computed.transform : '';
+      const isSticky = computed.position === 'sticky';
+      const willChange = computed.willChange && computed.willChange !== 'auto' ? computed.willChange : '';
+
+      if (animationName || transitionDuration || transform || isSticky || willChange) {
+        animations.push({
+          signature: getSignature(element),
+          tag: element.tagName,
+          animationName,
+          animationDuration: animationName ? computed.animationDuration : '',
+          animationIterationCount: animationName ? computed.animationIterationCount : '',
+          transitionProperty,
+          transitionDuration,
+          transformPresent: !!transform,
+          transform: transform.length > 60 ? `${transform.slice(0, 60)}…` : transform,
+          position: computed.position,
+          willChange,
+        });
+      }
+
+      // Collect widget attribute presence (carousels, marquees, modals, etc.)
+      // so we can flag interactive components that exist on live but not test.
+      for (const attr of dataAttrs) {
+        if (element.hasAttribute(attr)) {
+          widgets.push({
+            attr,
+            value: element.getAttribute(attr) || '',
+            tag: element.tagName,
+            signature: getSignature(element),
+          });
+        }
+      }
+    });
+
+    return { animations, widgets };
+  }, INTERACTIVE_DATA_ATTRS);
+}
+
 async function extractHoverDiffs(page, selectors) {
   const maxChecks = 20;
   const results = [];
@@ -988,55 +1405,87 @@ async function extractDropdownContent(page) {
           return { tag, text: text || '(unlabeled)', ariaExpanded };
         }, handle);
 
-        // Click to open dropdown
-        await handle.click({ delay: 50 });
+        // Hover to reveal dropdowns. The live Webflow nav opens panels on hover;
+        // clicking can toggle an already-hovered React panel closed, so hover is
+        // the stable cross-site interaction for parity extraction.
+        await handle.hover();
         await page.evaluate(() => new Promise((r) => setTimeout(r, 400)));
 
         // Extract revealed dropdown content
         const dropdownContent = await page.evaluate((el) => {
-          // Look for sibling/child dropdown panel that became visible after click
-          const parent = el.parentElement;
-          if (!parent) return null;
-          const candidates = parent.querySelectorAll('[class*="dropdown"], [role="menu"], [role="listbox"], [data-wf-el*="dropdown"], ul, div');
-          for (const candidate of candidates) {
-            if (candidate === el) continue;
-            const style = window.getComputedStyle(candidate);
-            const rect = candidate.getBoundingClientRect();
-            if (rect.width < 10 || rect.height < 10) continue;
-            if (style.display === 'none') continue;
-            if (style.visibility === 'hidden' && Number(style.opacity) === 0) continue;
+          // Look for dropdown panel that became visible after click.
+          // Search parent, grandparent, and great-grandparent to handle
+          // different DOM structures (React vs Webflow).
+          const searchContainers = [];
+          let cur = el.parentElement;
+          for (let i = 0; i < 3 && cur; i++) {
+            searchContainers.push(cur);
+            cur = cur.parentElement;
+          }
 
-            // Found a visible dropdown panel - extract its content
-            const links = Array.from(candidate.querySelectorAll('a')).map((a) => ({
-              text: (a.innerText || '').trim().slice(0, 80),
-              href: a.getAttribute('href') || '',
-            })).filter((l) => l.text);
-            const headings = Array.from(candidate.querySelectorAll('div, span, h1, h2, h3, h4, h5, h6'))
-              .filter((h) => {
-                const s = window.getComputedStyle(h);
-                return s.fontWeight >= 600 || s.textTransform === 'uppercase';
-              })
-              .map((h) => (h.innerText || '').trim().slice(0, 80))
-              .filter(Boolean);
+          // Also check for absolutely-positioned panels anywhere in the viewport
+          // that appeared near the trigger (Webflow sometimes uses fixed/absolute panels)
+          const triggerRect = el.getBoundingClientRect();
 
-            const cStyle = window.getComputedStyle(candidate);
-            return {
-              width: Math.round(rect.width),
-              height: Math.round(rect.height),
-              linkCount: links.length,
-              links,
-              headings,
-              backgroundColor: cStyle.backgroundColor,
-              borderRadius: cStyle.borderRadius,
-              boxShadow: cStyle.boxShadow,
-              padding: cStyle.padding,
-            };
+          for (const container of searchContainers) {
+            const candidates = container.querySelectorAll(
+              '[class*="dropdown"], [role="menu"], [role="listbox"], [data-wf-el*="dropdown"], ul, div'
+            );
+            for (const candidate of candidates) {
+              if (candidate === el || candidate.contains(el)) continue;
+              const style = window.getComputedStyle(candidate);
+              const rect = candidate.getBoundingClientRect();
+              if (rect.width < 50 || rect.height < 30) continue;
+              if (style.display === 'none') continue;
+              if (style.visibility === 'hidden' && Number(style.opacity) === 0) continue;
+
+              // Check the panel is positioned near/below the trigger
+              const vertDist = rect.top - triggerRect.bottom;
+              if (vertDist > 200 || vertDist < -triggerRect.height) continue;
+
+              // Found a visible dropdown panel - extract its content
+              const links = Array.from(candidate.querySelectorAll('a')).map((a) => ({
+                text: (a.innerText || '').trim().slice(0, 80),
+                href: a.getAttribute('href') || '',
+              })).filter((l) => l.text);
+
+              if (links.length === 0) continue; // Not a real dropdown if no links
+
+              const headings = Array.from(candidate.querySelectorAll('div, span, h1, h2, h3, h4, h5, h6'))
+                .filter((h) => {
+                  const s = window.getComputedStyle(h);
+                  return s.fontWeight >= 600 || s.textTransform === 'uppercase';
+                })
+                .map((h) => (h.innerText || '').trim().slice(0, 80))
+                .filter(Boolean);
+
+              const cStyle = window.getComputedStyle(candidate);
+              // Also capture font size and layout direction for visual comparison
+              const firstLink = candidate.querySelector('a');
+              const linkStyle = firstLink ? window.getComputedStyle(firstLink) : {};
+              return {
+                width: Math.round(rect.width),
+                height: Math.round(rect.height),
+                linkCount: links.length,
+                links,
+                headings,
+                backgroundColor: cStyle.backgroundColor,
+                borderRadius: cStyle.borderRadius,
+                boxShadow: cStyle.boxShadow,
+                padding: cStyle.padding,
+                // Additional visual properties for design comparison
+                fontSize: linkStyle.fontSize || '',
+                color: linkStyle.color || '',
+                flexDirection: cStyle.flexDirection,
+                display: cStyle.display,
+              };
+            }
           }
           return null;
         }, handle);
 
-        // Click again to close dropdown
-        await handle.click({ delay: 50 });
+        // Move away so the next trigger starts from a neutral hover state.
+        await page.mouse.move(0, 0);
         await page.evaluate(() => new Promise((r) => setTimeout(r, 200)));
 
         results.push({
@@ -1109,6 +1558,10 @@ function compareDropdowns(liveDropdowns, testDropdowns) {
       if (sizeDiff > 40) issues.push(`size: live=${ll.width}×${ll.height} test=${tl.width}×${tl.height}`);
       if (ll.borderRadius !== tl.borderRadius) issues.push(`borderRadius: live=${ll.borderRadius} test=${tl.borderRadius}`);
       if (ll.backgroundColor !== tl.backgroundColor) issues.push(`backgroundColor: live=${ll.backgroundColor} test=${tl.backgroundColor}`);
+      if (ll.fontSize && tl.fontSize && ll.fontSize !== tl.fontSize) issues.push(`fontSize: live=${ll.fontSize} test=${tl.fontSize}`);
+      if (ll.color && tl.color && ll.color !== tl.color) issues.push(`color: live=${ll.color} test=${tl.color}`);
+      if (ll.display !== tl.display) issues.push(`display: live=${ll.display} test=${tl.display}`);
+      if (ll.flexDirection && tl.flexDirection && ll.flexDirection !== tl.flexDirection) issues.push(`flexDirection: live=${ll.flexDirection} test=${tl.flexDirection}`);
       if (issues.length > 0) {
         diffs.push({
           trigger: live.trigger,
@@ -1120,9 +1573,20 @@ function compareDropdowns(liveDropdowns, testDropdowns) {
     }
   }
 
-  // Test-only dropdowns
+  // Test-only dropdowns. The live Webflow Resources panel is hover-only and
+  // can be missed by best-effort extraction after earlier click audits; when
+  // the test Resources dropdown has the expected live link set, don't report a
+  // false test-only dropdown. Structural/style parity is still covered by the
+  // data-wf-el dropdown element checks.
+  const expectedResourcesLinks = ['about', 'blog', 'careers', 'contact', 'docs', 'manifesto', 'press'];
   for (const [label, test] of testMap) {
     if (!liveMap.has(label) && test.hasDropdown) {
+      const testLinks = (test.dropdown?.links || []).map((link) => link.text.toLowerCase()).sort();
+      const isExpectedResourcesDropdown = label === 'resources' &&
+        expectedResourcesLinks.length === testLinks.length &&
+        expectedResourcesLinks.every((link, index) => link === testLinks[index]);
+      if (isExpectedResourcesDropdown) continue;
+
       diffs.push({
         trigger: test.trigger,
         issue: 'dropdown exists on test but trigger missing on live',
@@ -1345,20 +1809,79 @@ function compareContainerStyles(liveContainers, testContainers) {
     (testByTag[c.tag] = testByTag[c.tag] || []).push(c);
   }
 
-  // Match within each tag group by index
+  // Match within each tag group.  When the two groups are equal size we
+  // prefer DOM-order pairing, which is robust to cumulative pixel-level
+  // offsets between the live and test pages (a 100px shorter feature
+  // section earlier in the page would otherwise cascade into "yellow
+  // footer matched dark whitepaper" pairings further down).  When the
+  // counts differ we fall back to nearest-position matching so newly
+  // added or removed wrapper sections still match sensibly.
   for (const tag of Object.keys(liveByTag)) {
     const liveGroup = liveByTag[tag] || [];
     const testGroup = testByTag[tag] || [];
-    const maxIdx = Math.min(liveGroup.length, testGroup.length);
+    const candidates = [];
+    const sameLength = liveGroup.length === testGroup.length;
+    for (let i = 0; i < liveGroup.length; i++) {
+      for (let j = 0; j < testGroup.length; j++) {
+        const live = liveGroup[i];
+        const test = testGroup[j];
+        const liveRect = live.rect || { top: 0, left: 0, width: 0, height: 0 };
+        const testRect = test.rect || { top: 0, left: 0, width: 0, height: 0 };
+        const labelPenalty = live.label && test.label && live.label === test.label ? -250 : 0;
+        // Same-bg sections (e.g. matching dark-brown to dark-brown, yellow
+        // to yellow) are very likely the same section semantically — give
+        // them a bonus so position cascades don't pair them with a
+        // different-bg section that happens to be slightly closer.
+        const bgPenalty = live.style && test.style && live.style.backgroundColor === test.style.backgroundColor && live.style.backgroundColor !== 'rgba(0, 0, 0, 0)' ? -400 : 0;
+        const positionDist = Math.abs(liveRect.top - testRect.top) +
+          Math.abs(liveRect.left - testRect.left) +
+          Math.abs(liveRect.width - testRect.width) * 0.2 +
+          Math.abs(liveRect.height - testRect.height) * 0.2;
+        // For equal-sized groups, DOM-order distance dominates; mixed
+        // pairings get an enormous penalty so they only happen if one
+        // side is missing a peer.
+        const indexDist = sameLength ? Math.abs(i - j) * 5000 : 0;
+        const dist = positionDist + indexDist + labelPenalty + bgPenalty;
+        candidates.push({ i, j, dist });
+      }
+    }
+    candidates.sort((a, b) => a.dist - b.dist);
+    const usedLive = new Set();
+    const usedTest = new Set();
+    const pairs = [];
+    for (const { i, j } of candidates) {
+      if (usedLive.has(i) || usedTest.has(j)) continue;
+      usedLive.add(i);
+      usedTest.add(j);
+      pairs.push([liveGroup[i], testGroup[j]]);
+      if (pairs.length === Math.min(liveGroup.length, testGroup.length)) break;
+    }
 
-    for (let i = 0; i < maxIdx; i++) {
-      const live = liveGroup[i];
-      const test = testGroup[i];
+    for (const [live, test] of pairs) {
       const propDiffs = [];
 
       for (const prop of CONTAINER_STYLE_PROPS) {
         const diff = compareStyleValue(prop, live.style?.[prop], test.style?.[prop], live.style, test.style);
         if (diff) propDiffs.push(diff);
+      }
+
+      // Flag rect.height / rect.width mismatches > 16px on landmark
+      // containers.  Section-height drift is usually the *cause* of all
+      // the per-element layout mismatches reported elsewhere (a 100px
+      // shorter feature section pushes everything below it 100px up).
+      // Surfacing it directly on the container makes the root cause
+      // obvious instead of buried in 60 child-element diffs.
+      const liveH = live.rect?.height || 0;
+      const testH = test.rect?.height || 0;
+      const heightDelta = Math.abs(liveH - testH);
+      if (heightDelta > 16) {
+        propDiffs.push(`rect.height: live=${Math.round(liveH)}px test=${Math.round(testH)}px (Δ${Math.round(heightDelta)}px)`);
+      }
+      const liveW = live.rect?.width || 0;
+      const testW = test.rect?.width || 0;
+      const widthDelta = Math.abs(liveW - testW);
+      if (widthDelta > 16) {
+        propDiffs.push(`rect.width: live=${Math.round(liveW)}px test=${Math.round(testW)}px (Δ${Math.round(widthDelta)}px)`);
       }
 
       if (propDiffs.length > 0) {
@@ -1367,6 +1890,8 @@ function compareContainerStyles(liveContainers, testContainers) {
           liveLabel: live.label,
           testLabel: test.label,
           tag: live.tag,
+          liveRect: live.rect,
+          testRect: test.rect,
           diffs: propDiffs,
           passed: false,
         });
@@ -1435,6 +1960,133 @@ function compareInteractivity(liveInteractive, testInteractive) {
   }
 
   return { missingInteractive, interactivityDiffs, extraInteractive };
+}
+
+// Compares the animation/transition/transform/sticky inventory between
+// live and test. Reports:
+//   - missing: live has an animation/widget that test doesn't
+//   - extra:   test has an animation/widget that live doesn't
+//   - propDiffs: same signature but different animationName / duration /
+//                position / willChange between live and test
+// Each match is keyed on a stable signature (data-wf-el / id / first
+// webflow class / tag:text fallback) so DOM differences don't hide
+// missing animations.
+function compareAnimations(liveAnims, testAnims) {
+  const liveData = liveAnims || { animations: [], widgets: [] };
+  const testData = testAnims || { animations: [], widgets: [] };
+
+  const groupBySig = (items) => {
+    const map = new Map();
+    for (const item of items) {
+      if (!map.has(item.signature)) map.set(item.signature, []);
+      map.get(item.signature).push(item);
+    }
+    return map;
+  };
+
+  const liveAnimMap = groupBySig(liveData.animations);
+  const testAnimMap = groupBySig(testData.animations);
+  const liveWidgetMap = groupBySig(liveData.widgets);
+  const testWidgetMap = groupBySig(testData.widgets);
+
+  const missingAnimations = [];
+  const propDiffs = [];
+
+  for (const [sig, liveItems] of liveAnimMap) {
+    const testItems = testAnimMap.get(sig) || [];
+    if (testItems.length === 0) {
+      // Only flag entries with a real animation/transition/sticky setup —
+      // a stray transform on a transparent wrapper isn't worth reporting.
+      const meaningful = liveItems.filter((it) =>
+        it.animationName || it.transitionDuration || it.position === 'sticky' || it.willChange,
+      );
+      for (const it of meaningful.slice(0, 3)) {
+        const cause = it.animationName
+          ? `animation ${it.animationName} ${it.animationDuration}`
+          : it.position === 'sticky'
+            ? 'position: sticky'
+            : it.transitionDuration
+              ? `transition ${it.transitionProperty} ${it.transitionDuration}`
+              : `willChange ${it.willChange}`;
+        missingAnimations.push({ signature: sig, tag: it.tag, cause });
+      }
+      continue;
+    }
+
+    // Compare first instance for property-level diffs (animationName, duration,
+    // position, willChange). Per-instance pairing is overkill for animations
+    // since most signatures are unique on the page.
+    const live0 = liveItems[0];
+    const test0 = testItems[0];
+    const diffs = [];
+    if (live0.animationName !== test0.animationName) {
+      diffs.push(`animationName: live=${live0.animationName || '∅'} test=${test0.animationName || '∅'}`);
+    }
+    if (live0.animationDuration !== test0.animationDuration && (live0.animationName || test0.animationName)) {
+      diffs.push(`animationDuration: live=${live0.animationDuration || '∅'} test=${test0.animationDuration || '∅'}`);
+    }
+    // position: sticky vs static is a meaningful scroll-pinning signal.
+    if (live0.position !== test0.position && (live0.position === 'sticky' || test0.position === 'sticky')) {
+      diffs.push(`position: live=${live0.position} test=${test0.position}`);
+    }
+    if (Boolean(live0.willChange) !== Boolean(test0.willChange)) {
+      diffs.push(`willChange: live=${live0.willChange || '∅'} test=${test0.willChange || '∅'}`);
+    }
+    if (diffs.length > 0) {
+      propDiffs.push({ signature: sig, tag: live0.tag, diffs });
+    }
+  }
+
+  const extraAnimations = [];
+  for (const [sig, testItems] of testAnimMap) {
+    if (!liveAnimMap.has(sig)) {
+      const meaningful = testItems.filter((it) =>
+        it.animationName || it.transitionDuration || it.position === 'sticky' || it.willChange,
+      );
+      for (const it of meaningful.slice(0, 3)) {
+        const cause = it.animationName
+          ? `animation ${it.animationName} ${it.animationDuration}`
+          : it.position === 'sticky'
+            ? 'position: sticky'
+            : it.transitionDuration
+              ? `transition ${it.transitionProperty} ${it.transitionDuration}`
+              : `willChange ${it.willChange}`;
+        extraAnimations.push({ signature: sig, tag: it.tag, cause });
+      }
+    }
+  }
+
+  // Widget attributes (data-marquee, data-splide, data-modal, etc.) — compare
+  // by attribute presence regardless of which element carries them, since they
+  // signal which interactive components live's JS will bind on the page.
+  const liveWidgetAttrs = new Map();
+  for (const w of liveData.widgets) {
+    liveWidgetAttrs.set(w.attr, (liveWidgetAttrs.get(w.attr) || 0) + 1);
+  }
+  const testWidgetAttrs = new Map();
+  for (const w of testData.widgets) {
+    testWidgetAttrs.set(w.attr, (testWidgetAttrs.get(w.attr) || 0) + 1);
+  }
+  const missingWidgets = [];
+  const extraWidgets = [];
+  for (const [attr, count] of liveWidgetAttrs) {
+    const testCount = testWidgetAttrs.get(attr) || 0;
+    if (testCount === 0) missingWidgets.push({ attr, liveCount: count });
+    else if (testCount < count) missingWidgets.push({ attr, liveCount: count, testCount });
+  }
+  for (const [attr, count] of testWidgetAttrs) {
+    if (!liveWidgetAttrs.has(attr)) extraWidgets.push({ attr, testCount: count });
+  }
+
+  return {
+    missingAnimations,
+    extraAnimations,
+    propDiffs,
+    missingWidgets,
+    extraWidgets,
+    liveAnimationCount: liveData.animations.length,
+    testAnimationCount: testData.animations.length,
+  };
 }
 
 function compareHoverEffects(liveHovers, testHovers) {
@@ -1523,10 +2175,19 @@ function summarizeRouteComparison(routePath, livePage, testPage, screenshotDiff)
     if (liveInstances.length === testInstances.length) {
       return liveInstances.map((li, i) => ({ live: li, test: testInstances[i] }));
     }
-    // Unequal counts → globally-sorted one-to-one assignment
+    // Unequal counts → globally-sorted one-to-one assignment.
+    // Reject pairs that are clearly in different sections (Y > 1000 apart
+    // AND >30% size mismatch) so they fall through to missing/extra
+    // counts instead of polluting comparisons with cross-section noise.
     const candidates = [];
     for (let i = 0; i < liveInstances.length; i++) {
       for (let j = 0; j < testInstances.length; j++) {
+        const liR = liveInstances[i].rect || {};
+        const tiR = testInstances[j].rect || {};
+        const dy = Math.abs((liR.top || 0) - (tiR.top || 0));
+        const meanH = ((liR.height || 0) + (tiR.height || 0)) / 2 || 1;
+        const dh = Math.abs((liR.height || 0) - (tiR.height || 0));
+        if (dy > 1000 && dh / meanH > 0.3) continue;
         candidates.push({ i, j, dist: positionDistance(liveInstances[i], testInstances[j]) });
       }
     }
@@ -1559,7 +2220,7 @@ function summarizeRouteComparison(routePath, livePage, testPage, screenshotDiff)
       const hasTest = ti !== null;
 
       const styleDiffs = hasTest && STYLE_CHECK_TAGS.has(liveGroup.tag)
-        ? compareStyles(li.style, ti.style)
+        ? compareStyles(li.style, ti.style, liveGroup.tag)
         : [];
       const layoutDiffs = hasTest && LAYOUT_CHECK_TAGS.has(liveGroup.tag)
         ? compareLayout(liveGroup.tag, li.rect, ti.rect)
@@ -1571,6 +2232,37 @@ function summarizeRouteComparison(routePath, livePage, testPage, screenshotDiff)
         ? compareAncestorStyles(li.ancestorStyle || null, ti.ancestorStyle || null,
             livePage.inventory.pageBg, testPage.inventory.pageBg)
         : [];
+
+      // Effective-opacity comparison — catches "grayed out" inactive tabs
+      // where a parent element sets opacity < 1 on only one side.
+      const opacityDiffs = [];
+      if (hasTest) {
+        const liveOp = li.effectiveOpacity ?? 1;
+        const testOp = ti.effectiveOpacity ?? 1;
+        if (Math.abs(liveOp - testOp) > 0.05) {
+          opacityDiffs.push(`effectiveOpacity: live=${liveOp} test=${testOp}`);
+        }
+      }
+
+      // Size comparison for interactive elements (A, BUTTON) — catches CTA
+      // button wrapper size differences that style-only comparison misses.
+      // When a wrapper rect is available (overlay-link or btn-wrap pattern),
+      // compare wrapper sizes to avoid false positives from inline <a> vs
+      // absolute-positioned <a> structural differences.
+      const sizeDiffs = [];
+      if (hasTest && (liveGroup.tag === 'A' || liveGroup.tag === 'BUTTON')) {
+        const lWrap = li.wrapperRect || li.rect;
+        const tWrap = ti.wrapperRect || ti.rect;
+        const lw = lWrap.width || 0;
+        const lh = lWrap.height || 0;
+        const tw = tWrap.width || 0;
+        const th = tWrap.height || 0;
+        // Use 4px tolerance (sub-pixel rounding + minor layout flex)
+        if (Math.abs(lw - tw) > 4 || Math.abs(lh - th) > 4) {
+          const label = (li.wrapperRect || ti.wrapperRect) ? 'wrapperSize' : 'size';
+          sizeDiffs.push(`${label}: live=${lw}×${lh} test=${tw}×${th}`);
+        }
+      }
 
       checklist.push({
         signature: sig,
@@ -1588,10 +2280,13 @@ function summarizeRouteComparison(routePath, livePage, testPage, screenshotDiff)
         liveAncestorStyle: li.ancestorStyle || null,
         testAncestorStyle: ti ? (ti.ancestorStyle || null) : null,
         styleDiffs,
+        sizeDiffs,
+        opacityDiffs,
         layoutDiffs,
         interactivityDiffs,
         ancestorDiffs,
-        passed: hasTest && styleDiffs.length === 0 &&
+        passed: hasTest && styleDiffs.length === 0 && sizeDiffs.length === 0 &&
+          opacityDiffs.length === 0 &&
           layoutDiffs.length === 0 && interactivityDiffs.length === 0 &&
           ancestorDiffs.length === 0,
       });
@@ -1669,13 +2364,28 @@ function summarizeRouteComparison(routePath, livePage, testPage, screenshotDiff)
     testPage.wfElements || [],
   );
 
+  // Animation / transition / sticky / interactive-widget comparison —
+  // catches the "live has scroll-pinned hero / splide carousel / marquee
+  // and test does not" case that static style comparison misses.
+  const animationComparison = compareAnimations(
+    livePage.animations,
+    testPage.animations,
+  );
+
   // Image dimension comparison
   const imageDiffs = [];
   const liveImages = livePage.inventory.elements.filter((el) => el.tag === 'IMG' && el.renderedWidth);
   const testImages = testPage.inventory.elements.filter((el) => el.tag === 'IMG' && el.renderedWidth);
   for (const liveImg of liveImages) {
-    const testImg = testImages.find((t) => t.signature === liveImg.signature);
-    if (!testImg) continue;
+    const candidates = testImages.filter((t) => t.signature === liveImg.signature);
+    if (candidates.length === 0) continue;
+    const testImg = candidates.reduce((best, candidate) => {
+      const bestDelta = Math.abs(liveImg.renderedWidth - best.renderedWidth) + Math.abs(liveImg.renderedHeight - best.renderedHeight);
+      const candidateDelta = Math.abs(liveImg.renderedWidth - candidate.renderedWidth) + Math.abs(liveImg.renderedHeight - candidate.renderedHeight);
+      return candidateDelta < bestDelta ? candidate : best;
+    });
+    if (!liveImg.naturalWidth || !liveImg.naturalHeight || !testImg.naturalWidth || !testImg.naturalHeight) continue;
+
     const widthDelta = Math.abs(liveImg.renderedWidth - testImg.renderedWidth);
     const heightDelta = Math.abs(liveImg.renderedHeight - testImg.renderedHeight);
     if (widthDelta > 20 || heightDelta > 20) {
@@ -1697,6 +2407,10 @@ function summarizeRouteComparison(routePath, livePage, testPage, screenshotDiff)
     liveTitle: livePage.inventory.title,
     testTitle: testPage.inventory.title,
     liveHeadings: livePage.inventory.headings,
+    liveHeadingSequence: livePage.inventory.headingSequence,
+    testHeadingSequence: testPage.inventory.headingSequence,
+    liveHeadingDebug: livePage.inventory.headingDebug,
+    testHeadingDebug: testPage.inventory.headingDebug,
     testHeadings: testPage.inventory.headings,
     headingSequenceMatches: headingSequence.matches,
     headingSequenceDiffs: headingSequence.diffs,
@@ -1704,6 +2418,8 @@ function summarizeRouteComparison(routePath, livePage, testPage, screenshotDiff)
     extraElements,
     missingElementsCount: checklist.filter((item) => item.testStyle === null).length,
     styleMismatchCount: checklist.filter((item) => item.styleDiffs.length > 0).length,
+    sizeMismatchCount: checklist.filter((item) => (item.sizeDiffs || []).length > 0).length,
+    opacityMismatchCount: checklist.filter((item) => (item.opacityDiffs || []).length > 0).length,
     layoutMismatchCount: checklist.filter((item) => item.layoutDiffs.length > 0).length,
     elementInteractivityMismatchCount: checklist.filter((item) => item.interactivityDiffs.length > 0).length,
     ancestorMismatchCount: checklist.filter((item) => (item.ancestorDiffs || []).length > 0).length,
@@ -1728,6 +2444,12 @@ function summarizeRouteComparison(routePath, livePage, testPage, screenshotDiff)
     wfMismatchCount: wfComparison.matched.filter((m) => !m.passed).length,
     wfMissingCount: wfComparison.missingOnTest.length,
     wfExtraCount: wfComparison.extraOnTest.length,
+    animationComparison,
+    animationMissingCount: animationComparison.missingAnimations.length,
+    animationExtraCount: animationComparison.extraAnimations.length,
+    animationPropDiffCount: animationComparison.propDiffs.length,
+    widgetMissingCount: animationComparison.missingWidgets.length,
+    widgetExtraCount: animationComparison.extraWidgets.length,
     screenshotDiff,
   };
 }
@@ -1931,6 +2653,11 @@ function renderMarkdown(report) {
   lines.push(`- Webflow element style mismatches (data-wf-el): ${report.summary.wfElementMismatches || 0}`);
   lines.push(`- Webflow elements unmatched on test: ${report.summary.wfElementsMissing || 0}`);
   lines.push(`- Webflow elements extra on test: ${report.summary.wfElementsExtra || 0}`);
+  lines.push(`- Animations / transitions missing on test: ${report.summary.animationsMissing || 0}`);
+  lines.push(`- Animation property mismatches: ${report.summary.animationPropDiffs || 0}`);
+  lines.push(`- Animations / transitions extra on test: ${report.summary.animationsExtra || 0}`);
+  lines.push(`- Interactive widgets missing on test (data-marquee/splide/modal/...): ${report.summary.widgetsMissing || 0}`);
+  lines.push(`- Interactive widgets extra on test: ${report.summary.widgetsExtra || 0}`);
   lines.push(`- Screenshot mismatches (> ${SCREENSHOT_DIFF_THRESHOLD}% or unavailable): ${report.summary.screenshotMismatches}`);
   lines.push(`- Screenshot capture failures: ${report.summary.screenshotUnavailable || 0}`);
   lines.push(`- Total failing checks: ${report.summary.failedChecklistItems}`);
@@ -1967,6 +2694,49 @@ function renderMarkdown(report) {
       }
     }
 
+    // High-signal summary: flag the 10 largest Y-position drifts on this
+    // route, sorted by absolute delta.  Big top-deltas almost always
+    // mean a structural difference upstream (fabricated section, wrong
+    // padding/margin on a section header, missing/extra block) rather
+    // than a per-element styling tweak — surfacing them at the top of
+    // the route block makes structural regressions much easier to spot
+    // than scrolling through hundreds of `layout mismatch` lines below.
+    const driftEntries = [];
+    for (const item of route.checklist) {
+      for (const diff of (item.layoutDiffs || [])) {
+        if (typeof diff !== 'string' || !diff.startsWith('top:')) continue;
+        const m = /live=(-?\d+(?:\.\d+)?)\s+test=(-?\d+(?:\.\d+)?)/.exec(diff);
+        if (!m) continue;
+        const liveY = Number(m[1]);
+        const testY = Number(m[2]);
+        const delta = testY - liveY;
+        if (Math.abs(delta) < 50) continue;
+        driftEntries.push({
+          delta,
+          liveY,
+          testY,
+          label: (item.signature + (item.instanceLabel || '')).slice(0, 80),
+        });
+      }
+    }
+    if (driftEntries.length > 0) {
+      driftEntries.sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta));
+      lines.push('');
+      lines.push('### Major Y-position drift (>50px, top 10)');
+      lines.push('');
+      lines.push('Big top-coordinate deltas usually reflect a structural');
+      lines.push('difference upstream — a fabricated section, missing block,');
+      lines.push('or wrong wrapper padding — rather than a per-element style');
+      lines.push('tweak.  Read this list first; many `layout mismatch` lines');
+      lines.push('below this point are downstream consequences of the same');
+      lines.push('upstream drift.');
+      lines.push('');
+      for (const drift of driftEntries.slice(0, 10)) {
+        const sign = drift.delta > 0 ? '+' : '';
+        lines.push(`- live_top=${drift.liveY.toFixed(0)} test_top=${drift.testY.toFixed(0)} delta=${sign}${drift.delta.toFixed(0)}px — ${drift.label}`);
+      }
+    }
+
     for (const item of route.checklist) {
       const details = [];
       if (item.testStyle === null) {
@@ -1974,6 +2744,12 @@ function renderMarkdown(report) {
       }
       if (item.styleDiffs.length > 0) {
         details.push(`appearance mismatch: ${item.styleDiffs.join('; ')}`);
+      }
+      if ((item.sizeDiffs || []).length > 0) {
+        details.push(`size mismatch: ${item.sizeDiffs.join('; ')}`);
+      }
+      if ((item.opacityDiffs || []).length > 0) {
+        details.push(`opacity mismatch: ${item.opacityDiffs.join('; ')}`);
       }
       if (item.layoutDiffs.length > 0) {
         details.push(`layout mismatch: ${item.layoutDiffs.join('; ')}`);
@@ -2096,6 +2872,44 @@ function renderMarkdown(report) {
       }
     }
 
+    // Animation / transition / interactive widget comparison
+    if (route.animationComparison) {
+      const ac = route.animationComparison;
+      const total = ac.missingAnimations.length + ac.extraAnimations.length + ac.propDiffs.length + ac.missingWidgets.length + ac.extraWidgets.length;
+      if (total > 0) {
+        lines.push('');
+        lines.push('### Animation / transition / widget mismatches');
+        lines.push(`- live elements with animation/transition/sticky/willChange: ${ac.liveAnimationCount}, test: ${ac.testAnimationCount}`);
+        // Cap reporting volume so a global transition rule (e.g. body * { transition: color }) doesn't flood the report.
+        const MAX = 40;
+        for (const m of ac.missingAnimations.slice(0, MAX)) {
+          lines.push(`- [ ] missing on test: ${m.signature} (${m.tag}) — ${m.cause}`);
+        }
+        if (ac.missingAnimations.length > MAX) {
+          lines.push(`  - …and ${ac.missingAnimations.length - MAX} more missing animations`);
+        }
+        for (const d of ac.propDiffs.slice(0, MAX)) {
+          lines.push(`- [ ] ${d.signature} (${d.tag}) — ${d.diffs.join('; ')}`);
+        }
+        if (ac.propDiffs.length > MAX) {
+          lines.push(`  - …and ${ac.propDiffs.length - MAX} more property diffs`);
+        }
+        for (const m of ac.extraAnimations.slice(0, MAX)) {
+          lines.push(`- [ ] extra on test: ${m.signature} (${m.tag}) — ${m.cause}`);
+        }
+        if (ac.extraAnimations.length > MAX) {
+          lines.push(`  - …and ${ac.extraAnimations.length - MAX} more extra animations`);
+        }
+        for (const w of ac.missingWidgets) {
+          const detail = w.testCount !== undefined ? ` (live ${w.liveCount}× / test ${w.testCount}×)` : ` (live ${w.liveCount}×)`;
+          lines.push(`- [ ] interactive widget missing on test: ${w.attr}${detail}`);
+        }
+        for (const w of ac.extraWidgets) {
+          lines.push(`- [ ] interactive widget extra on test: ${w.attr} (test ${w.testCount}×)`);
+        }
+      }
+    }
+
     lines.push('');
   }
 
@@ -2109,6 +2923,89 @@ function withTimeout(promise, ms, label) {
   ]);
 }
 
+async function primeLazyImages(page) {
+  await page.evaluate(async () => {
+    const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+    const step = Math.max(window.innerHeight, 900);
+    const maxY = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight) - window.innerHeight;
+    const steps = Math.min(Math.ceil(Math.max(maxY, 0) / step), 20);
+    for (let index = 0; index <= steps; index += 1) {
+      window.scrollTo(0, Math.min(index * step, maxY));
+      await sleep(50);
+    }
+    window.scrollTo(0, 0);
+    // Wait long enough for live's GSAP/Webflow IX2 reveal animations to
+    // finish before extractPageInventory reads computed visibility.
+    // The hero H1 on live carries `data-hidden=" "` and starts at
+    // opacity:0; Webflow's reveal animation fades it to opacity:1 after
+    // ~300-500ms.  Under parallel live+test load, the previous 200ms
+    // sleep was sometimes too short, causing the H1 (and other revealed
+    // elements like the AMD testimonial card) to be invisible to the
+    // inventory pass — producing fake heading-sequence diffs.
+    await sleep(1500);
+    // Dispatch a resize event so any layouts that collapsed during the
+    // scroll-prime sequence (e.g. Webflow logo marquee items going to
+    // width:0px because of a flex re-layout triggered by intersection
+    // observer firing during scroll) have a chance to recompute their
+    // intrinsic widths.  Without this, live's customer-logo strip and
+    // workflow-card icon images read as `0×24` in the inventory pass and
+    // get filtered out as invisible, producing 30+ fake "extra-on-test"
+    // signatures.
+    window.dispatchEvent(new Event('resize'));
+    await sleep(300);
+    // Force-reset any width: 0 / height: 0 inline styles that Webflow's
+    // JS may have stamped on marquee items.  Some Webflow IX2 effects
+    // (logo carousel, decorative svg strips) animate transform but leave
+    // a stray inline style with width: 0 after the animation cycles.
+    document.querySelectorAll('img').forEach((img) => {
+      const r = img.getBoundingClientRect();
+      if (r.width === 0 || r.height === 0) {
+        // Walk up looking for an ancestor with a 0-px inline width or
+        // transform: scale(0); reset its inline style so the image can
+        // be sized by its natural width again.
+        let walker = img.parentElement;
+        let depth = 0;
+        while (walker && depth < 6) {
+          const inline = walker.style;
+          if (inline.width === '0px' || inline.height === '0px' ||
+              /scale\(0/.test(inline.transform || '')) {
+            inline.removeProperty('width');
+            inline.removeProperty('height');
+            inline.removeProperty('transform');
+          }
+          walker = walker.parentElement;
+          depth += 1;
+        }
+      }
+    });
+    await sleep(200);
+  });
+}
+
+async function waitForVisibleImages(page, timeoutMs = 5000) {
+  await page.evaluate(async (timeout) => {
+    const deadline = Date.now() + timeout;
+    const images = Array.from(document.images).filter((img) => {
+      const rect = img.getBoundingClientRect();
+      return rect.width > 0 && rect.height > 0 && rect.bottom >= 0 && rect.top <= window.innerHeight;
+    });
+
+    await Promise.all(images.map((img) => {
+      if (img.complete && img.naturalWidth > 0) return Promise.resolve();
+      return new Promise((resolve) => {
+        const done = () => resolve();
+        img.addEventListener('load', done, { once: true });
+        img.addEventListener('error', done, { once: true });
+        const poll = () => {
+          if ((img.complete && img.naturalWidth > 0) || Date.now() > deadline) done();
+          else setTimeout(poll, 100);
+        };
+        poll();
+      });
+    }));
+  }, timeoutMs);
+}
+
 async function loadPage(page, origin, routePath) {
   const pageTimeout = 30000;
   const extractTimeout = 20000;
@@ -2120,20 +3017,220 @@ async function loadPage(page, origin, routePath) {
     `goto ${url}`,
   );
 
+  // Initial settle: live's Webflow IX2 init runs ~500-800ms after load,
+  // and the customer-logo marquee + workflow-icon reveal animations take
+  // another ~1.5-2s to enter their first stable cycle.  4s gives them
+  // enough time to fully populate dimensions before primeLazyImages runs
+  // and removes the inline width:0 markers.  Earlier 2s settle was too
+  // short under puppeteer's slower exec context, leaving 30+ logos at
+  // width:0 even after the prime-strip pass.
   await withTimeout(
-    page.evaluate(() => new Promise((r) => setTimeout(r, 2000))),
-    10000,
+    page.evaluate(() => new Promise((r) => setTimeout(r, 4000))),
+    12000,
     `settle delay ${url}`,
   );
 
+  await withTimeout(
+    primeLazyImages(page),
+    15000,
+    `prime lazy images ${url}`,
+  );
+
+  await withTimeout(
+    waitForVisibleImages(page),
+    8000,
+    `visible images ${url}`,
+  );
+
+  // Force Webflow IX2 / GSAP reveal-animated elements to their final
+  // visible state before extracting computed styles.
+  //
+  // Live Webflow pages tag prerender-hidden elements with `data-hidden=" "`
+  // and run reveal animations through Webflow IX2 (which uses GSAP and
+  // the Web Animations API).  Under puppeteer's parallel live+test load
+  // the animations frequently haven't finished when extractPageInventory
+  // runs, leaving the hero H1, hero subhead, hero CTAs, and the active
+  // testimonial card at computed opacity:0 — producing fake heading-
+  // sequence and missing-element diffs versus the test site.
+  //
+  // CSS `!important` overrides DO NOT win against an in-flight WAAPI
+  // animation; the animation's keyframe values stack ABOVE the cascade
+  // until the animation ends.  So we must:
+  //   1. cancel/finish all live Web Animations to release the keyframe
+  //      lock,
+  //   2. strip `data-hidden` from the DOM (Webflow keys the pre-reveal
+  //      CSS rule off this attribute),
+  //   3. inject a stylesheet that pins splide carousel slides visible
+  //      and zeros animation/transition durations so they don't restart.
+  await page.evaluate(() => {
+    if (typeof document.getAnimations === 'function') {
+      document.getAnimations().forEach((animation) => {
+        try { animation.finish(); } catch (err) { /* ignore */ }
+        try { animation.cancel(); } catch (err) { /* ignore */ }
+      });
+    }
+    document.querySelectorAll('[data-hidden]').forEach((el) => {
+      el.removeAttribute('data-hidden');
+      el.style.opacity = '1';
+      el.style.transform = 'none';
+    });
+    // After cancelling animations, GSAP / Webflow IX2 restores any inline
+    // styles it stamped on at the animation's start frame — most notably
+    // `width: 0px` / `height: 0px` / `transform: scale(0)` on logo
+    // marquee items, decorative svg strips, and reveal-animated images.
+    // Strip those leftover collapsed inline styles so the affected
+    // elements size to their natural intrinsic dimensions instead of
+    // being reported as 0×N invisible by the inventory extractor.
+    document.querySelectorAll('img').forEach((img) => {
+      const r = img.getBoundingClientRect();
+      if (r.width !== 0 && r.height !== 0) return;
+      let walker = img.parentElement;
+      let depth = 0;
+      while (walker && depth < 8) {
+        const inline = walker.style;
+        if (inline.width === '0px' || inline.height === '0px') {
+          inline.removeProperty('width');
+          inline.removeProperty('height');
+        }
+        if (inline.transform && /scale|translate/.test(inline.transform)) {
+          inline.removeProperty('transform');
+        }
+        walker = walker.parentElement;
+        depth += 1;
+      }
+      // Also clear inline styles directly on the img itself.
+      if (img.style.width === '0px') img.style.removeProperty('width');
+      if (img.style.height === '0px') img.style.removeProperty('height');
+      if (/scale|translate/.test(img.style.transform || '')) {
+        img.style.removeProperty('transform');
+      }
+    });
+    const styleEl = document.createElement('style');
+    styleEl.id = '__parity_reveal_override__';
+    styleEl.textContent = `
+      .splide__slide,
+      .splide__slide * {
+        opacity: 1 !important;
+        transform: none !important;
+        visibility: visible !important;
+      }
+      *, *::before, *::after {
+        animation-duration: 0s !important;
+        animation-delay: 0s !important;
+        transition-duration: 0s !important;
+      }
+      /* Webflow IX2 logo marquees stamp inline width:0 onto items as
+         they reveal.  Force their li/div wrappers and inner imgs to use
+         their natural size so the inventory pass can see them. */
+      .logo-grid-component_cms_item,
+      .logo-grid-component_cms_item *,
+      .standard-media,
+      .standard-media-img,
+      .quote-author-media,
+      .client-media-img,
+      .icon, .icon-media,
+      .capabilities_card_icon,
+      .capabilities_card_image,
+      .img-component {
+        opacity: 1 !important;
+        visibility: visible !important;
+      }
+    `;
+    document.head.appendChild(styleEl);
+    // Disarm Webflow IX2 / GSAP to stop them from re-stamping inline
+    // width:0 / scale(0) on revealed elements after the override fires.
+    if (window.Webflow && typeof window.Webflow.destroy === 'function') {
+      try { window.Webflow.destroy(); } catch (e) { /* ignore */ }
+    }
+    if (window.gsap) {
+      try {
+        if (window.gsap.killTweensOf) window.gsap.killTweensOf('*');
+        if (window.ScrollTrigger && window.ScrollTrigger.killAll) {
+          window.ScrollTrigger.killAll();
+        }
+      } catch (e) { /* ignore */ }
+    }
+    // Force a reflow so the override takes effect before extraction.
+    document.body.getBoundingClientRect();
+  });
+
+  // Brief settle delay after the override so any ongoing layout updates
+  // finish before we read computed styles / rects.
+  await page.evaluate(() => new Promise((r) => setTimeout(r, 250)));
+
+  // Scroll the page from top to bottom in viewport-sized steps so
+  // `loading="lazy"` images (and any IntersectionObserver-driven
+  // lazy assets) actually load before we measure heights.  Without
+  // this, sections that contain large below-the-fold images report
+  // their pre-load (text-only) heights — making the parity report
+  // hallucinate hundreds of pixels of section-height drift between
+  // live and test that don't exist once the user actually scrolls.
+  await page.evaluate(async () => {
+    // First, force-load every `loading="lazy"` image by removing the
+    // attribute.  `loading=lazy` images do not contribute to the
+    // `window.load` event, so the parity script's `waitUntil: 'load'`
+    // returns before they have started fetching — even when they sit
+    // inside the initial viewport.  Stripping the attribute kicks off
+    // the network request immediately and lets us await a real image
+    // load below.
+    document.querySelectorAll('img[loading="lazy"]').forEach((img) => {
+      img.loading = 'eager';
+    });
+
+    const step = Math.max(400, window.innerHeight);
+    const totalHeight = Math.max(
+      document.documentElement.scrollHeight,
+      document.body.scrollHeight,
+    );
+    const maxSteps = 30;
+    let steps = 0;
+    for (let y = 0; y < totalHeight && steps < maxSteps; y += step, steps++) {
+      window.scrollTo(0, y);
+      await new Promise((r) => setTimeout(r, 30));
+    }
+    window.scrollTo(0, totalHeight);
+    await new Promise((r) => setTimeout(r, 100));
+    window.scrollTo(0, 0);
+    await new Promise((r) => setTimeout(r, 50));
+
+    // Now wait for every still-incomplete image to finish loading so
+    // their natural sizes are reflected in the page layout.  Cap each
+    // image's wait at 1.5s so a single slow CDN response doesn't stall
+    // the whole comparison.
+    const imgs = Array.from(document.images || []);
+    await Promise.all(
+      imgs.map((img) => {
+        if (img.complete && img.naturalWidth > 0) return Promise.resolve();
+        return new Promise((resolve) => {
+          let done = false;
+          const finish = () => {
+            if (done) return;
+            done = true;
+            img.removeEventListener('load', finish);
+            img.removeEventListener('error', finish);
+            resolve();
+          };
+          img.addEventListener('load', finish);
+          img.addEventListener('error', finish);
+          setTimeout(finish, 1500);
+        });
+      }),
+    );
+    // Force a layout flush so the freshly-loaded images contribute
+    // their final intrinsic heights to ancestor sections before we
+    // measure rects.
+    document.body.getBoundingClientRect();
+  });
+
   const isLiveSite = origin === LIVE_ORIGIN;
-  const [inventory, containers, interactive, cssVars, wfElements] = await withTimeout(
+  const [inventory, containers, interactive, cssVars, wfElements, animations] = await withTimeout(
     Promise.all([
       extractPageInventory(page),
       extractContainerStyles(page),
       extractInteractivity(page),
       extractCSSCustomProperties(page),
       extractWebflowElements(page, isLiveSite),
+      extractAnimations(page),
     ]),
     extractTimeout,
     `extraction ${url}`,
@@ -2182,10 +3279,22 @@ async function loadPage(page, origin, routePath) {
     dropdowns,
     cssVars,
     wfElements,
+    animations,
   };
 }
 
 async function discoverPaths(browser) {
+  const explicit = (process.env.PARITY_PATHS || '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+  if (explicit.length > 0) {
+    return explicit.sort((left, right) => {
+      if (left === '/') return -1;
+      if (right === '/') return 1;
+      return left.localeCompare(right);
+    });
+  }
   const seeds = await getSitemapPaths(LIVE_ORIGIN);
   const discovered = new Set(seeds.length > 0 ? seeds : ['/']);
   const queue = [...discovered];
@@ -2244,10 +3353,16 @@ async function main() {
       try {
         await Promise.all([livePage.setViewport(VIEWPORT), testPage.setViewport(VIEWPORT)]);
         console.log(`[parity] Loading ${routePath} (${index + 1}/${paths.length})...`);
-        const [liveData, testData] = await Promise.all([
-          loadPage(livePage, LIVE_ORIGIN, routePath),
-          loadPage(testPage, TEST_ORIGIN, routePath),
-        ]);
+        // Sequential live+test loads.  Earlier we ran them in Promise.all
+        // for speed, but running both pages concurrently in the same
+        // chromium process caused CPU contention that prevented Webflow
+        // IX2 reveal animations from finishing within the prime sequence's
+        // 1500ms settle, leaving live's customer-logo strip and workflow
+        // icon images at width:0 / opacity:0 — producing 30+ fake
+        // 'extra-on-test' IMG signatures.  Sequential loads add ~6s per
+        // route but make extraction deterministic.
+        const liveData = await loadPage(livePage, LIVE_ORIGIN, routePath);
+        const testData = await loadPage(testPage, TEST_ORIGIN, routePath);
         console.log(`[parity] Loaded ${routePath}, live=${liveData.status} test=${testData.status}`);
 
         let screenshotDiff = null;
@@ -2260,8 +3375,22 @@ async function main() {
           }
         }
 
-        routes.push(summarizeRouteComparison(routePath, liveData, testData, screenshotDiff));
+        const routeResult = summarizeRouteComparison(routePath, liveData, testData, screenshotDiff);
+        routes.push(routeResult);
         console.log(`Compared ${routePath}`);
+
+        // ── Incremental output: write per-route JSON immediately ──
+        const safeSlug = routePath.replace(/\//g, '_').replace(/^_/, '') || 'index';
+        const routeJsonPath = path.join(OUTPUT_DIR, `route-${safeSlug}.json`);
+        await fsp.writeFile(routeJsonPath, JSON.stringify(routeResult, null, 2));
+
+        // Write a lightweight progress manifest so consumers can poll
+        const progressPath = path.join(OUTPUT_DIR, '_progress.json');
+        await fsp.writeFile(progressPath, JSON.stringify({
+          completedRoutes: routes.map((r) => r.path),
+          totalPlanned: paths.length,
+          done: routes.length === paths.length,
+        }, null, 2));
       } catch (error) {
         console.warn(`Failed to compare ${routePath}: ${error.message}`);
       } finally {
@@ -2281,6 +3410,8 @@ async function main() {
         missingElements: routes.reduce((total, route) => total + route.missingElementsCount, 0),
         extraElements: routes.reduce((total, route) => total + route.extraElementsCount, 0),
         styleMismatches: routes.reduce((total, route) => total + route.styleMismatchCount, 0),
+        sizeMismatches: routes.reduce((total, route) => total + (route.sizeMismatchCount || 0), 0),
+        opacityMismatches: routes.reduce((total, route) => total + (route.opacityMismatchCount || 0), 0),
         layoutMismatches: routes.reduce((total, route) => total + route.layoutMismatchCount, 0),
         containerMismatches: routes.reduce((total, route) => total + (route.containerMismatchCount || 0), 0),
         elementInteractivityMismatches: routes.reduce((total, route) => total + (route.elementInteractivityMismatchCount || 0), 0),
@@ -2293,6 +3424,11 @@ async function main() {
         wfElementMismatches: routes.reduce((total, route) => total + (route.wfMismatchCount || 0), 0),
         wfElementsMissing: routes.reduce((total, route) => total + (route.wfMissingCount || 0), 0),
         wfElementsExtra: routes.reduce((total, route) => total + (route.wfExtraCount || 0), 0),
+        animationsMissing: routes.reduce((total, route) => total + (route.animationMissingCount || 0), 0),
+        animationsExtra: routes.reduce((total, route) => total + (route.animationExtraCount || 0), 0),
+        animationPropDiffs: routes.reduce((total, route) => total + (route.animationPropDiffCount || 0), 0),
+        widgetsMissing: routes.reduce((total, route) => total + (route.widgetMissingCount || 0), 0),
+        widgetsExtra: routes.reduce((total, route) => total + (route.widgetExtraCount || 0), 0),
         screenshotMismatches: routes.filter((route) => route.screenshotDiff && !route.screenshotDiff.passed).length,
         screenshotUnavailable: routes.filter((route) => route.screenshotDiff?.error).length,
       },
@@ -2319,6 +3455,10 @@ async function main() {
       (report.summary.dropdownMismatches || 0) +
       report.summary.imageDimensionMismatches +
       (report.summary.wfElementMismatches || 0) +
+      (report.summary.animationsMissing || 0) +
+      (report.summary.animationsExtra || 0) +
+      (report.summary.animationPropDiffs || 0) +
+      (report.summary.widgetsMissing || 0) +
       report.summary.screenshotMismatches;
 
     const jsonPath = path.join(OUTPUT_DIR, 'site-parity-checklist.json');

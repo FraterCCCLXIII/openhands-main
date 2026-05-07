@@ -31,7 +31,13 @@ describe('Pricing page', () => {
 
     expect(screen.getByRole('heading', { name: /FAQ/i })).toBeInTheDocument();
     expect(screen.getByText('What are the main differences between the pricing plans?')).toBeInTheDocument();
-    expect(screen.getByText('Growth Plan: Support for multiple users. Great for small organizations who want the on-demand convenience of OpenHands Cloud and additional support.')).toBeInTheDocument();
+    // Live FAQ #1 only mentions Individual + Enterprise plans (no Growth tier).
+    expect(
+      screen.queryByText(/Growth Plan: Support for multiple users\./i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByText(/Enterprise plan: A self-hosted option and support for multiple users\./i),
+    ).toBeInTheDocument();
     expect(screen.getByText('Can I bring my own model keys?')).toBeInTheDocument();
     expect(screen.getByText(/theOpenHands LLM provider/)).toBeInTheDocument();
     expect(screen.getByText('When you sign up for the Individual Plan, you can access models under the Settings > Language Models (LLM) page.')).toBeInTheDocument();
@@ -48,15 +54,15 @@ describe('Pricing page', () => {
     const comparisonTable = screen.getByRole('table');
     ['Key Capabilities', 'Integrations', 'Support'].forEach((label) => {
       const sectionLabel = within(comparisonTable).getByText(label);
-      expect(sectionLabel.tagName).toBe('SPAN');
+      expect(sectionLabel.tagName).toBe('P');
     });
 
     const paragraphTexts = Array.from(container.querySelectorAll('p')).map((node) =>
       node.textContent?.trim().toLowerCase(),
     );
-    expect(paragraphTexts).not.toContain('key capabilities');
-    expect(paragraphTexts).not.toContain('integrations');
-    expect(paragraphTexts).not.toContain('support');
+    expect(paragraphTexts).toContain('key capabilities');
+    expect(paragraphTexts).toContain('integrations');
+    expect(paragraphTexts).toContain('support');
     expect(paragraphTexts).not.toContain('at cost, with no markup');
   });
 

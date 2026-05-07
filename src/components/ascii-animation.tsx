@@ -480,6 +480,7 @@ export const ASCIIAnimation: React.FC<ASCIIAnimationProps> = ({ className = '' }
   return (
     <div
       ref={containerRef}
+      data-wf-el='ascii-embed'
       className={`ascii-embed ${className}`}
       style={{
         position: 'relative',
@@ -489,6 +490,7 @@ export const ASCIIAnimation: React.FC<ASCIIAnimationProps> = ({ className = '' }
     >
       <pre
         ref={preRef}
+        data-wf-el='ascii-pre'
         className="ascii-pre"
         aria-hidden="true"
       />

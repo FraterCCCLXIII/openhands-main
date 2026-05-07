@@ -11,14 +11,14 @@ describe('site shell parity helpers', () => {
     expect(container.querySelector('img')?.getAttribute('alt')).toBe('');
   });
 
-  it('shows social links in the standalone footer', () => {
+  it('hides social links in the standalone footer by default', () => {
     render(
       <MemoryRouter>
         <Footer standalone />
       </MemoryRouter>
     );
 
-    expect(screen.getAllByTestId('footer-social-link')).toHaveLength(3);
+    expect(screen.queryAllByTestId('footer-social-link')).toHaveLength(0);
   });
 
   it('can render the compact Webflow-style footer navigation', () => {

@@ -64,7 +64,7 @@ export const BlogFooter: React.FC<BlogFooterProps> = ({
 
   return (
     <div className='mt-16 flex w-full flex-col gap-14 border-t border-black/10 pt-10'>
-      <section className='space-y-4'>
+      <section data-wf-el='section' className='space-y-4'>
         <div className='flex items-center justify-between gap-4'>
           <button
             type='button'
@@ -121,7 +121,7 @@ export const BlogFooter: React.FC<BlogFooterProps> = ({
       </section>
 
       {articleHighlights.length > 0 && (
-        <section className='grid grid-cols-1 gap-x-8 gap-y-12 md:grid-cols-2 xl:grid-cols-3'>
+        <section data-wf-el='section' className='grid grid-cols-1 gap-x-8 gap-y-12 md:grid-cols-2 xl:grid-cols-3'>
           {articleHighlights.map((highlight) => (
             <BlogCard
               key={highlight.href}
@@ -136,7 +136,7 @@ export const BlogFooter: React.FC<BlogFooterProps> = ({
         </section>
       )}
 
-      <section className='flex flex-col items-center gap-4 text-center'>
+      <section data-wf-el='section' className='flex flex-col items-center gap-4 text-center'>
         <h1 className='font-sohne text-[32px] leading-[1.1] font-medium tracking-[-0.03em] text-brand-fg lg:text-[44px]'>
           Get useful insights in our blog
         </h1>
