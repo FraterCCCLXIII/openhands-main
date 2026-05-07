@@ -15,21 +15,10 @@ vi.mock("next/navigation", () => ({
 
 import { IntegrationWizard } from "@/src/components/integrations/wizard/wizard";
 
-(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+import { enableReactActEnvironment, setInputValue } from "@/src/test-utils/jsdom-helpers";
 
-const setInputValue = (element: HTMLInputElement | undefined, value: string) => {
-  if (!element) {
-    throw new Error("Expected input element");
-  }
+enableReactActEnvironment();
 
-  const valueSetter = Object.getOwnPropertyDescriptor(
-    HTMLInputElement.prototype,
-    "value",
-  )?.set;
-  valueSetter?.call(element, value);
-  element.dispatchEvent(new Event("input", { bubbles: true }));
-  element.dispatchEvent(new Event("change", { bubbles: true }));
-};
 
 describe("IntegrationWizard", () => {
   let container: HTMLDivElement;

@@ -17,7 +17,9 @@ vi.mock("next-auth/react", () => ({
 }));
 import { Providers } from "@/src/components/providers";
 
-(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+import { enableReactActEnvironment } from "@/src/test-utils/jsdom-helpers";
+
+enableReactActEnvironment();
 
 const QueryClientProbe = () => {
   const queryClient = useQueryClient();

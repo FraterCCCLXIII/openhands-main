@@ -7,7 +7,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ManagedConnectorList } from "@/src/components/admin/integrations/managed-connector-list";
 import type { ManagedConnectorDefinition } from "@/src/types/integrations-hub";
 
-(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+import { enableReactActEnvironment, setInputValue } from "@/src/test-utils/jsdom-helpers";
+
+enableReactActEnvironment();
 
 const initialConnectors: ManagedConnectorDefinition[] = [
   {
@@ -95,29 +97,6 @@ const unreadableOauthConnector: ManagedConnectorDefinition = {
 };
 
 
-const setInputValue = (element: Element | null, value: string) => {
-  if (element instanceof HTMLInputElement) {
-    const valueSetter = Object.getOwnPropertyDescriptor(
-      HTMLInputElement.prototype,
-      "value",
-    )?.set;
-    valueSetter?.call(element, value);
-    element.dispatchEvent(new Event("input", { bubbles: true }));
-    return;
-  }
-
-  if (element instanceof HTMLSelectElement) {
-    const valueSetter = Object.getOwnPropertyDescriptor(
-      HTMLSelectElement.prototype,
-      "value",
-    )?.set;
-    valueSetter?.call(element, value);
-    element.dispatchEvent(new Event("change", { bubbles: true }));
-    return;
-  }
-
-  throw new Error("Expected input or select element");
-};
 
 const findConnectorDetailsToggle = (container: ParentNode, slug: string) =>
   container.querySelector<HTMLButtonElement>(

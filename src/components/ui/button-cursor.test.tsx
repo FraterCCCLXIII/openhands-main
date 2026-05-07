@@ -9,7 +9,9 @@ import { AccessModeSlider } from "@/src/components/integrations/tool-access-cont
 import { KindStep } from "@/src/components/integrations/wizard/kind-step";
 import { Button } from "@/src/components/ui/button";
 
-(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+import { enableReactActEnvironment } from "@/src/test-utils/jsdom-helpers";
+
+enableReactActEnvironment();
 
 describe("button cursor affordances", () => {
   let container: HTMLDivElement;

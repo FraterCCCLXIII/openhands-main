@@ -8,7 +8,9 @@ import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
 import { Card } from "@/src/components/ui/card";
 
-(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+import { enableReactActEnvironment } from "@/src/test-utils/jsdom-helpers";
+
+enableReactActEnvironment();
 
 describe("theme primitives", () => {
   let container: HTMLDivElement;

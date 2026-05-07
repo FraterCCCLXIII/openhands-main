@@ -4,6 +4,8 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { enableReactActEnvironment, setInputValue } from "@/src/test-utils/jsdom-helpers";
+
 import {
   ProviderCatalog,
   availabilityLabel,
@@ -23,7 +25,7 @@ import type {
   OAuthProviderCatalogOption,
 } from "@/src/types/integrations-hub";
 
-(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+enableReactActEnvironment();
 
 const readyManagedConnectors: ManagedConnectorOption[] = [
   {
@@ -383,18 +385,6 @@ describe("provider catalog helper utilities", () => {
 });
 
 
-const setInputValue = (element: Element | null, value: string) => {
-  if (!(element instanceof HTMLInputElement)) {
-    throw new Error("Expected HTMLInputElement");
-  }
-
-  const valueSetter = Object.getOwnPropertyDescriptor(
-    HTMLInputElement.prototype,
-    "value",
-  )?.set;
-  valueSetter?.call(element, value);
-  element.dispatchEvent(new Event("input", { bubbles: true }));
-};
 
 describe("ProviderCatalog", () => {
   let container: HTMLDivElement;

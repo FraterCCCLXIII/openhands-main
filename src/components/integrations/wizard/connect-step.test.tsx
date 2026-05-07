@@ -12,21 +12,10 @@ import type {
 import type { DiscoverFeedback, WizardDraft } from "@/src/components/integrations/wizard/utils";
 import type { AdminSection } from "@/src/lib/admin-routes";
 
-(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+import { enableReactActEnvironment, setInputValue } from "@/src/test-utils/jsdom-helpers";
 
-const setInputValue = (element: HTMLInputElement | null, value: string) => {
-  if (!element) {
-    throw new Error("Expected input element");
-  }
+enableReactActEnvironment();
 
-  const valueSetter = Object.getOwnPropertyDescriptor(
-    HTMLInputElement.prototype,
-    "value",
-  )?.set;
-  valueSetter?.call(element, value);
-  element.dispatchEvent(new Event("input", { bubbles: true }));
-  element.dispatchEvent(new Event("change", { bubbles: true }));
-};
 
 const baseManagedDraft: WizardDraft = {
   kind: "managed",

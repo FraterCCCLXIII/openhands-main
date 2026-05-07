@@ -22,25 +22,10 @@ import type {
 } from "@/src/types/integrations-hub";
 import type { FilteredIntegrationToolEntry } from "@/src/components/dashboard/utils";
 
-(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+import { enableReactActEnvironment, setInputValue } from "@/src/test-utils/jsdom-helpers";
 
-const setInputValue = (
-  element: HTMLInputElement | HTMLSelectElement | null,
-  value: string,
-) => {
-  if (!element) {
-    throw new Error("Expected input element");
-  }
+enableReactActEnvironment();
 
-  const prototype =
-    element instanceof HTMLSelectElement
-      ? HTMLSelectElement.prototype
-      : HTMLInputElement.prototype;
-  const valueSetter = Object.getOwnPropertyDescriptor(prototype, "value")?.set;
-  valueSetter?.call(element, value);
-  element.dispatchEvent(new Event("input", { bubbles: true }));
-  element.dispatchEvent(new Event("change", { bubbles: true }));
-};
 
 const connectors: ManagedConnectorOption[] = [
   {

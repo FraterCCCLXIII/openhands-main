@@ -14,7 +14,9 @@ vi.mock("next-auth/react", () => ({
 
 import { GitHubSignInButton } from "@/src/components/auth/github-sign-in-button";
 
-(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+import { enableReactActEnvironment } from "@/src/test-utils/jsdom-helpers";
+
+enableReactActEnvironment();
 
 describe("GitHubSignInButton", () => {
   let container: HTMLDivElement;

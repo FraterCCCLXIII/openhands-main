@@ -6,7 +6,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AgentConnectionSection } from "@/src/components/dashboard/sections/agent-connection-section";
 
-(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+import { enableReactActEnvironment } from "@/src/test-utils/jsdom-helpers";
+
+enableReactActEnvironment();
 
 const createDefaultProps = () => ({
   adminKey: {

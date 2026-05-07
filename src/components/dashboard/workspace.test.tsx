@@ -27,28 +27,17 @@ vi.mock("next-auth/react", () => ({
 }));
 
 import { DashboardWorkspace } from "@/src/components/dashboard/workspace";
+
 import { createDashboardFetchMock } from "@/src/test-utils/fetch-mock-helpers";
+import { enableReactActEnvironment, setInputValue } from "@/src/test-utils/jsdom-helpers";
 import type {
   AccessRequest,
   ManagedConnectorOption,
   IntegrationSpec,
 } from "@/src/types/integrations-hub";
 
-(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+enableReactActEnvironment();
 
-const setInputValue = (element: HTMLInputElement | undefined, value: string) => {
-  if (!element) {
-    throw new Error("Expected input element");
-  }
-
-  const valueSetter = Object.getOwnPropertyDescriptor(
-    HTMLInputElement.prototype,
-    "value",
-  )?.set;
-  valueSetter?.call(element, value);
-  element.dispatchEvent(new Event("input", { bubbles: true }));
-  element.dispatchEvent(new Event("change", { bubbles: true }));
-};
 
 const managedConnectors: ManagedConnectorOption[] = [
   {
