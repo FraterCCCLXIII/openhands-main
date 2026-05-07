@@ -27,6 +27,7 @@ vi.mock("next-auth/react", () => ({
 }));
 
 import { DashboardWorkspace } from "@/src/components/dashboard/workspace";
+import { createDashboardFetchMock } from "@/src/test-utils/fetch-mock-helpers";
 import type {
   AccessRequest,
   ManagedConnectorOption,
@@ -224,32 +225,12 @@ describe("DashboardWorkspace", () => {
       },
     ];
 
-    fetchMock.mockImplementation(async (input: RequestInfo | URL) => {
-      const url = typeof input === "string" ? input : input.toString();
-
-      if (
-        url === "/api/integrations" ||
-        url === "/api/case-by-case-approvals" ||
-        url === "/api/notifications" ||
-        url === "/api/integrations/managed-connectors"
-      ) {
-        return new Response(
-          JSON.stringify(
-            url === "/api/integrations"
-              ? integrationsState
-              : url === "/api/integrations/managed-connectors"
-                ? managedConnectors
-                : [],
-          ),
-          {
-            status: 200,
-            headers: { "Content-Type": "application/json" },
-          },
-        );
-      }
-
-      throw new Error(`Unexpected fetch: ${url}`);
-    });
+    fetchMock.mockImplementation(
+      createDashboardFetchMock({
+        integrations: integrationsState,
+        managedConnectors,
+      }),
+    );
 
     await act(async () => {
       root.render(
@@ -401,21 +382,7 @@ describe("DashboardWorkspace", () => {
   });
 
   it("shows integrations as the default section with a searchable add-integration panel", async () => {
-    fetchMock.mockImplementation(async (input: RequestInfo | URL) => {
-      const url = typeof input === "string" ? input : input.toString();
-
-      if (url === "/api/integrations/managed-connectors") {
-        return new Response(JSON.stringify(managedConnectors), {
-          status: 200,
-          headers: { "Content-Type": "application/json" },
-        });
-      }
-
-      return new Response(JSON.stringify([]), {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-      });
-    });
+    fetchMock.mockImplementation(createDashboardFetchMock({ managedConnectors }));
 
     await act(async () => {
       root.render(
@@ -466,28 +433,12 @@ describe("DashboardWorkspace", () => {
       },
     ];
 
-    fetchMock.mockImplementation(async (input: RequestInfo | URL) => {
-      const url = typeof input === "string" ? input : input.toString();
-
-      if (url === "/api/integrations/managed-connectors") {
-        return new Response(JSON.stringify(managedConnectors), {
-          status: 200,
-          headers: { "Content-Type": "application/json" },
-        });
-      }
-
-      if (url === "/api/integrations") {
-        return new Response(JSON.stringify(integrationsState), {
-          status: 200,
-          headers: { "Content-Type": "application/json" },
-        });
-      }
-
-      return new Response(JSON.stringify([]), {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-      });
-    });
+    fetchMock.mockImplementation(
+      createDashboardFetchMock({
+        integrations: integrationsState,
+        managedConnectors,
+      }),
+    );
 
     await act(async () => {
       root.render(
@@ -524,30 +475,20 @@ describe("DashboardWorkspace", () => {
       pushedHref = href;
     });
 
-    fetchMock.mockImplementation(async (input: RequestInfo | URL) => {
-      const url = typeof input === "string" ? input : input.toString();
-
-      if (url === "/api/integrations/managed-connectors") {
-        return new Response(JSON.stringify(managedConnectors), {
-          status: 200,
-          headers: { "Content-Type": "application/json" },
-        });
-      }
-
-      if (
-        url === "/api/integrations" ||
-        url === "/api/case-by-case-approvals" ||
-        url === "/api/notifications" ||
-        url === "/api/oauth/connections"
-      ) {
-        return new Response(JSON.stringify([]), {
-          status: 200,
-          headers: { "Content-Type": "application/json" },
-        });
-      }
-
-      throw new Error(`Unexpected fetch: ${url}`);
-    });
+    fetchMock.mockImplementation(
+      createDashboardFetchMock({
+        managedConnectors,
+        routeHandler: (url) => {
+          if (url === "/api/oauth/connections") {
+            return new Response(JSON.stringify([]), {
+              status: 200,
+              headers: { "Content-Type": "application/json" },
+            });
+          }
+          return null;
+        },
+      }),
+    );
 
     const renderWorkspace = async () => {
       await act(async () => {
@@ -603,30 +544,20 @@ describe("DashboardWorkspace", () => {
   });
 
   it("keeps OAuth callback errors visible after the wizard auto-selects the connector", async () => {
-    fetchMock.mockImplementation(async (input: RequestInfo | URL) => {
-      const url = typeof input === "string" ? input : input.toString();
-
-      if (url === "/api/integrations/managed-connectors") {
-        return new Response(JSON.stringify(managedConnectors), {
-          status: 200,
-          headers: { "Content-Type": "application/json" },
-        });
-      }
-
-      if (
-        url === "/api/integrations" ||
-        url === "/api/case-by-case-approvals" ||
-        url === "/api/notifications" ||
-        url === "/api/oauth/connections"
-      ) {
-        return new Response(JSON.stringify([]), {
-          status: 200,
-          headers: { "Content-Type": "application/json" },
-        });
-      }
-
-      throw new Error(`Unexpected fetch: ${url}`);
-    });
+    fetchMock.mockImplementation(
+      createDashboardFetchMock({
+        managedConnectors,
+        routeHandler: (url) => {
+          if (url === "/api/oauth/connections") {
+            return new Response(JSON.stringify([]), {
+              status: 200,
+              headers: { "Content-Type": "application/json" },
+            });
+          }
+          return null;
+        },
+      }),
+    );
 
     useSearchParamsMock.mockReturnValue(
       new URLSearchParams({

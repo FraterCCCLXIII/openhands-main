@@ -21,6 +21,7 @@ The root `LICENSE` is proprietary: `Copyright All Hands AI, Inc. All rights rese
 - For targeted HTTP adapter coverage work, run `npx vitest run src/lib/adapters/http-adapter.test.ts --coverage --coverage.include=src/lib/adapters/http-adapter.ts --coverage.reporter=text`; the suite now covers auth-mode differences, templated query/header/body shaping, multipart/form/text encoding, validation errors, and response parsing fallbacks.
 
 - Shared server-rendered page DOM test helpers now live in `src/test-utils/static-dom.tsx`; reuse `renderStaticDocument`, `findHeading`, and `getCodeValues` instead of re-creating local `DOMParser`/`renderToStaticMarkup` helpers in page tests.
+- Shared dashboard fetch-mock builder lives at `src/test-utils/fetch-mock-helpers.ts`; prefer `createDashboardFetchMock({ integrations, managedConnectors, accessRequests, notifications, routeHandler })` over hand-rolled `vi.fn` route routers. Standard routes (`/api/integrations`, `/api/integrations/managed-connectors`, `/api/case-by-case-approvals`, `/api/notifications`) fall back to empty arrays; the `routeHandler` escape hatch handles per-test endpoints (PATCH/DELETE/POST or extra routes like `/api/oauth/connections`) before the standard fallbacks run, and unmatched routes still throw `"Unexpected fetch"` so tests can't silently drift.
 
 - Run e2e tests only: `npm run test:e2e`
 - Run targeted mutation testing for a new file: `npm run test:mutation -- src/path/to/new-file.ts`
