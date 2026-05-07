@@ -223,47 +223,54 @@ describe("IntegrationsHubService", () => {
   });
 
 
-  it("records successful invocation metadata and exposes usage summaries", async () => {
-    const service = createService();
-    await installIntegration(service, baseIntegration);
+  describe("successful invocation tracking", () => {
+    let service: IntegrationsHubService;
 
-    await service.invokeContext(
-      "agent-usage",
-      "assistant",
-      "salesforce",
-      "accounts",
-      { limit: 5, q: "acme" },
-      ["accounts.read"],
-      { ownerId: OWNER_ID },
-    );
-
-    const sql = getActiveSql();
-    const rows = await sql`SELECT * FROM tool_invocations ORDER BY invoked_at ASC`;
-    const row = rows[0] as Record<string, unknown>;
-    const parseField = <T,>(value: unknown) =>
-      typeof value === "string" ? (JSON.parse(value) as T) : (value as T);
-
-    expect(rows).toHaveLength(1);
-    expect(row.owner_id).toBe(OWNER_ID);
-    expect(row.agent_id).toBe("agent-usage");
-    expect(row.agent_class).toBe("assistant");
-    expect(row.integration_key).toBe("salesforce");
-    expect(row.function_name).toBe("accounts");
-    expect(row.provider).toBe("http");
-    expect(row.kind).toBe("api");
-    expect(row.auth_strategy).toBe("bearer");
-    expect(row.outcome).toBe("success");
-    expect(parseField<string[]>(row.scopes)).toEqual(["accounts.read"]);
-    expect(parseField<string[]>(row.payload_keys)).toEqual(["limit", "q"]);
-    expect(row.error_message).toBeNull();
-
-    const integrations = await service.listOwnerIntegrationsWithUsage(OWNER_ID);
-    const savedIntegration = getOnlyIntegration(integrations);
-    expect(savedIntegration.tools["accounts"]).toMatchObject({
-      invocationCount: 1,
-      lastInvocationOutcome: "success",
+    beforeEach(async () => {
+      service = createService();
+      await installIntegration(service, baseIntegration);
+      await service.invokeContext(
+        "agent-usage",
+        "assistant",
+        "salesforce",
+        "accounts",
+        { limit: 5, q: "acme" },
+        ["accounts.read"],
+        { ownerId: OWNER_ID },
+      );
     });
-    expect(savedIntegration.tools["accounts"]?.lastInvokedAt).toBeTruthy();
+
+    it("records invocation metadata with owner, agent, and payload details", async () => {
+      const sql = getActiveSql();
+      const rows = await sql`SELECT * FROM tool_invocations ORDER BY invoked_at ASC`;
+      const row = rows[0] as Record<string, unknown>;
+      const parseField = <T,>(value: unknown) =>
+        typeof value === "string" ? (JSON.parse(value) as T) : (value as T);
+
+      expect(rows).toHaveLength(1);
+      expect(row.owner_id).toBe(OWNER_ID);
+      expect(row.agent_id).toBe("agent-usage");
+      expect(row.agent_class).toBe("assistant");
+      expect(row.integration_key).toBe("salesforce");
+      expect(row.function_name).toBe("accounts");
+      expect(row.provider).toBe("http");
+      expect(row.kind).toBe("api");
+      expect(row.auth_strategy).toBe("bearer");
+      expect(row.outcome).toBe("success");
+      expect(parseField<string[]>(row.scopes)).toEqual(["accounts.read"]);
+      expect(parseField<string[]>(row.payload_keys)).toEqual(["limit", "q"]);
+      expect(row.error_message).toBeNull();
+    });
+
+    it("enriches integration listings with per-tool usage summaries", async () => {
+      const integrations = await service.listOwnerIntegrationsWithUsage(OWNER_ID);
+      const savedIntegration = getOnlyIntegration(integrations);
+      expect(savedIntegration.tools["accounts"]).toMatchObject({
+        invocationCount: 1,
+        lastInvocationOutcome: "success",
+      });
+      expect(savedIntegration.tools["accounts"]?.lastInvokedAt).toBeTruthy();
+    });
   });
 
   it("records denied invocation metadata for approval-required functions", async () => {
@@ -978,106 +985,154 @@ describe("IntegrationsHubService", () => {
   });
 
 
-  it("rotates and revokes user API keys with hashed auth and encrypted recovery", async () => {
-    const service = createService();
+  describe("user API keys", () => {
+    const userOwnerId = "owner@example.com";
 
-    const first = await service.rotateUserApiKey("Owner@Example.com");
-    const storedFirst = await testRepo.getUserApiKeyByOwner("owner@example.com");
+    const issueUserApiKey = async (service: IntegrationsHubService) => {
+      const issued = await service.rotateUserApiKey("Owner@Example.com");
+      const stored = await testRepo.getUserApiKeyByOwner(userOwnerId);
+      return { issued, stored };
+    };
 
-    expect(first.apiKey.startsWith("clu_")).toBe(true);
-    expect(storedFirst).not.toBeNull();
-    expect(storedFirst?.apiKeyHash).not.toBe(first.apiKey);
-    expect(storedFirst?.encryptedApiKey).toBeTruthy();
-    expect(storedFirst?.encryptedApiKey).not.toBe(first.apiKey);
-    expect(storedFirst?.keyPrefix).toBe(first.key.keyPrefix);
-    expect(storedFirst?.keySuffix).toBe(first.key.keySuffix);
-    expect(await service.getStoredUserApiKey(first.apiKey)).toMatchObject({
-      ownerId: "owner@example.com",
+    it("issues a new user API key with hashed storage and encrypted recovery", async () => {
+      const service = createService();
+      const { issued, stored } = await issueUserApiKey(service);
+
+      expect(issued.apiKey.startsWith("clu_")).toBe(true);
+      expect(stored).not.toBeNull();
+      expect(stored?.apiKeyHash).not.toBe(issued.apiKey);
+      expect(stored?.encryptedApiKey).toBeTruthy();
+      expect(stored?.encryptedApiKey).not.toBe(issued.apiKey);
+      expect(stored?.keyPrefix).toBe(issued.key.keyPrefix);
+      expect(stored?.keySuffix).toBe(issued.key.keySuffix);
+      expect(await service.getStoredUserApiKey(issued.apiKey)).toMatchObject({
+        ownerId: userOwnerId,
+      });
+      expect(await service.getUserApiKeyStatus(userOwnerId)).toEqual(issued.key);
+      expect(await service.getUserApiKeyValue(userOwnerId)).toBe(issued.apiKey);
     });
-    expect(await service.getUserApiKeyStatus("owner@example.com")).toEqual(first.key);
-    expect(await service.getUserApiKeyValue("owner@example.com")).toBe(first.apiKey);
 
-    const second = await service.rotateUserApiKey("owner@example.com");
-    const storedSecond = await testRepo.getUserApiKeyByOwner("owner@example.com");
+    it("rotates an existing user API key invalidating the previous key", async () => {
+      const service = createService();
+      const { issued: first, stored: storedFirst } = await issueUserApiKey(service);
 
-    expect(second.apiKey).not.toBe(first.apiKey);
-    expect(second.key.createdAt).toBe(first.key.createdAt);
-    expect(second.key.updatedAt).not.toBe(first.key.updatedAt);
-    expect(storedSecond?.apiKeyHash).not.toBe(storedFirst?.apiKeyHash);
-    expect(storedSecond?.encryptedApiKey).not.toBe(storedFirst?.encryptedApiKey);
-    expect(await service.getStoredUserApiKey(first.apiKey)).toBeNull();
-    expect(await service.getStoredUserApiKey(second.apiKey)).toMatchObject({
-      ownerId: "owner@example.com",
+      const second = await service.rotateUserApiKey(userOwnerId);
+      const storedSecond = await testRepo.getUserApiKeyByOwner(userOwnerId);
+
+      expect(second.apiKey).not.toBe(first.apiKey);
+      expect(second.key.createdAt).toBe(first.key.createdAt);
+      expect(second.key.updatedAt).not.toBe(first.key.updatedAt);
+      expect(storedSecond?.apiKeyHash).not.toBe(storedFirst?.apiKeyHash);
+      expect(storedSecond?.encryptedApiKey).not.toBe(storedFirst?.encryptedApiKey);
+      expect(await service.getStoredUserApiKey(first.apiKey)).toBeNull();
+      expect(await service.getStoredUserApiKey(second.apiKey)).toMatchObject({
+        ownerId: userOwnerId,
+      });
+      expect(await service.getUserApiKeyValue(userOwnerId)).toBe(second.apiKey);
     });
-    expect(await service.getUserApiKeyValue("owner@example.com")).toBe(second.apiKey);
 
-    expect(await service.revokeUserApiKey("owner@example.com")).toEqual({
-      revoked: true,
+    it("revokes a user API key clearing all stored records", async () => {
+      const service = createService();
+      const { issued } = await issueUserApiKey(service);
+
+      expect(await service.revokeUserApiKey(userOwnerId)).toEqual({
+        revoked: true,
+      });
+      expect(await service.getStoredUserApiKey(issued.apiKey)).toBeNull();
+      expect(await service.getUserApiKeyStatus(userOwnerId)).toBeNull();
+      expect(await service.getUserApiKeyValue(userOwnerId)).toBeNull();
     });
-    expect(await service.getStoredUserApiKey(second.apiKey)).toBeNull();
-    expect(await service.getUserApiKeyStatus("owner@example.com")).toBeNull();
-    expect(await service.getUserApiKeyValue("owner@example.com")).toBeNull();
-    expect(await service.revokeUserApiKey("owner@example.com")).toEqual({
-      revoked: false,
+
+    it("returns revoked:false when no user API key exists to revoke", async () => {
+      const service = createService();
+
+      expect(await service.revokeUserApiKey(userOwnerId)).toEqual({
+        revoked: false,
+      });
     });
-  });
 
-  it("returns null for unknown user API keys", async () => {
-    const service = createService();
+    it("returns null for unknown user API keys", async () => {
+      const service = createService();
 
-    expect(await service.getStoredUserApiKey("not-a-real-user-key")).toBeNull();
-  });
-
-
-  it("rotates and revokes admin API keys with hashed auth and encrypted recovery", async () => {
-    vi.stubEnv("APP_ADMIN_EMAILS", "admin@example.com");
-    const service = createService();
-
-    const first = await service.rotateAdminApiKey("Admin@Example.com");
-    const storedFirst = await testRepo.getAdminApiKeyByOwner("admin@example.com");
-
-    expect(first.apiKey.startsWith("clad_")).toBe(true);
-    expect(storedFirst).not.toBeNull();
-    expect(storedFirst?.apiKeyHash).not.toBe(first.apiKey);
-    expect(storedFirst?.encryptedApiKey).toBeTruthy();
-    expect(storedFirst?.encryptedApiKey).not.toBe(first.apiKey);
-    expect(storedFirst?.keyPrefix).toBe(first.key.keyPrefix);
-    expect(storedFirst?.keySuffix).toBe(first.key.keySuffix);
-    expect(await service.getStoredAdminApiKey(first.apiKey)).toMatchObject({
-      ownerId: "admin@example.com",
-    });
-    expect(await service.getAdminApiKeyStatus("admin@example.com")).toEqual(first.key);
-    expect(await service.getAdminApiKeyValue("admin@example.com")).toBe(first.apiKey);
-
-    const second = await service.rotateAdminApiKey("admin@example.com");
-    const storedSecond = await testRepo.getAdminApiKeyByOwner("admin@example.com");
-
-    expect(second.apiKey).not.toBe(first.apiKey);
-    expect(second.key.createdAt).toBe(first.key.createdAt);
-    expect(second.key.updatedAt).not.toBe(first.key.updatedAt);
-    expect(storedSecond?.apiKeyHash).not.toBe(storedFirst?.apiKeyHash);
-    expect(storedSecond?.encryptedApiKey).not.toBe(storedFirst?.encryptedApiKey);
-    expect(await service.getStoredAdminApiKey(first.apiKey)).toBeNull();
-    expect(await service.getStoredAdminApiKey(second.apiKey)).toMatchObject({
-      ownerId: "admin@example.com",
-    });
-    expect(await service.getAdminApiKeyValue("admin@example.com")).toBe(second.apiKey);
-
-    expect(await service.revokeAdminApiKey("admin@example.com")).toEqual({
-      revoked: true,
-    });
-    expect(await service.getStoredAdminApiKey(second.apiKey)).toBeNull();
-    expect(await service.getAdminApiKeyStatus("admin@example.com")).toBeNull();
-    expect(await service.getAdminApiKeyValue("admin@example.com")).toBeNull();
-    expect(await service.revokeAdminApiKey("admin@example.com")).toEqual({
-      revoked: false,
+      expect(await service.getStoredUserApiKey("not-a-real-user-key")).toBeNull();
     });
   });
 
-  it("returns null for unknown admin API keys", async () => {
-    const service = createService();
+  describe("admin API keys", () => {
+    const adminOwnerId = "admin@example.com";
 
-    expect(await service.getStoredAdminApiKey("not-a-real-admin-key")).toBeNull();
+    beforeEach(() => {
+      vi.stubEnv("APP_ADMIN_EMAILS", adminOwnerId);
+    });
+
+    const issueAdminApiKey = async (service: IntegrationsHubService) => {
+      const issued = await service.rotateAdminApiKey("Admin@Example.com");
+      const stored = await testRepo.getAdminApiKeyByOwner(adminOwnerId);
+      return { issued, stored };
+    };
+
+    it("issues a new admin API key with hashed storage and encrypted recovery", async () => {
+      const service = createService();
+      const { issued, stored } = await issueAdminApiKey(service);
+
+      expect(issued.apiKey.startsWith("clad_")).toBe(true);
+      expect(stored).not.toBeNull();
+      expect(stored?.apiKeyHash).not.toBe(issued.apiKey);
+      expect(stored?.encryptedApiKey).toBeTruthy();
+      expect(stored?.encryptedApiKey).not.toBe(issued.apiKey);
+      expect(stored?.keyPrefix).toBe(issued.key.keyPrefix);
+      expect(stored?.keySuffix).toBe(issued.key.keySuffix);
+      expect(await service.getStoredAdminApiKey(issued.apiKey)).toMatchObject({
+        ownerId: adminOwnerId,
+      });
+      expect(await service.getAdminApiKeyStatus(adminOwnerId)).toEqual(issued.key);
+      expect(await service.getAdminApiKeyValue(adminOwnerId)).toBe(issued.apiKey);
+    });
+
+    it("rotates an existing admin API key invalidating the previous key", async () => {
+      const service = createService();
+      const { issued: first, stored: storedFirst } = await issueAdminApiKey(service);
+
+      const second = await service.rotateAdminApiKey(adminOwnerId);
+      const storedSecond = await testRepo.getAdminApiKeyByOwner(adminOwnerId);
+
+      expect(second.apiKey).not.toBe(first.apiKey);
+      expect(second.key.createdAt).toBe(first.key.createdAt);
+      expect(second.key.updatedAt).not.toBe(first.key.updatedAt);
+      expect(storedSecond?.apiKeyHash).not.toBe(storedFirst?.apiKeyHash);
+      expect(storedSecond?.encryptedApiKey).not.toBe(storedFirst?.encryptedApiKey);
+      expect(await service.getStoredAdminApiKey(first.apiKey)).toBeNull();
+      expect(await service.getStoredAdminApiKey(second.apiKey)).toMatchObject({
+        ownerId: adminOwnerId,
+      });
+      expect(await service.getAdminApiKeyValue(adminOwnerId)).toBe(second.apiKey);
+    });
+
+    it("revokes an admin API key clearing all stored records", async () => {
+      const service = createService();
+      const { issued } = await issueAdminApiKey(service);
+
+      expect(await service.revokeAdminApiKey(adminOwnerId)).toEqual({
+        revoked: true,
+      });
+      expect(await service.getStoredAdminApiKey(issued.apiKey)).toBeNull();
+      expect(await service.getAdminApiKeyStatus(adminOwnerId)).toBeNull();
+      expect(await service.getAdminApiKeyValue(adminOwnerId)).toBeNull();
+    });
+
+    it("returns revoked:false when no admin API key exists to revoke", async () => {
+      const service = createService();
+
+      expect(await service.revokeAdminApiKey(adminOwnerId)).toEqual({
+        revoked: false,
+      });
+    });
+
+    it("returns null for unknown admin API keys", async () => {
+      const service = createService();
+
+      expect(await service.getStoredAdminApiKey("not-a-real-admin-key")).toBeNull();
+    });
   });
 
   it("rejects admin API key issuance and recovery for non-admin owners", async () => {
@@ -1696,93 +1751,106 @@ describe("IntegrationsHubService", () => {
     await expect(repository.getOwnerIntegration(OWNER_ID, "slack")).resolves.toBeNull();
   });
 
-  it("disables only stale tools with tracked usage", async () => {
-    const service = createService();
+  describe("disableUnusedOwnerTools", () => {
     const staleInvokedAt = new Date(Date.now() - 40 * 24 * 60 * 60 * 1000).toISOString();
     const recentInvokedAt = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString();
 
-    await installIntegration(service, {
-      ...baseIntegration,
-      tools: {
-        accounts: {
-          ...baseAccountsTool,
+    const setupStaleAndRecentToolUsage = async (service: IntegrationsHubService) => {
+      await installIntegration(service, {
+        ...baseIntegration,
+        tools: {
+          accounts: {
+            ...baseAccountsTool,
+          },
+          reports: {
+            ...baseAccountsTool,
+            name: "reports",
+            description: "List reports",
+            defaultScopes: ["reports.read"],
+          },
+          archived: {
+            ...baseAccountsTool,
+            name: "archived",
+            description: "Archived tool",
+            defaultScopes: ["archived.read"],
+            accessMode: "disabled",
+            enabled: false,
+          },
         },
-        reports: {
-          ...baseAccountsTool,
-          name: "reports",
-          description: "List reports",
-          defaultScopes: ["reports.read"],
+      });
+
+      await testRepo.createToolInvocation(
+        createToolInvocationRecord({
+          ownerId: OWNER_ID,
+          agentId: "agent-stale",
+          agentClass: "assistant",
+          integration: {
+            key: "salesforce",
+            provider: "http",
+            kind: "api",
+            authStrategy: "bearer",
+          },
+          toolName: "accounts",
+          scopes: ["accounts.read"],
+          payloadKeys: [],
+          invokedAt: staleInvokedAt,
+          outcome: "success",
+        }),
+      );
+      await testRepo.createToolInvocation(
+        createToolInvocationRecord({
+          ownerId: OWNER_ID,
+          agentId: "agent-recent",
+          agentClass: "assistant",
+          integration: {
+            key: "salesforce",
+            provider: "http",
+            kind: "api",
+            authStrategy: "bearer",
+          },
+          toolName: "reports",
+          scopes: ["reports.read"],
+          payloadKeys: [],
+          invokedAt: recentInvokedAt,
+          outcome: "success",
+        }),
+      );
+    };
+
+    it("returns the stale tools as disabled in the operation result", async () => {
+      const service = createService();
+      await setupStaleAndRecentToolUsage(service);
+
+      const result = await service.disableUnusedOwnerTools(OWNER_ID, 30, "days");
+
+      expect(result.disabledCount).toBe(1);
+      expect(result.disabledTools).toEqual([
+        {
+          integrationKey: "salesforce",
+          toolName: "accounts",
+          lastInvokedAt: staleInvokedAt,
         },
-        archived: {
-          ...baseAccountsTool,
-          name: "archived",
-          description: "Archived tool",
-          defaultScopes: ["archived.read"],
-          accessMode: "disabled",
-          enabled: false,
-        },
-      },
+      ]);
     });
 
-    await testRepo.createToolInvocation(
-      createToolInvocationRecord({
-        ownerId: OWNER_ID,
-        agentId: "agent-stale",
-        agentClass: "assistant",
-        integration: {
-          key: "salesforce",
-          provider: "http",
-          kind: "api",
-          authStrategy: "bearer",
-        },
-        toolName: "accounts",
-        scopes: ["accounts.read"],
-        payloadKeys: [],
-        invokedAt: staleInvokedAt,
-        outcome: "success",
-      }),
-    );
-    await testRepo.createToolInvocation(
-      createToolInvocationRecord({
-        ownerId: OWNER_ID,
-        agentId: "agent-recent",
-        agentClass: "assistant",
-        integration: {
-          key: "salesforce",
-          provider: "http",
-          kind: "api",
-          authStrategy: "bearer",
-        },
-        toolName: "reports",
-        scopes: ["reports.read"],
-        payloadKeys: [],
-        invokedAt: recentInvokedAt,
-        outcome: "success",
-      }),
-    );
+    it("persists disabled state for stale tools while preserving recent and pre-disabled tools", async () => {
+      const service = createService();
+      await setupStaleAndRecentToolUsage(service);
 
-    const result = await service.disableUnusedOwnerTools(OWNER_ID, 30, "days");
+      await service.disableUnusedOwnerTools(OWNER_ID, 30, "days");
 
-    expect(result.disabledCount).toBe(1);
-    expect(result.disabledTools).toEqual([
-      {
-        integrationKey: "salesforce",
-        toolName: "accounts",
-        lastInvokedAt: staleInvokedAt,
-      },
-    ]);
-
-    const savedIntegration = getOnlyIntegration(await service.listOwnerIntegrations(OWNER_ID));
-    expect(savedIntegration.tools["accounts"]).toMatchObject({
-      accessMode: "disabled",
-      enabled: false,
-    });
-    expect(savedIntegration.tools["reports"]).toMatchObject({
-      enabled: true,
-    });
-    expect(savedIntegration.tools["archived"]).toMatchObject({
-      accessMode: "disabled",
-      enabled: false,
+      const savedIntegration = getOnlyIntegration(await service.listOwnerIntegrations(OWNER_ID));
+      expect(savedIntegration.tools["accounts"]).toMatchObject({
+        accessMode: "disabled",
+        enabled: false,
+      });
+      expect(savedIntegration.tools["reports"]).toMatchObject({
+        enabled: true,
+      });
+      expect(savedIntegration.tools["archived"]).toMatchObject({
+        accessMode: "disabled",
+        enabled: false,
+      });
     });
   });
 
@@ -1903,10 +1971,9 @@ describe("IntegrationsHubService", () => {
     });
   });
 
-  it("lists sanitized connection statuses and validates OAuth state lifecycle", async () => {
+  it("lists sanitized connection statuses for the owner", async () => {
     const service = createService();
     const future = new Date(Date.now() + 60 * 60 * 1000).toISOString();
-    const past = new Date(Date.now() - 60 * 1000).toISOString();
 
     await service.saveOAuthConnection(
       "Owner@Example.com",
@@ -1948,10 +2015,19 @@ describe("IntegrationsHubService", () => {
       authStrategy: "oauth2",
       metadata: { workspaceSlug: "team-wiki" },
     });
+  });
+
+  it("rejects OAuth state lookups for missing or already-used states", async () => {
+    const service = createService();
 
     await expect(service.getOAuthState("missing", "notion")).rejects.toThrow(
       "OAuth state not found or already used.",
     );
+  });
+
+  it("rejects OAuth state when the requested provider does not match", async () => {
+    const service = createService();
+    const future = new Date(Date.now() + 60 * 60 * 1000).toISOString();
 
     await service.saveOAuthState({
       state: "state-provider-mismatch",
@@ -1964,6 +2040,11 @@ describe("IntegrationsHubService", () => {
     await expect(
       service.getOAuthState("state-provider-mismatch", "slack"),
     ).rejects.toThrow("OAuth state provider mismatch.");
+  });
+
+  it("rejects expired OAuth state records", async () => {
+    const service = createService();
+    const past = new Date(Date.now() - 60 * 1000).toISOString();
 
     await service.saveOAuthState({
       state: "state-expired",
@@ -1976,6 +2057,11 @@ describe("IntegrationsHubService", () => {
     await expect(service.getOAuthState("state-expired", "notion")).rejects.toThrow(
       "OAuth state has expired. Try connecting again.",
     );
+  });
+
+  it("consumes valid OAuth state and marks it as used", async () => {
+    const service = createService();
+    const future = new Date(Date.now() + 60 * 60 * 1000).toISOString();
 
     await service.saveOAuthState({
       state: "state-active",
