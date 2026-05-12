@@ -10,6 +10,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "db:migrate": "./scripts/run-migrations.sh",
+    "db:migrate:check": "./scripts/run-migrations.sh --check",
     "test": "vitest run",
     "test:unit": "vitest run --exclude src/lib/db/e2e-repository.test.ts --exclude src/lib/e2e-integration.test.ts",
     "test:coverage": "vitest run --coverage",

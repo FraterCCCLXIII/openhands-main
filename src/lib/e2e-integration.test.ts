@@ -5,10 +5,13 @@
  * These tests cover the managed connector → discovery → integration creation
  * path that is otherwise only exercised in production with a real Postgres
  * instance and Neon serverless driver.
+ *
+ * Note: Production schema is managed by Alembic migrations (backend/alembic/).
+ * Tests initialize schema directly via initializeTestSchema() for isolation.
  */
 
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import { createPgliteTestContext, type PgliteTestContext } from "./db/pglite-test-utils";
+import { createPgliteTestContext, initializeTestSchema, type PgliteTestContext } from "./db/pglite-test-utils";
 
 let ctx: PgliteTestContext;
 
@@ -49,8 +52,9 @@ let service: InstanceType<typeof IntegrationsHubService>;
 
 beforeEach(async () => {
   ctx = await createPgliteTestContext();
+  // Initialize schema for test isolation (production uses Alembic migrations).
+  await initializeTestSchema(ctx.pglite);
   repo = new PostgresRepository();
-  await repo.ensureSchema();
 
   const registry = new AdapterRegistry({
     http: new HttpAdapter(),

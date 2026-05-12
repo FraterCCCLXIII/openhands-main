@@ -428,12 +428,7 @@ export class IntegrationsHubService {
     private readonly notifications: NotificationPublisher,
   ) {}
 
-  async initialize() {
-    await this.repository.ensureSchema();
-  }
-
   async listOwnerIntegrations(ownerId: string) {
-    await this.initialize();
     const normalizedOwnerId = normalizeAgentApiKeyOwner(ownerId);
     const integrations = await this.repository.listOwnerIntegrations(normalizedOwnerId);
 
@@ -445,7 +440,6 @@ export class IntegrationsHubService {
   }
 
   async listOwnerIntegrationsWithUsage(ownerId: string) {
-    await this.initialize();
     const normalizedOwnerId = normalizeAgentApiKeyOwner(ownerId);
     const [storedIntegrations, usageSummaries] = await Promise.all([
       this.repository.listOwnerIntegrations(normalizedOwnerId),
@@ -491,7 +485,6 @@ export class IntegrationsHubService {
     thresholdValue: number,
     thresholdUnit: UnusedToolWindowUnit,
   ): Promise<DisableUnusedToolsResult> {
-    await this.initialize();
     const normalizedOwnerId = normalizeAgentApiKeyOwner(ownerId);
     const [integrations, usageSummaries] = await Promise.all([
       this.repository.listOwnerIntegrations(normalizedOwnerId),
@@ -552,7 +545,6 @@ export class IntegrationsHubService {
   }
 
   async deleteOwnerIntegration(ownerId: string, integrationKey: string) {
-    await this.initialize();
 
     const normalizedOwnerId = normalizeAgentApiKeyOwner(ownerId);
     const normalizedIntegrationKey = integrationKey.trim();
@@ -573,7 +565,6 @@ export class IntegrationsHubService {
   }
 
   async listManagedConnectors() {
-    await this.initialize();
     return (await listAllManagedConnectorDefinitions(this.repository)).map((connector) => ({
       ...connector,
       tools: sanitizeIndexedToolDefinitions(connector.tools),
@@ -592,7 +583,6 @@ export class IntegrationsHubService {
       oauthClientSecret?: string;
     },
   ) {
-    await this.initialize();
 
     const slug = input.slug.trim();
     if (!slug) {
@@ -725,7 +715,6 @@ export class IntegrationsHubService {
   }
 
   async indexManagedConnectorFunctions(slug: string, ownerId?: string) {
-    await this.initialize();
 
     const normalizedSlug = slug.trim();
     if (!normalizedSlug) {
@@ -799,7 +788,6 @@ export class IntegrationsHubService {
 
 
   async deleteManagedConnector(slug: string) {
-    await this.initialize();
 
     const normalizedSlug = slug.trim();
     if (!normalizedSlug) {
@@ -817,7 +805,6 @@ export class IntegrationsHubService {
 
 
   async listAccessRequests() {
-    await this.initialize();
     return this.repository.listAccessRequests();
   }
 
@@ -829,17 +816,14 @@ export class IntegrationsHubService {
   }
 
   async listNotifications() {
-    await this.initialize();
     return this.repository.listNotifications();
   }
 
   async createNotification(notification: NotificationRecord) {
-    await this.initialize();
     return this.repository.createNotification(notification);
   }
 
   async getOrCreateAgentApiKey(ownerId: string): Promise<AgentApiKeyRecord> {
-    await this.initialize();
     const normalizedOwnerId = normalizeAgentApiKeyOwner(ownerId);
 
     if (!normalizedOwnerId) {
@@ -864,7 +848,6 @@ export class IntegrationsHubService {
   }
 
   async rotateAgentApiKey(ownerId: string): Promise<AgentApiKeyRecord> {
-    await this.initialize();
     const normalizedOwnerId = normalizeAgentApiKeyOwner(ownerId);
 
     if (!normalizedOwnerId) {
@@ -888,7 +871,6 @@ export class IntegrationsHubService {
   }
 
   async hasStoredAgentApiKeys() {
-    await this.initialize();
     return this.repository.hasAgentApiKeys();
   }
 
@@ -898,12 +880,10 @@ export class IntegrationsHubService {
       return null;
     }
 
-    await this.initialize();
     return this.repository.findAgentApiKey(normalizedApiKey);
   }
 
   async getUserApiKeyStatus(ownerId: string) {
-    await this.initialize();
     const normalizedOwnerId = normalizeAgentApiKeyOwner(ownerId);
     const record = await this.repository.getUserApiKeyByOwner(normalizedOwnerId);
 
@@ -928,7 +908,6 @@ export class IntegrationsHubService {
   }
 
   async getUserApiKeyValue(ownerId: string) {
-    await this.initialize();
     const normalizedOwnerId = normalizeAgentApiKeyOwner(ownerId);
     const record = await this.repository.getUserApiKeyByOwner(normalizedOwnerId);
 
@@ -940,7 +919,6 @@ export class IntegrationsHubService {
   }
 
   async rotateUserApiKey(ownerId: string) {
-    await this.initialize();
     const normalizedOwnerId = normalizeAgentApiKeyOwner(ownerId);
 
     if (!normalizedOwnerId) {
@@ -972,7 +950,6 @@ export class IntegrationsHubService {
   }
 
   async revokeUserApiKey(ownerId: string) {
-    await this.initialize();
     const normalizedOwnerId = normalizeAgentApiKeyOwner(ownerId);
     const existing = await this.repository.getUserApiKeyByOwner(normalizedOwnerId);
 
@@ -990,12 +967,10 @@ export class IntegrationsHubService {
       return null;
     }
 
-    await this.initialize();
     return this.repository.findUserApiKeyByHash(hashScopedApiKey(normalizedApiKey));
   }
 
   async getAdminApiKeyStatus(ownerId: string) {
-    await this.initialize();
     const normalizedOwnerId = requireAdminApiKeyOwner(ownerId);
     const record = await this.repository.getAdminApiKeyByOwner(normalizedOwnerId);
 
@@ -1020,7 +995,6 @@ export class IntegrationsHubService {
   }
 
   async getAdminApiKeyValue(ownerId: string) {
-    await this.initialize();
     const normalizedOwnerId = requireAdminApiKeyOwner(ownerId);
     const record = await this.repository.getAdminApiKeyByOwner(normalizedOwnerId);
 
@@ -1032,7 +1006,6 @@ export class IntegrationsHubService {
   }
 
   async rotateAdminApiKey(ownerId: string) {
-    await this.initialize();
     const normalizedOwnerId = requireAdminApiKeyOwner(ownerId);
 
     const existing = await this.repository.getAdminApiKeyByOwner(normalizedOwnerId);
@@ -1057,7 +1030,6 @@ export class IntegrationsHubService {
   }
 
   async revokeAdminApiKey(ownerId: string) {
-    await this.initialize();
     const normalizedOwnerId = requireAdminApiKeyOwner(ownerId);
     const existing = await this.repository.getAdminApiKeyByOwner(normalizedOwnerId);
 
@@ -1075,7 +1047,6 @@ export class IntegrationsHubService {
       return null;
     }
 
-    await this.initialize();
     const record = await this.repository.findAdminApiKeyByHash(
       hashScopedApiKey(normalizedApiKey),
     );
@@ -1088,7 +1059,6 @@ export class IntegrationsHubService {
   }
 
   async listIntegrationConnections(ownerId: string) {
-    await this.initialize();
     const normalizedOwnerId = normalizeAgentApiKeyOwner(ownerId);
     const connections = await this.repository.listIntegrationConnections(
       normalizedOwnerId,
@@ -1104,7 +1074,6 @@ export class IntegrationsHubService {
     limit?: number;
     offset?: number;
   }) {
-    await this.initialize();
     const connections = await this.repository.listAllIntegrationConnections({
       ownerId: normalizeCaseInsensitiveText(filters?.ownerId) || undefined,
       provider: normalizeCaseInsensitiveText(filters?.provider) || undefined,
@@ -1132,7 +1101,6 @@ export class IntegrationsHubService {
   }
 
   async getAdminOperationalOverview(): Promise<AdminOperationalOverview> {
-    await this.initialize();
     const [connections, managedConnectors, accessRequests, notifications] = await Promise.all([
       this.repository.listAllIntegrationConnections(),
       this.repository.listManagedConnectors(),
@@ -1312,7 +1280,6 @@ export class IntegrationsHubService {
   }
 
   async getIntegrationConnectionStatus(ownerId: string, integrationKey: string) {
-    await this.initialize();
     const connection = await this.repository.getIntegrationConnection(
       normalizeAgentApiKeyOwner(ownerId),
       integrationKey,
@@ -1338,7 +1305,6 @@ export class IntegrationsHubService {
       | "updatedAt"
     >,
   ) {
-    await this.initialize();
     const timestamp = nowIso();
     const normalizedOwnerId = normalizeAgentApiKeyOwner(ownerId);
     const existing = await this.repository.getIntegrationConnection(
@@ -1381,7 +1347,6 @@ export class IntegrationsHubService {
     callbackUrl?: string;
     expiresAt: string;
   }) {
-    await this.initialize();
     return this.repository.saveOAuthState({
       ...record,
       ownerId: normalizeAgentApiKeyOwner(record.ownerId),
@@ -1390,7 +1355,6 @@ export class IntegrationsHubService {
   }
 
   async getOAuthState(state: string, provider: string) {
-    await this.initialize();
     const record = await this.repository.getOAuthState(state);
     if (!record) {
       throw new IntegrationsHubError("OAuth state not found or already used.", 400);
@@ -1409,7 +1373,6 @@ export class IntegrationsHubService {
   }
 
   async consumeOAuthState(state: string, provider: string) {
-    await this.initialize();
     const record = await this.getOAuthState(state, provider);
     await this.repository.deleteOAuthState(state);
     return record;
@@ -1417,7 +1380,6 @@ export class IntegrationsHubService {
 
 
   async isStoredAgentApiKeyAuthorized(apiKey: string) {
-    await this.initialize();
     const candidate = apiKey.trim();
 
     if (!candidate) {
@@ -1435,7 +1397,6 @@ export class IntegrationsHubService {
       functions?: Record<string, ToolSpec>;
     },
   ) {
-    await this.initialize();
 
     if (spec.authStrategy === "oauth2" && Object.keys(spec.credentials).length > 0) {
       throw new IntegrationsHubError(
@@ -1561,7 +1522,6 @@ export class IntegrationsHubService {
 
 
   async upsertAgentPolicy(agentClass: string, rules: PolicyRule[]) {
-    await this.initialize();
     const policy: AgentClassPolicy = { agentClass, rules };
     return this.repository.upsertPolicy(policy);
   }
@@ -1622,7 +1582,6 @@ export class IntegrationsHubService {
   async createAccessRequest(
     request: Omit<AccessRequest, "id" | "createdAt" | "status">,
   ) {
-    await this.initialize();
     const accessRequest: AccessRequest = {
       ...request,
       justification: request.justification?.trim() || undefined,
@@ -1680,7 +1639,6 @@ export class IntegrationsHubService {
   }
 
   async purgeExpiredGrants() {
-    await this.initialize();
     return this.repository.purgeExpiredGrants(nowIso());
   }
 
@@ -1999,7 +1957,6 @@ export class IntegrationsHubService {
   }
 
   private async getMutableOwnerIntegration(ownerId: string, key: string) {
-    await this.initialize();
     const normalizedOwnerId = normalizeAgentApiKeyOwner(ownerId);
     const existing = await this.repository.getOwnerIntegration(normalizedOwnerId, key);
     if (existing) {
@@ -2029,7 +1986,6 @@ export class IntegrationsHubService {
     ownerId?: string;
     agentData?: AccessRequestAgentData;
   }) {
-    await this.initialize();
     const notificationRecipient = ownerId?.trim() || "case-by-case-approvals";
     const normalizedNotificationRecipient = normalizeAgentApiKeyOwner(
       notificationRecipient,
@@ -2080,7 +2036,6 @@ export class IntegrationsHubService {
   }
 
   private async getOwnerIntegration(ownerId: string, key: string) {
-    await this.initialize();
     const integration = await this.repository.getOwnerIntegration(
       normalizeAgentApiKeyOwner(ownerId),
       key,
@@ -2096,7 +2051,6 @@ export class IntegrationsHubService {
   }
 
   private async getAccessRequest(requestId: string) {
-    await this.initialize();
     const request = await this.repository.getAccessRequest(requestId);
     if (!request) {
       throw new IntegrationsHubError(

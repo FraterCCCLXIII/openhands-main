@@ -12,6 +12,9 @@ The root `LICENSE` is proprietary: `Copyright All Hands AI, Inc. All rights rese
 - Run the pre-commit validation gate: `.openhands/pre-commit.sh`
 - Install dependencies: `npm install`
 - Run locally with auth bypass: `DISABLE_AUTH=true npm run dev`
+- Run database migrations: `npm run db:migrate` (or `./scripts/run-migrations.sh`)
+- Check migration status: `npm run db:migrate:check`
+- Create a new migration: `cd backend && uv run alembic revision -m "description"`
 - Run tests: `npm test`
 - Run unit tests only: `npm run test:unit`
 - Targeted integration-wizard coverage check: `npx vitest run src/components/integrations/wizard/utils.test.ts src/components/integrations/wizard/use-wizard-state.test.tsx src/components/integrations/wizard/review-step.test.tsx src/components/integrations/wizard/connect-step.test.tsx src/components/integrations/wizard/wizard.test.tsx --coverage.enabled --coverage.include='src/components/integrations/wizard/**/*.{ts,tsx}'`
@@ -65,12 +68,13 @@ The root `LICENSE` is proprietary: `Copyright All Hands AI, Inc. All rights rese
 
 - `src/lib/adapters/mcp-adapter.ts` uses `@modelcontextprotocol/sdk` to call remote MCP tools.
 - `src/lib/db/postgres-repository.ts` uses Neon with `POSTGRES_URL` or `DATABASE_URL`. There is no in-memory fallback; all tests use PGlite-backed `PostgresRepository` instances.
-- Postgres schema bootstrap and row mapping helpers now live in `src/lib/db/postgres-schema.ts` and `src/lib/db/postgres-records.ts`; keep `PostgresRepository` focused on query methods.
+- Database schema is managed by Alembic migrations in `backend/alembic/`. Run `npm run db:migrate` or `./scripts/run-migrations.sh` before starting the app or deploying. The initial migration (`backend/alembic/versions/20250512_0001_initial_schema.py`) contains all table definitions.
+- Row mapping helpers live in `src/lib/db/postgres-records.ts`; keep `PostgresRepository` focused on query methods.
 - OpenAPI builders now share common schema/auth/response utilities in `src/lib/openapi/shared.ts`, and `src/lib/core/schema.ts` exports reusable Zod shapes used by admin/user/context OpenAPI documents.
+- Tests use `initializeTestSchema()` from `src/lib/db/pglite-test-utils.ts` to initialize schema directly against PGlite for isolation; this mirrors the Alembic migration but runs in-process.
 
 - Managed OAuth connectors store user-specific provider tokens server-side as per-user integration connection records instead of embedding them in the integration spec.
 - Integrations are installed strictly per user via `owner_integrations`; OAuth access tokens must live only in per-user integration connection records, and owner-scoped `oauth2` installs must not embed credentials in `IntegrationSpec.credentials`.
-- `src/lib/db/postgres-repository.ts` now drops the legacy shared `integrations` table during schema initialization so deployed environments converge on owner-only integration storage.
 
 - OAuth onboarding uses `/api/oauth/[provider]/start` and `/api/oauth/[provider]/callback`, persists encrypted credentials plus short-lived state records in the repository, and `/api/context/*` resolves the calling user from the restricted agent/runtime integrations-hub API key so the correct per-user OAuth token is injected at invocation time.
 - `/api/mcp` now exposes the same per-user integrations hub as an MCP Streamable HTTP server authenticated by the restricted agent/runtime integrations-hub API key. Tool names are namespaced as `<integration>__<function>`, enabled plus `approval_required` functions are listed, MCP URL query params for `agentId` / `agentClass` are optional initial defaults, and callers can also set session-scoped defaults with the managed `set_agent_id` / `set_agent_class` tools or override per call with `contextAgentId` / `contextAgentClass` plus optional `contextScopes`.

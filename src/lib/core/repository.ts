@@ -14,8 +14,13 @@ import type {
   UserApiKeyRecord,
 } from "@/src/types/integrations-hub";
 
+/**
+ * Repository interface for integrations-hub data access.
+ *
+ * Schema is managed by Alembic migrations (see backend/alembic/).
+ * Run `npm run db:migrate` before starting the app.
+ */
 export interface ContextRepository {
-  ensureSchema(): Promise<void>;
   listOwnerIntegrations(ownerId: string): Promise<IntegrationSpec[]>;
   getOwnerIntegration(
     ownerId: string,

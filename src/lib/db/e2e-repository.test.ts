@@ -4,10 +4,13 @@
  * These tests exercise the real SQL schema, query logic, and JSONB round-trips
  * instead of the in-memory mock, catching issues that only surface with a real
  * Postgres-compatible backend.
+ *
+ * Note: Production schema is managed by Alembic migrations (backend/alembic/).
+ * Tests initialize schema directly via initializeTestSchema() for isolation.
  */
 
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import { createPgliteTestContext, type PgliteTestContext } from "./pglite-test-utils";
+import { createPgliteTestContext, initializeTestSchema, type PgliteTestContext } from "./pglite-test-utils";
 
 let ctx: PgliteTestContext;
 
@@ -32,8 +35,9 @@ let repo: InstanceType<typeof PostgresRepository>;
 
 beforeEach(async () => {
   ctx = await createPgliteTestContext();
+  // Initialize schema for test isolation (production uses Alembic migrations).
+  await initializeTestSchema(ctx.pglite);
   repo = new PostgresRepository();
-  await repo.ensureSchema();
 });
 
 afterEach(async () => {
@@ -532,12 +536,5 @@ describe("notifications", () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// Schema idempotency
-// ---------------------------------------------------------------------------
-describe("schema initialization", () => {
-  it("is idempotent – calling ensureSchema twice does not error", async () => {
-    // Schema was already initialized in beforeEach; calling again should be fine.
-    await expect(repo.ensureSchema()).resolves.toBeUndefined();
-  });
-});
+// Note: Schema initialization tests removed - schema is now managed by Alembic migrations.
+// See backend/alembic/ for migration files.

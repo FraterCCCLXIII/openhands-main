@@ -138,7 +138,13 @@ For a fuller route map and auth breakdown, see [API.md](./API.md).
 
    </details>
 
-4. Start the app:
+4. Run database migrations:
+
+   ```bash
+   npm run db:migrate
+   ```
+
+5. Start the app:
 
    ```bash
    # Standard local development
@@ -148,13 +154,13 @@ For a fuller route map and auth breakdown, see [API.md](./API.md).
    DISABLE_AUTH=true npm run dev
    ```
 
-5. Open the dashboard:
+6. Open the dashboard:
 
    ```text
    http://localhost:3000/integrations
    ```
 
-6. Visit `/integrations` once to provision the personal agent/runtime API key, then open `/agent-connection` for the generated REST and MCP connection examples.
+7. Visit `/integrations` once to provision the personal agent/runtime API key, then open `/agent-connection` for the generated REST and MCP connection examples.
 
 ## Environment variables
 

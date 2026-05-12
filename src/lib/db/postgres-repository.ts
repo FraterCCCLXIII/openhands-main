@@ -29,7 +29,6 @@ import {
   mapTemporaryGrantRow,
   mapUserApiKeyRow,
 } from "@/src/lib/db/postgres-records";
-import { initializePostgresSchema } from "@/src/lib/db/postgres-schema";
 import { createStandardPgSql } from "@/src/lib/db/standard-pg-adapter";
 
 // Row type for query results
@@ -50,31 +49,14 @@ const getSql = () => {
   return neon(databaseUrl);
 };
 
+/**
+ * Repository for integrations-hub data access.
+ *
+ * Schema is managed by Alembic migrations (see backend/alembic/).
+ * Run `npm run db:migrate` before starting the app.
+ */
 export class PostgresRepository implements ContextRepository {
-  private schemaReady = false;
-  private schemaInitPromise?: Promise<void>;
-
-  async ensureSchema() {
-    if (this.schemaReady) {
-      return;
-    }
-
-    if (!this.schemaInitPromise) {
-      this.schemaInitPromise = this.initializeSchema().finally(() => {
-        this.schemaInitPromise = undefined;
-      });
-    }
-
-    await this.schemaInitPromise;
-  }
-
-  private async initializeSchema() {
-    await initializePostgresSchema(getSql());
-    this.schemaReady = true;
-  }
-
   async listOwnerIntegrations(ownerId: string) {
-    await this.ensureSchema();
     const sql = getSql();
     const rows: Row[] = await sql`
       SELECT * FROM owner_integrations
@@ -85,7 +67,6 @@ export class PostgresRepository implements ContextRepository {
   }
 
   async getOwnerIntegration(ownerId: string, integrationKey: string) {
-    await this.ensureSchema();
     const sql = getSql();
     const rows: Row[] = await sql`
       SELECT * FROM owner_integrations
@@ -96,7 +77,6 @@ export class PostgresRepository implements ContextRepository {
   }
 
   async upsertOwnerIntegration(ownerId: string, spec: IntegrationSpec) {
-    await this.ensureSchema();
     const sql = getSql();
     await sql`
       INSERT INTO owner_integrations (
@@ -123,7 +103,6 @@ export class PostgresRepository implements ContextRepository {
   }
 
   async deleteOwnerIntegration(ownerId: string, integrationKey: string) {
-    await this.ensureSchema();
     const sql = getSql();
     await sql.transaction([
       sql`
@@ -138,7 +117,6 @@ export class PostgresRepository implements ContextRepository {
   }
 
   async upsertPolicy(policy: AgentClassPolicy) {
-    await this.ensureSchema();
     const sql = getSql();
     await sql`
       INSERT INTO agent_class_policies (agent_class, rules, updated_at)
@@ -149,7 +127,6 @@ export class PostgresRepository implements ContextRepository {
   }
 
   async getPolicy(agentClass: string) {
-    await this.ensureSchema();
     const sql = getSql();
     const rows: Row[] = await sql`SELECT * FROM agent_class_policies WHERE agent_class = ${agentClass}`;
     const row = rows[0];
@@ -160,7 +137,6 @@ export class PostgresRepository implements ContextRepository {
   }
 
   async listAccessRequests() {
-    await this.ensureSchema();
     const sql = getSql();
     const rows: Row[] = await sql`SELECT * FROM access_requests ORDER BY created_at DESC`;
     return rows.map((row: Row) => mapAccessRequestRow(row));
@@ -172,7 +148,6 @@ export class PostgresRepository implements ContextRepository {
   }
 
   async createAccessRequest(request: AccessRequest) {
-    await this.ensureSchema();
     const sql = getSql();
     await sql`
       INSERT INTO access_requests (
@@ -189,7 +164,6 @@ export class PostgresRepository implements ContextRepository {
   }
 
   async updateAccessRequest(request: AccessRequest) {
-    await this.ensureSchema();
     const sql = getSql();
     await sql`
       UPDATE access_requests
@@ -214,14 +188,12 @@ export class PostgresRepository implements ContextRepository {
   }
 
   async listTemporaryGrants() {
-    await this.ensureSchema();
     const sql = getSql();
     const rows: Row[] = await sql`SELECT * FROM temporary_grants ORDER BY created_at DESC`;
     return rows.map((row: Row) => mapTemporaryGrantRow(row));
   }
 
   async saveTemporaryGrant(grant: TemporaryGrant) {
-    await this.ensureSchema();
     const sql = getSql();
     await sql`
       INSERT INTO temporary_grants (
@@ -243,14 +215,12 @@ export class PostgresRepository implements ContextRepository {
   }
 
   async purgeExpiredGrants(nowIso: string) {
-    await this.ensureSchema();
     const sql = getSql();
     const rows: Row[] = await sql`DELETE FROM temporary_grants WHERE expires_at <= ${nowIso} RETURNING id`;
     return rows.length;
   }
 
   async createToolInvocation(record: ToolInvocationRecord) {
-    await this.ensureSchema();
     const sql = getSql();
     await sql`
       INSERT INTO tool_invocations (
@@ -267,7 +237,6 @@ export class PostgresRepository implements ContextRepository {
   }
 
   async listOwnerToolUsageSummaries(ownerId: string) {
-    await this.ensureSchema();
     const sql = getSql();
     const rows: Row[] = await sql`
       SELECT
@@ -286,14 +255,12 @@ export class PostgresRepository implements ContextRepository {
   }
 
   async listNotifications() {
-    await this.ensureSchema();
     const sql = getSql();
     const rows: Row[] = await sql`SELECT * FROM notifications ORDER BY created_at DESC`;
     return rows.map((row: Row) => mapNotificationRow(row));
   }
 
   async createNotification(notification: NotificationRecord) {
-    await this.ensureSchema();
     const sql = getSql();
     await sql`
       INSERT INTO notifications (id, channel, recipient, subject, body, metadata, created_at)
@@ -305,7 +272,6 @@ export class PostgresRepository implements ContextRepository {
   }
 
   async getAgentApiKeyByOwner(ownerId: string) {
-    await this.ensureSchema();
     const sql = getSql();
     const rows: Row[] = await sql`SELECT * FROM agent_api_keys WHERE owner_id = ${ownerId}`;
     const row = rows[0];
@@ -316,7 +282,6 @@ export class PostgresRepository implements ContextRepository {
   }
 
   async findAgentApiKey(apiKey: string) {
-    await this.ensureSchema();
     const sql = getSql();
     const rows: Row[] = await sql`SELECT * FROM agent_api_keys WHERE api_key = ${apiKey}`;
     const row = rows[0];
@@ -327,7 +292,6 @@ export class PostgresRepository implements ContextRepository {
   }
 
   async saveAgentApiKey(record: AgentApiKeyRecord) {
-    await this.ensureSchema();
     const sql = getSql();
     await sql`
       INSERT INTO agent_api_keys (owner_id, api_key, created_at, updated_at)
@@ -341,7 +305,6 @@ export class PostgresRepository implements ContextRepository {
   }
 
   async getUserApiKeyByOwner(ownerId: string) {
-    await this.ensureSchema();
     const sql = getSql();
     const rows: Row[] = await sql`SELECT * FROM user_api_keys WHERE owner_id = ${ownerId}`;
     const row = rows[0];
@@ -352,7 +315,6 @@ export class PostgresRepository implements ContextRepository {
   }
 
   async findUserApiKeyByHash(apiKeyHash: string) {
-    await this.ensureSchema();
     const sql = getSql();
     const rows: Row[] = await sql`SELECT * FROM user_api_keys WHERE api_key_hash = ${apiKeyHash}`;
     const row = rows[0];
@@ -363,7 +325,6 @@ export class PostgresRepository implements ContextRepository {
   }
 
   async saveUserApiKey(record: UserApiKeyRecord) {
-    await this.ensureSchema();
     const sql = getSql();
     await sql`
       INSERT INTO user_api_keys (
@@ -396,13 +357,11 @@ export class PostgresRepository implements ContextRepository {
   }
 
   async deleteUserApiKey(ownerId: string) {
-    await this.ensureSchema();
     const sql = getSql();
     await sql`DELETE FROM user_api_keys WHERE owner_id = ${ownerId}`;
   }
 
   async getAdminApiKeyByOwner(ownerId: string) {
-    await this.ensureSchema();
     const sql = getSql();
     const rows: Row[] = await sql`SELECT * FROM admin_api_keys WHERE owner_id = ${ownerId}`;
     const row = rows[0];
@@ -413,7 +372,6 @@ export class PostgresRepository implements ContextRepository {
   }
 
   async findAdminApiKeyByHash(apiKeyHash: string) {
-    await this.ensureSchema();
     const sql = getSql();
     const rows: Row[] = await sql`SELECT * FROM admin_api_keys WHERE api_key_hash = ${apiKeyHash}`;
     const row = rows[0];
@@ -424,7 +382,6 @@ export class PostgresRepository implements ContextRepository {
   }
 
   async saveAdminApiKey(record: AdminApiKeyRecord) {
-    await this.ensureSchema();
     const sql = getSql();
     await sql`
       INSERT INTO admin_api_keys (
@@ -457,27 +414,23 @@ export class PostgresRepository implements ContextRepository {
   }
 
   async deleteAdminApiKey(ownerId: string) {
-    await this.ensureSchema();
     const sql = getSql();
     await sql`DELETE FROM admin_api_keys WHERE owner_id = ${ownerId}`;
   }
 
   async hasAgentApiKeys() {
-    await this.ensureSchema();
     const sql = getSql();
     const rows: Row[] = await sql`SELECT 1 FROM agent_api_keys LIMIT 1`;
     return rows.length > 0;
   }
 
   async listManagedConnectors() {
-    await this.ensureSchema();
     const sql = getSql();
     const rows: Row[] = await sql`SELECT * FROM managed_connectors ORDER BY slug ASC`;
     return rows.map((row: Row) => mapManagedConnectorRow(row));
   }
 
   async getManagedConnector(slug: string) {
-    await this.ensureSchema();
     const sql = getSql();
     const rows: Row[] = await sql`SELECT * FROM managed_connectors WHERE slug = ${slug}`;
     const row = rows[0];
@@ -488,7 +441,6 @@ export class PostgresRepository implements ContextRepository {
   }
 
   async upsertManagedConnector(record: ManagedConnectorRecord) {
-    await this.ensureSchema();
     const sql = getSql();
     await sql`
       INSERT INTO managed_connectors (
@@ -529,13 +481,11 @@ export class PostgresRepository implements ContextRepository {
   }
 
   async deleteManagedConnector(slug: string) {
-    await this.ensureSchema();
     const sql = getSql();
     await sql`DELETE FROM managed_connectors WHERE slug = ${slug}`;
   }
 
   async listIntegrationConnections(ownerId: string) {
-    await this.ensureSchema();
     const sql = getSql();
     const rows: Row[] = await sql`
       SELECT * FROM integration_connections
@@ -552,7 +502,6 @@ export class PostgresRepository implements ContextRepository {
     limit?: number;
     offset?: number;
   }) {
-    await this.ensureSchema();
     const sql = getSql();
     const ownerId = filters?.ownerId ?? null;
     const provider = filters?.provider ?? null;
@@ -572,7 +521,6 @@ export class PostgresRepository implements ContextRepository {
   }
 
   async getIntegrationConnection(ownerId: string, integrationKey: string) {
-    await this.ensureSchema();
     const sql = getSql();
     const rows: Row[] = await sql`
       SELECT * FROM integration_connections
@@ -586,7 +534,6 @@ export class PostgresRepository implements ContextRepository {
   }
 
   async upsertIntegrationConnection(record: IntegrationConnectionRecord) {
-    await this.ensureSchema();
     const sql = getSql();
     await sql`
       INSERT INTO integration_connections (
@@ -616,7 +563,6 @@ export class PostgresRepository implements ContextRepository {
   }
 
   async saveOAuthState(record: OAuthStateRecord) {
-    await this.ensureSchema();
     const sql = getSql();
     await sql`
       INSERT INTO oauth_states (
@@ -639,7 +585,6 @@ export class PostgresRepository implements ContextRepository {
   }
 
   async getOAuthState(state: string) {
-    await this.ensureSchema();
     const sql = getSql();
     const rows: Row[] = await sql`SELECT * FROM oauth_states WHERE state = ${state}`;
     const row = rows[0];
@@ -650,7 +595,6 @@ export class PostgresRepository implements ContextRepository {
   }
 
   async deleteOAuthState(state: string) {
-    await this.ensureSchema();
     const sql = getSql();
     await sql`DELETE FROM oauth_states WHERE state = ${state}`;
   }
