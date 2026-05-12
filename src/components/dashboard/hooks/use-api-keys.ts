@@ -205,7 +205,7 @@ export const useApiKeys = ({
     }
   }, [agentApiKey, contextApiKey, hasLocalAgentKeyOverride]);
 
-  const contextApiReady = agentApiKey.trim().length > 0;
+  const contextApiReady = (agentApiKey ?? "").trim().length > 0;
 
   const userKey = useStoredApiKey<UserApiKeyStatus>({
     initialStatus: userApiKey,

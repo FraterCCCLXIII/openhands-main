@@ -6,19 +6,25 @@ declare global {
   }
 }
 
-const withOwnerHeader = (input: RequestInfo, init?: RequestInit): RequestInit | undefined => {
+const withOwnerHeader = (input: RequestInfo, init?: RequestInit): RequestInit => {
+  // Always include credentials for same-origin API requests
+  const baseInit: RequestInit = {
+    ...init,
+    credentials: init?.credentials ?? "same-origin",
+  };
+
   if (typeof window === "undefined" || typeof input !== "string" || !input.startsWith("/api/")) {
-    return init;
+    return baseInit;
   }
 
   const ownerId = window.__INTEGRATIONS_HUB_OWNER_ID__;
   if (!ownerId) {
-    return init;
+    return baseInit;
   }
 
   const headers = new Headers(init?.headers);
   headers.set("X-Owner-Id", ownerId);
-  return { ...init, headers };
+  return { ...baseInit, headers };
 };
 
 export class ApiRequestError extends Error {

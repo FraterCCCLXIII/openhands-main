@@ -1,24 +1,42 @@
+"use client";
+
 import Link from "next/link";
 import { ArrowRight, DatabaseZap, KeyRound, ShieldCheck, Waypoints } from "lucide-react";
 
-import { auth } from "@/src/lib/auth";
-import { isAppAdminEmail } from "@/src/lib/app-admins";
-import { isEphemeralIntegrationsHubStorage } from "@/src/lib/persistence";
-import { ServiceUnavailableScreen } from "@/src/components/feedback/service-unavailable-screen";
+import { useAuth } from "@/src/components/auth/auth-context";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
 import { Card } from "@/src/components/ui/card";
 
-export default async function HomePage() {
-  const session = await auth();
+const features = [
+  {
+    title: "Connector breadth",
+    body: "Register managed connectors in the database and connect remote MCP servers directly without a separate integration layer.",
+    icon: DatabaseZap,
+  },
+  {
+    title: "MCP federation",
+    body: "Connect remote MCP servers with the official TypeScript MCP SDK.",
+    icon: Waypoints,
+  },
+  {
+    title: "Fine-grained control",
+    body: "Toggle entire integrations, individual tools, and agent-class scopes.",
+    icon: ShieldCheck,
+  },
+  {
+    title: "Human approval",
+    body: "Route access requests to email, in-app, and SMS channels with expiring grants.",
+    icon: KeyRound,
+  },
+];
 
-  if (session?.user && isEphemeralIntegrationsHubStorage()) {
-    return (
-      <ServiceUnavailableScreen
-        isAdmin={isAppAdminEmail(session.user.email ?? undefined)}
-      />
-    );
-  }
+export default function HomePage() {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  // Use "#" while loading to prevent flash of wrong destination
+  const ctaHref = isLoading ? "#" : isAuthenticated ? "/integrations" : "/signin";
+  const ctaText = isAuthenticated ? "Open dashboard" : "Sign in to configure";
 
   return (
     <main className="min-h-screen px-6 py-12">
@@ -37,10 +55,10 @@ export default async function HomePage() {
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
-            <Link href={session?.user ? "/integrations" : "/signin"}>
-              <Button className="gap-2">
-                {session?.user ? "Open dashboard" : "Sign in to configure"}
-                <ArrowRight className="h-4 w-4" />
+            <Link href={ctaHref}>
+              <Button className="gap-2" disabled={isLoading}>
+                {isLoading ? "Loading..." : ctaText}
+                {!isLoading && <ArrowRight className="h-4 w-4" />}
               </Button>
             </Link>
             <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)] px-4 py-2 text-sm text-[var(--color-text-base)]">
@@ -50,28 +68,7 @@ export default async function HomePage() {
         </header>
 
         <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
-          {[
-            {
-              title: "Connector breadth",
-              body: "Register managed connectors in the database and connect remote MCP servers directly without a separate integration layer.",
-              icon: DatabaseZap,
-            },
-            {
-              title: "MCP federation",
-              body: "Connect remote MCP servers with the official TypeScript MCP SDK.",
-              icon: Waypoints,
-            },
-            {
-              title: "Fine-grained control",
-              body: "Toggle entire integrations, individual tools, and agent-class scopes.",
-              icon: ShieldCheck,
-            },
-            {
-              title: "Human approval",
-              body: "Route access requests to email, in-app, and SMS channels with expiring grants.",
-              icon: KeyRound,
-            },
-          ].map((item) => (
+          {features.map((item) => (
             <Card key={item.title} className="p-6">
               <item.icon className="mb-4 h-8 w-8 text-[var(--color-accent)]" />
               <h2 className="mb-2 text-lg font-semibold text-white">{item.title}</h2>

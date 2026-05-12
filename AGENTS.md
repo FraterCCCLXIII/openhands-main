@@ -6,12 +6,23 @@ This repository contains a Next.js/TypeScript implementation of an agent integra
 
 The root `LICENSE` is proprietary: `Copyright All Hands AI, Inc. All rights reserved.`
 
+## SPA Architecture
+
+- The dashboard has been refactored to support running as a Single Page Application (SPA) that queries REST endpoints client-side.
+- All dashboard pages (`/integrations`, `/profile`, `/agent-connection`, `/case-by-case-approvals`, `/admin-integrations`, `/admin-overview`) now export client components that fetch data via TanStack Query.
+- For static site generation, set `SPA_MODE=true` in the build environment; this enables `output: "export"` in `next.config.ts` with trailing slashes and unoptimized images.
+- Server-side rendering (SSR) versions of pages are preserved in `src/components/dashboard/server-page.tsx` for legacy SSR deployments.
+- Client-side auth state is managed via `useAuth()` from `src/components/auth/auth-context.tsx`, which wraps `useSession` from NextAuth and provides a dev user fallback when `authDisabled` is true.
+- The `Providers` component always wraps children with `SessionProvider` to satisfy React hook rules, then passes `authDisabled` to the `AuthProvider` context.
+- Page tests that use `renderStaticDocument` for SSR testing should import from `server-page.tsx` versions explicitly (e.g., `ServerDashboardPage`).
+
 ## Common commands
 
 - Bootstrap an OpenHands session: `.openhands/setup.sh`
 - Run the pre-commit validation gate: `.openhands/pre-commit.sh`
 - Install dependencies: `npm install`
 - Run locally with auth bypass: `DISABLE_AUTH=true npm run dev`
+- Build for static export (SPA mode): `SPA_MODE=true npm run build && npm run export`
 - Run database migrations: `npm run db:migrate` (or `./scripts/run-migrations.sh`)
 - Check migration status: `npm run db:migrate:check`
 - Create a new migration: `cd backend && uv run alembic revision -m "description"`

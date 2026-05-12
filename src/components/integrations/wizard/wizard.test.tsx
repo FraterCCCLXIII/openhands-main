@@ -120,7 +120,7 @@ describe("IntegrationWizard", () => {
 
     expect(fetchMock).toHaveBeenCalledWith(
       "/api/integrations/managed-connectors",
-      undefined,
+      expect.objectContaining({ credentials: "same-origin" }),
     );
 
     const options = Array.from(container.querySelectorAll("datalist option")).map(
@@ -372,7 +372,7 @@ describe("IntegrationWizard", () => {
 
     expect(fetchMock).toHaveBeenCalledWith(
       "/api/integrations/managed-connectors",
-      undefined,
+      expect.objectContaining({ credentials: "same-origin" }),
     );
 
     const options = Array.from(container.querySelectorAll("datalist option")).map(

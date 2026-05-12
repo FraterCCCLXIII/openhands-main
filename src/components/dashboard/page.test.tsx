@@ -57,7 +57,8 @@ vi.mock("@/src/lib/request-context", () => ({
   getRequestOrigin: () => "https://example.com",
 }));
 
-import { DashboardPage } from "./page";
+// Import the server version explicitly for SSR tests
+import { ServerDashboardPage } from "./server-page";
 
 beforeEach(() => {
   authMock.mockReset();
@@ -87,11 +88,11 @@ afterEach(() => {
   vi.unstubAllEnvs();
 });
 
-describe("DashboardPage", () => {
+describe("ServerDashboardPage (SSR legacy)", () => {
   it("preloads owner-scoped access requests for non-admin users without loading global notifications", async () => {
     vi.stubEnv("APP_ADMIN_EMAILS", "admin@example.com");
 
-    renderToStaticMarkup(await DashboardPage());
+    renderToStaticMarkup(await ServerDashboardPage());
 
     expect(serviceMock.listOwnerAccessRequests).toHaveBeenCalledWith("user@example.com");
     expect(serviceMock.listNotifications).not.toHaveBeenCalled();

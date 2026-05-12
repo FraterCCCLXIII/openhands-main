@@ -186,9 +186,9 @@ export const maskApiKey = (apiKey: string, revealed: boolean) => {
   return `${visiblePrefix}${"•".repeat(12)}${trimmed.slice(-4)}`;
 };
 
-export const maskStoredApiKey = (keyPrefix: string, keySuffix: string) => {
-  const normalizedPrefix = keyPrefix.trim();
-  const normalizedSuffix = keySuffix.trim();
+export const maskStoredApiKey = (keyPrefix: string | null | undefined, keySuffix: string | null | undefined) => {
+  const normalizedPrefix = (keyPrefix ?? "").trim();
+  const normalizedSuffix = (keySuffix ?? "").trim();
 
   if (!normalizedPrefix && !normalizedSuffix) {
     return "";

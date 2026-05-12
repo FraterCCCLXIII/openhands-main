@@ -5,8 +5,9 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { sessionProviderRenderSpy } = vi.hoisted(() => ({
+const { sessionProviderRenderSpy, useSessionMock } = vi.hoisted(() => ({
   sessionProviderRenderSpy: vi.fn(),
+  useSessionMock: vi.fn(() => ({ data: null, status: "loading" })),
 }));
 
 vi.mock("next-auth/react", () => ({
@@ -14,6 +15,7 @@ vi.mock("next-auth/react", () => ({
     sessionProviderRenderSpy();
     return <div data-session-provider="true">{children}</div>;
   },
+  useSession: useSessionMock,
 }));
 import { Providers } from "@/src/components/providers";
 
@@ -58,7 +60,7 @@ describe("Providers", () => {
     expect(container.querySelector('[data-query-client="present"]')?.textContent).toBe("probe");
   });
 
-  it("skips SessionProvider while still providing React Query when auth is disabled", async () => {
+  it("always includes SessionProvider (for hook rules) but provides authDisabled flag to auth context", async () => {
     await act(async () => {
       root.render(
         <Providers authDisabled>
@@ -67,8 +69,9 @@ describe("Providers", () => {
       );
     });
 
-    expect(sessionProviderRenderSpy).not.toHaveBeenCalled();
-    expect(container.querySelector('[data-session-provider="true"]')).toBeNull();
+    // SessionProvider is now always rendered to satisfy React hook rules
+    expect(sessionProviderRenderSpy).toHaveBeenCalledTimes(1);
+    expect(container.querySelector('[data-session-provider="true"]')).toBeTruthy();
     expect(container.querySelector('[data-query-client="present"]')?.textContent).toBe("probe");
   });
 });

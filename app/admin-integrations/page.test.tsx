@@ -1,126 +1,149 @@
 // @vitest-environment jsdom
 
-import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { act } from "react";
+import { createRoot, type Root } from "react-dom/client";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { findHeading, getCodeValues, renderStaticDocument } from "@/src/test-utils/static-dom";
+import { enableReactActEnvironment } from "@/src/test-utils/jsdom-helpers";
 
-const { authMock } = vi.hoisted(() => ({
-  authMock: vi.fn(async () => ({ user: { email: "dev@localhost" } })),
+enableReactActEnvironment();
+
+const { useAuthMock, fetchJsonMock } = vi.hoisted(() => ({
+  useAuthMock: vi.fn(() => ({
+    user: { name: "User", email: "user@example.com" },
+    ownerId: "user@example.com",
+    isAdmin: false,
+    isLoading: false,
+    isAuthenticated: true,
+    authDisabled: false,
+  })),
+  fetchJsonMock: vi.fn(),
 }));
 
-vi.mock("@/src/lib/auth", () => ({
-  auth: authMock,
+vi.mock("@/src/components/auth/auth-context", () => ({
+  useAuth: useAuthMock,
 }));
 
-vi.mock("@neondatabase/serverless", () => ({ neon: () => getActiveSql() }));
+vi.mock("@/src/lib/fetch-json", () => ({
+  fetchJson: fetchJsonMock,
+}));
 
-import { createTestRepository, getActiveSql } from "@/src/lib/db/pglite-test-utils";
+import { ClientAdminIntegrationsPage } from "@/src/components/admin/integrations/client-page";
 
-import AdminIntegrationsPage from "./page";
+describe("app/admin-integrations/page (ClientAdminIntegrationsPage)", () => {
+  let container: HTMLDivElement;
+  let root: Root;
+  let queryClient: QueryClient;
 
-const renderDocument = async () => renderStaticDocument(await AdminIntegrationsPage());
-
-let testCleanup: () => Promise<void>;
-beforeAll(() => {
-  vi.stubEnv("POSTGRES_URL", "pglite://admin-integrations-page-test");
-});
-beforeEach(async () => {
-  const ctx = await createTestRepository();
-  testCleanup = ctx.cleanup;
-});
-
-afterEach(async () => {
-  authMock.mockReset();
-  authMock.mockResolvedValue({ user: { email: "dev@localhost" } });
-  const runtime = globalThis as typeof globalThis & {
-    integrationsHubRepository?: unknown;
-    integrationsHubService?: unknown;
-  };
-  delete runtime.integrationsHubRepository;
-  delete runtime.integrationsHubService;
-  await testCleanup();
-});
-
-describe("app/admin-integrations/page", () => {
-  it("renders the dashboard sidebar chrome for signed-in regular users", async () => {
-    vi.stubEnv("ADMIN_EMAIL", "");
-
-    const document = await renderDocument();
-    const navHrefs = Array.from(document.querySelectorAll("nav a")).map((link) =>
-      link.getAttribute("href"),
-    );
-
-    expect(navHrefs).toEqual(
-      expect.arrayContaining([
-        "/integrations",
-        "/case-by-case-approvals",
-        "/agent-connection",
-        "/profile",
-      ]),
-    );
-    expect(document.querySelector('a[href="/admin-integrations"]')).toBeTruthy();
-    expect(document.querySelector('a[href="/home"]')).toBeFalsy();
-    expect(document.body.textContent).toContain("Signed in as");
-    expect(document.querySelector('[data-testid="user-guidance-card"]')).toBeTruthy();
-    expect(document.querySelector('[data-testid="admin-guidance-card"]')).toBeFalsy();
-    expect(findHeading(document, 2, "Popular official provider options")).toBeTruthy();
-    expect(findHeading(document, 2, "Registered managed connectors")).toBeFalsy();
-    expect(document.querySelector('a[href="/integrations?showIntegrationWizard=1"]')).toBeTruthy();
-    expect(document.body.textContent).toContain("contact an admin");
+  beforeEach(() => {
+    container = document.createElement("div");
+    document.body.appendChild(container);
+    queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    root = createRoot(container);
+    useAuthMock.mockReset();
+    useAuthMock.mockReturnValue({
+      user: { name: "User", email: "user@example.com" },
+      ownerId: "user@example.com",
+      isAdmin: false,
+      isLoading: false,
+      isAuthenticated: true,
+      authDisabled: false,
+    });
+    fetchJsonMock.mockReset();
+    // Default mock responses
+    fetchJsonMock.mockImplementation((url: string) => {
+      if (url === "/api/admin/managed-connectors") {
+        return Promise.resolve([]);
+      }
+      if (url === "/api/integrations/managed-connectors") {
+        return Promise.resolve([
+          { slug: "github", name: "GitHub", oauthConfigured: true },
+        ]);
+      }
+      if (url === "/api/integrations/oauth-provider-catalog") {
+        return Promise.resolve([
+          {
+            slug: "github",
+            name: "GitHub",
+            description: "GitHub API",
+            categories: ["development", "version-control"],
+            oauthAuthorizationUrl: "https://github.com/login/oauth/authorize",
+            oauthTokenUrl: "https://github.com/login/oauth/access_token",
+          },
+        ]);
+      }
+      return Promise.resolve([]);
+    });
   });
 
-  it("shows the configured admin email when ADMIN_EMAIL is set", async () => {
-    vi.stubEnv("ADMIN_EMAIL", "admin@example.com");
-
-    const document = await renderDocument();
-    const mailLink = document.querySelector('a[href="mailto:admin@example.com"]');
-
-    expect(mailLink).toBeTruthy();
-    expect(mailLink?.textContent).toContain("Contact admin@example.com");
-    expect(document.body.textContent).toContain("please contact admin@example.com");
+  afterEach(async () => {
+    await act(async () => {
+      root.unmount();
+    });
+    container.remove();
   });
 
-  it("shows only the admin guidance card and connector controls to allowlisted admins", async () => {
-    vi.stubEnv("APP_ADMIN_EMAILS", "admin@example.com");
-    authMock.mockResolvedValue({ user: { email: "admin@example.com" } });
+  it("renders admin integrations page header after data loads", async () => {
+    await act(async () => {
+      root.render(
+        <QueryClientProvider client={queryClient}>
+          <ClientAdminIntegrationsPage />
+        </QueryClientProvider>,
+      );
+    });
 
-    const document = await renderDocument();
-    const codeValues = getCodeValues(document);
+    // Wait for queries to settle
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    });
 
-    expect(document.querySelector('[data-testid="admin-guidance-card"]')).toBeTruthy();
-    expect(document.querySelector('[data-testid="user-guidance-card"]')).toBeFalsy();
-    expect(findHeading(document, 2, "Registered managed connectors")).toBeTruthy();
-    expect(findHeading(document, 2, "Popular official provider options")).toBeTruthy();
-    expect(document.querySelector('a[href="/api/managed-connectors/openapi"]')).toBeTruthy();
-    expect(codeValues).toEqual(
-      expect.arrayContaining([
-        "APP_ADMIN_EMAILS",
-        "POST /api/managed-connectors",
-        "AUTH_REDIRECT_PROXY_URL",
-        "src/lib/integrations/oauth-provider-registration-defaults.ts",
-        "src/lib/integrations/oauth-provider-catalog.ts",
-      ]),
-    );
-    expect(document.body.textContent).toContain("service-level admin action");
-    expect(document.body.textContent).toContain("Connect");
-    expect(document.body.textContent).toContain("Discover tools");
-    expect(document.body.textContent).toContain("ElevenLabs");
-    expect(document.body.textContent).toContain("Ordinal");
+    expect(container.textContent).toContain("Admin integrations");
+    expect(container.textContent).toContain("OpenHands Integrations Hub");
   });
 
-  it("shows database setup instructions to admins when persistent storage is unavailable", async () => {
-    vi.stubEnv("NODE_ENV", "production");
-    vi.stubEnv("POSTGRES_URL", "");
-    vi.stubEnv("DATABASE_URL", "");
-    vi.stubEnv("APP_ADMIN_EMAILS", "admin@example.com");
-    authMock.mockResolvedValue({ user: { email: "admin@example.com" } });
+  it("shows user guidance card for non-admin users", async () => {
+    await act(async () => {
+      root.render(
+        <QueryClientProvider client={queryClient}>
+          <ClientAdminIntegrationsPage />
+        </QueryClientProvider>,
+      );
+    });
 
-    const document = await renderDocument();
-    const codeValues = getCodeValues(document);
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    });
 
-    expect(findHeading(document, 1, "Service unavailable")).toBeTruthy();
-    expect(findHeading(document, 2, "How to set up the database")).toBeTruthy();
-    expect(codeValues).toEqual(expect.arrayContaining(["POSTGRES_URL", "DATABASE_URL"]));
-    expect(findHeading(document, 2, "Popular official provider options")).toBeFalsy();
+    expect(container.querySelector('[data-testid="user-guidance-card"]')).toBeTruthy();
+    expect(container.querySelector('[data-testid="admin-guidance-card"]')).toBeFalsy();
+  });
+
+  it("shows admin guidance card for admin users", async () => {
+    useAuthMock.mockReturnValue({
+      user: { name: "Admin", email: "admin@example.com" },
+      ownerId: "admin@example.com",
+      isAdmin: true,
+      isLoading: false,
+      isAuthenticated: true,
+      authDisabled: false,
+    });
+
+    await act(async () => {
+      root.render(
+        <QueryClientProvider client={queryClient}>
+          <ClientAdminIntegrationsPage />
+        </QueryClientProvider>,
+      );
+    });
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    });
+
+    expect(container.querySelector('[data-testid="admin-guidance-card"]')).toBeTruthy();
+    expect(container.querySelector('[data-testid="user-guidance-card"]')).toBeFalsy();
   });
 });

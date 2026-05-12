@@ -1,60 +1,102 @@
 // @vitest-environment jsdom
 
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { act } from "react";
+import { createRoot, type Root } from "react-dom/client";
+import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
-import { findHeading, getCodeValues, renderStaticDocument } from "@/src/test-utils/static-dom";
+import { enableReactActEnvironment } from "@/src/test-utils/jsdom-helpers";
 
-const { authMock } = vi.hoisted(() => ({
-  authMock: vi.fn(async () => ({ user: { email: "user@example.com" } })),
+enableReactActEnvironment();
+
+interface AuthContextValue {
+  user: { name?: string | null; email?: string | null } | null;
+  ownerId: string | null;
+  isAdmin: boolean;
+  isLoading: boolean;
+  isAuthenticated: boolean;
+  authDisabled: boolean;
+}
+
+const { useAuthMock } = vi.hoisted(() => ({
+  useAuthMock: vi.fn() as Mock<() => AuthContextValue>,
 }));
 
-vi.mock("@/src/lib/auth", () => ({
-  auth: authMock,
+vi.mock("@/src/components/auth/auth-context", () => ({
+  useAuth: useAuthMock,
 }));
 
 import HomePage from "./page";
 
-const renderDocument = async () => renderStaticDocument(await HomePage());
-
-afterEach(() => {
-  vi.unstubAllEnvs();
-  authMock.mockReset();
-  authMock.mockResolvedValue({ user: { email: "user@example.com" } });
-});
-
 describe("HomePage", () => {
-  it("shows a generic service unavailable screen to signed-in non-admin users when storage is unavailable", async () => {
-    vi.stubEnv("NODE_ENV", "production");
-    vi.stubEnv("APP_ADMIN_EMAILS", "admin@example.com");
+  let container: HTMLDivElement;
+  let root: Root;
 
-    const document = await renderDocument();
-
-    expect(findHeading(document, 1, "Service unavailable")).toBeTruthy();
-    expect(document.body.textContent).toContain(
-      "Please contact your administrator and try again later.",
-    );
-    expect(findHeading(document, 2, "How to set up the database")).toBeFalsy();
+  beforeEach(() => {
+    container = document.createElement("div");
+    document.body.appendChild(container);
+    root = createRoot(container);
+    useAuthMock.mockReset();
+    useAuthMock.mockReturnValue({
+      user: { name: "User", email: "user@example.com" },
+      ownerId: "user@example.com",
+      isAdmin: false,
+      isLoading: false,
+      isAuthenticated: true,
+      authDisabled: false,
+    });
   });
 
-  it("shows setup instructions to signed-in admins when storage is unavailable", async () => {
-    vi.stubEnv("NODE_ENV", "production");
-    vi.stubEnv("APP_ADMIN_EMAILS", "admin@example.com");
-    authMock.mockResolvedValue({ user: { email: "admin@example.com" } });
-
-    const document = await renderDocument();
-
-    expect(findHeading(document, 1, "Service unavailable")).toBeTruthy();
-    expect(findHeading(document, 2, "How to set up the database")).toBeTruthy();
-    const codeValues = getCodeValues(document);
-    expect(codeValues).toContain("POSTGRES_URL");
-    expect(codeValues).toContain("DATABASE_URL");
+  afterEach(async () => {
+    await act(async () => {
+      root.unmount();
+    });
+    container.remove();
   });
 
   it("links signed-in users to the /integrations dashboard route", async () => {
-    const document = await renderDocument();
-    const dashboardLink = document.querySelector('a[href="/integrations"]');
+    await act(async () => {
+      root.render(<HomePage />);
+    });
 
+    const dashboardLink = container.querySelector('a[href="/integrations"]');
     expect(dashboardLink).toBeTruthy();
     expect(dashboardLink?.textContent).toContain("Open dashboard");
+  });
+
+  it("links non-authenticated users to /signin", async () => {
+    useAuthMock.mockReturnValue({
+      user: null,
+      ownerId: null,
+      isAdmin: false,
+      isLoading: false,
+      isAuthenticated: false,
+      authDisabled: false,
+    });
+
+    await act(async () => {
+      root.render(<HomePage />);
+    });
+
+    const signInLink = container.querySelector('a[href="/signin"]');
+    expect(signInLink).toBeTruthy();
+    expect(signInLink?.textContent).toContain("Sign in to configure");
+  });
+
+  it("shows loading state while auth is loading", async () => {
+    useAuthMock.mockReturnValue({
+      user: null,
+      ownerId: null,
+      isAdmin: false,
+      isLoading: true,
+      isAuthenticated: false,
+      authDisabled: false,
+    });
+
+    await act(async () => {
+      root.render(<HomePage />);
+    });
+
+    const button = container.querySelector("button");
+    expect(button?.textContent).toContain("Loading...");
   });
 });

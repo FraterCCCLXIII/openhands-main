@@ -13,8 +13,9 @@ import {
 import type { IntegrationSpec } from "@/src/types/integrations-hub";
 
 export const OPENHANDS_CONTEXT_KEY_ENV = "$OPENHANDS_CONTEXT_KEY";
+// Default MCP URL for OpenHands Cloud - replace with your deployment URL
 export const OPENHANDS_CLOUD_SHTTP_MCP_URL =
-  "https://openhands-integrations-hub.vercel.app/api/mcp";
+  "https://integrations-hub.example.com/api/mcp";
 
 export interface AgentConnectionGuide {
   endpoint: string;
