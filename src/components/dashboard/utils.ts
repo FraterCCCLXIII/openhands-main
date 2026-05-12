@@ -163,6 +163,14 @@ export const formatTimestamp = (value?: string) => {
   return new Date(value).toLocaleString();
 };
 
+const visibleApiKeyPrefix = (value: string) => {
+  const underscoreIndex = value.indexOf("_");
+  if (underscoreIndex >= 0) {
+    return value.slice(0, underscoreIndex + 1);
+  }
+  return value.slice(0, 4);
+};
+
 export const maskApiKey = (apiKey: string, revealed: boolean) => {
   const trimmed = apiKey.trim();
 
@@ -174,9 +182,8 @@ export const maskApiKey = (apiKey: string, revealed: boolean) => {
     return "•".repeat(trimmed.length);
   }
 
-  return `${trimmed.slice(0, 4)}${"•".repeat(
-    Math.max(12, trimmed.length - 8),
-  )}${trimmed.slice(-4)}`;
+  const visiblePrefix = visibleApiKeyPrefix(trimmed);
+  return `${visiblePrefix}${"•".repeat(12)}${trimmed.slice(-4)}`;
 };
 
 export const maskStoredApiKey = (keyPrefix: string, keySuffix: string) => {
@@ -187,7 +194,7 @@ export const maskStoredApiKey = (keyPrefix: string, keySuffix: string) => {
     return "";
   }
 
-  return `${normalizedPrefix}${"•".repeat(12)}${normalizedSuffix}`;
+  return `${visibleApiKeyPrefix(normalizedPrefix)}${"•".repeat(12)}${normalizedSuffix}`;
 };
 
 export const copyTextToClipboard = async (text: string) => {

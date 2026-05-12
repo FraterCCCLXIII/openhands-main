@@ -1,9 +1,11 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { NextRequest } from "next/server";
+import { encode } from "next-auth/jwt";
 
 import { proxy } from "@/proxy";
 
 const originalDisableAuth = process.env.DISABLE_AUTH;
+const originalAuthSecret = process.env.AUTH_SECRET;
 
 const restoreDisableAuth = () => {
   if (originalDisableAuth === undefined) {
@@ -14,15 +16,25 @@ const restoreDisableAuth = () => {
   process.env.DISABLE_AUTH = originalDisableAuth;
 };
 
+const restoreAuthSecret = () => {
+  if (originalAuthSecret === undefined) {
+    delete process.env.AUTH_SECRET;
+    return;
+  }
+
+  process.env.AUTH_SECRET = originalAuthSecret;
+};
+
 afterEach(() => {
   restoreDisableAuth();
+  restoreAuthSecret();
 });
 
 describe("proxy", () => {
-  it("allows loopback requests when auth is disabled", () => {
+  it("allows loopback requests when auth is disabled", async () => {
     process.env.DISABLE_AUTH = "true";
 
-    const response = proxy(
+    const response = await proxy(
       new NextRequest("http://localhost:3000/integrations", {
         headers: { host: "localhost:3000" },
       }),
@@ -34,7 +46,7 @@ describe("proxy", () => {
   it("blocks external API requests when auth is disabled", async () => {
     process.env.DISABLE_AUTH = "true";
 
-    const response = proxy(
+    const response = await proxy(
       new NextRequest("https://integrations-hub.example.com/api/integrations", {
         headers: { "x-forwarded-host": "integrations-hub.example.com" },
       }),
@@ -47,8 +59,8 @@ describe("proxy", () => {
     });
   });
 
-  it("applies baseline security headers to successful responses", () => {
-    const response = proxy(
+  it("applies baseline security headers to successful responses", async () => {
+    const response = await proxy(
       new NextRequest("https://integrations-hub.example.com/integrations", {
         headers: { host: "integrations-hub.example.com" },
       }),
@@ -69,7 +81,7 @@ describe("proxy", () => {
   it("applies baseline security headers to blocked API responses", async () => {
     process.env.DISABLE_AUTH = "true";
 
-    const response = proxy(
+    const response = await proxy(
       new NextRequest("https://integrations-hub.example.com/api/integrations", {
         headers: { host: "integrations-hub.example.com" },
       }),
@@ -87,10 +99,48 @@ describe("proxy", () => {
     });
   });
 
+  it("requires a signed-in dashboard session for user key endpoints", async () => {
+    process.env.DISABLE_AUTH = "false";
+    process.env.AUTH_SECRET = "test-secret";
+
+    const response = await proxy(
+      new NextRequest("https://integrations-hub.example.com/api/user/key", {
+        headers: { host: "integrations-hub.example.com", "x-owner-id": "attacker@example.com" },
+      }),
+    );
+
+    expect(response.status).toBe(401);
+    await expect(response.json()).resolves.toEqual({
+      detail: "Sign in to the dashboard before using this endpoint.",
+    });
+  });
+
+
+  it("accepts a signed-in secure Auth.js session for user key endpoints", async () => {
+    process.env.DISABLE_AUTH = "false";
+    process.env.AUTH_SECRET = "test-secret";
+    const sessionToken = await encode({
+      secret: "test-secret",
+      salt: "__Secure-authjs.session-token",
+      token: { email: "user@example.com" },
+    });
+
+    const response = await proxy(
+      new NextRequest("https://integrations-hub.example.com/api/user/key", {
+        headers: {
+          cookie: `__Secure-authjs.session-token=${sessionToken}`,
+          host: "integrations-hub.example.com",
+        },
+      }),
+    );
+
+    expect(response.status).toBe(200);
+  });
+
   it("rejects spoofed loopback forwarded hosts when auth is disabled", async () => {
     process.env.DISABLE_AUTH = "true";
 
-    const response = proxy(
+    const response = await proxy(
       new NextRequest("https://integrations-hub.example.com/api/integrations", {
         headers: {
           host: "integrations-hub.example.com",

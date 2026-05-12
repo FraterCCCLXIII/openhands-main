@@ -21,8 +21,9 @@
     "test:mutation:dry": "node ./scripts/run-mutation.mjs --dry-run",
     "test:mutation:all": "node ./scripts/run-mutation.mjs --all --soft-fail",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint .",
-    "audit": "npm audit --audit-level=moderate"
+    "lint": "eslint . && node scripts/check-client-boundaries.mjs",
+    "audit": "npm audit --audit-level=moderate",
+    "test:backend:python": "python3 -m pytest backend/tests -q"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.28.0",
@@ -31,7 +32,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^1.7.0",
-    "next": "^16.2.3",
+    "next": "^16.2.6",
     "next-auth": "^5.0.0-beta.30",
     "pg": "^8.20.0",
     "postcss": "^8.5.10",

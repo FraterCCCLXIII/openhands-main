@@ -42,7 +42,7 @@ import {
   approvalHoursToMinutes,
   normalizeApprovalDurationHours,
 } from "@/src/lib/access-requests";
-import { buildAgentConnectionGuide } from "@/src/lib/agent-connection";
+import { buildAgentConnectionGuide } from "@/src/shared/agent-connection";
 import type {
   AccessRequest,
   AdminApiKeyStatus,
@@ -278,6 +278,12 @@ export const DashboardWorkspace = ({
     adminApiKeyValue: initialAdminApiKeyValue,
     onStatus: setStatusMessage,
   });
+
+  const ownerId = (currentUser.email?.trim() || currentUser.name?.trim() || "dev@localhost").toLowerCase();
+
+  if (typeof window !== "undefined") {
+    window.__INTEGRATIONS_HUB_OWNER_ID__ = ownerId;
+  }
 
   const userName = currentUser.name?.trim() || "Admin User";
   const userEmail = currentUser.email?.trim() || "Not provided";

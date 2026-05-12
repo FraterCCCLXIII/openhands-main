@@ -1,4 +1,4 @@
-import { OPENHANDS_CONTEXT_KEY_ENV } from "@/src/lib/agent-connection";
+import { OPENHANDS_CONTEXT_KEY_ENV } from "@/src/shared/agent-connection";
 import type {
   ToolAccessMode,
   ToolSpec,

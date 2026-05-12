@@ -5,5 +5,11 @@
       "path": "/api/cron/expire-grants",
       "schedule": "*/15 * * * *"
     }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/:path((?!auth).*)",
+      "destination": "/api/index.py"
+    }
   ]
 }

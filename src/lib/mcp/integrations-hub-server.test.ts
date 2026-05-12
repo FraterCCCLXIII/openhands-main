@@ -1,13 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { IntegrationsHubError } from "@/src/lib/core/errors";
+import { createIntegrationsHubMcpServer } from "@/src/lib/mcp/integrations-hub-server";
 import {
   INTEGRATIONS_HUB_MCP_SET_AGENT_CLASS_TOOL_NAME,
   INTEGRATIONS_HUB_MCP_SET_AGENT_DATA_TOOL_NAME,
   INTEGRATIONS_HUB_MCP_SET_AGENT_ID_TOOL_NAME,
   buildIntegrationsHubMcpToolName,
-  createIntegrationsHubMcpServer,
-} from "@/src/lib/mcp/integrations-hub-server";
+} from "@/src/shared/mcp-tool-names";
 import type { IntegrationsHubService } from "@/src/lib/core/service";
 import type { IntegrationSpec } from "@/src/types/integrations-hub";
 

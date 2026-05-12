@@ -299,10 +299,13 @@ describe("dashboard-workspace-utils", () => {
   it("covers api key masking, filtering, unused tool candidates, and logo resolution helpers", () => {
     expect(maskApiKey("  abc12345  ", false)).toBe("••••••••");
     expect(maskApiKey("  abcdefghijklmnop  ", false)).toBe("abcd••••••••••••mnop");
+    expect(maskApiKey("  cla_1234567890abcdefghijklmnop  ", false)).toBe("cla_••••••••••••mnop");
+    expect(maskApiKey("  clad_1234567890abcdefghijklmnop  ", false)).toBe("clad_••••••••••••mnop");
     expect(maskApiKey("  abcdefghijklmnop  ", true)).toBe("abcdefghijklmnop");
     expect(maskApiKey("   ", false)).toBe("");
     expect(maskStoredApiKey("", "")).toBe("");
-    expect(maskStoredApiKey("clu_1234", "wxyz")).toBe("clu_1234••••••••••••wxyz");
+    expect(maskStoredApiKey("clu_12345678", "wxyz")).toBe("clu_••••••••••••wxyz");
+    expect(maskStoredApiKey("clad_1234567", "wxyz")).toBe("clad_••••••••••••wxyz");
 
     const integrationsWithVariants: IntegrationSpec[] = [
       ...integrations,

@@ -19,6 +19,17 @@ At a high level, the repository separates three concerns:
 
 That split is the core security idea of the repo: agents get a narrow integrations-hub interface, while humans keep control over connector registration, per-user credentials, and approval workflows.
 
+## Source boundaries
+
+The codebase keeps frontend, shared, and backend concerns separate by convention and by a lint-time client-boundary check:
+
+- `src/components/` contains React UI. Files marked `"use client"` must not import server-only modules, even transitively.
+- `src/shared/` contains browser-safe helpers and constants that can be imported by both client UI and server/runtime code.
+- `src/lib/` contains backend/domain modules plus a small number of legacy shared helpers. New client-safe cross-layer helpers should prefer `src/shared/` so browser bundles do not accidentally pull in auth, DB, MCP server, OAuth, or credential-handling code.
+- `backend/` contains the Python/FastAPI backend and owns the `/api/...` route surface. It can be deployed as its own Vercel project rooted at `backend/`.
+
+`npm run lint` runs `scripts/check-client-boundaries.mjs` after ESLint to reject client components that reach into server-only paths such as `src/lib/core`, `src/lib/db`, `src/lib/mcp`, `src/lib/oauth`, or credential/auth helpers. Python route parity is covered by `backend/tests/test_route_parity.py`, which compares registered FastAPI routes against `backend/app/route_manifest.py`.
+
 ## Security model
 
 ### Actors and trust boundaries
