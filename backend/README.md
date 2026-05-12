@@ -4,15 +4,36 @@ This directory contains the Python/FastAPI backend stack for the integrations hu
 
 ## Local development
 
+This project uses [uv](https://docs.astral.sh/uv/) for dependency management. Dependencies are defined in `pyproject.toml` and locked in `uv.lock`.
+
 ```bash
 cd backend
-python -m venv .venv
-. .venv/bin/activate
-pip install -r requirements-dev.txt
+uv sync --dev
+DISABLE_AUTH=true uv run uvicorn backend.app.main:app --reload --app-dir ..
+```
+
+Or if you prefer a traditional venv workflow:
+
+```bash
+cd backend
+uv venv
+source .venv/bin/activate
+uv pip install -e ".[dev]"
 DISABLE_AUTH=true uvicorn backend.app.main:app --reload --app-dir ..
 ```
 
 The FastAPI app owns the `/api/...` backend paths that were previously implemented as Next.js route handlers. For local parity testing, set `DISABLE_AUTH=true` or send `X-Owner-Id: <email>` headers.
+
+## Running tests
+
+```bash
+cd backend
+uv run pytest tests/ -v
+```
+
+## Vercel deployment
+
+Vercel natively supports uv and will automatically use it to install dependencies from `pyproject.toml` and `uv.lock`. Builds are 30-65% faster compared to pip-based installs.
 
 ## Vercel deployment
 

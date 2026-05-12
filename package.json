@@ -23,7 +23,7 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint . && node scripts/check-client-boundaries.mjs",
     "audit": "npm audit --audit-level=moderate",
-    "test:backend:python": "python3 -m pytest backend/tests -q"
+    "test:backend:python": "cd backend && uv run pytest tests -q"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.28.0",

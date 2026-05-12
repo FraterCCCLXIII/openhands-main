@@ -18,3 +18,5 @@ reports/
 
 __pycache__/
 .pytest_cache/
+.venv/
+.vscode/launch.json
