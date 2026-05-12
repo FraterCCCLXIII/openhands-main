@@ -96,12 +96,12 @@
     "login": "all-hands-bot"
   },
   {
-    "id": 213239228,
-    "login": "llamantino"
-  },
-  {
     "id": 81847,
     "login": "claude"
+  },
+  {
+    "id": 213239228,
+    "login": "llamantino"
   },
   {
     "id": 1708914,
@@ -110,6 +110,10 @@
   {
     "id": 95044293,
     "login": "anasdorbani"
+  },
+  {
+    "id": 157206163,
+    "login": "simonrosenberg"
   },
   {
     "id": 10997968,
@@ -124,16 +128,12 @@
     "login": "frankxu2004"
   },
   {
-    "id": 54480367,
-    "login": "HeyItsChloe"
-  },
-  {
     "id": 20578281,
     "login": "juanmichelini"
   },
   {
-    "id": 157206163,
-    "login": "simonrosenberg"
+    "id": 54480367,
+    "login": "HeyItsChloe"
   },
   {
     "id": 87397251,
@@ -200,6 +200,10 @@
     "login": "RainRat"
   },
   {
+    "id": 41898282,
+    "login": "github-actions[bot]"
+  },
+  {
     "id": 138990495,
     "login": "Umpire2018"
   },
@@ -230,9 +234,5 @@
   {
     "id": 133818254,
     "login": "abhayymishraa"
-  },
-  {
-    "id": 41898282,
-    "login": "github-actions[bot]"
   }
 ]
