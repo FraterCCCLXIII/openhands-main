@@ -3,15 +3,20 @@ from __future__ import annotations
 import json
 import os
 import urllib.parse
+from typing import TYPE_CHECKING
 
 import httpx
 from fastapi.testclient import TestClient
 
 from backend.app import main as backend_main
 from backend.app import oauth_flow
+from backend.app.config import reset_config
 from backend.app.main import app
 from backend.app.models import AccessRequest, ManagedConnector, ManagedConnectorTool, ToolSpec
 from backend.app.repository import repository
+
+if TYPE_CHECKING:
+    from conftest import ConfigEnvFixture
 
 
 def setup_function() -> None:
@@ -23,6 +28,9 @@ def setup_function() -> None:
     repository.admin_keys.clear()
     repository.connections.clear()
     os.environ["APP_ADMIN_EMAILS"] = "dev@localhost,admin@example.com"
+    os.environ["CREDENTIAL_ENCRYPTION_KEY"] = "test-encryption-key-for-tests"
+    # Reset config cache to pick up env var changes
+    reset_config()
 
     repository.oauth_states.clear()
     repository.policies.clear()
@@ -30,8 +38,8 @@ def setup_function() -> None:
     repository.tool_invocations.clear()
 
 
-def test_register_integration_and_invoke_mock_tool(monkeypatch) -> None:
-    monkeypatch.setenv("DISABLE_AUTH", "true")
+def test_register_integration_and_invoke_mock_tool(config_env: "ConfigEnvFixture", monkeypatch) -> None:
+    config_env("INTHUB_DISABLE_AUTH", "true")
     client = TestClient(app)
     integration = {
         "key": "crm",
@@ -71,8 +79,8 @@ def test_register_integration_and_invoke_mock_tool(monkeypatch) -> None:
     assert result.json()["data"] == {"ok": True}
 
 
-def test_managed_connector_discovery_and_user_key_flow(monkeypatch) -> None:
-    monkeypatch.setenv("DISABLE_AUTH", "true")
+def test_managed_connector_discovery_and_user_key_flow(config_env: "ConfigEnvFixture", monkeypatch) -> None:
+    config_env("INTHUB_DISABLE_AUTH", "true")
     client = TestClient(app)
 
     admin_key = client.post("/api/admin/key").json()["apiKey"]
@@ -113,9 +121,9 @@ def test_managed_connector_discovery_and_user_key_flow(monkeypatch) -> None:
     assert client.get("/api/user/integrations", headers={"Authorization": f"Bearer {user_key}"}).status_code == 200
 
 
-def test_managed_oauth_mcp_discovery_uses_saved_connection(monkeypatch) -> None:
-    monkeypatch.setenv("DISABLE_AUTH", "true")
-    monkeypatch.setenv("CREDENTIAL_ENCRYPTION_KEY", "test-credential-key")
+def test_managed_oauth_mcp_discovery_uses_saved_connection(config_env: "ConfigEnvFixture", monkeypatch) -> None:
+    config_env("INTHUB_DISABLE_AUTH", "true")
+    config_env("CREDENTIAL_ENCRYPTION_KEY", "test-credential-key")
     client = TestClient(app)
 
     admin_key = client.post("/api/admin/key").json()["apiKey"]
@@ -191,8 +199,8 @@ def test_managed_oauth_mcp_discovery_uses_saved_connection(monkeypatch) -> None:
     }
 
 
-def test_mcp_discovery_honors_streamable_transport_order(monkeypatch) -> None:
-    monkeypatch.setenv("DISABLE_AUTH", "true")
+def test_mcp_discovery_honors_streamable_transport_order(config_env: "ConfigEnvFixture", monkeypatch) -> None:
+    config_env("INTHUB_DISABLE_AUTH", "true")
     client = TestClient(app)
     attempted: list[str] = []
 
@@ -225,12 +233,12 @@ def test_mcp_discovery_honors_streamable_transport_order(monkeypatch) -> None:
     assert response.json()["tools"]["list"]["description"] == "List things"
 
 
-def test_oauth_invocation_requires_connection_and_refreshes_expired_tokens(monkeypatch) -> None:
+def test_oauth_invocation_requires_connection_and_refreshes_expired_tokens(config_env: "ConfigEnvFixture", monkeypatch) -> None:
     import threading
     from http.server import BaseHTTPRequestHandler, HTTPServer
 
-    monkeypatch.setenv("DISABLE_AUTH", "true")
-    monkeypatch.setenv("CREDENTIAL_ENCRYPTION_KEY", "test-credential-key")
+    config_env("INTHUB_DISABLE_AUTH", "true")
+    config_env("CREDENTIAL_ENCRYPTION_KEY", "test-credential-key")
     client = TestClient(app)
 
     seen: dict[str, object] = {}
@@ -325,9 +333,9 @@ def test_oauth_invocation_requires_connection_and_refreshes_expired_tokens(monke
         thread.join(timeout=2)
 
 
-def test_oauth_start_uses_proxy_scopes_and_additional_params(monkeypatch) -> None:
-    monkeypatch.setenv("DISABLE_AUTH", "true")
-    monkeypatch.setenv("AUTH_REDIRECT_PROXY_URL", "https://stable.example.dev/api/auth")
+def test_oauth_start_uses_proxy_scopes_and_additional_params(config_env: "ConfigEnvFixture", monkeypatch) -> None:
+    config_env("INTHUB_DISABLE_AUTH", "true")
+    config_env("AUTH_REDIRECT_PROXY_URL", "https://stable.example.dev/api/auth")
     client = TestClient(app)
     admin_key = client.post("/api/admin/key").json()["apiKey"]
     response = client.post(
@@ -366,11 +374,11 @@ def test_oauth_start_uses_proxy_scopes_and_additional_params(monkeypatch) -> Non
     assert query["audience"] == ["api"]
 
 
-def test_dynamic_oauth_client_registration_for_public_clients(monkeypatch) -> None:
+def test_dynamic_oauth_client_registration_for_public_clients(config_env: "ConfigEnvFixture", monkeypatch) -> None:
     import threading
     from http.server import BaseHTTPRequestHandler, HTTPServer
 
-    monkeypatch.setenv("DISABLE_AUTH", "true")
+    config_env("INTHUB_DISABLE_AUTH", "true")
     client = TestClient(app)
     registrations: list[dict[str, object]] = []
 
@@ -422,8 +430,8 @@ def test_dynamic_oauth_client_registration_for_public_clients(monkeypatch) -> No
         thread.join(timeout=2)
 
 
-def test_approval_required_requests_are_deduplicated_and_policy_denials_do_not_create_requests(monkeypatch) -> None:
-    monkeypatch.setenv("DISABLE_AUTH", "true")
+def test_approval_required_requests_are_deduplicated_and_policy_denials_do_not_create_requests(config_env: "ConfigEnvFixture", monkeypatch) -> None:
+    config_env("INTHUB_DISABLE_AUTH", "true")
     client = TestClient(app)
     integration = {
         "key": "approval-api",
@@ -471,8 +479,8 @@ def test_approval_required_requests_are_deduplicated_and_policy_denials_do_not_c
     assert len(client.get("/api/case-by-case-approvals").json()) == 1
 
 
-def test_repository_uses_owner_header_identity(monkeypatch) -> None:
-    monkeypatch.setenv("DISABLE_AUTH", "true")
+def test_repository_uses_owner_header_identity(config_env: "ConfigEnvFixture", monkeypatch) -> None:
+    config_env("INTHUB_DISABLE_AUTH", "true")
     client = TestClient(app)
     integration = {
         "key": "owned",
@@ -494,7 +502,7 @@ def test_repository_uses_owner_header_identity(monkeypatch) -> None:
     assert other_response.json() == []
 
 
-def test_http_provider_invocation_uses_request_template_and_auth(monkeypatch) -> None:
+def test_http_provider_invocation_uses_request_template_and_auth(config_env: "ConfigEnvFixture", monkeypatch) -> None:
     import json
     import threading
     from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -519,7 +527,7 @@ def test_http_provider_invocation_uses_request_template_and_auth(monkeypatch) ->
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
     try:
-        monkeypatch.setenv("DISABLE_AUTH", "true")
+        config_env("INTHUB_DISABLE_AUTH", "true")
         client = TestClient(app)
         base_url = f"http://127.0.0.1:{server.server_port}"
         integration = {
@@ -574,9 +582,9 @@ def test_http_provider_invocation_uses_request_template_and_auth(monkeypatch) ->
         thread.join(timeout=2)
 
 
-def test_dashboard_key_routes_reject_spoofed_owner_without_internal_auth(monkeypatch) -> None:
-    monkeypatch.delenv("DISABLE_AUTH", raising=False)
-    monkeypatch.setenv("AUTH_SECRET", "test-internal-secret")
+def test_dashboard_key_routes_reject_spoofed_owner_without_internal_auth(config_env: "ConfigEnvFixture", monkeypatch) -> None:
+    config_env("INTHUB_DISABLE_AUTH")
+    config_env("AUTH_SECRET", "test-internal-secret")
 
     client = TestClient(app)
     response = client.get("/api/user/key", headers={"X-Owner-Id": "attacker@example.com"})
@@ -585,9 +593,9 @@ def test_dashboard_key_routes_reject_spoofed_owner_without_internal_auth(monkeyp
     assert "Sign in" in response.json()["detail"]
 
 
-def test_dashboard_key_routes_accept_internal_proxy_owner(monkeypatch) -> None:
-    monkeypatch.delenv("DISABLE_AUTH", raising=False)
-    monkeypatch.setenv("AUTH_SECRET", "test-internal-secret")
+def test_dashboard_key_routes_accept_internal_proxy_owner(config_env: "ConfigEnvFixture", monkeypatch) -> None:
+    config_env("INTHUB_DISABLE_AUTH")
+    config_env("AUTH_SECRET", "test-internal-secret")
 
     client = TestClient(app)
     response = client.get(
@@ -614,9 +622,9 @@ def test_dashboard_key_routes_accept_internal_proxy_owner(monkeypatch) -> None:
     assert "key" not in agent_response.json()
 
 
-def test_user_key_reveal_returns_metadata_when_stored_key_cannot_be_decrypted(monkeypatch) -> None:
-    monkeypatch.setenv("DISABLE_AUTH", "true")
-    monkeypatch.setenv("POSTGRES_URL", "postgres://test")
+def test_user_key_reveal_returns_metadata_when_stored_key_cannot_be_decrypted(config_env: "ConfigEnvFixture", monkeypatch) -> None:
+    config_env("INTHUB_DISABLE_AUTH", "true")
+    config_env("POSTGRES_URL", "postgres://test")
 
     def fake_db_rows(query: str, _params: object = ()) -> list[dict[str, object]]:
         assert "FROM user_api_keys" in query
@@ -651,10 +659,10 @@ def test_user_key_reveal_returns_metadata_when_stored_key_cannot_be_decrypted(mo
 
 
 
-def test_admin_privileges_fail_closed_without_allowlist(monkeypatch) -> None:
-    monkeypatch.delenv("DISABLE_AUTH", raising=False)
-    monkeypatch.setenv("AUTH_SECRET", "test-internal-secret")
-    monkeypatch.delenv("APP_ADMIN_EMAILS", raising=False)
+def test_admin_privileges_fail_closed_without_allowlist(config_env: "ConfigEnvFixture", monkeypatch) -> None:
+    config_env("INTHUB_DISABLE_AUTH")
+    config_env("AUTH_SECRET", "test-internal-secret")
+    config_env("APP_ADMIN_EMAILS")
     client = TestClient(app)
 
     response = client.post(
@@ -668,10 +676,10 @@ def test_admin_privileges_fail_closed_without_allowlist(monkeypatch) -> None:
     assert response.status_code == 403
 
 
-def test_non_admin_dashboard_routes_reject_privileged_api_calls(monkeypatch) -> None:
-    monkeypatch.delenv("DISABLE_AUTH", raising=False)
-    monkeypatch.setenv("AUTH_SECRET", "test-internal-secret")
-    monkeypatch.setenv("APP_ADMIN_EMAILS", "admin@example.com")
+def test_non_admin_dashboard_routes_reject_privileged_api_calls(config_env: "ConfigEnvFixture", monkeypatch) -> None:
+    config_env("INTHUB_DISABLE_AUTH")
+    config_env("AUTH_SECRET", "test-internal-secret")
+    config_env("APP_ADMIN_EMAILS", "admin@example.com")
     client = TestClient(app)
     user_headers = {
         "X-Owner-Id": "user@example.com",
@@ -723,10 +731,10 @@ def test_non_admin_dashboard_routes_reject_privileged_api_calls(monkeypatch) -> 
     assert client.delete("/api/managed-connectors/sample", headers=user_headers).status_code == 403
 
 
-def test_admin_dashboard_routes_allow_privileged_api_calls(monkeypatch) -> None:
-    monkeypatch.delenv("DISABLE_AUTH", raising=False)
-    monkeypatch.setenv("AUTH_SECRET", "test-internal-secret")
-    monkeypatch.setenv("APP_ADMIN_EMAILS", "admin@example.com")
+def test_admin_dashboard_routes_allow_privileged_api_calls(config_env: "ConfigEnvFixture", monkeypatch) -> None:
+    config_env("INTHUB_DISABLE_AUTH")
+    config_env("AUTH_SECRET", "test-internal-secret")
+    config_env("APP_ADMIN_EMAILS", "admin@example.com")
     client = TestClient(app)
     admin_headers = {
         "X-Owner-Id": "admin@example.com",
@@ -757,10 +765,10 @@ def test_admin_dashboard_routes_allow_privileged_api_calls(monkeypatch) -> None:
     assert client.delete("/api/managed-connectors/sample", headers=admin_headers).status_code == 200
 
 
-def test_deprecated_admin_oauth_connections_route_returns_410(monkeypatch) -> None:
-    monkeypatch.delenv("DISABLE_AUTH", raising=False)
-    monkeypatch.setenv("AUTH_SECRET", "test-internal-secret")
-    monkeypatch.setenv("APP_ADMIN_EMAILS", "admin@example.com")
+def test_deprecated_admin_oauth_connections_route_returns_410(config_env: "ConfigEnvFixture", monkeypatch) -> None:
+    config_env("INTHUB_DISABLE_AUTH")
+    config_env("AUTH_SECRET", "test-internal-secret")
+    config_env("APP_ADMIN_EMAILS", "admin@example.com")
     client = TestClient(app)
     key_response = client.post(
         "/api/admin/key",
@@ -777,8 +785,8 @@ def test_deprecated_admin_oauth_connections_route_returns_410(monkeypatch) -> No
     assert "Use the user API key" in response.json()["detail"]
 
 
-def test_default_managed_connectors_are_listed_and_require_credentials(monkeypatch) -> None:
-    monkeypatch.setenv("DISABLE_AUTH", "true")
+def test_default_managed_connectors_are_listed_and_require_credentials(config_env: "ConfigEnvFixture", monkeypatch) -> None:
+    config_env("INTHUB_DISABLE_AUTH", "true")
     client = TestClient(app)
 
     connectors = client.get("/api/integrations/managed-connectors").json()
@@ -815,8 +823,8 @@ def test_default_managed_connectors_are_listed_and_require_credentials(monkeypat
 
 
 
-def test_managed_connector_function_indexing_generates_tools_and_preserves_access(monkeypatch) -> None:
-    monkeypatch.setenv("DISABLE_AUTH", "true")
+def test_managed_connector_function_indexing_generates_tools_and_preserves_access(config_env: "ConfigEnvFixture", monkeypatch) -> None:
+    config_env("INTHUB_DISABLE_AUTH", "true")
     client = TestClient(app)
     repository.save_managed_connector(
         ManagedConnector(
@@ -846,12 +854,12 @@ def test_managed_connector_function_indexing_generates_tools_and_preserves_acces
     assert tools["create_item"]["accessMode"] == "enabled"
 
 
-def test_managed_http_openapi_discovery_and_multipart_invocation(monkeypatch) -> None:
+def test_managed_http_openapi_discovery_and_multipart_invocation(config_env: "ConfigEnvFixture", monkeypatch) -> None:
     import base64
     import threading
     from http.server import BaseHTTPRequestHandler, HTTPServer
 
-    monkeypatch.setenv("DISABLE_AUTH", "true")
+    config_env("INTHUB_DISABLE_AUTH", "true")
     seen: dict[str, object] = {}
 
     class Handler(BaseHTTPRequestHandler):
@@ -961,8 +969,8 @@ def test_managed_http_openapi_discovery_and_multipart_invocation(monkeypatch) ->
         thread.join(timeout=2)
 
 
-def test_generated_openapi_documents_include_route_details(monkeypatch) -> None:
-    monkeypatch.setenv("DISABLE_AUTH", "true")
+def test_generated_openapi_documents_include_route_details(config_env: "ConfigEnvFixture", monkeypatch) -> None:
+    config_env("INTHUB_DISABLE_AUTH", "true")
     client = TestClient(app)
 
     user_key = client.post("/api/user/key").json()["apiKey"]
@@ -976,8 +984,8 @@ def test_generated_openapi_documents_include_route_details(monkeypatch) -> None:
     assert "requestBody" not in functions_doc
 
 
-def test_mcp_tools_expose_input_schema_and_strip_context_arguments(monkeypatch) -> None:
-    monkeypatch.setenv("DISABLE_AUTH", "true")
+def test_mcp_tools_expose_input_schema_and_strip_context_arguments(config_env: "ConfigEnvFixture", monkeypatch) -> None:
+    config_env("INTHUB_DISABLE_AUTH", "true")
     client = TestClient(app)
     integration = {
         "key": "schemahub",
@@ -1041,8 +1049,8 @@ def test_mcp_tools_expose_input_schema_and_strip_context_arguments(monkeypatch) 
     assert json.loads(text) == {"payload": {"recordId": "abc", "expand": True}}
 
 
-def test_mcp_tool_call_returns_downstream_result(monkeypatch) -> None:
-    monkeypatch.setenv("DISABLE_AUTH", "true")
+def test_mcp_tool_call_returns_downstream_result(config_env: "ConfigEnvFixture", monkeypatch) -> None:
+    config_env("INTHUB_DISABLE_AUTH", "true")
     calls: list[dict[str, object]] = []
 
     class FakeMcpClient:
@@ -1128,8 +1136,8 @@ def test_mcp_tool_call_returns_downstream_result(monkeypatch) -> None:
     assert tool_call["json"]["params"] == {"name": "remote_lookup", "arguments": {"query": "hello"}}
 
 
-def test_approval_creates_temporary_grant_that_allows_invocation(monkeypatch) -> None:
-    monkeypatch.setenv("DISABLE_AUTH", "true")
+def test_approval_creates_temporary_grant_that_allows_invocation(config_env: "ConfigEnvFixture", monkeypatch) -> None:
+    config_env("INTHUB_DISABLE_AUTH", "true")
     client = TestClient(app)
     integration = {
         "key": "approval-demo",
@@ -1180,8 +1188,8 @@ def test_approval_creates_temporary_grant_that_allows_invocation(monkeypatch) ->
     assert allowed.json()["data"] == {"ok": True}
 
 
-def test_case_by_case_approvals_are_scoped_by_in_app_notification_target(monkeypatch) -> None:
-    monkeypatch.setenv("DISABLE_AUTH", "true")
+def test_case_by_case_approvals_are_scoped_by_in_app_notification_target(config_env: "ConfigEnvFixture", monkeypatch) -> None:
+    config_env("INTHUB_DISABLE_AUTH", "true")
     client = TestClient(app)
     repository.access_requests.setdefault("all", {})["req-approved"] = AccessRequest(
         id="req-approved",
@@ -1217,8 +1225,8 @@ def test_case_by_case_approvals_are_scoped_by_in_app_notification_target(monkeyp
     assert requests[0]["status"] == "approved"
 
 
-def test_agent_class_policy_is_persisted_and_enforced(monkeypatch) -> None:
-    monkeypatch.setenv("DISABLE_AUTH", "true")
+def test_agent_class_policy_is_persisted_and_enforced(config_env: "ConfigEnvFixture", monkeypatch) -> None:
+    config_env("INTHUB_DISABLE_AUTH", "true")
     client = TestClient(app)
     integration = {
         "key": "policy-demo",
@@ -1255,8 +1263,8 @@ def test_agent_class_policy_is_persisted_and_enforced(monkeypatch) -> None:
     assert "agent class policy" in blocked.json()["detail"]
 
 
-def test_disable_unused_tools_uses_invocation_history(monkeypatch) -> None:
-    monkeypatch.setenv("DISABLE_AUTH", "true")
+def test_disable_unused_tools_uses_invocation_history(config_env: "ConfigEnvFixture", monkeypatch) -> None:
+    config_env("INTHUB_DISABLE_AUTH", "true")
     client = TestClient(app)
     integration = {
         "key": "usage-demo",
@@ -1291,8 +1299,8 @@ def test_disable_unused_tools_uses_invocation_history(monkeypatch) -> None:
     assert updated.tools["never"].accessMode == "enabled"
 
 
-def test_raw_mcp_discovery_lists_remote_tools(monkeypatch) -> None:
-    monkeypatch.setenv("DISABLE_AUTH", "true")
+def test_raw_mcp_discovery_lists_remote_tools(config_env: "ConfigEnvFixture", monkeypatch) -> None:
+    config_env("INTHUB_DISABLE_AUTH", "true")
     calls: list[dict[str, object]] = []
 
     class FakeMcpDiscoveryClient:
@@ -1330,9 +1338,9 @@ def test_raw_mcp_discovery_lists_remote_tools(monkeypatch) -> None:
     assert calls[-1]["headers"]["Authorization"] == "Bearer token"
 
 
-def test_oauth_catalog_and_admin_overview_are_data_driven(monkeypatch) -> None:
-    monkeypatch.setenv("DISABLE_AUTH", "true")
-    monkeypatch.setenv("CREDENTIAL_ENCRYPTION_KEY", "test-key")
+def test_oauth_catalog_and_admin_overview_are_data_driven(config_env: "ConfigEnvFixture", monkeypatch) -> None:
+    config_env("INTHUB_DISABLE_AUTH", "true")
+    config_env("CREDENTIAL_ENCRYPTION_KEY", "test-credential-key")
     client = TestClient(app)
     catalog = client.get("/api/integrations/oauth-provider-catalog").json()
     assert {item["slug"] for item in catalog} >= {"github", "slack", "notion", "hubspot", "elevenlabs", "ordinal"}

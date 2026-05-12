@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 import base64
 import json
 import re
@@ -18,6 +17,7 @@ from fastapi.responses import JSONResponse, PlainTextResponse, RedirectResponse,
 from pydantic import ValidationError
 
 from .auth import DEFAULT_OWNER, is_admin_owner
+from .config import get_default_config, INTERNAL_AUTH_HEADER
 from .models import AccessRequest, ContextInvocationRequest, IntegrationSpec, ManagedConnector, ManagedConnectorTool, ToolSpec, now_iso
 from .managed_connectors import get_managed_connector, list_managed_connectors
 from .oauth_flow import credentials_for, ensure_managed_oauth_client, exchange_oauth_code, start_oauth_redirect
@@ -670,15 +670,15 @@ def mcp_call(owner: str, body: dict[str, Any]) -> dict[str, Any]:
 
 
 
-INTERNAL_AUTH_HEADER = "x-integrations-hub-internal-secret"
-
-
 def internal_auth_secret() -> str:
-    return (os.getenv("INTEGRATIONS_HUB_INTERNAL_SECRET") or os.getenv("AUTH_SECRET") or os.getenv("NEXTAUTH_SECRET") or "").strip()
+    """Get the internal auth secret from config."""
+    cfg = get_default_config()
+    return cfg.internal_auth_secret.get_secret_value() if cfg.internal_auth_secret else ""
 
 
 def is_auth_disabled() -> bool:
-    return os.getenv("DISABLE_AUTH") == "true"
+    """Check if authentication is disabled."""
+    return get_default_config().disable_auth
 
 
 def requires_dashboard_session(path: str, method: str) -> bool:
@@ -1210,9 +1210,10 @@ async def fastapi_handler(request: Request):
         return RedirectResponse(f"/integrations?oauth_status=connected&oauth_provider={provider}&integrationKey={connection['integrationKey']}")
 
     if path == "/api/cron/expire-grants":
-        secret = (os.getenv("CRON_SECRET") or "").strip()
-        if not secret:
-            raise HTTPException(status_code=503, detail="CRON_SECRET must be configured for the expire-grants cron route.")
+        try:
+            secret = get_default_config().require_cron_secret()
+        except RuntimeError as exc:
+            raise HTTPException(status_code=503, detail=str(exc)) from exc
         if request.headers.get("authorization") != f"Bearer {secret}":
             raise HTTPException(status_code=401, detail="Unauthorized")
         return {"purged": repository.purge_expired_grants()}

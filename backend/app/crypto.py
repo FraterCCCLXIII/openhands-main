@@ -8,6 +8,8 @@ from typing import Any
 
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
+from .config import get_default_config
+
 IV_LENGTH = 12
 TAG_LENGTH = 16
 
@@ -21,9 +23,10 @@ def _b64url_decode(data: str) -> bytes:
 
 
 def _key(raw: str | None = None) -> bytes:
-    material = (raw if raw is not None else os.getenv("CREDENTIAL_ENCRYPTION_KEY", "")).strip()
-    if not material:
-        raise RuntimeError("CREDENTIAL_ENCRYPTION_KEY must be configured to encrypt stored provider credentials.")
+    if raw is not None:
+        material = raw.strip()
+    else:
+        material = get_default_config().require_credential_encryption_key()
     return hashlib.sha256(material.encode("utf-8")).digest()
 
 

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import hashlib
-import os
 from dataclasses import dataclass, field
 from secrets import token_urlsafe
 from typing import Any
@@ -10,6 +9,7 @@ import psycopg
 from psycopg.rows import dict_row
 from psycopg.types.json import Jsonb
 
+from .config import get_default_config
 from .crypto import decrypt_api_key, decrypt_credentials, encrypt_api_key, encrypt_credentials
 from .models import AccessRequest, IntegrationSpec, ManagedConnector, ToolSpec, now_iso
 
@@ -18,7 +18,7 @@ from .models import AccessRequest, IntegrationSpec, ManagedConnector, ToolSpec, 
 class Repository:
     @property
     def database_url(self) -> str | None:
-        return os.getenv("POSTGRES_URL") or os.getenv("DATABASE_URL")
+        return get_default_config().postgres_url
 
     def db_rows(self, query: str, params: tuple[Any, ...] = ()) -> list[dict[str, Any]]:
         if not self.database_url:

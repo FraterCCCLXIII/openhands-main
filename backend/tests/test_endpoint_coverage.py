@@ -1,23 +1,47 @@
 from __future__ import annotations
 
-import os
+from typing import TYPE_CHECKING
 
+import pytest
 from fastapi.testclient import TestClient
-
-os.environ["APP_ADMIN_EMAILS"] = "admin@example.com"
-
-os.environ["DISABLE_AUTH"] = "true"
 
 from backend.app.main import app
 from backend.app.models import ManagedConnector, ManagedConnectorTool
 from backend.app.repository import repository
 from backend.app.route_manifest import ROUTES
 
-client = TestClient(app, raise_server_exceptions=False)
+if TYPE_CHECKING:
+    from conftest import ConfigEnvFixture
+
 OWNER = "admin@example.com"
 AGENT_KEY = "cla_test_agent_key"
 USER_KEY = "clu_test_user_key"
 ADMIN_KEY = "clad_test_admin_key"
+
+
+@pytest.fixture(autouse=True)
+def setup_test_env(config_env: "ConfigEnvFixture"):
+    """Set up test environment before each test."""
+    config_env("APP_ADMIN_EMAILS", OWNER)
+    config_env("INTHUB_DISABLE_AUTH", "true")
+    config_env("CREDENTIAL_ENCRYPTION_KEY", "test-encryption-key-for-coverage")
+    repository.integrations.clear()
+    repository.access_requests.clear()
+    repository.managed_connectors.clear()
+    repository.agent_keys.clear()
+    repository.user_keys.clear()
+    repository.admin_keys.clear()
+    repository.connections.clear()
+    repository.oauth_states.clear()
+    repository.policies.clear()
+    repository.temporary_grants.clear()
+    repository.tool_invocations.clear()
+    yield
+
+
+def get_client() -> TestClient:
+    """Get a fresh test client after config is set up."""
+    return TestClient(app, raise_server_exceptions=False)
 
 
 def sample_path(path: str) -> str:
@@ -31,7 +55,7 @@ def sample_path(path: str) -> str:
     )
 
 
-def seed_state() -> None:
+def seed_state(client: TestClient) -> None:
     repository.save_key(OWNER, "agent", AGENT_KEY)
     repository.save_key(OWNER, "user", USER_KEY)
     repository.save_key(OWNER, "admin", ADMIN_KEY)
@@ -127,9 +151,10 @@ def body_for(path: str) -> object:
 
 
 def test_all_original_manifest_routes_are_implemented_without_server_errors() -> None:
+    client = get_client()
     failures: list[tuple[str, str, int, str]] = []
     for method, route_path in ROUTES:
-        seed_state()
+        seed_state(client)
         response = client.request(
             method,
             sample_path(route_path),
@@ -143,7 +168,8 @@ def test_all_original_manifest_routes_are_implemented_without_server_errors() ->
 
 
 def test_mcp_endpoint_lists_and_calls_enabled_tools() -> None:
-    seed_state()
+    client = get_client()
+    seed_state(client)
 
     tools_response = client.post(
         "/api/mcp",
@@ -168,6 +194,7 @@ def test_mcp_endpoint_lists_and_calls_enabled_tools() -> None:
 
 
 def test_auth_compatibility_routes_are_available() -> None:
+    client = get_client()
     for method in ("GET", "POST"):
         response = client.request(method, "/api/auth/session", headers={"X-Owner-Id": OWNER})
         assert response.status_code == 200
@@ -175,6 +202,7 @@ def test_auth_compatibility_routes_are_available() -> None:
 
 
 def test_context_and_mcp_require_valid_agent_api_key() -> None:
+    client = get_client()
     repository.agent_keys.clear()
     response = client.post("/api/context/sample/sample_tool", json={"payload": {}, "scopes": []})
     assert response.status_code == 503
