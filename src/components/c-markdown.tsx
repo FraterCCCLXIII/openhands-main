@@ -23,47 +23,11 @@ const normalizeRawPreBlocks = (content: string) =>
     }
   );
 
-const BLOG_INITIAL_LAZY_IMAGE_COUNT = 7;
-const BLOG_LAZY_IMAGE_ROOT_MARGIN = '1200px 0px';
-
 type BlogImageProps = React.ImgHTMLAttributes<HTMLImageElement> & {
-  initiallyLoad?: boolean;
   isBlog: boolean;
 };
 
-const BlogImage: React.FC<BlogImageProps> = ({ initiallyLoad = false, isBlog, src, loading, ...props }) => {
-  const shouldDefer = isBlog && loading === 'lazy' && typeof src === 'string' && !initiallyLoad;
-  const imageRef = React.useRef<HTMLImageElement>(null);
-  const [shouldLoad, setShouldLoad] = React.useState(!shouldDefer);
-
-  React.useEffect(() => {
-    if (!shouldDefer) {
-      setShouldLoad(true);
-      return;
-    }
-
-    const image = imageRef.current;
-    if (!image || typeof IntersectionObserver === 'undefined') {
-      setShouldLoad(true);
-      return;
-    }
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setShouldLoad(true);
-          observer.disconnect();
-        }
-      },
-      { rootMargin: BLOG_LAZY_IMAGE_ROOT_MARGIN }
-    );
-
-    observer.observe(image);
-    return () => observer.disconnect();
-  }, [shouldDefer]);
-
-  return <img ref={imageRef} src={shouldLoad ? src : undefined} loading={loading} {...props} />;
-};
+const BlogImage: React.FC<BlogImageProps> = ({ isBlog: _isBlog, ...props }) => <img {...props} />;
 
 
 export const CMarkdown: React.FC<CMarkdownProps> = ({
@@ -79,10 +43,9 @@ export const CMarkdown: React.FC<CMarkdownProps> = ({
     () => normalizeRawPreBlocks(children),
     [children]
   );
-  let blogLazyImageCount = 0;
 
   return (
-    <div className={isBlog ? undefined : 'flex flex-col gap-4'}>
+    <div className={isBlog ? undefined : 'flex flex-col gap-4'} style={isBlog ? { fontFamily: 'Sohne Buch, Sohne Kraftig, Inter, Arial, sans-serif' } : undefined}>
       <Markdown
         remarkPlugins={[remarkMath, remarkGfm]}
         rehypePlugins={[rehypeRaw, rehypeKatex]}
@@ -92,10 +55,10 @@ export const CMarkdown: React.FC<CMarkdownProps> = ({
               rel='noreferrer'
               target='_blank'
               className={clsx(
-                'underline decoration-[1px] underline-offset-[0.18em] transition-colors',
+                'underline transition-colors',
                 isBlog
-                  ? 'text-[16px] leading-[22.4px] text-brand-brown hover:text-brand-fg'
-                  : 'text-blue-600'
+                  ? 'font-[Sohne_Buch] text-[16px] leading-[22.4px] text-brand-brown hover:text-brand-fg'
+                  : 'text-blue-600 decoration-[1px] underline-offset-[0.18em]'
               )}
               {...props}
             >
@@ -107,7 +70,7 @@ export const CMarkdown: React.FC<CMarkdownProps> = ({
               className={clsx(
                 isBlog ? 'mb-[8.8px] mt-[44px] first:mt-0' : 'mb-4 mt-12 first:mt-0',
                 isBlog
-                  ? 'font-inter text-[32px] leading-[1.1] font-medium tracking-[-0.03em] text-brand-fg lg:text-[44px]'
+                  ? 'font-sohne text-[32px] leading-[1.1] font-medium tracking-[-0.02em] text-brand-fg lg:text-[44px]'
                   : 'font-quincy text-5xl'
               )}
               {...props}
@@ -120,7 +83,7 @@ export const CMarkdown: React.FC<CMarkdownProps> = ({
               className={clsx(
                 isBlog ? 'mb-[8.8px] mt-[44px] first:mt-0' : 'mb-4 mt-12 first:mt-0',
                 isBlog
-                  ? 'font-inter text-[32px] leading-[1.1] font-medium tracking-[-0.03em] text-brand-fg lg:text-[44px]'
+                  ? 'font-sohne text-[32px] leading-[1.1] font-medium tracking-[-0.02em] text-brand-fg lg:text-[44px]'
                   : 'font-quincy text-5xl'
               )}
               {...props}
@@ -133,7 +96,7 @@ export const CMarkdown: React.FC<CMarkdownProps> = ({
               className={clsx(
                 isBlog ? 'mb-[9.6px] mt-8' : 'mb-4 mt-10',
                 isBlog
-                  ? 'font-inter text-[24px] leading-[1.2] font-medium tracking-[-0.02em] text-brand-fg lg:text-[32px]'
+                  ? 'font-sohne text-[24px] leading-[1.2] font-medium text-brand-fg lg:text-[32px]'
                   : 'font-quincy text-3xl'
               )}
               {...props}
@@ -146,7 +109,7 @@ export const CMarkdown: React.FC<CMarkdownProps> = ({
               className={clsx(
                 isBlog ? 'mb-[9.6px] mt-8' : 'mb-4 mt-8',
                 isBlog
-                  ? 'font-inter text-[20px] leading-[1.3] font-medium text-brand-fg lg:text-[24px]'
+                  ? 'font-sohne text-[20px] leading-[1.3] font-medium text-brand-fg lg:text-[24px]'
                   : 'font-quincy text-2xl'
               )}
               {...props}
@@ -168,7 +131,7 @@ export const CMarkdown: React.FC<CMarkdownProps> = ({
             <li
               className={clsx(
                 isBlog
-                  ? 'mb-[4.8px] text-[16px] leading-[22.4px] text-[#5f5f5f] marker:text-brand-fg last:mb-0'
+                  ? 'mb-[4.8px] font-[Sohne_Buch] text-[16px] leading-[22.4px] text-[#5f5f5f] marker:text-brand-fg last:mb-0'
                   : 'ml-5 list-disc'
               )}
               {...props}
@@ -176,22 +139,17 @@ export const CMarkdown: React.FC<CMarkdownProps> = ({
               {listChildren}
             </li>
           ),
-          img: ({ alt, className, ...props }) => {
-            const lazyImageIndex = isBlog && props.loading === 'lazy' ? ++blogLazyImageCount : 0;
-
-            return (
-              <BlogImage
-                initiallyLoad={lazyImageIndex > 0 && lazyImageIndex <= BLOG_INITIAL_LAZY_IMAGE_COUNT}
-                isBlog={isBlog}
-                className={clsx(
-                  isBlog ? 'w-full rounded-[8px] object-cover leading-[22.4px]' : 'rounded-lg',
-                  className
-                )}
-                {...props}
-                alt={alt}
-              />
-            );
-          },
+          img: ({ alt, className, ...props }) => (
+            <BlogImage
+              isBlog={isBlog}
+              className={clsx(
+                isBlog ? 'w-full rounded-[8px] object-cover leading-[22.4px]' : 'rounded-lg',
+                className
+              )}
+              {...props}
+              alt={alt}
+            />
+          ),
           figure: ({ children: figureChildren, className, ...props }) => {
             const isFullWidthFigure =
               typeof className === 'string' && className.includes('w-richtext-align-fullwidth');
@@ -203,7 +161,7 @@ export const CMarkdown: React.FC<CMarkdownProps> = ({
                   isBlog && isFullWidthFigure
                     ? 'w-full max-w-full [&_img]:max-w-full [&_img]:w-full [&_img]:text-[0px] [&_img]:leading-[0] [&_img]:text-transparent'
                     : undefined,
-                  isBlog && !isFullWidthFigure ? 'max-w-[60%] [&_img]:max-w-full [&_img]:w-auto' : undefined,
+                  isBlog && !isFullWidthFigure ? 'max-w-full [&_img]:max-w-full [&_img]:w-full' : undefined,
                   className
                 )}
                 {...props}
@@ -212,13 +170,23 @@ export const CMarkdown: React.FC<CMarkdownProps> = ({
               </figure>
             );
           },
-          pre: ({ children: preChildren, ...props }) => (
+          pre: ({ children: preChildren, style, ...props }) => (
             <pre
-              className={clsx(
-                isBlog
-                  ? 'my-[15px] overflow-x-auto text-[15px] leading-[21px] [&_code]:!inline-block [&_code]:!rounded-none [&_code]:!bg-transparent [&_code]:!px-[6.75px] [&_code]:!py-0 [&_code]:!text-[13.5px] [&_code]:!leading-[18.9px] [&_code]:!text-inherit'
-                  : undefined
-              )}
+              className={clsx(isBlog ? 'overflow-x-auto' : undefined)}
+              style={isBlog ? {
+                ...style,
+                display: 'block',
+                overflowX: 'auto',
+                backgroundColor: 'rgb(34, 21, 13)',
+                color: 'rgb(248, 248, 242)',
+                borderRadius: '6.4px',
+                padding: '1.5em 0.5em',
+                marginTop: '15px',
+                marginBottom: '15px',
+                fontFamily: 'monospace',
+                fontSize: '15px',
+                lineHeight: '21px',
+              } : style}
               {...props}
             >
               {preChildren}
@@ -228,7 +196,7 @@ export const CMarkdown: React.FC<CMarkdownProps> = ({
             <p
               className={clsx(
                 isBlog
-                  ? 'mb-4 mt-0 text-[16px] leading-[22.4px] text-[#5f5f5f]'
+                  ? 'mb-4 mt-0 font-[Sohne_Buch] text-[16px] leading-[22.4px] text-[#5f5f5f]'
                   : 'text-description'
               )}
               {...props}
@@ -256,15 +224,45 @@ export const CMarkdown: React.FC<CMarkdownProps> = ({
           ),
           code: ({ children: codeChildren, className, ...props }) => {
             if (!className) {
+              const { style, ...codeProps } = props;
               return (
                 <code
                   className={clsx(
-                    'rounded-[6px] px-2 py-1 font-mono text-[0.95em]',
+                    'rounded-[6px] font-mono',
                     isBlog
-                      ? 'bg-brand-fg text-brand-bg'
-                      : 'bg-black/10 text-brand-fg'
+                      ? 'bg-brand-fg px-[7.5px] py-0 text-brand-bg'
+                      : 'bg-black/10 px-2 py-1 text-[0.95em] text-brand-fg'
                   )}
-                  {...props}
+                  style={isBlog ? {
+                    ...style,
+                    display: 'inline-block',
+                    fontFamily: 'monospace',
+                    fontSize: '14.4px',
+                    lineHeight: '20.16px',
+                  } : style}
+                  {...codeProps}
+                >
+                  {codeChildren}
+                </code>
+              );
+            }
+
+            if (isBlog) {
+              const { style, ...codeProps } = props;
+              return (
+                <code
+                  className={className}
+                  style={{
+                    ...style,
+                    display: 'block',
+                    overflow: 'auto',
+                    backgroundColor: 'rgb(34, 21, 13)',
+                    borderRadius: '6.4px',
+                    fontFamily: 'monospace',
+                    fontSize: '15px',
+                    lineHeight: '21px',
+                  }}
+                  {...codeProps}
                 >
                   {codeChildren}
                 </code>

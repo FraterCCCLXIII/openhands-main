@@ -1,5 +1,8 @@
 import type { Route } from './+types/pricing';
+import { Footer } from '~/components/footer';
 import { OverlayLinkButton } from '~/components/overlay-link-button';
+
+export const handle = { hideGlobalFooter: true };
 
 const CARD_CHECK_ICON = '/assets/webflow/icons/690cb1513c759a7404df1ba1_check.svg';
 const TABLE_TICK_ICON = '/assets/webflow/icons/691234bd9e72712ffbcf9470_tick.svg';
@@ -110,7 +113,11 @@ const FAQS = [
             Enterprise plan: A self-hosted option and support for multiple users. Great for organizations who want to deploy OpenHands across many teams and centrally manage access on-premise. Additional support and enterprise services are included.
           </li>
         </ul>
-        <p className='mt-3'>‍</p>
+        {/* Webflow rich-text exports trailing ZWJ-only paragraphs as
+            spacers; live gives them margin: 0 (they're not really
+            empty, so we can't rely on `:empty`).  Use a sentinel
+            class. */}
+        <p className='wf-zwj-spacer'>‍</p>
       </>
     ),
   },
@@ -121,10 +128,10 @@ const FAQS = [
         <p>
           OpenHands Open Source is a full, MIT licensed version of OpenHands that is designed for a single user and can run locally on your machine with your own LLM key. At a high level, our open source options include a local Web GUI, a CLI, and a Software Agent SDK.
         </p>
-        <p className='mt-3'>
+        <p>
           OpenHands Cloud is a SaaS-based version of OpenHands with both a free Individual tier, as well as commercial tiers for organizations and businesses. OpenHands Cloud also comes with additional features like Cloud APIs, ticketing system integrations, Git provider integrations, and more.
         </p>
-        <p className='mt-3'>‍</p>
+        <p className='wf-zwj-spacer'>‍</p>
       </>
     ),
   },
@@ -133,7 +140,7 @@ const FAQS = [
     answer: (
       <>
         <p>Yes! OpenHands Open Source and OpenHands Cloud plans offer support to bring your own LLM keys.</p>
-        <p className='mt-3'>‍</p>
+        <p className='wf-zwj-spacer'>‍</p>
       </>
     ),
   },
@@ -144,10 +151,10 @@ const FAQS = [
         <p>
           If you do not have an LLM key, you can use theOpenHands LLM provider (available within the Individual Tier), which provides multiple model options at cost, with no markup on a pay-as-you-go basis.
         </p>
-        <p className='mt-3'>
+        <p>
           When you sign up for the Individual Plan, you can access models under the Settings &gt; Language Models (LLM) page.
         </p>
-        <p className='mt-3'>
+        <p>
           You can also generate an API key for the OpenHands LLM provider under the Settings &gt; API page, which you can use in tools like the OpenHands CLI, OpenHands Local Web UI, and OpenHands Software Agent SDK.
         </p>
       </>
@@ -168,7 +175,7 @@ const FAQS = [
 // 36px height comes from the p's 21.6 + 14.4 margin-bottom.  Match
 // these exact values so each row is 36px on test (was 22.4) and the
 // total compare-table height matches live (1431).
-const COMPARE_ROW: React.CSSProperties = { display: 'flex' };
+const COMPARE_ROW: React.CSSProperties = { display: 'flex', marginLeft: '-20px', marginRight: '-20px' };
 // Live's `.col` is `display: flex; flex-direction: column` — the
 // column direction is critical because it makes the cross-axis
 // horizontal, so the inner `<p>` stretches to fill the col's inner
@@ -353,16 +360,18 @@ const CompareTable = () => {
   }
 
   return (
-    <section
-      data-wf-el='plans-compare'
-      className='bg-brand-fg text-brand-bg plans-compare mx-auto w-full'
-      style={{ display: 'grid', gap: '8px', padding: '0px', maxWidth: '1129px' }}
-    >
-      <h2 className='sr-only' data-wf-el='pc-visually-hidden'>
-        Compare plans
-      </h2>
-      {out}
-    </section>
+    <div className='mx-auto w-full' style={{ maxWidth: '1129px' }}>
+      <section
+        data-wf-el='plans-compare'
+        className='bg-brand-fg text-brand-bg plans-compare w-full'
+        style={{ display: 'grid', gap: '8px', padding: '0px' }}
+      >
+        <h2 className='sr-only' data-wf-el='pc-visually-hidden'>
+          Compare plans
+        </h2>
+        {out}
+      </section>
+    </div>
   );
 };
 
@@ -409,8 +418,8 @@ const Pricing = () => {
        * — the page bg comes from the body/page-wrapper and the gutter
        * lives on the inner container. Move padding/relative inward so
        * the section's geometry/styles match live. */}
-      <section data-wf-el='hero-section' className='overflow-hidden'>
-        <div className='relative mx-auto flex max-w-4xl flex-col items-center gap-4 px-5 pb-20 pt-16 text-center lg:px-10'>
+      <section data-wf-el='hero-section' className='overflow-hidden' style={{ minHeight: '816px' }}>
+        <div className='relative mx-auto flex max-w-4xl flex-col items-center px-5 pb-0 pt-16 text-center lg:px-10'>
           <div className='absolute inset-0 opacity-[0.12]' aria-hidden='true'>
             <img
               src='/assets/webflow/backgrounds/6908d170831c19b2b6976323_ascii-art_(16)_1.svg'
@@ -419,10 +428,14 @@ const Pricing = () => {
               style={{ textAlign: 'start' }}
             />
           </div>
-          <h1 className='fluid-h1 text-brand-fg' style={{ position: 'relative' }}>
+          {/* Live's hero H1 has margin: 0; the new h1 element default
+              (mb: 10) doesn't apply here. */}
+          <h1 className='fluid-h1 text-brand-fg' style={{ position: 'relative', marginBottom: '0px', width: '599px', maxWidth: '100%' }}>
             Pricing that fits your rollout
           </h1>
-          <p className='max-w-2xl fluid-body-lg text-brand-muted'>
+          {/* Live's hero subtitle is `.paragraph-lg` whose margins
+              resolve to mt=10.4 (0.5em of 20.8) and mb=20.8 (1em). */}
+          <p className='fluid-body-lg text-brand-muted' style={{ marginTop: '10.4px', marginBottom: '20.8px', width: '599px', maxWidth: '100%' }}>
             Run locally, in our cloud, or self-host. Pay only for what you need
           </p>
         </div>
@@ -435,7 +448,7 @@ const Pricing = () => {
         <div
           data-wf-el='standard-collection'
           className='relative mx-auto mt-[49.6px] block max-w-[1238px] px-5 lg:px-0'
-        ><div className='flex flex-col gap-y-10 lg:flex-row lg:gap-x-10'>
+        ><div className='flex flex-col gap-y-10 lg:flex-row lg:gap-x-6'>
           {PRICING_PLANS.map((plan) => (
             // Live's plan card is `<div class="card u-border-dark u-bg-cream">`
             // (8px border-radius, no padding) with an inner
@@ -460,15 +473,26 @@ const Pricing = () => {
                 className='relative flex h-full flex-col items-stretch p-6'
                 style={{ justifyContent: 'space-between' }}
               >
-                <div className='text-sm uppercase tracking-[0.14em] text-brand-muted'>{plan.eyebrow}</div>
-                <div className='mt-2 fluid-h3 text-brand-fg'>{plan.title}</div>
-                <p className='mt-3 text-[20px] font-normal leading-[28px] text-[#5f5f5f]'>{plan.price}</p>
-                <p className='mt-4 text-[16px] leading-[22.4px] text-brand-muted'>{plan.description}</p>
-                <p className='mt-6 fluid-sm font-normal text-[#5f5f5f]'>{plan.intro}</p>
-                <ul className='mt-4 flex flex-1 flex-col gap-3'>
+                <div
+                  className='font-mono text-[14px] font-normal leading-[16.896px] text-brand-bg'
+                  style={{ display: 'inline-block', alignSelf: 'flex-start', padding: '3.2px 8px', marginBottom: '21.12px', borderRadius: '999px', backgroundColor: 'rgb(34, 21, 13)' }}
+                >
+                  {plan.eyebrow}
+                </div>
+                <div className='text-brand-fg' style={{ fontSize: '24px', lineHeight: '33.6px', fontWeight: 500, marginBottom: '0px' }}>{plan.title}</div>
+                {/* Live's plan-card paragraphs use Webflow margin-bottom
+                    (not margin-top) for inter-line spacing.  Switching
+                    matches: price mb=20, description mb=24, intro
+                    mt=21.6/mb=14.4 — values pulled directly from the
+                    parity script's computed-style output. */}
+                <p className='text-[20px] font-normal leading-[28px] text-[#5f5f5f]' style={{ marginTop: '0px', marginBottom: '20px' }}>{plan.price}</p>
+                <p className='text-[16px] leading-[22.4px] text-brand-muted' style={{ marginTop: '0px', marginBottom: '24px' }}>{plan.description}</p>
+                <div aria-hidden='true' style={{ height: '1px', margin: '0px', backgroundColor: 'rgba(34, 21, 13, 0.2)' }} />
+                <p className='fluid-sm font-normal text-[#5f5f5f]' style={{ marginTop: '21.6px', marginBottom: '14.4px' }}>{plan.intro}</p>
+                <ul className='flex flex-1 flex-col' style={{ marginTop: '0px', marginLeft: '-4px', width: 'calc(100% + 8px)' }}>
                   {plan.features.map((feature) => (
-                    <li key={feature} className='flex items-start gap-3 font-sohne-buch fluid-sm leading-[1.5] text-[#5f5f5f]'>
-                      <img src={CARD_CHECK_ICON} alt='' aria-hidden='true' className='mt-0.5 h-5 w-5 flex-none' />
+                    <li key={feature} className='flex items-center gap-2 font-sohne-buch fluid-sm leading-[1.5] text-[#5f5f5f]' style={{ marginBottom: '8px', paddingLeft: '4px' }}>
+                      <img src={CARD_CHECK_ICON} alt='' aria-hidden='true' className='h-5 w-5 flex-none' />
                       <p className='flex-1'>{feature}</p>
                     </li>
                   ))}
@@ -477,7 +501,7 @@ const Pricing = () => {
                   href={plan.buttonHref}
                   label={plan.buttonLabel}
                   variant='outline'
-                  className='mt-8'
+                  wrapperStyle={{ marginTop: '30px', marginBottom: '0px' }}
                   fullWidth
                 />
               </div>
@@ -572,12 +596,13 @@ const Pricing = () => {
           position: 'relative',
         }}
       >
-        <div className='mx-auto grid max-w-[1238px] gap-10 px-5 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:gap-16 lg:px-0' data-wf-el='container'>
+        <div className='mx-auto grid max-w-[1239px] gap-10 px-5 lg:grid-cols-[493px_706px] lg:gap-10 lg:px-0' data-wf-el='container'>
           <div>
-            <h2 className='section-title text-brand-fg'>
+            {/* FAQ H2 mb=22 on live (overrides the .h2 element 8.8). */}
+            <h2 className='section-title text-brand-fg' style={{ marginBottom: '22px' }}>
               FAQ&apos;s
             </h2>
-            <OverlayLinkButton href='/contact' label='Contact us' variant='outline' className='mt-8' />
+            <OverlayLinkButton href='/contact' label='Contact us' variant='outline' />
           </div>
           <div>
             {FAQS.map((faq, idx) => (
@@ -609,6 +634,7 @@ const Pricing = () => {
                   style={{
                     padding: '24px',
                     fontWeight: 400,
+                    borderBottom: '1px solid rgb(249, 240, 217)',
                   }}
                 >
                   {/* Live's `.accordion-title` is `font-size: 24px;
@@ -640,10 +666,15 @@ const Pricing = () => {
                     <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5' stroke='currentColor' strokeWidth='1.6' strokeLinecap='round' strokeLinejoin='round'/></svg>
                   </span>
                 </summary>
+                {/* Live's `.accordion-item-content` wrapper carries
+                    `.faq-answer` (Webflow class) which sets every
+                    descendant <p> to `margin-bottom: 1em`.  Adding the
+                    matching class lets our shared CSS rule apply the
+                    same default without touching individual <p> tags. */}
                 <div
                   data-wf-el='accordion-content'
-                  className='max-w-[680px] font-sohne-buch text-[16px] leading-[22.4px] text-[#5f5f5f]'
-                  style={{ padding: '0 24px 24px' }}
+                  className='faq-answer font-sohne-buch text-[16px] leading-[22.4px] text-[#5f5f5f]'
+                  style={{ marginTop: '16px', marginLeft: '25px', marginRight: '25px', padding: '0px' }}
                 >
                   {faq.answer}
                 </div>
@@ -653,13 +684,18 @@ const Pricing = () => {
         </div>
       </section>
 
-      {/* Live /pricing renders the closing "Building the open standard..."
-          CTA INSIDE the yellow footer section, not as a separate yellow
-          section above it.  We thread the CTA copy through the Footer's
-          marketingCta* props (wired up in src/root.tsx via
-          PRODUCT_SUBPAGE_CTA['/pricing']) so the rendered DOM matches
-          live (one yellow section rather than two stacked yellow sections,
-          which were drifting layout by ~400px). */}
+      {/* Live renders the closing CTA inside the yellow footer section, and
+          the footer section itself is a child of page-main. */}
+      <Footer
+        standalone
+        showSocialLinks
+        compactNav
+        minHeight={1209}
+        marketingCtaTitle='Building the open standard for autonomous software development.'
+        marketingCtaDescription='OpenHands is the foundation for secure, transparent, model-agnostic coding agents - empowering every software team to build faster with full control.'
+        marketingCtaPrimary={{ href: 'https://docs.openhands.dev/sdk', label: 'Build with SDK' }}
+        marketingCtaSecondary={{ href: 'https://app.all-hands.dev/', label: 'Try it live' }}
+      />
     </main>
   );
 };

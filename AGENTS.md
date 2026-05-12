@@ -254,3 +254,10 @@ npm run parity:checklist  # Crawl openhands.dev and compare against local site
 - Live Webflow pages reuse class names across semantically different contexts (e.g. `eyebrow` for tab pills AND section labels, `lovewall_cms_item_top_name` for both author names AND titles). Tag each distinct usage separately and ensure counts match for index-based matching.
 - SVG elements don't reliably compute `textUnderlineOffset`; wrap SVGs in a `<div>` with the `data-wf-el` attribute to get correct computed style values.
 - Live sections use `display: block`, transparent backgrounds, and `padding: 80px 0`. The tan page color comes from the body/page-wrapper, not individual sections.
+
+### Flex-Blockification Trap (Common False-Positive Source)
+- **CSS spec**: `display: flex` and `display: grid` containers automatically blockify children — any child with `display: inline`, `inline-block`, or `inline-flex` is computed as `block`, `block`, or `flex` (respectively).
+- This means the parity script's `display: live=inline-block test=block` mismatch on `<img>` elements almost always indicates live uses a **non-flex** parent container (e.g. plain `display:block` with `text-align:center`), while the local copy switched the wrapper to `flex`.
+- Fix pattern: replace `flex items-center justify-center` per-cell wrappers with `display:block` + `line-height:Npx` + `vertical-align:middle` (for single-row icon grids) or `display:block` + `text-align:center` + per-image `margin` (for the `.logo-grid` pattern).
+- Similar trap with **`mx-auto` on a flex column child**: the auto margins compute to `(parent - child) / 2` instead of `0`, producing huge phantom marginLeft/marginRight values in the parity report. Replace with `self-center` (item-level) OR move centering to the parent via `items-center` (container-level).
+- Centering inside a `text-center` parent that is itself a flex column: use `flex flex-col items-center` so the centering is **flexbox-driven** (no auto margins on children) — live consistently uses this pattern, so the parity report's computed margin = 0 only matches when we do the same.

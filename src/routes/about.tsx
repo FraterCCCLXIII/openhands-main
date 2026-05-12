@@ -1,5 +1,6 @@
 import { CompanyPageShell } from '~/components/company-page-shell';
 import { MemberCard } from '~/components/member-card';
+import { OverlayLinkButton } from '~/components/overlay-link-button';
 import { teamMembers } from '~/constants/members';
 import type { Route } from './+types/about';
 
@@ -41,6 +42,12 @@ export const meta: Route.MetaFunction = ({ location }) => {
   ];
 };
 
+const MILESTONE_LABEL_POSITIONS = [
+  { left: '226px', top: '388.7px' },
+  { left: '197px', top: '380.7px' },
+  { left: '169px', top: '388.7px' },
+] as const;
+
 const MILESTONES = [
   {
     value: '73K',
@@ -64,52 +71,52 @@ const MILESTONES = [
 const About = () => {
   return (
     <CompanyPageShell>
-      <section data-wf-el='section-hero' className='pt-0 pb-0'>
+      <section data-wf-el='section-hero' className='pt-0 pb-0' style={{ height: '1152.27px' }}>
         {/* Live wraps hero content in `.hero-content` (`padding: 4rem 0 4rem`).
             Move that padding onto the inner content wrappers so the SECTION
-            keeps `padding: 0` (matches live) while H1 still starts at top:140. */}
-        <div className='mx-auto max-w-[560px] pt-14 text-center'>
-          <h1 className='fluid-h1 text-brand-fg'>
+            keeps `padding: 0` (matches live) while H1 starts at live top:148. */}
+        <div className='mx-auto max-w-[600px] pt-16 text-center'>
+          <h1 className='fluid-h1 h1-flow-root text-brand-fg'>
             Empowering every team to build software autonomously.
           </h1>
-          <p className='mt-4 fluid-body-lg font-medium text-[#5f5f5f]'>
+          <p className='fluid-body-lg font-medium text-[#5f5f5f]' style={{ marginTop: '10.4px', marginBottom: '20.8px' }}>
             OpenHands is the open, secure, and model-agnostic platform
           </p>
         </div>
 
-        <div className='mx-auto mt-[120px] max-w-[1238px]'>
+        <div className='mx-auto mt-[149px] max-w-[1238px]'>
           <div className='mb-12 flex justify-center'>
             <h2 className='inline-block section-title text-brand-fg'>
               Milestones
             </h2>
           </div>
 
-          <div className='relative min-h-[663px] overflow-hidden rounded-[8px] bg-brand-fg px-6 py-8 text-brand-bg lg:px-8 lg:py-10'>
-            <div
+          <div className='relative min-h-[635px] overflow-hidden rounded-[8px] bg-brand-fg text-brand-bg' style={{ height: '636.562px', border: '1px solid rgba(0, 0, 0, 0)' }}>
+            <img
               aria-hidden='true'
-              className='absolute inset-0 bg-cover bg-center bg-no-repeat opacity-20'
-              style={{
-                backgroundImage:
-                  "url('/assets/webflow/backgrounds/690e289157a957d4d32ee88d_ascii-art_(20)_1.png')",
-              }}
+              src='/assets/webflow/backgrounds/690e289157a957d4d32ee88d_ascii-art_(20)_1.png'
+              alt=''
+              className='object-cover opacity-20'
+              style={{ position: 'static', display: 'inline-block', width: '1236px', height: '634.562px' }}
             />
 
-            <div className='relative grid gap-4 md:grid-cols-3'>
-              {MILESTONES.map((milestone) => (
+            <div className='absolute inset-0'>
+              {MILESTONES.map((milestone, index) => (
                 <div
                   key={milestone.label}
-                  className='flex min-h-[195px] flex-col justify-between rounded-[8px] bg-white/8 p-5 backdrop-blur-sm'
+                  className='absolute'
+                  style={{ left: `${index * 33.333333}%`, top: '0px', width: '33.333333%', height: '100%' }}
                 >
-                  <div className='flex items-end justify-end gap-1'>
-                    <span className='text-[56px] font-medium leading-none tracking-[-0.04em] lg:text-[72px]'>
+                  <div className='absolute flex items-end gap-1' style={{ top: index === 1 ? '225.6px' : '234px', left: '50%', transform: 'translateX(-50%)' }}>
+                    <span className='font-medium leading-none tracking-[-0.04em]' style={{ fontSize: '154.08px', lineHeight: '154.08px' }}>
                       {milestone.value}
                     </span>
                     {'suffix' in milestone && milestone.suffix ? (
-                      <span className='pb-1 text-[36px] leading-none'>{milestone.suffix}</span>
+                      <span className='pb-1 text-[56px] leading-none'>{milestone.suffix}</span>
                     ) : null}
                   </div>
-                  <div className='mt-6 flex items-center gap-3'>
-                    <img src={milestone.icon} alt='' className='h-[17px] w-auto shrink-0' />
+                  <div className='absolute flex items-start gap-3' style={MILESTONE_LABEL_POSITIONS[index]}>
+                    <img src={milestone.icon} alt='' className='shrink-0' style={{ display: 'flex', width: '17px', height: '24px' }} />
                     <div className='font-mono text-[14px] leading-[1.2] text-brand-bg'>
                       {milestone.label}
                     </div>
@@ -121,26 +128,25 @@ const About = () => {
         </div>
       </section>
 
-      <section data-wf-el='section' className='pt-20 pb-20'>
+      <section data-wf-el='section' className='pt-20 pb-20' style={{ height: '2450.45px' }}>
         <div className='mx-auto max-w-[1238px]'>
-          <div>
-            <h3 className='section-title text-brand-fg'>
+          <div className='px-5'>
+            <h3 className='section-title text-brand-fg' style={{ marginBottom: '8.8px' }}>
               Team
             </h3>
-            <p className='mt-3 fluid-body-lg font-medium text-[#5f5f5f]'>
+            <p className='fluid-body-lg font-medium text-[#5f5f5f]' style={{ marginTop: '0px', marginBottom: '20.8px' }}>
               Built by developers, for developers.
             </p>
-            <a
+            <OverlayLinkButton
               href='https://jobs.ashbyhq.com/OpenHands'
-              target='_blank'
-              rel='noopener noreferrer'
-              className='btn btn-outline border-none mt-6 rounded-none'
-            >
-              Join us
-            </a>
+              label='Join us'
+              variant='outline'
+              className='w-fit'
+              wrapperStyle={{ marginBottom: '0px' }}
+            />
           </div>
 
-          <div className='mt-[128px] grid justify-items-start gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-4'>
+          <div className='mt-[128px] grid justify-items-start gap-x-0 gap-y-10 sm:grid-cols-2 lg:grid-cols-4'>
             {teamMembers.map((member) => (
               <MemberCard key={member.name} member={member} />
             ))}

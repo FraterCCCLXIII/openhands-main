@@ -15,7 +15,7 @@ type BlogPost = Post & {
   };
 };
 
-export const BLOG_FEATURED_SLUG = 'openhands-index';
+export const BLOG_FEATURED_SLUG = 'openhands-enterprise-agent-control-plane';
 
 export const getBlogSlug = (post: BlogPost) => post.data.slug ?? stringToSlug(post.data.title);
 
@@ -64,9 +64,7 @@ class BlogAPI {
   }
 
   public getBlogGridBlogs(): BlogPost[] {
-    const featuredBlog = this.getFeaturedBlog();
-
-    return this.posts.filter((post) => post !== featuredBlog);
+    return this.posts;
   }
 
   public getArticleHighlightBlogs(limit = 3): BlogPost[] {

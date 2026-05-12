@@ -1,6 +1,4 @@
-import { Bold, OrderedList, ExternalLink } from "../components/custom-elements";
-import Markdown from "react-markdown";
-import tos from "../legal/tos.md?raw";
+import tosHtml from '~/legal/tos-live.html?raw';
 import type { Route } from './+types/tos';
 
 export const meta: Route.MetaFunction = ({ location }) => {
@@ -24,16 +22,27 @@ export const meta: Route.MetaFunction = ({ location }) => {
 
 function TOS() {
   return (
-    <main className="flex flex-col items-start px-80 py-10 gap-10">
-      <Markdown
-        children={tos}
-        components={{
-          h1: ({ children }) => <h1 className="heading">{children}</h1>,
-          h2: ({ children }) => <Bold underline>{children}</Bold>,
-          a: ({ children }) => <ExternalLink>{children}</ExternalLink>,
-          ol: ({ children }) => <OrderedList>{children}</OrderedList>,
-        }}
-      />
+    <main data-wf-el='page-main' className='text-brand-fg' style={{ display: 'flex', flexDirection: 'column' }}>
+      <section
+        data-wf-el='section'
+        style={{ display: 'block', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px', position: 'relative' }}
+      >
+        <style>{`
+          .tos-legal h1 { font-size: 28px; margin-top: 0; }
+          .tos-legal h2 { font-size: 22px; margin-top: 32px; }
+          .tos-legal h3 { font-size: 18px; margin-top: 24px; }
+          .tos-legal p { margin-bottom: 16px; }
+        `}</style>
+        <div data-wf-el='container' className='mx-auto max-w-[900px] px-5 lg:px-0'>
+          <h1 className='h3 mb-6 mt-0 text-center text-[28px] font-medium leading-[1.15] tracking-[-0.02em] text-brand-fg'>
+            Terms of Service
+          </h1>
+          <div
+            className='tos-legal text-[16px] leading-[22.4px] tracking-[-0.015em] text-brand-fg'
+            dangerouslySetInnerHTML={{ __html: tosHtml }}
+          />
+        </div>
+      </section>
     </main>
   );
 }

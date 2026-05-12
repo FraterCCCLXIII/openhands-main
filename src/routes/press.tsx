@@ -25,6 +25,14 @@ export const meta: Route.MetaFunction = ({ location }) => {
 
 const PRESS_ITEMS = [
   {
+    date: 'May 6, 2026',
+    title: 'OpenHands Launches an Agent Control Plane to Manage Software Agents',
+    url: 'https://www.businesswire.com/news/home/20260506314667/en/OpenHands-Launches-an-Agent-Control-Plane-to-Manage-Software-Agents',
+    image:
+      'https://cdn.prod.website-files.com/68ff4058b35616cdd47d5b59/69fc7ec60f00b83c7a94d04f_CleanShot%202026-05-07%20at%2007.59.49%402x.png',
+  },
+
+  {
     date: 'November 18, 2025',
     title:
       'OpenHands Raises $18.8M Series A to Bring Open-Source Cloud Coding Agents to Enterprises',
@@ -51,21 +59,21 @@ const Press = () => {
   return (
     <CompanyPageShell>
       <section data-wf-el='section-hero' className='pb-0 pt-0'>
-        {/* Live wraps hero in `.hero-content` (`padding: 4rem 0 4rem`); replicate
-            with pt/pb on the inner content wrapper so the H1's top:140 matches. */}
-        <div className='mx-auto max-w-[640px] pb-16 pt-14 text-center'>
-          <h1 className='fluid-h1 text-brand-fg'>
+        {/* Live wraps hero in `.hero-content`; keep the vertical padding on
+            the inner wrapper so the H1 and hero section height match. */}
+        <div className='mx-auto max-w-[600px] text-center' style={{ paddingTop: '64px', paddingBottom: '58.4px' }}>
+          <h1 className='fluid-h1 h1-flow-root text-brand-fg'>
             In the news
           </h1>
-          <p className='mt-4 fluid-body-lg font-medium text-[#5f5f5f]'>
+          <p className='fluid-body-lg font-medium text-[#5f5f5f]' style={{ marginTop: '10.4px', marginBottom: '20.8px' }}>
             Read how OpenHands is reshaping the future of AI-powered software development.
           </p>
-          <div className='mt-10 flex justify-center'>
+          <div className='flex justify-center' style={{ marginTop: '70.4px' }}>
             <div className='btn btn-primary relative rounded-none'>
               <span aria-hidden='true'>Contact Us</span>
               <Link
                 to='/contact'
-                className='absolute inset-0 flex items-center justify-center bg-transparent text-brand-bg'
+                className='absolute inset-0 block bg-transparent text-brand-bg'
                 style={{ borderStyle: 'none' }}
                 aria-label='Contact Us'
               >
@@ -76,18 +84,23 @@ const Press = () => {
         </div>
       </section>
 
-      <section data-wf-el='section' className='pb-20'>
+      <section data-wf-el='section' className='pb-20' style={{ height: '1274.3px' }}>
         <div className='mx-auto grid max-w-[1238px] gap-x-6 gap-y-14 md:grid-cols-2 xl:grid-cols-3'>
-          {PRESS_ITEMS.map((item) => (
-            <article key={item.title} className='flex flex-col gap-5'>
-              <img src={item.image} alt='' className='h-[300px] w-full object-cover' style={{ borderRadius: '0px', display: 'inline-block' }} />
-              <p className='m-0 inline-block text-[16px] leading-[22.4px] text-[#5f5f5f]'>{item.date}</p>
-              <p className='m-0 max-w-[397px] fluid-body-lg font-medium text-brand-fg'>
+          {PRESS_ITEMS.map((item, index) => (
+            <article key={item.title} className={`relative flex flex-col items-start gap-4 ${index === 3 ? 'xl:col-start-2' : ''}`}>
+              <div>
+                <img src={item.image} alt='' className='h-[300px] w-full' style={{ borderRadius: '0px', display: 'inline-block', objectFit: 'fill' }} />
+              </div>
+              <p className='inline-block text-[16px] leading-[22.4px] text-[#5f5f5f]' style={{ margin: '0 0 16px' }}>{item.date}</p>
+              <p className='max-w-[397px] fluid-body-lg font-medium text-brand-fg' style={{ margin: '0 0 20.8px' }}>
                 {item.title}
               </p>
-              <a href={item.url} target='_blank' rel='noopener noreferrer' className='btn btn-outline border-none w-fit rounded-none'>
-                Read more
-              </a>
+              <div className='btn btn-outline border-none w-fit rounded-none relative'>
+                <span aria-hidden='true'>Read more</span>
+                <a href={item.url} target='_blank' rel='noopener noreferrer' className='absolute inset-0 block bg-transparent' style={{ borderStyle: 'none' }}>
+                  <span className='sr-only'>Read more</span>
+                </a>
+              </div>
             </article>
           ))}
         </div>

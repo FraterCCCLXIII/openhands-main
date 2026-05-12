@@ -7,6 +7,9 @@ interface OverlayLinkButtonProps {
   variant?: 'primary' | 'outline' | 'lightbrown';
   className?: string;
   textClassName?: string;
+  wrapperStyle?: React.CSSProperties;
+  iconSrc?: string;
+  iconAlt?: string;
   fullWidth?: boolean;
   // Optional Webflow data-wf-el attribute names to mirror the live
   // `<div class="button-N"><div class="btn-text-N">…</div></div>`
@@ -28,6 +31,9 @@ export const OverlayLinkButton = ({
   variant = 'primary',
   className,
   textClassName,
+  wrapperStyle,
+  iconSrc,
+  iconAlt = '',
   fullWidth = false,
   wfEl,
   textWfEl,
@@ -54,9 +60,10 @@ export const OverlayLinkButton = ({
         fullWidth && 'w-full',
         className,
       )}
-      style={config.isWrap ? baseStyle : { ...baseStyle, borderRadius: 0 }}
+      style={config.isWrap ? { ...baseStyle, ...wrapperStyle } : { ...baseStyle, borderRadius: 0, ...wrapperStyle }}
     >
-      <div data-wf-el={textWfEl} aria-hidden='true' className={textClassName} style={{ whiteSpace: 'nowrap', cursor: 'auto', textUnderlineOffset: 'auto', pointerEvents: 'none' }}>
+      <div data-wf-el={textWfEl} aria-hidden='true' className={textClassName} style={{ display: 'inline-flex', alignItems: 'center', gap: '6.4px', whiteSpace: 'nowrap', cursor: 'auto', textUnderlineOffset: 'auto', pointerEvents: 'none' }}>
+        {iconSrc ? <img src={iconSrc} alt={iconAlt} style={{ width: '19px', height: '19px', objectFit: 'fill' }} /> : null}
         {label}
       </div>
       {/* Live's overlay anchor (`.u-link-cover.w-inline-block`) carries
@@ -75,6 +82,7 @@ export const OverlayLinkButton = ({
           textUnderlineOffset: '3px',
           fontSize: '16px',
           lineHeight: '20.8px',
+          maxWidth: '100%',
           // Inherit color from .btn-wrap-* parent so the overlay anchor's
           // color/textDecorationColor matches live (e.g. #F9F0D9 inside
           // .btn-wrap-primary instead of body brand-fg).

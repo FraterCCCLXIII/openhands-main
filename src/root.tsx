@@ -207,7 +207,7 @@ export default function App() {
   }, []);
 
   return (
-    <div data-wf-el='page-wrapper' className='relative' style={{ display: 'flex', flexDirection: 'column', backgroundColor: 'rgb(249, 240, 217)', minHeight: '100vh' }}>
+    <div data-wf-el='page-wrapper' className='relative' style={{ display: 'flex', flexDirection: 'column', backgroundColor: 'rgb(249, 240, 217)', minHeight: '100vh', overflow: 'clip' }}>
       <Sidebar
         ref={sidebarRef}
         isHidden={isSidebarHidden}
@@ -245,7 +245,6 @@ export default function App() {
                   standalone
                   showSocialLinks
                   compactNav={usePrivacyFooterLayout || useParityFooterLayout || useProductFooterLayout}
-                  navWidthClass={useParityFooterLayout ? 'max-w-[760px]' : undefined}
                   minHeight={footerMinHeight}
                   /*
                    * On product subpages live's footer renders a

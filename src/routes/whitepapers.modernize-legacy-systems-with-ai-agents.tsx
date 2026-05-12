@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { type MetaFunction } from 'react-router';
-import { ProductPageFooterCta } from '~/components/product-feature-page';
+import { Footer } from '~/components/footer';
 
 const WHITEPAPER_TITLE = 'Modernize Legacy Systems with AI Agents | OpenHands Whitepaper';
 const WHITEPAPER_DESCRIPTION =
@@ -144,6 +144,8 @@ export const meta: MetaFunction = ({ location }) => [
   { rel: 'canonical', href: `https://openhands.dev${location.pathname}` },
 ];
 
+export const handle = { hideGlobalFooter: true };
+
 export default function WhitepaperModernizeLegacySystemsWithAiAgents() {
   const [isDownloadReady, setIsDownloadReady] = useState(false);
 
@@ -159,26 +161,26 @@ export default function WhitepaperModernizeLegacySystemsWithAiAgents() {
   }, []);
 
   return (
-    <main className='bg-brand-bg'>
-      <section data-wf-el='section' className='px-6 pb-16 pt-10 lg:px-10 lg:pb-20 lg:pt-14'>
+    <main style={{ display: 'flex', flexDirection: 'column', backgroundColor: 'rgba(0, 0, 0, 0)' }}>
+      <section data-wf-el='section' className='px-6 pb-16 pt-10 lg:px-10 lg:pb-[65px] lg:pt-20' style={{ minHeight: '968px', backgroundColor: 'rgb(249, 240, 217)', paddingLeft: '0px', paddingRight: '0px' }}>
         <div className='mx-auto max-w-[1238px]'>
           <div className='mx-auto max-w-[920px] text-center'>
-            <h1 className='mx-auto max-w-[834px] fluid-h1 text-brand-fg'>
+            <h1 className='fluid-h1 text-brand-fg' style={{ width: '834px', maxWidth: '834px', position: 'relative', left: '43px', marginBottom: '8.8px', letterSpacing: '-0.02em' }}>
               Whitepaper: Modernize legacy systems before your expertise disappears
             </h1>
-            <p className='mx-auto mt-4 max-w-[657px] fluid-body-lg font-medium text-[#5f5f5f]'>
+            <p className='fluid-body-lg font-medium text-[#5f5f5f]' style={{ width: '657px', maxWidth: '657px', transform: 'translateX(131.5px)', marginTop: '0px', marginBottom: '20.8px' }}>
               Legacy modernization projects fail 74% of the time and the engineers who understand your COBOL, mainframe, and legacy systems are retiring faster than you can replace them.
             </p>
           </div>
 
-          <div className='mt-14 grid gap-12 lg:grid-cols-[526px_603px] lg:items-start lg:gap-[109px]'>
+          <div className='mt-[53px] grid gap-12 lg:grid-cols-[526px_603px] lg:items-start lg:gap-[109px]'>
             <div>
-              <p className='text-[16px] leading-[22.4px] text-brand-fg'>
+              <p className='text-[16px] leading-[22.4px] text-brand-fg' style={{ marginBottom: '16px' }}>
                 The Large Codebase SDK from OpenHands fills that gap. By combining AI coding agents with static analysis, it maps the full dependency structure of your codebase and orchestrates migration work in the right order so agents can run in parallel without producing conflicting changes, making enterprise-scale refactors practical for the first time. Model-agnostic and deployable on-prem or in the cloud, it&apos;s built for organizations where data sensitivity and regulatory compliance aren&apos;t optional.
               </p>
 
               <div className='mt-10'>
-                <h3 className='fluid-body-lg font-medium text-brand-fg'>
+                <h3 className='max-w-[502px] fluid-body-lg font-medium text-brand-fg' style={{ marginBottom: '20.8px' }}>
                   What you&apos;ll learn in the whitepaper:
                 </h3>
                 <ul className='mt-5'>
@@ -225,17 +227,15 @@ export default function WhitepaperModernizeLegacySystemsWithAiAgents() {
         </div>
       </section>
 
-      <ProductPageFooterCta
-        title='Bring your team into the loop.'
-        description='Use the OpenHands Web GUI to collaborate with agents.'
-        actions={[
-          { label: 'Try it live', href: 'https://app.all-hands.dev/' },
-          {
-            label: 'Download Local GUI',
-            href: 'https://docs.openhands.dev/openhands/usage/run-openhands/local-setup',
-            variant: 'outline',
-          },
-        ]}
+      <Footer
+        standalone
+        showSocialLinks
+        compactNav
+        minHeight={1136}
+        marketingCtaTitle='Bring your team into the loop.'
+        marketingCtaDescription='Use the OpenHands Web GUI to collaborate with agents.'
+        marketingCtaPrimary={{ label: 'Try it live', href: 'https://app.all-hands.dev/' }}
+        marketingCtaSecondary={{ label: 'Download Local GUI', href: 'https://docs.openhands.dev/openhands/usage/run-openhands/local-setup' }}
       />
     </main>
   );

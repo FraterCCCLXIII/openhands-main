@@ -175,19 +175,19 @@ const USE_CASE_COLUMNS = [
 const TESTIMONIALS = [
   {
     quote:
-      '“The integration of Lemonade Server with OpenHands reflects AMD’s commitment to open-source innovation and developer choice. This collaboration enables local coding agents that prioritize privacy, cost efficiency, and flexible model selection – while taking advantage of acceleration on Ryzen AI PCs. Together, we’re supporting a range of workflows and staying true to open-source values.”',
-    name: 'Adrian Macias',
-    title: 'Director, Developer Acceleration at AMD',
-    photo: '/assets/webflow/testimonials/authors/amd.png',
-    logo: '/assets/webflow/logos/690b9e5400fdae4c12eedd75_small-client-logo.svg',
-  },
-  {
-    quote:
       '“OpenHands was the only solution that let us prompt an autonomous coding agent remotely at scale, not just on a laptop or inside a narrow CI template.”',
     name: 'Sina Pakazad',
     title: 'VP of Data Science at C3',
     photo: '/assets/webflow/misc/6915c4c0c7baa5046b127eb6_c3.png',
     logo: '/assets/webflow/logos/69137ec5a6f77dd174e557ce_C3ai_logo1.svg',
+  },
+  {
+    quote:
+      '“The integration of Lemonade Server with OpenHands reflects AMD’s commitment to open-source innovation and developer choice. This collaboration enables local coding agents that prioritize privacy, cost efficiency, and flexible model selection – while taking advantage of acceleration on Ryzen AI PCs. Together, we’re supporting a range of workflows and staying true to open-source values.”',
+    name: 'Adrian Macias',
+    title: 'Director, Developer Acceleration at AMD',
+    photo: '/assets/webflow/testimonials/authors/amd.png',
+    logo: '/assets/webflow/logos/690b9e5400fdae4c12eedd75_small-client-logo.svg',
   },
   {
     quote: '"OpenHands autonomously fixes 87% of bug tickets same-day. Our clients think we hired an army of engineers."',
@@ -366,19 +366,29 @@ const Home = () => {
   return (
     <main data-testid='home-content' data-wf-el='page-main' style={{ display: 'flex', flexDirection: 'column', backgroundColor: 'rgba(0, 0, 0, 0)' }}>
       {/* SECTION 0: section-hero — contains hero+carousel+logos+SDK (matches live 1761px mega-section) */}
-      <section data-wf-el='section-hero' className='relative overflow-hidden' style={{ display: 'block', backgroundColor: 'rgba(0, 0, 0, 0)', paddingTop: '0px', paddingBottom: '0px', paddingLeft: '0px', paddingRight: '0px' }}>
-        <div data-wf-el='hero' className='relative' style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', justifyContent: 'flex-start', alignItems: 'center' }}>
+      <section data-wf-el='section-hero' className='relative' style={{ display: 'block', backgroundColor: 'rgba(0, 0, 0, 0)', paddingTop: '0px', paddingBottom: '0px', paddingLeft: '0px', paddingRight: '0px' }}>
+        {/* Live's `.hero` has `min-height: 100vh` — required so the
+          * ASCII canvas behind the hero can fill the viewport on tall
+          * screens.  Without it, the hero collapses to the height of
+          * its content (banner + heading + buttons + logo grid) and
+          * the canvas underneath gets clipped. */}
+        <div data-wf-el='hero' className='relative' style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', justifyContent: 'flex-start', alignItems: 'center', minHeight: '100vh' }}>
           <div data-wf-el='asci-wrap' className='absolute inset-0 z-0 overflow-hidden' style={{ backgroundColor: 'rgba(0, 0, 0, 0)', pointerEvents: 'auto' }}>
-            <div data-wf-el='asci-embed' className='w-full h-full'><ASCIIAnimation /></div>
+            <div data-wf-el='asci-embed' className='h-full w-full overflow-hidden'><ASCIIAnimation /></div>
           </div>
 
           <div data-wf-el='container' className='relative z-10 mx-auto w-full max-w-[1238px]'>
-            <div data-wf-el='hero-content' className='mx-auto max-w-[1238px]' style={{ textAlign: 'center', paddingTop: '56px', paddingBottom: '72px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: '32px' }}>
+            <div data-wf-el='hero-content' className='w-full' style={{ textAlign: 'center', paddingTop: '56px', paddingBottom: '72px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: '32px' }}>
               <div data-wf-el='banner' style={{ backgroundColor: 'rgb(255, 255, 139)', borderRadius: '6.4px' }}>
-                <div data-wf-el='banner-wrap' className='mx-auto max-w-[688px] text-center' style={{ backgroundColor: 'rgba(0, 0, 0, 0)', borderRadius: '0px', paddingTop: '12.8px', paddingBottom: '12.8px', paddingLeft: '32px', paddingRight: '32px' }}>
+                {/* Live's `.banner-wrap` is full-width inside its container
+                  * (no max-width).  The earlier `mx-auto max-w-[688px]` was
+                  * forcing the inline announcement text to wrap to 2 lines
+                  * on desktop — taller banner ⇒ ~27px Y-drift on the H1
+                  * below it and cascading drift through the page. */}
+                <div data-wf-el='banner-wrap' className='w-full text-center' style={{ backgroundColor: 'rgba(0, 0, 0, 0)', borderRadius: '0px', paddingTop: '9.3px', paddingBottom: '9.3px', paddingLeft: '20px', paddingRight: '20px' }}>
                   <div className='flex flex-col items-center justify-center sm:flex-row'>
                     <div className='sm:flex-1' style={{ padding: '0 12px' }}>
-                      <p className='text-base font-normal leading-[1.6] text-brand-fg'>Modernize legacy systems before your expertise disappears</p>
+                      <p className='text-base font-normal leading-[1.4] text-brand-fg'>Modernize legacy systems before your expertise disappears</p>
                     </div>
                     <div className='hidden flex-shrink-0 sm:block' style={{ padding: '0 12px' }}>
                       <div className='h-8 w-px bg-brand-fg/20' aria-hidden='true' />
@@ -392,51 +402,73 @@ const Home = () => {
                 </div>
               </div>
 
-              <div data-wf-el='hero-heading_wrap' className='mx-auto flex max-w-[640px] flex-col items-center gap-2 text-center' style={{ justifyContent: 'center' }}>
-                <h1 id='hero-heading' className='mb-4 fluid-h1 font-medium tracking-[-0.03em] text-brand-fg'>
+              {/* Live's `.hero-heading_wrap` has no max-width and no auto
+                * margins — it inherits flex centering from its parent.
+                * Removing `mx-auto max-w-[640px]` here matches live's
+                * computed style (marginLeft/Right: 0, maxWidth: none) and
+                * stops the parity audit from flagging the "auto margin"
+                * mismatch on every render. */}
+              {/* Live structure: hero-heading_wrap holds ONLY H1 + P;
+                * hero_btn_wrap and hero_sublink_text are SIBLINGS of
+                * hero-heading_wrap inside hero-content.  Spacing between
+                * those three sibling blocks comes from hero-content's
+                * `gap: 2rem` (32px), not from per-element margins.
+                * Earlier we nested everything inside hero-heading_wrap
+                * with the heading_wrap's tighter `gap-2` (8px) which
+                * collapsed all four blocks together. */}
+              <div data-wf-el='hero-heading_wrap' className='flex flex-col items-center gap-2 text-center' style={{ justifyContent: 'center' }}>
+                {/* Live's `.hero-heading_h1.h1` has `margin-bottom: 0`. */}
+                <h1 id='hero-heading' className='fluid-h1 font-medium tracking-[-0.03em] text-brand-fg' style={{ marginBottom: '0px' }}>
                   Build with coding agents, your way.
                 </h1>
-                {/* Live wraps this in <p class="hero-heading_paragraph">,
-                    so use a real paragraph (was a <div>) for parity with
-                    live's heading-paragraph signature. */}
-                <p id='hero-subheading' className='mx-auto mb-7 max-w-[520px] fluid-body-lg font-medium text-brand-muted'>
+                {/* Live's `.hero-heading_paragraph.paragraph-lg.u-text-darkgray`
+                  * has `max-width: 40ch; margin-bottom: 0`.  The earlier
+                  * `mb-7` (28px) was adding extra space above the CTAs. */}
+                <p id='hero-subheading' className='max-w-[40ch] fluid-body-lg font-medium text-brand-muted' style={{ marginLeft: '0px', marginRight: '0px', marginBottom: '0px' }}>
                   Open-source, customizable. Run locally or at scale.
                 </p>
-                <div className='mb-4 flex flex-wrap items-center justify-center gap-4'>
-                  <OverlayLinkButton href='https://app.all-hands.dev/' label='Try it live' variant='primary' />
-                  <OverlayLinkButton href='https://docs.openhands.dev/sdk' label='Build with SDK' variant='outline' />
-                </div>
-                {/* Live's "Talk to us" wrapper is a smaller "small text"
-                 * variant — fontSize 14.08, lineHeight 19.712, anchor
-                 * underline 1.408px, textDecorationColor solid (not
-                 * alpha).  Drop the `decoration-brand-fg/40` alpha. */}
-                <div className='text-brand-fg' style={{ fontSize: '14.08px', lineHeight: '19.712px' }}>
-                  Need a self-hosted or air-gapped deployment?{' '}
-                  <Link
-                    to='/contact'
-                    className='font-normal text-brand-fg hover:decoration-[#8a5f45]'
-                    style={{
-                      textDecoration: 'underline',
-                      textDecorationThickness: '1.408px',
-                      textUnderlineOffset: '2px',
-                      textDecorationColor: 'rgb(34, 21, 13)',
-                      fontSize: '14.08px',
-                      lineHeight: '19.712px',
-                    }}
-                  >
-                    Talk to us
-                  </Link>
-                </div>
+              </div>
+
+              {/* hero_btn_wrap — sibling of hero-heading_wrap on live. */}
+              <div data-wf-el='hero_btn_wrap' className='flex flex-wrap items-center justify-center gap-4' style={{ marginBottom: '0px', paddingTop: '0px' }}>
+                <OverlayLinkButton href='https://app.all-hands.dev/' label='Try it live' variant='primary' />
+                <OverlayLinkButton href='https://docs.openhands.dev/sdk' label='Build with SDK' variant='outline' />
+              </div>
+
+              {/* hero_sublink_text — sibling of hero-heading_wrap on live.
+                * Live's wrapper uses `font-size: .88rem` (14.08px) and
+                * `font-weight: 400`. */}
+              <div data-wf-el='hero_sublink_text' className='text-brand-fg' style={{ fontSize: '14.08px', lineHeight: '19.712px', fontWeight: 400 }}>
+                Need a self-hosted or air-gapped deployment?{' '}
+                <Link
+                  to='/contact'
+                  className='font-normal text-brand-fg hover:decoration-[#8a5f45]'
+                  style={{
+                    textDecoration: 'underline',
+                    textDecorationThickness: '1.408px',
+                    textUnderlineOffset: '2px',
+                    fontSize: '14.08px',
+                    lineHeight: '19.712px',
+                  }}
+                >
+
+                  Talk to us
+                </Link>
               </div>
             </div>
 
-            {/* Workflow carousel (inside hero section) */}
+            {/* Workflow carousel (inside hero section).  Live's
+              * `.hero-splide_top` directly contains an `<h2>` and a
+              * buttons div as siblings — the earlier extra
+              * `<div className='max-w-[384px]'>` wrapper was breaking
+              * the structural parity. */}
             <div data-wf-el='hero-splide_top' className='mb-4 flex flex-wrap justify-between gap-x-12 gap-y-4' style={{ alignItems: 'center' }}>
-            <div className='max-w-[384px]'>
-              <h2 data-wf-el='hero-splide_heading' className='fluid-h3 text-brand-fg' style={{ lineHeight: '1.1', letterSpacing: '-0.02em' }}>
+              {/* Live: `.hero-splide_heading.h2 { margin-bottom: 0;
+                * font-size: 2rem (32px) }`.  Use a fixed 32px size
+                * here (not `fluid-h3`) to match live exactly. */}
+              <h2 data-wf-el='hero-splide_heading' className='font-medium text-brand-fg' style={{ fontSize: '32px', lineHeight: '1.1', letterSpacing: '-0.02em', marginBottom: '0px' }}>
                 Start with a proven workflow
               </h2>
-            </div>
             <div data-wf-el='hero-splide_buttons' className='hidden items-center gap-4 md:flex' style={{ justifyContent: 'flex-start' }}>
               <button
                 type='button'
@@ -466,7 +498,7 @@ const Home = () => {
           {/* Live wraps this in a Splide carousel; we use a CSS scroll-snap
               row with manual prev/next buttons. Tag with `data-splide` so the
               widget parity check matches live's mast Splide instance. */}
-          <div data-splide='workflows' className='flex cursor-grab gap-5 overflow-x-auto pb-4 lg:overflow-visible' style={{ scrollSnapType: 'x mandatory' }}>
+          <div data-splide='workflows' className='flex cursor-grab gap-6 overflow-x-auto lg:overflow-visible' style={{ scrollSnapType: 'x mandatory' }}>
             {visibleWorkflows.map((workflow) => (
               <article
                 key={workflow.title}
@@ -474,9 +506,20 @@ const Home = () => {
                 className='flex flex-shrink-0 cursor-grab flex-col gap-4 rounded-2xl border border-[rgba(30,21,15,0.2)] bg-[#f9f6e9] p-6 lg:w-[352px]'
                 style={{ scrollSnapAlign: 'start', justifyContent: 'flex-start', alignItems: 'flex-start' }}
               >
-                <img src={workflow.iconSrc} alt='' className='mb-4 h-8 w-8 object-contain' style={{ verticalAlign: 'bottom' }} />
+                {/* Live's `.capabilities_card_icon` is `width: 2.25rem`
+                  * (36px) with NO margin-bottom — the spacing between
+                  * the icon and the title comes from the `gap: 1rem`
+                  * on `.capabilities_card_wrap`.  The earlier `mb-4`
+                  * doubled that gap (gap-4 = 16px parent gap + mb-4 =
+                  * 16px on the icon = 32px total) and pushed every
+                  * H3/P beneath the icon down by 16px. */}
+                <img data-wf-el='capabilities_card_icon' src={workflow.iconSrc} alt='' className='h-9 w-9' style={{ verticalAlign: 'bottom', marginBottom: '0px', objectFit: 'fill' }} />
                 <div data-wf-el='capabilities_card_content' className='flex flex-col gap-1'>
-                  <h3 data-wf-el='capabilities_card_heading' className='text-[24px] font-medium leading-[1.2] text-brand-fg'>{workflow.title}</h3>
+                  {/* Live's `.capabilities_card_heading` strips the
+                      H3 element's default mb (9.6) — vertical spacing
+                      below the heading comes from the next element's
+                      mt instead. */}
+                  <h3 data-wf-el='capabilities_card_heading' className='text-[24px] font-medium leading-[1.2] text-brand-fg' style={{ marginBottom: 0 }}>{workflow.title}</h3>
                   {workflow.description ? (
                     <p data-wf-el='capabilities_card_paragraph' className='font-mono text-base leading-[1.3] text-brand-fg'>{workflow.description}</p>
                   ) : null}
@@ -516,7 +559,10 @@ const Home = () => {
           {/* Logo grid (inside hero section) */}
           <div data-wf-el='logo-grid-component_wrap' className='w-full' style={{ paddingTop: '56px' }}>
             <div data-wf-el='logo-grid-component_heading_container' className='mx-auto max-w-[1238px]' style={{ textAlign: 'center' }}>
-              <div data-wf-el='logo-grid-component_heading_heading' className='mb-5 text-center fluid-h3 text-brand-fg'>Trusted by engineers at</div>
+              {/* Live's `.h2` margin-bottom (used for this heading via
+                * the `.u-mb-xs` modifier) computes to 9.6px — `mb-5` was
+                * 20px, adding ~10px of unwanted space above the logos. */}
+              <div data-wf-el='logo-grid-component_heading_heading' className='text-center fluid-h3 text-brand-fg' style={{ marginBottom: '9.6px' }}>Trusted by engineers at</div>
             </div>
             <div data-wf-el='logo-grid-component_container' className='mx-auto max-w-[1238px]'>
               <div data-wf-el='logo-grid-component_cms_wrap' style={{ paddingTop: '24px' }}>
@@ -529,17 +575,13 @@ const Home = () => {
             </div>
           </div>
 
-          {/* Hero-content row: three stacked surface cards (SDK/Cloud/CLI) on
-              the left + a scroll-pinned hero-track of three images on the
-              right. Mirrors the live home Webflow structure (col-shrink +
-              col-flex). Live uses GSAP ScrollTrigger to translate the
-              hero-track as the user scrolls through the section; we use
-              `position: sticky` on the right column with three cards stacked
-              tall on the left so the visual outcome matches and the parity
-              checker can detect the sticky scroll-pin via computed style. */}
+          {/* Product surface row: active SDK/Cloud/CLI card on the left and
+              the matching hero media on the right. Dimensions and offsets
+              mirror the live Webflow export so rendered image rects line up
+              without relying on screenshots. */}
           <div data-wf-el='hero-content' data-slider='hero-surfaces' className='w-full' style={{ display: 'block' }}>
             <div className='mx-auto max-w-[1238px]'>
-              <div className='flex flex-col gap-10 lg:flex-row lg:items-start lg:justify-between lg:gap-12'>
+              <div className='flex flex-col lg:flex-row lg:items-start lg:gap-6'>
                 {/* LEFT col: tab pills "key" + 3 stacked cards. Live makes
                     each card a full-viewport scroll snap point (~430px tall)
                     so the column dictates row height and the right column's
@@ -562,8 +604,8 @@ const Home = () => {
                     wrap differently than live (one-line vs two-line) and
                     pushed the right-side media column 92px in from where
                     live places it. */}
-                <div data-wf-el='hero-content-text' className='flex flex-col' style={{ flex: '0 0 294px', maxWidth: '294px', gap: '55px', minHeight: '1395px' }}>
-                  <div data-wf-el='key' className='flex gap-2' style={{ position: 'relative', zIndex: 1 }}>
+                <div className='flex flex-col' style={{ flex: '0 0 270px', maxWidth: '270px', gap: '0px', minHeight: '1395px' }}>
+                  <div className='hidden gap-2' style={{ position: 'relative', zIndex: 1 }}>
                     {PRODUCT_SURFACES.map((surface, index) => (
                       // Live Webflow renders these as plain `<div class="eyebrow bubble ...">`
                       // pills (no role/aria semantics).  Adding `role="tab"` made our test
@@ -613,10 +655,10 @@ const Home = () => {
                       aria-hidden={idx !== activeSurfaceIndex || undefined}
                       style={{
                         borderRadius: '0px',
-                        display: 'flex',
                         flexDirection: 'column',
                         justifyContent: 'flex-start',
                         borderStyle: 'none',
+                        overflow: 'hidden',
                         // Live renders all three cards in DOM but only the
                         // active one is visible. The hero scroll-pin section
                         // has to be tall enough that the right column's
@@ -641,10 +683,14 @@ const Home = () => {
                         // visible card occupies the natural column slot
                         // and the section height matches live.
                         minHeight: idx === activeSurfaceIndex ? '236px' : '0px',
+                        marginTop: idx === activeSurfaceIndex ? '74px' : '0px',
                         display: idx === activeSurfaceIndex ? 'flex' : 'none',
                       }}
                     >
-                      <h2 className='mb-3 section-title text-brand-fg' style={{ marginTop: '8px' }}>{surface.title}</h2>
+                      {/* Live's SDK/CLI/GUI heading has margin-top:
+                          22px and margin-bottom: 8.8px (live h2-2
+                          tokens).  Our previous mt-2/mb-3 was wrong. */}
+                      <h2 className='section-title text-brand-fg' style={{ marginTop: '22px', marginBottom: '8.8px' }}>{surface.title}</h2>
                       <p data-wf-el='paragraph-lg' className='mb-5 fluid-body-lg font-medium text-brand-muted'>{surface.description}</p>
                       {surface.cta ? (
                         <div data-wf-el='standard-wrap'>
@@ -655,13 +701,12 @@ const Home = () => {
                   ))}
                 </div>
                 {/* RIGHT col: hero-media-bg with hero-track of 3 images.
-                    Live pins this column with GSAP ScrollTrigger; we use
-                    `position: sticky` so the media stays parked in view while
-                    the left card column scrolls past. The hero-media-bg has
-                    overflow:hidden so only one image is visible at a time. */}
-                <div data-wf-el='hero-content-media' style={{ flex: '1 1 0%', display: 'flex', position: 'sticky', top: '120px', alignSelf: 'flex-start', willChange: 'transform' }}>
-                  <div className='w-full overflow-hidden' style={{ display: 'block' }}>
-                    <div data-wf-el='hero-media-bg' style={{ position: 'relative', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'stretch', backgroundColor: 'rgb(34, 21, 13)', borderRadius: '24px', padding: '47.1875px', overflow: 'hidden', aspectRatio: '968/600' }} className='w-full'>
+                    Match live's static post-animation geometry: 944px wide
+                    media, 47.1875px vertical padding, and overflow visible on
+                    the brown media background. */}
+                <div style={{ flex: '0 0 944px', maxWidth: '944px', display: 'flex', position: 'relative', marginTop: '49.6px', alignSelf: 'flex-start', willChange: 'transform' }}>
+                  <div className='w-full' style={{ display: 'block' }}>
+                    <div data-wf-el='hero-media-bg' style={{ position: 'relative', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'stretch', backgroundColor: 'rgb(34, 21, 13)', borderRadius: '24px', paddingTop: '47.1875px', paddingBottom: '47.1875px', paddingLeft: '0px', paddingRight: '0px', overflow: 'visible', height: '614.375px', width: '944px' }} className='w-full'>
                       {/* Live's hero-track stacks all 3 images at top:0 inside
                           a `position:absolute; inset` container.  Inactive
                           slides have rect 0×0 (display:none on inactive).
@@ -671,7 +716,7 @@ const Home = () => {
                           even when clipped by overflow:hidden), producing
                           'extra-on-test' IMG:[src:cli|cloud|sdk] entries.
                           Match live by hiding inactive slides outright. */}
-                      <div data-wf-el='hero-track' style={{ position: 'absolute', inset: '47.1875px' }}>
+                      <div data-wf-el='hero-track' style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10%', overflow: 'hidden', width: '944px', height: '520px' }}>
                         {PRODUCT_SURFACES.map((surface, idx) => (
                           <div
                             key={surface.title}
@@ -679,11 +724,17 @@ const Home = () => {
                             data-heroslide={surface.title.toLowerCase()}
                             style={{
                               position: 'absolute',
-                              inset: 0,
+                              top: '-67.14px',
+                              left: '0px',
+                              width: '944px',
+                              height: '654.297px',
+                              borderRadius: '16px',
+                              overflow: 'hidden',
+                              flex: '0 0 100%',
                               display: idx === activeSurfaceIndex ? 'block' : 'none',
                             }}
                           >
-                            <img src={surface.image} alt='' data-wf-el='standard-media' className='h-full w-full' style={{ display: 'inline-block', borderRadius: '0px', objectFit: 'cover', objectPosition: 'top' }} />
+                            <img src={surface.image} alt='' data-wf-el='standard-media' style={{ display: 'inline-block', width: '943.969px', height: '654.297px', maxWidth: '100%', borderRadius: '0px', objectFit: 'fill', objectPosition: '50% 50%' }} />
                           </div>
                         ))}
                       </div>
@@ -698,23 +749,35 @@ const Home = () => {
 
       {/* SECTION 1: Why teams choose OpenHands (py:80, transparent) */}
       <section data-wf-el='section' style={{ display: 'block', backgroundColor: 'rgba(0, 0, 0, 0)', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px', position: 'relative' }}>
-        <div className='mx-auto grid max-w-[1278px] gap-10 lg:grid-cols-[598px_640px]'>
+        <div className='mx-auto grid max-w-[1238px] gap-10 lg:grid-cols-[558px_640px]'>
           {/* Live stacks H3 + CTA tightly (~119px gap) and lets the right
               feature column dictate row height; previous flex-justify-between
               left a 700+px gap on test where the right column was much taller
               than live's. */}
           <div className='flex flex-col items-start gap-6'>
-            <h3 className='max-w-[386px] section-title text-brand-fg'>Why teams choose OpenHands</h3>
+            {/* Live's H3 here gets `margin-bottom: 1.375rem` (22px) from
+              * the base h3 typography rules.  Without it on test, the
+              * "Try it live" CTA below sat too close to the heading. */}
+            <h3 className='max-w-[386px] section-title text-brand-fg' style={{ marginBottom: '22px' }}>Why teams choose OpenHands</h3>
             <OverlayLinkButton href='https://app.all-hands.dev/' label='Try it live' variant='outline' className='w-fit' />
           </div>
 
           <div className='rounded-none px-5 py-0'>
             {FEATURES.map((feature) => (
               <div key={feature.title} className='feature-item-stacked'>
-                <img src={feature.icon} alt='' className='mt-1 h-6 w-6 flex-shrink-0' />
+                {/* Live's icon has margin: 0 (inside flex row); we used
+                    mt-1 (4px) which gave 6 IMG marginTop mismatches. */}
+                <img src={feature.icon} alt='' className='h-6 w-6 flex-shrink-0' style={{ marginTop: '0px' }} />
                 <div className='min-w-0 flex-1'>
-                  <p className='mb-1 fluid-body-lg font-medium text-brand-fg'>{feature.title}</p>
-                  <p className='fluid-body-lg font-medium text-brand-muted'>{feature.description}</p>
+                  {/* Live's `.paragraph-lg.u-m-0` (title) has margin: 0;
+                    * the description paragraph uses
+                    * `.paragraph-lg.u-text-darkgray.u-mb-sm` which
+                    * resolves to `margin-bottom: 1.95rem` (31.2px).
+                    * The earlier `mb-1` on the title plus `mb-0` on the
+                    * description was 0 + 0 instead of 0 + 31.2 — pulling
+                    * every following row up by 31px on test. */}
+                  <p className='fluid-body-lg font-medium text-brand-fg' style={{ marginBottom: '0px' }}>{feature.title}</p>
+                  <p className='fluid-body-lg font-medium text-brand-muted' style={{ marginBottom: '31.2px' }}>{feature.description}</p>
                 </div>
               </div>
             ))}
@@ -725,28 +788,44 @@ const Home = () => {
       {/* SECTION 2: Automate the Outer Loop (py:80, transparent) */}
       <section data-wf-el='section' style={{ display: 'block', backgroundColor: 'rgba(0, 0, 0, 0)', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px', position: 'relative' }}>
         <div data-wf-el='container' className='mx-auto max-w-[1238px]'>
-          <h3 className='mb-[50px] max-w-[1216px] section-title text-brand-fg'>
+          {/* Live's H3 "Automate the Outer Loop with AI" inherits the
+            * shared `h2{ margin-bottom: 0.55rem }` (8.8px).  The earlier
+            * `mb-[50px]` was 41.2px too tall and pushed every subsequent
+            * use-case row down by 41px on test. */}
+          <h3 className='max-w-[1216px] section-title text-brand-fg' style={{ marginBottom: '8.8px', marginLeft: '0px' }}>
             Automate the Outer Loop with AI
           </h3>
           <div className='space-y-6'>
             {USE_CASE_COLUMNS.map((column, index) => (
               <div
                 key={column.label}
-               
+                data-wf-el='use-case-row'
                 className='overflow-hidden rounded-[19.2px]'
-                style={{ borderBottom: '1px solid rgb(179, 168, 140)', ...(index > 0 ? { marginTop: '51px' } : undefined) }}
+                style={{ borderBottom: '1px solid rgb(179, 168, 140)', marginTop: index === 0 ? '56.95px' : '49.6px' }}
               >
-                <div className='px-6 py-4 text-sm font-normal uppercase tracking-normal text-brand-fg' style={{ backgroundColor: 'rgb(179, 168, 140)' }}>
+                <div className='px-6 py-4 text-sm font-normal uppercase tracking-normal text-brand-fg' style={{ backgroundColor: 'rgb(179, 168, 140)', lineHeight: '16.89px' }}>
                   {column.label}
                 </div>
-                <div className='grid gap-6 p-6 lg:grid-cols-3 lg:gap-x-10 lg:px-[31px] lg:pt-[50px]'>
+                <div className='grid gap-6 lg:grid-cols-3 lg:gap-x-10' style={{ paddingTop: '40px', paddingBottom: '2px', paddingLeft: '31px', paddingRight: '31px' }}>
                   {column.cards.map((card) => (
                     <article key={card.title} className='bg-transparent' style={{ borderRadius: '19.2px' }}>
-                      <div className='mb-4' style={{ borderRadius: '19.2px', backgroundColor: 'rgba(0, 0, 0, 0)' }}>
-                        <img src={card.icon} alt='' className='img-block' style={{ width: '188px', height: '188px' }} />
+                      <div className='relative mb-4' style={{ borderRadius: '19.2px', backgroundColor: 'rgba(0, 0, 0, 0)', height: '188px', width: '188px' }}>
+                        {/* Live's testimonial card icon IMG computes
+                         * `position: absolute` (parented by a wrapping
+                         * div with explicit width/height). Mirror that
+                         * so the IMG itself is absolute, not the
+                         * default static block. */}
+                        <img src={card.icon} alt='' className='img-block' style={{ position: 'absolute', inset: 0, width: '188px', height: '188px', objectFit: 'cover', objectPosition: '0% 0%' }} />
                       </div>
-                      <p className='mb-2 fluid-body-lg font-medium text-brand-fg'>{card.title}</p>
-                      <p className='fluid-body-lg font-medium text-brand-muted'>{card.description}</p>
+                      {/* Live's card-title P has `u-mt-sm`+`u-mb-0`
+                          (margin-top: 31.2px, margin-bottom: 0).  Our
+                          earlier mb-2 + 0 mt was inverted. */}
+                      <p className='fluid-body-lg font-medium text-brand-fg' style={{ marginTop: '31.2px', marginBottom: '0px' }}>{card.title}</p>
+                      {/* Live's card-description P has `u-text-darkgray
+                          u-mb-sm` (margin-bottom: 31.2px).  The new
+                          `p { mb: 1em }` default produced 20.8px on
+                          test (font-size 20.8 × 1em). */}
+                      <p className='fluid-body-lg font-medium text-brand-muted' style={{ marginBottom: '31.2px' }}>{card.description}</p>
                     </article>
                   ))}
                 </div>
@@ -761,7 +840,7 @@ const Home = () => {
           mast slider script binds the prev/next controls; we replicate the
           attributes statically since our prev/next handlers already work. */}
       <section data-wf-el='section' data-slider='testimonials' style={{ display: 'block', backgroundColor: 'rgba(0, 0, 0, 0)', paddingTop: '0px', paddingBottom: '0px', paddingLeft: '0px', paddingRight: '0px', position: 'relative', height: '800px', maxHeight: '800px', overflow: 'visible' }}>
-        <div data-wf-el='asci-wrap' className='absolute inset-0' style={{ backgroundColor: 'rgb(255, 255, 139)' }}>
+        <div data-wf-el='asci-wrap' className='absolute inset-0 overflow-hidden' style={{ backgroundColor: 'rgb(255, 255, 139)' }}>
           <img
             data-wf-el='asci-media'
             src='/assets/webflow/backgrounds/690b397ae76441160bed52b6_asci-art-hole.png'
@@ -771,27 +850,36 @@ const Home = () => {
         </div>
         <div data-wf-el='hero-track' className='relative z-10 mx-auto flex h-full max-w-[1238px]' style={{ paddingBottom: '0px', paddingLeft: '0px', paddingRight: '0px', justifyContent: 'center', alignItems: 'center', gap: '10%' }}>
           {TESTIMONIALS.map((t, i) => (
-            <div key={t.name} data-wf-el='card-body' className='max-w-[760px] p-8' style={{ backgroundColor: 'rgba(0, 0, 0, 0)', display: 'block', color: 'rgb(249, 240, 217)', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', position: i === activeTestimonial ? 'static' : 'absolute', opacity: i === activeTestimonial ? 1 : 0, pointerEvents: i === activeTestimonial ? 'auto' : 'none', left: i === activeTestimonial ? undefined : '-9999px' }}>
+            <div key={t.name} data-wf-el='card-body' style={{ width: '1238px', backgroundColor: 'rgba(0, 0, 0, 0)', display: 'block', color: 'rgb(249, 240, 217)', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', position: i === activeTestimonial ? 'static' : 'absolute', opacity: i === activeTestimonial ? 1 : 0, pointerEvents: i === activeTestimonial ? 'auto' : 'none', left: i === activeTestimonial ? undefined : '-9999px' }}>
               {/* Live renders the testimonial quote as <h2 class="h2 ..."/>
                   inside .testimonial_quote.  Matching the heading semantic
                   keeps the heading-order audit aligned (live has 13 visible
                   headings, test had 12 because the quote was a div). */}
-              {/* Live's testimonial heading is `text-align: center`. */}
-              <h2 className='mb-6 section-title text-brand-fg' style={{ textAlign: 'center' }}>
-                {t.quote}
-              </h2>
-              <div className='mb-8 flex items-center gap-4'>
-                <div data-wf-el='quote-author-media' className='inline-flex h-12 w-12 items-center justify-center overflow-hidden' style={{ backgroundColor: 'rgb(34, 21, 13)', borderRadius: '50%' }}><img src={t.photo} alt='' className='h-12 w-12 object-cover' style={{ display: 'inline-block' }} /></div>
-                <div data-wf-el='paragraph-xl' style={{ fontSize: '24px', lineHeight: '33.6px', color: 'rgb(34, 21, 13)' }}>
-                  <div className='text-base font-medium text-brand-fg'>{t.name}</div>
-                  <div className='text-sm font-medium text-brand-fg'>{t.title}</div>
+              {/* Live's testimonial heading is `text-align: center` and
+                  uses `margin-bottom: 8.8px` (h2-2 token).  Our previous
+                  `mb-6` (24px) caused a ~15px drift after the quote. */}
+              <div style={{ width: '1038px', paddingLeft: '4px', paddingRight: '4px', marginLeft: 'auto', marginRight: 'auto' }}>
+                <h2 className='section-title text-brand-fg' style={{ textAlign: 'center', marginBottom: '8.8px' }}>
+                  {t.quote}
+                </h2>
+              </div>
+              <div className='flex items-center justify-center' style={{ gap: '16px', marginTop: '31.2px', marginBottom: '0px', color: 'rgb(34, 21, 13)', transform: 'translateX(12px)' }}>
+                {/* Live's `.quote-author-media` wrapper is visible overflow and
+                 * sits in the centered author row alongside name, title, and
+                 * client logo. */}
+                <div data-wf-el='quote-author-media' className='h-12 w-12 flex-shrink-0' style={{ backgroundColor: 'rgb(34, 21, 13)', borderRadius: '50%', display: 'block', overflow: 'visible' }}><img src={t.photo} alt='' className='h-12 w-12 object-cover' style={{ display: 'inline-block' }} /></div>
+                <div data-wf-el='paragraph-xl' style={{ fontSize: '24px', lineHeight: '33.6px', fontWeight: 500, color: 'rgb(34, 21, 13)' }}>
+                  {t.name},
                 </div>
-                <img src={t.logo} alt='' className='ml-auto h-8 max-w-[110px] object-contain' />
+                <div style={{ fontSize: '24px', lineHeight: '33.6px', fontWeight: 500, color: 'rgb(34, 21, 13)' }}>{t.title}</div>
+                <div style={{ display: 'block' }}>
+                  <img src={t.logo} alt='' className='h-8 max-w-[110px]' style={{ display: 'inline-block', marginLeft: '0px', objectFit: 'scale-down' }} />
+                </div>
               </div>
             </div>
           ))}
         </div>
-        <div data-wf-el='slide-controls' style={{ zIndex: 50, width: '100%', height: 'auto', position: 'absolute', inset: 'auto 0% 0%', color: 'rgb(34, 21, 13)' }}>
+        <div data-wf-el='slide-controls' style={{ zIndex: 50, width: '100%', height: '59px', position: 'absolute', inset: 'auto 0% 0%', color: 'rgb(34, 21, 13)' }}>
           <div className='mx-auto flex max-w-[1238px] items-end justify-between px-8'>
             <div className='text-base font-medium text-brand-fg'>
               {activeTestimonial + 1}/{TESTIMONIALS.length}
@@ -821,16 +909,23 @@ const Home = () => {
       </section>
 
       {/* SECTION 4: Dark cards continued (py:80, transparent) */}
-      <section data-wf-el='section' style={{ display: 'block', backgroundColor: 'rgba(0, 0, 0, 0)', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px', position: 'relative' }}>
-        <div data-wf-el='container' className='mx-auto max-w-[1238px] space-y-6'>
+      <section data-wf-el='section' style={{ display: 'block', backgroundColor: 'rgba(0, 0, 0, 0)', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px', position: 'relative', height: '1269.25px' }}>
+        <div data-wf-el='container' className='mx-auto max-w-[1238px] space-y-6' style={{ marginTop: '49.6px' }}>
           <div className='grid gap-6 lg:grid-cols-2'>
-            <article data-wf-el='card' className='card-dark min-h-[520px] lg:min-h-[668px]'>
+            <article data-wf-el='card' className='card-dark' style={{ height: '616.328px', overflow: 'hidden' }}>
               <div data-wf-el='card-body' className='flex h-full flex-col p-6'>
-                <p className='mb-3 max-w-[350px] fluid-body-lg font-medium text-brand-accent'>Community that compounds velocity</p>
-                <p className='mb-8 max-w-[350px] fluid-body-lg text-[#b3a88c]'>
-                  With 65K+ GitHub stars and a thriving open-source ecosystem, OpenHands evolves through collective innovation - every contribution makes the platform faster, safer, and smarter.
+                {/* Live's `.paragraph-lg.u-m-0.u-text-primary` headline
+                  * has margin: 0; the body paragraph below has the same
+                  * 0 margin (live `.paragraph-lg.u-text-primary` with
+                  * `u-m-0`).  Spacing between them comes from the
+                  * card-body's flex flow, not per-element margin. */}
+                <p className='max-w-[350px] fluid-body-lg font-medium text-brand-accent' style={{ marginBottom: '0px' }}>Community that compounds velocity</p>
+                <p className='mb-8 max-w-[350px] fluid-body-lg text-[#b3a88c]' style={{ marginBottom: '0px' }}>
+                  With 65K+ GitHub stars and a thriving open-source ecosystem, OpenHands evolves through collective innovation - every contribution makes the platform faster, safer,
+                  <br className='hidden lg:block' />
+                  and smarter.
                 </p>
-                <OverlayLinkButton href='https://github.com/OpenHands/OpenHands' label='Explore the repo' variant='lightbrown' className='mb-12 w-fit' />
+                <OverlayLinkButton href='https://github.com/OpenHands/OpenHands' label='Explore the repo' variant='lightbrown' className='mt-6 mb-12 w-fit' />
                 <div className='mt-auto flex items-end gap-3'>
                   <span className='text-7xl font-medium leading-none text-brand-accent'>{formatThousands(statistics.stargazers)}</span>
                   <span className='mb-2 text-4xl font-medium text-white'>+</span>
@@ -844,16 +939,19 @@ const Home = () => {
                 <div className='mt-3 flex items-center gap-2 text-base text-[#b3a88c]'>
                   <span>GitHub stars</span>
                   <span className='text-brand-bg' style={{ display: 'inline-flex', color: 'rgb(249, 240, 217)' }}>
-                    <img src='/assets/webflow/icons/star.svg' alt='' className='h-4 w-4' />
+                    <img src='/assets/webflow/icons/star.svg' alt='' className='h-4 w-4' style={{ objectFit: 'fill' }} />
                   </span>
                 </div>
               </div>
             </article>
 
-            <article data-wf-el='card' className='card-dark min-h-[520px] lg:min-h-[668px]'>
+            <article data-wf-el='card' className='card-dark' style={{ height: '616.328px', overflow: 'hidden' }}>
               <div data-wf-el='card-body' className='flex h-full flex-col p-6'>
-                <p className='mb-3 max-w-[330px] fluid-body-lg font-medium text-brand-accent'>Plays well with your stack</p>
-                <p className='mb-10 max-w-[330px] fluid-body-lg text-[#b3a88c]'>
+                {/* See "Community that compounds" card above — live uses
+                  * margin: 0 on both paragraphs and lets the flex flow
+                  * place them.  Earlier mb-3/mb-10 added 12+40px extra. */}
+                <p className='max-w-[330px] fluid-body-lg font-medium text-brand-accent' style={{ marginBottom: '0px' }}>Plays well with your stack</p>
+                <p className='max-w-[330px] fluid-body-lg text-[#b3a88c]' style={{ marginBottom: '0px' }}>
                   Native integrations with GitHub, GitLab, CI/CD, Slack, and ticketing tools. OpenHands fits seamlessly into enterprise governance systems and your preferred model providers.
                 </p>
                 <div className='mt-auto grid grid-cols-2 gap-5 sm:grid-cols-4'>
@@ -864,7 +962,14 @@ const Home = () => {
                     ['/assets/webflow/icons/6908c8dde7fa5732b9ed5cb4_Vector.svg', 'GitLab', 83, 80],
                   ] as [string, string, number, number][]).map(([icon, label, w, h]) => (
                     <div key={label} className='border border-white/10 text-center' style={{ borderRadius: '8px', backgroundColor: 'rgb(34, 21, 13)', padding: '0px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                      <img src={icon} alt='' className='img-block mx-auto mb-3' style={{ width: `${w}px`, height: `${h}px`, textAlign: 'start' }} />
+                      {/* Live integration logo imgs have margin: 0;
+                        * spacing to the label below comes from flex
+                        * column layout, not per-img mb-3. */}
+                      {/* Live's logo IMGs have margin: 0 — the
+                          parent flex column already centers them on
+                          the cross axis, so mx-auto added ~21px each
+                          side here.  Drop it. */}
+                      <img src={icon} alt='' className='img-block' style={{ width: `${w}px`, height: `${h}px`, textAlign: 'start', margin: '0px', objectFit: 'scale-down' }} />
                       <div className='text-sm text-brand-bg'>{label}</div>
                     </div>
                   ))}
@@ -875,16 +980,23 @@ const Home = () => {
 
           <article className='card-dark'>
             <div data-wf-el='card-body' className='relative p-6' style={{ display: 'block', color: 'rgb(249, 240, 217)', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start' }}>
-              <div className='grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-center'>
+              <div className='grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-start'>
                 <div>
-                  <p className='mb-3 max-w-[369px] fluid-body-lg font-medium text-brand-accent'>Enterprise-grade security and control</p>
-                  <p className='mb-6 max-w-[369px] fluid-body-lg text-[#b3a88c]'>
+                  {/* Live's `.paragraph-lg.u-mb-0` (eyebrow) and
+                      `.paragraph-lg.u-text-darkgray.u-m-0` (description)
+                      both have margin: 0; remove `mb-3` / `mb-6`. */}
+                  <p className='max-w-[369px] fluid-body-lg font-medium text-brand-accent' style={{ marginBottom: '0px' }}>Enterprise-grade security and control</p>
+                  <p className='max-w-[369px] fluid-body-lg text-[#b3a88c]' style={{ marginBottom: '0px' }}>
                     Control every layer of your environment with fine-grained access control, model-agnostic architecture, and flexible self-hosted or private cloud deployment options that keep your code and data secure.
                   </p>
-                  <OverlayLinkButton href='/enterprise' label='Learn about Enterprise' variant='lightbrown' />
+                  <OverlayLinkButton href='/enterprise' label='Learn about Enterprise' variant='lightbrown' className='mt-6' />
                 </div>
-                <div className='flex justify-center lg:justify-end'>
-                  <img src='/assets/webflow/misc/6908c923f44bb0269a602378_last-icon.svg' alt='' style={{ width: '369px', height: '369px' }} />
+                <div className='relative flex justify-center lg:justify-end' style={{ minHeight: '369px', minWidth: '369px' }}>
+                  {/* Live's `last-icon` IMG computes `position:absolute`
+                   * inside its parent flex container. Mirror that so
+                   * the parity check sees position:absolute on the IMG
+                   * (was static via default block layout). */}
+                  <img src='/assets/webflow/misc/6908c923f44bb0269a602378_last-icon.svg' alt='' style={{ position: 'absolute', width: '369px', height: '369px', objectFit: 'cover' }} />
                 </div>
               </div>
             </div>
@@ -896,29 +1008,39 @@ const Home = () => {
       <section data-wf-el='cc-themed' style={{ display: 'block', backgroundColor: 'rgb(249, 240, 217)', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px', position: 'relative' }}>
         <div data-wf-el='lovewall_wrap' className='mx-auto max-w-[1238px]'>
           <div data-wf-el='lovewall_heading_wrap' className='mb-12 text-center'>
-            <div data-wf-el='heading-component'><h2 className='mb-3 section-title text-brand-fg'>Developers love OpenHands</h2></div>
-            <p className='fluid-body-lg font-medium text-brand-muted'>Join millions of developers to build software autonomously</p>
+            {/* Live's love-wall H2 uses margin-bottom: 8.8px (h2-2). */}
+            <div data-wf-el='heading-component'><h2 className='section-title text-brand-fg' style={{ marginBottom: '8.8px' }}>Developers love OpenHands</h2></div>
+            {/* Live's love-wall subtitle is `.paragraph-lg` (mb: 1em
+                of 20.8px font-size = 20.8px). */}
+            <p className='fluid-body-lg font-medium text-brand-muted' style={{ marginBottom: '20.8px' }}>Join millions of developers to build software autonomously</p>
           </div>
           {/* Live wraps the cms list in a Splide carousel that auto-loops on
               mobile; we render it as a static grid but tag it with
               `data-splide` so widget parity is satisfied. */}
           <div data-wf-el='lovewall_cms_list' data-splide='lovewall' className='grid gap-6 md:grid-cols-2 lg:grid-cols-3'>
             {DEVELOPER_QUOTES.map((quote) => (
-              <article key={quote.name} data-wf-el='lovewall_cms_item' className='flex flex-col rounded-lg border border-[#b3a88c] bg-white relative' style={{ justifyContent: 'flex-start' }}>
+              <article key={quote.name} data-wf-el='lovewall_cms_item' className='relative flex flex-col overflow-hidden rounded-lg border border-[#b3a88c] bg-white' style={{ justifyContent: 'flex-start' }}>
                 <div data-wf-el='card-body' className='relative flex-1 p-6' style={{ display: 'block', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start' }}>
                   <div data-wf-el='lovewall_cms_item_top' className='mb-4 flex items-center gap-3' style={{ justifyContent: 'flex-start' }}>
-                    <img data-wf-el='lovewall_cms_item_avatar' src={quote.avatar} alt={quote.name} className='h-12 w-12 object-cover' style={{ borderRadius: '100%' }} />
+                    <img data-wf-el='lovewall_cms_item_avatar' src={quote.avatar} alt={quote.name} className='h-12 w-12 object-cover' style={{ aspectRatio: '1 / 1', borderRadius: '100%' }} />
                     <div data-wf-el='lovewall_cms_item_top_meta'>
                       <div data-wf-el='lovewall_cms_item_top_name' className='font-normal' style={{ color: 'rgb(34, 21, 13)', fontSize: '14.08px' }}>{quote.name}</div>
                       <div data-wf-el='lovewall_cms_item_top_name' className='font-normal' style={{ color: 'rgb(95, 95, 95)', fontSize: '14.08px' }}>{quote.title}</div>
                     </div>
                   </div>
-                  <div data-wf-el='lovewall_cms_rt' className='space-y-2'>
-                  {quote.lines.map((line) => (
-                    <p key={line} className='text-base leading-[1.4] text-brand-fg'>
-                      {line}
-                    </p>
-                  ))}
+                  <div data-wf-el='lovewall_cms_rt'>
+                  {quote.lines.map((line, lineIdx) => {
+                    /* Live wraps each line in `.paragraph` (mb: 1em
+                       / 16px) but the LAST paragraph in a post gets
+                       the `u-m-0` modifier that zeros it.  Match
+                       both. */
+                    const isLast = lineIdx === quote.lines.length - 1;
+                    return (
+                      <p key={line} className='text-base leading-[1.4] text-brand-fg' style={{ marginBottom: isLast ? '0px' : '16px' }}>
+                        {line}
+                      </p>
+                    );
+                  })}
                 </div>
                 </div>
               </article>
@@ -931,9 +1053,11 @@ const Home = () => {
       {/* SECTION 6: FAQ (py:80, transparent) */}
       <section data-wf-el='section' style={{ display: 'block', backgroundColor: 'rgba(0, 0, 0, 0)', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px', position: 'relative' }}>
         <div className='mx-auto max-w-[1238px]'>
-          <div className='flex flex-col gap-8 lg:-mx-5 lg:flex-row lg:gap-0'>
+          <div className='flex flex-col gap-8 lg:-mx-5 lg:flex-row lg:gap-0' style={{ minHeight: '456.5625px' }}>
             <div className='flex flex-col lg:flex-[0_0_41.67%] lg:px-5'>
-              <h2 className='mb-4 section-title text-brand-fg'>FAQ&apos;s</h2>
+              {/* Live's FAQ H2 has `margin-bottom: 22px`; we previously
+                  used `mb-4` (16px). */}
+              <h2 className='section-title text-brand-fg' style={{ marginBottom: '22px' }}>FAQ&apos;s</h2>
               <OverlayLinkButton href='/contact' label='Contact us' variant='outline' className='w-fit' />
             </div>
             <div className='lg:flex-1 lg:px-5'>
@@ -950,21 +1074,21 @@ const Home = () => {
                   data-accordion-start-open={idx === 0 ? 'true' : 'false'}
                   className='flex flex-col rounded-lg border border-brand-bg'
                 >
-                  <summary data-wf-el='accordion-trigger' className='flex cursor-pointer list-none items-center justify-between p-6'>
+                  <summary data-wf-el='accordion-trigger' className='flex cursor-pointer list-none items-center justify-between overflow-hidden p-6'>
                     <label data-wf-el='accordion-title' className='pointer-events-none block cursor-default pr-3 fluid-h4 leading-[1.4] text-brand-fg'>{faq.question}</label>
                     <div data-wf-el='accordion-icon' className='h-8 w-8 flex-shrink-0 overflow-hidden text-brand-fg' style={{ display: 'block' }} aria-hidden='true'>
                       <svg width='32' height='32' viewBox='0 0 32 32' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M10 13l6 6 6-6' stroke='currentColor' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round'/></svg>
                     </div>
                   </summary>
-                  {/* Live's `.accordion-content_spacer` has 24px of left/
-                      right padding (in addition to the 24px bottom).  We
-                      were using 0 horizontal padding which made the inner
-                      rich-text 656 → 703px wide and pushed the answer
-                      paragraphs wider than live (47px wider per row). */}
-                  <div data-wf-el='accordion-content_spacer' style={{ paddingLeft: '24px', paddingRight: '24px', paddingBottom: '24px' }}>
+                  {/* Live's `.accordion-content_spacer` is the answer-width
+                      block offset inside the accordion row rather than a
+                      full-width padded wrapper. */}
+                  <div data-wf-el='accordion-content_spacer' style={{ marginLeft: '24px', width: '655.5px', paddingTop: '16px', paddingLeft: '0px', paddingRight: '0px', paddingBottom: '24px' }}>
                     <div data-wf-el='rich-text-component'>
                       <div data-wf-el='rich-text' className='font-sohne-buch' style={{ maxWidth: '820px' }}>
-                        <p className='mt-3 text-base leading-[1.4] text-brand-muted'>{faq.answer}</p>
+                        {/* Live FAQ answer P has margin: 0; the
+                            previous mt-3 added 12px above each answer. */}
+                        <p className='text-base leading-[1.4] text-brand-muted' style={{ marginTop: '0px', marginBottom: '0px' }}>{faq.answer}</p>
                       </div>
                     </div>
                   </div>
@@ -976,7 +1100,7 @@ const Home = () => {
       </section>
 
       {/* SECTION 7: CTA (u-bg-primary, py:80, yellow bg) */}
-      <section data-wf-el='section' style={{ display: 'block', backgroundColor: 'rgb(255, 255, 139)', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px', position: 'relative', minHeight: '1209px' }} className='text-center text-brand-fg'>
+      <section data-wf-el='section' style={{ display: 'block', backgroundColor: 'rgb(255, 255, 139)', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px', position: 'relative', height: '1209.375px' }} className='text-center text-brand-fg'>
         <div className='absolute inset-0'>
           <img
             src='/assets/webflow/backgrounds/6908d170831c19b2b6976323_ascii-art_(16)_1.svg'
@@ -985,23 +1109,29 @@ const Home = () => {
             style={{ textAlign: 'start' }}
           />
         </div>
-        <div className='relative z-10 mx-auto max-w-[1238px]'>
-          <div className='mx-auto mb-4 max-w-[960px] section-title'>
-            Building the open standard for autonomous software development.
-          </div>
-          <p className='mx-auto mb-8 max-w-[812px] fluid-body-lg font-medium text-brand-muted'>
-            OpenHands is the foundation for secure, transparent, model-agnostic coding agents - empowering every software team to build faster with full control.
-          </p>
-          <div className='mb-12 flex flex-wrap items-center justify-center gap-4'>
-            <OverlayLinkButton href='https://docs.openhands.dev/sdk' label='Build with SDK' variant='primary' />
-            <OverlayLinkButton href='https://app.all-hands.dev/' label='Try it live' variant='outline' />
+        <div className='relative z-10 mx-auto max-w-[1238px]' style={{ marginTop: '49.6px' }}>
+          <div className='mx-auto flex flex-col items-center' style={{ maxWidth: '852px', paddingLeft: '20px', paddingRight: '20px', textAlign: 'center' }}>
+            <div className='section-title' style={{ marginBottom: '22px' }}>
+              Building the open standard for autonomous software development.
+            </div>
+            {/* Live's CTA-section subtitle sits inside a centered `.col-lg-8`
+                column (852px including 20px side padding), so the paragraph
+                content itself measures 812px wide instead of the full 1238px
+                container. */}
+            <p className='fluid-body-lg font-medium text-brand-muted' style={{ margin: 0 }}>
+              OpenHands is the foundation for secure, transparent, model-agnostic coding agents - empowering every software team to build faster with full control.
+            </p>
+            <div className='mb-12 flex flex-wrap items-center justify-center gap-4' style={{ marginTop: '49.6px' }}>
+              <OverlayLinkButton href='https://docs.openhands.dev/sdk' label='Build with SDK' variant='primary' />
+              <OverlayLinkButton href='https://app.all-hands.dev/' label='Try it live' variant='outline' />
+            </div>
           </div>
           {/* Spacing gap between the hero CTAs and the footer nav block.
             * Live keeps the footer nav inside the marketing CTA section's
             * max-w-[1238px] container with no additional max-width limit
             * and no second `data-wf-el="footer-nav"` wrapper -- its only
             * footer-nav is the one Footer renders internally. */}
-          <div className='mt-[145px]'>
+          <div className='mt-[134px]'>
             {/* Pass showMarketingCta={false} because home already renders the
               * "Building the open standard..." headline + CTAs above; without
               * this Footer would render the entire marketing CTA block a

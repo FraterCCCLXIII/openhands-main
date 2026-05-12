@@ -32,7 +32,7 @@ interface FooterProps {
   marketingCtaTitle?: string;
   marketingCtaDescription?: string;
   marketingCtaPrimary?: FooterCta;
-  marketingCtaSecondary?: FooterCta;
+  marketingCtaSecondary?: FooterCta | null;
 }
 
 /**
@@ -44,7 +44,7 @@ interface FooterMarketingCtaProps {
   title?: string;
   description?: string;
   primary?: FooterCta;
-  secondary?: FooterCta;
+  secondary?: FooterCta | null;
 }
 
 const DEFAULT_CTA_TITLE = 'Building the open standard for autonomous software development.';
@@ -62,16 +62,20 @@ const FooterMarketingCta = ({
   // inside the footer section, so adding a custom key here would
   // register as a phantom 'extra-on-test' wf element that has no
   // corresponding live counterpart.
-  <div className='mb-12 flex flex-col items-center gap-6 text-center'>
-    <div className='section-title max-w-[812px] tracking-[-0.02em] text-brand-fg'>
-      {title}
-    </div>
-    <p className='max-w-[812px] fluid-body-lg font-medium text-brand-muted'>
-      {description}
-    </p>
-    <div className='flex flex-wrap items-center justify-center gap-4'>
-      <OverlayLinkButton href={primary.href} label={primary.label} variant='primary' />
-      <OverlayLinkButton href={secondary.href} label={secondary.label} variant='outline' />
+  <div className='text-center' style={{ marginTop: '49px', marginBottom: '127px' }}>
+    <div style={{ width: '852px', maxWidth: '100%', marginLeft: 'auto', marginRight: 'auto', paddingLeft: '20px', paddingRight: '20px', boxSizing: 'border-box' }}>
+      <div className='section-title max-w-[812px] tracking-[-0.02em] text-brand-fg' style={{ marginBottom: '22px' }}>
+        {title}
+      </div>
+      <p className='w-full max-w-[812px] fluid-body-lg font-medium text-brand-muted'>
+        {description}
+      </p>
+      <div className='flex flex-wrap items-center justify-center gap-4' style={{ marginTop: '51px' }}>
+        <OverlayLinkButton href={primary.href} label={primary.label} variant='primary' />
+        {secondary ? (
+          <OverlayLinkButton href={secondary.href} label={secondary.label} variant='outline' />
+        ) : null}
+      </div>
     </div>
   </div>
 );
@@ -132,17 +136,23 @@ const FooterContent = ({
         />
       ) : null}
       {showSocialLinks ? (
-        <div className='mb-12 flex justify-center'>
-          <div className='flex flex-wrap items-center justify-center gap-4'>
+        <div
+          data-wf-el='footer-social-row'
+          className='mb-12 flex justify-center'
+          style={{ marginLeft: '-20px', marginRight: '-20px', rowGap: '40px', textAlign: 'start' }}
+        >
+          <div className='flex flex-wrap items-center justify-center gap-2'>
             {SOCIAL_LINKS.map((item) => (
               <a
                 key={item.label}
                 href={item.href}
                 {...('external' in item && item.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-                className='flex h-10 w-10 items-center justify-center'
+                className='flex items-center justify-center'
+                style={{ width: '65px', height: '65px', maxWidth: '100%', textAlign: 'start', textDecoration: 'underline', textDecorationThickness: '1.6px', textUnderlineOffset: '1.6px', objectFit: 'contain' }}
+                data-wf-el='standard-media'
                 data-testid='footer-social-link'
               >
-                <img src={item.icon} alt='' className='h-10 w-10 object-contain' />
+                <img data-wf-el='standard-media-img' src={item.icon} alt='' style={{ width: '65px', height: '65px', objectFit: 'scale-down', textUnderlineOffset: '1.6px' }} />
               </a>
             ))}
           </div>
@@ -163,7 +173,7 @@ const FooterContent = ({
         {compactNav ? (
           <div
             className={clsx(
-              'flex w-full flex-wrap items-start justify-between gap-x-6 gap-y-4 border-b border-[#b3a88c] pb-4 text-left',
+              'flex w-full flex-wrap items-start justify-between gap-x-6 gap-y-4 border-b border-[#b3a88c] text-left',
               navWidthClass ?? 'max-w-[825px]'
             )}
           >
@@ -226,10 +236,11 @@ const FooterContent = ({
 
             <Link
               to='/contact'
+              aria-current={normalizePathname('/contact') === pathname ? 'page' : undefined}
               data-wf-el='nav-link'
               className={clsx(
                 'whitespace-nowrap px-[5px] py-[14.4px] text-base font-medium leading-[22.4px] link-hover hover:text-[#8a5f45]',
-                ''
+                normalizePathname('/contact') === pathname && 'text-[#8a5f45]'
               )}
               style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '4.8px' }}
             >
@@ -249,7 +260,7 @@ const FooterContent = ({
                 to={item.to}
                 data-wf-el='nav-link'
                 className={clsx(
-                  'whitespace-nowrap text-left text-base font-medium leading-[22.4px] link-hover hover:text-[#8a5f45]',
+                  'whitespace-nowrap px-[5px] py-[14.4px] text-left text-base font-medium leading-[22.4px] link-hover hover:text-[#8a5f45]',
                   ''
                 )}
                 style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '4.8px' }}
@@ -292,7 +303,7 @@ const FooterContent = ({
               to='/contact'
               data-wf-el='nav-link'
               className={clsx(
-                'whitespace-nowrap text-left text-base font-medium leading-[22.4px] link-hover hover:text-[#8a5f45]',
+                'whitespace-nowrap px-[5px] py-[14.4px] text-left text-base font-medium leading-[22.4px] link-hover hover:text-[#8a5f45]',
                 ''
               )}
               style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '4.8px' }}
@@ -307,7 +318,7 @@ const FooterContent = ({
           single Privacy Policy eyebrow link, centered.  We keep the
           copyright in a sr-only span so the legal credit isn't lost
           but it doesn't appear in parity DOM inventories. */}
-      <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: compactNav ? '62px' : '0px' }}>
         <span className='sr-only'>© {new Date().getFullYear()} OpenHands - All rights reserved</span>
         <Link
           to='/privacy'
@@ -330,9 +341,10 @@ const FooterContent = ({
       {/* Live's `.standard-media` has `margin-top: 0` — vertical
        * spacing above the big OpenHands wordmark comes from the
        * preceding row's bottom padding, not this wrapper's `mt-8`. */}
-      <div data-wf-el='standard-media' className='flex justify-center' style={{ textAlign: 'start', alignItems: 'center', marginTop: '0px' }}>
-        <img data-wf-el='standard-media-img' src='/assets/webflow/backgrounds/openhands_logo_black.svg' alt='' style={{ width: '610px', height: '102px', textAlign: 'start' }} />
+      <div data-wf-el='standard-media' style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', textAlign: 'start', marginTop: compactNav ? '40px' : '0px', marginLeft: 'auto', marginRight: 'auto', width: '610px', height: '102px', objectFit: 'contain' }}>
+        <img data-wf-el='standard-media-img' src='/assets/webflow/backgrounds/openhands_logo_black.svg' alt='' style={{ display: 'block', width: '610px', height: '102px', textAlign: 'start', objectFit: 'scale-down' }} />
       </div>
+      {compactNav ? <div aria-hidden='true' style={{ height: '50px' }} /> : null}
     </div>
   );
 };
@@ -374,10 +386,10 @@ export const Footer = ({
     // footers; we want the same totals.
     <section
       data-wf-el='section'
-      className='relative overflow-hidden bg-brand-accent text-brand-fg'
+      className='relative overflow-visible bg-brand-accent text-brand-fg'
       style={{ padding: '80px 0px', minHeight: minHeight ? `${minHeight}px` : undefined }}
     >
-      <div data-wf-el='asci-wrap' className='absolute inset-0'>
+      <div data-wf-el='asci-wrap' className='absolute inset-0 overflow-hidden'>
         <img
           data-wf-el='asci-media'
           src='/assets/webflow/backgrounds/6908d170831c19b2b6976323_ascii-art_(16)_1.svg'

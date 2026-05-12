@@ -10,7 +10,7 @@ import {
 import { blogAPI, getBlogSlug } from '~/api/blog';
 import { BlogFooter } from '~/components/blog-footer';
 import { CMarkdown } from '~/components/c-markdown';
-import { MarketingFooterCta } from '~/components/marketing-footer-cta';
+import { Footer } from '~/components/footer';
 import { PlaceholderImage } from '~/components/placeholder-image';
 import { getOpenHandsBlogUrl } from '~/utils/blog-slug-aliases';
 import { formatDate } from '~/utils/format-date';
@@ -24,6 +24,9 @@ const formatSeoTitleDate = (date: string) =>
     day: '2-digit',
     year: 'numeric',
   });
+
+export const handle = { hideGlobalFooter: true };
+
 
 export const action = handleNewsletterSubscription;
 
@@ -164,18 +167,18 @@ const BlogDetails = () => {
   }, []);
 
   return (
-    <article className='flex flex-col items-center px-5 pb-16 pt-[45px] lg:px-10'>
-      <div className='w-full max-w-[1240px]'>
-        <div className='mx-auto w-full max-w-[1240px]'>
+    <main data-wf-el='page-main' className='flex flex-col'>
+      <section data-wf-el='section-hero' className='w-full'>
+        <div className='mx-auto w-full max-w-[1238px] px-5 lg:px-0' style={{ paddingTop: '64px' }}>
           <Link
             to='/blog'
-            className='inline-flex text-[18px] leading-[1.2] font-medium text-brand-fg transition-colors hover:text-brand-brown'
+            className='mb-4 block w-fit text-[16px] leading-[1.4] font-normal text-brand-fg transition-colors hover:text-brand-brown'
           >
             ← Back to Blog
           </Link>
         </div>
 
-        <header className='mx-auto mt-6 flex w-full max-w-[1240px] flex-col gap-8'>
+        <header className='mx-auto mt-6 flex w-full max-w-[1238px] flex-col gap-8 px-5 pb-20 lg:px-0'>
           <div className='max-w-[560px]'>
             <h1 className='fluid-h1 font-sohne text-brand-fg'>
               {data.title}
@@ -199,10 +202,10 @@ const BlogDetails = () => {
             )}
           </figure>
 
-          <div className='grid grid-cols-1 gap-4 pt-4 md:grid-cols-2'>
+          <div className='grid grid-cols-1 gap-10 pt-4 md:grid-cols-2'>
             <div>
-              <p className='m-0 text-[14px] leading-[1.5] text-[#5f5f5f]'>Written by</p>
-              <p className='mt-2 text-[18px] leading-[1.2] font-medium text-brand-fg'>
+              <p className='text-[14px] leading-[1.5] text-[#5f5f5f]' style={{ marginTop: '7.2px', marginBottom: '14.4px' }}>Written by</p>
+              <p className='m-0 text-[20.8px] leading-[24.96px] font-medium text-brand-fg'>
                 {data.authors.map((author, index) => {
                   const content = author.link ? (
                     <a
@@ -228,37 +231,33 @@ const BlogDetails = () => {
             </div>
 
             <div className='md:text-right'>
-              <p className='m-0 text-[14px] leading-[1.5] text-[#5f5f5f]'>Published on</p>
-              <p className='mt-2 text-[18px] leading-[1.2] font-medium text-brand-fg'>
+              <p className='text-[14px] leading-[1.5] text-[#5f5f5f]' style={{ marginTop: '7.2px', marginBottom: '14.4px' }}>Published on</p>
+              <p className='m-0 text-[20.8px] leading-[24.96px] font-medium text-brand-fg'>
                 <time dateTime={data.date}>{formatDate(data.date)}</time>
               </p>
             </div>
           </div>
         </header>
-      </div>
+      </section>
 
-      <main className='mt-12 flex w-full max-w-[1240px] flex-col gap-10'>
-        <section data-wf-el='section' className='mx-auto w-full max-w-[820px]'>
+      <section data-wf-el='section' className='w-full' style={{ paddingTop: '80px', paddingBottom: '80px' }}>
+        <div className='mx-auto w-full max-w-[820px] px-5 lg:px-0'>
           <CMarkdown variant='blog' codeElementWidth={codeElementWidth}>
             {data.content}
           </CMarkdown>
-        </section>
-
-        <section data-wf-el='section' className='w-full'>
-          <BlogFooter
-            title={data.title}
-            authors={data.authors}
-            date={data.date}
-            url={data.url}
-            articleHighlights={data.articleHighlights}
-          />
-        </section>
-
-        <div className='w-full'>
-          <MarketingFooterCta semanticHeading={false} />
         </div>
-      </main>
-    </article>
+      </section>
+
+      <BlogFooter
+        title={data.title}
+        authors={data.authors}
+        date={data.date}
+        url={data.url}
+        articleHighlights={data.articleHighlights}
+      />
+
+      <Footer standalone showSocialLinks compactNav />
+    </main>
   );
 };
 

@@ -1,4 +1,5 @@
 import type { Route } from './+types/enterprise';
+import { Footer } from '~/components/footer';
 import { OverlayLinkButton } from '~/components/overlay-link-button';
 
 const ASCII_BG = '/assets/webflow/backgrounds/6908d170831c19b2b6976323_ascii-art_(16)_1.svg';
@@ -228,6 +229,8 @@ export const meta: Route.MetaFunction = ({ location }) => {
   ];
 };
 
+export const handle = { hideGlobalFooter: true };
+
 // Live's `.container` resolves to max-width 1238px with no horizontal
 // padding (margins handle the gutter at 101px on either side at 1440
 // viewport).  Mirroring that exactly drops 7+ wfMismatch entries
@@ -244,8 +247,9 @@ const Container = ({ children, className = '' }: { children: React.ReactNode; cl
 
 const Eyebrow = ({ children, className = '' }: { children: React.ReactNode; className?: string }) => (
   <div
-    data-wf-el='eyebrow'
-    className={`font-mono text-[14px] font-normal uppercase leading-[16.896px] tracking-[0.04em] ${className}`}
+    data-wf-el='acp_features_eyebrow'
+    className={`font-mono text-[14px] font-normal leading-[16.896px] ${className}`}
+    style={{ width: 'fit-content', marginBottom: '21.12px' }}
   >
     {children}
   </div>
@@ -258,7 +262,7 @@ const Enterprise = () => {
        * inner container handles the gutter and vertical rhythm. */}
       <section
         data-wf-el='section-hero'
-        className='relative overflow-hidden'
+        className='relative overflow-visible'
         style={{
           ...SECTION_BASE,
           paddingTop: '0px',
@@ -405,7 +409,7 @@ const Enterprise = () => {
             <img
               src={CONTROL_PLANE_IMG}
               alt=''
-              className='h-auto w-full object-contain'
+              className='h-auto w-full object-cover'
               loading='lazy'
               style={{ textAlign: 'start' }}
             />
@@ -415,7 +419,7 @@ const Enterprise = () => {
 
       {/* GOVERN AGENTS — 1+2+2 layout (first card spans 2 cols).  Live uses
        * h3.h2 for the section heading and h3.h4 for each card heading. */}
-      <section data-wf-el='section' style={SECTION_BASE}>
+      <section data-wf-el='section' style={{ ...SECTION_BASE, paddingBottom: '103px' }}>
         <Container>
           {/* Live's H3 has no max-width constraint and 66px bottom
             * margin so the headline fits on a single 48px line.  The
@@ -477,8 +481,8 @@ const Enterprise = () => {
                 <div data-wf-el='acp_features_eyebrow' className='font-mono text-[14px] font-normal leading-[16.896px] text-brand-fg'>
                   {eyebrow}
                 </div>
-                <h3 data-wf-el='acp_features_heading' className='fluid-h4 font-medium text-brand-fg'>{heading}</h3>
-                <p data-wf-el='acp_features_paragraph' className='text-[16px] leading-[22.4px] text-[#5f5f5f]' style={{ maxWidth: '808.961px' }}>{paragraph}</p>
+                <h3 data-wf-el='acp_features_heading' className='fluid-h4 font-medium text-brand-fg' style={{ marginBottom: 0 }}>{heading}</h3>
+                <p data-wf-el='acp_features_paragraph' className='text-[16px] leading-[22.4px] text-[#5f5f5f]' style={{ maxWidth: '808.961px', marginBottom: '0px' }}>{paragraph}</p>
                 {/* Live's `.product-list_ul` has padding-left:0 and uses
                  * the dark-brown body color; bullets get explicit 16px
                  * top/bottom padding instead of the default UL spacing. */}
@@ -521,10 +525,10 @@ const Enterprise = () => {
       </section>
 
       {/* EVENT TO PR — dark 2-column with image */}
-      <section data-wf-el='section' style={SECTION_DARK}>
+      <section data-wf-el='section' style={{ ...SECTION_DARK, minHeight: '638px' }}>
         <Container>
           <div className='grid grid-cols-1 items-center gap-10 lg:grid-cols-2 lg:gap-16'>
-            <div className='flex flex-col gap-4'>
+            <div className='flex flex-col items-start gap-4'>
               {/* Live tags this eyebrow as `.acp_features_eyebrow` (not
                * the generic top-level `.eyebrow`) and gives it a 21.12px
                * margin-bottom — matching the in-card eyebrows in the
@@ -537,8 +541,8 @@ const Enterprise = () => {
               >
                 Automations
               </div>
-              <h2 className='section-title text-brand-bg'>From event to PR, no human in the loop.</h2>
-              <p className='fluid-body-lg text-[#b3a88c]'>
+              <h2 className='section-title text-brand-bg' style={{ width: '599px' }}>From event to PR, no human in the loop.</h2>
+              <p className='fluid-body-lg text-[#b3a88c]' style={{ marginBottom: '20.8px' }}>
                 Wire OpenHands to the tools your team already uses. When something happens, the right agent fires, does the work, and opens a pull request.
                 <br />
                 <br />
@@ -546,14 +550,14 @@ const Enterprise = () => {
               </p>
             </div>
             <div>
-              <img src={STEPS_IMG} alt='' className='img-block h-auto w-full object-contain' loading='lazy' />
+              <img src={STEPS_IMG} alt='' className='img-block h-auto w-full object-fill' loading='lazy' />
             </div>
           </div>
         </Container>
       </section>
 
       {/* C3.ai QUOTE — light section with ASCII hole bg */}
-      <section data-wf-el='section' className='overflow-hidden' style={SECTION_BASE}>
+      <section data-wf-el='section' className='overflow-visible' style={SECTION_BASE}>
         <div className='absolute inset-0' aria-hidden='true'>
           <img
             src={ASCII_HOLE_BG}
@@ -593,10 +597,11 @@ const Enterprise = () => {
                * live's image is a flat raster. */}
               <div
                 data-wf-el='quote-author-media'
-                className='inline-flex h-12 w-12 items-center justify-center overflow-hidden'
+                className='h-12 w-12 overflow-hidden'
                 style={{
                   borderRadius: '50%',
                   backgroundColor: 'rgb(34, 21, 13)',
+                  display: 'block',
                 }}
               >
                 <img
@@ -627,10 +632,10 @@ const Enterprise = () => {
       {/* BUILT FOR TEAMS — 3+2 layout (3-col grid, last 2 cards on row 2). */}
       <section data-wf-el='section' style={SECTION_BASE}>
         <Container>
-          <div className='mb-10 flex flex-col gap-3'>
+          <div className='flex flex-col items-start' style={{ marginBottom: '0px', justifyContent: 'center' }}>
             <Eyebrow className='text-brand-fg'>OpenHands Enterprise</Eyebrow>
-            <h2 className='section-title text-brand-fg'>Built for teams running agents at scale. </h2>
-            <p className='fluid-body-lg text-[#5f5f5f]'>
+            <h2 className='section-title max-w-[724px] text-brand-fg'>Built for teams running agents at scale. </h2>
+            <p className='fluid-body-lg text-[#5f5f5f]' style={{ marginBottom: '20.8px' }}>
               Self-hosted in your VPC via Kubernetes. Source-available. Backed by extended support and direct access to our research team.
             </p>
           </div>
@@ -673,8 +678,8 @@ const Enterprise = () => {
                   >
                     <Icon />
                   </div>
-                  <h3 data-wf-el='acp_features_heading' className='fluid-h4 font-medium text-brand-fg'>{heading}</h3>
-                  <p data-wf-el='acp_features_paragraph' className='text-[16px] leading-[22.4px] text-[#5f5f5f]' style={{ maxWidth: '808.961px' }}>{paragraph}</p>
+                  <h3 data-wf-el='acp_features_heading' className='fluid-h4 font-medium text-brand-fg' style={{ marginBottom: 0 }}>{heading}</h3>
+                  <p data-wf-el='acp_features_paragraph' className='text-[16px] leading-[22.4px] text-[#5f5f5f]' style={{ maxWidth: '808.961px', marginBottom: '0px' }}>{paragraph}</p>
                 </article>
               );
             })}
@@ -710,27 +715,30 @@ const Enterprise = () => {
               Legacy modernization projects fail 74% of the time and the engineers who understand your COBOL, mainframe, and legacy systems are retiring faster than you can replace them.
             </p>
             <div className='mt-4'>
-              <span className='btn-wrap-dark'>
-                <OverlayLinkButton
-                  href='/whitepapers/modernize-legacy-systems-with-ai-agents'
-                  label='Download the Whitepaper'
-                  variant='outline'
-                />
-              </span>
+              <OverlayLinkButton
+                href='/whitepapers/modernize-legacy-systems-with-ai-agents'
+                label='Download the Whitepaper'
+                variant='lightbrown'
+                className='!flex'
+              />
             </div>
           </div>
         </Container>
       </section>
 
-      {/* The closing "What comes after Claude Code?" CTA used to live
-       * here as a standalone yellow section, but live renders it as
-       * the first child of the global footer's `section.u-bg-primary`
-       * (one yellow section containing the CTA, social icons, nav,
-       * and ASCII art).  Pushing the CTA copy through the Footer's
-       * marketingCtaTitle/Description/Primary/Secondary slots (wired
-       * up in src/root.tsx via PRODUCT_SUBPAGE_CTA['/enterprise']) is
-       * what gives us the exact same single-section rendering as live
-       * without doubling the CTA up. */}
+      {/* Live renders the closing CTA/footer section inside page-main on
+       * /enterprise, not after </main>. Keeping Footer here avoids a
+       * full footer-height page-main delta in parity while preserving the
+       * same one yellow section containing CTA, social icons, nav, and ASCII art. */}
+      <Footer
+        standalone
+        showSocialLinks
+        compactNav
+        marketingCtaTitle='What comes after Claude Code?'
+        marketingCtaDescription='The teams shipping the most are moving beyond individual agent sessions to governed, automated workflows. Let us show you what that looks like in practice.'
+        marketingCtaPrimary={{ href: '/contact', label: 'Book a Demo' }}
+        marketingCtaSecondary={{ href: 'https://docs.openhands.dev/sdk', label: 'Build with SDK' }}
+      />
     </main>
   );
 };

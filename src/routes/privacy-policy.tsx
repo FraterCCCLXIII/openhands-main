@@ -1,11 +1,10 @@
 import Markdown from 'react-markdown';
 
-import { MarketingFooterCta } from '~/components/marketing-footer-cta';
 import privacyPolicy from '~/legal/privacy-policy.md?raw';
 
 import type { Route } from './+types/privacy-policy';
 
-const legalHeadingClass = 'font-medium leading-[1.15] tracking-[-0.02em] text-brand-fg';
+const legalHeadingClass = 'font-medium leading-[1.15] tracking-normal text-brand-fg';
 const legalDescription =
   'Learn how OpenHands and All Hands AI collect, use, and protect personal information across our website and services.';
 const socialImage =
@@ -46,31 +45,34 @@ export const meta: Route.MetaFunction = ({ location }) => {
 
 function PrivacyPolicy() {
   return (
-    <>
-      <main className='px-6 pb-20 pt-16 text-brand-fg lg:px-10'>
-        <div className='mx-auto max-w-[900px]'>
+    <main data-wf-el='page-main' className='text-brand-fg' style={{ display: 'flex', flexDirection: 'column' }}>
+      <section
+        data-wf-el='section'
+        style={{ display: 'block', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px' }}
+      >
+        <div data-wf-el='container' className='mx-auto max-w-[900px] px-5 lg:px-0'>
           <Markdown
             components={{
               h1: ({ children }) => (
-                <h1 className={`${legalHeadingClass} mb-12 text-center fluid-h3`}>
+                <h1 className={`${legalHeadingClass} mt-0 text-center fluid-h3`} style={{ width: '950px', maxWidth: 'calc(100vw - 40px)', lineHeight: '38.4px', marginLeft: '0px', marginRight: '0px', marginBottom: '48px', position: 'relative', left: '-25px' }}>
                   {children}
                 </h1>
               ),
               h2: ({ children }) => (
-                <h2 className={`${legalHeadingClass} mx-auto mt-7 mb-2 max-w-[900px] text-[20px] leading-[22px]`}>
+                <h2 className={`${legalHeadingClass} mx-auto mb-2 mt-7 max-w-[900px] text-[20px] leading-[22px]`} style={{ letterSpacing: '-0.4px' }}>
                   {children}
                 </h2>
               ),
               h3: ({ children }) => (
-                <h3 className={`${legalHeadingClass} mx-auto mt-[18px] mb-[6px] max-w-[900px] text-[16px] leading-[1.2]`}>
+                <h3 className={`${legalHeadingClass} mx-auto mb-[6px] mt-[18px] max-w-[900px] text-[16px] leading-[1.2]`}>
                   {children}
                 </h3>
               ),
               p: ({ children }) => (
-                <p className='mx-auto mb-[14px] max-w-[900px] text-[14px] leading-[1.6] tracking-[-0.015em] text-brand-fg'>{children}</p>
+                <p className='mx-auto mb-[14px] max-w-[900px] text-[14px] leading-[1.6] text-brand-fg'>{children}</p>
               ),
               ul: ({ children }) => (
-                <ul className='mb-[14px] ml-4 list-none text-[14px] leading-[1.6] tracking-[-0.015em] text-brand-fg'>
+                <ul className='mb-[14px] ml-5 list-disc p-0 text-[14px] leading-[1.6] text-brand-fg'>
                   {children}
                 </ul>
               ),
@@ -105,9 +107,8 @@ function PrivacyPolicy() {
             {privacyPolicy}
           </Markdown>
         </div>
-      </main>
-      <MarketingFooterCta />
-    </>
+      </section>
+    </main>
   );
 }
 

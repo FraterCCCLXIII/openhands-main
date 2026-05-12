@@ -92,7 +92,7 @@ export const Header: React.FC<HeaderProps> = ({
           <div className='flex items-stretch justify-center'>
             <ul data-wf-el='nav_links_list' style={{ display: 'flex', justifyContent: 'center', gap: '1.5cqw', alignItems: 'stretch', width: 'min-content', position: 'relative' }}>
               {/* Product dropdown */}
-              <li data-wf-el='nav_links_li' className='relative' style={{ display: 'list-item' }}>
+              <li data-wf-el='nav_links_li' style={{ display: 'list-item' }}>
                 <a
                   href='/product'
                   data-wf-el='nav_links_link'
@@ -181,7 +181,7 @@ export const Header: React.FC<HeaderProps> = ({
                 </li>
               ))}
               {/* Resources dropdown */}
-              <li data-wf-el='nav_links_li' className='relative' style={{ display: 'list-item' }}>
+              <li data-wf-el='nav_links_li' style={{ display: 'list-item' }}>
                 <button
                   className='flex items-center gap-1 text-base font-normal leading-[22.4px] hover:text-[#8a5f45]'
                   style={{ cursor: 'default', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', height: '100%', padding: '0 8px', position: 'relative' }}
@@ -252,7 +252,7 @@ export const Header: React.FC<HeaderProps> = ({
             </ul>
           </div>
 
-          <div data-wf-el='nav_right' className='flex-shrink-0 items-center gap-5' style={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <div data-wf-el='nav_right' className='flex-shrink-0 items-center gap-5' style={{ position: 'relative', display: 'flex', justifyContent: 'flex-end' }}>
               <a
                 data-wf-el='nav-menu_gh_count'
                 href='https://github.com/OpenHands/OpenHands'

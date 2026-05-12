@@ -24,6 +24,24 @@ const PROTOCOL_TIMEOUT = Number(
 );
 const SCREENSHOT_PAGE_LIMIT = Number(process.env.PARITY_SCREENSHOT_PAGE_LIMIT || Math.min(MAX_PAGES, 20));
 const SCREENSHOT_DIFF_THRESHOLD = Number(process.env.PARITY_SCREENSHOT_DIFF_THRESHOLD || 2);
+const DEFAULT_DISCOVERY_PATHS = [
+  '/',
+  '/product',
+  '/product/cli',
+  '/product/gui',
+  '/product/sdk',
+  '/enterprise',
+  '/pricing',
+  '/community',
+  '/about',
+  '/contact',
+  '/press',
+  '/manifesto',
+  '/privacy',
+  '/blog',
+  '/whitepapers/modernize-legacy-systems-with-ai-agents',
+];
+
 const SCREENSHOT_CHUNK_HEIGHT = Number(process.env.PARITY_SCREENSHOT_CHUNK_HEIGHT || 6000);
 const SCREENSHOT_CHUNK_TRIGGER_HEIGHT = Number(process.env.PARITY_SCREENSHOT_CHUNK_TRIGGER_HEIGHT || 12000);
 // ── Visual style properties compared per-element ──
@@ -50,23 +68,51 @@ const STYLE_PROPS = [
   // Border  (borderWidth=0 diffs are filtered out at comparison time)
   'borderRadius',
   'borderWidth',
+  'borderTopWidth',
+  'borderRightWidth',
+  'borderBottomWidth',
+  'borderLeftWidth',
   'borderStyle',
   'borderColor',
   // Layout alignment (catches flex-item alignment differences)
   'alignSelf',
   'verticalAlign',
+  // Replaced media/object styles are common root causes of pixel drift:
+  // e.g. an image with object-fit: cover and a forced 16:9 wrapper can
+  // report the same src but render hundreds of pixels smaller/taller than
+  // live. Capture the style cause alongside the rect symptom.
+  'objectFit',
+  'objectPosition',
   // Layout-affecting box model (catches DOM-structural differences like
   // overlay-link <a> with position:absolute filling its wrapper vs.
   // inline-flex <a> with text-only dimensions)
   'position',
   'display',
+  'overflow',
+  'boxSizing',
+  // Margin/padding on the element itself.  These are the most direct
+  // root cause of cumulative Y-position drift when a downstream element
+  // shifts but its own height/style is identical (e.g. an H1 with
+  // `margin-bottom: 16px` on test vs `0` on live pushes every following
+  // section down by 16px; without capturing margin here the parity audit
+  // saw only the symptom — `top: live=222 test=249` on the next P — with
+  // no clue why).  Padding is included for symmetry and to catch
+  // `padding-bottom` differences that swell button/link heights.
+  'marginTop',
+  'marginBottom',
+  'marginLeft',
+  'marginRight',
+  'paddingTop',
+  'paddingBottom',
+  'paddingLeft',
+  'paddingRight',
   // Effects / interactivity
   'cursor',
   'opacity',
   'boxShadow',
 ];
-const STYLE_CHECK_TAGS = new Set(['H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'A', 'BUTTON', 'LABEL', 'INPUT', 'IMG', 'P', 'SPAN', 'DIV', 'SUMMARY', 'DETAILS', 'NAV', 'SECTION', 'ARTICLE', 'UL', 'LI']);
-const LAYOUT_CHECK_TAGS = new Set(['H1', 'H2', 'H3', 'H4', 'A', 'BUTTON', 'LABEL', 'INPUT', 'IMG', 'P', 'DIV']);
+const STYLE_CHECK_TAGS = new Set(['H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'A', 'BUTTON', 'LABEL', 'INPUT', 'IMG', 'P', 'SPAN', 'DIV', 'SUMMARY', 'DETAILS', 'NAV', 'SECTION', 'ARTICLE', 'UL', 'LI', 'PRE', 'CODE']);
+const LAYOUT_CHECK_TAGS = new Set(['H1', 'H2', 'H3', 'H4', 'A', 'BUTTON', 'LABEL', 'INPUT', 'IMG', 'P', 'DIV', 'PRE', 'CODE']);
 
 const CONTAINER_STYLE_PROPS = [
   'backgroundColor',
@@ -90,6 +136,11 @@ const CONTAINER_STYLE_PROPS = [
   'minWidth',
   'maxHeight',
   'maxWidth',
+  'width',
+  'height',
+  'aspectRatio',
+  'overflow',
+  'boxSizing',
   'display',
   'flexDirection',
   'justifyContent',
@@ -362,8 +413,67 @@ const ANCESTOR_COMPARE_PROPS = [
   'flexDirection',
   'gap',
 ];
+const LAYOUT_CONTEXT_PROPS = [
+  'display',
+  'position',
+  'top',
+  'right',
+  'bottom',
+  'left',
+  'transform',
+  'overflow',
+  'boxSizing',
+  'width',
+  'height',
+  'minWidth',
+  'minHeight',
+  'maxWidth',
+  'maxHeight',
+  'aspectRatio',
+  'paddingTop',
+  'paddingRight',
+  'paddingBottom',
+  'paddingLeft',
+  'marginTop',
+  'marginRight',
+  'marginBottom',
+  'marginLeft',
+  'gap',
+  'columnGap',
+  'rowGap',
+  'flexDirection',
+  'flexWrap',
+  'justifyContent',
+  'alignItems',
+  'alignContent',
+  'gridTemplateColumns',
+  'gridTemplateRows',
+  'gridAutoFlow',
+  'gridAutoColumns',
+  'gridAutoRows',
+  'gridColumn',
+  'gridRow',
+];
+
+function compareLayoutContextStyles(liveContext, testContext, layoutDiffs = []) {
+  if (!layoutDiffs.length || (!liveContext && !testContext)) return [];
+  if (!liveContext || !testContext) {
+    const present = liveContext || testContext;
+    const side = liveContext ? 'live-only' : 'test-only';
+    return [`layoutContext.${present?._kind || 'ancestor'}: ${side} (${present?._tag || 'unknown'})`];
+  }
+
+  const diffs = [];
+  for (const prop of LAYOUT_CONTEXT_PROPS) {
+    const diff = compareStyleValue(prop, liveContext[prop], testContext[prop], liveContext, testContext);
+    if (diff) diffs.push(`layoutContext.${liveContext._kind || 'ancestor'}.${diff}`);
+  }
+  return diffs;
+}
+
 function compareAncestorStyles(liveAncestor, testAncestor, livePageBg, testPageBg) {
   if (!liveAncestor && !testAncestor) return [];
+
   if (!liveAncestor || !testAncestor) {
     // One side has a visual ancestor within maxDepth levels, the other doesn't.
     // Only flag when the ancestor carries a *visible* property — a non-transparent
@@ -533,7 +643,7 @@ async function extractPageInventory(page) {
     // Yield to layout, then clean up again.
     return new Promise((resolve) => setTimeout(() => { cleanup(); resolve(); }, 100));
   });
-  return page.evaluate((styleProps) => {
+  return page.evaluate((styleProps, layoutContextProps) => {
     // Include semantic elements plus div elements that have ARIA roles or
     // aria-hidden (CTA overlay-link pattern) so tab pills, buttons with
     // visually-hidden link text, and dropdown triggers are inventoried.
@@ -551,6 +661,8 @@ async function extractPageInventory(page) {
       'select',
       'img',
       'video',
+      'pre',
+      'code',
       'div[role]',
       'div[aria-hidden]',
     ].join(',');
@@ -609,6 +721,8 @@ async function extractPageInventory(page) {
       if (!isVisible(element)) return;
 
       const tag = element.tagName;
+      if ((tag === 'PRE' || tag === 'CODE') && element.getAttribute('aria-hidden') === 'true') return;
+
       const rawText =
         tag === 'IMG'
           ? element.getAttribute('alt') || element.getAttribute('aria-label') || ''
@@ -667,6 +781,30 @@ async function extractPageInventory(page) {
         : `${tag}:${normalizedText.slice(0, 140)}`;
       const style = Object.fromEntries(styleProps.map((prop) => [prop, computed[prop]]));
 
+      // Text wrapping differences are a common hidden root cause of layout
+      // drift: computed font-size/line-height/width can match while a font
+      // file, explicit <br>, or inline child changes the actual line boxes.
+      // Capture rendered line-box metrics so the report names that cause
+      // instead of only showing a downstream top/height delta.
+      let textMetrics = null;
+      if (normalizedText && ['H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'P', 'LABEL'].includes(tag)) {
+        const range = document.createRange();
+        range.selectNodeContents(element);
+        const lineTops = [];
+        for (const lineRect of Array.from(range.getClientRects())) {
+          if (lineRect.width < 1 || lineRect.height < 1) continue;
+          const top = Math.round((lineRect.top + window.scrollY) * 10) / 10;
+          if (!lineTops.some((existing) => Math.abs(existing - top) < 1)) {
+            lineTops.push(top);
+          }
+        }
+        range.detach();
+        textMetrics = {
+          lineCount: lineTops.length,
+          lineTops,
+        };
+      }
+
       // Track per-signature occurrence index so downstream matching can
       // pair the Nth live instance with the Nth test instance.
       if (!signatureCounter.has(signature)) signatureCounter.set(signature, 0);
@@ -695,6 +833,7 @@ async function extractPageInventory(page) {
         signature,
         occurrenceIndex,
         style,
+        textMetrics,
         effectiveOpacity,
         rect: {
           top: Math.round(rect.top + window.scrollY),
@@ -704,11 +843,59 @@ async function extractPageInventory(page) {
         },
       };
 
+      const captureLayoutContext = (node, kind) => {
+        if (!node) return null;
+        const comp = window.getComputedStyle(node);
+        const captured = Object.fromEntries(layoutContextProps.map((prop) => [prop, comp[prop]]));
+        captured._tag = node.tagName;
+        captured._kind = kind;
+        return captured;
+      };
+
+      entry.parentLayoutStyle = captureLayoutContext(element.parentElement, 'parent');
+      let layoutAncestor = element.parentElement;
+      let layoutDepth = 0;
+      while (layoutAncestor && layoutDepth < 8) {
+        const comp = window.getComputedStyle(layoutAncestor);
+        const numeric = (value) => Number.parseFloat(value || '0') || 0;
+        const hasLayoutSignal =
+          ['flex', 'inline-flex', 'grid', 'inline-grid'].includes(comp.display) ||
+          comp.position !== 'static' ||
+          (comp.transform && comp.transform !== 'none') ||
+          numeric(comp.gap) > 0 ||
+          numeric(comp.columnGap) > 0 ||
+          numeric(comp.rowGap) > 0 ||
+          numeric(comp.paddingTop) > 0 ||
+          numeric(comp.paddingBottom) > 0 ||
+          numeric(comp.paddingLeft) > 0 ||
+          numeric(comp.paddingRight) > 0 ||
+          numeric(comp.marginTop) > 0 ||
+          numeric(comp.marginBottom) > 0 ||
+          comp.maxWidth !== 'none' ||
+          comp.minHeight !== '0px';
+        if (hasLayoutSignal) {
+          entry.layoutAncestorStyle = captureLayoutContext(layoutAncestor, 'layoutAncestor');
+          break;
+        }
+        layoutAncestor = layoutAncestor.parentElement;
+        layoutDepth += 1;
+      }
+
       if (tag === 'IMG') {
         entry.naturalWidth = element.naturalWidth || 0;
         entry.naturalHeight = element.naturalHeight || 0;
         entry.renderedWidth = Math.round(rect.width);
         entry.renderedHeight = Math.round(rect.height);
+        // Capture parent's display so we can diagnose the
+        // flex-blockification trap: parent display:flex|grid silently
+        // promotes any inline-block child to block. When the parity
+        // report shows display + auto margin mismatches on an <img>, the
+        // root cause is almost always a parent display difference — we
+        // record it here so the cause is one click away from the symptom.
+        const parent = element.parentElement;
+        if (parent) {
+          entry.parentDisplay = window.getComputedStyle(parent).display;
+        }
       }
 
       // For links and buttons, capture wrapper rect if the element is inside
@@ -838,7 +1025,7 @@ async function extractPageInventory(page) {
       elements,
       pageBg,
     };
-  }, STYLE_PROPS);
+  }, STYLE_PROPS, LAYOUT_CONTEXT_PROPS);
 }
 
 // ── Webflow-element extraction ──
@@ -882,9 +1069,50 @@ async function extractWebflowElements(page, isLiveSite) {
     function isVisible(el) {
       var rect = el.getBoundingClientRect();
       if (rect.width < 4 || rect.height < 4) return false;
-      var st = window.getComputedStyle(el);
-      return st.display !== 'none' && st.visibility !== 'hidden' && Number(st.opacity) > 0;
+      var docWidth = document.documentElement.clientWidth;
+      var docHeight = Math.max(document.documentElement.scrollHeight, document.body.scrollHeight);
+      if (rect.right <= 0 || rect.left >= docWidth || rect.bottom <= 0 || rect.top >= docHeight) return false;
+
+      var current = el;
+      while (current) {
+        var st = window.getComputedStyle(current);
+        if (st.display === 'none' || st.visibility === 'hidden' || Number(st.opacity) === 0) return false;
+        if (current.hasAttribute('hidden')) return false;
+        current = current.parentElement;
+      }
+      return true;
     }
+
+    function specialLiveKey(el) {
+      // The live footer uses Webflow utility classes for the social-icon
+      // row (`row u-mt-lg ... u-mb-md`) rather than a unique semantic
+      // class. That row's zero-height + margins control the Y-position of
+      // the footer nav/logo block, so expose it under a stable key that
+      // local markup can mirror with `data-wf-el`.
+      if (
+        el.classList &&
+        el.classList.contains('row') &&
+        el.classList.contains('u-mt-lg') &&
+        el.classList.contains('u-mb-md') &&
+        el.closest('section.u-bg-primary')
+      ) {
+        return 'footer-social-row';
+      }
+      if (
+        el.classList &&
+        el.classList.contains('row') &&
+        el.classList.contains('u-mt-md') &&
+        el.classList.contains('border-radius') &&
+        el.classList.contains('u-overflow-hidden')
+      ) {
+        var rowText = (el.textContent || '').replace(/\s+/g, ' ').trim().toLowerCase();
+        if (rowText.indexOf('reduce engineering toil') >= 0 || rowText.indexOf('streamline complex work') >= 0) {
+          return 'use-case-row';
+        }
+      }
+      return null;
+    }
+
 
     var results = [];
     var elements;
@@ -903,8 +1131,9 @@ async function extractWebflowElements(page, isLiveSite) {
 
       var wfKey = null;
       if (isLive) {
+        wfKey = specialLiveKey(el);
         // Find the first semantic class name
-        for (var j = 0; j < el.classList.length; j++) {
+        for (var j = 0; !wfKey && j < el.classList.length; j++) {
           if (isSemanticClass(el.classList[j])) { wfKey = el.classList[j]; break; }
         }
       } else {
@@ -1771,21 +2000,61 @@ function categorizeStyleDiffs(routes) {
     borderWidth: { label: 'Border width', count: 0, examples: [] },
     borderColor: { label: 'Border color', count: 0, examples: [] },
     whiteSpace: { label: 'White-space', count: 0, examples: [] },
+    objectFit: { label: 'Image/video object fit', count: 0, examples: [] },
+    objectPosition: { label: 'Image/video object position', count: 0, examples: [] },
+    overflow: { label: 'Overflow/clipping', count: 0, examples: [] },
+    boxSizing: { label: 'Box sizing', count: 0, examples: [] },
+    position: { label: 'Positioning', count: 0, examples: [] },
+    display: { label: 'Display mode', count: 0, examples: [] },
+    flexDirection: { label: 'Flex direction', count: 0, examples: [] },
+    justifyContent: { label: 'Flex/grid main-axis alignment', count: 0, examples: [] },
+    alignItems: { label: 'Flex/grid cross-axis alignment', count: 0, examples: [] },
+    alignSelf: { label: 'Self alignment', count: 0, examples: [] },
+    gap: { label: 'Flex/grid gap', count: 0, examples: [] },
+    marginTop: { label: 'Top margin', count: 0, examples: [] },
+    marginBottom: { label: 'Bottom margin', count: 0, examples: [] },
+    marginLeft: { label: 'Left margin', count: 0, examples: [] },
+    marginRight: { label: 'Right margin', count: 0, examples: [] },
+    paddingTop: { label: 'Top padding', count: 0, examples: [] },
+    paddingBottom: { label: 'Bottom padding', count: 0, examples: [] },
+    paddingLeft: { label: 'Left padding', count: 0, examples: [] },
+    paddingRight: { label: 'Right padding', count: 0, examples: [] },
+    minWidth: { label: 'Minimum width', count: 0, examples: [] },
+    minHeight: { label: 'Minimum height', count: 0, examples: [] },
+    maxWidth: { label: 'Maximum width', count: 0, examples: [] },
+    maxHeight: { label: 'Maximum height', count: 0, examples: [] },
+    width: { label: 'CSS width', count: 0, examples: [] },
+    height: { label: 'CSS height', count: 0, examples: [] },
+    aspectRatio: { label: 'Aspect ratio', count: 0, examples: [] },
     cursor: { label: 'Cursor style', count: 0, examples: [] },
     opacity: { label: 'Opacity', count: 0, examples: [] },
     boxShadow: { label: 'Box shadow', count: 0, examples: [] },
     other: { label: 'Other', count: 0, examples: [] },
   };
 
+  const addDiff = (route, signature, diff) => {
+    const prop = diff.split(':')[0].trim();
+    const cat = categories[prop] || categories.other;
+    cat.count += 1;
+    if (cat.examples.length < 3) {
+      cat.examples.push({ route: route.path, signature, diff });
+    }
+  };
+
   for (const route of routes) {
     for (const item of route.checklist || []) {
       for (const diff of item.styleDiffs || []) {
-        const prop = diff.split(':')[0].trim();
-        const cat = categories[prop] || categories.other;
-        cat.count += 1;
-        if (cat.examples.length < 3) {
-          cat.examples.push({ route: route.path, signature: item.signature, diff });
-        }
+        addDiff(route, item.signature, diff);
+      }
+    }
+    // Webflow-key comparisons often identify the style root cause for a
+    // downstream layout delta even when the generic DOM-signature checklist
+    // has no style mismatch. Include those style diffs in the same property
+    // breakdown so the summary does not misleadingly report "no" styling
+    // differences while data-wf-el rows still show width/height/spacing drift.
+    for (const item of route.wfComparison?.matched || []) {
+      for (const diff of item.styleDiffs || []) {
+        addDiff(route, `[data-wf-el=${item.key}]`, diff);
       }
     }
   }
@@ -2117,21 +2386,65 @@ function compareHoverEffects(liveHovers, testHovers) {
   return diffs;
 }
 
+function normalizeHeadingForOrder(entry) {
+  if (!entry) return entry;
+  const match = entry.match(/^(H[1-4]):(.+)$/);
+  if (!match) return entry;
+  const [, tag, text] = match;
+  // The testimonial carousel on the live Webflow site can auto-advance while
+  // the local React version is captured at a different slide. The heading-order
+  // audit should catch structural/semantic drift, not fail because two valid
+  // testimonial quote slides were active at different capture instants.
+  if (/^[“\"]/.test(text) && text.length > 100) return `${tag}:<testimonial-quote>`;
+  return entry;
+}
+
 function analyzeHeadingSequence(liveSequence, testSequence) {
-  if (JSON.stringify(liveSequence) === JSON.stringify(testSequence)) {
+  const liveComparable = liveSequence.map(normalizeHeadingForOrder);
+  const testComparable = testSequence.map(normalizeHeadingForOrder);
+  if (JSON.stringify(liveComparable) === JSON.stringify(testComparable)) {
     return { matches: true, diffs: [] };
   }
 
   const diffs = [];
   const maxLength = Math.max(liveSequence.length, testSequence.length);
   for (let index = 0; index < maxLength; index += 1) {
-    if (liveSequence[index] === testSequence[index]) continue;
+    if (liveComparable[index] === testComparable[index]) continue;
     diffs.push(`index ${index + 1}: live=${liveSequence[index] || '∅'} test=${testSequence[index] || '∅'}`);
     if (diffs.length >= 8) break;
   }
 
   return { matches: false, diffs };
 }
+
+function getDynamicTestimonialHeading(sequence) {
+  return sequence.find((entry) => {
+    const match = entry.match(/^H2:(.+)$/);
+    return match && /^[“\"]/.test(match[1]) && match[1].length > 100;
+  }) || null;
+}
+
+function suppressDynamicTestimonialWfDiffs(wfComparison, liveSequence, testSequence) {
+  const liveQuote = getDynamicTestimonialHeading(liveSequence);
+  const testQuote = getDynamicTestimonialHeading(testSequence);
+  if (!liveQuote || !testQuote || liveQuote === testQuote) return;
+
+  // If the two sites are captured on different testimonial slides, the author
+  // avatar/name/logo positions are content-dependent symptoms of that active
+  // slide mismatch rather than stable style/layout differences. Suppress these
+  // rows so the layout totals stay focused on persistent page geometry drift.
+  const dynamicKeys = new Set(['quote-author-media', 'paragraph-xl']);
+  for (const match of wfComparison.matched || []) {
+    if (!dynamicKeys.has(match.key)) continue;
+    match.ignoredReason = 'dynamic testimonial slide differed at capture time';
+    match.ignoredStyleDiffs = match.styleDiffs || [];
+    match.ignoredLayoutDiffs = match.layoutDiffs || [];
+    match.styleDiffs = [];
+    match.layoutDiffs = [];
+    match.passed = true;
+  }
+}
+
 
 function summarizeRouteComparison(routePath, livePage, testPage, screenshotDiff) {
   // ── Per-instance matching ──
@@ -2232,6 +2545,23 @@ function summarizeRouteComparison(routePath, livePage, testPage, screenshotDiff)
         ? compareAncestorStyles(li.ancestorStyle || null, ti.ancestorStyle || null,
             livePage.inventory.pageBg, testPage.inventory.pageBg)
         : [];
+      const layoutCauseDiffs = hasTest && layoutDiffs.length > 0
+        ? Array.from(new Set([
+            ...compareLayoutContextStyles(li.parentLayoutStyle || null, ti.parentLayoutStyle || null, layoutDiffs),
+            ...compareLayoutContextStyles(li.layoutAncestorStyle || null, ti.layoutAncestorStyle || null, layoutDiffs),
+          ]))
+        : [];
+
+      // Parent-display diff for IMG when the display itself differs —
+      // surfaces the flex/grid blockification trap (parent display:flex
+      // silently promotes inline-block children to block) so the root
+      // cause is named in the report alongside the symptom.
+      if (hasTest && liveGroup.tag === 'IMG' && li.parentDisplay && ti.parentDisplay) {
+        const displayMismatch = (styleDiffs || []).some((d) => /^display:/.test(d));
+        if (displayMismatch && li.parentDisplay !== ti.parentDisplay) {
+          styleDiffs.push(`parentDisplay: live=${li.parentDisplay} test=${ti.parentDisplay}`);
+        }
+      }
 
       // Effective-opacity comparison — catches "grayed out" inactive tabs
       // where a parent element sets opacity < 1 on only one side.
@@ -2244,12 +2574,24 @@ function summarizeRouteComparison(routePath, livePage, testPage, screenshotDiff)
         }
       }
 
+      // Size/text-flow comparison. Text line-box mismatches catch wrapping
+      // differences that may not show up in computed style (for example,
+      // same font-family name but different loaded font file, or an added
+      // line break). These are root causes for height/top drift on paragraphs.
+      const sizeDiffs = [];
+      if (hasTest && li.textMetrics && ti.textMetrics) {
+        const liveLines = li.textMetrics.lineCount || 0;
+        const testLines = ti.textMetrics.lineCount || 0;
+        if (liveLines !== testLines) {
+          sizeDiffs.push(`textLines: live=${liveLines} test=${testLines}`);
+        }
+      }
+
       // Size comparison for interactive elements (A, BUTTON) — catches CTA
       // button wrapper size differences that style-only comparison misses.
       // When a wrapper rect is available (overlay-link or btn-wrap pattern),
       // compare wrapper sizes to avoid false positives from inline <a> vs
       // absolute-positioned <a> structural differences.
-      const sizeDiffs = [];
       if (hasTest && (liveGroup.tag === 'A' || liveGroup.tag === 'BUTTON')) {
         const lWrap = li.wrapperRect || li.rect;
         const tWrap = ti.wrapperRect || ti.rect;
@@ -2275,17 +2617,24 @@ function summarizeRouteComparison(routePath, livePage, testPage, screenshotDiff)
         testStyle: ti ? ti.style : null,
         liveRect: li.rect,
         testRect: ti ? ti.rect : null,
+        liveTextMetrics: li.textMetrics || null,
+        testTextMetrics: ti ? (ti.textMetrics || null) : null,
         liveInteractive: li.interactive || null,
         testInteractive: ti ? (ti.interactive || null) : null,
         liveAncestorStyle: li.ancestorStyle || null,
         testAncestorStyle: ti ? (ti.ancestorStyle || null) : null,
+        liveParentLayoutStyle: li.parentLayoutStyle || null,
+        testParentLayoutStyle: ti ? (ti.parentLayoutStyle || null) : null,
+        liveLayoutAncestorStyle: li.layoutAncestorStyle || null,
+        testLayoutAncestorStyle: ti ? (ti.layoutAncestorStyle || null) : null,
         styleDiffs,
         sizeDiffs,
         opacityDiffs,
         layoutDiffs,
+        layoutCauseDiffs,
         interactivityDiffs,
         ancestorDiffs,
-        passed: hasTest && styleDiffs.length === 0 && sizeDiffs.length === 0 &&
+        passed: hasTest && styleDiffs.length === 0 && layoutCauseDiffs.length === 0 && sizeDiffs.length === 0 &&
           opacityDiffs.length === 0 &&
           layoutDiffs.length === 0 && interactivityDiffs.length === 0 &&
           ancestorDiffs.length === 0,
@@ -2363,6 +2712,11 @@ function summarizeRouteComparison(routePath, livePage, testPage, screenshotDiff)
     livePage.wfElements || [],
     testPage.wfElements || [],
   );
+  suppressDynamicTestimonialWfDiffs(
+    wfComparison,
+    livePage.inventory.headingSequence,
+    testPage.inventory.headingSequence,
+  );
 
   // Animation / transition / sticky / interactive-widget comparison —
   // catches the "live has scroll-pinned hero / splide carousel / marquee
@@ -2417,7 +2771,7 @@ function summarizeRouteComparison(routePath, livePage, testPage, screenshotDiff)
     checklist,
     extraElements,
     missingElementsCount: checklist.filter((item) => item.testStyle === null).length,
-    styleMismatchCount: checklist.filter((item) => item.styleDiffs.length > 0).length,
+    styleMismatchCount: checklist.filter((item) => item.styleDiffs.length > 0 || (item.layoutCauseDiffs || []).length > 0).length,
     sizeMismatchCount: checklist.filter((item) => (item.sizeDiffs || []).length > 0).length,
     opacityMismatchCount: checklist.filter((item) => (item.opacityDiffs || []).length > 0).length,
     layoutMismatchCount: checklist.filter((item) => item.layoutDiffs.length > 0).length,
@@ -2442,6 +2796,8 @@ function summarizeRouteComparison(routePath, livePage, testPage, screenshotDiff)
     cssVarDiffCount: cssVarDiffs.length,
     wfComparison,
     wfMismatchCount: wfComparison.matched.filter((m) => !m.passed).length,
+    wfStyleMismatchCount: wfComparison.matched.filter((m) => (m.styleDiffs || []).length > 0).length,
+    wfLayoutMismatchCount: wfComparison.matched.filter((m) => (m.layoutDiffs || []).length > 0).length,
     wfMissingCount: wfComparison.missingOnTest.length,
     wfExtraCount: wfComparison.extraOnTest.length,
     animationComparison,
@@ -2650,7 +3006,9 @@ function renderMarkdown(report) {
   lines.push(`- Click behavior mismatches (tabs/accordions): ${report.summary.clickBehaviorMismatches || 0}`);
   lines.push(`- Dropdown mismatches (nav dropdowns): ${report.summary.dropdownMismatches || 0}`);
   lines.push(`- Image dimension mismatches: ${report.summary.imageDimensionMismatches || 0}`);
-  lines.push(`- Webflow element style mismatches (data-wf-el): ${report.summary.wfElementMismatches || 0}`);
+  lines.push(`- Webflow element mismatches (data-wf-el total): ${report.summary.wfElementMismatches || 0}`);
+  lines.push(`- Webflow element style mismatches (data-wf-el): ${report.summary.wfStyleMismatches || 0}`);
+  lines.push(`- Webflow element layout mismatches (data-wf-el): ${report.summary.wfLayoutMismatches || 0}`);
   lines.push(`- Webflow elements unmatched on test: ${report.summary.wfElementsMissing || 0}`);
   lines.push(`- Webflow elements extra on test: ${report.summary.wfElementsExtra || 0}`);
   lines.push(`- Animations / transitions missing on test: ${report.summary.animationsMissing || 0}`);
@@ -2744,6 +3102,9 @@ function renderMarkdown(report) {
       }
       if (item.styleDiffs.length > 0) {
         details.push(`appearance mismatch: ${item.styleDiffs.join('; ')}`);
+      }
+      if ((item.layoutCauseDiffs || []).length > 0) {
+        details.push(`layout-cause style mismatch: ${item.layoutCauseDiffs.join('; ')}`);
       }
       if ((item.sizeDiffs || []).length > 0) {
         details.push(`size mismatch: ${item.sizeDiffs.join('; ')}`);
@@ -3296,7 +3657,7 @@ async function discoverPaths(browser) {
     });
   }
   const seeds = await getSitemapPaths(LIVE_ORIGIN);
-  const discovered = new Set(seeds.length > 0 ? seeds : ['/']);
+  const discovered = new Set([...DEFAULT_DISCOVERY_PATHS, ...seeds]);
   const queue = [...discovered];
   const page = await browser.newPage();
   await page.setViewport(VIEWPORT);
@@ -3422,6 +3783,8 @@ async function main() {
         dropdownMismatches: routes.reduce((total, route) => total + (route.dropdownDiffCount || 0), 0),
         imageDimensionMismatches: routes.reduce((total, route) => total + (route.imageDiffCount || 0), 0),
         wfElementMismatches: routes.reduce((total, route) => total + (route.wfMismatchCount || 0), 0),
+        wfStyleMismatches: routes.reduce((total, route) => total + (route.wfStyleMismatchCount || 0), 0),
+        wfLayoutMismatches: routes.reduce((total, route) => total + (route.wfLayoutMismatchCount || 0), 0),
         wfElementsMissing: routes.reduce((total, route) => total + (route.wfMissingCount || 0), 0),
         wfElementsExtra: routes.reduce((total, route) => total + (route.wfExtraCount || 0), 0),
         animationsMissing: routes.reduce((total, route) => total + (route.animationMissingCount || 0), 0),

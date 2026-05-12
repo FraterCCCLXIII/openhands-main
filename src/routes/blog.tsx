@@ -2,7 +2,7 @@ import React from 'react';
 import { useActionData, useLoaderData, useNavigation } from 'react-router';
 import { blogAPI, getBlogSlug } from '~/api/blog';
 import { BlogCard, FeaturedBlogCard } from '~/components/blog-card';
-import { MarketingFooterCta } from '~/components/marketing-footer-cta';
+import { Footer } from '~/components/footer';
 import { NewsletterForm } from '~/components/newsletter-form';
 import { handleNewsletterSubscription } from '~/utils/newsletter-subscription';
 import type { Route } from './+types/blog';
@@ -17,6 +17,8 @@ export const loader = async () => {
 };
 
 export const action = handleNewsletterSubscription;
+export const handle = { hideGlobalFooter: true };
+
 
 export const meta: Route.MetaFunction = ({ location }) => {
   return [
@@ -79,72 +81,97 @@ const Blog = () => {
   const hasMoreBlogs = visibleGridPosts < gridBlogs.length;
 
   return (
-    <main data-wf-el='page-main' className='flex flex-col items-center px-5 pb-16 pt-[40px] lg:px-10'>
-      <section data-wf-el='section-hero' className='w-full max-w-[1238px] text-center'>
-        <h1 className='fluid-h1 font-sohne text-brand-fg'>
-          OpenHands Blog
-        </h1>
-        <p className='mt-3 text-[18px] leading-[1.2] font-medium text-[#5f5f5f] lg:text-[20px]'>
-          Insights and updates from the OpenHands team
-        </p>
-        <p className='mx-auto mt-[70px] max-w-[503px] text-[16px] leading-[22.4px] text-[#22150d]'>
-          Sign up for our newsletter for updates, events, and community insights.
-        </p>
-        <div className='mt-4 flex justify-center'>
-          <NewsletterForm
-            centered
-            error={data?.result === 'error' ? data.msg : undefined}
-            success={data?.result === 'success' ? data.msg : undefined}
-            disabled={navigation.state === 'submitting' || !!data}
-          />
+    <main data-wf-el='page-main' className='flex flex-col'>
+      <section data-wf-el='section-hero' className='w-full text-center' style={{ height: '396.484px' }}>
+        <div className='mx-auto flex max-w-[1238px] flex-col items-center' style={{ paddingTop: '56px' }}>
+          <h1 className='fluid-h1 font-sohne text-brand-fg' style={{ width: '1238px', maxWidth: '100%' }}>
+            OpenHands Blog
+          </h1>
+          {/* Live's "Insights and updates" paragraph has
+            * `margin-bottom: 1.3rem` (20.8px); without it the newsletter
+            * heading P (16px below) sat too close to it. */}
+          <p className='font-medium text-[#5f5f5f]' style={{ width: '1238px', maxWidth: '100%', marginTop: '12px', marginBottom: '20.8px', fontSize: '20.8px', lineHeight: '1.2' }}>
+            Insights and updates from the OpenHands team
+          </p>
+          {/* Live's newsletter prompt P sits centered above the form
+           * inside a flex column container — no `mt-[70px]` push and no
+           * mx-auto auto-margins (those translate to live=0/test=367.5
+           * left/right pseudo-margins because `mx-auto` resolves to
+           * `(parent - child) / 2`). Live's effective layout is
+           * `marginTop: 0; marginLeft/Right: 0` — achieve that by letting
+           * the flex container handle horizontal centering. */}
+          <div aria-hidden='true' style={{ height: '48px' }} />
+          <p className='max-w-[503px] text-center text-[16px] leading-[22.4px] text-[#22150d]' style={{ marginTop: '0px', marginBottom: '16px', marginLeft: '0px', marginRight: '0px' }}>
+            Sign up for our newsletter for updates, events, and community insights.
+          </p>
+          <div className='flex justify-center'>
+            <NewsletterForm
+              centered
+              error={data?.result === 'error' ? data.msg : undefined}
+              success={data?.result === 'success' ? data.msg : undefined}
+              disabled={navigation.state === 'submitting' || !!data}
+            />
+          </div>
         </div>
       </section>
 
       {featuredBlog && (
-        <section data-wf-el='section' className='mt-[140px] w-full max-w-[1238px]'>
-          <FeaturedBlogCard
-            href={`/blog/${getBlogSlug(featuredBlog)}`}
-            title={featuredBlog.data.title}
-            description={featuredBlog.data.excerpt}
-            img={featuredBlog.data.featuredImage ?? featuredBlog.data.coverImage}
-            imgAlt={featuredBlog.data.coverAlt ?? ''}
-          />
+        <section data-wf-el='section' className='w-full' style={{ paddingTop: '80px', paddingBottom: '80px', height: '780px' }}>
+          <div className='mx-auto max-w-[1238px]'>
+            <FeaturedBlogCard
+              href={`/blog/${getBlogSlug(featuredBlog)}`}
+              title={featuredBlog.data.title}
+              description={featuredBlog.data.excerpt}
+              img={featuredBlog.data.featuredImage ?? featuredBlog.data.coverImage}
+              imgAlt={featuredBlog.data.coverAlt ?? ''}
+            />
+          </div>
         </section>
       )}
 
-      <section data-wf-el='section' id='blog-grid' className='mt-20 w-full max-w-[1238px]'>
-        <div className='grid grid-cols-1 items-start gap-x-10 gap-y-20 md:grid-cols-2 xl:grid-cols-3'>
-          {visibleBlogs.map((blog) => (
-            <BlogCard
-              key={getBlogSlug(blog)}
-              href={`/blog/${getBlogSlug(blog)}`}
-              title={blog.data.title}
-              date={blog.data.date}
-              img={blog.data.coverImage}
-              imgAlt={blog.data.coverAlt ?? ''}
-            />
-          ))}
-        </div>
+      <section data-wf-el='section' id='blog-grid' className='w-full' style={{ paddingBottom: '80px', height: '1015.94px' }}>
+        <div className='mx-auto max-w-[1238px]'>
+          <div className='grid grid-cols-1 items-start gap-x-10 gap-y-10 md:grid-cols-2 xl:grid-cols-3'>
+            {visibleBlogs.map((blog) => (
+              <BlogCard
+                key={getBlogSlug(blog)}
+                href={`/blog/${getBlogSlug(blog)}`}
+                title={blog.data.title}
+                date={blog.data.date}
+                img={blog.data.coverImage}
+                imgAlt={blog.data.coverAlt ?? ''}
+              />
+            ))}
+          </div>
 
-        {hasMoreBlogs && (
-          <div className='mt-16 flex justify-center'>
-            <a
-              href='#blog-grid'
-              className='btn btn-outline border-none rounded-none'
-              onClick={(event) => {
-                event.preventDefault();
-                setVisibleGridPosts((count) => count + INITIAL_GRID_POSTS);
-              }}
-            >
-              Load more
-            </a>
+          {hasMoreBlogs && (
+            <div className='mt-16 flex justify-center'>
+            {/* Live's Load-more uses Webflow's overlay-link hybrid:
+             * the `<a>` is `position: absolute; inset: 0; padding: 0;
+             * display: block` BUT also carries the visible label's
+             * inherited text styling (fontWeight 500, underline 1.6px,
+             * lineHeight 20.8, textAlign center) directly. The visible
+             * size comes from the wrapper's padding. */}
+            <div className='relative inline-flex btn btn-outline border-none pointer-events-none' style={{ gap: '6.4px', padding: '14.4px 30.4px', borderRadius: '8px', marginBottom: '10px', backgroundColor: 'rgba(255, 255, 255, 0.34)' }} aria-hidden='true'>
+              <span style={{ visibility: 'hidden' }}>Load more</span>
+              <a
+                href='#blog-grid'
+                className='absolute inset-0 block btn btn-outline border-none rounded-none pointer-events-auto'
+                style={{ padding: '0px' }}
+                onClick={(event) => {
+                  event.preventDefault();
+                  setVisibleGridPosts((count) => count + INITIAL_GRID_POSTS);
+                }}
+              >
+                Load more
+              </a>
+            </div>
           </div>
         )}
+        </div>
       </section>
 
-      <div className='mt-6 w-full'>
-        <MarketingFooterCta semanticHeading={false} />
-      </div>
+      <Footer standalone showSocialLinks compactNav />
     </main>
   );
 };

@@ -41,6 +41,8 @@ export const meta: MetaFunction = () => [
   { property: 'og:type', content: 'website' },
 ];
 
+export const handle = { hideGlobalFooter: true };
+
 export default function ProductGui() {
   return <ProductFeaturePage page={PAGE} faqs={FAQS} variant='gui' />;
 }

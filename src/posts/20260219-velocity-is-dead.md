@@ -3,7 +3,7 @@ title: "Velocity Is Dead: AI-Generated Compilers and the Future of Software"
 slug: "20260219-velocity-is-dead"
 excerpt: "What really matters in a world where velocity of code creation is no longer the bottleneck in software engineering?"
 coverImage: "/assets/webflow/blog/20260219-velocity-is-dead/cover.png"
-date: "2026-02-18T12:00:00.000Z"
+date: "2026-02-19T12:00:00.000Z"
 authors:
   - name: "Ray Myers"
 ogImage:

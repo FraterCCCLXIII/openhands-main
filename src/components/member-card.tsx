@@ -3,10 +3,10 @@ interface MemberCardProps {
 }
 
 export const MemberCard: React.FC<MemberCardProps> = ({ member }) => (
-  <article className='space-y-4'>
+  <article className='flex flex-col gap-4 px-5'>
     <div
       data-testid='member-card-media'
-      className='h-[190px] w-[190px] overflow-hidden rounded-[8px] bg-brand-fg/5'
+      className='h-[190px] w-[190px] overflow-hidden rounded-[8px]'
     >
       <img src={member.src} alt='' className='h-full w-full object-cover grayscale' />
     </div>

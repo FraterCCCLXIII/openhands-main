@@ -1,4 +1,5 @@
 import type { Route } from './+types/product';
+import { Footer } from '~/components/footer';
 import {
   ProductComparisonTable,
   ProductPageActionLink,
@@ -27,6 +28,8 @@ export const meta: Route.MetaFunction = ({ location }) => {
   ];
 };
 
+export const handle = { hideGlobalFooter: true };
+
 const Product = () => {
   return (
     <main data-wf-el='page-main' style={{ display: 'flex', flexDirection: 'column' }}>
@@ -38,17 +41,17 @@ const Product = () => {
         section count and per-section heights aligned with live.
       */}
       <section data-wf-el='section-product_hero' style={{ display: 'block', backgroundColor: 'rgba(0, 0, 0, 0)', paddingTop: '0px', paddingBottom: '0px', paddingLeft: '0px', paddingRight: '0px' }} className='relative overflow-hidden'>
-        <div className='relative mx-auto flex max-w-[860px] flex-col items-center text-center'>
-          <div className='inline-flex rounded-[4px] bg-brand-accent px-5 py-2 text-[13px] font-medium leading-none text-brand-fg'>
+        <div className='relative mx-auto flex max-w-[1238px] flex-col items-center justify-center text-center' style={{ height: '432px' }}>
+          <div className='rounded-[4px] bg-brand-accent text-[13px] font-medium leading-none text-brand-fg' style={{ alignItems: 'center', display: 'flex', height: '48px', justifyContent: 'center', marginBottom: '24px', width: '121px' }}>
             Product
           </div>
-          <h1 className='mt-6 fluid-h1 text-brand-fg'>
+          <h1 className='fluid-h1 max-w-[932px] text-brand-fg'>
             Build better software with autonomous cloud agent
           </h1>
-          <p className='mt-4 max-w-[640px] fluid-body-lg text-[#5f5f5f]'>
+          <p className='max-w-[560px] fluid-body-lg text-[#5f5f5f]' style={{ marginTop: '10.4px', marginBottom: '20.8px' }}>
             Offload toil, ship faster. OpenHands automates real development tasks with transparency, governance, and choice.
           </p>
-          <div className='mt-6 flex flex-wrap items-center justify-center gap-4'>
+          <div className='flex flex-wrap items-center justify-center gap-4' style={{ paddingTop: '32px' }}>
             <ProductPageActionLink
               href='https://app.all-hands.dev/'
               label='Try it live'
@@ -63,21 +66,21 @@ const Product = () => {
         </div>
 
         {/* Nested dark interface-cards section — see comment above */}
-        <section data-wf-el='section' style={{ display: 'block', backgroundColor: 'rgb(34, 21, 13)', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px', marginTop: '80px' }}>
-        <div className='mx-auto max-w-[1260px] space-y-10 lg:space-y-4'>
+        <section data-wf-el='section' style={{ display: 'block', backgroundColor: 'rgb(34, 21, 13)', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px', marginTop: '0px', minHeight: '1766px' }}>
+        <div className='mx-auto flex max-w-[1238px] flex-col' style={{ rowGap: '128px' }}>
           {PRODUCT_SURFACES.map((item, index) => {
             const imageCard = (
-              <div style={{ width: '489px', maxWidth: '100%' }}>
-                <img src={item.image} alt='' className='img-block product-list_img' style={{ width: '489px', maxWidth: '100%', height: 'auto', borderRadius: '0px', color: 'rgb(249, 240, 217)' }} />
+              <div style={{ width: '489px', maxWidth: '100%', marginLeft: 'auto', marginRight: 'auto' }}>
+                <img src={item.image} alt='' className='img-block product-list_img' style={{ width: '489px', maxWidth: '100%', height: 'auto', borderRadius: '0px', color: 'rgb(249, 240, 217)', objectFit: 'scale-down' }} />
               </div>
             );
 
             const textBlock = (
-              <div className={index === 1 ? 'lg:pl-8' : 'lg:pr-8'}>
+              <div className={index === 1 ? 'lg:pl-[44px]' : 'lg:pr-8'}>
                 <h2 className='w-fit section-title text-brand-bg'>
                   {item.title}
                 </h2>
-                <p className='mt-5 max-w-[571px] fluid-body-lg text-[#b3a88c]'>
+                <p className='max-w-[571px] fluid-body-lg text-[#b3a88c]' style={{ marginTop: '0px', marginBottom: '20.8px' }}>
                   {item.description}
                 </p>
                 <OverlayLinkButton
@@ -92,7 +95,8 @@ const Product = () => {
             return (
               <div
                 key={item.title}
-                className='grid gap-10 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:items-center'
+                className='grid lg:grid-cols-2 lg:items-center'
+                style={{ minHeight: '450px' }}
               >
                 {index === 1 ? (
                   <>
@@ -112,13 +116,17 @@ const Product = () => {
         </section>
       </section>
 
-      <ProductComparisonTable headerColor='rgb(138, 95, 69)' ctaHref='https://app.all-hands.dev/' ctaLabel='Try it live' />
-      {/*
-        Live /product does NOT have a separate yellow ASCII CTA section
-        — the "Building the open standard..." copy is rendered inside
-        the global footer (section.u-bg-primary) by FooterMarketingCta.
-        Adding ProductPageFooterCta here was a structural divergence.
-      */}
+      <ProductComparisonTable ctaHref='https://app.all-hands.dev/' ctaLabel='Try it live' />
+      {/* Live renders the default closing CTA inside the yellow footer section,
+        and the footer section itself is a child of page-main. */}
+      <Footer
+        standalone
+        showSocialLinks
+        compactNav
+        minHeight={1144}
+        marketingCtaPrimary={{ href: 'https://app.all-hands.dev/', label: 'Try it live' }}
+        marketingCtaSecondary={{ href: 'https://docs.openhands.dev/overview/introduction', label: 'See developer docs' }}
+      />
     </main>
   );
 };
