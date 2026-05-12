@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import os
 import base64
-import hashlib
 import json
 import re
 import secrets
@@ -12,7 +11,7 @@ import urllib.request
 
 import httpx
 from datetime import datetime, timedelta, timezone
-from typing import Any
+from typing import Any, Callable
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse, PlainTextResponse, RedirectResponse, StreamingResponse
@@ -20,6 +19,9 @@ from pydantic import ValidationError
 
 from .auth import DEFAULT_OWNER, is_admin_owner
 from .models import AccessRequest, ContextInvocationRequest, IntegrationSpec, ManagedConnector, ManagedConnectorTool, ToolSpec, now_iso
+from .managed_connectors import get_managed_connector, list_managed_connectors
+from .oauth_flow import credentials_for, ensure_managed_oauth_client, exchange_oauth_code, start_oauth_redirect
+from .openapi_tools import generate_openapi_tools
 from .repository import repository
 from .route_manifest import ROUTES
 
@@ -41,157 +43,11 @@ ADMIN_CONNECTOR_MANAGEMENT_DETAIL = "Only app administrators can manage service-
 ADMIN_NOTIFICATIONS_DETAIL = "Only app administrators can view notifications."
 ADMIN_KEY_MANAGEMENT_DETAIL = "Only app administrators can manage admin API keys."
 
-CONFIGURED_API_KEY_HEADERS = {"elevenlabs": "xi-api-key"}
-
-
-DEFAULT_MANAGED_CONNECTORS = [
-    ManagedConnector(
-        slug="elevenlabs",
-        name="ElevenLabs",
-        description="Voice generation, text-to-speech, speech-to-text, and audio tools.",
-        appUrl="https://elevenlabs.io",
-        categories=["AI", "Audio"],
-        authModes=["api_key"],
-        authStrategy="api_key",
-        provider="http",
-        credentialLabel="ElevenLabs API key",
-        credentialPlaceholder="Paste your ElevenLabs API key",
-        credentialHelp="Personal or workspace ElevenLabs API key sent in the xi-api-key header.",
-        apiKeyHeaderName="xi-api-key",
-        apiBaseUrl="https://api.elevenlabs.io",
-        openApiUrl="https://api.elevenlabs.io/openapi.json",
-        oauthConfigured=True,
-    ),
-    ManagedConnector(
-        slug="ordinal",
-        name="Ordinal",
-        description="Social media management through Ordinal's hosted MCP server.",
-        appUrl="https://app.tryordinal.com",
-        categories=["Social media", "Marketing"],
-        authModes=["bearer"],
-        authStrategy="bearer",
-        provider="mcp",
-        credentialLabel="Ordinal API key",
-        credentialPlaceholder="Paste your Ordinal API key",
-        credentialHelp="API key from your Ordinal workspace settings, sent as a Bearer token in the Authorization header.",
-        serverUrl="https://app.tryordinal.com/api/mcp",
-        oauthConfigured=True,
-    ),
-]
-
-
-def default_managed_connector(slug: str) -> ManagedConnector | None:
-    return next((connector for connector in DEFAULT_MANAGED_CONNECTORS if connector.slug == slug), None)
-
-
-def with_configured_connector_defaults(connector: ManagedConnector) -> ManagedConnector:
-    header_name = connector.apiKeyHeaderName or CONFIGURED_API_KEY_HEADERS.get(connector.slug)
-    if header_name and header_name != connector.apiKeyHeaderName:
-        return connector.model_copy(update={"apiKeyHeaderName": header_name})
-    return connector
-
-
-
-def get_managed_connector(slug: str) -> ManagedConnector | None:
-    connector = repository.get_managed_connector(slug) or default_managed_connector(slug)
-    return with_configured_connector_defaults(connector) if connector else None
-
-
-def list_managed_connectors(include_defaults: bool = True) -> list[ManagedConnector]:
-    connectors = [with_configured_connector_defaults(connector) for connector in repository.list_managed_connectors()]
-    if include_defaults:
-        registered = {connector.slug for connector in connectors}
-        connectors = [*connectors, *[connector for connector in DEFAULT_MANAGED_CONNECTORS if connector.slug not in registered]]
-    return sorted(connectors, key=lambda connector: connector.name.lower())
-
 DEPRECATED_ADMIN_CONNECTIONS_MESSAGE = "Admin API keys can no longer read self-scoped OAuth connections. Use the user API key with /api/user/connections instead."
 
 
 
 
-
-def b64url(data: bytes) -> str:
-    return base64.urlsafe_b64encode(data).decode("ascii").rstrip("=")
-
-
-def oauth_expiry(seconds: int = 600) -> str:
-    return (datetime.now(timezone.utc) + timedelta(seconds=seconds)).isoformat().replace("+00:00", "Z")
-
-
-def start_oauth_redirect(request: Request, provider: str, owner: str) -> RedirectResponse:
-    connector = get_managed_connector(provider)
-    if not connector or not connector.oauthConfig:
-        raise HTTPException(status_code=404, detail=f"Unknown OAuth provider '{provider}'.")
-    client = repository.read_oauth_client(connector)
-    if not client:
-        raise HTTPException(status_code=500, detail=f"{connector.name} is missing stored OAuth client credentials.")
-    state = secrets.token_urlsafe(24)
-    verifier = secrets.token_urlsafe(48) if connector.oauthConfig.get("pkce") else None
-    redirect_to = request.query_params.get("redirectTo") or f"/integrations?showIntegrationWizard=1&managedConnector={provider}"
-    integration_key = request.query_params.get("integrationKey") or provider
-    redirect_uri = f"{request.url.scheme}://{request.url.netloc}/api/oauth/{provider}/callback"
-    query = {
-        "response_type": "code",
-        "client_id": client["clientId"],
-        "redirect_uri": redirect_uri,
-        "state": state,
-    }
-    scopes = connector.oauthConfig.get("scopes") or []
-    if scopes:
-        query["scope"] = " ".join(scopes)
-    if verifier:
-        query["code_challenge"] = b64url(hashlib.sha256(verifier.encode()).digest())
-        query["code_challenge_method"] = "S256"
-    for key, value in (connector.oauthConfig.get("additionalAuthorizationParams") or {}).items():
-        query[str(key)] = str(value)
-    repository.save_oauth_state(state, owner, integration_key, provider, verifier, redirect_to, redirect_uri, None, oauth_expiry())
-    return RedirectResponse(f"{connector.oauthConfig['authorizationUrl']}?{urllib.parse.urlencode(query)}")
-
-
-def exchange_oauth_code(provider: str, state: str, code: str) -> dict[str, Any]:
-    record = repository.consume_oauth_state(state, provider)
-    if not record:
-        raise HTTPException(status_code=400, detail="OAuth state not found or already used.")
-    connector = get_managed_connector(provider)
-    if not connector or not connector.oauthConfig:
-        raise HTTPException(status_code=404, detail=f"Unknown OAuth provider '{provider}'.")
-    client = repository.read_oauth_client(connector)
-    if not client:
-        raise HTTPException(status_code=500, detail=f"{connector.name} is missing stored OAuth client credentials.")
-    body = {
-        "grant_type": "authorization_code",
-        "code": code,
-        "redirect_uri": record.get("redirect_uri"),
-        "client_id": client["clientId"],
-    }
-    if record.get("code_verifier"):
-        body["code_verifier"] = record.get("code_verifier")
-    headers = {"Accept": "application/json", "Content-Type": "application/x-www-form-urlencoded"}
-    if connector.oauthConfig.get("clientAuthentication") == "basic" and client.get("clientSecret"):
-        token = base64.b64encode(f"{client['clientId']}:{client['clientSecret']}".encode()).decode()
-        headers["Authorization"] = f"Basic {token}"
-    elif client.get("clientSecret"):
-        body["client_secret"] = client["clientSecret"]
-    request = urllib.request.Request(connector.oauthConfig["tokenUrl"], data=urllib.parse.urlencode(body).encode(), headers=headers, method="POST")
-    try:
-        with urllib.request.urlopen(request, timeout=10) as response:
-            payload = json.loads(response.read().decode() or "{}")
-    except Exception as exc:
-        raise HTTPException(status_code=502, detail=f"OAuth token exchange failed: {exc}") from exc
-    access_token = payload.get("access_token")
-    if not isinstance(access_token, str) or not access_token:
-        raise HTTPException(status_code=502, detail="OAuth token exchange did not return an access token.")
-    expires_at = None
-    if isinstance(payload.get("expires_in"), int):
-        expires_at = oauth_expiry(int(payload["expires_in"]))
-    return repository.save_connection(
-        str(record["owner_id"]),
-        str(record["integration_key"]),
-        provider,
-        "oauth2",
-        {"accessToken": access_token, **({"refreshToken": payload.get("refresh_token")} if payload.get("refresh_token") else {})},
-        {"tokenType": payload.get("token_type"), "scopes": str(payload.get("scope") or "").split() if payload.get("scope") else connector.oauthConfig.get("scopes") or [], "expiresAt": expires_at, "metadata": {}},
-    )
 
 def admin_connection_filters(request: Request) -> dict[str, Any]:
     params = request.query_params
@@ -317,12 +173,6 @@ def path_template(path: str, payload: dict[str, Any]) -> str:
             raise HTTPException(status_code=400, detail=f"Path placeholder '{name}' must resolve to a string, number, or boolean.")
         result = result.replace("{{" + name + "}}", urllib.parse.quote(str(value), safe=""))
     return result
-
-
-def credentials_for(owner: str, integration: IntegrationSpec) -> dict[str, Any]:
-    if integration.authStrategy == "oauth2":
-        return repository.get_connection_credentials(owner, integration.key) or {}
-    return integration.credentials
 
 
 def http_auth_headers(integration: IntegrationSpec, credentials: dict[str, Any]) -> dict[str, str]:
@@ -452,6 +302,38 @@ def mcp_tool_name(tool: ToolSpec) -> str:
     return tool_name.strip() if isinstance(tool_name, str) and tool_name.strip() else tool.name
 
 
+def mcp_transport_urls(default_url: str, *configs: dict[str, Any]) -> list[str]:
+    for config in configs:
+        order = config.get("mcpTransportOrder") if isinstance(config, dict) else None
+        if not isinstance(order, list):
+            continue
+        urls = [
+            str(item.get("url")).strip()
+            for item in order
+            if isinstance(item, dict) and item.get("transport") == "streamable_http" and str(item.get("url") or "").strip()
+        ]
+        return urls or [default_url]
+    return [default_url]
+
+
+def retry_mcp_transports[T](urls: list[str], operation: Callable[[str], T], fallback: T) -> T:
+    last_error: HTTPException | None = None
+    for url in urls:
+        try:
+            return operation(url)
+        except HTTPException as exc:
+            last_error = exc
+        except httpx.HTTPError as exc:
+            last_error = HTTPException(status_code=502, detail=str(exc))
+    if last_error:
+        raise last_error
+    return fallback
+
+
+def discover_mcp_tools_with_transport_order(server_url: str, headers: dict[str, str], *configs: dict[str, Any]) -> dict[str, ToolSpec]:
+    return retry_mcp_transports(mcp_transport_urls(server_url, *configs), lambda url: discover_mcp_tools(url, headers), {})
+
+
 def parse_sse_json_messages(text: str) -> list[Any]:
     messages: list[Any] = []
     data_lines: list[str] = []
@@ -514,54 +396,63 @@ def post_mcp_message(
     return parse_mcp_http_response(response, expected_id)
 
 
+def invoke_mcp_session(client: httpx.Client, server_url: str, headers: dict[str, str], tool_name: str, payload: dict[str, Any]) -> dict[str, Any]:
+    initialized, session_id = post_mcp_message(
+        client,
+        server_url,
+        headers,
+        {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "initialize",
+            "params": {
+                "protocolVersion": MCP_PROTOCOL_VERSION,
+                "capabilities": {},
+                "clientInfo": MCP_CLIENT_INFO,
+            },
+        },
+        None,
+        None,
+        1,
+    )
+    protocol_version = str((initialized or {}).get("protocolVersion") or MCP_PROTOCOL_VERSION)
+    post_mcp_message(
+        client,
+        server_url,
+        headers,
+        {"jsonrpc": "2.0", "method": "notifications/initialized"},
+        session_id,
+        protocol_version,
+        None,
+    )
+    result, _ = post_mcp_message(
+        client,
+        server_url,
+        headers,
+        {
+            "jsonrpc": "2.0",
+            "id": 2,
+            "method": "tools/call",
+            "params": {"name": tool_name, "arguments": payload},
+        },
+        session_id,
+        protocol_version,
+        2,
+    )
+    return result or {}
+
+
 def invoke_mcp_tool(owner: str, integration: IntegrationSpec, tool: ToolSpec, payload: dict[str, Any]) -> Any:
     server_url = mcp_server_url(integration, tool)
     headers = http_auth_headers(integration, credentials_for(owner, integration))
     tool_name = mcp_tool_name(tool)
-    with httpx.Client(timeout=20, follow_redirects=True) as client:
-        initialized, session_id = post_mcp_message(
-            client,
-            server_url,
-            headers,
-            {
-                "jsonrpc": "2.0",
-                "id": 1,
-                "method": "initialize",
-                "params": {
-                    "protocolVersion": MCP_PROTOCOL_VERSION,
-                    "capabilities": {},
-                    "clientInfo": MCP_CLIENT_INFO,
-                },
-            },
-            None,
-            None,
-            1,
-        )
-        protocol_version = str((initialized or {}).get("protocolVersion") or MCP_PROTOCOL_VERSION)
-        post_mcp_message(
-            client,
-            server_url,
-            headers,
-            {"jsonrpc": "2.0", "method": "notifications/initialized"},
-            session_id,
-            protocol_version,
-            None,
-        )
-        result, _ = post_mcp_message(
-            client,
-            server_url,
-            headers,
-            {
-                "jsonrpc": "2.0",
-                "id": 2,
-                "method": "tools/call",
-                "params": {"name": tool_name, "arguments": payload},
-            },
-            session_id,
-            protocol_version,
-            2,
-        )
-        return result or {}
+    config = tool.config if isinstance(tool.config, dict) else {}
+
+    def call_transport(candidate_url: str) -> dict[str, Any]:
+        with httpx.Client(timeout=20, follow_redirects=True) as client:
+            return invoke_mcp_session(client, candidate_url, headers, tool_name, payload)
+
+    return retry_mcp_transports(mcp_transport_urls(server_url, config, integration.config), call_transport, {})
 
 
 def invoke_tool_payload(owner: str, integration: IntegrationSpec, tool: ToolSpec, payload: dict[str, Any]) -> Any:
@@ -610,7 +501,9 @@ def policy_allows(policy: dict[str, Any] | None, integration: IntegrationSpec, t
     return False
 
 
-def deny_tool_invocation(owner: str, integration: IntegrationSpec, tool: ToolSpec, scopes: list[str], payload: dict[str, Any], agent_id: str | None, agent_class: str | None, reason: str) -> None:
+def ensure_pending_access_request(owner: str, integration: IntegrationSpec, tool: ToolSpec, scopes: list[str], agent_id: str | None, agent_class: str | None) -> None:
+    if repository.find_matching_pending_access_request(owner, agent_id, agent_class, integration.key, tool.name, scopes):
+        return
     repository.save_access_request(
         owner,
         AccessRequest(
@@ -621,6 +514,11 @@ def deny_tool_invocation(owner: str, integration: IntegrationSpec, tool: ToolSpe
             scopes=scopes,
         ),
     )
+
+
+def deny_tool_invocation(owner: str, integration: IntegrationSpec, tool: ToolSpec, scopes: list[str], payload: dict[str, Any], agent_id: str | None, agent_class: str | None, reason: str, create_access_request: bool = False) -> None:
+    if create_access_request:
+        ensure_pending_access_request(owner, integration, tool, scopes, agent_id, agent_class)
     repository.record_tool_invocation(owner, integration, tool, scopes, payload, "denied", reason, agent_id, agent_class)
     raise HTTPException(status_code=403, detail=reason)
 
@@ -637,7 +535,7 @@ def invoke_enabled_tool(
     scopes = effective_scopes(tool, scopes)
     grant = active_temporary_grant(agent_id, agent_class, integration.key, tool.name, scopes)
     if tool.accessMode == "approval_required" and not grant:
-        deny_tool_invocation(owner, integration, tool, scopes, payload, agent_id, agent_class, "Human approval is required before calling this tool.")
+        deny_tool_invocation(owner, integration, tool, scopes, payload, agent_id, agent_class, "Human approval is required before calling this tool.", True)
 
     policy = repository.get_policy(agent_class) if agent_class else None
     if tool.accessMode != "approval_required" and policy and not policy_allows(policy, integration, tool, scopes) and not grant:
@@ -1091,153 +989,6 @@ def index_managed_connector_functions(slug: str, owner: str | None = None) -> di
 
 
 
-OPENAPI_METHODS = ("get", "post", "put", "patch", "delete")
-
-
-def normalize_tool_name(value: str) -> str:
-    normalized = re.sub(r"[^a-zA-Z0-9]+", "_", value).strip("_").lower()
-    return normalized or "call_api"
-
-
-def resolve_openapi_ref(ref: str, document: dict[str, Any]) -> Any:
-    if not ref.startswith("#/"):
-        raise HTTPException(status_code=500, detail=f"Unsupported OpenAPI reference '{ref}'.")
-    value: Any = document
-    for segment in ref[2:].split("/"):
-        segment = segment.replace("~1", "/").replace("~0", "~")
-        if not isinstance(value, dict) or segment not in value:
-            raise HTTPException(status_code=500, detail=f"Could not resolve OpenAPI reference '{ref}'.")
-        value = value[segment]
-    return value
-
-
-def resolve_openapi_item(item: Any, document: dict[str, Any]) -> Any:
-    if isinstance(item, dict) and isinstance(item.get("$ref"), str):
-        return resolve_openapi_ref(item["$ref"], document)
-    return item
-
-
-def openapi_content_type(content: dict[str, Any]) -> str | None:
-    if "application/json" in content:
-        return "json"
-    if "application/x-www-form-urlencoded" in content:
-        return "form_urlencoded"
-    if "multipart/form-data" in content:
-        return "multipart_form_data"
-    if "text/plain" in content:
-        return "text"
-    return None
-
-
-def openapi_body_description(request_body: dict[str, Any] | None) -> str:
-    content = request_body.get("content") if isinstance(request_body, dict) else None
-    if isinstance(content, dict):
-        if "multipart/form-data" in content:
-            return "Provide multipart form fields under `body`. File inputs can use objects like { filename, contentType, contentBase64 }."
-        if "application/x-www-form-urlencoded" in content:
-            return "Provide form fields under `body`."
-        if "text/plain" in content:
-            return "Provide the plain-text request payload under `body`."
-    return "Provide the request payload under `body`."
-
-
-def build_openapi_description(operation: dict[str, Any], path_params: list[dict[str, Any]], query_params: list[dict[str, Any]], request_body: dict[str, Any] | None) -> str:
-    base = str(operation.get("summary") or operation.get("description") or "HTTP API operation").strip()
-    hints: list[str] = []
-    if path_params:
-        hints.append("Path params: " + ", ".join(param["name"] for param in path_params) + ".")
-    if query_params:
-        hints.append("Query params: " + ", ".join(param["name"] for param in query_params) + ".")
-    if request_body:
-        hints.append(openapi_body_description(request_body))
-    return f"{base} {' '.join(hints)}" if hints else base
-
-
-def build_openapi_request_template(method: str, path: str, parameters: list[dict[str, Any]], request_body: dict[str, Any] | None) -> dict[str, Any] | None:
-    content = request_body.get("content") if isinstance(request_body, dict) else None
-    content_type = openapi_content_type(content) if isinstance(content, dict) else None
-    if content is not None and content_type is None:
-        return None
-    headers = {
-        param["name"]: str(param.get("schema", {}).get("enum", [None])[0])
-        for param in parameters
-        if param.get("in") == "header"
-        and str(param.get("name", "")).lower() != "authorization"
-        and isinstance(param.get("schema"), dict)
-        and len(param["schema"].get("enum", [])) == 1
-    }
-    query = {param["name"]: "{{" + param["name"] + "}}" for param in parameters if param.get("in") == "query"}
-    return {
-        "method": method.upper(),
-        "path": re.sub(r"\{([^}]+)\}", r"{{\1}}", path),
-        **({"query": query} if query else {}),
-        **({"headers": headers} if headers else {}),
-        **({"body": "{{body}}"} if request_body else {}),
-        **({"contentType": content_type} if content_type else {}),
-    }
-
-
-def openapi_input_schema(parameters: list[dict[str, Any]], request_body: dict[str, Any] | None) -> dict[str, Any]:
-    properties: dict[str, Any] = {}
-    required: list[str] = []
-    for param in parameters:
-        name = param.get("name")
-        if not isinstance(name, str) or param.get("in") not in {"path", "query"}:
-            continue
-        properties[name] = param.get("schema") if isinstance(param.get("schema"), dict) else {"type": "string"}
-        if param.get("required") or param.get("in") == "path":
-            required.append(name)
-    if request_body:
-        properties["body"] = {"description": "Request body."}
-        if request_body.get("required"):
-            required.append("body")
-    return {"type": "object", "properties": properties, "required": required, "additionalProperties": True}
-
-
-def generate_openapi_tools(open_api_url: str, auth_strategy: str) -> list[ManagedConnectorTool]:
-    try:
-        request = urllib.request.Request(open_api_url, headers={"Accept": "application/json"})
-        with urllib.request.urlopen(request, timeout=20) as response:
-            document = json.loads(response.read().decode() or "{}")
-    except urllib.error.HTTPError as exc:
-        raise HTTPException(status_code=502, detail=f"Failed to load OpenAPI schema from {open_api_url} ({exc.code}).") from exc
-    except Exception as exc:
-        raise HTTPException(status_code=502, detail=f"Failed to load OpenAPI schema from {open_api_url}: {exc}") from exc
-    paths = document.get("paths") if isinstance(document, dict) else None
-    if not isinstance(paths, dict):
-        raise HTTPException(status_code=500, detail=f"OpenAPI schema at {open_api_url} does not contain any paths.")
-    tools: list[ManagedConnectorTool] = []
-    for path, path_item in paths.items():
-        if not isinstance(path_item, dict):
-            continue
-        path_parameters = [resolve_openapi_item(item, document) for item in path_item.get("parameters", []) if isinstance(item, dict)]
-        for method in OPENAPI_METHODS:
-            operation = path_item.get(method)
-            if not isinstance(operation, dict):
-                continue
-            security = operation.get("security", document.get("security", []))
-            if auth_strategy in {"oauth2", "bearer"} and security and not any("bearerAuth" in requirement for requirement in security if isinstance(requirement, dict)):
-                continue
-            parameters = [*path_parameters, *[resolve_openapi_item(item, document) for item in operation.get("parameters", []) if isinstance(item, dict)]]
-            request_body = resolve_openapi_item(operation.get("requestBody"), document) if operation.get("requestBody") else None
-            request_template = build_openapi_request_template(method, str(path), parameters, request_body if isinstance(request_body, dict) else None)
-            if not request_template:
-                continue
-            tool_name = normalize_tool_name(str(operation.get("operationId") or f"{method}_{path}"))
-            path_params = [param for param in parameters if param.get("in") == "path"]
-            query_params = [param for param in parameters if param.get("in") == "query"]
-            tools.append(ManagedConnectorTool(
-                name=tool_name,
-                description=build_openapi_description(operation, path_params, query_params, request_body if isinstance(request_body, dict) else None),
-                request=request_template,
-                config={"inputSchema": openapi_input_schema(parameters, request_body if isinstance(request_body, dict) else None)},
-            ))
-    if not tools:
-        raise HTTPException(status_code=500, detail=f"OpenAPI schema at {open_api_url} did not produce any supported HTTP tools.")
-    return tools
-
-
-
 def infer_auth_strategy(credentials: dict[str, Any]) -> str:
     if credentials.get("accessToken"):
         return "bearer"
@@ -1308,7 +1059,27 @@ def discover_mcp_tools(server_url: str, headers: dict[str, str]) -> dict[str, To
     return discovered
 
 
-def discovered_integration(payload: dict[str, Any]) -> dict[str, Any]:
+def managed_mcp_discovery_credentials(owner: str, integration_key: str, connector: ManagedConnector, credentials: dict[str, Any]) -> dict[str, Any]:
+    if connector.authStrategy == "oauth2":
+        saved_credentials = repository.get_connection_credentials(owner, integration_key)
+        if not saved_credentials:
+            raise HTTPException(status_code=403, detail=f"Connect {connector.name} for this user before discovering tools.")
+        return saved_credentials
+    return managed_connector_credentials(connector, credentials)
+
+
+def discover_managed_mcp_tools_for_owner(owner: str, integration_key: str, connector: ManagedConnector, credentials: dict[str, Any]) -> dict[str, ToolSpec]:
+    server_url = str(connector.serverUrl or connector.apiBaseUrl or "").strip()
+    if not server_url:
+        raise HTTPException(status_code=400, detail=f"Managed MCP connector '{connector.slug}' is missing a server URL.")
+    discovery_credentials = managed_mcp_discovery_credentials(owner, integration_key, connector, credentials)
+    return discover_mcp_tools_with_transport_order(
+        server_url,
+        mcp_discovery_headers(connector.authStrategy, discovery_credentials),
+    )
+
+
+def discovered_integration(payload: dict[str, Any], owner: str) -> dict[str, Any]:
     config = payload.get("config") if isinstance(payload.get("config"), dict) else {}
     credentials = payload.get("credentials") if isinstance(payload.get("credentials"), dict) else {}
     slug = payload.get("managedConnectorSlug") or config.get("managedConnectorSlug") or payload.get("key")
@@ -1317,9 +1088,13 @@ def discovered_integration(payload: dict[str, Any]) -> dict[str, Any]:
         raise HTTPException(status_code=404, detail=f"Unknown managed connector '{slug}'.")
     connector = get_managed_connector(str(slug) if slug else "")
     if connector:
+        integration_key = str(payload.get("key") or connector.slug)
         resolved_credentials = managed_connector_credentials(connector, credentials)
+        tools = connector_tools(connector)
+        if connector.provider == "mcp" and not tools:
+            tools = discover_managed_mcp_tools_for_owner(owner, integration_key, connector, credentials)
         return {
-            "key": payload.get("key") or connector.slug,
+            "key": integration_key,
             "name": payload.get("name") or connector.name,
             "kind": "mcp" if connector.provider == "mcp" else "api",
             "provider": connector.provider,
@@ -1328,7 +1103,7 @@ def discovered_integration(payload: dict[str, Any]) -> dict[str, Any]:
             "fineGrainedPermissions": True,
             "config": {"managedConnectorSlug": connector.slug},
             "credentials": resolved_credentials,
-            "tools": {name: tool.model_dump() for name, tool in connector_tools(connector).items()},
+            "tools": {name: tool.model_dump() for name, tool in tools.items()},
         }
     if payload.get("kind") != "mcp":
         raise HTTPException(status_code=400, detail="Only managed connectors and raw MCP discovery are supported.")
@@ -1336,7 +1111,7 @@ def discovered_integration(payload: dict[str, Any]) -> dict[str, Any]:
     if not server_url:
         raise HTTPException(status_code=400, detail="MCP discovery requires config.serverUrl.")
     auth_strategy = infer_auth_strategy(credentials)
-    tools = discover_mcp_tools(server_url, mcp_discovery_headers(auth_strategy, credentials))
+    tools = discover_mcp_tools_with_transport_order(server_url, mcp_discovery_headers(auth_strategy, credentials), config)
     return {
         "key": payload.get("key", "custom"),
         "name": payload.get("name", payload.get("key", "Custom integration")),
@@ -1507,7 +1282,7 @@ async def fastapi_handler(request: Request):
     if path in {"/api/integrations/discover", "/api/admin/integrations/discover"}:
         if path == "/api/integrations/discover" and isinstance(body, dict):
             assert_user_can_discover_integration(owner, body)
-        return discovered_integration(body)
+        return discovered_integration(body, owner)
 
     if path == "/api/integrations/disable-unused":
         return disable_unused_tools(owner, body if isinstance(body, dict) else {})
@@ -1519,7 +1294,8 @@ async def fastapi_handler(request: Request):
         if method == "GET":
             return [connector.response() for connector in list_managed_connectors()]
         require_app_admin(owner, ADMIN_CONNECTOR_MANAGEMENT_DETAIL)
-        return repository.save_managed_connector(ManagedConnector.model_validate(body)).response()
+        connector = ensure_managed_oauth_client(ManagedConnector.model_validate(body))
+        return repository.save_managed_connector(connector).response()
 
     if path == "/api/managed-connectors/{slug}" or path == "/api/admin/managed-connectors/{slug}":
         require_app_admin(owner, ADMIN_CONNECTOR_MANAGEMENT_DETAIL)

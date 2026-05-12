@@ -2,13 +2,15 @@ from __future__ import annotations
 
 import json
 import os
+import urllib.parse
 
 import httpx
 from fastapi.testclient import TestClient
 
 from backend.app import main as backend_main
+from backend.app import oauth_flow
 from backend.app.main import app
-from backend.app.models import AccessRequest, ManagedConnector, ManagedConnectorTool
+from backend.app.models import AccessRequest, ManagedConnector, ManagedConnectorTool, ToolSpec
 from backend.app.repository import repository
 
 
@@ -109,6 +111,364 @@ def test_managed_connector_discovery_and_user_key_flow(monkeypatch) -> None:
 
     user_key = client.post("/api/user/key").json()["apiKey"]
     assert client.get("/api/user/integrations", headers={"Authorization": f"Bearer {user_key}"}).status_code == 200
+
+
+def test_managed_oauth_mcp_discovery_uses_saved_connection(monkeypatch) -> None:
+    monkeypatch.setenv("DISABLE_AUTH", "true")
+    monkeypatch.setenv("CREDENTIAL_ENCRYPTION_KEY", "test-credential-key")
+    client = TestClient(app)
+
+    admin_key = client.post("/api/admin/key").json()["apiKey"]
+    connector_response = client.post(
+        "/api/managed-connectors",
+        headers={"Authorization": f"Bearer {admin_key}"},
+        json={
+            "slug": "linear",
+            "name": "Linear",
+            "description": "Linear MCP",
+            "categories": ["product"],
+            "authModes": ["oauth2"],
+            "authStrategy": "oauth2",
+            "provider": "mcp",
+            "serverUrl": "https://mcp.linear.app/mcp",
+            "oauthConfigured": True,
+            "oauthClientId": "linear-client-id",
+            "oauthClientSecret": "linear-client-secret",
+            "oauthConfig": {
+                "authorizationUrl": "https://linear.app/oauth/authorize",
+                "tokenUrl": "https://api.linear.app/oauth/token",
+                "scopes": ["read"],
+            },
+            "credentialLabel": "Connect Linear",
+            "credentialPlaceholder": "Connect Linear",
+            "credentialHelp": "Use OAuth to connect Linear.",
+            "tools": [],
+            "enabled": True,
+        },
+    )
+    assert connector_response.status_code == 200
+    repository.save_connection(
+        "dev@localhost",
+        "linear",
+        "mcp",
+        "oauth2",
+        {"accessToken": "saved-linear-token"},
+        {"scopes": ["read"]},
+    )
+
+    seen: dict[str, object] = {}
+
+    def fake_discover_mcp_tools(server_url: str, headers: dict[str, str]) -> dict[str, ToolSpec]:
+        seen["serverUrl"] = server_url
+        seen["headers"] = headers
+        return {
+            "list_issues": ToolSpec(
+                name="list_issues",
+                description="List Linear issues",
+                config={"toolName": "list_issues", "inputSchema": {"type": "object"}},
+            )
+        }
+
+    monkeypatch.setattr(backend_main, "discover_mcp_tools", fake_discover_mcp_tools)
+
+    discovered = client.post(
+        "/api/integrations/discover",
+        json={
+            "key": "linear",
+            "kind": "managed",
+            "config": {"managedConnectorSlug": "linear"},
+            "credentials": {"accessToken": "submitted-token-should-not-be-used"},
+        },
+    )
+
+    assert discovered.status_code == 200
+    body = discovered.json()
+    assert body["credentials"] == {}
+    assert body["tools"]["list_issues"]["description"] == "List Linear issues"
+    assert seen == {
+        "serverUrl": "https://mcp.linear.app/mcp",
+        "headers": {"Authorization": "Bearer saved-linear-token"},
+    }
+
+
+def test_mcp_discovery_honors_streamable_transport_order(monkeypatch) -> None:
+    monkeypatch.setenv("DISABLE_AUTH", "true")
+    client = TestClient(app)
+    attempted: list[str] = []
+
+    def fake_discover(server_url, _headers):
+        attempted.append(server_url)
+        if server_url == "https://first.example/mcp":
+            raise backend_main.HTTPException(status_code=502, detail="first failed")
+        return {"list": ToolSpec(name="list", description="List things")}
+
+    monkeypatch.setattr(backend_main, "discover_mcp_tools", fake_discover)
+    response = client.post(
+        "/api/integrations/discover",
+        json={
+            "key": "fallback",
+            "name": "Fallback",
+            "kind": "mcp",
+            "config": {
+                "serverUrl": "https://fallback.example/mcp",
+                "mcpTransportOrder": [
+                    {"transport": "streamable_http", "url": "https://first.example/mcp"},
+                    {"transport": "sse", "url": "https://ignored.example/sse"},
+                    {"transport": "streamable_http", "url": "https://second.example/mcp"},
+                ],
+            },
+            "credentials": {},
+        },
+    )
+    assert response.status_code == 200
+    assert attempted == ["https://first.example/mcp", "https://second.example/mcp"]
+    assert response.json()["tools"]["list"]["description"] == "List things"
+
+
+def test_oauth_invocation_requires_connection_and_refreshes_expired_tokens(monkeypatch) -> None:
+    import threading
+    from http.server import BaseHTTPRequestHandler, HTTPServer
+
+    monkeypatch.setenv("DISABLE_AUTH", "true")
+    monkeypatch.setenv("CREDENTIAL_ENCRYPTION_KEY", "test-credential-key")
+    client = TestClient(app)
+
+    seen: dict[str, object] = {}
+
+    class Handler(BaseHTTPRequestHandler):
+        def do_GET(self):  # noqa: N802 - http.server API
+            seen["authorization"] = self.headers.get("authorization")
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps({"ok": True}).encode())
+
+        def log_message(self, *_args):
+            return
+
+    server = HTTPServer(("127.0.0.1", 0), Handler)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    try:
+        base_url = f"http://127.0.0.1:{server.server_port}"
+        integration = {
+            "key": "refresh-provider",
+            "name": "Refresh Provider",
+            "kind": "api",
+            "provider": "http",
+            "authStrategy": "oauth2",
+            "config": {"apiBaseUrl": base_url},
+            "tools": {
+                "me": {
+                    "name": "me",
+                    "description": "Fetch me",
+                    "config": {"request": {"method": "GET", "path": "/me"}},
+                }
+            },
+        }
+        assert client.post("/api/integrations", json=integration).status_code == 200
+        agent_key = client.get("/api/user/agent-key").json()["apiKey"]
+
+        missing = client.post(
+            "/api/context/refresh-provider/me",
+            headers={"Authorization": f"Bearer {agent_key}"},
+            json={"payload": {}, "scopes": []},
+        )
+        assert missing.status_code == 403
+        assert "Connect Refresh Provider" in missing.json()["detail"]
+
+        admin_key = client.post("/api/admin/key").json()["apiKey"]
+        assert client.post(
+            "/api/managed-connectors",
+            headers={"Authorization": f"Bearer {admin_key}"},
+            json={
+                "slug": "refresh-provider",
+                "name": "Refresh Provider",
+                "description": "Refresh Provider",
+                "authModes": ["oauth2"],
+                "authStrategy": "oauth2",
+                "provider": "http",
+                "apiBaseUrl": base_url,
+                "oauthClientId": "client-id",
+                "oauthClientSecret": "client-secret",
+                "oauthConfig": {"authorizationUrl": "https://auth.example/authorize", "tokenUrl": "https://auth.example/token", "scopes": ["read"]},
+            },
+        ).status_code == 200
+        repository.save_connection(
+            "dev@localhost",
+            "refresh-provider",
+            "refresh-provider",
+            "oauth2",
+            {"accessToken": "expired-token", "refreshToken": "refresh-token"},
+            {"scopes": ["read"], "expiresAt": "2000-01-01T00:00:00Z"},
+        )
+
+        token_requests: list[tuple[dict[str, str], dict[str, str]]] = []
+
+        def fake_fetch_oauth_token(_connector, body, headers):
+            token_requests.append((body, headers))
+            return {"access_token": "refreshed-token", "refresh_token": "next-refresh", "expires_in": 3600, "scope": "read"}
+
+        monkeypatch.setattr(oauth_flow, "fetch_oauth_token", fake_fetch_oauth_token)
+        refreshed = client.post(
+            "/api/context/refresh-provider/me",
+            headers={"Authorization": f"Bearer {agent_key}"},
+            json={"payload": {}, "scopes": []},
+        )
+        assert refreshed.status_code == 200
+        assert seen["authorization"] == "Bearer refreshed-token"
+        assert token_requests[0][0]["grant_type"] == "refresh_token"
+        assert token_requests[0][0]["refresh_token"] == "refresh-token"
+        assert token_requests[0][1]["Authorization"].startswith("Basic ")
+    finally:
+        server.shutdown()
+        thread.join(timeout=2)
+
+
+def test_oauth_start_uses_proxy_scopes_and_additional_params(monkeypatch) -> None:
+    monkeypatch.setenv("DISABLE_AUTH", "true")
+    monkeypatch.setenv("AUTH_REDIRECT_PROXY_URL", "https://stable.example.dev/api/auth")
+    client = TestClient(app)
+    admin_key = client.post("/api/admin/key").json()["apiKey"]
+    response = client.post(
+        "/api/managed-connectors",
+        headers={"Authorization": f"Bearer {admin_key}"},
+        json={
+            "slug": "oauth-params",
+            "name": "OAuth Params",
+            "description": "OAuth Params",
+            "authModes": ["oauth2"],
+            "authStrategy": "oauth2",
+            "provider": "mcp",
+            "serverUrl": "https://mcp.example/mcp",
+            "oauthClientId": "client-id",
+            "oauthClientSecret": "client-secret",
+            "oauthConfig": {
+                "authorizationUrl": "https://auth.example/authorize",
+                "tokenUrl": "https://auth.example/token",
+                "scopes": ["read", "write"],
+                "optionalScopes": ["extra"],
+                "scopeSeparator": "comma",
+                "additionalAuthorizationParams": {"audience": "api", "optional_scope": "legacy"},
+            },
+        },
+    )
+    assert response.status_code == 200
+
+    start = client.get("/api/oauth/oauth-params/start", follow_redirects=False)
+    assert start.status_code == 307
+    location = start.headers["location"]
+    parsed = urllib.parse.urlparse(location)
+    query = urllib.parse.parse_qs(parsed.query)
+    assert query["redirect_uri"] == ["https://stable.example.dev/api/oauth/oauth-params/callback"]
+    assert query["scope"] == ["read,write"]
+    assert query["optional_scope"] == ["extra,legacy"]
+    assert query["audience"] == ["api"]
+
+
+def test_dynamic_oauth_client_registration_for_public_clients(monkeypatch) -> None:
+    import threading
+    from http.server import BaseHTTPRequestHandler, HTTPServer
+
+    monkeypatch.setenv("DISABLE_AUTH", "true")
+    client = TestClient(app)
+    registrations: list[dict[str, object]] = []
+
+    class Handler(BaseHTTPRequestHandler):
+        def do_POST(self):  # noqa: N802 - http.server API
+            length = int(self.headers.get("content-length", "0"))
+            registrations.append(json.loads(self.rfile.read(length).decode()))
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps({"client_id": "dynamic-client"}).encode())
+
+        def log_message(self, *_args):
+            return
+
+    server = HTTPServer(("127.0.0.1", 0), Handler)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    try:
+        admin_key = client.post("/api/admin/key").json()["apiKey"]
+        response = client.post(
+            "/api/managed-connectors",
+            headers={"Authorization": f"Bearer {admin_key}"},
+            json={
+                "slug": "dynamic-oauth",
+                "name": "Dynamic OAuth",
+                "description": "Dynamic OAuth",
+                "authModes": ["oauth2"],
+                "authStrategy": "oauth2",
+                "provider": "mcp",
+                "serverUrl": "https://mcp.example/mcp",
+                "oauthConfig": {
+                    "authorizationUrl": "https://auth.example/authorize",
+                    "tokenUrl": "https://auth.example/token",
+                    "registrationUrl": f"http://127.0.0.1:{server.server_port}/register",
+                    "clientAuthentication": "none",
+                    "scopes": [],
+                },
+            },
+        )
+        assert response.status_code == 200
+        assert response.json()["oauthConfigured"] is True
+        assert registrations[0]["token_endpoint_auth_method"] == "none"
+        connector = repository.get_managed_connector("dynamic-oauth")
+        assert connector is not None
+        assert connector.oauthClientId == "dynamic-client"
+    finally:
+        server.shutdown()
+        thread.join(timeout=2)
+
+
+def test_approval_required_requests_are_deduplicated_and_policy_denials_do_not_create_requests(monkeypatch) -> None:
+    monkeypatch.setenv("DISABLE_AUTH", "true")
+    client = TestClient(app)
+    integration = {
+        "key": "approval-api",
+        "name": "Approval API",
+        "kind": "api",
+        "provider": "mock",
+        "authStrategy": "none",
+        "tools": {
+            "needs_approval": {
+                "name": "needs_approval",
+                "description": "Needs approval",
+                "accessMode": "approval_required",
+                "executionMode": "mock",
+                "mockResponse": {"ok": True},
+            },
+            "policy_limited": {
+                "name": "policy_limited",
+                "description": "Policy limited",
+                "executionMode": "mock",
+                "mockResponse": {"ok": True},
+            },
+        },
+    }
+    assert client.post("/api/integrations", json=integration).status_code == 200
+    agent_key = client.get("/api/user/agent-key").json()["apiKey"]
+
+    for _ in range(2):
+        response = client.post(
+            "/api/context/approval-api/needs_approval",
+            headers={"Authorization": f"Bearer {agent_key}"},
+            json={"agentId": "agent-1", "agentClass": "developer", "payload": {}, "scopes": []},
+        )
+        assert response.status_code == 403
+    requests = client.get("/api/case-by-case-approvals").json()
+    assert len(requests) == 1
+    assert requests[0]["toolName"] == "needs_approval"
+
+    assert client.put("/api/agent-classes/developer", json={"rules": []}).status_code == 200
+    denied = client.post(
+        "/api/context/approval-api/policy_limited",
+        headers={"Authorization": f"Bearer {agent_key}"},
+        json={"agentId": "agent-1", "agentClass": "developer", "payload": {}, "scopes": []},
+    )
+    assert denied.status_code == 403
+    assert len(client.get("/api/case-by-case-approvals").json()) == 1
 
 
 def test_repository_uses_owner_header_identity(monkeypatch) -> None:

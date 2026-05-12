@@ -129,6 +129,10 @@ class Repository:
     def normalize_owner_id(value: Any) -> str:
         return str(value or "").strip().lower()
 
+    @staticmethod
+    def same_scopes(left: list[str], right: list[str]) -> bool:
+        return sorted(left) == sorted(right)
+
     @classmethod
     def access_request_owner_id(cls, request: AccessRequest) -> str | None:
         notification_owner = cls.normalize_owner_id(request.notificationTargets.get("in_app"))
@@ -315,6 +319,41 @@ class Repository:
             return [request for request in requests if self.access_request_matches_owner(request, owner_id)]
         return requests
 
+    def find_matching_pending_access_request(
+        self,
+        owner_id: str,
+        agent_id: str | None,
+        agent_class: str | None,
+        integration_key: str,
+        tool_name: str,
+        scopes: list[str],
+    ) -> AccessRequest | None:
+        if self.database_url:
+            rows = self.db_rows(
+                """
+                SELECT * FROM access_requests
+                WHERE status = 'pending'
+                  AND LOWER(COALESCE(notification_targets->>'in_app', '')) = LOWER(%s)
+                  AND COALESCE(agent_id, '') = COALESCE(%s, '')
+                  AND COALESCE(agent_class, '') = COALESCE(%s, '')
+                  AND integration_key = %s
+                  AND function_name = %s
+                ORDER BY created_at DESC
+                """,
+                (owner_id, agent_id, agent_class, integration_key, tool_name),
+            )
+            for row in rows:
+                request = self.row_to_access_request(row)
+                if self.same_scopes(request.scopes, scopes):
+                    return request
+            return None
+        for request in self.access_requests.get(self.normalize_owner_id(owner_id), {}).values():
+            if request.status != "pending":
+                continue
+            if request.agentId == agent_id and request.agentClass == agent_class and request.integrationKey == integration_key and request.toolName == tool_name and self.same_scopes(request.scopes, scopes):
+                return request
+        return None
+
     def save_access_request(self, owner_id: str, request: AccessRequest) -> AccessRequest:
         request = self.owner_scoped_access_request(owner_id, request)
         if self.database_url:
@@ -415,7 +454,9 @@ class Repository:
     def save_managed_connector(self, connector: ManagedConnector) -> ManagedConnector:
         connector.updatedAt = now_iso()
         if connector.authStrategy == "oauth2":
-            connector.oauthConfigured = bool(connector.oauthClientId) or connector.oauthConfig is not None
+            connector.oauthConfigured = bool(connector.oauthClientId)
+        else:
+            connector.oauthConfigured = connector.authStrategy != "oauth2"
         if not connector.authModes:
             connector.authModes = [connector.authStrategy]
         if self.database_url:
@@ -634,11 +675,35 @@ class Repository:
         self.connections[(owner_id, integration_key)] = {**record, "credentials": credentials}
         return record
 
-    def get_connection_credentials(self, owner_id: str, integration_key: str) -> dict[str, Any] | None:
+    def get_connection(self, owner_id: str, integration_key: str) -> dict[str, Any] | None:
         if self.database_url:
-            rows = self.db_rows("SELECT encrypted_credentials FROM integration_connections WHERE owner_id = %s AND integration_key = %s", (owner_id, integration_key))
-            return decrypt_credentials(rows[0]["encrypted_credentials"]) if rows else None
-        record = self.connections.get((owner_id, integration_key))
+            rows = self.db_rows("SELECT * FROM integration_connections WHERE LOWER(owner_id) = LOWER(%s) AND integration_key = %s", (owner_id, integration_key))
+            if not rows:
+                return None
+            row = rows[0]
+            return {
+                "ownerId": row.get("owner_id"),
+                "integrationKey": row.get("integration_key"),
+                "provider": row.get("provider"),
+                "authStrategy": row.get("auth_strategy"),
+                "credentials": decrypt_credentials(row["encrypted_credentials"]),
+                "tokenType": row.get("token_type"),
+                "scopes": row.get("scopes") or [],
+                "expiresAt": self.iso(row.get("expires_at")),
+                "externalAccountId": row.get("external_account_id"),
+                "externalWorkspaceId": row.get("external_workspace_id"),
+                "displayName": row.get("display_name"),
+                "metadata": row.get("metadata") or {},
+                "createdAt": self.iso(row.get("created_at")) or now_iso(),
+                "updatedAt": self.iso(row.get("updated_at")) or now_iso(),
+            }
+        record = self.connections.get((owner_id, integration_key)) or self.connections.get((owner_id.lower(), integration_key))
+        if not record:
+            return None
+        return {"ownerId": owner_id, **record}
+
+    def get_connection_credentials(self, owner_id: str, integration_key: str) -> dict[str, Any] | None:
+        record = self.get_connection(owner_id, integration_key)
         return record.get("credentials") if record else None
 
     def has_agent_api_keys(self) -> bool:
