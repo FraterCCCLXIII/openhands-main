@@ -193,6 +193,20 @@ def test_mcp_endpoint_lists_and_calls_enabled_tools() -> None:
     assert call_response.json()["result"]["content"][0]["type"] == "text"
 
 
+def test_mcp_initialized_notification_returns_no_jsonrpc_body() -> None:
+    client = get_client()
+    seed_state(client)
+
+    response = client.post(
+        "/api/mcp",
+        headers={"X-Owner-Id": OWNER, "Authorization": f"Bearer {AGENT_KEY}"},
+        json={"jsonrpc": "2.0", "method": "notifications/initialized"},
+    )
+
+    assert response.status_code == 202
+    assert response.content == b""
+
+
 def test_auth_compatibility_routes_are_available() -> None:
     client = get_client()
     for method in ("GET", "POST"):

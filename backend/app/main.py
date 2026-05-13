@@ -13,7 +13,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Callable
 
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import JSONResponse, PlainTextResponse, RedirectResponse, StreamingResponse
+from fastapi.responses import JSONResponse, PlainTextResponse, RedirectResponse, Response, StreamingResponse
 from pydantic import ValidationError
 
 from .auth import DEFAULT_OWNER, is_admin_owner
@@ -633,12 +633,12 @@ def jsonrpc_response(body: dict[str, Any], result: Any = None, error: dict[str, 
     return response
 
 
-def mcp_call(owner: str, body: dict[str, Any]) -> dict[str, Any]:
+def mcp_call(owner: str, body: dict[str, Any]) -> dict[str, Any] | Response:
     method = body.get("method")
     if method == "initialize":
         return jsonrpc_response(body, {"protocolVersion": body.get("params", {}).get("protocolVersion", "2024-11-05"), "capabilities": {"tools": {}}, "serverInfo": {"name": "integrations-hub-fastapi", "version": "0.1.0"}})
     if method == "notifications/initialized":
-        return {"accepted": True}
+        return Response(status_code=202)
     if method == "tools/list":
         return jsonrpc_response(body, {"tools": mcp_tool_list(owner)})
     if method == "tools/call":
