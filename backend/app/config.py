@@ -82,6 +82,7 @@ class Config(BaseModel):
         INTHUB_CRON_SECRET: Secret for cron job authentication
         INTHUB_APP_ADMIN_EMAILS: Comma-separated admin email addresses
         INTHUB_CREDENTIAL_ENCRYPTION_KEY: Key for encrypting stored credentials
+        INTHUB_STATIC_DIR: Directory for pre-built SPA files (K8s mode only)
     """
 
     # Database
@@ -133,6 +134,16 @@ class Config(BaseModel):
             "Key for encrypting stored provider credentials. Reads from "
             "INTHUB_CREDENTIAL_ENCRYPTION_KEY with fallback to CREDENTIAL_ENCRYPTION_KEY. "
             "Required for OAuth and credential storage."
+        ),
+    )
+
+    # Static file serving (K8s mode)
+    static_dir: str | None = Field(
+        default=None,
+        description=(
+            "Directory containing pre-built Next.js SPA static files. When set, "
+            "FastAPI serves the SPA directly (for K8s/Docker deployments). "
+            "Leave unset on Vercel where CDN handles static files."
         ),
     )
 

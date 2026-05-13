@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:spa": "./scripts/build-spa.sh",
     "start": "next start",
     "db:migrate": "./scripts/run-migrations.sh",
     "db:migrate:check": "./scripts/run-migrations.sh --check",

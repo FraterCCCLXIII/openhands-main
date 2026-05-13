@@ -10,10 +10,14 @@ from backend.app.main import app
 ROOT = Path(__file__).resolve().parents[2]
 
 
-def test_root_vercel_preview_routes_non_auth_api_to_fastapi_entrypoint() -> None:
+def test_root_vercel_routes_non_auth_api_to_fastapi_entrypoint() -> None:
+    """Verify Vercel routes non-auth /api/* to FastAPI, auth stays with Next.js."""
     config = json.loads((ROOT / "vercel.json").read_text())
+    # Non-auth API routes go to FastAPI
     assert {"source": "/api/:path((?!auth).*)", "destination": "/api/index.py"} in config["rewrites"]
-    assert {"source": "/api/:path*", "destination": "/api/index.py"} not in config["rewrites"]
+    # Standard Next.js build (not SPA mode) for Vercel
+    assert "build:spa" not in config.get("buildCommand", "")
+    assert "npm run build" in config.get("buildCommand", "")
     assert (ROOT / "api" / "index.py").read_text().strip() == "from backend.app.main import app"
 
 

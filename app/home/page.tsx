@@ -2,6 +2,11 @@ import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
+/**
+ * Legacy /home redirect page.
+ *
+ * Redirects to /integrations with any query parameters preserved.
+ */
 export default async function LegacyHomePage({
   searchParams,
 }: {

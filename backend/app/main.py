@@ -24,6 +24,7 @@ from .oauth_flow import credentials_for, ensure_managed_oauth_client, exchange_o
 from .openapi_tools import generate_openapi_tools
 from .repository import repository
 from .route_manifest import ROUTES
+from .static_files import mount_static_files
 
 app = FastAPI(
     title="OpenHands Integrations Hub Python Backend",
@@ -1402,3 +1403,9 @@ for auth_path in [
     "/api/auth/callback/{provider}",
 ]:
     app.add_api_route(auth_path, auth_handler, methods=["GET", "POST"], name=f"AUTH {auth_path}")
+
+# Mount static files for SPA serving (K8s/Docker mode only).
+# This must be called AFTER all API routes are registered, as it includes
+# a catch-all route for SPA client-side routing.
+# On Vercel, STATIC_DIR is not set, so this is a no-op.
+mount_static_files(app)

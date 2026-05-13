@@ -16,13 +16,42 @@ The root `LICENSE` is proprietary: `Copyright All Hands AI, Inc. All rights rese
 - The `Providers` component always wraps children with `SessionProvider` to satisfy React hook rules, then passes `authDisabled` to the `AuthProvider` context.
 - Page tests that use `renderStaticDocument` for SSR testing should import from `server-page.tsx` versions explicitly (e.g., `ServerDashboardPage`).
 
+## Deployment Architecture (Vercel + K8s)
+
+The repository supports deployment to both Vercel and self-hosted K8s environments:
+
+### Vercel Deployment (Standard Next.js)
+- Uses standard Next.js build (`npm run build`) with SSR capabilities
+- Vercel handles page routing and static file serving via CDN
+- `/api/auth/*` routes stay with Next.js for NextAuth.js integration
+- Other `/api/*` routes rewrite to the FastAPI backend at `api/index.py`
+- This leverages Vercel's optimized Next.js integration
+
+### K8s/Docker Deployment (SPA Mode)
+- `npm run build:spa` builds a static export to `out/` for K8s deployments
+- Set `STATIC_DIR` (or `INTHUB_STATIC_DIR`) to the path containing the pre-built `out/` directory
+- FastAPI serves both the SPA static files and all API routes from a single container
+- `backend/app/static_files.py` implements static file serving with appropriate caching headers:
+  - `/_next/static/*` files are content-hashed, cached aggressively (1 year)
+  - HTML files use `must-revalidate` for fresh content
+  - SPA catch-all route returns `index.html` for client-side routing
+
+### Build Commands
+- `npm run build` - Standard Next.js build (for Vercel)
+- `npm run build:spa` - Static export for K8s deployments (outputs to `out/`)
+- The SPA build script temporarily moves `app/api/auth/` to avoid static export conflicts
+
+### Environment Variables for K8s
+- `STATIC_DIR=/app/out` - Path to pre-built SPA files (enables FastAPI static serving)
+- Leave `STATIC_DIR` unset on Vercel (uses standard Next.js integration)
+
 ## Common commands
 
 - Bootstrap an OpenHands session: `.openhands/setup.sh`
 - Run the pre-commit validation gate: `.openhands/pre-commit.sh`
 - Install dependencies: `npm install`
 - Run locally with auth bypass: `DISABLE_AUTH=true npm run dev`
-- Build for static export (SPA mode): `SPA_MODE=true npm run build && npm run export`
+- Build for static export (SPA mode): `npm run build:spa` (outputs to `out/`)
 - Run database migrations: `npm run db:migrate` (or `./scripts/run-migrations.sh`)
 - Check migration status: `npm run db:migrate:check`
 - Create a new migration: `cd backend && uv run alembic revision -m "description"`
