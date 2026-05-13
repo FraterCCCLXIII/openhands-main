@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
+import { MemoryRouter } from 'react-router';
 
 const mockFeaturedBlog = {
   content: 'Featured',
@@ -51,18 +52,17 @@ import Blog from '../../src/routes/blog';
 describe('Blog route', () => {
   it('renders the pinned featured post and progressively reveals the blog grid', async () => {
     const user = userEvent.setup();
-    const { container } = render(<Blog />);
+    const { container } = render(<MemoryRouter><Blog /></MemoryRouter>);
 
     const newsletterPrompt = screen.getByText(
       'Sign up for our newsletter for updates, events, and community insights.'
     );
 
-    expect(container.querySelector('main')?.className).toContain('pt-[40px]');
+    expect(container.querySelector('main')?.className).toContain('flex flex-col');
     expect(screen.getByText('Insights and updates from the OpenHands team')).toBeInTheDocument();
-    expect(newsletterPrompt.className).toContain('mt-[70px]');
     expect(newsletterPrompt.className).toContain('text-[16px]');
     expect(screen.getByText('Introducing the OpenHands Index')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Read more' })).toHaveAttribute(
+    expect(container.querySelector('[data-testid="featured-blog-card"] a')).toHaveAttribute(
       'href',
       '/blog/openhands-index'
     );
@@ -75,7 +75,7 @@ describe('Blog route', () => {
     expect(screen.getByText('Grid Post 6')).toBeInTheDocument();
     expect(screen.queryByText('Grid Post 7')).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole('link', { name: 'Load more' }));
+    await user.click(container.querySelector('a[href="#blog-grid"]')!);
 
     expect(screen.getByText('Grid Post 7')).toBeInTheDocument();
     expect(

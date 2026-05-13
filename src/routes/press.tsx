@@ -29,7 +29,7 @@ const PRESS_ITEMS = [
     title: 'OpenHands Launches an Agent Control Plane to Manage Software Agents',
     url: 'https://www.businesswire.com/news/home/20260506314667/en/OpenHands-Launches-an-Agent-Control-Plane-to-Manage-Software-Agents',
     image:
-      'https://cdn.prod.website-files.com/68ff4058b35616cdd47d5b59/69fc7ec60f00b83c7a94d04f_CleanShot%202026-05-07%20at%2007.59.49%402x.png',
+      '/assets/webflow/press/cleanshot-2026-05-07-at-075949-2x.png',
   },
 
   {

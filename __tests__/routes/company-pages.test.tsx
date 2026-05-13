@@ -84,7 +84,7 @@ describe('company information pages parity', () => {
     expect(screen.getByText('OpenHands Raises $18.8M Series A to Bring Open-Source Cloud Coding Agents to Enterprises').tagName).toBe('P');
     expect(screen.getByText('All Hands AI Announces $5M to Advance Open-source AI Agents for Developers').tagName).toBe('P');
     expect(screen.getByText('All Hands AI raises $5M to build open source agents for developers').tagName).toBe('P');
-    expect(screen.getAllByRole('link', { name: 'Read more' })).toHaveLength(3);
+    expect(screen.getAllByRole('link', { name: 'Read more' })).toHaveLength(4);
     expect(screen.queryByRole('heading', { name: 'OpenHands Raises $18.8M Series A to Bring Open-Source Cloud Coding Agents to Enterprises' })).not.toBeInTheDocument();
     expect(screen.queryByText('Media Kit')).not.toBeInTheDocument();
   });

@@ -379,10 +379,10 @@ export const ProductFeaturePage = ({
     <main data-wf-el='page-main' style={{ display: 'flex', flexDirection: 'column' }}>
       <section
         data-wf-el='section-product_hero'
-        className='relative overflow-hidden'
-        style={{ padding: '0' }}
+        className='relative'
+        style={{ padding: '0', overflow: 'visible' }}
       >
-        <div data-wf-el='hero' className='relative flex w-full flex-col items-center overflow-hidden' style={{ textAlign: 'start', justifyContent: 'flex-start', height: heroHeight }}>
+        <div data-wf-el='hero' className='relative flex w-full flex-col items-center' style={{ textAlign: 'start', justifyContent: 'flex-start', height: heroHeight, overflow: 'visible' }}>
           <div className='mx-auto flex max-w-[860px] flex-col items-center' style={{ height: heroHeight, justifyContent: 'center', paddingTop: '56px', paddingBottom: '56px' }}>
             <ProductEyebrow label={page.eyebrow} />
             <h1 className='fluid-h1 text-brand-fg' style={{ textAlign: 'center' }}>

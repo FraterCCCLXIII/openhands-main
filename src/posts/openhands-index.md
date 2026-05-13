@@ -2,7 +2,7 @@
 title: "The OpenHands Index: 3 Months Out"
 slug: "openhands-index"
 excerpt: "The OpenHands Index is a comprehensive benchmark that tests agentic software engineering models across a broad variety of tasks."
-coverImage: "https://cdn.prod.website-files.com/68ff4058b35616cdd47d5b59/6a01dccc72a1193927f04202_20260511-index-01-costper.png"
+coverImage: "/assets/webflow/blog/openhands-index/20260511-index-01-costper.png"
 featuredImage: "/assets/webflow/misc/697ae008c16d7711317c4b54_openhands-index-headline.png"
 date: "2026-05-11T12:00:00.000Z"
 seoTitleDate: "May 11, 2026"

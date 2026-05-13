@@ -278,8 +278,8 @@ const Enterprise = () => {
          * elements are in normal flow.  Matching this structure keeps
          * the parity wf-element comparison happy. */}
         <div className='absolute inset-0 opacity-[0.12]' aria-hidden='true'>
-          <div data-wf-el='asci-embed' className='h-full w-full' style={{ position: 'static' }}>
-            <div data-wf-el='ascii-embed' className='h-full w-full' style={{ position: 'relative' }}>
+          <div data-wf-el='asci-embed' className='h-full w-full' style={{ position: 'static', overflow: 'hidden' }}>
+            <div data-wf-el='ascii-embed' className='h-full w-full' style={{ position: 'relative', overflow: 'hidden' }}>
               <img
                 src={ASCII_BG}
                 alt=''
@@ -404,6 +404,7 @@ const Enterprise = () => {
               padding: '32px',
               borderRadius: '32px',
               border: '1px solid rgb(249, 240, 217)',
+              overflow: 'hidden',
             }}
           >
             <img
@@ -471,7 +472,7 @@ const Enterprise = () => {
                 <div
                   data-wf-el='acp_features_icon'
                   className='h-10 w-10 p-2 text-[#FFFF8B]'
-                  style={{ backgroundColor: 'rgb(34, 21, 13)', borderRadius: '8px', display: 'block' }}
+                  style={{ backgroundColor: 'rgb(34, 21, 13)', borderRadius: '8px', display: 'block', width: '24px', height: '24px', padding: '8px', boxSizing: 'content-box', aspectRatio: '1 / 1' }}
                 >
                   <Icon />
                 </div>
@@ -674,7 +675,7 @@ const Enterprise = () => {
                   <div
                     data-wf-el='acp_features_icon'
                     className='h-10 w-10 p-2 text-[#FFFF8B]'
-                    style={{ backgroundColor: 'rgb(34, 21, 13)', borderRadius: '8px', display: 'block' }}
+                    style={{ backgroundColor: 'rgb(34, 21, 13)', borderRadius: '8px', display: 'block', width: '24px', height: '24px', padding: '8px', boxSizing: 'content-box', aspectRatio: '1 / 1' }}
                   >
                     <Icon />
                   </div>

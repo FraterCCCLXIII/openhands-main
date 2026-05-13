@@ -161,7 +161,7 @@ export const CMarkdown: React.FC<CMarkdownProps> = ({
                   isBlog && isFullWidthFigure
                     ? 'w-full max-w-full [&_img]:max-w-full [&_img]:w-full [&_img]:text-[0px] [&_img]:leading-[0] [&_img]:text-transparent'
                     : undefined,
-                  isBlog && !isFullWidthFigure ? 'max-w-full [&_img]:max-w-full [&_img]:w-full' : undefined,
+                  isBlog && !isFullWidthFigure ? 'max-w-full [&_img]:max-w-full [&_img]:w-auto' : undefined,
                   className
                 )}
                 {...props}
@@ -172,7 +172,7 @@ export const CMarkdown: React.FC<CMarkdownProps> = ({
           },
           pre: ({ children: preChildren, style, ...props }) => (
             <pre
-              className={clsx(isBlog ? 'overflow-x-auto' : undefined)}
+              className={clsx(isBlog ? 'my-[15px] overflow-x-auto [&_code]:!inline-block' : undefined)}
               style={isBlog ? {
                 ...style,
                 display: 'block',

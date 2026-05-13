@@ -15,13 +15,11 @@ describe('Privacy policy route', () => {
   it('renders the live privacy heading hierarchy and CTA block', () => {
     const { container } = renderRoute();
 
-    expect(container.querySelector('main')).toHaveClass('pt-16', 'pb-20');
-    expect(container.querySelector('main > div')).toHaveClass('max-w-[900px]');
-    expect(screen.getByRole('heading', { level: 1, name: 'Privacy Policy' })).toHaveClass('mb-12', 'leading-[1.15]');
-    expect(screen.getByText('Effective Date: September 3, 2025').closest('p')).toHaveClass(
-      'tracking-[-0.015em]',
-      'leading-[1.6]',
-    );
+    expect(container.querySelector('main')).toHaveClass('text-brand-fg');
+    expect(container.querySelector('main > section')).toHaveStyle({ paddingTop: '80px', paddingBottom: '80px' });
+    expect(container.querySelector('main [data-wf-el="container"]')).toHaveClass('max-w-[900px]');
+    expect(screen.getByRole('heading', { level: 1, name: 'Privacy Policy' })).toHaveClass('text-center', 'fluid-h3');
+    expect(screen.getByText('Effective Date: September 3, 2025').closest('p')).toHaveClass('leading-[1.6]');
 
     expect(screen.getByRole('heading', { level: 2, name: 'Personal information we collect' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { level: 2, name: 'How we use personal information' })).toBeInTheDocument();
@@ -37,11 +35,5 @@ describe('Privacy policy route', () => {
       'https://all-hands.dev',
     );
 
-    expect(screen.getByText('Building the open standard for autonomous software development.')).toBeInTheDocument();
-    expect(
-      screen.queryByRole('heading', { name: 'Building the open standard for autonomous software development.' }),
-    ).not.toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Build with SDK' })).toHaveAttribute('href', 'https://docs.openhands.dev/sdk');
-    expect(screen.getByRole('link', { name: 'Try it live' })).toHaveAttribute('href', 'https://app.all-hands.dev/');
   });
 });

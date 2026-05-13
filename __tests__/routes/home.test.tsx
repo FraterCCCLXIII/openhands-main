@@ -41,8 +41,9 @@ describe('home route parity structure', () => {
     expect(screen.getByRole('link', { name: 'Talk to us' })).toBeInTheDocument();
 
     expect(container.innerHTML).toContain('lg:grid-cols-3');
-    expect(container.innerHTML).toContain('mt-[145px]');
-    expect(container.innerHTML).toContain('margin-top: 233px');
+    expect(container.querySelectorAll('[data-key]')).toHaveLength(3);
+    expect(container.querySelectorAll('[data-heroslide]')).toHaveLength(3);
+    expect(container.innerHTML).toContain('min-height: 792px');
     expect(container.innerHTML).toContain('h-full w-full object-cover');
     expect(container.innerHTML).not.toContain('xl:grid-cols-4');
     expect(screen.getByRole('img', { name: 'ASCII art depicting a large black hole with light and particles swirling around it.' })).toHaveClass(
@@ -50,6 +51,6 @@ describe('home route parity structure', () => {
       'w-full',
       'object-cover',
     );
-    expect(screen.queryAllByTestId('footer-social-link')).toHaveLength(0);
+    expect(screen.queryAllByTestId('footer-social-link')).toHaveLength(3);
   });
 });

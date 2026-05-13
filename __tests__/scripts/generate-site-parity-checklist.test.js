@@ -10,6 +10,8 @@ const require = createRequire(import.meta.url);
 const {
   capturePageScreenshot,
   compareContainerStyles,
+  compareDynamicControlVisuals,
+  compareDynamicSelectorUx,
   compareHoverEffects,
   compareInteractivity,
   compareStyleValue,
@@ -367,5 +369,110 @@ describe('hover effect comparison', () => {
     const test = [{ signature: 'BUTTON:only-test', hasHoverEffect: true, hoverChanges: [] }];
     const diffs = compareHoverEffects(live, test);
     expect(diffs).toHaveLength(0);
+  });
+});
+
+describe('dynamic widget control visual comparison', () => {
+  const controlStyle = {
+    display: 'block',
+    position: 'static',
+    fontFamily: 'Sohne Mono, monospace',
+    fontSize: '12px',
+    lineHeight: '14px',
+    fontWeight: '400',
+    color: 'rgb(34, 21, 13)',
+    backgroundColor: 'rgba(255, 255, 255, 0)',
+    borderColor: 'rgb(34, 21, 13)',
+    borderStyle: 'solid',
+    borderWidth: '1px',
+    borderRadius: '999px',
+    paddingTop: '4px',
+    paddingRight: '8px',
+    paddingBottom: '4px',
+    paddingLeft: '8px',
+    marginTop: '0px',
+    marginRight: '0px',
+    marginBottom: '0px',
+    marginLeft: '0px',
+    opacity: '1',
+    cursor: 'pointer',
+    textAlign: 'left',
+  };
+
+  const control = (label, overrides = {}) => ({
+    label,
+    visible: true,
+    rect: { top: 100, left: 20, width: 48, height: 22, ...(overrides.rect || {}) },
+    relativeToRoot: { top: 10, left: 0, bottom: 32, right: 48, ...(overrides.relativeToRoot || {}) },
+    relativeToMedia: { top: -40, left: -300, bottom: -18, right: -252, ...(overrides.relativeToMedia || {}) },
+    style: { ...controlStyle, ...(overrides.style || {}) },
+    effectiveOpacity: overrides.effectiveOpacity ?? 1,
+  });
+
+  const widget = (controls, controlGroup = {}) => ({
+    present: true,
+    visibleControlLabels: controls.map((item) => item.label),
+    controls,
+    renderedPanelLabels: ['SDK', 'Cloud', 'CLI'],
+    clickActivePanels: ['SDK', 'Cloud', 'CLI'],
+    scrollActivePanels: [],
+    mediaVisibleSampleCount: 0,
+    mediaToNextSectionGap: 128,
+    controlGroup: {
+      rect: { top: 100, left: 20, width: 170, height: 22, ...(controlGroup.rect || {}) },
+      relativeToRoot: { top: 10, left: 0, bottom: 32, right: 170, ...(controlGroup.relativeToRoot || {}) },
+      relativeToMedia: { top: -40, left: -300, bottom: -18, right: -130, ...(controlGroup.relativeToMedia || {}) },
+      style: {
+        display: 'flex',
+        flexDirection: 'row',
+        flexWrap: 'nowrap',
+        gap: '0px',
+        rowGap: '0px',
+        columnGap: '0px',
+        justifyContent: 'flex-start',
+        alignItems: 'flex-start',
+        ...(controlGroup.style || {}),
+      },
+    },
+  });
+
+  it('detects control styling and position differences even when switching works', () => {
+    const live = widget([control('SDK'), control('Cloud'), control('CLI')]);
+    const test = widget([
+      control('SDK', {
+        rect: { top: 148, left: 40, width: 72, height: 30 },
+        relativeToRoot: { top: 58, left: 20 },
+        style: {
+          fontSize: '14px',
+          backgroundColor: 'rgb(34, 21, 13)',
+          color: 'rgb(249, 240, 217)',
+          borderRadius: '20px',
+          paddingLeft: '12px',
+          paddingRight: '12px',
+        },
+      }),
+      control('Cloud'),
+      control('CLI'),
+    ], {
+      relativeToRoot: { top: 58, left: 20 },
+      style: { gap: '8px' },
+    });
+
+    const result = compareDynamicSelectorUx(live, test);
+
+    expect(result.issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ type: 'control-style-mismatch', label: 'SDK' }),
+        expect.objectContaining({ type: 'control-position-mismatch', label: 'SDK' }),
+        expect.objectContaining({ type: 'control-group-layout-mismatch' }),
+      ]),
+    );
+  });
+
+  it('passes control visual comparison for matching controls', () => {
+    const live = widget([control('SDK'), control('Cloud'), control('CLI')]);
+    const test = widget([control('SDK'), control('Cloud'), control('CLI')]);
+
+    expect(compareDynamicControlVisuals(live, test)).toHaveLength(0);
   });
 });

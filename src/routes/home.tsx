@@ -579,33 +579,15 @@ const Home = () => {
               the matching hero media on the right. Dimensions and offsets
               mirror the live Webflow export so rendered image rects line up
               without relying on screenshots. */}
-          <div data-wf-el='hero-content' data-slider='hero-surfaces' className='w-full' style={{ display: 'block' }}>
+          <div data-wf-el='hero-content' data-slider='hero-surfaces' className='w-full' style={{ display: 'block', marginTop: '122.4px' }}>
             <div className='mx-auto max-w-[1238px]'>
-              <div className='flex flex-col lg:flex-row lg:items-start lg:gap-6'>
-                {/* LEFT col: tab pills "key" + 3 stacked cards. Live makes
-                    each card a full-viewport scroll snap point (~430px tall)
-                    so the column dictates row height and the right column's
-                    sticky media stays in view while the user scrolls through
-                    each card. */}
-                {/* The SDK/Cloud/CLI section on live takes up the full pin
-                    scroll: the right-column media is sticky, the left
-                    column scrolls past, and the user advances through
-                    the cards as they scroll.  Live's hero-content is
-                    2400px tall and the right-column hero-media-bg pins
-                    for ~1300px of scroll.  Reserve that height on the
-                    text column so the sticky media has room to stay
-                    parked while only one (display:flex) card is
-                    visible at a time.  Without this, the hero collapses
-                    to ~1500px on test (vs 2400 on live) and every
-                    section below it offsets by -900px. */}
-                {/* Live's `.col.col-shrink.col-md-12` is 294px wide, with
-                    inner padding bringing the cards/H2 to 270px.  We were
-                    reserving 386px which made each H2 + body text shrink-
-                    wrap differently than live (one-line vs two-line) and
-                    pushed the right-side media column 92px in from where
-                    live places it. */}
-                <div className='flex flex-col' style={{ flex: '0 0 270px', maxWidth: '270px', gap: '0px', minHeight: '1395px' }}>
-                  <div className='hidden gap-2' style={{ position: 'relative', zIndex: 1 }}>
+              <div id='hero-media' className='flex flex-col lg:flex-row lg:items-start lg:gap-6'>
+                {/* LEFT col: selector controls + active card. Match live's
+                    Webflow row: the selector keys align with the top of the
+                    media background, then the active card starts immediately
+                    below them. */}
+                <div className='flex flex-col' style={{ flex: '0 0 270px', maxWidth: '270px', gap: '0px', minHeight: '792px' }}>
+                  <div className='flex flex-nowrap items-center justify-start' style={{ position: 'relative', zIndex: 1, marginTop: '49.6px', gap: '9.6px' }}>
                     {PRODUCT_SURFACES.map((surface, index) => (
                       // Live Webflow renders these as plain `<div class="eyebrow bubble ...">`
                       // pills (no role/aria semantics).  Adding `role="tab"` made our test
@@ -626,6 +608,9 @@ const Home = () => {
                           paddingRight: '9.6px',
                           paddingTop: '4px',
                           paddingBottom: '4px',
+                          minWidth: '29.64px',
+                          minHeight: '24.9px',
+                          boxSizing: 'border-box',
                           fontSize: '14.08px',
                           lineHeight: '16.896px',
                           fontWeight: 400,
@@ -633,19 +618,15 @@ const Home = () => {
                           color: 'rgb(249, 240, 217)',
                           backgroundColor: 'rgb(34, 21, 13)',
                           borderColor: 'rgb(0, 0, 0)',
-                          opacity: index === activeSurfaceIndex ? 1 : 0.3,
+                          opacity: 0.3,
                         }}
                       >
-                        {surface.title}
+                        {index === activeSurfaceIndex ? surface.title : ''}
                       </div>
                     ))}
                   </div>
-                  {/* Live renders all three cards in DOM but hides the
-                      inactive ones via opacity/visibility while the section
-                      pins the right-side media on scroll. We keep the same
-                      DOM but stack them at full opacity so semantics and
-                      heading order stay close to live; the scroll animation
-                      itself isn't replicated. */}
+                  {/* Only the active copy card occupies layout; the mounted
+                      media stack on the right handles the animated transition. */}
                   {PRODUCT_SURFACES.map((surface, idx) => (
                     <div
                       key={surface.title}
@@ -659,31 +640,8 @@ const Home = () => {
                         justifyContent: 'flex-start',
                         borderStyle: 'none',
                         overflow: 'hidden',
-                        // Live renders all three cards in DOM but only the
-                        // active one is visible. The hero scroll-pin section
-                        // has to be tall enough that the right column's
-                        // sticky media stays parked while the user scrolls
-                        // through each card.  Live's hero-content section is
-                        // ~1230px tall measured from H2:sdk to next section.
-                        // Use minHeight:400px per card + gap:55px (3*400 +
-                        // 2*55 = 1310).  Section-level audit shows live's
-                        // hero is 2400px tall and ours was 2371px (-29);
-                        // adding 10px per card brings the section height
-                        // to within +/- 5px of live and keeps the rest of
-                        // the page aligned to live downstream.
-                        // Live's inactive surface cards collapse to a 0×0
-                        // rect (no visual placeholder, no reserved column
-                        // height) — only the active card occupies layout.
-                        // Earlier we kept inactive cards at min-height:400px
-                        // with visibility:hidden, which made the column
-                        // 1310px tall and pushed the rest of the page +130px
-                        // below live (matching the layout drift the parity
-                        // checker reports for SDK/Cloud/CLI H2 entries).
-                        // Switch to display:none for inactive cards so the
-                        // visible card occupies the natural column slot
-                        // and the section height matches live.
                         minHeight: idx === activeSurfaceIndex ? '236px' : '0px',
-                        marginTop: idx === activeSurfaceIndex ? '74px' : '0px',
+                        marginTop: '0px',
                         display: idx === activeSurfaceIndex ? 'flex' : 'none',
                       }}
                     >
@@ -707,15 +665,9 @@ const Home = () => {
                 <div style={{ flex: '0 0 944px', maxWidth: '944px', display: 'flex', position: 'relative', marginTop: '49.6px', alignSelf: 'flex-start', willChange: 'transform' }}>
                   <div className='w-full' style={{ display: 'block' }}>
                     <div data-wf-el='hero-media-bg' style={{ position: 'relative', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'stretch', backgroundColor: 'rgb(34, 21, 13)', borderRadius: '24px', paddingTop: '47.1875px', paddingBottom: '47.1875px', paddingLeft: '0px', paddingRight: '0px', overflow: 'visible', height: '614.375px', width: '944px' }} className='w-full'>
-                      {/* Live's hero-track stacks all 3 images at top:0 inside
-                          a `position:absolute; inset` container.  Inactive
-                          slides have rect 0×0 (display:none on inactive).
-                          Earlier we kept all 3 in a flex column and used
-                          translateY to reveal one slide; this leaves all 3
-                          imgs visible to puppeteer (rect.w/h still non-zero
-                          even when clipped by overflow:hidden), producing
-                          'extra-on-test' IMG:[src:cli|cloud|sdk] entries.
-                          Match live by hiding inactive slides outright. */}
+                      {/* Keep every media panel mounted and cross-fade/slide between them so
+                          the controls and scroll observer can animate the screenshot
+                          without introducing visible duplicate images. */}
                       <div data-wf-el='hero-track' style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10%', overflow: 'hidden', width: '944px', height: '520px' }}>
                         {PRODUCT_SURFACES.map((surface, idx) => (
                           <div
@@ -731,7 +683,11 @@ const Home = () => {
                               borderRadius: '16px',
                               overflow: 'hidden',
                               flex: '0 0 100%',
-                              display: idx === activeSurfaceIndex ? 'block' : 'none',
+                              display: 'block',
+                              opacity: idx === activeSurfaceIndex ? 1 : 0,
+                              transform: `translateY(${idx === activeSurfaceIndex ? 0 : idx < activeSurfaceIndex ? -24 : 24}px)`,
+                              transition: 'opacity 360ms ease, transform 360ms ease',
+                              pointerEvents: idx === activeSurfaceIndex ? 'auto' : 'none',
                             }}
                           >
                             <img src={surface.image} alt='' data-wf-el='standard-media' style={{ display: 'inline-block', width: '943.969px', height: '654.297px', maxWidth: '100%', borderRadius: '0px', objectFit: 'fill', objectPosition: '50% 50%' }} />
@@ -1047,6 +1003,26 @@ const Home = () => {
             ))}
           </div>
           <p className='sr-only'>‍</p>
+        </div>
+      </section>
+
+
+      <section data-wf-el='section' style={{ display: 'block', backgroundColor: 'rgba(0, 0, 0, 0)', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px', position: 'relative', height: '513.078px', overflow: 'hidden' }}>
+        <div data-wf-el='asci-wrap' className='absolute inset-0 overflow-hidden' style={{ backgroundColor: 'rgb(255, 255, 139)' }}>
+          <img
+            data-wf-el='asci-media'
+            src='/assets/webflow/backgrounds/690b397ae76441160bed52b6_asci-art-hole.png'
+            alt=''
+            aria-hidden='true'
+            className='h-full w-full object-cover'
+            style={{ textAlign: 'start' }}
+          />
+        </div>
+        <div className='relative z-10 mx-auto flex max-w-[1238px] flex-col items-center text-center' style={{ height: '353.078px', paddingTop: '64px', paddingBottom: '64px' }}>
+          <h2 className='fluid-h3 text-brand-fg' style={{ marginBottom: '9.6px' }}>Powering enterprise AI with the world&rsquo;s best</h2>
+          <p className='fluid-body-lg font-medium text-[#5f5f5f]' style={{ width: '1238px', maxWidth: '100%', marginTop: '10.4px', marginBottom: '20.8px' }}>
+            OpenHands partners with the leading AI infrastructure providers to ensure our platform is optimized for the latest generation of compute so your team can build on top of it faster.
+          </p>
         </div>
       </section>
 

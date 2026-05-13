@@ -60,7 +60,7 @@ describe('BlogCard', () => {
     );
 
     const featuredCard = screen.getByTestId('featured-blog-card');
-    const readMoreLink = screen.getByRole('link', { name: 'Read more' });
+    const readMoreLink = featuredCard.querySelector('a');
 
     expect(featuredCard).toBeInTheDocument();
     expect(screen.getByText('Introducing the OpenHands Index')).toBeInTheDocument();

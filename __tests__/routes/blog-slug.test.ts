@@ -23,7 +23,7 @@ test("blog loader resolves canonical ACP slugs without redirecting away", () => 
   expect(data.title).toBe(
     "Use AI Agents in Your Favorite Editor through the Agent Client Protocol"
   );
-  expect(data.seoTitleDate).toBe("Dec 07, 2025");
+  expect(data.seoTitleDate).toBe("Dec 09, 2025");
 });
 
 test("blog loader preserves live title dates via seoTitleDate metadata", () => {

@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
+import { MemoryRouter } from 'react-router';
 import BlogDetails from '../../src/routes/blog.$slug';
 
 vi.mock('react-router', async () => {
@@ -46,9 +47,9 @@ vi.mock('react-router', async () => {
 
 describe('Blog article route', () => {
   it('renders the live-style article chrome and footer sections', () => {
-    const { container } = render(<BlogDetails />);
+    const { container } = render(<MemoryRouter><BlogDetails /></MemoryRouter>);
 
-    expect(container.querySelector('article')?.className).toContain('pt-[45px]');
+    expect(container.querySelector('main')?.className).toContain('flex flex-col');
     expect(screen.getByRole('link', { name: '← Back to Blog' })).toHaveAttribute('href', '/blog');
     expect(screen.getByText('Published on')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Citation/i })).toBeInTheDocument();
@@ -60,7 +61,7 @@ describe('Blog article route', () => {
     expect(relatedPostLink).toHaveAttribute('href', '/blog/agent-control-plane');
     expect(screen.queryByText('April 3, 2026')).not.toBeInTheDocument();
 
-    const coverImage = container.querySelector('article > div img');
+    const coverImage = container.querySelector('header figure img');
 
     expect(coverImage?.getAttribute('alt')).toBe('');
     expect(coverImage?.getAttribute('loading')).toBe('lazy');

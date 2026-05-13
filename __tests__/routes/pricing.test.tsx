@@ -24,7 +24,7 @@ describe('Pricing page', () => {
     expect(screen.getByText('Git integrations')).toBeInTheDocument();
     expect(screen.getByText('Priority support & shared Slack channel')).toBeInTheDocument();
 
-    expect(screen.getByRole('heading', { name: /Compare plans/i })).toBeInTheDocument();
+    expect(screen.getAllByRole('heading', { name: /Compare plans/i })[0]).toHaveClass('sr-only');
     expect(screen.getByText('Git Integrations (GitHub, Bitbucket, GitLab)')).toBeInTheDocument();
     expect(screen.getByText('Shared Slack Channel')).toBeInTheDocument();
     expect(screen.getAllByAltText('tick icon').length).toBeGreaterThanOrEqual(30);
@@ -51,9 +51,10 @@ describe('Pricing page', () => {
     expect(screen.getAllByText('Includes:').map((node) => node.tagName)).toEqual(['P', 'P']);
     expect(screen.getAllByText('‍').length).toBeGreaterThanOrEqual(3);
 
-    const comparisonTable = screen.getByRole('table');
+    const comparisonTable = container.querySelector('[data-wf-el="plans-compare"]');
+    expect(comparisonTable).not.toBeNull();
     ['Key Capabilities', 'Integrations', 'Support'].forEach((label) => {
-      const sectionLabel = within(comparisonTable).getByText(label);
+      const sectionLabel = within(comparisonTable as HTMLElement).getByText(label);
       expect(sectionLabel.tagName).toBe('P');
     });
 
@@ -66,20 +67,15 @@ describe('Pricing page', () => {
     expect(paragraphTexts).not.toContain('at cost, with no markup');
   });
 
-  it('uses table-layout: fixed with constrained column widths for comparison table', () => {
+  it('uses the live Webflow div-grid comparison structure', () => {
     const { container } = renderPricing();
 
-    const table = container.querySelector('table');
+    const table = container.querySelector('[data-wf-el="plans-compare"]');
     expect(table).not.toBeNull();
-    expect(table!.style.tableLayout).toBe('fixed');
-
-    const cols = table!.querySelectorAll('colgroup col');
-    expect(cols).toHaveLength(4);
-    const widths = Array.from(cols).map((col) => (col as HTMLElement).style.width);
-    expect(widths[0]).toBe('28%');
-    expect(widths[1]).toBe('24%');
-    expect(widths[2]).toBe('24%');
-    expect(widths[3]).toBe('24%');
+    expect((table as HTMLElement).style.display).toBe('grid');
+    expect((table as HTMLElement).style.gap).toBe('8px');
+    expect(table!.querySelectorAll('[data-wf-el="pc-row"]')[0]?.children).toHaveLength(4);
+    expect(table!.querySelector('table')).toBeNull();
   });
 
   it('does not center tick icons in comparison table (left-aligned for live parity)', () => {
@@ -90,7 +86,7 @@ describe('Pricing page', () => {
       expect(tick.className).not.toContain('mx-auto');
     });
 
-    const tickCell = ticks[0].closest('td');
+    const tickCell = ticks[0].closest('[data-wf-el="pc-cell"]');
     expect(tickCell).not.toBeNull();
     expect(tickCell!.className).not.toContain('text-center');
   });
@@ -102,7 +98,7 @@ describe('Pricing page', () => {
     const faqGrid = faqHeading.closest('[class*="grid"]');
     expect(faqGrid).not.toBeNull();
     expect(faqGrid!.className).not.toContain('grid-cols-[240px');
-    expect(faqGrid!.className).toContain('grid-cols-[minmax(0,2fr)_minmax(0,3fr)]');
+    expect(faqGrid!.className).toContain('lg:grid-cols-[493px_706px]');
   });
 
   it('renders card feature paragraphs with flex-1 for full-width layout', () => {

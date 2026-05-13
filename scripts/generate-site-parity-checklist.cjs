@@ -1979,6 +1979,546 @@ function compareClickBehavior(liveClicks, testClicks) {
   return diffs;
 }
 
+
+// ── Dynamic selector / panel UX audit ──
+// General audit for stateful UI widgets where controls change panels, slides,
+// or media. It supports aria-controls tabs, hash/data-target controls, Webflow
+// tabs, and shared-root data-driven selectors. This runs before animation
+// normalization so dynamic UX regressions are not hidden by static extraction.
+const DYNAMIC_WIDGET_CONTROL_SELECTORS = [
+  '[aria-controls]',
+  '[role="tab"]',
+  '[data-key]',
+  '[data-w-tab]',
+  '[data-tab]',
+  '[data-target]',
+  'a[href^="#"]',
+];
+const DYNAMIC_WIDGET_PANEL_SELECTORS = [
+  '[role="tabpanel"]',
+  '[data-heroslide]',
+  '[data-slide]',
+  '[data-panel]',
+  '[data-pane]',
+  '.w-tab-pane',
+];
+
+const DYNAMIC_CONTROL_STYLE_PROPS = [
+  'display',
+  'position',
+  'fontFamily',
+  'fontSize',
+  'lineHeight',
+  'fontWeight',
+  'color',
+  'backgroundColor',
+  'borderColor',
+  'borderStyle',
+  'borderWidth',
+  'borderRadius',
+  'paddingTop',
+  'paddingRight',
+  'paddingBottom',
+  'paddingLeft',
+  'marginTop',
+  'marginRight',
+  'marginBottom',
+  'marginLeft',
+  'opacity',
+  'cursor',
+  'textAlign',
+];
+const DYNAMIC_CONTROL_GROUP_STYLE_PROPS = [
+  'display',
+  'flexDirection',
+  'flexWrap',
+  'gap',
+  'rowGap',
+  'columnGap',
+  'justifyContent',
+  'alignItems',
+];
+
+async function pageHasDynamicSelectorCandidate(page) {
+  return page.evaluate((controlSelectors, panelSelectors) => {
+    const controlSelector = controlSelectors.join(',');
+    const panelSelector = panelSelectors.join(',');
+    const byId = (value) => value && document.getElementById(value.replace(/^#/, ''));
+    if (Array.from(document.querySelectorAll('[aria-controls]')).filter((el) => byId(el.getAttribute('aria-controls'))).length >= 2) return true;
+    if (Array.from(document.querySelectorAll('a[href^="#"], [data-target]')).filter((el) => byId(el.getAttribute('href') || el.getAttribute('data-target'))).length >= 2) return true;
+    if (document.querySelectorAll('[data-w-tab]').length >= 4 && document.querySelectorAll('.w-tab-pane, [role="tabpanel"]').length >= 2) return true;
+    for (const panel of Array.from(document.querySelectorAll(panelSelector))) {
+      let root = panel.parentElement;
+      for (let depth = 0; root && depth < 10; depth += 1, root = root.parentElement) {
+        if (root.querySelectorAll(controlSelector).length >= 2 && root.querySelectorAll(panelSelector).length >= 2) return true;
+      }
+    }
+    return false;
+  }, DYNAMIC_WIDGET_CONTROL_SELECTORS, DYNAMIC_WIDGET_PANEL_SELECTORS);
+}
+
+async function extractDynamicSelectorUx(page) {
+  return page.evaluate(async (controlSelectors, panelSelectors, controlStyleProps, controlGroupStyleProps) => {
+    const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+    const controlSelector = controlSelectors.join(',');
+    const panelSelector = panelSelectors.join(',');
+    const norm = (value) => (value || '').replace(/\s+/g, ' ').trim();
+    const srcLabel = (src) => decodeURIComponent((src || '').split('/').pop() || '')
+      .replace(/[-_]p-\d+.*$/, '')
+      .replace(/\.[^.?#]+(?:[?#].*)?$/, '')
+      .replace(/^[a-f0-9]{20,}_/i, '')
+      .replace(/^[a-f0-9]{20,}_/i, '')
+      .replace(/[_-]+/g, ' ')
+      .trim();
+    const byId = (value) => value && document.getElementById(value.replace(/^#/, ''));
+    const unique = (items) => Array.from(new Set(items.filter(Boolean)));
+    const isControl = (el) => el?.matches?.(controlSelector);
+    const isVisible = (el, { allowBelowViewport = true } = {}) => {
+      if (!el) return false;
+      const rect = el.getBoundingClientRect();
+      if (rect.width < 4 || rect.height < 4) return false;
+      if (!allowBelowViewport && (rect.bottom <= 0 || rect.top >= window.innerHeight || rect.right <= 0 || rect.left >= window.innerWidth)) return false;
+      let current = el;
+      while (current) {
+        const style = window.getComputedStyle(current);
+        if (style.display === 'none' || style.visibility === 'hidden' || Number(style.opacity) === 0 || current.hasAttribute('hidden')) return false;
+        current = current.parentElement;
+      }
+      return true;
+    };
+    const rectInfo = (el) => {
+      if (!el) return null;
+      const r = el.getBoundingClientRect();
+      return { top: Math.round(r.top + window.scrollY), viewportTop: Math.round(r.top), bottom: Math.round(r.bottom + window.scrollY), width: Math.round(r.width), height: Math.round(r.height) };
+    };
+    const viewportOverlap = (el) => {
+      if (!el) return 0;
+      const r = el.getBoundingClientRect();
+      const x = Math.max(0, Math.min(r.right, window.innerWidth) - Math.max(r.left, 0));
+      const y = Math.max(0, Math.min(r.bottom, window.innerHeight) - Math.max(r.top, 0));
+      return Math.round((x * y / Math.max(1, r.width * r.height)) * 100) / 100;
+    };
+    const commonAncestor = (items) => {
+      const elements = unique(items);
+      let root = elements[0] || null;
+      while (root && !elements.every((el) => root.contains(el))) root = root.parentElement;
+      return root;
+    };
+    const candidates = [];
+    const addCandidate = (pattern, controls, panels) => {
+      controls = unique(controls);
+      panels = unique(panels).filter((panel) => !controls.includes(panel));
+      if (controls.length < 2 || panels.length < 2) return;
+      const root = commonAncestor([...controls, ...panels]);
+      if (!root) return;
+      const rect = root.getBoundingClientRect();
+      candidates.push({ pattern, root, controls, panels, visibleControls: controls.filter((control) => isVisible(control)).length, area: Math.max(1, rect.width * rect.height) });
+    };
+
+    const ariaControls = Array.from(document.querySelectorAll('[aria-controls]'));
+    addCandidate('aria-controls', ariaControls, ariaControls.map((control) => byId(control.getAttribute('aria-controls'))));
+    const hashControls = Array.from(document.querySelectorAll('a[href^="#"], [data-target]')).filter((control) => (control.getAttribute('href') || control.getAttribute('data-target') || '').length > 1);
+    addCandidate('hash-target', hashControls, hashControls.map((control) => byId(control.getAttribute('href') || control.getAttribute('data-target'))));
+    addCandidate(
+      'webflow-tabs',
+      Array.from(document.querySelectorAll('[data-w-tab]')).filter((el) => !el.matches('.w-tab-pane, [role="tabpanel"]')),
+      Array.from(document.querySelectorAll('.w-tab-pane[data-w-tab], [role="tabpanel"][data-w-tab]')),
+    );
+
+    const seenRoots = new Set();
+    for (const panel of Array.from(document.querySelectorAll(panelSelector)).filter((el) => !isControl(el))) {
+      let root = panel.parentElement;
+      for (let depth = 0; root && depth < 10; depth += 1, root = root.parentElement) {
+        if (seenRoots.has(root)) continue;
+        seenRoots.add(root);
+        addCandidate('shared-root', Array.from(root.querySelectorAll(controlSelector)), Array.from(root.querySelectorAll(panelSelector)).filter((el) => !isControl(el)));
+      }
+    }
+
+    if (candidates.length === 0) return { present: false, reason: 'No dynamic control/panel widget found' };
+    candidates.sort((a, b) => (b.panels.length - a.panels.length) || (a.area - b.area) || (b.visibleControls - a.visibleControls));
+
+    const { pattern, root, controls, panels } = candidates[0];
+    const track = commonAncestor(panels) || panels[0]?.parentElement || root;
+    const mediaBox = (() => {
+      let best = track;
+      let bestArea = 0;
+      let current = track;
+      for (let depth = 0; current && current !== root.parentElement && depth < 6; depth += 1, current = current.parentElement) {
+        const rect = current.getBoundingClientRect();
+        const area = rect.width * rect.height;
+        if (current !== root && rect.width >= 100 && rect.height >= 100 && area >= bestArea) {
+          best = current;
+          bestArea = area;
+        }
+        if (current === root) break;
+      }
+      return best || track;
+    })();
+    const section = root.closest('section') || root;
+    const controlLabel = (el, index) => norm(el.textContent || el.getAttribute('aria-label') || '') || el.getAttribute('aria-controls') || el.getAttribute('data-w-tab') || el.getAttribute('data-key') || el.getAttribute('data-tab') || el.getAttribute('data-target') || el.getAttribute('href') || `control-${index + 1}`;
+    const panelLabel = (el, index) => srcLabel(el.querySelector('img')?.getAttribute('src') || '') || norm(el.getAttribute('aria-label') || el.getAttribute('data-w-tab') || el.getAttribute('data-heroslide') || el.getAttribute('data-slide') || el.getAttribute('data-panel') || el.id || '') || `panel-${index + 1}`;
+    const pickStyles = (el, props) => {
+      const computed = window.getComputedStyle(el);
+      return Object.fromEntries(props.map((prop) => [prop, computed[prop]]));
+    };
+    const effectiveOpacityOf = (el) => {
+      let opacity = 1;
+      for (let current = el; current; current = current.parentElement) {
+        opacity *= Number.parseFloat(window.getComputedStyle(current).opacity || '1') || 0;
+      }
+      return Math.round(opacity * 100) / 100;
+    };
+    const relativeRect = (el, base) => {
+      if (!el || !base) return null;
+      const er = el.getBoundingClientRect();
+      const br = base.getBoundingClientRect();
+      return {
+        top: Math.round(er.top - br.top),
+        left: Math.round(er.left - br.left),
+        bottom: Math.round(er.bottom - br.top),
+        right: Math.round(er.right - br.left),
+      };
+    };
+    const controlGroup = commonAncestor(controls) || controls[0]?.parentElement || root;
+    const describeControlGroup = () => ({
+      rect: rectInfo(controlGroup),
+      relativeToRoot: relativeRect(controlGroup, root),
+      relativeToMedia: relativeRect(controlGroup, mediaBox),
+      style: pickStyles(controlGroup, controlGroupStyleProps),
+    });
+    const describeControls = () => controls.map((el, index) => ({
+      label: controlLabel(el, index),
+      role: el.getAttribute('role') || '',
+      visible: isVisible(el),
+      rect: rectInfo(el),
+      relativeToRoot: relativeRect(el, root),
+      relativeToMedia: relativeRect(el, mediaBox),
+      style: pickStyles(el, controlStyleProps),
+      effectiveOpacity: effectiveOpacityOf(el),
+    }));
+    const describePanel = (el, index) => {
+      const computed = window.getComputedStyle(el);
+      const media = el.querySelector('img, video, svg') || el;
+      const mediaComputed = window.getComputedStyle(media);
+      const er = el.getBoundingClientRect();
+      const cr = mediaBox.getBoundingClientRect();
+      const clippedArea = Math.max(0, Math.min(er.right, cr.right) - Math.max(er.left, cr.left)) * Math.max(0, Math.min(er.bottom, cr.bottom) - Math.max(er.top, cr.top));
+      const opacity = Number.parseFloat(computed.opacity || '1') * Number.parseFloat(mediaComputed.opacity || '1');
+      return { label: panelLabel(el, index), visible: isVisible(el) && clippedArea > 100 && opacity > 0.05, score: Math.round(clippedArea * opacity), display: computed.display, rect: rectInfo(el) };
+    };
+    const captureState = () => {
+      const panelState = panels.map(describePanel);
+      const active = panelState.filter((panel) => panel.visible).sort((a, b) => b.score - a.score)[0] || null;
+      return { activePanel: active?.label || null, visiblePanels: panelState.filter((panel) => panel.visible).map((panel) => panel.label), panels: panelState, mediaViewportOverlap: viewportOverlap(mediaBox), mediaRect: rectInfo(mediaBox), rootRect: rectInfo(root), sectionRect: rectInfo(section) };
+    };
+
+    const originalScrollY = window.scrollY;
+    window.scrollTo(0, 0);
+    await sleep(100);
+    const initialControls = describeControls();
+    const initialControlGroup = describeControlGroup();
+
+    const rootTop = root.getBoundingClientRect().top + window.scrollY;
+    const sectionBottom = section.getBoundingClientRect().bottom + window.scrollY;
+    const maxScroll = Math.max(0, Math.max(document.body.scrollHeight, document.documentElement.scrollHeight) - window.innerHeight);
+    window.scrollTo(0, Math.max(0, Math.min(maxScroll, rootTop - 180)));
+    await sleep(700);
+    await Promise.all(panels.flatMap((panel) => Array.from(panel.querySelectorAll('img'))).map((img) => {
+      try { img.loading = 'eager'; } catch (error) { /* ignore */ }
+      if (img.complete && img.naturalWidth > 0) return Promise.resolve();
+      return new Promise((resolve) => { img.addEventListener('load', resolve, { once: true }); img.addEventListener('error', resolve, { once: true }); setTimeout(resolve, 1200); });
+    }));
+
+    const clickSamples = [];
+    for (const control of controls.filter((item) => isVisible(item, { allowBelowViewport: false })).slice(0, 6)) {
+      try {
+        control.click();
+        await sleep(400);
+        const state = captureState();
+        clickSamples.push({ label: controlLabel(control, clickSamples.length), activePanel: state.activePanel, visiblePanels: state.visiblePanels });
+      } catch (error) {
+        clickSamples.push({ label: controlLabel(control, clickSamples.length), error: error.message });
+      }
+    }
+
+    const start = Math.max(0, Math.min(maxScroll, rootTop - window.innerHeight * 0.25));
+    const end = Math.max(start, Math.min(maxScroll, sectionBottom - window.innerHeight * 0.65));
+    const scrollSamples = [];
+    for (const y of Array.from(new Set([0, 0.25, 0.5, 0.75, 1].map((ratio) => Math.round(start + (end - start) * ratio))))) {
+      window.scrollTo(0, y);
+      await sleep(300);
+      const state = captureState();
+      scrollSamples.push({ scrollY: Math.round(window.scrollY), activePanel: state.activePanel, visiblePanels: state.visiblePanels, mediaViewportOverlap: state.mediaViewportOverlap, mediaViewportTop: state.mediaRect?.viewportTop ?? null });
+    }
+
+    window.scrollTo(0, originalScrollY);
+    await sleep(100);
+    const finalState = captureState();
+    let nextSection = section.nextElementSibling;
+    while (nextSection && !isVisible(nextSection)) nextSection = nextSection.nextElementSibling;
+    const mediaBottom = mediaBox.getBoundingClientRect().bottom + window.scrollY;
+    const nextTop = nextSection ? nextSection.getBoundingClientRect().top + window.scrollY : null;
+
+    return {
+      present: true,
+      pattern,
+      widgetSignature: `${controls.length} controls / ${panels.length} panels`,
+      controls: initialControls,
+      controlGroup: initialControlGroup,
+      visibleControlLabels: initialControls.filter((control) => control.visible).map((control) => control.label),
+      finalState,
+      clickSamples,
+      scrollSamples,
+      renderedPanelLabels: finalState.panels.filter((panel) => panel.display !== 'none' && (panel.rect?.width || 0) >= 4 && (panel.rect?.height || 0) >= 4).map((panel) => panel.label),
+      mediaVisibleSampleCount: scrollSamples.filter((sample) => sample.mediaViewportOverlap >= 0.25).length,
+      scrollActivePanels: scrollSamples.map((sample) => sample.activePanel).filter(Boolean),
+      clickActivePanels: clickSamples.map((sample) => sample.activePanel).filter(Boolean),
+      mediaToNextSectionGap: nextTop !== null && Number.isFinite(mediaBottom) ? Math.round(nextTop - mediaBottom) : null,
+    };
+  }, DYNAMIC_WIDGET_CONTROL_SELECTORS, DYNAMIC_WIDGET_PANEL_SELECTORS, DYNAMIC_CONTROL_STYLE_PROPS, DYNAMIC_CONTROL_GROUP_STYLE_PROPS);
+}
+
+async function captureDynamicSelectorUx(page) {
+  if (!(await pageHasDynamicSelectorCandidate(page))) return { present: false };
+  const originalViewport = page.viewport() || VIEWPORT;
+  const auditViewport = { ...originalViewport, width: originalViewport.width || VIEWPORT.width, height: Math.min(originalViewport.height || VIEWPORT.height, 900) };
+  const shouldResize = auditViewport.height !== originalViewport.height || auditViewport.width !== originalViewport.width;
+  try {
+    if (shouldResize) {
+      await page.setViewport(auditViewport);
+      await page.evaluate(() => new Promise((resolve) => setTimeout(resolve, 500)));
+    }
+    return await extractDynamicSelectorUx(page);
+  } catch (error) {
+    return { present: true, error: error.message };
+  } finally {
+    if (shouldResize) {
+      await page.setViewport(originalViewport);
+      await page.evaluate(() => new Promise((resolve) => setTimeout(resolve, 500)));
+    }
+  }
+}
+
+function uniqueNonEmpty(values) {
+  return Array.from(new Set((values || []).filter(Boolean)));
+}
+
+
+function normalizeDynamicLabel(value) {
+  return normalizeWhitespace(value).toLowerCase();
+}
+
+function compareDynamicControlStyleValue(prop, liveValue, testValue, liveStyle, testStyle) {
+  if (liveValue === testValue) return null;
+
+  if (prop === 'fontFamily') {
+    if (primaryFontMatches(liveValue, testValue)) return null;
+    const livePrimary = normalizeFontFamily(liveValue)[0] || '(none)';
+    const testPrimary = normalizeFontFamily(testValue)[0] || '(none)';
+    return `fontFamily: live=${livePrimary} test=${testPrimary}`;
+  }
+
+  if (prop === 'color' || prop === 'backgroundColor' || prop === 'borderColor') {
+    const liveColor = parseColor(liveValue);
+    const testColor = parseColor(testValue);
+    if (liveColor && testColor) {
+      const channelDiff = Math.abs(liveColor.r - testColor.r) + Math.abs(liveColor.g - testColor.g) + Math.abs(liveColor.b - testColor.b);
+      const alphaDiff = Math.abs(liveColor.a - testColor.a);
+      const tolerance = prop === 'backgroundColor' ? 8 : 6;
+      if (channelDiff <= tolerance * 3 && alphaDiff <= 0.05) return null;
+    }
+  }
+
+  if (prop === 'borderStyle' || prop === 'borderColor') {
+    const liveBW = parsePx(liveStyle?.borderWidth || '0');
+    const testBW = parsePx(testStyle?.borderWidth || '0');
+    if ((liveBW === null || liveBW === 0) && (testBW === null || testBW === 0)) return null;
+  }
+
+  if (prop === 'textAlign') {
+    const normalizeAlign = (v) => (v === 'start' ? 'left' : v === 'end' ? 'right' : v);
+    if (normalizeAlign(liveValue) === normalizeAlign(testValue)) return null;
+  }
+
+  if (prop === 'opacity') {
+    const diff = Math.abs(parseFloat(liveValue || '1') - parseFloat(testValue || '1'));
+    if (diff <= 0.05) return null;
+  }
+
+  const livePx = parsePx(liveValue);
+  const testPx = parsePx(testValue);
+  if (livePx !== null && testPx !== null) {
+    const toleranceByProp = {
+      fontSize: 0.5,
+      lineHeight: 1,
+      fontWeight: 50,
+      borderRadius: 2,
+      borderWidth: 1,
+      paddingTop: 2,
+      paddingRight: 2,
+      paddingBottom: 2,
+      paddingLeft: 2,
+      marginTop: 2,
+      marginRight: 2,
+      marginBottom: 2,
+      marginLeft: 2,
+      gap: 2,
+      rowGap: 2,
+      columnGap: 2,
+    };
+    const tolerance = Math.max(0.25, toleranceByProp[prop] ?? 1);
+    if (Math.abs(livePx - testPx) <= tolerance) return null;
+  }
+
+  return `${prop}: live=${liveValue} test=${testValue}`;
+}
+
+function findMatchingDynamicControl(control, candidates, fallbackIndex) {
+  const label = normalizeDynamicLabel(control?.label || '');
+  if (label) {
+    const byLabel = candidates.find((candidate) => normalizeDynamicLabel(candidate?.label || '') === label);
+    if (byLabel) return byLabel;
+  }
+  return candidates[fallbackIndex] || null;
+}
+
+function compareDynamicRect(liveRect, testRect, fields, tolerance) {
+  const diffs = [];
+  for (const field of fields) {
+    const liveValue = liveRect?.[field];
+    const testValue = testRect?.[field];
+    if (!Number.isFinite(liveValue) || !Number.isFinite(testValue)) continue;
+    if (Math.abs(liveValue - testValue) > tolerance) {
+      diffs.push(`${field}: live=${liveValue}px test=${testValue}px`);
+    }
+  }
+  return diffs;
+}
+
+function compareDynamicControlVisuals(liveUx, testUx) {
+  const issues = [];
+  const liveControls = (liveUx?.controls || []).filter((control) => control.visible);
+  const testControls = (testUx?.controls || []).filter((control) => control.visible);
+  if (liveControls.length < 2 || testControls.length < 2) return issues;
+
+  for (const [index, liveControl] of liveControls.entries()) {
+    const testControl = findMatchingDynamicControl(liveControl, testControls, index);
+    if (!testControl) continue;
+
+    const styleDiffs = [];
+    for (const prop of DYNAMIC_CONTROL_STYLE_PROPS) {
+      const diff = compareDynamicControlStyleValue(
+        prop,
+        liveControl.style?.[prop],
+        testControl.style?.[prop],
+        liveControl.style,
+        testControl.style,
+      );
+      if (diff) styleDiffs.push(diff);
+    }
+    const opacityDiff = Math.abs((liveControl.effectiveOpacity ?? 1) - (testControl.effectiveOpacity ?? 1));
+    if (opacityDiff > 0.05) {
+      styleDiffs.push(`effectiveOpacity: live=${liveControl.effectiveOpacity} test=${testControl.effectiveOpacity}`);
+    }
+    if (styleDiffs.length > 0) {
+      issues.push({
+        type: 'control-style-mismatch',
+        label: liveControl.label,
+        message: `dynamic widget control "${liveControl.label}" has different visual styling: ${styleDiffs.join('; ')}`,
+        diffs: styleDiffs,
+      });
+    }
+
+    const geometryDiffs = [
+      ...compareDynamicRect(liveControl.rect, testControl.rect, ['width', 'height'], 4),
+      ...compareDynamicRect(liveControl.relativeToMedia, testControl.relativeToMedia, ['top', 'left'], 16).map((diff) => `media ${diff}`),
+    ];
+    if (geometryDiffs.length > 0) {
+      issues.push({
+        type: 'control-position-mismatch',
+        label: liveControl.label,
+        message: `dynamic widget control "${liveControl.label}" has different size/position: ${geometryDiffs.join('; ')}`,
+        diffs: geometryDiffs,
+      });
+    }
+  }
+
+  const liveGroup = liveUx?.controlGroup;
+  const testGroup = testUx?.controlGroup;
+  if (liveGroup && testGroup) {
+    const groupDiffs = [];
+    for (const prop of DYNAMIC_CONTROL_GROUP_STYLE_PROPS) {
+      const diff = compareDynamicControlStyleValue(prop, liveGroup.style?.[prop], testGroup.style?.[prop], liveGroup.style, testGroup.style);
+      if (diff) groupDiffs.push(diff);
+    }
+    groupDiffs.push(...compareDynamicRect(liveGroup.rect, testGroup.rect, ['width', 'height'], 8));
+    groupDiffs.push(...compareDynamicRect(liveGroup.relativeToMedia, testGroup.relativeToMedia, ['top', 'left'], 16).map((diff) => `media ${diff}`));
+    if (groupDiffs.length > 0) {
+      issues.push({
+        type: 'control-group-layout-mismatch',
+        message: `dynamic widget control group layout differs: ${groupDiffs.join('; ')}`,
+        diffs: groupDiffs,
+      });
+    }
+  }
+
+  return issues;
+}
+
+function compareDynamicSelectorUx(liveUx, testUx) {
+  const issues = [];
+  const live = liveUx || { present: false };
+  const test = testUx || { present: false };
+  if (!live.present) return { present: false, passed: true, issues, live, test };
+  if (live.error || test.error) {
+    issues.push({ type: 'audit-error', message: `dynamic widget audit error: live=${live.error || 'none'} test=${test.error || 'none'}` });
+    return { present: true, passed: false, issues, live, test };
+  }
+  if (!test.present) {
+    issues.push({ type: 'missing-widget', message: `dynamic control/panel widget exists on live (${live.widgetSignature || 'unknown shape'}) but not on test` });
+    return { present: true, passed: false, issues, live, test };
+  }
+
+  if ((live.visibleControlLabels || []).length >= 2 && (test.visibleControlLabels || []).length < live.visibleControlLabels.length) {
+    issues.push({ type: 'missing-visible-controls', message: `live has ${live.visibleControlLabels.length} visible widget controls, but test has ${(test.visibleControlLabels || []).length}`, liveVisible: live.visibleControlLabels, testVisible: test.visibleControlLabels || [] });
+  }
+
+  const liveRenderedPanels = uniqueNonEmpty(live.renderedPanelLabels || live.renderedSlideLabels);
+  const testRenderedPanels = uniqueNonEmpty(test.renderedPanelLabels || test.renderedSlideLabels);
+  if (liveRenderedPanels.length >= 2 && testRenderedPanels.length < liveRenderedPanels.length) {
+    issues.push({ type: 'mounted-panel-stack-missing', message: `live keeps ${liveRenderedPanels.length} widget panels/media items mounted (${liveRenderedPanels.join(', ')}), but test only renders ${testRenderedPanels.length ? testRenderedPanels.join(', ') : 'none'}; hidden/unmounted panels cannot match live's dynamic transitions`, livePanels: liveRenderedPanels, testPanels: testRenderedPanels });
+  }
+
+  const liveGap = Number.isFinite(live.mediaToNextSectionGap) ? live.mediaToNextSectionGap : null;
+  const testGap = Number.isFinite(test.mediaToNextSectionGap) ? test.mediaToNextSectionGap : null;
+  if (liveGap !== null && testGap !== null && testGap > Math.max(300, liveGap + 250)) {
+    issues.push({ type: 'excessive-post-media-gap', message: `space from the widget media/panel box to the next section is much larger on test (${testGap}px) than live (${liveGap}px)`, liveGap, testGap });
+  }
+
+  const liveClickPanels = uniqueNonEmpty(live.clickActivePanels || live.clickActiveSlides);
+  const testClickPanels = uniqueNonEmpty(test.clickActivePanels || test.clickActiveSlides);
+  if (liveClickPanels.length >= 2 && testClickPanels.length < Math.min(liveClickPanels.length, 3)) {
+    issues.push({ type: 'click-switching-missing', message: `clicking live controls changes active widget panel/media (${liveClickPanels.join(' → ')}), but test only exposes ${testClickPanels.length ? testClickPanels.join(' → ') : 'no detected click-driven panel changes'}`, livePanels: liveClickPanels, testPanels: testClickPanels });
+  }
+
+  const liveScrollPanels = uniqueNonEmpty(live.scrollActivePanels || live.scrollActiveSlides);
+  const testScrollPanels = uniqueNonEmpty(test.scrollActivePanels || test.scrollActiveSlides);
+  if (liveScrollPanels.length >= 2 && testScrollPanels.length < Math.min(liveScrollPanels.length, 3)) {
+    issues.push({ type: 'scroll-switching-missing', message: `scrolling live changes active widget panel/media (${liveScrollPanels.join(' → ')}), but test stays on ${testScrollPanels.length ? testScrollPanels.join(' → ') : 'no detected panel'}`, livePanels: liveScrollPanels, testPanels: testScrollPanels });
+  }
+
+  const liveMediaVisible = live.mediaVisibleSampleCount || 0;
+  const testMediaVisible = test.mediaVisibleSampleCount || 0;
+  if (liveMediaVisible >= 3 && testMediaVisible <= Math.max(1, liveMediaVisible - 3)) {
+    issues.push({ type: 'media-not-pinned-through-scroll', message: `live keeps widget media/panels visible through ${liveMediaVisible}/${(live.scrollSamples || []).length} scroll samples, but test only keeps it visible through ${testMediaVisible}/${(test.scrollSamples || []).length}`, liveMediaVisible, testMediaVisible });
+  }
+
+  issues.push(...compareDynamicControlVisuals(live, test));
+
+  return { present: true, passed: issues.length === 0, issues, live, test };
+}
+
 // ── Style-diff category summary ──
 // Groups style diffs into user-visible categories for easy scanning.
 function categorizeStyleDiffs(routes) {
@@ -2726,6 +3266,11 @@ function summarizeRouteComparison(routePath, livePage, testPage, screenshotDiff)
     testPage.animations,
   );
 
+  const dynamicSelectorComparison = compareDynamicSelectorUx(
+    livePage.dynamicSelectorUx,
+    testPage.dynamicSelectorUx,
+  );
+
   // Image dimension comparison
   const imageDiffs = [];
   const liveImages = livePage.inventory.elements.filter((el) => el.tag === 'IMG' && el.renderedWidth);
@@ -2806,6 +3351,8 @@ function summarizeRouteComparison(routePath, livePage, testPage, screenshotDiff)
     animationPropDiffCount: animationComparison.propDiffs.length,
     widgetMissingCount: animationComparison.missingWidgets.length,
     widgetExtraCount: animationComparison.extraWidgets.length,
+    dynamicSelectorComparison,
+    dynamicSelectorMismatchCount: dynamicSelectorComparison.issues.length,
     screenshotDiff,
   };
 }
@@ -3016,6 +3563,7 @@ function renderMarkdown(report) {
   lines.push(`- Animations / transitions extra on test: ${report.summary.animationsExtra || 0}`);
   lines.push(`- Interactive widgets missing on test (data-marquee/splide/modal/...): ${report.summary.widgetsMissing || 0}`);
   lines.push(`- Interactive widgets extra on test: ${report.summary.widgetsExtra || 0}`);
+  lines.push(`- Dynamic widget UX mismatches: ${report.summary.dynamicSelectorMismatches || 0}`);
   lines.push(`- Screenshot mismatches (> ${SCREENSHOT_DIFF_THRESHOLD}% or unavailable): ${report.summary.screenshotMismatches}`);
   lines.push(`- Screenshot capture failures: ${report.summary.screenshotUnavailable || 0}`);
   lines.push(`- Total failing checks: ${report.summary.failedChecklistItems}`);
@@ -3233,6 +3781,24 @@ function renderMarkdown(report) {
       }
     }
 
+    // Dynamic widget UX comparison
+    if (route.dynamicSelectorComparison && route.dynamicSelectorComparison.present && route.dynamicSelectorComparison.issues.length > 0) {
+      lines.push('');
+      lines.push('### Dynamic widget UX mismatches');
+      for (const issue of route.dynamicSelectorComparison.issues) {
+        lines.push(`- [ ] ${issue.type} — ${issue.message}`);
+      }
+      const live = route.dynamicSelectorComparison.live || {};
+      const test = route.dynamicSelectorComparison.test || {};
+      if (live.scrollSamples || test.scrollSamples) {
+        const summarizeSamples = (samples) => (samples || [])
+          .map((sample) => `${sample.scrollY}:${sample.activePanel || sample.activeSlide || '∅'}:${sample.mediaViewportOverlap}`)
+          .join(', ');
+        lines.push(`  - live scroll samples (scrollY:activePanel:mediaOverlap): ${summarizeSamples(live.scrollSamples) || 'none'}`);
+        lines.push(`  - test scroll samples (scrollY:activePanel:mediaOverlap): ${summarizeSamples(test.scrollSamples) || 'none'}`);
+      }
+    }
+
     // Animation / transition / interactive widget comparison
     if (route.animationComparison) {
       const ac = route.animationComparison;
@@ -3391,6 +3957,21 @@ async function loadPage(page, origin, routePath) {
     `settle delay ${url}`,
   );
 
+  // Capture dynamic control/panel widget behavior before the generic lazy-
+  // image priming scroll and before the static parity normalization cancels
+  // Webflow/GSAP animations. This is intentionally best-effort and no-ops on
+  // routes that do not contain a dynamic control/panel widget.
+  let dynamicSelectorUx = { present: false };
+  try {
+    dynamicSelectorUx = await withTimeout(
+      captureDynamicSelectorUx(page),
+      15000,
+      `dynamic widget UX ${url}`,
+    );
+  } catch (error) {
+    dynamicSelectorUx = { present: true, error: error.message };
+  }
+
   await withTimeout(
     primeLazyImages(page),
     15000,
@@ -3402,6 +3983,7 @@ async function loadPage(page, origin, routePath) {
     8000,
     `visible images ${url}`,
   );
+
 
   // Force Webflow IX2 / GSAP reveal-animated elements to their final
   // visible state before extracting computed styles.
@@ -3641,6 +4223,7 @@ async function loadPage(page, origin, routePath) {
     cssVars,
     wfElements,
     animations,
+    dynamicSelectorUx,
   };
 }
 
@@ -3792,6 +4375,7 @@ async function main() {
         animationPropDiffs: routes.reduce((total, route) => total + (route.animationPropDiffCount || 0), 0),
         widgetsMissing: routes.reduce((total, route) => total + (route.widgetMissingCount || 0), 0),
         widgetsExtra: routes.reduce((total, route) => total + (route.widgetExtraCount || 0), 0),
+        dynamicSelectorMismatches: routes.reduce((total, route) => total + (route.dynamicSelectorMismatchCount || 0), 0),
         screenshotMismatches: routes.filter((route) => route.screenshotDiff && !route.screenshotDiff.passed).length,
         screenshotUnavailable: routes.filter((route) => route.screenshotDiff?.error).length,
       },
@@ -3822,6 +4406,7 @@ async function main() {
       (report.summary.animationsExtra || 0) +
       (report.summary.animationPropDiffs || 0) +
       (report.summary.widgetsMissing || 0) +
+      (report.summary.dynamicSelectorMismatches || 0) +
       report.summary.screenshotMismatches;
 
     const jsonPath = path.join(OUTPUT_DIR, 'site-parity-checklist.json');
@@ -3847,6 +4432,8 @@ module.exports = {
   compareClickBehavior,
   compareContainerStyles,
   compareDropdowns,
+  compareDynamicControlVisuals,
+  compareDynamicSelectorUx,
   compareHoverEffects,
   compareInteractivity,
   compareStyleValue,

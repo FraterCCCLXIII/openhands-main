@@ -56,8 +56,7 @@ describe('shared branding links', () => {
       screen.getByText('Sign up for our newsletter for updates, events, and community insights.')
     ).toBeInTheDocument();
 
-    fireEvent.click(screen.getByTitle('Expand Citation'));
-
+    expect(screen.getByTitle('Collapse Citation')).toBeInTheDocument();
     expect(screen.getByText(/organization = \{OpenHands Blog\}/)).toBeInTheDocument();
   });
 });
