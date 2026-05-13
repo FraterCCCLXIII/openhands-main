@@ -1,8 +1,9 @@
+import type { CSSProperties } from 'react';
 import type { Route } from './+types/enterprise';
+import ASCIIAnimation from '~/components/ascii-animation';
 import { Footer } from '~/components/footer';
 import { OverlayLinkButton } from '~/components/overlay-link-button';
 
-const ASCII_BG = '/assets/webflow/backgrounds/6908d170831c19b2b6976323_ascii-art_(16)_1.svg';
 const ASCII_HOLE_BG = '/assets/webflow/backgrounds/690b397ae76441160bed52b6_asci-art-hole.png';
 const CONTROL_PLANE_IMG = '/assets/webflow/enterprise/control-plane.png';
 const STEPS_IMG = '/assets/webflow/enterprise/steps.png';
@@ -269,25 +270,11 @@ const Enterprise = () => {
           paddingBottom: '0px',
         }}
       >
-        {/* Live's hero ASCII layer is a 4-level nest:
-         *   div.asci-wrap        position: absolute (overlay layer)
-         *     div.asci-embed     position: static
-         *       div.ascii-embed  position: relative
-         *         pre.ascii-pre  position: absolute, font-mono 14/14
-         * The outermost wrap is what positions the layer; the nested
-         * elements are in normal flow.  Matching this structure keeps
-         * the parity wf-element comparison happy. */}
-        <div className='absolute inset-0 opacity-[0.12]' aria-hidden='true'>
-          <div data-wf-el='asci-embed' className='h-full w-full' style={{ position: 'static', overflow: 'hidden' }}>
-            <div data-wf-el='ascii-embed' className='h-full w-full' style={{ position: 'relative', overflow: 'hidden' }}>
-              <img
-                src={ASCII_BG}
-                alt=''
-                className='h-full w-full object-cover'
-                style={{ textAlign: 'start' }}
-              />
-            </div>
-          </div>
+        {/* Live's hero uses the same animated ASCII embed as the product
+         * pages: an absolute `.asci-wrap` paint layer containing an
+         * `.ascii-pre` text surface. */}
+        <div data-wf-el='asci-wrap' className='pointer-events-auto absolute inset-0 overflow-hidden' style={{ '--ascii-opacity': '0.12' } as CSSProperties} aria-hidden='true'>
+          <ASCIIAnimation className='h-full w-full' />
         </div>
         {/* Live's `.container` sits inside `section-hero` with padding 0
          * vertically; the visual rhythm comes from the inner

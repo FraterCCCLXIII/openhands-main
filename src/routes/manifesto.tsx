@@ -1,3 +1,5 @@
+import type { CSSProperties } from 'react';
+import ASCIIAnimation from '~/components/ascii-animation';
 import { CompanyPageShell } from '~/components/company-page-shell';
 import type { Route } from './+types/manifesto';
 
@@ -63,8 +65,11 @@ const SeparatorParagraph = () => <p className='font-sohne-buch text-[#5f5f5f]' s
 const Manifesto = () => {
   return (
     <CompanyPageShell>
-      <section data-wf-el='section-hero' className='px-6 pb-10 pt-12 lg:px-10 lg:pb-10 lg:pt-12' style={{ height: '241.484px', padding: '0px' }}>
-        <div className='mx-auto max-w-[493px] pt-14 text-center'>
+      <section data-wf-el='section-hero' className='relative px-6 pb-10 pt-12 lg:px-10 lg:pb-10 lg:pt-12' style={{ height: '241.484px', padding: '0px' }}>
+        <div data-wf-el='asci-wrap' className='pointer-events-auto absolute inset-0 overflow-hidden' style={{ '--ascii-opacity': '0.12' } as CSSProperties} aria-hidden='true'>
+          <ASCIIAnimation className='h-full w-full' />
+        </div>
+        <div className='relative mx-auto max-w-[493px] pt-14 text-center'>
           <h1 className='fluid-h1 h1-flow-root text-brand-fg'>
             Hands on the Future
           </h1>

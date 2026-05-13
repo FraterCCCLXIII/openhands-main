@@ -1,4 +1,5 @@
-import type { FormEvent } from 'react';
+import type { CSSProperties, FormEvent } from 'react';
+import ASCIIAnimation from '~/components/ascii-animation';
 import { CompanyPageShell } from '~/components/company-page-shell';
 import type { Route } from './+types/contact';
 
@@ -91,10 +92,13 @@ const Contact = () => {
     <CompanyPageShell>
       <section
         data-wf-el='section-hero'
-        className='px-6 pb-0 pt-0 lg:px-10'
+        className='relative px-6 pb-0 pt-0 lg:px-10'
         style={{ marginTop: '0px', height: '266px', paddingTop: '0px', paddingLeft: '0px', paddingRight: '0px' }}
       >
-        <div className='mx-auto flex max-w-[720px] flex-col items-center text-center' style={{ paddingTop: '56px' }}>
+        <div data-wf-el='asci-wrap' className='pointer-events-auto absolute inset-0 overflow-hidden' style={{ '--ascii-opacity': '0.12' } as CSSProperties} aria-hidden='true'>
+          <ASCIIAnimation className='h-full w-full' />
+        </div>
+        <div className='relative mx-auto flex max-w-[720px] flex-col items-center text-center' style={{ paddingTop: '56px' }}>
           <h1 className='h1-flow-root max-w-[560px] fluid-h1 text-brand-fg'>
             Talk to the OpenHands Team
           </h1>
@@ -158,29 +162,29 @@ const Contact = () => {
                   <div>
                     <div>
                       <p className={fieldLabelClass}>First Name *</p>
-                      <input type='text' name='firstname' placeholder='James' required className={`${textFieldClass} field-input`} />
+                      <input id='firstname' type='text' name='firstname' placeholder='James' required className={`${textFieldClass} field-input`} />
                     </div>
                     <div>
                       <p className={fieldLabelClass}>Company email *</p>
-                      <input type='email' name='Email' placeholder='email@company.com' required className={`${textFieldClass} field-input field-input--last`} />
+                      <input id='Email' type='email' name='Email' placeholder='email@company.com' required className={`${textFieldClass} field-input field-input--last`} />
                     </div>
                   </div>
 
                   <div>
                     <div>
                       <p className={fieldLabelClass}>Last name *</p>
-                      <input type='text' name='lastname' placeholder='Smith' required className={`${textFieldClass} field-input`} />
+                      <input id='lastname' type='text' name='lastname' placeholder='Smith' required className={`${textFieldClass} field-input`} />
                     </div>
                     <div>
                       <p className={fieldLabelClass}>Company name *</p>
-                      <input type='text' name='company' placeholder='Acme' required className={`${textFieldClass} field-input field-input--last`} />
+                      <input id='company' type='text' name='company' placeholder='Acme' required className={`${textFieldClass} field-input field-input--last`} />
                     </div>
                   </div>
                 </div>
 
                 <div>
                   <p className={fieldLabelClass}>Engineering team size*</p>
-                  <select name='Engineering-size' defaultValue='' required className={`${textFieldClass} field-input field-input--last`}>
+                  <select id='Engineering-size' name='Engineering-size' defaultValue='' required className={`${textFieldClass} field-input field-input--last`}>
                     <option value=''>Select one...</option>
                     <option value='51-500'>1-50</option>
                     <option value='50-100'>50-100</option>
@@ -191,6 +195,7 @@ const Contact = () => {
                 <div>
                   <p className={fieldLabelClass}>Message *</p>
                   <textarea
+                    id='Message-comments'
                     name='Message-comments'
                     placeholder='Send us a note here....'
                     required

@@ -1,4 +1,6 @@
+import type { CSSProperties } from 'react';
 import type { Route } from './+types/product';
+import ASCIIAnimation from '~/components/ascii-animation';
 import { Footer } from '~/components/footer';
 import {
   ProductComparisonTable,
@@ -41,6 +43,9 @@ const Product = () => {
         section count and per-section heights aligned with live.
       */}
       <section data-wf-el='section-product_hero' style={{ display: 'block', backgroundColor: 'rgba(0, 0, 0, 0)', paddingTop: '0px', paddingBottom: '0px', paddingLeft: '0px', paddingRight: '0px' }} className='relative'>
+        <div data-wf-el='asci-wrap' className='pointer-events-auto absolute inset-x-0 top-0 h-screen overflow-hidden' style={{ '--ascii-opacity': '0.12' } as CSSProperties} aria-hidden='true'>
+          <ASCIIAnimation className='h-full w-full' />
+        </div>
         <div className='relative mx-auto flex max-w-[1238px] flex-col items-center justify-center text-center' style={{ height: '432px' }}>
           <div className='rounded-[4px] bg-brand-accent text-[13px] font-medium leading-none text-brand-fg' style={{ alignItems: 'center', display: 'flex', height: '48px', justifyContent: 'center', marginBottom: '24px', width: '121px' }}>
             Product
@@ -70,7 +75,7 @@ const Product = () => {
         <div className='mx-auto flex max-w-[1238px] flex-col' style={{ rowGap: '128px' }}>
           {PRODUCT_SURFACES.map((item, index) => {
             const imageCard = (
-              <div style={{ width: '489px', maxWidth: '100%', marginLeft: 'auto', marginRight: 'auto' }}>
+              <div data-wf-el='product-list_img_wrap' className='bg-brand-bg' style={{ alignItems: 'center', borderRadius: '16px', display: 'flex', height: '450px', justifyContent: 'center', marginLeft: 'auto', marginRight: 'auto', maxWidth: '100%', overflow: 'hidden', width: '619px' }}>
                 <img src={item.image} alt='' className='img-block product-list_img' style={{ width: '489px', maxWidth: '100%', height: 'auto', borderRadius: '0px', color: 'rgb(249, 240, 217)', objectFit: 'scale-down' }} />
               </div>
             );

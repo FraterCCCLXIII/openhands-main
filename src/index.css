@@ -540,6 +540,7 @@
   color: var(--fg, #22150d);
   background: transparent;
   opacity: var(--ascii-opacity, 0.12);
+  filter: var(--ascii-filter, none);
   font: 12px/12px ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
   white-space: pre;
   user-select: none;

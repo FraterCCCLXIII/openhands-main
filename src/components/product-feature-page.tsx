@@ -379,6 +379,9 @@ export const ProductFeaturePage = ({
         className='relative'
         style={{ padding: '0', overflow: 'visible' }}
       >
+        <div data-wf-el='asci-wrap' className='pointer-events-auto absolute inset-x-0 top-0 h-screen overflow-hidden' style={{ '--ascii-opacity': '0.12' } as CSSProperties} aria-hidden='true'>
+          <ASCIIAnimation className='h-full w-full' />
+        </div>
         <div data-wf-el='hero' className='relative flex w-full flex-col items-center' style={{ textAlign: 'start', justifyContent: 'flex-start', height: heroHeight, overflow: 'visible' }}>
           <div className='mx-auto flex max-w-[860px] flex-col items-center' style={{ height: heroHeight, justifyContent: 'center', paddingTop: '56px', paddingBottom: '56px' }}>
             <ProductEyebrow label={page.eyebrow} />

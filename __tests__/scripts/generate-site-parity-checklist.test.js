@@ -11,6 +11,8 @@ const {
   capturePageScreenshot,
   compareButtonComponents,
   compareContainerStyles,
+  compareDropdowns,
+  compareDropdownStateSnapshots,
   compareDynamicControlVisuals,
   compareDynamicMotion,
   comparePaintedLayers,
@@ -399,6 +401,99 @@ describe('hover effect comparison', () => {
   });
 });
 
+describe('dropdown interaction state comparison', () => {
+  const hiddenPanel = {
+    visible: false,
+    style: {
+      opacity: '0',
+      pointerEvents: 'none',
+      transform: 'matrix(0.95, 0, 0, 0.95, 0, 0)',
+      transitionProperty: 'opacity, transform',
+      transitionDuration: '200ms, 200ms',
+      transitionTimingFunction: 'ease, ease',
+    },
+  };
+
+  const visiblePanel = {
+    visible: true,
+    style: {
+      opacity: '1',
+      pointerEvents: 'auto',
+      transform: 'matrix(1, 0, 0, 1, 0, 0)',
+      transitionProperty: 'opacity, transform',
+      transitionDuration: '200ms, 200ms',
+      transitionTimingFunction: 'ease, ease',
+    },
+  };
+
+  it('detects different dropdown appearance and disappearance state criteria', () => {
+    const liveStates = {
+      rest: { panel: hiddenPanel },
+      triggerHover400: { panel: visiblePanel },
+      mouseAway400: { panel: hiddenPanel },
+    };
+    const testStates = {
+      rest: { panel: { ...hiddenPanel, style: { ...hiddenPanel.style, transform: 'matrix(1, 0, 0, 1, -596, 0)' } } },
+      triggerHover400: { panel: visiblePanel },
+      mouseAway400: { panel: visiblePanel },
+    };
+
+    const issues = compareDropdownStateSnapshots(liveStates, testStates);
+    expect(issues).toEqual(expect.arrayContaining([
+      expect.stringContaining('resting: transform'),
+      expect.stringContaining('mouse away 400ms: visibility'),
+    ]));
+  });
+
+  it('detects descendant menu icon hover effects that do not change the link root', () => {
+    const liveStates = {
+      triggerHover400: {
+        items: [{
+          text: 'Docs',
+          link: { color: 'rgb(249, 240, 217)', backgroundColor: 'rgba(0, 0, 0, 0)' },
+          icon: { color: 'rgb(255, 255, 139)', backgroundColor: 'rgb(0, 0, 0)' },
+          svgPaint: { fill: 'rgb(255, 255, 139)', stroke: 'none' },
+        }],
+      },
+      firstItemHover: {
+        items: [{
+          text: 'Docs',
+          link: { color: 'rgb(249, 240, 217)', backgroundColor: 'rgba(0, 0, 0, 0)' },
+          icon: { color: 'rgb(0, 0, 0)', backgroundColor: 'rgb(255, 255, 139)' },
+          svgPaint: { fill: 'rgb(0, 0, 0)', stroke: 'none' },
+        }],
+      },
+    };
+    const testStates = {
+      triggerHover400: liveStates.triggerHover400,
+      firstItemHover: liveStates.triggerHover400,
+    };
+
+    const issues = compareDropdownStateSnapshots(liveStates, testStates);
+    expect(issues).toEqual(expect.arrayContaining([
+      expect.stringContaining('item hover Docs icon.backgroundColor changes on live but not test'),
+      expect.stringContaining('item hover Docs svgPaint.fill changes on live but not test'),
+    ]));
+  });
+
+  it('does not suppress test-only Resources dropdowns when live extraction misses them', () => {
+    const diffs = compareDropdowns([], [{
+      trigger: 'Resources',
+      hasDropdown: true,
+      dropdown: {
+        links: [
+          { text: 'About' }, { text: 'Blog' }, { text: 'Careers' }, { text: 'Contact' },
+          { text: 'Docs' }, { text: 'Manifesto' }, { text: 'Press' },
+        ],
+      },
+    }]);
+
+    expect(diffs).toHaveLength(1);
+    expect(diffs[0].issue).toBe('dropdown exists on test but trigger missing on live');
+  });
+});
+
+
 describe('dynamic widget control visual comparison', () => {
   const controlStyle = {
     display: 'block',
@@ -535,6 +630,19 @@ describe('generalized visual parity comparisons', () => {
     expect(result.missingMotion[0].signature).toBe('wf:ascii-pre');
   });
 
+  it('ignores extra local ASCII motion when the matching live layer exists but samples static', () => {
+    const live = [
+      { signature: 'wf:asci-wrap', tag: 'DIV', hasRuntimeMotion: false, changedFields: [], mutationCount: 0 },
+    ];
+    const test = [
+      { signature: 'wf:asci-wrap', tag: 'DIV', hasRuntimeMotion: true, changedFields: ['contentHash'], mutationCount: 12 },
+    ];
+
+    const result = compareDynamicMotion(live, test);
+
+    expect(result.extraMotion).toHaveLength(0);
+  });
+
   it('detects painted layer count and style differences', () => {
     const base = { tag: 'DIV', rect: { area: 1000 }, pseudo: {}, style: { backgroundColor: 'rgb(34, 21, 13)', opacity: '1', effectiveOpacity: 1 } };
     const result = comparePaintedLayers(
@@ -569,6 +677,24 @@ describe('generalized visual parity comparisons', () => {
     expect(result.extra).toHaveLength(0);
     expect(result.styleDiffs[0]).toEqual(expect.objectContaining({ key: 'section:0 ↔ wf:section' }));
   });
+
+  it('limits unmatched painted layers to structural and decorative surfaces', () => {
+    const base = { tag: 'DIV', rect: { area: 1000 }, pseudo: {}, style: { backgroundColor: 'rgb(34, 21, 13)', opacity: '1', effectiveOpacity: 1 } };
+    const result = comparePaintedLayers(
+      [],
+      [
+        { ...base, key: 'wf:card' },
+        { ...base, key: 'wf:asci-wrap' },
+        { ...base, key: 'img:logo', tag: 'IMG' },
+      ],
+    );
+
+    expect(result.extra).toEqual([
+      expect.objectContaining({ key: 'wf:asci-wrap' }),
+      expect.objectContaining({ key: 'img:logo' }),
+    ]);
+  });
+
 
   it('does not report position-only differences as painted-layer style mismatches', () => {
     const live = {

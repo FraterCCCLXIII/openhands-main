@@ -1,4 +1,6 @@
+import type { CSSProperties } from 'react';
 import type { Route } from './+types/pricing';
+import ASCIIAnimation from '~/components/ascii-animation';
 import { Footer } from '~/components/footer';
 import { OverlayLinkButton } from '~/components/overlay-link-button';
 
@@ -419,15 +421,10 @@ const Pricing = () => {
        * lives on the inner container. Move padding/relative inward so
        * the section's geometry/styles match live. */}
       <section data-wf-el='hero-section' style={{ minHeight: '816px' }}>
+        <div data-wf-el='asci-wrap' className='pointer-events-auto absolute inset-x-0 top-0 h-screen overflow-hidden' style={{ '--ascii-opacity': '0.12', '--ascii-filter': 'drop-shadow(0 0 6px rgba(160, 200, 255, 0.1))' } as CSSProperties} aria-hidden='true'>
+          <ASCIIAnimation className='h-full w-full' />
+        </div>
         <div className='relative mx-auto flex max-w-4xl flex-col items-center px-5 pb-0 pt-16 text-center lg:px-10'>
-          <div className='absolute inset-0 opacity-[0.12]' aria-hidden='true'>
-            <img
-              src='/assets/webflow/backgrounds/6908d170831c19b2b6976323_ascii-art_(16)_1.svg'
-              alt=''
-              className='h-full w-full object-cover'
-              style={{ textAlign: 'start' }}
-            />
-          </div>
           {/* Live's hero H1 has margin: 0; the new h1 element default
               (mb: 10) doesn't apply here. */}
           <h1 className='fluid-h1 text-brand-fg' style={{ position: 'relative', marginBottom: '0px', width: '599px', maxWidth: '100%' }}>

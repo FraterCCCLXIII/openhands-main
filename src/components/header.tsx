@@ -198,12 +198,12 @@ export const Header: React.FC<HeaderProps> = ({
                 </button>
                 <div
                   data-wf-el='nav_links_dropdown_wrap'
-                  className='absolute top-full z-50'
-                  style={{ left: '50%', transform: 'translateX(-91%)', opacity: resourcesOpen ? '1' : '0', pointerEvents: resourcesOpen ? 'auto' : 'none', paddingTop: '8px', width: '655px' }}
+                  className='absolute left-0 right-0 top-full z-50'
+                  style={{ transform: resourcesOpen ? 'scale(1)' : 'scale(0.95)', opacity: resourcesOpen ? '1' : '0', pointerEvents: resourcesOpen ? 'auto' : 'none', paddingTop: '8px', transformOrigin: 'right top' }}
                   onMouseEnter={() => setResourcesOpen(true)}
                   onMouseLeave={() => setResourcesOpen(false)}
                 >
-                  <div data-wf-el='nav_links_dropdown' style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: '32px', backgroundColor: 'rgb(34, 21, 13)', color: 'rgb(249, 240, 217)', borderRadius: '16px', padding: '23px', boxShadow: 'none', width: '655px' }}>
+                  <div data-wf-el='nav_links_dropdown' style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: '32px', backgroundColor: 'rgb(34, 21, 13)', color: 'rgb(249, 240, 217)', borderRadius: '16px', padding: '23px', boxShadow: 'none', width: '100%' }}>
                     {RESOURCE_LINK_GROUPS.map((group) => (
                       <div key={group.title} data-wf-el='nav_links_dropdown_group' style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', gap: '24px', margin: 0 }}>
                         <div data-wf-el='dropdown-eyebrow' className='eyebrow u-mb-0 font-mono' style={{ margin: 0, color: 'rgb(249, 240, 217)', fontSize: '14.08px', lineHeight: '16.896px' }}>

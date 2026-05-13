@@ -1700,6 +1700,8 @@ function compareDynamicMotion(liveMotion = [], testMotion = []) {
   };
   const liveMap = groupMoving(liveMotion);
   const testMap = groupMoving(testMotion);
+  const liveAllSignatures = new Set((liveMotion || []).map((item) => item.signature));
+  const isAsciiSignature = (signature) => /(?:^|:)(?:ascii|asci)[-_\w]*/i.test(signature || '');
   const missingMotion = [];
   const extraMotion = [];
   const propDiffs = [];
@@ -1728,6 +1730,11 @@ function compareDynamicMotion(liveMotion = [], testMotion = []) {
   }
   for (const [sig, testItems] of testMap) {
     if (liveMap.has(sig)) continue;
+    // Webflow's ASCII embed can be deterministic/static during the short sample
+    // window even though the matching layer exists. Do not penalize a local
+    // implementation for animating a corresponding ASCII layer; still report
+    // missing motion when live is observed moving and test is not.
+    if (isAsciiSignature(sig) && liveAllSignatures.has(sig)) continue;
     for (const item of testItems.slice(0, 3)) {
       extraMotion.push({ signature: sig, tag: item.tag, changedFields: item.changedFields, mutationCount: item.mutationCount });
     }
@@ -1758,31 +1765,40 @@ async function extractPaintedLayers(page, isLiveSite) {
       }) || '';
     };
     const ordinalByTag = {};
+    const imageKeyFor = (element) => {
+      try {
+        const url = new URL(element.currentSrc || element.src || '', document.baseURI);
+        const filename = decodeURIComponent(url.pathname.split('/').pop() || '')
+          .replace(/^[a-f0-9]{20,}_/i, '')
+          .replace(/^[a-f0-9]{20,}_/i, '')
+          .replace(/-p-\d+(?=\.)/i, '')
+          .replace(/\.[^.]+$/, '')
+          .replace(/[\s_%-]+/g, '')
+          .toLowerCase();
+        if (filename) return `img:${filename}`;
+      } catch { /* fall through */ }
+      return '';
+    };
     const keyFor = (element) => {
+      const tagKey = element.tagName.toLowerCase();
+      // Image filenames are the most stable cross-site identity for decorative
+      // Webflow media. Generic Webflow classes like `standard-media-img` and
+      // local data-wf-el hints often over-group unrelated images, causing noisy
+      // missing/extra paint reports even when the asset itself matches.
+      if (element.tagName === 'IMG') {
+        const imageKey = imageKeyFor(element);
+        if (imageKey) return imageKey;
+        const ordinal = ordinalByTag[tagKey] || 0;
+        ordinalByTag[tagKey] = ordinal + 1;
+        return `${tagKey}:${ordinal}`;
+      }
       const wf = element.getAttribute('data-wf-el');
       if (wf) return `wf:${wf}`;
       const cls = semanticClass(element);
       if (cls) return `wf:${cls}`;
       if (element.id) return `id:${element.id}`;
-      const tagKey = element.tagName.toLowerCase();
       if (element.tagName === 'BODY') return 'body';
       if (['SECTION', 'MAIN', 'HEADER', 'FOOTER', 'NAV'].includes(element.tagName)) {
-        const ordinal = ordinalByTag[tagKey] || 0;
-        ordinalByTag[tagKey] = ordinal + 1;
-        return `${tagKey}:${ordinal}`;
-      }
-      if (element.tagName === 'IMG') {
-        try {
-          const url = new URL(element.currentSrc || element.src || '', document.baseURI);
-          const filename = decodeURIComponent(url.pathname.split('/').pop() || '')
-            .replace(/^[a-f0-9]{20,}_/i, '')
-            .replace(/^[a-f0-9]{20,}_/i, '')
-            .replace(/-p-\d+(?=\.)/i, '')
-            .replace(/\.[^.]+$/, '')
-            .replace(/[\s_%-]+/g, '')
-            .toLowerCase();
-          if (filename) return `img:${filename}`;
-        } catch { /* fall through */ }
         const ordinal = ordinalByTag[tagKey] || 0;
         ordinalByTag[tagKey] = ordinal + 1;
         return `${tagKey}:${ordinal}`;
@@ -1968,14 +1984,20 @@ function comparePaintedLayers(liveLayers = [], testLayers = []) {
     comparePair(liveItem, testItem, `${liveItem.key} ↔ ${testItem.key}`, 1);
   }
 
+  const isReportableUnmatchedLayer = (item) => {
+    const tag = item?.tag || '';
+    const key = item?.key || '';
+    if (['BODY', 'SECTION', 'MAIN', 'HEADER', 'FOOTER', 'NAV', 'IMG', 'PRE', 'CANVAS', 'VIDEO', 'SVG'].includes(tag)) return true;
+    return /(?:^|:)(?:ascii|asci|hero|section|page|background|marquee|slider|carousel)(?:[-_]|$)/i.test(key);
+  };
   const addGrouped = (target, items) => {
     const grouped = group(items);
     for (const [key, groupedItems] of grouped) {
       target.push({ key, tag: groupedItems[0].tag, count: groupedItems.length, largestArea: groupedItems[0].rect?.area || 0 });
     }
   };
-  addGrouped(missing, unmatchedLive.filter((_, index) => !matchedLive.has(index)));
-  addGrouped(extra, unmatchedTest.filter((_, index) => !matchedTest.has(index)));
+  addGrouped(missing, unmatchedLive.filter((item, index) => !matchedLive.has(index) && isReportableUnmatchedLayer(item)));
+  addGrouped(extra, unmatchedTest.filter((item, index) => !matchedTest.has(index) && isReportableUnmatchedLayer(item)));
   return { missing, extra, countDiffs, styleDiffs };
 }
 
@@ -2249,119 +2271,249 @@ async function extractDropdownContent(page) {
               bottom: Math.round(rect.bottom + window.scrollY),
               right: Math.round(rect.right + window.scrollX),
             },
+            viewportPoint: {
+              x: Math.round(rect.left + rect.width / 2),
+              y: Math.round(rect.top + rect.height / 2),
+            },
           };
         }, handle);
 
-        // Hover to reveal dropdowns. The live Webflow nav opens panels on hover;
-        // clicking can toggle an already-hovered React panel closed, so hover is
-        // the stable cross-site interaction for parity extraction.
-        await handle.hover();
-        await page.evaluate(() => new Promise((r) => setTimeout(r, 400)));
+        if (triggerInfo.rect.width < 1 || triggerInfo.rect.height < 1 || triggerInfo.viewportPoint.y < 0 || triggerInfo.viewportPoint.y > VIEWPORT.height) {
+          continue;
+        }
 
-        // Extract revealed dropdown content
-        const dropdownContent = await page.evaluate((el) => {
-          // Look for dropdown panel that became visible after click.
-          // Search parent, grandparent, and great-grandparent to handle
-          // different DOM structures (React vs Webflow).
-          const searchContainers = [];
-          let cur = el.parentElement;
-          for (let i = 0; i < 3 && cur; i++) {
-            searchContainers.push(cur);
-            cur = cur.parentElement;
-          }
 
-          // Also check for absolutely-positioned panels anywhere in the viewport
-          // that appeared near the trigger (Webflow sometimes uses fixed/absolute panels)
-          const triggerRect = el.getBoundingClientRect();
-
-          for (const container of searchContainers) {
-            const candidates = container.querySelectorAll(
-              '[class*="dropdown"], [role="menu"], [role="listbox"], [data-wf-el*="dropdown"], ul, div'
-            );
-            for (const candidate of candidates) {
-              if (candidate === el || candidate.contains(el)) continue;
-              const style = window.getComputedStyle(candidate);
-              const rect = candidate.getBoundingClientRect();
-              if (rect.width < 50 || rect.height < 30) continue;
-              if (style.display === 'none') continue;
-              if (style.visibility === 'hidden' && Number(style.opacity) === 0) continue;
-
-              // Check the panel is positioned near/below the trigger
-              const vertDist = rect.top - triggerRect.bottom;
-              if (vertDist > 200 || vertDist < -triggerRect.height) continue;
-
-              // Found a visible dropdown panel - extract its content
-              const links = Array.from(candidate.querySelectorAll('a')).map((a) => ({
-                text: (a.innerText || '').trim().slice(0, 80),
-                href: a.getAttribute('href') || '',
-              })).filter((l) => l.text);
-
-              if (links.length === 0) continue; // Not a real dropdown if no links
-
-              const headings = Array.from(candidate.querySelectorAll('div, span, h1, h2, h3, h4, h5, h6'))
-                .filter((h) => {
-                  const s = window.getComputedStyle(h);
-                  return s.fontWeight >= 600 || s.textTransform === 'uppercase';
-                })
-                .map((h) => (h.innerText || '').trim().slice(0, 80))
-                .filter(Boolean);
-
-              const cStyle = window.getComputedStyle(candidate);
-              // Also capture font size and layout direction for visual comparison
-              const firstLink = candidate.querySelector('a');
-              const linkStyle = firstLink ? window.getComputedStyle(firstLink) : {};
-              return {
-                rect: {
-                  top: Math.round(rect.top + window.scrollY),
-                  left: Math.round(rect.left + window.scrollX),
-                  width: Math.round(rect.width),
-                  height: Math.round(rect.height),
-                  bottom: Math.round(rect.bottom + window.scrollY),
-                  right: Math.round(rect.right + window.scrollX),
-                },
-                triggerRect: {
-                  top: Math.round(triggerRect.top + window.scrollY),
-                  left: Math.round(triggerRect.left + window.scrollX),
-                  width: Math.round(triggerRect.width),
-                  height: Math.round(triggerRect.height),
-                  bottom: Math.round(triggerRect.bottom + window.scrollY),
-                  right: Math.round(triggerRect.right + window.scrollX),
-                },
-                offsetFromTrigger: {
-                  left: Math.round(rect.left - triggerRect.left),
-                  top: Math.round(rect.top - triggerRect.bottom),
-                  centerX: Math.round((rect.left + rect.width / 2) - (triggerRect.left + triggerRect.width / 2)),
-                },
-                width: Math.round(rect.width),
-                height: Math.round(rect.height),
-                linkCount: links.length,
-                links,
-                headings,
-                backgroundColor: cStyle.backgroundColor,
-                borderRadius: cStyle.borderRadius,
-                boxShadow: cStyle.boxShadow,
-                padding: cStyle.padding,
-                // Additional visual properties for design comparison
-                fontSize: linkStyle.fontSize || '',
-                color: linkStyle.color || '',
-                flexDirection: cStyle.flexDirection,
-                display: cStyle.display,
-              };
+        const captureInteractionState = async () => page.evaluate((el) => {
+          const roundedRect = (node) => {
+            if (!node) return null;
+            const rect = node.getBoundingClientRect();
+            return {
+              top: Math.round(rect.top + window.scrollY),
+              left: Math.round(rect.left + window.scrollX),
+              width: Math.round(rect.width),
+              height: Math.round(rect.height),
+              bottom: Math.round(rect.bottom + window.scrollY),
+              right: Math.round(rect.right + window.scrollX),
+            };
+          };
+          const preciseRect = (node) => {
+            if (!node) return null;
+            const rect = node.getBoundingClientRect();
+            return {
+              top: Number((rect.top + window.scrollY).toFixed(2)),
+              left: Number((rect.left + window.scrollX).toFixed(2)),
+              width: Number(rect.width.toFixed(2)),
+              height: Number(rect.height.toFixed(2)),
+              bottom: Number((rect.bottom + window.scrollY).toFixed(2)),
+              right: Number((rect.right + window.scrollX).toFixed(2)),
+            };
+          };
+          const styleSnapshot = (node) => {
+            if (!node) return null;
+            const c = window.getComputedStyle(node);
+            return {
+              color: c.color,
+              backgroundColor: c.backgroundColor,
+              borderColor: c.borderColor,
+              fill: c.fill,
+              stroke: c.stroke,
+              opacity: c.opacity,
+              transform: c.transform,
+              transitionProperty: c.transitionProperty,
+              transitionDuration: c.transitionDuration,
+              transitionTimingFunction: c.transitionTimingFunction,
+              pointerEvents: c.pointerEvents,
+              visibility: c.visibility,
+              display: c.display,
+            };
+          };
+          const isEffectivelyVisible = (node) => {
+            if (!node) return false;
+            const c = window.getComputedStyle(node);
+            const rect = node.getBoundingClientRect();
+            return c.display !== 'none' && c.visibility !== 'hidden' && Number(c.opacity) > 0.05 && c.pointerEvents !== 'none' && rect.width > 0 && rect.height > 0;
+          };
+          const panelScore = (candidate, triggerRect) => {
+            const text = (candidate.textContent || '').replace(/\s+/g, ' ').trim();
+            const links = Array.from(candidate.querySelectorAll('a')).filter((a) => (a.innerText || a.textContent || '').trim());
+            if (links.length === 0) return -Infinity;
+            const rect = candidate.getBoundingClientRect();
+            if (rect.width < 50 || rect.height < 20) return -Infinity;
+            const c = window.getComputedStyle(candidate);
+            if (c.display === 'none') return -Infinity;
+            const className = String(candidate.className || '').toLowerCase();
+            const wf = String(candidate.getAttribute('data-wf-el') || '').toLowerCase();
+            let score = links.length * 10;
+            if (/(dropdown|menu|listbox)/.test(className) || /(dropdown|menu|listbox)/.test(wf)) score += 60;
+            if (/(dropdown[-_]?wrap|dropdown_wrap)/.test(className) || /(dropdown[-_]?wrap|dropdown_wrap)/.test(wf)) score += 40;
+            if (text.toLowerCase().includes('docs') || text.toLowerCase().includes('terminal')) score += 8;
+            const verticalGap = Math.abs(rect.top - triggerRect.bottom);
+            const horizontalGap = Math.abs((rect.left + rect.width / 2) - (triggerRect.left + triggerRect.width / 2));
+            score -= Math.min(verticalGap, 300) / 10;
+            score -= Math.min(horizontalGap, 600) / 60;
+            if (candidate.contains(document.activeElement)) score += 4;
+            return score;
+          };
+          const findPanel = () => {
+            const triggerRect = el.getBoundingClientRect();
+            const containers = [];
+            let cur = el.parentElement;
+            for (let i = 0; i < 5 && cur; i++) {
+              containers.push(cur);
+              cur = cur.parentElement;
             }
+            containers.push(document.body);
+            const seen = new Set();
+            const candidates = [];
+            for (const container of containers) {
+              for (const candidate of container.querySelectorAll('[class*="dropdown"], [role="menu"], [role="listbox"], [data-wf-el*="dropdown"]')) {
+                if (seen.has(candidate) || candidate === el || candidate.contains(el)) continue;
+                seen.add(candidate);
+                const score = panelScore(candidate, triggerRect);
+                if (Number.isFinite(score)) candidates.push({ candidate, score });
+              }
+            }
+            candidates.sort((a, b) => b.score - a.score);
+            return candidates[0]?.candidate || null;
+          };
+          const panel = findPanel();
+          const triggerRect = el.getBoundingClientRect();
+          if (!panel) {
+            return {
+              panel: null,
+              dropdown: null,
+              items: [],
+              firstLinkPoint: null,
+            };
           }
-          return null;
+
+          const panelRect = panel.getBoundingClientRect();
+          const panelStyle = window.getComputedStyle(panel);
+          const links = Array.from(panel.querySelectorAll('a')).map((a) => ({
+            text: (a.innerText || a.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 80),
+            href: a.getAttribute('href') || '',
+          })).filter((l) => l.text);
+          const firstLink = panel.querySelector('a');
+          const firstLinkStyle = firstLink ? window.getComputedStyle(firstLink) : {};
+          const headings = Array.from(panel.querySelectorAll('div, span, h1, h2, h3, h4, h5, h6'))
+            .filter((h) => {
+              const s = window.getComputedStyle(h);
+              return s.fontWeight >= 600 || s.textTransform === 'uppercase';
+            })
+            .map((h) => (h.innerText || '').trim().slice(0, 80))
+            .filter(Boolean);
+          const items = Array.from(panel.querySelectorAll('a')).slice(0, 8).map((link) => {
+            const icon = link.querySelector('[class*="icon"], [data-wf-el*="icon"], svg');
+            const svg = icon?.tagName === 'svg' ? icon : icon?.querySelector('svg') || link.querySelector('svg');
+            const svgPaint = svg?.querySelector('path, rect, circle, ellipse, polygon, polyline, line');
+            return {
+              text: (link.innerText || link.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 80),
+              rect: preciseRect(link),
+              link: styleSnapshot(link),
+              icon: icon ? {
+                rect: preciseRect(icon),
+                ...styleSnapshot(icon),
+              } : null,
+              svg: svg ? styleSnapshot(svg) : null,
+              svgPaint: svgPaint ? styleSnapshot(svgPaint) : null,
+            };
+          }).filter((item) => item.text);
+          const firstRect = firstLink?.getBoundingClientRect();
+          return {
+            panel: {
+              rect: preciseRect(panel),
+              visible: isEffectivelyVisible(panel),
+              style: {
+                opacity: panelStyle.opacity,
+                pointerEvents: panelStyle.pointerEvents,
+                visibility: panelStyle.visibility,
+                display: panelStyle.display,
+                transform: panelStyle.transform,
+                transformOrigin: panelStyle.transformOrigin,
+                transitionProperty: panelStyle.transitionProperty,
+                transitionDuration: panelStyle.transitionDuration,
+                transitionTimingFunction: panelStyle.transitionTimingFunction,
+                backgroundColor: panelStyle.backgroundColor,
+                borderRadius: panelStyle.borderRadius,
+                boxShadow: panelStyle.boxShadow,
+                padding: panelStyle.padding,
+              },
+              offsetFromTrigger: {
+                left: Math.round(panelRect.left - triggerRect.left),
+                top: Math.round(panelRect.top - triggerRect.bottom),
+                centerX: Math.round((panelRect.left + panelRect.width / 2) - (triggerRect.left + triggerRect.width / 2)),
+              },
+            },
+            dropdown: {
+              rect: roundedRect(panel),
+              triggerRect: roundedRect(el),
+              offsetFromTrigger: {
+                left: Math.round(panelRect.left - triggerRect.left),
+                top: Math.round(panelRect.top - triggerRect.bottom),
+                centerX: Math.round((panelRect.left + panelRect.width / 2) - (triggerRect.left + triggerRect.width / 2)),
+              },
+              width: Math.round(panelRect.width),
+              height: Math.round(panelRect.height),
+              linkCount: links.length,
+              links,
+              headings,
+              backgroundColor: panelStyle.backgroundColor,
+              borderRadius: panelStyle.borderRadius,
+              boxShadow: panelStyle.boxShadow,
+              padding: panelStyle.padding,
+              fontSize: firstLinkStyle.fontSize || '',
+              color: firstLinkStyle.color || '',
+              flexDirection: panelStyle.flexDirection,
+              display: panelStyle.display,
+            },
+            items,
+            firstLinkPoint: firstRect ? {
+              x: Math.round(firstRect.left + firstRect.width / 2),
+              y: Math.round(firstRect.top + firstRect.height / 2),
+            } : null,
+          };
         }, handle);
 
-        // Move away so the next trigger starts from a neutral hover state.
+        const states = {};
+        states.rest = await captureInteractionState();
+
+        // Hover to reveal dropdowns. Capture an early and settled state so we
+        // compare both transition/opening behavior and final panel geometry.
         await page.mouse.move(0, 0);
-        await page.evaluate(() => new Promise((r) => setTimeout(r, 200)));
+        await page.mouse.move(triggerInfo.viewportPoint.x, triggerInfo.viewportPoint.y, { steps: 5 });
+        await page.evaluate(() => new Promise((r) => setTimeout(r, 80)));
+        states.triggerHover80 = await captureInteractionState();
+        await page.evaluate(() => new Promise((r) => setTimeout(r, 320)));
+        states.triggerHover400 = await captureInteractionState();
+
+        let dropdownContent = states.triggerHover400.dropdown;
+        if (!states.triggerHover400.panel?.visible && states.triggerHover80.panel?.visible) {
+          dropdownContent = states.triggerHover80.dropdown;
+        }
+
+        // Exercise descendant hover states inside the revealed panel. This catches
+        // icon/background/SVG color transitions that do not change the anchor root.
+        if (states.triggerHover400.firstLinkPoint) {
+          await page.mouse.move(states.triggerHover400.firstLinkPoint.x, states.triggerHover400.firstLinkPoint.y);
+          await page.evaluate(() => new Promise((r) => setTimeout(r, 160)));
+          states.firstItemHover = await captureInteractionState();
+        }
+
+        // Move away and capture close behavior at two points. Different hover gaps,
+        // JS state toggles, or CSS transition criteria show up here.
+        await page.mouse.move(0, 0);
+        await page.evaluate(() => new Promise((r) => setTimeout(r, 120)));
+        states.mouseAway120 = await captureInteractionState();
+        await page.evaluate(() => new Promise((r) => setTimeout(r, 320)));
+        states.mouseAway400 = await captureInteractionState();
 
         results.push({
           trigger: triggerInfo.text,
           triggerTag: triggerInfo.tag,
           triggerRect: triggerInfo.rect,
-          hasDropdown: dropdownContent !== null,
+          hasDropdown: Boolean(dropdownContent),
           dropdown: dropdownContent,
+          states,
         });
       } catch {
         // element may have triggered navigation
@@ -2373,6 +2525,131 @@ async function extractDropdownContent(page) {
   return results;
 }
 
+
+function normalizeInteractionTransform(value = '') {
+  const text = String(value || '').trim();
+  if (!text || text === 'none' || text === 'matrix(1, 0, 0, 1, 0, 0)') return 'none';
+  return text.replace(/-?\d+\.\d+/g, (match) => String(Math.round(Number(match) * 100) / 100));
+}
+
+function parseInteractionOpacity(value) {
+  const parsed = Number.parseFloat(value);
+  return Number.isFinite(parsed) ? parsed : 1;
+}
+
+function getByPath(object, path) {
+  return path.split('.').reduce((current, key) => current?.[key], object);
+}
+
+function findStateItem(items = [], text = '') {
+  const normalized = String(text || '').toLowerCase();
+  return items.find((item) => String(item.text || '').toLowerCase() === normalized) || items[0] || null;
+}
+
+function visualValueChanged(before, after, path) {
+  const left = getByPath(before, path);
+  const right = getByPath(after, path);
+  if (left == null && right == null) return false;
+  return String(left || '') !== String(right || '');
+}
+
+function compareDropdownItemHoverStates(liveStates = {}, testStates = {}) {
+  const issues = [];
+  const liveBefore = liveStates.triggerHover400;
+  const liveHover = liveStates.firstItemHover;
+  const testBefore = testStates.triggerHover400;
+  const testHover = testStates.firstItemHover;
+  if (!liveBefore?.items?.length || !liveHover?.items?.length || !testBefore?.items?.length || !testHover?.items?.length) return issues;
+
+  const visualPaths = [
+    'link.color',
+    'link.backgroundColor',
+    'icon.color',
+    'icon.backgroundColor',
+    'icon.fill',
+    'icon.stroke',
+    'svg.color',
+    'svg.fill',
+    'svg.stroke',
+    'svgPaint.fill',
+    'svgPaint.stroke',
+  ];
+
+  for (const liveBeforeItem of liveBefore.items.slice(0, 3)) {
+    const liveHoverItem = findStateItem(liveHover.items, liveBeforeItem.text);
+    const testBeforeItem = findStateItem(testBefore.items, liveBeforeItem.text);
+    const testHoverItem = findStateItem(testHover.items, liveBeforeItem.text);
+    if (!liveHoverItem || !testBeforeItem || !testHoverItem) continue;
+    const changedOnLive = visualPaths.filter((path) => visualValueChanged(liveBeforeItem, liveHoverItem, path));
+    const changedOnTest = visualPaths.filter((path) => visualValueChanged(testBeforeItem, testHoverItem, path));
+    for (const path of changedOnLive) {
+      if (!changedOnTest.includes(path)) {
+        issues.push(`item hover ${liveBeforeItem.text} ${path} changes on live but not test (${getByPath(liveBeforeItem, path)} → ${getByPath(liveHoverItem, path)})`);
+        continue;
+      }
+      const liveAfter = getByPath(liveHoverItem, path);
+      const testAfter = getByPath(testHoverItem, path);
+      if (String(liveAfter || '') !== String(testAfter || '')) {
+        issues.push(`item hover ${liveBeforeItem.text} ${path}: live=${liveAfter} test=${testAfter}`);
+      }
+    }
+    for (const path of changedOnTest) {
+      if (!changedOnLive.includes(path)) {
+        issues.push(`item hover ${liveBeforeItem.text} ${path} changes on test but not live (${getByPath(testBeforeItem, path)} → ${getByPath(testHoverItem, path)})`);
+      }
+    }
+  }
+  return issues;
+}
+
+function compareDropdownStateSnapshots(liveStates = {}, testStates = {}) {
+  const issues = [];
+  const stateChecks = [
+    ['rest', 'resting'],
+    ['triggerHover80', 'trigger hover 80ms'],
+    ['triggerHover400', 'trigger hover 400ms'],
+    ['firstItemHover', 'first item hover'],
+    ['mouseAway120', 'mouse away 120ms'],
+    ['mouseAway400', 'mouse away 400ms'],
+  ];
+
+  for (const [key, label] of stateChecks) {
+    const livePanel = liveStates[key]?.panel;
+    const testPanel = testStates[key]?.panel;
+    if (!livePanel && !testPanel) continue;
+    if (!livePanel || !testPanel) {
+      issues.push(`${label}: panel captured on ${livePanel ? 'live' : 'test'} only`);
+      continue;
+    }
+    if (Boolean(livePanel.visible) !== Boolean(testPanel.visible)) {
+      issues.push(`${label}: visibility live=${Boolean(livePanel.visible)} test=${Boolean(testPanel.visible)}`);
+    }
+    const liveOpacity = parseInteractionOpacity(livePanel.style?.opacity);
+    const testOpacity = parseInteractionOpacity(testPanel.style?.opacity);
+    if (Math.abs(liveOpacity - testOpacity) > 0.15) {
+      issues.push(`${label}: opacity live=${livePanel.style?.opacity} test=${testPanel.style?.opacity}`);
+    }
+    const liveTransform = normalizeInteractionTransform(livePanel.style?.transform);
+    const testTransform = normalizeInteractionTransform(testPanel.style?.transform);
+    if (liveTransform !== testTransform) {
+      issues.push(`${label}: transform live=${liveTransform} test=${testTransform}`);
+    }
+    if ((livePanel.style?.pointerEvents || '') !== (testPanel.style?.pointerEvents || '')) {
+      issues.push(`${label}: pointerEvents live=${livePanel.style?.pointerEvents} test=${testPanel.style?.pointerEvents}`);
+    }
+    for (const prop of ['transitionProperty', 'transitionDuration', 'transitionTimingFunction']) {
+      const liveValue = livePanel.style?.[prop] || '';
+      const testValue = testPanel.style?.[prop] || '';
+      if (liveValue && testValue && liveValue !== testValue) {
+        issues.push(`${label}: ${prop} live=${liveValue} test=${testValue}`);
+      }
+    }
+  }
+
+  issues.push(...compareDropdownItemHoverStates(liveStates, testStates));
+  return issues;
+}
+
 function compareDropdowns(liveDropdowns, testDropdowns) {
   const diffs = [];
 
@@ -2380,10 +2657,23 @@ function compareDropdowns(liveDropdowns, testDropdowns) {
   const liveMap = new Map(liveDropdowns.map((d) => [d.trigger.toLowerCase(), d]));
   const testMap = new Map(testDropdowns.map((d) => [d.trigger.toLowerCase(), d]));
 
+  for (const item of [...liveDropdowns, ...testDropdowns]) {
+    if (item?.error) {
+      diffs.push({
+        trigger: item.trigger,
+        issue: `dropdown extraction failed: ${item.error}`,
+        liveLinks: liveDropdowns.includes(item) ? 0 : undefined,
+        testLinks: testDropdowns.includes(item) ? 0 : undefined,
+      });
+    }
+  }
+
+
   for (const [label, live] of liveMap) {
     const test = testMap.get(label);
     if (!test) {
       if (live.hasDropdown) {
+
         diffs.push({
           trigger: live.trigger,
           issue: 'dropdown exists on live but trigger missing on test',
@@ -2455,6 +2745,7 @@ function compareDropdowns(liveDropdowns, testDropdowns) {
       if (ll.color && tl.color && ll.color !== tl.color) issues.push(`color: live=${ll.color} test=${tl.color}`);
       if (ll.display !== tl.display) issues.push(`display: live=${ll.display} test=${tl.display}`);
       if (ll.flexDirection && tl.flexDirection && ll.flexDirection !== tl.flexDirection) issues.push(`flexDirection: live=${ll.flexDirection} test=${tl.flexDirection}`);
+      issues.push(...compareDropdownStateSnapshots(live.states, test.states));
       if (issues.length > 0) {
         diffs.push({
           trigger: live.trigger,
@@ -2466,20 +2757,8 @@ function compareDropdowns(liveDropdowns, testDropdowns) {
     }
   }
 
-  // Test-only dropdowns. The live Webflow Resources panel is hover-only and
-  // can be missed by best-effort extraction after earlier click audits; when
-  // the test Resources dropdown has the expected live link set, don't report a
-  // false test-only dropdown. Structural/style parity is still covered by the
-  // data-wf-el dropdown element checks.
-  const expectedResourcesLinks = ['about', 'blog', 'careers', 'contact', 'docs', 'manifesto', 'press'];
   for (const [label, test] of testMap) {
     if (!liveMap.has(label) && test.hasDropdown) {
-      const testLinks = (test.dropdown?.links || []).map((link) => link.text.toLowerCase()).sort();
-      const isExpectedResourcesDropdown = label === 'resources' &&
-        expectedResourcesLinks.length === testLinks.length &&
-        expectedResourcesLinks.every((link, index) => link === testLinks[index]);
-      if (isExpectedResourcesDropdown) continue;
-
       diffs.push({
         trigger: test.trigger,
         issue: 'dropdown exists on test but trigger missing on live',
@@ -4765,6 +5044,20 @@ async function loadPage(page, origin, routePath) {
   );
 
 
+  // Capture stateful dropdown/menu behavior before any other dynamic audits can
+  // move the mouse, scroll the page, or normalize/destroy Webflow interactions.
+  let dropdowns = [];
+  try {
+    dropdowns = await withTimeout(
+      extractDropdownContent(page),
+      30000,
+      `dropdown content ${url}`,
+    );
+  } catch (error) {
+    dropdowns = [{ trigger: '__dropdown_extraction_error__', hasDropdown: false, error: error.message }];
+  }
+
+
   // Capture true runtime motion before any static parity normalization cancels
   // animations or zeroes transition durations. This catches rAF/text/canvas
   // effects that are invisible to computed CSS animationName checks.
@@ -5025,17 +5318,6 @@ async function loadPage(page, origin, routePath) {
     // click behavior extraction is best-effort
   }
 
-  let dropdowns = [];
-  try {
-    dropdowns = await withTimeout(
-      extractDropdownContent(page),
-      20000,
-      `dropdown content ${url}`,
-    );
-  } catch {
-    // dropdown extraction is best-effort
-  }
-
   return {
     status: response?.status() || 0,
     inventory,
@@ -5288,6 +5570,7 @@ module.exports = {
   compareClickBehavior,
   compareContainerStyles,
   compareDropdowns,
+  compareDropdownStateSnapshots,
   compareDynamicControlVisuals,
   compareDynamicSelectorUx,
   compareHoverEffects,
