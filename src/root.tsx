@@ -32,23 +32,12 @@ export const links: Route.LinksFunction = () => [
     href: '/all-hands-logo-1.svg',
     type: 'image/svg+xml',
   },
-  // Preconnect to Google Fonts
-  { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
-  {
-    rel: 'preconnect',
-    href: 'https://fonts.gstatic.com',
-    crossOrigin: 'anonymous',
-  },
-  {
-    rel: 'stylesheet',
-    href: 'https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Poppins:wght@400;600;700;800&display=swap',
-  },
-  // Prefetch custom fonts
+  // Preload the primary local brand font used above the fold.
   {
     rel: 'preload',
-    href: '/assets/fonts/QuincyCF-Regular.woff',
+    href: '/assets/fonts/Sohne-Kraftig.woff2',
     as: 'font',
-    type: 'font/woff',
+    type: 'font/woff2',
     crossOrigin: 'anonymous',
   },
   // Preconnect to GitHub avatars
@@ -269,7 +258,6 @@ export default function App() {
         onClose={handleCloseGitHubModal} 
       />
       
-      <ScrollRestoration />
     </div>
   );
 }

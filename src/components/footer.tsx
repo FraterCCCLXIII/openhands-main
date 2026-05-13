@@ -394,6 +394,8 @@ export const Footer = ({
           data-wf-el='asci-media'
           src='/assets/webflow/backgrounds/6908d170831c19b2b6976323_ascii-art_(16)_1.svg'
           alt=''
+          loading='lazy'
+          decoding='async'
           className='h-full w-full object-cover'
           style={{ display: 'inline-block', textAlign: 'start' }}
         />

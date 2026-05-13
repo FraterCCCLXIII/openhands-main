@@ -11,6 +11,14 @@ interface ASCIIAnimationProps {
   className?: string;
 }
 
+type BandSample = {
+  u: number;
+  v: number;
+  bandIndex: number;
+  tLine: number;
+  tGap: number;
+};
+
 // Configuration matching openhands.dev
 const CFG = {
   angleDeg: 0,
@@ -153,6 +161,7 @@ export const ASCIIAnimation: React.FC<ASCIIAnimationProps> = ({ className = '' }
     cellW: 8,
     cellH: 14,
     eraseBuf: new Float32Array(1),
+    eraseActive: false,
     streaks: [] as any[],
   });
 
@@ -285,7 +294,7 @@ export const ASCIIAnimation: React.FC<ASCIIAnimationProps> = ({ className = '' }
     return false;
   }, [makeStreak]);
 
-  const sampleBands = useCallback((x: number, y: number, t: number, rowNorm: number) => {
+  const sampleBands = useCallback((x: number, y: number, t: number, rowNorm: number, out: BandSample) => {
     const state = stateRef.current;
     const s = state.sShort || 1;
     let u = x / s;
@@ -319,11 +328,15 @@ export const ASCIIAnimation: React.FC<ASCIIAnimationProps> = ({ className = '' }
     const tGap = clamp((gap - aL) / (bL - aL), 0, 1);
     const bandIndex = Math.floor(rx * CFG.frequency);
 
-    return { u: u + wx, v: v + wy, bandIndex, tLine, tGap };
+    out.u = u + wx;
+    out.v = v + wy;
+    out.bandIndex = bandIndex;
+    out.tLine = tLine;
+    out.tGap = tGap;
   }, []);
 
   const baseChar = useCallback(
-    (x: number, y: number, t: number, b: ReturnType<typeof sampleBands>) => {
+    (x: number, y: number, t: number, b: BandSample) => {
       const { u, v, bandIndex, tLine, tGap } = b;
 
       if (inGapCloud(u, v, t)) return ' ';
@@ -346,7 +359,7 @@ export const ASCIIAnimation: React.FC<ASCIIAnimationProps> = ({ className = '' }
   );
 
   const chooseChar = useCallback(
-    (x: number, y: number, t: number, b: ReturnType<typeof sampleBands>) => {
+    (x: number, y: number, t: number, b: BandSample) => {
       const state = stateRef.current;
       const idx = y * state.cols + x;
       if (state.eraseBuf[idx] > 0) return ' ';
@@ -370,22 +383,30 @@ export const ASCIIAnimation: React.FC<ASCIIAnimationProps> = ({ className = '' }
       state.lastT = t;
       state.lastFrame = now;
 
-      // Decay erase buffer
-      if (CFG.erase.enabled) {
+      // Decay erase buffer only after the user has interacted with it.
+      if (CFG.erase.enabled && state.eraseActive) {
         const decay = dt > 0 ? dt : 0.016;
+        let hasActiveErase = false;
         for (let i = 0; i < state.eraseBuf.length; i++) {
           const v = state.eraseBuf[i] - decay;
-          state.eraseBuf[i] = v > 0 ? v : 0;
+          if (v > 0) {
+            state.eraseBuf[i] = v;
+            hasActiveErase = true;
+          } else {
+            state.eraseBuf[i] = 0;
+          }
         }
+        state.eraseActive = hasActiveErase;
       }
 
       // Build output
       let out = '';
+      const band: BandSample = { u: 0, v: 0, bandIndex: 0, tLine: 0, tGap: 0 };
       for (let y = 0; y < state.rows; y++) {
         const rowNorm = state.rows <= 1 ? 0 : y / (state.rows - 1);
         for (let x = 0; x < state.cols; x++) {
-          const b = sampleBands(x, y, t, rowNorm);
-          out += chooseChar(x, y, t, b);
+          sampleBands(x, y, t, rowNorm, band);
+          out += chooseChar(x, y, t, band);
         }
         if (y < state.rows - 1) out += '\n';
       }
@@ -438,6 +459,7 @@ export const ASCIIAnimation: React.FC<ASCIIAnimationProps> = ({ className = '' }
         if (accept) {
           const idx = y * state.cols + x;
           state.eraseBuf[idx] = Math.max(state.eraseBuf[idx], dur * falloff);
+          state.eraseActive = true;
         }
       }
     }

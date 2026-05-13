@@ -690,7 +690,7 @@ const Home = () => {
                               pointerEvents: idx === activeSurfaceIndex ? 'auto' : 'none',
                             }}
                           >
-                            <img src={surface.image} alt='' data-wf-el='standard-media' style={{ display: 'inline-block', width: '943.969px', height: '654.297px', maxWidth: '100%', borderRadius: '0px', objectFit: 'fill', objectPosition: '50% 50%' }} />
+                            <img src={surface.image} alt='' data-wf-el='standard-media' width={1846} height={1280} loading='lazy' decoding='async' style={{ display: 'inline-block', width: '943.969px', height: '654.297px', maxWidth: '100%', borderRadius: '0px', objectFit: 'fill', objectPosition: '50% 50%' }} />
                           </div>
                         ))}
                       </div>
@@ -1011,7 +1011,13 @@ const Home = () => {
         <div data-wf-el='asci-wrap' className='absolute inset-0 overflow-hidden' style={{ backgroundColor: 'rgb(255, 255, 139)' }}>
           <img
             data-wf-el='asci-media'
-            src='/assets/webflow/backgrounds/690b397ae76441160bed52b6_asci-art-hole.png'
+            src='/assets/webflow/backgrounds/690b397ae76441160bed52b6_asci-art-hole-p-1080.png'
+            srcSet='/assets/webflow/backgrounds/690b397ae76441160bed52b6_asci-art-hole-p-800.png 800w, /assets/webflow/backgrounds/690b397ae76441160bed52b6_asci-art-hole-p-1080.png 1080w, /assets/webflow/backgrounds/690b397ae76441160bed52b6_asci-art-hole.png 1440w'
+            sizes='100vw'
+            width={1440}
+            height={800}
+            loading='lazy'
+            decoding='async'
             alt=''
             aria-hidden='true'
             className='h-full w-full object-cover'
@@ -1081,6 +1087,8 @@ const Home = () => {
           <img
             src='/assets/webflow/backgrounds/6908d170831c19b2b6976323_ascii-art_(16)_1.svg'
             alt=''
+            loading='lazy'
+            decoding='async'
             className='h-full w-full object-cover'
             style={{ textAlign: 'start' }}
           />
