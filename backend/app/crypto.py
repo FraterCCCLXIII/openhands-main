@@ -10,6 +10,7 @@ from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
 from .config import get_default_config
 
+
 IV_LENGTH = 12
 TAG_LENGTH = 16
 
@@ -42,8 +43,8 @@ def encrypt_credentials(credentials: dict[str, Any]) -> str:
 def decrypt_credentials(payload: str) -> dict[str, Any]:
     data = _b64url_decode(payload)
     iv = data[:IV_LENGTH]
-    tag = data[IV_LENGTH:IV_LENGTH + TAG_LENGTH]
-    ciphertext = data[IV_LENGTH + TAG_LENGTH:]
+    tag = data[IV_LENGTH : IV_LENGTH + TAG_LENGTH]
+    ciphertext = data[IV_LENGTH + TAG_LENGTH :]
     aes = AESGCM(_key())
     plaintext = aes.decrypt(iv, ciphertext + tag, None)
     decoded = json.loads(plaintext.decode("utf-8"))

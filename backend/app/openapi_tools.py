@@ -10,6 +10,7 @@ from fastapi import HTTPException
 
 from .models import ManagedConnectorTool
 
+
 OPENAPI_METHODS = ("get", "post", "put", "patch", "delete")
 
 
@@ -20,12 +21,16 @@ def normalize_tool_name(value: str) -> str:
 
 def resolve_openapi_ref(ref: str, document: dict[str, Any]) -> Any:
     if not ref.startswith("#/"):
-        raise HTTPException(status_code=500, detail=f"Unsupported OpenAPI reference '{ref}'.")
+        raise HTTPException(
+            status_code=500, detail=f"Unsupported OpenAPI reference '{ref}'."
+        )
     value: Any = document
     for segment in ref[2:].split("/"):
         segment = segment.replace("~1", "/").replace("~0", "~")
         if not isinstance(value, dict) or segment not in value:
-            raise HTTPException(status_code=500, detail=f"Could not resolve OpenAPI reference '{ref}'.")
+            raise HTTPException(
+                status_code=500, detail=f"Could not resolve OpenAPI reference '{ref}'."
+            )
         value = value[segment]
     return value
 
@@ -60,19 +65,35 @@ def openapi_body_description(request_body: dict[str, Any] | None) -> str:
     return "Provide the request payload under `body`."
 
 
-def build_openapi_description(operation: dict[str, Any], path_params: list[dict[str, Any]], query_params: list[dict[str, Any]], request_body: dict[str, Any] | None) -> str:
-    base = str(operation.get("summary") or operation.get("description") or "HTTP API operation").strip()
+def build_openapi_description(
+    operation: dict[str, Any],
+    path_params: list[dict[str, Any]],
+    query_params: list[dict[str, Any]],
+    request_body: dict[str, Any] | None,
+) -> str:
+    base = str(
+        operation.get("summary") or operation.get("description") or "HTTP API operation"
+    ).strip()
     hints: list[str] = []
     if path_params:
-        hints.append("Path params: " + ", ".join(param["name"] for param in path_params) + ".")
+        hints.append(
+            "Path params: " + ", ".join(param["name"] for param in path_params) + "."
+        )
     if query_params:
-        hints.append("Query params: " + ", ".join(param["name"] for param in query_params) + ".")
+        hints.append(
+            "Query params: " + ", ".join(param["name"] for param in query_params) + "."
+        )
     if request_body:
         hints.append(openapi_body_description(request_body))
     return f"{base} {' '.join(hints)}" if hints else base
 
 
-def build_openapi_request_template(method: str, path: str, parameters: list[dict[str, Any]], request_body: dict[str, Any] | None) -> dict[str, Any] | None:
+def build_openapi_request_template(
+    method: str,
+    path: str,
+    parameters: list[dict[str, Any]],
+    request_body: dict[str, Any] | None,
+) -> dict[str, Any] | None:
     content = request_body.get("content") if isinstance(request_body, dict) else None
     content_type = openapi_content_type(content) if isinstance(content, dict) else None
     if content is not None and content_type is None:
@@ -85,7 +106,11 @@ def build_openapi_request_template(method: str, path: str, parameters: list[dict
         and isinstance(param.get("schema"), dict)
         and len(param["schema"].get("enum", [])) == 1
     }
-    query = {param["name"]: "{{" + param["name"] + "}}" for param in parameters if param.get("in") == "query"}
+    query = {
+        param["name"]: "{{" + param["name"] + "}}"
+        for param in parameters
+        if param.get("in") == "query"
+    }
     return {
         "method": method.upper(),
         "path": re.sub(r"\{([^}]+)\}", r"{{\1}}", path),
@@ -96,61 +121,130 @@ def build_openapi_request_template(method: str, path: str, parameters: list[dict
     }
 
 
-def openapi_input_schema(parameters: list[dict[str, Any]], request_body: dict[str, Any] | None) -> dict[str, Any]:
+def openapi_input_schema(
+    parameters: list[dict[str, Any]], request_body: dict[str, Any] | None
+) -> dict[str, Any]:
     properties: dict[str, Any] = {}
     required: list[str] = []
     for param in parameters:
         name = param.get("name")
         if not isinstance(name, str) or param.get("in") not in {"path", "query"}:
             continue
-        properties[name] = param.get("schema") if isinstance(param.get("schema"), dict) else {"type": "string"}
+        properties[name] = (
+            param.get("schema")
+            if isinstance(param.get("schema"), dict)
+            else {"type": "string"}
+        )
         if param.get("required") or param.get("in") == "path":
             required.append(name)
     if request_body:
         properties["body"] = {"description": "Request body."}
         if request_body.get("required"):
             required.append("body")
-    return {"type": "object", "properties": properties, "required": required, "additionalProperties": True}
+    return {
+        "type": "object",
+        "properties": properties,
+        "required": required,
+        "additionalProperties": True,
+    }
 
 
-def generate_openapi_tools(open_api_url: str, auth_strategy: str) -> list[ManagedConnectorTool]:
+def generate_openapi_tools(
+    open_api_url: str, auth_strategy: str
+) -> list[ManagedConnectorTool]:
     try:
-        request = urllib.request.Request(open_api_url, headers={"Accept": "application/json"})
+        request = urllib.request.Request(
+            open_api_url, headers={"Accept": "application/json"}
+        )
         with urllib.request.urlopen(request, timeout=20) as response:
             document = json.loads(response.read().decode() or "{}")
     except urllib.error.HTTPError as exc:
-        raise HTTPException(status_code=502, detail=f"Failed to load OpenAPI schema from {open_api_url} ({exc.code}).") from exc
+        raise HTTPException(
+            status_code=502,
+            detail=f"Failed to load OpenAPI schema from {open_api_url} ({exc.code}).",
+        ) from exc
     except Exception as exc:
-        raise HTTPException(status_code=502, detail=f"Failed to load OpenAPI schema from {open_api_url}: {exc}") from exc
+        raise HTTPException(
+            status_code=502,
+            detail=f"Failed to load OpenAPI schema from {open_api_url}: {exc}",
+        ) from exc
     paths = document.get("paths") if isinstance(document, dict) else None
     if not isinstance(paths, dict):
-        raise HTTPException(status_code=500, detail=f"OpenAPI schema at {open_api_url} does not contain any paths.")
+        raise HTTPException(
+            status_code=500,
+            detail=f"OpenAPI schema at {open_api_url} does not contain any paths.",
+        )
     tools: list[ManagedConnectorTool] = []
     for path, path_item in paths.items():
         if not isinstance(path_item, dict):
             continue
-        path_parameters = [resolve_openapi_item(item, document) for item in path_item.get("parameters", []) if isinstance(item, dict)]
+        path_parameters = [
+            resolve_openapi_item(item, document)
+            for item in path_item.get("parameters", [])
+            if isinstance(item, dict)
+        ]
         for method in OPENAPI_METHODS:
             operation = path_item.get(method)
             if not isinstance(operation, dict):
                 continue
             security = operation.get("security", document.get("security", []))
-            if auth_strategy in {"oauth2", "bearer"} and security and not any("bearerAuth" in requirement for requirement in security if isinstance(requirement, dict)):
+            if (
+                auth_strategy in {"oauth2", "bearer"}
+                and security
+                and not any(
+                    "bearerAuth" in requirement
+                    for requirement in security
+                    if isinstance(requirement, dict)
+                )
+            ):
                 continue
-            parameters = [*path_parameters, *[resolve_openapi_item(item, document) for item in operation.get("parameters", []) if isinstance(item, dict)]]
-            request_body = resolve_openapi_item(operation.get("requestBody"), document) if operation.get("requestBody") else None
-            request_template = build_openapi_request_template(method, str(path), parameters, request_body if isinstance(request_body, dict) else None)
+            parameters = [
+                *path_parameters,
+                *[
+                    resolve_openapi_item(item, document)
+                    for item in operation.get("parameters", [])
+                    if isinstance(item, dict)
+                ],
+            ]
+            request_body = (
+                resolve_openapi_item(operation.get("requestBody"), document)
+                if operation.get("requestBody")
+                else None
+            )
+            request_template = build_openapi_request_template(
+                method,
+                str(path),
+                parameters,
+                request_body if isinstance(request_body, dict) else None,
+            )
             if not request_template:
                 continue
-            tool_name = normalize_tool_name(str(operation.get("operationId") or f"{method}_{path}"))
+            tool_name = normalize_tool_name(
+                str(operation.get("operationId") or f"{method}_{path}")
+            )
             path_params = [param for param in parameters if param.get("in") == "path"]
             query_params = [param for param in parameters if param.get("in") == "query"]
-            tools.append(ManagedConnectorTool(
-                name=tool_name,
-                description=build_openapi_description(operation, path_params, query_params, request_body if isinstance(request_body, dict) else None),
-                request=request_template,
-                config={"inputSchema": openapi_input_schema(parameters, request_body if isinstance(request_body, dict) else None)},
-            ))
+            tools.append(
+                ManagedConnectorTool(
+                    name=tool_name,
+                    description=build_openapi_description(
+                        operation,
+                        path_params,
+                        query_params,
+                        request_body if isinstance(request_body, dict) else None,
+                    ),
+                    request=request_template,
+                    config={
+                        "inputSchema": openapi_input_schema(
+                            parameters,
+                            request_body if isinstance(request_body, dict) else None,
+                        )
+                    },
+                )
+            )
     if not tools:
-        raise HTTPException(status_code=500, detail=f"OpenAPI schema at {open_api_url} did not produce any supported HTTP tools.")
+        raise HTTPException(
+            status_code=500,
+            detail=f"OpenAPI schema at {open_api_url} did not produce any supported HTTP tools.",
+        )
     return tools

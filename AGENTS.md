@@ -76,6 +76,20 @@ The repository supports deployment to both Vercel and self-hosted K8s environmen
 
 - Lint: `npm run lint`
 
+### Python lint checks (backend)
+
+- Python lint and formatting: `npm run lint:python` (runs ruff format check, ruff lint, and pycodestyle)
+- Auto-fix Python formatting/lint: `npm run lint:python:fix` (runs ruff format and ruff check --fix)
+- Python type checking: `npm run typecheck:python` (runs pyright with basic mode)
+- Run Python tests: `npm run test:backend:python`
+
+The backend Python checks are configured in `backend/pyproject.toml`:
+- **Ruff**: formatting (double quotes, 4-space indent) and linting (pycodestyle errors, pyflakes, isort, pyupgrade, unused arguments, mutable defaults)
+- **Pycodestyle**: additional PEP8 style checks with `--max-line-length=88 --ignore=E203,E501,W503,E704`
+- **Pyright**: type checking in basic mode with gradual adoption (type errors are reported as warnings during initial rollout)
+
+The `.openhands/pre-commit.sh` script runs these Python checks alongside the TypeScript/frontend checks.
+
 ## Local DB-backed validation
 
 - All automated tests use PGlite via `src/lib/db/pglite-test-utils.ts`; the standard pattern is `vi.mock("@neondatabase/serverless", () => ({ neon: () => getActiveSql() }))`, `createTestRepository()` in `beforeEach`, and `cleanup()` in `afterEach`.

@@ -29,4 +29,67 @@ pythonpath = ["..", "."]
 [dependency-groups]
 dev = [
     "pytest>=8.4.2",
+    "pyright>=1.1.405",
+    "ruff>=0.12.0",
+    "pycodestyle>=2.12.0",
 ]
+
+# Ruff configuration
+[tool.ruff]
+target-version = "py312"
+line-length = 88
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle errors
+    "F",    # pyflakes (includes F841: unused-variable)
+    "I",    # isort
+    "UP",   # pyupgrade
+    "ARG",  # flake8-unused-arguments
+]
+# Enforce rules that catch mutable defaults and related pitfalls
+extend-select = ["B006", "B008", "B039", "RUF012"]
+# E501 is handled by pycodestyle with specific ignores
+ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+# Test files often have unused arguments (fixtures, mocks, interface implementations)
+"tests/**/*.py" = ["ARG"]
+# api/index.py re-exports app for Vercel with a fallback import path
+# Both imports are needed: one for monorepo layout, one for Vercel project root at backend/
+"api/index.py" = ["F401"]
+
+# Allowlist safe default calls for flake8-bugbear rules (e.g., FastAPI Depends)
+[tool.ruff.lint.flake8-bugbear]
+extend-immutable-calls = [
+    "fastapi.Depends",
+    "fastapi.params.Depends",
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app", "backend"]
+combine-as-imports = true
+force-single-line = false
+lines-after-imports = 2
+
+# Pyright configuration
+[tool.pyright]
+include = ["app", "api", "tests", "alembic"]
+pythonVersion = "3.12"
+typeCheckingMode = "basic"
+# Parent directory is needed for "backend.app" imports in tests
+extraPaths = [".."]
+# Gradual adoption: start with basic mode and fewer strict rules
+reportMissingImports = "warning"
+reportOptionalMemberAccess = "warning"
+reportOptionalSubscript = "warning"
+reportOptionalIterable = "warning"
+reportArgumentType = "warning"
+reportReturnType = "warning"
+# Test files can have loose typing for mocks
+reportOperatorIssue = "warning"
+reportIndexIssue = "warning"

@@ -1,10 +1,11 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any, Literal
 from uuid import uuid4
 
 from pydantic import BaseModel, Field
+
 
 AuthStrategy = Literal["none", "api_key", "bearer", "basic", "oauth2", "mcp_session"]
 IntegrationKind = Literal["api", "mcp"]
@@ -14,7 +15,7 @@ AccessRequestStatus = Literal["pending", "approved", "rejected", "expired"]
 
 
 def now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    return datetime.now(UTC).isoformat().replace("+00:00", "Z")
 
 
 class ToolSpec(BaseModel):
@@ -45,7 +46,7 @@ class IntegrationSpec(BaseModel):
     credentials: dict[str, Any] = Field(default_factory=dict)
     tools: dict[str, ToolSpec] = Field(default_factory=dict)
 
-    def redacted(self) -> "IntegrationSpec":
+    def redacted(self) -> IntegrationSpec:
         return self.model_copy(update={"credentials": {}})
 
 
@@ -131,5 +132,7 @@ class ManagedConnector(BaseModel):
     def response(self) -> dict[str, Any]:
         data = self.model_dump(exclude={"oauthClientId", "oauthClientSecret"})
         data["oauthConfigured"] = self.oauthConfigured
-        data["oauthClientStatus"] = "decryptable" if self.oauthConfigured else "not_applicable"
+        data["oauthClientStatus"] = (
+            "decryptable" if self.oauthConfigured else "not_applicable"
+        )
         return data

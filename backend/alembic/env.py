@@ -3,13 +3,16 @@
 This module configures Alembic to run migrations using SQLAlchemy's
 connection management with psycopg as the underlying driver.
 """
+
 from __future__ import annotations
 
 import os
 from logging.config import fileConfig
 
-from alembic import context
 from sqlalchemy import create_engine, pool
+
+from alembic import context
+
 
 # Alembic Config object for access to .ini file values
 config = context.config

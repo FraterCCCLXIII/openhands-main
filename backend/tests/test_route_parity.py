@@ -5,6 +5,7 @@ from fastapi.routing import APIRoute
 from backend.app.main import app
 from backend.app.route_manifest import ROUTES
 
+
 IGNORED_METHODS = {"HEAD", "OPTIONS"}
 
 

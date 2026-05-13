@@ -25,6 +25,9 @@
     "test:mutation:all": "node ./scripts/run-mutation.mjs --all --soft-fail",
     "typecheck": "tsc --noEmit",
     "lint": "eslint . && node scripts/check-client-boundaries.mjs",
+    "lint:python": "cd backend && uv run ruff format --check . && uv run ruff check . && uv run pycodestyle --max-line-length=88 --ignore=E203,E501,W503,E704 app api tests",
+    "lint:python:fix": "cd backend && uv run ruff format . && uv run ruff check --fix .",
+    "typecheck:python": "cd backend && uv run pyright",
     "audit": "npm audit --audit-level=moderate",
     "test:backend:python": "cd backend && uv run pytest tests -q"
   },

@@ -10,7 +10,12 @@ from psycopg.rows import dict_row
 from psycopg.types.json import Jsonb
 
 from .config import get_default_config
-from .crypto import decrypt_api_key, decrypt_credentials, encrypt_api_key, encrypt_credentials
+from .crypto import (
+    decrypt_api_key,
+    decrypt_credentials,
+    encrypt_api_key,
+    encrypt_credentials,
+)
 from .models import AccessRequest, IntegrationSpec, ManagedConnector, ToolSpec, now_iso
 
 
@@ -44,7 +49,6 @@ class Repository:
                 cur.execute(query, params)
             conn.commit()
 
-
     @staticmethod
     def iso(value: Any) -> str | None:
         if value is None:
@@ -54,7 +58,9 @@ class Repository:
         return str(value)
 
     @staticmethod
-    def key_status(value: str | None, created_at: Any = None, updated_at: Any = None) -> dict[str, Any] | None:
+    def key_status(
+        value: str | None, created_at: Any = None, updated_at: Any = None
+    ) -> dict[str, Any] | None:
         if not value:
             return None
         return {
@@ -66,7 +72,9 @@ class Repository:
         }
 
     @staticmethod
-    def stored_key_status(key_prefix: Any, key_suffix: Any, created_at: Any = None, updated_at: Any = None) -> dict[str, Any] | None:
+    def stored_key_status(
+        key_prefix: Any, key_suffix: Any, created_at: Any = None, updated_at: Any = None
+    ) -> dict[str, Any] | None:
         prefix = str(key_prefix or "")
         suffix = str(key_suffix or "")
         if not prefix and not suffix:
@@ -86,7 +94,6 @@ class Repository:
         except Exception:
             return None
 
-
     @staticmethod
     def hash_key(value: str) -> str:
         return hashlib.sha256(value.encode("utf-8")).hexdigest()
@@ -103,21 +110,29 @@ class Repository:
 
     @classmethod
     def access_request_owner_id(cls, request: AccessRequest) -> str | None:
-        notification_owner = cls.normalize_owner_id(request.notificationTargets.get("in_app"))
+        notification_owner = cls.normalize_owner_id(
+            request.notificationTargets.get("in_app")
+        )
         return notification_owner or None
 
     @classmethod
-    def access_request_matches_owner(cls, request: AccessRequest, owner_id: str) -> bool:
+    def access_request_matches_owner(
+        cls, request: AccessRequest, owner_id: str
+    ) -> bool:
         return cls.access_request_owner_id(request) == cls.normalize_owner_id(owner_id)
 
     @classmethod
-    def owner_scoped_access_request(cls, owner_id: str, request: AccessRequest) -> AccessRequest:
+    def owner_scoped_access_request(
+        cls, owner_id: str, request: AccessRequest
+    ) -> AccessRequest:
         notification_targets = dict(request.notificationTargets)
         notification_targets.setdefault("in_app", cls.normalize_owner_id(owner_id))
         channels = list(request.channels)
         if "in_app" not in channels:
             channels.append("in_app")
-        return request.model_copy(update={"channels": channels, "notificationTargets": notification_targets})
+        return request.model_copy(
+            update={"channels": channels, "notificationTargets": notification_targets}
+        )
 
     access_requests: dict[str, dict[str, AccessRequest]] = field(default_factory=dict)
     managed_connectors: dict[str, ManagedConnector] = field(default_factory=dict)
@@ -155,9 +170,14 @@ class Repository:
                 (owner_id,),
             )
             return [self.row_to_integration(row).redacted() for row in rows]
-        return [integration.redacted() for integration in self.integrations.get(owner_id, {}).values()]
+        return [
+            integration.redacted()
+            for integration in self.integrations.get(owner_id, {}).values()
+        ]
 
-    def save_integration(self, owner_id: str, integration: IntegrationSpec) -> IntegrationSpec:
+    def save_integration(
+        self, owner_id: str, integration: IntegrationSpec
+    ) -> IntegrationSpec:
         if self.database_url:
             self.execute_db(
                 """
@@ -188,14 +208,21 @@ class Repository:
                     integration.fineGrainedPermissions,
                     Jsonb(integration.config),
                     Jsonb(integration.credentials),
-                    Jsonb({name: tool.model_dump() for name, tool in integration.tools.items()}),
+                    Jsonb(
+                        {
+                            name: tool.model_dump()
+                            for name, tool in integration.tools.items()
+                        }
+                    ),
                 ),
             )
             return integration.redacted()
         self.integrations.setdefault(owner_id, {})[integration.key] = integration
         return integration.redacted()
 
-    def get_integration(self, owner_id: str, integration_key: str) -> IntegrationSpec | None:
+    def get_integration(
+        self, owner_id: str, integration_key: str
+    ) -> IntegrationSpec | None:
         if self.database_url:
             rows = self.db_rows(
                 """
@@ -222,9 +249,13 @@ class Repository:
                 (owner_id, integration_key, owner_id, integration_key),
             )
             return bool(rows)
-        return self.integrations.get(owner_id, {}).pop(integration_key, None) is not None
+        return (
+            self.integrations.get(owner_id, {}).pop(integration_key, None) is not None
+        )
 
-    def save_tool(self, owner_id: str, integration_key: str, tool: ToolSpec) -> ToolSpec | None:
+    def save_tool(
+        self, owner_id: str, integration_key: str, tool: ToolSpec
+    ) -> ToolSpec | None:
         integration = self.get_integration(owner_id, integration_key)
         if not integration:
             return None
@@ -232,7 +263,9 @@ class Repository:
         self.save_integration(owner_id, integration)
         return tool
 
-    def update_tool(self, owner_id: str, integration_key: str, tool_name: str, patch: dict[str, Any]) -> ToolSpec | None:
+    def update_tool(
+        self, owner_id: str, integration_key: str, tool_name: str, patch: dict[str, Any]
+    ) -> ToolSpec | None:
         integration = self.get_integration(owner_id, integration_key)
         if not integration or tool_name not in integration.tools:
             return None
@@ -241,7 +274,9 @@ class Repository:
             priority = {"disabled": 0, "approval_required": 1, "enabled": 2}
             requested = patch["accessMode"]
             if priority.get(requested, 0) > priority.get(current.maxAccessMode, 0):
-                raise ValueError(f"Tool '{tool_name}' cannot exceed the organization-managed '{current.maxAccessMode}' access level.")
+                raise ValueError(
+                    f"Tool '{tool_name}' cannot exceed the organization-managed '{current.maxAccessMode}' access level."
+                )
         next_tool = current.model_copy(update=patch)
         if "accessMode" in patch:
             next_tool.enabled = patch["accessMode"] != "disabled"
@@ -280,11 +315,21 @@ class Repository:
                     (owner_id,),
                 )
                 return [self.row_to_access_request(row) for row in rows]
-            rows = self.db_rows("SELECT * FROM access_requests ORDER BY created_at DESC")
+            rows = self.db_rows(
+                "SELECT * FROM access_requests ORDER BY created_at DESC"
+            )
             return [self.row_to_access_request(row) for row in rows]
-        requests = [request for requests in self.access_requests.values() for request in requests.values()]
+        requests = [
+            request
+            for requests in self.access_requests.values()
+            for request in requests.values()
+        ]
         if owner_id:
-            return [request for request in requests if self.access_request_matches_owner(request, owner_id)]
+            return [
+                request
+                for request in requests
+                if self.access_request_matches_owner(request, owner_id)
+            ]
         return requests
 
     def find_matching_pending_access_request(
@@ -315,14 +360,24 @@ class Repository:
                 if self.same_scopes(request.scopes, scopes):
                     return request
             return None
-        for request in self.access_requests.get(self.normalize_owner_id(owner_id), {}).values():
+        for request in self.access_requests.get(
+            self.normalize_owner_id(owner_id), {}
+        ).values():
             if request.status != "pending":
                 continue
-            if request.agentId == agent_id and request.agentClass == agent_class and request.integrationKey == integration_key and request.toolName == tool_name and self.same_scopes(request.scopes, scopes):
+            if (
+                request.agentId == agent_id
+                and request.agentClass == agent_class
+                and request.integrationKey == integration_key
+                and request.toolName == tool_name
+                and self.same_scopes(request.scopes, scopes)
+            ):
                 return request
         return None
 
-    def save_access_request(self, owner_id: str, request: AccessRequest) -> AccessRequest:
+    def save_access_request(
+        self, owner_id: str, request: AccessRequest
+    ) -> AccessRequest:
         request = self.owner_scoped_access_request(owner_id, request)
         if self.database_url:
             data = dict(request.agentData)
@@ -349,9 +404,21 @@ class Repository:
                     decided_by = EXCLUDED.decided_by
                 """,
                 (
-                    request.id, request.agentId, request.agentClass, request.integrationKey, request.toolName,
-                    Jsonb(request.scopes), request.requestedMinutes, Jsonb(request.channels), Jsonb(request.notificationTargets),
-                    request.justification, Jsonb(data), request.createdAt, request.status, request.decidedAt, request.decidedBy,
+                    request.id,
+                    request.agentId,
+                    request.agentClass,
+                    request.integrationKey,
+                    request.toolName,
+                    Jsonb(request.scopes),
+                    request.requestedMinutes,
+                    Jsonb(request.channels),
+                    Jsonb(request.notificationTargets),
+                    request.justification,
+                    Jsonb(data),
+                    request.createdAt,
+                    request.status,
+                    request.decidedAt,
+                    request.decidedBy,
                 ),
             )
             request.agentData = data
@@ -359,7 +426,9 @@ class Repository:
         self.access_requests.setdefault(owner_id, {})[request.id] = request
         return request
 
-    def decide_access_request(self, owner_id: str | None, request_id: str, status: str, reviewer: str) -> AccessRequest | None:
+    def decide_access_request(
+        self, owner_id: str | None, request_id: str, status: str, reviewer: str
+    ) -> AccessRequest | None:
         if self.database_url:
             decided_at = now_iso()
             rows = self.db_rows(
@@ -376,7 +445,11 @@ class Repository:
                 (status, decided_at, reviewer, request_id, owner_id, owner_id),
             )
             return self.row_to_access_request(rows[0]) if rows else None
-        for request in [request for requests in self.access_requests.values() for request in requests.values()]:
+        for request in [
+            request
+            for requests in self.access_requests.values()
+            for request in requests.values()
+        ]:
             if request.id != request_id:
                 continue
             if owner_id and not self.access_request_matches_owner(request, owner_id):
@@ -409,8 +482,12 @@ class Repository:
             oauthConfig=row.get("oauth_config"),
             tools=row.get("functions") or [],
             enabled=bool(row["enabled"]),
-            createdAt=row["created_at"].isoformat() if hasattr(row.get("created_at"), "isoformat") else str(row.get("created_at")),
-            updatedAt=row["updated_at"].isoformat() if hasattr(row.get("updated_at"), "isoformat") else str(row.get("updated_at")),
+            createdAt=row["created_at"].isoformat()
+            if hasattr(row.get("created_at"), "isoformat")
+            else str(row.get("created_at")),
+            updatedAt=row["updated_at"].isoformat()
+            if hasattr(row.get("updated_at"), "isoformat")
+            else str(row.get("updated_at")),
         )
 
     def list_managed_connectors(self) -> list[ManagedConnector]:
@@ -459,11 +536,37 @@ class Repository:
                     updated_at = NOW()
                 """,
                 (
-                    connector.slug, connector.name, connector.description, connector.logoUrl, connector.appUrl, connector.docsUrl,
-                    Jsonb(connector.categories), Jsonb(connector.authModes), connector.authStrategy, connector.provider,
-                    connector.credentialLabel, connector.credentialPlaceholder, connector.credentialHelp, connector.apiBaseUrl or "",
-                    connector.serverUrl, connector.openApiUrl, Jsonb(connector.oauthConfig) if connector.oauthConfig else None,
-                    encrypt_credentials({"clientId": connector.oauthClientId, **({"clientSecret": connector.oauthClientSecret} if connector.oauthClientSecret else {})}) if connector.oauthClientId else ("configured" if connector.oauthConfigured else None), Jsonb([tool.model_dump() for tool in connector.tools]), connector.enabled,
+                    connector.slug,
+                    connector.name,
+                    connector.description,
+                    connector.logoUrl,
+                    connector.appUrl,
+                    connector.docsUrl,
+                    Jsonb(connector.categories),
+                    Jsonb(connector.authModes),
+                    connector.authStrategy,
+                    connector.provider,
+                    connector.credentialLabel,
+                    connector.credentialPlaceholder,
+                    connector.credentialHelp,
+                    connector.apiBaseUrl or "",
+                    connector.serverUrl,
+                    connector.openApiUrl,
+                    Jsonb(connector.oauthConfig) if connector.oauthConfig else None,
+                    encrypt_credentials(
+                        {
+                            "clientId": connector.oauthClientId,
+                            **(
+                                {"clientSecret": connector.oauthClientSecret}
+                                if connector.oauthClientSecret
+                                else {}
+                            ),
+                        }
+                    )
+                    if connector.oauthClientId
+                    else ("configured" if connector.oauthConfigured else None),
+                    Jsonb([tool.model_dump() for tool in connector.tools]),
+                    connector.enabled,
                 ),
             )
             return connector
@@ -472,18 +575,23 @@ class Repository:
 
     def delete_managed_connector(self, slug: str) -> bool:
         if self.database_url:
-            rows = self.db_rows("DELETE FROM managed_connectors WHERE slug = %s RETURNING slug", (slug,))
+            rows = self.db_rows(
+                "DELETE FROM managed_connectors WHERE slug = %s RETURNING slug", (slug,)
+            )
             return bool(rows)
         return self.managed_connectors.pop(slug, None) is not None
 
-
     def get_managed_connector(self, slug: str) -> ManagedConnector | None:
         if self.database_url:
-            rows = self.db_rows("SELECT * FROM managed_connectors WHERE slug = %s", (slug,))
+            rows = self.db_rows(
+                "SELECT * FROM managed_connectors WHERE slug = %s", (slug,)
+            )
             return self.row_to_managed_connector(rows[0]) if rows else None
         return self.managed_connectors.get(slug)
 
-    def list_connections(self, owner_id: str | None = None, filters: dict[str, Any] | None = None) -> list[dict[str, Any]]:
+    def list_connections(
+        self, owner_id: str | None = None, filters: dict[str, Any] | None = None
+    ) -> list[dict[str, Any]]:
         if self.database_url:
             filters = filters or {}
             owner_filter = owner_id or filters.get("ownerId")
@@ -500,34 +608,58 @@ class Repository:
                 ORDER BY provider ASC, external_account_id ASC NULLS LAST, owner_id ASC, integration_key ASC
                 LIMIT %s OFFSET %s
                 """,
-                (owner_filter, owner_filter, provider, provider, integration_key, integration_key, limit, offset),
+                (
+                    owner_filter,
+                    owner_filter,
+                    provider,
+                    provider,
+                    integration_key,
+                    integration_key,
+                    limit,
+                    offset,
+                ),
             )
         else:
             rows = []
             for (saved_owner, _), record in self.connections.items():
                 if owner_id and saved_owner.lower() != owner_id.lower():
                     continue
-                if filters and filters.get("ownerId") and saved_owner.lower() != str(filters.get("ownerId")).lower():
+                if (
+                    filters
+                    and filters.get("ownerId")
+                    and saved_owner.lower() != str(filters.get("ownerId")).lower()
+                ):
                     continue
-                if filters and filters.get("provider") and str(record.get("provider", "")).lower() != str(filters.get("provider")).lower():
+                if (
+                    filters
+                    and filters.get("provider")
+                    and str(record.get("provider", "")).lower()
+                    != str(filters.get("provider")).lower()
+                ):
                     continue
-                if filters and filters.get("integrationKey") and record.get("integrationKey") != filters.get("integrationKey"):
+                if (
+                    filters
+                    and filters.get("integrationKey")
+                    and record.get("integrationKey") != filters.get("integrationKey")
+                ):
                     continue
-                rows.append({
-                    "owner_id": saved_owner,
-                    "integration_key": record.get("integrationKey"),
-                    "provider": record.get("provider"),
-                    "auth_strategy": record.get("authStrategy"),
-                    "token_type": record.get("tokenType"),
-                    "scopes": record.get("scopes") or [],
-                    "expires_at": record.get("expiresAt"),
-                    "external_account_id": record.get("externalAccountId"),
-                    "external_workspace_id": record.get("externalWorkspaceId"),
-                    "display_name": record.get("displayName"),
-                    "metadata": record.get("metadata") or {},
-                    "created_at": record.get("createdAt"),
-                    "updated_at": record.get("updatedAt"),
-                })
+                rows.append(
+                    {
+                        "owner_id": saved_owner,
+                        "integration_key": record.get("integrationKey"),
+                        "provider": record.get("provider"),
+                        "auth_strategy": record.get("authStrategy"),
+                        "token_type": record.get("tokenType"),
+                        "scopes": record.get("scopes") or [],
+                        "expires_at": record.get("expiresAt"),
+                        "external_account_id": record.get("externalAccountId"),
+                        "external_workspace_id": record.get("externalWorkspaceId"),
+                        "display_name": record.get("displayName"),
+                        "metadata": record.get("metadata") or {},
+                        "created_at": record.get("createdAt"),
+                        "updated_at": record.get("updatedAt"),
+                    }
+                )
         query = (filters or {}).get("q") or ""
         result = []
         for row in rows:
@@ -546,7 +678,11 @@ class Repository:
                 "createdAt": self.iso(row.get("created_at")) or now_iso(),
                 "updatedAt": self.iso(row.get("updated_at")) or now_iso(),
             }
-            if query and query.lower() not in " ".join(str(v or "") for v in item.values()).lower():
+            if (
+                query
+                and query.lower()
+                not in " ".join(str(v or "") for v in item.values()).lower()
+            ):
                 continue
             if owner_id:
                 item.pop("ownerId", None)
@@ -558,10 +694,19 @@ class Repository:
     def list_notifications(self) -> list[dict[str, Any]]:
         if self.database_url:
             rows = self.db_rows("SELECT * FROM notifications ORDER BY created_at DESC")
-            return [{"id": str(row["id"]), "channel": row["channel"], "recipient": row["recipient"], "subject": row["subject"], "body": row["body"], "metadata": row.get("metadata") or {}, "createdAt": self.iso(row.get("created_at")) or now_iso()} for row in rows]
+            return [
+                {
+                    "id": str(row["id"]),
+                    "channel": row["channel"],
+                    "recipient": row["recipient"],
+                    "subject": row["subject"],
+                    "body": row["body"],
+                    "metadata": row.get("metadata") or {},
+                    "createdAt": self.iso(row.get("created_at")) or now_iso(),
+                }
+                for row in rows
+            ]
         return []
-
-
 
     def read_oauth_client(self, connector: ManagedConnector) -> dict[str, str] | None:
         if connector.oauthClientId:
@@ -571,7 +716,10 @@ class Repository:
             return result
         if not self.database_url:
             return None
-        rows = self.db_rows("SELECT encrypted_oauth_client FROM managed_connectors WHERE slug = %s", (connector.slug,))
+        rows = self.db_rows(
+            "SELECT encrypted_oauth_client FROM managed_connectors WHERE slug = %s",
+            (connector.slug,),
+        )
         encrypted = rows[0].get("encrypted_oauth_client") if rows else None
         if not encrypted or encrypted == "configured":
             return None
@@ -585,67 +733,170 @@ class Repository:
             result["clientSecret"] = client_secret
         return result
 
-    def save_oauth_state(self, state: str, owner_id: str, integration_key: str, provider: str, code_verifier: str | None, redirect_to: str, redirect_uri: str, callback_url: str | None, expires_at: str) -> None:
+    def save_oauth_state(
+        self,
+        state: str,
+        owner_id: str,
+        integration_key: str,
+        provider: str,
+        code_verifier: str | None,
+        redirect_to: str,
+        redirect_uri: str,
+        callback_url: str | None,
+        expires_at: str,
+    ) -> None:
         if self.database_url:
             self.execute_db(
                 """INSERT INTO oauth_states (state, owner_id, integration_key, provider, code_verifier, redirect_to, redirect_uri, callback_url, created_at, expires_at)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, NOW(), %s)
                 ON CONFLICT (state) DO UPDATE SET owner_id = EXCLUDED.owner_id, integration_key = EXCLUDED.integration_key, provider = EXCLUDED.provider, code_verifier = EXCLUDED.code_verifier, redirect_to = EXCLUDED.redirect_to, redirect_uri = EXCLUDED.redirect_uri, callback_url = EXCLUDED.callback_url, expires_at = EXCLUDED.expires_at""",
-                (state, owner_id, integration_key, provider, code_verifier, redirect_to, redirect_uri, callback_url, expires_at),
+                (
+                    state,
+                    owner_id,
+                    integration_key,
+                    provider,
+                    code_verifier,
+                    redirect_to,
+                    redirect_uri,
+                    callback_url,
+                    expires_at,
+                ),
             )
         else:
-            self.oauth_states[state] = {"state": state, "owner_id": owner_id, "integration_key": integration_key, "provider": provider, "code_verifier": code_verifier, "redirect_to": redirect_to, "redirect_uri": redirect_uri, "callback_url": callback_url, "expires_at": expires_at}
+            self.oauth_states[state] = {
+                "state": state,
+                "owner_id": owner_id,
+                "integration_key": integration_key,
+                "provider": provider,
+                "code_verifier": code_verifier,
+                "redirect_to": redirect_to,
+                "redirect_uri": redirect_uri,
+                "callback_url": callback_url,
+                "expires_at": expires_at,
+            }
 
     def consume_oauth_state(self, state: str, provider: str) -> dict[str, Any] | None:
         if self.database_url:
-            rows = self.db_rows("DELETE FROM oauth_states WHERE state = %s AND provider = %s AND expires_at > NOW() RETURNING *", (state, provider))
+            rows = self.db_rows(
+                "DELETE FROM oauth_states WHERE state = %s AND provider = %s AND expires_at > NOW() RETURNING *",
+                (state, provider),
+            )
             return rows[0] if rows else None
         row = self.oauth_states.pop(state, None)
         return row if row and row.get("provider") == provider else None
 
-
-    def record_tool_invocation(self, owner_id: str, integration: IntegrationSpec, tool: ToolSpec, scopes: list[str], payload: dict[str, Any], outcome: str, error_message: str | None = None, agent_id: str | None = None, agent_class: str | None = None) -> None:
+    def record_tool_invocation(
+        self,
+        owner_id: str,
+        integration: IntegrationSpec,
+        tool: ToolSpec,
+        scopes: list[str],
+        payload: dict[str, Any],
+        outcome: str,
+        error_message: str | None = None,
+        agent_id: str | None = None,
+        agent_class: str | None = None,
+    ) -> None:
         invoked_at = now_iso()
         if not self.database_url:
-            self.tool_invocations.append({
-                "id": token_urlsafe(18),
-                "ownerId": owner_id,
-                "agentId": agent_id,
-                "agentClass": agent_class,
-                "integrationKey": integration.key,
-                "toolName": tool.name,
-                "scopes": scopes,
-                "provider": integration.provider,
-                "kind": integration.kind,
-                "authStrategy": integration.authStrategy,
-                "outcome": outcome,
-                "invokedAt": invoked_at,
-                "payloadKeys": list(payload.keys()),
-                "errorMessage": error_message,
-            })
+            self.tool_invocations.append(
+                {
+                    "id": token_urlsafe(18),
+                    "ownerId": owner_id,
+                    "agentId": agent_id,
+                    "agentClass": agent_class,
+                    "integrationKey": integration.key,
+                    "toolName": tool.name,
+                    "scopes": scopes,
+                    "provider": integration.provider,
+                    "kind": integration.kind,
+                    "authStrategy": integration.authStrategy,
+                    "outcome": outcome,
+                    "invokedAt": invoked_at,
+                    "payloadKeys": list(payload.keys()),
+                    "errorMessage": error_message,
+                }
+            )
             return
         self.execute_db(
             """INSERT INTO tool_invocations (id, owner_id, agent_id, agent_class, integration_key, function_name, scopes, provider, kind, auth_strategy, outcome, invoked_at, duration_ms, payload_keys, error_message)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), %s, %s, %s)""",
-            (token_urlsafe(18), owner_id, agent_id, agent_class, integration.key, tool.name, Jsonb(scopes), integration.provider, integration.kind, integration.authStrategy, outcome, None, Jsonb(list(payload.keys())), error_message),
+            (
+                token_urlsafe(18),
+                owner_id,
+                agent_id,
+                agent_class,
+                integration.key,
+                tool.name,
+                Jsonb(scopes),
+                integration.provider,
+                integration.kind,
+                integration.authStrategy,
+                outcome,
+                None,
+                Jsonb(list(payload.keys())),
+                error_message,
+            ),
         )
 
-    def save_connection(self, owner_id: str, integration_key: str, provider: str, auth_strategy: str, credentials: dict[str, Any], metadata: dict[str, Any]) -> dict[str, Any]:
+    def save_connection(
+        self,
+        owner_id: str,
+        integration_key: str,
+        provider: str,
+        auth_strategy: str,
+        credentials: dict[str, Any],
+        metadata: dict[str, Any],
+    ) -> dict[str, Any]:
         encrypted = encrypt_credentials(credentials)
         if self.database_url:
             self.execute_db(
                 """INSERT INTO integration_connections (owner_id, integration_key, provider, auth_strategy, encrypted_credentials, token_type, scopes, expires_at, external_account_id, external_workspace_id, display_name, metadata, created_at, updated_at)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW())
                 ON CONFLICT (owner_id, integration_key) DO UPDATE SET provider = EXCLUDED.provider, auth_strategy = EXCLUDED.auth_strategy, encrypted_credentials = EXCLUDED.encrypted_credentials, token_type = EXCLUDED.token_type, scopes = EXCLUDED.scopes, expires_at = EXCLUDED.expires_at, external_account_id = EXCLUDED.external_account_id, external_workspace_id = EXCLUDED.external_workspace_id, display_name = EXCLUDED.display_name, metadata = EXCLUDED.metadata, updated_at = NOW()""",
-                (owner_id, integration_key, provider, auth_strategy, encrypted, metadata.get("tokenType"), Jsonb(metadata.get("scopes") or []), metadata.get("expiresAt"), metadata.get("externalAccountId"), metadata.get("externalWorkspaceId"), metadata.get("displayName"), Jsonb(metadata.get("metadata") or {})),
+                (
+                    owner_id,
+                    integration_key,
+                    provider,
+                    auth_strategy,
+                    encrypted,
+                    metadata.get("tokenType"),
+                    Jsonb(metadata.get("scopes") or []),
+                    metadata.get("expiresAt"),
+                    metadata.get("externalAccountId"),
+                    metadata.get("externalWorkspaceId"),
+                    metadata.get("displayName"),
+                    Jsonb(metadata.get("metadata") or {}),
+                ),
             )
-        record = {"integrationKey": integration_key, "provider": provider, "authStrategy": auth_strategy, "tokenType": metadata.get("tokenType"), "scopes": metadata.get("scopes") or [], "expiresAt": metadata.get("expiresAt"), "externalAccountId": metadata.get("externalAccountId"), "externalWorkspaceId": metadata.get("externalWorkspaceId"), "displayName": metadata.get("displayName"), "metadata": metadata.get("metadata") or {}, "createdAt": now_iso(), "updatedAt": now_iso()}
-        self.connections[(owner_id, integration_key)] = {**record, "credentials": credentials}
+        record = {
+            "integrationKey": integration_key,
+            "provider": provider,
+            "authStrategy": auth_strategy,
+            "tokenType": metadata.get("tokenType"),
+            "scopes": metadata.get("scopes") or [],
+            "expiresAt": metadata.get("expiresAt"),
+            "externalAccountId": metadata.get("externalAccountId"),
+            "externalWorkspaceId": metadata.get("externalWorkspaceId"),
+            "displayName": metadata.get("displayName"),
+            "metadata": metadata.get("metadata") or {},
+            "createdAt": now_iso(),
+            "updatedAt": now_iso(),
+        }
+        self.connections[(owner_id, integration_key)] = {
+            **record,
+            "credentials": credentials,
+        }
         return record
 
-    def get_connection(self, owner_id: str, integration_key: str) -> dict[str, Any] | None:
+    def get_connection(
+        self, owner_id: str, integration_key: str
+    ) -> dict[str, Any] | None:
         if self.database_url:
-            rows = self.db_rows("SELECT * FROM integration_connections WHERE LOWER(owner_id) = LOWER(%s) AND integration_key = %s", (owner_id, integration_key))
+            rows = self.db_rows(
+                "SELECT * FROM integration_connections WHERE LOWER(owner_id) = LOWER(%s) AND integration_key = %s",
+                (owner_id, integration_key),
+            )
             if not rows:
                 return None
             row = rows[0]
@@ -665,12 +916,16 @@ class Repository:
                 "createdAt": self.iso(row.get("created_at")) or now_iso(),
                 "updatedAt": self.iso(row.get("updated_at")) or now_iso(),
             }
-        record = self.connections.get((owner_id, integration_key)) or self.connections.get((owner_id.lower(), integration_key))
+        record = self.connections.get(
+            (owner_id, integration_key)
+        ) or self.connections.get((owner_id.lower(), integration_key))
         if not record:
             return None
         return {"ownerId": owner_id, **record}
 
-    def get_connection_credentials(self, owner_id: str, integration_key: str) -> dict[str, Any] | None:
+    def get_connection_credentials(
+        self, owner_id: str, integration_key: str
+    ) -> dict[str, Any] | None:
         record = self.get_connection(owner_id, integration_key)
         return record.get("credentials") if record else None
 
@@ -683,16 +938,27 @@ class Repository:
         if not api_key.strip():
             return None
         if self.database_url:
-            rows = self.db_rows("SELECT * FROM agent_api_keys WHERE api_key = %s", (api_key.strip(),))
+            rows = self.db_rows(
+                "SELECT * FROM agent_api_keys WHERE api_key = %s", (api_key.strip(),)
+            )
             if not rows:
                 return None
             row = rows[0]
-            return {"ownerId": row["owner_id"], "apiKey": row["api_key"], "createdAt": self.iso(row.get("created_at")), "updatedAt": self.iso(row.get("updated_at"))}
+            return {
+                "ownerId": row["owner_id"],
+                "apiKey": row["api_key"],
+                "createdAt": self.iso(row.get("created_at")),
+                "updatedAt": self.iso(row.get("updated_at")),
+            }
         for owner_id, value in self.agent_keys.items():
             if value == api_key.strip():
-                return {"ownerId": owner_id, "apiKey": value, "createdAt": now_iso(), "updatedAt": now_iso()}
+                return {
+                    "ownerId": owner_id,
+                    "apiKey": value,
+                    "createdAt": now_iso(),
+                    "updatedAt": now_iso(),
+                }
         return None
-
 
     def find_scoped_api_key(self, kind: str, api_key: str) -> dict[str, Any] | None:
         value = api_key.strip()
@@ -702,31 +968,63 @@ class Repository:
             bucket = {"user": self.user_keys, "admin": self.admin_keys}[kind]
             for owner_id, stored in bucket.items():
                 if stored == value:
-                    return {"ownerId": owner_id, "apiKey": stored, "createdAt": now_iso(), "updatedAt": now_iso()}
+                    return {
+                        "ownerId": owner_id,
+                        "apiKey": stored,
+                        "createdAt": now_iso(),
+                        "updatedAt": now_iso(),
+                    }
             return None
         table = "user_api_keys" if kind == "user" else "admin_api_keys"
-        rows = self.db_rows(f"SELECT * FROM {table} WHERE api_key_hash = %s", (self.hash_key(value),))
+        rows = self.db_rows(
+            f"SELECT * FROM {table} WHERE api_key_hash = %s", (self.hash_key(value),)
+        )
         if not rows:
             return None
         row = rows[0]
-        return {"ownerId": row["owner_id"], "apiKey": value, "createdAt": self.iso(row.get("created_at")), "updatedAt": self.iso(row.get("updated_at"))}
+        return {
+            "ownerId": row["owner_id"],
+            "apiKey": value,
+            "createdAt": self.iso(row.get("created_at")),
+            "updatedAt": self.iso(row.get("updated_at")),
+        }
 
     def get_key(self, owner_id: str, kind: str) -> dict[str, Any]:
         if not self.database_url:
-            bucket = {"agent": self.agent_keys, "user": self.user_keys, "admin": self.admin_keys}[kind]
+            bucket = {
+                "agent": self.agent_keys,
+                "user": self.user_keys,
+                "admin": self.admin_keys,
+            }[kind]
             value = bucket.get(owner_id)
             if value is None and kind == "agent":
                 value = self.rotate_key(bucket, owner_id, "cla")
-            return {"apiKey": value, "key": self.key_status(value), "hasKey": value is not None}
-        table = {"agent": "agent_api_keys", "user": "user_api_keys", "admin": "admin_api_keys"}[kind]
+            return {
+                "apiKey": value,
+                "key": self.key_status(value),
+                "hasKey": value is not None,
+            }
+        table = {
+            "agent": "agent_api_keys",
+            "user": "user_api_keys",
+            "admin": "admin_api_keys",
+        }[kind]
         if kind == "agent":
-            rows = self.db_rows(f"SELECT * FROM {table} WHERE owner_id = %s", (owner_id,))
+            rows = self.db_rows(
+                f"SELECT * FROM {table} WHERE owner_id = %s", (owner_id,)
+            )
             if not rows:
                 value = self.rotate_key(self.agent_keys, owner_id, "cla")
                 self.save_key(owner_id, kind, value)
                 return {"apiKey": value, "key": self.key_status(value), "hasKey": True}
             value = rows[0]["api_key"]
-            return {"apiKey": value, "key": self.key_status(value, rows[0].get("created_at"), rows[0].get("updated_at")), "hasKey": True}
+            return {
+                "apiKey": value,
+                "key": self.key_status(
+                    value, rows[0].get("created_at"), rows[0].get("updated_at")
+                ),
+                "hasKey": True,
+            }
         rows = self.db_rows(f"SELECT * FROM {table} WHERE owner_id = %s", (owner_id,))
         if not rows:
             return {"apiKey": None, "key": None, "hasKey": False}
@@ -734,13 +1032,22 @@ class Repository:
         value = self.decrypt_api_key_value(row.get("encrypted_api_key"))
         return {
             "apiKey": value,
-            "key": self.stored_key_status(row.get("key_prefix"), row.get("key_suffix"), row.get("created_at"), row.get("updated_at")),
+            "key": self.stored_key_status(
+                row.get("key_prefix"),
+                row.get("key_suffix"),
+                row.get("created_at"),
+                row.get("updated_at"),
+            ),
             "hasKey": True,
         }
 
     def save_key(self, owner_id: str, kind: str, value: str) -> dict[str, Any]:
         if not self.database_url:
-            bucket = {"agent": self.agent_keys, "user": self.user_keys, "admin": self.admin_keys}[kind]
+            bucket = {
+                "agent": self.agent_keys,
+                "user": self.user_keys,
+                "admin": self.admin_keys,
+            }[kind]
             bucket[owner_id] = value
             return {"apiKey": value, "key": self.key_status(value)}
         if kind == "agent":
@@ -756,20 +1063,37 @@ class Repository:
                 VALUES (%s, %s, %s, %s, %s, NOW(), NOW())
                 ON CONFLICT (owner_id) DO UPDATE SET api_key_hash = EXCLUDED.api_key_hash, key_prefix = EXCLUDED.key_prefix,
                 key_suffix = EXCLUDED.key_suffix, encrypted_api_key = EXCLUDED.encrypted_api_key, updated_at = NOW()""",
-                (owner_id, self.hash_key(value), value[:12], value[-4:], encrypt_api_key(value)),
+                (
+                    owner_id,
+                    self.hash_key(value),
+                    value[:12],
+                    value[-4:],
+                    encrypt_api_key(value),
+                ),
             )
         return {"apiKey": value, "key": self.key_status(value)}
 
     def delete_key(self, owner_id: str, kind: str) -> bool:
         if not self.database_url:
-            bucket = {"agent": self.agent_keys, "user": self.user_keys, "admin": self.admin_keys}[kind]
+            bucket = {
+                "agent": self.agent_keys,
+                "user": self.user_keys,
+                "admin": self.admin_keys,
+            }[kind]
             return bucket.pop(owner_id, None) is not None
-        table = {"agent": "agent_api_keys", "user": "user_api_keys", "admin": "admin_api_keys"}[kind]
-        rows = self.db_rows(f"DELETE FROM {table} WHERE owner_id = %s RETURNING owner_id", (owner_id,))
+        table = {
+            "agent": "agent_api_keys",
+            "user": "user_api_keys",
+            "admin": "admin_api_keys",
+        }[kind]
+        rows = self.db_rows(
+            f"DELETE FROM {table} WHERE owner_id = %s RETURNING owner_id", (owner_id,)
+        )
         return bool(rows)
 
-
-    def upsert_policy(self, agent_class: str, rules: list[dict[str, Any]]) -> dict[str, Any]:
+    def upsert_policy(
+        self, agent_class: str, rules: list[dict[str, Any]]
+    ) -> dict[str, Any]:
         policy = {"agentClass": agent_class, "rules": rules}
         if self.database_url:
             self.execute_db(
@@ -786,13 +1110,25 @@ class Repository:
         if not agent_class:
             return None
         if self.database_url:
-            rows = self.db_rows("SELECT agent_class, rules FROM agent_class_policies WHERE agent_class = %s", (agent_class,))
-            return {"agentClass": rows[0]["agent_class"], "rules": rows[0].get("rules") or []} if rows else None
+            rows = self.db_rows(
+                "SELECT agent_class, rules FROM agent_class_policies WHERE agent_class = %s",
+                (agent_class,),
+            )
+            return (
+                {
+                    "agentClass": rows[0]["agent_class"],
+                    "rules": rows[0].get("rules") or [],
+                }
+                if rows
+                else None
+            )
         return self.policies.get(agent_class)
 
     def list_temporary_grants(self) -> list[dict[str, Any]]:
         if self.database_url:
-            rows = self.db_rows("SELECT * FROM temporary_grants ORDER BY created_at DESC")
+            rows = self.db_rows(
+                "SELECT * FROM temporary_grants ORDER BY created_at DESC"
+            )
             return [
                 {
                     "id": str(row["id"]),
@@ -815,7 +1151,17 @@ class Repository:
                 """INSERT INTO temporary_grants (id, agent_id, agent_class, integration_key, function_name, scopes, granted_by, created_at, expires_at)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
                 ON CONFLICT (id) DO UPDATE SET agent_id = EXCLUDED.agent_id, agent_class = EXCLUDED.agent_class, integration_key = EXCLUDED.integration_key, function_name = EXCLUDED.function_name, scopes = EXCLUDED.scopes, granted_by = EXCLUDED.granted_by, created_at = EXCLUDED.created_at, expires_at = EXCLUDED.expires_at""",
-                (grant["id"], grant.get("agentId"), grant.get("agentClass"), grant["integrationKey"], grant["toolName"], Jsonb(grant.get("scopes") or []), grant["grantedBy"], grant["createdAt"], grant["expiresAt"]),
+                (
+                    grant["id"],
+                    grant.get("agentId"),
+                    grant.get("agentClass"),
+                    grant["integrationKey"],
+                    grant["toolName"],
+                    Jsonb(grant.get("scopes") or []),
+                    grant["grantedBy"],
+                    grant["createdAt"],
+                    grant["expiresAt"],
+                ),
             )
         else:
             self.temporary_grants[grant["id"]] = grant
@@ -846,7 +1192,9 @@ class Repository:
                 continue
             key = (str(record.get("integrationKey")), str(record.get("toolName")))
             current = summaries.get(key)
-            if not current or str(record.get("invokedAt")) > str(current.get("lastInvokedAt")):
+            if not current or str(record.get("invokedAt")) > str(
+                current.get("lastInvokedAt")
+            ):
                 summaries[key] = {
                     "integrationKey": key[0],
                     "toolName": key[1],
@@ -854,23 +1202,42 @@ class Repository:
                     "lastInvocationOutcome": record.get("outcome"),
                     "invocationCount": 0,
                 }
-            summaries[key]["invocationCount"] = int(summaries[key].get("invocationCount") or 0) + 1
+            summaries[key]["invocationCount"] = (
+                int(summaries[key].get("invocationCount") or 0) + 1
+            )
         return list(summaries.values())
 
     def purge_expired_grants(self) -> int:
         if self.database_url:
-            rows = self.db_rows("DELETE FROM temporary_grants WHERE expires_at <= NOW() RETURNING id")
+            rows = self.db_rows(
+                "DELETE FROM temporary_grants WHERE expires_at <= NOW() RETURNING id"
+            )
             return len(rows)
         return 0
 
     def overview(self) -> dict[str, Any]:
-        connections = self.list_connections(filters={"admin": True, "limit": 1000, "offset": 0})
+        connections = self.list_connections(
+            filters={"admin": True, "limit": 1000, "offset": 0}
+        )
         access_requests = self.list_access_requests(None)
         notifications = self.list_notifications()
         users: dict[str, dict[str, Any]] = {}
         for connection in connections:
             owner = connection.get("ownerId") or "unknown"
-            summary = users.setdefault(owner, {"ownerId": owner, "totalConnections": 0, "integrations": set(), "providers": set(), "totalAccessRequests": 0, "pendingAccessRequests": 0, "notifications": 0, "duplicateExternalAccounts": [], "connections": []})
+            summary = users.setdefault(
+                owner,
+                {
+                    "ownerId": owner,
+                    "totalConnections": 0,
+                    "integrations": set(),
+                    "providers": set(),
+                    "totalAccessRequests": 0,
+                    "pendingAccessRequests": 0,
+                    "notifications": 0,
+                    "duplicateExternalAccounts": [],
+                    "connections": [],
+                },
+            )
             summary["totalConnections"] += 1
             summary["integrations"].add(connection.get("integrationKey"))
             summary["providers"].add(connection.get("provider"))
@@ -879,7 +1246,20 @@ class Repository:
             owner = self.access_request_owner_id(request)
             if not owner or owner == "case-by-case-approvals":
                 continue
-            summary = users.setdefault(owner, {"ownerId": owner, "totalConnections": 0, "integrations": set(), "providers": set(), "totalAccessRequests": 0, "pendingAccessRequests": 0, "notifications": 0, "duplicateExternalAccounts": [], "connections": []})
+            summary = users.setdefault(
+                owner,
+                {
+                    "ownerId": owner,
+                    "totalConnections": 0,
+                    "integrations": set(),
+                    "providers": set(),
+                    "totalAccessRequests": 0,
+                    "pendingAccessRequests": 0,
+                    "notifications": 0,
+                    "duplicateExternalAccounts": [],
+                    "connections": [],
+                },
+            )
             summary["totalAccessRequests"] += 1
             if request.status == "pending":
                 summary["pendingAccessRequests"] += 1
@@ -895,18 +1275,40 @@ class Repository:
                 "provider": provider,
                 "externalAccountId": external_id,
                 "connections": group,
-                "owners": sorted({str(item.get("ownerId") or "") for item in group if item.get("ownerId")}),
+                "owners": sorted(
+                    {
+                        str(item.get("ownerId") or "")
+                        for item in group
+                        if item.get("ownerId")
+                    }
+                ),
             }
             for (provider, external_id), group in duplicate_groups.items()
-            if len({(item.get("ownerId"), item.get("integrationKey")) for item in group}) > 1
+            if len(
+                {(item.get("ownerId"), item.get("integrationKey")) for item in group}
+            )
+            > 1
         ]
         user_list = []
         for summary in users.values():
             summary["integrations"] = sorted(x for x in summary["integrations"] if x)
             summary["providers"] = sorted(x for x in summary["providers"] if x)
-            summary["duplicateExternalAccounts"] = [dup for dup in duplicates if summary["ownerId"] in dup["owners"]]
+            summary["duplicateExternalAccounts"] = [
+                dup for dup in duplicates if summary["ownerId"] in dup["owners"]
+            ]
             user_list.append(summary)
-        return {"totalConnections": len(connections), "connectedOwners": len(users), "managedConnectors": len(self.list_managed_connectors()), "totalAccessRequests": len(access_requests), "pendingAccessRequests": sum(1 for r in access_requests if r.status == "pending"), "notifications": len(notifications), "duplicateExternalAccounts": duplicates, "users": user_list}
+        return {
+            "totalConnections": len(connections),
+            "connectedOwners": len(users),
+            "managedConnectors": len(self.list_managed_connectors()),
+            "totalAccessRequests": len(access_requests),
+            "pendingAccessRequests": sum(
+                1 for r in access_requests if r.status == "pending"
+            ),
+            "notifications": len(notifications),
+            "duplicateExternalAccounts": duplicates,
+            "users": user_list,
+        }
 
     def rotate_key(self, bucket: dict[str, str], owner_id: str, prefix: str) -> str:
         value = f"{prefix}_{token_urlsafe(24)}"

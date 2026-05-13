@@ -6,6 +6,7 @@ On Vercel, leave this unset since Vercel's CDN handles static files.
 Usage:
     INTHUB_STATIC_DIR=/app/out uvicorn backend.app.main:app
 """
+
 from __future__ import annotations
 
 import logging
@@ -15,6 +16,7 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
 from .config import get_default_config
+
 
 logger = logging.getLogger(__name__)
 

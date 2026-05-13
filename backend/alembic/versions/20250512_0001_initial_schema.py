@@ -13,9 +13,11 @@ Both implementations used CREATE TABLE IF NOT EXISTS and ALTER TABLE ADD COLUMN
 IF NOT EXISTS for idempotent runtime initialization. This migration replaces
 that pattern with proper versioned migrations.
 """
+
 from __future__ import annotations
 
 from alembic import op
+
 
 revision: str = "0001"
 down_revision: str | None = None

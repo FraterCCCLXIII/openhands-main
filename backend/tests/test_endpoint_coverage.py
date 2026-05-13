@@ -10,6 +10,7 @@ from backend.app.models import ManagedConnector, ManagedConnectorTool
 from backend.app.repository import repository
 from backend.app.route_manifest import ROUTES
 
+
 if TYPE_CHECKING:
     from conftest import ConfigEnvFixture
 
@@ -20,7 +21,7 @@ ADMIN_KEY = "clad_test_admin_key"
 
 
 @pytest.fixture(autouse=True)
-def setup_test_env(config_env: "ConfigEnvFixture"):
+def setup_test_env(config_env: ConfigEnvFixture):
     """Set up test environment before each test."""
     config_env("APP_ADMIN_EMAILS", OWNER)
     config_env("INTHUB_DISABLE_AUTH", "true")
@@ -107,7 +108,10 @@ def seed_state(client: TestClient) -> None:
 def headers_for(route_path: str) -> dict[str, str]:
     if route_path.startswith("/api/admin/") and route_path != "/api/admin/key":
         return {"X-Owner-Id": OWNER, "Authorization": f"Bearer {ADMIN_KEY}"}
-    if route_path.startswith("/api/user/") and route_path not in {"/api/user/key", "/api/user/agent-key"}:
+    if route_path.startswith("/api/user/") and route_path not in {
+        "/api/user/key",
+        "/api/user/agent-key",
+    }:
         return {"X-Owner-Id": OWNER, "Authorization": f"Bearer {USER_KEY}"}
     if route_path.startswith("/api/context") or route_path == "/api/mcp":
         return {"X-Owner-Id": OWNER, "Authorization": f"Bearer {AGENT_KEY}"}
@@ -116,7 +120,13 @@ def headers_for(route_path: str) -> dict[str, str]:
 
 def body_for(path: str) -> object:
     if path.endswith("/functions"):
-        return [{"name": "sample_tool", "description": "Sample tool", "accessMode": "enabled"}]
+        return [
+            {
+                "name": "sample_tool",
+                "description": "Sample tool",
+                "accessMode": "enabled",
+            }
+        ]
     if path in {"/api/managed-connectors", "/api/admin/managed-connectors"}:
         return {
             "slug": "sample-connector",
@@ -130,9 +140,18 @@ def body_for(path: str) -> object:
             "tools": [],
         }
     if path.endswith("/tools") or "/tools/" in path:
-        return {"name": "sample_tool", "description": "Sample tool", "accessMode": "enabled"}
+        return {
+            "name": "sample_tool",
+            "description": "Sample tool",
+            "accessMode": "enabled",
+        }
     if path.endswith("/discover"):
-        return {"kind": "managed", "key": "sample", "name": "Sample", "managedConnectorSlug": "sample-connector"}
+        return {
+            "kind": "managed",
+            "key": "sample",
+            "name": "Sample",
+            "managedConnectorSlug": "sample-connector",
+        }
     if path.endswith("/toggle"):
         return {"enabled": False}
     if path.endswith("/approve"):
@@ -141,8 +160,19 @@ def body_for(path: str) -> object:
         return {}
     if path == "/api/agent-classes/{agentClass}":
         return {"rules": []}
-    if path in {"/api/integrations", "/api/user/integrations", "/api/admin/integrations"}:
-        return {"key": "sample", "name": "Sample", "kind": "api", "provider": "mock", "authStrategy": "none", "tools": {}}
+    if path in {
+        "/api/integrations",
+        "/api/user/integrations",
+        "/api/admin/integrations",
+    }:
+        return {
+            "key": "sample",
+            "name": "Sample",
+            "kind": "api",
+            "provider": "mock",
+            "authStrategy": "none",
+            "tools": {},
+        }
     if path == "/api/context/{integrationKey}/{toolName}":
         return {"payload": {}, "scopes": []}
     if path == "/api/mcp":
@@ -210,7 +240,9 @@ def test_mcp_initialized_notification_returns_no_jsonrpc_body() -> None:
 def test_auth_compatibility_routes_are_available() -> None:
     client = get_client()
     for method in ("GET", "POST"):
-        response = client.request(method, "/api/auth/session", headers={"X-Owner-Id": OWNER})
+        response = client.request(
+            method, "/api/auth/session", headers={"X-Owner-Id": OWNER}
+        )
         assert response.status_code == 200
         assert response.json()["user"]["email"] == OWNER
 
@@ -218,7 +250,9 @@ def test_auth_compatibility_routes_are_available() -> None:
 def test_context_and_mcp_require_valid_agent_api_key() -> None:
     client = get_client()
     repository.agent_keys.clear()
-    response = client.post("/api/context/sample/sample_tool", json={"payload": {}, "scopes": []})
+    response = client.post(
+        "/api/context/sample/sample_tool", json={"payload": {}, "scopes": []}
+    )
     assert response.status_code == 503
 
     repository.save_key(OWNER, "agent", AGENT_KEY)

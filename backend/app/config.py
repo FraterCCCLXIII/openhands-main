@@ -6,6 +6,7 @@ configuration. Access via `get_default_config()`.
 Pattern follows the agent server config from the OpenHands SDK:
 https://github.com/OpenHands/software-agent-sdk/blob/main/openhands-agent-server/openhands/agent_server/config.py
 """
+
 from __future__ import annotations
 
 import os
@@ -55,11 +56,7 @@ def _default_cron_secret() -> SecretStr | None:
 def _default_app_admin_emails() -> list[str]:
     """Parse admin emails from comma-separated environment variable."""
     raw = os.getenv("APP_ADMIN_EMAILS", "")
-    return [
-        email.strip().lower()
-        for email in raw.split(",")
-        if email.strip()
-    ]
+    return [email.strip().lower() for email in raw.split(",") if email.strip()]
 
 
 def _default_credential_encryption_key() -> SecretStr | None:
