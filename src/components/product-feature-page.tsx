@@ -1,5 +1,7 @@
+import type { CSSProperties } from 'react';
 import type { ProductFeaturePageData } from '~/data/product-feature-pages';
 import { Footer } from '~/components/footer';
+import ASCIIAnimation from '~/components/ascii-animation';
 import { OverlayLinkButton } from '~/components/overlay-link-button';
 
 export interface ProductPageAction {
@@ -27,16 +29,11 @@ export const PRODUCT_COMPARISON_ROWS = [
 const classNames = (...values: Array<string | false | null | undefined>) =>
   values.filter(Boolean).join(' ');
 
+const asciiOpacityValue = (opacityClass: string) => opacityClass.match(/opacity-\[([\d.]+)\]/)?.[1] || '0.12';
+
 const AsciiBackdrop = ({ opacity = 'opacity-[0.12]' }: { opacity?: string }) => (
-  <div data-wf-el='asci-wrap' className={classNames('absolute inset-0', opacity)}>
-    <div data-wf-el='asci-embed' className='w-full h-full'>
-      <img
-        src='/assets/webflow/backgrounds/6908d170831c19b2b6976323_ascii-art_(16)_1.svg'
-        alt=''
-        className='h-full w-full object-cover'
-        style={{ textAlign: 'start' }}
-      />
-    </div>
+  <div data-wf-el='asci-wrap' className='absolute inset-0' style={{ '--ascii-opacity': asciiOpacityValue(opacity) } as CSSProperties}>
+    <ASCIIAnimation className='h-full w-full' />
   </div>
 );
 
@@ -83,7 +80,7 @@ const ProductFeatureIntroBand = ({
   // `class="section"` sibling — NOT a second section-product_hero.
   // Use the matching wf-el key so the per-section parity comparison
   // does not see two section-product_hero blocks on test.
-  <section data-wf-el='section' className={classNames('relative overflow-hidden', minHeightClass)} style={{ display: 'block', backgroundColor: 'rgba(0, 0, 0, 0)', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px' }}>
+  <section data-wf-el='section' className={classNames('relative', minHeightClass)} style={{ display: 'block', backgroundColor: 'rgba(0, 0, 0, 0)', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px' }}>
     {/* Live's `.background-image` IMG always computes
      * `position:static; display:inline-block` — the absolute layer is
      * the wrapping div. Match that on both branches. */}
@@ -127,7 +124,7 @@ const ProductFeatureProofBand = ({
   minHeightClass?: string;
   descriptionClassName?: string;
 }) => (
-  <section data-wf-el='section' className={classNames('relative overflow-hidden', minHeightClass)} style={{ display: 'block', backgroundColor: 'rgba(0, 0, 0, 0)', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px' }}>
+  <section data-wf-el='section' className={classNames('relative', minHeightClass)} style={{ display: 'block', backgroundColor: 'rgba(0, 0, 0, 0)', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px' }}>
     {/* Live's `.background-image` IMG computes `position: static;
      * display: inline-block` regardless of whether the page provides
      * its own image or falls back to the default ASCII hole. The

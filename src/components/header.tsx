@@ -78,7 +78,7 @@ export const Header: React.FC<HeaderProps> = ({
   });
 
   return (
-    <nav data-wf-el='nav_wrap' className='sticky top-0 left-0 right-0 z-50 w-full backdrop-blur-md' style={{ display: 'block', height: '84px', backgroundColor: 'rgb(249, 240, 217)', paddingTop: '1rem', paddingBottom: '1rem', containerType: 'inline-size' as React.CSSProperties['containerType'] }}>
+    <nav data-wf-el='nav_wrap' className='sticky top-0 left-0 right-0 z-50 w-full' style={{ display: 'block', height: '84px', backgroundColor: 'rgb(249, 240, 217)', paddingTop: '1rem', paddingBottom: '1rem', containerType: 'inline-size' as React.CSSProperties['containerType'] }}>
       <div data-wf-el='nav_contain' style={{ display: 'block', width: '95%', marginLeft: 'auto', marginRight: 'auto' }}>
         <div data-wf-el='nav_grid' className='hidden lg:grid' style={{ display: 'grid', gap: '16px', gridTemplateColumns: '1fr min-content 1fr', alignContent: 'center', position: 'relative' }}>
           <div className='flex justify-start'>
@@ -264,7 +264,7 @@ export const Header: React.FC<HeaderProps> = ({
                 <div data-wf-el='nav-menu_gh_icon'><GitHubLogoBlack data-wf-el='bi-github' className='h-4 w-4 flex-shrink-0' style={{ width: '16px', height: '16px', verticalAlign: 'baseline' }} /></div>
                 <div data-wf-el='nav-menu_gh_num' style={{ fontSize: '12.96px', lineHeight: '18.144px' }}><span style={{ fontWeight: 400 }}>{formatThousands(statistics.stargazers)}</span></div>
               </a>
-              <div data-wf-el='button' className='btn btn-outline relative' style={{ padding: '0.9em 1.9em', margin: 0, borderRadius: '8px', backgroundColor: 'rgba(255,255,255,0.34)', borderColor: 'rgb(34, 21, 13)', textDecoration: 'none', textDecorationThickness: 'auto', textUnderlineOffset: 'auto', cursor: 'auto', boxShadow: 'rgb(249, 240, 217) 0px 0px 0px 0px inset', gap: '6.4px' }}>
+              <div data-wf-el='button' className='btn btn-outline relative' style={{ padding: '0.9em 1.9em', margin: 0, borderRadius: '8px', backgroundColor: 'rgba(255,255,255,0.34)', borderColor: 'rgb(34, 21, 13)', backdropFilter: 'blur(5px)', textDecoration: 'none', textDecorationThickness: 'auto', textUnderlineOffset: 'auto', cursor: 'auto', boxShadow: 'rgb(249, 240, 217) 0px 0px 0px 0px inset', gap: '6.4px' }}>
                 <div data-wf-el='btn-text' aria-hidden='true' style={{ whiteSpace: 'nowrap', cursor: 'auto', textUnderlineOffset: 'auto', pointerEvents: 'none' }}>Build with SDK</div>
                 <a href='https://docs.openhands.dev/sdk' target='_blank' rel='noopener noreferrer' className='absolute inset-0' style={{ textDecoration: 'underline', textDecorationThickness: '1.6px' }}>
                   <span className='sr-only'>Build with SDK</span>

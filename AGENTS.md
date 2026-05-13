@@ -75,6 +75,10 @@ Located at: `scripts/generate-site-parity-checklist.cjs`
 - The report now includes per-route sections for: container/section style mismatches, per-element interactivity mismatches, missing/extra interactive elements, interactivity behavior mismatches, and hover effect mismatches
 - Per-element interactivity captures: cursor (pointer vs default), pointerEvents (none vs auto), and clickable semantics (button/link/form-control role mismatches)
 - Ancestor walk uses `maxDepth = 8` to find visual wrapper elements (bg, borderRadius, boxShadow) above each text element. One-sided ancestor mismatches are only flagged when the ancestor has a **visible** backgroundColor or boxShadow — not borderRadius alone on a transparent container. Additionally, ancestors whose bg matches the page-level body/html background are silently skipped, since the page bg is always visible and finding it on a different structural container (Webflow page-wrapper div vs React body) is not a meaningful visual difference.
+- Button component parity intentionally keys buttons by the visible label (including `aria-hidden` Webflow text wrappers) rather than overlay-anchor `aria-label` / `.sr-only` text, so Webflow-style visual labels such as `Try it live` still match local overlay links whose accessible label is `Join Slack`.
+- Runtime motion parity collapses nested animated/mutating descendants to the outermost moving component root, preventing one ASCII/background animation from producing four duplicate motion findings (`asci-wrap`, `asci-embed`, `ascii-embed`, `ascii-pre`).
+- Painted-layer parity should compare visual paint only (backgrounds, borders, shadows, filters, opacity/pseudo paint), not layout-only CSS such as `position`; container/Webflow/layout audits own those non-paint concerns.
+- Container parity suppresses min/max size constraints when the computed rectangle already matches and one side's constraint equals the rendered size, avoiding non-visual `min-height: auto` vs `816px` noise while still reporting actual rect-height drift.
 
 ## Common Discrepancy Patterns
 

@@ -9,12 +9,17 @@ import { PNG } from 'pngjs';
 const require = createRequire(import.meta.url);
 const {
   capturePageScreenshot,
+  compareButtonComponents,
   compareContainerStyles,
   compareDynamicControlVisuals,
+  compareDynamicMotion,
+  comparePaintedLayers,
   compareDynamicSelectorUx,
   compareHoverEffects,
   compareInteractivity,
   compareStyleValue,
+  compareWebflowElements,
+  extractButtonComponents,
   normalizeFontFamily,
   normalizeTransition,
   primaryFontMatches,
@@ -258,7 +263,7 @@ describe('container style comparison', () => {
     expect(diffs).toHaveLength(0);
   });
 
-  it('only compares up to the shorter container list', () => {
+  it('reports container count mismatches instead of silently comparing only the shorter list', () => {
     const live = [
       { tag: 'SECTION', label: 's1', style: { backgroundColor: 'rgb(0,0,0)' } },
       { tag: 'SECTION', label: 's2', style: { backgroundColor: 'rgb(255,255,255)' } },
@@ -267,7 +272,29 @@ describe('container style comparison', () => {
       { tag: 'SECTION', label: 's1', style: { backgroundColor: 'rgb(0,0,0)' } },
     ];
     const diffs = compareContainerStyles(live, test);
-    expect(diffs).toHaveLength(0);
+    expect(diffs.some((diff) => diff.diffs.some((item) => item.includes('container count: live=2 test=1')))).toBe(true);
+  });
+
+  it('ignores min-height constraints that do not change rendered container size', () => {
+    const live = [
+      { tag: 'SECTION', label: 'hero', rect: { top: 0, left: 0, width: 1440, height: 816 }, style: { backgroundColor: 'rgb(249, 240, 217)', minHeight: 'auto' } },
+    ];
+    const test = [
+      { tag: 'SECTION', label: 'hero', rect: { top: 0, left: 0, width: 1440, height: 816 }, style: { backgroundColor: 'rgb(249, 240, 217)', minHeight: '816px' } },
+    ];
+
+    expect(compareContainerStyles(live, test)).toHaveLength(0);
+  });
+
+  it('ignores inactive min-height constraints and small explicit height differences', () => {
+    const live = [
+      { tag: 'SECTION', label: 'cta', rect: { top: 0, left: 0, width: 1440, height: 1136 }, style: { backgroundColor: 'rgb(255, 255, 139)', minHeight: 'auto', height: '1136px' } },
+    ];
+    const test = [
+      { tag: 'SECTION', label: 'cta', rect: { top: 0, left: 0, width: 1440, height: 1135 }, style: { backgroundColor: 'rgb(255, 255, 139)', minHeight: '1056px', height: '1135px' } },
+    ];
+
+    expect(compareContainerStyles(live, test)).toHaveLength(0);
   });
 });
 
@@ -474,5 +501,182 @@ describe('dynamic widget control visual comparison', () => {
     const test = widget([control('SDK'), control('Cloud'), control('CLI')]);
 
     expect(compareDynamicControlVisuals(live, test)).toHaveLength(0);
+  });
+});
+
+describe('generalized visual parity comparisons', () => {
+  it('reports repeated Webflow/data-wf element count mismatches', () => {
+    const live = [
+      { key: 'ascii-pre', tag: 'PRE', style: {}, rect: { top: 0, left: 0, width: 100, height: 100 } },
+      { key: 'ascii-pre', tag: 'PRE', style: {}, rect: { top: 120, left: 0, width: 100, height: 100 } },
+    ];
+    const test = [
+      { key: 'ascii-pre', tag: 'PRE', style: {}, rect: { top: 0, left: 0, width: 100, height: 100 } },
+    ];
+
+    const result = compareWebflowElements(live, test);
+
+    expect(result.countMismatches).toEqual([
+      expect.objectContaining({ key: 'ascii-pre', liveCount: 2, testCount: 1 }),
+    ]);
+  });
+
+  it('detects missing runtime motion by stable signature', () => {
+    const live = [
+      { signature: 'wf:ascii-pre', tag: 'PRE', hasRuntimeMotion: true, changedFields: ['contentHash'], mutationCount: 3 },
+    ];
+    const test = [
+      { signature: 'wf:ascii-pre', tag: 'PRE', hasRuntimeMotion: false, changedFields: [], mutationCount: 0 },
+    ];
+
+    const result = compareDynamicMotion(live, test);
+
+    expect(result.missingMotion).toHaveLength(1);
+    expect(result.missingMotion[0].signature).toBe('wf:ascii-pre');
+  });
+
+  it('detects painted layer count and style differences', () => {
+    const base = { tag: 'DIV', rect: { area: 1000 }, pseudo: {}, style: { backgroundColor: 'rgb(34, 21, 13)', opacity: '1', effectiveOpacity: 1 } };
+    const result = comparePaintedLayers(
+      [{ ...base, key: 'wf:asci-wrap' }, { ...base, key: 'wf:asci-wrap' }],
+      [{ ...base, key: 'wf:asci-wrap', style: { ...base.style, backgroundColor: 'rgb(255, 255, 139)' } }],
+    );
+
+    expect(result.countDiffs).toEqual([
+      expect.objectContaining({ key: 'wf:asci-wrap', liveCount: 2, testCount: 1 }),
+    ]);
+    expect(result.styleDiffs[0].diffs.some((diff) => diff.startsWith('backgroundColor:'))).toBe(true);
+  });
+
+  it('matches painted layers by geometry when semantic keys differ', () => {
+    const live = {
+      key: 'section:0',
+      tag: 'SECTION',
+      rect: { top: 100, left: 0, width: 1200, height: 500, area: 600000 },
+      pseudo: {},
+      style: { backgroundColor: 'rgb(34, 21, 13)', opacity: '1', effectiveOpacity: 1 },
+    };
+    const test = {
+      ...live,
+      key: 'wf:section',
+      rect: { top: 104, left: 0, width: 1200, height: 500, area: 600000 },
+      style: { ...live.style, backgroundColor: 'rgb(249, 240, 217)' },
+    };
+
+    const result = comparePaintedLayers([live], [test]);
+
+    expect(result.missing).toHaveLength(0);
+    expect(result.extra).toHaveLength(0);
+    expect(result.styleDiffs[0]).toEqual(expect.objectContaining({ key: 'section:0 ↔ wf:section' }));
+  });
+
+  it('does not report position-only differences as painted-layer style mismatches', () => {
+    const live = {
+      key: 'wf:card-body',
+      tag: 'DIV',
+      rect: { top: 100, left: 0, width: 1200, height: 500, area: 600000 },
+      pseudo: {},
+      style: { backgroundColor: 'rgb(249, 240, 217)', position: 'relative', opacity: '1', effectiveOpacity: 1 },
+    };
+    const test = {
+      ...live,
+      style: { ...live.style, position: 'static' },
+    };
+
+    const result = comparePaintedLayers([live], [test]);
+
+    expect(result.styleDiffs).toHaveLength(0);
+  });
+
+  it('leaves button paint to the specialized button audit', () => {
+    const buttonLayer = {
+      key: 'wf:btn-wrap-primary',
+      tag: 'DIV',
+      rect: { top: 10, left: 10, width: 160, height: 54, area: 8640 },
+      pseudo: {},
+      style: { backgroundColor: 'rgb(34, 21, 13)', opacity: '1', effectiveOpacity: 1 },
+    };
+
+    const result = comparePaintedLayers([], [buttonLayer]);
+
+    expect(result.extra).toHaveLength(0);
+  });
+
+  it('detects button wrapper visual contract mismatches', () => {
+    const base = {
+      signature: 'button:build with sdk',
+      label: 'Build with SDK',
+      variant: 'primary',
+      rect: { width: 150, height: 50 },
+      style: { backgroundColor: 'rgb(34, 21, 13)', borderColor: 'rgb(34, 21, 13)', borderWidth: '1px', opacity: '1', effectiveOpacity: 1 },
+    };
+
+    const result = compareButtonComponents(
+      [base],
+      [{ ...base, variant: 'secondary', style: { ...base.style, backgroundColor: 'rgba(255, 255, 255, 0.34)' } }],
+    );
+
+    expect(result.mismatches[0].diffs).toEqual(
+      expect.arrayContaining([
+        'variant: live=primary test=secondary',
+        expect.stringContaining('backgroundColor:'),
+      ]),
+    );
+  });
+
+  it('extracts button components by visible label instead of sr-only overlay label', async () => {
+    document.body.innerHTML = `
+      <div class="btn-wrap-primary">
+        <div aria-hidden="true">Try it live</div>
+        <a href="/join" aria-label="Join Slack"><span class="sr-only">Join Slack</span></a>
+      </div>
+    `;
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue({
+      top: 10,
+      left: 20,
+      right: 140,
+      bottom: 72,
+      width: 120,
+      height: 52,
+      x: 20,
+      y: 10,
+      toJSON: () => ({}),
+    });
+
+    const buttons = await extractButtonComponents({ evaluate: async (callback) => callback() });
+
+    expect(buttons).toHaveLength(1);
+    expect(buttons[0]).toEqual(expect.objectContaining({
+      label: 'Try it live',
+      signature: 'button:try it live',
+    }));
+  });
+
+  it('extracts Webflow button-N roots as button components', async () => {
+    document.body.innerHTML = `
+      <div class="button-3">
+        <div aria-hidden="true" class="btn-text-3">Book a demo</div>
+        <a href="/contact"><span class="sr-only">Book a demo</span></a>
+      </div>
+    `;
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue({
+      top: 10,
+      left: 20,
+      right: 140,
+      bottom: 72,
+      width: 120,
+      height: 52,
+      x: 20,
+      y: 10,
+      toJSON: () => ({}),
+    });
+
+    const buttons = await extractButtonComponents({ evaluate: async (callback) => callback() });
+
+    expect(buttons).toHaveLength(1);
+    expect(buttons[0]).toEqual(expect.objectContaining({
+      label: 'Book a demo',
+      signature: 'button:book a demo',
+    }));
   });
 });

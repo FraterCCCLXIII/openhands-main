@@ -69,12 +69,12 @@ const Press = () => {
             Read how OpenHands is reshaping the future of AI-powered software development.
           </p>
           <div className='flex justify-center' style={{ marginTop: '70.4px' }}>
-            <div className='btn btn-primary relative rounded-none'>
+            <div className='btn-wrap-primary relative'>
               <span aria-hidden='true'>Contact Us</span>
               <Link
                 to='/contact'
                 className='absolute inset-0 block bg-transparent text-brand-bg'
-                style={{ borderStyle: 'none' }}
+                style={{ borderStyle: 'none', textDecoration: 'underline', textDecorationThickness: '1.6px', textUnderlineOffset: '3px' }}
                 aria-label='Contact Us'
               >
                 <span className='sr-only'>Contact Us</span>
@@ -95,9 +95,9 @@ const Press = () => {
               <p className='max-w-[397px] fluid-body-lg font-medium text-brand-fg' style={{ margin: '0 0 20.8px' }}>
                 {item.title}
               </p>
-              <div className='btn btn-outline border-none w-fit rounded-none relative'>
+              <div className='btn-wrap w-fit relative'>
                 <span aria-hidden='true'>Read more</span>
-                <a href={item.url} target='_blank' rel='noopener noreferrer' className='absolute inset-0 block bg-transparent' style={{ borderStyle: 'none' }}>
+                <a href={item.url} target='_blank' rel='noopener noreferrer' className='absolute inset-0 block bg-transparent' style={{ borderStyle: 'none', textDecoration: 'underline', textDecorationThickness: '1.6px', textUnderlineOffset: '3px' }}>
                   <span className='sr-only'>Read more</span>
                 </a>
               </div>

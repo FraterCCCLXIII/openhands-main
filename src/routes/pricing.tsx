@@ -418,7 +418,7 @@ const Pricing = () => {
        * — the page bg comes from the body/page-wrapper and the gutter
        * lives on the inner container. Move padding/relative inward so
        * the section's geometry/styles match live. */}
-      <section data-wf-el='hero-section' className='overflow-hidden' style={{ minHeight: '816px' }}>
+      <section data-wf-el='hero-section' style={{ minHeight: '816px' }}>
         <div className='relative mx-auto flex max-w-4xl flex-col items-center px-5 pb-0 pt-16 text-center lg:px-10'>
           <div className='absolute inset-0 opacity-[0.12]' aria-hidden='true'>
             <img

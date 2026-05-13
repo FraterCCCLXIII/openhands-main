@@ -1230,10 +1230,14 @@ function compareWebflowElements(liveElements, testElements) {
   }
 
   const matched = [];
+  const countMismatches = [];
 
   for (const [key, testEls] of testByKey) {
     const liveEls = liveByKey.get(key);
     if (!liveEls) continue;
+    if (liveEls.length !== testEls.length) {
+      countMismatches.push({ key, tag: liveEls[0]?.tag || testEls[0]?.tag || 'UNKNOWN', liveCount: liveEls.length, testCount: testEls.length });
+    }
 
     if (liveEls.length === testEls.length) {
       // Index-based matching: pair 1st↔1st, 2nd↔2nd, etc.
@@ -1282,7 +1286,7 @@ function compareWebflowElements(liveElements, testElements) {
     }
   }
 
-  return { matched, missingOnTest, extraOnTest };
+  return { matched, missingOnTest, extraOnTest, countMismatches };
 }
 
 async function extractCSSCustomProperties(page) {
@@ -1543,6 +1547,601 @@ async function extractAnimations(page) {
   }, INTERACTIVE_DATA_ATTRS);
 }
 
+// ── Dynamic visual motion audit ──
+// Runs before the static parity normalization cancels Webflow/GSAP/WAAPI
+// animations. It samples high-signal decorative/interactive layers over time
+// and compares whether each side actually changes, catching JS/rAF-driven
+// effects (ASCII backgrounds, marquees, canvas/video motion) that do not show
+// up as CSS animationName values.
+async function extractDynamicMotion(page) {
+  return page.evaluate(async () => {
+    const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+    const hashString = (value) => {
+      let h = 2166136261;
+      const str = String(value || '');
+      for (let i = 0; i < str.length; i += 1) {
+        h ^= str.charCodeAt(i);
+        h = Math.imul(h, 16777619);
+      }
+      return (h >>> 0).toString(36);
+    };
+    const normalize = (value) => (value || '').replace(/\s+/g, ' ').trim();
+    const semanticClass = (element) => {
+      const classes = typeof element.className === 'string' ? element.className.split(/\s+/).filter(Boolean) : [];
+      return classes.find((c) =>
+        /[a-z]_[a-z]/i.test(c) ||
+        /^(ascii|asci|marquee|splide|slider|hero|nav|footer|button|card|section|product|enterprise|pricing|community|about|contact|press|manifesto|testimonial|workflow|lovewall|cta)-/i.test(c) ||
+        /^(ascii|asci|marquee|splide|slider|hero|nav|footer|button|card|section|product|enterprise|pricing|community|about|contact|press|manifesto|testimonial|workflow|lovewall|cta)_/i.test(c)
+      ) || '';
+    };
+    const signatureFor = (element, index) => {
+      const wf = element.getAttribute('data-wf-el');
+      if (wf) return `wf:${wf}`;
+      const cls = semanticClass(element);
+      if (cls) return `wf:${cls}`;
+      if (element.id) return `id:${element.id}`;
+      const aria = element.getAttribute('aria-label') || element.getAttribute('title') || '';
+      const text = normalize(element.innerText || element.textContent || '').slice(0, 60);
+      return `${element.tagName.toLowerCase()}:${(aria || text || index).toString().toLowerCase()}`;
+    };
+    const isVisible = (element) => {
+      const rect = element.getBoundingClientRect();
+      if (rect.width < 4 || rect.height < 4) return false;
+      const docWidth = document.documentElement.clientWidth;
+      const docHeight = Math.max(document.documentElement.scrollHeight, document.body.scrollHeight);
+      if (rect.right <= 0 || rect.left >= docWidth || rect.bottom <= 0 || rect.top >= docHeight) return false;
+      let cur = element;
+      while (cur) {
+        const style = window.getComputedStyle(cur);
+        if (style.display === 'none' || style.visibility === 'hidden' || Number(style.opacity) === 0) return false;
+        if (cur.hasAttribute('hidden')) return false;
+        cur = cur.parentElement;
+      }
+      return true;
+    };
+    const hasMotionSignal = (element) => {
+      const tag = element.tagName;
+      const comp = window.getComputedStyle(element);
+      const cls = `${element.className || ''} ${element.getAttribute('data-wf-el') || ''} ${element.id || ''}`.toLowerCase();
+      if (['PRE', 'CANVAS', 'VIDEO', 'SVG'].includes(tag)) return true;
+      if (/ascii|asci|marquee|splide|slider|carousel|motion|animation|animated|ticker|scroll/.test(cls)) return true;
+      if (comp.animationName && comp.animationName !== 'none') return true;
+      if (comp.transitionDuration && comp.transitionDuration !== '0s') return true;
+      if (comp.willChange && comp.willChange !== 'auto') return true;
+      if (comp.transform && comp.transform !== 'none') return true;
+      if (element.hasAttribute('data-marquee') || element.hasAttribute('data-slider') || element.hasAttribute('data-splide')) return true;
+      return false;
+    };
+    const rawCandidates = Array.from(document.querySelectorAll('body *'))
+      .filter((element) => isVisible(element) && hasMotionSignal(element));
+    const candidates = rawCandidates
+      .filter((element) => !rawCandidates.some((other) => other !== element && other.contains(element)))
+      .slice(0, 120);
+
+    const snapshot = (element) => {
+      const comp = window.getComputedStyle(element);
+      const rect = element.getBoundingClientRect();
+      let content = '';
+      if (element.tagName === 'CANVAS') {
+        try { content = element.toDataURL('image/png').slice(0, 5000); } catch { content = 'canvas-unreadable'; }
+      } else if (element.tagName === 'VIDEO') {
+        content = `${element.currentTime}:${element.readyState}:${element.videoWidth}x${element.videoHeight}`;
+      } else if (element.tagName === 'SVG') {
+        content = element.outerHTML.slice(0, 10000);
+      } else {
+        content = (element.textContent || '').slice(0, 10000);
+      }
+      return {
+        contentHash: hashString(content),
+        transform: comp.transform,
+        opacity: comp.opacity,
+        backgroundPosition: comp.backgroundPosition,
+        backgroundImage: comp.backgroundImage,
+        left: Math.round(rect.left),
+        top: Math.round(rect.top),
+        width: Math.round(rect.width),
+        height: Math.round(rect.height),
+      };
+    };
+
+    const beforeMutationCounts = new Map(candidates.map((el) => [el, 0]));
+    const observers = candidates.map((el) => {
+      const observer = new MutationObserver((mutations) => {
+        beforeMutationCounts.set(el, (beforeMutationCounts.get(el) || 0) + mutations.length);
+      });
+      try { observer.observe(el, { subtree: true, childList: true, characterData: true, attributes: true }); } catch { /* ignore */ }
+      return observer;
+    });
+
+    const samples = [];
+    for (let i = 0; i < 3; i += 1) {
+      samples.push(candidates.map(snapshot));
+      await sleep(i === 0 ? 500 : 650);
+    }
+    observers.forEach((observer) => observer.disconnect());
+
+    return candidates.map((element, index) => {
+      const itemSamples = samples.map((sample) => sample[index]).filter(Boolean);
+      const first = itemSamples[0] || {};
+      const changedFields = [];
+      for (const field of ['contentHash', 'transform', 'opacity', 'backgroundPosition', 'left', 'top', 'width', 'height']) {
+        if (itemSamples.some((sample) => sample[field] !== first[field])) changedFields.push(field);
+      }
+      const comp = window.getComputedStyle(element);
+      return {
+        signature: signatureFor(element, index),
+        tag: element.tagName,
+        rect: first,
+        hasRuntimeMotion: changedFields.length > 0 || (beforeMutationCounts.get(element) || 0) > 0,
+        changedFields,
+        mutationCount: beforeMutationCounts.get(element) || 0,
+        cssAnimation: comp.animationName && comp.animationName !== 'none' ? comp.animationName : '',
+        transitionDuration: comp.transitionDuration && comp.transitionDuration !== '0s' ? comp.transitionDuration : '',
+        willChange: comp.willChange && comp.willChange !== 'auto' ? comp.willChange : '',
+      };
+    });
+  });
+}
+
+function compareDynamicMotion(liveMotion = [], testMotion = []) {
+  const groupMoving = (items) => {
+    const map = new Map();
+    for (const item of items || []) {
+      // Treat static transitions / will-change as widget affordances, not
+      // runtime motion. This audit is for things that visibly move/change over
+      // time (rAF text, CSS keyframes, canvas/video/marquee), so requiring
+      // runtime mutation or a real CSS animation avoids flagging ordinary nav
+      // hover transitions as missing background animation.
+      if (!item.hasRuntimeMotion && !item.cssAnimation) continue;
+      if (!map.has(item.signature)) map.set(item.signature, []);
+      map.get(item.signature).push(item);
+    }
+    return map;
+  };
+  const liveMap = groupMoving(liveMotion);
+  const testMap = groupMoving(testMotion);
+  const missingMotion = [];
+  const extraMotion = [];
+  const propDiffs = [];
+
+  for (const [sig, liveItems] of liveMap) {
+    const testItems = testMap.get(sig) || [];
+    if (testItems.length === 0) {
+      for (const item of liveItems.slice(0, 3)) {
+        missingMotion.push({ signature: sig, tag: item.tag, changedFields: item.changedFields, mutationCount: item.mutationCount });
+      }
+      continue;
+    }
+    if (liveItems.length !== testItems.length) {
+      propDiffs.push({ signature: sig, diffs: [`moving instance count: live=${liveItems.length} test=${testItems.length}`] });
+    }
+    const live0 = liveItems[0];
+    const test0 = testItems[0];
+    const diffs = [];
+    if (Boolean(live0.hasRuntimeMotion) !== Boolean(test0.hasRuntimeMotion)) {
+      diffs.push(`runtimeMotion: live=${live0.hasRuntimeMotion} test=${test0.hasRuntimeMotion}`);
+    }
+    if (Boolean(live0.cssAnimation) !== Boolean(test0.cssAnimation)) {
+      diffs.push(`cssAnimation: live=${live0.cssAnimation || '∅'} test=${test0.cssAnimation || '∅'}`);
+    }
+    if (diffs.length) propDiffs.push({ signature: sig, tag: live0.tag, diffs });
+  }
+  for (const [sig, testItems] of testMap) {
+    if (liveMap.has(sig)) continue;
+    for (const item of testItems.slice(0, 3)) {
+      extraMotion.push({ signature: sig, tag: item.tag, changedFields: item.changedFields, mutationCount: item.mutationCount });
+    }
+  }
+
+  return {
+    missingMotion,
+    extraMotion,
+    propDiffs,
+    liveMovingCount: Array.from(liveMap.values()).reduce((total, items) => total + items.length, 0),
+    testMovingCount: Array.from(testMap.values()).reduce((total, items) => total + items.length, 0),
+  };
+}
+
+// ── Painted layer audit ──
+// Inventories visual layers regardless of semantic text extraction. This catches
+// missing decorative backgrounds, pseudo-element paint, overlay colors, and
+// repeated background-layer count mismatches.
+async function extractPaintedLayers(page, isLiveSite) {
+  return page.evaluate((isLive) => {
+    const normalize = (value) => (value || '').replace(/\s+/g, ' ').trim();
+    const semanticClass = (element) => {
+      const classes = typeof element.className === 'string' ? element.className.split(/\s+/).filter(Boolean) : [];
+      const skip = /^(text|bg|flex|grid|items|justify|px|py|p|m|w|h|max|min|relative|absolute|fixed|sticky|rounded|border|shadow|overflow|z|gap|font|leading|tracking|hover|focus|lg|md|sm|xl|container)$/;
+      return classes.find((c) => {
+        if (skip.test(c.split('-')[0])) return false;
+        return /[a-z]_[a-z]/i.test(c) || /^(ascii|asci|nav|footer|button|btn|card|section|hero|container|banner|cta|marquee|splide|slider|product|enterprise|pricing|community|about|contact|press|manifesto|testimonial|workflow|lovewall|standard|page)-/i.test(c);
+      }) || '';
+    };
+    const ordinalByTag = {};
+    const keyFor = (element) => {
+      const wf = element.getAttribute('data-wf-el');
+      if (wf) return `wf:${wf}`;
+      const cls = semanticClass(element);
+      if (cls) return `wf:${cls}`;
+      if (element.id) return `id:${element.id}`;
+      const tagKey = element.tagName.toLowerCase();
+      if (element.tagName === 'BODY') return 'body';
+      if (['SECTION', 'MAIN', 'HEADER', 'FOOTER', 'NAV'].includes(element.tagName)) {
+        const ordinal = ordinalByTag[tagKey] || 0;
+        ordinalByTag[tagKey] = ordinal + 1;
+        return `${tagKey}:${ordinal}`;
+      }
+      if (element.tagName === 'IMG') {
+        try {
+          const url = new URL(element.currentSrc || element.src || '', document.baseURI);
+          const filename = decodeURIComponent(url.pathname.split('/').pop() || '')
+            .replace(/^[a-f0-9]{20,}_/i, '')
+            .replace(/^[a-f0-9]{20,}_/i, '')
+            .replace(/-p-\d+(?=\.)/i, '')
+            .replace(/\.[^.]+$/, '')
+            .replace(/[\s_%-]+/g, '')
+            .toLowerCase();
+          if (filename) return `img:${filename}`;
+        } catch { /* fall through */ }
+        const ordinal = ordinalByTag[tagKey] || 0;
+        ordinalByTag[tagKey] = ordinal + 1;
+        return `${tagKey}:${ordinal}`;
+      }
+      if (['PRE', 'CANVAS', 'VIDEO', 'SVG'].includes(element.tagName)) {
+        const ordinal = ordinalByTag[tagKey] || 0;
+        ordinalByTag[tagKey] = ordinal + 1;
+        return `${tagKey}:${ordinal}`;
+      }
+      // Plain painted DIV/SPAN text keys are too unstable across Webflow vs.
+      // React DOM structure; rely on data-wf-el/semantic class for component
+      // layers and on landmarks/media for generalized decorative coverage.
+      if (['DIV', 'SPAN'].includes(element.tagName)) return '';
+      const label = normalize(element.getAttribute('aria-label') || element.getAttribute('title') || '').slice(0, 50).toLowerCase();
+      return label ? `${tagKey}:${label}` : '';
+    };
+    const nonTransparent = (value) => value && value !== 'transparent' && value !== 'rgba(0, 0, 0, 0)';
+    const hasPaint = (element, comp, before, after) => {
+      const rect = element.getBoundingClientRect();
+      const area = rect.width * rect.height;
+      if (['PRE', 'CANVAS', 'VIDEO', 'SVG', 'IMG'].includes(element.tagName)) return area > 100;
+      if (nonTransparent(comp.backgroundColor) || (comp.backgroundImage && comp.backgroundImage !== 'none')) return true;
+      if (comp.boxShadow && comp.boxShadow !== 'none') return true;
+      if (Number.parseFloat(comp.borderTopWidth || '0') > 0 && nonTransparent(comp.borderTopColor)) return true;
+      if (comp.filter && comp.filter !== 'none') return true;
+      if (comp.backdropFilter && comp.backdropFilter !== 'none') return true;
+      if (before && before.content !== 'none' && (nonTransparent(before.backgroundColor) || before.backgroundImage !== 'none')) return true;
+      if (after && after.content !== 'none' && (nonTransparent(after.backgroundColor) || after.backgroundImage !== 'none')) return true;
+      return false;
+    };
+    const isVisible = (element) => {
+      const rect = element.getBoundingClientRect();
+      if (rect.width < 4 || rect.height < 4) return false;
+      const docWidth = document.documentElement.clientWidth;
+      const docHeight = Math.max(document.documentElement.scrollHeight, document.body.scrollHeight);
+      if (rect.right <= 0 || rect.left >= docWidth || rect.bottom <= 0 || rect.top >= docHeight) return false;
+      let cur = element;
+      let effectiveOpacity = 1;
+      while (cur) {
+        const style = window.getComputedStyle(cur);
+        if (style.display === 'none' || style.visibility === 'hidden') return false;
+        if (cur.hasAttribute('hidden')) return false;
+        effectiveOpacity *= Number.parseFloat(style.opacity || '1') || 0;
+        cur = cur.parentElement;
+      }
+      return effectiveOpacity > 0.01;
+    };
+
+    const layers = [];
+    Array.from(document.querySelectorAll('body, body *')).forEach((element, index) => {
+      if (!isVisible(element)) return;
+      const comp = window.getComputedStyle(element);
+      const before = window.getComputedStyle(element, '::before');
+      const after = window.getComputedStyle(element, '::after');
+      if (!hasPaint(element, comp, before, after)) return;
+      const key = keyFor(element, index);
+      // On local Tailwind markup, unlabeled generic painted DIVs are not stable
+      // enough to compare. Keep live semantic classes and local data-wf-el keys,
+      // plus media/decorative tags and landmarks.
+      if (!key) return;
+      if (!isLive && key.startsWith('div:')) return;
+      const rect = element.getBoundingClientRect();
+      let effectiveOpacity = 1;
+      for (let cur = element; cur; cur = cur.parentElement) {
+        effectiveOpacity *= Number.parseFloat(window.getComputedStyle(cur).opacity || '1') || 0;
+      }
+      layers.push({
+        key,
+        tag: element.tagName,
+        rect: {
+          top: Math.round(rect.top + window.scrollY),
+          left: Math.round(rect.left + window.scrollX),
+          width: Math.round(rect.width),
+          height: Math.round(rect.height),
+          area: Math.round(rect.width * rect.height),
+        },
+        style: {
+          backgroundColor: comp.backgroundColor,
+          backgroundImage: comp.backgroundImage,
+          borderColor: comp.borderTopColor,
+          borderWidth: comp.borderTopWidth,
+          borderRadius: comp.borderRadius,
+          boxShadow: comp.boxShadow,
+          filter: comp.filter,
+          backdropFilter: comp.backdropFilter,
+          opacity: comp.opacity,
+          effectiveOpacity: Math.round(effectiveOpacity * 100) / 100,
+          position: comp.position,
+          zIndex: comp.zIndex,
+          transform: comp.transform,
+        },
+        pseudo: {
+          beforePaint: before && before.content !== 'none' && (nonTransparent(before.backgroundColor) || before.backgroundImage !== 'none'),
+          afterPaint: after && after.content !== 'none' && (nonTransparent(after.backgroundColor) || after.backgroundImage !== 'none'),
+        },
+      });
+    });
+    return layers.sort((a, b) => (b.rect.area || 0) - (a.rect.area || 0)).slice(0, 300);
+  }, isLiveSite);
+}
+
+function comparePaintedLayers(liveLayers = [], testLayers = []) {
+  const isSpecializedButtonLayer = (item) => /^wf:(btn|button)(?:[-_]|$)/.test(item?.key || '');
+  liveLayers = (liveLayers || []).filter((item) => !isSpecializedButtonLayer(item));
+  testLayers = (testLayers || []).filter((item) => !isSpecializedButtonLayer(item));
+
+  const group = (items) => {
+    const map = new Map();
+    for (const item of items || []) {
+      if (!map.has(item.key)) map.set(item.key, []);
+      map.get(item.key).push(item);
+    }
+    return map;
+  };
+  const liveMap = group(liveLayers);
+  const testMap = group(testLayers);
+  const missing = [];
+  const extra = [];
+  const countDiffs = [];
+  const styleDiffs = [];
+  const unmatchedLive = [];
+  const unmatchedTest = [];
+  const props = ['backgroundColor', 'backgroundImage', 'borderColor', 'borderWidth', 'borderRadius', 'boxShadow', 'filter', 'backdropFilter', 'opacity', 'effectiveOpacity'];
+  const comparePaintValue = (prop, live, test) => {
+    if (prop === 'effectiveOpacity') {
+      if (Math.abs((live ?? 1) - (test ?? 1)) > 0.05) return `effectiveOpacity: live=${live} test=${test}`;
+      return null;
+    }
+    return compareStyleValue(prop, live, test, {}, {});
+  };
+  const comparePair = (liveItem, testItem, key, instance) => {
+    const diffs = [];
+    for (const prop of props) {
+      const diff = comparePaintValue(prop, liveItem.style?.[prop], testItem.style?.[prop]);
+      if (diff) diffs.push(diff);
+    }
+    if (liveItem.pseudo?.beforePaint !== testItem.pseudo?.beforePaint) diffs.push(`::before paint: live=${liveItem.pseudo?.beforePaint} test=${testItem.pseudo?.beforePaint}`);
+    if (liveItem.pseudo?.afterPaint !== testItem.pseudo?.afterPaint) diffs.push(`::after paint: live=${liveItem.pseudo?.afterPaint} test=${testItem.pseudo?.afterPaint}`);
+    if (diffs.length) styleDiffs.push({ key, instance, tag: liveItem.tag, diffs, liveRect: liveItem.rect, testRect: testItem.rect });
+  };
+  for (const [key, liveItems] of liveMap) {
+    const testItems = testMap.get(key) || [];
+    const shared = Math.min(liveItems.length, testItems.length);
+    if (testItems.length && liveItems.length !== testItems.length) {
+      countDiffs.push({ key, liveCount: liveItems.length, testCount: testItems.length });
+    }
+    for (let index = 0; index < shared; index += 1) {
+      comparePair(liveItems[index], testItems[index], key, index + 1);
+    }
+    unmatchedLive.push(...liveItems.slice(shared));
+  }
+  for (const [key, testItems] of testMap) {
+    const liveItems = liveMap.get(key) || [];
+    unmatchedTest.push(...testItems.slice(Math.min(liveItems.length, testItems.length)));
+  }
+
+  const candidates = [];
+  for (let liveIndex = 0; liveIndex < unmatchedLive.length; liveIndex += 1) {
+    for (let testIndex = 0; testIndex < unmatchedTest.length; testIndex += 1) {
+      const liveItem = unmatchedLive[liveIndex];
+      const testItem = unmatchedTest[testIndex];
+      if (liveItem.tag !== testItem.tag) continue;
+      const liveRect = liveItem.rect || {};
+      const testRect = testItem.rect || {};
+      const areaRatio = Math.abs((liveRect.area || 0) - (testRect.area || 0)) / Math.max(liveRect.area || 1, testRect.area || 1);
+      const topDiff = Math.abs((liveRect.top || 0) - (testRect.top || 0));
+      const leftDiff = Math.abs((liveRect.left || 0) - (testRect.left || 0));
+      const sizeDiff = Math.abs((liveRect.width || 0) - (testRect.width || 0)) + Math.abs((liveRect.height || 0) - (testRect.height || 0));
+      const maxDimension = Math.max(liveRect.width || 0, liveRect.height || 0, testRect.width || 0, testRect.height || 0, 1);
+      if (areaRatio > 0.45 || topDiff > Math.max(180, maxDimension * 0.45) || leftDiff > Math.max(180, maxDimension * 0.45)) continue;
+      candidates.push({ liveIndex, testIndex, score: topDiff * 3 + leftDiff + sizeDiff * 0.5 + areaRatio * 200 });
+    }
+  }
+  candidates.sort((a, b) => a.score - b.score);
+  const matchedLive = new Set();
+  const matchedTest = new Set();
+  for (const candidate of candidates) {
+    if (matchedLive.has(candidate.liveIndex) || matchedTest.has(candidate.testIndex)) continue;
+    matchedLive.add(candidate.liveIndex);
+    matchedTest.add(candidate.testIndex);
+    const liveItem = unmatchedLive[candidate.liveIndex];
+    const testItem = unmatchedTest[candidate.testIndex];
+    comparePair(liveItem, testItem, `${liveItem.key} ↔ ${testItem.key}`, 1);
+  }
+
+  const addGrouped = (target, items) => {
+    const grouped = group(items);
+    for (const [key, groupedItems] of grouped) {
+      target.push({ key, tag: groupedItems[0].tag, count: groupedItems.length, largestArea: groupedItems[0].rect?.area || 0 });
+    }
+  };
+  addGrouped(missing, unmatchedLive.filter((_, index) => !matchedLive.has(index)));
+  addGrouped(extra, unmatchedTest.filter((_, index) => !matchedTest.has(index)));
+  return { missing, extra, countDiffs, styleDiffs };
+}
+
+// ── Visual button/component contract audit ──
+async function extractButtonComponents(page) {
+  return page.evaluate(() => {
+    const normalize = (value) => (value || '').replace(/\s+/g, ' ').trim();
+    const collapseRepeatedLabel = (label) => {
+      const words = normalize(label).split(' ');
+      if (words.length > 1 && words.length % 2 === 0) {
+        const mid = words.length / 2;
+        if (words.slice(0, mid).join(' ').toLowerCase() === words.slice(mid).join(' ').toLowerCase()) {
+          return words.slice(0, mid).join(' ');
+        }
+      }
+      return normalize(label);
+    };
+
+    const isVisible = (element) => {
+      const rect = element.getBoundingClientRect();
+      if (rect.width < 4 || rect.height < 4) return false;
+      for (let cur = element; cur; cur = cur.parentElement) {
+        const style = window.getComputedStyle(cur);
+        const opacity = Number.parseFloat(style.opacity);
+        if (style.display === 'none' || style.visibility === 'hidden' || (Number.isFinite(opacity) && opacity === 0)) return false;
+        if (cur.hasAttribute('hidden')) return false;
+      }
+      return true;
+    };
+    const isButtonRoot = (element) => {
+      const cls = `${element.className || ''}`;
+      const role = element.getAttribute('role') || '';
+      const wf = element.getAttribute('data-wf-el') || '';
+      return /^button(?:-|$)/.test(wf) ||
+        element.hasAttribute('data-wf--button--variant') ||
+        /(^|\s)(button(?:-[\w]+)?|btn|btn-wrap|btn-wrap-primary|btn-wrap-dark|btn-primary|btn-outline)(\s|$)/.test(cls) ||
+        /(^|\s)w-variant[-\w]*/.test(cls) ||
+        role.toLowerCase() === 'button' ||
+        (element.tagName === 'INPUT' && /^(submit|button)$/i.test(element.getAttribute('type') || ''));
+    };
+    const buttonRootFor = (element) => {
+      let cur = element;
+      let depth = 0;
+      while (cur && depth < 5) {
+        if (isButtonRoot(cur)) return cur;
+        cur = cur.parentElement;
+        depth += 1;
+      }
+      return isButtonRoot(element) ? element : null;
+    };
+    const textFrom = (element) => normalize(element?.innerText || element?.textContent || '');
+    const visualLabelFor = (wrapper, link) => {
+      const explicitVisible = Array.from(wrapper.querySelectorAll('[aria-hidden="true"]'))
+        .map(textFrom)
+        .find(Boolean);
+      if (explicitVisible) return collapseRepeatedLabel(explicitVisible);
+      const clone = wrapper.cloneNode(true);
+      clone.querySelectorAll('.sr-only, [hidden]').forEach((node) => node.remove());
+      const visualText = textFrom(clone);
+      return collapseRepeatedLabel(visualText || link?.getAttribute('aria-label') || wrapper.getAttribute('aria-label') || wrapper.getAttribute('value') || link?.getAttribute('title') || wrapper.getAttribute('title') || '');
+    };
+    const wrappers = new Set();
+    document.querySelectorAll('[data-wf--button--variant], [data-wf-el^="button"], [class*="button-"], .button, .btn, .btn-wrap, .btn-wrap-primary, .btn-wrap-dark, .btn-primary, .btn-outline, a[role="button"], button[class*="btn"], button[class*="button"], input[type="submit"], input[type="button"]').forEach((element) => {
+      if (!isVisible(element)) return;
+      const wrapper = buttonRootFor(element);
+      const link = wrapper?.matches('a[href],button') ? wrapper : wrapper?.querySelector('a[href],button');
+      const label = wrapper ? visualLabelFor(wrapper, link) : '';
+      if (!label || label.length > 80) return;
+      if (!wrapper || !isVisible(wrapper)) return;
+      for (const existing of Array.from(wrappers)) {
+        if (existing.contains(wrapper)) return;
+        if (wrapper.contains(existing)) wrappers.delete(existing);
+      }
+      wrappers.add(wrapper);
+    });
+    return Array.from(wrappers).map((wrapper, index) => {
+      const link = wrapper.matches('a[href],button') ? wrapper : wrapper.querySelector('a[href],button');
+      const label = visualLabelFor(wrapper, link).slice(0, 80);
+      const rect = wrapper.getBoundingClientRect();
+      const c = window.getComputedStyle(wrapper);
+      const linkStyle = link ? window.getComputedStyle(link) : c;
+      let effectiveOpacity = 1;
+      for (let cur = wrapper; cur; cur = cur.parentElement) {
+        effectiveOpacity *= Number.parseFloat(window.getComputedStyle(cur).opacity || '1') || 0;
+      }
+      const cls = `${wrapper.className || ''}`;
+      const variant = wrapper.getAttribute('data-wf--button--variant') ||
+        (/btn-wrap-primary|btn-primary/.test(cls) ? 'primary' : /btn-wrap-dark/.test(cls) ? 'lightbrown' : /btn-wrap|btn-outline|secondary|w-variant/.test(cls) ? 'secondary' : 'unknown');
+      return {
+        signature: `button:${label.toLowerCase()}`,
+        label,
+        variant,
+        index,
+        href: link?.getAttribute('href') || '',
+        rect: { top: Math.round(rect.top + window.scrollY), left: Math.round(rect.left + window.scrollX), width: Math.round(rect.width), height: Math.round(rect.height) },
+        style: {
+          backgroundColor: c.backgroundColor,
+          backgroundImage: c.backgroundImage,
+          borderColor: c.borderTopColor,
+          borderWidth: c.borderTopWidth,
+          borderRadius: c.borderRadius,
+          boxShadow: c.boxShadow,
+          backdropFilter: c.backdropFilter,
+          opacity: c.opacity,
+          effectiveOpacity: Math.round(effectiveOpacity * 100) / 100,
+          color: c.color,
+          textColor: linkStyle.color,
+          textDecoration: linkStyle.textDecoration,
+          fontSize: linkStyle.fontSize,
+          fontWeight: linkStyle.fontWeight,
+        },
+      };
+    });
+  });
+}
+
+function compareButtonComponents(liveButtons = [], testButtons = []) {
+  const group = (items) => {
+    const map = new Map();
+    for (const item of items || []) {
+      if (!map.has(item.signature)) map.set(item.signature, []);
+      map.get(item.signature).push(item);
+    }
+    return map;
+  };
+  const liveMap = group(liveButtons);
+  const testMap = group(testButtons);
+  const missing = [];
+  const extra = [];
+  const mismatches = [];
+  const props = ['backgroundColor', 'backgroundImage', 'borderColor', 'borderWidth', 'borderRadius', 'boxShadow', 'backdropFilter', 'opacity', 'color', 'textColor', 'textDecoration', 'fontSize', 'fontWeight'];
+  for (const [sig, liveItems] of liveMap) {
+    const testItems = testMap.get(sig) || [];
+    if (!testItems.length) {
+      missing.push({ signature: sig, count: liveItems.length, label: liveItems[0].label });
+      continue;
+    }
+    if (liveItems.length !== testItems.length) {
+      mismatches.push({ signature: sig, label: liveItems[0].label, diffs: [`button count: live=${liveItems.length} test=${testItems.length}`] });
+    }
+    const pairs = liveItems.map((liveItem, index) => ({ liveItem, testItem: testItems[index] })).filter((pair) => pair.testItem);
+    for (const { liveItem, testItem } of pairs) {
+      const diffs = [];
+      if (liveItem.variant !== testItem.variant && liveItem.variant !== 'unknown' && testItem.variant !== 'unknown') {
+        diffs.push(`variant: live=${liveItem.variant} test=${testItem.variant}`);
+      }
+      for (const prop of props) {
+        const diff = compareStyleValue(prop, liveItem.style?.[prop], testItem.style?.[prop], liveItem.style, testItem.style);
+        if (diff) diffs.push(diff);
+      }
+      const opDiff = Math.abs((liveItem.style?.effectiveOpacity ?? 1) - (testItem.style?.effectiveOpacity ?? 1));
+      if (opDiff > 0.05) diffs.push(`effectiveOpacity: live=${liveItem.style.effectiveOpacity} test=${testItem.style.effectiveOpacity}`);
+      for (const key of ['width', 'height']) {
+        const delta = Math.abs((liveItem.rect?.[key] || 0) - (testItem.rect?.[key] || 0));
+        if (delta > 4) diffs.push(`rect.${key}: live=${liveItem.rect?.[key]} test=${testItem.rect?.[key]}`);
+      }
+      if (diffs.length) mismatches.push({ signature: sig, label: liveItem.label, diffs, liveRect: liveItem.rect, testRect: testItem.rect });
+    }
+  }
+  for (const [sig, testItems] of testMap) {
+    if (!liveMap.has(sig)) extra.push({ signature: sig, count: testItems.length, label: testItems[0].label });
+  }
+  return { missing, extra, mismatches };
+}
+
+
 async function extractHoverDiffs(page, selectors) {
   const maxChecks = 20;
   const results = [];
@@ -1631,7 +2230,20 @@ async function extractDropdownContent(page) {
           const text = (el.innerText || el.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 80);
           const tag = el.tagName;
           const ariaExpanded = el.getAttribute('aria-expanded');
-          return { tag, text: text || '(unlabeled)', ariaExpanded };
+          const rect = el.getBoundingClientRect();
+          return {
+            tag,
+            text: text || '(unlabeled)',
+            ariaExpanded,
+            rect: {
+              top: Math.round(rect.top + window.scrollY),
+              left: Math.round(rect.left + window.scrollX),
+              width: Math.round(rect.width),
+              height: Math.round(rect.height),
+              bottom: Math.round(rect.bottom + window.scrollY),
+              right: Math.round(rect.right + window.scrollX),
+            },
+          };
         }, handle);
 
         // Hover to reveal dropdowns. The live Webflow nav opens panels on hover;
@@ -1693,6 +2305,27 @@ async function extractDropdownContent(page) {
               const firstLink = candidate.querySelector('a');
               const linkStyle = firstLink ? window.getComputedStyle(firstLink) : {};
               return {
+                rect: {
+                  top: Math.round(rect.top + window.scrollY),
+                  left: Math.round(rect.left + window.scrollX),
+                  width: Math.round(rect.width),
+                  height: Math.round(rect.height),
+                  bottom: Math.round(rect.bottom + window.scrollY),
+                  right: Math.round(rect.right + window.scrollX),
+                },
+                triggerRect: {
+                  top: Math.round(triggerRect.top + window.scrollY),
+                  left: Math.round(triggerRect.left + window.scrollX),
+                  width: Math.round(triggerRect.width),
+                  height: Math.round(triggerRect.height),
+                  bottom: Math.round(triggerRect.bottom + window.scrollY),
+                  right: Math.round(triggerRect.right + window.scrollX),
+                },
+                offsetFromTrigger: {
+                  left: Math.round(rect.left - triggerRect.left),
+                  top: Math.round(rect.top - triggerRect.bottom),
+                  centerX: Math.round((rect.left + rect.width / 2) - (triggerRect.left + triggerRect.width / 2)),
+                },
                 width: Math.round(rect.width),
                 height: Math.round(rect.height),
                 linkCount: links.length,
@@ -1720,6 +2353,7 @@ async function extractDropdownContent(page) {
         results.push({
           trigger: triggerInfo.text,
           triggerTag: triggerInfo.tag,
+          triggerRect: triggerInfo.rect,
           hasDropdown: dropdownContent !== null,
           dropdown: dropdownContent,
         });
@@ -1784,6 +2418,30 @@ function compareDropdowns(liveDropdowns, testDropdowns) {
       if (extraLinks.length > 0) issues.push(`extra links: ${extraLinks.join(', ')}`);
       // Compare visual style
       const sizeDiff = Math.abs((ll.width || 0) - (tl.width || 0)) + Math.abs((ll.height || 0) - (tl.height || 0));
+      if (ll.offsetFromTrigger && tl.offsetFromTrigger) {
+        const geomChecks = [
+          ['offset.left', ll.offsetFromTrigger.left, tl.offsetFromTrigger.left, 12],
+          ['offset.top', ll.offsetFromTrigger.top, tl.offsetFromTrigger.top, 8],
+          ['offset.centerX', ll.offsetFromTrigger.centerX, tl.offsetFromTrigger.centerX, 12],
+        ];
+        for (const [label, liveValue, testValue, tolerance] of geomChecks) {
+          if (Math.abs((liveValue || 0) - (testValue || 0)) > tolerance) {
+            issues.push(`${label}: live=${liveValue}px test=${testValue}px`);
+          }
+        }
+      }
+      if (ll.rect && tl.rect) {
+        const panelGeomChecks = [
+          ['panel.left', ll.rect.left, tl.rect.left, 16],
+          ['panel.top', ll.rect.top, tl.rect.top, 16],
+        ];
+        for (const [label, liveValue, testValue, tolerance] of panelGeomChecks) {
+          if (Math.abs((liveValue || 0) - (testValue || 0)) > tolerance) {
+            issues.push(`${label}: live=${liveValue}px test=${testValue}px`);
+          }
+        }
+      }
+
       if (sizeDiff > 40) issues.push(`size: live=${ll.width}×${ll.height} test=${tl.width}×${tl.height}`);
       if (ll.borderRadius !== tl.borderRadius) issues.push(`borderRadius: live=${ll.borderRadius} test=${tl.borderRadius}`);
       if (ll.backgroundColor !== tl.backgroundColor) issues.push(`backgroundColor: live=${ll.backgroundColor} test=${tl.backgroundColor}`);
@@ -2625,11 +3283,24 @@ function compareContainerStyles(liveContainers, testContainers) {
   // footer matched dark whitepaper" pairings further down).  When the
   // counts differ we fall back to nearest-position matching so newly
   // added or removed wrapper sections still match sensibly.
-  for (const tag of Object.keys(liveByTag)) {
+  for (const tag of new Set([...Object.keys(liveByTag), ...Object.keys(testByTag)])) {
     const liveGroup = liveByTag[tag] || [];
     const testGroup = testByTag[tag] || [];
     const candidates = [];
     const sameLength = liveGroup.length === testGroup.length;
+    if (liveGroup.length !== testGroup.length) {
+      diffs.push({
+        index: -1,
+        liveLabel: `${tag} count`,
+        testLabel: `${tag} count`,
+        tag,
+        liveRect: null,
+        testRect: null,
+        diffs: [`container count: live=${liveGroup.length} test=${testGroup.length}`],
+        passed: false,
+      });
+    }
+
     for (let i = 0; i < liveGroup.length; i++) {
       for (let j = 0; j < testGroup.length; j++) {
         const live = liveGroup[i];
@@ -2668,10 +3339,32 @@ function compareContainerStyles(liveContainers, testContainers) {
 
     for (const [live, test] of pairs) {
       const propDiffs = [];
+      const sameRenderedSize = (dimension) => Math.abs((live.rect?.[dimension] || 0) - (test.rect?.[dimension] || 0)) <= 16;
+      const isNonVisualSizeConstraintDiff = (prop) => {
+        if (!['height', 'width', 'minHeight', 'maxHeight', 'minWidth', 'maxWidth'].includes(prop)) return false;
+        const dimension = prop.endsWith('Height') || prop === 'height' ? 'height' : 'width';
+        if (!sameRenderedSize(dimension)) return false;
+        const liveValue = live.style?.[prop];
+        const testValue = test.style?.[prop];
+        const livePx = parsePx(liveValue);
+        const testPx = parsePx(testValue);
+        const isNoConstraint = (value) => value === 'auto' || value === 'none' || value === '0px';
+        const rendered = Math.max(live.rect?.[dimension] || 0, test.rect?.[dimension] || 0);
+        const constraintIsInactive = (px) => {
+          if (px === null) return false;
+          if (prop.startsWith('min')) return px <= rendered + 2;
+          if (prop.startsWith('max')) return px >= rendered - 2;
+          return Math.abs(px - rendered) <= 16;
+        };
+        if (isNoConstraint(liveValue) && constraintIsInactive(testPx)) return true;
+        if (isNoConstraint(testValue) && constraintIsInactive(livePx)) return true;
+        if (prop === 'height' || prop === 'width') return livePx !== null && testPx !== null && Math.abs(livePx - testPx) <= 16;
+        return false;
+      };
 
       for (const prop of CONTAINER_STYLE_PROPS) {
         const diff = compareStyleValue(prop, live.style?.[prop], test.style?.[prop], live.style, test.style);
-        if (diff) propDiffs.push(diff);
+        if (diff && !isNonVisualSizeConstraintDiff(prop)) propDiffs.push(diff);
       }
 
       // Flag rect.height / rect.width mismatches > 16px on landmark
@@ -3275,6 +3968,22 @@ function summarizeRouteComparison(routePath, livePage, testPage, screenshotDiff)
   const imageDiffs = [];
   const liveImages = livePage.inventory.elements.filter((el) => el.tag === 'IMG' && el.renderedWidth);
   const testImages = testPage.inventory.elements.filter((el) => el.tag === 'IMG' && el.renderedWidth);
+
+  const dynamicMotionComparison = compareDynamicMotion(
+    livePage.dynamicMotion || [],
+    testPage.dynamicMotion || [],
+  );
+
+  const paintedLayerComparison = comparePaintedLayers(
+    livePage.paintedLayers || [],
+    testPage.paintedLayers || [],
+  );
+
+  const buttonComponentComparison = compareButtonComponents(
+    livePage.buttonComponents || [],
+    testPage.buttonComponents || [],
+  );
+
   for (const liveImg of liveImages) {
     const candidates = testImages.filter((t) => t.signature === liveImg.signature);
     if (candidates.length === 0) continue;
@@ -3340,12 +4049,27 @@ function summarizeRouteComparison(routePath, livePage, testPage, screenshotDiff)
     cssVarDiffs,
     cssVarDiffCount: cssVarDiffs.length,
     wfComparison,
-    wfMismatchCount: wfComparison.matched.filter((m) => !m.passed).length,
+    wfMismatchCount: wfComparison.matched.filter((m) => !m.passed).length + (wfComparison.countMismatches || []).length,
     wfStyleMismatchCount: wfComparison.matched.filter((m) => (m.styleDiffs || []).length > 0).length,
     wfLayoutMismatchCount: wfComparison.matched.filter((m) => (m.layoutDiffs || []).length > 0).length,
     wfMissingCount: wfComparison.missingOnTest.length,
     wfExtraCount: wfComparison.extraOnTest.length,
+    wfCountMismatchCount: (wfComparison.countMismatches || []).length,
+
     animationComparison,
+    dynamicMotionComparison,
+    dynamicMotionMissingCount: dynamicMotionComparison.missingMotion.length,
+    dynamicMotionExtraCount: dynamicMotionComparison.extraMotion.length,
+    dynamicMotionPropDiffCount: dynamicMotionComparison.propDiffs.length,
+    paintedLayerComparison,
+    paintedLayerMismatchCount: paintedLayerComparison.styleDiffs.length + paintedLayerComparison.countDiffs.length,
+    paintedLayerMissingCount: paintedLayerComparison.missing.length,
+    paintedLayerExtraCount: paintedLayerComparison.extra.length,
+    buttonComponentComparison,
+    buttonComponentMismatchCount: buttonComponentComparison.mismatches.length,
+    buttonComponentMissingCount: buttonComponentComparison.missing.length,
+    buttonComponentExtraCount: buttonComponentComparison.extra.length,
+
     animationMissingCount: animationComparison.missingAnimations.length,
     animationExtraCount: animationComparison.extraAnimations.length,
     animationPropDiffCount: animationComparison.propDiffs.length,
@@ -3544,6 +4268,9 @@ function renderMarkdown(report) {
   lines.push(`- Missing element signatures: ${report.summary.missingElements}`);
   lines.push(`- Unexpected test-only signatures: ${report.summary.extraElements}`);
   lines.push(`- Appearance mismatches: ${report.summary.styleMismatches}`);
+  lines.push(`- Size mismatches: ${report.summary.sizeMismatches || 0}`);
+  lines.push(`- Opacity mismatches: ${report.summary.opacityMismatches || 0}`);
+
   lines.push(`- Layout mismatches: ${report.summary.layoutMismatches}`);
   lines.push(`- Container/section style mismatches: ${report.summary.containerMismatches}`);
   lines.push(`- Element interactivity mismatches: ${report.summary.elementInteractivityMismatches || 0}`);
@@ -3558,6 +4285,17 @@ function renderMarkdown(report) {
   lines.push(`- Webflow element layout mismatches (data-wf-el): ${report.summary.wfLayoutMismatches || 0}`);
   lines.push(`- Webflow elements unmatched on test: ${report.summary.wfElementsMissing || 0}`);
   lines.push(`- Webflow elements extra on test: ${report.summary.wfElementsExtra || 0}`);
+  lines.push(`- Webflow same-key count mismatches: ${report.summary.wfCountMismatches || 0}`);
+  lines.push(`- Dynamic runtime motion missing on test: ${report.summary.dynamicMotionMissing || 0}`);
+  lines.push(`- Dynamic runtime motion extra on test: ${report.summary.dynamicMotionExtra || 0}`);
+  lines.push(`- Dynamic runtime motion property mismatches: ${report.summary.dynamicMotionPropDiffs || 0}`);
+  lines.push(`- Painted layer style/count mismatches: ${report.summary.paintedLayerMismatches || 0}`);
+  lines.push(`- Painted layers missing on test: ${report.summary.paintedLayerMissing || 0}`);
+  lines.push(`- Painted layers extra on test: ${report.summary.paintedLayerExtra || 0}`);
+  lines.push(`- Button component contract mismatches: ${report.summary.buttonComponentMismatches || 0}`);
+  lines.push(`- Button components missing on test: ${report.summary.buttonComponentMissing || 0}`);
+  lines.push(`- Button components extra on test: ${report.summary.buttonComponentExtra || 0}`);
+
   lines.push(`- Animations / transitions missing on test: ${report.summary.animationsMissing || 0}`);
   lines.push(`- Animation property mismatches: ${report.summary.animationPropDiffs || 0}`);
   lines.push(`- Animations / transitions extra on test: ${report.summary.animationsExtra || 0}`);
@@ -3762,7 +4500,7 @@ function renderMarkdown(report) {
     if (route.wfComparison) {
       const wf = route.wfComparison;
       const failedMatches = wf.matched.filter((m) => !m.passed);
-      if (failedMatches.length > 0 || wf.missingOnTest.length > 0 || wf.extraOnTest.length > 0) {
+      if (failedMatches.length > 0 || wf.missingOnTest.length > 0 || wf.extraOnTest.length > 0 || (wf.countMismatches || []).length > 0) {
         lines.push('');
         lines.push('### Webflow element mismatches (data-wf-el)');
         for (const m of wf.matched) {
@@ -3778,8 +4516,71 @@ function renderMarkdown(report) {
         for (const m of wf.extraOnTest) {
           lines.push(`- [ ] ${m.key} (${m.tag}) — test has data-wf-el="${m.key}" but no matching class on live`);
         }
+        for (const m of wf.countMismatches || []) {
+          lines.push(`- [ ] ${m.key} (${m.tag}) — live/test count differs (${m.liveCount} vs ${m.testCount})`);
+        }
+
       }
     }
+
+    if (route.dynamicMotionComparison) {
+      const dm = route.dynamicMotionComparison;
+      const total = dm.missingMotion.length + dm.extraMotion.length + dm.propDiffs.length;
+      if (total > 0) {
+        lines.push('');
+        lines.push('### Dynamic runtime motion mismatches');
+        lines.push(`- live moving elements: ${dm.liveMovingCount}, test: ${dm.testMovingCount}`);
+        for (const m of dm.missingMotion.slice(0, 30)) {
+          lines.push(`- [ ] missing motion on test: ${m.signature} (${m.tag}) — changed fields: ${(m.changedFields || []).join(', ') || 'mutation'}; mutations=${m.mutationCount || 0}`);
+        }
+        for (const m of dm.propDiffs.slice(0, 30)) {
+          lines.push(`- [ ] ${m.signature} (${m.tag || 'element'}) — ${m.diffs.join('; ')}`);
+        }
+        for (const m of dm.extraMotion.slice(0, 30)) {
+          lines.push(`- [ ] extra motion on test: ${m.signature} (${m.tag}) — changed fields: ${(m.changedFields || []).join(', ') || 'mutation'}; mutations=${m.mutationCount || 0}`);
+        }
+      }
+    }
+
+    if (route.paintedLayerComparison) {
+      const paint = route.paintedLayerComparison;
+      const total = paint.missing.length + paint.extra.length + paint.countDiffs.length + paint.styleDiffs.length;
+      if (total > 0) {
+        lines.push('');
+        lines.push('### Painted layer mismatches');
+        for (const m of paint.missing.slice(0, 30)) {
+          lines.push(`- [ ] missing painted layer on test: ${m.key} (${m.tag}) — count ${m.count}, largest area ${m.largestArea}`);
+        }
+        for (const m of paint.countDiffs.slice(0, 30)) {
+          lines.push(`- [ ] painted layer count mismatch: ${m.key} — live=${m.liveCount} test=${m.testCount}`);
+        }
+        for (const m of paint.styleDiffs.slice(0, 30)) {
+          lines.push(`- [ ] ${m.key} #${m.instance} (${m.tag}) — ${m.diffs.join('; ')}`);
+        }
+        for (const m of paint.extra.slice(0, 30)) {
+          lines.push(`- [ ] extra painted layer on test: ${m.key} (${m.tag}) — count ${m.count}, largest area ${m.largestArea}`);
+        }
+      }
+    }
+
+    if (route.buttonComponentComparison) {
+      const buttons = route.buttonComponentComparison;
+      const total = buttons.missing.length + buttons.extra.length + buttons.mismatches.length;
+      if (total > 0) {
+        lines.push('');
+        lines.push('### Button component contract mismatches');
+        for (const m of buttons.missing.slice(0, 30)) {
+          lines.push(`- [ ] missing button on test: ${m.signature} — count ${m.count}`);
+        }
+        for (const m of buttons.mismatches.slice(0, 40)) {
+          lines.push(`- [ ] ${m.signature} — ${m.diffs.join('; ')}`);
+        }
+        for (const m of buttons.extra.slice(0, 30)) {
+          lines.push(`- [ ] extra button on test: ${m.signature} — count ${m.count}`);
+        }
+      }
+    }
+
 
     // Dynamic widget UX comparison
     if (route.dynamicSelectorComparison && route.dynamicSelectorComparison.present && route.dynamicSelectorComparison.issues.length > 0) {
@@ -3956,6 +4757,21 @@ async function loadPage(page, origin, routePath) {
     12000,
     `settle delay ${url}`,
   );
+
+
+  // Capture true runtime motion before any static parity normalization cancels
+  // animations or zeroes transition durations. This catches rAF/text/canvas
+  // effects that are invisible to computed CSS animationName checks.
+  let dynamicMotion = [];
+  try {
+    dynamicMotion = await withTimeout(
+      extractDynamicMotion(page),
+      12000,
+      `dynamic motion ${url}`,
+    );
+  } catch (error) {
+    dynamicMotion = [{ signature: 'dynamic-motion:error', tag: 'ERROR', hasRuntimeMotion: false, error: error.message }];
+  }
 
   // Capture dynamic control/panel widget behavior before the generic lazy-
   // image priming scroll and before the static parity normalization cancels
@@ -4166,7 +4982,7 @@ async function loadPage(page, origin, routePath) {
   });
 
   const isLiveSite = origin === LIVE_ORIGIN;
-  const [inventory, containers, interactive, cssVars, wfElements, animations] = await withTimeout(
+  const [inventory, containers, interactive, cssVars, wfElements, animations, paintedLayers, buttonComponents] = await withTimeout(
     Promise.all([
       extractPageInventory(page),
       extractContainerStyles(page),
@@ -4174,6 +4990,8 @@ async function loadPage(page, origin, routePath) {
       extractCSSCustomProperties(page),
       extractWebflowElements(page, isLiveSite),
       extractAnimations(page),
+      extractPaintedLayers(page, isLiveSite),
+      extractButtonComponents(page),
     ]),
     extractTimeout,
     `extraction ${url}`,
@@ -4223,6 +5041,9 @@ async function loadPage(page, origin, routePath) {
     cssVars,
     wfElements,
     animations,
+    dynamicMotion,
+    paintedLayers,
+    buttonComponents,
     dynamicSelectorUx,
   };
 }
@@ -4370,6 +5191,16 @@ async function main() {
         wfLayoutMismatches: routes.reduce((total, route) => total + (route.wfLayoutMismatchCount || 0), 0),
         wfElementsMissing: routes.reduce((total, route) => total + (route.wfMissingCount || 0), 0),
         wfElementsExtra: routes.reduce((total, route) => total + (route.wfExtraCount || 0), 0),
+        wfCountMismatches: routes.reduce((total, route) => total + (route.wfCountMismatchCount || 0), 0),
+        dynamicMotionMissing: routes.reduce((total, route) => total + (route.dynamicMotionMissingCount || 0), 0),
+        dynamicMotionExtra: routes.reduce((total, route) => total + (route.dynamicMotionExtraCount || 0), 0),
+        dynamicMotionPropDiffs: routes.reduce((total, route) => total + (route.dynamicMotionPropDiffCount || 0), 0),
+        paintedLayerMismatches: routes.reduce((total, route) => total + (route.paintedLayerMismatchCount || 0), 0),
+        paintedLayerMissing: routes.reduce((total, route) => total + (route.paintedLayerMissingCount || 0), 0),
+        paintedLayerExtra: routes.reduce((total, route) => total + (route.paintedLayerExtraCount || 0), 0),
+        buttonComponentMismatches: routes.reduce((total, route) => total + (route.buttonComponentMismatchCount || 0), 0),
+        buttonComponentMissing: routes.reduce((total, route) => total + (route.buttonComponentMissingCount || 0), 0),
+        buttonComponentExtra: routes.reduce((total, route) => total + (route.buttonComponentExtraCount || 0), 0),
         animationsMissing: routes.reduce((total, route) => total + (route.animationMissingCount || 0), 0),
         animationsExtra: routes.reduce((total, route) => total + (route.animationExtraCount || 0), 0),
         animationPropDiffs: routes.reduce((total, route) => total + (route.animationPropDiffCount || 0), 0),
@@ -4392,6 +5223,8 @@ async function main() {
       report.summary.missingElements +
       report.summary.extraElements +
       report.summary.styleMismatches +
+      (report.summary.sizeMismatches || 0) +
+      (report.summary.opacityMismatches || 0) +
       report.summary.layoutMismatches +
       report.summary.containerMismatches +
       (report.summary.elementInteractivityMismatches || 0) +
@@ -4402,10 +5235,22 @@ async function main() {
       (report.summary.dropdownMismatches || 0) +
       report.summary.imageDimensionMismatches +
       (report.summary.wfElementMismatches || 0) +
+      (report.summary.wfElementsMissing || 0) +
+      (report.summary.wfElementsExtra || 0) +
+      (report.summary.dynamicMotionMissing || 0) +
+      (report.summary.dynamicMotionExtra || 0) +
+      (report.summary.dynamicMotionPropDiffs || 0) +
+      (report.summary.paintedLayerMismatches || 0) +
+      (report.summary.paintedLayerMissing || 0) +
+      (report.summary.paintedLayerExtra || 0) +
+      (report.summary.buttonComponentMismatches || 0) +
+      (report.summary.buttonComponentMissing || 0) +
+      (report.summary.buttonComponentExtra || 0) +
       (report.summary.animationsMissing || 0) +
       (report.summary.animationsExtra || 0) +
       (report.summary.animationPropDiffs || 0) +
       (report.summary.widgetsMissing || 0) +
+      (report.summary.widgetsExtra || 0) +
       (report.summary.dynamicSelectorMismatches || 0) +
       report.summary.screenshotMismatches;
 
@@ -4429,6 +5274,11 @@ module.exports = {
   capturePageScreenshotInChunks,
   captureScreenshotDiff,
   categorizeStyleDiffs,
+  compareButtonComponents,
+  extractButtonComponents,
+  compareDynamicMotion,
+  comparePaintedLayers,
+
   compareClickBehavior,
   compareContainerStyles,
   compareDropdowns,

@@ -40,7 +40,7 @@ const Product = () => {
         block on live's HTML).  Mirroring that structure keeps the
         section count and per-section heights aligned with live.
       */}
-      <section data-wf-el='section-product_hero' style={{ display: 'block', backgroundColor: 'rgba(0, 0, 0, 0)', paddingTop: '0px', paddingBottom: '0px', paddingLeft: '0px', paddingRight: '0px' }} className='relative overflow-hidden'>
+      <section data-wf-el='section-product_hero' style={{ display: 'block', backgroundColor: 'rgba(0, 0, 0, 0)', paddingTop: '0px', paddingBottom: '0px', paddingLeft: '0px', paddingRight: '0px' }} className='relative'>
         <div className='relative mx-auto flex max-w-[1238px] flex-col items-center justify-center text-center' style={{ height: '432px' }}>
           <div className='rounded-[4px] bg-brand-accent text-[13px] font-medium leading-none text-brand-fg' style={{ alignItems: 'center', display: 'flex', height: '48px', justifyContent: 'center', marginBottom: '24px', width: '121px' }}>
             Product

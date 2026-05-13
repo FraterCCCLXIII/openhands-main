@@ -49,8 +49,8 @@ export const FeaturedBlogCard: React.FC<FeaturedBlogCardProps> = ({
          * underline 1.6px, lineHeight 20.8, textAlign center). The
          * visible size comes from the wrapper's padding. */}
         <div
-          className='relative inline-flex btn text-[16px] leading-[20.8px] text-brand-bg pointer-events-none'
-          style={{ gap: '6.4px', padding: '14.4px 30.4px', borderRadius: '8px', marginBottom: '10px', backgroundColor: 'rgb(34, 21, 13)' }}
+          className='relative btn-wrap-primary text-[16px] leading-[20.8px] text-brand-bg pointer-events-none'
+          style={{ gap: '6.4px', padding: '14.4px 30.4px', borderRadius: '8px', marginBottom: '10px' }}
           aria-hidden='true'
         >
           <span style={{ visibility: 'hidden' }}>Read more</span>

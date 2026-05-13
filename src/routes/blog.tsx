@@ -152,7 +152,7 @@ const Blog = () => {
              * inherited text styling (fontWeight 500, underline 1.6px,
              * lineHeight 20.8, textAlign center) directly. The visible
              * size comes from the wrapper's padding. */}
-            <div className='relative inline-flex btn btn-outline border-none pointer-events-none' style={{ gap: '6.4px', padding: '14.4px 30.4px', borderRadius: '8px', marginBottom: '10px', backgroundColor: 'rgba(255, 255, 255, 0.34)' }} aria-hidden='true'>
+            <div className='relative btn-wrap pointer-events-none' style={{ gap: '6.4px', padding: '14.4px 30.4px', borderRadius: '8px', marginBottom: '10px' }} aria-hidden='true'>
               <span style={{ visibility: 'hidden' }}>Load more</span>
               <a
                 href='#blog-grid'
