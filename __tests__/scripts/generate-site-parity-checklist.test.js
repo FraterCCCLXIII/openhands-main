@@ -679,4 +679,28 @@ describe('generalized visual parity comparisons', () => {
       signature: 'button:book a demo',
     }));
   });
+
+  it('collapses concatenated duplicate visible labels from overlay button markup', async () => {
+    document.body.innerHTML = `
+      <div class="btn-wrap">
+        <span aria-hidden="true">Read more</span><a href="/post"><span>Read more</span></a>
+      </div>
+    `;
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue({
+      top: 10,
+      left: 20,
+      right: 140,
+      bottom: 72,
+      width: 120,
+      height: 52,
+      x: 20,
+      y: 10,
+      toJSON: () => ({}),
+    });
+
+    const buttons = await extractButtonComponents({ evaluate: async (callback) => callback() });
+
+    expect(buttons[0].label).toBe('Read more');
+    expect(buttons[0].signature).toBe('button:read more');
+  });
 });

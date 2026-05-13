@@ -1984,14 +1984,20 @@ async function extractButtonComponents(page) {
   return page.evaluate(() => {
     const normalize = (value) => (value || '').replace(/\s+/g, ' ').trim();
     const collapseRepeatedLabel = (label) => {
-      const words = normalize(label).split(' ');
+      const normalized = normalize(label);
+      const compact = normalized.replace(/\s+/g, '').toLowerCase();
+      if (compact.length > 0 && compact.length % 2 === 0) {
+        const mid = compact.length / 2;
+        if (compact.slice(0, mid) === compact.slice(mid)) return normalized.slice(0, Math.ceil(normalized.length / 2)).trim();
+      }
+      const words = normalized.split(' ');
       if (words.length > 1 && words.length % 2 === 0) {
         const mid = words.length / 2;
         if (words.slice(0, mid).join(' ').toLowerCase() === words.slice(mid).join(' ').toLowerCase()) {
           return words.slice(0, mid).join(' ');
         }
       }
-      return normalize(label);
+      return normalized;
     };
 
     const isVisible = (element) => {
