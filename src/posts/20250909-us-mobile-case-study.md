@@ -1,17 +1,16 @@
 ---
-title: "Case Study: How US Mobile Supercharges Software Engineering with OpenHands"
-excerpt: "Learn how US Mobile leveraged OpenHands to reduce development time by 80% and transform an 8-point user story into a 2-point task, enabling their engineers to focus on higher-value work while delivering features faster."
-coverImage: "/assets/blog/20250909-us-mobile-case-study/cover.png"
-coverAlt: "Image from blog post"
-date: "2025-09-09T12:00:00.000Z"
-seoTitleDate: "Nov 12, 2025"
+title: 'Case Study: How US Mobile Supercharges Software Engineering with OpenHands'
+slug: case-study-how-us-mobile-supercharges-software-engineering-with-openhands
+excerpt: 'Learn how US Mobile leveraged OpenHands to reduce development time by 80% and transform an 8-point user story into a 2-point task, enabling their engineers to focus on higher-value work while delivering features faster.'
+coverImage: /assets/webflow/blog/agent-control-plane/cover.png
+coverAlt: Image from blog post
+date: '2025-09-09T12:00:00.000Z'
 authors:
   - name: OpenHands Team
-    picture: "/assets/blog/authors/openhands-team.png"
 ogImage:
-  url: "/assets/blog/20250909-us-mobile-case-study/cover.png"
+  url: /assets/webflow/blog/agent-control-plane/cover.png
+seoTitleDate: 'Nov 12, 2025'
 ---
-
 [US Mobile](https://www.usmobile.com/) is a fast-growing wireless telecom provider, known for its first-of-its-kind tech that enables consumers to switch between any of the big three mobile networks. Priding itself on innovation, customer-centricity, and flexibility, US Mobile has leveraged technology since its founding to stay ahead of customer needs and differentiate itself.
 
 Like many forward-thinking organizations, US Mobile made the strategic decision to embrace new AI initiatives across the organization and R&D teams.
@@ -26,7 +25,7 @@ To implement this, the engineer was empowered to use OpenHands to build and ship
 
 This approach freed up the engineer to work on other assignments, while OpenHands managed to address nearly 80% of the development effort. Once the code branch was pushed, only minor adjustments were needed to address small edge cases.
 
-> "I'm finding that OpenHands is incredibly decisive. [Other solutions] spin its wheels and go in circles… whereas OpenHands did not do that, which I appreciate. It's very decisive and focused." – Senior Software Engineer, US Mobile
+> "I'm finding that OpenHands is incredibly decisive. \[Other solutions\] spin its wheels and go in circles… whereas OpenHands did not do that, which I appreciate. It's very decisive and focused." – Senior Software Engineer, US Mobile
 
 Looking ahead, the senior engineer sees opportunities to integrate OpenHands into their daily routine. For example, they can review upcoming tickets, and select one or two internal tooling requests with clearly defined solutions. Instead of manually implementing the feature, they can now draft a prompt describing the required change and assign it to OpenHands.
 

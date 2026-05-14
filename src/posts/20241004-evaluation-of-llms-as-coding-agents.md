@@ -1,21 +1,17 @@
 ---
-title: "Evaluation of LLMs as Coding Agents on SWE-Bench (at 30x Speed!)"
-excerpt: "We evaluated LLMs as coding agents on SWE-Bench Lite, using an evaluation framework we built for efficient evaluation of coding agents."
-coverImage: "/assets/blog/20241004-evaluation-of-llms-as-coding-agents/accuracy-bar-chart.png"
-coverAlt: "Cover image"
-date: "2024-10-04T08:00:00.000Z"
-seoTitleDate: "Nov 12, 2025"
+title: Evaluation of LLMs as Coding Agents on SWE-Bench (at 30x Speed!)
+slug: evaluation-of-llms-as-coding-agents-on-swe-bench-at-30x-speed
+excerpt: 'We evaluated LLMs as coding agents on SWE-Bench Lite, using an evaluation framework we built for efficient evaluation of coding agents.'
+coverImage: /assets/webflow/misc/6914ea3bdba8fa1fa0d86fdf_6914ea37174a5acc2767ab7d_accuracy-bar-chart.png
+coverAlt: Cover image
+date: '2024-10-04T12:00:00.000Z'
 authors:
   - name: Graham Neubig
-    picture: "/assets/blog/authors/graham.jpg"
-    link: https://www.phontron.com/
   - name: Xingyao Wang
-    picture: "/assets/blog/authors/xingyao.webp"
-    link: https://xwang.dev
 ogImage:
-  url: "/assets/blog/20241004-evaluation-of-llms-as-coding-agents/accuracy-bar-chart.png"
+  url: /assets/webflow/misc/6914ea3bdba8fa1fa0d86fdf_6914ea37174a5acc2767ab7d_accuracy-bar-chart.png
+seoTitleDate: 'Nov 12, 2025'
 ---
-
 ## Introduction
 
 Coding agents hold great promise, but they're still far from perfect. Because of this, to make iterative improvements, we need to evaluate them rigorously.
@@ -48,17 +44,15 @@ Now that we have faster evaluation, we were able to answer two questions that we
 
 - **What are the best open models for use in coding agents?** Up until now we had mainly been relying on closed-source models, but we believe in open source and want to use open models if we can! We tried out llama-3.1, Qwen2.5, and Deepseek v2.5.
 - **How does the new OpenAI o1🍓 model perform?** The recently released OpenAI o1 models are all the rage nowadays, and we wanted to know how they stack up against previous closed models.
-
 The results of our experiments are below, with closed models in blue and open models in red:
 
-![Chart of LLM performance](/assets/blog/20241004-evaluation-of-llms-as-coding-agents/accuracy-bar-chart.png)
+![Chart of LLM performance](/assets/webflow/misc/6914ea3bdba8fa1fa0d86fdf_6914ea37174a5acc2767ab7d_accuracy-bar-chart.png)
 
 A few interesting takeaways here:
 
 - Clauder 3.5 Sonnet is the best by a fair amount, achieving a 27% resolve rate with the default agent in OpenHands.
 - GPT-4o lags behind, and o1-mini actually performed somewhat worse than GPT-4o. We went in and analyzed the results a little, and briefly it seemed like o1 was sometimes "overthinking" things, performing extra environment configuration tasks when it could just go ahead and finish the task.
 - Finally, the strongest open models were Llama 3.1 405 B and deepseek-v2.5, and they performed reasonably, even besting some of the closed models.
-
 Another aspect that is of interest, given that running agents can be relatively expensive, is the price/accuracy tradeoff, we've plotted this below:
 
 ![Chart of price/accuracy tradeoff](/assets/blog/20241004-evaluation-of-llms-as-coding-agents/accuracy-vs-cost.png)

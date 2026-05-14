@@ -185,11 +185,9 @@ const BlogDetails = () => {
             </h1>
           </div>
 
-          <figure className='w-full'>
+          <figure className={`w-full overflow-hidden ${data.coverRadius === 'none' ? 'rounded-none' : 'rounded-[8px]'}`}>
             {!data.cover && (
-              <PlaceholderImage
-                className={`w-full ${data.coverRadius === 'none' ? 'rounded-none' : 'rounded-[8px]'}`}
-              />
+              <PlaceholderImage className='w-full rounded-none' />
             )}
             {data.cover && (
               <img
@@ -197,7 +195,7 @@ const BlogDetails = () => {
                 alt={data.coverAlt}
                 loading='lazy'
                 decoding='async'
-                className={`h-auto w-full ${data.coverRadius === 'none' ? 'rounded-none' : 'rounded-[8px]'}`}
+                className='h-auto w-full rounded-none object-cover'
               />
             )}
           </figure>

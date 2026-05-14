@@ -5,10 +5,10 @@ import { BlogCard } from './blog-card';
 import { NewsletterForm } from './newsletter-form';
 
 interface BlogFooterProps {
-  title: string;
-  authors: Array<{ name: string; link?: string | null }>;
-  date: string;
-  url: string;
+  title?: string;
+  authors?: Array<{ name: string; link?: string | null }>;
+  date?: string;
+  url?: string;
   articleHighlights?: Array<{
     title: string;
     cover: string | null;
@@ -18,14 +18,14 @@ interface BlogFooterProps {
 }
 
 export const BlogFooter: React.FC<BlogFooterProps> = ({
-  title,
-  authors,
-  date,
-  url,
+  title = 'OpenHands Blog',
+  authors = [],
+  date = new Date().toISOString(),
+  url = '',
   articleHighlights = [],
 }) => {
   const [copied, setCopied] = useState(false);
-  const [expanded, setExpanded] = useState(true);
+  const [expanded, setExpanded] = useState(false);
   const navigation = useNavigation();
   const data = useActionData<typeof action>();
 
@@ -33,28 +33,13 @@ export const BlogFooter: React.FC<BlogFooterProps> = ({
   const year = dateObj.getFullYear();
   const month = dateObj.toLocaleString('default', { month: 'short' });
   const day = dateObj.getDate();
-
-  const generateBibTeX = () => {
-    const firstAuthorLastName = authors[0].name.split(' ').pop() || 'Author';
-    const citationKey = `${firstAuthorLastName.toLowerCase()}${year}-${title
-      .split(' ')
-      .slice(0, 3)
-      .join('-')
-      .toLowerCase()}`;
-
-    return `@online{${citationKey},
-  author = {${authors.map((author) => author.name).join(' and ')}},
-  title = {${title}},
-  year = {${year}},
-  month = {${month}},
-  day = {${day}},
-  url = {${url}},
-  note = {Blog post},
-  organization = {OpenHands Blog}
-}`;
-  };
-
-  const bibtex = generateBibTeX();
+  const firstAuthorLastName = authors[0]?.name.split(' ').pop() || 'Author';
+  const citationKey = `${firstAuthorLastName.toLowerCase()}${year}-${title
+    .split(' ')
+    .slice(0, 3)
+    .join('-')
+    .toLowerCase()}`;
+  const bibtex = `@online{${citationKey},\n  author = {${authors.map((author) => author.name).join(' and ')}},\n  title = {${title}},\n  year = {${year}},\n  month = {${month}},\n  day = {${day}},\n  url = {${url}},\n  note = {Blog post},\n  organization = {OpenHands Blog}\n}`;
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(bibtex);
@@ -87,7 +72,8 @@ export const BlogFooter: React.FC<BlogFooterProps> = ({
                 type='button'
                 onClick={copyToClipboard}
                 className='flex h-12 w-6 shrink-0 items-center justify-center text-[#5f5f5f] transition-colors hover:text-brand-brown'
-                title='Copy BibTeX'
+                title='Copy Citation'
+                aria-label='Copy Citation'
               >
                 <img src='/assets/webflow/icons/copy.svg' alt='' className='h-6 w-6 overflow-hidden rounded-[8px] object-cover' />
                 {copied && <span className='sr-only'>Copied!</span>}
@@ -102,7 +88,6 @@ export const BlogFooter: React.FC<BlogFooterProps> = ({
           </div>
         </div>
       </section>
-
       {articleHighlights.length > 0 && (
         <section data-wf-el='section' style={{ paddingTop: '80px', paddingBottom: '80px' }}>
           <div className='mx-auto grid w-full max-w-[1238px] grid-cols-1 gap-x-10 gap-y-12 px-5 md:grid-cols-2 lg:px-0 xl:grid-cols-3'>

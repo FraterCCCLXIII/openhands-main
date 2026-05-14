@@ -43,25 +43,13 @@ export const FeaturedBlogCard: React.FC<FeaturedBlogCardProps> = ({
         <p className='m-0 text-lg lg:text-[20.8px] leading-[1.2] font-medium text-white'>
           {description}
         </p>
-        {/* Live's Read-more is a Webflow overlay-link hybrid: the
-         * `<a>` is `position:absolute; inset:0; padding:0; display:
-         * block` AND carries the visible text styles (fontWeight 500,
-         * underline 1.6px, lineHeight 20.8, textAlign center). The
-         * visible size comes from the wrapper's padding. */}
-        <div
-          className='relative btn-wrap-primary text-[16px] leading-[20.8px] text-brand-bg pointer-events-none'
-          style={{ gap: '6.4px', padding: '14.4px 30.4px', borderRadius: '8px', marginBottom: '10px' }}
-          aria-hidden='true'
+        <Link
+          to={href}
+          className='btn btn-primary text-brand-bg'
+          style={{ padding: '14.4px 30.4px', borderRadius: '8px', marginBottom: '10px', fontSize: '16px', lineHeight: '20.8px' }}
         >
-          <span style={{ visibility: 'hidden' }}>Read more</span>
-          <Link
-            to={href}
-            className='absolute inset-0 block btn text-[16px] leading-[20.8px] text-brand-bg pointer-events-auto'
-            style={{ padding: '0px' }}
-          >
-            Read more
-          </Link>
-        </div>
+          Read more
+        </Link>
       </div>
     </div>
   </article>

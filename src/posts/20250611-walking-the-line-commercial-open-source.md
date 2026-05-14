@@ -1,20 +1,19 @@
 ---
-title: "Walking the Line with Commercial Open Source"
-excerpt: "Navigating the challenges and opportunities of building commercial open source software, and how we're approaching it with OpenHands."
-coverImage: "/assets/blog/20250611-walking-the-line-commercial-open-source/cover.png"
-coverAlt: "Image from blog post"
-date: "2025-06-11T09:00:00.000Z"
-seoTitleDate: "Nov 12, 2025"
+title: Walking the Line with Commercial Open Source
+slug: walking-the-line-with-commercial-open-source
+excerpt: 'Navigating the challenges and opportunities of building commercial open source software, and how we''re approaching it with OpenHands.'
+coverImage: /assets/blog/20250611-walking-the-line-commercial-open-source/github-stars.png
+coverAlt: Image from blog post
+date: '2025-06-11T12:00:00.000Z'
 authors:
   - name: Robert Brennan
-    picture: "/assets/blog/authors/robert.webp"
 ogImage:
-  url: "/assets/blog/20250611-walking-the-line-commercial-open-source/cover.png"
+  url: /assets/blog/20250611-walking-the-line-commercial-open-source/github-stars.png
+seoTitleDate: 'Nov 12, 2025'
 ---
-
 I've been building commercial open source software for over a decade. I'd like to think I've figured out all the tricks, that I know how to do it perfectly, and give everyone—users, contributors, maintainers, employees, investors, customers—exactly what they want.
 
-But different stakeholders have different needs. Even when they don't *directly* conflict with each other, you have limited time and resources. It's impossible to make everyone happy all the time.
+But different stakeholders have different needs. Even when they don't _directly_ conflict with each other, you have limited time and resources. It's impossible to make everyone happy all the time.
 
 So I'll share a few things I've learned about managing commercial open source, and discuss the approach we're taking with [OpenHands](https://github.com/OpenHands/OpenHands), our open source coding agent.
 
@@ -44,13 +43,13 @@ But sometimes investors think of open source as a "freemium" model: offer some c
 
 A great open source project isn't just a free tier. It's a self-sustaining community, a public domain good that can easily outlive the company that generated it.
 
-It's that sense of participation in a Wikipedia-esque public mission, to build something [not just *gratis* free but *libre* free](https://en.wikipedia.org/wiki/Gratis_versus_libre), which fuels the growth of open source communities. You'll need to repeatedly remind investors of this.
+It's that sense of participation in a Wikipedia-esque public mission, to build something [not just _gratis_ free but _libre_ free](https://en.wikipedia.org/wiki/Gratis_versus_libre), which fuels the growth of open source communities. You'll need to repeatedly remind investors of this.
 
 Conversely, the community needs to understand the value of having for-profit investment behind the project. Maintaining a popular open source project takes an immense amount of work. Unpaid volunteers routinely burn out, leaving behind a diaspora of poorly-maintained forks.
 
 We got pretty far with OpenHands in the early days, purely as a team of volunteers. Within a few weeks we'd replicated the main functionality of Cognition's Devin, and within a few more weeks we were topping the SWE-bench leaderboards.
 
-But very quickly things became unsustainable. I was working 2-4 hours per day *on top of a full-time job*, mostly just responding to issues and giving feedback on pull requests. Any time I spent writing code was just refactoring the pile of spaghetti that inevitably emerges when 50 different people make large contributions to the same codebase in the same week. A planned beach vacation turned into me working ~4 hours per day, even on the weekend, just to tread water.
+But very quickly things became unsustainable. I was working 2-4 hours per day _on top of a full-time job_, mostly just responding to issues and giving feedback on pull requests. Any time I spent writing code was just refactoring the pile of spaghetti that inevitably emerges when 50 different people make large contributions to the same codebase in the same week. A planned beach vacation turned into me working ~4 hours per day, even on the weekend, just to tread water.
 
 I started to burn out. And our stargazer count—a good proxy for how many people are interested in or using the project—started to trail off.
 
@@ -68,9 +67,9 @@ Your open source community needs to understand just how much having financial in
 
 You need to communicate a clear vision for what belongs in your open source project, and what is part of your commercial offering.
 
-With OpenHands, we want our open source project to be as valuable as possible for *individual developers* working on their laptop.
+With OpenHands, we want our open source project to be as valuable as possible for _individual developers_ working on their laptop.
 
-Commercially, we're developing features for *teams of developers* working together in the cloud.
+Commercially, we're developing features for _teams of developers_ working together in the cloud.
 
 This means that all of our research on code generation—the output of about 1/3 of our engineering team—goes directly into the open source. It means any developer can run a state-of-the-art coding agent, with whatever LLM they want, without giving their data to anyone. It means that academic teams can build on engineer-years worth of work to push the state-of-the-art forward, without getting anyone's permission.
 
@@ -92,8 +91,8 @@ So you need to constantly remind the community what it is you're building. What 
 
 With OpenHands, we want to put state-of-the-art coding agents into the hands of every developer, for free, forever.
 
-And to sustain that, we'll build commercial complements that enable *teams* of developers to collaborate with agents at enterprise scale.
+And to sustain that, we'll build commercial complements that enable _teams_ of developers to collaborate with agents at enterprise scale.
 
 I can't promise that this line will make everyone happy all the time. But it's our best shot at making sure the software development community gets a say in how the future of coding evolves.
 
-*Check out [OpenHands on GitHub](https://github.com/OpenHands/OpenHands)! You can also see the README for links to our Slack and Discord communities.*
+_Check out [OpenHands on GitHub](https://github.com/OpenHands/OpenHands)! You can also see the README for links to our Slack and Discord communities._

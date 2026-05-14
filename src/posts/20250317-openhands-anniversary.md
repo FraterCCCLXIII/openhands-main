@@ -1,17 +1,16 @@
 ---
-title: "One Year of OpenHands: A Journey of Open Source AI Development"
-excerpt: "Celebrating one year of OpenHands, reflecting on our growth, milestones, and looking ahead to the future of AI-powered software development."
-coverImage: "/assets/blog/20250317-openhands-anniversary/growth.png"
-coverAlt: "Cover image"
-date: "2025-03-17T09:00:00.000Z"
-seoTitleDate: "Nov 12, 2025"
+title: 'One Year of OpenHands: A Journey of Open Source AI Development'
+slug: one-year-of-openhands-a-journey-of-open-source-ai-development
+excerpt: 'Celebrating one year of OpenHands, reflecting on our growth, milestones, and looking ahead to the future of AI-powered software development.'
+coverImage: /assets/webflow/misc/6914f5894434007e8995f196_6914f58877e721f8e77321f3_growth.png
+coverAlt: Cover image
+date: '2025-03-17T12:00:00.000Z'
 authors:
   - name: Graham Neubig
-    picture: "/assets/blog/authors/graham.jpg"
 ogImage:
-  url: "/assets/blog/20250317-openhands-anniversary/growth.png"
+  url: /assets/webflow/misc/6914f5894434007e8995f196_6914f58877e721f8e77321f3_growth.png
+seoTitleDate: 'Nov 12, 2025'
 ---
-
 Today marks a significant milestone in our journey: OpenHands is celebrating its first anniversary! Over the past year, we've grown from an ambitious idea into a thriving open-source project that's reshaping how developers interact with AI-powered coding assistants.
 
 ## The Origin Story
@@ -34,7 +33,6 @@ OpenHands has shown remarkable growth over the past year:
 - Over 3,500 total commits
 - More than 250 unique contributors
 - Thousands of downloads of the app daily
-
 The graph above shows our journey in numbers, but the real impact goes beyond these metrics. We've seen OpenHands being used in [so many different ways](8-use-cases-for-generalist-software-development-agents), from helping individual developers automate routine tasks to assisting large teams in complex refactoring projects.
 
 ## Looking Ahead
@@ -42,13 +40,9 @@ The graph above shows our journey in numbers, but the real impact goes beyond th
 As we enter our second year, we're more excited than ever about the future of OpenHands. Our roadmap includes several ambitious initiatives:
 
 1. **General Release of the OpenHands Cloud:** We have released a [beta version](announcing-all-hands-online-beta) of the OpenHands Cloud, which allows you to use OpenHands in the cloud, without needing to run your own server, allowing you to use OpenHands from your browser, mobile device, or through GitHub. We're looking to open this up generally very soon.
-
 2. **Continued Agent Improvements:** We will continue to improve the agent's abilities, both improving core accuracy and staying on top of important benchmarks like SWE-Bench, and also broadening the range of tasks it can perform reliably.
-
 3. **More Integrations:** We want OpenHands to be accessible wherever you are in your development process, and are working on a better CLI experience and more integrations with task management tools such as Jira and Linear.
-
 4. **More Customization:** We are working on mechanisms to make OpenHands more customizable to your preferences, organizational policies, and workflows.
-
 ## Join Our Journey
 
 The success of OpenHands is a testament to the power of open-source collaboration. We're incredibly grateful to our contributors, users, and supporters who have helped shape this project over the past year.
@@ -60,6 +54,5 @@ We believe in the power of open source and community-driven development. If you'
 - Follow our [documentation](https://docs.all-hands.dev) to get started
 - Report issues and contribute improvements
 - Share your experiences with the community
-
 Together, we can make AI-powered development accessible to everyone.
 Thank you for being part of our story. Here's to another year of innovation, collaboration, and growth!

@@ -1,24 +1,22 @@
 ---
-title: "OpenHands Meets Slack: AI-Powered Development in Your Workspace"
-excerpt: "Bring the power of OpenHands AI development agents directly into your Slack workspace. Start conversations, get code assistance, and collaborate with AI seamlessly within your team's communication hub."
-coverImage: "/assets/blog/20250624-slack-integration/cover.png"
-coverAlt: "Image from blog post"
-date: "2025-06-24T12:00:00.000Z"
-seoTitleDate: "Nov 12, 2025"
+title: 'OpenHands Meets Slack: AI-Powered Development in Your Workspace'
+slug: openhands-meets-slack-ai-powered-development-in-your-workspace
+excerpt: 'Bring the power of OpenHands AI development agents directly into your Slack workspace. Start conversations, get code assistance, and collaborate with AI seamlessly within your team''s communication hub.'
+coverImage: /assets/webflow/blog/agent-control-plane/cover.png
+coverAlt: Image from blog post
+date: '2025-06-24T12:00:00.000Z'
 authors:
   - name: Rohit Malhotra
-    picture: "/assets/blog/authors/rohit.png"
   - name: Tim O'Farrell
-    picture: "/assets/blog/authors/tim.png"
 ogImage:
-  url: "/assets/blog/20250624-slack-integration/cover.png"
+  url: /assets/webflow/blog/agent-control-plane/cover.png
+seoTitleDate: 'Nov 12, 2025'
 ---
-
 As AI agents like [OpenHands](https://github.com/OpenHands/OpenHands) incorporate more and more into software development, we expect that developers will want to interact with AI in the same places where they interact with other co-workers.
 And today, much of that interaction happens in Slack.
 Today we're excited to announce the beta release of OpenHands Slack integration, bringing AI-powered software development directly into your Slack workspace.
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/hbloGmfZsJ4" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/hbloGmfZsJ4" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen=""></iframe>
 
 ## How It Works
 
@@ -42,8 +40,7 @@ Setting up OpenHands in your Slack workspace requires two simple steps:
 
 **For Team Members**: Sign in to the [OpenHands Cloud](https://app.all-hands.dev) then visit your [OpenHands Cloud integrations settings](https://app.all-hands.dev/settings/integrations), click "Install Slack App," and authorize the integration.
 
-*Note: Depending on your workspace settings, you may need admin approval for the authorization step.*
-
+_Note: Depending on your workspace settings, you may need admin approval for the authorization step._
 
 ## Some Starting Prompts
 

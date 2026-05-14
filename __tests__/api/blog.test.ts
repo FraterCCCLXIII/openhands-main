@@ -79,12 +79,12 @@ describe("blogAPI", () => {
     expect(sota?.content).not.toContain("our submission");
   });
 
-  test("keeps live-hidden verification article diagram alts out of the visible inventory", () => {
+  test("keeps verification article diagram alts synced to live CMS", () => {
     const verification = blogAPI.getBlogBySlug("20260305-learning-to-verify-ai-generated-code");
 
-    expect(verification?.content).not.toContain('alt="Critic model scoring diagram"');
-    expect(verification?.content).not.toContain('alt="Training pipeline diagram"');
-    expect(verification?.content).not.toContain('alt="Agent segment diagram"');
-    expect(verification?.content).not.toContain('alt="Rubrics predictive analysis"');
+    expect(verification?.content).toContain('![Critic model scoring diagram]');
+    expect(verification?.content).toContain('![Training pipeline diagram]');
+    expect(verification?.content).toContain('![Agent segment diagram]');
+    expect(verification?.content).toContain('![Rubrics predictive analysis]');
   });
 });

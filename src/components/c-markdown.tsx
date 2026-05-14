@@ -143,7 +143,7 @@ export const CMarkdown: React.FC<CMarkdownProps> = ({
             <BlogImage
               isBlog={isBlog}
               className={clsx(
-                isBlog ? 'w-full rounded-[8px] object-cover leading-[22.4px]' : 'rounded-lg',
+                isBlog ? 'w-full rounded-none object-cover leading-[22.4px]' : 'rounded-lg',
                 className
               )}
               {...props}
@@ -192,18 +192,37 @@ export const CMarkdown: React.FC<CMarkdownProps> = ({
               {preChildren}
             </pre>
           ),
-          p: ({ children: paragraphChildren, ...props }) => (
-            <p
-              className={clsx(
-                isBlog
-                  ? 'mb-4 mt-0 font-[Sohne_Buch] text-[16px] leading-[22.4px] text-[#5f5f5f]'
-                  : 'text-description'
-              )}
-              {...props}
-            >
-              {paragraphChildren}
-            </p>
-          ),
+          p: ({ children: paragraphChildren, node, ...props }) => {
+            const onlyChild = node?.children?.length === 1 ? node.children[0] : null;
+            const isImageOnlyParagraph =
+              isBlog &&
+              onlyChild?.type === 'element' &&
+              onlyChild.tagName === 'img';
+
+            if (isImageOnlyParagraph) {
+              return (
+                <figure
+                  className='mx-auto my-[3em] max-w-full overflow-hidden rounded-[8px] [&_img]:max-w-full [&_img]:w-auto'
+                  {...props}
+                >
+                  {paragraphChildren}
+                </figure>
+              );
+            }
+
+            return (
+              <p
+                className={clsx(
+                  isBlog
+                    ? 'mb-4 mt-0 font-[Sohne_Buch] text-[16px] leading-[22.4px] text-[#5f5f5f]'
+                    : 'text-description'
+                )}
+                {...props}
+              >
+                {paragraphChildren}
+              </p>
+            );
+          },
           strong: ({ children: strongChildren, ...props }) => (
             <strong className={isBlog ? 'font-bold text-brand-fg' : undefined} {...props}>
               {strongChildren}

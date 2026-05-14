@@ -92,7 +92,7 @@ export const Header: React.FC<HeaderProps> = ({
           <div className='flex items-stretch justify-center'>
             <ul data-wf-el='nav_links_list' style={{ display: 'flex', justifyContent: 'center', gap: '1.5cqw', alignItems: 'stretch', width: 'min-content', position: 'relative' }}>
               {/* Product dropdown */}
-              <li data-wf-el='nav_links_li' style={{ display: 'list-item' }}>
+              <li data-wf-el='nav_links_li' className='group' style={{ display: 'list-item' }}>
                 <a
                   href='/product'
                   data-wf-el='nav_links_link'
@@ -106,7 +106,8 @@ export const Header: React.FC<HeaderProps> = ({
                   )}
                   style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', height: '100%', padding: '0 8px' }}
                   onMouseEnter={() => setProductOpen(true)}
-                  onClick={(e) => { e.preventDefault(); setProductOpen(!productOpen); }}
+                  onFocus={() => setProductOpen(true)}
+                  onClick={(e) => { e.preventDefault(); setProductOpen(true); }}
                 >
                   <div>Product</div>
                   <div data-wf-el='nav_links_icon' className={clsx('transition-transform', productOpen && 'rotate-180')} style={{ display: 'block', width: '19px', height: '19px', cursor: 'pointer', textAlign: 'start' }}>
@@ -117,8 +118,8 @@ export const Header: React.FC<HeaderProps> = ({
                 </a>
                 <div
                   data-wf-el='nav_links_dropdown_wrap'
-                  className='absolute left-0 top-full z-50'
-                  style={{ opacity: productOpen ? '1' : '0', pointerEvents: productOpen ? 'auto' : 'none', paddingTop: '8px', width: '655px' }}
+                  className='absolute left-0 top-full z-50 origin-top-left scale-95 opacity-0 pointer-events-none transition group-hover:scale-100 group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:scale-100 group-focus-within:opacity-100 group-focus-within:pointer-events-auto'
+                  style={{ paddingTop: '8px', width: '655px' }}
                   onMouseEnter={() => setProductOpen(true)}
                   onMouseLeave={() => setProductOpen(false)}
                 >
@@ -181,12 +182,13 @@ export const Header: React.FC<HeaderProps> = ({
                 </li>
               ))}
               {/* Resources dropdown */}
-              <li data-wf-el='nav_links_li' style={{ display: 'list-item' }}>
+              <li data-wf-el='nav_links_li' className='group' style={{ display: 'list-item' }}>
                 <button
                   className='flex items-center gap-1 text-base font-normal leading-[22.4px] hover:text-[#8a5f45]'
                   style={{ cursor: 'default', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', height: '100%', padding: '0 8px', position: 'relative' }}
                   onMouseEnter={() => setResourcesOpen(true)}
-                  onClick={() => setResourcesOpen(!resourcesOpen)}
+                  onFocus={() => setResourcesOpen(true)}
+                  onClick={() => setResourcesOpen(true)}
                   type='button'
                 >
                   <div>Resources</div>
@@ -198,8 +200,8 @@ export const Header: React.FC<HeaderProps> = ({
                 </button>
                 <div
                   data-wf-el='nav_links_dropdown_wrap'
-                  className='absolute left-0 right-0 top-full z-50'
-                  style={{ transform: resourcesOpen ? 'scale(1)' : 'scale(0.95)', opacity: resourcesOpen ? '1' : '0', pointerEvents: resourcesOpen ? 'auto' : 'none', paddingTop: '8px', transformOrigin: 'right top' }}
+                  className='absolute left-0 right-0 top-full z-50 origin-top-right scale-95 opacity-0 pointer-events-none transition group-hover:scale-100 group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:scale-100 group-focus-within:opacity-100 group-focus-within:pointer-events-auto'
+                  style={{ paddingTop: '8px' }}
                   onMouseEnter={() => setResourcesOpen(true)}
                   onMouseLeave={() => setResourcesOpen(false)}
                 >
@@ -228,18 +230,17 @@ export const Header: React.FC<HeaderProps> = ({
                                   <div>{resItem.name}</div>
                                 </a>
                               ) : (
-                                <Link
-                                  to={resItem.to}
+                                <a
+                                  href={resItem.to}
                                   data-wf-el='nav_links_link'
                                   className='is-dropdown'
                                   style={{ position: 'relative', display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', gap: '8px', padding: 0, width: '100%', color: 'rgb(249, 240, 217)', fontSize: '16px', lineHeight: '22.4px' }}
-                                  onClick={() => setResourcesOpen(false)}
                                 >
                                   <div data-wf-el='nav_links_dropdown_icon' className='flex-shrink-0' style={{ display: 'flex', width: '30px', height: '30px', padding: '7px', color: 'rgb(255, 255, 139)', backgroundColor: 'rgb(0, 0, 0)', borderRadius: '8px', justifyContent: 'center', alignItems: 'center' }}>
                                     <ResourceDropdownIcon name={resItem.name} />
                                   </div>
                                   <div>{resItem.name}</div>
-                                </Link>
+                                </a>
                               )}
                             </li>
                           ))}

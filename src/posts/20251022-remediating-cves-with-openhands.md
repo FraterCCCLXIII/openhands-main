@@ -1,17 +1,16 @@
 ---
-title: "Remediating CVEs at Scale with Agents"
-excerpt: "While developers adapt to terminal-based agents, forward-thinking organizations are automating CVE remediation at scale. Learn how OpenHands enables teams to tackle millions of vulnerabilities with AI-powered agents, custom dashboards, and cloud-based automation."
-coverImage: "/assets/blog/20251022-remediating-cves/cover.png"
-coverAlt: "Image from blog post"
-date: "2025-10-22T12:00:00.000Z"
-seoTitleDate: "Nov 12, 2025"
+title: Remediating CVEs at Scale with Agents
+slug: remediating-cves-at-scale-with-agents
+excerpt: 'While developers adapt to terminal-based agents, forward-thinking organizations are automating CVE remediation at scale. Learn how OpenHands enables teams to tackle millions of vulnerabilities with AI-powered agents, custom dashboards, and cloud-based automation.'
+coverImage: /assets/webflow/blog/agent-control-plane/cover.png
+coverAlt: Image from blog post
+date: '2025-10-22T12:00:00.000Z'
 authors:
   - name: Robert Brennan
-    picture: "/assets/blog/authors/robert.webp"
 ogImage:
-  url: "/assets/blog/20251022-remediating-cves/cover.png"
+  url: /assets/webflow/blog/agent-control-plane/cover.png
+seoTitleDate: 'Nov 12, 2025'
 ---
-
 While individual developers are still getting used to running agents in their terminal (e.g. Claude Code or the OpenHands CLI), the most advanced AI adopters are using agents to build scalable automation using agents. We've seen folks use OpenHands to react to errors in Datadog logs; to automatically and intelligently pick the best reviewer for a given PR; and to keep their docs up-to-date.
 
 But one of the highest-impact automations we've seen is around remediation of CVEs (common vulnerabilities and exposures).
@@ -33,25 +32,6 @@ The key is to track and triage: make sure the most severe CVEs (according to the
 Getting a CVE solved is not always trivial. It's a fairly rote, tedious process, but not easily automated—at least not without AI!
 
 The workflow looks something like this:
-
-- Identify the CVE and the source package
-  - A scanner like Trivy will give you this info
-- Figure out if there's a fix available in a newer version of the package
-  - Scanners will often include this information as well!
-- Find where inside your codebase or build process the package is being pulled in
-  - It could come from a few different places:
-    - Your base operating system
-    - A package installed on the OS
-    - An app-level dependency
-    - A *transitive* app-level dependency
-    - Somewhere else
-- Decide if you really need this package, or if it's an unused dependency
-  - If it's unused, remove it
-  - If it's being used, upgrade to the fixed version
-- Test the code to ensure everything still works as expected
-  - Hopefully your CI pipeline is enough to give you confidence here
-  - You may need to alter other dependencies or modify your application code if there are breaking changes in the update
-- Merge and re-scan!
 
 I've lost entire days to the above process, after being handed a critical-level CVE that needed to get squashed.
 
@@ -95,13 +75,6 @@ Fortunately, the OpenHands Cloud Agent SDK allows you to quickly create custom e
 
 As an example, here's a vibecoded prototype that uses the OpenHands SDK to:
 
-- Generate a list of know vulnerabilities across all our GitHub repos
-- For each vulnerability, we can:
-  - Start a new OpenHands conversation to fix the vulnerability
-  - See the agent's status (working, finished, errored)
-  - See the resulting PR's status (CI running, CI successful, CI failed)
-  - Restart the agent if CI failed
-
 ![CVE Remediation Dashboard](/assets/blog/20251022-remediating-cves/dashboard.png)
 
 An engineer can move through at their own pace, kicking off dozens of conversations at a time, getting the easiest fixes merged and iterating on the tougher ones. At any point they can drop into the corresponding OpenHands conversation, see where the agent might be getting stuck, and give it some additional instructions beyond our boilerplate prompt.
@@ -116,4 +89,4 @@ Over the next year, we expect the bulk of coding agents will be running in the c
 
 We're already seeing organizations use OpenHands like this—leveling mountains of tech debt with only a few highly-skilled agent engineers. It's incredible being at the forefront of agent-driven development, and we're excited to see how our users put OpenHands to work next!
 
-*Interested in tearing down your tech debt? OpenHands provides a [Cloud Agent SDK](https://github.com/OpenHands/agent-sdk/), a Refactor Kit, and other purpose-built tools for code maintenance at scale. Check out [our GitHub repos](http://github.com/OpenHands/) or [get in touch with our research team](mailto:contact@openhands.dev)!*
+_Interested in tearing down your tech debt? OpenHands provides a [Cloud Agent SDK](https://github.com/OpenHands/agent-sdk/), a Refactor Kit, and other purpose-built tools for code maintenance at scale. Check out [our GitHub repos](http://github.com/OpenHands/) or [get in touch with our research team](mailto:contact@openhands.dev)!_

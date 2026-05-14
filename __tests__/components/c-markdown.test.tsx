@@ -22,7 +22,7 @@ describe('CMarkdown', () => {
     expect(link.className).toContain('text-[16px]');
     expect(link.className).toContain('leading-[22.4px]');
     expect(screen.getByText('code').className).toContain('bg-brand-fg');
-    expect(image.className).toContain('rounded-[8px]');
+    expect(image.className).toContain('rounded-none');
     expect(image.className).not.toContain('my-10');
     expect(title.className).toContain('mt-[44px]');
     expect(subtitle.className).toContain('mb-[8.8px]');
@@ -43,7 +43,7 @@ describe('CMarkdown', () => {
     expect(figure?.className).toContain('mx-auto');
     expect(figure?.className).toContain('[&_img]:max-w-full');
     expect(figure?.className).toContain('[&_img]:w-auto');
-    expect(image.className).toContain('rounded-[8px]');
+    expect(image.className).toContain('rounded-none');
     expect(image.className).not.toContain('my-[3em]');
   });
 

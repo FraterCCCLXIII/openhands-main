@@ -1,24 +1,21 @@
 ---
-title: "Building a Provably Versatile Agent"
-excerpt: "OpenHands Versa is a versatile agent that excels across multiple benchmarks, from software engineering to web browsing and frontend development."
-coverImage: "/assets/blog/20250604-openhands-versa/image2.png"
-coverAlt: "Image from blog post"
-date: "2025-06-04T09:00:00.000Z"
-seoTitleDate: "Nov 12, 2025"
+title: Building a Provably Versatile Agent
+slug: building-a-provably-versatile-agent
+excerpt: 'OpenHands Versa is a versatile agent that excels across multiple benchmarks, from software engineering to web browsing and frontend development.'
+coverImage: /assets/webflow/blog/20250814-ai-agent-security/image2.png
+coverAlt: Image from blog post
+date: '2025-06-04T12:00:00.000Z'
 authors:
   - name: Juan Michelini
-    picture: "/assets/blog/authors/juan.jpg"
   - name: Xingyao Wang
-    picture: "/assets/blog/authors/xingyao.webp"
   - name: Graham Neubig
-    picture: "/assets/blog/authors/graham.jpg"
 ogImage:
-  url: "/assets/blog/20250604-openhands-versa/image2.png"
+  url: /assets/webflow/blog/20250814-ai-agent-security/image2.png
+seoTitleDate: 'Nov 12, 2025'
 ---
-
 There's a lot of news in agents nowadays, ones that code, ones that browse the web, ones that perform customer service, ones that wash your socks. However, while there is a lot of excitement around agents, there is also a lot of disappointment. When you actually try them out, they often make simple mistakes, get stuck in loops, and don't get the job done.
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/uc2P-7E0ZwE" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/uc2P-7E0ZwE" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen=""></iframe>
 
 At [OpenHands](https://github.com/OpenHands/OpenHands), we have been working hard at making agents that actually work, and doing it in the open so you can actually understand why they work too. And how have we proven that they work? We have consistently been on or near the top of the industry-standard [SWE-Bench leaderboard](https://www.swebench.com/), which measures the ability of agents to solve software bugs in Python.
 
@@ -26,9 +23,8 @@ However, there's a lot more to life than solving bugs on Python repos. If you're
 
 Today, we're announcing two first steps towards this goal:
 
-* First, **VersaBench**, a new broad-coverage benchmark for evaluating agents on many different tasks from software development to more general business-relevant tasks.
-* Second, **OpenHands Versa**, an agent that can not only capably solve software engineering tasks, but cover a much broader spectrum of use cases.
-
+- First, **VersaBench**, a new broad-coverage benchmark for evaluating agents on many different tasks from software development to more general business-relevant tasks.
+- Second, **OpenHands Versa**, an agent that can not only capably solve software engineering tasks, but cover a much broader spectrum of use cases.
 OpenHands Versa is quite capable, delivering performance that exceeds the state of the art on 5/8 benchmarks on VersaBench and is competitive on the others. This is the first time that a single agent has been demonstrated to be so broadly capable, and we think that you'll like it if you try it out.
 
 OpenHands Versa is enabled by default in the most recent version of OpenHands, so you can use it in the [OpenHands Cloud](https://app.all-hands.dev) today, [download OpenHands](https://github.com/OpenHands/OpenHands) 0.41 or higher, and read on to learn more.
@@ -49,7 +45,7 @@ Based on our experience and feedback from OpenHands users, [we have identified a
 
 ## New Research - OpenHands-Versa
 
-![OpenHands Versa Methodology](/assets/blog/20250604-openhands-versa/image2.png)
+![OpenHands Versa Methodology](/assets/webflow/blog/20250814-ai-agent-security/image2.png)
 
 Based on this benchmark, together with other researchers at Carnegie Mellon University, we investigated how to build a truly versatile agent that works across diverse tasks. Our research built on OpenHands, our strong software development agent that was nonetheless constrained due to its limited toolset of only using a textual browser, a file editor, and code execution.
 
@@ -61,7 +57,7 @@ The details of the approach have been explained in our [paper](https://arxiv.org
 
 The results of OpenHands-Versa are impressive. Across the 10 diverse benchmarks in VersaBench, we achieve state-of-the-art accuracy in 8, sometimes improving the state-of-the-art by up to 30 points. Even where OpenHands-Versa does not quite achieve the results of more specialized agents, it is close, demonstrating that a single generalist agent can be used with confidence in these situations as well.
 
-![OpenHands Versa Results](/assets/blog/20250604-openhands-versa/image1.png)
+![OpenHands Versa Results](/assets/webflow/blog/20250814-ai-agent-security/image1.png)
 
 Overall, the takeaway is simple: OpenHands is an agent that actually delivers across a wide variety of tasks, and now we have proof of this in the numbers. All of the benchmarking code is publicly available, so we welcome you to download it, run it, and scrutinize the results yourself as well!
 
@@ -69,7 +65,6 @@ Overall, the takeaway is simple: OpenHands is an agent that actually delivers ac
 
 Getting started with this new version of OpenHands is easy. You can:
 
-* Immediately access it through the [OpenHands Cloud](https://app.all-hands.dev), where new users can get started right away with $20 in free credits.
-* [Download OpenHands](https://github.com/OpenHands/OpenHands) and run locally, selecting a version 0.41.0 or higher.
-
+- Immediately access it through the [OpenHands Cloud](https://app.all-hands.dev), where new users can get started right away with $20 in free credits.
+- [Download OpenHands](https://github.com/OpenHands/OpenHands) and run locally, selecting a version 0.41.0 or higher.
 We also encourage you to join the community – connect with us on [Slack](https://join.slack.com/t/openhands-ai/shared_invite/zt-34zm4j0gj-Qz5kRHoca8DFCbqXPS~f_A), read our [documentation](https://docs.all-hands.dev/), and stay updated on our latest developments. Looking forward to what you all do with the world's most versatile agent!

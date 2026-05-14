@@ -146,18 +146,10 @@ const Blog = () => {
 
           {hasMoreBlogs && (
             <div className='mt-16 flex justify-center'>
-            {/* Live's Load-more uses Webflow's overlay-link hybrid:
-             * the `<a>` is `position: absolute; inset: 0; padding: 0;
-             * display: block` BUT also carries the visible label's
-             * inherited text styling (fontWeight 500, underline 1.6px,
-             * lineHeight 20.8, textAlign center) directly. The visible
-             * size comes from the wrapper's padding. */}
-            <div className='relative btn-wrap pointer-events-none' style={{ gap: '6.4px', padding: '14.4px 30.4px', borderRadius: '8px', marginBottom: '10px' }} aria-hidden='true'>
-              <span style={{ visibility: 'hidden' }}>Load more</span>
               <a
                 href='#blog-grid'
-                className='absolute inset-0 block btn btn-outline border-none rounded-none pointer-events-auto'
-                style={{ padding: '0px' }}
+                className='btn btn-outline'
+                style={{ padding: '14.4px 30.4px', borderRadius: '8px', marginBottom: '10px', fontSize: '16px', lineHeight: '20.8px' }}
                 onClick={(event) => {
                   event.preventDefault();
                   setVisibleGridPosts((count) => count + INITIAL_GRID_POSTS);
@@ -166,8 +158,7 @@ const Blog = () => {
                 Load more
               </a>
             </div>
-          </div>
-        )}
+          )}
         </div>
       </section>
 

@@ -1,25 +1,22 @@
 ---
-title: "8 Use Cases for Generalist Software Development Agents"
-excerpt: "Exploring practical applications of generalist software development agents in real-world scenarios, with example prompts and use cases."
-coverImage: "/assets/blog/20250116-use-cases-for-generalist-software-development-agents/header.png"
-coverAlt: "Cover image"
-date: "2025-01-16T12:00:00.000Z"
-seoTitleDate: "Nov 12, 2025"
+title: 8 Use Cases for Generalist Software Development Agents
+slug: 8-use-cases-for-generalist-software-development-agents
+excerpt: 'Exploring practical applications of generalist software development agents in real-world scenarios, with example prompts and use cases.'
+coverImage: /assets/webflow/misc/6914f58cfdffde8b3cfc47e2_6914f58b09c10a375306207e_header.png
+coverAlt: Cover image
+date: '2025-01-16T12:00:00.000Z'
 authors:
   - name: Graham Neubig
-    link: https://phontron.com
-    picture: "/assets/blog/members/graham-neubig.jpg"
 ogImage:
-  url: "/assets/blog/20250116-use-cases-for-generalist-software-development-agents/header.png"
+  url: /assets/webflow/misc/6914f58cfdffde8b3cfc47e2_6914f58b09c10a375306207e_header.png
+seoTitleDate: 'Nov 12, 2025'
 ---
-
 # 8 Use Cases for Generalist Software Development Agents (w/ Prompts)
 
 We are developing [OpenHands](https://github.com/OpenHands/OpenHands), an agent for software development that has the ability to write code, execute code, and browse the web. It is very general and can do a lot of tasks, which is a double-edged sword:
 
-* On the **plus side**, this makes the agent framework very powerful, and once you learn how to use it you can do most anything.
-* On the **minus side**, it means that sometimes we've found users to be at a loss of how to start using it.
-
+- On the **plus side**, this makes the agent framework very powerful, and once you learn how to use it you can do most anything.
+- On the **minus side**, it means that sometimes we've found users to be at a loss of how to start using it.
 This blog post is meant to showcase some great use cases that we've found for OpenHands and provide some sample prompts that we have used. We'd also like to point out that OpenHands has a flexible framework for prompt customization using ["microagents"](https://github.com/OpenHands/OpenHands/tree/main/microagents), and some of these tasks are available as micro-agents within OpenHands itself as well.
 
 Let's see what a generalist software development agent can do, and how to skillfully prompt it to do a good job!
@@ -49,13 +46,12 @@ Diagnose the problem, and fix it according to the following procedure:
 
 Let's break this down a bit, it is in several steps:
 
-* **Bug Localization**: In step 1, we asked the agent to find the place to modify. It will do this by using search tools like find and grep to try to identify the appropriate location in the codebase.
-* **Environment Setup**: Step 2 initializes the project environment by installing dependencies. Of course the instructions will be a little different for your own project.
-* **Test-driven Development**: [TDD](https://en.wikipedia.org/wiki/Test-driven_development) is a practice where you develop tests first and then do implementation afterwards. In general it's a good practice for human developers as it lays out expectations and makes for fast iteration cycles, but unfortunately human developers don't really like writing tests, especially beforehand. Fortunately, agents have no such issues, so in step 3 and 4 we have them reproduce the error in tests first and then fix the bug.
-* **Implementation and Testing**: In step 5, we ask the agent to fix the issue and confirm that everything works. Often the agent will go through several iterations here before getting a good working implementation.
-* **Pushing to Github**: In step 6 we have the agent open a PR to github for human review.
-* **Checking and Fixing CI**: One thing that developers often *hate* to do is fix up failing CI actions. Fortunately agents can do that for you too! The agent can monitor github actions, see if any are failing due to the PR, and go in and fix them autonomously until they pass.
-
+- **Bug Localization**: In step 1, we asked the agent to find the place to modify. It will do this by using search tools like find and grep to try to identify the appropriate location in the codebase.
+- **Environment Setup**: Step 2 initializes the project environment by installing dependencies. Of course the instructions will be a little different for your own project.
+- **Test-driven Development**: [TDD](https://en.wikipedia.org/wiki/Test-driven_development) is a practice where you develop tests first and then do implementation afterwards. In general it's a good practice for human developers as it lays out expectations and makes for fast iteration cycles, but unfortunately human developers don't really like writing tests, especially beforehand. Fortunately, agents have no such issues, so in step 3 and 4 we have them reproduce the error in tests first and then fix the bug.
+- **Implementation and Testing**: In step 5, we ask the agent to fix the issue and confirm that everything works. Often the agent will go through several iterations here before getting a good working implementation.
+- **Pushing to Github**: In step 6 we have the agent open a PR to github for human review.
+- **Checking and Fixing CI**: One thing that developers often _hate_ to do is fix up failing CI actions. Fortunately agents can do that for you too! The agent can monitor github actions, see if any are failing due to the PR, and go in and fix them autonomously until they pass.
 ## Implement Features
 
 In addition to squashing bugs, you also often want to implement new features. Here's [an example of a feature](https://github.com/OpenHands/OpenHands/pull/5807) that was implemented by the OpenHands agent – tooltips for a sidebar in the OpenHands app. When implementing features, it's reasonable to use a prompt pretty similar to the one we use for fixing bugs, for similar reasons:
@@ -106,7 +102,7 @@ One thing to note here is that I always ask the model to write tests and execute
 
 One task that software engineers dread is fixing failing continuous integration tests like these ones:
 
-![Failing CI Tests](/assets/blog/20250116-use-cases-for-generalist-software-development-agents/image1.png)
+![Failing CI Tests](/assets/webflow/blog/20250814-ai-agent-security/image1.png)
 
 The reason why this is so annoying is because often you need to fix the issue then push to github, see that it's not passing, click through the interface, read the logs, fix the issue, push again, etc.
 
@@ -130,7 +126,7 @@ More than half of the time, this solves my problem and I don't have to fix tests
 
 ## Fix Merge Conflicts
 
-In addition to fixing continuous integration, another *huge* pain is fixing merge conflicts, where someone else has pushed to the main branch but it conflicts with your own files. Fortunately, OpenHands is pretty good at fixing these too, here's an example:
+In addition to fixing continuous integration, another _huge_ pain is fixing merge conflicts, where someone else has pushed to the main branch but it conflicts with your own files. Fortunately, OpenHands is pretty good at fixing these too, here's an example:
 
 ```
 Please pull the branch add-japanese-translations associated with
@@ -166,9 +162,9 @@ Please create a GPU instance on AWS with the deep learning AMI and provide login
 credentials via private key.
 ```
 
-As anyone who has done this through the AWS UI before can attest, this sort of thing requires a *lot* of clicks and can be a major time sink.
+As anyone who has done this through the AWS UI before can attest, this sort of thing requires a _lot_ of clicks and can be a major time sink.
 
-Another option for performing deployments is to use *infrastructure as code*, where you specify the type of infrastructure you want as code, and execute the code to actually create the infrastructure. One common language for specifying infrastructure as code is [Terraform](https://www.terraform.io/), which is a very nice and powerful language, but also requires learning somewhat esoteric syntax. Fortunately, OpenHands is also pretty good at writing this code, so you can ask something like this:
+Another option for performing deployments is to use _infrastructure as code_, where you specify the type of infrastructure you want as code, and execute the code to actually create the infrastructure. One common language for specifying infrastructure as code is [Terraform](https://www.terraform.io/), which is a very nice and powerful language, but also requires learning somewhat esoteric syntax. Fortunately, OpenHands is also pretty good at writing this code, so you can ask something like this:
 
 ```
 Write Terraform code for a GPU instance on AWS with the deep learning AMI. Run
@@ -194,7 +190,7 @@ showing weekly statistics:
 
 And here is the resulting figure!
 
-![Data Analysis Results](/assets/blog/20250116-use-cases-for-generalist-software-development-agents/image2.png)
+![Data Analysis Results](/assets/webflow/blog/20250814-ai-agent-security/image2.png)
 
 ## Conclusion
 
@@ -202,5 +198,5 @@ This blog post covered 8 common use cases where we've been using OpenHands a lot
 
 But hopefully this gets you a good idea of some tasks that you can start out with, and hopefully accelerate your software development process! If you'd like to try out OpenHands, please download the open source repo, or sign up for our online app:
 
-* Open Source: [https://github.com/OpenHands/OpenHands](https://github.com/OpenHands/OpenHands)
-* Online App: [https://app.all-hands.dev](https://app.all-hands.dev)
+- Open Source: [https://github.com/OpenHands/OpenHands](https://github.com/OpenHands/OpenHands)
+- Online App: [https://app.all-hands.dev](https://app.all-hands.dev)

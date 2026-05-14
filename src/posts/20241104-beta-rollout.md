@@ -1,17 +1,16 @@
 ---
-title: "Announcing All Hands Online (Beta)"
-excerpt: "Today we're excited to announce our official hosted version of the OpenHands AI software developer! Learn about our new features including GitHub integration and improved multi-session support."
-coverImage: "/assets/blog/20241104-beta-rollout/cover.png"
-coverAlt: "Image from blog post"
-date: "2024-11-04T09:00:00.000Z"
-seoTitleDate: "Nov 12, 2025"
+title: Announcing All Hands Online (Beta)
+slug: announcing-all-hands-online-beta
+excerpt: Today we're excited to announce our official hosted version of the OpenHands AI software developer! Learn about our new features including GitHub integration and improved multi-session support.
+coverImage: /assets/webflow/blog/agent-control-plane/cover.png
+coverAlt: Image from blog post
+date: '2024-11-04T12:00:00.000Z'
 authors:
   - name: Robert Brennan
-    picture: "/assets/blog/members/robert-brennan.jpg"
 ogImage:
-  url: "/assets/blog/20241104-beta-rollout/cover.png"
+  url: /assets/webflow/blog/agent-control-plane/cover.png
+seoTitleDate: 'Nov 12, 2025'
 ---
-
 Today we're excited to announce something we've been working hard for for the past couple months: we now have an official hosted version of the OpenHands AI software developer!
 
 OpenHands is an open source project for software development agents, and now [boasts the strongest AI software development agent in the world](https://www.all-hands.dev/blog/openhands-codeact-21-an-open-state-of-the-art-software-development-agent), resolving over 50% of real github issues on the standard SWE-Bench Verified benchmark.
@@ -30,7 +29,6 @@ We've completely redesigned the OpenHands interface to be more intuitive and eas
 - Better organization of conversations and projects
 - Improved visibility into what the agent is doing
 - More intuitive navigation
-
 ![New OpenHands UI](/assets/blog/20241104-beta-rollout/new-ui.png)
 
 Huge thanks to Paul Bloch for his work on the designs here, and to Stephan Psaras for his implementation.
@@ -64,4 +62,3 @@ Many thanks to Tim O'Farrell for his work on making our application server more 
 This is just the start for OpenHands: we've got a lot of great features in development now. In particular, we're working on support for having multiple conversations simultaneously, adding the ability to extend and customize the agent's behavior, and a deeper GitHub integration. And as always we're working hard on making our core agent better and better, so it can take on even bigger issues with higher accuracy.
 
 Stay tuned!
-

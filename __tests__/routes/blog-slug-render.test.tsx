@@ -52,7 +52,8 @@ describe('Blog article route', () => {
     expect(container.querySelector('main')?.className).toContain('flex flex-col');
     expect(screen.getByRole('link', { name: '← Back to Blog' })).toHaveAttribute('href', '/blog');
     expect(screen.getByText('Published on')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Citation/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^Citation$/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^Copy Citation$/i })).toBeInTheDocument();
 
     const relatedPostLink = screen
       .getByText('The Software Agent Control Plane')

@@ -1,17 +1,16 @@
 ---
-title: "OpenHands Cloud Self-hosted: Secure, Convenient Deployment of AI Software Development Agents"
-excerpt: "OpenHands Cloud is now available as a self-hosted solution, providing secure, convenient deployment of AI software development agents. It features a 30-day free trial and is available as a source-available Helm Chart."
-coverImage: "/assets/blog/20250618-openhands-self-hosted/cover.png"
-coverAlt: "Image from blog post"
-date: "2025-06-18T15:00:00.000Z"
-seoTitleDate: "Nov 12, 2025"
+title: 'OpenHands Cloud Self-hosted: Secure, Convenient Deployment of AI Software Development Agents'
+slug: openhands-cloud-self-hosted-secure-convenient-deployment-of-ai-software-development-agents
+excerpt: 'OpenHands Cloud is now available as a self-hosted solution, providing secure, convenient deployment of AI software development agents. It features a 30-day free trial and is available as a source-available Helm Chart.'
+coverImage: /assets/webflow/blog/agent-control-plane/cover.png
+coverAlt: Image from blog post
+date: '2025-06-18T12:00:00.000Z'
 authors:
   - name: Robert Brennan
-    picture: "/assets/blog/authors/robert.jpg"
 ogImage:
-  url: "/assets/blog/20250618-openhands-self-hosted/cover.png"
+  url: /assets/webflow/blog/agent-control-plane/cover.png
+seoTitleDate: 'Nov 12, 2025'
 ---
-
 [OpenHands](https://github.com/OpenHands/OpenHands) is an MIT-licensed open source platform for AI agents for software development.
 On top of OpenHands, we have built [OpenHands Cloud](https://app.all-hands.dev/), a centralized, multi-tenant OpenHands server that can scale to thousands of coding agents and includes convenient features like integrations into github and slack, API access, and more.
 Today, we're announcing **OpenHands Cloud Self-hosted**, a new way to deploy OpenHands Cloud in your own isolated VPC for security-sensitive enterprises.
@@ -21,18 +20,18 @@ Today, we're announcing **OpenHands Cloud Self-hosted**, a new way to deploy Ope
 To go a little bit deeper into the different ways to use OpenHands and know which is best for you,
 let's make a comparison.
 
-|                          | Open Source   | Cloud | Cloud Self-hosted |
-|--------------------------|---------------|-------|-------------------|
-| Suitable for Individuals | ✅            | ✅     | ❌                |
-| Suitable for Teams       | ❌            | ✅     | ✅                |
-| State-of-the-art Agents  | ✅            | ✅     | ✅                |
-| [GUI Access](https://docs.all-hands.dev/usage/how-to/gui-mode)               | ✅            | ✅     | ✅                |
-| [CLI Access](https://docs.all-hands.dev/usage/how-to/cli-mode)               | ✅            | ❌     | ❌                |
-| Seamless [GitHub](https://docs.all-hands.dev/usage/cloud/github-installation)/[Gitlab](https://docs.all-hands.dev/usage/cloud/gitlab-installation) Integration | ❌  | ✅     | ✅                |
-| [Slack Integration](https://docs.all-hands.dev/usage/cloud/slack-installation)        | ❌            | ✅     | ✅                |
-| [API Access](https://docs.all-hands.dev/usage/cloud/cloud-api)               | ❌            | ✅     | ✅                |
-| Parallel Agent Serving   | ❌            | ✅     | ✅                |
-| Privacy/Security         | See API provider | [Privacy Policy](https://all-hands.dev/privacy) | Data stays on your VPC |
+|  | Open Source | Cloud | Cloud Self-hosted |
+| --- | --- | --- | --- |
+| Suitable for Individuals | ✅ | ✅ | ❌ |
+| Suitable for Teams | ❌ | ✅ | ✅ |
+| State-of-the-art Agents | ✅ | ✅ | ✅ |
+| [GUI Access](https://docs.all-hands.dev/usage/how-to/gui-mode) | ✅ | ✅ | ✅ |
+| [CLI Access](https://docs.all-hands.dev/usage/how-to/cli-mode) | ✅ | ❌ | ❌ |
+| Seamless [GitHub](https://docs.all-hands.dev/usage/cloud/github-installation)/[Gitlab](https://docs.all-hands.dev/usage/cloud/gitlab-installation) Integration | ❌ | ✅ | ✅ |
+| [Slack Integration](https://docs.all-hands.dev/usage/cloud/slack-installation) | ❌ | ✅ | ✅ |
+| [API Access](https://docs.all-hands.dev/usage/cloud/cloud-api) | ❌ | ✅ | ✅ |
+| Parallel Agent Serving | ❌ | ✅ | ✅ |
+| Privacy/Security | See API provider | [Privacy Policy](https://all-hands.dev/privacy) | Data stays on your VPC |
 | [Pricing](https://all-hands.dev/pricing) | Bring-your-own Key | [$20 free trial + pay-as-you-go](https://app.all-hands.dev/pricing) | [30-day Trial + contact us](https://docs.google.com/forms/d/e/1FAIpQLScygK76gSmjRfqkC1XzogU89X4vNVaiITdDVkmdEP_Qh2b4gg/viewform) |
 
 In short, all versions of OpenHands have state-of-the-art accuracy, the OpenHands open source is good for individual developers working independently, while the cloud versions are more suited for teams.
@@ -53,7 +52,6 @@ Why are we taking this method of making our proprietary code public? It's for se
 1. Most importantly, we realize that developers and platform engineers like to read and try things. They don't want to talk with a sales team to get started (we're the same!).
 2. If there are any issues that the cloud subscribers encounter while using the chart, they can modify and fix it to contribute back.
 3. We believe in our user community, and largely trust them to do the right thing -- we're hopeful that we will not need to do any enforcement against people who violate the terms.
-
 ## How do we get started?
 
 If you want to try out OpenHands Cloud in your own Kubernetes cluster, you can [follow the instructions here](https://github.com/OpenHands/OpenHands-Cloud/tree/main/charts/openhands).

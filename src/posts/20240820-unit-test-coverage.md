@@ -1,18 +1,16 @@
 ---
-title: "Using OpenHands to Improve your Test Coverage"
-excerpt: "Here is a practical example of how OpenHands (Formerly OpenDevin) can improve your unit test coverage right now."
-coverImage: "/assets/blog/placeholder.png"
-coverAlt: "Image from blog post"
-date: "2024-08-20T08:00:00.000Z"
-seoTitleDate: "Nov 12, 2025"
+title: Using OpenHands to Improve your Test Coverage
+slug: using-openhands-to-improve-your-test-coverage
+excerpt: Here is a practical example of how OpenHands (Formerly OpenDevin) can improve your unit test coverage right now.
+coverImage: /assets/blog/20240820-unit-test-coverage/unit-test-coverage.jpeg
+coverAlt: Image from blog post
+date: '2024-08-20T12:00:00.000Z'
 authors:
   - name: Tim O'Farrell
-    picture: "/assets/blog/authors/tim.png"
-    link: https://www.linkedin.com/in/tim-o-129b4364/
 ogImage:
-  url: "/assets/blog/placeholder.png"
+  url: /assets/blog/20240820-unit-test-coverage/unit-test-coverage.jpeg
+seoTitleDate: 'Nov 12, 2025'
 ---
-
 There is a lot of conjecture and abstract articles out there about what AI may or may not be able to do for you. There is also a lot of FUD about how it is going to replace everybody and crash the economy.
 
 Here is a practical example of how [OpenHands](https://github.com/OpenHands/OpenHands) (Formerly OpenDevin) can improve your unit test coverage right now. We are constantly improving the reliability and usability of this tool, so your mileage may vary!
@@ -21,10 +19,9 @@ Here is a practical example of how [OpenHands](https://github.com/OpenHands/Open
 
 I used an old side project for this: [Json Urley](https://github.com/tofarr/json-urley). This project converts json objects to / from readable url parameters compatible with OpenAPI. The actual intent of this project is not that important for this article - I chose this project because:
 
-* It is quite small
-* The objective is well defined in the project README
-* It already uses linting and code coverage tools. The current coverage is 100% - every line of code is run by at least 1 test
-
+- It is quite small
+- The objective is well defined in the project README
+- It already uses linting and code coverage tools. The current coverage is 100% - every line of code is run by at least 1 test
 ## The Sanity Check
 
 I began by using some standard prompts - I am sanity checking here as I want to be sure that the project does what I expect at each step:
@@ -55,7 +52,7 @@ It looks like the reason is the code snippet that the Agent wanted to merge into
 
 ![The Agent assumed that keys must not repeat - this is not the case!](/assets/blog/20240820-unit-test-coverage/useful-4.png)
 
- I removed this code snippet and the `test_conflicting_types` test case. That left me with 1 failing test - `test_unicode_characters`. **This is a actually valid case that I missed, despite my best efforts with multiple passes and coverage being 100%**!!! I had not considered how non English characters would be processed ("José" and "São Paulo"). Color me impressed. A small tweak and I am ready to merge the PR.
+I removed this code snippet and the `test_conflicting_types` test case. That left me with 1 failing test - `test_unicode_characters`. **This is a actually valid case that I missed, despite my best efforts with multiple passes and coverage being 100%**!!! I had not considered how non English characters would be processed ("José" and "São Paulo"). Color me impressed. A small tweak and I am ready to merge the PR.
 
 ## Conclusions
 

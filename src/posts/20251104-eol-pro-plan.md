@@ -1,18 +1,17 @@
 ---
-title: "Bring your own LLM is now available to all OpenHands Cloud users"
-excerpt: "We’re excited to announce the expansion of our Bring your own Key (BYOK) support, making this available to all new and existing users of OpenHands Cloud"
-coverImage: "/assets/blog/20251104-eol-pro-plan/eol-pro-plan-graphic.png"
-coverAlt: "Cover image"
-date: "2025-11-04T12:35:00.000Z"
-seoTitleDate: "Nov 12, 2025"
+title: Bring your own LLM is now available to all OpenHands Cloud users
+slug: bring-your-own-llm-is-now-available-to-all-openhands-cloud-users
+excerpt: 'We’re excited to announce the expansion of our Bring your own Key (BYOK) support, making this available to all new and existing users of OpenHands Cloud'
+coverImage: /assets/webflow/misc/6914f56a0fc76f5a160eb9d6_6914f56932cafa0ea56f4cb2_eol-pro-plan-graphic.png
+coverAlt: Cover image
+date: '2025-11-04T12:00:00.000Z'
 authors:
   - name: Joe Pelletier
-    picture: "/assets/blog/authors/openhands-team.png"
 ogImage:
-  url: "/assets/blog/20251104-eol-pro-plan/eol-pro-plan-graphic.png"
+  url: /assets/webflow/misc/6914f56a0fc76f5a160eb9d6_6914f56932cafa0ea56f4cb2_eol-pro-plan-graphic.png
+seoTitleDate: 'Nov 12, 2025'
 ---
-
-We’re excited to announce the expansion of our Bring your own Key (BYOK) support, making this available to all new and existing users of OpenHands Cloud\! With this change, developers can sign up for free, bring their own LLM key, and run multiple conversations with the powerful OpenHands coding agent in the new “BYOK” tier.
+We’re excited to announce the expansion of our Bring your own Key (BYOK) support, making this available to all new and existing users of OpenHands Cloud! With this change, developers can sign up for free, bring their own LLM key, and run multiple conversations with the powerful OpenHands coding agent in the new “BYOK” tier.
 
 If users do not have their own LLM key, OpenHands Cloud also comes with built-in support for the OpenHands LLM Provider, which provides **at-cost (zero markup)** access to multiple state-of-the-art models like Claude Sonnet 4.5, GPT-5, Qwen3-Coder, and more. LLM usage credits for the OpenHands LLM provider can be purchased on a ‘pay-as-you-go’ basis via OpenHands Cloud. You can also generate an OpenHands LLM provider API key to use with other tools like the [OpenHands CLI](https://docs.openhands.dev/openhands/usage/run-openhands/cli-mode), the [OpenHands Software Agent SDK](https://github.com/OpenHands/software-agent-sdk/), or the [local OpenHands GUI](https://docs.openhands.dev/openhands/usage/run-openhands/gui-mode).
 
@@ -20,6 +19,6 @@ The new BYOK tier is free and limited to 1 user, plus some usage restrictions on
 
 To get started, [sign in to OpenHands Cloud](https://app.all-hands.dev/) and follow these steps:
 
-1. Click your avatar in the lower-left corner of the screen  
-2. Select Language Model (LLM)  
-3. Select the OpenHands provider, or another provider of your choice  
+1. Click your avatar in the lower-left corner of the screen
+2. Select Language Model (LLM)
+3. Select the OpenHands provider, or another provider of your choice

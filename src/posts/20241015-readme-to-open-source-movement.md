@@ -1,22 +1,21 @@
 ---
-title: "OpenHands: From README to open source movement"
-excerpt: "OpenHands exists because our community willed it. Here’s how it all started."
-coverImage: "/assets/blog/20241015-readme-to-open-source-movement/all-hands-founders-full.jpg"
-coverAlt: "Cover image"
-date: "2024-10-17T08:00:00.000Z"
-seoTitleDate: "Nov 12, 2025"
+title: 'OpenHands: From README to open source movement'
+slug: openhands-from-readme-to-open-source-movement
+excerpt: OpenHands exists because our community willed it. Here’s how it all started.
+coverImage: /assets/webflow/misc/6914f5eeeddff54443d84633_6914f5ee32cafa0ea56fd6d3_all-hands-founders-full.jpeg
+coverAlt: Cover image
+date: '2024-10-17T12:00:00.000Z'
 authors:
   - name: Ana Hevesi
-    link: https://hachyderm.io/@anthrocypher
 ogImage:
-  url: "/assets/blog/20241015-readme-to-open-source-movement/all-hands-founders.jpg"
+  url: /assets/webflow/misc/6914f5eeeddff54443d84633_6914f5ee32cafa0ea56fd6d3_all-hands-founders-full.jpeg
+seoTitleDate: 'Nov 12, 2025'
 ---
+[OpenHands](https://github.com/OpenHands/OpenHands) exists because our community willed it.
 
-[OpenHands](https://github.com/OpenHands/OpenHands) exists because our community willed it. 
+When Cognition AI launched their demo for Devin, they captured the imaginations of developers around the world—but it was also kind of scary. The future of development was here, and it was being built in a closed source walled garden.
 
-When Cognition AI launched their demo for Devin, they captured the imaginations of developers around the world—but it was also kind of scary. The future of development was here, and it was being built in a closed source walled garden. 
-
-In response, developers and researchers around the world came together to build AI agents with an accessible UI, completely in the open. Their work together created the project we now call OpenHands. 
+In response, developers and researchers around the world came together to build AI agents with an accessible UI, completely in the open. Their work together created the project we now call OpenHands.
 
 Here’s how it all started.
 
@@ -24,7 +23,7 @@ Here’s how it all started.
 
 **Robert Brennan**: I came across the project after Googling “is [Devin](https://www.cognition.ai/blog/introducing-devin) open source?” and found the OpenDevin repo (before the rename to OpenHands) when it was still just a README. It was one paragraph of text saying “We're gonna build Devin, but open source.”
 
-I saw Graham made a commit soon after that with a front-end, kind of mocking out what Devin looked like. I made one of the first PRs after that. Graham and I found each other in the community Slack pretty quickly, because we were the two of the first contributors. 
+I saw Graham made a commit soon after that with a front-end, kind of mocking out what Devin looked like. I made one of the first PRs after that. Graham and I found each other in the community Slack pretty quickly, because we were the two of the first contributors.
 
 **Graham Neubig:** I saw the Devin demo online, I was interested in it, and then on Twitter I saw that this OpenDevin project existed. I had been doing research in the area, like Xingyao had, and so I was interested. I saw that it had a ridiculous number of stars on GitHub despite only having a README. That indicated to me that people were very interested in this.
 
@@ -46,15 +45,15 @@ I said, “Or I could use Claude and come up with an interface that looks like D
 
 **Robert:** I was supposed to be on vacation the first week or so that we had a working MVP and everybody was rushing in to use it and find it and try it.
 
-We got [featured](https://www.producthunt.com/products/opendevin#opendevin) on Product Hunt while I was on vacation... And it was actually kind of fortuitous that I was on vacation. Because I didn't have any other responsibilities to take care of and I could just focus on helping folks out through navigating the open source project. 
+We got [featured](https://www.producthunt.com/products/opendevin#opendevin) on Product Hunt while I was on vacation... And it was actually kind of fortuitous that I was on vacation. Because I didn't have any other responsibilities to take care of and I could just focus on helping folks out through navigating the open source project.
 
 **Robert:** There wasn't as much of an existing set of maintainers, nobody really had responsibility over the project. It was kind of Wild West.
 
-It was a lot of responding to issues, making sure people felt like their voice was being heard. Helping PRs get merged was a big one because it was early days, everything was moving quickly. So making sure that PRs were getting attention and getting merged and getting good code review was a big piece of it. I think that helped a lot of different people feel invested in the community. 
+It was a lot of responding to issues, making sure people felt like their voice was being heard. Helping PRs get merged was a big one because it was early days, everything was moving quickly. So making sure that PRs were getting attention and getting merged and getting good code review was a big piece of it. I think that helped a lot of different people feel invested in the community.
 
-## Part 3: Research \+ product
+## Part 3: Research + product
 
-**Robert:** Starting with the front end, something that's visual, something that people can look at, just feels more real even if it's not doing anything yet. I think that helps the community really look at you like, “Oh, I can see where this is going,” right? 
+**Robert:** Starting with the front end, something that's visual, something that people can look at, just feels more real even if it's not doing anything yet. I think that helps the community really look at you like, “Oh, I can see where this is going,” right?
 
 **Graham:** Yeah, we needed something to get started with, and probably anybody could have come up with an initial interface but there was a difference between somebody doing it in two weeks and somebody doing it today.
 
@@ -78,7 +77,7 @@ Another helpful thing for us was that we had the Cognition demo video, so everyb
 
 **Robert:** VCs started reaching out to us within a week or two of things starting to take off. I think it was pretty clear to us like, “Oh, there's something going on here.” So the the idea was put in our heads pretty early on.
 
-**Robert:** The three of us talked about it along with the 3 other folks (Junyang, Binyuan, and [Bowen Li](https://github.com/libowen2121)) who were early on in the project. I had a 1-1 conversation with basically all six of the different folks who invested early on in the project to gauge how interested they were in starting a company. 
+**Robert:** The three of us talked about it along with the 3 other folks (Junyang, Binyuan, and [Bowen Li](https://github.com/libowen2121)) who were early on in the project. I had a 1-1 conversation with basically all six of the different folks who invested early on in the project to gauge how interested they were in starting a company.
 
 **Robert:** Graham was in 100%.
 
@@ -96,9 +95,9 @@ So, I'm bought into the open source ethos, especially for something that's this 
 
 But also at a social level, I just think that the technology is too powerful to be held in a closed source way by a single entity.
 
-**Graham:** A lot of the progress that is going to go on here is going to be either done in a cloistered way within 50 companies 50 times, and they'll all do it in slightly different ways, some will be slightly better than others, but it seems like a lot of duplicated effort. 
+**Graham:** A lot of the progress that is going to go on here is going to be either done in a cloistered way within 50 companies 50 times, and they'll all do it in slightly different ways, some will be slightly better than others, but it seems like a lot of duplicated effort.
 
-Or as a whole open source community, we can come together once, build it once and have 1 thing that we all agree on and use. And that includes people in academia who are very interested in doing research. 
+Or as a whole open source community, we can come together once, build it once and have 1 thing that we all agree on and use. And that includes people in academia who are very interested in doing research.
 
 It also includes people in various varieties of industry that don't want to be building something like this from scratch, but still would like to have something that they can deploy locally and have transparency and control into.
 
@@ -108,4 +107,4 @@ My belief is that that's also just a good decision for making the best software.
 
 Another advantage of open-source comes when you make a mistake; someone in the open-source community runs your code and helps you catch those bugs. I hope building things in the open becomes the new default, ensuring everybody can run your code, reproduce your results, and point out errors.
 
-**Robert:** I think good science is, by definition, open.  
+**Robert:** I think good science is, by definition, open.

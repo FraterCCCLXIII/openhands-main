@@ -1,45 +1,32 @@
 ---
-title: "Introducing the OpenHands Software Agent SDK"
-excerpt: "Open-source, simple to use, powerful, and highly customizable. The OpenHands software agent SDK makes it possible to build plug-and-play coding agents for any workflow."
-coverImage: "/assets/blog/20251105-openhands-sdk-plug-and-play-coding-agents/cover.png"
-coverAlt: "Image from blog post"
-date: "2025-11-05T14:00:00.000Z"
-seoTitleDate: "Nov 12, 2025"
+title: Introducing the OpenHands Software Agent SDK
+slug: introducing-the-openhands-software-agent-sdk
+excerpt: 'Open-source, simple to use, powerful, and highly customizable. The OpenHands software agent SDK makes it possible to build plug-and-play coding agents for any workflow.'
+coverImage: /assets/webflow/blog/agent-control-plane/cover.png
+coverAlt: Image from blog post
+date: '2025-11-05T12:00:00.000Z'
 authors:
   - name: Graham Neubig
-    picture: "/assets/blog/authors/graham.png"
 ogImage:
-  url: "/assets/blog/20251105-openhands-sdk-plug-and-play-coding-agents/cover.png"
+  url: /assets/webflow/blog/agent-control-plane/cover.png
+seoTitleDate: 'Nov 12, 2025'
 ---
-
 Today we're introducing the OpenHands SDK, our new open-sourced, MIT licensed tool, that makes it easy to build powerful coding agents that can be spun up in a few lines of code, but customized to fit any developer workflow.
 
 ## From "Build With" to "Build On"
 
 More and more, software engineers are turning to AI agents to help with coding tasks, whether through a command line interface like Claude Code or the [OpenHands CLI](https://docs.openhands.dev/openhands/usage/run-openhands/cli-mode), through integrations in IDEs like VS Code or Cursor, or embedded into developer workflows like the [OpenHands GitHub Actions](https://docs.openhands.dev/openhands/usage/cloud/github-installation) or [Slack Integration](https://docs.openhands.dev/openhands/usage/cloud/slack-installation).
 
-At OpenHands, we're calling this the *build with* use case, where a developer builds software *with* the help of AI agents that can understand code, reason about software tasks, and take actions like editing files, running tests, and creating pull requests.
-However, more and more it's been clear that for agents that create software, there is a powerful *build on* use case, where developers and organizations want to build *on* top of AI agents by creating their own unique workflows that utilize the power of coding agents.
+the help of AI agents that can understand code, reason about software tasks, and take actions like editing files, running tests, and creating pull requests.
+However, more and more it's been clear that for agents that create software, there is a powerful
 
 Some examples where people already are using OpenHands include:
 
-- **Custom debugging agents** that can analyze application logs and suggest fixes
-- **Automated code review bots** that can understand the full code context and provide detailed feedback
-- **Data ingestion agents** that take in a folder of unstructured data from a user and upload it to a database
-- **Security auditing agents** that investigate software for vulnerabilities and create pull requests to fix them
-
 ## What is Necessary to Build On?
 
-Based on the lessons that we've learned watching thousands of developers use OpenHands, we realized that to truly enable the *build on* use case, we needed to build a completely new experience for developers building on top of coding agents.
+Based on the lessons that we've learned watching thousands of developers use OpenHands, we realized that to truly enable the _build on_ use case, we needed to build a completely new experience for developers building on top of coding agents.
 
 Based on this, we designed and built the OpenHands Software Agent SDK from the ground up with a few things in mind:
-
-1. **Simplicity**: It should be easy to get started with the SDK, with minimal setup and configuration required to get an agent that works seamlessly with many workflows.
-2. **Performance**: The SDK should provide production-ready performance out of the box, without requiring extensive prompt engineering or optimization.
-3. **Flexibility**: The SDK should be model-agnostic, allowing developers to use any LLM provider they choose, without being locked into a specific vendor.
-4. **Customizability**: The SDK should allow developers to easily create custom tools and integrate them into their agents if (and only if) necessary.
-5. **Production Readiness**: The SDK should be designed with enterprise needs in mind, including type-safe APIs, error handling, conversation serialization, and logging.
-6. **Run Anywhere**: The SDK should be able to run locally on a developers computer, and then with minimal changes be able to spin up thousands of instances on the cloud.
 
 ## Hello OpenHands SDK
 
@@ -48,7 +35,6 @@ Here's a simple example that creates an agent with three built-in tools: a bash 
 
 ```python
 import os
-
 from openhands.sdk import LLM, Conversation, Tool, Agent
 from openhands.tools.execute_bash import TerminalTool
 from openhands.tools.file_editor import FileEditorTool
@@ -62,17 +48,17 @@ llm = LLM(
 agent = Agent(
     llm=llm,
     tools=[
-       Tool(name=TerminalTool.name),
-       Tool(name=FileEditorTool.name),
-       Tool(name=TaskTrackerTool.name),
+        Tool(name=TerminalTool.name),
+        Tool(name=FileEditorTool.name),
+        Tool(name=TaskTrackerTool.name),
     ],
 )
 
 conversation = Conversation(agent=agent, workspace=os.getcwd())
-
 conversation.send_message("Write 3 facts about the current project into FACTS.txt.")
 conversation.run()
 ```
+
 
 Despite its simplicity, this agent is essentially the same as the ones we use to get scores near the top of competitive leaderboards like [SWE-Bench Verified](https://www.swebench.com/).
 
@@ -96,6 +82,7 @@ class GrepTool(ToolDefinition[GrepAction, GrepObservation]):
         return [cls(action_type=GrepAction, ...)]
 ```
 
+
 **Skills and Context** ([example](https://github.com/OpenHands/software-agent-sdk/blob/main/examples/01_standalone_sdk/03_activate_skill.py)): Inject domain-specific knowledge that activates based on keywords or conditions:
 
 ```python
@@ -113,6 +100,7 @@ agent_context = AgentContext(
 )
 ```
 
+
 **Conversation Persistence** ([example](https://github.com/OpenHands/software-agent-sdk/blob/main/examples/01_standalone_sdk/10_persistence.py)): Save and restore agent conversations for long-running workflows:
 
 ```python
@@ -122,8 +110,10 @@ conversation = Conversation(
     persistence_dir="./.conversations",
     conversation_id=conversation_id
 )
+
 # Later, restore with the same conversation_id
 ```
+
 
 **Docker Workspaces** ([example](https://github.com/OpenHands/software-agent-sdk/blob/main/examples/02_remote_agent_server/02_convo_with_docker_sandboxed_server.py)): Run agents in isolated Docker containers for enhanced security and scalability:
 
@@ -137,6 +127,7 @@ with DockerWorkspace(
     conversation = Conversation(agent=agent, workspace=workspace)
     # Agent runs in isolated Docker environment
 ```
+
 
 ## Real-World Applications
 
@@ -159,7 +150,6 @@ The workflow triggers when a `review-this` label is added to a PR, runs the anal
 For routine maintenance tasks, we created a flexible GitHub Actions workflow ([code](https://github.com/OpenHands/software-agent-sdk/tree/main/examples/03_github_workflows/01_basic_action)) that can run any custom prompt on a schedule or manual trigger. This enables automated documentation updates, dependency management, and other recurring tasks.
 
 Teams can provide prompts either as direct text or from URLs, making it easy to maintain shared prompt libraries and run consistent maintenance across multiple repositories.
-
 
 ## Get Started Today
 

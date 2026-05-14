@@ -32,19 +32,12 @@ describe('shared branding links', () => {
     );
   });
 
-  it('uses OpenHands branding in the blog footer copy and citation', () => {
+  it('uses OpenHands branding in the blog footer copy', () => {
     const router = createMemoryRouter(
       [
         {
           path: '/',
-          element: (
-            <BlogFooter
-              title='Test Post'
-              authors={[{ name: 'Jane Doe' }]}
-              date='2026-01-02'
-              url='https://openhands.dev/blog/test-post'
-            />
-          ),
+          element: <BlogFooter />,
         },
       ],
       { initialEntries: ['/'] }
@@ -56,7 +49,6 @@ describe('shared branding links', () => {
       screen.getByText('Sign up for our newsletter for updates, events, and community insights.')
     ).toBeInTheDocument();
 
-    expect(screen.getByTitle('Collapse Citation')).toBeInTheDocument();
-    expect(screen.getByText(/organization = \{OpenHands Blog\}/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^Citation$/i })).toBeInTheDocument();
   });
 });

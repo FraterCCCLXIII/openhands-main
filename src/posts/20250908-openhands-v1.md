@@ -1,17 +1,16 @@
 ---
-title: "The Path to OpenHands v1"
-excerpt: "A look at how we’re stabilizing the OpenHands platform for a v1: a lightweight SDK, a streamlined CLI, and a server architecture built on a synchronous conversation model."
-coverImage: "/assets/blog/20250908-openhands-v1/image.png"
-coverAlt: "Cover image"
-date: "2025-09-04T12:00:00.000Z"
-seoTitleDate: "Nov 12, 2025"
+title: The Path to OpenHands v1
+slug: the-path-to-openhands-v1
+excerpt: 'A look at how we’re stabilizing the OpenHands platform for a v1: a lightweight SDK, a streamlined CLI, and a server architecture built on a synchronous conversation model.'
+coverImage: /assets/webflow/blog/6914ead8ba1c303de166eaf1_6914e738ef96d4db714b7e45_image.png
+coverAlt: Cover image
+date: '2025-09-04T12:00:00.000Z'
 authors:
   - name: Robert Brennan
-    picture: "/assets/blog/authors/robert.webp"
 ogImage:
-  url: "/assets/blog/20250908-openhands-v1/image.png"
+  url: /assets/webflow/blog/6914ead8ba1c303de166eaf1_6914e738ef96d4db714b7e45_image.png
+seoTitleDate: 'Nov 12, 2025'
 ---
-
 The [OpenHands GitHub repository](https://github.com/OpenHands/OpenHands) has grown organically over the last 18 months. We’re averaging about 60 commits per week (!) with contributions from nearly 400 unique developers.
 
 As you can imagine, the codebase has gotten a bit out of hand.
@@ -24,7 +23,7 @@ We’re due for a major overhaul. So we’ve sketched out our wish list for a v1
 
 ## OpenHands SDK v1
 
-First off, we want a flavor of OpenHands that’s *extremely* light-weight. We’re tracking this in [GitHub](https://github.com/OpenHands/OpenHands/issues/10577).
+First off, we want a flavor of OpenHands that’s _extremely_ light-weight. We’re tracking this in [GitHub](https://github.com/OpenHands/OpenHands/issues/10577).
 
 Our current docker image is close to 10GB, and our CLI takes several minutes to install due to a wild list of transitive dependencies (including a YouTube API client for some reason??)
 
@@ -45,23 +44,21 @@ llm = LLM(
 )
 
 def hello_tool(name):
-  print("hello, " + name)
+    print("hello, " + name)
 
 tools = [
-  Tool(
-    name="hello",
-    description="Says hello",
-    callback=hello_tool,
-    inputSchema={'type': 'string', 'description': 'name to greet'}
-  ),
+    Tool(
+        name="hello",
+        description="Says hello",
+        callback=hello_tool,
+        inputSchema={'type': 'string', 'description': 'name to greet'}
+    ),
 ]
 
 agent = CodeActAgent(llm=llm, tools=tools)
-
 conversation = Conversation(agent=agent)
 conversation.send_text("Say hello!")
 conversation.run()
-
 print("Conversation finished with status:", conversation.state.status)
 ```
 
@@ -93,7 +90,7 @@ OpenHands started as a web application, where you can chat with a coding agent. 
 
 The main changes to the backend will be under the hood—we’ll swap out our current `AgentController` for something that uses the new SDK. The end‑user experience—including existing API endpoints—should be unaffected.
 
-![OpenHands v1 overview](/assets/blog/20250908-openhands-v1/image.png)
+![OpenHands v1 overview](/assets/webflow/blog/6914ead8ba1c303de166eaf1_6914e738ef96d4db714b7e45_image.png)
 
 Separately, we’ve been maintaining a closed‑source extension to OpenHands Server, which we call OpenHands Cloud. This is a variant of OpenHands which adds authentication and scalability for cloud‑based deployments. We’re going to move this code into the open source repo, under a commercial license. Teams will be able to install and try OpenHands Cloud in their own VPC, but will need a commercial license for long‑term use.
 
