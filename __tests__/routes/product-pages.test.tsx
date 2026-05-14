@@ -171,76 +171,54 @@ describe('Product parity routes', () => {
     });
   });
 
-  it('matches live product metadata for the root route', () => {
-    expect(productMeta({ location: { pathname: '/product' } } as never)).toEqual([
-      { title: 'OpenHands Product | Autonomous Cloud Coding Agents' },
-      {
-        name: 'description',
-        content:
-          'Explore how OpenHands revolutionizes software development with secure, model-agnostic cloud coding agents. Delegate, execute, and review code autonomously.',
-      },
-      { property: 'og:title', content: 'OpenHands Product | Autonomous Cloud Coding Agents' },
-      {
-        property: 'og:description',
-        content:
-          'Explore how OpenHands revolutionizes software development with secure, model-agnostic cloud coding agents. Delegate, execute, and review code autonomously.',
-      },
-      { property: 'og:url', content: 'https://openhands.dev/product' },
+  const expectSocialMetadata = (
+    entries: unknown,
+    { title, description, pathname }: { title: string; description: string; pathname: string }
+  ) => {
+    expect(entries).toEqual([
+      { title },
+      { name: 'description', content: description },
+      { property: 'og:title', content: title },
+      { property: 'og:description', content: description },
+      { property: 'og:image', content: PRODUCT_OG_IMAGE },
+      { property: 'og:url', content: `https://openhands.dev${pathname}` },
       { property: 'og:type', content: 'website' },
+      { property: 'og:site_name', content: 'OpenHands' },
       { name: 'twitter:card', content: 'summary_large_image' },
-      { rel: 'canonical', href: 'https://openhands.dev/product' },
+      { name: 'twitter:title', content: title },
+      { name: 'twitter:description', content: description },
+      { name: 'twitter:image', content: PRODUCT_OG_IMAGE },
+      { rel: 'canonical', href: `https://openhands.dev${pathname}` },
     ]);
+  };
+
+  it('matches live product metadata for the root route', () => {
+    expectSocialMetadata(productMeta({ location: { pathname: '/product' } } as never), {
+      title: 'OpenHands Product | Autonomous Cloud Coding Agents',
+      description:
+        'Explore how OpenHands revolutionizes software development with secure, model-agnostic cloud coding agents. Delegate, execute, and review code autonomously.',
+      pathname: '/product',
+    });
   });
 
   it('matches live metadata for the dedicated product pages', () => {
-    expect(productSdkMeta({} as never)).toEqual([
-      { title: 'OpenHands SDK | Secure, Scalable Agentic Software Development' },
-      { name: 'description', content: 'Extend OpenHands with code, not constraints.' },
-      {
-        property: 'og:title',
-        content: 'OpenHands SDK | Secure, Scalable Agentic Software Development',
-      },
-      { property: 'og:description', content: 'Extend OpenHands with code, not constraints.' },
-      { property: 'og:image', content: PRODUCT_OG_IMAGE },
-      { property: 'og:type', content: 'website' },
-    ]);
+    expectSocialMetadata(productSdkMeta({} as never), {
+      title: 'OpenHands SDK | Secure, Scalable Agentic Software Development',
+      description: 'Extend OpenHands with code, not constraints.',
+      pathname: '/product/sdk',
+    });
 
-    expect(productGuiMeta({} as never)).toEqual([
-      { title: 'OpenHands Web GUI | Secure, Scalable Agentic Software Development' },
-      {
-        name: 'description',
-        content: 'Plan, run, and review agent work together in a collaborative UI.',
-      },
-      {
-        property: 'og:title',
-        content: 'OpenHands Web GUI | Secure, Scalable Agentic Software Development',
-      },
-      {
-        property: 'og:description',
-        content: 'Plan, run, and review agent work together in a collaborative UI.',
-      },
-      { property: 'og:image', content: PRODUCT_OG_IMAGE },
-      { property: 'og:type', content: 'website' },
-    ]);
+    expectSocialMetadata(productGuiMeta({} as never), {
+      title: 'OpenHands Web GUI | Secure, Scalable Agentic Software Development',
+      description: 'Plan, run, and review agent work together in a collaborative UI.',
+      pathname: '/product/gui',
+    });
 
-    expect(productCliMeta({} as never)).toEqual([
-      { title: 'OpenHands CLI | Secure, Scalable Agentic Software Development' },
-      {
-        name: 'description',
-        content:
-          'Run, inspect, and automate OpenHands agents directly from the terminal or headlessly in your pipelines with full visibility and control.',
-      },
-      {
-        property: 'og:title',
-        content: 'OpenHands CLI | Secure, Scalable Agentic Software Development',
-      },
-      {
-        property: 'og:description',
-        content:
-          'Run, inspect, and automate OpenHands agents directly from the terminal or headlessly in your pipelines with full visibility and control.',
-      },
-      { property: 'og:image', content: PRODUCT_OG_IMAGE },
-      { property: 'og:type', content: 'website' },
-    ]);
+    expectSocialMetadata(productCliMeta({} as never), {
+      title: 'OpenHands CLI | Secure, Scalable Agentic Software Development',
+      description:
+        'Run, inspect, and automate OpenHands agents directly from the terminal or headlessly in your pipelines with full visibility and control.',
+      pathname: '/product/cli',
+    });
   });
 });

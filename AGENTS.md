@@ -78,6 +78,7 @@ Located at: `scripts/generate-site-parity-checklist.cjs`
 - Button component parity intentionally keys buttons by the visible label (including `aria-hidden` Webflow text wrappers) rather than overlay-anchor `aria-label` / `.sr-only` text, so Webflow-style visual labels such as `Try it live` still match local overlay links whose accessible label is `Join Slack`.
 - Runtime motion parity collapses nested animated/mutating descendants to the outermost moving component root, preventing one ASCII/background animation from producing four duplicate motion findings (`asci-wrap`, `asci-embed`, `ascii-embed`, `ascii-pre`).
 - Painted-layer parity should compare visual paint only (backgrounds, borders, shadows, filters, opacity/pseudo paint), not layout-only CSS such as `position`; container/Webflow/layout audits own those non-paint concerns.
+- Social preview parity extracts non-visible `<head>` metadata and compares Open Graph / Twitter preview contracts. Use `src/utils/seo.ts#createSocialPreviewMeta` for marketing routes so `og:title`, `og:description`, `og:image`, `og:url`, `og:type`, `og:site_name`, `twitter:card`, `twitter:title`, `twitter:description`, `twitter:image`, and canonical stay consistent.
 - Container parity suppresses min/max size constraints when the computed rectangle already matches and one side's constraint equals the rendered size, avoiding non-visual `min-height: auto` vs `816px` noise while still reporting actual rect-height drift.
 
 ## Common Discrepancy Patterns

@@ -1,6 +1,7 @@
 import type { Route } from './+types/community';
 import { Footer } from '~/components/footer';
 import { OverlayLinkButton } from '~/components/overlay-link-button';
+import { createSocialPreviewMeta } from '~/utils/seo';
 
 const LATEST_COMMUNITY_CALL = {
   description:
@@ -64,26 +65,13 @@ const CONTRIBUTION_PATHS = [
   },
 ];
 
-export const meta: Route.MetaFunction = ({ location }) => {
-  return [
-    { title: 'OpenHands Community' },
-    {
-      name: 'description',
-      content:
-        'Meet OpenHands, the open-source, model-agnostic platform for cloud coding agents. Automate real engineering work securely and transparently. Build faster with full control.',
-    },
-    { property: 'og:title', content: 'OpenHands Community' },
-    {
-      property: 'og:description',
-      content:
-        'Meet OpenHands, the open-source, model-agnostic platform for cloud coding agents. Automate real engineering work securely and transparently. Build faster with full control.',
-    },
-    { property: 'og:url', content: 'https://openhands.dev' + location.pathname },
-    { property: 'og:type', content: 'website' },
-    { name: 'twitter:card', content: 'summary_large_image' },
-    { rel: 'canonical', href: 'https://openhands.dev' + location.pathname },
-  ];
-};
+export const meta: Route.MetaFunction = ({ location }) =>
+  createSocialPreviewMeta({
+    title: 'OpenHands Community',
+    description:
+      'Meet OpenHands, the open-source, model-agnostic platform for cloud coding agents. Automate real engineering work securely and transparently. Build faster with full control.',
+    pathname: location.pathname,
+  });
 export const handle = { hideGlobalFooter: true };
 
 

@@ -1,6 +1,7 @@
 import type { MetaFunction } from 'react-router';
 import { ProductFeaturePage } from '~/components/product-feature-page';
-import { PRODUCT_FEATURE_PAGES, PRODUCT_OG_IMAGE } from '~/data/product-feature-pages';
+import { PRODUCT_FEATURE_PAGES } from '~/data/product-feature-pages';
+import { createSocialPreviewMeta } from '~/utils/seo';
 
 const FAQS = [
   {
@@ -32,14 +33,12 @@ const FAQS = [
 
 const PAGE = PRODUCT_FEATURE_PAGES.gui;
 
-export const meta: MetaFunction = () => [
-  { title: PAGE.metaTitle },
-  { name: 'description', content: PAGE.metaDescription },
-  { property: 'og:title', content: PAGE.metaTitle },
-  { property: 'og:description', content: PAGE.metaDescription },
-  { property: 'og:image', content: PRODUCT_OG_IMAGE },
-  { property: 'og:type', content: 'website' },
-];
+export const meta: MetaFunction = () =>
+  createSocialPreviewMeta({
+    title: PAGE.metaTitle,
+    description: PAGE.metaDescription,
+    pathname: '/product/gui',
+  });
 
 export const handle = { hideGlobalFooter: true };
 

@@ -8,27 +8,15 @@ import {
 } from '~/components/product-feature-page';
 import { OverlayLinkButton } from '~/components/overlay-link-button';
 import { PRODUCT_SURFACES } from '~/constants/product-surfaces';
+import { createSocialPreviewMeta } from '~/utils/seo';
 
-export const meta: Route.MetaFunction = ({ location }) => {
-  return [
-    { title: 'OpenHands Product | Autonomous Cloud Coding Agents' },
-    {
-      name: 'description',
-      content:
-        'Explore how OpenHands revolutionizes software development with secure, model-agnostic cloud coding agents. Delegate, execute, and review code autonomously.',
-    },
-    { property: 'og:title', content: 'OpenHands Product | Autonomous Cloud Coding Agents' },
-    {
-      property: 'og:description',
-      content:
-        'Explore how OpenHands revolutionizes software development with secure, model-agnostic cloud coding agents. Delegate, execute, and review code autonomously.',
-    },
-    { property: 'og:url', content: 'https://openhands.dev' + location.pathname },
-    { property: 'og:type', content: 'website' },
-    { name: 'twitter:card', content: 'summary_large_image' },
-    { rel: 'canonical', href: 'https://openhands.dev' + location.pathname },
-  ];
-};
+export const meta: Route.MetaFunction = ({ location }) =>
+  createSocialPreviewMeta({
+    title: 'OpenHands Product | Autonomous Cloud Coding Agents',
+    description:
+      'Explore how OpenHands revolutionizes software development with secure, model-agnostic cloud coding agents. Delegate, execute, and review code autonomously.',
+    pathname: location.pathname,
+  });
 
 export const handle = { hideGlobalFooter: true };
 

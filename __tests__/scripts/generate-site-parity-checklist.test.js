@@ -19,6 +19,7 @@ const {
   compareDynamicSelectorUx,
   compareHoverEffects,
   compareInteractivity,
+  compareSocialPreviews,
   compareStyleValue,
   compareWebflowElements,
   extractButtonComponents,
@@ -490,6 +491,66 @@ describe('dropdown interaction state comparison', () => {
 
     expect(diffs).toHaveLength(1);
     expect(diffs[0].issue).toBe('dropdown exists on test but trigger missing on live');
+  });
+});
+
+describe('social preview metadata comparison', () => {
+  it('flags missing Open Graph and Twitter preview tags even when visible DOM matches', () => {
+    const live = {
+      values: {
+        'og:title': ['OpenHands'],
+        'og:description': ['Cloud coding agents'],
+        'og:image': ['https://cdn.prod.website-files.com/site/69161b32abf448a2df921a73_openhands_opengraph_01.png'],
+        'og:type': ['website'],
+        'twitter:card': ['summary_large_image'],
+        'twitter:title': ['OpenHands'],
+        'twitter:description': ['Cloud coding agents'],
+      },
+    };
+    const test = {
+      values: {
+        'og:title': ['OpenHands'],
+        'og:description': ['Cloud coding agents'],
+        'og:type': ['website'],
+        'twitter:card': ['summary_large_image'],
+      },
+    };
+
+    const diffs = compareSocialPreviews(live, test);
+    expect(diffs).toEqual(expect.arrayContaining([
+      expect.objectContaining({ key: 'twitter:title', issue: 'required social preview tag missing on test' }),
+      expect.objectContaining({ key: 'twitter:description', issue: 'required social preview tag missing on test' }),
+      expect.objectContaining({ key: 'og:image', issue: 'social preview image missing on test' }),
+      expect.objectContaining({ key: 'twitter:image', issue: 'summary_large_image card has no preview image on test' }),
+    ]));
+  });
+
+  it('normalizes preview image hosts so CDN and local OpenHands paths match by asset filename', () => {
+    const live = {
+      values: {
+        'og:title': ['OpenHands'],
+        'og:description': ['Cloud coding agents'],
+        'og:image': ['https://cdn.prod.website-files.com/site/69161b32abf448a2df921a73_openhands_opengraph_01.png'],
+        'og:type': ['website'],
+        'twitter:card': ['summary_large_image'],
+        'twitter:title': ['OpenHands'],
+        'twitter:description': ['Cloud coding agents'],
+      },
+    };
+    const test = {
+      values: {
+        'og:title': ['OpenHands'],
+        'og:description': ['Cloud coding agents'],
+        'og:image': ['https://openhands.dev/assets/webflow/og/69161b32abf448a2df921a73_openhands_opengraph_01.png'],
+        'og:type': ['website'],
+        'twitter:card': ['summary_large_image'],
+        'twitter:title': ['OpenHands'],
+        'twitter:description': ['Cloud coding agents'],
+        'twitter:image': ['https://openhands.dev/assets/webflow/og/69161b32abf448a2df921a73_openhands_opengraph_01.png'],
+      },
+    };
+
+    expect(compareSocialPreviews(live, test)).toEqual([]);
   });
 });
 

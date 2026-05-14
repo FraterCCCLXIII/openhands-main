@@ -6,6 +6,7 @@ import { Footer } from '~/components/footer';
 import { OverlayLinkButton } from '~/components/overlay-link-button';
 import { formatThousands } from '~/utils/format-thousands';
 import { ASCIIAnimation } from '~/components/ascii-animation';
+import { createSocialPreviewMeta } from '~/utils/seo';
 
 const CLIENT_LOGOS = [
   { name: 'TikTok', url: '/assets/webflow/logos/69137f6974b71a1a4a932f82_TikTok_logo.svg' },
@@ -300,27 +301,12 @@ const FAQS = [
   },
 ];
 
-export const meta: Route.MetaFunction = () => {
-  return [
-    { title: 'OpenHands | The Open Platform for Cloud Coding Agents' },
-    {
-      name: 'description',
-      content:
-        'Meet OpenHands, the open-source, model-agnostic platform for cloud coding agents. Automate real engineering work securely and transparently. Build faster with full control.',
-    },
-    { property: 'og:title', content: 'OpenHands | The Open Platform for Cloud Coding Agents' },
-    {
-      property: 'og:description',
-      content:
-        'Meet OpenHands, the open-source, model-agnostic platform for cloud coding agents. Automate real engineering work securely and transparently. Build faster with full control.',
-    },
-    { property: 'og:image', content: 'https://openhands.dev/assets/webflow/og/69161b32abf448a2df921a73_openhands_opengraph_01.png' },
-    { property: 'og:url', content: 'https://openhands.dev' },
-    { property: 'og:type', content: 'website' },
-    { name: 'twitter:card', content: 'summary_large_image' },
-    { rel: 'canonical', href: 'https://openhands.dev' },
-  ];
-};
+export const meta: Route.MetaFunction = () =>
+  createSocialPreviewMeta({
+    title: 'OpenHands | The Open Platform for Cloud Coding Agents',
+    description:
+      'Meet OpenHands, the open-source, model-agnostic platform for cloud coding agents. Automate real engineering work securely and transparently. Build faster with full control.',
+  });
 
 const Home = () => {
   const [activeTestimonial, setActiveTestimonial] = React.useState(0);

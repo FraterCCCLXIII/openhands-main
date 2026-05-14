@@ -3,6 +3,7 @@ import type { Route } from './+types/enterprise';
 import ASCIIAnimation from '~/components/ascii-animation';
 import { Footer } from '~/components/footer';
 import { OverlayLinkButton } from '~/components/overlay-link-button';
+import { DEFAULT_SOCIAL_IMAGE } from '~/utils/seo';
 
 const ASCII_HOLE_BG = '/assets/webflow/backgrounds/690b397ae76441160bed52b6_asci-art-hole.png';
 const CONTROL_PLANE_IMG = '/assets/webflow/enterprise/control-plane.png';
@@ -218,14 +219,20 @@ export const meta: Route.MetaFunction = ({ location }) => {
       content:
         'Scale AI agents in production with the control, visibility, and repeatability your enterprise needs.',
     },
-    {
-      property: 'og:image',
-      content:
-        'https://openhands.dev/assets/webflow/og/69161b32abf448a2df921a73_openhands_opengraph_01.png',
-    },
+    { property: 'og:image', content: DEFAULT_SOCIAL_IMAGE },
     { property: 'og:url', content: 'https://openhands.dev' + location.pathname },
     { property: 'og:type', content: 'website' },
     { name: 'twitter:card', content: 'summary_large_image' },
+    {
+      name: 'twitter:title',
+      content: 'OpenHands for Enterprise | Secure, Scalable Agentic Software Development',
+    },
+    {
+      name: 'twitter:description',
+      content:
+        'Scale AI agents in production with the control, visibility, and repeatability your enterprise needs.',
+    },
+    { name: 'twitter:image', content: DEFAULT_SOCIAL_IMAGE },
     { rel: 'canonical', href: 'https://openhands.dev' + location.pathname },
   ];
 };

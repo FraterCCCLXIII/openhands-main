@@ -1289,6 +1289,93 @@ function compareWebflowElements(liveElements, testElements) {
   return { matched, missingOnTest, extraOnTest, countMismatches };
 }
 
+
+async function extractSocialPreviewMeta(page) {
+  return page.evaluate(() => {
+    const values = {};
+    const attributes = {};
+    const add = (key, value, attribute) => {
+      if (!key || !value) return;
+      const normalizedKey = key.toLowerCase();
+      if (!values[normalizedKey]) values[normalizedKey] = [];
+      values[normalizedKey].push(value.trim());
+      if (!attributes[normalizedKey]) attributes[normalizedKey] = [];
+      attributes[normalizedKey].push(attribute);
+    };
+
+    for (const meta of document.querySelectorAll('meta[property], meta[name]')) {
+      const key = meta.getAttribute('property') || meta.getAttribute('name');
+      if (!key || (!key.toLowerCase().startsWith('og:') && !key.toLowerCase().startsWith('twitter:'))) continue;
+      add(key, meta.getAttribute('content') || '', meta.hasAttribute('property') ? 'property' : 'name');
+    }
+
+    const canonical = document.querySelector('link[rel="canonical"]');
+    if (canonical) add('canonical', canonical.getAttribute('href') || '', 'rel');
+
+    return {
+      title: document.title || '',
+      values,
+      attributes,
+    };
+  });
+}
+
+const firstSocialValue = (meta, key) => (meta?.values?.[key]?.[0] || '').trim();
+
+function normalizeSocialMetaText(value) {
+  return String(value || '').replace(/\s+/g, ' ').trim();
+}
+
+function normalizeSocialImage(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return '';
+  try {
+    const parsed = new URL(raw, 'https://openhands.dev');
+    return decodeURIComponent(parsed.pathname.split('/').pop() || '').toLowerCase();
+  } catch {
+    return decodeURIComponent(raw.split('/').pop() || raw).toLowerCase();
+  }
+}
+
+function compareSocialPreviews(liveMeta = {}, testMeta = {}) {
+  const diffs = [];
+  const requiredTestKeys = ['og:title', 'og:description', 'og:type', 'twitter:card', 'twitter:title', 'twitter:description'];
+
+  for (const key of requiredTestKeys) {
+    if (!firstSocialValue(testMeta, key)) {
+      diffs.push({ key, issue: 'required social preview tag missing on test', live: firstSocialValue(liveMeta, key), test: '' });
+    }
+  }
+
+  for (const key of requiredTestKeys) {
+    const liveValue = firstSocialValue(liveMeta, key);
+    const testValue = firstSocialValue(testMeta, key);
+    if (!liveValue || !testValue) continue;
+    if (normalizeSocialMetaText(liveValue) !== normalizeSocialMetaText(testValue)) {
+      diffs.push({ key, issue: 'social preview content differs', live: liveValue, test: testValue });
+    }
+  }
+
+  const liveImage = firstSocialValue(liveMeta, 'og:image') || firstSocialValue(liveMeta, 'twitter:image');
+  const testOgImage = firstSocialValue(testMeta, 'og:image');
+  const testTwitterImage = firstSocialValue(testMeta, 'twitter:image');
+  const testImage = testOgImage || testTwitterImage;
+  if (liveImage && !testImage) {
+    diffs.push({ key: 'og:image', issue: 'social preview image missing on test', live: liveImage, test: '' });
+  }
+  if (firstSocialValue(testMeta, 'twitter:card') === 'summary_large_image' && !testImage) {
+    diffs.push({ key: 'twitter:image', issue: 'summary_large_image card has no preview image on test', live: liveImage, test: '' });
+  }
+  if (liveImage && testImage && normalizeSocialImage(liveImage) !== normalizeSocialImage(testImage)) {
+    diffs.push({ key: 'og:image', issue: 'social preview image differs', live: liveImage, test: testImage });
+  }
+  if (testOgImage && testTwitterImage && normalizeSocialImage(testOgImage) !== normalizeSocialImage(testTwitterImage)) {
+    diffs.push({ key: 'twitter:image', issue: 'Open Graph and Twitter preview images differ on test', live: testOgImage, test: testTwitterImage });
+  }
+
+  return diffs;
+}
+
 async function extractCSSCustomProperties(page) {
   return page.evaluate(() => {
     const root = document.documentElement;
@@ -4211,6 +4298,14 @@ function summarizeRouteComparison(routePath, livePage, testPage, screenshotDiff)
     testPage.dropdowns || [],
   );
 
+  // Social preview metadata comparison. The visible DOM inventory cannot catch
+  // missing Open Graph / Twitter card tags, but those tags control link previews.
+  const socialPreviewDiffs = compareSocialPreviews(
+    livePage.socialPreviewMeta || {},
+    testPage.socialPreviewMeta || {},
+  );
+
+
   // CSS custom property comparison
   const cssVarDiffs = [];
   const allVarNames = new Set([
@@ -4334,6 +4429,8 @@ function summarizeRouteComparison(routePath, livePage, testPage, screenshotDiff)
     cssVarDiffs,
     cssVarDiffCount: cssVarDiffs.length,
     wfComparison,
+    socialPreviewDiffs,
+    socialPreviewMismatchCount: socialPreviewDiffs.length,
     wfMismatchCount: wfComparison.matched.filter((m) => !m.passed).length + (wfComparison.countMismatches || []).length,
     wfStyleMismatchCount: wfComparison.matched.filter((m) => (m.styleDiffs || []).length > 0).length,
     wfLayoutMismatchCount: wfComparison.matched.filter((m) => (m.layoutDiffs || []).length > 0).length,
@@ -4564,6 +4661,7 @@ function renderMarkdown(report) {
   lines.push(`- Hover effect mismatches: ${report.summary.hoverMismatches}`);
   lines.push(`- Click behavior mismatches (tabs/accordions): ${report.summary.clickBehaviorMismatches || 0}`);
   lines.push(`- Dropdown mismatches (nav dropdowns): ${report.summary.dropdownMismatches || 0}`);
+  lines.push(`- Social preview metadata mismatches: ${report.summary.socialPreviewMismatches || 0}`);
   lines.push(`- Image dimension mismatches: ${report.summary.imageDimensionMismatches || 0}`);
   lines.push(`- Webflow element mismatches (data-wf-el total): ${report.summary.wfElementMismatches || 0}`);
   lines.push(`- Webflow element style mismatches (data-wf-el): ${report.summary.wfStyleMismatches || 0}`);
@@ -4700,6 +4798,16 @@ function renderMarkdown(report) {
     for (const extra of route.extraElements) {
       lines.push(`- [ ] EXTRA:${extra.signature} — unexpected on test site (count ${extra.count})`);
     }
+
+    // Social preview metadata mismatches
+    if (route.socialPreviewDiffs && route.socialPreviewDiffs.length > 0) {
+      lines.push('');
+      lines.push('### Social preview metadata mismatches');
+      for (const diff of route.socialPreviewDiffs) {
+        lines.push(`- [ ] ${diff.key} — ${diff.issue}${diff.live || diff.test ? ` (live: ${diff.live || '∅'} | test: ${diff.test || '∅'})` : ''}`);
+      }
+    }
+
 
     // Container/section style mismatches
     if (route.containerDiffs && route.containerDiffs.length > 0) {
@@ -5281,11 +5389,12 @@ async function loadPage(page, origin, routePath) {
   });
 
   const isLiveSite = origin === LIVE_ORIGIN;
-  const [inventory, containers, interactive, cssVars, wfElements, animations, paintedLayers, buttonComponents] = await withTimeout(
+  const [inventory, containers, interactive, socialPreviewMeta, cssVars, wfElements, animations, paintedLayers, buttonComponents] = await withTimeout(
     Promise.all([
       extractPageInventory(page),
       extractContainerStyles(page),
       extractInteractivity(page),
+      extractSocialPreviewMeta(page),
       extractCSSCustomProperties(page),
       extractWebflowElements(page, isLiveSite),
       extractAnimations(page),
@@ -5324,6 +5433,7 @@ async function loadPage(page, origin, routePath) {
     containers,
     interactive,
     hoverEffects,
+    socialPreviewMeta,
     clickBehavior,
     dropdowns,
     cssVars,
@@ -5473,6 +5583,7 @@ async function main() {
         hoverMismatches: routes.reduce((total, route) => total + (route.hoverMismatchCount || 0), 0),
         clickBehaviorMismatches: routes.reduce((total, route) => total + (route.clickBehaviorDiffCount || 0), 0),
         dropdownMismatches: routes.reduce((total, route) => total + (route.dropdownDiffCount || 0), 0),
+        socialPreviewMismatches: routes.reduce((total, route) => total + (route.socialPreviewMismatchCount || 0), 0),
         imageDimensionMismatches: routes.reduce((total, route) => total + (route.imageDiffCount || 0), 0),
         wfElementMismatches: routes.reduce((total, route) => total + (route.wfMismatchCount || 0), 0),
         wfStyleMismatches: routes.reduce((total, route) => total + (route.wfStyleMismatchCount || 0), 0),
@@ -5520,6 +5631,7 @@ async function main() {
       report.summary.interactivityDiffs +
       report.summary.hoverMismatches +
       (report.summary.clickBehaviorMismatches || 0) +
+      (report.summary.socialPreviewMismatches || 0) +
       (report.summary.dropdownMismatches || 0) +
       report.summary.imageDimensionMismatches +
       (report.summary.wfElementMismatches || 0) +
@@ -5575,6 +5687,7 @@ module.exports = {
   compareDynamicSelectorUx,
   compareHoverEffects,
   compareInteractivity,
+  compareSocialPreviews,
   compareStyleValue,
   compareWebflowElements,
   copyPngInto,

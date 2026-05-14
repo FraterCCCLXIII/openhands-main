@@ -1,27 +1,15 @@
 import { Link } from 'react-router';
 import { CompanyPageShell } from '~/components/company-page-shell';
 import type { Route } from './+types/press';
+import { createSocialPreviewMeta } from '~/utils/seo';
 
-export const meta: Route.MetaFunction = ({ location }) => {
-  return [
-    { title: 'OpenHands Newsroom | Press, Media, and Brand Resources' },
-    {
-      name: 'description',
-      content:
-        'Access the latest news, press releases, and brand assets from OpenHands, the open-source standard for cloud coding agents.',
-    },
-    { property: 'og:title', content: 'OpenHands Newsroom | Press, Media, and Brand Resources' },
-    {
-      property: 'og:description',
-      content:
-        'Access the latest news, press releases, and brand assets from OpenHands, the open-source standard for cloud coding agents.',
-    },
-    { property: 'og:url', content: 'https://openhands.dev' + location.pathname },
-    { property: 'og:type', content: 'website' },
-    { name: 'twitter:card', content: 'summary_large_image' },
-    { rel: 'canonical', href: 'https://openhands.dev' + location.pathname },
-  ];
-};
+export const meta: Route.MetaFunction = ({ location }) =>
+  createSocialPreviewMeta({
+    title: 'OpenHands Newsroom | Press, Media, and Brand Resources',
+    description:
+      'Access the latest news, press releases, and brand assets from OpenHands, the open-source standard for cloud coding agents.',
+    pathname: location.pathname,
+  });
 
 const PRESS_ITEMS = [
   {
