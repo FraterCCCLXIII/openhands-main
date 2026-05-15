@@ -175,6 +175,13 @@ const USE_CASE_COLUMNS = [
 
 const TESTIMONIALS = [
   {
+    quote: '"OpenHands autonomously fixes 87% of bug tickets same-day. Our clients think we hired an army of engineers."',
+    name: 'Nick Blanchet',
+    title: 'CTO at Flextract',
+    photo: '/assets/webflow/logos/6915c4f0cbba410851f45d79_flextract-selfie.png',
+    logo: '/assets/webflow/logos/6915b02ded45d0b434a0974d_flextract.png',
+  },
+  {
     quote:
       '“OpenHands was the only solution that let us prompt an autonomous coding agent remotely at scale, not just on a laptop or inside a narrow CI template.”',
     name: 'Sina Pakazad',
@@ -189,13 +196,6 @@ const TESTIMONIALS = [
     title: 'Director, Developer Acceleration at AMD',
     photo: '/assets/webflow/testimonials/authors/amd.png',
     logo: '/assets/webflow/logos/690b9e5400fdae4c12eedd75_small-client-logo.svg',
-  },
-  {
-    quote: '"OpenHands autonomously fixes 87% of bug tickets same-day. Our clients think we hired an army of engineers."',
-    name: 'Nick Blanchet',
-    title: 'CTO at Flextract',
-    photo: '/assets/webflow/logos/6915c4f0cbba410851f45d79_flextract-selfie.png',
-    logo: '/assets/webflow/logos/6915b02ded45d0b434a0974d_flextract.png',
   },
 ];
 
@@ -565,7 +565,7 @@ const Home = () => {
               the matching hero media on the right. Dimensions and offsets
               mirror the live Webflow export so rendered image rects line up
               without relying on screenshots. */}
-          <div data-wf-el='hero-content' data-slider='hero-surfaces' className='w-full' style={{ display: 'block', marginTop: '122.4px' }}>
+          <div data-wf-el='hero-content' data-slider='hero-surfaces' className='w-full' style={{ display: 'block', marginTop: '0px' }}>
             <div className='mx-auto max-w-[1238px]'>
               <div id='hero-media' className='flex flex-col lg:flex-row lg:items-start lg:gap-6'>
                 {/* LEFT col: selector controls + active card. Match live's
@@ -869,7 +869,7 @@ const Home = () => {
                 </p>
                 <OverlayLinkButton href='https://github.com/OpenHands/OpenHands' label='Explore the repo' variant='lightbrown' className='mt-6 mb-12 w-fit' />
                 <div className='mt-auto flex items-end gap-3'>
-                  <span className='text-7xl font-medium leading-none text-brand-accent'>{formatThousands(statistics.stargazers)}</span>
+                  <span className='text-7xl font-medium leading-none text-brand-accent'>{Math.round(statistics.stargazers / 1000)}K</span>
                   <span className='mb-2 text-4xl font-medium text-white'>+</span>
                 </div>
                 {/* Live uses the actual star SVG asset (not an emoji) so the

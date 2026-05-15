@@ -70,7 +70,7 @@ const productFeaturePages: Record<'sdk' | 'gui' | 'cli', ProductFeaturePageData>
     introDescription:
       'The OpenHands SDK lets teams create specialized agents, integrate internal tools, and orchestrate complex workflows programmatically.',
     accentImage: {
-      src: '/assets/webflow/backgrounds/690b50c95a72e7b17a1412a8_09a6ecb11584c3309a64a00d57130313_ascii-art_%2815%29_1.svg',
+      src: '/assets/webflow/backgrounds/690b50c95a72e7b17a1412a8_09a6ecb11584c3309a64a00d57130313_ascii-art_(15)_1.svg',
       alt: 'asci art',
     },
     proofTitle: 'Solve real edge cases.',
@@ -197,14 +197,14 @@ const productFeaturePages: Record<'sdk' | 'gui' | 'cli', ProductFeaturePageData>
     },
     introTitle: 'A first-class terminal and CLI interface for autonomous agents.',
     introDescription:
-      'The OpenHands Terminal / CLI gives developers direct, low-latency control over cloud-based coding agents. Use it interactively from your terminal or run it headlessly from CI, cron jobs, or internal systems.Same agent. Same runtime. Two modes of control.',
+      'The OpenHands Terminal / CLI gives developers direct, low-latency control over cloud-based coding agents. Use it interactively from your terminal or run it headlessly from CI, cron jobs, or internal systems.\nSame agent. Same runtime. Two modes of control.',
     accentImage: {
-      src: '/assets/webflow/backgrounds/690b50c95a72e7b17a1412a8_09a6ecb11584c3309a64a00d57130313_ascii-art_%2815%29_1.svg',
+      src: '/assets/webflow/backgrounds/690b50c95a72e7b17a1412a8_09a6ecb11584c3309a64a00d57130313_ascii-art_(15)_1.svg',
       alt: 'asci art',
     },
     proofTitle: 'Real autonomy needs observability and repeatability.',
     proofDescription:
-      'IDE assistants are fine for small edits. Real agentic work requires visibility into what ran, where it ran, and what changed. OpenHands’ Terminal / CLI lets you see exactly what the agent did, inspect outputs, and re-run tasks deterministically.No babysitting. No abstraction leaks.',
+      'IDE assistants are fine for small edits. Real agentic work requires visibility into what ran, where it ran, and what changed. OpenHands’ Terminal / CLI lets you see exactly what the agent did, inspect outputs, and re-run tasks deterministically.\nNo babysitting. No abstraction leaks.',
     capabilities: [
       'Intuitive and powerful Terminal UX',
       'Save and resume conversations',

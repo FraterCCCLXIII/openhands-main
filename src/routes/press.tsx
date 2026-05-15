@@ -73,7 +73,7 @@ const Press = () => {
       </section>
 
       <section data-wf-el='section' className='pb-20' style={{ height: '1274.3px' }}>
-        <div className='mx-auto grid max-w-[1238px] gap-x-6 gap-y-14 md:grid-cols-2 xl:grid-cols-3'>
+        <div className='mx-auto grid max-w-[1238px] gap-x-6 gap-y-6 md:grid-cols-2 xl:grid-cols-3'>
           {PRESS_ITEMS.map((item, index) => (
             <article key={item.title} className={`relative flex flex-col items-start gap-4 ${index === 3 ? 'xl:col-start-2' : ''}`}>
               <div>

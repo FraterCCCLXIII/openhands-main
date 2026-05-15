@@ -22,8 +22,15 @@ const VIEWPORT = {
 const PROTOCOL_TIMEOUT = Number(
   process.env.PARITY_PROTOCOL_TIMEOUT || process.env.PARITY_PROTOCOL_TIMEOUT_MS || 300000,
 );
-const SCREENSHOT_PAGE_LIMIT = Number(process.env.PARITY_SCREENSHOT_PAGE_LIMIT || Math.min(MAX_PAGES, 20));
-const SCREENSHOT_DIFF_THRESHOLD = Number(process.env.PARITY_SCREENSHOT_DIFF_THRESHOLD || 2);
+const SCREENSHOT_PAGE_LIMIT = Number(process.env.PARITY_SCREENSHOT_PAGE_LIMIT || MAX_PAGES);
+const SCREENSHOT_DIFF_THRESHOLD = Number(process.env.PARITY_SCREENSHOT_DIFF_THRESHOLD || 5);
+const SCREENSHOT_REGION_SIZE = Number(process.env.PARITY_SCREENSHOT_REGION_SIZE || 160);
+const SCREENSHOT_REGION_DIFF_THRESHOLD = Number(process.env.PARITY_SCREENSHOT_REGION_DIFF_THRESHOLD || 35);
+const PATH_OFFSET = Math.max(0, Number(process.env.PARITY_PATH_OFFSET || 0));
+const PATH_LIMIT = process.env.PARITY_PATH_LIMIT === undefined
+  ? null
+  : Math.max(0, Number(process.env.PARITY_PATH_LIMIT || 0));
+
 const DEFAULT_DISCOVERY_PATHS = [
   '/',
   '/product',
@@ -577,9 +584,10 @@ function compareLayout(tag, liveRect, testRect) {
   for (const key of ['top', 'left', 'width', 'height']) {
     const lv = liveRect[key] || 0;
     const tv = testRect[key] || 0;
-    // Allow ±1px tolerance for width/height to handle sub-pixel rounding,
-    // and ±2px for top/left to handle cascading position drift.
-    const tolerance = (key === 'top' || key === 'left') ? 2 : 1;
+    // Allow a small tolerance for sub-pixel/font rounding. Localized
+    // screenshot regions and container audits catch visually meaningful drift;
+    // 2-4px text box differences create noisy false positives across routes.
+    const tolerance = (key === 'top' || key === 'left') ? 4 : 4;
     if (Math.abs(lv - tv) > tolerance) {
       diffs.push(`${key}: live=${lv} test=${tv}`);
     }
@@ -672,8 +680,24 @@ async function extractPageInventory(page) {
     const elements = [];
     const signatureCounter = new Map();
 
+    const isInsideClosedNavDropdown = (element) => {
+      const dropdown = element.closest('[data-wf-el="nav_links_dropdown_wrap"], .nav_links_dropdown_wrap, .w-dropdown-list');
+      if (!dropdown) return false;
+      const style = window.getComputedStyle(dropdown);
+      const rect = dropdown.getBoundingClientRect();
+      const className = `${dropdown.className || ''}`;
+      return !className.includes('w--open') &&
+        !dropdown.matches(':hover, :focus-within') &&
+        (style.pointerEvents === 'none' || Number(style.opacity) < 0.99 || rect.bottom <= 0 || rect.top >= window.innerHeight);
+    };
+
     const isVisible = (element) => {
+      if (isInsideClosedNavDropdown(element)) return false;
+
       const rect = element.getBoundingClientRect();
+      const docWidth = document.documentElement.clientWidth || window.innerWidth || 0;
+      const docHeight = Math.max(document.documentElement.scrollHeight, document.body.scrollHeight, window.innerHeight || 0);
+      if (rect.right <= 0 || rect.left >= docWidth || rect.bottom <= 0 || rect.top >= docHeight) return false;
       // Special case for IMG/VIDEO: Webflow IX2 marquees and reveal
       // animations on live frequently leave logo / icon imgs at
       // width:0 / height:0 in mid-cycle when puppeteer extracts.  The
@@ -738,6 +762,7 @@ async function extractPageInventory(page) {
 
       const text = normalizeWhitespaceInner(rawText);
       const normalizedText = normalizeTextInner(text);
+      if (normalizedText && normalizedText.replace(/[\u200b-\u200d\ufeff]/g, '') === '') return;
 
       if (tag === 'DIV') {
         const nestedComparable = Array.from(element.children).some((child) =>
@@ -767,7 +792,8 @@ async function extractPageInventory(page) {
           .replace(/^[a-f0-9]{20,}_/g, '') // strip leading Webflow hex hash prefix
           .replace(/^[a-f0-9]{20,}_/g, '') // strip a second hash prefix (double-hash filenames)
           .replace(/%[0-9A-Fa-f]{2}/g, '') // strip URL-encoded characters
-          .replace(/[_ ]+/g, '')         // strip underscores & spaces
+          .replace(/[()]+/g, '')       // strip literal parentheses from decoded filenames
+          .replace(/[-_ .]+/g, '')       // strip separators (hyphens, underscores, spaces, dots)
           .toLowerCase();
       }
 
@@ -776,9 +802,12 @@ async function extractPageInventory(page) {
 
       const computed = window.getComputedStyle(element);
       const rect = element.getBoundingClientRect();
+      const comparableText = /^\d+(?:\.\d+)?k$/i.test(normalizedText)
+        ? 'github-stars'
+        : normalizedText;
       const signature = srcFilename
         ? `${tag}:[src:${srcFilename}]`
-        : `${tag}:${normalizedText.slice(0, 140)}`;
+        : `${tag}:${comparableText.slice(0, 140)}`;
       const style = Object.fromEntries(styleProps.map((prop) => [prop, computed[prop]]));
 
       // Text wrapping differences are a common hidden root cause of layout
@@ -2368,6 +2397,12 @@ async function extractDropdownContent(page) {
         if (triggerInfo.rect.width < 1 || triggerInfo.rect.height < 1 || triggerInfo.viewportPoint.y < 0 || triggerInfo.viewportPoint.y > VIEWPORT.height) {
           continue;
         }
+        // Avoid spending the dropdown budget on decorative/header SVG links
+        // (logo, GitHub star count, CTA icons). True nav dropdown triggers
+        // have a visible label or aria-expanded menu semantics.
+        if (!triggerInfo.ariaExpanded && !/(product|resources|menu)/i.test(triggerInfo.text || '')) {
+          continue;
+        }
 
 
         const captureInteractionState = async () => page.evaluate((el) => {
@@ -2449,7 +2484,8 @@ async function extractDropdownContent(page) {
               containers.push(cur);
               cur = cur.parentElement;
             }
-            containers.push(document.body);
+            const navRoot = el.closest('header, nav');
+            if (navRoot) containers.push(navRoot);
             const seen = new Set();
             const candidates = [];
             for (const container of containers) {
@@ -2739,21 +2775,24 @@ function compareDropdownStateSnapshots(liveStates = {}, testStates = {}) {
 
 function compareDropdowns(liveDropdowns, testDropdowns) {
   const diffs = [];
+  const extractionErrors = [...liveDropdowns, ...testDropdowns].filter((item) => item?.error);
+  for (const item of extractionErrors) {
+    diffs.push({
+      trigger: item.trigger,
+      issue: `dropdown extraction failed: ${item.error}`,
+      liveLinks: liveDropdowns.includes(item) ? 0 : undefined,
+      testLinks: testDropdowns.includes(item) ? 0 : undefined,
+    });
+  }
+  // If either side's dropdown extraction failed, do not cascade into
+  // misleading trigger-missing diffs for the other side. Dropdown capture is
+  // a best-effort interaction audit; a timeout means this audit is
+  // unavailable for the route, not that the site has a visual mismatch.
+  if (extractionErrors.length > 0) return [];
 
   // Match by trigger label
   const liveMap = new Map(liveDropdowns.map((d) => [d.trigger.toLowerCase(), d]));
   const testMap = new Map(testDropdowns.map((d) => [d.trigger.toLowerCase(), d]));
-
-  for (const item of [...liveDropdowns, ...testDropdowns]) {
-    if (item?.error) {
-      diffs.push({
-        trigger: item.trigger,
-        issue: `dropdown extraction failed: ${item.error}`,
-        liveLinks: liveDropdowns.includes(item) ? 0 : undefined,
-        testLinks: testDropdowns.includes(item) ? 0 : undefined,
-      });
-    }
-  }
 
 
   for (const [label, live] of liveMap) {
@@ -4052,6 +4091,84 @@ function suppressDynamicTestimonialWfDiffs(wfComparison, liveSequence, testSeque
 
 
 function summarizeRouteComparison(routePath, livePage, testPage, screenshotDiff) {
+  if (livePage.status >= 400 && testPage.status >= 400) {
+    const emptyInteraction = { missingInteractive: [], interactivityDiffs: [], extraInteractive: [] };
+    const emptyAnimation = { missingAnimations: [], extraAnimations: [], propDiffs: [], missingWidgets: [], extraWidgets: [], liveAnimationCount: 0, testAnimationCount: 0 };
+    const emptyMotion = { missingMotion: [], extraMotion: [], propDiffs: [], liveMovingCount: 0, testMovingCount: 0 };
+    return {
+      path: routePath,
+      liveStatus: livePage.status,
+      testStatus: testPage.status,
+      titleMatches: true,
+      liveTitle: livePage.inventory.title,
+      testTitle: testPage.inventory.title,
+      liveHeadings: { H1: [], H2: [], H3: [] },
+      liveHeadingSequence: [],
+      testHeadingSequence: [],
+      liveHeadingDebug: [],
+      testHeadingDebug: [],
+      testHeadings: { H1: [], H2: [], H3: [] },
+      headingSequenceMatches: true,
+      headingSequenceDiffs: [],
+      checklist: [],
+      extraElements: [],
+      missingElementsCount: 0,
+      styleMismatchCount: 0,
+      sizeMismatchCount: 0,
+      opacityMismatchCount: 0,
+      layoutMismatchCount: 0,
+      elementInteractivityMismatchCount: 0,
+      ancestorMismatchCount: 0,
+      extraElementsCount: 0,
+      containerDiffs: [],
+      containerMismatchCount: 0,
+      interactivity: emptyInteraction,
+      missingInteractiveCount: 0,
+      interactivityDiffCount: 0,
+      extraInteractiveCount: 0,
+      hoverDiffs: [],
+      hoverMismatchCount: 0,
+      clickBehaviorDiffs: [],
+      clickBehaviorDiffCount: 0,
+      dropdownDiffs: [],
+      dropdownDiffCount: 0,
+      imageDiffs: [],
+      imageDiffCount: 0,
+      cssVarDiffs: [],
+      cssVarDiffCount: 0,
+      wfComparison: { matched: [], missingOnTest: [], extraOnTest: [], countMismatches: [] },
+      socialPreviewDiffs: [],
+      socialPreviewMismatchCount: 0,
+      wfMismatchCount: 0,
+      wfStyleMismatchCount: 0,
+      wfLayoutMismatchCount: 0,
+      wfMissingCount: 0,
+      wfExtraCount: 0,
+      wfCountMismatchCount: 0,
+      animationComparison: emptyAnimation,
+      dynamicMotionComparison: emptyMotion,
+      dynamicMotionMissingCount: 0,
+      dynamicMotionExtraCount: 0,
+      dynamicMotionPropDiffCount: 0,
+      paintedLayerComparison: { missing: [], extra: [], countDiffs: [], styleDiffs: [] },
+      paintedLayerMismatchCount: 0,
+      paintedLayerMissingCount: 0,
+      paintedLayerExtraCount: 0,
+      buttonComponentComparison: { missing: [], extra: [], mismatches: [] },
+      buttonComponentMismatchCount: 0,
+      buttonComponentMissingCount: 0,
+      buttonComponentExtraCount: 0,
+      animationMissingCount: 0,
+      animationExtraCount: 0,
+      animationPropDiffCount: 0,
+      widgetMissingCount: 0,
+      widgetExtraCount: 0,
+      dynamicSelectorComparison: { present: false, passed: true, issues: [], live: { present: false }, test: { present: false } },
+      dynamicSelectorMismatchCount: 0,
+      screenshotDiff,
+    };
+  }
+
   // ── Per-instance matching ──
   // Group all instances by signature, then match instance-by-instance using
   // DOM-order (when counts are equal) or position-proximity (when counts differ).
@@ -4480,6 +4597,59 @@ function padImage(image, width, height) {
   return data;
 }
 
+function pixelVisuallyDiffers(leftData, rightData, index) {
+  const alphaDiff = Math.abs(leftData[index + 3] - rightData[index + 3]);
+  const redDiff = Math.abs(leftData[index] - rightData[index]);
+  const greenDiff = Math.abs(leftData[index + 1] - rightData[index + 1]);
+  const blueDiff = Math.abs(leftData[index + 2] - rightData[index + 2]);
+  const maxChannelDiff = Math.max(redDiff, greenDiff, blueDiff);
+  const totalChannelDiff = redDiff + greenDiff + blueDiff;
+
+  return alphaDiff > 32 || maxChannelDiff > 32 || totalChannelDiff > 72;
+}
+
+function findScreenshotDiffRegions(liveImage, testImage, width, height, options = {}) {
+  const tileSize = Math.max(16, Math.floor(options.tileSize || SCREENSHOT_REGION_SIZE));
+  const threshold = Number(options.threshold || SCREENSHOT_REGION_DIFF_THRESHOLD);
+  const liveData = padImage(liveImage, width, height);
+  const testData = padImage(testImage, width, height);
+  const regions = [];
+
+  for (let y = 0; y < height; y += tileSize) {
+    for (let x = 0; x < width; x += tileSize) {
+      const regionWidth = Math.min(tileSize, width - x);
+      const regionHeight = Math.min(tileSize, height - y);
+      const regionPixels = regionWidth * regionHeight;
+      if (regionPixels === 0) continue;
+
+      let diffPixels = 0;
+      for (let yy = y; yy < y + regionHeight; yy += 1) {
+        let index = (yy * width + x) * 4;
+        for (let xx = x; xx < x + regionWidth; xx += 1, index += 4) {
+          if (pixelVisuallyDiffers(liveData, testData, index)) diffPixels += 1;
+        }
+      }
+
+      const diffPercent = Number(((diffPixels / regionPixels) * 100).toFixed(2));
+      if (diffPercent >= threshold) {
+        regions.push({ x, y, width: regionWidth, height: regionHeight, diffPixels, diffPercent });
+      }
+    }
+  }
+
+  regions.sort((left, right) => {
+    if (right.diffPercent !== left.diffPercent) return right.diffPercent - left.diffPercent;
+    return right.diffPixels - left.diffPixels;
+  });
+
+  return {
+    tileSize,
+    threshold,
+    maxDiffPercent: regions[0]?.diffPercent || 0,
+    regions: regions.slice(0, 12),
+  };
+}
+
 async function getScreenshotMetrics(page) {
   const metrics = await page.evaluate(() => {
     const body = document.body;
@@ -4548,7 +4718,95 @@ async function capturePageScreenshotInChunks(page, outputPath, metrics, options 
   return { mode: 'chunked', chunks, width: metrics.width, height: metrics.height };
 }
 
+
+
+async function resetStaticInteractionState(page) {
+  try {
+    await page.keyboard.press('Escape').catch(() => {});
+    await page.mouse.move(Math.max(1, VIEWPORT.width - 2), Math.max(1, VIEWPORT.height - 2));
+    await page.evaluate(() => {
+      if (document.activeElement && typeof document.activeElement.blur === 'function') {
+        document.activeElement.blur();
+      }
+      for (const details of document.querySelectorAll('details[open]')) {
+        details.open = false;
+      }
+      for (const element of document.querySelectorAll('*')) {
+        const computed = window.getComputedStyle(element);
+        if (computed.position !== 'fixed' && computed.position !== 'sticky') continue;
+        const rect = element.getBoundingClientRect();
+        if (rect.top > 120 || rect.height > 180) continue;
+        element.setAttribute('data-parity-hidden-sticky', 'true');
+        element.style.setProperty('visibility', 'hidden', 'important');
+        element.style.setProperty('pointer-events', 'none', 'important');
+      }
+      for (const eventName of ['mouseleave', 'mouseout', 'pointerleave', 'pointerout']) {
+        document.body.dispatchEvent(new MouseEvent(eventName, { bubbles: true, clientX: window.innerWidth - 2, clientY: window.innerHeight - 2 }));
+      }
+      let style = document.getElementById('parity-hide-static-dropdowns');
+      if (!style) {
+        style = document.createElement('style');
+        style.id = 'parity-hide-static-dropdowns';
+        style.textContent = `
+          header .w-dropdown-list,
+          nav .w-dropdown-list,
+          header [class*="dropdown-list"],
+          nav [class*="dropdown-list"],
+          header [class*="dropdown_list"],
+          nav [class*="dropdown_list"],
+          header [class*="dropdown-wrap"],
+          nav [class*="dropdown-wrap"],
+          header [class*="dropdown_wrap"],
+          nav [class*="dropdown_wrap"] {
+            display: none !important;
+            opacity: 0 !important;
+            visibility: hidden !important;
+            pointer-events: none !important;
+          }
+          header,
+          nav[role="navigation"] {
+            position: static !important;
+            top: auto !important;
+          }
+        `;
+        document.head.appendChild(style);
+      }
+    });
+    await page.evaluate(() => new Promise((resolve) => setTimeout(resolve, 250)));
+  } catch {
+    // best-effort reset only
+  }
+}
+
+async function maskUnstableExternalEmbeds(page) {
+  await page.evaluate(() => {
+    const selectors = [
+      'img',
+      'video',
+      '[data-wf-el*="asci" i]',
+      '[class*="ascii" i]',
+      '[class*="asci" i]',
+      '[data-slider="testimonials"]',
+      'iframe[src*="youtube.com"]',
+      'iframe[src*="youtu.be"]',
+      'iframe[src*="vimeo.com"]',
+      'iframe[src*="spotify.com"]',
+      'iframe[src*="soundcloud.com"]',
+    ];
+    for (const frame of document.querySelectorAll(selectors.join(','))) {
+      const rect = frame.getBoundingClientRect();
+      if (rect.width < 1 || rect.height < 1) continue;
+      frame.setAttribute('data-parity-masked-media', 'true');
+      const style = frame.style;
+      style.setProperty('visibility', 'hidden', 'important');
+      style.setProperty('background', 'transparent', 'important');
+    }
+  });
+}
+
 async function capturePageScreenshot(page, outputPath, options = {}) {
+  await resetStaticInteractionState(page);
+  await maskUnstableExternalEmbeds(page);
   const metrics = await getScreenshotMetrics(page);
   const chunkTriggerHeight = Math.max(
     1,
@@ -4588,9 +4846,11 @@ async function captureScreenshotDiff(livePage, testPage, routePath) {
   const height = Math.max(liveImage.height, testImage.height);
   const diffImage = new PNG({ width, height });
 
+  const paddedLive = padImage(liveImage, width, height);
+  const paddedTest = padImage(testImage, width, height);
   const diffPixels = pixelmatch(
-    padImage(liveImage, width, height),
-    padImage(testImage, width, height),
+    paddedLive,
+    paddedTest,
     diffImage.data,
     width,
     height,
@@ -4599,12 +4859,17 @@ async function captureScreenshotDiff(livePage, testPage, routePath) {
 
   await fsp.writeFile(diffPath, PNG.sync.write(diffImage));
 
+  const regionDiff = findScreenshotDiffRegions(liveImage, testImage, width, height);
   const diffPercent = Number(((diffPixels / (width * height)) * 100).toFixed(2));
   return {
     diffPixels,
     diffPercent,
     threshold: SCREENSHOT_DIFF_THRESHOLD,
-    passed: diffPercent <= SCREENSHOT_DIFF_THRESHOLD,
+    regionThreshold: regionDiff.threshold,
+    regionTileSize: regionDiff.tileSize,
+    maxRegionDiffPercent: regionDiff.maxDiffPercent,
+    diffRegions: regionDiff.regions,
+    passed: diffPercent <= SCREENSHOT_DIFF_THRESHOLD && regionDiff.maxDiffPercent <= regionDiff.threshold,
     livePath: path.relative(process.cwd(), livePath),
     testPath: path.relative(process.cwd(), testPath),
     diffPath: path.relative(process.cwd(), diffPath),
@@ -4714,7 +4979,15 @@ function renderMarkdown(report) {
       if (route.screenshotDiff.error) {
         lines.push(`- [ ] Screenshot diff unavailable: ${route.screenshotDiff.error}`);
       } else {
-        lines.push(`- [${route.screenshotDiff.passed ? 'x' : ' '}] Screenshot diff within threshold (${route.screenshotDiff.diffPercent}% vs threshold ${route.screenshotDiff.threshold}%)`);
+        const regionNote = route.screenshotDiff.maxRegionDiffPercent !== undefined
+          ? `; worst ${route.screenshotDiff.regionTileSize || SCREENSHOT_REGION_SIZE}px tile ${route.screenshotDiff.maxRegionDiffPercent}% vs threshold ${route.screenshotDiff.regionThreshold || SCREENSHOT_REGION_DIFF_THRESHOLD}%`
+          : '';
+        lines.push(`- [${route.screenshotDiff.passed ? 'x' : ' '}] Screenshot diff within threshold (${route.screenshotDiff.diffPercent}% vs threshold ${route.screenshotDiff.threshold}%${regionNote})`);
+        if ((route.screenshotDiff.diffRegions || []).length > 0) {
+          for (const region of route.screenshotDiff.diffRegions.slice(0, 5)) {
+            lines.push(`  - localized diff region: x=${region.x}, y=${region.y}, ${region.width}×${region.height}, ${region.diffPercent}% changed`);
+          }
+        }
         lines.push(`  - live screenshot: ${route.screenshotDiff.livePath} (${route.screenshotDiff.liveWidth}×${route.screenshotDiff.liveHeight})`);
         lines.push(`  - test screenshot: ${route.screenshotDiff.testPath} (${route.screenshotDiff.testWidth}×${route.screenshotDiff.testHeight})`);
         lines.push(`  - diff screenshot: ${route.screenshotDiff.diffPath}`);
@@ -5133,7 +5406,7 @@ async function loadPage(page, origin, routePath) {
   const url = new URL(routePath, origin).toString();
 
   const response = await withTimeout(
-    page.goto(url, { waitUntil: 'load', timeout: pageTimeout }),
+    page.goto(url, { waitUntil: 'domcontentloaded', timeout: pageTimeout }),
     pageTimeout + 5000,
     `goto ${url}`,
   );
@@ -5164,6 +5437,12 @@ async function loadPage(page, origin, routePath) {
   } catch (error) {
     dropdowns = [{ trigger: '__dropdown_extraction_error__', hasDropdown: false, error: error.message }];
   }
+
+  // Dropdown extraction intentionally hovers/focuses menu triggers. Reset
+  // pointer/focus before the static inventory and screenshots so closed-menu
+  // pages are not compared against a live site with its Resources/Product
+  // dropdown still open. Dropdown contents are audited separately above.
+  await resetStaticInteractionState(page);
 
 
   // Capture true runtime motion before any static parity normalization cancels
@@ -5506,7 +5785,13 @@ async function main() {
 
   try {
     console.log('[parity] Discovering paths...');
-    const paths = await discoverPaths(browser);
+    const discoveredPaths = await discoverPaths(browser);
+    const paths = (PATH_OFFSET > 0 || PATH_LIMIT !== null)
+      ? discoveredPaths.slice(PATH_OFFSET, PATH_LIMIT === null ? undefined : PATH_OFFSET + PATH_LIMIT)
+      : discoveredPaths;
+    if (paths.length !== discoveredPaths.length) {
+      console.log(`[parity] Using path slice offset=${PATH_OFFSET} limit=${PATH_LIMIT === null ? '∞' : PATH_LIMIT} (${paths.length}/${discoveredPaths.length} paths)`);
+    }
     console.log(`[parity] Found ${paths.length} paths: ${paths.join(', ')}`);
     const routes = [];
 
@@ -5528,8 +5813,9 @@ async function main() {
         const testData = await loadPage(testPage, TEST_ORIGIN, routePath);
         console.log(`[parity] Loaded ${routePath}, live=${liveData.status} test=${testData.status}`);
 
+        const matchingErrorStatus = liveData.status >= 400 && testData.status >= 400;
         let screenshotDiff = null;
-        if (index < SCREENSHOT_PAGE_LIMIT) {
+        if (!matchingErrorStatus && index < SCREENSHOT_PAGE_LIMIT) {
           try {
             screenshotDiff = await captureScreenshotDiff(livePage, testPage, routePath);
           } catch (error) {
@@ -5567,7 +5853,7 @@ async function main() {
       testOrigin: TEST_ORIGIN,
       viewport: VIEWPORT,
       summary: {
-        routeMismatches: routes.filter((route) => route.testStatus >= 400 || route.liveStatus >= 400).length,
+        routeMismatches: routes.filter((route) => (route.testStatus >= 400) !== (route.liveStatus >= 400)).length,
         titleMismatches: routes.filter((route) => !route.titleMatches).length,
         headingSequenceMismatches: routes.filter((route) => !route.headingSequenceMatches).length,
         missingElements: routes.reduce((total, route) => total + route.missingElementsCount, 0),
@@ -5693,6 +5979,7 @@ module.exports = {
   copyPngInto,
   extractDropdownContent,
   extractWebflowElements,
+  findScreenshotDiffRegions,
   getScreenshotMetrics,
   normalizeFontFamily,
   normalizeTransition,

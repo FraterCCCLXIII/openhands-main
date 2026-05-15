@@ -23,6 +23,7 @@ const {
   compareStyleValue,
   compareWebflowElements,
   extractButtonComponents,
+  findScreenshotDiffRegions,
   normalizeFontFamily,
   normalizeTransition,
   primaryFontMatches,
@@ -91,6 +92,33 @@ function temporaryPath(filename) {
   return path.join(dir, filename);
 }
 
+
+function makeSolidPng(width, height, color) {
+  const png = new PNG({ width, height });
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      const index = (y * width + x) * 4;
+      png.data[index] = color.r;
+      png.data[index + 1] = color.g;
+      png.data[index + 2] = color.b;
+      png.data[index + 3] = color.a ?? 255;
+    }
+  }
+  return png;
+}
+
+function fillRect(png, rect, color) {
+  for (let y = rect.y; y < rect.y + rect.height; y += 1) {
+    for (let x = rect.x; x < rect.x + rect.width; x += 1) {
+      const index = (y * png.width + x) * 4;
+      png.data[index] = color.r;
+      png.data[index + 1] = color.g;
+      png.data[index + 2] = color.b;
+      png.data[index + 3] = color.a ?? 255;
+    }
+  }
+}
+
 describe('parity screenshot capture', () => {
   it('captures tall pages in stitched chunks instead of one full-page screenshot', async () => {
     const page = new FakeScreenshotPage({
@@ -147,6 +175,21 @@ describe('parity screenshot capture', () => {
     expect(warn).toHaveBeenCalledWith(
       expect.stringContaining('retrying chunked capture: Page.captureScreenshot timed out'),
     );
+  });
+
+
+  it('reports localized screenshot differences that are diluted globally', () => {
+    const live = makeSolidPng(320, 320, { r: 249, g: 240, b: 217 });
+    const test = makeSolidPng(320, 320, { r: 249, g: 240, b: 217 });
+    fillRect(test, { x: 20, y: 20, width: 80, height: 80 }, { r: 34, g: 21, b: 13 });
+
+    const result = findScreenshotDiffRegions(live, test, 320, 320, {
+      tileSize: 160,
+      threshold: 8,
+    });
+
+    expect(result.maxDiffPercent).toBe(25);
+    expect(result.regions[0]).toMatchObject({ x: 0, y: 0, width: 160, height: 160 });
   });
 });
 

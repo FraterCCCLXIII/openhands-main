@@ -46,6 +46,9 @@ const MANIFESTO_POINTS = [
 ] as const;
 
 const SeparatorParagraph = () => <p className='font-sohne-buch text-[#5f5f5f]' style={{ marginBottom: '1em', lineHeight: '22.4px' }}>‍</p>;
+const MutedEm = ({ children }: { children: React.ReactNode }) => (
+  <em className='not-italic text-[#7a7a7a]'>{children}</em>
+);
 
 const Manifesto = () => {
   return (
@@ -75,10 +78,10 @@ const Manifesto = () => {
 
           <div className='mx-auto max-w-[820px]' style={{ marginTop: '127px' }}>
             <h3 className='fluid-h3 text-brand-fg'>
-              We&apos;re at the beginning of a new era in software <em>development. Work is shifting from keystrokes to delegated tasks,</em> from single laptops to coordinated fleets of agents running in environments you control.
+              We&apos;re at the beginning of a new era in software <MutedEm>development. Work is shifting from keystrokes to delegated tasks,</MutedEm> from single laptops to coordinated fleets of agents running in environments you control.
               <br />
               <br />
-              <em>This is</em> our point of view <em>on how we build, what we ship, and</em> why it matters… <em>We believe</em>:
+              <MutedEm>This is</MutedEm> our point of view <MutedEm>on how we build, what we ship, and</MutedEm> why it matters… <MutedEm>We believe</MutedEm>:
               <br />‍
             </h3>
 

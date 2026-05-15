@@ -63,6 +63,11 @@ export const ProductPageActionLink = ({
   );
 };
 
+const renderTextWithBreaks = (text: string) =>
+  text.split('\n').map((part, index) => (
+    <>{index > 0 ? <br /> : null}{part}</>
+  ));
+
 const ProductFeatureIntroBand = ({
   title,
   description,
@@ -81,6 +86,7 @@ const ProductFeatureIntroBand = ({
   // Use the matching wf-el key so the per-section parity comparison
   // does not see two section-product_hero blocks on test.
   <section data-wf-el='section' className={classNames('relative', minHeightClass)} style={{ display: 'block', backgroundColor: 'rgba(0, 0, 0, 0)', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px' }}>
+    <div className='absolute inset-0 bg-brand-accent' aria-hidden='true' />
     {/* Live's `.background-image` IMG always computes
      * `position:static; display:inline-block` — the absolute layer is
      * the wrapping div. Match that on both branches. */}
@@ -101,7 +107,7 @@ const ProductFeatureIntroBand = ({
         {title}
       </h2>
       <p className={classNames('fluid-body-lg text-[#5f5f5f]', wideDescription ? '' : 'max-w-[560px]')} style={{ marginTop: '10.4px', marginBottom: '20.8px', marginLeft: '0px', marginRight: '0px', ...(wideDescription ? { minHeight: '99.812px' } : {}) }}>
-        {description}
+        {renderTextWithBreaks(description)}
       </p>
     </div>
   </section>
@@ -125,6 +131,7 @@ const ProductFeatureProofBand = ({
   descriptionClassName?: string;
 }) => (
   <section data-wf-el='section' className={classNames('relative', minHeightClass)} style={{ display: 'block', backgroundColor: 'rgba(0, 0, 0, 0)', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px' }}>
+    <div className='absolute inset-0 bg-brand-fg' aria-hidden='true' />
     {/* Live's `.background-image` IMG computes `position: static;
      * display: inline-block` regardless of whether the page provides
      * its own image or falls back to the default ASCII hole. The
@@ -143,7 +150,7 @@ const ProductFeatureProofBand = ({
         {title}
       </h2>
       <p className={classNames('fluid-body-lg', descriptionClassName ?? 'text-[#b3a88c]', wideDescription ? '' : 'max-w-[560px]')} style={{ marginTop: '10.4px', marginBottom: '20.8px', marginLeft: '0px', marginRight: '0px', ...(wideDescription ? { minHeight: '99.812px' } : {}) }}>
-        {description}
+        {renderTextWithBreaks(description)}
       </p>
     </div>
   </section>
@@ -180,7 +187,7 @@ const ProductGuiIntroSection = ({
 const ProductList = ({ items }: { items: readonly string[] }) => (
   <div data-wf-el='product-list_ul' style={{ borderStyle: 'none', textAlign: 'start', width: '571px', maxWidth: '100%', marginTop: '0px' }}>
     {items.map((item) => (
-      <div data-wf-el='product-list_element' key={item} className='py-4 text-[#5f5f5f] font-medium' style={{ fontSize: '20.8px', lineHeight: '24.96px', display: 'list-item', textAlign: 'start', minHeight: '57.953px' }}>
+      <div data-wf-el='product-list_element' key={item} className='py-4 text-[#5f5f5f] font-medium' style={{ fontSize: '20.8px', lineHeight: '24.96px', display: 'block', textAlign: 'start', minHeight: '57.953px', borderBottom: '1px solid rgba(34, 21, 13, 0.28)' }}>
         {item}
       </div>
     ))}

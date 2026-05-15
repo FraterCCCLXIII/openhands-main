@@ -8,19 +8,11 @@ const LATEST_COMMUNITY_CALL = {
     'Catch up on our most recent community call where we discuss updates, roadmap, and answer questions from the community.',
   date: 'May 8, 2026',
   duration: '17:13',
-  videoUrl: 'https://www.youtube.com/watch?v=H8wIK1_0zNU',
-  embedUrl: 'https://www.youtube.com/embed/H8wIK1_0zNU',
+  videoUrl: 'https://www.youtube.com/watch?v=20HNd4cb2vA',
+  embedUrl: 'https://www.youtube.com/embed/20HNd4cb2vA',
 };
 
 const EVENTS = [
-  {
-    title: 'OpenHands Open Office QA',
-    description:
-      'Open Office with the co-founders and product team of OpenHands.',
-    date: 'May 12, 2026',
-    time: '7:30 PM UTC',
-    href: 'https://luma.com/openhands-open-office-qa',
-  },
   {
     title: 'OpenHands Community Call - May 21st',
     description:
@@ -28,6 +20,14 @@ const EVENTS = [
     date: 'May 21, 2026',
     time: '4:00 PM UTC',
     href: 'https://luma.com/openhands-community-21may26',
+  },
+  {
+    title: 'Scaling Enterprise AI Agents: Security, Privacy & Real-World Deployment',
+    description:
+      'AI agents are rapidly moving from experimentation to mission-critical enterprise workflows — but scaling them securely remains one of the industry’s biggest challenges. Join us for an evening of conversation with leading engineers, founders, and AI infrastructure experts as we explore what it takes to deploy AI agents at enterprise scale while maintaining strong security, privacy, governance, and reliability standards. Expect practical insights, candid discussions, and networking with builders shaping the next generation of enterprise AI. Panelists: Robert Brennan — CEO and Co-Founder of OpenHands Dillon Zhang Forrest — Solutions Architect at Vercel Mahan Salehi — Product Manager at NVIDIA Chris Bradbury — Principal at Alumni Ventures Schedule: 5:30 - Doors Open 6:00 - Panel 6:30 - QA 7:00 - Networking 7:30 - End Enjoy complimentary food and beverage at the event. By RSVPing, you consent to receive marketing emails from the hosts. You can withdraw consent at any time via the unsubscribe link.',
+    date: 'May 26, 2026',
+    time: '9:30 PM UTC',
+    href: 'https://luma.com/openhands-enterprise-ai-agents',
   },
   {
     title: 'OpenHands Community Call - June 4th',
@@ -179,7 +179,7 @@ const Community = () => {
             />
           </div>
 
-          <div className='overflow-hidden rounded-[4px] bg-black/10'>
+          <div className='overflow-hidden rounded-[4px]'>
             <iframe
               title='Latest OpenHands community call'
               src={LATEST_COMMUNITY_CALL.embedUrl}
@@ -192,7 +192,7 @@ const Community = () => {
         </div>
       </section>
 
-      <section data-wf-el='section' id='events' className='py-20' style={{ height: '651.5px' }}>
+      <section data-wf-el='section' id='events' className='py-20' style={{ height: '1088.12px' }}>
         <div className='mx-auto max-w-[1238px]'>
           <div className='text-center'>
             <h2 className='section-title text-brand-fg' style={{ marginBottom: '66px' }}>
@@ -207,7 +207,7 @@ const Community = () => {
                 href={event.href}
                 target='_blank'
                 rel='noopener noreferrer'
-                className='relative flex h-[284px] flex-col overflow-hidden rounded-[8px] border border-[#b3a88c] bg-transparent transition-transform hover:-translate-y-0.5'
+                className='relative flex h-[720px] flex-col overflow-hidden rounded-[8px] border border-[#b3a88c] bg-transparent transition-transform hover:-translate-y-0.5'
               >
                 <div className='flex h-full flex-col p-6'>
                 <h2 className='fluid-h4 leading-[1.4] text-brand-fg' style={{ marginBottom: '0px' }}>
