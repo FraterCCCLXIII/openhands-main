@@ -158,20 +158,23 @@ const ProductGuiIntroSection = ({
   title: string;
   description: string;
 }) => (
-  <section data-wf-el='section' style={{ display: 'block', backgroundColor: 'rgb(34, 21, 13)', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px', minHeight: '629px' }}>
-    <div className='mx-auto grid max-w-[1278px] gap-0 lg:grid-cols-2'>
-      {/* Live's image-card parent is flex (Webflow grid-cell wrapper)
-       * and the IMG itself computes display:block. Set both
-       * explicitly so the parity check matches. */}
-      <div data-wf-el='product-list_img_wrap' className='rounded-[18px] bg-brand-bg shadow-[0_0_0_1px_rgba(249,240,217,0.08)]' style={{ borderTop: '1px solid rgb(249, 240, 217)', boxSizing: 'border-box', display: 'flex', width: '599px', maxWidth: '100%', marginLeft: '20px', padding: '96px 64px 64px' }}>
-        <img src={image.src} alt={image.alt} style={{ width: '469px', height: '307px', borderRadius: '0px', color: 'rgb(249, 240, 217)', display: 'block', objectFit: 'scale-down' }} />
-      </div>
-      <div data-wf-el='heading-stack' className='text-brand-bg' style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-start', paddingLeft: '20px', paddingRight: '20px', minHeight: '469px' }}>
-        <h2 className='section-title'>{title}</h2>
-        {/* Live's intro description P here computes margin:0 (lives
-         * inside a flex column heading-stack which doesn't add any
-         * P spacing). */}
-        <p className='fluid-body-lg text-[#b3a88c]' style={{ marginTop: '0px', marginBottom: '20.8px', width: '599px', maxWidth: '100%' }}>{description}</p>
+  <section data-wf-el='section' style={{ display: 'block', backgroundColor: 'rgb(34, 21, 13)', color: 'rgb(249, 240, 217)', position: 'relative', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px' }}>
+    <div data-wf-el='container' className='mx-auto max-w-[1238px]' style={{ display: 'block', width: '1238px', marginLeft: 'auto', marginRight: 'auto' }}>
+      <div style={{ display: 'flex', marginLeft: '-20px', marginRight: '-20px' }}>
+        <div style={{ width: '50%', paddingLeft: '20px', paddingRight: '20px', minHeight: '469px' }}>
+          <div data-wf-el='product-list_img_wrap' className='bg-brand-bg' style={{ backgroundColor: 'rgb(249, 240, 217)', border: '1px solid rgb(179, 168, 140)', borderRadius: '16px', boxSizing: 'border-box', color: 'rgb(249, 240, 217)', display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative', overflow: 'hidden', width: '599px', minHeight: '100%', marginLeft: '0px', padding: '96px 64px 64px', boxShadow: 'none' }}>
+            <div data-wf-el='product-list_img_overlay' className='absolute inset-x-0 top-0 text-brand-fg' style={{ backgroundColor: 'rgb(179, 168, 140)', color: 'rgb(34, 21, 13)', zIndex: 1, padding: '16px' }}>
+              <div data-wf-el='eyebrow' className='font-mono' style={{ fontSize: '14.08px', lineHeight: '16.896px', marginBottom: '0px', width: '565px' }}>Web&nbsp;GUI</div>
+            </div>
+            <img data-wf-el='product-list_img' src={image.src} alt={image.alt} style={{ width: '469px', height: '307px', borderRadius: '0px', color: 'rgb(249, 240, 217)', display: 'block', objectFit: 'scale-down' }} />
+          </div>
+        </div>
+        <div style={{ width: '50%', paddingLeft: '20px', paddingRight: '20px', minHeight: '469px' }}>
+          <div data-wf-el='heading-stack' className='text-brand-bg' style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-start', paddingLeft: '0px', paddingRight: '0px', width: '599px', height: '469px' }}>
+            <h2 className='section-title'>{title}</h2>
+            <p data-wf-el='paragraph-lg' className='fluid-body-lg text-[#b3a88c]' style={{ marginTop: '0px', marginBottom: '20.8px', width: '599px' }}>{description}</p>
+          </div>
+        </div>
       </div>
     </div>
   </section>
