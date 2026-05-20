@@ -6,27 +6,21 @@
    The live site uses a single Kräftig file for all weights. */
 @font-face {
   font-family: "Sohne Kraftig";
-  src:
-    url("/assets/fonts/Sohne-Kraftig.woff2") format("woff2"),
-    url("/assets/fonts/Sohne-Kraftig.otf") format("opentype");
+  src: url("/assets/fonts/Sohne-Kraftig.otf") format("opentype");
   font-weight: 100 900;
   font-display: swap;
 }
 
 @font-face {
   font-family: "Sohne Buch";
-  src:
-    url("/assets/fonts/Sohne-Buch.woff2") format("woff2"),
-    url("/assets/fonts/Sohne-Buch.otf") format("opentype");
+  src: url("/assets/fonts/Sohne-Buch.otf") format("opentype");
   font-weight: 100 900;
   font-display: swap;
 }
 
 @font-face {
-  font-family: "GeistMono";
-  src:
-    url("/assets/fonts/GeistMono-Regular.woff2") format("woff2"),
-    url("/assets/fonts/GeistMono-Regular.otf") format("opentype");
+  font-family: "Geistmono";
+  src: url("/assets/fonts/GeistMono-Regular.otf") format("opentype");
   font-weight: 400;
   font-display: swap;
 }

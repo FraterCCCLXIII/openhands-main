@@ -17,7 +17,10 @@ describe('NewsletterForm', () => {
     expect(emailField).toBeInTheDocument();
     expect(emailField.className).toContain('min-h-[52px]');
     expect(submitButton).toBeInTheDocument();
+    expect(submitButton).toHaveAttribute('data-wf-el', 'button');
     expect(submitButton.className).toContain('min-h-[52px]');
+    expect(document.querySelector('[data-wf-el="is-blog"]')).toBeInTheDocument();
+    expect(document.querySelector('[data-wf-el="input-group"]')).toBeInTheDocument();
 
     const privacyLink = screen.getByRole('link', { name: 'Privacy Policy' });
     expect(privacyLink).toHaveAttribute('href', '/privacy');

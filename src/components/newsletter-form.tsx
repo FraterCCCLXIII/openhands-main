@@ -21,13 +21,14 @@ export const NewsletterForm: React.FC<NewsletterFormProps> = ({
     <div className={clsx('w-full', centered && 'flex flex-col items-center', className)}>
       <Form
         data-testid='newsletter-form'
+        data-wf-el='is-blog'
         className={clsx(
-          'flex w-full flex-col items-center gap-4',
+          'relative flex w-full flex-col items-center justify-center gap-4 text-[#5f5f5f]',
           centered && 'text-center'
         )}
         method='post'
       >
-        <div className='flex w-full max-w-[400px] flex-col gap-4 md:flex-row md:items-center md:gap-5'>
+        <div data-wf-el='input-group' className='relative flex w-full max-w-[400px] flex-col gap-4 text-left text-[#5f5f5f] md:flex-row md:gap-5'>
           <input
             type='email'
             name='email'
@@ -38,15 +39,16 @@ export const NewsletterForm: React.FC<NewsletterFormProps> = ({
             style={{ verticalAlign: 'middle', marginBottom: '10px', padding: '25.6px 12px', height: '51px', boxSizing: 'border-box' }}
           />
           <input
+            data-wf-el='button'
             type='submit'
             value='Subscribe'
             disabled={disabled}
-            className='btn-primary inline-flex min-h-[52px] cursor-pointer items-center justify-center rounded-[8px] px-[24px] py-[12px] text-[16px] font-medium leading-[1.3] disabled:cursor-not-allowed disabled:opacity-50'
-            style={{ boxShadow: 'rgba(0, 0, 0, 0) 0px 0px 0px 0px inset', marginTop: '0px', marginBottom: '10px', position: 'relative', minWidth: '135px' }}
+            className='btn-primary inline-flex min-h-[52px] cursor-pointer items-center justify-center rounded-[8px] px-[30.4px] py-[12px] text-[16px] font-medium leading-[1.3] disabled:cursor-not-allowed disabled:opacity-50'
+            style={{ boxShadow: 'rgba(0, 0, 0, 0) 0px 0px 0px 0px inset', marginTop: '0px', marginBottom: '10px', position: 'relative', minHeight: 'auto', minWidth: 'auto', gap: '6.4px' }}
           />
         </div>
 
-        <p className='m-0 max-w-[480px] text-center font-mono text-[12px] leading-[14.4px] text-[#5f5f5f]'>
+        <p data-wf-el='eyebrow' className='m-0 max-w-[480px] text-center font-mono text-[12px] leading-[14.4px] text-[#5f5f5f]' style={{ textWrap: 'pretty' }}>
           By submitting your email you agree to our{' '}
           <a
             href='/privacy'

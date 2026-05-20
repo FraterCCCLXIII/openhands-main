@@ -31,7 +31,7 @@ export default {
         inter: ["Inter", "sans-serif"],
         'sohne': ['"Sohne Kraftig"', "Arial", "sans-serif"],
         'sohne-buch': ['"Sohne Buch"', "Arial", "sans-serif"],
-        'mono': ['"GeistMono"', "ui-monospace", "monospace"],
+        'mono': ['"Geistmono"', "Arial", "sans-serif"],
       },
       screens: {
         'monitor': '1800px',

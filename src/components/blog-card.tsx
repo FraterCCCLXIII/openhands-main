@@ -18,14 +18,17 @@ export const FeaturedBlogCard: React.FC<FeaturedBlogCardProps> = ({
   img,
   imgAlt = '',
 }) => (
-  <article
+  <div
     data-testid='featured-blog-card'
-    className='group relative overflow-hidden rounded-[19.2px] bg-transparent text-brand-bg'
+    data-wf-el='blog-item'
+    className='group relative w-full overflow-hidden rounded-[19.2px] bg-transparent text-brand-fg'
+    style={{ height: '620px' }}
   >
-    <div className='aspect-[2/1] w-full'>
+    <div data-wf-el='standard-media' className='relative h-full w-full'>
       {!img && <PlaceholderImage className='h-full w-full' />}
       {img && (
         <img
+          data-wf-el='standard-media-img'
           src={img}
           alt={imgAlt}
           className='h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]'
@@ -34,25 +37,32 @@ export const FeaturedBlogCard: React.FC<FeaturedBlogCardProps> = ({
       )}
     </div>
 
-    <div className='absolute inset-0 bg-[#716f66]/95' />
+    <div className='absolute inset-0 bg-black/50 backdrop-blur-[2px]' />
 
-    <div className='absolute inset-x-0 bottom-0' style={{ padding: '44px 44px 24px' }}>
-      <div className='max-w-[456px]'>
-        <p className='m-0 font-sohne text-lg lg:text-[20.8px] leading-[24.96px] font-medium text-brand-accent'>
-          {title}
-        </p>
-        <p className='m-0 text-lg lg:text-[20.8px] leading-[1.2] font-medium text-white'>
-          {description}
-        </p>
-        <OverlayLinkButton
-          href={href}
-          label='Read more'
-          variant='primary'
-          className='mt-[24px]'
-        />
+    <div data-wf-el='blog-item-content' className='absolute inset-0 flex flex-col items-start justify-end'>
+      <div data-wf-el='card-body' className='relative flex h-full w-full flex-col items-start justify-end' style={{ padding: '24px' }}>
+        <div data-wf-el='standard-wrap' className='w-full'>
+          <div className='flex w-[496px] flex-col px-5'>
+            <p data-wf-el='paragraph-lg' className='m-0 font-sohne text-lg lg:text-[20.8px] leading-[24.96px] font-medium text-brand-accent' style={{ textWrap: 'pretty' }}>
+              {title}
+            </p>
+            <p data-wf-el='paragraph-lg' className='m-0 text-lg lg:text-[20.8px] leading-[1.2] font-medium text-white' style={{ textWrap: 'pretty' }}>
+              {description}
+            </p>
+            <div data-wf-el='standard-wrap' style={{ marginTop: '24px' }}>
+              <OverlayLinkButton
+                href={href}
+                label='Read more'
+                variant='primary'
+                wfEl='button'
+                textWfEl='btn-text'
+              />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
-  </article>
+  </div>
 );
 
 interface BlogCardProps {
@@ -63,6 +73,7 @@ interface BlogCardProps {
   imgAlt?: string;
   showDate?: boolean;
   titleLinkOnly?: boolean;
+  webflowIndexCard?: boolean;
 }
 
 export const BlogCard: React.FC<BlogCardProps> = ({
@@ -73,16 +84,18 @@ export const BlogCard: React.FC<BlogCardProps> = ({
   imgAlt,
   showDate = true,
   titleLinkOnly = false,
+  webflowIndexCard = false,
 }) => {
-  const imageClassName = titleLinkOnly ? 'h-[250px] w-full' : 'aspect-[10/7] w-full';
+  const imageClassName = titleLinkOnly ? 'h-[250px] w-full' : webflowIndexCard ? 'h-[270px] w-full' : 'aspect-[10/7] w-full';
   const image = !img ? (
     <PlaceholderImage variant='robot' className={imageClassName} />
   ) : (
     <img
+      data-wf-el={webflowIndexCard ? 'standard-media-img' : undefined}
       src={img}
       alt={imgAlt !== undefined ? imgAlt : `${title} cover image`}
       className={`${imageClassName} transition-transform duration-300 group-hover:scale-[1.02]`}
-      style={{ objectFit: 'fill' }}
+      style={webflowIndexCard ? { objectFit: 'fill', aspectRatio: '3 / 2' } : { objectFit: 'fill' }}
     />
   );
 
@@ -94,7 +107,7 @@ export const BlogCard: React.FC<BlogCardProps> = ({
         data-testid='blog-card'
         style={{ fontFamily: 'Sohne Buch, Sohne Kraftig, Inter, Arial, sans-serif' }}
       >
-        <article className='flex flex-col gap-0'>
+        <div className='flex flex-col gap-0'>
           <div className='overflow-hidden rounded-[6px]'>{image}</div>
 
           <div className='flex max-w-[354px] flex-col gap-0'>
@@ -107,25 +120,25 @@ export const BlogCard: React.FC<BlogCardProps> = ({
               </span>
             </p>
           </div>
-        </article>
+        </div>
       </Link>
     );
   }
 
   return (
-    <Link to={href} className='group relative block' data-testid='blog-card'>
-      <article className='flex flex-col gap-6'>
-        <div className='overflow-hidden rounded-[6px]'>{image}</div>
+    <Link to={href} className={`group relative block ${webflowIndexCard ? 'w-full self-start' : ''}`} data-testid='blog-card' data-wf-el={webflowIndexCard ? 'blog-item' : undefined} style={webflowIndexCard ? { maxWidth: '100%' } : undefined}>
+      <div className='flex flex-col gap-6'>
+        <div data-wf-el={webflowIndexCard ? 'standard-media' : undefined} className='overflow-hidden rounded-[6px]' style={webflowIndexCard ? { minHeight: '270px' } : undefined}>{image}</div>
 
         <div className='flex max-w-[352px] flex-col gap-0'>
           {showDate && date && (
-            <p className='text-[14.4px] leading-[21.6px] text-[#5f5f5f]' style={{ marginTop: '0px', marginBottom: '14.4px' }}>{formatDate(date)}</p>
+            <p data-wf-el={webflowIndexCard ? 'paragraph-sm' : undefined} className='text-[14.4px] leading-[21.6px] text-[#5f5f5f]' style={{ marginTop: '0px', marginBottom: '14.4px' }}>{formatDate(date)}</p>
           )}
-          <p className='m-0 font-sohne text-[20.8px] leading-[24.96px] font-medium text-brand-fg'>
+          <p data-wf-el={webflowIndexCard ? 'paragraph-lg' : undefined} className='m-0 font-sohne text-[20.8px] leading-[24.96px] font-medium text-brand-fg' style={webflowIndexCard ? { textWrap: 'pretty' } : undefined}>
             {title}
           </p>
         </div>
-      </article>
+      </div>
     </Link>
   );
 };

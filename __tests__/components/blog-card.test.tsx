@@ -28,6 +28,26 @@ describe('BlogCard', () => {
     expect(screen.queryByText('Read More')).not.toBeInTheDocument();
   });
 
+  it('can mirror the live /blog grid Webflow element structure', () => {
+    render(
+      <BlogCard
+        title='OpenHands Product Update - May 2026'
+        date='2026-05-20T12:00:00.000Z'
+        href='/blog/openhands-product-update---may-2026'
+        img='/assets/update.png'
+        webflowIndexCard
+      />
+    );
+
+    const card = screen.getByRole('link', { name: /May 20, 2026\s+OpenHands Product Update/i });
+
+    expect(card).toHaveAttribute('data-wf-el', 'blog-item');
+    expect(card.querySelector('[data-wf-el="standard-media"]')).toBeInTheDocument();
+    expect(card.querySelector('img')).toHaveAttribute('data-wf-el', 'standard-media-img');
+    expect(screen.getByText('May 20, 2026')).toHaveAttribute('data-wf-el', 'paragraph-sm');
+    expect(screen.getByText('OpenHands Product Update - May 2026')).toHaveAttribute('data-wf-el', 'paragraph-lg');
+  });
+
   it('supports title-only related cards without visible dates', () => {
     render(
       <BlogCard
@@ -65,7 +85,8 @@ describe('BlogCard', () => {
     expect(featuredCard).toBeInTheDocument();
     expect(screen.getByText('Introducing the OpenHands Index')).toBeInTheDocument();
     expect(readMoreLink).toHaveAttribute('href', '/blog/openhands-index');
-    expect(featuredCard.querySelector('div')?.className).toContain('aspect-[2/1]');
+    expect(featuredCard).toHaveStyle({ height: '620px' });
+    expect(featuredCard.querySelector('[data-wf-el="standard-media"]')).toHaveClass('h-full');
     expect(featuredCard.querySelector('img')?.getAttribute('alt')).toBe('');
   });
 });

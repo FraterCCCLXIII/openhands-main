@@ -33,12 +33,12 @@ export const links: Route.LinksFunction = () => [
     href: '/all-hands-logo-1.svg',
     type: 'image/svg+xml',
   },
-  // Preload the primary local brand font used above the fold.
+  // Preload the exact live Webflow brand font used above the fold.
   {
     rel: 'preload',
-    href: '/assets/fonts/Sohne-Kraftig.woff2',
+    href: '/assets/fonts/Sohne-Kraftig.otf',
     as: 'font',
-    type: 'font/woff2',
+    type: 'font/otf',
     crossOrigin: 'anonymous',
   },
   // Preconnect to GitHub avatars
