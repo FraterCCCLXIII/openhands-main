@@ -170,7 +170,7 @@ const ProductGuiIntroSection = ({
       {/* Live's image-card parent is flex (Webflow grid-cell wrapper)
        * and the IMG itself computes display:block. Set both
        * explicitly so the parity check matches. */}
-      <div className='rounded-[18px] bg-brand-bg shadow-[0_0_0_1px_rgba(249,240,217,0.08)]' style={{ display: 'flex', width: '599px', maxWidth: '100%', marginLeft: '20px', padding: '96px 64px 64px' }}>
+      <div data-wf-el='product-list_img_wrap' className='rounded-[18px] bg-brand-bg shadow-[0_0_0_1px_rgba(249,240,217,0.08)]' style={{ borderTop: '1px solid rgb(249, 240, 217)', boxSizing: 'border-box', display: 'flex', width: '599px', maxWidth: '100%', marginLeft: '20px', padding: '96px 64px 64px' }}>
         <img src={image.src} alt={image.alt} style={{ width: '469px', height: '307px', borderRadius: '0px', color: 'rgb(249, 240, 217)', display: 'block', objectFit: 'scale-down' }} />
       </div>
       <div data-wf-el='heading-stack' className='text-brand-bg' style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-start', paddingLeft: '20px', paddingRight: '20px', minHeight: '469px' }}>

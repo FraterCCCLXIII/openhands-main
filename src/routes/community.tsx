@@ -250,7 +250,7 @@ const Community = () => {
             </p>
           </div>
 
-          <div className='mt-10 grid gap-6 lg:grid-cols-3'>
+          <div className='grid gap-6 lg:grid-cols-3' style={{ marginTop: '23px' }}>
             {CONTRIBUTION_PATHS.map((path) => (
               <article
                 key={path.title}

@@ -440,7 +440,7 @@
 
   /* Card styles */
   .card-dark {
-    @apply bg-card-bg text-card-text rounded-lg;
+    @apply bg-card-bg text-card-text rounded-lg border border-[#b3a88c];
   }
 
   /* Feature list item */
@@ -468,9 +468,6 @@
     padding-left: 1px;
   }
 
-  .feature-item-stacked:last-child {
-    @apply border-b border-brand-border;
-  }
 
   /* Use case block */
   .use-case-block {

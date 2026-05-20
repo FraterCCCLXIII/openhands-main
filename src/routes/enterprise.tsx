@@ -523,7 +523,7 @@ const Enterprise = () => {
       <section data-wf-el='section' style={{ ...SECTION_DARK, minHeight: '638px' }}>
         <Container>
           <div className='grid grid-cols-1 items-center gap-10 lg:grid-cols-2 lg:gap-16'>
-            <div className='flex flex-col items-start gap-4'>
+            <div className='flex flex-col items-start'>
               {/* Live tags this eyebrow as `.acp_features_eyebrow` (not
                * the generic top-level `.eyebrow`) and gives it a 21.12px
                * margin-bottom — matching the in-card eyebrows in the

@@ -63,7 +63,7 @@ const Product = () => {
         <div className='mx-auto flex max-w-[1238px] flex-col' style={{ rowGap: '128px' }}>
           {PRODUCT_SURFACES.map((item, index) => {
             const imageCard = (
-              <div data-wf-el='product-list_img_wrap' className='bg-brand-bg' style={{ alignItems: 'center', borderRadius: '16px', display: 'flex', height: '450px', justifyContent: 'center', marginLeft: 'auto', marginRight: 'auto', maxWidth: '100%', overflow: 'hidden', width: '619px' }}>
+              <div data-wf-el='product-list_img_wrap' className='bg-brand-bg' style={{ alignItems: 'center', borderRadius: '16px', borderTop: '1px solid rgb(249, 240, 217)', boxSizing: 'border-box', display: 'flex', height: '450px', justifyContent: 'center', marginLeft: 'auto', marginRight: 'auto', maxWidth: '100%', overflow: 'hidden', width: '619px' }}>
                 <img src={item.image} alt='' className='img-block product-list_img' style={{ width: '489px', maxWidth: '100%', height: 'auto', borderRadius: '0px', color: 'rgb(249, 240, 217)', objectFit: 'scale-down' }} />
               </div>
             );
@@ -73,14 +73,15 @@ const Product = () => {
                 <h2 className='w-fit section-title text-brand-bg'>
                   {item.title}
                 </h2>
-                <p className='max-w-[571px] fluid-body-lg text-[#b3a88c]' style={{ marginTop: '0px', marginBottom: '20.8px' }}>
+                <p className='max-w-[571px] fluid-body-lg text-[#b3a88c]' style={{ marginTop: '24px', marginBottom: '20.8px' }}>
                   {item.description}
                 </p>
                 <OverlayLinkButton
                   href={item.href}
                   label='Learn more'
                   variant='lightbrown'
-                  className='mt-8'
+                  className='w-fit'
+                  wrapperStyle={{ marginTop: '17px' }}
                 />
               </div>
             );

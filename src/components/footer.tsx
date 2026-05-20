@@ -169,11 +169,11 @@ const FooterContent = ({
         * intermediate Webflow grid layers down to a single 812px-wide
         * centered flex row so our nav-link inventory lines up with
         * live's positions. */}
-      <div data-wf-el='footer-nav' className='mx-auto w-full max-w-[812px]' style={compactNav ? { display: 'flex', textAlign: 'start', paddingBottom: '16px', justifyContent: 'space-between', alignItems: 'flex-start' } : { display: 'flex', justifyContent: 'center' }}>
+      <div data-wf-el='footer-nav' className='mx-auto w-full max-w-[812px]' style={compactNav ? { display: 'flex', textAlign: 'start', paddingBottom: '16px', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid #b3a88c' } : { display: 'flex', justifyContent: 'center' }}>
         {compactNav ? (
           <div
             className={clsx(
-              'flex w-full flex-wrap items-start justify-between gap-x-6 gap-y-4 border-b border-[#b3a88c] text-left',
+              'flex w-full flex-wrap items-start justify-between gap-x-6 gap-y-4 text-left',
               navWidthClass ?? 'max-w-[825px]'
             )}
           >

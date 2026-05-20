@@ -161,7 +161,7 @@ describe('Marketing parity routes', () => {
     expect(screen.getByRole('heading', { name: /Latest Community Call/i })).toBeInTheDocument();
     expect(screen.getByTitle('Latest OpenHands community call')).toHaveAttribute(
       'src',
-      'https://www.youtube.com/embed/H8wIK1_0zNU'
+      'https://www.youtube.com/embed/20HNd4cb2vA'
     );
     expect(screen.getByText('May 8, 2026')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /Upcoming Events/i })).toBeInTheDocument();

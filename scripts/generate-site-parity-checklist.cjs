@@ -752,7 +752,9 @@ async function extractPageInventory(page) {
           ? element.getAttribute('alt') || element.getAttribute('aria-label') || ''
           : tag === 'VIDEO'
             ? element.getAttribute('aria-label') || element.getAttribute('title') || ''
-            : tag === 'INPUT'
+            : tag === 'IFRAME'
+              ? element.getAttribute('title') || element.getAttribute('aria-label') || element.getAttribute('src') || 'iframe'
+              : tag === 'INPUT'
               ? element.type === 'hidden'
                 ? ''
                 : element.value || element.getAttribute('placeholder') || element.getAttribute('aria-label') || ''
@@ -1541,6 +1543,280 @@ async function extractInteractivity(page) {
   }, INTERACTIVE_STYLE_PROPS);
 }
 
+
+async function extractVisualGaps(page) {
+  return page.evaluate(() => {
+    const normalizeWhitespace = (value) => (value || '').replace(/\s+/g, ' ').trim();
+    const normalizeText = (value) => normalizeWhitespace(value).toLowerCase();
+    const nonTransparent = (value) => value && value !== 'transparent' && value !== 'rgba(0, 0, 0, 0)';
+    const px = (value) => Number.parseFloat(value || '0') || 0;
+    const docWidth = document.documentElement.clientWidth || window.innerWidth || 0;
+    const docHeight = Math.max(document.documentElement.scrollHeight, document.body.scrollHeight, window.innerHeight || 0);
+    const bodyBg = window.getComputedStyle(document.body).backgroundColor;
+    const htmlBg = window.getComputedStyle(document.documentElement).backgroundColor;
+    const pageBg = nonTransparent(bodyBg) ? bodyBg : htmlBg;
+
+    const isVisible = (element, { allowThin = false } = {}) => {
+      const rect = element.getBoundingClientRect();
+      if (rect.width < 4 || (!allowThin && rect.height < 4)) return false;
+      if (rect.right <= 0 || rect.left >= docWidth || rect.bottom <= 0 || rect.top >= docHeight) return false;
+      let current = element;
+      while (current) {
+        const style = window.getComputedStyle(current);
+        if (style.display === 'none' || style.visibility === 'hidden' || Number(style.opacity) === 0) return false;
+        if (current.hasAttribute('hidden')) return false;
+        current = current.parentElement;
+      }
+      return true;
+    };
+
+    const sourceId = new WeakMap();
+    let nextSourceId = 1;
+    const idFor = (element) => {
+      if (!sourceId.has(element)) sourceId.set(element, nextSourceId++);
+      return sourceId.get(element);
+    };
+
+    const srcKeyFor = (element) => {
+      const src = element.getAttribute('src') || element.currentSrc || '';
+      const lastSegment = src.split('/').pop() || '';
+      return lastSegment
+        .replace(/[-_]p-\d+.*$/, '')
+        .replace(/\.[^.]+$/, '')
+        .replace(/[?#].*$/, '')
+        .replace(/^[a-f0-9]{20,}_/g, '')
+        .replace(/^[a-f0-9]{20,}_/g, '')
+        .replace(/%[0-9A-Fa-f]{2}/g, '')
+        .replace(/[()]+/g, '')
+        .replace(/[-_ .]+/g, '')
+        .toLowerCase();
+    };
+
+    const signatureFor = (element) => {
+      const tag = element.tagName;
+      const rawText =
+        tag === 'IMG'
+          ? element.getAttribute('alt') || element.getAttribute('aria-label') || ''
+          : tag === 'VIDEO'
+            ? element.getAttribute('aria-label') || element.getAttribute('title') || ''
+            : tag === 'IFRAME'
+              ? element.getAttribute('title') || element.getAttribute('aria-label') || element.getAttribute('src') || 'iframe'
+              : tag === 'INPUT'
+              ? element.type === 'hidden'
+                ? ''
+                : element.value || element.getAttribute('placeholder') || element.getAttribute('aria-label') || ''
+              : tag === 'TEXTAREA' || tag === 'SELECT'
+                ? element.getAttribute('aria-label') || element.getAttribute('placeholder') || element.value || ''
+                : element.innerText || element.textContent || '';
+      const normalizedText = normalizeText(rawText);
+      const srcKey = tag === 'IMG' || tag === 'VIDEO' ? srcKeyFor(element) : '';
+      if (!normalizedText && !srcKey) return null;
+      if (normalizedText && (normalizedText.startsWith('http://') || normalizedText.startsWith('https://'))) return null;
+      const comparableText = /^\d+(?:\.\d+)?k$/i.test(normalizedText) ? 'github-stars' : normalizedText;
+      return srcKey ? `${tag}:[src:${srcKey}]` : `${tag}:${comparableText.slice(0, 140)}`;
+    };
+
+    const isDecorativeMedia = (element) => {
+      if (!['IMG', 'VIDEO'].includes(element.tagName)) return false;
+      const hasAccessibleLabel = normalizeWhitespace(
+        element.getAttribute('alt') || element.getAttribute('aria-label') || element.getAttribute('title') || '',
+      ).length > 0;
+      if (hasAccessibleLabel) return false;
+      if (element.closest('[data-wf-el*="asci" i], [class*="ascii" i], [class*="asci" i]')) return true;
+      const rect = element.getBoundingClientRect();
+      if (rect.width <= 24 && rect.height <= 24) return true;
+      let current = element.parentElement;
+      let depth = 0;
+      while (current && depth < 4) {
+        const style = window.getComputedStyle(current);
+        if ((style.position === 'absolute' || style.position === 'fixed') && rect.width >= docWidth * 0.75 && rect.height >= 300) {
+          return true;
+        }
+        current = current.parentElement;
+        depth += 1;
+      }
+      return false;
+    };
+
+    const rectFor = (element) => {
+      const rect = element.getBoundingClientRect();
+      return {
+        top: Math.round(rect.top + window.scrollY),
+        left: Math.round(rect.left + window.scrollX),
+        width: Math.round(rect.width),
+        height: Math.round(rect.height),
+        bottom: Math.round(rect.bottom + window.scrollY),
+        right: Math.round(rect.right + window.scrollX),
+      };
+    };
+
+    const contentSelectors = [
+      'h1', 'h2', 'h3', 'h4', 'p', 'a', 'button', 'label', 'input',
+      'textarea', 'select', 'img', 'video', 'iframe', 'pre', 'code', 'div[role]', 'div[aria-hidden]',
+    ].join(',');
+
+    const anchors = [];
+    const visualFeatures = [];
+    const signatureCounter = new Map();
+
+    document.querySelectorAll(contentSelectors).forEach((element) => {
+      if (!isVisible(element)) return;
+      const tag = element.tagName;
+      if ((tag === 'PRE' || tag === 'CODE') && element.getAttribute('aria-hidden') === 'true') return;
+      if (isDecorativeMedia(element)) return;
+
+      const signature = signatureFor(element);
+      if (!signature) return;
+
+      if (tag === 'DIV') {
+        const nestedComparable = Array.from(element.children).some((child) =>
+          child.matches(contentSelectors) || child.querySelector(contentSelectors)
+        );
+        const clickableAncestor = element.closest('a,button');
+        const siblingOverlayLink = signature.length <= 60 && element.parentElement?.querySelector?.('a,button');
+        if (nestedComparable || (clickableAncestor && clickableAncestor !== element) || siblingOverlayLink) return;
+      }
+
+      if (!signatureCounter.has(signature)) signatureCounter.set(signature, 0);
+      const occurrenceIndex = signatureCounter.get(signature);
+      signatureCounter.set(signature, occurrenceIndex + 1);
+      const rect = rectFor(element);
+      const source = idFor(element);
+      const label = signature.length > 90 ? `${signature.slice(0, 87)}…` : signature;
+      const feature = {
+        kind: 'content',
+        signature,
+        occurrenceIndex,
+        label,
+        source,
+        rect,
+      };
+      if (!['IMG', 'VIDEO', 'IFRAME'].includes(tag)) {
+        anchors.push(feature);
+      }
+      visualFeatures.push(feature);
+    });
+
+    const describeElement = (element) => {
+      const id = element.id ? `#${element.id}` : '';
+      const wf = element.getAttribute('data-wf-el');
+      const classes = Array.from(element.classList || [])
+        .filter((c) => /[a-z]/i.test(c))
+        .slice(0, 3)
+        .join('.');
+      return `${element.tagName.toLowerCase()}${id}${wf ? `[${wf}]` : classes ? `.${classes}` : ''}`;
+    };
+
+    const addLineFeature = (element, kind, y, height, labelSuffix) => {
+      const rect = element.getBoundingClientRect();
+      const width = Math.round(rect.width);
+      if (width < 16) return;
+      const top = Math.round(y + window.scrollY);
+      const lineHeight = Math.max(1, Math.round(height));
+      visualFeatures.push({
+        kind,
+        signature: `${kind}:${labelSuffix}`,
+        occurrenceIndex: 0,
+        label: `${kind}:${labelSuffix}`.slice(0, 120),
+        source: idFor(element),
+        rect: {
+          top,
+          left: Math.round(rect.left + window.scrollX),
+          width,
+          height: lineHeight,
+          bottom: top + lineHeight,
+          right: Math.round(rect.right + window.scrollX),
+        },
+      });
+    };
+
+    document.querySelectorAll('body *').forEach((element) => {
+      if (!isVisible(element, { allowThin: true })) return;
+      const comp = window.getComputedStyle(element);
+      const rect = element.getBoundingClientRect();
+      const description = describeElement(element);
+
+      const borderTop = px(comp.borderTopWidth);
+      if (borderTop > 0 && nonTransparent(comp.borderTopColor)) {
+        addLineFeature(element, 'border-top', rect.top, borderTop, description);
+      }
+
+      const borderBottom = px(comp.borderBottomWidth);
+      if (borderBottom > 0 && nonTransparent(comp.borderBottomColor)) {
+        addLineFeature(element, 'border-bottom', rect.bottom - borderBottom, borderBottom, description);
+      }
+
+      const parentBg = element.parentElement ? window.getComputedStyle(element.parentElement).backgroundColor : '';
+      const hasContrastingBackground = nonTransparent(comp.backgroundColor) &&
+        comp.backgroundColor !== pageBg &&
+        (!nonTransparent(parentBg) || parentBg !== comp.backgroundColor);
+      const hasBackgroundPaint = hasContrastingBackground || (comp.backgroundImage && comp.backgroundImage !== 'none');
+      if (hasBackgroundPaint && rect.width >= 16 && rect.height > 0 && rect.height <= 8) {
+        addLineFeature(element, 'paint-line', rect.top, rect.height, description);
+      }
+
+      if (hasBackgroundPaint && rect.width >= 16 && rect.height > 8 && !['BODY', 'HTML', 'SECTION', 'MAIN'].includes(element.tagName)) {
+        addLineFeature(element, 'paint-edge-top', rect.top, 1, description);
+      }
+
+      if (element.tagName === 'HR') {
+        addLineFeature(element, 'hr', rect.top, Math.max(rect.height, borderTop, borderBottom, 1), description);
+      }
+    });
+
+    const horizontalOverlap = (a, b) => Math.max(0, Math.min(a.right, b.right) - Math.max(a.left, b.left));
+    const overlapsHorizontally = (anchor, candidate) => {
+      const overlap = horizontalOverlap(anchor.rect, candidate.rect);
+      const required = Math.min(40, Math.max(8, Math.min(anchor.rect.width, candidate.rect.width) * 0.25));
+      const anchorCenter = anchor.rect.left + anchor.rect.width / 2;
+      const candidateCenter = candidate.rect.left + candidate.rect.width / 2;
+      return overlap >= required ||
+        (candidate.rect.left <= anchorCenter && anchorCenter <= candidate.rect.right) ||
+        (anchor.rect.left <= candidateCenter && candidateCenter <= anchor.rect.right);
+    };
+
+    const nearestBelowFor = (anchor) => {
+      const candidates = [];
+      for (const feature of visualFeatures) {
+        if (feature.source === anchor.source && feature.kind === 'content') continue;
+        if (feature.source === anchor.source && feature.kind !== 'content') {
+          // Keep a containing element's border/paint edge; it can be the visual
+          // divider that controls spacing around the anchor.
+        }
+        if (!overlapsHorizontally(anchor, feature)) continue;
+        const gap = feature.rect.top - anchor.rect.bottom;
+        if (gap < -1) continue;
+        candidates.push({
+          feature,
+          gap: Math.max(0, Math.round(gap)),
+          overlap: horizontalOverlap(anchor.rect, feature.rect),
+        });
+      }
+      candidates.sort((left, right) => {
+        if (left.gap !== right.gap) return left.gap - right.gap;
+        return right.overlap - left.overlap;
+      });
+      return candidates[0] || null;
+    };
+
+    return anchors.map((anchor) => {
+      const below = nearestBelowFor(anchor);
+      return {
+        signature: anchor.signature,
+        occurrenceIndex: anchor.occurrenceIndex,
+        label: anchor.label,
+        anchorRect: anchor.rect,
+        nextDown: below ? {
+          gap: below.gap,
+          kind: below.feature.kind,
+          label: below.feature.label,
+          rect: below.feature.rect,
+        } : null,
+      };
+    });
+  });
+}
+
 // Interactive Webflow widget attributes worth tracking for parity.
 // These are the data-* attributes the live JS bindings hook into
 // (carousels, modals, accordions, scroll-pinned hero, etc.). When live
@@ -2283,6 +2559,109 @@ function compareButtonComponents(liveButtons = [], testButtons = []) {
     if (!liveMap.has(sig)) extra.push({ signature: sig, count: testItems.length, label: testItems[0].label });
   }
   return { missing, extra, mismatches };
+}
+
+
+function compareVisualGaps(liveGaps = [], testGaps = []) {
+  const groupBySignature = (items) => {
+    const grouped = new Map();
+    for (const item of items || []) {
+      if (!grouped.has(item.signature)) grouped.set(item.signature, []);
+      grouped.get(item.signature).push(item);
+    }
+    return grouped;
+  };
+
+  const liveGrouped = groupBySignature(liveGaps);
+  const testGrouped = groupBySignature(testGaps);
+  const mismatches = [];
+
+  const pairItems = (liveItems, testItems) => {
+    if (!testItems.length) return liveItems.map((live) => ({ live, test: null }));
+    if (liveItems.length === testItems.length) return liveItems.map((live, index) => ({ live, test: testItems[index] }));
+
+    const candidates = [];
+    for (let i = 0; i < liveItems.length; i += 1) {
+      for (let j = 0; j < testItems.length; j += 1) {
+        const liveTop = liveItems[i].anchorRect?.top || 0;
+        const testTop = testItems[j].anchorRect?.top || 0;
+        candidates.push({ i, j, dist: Math.abs(liveTop - testTop) });
+      }
+    }
+    candidates.sort((left, right) => left.dist - right.dist);
+    const usedLive = new Set();
+    const usedTest = new Set();
+    const pairs = new Map();
+    for (const candidate of candidates) {
+      if (usedLive.has(candidate.i) || usedTest.has(candidate.j)) continue;
+      usedLive.add(candidate.i);
+      usedTest.add(candidate.j);
+      pairs.set(candidate.i, candidate.j);
+    }
+    return liveItems.map((live, index) => ({ live, test: pairs.has(index) ? testItems[pairs.get(index)] : null }));
+  };
+
+  const gapTolerance = (liveGap, testGap) => {
+    const largest = Math.max(Math.abs(liveGap || 0), Math.abs(testGap || 0));
+    return Math.max(8, Math.min(18, largest * 0.18));
+  };
+
+  for (const [signature, liveItems] of liveGrouped) {
+    const testItems = testGrouped.get(signature) || [];
+    for (const { live, test } of pairItems(liveItems, testItems)) {
+      if (!test) continue;
+
+      // This audit is meant to catch spacing between visual features that the
+      // element-rect checks miss.  If the anchor itself has drifted, the normal
+      // layout checks already explain the problem; skipping those cases avoids
+      // turning one upstream section-height mismatch into hundreds of gap diffs.
+      const anchorTopDelta = Math.abs((live.anchorRect?.top || 0) - (test.anchorRect?.top || 0));
+      const anchorHeightDelta = Math.abs((live.anchorRect?.height || 0) - (test.anchorRect?.height || 0));
+      if (anchorTopDelta > 8 || anchorHeightDelta > 8) continue;
+
+      const liveNext = live.nextDown;
+      const testNext = test.nextDown;
+      if (!liveNext && !testNext) continue;
+      if (!liveNext || !testNext) {
+        const present = liveNext || testNext;
+        if ((present?.gap || 0) <= 120) {
+          mismatches.push({
+            signature,
+            occurrenceIndex: live.occurrenceIndex,
+            anchorLabel: live.label,
+            issue: liveNext ? 'missing next visual feature on test' : 'extra next visual feature on test',
+            liveGap: liveNext?.gap ?? null,
+            testGap: testNext?.gap ?? null,
+            liveNext: liveNext ? { kind: liveNext.kind, label: liveNext.label, rect: liveNext.rect } : null,
+            testNext: testNext ? { kind: testNext.kind, label: testNext.label, rect: testNext.rect } : null,
+          });
+        }
+        continue;
+      }
+
+      const delta = testNext.gap - liveNext.gap;
+      const tolerance = gapTolerance(liveNext.gap, testNext.gap);
+      const meaningfulDelta = Math.abs(delta) >= 12;
+      if (Math.abs(delta) <= tolerance || !meaningfulDelta) continue;
+
+      mismatches.push({
+        signature,
+        occurrenceIndex: live.occurrenceIndex,
+        anchorLabel: live.label,
+        issue: 'next visual feature spacing mismatch',
+        delta,
+        liveGap: liveNext.gap,
+        testGap: testNext.gap,
+        liveAnchorRect: live.anchorRect,
+        testAnchorRect: test.anchorRect,
+        liveNext: { kind: liveNext.kind, label: liveNext.label, rect: liveNext.rect },
+        testNext: { kind: testNext.kind, label: testNext.label, rect: testNext.rect },
+      });
+    }
+  }
+
+  mismatches.sort((left, right) => Math.abs(right.delta || 0) - Math.abs(left.delta || 0));
+  return { mismatches };
 }
 
 
@@ -4123,6 +4502,8 @@ function summarizeRouteComparison(routePath, livePage, testPage, screenshotDiff)
       containerDiffs: [],
       containerMismatchCount: 0,
       interactivity: emptyInteraction,
+      visualGapComparison: { mismatches: [] },
+      visualGapMismatchCount: 0,
       missingInteractiveCount: 0,
       interactivityDiffCount: 0,
       extraInteractiveCount: 0,
@@ -4397,6 +4778,11 @@ function summarizeRouteComparison(routePath, livePage, testPage, screenshotDiff)
     testPage.interactive || [],
   );
 
+  const visualGapComparison = compareVisualGaps(
+    livePage.visualGaps || [],
+    testPage.visualGaps || [],
+  );
+
   // Hover effect comparison
   const hoverDiffs = compareHoverEffects(
     livePage.hoverEffects || [],
@@ -4532,6 +4918,8 @@ function summarizeRouteComparison(routePath, livePage, testPage, screenshotDiff)
     containerDiffs,
     containerMismatchCount: containerDiffs.length,
     interactivity,
+    visualGapComparison,
+    visualGapMismatchCount: visualGapComparison.mismatches.length,
     missingInteractiveCount: interactivity.missingInteractive.length,
     interactivityDiffCount: interactivity.interactivityDiffs.length,
     extraInteractiveCount: interactivity.extraInteractive.length,
@@ -4921,6 +5309,7 @@ function renderMarkdown(report) {
   lines.push(`- Layout mismatches: ${report.summary.layoutMismatches}`);
   lines.push(`- Container/section style mismatches: ${report.summary.containerMismatches}`);
   lines.push(`- Element interactivity mismatches: ${report.summary.elementInteractivityMismatches || 0}`);
+  lines.push(`- Visual gap mismatches: ${report.summary.visualGapMismatches || 0}`);
   lines.push(`- Missing interactive elements: ${report.summary.missingInteractive}`);
   lines.push(`- Interactivity behavior mismatches: ${report.summary.interactivityDiffs}`);
   lines.push(`- Hover effect mismatches: ${report.summary.hoverMismatches}`);
@@ -5088,6 +5477,22 @@ function renderMarkdown(report) {
       lines.push('### Container/section style mismatches');
       for (const diff of route.containerDiffs) {
         lines.push(`- [ ] ${diff.tag}[${diff.liveLabel}] — ${diff.diffs.join('; ')}`);
+      }
+    }
+
+    // Visual gap mismatches
+    const visualGaps = route.visualGapComparison || { mismatches: [] };
+    if ((visualGaps.mismatches || []).length > 0) {
+      lines.push('');
+      lines.push('### Visual gap mismatches');
+      lines.push('');
+      lines.push('These compare the distance from a matched visible anchor (text/image/control) to the next visible feature below it, including text, media, borders, HRs, and thin painted divider lines.');
+      for (const gap of visualGaps.mismatches.slice(0, 60)) {
+        const occurrence = gap.occurrenceIndex ? ` #${gap.occurrenceIndex + 1}` : '';
+        const delta = Number.isFinite(gap.delta) ? `; delta=${gap.delta > 0 ? '+' : ''}${gap.delta}px` : '';
+        const liveNext = gap.liveNext ? `${gap.liveNext.kind} ${gap.liveNext.label}` : '∅';
+        const testNext = gap.testNext ? `${gap.testNext.kind} ${gap.testNext.label}` : '∅';
+        lines.push(`- [ ] ${gap.anchorLabel || gap.signature}${occurrence} — ${gap.issue}; gap live=${gap.liveGap ?? '∅'}px test=${gap.testGap ?? '∅'}px${delta}; next live=${liveNext}; next test=${testNext}`);
       }
     }
 
@@ -5668,11 +6073,12 @@ async function loadPage(page, origin, routePath) {
   });
 
   const isLiveSite = origin === LIVE_ORIGIN;
-  const [inventory, containers, interactive, socialPreviewMeta, cssVars, wfElements, animations, paintedLayers, buttonComponents] = await withTimeout(
+  const [inventory, containers, interactive, visualGaps, socialPreviewMeta, cssVars, wfElements, animations, paintedLayers, buttonComponents] = await withTimeout(
     Promise.all([
       extractPageInventory(page),
       extractContainerStyles(page),
       extractInteractivity(page),
+      extractVisualGaps(page),
       extractSocialPreviewMeta(page),
       extractCSSCustomProperties(page),
       extractWebflowElements(page, isLiveSite),
@@ -5711,6 +6117,7 @@ async function loadPage(page, origin, routePath) {
     inventory,
     containers,
     interactive,
+    visualGaps,
     hoverEffects,
     socialPreviewMeta,
     clickBehavior,
@@ -5864,6 +6271,7 @@ async function main() {
         layoutMismatches: routes.reduce((total, route) => total + route.layoutMismatchCount, 0),
         containerMismatches: routes.reduce((total, route) => total + (route.containerMismatchCount || 0), 0),
         elementInteractivityMismatches: routes.reduce((total, route) => total + (route.elementInteractivityMismatchCount || 0), 0),
+        visualGapMismatches: routes.reduce((total, route) => total + (route.visualGapMismatchCount || 0), 0),
         missingInteractive: routes.reduce((total, route) => total + (route.missingInteractiveCount || 0), 0),
         interactivityDiffs: routes.reduce((total, route) => total + (route.interactivityDiffCount || 0), 0),
         hoverMismatches: routes.reduce((total, route) => total + (route.hoverMismatchCount || 0), 0),
@@ -5913,6 +6321,7 @@ async function main() {
       report.summary.layoutMismatches +
       report.summary.containerMismatches +
       (report.summary.elementInteractivityMismatches || 0) +
+      (report.summary.visualGapMismatches || 0) +
       report.summary.missingInteractive +
       report.summary.interactivityDiffs +
       report.summary.hoverMismatches +

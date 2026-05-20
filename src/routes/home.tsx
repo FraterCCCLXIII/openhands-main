@@ -696,7 +696,7 @@ const Home = () => {
               feature column dictate row height; previous flex-justify-between
               left a 700+px gap on test where the right column was much taller
               than live's. */}
-          <div className='flex flex-col items-start gap-6'>
+          <div className='flex flex-col items-start'>
             {/* Live's H3 here gets `margin-bottom: 1.375rem` (22px) from
               * the base h3 typography rules.  Without it on test, the
               * "Try it live" CTA below sat too close to the heading. */}
@@ -743,7 +743,7 @@ const Home = () => {
                 key={column.label}
                 data-wf-el='use-case-row'
                 className='overflow-hidden rounded-[19.2px]'
-                style={{ borderBottom: '1px solid rgb(179, 168, 140)', marginTop: index === 0 ? '56.95px' : '49.6px' }}
+                style={{ borderTop: '1px solid rgb(179, 168, 140)', borderBottom: '1px solid rgb(179, 168, 140)', marginTop: index === 0 ? '56.95px' : '49.6px' }}
               >
                 <div className='px-6 py-4 text-sm font-normal uppercase tracking-normal text-brand-fg' style={{ backgroundColor: 'rgb(179, 168, 140)', lineHeight: '16.89px' }}>
                   {column.label}
@@ -1101,7 +1101,7 @@ const Home = () => {
             * max-w-[1238px] container with no additional max-width limit
             * and no second `data-wf-el="footer-nav"` wrapper -- its only
             * footer-nav is the one Footer renders internally. */}
-          <div className='mt-[134px]'>
+          <div className='mt-[80px]'>
             {/* Pass showMarketingCta={false} because home already renders the
               * "Building the open standard..." headline + CTAs above; without
               * this Footer would render the entire marketing CTA block a

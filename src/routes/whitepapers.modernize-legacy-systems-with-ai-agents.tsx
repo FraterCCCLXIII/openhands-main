@@ -183,9 +183,9 @@ export default function WhitepaperModernizeLegacySystemsWithAiAgents() {
                 <h3 className='max-w-[502px] fluid-body-lg font-medium text-brand-fg' style={{ marginBottom: '20.8px' }}>
                   What you&apos;ll learn in the whitepaper:
                 </h3>
-                <ul className='mt-5'>
+                <ul style={{ marginTop: '0px' }}>
                   {WHITEPAPER_LEARNINGS.map((item) => (
-                    <li key={item} className='min-h-[55px] list-none text-[16px] leading-[22.4px] text-[#5f5f5f]'>
+                    <li key={item} className='min-h-[55px] list-none text-[16px] leading-[22.4px] text-[#5f5f5f]' style={{ borderBottom: '1px solid rgba(95, 95, 95, 0.5)' }}>
                       {item}
                     </li>
                   ))}
@@ -218,7 +218,7 @@ export default function WhitepaperModernizeLegacySystemsWithAiAgents() {
                     title='Download whitepaper form'
                     srcDoc={HUBSPOT_FORM_FRAME_SRC_DOC}
                     sandbox='allow-forms allow-scripts'
-                    className='mt-2 h-[413px] w-full border-0'
+                    className='h-[413px] w-full border-0' style={{ marginTop: '33px' }}
                   />
                 </>
               )}

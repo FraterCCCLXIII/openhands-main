@@ -145,7 +145,7 @@ const Blog = () => {
           </div>
 
           {hasMoreBlogs && (
-            <div className='mt-16 flex justify-center'>
+            <div className='flex justify-center' style={{ marginTop: '49px' }}>
               <a
                 href='#blog-grid'
                 className='btn btn-outline'
