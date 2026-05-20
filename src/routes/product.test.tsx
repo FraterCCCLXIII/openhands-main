@@ -1,0 +1,30 @@
+import { describe, expect, it } from 'vitest';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { MemoryRouter } from 'react-router';
+import Product from './product';
+
+const renderProduct = () =>
+  renderToStaticMarkup(
+    <MemoryRouter initialEntries={['/product']}>
+      <Product />
+    </MemoryRouter>,
+  );
+
+describe('/product parity markup', () => {
+  it('keeps Webflow parity anchors for product surface cards and comparison table', () => {
+    const html = renderProduct();
+
+    expect(html.match(/data-wf-el="product-list_img_wrap"/g)).toHaveLength(3);
+    expect(html.match(/data-wf-el="product-list_img"/g)).toHaveLength(3);
+    expect(html.match(/data-wf-el="product-table_tr"/g)).toHaveLength(6);
+    expect(html.match(/data-wf-el="product-table_th"/g)).toHaveLength(30);
+  });
+
+  it('renders live footer copyright text visibly for product parity', () => {
+    const html = renderProduct();
+
+    expect(html).toContain('© <span>');
+    expect(html).toContain(' OpenHands - All rights reserved');
+    expect(html).toContain('data-wf-el="eyebrow"');
+  });
+});

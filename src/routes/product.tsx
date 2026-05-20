@@ -61,55 +61,94 @@ const Product = () => {
           </div>
         </div>
 
-        {/* Nested dark interface-cards section — see comment above */}
-        <section data-wf-el='section' style={{ display: 'block', backgroundColor: 'rgb(34, 21, 13)', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px', marginTop: '0px', minHeight: '1766px' }}>
-        <div className='mx-auto flex max-w-[1238px] flex-col' style={{ rowGap: '128px' }}>
-          {PRODUCT_SURFACES.map((item, index) => {
-            const imageCard = (
-              <div data-wf-el='product-list_img_wrap' className='bg-brand-bg' style={{ alignItems: 'center', borderRadius: '16px', borderTop: '1px solid rgb(249, 240, 217)', boxSizing: 'border-box', display: 'flex', height: '450px', justifyContent: 'center', marginLeft: 'auto', marginRight: 'auto', maxWidth: '100%', overflow: 'hidden', width: '619px' }}>
-                <img src={item.image} alt='' className='img-block product-list_img' style={{ width: '489px', maxWidth: '100%', height: 'auto', borderRadius: '0px', color: 'rgb(249, 240, 217)', objectFit: 'scale-down' }} />
+        <div data-wf-el='hero' className='relative flex w-full flex-col items-center overflow-hidden' style={{ height: '432px', justifyContent: 'flex-start', textAlign: 'start' }}>
+          <div data-wf-el='container' className='mx-auto max-w-[1238px]' style={{ display: 'block', width: '100%' }}>
+            <div data-wf-el='hero-content' className='flex flex-col items-center justify-center text-center' style={{ position: 'relative', height: '432px', paddingTop: '56px', paddingBottom: '56px' }}>
+              <div className='u-mb-sm' style={{ marginBottom: '24px' }}>
+                <div data-wf-el='banner' className='bg-brand-accent text-brand-fg' style={{ display: 'block', borderRadius: '6.4px', fontSize: '16px', lineHeight: '22.4px', fontWeight: 400, padding: '0px', textAlign: 'center' }}>
+                  <div data-wf-el='banner-wrap' style={{ padding: '12.8px 32px', textAlign: 'center' }}>
+                    <div>Product</div>
+                  </div>
+                </div>
               </div>
-            );
-
-            const textBlock = (
-              <div className={index === 1 ? 'lg:pl-[44px]' : 'lg:pr-8'}>
-                <h2 className='w-fit section-title text-brand-bg'>
-                  {item.title}
-                </h2>
-                <p className='max-w-[571px] fluid-body-lg text-[#b3a88c]' style={{ marginTop: '24px', marginBottom: '20.8px' }}>
-                  {item.description}
-                </p>
-                <OverlayLinkButton
-                  href={item.href}
-                  label='Learn more'
-                  variant='lightbrown'
-                  className='w-fit'
-                  wrapperStyle={{ marginTop: '17px' }}
+              <h1 className='fluid-h1 max-w-[932px] text-brand-fg'>
+                Build better software with autonomous cloud agent
+              </h1>
+              <p data-wf-el='paragraph-lg' className='fluid-body-lg text-[#5f5f5f]' style={{ marginTop: '10.4px', marginBottom: '20.8px', maxWidth: '560px', textAlign: 'center' }}>
+                Offload toil, ship faster. OpenHands automates real development tasks with transparency, governance, and choice.
+              </p>
+              <div data-wf-el='hero_btn_wrap' className='flex flex-wrap' style={{ paddingTop: '32px', gap: '8px 16px', maxWidth: '100%' }}>
+                <ProductPageActionLink
+                  href='https://app.all-hands.dev/'
+                  label='Try it live'
+                  screenReaderLabel='Join Slack'
+                />
+                <ProductPageActionLink
+                  href='https://docs.openhands.dev/overview/introduction'
+                  label='See developer docs'
+                  variant='outline'
                 />
               </div>
-            );
-
-            return (
-              <div
-                key={item.title}
-                className='grid lg:grid-cols-2 lg:items-center'
-                style={{ minHeight: '450px' }}
-              >
-                {index === 1 ? (
-                  <>
-                    {imageCard}
-                    {textBlock}
-                  </>
-                ) : (
-                  <>
-                    {textBlock}
-                    {imageCard}
-                  </>
-                )}
-              </div>
-            );
-          })}
+            </div>
+          </div>
         </div>
+
+        <section data-wf-el='section' style={{ display: 'block', backgroundColor: 'rgb(34, 21, 13)', color: 'rgb(249, 240, 217)', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px', marginTop: '0px', position: 'relative' }}>
+          <div data-wf-el='container' className='mx-auto max-w-[1238px]' style={{ display: 'block', color: 'rgb(249, 240, 217)' }}>
+            <div className='flex flex-col' style={{ rowGap: '128px', marginLeft: '-20px', marginRight: '-20px' }}>
+            {PRODUCT_SURFACES.map((item, index) => {
+              const imageCard = (
+                <div style={{ marginLeft: index === 1 ? '20px' : '0px' }}>
+                  <div data-wf-el='product-list_img_wrap' className='bg-brand-bg' style={{ alignItems: 'center', borderRadius: '16px', border: '1px solid rgb(179, 168, 140)', boxSizing: 'border-box', color: 'rgb(249, 240, 217)', display: 'flex', height: '450px', justifyContent: 'center', minHeight: '100%', overflow: 'hidden', padding: '64px', position: 'relative', width: '619px' }}>
+                    <img data-wf-el='product-list_img' src={item.image} alt='' className='img-block product-list_img' style={{ width: '100%', maxWidth: '100%', height: 'auto', borderRadius: '0px', color: 'rgb(249, 240, 217)', display: 'block', objectFit: 'scale-down' }} />
+                  </div>
+                </div>
+              );
+
+              const textBlock = (
+                <div data-wf-el='mobile-order-last' style={{ display: 'flex', flexDirection: 'column', marginLeft: '0px', position: 'relative', transform: index === 1 ? 'translateX(20px)' : undefined, width: '619px' }}>
+                  <div data-wf-el='content-block' style={{ alignItems: 'flex-start', color: 'rgb(249, 240, 217)', display: 'flex', flexDirection: 'column', gap: '16px', height: '450px', justifyContent: 'center', padding: '24px', position: 'relative', width: '619px' }}>
+                    <h2 className='w-fit section-title text-brand-bg'>
+                      {item.title}
+                    </h2>
+                    <p data-wf-el='paragraph-lg' className='fluid-body-lg text-[#b3a88c]' style={{ marginTop: '0px', marginBottom: '20.8px', width: '571px' }}>
+                      {item.description}
+                    </p>
+                    <OverlayLinkButton
+                      href={item.href}
+                      label='Learn more'
+                      variant='lightbrown'
+                      className='w-fit'
+                      wrapperStyle={{ marginTop: '0px' }}
+                      wfEl='button'
+                      textWfEl='btn-text'
+                    />
+                  </div>
+                </div>
+              );
+
+              return (
+                <div
+                  key={item.title}
+                  className='grid lg:grid-cols-[639px_639px] lg:items-center'
+                  style={{ minHeight: '450px' }}
+                >
+                  {index === 1 ? (
+                    <>
+                      {imageCard}
+                      {textBlock}
+                    </>
+                  ) : (
+                    <>
+                      {textBlock}
+                      {imageCard}
+                    </>
+                  )}
+                </div>
+              );
+            })}
+            </div>
+          </div>
         </section>
       </section>
 

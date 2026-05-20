@@ -176,7 +176,8 @@ const FooterContent = ({
         * intermediate Webflow grid layers down to a single 812px-wide
         * centered flex row so our nav-link inventory lines up with
         * live's positions. */}
-      <div data-wf-el='footer-nav' className='mx-auto w-full max-w-[812px]' style={compactNav ? { display: 'flex', textAlign: 'start', paddingBottom: '16px', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid #b3a88c' } : { display: 'flex', justifyContent: 'center' }}>
+      <div className='flex justify-center'>
+      <div data-wf-el='footer-nav' className='w-full' style={compactNav ? { display: 'flex', textAlign: 'start', paddingBottom: '16px', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid #b3a88c', width: '812px', maxWidth: 'none' } : { display: 'flex', justifyContent: 'center' }}>
         {compactNav ? (
           <div
             className={clsx(
@@ -320,6 +321,7 @@ const FooterContent = ({
           </div>
         )}
       </div>
+      </div>
 
       {/* Most local routes keep the copyright screen-reader-only, but routes
           whose live footer exposes the copyright can opt in with
@@ -358,7 +360,7 @@ const FooterContent = ({
           <img data-wf-el='standard-media-img' src='/assets/webflow/backgrounds/openhands_logo_black.svg' alt='' style={{ display: 'block', width: '610px', height: '102px', textAlign: 'start', objectFit: 'scale-down' }} />
         </div>
       </div>
-      {compactNav ? <div aria-hidden='true' style={{ height: '50px' }} /> : null}
+
     </div>
   );
 };
@@ -426,6 +428,7 @@ export const Footer = ({
           {...ctaProps}
         />
       </div>
+      {compactNav ? <div aria-hidden='true' style={{ height: '50px' }} /> : null}
     </section>
   );
 };
