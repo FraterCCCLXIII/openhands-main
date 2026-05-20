@@ -16,6 +16,9 @@ interface OverlayLinkButtonProps {
   // structure for parity tooling that walks data-wf-el labels.
   wfEl?: string;
   textWfEl?: string;
+  iconWrapWfEl?: string;
+  iconColorWfEl?: string;
+  iconWfEl?: string;
 }
 
 const VARIANT_CONFIG: Record<NonNullable<OverlayLinkButtonProps['variant']>, { cls: string; isWrap: boolean }> = {
@@ -37,6 +40,9 @@ export const OverlayLinkButton = ({
   fullWidth = false,
   wfEl,
   textWfEl,
+  iconWrapWfEl,
+  iconColorWfEl,
+  iconWfEl,
 }: OverlayLinkButtonProps) => {
   const isExternalLink = /^https?:\/\//.test(href);
   const config = VARIANT_CONFIG[variant];

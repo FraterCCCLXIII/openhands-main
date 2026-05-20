@@ -554,7 +554,7 @@ const FooterContent = ({
         <Link
           to='/privacy'
           data-wf-el='eyebrow'
-          className='font-mono text-[14px] font-normal leading-[16.896px] hover:text-[#8a5f45]'
+          className='font-mono text-[14.08px] font-normal leading-[16.896px] hover:text-[#8a5f45]'
           style={{
             textAlign: 'center',
             textDecoration: 'none',
