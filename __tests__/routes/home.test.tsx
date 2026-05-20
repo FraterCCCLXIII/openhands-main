@@ -55,4 +55,24 @@ describe('home route parity structure', () => {
     );
     expect(screen.queryAllByTestId('footer-social-link')).toHaveLength(3);
   });
+
+  it('preserves live Webflow text-node and widget parity markers', () => {
+    const { container } = renderRoute();
+
+    expect(container.querySelectorAll('[data-modal="open"]')).toHaveLength(4);
+    expect(container.querySelectorAll('[data-wf-el="hero-splide_button"]')).toHaveLength(2);
+    expect(container.querySelectorAll('[data-wf-el="slide-icon-media"]')).toHaveLength(2);
+    expect(container.querySelectorAll('[data-wf-el="accordion-icon"] path[d^="M17 17"]')).toHaveLength(5);
+
+    expect(screen.getByText('Nick Blanchet,')).toBeInTheDocument();
+    expect(screen.getByText('74K')).toBeInTheDocument();
+    expect(screen.getByText('©')).toBeInTheDocument();
+    expect(screen.getByText(String(new Date().getFullYear()))).toBeInTheDocument();
+    expect(screen.getByText('OpenHands - All rights reserved')).toBeInTheDocument();
+
+    expect(screen.getByText('@allhands_ai')).toBeInTheDocument();
+    expect(screen.getByText('@windsurf')).toBeInTheDocument();
+    expect(screen.getByText('@zeddotdev')).toBeInTheDocument();
+    expect(container.textContent).toContain("Built on an open source foundation, it's designed for enterprise software development at scale.");
+  });
 });

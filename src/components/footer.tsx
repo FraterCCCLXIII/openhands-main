@@ -16,6 +16,7 @@ interface FooterProps {
   compactNav?: boolean;
   navWidthClass?: string;
   minHeight?: number;
+  showCopyright?: boolean;
   /**
    * When true (default), the footer renders the marketing CTA at
    * the top of the footer section, matching live's footer markup
@@ -107,6 +108,7 @@ type FooterContentProps = Pick<
   | 'compactNav'
   | 'navWidthClass'
   | 'showMarketingCta'
+  | 'showCopyright'
   | 'marketingCtaTitle'
   | 'marketingCtaDescription'
   | 'marketingCtaPrimary'
@@ -118,6 +120,7 @@ const FooterContent = ({
   compactNav = false,
   navWidthClass,
   showMarketingCta = true,
+  showCopyright = false,
   marketingCtaTitle,
   marketingCtaDescription,
   marketingCtaPrimary,
@@ -315,12 +318,19 @@ const FooterContent = ({
         )}
       </div>
 
-      {/* Live's footer does NOT render a copyright line — only a
-          single Privacy Policy eyebrow link, centered.  We keep the
-          copyright in a sr-only span so the legal credit isn't lost
-          but it doesn't appear in parity DOM inventories. */}
+      {/* Most local routes keep the copyright screen-reader-only, but the
+          live homepage renders the copyright eyebrow above Privacy Policy.
+          `showCopyright` opts the homepage into that visible markup. */}
       <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: compactNav ? '62px' : '0px' }}>
-        <span className='sr-only'>© {new Date().getFullYear()} OpenHands - All rights reserved</span>
+        {showCopyright ? (
+          <div className='font-mono text-[14.08px] font-normal leading-[16.896px] text-brand-fg' style={{ display: 'flex', justifyContent: 'center', gap: '4px', textAlign: 'center', marginBottom: '8px' }}>
+            <span>©</span>
+            <span>{new Date().getFullYear()}</span>
+            <span>OpenHands - All rights reserved</span>
+          </div>
+        ) : (
+          <span className='sr-only'>© {new Date().getFullYear()} OpenHands - All rights reserved</span>
+        )}
         <Link
           to='/privacy'
           data-wf-el='eyebrow'
@@ -342,7 +352,7 @@ const FooterContent = ({
       {/* Live's `.standard-media` has `margin-top: 0` — vertical
        * spacing above the big OpenHands wordmark comes from the
        * preceding row's bottom padding, not this wrapper's `mt-8`. */}
-      <div data-wf-el='standard-media' style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', textAlign: 'start', marginTop: compactNav ? '40px' : '0px', marginLeft: 'auto', marginRight: 'auto', width: '610px', height: '102px', objectFit: 'contain' }}>
+      <div data-wf-el='standard-media' style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', textAlign: 'start', marginTop: '0px', marginLeft: 'auto', marginRight: 'auto', width: '610px', height: '102px', objectFit: 'contain' }}>
         <img data-wf-el='standard-media-img' src='/assets/webflow/backgrounds/openhands_logo_black.svg' alt='' style={{ display: 'block', width: '610px', height: '102px', textAlign: 'start', objectFit: 'scale-down' }} />
       </div>
       {compactNav ? <div aria-hidden='true' style={{ height: '50px' }} /> : null}
@@ -357,6 +367,7 @@ export const Footer = ({
   navWidthClass,
   minHeight,
   showMarketingCta = true,
+  showCopyright = false,
   marketingCtaTitle,
   marketingCtaDescription,
   marketingCtaPrimary,
@@ -364,6 +375,7 @@ export const Footer = ({
 }: FooterProps) => {
   const ctaProps = {
     showMarketingCta,
+    showCopyright,
     marketingCtaTitle,
     marketingCtaDescription,
     marketingCtaPrimary,

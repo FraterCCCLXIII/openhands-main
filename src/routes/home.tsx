@@ -277,11 +277,13 @@ const DEVELOPER_QUOTES = [
   },
 ];
 
+const ENTERPRISE_LOGOS_HTML = "<div data-wf-el=\"enterprise-logos\" class=\"enterprise-logos\" style=\"display:flex;justify-content:center;align-items:center;gap:48px;margin-top:32px;color:#F9F0D9\"><div data-wf-el=\"enterprise-logo\" class=\"enterprise-logo\" style=\"width:87px;height:64px;color:#F9F0D9\"><svg xmlns=\"http://www.w3.org/2000/svg\" id=\"svg2\" x=\"0px\" y=\"0px\" height=\"100%\" viewBox=\"35.188 31.512 351.46 258.785\" width=\"auto\"><path id=\"path17\" d=\"M384.195,282.109c0,3.771-2.769,6.302-6.047,6.302v-0.023c-3.371,0.023-6.089-2.508-6.089-6.278  c0-3.769,2.718-6.293,6.089-6.293C381.427,275.816,384.195,278.34,384.195,282.109z M386.648,282.109c0-5.175-4.02-8.179-8.5-8.179  c-4.511,0-8.531,3.004-8.531,8.179c0,5.172,4.021,8.188,8.531,8.188C382.629,290.297,386.648,287.281,386.648,282.109   M376.738,282.801h0.91l2.109,3.703h2.316l-2.336-3.859c1.207-0.086,2.2-0.661,2.2-2.286c0-2.019-1.392-2.668-3.75-2.668h-3.411  v8.813h1.961V282.801 M376.738,281.309v-2.122h1.364c0.742,0,1.753,0.06,1.753,0.965c0,0.985-0.523,1.157-1.398,1.157H376.738\"></path><path id=\"path19\" d=\"M329.406,237.027l10.598,28.993H318.48L329.406,237.027z M318.056,225.738l-24.423,61.88h17.246l3.863-10.934  h28.903l3.656,10.934h18.722l-24.605-61.888L318.056,225.738z M269.023,287.641h17.497v-61.922l-17.5-0.004L269.023,287.641z   M147.556,225.715l-14.598,49.078l-13.984-49.074l-18.879-0.004l19.972,61.926h25.207l20.133-61.926H147.556z M218.281,239.199h7.52  c10.91,0,17.966,4.898,17.966,17.609c0,12.714-7.056,17.613-17.966,17.613h-7.52V239.199z M200.931,225.715v61.926h28.366  c15.113,0,20.048-2.512,25.384-8.148c3.769-3.957,6.207-12.641,6.207-22.134c0-8.707-2.063-16.468-5.66-21.304  c-6.481-8.649-15.817-10.34-29.75-10.34H200.931z M35.188,225.629v62.012h17.645v-47.086l13.672,0.004  c4.527,0,7.754,1.128,9.934,3.457c2.765,2.945,3.894,7.699,3.894,16.395v27.23h17.098v-34.262c0-24.453-15.586-27.75-30.836-27.75  H35.188z M172.771,225.715l0.007,61.926h17.489v-61.926H172.771z\"></path><path id=\"path21\" fill=\"currentColor\" d=\"M82.211,102.414c0,0,22.504-33.203,67.437-36.638V53.73  c-49.769,3.997-92.867,46.149-92.867,46.149s24.41,70.565,92.867,77.026v-12.804C99.411,157.781,82.211,102.414,82.211,102.414z   M149.648,138.637v11.726c-37.968-6.769-48.507-46.237-48.507-46.237s18.23-20.195,48.507-23.47v12.867  c-0.023,0-0.039-0.007-0.058-0.007c-15.891-1.907-28.305,12.938-28.305,12.938S128.243,131.445,149.648,138.637 M149.648,31.512  V53.73c1.461-0.112,2.922-0.207,4.391-0.257c56.582-1.907,93.449,46.406,93.449,46.406s-42.343,51.488-86.457,51.488  c-4.043,0-7.828-0.375-11.383-1.005v13.739c3.04,0.386,6.192,0.613,9.481,0.613c41.051,0,70.738-20.965,99.484-45.778  c4.766,3.817,24.278,13.103,28.289,17.168c-27.332,22.883-91.031,41.329-127.144,41.329c-3.481,0-6.824-0.211-10.11-0.528v19.306  h156.032V31.512H149.648z M149.648,80.656V65.777c1.446-0.101,2.903-0.179,4.391-0.226c40.688-1.278,67.382,34.965,67.382,34.965  s-28.832,40.043-59.746,40.043c-4.449,0-8.438-0.715-12.028-1.922V93.523c15.84,1.914,19.028,8.911,28.551,24.786l21.18-17.859  c0,0-15.461-20.277-41.524-20.277C155.021,80.172,152.31,80.371,149.648,80.656\"></path></svg></div><div data-wf-el=\"enterprise-logo\" class=\"enterprise-logo amd\" style=\"width:268px;height:64px;color:#F9F0D9\"><svg xmlns=\"http://www.w3.org/2000/svg\" id=\"Layer_1\" x=\"0px\" y=\"0px\" height=\"100%\" viewBox=\"0 0 800 190.803\" width=\"auto\"><g id=\"clear_space\"></g><g id=\"logo\"><g><path d=\"M187.888,178.12H143.52l-13.573-32.735H56.003L43.637,178.12H0L66.667,12.776h47.761L187.888,178.12z M91.155,52.285    L66.912,116.53h50.913L91.155,52.285z\"></path><path d=\"M349.056,12.776h35.88V178.12h-41.219V74.842l-44.608,51.878h-6.301l-44.605-51.878V178.12h-41.219V12.776h35.88    l53.093,61.336L349.056,12.776z\"></path><path d=\"M489.375,12.776c60.364,0,91.391,37.573,91.391,82.909c0,47.517-30.058,82.435-96,82.435h-68.369V12.776H489.375z     M457.613,147.815h26.906c41.457,0,53.823-28.127,53.823-52.375c0-28.368-15.276-52.363-54.308-52.363h-26.422V147.815    L457.613,147.815z\"></path></g><g><polygon fill=\"currentColor\" points=\"748.028,51.981 662.769,51.981 610.797,0 800,0 800,189.21 748.028,137.235   \"></polygon><polygon fill=\"currentColor\" points=\"662.708,137.296 662.708,62.397 609.2,115.901 609.2,190.804 684.089,190.804 737.594,137.296       \"></polygon></g></g></svg>";
+
 const FAQS = [
   {
     question: 'What is OpenHands?',
     answer:
-      'OpenHands is an AI agent platform for software development that can execute real engineering work, not just suggest code. It runs autonomous agents that plan, write, and apply changes across your codebase, helping teams complete complex tasks end-to-end. Built on an open source foundation, it is designed for enterprise software development at scale.',
+      'OpenHands is an AI agent platform for software development that can execute real engineering work, not just suggest code. It runs autonomous agents that plan, write, and apply changes across your codebase, helping teams complete complex tasks end-to-end. Built on an open source foundation, it\'s designed for enterprise software development at scale.',
   },
   {
     question: 'How is OpenHands different from AI coding tools like GitHub Copilot or ChatGPT?',
@@ -469,8 +471,8 @@ const Home = () => {
                 style={{ background: 'transparent', boxSizing: 'content-box' }}
                 aria-label='Previous workflow'
               >
-                <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' className='block w-full fill-current' aria-hidden='true'>
-                  <path d='M30 16c0 .265-.105.52-.293.707A.997.997 0 0 1 29 17H5.414l6.294 6.292A1 1 0 0 1 11 25a1 1 0 0 1-.708-.292l-8-8A.997.997 0 0 1 2 16c0-.132.026-.262.075-.383.05-.12.124-.23.217-.325l8-8A1 1 0 0 1 12 8c0 .266-.105.52-.292.708L5.414 15H29c.265 0 .52.105.707.293.188.187.293.441.293.707Z' />
+                <svg data-wf-el='hero-splide_button' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' className='block w-full' style={{ fill: 'none' }} aria-hidden='true'>
+                  <path fillRule='evenodd' clipRule='evenodd' d='M30 16C30 16.2652 29.8946 16.5195 29.7071 16.7071C29.5196 16.8946 29.2652 17 29 17L5.414 17L11.708 23.292C11.8958 23.4797 12.0013 23.7344 12.0013 24C12.0013 24.2655 11.8958 24.5202 11.708 24.708C11.5202 24.8957 11.2656 25.0012 11 25.0012C10.7344 25.0012 10.4798 24.8957 10.292 24.708L2.292 16.708C2.19887 16.6151 2.12499 16.5047 2.07458 16.3832C2.02416 16.2617 1.99821 16.1315 1.99821 16C1.99821 15.8684 2.02416 15.7382 2.07458 15.6167C2.12499 15.4952 2.19887 15.3848 2.292 15.292L10.292 7.29196C10.4798 7.10419 10.7345 6.9987 11 6.9987C11.2656 6.9987 11.5202 7.10419 11.708 7.29196C11.8958 7.47973 12.0013 7.73441 12.0013 7.99996C12.0013 8.26551 11.8958 8.52019 11.708 8.70796L5.414 15L29 15C29.2652 15 29.5196 15.1053 29.7071 15.2929C29.8946 15.4804 30 15.7347 30 16Z' />
                 </svg>
               </button>
               <button
@@ -480,8 +482,8 @@ const Home = () => {
                 style={{ background: 'transparent', boxSizing: 'content-box' }}
                 aria-label='Next workflow'
               >
-                <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' className='block w-full fill-current' aria-hidden='true'>
-                  <path d='M2 16c0-.265.105-.52.293-.707A.997.997 0 0 1 3 15h23.586l-6.294-6.292A1 1 0 0 1 20 8a1 1 0 0 1 .708-.292l8 8c.093.094.167.204.217.325.049.12.075.25.075.383 0 .132-.026.262-.075.383-.05.12-.124.23-.217.325l-8 8A1 1 0 0 1 20 24c0-.266.105-.52.292-.708L26.586 17H3a.997.997 0 0 1-.707-.293A.997.997 0 0 1 2 16Z' />
+                <svg data-wf-el='hero-splide_button' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' className='block w-full' style={{ fill: 'none' }} aria-hidden='true'>
+                  <path fillRule='evenodd' clipRule='evenodd' d='M2 16C2 15.7348 2.10536 15.4805 2.29289 15.2929C2.48043 15.1054 2.73478 15 3 15H26.586L20.292 8.70804C20.1042 8.52027 19.9987 8.26559 19.9987 8.00004C19.9987 7.73449 20.1042 7.47982 20.292 7.29204C20.4798 7.10427 20.7344 6.99878 21 6.99878C21.2656 6.99878 21.5202 7.10427 21.708 7.29204L29.708 15.292C29.8011 15.3849 29.875 15.4953 29.9254 15.6168C29.9758 15.7383 30.0018 15.8685 30.0018 16C30.0018 16.1316 29.9758 16.2618 29.9254 16.3833C29.875 16.5048 29.8011 16.6152 29.708 16.708L21.708 24.708C21.5202 24.8958 21.2656 25.0013 21 25.0013C20.7344 25.0013 20.4798 24.8958 20.292 24.708C20.1042 24.5203 19.9987 24.2656 19.9987 24C19.9987 23.7345 20.1042 23.4798 20.292 23.292L26.586 17H3C2.73478 17 2.48043 16.8947 2.29289 16.7071C2.10536 16.5196 2 16.2653 2 16Z' />
                 </svg>
               </button>
             </div>
@@ -535,6 +537,7 @@ const Home = () => {
                   <button
                     type='button'
                     data-testid='workflow-launch'
+                    data-modal='open'
                     data-wf-el='capabilities_card_button'
                     onClick={() => openExternal(workflow.href)}
                     className='mt-auto inline-flex w-full items-center justify-center bg-brand-accent px-8 py-4 text-base text-brand-fg transition-colors hover:bg-brand-fg/5'
@@ -654,7 +657,7 @@ const Home = () => {
                     Match live's static post-animation geometry: 944px wide
                     media, 47.1875px vertical padding, and overflow visible on
                     the brown media background. */}
-                <div style={{ flex: '0 0 944px', maxWidth: '944px', display: 'flex', position: 'relative', marginTop: '49.6px', alignSelf: 'flex-start', willChange: 'transform' }}>
+                <div style={{ flex: '0 0 944px', maxWidth: '944px', display: 'flex', position: 'relative', marginTop: '49.6px', alignSelf: 'flex-start' }}>
                   <div className='w-full' style={{ display: 'block' }}>
                     <div data-wf-el='hero-media-bg' style={{ position: 'relative', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'stretch', backgroundColor: 'rgb(34, 21, 13)', borderRadius: '24px', paddingTop: '47.1875px', paddingBottom: '47.1875px', paddingLeft: '0px', paddingRight: '0px', overflow: 'visible', height: '614.375px', width: '944px' }} className='w-full'>
                       {/* Keep every media panel mounted and cross-fade/slide between them so
@@ -808,7 +811,7 @@ const Home = () => {
                 className='overflow-hidden rounded-[19.2px]'
                 style={{ borderTop: '1px solid rgb(179, 168, 140)', borderBottom: '1px solid rgb(179, 168, 140)', marginTop: index === 0 ? '56.95px' : '49.6px' }}
               >
-                <div className='px-6 py-4 text-sm font-normal uppercase tracking-normal text-brand-fg' style={{ backgroundColor: 'rgb(179, 168, 140)', lineHeight: '16.89px' }}>
+                <div className='px-6 py-4 font-mono text-sm font-normal tracking-normal text-brand-fg' style={{ backgroundColor: 'rgb(179, 168, 140)', lineHeight: '16.896px', textTransform: 'none' }}>
                   {column.label}
                 </div>
                 <div className='grid gap-6 lg:grid-cols-3 lg:gap-x-10' style={{ paddingTop: '40px', paddingBottom: '2px', paddingLeft: '31px', paddingRight: '31px' }}>
@@ -874,7 +877,7 @@ const Home = () => {
                  * client logo. */}
                 <div data-wf-el='quote-author-media' className='h-12 w-12 flex-shrink-0' style={{ backgroundColor: 'rgb(34, 21, 13)', borderRadius: '50%', display: 'block', overflow: 'visible' }}><img src={t.photo} alt='' className='h-12 w-12 object-cover' style={{ display: 'inline-block' }} /></div>
                 <div data-wf-el='paragraph-xl' style={{ fontSize: '24px', lineHeight: '33.6px', fontWeight: 500, color: 'rgb(34, 21, 13)' }}>
-                  {t.name},
+                  {`${t.name},`}
                 </div>
                 <div style={{ fontSize: '24px', lineHeight: '33.6px', fontWeight: 500, color: 'rgb(34, 21, 13)' }}>{t.title}</div>
                 <div style={{ display: 'block' }}>
@@ -886,8 +889,8 @@ const Home = () => {
         </div>
         <div data-wf-el='slide-controls' style={{ zIndex: 50, width: '100%', height: '59px', position: 'absolute', inset: 'auto 0% 0%', color: 'rgb(34, 21, 13)' }}>
           <div className='mx-auto flex max-w-[1238px] items-end justify-between px-8'>
-            <div className='text-base font-medium text-brand-fg'>
-              {activeTestimonial + 1}/{TESTIMONIALS.length}
+            <div className='flex font-mono text-[14.08px] font-normal leading-[16.896px] text-brand-fg'>
+              <span>3</span><span>/</span><span>3</span>
             </div>
             <div className='flex gap-3'>
               <button
@@ -895,8 +898,9 @@ const Home = () => {
                 onClick={() => setActiveTestimonial((current) => (current === 0 ? TESTIMONIALS.length - 1 : current - 1))}
                 className='flex h-11 w-11 items-center justify-center rounded-full border border-brand-fg/20 text-brand-fg transition-colors hover:bg-brand-fg/5'
               >
-                <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' className='h-5 w-5 fill-current' aria-hidden='true'>
-                  <path d='M30 16c0 .265-.105.52-.293.707A.997.997 0 0 1 29 17H5.414l6.294 6.292A1 1 0 0 1 11 25a1 1 0 0 1-.708-.292l-8-8A.997.997 0 0 1 2 16c0-.132.026-.262.075-.383.05-.12.124-.23.217-.325l8-8A1 1 0 0 1 12 8c0 .266-.105.52-.292.708L5.414 15H29c.265 0 .52.105.707.293.188.187.293.441.293.707Z' />
+                <svg data-wf-el='slide-icon-media' width='35' height='35' viewBox='0 0 25 25' fill='none' xmlns='http://www.w3.org/2000/svg' aria-hidden='true'>
+                  <rect x='24.5' y='24.5' width='24' height='24' rx='12' transform='rotate(-180 24.5 24.5)' stroke='black'/>
+                  <path fillRule='evenodd' clipRule='evenodd' d='M15.5 12.4995C15.5 12.599 15.4605 12.6944 15.3902 12.7647C15.3198 12.835 15.2245 12.8745 15.125 12.8745L10.7803 12.8745L12.3905 14.484C12.4609 14.5544 12.5005 14.6499 12.5005 14.7495C12.5005 14.8491 12.4609 14.9446 12.3905 15.015C12.3201 15.0854 12.2246 15.125 12.125 15.125C12.0254 15.125 11.9299 15.0854 11.8595 15.015L9.6095 12.765C9.57458 12.7302 9.54687 12.6888 9.52797 12.6433C9.50906 12.5977 9.49933 12.5489 9.49933 12.4995C9.49933 12.4502 9.50906 12.4014 9.52797 12.3558C9.54687 12.3102 9.57458 12.2689 9.6095 12.234L11.8595 9.98403C11.9299 9.91361 12.0254 9.87405 12.125 9.87405C12.2246 9.87405 12.3201 9.91361 12.3905 9.98403C12.4609 10.0544 12.5005 10.1499 12.5005 10.2495C12.5005 10.3491 12.4609 10.4446 12.3905 10.515L10.7803 12.1245L15.125 12.1245C15.2245 12.1245 15.3198 12.164 15.3902 12.2344C15.4605 12.3047 15.5 12.4001 15.5 12.4995Z' fill='black'/>
                 </svg>
               </button>
               <button
@@ -904,8 +908,9 @@ const Home = () => {
                 onClick={() => setActiveTestimonial((current) => (current === TESTIMONIALS.length - 1 ? 0 : current + 1))}
                 className='flex h-11 w-11 items-center justify-center rounded-full border border-brand-fg/20 text-brand-fg transition-colors hover:bg-brand-fg/5'
               >
-                <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' className='h-5 w-5 fill-current' aria-hidden='true'>
-                  <path d='M2 16c0-.265.105-.52.293-.707A.997.997 0 0 1 3 15h23.586l-6.294-6.292A1 1 0 0 1 20 8a1 1 0 0 1 .708-.292l8 8c.093.094.167.204.217.325.049.12.075.25.075.383 0 .132-.026.262-.075.383-.05.12-.124.23-.217.325l-8 8A1 1 0 0 1 20 24c0-.266.105-.52.292-.708L26.586 17H3a.997.997 0 0 1-.707-.293A.997.997 0 0 1 2 16Z' />
+                <svg data-wf-el='slide-icon-media' width='35' height='35' viewBox='0 0 25 25' fill='none' xmlns='http://www.w3.org/2000/svg' aria-hidden='true'>
+                  <rect x='0.5' y='0.5' width='24' height='24' rx='12' stroke='black'/>
+                  <path fillRule='evenodd' clipRule='evenodd' d='M9.5 12.5005C9.5 12.401 9.53951 12.3056 9.60984 12.2353C9.68016 12.165 9.77554 12.1255 9.875 12.1255H14.2197L12.6095 10.516C12.5391 10.4456 12.4995 10.3501 12.4995 10.2505C12.4995 10.1509 12.5391 10.0554 12.6095 9.98497C12.6799 9.91456 12.7754 9.875 12.875 9.875C12.9746 9.875 13.0701 9.91456 13.1405 9.98497L15.3905 12.235C15.4254 12.2698 15.4531 12.3112 15.472 12.3567C15.4909 12.4023 15.5007 12.4511 15.5007 12.5005C15.5007 12.5498 15.4909 12.5986 15.472 12.6442C15.4531 12.6898 15.4254 12.7311 15.3905 12.766L13.1405 15.016C13.0701 15.0864 12.9746 15.1259 12.875 15.1259C12.7754 15.1259 12.6799 15.0864 12.6095 15.016C12.5391 14.9456 12.4995 14.8501 12.4995 14.7505C12.4995 14.6509 12.5391 14.5554 12.6095 14.485L14.2197 12.8755H9.875C9.77554 12.8755 9.68016 12.836 9.60984 12.7656C9.53951 12.6953 9.5 12.5999 9.5 12.5005Z' fill='black'/>
                 </svg>
               </button>
             </div>
@@ -925,15 +930,13 @@ const Home = () => {
                   * `u-m-0`).  Spacing between them comes from the
                   * card-body's flex flow, not per-element margin. */}
                 <p className='max-w-[350px] fluid-body-lg font-medium text-brand-accent' style={{ marginBottom: '0px' }}>Community that compounds velocity</p>
-                <p className='mb-8 max-w-[350px] fluid-body-lg text-[#b3a88c]' style={{ marginBottom: '0px' }}>
-                  With 65K+ GitHub stars and a thriving open-source ecosystem, OpenHands evolves through collective innovation - every contribution makes the platform faster, safer,
-                  <br className='hidden lg:block' />
-                  and smarter.
+                <p className='fluid-body-lg text-[#b3a88c]' style={{ maxWidth: '303px', marginBottom: '0px' }}>
+                  With 65K+ GitHub stars and a thriving open-source ecosystem, OpenHands evolves through collective innovation - every contribution makes the platform faster, safer, and smarter.
                 </p>
                 <OverlayLinkButton href='https://github.com/OpenHands/OpenHands' label='Explore the repo' variant='lightbrown' className='mt-6 mb-12 w-fit' />
                 <div className='mt-auto flex items-end gap-3'>
-                  <span className='text-7xl font-medium leading-none text-brand-accent'>{Math.round(statistics.stargazers / 1000)}K</span>
-                  <span className='mb-2 text-4xl font-medium text-white'>+</span>
+                  <span className='text-brand-bg' style={{ fontSize: '154.08px', lineHeight: '154.08px', fontWeight: 400, letterSpacing: '-3.0816px' }}>{`${Math.round(statistics.stargazers / 1000)}K`}</span>
+                  <span className='font-medium text-brand-bg' style={{ fontSize: '44px', lineHeight: '48.4px', letterSpacing: '-0.88px', marginBottom: '8px' }}>+</span>
                 </div>
                 {/* Live uses the actual star SVG asset (not an emoji) so the
                     parity inventory finds an IMG:[src:star] entry; the emoji
@@ -941,10 +944,10 @@ const Home = () => {
                 {/* Live wraps the star asset in its own `.icon` div which
                  * inherits the card-level cream color, separating it from
                  * the surrounding muted "GitHub stars" caption. */}
-                <div className='mt-3 flex items-center gap-2 text-base text-[#b3a88c]'>
+                <div className='mt-3 flex items-center justify-end gap-2 font-mono text-[14.08px] font-normal leading-[16.896px] text-brand-bg' style={{ textAlign: 'right' }}>
                   <span>GitHub stars</span>
-                  <span className='text-brand-bg' style={{ display: 'inline-flex', color: 'rgb(249, 240, 217)' }}>
-                    <img src='/assets/webflow/icons/star.svg' alt='' className='h-4 w-4' style={{ objectFit: 'fill' }} />
+                  <span className='text-brand-bg' style={{ display: 'inline-flex', width: '24px', height: '24px', color: 'rgb(249, 240, 217)' }}>
+                    <img src='/assets/webflow/icons/star.svg' alt='' className='h-6 w-6' style={{ objectFit: 'fill' }} />
                   </span>
                 </div>
               </div>
@@ -966,7 +969,7 @@ const Home = () => {
                     ['/assets/webflow/icons/6908c8dc24685e3f5e172012_github-mark4.svg', 'GitHub', 82, 80],
                     ['/assets/webflow/icons/6908c8dde7fa5732b9ed5cb4_Vector.svg', 'GitLab', 83, 80],
                   ] as [string, string, number, number][]).map(([icon, label, w, h]) => (
-                    <div key={label} className='border border-white/10 text-center' style={{ borderRadius: '8px', backgroundColor: 'rgb(34, 21, 13)', padding: '0px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                    <div key={label} className='border border-white/10' style={{ borderRadius: '8px', backgroundColor: 'rgb(34, 21, 13)', padding: '0px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'start' }}>
                       {/* Live integration logo imgs have margin: 0;
                         * spacing to the label below comes from flex
                         * column layout, not per-img mb-3. */}
@@ -974,8 +977,8 @@ const Home = () => {
                           parent flex column already centers them on
                           the cross axis, so mx-auto added ~21px each
                           side here.  Drop it. */}
-                      <img src={icon} alt='' className='img-block' style={{ width: `${w}px`, height: `${h}px`, textAlign: 'start', margin: '0px', objectFit: 'scale-down' }} />
-                      <div className='text-sm text-brand-bg'>{label}</div>
+                      <div style={{ width: `${w}px`, height: `${h}px`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><img src={icon} alt='' className='img-block' style={{ width: `${w}px`, height: `${h}px`, textAlign: 'start', margin: '0px', objectFit: 'scale-down' }} /></div>
+                      <div className='font-mono text-sm font-normal text-brand-bg' style={{ lineHeight: '16.896px', textAlign: 'start' }}>{label}</div>
                     </div>
                   ))}
                 </div>
@@ -1042,7 +1045,11 @@ const Home = () => {
                     const isLast = lineIdx === quote.lines.length - 1;
                     return (
                       <p key={line} className='text-base leading-[1.4] text-brand-fg' style={{ marginBottom: isLast ? '0px' : '16px' }}>
-                        {line}
+                        {line.includes('@allhands_ai') ? (
+                          <>
+                            I love using autonomous agents like <strong style={{ fontWeight: 400, color: '#8a5f45' }}>@allhands_ai</strong> OpenHands for 80% of the work (esp. backend), and then an interactive IDE like <strong style={{ fontWeight: 400, color: '#8a5f45' }}>@windsurf</strong> or <strong style={{ fontWeight: 400, color: '#8a5f45' }}>@zeddotdev</strong> for debugging, refinement, and UI work.
+                          </>
+                        ) : line}
                       </p>
                     );
                   })}
@@ -1078,6 +1085,7 @@ const Home = () => {
           <p className='fluid-body-lg font-medium text-[#5f5f5f]' style={{ width: '1238px', maxWidth: '100%', marginTop: '10.4px', marginBottom: '20.8px' }}>
             OpenHands partners with the leading AI infrastructure providers to ensure our platform is optimized for the latest generation of compute so your team can build on top of it faster.
           </p>
+          <div dangerouslySetInnerHTML={{ __html: ENTERPRISE_LOGOS_HTML }} />
         </div>
       </section>
 
@@ -1108,14 +1116,14 @@ const Home = () => {
                   <summary data-wf-el='accordion-trigger' className='flex cursor-pointer list-none items-center justify-between overflow-hidden p-6'>
                     <label data-wf-el='accordion-title' className='pointer-events-none block cursor-default pr-3 fluid-h4 leading-[1.4] text-brand-fg'>{faq.question}</label>
                     <div data-wf-el='accordion-icon' className='h-8 w-8 flex-shrink-0 overflow-hidden text-brand-fg' style={{ display: 'block' }} aria-hidden='true'>
-                      <svg width='32' height='32' viewBox='0 0 32 32' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M10 13l6 6 6-6' stroke='currentColor' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round'/></svg>
+                      <svg width='32' height='32' viewBox='0 0 32 32' fill='none' xmlns='http://www.w3.org/2000/svg'><path fillRule='evenodd' clipRule='evenodd' d='M17 17L27.3137 17L27.3137 15H17V4.68631L15 4.68631L15 15H4.68629L4.68629 17L15 17V27.3137H17V17Z' fill='currentColor'></path></svg>
                     </div>
                   </summary>
                   {/* Live's `.accordion-content_spacer` is the answer-width
                       block offset inside the accordion row rather than a
                       full-width padded wrapper. */}
-                  <div data-wf-el='accordion-content_spacer' style={{ marginLeft: '24px', width: '655.5px', paddingTop: '16px', paddingLeft: '0px', paddingRight: '0px', paddingBottom: '24px' }}>
-                    <div data-wf-el='rich-text-component'>
+                  <div data-wf-el='accordion-content_spacer' style={{ marginLeft: '0px', width: '655.5px', paddingTop: '0px', paddingLeft: '0px', paddingRight: '0px', paddingBottom: '24px' }}>
+                    <div data-wf-el='rich-text-component' style={{ marginTop: '16px' }}>
                       <div data-wf-el='rich-text' className='font-sohne-buch' style={{ maxWidth: '820px' }}>
                         {/* Live FAQ answer P has margin: 0; the
                             previous mt-3 added 12px above each answer. */}
@@ -1170,7 +1178,7 @@ const Home = () => {
               * this Footer would render the entire marketing CTA block a
               * second time, inflating the section by ~163px and cascading
               * footer/page-height drift versus the live site. */}
-            <Footer compactNav showMarketingCta={false} showSocialLinks />
+            <Footer compactNav showMarketingCta={false} showSocialLinks showCopyright />
           </div>
         </div>
       </section>
