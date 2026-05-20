@@ -249,11 +249,11 @@ export const ProductComparisonTable = ({
             </colgroup>
             <thead>
               <tr data-wf-el='product-table_tr' className={classNames('border-b text-[20px] leading-[28px]', borderClass)} style={{ color: trColor }}>
-                <th data-wf-el='product-table_th' className='py-4 font-normal text-left' style={{ paddingRight: '0px', letterSpacing: 'normal', textTransform: 'none', color: thColor }}>Feature</th>
-                <th data-wf-el='product-table_th' className='py-4 text-center font-normal' style={{ paddingLeft: '0', paddingRight: '0', letterSpacing: 'normal', textTransform: 'none', color: thColor }}>OpenHands</th>
-                <th data-wf-el='product-table_th' className='py-4 text-center font-normal' style={{ paddingLeft: '0', paddingRight: '0', letterSpacing: 'normal', textTransform: 'none', color: thColor }}>Devin</th>
-                <th data-wf-el='product-table_th' className='py-4 text-center font-normal' style={{ paddingLeft: '0', paddingRight: '0', letterSpacing: 'normal', textTransform: 'none', color: thColor }}>Claude Code</th>
-                <th data-wf-el='product-table_th' className='py-4 text-center font-normal' style={{ paddingLeft: '0', paddingRight: '0', letterSpacing: 'normal', textTransform: 'none', color: thColor }}>Factory</th>
+                <th data-wf-el='product-table_th' className='py-4 font-normal text-left' style={{ paddingTop: '15.667px', paddingBottom: '15.667px', paddingRight: '0px', letterSpacing: 'normal', textTransform: 'none', color: thColor }}>Feature</th>
+                <th data-wf-el='product-table_th' className='py-4 text-center font-normal' style={{ paddingTop: '15.667px', paddingBottom: '15.667px', paddingLeft: '0', paddingRight: '0', letterSpacing: 'normal', textTransform: 'none', color: thColor }}>OpenHands</th>
+                <th data-wf-el='product-table_th' className='py-4 text-center font-normal' style={{ paddingTop: '15.667px', paddingBottom: '15.667px', paddingLeft: '0', paddingRight: '0', letterSpacing: 'normal', textTransform: 'none', color: thColor }}>Devin</th>
+                <th data-wf-el='product-table_th' className='py-4 text-center font-normal' style={{ paddingTop: '15.667px', paddingBottom: '15.667px', paddingLeft: '0', paddingRight: '0', letterSpacing: 'normal', textTransform: 'none', color: thColor }}>Claude Code</th>
+                <th data-wf-el='product-table_th' className='py-4 text-center font-normal' style={{ paddingTop: '15.667px', paddingBottom: '15.667px', paddingLeft: '0', paddingRight: '0', letterSpacing: 'normal', textTransform: 'none', color: thColor }}>Factory</th>
               </tr>
             </thead>
             <tbody>
@@ -291,6 +291,17 @@ export const ProductComparisonTable = ({
   );
 };
 
+
+const renderFaqQuestion = (question: string) => {
+  if (question === 'How does the OpenHands CLI improve developer productivity?') {
+    return 'How does the OpenHands CLI improve developer\u00a0productivity?';
+  }
+  if (question === 'Is the OpenHands CLI suitable for advanced engineering workflows?') {
+    return 'Is the OpenHands CLI suitable for advanced engineering\u00a0workflows?';
+  }
+  return question;
+};
+
 export const ProductFaqSection = ({ faqs }: { faqs: readonly ProductFaqItem[] }) => {
   return (
     <section data-wf-el='section' className='relative' style={{ display: 'block', backgroundColor: 'rgba(0, 0, 0, 0)', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px' }}>
@@ -306,7 +317,7 @@ export const ProductFaqSection = ({ faqs }: { faqs: readonly ProductFaqItem[] })
         </div>
         <div data-wf-el='standard-collection' className='border-brand-fg/15' style={{ borderStyle: 'none' }}>
           <div role='list' data-wf-el='standard-collection-list'>
-            {faqs.map((faq, idx) => (
+            {faqs.map((faq) => (
               <div role='listitem' key={faq.question} data-wf-el='standard-collection-list-item' style={{ display: 'block', justifyContent: 'space-between', alignItems: 'center', gap: '16px' }}>
                 <details
                   open

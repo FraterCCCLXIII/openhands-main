@@ -542,6 +542,7 @@ const FooterContent = ({
         </div>
       </div>
       </div>
+      </div>
 
       {/* Most local routes keep the copyright screen-reader-only, but routes
           whose live footer exposes the copyright can opt in with
