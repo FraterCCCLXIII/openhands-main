@@ -62,7 +62,7 @@ export const OverlayLinkButton = ({
       )}
       style={config.isWrap ? { ...baseStyle, ...wrapperStyle } : { ...baseStyle, borderRadius: 0, ...wrapperStyle }}
     >
-      <div data-wf-el={textWfEl} aria-hidden='true' className={textClassName} style={{ display: 'inline-flex', alignItems: 'center', gap: '6.4px', whiteSpace: 'nowrap', cursor: 'auto', textUnderlineOffset: 'auto', pointerEvents: 'none' }}>
+      <div data-wf-el={textWfEl} aria-hidden='true' className={textClassName} style={{ display: 'block', whiteSpace: 'nowrap', cursor: 'auto', textUnderlineOffset: 'auto', pointerEvents: 'none' }}>
         {iconSrc ? <img src={iconSrc} alt={iconAlt} style={{ width: '19px', height: '19px', objectFit: 'fill' }} /> : null}
         {label}
       </div>

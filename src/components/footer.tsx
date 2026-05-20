@@ -64,18 +64,18 @@ const FooterMarketingCta = ({
   // inside the footer section, so adding a custom key here would
   // register as a phantom 'extra-on-test' wf element that has no
   // corresponding live counterpart.
-  <div className='text-center' style={{ marginTop: '49px', marginBottom: '127px' }}>
+  <div className='text-center' style={{ marginTop: '49px', marginBottom: '0px' }}>
     <div style={{ width: '852px', maxWidth: '100%', marginLeft: 'auto', marginRight: 'auto', paddingLeft: '20px', paddingRight: '20px', boxSizing: 'border-box' }}>
       <div className='section-title max-w-[812px] tracking-[-0.02em] text-brand-fg' style={{ marginBottom: '22px' }}>
         {title}
       </div>
-      <p className='w-full max-w-[812px] fluid-body-lg font-medium text-brand-muted'>
+      <p data-wf-el='paragraph-lg' className='w-full fluid-body-lg font-medium text-brand-muted'>
         {description}
       </p>
       <div className='flex flex-wrap items-center justify-center gap-4' style={{ marginTop: '51px' }}>
-        <OverlayLinkButton href={primary.href} label={primary.label} variant='primary' />
+        <OverlayLinkButton href={primary.href} label={primary.label} variant='primary' wfEl='button' textWfEl='btn-text' />
         {secondary ? (
-          <OverlayLinkButton href={secondary.href} label={secondary.label} variant='outline' />
+          <OverlayLinkButton href={secondary.href} label={secondary.label} variant='outline' wfEl='button' textWfEl='btn-text' />
         ) : null}
       </div>
     </div>
@@ -143,7 +143,7 @@ const FooterContent = ({
         <div
           data-wf-el='footer-social-row'
           className='mb-12 flex justify-center'
-          style={{ marginLeft: '-20px', marginRight: '-20px', rowGap: '40px', textAlign: 'start' }}
+          style={{ marginTop: '128px', marginLeft: '-20px', marginRight: '-20px', rowGap: '40px', textAlign: 'start' }}
         >
           <div className='flex flex-wrap items-center justify-center gap-2'>
             {SOCIAL_LINKS.map((item) => (
@@ -318,15 +318,13 @@ const FooterContent = ({
         )}
       </div>
 
-      {/* Most local routes keep the copyright screen-reader-only, but the
-          live homepage renders the copyright eyebrow above Privacy Policy.
-          `showCopyright` opts the homepage into that visible markup. */}
+      {/* Most local routes keep the copyright screen-reader-only, but routes
+          whose live footer exposes the copyright can opt in with
+          `showCopyright`. */}
       <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: compactNav ? '62px' : '0px' }}>
         {showCopyright ? (
-          <div className='font-mono text-[14.08px] font-normal leading-[16.896px] text-brand-fg' style={{ display: 'flex', justifyContent: 'center', gap: '4px', textAlign: 'center', marginBottom: '8px' }}>
-            <span>©</span>
-            <span>{new Date().getFullYear()}</span>
-            <span>OpenHands - All rights reserved</span>
+          <div data-wf-el='eyebrow' className='font-mono text-[14px] font-normal leading-[16.896px]' style={{ textAlign: 'center', width: '812px', marginBottom: '21.12px' }}>
+            © <span>{new Date().getFullYear()}</span> OpenHands - All rights reserved
           </div>
         ) : (
           <span className='sr-only'>© {new Date().getFullYear()} OpenHands - All rights reserved</span>
@@ -352,8 +350,10 @@ const FooterContent = ({
       {/* Live's `.standard-media` has `margin-top: 0` — vertical
        * spacing above the big OpenHands wordmark comes from the
        * preceding row's bottom padding, not this wrapper's `mt-8`. */}
-      <div data-wf-el='standard-media' style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', textAlign: 'start', marginTop: '0px', marginLeft: 'auto', marginRight: 'auto', width: '610px', height: '102px', objectFit: 'contain' }}>
-        <img data-wf-el='standard-media-img' src='/assets/webflow/backgrounds/openhands_logo_black.svg' alt='' style={{ display: 'block', width: '610px', height: '102px', textAlign: 'start', objectFit: 'scale-down' }} />
+      <div style={{ display: 'flex', justifyContent: 'center' }}>
+        <div data-wf-el='standard-media' style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', textAlign: 'start', marginTop: '0px', marginLeft: '0px', marginRight: '0px', width: '610px', height: '102px', objectFit: 'contain' }}>
+          <img data-wf-el='standard-media-img' src='/assets/webflow/backgrounds/openhands_logo_black.svg' alt='' style={{ display: 'block', width: '610px', height: '102px', textAlign: 'start', objectFit: 'scale-down' }} />
+        </div>
       </div>
       {compactNav ? <div aria-hidden='true' style={{ height: '50px' }} /> : null}
     </div>
@@ -365,7 +365,7 @@ export const Footer = ({
   showSocialLinks = false,
   compactNav = false,
   navWidthClass,
-  minHeight,
+  minHeight: _minHeight,
   showMarketingCta = true,
   showCopyright = false,
   marketingCtaTitle,
@@ -400,7 +400,7 @@ export const Footer = ({
     <section
       data-wf-el='section'
       className='relative overflow-visible bg-brand-accent text-brand-fg'
-      style={{ padding: '80px 0px', minHeight: minHeight ? `${minHeight}px` : undefined }}
+      style={{ padding: '80px 0px' }}
     >
       <div data-wf-el='asci-wrap' className='absolute inset-0 overflow-hidden'>
         <img
@@ -413,7 +413,7 @@ export const Footer = ({
           style={{ display: 'inline-block', textAlign: 'start' }}
         />
       </div>
-      <div className='relative z-10 mx-auto max-w-[1238px]'>
+      <div data-wf-el='container' className='relative z-10 mx-auto max-w-[1238px]'>
         <FooterContent
           showSocialLinks={showSocialLinks}
           compactNav={compactNav}

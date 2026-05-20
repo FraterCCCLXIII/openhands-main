@@ -81,6 +81,15 @@ describe('Product parity routes', () => {
     expect(screen.getAllByText('Build agents your way.').length).toBeGreaterThan(0);
     expect(screen.getByText('Start with the SDK when you need custom agent behavior or internal platform integrations.')).toBeInTheDocument();
     expect(screen.getAllByRole('link', { name: 'Download Agent Canvas' }).length).toBeGreaterThan(0);
+    expect(container.querySelectorAll('[data-wf-el="asci-wrap"]')).toHaveLength(4);
+    expect(container.querySelectorAll('[data-wf-el="asci-media"]')).toHaveLength(3);
+    expect(container.querySelectorAll('tr[data-wf-el="product-table_tr"]')).toHaveLength(6);
+    expect(container.querySelectorAll('[data-wf-el="product-table_th"]')).toHaveLength(30);
+    expect(container.querySelectorAll('svg[data-wf-el="accordion-icon"] path').item(0)).toHaveAttribute(
+      'd',
+      'M17 17L27.3137 17L27.3137 15H17V4.68631L15 4.68631L15 15H4.68629L4.68629 17L15 17V27.3137H17V17Z',
+    );
+    expect(screen.getByText('OpenHands - All rights reserved', { exact: false })).toBeInTheDocument();
     const summaryLabel = container.querySelector('summary label');
     expect(summaryLabel).toBeInTheDocument();
     expect(summaryLabel).toHaveStyle({ fontSize: '24px' });

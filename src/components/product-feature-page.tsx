@@ -39,8 +39,10 @@ const AsciiBackdrop = ({ opacity = 'opacity-[0.12]' }: { opacity?: string }) => 
 );
 
 const ProductEyebrow = ({ label }: { label: string }) => (
-  <div data-wf-el='banner' className='rounded-[4px] bg-brand-accent font-medium text-brand-fg' style={{ display: 'block', fontSize: '16px', lineHeight: '22.4px', marginBottom: '24px', padding: '0', textAlign: 'center' }}>
-    <div data-wf-el='banner-wrap' style={{ fontSize: '16px', lineHeight: '22.4px', paddingTop: '12.8px', paddingBottom: '12.8px', paddingLeft: '32px', paddingRight: '32px', textAlign: 'center' }}>{label}</div>
+  <div className='mb-6'>
+    <div data-wf-el='banner' className='rounded-[4px] bg-brand-accent font-normal text-brand-fg' style={{ display: 'block', fontSize: '16px', lineHeight: '22.4px', marginBottom: '0px', padding: '0', textAlign: 'center' }}>
+      <div data-wf-el='banner-wrap' style={{ fontSize: '16px', fontWeight: 400, lineHeight: '22.4px', paddingTop: '12.8px', paddingBottom: '12.8px', paddingLeft: '32px', paddingRight: '32px', textAlign: 'center' }}>{label}</div>
+    </div>
   </div>
 );
 
@@ -60,13 +62,15 @@ export const ProductPageActionLink = ({
       variant={variant}
       className={className}
       wrapperStyle={wrapperStyle}
+      wfEl='button'
+      textWfEl='btn-text'
     />
   );
 };
 
 const renderTextWithBreaks = (text: string) =>
   text.split('\n').map((part, index) => (
-    <Fragment key={index}>{index > 0 ? <br /> : null}{part}</Fragment>
+    <Fragment key={`${part}-${index}`}>{index > 0 ? <br /> : null}{part}</Fragment>
   ));
 
 const ProductFeatureIntroBand = ({
@@ -74,26 +78,17 @@ const ProductFeatureIntroBand = ({
   description,
   image,
   wideDescription = false,
-  minHeightClass = 'min-h-[467px]',
 }: {
   title: string;
   description: string;
   image?: ProductFeaturePageData['heroImage'];
   wideDescription?: boolean;
-  minHeightClass?: string;
 }) => (
-  // Live /product/{cli,gui,sdk} renders this intro band as a plain
-  // `class="section"` sibling — NOT a second section-product_hero.
-  // Use the matching wf-el key so the per-section parity comparison
-  // does not see two section-product_hero blocks on test.
-  <section data-wf-el='section' className={classNames('relative', minHeightClass)} style={{ display: 'block', backgroundColor: 'rgba(0, 0, 0, 0)', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px' }}>
-    <div className='absolute inset-0 bg-brand-accent' aria-hidden='true' />
-    {/* Live's `.background-image` IMG always computes
-     * `position:static; display:inline-block` — the absolute layer is
-     * the wrapping div. Match that on both branches. */}
-    <div className='absolute inset-0'>
+  <section data-wf-el='section' className='relative' style={{ display: 'block', backgroundColor: 'rgba(0, 0, 0, 0)', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px' }}>
+    <div data-wf-el='asci-wrap' className='absolute inset-0 overflow-hidden bg-brand-accent' style={{ maxHeight: '2400px' }} aria-hidden='true'>
       {image ? (
         <img
+          data-wf-el='asci-media'
           src={image.src}
           alt={image.alt}
           className='h-full w-full object-cover'
@@ -103,13 +98,15 @@ const ProductFeatureIntroBand = ({
         <AsciiBackdrop opacity='opacity-[0.14]' />
       )}
     </div>
-    <div data-wf-el='heading-stack' className={classNames('relative mx-auto text-center', wideDescription ? 'max-w-[1238px]' : 'max-w-[978px]')} style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'center', paddingTop: '64px', paddingBottom: '64px' }}>
-      <h2 className='fluid-h3 text-brand-fg' style={{ textAlign: 'center' }}>
-        {title}
-      </h2>
-      <p className={classNames('fluid-body-lg text-[#5f5f5f]', wideDescription ? '' : 'max-w-[560px]')} style={{ marginTop: '10.4px', marginBottom: '20.8px', marginLeft: '0px', marginRight: '0px', ...(wideDescription ? { minHeight: '99.812px' } : {}) }}>
-        {renderTextWithBreaks(description)}
-      </p>
+    <div data-wf-el='container' className='mx-auto max-w-[1238px]'>
+      <div data-wf-el='heading-stack' className={classNames('relative text-center', wideDescription ? '' : '')} style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'center', paddingTop: '64px', paddingBottom: '64px', width: '100%' }}>
+        <h2 className='fluid-h3 text-brand-fg' style={{ textAlign: 'center' }}>
+          {title}
+        </h2>
+        <p data-wf-el='paragraph-lg' className={classNames('fluid-body-lg text-[#5f5f5f]', wideDescription ? '' : 'max-w-[560px]')} style={{ marginTop: '10.4px', marginBottom: '20.8px', marginLeft: '0px', marginRight: '0px', ...(wideDescription ? { minHeight: '99.812px' } : {}) }}>
+          {renderTextWithBreaks(description)}
+        </p>
+      </div>
     </div>
   </section>
 );
@@ -120,7 +117,6 @@ const ProductFeatureProofBand = ({
   image,
   headingClassName = 'text-white',
   wideDescription = false,
-  minHeightClass = 'min-h-[571px]',
   descriptionClassName,
 }: {
   title: string;
@@ -128,31 +124,27 @@ const ProductFeatureProofBand = ({
   image?: ProductFeaturePageData['accentImage'];
   headingClassName?: string;
   wideDescription?: boolean;
-  minHeightClass?: string;
   descriptionClassName?: string;
 }) => (
-  <section data-wf-el='section' className={classNames('relative', minHeightClass)} style={{ display: 'block', backgroundColor: 'rgba(0, 0, 0, 0)', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px' }}>
-    <div className='absolute inset-0 bg-brand-fg' aria-hidden='true' />
-    {/* Live's `.background-image` IMG computes `position: static;
-     * display: inline-block` regardless of whether the page provides
-     * its own image or falls back to the default ASCII hole. The
-     * absolute positioning lives on the WRAPPING DIV, not the IMG —
-     * mirror that on both branches. */}
-    <div className={image ? 'absolute inset-0' : 'absolute inset-0 opacity-[0.28]'}>
+  <section data-wf-el='section' className='relative' style={{ display: 'block', backgroundColor: 'rgba(0, 0, 0, 0)', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px' }}>
+    <div data-wf-el='asci-wrap' className={image ? 'absolute inset-0 overflow-hidden bg-brand-fg' : 'absolute inset-0 overflow-hidden bg-brand-fg opacity-[0.28]'} style={{ maxHeight: '2400px' }} aria-hidden='true'>
       <img
+        data-wf-el='asci-media'
         src={image ? image.src : '/assets/webflow/backgrounds/690b397ae76441160bed52b6_asci-art-hole.png'}
         alt={image ? image.alt : ''}
         className='h-full w-full object-cover'
         style={{ textAlign: 'start', position: 'static', display: 'inline-block' }}
       />
     </div>
-    <div data-wf-el='heading-stack' className={classNames('relative mx-auto text-center', headingClassName === 'text-white' ? 'text-white' : '', wideDescription ? 'max-w-[1238px]' : 'max-w-[978px]')} style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'center', paddingTop: '64px', paddingBottom: '64px' }}>
-      <h2 className={classNames('fluid-h3', headingClassName)}>
-        {title}
-      </h2>
-      <p className={classNames('fluid-body-lg', descriptionClassName ?? 'text-[#b3a88c]', wideDescription ? '' : 'max-w-[560px]')} style={{ marginTop: '10.4px', marginBottom: '20.8px', marginLeft: '0px', marginRight: '0px', ...(wideDescription ? { minHeight: '99.812px' } : {}) }}>
-        {renderTextWithBreaks(description)}
-      </p>
+    <div data-wf-el='container' className='mx-auto max-w-[1238px]'>
+      <div data-wf-el='heading-stack' className={classNames('relative text-center', headingClassName === 'text-white' ? 'text-white' : '')} style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'center', paddingTop: '64px', paddingBottom: '64px', width: '100%' }}>
+        <h2 className={classNames('fluid-h3', headingClassName)}>
+          {title}
+        </h2>
+        <p data-wf-el='paragraph-lg' className={classNames('fluid-body-lg', descriptionClassName ?? 'text-[#b3a88c]', wideDescription ? '' : 'max-w-[560px]')} style={{ marginTop: '10.4px', marginBottom: '20.8px', marginLeft: '0px', marginRight: '0px', ...(wideDescription ? { minHeight: '99.812px' } : {}) }}>
+          {renderTextWithBreaks(description)}
+        </p>
+      </div>
     </div>
   </section>
 );
@@ -186,13 +178,13 @@ const ProductGuiIntroSection = ({
 );
 
 const ProductList = ({ items }: { items: readonly string[] }) => (
-  <div data-wf-el='product-list_ul' style={{ borderStyle: 'none', textAlign: 'start', width: '571px', maxWidth: '100%', marginTop: '0px' }}>
+  <ul data-wf-el='product-list_ul' style={{ borderStyle: 'none', textAlign: 'start', width: '571px', marginTop: '0px', listStyleType: 'none', paddingLeft: '0px' }}>
     {items.map((item) => (
-      <div data-wf-el='product-list_element' key={item} className='py-4 text-[#5f5f5f] font-medium' style={{ fontSize: '20.8px', lineHeight: '24.96px', display: 'block', textAlign: 'start', minHeight: '57.953px', borderBottom: '1px solid rgba(34, 21, 13, 0.28)' }}>
+      <li data-wf-el='product-list_element' key={item} className='py-4 text-[#5f5f5f] font-medium' style={{ fontSize: '20.8px', lineHeight: '24.96px', display: 'list-item', textAlign: 'start', borderBottom: '1px solid rgba(34, 21, 13, 0.28)' }}>
         {item}
-      </div>
+      </li>
     ))}
-  </div>
+  </ul>
 );
 
 const ProductImageCard = ({
@@ -207,7 +199,7 @@ const ProductImageCard = ({
   const useLiveCliImageHeight = src.includes('699490d1d9729682e0daf0a5_cli') || className.includes('cli-how-height');
 
   return (
-    <div data-wf-el='product-list_img_wrap' className={classNames('rounded-[18px]', className)} style={{ backgroundColor: 'rgba(0,0,0,0)', borderWidth: '1px', borderStyle: 'solid', borderColor: 'rgb(179, 168, 140)', boxShadow: 'none', padding: '64px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+    <div data-wf-el='product-list_img_wrap' className={classNames('rounded-[18px]', className)} style={{ backgroundColor: 'rgba(0,0,0,0)', borderWidth: '1px', borderStyle: 'solid', borderColor: 'rgb(179, 168, 140)', boxShadow: 'none', padding: '64px', display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative', overflow: 'hidden', minHeight: '100%' }}>
       <img data-wf-el='product-list_img' src={src} alt={alt} className='img-block w-full' style={{ borderRadius: '0px', objectFit: 'scale-down', ...(useLiveCliImageHeight ? { height: '322.906px' } : {}) }} />
     </div>
   );
@@ -226,9 +218,8 @@ export const ProductComparisonTable = ({
   ctaLabel?: string;
   minHeight?: number;
 }) => {
-  const sectionClass = dark ? 'bg-brand-fg text-brand-bg' : 'bg-brand-bg text-brand-fg';
   const headingClass = dark ? 'text-brand-bg' : 'text-brand-fg';
-  const cellClass = dark ? 'font-sohne-buch text-[#b3a88c]' : 'font-sohne-buch text-[#5f5f5f]';
+  const cellClass = dark ? 'text-[#b3a88c]' : 'text-[#5f5f5f]';
   const borderClass = dark ? 'border-brand-bg/20' : 'border-brand-fg/12';
   const trColor = headerColor ?? (dark ? 'rgb(249, 240, 217)' : 'rgb(34, 21, 13)');
   // Live computed colors for product-table_th: rgb(34,21,13) on light bg,
@@ -237,15 +228,15 @@ export const ProductComparisonTable = ({
   const tickColor = headerColor ?? (dark ? 'rgb(179, 168, 140)' : 'rgb(138, 95, 69)');
 
   return (
-    <section data-wf-el='section' className={classNames('relative', dark ? 'text-brand-bg' : 'text-brand-fg')} style={{ display: 'block', backgroundColor: dark ? 'rgb(34, 21, 13)' : 'rgba(0, 0, 0, 0)', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px', ...(minHeight ? { minHeight: `${minHeight}px` } : {}) }}>
-      <div data-wf-el='container' className='relative mx-auto max-w-[1238px]' style={{ display: 'block', color: dark ? 'rgb(249, 240, 217)' : 'rgb(34, 21, 13)', zIndex: 1, marginTop: minHeight ? '128px' : '0px', marginBottom: minHeight ? '128px' : '0px' }}>
+    <section data-wf-el='section' className={classNames('relative', dark ? 'text-brand-bg' : 'text-brand-fg')} style={{ display: 'block', backgroundColor: dark ? 'rgb(34, 21, 13)' : 'rgba(0, 0, 0, 0)', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px' }}>
+      <div data-wf-el='container' className='mx-auto max-w-[1238px]' style={{ display: 'block', color: dark ? 'rgb(249, 240, 217)' : 'rgb(34, 21, 13)', zIndex: 1, marginTop: minHeight ? '128px' : '0px', marginBottom: minHeight ? '128px' : '0px' }}>
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginLeft: '-20px', marginRight: '-20px' }}>
           <div className={classNames('section-title max-w-[599px] text-center', headingClass)} style={{ marginBottom: '8.8px' }}>
             The only open, secure, and scalable agent platform built for real engineering work
           </div>
         </div>
-        <div data-wf-el='product-table' className='overflow-x-auto' style={{ display: 'block', position: 'relative', marginTop: '49.6px', width: '100%', color: dark ? 'rgb(249, 240, 217)' : 'rgb(34, 21, 13)' }}>
-          <table className='w-full border-collapse text-left'>
+        <div style={{ width: '100%', color: dark ? 'rgb(249, 240, 217)' : 'rgb(34, 21, 13)' }}>
+          <table data-wf-el='product-table' className='w-full border-collapse text-left' style={{ display: 'table', position: 'relative', overflow: 'visible', marginTop: '49.6px' }}>
             <colgroup>
               <col style={{ width: '407px' }} />
               <col style={{ width: '262px' }} />
@@ -264,10 +255,10 @@ export const ProductComparisonTable = ({
             </thead>
             <tbody>
               {PRODUCT_COMPARISON_ROWS.map((row) => (
-                <tr key={row.label} className={classNames('border-b last:border-b-0', borderClass)}>
-                  <td className={classNames('text-left text-[16px] font-medium', cellClass)} style={{ paddingTop: '17px', paddingBottom: '17px', paddingLeft: '0px', paddingRight: '0px' }}>{row.label}</td>
+                <tr key={row.label} data-wf-el='product-table_tr' className={classNames('border-b last:border-b-0 text-[20px] leading-[28px] font-normal', borderClass)} style={{ color: tickColor }}>
+                  <td data-wf-el='product-table_th' className={classNames('text-left font-normal', cellClass)} style={{ paddingTop: '16px', paddingBottom: '16px', paddingLeft: '0px', paddingRight: '0px', letterSpacing: 'normal', textTransform: 'none', color: tickColor }}>{row.label}</td>
                   {row.values.map((value, index) => (
-                    <td key={`${row.label}-${index}`} className='text-center' style={{ paddingTop: '17px', paddingBottom: '17px', paddingLeft: '0px', paddingRight: '0px' }}>
+                    <td data-wf-el='product-table_th' key={`${row.label}-${index}`} className='text-center font-normal' style={{ paddingTop: '16px', paddingBottom: '16px', paddingLeft: '0px', paddingRight: '0px', letterSpacing: 'normal', textTransform: 'none', color: tickColor }}>
                       {value ? (
                         <img data-wf-el='icon' src={TABLE_TICK_ICON} alt='' aria-hidden='true' className='mx-auto h-6 w-6' style={{ display: 'inline-flex', fontSize: '20px', lineHeight: '28px', color: tickColor }} />
                       ) : (
@@ -281,13 +272,15 @@ export const ProductComparisonTable = ({
           </table>
         </div>
         {ctaHref && ctaLabel ? (
-          <div className='text-center' style={{ marginTop: '49.6px' }}>
-            <ProductPageActionLink
-              href={ctaHref}
-              label={ctaLabel}
-              variant={dark ? 'lightbrown' : 'primary'}
-              wrapperStyle={{ marginBottom: '0px' }}
-            />
+          <div className='text-center' style={{ display: 'flex', justifyContent: 'center', marginTop: '49.6px' }}>
+            <div data-wf-el='standard-wrap' style={{ display: 'block', width: '125.969px', textAlign: 'start' }}>
+              <ProductPageActionLink
+                href={ctaHref}
+                label={ctaLabel}
+                variant={dark ? 'lightbrown' : 'primary'}
+                wrapperStyle={{ marginBottom: '0px' }}
+              />
+            </div>
           </div>
         ) : null}
       </div>
@@ -297,7 +290,7 @@ export const ProductComparisonTable = ({
 
 export const ProductFaqSection = ({ faqs }: { faqs: readonly ProductFaqItem[] }) => {
   return (
-    <section data-wf-el='section' style={{ display: 'block', backgroundColor: 'rgba(0, 0, 0, 0)', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px' }}>
+    <section data-wf-el='section' className='relative' style={{ display: 'block', backgroundColor: 'rgba(0, 0, 0, 0)', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px' }}>
       <div data-wf-el='container' className='mx-auto max-w-[1238px]' style={{ display: 'block', paddingTop: '0px', paddingBottom: '0px', gap: 'normal' }}>
         <div className='grid gap-10 lg:grid-cols-[492.5px_minmax(0,1fr)] lg:gap-10' style={{ alignItems: 'start' }}>
         <div style={{ width: '492.5px', maxWidth: '100%' }}>
@@ -313,21 +306,29 @@ export const ProductFaqSection = ({ faqs }: { faqs: readonly ProductFaqItem[] })
             {faqs.map((faq, idx) => (
               <div role='listitem' key={faq.question} data-wf-el='standard-collection-list-item' style={{ display: 'block', justifyContent: 'space-between', alignItems: 'center', gap: '16px' }}>
                 <details
+                  open
                   data-wf-el='accordion-item'
-                  /* Stamp `data-accordion-start-open` on every FAQ row to
-                     match live's mast accordion data attribute count (5×).
-                     The open/close interaction itself uses <details>/<summary>. */
                   data-accordion-start-open='false'
                   className='group'
                   style={{ borderRadius: '8px', borderWidth: '1px', borderStyle: 'solid', borderColor: 'rgb(249, 240, 217)', display: 'flex', flexDirection: 'column', padding: '0' }}
                 >
-                  <summary data-wf-el='accordion-trigger' className='flex cursor-pointer list-none items-center justify-between font-normal text-brand-fg' style={{ fontSize: '16px', lineHeight: '22.4px', padding: '24px', gap: 'normal', borderBottom: '1px solid rgb(249, 240, 217)' }}>
+                  <summary data-wf-el='accordion-trigger' className='flex cursor-pointer list-none items-center justify-between font-normal text-brand-fg' style={{ fontSize: '16px', lineHeight: '22.4px', padding: '24px', gap: 'normal', borderBottom: '1px solid rgb(249, 240, 217)', overflow: 'hidden' }}>
                     <label data-wf-el='accordion-title' className='block pointer-events-none cursor-default font-medium' style={{ paddingRight: '12px', fontSize: '24px', lineHeight: '33.6px' }}>{faq.question}</label>
-                    <div data-wf-el='accordion-icon' className='h-8 w-8 flex-shrink-0 overflow-hidden text-brand-fg transition-transform group-open:rotate-180' style={{ display: 'block' }} aria-hidden='true'>
-                      <svg width='32' height='32' viewBox='0 0 32 32' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M10 13l6 6 6-6' stroke='currentColor' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round'/></svg>
-                    </div>
+                    <svg data-wf-el='accordion-icon' className='h-8 w-8 flex-shrink-0 text-brand-fg' width='32' height='32' viewBox='0 0 32 32' fill='none' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' style={{ verticalAlign: 'baseline' }}>
+                      <path fillRule='evenodd' clipRule='evenodd' d='M17 17L27.3137 17L27.3137 15H17V4.68631L15 4.68631L15 15H4.68629L4.68629 17L15 17V27.3137H17V17Z' fill='currentColor' />
+                    </svg>
                   </summary>
-                  <div data-wf-el='accordion-content_spacer' style={{ color: 'rgb(34, 21, 13)', marginTop: '16px', marginLeft: '24px', marginRight: '24px', padding: '0px' }}><p className='font-sohne-buch text-[16px] leading-[22.4px]' style={{ color: 'rgb(95, 95, 95)' }}>{faq.answer}</p></div>
+                  <div style={{ paddingLeft: '24px', paddingRight: '24px' }}>
+                    <div data-wf-el='accordion-content_spacer' style={{ color: 'rgb(34, 21, 13)', marginTop: '0px', marginLeft: '0px', marginRight: '0px', padding: '0px 0px 24px' }}>
+                      <div data-wf-el='slot' style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                        <div data-wf-el='rich-text-component' style={{ marginTop: '16px' }}>
+                          <div data-wf-el='rich-text' className='font-sohne-buch' style={{ maxWidth: '820px', width: '100%' }}>
+                            <p className='font-sohne-buch text-[16px] leading-[22.4px]' style={{ color: 'rgb(95, 95, 95)', marginBottom: '0px' }}>{faq.answer}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </details>
               </div>
             ))}
@@ -376,28 +377,25 @@ export const ProductFeaturePage = ({
 }) => {
   const isGui = variant === 'gui';
   const isCli = variant === 'cli';
-  const isSdk = variant === 'sdk';
-  const proofBandMinHeight = isGui ? 'min-h-[420px]' : isSdk ? 'min-h-[407px]' : 'min-h-[467px]';
-  const capabilitiesMinHeight = isGui ? 1227 : isSdk ? 1188 : 1194;
   const heroHeight = isCli ? '432px' : isGui ? '407px' : '382px';
   return (
     <main data-wf-el='page-main' style={{ display: 'flex', flexDirection: 'column' }}>
       <section
         data-wf-el='section-product_hero'
-        className='relative'
         style={{ padding: '0', overflow: 'visible' }}
       >
-        <div data-wf-el='asci-wrap' className='pointer-events-auto absolute inset-x-0 top-0 h-screen overflow-hidden' style={{ '--ascii-opacity': '0.12' } as CSSProperties} aria-hidden='true'>
+        <div data-wf-el='asci-wrap' className='pointer-events-auto absolute inset-x-0 top-0 h-screen overflow-hidden' style={{ '--ascii-opacity': '0.12', maxHeight: '2400px' } as CSSProperties} aria-hidden='true'>
           <ASCIIAnimation className='h-full w-full' />
         </div>
-        <div data-wf-el='hero' className='relative flex w-full flex-col items-center' style={{ textAlign: 'start', justifyContent: 'flex-start', height: heroHeight, overflow: 'visible' }}>
-          <div className='mx-auto flex max-w-[860px] flex-col items-center' style={{ height: heroHeight, justifyContent: 'center', paddingTop: '56px', paddingBottom: '56px' }}>
+        <div data-wf-el='hero' className='relative flex w-full flex-col items-center' style={{ textAlign: 'start', justifyContent: 'flex-start', height: heroHeight, overflow: 'hidden' }}>
+          <div data-wf-el='container' className='mx-auto w-full max-w-[1238px]' style={{ display: 'block' }}>
+            <div data-wf-el='hero-content' className='flex flex-col items-center' style={{ position: 'relative', width: '100%', height: heroHeight, justifyContent: 'center', paddingTop: '56px', paddingBottom: '56px', textAlign: 'center' }}>
             <ProductEyebrow label={page.eyebrow} />
             <h1 className='fluid-h1 text-brand-fg' style={{ textAlign: 'center' }}>
               {page.heading}
             </h1>
-            <p data-wf-el='paragraph-lg' className='fluid-body-lg max-w-[560px] text-[#5f5f5f]' style={{ textAlign: 'center', marginTop: '10.4px', marginBottom: '20.8px' }}>{page.description}</p>
-            <div className='flex flex-wrap' style={{ paddingTop: '32px', gap: '8px 16px', textAlign: 'center' }}>
+              <p data-wf-el='paragraph-lg' className='fluid-body-lg max-w-[560px] text-[#5f5f5f]' style={{ textAlign: 'center', marginTop: '10.4px', marginBottom: '20.8px' }}>{page.description}</p>
+              <div data-wf-el='hero_btn_wrap' className='flex flex-wrap' style={{ maxWidth: '100%', paddingTop: '32px', gap: '8px 16px', textAlign: 'center' }}>
               <ProductPageActionLink
                 href={page.primaryCta.href}
                 label={page.primaryCta.label}
@@ -409,6 +407,7 @@ export const ProductFeaturePage = ({
               />
             </div>
           </div>
+        </div>
         </div>
       </section>
 
@@ -425,7 +424,6 @@ export const ProductFeaturePage = ({
             image={page.accentImage}
             headingClassName='text-brand-fg'
             descriptionClassName='text-[#5f5f5f]'
-            minHeightClass={proofBandMinHeight}
           />
         </>
       ) : (
@@ -435,23 +433,21 @@ export const ProductFeaturePage = ({
             description={page.introDescription}
             image={page.heroImage}
             wideDescription={isCli}
-            minHeightClass={isSdk ? 'min-h-[442px]' : undefined}
           />
           <ProductFeatureProofBand
             title={page.proofTitle}
             description={page.proofDescription}
             image={page.accentImage}
             wideDescription={isCli}
-            minHeightClass={proofBandMinHeight}
           />
         </>
       )}
 
-      <section data-wf-el='section' style={{ display: 'block', backgroundColor: 'rgb(249, 240, 217)', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px', minHeight: `${capabilitiesMinHeight}px` }}>
+      <section data-wf-el='section' className='relative' style={{ display: 'block', backgroundColor: 'rgb(249, 240, 217)', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px' }}>
         <div data-wf-el='container' className='mx-auto max-w-[1238px]' style={{ display: 'block' }}>
           <div className='grid gap-10 lg:grid-cols-2' style={{ marginBottom: '128px', alignItems: 'start', marginLeft: '-20px', marginRight: '-20px' }}>
-            <div data-wf-el='card' style={{ borderStyle: 'none' }}>
-              <div data-wf-el='card-body' style={{ padding: '24px' }}>
+            <div data-wf-el='card' style={{ borderStyle: 'none', borderRadius: '8px', position: 'relative', display: 'flex', overflow: 'hidden', flexDirection: 'column', justifyContent: 'flex-start' }}>
+              <div data-wf-el='card-body' style={{ padding: '24px', position: 'relative', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start' }}>
                 <h2 className='section-title text-brand-fg' style={{ textAlign: 'start' }}>
                   Key capabilities
                 </h2>
@@ -462,8 +458,8 @@ export const ProductFeaturePage = ({
           </div>
           <div className='grid gap-10 lg:grid-cols-2' style={{ alignItems: 'start', marginLeft: '-20px', marginRight: '-20px' }}>
             <ProductImageCard src={page.showcaseImages[1].src} alt={page.showcaseImages[1].alt} className={classNames('lg:translate-x-5', isCli && 'cli-how-height')} />
-            <div data-wf-el='card' style={{ borderStyle: 'none' }}>
-              <div data-wf-el='card-body' style={{ padding: '24px' }}>
+            <div data-wf-el='card' style={{ borderStyle: 'none', borderRadius: '8px', position: 'relative', display: 'flex', overflow: 'hidden', flexDirection: 'column', justifyContent: 'flex-start' }}>
+              <div data-wf-el='card-body' style={{ padding: '24px', position: 'relative', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start' }}>
                 <h2 className='section-title text-brand-fg' style={{ textAlign: 'start' }}>
                   How teams use it
                 </h2>
@@ -482,6 +478,7 @@ export const ProductFeaturePage = ({
         standalone
         showSocialLinks
         compactNav
+        showCopyright
         minHeight={1056}
         marketingCtaTitle={page.closingTitle}
         marketingCtaDescription={page.closingDescription}
