@@ -36,7 +36,7 @@ export const OverlayLinkButton = ({
   className,
   textClassName,
   wrapperStyle,
-  textStyle,
+  textStyle: customTextStyle,
   iconSrc,
   iconAlt = '',
   fullWidth = false,
@@ -48,7 +48,6 @@ export const OverlayLinkButton = ({
 }: OverlayLinkButtonProps) => {
   const isExternalLink = /^https?:\/\//.test(href);
   const config = VARIANT_CONFIG[variant];
-  const textDisplay = iconSrc ? 'inline-flex' : 'block';
 
   // Live's `.button-N` outer wrap has cursor:auto and a 10px
   // margin-bottom (Webflow's default form-control margin); inheriting
@@ -89,7 +88,7 @@ export const OverlayLinkButton = ({
       )}
       style={config.isWrap ? { ...baseStyle, ...wrapperStyle } : { ...baseStyle, borderRadius: 0, ...wrapperStyle }}
     >
-      <div data-wf-el={textWfEl} aria-hidden='true' className={textClassName} style={{ display: 'block', whiteSpace: 'nowrap', cursor: 'auto', textUnderlineOffset: 'auto', pointerEvents: 'none' }}>
+      <div data-wf-el={textWfEl} aria-hidden='true' className={textClassName} style={{ ...textStyle, ...customTextStyle }}>
         {iconSrc ? <img src={iconSrc} alt={iconAlt} style={{ width: '19px', height: '19px', objectFit: 'fill' }} /> : null}
         {label}
       </div>

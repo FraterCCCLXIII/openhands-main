@@ -322,270 +322,6 @@ const WebflowFooterContent = ({
   );
 };
 
-type FooterContentProps = Pick<
-  FooterProps,
-  | 'showSocialLinks'
-  | 'compactNav'
-  | 'navWidthClass'
-  | 'showMarketingCta'
-  | 'showCopyright'
-  | 'marketingCtaTitle'
-  | 'marketingCtaDescription'
-  | 'marketingCtaPrimary'
-  | 'marketingCtaSecondary'
-  | 'showCopyright'
->;
-
-const FooterContent = ({
-  showSocialLinks = false,
-  compactNav = false,
-  navWidthClass,
-  showMarketingCta = true,
-  showCopyright = false,
-  marketingCtaTitle,
-  marketingCtaDescription,
-  marketingCtaPrimary,
-  marketingCtaSecondary,
-  showCopyright = false,
-}: FooterContentProps) => {
-  const location = useLocation();
-  const pathname = normalizePathname(location.pathname);
-
-  return (
-    <div className='text-center text-brand-fg' style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      {showMarketingCta ? (
-        <FooterMarketingCta
-          title={marketingCtaTitle}
-          description={marketingCtaDescription}
-          primary={marketingCtaPrimary}
-          secondary={marketingCtaSecondary}
-          bottomMargin={showSocialLinks ? 0 : 127}
-        />
-      ) : null}
-      {showSocialLinks ? (
-        <div
-          data-wf-el='footer-social-row'
-          className='mb-12 flex justify-center'
-          style={{ marginTop: '128px', marginLeft: '-20px', marginRight: '-20px', rowGap: '40px', textAlign: 'start' }}
-        >
-          <div className='flex flex-wrap items-center justify-center gap-2'>
-            {SOCIAL_LINKS.map((item) => (
-              <a
-                key={item.label}
-                href={item.href}
-                {...('external' in item && item.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-                className='flex items-center justify-center'
-                style={{ width: '65px', height: '65px', maxWidth: '100%', textAlign: 'start', textDecoration: 'underline', textDecorationThickness: '1.6px', textUnderlineOffset: '1.6px', objectFit: 'contain' }}
-                data-wf-el='standard-media'
-                data-testid='footer-social-link'
-              >
-                <img data-wf-el='standard-media-img' src={item.icon} alt='' style={{ width: '65px', height: '65px', objectFit: 'scale-down', textUnderlineOffset: '1.6px' }} />
-              </a>
-            ))}
-          </div>
-        </div>
-      ) : null}
-
-      {/* Live's `.footer-nav` has `margin-bottom: 0` (the Tailwind `mb-8`
-       * was a leftover that pushed the social row 32px lower than live).
-       * Spacing between the nav and the social row comes from the row's
-       * own padding, not this wrapper. */}
-      {/* Live's footer chain is `.container` (1238) > `.row.row-justify-center`
-        * (1278, flex justify-center) > `.col.col-lg-8` (852, padding 0 20px)
-        * > `.footer-nav` (812, flex space-between).  We collapse those
-        * intermediate Webflow grid layers down to a single 812px-wide
-        * centered flex row so our nav-link inventory lines up with
-        * live's positions. */}
-      <div className='flex justify-center'>
-      <div data-wf-el='footer-nav' className='w-full' style={compactNav ? { display: 'flex', textAlign: 'start', paddingBottom: '16px', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid #b3a88c', width: '812px', maxWidth: 'none' } : { display: 'flex', justifyContent: 'center' }}>
-        {compactNav ? (
-          <div
-            data-wf-el='footer-nav'
-            className='flex w-[812px] items-start justify-between text-left'
-            style={{ textAlign: 'start', paddingBottom: '16px', borderBottom: '1px solid #b3a88c' }}
-          >
-            {FOOTER_NAV_ITEMS.map((item) => {
-              const isActive = normalizePathname(item.to) === pathname;
-              return (
-                <Link
-                  key={item.name}
-                  to={item.to}
-                  aria-current={isActive ? 'page' : undefined}
-                  data-wf-el='nav-link'
-                  className={clsx(
-                    'whitespace-nowrap px-[5px] py-[14.4px] text-base font-medium leading-[22.4px] link-hover hover:text-[#8a5f45]',
-                    isActive && 'text-[#8a5f45]'
-                  )}
-                  style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '4.8px' }}
-                >
-                  {item.name}
-                </Link>
-              );
-            })}
-
-            <div data-wf-el='footer-drop' id='footer-resources' className='flex flex-col items-start' style={{ justifyContent: 'flex-start' }}>
-              {/* Live tags the Resources trigger with .nav-link so that
-                * the footer's nav-link inventory has 7 entries (Home,
-                * Product, Enterprise, Pricing, About, Resources,
-                * Contact), matching what we render here. */}
-              <a
-                href='#footer-resources'
-                data-wf-el='nav-link'
-                className='px-[5px] text-base font-medium hover:text-[#8a5f45]'
-                style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '4.8px', lineHeight: '22.4px', textAlign: 'start', whiteSpace: 'nowrap', paddingTop: '14.5px', paddingBottom: '14.5px' }}
-              >
-                Resources
-              </a>
-              {FOOTER_RESOURCE_LINKS.map((item) =>
-                item.external ? (
-                  <a
-                    key={item.name}
-                    href={item.to}
-                    target='_blank'
-                    rel='noopener noreferrer'
-                    data-wf-el='footer-nav-link'
-                    className='px-[5px] font-sohne-buch text-[14px] font-normal leading-[19.6px] hover:text-[#8a5f45]'
-                  >
-                    {item.name}
-                  </a>
-                ) : (
-                  <Link
-                    key={item.name}
-                    to={item.to}
-                    data-wf-el='footer-nav-link'
-                    className='px-[5px] font-sohne-buch text-[14px] font-normal leading-[19.6px] hover:text-[#8a5f45]'
-                  >
-                    {item.name}
-                  </Link>
-                ),
-              )}
-            </div>
-
-            <Link
-              to='/contact'
-              aria-current={normalizePathname('/contact') === pathname ? 'page' : undefined}
-              data-wf-el='nav-link'
-              className={clsx(
-                'whitespace-nowrap px-[5px] py-[14.4px] text-base font-medium leading-[22.4px] link-hover hover:text-[#8a5f45]',
-                normalizePathname('/contact') === pathname && 'text-[#8a5f45]'
-              )}
-              style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '4.8px' }}
-            >
-              Contact
-            </Link>
-            </div>
-          ) : (
-            <div
-              className={clsx(
-                'flex w-full flex-wrap items-start justify-center gap-x-16 gap-y-3 text-sm leading-[20.8px]',
-                navWidthClass ?? 'max-w-[1060px]'
-              )}
-            >
-            {FOOTER_NAV_ITEMS.map((item) => (
-              <Link
-                key={item.name}
-                to={item.to}
-                data-wf-el='nav-link'
-                className={clsx(
-                  'whitespace-nowrap px-[5px] py-[14.4px] text-left text-base font-medium leading-[22.4px] link-hover hover:text-[#8a5f45]',
-                  ''
-                )}
-                style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '4.8px' }}
-              >
-                {item.name}
-              </Link>
-            ))}
-
-            <div data-wf-el='footer-drop' id='footer-resources' className='flex max-w-[220px] flex-wrap items-start gap-x-5 gap-y-2 text-left' style={{ justifyContent: 'flex-start' }}>
-              {/* Live tags Resources with .nav-link too. */}
-              <a href='#footer-resources' data-wf-el='nav-link' className='text-base font-medium hover:text-[#8a5f45]' style={{ display: 'block', fontFamily: '"Sohne Kraftig", Inter, Arial, sans-serif', lineHeight: '22.4px', textAlign: 'start', whiteSpace: 'nowrap', paddingTop: '14.5px', paddingBottom: '14.5px' }}>
-                Resources
-              </a>
-              {FOOTER_RESOURCE_LINKS.map((item) =>
-                item.external ? (
-                  <a
-                    key={item.name}
-                    href={item.to}
-                    target='_blank'
-                    rel='noopener noreferrer'
-                    data-wf-el='footer-nav-link'
-                    className='font-sohne-buch text-[14px] font-normal leading-[19.6px] hover:text-[#8a5f45]'
-                  >
-                    {item.name}
-                  </a>
-                ) : (
-                  <Link
-                    key={item.name}
-                    to={item.to}
-                    data-wf-el='footer-nav-link'
-                    className='font-sohne-buch text-[14px] font-normal leading-[19.6px] hover:text-[#8a5f45]'
-                  >
-                    {item.name}
-                  </Link>
-                ),
-              )}
-            </div>
-
-            <Link
-              to='/contact'
-              data-wf-el='nav-link'
-              className={clsx(
-                'whitespace-nowrap px-[5px] py-[14.4px] text-left text-base font-medium leading-[22.4px] link-hover hover:text-[#8a5f45]',
-                ''
-              )}
-              style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '4.8px' }}
-            >
-              Contact
-            </Link>
-          </div>
-        )}
-        </div>
-      </div>
-      </div>
-      </div>
-
-      {/* Most local routes keep the copyright screen-reader-only, but routes
-          whose live footer exposes the copyright can opt in with
-          `showCopyright`. */}
-      <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: compactNav ? '62px' : '0px' }}>
-        {showCopyright ? (
-          <div data-wf-el='eyebrow' className='font-mono text-[14px] font-normal leading-[16.896px]' style={{ textAlign: 'center', width: '812px', marginBottom: '21.12px' }}>
-            © <span>{new Date().getFullYear()}</span> OpenHands - All rights reserved
-          </div>
-        ) : (
-          <span className='sr-only'>© {new Date().getFullYear()} OpenHands - All rights reserved</span>
-        )}
-        <Link
-          to='/privacy'
-          data-wf-el='eyebrow'
-          className='font-mono text-[14.08px] font-normal leading-[16.896px] hover:text-[#8a5f45]'
-          style={{
-            textAlign: 'center',
-            textDecoration: 'none',
-            textUnderlineOffset: '1.408px',
-            alignSelf: 'center',
-            cursor: 'pointer',
-            marginBottom: '21.12px',
-            display: 'block',
-          }}
-        >
-          Privacy Policy
-        </Link>
-      </div>
-
-      {/* Live's `.standard-media` has `margin-top: 0` — vertical
-       * spacing above the big OpenHands wordmark comes from the
-       * preceding row's bottom padding, not this wrapper's `mt-8`. */}
-      <div style={{ display: 'flex', justifyContent: 'center' }}>
-        <div data-wf-el='standard-media' style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', textAlign: 'start', marginTop: '0px', marginLeft: '0px', marginRight: '0px', width: '610px', height: '102px', objectFit: 'contain' }}>
-          <img data-wf-el='standard-media-img' src='/assets/webflow/backgrounds/openhands_logo_black.svg' alt='' style={{ display: 'block', width: '610px', height: '102px', textAlign: 'start', objectFit: 'scale-down' }} />
-        </div>
-      </div>
-
-    </div>
-  );
-};
-
 export const Footer = ({
   standalone = false,
   showSocialLinks = false,
@@ -598,7 +334,6 @@ export const Footer = ({
   marketingCtaDescription,
   marketingCtaPrimary,
   marketingCtaSecondary,
-  showCopyright,
 }: FooterProps) => {
   const ctaProps = {
     showMarketingCta,
@@ -607,14 +342,11 @@ export const Footer = ({
     marketingCtaDescription,
     marketingCtaPrimary,
     marketingCtaSecondary,
-    showCopyright,
   };
   if (!standalone) {
     return (
-      <FooterContent
+      <WebflowFooterContent
         showSocialLinks={showSocialLinks}
-        compactNav={compactNav}
-        navWidthClass={navWidthClass}
         {...ctaProps}
       />
     );
@@ -642,7 +374,7 @@ export const Footer = ({
         />
       </div>
       <div data-wf-el='container' className='relative z-10 mx-auto max-w-[1238px]'>
-        <FooterContent
+        <WebflowFooterContent
           showSocialLinks={showSocialLinks}
           showCopyright={showCopyright}
           {...ctaProps}
