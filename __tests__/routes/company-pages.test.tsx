@@ -79,7 +79,7 @@ describe('company information pages parity', () => {
   });
 
   it('renders the synced newsroom cards using paragraph titles and text links', () => {
-    renderRoute(<Press />);
+    const { container } = renderRoute(<Press />);
 
     expect(screen.getByRole('heading', { name: 'In the news' })).toBeInTheDocument();
     expect(screen.getByText('Read how OpenHands is reshaping the future of AI-powered software development.')).toBeInTheDocument();
@@ -89,6 +89,9 @@ describe('company information pages parity', () => {
     expect(screen.getByText('All Hands AI Announces $5M to Advance Open-source AI Agents for Developers').tagName).toBe('P');
     expect(screen.getByText('All Hands AI raises $5M to build open source agents for developers').tagName).toBe('P');
     expect(screen.getAllByRole('link', { name: 'Read more' })).toHaveLength(4);
+    expect(container.querySelectorAll('[data-wf-el="standard-collection-list-item"]')).toHaveLength(4);
+    expect(container.querySelector('[data-wf-el="standard-collection-list"]')).toHaveAttribute('role', 'list');
+    expect(screen.getByText(/OpenHands - All rights reserved/).textContent).toContain(`${new Date().getFullYear()} OpenHands - All rights reserved`);
     expect(screen.queryByRole('heading', { name: 'OpenHands Raises $18.8M Series A to Bring Open-Source Cloud Coding Agents to Enterprises' })).not.toBeInTheDocument();
     expect(screen.queryByText('Media Kit')).not.toBeInTheDocument();
   });

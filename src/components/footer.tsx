@@ -470,14 +470,14 @@ const FooterContent = ({
             >
               Contact
             </Link>
-          </div>
-        ) : (
-          <div
-            className={clsx(
-              'flex w-full flex-wrap items-start justify-center gap-x-16 gap-y-3 text-sm leading-[20.8px]',
-              navWidthClass ?? 'max-w-[1060px]'
-            )}
-          >
+            </div>
+          ) : (
+            <div
+              className={clsx(
+                'flex w-full flex-wrap items-start justify-center gap-x-16 gap-y-3 text-sm leading-[20.8px]',
+                navWidthClass ?? 'max-w-[1060px]'
+              )}
+            >
             {FOOTER_NAV_ITEMS.map((item) => (
               <Link
                 key={item.name}
@@ -536,6 +536,7 @@ const FooterContent = ({
             </Link>
           </div>
         )}
+        </div>
       </div>
       </div>
 
