@@ -18,6 +18,13 @@ interface FooterProps {
   minHeight?: number;
   showCopyright?: boolean;
   /**
+   * Render the legacy Webflow footer grid/row structure used by the
+   * whitepaper page. Other routes keep the existing compact React layout
+   * because their live footer variants intentionally omit the copyright row.
+   */
+  webflowLayout?: boolean;
+  showCopyright?: boolean;
+  /**
    * When true (default), the footer renders the marketing CTA at
    * the top of the footer section, matching live's footer markup
    * which always nests the CTA inside `section.u-bg-primary` rather
@@ -102,6 +109,216 @@ const SOCIAL_LINKS = [
     external: true,
   },
 ] as const;
+
+const FOOTER_ROW_STYLE = {
+  display: 'flex',
+  flexWrap: 'wrap',
+  alignContent: 'stretch',
+  marginLeft: '-20px',
+  marginRight: '-20px',
+} as const;
+
+const FOOTER_COL_STYLE = {
+  display: 'flex',
+  flexDirection: 'column',
+  position: 'relative',
+  paddingLeft: '20px',
+  paddingRight: '20px',
+  flex: '1 1 0%',
+} as const;
+
+const FOOTER_COL_LG_8_STYLE = {
+  ...FOOTER_COL_STYLE,
+  flexBasis: '66.67%',
+  maxWidth: '66.6667%',
+} as const;
+
+const FOOTER_COL_SHRINK_STYLE = {
+  ...FOOTER_COL_STYLE,
+  flex: '0 0 auto',
+} as const;
+
+const FOOTER_COL_SHRINK_NO_PADDING_STYLE = {
+  display: 'flex',
+  flexDirection: 'column',
+  position: 'relative',
+  flex: '0 0 auto',
+} as const;
+
+
+const footerNavLinkStyle = {
+  display: 'flex',
+  justifyContent: 'center',
+  alignItems: 'center',
+  gap: '4.8px',
+  padding: '14.4px 5px',
+  fontSize: '16px',
+  fontWeight: 500,
+  lineHeight: '22.4px',
+  whiteSpace: 'nowrap',
+} as const;
+
+const footerResourceLinkStyle = {
+  paddingLeft: '5px',
+  paddingRight: '5px',
+  fontFamily: '"Sohne Buch", "Sohne Kraftig", Arial, sans-serif',
+  fontSize: '14px',
+  fontWeight: 400,
+  lineHeight: '19.6px',
+} as const;
+
+type WebflowFooterContentProps = Pick<
+  FooterProps,
+  | 'showSocialLinks'
+  | 'showMarketingCta'
+  | 'showCopyright'
+  | 'marketingCtaTitle'
+  | 'marketingCtaDescription'
+  | 'marketingCtaPrimary'
+  | 'marketingCtaSecondary'
+>;
+
+const WebflowFooterContent = ({
+  showSocialLinks = false,
+  showMarketingCta = true,
+  showCopyright = false,
+  marketingCtaTitle,
+  marketingCtaDescription,
+  marketingCtaPrimary,
+  marketingCtaSecondary,
+}: WebflowFooterContentProps) => {
+  const location = useLocation();
+  const pathname = normalizePathname(location.pathname);
+  const currentYear = new Date().getFullYear();
+
+  const renderTopLevelLink = (item: (typeof FOOTER_NAV_ITEMS)[number]) => {
+    const isActive = normalizePathname(item.to) === pathname;
+    return (
+      <Link
+        key={item.name}
+        to={item.to}
+        aria-current={isActive ? 'page' : undefined}
+        data-wf-el='nav-link'
+        className={clsx('nav-link link-hover hover:text-[#8a5f45]', isActive && 'text-[#8a5f45]')}
+        style={footerNavLinkStyle}
+      >
+        {item.name}
+      </Link>
+    );
+  };
+
+  return (
+    <div data-wf-el='container' className='container u-position-relative u-z-index-1' style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: '1238px', marginLeft: 'auto', marginRight: 'auto' }}>
+      {showMarketingCta ? (
+        <div className='row row-justify-center u-mt-md u-position-relative u-z-index-1' style={{ ...FOOTER_ROW_STYLE, justifyContent: 'center', position: 'relative', zIndex: 1, marginTop: '49px' }}>
+          <div className='col col-lg-8 col-sm-12' style={FOOTER_COL_LG_8_STYLE}>
+            <div className='h2 u-text-center u-mb-xs section-title text-brand-fg' style={{ textAlign: 'center', marginBottom: '22px', letterSpacing: '-0.02em' }}>
+              {marketingCtaTitle ?? DEFAULT_CTA_TITLE}
+            </div>
+            <p data-wf-el='paragraph-lg' className='u-m-0 u-text-darkgray u-text-center font-medium text-brand-muted' style={{ margin: '0px', textAlign: 'center', fontSize: '20.8px', lineHeight: '24.96px' }}>
+              {marketingCtaDescription ?? DEFAULT_CTA_DESCRIPTION}
+            </p>
+            <div className='row row-gap-button u-mt-md row-justify-center' style={{ ...FOOTER_ROW_STYLE, justifyContent: 'center', columnGap: '16px', rowGap: '16px', marginTop: '51px' }}>
+              <div className='col col-shrink' style={FOOTER_COL_SHRINK_NO_PADDING_STYLE}>
+                <OverlayLinkButton href={(marketingCtaPrimary ?? DEFAULT_CTA_PRIMARY).href} label={(marketingCtaPrimary ?? DEFAULT_CTA_PRIMARY).label} variant='primary' />
+              </div>
+              {marketingCtaSecondary !== null ? (
+                <div className='col col-shrink' style={FOOTER_COL_SHRINK_NO_PADDING_STYLE}>
+                  <OverlayLinkButton href={(marketingCtaSecondary ?? DEFAULT_CTA_SECONDARY).href} label={(marketingCtaSecondary ?? DEFAULT_CTA_SECONDARY).label} variant='outline' />
+                </div>
+              ) : null}
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {showSocialLinks ? (
+        <div data-wf-el='footer-social-row' className='row u-mt-lg row-justify-center u-mb-md' style={{ ...FOOTER_ROW_STYLE, justifyContent: 'center', marginTop: '128px', marginBottom: '49px', rowGap: '40px', textAlign: 'start' }}>
+          <div className='col' style={FOOTER_COL_STYLE}>
+            <div className='row row-gap-sm row-justify-center' style={{ ...FOOTER_ROW_STYLE, justifyContent: 'center', columnGap: '8px', rowGap: '16px' }}>
+              {SOCIAL_LINKS.map((item) => (
+                <div key={item.label} className='col col-shrink' style={FOOTER_COL_SHRINK_NO_PADDING_STYLE}>
+                  <a
+                    href={item.href}
+                    {...('external' in item && item.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                    className='standard-media contain-center w-inline-block'
+                    data-wf-el='standard-media'
+                    data-testid='footer-social-link'
+                    style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '65px', height: '65px', maxWidth: '100%', textAlign: 'start', textDecoration: 'underline', textDecorationThickness: '1.6px', textUnderlineOffset: '1.6px', objectFit: 'contain' }}
+                  >
+                    <img data-wf-el='standard-media-img' src={item.icon} alt='' style={{ width: '65px', height: '65px', objectFit: 'scale-down', textUnderlineOffset: '1.6px' }} />
+                  </a>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      <div className='row row-justify-center u-mb-sm' style={{ ...FOOTER_ROW_STYLE, justifyContent: 'center', marginBottom: '24px' }}>
+        <div className='col col-lg-8 col-md-12' style={FOOTER_COL_LG_8_STYLE}>
+          <div data-wf-el='footer-nav' className='footer-nav' style={{ display: 'flex', flexFlow: 'row nowrap', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%', paddingBottom: '16px', borderBottom: '1px solid #b3a88c' }}>
+            {FOOTER_NAV_ITEMS.map(renderTopLevelLink)}
+            <div data-wf-el='footer-drop' id='footer-resources' className='footer-drop' style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'flex-start' }}>
+              <a href='#footer-resources' data-wf-el='nav-link' className='nav-link hover:text-[#8a5f45]' style={footerNavLinkStyle}>
+                Resources
+              </a>
+              {FOOTER_RESOURCE_LINKS.map((item) =>
+                item.external ? (
+                  <a key={item.name} href={item.to} target='_blank' rel='noopener noreferrer' data-wf-el='footer-nav-link' className='footer-nav-link buch hover:text-[#8a5f45]' style={footerResourceLinkStyle}>
+                    {item.name}
+                  </a>
+                ) : (
+                  <Link key={item.name} to={item.to} data-wf-el='footer-nav-link' className='footer-nav-link buch hover:text-[#8a5f45]' style={footerResourceLinkStyle}>
+                    {item.name}
+                  </Link>
+                ),
+              )}
+            </div>
+            <Link
+              to='/contact'
+              aria-current={normalizePathname('/contact') === pathname ? 'page' : undefined}
+              data-wf-el='nav-link'
+              className={clsx('nav-link link-hover hover:text-[#8a5f45]', normalizePathname('/contact') === pathname && 'text-[#8a5f45]')}
+              style={footerNavLinkStyle}
+            >
+              Contact
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      <div className='row row-justify-center u-mb-md' style={{ ...FOOTER_ROW_STYLE, justifyContent: 'center', marginBottom: '40px' }}>
+        <div className='col col-lg-8' style={FOOTER_COL_LG_8_STYLE}>
+          {showCopyright ? (
+            <div data-wf-el='eyebrow' className='eyebrow u-text-center' style={{ textAlign: 'center', marginBottom: '21.12px', fontFamily: 'GeistMono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace', fontSize: '14px', fontWeight: 400, lineHeight: '16.896px' }}>
+              © <span data-year=' '>{currentYear}</span> OpenHands - All rights reserved
+            </div>
+          ) : (
+            <span className='sr-only'>© {currentYear} OpenHands - All rights reserved</span>
+          )}
+          <Link
+            to='/privacy'
+            data-wf-el='eyebrow'
+            className='eyebrow u-text-center is-link hover:text-[#8a5f45]'
+            style={{ alignSelf: 'center', display: 'block', textAlign: 'center', marginBottom: '21.12px', fontFamily: 'GeistMono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace', fontSize: '14px', fontWeight: 400, lineHeight: '16.896px', textDecoration: 'none', cursor: 'pointer' }}
+          >
+            Privacy Policy
+          </Link>
+        </div>
+        <div className='col col-lg-8' style={{ ...FOOTER_COL_LG_8_STYLE, marginTop: '40px' }}>
+          <div className='row row-gap-sm row-justify-center' style={{ ...FOOTER_ROW_STYLE, justifyContent: 'center', rowGap: '16px' }}>
+            <div className='col col-shrink' style={FOOTER_COL_SHRINK_STYLE}>
+              <div data-wf-el='standard-media' className='standard-media contain-center' style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', textAlign: 'start', width: '610px', height: '102px', objectFit: 'contain' }}>
+                <img data-wf-el='standard-media-img' src='/assets/webflow/backgrounds/openhands_logo_black.svg' alt='' style={{ display: 'block', width: '610px', height: '102px', textAlign: 'start', objectFit: 'scale-down' }} />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 type FooterContentProps = Pick<
   FooterProps,
@@ -423,8 +640,7 @@ export const Footer = ({
       <div data-wf-el='container' className='relative z-10 mx-auto max-w-[1238px]'>
         <FooterContent
           showSocialLinks={showSocialLinks}
-          compactNav={compactNav}
-          navWidthClass={navWidthClass}
+          showCopyright={showCopyright}
           {...ctaProps}
         />
       </div>

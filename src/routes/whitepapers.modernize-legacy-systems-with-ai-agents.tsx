@@ -161,31 +161,35 @@ export default function WhitepaperModernizeLegacySystemsWithAiAgents() {
   }, []);
 
   return (
-    <main style={{ display: 'flex', flexDirection: 'column', backgroundColor: 'rgba(0, 0, 0, 0)' }}>
-      <section data-wf-el='section' className='px-6 pb-16 pt-10 lg:px-10 lg:pb-[65px] lg:pt-20' style={{ minHeight: '968px', backgroundColor: 'rgb(249, 240, 217)', paddingLeft: '0px', paddingRight: '0px' }}>
-        <div className='mx-auto max-w-[1238px]'>
-          <div className='mx-auto max-w-[920px] text-center'>
-            <h1 className='fluid-h1 text-brand-fg' style={{ width: '834px', maxWidth: '834px', position: 'relative', left: '43px', marginBottom: '8.8px', letterSpacing: '-0.02em' }}>
+    <main data-wf-el='page-main' className='page-main' style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 84px)', backgroundColor: 'rgba(0, 0, 0, 0)' }}>
+      <section data-wf-el='section' className='section cc-themed' style={{ position: 'relative', padding: '80px 0px', backgroundColor: 'rgb(249, 240, 217)' }}>
+        <div data-wf-el='container' className='container' style={{ width: '100%', maxWidth: '1238px', marginLeft: 'auto', marginRight: 'auto' }}>
+          <div
+            data-wf-el='whitepaper_heading-stack'
+            className='whitepaper_heading-stack heading-stack is-center'
+            style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', marginBottom: '32px', textAlign: 'center' }}
+          >
+            <h1 data-wf-el='whitepaper_heading' className='whitepaper_heading h2 fluid-h1 text-brand-fg' style={{ width: '834px', maxWidth: '834px', marginBottom: '8.8px', letterSpacing: '-0.02em', textAlign: 'center' }}>
               Whitepaper: Modernize legacy systems before your expertise disappears
             </h1>
-            <p className='fluid-body-lg font-medium text-[#5f5f5f]' style={{ width: '657px', maxWidth: '657px', transform: 'translateX(131.5px)', marginTop: '0px', marginBottom: '20.8px' }}>
+            <p data-wf-el='whitepaper_paragraph' className='whitepaper_paragraph u-text-darkgray font-medium text-[#5f5f5f]' style={{ width: '657px', maxWidth: '657px', marginTop: '0px', marginBottom: '20.8px', fontSize: '20.8px', lineHeight: '24.96px', textAlign: 'center' }}>
               Legacy modernization projects fail 74% of the time and the engineers who understand your COBOL, mainframe, and legacy systems are retiring faster than you can replace them.
             </p>
           </div>
 
-          <div className='mt-[53px] grid gap-12 lg:grid-cols-[526px_603px] lg:items-start lg:gap-[109px]'>
-            <div>
+          <div data-wf-el='whitepaper_layout' className='whitepaper_layout' style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px' }}>
+            <div data-wf-el='whitepaper_content' className='whitepaper_content' style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'flex-start', gap: '24px', maxWidth: '52ch' }}>
               <p className='text-[16px] leading-[22.4px] text-brand-fg' style={{ marginBottom: '16px' }}>
                 The Large Codebase SDK from OpenHands fills that gap. By combining AI coding agents with static analysis, it maps the full dependency structure of your codebase and orchestrates migration work in the right order so agents can run in parallel without producing conflicting changes, making enterprise-scale refactors practical for the first time. Model-agnostic and deployable on-prem or in the cloud, it&apos;s built for organizations where data sensitivity and regulatory compliance aren&apos;t optional.
               </p>
 
-              <div className='mt-10'>
-                <h3 className='max-w-[502px] fluid-body-lg font-medium text-brand-fg' style={{ marginBottom: '20.8px' }}>
+              <div data-wf-el='whitepaper_list_wrap' className='whitepaper_list_wrap'>
+                <h3 data-wf-el='whitepaper_list_heading' className='whitepaper_list_heading font-medium text-brand-fg' style={{ marginBottom: '20.8px', fontSize: '20.8px', lineHeight: '24.96px' }}>
                   What you&apos;ll learn in the whitepaper:
                 </h3>
-                <ul style={{ marginTop: '0px' }}>
+                <ul data-wf-el='product-list_ul' className='product-list_ul' style={{ width: '100%', margin: '0px', paddingLeft: '0px' }}>
                   {WHITEPAPER_LEARNINGS.map((item) => (
-                    <li key={item} className='min-h-[55px] list-none text-[16px] leading-[22.4px] text-[#5f5f5f]' style={{ borderBottom: '1px solid rgba(95, 95, 95, 0.5)' }}>
+                    <li key={item} data-wf-el='product-list_element' className='product-list_element u-text-darkgray u-mb-0 list-none text-[16px] leading-[22.4px] text-[#5f5f5f]' style={{ paddingTop: '16px', paddingBottom: '16px', borderBottom: '1px solid rgba(95, 95, 95, 0.5)' }}>
                       {item}
                     </li>
                   ))}
@@ -193,35 +197,40 @@ export default function WhitepaperModernizeLegacySystemsWithAiAgents() {
               </div>
             </div>
 
-            <div className='min-h-[573px] rounded-[8px] border border-brand-fg p-6'>
-              {isDownloadReady ? (
-                <div role='status' className='whitepaper-link'>
-                  <h3 className='fluid-h3 text-brand-fg'>Download the Whitepaper</h3>
-                  <div className='mt-6 inline-flex rounded-[8px] bg-brand-fg px-5 py-3 text-[16px] font-medium leading-[20.8px] text-brand-bg'>
-                    <a
-                      href={WHITEPAPER_PDF_URL}
-                      target='_blank'
-                      rel='noopener noreferrer'
-                      className='text-brand-bg'
-                    >
-                      Download now
-                    </a>
+            <div data-wf-el='card' className='card u-border-dark' style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', alignSelf: 'start', position: 'relative', overflow: 'hidden', border: '1px solid rgb(34, 21, 13)', borderRadius: '8px' }}>
+              <div data-wf-el='card-body' className='card-body' style={{ position: 'relative', padding: '24px', flex: '1 1 0%', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start' }}>
+                {isDownloadReady ? (
+                  <div role='status' className='whitepaper-link' style={{ textAlign: 'center', paddingTop: '16px', paddingBottom: '16px' }}>
+                    <h3 className='fluid-h3 text-brand-fg'>Download the Whitepaper</h3>
+                    <div className='mt-6 inline-flex rounded-[8px] bg-brand-fg px-5 py-3 text-[16px] font-medium leading-[20.8px] text-brand-bg'>
+                      <a
+                        href={WHITEPAPER_PDF_URL}
+                        target='_blank'
+                        rel='noopener noreferrer'
+                        className='text-brand-bg'
+                      >
+                        Download now
+                      </a>
+                    </div>
                   </div>
-                </div>
-              ) : (
-                <>
-                  <h2 className='fluid-h4 text-brand-fg'>
-                    Download the whitepaper to learn how it works and to apply for our Q2 2026 Proof-of-Concept program.
-                  </h2>
+                ) : (
+                  <>
+                    <h2 data-form='heading' className='h4 fluid-h4 text-brand-fg' style={{ marginBottom: '9.6px' }}>
+                      <span style={{ display: 'block', width: '475px', maxWidth: '100%' }}>
+                        Download the whitepaper to learn how it works and to apply for our Q2 2026 Proof-of-Concept program.
+                      </span>
+                    </h2>
 
-                  <iframe
-                    title='Download whitepaper form'
-                    srcDoc={HUBSPOT_FORM_FRAME_SRC_DOC}
-                    sandbox='allow-forms allow-scripts'
-                    className='h-[413px] w-full border-0' style={{ marginTop: '33px' }}
-                  />
-                </>
-              )}
+                    <iframe
+                      title='Download whitepaper form'
+                      srcDoc={HUBSPOT_FORM_FRAME_SRC_DOC}
+                      sandbox='allow-forms allow-scripts'
+                      className='border-0'
+                      style={{ display: 'inline', width: '100%', height: '413px', margin: '0px' }}
+                    />
+                  </>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -231,7 +240,8 @@ export default function WhitepaperModernizeLegacySystemsWithAiAgents() {
         standalone
         showSocialLinks
         compactNav
-        minHeight={1136}
+        webflowLayout
+        showCopyright
         marketingCtaTitle='Bring your team into the loop.'
         marketingCtaDescription='Use the OpenHands Web GUI to collaborate with agents.'
         marketingCtaPrimary={{ label: 'Try it live', href: 'https://app.all-hands.dev/' }}

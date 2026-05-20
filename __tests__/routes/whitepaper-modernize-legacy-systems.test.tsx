@@ -33,8 +33,12 @@ describe('modernize legacy systems whitepaper route', () => {
     ).toHaveClass('fluid-h4');
     expect(screen.getByTitle('Download whitepaper form')).toBeInTheDocument();
     expect(container.querySelector('form, input, select, button')).not.toBeInTheDocument();
+    expect(container.querySelector('[data-wf-el="whitepaper_layout"]')).toBeInTheDocument();
+    expect(container.querySelector('[data-wf-el="card-body"]')).toBeInTheDocument();
     expect(screen.getByText(/Bring your team into the loop/i)).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: /Bring your team into the loop/i })).not.toBeInTheDocument();
+    expect(screen.getByText(/OpenHands - All rights reserved/i)).toBeVisible();
+    expect(container.querySelectorAll('[data-wf-el="eyebrow"]')).toHaveLength(2);
   });
 
   it('reveals the direct download CTA after the embedded form reports success', async () => {
