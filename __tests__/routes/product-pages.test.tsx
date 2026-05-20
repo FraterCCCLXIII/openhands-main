@@ -4,29 +4,34 @@ import { MemoryRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
 import { PRODUCT_OG_IMAGE } from '../../src/data/product-feature-pages';
 import Product, { meta as productMeta } from '../../src/routes/product';
+import ProductAgentCanvas, { meta as productAgentCanvasMeta } from '../../src/routes/product-agent-canvas';
 import ProductCLI, { meta as productCliMeta } from '../../src/routes/product-cli';
-import ProductGUI, { meta as productGuiMeta } from '../../src/routes/product-gui';
 import ProductSDK, { meta as productSdkMeta } from '../../src/routes/product-sdk';
+
+const AGENT_CANVAS_DOWNLOAD_URL = 'https://github.com/OpenHands/OpenHands/releases';
+const OPENHANDS_DOCS_URL = 'https://docs.openhands.dev/overview/introduction';
+const AGENT_CANVAS_CONNECTION_GUIDE_URL = 'https://docs.openhands.dev/openhands/usage/run-openhands/acp';
+const OPENHANDS_AUTOMATIONS_GUIDE_URL = 'https://docs.openhands.dev/openhands/usage/automations/overview#automations-overview';
 
 const renderRoute = (element: ReactElement) => {
   return render(<MemoryRouter>{element}</MemoryRouter>);
 };
 
 describe('Product parity routes', () => {
-  it('matches the live product page structure and links', () => {
+  it('matches the refreshed product overview structure and links', () => {
     renderRoute(<Product />);
 
     expect(
-      screen.getByRole('heading', { name: 'Build better software with autonomous cloud agent' })
+      screen.getByRole('heading', { name: 'From a single local agent to an org-wide control plane.' })
     ).toBeInTheDocument();
     expect(
       screen.getByText(
         'The only open, secure, and scalable agent platform built for real engineering work'
       )
     ).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Join Slack' })).toHaveAttribute(
+    expect(screen.getAllByRole('link', { name: 'Download Agent Canvas' })[0]).toHaveAttribute(
       'href',
-      'https://app.all-hands.dev/',
+      AGENT_CANVAS_DOWNLOAD_URL,
     );
     expect(
       screen.getByText('Building the open standard for autonomous software development.')
@@ -40,20 +45,19 @@ describe('Product parity routes', () => {
     const docLinks = screen.getAllByRole('link', { name: 'See developer docs' });
     expect(docLinks.length).toBeGreaterThan(0);
     docLinks.forEach((link) => {
-      expect(link).toHaveAttribute('href', 'https://docs.openhands.dev/overview/introduction');
+      expect(link).toHaveAttribute('href', OPENHANDS_DOCS_URL);
     });
 
-    expect(screen.getByRole('heading', { name: 'Terminal / CLI' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Web GUI' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Agent Canvas' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Automations' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'OpenHands Cloud' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'SDK' })).toBeInTheDocument();
-    expect(screen.queryByAltText('Terminal / CLI')).not.toBeInTheDocument();
-    expect(screen.queryByAltText('Web GUI')).not.toBeInTheDocument();
-    expect(screen.queryByAltText('SDK')).not.toBeInTheDocument();
 
     const learnMoreLinks = screen.getAllByRole('link', { name: /learn more/i });
     expect(learnMoreLinks.map((link) => link.getAttribute('href'))).toEqual([
-      '/product/cli',
-      '/product/gui',
+      '/product/agent-canvas',
+      OPENHANDS_AUTOMATIONS_GUIDE_URL,
+      'https://app.all-hands.dev/',
       '/product/sdk',
     ]);
 
@@ -66,37 +70,40 @@ describe('Product parity routes', () => {
     expect(
       screen.getByRole('heading', { name: 'Build agents your way.' })
     ).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Join Slack' })).toHaveAttribute(
+    expect(screen.getAllByRole('link', { name: 'Get Started' })[0]).toHaveAttribute(
       'href',
-      'https://docs.openhands.dev/sdk',
+      'https://docs.openhands.dev/sdk/getting-started',
     );
-    expect(screen.getByText('Programmatic task creation')).toBeInTheDocument();
+    expect(screen.getByText('Unified Python API')).toBeInTheDocument();
     expect(screen.getByAltText('asci art')).toBeInTheDocument();
     expect(screen.queryByAltText('OpenHands SDK interface preview.')).not.toBeInTheDocument();
     expect(screen.queryByAltText('OpenHands comparison illustration.')).not.toBeInTheDocument();
-    expect(screen.getByText('Turn OpenHands into your agent platform.')).toBeInTheDocument();
-    expect(screen.getByText('Start building with the SDK.')).toBeInTheDocument();
-    expect(screen.getAllByRole('link', { name: 'Try it live' }).length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Build agents your way.').length).toBeGreaterThan(0);
+    expect(screen.getByText('Start with the SDK when you need custom agent behavior or internal platform integrations.')).toBeInTheDocument();
+    expect(screen.getAllByRole('link', { name: 'Download Agent Canvas' }).length).toBeGreaterThan(0);
     const summaryLabel = container.querySelector('summary label');
     expect(summaryLabel).toBeInTheDocument();
     expect(summaryLabel).toHaveStyle({ fontSize: '24px' });
   });
 
-  it('renders the Web GUI product page content', () => {
-    renderRoute(<ProductGUI />);
+  it('renders the Agent Canvas product page content', () => {
+    renderRoute(<ProductAgentCanvas />);
 
     expect(
-      screen.getByRole('heading', { name: 'Agentic development, made human.' })
+      screen.getByRole('heading', { name: 'Run agents. Not sessions.' })
     ).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Join Slack' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'Download for free' })).toHaveAttribute(
       'href',
-      'https://app.all-hands.dev/',
+      AGENT_CANVAS_DOWNLOAD_URL,
     );
-    expect(screen.getAllByText('Download Local GUI').length).toBeGreaterThan(0);
-    expect(screen.getByText('Trust requires visibility.')).toBeInTheDocument();
-    expect(screen.getByText('Bring your team into the loop.')).toBeInTheDocument();
-    expect(screen.getByText('Use the OpenHands Web GUI to collaborate with agents.')).toBeInTheDocument();
-    expect(screen.getAllByRole('link', { name: 'Try it live' }).length).toBeGreaterThan(1);
+    expect(screen.getAllByRole('link', { name: 'Read docs' })[0]).toHaveAttribute(
+      'href',
+      AGENT_CANVAS_CONNECTION_GUIDE_URL,
+    );
+    expect(screen.getByText("One session isn't a system.")).toBeInTheDocument();
+    expect(screen.getByText("Your agents should work when you don't.")).toBeInTheDocument();
+    expect(screen.getByText('Download Agent Canvas and go from single-session prompts to a fleet of always-on agents. Free, open source, no Docker.')).toBeInTheDocument();
+    expect(screen.getAllByRole('link', { name: 'Download Agent Canvas' }).length).toBeGreaterThan(1);
     expect(screen.queryByAltText('OpenHands Web GUI review interface.')).not.toBeInTheDocument();
     expect(screen.queryByAltText('OpenHands Web GUI planning interface.')).not.toBeInTheDocument();
   });
@@ -105,26 +112,26 @@ describe('Product parity routes', () => {
     const { container } = renderRoute(<ProductCLI />);
 
     expect(
-      screen.getByRole('heading', { name: 'Agentic power from the command line.' })
+      screen.getByRole('heading', { name: 'The CLI is still here. Agent Canvas is where agents scale.' })
     ).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Join Slack' })).toHaveAttribute(
+    expect(screen.getAllByRole('link', { name: 'Download Agent Canvas' })[0]).toHaveAttribute(
       'href',
-      'https://docs.openhands.dev/openhands/usage/cli/installation',
+      AGENT_CANVAS_DOWNLOAD_URL,
     );
     expect(
-      screen.getByText('Headless mode for CI/CD and background tasks')
+      screen.getByText('Upgrade path to Agent Canvas for visual orchestration')
     ).toBeInTheDocument();
     expect(screen.getByAltText('asci art')).toBeInTheDocument();
     expect(screen.queryByAltText('OpenHands CLI interface screenshot.')).not.toBeInTheDocument();
     expect(screen.queryByAltText('OpenHands comparison illustration.')).not.toBeInTheDocument();
     expect(container.querySelectorAll('summary label')).toHaveLength(5);
     expect(container.querySelector('summary label')).toHaveStyle({ fontSize: '24px' });
-    expect(screen.getByText('Control your agents like real infrastructure.')).toBeInTheDocument();
-    expect(screen.getByText('Run OpenHands from the terminal or automate it end to end with the CLI.')).toBeInTheDocument();
-    expect(screen.getAllByRole('link', { name: 'Try it live' }).length).toBeGreaterThan(0);
+    expect(screen.getByText('Ready for more than one session?')).toBeInTheDocument();
+    expect(screen.getByText('Download Agent Canvas for the local workspace, parallel agents, and built-in automations. Keep the CLI docs nearby for terminal workflows.')).toBeInTheDocument();
+    expect(screen.getAllByRole('link', { name: 'View CLI Docs' }).length).toBeGreaterThan(0);
   });
 
-  it('locks live product detail CTA, proof heading, and FAQ typography parity', () => {
+  it('locks refreshed product detail CTA, proof heading, and FAQ typography parity', () => {
     const detailPages: Array<{
       element: ReactElement;
       proofHeading: string;
@@ -134,23 +141,23 @@ describe('Product parity routes', () => {
     }> = [
       {
         element: <ProductSDK />,
-        proofHeading: 'Solve real edge cases.',
+        proofHeading: 'Bring your tools, models, and workflows.',
         proofHeadingClass: 'text-white',
-        closingDescription: 'Start building with the SDK.',
+        closingDescription: 'Start with the SDK when you need custom agent behavior or internal platform integrations.',
         forbiddenImageAlt: /sdk interface preview|comparison illustration/i,
       },
       {
-        element: <ProductGUI />,
-        proofHeading: 'Trust requires visibility.',
+        element: <ProductAgentCanvas />,
+        proofHeading: "One session isn't a system.",
         proofHeadingClass: 'text-brand-fg',
-        closingDescription: 'Use the OpenHands Web GUI to collaborate with agents.',
+        closingDescription: 'Download Agent Canvas and go from single-session prompts to a fleet of always-on agents. Free, open source, no Docker.',
         forbiddenImageAlt: /web gui screenshot|web gui review interface|web gui planning interface/i,
       },
       {
         element: <ProductCLI />,
-        proofHeading: 'Real autonomy needs observability and repeatability.',
+        proofHeading: 'Keep the terminal. Add the system layer.',
         proofHeadingClass: 'text-white',
-        closingDescription: 'Run OpenHands from the terminal or automate it end to end with the CLI.',
+        closingDescription: 'Download Agent Canvas for the local workspace, parallel agents, and built-in automations. Keep the CLI docs nearby for terminal workflows.',
         forbiddenImageAlt: /cli interface screenshot|comparison illustration/i,
       },
     ];
@@ -192,32 +199,34 @@ describe('Product parity routes', () => {
     ]);
   };
 
-  it('matches live product metadata for the root route', () => {
+  it('matches refreshed product metadata for the root route', () => {
     expectSocialMetadata(productMeta({ location: { pathname: '/product' } } as never), {
-      title: 'OpenHands Product | Autonomous Cloud Coding Agents',
+      title: 'OpenHands Product | Agent Canvas, Automations, Cloud, and SDK',
       description:
-        'Explore how OpenHands revolutionizes software development with secure, model-agnostic cloud coding agents. Delegate, execute, and review code autonomously.',
+        'Explore the OpenHands platform: Agent Canvas for local parallel agents, Automations for always-on workflows, Cloud for scale, and the SDK for custom agent builders.',
       pathname: '/product',
     });
   });
 
-  it('matches live metadata for the dedicated product pages', () => {
+  it('matches refreshed metadata for the dedicated product pages', () => {
     expectSocialMetadata(productSdkMeta({} as never), {
-      title: 'OpenHands SDK | Secure, Scalable Agentic Software Development',
-      description: 'Extend OpenHands with code, not constraints.',
+      title: 'OpenHands SDK | Build agents your way',
+      description:
+        'Use the OpenHands SDK to build custom agents, internal tooling, and production agent services on top of the same open foundation that powers Agent Canvas.',
       pathname: '/product/sdk',
     });
 
-    expectSocialMetadata(productGuiMeta({} as never), {
-      title: 'OpenHands Web GUI | Secure, Scalable Agentic Software Development',
-      description: 'Plan, run, and review agent work together in a collaborative UI.',
-      pathname: '/product/gui',
+    expectSocialMetadata(productAgentCanvasMeta({} as never), {
+      title: 'OpenHands Agent Canvas | Run agents, not sessions',
+      description:
+        'Download Agent Canvas, the local visual workspace for running AI coding agents in parallel, connecting ACP-compatible agents, and creating automations.',
+      pathname: '/product/agent-canvas',
     });
 
     expectSocialMetadata(productCliMeta({} as never), {
-      title: 'OpenHands CLI | Secure, Scalable Agentic Software Development',
+      title: 'OpenHands CLI | Terminal access for OpenHands agents',
       description:
-        'Run, inspect, and automate OpenHands agents directly from the terminal or headlessly in your pipelines with full visibility and control.',
+        'The OpenHands CLI remains available for terminal-first workflows, while Agent Canvas is the recommended path for parallel sessions, automations, and always-on agents.',
       pathname: '/product/cli',
     });
   });

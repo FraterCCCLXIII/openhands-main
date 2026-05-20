@@ -7,6 +7,13 @@ import { OverlayLinkButton } from '~/components/overlay-link-button';
 import { formatThousands } from '~/utils/format-thousands';
 import { ASCIIAnimation } from '~/components/ascii-animation';
 import { createSocialPreviewMeta } from '~/utils/seo';
+import {
+  AGENT_CANVAS_CONNECTION_GUIDE_URL,
+  AGENT_CANVAS_DOWNLOAD_URL,
+  AGENT_CANVAS_LAUNCH_BLOG_URL,
+  OPENHANDS_AUTOMATIONS_GUIDE_URL,
+  OPENHANDS_DOCS_URL,
+} from '~/constants/product-links';
 
 const CLIENT_LOGOS = [
   { name: 'TikTok', url: '/assets/webflow/logos/69137f6974b71a1a4a932f82_TikTok_logo.svg' },
@@ -75,58 +82,55 @@ const WORKFLOWS = [
 // than a tabbed surface picker. Only the SDK card carries a CTA on live.
 const PRODUCT_SURFACES = [
   {
-    title: 'SDK',
-    description: 'Use the SDK to embed OpenHands into apps and workflows',
-    href: 'https://docs.openhands.dev/sdk',
-    cta: 'Get the SDK',
-    image: '/assets/webflow/misc/691b30aa3c700dcb47a96c00_SDK.webp',
+    title: 'Agent Canvas',
+    description: 'One workspace for parallel agents, local runs, cloud backends, and the agents you already use.',
+    href: '/product/agent-canvas',
+    cta: 'Learn more',
+    image: '/assets/webflow/misc/6994c3bfa634f5f3966d2150_4c76230966d0d54a446a009e4f4a19c2_gui.png',
+  },
+  {
+    title: 'Automations',
+    description: 'Build it once, then let cron schedules and engineering events run it forever.',
+    href: OPENHANDS_AUTOMATIONS_GUIDE_URL,
+    cta: 'Read the guide',
+    image: '/assets/webflow/blog/openhands-enterprise-agent-control-plane/20260506-openhands-enterprise-agent-control-plane-automations.png',
   },
   {
     title: 'Cloud',
-    description: 'Plan and execute complex tasks via the desktop or mobile web',
+    description: "Always-on agents that keep working after your laptop closes.",
     href: 'https://app.all-hands.dev/',
-    cta: '',
+    cta: 'Try Cloud',
     image: '/assets/webflow/misc/691b30afadf69b956d353513_Cloud.webp',
   },
   {
-    title: 'CLI',
-    description: 'Pair with OpenHands CLI right from your terminal',
-    href: 'https://docs.openhands.dev/openhands/usage/cli/installation',
-    cta: '',
-    image: '/assets/webflow/misc/691b30b28b25626f4d315588_CLI.webp',
+    title: 'SDK',
+    description: 'Build custom agents, tools, and internal platforms on the open foundation.',
+    href: 'https://docs.openhands.dev/sdk',
+    cta: 'Get the SDK',
+    image: '/assets/webflow/misc/691b30aa3c700dcb47a96c00_SDK.webp',
   },
 ];
 
 const FEATURES = [
   {
-    title: 'Extensible and customizable for any workflow',
-    description: 'Build and orchestrate your own agents with open SDKs, APIs, and micro-agents.',
-    icon: '/assets/webflow/features/690b95df7d9ca76624d45550_Frame48095777.svg',
-  },
-  {
-    title: 'Model-agnostic',
-    description: 'Adapt OpenHands to any model, CI/CD pipeline, or codebase with fine-grained configurability.',
-    icon: '/assets/webflow/features/690b95d99040920ad0084107_Frame48095776.svg',
-  },
-  {
-    title: 'Works where you do',
-    description: 'Delegate tasks directly from GitHub, GitLab, Slack, or via the API and SDK',
+    title: 'Run agents where real engineering happens',
+    description: 'Let agents work across your repos, tools, and workflows so they can execute real engineering tasks, not just suggest what to do next.',
     icon: '/assets/webflow/features/690b95d3c92c94a6a9b249f8_Frame48095775.svg',
   },
   {
-    title: 'Secure, sandboxed runtime you control',
-    description: 'Deploy in isolated Docker or Kubernetes environments, self-hosted or cloud, with full access control and auditability.',
+    title: 'Turn repeated work into always-on workflows',
+    description: 'Turn code review, dependency updates, PR summaries, CI fixes, and other recurring work into workflows that run from a schedule or trigger.',
+    icon: '/assets/webflow/features/690b95df7d9ca76624d45550_Frame48095777.svg',
+  },
+  {
+    title: 'Customize agents around your workflow',
+    description: 'Bring your tools, models, interfaces, and workflows. OpenHands adapts to how your team builds, not the other way around.',
+    icon: '/assets/webflow/features/690b95d99040920ad0084107_Frame48095776.svg',
+  },
+  {
+    title: 'Scale agent usage with control',
+    description: 'Run agents across teams with the visibility, access controls, audit trails, and cost guardrails your organization needs.',
     icon: '/assets/webflow/features/690b95ca541b813083e0b38a_Frame48095774.svg',
-  },
-  {
-    title: 'Open source and transparent by design',
-    description: 'Full visibility into every agent and artifact.',
-    icon: '/assets/webflow/features/690b95bf82d3695da1690cb8_Frame48095773.svg',
-  },
-  {
-    title: 'Cloud coding agents that scale',
-    description: 'From a single task to thousands of parallel runs.',
-    icon: '/assets/webflow/features/690b95b580671251fa0903f4_Frame48095772.svg',
   },
 ];
 
@@ -303,9 +307,9 @@ const FAQS = [
 
 export const meta: Route.MetaFunction = () =>
   createSocialPreviewMeta({
-    title: 'OpenHands | The Open Platform for Cloud Coding Agents',
+    title: 'OpenHands | Agent Canvas for Always-on Coding Agents',
     description:
-      'Meet OpenHands, the open-source, model-agnostic platform for cloud coding agents. Automate real engineering work securely and transparently. Build faster with full control.',
+      'Download Agent Canvas and turn coding agents into an always-on engineering team. Run parallel sessions, create automations, and scale from your laptop to your organization.',
   });
 
 const Home = () => {
@@ -374,14 +378,14 @@ const Home = () => {
                 <div data-wf-el='banner-wrap' className='w-full text-center' style={{ backgroundColor: 'rgba(0, 0, 0, 0)', borderRadius: '0px', paddingTop: '9.3px', paddingBottom: '9.3px', paddingLeft: '20px', paddingRight: '20px' }}>
                   <div className='flex flex-col items-center justify-center sm:flex-row'>
                     <div className='sm:flex-1' style={{ padding: '0 12px' }}>
-                      <p className='text-base font-normal leading-[1.4] text-brand-fg'>Modernize legacy systems before your expertise disappears</p>
+                      <p className='text-base font-normal leading-[1.4] text-brand-fg'>Agent Canvas is live! Check out the launch blog to see what&apos;s new</p>
                     </div>
                     <div className='hidden flex-shrink-0 sm:block' style={{ padding: '0 12px' }}>
                       <div className='h-8 w-px bg-brand-fg/20' aria-hidden='true' />
                     </div>
                     <div className='flex-shrink-0' style={{ padding: '0 12px' }}>
-                      <Link to='/whitepapers/modernize-legacy-systems-with-ai-agents' className='font-sohne-buch text-base font-normal leading-[22.4px] hover:text-[#8a5f45]' style={{ display: 'block' }}>
-                        Read the whitepaper
+                      <Link to={AGENT_CANVAS_LAUNCH_BLOG_URL} className='font-sohne-buch text-base font-normal leading-[22.4px] hover:text-[#8a5f45]' style={{ display: 'block' }}>
+                        Read the blog
                       </Link>
                     </div>
                   </div>
@@ -405,29 +409,31 @@ const Home = () => {
               <div data-wf-el='hero-heading_wrap' className='flex flex-col items-center gap-2 text-center' style={{ justifyContent: 'center' }}>
                 {/* Live's `.hero-heading_h1.h1` has `margin-bottom: 0`. */}
                 <h1 id='hero-heading' className='fluid-h1 font-medium tracking-[-0.03em] text-brand-fg' style={{ marginBottom: '0px' }}>
-                  Build with coding agents, your way.
+                  Turn your coding agents into an always-on engineering team.
                 </h1>
                 {/* Live's `.hero-heading_paragraph.paragraph-lg.u-text-darkgray`
                   * has `max-width: 40ch; margin-bottom: 0`.  The earlier
                   * `mb-7` (28px) was adding extra space above the CTAs. */}
                 <p id='hero-subheading' className='max-w-[40ch] fluid-body-lg font-medium text-brand-muted' style={{ marginLeft: '0px', marginRight: '0px', marginBottom: '0px' }}>
-                  Open-source, customizable. Run locally or at scale.
+                  From a local agent workspace to an enterprise Agent Control Plane. Parallel sessions, built-in automations, and a path from your laptop to your whole org.
                 </p>
               </div>
 
               {/* hero_btn_wrap — sibling of hero-heading_wrap on live. */}
               <div data-wf-el='hero_btn_wrap' className='flex flex-wrap items-center justify-center gap-4' style={{ marginBottom: '0px', paddingTop: '0px' }}>
-                <OverlayLinkButton href='https://app.all-hands.dev/' label='Try it live' variant='primary' />
-                <OverlayLinkButton href='https://docs.openhands.dev/sdk' label='Build with SDK' variant='outline' />
+                <OverlayLinkButton href={AGENT_CANVAS_DOWNLOAD_URL} label='Download Agent Canvas' variant='primary' />
+                <OverlayLinkButton href={OPENHANDS_DOCS_URL} label='See developer docs' variant='outline' />
               </div>
 
               {/* hero_sublink_text — sibling of hero-heading_wrap on live.
                 * Live's wrapper uses `font-size: .88rem` (14.08px) and
                 * `font-weight: 400`. */}
               <div data-wf-el='hero_sublink_text' className='text-brand-fg' style={{ fontSize: '14.08px', lineHeight: '19.712px', fontWeight: 400 }}>
-                Need a self-hosted or air-gapped deployment?{' '}
-                <Link
-                  to='/contact'
+                Connecting Claude Code, Codex, or another ACP agent?{' '}
+                <a
+                  href={AGENT_CANVAS_CONNECTION_GUIDE_URL}
+                  target='_blank'
+                  rel='noopener noreferrer'
                   className='font-normal text-brand-fg hover:decoration-[#8a5f45]'
                   style={{
                     textDecoration: 'underline',
@@ -438,8 +444,8 @@ const Home = () => {
                   }}
                 >
 
-                  Talk to us
-                </Link>
+                  Read the connection guide
+                </a>
               </div>
             </div>
 
@@ -689,6 +695,63 @@ const Home = () => {
         </div>
       </section>
 
+      <section data-wf-el='section' style={{ display: 'block', backgroundColor: 'rgba(0, 0, 0, 0)', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px', position: 'relative' }}>
+        <div className='mx-auto max-w-[1238px] rounded-[24px] border border-brand-fg/15 bg-[#f9f6e9] p-8 lg:p-12'>
+          <div className='grid gap-10 lg:grid-cols-[420px_1fr] lg:items-start'>
+            <div>
+              <div className='font-mono text-[14.08px] leading-[16.896px] text-brand-muted'>GET STARTED</div>
+              <h2 className='section-title mt-4 text-brand-fg'>Running in under 5 minutes.</h2>
+              <p className='fluid-body-lg text-brand-muted' style={{ marginTop: '10.4px', marginBottom: '20.8px' }}>
+                No Docker. No complex setup. Download the app, connect the agent you already use, and create your first automation.
+              </p>
+              <div className='mt-8 flex flex-wrap gap-4'>
+                <OverlayLinkButton href={AGENT_CANVAS_DOWNLOAD_URL} label='Download Agent Canvas' variant='primary' />
+                <OverlayLinkButton href={OPENHANDS_DOCS_URL} label='Read docs' variant='outline' />
+              </div>
+            </div>
+            <div className='grid gap-4 md:grid-cols-3'>
+              {[
+                {
+                  step: '1',
+                  title: 'Download Agent Canvas',
+                  description: 'Install on macOS, Linux, or Windows. The agent server runs directly on your machine.',
+                  href: AGENT_CANVAS_DOWNLOAD_URL,
+                  label: 'GitHub Releases ->',
+                },
+                {
+                  step: '2',
+                  title: 'Connect your agent',
+                  description: 'Use ACP to connect Claude Code, Codex, Gemini CLI, or the OpenHands harness.',
+                  href: AGENT_CANVAS_CONNECTION_GUIDE_URL,
+                  label: 'Connection Guide ->',
+                },
+                {
+                  step: '3',
+                  title: 'Create your first automation',
+                  description: 'Set up a GitHub webhook or Monday morning cron so your agent can keep working.',
+                  href: OPENHANDS_AUTOMATIONS_GUIDE_URL,
+                  label: 'Automations Guide ->',
+                },
+              ].map((item) => (
+                <article key={item.step} className='flex min-h-[280px] flex-col rounded-[16px] border border-brand-fg/15 bg-brand-bg p-6'>
+                  <div className='mb-6 flex h-10 w-10 items-center justify-center rounded-full bg-brand-fg font-mono text-brand-bg'>{item.step}</div>
+                  <h3 className='fluid-h4 text-brand-fg'>{item.title}</h3>
+                  <p className='mt-3 flex-1 text-[16px] leading-[22.4px] text-brand-muted'>{item.description}</p>
+                  <a href={item.href} target='_blank' rel='noopener noreferrer' className='mt-6 text-[16px] leading-[22.4px] text-brand-fg underline decoration-[1.6px] underline-offset-[3px] hover:text-[#8a5f45]'>
+                    {item.label}
+                  </a>
+                </article>
+              ))}
+            </div>
+          </div>
+          <div className='mt-8 flex flex-wrap gap-3 font-mono text-[14.08px] leading-[16.896px] text-brand-muted'>
+            <span className='rounded-full border border-brand-fg/15 px-3 py-2'>Works with any ACP-compatible harness</span>
+            <span className='rounded-full border border-brand-fg/15 px-3 py-2'>Runs on local, VM, or cloud backend</span>
+          </div>
+        </div>
+      </section>
+
+
       {/* SECTION 1: Why teams choose OpenHands (py:80, transparent) */}
       <section data-wf-el='section' style={{ display: 'block', backgroundColor: 'rgba(0, 0, 0, 0)', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px', position: 'relative' }}>
         <div className='mx-auto grid max-w-[1238px] gap-10 lg:grid-cols-[558px_640px]'>
@@ -701,7 +764,7 @@ const Home = () => {
               * the base h3 typography rules.  Without it on test, the
               * "Try it live" CTA below sat too close to the heading. */}
             <h3 className='max-w-[386px] section-title text-brand-fg' style={{ marginBottom: '22px' }}>Why teams choose OpenHands</h3>
-            <OverlayLinkButton href='https://app.all-hands.dev/' label='Try it live' variant='outline' className='w-fit' />
+            <OverlayLinkButton href={AGENT_CANVAS_DOWNLOAD_URL} label='Download Agent Canvas' variant='outline' className='w-fit' />
           </div>
 
           <div className='rounded-none px-5 py-0'>
@@ -1082,18 +1145,18 @@ const Home = () => {
         <div className='relative z-10 mx-auto max-w-[1238px]' style={{ marginTop: '49.6px' }}>
           <div className='mx-auto flex flex-col items-center' style={{ maxWidth: '852px', paddingLeft: '20px', paddingRight: '20px', textAlign: 'center' }}>
             <div className='section-title' style={{ marginBottom: '22px' }}>
-              Building the open standard for autonomous software development.
+              Your agents should work when you don&apos;t.
             </div>
             {/* Live's CTA-section subtitle sits inside a centered `.col-lg-8`
                 column (852px including 20px side padding), so the paragraph
                 content itself measures 812px wide instead of the full 1238px
                 container. */}
             <p className='fluid-body-lg font-medium text-brand-muted' style={{ margin: 0 }}>
-              OpenHands is the foundation for secure, transparent, model-agnostic coding agents - empowering every software team to build faster with full control.
+              Download Agent Canvas and go from single-session prompts to a fleet of always-on agents. Free, open source, no Docker.
             </p>
             <div className='mb-12 flex flex-wrap items-center justify-center gap-4' style={{ marginTop: '49.6px' }}>
-              <OverlayLinkButton href='https://docs.openhands.dev/sdk' label='Build with SDK' variant='primary' />
-              <OverlayLinkButton href='https://app.all-hands.dev/' label='Try it live' variant='outline' />
+              <OverlayLinkButton href={AGENT_CANVAS_DOWNLOAD_URL} label='Download Agent Canvas' variant='primary' />
+              <OverlayLinkButton href={OPENHANDS_DOCS_URL} label='See developer docs' variant='outline' />
             </div>
           </div>
           {/* Spacing gap between the hero CTAs and the footer nav block.

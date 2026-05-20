@@ -5,29 +5,29 @@ import { createSocialPreviewMeta } from '~/utils/seo';
 
 const FAQS = [
   {
-    question: 'What is the OpenHands CLI?',
+    question: 'Is the OpenHands CLI still available?',
     answer:
-      'The OpenHands CLI is built for developers who want to delegate real tasks to agents without leaving their terminal, from refactoring code to running multi-step workflows.',
+      'Yes. The CLI remains available for terminal-first workflows, scripting, and headless usage. It is no longer featured in the product dropdown because Agent Canvas is now the recommended starting point for most developers.',
   },
   {
-    question: 'How does the OpenHands CLI improve developer productivity?',
+    question: 'When should I use Agent Canvas instead of the CLI?',
     answer:
-      'The CLI enables developers to delegate repetitive or complex tasks to AI agents while staying in their existing workflow. This reduces context switching and allows faster iteration directly from the command line.',
+      'Use Agent Canvas when you want multiple active sessions, a visual workspace, built-in automations, backend switching, or shared team workflows. It gives CLI users the system layer around their agents.',
   },
   {
-    question: 'Can I use the OpenHands CLI with my existing tools?',
+    question: 'Can the CLI work with ACP-compatible tools?',
     answer:
-      'Yes. The OpenHands CLI integrates with standard developer tools, environments, and workflows, making it easy to adopt without changing your existing setup.',
+      'Yes. The CLI can participate in ACP-compatible editor and harness workflows, and Agent Canvas is designed to connect to those same compatible agents.',
   },
   {
-    question: 'Is the OpenHands CLI suitable for advanced engineering workflows?',
+    question: 'Will CLI documentation remain available?',
     answer:
-      'Yes. The CLI is designed for experienced developers who want fine-grained control over agent behavior, task execution, and system-level operations across their codebase.',
+      'Yes. Existing CLI documentation remains available for developers who need terminal-specific commands, confirmation modes, and scripting examples.',
   },
   {
-    question: 'Does the OpenHands CLI require cloud connectivity?',
+    question: 'What should new users install first?',
     answer:
-      'OpenHands can be deployed in cloud or self-hosted environments, allowing teams to run the CLI in secure, isolated setups depending on their infrastructure requirements.',
+      'New users should start with Agent Canvas, then use the CLI docs when they need terminal-first control or want to wire agents into scripts.',
   },
 ] as const;
 

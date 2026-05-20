@@ -8,13 +8,17 @@ import {
 } from '~/components/product-feature-page';
 import { OverlayLinkButton } from '~/components/overlay-link-button';
 import { PRODUCT_SURFACES } from '~/constants/product-surfaces';
+import {
+  AGENT_CANVAS_DOWNLOAD_URL,
+  OPENHANDS_DOCS_URL,
+} from '~/constants/product-links';
 import { createSocialPreviewMeta } from '~/utils/seo';
 
 export const meta: Route.MetaFunction = ({ location }) =>
   createSocialPreviewMeta({
-    title: 'OpenHands Product | Autonomous Cloud Coding Agents',
+    title: 'OpenHands Product | Agent Canvas, Automations, Cloud, and SDK',
     description:
-      'Explore how OpenHands revolutionizes software development with secure, model-agnostic cloud coding agents. Delegate, execute, and review code autonomously.',
+      'Explore the OpenHands platform: Agent Canvas for local parallel agents, Automations for always-on workflows, Cloud for scale, and the SDK for custom agent builders.',
     pathname: location.pathname,
   });
 
@@ -39,19 +43,18 @@ const Product = () => {
             Product
           </div>
           <h1 className='fluid-h1 max-w-[932px] text-brand-fg'>
-            Build better software with autonomous cloud agent
+            From a single local agent to an org-wide control plane.
           </h1>
-          <p className='max-w-[560px] fluid-body-lg text-[#5f5f5f]' style={{ marginTop: '10.4px', marginBottom: '20.8px' }}>
-            Offload toil, ship faster. OpenHands automates real development tasks with transparency, governance, and choice.
+          <p className='max-w-[640px] fluid-body-lg text-[#5f5f5f]' style={{ marginTop: '10.4px', marginBottom: '20.8px' }}>
+            OpenHands takes you from your first AI coding session to a fleet of always-on agents running across your organization, without switching interfaces or rebuilding workflows.
           </p>
           <div className='flex flex-wrap items-center justify-center gap-4' style={{ paddingTop: '32px' }}>
             <ProductPageActionLink
-              href='https://app.all-hands.dev/'
-              label='Try it live'
-              screenReaderLabel='Join Slack'
+              href={AGENT_CANVAS_DOWNLOAD_URL}
+              label='Download Agent Canvas'
             />
             <ProductPageActionLink
-              href='https://docs.openhands.dev/overview/introduction'
+              href={OPENHANDS_DOCS_URL}
               label='See developer docs'
               variant='outline'
             />
@@ -110,7 +113,7 @@ const Product = () => {
         </section>
       </section>
 
-      <ProductComparisonTable ctaHref='https://app.all-hands.dev/' ctaLabel='Try it live' />
+      <ProductComparisonTable ctaHref={AGENT_CANVAS_DOWNLOAD_URL} ctaLabel='Download Agent Canvas' />
       {/* Live renders the default closing CTA inside the yellow footer section,
         and the footer section itself is a child of page-main. */}
       <Footer
@@ -118,8 +121,8 @@ const Product = () => {
         showSocialLinks
         compactNav
         minHeight={1144}
-        marketingCtaPrimary={{ href: 'https://app.all-hands.dev/', label: 'Try it live' }}
-        marketingCtaSecondary={{ href: 'https://docs.openhands.dev/overview/introduction', label: 'See developer docs' }}
+        marketingCtaPrimary={{ href: AGENT_CANVAS_DOWNLOAD_URL, label: 'Download Agent Canvas' }}
+        marketingCtaSecondary={{ href: OPENHANDS_DOCS_URL, label: 'See developer docs' }}
       />
     </main>
   );

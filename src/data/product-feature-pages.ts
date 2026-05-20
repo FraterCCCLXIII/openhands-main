@@ -1,3 +1,9 @@
+import {
+  AGENT_CANVAS_CONNECTION_GUIDE_URL,
+  AGENT_CANVAS_DOWNLOAD_URL,
+  OPENHANDS_DOCS_URL,
+} from '~/constants/product-links';
+
 export const PRODUCT_OG_IMAGE =
   'https://openhands.dev/assets/webflow/og/69161b32abf448a2df921a73_openhands_opengraph_01.png';
 
@@ -49,39 +55,41 @@ export interface ProductFeaturePageData {
 const productFeaturePages: Record<'sdk' | 'gui' | 'cli', ProductFeaturePageData> = {
   sdk: {
     pageTitle: 'SDK',
-    metaTitle: 'OpenHands SDK | Secure, Scalable Agentic Software Development',
-    metaDescription: 'Extend OpenHands with code, not constraints.',
+    metaTitle: 'OpenHands SDK | Build agents your way',
+    metaDescription:
+      'Use the OpenHands SDK to build custom agents, internal tooling, and production agent services on top of the same open foundation that powers Agent Canvas.',
     eyebrow: 'SDK',
     heading: 'Build agents your way.',
-    description: 'Extend OpenHands with code, not constraints.',
+    description:
+      'The open foundation everything else runs on. Go beyond Agent Canvas with custom behaviors, internal tooling, and programmatic control.',
     heroImage: {
       src: '/assets/webflow/backgrounds/690b397ae76441160bed52b6_asci-art-hole.png',
       alt: 'ASCII art depicting a large black hole with light and particles swirling around it.',
     },
     primaryCta: {
-      label: 'View SDK Doc',
-      href: 'https://docs.openhands.dev/sdk',
+      label: 'Get Started',
+      href: 'https://docs.openhands.dev/sdk/getting-started',
     },
     secondaryCta: {
-      label: 'Contact Us',
-      href: '/contact',
+      label: 'See developer docs',
+      href: OPENHANDS_DOCS_URL,
     },
-    introTitle: 'An open SDK for building custom agents and workflows.',
+    introTitle: 'The open foundation for custom coding agents.',
     introDescription:
-      'The OpenHands SDK lets teams create specialized agents, integrate internal tools, and orchestrate complex workflows programmatically.',
+      'For teams who want to go beyond Agent Canvas, the OpenHands SDK provides a unified Python API for agents, tools, conversations, and production services.',
     accentImage: {
       src: '/assets/webflow/backgrounds/690b50c95a72e7b17a1412a8_09a6ecb11584c3309a64a00d57130313_ascii-art_(15)_1.svg',
       alt: 'asci art',
     },
-    proofTitle: 'Solve real edge cases.',
+    proofTitle: 'Bring your tools, models, and workflows.',
     proofDescription:
-      'Closed platforms force you into predefined behaviors. OpenHands gives you primitives, not prescriptions, so you can adapt agents to your codebase, tooling, and governance needs.',
+      'OpenHands adapts to how your team builds, not the other way around. Swap models, wire in internal APIs, expose custom tools, and keep the same agent primitives from prototype to production.',
     capabilities: [
-      'Programmatic task creation',
+      'Unified Python API',
+      'Ready-to-use tools',
+      'Model-agnostic routing',
       'Custom agent behaviors',
-      'Tool and API integrations',
-      'Model selection and routing',
-      'Fine-grained execution control',
+      'Production-ready server',
     ],
     showcaseImages: [
       {
@@ -95,57 +103,59 @@ const productFeaturePages: Record<'sdk' | 'gui' | 'cli', ProductFeaturePageData>
     ],
     useCases: [
       'Build domain-specific agents',
-      'Integrate agents into your apps',
-      'Create internal AI platforms',
-      'Extend OpenHands beyond defaults',
+      'Embed agents into internal apps',
+      'Create custom orchestration layers',
+      'Run services on Docker, Kubernetes, or bare metal',
     ],
-    closingTitle: 'Turn OpenHands into your agent platform.',
-    closingDescription: 'Start building with the SDK.',
+    closingTitle: 'Build agents your way.',
+    closingDescription: 'Start with the SDK when you need custom agent behavior or internal platform integrations.',
     closingPrimaryCta: {
       label: 'Get Started',
       href: 'https://docs.openhands.dev/sdk/getting-started',
     },
     closingSecondaryCta: {
-      label: 'View SDK Docs',
-      href: 'https://docs.openhands.dev/sdk',
+      label: 'See developer docs',
+      href: OPENHANDS_DOCS_URL,
     },
   },
   gui: {
-    pageTitle: 'Web GUI',
-    metaTitle: 'OpenHands Web GUI | Secure, Scalable Agentic Software Development',
-    metaDescription: 'Plan, run, and review agent work together in a collaborative UI.',
-    eyebrow: 'Web GUI',
-    heading: 'Agentic development, made human.',
-    description: 'Plan, run, and review agent work together in a collaborative UI.',
+    pageTitle: 'Agent Canvas',
+    metaTitle: 'OpenHands Agent Canvas | Run agents, not sessions',
+    metaDescription:
+      'Download Agent Canvas, the local visual workspace for running AI coding agents in parallel, connecting ACP-compatible agents, and creating automations.',
+    eyebrow: 'Agent Canvas',
+    heading: 'Run agents. Not sessions.',
+    description:
+      'Agent Canvas, the new face of OpenHands, is a local, visual workspace for running AI coding agents. Install on your laptop, connect the agents you already use, and start.',
     heroImage: {
       src: '/assets/webflow/misc/6994c3bfa634f5f3966d2150_4c76230966d0d54a446a009e4f4a19c2_gui.png',
       alt: '',
     },
     primaryCta: {
-      label: 'Try it live',
-      href: 'https://app.all-hands.dev/',
+      label: 'Download for free',
+      href: AGENT_CANVAS_DOWNLOAD_URL,
     },
     secondaryCta: {
-      label: 'Download Local GUI',
-      href: 'https://docs.openhands.dev/openhands/usage/run-openhands/local-setup',
+      label: 'Read docs',
+      href: AGENT_CANVAS_CONNECTION_GUIDE_URL,
     },
-    introTitle: 'A collaborative interface for agentic workflows.',
+    introTitle: 'One workspace. All your agents.',
     introDescription:
-      'The OpenHands Web GUI gives teams a shared workspace to scope tasks, monitor execution, and review results. It turns autonomous agents into teammates you can understand and trust.',
+      'Run multiple sessions simultaneously, each on its own branch, and switch between local, VM, and cloud backends without changing interfaces.',
     accentImage: {
       src: '/assets/webflow/backgrounds/690b397ae76441160bed52b6_asci-art-hole.png',
       alt: 'ASCII art depicting a large black hole with light and particles swirling around it.',
     },
-    proofTitle: 'Trust requires visibility.',
+    proofTitle: "One session isn't a system.",
     proofDescription:
-      'Enterprises don’t adopt black boxes. The GUI makes agent behavior transparent, reviewable, and auditable so teams feel confident delegating real work.',
+      'Claude Code, Codex, and terminal tools are powerful, but they stop at the single-session ceiling. Agent Canvas adds the missing layer: parallel agents, always-on execution, built-in automations, team workflows, and open ACP compatibility.',
     capabilities: [
-      'Generate technical plans and PRDs',
-      'Parallelize multiple agent runs',
-      'Review diffs and code artifacts',
-      'Share conversations with teammates',
-      'Run agents in secure sandboxes',
-      'Use with Slack, Jira, GitHub, and more',
+      'Parallel agents in one view',
+      'Connect Claude Code, Codex, Gemini CLI, or OpenHands via ACP',
+      'Local-first, cloud-ready backends',
+      'Cron-style automations in the UI',
+      'GitHub, Slack, Jira, PagerDuty, and CI triggers',
+      'Share automations, skills, and plugins across your team',
     ],
     showcaseImages: [
       {
@@ -158,60 +168,61 @@ const productFeaturePages: Record<'sdk' | 'gui' | 'cli', ProductFeaturePageData>
       },
     ],
     useCases: [
-      'Break epics into agent-sized tasks',
-      'Review PRs generated by agents',
-      'Track productivity gains across teams',
-      'Enable safe rollout beyond power users',
+      'Run four agents in parallel, each on its own branch',
+      'Keep work running after your laptop closes',
+      'Create a Monday morning dependency update cron',
+      'Trigger code review when a pull request opens',
+      'Turn individual wins into shared team workflows',
     ],
-    closingTitle: 'Bring your team into the loop.',
-    closingDescription: 'Use the OpenHands Web GUI to collaborate with agents.',
+    closingTitle: "Your agents should work when you don't.",
+    closingDescription: 'Download Agent Canvas and go from single-session prompts to a fleet of always-on agents. Free, open source, no Docker.',
     closingPrimaryCta: {
-      label: 'Try it live',
-      href: 'https://app.all-hands.dev/',
+      label: 'Download Agent Canvas',
+      href: AGENT_CANVAS_DOWNLOAD_URL,
     },
     closingSecondaryCta: {
-      label: 'Download Local GUI',
-      href: 'https://docs.openhands.dev/openhands/usage/run-openhands/local-setup',
+      label: 'Connection Guide',
+      href: AGENT_CANVAS_CONNECTION_GUIDE_URL,
     },
   },
   cli: {
     pageTitle: 'Terminal / CLI',
-    metaTitle: 'OpenHands CLI | Secure, Scalable Agentic Software Development',
+    metaTitle: 'OpenHands CLI | Terminal access for OpenHands agents',
     metaDescription:
-      'Run, inspect, and automate OpenHands agents directly from the terminal or headlessly in your pipelines with full visibility and control.',
+      'The OpenHands CLI remains available for terminal-first workflows, while Agent Canvas is the recommended path for parallel sessions, automations, and always-on agents.',
     eyebrow: 'Terminal / CLI',
-    heading: 'Agentic power from the command line.',
+    heading: 'The CLI is still here. Agent Canvas is where agents scale.',
     description:
-      'Run, inspect, and automate OpenHands agents directly from the terminal or headlessly in your pipelines with full visibility and control.',
+      'Use the CLI when you want terminal-first control. Start with Agent Canvas when you need parallel sessions, automations, cloud backends, and a visual workspace.',
     heroImage: {
       src: '/assets/webflow/backgrounds/690b397ae76441160bed52b6_asci-art-hole.png',
       alt: 'ASCII art depicting a large black hole with light and particles swirling around it.',
     },
     primaryCta: {
-      label: 'Get Started',
-      href: 'https://docs.openhands.dev/openhands/usage/cli/installation',
+      label: 'Download Agent Canvas',
+      href: AGENT_CANVAS_DOWNLOAD_URL,
     },
     secondaryCta: {
       label: 'View CLI Docs',
       href: 'https://docs.openhands.dev/openhands/usage/cli/terminal',
     },
-    introTitle: 'A first-class terminal and CLI interface for autonomous agents.',
+    introTitle: 'A lightweight path for terminal-first developers.',
     introDescription:
-      'The OpenHands Terminal / CLI gives developers direct, low-latency control over cloud-based coding agents. Use it interactively from your terminal or run it headlessly from CI, cron jobs, or internal systems.\nSame agent. Same runtime. Two modes of control.',
+      'The CLI remains useful for direct command-line control, scripting, and headless use cases. For the full product experience, we are focusing new workflow investment on Agent Canvas and the open ACP ecosystem.',
     accentImage: {
       src: '/assets/webflow/backgrounds/690b50c95a72e7b17a1412a8_09a6ecb11584c3309a64a00d57130313_ascii-art_(15)_1.svg',
       alt: 'asci art',
     },
-    proofTitle: 'Real autonomy needs observability and repeatability.',
+    proofTitle: 'Keep the terminal. Add the system layer.',
     proofDescription:
-      'IDE assistants are fine for small edits. Real agentic work requires visibility into what ran, where it ran, and what changed. OpenHands’ Terminal / CLI lets you see exactly what the agent did, inspect outputs, and re-run tasks deterministically.\nNo babysitting. No abstraction leaks.',
+      'Agent Canvas connects to ACP-compatible agents and gives terminal-first users the workspace the CLI alone does not provide: parallel sessions, backend switching, automations, and team sharing.',
     capabilities: [
-      'Intuitive and powerful Terminal UX',
-      'Save and resume conversations',
+      'Terminal-first task execution',
+      'Scriptable and headless workflows',
       'Use with your favorite IDE via ACP',
-      'Headless mode for CI/CD and background tasks',
-      'Confirmation mode for safe, local execution',
-      'Seamlessly integrates with OpenHands Cloud',
+      'Confirmation mode for safe local execution',
+      'Docs and examples remain available',
+      'Upgrade path to Agent Canvas for visual orchestration',
     ],
     showcaseImages: [
       {
@@ -224,19 +235,17 @@ const productFeaturePages: Record<'sdk' | 'gui' | 'cli', ProductFeaturePageData>
       },
     ],
     useCases: [
-      'Fix bugs before standup',
-      'Run repo-wide maintenance and refactors',
-      'Trigger agents from CI pipelines',
-      'Upgrade dependencies nightly',
-      'Remediate vulnerabilities before merge',
-      'Automate linting and test cleanup',
+      'Run a one-off task from your terminal',
+      'Wire agents into scripts and local tooling',
+      'Launch ACP-compatible editor workflows',
+      'Move repeated work into Agent Canvas automations',
     ],
-    closingTitle: 'Control your agents like real infrastructure.',
+    closingTitle: 'Ready for more than one session?',
     closingDescription:
-      'Run OpenHands from the terminal or automate it end to end with the CLI.',
+      'Download Agent Canvas for the local workspace, parallel agents, and built-in automations. Keep the CLI docs nearby for terminal workflows.',
     closingPrimaryCta: {
-      label: 'Get Started',
-      href: 'https://docs.openhands.dev/openhands/usage/cli/installation',
+      label: 'Download Agent Canvas',
+      href: AGENT_CANVAS_DOWNLOAD_URL,
     },
     closingSecondaryCta: {
       label: 'View CLI Docs',

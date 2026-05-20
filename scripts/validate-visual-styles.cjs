@@ -10,7 +10,8 @@ const puppeteer = require('puppeteer');
 const fs = require('fs');
 const path = require('path');
 const { PNG } = require('pngjs');
-const pixelmatch = require('pixelmatch');
+const pixelmatchModule = require('pixelmatch');
+const pixelmatch = pixelmatchModule.default || pixelmatchModule;
 
 const LIVE_URL = 'https://openhands.dev';
 const TEST_URL = process.env.TEST_URL || 'http://localhost:12001';

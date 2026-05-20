@@ -1,8 +1,9 @@
-import type { CSSProperties } from 'react';
+import { Fragment, type CSSProperties } from 'react';
 import type { ProductFeaturePageData } from '~/data/product-feature-pages';
 import { Footer } from '~/components/footer';
 import ASCIIAnimation from '~/components/ascii-animation';
 import { OverlayLinkButton } from '~/components/overlay-link-button';
+import { AGENT_CANVAS_DOWNLOAD_URL } from '~/constants/product-links';
 
 export interface ProductPageAction {
   label: string;
@@ -65,7 +66,7 @@ export const ProductPageActionLink = ({
 
 const renderTextWithBreaks = (text: string) =>
   text.split('\n').map((part, index) => (
-    <>{index > 0 ? <br /> : null}{part}</>
+    <Fragment key={index}>{index > 0 ? <br /> : null}{part}</Fragment>
   ));
 
 const ProductFeatureIntroBand = ({
@@ -400,7 +401,6 @@ export const ProductFeaturePage = ({
               <ProductPageActionLink
                 href={page.primaryCta.href}
                 label={page.primaryCta.label}
-                screenReaderLabel='Join Slack'
               />
               <ProductPageActionLink
                 href={page.secondaryCta.href}
@@ -474,7 +474,7 @@ export const ProductFeaturePage = ({
         </div>
       </section>
 
-      <ProductComparisonTable dark ctaHref='https://app.all-hands.dev/' ctaLabel='Try it live' minHeight={1082} />
+      <ProductComparisonTable dark ctaHref={AGENT_CANVAS_DOWNLOAD_URL} ctaLabel='Download Agent Canvas' minHeight={1082} />
       <ProductFaqSection faqs={faqs} />
       {/* Live renders the page-specific closing CTA inside the yellow footer
         section, and the footer section itself is a child of page-main. */}

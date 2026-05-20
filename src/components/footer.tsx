@@ -3,6 +3,7 @@ import clsx from 'clsx';
 import { FOOTER_NAV_ITEMS, FOOTER_RESOURCE_LINKS } from '~/constants/site-shell';
 import { normalizePathname } from '~/utils/normalize-pathname';
 import { OverlayLinkButton } from '~/components/overlay-link-button';
+import { AGENT_CANVAS_DOWNLOAD_URL, OPENHANDS_DOCS_URL } from '~/constants/product-links';
 
 interface FooterCta {
   href: string;
@@ -49,8 +50,8 @@ interface FooterMarketingCtaProps {
 
 const DEFAULT_CTA_TITLE = 'Building the open standard for autonomous software development.';
 const DEFAULT_CTA_DESCRIPTION = 'OpenHands is the foundation for secure, transparent, model-agnostic coding agents - empowering every software team to build faster with full control.';
-const DEFAULT_CTA_PRIMARY: FooterCta = { href: 'https://docs.openhands.dev/sdk', label: 'Build with SDK' };
-const DEFAULT_CTA_SECONDARY: FooterCta = { href: 'https://app.all-hands.dev/', label: 'Try it live' };
+const DEFAULT_CTA_PRIMARY: FooterCta = { href: AGENT_CANVAS_DOWNLOAD_URL, label: 'Download Agent Canvas' };
+const DEFAULT_CTA_SECONDARY: FooterCta = { href: OPENHANDS_DOCS_URL, label: 'See developer docs' };
 
 const FooterMarketingCta = ({
   title = DEFAULT_CTA_TITLE,

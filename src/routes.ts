@@ -11,6 +11,7 @@ export default [
   route("/pricing", "routes/pricing.tsx"),
   route("/features", "routes/features.tsx"),
   route("/product", "routes/product.tsx"),
+  route("/product/agent-canvas", "routes/product-agent-canvas.tsx"),
   route("/product/cli", "routes/product-cli.tsx"),
   route("/product/gui", "routes/product-gui.tsx"),
   route("/product/sdk", "routes/product-sdk.tsx"),

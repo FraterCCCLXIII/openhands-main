@@ -3,6 +3,10 @@ import type { Route } from './+types/pricing';
 import ASCIIAnimation from '~/components/ascii-animation';
 import { Footer } from '~/components/footer';
 import { OverlayLinkButton } from '~/components/overlay-link-button';
+import {
+  AGENT_CANVAS_DOWNLOAD_URL,
+  OPENHANDS_DOCS_URL,
+} from '~/constants/product-links';
 
 export const handle = { hideGlobalFooter: true };
 
@@ -17,10 +21,10 @@ const PRICING_PLANS = [
     description: 'Free, local OpenHands for getting started',
     intro: 'Includes:',
     buttonLabel: 'Download',
-    buttonHref: 'https://docs.openhands.dev/openhands/usage/run-openhands/local-setup',
+    buttonHref: AGENT_CANVAS_DOWNLOAD_URL,
     features: [
       'Best-in-class OpenHands Agent',
-      'Web-based GUI, Terminal UI, and CLI',
+      'Agent Canvas and terminal access',
       'Git integrations',
       'Community support',
       'Model agnostic',
@@ -77,11 +81,11 @@ const COMPARISON_ROWS: ComparisonRow[] = [
     label: 'Bring your own key, or you use OpenHands provider at-cost',
     values: [true, true, true],
   },
-  { type: 'ticks', label: 'Web-based GUI', values: [true, true, true] },
-  { type: 'ticks', label: 'OpenHands CLI', values: [true, true, true] },
+  { type: 'ticks', label: 'Agent Canvas', values: [true, true, true] },
+  { type: 'ticks', label: 'Terminal / CLI access', values: [true, true, true] },
   { type: 'ticks', label: 'Git Integrations (GitHub, Bitbucket, GitLab)', values: [true, true, true] },
   { type: 'ticks', label: 'Secrets', values: [true, true, true] },
-  { type: 'ticks', label: 'Cloud Agent SDK', values: [true, true, true] },
+  { type: 'ticks', label: 'OpenHands SDK', values: [true, true, true] },
   { type: 'ticks', label: 'MCP Support', values: [true, true, true] },
   { type: 'ticks', label: 'Organization Support', values: [true, true, true] },
   { type: 'ticks', label: 'Multi-user RBAC', values: [false, false, true] },
@@ -128,7 +132,7 @@ const FAQS = [
     answer: (
       <>
         <p>
-          OpenHands Open Source is a full, MIT licensed version of OpenHands that is designed for a single user and can run locally on your machine with your own LLM key. At a high level, our open source options include a local Web GUI, a CLI, and a Software Agent SDK.
+          OpenHands Open Source is a full, MIT licensed version of OpenHands that is designed for a single user and can run locally on your machine with your own LLM key. At a high level, our open source options include Agent Canvas, terminal access, and the OpenHands SDK.
         </p>
         <p>
           OpenHands Cloud is a SaaS-based version of OpenHands with both a free Individual tier, as well as commercial tiers for organizations and businesses. OpenHands Cloud also comes with additional features like Cloud APIs, ticketing system integrations, Git provider integrations, and more.
@@ -690,8 +694,8 @@ const Pricing = () => {
         minHeight={1209}
         marketingCtaTitle='Building the open standard for autonomous software development.'
         marketingCtaDescription='OpenHands is the foundation for secure, transparent, model-agnostic coding agents - empowering every software team to build faster with full control.'
-        marketingCtaPrimary={{ href: 'https://docs.openhands.dev/sdk', label: 'Build with SDK' }}
-        marketingCtaSecondary={{ href: 'https://app.all-hands.dev/', label: 'Try it live' }}
+        marketingCtaPrimary={{ href: AGENT_CANVAS_DOWNLOAD_URL, label: 'Download Agent Canvas' }}
+        marketingCtaSecondary={{ href: OPENHANDS_DOCS_URL, label: 'See developer docs' }}
       />
     </main>
   );

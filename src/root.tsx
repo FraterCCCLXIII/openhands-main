@@ -19,6 +19,7 @@ import { Header } from './components/header';
 import { MarketingFooterCta } from './components/marketing-footer-cta';
 import { Sidebar } from './components/sidebar/sidebar';
 import { PRODUCT_FEATURE_PAGES } from './data/product-feature-pages';
+import { AGENT_CANVAS_DOWNLOAD_URL, OPENHANDS_DOCS_URL } from './constants/product-links';
 import { GitHubModal } from './components/github-modal';
 import { GitHubModalProvider } from './contexts/github-modal-context';
 import { useWidth } from './hooks/use-media';
@@ -85,6 +86,7 @@ type FooterCtaOverride = {
 };
 
 const PRODUCT_SUBPAGE_CTA: Record<string, FooterCtaOverride> = {
+  '/product/agent-canvas': buildProductCta('gui'),
   '/product/cli': buildProductCta('cli'),
   '/product/gui': buildProductCta('gui'),
   '/product/sdk': buildProductCta('sdk'),
@@ -99,7 +101,7 @@ const PRODUCT_SUBPAGE_CTA: Record<string, FooterCtaOverride> = {
     marketingCtaDescription:
       'The teams shipping the most are moving beyond individual agent sessions to governed, automated workflows. Let us show you what that looks like in practice.',
     marketingCtaPrimary: { href: '/contact', label: 'Book a Demo' },
-    marketingCtaSecondary: { href: 'https://docs.openhands.dev/sdk', label: 'Build with SDK' },
+    marketingCtaSecondary: { href: OPENHANDS_DOCS_URL, label: 'See developer docs' },
   },
   // Live /pricing renders the closing "Building the open standard…"
   // CTA inside the yellow footer section (`section.u-bg-primary`),
@@ -111,8 +113,8 @@ const PRODUCT_SUBPAGE_CTA: Record<string, FooterCtaOverride> = {
       'Building the open standard for autonomous software development.',
     marketingCtaDescription:
       'OpenHands is the foundation for secure, transparent, model-agnostic coding agents - empowering every software team to build faster with full control.',
-    marketingCtaPrimary: { href: 'https://docs.openhands.dev/sdk', label: 'Build with SDK' },
-    marketingCtaSecondary: { href: 'https://app.all-hands.dev/', label: 'Try it live' },
+    marketingCtaPrimary: { href: AGENT_CANVAS_DOWNLOAD_URL, label: 'Download Agent Canvas' },
+    marketingCtaSecondary: { href: OPENHANDS_DOCS_URL, label: 'See developer docs' },
   },
 };
 

@@ -7,25 +7,36 @@ import clsx from 'clsx';
 import GitHubLogoBlack from '~/svgs/github-logo-black.svg?react';
 import statistics from '~/data/statistics.json';
 import { DESKTOP_NAV_ITEMS, RESOURCE_LINK_GROUPS, PRODUCT_DROPDOWN_ITEMS } from '~/constants/site-shell';
+import { AGENT_CANVAS_DOWNLOAD_URL, OPENHANDS_DOCS_URL } from '~/constants/product-links';
 import { formatThousands } from '~/utils/format-thousands';
 import { isPathActive, normalizePathname } from '~/utils/normalize-pathname';
 
-const PRODUCT_ICON_WF_EL: Record<string, string> = { cli: 'bi-terminal', gui: 'bi-display', sdk: 'bi-box-seam' };
+const PRODUCT_ICON_WF_EL: Record<string, string> = {
+  'agent-canvas': 'bi-display',
+  automations: 'bi-arrow-repeat',
+  cloud: 'bi-cloud',
+  sdk: 'bi-box-seam',
+};
 
-function ProductDropdownIcon({ type }: { type: 'cli' | 'gui' | 'sdk' }) {
+function ProductDropdownIcon({ type }: { type: string }) {
   const wfEl = PRODUCT_ICON_WF_EL[type];
   switch (type) {
-    case 'cli':
-      return (
-        <svg data-wf-el={wfEl} xmlns='http://www.w3.org/2000/svg' width='100%' fill='currentColor' viewBox='0 0 16 16'>
-          <path d='M6 9a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 0 1h-3A.5.5 0 0 1 6 9M3.854 4.146a.5.5 0 1 0-.708.708L4.793 6.5 3.146 8.146a.5.5 0 1 0 .708.708l2-2a.5.5 0 0 0 0-.708z' />
-          <path d='M2 1a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2zm12 1a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z' />
-        </svg>
-      );
-    case 'gui':
+    case 'agent-canvas':
       return (
         <svg data-wf-el={wfEl} xmlns='http://www.w3.org/2000/svg' width='100%' fill='currentColor' viewBox='0 0 16 16'>
           <path d='M0 4s0-2 2-2h12s2 0 2 2v6s0 2-2 2h-4q0 1 .25 1.5H11a.5.5 0 0 1 0 1H5a.5.5 0 0 1 0-1h.75Q6 13 6 12H2s-2 0-2-2zm1.398-.855a.76.76 0 0 0-.254.302A1.5 1.5 0 0 0 1 4.01V10c0 .325.078.502.145.602q.105.156.302.254a1.5 1.5 0 0 0 .538.143L2.01 11H14c.325 0 .502-.078.602-.145a.76.76 0 0 0 .254-.302 1.5 1.5 0 0 0 .143-.538L15 9.99V4c0-.325-.078-.502-.145-.602a.76.76 0 0 0-.302-.254A1.5 1.5 0 0 0 13.99 3H2c-.325 0-.502.078-.602.145' />
+        </svg>
+      );
+    case 'automations':
+      return (
+        <svg data-wf-el={wfEl} xmlns='http://www.w3.org/2000/svg' width='100%' fill='currentColor' viewBox='0 0 16 16'>
+          <path d='M8 3a5 5 0 0 0-4.546 2.914.5.5 0 0 1-.908-.418A6 6 0 0 1 13.917 7H15.5a.5.5 0 0 1 .354.854l-2.5 2.5a.5.5 0 0 1-.708 0l-2.5-2.5A.5.5 0 0 1 10.5 7h2.399A5 5 0 0 0 8 3m-5.354 2.646a.5.5 0 0 1 .708 0l2.5 2.5A.5.5 0 0 1 5.5 9H3.101A5 5 0 0 0 12.546 10.086a.5.5 0 1 1 .908.418A6 6 0 0 1 2.083 9H.5a.5.5 0 0 1-.354-.854z' />
+        </svg>
+      );
+    case 'cloud':
+      return (
+        <svg data-wf-el={wfEl} xmlns='http://www.w3.org/2000/svg' width='100%' fill='currentColor' viewBox='0 0 16 16'>
+          <path d='M4.406 3.342A5.53 5.53 0 0 1 8 2c2.69 0 4.923 2 5.166 4.579C14.758 6.804 16 8.137 16 9.773 16 11.569 14.502 13 12.687 13H4.781C2.133 13 0 10.955 0 8.333c0-2.44 1.856-4.46 4.406-4.991M8 3a4.53 4.53 0 0 0-2.941 1.1.5.5 0 0 1-.454.112C2.5 4.58 1 6.293 1 8.333 1 10.389 2.676 12 4.781 12h7.906C13.98 12 15 10.988 15 9.773c0-1.216-1.02-2.228-2.313-2.228h-.244a.5.5 0 0 1-.498-.454C11.77 4.77 10.13 3 8 3' />
         </svg>
       );
     case 'sdk':
@@ -34,6 +45,8 @@ function ProductDropdownIcon({ type }: { type: 'cli' | 'gui' | 'sdk' }) {
           <path d='M8.186 1.113a.5.5 0 0 0-.372 0L1.846 3.5l2.404.961L10.404 2zm3.564 1.426L5.596 5 8 5.961 14.154 3.5zm3.25 1.7-6.5 2.6v7.922l6.5-2.6V4.24zM7.5 14.762V6.838L1 4.239v7.923zM7.443.184a1.5 1.5 0 0 1 1.114 0l7.129 2.852A.5.5 0 0 1 16 3.5v8.662a1 1 0 0 1-.629.928l-7.185 2.874a.5.5 0 0 1-.372 0L.63 13.09a1 1 0 0 1-.63-.928V3.5a.5.5 0 0 1 .314-.464z' />
         </svg>
       );
+    default:
+      return null;
   }
 }
 
@@ -126,24 +139,47 @@ export const Header: React.FC<HeaderProps> = ({
                   <div data-wf-el='nav_links_dropdown' style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: '32px', backgroundColor: 'rgb(34, 21, 13)', color: 'rgb(249, 240, 217)', borderRadius: '16px', padding: '23px', boxShadow: 'none', width: '655px' }}>
                     <div data-wf-el='nav_links_dropdown_group' style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', gap: '24px', margin: 0 }}>
                       <div data-wf-el='dropdown-eyebrow' className='eyebrow u-mb-0 font-mono' style={{ margin: 0, color: 'rgb(249, 240, 217)', fontSize: '14.08px', lineHeight: '16.896px' }}>Features</div>
-                      <ul data-wf-el='nav_links_list' className='is-dropdown' style={{ position: 'relative', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', justifyContent: 'center', alignItems: 'stretch', gap: '21.6px', margin: 0, padding: 0, width: '100%' }}>
-                        {PRODUCT_DROPDOWN_ITEMS.map((item) => (
-                          <li data-wf-el='nav_links_li' className='is-dropdown' key={item.name} style={{ display: 'list-item', margin: 0, padding: 0 }}>
-                            <Link
-                              to={item.to}
-                              data-wf-el='nav_links_link'
-                              className='is-dropdown'
-                              style={{ position: 'relative', display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', gap: '8px', padding: 0, width: '100%', color: 'rgb(249, 240, 217)', fontSize: '16px', lineHeight: '22.4px' }}
-                              onClick={() => setProductOpen(false)}
-                            >
+                      <ul data-wf-el='nav_links_list' className='is-dropdown' style={{ position: 'relative', display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', justifyContent: 'center', alignItems: 'stretch', gap: '21.6px', margin: 0, padding: 0, width: '100%' }}>
+                        {PRODUCT_DROPDOWN_ITEMS.map((item) => {
+                          const content = (
+                            <>
                               <div data-wf-el='nav_links_dropdown_icon' className='flex-shrink-0' style={{ display: 'flex', width: '30px', height: '30px', padding: '7px', color: 'rgb(255, 255, 139)', backgroundColor: 'rgb(0, 0, 0)', borderRadius: '8px', justifyContent: 'center', alignItems: 'center' }}>
                                 <ProductDropdownIcon type={item.icon} />
                               </div>
                               <div>{item.name}</div>
                               <p data-wf-el='nav_links_subtext' style={{ margin: 0, color: 'rgb(179, 168, 140)', fontSize: '14.4px', lineHeight: '21.6px' }}>{item.description}</p>
-                            </Link>
-                          </li>
-                        ))}
+                            </>
+                          );
+                          const linkStyle: React.CSSProperties = { position: 'relative', display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', gap: '8px', padding: 0, width: '100%', color: 'rgb(249, 240, 217)', fontSize: '16px', lineHeight: '22.4px' };
+
+                          return (
+                            <li data-wf-el='nav_links_li' className='is-dropdown' key={item.name} style={{ display: 'list-item', margin: 0, padding: 0 }}>
+                              {item.external ? (
+                                <a
+                                  href={item.to}
+                                  target='_blank'
+                                  rel='noopener noreferrer'
+                                  data-wf-el='nav_links_link'
+                                  className='is-dropdown'
+                                  style={linkStyle}
+                                  onClick={() => setProductOpen(false)}
+                                >
+                                  {content}
+                                </a>
+                              ) : (
+                                <Link
+                                  to={item.to}
+                                  data-wf-el='nav_links_link'
+                                  className='is-dropdown'
+                                  style={linkStyle}
+                                  onClick={() => setProductOpen(false)}
+                                >
+                                  {content}
+                                </Link>
+                              )}
+                            </li>
+                          );
+                        })}
                       </ul>
                     </div>
                   </div>
@@ -266,15 +302,15 @@ export const Header: React.FC<HeaderProps> = ({
                 <div data-wf-el='nav-menu_gh_num' style={{ fontSize: '12.96px', lineHeight: '18.144px' }}><span style={{ fontWeight: 400 }}>{formatThousands(statistics.stargazers)}</span></div>
               </a>
               <div data-wf-el='button' className='btn btn-outline relative' style={{ padding: '0.9em 1.9em', margin: 0, borderRadius: '8px', backgroundColor: 'rgba(255,255,255,0.34)', borderColor: 'rgb(34, 21, 13)', backdropFilter: 'blur(5px)', textDecoration: 'none', textDecorationThickness: 'auto', textUnderlineOffset: 'auto', cursor: 'auto', boxShadow: 'rgb(249, 240, 217) 0px 0px 0px 0px inset', gap: '6.4px' }}>
-                <div data-wf-el='btn-text' aria-hidden='true' style={{ whiteSpace: 'nowrap', cursor: 'auto', textUnderlineOffset: 'auto', pointerEvents: 'none' }}>Build with SDK</div>
-                <a href='https://docs.openhands.dev/sdk' target='_blank' rel='noopener noreferrer' className='absolute inset-0' style={{ textDecoration: 'underline', textDecorationThickness: '1.6px' }}>
-                  <span className='sr-only'>Build with SDK</span>
+                <div data-wf-el='btn-text' aria-hidden='true' style={{ whiteSpace: 'nowrap', cursor: 'auto', textUnderlineOffset: 'auto', pointerEvents: 'none' }}>See developer docs</div>
+                <a href={OPENHANDS_DOCS_URL} target='_blank' rel='noopener noreferrer' className='absolute inset-0' style={{ textDecoration: 'underline', textDecorationThickness: '1.6px' }}>
+                  <span className='sr-only'>See developer docs</span>
                 </a>
               </div>
               <div data-wf-el='button' className='btn btn-primary relative' style={{ padding: '0.9em 1.9em', margin: 0, borderRadius: '8px', textDecoration: 'none', textDecorationThickness: 'auto', textUnderlineOffset: 'auto', cursor: 'auto', boxShadow: 'rgba(0, 0, 0, 0) 0px 0px 0px 0px inset', gap: '6.4px' }}>
-                <div data-wf-el='btn-text' aria-hidden='true' style={{ whiteSpace: 'nowrap', cursor: 'auto', textUnderlineOffset: 'auto', pointerEvents: 'none' }}>Try it live</div>
-                <a href='https://app.all-hands.dev/' target='_blank' rel='noopener noreferrer' className='absolute inset-0' style={{ textDecoration: 'underline', textDecorationThickness: '1.6px' }}>
-                  <span className='sr-only'>Try it live</span>
+                <div data-wf-el='btn-text' aria-hidden='true' style={{ whiteSpace: 'nowrap', cursor: 'auto', textUnderlineOffset: 'auto', pointerEvents: 'none' }}>Download Agent Canvas</div>
+                <a href={AGENT_CANVAS_DOWNLOAD_URL} target='_blank' rel='noopener noreferrer' className='absolute inset-0' style={{ textDecoration: 'underline', textDecorationThickness: '1.6px' }}>
+                  <span className='sr-only'>Download Agent Canvas</span>
                 </a>
               </div>
             </div>
