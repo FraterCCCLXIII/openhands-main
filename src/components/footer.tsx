@@ -352,7 +352,7 @@ const FooterContent = ({
   const pathname = normalizePathname(location.pathname);
 
   return (
-    <div className='text-center text-brand-fg'>
+    <div className='text-center text-brand-fg' style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       {showMarketingCta ? (
         <FooterMarketingCta
           title={marketingCtaTitle}

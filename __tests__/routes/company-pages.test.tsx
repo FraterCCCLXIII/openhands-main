@@ -3,6 +3,7 @@ import type { ReactElement } from 'react';
 import { MemoryRouter, RouterProvider, createMemoryRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
 import App from '../../src/root';
+import { teamMembers } from '../../src/constants/members';
 import About from '../../src/routes/about';
 import Contact from '../../src/routes/contact';
 import Manifesto from '../../src/routes/manifesto';
@@ -49,6 +50,9 @@ describe('company information pages parity', () => {
         image.getAttribute('src')?.startsWith('/assets/')
       )
     ).toBe(true);
+    expect(container.querySelectorAll('[data-wf-el="standard-collection-list-item"]')).toHaveLength(teamMembers.length + 2);
+    expect(container.querySelectorAll('[data-wf-el="card-2"]')).toHaveLength(4);
+    expect(screen.getByText('OSS contributors')).toBeInTheDocument();
   });
 
   it('renders the synced contact page copy, supporting sections, and paragraph-style form labels', () => {

@@ -44,9 +44,6 @@ export const meta: Route.MetaFunction = ({ location }) => {
   ];
 };
 
-const MILESTONE_CARD_LEFT = [54, 438, 822] as const;
-const MILESTONE_LABEL_TOP = [235, 227, 235] as const;
-
 const MILESTONES = [
   {
     value: '74K',
@@ -67,97 +64,145 @@ const MILESTONES = [
   },
 ] as const;
 
+const MilestoneCard = ({ milestone, index }: { milestone: (typeof MILESTONES)[number]; index: number }) => (
+  <div
+    data-wf-el='card-2'
+    className='relative flex flex-col justify-start overflow-hidden rounded-[8px]'
+    style={{
+      width: index === 2 ? '360.5px' : '359.75px',
+      height: '330.562px',
+      backgroundColor: 'rgba(255, 255, 255, 0.34)',
+      borderStyle: 'none',
+    }}
+  >
+    <div
+      data-wf-el='card-body-2'
+      className='relative flex h-full w-full flex-col items-center justify-center p-6'
+    >
+      <div data-wf-el='standard-wrap' className='flex items-end justify-end' style={{ marginTop: '49.6px' }}>
+        <div
+          data-wf-el='eye-catch-2'
+          className='font-sohne-buch text-white'
+          style={{ fontSize: '154.08px', lineHeight: '154.08px', fontWeight: 400, letterSpacing: 'normal' }}
+        >
+          {milestone.value}
+        </div>
+        {'suffix' in milestone && milestone.suffix ? (
+          <div data-wf-el='h2-2' className='section-title text-white' style={{ marginBottom: '8.8px' }}>
+            {milestone.suffix}
+          </div>
+        ) : null}
+      </div>
+      <div data-wf-el='standard-wrap' className='flex flex-col items-center justify-center' style={index === 1 ? { width: '135.156px', height: '78.89px' } : undefined}>
+        <img data-wf-el='icon-2' src={milestone.icon} alt='' className='h-6 w-[17px] shrink-0' style={{ display: 'flex', borderStyle: 'none' }} />
+        <div data-wf-el='eyebrow-2' className='font-mono text-[14.08px] leading-[16.896px] text-white' style={{ width: index === 1 ? '135.156px' : 'auto', height: index === 1 ? '33.78px' : 'auto', marginBottom: '21.12px', textAlign: index === 2 ? 'center' : 'start' }}>
+          {milestone.label}
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
 const About = () => {
   return (
     <CompanyPageShell>
-      <section data-wf-el='section-hero' className='relative pt-0 pb-0' style={{ height: '1152.27px' }}>
-        <div data-wf-el='asci-wrap' className='pointer-events-auto absolute inset-0 overflow-hidden' style={{ '--ascii-opacity': '0.12', '--ascii-filter': 'drop-shadow(0 0 6px rgba(160, 200, 255, 0.1))', maxHeight: '2400px' } as CSSProperties} aria-hidden='true'>
-          <ASCIIAnimation className='h-full w-full' />
-        </div>
-        {/* Live wraps hero content in `.hero-content` (`padding: 4rem 0 4rem`).
-            Move that padding onto the inner content wrappers so the SECTION
-            keeps `padding: 0` (matches live) while H1 starts at live top:148. */}
-        <div className='mx-auto max-w-[600px] pt-16 text-center'>
-          <h1 className='fluid-h1 h1-flow-root text-brand-fg'>
-            Empowering every team to build software autonomously.
-          </h1>
-          <p className='fluid-body-lg font-medium text-[#5f5f5f]' style={{ marginTop: '10.4px', marginBottom: '20.8px' }}>
-            OpenHands is the open, secure, and model-agnostic platform
-          </p>
-        </div>
-
-        <div className='mx-auto mt-[149px] max-w-[1238px]'>
-          <div className='mb-12 flex justify-center'>
-            <h2 className='inline-block section-title text-brand-fg'>
-              Milestones
-            </h2>
+      <section data-wf-el='section-hero' className='relative pt-0 pb-0' style={{ height: '1152.27px', borderStyle: 'none' }}>
+        <div data-wf-el='asci-wrap' className='pointer-events-auto absolute inset-0 overflow-hidden' style={{ '--ascii-opacity': '0.12', '--ascii-filter': 'drop-shadow(0 0 6px rgba(160, 200, 255, 0.1))', maxHeight: '2400px', borderStyle: 'none' } as CSSProperties} aria-hidden='true'>
+          <div data-wf-el='asci-embed' className='h-full w-full overflow-hidden'>
+            <ASCIIAnimation className='h-full w-full' />
           </div>
+        </div>
 
-          <div className='relative min-h-[635px] overflow-hidden rounded-[8px] bg-brand-fg text-brand-bg' style={{ height: '636.562px', border: '1px solid rgba(0, 0, 0, 0)' }}>
-            <img
-              aria-hidden='true'
-              src='/assets/webflow/backgrounds/690e289157a957d4d32ee88d_ascii-art_(20)_1.png'
-              alt=''
-              className='object-cover'
-              style={{ position: 'static', display: 'inline-block', width: '1236px', height: '634.562px' }}
-            />
-
-            <div className='absolute inset-0'>
-              {MILESTONES.map((milestone, index) => (
-                <div
-                  key={milestone.label}
-                  className='absolute flex flex-col items-center rounded-[8px]'
-                  style={{
-                    left: `${MILESTONE_CARD_LEFT[index]}px`,
-                    top: '153px',
-                    width: '360px',
-                    height: '330px',
-                    backgroundColor: 'rgba(255, 255, 255, 0.34)',
-                  }}
-                >
-                  <div className='absolute flex items-end gap-1' style={{ top: index === 1 ? '72.6px' : '81px', left: '50%', transform: 'translateX(-50%)' }}>
-                    <span className='font-medium leading-none tracking-[-0.04em]' style={{ fontSize: '154.08px', lineHeight: '154.08px' }}>
-                      {milestone.value}
-                    </span>
-                    {'suffix' in milestone && milestone.suffix ? (
-                      <span className='pb-1 text-[56px] leading-none'>{milestone.suffix}</span>
-                    ) : null}
+        <div data-wf-el='standard-collection' className='h-full'>
+          <div data-wf-el='standard-collection-list' className='h-full'>
+            <div data-wf-el='standard-collection-list-item' className='h-full' style={{ justifyContent: 'space-between', alignItems: 'center', gap: '16px' }}>
+              <div data-wf-el='hero-content' className='flex h-full w-full flex-col items-center justify-center py-16'>
+                <div data-wf-el='container' className='mx-auto w-full max-w-[1238px]' style={{ marginLeft: '101px', marginRight: '101px' }}>
+                  <div className='mx-auto max-w-[600px] text-center'>
+                    <h1 className='fluid-h1 h1-flow-root text-brand-fg'>
+                      Empowering every team to build software autonomously.
+                    </h1>
+                    <p data-wf-el='paragraph-lg' className='fluid-body-lg font-medium text-[#5f5f5f]' style={{ marginTop: '10.4px', marginBottom: '20.8px' }}>
+                      OpenHands is the open, secure, and model-agnostic platform
+                    </p>
                   </div>
-                  <div className='absolute flex items-start gap-3' style={{ top: `${MILESTONE_LABEL_TOP[index]}px`, left: '171px' }}>
-                    <img src={milestone.icon} alt='' className='shrink-0' style={{ display: 'flex', width: '17px', height: '24px' }} />
-                    <div className='font-mono text-[14px] leading-[1.2] text-brand-bg'>
-                      {milestone.label}
+
+                  <div className='mt-[149px]'>
+                    <div className='mb-12 flex justify-center'>
+                      <h2 className='inline-block section-title text-brand-fg'>
+                        Milestones
+                      </h2>
+                    </div>
+
+                    <div data-wf-el='row-2' className='relative -mx-5 flex' style={{ height: '636.562px', gap: '40px' }}>
+                      <div data-wf-el='col-2' className='relative flex w-full flex-col px-5'>
+                        <div data-wf-el='card-2' className='relative flex h-full w-full flex-col justify-start overflow-hidden rounded-[8px] bg-brand-fg' style={{ border: '1px solid #b3a88c' }}>
+                          <div data-wf-el='card-body-2' className='relative h-full w-full p-6' style={{ flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start' }}>
+                            <div data-wf-el='card-bg' className='absolute inset-0'>
+                              <img
+                                data-wf-el='card-bg-img'
+                                aria-hidden='true'
+                                src='/assets/webflow/backgrounds/690e289157a957d4d32ee88d_ascii-art_(20)_1.png'
+                                alt=''
+                                className='h-full w-full object-cover'
+                                style={{ display: 'inline-block', borderStyle: 'none' }}
+                              />
+                            </div>
+
+                            <div aria-hidden='true' style={{ height: '128px' }} />
+                            <div data-wf-el='container' className='mx-auto' style={{ marginTop: '0px', marginLeft: '29.7px', marginRight: '29.7px', width: '1129px', height: '331px', maxWidth: '1238px' }}>
+                              <div className='flex h-full justify-between'>
+                                {MILESTONES.map((milestone, index) => (
+                                  <MilestoneCard key={milestone.label} milestone={milestone} index={index} />
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
-              ))}
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      <section data-wf-el='section' className='relative pt-20 pb-20' style={{ height: '2450.45px' }}>
-        <div className='mx-auto max-w-[1238px]'>
-          <div className='px-5'>
-            <h3 className='section-title text-brand-fg' style={{ marginBottom: '8.8px' }}>
-              Team
-            </h3>
-            <p className='fluid-body-lg font-medium text-[#5f5f5f]' style={{ marginTop: '0px', marginBottom: '20.8px' }}>
-              Built by developers, for developers.
-            </p>
-            <OverlayLinkButton
-              href='https://jobs.ashbyhq.com/OpenHands'
-              label='Join us'
-              variant='outline'
-              className='w-fit'
-              wrapperStyle={{ marginBottom: '0px' }}
-            />
+      <section data-wf-el='section' className='relative pt-20 pb-20' style={{ height: '2450.45px', borderStyle: 'none' }}>
+        <div data-wf-el='container' className='mx-auto max-w-[1238px]'>
+          <div data-wf-el='standard-collection'>
+            <div data-wf-el='standard-collection-list'>
+              <div data-wf-el='standard-collection-list-item' style={{ justifyContent: 'space-between', alignItems: 'center', gap: '16px' }}>
+                <div className='px-5'>
+                  <h3 className='section-title text-brand-fg' style={{ marginBottom: '8.8px' }}>
+                    Team
+                  </h3>
+                  <p data-wf-el='paragraph-lg' className='fluid-body-lg font-medium text-[#5f5f5f]' style={{ marginTop: '0px', marginBottom: '20.8px' }}>
+                    Built by developers, for developers.
+                  </p>
+                  <div data-wf-el='standard-wrap' className='w-full'>
+                    <OverlayLinkButton
+                      href='https://jobs.ashbyhq.com/OpenHands'
+                      label='Join us'
+                      variant='outline'
+                      className='w-fit'
+                      wrapperStyle={{ marginBottom: '0px' }}
+                      wfEl='button'
+                      textWfEl='btn-text'
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div className='mt-[128px] grid justify-items-start gap-x-0 gap-y-10 sm:grid-cols-2 lg:grid-cols-4'>
-            {teamMembers.map((member) => (
-              <MemberCard key={member.name} member={member} />
-            ))}
+          <div data-wf-el='standard-collection' className='mt-[128px]'>
+            <div data-wf-el='standard-collection-list' className='flex flex-wrap' style={{ rowGap: '40px' }}>
+              {teamMembers.map((member) => (
+                <MemberCard key={member.name} member={member} />
+              ))}
+            </div>
           </div>
         </div>
       </section>
