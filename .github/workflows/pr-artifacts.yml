@@ -23,8 +23,11 @@ jobs:
     steps:
       - name: Check if fork PR
         id: check-fork
+        env:
+          HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+          BASE_REPO: ${{ github.event.pull_request.base.repo.full_name }}
         run: |
-          if [ "${{ github.event.pull_request.head.repo.full_name }}" != "${{ github.event.pull_request.base.repo.full_name }}" ]; then
+          if [ "$HEAD_REPO" != "$BASE_REPO" ]; then
             echo "is_fork=true" >> $GITHUB_OUTPUT
             echo "::notice::Fork PR detected - skipping auto-cleanup on base branch"
           else
@@ -40,13 +43,15 @@ jobs:
       - name: Remove .pr/ directory from base branch
         id: remove
         if: steps.check-fork.outputs.is_fork == 'false'
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
         run: |
           if [ -d ".pr" ]; then
             git config user.name "allhands-bot"
             git config user.email "allhands-bot@users.noreply.github.com"
             git rm -rf .pr/
             git commit -m "chore: remove merged PR artifacts [automated]"
-            git push origin HEAD:${{ github.event.pull_request.base.ref }} || {
+            git push origin "HEAD:${BASE_REF}" || {
               echo "::error::Failed to push cleanup commit. Check branch protection rules."
               exit 1
             }
@@ -60,13 +65,16 @@ jobs:
       - name: Comment on merged PR
         if: steps.check-fork.outputs.is_fork == 'false' && steps.remove.outputs.removed == 'true'
         uses: actions/github-script@v9
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
         with:
           script: |
             const marker = '<!-- pr-artifacts-notice -->';
+            const baseRef = process.env.BASE_REF;
             const body = `${marker}
             ✅ **PR Artifacts Cleaned Up**
 
-            The \`.pr/\` directory was automatically removed from \`${{ github.event.pull_request.base.ref }}\` after merge.
+            The \`.pr/\` directory was automatically removed from \`${baseRef}\` after merge.
             `;
 
             await github.rest.issues.createComment({
