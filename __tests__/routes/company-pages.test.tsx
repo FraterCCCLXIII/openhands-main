@@ -68,7 +68,11 @@ describe('company information pages parity', () => {
     expect(screen.getByPlaceholderText('Acme')).toBeInTheDocument();
     expect(screen.getByPlaceholderText('Send us a note here....')).toBeInTheDocument();
     expect(container.querySelectorAll('label')).toHaveLength(0);
-    expect(container.querySelector('input[type="submit"][value="Submit"]')).toBeInTheDocument();
+    expect(container.querySelector('[data-wf-el="card"] [data-wf-el="card-body"] [data-wf-el="form-block"]')).toBeInTheDocument();
+    expect(container.querySelectorAll('[data-wf-el="icon-media"]')).toHaveLength(6);
+    expect(container.querySelectorAll('[data-wf-el="track-item"]')).toHaveLength(16);
+    expect(container.querySelector('select[data-wf-el="select-field"].contact-select-field')).toBeInTheDocument();
+    expect(container.querySelector('input[type="submit"][value="Submit"][data-wf-el="button"]')).toBeInTheDocument();
     expect(container.querySelector('button[type="submit"]')).not.toBeInTheDocument();
     expect(screen.getByText('We’ll be in touch soon')).toBeInTheDocument();
     expect(screen.getByText('Oops! Something went wrong while submitting the form.')).toBeInTheDocument();
@@ -119,5 +123,6 @@ describe('company information pages parity', () => {
     renderInApp(initialEntry, routePath, element);
 
     expect(screen.getByText('Building the open standard for autonomous software development.')).toBeInTheDocument();
+    expect(screen.getByText(/OpenHands - All rights reserved/)).toBeInTheDocument();
   });
 });

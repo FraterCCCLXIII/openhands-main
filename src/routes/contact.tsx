@@ -81,7 +81,7 @@ const CUSTOMER_LOGOS = [
 // (4px gap → 4px mt on input) can be dropped per-field.
 const fieldLabelClass = 'font-sohne-buch text-[14.4px] leading-[21.6px] text-brand-fg field-label';
 const textFieldClass =
-  'block w-full rounded-[6.4px] border border-[#5f5f5f] bg-white/35 px-3 py-2 text-[14px] leading-[20px] text-[#333333] outline-none placeholder:text-[#5f5f5f] align-middle';
+  'block w-full rounded-[6.4px] border border-[#5f5f5f] bg-[rgba(255,255,255,0.34)] px-3 py-2 text-[14px] leading-[20px] text-[#333333] outline-none placeholder:text-[#5f5f5f] align-middle';
 
 const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
   event.preventDefault();
@@ -95,14 +95,14 @@ const Contact = () => {
         className='relative px-6 pb-0 pt-0 lg:px-10'
         style={{ marginTop: '0px', height: '266px', paddingTop: '0px', paddingLeft: '0px', paddingRight: '0px' }}
       >
-        <div data-wf-el='asci-wrap' className='pointer-events-auto absolute inset-0 overflow-hidden' style={{ '--ascii-opacity': '0.12' } as CSSProperties} aria-hidden='true'>
+        <div data-wf-el='asci-wrap' className='pointer-events-auto absolute inset-0 overflow-hidden' style={{ '--ascii-opacity': '0.12', maxHeight: '2400px', textAlign: 'center' } as CSSProperties} aria-hidden='true'>
           <ASCIIAnimation className='h-full w-full' />
         </div>
-        <div className='relative mx-auto flex max-w-[720px] flex-col items-center text-center' style={{ paddingTop: '56px' }}>
+        <div data-wf-el='hero-content' className='relative flex w-full flex-col items-center justify-center text-center' style={{ height: '266.438px', paddingTop: '56px', paddingBottom: '56px' }}>
           <h1 className='h1-flow-root max-w-[560px] fluid-h1 text-brand-fg'>
             Talk to the OpenHands Team
           </h1>
-          <p className='max-w-[560px] fluid-body-lg font-medium text-[#5f5f5f]' style={{ marginTop: '10.4px', marginBottom: '20.8px' }}>
+          <p data-wf-el='paragraph-lg' className='max-w-[560px] fluid-body-lg font-medium text-[#5f5f5f]' style={{ marginTop: '10.4px', marginBottom: '20.8px' }}>
             Get a custom demo and explore pricing, private deployments, and white-glove training, support and services for your org
           </p>
         </div>
@@ -111,113 +111,115 @@ const Contact = () => {
       <section
         data-wf-el='section'
         className='px-6 pb-16 pt-0 lg:px-10 lg:pb-20'
-        style={{ marginTop: '0px', height: '821.359px', paddingTop: '80px', paddingLeft: '0px', paddingRight: '0px' }}
+        style={{ position: 'relative', marginTop: '0px', height: '821.359px', paddingTop: '80px', paddingLeft: '0px', paddingRight: '0px' }}
       >
-        <div className='mx-auto max-w-[1238px]' style={{ marginTop: '50px' }}>
-          <div className='grid gap-0 lg:grid-cols-2 lg:items-start'>
-            <div style={{ paddingLeft: '20px', paddingRight: '20px' }}>
-              <div className='fluid-h3 text-brand-fg'>
+        <div data-wf-el='container' className='mx-auto max-w-[1238px]' style={{ marginTop: '49.6px' }}>
+          <div style={{ display: 'flex', margin: '0px', width: '1238px', height: '611.766px', rowGap: '40px' }}>
+            <div style={{ display: 'flex', position: 'relative', flexDirection: 'column', width: '619px', maxWidth: '50%', paddingLeft: '20px', paddingRight: '20px' }}>
+              <div className='fluid-h3 text-center text-brand-fg' style={{ marginBottom: '9.6px' }}>
                 Why enterprises <br />choose OpenHands
               </div>
 
-              <div className='mt-6 space-y-6'>
-                {CONTACT_FEATURES.map((feature) => (
-                  <div key={feature} className='grid grid-cols-[20px_1fr] items-start gap-3'>
-                    {/* Live's check icon has margin: 0; we previously used
-                        `mt-1` (4px), giving 6 IMG marginTop mismatches. */}
-                    <img src={CHECK_ICON} alt='' className='h-5 w-5' style={{ marginTop: '0px' }} />
-                    {/* Live's enterprise feature paragraphs use Sohne Buch
-                        (the body font) at 20px; the inherited Sohne Kraftig
-                        was flagged in 6 fontFamily mismatches.  Margin:0
-                        keeps the live `u-m-0` analog. */}
-                    <p className='font-sohne-buch text-[20px] leading-[28px] text-[#5f5f5f]' style={{ marginTop: '0px', marginBottom: '0px' }}>{feature}</p>
+              {CONTACT_FEATURES.map((feature, index) => (
+                <div key={feature} style={{ display: 'flex', marginTop: '24px', marginBottom: index === CONTACT_FEATURES.length - 1 ? '8px' : '0px', marginLeft: '-4px', marginRight: '-4px', width: '587px', height: '28px', rowGap: '8px' }}>
+                  <div style={{ display: 'flex', position: 'relative', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', width: '28px', height: '28px', paddingLeft: '4px', paddingRight: '4px' }}>
+                    <img data-wf-el='icon-media' src={CHECK_ICON} alt='' className='h-5 w-5' style={{ marginTop: '0px' }} />
                   </div>
-                ))}
-              </div>
+                  <div style={{ display: 'flex', position: 'relative', flexDirection: 'column', width: '559px', height: '28px', paddingLeft: '4px', paddingRight: '4px' }}>
+                    <p data-wf-el='paragraph-md' className='font-sohne-buch text-[20px] leading-[28px] text-[#5f5f5f]' style={{ marginTop: '0px', marginBottom: '0px' }}>{feature}</p>
+                  </div>
+                </div>
+              ))}
 
-              <div className='font-medium tracking-[-0.02em] text-brand-fg' style={{ marginTop: '76px', fontSize: '24px', lineHeight: '33.6px' }}>
+              <div className='font-medium text-brand-fg' style={{ marginTop: '74.4px', marginBottom: '9.6px', fontSize: '24px', lineHeight: '33.6px', letterSpacing: 'normal' }}>
                 Trusted by engineers at
               </div>
 
-              <div className='eyebrow-slider w-dyn-list' style={{ marginTop: '10.4px', overflow: 'hidden', width: '579px', height: '75px' }}>
-                <div role='list' className='track w-dyn-items' style={{ display: 'flex', alignItems: 'center', width: '1840px', height: '35px', transform: 'translateX(-652px)', marginTop: '20px' }}>
-                  {CUSTOMER_LOGOS.map((logo) => (
-                    <div role='listitem' key={logo} className='track-item w-dyn-item' style={{ flex: '0 0 115px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <div className='standard-media contain-center inline-block' style={{ display: 'inline-block' }}>
-                        <img src={logo} alt='' className='standard-media-img' style={{ maxWidth: '100px', maxHeight: '35px', width: 'auto', height: 'auto', verticalAlign: 'middle', objectFit: 'scale-down' }} />
-                      </div>
+              <div style={{ display: 'flex', width: '619px', height: '74.7344px', marginLeft: '-20px', marginRight: '-20px', rowGap: '40px' }}>
+                <div style={{ display: 'flex', position: 'relative', flexDirection: 'column', width: '619px', paddingLeft: '20px', paddingRight: '20px' }}>
+                  <div data-wf-el='eyebrow-slider' className='eyebrow-slider w-dyn-list' style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden', width: '579px', height: '74.7344px', paddingTop: '20px', paddingBottom: '20px' }}>
+                    <div role='list' className='track w-dyn-items' style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: '16px', width: '1840px', height: '34.7344px', transform: 'translateX(0px)' }}>
+                      {CUSTOMER_LOGOS.map((logo) => (
+                        <div data-wf-el='track-item' role='listitem' key={logo} className='track-item w-dyn-item' style={{ flex: '0 0 100px', width: '100px', minWidth: '100px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <div data-wf-el='standard-media' className='standard-media contain-center inline-block' style={{ display: 'block', justifyContent: 'center', alignItems: 'center', objectFit: 'contain' }}>
+                            <img data-wf-el='standard-media-img' src={logo} alt='' className='standard-media-img' style={{ maxWidth: '100px', width: 'auto', height: 'auto', verticalAlign: 'middle', objectFit: 'scale-down', borderStyle: 'none' }} />
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div style={{ paddingLeft: '20px', paddingRight: '20px' }}>
-              <div className='rounded-[8px] border border-brand-fg/25 bg-transparent' style={{ padding: '24px' }}>
-                <form className='space-y-5' onSubmit={handleSubmit} style={{ marginTop: '24px' }}>
-                {/* Live wraps each field in a Webflow row that resolves
-                    to label-with-mb-7.2 + input-with-mb-21 (and no
-                    inter-element gap from a space-y wrapper). */}
-                <div className='grid gap-5 md:grid-cols-2'>
-                  <div>
-                    <div>
-                      <p className={fieldLabelClass}>First Name *</p>
-                      <input id='firstname' type='text' name='firstname' placeholder='James' required className={`${textFieldClass} field-input`} />
+            <div style={{ display: 'flex', position: 'relative', flexDirection: 'column', width: '619px', paddingLeft: '20px', paddingRight: '20px' }}>
+              <div data-wf-el='card' style={{ display: 'flex', position: 'relative', flexDirection: 'column', justifyContent: 'flex-start', overflow: 'hidden', width: '579px', height: '611.766px', border: '1px solid rgb(34, 21, 13)', borderRadius: '8px' }}>
+                <div data-wf-el='card-body' style={{ display: 'block', position: 'relative', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', width: '577px', height: '609.766px', padding: '24px' }}>
+                  <div data-wf-el='form-block' className='w-form' style={{ display: 'block', width: '529px', marginBottom: '15px' }}>
+                    <form data-wf-el='form-block--form' onSubmit={handleSubmit} style={{ display: 'block', width: '529px', marginTop: '24px', marginBottom: '24px' }}>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', margin: '0px -12px', rowGap: '24px', width: '553px' }}>
+                    <div style={{ display: 'flex', position: 'relative', flexDirection: 'column', width: '276.5px', paddingLeft: '12px', paddingRight: '12px' }}>
+                      <div>
+                        <p data-wf-el='paragraph-sm' className={fieldLabelClass}>First Name *</p>
+                        <input data-wf-el='text-field' id='firstname' type='text' name='firstname' placeholder='James' required className={`${textFieldClass} field-input`} />
+                      </div>
+                      <div>
+                        <p data-wf-el='paragraph-sm' className={fieldLabelClass}>Company email *</p>
+                        <input data-wf-el='text-field' id='Email' type='email' name='Email' placeholder='email@company.com' required className={`${textFieldClass} field-input field-input--last`} />
+                      </div>
                     </div>
-                    <div>
-                      <p className={fieldLabelClass}>Company email *</p>
-                      <input id='Email' type='email' name='Email' placeholder='email@company.com' required className={`${textFieldClass} field-input field-input--last`} />
+
+                    <div style={{ display: 'flex', position: 'relative', flexDirection: 'column', width: '276.5px', paddingLeft: '12px', paddingRight: '12px' }}>
+                      <div>
+                        <p data-wf-el='paragraph-sm' className={fieldLabelClass}>Last name *</p>
+                        <input data-wf-el='text-field' id='lastname' type='text' name='lastname' placeholder='Smith' required className={`${textFieldClass} field-input`} />
+                      </div>
+                      <div>
+                        <p data-wf-el='paragraph-sm' className={fieldLabelClass}>Company name *</p>
+                        <input data-wf-el='text-field' id='company' type='text' name='company' placeholder='Acme' required className={`${textFieldClass} field-input field-input--last`} />
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', position: 'relative', flexDirection: 'column', width: '553px', maxWidth: '100%', paddingLeft: '12px', paddingRight: '12px' }}>
+                      <p data-wf-el='paragraph-sm' className={fieldLabelClass}>Engineering team size*</p>
+                      <select data-wf-el='select-field' id='Engineering-size' name='Engineering-size' defaultValue='' required className={`${textFieldClass} contact-select-field field-input field-input--last`} style={{ height: '38px', lineHeight: '20px' }}>
+                        <option value=''>Select one...</option>
+                        <option value='51-500'>1-50</option>
+                        <option value='50-100'>50-100</option>
+                        <option value='501+'>501+</option>
+                      </select>
+                    </div>
+
+                    <div style={{ display: 'flex', position: 'relative', flexDirection: 'column', width: '553px', paddingLeft: '12px', paddingRight: '12px' }}>
+                      <p data-wf-el='paragraph-sm' className={fieldLabelClass}>Message *</p>
+                      <textarea
+                        data-wf-el='text-area'
+                        id='Message-comments'
+                        name='Message-comments'
+                        placeholder='Send us a note here....'
+                        required
+                        className={`${textFieldClass} resize-y`}
+                        style={{ height: '120px', minHeight: '120px', marginTop: '0px', marginBottom: '10px' }}
+                      />
                     </div>
                   </div>
 
-                  <div>
-                    <div>
-                      <p className={fieldLabelClass}>Last name *</p>
-                      <input id='lastname' type='text' name='lastname' placeholder='Smith' required className={`${textFieldClass} field-input`} />
-                    </div>
-                    <div>
-                      <p className={fieldLabelClass}>Company name *</p>
-                      <input id='company' type='text' name='company' placeholder='Acme' required className={`${textFieldClass} field-input field-input--last`} />
-                    </div>
+                  <input data-wf-el='button' type='submit' value='Submit' className='btn-primary w-fit field-submit' style={{ position: 'relative', display: 'inline-flex', justifyContent: 'center', alignItems: 'center', gap: '6.4px', borderRadius: '8px', padding: '14.4px 30.4px', fontSize: '16px', fontWeight: 500, lineHeight: '20.8px', cursor: 'pointer', border: '1px solid transparent', marginTop: '24px', marginBottom: '10px', boxShadow: 'rgba(0,0,0,0) 0px 0px 0px 0px inset' }} />
+
+                  <div className='hidden'>
+                    <p>Thank you!</p>
+                    <p>We’ll be in touch soon</p>
+                    <a href='#'>Dismiss</a>
+                  </div>
+                  <div className='hidden'>
+                    <p>Oops! Something went wrong while submitting the form.</p>
+                  </div>
+                    </form>
                   </div>
                 </div>
-
-                <div>
-                  <p className={fieldLabelClass}>Engineering team size*</p>
-                  <select id='Engineering-size' name='Engineering-size' defaultValue='' required className={`${textFieldClass} field-input field-input--last`}>
-                    <option value=''>Select one...</option>
-                    <option value='51-500'>1-50</option>
-                    <option value='50-100'>50-100</option>
-                    <option value='501+'>501+</option>
-                  </select>
-                </div>
-
-                <div>
-                  <p className={fieldLabelClass}>Message *</p>
-                  <textarea
-                    id='Message-comments'
-                    name='Message-comments'
-                    placeholder='Send us a note here....'
-                    required
-                    rows={6}
-                    className={`${textFieldClass} field-input field-input--last min-h-[160px] resize-y`}
-                  />
-                </div>
-
-                <input type='submit' value='Submit' className='btn-primary w-fit field-submit' style={{ position: 'relative', display: 'inline-flex', borderRadius: '8px', padding: '14.4px 30.4px', fontSize: '16px', fontWeight: 500, lineHeight: 1.3, cursor: 'pointer', border: '1px solid transparent', marginTop: '24px', marginBottom: '10px', boxShadow: 'rgba(0,0,0,0) 0px 0px 0px 0px inset' }} />
-
-                <div className='hidden'>
-                  <p>Thank you!</p>
-                  <p>We’ll be in touch soon</p>
-                  <a href='#'>Dismiss</a>
-                </div>
-                <div className='hidden'>
-                  <p>Oops! Something went wrong while submitting the form.</p>
-                </div>
-              </form>
+              </div>
             </div>
           </div>
-        </div>
         </div>
       </section>
     </CompanyPageShell>

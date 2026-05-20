@@ -225,6 +225,8 @@
   .field-input { margin-top: 0; margin-bottom: 21px; }
   .field-input--last { margin-bottom: 0; }
   .field-submit { margin-top: 24px; margin-bottom: 10px; }
+  .contact-select-field { line-height: 20px !important; }
+
 
   ::selection {
     @apply bg-brand-fg text-brand-bg;
@@ -527,12 +529,14 @@
   position: relative;
   inset: 0;
   overflow: hidden;
+  text-align: center;
 }
 
 .ascii-pre {
   position: absolute;
   inset: 0;
   margin: 0;
+  text-align: center;
   overflow: hidden;
   color: var(--fg, #22150d);
   background: transparent;

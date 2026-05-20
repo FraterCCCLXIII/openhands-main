@@ -25,7 +25,7 @@ export const CompanyPageShell = ({
   backgroundClassName = 'opacity-[0.12]',
 }: CompanyPageShellProps) => {
   return (
-    <main data-wf-el='page-main' className='relative overflow-visible' style={{ display: 'flex', flexDirection: 'column' }}>
+    <main data-wf-el='page-main' className='relative overflow-visible' style={{ display: 'flex', flexDirection: 'column', position: 'static' }}>
       <div
         aria-hidden='true'
         data-testid='company-page-background'
@@ -37,6 +37,7 @@ export const CompanyPageShell = ({
       />
       <div className='relative'>{children}</div>
       <Footer standalone compactNav showSocialLinks />
+      <div aria-hidden='true' style={{ height: '19px' }} />
     </main>
   );
 };

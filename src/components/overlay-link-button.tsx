@@ -46,6 +46,7 @@ export const OverlayLinkButton = ({
 }: OverlayLinkButtonProps) => {
   const isExternalLink = /^https?:\/\//.test(href);
   const config = VARIANT_CONFIG[variant];
+  const textDisplay = iconSrc ? 'inline-flex' : 'block';
 
   // Live's `.button-N` outer wrap has cursor:auto and a 10px
   // margin-bottom (Webflow's default form-control margin); inheriting
