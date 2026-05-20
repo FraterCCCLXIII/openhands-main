@@ -17,9 +17,11 @@ describe('Privacy policy route', () => {
 
     expect(container.querySelector('main')).toHaveClass('text-brand-fg');
     expect(container.querySelector('main > section')).toHaveStyle({ paddingTop: '80px', paddingBottom: '80px' });
-    expect(container.querySelector('main [data-wf-el="container"]')).toHaveClass('max-w-[900px]');
+    expect(container.querySelector('main [data-wf-el="container"]')).toHaveClass('max-w-[950.08px]');
+    expect(container.querySelector('main [data-wf-el="ah-legal"]')).toHaveClass('max-w-[900px]', 'text-[14px]');
     expect(screen.getByRole('heading', { level: 1, name: 'Privacy Policy' })).toHaveClass('text-center', 'fluid-h3');
     expect(screen.getByText('Effective Date: September 3, 2025').closest('p')).toHaveClass('leading-[1.6]');
+    expect(screen.getByText('Effective Date: September 3, 2025').closest('strong')).toHaveClass('font-bold', 'text-black');
 
     expect(screen.getByRole('heading', { level: 2, name: 'Personal information we collect' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { level: 2, name: 'How we use personal information' })).toBeInTheDocument();
@@ -30,6 +32,9 @@ describe('Privacy policy route', () => {
     expect(screen.getByText(/This Privacy Policy explains how we handle personal information/i)).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Brave' })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'contact@all-hands.dev' })).not.toBeInTheDocument();
+    expect(screen.getByText(/browser:o Firefox; Chrome; Microsoft Edge; Safari/i)).toBeInTheDocument();
+    expect(screen.getByText(/participating companies:o Digital Advertising Allianceo Network Advertising Initiative/i)).toBeInTheDocument();
+
     expect(screen.getByRole('link', { name: 'https://all-hands.dev' })).toHaveAttribute(
       'href',
       'https://all-hands.dev',

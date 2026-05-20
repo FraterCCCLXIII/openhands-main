@@ -61,7 +61,7 @@ We may share your personal information with the following categories of third pa
 
 ### Service providers.
 
-Companies and individuals that provide services on our behalf or help us operate our Services or our business (such as hosting, information technology, customer support, email delivery, marketing, analytics, and website tracking services). We also rely on third-party AI service providers, which may receive your content subject to our agreements with them, to assist us with providing the Site and Services.
+Companies and individuals that provide services on our behalf or help us operate our Services or our business (such as hosting, information technology, customer support, email delivery, marketing, analytics, and website tracking services).. We also rely on third-party AI service providers, which may receive your content subject to our agreements with them, to assist us with providing the Site and Services.
 
 ### Professional advisors.
 
@@ -87,11 +87,11 @@ You can opt out of receiving marketing emails at any time by clicking “unsubsc
 
 ### Limit online tracking: Here are some of the ways you can limit online tracking:
 
-- **Block cookies.** Most browsers let you remove or reject cookies, including cookies used for interest-based advertising. To do this, follow the instructions in your browser settings. Many browsers accept cookies by default until you change your settings. Use the following links to learn more about how to control cookies and online tracking through your browser: [Firefox](https://support.mozilla.org/en-US/kb/enhanced-tracking-protection-firefox-desktop); [Chrome](https://support.google.com/chrome/answer/95647); [Microsoft Edge](https://support.microsoft.com/en-us/microsoft-edge/learn-about-tracking-prevention-in-microsoft-edge-5ac125e8-9b90-8d59-fa2c-7f2e9a44d869); [Safari](https://support.apple.com/guide/safari/manage-cookies-and-website-data-sfri11471/mac)
+- **Block cookies.** Most browsers let you remove or reject cookies, including cookies used for interest-based advertising. To do this, follow the instructions in your browser settings. Many browsers accept cookies by default until you change your settings. Use the following links to learn more about how to control cookies and online tracking through your browser:o Firefox; Chrome; Microsoft Edge; Safari
 - **Limit the use of advertising ID.** You may be able to limit use of your mobile device’s advertising ID for interest-based advertising purposes through your device’s settings.
-- **Use privacy plug-ins or browsers.** You can block our Services from setting cookies used for interest-based ads by using a browser with privacy features, like [Brave](https://brave.com/), or installing browser plugins like [Privacy Badger](https://www.eff.org/privacybadger), [DuckDuckGo](https://duckduckgo.com/), [Ghostery](https://www.ghostery.com/) or [uBlock Origin](https://ublock.org/), and configuring them to block third-party cookies/trackers. You can also install a browser add-on to opt out of [Google Analytics](https://tools.google.com/dlpage/gaoptout).
-- **Advertising industry opt-outs.** You can also use these opt-out options to limit use of your information for interest-based advertising by participating companies: [Digital Advertising Alliance](http://optout.aboutads.info/); [Network Advertising Initiative](http://optout.networkadvertising.org/?c=1)
-- **Platform opt-outs.** The following advertising platforms offer opt-out features that let you opt out of use of your information for interest-based advertising: [Google opt-out](https://adssettings.google.com/); [LinkedIn opt-out](https://www.linkedin.com/psettings/guest-controls/retargeting-opt-out); [Microsoft opt-out](https://about.ads.microsoft.com/en-us/resources/policies/opt-out-of-the-microsoft-advertising-optimization-program)
+- **Use privacy plug-ins or browsers.** You can block our Services from setting cookies used for interest-based ads by using a browser with privacy features, like Brave, or installing browser plugins like Privacy Badger, DuckDuckGo, Ghostery or uBlock Origin, and configuring them to block third-party cookies/trackers. You can also install a browser add-on to opt out of Google Analytics.
+- **Advertising industry opt-outs.** You can also use these opt-out options to limit use of your information for interest-based advertising by participating companies:o Digital Advertising Allianceo Network Advertising Initiative
+- **Platform opt-outs.** The following advertising platforms offer opt-out features that let you opt out of use of your information for interest-based advertising:o Google opt-outo LinkedIn opt-outo Microsoft opt-out
 
 Note that the above opt-out mechanisms are specific to the device or browser on which they are exercised. You will need to opt out on every browser and device that you use.
 
@@ -101,11 +101,11 @@ Some Internet browsers may be configured to send “Do Not Track” signals to t
 
 ## Other sites, mobile applications and services
 
-Our Site and Services may contain links to other websites, mobile applications, and other online services operated by third parties. These links are not an endorsement of, or representation that we are affiliated with, any third party. In addition, our content may be included on web pages or in mobile applications or online services that are not associated with us. We do not control third-party websites, mobile applications or online services, and we are not responsible for their actions. Other websites and services follow different rules regarding the collection, use and sharing of your personal information. We encourage you to read the privacy policies of the other websites and mobile applications and online services you use.
+Our Site and Services may contain links to other websites, mobile applications, and other online services operated by third parties. These links are not an endorsement of, or representation that we are affiliated with, any third party. In addition, our content may be included on web pages or in mobile applications or online services that are not associated with us. We do not control third-party websites, mobile applications or online services, and we are not responsible for their actions. Other websites and services follow different rules regarding the collection, use and sharing of your personal information. We encourage you to read the privacy policies of the other websites and mobile applications and online services you use
 
 ### Retention
 
-We keep personal information for as long as reasonably necessary for the purposes described in this Privacy Policy, while we have a business need to do so, or as required by law (e.g. for tax, legal, accounting, or other purposes), whichever is longer. If you require your data to be deleted, please email [contact@all-hands.dev](mailto:contact@all-hands.dev).
+We keep personal information for as long as reasonably necessary for the purposes described in this Privacy Policy, while we have a business need to do so, or as required by law (e.g. for tax, legal, accounting, or other purposes), whichever is longer. If you require your data to be deleted, please email contact@all-hands.dev.
 
 ### Children
 
@@ -117,14 +117,14 @@ We employ a number of technical, organizational and physical safeguards designed
 
 ### Changes to this Privacy Policy
 
-We reserve the right to modify this Privacy Policy at any time. If we make material changes to this Privacy Policy, we will notify you by updating the date of this Privacy Policy and posting it on the Site or Services or as otherwise required by applicable laws.
+We reserve the right to modify this Privacy Policy at any time. If we make material changes to this Privacy Policy, we will notify you by updating the date of this Privacy Policy and posting it on the Site or Services or as otherwise required by applicable laws
 
 ### Changes to this Privacy Policy
 
-We reserve the right to modify this Privacy Policy at any time. If we make material changes to this Privacy Policy, we will notify you by updating the date of this Privacy Policy and posting it on the Site or Services or as otherwise required by applicable laws.
+We reserve the right to modify this Privacy Policy at any time. If we make material changes to this Privacy Policy, we will notify you by updating the date of this Privacy Policy and posting it on the Site or Services or as otherwise required by applicable laws
 
 ### How to contact us
 
-Please direct any questions or comments about this Privacy Policy or Site to [contact@all-hands.dev](mailto:contact@all-hands.dev) or send a letter to All Hands AI, 24 Oak Street, Unit 2, Cambridge, MA 02139.
+Please direct any questions or comments about this Privacy Policy or Site to contact@all-hands.dev or send a letter to All Hands AI, 24 Oak Street, Unit 2, Cambridge, MA 02139.
 
 ‍

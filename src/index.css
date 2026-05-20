@@ -170,6 +170,17 @@
   .marketing-pricing-faq-answer p:last-child {
     margin-bottom: 0;
   }
+
+  .w-richtext::before,
+  .w-richtext::after {
+    content: " ";
+    display: table;
+    grid-area: 1 / 1 / 2 / 2;
+  }
+
+  .w-richtext::after {
+    clear: both;
+  }
   .paragraph.u-m-0,
   .paragraph-lg.u-m-0,
   .paragraph-sm.u-m-0,

@@ -170,7 +170,7 @@ export default function App() {
   // values come from live's measured rendered height of the
   // `section.u-bg-primary` (yellow CTA + footer block) — most pages
   // render at 1209px once the social-icon row + footer-nav are in.
-  const footerMinHeight = pathname === '/product' ? 1144 : pathname.startsWith('/product/') ? 1071 : pathname === '/enterprise' ? 1161 : 1209;
+  const footerMinHeight = pathname === '/privacy' ? undefined : pathname === '/product' ? 1144 : pathname.startsWith('/product/') ? 1071 : pathname === '/enterprise' ? 1161 : 1209;
 
   const handleOpenGitHubModal = () => {
     setIsGitHubModalOpen(true);

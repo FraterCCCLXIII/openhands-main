@@ -397,10 +397,9 @@ const FooterContent = ({
       <div data-wf-el='footer-nav' className='w-full' style={compactNav ? { display: 'flex', textAlign: 'start', paddingBottom: '16px', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid #b3a88c', width: '812px', maxWidth: 'none' } : { display: 'flex', justifyContent: 'center' }}>
         {compactNav ? (
           <div
-            className={clsx(
-              'flex w-full flex-wrap items-start justify-between gap-x-6 gap-y-4 text-left',
-              navWidthClass ?? 'max-w-[825px]'
-            )}
+            data-wf-el='footer-nav'
+            className='flex w-[812px] items-start justify-between text-left'
+            style={{ textAlign: 'start', paddingBottom: '16px', borderBottom: '1px solid #b3a88c' }}
           >
             {FOOTER_NAV_ITEMS.map((item) => {
               const isActive = normalizePathname(item.to) === pathname;
