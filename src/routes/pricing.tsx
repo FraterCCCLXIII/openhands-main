@@ -155,7 +155,7 @@ const FAQS = [
     answer: (
       <>
         <p>
-          If you do not have an LLM key, you can use theOpenHands LLM provider (available within the Individual Tier), which provides multiple model options at cost, with no markup on a pay-as-you-go basis.
+          If you do not have an LLM key, you can use theOpenHands LLM provider (available within the Individual Tier), which provides multiple model options <strong style={{ color: 'rgb(0, 0, 0)' }}>at cost, with no markup </strong>on a pay-as-you-go basis.
         </p>
         <p>
           When you sign up for the Individual Plan, you can access models under the Settings &gt; Language Models (LLM) page.
@@ -194,6 +194,7 @@ const COMPARE_COL: React.CSSProperties = {
   minWidth: 0,
   display: 'flex',
   flexDirection: 'column',
+  position: 'relative',
 };
 // Live's `.col.pc-label` and `.col.pc-plan` both use `flex: 1 1 0%`
 // (equal column widths) — there's no special label-column sizing.
@@ -254,24 +255,31 @@ const CompareLine = ({
   />
 );
 
+const CompareParagraph = ({
+  children,
+  style = COMPARE_TEXT,
+}: {
+  children?: React.ReactNode;
+  style?: React.CSSProperties;
+}) => (
+  <p data-wf-el='paragraph-sm' style={style}>
+    {children}
+  </p>
+);
+
 const CompareSectionHead = ({ label }: { label: string }) => (
   <div data-wf-el='pc-section' className='pc-section'>
-    <p style={COMPARE_SECTION_TEXT}>{label}</p>
+    <CompareParagraph style={COMPARE_SECTION_TEXT}>{label}</CompareParagraph>
   </div>
 );
 
 const renderCompareRow = (key: string, label: string, cells: React.ReactNode[]) => (
-  <div key={key} data-wf-el='pc-row' className='row' style={COMPARE_ROW}>
+  <div key={key} className='row' style={COMPARE_ROW}>
     <div data-wf-el='pc-label' className='col pc-label' style={COMPARE_LABEL_COL}>
-      <p style={COMPARE_TEXT}>{label}</p>
+      <CompareParagraph>{label}</CompareParagraph>
     </div>
     {cells.map((cell, i) => (
-      <div
-        key={`${key}-${i}`}
-        data-wf-el='pc-cell'
-        className='col'
-        style={COMPARE_COL}
-      >
+      <div key={`${key}-${i}`} className='col' style={COMPARE_COL}>
         {cell}
       </div>
     ))}
@@ -287,10 +295,10 @@ const CompareTable = () => {
       key='pc-head'
       data-wf-el='pc-head'
       className='row pc-head'
-      style={COMPARE_ROW}
+      style={{ ...COMPARE_ROW, gap: '40px normal' }}
     >
       <div data-wf-el='pc-label' className='col pc-label' style={COMPARE_LABEL_COL}>
-        <p style={COMPARE_HEAD_TEXT}>Features</p>
+        <CompareParagraph style={COMPARE_HEAD_TEXT}>Features</CompareParagraph>
       </div>
       {['Open Source', 'Individual', 'Enterprise'].map((plan) => (
         <div
@@ -299,7 +307,7 @@ const CompareTable = () => {
           className='col pc-plan hide-on-small'
           style={COMPARE_COL}
         >
-          <p style={COMPARE_HEAD_TEXT}>{plan}</p>
+          <CompareParagraph style={COMPARE_HEAD_TEXT}>{plan}</CompareParagraph>
         </div>
       ))}
     </div>,
@@ -336,9 +344,7 @@ const CompareTable = () => {
           `row-${row.label}`,
           row.label,
           row.values.map((v, i) => (
-            <p key={i} style={COMPARE_TEXT}>
-              {v}
-            </p>
+            <CompareParagraph key={i}>{v}</CompareParagraph>
           )),
         ),
       );
@@ -359,7 +365,7 @@ const CompareTable = () => {
         `row-${row.label}`,
         row.label,
         row.values.map((enabled, i) =>
-          enabled ? <CompareTick key={i} /> : <p key={i} style={COMPARE_TEXT} />,
+          enabled ? <CompareTick key={i} /> : <CompareParagraph key={i} />,
         ),
       ),
     );
@@ -420,95 +426,85 @@ export const meta: Route.MetaFunction = ({ location }) => {
 const Pricing = () => {
   return (
     <main data-wf-el='page-main' style={{ display: 'flex', flexDirection: 'column' }}>
-      {/* Live's hero-section is position:static, transparent bg, padding 0
-       * — the page bg comes from the body/page-wrapper and the gutter
-       * lives on the inner container. Move padding/relative inward so
-       * the section's geometry/styles match live. */}
-      <section data-wf-el='hero-section' style={{ minHeight: '816px' }}>
-        <div data-wf-el='asci-wrap' className='pointer-events-auto absolute inset-x-0 top-0 h-screen overflow-hidden' style={{ '--ascii-opacity': '0.12', '--ascii-filter': 'drop-shadow(0 0 6px rgba(160, 200, 255, 0.1))' } as CSSProperties} aria-hidden='true'>
-          <ASCIIAnimation className='h-full w-full' />
-        </div>
-        <div className='relative mx-auto flex max-w-4xl flex-col items-center px-5 pb-0 pt-16 text-center lg:px-10'>
-          {/* Live's hero H1 has margin: 0; the new h1 element default
-              (mb: 10) doesn't apply here. */}
-          <h1 className='fluid-h1 text-brand-fg' style={{ position: 'relative', marginBottom: '0px', width: '599px', maxWidth: '100%' }}>
-            Pricing that fits your rollout
-          </h1>
-          {/* Live's hero subtitle is `.paragraph-lg` whose margins
-              resolve to mt=10.4 (0.5em of 20.8) and mb=20.8 (1em). */}
-          <p className='fluid-body-lg text-brand-muted' style={{ marginTop: '10.4px', marginBottom: '20.8px', width: '599px', maxWidth: '100%' }}>
-            Run locally, in our cloud, or self-host. Pay only for what you need
-          </p>
-        </div>
-        {/* Live wraps the plan cards in two layers:
-         *   .standard-collection      (display: block, gap: normal)
-         *     .standard-collection-list .row .row-gap-md  (flex)
-         *       .col-lg-4 ...          (each card)
-         * The outer `.standard-collection` is a plain block container; the
-         * inner `.row` does the actual flex layout. */}
+      <section data-wf-el='hero-section'>
         <div
-          data-wf-el='standard-collection'
-          className='relative mx-auto mt-[49.6px] block max-w-[1238px] px-5 lg:px-0'
-        ><div className='flex flex-col gap-y-10 lg:flex-row lg:gap-x-6'>
-          {PRICING_PLANS.map((plan) => (
-            // Live's plan card is `<div class="card u-border-dark u-bg-cream">`
-            // (8px border-radius, no padding) with an inner
-            // `<div class="card-body u-d-v-between">` (padding 24, flex column).
-            // Wrapping the content in a child div with the padding moves
-            // the parity ancestor walk's matched ancestor onto the inner
-            // wrapper, which has 0 border-radius and 0 padding -- matching
-            // live's first visible ancestor after the leaf nodes.  The
-            // outer .card keeps the 8px border-radius and tan bg.
-            // Live's .card has position:relative and
-            // justifyContent:flex-start; .card-body also uses
-            // position:relative.  Setting these explicitly drops the
-            // matching wfMismatch entries (4x card and 4x card-body).
-            <article
-              key={plan.title}
-              data-wf-el='card'
-              className='relative flex flex-1 flex-col justify-start overflow-hidden rounded-lg bg-[#f5ecd6]/90'
-              style={{ borderRadius: '8px', border: '1px solid rgb(34, 21, 13)' }}
-            >
-              <div
-                data-wf-el='card-body'
-                className='relative flex h-full flex-col items-stretch p-6'
-                style={{ justifyContent: 'space-between' }}
-              >
+          data-wf-el='hero-content'
+          style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '64px 0px' }}
+        >
+          <div data-wf-el='asci-wrap' className='pointer-events-auto absolute inset-x-0 top-0 h-screen overflow-hidden' style={{ '--ascii-opacity': '0.12', '--ascii-filter': 'drop-shadow(0 0 6px rgba(160, 200, 255, 0.1))', maxHeight: '2400px' } as CSSProperties} aria-hidden='true'>
+            <div data-wf-el='asci-embed' className='h-full w-full overflow-hidden'>
+              <ASCIIAnimation className='h-full w-full' />
+            </div>
+          </div>
+          <div data-wf-el='container' className='mx-auto block w-full max-w-[1238px] px-5 lg:px-0'>
+            <div className='flex flex-col items-center text-center'>
+              <h1 className='fluid-h1 text-brand-fg' style={{ position: 'relative', marginBottom: '0px', width: '599px', textAlign: 'center' }}>
+                Pricing that fits your rollout
+              </h1>
+              <p data-wf-el='paragraph-lg' className='fluid-body-lg text-brand-muted' style={{ marginTop: '10.4px', marginBottom: '20.8px', width: '599px', textAlign: 'center' }}>
+                Run locally, in our cloud, or self-host. Pay only for what you need
+              </p>
+            </div>
+          </div>
+          <div
+            data-wf-el='standard-collection'
+            className='relative z-[1] mx-auto mt-[49.6px] block w-full max-w-[1238px] px-5 lg:px-0'
+          >
+            <div data-wf-el='standard-collection-list' className='flex flex-col lg:flex-row' style={{ margin: '0px -12px', gap: '24px normal' }}>
+              {PRICING_PLANS.map((plan) => (
                 <div
-                  className='font-mono text-[14px] font-normal leading-[16.896px] text-brand-bg'
-                  style={{ display: 'inline-block', alignSelf: 'flex-start', padding: '3.2px 8px', marginBottom: '21.12px', borderRadius: '999px', backgroundColor: 'rgb(34, 21, 13)' }}
+                  key={plan.title}
+                  data-wf-el='standard-collection-list-item'
+                  className='flex w-full flex-1 justify-between'
+                  style={{ padding: '0px 12px', position: 'relative', alignItems: 'center', gap: '16px' }}
                 >
-                  {plan.eyebrow}
+                  <article
+                    data-wf-el='card'
+                    className='relative flex h-full w-full flex-col justify-start overflow-hidden rounded-lg bg-brand-bg'
+                    style={{ borderRadius: '8px', border: '1px solid rgb(34, 21, 13)' }}
+                  >
+                    <div
+                      data-wf-el='card-body'
+                      className='relative flex h-full flex-col items-stretch p-6 text-brand-fg'
+                      style={{ justifyContent: 'space-between' }}
+                    >
+                      <div data-wf-el='standard-wrap'>
+                        <div
+                          data-wf-el='eyebrow'
+                          className='font-mono text-[14.08px] font-normal leading-[16.896px] text-brand-fg'
+                          style={{ display: 'inline-block', padding: '3.2px 9.6px', marginBottom: '21.12px', borderRadius: '20px', backgroundColor: 'rgb(179, 168, 140)' }}
+                        >
+                          {plan.eyebrow}
+                        </div>
+                        <div data-wf-el='paragraph-xl' className='text-brand-fg' style={{ fontSize: '24px', lineHeight: '33.6px', fontWeight: 500, marginBottom: '0px' }}>{plan.title}</div>
+                        <p data-wf-el='paragraph-md' className='text-[20px] font-normal leading-[28px] text-[#5f5f5f]' style={{ marginTop: '0px', marginBottom: '20px' }}>{plan.price}</p>
+                        <p className='text-[16px] leading-[22.4px] text-brand-muted' style={{ marginTop: '0px', marginBottom: '24px' }}>{plan.description}</p>
+                        <div aria-hidden='true' style={{ height: '1px', margin: '0px', backgroundColor: 'rgba(34, 21, 13, 0.2)' }} />
+                        <p data-wf-el='paragraph-sm' className='fluid-sm font-normal text-[#5f5f5f]' style={{ marginTop: '21.6px', marginBottom: '14.4px' }}>{plan.intro}</p>
+                        <ul className='flex flex-1 flex-col' style={{ marginTop: '0px', marginLeft: '-4px', width: 'calc(100% + 8px)' }}>
+                          {plan.features.map((feature) => (
+                            <li key={feature} className='flex items-center gap-2 font-sohne-buch fluid-sm leading-[1.5] text-[#5f5f5f]' style={{ marginBottom: '8px', paddingLeft: '4px', paddingRight: '4px' }}>
+                              <img data-wf-el='icon-media' src={CARD_CHECK_ICON} alt='' aria-hidden='true' className='h-5 w-5 flex-none' style={{ color: 'rgb(34, 21, 13)', fontSize: '16px', lineHeight: '22.4px', fontFamily: '"Sohne Kraftig", Arial, sans-serif' }} />
+                              <p data-wf-el='paragraph-sm' className='flex-1'>{feature}</p>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                      <OverlayLinkButton
+                        href={plan.buttonHref}
+                        label={plan.buttonLabel}
+                        variant='outline'
+                        wrapperStyle={{ marginTop: '30px', marginBottom: '0px' }}
+                        fullWidth
+                        wfEl='button'
+                        textWfEl='btn-text'
+                      />
+                    </div>
+                  </article>
                 </div>
-                <div className='text-brand-fg' style={{ fontSize: '24px', lineHeight: '33.6px', fontWeight: 500, marginBottom: '0px' }}>{plan.title}</div>
-                {/* Live's plan-card paragraphs use Webflow margin-bottom
-                    (not margin-top) for inter-line spacing.  Switching
-                    matches: price mb=20, description mb=24, intro
-                    mt=21.6/mb=14.4 — values pulled directly from the
-                    parity script's computed-style output. */}
-                <p className='text-[20px] font-normal leading-[28px] text-[#5f5f5f]' style={{ marginTop: '0px', marginBottom: '20px' }}>{plan.price}</p>
-                <p className='text-[16px] leading-[22.4px] text-brand-muted' style={{ marginTop: '0px', marginBottom: '24px' }}>{plan.description}</p>
-                <div aria-hidden='true' style={{ height: '1px', margin: '0px', backgroundColor: 'rgba(34, 21, 13, 0.2)' }} />
-                <p className='fluid-sm font-normal text-[#5f5f5f]' style={{ marginTop: '21.6px', marginBottom: '14.4px' }}>{plan.intro}</p>
-                <ul className='flex flex-1 flex-col' style={{ marginTop: '0px', marginLeft: '-4px', width: 'calc(100% + 8px)' }}>
-                  {plan.features.map((feature) => (
-                    <li key={feature} className='flex items-center gap-2 font-sohne-buch fluid-sm leading-[1.5] text-[#5f5f5f]' style={{ marginBottom: '8px', paddingLeft: '4px' }}>
-                      <img src={CARD_CHECK_ICON} alt='' aria-hidden='true' className='h-5 w-5 flex-none' />
-                      <p className='flex-1'>{feature}</p>
-                    </li>
-                  ))}
-                </ul>
-                <OverlayLinkButton
-                  href={plan.buttonHref}
-                  label={plan.buttonLabel}
-                  variant='outline'
-                  wrapperStyle={{ marginTop: '30px', marginBottom: '0px' }}
-                  fullWidth
-                />
-              </div>
-            </article>
-          ))}
-        </div>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
@@ -550,11 +546,18 @@ const Pricing = () => {
            * pushes 50px of cumulative shift onto every element below. */}
           <div
             data-wf-el='card'
-            className='overflow-hidden rounded-lg'
-            style={{ borderRadius: '8px', border: '1px solid rgb(34, 21, 13)' }}
+            className='relative flex flex-col justify-start overflow-hidden rounded-lg'
+            style={{ borderRadius: '8px', border: '1px solid rgb(179, 168, 140)' }}
           >
-            <div data-wf-el='card-body' className='bg-brand-fg p-6 text-brand-bg'>
-              <div data-wf-el='table-embed' style={{ marginTop: '24px', marginBottom: '24px' }}>
+            <div
+              data-wf-el='card-body'
+              className='relative bg-brand-fg p-6 text-brand-fg'
+              style={{ backgroundColor: 'rgb(34, 21, 13)', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start' }}
+            >
+              <div
+                data-wf-el='table-embed'
+                style={{ display: 'flex', margin: '24px 29.7031px', color: 'rgb(34, 21, 13)' }}
+              >
                 {/* Live's compare-table is a div-grid (NOT a <table>):
                  *
                  *   section.plans-compare         display: grid; gap: 8px
@@ -597,90 +600,84 @@ const Pricing = () => {
           position: 'relative',
         }}
       >
-        <div className='mx-auto grid max-w-[1239px] gap-10 px-5 lg:grid-cols-[493px_706px] lg:gap-10 lg:px-0' data-wf-el='container'>
-          <div>
-            {/* FAQ H2 mb=22 on live (overrides the .h2 element 8.8). */}
-            <h2 className='section-title text-brand-fg' style={{ marginBottom: '22px' }}>
-              FAQ&apos;s
-            </h2>
-            <OverlayLinkButton href='/contact' label='Contact us' variant='outline' />
-          </div>
-          <div>
-            {FAQS.map((faq, idx) => (
-              // Live's .accordion-item has no border-radius and no
-              // padding on the <details> element itself; padding
-              // lives on the inner trigger/content blocks instead.
-              // Match that geometry so the parity ancestor walk
-              // doesn't pair every FAQ-answer paragraph against a
-              // 24px-padded / rounded ancestor on test only.
-              // Live's .accordion-item is an 8px-rounded box with a
-              // 1px solid border (color rgb(249,240,217)) on all four
-              // sides; the <summary>/.accordion-trigger has 24px
-              // padding, alignItems:center, fontSize 16px /
-              // lineHeight 22.4px (paragraph-md, not h4).  Mirroring
-              // these collapses ~10 wfMismatch entries per FAQ row.
-              <details
-                key={faq.question}
-                data-wf-el='accordion-item'
-                data-accordion-start-open={idx === 0 ? 'true' : 'false'}
-                className='flex flex-col'
-                style={{
-                  border: '1px solid rgb(249, 240, 217)',
-                  borderRadius: '8px',
-                }}
-              >
-                <summary
-                  data-wf-el='accordion-trigger'
-                  className='flex cursor-pointer list-none items-center justify-between text-brand-fg'
-                  style={{
-                    padding: '24px',
-                    fontWeight: 400,
-                    borderBottom: '1px solid rgb(249, 240, 217)',
-                  }}
-                >
-                  {/* Live's `.accordion-title` is `font-size: 24px;
-                   * line-height: 33.6px; font-weight: 500` (the `.h4`
-                   * Webflow utility = Sohne Kräftig).  We were rendering
-                   * font-weight 400 (Sohne Buch) which produces slightly
-                   * different glyph metrics — the longest FAQ question
-                   * was wrapping to 2 lines on test but 1 line on live.
-                   * Matching the 500-weight Kräftig face also matches
-                   * live's `.h4` utility exactly. */}
-                  <label
-                    className='pointer-events-none m-0 cursor-default'
-                    style={{
-                      fontSize: '24px',
-                      lineHeight: '33.6px',
-                      fontWeight: 500,
-                      paddingRight: '12px',
-                    }}
-                  >
-                    {faq.question}
-                  </label>
-                  {/* No `ml-4` here: live's chevron sits flush against
-                   * the label's 12px right padding (no extra margin).
-                   * The 16px gap that ml-4 added was eating into the
-                   * label's available width, wrapping the first two
-                   * questions to 2 lines and inflating the FAQ section
-                   * by ~30px. */}
-                  <span className='inline-flex h-8 w-8 flex-shrink-0 items-center justify-center text-brand-fg transition-transform group-open:rotate-180' aria-hidden='true'>
-                    <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5' stroke='currentColor' strokeWidth='1.6' strokeLinecap='round' strokeLinejoin='round'/></svg>
-                  </span>
-                </summary>
-                {/* Live's `.accordion-item-content` wrapper carries
-                    `.faq-answer` (Webflow class) which sets every
-                    descendant <p> to `margin-bottom: 1em`.  Adding the
-                    matching class lets our shared CSS rule apply the
-                    same default without touching individual <p> tags. */}
-                <div
-                  data-wf-el='accordion-content'
-                  className='faq-answer font-sohne-buch text-[16px] leading-[22.4px] text-[#5f5f5f]'
-                  style={{ marginTop: '16px', marginLeft: '25px', marginRight: '25px', padding: '0px' }}
-                >
-                  {faq.answer}
-                </div>
-              </details>
-            ))}
+        <div className='mx-auto block max-w-[1238px] px-5 lg:px-0' data-wf-el='container'>
+          <div className='grid gap-10 lg:grid-cols-[493px_705.5px] lg:gap-10'>
+            <div>
+              <h2 className='section-title text-brand-fg' style={{ marginBottom: '22px' }}>
+                FAQ&apos;s
+              </h2>
+              <div data-wf-el='standard-wrap'>
+                <OverlayLinkButton href='/contact' label='Contact us' variant='outline' wfEl='button' textWfEl='btn-text' />
+              </div>
+            </div>
+            <div data-wf-el='standard-collection'>
+              <div data-wf-el='standard-collection-list'>
+                {FAQS.map((faq, idx) => (
+                  <div key={faq.question} data-wf-el='standard-collection-list-item' style={{ justifyContent: 'space-between', alignItems: 'center', gap: '16px' }}>
+                    <details
+                      data-wf-el='accordion-item'
+                      data-accordion-start-open={idx === 0 ? 'true' : 'false'}
+                      className='flex flex-col'
+                      style={{
+                        border: '1px solid rgb(249, 240, 217)',
+                        borderRadius: '8px',
+                      }}
+                    >
+                      <summary
+                        data-wf-el='accordion-trigger'
+                        className='flex cursor-pointer list-none items-center justify-between text-brand-fg'
+                        style={{
+                          padding: '24px',
+                          fontWeight: 400,
+                          borderBottom: '1px solid rgb(249, 240, 217)',
+                          overflow: 'hidden',
+                        }}
+                      >
+                        <label
+                          data-wf-el='accordion-title'
+                          className='pointer-events-none m-0 cursor-default'
+                          style={{
+                            fontSize: '24px',
+                            lineHeight: '33.6px',
+                            fontWeight: 500,
+                            paddingRight: '12px',
+                          }}
+                        >
+                          {faq.question}
+                        </label>
+                        <svg
+                          data-wf-el='accordion-icon'
+                          className='accordion-icon flex-shrink-0 overflow-hidden text-brand-fg transition-transform group-open:rotate-180'
+                          xmlns='http://www.w3.org/2000/svg'
+                          width='100%'
+                          viewBox='0 0 32 32'
+                          fill='none'
+                          style={{ display: 'block', width: '32px', height: '32px', verticalAlign: 'baseline' }}
+                          aria-hidden='true'
+                        >
+                          <path fillRule='evenodd' clipRule='evenodd' d='M17 17L27.3137 17L27.3137 15H17V4.68631L15 4.68631L15 15H4.68629L4.68629 17L15 17V27.3137H17V17Z' fill='currentColor' />
+                        </svg>
+                      </summary>
+                      <div style={{ marginLeft: '24px', marginRight: '24px' }}>
+                        <div data-wf-el='accordion-content_spacer' style={{ padding: '0px 0px 24px' }}>
+                          <div data-wf-el='slot' style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                            <div data-wf-el='rich-text-component' style={{ marginTop: '16px', width: '100%' }}>
+                              <div
+                                data-wf-el='rich-text'
+                                className='faq-answer pricing-rich-text font-sohne-buch text-[16px] leading-[22.4px] text-brand-fg'
+                                style={{ padding: '0px', maxWidth: '820px' }}
+                              >
+                                {faq.answer}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </details>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -691,7 +688,6 @@ const Pricing = () => {
         standalone
         showSocialLinks
         compactNav
-        minHeight={1209}
         marketingCtaTitle='Building the open standard for autonomous software development.'
         marketingCtaDescription='OpenHands is the foundation for secure, transparent, model-agnostic coding agents - empowering every software team to build faster with full control.'
         marketingCtaPrimary={{ href: AGENT_CANVAS_DOWNLOAD_URL, label: 'Download Agent Canvas' }}

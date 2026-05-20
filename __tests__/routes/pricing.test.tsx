@@ -65,6 +65,10 @@ describe('Pricing page', () => {
     expect(paragraphTexts).toContain('integrations');
     expect(paragraphTexts).toContain('support');
     expect(paragraphTexts).not.toContain('at cost, with no markup');
+
+    const pricingProviderCopy = screen.getByText(/provides multiple model options/i);
+    expect(pricingProviderCopy.tagName).toBe('P');
+    expect(within(pricingProviderCopy).getByText('at cost, with no markup')).toHaveStyle({ color: 'rgb(0, 0, 0)' });
   });
 
   it('uses the live Webflow div-grid comparison structure', () => {
@@ -74,7 +78,7 @@ describe('Pricing page', () => {
     expect(table).not.toBeNull();
     expect((table as HTMLElement).style.display).toBe('grid');
     expect((table as HTMLElement).style.gap).toBe('8px');
-    expect(table!.querySelectorAll('[data-wf-el="pc-row"]')[0]?.children).toHaveLength(4);
+    expect(table!.querySelectorAll('.row')[0]?.children).toHaveLength(4);
     expect(table!.querySelector('table')).toBeNull();
   });
 
@@ -86,7 +90,7 @@ describe('Pricing page', () => {
       expect(tick.className).not.toContain('mx-auto');
     });
 
-    const tickCell = ticks[0].closest('[data-wf-el="pc-cell"]');
+    const tickCell = ticks[0].closest('.col');
     expect(tickCell).not.toBeNull();
     expect(tickCell!.className).not.toContain('text-center');
   });
@@ -98,7 +102,7 @@ describe('Pricing page', () => {
     const faqGrid = faqHeading.closest('[class*="grid"]');
     expect(faqGrid).not.toBeNull();
     expect(faqGrid!.className).not.toContain('grid-cols-[240px');
-    expect(faqGrid!.className).toContain('lg:grid-cols-[493px_706px]');
+    expect(faqGrid!.className).toContain('lg:grid-cols-[493px_705.5px]');
   });
 
   it('renders card feature paragraphs with flex-1 for full-width layout', () => {

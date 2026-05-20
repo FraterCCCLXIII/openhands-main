@@ -55,6 +55,7 @@ interface FooterMarketingCtaProps {
   description?: string;
   primary?: FooterCta;
   secondary?: FooterCta | null;
+  bottomMargin?: number;
 }
 
 const DEFAULT_CTA_TITLE = 'Building the open standard for autonomous software development.';
@@ -67,6 +68,7 @@ const FooterMarketingCta = ({
   description = DEFAULT_CTA_DESCRIPTION,
   primary = DEFAULT_CTA_PRIMARY,
   secondary = DEFAULT_CTA_SECONDARY,
+  bottomMargin = 127,
 }: FooterMarketingCtaProps) => (
   // No data-wf-el here: live wraps the CTA copy in a generic div
   // inside the footer section, so adding a custom key here would
@@ -357,6 +359,7 @@ const FooterContent = ({
           description={marketingCtaDescription}
           primary={marketingCtaPrimary}
           secondary={marketingCtaSecondary}
+          bottomMargin={showSocialLinks ? 0 : 127}
         />
       ) : null}
       {showSocialLinks ? (
