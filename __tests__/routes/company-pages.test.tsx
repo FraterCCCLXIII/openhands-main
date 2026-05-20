@@ -97,9 +97,14 @@ describe('company information pages parity', () => {
   });
 
   it('renders the synced manifesto copy with live heading and paragraph semantics', () => {
-    renderRoute(<Manifesto />);
+    const { container } = renderRoute(<Manifesto />);
 
     const introHeading = screen.getByRole('heading', { level: 3, name: /We're at the beginning of a new era in software/i });
+    const platformStrong = screen.getByText((_, element) =>
+      element?.tagName === 'STRONG' &&
+      element.textContent?.includes('We are building the open, secure, and model-agnostic platform') &&
+      element.textContent.includes('Every agent runs in a containerized sandbox you control.')
+    );
 
     expect(screen.getByRole('heading', { level: 1, name: 'Hands on the Future' })).toBeInTheDocument();
     expect(screen.getByText('We believe in an open, autonomous future for software development')).toBeInTheDocument();
@@ -115,6 +120,11 @@ describe('company information pages parity', () => {
     expect(screen.getByRole('heading', { level: 3, name: 'What this asks of you' })).toBeInTheDocument();
     expect(screen.getByText(/Adopt an agentic mindset\. Identify toil\. Delegate clearly\./).closest('p')?.tagName).toBe('P');
     expect(screen.queryByRole('heading', { name: 'The future of software development must be written by engineers' })).not.toBeInTheDocument();
+    expect(platformStrong.querySelector('br')).toBeInTheDocument();
+    expect(container.querySelector('[data-testid="company-page-background"]')).not.toBeInTheDocument();
+    expect(container.querySelectorAll('div[data-wf-el="standard-collection"]')).toHaveLength(2);
+    expect(container.querySelectorAll('section[data-wf-el="section"]')).toHaveLength(2);
+    expect(container.querySelector('div[data-wf-el="rich-text"]')).toContainElement(introHeading);
   });
 
   it.each([

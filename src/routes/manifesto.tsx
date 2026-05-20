@@ -45,86 +45,151 @@ const MANIFESTO_POINTS = [
   },
 ] as const;
 
-const SeparatorParagraph = () => <p className='font-sohne-buch text-[#5f5f5f]' style={{ marginBottom: '1em', lineHeight: '22.4px' }}>‍</p>;
+const paragraphStyle: CSSProperties = {
+  marginBottom: '1em',
+  lineHeight: '22.4px',
+  textWrap: 'pretty',
+};
+
+const SeparatorParagraph = () => (
+  <p className='font-sohne-buch text-[#5f5f5f]' style={paragraphStyle}>‍</p>
+);
+
 const MutedEm = ({ children }: { children: React.ReactNode }) => (
-  <em className='not-italic text-[#7a7a7a]'>{children}</em>
+  <em className='not-italic text-[#7d7d7d]'>{children}</em>
+);
+
+const ManifestoPoint = ({
+  point,
+  index,
+}: {
+  point: (typeof MANIFESTO_POINTS)[number];
+  index: number;
+}) => (
+  <>
+    <p className='font-sohne-buch text-[16px] leading-[22.4px] text-[#5f5f5f]' style={paragraphStyle}>
+      <strong className='font-bold text-black'>
+        {point.heading}
+        <br />
+      </strong>
+      {point.body}
+      {index > 0 && index < MANIFESTO_POINTS.length - 1 ? <><br />‍</> : null}
+    </p>
+    {index === 0 ? <SeparatorParagraph /> : null}
+  </>
 );
 
 const Manifesto = () => {
   return (
-    <CompanyPageShell>
-      <section data-wf-el='section-hero' className='relative px-6 pb-10 pt-12 lg:px-10 lg:pb-10 lg:pt-12' style={{ height: '241.484px', padding: '0px' }}>
-        <div data-wf-el='asci-wrap' className='pointer-events-auto absolute inset-0 overflow-hidden' style={{ '--ascii-opacity': '0.12' } as CSSProperties} aria-hidden='true'>
-          <ASCIIAnimation className='h-full w-full' />
-        </div>
-        <div className='relative mx-auto max-w-[493px] pt-14 text-center'>
-          <h1 className='fluid-h1 h1-flow-root text-brand-fg'>
-            Hands on the Future
-          </h1>
-          <p className='fluid-body-lg font-medium text-[#5f5f5f]' style={{ marginTop: '10.4px', marginBottom: '20.8px' }}>
-            We believe in an open, autonomous future for software development
-          </p>
+    <CompanyPageShell showBackground={false}>
+      <section data-wf-el='section-hero' className='relative' style={{ height: '241.484px', padding: '0px' }}>
+        <div data-wf-el='standard-collection'>
+          <div data-wf-el='standard-collection-list'>
+            <div data-wf-el='standard-collection-list-item' style={{ justifyContent: 'space-between', alignItems: 'center', gap: '16px' }}>
+              <div
+                data-wf-el='hero-content'
+                className='relative flex flex-col items-center justify-center text-center'
+                style={{ padding: '56px 0px' }}
+              >
+                <div
+                  data-wf-el='asci-wrap'
+                  className='pointer-events-auto absolute inset-0 overflow-hidden'
+                  style={{ '--ascii-opacity': '0.12', maxHeight: '2400px', textAlign: 'center' } as CSSProperties}
+                  aria-hidden='true'
+                >
+                  <div data-wf-el='asci-embed' className='asci-embed w-embed h-full w-full overflow-hidden' style={{ textAlign: 'center' }}>
+                    <ASCIIAnimation className='h-full w-full' />
+                  </div>
+                </div>
+                <div data-wf-el='container' className='mx-auto w-full max-w-[1238px] text-center'>
+                  <div className='mx-auto max-w-[493px]'>
+                    <h1 className='fluid-h1 h1-flow-root text-brand-fg'>
+                      Hands on the Future
+                    </h1>
+                    <p
+                      data-wf-el='paragraph-lg'
+                      className='fluid-body-lg font-medium text-[#5f5f5f]'
+                      style={{ marginTop: '10.4px', marginBottom: '20.8px' }}
+                    >
+                      We believe in an open, autonomous future for software development
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
-      <section data-wf-el='section' className='px-6 pb-16 lg:px-10 lg:pb-20' style={{ height: '2018.94px', paddingTop: '50px', paddingLeft: '0px', paddingRight: '0px' }}>
-        <div className='mx-auto max-w-[919px]'>
-          <img
-            src='/assets/webflow/misc/691645a7832560da97f475c5_Featured_manifesto.png'
-            alt=''
-            className='img-block w-full object-cover'
-            style={{ borderRadius: '0px' }}
-          />
-
-          <div className='mx-auto max-w-[820px]' style={{ marginTop: '127px' }}>
-            <h3 className='fluid-h3 text-brand-fg'>
-              We&apos;re at the beginning of a new era in software <MutedEm>development. Work is shifting from keystrokes to delegated tasks,</MutedEm> from single laptops to coordinated fleets of agents running in environments you control.
-              <br />
-              <br />
-              <MutedEm>This is</MutedEm> our point of view <MutedEm>on how we build, what we ship, and</MutedEm> why it matters… <MutedEm>We believe</MutedEm>:
-              <br />‍
-            </h3>
-
-            <div style={{ marginTop: '10px' }}>
-              {MANIFESTO_POINTS.map((point, index) => (
-                <div key={point.heading}>
-                  <p className='font-sohne-buch text-[16px] leading-[22.4px] text-[#5f5f5f]' style={{ marginBottom: '1em' }}>
-                    <strong className='font-bold text-black'>{point.heading}</strong>
-                    <br />
-                    {point.body}
-                    {index > 0 && index < MANIFESTO_POINTS.length - 1 ? <><br />‍</> : null}
-                  </p>
-                  {index === 0 ? <SeparatorParagraph /> : null}
+      <section
+        data-wf-el='section'
+        style={{ height: '2018.94px', padding: '0px 0px 80px', position: 'relative' }}
+      >
+        <div data-wf-el='standard-collection'>
+          <div data-wf-el='standard-collection-list'>
+            <div data-wf-el='standard-collection-list-item' style={{ justifyContent: 'space-between', alignItems: 'center', gap: '16px' }}>
+              <div aria-hidden='true' style={{ display: 'table' }} />
+              <div data-wf-el='container' className='mx-auto w-full max-w-[1238px]' style={{ marginTop: '49.6px' }}>
+                <div className='mx-auto max-w-[919px]'>
+                  <div
+                    data-wf-el='standard-media'
+                    className='w-full overflow-hidden'
+                    style={{ display: 'flex', position: 'relative', justifyContent: 'center', alignItems: 'center', borderRadius: '6.4px' }}
+                  >
+                    <img
+                      data-wf-el='standard-media-img'
+                      src='/assets/webflow/misc/691645a7832560da97f475c5_Featured_manifesto.png'
+                      alt=''
+                      className='img-block w-full object-cover'
+                      style={{ borderRadius: '0px' }}
+                    />
+                  </div>
                 </div>
-              ))}
+
+                <div style={{ marginTop: '127px' }}>
+                  <div data-wf-el='rich-text' className='webflow-rich-text mx-auto max-w-[820px] font-sohne-buch'>
+                    <h3 className='fluid-h3 font-sohne text-brand-fg'>
+                    We&apos;re at the beginning of a new era in software <MutedEm>development. Work is shifting from keystrokes to delegated tasks,</MutedEm> from single laptops to coordinated fleets of agents running in environments you control.
+                    <br />
+                    <br />
+                    <MutedEm>This is</MutedEm> our point of view <MutedEm>on how we build, what we ship, and</MutedEm> why it matters… <MutedEm>We believe</MutedEm>:
+                    <br />‍
+                  </h3>
+
+                  <div style={{ marginTop: '10px' }}>
+                    {MANIFESTO_POINTS.map((point, index) => (
+                      <ManifestoPoint key={point.heading} point={point} index={index} />
+                    ))}
+                  </div>
+
+                  <SeparatorParagraph />
+                  <SeparatorParagraph />
+
+                  <h3 className='fluid-h3 font-sohne text-brand-fg' style={{ marginTop: '32px' }}>
+                    What this means for OpenHands
+                  </h3>
+                  <p className='font-sohne-buch text-[16px] leading-[22.4px] text-[#5f5f5f]' style={paragraphStyle}>
+                    <strong className='font-bold text-black'>
+                      {'We are building the open, secure, and model-agnostic platform for cloud coding agents.\u2028\u2028'}
+                      <br />
+                      Every agent runs in a containerized sandbox you control.
+                    </strong>{' '}
+                    Every outcome can be measured and reviewed. You can self-host the open source, or use our cloud. You can bring your own models and switch without drama. You can start local, then scale to thousands of concurrent agents running throughout your codebase.
+                  </p>
+
+                  <SeparatorParagraph />
+
+                  <h3 className='fluid-h3 font-sohne text-brand-fg' style={{ marginTop: '32px' }}>
+                    What this asks of you
+                  </h3>
+                  <p className='font-sohne-buch text-[16px] leading-[22.4px] text-[#5f5f5f]' style={paragraphStyle}>
+                    <strong className='font-bold text-black'>Adopt an agentic mindset. Identify toil. Delegate clearly. Measure success. Invest in agent orchestration as a core engineering skill</strong>.
+                  </p>
+                </div>
+              </div>
             </div>
-
-            <SeparatorParagraph />
-            <SeparatorParagraph />
-
-            <section data-wf-el='section'>
-              {/* Live's manifesto sub-section H3 has explicit
-                  margin-top: 32px (separate from the section's mt). */}
-              <h3 className='fluid-h3 text-brand-fg' style={{ marginTop: '32px' }}>
-                What this means for OpenHands
-              </h3>
-              <p className='font-sohne-buch text-[16px] leading-[22.4px] text-[#5f5f5f]' style={{ marginBottom: '1em' }}>
-                <strong className='font-bold text-black'>We are building the open, secure, and model-agnostic platform for cloud coding agents. Every agent runs in a containerized sandbox you control.</strong>{' '}
-                Every outcome can be measured and reviewed. You can self-host the open source, or use our cloud. You can bring your own models and switch without drama. You can start local, then scale to thousands of concurrent agents running throughout your codebase.
-              </p>
-            </section>
-
-            <SeparatorParagraph />
-
-            <section data-wf-el='section' className='mt-8'>
-              <h3 className='fluid-h3 text-brand-fg' style={{ marginTop: '32px' }}>
-                What this asks of you
-              </h3>
-              <p className='font-sohne-buch text-[16px] leading-[22.4px] text-[#5f5f5f]' style={{ marginBottom: '1em' }}>
-                <strong className='font-bold text-black'>Adopt an agentic mindset. Identify toil. Delegate clearly. Measure success. Invest in agent orchestration as a core engineering skill</strong>.
-              </p>
-            </section>
           </div>
+        </div>
         </div>
       </section>
     </CompanyPageShell>

@@ -121,6 +121,20 @@
     display: flow-root;
     overflow: hidden;
   }
+
+  .webflow-rich-text::before,
+  .webflow-rich-text::after {
+    content: " ";
+    display: table;
+    grid-column-start: 1;
+    grid-row-start: 1;
+    grid-column-end: 2;
+    grid-row-end: 2;
+  }
+
+  .webflow-rich-text::after {
+    clear: both;
+  }
   h2 { margin-bottom: 8.8px; }
   h3 { margin-bottom: 9.6px; }
   h4 { margin-bottom: 10px; }

@@ -8,6 +8,7 @@ interface OverlayLinkButtonProps {
   className?: string;
   textClassName?: string;
   wrapperStyle?: React.CSSProperties;
+  textStyle?: React.CSSProperties;
   iconSrc?: string;
   iconAlt?: string;
   fullWidth?: boolean;
@@ -35,6 +36,7 @@ export const OverlayLinkButton = ({
   className,
   textClassName,
   wrapperStyle,
+  textStyle,
   iconSrc,
   iconAlt = '',
   fullWidth = false,

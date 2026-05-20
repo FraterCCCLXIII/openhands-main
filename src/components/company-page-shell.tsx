@@ -4,6 +4,7 @@ import { Footer } from '~/components/footer';
 interface CompanyPageShellProps {
   children: ReactNode;
   backgroundClassName?: string;
+  showBackground?: boolean;
 }
 
 /**
@@ -23,6 +24,7 @@ interface CompanyPageShellProps {
 export const CompanyPageShell = ({
   children,
   backgroundClassName = 'opacity-[0.12]',
+  showBackground = true,
 }: CompanyPageShellProps) => {
   return (
     <main data-wf-el='page-main' className='relative overflow-visible' style={{ display: 'flex', flexDirection: 'column', position: 'static' }}>
