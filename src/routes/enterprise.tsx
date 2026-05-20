@@ -217,7 +217,7 @@ export const meta: Route.MetaFunction = ({ location }) => {
     {
       property: 'og:description',
       content:
-        'Scale AI agents in production with the control, visibility, and repeatability your enterprise needs.',
+        'Deploy OpenHands securely across your organization. Enterprise-grade governance, compliance, and customization for regulated industries.',
     },
     { property: 'og:image', content: DEFAULT_SOCIAL_IMAGE },
     { property: 'og:url', content: 'https://openhands.dev' + location.pathname },
@@ -230,7 +230,7 @@ export const meta: Route.MetaFunction = ({ location }) => {
     {
       name: 'twitter:description',
       content:
-        'Scale AI agents in production with the control, visibility, and repeatability your enterprise needs.',
+        'Deploy OpenHands securely across your organization. Enterprise-grade governance, compliance, and customization for regulated industries.',
     },
     { name: 'twitter:image', content: DEFAULT_SOCIAL_IMAGE },
     { rel: 'canonical', href: 'https://openhands.dev' + location.pathname },
@@ -280,7 +280,7 @@ const Enterprise = () => {
         {/* Live's hero uses the same animated ASCII embed as the product
          * pages: an absolute `.asci-wrap` paint layer containing an
          * `.ascii-pre` text surface. */}
-        <div data-wf-el='asci-wrap' className='pointer-events-auto absolute inset-0 overflow-hidden' style={{ '--ascii-opacity': '0.12' } as CSSProperties} aria-hidden='true'>
+        <div data-wf-el='asci-wrap' className='pointer-events-auto absolute inset-0 overflow-hidden' style={{ '--ascii-opacity': '0.12', maxHeight: '2400px' } as CSSProperties} aria-hidden='true'>
           <ASCIIAnimation className='h-full w-full' />
         </div>
         {/* Live's `.container` sits inside `section-hero` with padding 0
@@ -339,8 +339,8 @@ const Enterprise = () => {
                 href='https://app.vanta.com/openhands.dev/trust/an0kgh9goh7xyqkhsb6tlp'
                 label='Trust Center'
                 variant='outline'
-                wfEl='button-3'
-                textWfEl='btn-text-3'
+                wfEl='button'
+                textWfEl='btn-text'
                 className='!px-[30.4px] !py-[14.4px]'
               />
             </div>
@@ -402,6 +402,7 @@ const Enterprise = () => {
             }}
           >
             <img
+              data-wf-el='acp_graphic_img'
               src={CONTROL_PLANE_IMG}
               alt=''
               className='h-auto w-full object-cover'
@@ -414,7 +415,7 @@ const Enterprise = () => {
 
       {/* GOVERN AGENTS — 1+2+2 layout (first card spans 2 cols).  Live uses
        * h3.h2 for the section heading and h3.h4 for each card heading. */}
-      <section data-wf-el='section' style={{ ...SECTION_BASE, paddingBottom: '103px' }}>
+      <section data-wf-el='section' style={SECTION_BASE}>
         <Container>
           {/* Live's H3 has no max-width constraint and 66px bottom
             * margin so the headline fits on a single 48px line.  The
@@ -516,35 +517,33 @@ const Enterprise = () => {
               </article>
             ))}
           </div>
+          <div aria-hidden='true' style={{ height: '23px' }} />
         </Container>
       </section>
 
       {/* EVENT TO PR — dark 2-column with image */}
-      <section data-wf-el='section' style={{ ...SECTION_DARK, minHeight: '638px' }}>
+      <section data-wf-el='section' style={SECTION_DARK}>
         <Container>
-          <div className='grid grid-cols-1 items-center gap-10 lg:grid-cols-2 lg:gap-16'>
-            <div className='flex flex-col items-start'>
-              {/* Live tags this eyebrow as `.acp_features_eyebrow` (not
-               * the generic top-level `.eyebrow`) and gives it a 21.12px
-               * margin-bottom — matching the in-card eyebrows in the
-               * preceding control-features grid.  Use the cream color
-               * (`text-brand-bg`) since this section is dark. */}
-              <div
-                data-wf-el='acp_features_eyebrow'
-                className='font-mono text-[14px] font-normal leading-[16.896px] text-brand-bg'
-                style={{ marginBottom: '21.12px' }}
-              >
-                Automations
+          <div className='flex flex-wrap' style={{ margin: '0px -20px', rowGap: '40px' }}>
+            <div className='flex basis-full flex-col px-5 lg:basis-1/2' style={{ position: 'relative' }}>
+              <div data-wf-el='heading-stack' className='flex flex-col items-start' style={{ justifyContent: 'center', height: '100%' }}>
+                <div
+                  data-wf-el='acp_features_eyebrow'
+                  className='font-mono text-[14px] font-normal leading-[16.896px] text-brand-bg'
+                  style={{ marginBottom: '21.12px' }}
+                >
+                  Automations
+                </div>
+                <h2 className='section-title text-brand-bg' style={{ width: '599px', marginBottom: '8.8px' }}>From event to PR, no human in the loop.</h2>
+                <p className='fluid-body-lg text-[#b3a88c]' style={{ marginBottom: '20.8px', width: '599px' }}>
+                  Wire OpenHands to the tools your team already uses. When something happens, the right agent fires, does the work, and opens a pull request.
+                  <br />
+                  <br />
+                  Every automated run is fully logged and governed by the same cost and security policies as manual sessions. Automation doesn't mean unsupervised.
+                </p>
               </div>
-              <h2 className='section-title text-brand-bg' style={{ width: '599px' }}>From event to PR, no human in the loop.</h2>
-              <p className='fluid-body-lg text-[#b3a88c]' style={{ marginBottom: '20.8px' }}>
-                Wire OpenHands to the tools your team already uses. When something happens, the right agent fires, does the work, and opens a pull request.
-                <br />
-                <br />
-                Every automated run is fully logged and governed by the same cost and security policies as manual sessions. Automation doesn{'\u2019'}t mean unsupervised.
-              </p>
             </div>
-            <div>
+            <div className='flex basis-full flex-col px-5 lg:basis-1/2' style={{ position: 'relative' }}>
               <img src={STEPS_IMG} alt='' className='img-block h-auto w-full object-fill' loading='lazy' />
             </div>
           </div>
@@ -553,8 +552,9 @@ const Enterprise = () => {
 
       {/* C3.ai QUOTE — light section with ASCII hole bg */}
       <section data-wf-el='section' className='overflow-visible' style={SECTION_BASE}>
-        <div className='absolute inset-0' aria-hidden='true'>
+        <div data-wf-el='asci-wrap' className='absolute inset-0 bg-brand-accent' style={{ overflow: 'hidden' }} aria-hidden='true'>
           <img
+            data-wf-el='asci-media'
             src={ASCII_HOLE_BG}
             alt='ASCII art depicting a large black hole with light and particles swirling around it.'
             className='h-full w-full object-cover'
@@ -568,18 +568,19 @@ const Enterprise = () => {
            * margin-bottom on the quote plus the 64px stack padding give
            * the section its 503px total height. */}
           <div
+            data-wf-el='heading-stack'
             className='relative z-[2] flex w-full flex-col items-center text-center'
-            style={{ padding: '64px 0px' }}
+            style={{ padding: '64px 0px', justifyContent: 'flex-start' }}
           >
             <p
               className='testimonial-quote text-brand-fg'
               style={{ marginTop: '0px', marginBottom: '22px' }}
             >
-              {'\u201C'}OpenHands was the only solution that let us prompt an autonomous coding agent remotely at scale {'\u2014'} not just on a laptop or inside a narrow CI template.{'\u201D'}
+              “OpenHands was the only solution that let us prompt an autonomous coding agent remotely at scale — not just on a laptop or inside a narrow CI template.”
             </p>
             <div
               data-wf-el='acp_quote_wrap'
-              className='flex flex-wrap items-center justify-center'
+              className='flex flex-nowrap items-center justify-center'
               style={{ gap: '32px' }}
             >
               {/* Live wraps the portrait in a `.quote-author-media`
@@ -592,14 +593,16 @@ const Enterprise = () => {
                * live's image is a flat raster. */}
               <div
                 data-wf-el='quote-author-media'
-                className='h-12 w-12 overflow-hidden'
+                className='h-12 w-12'
                 style={{
                   borderRadius: '50%',
                   backgroundColor: 'rgb(34, 21, 13)',
                   display: 'block',
+                  overflow: 'visible',
                 }}
               >
                 <img
+                  data-wf-el='acp_quote_img'
                   src={C3AI_AUTHOR_IMG}
                   alt=''
                   className='h-12 w-12 object-cover'
@@ -617,8 +620,8 @@ const Enterprise = () => {
               >
                 Sina Pakazad, VP of Data Science at C3.ai
               </p>
-              <div className='mx-2 h-8 w-px rotate-12 bg-brand-fg/30' aria-hidden='true' />
-              <img src={C3AI_LOGO} alt='' className='h-8 w-auto' loading='lazy' />
+              <div className='h-10 w-px rotate-12 bg-brand-fg/30' aria-hidden='true' />
+              <img data-wf-el='acp_quote_logo' src={C3AI_LOGO} alt='' className='h-auto w-[80px]' loading='lazy' />
             </div>
           </div>
         </Container>
@@ -627,13 +630,14 @@ const Enterprise = () => {
       {/* BUILT FOR TEAMS — 3+2 layout (3-col grid, last 2 cards on row 2). */}
       <section data-wf-el='section' style={SECTION_BASE}>
         <Container>
-          <div className='flex flex-col items-start' style={{ marginBottom: '0px', justifyContent: 'center' }}>
-            <Eyebrow className='text-brand-fg'>OpenHands Enterprise</Eyebrow>
-            <h2 className='section-title max-w-[724px] text-brand-fg'>Built for teams running agents at scale. </h2>
-            <p className='fluid-body-lg text-[#5f5f5f]' style={{ marginBottom: '20.8px' }}>
-              Self-hosted in your VPC via Kubernetes. Source-available. Backed by extended support and direct access to our research team.
-            </p>
-          </div>
+          <div style={{ marginBottom: '24px' }}>
+            <div className='flex flex-col items-start' style={{ marginBottom: '0px', justifyContent: 'center' }}>
+              <Eyebrow className='text-brand-fg'>OpenHands Enterprise</Eyebrow>
+              <h2 className='section-title max-w-[724px] text-brand-fg'>Built for teams running agents at scale. </h2>
+              <p className='fluid-body-lg text-[#5f5f5f]' style={{ marginBottom: '20.8px' }}>
+                Self-hosted in your VPC via Kubernetes. Source-available. Backed by extended support and direct access to our research team.
+              </p>
+            </div>
           {/* Live's built-for-teams grid is 3 cards on row 1 (each
            * 412px / one-third) and 2 cards on row 2 (each 618px /
            * one-half).  A flat 3-col CSS grid leaves an empty cell on
@@ -679,6 +683,8 @@ const Enterprise = () => {
               );
             })}
           </div>
+          </div>
+
         </Container>
       </section>
 
@@ -709,11 +715,13 @@ const Enterprise = () => {
             >
               Legacy modernization projects fail 74% of the time and the engineers who understand your COBOL, mainframe, and legacy systems are retiring faster than you can replace them.
             </p>
-            <div className='mt-4'>
+            <div>
               <OverlayLinkButton
                 href='/whitepapers/modernize-legacy-systems-with-ai-agents'
                 label='Download the Whitepaper'
                 variant='lightbrown'
+                wfEl='button'
+                textWfEl='btn-text'
                 className='!flex'
               />
             </div>
@@ -733,6 +741,7 @@ const Enterprise = () => {
         marketingCtaDescription='The teams shipping the most are moving beyond individual agent sessions to governed, automated workflows. Let us show you what that looks like in practice.'
         marketingCtaPrimary={{ href: '/contact', label: 'Book a Demo' }}
         marketingCtaSecondary={{ href: 'https://docs.openhands.dev/sdk', label: 'Build with SDK' }}
+        showCopyright
       />
     </main>
   );

@@ -35,6 +35,7 @@ interface FooterProps {
   marketingCtaDescription?: string;
   marketingCtaPrimary?: FooterCta;
   marketingCtaSecondary?: FooterCta | null;
+  showCopyright?: boolean;
 }
 
 /**
@@ -113,6 +114,7 @@ type FooterContentProps = Pick<
   | 'marketingCtaDescription'
   | 'marketingCtaPrimary'
   | 'marketingCtaSecondary'
+  | 'showCopyright'
 >;
 
 const FooterContent = ({
@@ -125,6 +127,7 @@ const FooterContent = ({
   marketingCtaDescription,
   marketingCtaPrimary,
   marketingCtaSecondary,
+  showCopyright = false,
 }: FooterContentProps) => {
   const location = useLocation();
   const pathname = normalizePathname(location.pathname);
@@ -372,6 +375,7 @@ export const Footer = ({
   marketingCtaDescription,
   marketingCtaPrimary,
   marketingCtaSecondary,
+  showCopyright,
 }: FooterProps) => {
   const ctaProps = {
     showMarketingCta,
@@ -380,6 +384,7 @@ export const Footer = ({
     marketingCtaDescription,
     marketingCtaPrimary,
     marketingCtaSecondary,
+    showCopyright,
   };
   if (!standalone) {
     return (
@@ -402,7 +407,7 @@ export const Footer = ({
       className='relative overflow-visible bg-brand-accent text-brand-fg'
       style={{ padding: '80px 0px' }}
     >
-      <div data-wf-el='asci-wrap' className='absolute inset-0 overflow-hidden'>
+      <div data-wf-el='asci-wrap' className='absolute inset-0 overflow-hidden' style={{ maxHeight: '2400px' }}>
         <img
           data-wf-el='asci-media'
           src='/assets/webflow/backgrounds/6908d170831c19b2b6976323_ascii-art_(16)_1.svg'

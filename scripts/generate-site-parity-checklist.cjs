@@ -1124,6 +1124,19 @@ async function extractPageInventory(page) {
       return `${viewBox}::${tokens.join(';')}`.slice(0, 12000);
     };
     const semanticSvgKey = (svg) => {
+      const ownWf = svg.getAttribute?.('data-wf-el');
+      const parentWf = svg.parentElement?.getAttribute?.('data-wf-el');
+      const parentClasses = typeof svg.parentElement?.className === 'string'
+        ? svg.parentElement.className.split(/\s+/)
+        : (svg.parentElement?.className?.baseVal || '').split(/\s+/);
+      const parentIconKey = parentWf === 'acp_features_icon' || parentClasses.indexOf('acp_features_icon') >= 0;
+      const svgClasses = typeof svg.className === 'string'
+        ? svg.className.split(/\s+/)
+        : (svg.className?.baseVal || '').split(/\s+/);
+      // Bootstrap icon SVGs carry their `bi-*` Webflow key for element
+      // style matching, while vector shape comparison should group them
+      // by the surrounding feature icon chip on both live and local pages.
+      if (parentIconKey && (ownWf?.indexOf('bi-') === 0 || svgClasses.some((cls) => cls.indexOf('bi-') === 0))) return 'acp_features_icon';
       let current = svg;
       let depth = 0;
       while (current && depth < 8) {

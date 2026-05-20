@@ -83,7 +83,7 @@ describe('Marketing parity routes', () => {
   });
 
   it('renders the updated enterprise page content', () => {
-    renderRoute(<Enterprise />);
+    const { container } = renderRoute(<Enterprise />);
 
     // New live hero
     expect(screen.getByRole('heading', { level: 1, name: /From agents to systems/i })).toBeInTheDocument();
@@ -123,6 +123,11 @@ describe('Marketing parity routes', () => {
     expect(
       screen.getByText(/OpenHands was the only solution that let us prompt an autonomous coding agent/i),
     ).toBeInTheDocument();
+    expect(screen.getByText(/Automation doesn't mean unsupervised\./i)).toBeInTheDocument();
+    expect(container.querySelector('img[data-wf-el="acp_graphic_img"]')).toHaveAttribute('src', '/assets/webflow/enterprise/control-plane.png');
+    expect(container.querySelector('img[data-wf-el="acp_quote_img"]')).toHaveAttribute('src', '/assets/webflow/enterprise/image96x96.png');
+    expect(container.querySelector('img[data-wf-el="acp_quote_logo"]')).toHaveAttribute('src', '/assets/webflow/enterprise/c3ailogo.svg');
+
     expect(screen.getByText(/Sina Pakazad, VP of Data Science at C3\.ai/i)).toBeInTheDocument();
 
     // Built-for-teams grid
@@ -141,13 +146,9 @@ describe('Marketing parity routes', () => {
       '/whitepapers/modernize-legacy-systems-with-ai-agents',
     );
 
-    // Closing "What comes after Claude Code?" CTA now lives inside
-    // the global footer (wired through root.tsx via
-    // PRODUCT_SUBPAGE_CTA['/enterprise']) rather than as a separate
-    // section on the page itself, matching live's structure.  The
-    // route component therefore should NOT render that text directly;
-    // the footer is rendered by the layout, not the route in tests.
+    // Closing footer section mirrors the live enterprise footer, including the visible copyright.
     expect(screen.getByText(/What comes after Claude Code\?/i)).toBeInTheDocument();
+    expect(screen.getByText(/© \d{4} OpenHands - All rights reserved/i)).toBeInTheDocument();
 
     // Old marketing-page placeholders should be gone now
     expect(screen.queryByText(/Why Enterprises Choose OpenHands/i)).not.toBeInTheDocument();

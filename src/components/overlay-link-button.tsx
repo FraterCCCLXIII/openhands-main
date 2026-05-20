@@ -50,6 +50,24 @@ export const OverlayLinkButton = ({
     marginBottom: '10px',
   };
 
+  const textStyle: React.CSSProperties = iconSrc
+    ? {
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '6.4px',
+        whiteSpace: 'nowrap',
+        cursor: 'auto',
+        textUnderlineOffset: 'auto',
+        pointerEvents: 'none',
+      }
+    : {
+        display: 'block',
+        whiteSpace: 'nowrap',
+        cursor: 'auto',
+        textUnderlineOffset: 'auto',
+        pointerEvents: 'none',
+      };
+
   return (
     <div
       data-wf-el={wfEl}
