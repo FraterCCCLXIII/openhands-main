@@ -41,6 +41,27 @@ const EVENTS = [
 
 const MICHAEL_MAY_IMAGE = '/assets/webflow/team/698653c2074b111e59086ff8_mike.jpeg';
 
+const FIRST_TIME_CONTRIBUTORS = [
+  {
+    name: 'Kage18',
+    title: 'fix: avoid rewriting provider credit errors',
+    href: 'https://github.com/OpenHands/OpenHands/pull/14437',
+    avatar: 'https://avatars.githubusercontent.com/u/39442065?v=4',
+  },
+  {
+    name: 'smolpaws',
+    title: 'Add issue duplicate automation workflow',
+    href: 'https://github.com/OpenHands/OpenHands/pull/14444',
+    avatar: 'https://avatars.githubusercontent.com/u/255025612?v=4',
+  },
+  {
+    name: 'Cao-R',
+    title: 'fix Windows compatibility: use cross-platform temp directory for sandbox',
+    href: 'https://github.com/OpenHands/OpenHands/pull/14261',
+    avatar: 'https://avatars.githubusercontent.com/u/176635150?v=4',
+  },
+] as const;
+
 const CONTRIBUTION_PATHS = [
   {
     title: 'Read the docs',
@@ -288,27 +309,30 @@ const Community = () => {
             </h2>
           </div>
           <div className='mt-12 grid gap-6 lg:grid-cols-4'>
-            <a
-              href='https://github.com/OpenHands/OpenHands/pull/8840'
-              target='_blank'
-              rel='noopener noreferrer'
-              className='relative flex h-[181px] flex-col overflow-hidden rounded-[8px] border border-[#b3a88c] p-0 text-left text-brand-fg'
-            >
-              <div className='p-6'>
-                <div className='mb-4 flex items-center gap-3'>
-                  <img
-                    src='https://avatars.githubusercontent.com/u/176635150?v=4'
-                    alt='Cao-R'
-                    className='h-12 w-12 object-cover'
-                    style={{ borderRadius: '100%' }}
-                  />
-                  <span className='text-[16px] leading-[22.4px]'>Cao-R</span>
+            {FIRST_TIME_CONTRIBUTORS.map((contributor) => (
+              <a
+                key={contributor.name}
+                href={contributor.href}
+                target='_blank'
+                rel='noopener noreferrer'
+                className='relative flex h-[181px] flex-col overflow-hidden rounded-[8px] border border-[#b3a88c] p-0 text-left text-brand-fg'
+              >
+                <div className='p-6'>
+                  <div className='mb-4 flex items-center gap-3'>
+                    <img
+                      src={contributor.avatar}
+                      alt={contributor.name}
+                      className='h-12 w-12 object-cover'
+                      style={{ borderRadius: '100%' }}
+                    />
+                    <span className='text-[16px] leading-[22.4px]'>{contributor.name}</span>
+                  </div>
+                  <p className='text-[16px] font-normal leading-[22.4px] text-brand-fg' style={{ margin: 0 }}>
+                    {contributor.title}
+                  </p>
                 </div>
-                <p className='text-[16px] font-normal leading-[22.4px] text-brand-fg' style={{ margin: 0 }}>
-                  fix Windows compatibility: use cross-platform temp directory for sandbox
-                </p>
-              </div>
-            </a>
+              </a>
+            ))}
           </div>
         </div>
       </section>

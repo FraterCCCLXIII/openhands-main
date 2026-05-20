@@ -25,7 +25,7 @@ const PROTOCOL_TIMEOUT = Number(
 const SCREENSHOT_PAGE_LIMIT = Number(process.env.PARITY_SCREENSHOT_PAGE_LIMIT || MAX_PAGES);
 const SCREENSHOT_DIFF_THRESHOLD = Number(process.env.PARITY_SCREENSHOT_DIFF_THRESHOLD || 5);
 const SCREENSHOT_REGION_SIZE = Number(process.env.PARITY_SCREENSHOT_REGION_SIZE || 160);
-const SCREENSHOT_REGION_DIFF_THRESHOLD = Number(process.env.PARITY_SCREENSHOT_REGION_DIFF_THRESHOLD || 35);
+const SCREENSHOT_REGION_DIFF_THRESHOLD = Number(process.env.PARITY_SCREENSHOT_REGION_DIFF_THRESHOLD || 12);
 const PATH_OFFSET = Math.max(0, Number(process.env.PARITY_PATH_OFFSET || 0));
 const PATH_LIMIT = process.env.PARITY_PATH_LIMIT === undefined
   ? null
@@ -1046,6 +1046,131 @@ async function extractPageInventory(page) {
       };
     });
 
+    const rectForRange = (range) => {
+      const rects = Array.from(range.getClientRects()).filter((rect) => rect.width >= 1 && rect.height >= 1);
+      if (!rects.length) return null;
+      const left = Math.min(...rects.map((rect) => rect.left));
+      const top = Math.min(...rects.map((rect) => rect.top));
+      const right = Math.max(...rects.map((rect) => rect.right));
+      const bottom = Math.max(...rects.map((rect) => rect.bottom));
+      return {
+        top: Math.round(top + window.scrollY),
+        left: Math.round(left + window.scrollX),
+        width: Math.round(right - left),
+        height: Math.round(bottom - top),
+      };
+    };
+
+    const isScreenReaderOnly = (element) => {
+      const className = `${element.className || ''}`;
+      const style = window.getComputedStyle(element);
+      return /(^|\s)(sr-only|visually-hidden|w-condition-invisible)(\s|$)/i.test(className) ||
+        (style.clip && style.clip !== 'auto') ||
+        (style.clipPath && style.clipPath !== 'none') ||
+        (style.position === 'absolute' && Number.parseFloat(style.width) <= 1 && Number.parseFloat(style.height) <= 1 && style.overflow === 'hidden');
+    };
+
+    const renderedText = [];
+    const renderedTextCounter = new Map();
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
+      acceptNode(node) {
+        const text = normalizeWhitespaceInner(node.nodeValue || '');
+        if (!text || text.length > 500 || text.replace(/[\u200b-\u200d\ufeff]/g, '') === '') return NodeFilter.FILTER_REJECT;
+        const parent = node.parentElement;
+        if (!parent || ['SCRIPT', 'STYLE', 'NOSCRIPT', 'TEMPLATE', 'PRE', 'CODE'].includes(parent.tagName) || parent.closest('pre,code')) return NodeFilter.FILTER_REJECT;
+        if (!isVisible(parent) || isScreenReaderOnly(parent)) return NodeFilter.FILTER_REJECT;
+        return NodeFilter.FILTER_ACCEPT;
+      },
+    });
+    for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+      const text = normalizeWhitespaceInner(node.nodeValue || '');
+      const key = normalizeTextInner(text);
+      const host = node.parentElement;
+      const range = document.createRange();
+      range.selectNodeContents(node);
+      const rect = rectForRange(range);
+      range.detach();
+      if (!rect || rect.width < 4 || rect.height < 4) continue;
+      const computed = window.getComputedStyle(host);
+      const style = Object.fromEntries(styleProps.map((prop) => [prop, computed[prop]]));
+      if (!renderedTextCounter.has(key)) renderedTextCounter.set(key, 0);
+      const occurrenceIndex = renderedTextCounter.get(key);
+      renderedTextCounter.set(key, occurrenceIndex + 1);
+      renderedText.push({
+        signature: `TEXT:${key.slice(0, 140)}`,
+        key,
+        text,
+        tag: host.tagName,
+        occurrenceIndex,
+        style,
+        rect,
+      });
+    }
+
+    const normalizeAttr = (value) => normalizeWhitespaceInner(value || '').replace(/\s+/g, ' ').slice(0, 800);
+    const svgShapeFingerprint = (svg) => {
+      const tokens = [];
+      for (const node of Array.from(svg.querySelectorAll('path,line,polyline,polygon,circle,ellipse,rect')).slice(0, 80)) {
+        const attrs = ['d', 'points', 'x1', 'y1', 'x2', 'y2', 'cx', 'cy', 'r', 'rx', 'ry', 'x', 'y', 'width', 'height']
+          .map((attr) => {
+            const value = node.getAttribute(attr);
+            return value ? `${attr}=${normalizeAttr(value)}` : '';
+          })
+          .filter(Boolean)
+          .join('|');
+        tokens.push(`${node.tagName.toLowerCase()}(${attrs})`);
+      }
+      const viewBox = normalizeAttr(svg.getAttribute('viewBox') || '');
+      return `${viewBox}::${tokens.join(';')}`.slice(0, 12000);
+    };
+    const semanticSvgKey = (svg) => {
+      let current = svg;
+      let depth = 0;
+      while (current && depth < 8) {
+        const wf = current.getAttribute?.('data-wf-el');
+        if (wf) return wf;
+        const classes = typeof current.className === 'string'
+          ? current.className.split(/\s+/)
+          : (current.className?.baseVal || '').split(/\s+/);
+        const semantic = classes.find((cls) => /(accordion|enterprise|logo|icon|arrow|testimonial|slider|social|nav|button|faq|nvidia|amd)/i.test(cls));
+        if (semantic) return semantic;
+        if (current.id && /(logo|icon|arrow|nvidia|amd)/i.test(current.id)) return current.id;
+        current = current.parentElement;
+        depth += 1;
+      }
+      return 'svg';
+    };
+    const svgVectors = [];
+    const svgCounter = new Map();
+    for (const svg of Array.from(document.querySelectorAll('svg'))) {
+      if (!isVisible(svg) || isScreenReaderOnly(svg)) continue;
+      const rect = svg.getBoundingClientRect();
+      if (rect.width < 6 || rect.height < 6) continue;
+      const key = semanticSvgKey(svg);
+      if (!svgCounter.has(key)) svgCounter.set(key, 0);
+      const occurrenceIndex = svgCounter.get(key);
+      svgCounter.set(key, occurrenceIndex + 1);
+      const computed = window.getComputedStyle(svg);
+      svgVectors.push({
+        signature: `SVG:${key}`,
+        key,
+        occurrenceIndex,
+        fingerprint: svgShapeFingerprint(svg),
+        style: {
+          color: computed.color,
+          fill: computed.fill,
+          stroke: computed.stroke,
+          strokeWidth: computed.strokeWidth,
+        },
+        rect: {
+          top: Math.round(rect.top + window.scrollY),
+          left: Math.round(rect.left + window.scrollX),
+          width: Math.round(rect.width),
+          height: Math.round(rect.height),
+        },
+      });
+    }
+
     return {
       title,
       headings,
@@ -1054,6 +1179,8 @@ async function extractPageInventory(page) {
         .map((element) => `${element.tag}:${element.text}`),
       headingDebug,
       elements,
+      renderedText,
+      svgVectors,
       pageBg,
     };
   }, STYLE_PROPS, LAYOUT_CONTEXT_PROPS);
@@ -2559,6 +2686,110 @@ function compareButtonComponents(liveButtons = [], testButtons = []) {
     if (!liveMap.has(sig)) extra.push({ signature: sig, count: testItems.length, label: testItems[0].label });
   }
   return { missing, extra, mismatches };
+}
+
+
+function groupBySignature(items = []) {
+  const grouped = new Map();
+  for (const item of items) {
+    const sig = item.signature || item.key || '';
+    if (!sig) continue;
+    if (!grouped.has(sig)) grouped.set(sig, []);
+    grouped.get(sig).push(item);
+  }
+  return grouped;
+}
+
+function compareRenderedText(liveText = [], testText = []) {
+  const liveMap = groupBySignature(liveText);
+  const testMap = groupBySignature(testText);
+  const missing = [];
+  const extra = [];
+  const countDiffs = [];
+  const mismatches = [];
+  const props = ['fontFamily', 'fontSize', 'lineHeight', 'fontWeight', 'fontStyle', 'letterSpacing', 'textTransform', 'whiteSpace', 'color', 'textAlign'];
+
+  for (const [sig, liveItems] of liveMap) {
+    const testItems = testMap.get(sig) || [];
+    if (!testItems.length) {
+      missing.push({ signature: sig, text: liveItems[0]?.text || '', count: liveItems.length, tag: liveItems[0]?.tag || '' });
+      continue;
+    }
+    if (liveItems.length !== testItems.length) {
+      countDiffs.push({ signature: sig, text: liveItems[0]?.text || '', liveCount: liveItems.length, testCount: testItems.length });
+    }
+    const pairCount = Math.min(liveItems.length, testItems.length);
+    for (let i = 0; i < pairCount; i += 1) {
+      const live = liveItems[i];
+      const test = testItems[i];
+      const diffs = [];
+      if ((live.text || '') !== (test.text || '')) {
+        diffs.push(`text: live=${JSON.stringify(live.text || '')} test=${JSON.stringify(test.text || '')}`);
+      }
+      for (const prop of props) {
+        const diff = compareStyleValue(prop, live.style?.[prop], test.style?.[prop], live.style, test.style);
+        if (diff) diffs.push(diff);
+      }
+      const sizeDiffs = compareLayout('TEXT', live.rect, test.rect).filter((diff) => /width|height/.test(diff));
+      diffs.push(...sizeDiffs.map((diff) => `textRect.${diff}`));
+      if (diffs.length > 0) {
+        mismatches.push({ signature: sig, text: live.text || '', occurrenceIndex: i, tag: live.tag, diffs, liveRect: live.rect, testRect: test.rect });
+      }
+    }
+  }
+  for (const [sig, testItems] of testMap) {
+    if (!liveMap.has(sig)) {
+      extra.push({ signature: sig, text: testItems[0]?.text || '', count: testItems.length, tag: testItems[0]?.tag || '' });
+    }
+  }
+  return { missing, extra, countDiffs, mismatches };
+}
+
+function compareSvgVectors(liveVectors = [], testVectors = []) {
+  const liveMap = groupBySignature(liveVectors);
+  const testMap = groupBySignature(testVectors);
+  const missing = [];
+  const extra = [];
+  const countDiffs = [];
+  const mismatches = [];
+  const props = ['color', 'fill', 'stroke', 'strokeWidth'];
+
+  for (const [sig, liveItems] of liveMap) {
+    const testItems = testMap.get(sig) || [];
+    if (!testItems.length) {
+      missing.push({ signature: sig, count: liveItems.length, liveRect: liveItems[0]?.rect || null });
+      continue;
+    }
+    if (liveItems.length !== testItems.length) {
+      countDiffs.push({ signature: sig, liveCount: liveItems.length, testCount: testItems.length });
+    }
+    const pairCount = Math.min(liveItems.length, testItems.length);
+    for (let i = 0; i < pairCount; i += 1) {
+      const live = liveItems[i];
+      const test = testItems[i];
+      const diffs = [];
+      if ((live.fingerprint || '') !== (test.fingerprint || '')) {
+        diffs.push('shape fingerprint differs');
+      }
+      for (const prop of props) {
+        const diff = compareStyleValue(prop, live.style?.[prop], test.style?.[prop], live.style, test.style);
+        if (diff) diffs.push(diff);
+      }
+      for (const key of ['width', 'height']) {
+        const delta = Math.abs((live.rect?.[key] || 0) - (test.rect?.[key] || 0));
+        if (delta > 4) diffs.push(`rect.${key}: live=${live.rect?.[key]} test=${test.rect?.[key]}`);
+      }
+      if (diffs.length > 0) {
+        mismatches.push({ signature: sig, occurrenceIndex: i, diffs, liveRect: live.rect, testRect: test.rect });
+      }
+    }
+  }
+  for (const [sig, testItems] of testMap) {
+    if (!liveMap.has(sig)) {
+      extra.push({ signature: sig, count: testItems.length, testRect: testItems[0]?.rect || null });
+    }
+  }
+  return { missing, extra, countDiffs, mismatches };
 }
 
 
@@ -4546,6 +4777,17 @@ function summarizeRouteComparison(routePath, livePage, testPage, screenshotDiff)
       widgetExtraCount: 0,
       dynamicSelectorComparison: { present: false, passed: true, issues: [], live: { present: false }, test: { present: false } },
       dynamicSelectorMismatchCount: 0,
+      renderedTextComparison: { missing: [], extra: [], countDiffs: [], mismatches: [] },
+      renderedTextMissingCount: 0,
+      renderedTextExtraCount: 0,
+      renderedTextCountMismatchCount: 0,
+      renderedTextMismatchCount: 0,
+      svgVectorComparison: { missing: [], extra: [], countDiffs: [], mismatches: [] },
+      svgVectorMissingCount: 0,
+      svgVectorExtraCount: 0,
+      svgVectorCountMismatchCount: 0,
+      svgVectorMismatchCount: 0,
+      routeAvailabilityMatches: (livePage.status < 400) === (testPage.status < 400),
       screenshotDiff,
     };
   }
@@ -4867,6 +5109,16 @@ function summarizeRouteComparison(routePath, livePage, testPage, screenshotDiff)
     testPage.buttonComponents || [],
   );
 
+  const renderedTextComparison = compareRenderedText(
+    livePage.inventory.renderedText || [],
+    testPage.inventory.renderedText || [],
+  );
+
+  const svgVectorComparison = compareSvgVectors(
+    livePage.inventory.svgVectors || [],
+    testPage.inventory.svgVectors || [],
+  );
+
   for (const liveImg of liveImages) {
     const candidates = testImages.filter((t) => t.signature === liveImg.signature);
     if (candidates.length === 0) continue;
@@ -4964,6 +5216,17 @@ function summarizeRouteComparison(routePath, livePage, testPage, screenshotDiff)
     widgetExtraCount: animationComparison.extraWidgets.length,
     dynamicSelectorComparison,
     dynamicSelectorMismatchCount: dynamicSelectorComparison.issues.length,
+    renderedTextComparison,
+    renderedTextMissingCount: renderedTextComparison.missing.length,
+    renderedTextExtraCount: renderedTextComparison.extra.length,
+    renderedTextCountMismatchCount: renderedTextComparison.countDiffs.length,
+    renderedTextMismatchCount: renderedTextComparison.mismatches.length,
+    svgVectorComparison,
+    svgVectorMissingCount: svgVectorComparison.missing.length,
+    svgVectorExtraCount: svgVectorComparison.extra.length,
+    svgVectorCountMismatchCount: svgVectorComparison.countDiffs.length,
+    svgVectorMismatchCount: svgVectorComparison.mismatches.length,
+    routeAvailabilityMatches: (livePage.status < 400) === (testPage.status < 400),
     screenshotDiff,
   };
 }
@@ -5002,6 +5265,7 @@ function findScreenshotDiffRegions(liveImage, testImage, width, height, options 
   const liveData = padImage(liveImage, width, height);
   const testData = padImage(testImage, width, height);
   const regions = [];
+  let maxDiffPercent = 0;
 
   for (let y = 0; y < height; y += tileSize) {
     for (let x = 0; x < width; x += tileSize) {
@@ -5019,6 +5283,7 @@ function findScreenshotDiffRegions(liveImage, testImage, width, height, options 
       }
 
       const diffPercent = Number(((diffPixels / regionPixels) * 100).toFixed(2));
+      maxDiffPercent = Math.max(maxDiffPercent, diffPercent);
       if (diffPercent >= threshold) {
         regions.push({ x, y, width: regionWidth, height: regionHeight, diffPixels, diffPercent });
       }
@@ -5033,7 +5298,7 @@ function findScreenshotDiffRegions(liveImage, testImage, width, height, options 
   return {
     tileSize,
     threshold,
-    maxDiffPercent: regions[0]?.diffPercent || 0,
+    maxDiffPercent,
     regions: regions.slice(0, 12),
   };
 }
@@ -5169,12 +5434,10 @@ async function resetStaticInteractionState(page) {
 async function maskUnstableExternalEmbeds(page) {
   await page.evaluate(() => {
     const selectors = [
-      'img',
       'video',
       '[data-wf-el*="asci" i]',
       '[class*="ascii" i]',
       '[class*="asci" i]',
-      '[data-slider="testimonials"]',
       'iframe[src*="youtube.com"]',
       'iframe[src*="youtu.be"]',
       'iframe[src*="vimeo.com"]',
@@ -5339,6 +5602,12 @@ function renderMarkdown(report) {
   lines.push(`- Interactive widgets missing on test (data-marquee/splide/modal/...): ${report.summary.widgetsMissing || 0}`);
   lines.push(`- Interactive widgets extra on test: ${report.summary.widgetsExtra || 0}`);
   lines.push(`- Dynamic widget UX mismatches: ${report.summary.dynamicSelectorMismatches || 0}`);
+  lines.push(`- Rendered text mismatches: ${report.summary.renderedTextMismatches || 0}`);
+  lines.push(`- Rendered text missing on test: ${report.summary.renderedTextMissing || 0}`);
+  lines.push(`- Rendered text extra on test: ${report.summary.renderedTextExtra || 0}`);
+  lines.push(`- SVG/vector shape mismatches: ${report.summary.svgVectorMismatches || 0}`);
+  lines.push(`- SVG/vector missing on test: ${report.summary.svgVectorMissing || 0}`);
+  lines.push(`- SVG/vector extra on test: ${report.summary.svgVectorExtra || 0}`);
   lines.push(`- Screenshot mismatches (> ${SCREENSHOT_DIFF_THRESHOLD}% or unavailable): ${report.summary.screenshotMismatches}`);
   lines.push(`- Screenshot capture failures: ${report.summary.screenshotUnavailable || 0}`);
   lines.push(`- Total failing checks: ${report.summary.failedChecklistItems}`);
@@ -5360,7 +5629,10 @@ function renderMarkdown(report) {
   for (const route of report.routes) {
     lines.push(`## ${route.path}`);
     lines.push('');
-    lines.push(`- [${route.testStatus < 400 ? 'x' : ' '}] Route exists on company-website (${route.liveStatus} vs ${route.testStatus})`);
+    const liveReachable = route.liveStatus < 400;
+    const testReachable = route.testStatus < 400;
+    const availabilityMatches = route.routeAvailabilityMatches ?? (liveReachable === testReachable);
+    lines.push(`- [${availabilityMatches ? 'x' : ' '}] Route availability matches (live ${route.liveStatus}${liveReachable ? ' reachable' : ' error'}, test ${route.testStatus}${testReachable ? ' reachable' : ' error'})`);
     lines.push(`- [${route.titleMatches ? 'x' : ' '}] Title matches${route.titleMatches ? '' : ` (live: ${route.liveTitle} | test: ${route.testTitle})`}`);
     lines.push(`- [${route.headingSequenceMatches ? 'x' : ' '}] Heading order matches${route.headingSequenceMatches ? '' : ` (${route.headingSequenceDiffs.join(' | ')})`}`);
 
@@ -5381,6 +5653,26 @@ function renderMarkdown(report) {
         lines.push(`  - test screenshot: ${route.screenshotDiff.testPath} (${route.screenshotDiff.testWidth}×${route.screenshotDiff.testHeight})`);
         lines.push(`  - diff screenshot: ${route.screenshotDiff.diffPath}`);
       }
+    }
+
+    const renderedText = route.renderedTextComparison || { missing: [], extra: [], countDiffs: [], mismatches: [] };
+    if (renderedText.missing.length || renderedText.extra.length || renderedText.countDiffs.length || renderedText.mismatches.length) {
+      lines.push('### Rendered text-node mismatches');
+      for (const item of renderedText.missing.slice(0, 20)) lines.push(`- [ ] missing text on test: ${item.signature} (${item.count}×) — ${item.text}`);
+      for (const item of renderedText.extra.slice(0, 20)) lines.push(`- [ ] extra text on test: ${item.signature} (${item.count}×) — ${item.text}`);
+      for (const item of renderedText.countDiffs.slice(0, 20)) lines.push(`- [ ] text count mismatch: ${item.signature} live=${item.liveCount} test=${item.testCount}`);
+      for (const item of renderedText.mismatches.slice(0, 20)) lines.push(`- [ ] ${item.signature}${item.occurrenceIndex ? ` #${item.occurrenceIndex + 1}` : ''} — ${item.diffs.join('; ')}`);
+      lines.push('');
+    }
+
+    const svgVectors = route.svgVectorComparison || { missing: [], extra: [], countDiffs: [], mismatches: [] };
+    if (svgVectors.missing.length || svgVectors.extra.length || svgVectors.countDiffs.length || svgVectors.mismatches.length) {
+      lines.push('### SVG/vector shape mismatches');
+      for (const item of svgVectors.missing.slice(0, 20)) lines.push(`- [ ] missing SVG/vector on test: ${item.signature} (${item.count}×)`);
+      for (const item of svgVectors.extra.slice(0, 20)) lines.push(`- [ ] extra SVG/vector on test: ${item.signature} (${item.count}×)`);
+      for (const item of svgVectors.countDiffs.slice(0, 20)) lines.push(`- [ ] SVG/vector count mismatch: ${item.signature} live=${item.liveCount} test=${item.testCount}`);
+      for (const item of svgVectors.mismatches.slice(0, 20)) lines.push(`- [ ] ${item.signature}${item.occurrenceIndex ? ` #${item.occurrenceIndex + 1}` : ''} — ${item.diffs.join('; ')}`);
+      lines.push('');
     }
 
     // High-signal summary: flag the 10 largest Y-position drifts on this
@@ -6300,6 +6592,12 @@ async function main() {
         widgetsMissing: routes.reduce((total, route) => total + (route.widgetMissingCount || 0), 0),
         widgetsExtra: routes.reduce((total, route) => total + (route.widgetExtraCount || 0), 0),
         dynamicSelectorMismatches: routes.reduce((total, route) => total + (route.dynamicSelectorMismatchCount || 0), 0),
+        renderedTextMismatches: routes.reduce((total, route) => total + (route.renderedTextMismatchCount || 0) + (route.renderedTextCountMismatchCount || 0), 0),
+        renderedTextMissing: routes.reduce((total, route) => total + (route.renderedTextMissingCount || 0), 0),
+        renderedTextExtra: routes.reduce((total, route) => total + (route.renderedTextExtraCount || 0), 0),
+        svgVectorMismatches: routes.reduce((total, route) => total + (route.svgVectorMismatchCount || 0) + (route.svgVectorCountMismatchCount || 0), 0),
+        svgVectorMissing: routes.reduce((total, route) => total + (route.svgVectorMissingCount || 0), 0),
+        svgVectorExtra: routes.reduce((total, route) => total + (route.svgVectorExtraCount || 0), 0),
         screenshotMismatches: routes.filter((route) => route.screenshotDiff && !route.screenshotDiff.passed).length,
         screenshotUnavailable: routes.filter((route) => route.screenshotDiff?.error).length,
       },
@@ -6347,6 +6645,12 @@ async function main() {
       (report.summary.widgetsMissing || 0) +
       (report.summary.widgetsExtra || 0) +
       (report.summary.dynamicSelectorMismatches || 0) +
+      (report.summary.renderedTextMismatches || 0) +
+      (report.summary.renderedTextMissing || 0) +
+      (report.summary.renderedTextExtra || 0) +
+      (report.summary.svgVectorMismatches || 0) +
+      (report.summary.svgVectorMissing || 0) +
+      (report.summary.svgVectorExtra || 0) +
       report.summary.screenshotMismatches;
 
     const jsonPath = path.join(OUTPUT_DIR, 'site-parity-checklist.json');

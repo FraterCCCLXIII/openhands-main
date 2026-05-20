@@ -82,8 +82,8 @@ const Blog = () => {
 
   return (
     <main data-wf-el='page-main' className='flex flex-col'>
-      <section data-wf-el='section-hero' className='w-full text-center' style={{ height: '396.484px' }}>
-        <div className='mx-auto flex max-w-[1238px] flex-col items-center' style={{ paddingTop: '56px' }}>
+      <section data-wf-el='section-hero' className='relative w-full' style={{ height: '396.484px', textAlign: 'start' }}>
+        <div className='mx-auto flex max-w-[1238px] flex-col items-center text-center' style={{ paddingTop: '56px' }}>
           <h1 className='fluid-h1 font-sohne text-brand-fg' style={{ width: '1238px', maxWidth: '100%' }}>
             OpenHands Blog
           </h1>
@@ -116,7 +116,7 @@ const Blog = () => {
       </section>
 
       {featuredBlog && (
-        <section data-wf-el='section' className='w-full' style={{ paddingTop: '80px', paddingBottom: '80px', height: '780px' }}>
+        <section data-wf-el='section' className='relative w-full' style={{ paddingTop: '80px', paddingBottom: '80px', height: '780px' }}>
           <div className='mx-auto max-w-[1238px]'>
             <FeaturedBlogCard
               href={`/blog/${getBlogSlug(featuredBlog)}`}
@@ -129,7 +129,7 @@ const Blog = () => {
         </section>
       )}
 
-      <section data-wf-el='section' id='blog-grid' className='w-full' style={{ paddingBottom: '80px', height: '1015.94px' }}>
+      <section data-wf-el='section' id='blog-grid' className='relative w-full' style={{ paddingBottom: '80px', height: '1015.94px' }}>
         <div className='mx-auto max-w-[1238px]'>
           <div className='grid grid-cols-1 items-start gap-x-10 gap-y-10 md:grid-cols-2 xl:grid-cols-3'>
             {visibleBlogs.map((blog) => (
@@ -146,17 +146,23 @@ const Blog = () => {
 
           {hasMoreBlogs && (
             <div className='flex justify-center' style={{ marginTop: '49px' }}>
-              <a
-                href='#blog-grid'
-                className='btn btn-outline'
-                style={{ padding: '14.4px 30.4px', borderRadius: '8px', marginBottom: '10px', fontSize: '16px', lineHeight: '20.8px' }}
-                onClick={(event) => {
-                  event.preventDefault();
-                  setVisibleGridPosts((count) => count + INITIAL_GRID_POSTS);
-                }}
-              >
-                Load more
-              </a>
+              <div className='btn-wrap relative'>
+                <div aria-hidden='true' style={{ pointerEvents: 'none', whiteSpace: 'nowrap' }}>
+                  Load more
+                </div>
+                <a
+                  href='#blog-grid'
+                  className='absolute inset-0 block'
+                  style={{ color: 'inherit', fontSize: '16px', lineHeight: '20.8px', textDecoration: 'underline', textDecorationThickness: '1.6px', textUnderlineOffset: '3px' }}
+                  aria-label='Load more'
+                  onClick={(event) => {
+                    event.preventDefault();
+                    setVisibleGridPosts((count) => count + INITIAL_GRID_POSTS);
+                  }}
+                >
+                  <span className='sr-only'>Load more</span>
+                </a>
+              </div>
             </div>
           )}
         </div>

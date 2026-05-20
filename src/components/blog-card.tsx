@@ -1,4 +1,5 @@
 import { Link } from 'react-router';
+import { OverlayLinkButton } from '~/components/overlay-link-button';
 import { formatDate } from '~/utils/format-date';
 import { PlaceholderImage } from './placeholder-image';
 
@@ -19,7 +20,7 @@ export const FeaturedBlogCard: React.FC<FeaturedBlogCardProps> = ({
 }) => (
   <article
     data-testid='featured-blog-card'
-    className='group relative overflow-hidden rounded-[16px] bg-card-bg text-brand-bg'
+    className='group relative overflow-hidden rounded-[19.2px] bg-transparent text-brand-bg'
   >
     <div className='aspect-[2/1] w-full'>
       {!img && <PlaceholderImage className='h-full w-full' />}
@@ -33,9 +34,9 @@ export const FeaturedBlogCard: React.FC<FeaturedBlogCardProps> = ({
       )}
     </div>
 
-    <div className='absolute inset-0 bg-gradient-to-t from-[#22150d] via-[#22150d]/58 to-transparent' />
+    <div className='absolute inset-0 bg-[#716f66]/95' />
 
-    <div className='absolute inset-x-0 bottom-0 p-6 lg:p-6'>
+    <div className='absolute inset-x-0 bottom-0' style={{ padding: '44px 44px 24px' }}>
       <div className='max-w-[456px]'>
         <p className='m-0 font-sohne text-lg lg:text-[20.8px] leading-[24.96px] font-medium text-brand-accent'>
           {title}
@@ -43,13 +44,12 @@ export const FeaturedBlogCard: React.FC<FeaturedBlogCardProps> = ({
         <p className='m-0 text-lg lg:text-[20.8px] leading-[1.2] font-medium text-white'>
           {description}
         </p>
-        <Link
-          to={href}
-          className='btn btn-primary text-brand-bg'
-          style={{ padding: '14.4px 30.4px', borderRadius: '8px', marginBottom: '10px', fontSize: '16px', lineHeight: '20.8px' }}
-        >
-          Read more
-        </Link>
+        <OverlayLinkButton
+          href={href}
+          label='Read more'
+          variant='primary'
+          className='mt-[24px]'
+        />
       </div>
     </div>
   </article>

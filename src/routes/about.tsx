@@ -44,15 +44,12 @@ export const meta: Route.MetaFunction = ({ location }) => {
   ];
 };
 
-const MILESTONE_LABEL_POSITIONS = [
-  { left: '226px', top: '388.7px' },
-  { left: '197px', top: '380.7px' },
-  { left: '169px', top: '388.7px' },
-] as const;
+const MILESTONE_CARD_LEFT = [54, 438, 822] as const;
+const MILESTONE_LABEL_TOP = [235, 227, 235] as const;
 
 const MILESTONES = [
   {
-    value: '73K',
+    value: '74K',
     suffix: '+',
     label: 'GitHub stars',
     icon: '/assets/webflow/icons/690e2b7b51667746d95adc9d_Vector-2.svg',
@@ -74,7 +71,7 @@ const About = () => {
   return (
     <CompanyPageShell>
       <section data-wf-el='section-hero' className='relative pt-0 pb-0' style={{ height: '1152.27px' }}>
-        <div data-wf-el='asci-wrap' className='pointer-events-auto absolute inset-0 overflow-hidden' style={{ '--ascii-opacity': '0.12', '--ascii-filter': 'drop-shadow(0 0 6px rgba(160, 200, 255, 0.1))' } as CSSProperties} aria-hidden='true'>
+        <div data-wf-el='asci-wrap' className='pointer-events-auto absolute inset-0 overflow-hidden' style={{ '--ascii-opacity': '0.12', '--ascii-filter': 'drop-shadow(0 0 6px rgba(160, 200, 255, 0.1))', maxHeight: '2400px' } as CSSProperties} aria-hidden='true'>
           <ASCIIAnimation className='h-full w-full' />
         </div>
         {/* Live wraps hero content in `.hero-content` (`padding: 4rem 0 4rem`).
@@ -109,10 +106,16 @@ const About = () => {
               {MILESTONES.map((milestone, index) => (
                 <div
                   key={milestone.label}
-                  className='absolute'
-                  style={{ left: `${index * 33.333333}%`, top: '0px', width: '33.333333%', height: '100%' }}
+                  className='absolute flex flex-col items-center rounded-[8px]'
+                  style={{
+                    left: `${MILESTONE_CARD_LEFT[index]}px`,
+                    top: '153px',
+                    width: '360px',
+                    height: '330px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.34)',
+                  }}
                 >
-                  <div className='absolute flex items-end gap-1' style={{ top: index === 1 ? '225.6px' : '234px', left: '50%', transform: 'translateX(-50%)' }}>
+                  <div className='absolute flex items-end gap-1' style={{ top: index === 1 ? '72.6px' : '81px', left: '50%', transform: 'translateX(-50%)' }}>
                     <span className='font-medium leading-none tracking-[-0.04em]' style={{ fontSize: '154.08px', lineHeight: '154.08px' }}>
                       {milestone.value}
                     </span>
@@ -120,7 +123,7 @@ const About = () => {
                       <span className='pb-1 text-[56px] leading-none'>{milestone.suffix}</span>
                     ) : null}
                   </div>
-                  <div className='absolute flex items-start gap-3' style={MILESTONE_LABEL_POSITIONS[index]}>
+                  <div className='absolute flex items-start gap-3' style={{ top: `${MILESTONE_LABEL_TOP[index]}px`, left: '171px' }}>
                     <img src={milestone.icon} alt='' className='shrink-0' style={{ display: 'flex', width: '17px', height: '24px' }} />
                     <div className='font-mono text-[14px] leading-[1.2] text-brand-bg'>
                       {milestone.label}
@@ -133,7 +136,7 @@ const About = () => {
         </div>
       </section>
 
-      <section data-wf-el='section' className='pt-20 pb-20' style={{ height: '2450.45px' }}>
+      <section data-wf-el='section' className='relative pt-20 pb-20' style={{ height: '2450.45px' }}>
         <div className='mx-auto max-w-[1238px]'>
           <div className='px-5'>
             <h3 className='section-title text-brand-fg' style={{ marginBottom: '8.8px' }}>
