@@ -7,7 +7,11 @@ const WHITEPAPER_DESCRIPTION =
   '74% of legacy modernization projects fail. Learn how OpenHands uses AI agents and dependency-aware orchestration to safely migrate COBOL and large codebases at enterprise scale. Download the whitepaper and apply for the Q2 2026 PoC.';
 const WHITEPAPER_PDF_URL =
   '/assets/webflow/whitepapers/openhands-whitepaper.pdf';
-const WHITEPAPER_FORM_SUBMITTED_EVENT = 'openhands:whitepaper-form-submitted';
+const HUBSPOT_PORTAL_ID = '50790961';
+const HUBSPOT_WHITEPAPER_FORM_ID = '4426798e-b2ea-48ec-b9ee-e314cbeda890';
+const HUBSPOT_REGION = 'na1';
+const HUBSPOT_WHITEPAPER_FORM_SCRIPT_SRC = `https://js.hsforms.net/forms/embed/${HUBSPOT_PORTAL_ID}.js`;
+const HUBSPOT_FORM_SUCCESS_EVENT = 'hs-form-event:on-submission:success';
 
 const WHITEPAPER_LEARNINGS = [
   'Why 74% of modernization projects fail (and what’s actually missing)',
@@ -18,109 +22,6 @@ const WHITEPAPER_LEARNINGS = [
   'How to evaluate if your system is a fit',
 ] as const;
 
-const HUBSPOT_FORM_FRAME_SRC_DOC = `<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <style>
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      background: transparent;
-      color: #212d3a;
-      font-family: Arial, Helvetica, sans-serif;
-      font-size: 16px;
-    }
-    form {
-      display: grid;
-      grid-template-columns: 222px 222px;
-      column-gap: 30px;
-      row-gap: 20px;
-      padding: 40px;
-    }
-    label {
-      display: block;
-      margin-bottom: 10px;
-      font-size: 16px;
-      font-weight: 400;
-      line-height: normal;
-    }
-    input,
-    select {
-      display: block;
-      width: 222px;
-      height: 41px;
-      border: 1px solid #cbd6e2;
-      border-radius: 3px;
-      background: #f5f8fa;
-      color: #212d3a;
-      font: inherit;
-      padding: 9px 10px;
-    }
-    button {
-      grid-column: 2;
-      justify-self: end;
-      width: 248px;
-      height: 43px;
-      margin-top: 20px;
-      border: 0;
-      border-radius: 3px;
-      background: #ff7a59;
-      color: #fff;
-      cursor: pointer;
-      font-size: 16px;
-      font-weight: 700;
-    }
-  </style>
-</head>
-<body>
-  <form>
-    <div>
-      <label for="firstname">First Name*</label>
-      <input id="firstname" name="firstname" type="text" required />
-    </div>
-    <div>
-      <label for="lastname">Last Name*</label>
-      <input id="lastname" name="lastname" type="text" required />
-    </div>
-    <div>
-      <label for="email">Company Email*</label>
-      <input id="email" name="email" type="email" required />
-    </div>
-    <div>
-      <label for="jobtitle">Role Title*</label>
-      <input id="jobtitle" name="jobtitle" type="text" required />
-    </div>
-    <div>
-      <label for="company">Company Name*</label>
-      <input id="company" name="company" type="text" required />
-    </div>
-    <div>
-      <label for="engineering-team-size">Engineering Team Size*</label>
-      <select id="engineering-team-size" name="engineering_team_size" required>
-        <option value=""></option>
-        <option value="1-50">1-50</option>
-        <option value="50-500">50-500</option>
-        <option value="500+">500+</option>
-      </select>
-    </div>
-    <button type="submit">Download Whitepaper</button>
-  </form>
-  <script>
-    document.querySelector('form').addEventListener('submit', function (event) {
-      event.preventDefault();
-      window.parent.postMessage({ type: '${WHITEPAPER_FORM_SUBMITTED_EVENT}' }, '*');
-    });
-  </script>
-</body>
-</html>`;
-
-const isWhitepaperFormSubmittedMessage = (data: unknown) => (
-  typeof data === 'object' &&
-  data !== null &&
-  'type' in data &&
-  data.type === WHITEPAPER_FORM_SUBMITTED_EVENT
-);
 
 export const meta: MetaFunction = ({ location }) => [
   { title: WHITEPAPER_TITLE },
@@ -150,18 +51,14 @@ export default function WhitepaperModernizeLegacySystemsWithAiAgents() {
   const [isDownloadReady, setIsDownloadReady] = useState(false);
 
   useEffect(() => {
-    const handleMessage = (event: MessageEvent) => {
-      if (isWhitepaperFormSubmittedMessage(event.data)) {
-        setIsDownloadReady(true);
-      }
-    };
+    const handleHubSpotSuccess = () => setIsDownloadReady(true);
 
-    window.addEventListener('message', handleMessage);
-    return () => window.removeEventListener('message', handleMessage);
+    window.addEventListener(HUBSPOT_FORM_SUCCESS_EVENT, handleHubSpotSuccess);
+    return () => window.removeEventListener(HUBSPOT_FORM_SUCCESS_EVENT, handleHubSpotSuccess);
   }, []);
 
   return (
-    <main data-wf-el='page-main' className='page-main' style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 84px)', backgroundColor: 'rgba(0, 0, 0, 0)' }}>
+    <main data-wf-el='page-main' className='page-main' style={{ display: 'flex', flexDirection: 'column', minHeight: 'calc(100vh - 84px)', backgroundColor: 'rgba(0, 0, 0, 0)' }}>
       <section data-wf-el='section' className='section cc-themed' style={{ position: 'relative', padding: '80px 0px', backgroundColor: 'rgb(249, 240, 217)' }}>
         <div data-wf-el='container' className='container' style={{ width: '100%', maxWidth: '1238px', marginLeft: 'auto', marginRight: 'auto' }}>
           <div
@@ -221,12 +118,12 @@ export default function WhitepaperModernizeLegacySystemsWithAiAgents() {
                       </span>
                     </h2>
 
-                    <iframe
-                      title='Download whitepaper form'
-                      srcDoc={HUBSPOT_FORM_FRAME_SRC_DOC}
-                      sandbox='allow-forms allow-scripts'
-                      className='border-0'
-                      style={{ display: 'inline', width: '100%', height: '413px', margin: '0px' }}
+                    <script src={HUBSPOT_WHITEPAPER_FORM_SCRIPT_SRC} defer />
+                    <div
+                      className='hs-form-frame'
+                      data-region={HUBSPOT_REGION}
+                      data-form-id={HUBSPOT_WHITEPAPER_FORM_ID}
+                      data-portal-id={HUBSPOT_PORTAL_ID}
                     />
                   </>
                 )}

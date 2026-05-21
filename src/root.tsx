@@ -57,6 +57,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Meta />
         <Links />
         <script src="/reo-init.js" defer />
+        <script id="hs-script-loader" src="https://js.hs-scripts.com/50790961.js" async defer />
       </head>
       <body>
         <PHProvider>

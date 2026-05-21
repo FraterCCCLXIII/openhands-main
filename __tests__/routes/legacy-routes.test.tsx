@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import type { ReactElement } from 'react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
@@ -22,7 +22,7 @@ const findEntry = (entries: MetaEntry[], key: string, value: string) =>
   entries.find((entry) => entry[key] === value);
 
 describe('legacy routes parity', () => {
-  it('renders the legacy whitepaper page with the live copy and iframe-boundary form semantics', () => {
+  it('renders the legacy whitepaper page with the live copy and native HubSpot form embed', () => {
     renderRoute(<WhitepaperModernizeLegacySystemsWithAiAgents />);
     const main = screen.getByRole('main');
 
@@ -42,25 +42,24 @@ describe('legacy routes parity', () => {
     expect(
       screen.getByText('How dependency-aware orchestration unlocks safe parallel refactoring')
     ).toBeInTheDocument();
-    expect(screen.getByTitle('Download whitepaper form')).toBeInTheDocument();
-    expect(main.querySelector('form, input, select, button')).not.toBeInTheDocument();
+    expect(main.querySelector('script[src="https://js.hsforms.net/forms/embed/50790961.js"]')).toBeInTheDocument();
+    expect(main.querySelector('.hs-form-frame')).toHaveAttribute('data-region', 'na1');
+    expect(main.querySelector('.hs-form-frame')).toHaveAttribute('data-portal-id', '50790961');
+    expect(main.querySelector('.hs-form-frame')).toHaveAttribute('data-form-id', '4426798e-b2ea-48ec-b9ee-e314cbeda890');
     expect(screen.getByRole('link', { name: 'Download Local GUI' })).toHaveAttribute(
       'href',
       'https://docs.openhands.dev/openhands/usage/run-openhands/local-setup'
     );
   });
 
-  it('reveals the legacy whitepaper direct download after the embedded form reports success', async () => {
+  it('reveals the legacy whitepaper direct download after the native HubSpot form reports success', () => {
     renderRoute(<WhitepaperModernizeLegacySystemsWithAiAgents />);
 
-    fireEvent(
-      window,
-      new MessageEvent('message', {
-        data: { type: 'openhands:whitepaper-form-submitted' },
-      })
-    );
+    act(() => {
+      window.dispatchEvent(new Event('hs-form-event:on-submission:success'));
+    });
 
-    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('Download the Whitepaper'));
+    expect(screen.getByRole('status')).toHaveTextContent('Download the Whitepaper');
 
     expect(screen.getByRole('link', { name: 'Download now' })).toHaveAttribute(
       'href',

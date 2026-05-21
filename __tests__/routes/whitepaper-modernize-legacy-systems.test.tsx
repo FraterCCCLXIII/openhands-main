@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
 import Whitepaper from '../../src/routes/whitepapers.modernize-legacy-systems-with-ai-agents';
@@ -31,9 +31,14 @@ describe('modernize legacy systems whitepaper route', () => {
         name: /Download the whitepaper to learn how it works/i,
       }),
     ).toHaveClass('fluid-h4');
-    expect(screen.getByTitle('Download whitepaper form')).toBeInTheDocument();
-    expect(container.querySelector('form, input, select, button')).not.toBeInTheDocument();
+    expect(container.querySelector('script[src="https://js.hsforms.net/forms/embed/50790961.js"]')).toBeInTheDocument();
+    expect(container.querySelector('.hs-form-frame')).toHaveAttribute('data-region', 'na1');
+    expect(container.querySelector('.hs-form-frame')).toHaveAttribute('data-portal-id', '50790961');
+    expect(container.querySelector('.hs-form-frame')).toHaveAttribute('data-form-id', '4426798e-b2ea-48ec-b9ee-e314cbeda890');
     expect(container.querySelector('[data-wf-el="whitepaper_layout"]')).toBeInTheDocument();
+    expect(container.querySelector('main')).toHaveStyle({ minHeight: 'calc(100vh - 84px)' });
+    expect(container.querySelector('main')).not.toHaveStyle({ height: 'calc(100vh - 84px)' });
+
     expect(container.querySelector('[data-wf-el="card-body"]')).toBeInTheDocument();
     expect(screen.getByText(/Bring your team into the loop/i)).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: /Bring your team into the loop/i })).not.toBeInTheDocument();
@@ -41,17 +46,14 @@ describe('modernize legacy systems whitepaper route', () => {
     expect(container.querySelectorAll('[data-wf-el="eyebrow"]')).toHaveLength(2);
   });
 
-  it('reveals the direct download CTA after the embedded form reports success', async () => {
+  it('reveals the direct download CTA after the native HubSpot form reports success', () => {
     renderRoute();
 
-    fireEvent(
-      window,
-      new MessageEvent('message', {
-        data: { type: 'openhands:whitepaper-form-submitted' },
-      }),
-    );
+    act(() => {
+      window.dispatchEvent(new Event('hs-form-event:on-submission:success'));
+    });
 
-    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('Download the Whitepaper'));
+    expect(screen.getByRole('status')).toHaveTextContent('Download the Whitepaper');
 
     const downloadLink = screen.getByRole('link', { name: 'Download now' });
     expect(downloadLink).toHaveAttribute(

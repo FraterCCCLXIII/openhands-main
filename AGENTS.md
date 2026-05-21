@@ -174,6 +174,7 @@ npm run parity:checklist  # Crawl openhands.dev and compare against local site
 - `/about` team headshots should render in fixed `190px × 190px` media frames; expanding them to full column width creates large cumulative Y-offset drift across the roster.
 - `/about` milestone parity is sensitive to the dark panel height and should use a CSS background layer (not a visible `<img>`) so screenshot/layout parity improves without introducing extra `IMG:` signatures.
 - Live `/contact` uses a centered hero above the two-column content, a visible non-heading `Why enterprises choose OpenHands` block, a visible `Trusted by engineers at` logo area, paragraph-style form labels, and an `input[type="submit"]` control.
+- Live `/contact` Webflow form posts to Webflow and is also captured in HubSpot as a Non-HubSpot form named from `#contact-page-form.form-block--form.u-mt-sm.u-mb-sm`; the local React site should not post to Webflow, but should keep that selector and load HubSpot tracking script `https://js.hs-scripts.com/50790961.js` so HubSpot Collected Forms can use the same capture method. Success hides the form and focuses `.w-form-done`; failure keeps the form visible and focuses `.w-form-fail`; the `data-form-reset` Dismiss link resets and reveals the form.
 - `/contact` logo parity matches best with an eight-column desktop logo grid (two rows) instead of a taller four-column stack or a horizontally overflowing marquee.
 - Live `/press` uses paragraph dates/titles plus plain text `Read more` links instead of heading-based cards or outline buttons.
 - Live `/manifesto` uses an `H3` intro block plus `H3` closing sections, while the manifesto principles themselves are paragraph blocks with bold lead-ins rather than separate headings.
@@ -238,6 +239,8 @@ npm run parity:checklist  # Crawl openhands.dev and compare against local site
 
 ## Legacy Route / 404 Parity Notes
 - The legacy whitepaper path `/whitepapers/modernize-legacy-systems-with-ai-agents` is implemented as a first-class local route, not a redirect or iframe mirror, because the parity checklist reads visible DOM text directly.
+- The whitepaper form uses the live HubSpot-native embed (`data-portal-id="50790961"`, `data-form-id="4426798e-b2ea-48ec-b9ee-e314cbeda890"`, region `na1`) so submissions land in the same HubSpot form as production; reveal the direct PDF CTA when the `hs-form-event:on-submission:success` event fires.
+
 - Unknown marketing routes now fall through to `route("*", "routes/not-found.tsx")`, which returns a 404 status via `data(null, { status: 404 })` while still rendering inside the normal marketing chrome so the live-style nav/footer signatures remain visible.
 
 ## Enterprise / Pricing Parity Notes (issue #408)

@@ -1,4 +1,4 @@
-import type { CSSProperties, FormEvent } from 'react';
+import { useEffect, useRef, useState, type CSSProperties, type FormEvent, type MouseEvent } from 'react';
 import ASCIIAnimation from '~/components/ascii-animation';
 import { CompanyPageShell } from '~/components/company-page-shell';
 import type { Route } from './+types/contact';
@@ -83,11 +83,67 @@ const fieldLabelClass = 'font-sohne-buch text-[14.4px] leading-[21.6px] text-bra
 const textFieldClass =
   'block w-full rounded-[6.4px] border border-[#5f5f5f] bg-[rgba(255,255,255,0.34)] px-3 py-2 text-[14px] leading-[20px] text-[#333333] outline-none placeholder:text-[#5f5f5f] align-middle';
 
-const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
-  event.preventDefault();
-};
+const WEBFLOW_CONTACT_FORM_PAGE_ID = '690deaff1fe3eae92d4194c8';
+const WEBFLOW_CONTACT_FORM_ELEMENT_ID = '42a56c27-dcc3-027e-c005-62893c647c15';
+const WEBFLOW_CONTACT_FORM_NAME = 'Contact-page-form';
+const LOCAL_CONTACT_FORM_SUBMIT_DELAY_MS = 250;
+
+type ContactFormStatus = 'idle' | 'submitting' | 'success' | 'error';
 
 const Contact = () => {
+  const [formStatus, setFormStatus] = useState<ContactFormStatus>('idle');
+  const formRef = useRef<HTMLFormElement>(null);
+  const successRef = useRef<HTMLDivElement>(null);
+  const errorRef = useRef<HTMLDivElement>(null);
+  const submitTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isSubmitting = formStatus === 'submitting';
+
+  useEffect(() => {
+    if (formStatus === 'success') {
+      successRef.current?.focus();
+    } else if (formStatus === 'error') {
+      errorRef.current?.focus();
+    }
+  }, [formStatus]);
+
+  useEffect(() => {
+    return () => {
+      if (submitTimeoutRef.current) {
+        clearTimeout(submitTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (isSubmitting) {
+      return;
+    }
+
+    if (submitTimeoutRef.current) {
+      clearTimeout(submitTimeoutRef.current);
+    }
+
+    setFormStatus('submitting');
+    submitTimeoutRef.current = setTimeout(() => {
+      setFormStatus('success');
+      submitTimeoutRef.current = null;
+    }, LOCAL_CONTACT_FORM_SUBMIT_DELAY_MS);
+  };
+
+  const handleDismiss = (event: MouseEvent<HTMLAnchorElement>) => {
+    event.preventDefault();
+
+    if (submitTimeoutRef.current) {
+      clearTimeout(submitTimeoutRef.current);
+      submitTimeoutRef.current = null;
+    }
+
+    formRef.current?.reset();
+    setFormStatus('idle');
+  };
+
   return (
     <CompanyPageShell>
       <section
@@ -156,33 +212,43 @@ const Contact = () => {
               <div data-wf-el='card' style={{ display: 'flex', position: 'relative', flexDirection: 'column', justifyContent: 'flex-start', overflow: 'hidden', width: '579px', height: '611.766px', border: '1px solid rgb(34, 21, 13)', borderRadius: '8px' }}>
                 <div data-wf-el='card-body' style={{ display: 'block', position: 'relative', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', width: '577px', height: '609.766px', padding: '24px' }}>
                   <div data-wf-el='form-block' className='w-form' style={{ display: 'block', width: '529px', marginBottom: '15px' }}>
-                    <form data-wf-el='form-block--form' onSubmit={handleSubmit} style={{ display: 'block', width: '529px', marginTop: '24px', marginBottom: '24px' }}>
+                    <form
+                      ref={formRef}
+                      data-wf-el='form-block--form'
+                      id='contact-page-form'
+                      name='wf-form-Contact-page-form'
+                      data-name={WEBFLOW_CONTACT_FORM_NAME}
+                      method='get'
+                      className='form-block--form u-mt-sm u-mb-sm'
+                      aria-label={WEBFLOW_CONTACT_FORM_NAME}
+                      data-wf-page-id={WEBFLOW_CONTACT_FORM_PAGE_ID}
+                      data-wf-element-id={WEBFLOW_CONTACT_FORM_ELEMENT_ID}
+                      onSubmit={handleSubmit}
+                      style={{ display: formStatus === 'success' ? 'none' : 'block', width: '529px', marginTop: '24px', marginBottom: '24px' }}
+                    >
                       <div style={{ display: 'flex', flexWrap: 'wrap', margin: '0px -12px', rowGap: '24px', width: '553px' }}>
-                    <div style={{ display: 'flex', position: 'relative', flexDirection: 'column', width: '276.5px', paddingLeft: '12px', paddingRight: '12px' }}>
-                      <div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '276.5px 276.5px', width: '553px' }}>
+                      <div style={{ display: 'flex', position: 'relative', flexDirection: 'column', width: '276.5px', paddingLeft: '12px', paddingRight: '12px' }}>
                         <p data-wf-el='paragraph-sm' className={fieldLabelClass}>First Name *</p>
-                        <input data-wf-el='text-field' id='firstname' type='text' name='firstname' placeholder='James' required className={`${textFieldClass} field-input`} />
+                        <input data-wf-el='text-field' id='firstname' type='text' name='firstname' data-name='firstname' maxLength={256} placeholder='James' required className={`${textFieldClass} field-input`} />
                       </div>
-                      <div>
-                        <p data-wf-el='paragraph-sm' className={fieldLabelClass}>Company email *</p>
-                        <input data-wf-el='text-field' id='Email' type='email' name='Email' placeholder='email@company.com' required className={`${textFieldClass} field-input field-input--last`} />
-                      </div>
-                    </div>
-
-                    <div style={{ display: 'flex', position: 'relative', flexDirection: 'column', width: '276.5px', paddingLeft: '12px', paddingRight: '12px' }}>
-                      <div>
+                      <div style={{ display: 'flex', position: 'relative', flexDirection: 'column', width: '276.5px', paddingLeft: '12px', paddingRight: '12px' }}>
                         <p data-wf-el='paragraph-sm' className={fieldLabelClass}>Last name *</p>
-                        <input data-wf-el='text-field' id='lastname' type='text' name='lastname' placeholder='Smith' required className={`${textFieldClass} field-input`} />
+                        <input data-wf-el='text-field' id='lastname' type='text' name='lastname' data-name='lastname' maxLength={256} placeholder='Smith' required className={`${textFieldClass} field-input`} />
                       </div>
-                      <div>
+                      <div style={{ display: 'flex', position: 'relative', flexDirection: 'column', width: '276.5px', paddingLeft: '12px', paddingRight: '12px' }}>
+                        <p data-wf-el='paragraph-sm' className={fieldLabelClass}>Company email *</p>
+                        <input data-wf-el='text-field' id='Email' type='email' name='Email' data-name='Email' maxLength={256} placeholder='email@company.com' required className={`${textFieldClass} field-input field-input--last`} />
+                      </div>
+                      <div style={{ display: 'flex', position: 'relative', flexDirection: 'column', width: '276.5px', paddingLeft: '12px', paddingRight: '12px' }}>
                         <p data-wf-el='paragraph-sm' className={fieldLabelClass}>Company name *</p>
-                        <input data-wf-el='text-field' id='company' type='text' name='company' placeholder='Acme' required className={`${textFieldClass} field-input field-input--last`} />
+                        <input data-wf-el='text-field' id='company' type='text' name='company' data-name='company' maxLength={256} placeholder='Acme' required className={`${textFieldClass} field-input field-input--last`} />
                       </div>
                     </div>
 
                     <div style={{ display: 'flex', position: 'relative', flexDirection: 'column', width: '553px', maxWidth: '100%', paddingLeft: '12px', paddingRight: '12px' }}>
                       <p data-wf-el='paragraph-sm' className={fieldLabelClass}>Engineering team size*</p>
-                      <select data-wf-el='select-field' id='Engineering-size' name='Engineering-size' defaultValue='' required className={`${textFieldClass} contact-select-field field-input field-input--last`} style={{ height: '38px', lineHeight: '20px' }}>
+                      <select data-wf-el='select-field' id='Engineering-size' name='Engineering-size' data-name='Engineering-size' defaultValue='' required className={`${textFieldClass} contact-select-field field-input field-input--last`} style={{ height: '38px', lineHeight: '20px' }}>
                         <option value=''>Select one...</option>
                         <option value='51-500'>1-50</option>
                         <option value='50-100'>50-100</option>
@@ -196,6 +262,8 @@ const Contact = () => {
                         data-wf-el='text-area'
                         id='Message-comments'
                         name='Message-comments'
+                        data-name='Message-comments'
+                        maxLength={5000}
                         placeholder='Send us a note here....'
                         required
                         className={`${textFieldClass} resize-y`}
@@ -204,17 +272,43 @@ const Contact = () => {
                     </div>
                   </div>
 
-                  <input data-wf-el='button' type='submit' value='Submit' className='btn-primary w-fit field-submit' style={{ position: 'relative', display: 'inline-flex', justifyContent: 'center', alignItems: 'center', gap: '6.4px', borderRadius: '8px', padding: '14.4px 30.4px', fontSize: '16px', fontWeight: 500, lineHeight: '20.8px', cursor: 'pointer', border: '1px solid transparent', marginTop: '24px', marginBottom: '10px', boxShadow: 'rgba(0,0,0,0) 0px 0px 0px 0px inset' }} />
-
-                  <div className='hidden'>
-                    <p>Thank you!</p>
-                    <p>We’ll be in touch soon</p>
-                    <a href='#'>Dismiss</a>
-                  </div>
-                  <div className='hidden'>
-                    <p>Oops! Something went wrong while submitting the form.</p>
-                  </div>
+                  <input
+                    data-wf-el='button'
+                    type='submit'
+                    data-wait='Please wait...'
+                    value={isSubmitting ? 'Please wait...' : 'Submit'}
+                    disabled={isSubmitting}
+                    className='btn-primary w-fit field-submit'
+                    style={{ position: 'relative', display: 'inline-flex', justifyContent: 'center', alignItems: 'center', gap: '6.4px', borderRadius: '8px', padding: '14.4px 30.4px', fontSize: '16px', fontWeight: 500, lineHeight: '20.8px', cursor: isSubmitting ? 'default' : 'pointer', border: '1px solid transparent', marginTop: '24px', marginBottom: '10px', boxShadow: 'rgba(0,0,0,0) 0px 0px 0px 0px inset' }}
+                  />
                     </form>
+                    <div
+                      ref={successRef}
+                      className='form-success w-form-done'
+                      tabIndex={-1}
+                      role='region'
+                      aria-label={`${WEBFLOW_CONTACT_FORM_NAME} success`}
+                      style={{ display: formStatus === 'success' ? 'block' : 'none', width: '520.312px', padding: '20px', textAlign: 'center' }}
+                    >
+                      <div className='stack-form' style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-start', width: '480.312px' }}>
+                        <div className='h3 u-mb-0 fluid-h3 text-brand-fg' style={{ marginBottom: '0px' }}>Thank you! <br /></div>
+                        <div className='h4 u-text-left u-text-darkgray fluid-h4 text-[#5f5f5f]' style={{ marginBottom: '9.41714px' }}>We’ll be in touch soon</div>
+                        <div data-wf--button--variant='secondary' className='button w-variant-052759b4-b398-e98d-c28c-099b380d4426 u-mt-sm' data-form-reset='true' style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center', borderRadius: '8px', padding: '14.4px 30.4px', fontSize: '16px', fontWeight: 500, lineHeight: '20.8px', marginTop: '24px', marginBottom: '10px', backgroundColor: 'rgba(255,255,255,0.34)' }}>
+                          <div aria-hidden='true' className='btn-text'>Dismiss</div>
+                          <a href='#' onClick={handleDismiss} className='u-link-cover w-inline-block absolute inset-0'><div className='u-sr-only sr-only'>Dismiss</div></a>
+                        </div>
+                      </div>
+                    </div>
+                    <div
+                      ref={errorRef}
+                      className='error-message w-form-fail'
+                      tabIndex={-1}
+                      role='region'
+                      aria-label={`${WEBFLOW_CONTACT_FORM_NAME} failure`}
+                      style={{ display: formStatus === 'error' ? 'block' : 'none', width: '520.312px', marginTop: '10px', padding: '16px 10px', backgroundColor: 'rgb(255, 222, 222)' }}
+                    >
+                      <div>Oops! Something went wrong while submitting the form.</div>
+                    </div>
                   </div>
                 </div>
               </div>

@@ -1,7 +1,8 @@
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import type { ReactElement } from 'react';
 import { MemoryRouter, RouterProvider, createMemoryRouter } from 'react-router';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import App from '../../src/root';
 import { teamMembers } from '../../src/constants/members';
 import About from '../../src/routes/about';
@@ -27,6 +28,10 @@ const renderInApp = (initialEntry: string, routePath: string, element: ReactElem
 
   return render(<RouterProvider router={router} />);
 };
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
 
 describe('company information pages parity', () => {
   it('renders the synced about page team roster with live heading hierarchy', () => {
@@ -77,9 +82,76 @@ describe('company information pages parity', () => {
     expect(container.querySelectorAll('[data-wf-el="track-item"]')).toHaveLength(16);
     expect(container.querySelector('select[data-wf-el="select-field"].contact-select-field')).toBeInTheDocument();
     expect(container.querySelector('input[type="submit"][value="Submit"][data-wf-el="button"]')).toBeInTheDocument();
+    expect(container.querySelector('#contact-page-form')).toHaveClass('form-block--form', 'u-mt-sm', 'u-mb-sm');
+
     expect(container.querySelector('button[type="submit"]')).not.toBeInTheDocument();
     expect(screen.getByText('We’ll be in touch soon')).toBeInTheDocument();
     expect(screen.getByText('Oops! Something went wrong while submitting the form.')).toBeInTheDocument();
+  });
+
+  it('tabs through the contact form name fields in visual row order', async () => {
+    const user = userEvent.setup();
+    renderRoute(<Contact />);
+
+    screen.getByPlaceholderText('James').focus();
+    await user.tab();
+
+    expect(screen.getByPlaceholderText('Smith')).toHaveFocus();
+
+    await user.tab();
+    expect(screen.getByPlaceholderText('email@company.com')).toHaveFocus();
+
+    await user.tab();
+    expect(screen.getByPlaceholderText('Acme')).toHaveFocus();
+  });
+
+  it('submits the contact form locally and shows the dismissible Webflow-style success state', async () => {
+    const user = userEvent.setup();
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+
+    const { container } = renderRoute(<Contact />);
+
+    await user.type(screen.getByPlaceholderText('James'), 'Test');
+    await user.type(screen.getByPlaceholderText('Smith'), 'User');
+    await user.type(screen.getByPlaceholderText('email@company.com'), 'test@example.com');
+    await user.type(screen.getByPlaceholderText('Acme'), 'Example Co');
+    await user.selectOptions(screen.getByRole('combobox'), '50-100');
+    await user.type(screen.getByPlaceholderText('Send us a note here....'), 'Testing the local Webflow-style behavior.');
+    await user.click(screen.getByRole('button', { name: 'Submit' }));
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(screen.getByRole('button', { name: 'Please wait...' })).toBeDisabled();
+
+    const successRegion = await screen.findByRole('region', { name: 'Contact-page-form success' });
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(container.querySelector('#contact-page-form')).toHaveStyle({ display: 'none' });
+    expect(successRegion).toHaveStyle({ display: 'block' });
+    expect(successRegion).toHaveFocus();
+
+    await user.click(screen.getByRole('link', { name: 'Dismiss' }));
+
+    expect(container.querySelector('#contact-page-form')).toHaveStyle({ display: 'block' });
+    expect(successRegion).toHaveStyle({ display: 'none' });
+    expect(screen.getByPlaceholderText('James')).toHaveValue('');
+  });
+
+  it('keeps the Webflow-style failure block hidden for the local-only success path', async () => {
+    const user = userEvent.setup();
+    const { container } = renderRoute(<Contact />);
+
+    await user.type(screen.getByPlaceholderText('James'), 'Test');
+    await user.type(screen.getByPlaceholderText('Smith'), 'User');
+    await user.type(screen.getByPlaceholderText('email@company.com'), 'test@example.com');
+    await user.type(screen.getByPlaceholderText('Acme'), 'Example Co');
+    await user.selectOptions(screen.getByRole('combobox'), '50-100');
+    await user.type(screen.getByPlaceholderText('Send us a note here....'), 'Testing the local-only form.');
+    await user.click(screen.getByRole('button', { name: 'Submit' }));
+
+    await screen.findByRole('region', { name: 'Contact-page-form success' });
+
+    expect(container.querySelector('.w-form-fail')).toHaveStyle({ display: 'none' });
   });
 
   it('renders the synced newsroom cards using paragraph titles and text links', () => {
