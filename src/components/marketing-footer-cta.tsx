@@ -1,6 +1,5 @@
 import clsx from 'clsx';
 import { OverlayLinkButton } from '~/components/overlay-link-button';
-import { AGENT_CANVAS_DOWNLOAD_URL, OPENHANDS_DOCS_URL } from '~/constants/product-links';
 
 interface MarketingFooterCtaProps {
   semanticHeading?: boolean;
@@ -45,8 +44,8 @@ export const MarketingFooterCta = ({
             OpenHands is the foundation for secure, transparent, model-agnostic coding agents - empowering every software team to build faster with full control.
           </p>
           <div className='flex flex-wrap items-center justify-center gap-4'>
-            <OverlayLinkButton href={AGENT_CANVAS_DOWNLOAD_URL} label='Download Agent Canvas' variant='primary' />
-            <OverlayLinkButton href={OPENHANDS_DOCS_URL} label='See developer docs' variant='outline' />
+            <OverlayLinkButton href='https://docs.openhands.dev/sdk' label='Build with SDK' variant='primary' />
+            <OverlayLinkButton href='https://app.all-hands.dev/' label='Try it live' variant='outline' />
           </div>
         </div>
       </div>

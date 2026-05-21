@@ -28,15 +28,17 @@ export const CompanyPageShell = ({
 }: CompanyPageShellProps) => {
   return (
     <main data-wf-el='page-main' className='relative overflow-visible' style={{ display: 'flex', flexDirection: 'column', position: 'static' }}>
-      <div
-        aria-hidden='true'
-        data-testid='company-page-background'
-        className={`pointer-events-none absolute inset-0 bg-cover bg-top bg-no-repeat ${backgroundClassName}`}
-        style={{
-          backgroundImage:
-            "url('/assets/webflow/backgrounds/690b397ae76441160bed52b6_asci-art-hole.png')",
-        }}
-      />
+      {showBackground ? (
+        <div
+          aria-hidden='true'
+          data-testid='company-page-background'
+          className={`pointer-events-none absolute inset-0 bg-cover bg-top bg-no-repeat ${backgroundClassName}`}
+          style={{
+            backgroundImage:
+              "url('/assets/webflow/backgrounds/690b397ae76441160bed52b6_asci-art-hole.png')",
+          }}
+        />
+      ) : null}
       <div className='relative'>{children}</div>
       <Footer standalone compactNav showSocialLinks />
       <div aria-hidden='true' style={{ height: '19px' }} />

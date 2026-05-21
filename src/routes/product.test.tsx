@@ -23,8 +23,8 @@ describe('/product parity markup', () => {
   it('renders live footer copyright text visibly for product parity', () => {
     const html = renderProduct();
 
-    expect(html).toContain('© <span>');
-    expect(html).toContain(' OpenHands - All rights reserved');
+    expect(html).toMatch(/©(?:&nbsp;|\u00a0| )?<span/);
+    expect(html.replace(/&nbsp;/g, ' ').replace(/\u00a0/g, ' ')).toContain(' OpenHands - All rights reserved');
     expect(html).toContain('data-wf-el="eyebrow"');
   });
 });

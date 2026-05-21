@@ -95,7 +95,7 @@ describe('company information pages parity', () => {
     expect(screen.getAllByRole('link', { name: 'Read more' })).toHaveLength(4);
     expect(container.querySelectorAll('[data-wf-el="standard-collection-list-item"]')).toHaveLength(4);
     expect(container.querySelector('[data-wf-el="standard-collection-list"]')).toHaveAttribute('role', 'list');
-    expect(screen.getByText(/OpenHands - All rights reserved/).textContent).toContain(`${new Date().getFullYear()} OpenHands - All rights reserved`);
+    expect(screen.getByText(/OpenHands - All rights reserved/).textContent?.replace(/\u00a0/g, ' ')).toContain(`${new Date().getFullYear()} OpenHands - All rights reserved`);
     expect(screen.queryByRole('heading', { name: 'OpenHands Raises $18.8M Series A to Bring Open-Source Cloud Coding Agents to Enterprises' })).not.toBeInTheDocument();
     expect(screen.queryByText('Media Kit')).not.toBeInTheDocument();
   });

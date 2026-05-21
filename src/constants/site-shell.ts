@@ -1,8 +1,3 @@
-import {
-  OPENHANDS_AUTOMATIONS_GUIDE_URL,
-  OPENHANDS_CLOUD_URL,
-} from './product-links';
-
 export interface SiteLink {
   name: string;
   to: string;
@@ -18,14 +13,12 @@ export interface ProductDropdownItem {
   name: string;
   to: string;
   description: string;
-  icon: 'agent-canvas' | 'automations' | 'cloud' | 'sdk';
-  external?: boolean;
+  icon: 'cli' | 'gui' | 'sdk';
 }
 
 export const PRODUCT_DROPDOWN_ITEMS: ProductDropdownItem[] = [
-  { name: 'Agent Canvas', to: '/product/agent-canvas', description: 'One workspace. All your agents.', icon: 'agent-canvas' },
-  { name: 'Automations', to: OPENHANDS_AUTOMATIONS_GUIDE_URL, description: 'Build it once. Let it run forever.', icon: 'automations', external: true },
-  { name: 'Cloud', to: OPENHANDS_CLOUD_URL, description: "Agents that don't stop when you do.", icon: 'cloud', external: true },
+  { name: 'Terminal / CLI', to: '/product/cli', description: 'Agentic power from the command line', icon: 'cli' },
+  { name: 'Web GUI', to: '/product/gui', description: 'Agentic development, made human.', icon: 'gui' },
   { name: 'SDK', to: '/product/sdk', description: 'Build agents your way.', icon: 'sdk' },
 ];
 

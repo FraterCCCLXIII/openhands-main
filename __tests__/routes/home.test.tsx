@@ -15,13 +15,12 @@ describe('home route parity structure', () => {
   it('matches the visible heading sequence expected by the parity audit', () => {
     renderRoute();
 
-    expect(screen.getByText('Turn your coding agents into an always-on engineering team.')).toBeInTheDocument();
+    expect(screen.getByText('Build with coding agents, your way.')).toBeInTheDocument();
 
     const headingTexts = screen.getAllByRole('heading').map((heading) => heading.textContent?.trim());
     expect(headingTexts).toContain('Start with a proven workflow');
     expect(headingTexts).toContain('Fix Vulnerabilities');
-    expect(headingTexts).toContain('Running in under 5 minutes.');
-    expect(headingTexts).toContain('Download Agent Canvas');
+    expect(headingTexts).toContain('SDK');
     expect(headingTexts).toContain('Why teams choose OpenHands');
     expect(headingTexts).toContain('Automate the Outer Loop with AI');
     expect(headingTexts).toContain('Developers love OpenHands');
@@ -39,12 +38,11 @@ describe('home route parity structure', () => {
     expect((container.innerHTML.match(/>Launch</g) ?? []).length).toBe(4);
     expect(screen.queryByRole('link', { name: 'Download CLI' })).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'View docs' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Read the connection guide' })).toBeInTheDocument();
-    expect(screen.getAllByRole('link', { name: 'Download Agent Canvas' }).length).toBeGreaterThan(0);
+    expect(screen.getByRole('link', { name: 'Talk to us' })).toBeInTheDocument();
 
     expect(container.innerHTML).toContain('lg:grid-cols-3');
-    expect(container.querySelectorAll('[data-key]')).toHaveLength(4);
-    expect(container.querySelectorAll('[data-heroslide]')).toHaveLength(4);
+    expect(container.querySelectorAll('[data-key]')).toHaveLength(3);
+    expect(container.querySelectorAll('[data-heroslide]')).toHaveLength(3);
     expect(container.innerHTML).toContain('min-height: 792px');
     expect(container.innerHTML).toContain('h-full w-full object-cover');
     expect(container.innerHTML).not.toContain('xl:grid-cols-4');
@@ -66,9 +64,7 @@ describe('home route parity structure', () => {
 
     expect(screen.getByText('Nick Blanchet,')).toBeInTheDocument();
     expect(screen.getByText('74K')).toBeInTheDocument();
-    expect(screen.getByText('©')).toBeInTheDocument();
-    expect(screen.getByText(String(new Date().getFullYear()))).toBeInTheDocument();
-    expect(screen.getByText('OpenHands - All rights reserved')).toBeInTheDocument();
+    expect(container.textContent).toContain(`©${String.fromCharCode(160)}${new Date().getFullYear()}${String.fromCharCode(160)}OpenHands - All rights reserved`);
 
     expect(screen.getByText('@allhands_ai')).toBeInTheDocument();
     expect(screen.getByText('@windsurf')).toBeInTheDocument();

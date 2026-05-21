@@ -3,7 +3,6 @@ import clsx from 'clsx';
 import { FOOTER_NAV_ITEMS, FOOTER_RESOURCE_LINKS } from '~/constants/site-shell';
 import { normalizePathname } from '~/utils/normalize-pathname';
 import { OverlayLinkButton } from '~/components/overlay-link-button';
-import { AGENT_CANVAS_DOWNLOAD_URL, OPENHANDS_DOCS_URL } from '~/constants/product-links';
 
 interface FooterCta {
   href: string;
@@ -60,8 +59,8 @@ interface FooterMarketingCtaProps {
 
 const DEFAULT_CTA_TITLE = 'Building the open standard for autonomous software development.';
 const DEFAULT_CTA_DESCRIPTION = 'OpenHands is the foundation for secure, transparent, model-agnostic coding agents - empowering every software team to build faster with full control.';
-const DEFAULT_CTA_PRIMARY: FooterCta = { href: AGENT_CANVAS_DOWNLOAD_URL, label: 'Download Agent Canvas' };
-const DEFAULT_CTA_SECONDARY: FooterCta = { href: OPENHANDS_DOCS_URL, label: 'See developer docs' };
+const DEFAULT_CTA_PRIMARY: FooterCta = { href: 'https://docs.openhands.dev/sdk', label: 'Build with SDK' };
+const DEFAULT_CTA_SECONDARY: FooterCta = { href: 'https://app.all-hands.dev/', label: 'Try it live' };
 
 const FooterMarketingCta = ({
   title = DEFAULT_CTA_TITLE,
@@ -183,7 +182,7 @@ type WebflowFooterContentProps = Pick<
 const WebflowFooterContent = ({
   showSocialLinks = false,
   showMarketingCta = true,
-  showCopyright = false,
+  showCopyright = true,
   marketingCtaTitle,
   marketingCtaDescription,
   marketingCtaPrimary,
@@ -201,7 +200,7 @@ const WebflowFooterContent = ({
         to={item.to}
         aria-current={isActive ? 'page' : undefined}
         data-wf-el='nav-link'
-        className={clsx('nav-link link-hover hover:text-[#8a5f45]', isActive && 'text-[#8a5f45]')}
+        className={clsx('nav-link link-hover hover:text-[#8a5f45] py-[14.4px]', isActive && 'text-[#8a5f45]')}
         style={footerNavLinkStyle}
       >
         {item.name}
@@ -259,7 +258,7 @@ const WebflowFooterContent = ({
 
       <div className='row row-justify-center u-mb-sm' style={{ ...FOOTER_ROW_STYLE, justifyContent: 'center', marginBottom: '24px' }}>
         <div className='col col-lg-8 col-md-12' style={FOOTER_COL_LG_8_STYLE}>
-          <div data-wf-el='footer-nav' className='footer-nav' style={{ display: 'flex', flexFlow: 'row nowrap', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%', paddingBottom: '16px', borderBottom: '1px solid #b3a88c' }}>
+          <div data-wf-el='footer-nav' className='footer-nav justify-between' style={{ display: 'flex', flexFlow: 'row nowrap', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%', paddingBottom: '16px', borderBottom: '1px solid #b3a88c' }}>
             {FOOTER_NAV_ITEMS.map(renderTopLevelLink)}
             <div data-wf-el='footer-drop' id='footer-resources' className='footer-drop' style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'flex-start' }}>
               <a href='#footer-resources' data-wf-el='nav-link' className='nav-link hover:text-[#8a5f45]' style={footerNavLinkStyle}>
@@ -281,7 +280,7 @@ const WebflowFooterContent = ({
               to='/contact'
               aria-current={normalizePathname('/contact') === pathname ? 'page' : undefined}
               data-wf-el='nav-link'
-              className={clsx('nav-link link-hover hover:text-[#8a5f45]', normalizePathname('/contact') === pathname && 'text-[#8a5f45]')}
+              className={clsx('nav-link link-hover hover:text-[#8a5f45] py-[14.4px]', normalizePathname('/contact') === pathname && 'text-[#8a5f45]')}
               style={footerNavLinkStyle}
             >
               Contact
@@ -294,7 +293,7 @@ const WebflowFooterContent = ({
         <div className='col col-lg-8' style={FOOTER_COL_LG_8_STYLE}>
           {showCopyright ? (
             <div data-wf-el='eyebrow' className='eyebrow u-text-center' style={{ textAlign: 'center', marginBottom: '21.12px', fontFamily: 'GeistMono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace', fontSize: '14px', fontWeight: 400, lineHeight: '16.896px' }}>
-              © <span data-year=' '>{currentYear}</span> OpenHands - All rights reserved
+              © <span data-year=' '>{currentYear}</span> OpenHands - All rights reserved
             </div>
           ) : (
             <span className='sr-only'>© {currentYear} OpenHands - All rights reserved</span>
@@ -329,7 +328,7 @@ export const Footer = ({
   navWidthClass,
   minHeight: _minHeight,
   showMarketingCta = true,
-  showCopyright = false,
+  showCopyright = true,
   marketingCtaTitle,
   marketingCtaDescription,
   marketingCtaPrimary,

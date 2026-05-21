@@ -2,8 +2,8 @@ import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
 import Product from '../../src/routes/product';
-import ProductAgentCanvas from '../../src/routes/product-agent-canvas';
 import ProductCli from '../../src/routes/product-cli';
+import ProductGui from '../../src/routes/product-gui';
 import ProductSdk from '../../src/routes/product-sdk';
 import Enterprise from '../../src/routes/enterprise';
 import Community from '../../src/routes/community';
@@ -19,20 +19,18 @@ describe('Marketing parity routes', () => {
     renderRoute(<Product />);
 
     expect(screen.getAllByText('Product').length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByRole('heading', { name: /From a single local agent to an org-wide control plane/i })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Agent Canvas' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Automations' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'OpenHands Cloud' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Build better software with autonomous cloud agent/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Terminal / CLI' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Web GUI' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'SDK' })).toBeInTheDocument();
-    expect(screen.getAllByRole('link', { name: 'Learn more' })).toHaveLength(4);
+    expect(screen.getAllByRole('link', { name: 'Learn more' })).toHaveLength(3);
     expect(screen.getAllByRole('link', { name: 'Learn more' }).map((link) => link.getAttribute('href'))).toEqual([
-      '/product/agent-canvas',
-      'https://docs.openhands.dev/openhands/usage/automations/overview#automations-overview',
-      'https://app.all-hands.dev/',
+      '/product/cli',
+      '/product/gui',
       '/product/sdk',
     ]);
-    expect(screen.getAllByRole('link', { name: 'Download Agent Canvas' })[0]).toHaveAttribute('href', 'https://github.com/OpenHands/OpenHands/releases');
-    expect(screen.getByText('The only open, secure, and scalable agent platform built for real engineering work')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Join Slack' })).toHaveAttribute('href', 'https://app.all-hands.dev/');
+    expect(screen.getByText('Coding Agent SDK')).toBeInTheDocument();
     expect(screen.getByText(/Building the open standard for autonomous software development/i)).toBeInTheDocument();
     expect(
       screen.queryByRole('heading', {
@@ -45,41 +43,41 @@ describe('Marketing parity routes', () => {
     const { container } = renderRoute(<ProductCli />);
 
     expect(screen.getByText('Terminal / CLI')).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: /The CLI is still here\. Agent Canvas is where agents scale/i })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: /A lightweight path for terminal-first developers/i })).toBeInTheDocument();
-    expect(screen.getAllByRole('link', { name: 'Download Agent Canvas' })[0]).toHaveAttribute(
+    expect(screen.getByRole('heading', { name: /Agentic power from the command line/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /A first-class terminal and CLI interface for autonomous agents/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Join Slack' })).toHaveAttribute(
       'href',
-      'https://github.com/OpenHands/OpenHands/releases',
+      'https://docs.openhands.dev/openhands/usage/cli/installation',
     );
-    expect(screen.getByText('Terminal-first task execution')).toBeInTheDocument();
-    expect(screen.getByText('Move repeated work into Agent Canvas automations')).toBeInTheDocument();
-    expect(screen.getByText('Is the OpenHands CLI still available?')).toBeInTheDocument();
+    expect(screen.getByText('Intuitive and powerful Terminal UX')).toBeInTheDocument();
+    expect(screen.getByText('Fix bugs before standup')).toBeInTheDocument();
+    expect(screen.getByText('Does the OpenHands CLI require cloud connectivity?')).toBeInTheDocument();
     expect(container.querySelectorAll('summary label')).toHaveLength(FAQ_LABEL_COUNT);
     expect(
-      screen.queryByRole('heading', { name: /Ready for more than one session/i }),
+      screen.queryByRole('heading', { name: /Control your agents like real infrastructure/i }),
     ).not.toBeInTheDocument();
   });
 
-  it('renders the Agent Canvas product page content', () => {
-    renderRoute(<ProductAgentCanvas />);
+  it('renders the GUI product page content', () => {
+    renderRoute(<ProductGui />);
 
-    expect(screen.getByRole('heading', { name: /Run agents\. Not sessions/i })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Download for free' })).toHaveAttribute('href', 'https://github.com/OpenHands/OpenHands/releases');
-    expect(screen.getByText('Parallel agents in one view')).toBeInTheDocument();
-    expect(screen.getByText('Run four agents in parallel, each on its own branch')).toBeInTheDocument();
-    expect(screen.getByText('What is Agent Canvas?')).toBeInTheDocument();
-    expect(screen.queryByRole('heading', { name: /Your agents should work when you don't/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Agentic development, made human/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Join Slack' })).toHaveAttribute('href', 'https://app.all-hands.dev/');
+    expect(screen.getByText('Generate technical plans and PRDs')).toBeInTheDocument();
+    expect(screen.getByText('Break epics into agent-sized tasks')).toBeInTheDocument();
+    expect(screen.getByText('What is the OpenHands GUI?')).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: /Bring your team into the loop/i })).not.toBeInTheDocument();
   });
 
   it('renders the SDK product page content', () => {
     renderRoute(<ProductSdk />);
 
     expect(screen.getByRole('heading', { name: /Build agents your way/i })).toBeInTheDocument();
-    expect(screen.getAllByRole('link', { name: 'Get Started' })[0]).toHaveAttribute('href', 'https://docs.openhands.dev/sdk/getting-started');
-    expect(screen.getByText('Unified Python API')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Join Slack' })).toHaveAttribute('href', 'https://docs.openhands.dev/sdk');
+    expect(screen.getByText('Programmatic task creation')).toBeInTheDocument();
     expect(screen.getByText('Build domain-specific agents')).toBeInTheDocument();
-    expect(screen.getByText('What is the OpenHands SDK?')).toBeInTheDocument();
-    expect(screen.queryByRole('heading', { name: /Build agents your way/i })).toBeInTheDocument();
+    expect(screen.getByText('What is the Large Codebase SDK?')).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: /Turn OpenHands into your agent platform/i })).not.toBeInTheDocument();
   });
 
   it('renders the updated enterprise page content', () => {
@@ -148,7 +146,7 @@ describe('Marketing parity routes', () => {
 
     // Closing footer section mirrors the live enterprise footer, including the visible copyright.
     expect(screen.getByText(/What comes after Claude Code\?/i)).toBeInTheDocument();
-    expect(screen.getByText(/© \d{4} OpenHands - All rights reserved/i)).toBeInTheDocument();
+    expect(screen.getByText(/OpenHands - All rights reserved/i).textContent?.replace(/\u00a0/g, ' ')).toMatch(/© \d{4} OpenHands - All rights reserved/i);
 
     // Old marketing-page placeholders should be gone now
     expect(screen.queryByText(/Why Enterprises Choose OpenHands/i)).not.toBeInTheDocument();

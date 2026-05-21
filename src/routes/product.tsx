@@ -8,17 +8,13 @@ import {
 } from '~/components/product-feature-page';
 import { OverlayLinkButton } from '~/components/overlay-link-button';
 import { PRODUCT_SURFACES } from '~/constants/product-surfaces';
-import {
-  AGENT_CANVAS_DOWNLOAD_URL,
-  OPENHANDS_DOCS_URL,
-} from '~/constants/product-links';
 import { createSocialPreviewMeta } from '~/utils/seo';
 
 export const meta: Route.MetaFunction = ({ location }) =>
   createSocialPreviewMeta({
-    title: 'OpenHands Product | Agent Canvas, Automations, Cloud, and SDK',
+    title: 'OpenHands Product | Autonomous Cloud Coding Agents',
     description:
-      'Explore the OpenHands platform: Agent Canvas for local parallel agents, Automations for always-on workflows, Cloud for scale, and the SDK for custom agent builders.',
+      'Explore how OpenHands revolutionizes software development with secure, model-agnostic cloud coding agents. Delegate, execute, and review code autonomously.',
     pathname: location.pathname,
   });
 
@@ -38,29 +34,6 @@ const Product = () => {
         <div data-wf-el='asci-wrap' className='pointer-events-auto absolute inset-x-0 top-0 h-screen overflow-hidden' style={{ '--ascii-opacity': '0.12' } as CSSProperties} aria-hidden='true'>
           <ASCIIAnimation className='h-full w-full' />
         </div>
-        <div className='relative mx-auto flex max-w-[1238px] flex-col items-center justify-center text-center' style={{ height: '432px' }}>
-          <div className='rounded-[4px] bg-brand-accent text-[13px] font-medium leading-none text-brand-fg' style={{ alignItems: 'center', display: 'flex', height: '48px', justifyContent: 'center', marginBottom: '24px', width: '121px' }}>
-            Product
-          </div>
-          <h1 className='fluid-h1 max-w-[932px] text-brand-fg'>
-            From a single local agent to an org-wide control plane.
-          </h1>
-          <p className='max-w-[640px] fluid-body-lg text-[#5f5f5f]' style={{ marginTop: '10.4px', marginBottom: '20.8px' }}>
-            OpenHands takes you from your first AI coding session to a fleet of always-on agents running across your organization, without switching interfaces or rebuilding workflows.
-          </p>
-          <div className='flex flex-wrap items-center justify-center gap-4' style={{ paddingTop: '32px' }}>
-            <ProductPageActionLink
-              href={AGENT_CANVAS_DOWNLOAD_URL}
-              label='Download Agent Canvas'
-            />
-            <ProductPageActionLink
-              href={OPENHANDS_DOCS_URL}
-              label='See developer docs'
-              variant='outline'
-            />
-          </div>
-        </div>
-
         <div data-wf-el='hero' className='relative flex w-full flex-col items-center overflow-hidden' style={{ height: '432px', justifyContent: 'flex-start', textAlign: 'start' }}>
           <div data-wf-el='container' className='mx-auto max-w-[1238px]' style={{ display: 'block', width: '100%' }}>
             <div data-wf-el='hero-content' className='flex flex-col items-center justify-center text-center' style={{ position: 'relative', height: '432px', paddingTop: '56px', paddingBottom: '56px' }}>
@@ -152,7 +125,7 @@ const Product = () => {
         </section>
       </section>
 
-      <ProductComparisonTable ctaHref={AGENT_CANVAS_DOWNLOAD_URL} ctaLabel='Download Agent Canvas' />
+      <ProductComparisonTable ctaHref='https://app.all-hands.dev/' ctaLabel='Try it live' />
       {/* Live renders the default closing CTA inside the yellow footer section,
         and the footer section itself is a child of page-main. */}
       <Footer
@@ -160,8 +133,8 @@ const Product = () => {
         showSocialLinks
         compactNav
         minHeight={1144}
-        marketingCtaPrimary={{ href: AGENT_CANVAS_DOWNLOAD_URL, label: 'Download Agent Canvas' }}
-        marketingCtaSecondary={{ href: OPENHANDS_DOCS_URL, label: 'See developer docs' }}
+        marketingCtaPrimary={{ href: 'https://app.all-hands.dev/', label: 'Try it live' }}
+        marketingCtaSecondary={{ href: 'https://docs.openhands.dev/overview/introduction', label: 'See developer docs' }}
       />
     </main>
   );
