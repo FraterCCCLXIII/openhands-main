@@ -120,6 +120,15 @@ const STYLE_PROPS = [
   'opacity',
   'boxShadow',
 ];
+const EXACT_NUMERIC_STYLE_PROPS = new Set([
+  'width',
+  'height',
+  'borderWidth',
+  'borderTopWidth',
+  'borderRightWidth',
+  'borderBottomWidth',
+  'borderLeftWidth',
+]);
 const STYLE_CHECK_TAGS = new Set(['H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'A', 'BUTTON', 'LABEL', 'INPUT', 'IMG', 'P', 'SPAN', 'DIV', 'SUMMARY', 'DETAILS', 'NAV', 'SECTION', 'ARTICLE', 'UL', 'LI', 'PRE', 'CODE']);
 const LAYOUT_CHECK_TAGS = new Set(['H1', 'H2', 'H3', 'H4', 'A', 'BUTTON', 'LABEL', 'INPUT', 'IMG', 'P', 'DIV', 'PRE', 'CODE']);
 
@@ -334,29 +343,27 @@ function compareStyleValue(prop, liveValue, testValue, liveStyle, testStyle) {
     // by tens of pixels per element across long documents.
     //
     // Sub-pixel rounding (e.g. 44px vs 43.9999px from clamp() math) is
-    // handled by a small floor of 0.25px applied to every numeric prop.
-    const toleranceByProp = {
-      fontSize: 0.5,
-      fontWeight: 50,
-      lineHeight: 1,
-      borderRadius: 3,
-      borderWidth: 0,
-      borderTopWidth: 0,
-      borderRightWidth: 0,
-      borderBottomWidth: 0,
-      borderLeftWidth: 0,
-      letterSpacing: 0.25,
-      textUnderlineOffset: 2,
-      textDecorationThickness: 1,
-      paddingTop: 8,
-      paddingBottom: 8,
-      paddingLeft: 8,
-      paddingRight: 8,
-    };
-    const tolerance = Object.prototype.hasOwnProperty.call(toleranceByProp, prop)
-      ? toleranceByProp[prop]
-      : 2;
-    if (Math.abs(livePx - testPx) <= tolerance) return null;
+    // handled by a small floor for most numeric props. Rendered dimensions and
+    // border widths remain exact because 1px deltas can explain visible gaps.
+    if (EXACT_NUMERIC_STYLE_PROPS.has(prop)) {
+      if (livePx === testPx) return null;
+    } else {
+      const toleranceByProp = {
+        fontSize: 0.5,
+        fontWeight: 50,
+        lineHeight: 1,
+        borderRadius: 3,
+        letterSpacing: 0.25,
+        textUnderlineOffset: 2,
+        textDecorationThickness: 1,
+        paddingTop: 8,
+        paddingBottom: 8,
+        paddingLeft: 8,
+        paddingRight: 8,
+      };
+      const tolerance = Math.max(0.25, toleranceByProp[prop] ?? 2);
+      if (Math.abs(livePx - testPx) <= tolerance) return null;
+    }
   }
 
   if (prop === 'backgroundImage') {
@@ -593,10 +600,10 @@ function compareLayout(tag, liveRect, testRect) {
   for (const key of ['top', 'left', 'width', 'height']) {
     const lv = liveRect[key] || 0;
     const tv = testRect[key] || 0;
-    // Keep a small tolerance for positional drift/noisy scroll rounding, but
-    // compare rendered sizes exactly. Subtle width/height deltas (for example
-    // 1px borders or 2px pill-width differences) are visually meaningful in
-    // parity work and should not be hidden by the layout tolerance.
+    // Keep positional tolerance for cumulative sub-pixel/font rounding, but
+    // compare rendered size exactly: even 1px width/height deltas can explain
+    // visible gaps and should point to the source element instead of being
+    // swallowed by the generic layout audit.
     const tolerance = (key === 'top' || key === 'left') ? 4 : 0;
     if (Math.abs(lv - tv) > tolerance) {
       diffs.push(`${key}: live=${lv} test=${tv}`);
@@ -2741,8 +2748,9 @@ function compareButtonComponents(liveButtons = [], testButtons = []) {
       const opDiff = Math.abs((liveItem.style?.effectiveOpacity ?? 1) - (testItem.style?.effectiveOpacity ?? 1));
       if (opDiff > 0.05) diffs.push(`effectiveOpacity: live=${liveItem.style.effectiveOpacity} test=${testItem.style.effectiveOpacity}`);
       for (const key of ['width', 'height']) {
-        const delta = Math.abs((liveItem.rect?.[key] || 0) - (testItem.rect?.[key] || 0));
-        if (delta > 4) diffs.push(`rect.${key}: live=${liveItem.rect?.[key]} test=${testItem.rect?.[key]}`);
+        const liveSize = liveItem.rect?.[key] || 0;
+        const testSize = testItem.rect?.[key] || 0;
+        if (liveSize !== testSize) diffs.push(`rect.${key}: live=${liveItem.rect?.[key]} test=${testItem.rect?.[key]}`);
       }
       if (diffs.length) mismatches.push({ signature: sig, label: liveItem.label, diffs, liveRect: liveItem.rect, testRect: testItem.rect });
     }
@@ -2845,8 +2853,9 @@ function compareSvgVectors(liveVectors = [], testVectors = []) {
         if (diff) diffs.push(diff);
       }
       for (const key of ['width', 'height']) {
-        const delta = Math.abs((live.rect?.[key] || 0) - (test.rect?.[key] || 0));
-        if (delta > 4) diffs.push(`rect.${key}: live=${live.rect?.[key]} test=${test.rect?.[key]}`);
+        const liveSize = live.rect?.[key] || 0;
+        const testSize = test.rect?.[key] || 0;
+        if (liveSize !== testSize) diffs.push(`rect.${key}: live=${live.rect?.[key]} test=${test.rect?.[key]}`);
       }
       if (diffs.length > 0) {
         mismatches.push({ signature: sig, occurrenceIndex: i, diffs, liveRect: live.rect, testRect: test.rect });
@@ -4435,7 +4444,7 @@ function compareContainerStyles(liveContainers, testContainers) {
 
     for (const [live, test] of pairs) {
       const propDiffs = [];
-      const sameRenderedSize = (dimension) => Math.abs((live.rect?.[dimension] || 0) - (test.rect?.[dimension] || 0)) <= 16;
+      const sameRenderedSize = (dimension) => (live.rect?.[dimension] || 0) === (test.rect?.[dimension] || 0);
       const isNonVisualSizeConstraintDiff = (prop) => {
         if (!['height', 'width', 'minHeight', 'maxHeight', 'minWidth', 'maxWidth'].includes(prop)) return false;
         const dimension = prop.endsWith('Height') || prop === 'height' ? 'height' : 'width';
@@ -4448,13 +4457,13 @@ function compareContainerStyles(liveContainers, testContainers) {
         const rendered = Math.max(live.rect?.[dimension] || 0, test.rect?.[dimension] || 0);
         const constraintIsInactive = (px) => {
           if (px === null) return false;
-          if (prop.startsWith('min')) return px <= rendered + 2;
-          if (prop.startsWith('max')) return px >= rendered - 2;
-          return Math.abs(px - rendered) <= 16;
+          if (prop.startsWith('min')) return px <= rendered;
+          if (prop.startsWith('max')) return px >= rendered;
+          return px === rendered;
         };
         if (isNoConstraint(liveValue) && constraintIsInactive(testPx)) return true;
         if (isNoConstraint(testValue) && constraintIsInactive(livePx)) return true;
-        if (prop === 'height' || prop === 'width') return livePx !== null && testPx !== null && Math.abs(livePx - testPx) <= 16;
+        if (prop === 'height' || prop === 'width') return livePx !== null && testPx !== null && livePx === testPx;
         return false;
       };
 
@@ -4463,22 +4472,22 @@ function compareContainerStyles(liveContainers, testContainers) {
         if (diff && !isNonVisualSizeConstraintDiff(prop)) propDiffs.push(diff);
       }
 
-      // Flag rect.height / rect.width mismatches > 16px on landmark
-      // containers.  Section-height drift is usually the *cause* of all
-      // the per-element layout mismatches reported elsewhere (a 100px
-      // shorter feature section pushes everything below it 100px up).
-      // Surfacing it directly on the container makes the root cause
-      // obvious instead of buried in 60 child-element diffs.
+      // Flag rect.height / rect.width mismatches on landmark containers.
+      // Section-height drift is usually the *cause* of all the per-element
+      // layout mismatches reported elsewhere (a 100px shorter feature section
+      // pushes everything below it 100px up). Surfacing it directly on the
+      // container makes the root cause obvious instead of buried in 60
+      // child-element diffs, and small size deltas can be the visible gap.
       const liveH = live.rect?.height || 0;
       const testH = test.rect?.height || 0;
       const heightDelta = Math.abs(liveH - testH);
-      if (heightDelta > 16) {
+      if (heightDelta > 0) {
         propDiffs.push(`rect.height: live=${Math.round(liveH)}px test=${Math.round(testH)}px (Δ${Math.round(heightDelta)}px)`);
       }
       const liveW = live.rect?.width || 0;
       const testW = test.rect?.width || 0;
       const widthDelta = Math.abs(liveW - testW);
-      if (widthDelta > 16) {
+      if (widthDelta > 0) {
         propDiffs.push(`rect.width: live=${Math.round(liveW)}px test=${Math.round(testW)}px (Δ${Math.round(widthDelta)}px)`);
       }
 

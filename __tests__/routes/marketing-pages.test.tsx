@@ -169,6 +169,8 @@ describe('Marketing parity routes', () => {
     expect(screen.queryByText('Scale Enterprise AI Agents')).not.toBeInTheDocument();
     expect(screen.queryByText(/5:15pm — Doors Open/i)).not.toBeInTheDocument();
     expect(screen.getAllByText(/Recording and agenda will be available post meeting\./i)).toHaveLength(2);
+    expect(container.querySelector('section#events')).toHaveStyle({ height: '1804.62px' });
+    expect(container.querySelector('[data-wf-el="contribution_card_link"]')).toHaveStyle({ height: '1436.66px' });
     expect(screen.getByRole('heading', { name: /Recognizing first-time contributors/i })).toBeInTheDocument();
     expect(screen.queryByText('@alexdev')).not.toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /Community contributor spotlight/i })).toBeInTheDocument();

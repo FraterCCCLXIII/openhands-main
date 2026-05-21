@@ -265,6 +265,16 @@ describe('compareStyleValue extended properties', () => {
     expect(result).toBe('letterSpacing: live=0px test=3px');
   });
 
+  it('detects one-pixel border width mismatches without tolerance', () => {
+    expect(compareStyleValue('borderWidth', '0px', '1px')).toBe('borderWidth: live=0px test=1px');
+    expect(compareStyleValue('borderTopWidth', '2px', '3px')).toBe('borderTopWidth: live=2px test=3px');
+  });
+
+  it('detects one-pixel rendered width and height style mismatches without tolerance', () => {
+    expect(compareStyleValue('width', '320px', '321px')).toBe('width: live=320px test=321px');
+    expect(compareStyleValue('height', '48px', '49px')).toBe('height: live=48px test=49px');
+  });
+
   it('normalizes textDecoration whitespace differences', () => {
     expect(compareStyleValue('textDecoration', 'none solid rgb(0, 0, 0)', 'none  solid  rgb(0, 0, 0)')).toBeNull();
   });
@@ -332,7 +342,7 @@ describe('container style comparison', () => {
     expect(compareContainerStyles(live, test)).toHaveLength(0);
   });
 
-  it('ignores inactive min-height constraints and small explicit height differences', () => {
+  it('ignores inactive min-height constraints but reports one-pixel rendered height differences', () => {
     const live = [
       { tag: 'SECTION', label: 'cta', rect: { top: 0, left: 0, width: 1440, height: 1136 }, style: { backgroundColor: 'rgb(255, 255, 139)', minHeight: 'auto', height: '1136px' } },
     ];
@@ -340,7 +350,12 @@ describe('container style comparison', () => {
       { tag: 'SECTION', label: 'cta', rect: { top: 0, left: 0, width: 1440, height: 1135 }, style: { backgroundColor: 'rgb(255, 255, 139)', minHeight: '1056px', height: '1135px' } },
     ];
 
-    expect(compareContainerStyles(live, test)).toHaveLength(0);
+    const diffs = compareContainerStyles(live, test);
+    expect(diffs).toHaveLength(1);
+    expect(diffs[0].diffs).toEqual(expect.arrayContaining([
+      'height: live=1136px test=1135px',
+      'rect.height: live=1136px test=1135px (Δ1px)',
+    ]));
   });
 });
 
@@ -873,6 +888,26 @@ describe('generalized visual parity comparisons', () => {
         expect.stringContaining('backgroundColor:'),
       ]),
     );
+  });
+
+  it('detects one-pixel button rendered size and border width mismatches', () => {
+    const base = {
+      signature: 'button:try it live',
+      label: 'Try it live',
+      variant: 'primary',
+      rect: { width: 150, height: 50 },
+      style: { backgroundColor: 'rgb(34, 21, 13)', borderColor: 'rgb(34, 21, 13)', borderWidth: '0px', opacity: '1', effectiveOpacity: 1 },
+    };
+
+    const result = compareButtonComponents(
+      [base],
+      [{ ...base, rect: { width: 151, height: 50 }, style: { ...base.style, borderWidth: '1px' } }],
+    );
+
+    expect(result.mismatches[0].diffs).toEqual(expect.arrayContaining([
+      'borderWidth: live=0px test=1px',
+      'rect.width: live=150 test=151',
+    ]));
   });
 
   it('extracts button components by visible label instead of sr-only overlay label', async () => {
