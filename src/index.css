@@ -559,6 +559,13 @@
 }
 
 /* ASCII Animation Styles - matches openhands.dev */
+.asci-embed {
+  position: static;
+  inset: auto;
+  overflow: hidden;
+  text-align: start;
+}
+
 .ascii-embed {
   position: relative;
   inset: 0;

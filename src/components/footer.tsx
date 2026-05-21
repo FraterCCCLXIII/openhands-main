@@ -20,6 +20,7 @@ interface FooterProps {
   minHeight?: number;
   compactSpacerHeight?: number;
   showCopyright?: boolean;
+  footerContainerTransform?: string;
   /**
    * Render the legacy Webflow footer grid/row structure used by the
    * whitepaper page. Other routes keep the existing compact React layout
@@ -183,6 +184,7 @@ type WebflowFooterContentProps = Pick<
   | 'marketingCtaPrimary'
   | 'marketingCtaSecondary'
 > & {
+  footerContainerTransform?: string;
   containerWfEl?: string | null;
   containerStyle?: React.CSSProperties;
 };
@@ -195,6 +197,7 @@ const WebflowFooterContent = ({
   marketingCtaDescription,
   marketingCtaPrimary,
   marketingCtaSecondary,
+  footerContainerTransform,
   containerWfEl = 'container',
   containerStyle,
 }: WebflowFooterContentProps) => {
@@ -219,7 +222,7 @@ const WebflowFooterContent = ({
   };
 
   return (
-    <div data-wf-el={containerWfEl ?? undefined} className='container u-position-relative u-z-index-1' style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: '1238px', marginLeft: 'auto', marginRight: 'auto', ...containerStyle }}>
+    <div data-wf-el={containerWfEl ?? undefined} className='container u-position-relative u-z-index-1' style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: '1238px', marginLeft: 'auto', marginRight: 'auto', ...containerStyle, ...(footerContainerTransform ? { transform: footerContainerTransform, transformOrigin: 'top' } : {}) }}>
       {showMarketingCta ? (
         <div className='row row-justify-center u-mt-md u-position-relative u-z-index-1' style={{ ...FOOTER_ROW_STYLE, justifyContent: 'center', position: 'relative', zIndex: 1, marginTop: '50px' }}>
           <div className='col col-lg-8 col-sm-12' style={FOOTER_COL_LG_8_STYLE}>
@@ -347,6 +350,7 @@ export const Footer = ({
   marketingCtaDescription,
   marketingCtaPrimary,
   marketingCtaSecondary,
+  footerContainerTransform,
 }: FooterProps) => {
   const ctaProps = {
     showMarketingCta,
@@ -355,6 +359,7 @@ export const Footer = ({
     marketingCtaDescription,
     marketingCtaPrimary,
     marketingCtaSecondary,
+    footerContainerTransform,
   };
   if (!standalone) {
     return (
@@ -375,7 +380,7 @@ export const Footer = ({
       className='relative overflow-visible bg-brand-accent text-brand-fg'
       style={{ padding: '80px 0px' }}
     >
-      <div data-wf-el='asci-wrap' className='absolute inset-0 overflow-hidden'>
+      <div data-wf-el='asci-wrap' className='absolute inset-0 overflow-hidden' style={{ maxHeight: 'none' }}>
         <img
           data-wf-el='asci-media'
           src='/assets/webflow/backgrounds/6908d170831c19b2b6976323_ascii-art_(16)_1.svg'

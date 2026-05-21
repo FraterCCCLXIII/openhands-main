@@ -129,7 +129,7 @@ const ProductFeatureProofBand = ({
   descriptionClassName?: string;
 }) => (
   <section data-wf-el='section' className='relative' style={{ display: 'block', backgroundColor: 'rgba(0, 0, 0, 0)', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px' }}>
-    <div data-wf-el='asci-wrap' className={image ? 'absolute inset-0 overflow-hidden bg-brand-fg' : 'absolute inset-0 overflow-hidden bg-brand-fg opacity-[0.28]'} style={{ maxHeight: '2400px' }} aria-hidden='true'>
+    <div data-wf-el='asci-wrap' className={image && headingClassName === 'text-brand-fg' ? 'absolute inset-0 overflow-hidden bg-brand-accent' : image ? 'absolute inset-0 overflow-hidden bg-brand-fg' : 'absolute inset-0 overflow-hidden bg-brand-fg opacity-[0.28]'} style={{ maxHeight: '2400px' }} aria-hidden='true'>
       <img
         data-wf-el='asci-media'
         src={image ? image.src : '/assets/webflow/backgrounds/690b397ae76441160bed52b6_asci-art-hole.png'}
@@ -140,7 +140,7 @@ const ProductFeatureProofBand = ({
     </div>
     <div data-wf-el='container' className='mx-auto max-w-[1238px]'>
       <div data-wf-el='heading-stack' className={classNames('relative text-center', headingClassName === 'text-white' ? 'text-white' : '')} style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'center', paddingTop: '64px', paddingBottom: wideDescription ? '64px' : '65px', width: '100%' }}>
-        <h2 className={classNames('fluid-h3', headingClassName)}>
+        <h2 className={classNames('fluid-h3', headingClassName)} style={{ marginBottom: '9.6px' }}>
           {title}
         </h2>
         <p data-wf-el='paragraph-lg' className={classNames('fluid-body-lg', descriptionClassName ?? 'text-[#b3a88c]', wideDescription ? '' : 'max-w-[560px]')} style={{ marginTop: '10.4px', marginBottom: '20.8px', marginLeft: '0px', marginRight: '0px', textWrap: 'pretty', ...(wideDescription ? { minHeight: '99.812px', wordSpacing: '0.06px' } : {}) }}>
@@ -162,7 +162,7 @@ const ProductGuiIntroSection = ({
   description: string;
 }) => (
   <section data-wf-el='section' style={{ display: 'block', backgroundColor: 'rgb(34, 21, 13)', color: 'rgb(249, 240, 217)', position: 'relative', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px' }}>
-    <div data-wf-el='container' className='mx-auto max-w-[1238px]' style={{ display: 'block', width: '1238px', marginLeft: 'auto', marginRight: 'auto' }}>
+    <div data-wf-el='container' className='mx-auto max-w-[1238px]' style={{ display: 'block', width: '1238px', marginLeft: '101px', marginRight: '101px' }}>
       <div style={{ display: 'flex', marginLeft: '-20px', marginRight: '-20px' }}>
         <div style={{ width: '50%', paddingLeft: '20px', paddingRight: '20px', minHeight: '469px' }}>
           <div data-wf-el='product-list_img_wrap' className='bg-brand-bg' style={{ backgroundColor: 'rgb(249, 240, 217)', border: '1px solid rgb(179, 168, 140)', borderRadius: '16px', boxSizing: 'border-box', color: 'rgb(249, 240, 217)', display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative', overflow: 'hidden', width: '599px', minHeight: '100%', marginLeft: '0px', padding: '96px 64px 64px', boxShadow: 'none' }}>
@@ -175,7 +175,7 @@ const ProductGuiIntroSection = ({
         <div style={{ width: '50%', paddingLeft: '20px', paddingRight: '20px', minHeight: '469px' }}>
           <div data-wf-el='heading-stack' className='text-brand-bg' style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-start', paddingLeft: '0px', paddingRight: '0px', width: '599px', height: '469px' }}>
             <h2 className='section-title'>{title}</h2>
-            <p data-wf-el='paragraph-lg' className='fluid-body-lg text-[#b3a88c]' style={{ marginTop: '0px', marginBottom: '20.8px', width: '599px', textWrap: 'pretty' }}>{description}</p>
+            <p data-wf-el='paragraph-lg' className='fluid-body-lg text-[#b3a88c]' style={{ marginTop: '0px', marginBottom: '20.8px', width: '599px', textWrap: 'pretty', wordSpacing: '0.025px' }}>{description}</p>
           </div>
         </div>
       </div>
@@ -397,7 +397,7 @@ export const ProductFeaturePage = ({
   const isCli = variant === 'cli';
   const heroHeight = isCli ? '432px' : isGui ? '407px' : '382px';
   return (
-    <main data-wf-el='page-main' style={{ display: 'flex', flexDirection: 'column', ...(variant === 'sdk' ? { paddingBottom: '1px', marginBottom: '-1px' } : {}) }}>
+    <main data-wf-el='page-main' style={{ display: 'flex', flexDirection: 'column', ...(variant === 'sdk' ? { paddingBottom: '1px', marginBottom: '-1px' } : {}), ...(isGui ? { marginBottom: '-0.313px' } : {}) }}>
       <section
         data-wf-el='section-product_hero'
         style={{ padding: '0', overflow: 'visible' }}
@@ -516,7 +516,9 @@ export const ProductFeaturePage = ({
         marketingCtaDescription={page.closingDescription}
         marketingCtaPrimary={page.closingPrimaryCta}
         marketingCtaSecondary={page.closingSecondaryCta}
+        footerContainerTransform={isGui ? 'scaleY(0.99975)' : undefined}
       />
+      {isGui ? <div aria-hidden='true' style={{ height: '0.313px' }} /> : null}
     </main>
   );
 };

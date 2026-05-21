@@ -501,21 +501,30 @@ export const ASCIIAnimation: React.FC<ASCIIAnimationProps> = ({ className = '' }
 
   return (
     <div
-      ref={containerRef}
-      data-wf-el='ascii-embed'
-      className={`ascii-embed ${className}`}
+      data-wf-el='asci-embed'
+      className={`asci-embed w-embed ${className}`}
       style={{
-        position: 'relative',
         width: '100%',
         height: '100%',
       }}
     >
-      <pre
-        ref={preRef}
-        data-wf-el='ascii-pre'
-        className="ascii-pre"
-        aria-hidden="true"
-      />
+      <div
+        ref={containerRef}
+        data-wf-el='ascii-embed'
+        className='ascii-embed'
+        style={{
+          position: 'relative',
+          width: '100%',
+          height: '100%',
+        }}
+      >
+        <pre
+          ref={preRef}
+          data-wf-el='ascii-pre'
+          className="ascii-pre"
+          aria-hidden="true"
+        />
+      </div>
     </div>
   );
 };
