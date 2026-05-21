@@ -8,6 +8,7 @@ import { handleNewsletterSubscription } from '~/utils/newsletter-subscription';
 import type { Route } from './+types/blog';
 
 const INITIAL_GRID_POSTS = 6;
+const BLOG_GRID_VERTICAL_OFFSETS = [12.5, 25, 0, 0, 12.5, 0] as const;
 
 export const loader = async () => {
   const featuredBlog = blogAPI.getFeaturedBlog() ?? null;
@@ -84,7 +85,7 @@ const Blog = () => {
     <main data-wf-el='page-main' className='flex flex-col'>
       <section data-wf-el='section-hero' className='relative w-full' style={{ height: '396.484px', textAlign: 'start' }}>
         <div data-wf-el='hero-content' className='relative flex h-full w-full flex-col items-center justify-center text-center' style={{ paddingTop: '56px', paddingBottom: '56px' }}>
-          <div data-wf-el='container' className='mx-auto max-w-[1238px] text-center'>
+          <div data-wf-el='container' className='mx-auto max-w-[1238px] text-center' style={{ height: '284.48px' }}>
             <h1 className='fluid-h1 font-sohne text-brand-fg' style={{ width: '1238px', maxWidth: '100%' }}>
               OpenHands Blog
             </h1>
@@ -122,7 +123,7 @@ const Blog = () => {
           <div data-wf-el='container' className='mx-auto max-w-[1238px]'>
             <div data-wf-el='standard-collection'>
               <div data-wf-el='standard-collection-list'>
-                <div data-wf-el='standard-collection-list-item'>
+                <div data-wf-el='standard-collection-list-item' style={{ justifyContent: 'space-between', alignItems: 'center', gap: '16px' }}>
                   <FeaturedBlogCard
                     href={`/blog/${getBlogSlug(featuredBlog)}`}
                     title={featuredBlog.data.title}
@@ -140,18 +141,21 @@ const Blog = () => {
       <section data-wf-el='section' id='blog-grid' className='relative w-full' style={{ paddingBottom: '80px', height: '1015.94px' }}>
         <div data-wf-el='standard-collection' className='mx-auto max-w-[1238px]'>
           <div data-wf-el='standard-collection-list' className='flex flex-wrap' style={{ marginLeft: '-20px', marginRight: '-20px', rowGap: '40px' }}>
-            {visibleBlogs.map((blog) => (
-              <div key={getBlogSlug(blog)} data-wf-el='standard-collection-list-item' className='relative flex w-full items-center justify-between md:w-1/2 xl:w-1/3' style={{ maxWidth: '33.3333%', paddingLeft: '20px', paddingRight: '20px', gap: '16px' }}>
-                <BlogCard
-                  href={`/blog/${getBlogSlug(blog)}`}
-                  title={blog.data.title}
-                  date={blog.data.date}
-                  img={blog.data.coverImage}
-                  imgAlt={blog.data.coverAlt ?? ''}
-                  webflowIndexCard
-                />
-              </div>
-            ))}
+            {visibleBlogs.map((blog, index) => {
+              return (
+                <div key={getBlogSlug(blog)} data-wf-el='standard-collection-list-item' className='relative flex w-full items-center justify-between md:w-1/2 xl:w-1/3' style={{ maxWidth: '33.3333%', paddingLeft: '20px', paddingRight: '20px', gap: '16px' }}>
+                  <BlogCard
+                    href={`/blog/${getBlogSlug(blog)}`}
+                    title={blog.data.title}
+                    date={blog.data.date}
+                    img={blog.data.coverImage}
+                    imgAlt={blog.data.coverAlt ?? ''}
+                    webflowIndexCard
+                    verticalOffset={BLOG_GRID_VERTICAL_OFFSETS[index] ?? 0}
+                  />
+                </div>
+              );
+            })}
           </div>
         </div>
 
@@ -182,7 +186,7 @@ const Blog = () => {
         )}
       </section>
 
-      <Footer standalone showSocialLinks compactNav />
+      <Footer standalone showSocialLinks compactNav compactNavSpacerHeight={9.36} standaloneContainerHeight={950} standaloneContainerFlowSpacerHeight={41} />
     </main>
   );
 };

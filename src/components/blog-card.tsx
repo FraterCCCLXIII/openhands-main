@@ -74,6 +74,7 @@ interface BlogCardProps {
   showDate?: boolean;
   titleLinkOnly?: boolean;
   webflowIndexCard?: boolean;
+  verticalOffset?: number;
 }
 
 export const BlogCard: React.FC<BlogCardProps> = ({
@@ -85,6 +86,7 @@ export const BlogCard: React.FC<BlogCardProps> = ({
   showDate = true,
   titleLinkOnly = false,
   webflowIndexCard = false,
+  verticalOffset = 0,
 }) => {
   const imageClassName = titleLinkOnly ? 'h-[250px] w-full' : webflowIndexCard ? 'h-[270px] w-full' : 'aspect-[10/7] w-full';
   const image = !img ? (
@@ -126,7 +128,7 @@ export const BlogCard: React.FC<BlogCardProps> = ({
   }
 
   return (
-    <Link to={href} className={`group relative block ${webflowIndexCard ? 'w-full self-start' : ''}`} data-testid='blog-card' data-wf-el={webflowIndexCard ? 'blog-item' : undefined} style={webflowIndexCard ? { maxWidth: '100%' } : undefined}>
+    <Link to={href} className={`group relative block ${webflowIndexCard ? 'w-full' : ''}`} data-testid='blog-card' data-wf-el={webflowIndexCard ? 'blog-item' : undefined} style={webflowIndexCard ? { maxWidth: '100%', top: verticalOffset ? `-${verticalOffset}px` : undefined } : undefined}>
       <div className='flex flex-col gap-6'>
         <div data-wf-el={webflowIndexCard ? 'standard-media' : undefined} className='overflow-hidden rounded-[6px]' style={webflowIndexCard ? { minHeight: '270px' } : undefined}>{image}</div>
 

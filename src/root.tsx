@@ -169,6 +169,7 @@ export default function App() {
   // `section.u-bg-primary` (yellow CTA + footer block) — most pages
   // render at 1209px once the social-icon row + footer-nav are in.
   const footerMinHeight = pathname === '/privacy' ? undefined : pathname === '/product' ? 1144 : pathname.startsWith('/product/') ? 1071 : pathname === '/enterprise' ? 1161 : 1209;
+  const pageWrapperHeight = pathname === '/blog' ? '3485.38px' : pathname === '/product/cli' ? '5511px' : undefined;
 
   const handleOpenGitHubModal = () => {
     setIsGitHubModalOpen(true);
@@ -196,7 +197,7 @@ export default function App() {
   }, []);
 
   return (
-    <div data-wf-el='page-wrapper' className='relative' style={{ display: 'flex', flexDirection: 'column', backgroundColor: 'rgb(249, 240, 217)', minHeight: '100vh', overflow: 'clip', ...(pathname === '/product/cli' ? { height: '5511px' } : {}) }}>
+    <div data-wf-el='page-wrapper' className='relative' style={{ display: 'flex', flexDirection: 'column', backgroundColor: 'rgb(249, 240, 217)', minHeight: '100vh', overflow: 'clip', height: pageWrapperHeight }}>
       <Sidebar
         ref={sidebarRef}
         isHidden={isSidebarHidden}

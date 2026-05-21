@@ -13,9 +13,11 @@ interface FooterProps {
   standalone?: boolean;
   showSocialLinks?: boolean;
   compactNav?: boolean;
+  compactNavSpacerHeight?: number;
+  standaloneContainerHeight?: number;
+  standaloneContainerFlowSpacerHeight?: number;
   navWidthClass?: string;
   minHeight?: number;
-  compactNavSpacerHeight?: number;
   compactSpacerHeight?: number;
   showCopyright?: boolean;
   /**
@@ -180,7 +182,10 @@ type WebflowFooterContentProps = Pick<
   | 'marketingCtaDescription'
   | 'marketingCtaPrimary'
   | 'marketingCtaSecondary'
->;
+> & {
+  containerWfEl?: string | null;
+  containerStyle?: React.CSSProperties;
+};
 
 const WebflowFooterContent = ({
   showSocialLinks = false,
@@ -190,6 +195,8 @@ const WebflowFooterContent = ({
   marketingCtaDescription,
   marketingCtaPrimary,
   marketingCtaSecondary,
+  containerWfEl = 'container',
+  containerStyle,
 }: WebflowFooterContentProps) => {
   const location = useLocation();
   const pathname = normalizePathname(location.pathname);
@@ -212,7 +219,7 @@ const WebflowFooterContent = ({
   };
 
   return (
-    <div data-wf-el='container' className='container u-position-relative u-z-index-1' style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: '1238px', marginLeft: 'auto', marginRight: 'auto' }}>
+    <div data-wf-el={containerWfEl ?? undefined} className='container u-position-relative u-z-index-1' style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: '1238px', marginLeft: 'auto', marginRight: 'auto', ...containerStyle }}>
       {showMarketingCta ? (
         <div className='row row-justify-center u-mt-md u-position-relative u-z-index-1' style={{ ...FOOTER_ROW_STYLE, justifyContent: 'center', position: 'relative', zIndex: 1, marginTop: '50px' }}>
           <div className='col col-lg-8 col-sm-12' style={FOOTER_COL_LG_8_STYLE}>
@@ -328,9 +335,11 @@ export const Footer = ({
   standalone = false,
   showSocialLinks = false,
   compactNav = false,
+  compactNavSpacerHeight,
+  standaloneContainerHeight,
+  standaloneContainerFlowSpacerHeight = 1,
   navWidthClass,
   minHeight: _minHeight,
-  compactNavSpacerHeight,
   compactSpacerHeight = compactNavSpacerHeight ?? 50,
   showMarketingCta = true,
   showCopyright = true,
@@ -377,12 +386,18 @@ export const Footer = ({
           style={{ display: 'inline-block', textAlign: 'start' }}
         />
       </div>
-      <div className='relative z-10 w-full'>
+      <div
+        data-wf-el={standaloneContainerHeight ? 'container' : undefined}
+        className={standaloneContainerHeight ? 'relative z-10 mx-auto max-w-[1238px]' : 'relative z-10 w-full'}
+        style={standaloneContainerHeight ? { height: `${standaloneContainerHeight}px` } : undefined}
+      >
         <WebflowFooterContent
           showSocialLinks={showSocialLinks}
+          containerWfEl={standaloneContainerHeight ? null : undefined}
           {...ctaProps}
         />
       </div>
+      {standaloneContainerHeight ? <div aria-hidden='true' style={{ height: `${standaloneContainerFlowSpacerHeight}px` }} /> : null}
       {compactNav && compactSpacerHeight > 0 ? <div aria-hidden='true' style={{ height: `${compactSpacerHeight}px` }} /> : null}
     </section>
   );

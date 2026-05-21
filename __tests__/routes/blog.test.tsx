@@ -60,6 +60,7 @@ describe('Blog route', () => {
 
     expect(container.querySelector('main')?.className).toContain('flex flex-col');
     expect(container.querySelector('[data-wf-el="hero-content"]')).toBeInTheDocument();
+    expect(container.querySelector('[data-wf-el="section-hero"] [data-wf-el="container"]')).toHaveStyle({ height: '284.48px' });
     expect(container.querySelector('[data-wf-el="standard-collection-list-item"]')).toBeInTheDocument();
     expect(screen.getByText('Insights and updates from the OpenHands team')).toHaveAttribute('data-wf-el', 'paragraph-lg');
     expect(newsletterPrompt.className).toContain('text-[16px]');
@@ -83,6 +84,7 @@ describe('Blog route', () => {
     expect(
       screen.getByText('Building the open standard for autonomous software development.')
     ).toBeInTheDocument();
+    expect(Array.from(container.querySelectorAll('[data-wf-el="container"]')).at(-1)).toHaveStyle({ height: '950px' });
     expect(screen.getByText(/OpenHands - All rights reserved/)).toBeInTheDocument();
     expect(
       screen.queryByRole('heading', {

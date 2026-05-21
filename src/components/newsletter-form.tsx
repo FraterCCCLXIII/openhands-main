@@ -36,7 +36,7 @@ export const NewsletterForm: React.FC<NewsletterFormProps> = ({
             required
             pattern='[^@]+@[^.]+\..+'
             className='min-h-[52px] w-full rounded-[8px] border-none bg-white text-[16px] leading-[1.5] text-[#5f5f5f] outline-none transition-colors placeholder:text-[#b3a88c] focus:ring-1 focus:ring-brand-accent'
-            style={{ verticalAlign: 'middle', marginBottom: '10px', padding: '25.6px 12px', height: '51px', boxSizing: 'border-box' }}
+            style={{ verticalAlign: 'middle', marginBottom: '10px', padding: '25.6px 12px', height: '51px', minHeight: '0px', boxSizing: 'border-box' }}
           />
           <input
             data-wf-el='button'
@@ -44,12 +44,12 @@ export const NewsletterForm: React.FC<NewsletterFormProps> = ({
             value='Subscribe'
             disabled={disabled}
             className='btn-primary inline-flex min-h-[52px] cursor-pointer items-center justify-center rounded-[8px] px-[30.4px] py-[12px] text-[16px] font-medium leading-[1.3] disabled:cursor-not-allowed disabled:opacity-50'
-            style={{ boxShadow: 'rgba(0, 0, 0, 0) 0px 0px 0px 0px inset', marginTop: '0px', marginBottom: '10px', position: 'relative', minHeight: 'auto', minWidth: 'auto', gap: '6.4px' }}
+            style={{ boxShadow: 'rgba(0, 0, 0, 0) 0px 0px 0px 0px inset', marginTop: '0px', marginBottom: '10px', position: 'relative', minHeight: 'auto', minWidth: 'auto', gap: '6.4px', paddingTop: '14.4px', paddingBottom: '14.4px' }}
           />
         </div>
 
         <p data-wf-el='eyebrow' className='m-0 max-w-[480px] text-center font-mono text-[12px] leading-[14.4px] text-[#5f5f5f]' style={{ textWrap: 'pretty' }}>
-          By submitting your email you agree to our{' '}
+          {'By submitting your email you agree to our '}
           <a
             href='/privacy'
             target='_blank'

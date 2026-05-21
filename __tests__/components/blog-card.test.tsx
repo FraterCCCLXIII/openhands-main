@@ -36,12 +36,14 @@ describe('BlogCard', () => {
         href='/blog/openhands-product-update---may-2026'
         img='/assets/update.png'
         webflowIndexCard
+        verticalOffset={49}
       />
     );
 
     const card = screen.getByRole('link', { name: /May 20, 2026\s+OpenHands Product Update/i });
 
     expect(card).toHaveAttribute('data-wf-el', 'blog-item');
+    expect(card).toHaveStyle({ maxWidth: '100%', top: '-49px' });
     expect(card.querySelector('[data-wf-el="standard-media"]')).toBeInTheDocument();
     expect(card.querySelector('img')).toHaveAttribute('data-wf-el', 'standard-media-img');
     expect(screen.getByText('May 20, 2026')).toHaveAttribute('data-wf-el', 'paragraph-sm');
