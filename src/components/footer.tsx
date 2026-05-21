@@ -293,7 +293,7 @@ const WebflowFooterContent = ({
       <div className='row row-justify-center u-mb-md' style={{ ...FOOTER_ROW_STYLE, justifyContent: 'center', marginBottom: '40px' }}>
         <div className='col col-lg-8' style={FOOTER_COL_LG_8_STYLE}>
           {showCopyright ? (
-            <div data-wf-el='eyebrow' className='eyebrow u-text-center' style={{ textAlign: 'center', marginBottom: '21.12px', fontFamily: 'GeistMono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace', fontSize: '14px', fontWeight: 400, lineHeight: '16.896px' }}>
+            <div data-wf-el='eyebrow' className='eyebrow u-text-center' style={{ textAlign: 'center', marginBottom: '21.12px', fontFamily: 'GeistMono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace', fontSize: '14px', fontWeight: 400, lineHeight: '16.896px', wordSpacing: '0.2px' }}>
               © <span data-year=' '>{currentYear}</span> OpenHands - All rights reserved
             </div>
           ) : (

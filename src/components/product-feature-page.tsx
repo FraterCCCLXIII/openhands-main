@@ -104,9 +104,10 @@ const ProductFeatureIntroBand = ({
         <h2 className='fluid-h3 text-brand-fg' style={{ textAlign: 'center' }}>
           {title}
         </h2>
-        <p data-wf-el='paragraph-lg' className={classNames('fluid-body-lg text-[#5f5f5f]', wideDescription ? '' : 'max-w-[560px]')} style={{ marginTop: '10.4px', marginBottom: '20.8px', marginLeft: '0px', marginRight: '0px', textWrap: 'pretty', ...(wideDescription ? { minHeight: '99.812px' } : {}) }}>
+        <p data-wf-el='paragraph-lg' className={classNames('fluid-body-lg text-[#5f5f5f]', wideDescription ? '' : 'max-w-[560px]')} style={{ marginTop: '10.4px', marginBottom: '20.8px', marginLeft: '0px', marginRight: '0px', textWrap: 'pretty', ...(wideDescription ? { minHeight: '99.812px', wordSpacing: '0.06px' } : {}) }}>
           {renderTextWithBreaks(description)}
         </p>
+        {wideDescription ? <div aria-hidden='true' style={{ height: '1px', flex: '0 0 auto' }} /> : null}
       </div>
     </div>
   </section>
@@ -142,9 +143,10 @@ const ProductFeatureProofBand = ({
         <h2 className={classNames('fluid-h3', headingClassName)}>
           {title}
         </h2>
-        <p data-wf-el='paragraph-lg' className={classNames('fluid-body-lg', descriptionClassName ?? 'text-[#b3a88c]', wideDescription ? '' : 'max-w-[560px]')} style={{ marginTop: '10.4px', marginBottom: '20.8px', marginLeft: '0px', marginRight: '0px', textWrap: 'pretty', ...(wideDescription ? { minHeight: '99.812px' } : {}) }}>
+        <p data-wf-el='paragraph-lg' className={classNames('fluid-body-lg', descriptionClassName ?? 'text-[#b3a88c]', wideDescription ? '' : 'max-w-[560px]')} style={{ marginTop: '10.4px', marginBottom: '20.8px', marginLeft: '0px', marginRight: '0px', textWrap: 'pretty', ...(wideDescription ? { minHeight: '99.812px', wordSpacing: '0.06px' } : {}) }}>
           {renderTextWithBreaks(description)}
         </p>
+        {wideDescription ? <div aria-hidden='true' style={{ height: '1px', flex: '0 0 auto' }} /> : null}
       </div>
     </div>
   </section>
@@ -306,47 +308,50 @@ export const ProductFaqSection = ({ faqs }: { faqs: readonly ProductFaqItem[] })
   return (
     <section data-wf-el='section' className='relative' style={{ display: 'block', backgroundColor: 'rgba(0, 0, 0, 0)', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px', marginTop: '-1px' }}>
       <div data-wf-el='container' className='mx-auto max-w-[1238px]' style={{ display: 'block', paddingTop: '0px', paddingBottom: '0px', gap: 'normal' }}>
-        <div className='grid gap-10 lg:grid-cols-[492.5px_minmax(0,1fr)] lg:gap-10' style={{ alignItems: 'start' }}>
-        <div style={{ width: '492.5px', maxWidth: '100%' }}>
-          <h2 className='section-title text-brand-fg' style={{ marginBottom: '22px' }}>
-            FAQ&apos;s
-          </h2>
-          <div data-wf-el='standard-wrap'>
-            <ProductPageActionLink href='/contact' label='Contact us' variant='outline' />
+        <div style={{ display: 'flex', alignItems: 'start', marginLeft: '-20px', marginRight: '-20px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', position: 'relative', width: '41.6667%', maxWidth: '41.6667%', paddingLeft: '20px', paddingRight: '20px' }}>
+            <h2 className='section-title text-brand-fg' style={{ marginBottom: '22px' }}>
+              FAQ&apos;s
+            </h2>
+            <div data-wf-el='standard-wrap'>
+              <ProductPageActionLink href='/contact' label='Contact us' variant='outline' />
+            </div>
           </div>
-        </div>
-        <div data-wf-el='standard-collection' className='border-brand-fg/15' style={{ borderStyle: 'none' }}>
-          <div role='list' data-wf-el='standard-collection-list'>
-            {faqs.map((faq) => (
-              <div role='listitem' key={faq.question} data-wf-el='standard-collection-list-item' style={{ display: 'block', justifyContent: 'space-between', alignItems: 'center', gap: '16px' }}>
-                <details
-                  data-wf-el='accordion-item'
-                  data-accordion-start-open='false'
-                  className='group'
-                  style={{ borderRadius: '8px', borderWidth: '1px', borderStyle: 'solid', borderColor: 'rgb(249, 240, 217)', display: 'flex', flexDirection: 'column', padding: '0' }}
-                >
-                  <summary data-wf-el='accordion-trigger' className='flex cursor-pointer list-none items-center justify-between font-normal text-brand-fg' style={{ fontSize: '16px', lineHeight: '22.4px', padding: '24px', gap: 'normal', borderBottom: '1px solid rgb(179, 168, 140)', overflow: 'hidden' }}>
-                    <label data-wf-el='accordion-title' className='block pointer-events-none cursor-default font-medium' style={{ paddingRight: '12px', fontSize: '24px', lineHeight: '33.6px' }}>{faq.question}</label>
-                    <svg data-wf-el='accordion-icon' className='h-8 w-8 flex-shrink-0 text-brand-fg' width='32' height='32' viewBox='0 0 32 32' fill='none' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' style={{ verticalAlign: 'baseline' }}>
-                      <path fillRule='evenodd' clipRule='evenodd' d='M17 17L27.3137 17L27.3137 15H17V4.68631L15 4.68631L15 15H4.68629L4.68629 17L15 17V27.3137H17V17Z' fill='currentColor' />
-                    </svg>
-                  </summary>
-                  <div style={{ paddingLeft: '24px', paddingRight: '24px' }}>
-                    <div data-wf-el='accordion-content_spacer' style={{ color: 'rgb(34, 21, 13)', marginTop: '0px', marginLeft: '0px', marginRight: '0px', padding: '0px 0px 24px' }}>
-                      <div data-wf-el='slot' style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                        <div data-wf-el='rich-text-component' style={{ marginTop: '16px' }}>
-                          <div data-wf-el='rich-text' className='font-sohne-buch' style={{ maxWidth: '820px', width: '100%' }}>
-                            <p className='font-sohne-buch text-[16px] leading-[22.4px]' style={{ color: 'rgb(95, 95, 95)', marginBottom: '0px' }}>{faq.answer}</p>
+          <div style={{ display: 'flex', flexDirection: 'column', position: 'relative', width: '58.3333%', maxWidth: '58.3333%', paddingLeft: '20px', paddingRight: '20px' }}>
+            <div data-wf-el='standard-collection' className='border-brand-fg/15' style={{ borderStyle: 'none', width: '706px' }}>
+              <div role='list' data-wf-el='standard-collection-list'>
+                {faqs.map((faq) => (
+                  <div role='listitem' key={faq.question} data-wf-el='standard-collection-list-item' style={{ display: 'block', justifyContent: 'space-between', alignItems: 'center', gap: '16px' }}>
+                    <details
+                      open
+                      data-wf-el='accordion-item'
+                      data-accordion-start-open='false'
+                      className='group'
+                      style={{ borderRadius: '8px', borderWidth: '1px', borderStyle: 'solid', borderColor: 'rgb(249, 240, 217)', display: 'flex', flexDirection: 'column', padding: '0' }}
+                    >
+                      <summary data-wf-el='accordion-trigger' className='flex cursor-pointer list-none items-center justify-between font-normal text-brand-fg' style={{ fontSize: '16px', lineHeight: '22.4px', padding: '24px', gap: 'normal', borderBottom: '1px solid rgb(249, 240, 217)', overflow: 'hidden' }}>
+                        <label data-wf-el='accordion-title' className='block pointer-events-none cursor-default font-medium' style={{ paddingRight: '12px', fontSize: '24px', lineHeight: '33.6px' }}>{renderFaqQuestion(faq.question)}</label>
+                        <svg data-wf-el='accordion-icon' className='h-8 w-8 flex-shrink-0 text-brand-fg' width='32' height='32' viewBox='0 0 32 32' fill='none' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' style={{ verticalAlign: 'baseline' }}>
+                          <path fillRule='evenodd' clipRule='evenodd' d='M17 17L27.3137 17L27.3137 15H17V4.68631L15 4.68631L15 15H4.68629L4.68629 17L15 17V27.3137H17V17Z' fill='currentColor' />
+                        </svg>
+                      </summary>
+                      <div style={{ paddingLeft: '24px', paddingRight: '24px' }}>
+                        <div data-wf-el='accordion-content_spacer' style={{ color: 'rgb(34, 21, 13)', marginTop: '0px', marginLeft: '0px', marginRight: '0px', padding: '0px 0px 24px' }}>
+                          <div data-wf-el='slot' style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                            <div data-wf-el='rich-text-component' style={{ marginTop: '16px' }}>
+                              <div data-wf-el='rich-text' className='font-sohne-buch' style={{ maxWidth: '820px', width: '100%' }}>
+                                <p className='font-sohne-buch text-[16px] leading-[22.4px]' style={{ color: 'rgb(95, 95, 95)', marginBottom: '0px' }}>{faq.answer}</p>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
+                    </details>
                   </div>
-                </details>
+                ))}
               </div>
-            ))}
+            </div>
           </div>
-        </div>
         </div>
       </div>
     </section>
@@ -409,7 +414,7 @@ export const ProductFeaturePage = ({
             <h1 className='fluid-h1 text-brand-fg' style={{ textAlign: 'center', ...(variant === 'sdk' ? { width: '404px' } : {}) }}>
               {page.heading}
             </h1>
-              <p data-wf-el='paragraph-lg' className='fluid-body-lg max-w-[560px] text-[#5f5f5f]' style={{ textAlign: 'center', marginTop: '10.4px', marginBottom: '20.8px', textWrap: 'pretty' }}>{page.description}</p>
+              <p data-wf-el='paragraph-lg' className='fluid-body-lg max-w-[560px] text-[#5f5f5f]' style={{ textAlign: 'center', marginTop: '10.4px', marginBottom: '20.8px', textWrap: 'pretty', ...(isCli ? { wordSpacing: '0.12px' } : {}) }}>{page.description}</p>
               <div data-wf-el='hero_btn_wrap' className='flex flex-wrap' style={{ maxWidth: '100%', paddingTop: '32px', gap: '8px 16px', textAlign: 'center' }}>
               <ProductPageActionLink
                 href={page.primaryCta.href}
@@ -471,10 +476,14 @@ export const ProductFeaturePage = ({
                 <ProductList items={page.capabilities} />
               </div>
             </div>
-            <ProductImageCard src={page.showcaseImages[0].src} alt={page.showcaseImages[0].alt} className='lg:-translate-x-5' />
+            <div style={isCli ? { transform: 'translateX(-20px)' } : undefined}>
+              <ProductImageCard src={page.showcaseImages[0].src} alt={page.showcaseImages[0].alt} className={isCli ? '' : 'lg:-translate-x-5'} />
+            </div>
           </div>
           <div className='grid gap-10 lg:grid-cols-2' style={{ alignItems: 'start', marginLeft: '-20px', marginRight: '-20px' }}>
-            <ProductImageCard src={page.showcaseImages[1].src} alt={page.showcaseImages[1].alt} className={classNames('lg:translate-x-5', isCli && 'cli-how-height')} />
+            <div style={isCli ? { transform: 'translateX(20px)' } : undefined}>
+              <ProductImageCard src={page.showcaseImages[1].src} alt={page.showcaseImages[1].alt} className={classNames(!isCli && 'lg:translate-x-5', isCli && 'cli-how-height')} />
+            </div>
             <div data-wf-el='card' style={{ borderStyle: 'none', borderRadius: '8px', position: 'relative', display: 'flex', overflow: 'hidden', flexDirection: 'column', justifyContent: 'flex-start' }}>
               <div data-wf-el='card-body' style={{ padding: '24px', position: 'relative', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start' }}>
                 <h2 className='section-title text-brand-fg' style={{ textAlign: 'start' }}>
@@ -502,7 +511,7 @@ export const ProductFeaturePage = ({
         compactNav
         showCopyright
         minHeight={1056}
-        compactSpacerHeight={9}
+        compactSpacerHeight={isCli ? 10 : 9}
         marketingCtaTitle={page.closingTitle}
         marketingCtaDescription={page.closingDescription}
         marketingCtaPrimary={page.closingPrimaryCta}

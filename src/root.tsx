@@ -196,7 +196,7 @@ export default function App() {
   }, []);
 
   return (
-    <div data-wf-el='page-wrapper' className='relative' style={{ display: 'flex', flexDirection: 'column', backgroundColor: 'rgb(249, 240, 217)', minHeight: '100vh', overflow: 'clip' }}>
+    <div data-wf-el='page-wrapper' className='relative' style={{ display: 'flex', flexDirection: 'column', backgroundColor: 'rgb(249, 240, 217)', minHeight: '100vh', overflow: 'clip', ...(pathname === '/product/cli' ? { height: '5511px' } : {}) }}>
       <Sidebar
         ref={sidebarRef}
         isHidden={isSidebarHidden}
