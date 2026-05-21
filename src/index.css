@@ -445,6 +445,10 @@
     text-align: center;
   }
 
+  .dialog:not([open]) {
+    display: none;
+  }
+
   .dialog[open] {
     position: fixed;
     inset: 0;
