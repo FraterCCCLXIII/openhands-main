@@ -61,6 +61,7 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({
   showMenuIcon,
   onClickMenuButton,
+  width = 1024,
 }) => {
   const { scrollY } = useScroll();
   const location = useLocation();
@@ -68,6 +69,7 @@ export const Header: React.FC<HeaderProps> = ({
   const [textIsVisible, setTextIsVisible] = React.useState(true);
   const [resourcesOpen, setResourcesOpen] = React.useState(false);
   const [productOpen, setProductOpen] = React.useState(false);
+  const isMobile = width < 1024;
 
   useMotionValueEvent(scrollY, 'change', (latest) => {
     if (latest > 0) {
@@ -78,9 +80,9 @@ export const Header: React.FC<HeaderProps> = ({
   });
 
   return (
-    <nav data-wf-el='nav_wrap' className='sticky top-0 left-0 right-0 z-50 w-full' style={{ display: 'block', height: '84px', backgroundColor: 'rgb(249, 240, 217)', paddingTop: '1rem', paddingBottom: '1rem', containerType: 'inline-size' as React.CSSProperties['containerType'] }}>
+    <nav data-wf-el='nav_wrap' className='sticky top-0 left-0 right-0 z-50 w-full' style={{ display: 'block', height: isMobile ? '69.3437px' : '84px', backgroundColor: 'rgb(249, 240, 217)', paddingTop: '1rem', paddingBottom: '1rem', containerType: 'inline-size' as React.CSSProperties['containerType'] }}>
       <div data-wf-el='nav_contain' style={{ display: 'block', width: '95%', marginLeft: 'auto', marginRight: 'auto' }}>
-        <div data-wf-el='nav_grid' className='hidden lg:grid' style={{ display: 'grid', gap: '16px', gridTemplateColumns: '1fr min-content 1fr', alignContent: 'center', position: 'relative' }}>
+        <div data-wf-el='nav_grid' className='hidden lg:grid' style={{ display: isMobile ? 'none' : 'grid', gap: '16px', gridTemplateColumns: '1fr min-content 1fr', alignContent: 'center', position: 'relative' }}>
           <div className='flex justify-start'>
             {/* Live's `.nav_logo_link` has an explicit `width: 192px` —
               * the SVG natural size is 195×30 but the link clamps it. */}
@@ -281,7 +283,7 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
         {/* Mobile nav */}
-        <div className='flex items-center justify-between px-4 lg:hidden' style={{ height: '52px' }}>
+        <div className='flex items-center justify-between px-4 lg:hidden' style={{ height: isMobile ? '37.3437px' : '52px' }}>
           <div className='w-[38px]'>
             {showMenuIcon && (
               <button aria-label='Open Menu' onClick={onClickMenuButton}>

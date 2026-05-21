@@ -156,6 +156,7 @@ const footerNavLinkStyle = {
   alignItems: 'center',
   gap: '4.8px',
   padding: '14.4px 5px',
+  height: 'var(--footer-nav-link-height, auto)',
   fontSize: '16px',
   fontWeight: 500,
   lineHeight: '22.4px',
@@ -222,17 +223,18 @@ const WebflowFooterContent = ({
   };
 
   return (
-    <div data-wf-el={containerWfEl ?? undefined} className='container u-position-relative u-z-index-1' style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: '1238px', marginLeft: 'auto', marginRight: 'auto', ...containerStyle, ...(footerContainerTransform ? { transform: footerContainerTransform, transformOrigin: 'top' } : {}) }}>
+    <div data-wf-el={containerWfEl ?? undefined} className='container u-position-relative u-z-index-1' style={{ position: 'relative', zIndex: 1, width: 'var(--footer-container-width, 100%)', maxWidth: '1238px', height: 'var(--footer-container-height, auto)', top: 'var(--footer-container-top, 0px)', marginLeft: 'auto', marginRight: 'auto', ...containerStyle, ...(footerContainerTransform ? { transform: footerContainerTransform, transformOrigin: 'top' } : {}) }}>
+      <div style={{ transform: 'var(--footer-content-transform, none)' }}>
       {showMarketingCta ? (
-        <div className='row row-justify-center u-mt-md u-position-relative u-z-index-1' style={{ ...FOOTER_ROW_STYLE, justifyContent: 'center', position: 'relative', zIndex: 1, marginTop: '50px' }}>
-          <div className='col col-lg-8 col-sm-12' style={FOOTER_COL_LG_8_STYLE}>
+        <div className='row row-justify-center u-mt-md u-position-relative u-z-index-1' style={{ ...FOOTER_ROW_STYLE, justifyContent: 'center', position: 'relative', zIndex: 1, marginTop: 'var(--footer-cta-row-margin-top, 50px)' }}>
+          <div className='col col-lg-8 col-sm-12' style={{ ...FOOTER_COL_LG_8_STYLE, flexBasis: 'var(--footer-cta-col-basis, 66.67%)', maxWidth: 'var(--footer-cta-col-max-width, 66.6667%)' }}>
             <div className='h2 u-text-center u-mb-xs section-title text-brand-fg' style={{ textAlign: 'center', marginBottom: '22px', letterSpacing: '-0.02em' }}>
               {marketingCtaTitle ?? DEFAULT_CTA_TITLE}
             </div>
-            <p data-wf-el='paragraph-lg' className='u-m-0 u-text-darkgray u-text-center font-medium text-brand-muted' style={{ margin: '0px', textAlign: 'center', fontSize: '20.8px', lineHeight: '24.96px' }}>
+            <p data-wf-el='paragraph-lg' className='u-m-0 u-text-darkgray u-text-center font-medium text-brand-muted' style={{ margin: '0px', textAlign: 'center', fontSize: 'var(--footer-paragraph-lg-font-size, 20.8px)', lineHeight: 'var(--footer-paragraph-lg-line-height, 24.96px)', height: 'var(--footer-paragraph-lg-height, auto)' }}>
               {marketingCtaDescription ?? DEFAULT_CTA_DESCRIPTION}
             </p>
-            <div className='row row-gap-button u-mt-md row-justify-center' style={{ ...FOOTER_ROW_STYLE, justifyContent: 'center', columnGap: '16px', rowGap: '16px', marginTop: '51px' }}>
+            <div className='row row-gap-button u-mt-md row-justify-center' style={{ ...FOOTER_ROW_STYLE, justifyContent: 'center', columnGap: '16px', rowGap: '16px', marginTop: 'var(--footer-cta-button-margin-top, 51px)', flexDirection: 'var(--footer-cta-button-direction, row)' as React.CSSProperties['flexDirection'], alignItems: 'center' }}>
               <div className='col col-shrink' style={FOOTER_COL_SHRINK_NO_PADDING_STYLE}>
                 <OverlayLinkButton href={(marketingCtaPrimary ?? DEFAULT_CTA_PRIMARY).href} label={(marketingCtaPrimary ?? DEFAULT_CTA_PRIMARY).label} variant='primary' wfEl='button' textWfEl='btn-text' />
               </div>
@@ -247,7 +249,7 @@ const WebflowFooterContent = ({
       ) : null}
 
       {showSocialLinks ? (
-        <div data-wf-el='footer-social-row' className='row u-mt-lg row-justify-center u-mb-md' style={{ ...FOOTER_ROW_STYLE, justifyContent: 'center', marginTop: showMarketingCta ? '128px' : '80px', marginBottom: '49px', rowGap: '40px', textAlign: 'start' }}>
+        <div data-wf-el='footer-social-row' className='row u-mt-lg row-justify-center u-mb-md' style={{ ...FOOTER_ROW_STYLE, justifyContent: 'center', marginTop: showMarketingCta ? 'var(--footer-social-margin-top, 128px)' : '80px', marginBottom: '49px', rowGap: '40px', textAlign: 'start' }}>
           <div className='col' style={FOOTER_COL_STYLE}>
             <div className='row row-gap-sm row-justify-center' style={{ ...FOOTER_ROW_STYLE, justifyContent: 'center', columnGap: '8px', rowGap: '16px' }}>
               {SOCIAL_LINKS.map((item) => (
@@ -270,10 +272,10 @@ const WebflowFooterContent = ({
       ) : null}
 
       <div className='row row-justify-center u-mb-sm' style={{ ...FOOTER_ROW_STYLE, justifyContent: 'center', marginBottom: '24px' }}>
-        <div className='col col-lg-8 col-md-12' style={FOOTER_COL_LG_8_STYLE}>
-          <div data-wf-el='footer-nav' className='footer-nav justify-between' style={{ display: 'flex', flexFlow: 'row nowrap', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%', paddingBottom: '16px', borderBottom: '1px solid #b3a88c', textAlign: 'start' }}>
+        <div className='col col-lg-8 col-md-12' style={{ ...FOOTER_COL_LG_8_STYLE, flexBasis: 'var(--footer-nav-col-basis, 66.67%)', maxWidth: 'var(--footer-nav-col-max-width, 66.6667%)' }}>
+          <div data-wf-el='footer-nav' className='footer-nav justify-between' style={{ display: 'flex', flexFlow: 'var(--footer-nav-flow, row nowrap)', justifyContent: 'space-between', alignItems: 'var(--footer-nav-align, flex-start)', width: '100%', height: 'var(--footer-nav-height, auto)', paddingBottom: '16px', borderBottom: '1px solid #b3a88c', textAlign: 'start' }}>
             {FOOTER_NAV_ITEMS.map(renderTopLevelLink)}
-            <div data-wf-el='footer-drop' id='footer-resources' className='footer-drop' style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'flex-start', textAlign: 'start' }}>
+            <div data-wf-el='footer-drop' id='footer-resources' className='footer-drop' style={{ display: 'flex', flexDirection: 'column', alignItems: 'var(--footer-drop-align, flex-start)', justifyContent: 'flex-start', textAlign: 'start', height: 'var(--footer-drop-height, auto)' }}>
               <a href='#footer-resources' data-wf-el='nav-link' className='nav-link hover:text-[#8a5f45]' style={footerNavLinkStyle}>
                 Resources
               </a>
@@ -315,20 +317,19 @@ const WebflowFooterContent = ({
             to='/privacy'
             data-wf-el='eyebrow'
             className='eyebrow u-text-center is-link hover:text-[#8a5f45]'
-            style={{ alignSelf: 'center', display: 'block', textAlign: 'center', marginBottom: '21.12px', fontFamily: 'GeistMono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace', fontSize: '14px', fontWeight: 400, lineHeight: '16.896px', textDecoration: 'none', cursor: 'pointer' }}
+            style={{ alignSelf: 'center', display: 'block', textAlign: 'center', marginBottom: '21.12px', fontFamily: 'GeistMono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace', fontSize: '14px', fontWeight: 400, lineHeight: '16.896px', textDecoration: 'none', cursor: 'pointer', width: 'var(--footer-privacy-width, auto)' }}
           >
             Privacy Policy
           </Link>
         </div>
         <div className='col col-lg-8' style={{ ...FOOTER_COL_LG_8_STYLE, marginTop: '39px' }}>
           <div className='row row-gap-sm row-justify-center' style={{ ...FOOTER_ROW_STYLE, justifyContent: 'center', rowGap: '16px' }}>
-            <div className='col col-shrink' style={FOOTER_COL_SHRINK_STYLE}>
-              <div data-wf-el='standard-media' className='standard-media contain-center' style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', textAlign: 'start', width: '610px', height: '102px', objectFit: 'contain' }}>
-                <img data-wf-el='standard-media-img' src='/assets/webflow/backgrounds/openhands_logo_black.svg' alt='' style={{ display: 'block', width: '610px', height: '102px', textAlign: 'start', objectFit: 'scale-down' }} />
-              </div>
+            <div data-wf-el='standard-media' className='standard-media contain-center' style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', textAlign: 'start', width: 'var(--footer-logo-width, 610px)', height: 'var(--footer-logo-height, 102px)', objectFit: 'contain' }}>
+              <img data-wf-el='standard-media-img' src='/assets/webflow/backgrounds/openhands_logo_black.svg' alt='' style={{ display: 'block', width: 'var(--footer-logo-width, 610px)', height: 'var(--footer-logo-height, 102px)', textAlign: 'start', objectFit: 'scale-down' }} />
             </div>
           </div>
         </div>
+      </div>
       </div>
     </div>
   );
@@ -377,8 +378,8 @@ export const Footer = ({
     // footers; we want the same totals.
     <section
       data-wf-el='section'
-      className='relative overflow-visible bg-brand-accent text-brand-fg'
-      style={{ padding: '80px 0px' }}
+      className='section u-bg-primary relative overflow-visible bg-brand-accent text-brand-fg footer-webflow-layout'
+      style={{ padding: 'var(--footer-section-padding, 80px) 0px', height: 'var(--footer-section-height, auto)' }}
     >
       <div data-wf-el='asci-wrap' className='absolute inset-0 overflow-hidden' style={{ maxHeight: 'none' }}>
         <img

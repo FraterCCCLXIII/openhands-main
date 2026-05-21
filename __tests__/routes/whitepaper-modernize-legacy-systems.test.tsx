@@ -17,7 +17,7 @@ describe('modernize legacy systems whitepaper route', () => {
       screen.getByRole('heading', {
         name: /Whitepaper: Modernize legacy systems before your expertise disappears/i,
       }),
-    ).toHaveClass('fluid-h1');
+    ).toHaveClass('section-title');
     expect(screen.getByText(/The Large Codebase SDK from OpenHands fills that gap/i)).toBeInTheDocument();
     expect(
       screen.getByRole('heading', { level: 3, name: /What you'll learn in the whitepaper:/i }),
@@ -36,8 +36,12 @@ describe('modernize legacy systems whitepaper route', () => {
     expect(container.querySelector('.hs-form-frame')).toHaveAttribute('data-portal-id', '50790961');
     expect(container.querySelector('.hs-form-frame')).toHaveAttribute('data-form-id', '4426798e-b2ea-48ec-b9ee-e314cbeda890');
     expect(container.querySelector('[data-wf-el="whitepaper_layout"]')).toBeInTheDocument();
-    expect(container.querySelector('main')).toHaveStyle({ minHeight: 'calc(100vh - 84px)' });
+    expect(container.querySelector('main')).not.toHaveStyle({ minHeight: 'calc(100vh - 84px)' });
     expect(container.querySelector('main')).not.toHaveStyle({ height: 'calc(100vh - 84px)' });
+    expect(container.querySelector('main')).toHaveClass('whitepaper-modernize-page');
+    expect(container.querySelector('[data-wf-el="whitepaper_layout"]')).toHaveStyle({
+      gridTemplateColumns: 'var(--whitepaper-layout-columns, 1fr 1fr)',
+    });
 
     expect(container.querySelector('[data-wf-el="card-body"]')).toBeInTheDocument();
     expect(screen.getByText(/Bring your team into the loop/i)).toBeInTheDocument();

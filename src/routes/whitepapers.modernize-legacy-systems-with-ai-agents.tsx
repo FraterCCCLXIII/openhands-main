@@ -58,30 +58,30 @@ export default function WhitepaperModernizeLegacySystemsWithAiAgents() {
   }, []);
 
   return (
-    <main data-wf-el='page-main' className='page-main' style={{ display: 'flex', flexDirection: 'column', minHeight: 'calc(100vh - 84px)', backgroundColor: 'rgba(0, 0, 0, 0)' }}>
-      <section data-wf-el='section' className='section cc-themed' style={{ position: 'relative', padding: '80px 0px', backgroundColor: 'rgb(249, 240, 217)' }}>
-        <div data-wf-el='container' className='container' style={{ width: '100%', maxWidth: '1238px', marginLeft: 'auto', marginRight: 'auto' }}>
+    <main data-wf-el='page-main' className='page-main whitepaper-modernize-page' style={{ display: 'flex', flexDirection: 'column', backgroundColor: 'rgba(0, 0, 0, 0)' }}>
+      <section data-wf-el='section' className='section cc-themed' style={{ position: 'relative', padding: 'var(--whitepaper-section-padding, 80px) 0px', backgroundColor: 'rgb(249, 240, 217)' }}>
+        <div data-wf-el='container' className='container' style={{ width: 'var(--whitepaper-container-width, 100%)', maxWidth: '1238px', marginLeft: 'auto', marginRight: 'auto' }}>
           <div
             data-wf-el='whitepaper_heading-stack'
             className='whitepaper_heading-stack heading-stack is-center'
             style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', marginBottom: '32px', textAlign: 'center' }}
           >
-            <h1 data-wf-el='whitepaper_heading' className='whitepaper_heading h2 fluid-h1 text-brand-fg' style={{ width: '834px', maxWidth: '834px', marginBottom: '8.8px', letterSpacing: '-0.02em', textAlign: 'center' }}>
+            <h1 data-wf-el='whitepaper_heading' className='whitepaper_heading h2 section-title text-brand-fg' style={{ width: 'var(--whitepaper-heading-width, 834px)', maxWidth: 'var(--whitepaper-heading-max-width, 834px)', marginBottom: 'var(--whitepaper-heading-margin-bottom, 8.8px)', letterSpacing: '-0.02em', textAlign: 'center', position: 'relative' }}>
               Whitepaper: Modernize legacy systems before your expertise disappears
             </h1>
-            <p data-wf-el='whitepaper_paragraph' className='whitepaper_paragraph u-text-darkgray font-medium text-[#5f5f5f]' style={{ width: '657px', maxWidth: '657px', marginTop: '0px', marginBottom: '20.8px', fontSize: '20.8px', lineHeight: '24.96px', textAlign: 'center' }}>
+            <p data-wf-el='whitepaper_paragraph' className='whitepaper_paragraph u-text-darkgray fluid-body-lg text-[#5f5f5f]' style={{ width: 'var(--whitepaper-paragraph-width, 657px)', maxWidth: 'var(--whitepaper-paragraph-max-width, 657px)', marginTop: '0px', marginBottom: 'var(--whitepaper-paragraph-margin-bottom, 20.8px)', textAlign: 'center' }}>
               Legacy modernization projects fail 74% of the time and the engineers who understand your COBOL, mainframe, and legacy systems are retiring faster than you can replace them.
             </p>
           </div>
 
-          <div data-wf-el='whitepaper_layout' className='whitepaper_layout' style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px' }}>
-            <div data-wf-el='whitepaper_content' className='whitepaper_content' style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'flex-start', gap: '24px', maxWidth: '52ch' }}>
+          <div data-wf-el='whitepaper_layout' className='whitepaper_layout' style={{ display: 'grid', gridTemplateColumns: 'var(--whitepaper-layout-columns, 1fr 1fr)', gap: '32px' }}>
+            <div data-wf-el='whitepaper_content' className='whitepaper_content' style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'flex-start', gap: '24px', maxWidth: 'var(--whitepaper-content-max-width, 52ch)' }}>
               <p className='text-[16px] leading-[22.4px] text-brand-fg' style={{ marginBottom: '16px' }}>
                 The Large Codebase SDK from OpenHands fills that gap. By combining AI coding agents with static analysis, it maps the full dependency structure of your codebase and orchestrates migration work in the right order so agents can run in parallel without producing conflicting changes, making enterprise-scale refactors practical for the first time. Model-agnostic and deployable on-prem or in the cloud, it&apos;s built for organizations where data sensitivity and regulatory compliance aren&apos;t optional.
               </p>
 
               <div data-wf-el='whitepaper_list_wrap' className='whitepaper_list_wrap'>
-                <h3 data-wf-el='whitepaper_list_heading' className='whitepaper_list_heading font-medium text-brand-fg' style={{ marginBottom: '20.8px', fontSize: '20.8px', lineHeight: '24.96px' }}>
+                <h3 data-wf-el='whitepaper_list_heading' className='whitepaper_list_heading fluid-body-lg text-brand-fg' style={{ marginBottom: 'var(--whitepaper-list-heading-margin-bottom, 20.8px)' }}>
                   What you&apos;ll learn in the whitepaper:
                 </h3>
                 <ul data-wf-el='product-list_ul' className='product-list_ul' style={{ width: '100%', margin: '0px', paddingLeft: '0px' }}>
@@ -95,7 +95,7 @@ export default function WhitepaperModernizeLegacySystemsWithAiAgents() {
             </div>
 
             <div data-wf-el='card' className='card u-border-dark' style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', alignSelf: 'start', position: 'relative', overflow: 'hidden', border: '1px solid rgb(34, 21, 13)', borderRadius: '8px' }}>
-              <div data-wf-el='card-body' className='card-body' style={{ position: 'relative', padding: '24px', flex: '1 1 0%', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start' }}>
+              <div data-wf-el='card-body' className='card-body' style={{ position: 'relative', padding: 'var(--whitepaper-card-body-padding, 24px)', flex: '1 1 0%', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start' }}>
                 {isDownloadReady ? (
                   <div role='status' className='whitepaper-link' style={{ textAlign: 'center', paddingTop: '16px', paddingBottom: '16px' }}>
                     <h3 className='fluid-h3 text-brand-fg'>Download the Whitepaper</h3>

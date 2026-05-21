@@ -225,6 +225,7 @@ npm run parity:checklist  # Crawl openhands.dev and compare against local site
 - Live `/enterprise` currently serves a feature-flagged hero variant in parity checks: the visible H1 is `Open source agent infrastructure for code modernization` with subcopy `Build AI coding agents around your stack, your rules, your team.` The AMD quote remains an `h2`, `Measured impact` is a non-paragraph eyebrow, and the whitepaper promo title is a single `h3` without a separate `Whitepaper` paragraph.
 - Live `/privacy` legal rich text only treats literal URL text as visible anchors in parity extraction; browser names, DAA references, and `contact@all-hands.dev` should remain plain text even if the markdown source contains links.
 - Live whitepaper parity is sensitive to control semantics: `What you'll learn in the whitepaper:` should be an `h3`, form field labels should be visually hidden (with placeholders / aria-labels carrying the copy), and the primary submit control should be an `input[type="submit"]` rather than a visible `<button>` label block.
+- Mobile `/whitepapers/modernize-legacy-systems-with-ai-agents` parity at 375px depends on the live Webflow one-column layout, 90% containers, 49.5714px section padding, collapsed static HubSpot form geometry, and a screenshot-only blank form area that appears after the parity script masks ASCII media (`data-parity-masked-media`). Keep the route-specific mobile CSS in `src/index.css` aligned with the parity script behavior.
 
 
 ## Product Subpage Parity Notes
