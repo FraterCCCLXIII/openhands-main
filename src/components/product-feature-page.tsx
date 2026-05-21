@@ -241,7 +241,7 @@ export const ProductComparisonTable = ({
           </div>
         </div>
         <div style={{ width: '100%', color: dark ? 'rgb(249, 240, 217)' : 'rgb(34, 21, 13)' }}>
-          <table data-wf-el='product-table' className='w-full border-collapse text-left' style={{ display: 'table', position: 'relative', overflow: 'visible', marginTop: '49.6px' }}>
+          <table data-wf-el='product-table' className='w-full border-collapse text-left' style={{ display: 'table', position: 'relative', overflow: 'visible', marginTop: '49.6px', color: 'rgb(249, 240, 217)' }}>
             <colgroup>
               <col style={{ width: '407px' }} />
               <col style={{ width: '262px' }} />

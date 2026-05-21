@@ -19,7 +19,7 @@ export const PRODUCT_SURFACES: ProductSurface[] = [
     title: 'Web GUI',
     subtitle: 'Agentic development, made human.',
     description:
-      'Plan, run, and review agent work together in a collaborative UI.',
+      'Plan, run, and review agent work together in a collaborative UI.',
     href: '/product/gui',
     image: '/assets/webflow/misc/6994c3bfa634f5f3966d2150_4c76230966d0d54a446a009e4f4a19c2_gui.png',
   },

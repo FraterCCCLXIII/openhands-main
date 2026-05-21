@@ -30,9 +30,11 @@ const Product = () => {
         block on live's HTML).  Mirroring that structure keeps the
         section count and per-section heights aligned with live.
       */}
-      <section data-wf-el='section-product_hero' style={{ display: 'block', backgroundColor: 'rgba(0, 0, 0, 0)', paddingTop: '0px', paddingBottom: '0px', paddingLeft: '0px', paddingRight: '0px' }} className='relative'>
-        <div data-wf-el='asci-wrap' className='pointer-events-auto absolute inset-x-0 top-0 h-screen overflow-hidden' style={{ '--ascii-opacity': '0.12' } as CSSProperties} aria-hidden='true'>
-          <ASCIIAnimation className='h-full w-full' />
+      <section data-wf-el='section-product_hero' style={{ display: 'block', backgroundColor: 'rgba(0, 0, 0, 0)', paddingTop: '0px', paddingBottom: '0px', paddingLeft: '0px', paddingRight: '0px' }}>
+        <div data-wf-el='asci-wrap' className='pointer-events-auto absolute inset-x-0 top-0 h-screen overflow-hidden' style={{ '--ascii-opacity': '0.12', maxHeight: '2400px' } as CSSProperties} aria-hidden='true'>
+          <div data-wf-el='asci-embed' className='h-full w-full overflow-hidden'>
+            <ASCIIAnimation className='h-full w-full' />
+          </div>
         </div>
         <div data-wf-el='hero' className='relative flex w-full flex-col items-center overflow-hidden' style={{ height: '432px', justifyContent: 'flex-start', textAlign: 'start' }}>
           <div data-wf-el='container' className='mx-auto max-w-[1238px]' style={{ display: 'block', width: '100%' }}>
@@ -48,7 +50,7 @@ const Product = () => {
                 Build better software with autonomous cloud agent
               </h1>
               <p data-wf-el='paragraph-lg' className='fluid-body-lg text-[#5f5f5f]' style={{ marginTop: '10.4px', marginBottom: '20.8px', maxWidth: '560px', textAlign: 'center' }}>
-                Offload toil, ship faster. OpenHands automates real development tasks with transparency, governance, and choice.
+                Offload toil, ship faster. OpenHands automates real development tasks with transparency, governance, and choice.
               </p>
               <div data-wf-el='hero_btn_wrap' className='flex flex-wrap' style={{ paddingTop: '32px', gap: '8px 16px', maxWidth: '100%' }}>
                 <ProductPageActionLink
@@ -132,6 +134,7 @@ const Product = () => {
         standalone
         showSocialLinks
         compactNav
+        compactSpacerHeight={9}
         showCopyright
         minHeight={1144}
         marketingCtaPrimary={{ href: 'https://app.all-hands.dev/', label: 'Try it live' }}
