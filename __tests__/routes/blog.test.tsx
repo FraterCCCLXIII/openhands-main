@@ -58,10 +58,14 @@ describe('Blog route', () => {
       'Sign up for our newsletter for updates, events, and community insights.'
     );
 
+    expect(container.querySelector('main')?.className).toContain('blog-index-page');
     expect(container.querySelector('main')?.className).toContain('flex flex-col');
     expect(container.querySelector('[data-wf-el="hero-content"]')).toBeInTheDocument();
+    expect(container.querySelector('[data-wf-el="section-hero"]')).toHaveClass('blog-hero');
+    expect(container.querySelector('[data-wf-el="section-hero"] [data-wf-el="container"]')).toHaveClass('blog-hero-container');
     expect(container.querySelector('[data-wf-el="section-hero"] [data-wf-el="container"]')).toHaveStyle({ height: '284.48px' });
     expect(container.querySelector('[data-wf-el="standard-collection-list-item"]')).toBeInTheDocument();
+    expect(container.querySelector('.blog-grid-item')).toBeInTheDocument();
     expect(screen.getByText('Insights and updates from the OpenHands team')).toHaveAttribute('data-wf-el', 'paragraph-lg');
     expect(newsletterPrompt.className).toContain('text-[16px]');
     expect(screen.getByText('Introducing the OpenHands Index')).toBeInTheDocument();

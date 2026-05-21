@@ -40,9 +40,9 @@ export const FeaturedBlogCard: React.FC<FeaturedBlogCardProps> = ({
     <div className='absolute inset-0 bg-black/50 backdrop-blur-[2px]' />
 
     <div data-wf-el='blog-item-content' className='absolute inset-0 flex flex-col items-start justify-end'>
-      <div data-wf-el='card-body' className='relative flex h-full w-full flex-col items-start justify-end' style={{ padding: '24px' }}>
+      <div data-wf-el='card-body' className='featured-blog-card-body relative flex h-full w-full flex-col items-start justify-end' style={{ padding: '24px' }}>
         <div data-wf-el='standard-wrap' className='w-full'>
-          <div className='flex w-[496px] flex-col px-5'>
+          <div className='featured-blog-copy flex w-[496px] flex-col px-5'>
             <p data-wf-el='paragraph-lg' className='m-0 font-sohne text-lg lg:text-[20.8px] leading-[24.96px] font-medium text-brand-accent' style={{ textWrap: 'pretty' }}>
               {title}
             </p>
@@ -128,11 +128,11 @@ export const BlogCard: React.FC<BlogCardProps> = ({
   }
 
   return (
-    <Link to={href} className={`group relative block ${webflowIndexCard ? 'w-full' : ''}`} data-testid='blog-card' data-wf-el={webflowIndexCard ? 'blog-item' : undefined} style={webflowIndexCard ? { maxWidth: '100%', top: verticalOffset ? `-${verticalOffset}px` : undefined } : undefined}>
+    <Link to={href} className={`group relative block ${webflowIndexCard ? 'blog-grid-card w-full' : ''}`} data-testid='blog-card' data-wf-el={webflowIndexCard ? 'blog-item' : undefined} style={webflowIndexCard ? { maxWidth: '100%', top: verticalOffset ? `-${verticalOffset}px` : undefined } : undefined}>
       <div className='flex flex-col gap-6'>
-        <div data-wf-el={webflowIndexCard ? 'standard-media' : undefined} className='overflow-hidden rounded-[6px]' style={webflowIndexCard ? { minHeight: '270px' } : undefined}>{image}</div>
+        <div data-wf-el={webflowIndexCard ? 'standard-media' : undefined} className='blog-card-media overflow-hidden rounded-[6px]' style={webflowIndexCard ? { minHeight: '270px' } : undefined}>{image}</div>
 
-        <div className='flex max-w-[352px] flex-col gap-0'>
+        <div className='blog-card-copy flex max-w-[352px] flex-col gap-0'>
           {showDate && date && (
             <p data-wf-el={webflowIndexCard ? 'paragraph-sm' : undefined} className='text-[14.4px] leading-[21.6px] text-[#5f5f5f]' style={{ marginTop: '0px', marginBottom: '14.4px' }}>{formatDate(date)}</p>
           )}

@@ -82,28 +82,18 @@ const Blog = () => {
   const hasMoreBlogs = visibleGridPosts < gridBlogs.length;
 
   return (
-    <main data-wf-el='page-main' className='flex flex-col'>
-      <section data-wf-el='section-hero' className='relative w-full' style={{ height: '396.484px', textAlign: 'start' }}>
+    <main data-wf-el='page-main' className='blog-index-page flex flex-col'>
+      <section data-wf-el='section-hero' className='blog-hero relative w-full' style={{ height: '396.484px', textAlign: 'start' }}>
         <div data-wf-el='hero-content' className='relative flex h-full w-full flex-col items-center justify-center text-center' style={{ paddingTop: '56px', paddingBottom: '56px' }}>
-          <div data-wf-el='container' className='mx-auto max-w-[1238px] text-center' style={{ height: '284.48px' }}>
+          <div data-wf-el='container' className='blog-hero-container mx-auto max-w-[1238px] text-center' style={{ height: '284.48px' }}>
             <h1 className='fluid-h1 font-sohne text-brand-fg' style={{ width: '1238px', maxWidth: '100%' }}>
               OpenHands Blog
             </h1>
-            {/* Live's "Insights and updates" paragraph has
-              * `margin-bottom: 1.3rem` (20.8px); without it the newsletter
-              * heading P (16px below) sat too close to it. */}
-            <p data-wf-el='paragraph-lg' className='font-medium text-[#5f5f5f]' style={{ width: '1238px', maxWidth: 'none', marginTop: '12px', marginBottom: '20.8px', fontSize: '20.8px', lineHeight: '1.2' }}>
+            <p data-wf-el='paragraph-lg' className='blog-hero-subtitle font-medium text-[#5f5f5f]' style={{ width: '1238px', maxWidth: 'none', marginTop: '12px', marginBottom: '20.8px', fontSize: '20.8px', lineHeight: '1.2' }}>
               Insights and updates from the OpenHands team
             </p>
-            {/* Live's newsletter prompt P sits centered above the form
-             * inside a flex column container — no `mt-[70px]` push and no
-             * mx-auto auto-margins (those translate to live=0/test=367.5
-             * left/right pseudo-margins because `mx-auto` resolves to
-             * `(parent - child) / 2`). Live's effective layout is
-             * `marginTop: 0; marginLeft/Right: 0` — achieve that by letting
-             * the flex container handle horizontal centering. */}
-            <div aria-hidden='true' style={{ height: '48px' }} />
-            <div data-wf-el='align-center' className='flex w-full items-center justify-center'>
+            <div className='blog-hero-newsletter-spacer' aria-hidden='true' style={{ height: '48px' }} />
+            <div data-wf-el='align-center' className='blog-newsletter-prompt flex w-full items-center justify-center'>
               <p className='max-w-[503px] text-center text-[16px] leading-[22.4px] text-[#22150d]' style={{ marginTop: '0px', marginBottom: '16px', marginLeft: '0px', marginRight: '0px' }}>
                 Sign up for our newsletter for updates, events, and community insights.
               </p>
@@ -119,8 +109,8 @@ const Blog = () => {
       </section>
 
       {featuredBlog && (
-        <section data-wf-el='section' className='relative w-full' style={{ paddingTop: '80px', paddingBottom: '80px', height: '780px' }}>
-          <div data-wf-el='container' className='mx-auto max-w-[1238px]'>
+        <section data-wf-el='section' className='blog-featured-section relative w-full' style={{ paddingTop: '80px', paddingBottom: '80px', height: '780px' }}>
+          <div data-wf-el='container' className='blog-section-container mx-auto max-w-[1238px]'>
             <div data-wf-el='standard-collection'>
               <div data-wf-el='standard-collection-list'>
                 <div data-wf-el='standard-collection-list-item' style={{ justifyContent: 'space-between', alignItems: 'center', gap: '16px' }}>
@@ -138,12 +128,12 @@ const Blog = () => {
         </section>
       )}
 
-      <section data-wf-el='section' id='blog-grid' className='relative w-full' style={{ paddingBottom: '80px', height: '1015.94px' }}>
-        <div data-wf-el='standard-collection' className='mx-auto max-w-[1238px]'>
-          <div data-wf-el='standard-collection-list' className='flex flex-wrap' style={{ marginLeft: '-20px', marginRight: '-20px', rowGap: '40px' }}>
+      <section data-wf-el='section' id='blog-grid' className='blog-grid-section relative w-full' style={{ paddingBottom: '80px', height: '1015.94px' }}>
+        <div data-wf-el='standard-collection' className='blog-grid-collection mx-auto max-w-[1238px]'>
+          <div data-wf-el='standard-collection-list' className='blog-grid-list flex flex-wrap' style={{ marginLeft: '-20px', marginRight: '-20px', rowGap: '40px' }}>
             {visibleBlogs.map((blog, index) => {
               return (
-                <div key={getBlogSlug(blog)} data-wf-el='standard-collection-list-item' className='relative flex w-full items-center justify-between md:w-1/2 xl:w-1/3' style={{ maxWidth: '33.3333%', paddingLeft: '20px', paddingRight: '20px', gap: '16px' }}>
+                <div key={getBlogSlug(blog)} data-wf-el='standard-collection-list-item' className='blog-grid-item relative flex w-full items-center justify-between md:w-1/2 xl:w-1/3' style={{ maxWidth: '33.3333%', paddingLeft: '20px', paddingRight: '20px', gap: '16px' }}>
                   <BlogCard
                     href={`/blog/${getBlogSlug(blog)}`}
                     title={blog.data.title}
@@ -161,7 +151,7 @@ const Blog = () => {
 
         {hasMoreBlogs && (
           <div style={{ marginTop: '49px' }}>
-            <div data-wf-el='container' className='mx-auto max-w-[1238px]'>
+            <div data-wf-el='container' className='blog-load-more-container mx-auto max-w-[1238px]'>
               <div className='flex justify-center'>
                 <div data-wf-el='button' className='btn-wrap relative' style={{ marginBottom: '10px', cursor: 'auto' }}>
                 <div data-wf-el='btn-text' aria-hidden='true' style={{ pointerEvents: 'none', whiteSpace: 'nowrap' }}>

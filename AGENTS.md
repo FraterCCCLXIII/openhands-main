@@ -188,6 +188,7 @@ npm run parity:checklist  # Crawl openhands.dev and compare against local site
 
 ## Blog Parity Notes
 - Live `/blog` uses a centered hero with only the newsletter signup (no `Try it live` / `Build with SDK` CTA buttons), followed by one featured story card and a full grid of post cards.
+- Mobile `/blog` parity depends on scoped `.blog-index-page` CSS overrides for 375px layout: a 514.984px hero, 90% (337.5px) containers, single-column 337.5px post cards, fluid paragraph/date typography, and the Webflow-style yellow footer positioning.
 - Live blog index grid cards show publication date plus title only; featured card uses a dark overlay with `Read more` CTA copy.
 - Live blog/article links use the brand brown accent (`#8a5f45`) rather than bright blue, and article headings use medium-weight 44px desktop sizing instead of Quincy 48px/60px styles.
 - Live blog article cover images use 8px border-radius (`--card-border-radius: 0.5rem`), and the newsletter form uses `Share your email` placeholder plus the privacy-policy disclaimer.
