@@ -15,6 +15,7 @@ interface FooterProps {
   compactNav?: boolean;
   navWidthClass?: string;
   minHeight?: number;
+  compactSpacerHeight?: number;
   showCopyright?: boolean;
   /**
    * Render the legacy Webflow footer grid/row structure used by the
@@ -211,7 +212,7 @@ const WebflowFooterContent = ({
   return (
     <div data-wf-el='container' className='container u-position-relative u-z-index-1' style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: '1238px', marginLeft: 'auto', marginRight: 'auto' }}>
       {showMarketingCta ? (
-        <div className='row row-justify-center u-mt-md u-position-relative u-z-index-1' style={{ ...FOOTER_ROW_STYLE, justifyContent: 'center', position: 'relative', zIndex: 1, marginTop: '49px' }}>
+        <div className='row row-justify-center u-mt-md u-position-relative u-z-index-1' style={{ ...FOOTER_ROW_STYLE, justifyContent: 'center', position: 'relative', zIndex: 1, marginTop: '50px' }}>
           <div className='col col-lg-8 col-sm-12' style={FOOTER_COL_LG_8_STYLE}>
             <div className='h2 u-text-center u-mb-xs section-title text-brand-fg' style={{ textAlign: 'center', marginBottom: '22px', letterSpacing: '-0.02em' }}>
               {marketingCtaTitle ?? DEFAULT_CTA_TITLE}
@@ -221,11 +222,11 @@ const WebflowFooterContent = ({
             </p>
             <div className='row row-gap-button u-mt-md row-justify-center' style={{ ...FOOTER_ROW_STYLE, justifyContent: 'center', columnGap: '16px', rowGap: '16px', marginTop: '51px' }}>
               <div className='col col-shrink' style={FOOTER_COL_SHRINK_NO_PADDING_STYLE}>
-                <OverlayLinkButton href={(marketingCtaPrimary ?? DEFAULT_CTA_PRIMARY).href} label={(marketingCtaPrimary ?? DEFAULT_CTA_PRIMARY).label} variant='primary' />
+                <OverlayLinkButton href={(marketingCtaPrimary ?? DEFAULT_CTA_PRIMARY).href} label={(marketingCtaPrimary ?? DEFAULT_CTA_PRIMARY).label} variant='primary' wfEl='button' textWfEl='btn-text' />
               </div>
               {marketingCtaSecondary !== null ? (
                 <div className='col col-shrink' style={FOOTER_COL_SHRINK_NO_PADDING_STYLE}>
-                  <OverlayLinkButton href={(marketingCtaSecondary ?? DEFAULT_CTA_SECONDARY).href} label={(marketingCtaSecondary ?? DEFAULT_CTA_SECONDARY).label} variant='outline' />
+                  <OverlayLinkButton href={(marketingCtaSecondary ?? DEFAULT_CTA_SECONDARY).href} label={(marketingCtaSecondary ?? DEFAULT_CTA_SECONDARY).label} variant='outline' wfEl='button' textWfEl='btn-text' />
                 </div>
               ) : null}
             </div>
@@ -307,7 +308,7 @@ const WebflowFooterContent = ({
             Privacy Policy
           </Link>
         </div>
-        <div className='col col-lg-8' style={{ ...FOOTER_COL_LG_8_STYLE, marginTop: '40px' }}>
+        <div className='col col-lg-8' style={{ ...FOOTER_COL_LG_8_STYLE, marginTop: '39px' }}>
           <div className='row row-gap-sm row-justify-center' style={{ ...FOOTER_ROW_STYLE, justifyContent: 'center', rowGap: '16px' }}>
             <div className='col col-shrink' style={FOOTER_COL_SHRINK_STYLE}>
               <div data-wf-el='standard-media' className='standard-media contain-center' style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', textAlign: 'start', width: '610px', height: '102px', objectFit: 'contain' }}>
@@ -327,6 +328,7 @@ export const Footer = ({
   compactNav = false,
   navWidthClass,
   minHeight: _minHeight,
+  compactSpacerHeight = 50,
   showMarketingCta = true,
   showCopyright = true,
   marketingCtaTitle,
@@ -361,7 +363,7 @@ export const Footer = ({
       className='relative overflow-visible bg-brand-accent text-brand-fg'
       style={{ padding: '80px 0px' }}
     >
-      <div data-wf-el='asci-wrap' className='absolute inset-0 overflow-hidden' style={{ maxHeight: '2400px' }}>
+      <div data-wf-el='asci-wrap' className='absolute inset-0 overflow-hidden'>
         <img
           data-wf-el='asci-media'
           src='/assets/webflow/backgrounds/6908d170831c19b2b6976323_ascii-art_(16)_1.svg'
@@ -372,13 +374,13 @@ export const Footer = ({
           style={{ display: 'inline-block', textAlign: 'start' }}
         />
       </div>
-      <div data-wf-el='container' className='relative z-10 mx-auto max-w-[1238px]'>
+      <div className='relative z-10 w-full'>
         <WebflowFooterContent
           showSocialLinks={showSocialLinks}
           {...ctaProps}
         />
       </div>
-      {compactNav ? <div aria-hidden='true' style={{ height: '50px' }} /> : null}
+      {compactNav && compactSpacerHeight > 0 ? <div aria-hidden='true' style={{ height: `${compactSpacerHeight}px` }} /> : null}
     </section>
   );
 };

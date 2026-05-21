@@ -7,14 +7,28 @@
 @font-face {
   font-family: "Sohne Kraftig";
   src: url("/assets/fonts/Sohne-Kraftig.otf") format("opentype");
-  font-weight: 100 900;
+  font-weight: 300;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Sohne Kraftig";
+  src: url("/assets/fonts/Sohne-Kraftig.otf") format("opentype");
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Sohne Kraftig";
+  src: url("/assets/fonts/Sohne-Kraftig.otf") format("opentype");
+  font-weight: 500;
   font-display: swap;
 }
 
 @font-face {
   font-family: "Sohne Buch";
   src: url("/assets/fonts/Sohne-Buch.otf") format("opentype");
-  font-weight: 100 900;
+  font-weight: 400;
   font-display: swap;
 }
 
@@ -89,6 +103,7 @@
        The 1.6px-per-line difference compounds across long pages and shifts every
        downstream element upward, manifesting as cumulative top-position layout drift. */
     line-height: 1.4;
+    text-wrap: pretty;
   }
 
   /* Live's Webflow base styles give h2/h3/h4 a non-zero
@@ -548,14 +563,14 @@
   position: relative;
   inset: 0;
   overflow: hidden;
-  text-align: center;
+  text-align: start;
 }
 
 .ascii-pre {
   position: absolute;
   inset: 0;
   margin: 0;
-  text-align: center;
+  text-align: start;
   overflow: hidden;
   color: var(--fg, #22150d);
   background: transparent;

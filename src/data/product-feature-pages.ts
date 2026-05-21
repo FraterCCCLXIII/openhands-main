@@ -15,8 +15,14 @@ export interface ProductFeaturePageData {
   primaryCta: {
     label: string;
     href: string;
+    screenReaderLabel?: string;
   };
   secondaryCta: {
+    label: string;
+    href: string;
+    screenReaderLabel?: string;
+  };
+  comparisonCta?: {
     label: string;
     href: string;
   };
@@ -61,10 +67,15 @@ const productFeaturePages: Record<'sdk' | 'gui' | 'cli', ProductFeaturePageData>
     primaryCta: {
       label: 'View SDK Doc',
       href: 'https://docs.openhands.dev/sdk',
+      screenReaderLabel: 'Join Slack',
     },
     secondaryCta: {
       label: 'Contact Us',
       href: '/contact',
+    },
+    comparisonCta: {
+      label: 'Try it live',
+      href: 'https://app.all-hands.dev/',
     },
     introTitle: 'An open SDK for building custom agents and workflows.',
     introDescription:
@@ -78,10 +89,10 @@ const productFeaturePages: Record<'sdk' | 'gui' | 'cli', ProductFeaturePageData>
       'Closed platforms force you into predefined behaviors. OpenHands gives you primitives, not prescriptions, so you can adapt agents to your codebase, tooling, and governance needs.',
     capabilities: [
       'Programmatic task creation',
-      'Custom agent behaviors',
       'Tool and API integrations',
       'Model selection and routing',
       'Fine-grained execution control',
+      'Custom agent behaviors',
     ],
     showcaseImages: [
       {

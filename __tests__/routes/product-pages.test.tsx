@@ -24,7 +24,7 @@ describe('Product parity routes', () => {
         'The only open, secure, and scalable agent platform built for real engineering work'
       )
     ).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Join Slack' })).toHaveAttribute(
+    expect(screen.getAllByRole('link', { name: 'Try it live' })[0]).toHaveAttribute(
       'href',
       'https://app.all-hands.dev/',
     );
@@ -70,13 +70,22 @@ describe('Product parity routes', () => {
       'href',
       'https://docs.openhands.dev/sdk',
     );
-    expect(screen.getByText('Programmatic task creation')).toBeInTheDocument();
+    expect(screen.getByText('Tool and API integrations')).toBeInTheDocument();
     expect(screen.getByAltText('asci art')).toBeInTheDocument();
     expect(screen.queryByAltText('OpenHands SDK interface preview.')).not.toBeInTheDocument();
     expect(screen.queryByAltText('OpenHands comparison illustration.')).not.toBeInTheDocument();
-    expect(screen.getByText('Turn OpenHands into your agent platform.')).toBeInTheDocument();
+    expect(screen.getAllByText('Build agents your way.').length).toBeGreaterThan(0);
     expect(screen.getByText('Start building with the SDK.')).toBeInTheDocument();
-    expect(screen.getAllByRole('link', { name: 'Try it live' }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole('link', { name: 'Join Slack' }).length).toBeGreaterThan(0);
+    expect(container.querySelectorAll('[data-wf-el="asci-wrap"]')).toHaveLength(4);
+    expect(container.querySelectorAll('[data-wf-el="asci-media"]')).toHaveLength(3);
+    expect(container.querySelectorAll('tr[data-wf-el="product-table_tr"]')).toHaveLength(6);
+    expect(container.querySelectorAll('[data-wf-el="product-table_th"]')).toHaveLength(30);
+    expect(container.querySelectorAll('svg[data-wf-el="accordion-icon"] path').item(0)).toHaveAttribute(
+      'd',
+      'M17 17L27.3137 17L27.3137 15H17V4.68631L15 4.68631L15 15H4.68629L4.68629 17L15 17V27.3137H17V17Z',
+    );
+    expect(screen.getByText('OpenHands - All rights reserved', { exact: false })).toBeInTheDocument();
     const summaryLabel = container.querySelector('summary label');
     expect(summaryLabel).toBeInTheDocument();
     expect(summaryLabel).toHaveStyle({ fontSize: '24px' });
@@ -88,7 +97,7 @@ describe('Product parity routes', () => {
     expect(
       screen.getByRole('heading', { name: 'Agentic development, made human.' })
     ).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Join Slack' })).toHaveAttribute(
+    expect(screen.getAllByRole('link', { name: 'Try it live' })[0]).toHaveAttribute(
       'href',
       'https://app.all-hands.dev/',
     );
@@ -107,7 +116,7 @@ describe('Product parity routes', () => {
     expect(
       screen.getByRole('heading', { name: 'Agentic power from the command line.' })
     ).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Join Slack' })).toHaveAttribute(
+    expect(screen.getAllByRole('link', { name: 'Get Started' })[0]).toHaveAttribute(
       'href',
       'https://docs.openhands.dev/openhands/usage/cli/installation',
     );

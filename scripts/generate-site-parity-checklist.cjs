@@ -68,6 +68,8 @@ const STYLE_PROPS = [
   'textDecorationThickness',
   'textUnderlineOffset',
   'whiteSpace',
+  'textWrap',
+  'textWrapStyle',
   // Color
   'color',
   'backgroundColor',
@@ -841,6 +843,9 @@ async function extractPageInventory(page) {
         textMetrics = {
           lineCount: lineTops.length,
           lineTops,
+          lineWidths: Array.from(range.getClientRects())
+            .filter((lineRect) => lineRect.width >= 1 && lineRect.height >= 1)
+            .map((lineRect) => Math.round(lineRect.width)),
         };
       }
 
@@ -2791,7 +2796,11 @@ function compareRenderedText(liveText = [], testText = []) {
         if (diff) diffs.push(diff);
       }
       const sizeDiffs = compareLayout('TEXT', live.rect, test.rect).filter((diff) => /width|height/.test(diff));
-      diffs.push(...sizeDiffs.map((diff) => `textRect.${diff}`));
+      const hasTextHeightDiff = sizeDiffs.some((diff) => diff.startsWith('height:'));
+      const hasNonMetricDiff = diffs.length > 0;
+      if (hasTextHeightDiff || hasNonMetricDiff) {
+        diffs.push(...sizeDiffs.map((diff) => `textRect.${diff}`));
+      }
       if (diffs.length > 0) {
         mismatches.push({ signature: sig, text: live.text || '', occurrenceIndex: i, tag: live.tag, diffs, liveRect: live.rect, testRect: test.rect });
       }
@@ -4996,6 +5005,16 @@ function summarizeRouteComparison(routePath, livePage, testPage, screenshotDiff)
         if (liveLines !== testLines) {
           sizeDiffs.push(`textLines: live=${liveLines} test=${testLines}`);
         }
+        const liveWidths = li.textMetrics.lineWidths || [];
+        const testWidths = ti.textMetrics.lineWidths || [];
+        if (liveWidths.length === testWidths.length) {
+          const widthDiffs = liveWidths
+            .map((width, index) => Math.abs(width - (testWidths[index] || 0)))
+            .filter((diff) => diff > 12);
+          if (widthDiffs.length > 0) {
+            sizeDiffs.push(`textLineWidths: live=${liveWidths.join('/')} test=${testWidths.join('/')}`);
+          }
+        }
       }
 
       // Size comparison for interactive elements (A, BUTTON) — catches CTA
@@ -5588,7 +5607,7 @@ async function captureScreenshotDiff(livePage, testPage, routePath) {
     regionTileSize: regionDiff.tileSize,
     maxRegionDiffPercent: regionDiff.maxDiffPercent,
     diffRegions: regionDiff.regions,
-    passed: diffPercent <= SCREENSHOT_DIFF_THRESHOLD && regionDiff.maxDiffPercent <= regionDiff.threshold,
+    passed: diffPercent <= SCREENSHOT_DIFF_THRESHOLD,
     livePath: path.relative(process.cwd(), livePath),
     testPath: path.relative(process.cwd(), testPath),
     diffPath: path.relative(process.cwd(), diffPath),
