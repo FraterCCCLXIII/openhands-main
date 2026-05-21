@@ -107,11 +107,11 @@ const FAQS = [
         <p>
           OpenHands Cloud is a hosted SaaS version of OpenHands that provides out-of-the-box runtime support and a high token rate LLM access. There are a few options with OpenHands Cloud:
         </p>
-        <ul className='mt-3 list-disc space-y-2 pl-5'>
-          <li>
-            Individual plan: Support for 1 user. Great for individuals who want to bring their own LLM Key, or pay-as-you-go when using the OpenHands LLM provider.
+        <ul className='list-disc' style={{ margin: '0px 0px 16px', paddingLeft: '35.2px', paddingBottom: '0.1px' }}>
+          <li style={{ marginBottom: '4.8px' }}>
+            Individual plan: Support for 1 user. Great for individuals who want to bring their own LLM Key, or pay-as-you-go when using the OpenHands LLM provider.
           </li>
-          <li>
+          <li style={{ marginBottom: '4.8px' }}>
             Enterprise plan: A self-hosted option and support for multiple users. Great for organizations who want to deploy OpenHands across many teams and centrally manage access on-premise. Additional support and enterprise services are included.
           </li>
         </ul>
@@ -141,7 +141,7 @@ const FAQS = [
     question: 'Can I bring my own model keys?',
     answer: (
       <>
-        <p>Yes! OpenHands Open Source and OpenHands Cloud plans offer support to bring your own LLM keys.</p>
+        <p>Yes! OpenHands Open Source and OpenHands Cloud plans offer support to bring your own LLM keys.</p>
         <p className='wf-zwj-spacer'>‍</p>
       </>
     ),
@@ -154,10 +154,10 @@ const FAQS = [
           If you do not have an LLM key, you can use theOpenHands LLM provider (available within the Individual Tier), which provides multiple model options <strong style={{ color: 'rgb(0, 0, 0)' }}>at cost, with no markup </strong>on a pay-as-you-go basis.
         </p>
         <p>
-          When you sign up for the Individual Plan, you can access models under the Settings &gt; Language Models (LLM) page.
+          When you sign up for the Individual Plan, you can access models under the Settings &gt; Language Models (LLM) page.
         </p>
         <p>
-          You can also generate an API key for the OpenHands LLM provider under the Settings &gt; API page, which you can use in tools like the OpenHands CLI, OpenHands Local Web UI, and OpenHands Software Agent SDK.
+          You can also generate an API key for the OpenHands LLM provider under the Settings &gt; API page, which you can use in tools like the OpenHands CLI, OpenHands Local Web UI, and OpenHands Software Agent SDK.
         </p>
       </>
     ),
@@ -429,7 +429,7 @@ const Pricing = () => {
         >
           <div data-wf-el='asci-wrap' className='pointer-events-auto absolute inset-x-0 top-0 h-screen overflow-hidden' style={{ '--ascii-opacity': '0.12', '--ascii-filter': 'drop-shadow(0 0 6px rgba(160, 200, 255, 0.1))', maxHeight: '2400px' } as CSSProperties} aria-hidden='true'>
             <div data-wf-el='asci-embed' className='h-full w-full overflow-hidden'>
-              <ASCIIAnimation className='h-full w-full' />
+              <ASCIIAnimation className='pricing-ascii h-full w-full' />
             </div>
           </div>
           <div data-wf-el='container' className='mx-auto block w-full max-w-[1238px] px-5 lg:px-0'>
@@ -660,7 +660,7 @@ const Pricing = () => {
                             <div data-wf-el='rich-text-component' style={{ marginTop: '16px', width: '100%' }}>
                               <div
                                 data-wf-el='rich-text'
-                                className='faq-answer pricing-rich-text font-sohne-buch text-[16px] leading-[22.4px] text-brand-fg'
+                                className='faq-answer pricing-rich-text w-richtext font-sohne-buch text-[16px] leading-[22.4px] text-brand-fg'
                                 style={{ padding: '0px', maxWidth: '820px' }}
                               >
                                 {faq.answer}
@@ -688,6 +688,7 @@ const Pricing = () => {
         marketingCtaDescription='OpenHands is the foundation for secure, transparent, model-agnostic coding agents - empowering every software team to build faster with full control.'
         marketingCtaPrimary={{ href: 'https://docs.openhands.dev/sdk', label: 'Build with SDK' }}
         marketingCtaSecondary={{ href: 'https://app.all-hands.dev/', label: 'Try it live' }}
+        compactNavSpacerHeight={10.4}
       />
     </main>
   );

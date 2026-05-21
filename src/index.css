@@ -8,6 +8,7 @@
   font-family: "Sohne Kraftig";
   src: url("/assets/fonts/Sohne-Kraftig.otf") format("opentype");
   font-weight: 300;
+  font-style: normal;
   font-display: swap;
 }
 
@@ -15,6 +16,7 @@
   font-family: "Sohne Kraftig";
   src: url("/assets/fonts/Sohne-Kraftig.otf") format("opentype");
   font-weight: 400;
+  font-style: normal;
   font-display: swap;
 }
 
@@ -22,6 +24,7 @@
   font-family: "Sohne Kraftig";
   src: url("/assets/fonts/Sohne-Kraftig.otf") format("opentype");
   font-weight: 500;
+  font-style: normal;
   font-display: swap;
 }
 
@@ -29,6 +32,7 @@
   font-family: "Sohne Buch";
   src: url("/assets/fonts/Sohne-Buch.otf") format("opentype");
   font-weight: 400;
+  font-style: normal;
   font-display: swap;
 }
 
@@ -164,6 +168,10 @@
    * `.paragraph` / `.paragraph-md` / `.paragraph-lg` etc.).  We
    * keep Tailwind's `<p> { margin: 0 }` default and opt in to mb:1em
    * via the `.paragraph` (or fluid-body-lg etc.) classes below.  */
+  p {
+    text-wrap: pretty;
+  }
+
   .paragraph,
   .paragraph-md,
   .paragraph-lg,
@@ -192,6 +200,14 @@
   .faq-answer p:last-child,
   .marketing-pricing-faq-answer p:last-child {
     margin-bottom: 0;
+  }
+
+  .pricing-rich-text {
+    text-wrap: pretty;
+  }
+
+  .pricing-rich-text p {
+    color: #5f5f5f;
   }
 
   .w-richtext::before,
@@ -595,6 +611,11 @@
     font-size: 14px;
     line-height: 14px;
   }
+}
+
+.pricing-ascii,
+.pricing-ascii .ascii-pre {
+  text-align: start;
 }
 
 /* Webflow-style nav styling */
