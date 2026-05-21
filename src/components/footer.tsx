@@ -15,6 +15,7 @@ interface FooterProps {
   compactNav?: boolean;
   navWidthClass?: string;
   minHeight?: number;
+  compactNavSpacerHeight?: number;
   compactSpacerHeight?: number;
   showCopyright?: boolean;
   /**
@@ -174,6 +175,7 @@ type WebflowFooterContentProps = Pick<
   | 'showSocialLinks'
   | 'showMarketingCta'
   | 'showCopyright'
+  | 'compactNavSpacerHeight'
   | 'marketingCtaTitle'
   | 'marketingCtaDescription'
   | 'marketingCtaPrimary'
@@ -294,7 +296,7 @@ const WebflowFooterContent = ({
         <div className='col col-lg-8' style={FOOTER_COL_LG_8_STYLE}>
           {showCopyright ? (
             <div data-wf-el='eyebrow' className='eyebrow u-text-center' style={{ textAlign: 'center', marginBottom: '21.12px', fontFamily: 'GeistMono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace', fontSize: '14px', fontWeight: 400, lineHeight: '16.896px', wordSpacing: '0.2px' }}>
-              © <span data-year=' '>{currentYear}</span> OpenHands - All rights reserved
+              <span style={{ display: 'inline-block', transform: 'scaleX(1.0038)', transformOrigin: 'center' }}>© <span data-year=' '>{currentYear}</span> OpenHands - All rights reserved</span>
             </div>
           ) : (
             <span className='sr-only'>© {currentYear} OpenHands - All rights reserved</span>
@@ -328,7 +330,8 @@ export const Footer = ({
   compactNav = false,
   navWidthClass,
   minHeight: _minHeight,
-  compactSpacerHeight = 50,
+  compactNavSpacerHeight,
+  compactSpacerHeight = compactNavSpacerHeight ?? 50,
   showMarketingCta = true,
   showCopyright = true,
   marketingCtaTitle,

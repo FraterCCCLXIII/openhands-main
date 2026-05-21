@@ -30,7 +30,6 @@ describe('site shell parity helpers', () => {
 
     expect(container.querySelector('#footer-resources')?.parentElement).toHaveClass('justify-between');
     expect(screen.getByRole('link', { name: 'About' })).toHaveClass('py-[14.4px]');
-    expect(screen.getByText(/OpenHands - All rights reserved/)).toBeInTheDocument();
-    expect(container.querySelector('div[data-wf-el="eyebrow"] span')?.textContent).toBe(String(new Date().getFullYear()));
+    expect(container.textContent).toContain(`©${String.fromCharCode(160)}${new Date().getFullYear()}${String.fromCharCode(160)}OpenHands - All rights reserved`);
   });
 });

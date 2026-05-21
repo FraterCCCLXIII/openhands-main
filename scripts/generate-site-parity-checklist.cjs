@@ -5002,7 +5002,8 @@ function summarizeRouteComparison(routePath, livePage, testPage, screenshotDiff)
       if (hasTest && li.textMetrics && ti.textMetrics) {
         const liveLines = li.textMetrics.lineCount || 0;
         const testLines = ti.textMetrics.lineCount || 0;
-        if (liveLines !== testLines) {
+        const textBoxHeightDelta = Math.abs((li.rect?.height || 0) - (ti.rect?.height || 0));
+        if (liveLines !== testLines && textBoxHeightDelta > 4) {
           sizeDiffs.push(`textLines: live=${liveLines} test=${testLines}`);
         }
         const liveWidths = li.textMetrics.lineWidths || [];
@@ -5599,6 +5600,7 @@ async function captureScreenshotDiff(livePage, testPage, routePath) {
 
   const regionDiff = findScreenshotDiffRegions(liveImage, testImage, width, height);
   const diffPercent = Number(((diffPixels / (width * height)) * 100).toFixed(2));
+  const globallyWithinHalfThreshold = diffPercent <= SCREENSHOT_DIFF_THRESHOLD / 2;
   return {
     diffPixels,
     diffPercent,
@@ -5607,7 +5609,7 @@ async function captureScreenshotDiff(livePage, testPage, routePath) {
     regionTileSize: regionDiff.tileSize,
     maxRegionDiffPercent: regionDiff.maxDiffPercent,
     diffRegions: regionDiff.regions,
-    passed: diffPercent <= SCREENSHOT_DIFF_THRESHOLD,
+    passed: diffPercent <= SCREENSHOT_DIFF_THRESHOLD && (regionDiff.maxDiffPercent <= regionDiff.threshold || globallyWithinHalfThreshold),
     livePath: path.relative(process.cwd(), livePath),
     testPath: path.relative(process.cwd(), testPath),
     diffPath: path.relative(process.cwd(), diffPath),

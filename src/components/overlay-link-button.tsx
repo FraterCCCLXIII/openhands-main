@@ -20,6 +20,7 @@ interface OverlayLinkButtonProps {
   iconWrapWfEl?: string;
   iconColorWfEl?: string;
   iconWfEl?: string;
+  linkWfEl?: string;
 }
 
 const VARIANT_CONFIG: Record<NonNullable<OverlayLinkButtonProps['variant']>, { cls: string; isWrap: boolean }> = {
@@ -45,6 +46,7 @@ export const OverlayLinkButton = ({
   iconWrapWfEl,
   iconColorWfEl,
   iconWfEl,
+  linkWfEl,
 }: OverlayLinkButtonProps) => {
   const isExternalLink = /^https?:\/\//.test(href);
   const config = VARIANT_CONFIG[variant];
@@ -58,23 +60,13 @@ export const OverlayLinkButton = ({
     marginBottom: '10px',
   };
 
-  const textStyle: React.CSSProperties = iconSrc
-    ? {
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: '6.4px',
-        whiteSpace: 'nowrap',
-        cursor: 'auto',
-        textUnderlineOffset: 'auto',
-        pointerEvents: 'none',
-      }
-    : {
-        display: 'block',
-        whiteSpace: 'nowrap',
-        cursor: 'auto',
-        textUnderlineOffset: 'auto',
-        pointerEvents: 'none',
-      };
+  const textStyle: React.CSSProperties = {
+    display: 'block',
+    whiteSpace: 'nowrap',
+    cursor: 'auto',
+    textUnderlineOffset: 'auto',
+    pointerEvents: 'none',
+  };
 
   return (
     <div
@@ -88,8 +80,14 @@ export const OverlayLinkButton = ({
       )}
       style={config.isWrap ? { ...baseStyle, ...wrapperStyle } : { ...baseStyle, borderRadius: 0, ...wrapperStyle }}
     >
+      {iconSrc ? (
+        <div data-wf-el={iconWrapWfEl} style={{ display: 'flex', width: '19.1875px', height: '19.1875px', maxWidth: '19.2px', justifyContent: 'center', alignItems: 'center', lineHeight: '16px' }}>
+          <div data-wf-el={iconColorWfEl} style={{ display: 'flex', color: variant === 'primary' ? 'rgb(255, 255, 139)' : 'currentColor' }}>
+            <img data-wf-el={iconWfEl} src={iconSrc} alt={iconAlt} style={{ display: 'block', width: '19.1875px', height: '19.1875px', objectFit: 'fill' }} />
+          </div>
+        </div>
+      ) : null}
       <div data-wf-el={textWfEl} aria-hidden='true' className={textClassName} style={{ ...textStyle, ...customTextStyle }}>
-        {iconSrc ? <img src={iconSrc} alt={iconAlt} style={{ width: '19px', height: '19px', objectFit: 'fill' }} /> : null}
         {label}
       </div>
       {/* Live's overlay anchor (`.u-link-cover.w-inline-block`) carries
@@ -98,6 +96,8 @@ export const OverlayLinkButton = ({
         * line-height: 20.8px`.  Mirroring those here so the parity check
         * matches `A:build with sdk` / `A:contact us` text-decoration. */}
       <a
+        data-wf-el={linkWfEl}
+
         href={href}
         target={isExternalLink ? '_blank' : undefined}
         rel={isExternalLink ? 'noopener noreferrer' : undefined}
