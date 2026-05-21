@@ -4,7 +4,14 @@ export interface ProductSurface {
   description: string;
   href: string;
   image: string;
+  srcSet: string;
 }
+
+const webflowPngSrcSet = (basePath: string) => {
+  const extensionIndex = basePath.lastIndexOf('.png');
+  const base = basePath.slice(0, extensionIndex);
+  return `${base}-p-500.png 500w, ${base}-p-800.png 800w, ${basePath} 978w`;
+};
 
 export const PRODUCT_SURFACES: ProductSurface[] = [
   {
@@ -14,14 +21,16 @@ export const PRODUCT_SURFACES: ProductSurface[] = [
       'Run, inspect, and automate OpenHands agents directly from the terminal or headlessly in your pipelines with full visibility and control.',
     href: '/product/cli',
     image: '/assets/webflow/misc/699490d1d9729682e0daf0a5_cli.png',
+    srcSet: webflowPngSrcSet('/assets/webflow/misc/699490d1d9729682e0daf0a5_cli.png'),
   },
   {
     title: 'Web GUI',
     subtitle: 'Agentic development, made human.',
     description:
-      'Plan, run, and review agent work together in a collaborative UI.',
+      'Plan, run, and review agent work together in a collaborative UI.',
     href: '/product/gui',
     image: '/assets/webflow/misc/6994c3bfa634f5f3966d2150_4c76230966d0d54a446a009e4f4a19c2_gui.png',
+    srcSet: webflowPngSrcSet('/assets/webflow/misc/6994c3bfa634f5f3966d2150_4c76230966d0d54a446a009e4f4a19c2_gui.png'),
   },
   {
     title: 'SDK',
@@ -30,5 +39,6 @@ export const PRODUCT_SURFACES: ProductSurface[] = [
       'Create specialized agents, integrate internal tools, and orchestrate complex workflows programmatically.',
     href: '/product/sdk',
     image: '/assets/webflow/misc/699f4b0b80190eeea4ba3eb9_sdk-1.png',
+    srcSet: webflowPngSrcSet('/assets/webflow/misc/699f4b0b80190eeea4ba3eb9_sdk-1.png'),
   },
 ];

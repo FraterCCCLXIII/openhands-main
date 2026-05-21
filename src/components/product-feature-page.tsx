@@ -234,41 +234,41 @@ export const ProductComparisonTable = ({
   const tickColor = headerColor ?? (dark ? 'rgb(179, 168, 140)' : 'rgb(138, 95, 69)');
 
   return (
-    <section data-wf-el='section' className={classNames('relative', dark ? 'text-brand-bg' : 'text-brand-fg')} style={{ display: 'block', backgroundColor: dark ? 'rgb(34, 21, 13)' : 'rgba(0, 0, 0, 0)', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px' }}>
-      <div data-wf-el='container' className='mx-auto max-w-[1238px]' style={{ display: 'block', color: dark ? 'rgb(249, 240, 217)' : 'rgb(34, 21, 13)', zIndex: 1, marginTop: minHeight ? '128px' : '0px', marginBottom: minHeight ? '128px' : '0px' }}>
+    <section data-wf-el='section' className={classNames('relative', dark ? 'text-brand-bg' : 'text-brand-fg')} style={{ display: 'block', backgroundColor: dark ? 'rgb(34, 21, 13)' : 'rgba(0, 0, 0, 0)', paddingTop: 'var(--product-comparison-padding-top, var(--product-section-padding-y, 80px))', paddingBottom: 'var(--product-comparison-padding-bottom, var(--product-section-padding-y, 80px))', paddingLeft: '0px', paddingRight: '0px' }}>
+      <div data-wf-el='container' className='mx-auto max-w-[1238px]' style={{ display: 'block', color: dark ? 'rgb(249, 240, 217)' : 'rgb(34, 21, 13)', zIndex: 1, width: 'var(--product-container-width, 100%)', height: 'var(--product-comparison-container-height, auto)', marginTop: minHeight ? '128px' : '0px', marginBottom: minHeight ? '128px' : '0px' }}>
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginLeft: '-20px', marginRight: '-20px' }}>
-          <div className={classNames('section-title max-w-[599px] text-center', headingClass)} style={{ marginBottom: '8.8px' }}>
+          <div className={classNames('section-title text-center', headingClass)} style={{ marginBottom: 'var(--product-comparison-heading-margin-bottom, 8.8px)', maxWidth: 'var(--product-comparison-heading-max-width, 599px)' }}>
             The only open, secure, and scalable agent platform built for real engineering work
           </div>
         </div>
         <div style={{ width: '100%', color: dark ? 'rgb(249, 240, 217)' : 'rgb(34, 21, 13)' }}>
-          <table data-wf-el='product-table' className='w-full border-collapse text-left' style={{ display: 'table', position: 'relative', overflow: 'visible', marginTop: '49.6px', color: 'rgb(249, 240, 217)' }}>
+          <table data-wf-el='product-table' className='w-full border-collapse text-left' style={{ display: 'table', position: 'relative', overflow: 'visible', marginTop: '49.6px', transform: 'var(--product-comparison-content-transform, none)', color: 'rgb(249, 240, 217)' }}>
             <colgroup>
-              <col style={{ width: '407px' }} />
-              <col style={{ width: '262px' }} />
-              <col style={{ width: '125px' }} />
-              <col style={{ width: '280px' }} />
-              <col style={{ width: '165px' }} />
+              <col style={{ width: 'var(--product-table-col-1, 407px)' }} />
+              <col style={{ width: 'var(--product-table-col-2, 262px)' }} />
+              <col style={{ width: 'var(--product-table-col-3, 125px)' }} />
+              <col style={{ width: 'var(--product-table-col-4, 280px)' }} />
+              <col style={{ width: 'var(--product-table-col-5, 165px)' }} />
             </colgroup>
             <thead>
-              <tr data-wf-el='product-table_tr' className={classNames('border-b text-[20px] leading-[28px]', dark ? 'border-brand-bg/20' : 'border-brand-fg/12')} style={{ color: trColor }}>
-                <th data-wf-el='product-table_th' className='py-4 font-normal text-left' style={{ paddingTop: '16px', paddingBottom: '16px', paddingRight: '0px', letterSpacing: 'normal', textTransform: 'none', color: thColor }}>Feature</th>
-                <th data-wf-el='product-table_th' className='py-4 text-center font-normal' style={{ paddingTop: '16px', paddingBottom: '16px', paddingLeft: '0', paddingRight: '0', letterSpacing: 'normal', textTransform: 'none', color: thColor }}>OpenHands</th>
-                <th data-wf-el='product-table_th' className='py-4 text-center font-normal' style={{ paddingTop: '16px', paddingBottom: '16px', paddingLeft: '0', paddingRight: '0', letterSpacing: 'normal', textTransform: 'none', color: thColor }}>Devin</th>
-                <th data-wf-el='product-table_th' className='py-4 text-center font-normal' style={{ paddingTop: '16px', paddingBottom: '16px', paddingLeft: '0', paddingRight: '0', letterSpacing: 'normal', textTransform: 'none', color: thColor }}>Claude Code</th>
-                <th data-wf-el='product-table_th' className='py-4 text-center font-normal' style={{ paddingTop: '16px', paddingBottom: '16px', paddingLeft: '0', paddingRight: '0', letterSpacing: 'normal', textTransform: 'none', color: thColor }}>Factory</th>
+              <tr data-wf-el='product-table_tr' className={classNames('border-b text-[20px] leading-[28px]', dark ? 'border-brand-bg/20' : 'border-brand-fg/12')} style={{ color: trColor, fontSize: 'var(--product-table-row-font-size, 20px)', lineHeight: 'var(--product-table-row-line-height, 28px)' }}>
+                <th data-wf-el='product-table_th' className='py-4 font-normal text-left' style={{ paddingTop: '16px', paddingBottom: '16px', paddingRight: '0px', letterSpacing: 'normal', textTransform: 'none', fontSize: 'var(--product-table-cell-font-size, inherit)', lineHeight: 'var(--product-table-cell-line-height, inherit)', color: thColor }}>Feature</th>
+                <th data-wf-el='product-table_th' className='py-4 text-center font-normal' style={{ paddingTop: '16px', paddingBottom: '16px', paddingLeft: '8px', paddingRight: '8px', letterSpacing: 'normal', textTransform: 'none', fontSize: 'var(--product-table-cell-font-size, inherit)', lineHeight: 'var(--product-table-cell-line-height, inherit)', color: thColor }}>OpenHands</th>
+                <th data-wf-el='product-table_th' className='py-4 text-center font-normal' style={{ paddingTop: '16px', paddingBottom: '16px', paddingLeft: '8px', paddingRight: '8px', letterSpacing: 'normal', textTransform: 'none', fontSize: 'var(--product-table-cell-font-size, inherit)', lineHeight: 'var(--product-table-cell-line-height, inherit)', color: thColor }}>Devin</th>
+                <th data-wf-el='product-table_th' className='py-4 text-center font-normal' style={{ paddingTop: '16px', paddingBottom: '16px', paddingLeft: '8px', paddingRight: '8px', letterSpacing: 'normal', textTransform: 'none', fontSize: 'var(--product-table-cell-font-size, inherit)', lineHeight: 'var(--product-table-cell-line-height, inherit)', color: thColor }}>Claude Code</th>
+                <th data-wf-el='product-table_th' className='py-4 text-center font-normal' style={{ paddingTop: '16px', paddingBottom: '16px', paddingLeft: '8px', paddingRight: '8px', letterSpacing: 'normal', textTransform: 'none', fontSize: 'var(--product-table-cell-font-size, inherit)', lineHeight: 'var(--product-table-cell-line-height, inherit)', color: thColor }}>Factory</th>
               </tr>
             </thead>
             <tbody>
               {PRODUCT_COMPARISON_ROWS.map((row) => (
-                <tr key={row.label} data-wf-el='product-table_tr' className='text-[20px] leading-[28px] font-normal' style={{ color: tickColor, borderBottomWidth: '0px' }}>
-                  <td data-wf-el='product-table_th' className={classNames('text-left font-normal', cellClass)} style={{ paddingTop: '16px', paddingBottom: '16px', paddingLeft: '0px', paddingRight: '0px', letterSpacing: 'normal', textTransform: 'none', color: tickColor }}>{row.label}</td>
+                <tr key={row.label} data-wf-el='product-table_tr' className='text-[20px] leading-[28px] font-normal' style={{ color: tickColor, borderBottomWidth: '0px', fontSize: 'var(--product-table-row-font-size, 20px)', lineHeight: 'var(--product-table-row-line-height, 28px)' }}>
+                  <td data-wf-el='product-table_th' className={classNames('text-left font-normal', cellClass)} style={{ paddingTop: '16px', paddingBottom: '16px', paddingLeft: '0px', paddingRight: '0px', letterSpacing: 'normal', textTransform: 'none', fontSize: 'var(--product-table-cell-font-size, inherit)', lineHeight: 'var(--product-table-cell-line-height, inherit)', color: tickColor }}>{row.label}</td>
                   {row.values.map((value, index) => (
-                    <td data-wf-el='product-table_th' key={`${row.label}-${index}`} className='text-center font-normal' style={{ paddingTop: '16px', paddingBottom: '16px', paddingLeft: '0px', paddingRight: '0px', letterSpacing: 'normal', textTransform: 'none', color: tickColor }}>
+                    <td data-wf-el='product-table_th' key={`${row.label}-${index}`} className='text-center font-normal' style={{ paddingTop: '16px', paddingBottom: '16px', paddingLeft: '8px', paddingRight: '8px', letterSpacing: 'normal', textTransform: 'none', fontSize: 'var(--product-table-cell-font-size, inherit)', lineHeight: 'var(--product-table-cell-line-height, inherit)', color: tickColor }}>
                       {value ? (
-                        <img data-wf-el='icon' src={TABLE_TICK_ICON} alt='' aria-hidden='true' className='mx-auto h-6 w-6' style={{ display: 'inline-flex', fontSize: '20px', lineHeight: '28px', color: tickColor }} />
+                        <img data-wf-el='icon' src={TABLE_TICK_ICON} alt='' aria-hidden='true' className='mx-auto h-6 w-6' style={{ display: 'inline-flex', fontSize: 'var(--product-table-cell-font-size, 20px)', lineHeight: 'var(--product-table-cell-line-height, 28px)', color: tickColor }} />
                       ) : (
-                        <img data-wf-el='icon' src='/assets/webflow/misc/Cross.svg' alt='' aria-hidden='true' className='mx-auto h-6 w-6' style={{ display: 'inline-flex', fontSize: '20px', lineHeight: '28px', color: tickColor }} />
+                        <img data-wf-el='icon' src='/assets/webflow/misc/Cross.svg' alt='' aria-hidden='true' className='mx-auto h-6 w-6' style={{ display: 'inline-flex', fontSize: 'var(--product-table-cell-font-size, 20px)', lineHeight: 'var(--product-table-cell-line-height, 28px)', color: tickColor }} />
                       )}
                     </td>
                   ))}
@@ -278,7 +278,7 @@ export const ProductComparisonTable = ({
           </table>
         </div>
         {ctaHref && ctaLabel ? (
-          <div className='text-center' style={{ display: 'flex', justifyContent: 'center', marginTop: '49.6px' }}>
+          <div className='text-center' style={{ display: 'flex', justifyContent: 'center', marginTop: '49.6px', transform: 'var(--product-comparison-content-transform, none)' }}>
             <div data-wf-el='standard-wrap' style={{ display: 'block', width: '125.969px', textAlign: 'start' }}>
               <ProductPageActionLink
                 href={ctaHref}

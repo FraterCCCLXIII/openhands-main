@@ -19,7 +19,7 @@ interface FooterProps {
   standaloneContainerFlowSpacerHeight?: number;
   navWidthClass?: string;
   minHeight?: number;
-  compactSpacerHeight?: number;
+  compactSpacerHeight?: number | string;
   showCopyright?: boolean;
   footerContainerNudge?: number;
   footerContainerTransform?: string;
@@ -157,8 +157,12 @@ const footerNavLinkStyle = {
   justifyContent: 'center',
   alignItems: 'center',
   gap: '4.8px',
-  padding: '14.4px 5px',
-  height: 'var(--footer-nav-link-height, auto)',
+  height: 'var(--footer-nav-link-height, 51.1719px)',
+  boxSizing: 'border-box',
+  paddingTop: 'var(--footer-nav-link-padding-top, 14.39px)',
+  paddingBottom: 'var(--footer-nav-link-padding-bottom, 14.39px)',
+  paddingLeft: '5px',
+  paddingRight: '5px',
   fontSize: '16px',
   fontWeight: 500,
   lineHeight: '22.4px',
@@ -259,15 +263,15 @@ const WebflowFooterContent = ({
     <div data-wf-el={containerWfEl ?? undefined} className='container u-position-relative u-z-index-1' style={footerContainerStyle}>
       <div style={{ transform: isManifestoMobile ? 'none' : 'var(--footer-content-transform, none)' }}>
       {showMarketingCta ? (
-        <div className='row row-justify-center u-mt-md u-position-relative u-z-index-1' style={{ ...FOOTER_ROW_STYLE, justifyContent: 'center', position: 'relative', zIndex: 1, marginTop: isManifestoMobile ? '50px' : 'var(--footer-cta-row-margin-top, 50px)' }}>
+        <div className='row row-justify-center u-mt-md u-position-relative u-z-index-1' style={{ ...FOOTER_ROW_STYLE, justifyContent: 'center', position: 'relative', zIndex: 1, marginTop: isManifestoMobile ? '50px' : 'var(--footer-marketing-margin-top, var(--footer-cta-row-margin-top, 50px))' }}>
           <div className='col col-lg-8 col-sm-12 footer-cta-col' style={ctaColStyle}>
-            <div className='h2 u-text-center u-mb-xs section-title text-brand-fg' style={{ textAlign: 'center', marginBottom: isManifestoMobile ? '14.7732px' : '22px', letterSpacing: '-0.02em' }}>
+            <div className='h2 u-text-center u-mb-xs section-title text-brand-fg' style={{ textAlign: 'center', marginBottom: isManifestoMobile ? '14.7732px' : 'var(--footer-marketing-title-margin-bottom, var(--footer-cta-title-margin-bottom, 22px))', letterSpacing: '-0.02em' }}>
               {marketingCtaTitle ?? DEFAULT_CTA_TITLE}
             </div>
             <p data-wf-el='paragraph-lg' className='u-m-0 u-text-darkgray u-text-center font-medium text-brand-muted' style={{ margin: '0px', textAlign: 'center', fontSize: 'var(--footer-paragraph-lg-font-size, var(--paragraph-lg-font-size))', lineHeight: 'var(--footer-paragraph-lg-line-height, 1.2)', height: isManifestoMobile ? '85.1875px' : 'var(--footer-paragraph-lg-height, auto)' }}>
               {marketingCtaDescription ?? DEFAULT_CTA_DESCRIPTION}
             </p>
-            <div className='row row-gap-button u-mt-md row-justify-center' style={{ ...FOOTER_ROW_STYLE, justifyContent: 'center', columnGap: '16px', rowGap: '16px', marginTop: 'var(--footer-cta-button-margin-top, 51px)', flexDirection: (isManifestoMobile ? 'row' : 'var(--footer-cta-button-direction, row)') as React.CSSProperties['flexDirection'], alignItems: 'center' }}>
+            <div className='row row-gap-button u-mt-md row-justify-center' style={{ ...FOOTER_ROW_STYLE, justifyContent: 'center', columnGap: '16px', rowGap: '16px', marginTop: 'var(--footer-cta-buttons-margin-top, var(--footer-cta-button-margin-top, 51px))', flexDirection: (isManifestoMobile ? 'row' : 'var(--footer-cta-button-flex-direction, var(--footer-cta-button-direction, row))') as React.CSSProperties['flexDirection'], alignItems: 'center' }}>
               <div className='col col-shrink' style={FOOTER_COL_SHRINK_NO_PADDING_STYLE}>
                 <OverlayLinkButton href={(marketingCtaPrimary ?? DEFAULT_CTA_PRIMARY).href} label={(marketingCtaPrimary ?? DEFAULT_CTA_PRIMARY).label} variant='primary' wfEl='button' textWfEl='btn-text' />
               </div>
@@ -282,7 +286,7 @@ const WebflowFooterContent = ({
       ) : null}
 
       {showSocialLinks ? (
-        <div data-wf-el='footer-social-row' className='row u-mt-lg row-justify-center u-mb-md' style={{ ...FOOTER_ROW_STYLE, justifyContent: 'center', marginTop: isManifestoMobile ? '64px' : showMarketingCta ? 'var(--footer-social-margin-top, 128px)' : '80px', marginBottom: '49px', rowGap: '40px', textAlign: 'start' }}>
+        <div data-wf-el='footer-social-row' className='row u-mt-lg row-justify-center u-mb-md' style={{ ...FOOTER_ROW_STYLE, justifyContent: 'center', marginTop: isManifestoMobile ? '64px' : showMarketingCta ? 'var(--footer-social-margin-top, 128px)' : '80px', marginBottom: 'var(--footer-social-margin-bottom, 49px)', rowGap: '40px', textAlign: 'start' }}>
           <div className='col' style={FOOTER_COL_STYLE}>
             <div className='row row-gap-sm row-justify-center' style={{ ...FOOTER_ROW_STYLE, justifyContent: 'center', columnGap: '8px', rowGap: '16px' }}>
               {SOCIAL_LINKS.map((item) => (
@@ -337,10 +341,10 @@ const WebflowFooterContent = ({
         </div>
       </div>
 
-      <div className='row row-justify-center u-mb-md' style={{ ...FOOTER_ROW_STYLE, justifyContent: 'center', marginBottom: '40px' }}>
+      <div className='row row-justify-center u-mb-md' style={{ ...FOOTER_ROW_STYLE, justifyContent: 'center', marginBottom: 'var(--footer-bottom-row-margin-bottom, 40px)' }}>
         <div className='col col-lg-8 footer-copyright-col' style={FOOTER_COL_LG_8_STYLE}>
           {showCopyright ? (
-            <div data-wf-el='eyebrow' className='eyebrow u-text-center' style={{ textAlign: 'center', marginBottom: '21.12px', fontFamily: 'GeistMono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace', fontSize: '14px', fontWeight: 400, lineHeight: '16.896px', wordSpacing: '0.2px' }}>
+            <div data-wf-el='eyebrow' className='eyebrow u-text-center' style={{ textAlign: 'center', marginBottom: '21.12px', fontFamily: 'GeistMono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace', fontSize: 'var(--footer-eyebrow-font-size, 14px)', fontWeight: 400, lineHeight: '16.896px', wordSpacing: '0.2px' }}>
               <span style={{ display: 'inline-block', transform: 'scaleX(1.0038)', transformOrigin: 'center' }}>© <span data-year=' '>{currentYear}</span> OpenHands - All rights reserved</span>
             </div>
           ) : (
@@ -350,12 +354,12 @@ const WebflowFooterContent = ({
             to='/privacy'
             data-wf-el='eyebrow'
             className='eyebrow u-text-center is-link hover:text-[#8a5f45]'
-            style={{ alignSelf: 'center', display: 'block', textAlign: 'center', marginBottom: '21.12px', fontFamily: 'GeistMono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace', fontSize: 'var(--footer-privacy-font-size, 14.08px)', fontWeight: 400, lineHeight: '16.896px', textDecoration: 'none', cursor: 'pointer', width: isManifesto ? '118.266px' : 'var(--footer-privacy-width, auto)' }}
+            style={{ alignSelf: 'center', display: 'block', textAlign: 'center', marginBottom: '21.12px', fontFamily: 'GeistMono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace', fontSize: 'var(--footer-privacy-font-size, var(--footer-eyebrow-font-size, 14px))', fontWeight: 400, lineHeight: '16.896px', textDecoration: 'none', cursor: 'pointer', width: isManifesto ? '118.266px' : 'var(--footer-privacy-width, 118.266px)' }}
           >
             Privacy Policy
           </Link>
         </div>
-        <div className='col col-lg-8 footer-logo-col' style={{ ...FOOTER_COL_LG_8_STYLE, marginTop: '39px' }}>
+        <div className='col col-lg-8 footer-logo-col' style={{ ...FOOTER_COL_LG_8_STYLE, marginTop: 'var(--footer-logo-margin-top, 39px)' }}>
           <div className='row row-gap-sm row-justify-center' style={{ ...FOOTER_ROW_STYLE, justifyContent: 'center', rowGap: '16px' }}>
             {isManifestoMobile ? (
               <div data-wf-el='standard-media' className='standard-media contain-center footer-logo-media' style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', textAlign: 'start', width: '211.65625px', height: '35.390625px', objectFit: 'contain' }}>
@@ -399,6 +403,7 @@ export const Footer = ({
   const isManifesto = pathname === '/manifesto';
   const isManifestoMobile = isManifesto && width < 768;
   const effectiveCompactSpacerHeight = isManifestoMobile ? 9.21 : compactSpacerHeight;
+  const compactSpacerCssHeight = typeof effectiveCompactSpacerHeight === 'number' ? `var(--footer-compact-spacer-height, ${effectiveCompactSpacerHeight}px)` : effectiveCompactSpacerHeight;
   const ctaProps = {
     showMarketingCta,
     showCopyright,
@@ -426,7 +431,7 @@ export const Footer = ({
     <section
       data-wf-el='section'
       className='section u-bg-primary relative overflow-visible bg-brand-accent text-brand-fg footer-webflow-layout'
-      style={{ padding: isManifestoMobile ? '49.5714px 0px' : 'var(--footer-section-padding, var(--section-padding-y)) 0px', height: isManifesto ? (isManifestoMobile ? '1370.58px' : '1209.38px') : 'var(--footer-section-height, auto)' }}
+      style={{ padding: isManifestoMobile ? '49.5714px 0px' : 'var(--footer-section-padding, var(--product-section-padding-y, var(--section-padding-y))) 0px', height: isManifesto ? (isManifestoMobile ? '1370.58px' : '1209.38px') : 'var(--footer-section-height, auto)' }}
     >
       <div data-wf-el='asci-wrap' className='absolute inset-0 overflow-hidden' style={{ maxHeight: 'none' }}>
         <img
@@ -451,7 +456,7 @@ export const Footer = ({
         />
       </div>
       {standaloneContainerHeight ? <div aria-hidden='true' style={{ height: `${standaloneContainerFlowSpacerHeight}px` }} /> : null}
-      {compactNav && effectiveCompactSpacerHeight > 0 ? <div aria-hidden='true' style={{ height: `${effectiveCompactSpacerHeight}px` }} /> : null}
+      {compactNav && compactSpacerCssHeight ? <div aria-hidden='true' style={{ height: compactSpacerCssHeight }} /> : null}
     </section>
   );
 };
