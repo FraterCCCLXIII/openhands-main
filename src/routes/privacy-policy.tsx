@@ -69,7 +69,7 @@ export const meta: Route.MetaFunction = ({ location }) => {
     { name: 'twitter:title', content: 'Privacy Policy' },
     { name: 'twitter:description', content: legalDescription },
     { name: 'twitter:image', content: socialImage },
-    { rel: 'canonical', href: 'https://openhands.dev' + location.pathname },
+    { tagName: 'link', rel: 'canonical', href: 'https://openhands.dev' + location.pathname },
     { name: 'robots', content: 'noindex, nofollow' },
   ];
 };

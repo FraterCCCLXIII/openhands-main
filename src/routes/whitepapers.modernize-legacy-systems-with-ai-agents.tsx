@@ -141,7 +141,7 @@ export const meta: MetaFunction = ({ location }) => [
     name: 'twitter:image',
     content: 'https://openhands.dev/assets/webflow/og/69161b32abf448a2df921a73_openhands_opengraph_01.png',
   },
-  { rel: 'canonical', href: `https://openhands.dev${location.pathname}` },
+  { tagName: 'link', rel: 'canonical', href: `https://openhands.dev${location.pathname}` },
 ];
 
 export const handle = { hideGlobalFooter: true };

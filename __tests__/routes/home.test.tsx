@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
 import Home from '../../src/routes/home';
@@ -74,5 +74,36 @@ describe('home route parity structure', () => {
     expect(screen.getByText('@windsurf')).toBeInTheDocument();
     expect(screen.getByText('@zeddotdev')).toBeInTheDocument();
     expect(container.textContent).toContain("Built on an open source foundation, it's designed for enterprise software development at scale.");
+  });
+
+  it('opens a live-like workflow launch dialog instead of navigating directly', () => {
+    const { container } = renderRoute();
+    const [firstLaunch] = screen.getAllByTestId('workflow-launch');
+
+    expect(firstLaunch).toHaveAttribute(
+      'data-sdk-url',
+      'https://github.com/OpenHands/extensions/tree/main/plugins/vulnerability-remediation',
+    );
+    expect(firstLaunch).toHaveAttribute('data-cloud-url', '');
+
+    fireEvent.click(firstLaunch);
+
+    const dialog = container.querySelector('dialog[data-modal="modal"]');
+    expect(dialog).toHaveClass('dialog');
+    expect(dialog).toHaveAttribute('open');
+    expect(container.querySelector('.dialog_top_wrap')).toBeInTheDocument();
+    expect(container.querySelector('.dialog_bottom_wrap')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Launch in Cloud' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Launch in Cloud' })).toHaveAttribute(
+      'href',
+      'https://app.all-hands.dev/login',
+    );
+    expect(screen.getByRole('link', { name: 'Get SDK Example' })).toHaveAttribute(
+      'href',
+      'https://github.com/OpenHands/extensions/tree/main/plugins/vulnerability-remediation',
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Close workflow dialog' }));
+    expect(dialog).not.toHaveAttribute('open');
   });
 });

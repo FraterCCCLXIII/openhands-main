@@ -28,7 +28,7 @@ export const meta: Route.MetaFunction = ({ location }) => {
     },
     { property: "og:type", content: "website" },
     { property: "og:site_name", content: "OpenHands" },
-    { rel: "canonical", href: "https://openhands.dev" + location.pathname },
+    { tagName: "link", rel: "canonical", href: "https://openhands.dev" + location.pathname },
   ];
 };
 

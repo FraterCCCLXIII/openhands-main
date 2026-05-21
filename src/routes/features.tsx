@@ -82,7 +82,7 @@ export const meta: Route.MetaFunction = ({ location }) => {
     { name: 'twitter:title', content: 'OpenHands Cloud' },
     { name: 'twitter:description', content: 'Explore the powerful features of OpenHands cloud coding agents that supercharge your engineering team.' },
     { name: 'twitter:image', content: 'https://openhands.dev/assets/webflow/og/69161b32abf448a2df921a73_openhands_opengraph_01.png' },
-    { rel: 'canonical', href: 'https://openhands.dev' + location.pathname },
+    { tagName: 'link', rel: 'canonical', href: 'https://openhands.dev' + location.pathname },
     {
       'script:ld+json': JSON.stringify({
         '@context': 'https://schema.org',

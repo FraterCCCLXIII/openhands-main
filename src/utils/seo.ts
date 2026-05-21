@@ -1,7 +1,7 @@
 export const SITE_ORIGIN = 'https://openhands.dev';
 
 export const DEFAULT_SOCIAL_IMAGE =
-  `${SITE_ORIGIN}/assets/webflow/og/69161b32abf448a2df921a73_openhands_opengraph_01.png`;
+  'https://openhands.dev/assets/webflow/og/69161b32abf448a2df921a73_openhands_opengraph_01.png';
 
 type SocialPreviewMetaOptions = {
   title: string;
@@ -33,6 +33,11 @@ export const createSocialPreviewMeta = ({
     { property: 'og:title', content: title },
     { property: 'og:description', content: description },
     { property: 'og:image', content: image },
+    { property: 'og:image:secure_url', content: image },
+    { property: 'og:image:type', content: 'image/png' },
+    { property: 'og:image:width', content: '1200' },
+    { property: 'og:image:height', content: '630' },
+    { property: 'og:image:alt', content: title },
     { property: 'og:url', content: url },
     { property: 'og:type', content: type },
     { property: 'og:site_name', content: 'OpenHands' },
@@ -40,6 +45,7 @@ export const createSocialPreviewMeta = ({
     { name: 'twitter:title', content: title },
     { name: 'twitter:description', content: description },
     { name: 'twitter:image', content: image },
-    ...(canonical ? [{ rel: 'canonical', href: url }] : []),
+    { name: 'twitter:image:alt', content: title },
+    ...(canonical ? [{ tagName: 'link', rel: 'canonical', href: url }] : []),
   ];
 };

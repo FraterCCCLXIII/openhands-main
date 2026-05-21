@@ -123,7 +123,7 @@ export const meta: Route.MetaFunction = ({ data }) => {
     { name: 'twitter:title', content: data.title },
     { name: 'twitter:description', content: data.excerpt },
     { name: 'twitter:image', content: data.ogImage },
-    { rel: 'canonical', href: data.url },
+    { tagName: 'link', rel: 'canonical', href: data.url },
     {
       'script:ld+json': JSON.stringify({
         '@context': 'https://schema.org',

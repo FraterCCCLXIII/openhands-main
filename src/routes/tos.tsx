@@ -15,7 +15,7 @@ export const meta: Route.MetaFunction = ({ location }) => {
     { name: 'twitter:title', content: 'Terms of Service' },
     { name: 'twitter:description', content: 'OpenHands Terms of Service' },
     { name: 'twitter:image', content: 'https://openhands.dev/assets/webflow/og/69161b32abf448a2df921a73_openhands_opengraph_01.png' },
-    { rel: 'canonical', href: 'https://openhands.dev' + location.pathname },
+    { tagName: 'link', rel: 'canonical', href: 'https://openhands.dev' + location.pathname },
     { name: 'robots', content: 'noindex, nofollow' },
   ];
 };

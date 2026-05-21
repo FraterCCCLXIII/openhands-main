@@ -350,15 +350,14 @@
     @apply bg-brand-fg text-brand-bg border border-transparent;
   }
   .btn-primary:hover {
-    box-shadow: inset 0 0 0 1px rgba(249, 240, 217, 0.3);
-    opacity: 0.92;
+    box-shadow: inset 0 0 0 100px rgba(0, 0, 0, 0.15);
   }
 
   .btn-outline {
     @apply bg-transparent text-brand-fg border border-brand-fg;
   }
   .btn-outline:hover {
-    @apply bg-brand-fg text-brand-bg;
+    box-shadow: inset 0 0 0 100px rgba(0, 0, 0, 0.15);
   }
 
   /* Button wrapper — matches live Webflow CTA wrapper divs that provide
@@ -405,6 +404,17 @@
     background-color: rgba(241, 234, 224, 0.2);
     color: #F9F0D9;
   }
+  .btn-wrap:hover,
+  .btn-wrap-primary:hover,
+  .btn-wrap-dark:hover {
+    box-shadow: inset 0 0 0 100px rgba(0, 0, 0, 0.15);
+  }
+
+  .capabilities_card_button:hover {
+    background-color: rgb(34, 21, 13);
+    color: rgb(249, 240, 217);
+  }
+
   /* Inner .btn inside a wrapper: wrapper carries the padding, so strip it
      from the inner element to avoid doubling. */
   .btn-wrap > .btn,
@@ -415,6 +425,151 @@
     border-color: transparent;
     border-style: none;
     padding: 0;
+  }
+
+  .dialog {
+    z-index: 100;
+    display: flex;
+    flex-flow: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+    width: 48rem;
+    max-width: 95%;
+    padding: 1.5rem;
+    overflow: auto;
+    border: 1px solid rgba(30, 21, 15, 0.2);
+    border-radius: 1rem;
+    background-color: var(--color-brand-bg, rgb(249, 240, 217));
+    color: rgb(0, 0, 0);
+    text-align: center;
+  }
+
+  .dialog[open] {
+    position: fixed;
+    inset: 0;
+    margin: auto;
+    height: max-content;
+  }
+
+  .dialog::backdrop {
+    background-color: rgba(32, 21, 14, 0.5);
+    backdrop-filter: blur(8px);
+  }
+
+  .dialog_top_icon {
+    width: 2rem;
+  }
+
+  .dialog_top_wrap {
+    display: flex;
+    flex-flow: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 1rem;
+    width: 100%;
+  }
+
+  .dialog .h3 {
+    margin-top: 0;
+    margin-bottom: var(--h3-bottom-margin, 0.3em);
+    font-family: "Sohne Kraftig", Arial, sans-serif;
+    font-size: var(--h3-font-size);
+    line-height: var(--h3-line-height);
+    font-weight: var(--h3-font-weight);
+    text-align: center;
+    letter-spacing: -0.02em;
+  }
+
+  .dialog_top_heading.h3 {
+    margin-bottom: 0;
+  }
+
+  .dialog_top_content {
+    display: flex;
+    flex-flow: column;
+    gap: 0.25rem;
+  }
+
+  .dialog_top_paragraph {
+    margin-bottom: 0;
+    color: rgb(95, 95, 95);
+    font-family: Geistmono, Arial, sans-serif;
+  }
+
+  .dialog_top_close {
+    box-sizing: content-box;
+    align-self: flex-end;
+    width: 0.5rem;
+    margin-top: -0.5rem;
+    margin-right: -0.5rem;
+    padding: 0.5rem;
+    background-color: transparent;
+    cursor: pointer;
+  }
+
+  .dialog_bottom_wrap {
+    display: flex;
+    flex-flow: wrap;
+    width: 100%;
+    overflow: hidden;
+    border: 1px solid rgba(95, 95, 95, 0.2);
+    border-radius: 1.5rem;
+  }
+
+  .dialog_bottom_item {
+    display: flex;
+    flex: 50%;
+    flex-flow: column;
+    align-items: stretch;
+    justify-content: center;
+    gap: 1rem;
+    min-width: 14.5rem;
+    padding: 1rem;
+    border-right: 1px solid rgba(95, 95, 95, 0.2);
+  }
+
+  .dialog_bottom_item:last-child {
+    border-right: 0;
+  }
+
+  .dialog_bottom_heading {
+    margin-bottom: 0;
+    font-size: 1.13rem;
+    font-weight: 500;
+  }
+
+  .dialog_bottom_content {
+    display: flex;
+    flex-flow: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.25rem;
+  }
+
+  .dialog_bottom_paragraph {
+    max-width: 30ch;
+    margin-bottom: 0;
+    color: rgb(95, 95, 95);
+    font-family: Geistmono, Arial, sans-serif;
+    font-size: 0.88rem;
+  }
+
+  .dialog .button {
+    width: 100%;
+    margin-bottom: 0;
+    border-radius: 8px;
+  }
+
+  @media (max-width: 767px) {
+    .dialog_bottom_item {
+      border-right: 0;
+      border-bottom: 1px solid rgba(95, 95, 95, 0.2);
+    }
+
+    .dialog_bottom_item:last-child {
+      border-bottom: 0;
+    }
   }
 
   .btn-outline-light {
@@ -759,15 +914,64 @@
 
 /* Button component styles matching Webflow */
 .button {
-  @apply inline-flex items-center justify-center px-5 py-2.5 rounded-full font-medium text-sm cursor-pointer transition-all duration-200;
+  display: inline-flex;
+  position: relative;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4em;
+  margin-bottom: 10px;
+  padding: var(--btn-padding-y) var(--btn-padding-x);
+  border: 1px solid transparent;
+  border-radius: var(--btn-border-radius);
+  background-color: rgb(34, 21, 13);
+  color: rgb(249, 240, 217);
+  font-family: "Sohne Kraftig", Arial, sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.3;
+  text-align: center;
+  text-decoration: none;
+  cursor: auto;
+  pointer-events: auto;
+  transition: box-shadow 0.3s cubic-bezier(0.165, 0.84, 0.44, 1), border-color 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+  box-shadow: inset 0 0 0 0 transparent;
 }
 
-.button[data-wf--button--variant="primary"] {
-  @apply bg-brand-fg text-brand-bg hover:bg-opacity-80;
+.button:hover {
+  box-shadow: inset 0 0 0 100px rgba(0, 0, 0, 0.15);
 }
 
+.button.secondary-7,
 .button[data-wf--button--variant="secondary"] {
-  @apply bg-transparent text-brand-fg border border-brand-fg hover:bg-brand-fg hover:text-brand-bg;
+  border-color: rgb(34, 21, 13);
+  background-color: rgba(255, 255, 255, 0.34);
+  color: rgb(34, 21, 13);
+  box-shadow: inset 0 0 0 0 rgb(249, 240, 217);
+  backdrop-filter: blur(5px);
+}
+
+.btn-text {
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.u-link-cover {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.u-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 /* Banner styles */

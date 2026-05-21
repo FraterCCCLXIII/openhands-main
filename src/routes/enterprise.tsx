@@ -233,7 +233,7 @@ export const meta: Route.MetaFunction = ({ location }) => {
         'Deploy OpenHands securely across your organization. Enterprise-grade governance, compliance, and customization for regulated industries.',
     },
     { name: 'twitter:image', content: DEFAULT_SOCIAL_IMAGE },
-    { rel: 'canonical', href: 'https://openhands.dev' + location.pathname },
+    { tagName: 'link', rel: 'canonical', href: 'https://openhands.dev' + location.pathname },
   ];
 };
 

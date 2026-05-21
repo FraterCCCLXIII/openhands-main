@@ -190,6 +190,11 @@ describe('Product parity routes', () => {
       { property: 'og:title', content: title },
       { property: 'og:description', content: description },
       { property: 'og:image', content: PRODUCT_OG_IMAGE },
+      { property: 'og:image:secure_url', content: PRODUCT_OG_IMAGE },
+      { property: 'og:image:type', content: 'image/png' },
+      { property: 'og:image:width', content: '1200' },
+      { property: 'og:image:height', content: '630' },
+      { property: 'og:image:alt', content: title },
       { property: 'og:url', content: `https://openhands.dev${pathname}` },
       { property: 'og:type', content: 'website' },
       { property: 'og:site_name', content: 'OpenHands' },
@@ -197,7 +202,8 @@ describe('Product parity routes', () => {
       { name: 'twitter:title', content: title },
       { name: 'twitter:description', content: description },
       { name: 'twitter:image', content: PRODUCT_OG_IMAGE },
-      { rel: 'canonical', href: `https://openhands.dev${pathname}` },
+      { name: 'twitter:image:alt', content: title },
+      { tagName: 'link', rel: 'canonical', href: `https://openhands.dev${pathname}` },
     ]);
   };
 

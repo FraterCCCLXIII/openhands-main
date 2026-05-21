@@ -153,3 +153,4 @@ The local site uses the markdown filename as the slug, while Webflow generates S
 1. [ ] Create `/privacy` page to match Webflow
 2. [ ] Add `/joinslack` redirect route
 3. [ ] Consider blog slug alignment between local and Webflow
+4. [x] Audit hover states across CTA buttons (for example `Build with SDK`) and align broken hover behavior with live Webflow.
