@@ -1230,6 +1230,12 @@
   pointer-events: auto;
 }
 
+.manifesto-ascii .asci-embed,
+.manifesto-ascii .ascii-embed,
+.manifesto-ascii .ascii-pre {
+  text-align: center;
+}
+
 @media (min-width: 900px) {
   .ascii-pre {
     font-size: 14px;

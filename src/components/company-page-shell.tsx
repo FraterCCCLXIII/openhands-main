@@ -5,6 +5,7 @@ interface CompanyPageShellProps {
   children: ReactNode;
   backgroundClassName?: string;
   showBackground?: boolean;
+  footerFlowSpacerHeight?: number;
 }
 
 /**
@@ -25,6 +26,7 @@ export const CompanyPageShell = ({
   children,
   backgroundClassName = 'opacity-[0.12]',
   showBackground = true,
+  footerFlowSpacerHeight = 19,
 }: CompanyPageShellProps) => {
   return (
     <main data-wf-el='page-main' className='relative overflow-visible' style={{ display: 'flex', flexDirection: 'column', position: 'static' }}>
@@ -41,7 +43,7 @@ export const CompanyPageShell = ({
       ) : null}
       <div className='relative'>{children}</div>
       <Footer standalone compactNav showSocialLinks />
-      <div aria-hidden='true' style={{ height: '19px' }} />
+      {footerFlowSpacerHeight > 0 ? <div aria-hidden='true' style={{ height: `${footerFlowSpacerHeight}px` }} /> : null}
     </main>
   );
 };

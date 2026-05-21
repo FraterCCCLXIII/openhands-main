@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ReactElement } from 'react';
 import { MemoryRouter, RouterProvider, createMemoryRouter } from 'react-router';
@@ -201,6 +201,29 @@ describe('company information pages parity', () => {
     expect(container.querySelectorAll('div[data-wf-el="standard-collection"]')).toHaveLength(2);
     expect(container.querySelectorAll('section[data-wf-el="section"]')).toHaveLength(2);
     expect(container.querySelector('div[data-wf-el="rich-text"]')).toContainElement(introHeading);
+  });
+
+  it('keeps the manifesto mobile Webflow layout hooks aligned with live', async () => {
+    Object.defineProperty(window, 'innerWidth', {
+      configurable: true,
+      writable: true,
+      value: 375,
+    });
+
+    const { container } = renderInApp('/manifesto', 'manifesto', <Manifesto />);
+
+    expect(container.querySelector('section[data-wf-el="section-hero"]')).toHaveStyle({
+      height: '217.077px',
+      padding: '0px',
+    });
+    expect(container.querySelector('[data-wf-el="rich-text"]')?.children[1]?.tagName).toBe('P');
+
+    const footerSection = Array.from(container.querySelectorAll('section[data-wf-el="section"]')).at(-1);
+
+    await waitFor(() => {
+      expect(footerSection).toHaveStyle({ height: '1370.58px' });
+      expect(container.querySelector('[data-wf-el="footer-nav"]')).toHaveStyle({ height: '492.766px' });
+    });
   });
 
   it.each([
