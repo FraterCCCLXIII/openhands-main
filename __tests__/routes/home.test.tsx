@@ -63,6 +63,8 @@ describe('home route parity structure', () => {
     expect(container.querySelectorAll('[data-wf-el="hero-splide_button"]')).toHaveLength(2);
     expect(container.querySelectorAll('[data-wf-el="slide-icon-media"]')).toHaveLength(2);
     expect(container.querySelectorAll('[data-wf-el="accordion-icon"] path[d^="M17 17"]')).toHaveLength(5);
+    expect(container.querySelectorAll('[data-wf-el="accordion-item"][open]')).toHaveLength(0);
+    expect(container.querySelectorAll('[data-wf-el="accordion-item"][data-accordion-start-open="false"]')).toHaveLength(5);
 
     expect(screen.getByText('Nick Blanchet,')).toBeInTheDocument();
     expect(screen.getByText('74K')).toBeInTheDocument();

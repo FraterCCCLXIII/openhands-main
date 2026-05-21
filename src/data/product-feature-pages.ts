@@ -89,10 +89,10 @@ const productFeaturePages: Record<'sdk' | 'gui' | 'cli', ProductFeaturePageData>
       'Closed platforms force you into predefined behaviors. OpenHands gives you primitives, not prescriptions, so you can adapt agents to your codebase, tooling, and governance needs.',
     capabilities: [
       'Programmatic task creation',
+      'Custom agent behaviors',
       'Tool and API integrations',
       'Model selection and routing',
       'Fine-grained execution control',
-      'Custom agent behaviors',
     ],
     showcaseImages: [
       {

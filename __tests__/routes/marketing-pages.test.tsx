@@ -53,6 +53,7 @@ describe('Marketing parity routes', () => {
     expect(screen.getByText('Fix bugs before standup')).toBeInTheDocument();
     expect(screen.getByText('Does the OpenHands CLI require cloud connectivity?')).toBeInTheDocument();
     expect(container.querySelectorAll('summary label')).toHaveLength(FAQ_LABEL_COUNT);
+    expect(container.querySelectorAll('[data-wf-el="accordion-item"][open]')).toHaveLength(0);
     expect(
       screen.queryByRole('heading', { name: /Control your agents like real infrastructure/i }),
     ).not.toBeInTheDocument();
@@ -119,7 +120,7 @@ describe('Marketing parity routes', () => {
       screen.getByText(/OpenHands was the only solution that let us prompt an autonomous coding agent/i),
     ).toBeInTheDocument();
     expect(screen.getByText(/Automation doesn't mean unsupervised\./i)).toBeInTheDocument();
-    expect(container.querySelector('img[data-wf-el="acp_graphic_img"]')).toHaveAttribute('src', '/assets/webflow/enterprise/control-plane.png');
+    expect(container.querySelector('img[data-wf-el="acp_graphic_img"]')).toHaveAttribute('src', '/assets/webflow/enterprise/69fb21f8dc8c20b014d24bad_9761f727961757aba10787e99f6f05dd_control-plane-p-1600.png');
     expect(container.querySelector('img[data-wf-el="acp_quote_img"]')).toHaveAttribute('src', '/assets/webflow/enterprise/image96x96.png');
     expect(container.querySelector('img[data-wf-el="acp_quote_logo"]')).toHaveAttribute('src', '/assets/webflow/enterprise/c3ailogo.svg');
     expect(container.querySelectorAll('[data-wf-el="heading-stack"]')).toHaveLength(6);

@@ -14,6 +14,7 @@ const getPostSlug = (data: { title: string; slug?: string }) =>
 
 export default {
   ssr: true,
+  routeDiscovery: { mode: "initial" },
   appDirectory: 'src',
   presets: [vercelPreset()],
   async prerender() {

@@ -4,6 +4,7 @@ import type { Route } from './+types/home';
 import statistics from '~/data/statistics.json';
 import { Footer } from '~/components/footer';
 import { OverlayLinkButton } from '~/components/overlay-link-button';
+import { FAQ_TRIGGER_DIVIDER, CLOSED_FAQ_ITEM_PROPS } from '~/components/faq-accordion';
 import { formatThousands } from '~/utils/format-thousands';
 import { ASCIIAnimation } from '~/components/ascii-animation';
 import { createSocialPreviewMeta } from '~/utils/seo';
@@ -746,8 +747,13 @@ const Home = () => {
                 className='overflow-hidden rounded-[19.2px]'
                 style={{ display: 'flex', flexWrap: 'wrap', alignContent: 'stretch', border: '1px solid rgb(179, 168, 140)', marginTop: index === 0 ? '56.95px' : '49.6px' }}
               >
-                <div className='px-6 py-4 font-mono text-sm font-normal tracking-normal text-brand-fg' style={{ backgroundColor: 'rgb(179, 168, 140)', lineHeight: '16.896px', textTransform: 'none' }}>
-                  {column.label}
+                <div
+                  data-wf-el='custom-interface'
+                  style={{ backgroundColor: 'rgb(179, 168, 140)', width: '100%', flex: '0 0 auto', alignSelf: 'flex-start', paddingTop: '16px', paddingBottom: '16px', position: 'static' }}
+                >
+                  <div className='px-6 font-mono text-sm font-normal tracking-normal text-brand-fg' style={{ lineHeight: '16.896px', textTransform: 'none' }}>
+                    {column.label}
+                  </div>
                 </div>
                 <div className='flex w-full flex-wrap' style={{ paddingTop: '40px', paddingBottom: '0px' }}>
                   {column.cards.map((card) => (
@@ -897,25 +903,20 @@ const Home = () => {
                 <p className='max-w-[330px] fluid-body-lg text-[#b3a88c]' style={{ marginBottom: '0px' }}>
                   Native integrations with GitHub, GitLab, CI/CD, Slack, and ticketing tools. OpenHands fits seamlessly into enterprise governance systems and your preferred model providers.
                 </p>
-                <div className='mt-auto grid grid-cols-2 gap-5 sm:grid-cols-4' style={{ transform: 'translateY(-19px)' }}>
-                  {([
-                    ['/assets/webflow/icons/6908c8dc26f3de5a93212b4c_loop-1--multimedia-multi-button-repeat-media-loop-infinity-controls.svg', 'CI/CD', 119, 61],
-                    ['/assets/webflow/icons/6908c8dd7162d7d09526a0fd_Slack_Technologies_Logo2.svg', 'Slack', 80, 80],
-                    ['/assets/webflow/icons/6908c8dc24685e3f5e172012_github-mark4.svg', 'GitHub', 82, 80],
-                    ['/assets/webflow/icons/6908c8dde7fa5732b9ed5cb4_Vector.svg', 'GitLab', 83, 80],
-                  ] as [string, string, number, number][]).map(([icon, label, w, h]) => (
-                    <div key={label} className='border border-white/10' style={{ borderRadius: '8px', backgroundColor: 'rgb(34, 21, 13)', padding: '0px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'start', transform: label === 'CI/CD' ? 'translate(4px, 9px)' : undefined }}>
-                      {/* Live integration logo imgs have margin: 0;
-                        * spacing to the label below comes from flex
-                        * column layout, not per-img mb-3. */}
-                      {/* Live's logo IMGs have margin: 0 — the
-                          parent flex column already centers them on
-                          the cross axis, so mx-auto added ~21px each
-                          side here.  Drop it. */}
-                      <div style={{ width: `${w}px`, height: `${h}px`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><img src={icon} alt='' className='img-block' style={{ width: `${w}px`, height: `${h}px`, textAlign: 'start', margin: '0px', objectFit: 'scale-down' }} /></div>
-                      <div className='font-mono text-sm font-normal text-brand-bg' style={{ lineHeight: '16.896px', textAlign: 'start' }}>{label}</div>
-                    </div>
-                  ))}
+                <div data-wf-el='standard-wrap' className='mt-auto' style={{ width: '557px', height: '118px', transform: 'translateY(-18px)' }}>
+                  <div data-wf-el='row' style={{ display: 'flex', width: '565px', height: '118px', marginLeft: '-4px', marginRight: '-4px', rowGap: '8px' }}>
+                    {([
+                      ['/assets/webflow/icons/6908c8dc26f3de5a93212b4c_loop-1--multimedia-multi-button-repeat-media-loop-infinity-controls.svg', 'CI/CD', 119, 61],
+                      ['/assets/webflow/icons/6908c8dd7162d7d09526a0fd_Slack_Technologies_Logo2.svg', 'Slack', 80, 80],
+                      ['/assets/webflow/icons/6908c8dc24685e3f5e172012_github-mark4.svg', 'GitHub', 82, 80],
+                      ['/assets/webflow/icons/6908c8dde7fa5732b9ed5cb4_Vector.svg', 'GitLab', 83, 80],
+                    ] as [string, string, number, number][]).map(([icon, label, w, h]) => (
+                      <div key={label} data-wf-el='col' style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', position: 'relative', width: '141.25px', height: '118px', paddingLeft: '4px', paddingRight: '4px' }}>
+                        <img data-wf-el='standard-media-img' src={icon} alt='' className='standard-media-img' style={{ display: 'block', width: `${w}px`, height: `${h}px`, margin: '0px', objectFit: 'scale-down' }} />
+                        <div data-wf-el='eyebrow' className='font-mono text-sm font-normal text-brand-bg' style={{ lineHeight: '16.896px', marginTop: '21.12px', marginBottom: '0px' }}>{label}</div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             </article>
@@ -1035,20 +1036,14 @@ const Home = () => {
               <OverlayLinkButton href='/contact' label='Contact us' variant='outline' className='w-fit' />
             </div>
             <div className='lg:flex-1 lg:px-5'>
-              {FAQS.map((faq, idx) => (
+              {FAQS.map((faq) => (
                 <details
                   key={faq.question}
                   data-wf-el='accordion-item'
-                  /* Live carries `data-accordion-start-open` on every FAQ
-                     row (the live count is 5, matching all entries); the
-                     mast accordion.min.js script reads the attribute value
-                     to decide which row defaults open. We use first-only as
-                     'true' and stamp every row with the attribute so the
-                     widget count matches live. */
-                  data-accordion-start-open={idx === 0 ? 'true' : 'false'}
+                  {...CLOSED_FAQ_ITEM_PROPS}
                   className='flex flex-col rounded-lg border border-brand-bg'
                 >
-                  <summary data-wf-el='accordion-trigger' className='flex cursor-pointer list-none items-center justify-between overflow-hidden p-6' style={{ borderBottom: '1px solid rgb(249, 240, 217)' }}>
+                  <summary data-wf-el='accordion-trigger' className='flex cursor-pointer list-none items-center justify-between overflow-hidden p-6' style={{ borderBottom: FAQ_TRIGGER_DIVIDER }}>
                     <label data-wf-el='accordion-title' className='pointer-events-none block cursor-default pr-3 fluid-h4 leading-[1.4] text-brand-fg'>{faq.question}</label>
                     <div data-wf-el='accordion-icon' className='h-8 w-8 flex-shrink-0 overflow-hidden text-brand-fg' style={{ display: 'block' }} aria-hidden='true'>
                       <svg width='32' height='32' viewBox='0 0 32 32' fill='none' xmlns='http://www.w3.org/2000/svg'><path fillRule='evenodd' clipRule='evenodd' d='M17 17L27.3137 17L27.3137 15H17V4.68631L15 4.68631L15 15H4.68629L4.68629 17L15 17V27.3137H17V17Z' fill='currentColor'></path></svg>

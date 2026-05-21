@@ -1,3 +1,4 @@
+import { useEffect, useState, type ReactNode } from 'react';
 import type { Route } from './+types/community';
 import { Footer } from '~/components/footer';
 import { OverlayLinkButton } from '~/components/overlay-link-button';
@@ -13,14 +14,6 @@ const LATEST_COMMUNITY_CALL = {
 };
 
 const EVENTS = [
-  {
-    title: 'OpenHands Community Call - May 21st',
-    description:
-      "Join our bi-weekly OpenHands Community Call! We'll announce new contributors, discuss project updates, demo new features, and talk about the future of AI. All are welcome! Recording and agenda will be available post meeting.",
-    date: 'May 21, 2026',
-    time: '4:00 PM UTC',
-    href: 'https://luma.com/openhands-community-21may26',
-  },
   {
     title: 'Scaling Enterprise AI Agents: Security, Privacy & Real-World Deployment',
     titleScale: 1.0032,
@@ -55,7 +48,8 @@ By RSVPing, you consent to receive marketing emails from the hosts. You can with
     descriptionHeight: '1231px',
     date: 'May 26, 2026',
     time: '9:30 PM UTC',
-    href: 'https://luma.com/openhands-enterprise-ai-agents',
+    startsAt: '2026-05-26T21:30:00Z',
+    href: 'https://luma.com/event-26may26',
   },
   {
     title: 'OpenHands Community Call - June 4th',
@@ -63,7 +57,17 @@ By RSVPing, you consent to receive marketing emails from the hosts. You can with
       "Join our bi-weekly OpenHands Community Call! We'll announce new contributors, discuss project updates, demo new features, and talk about the future of AI. All are welcome! Recording and agenda will be available post meeting.",
     date: 'Jun 4, 2026',
     time: '4:00 PM UTC',
+    startsAt: '2026-06-04T16:00:00Z',
     href: 'https://luma.com/openhands-community-4jun26',
+  },
+  {
+    title: 'OpenHands Community Call - June 18th',
+    description:
+      "Join our bi-weekly OpenHands Community Call! We'll announce new contributors, discuss project updates, demo new features, and talk about the future of AI. All are welcome! Recording and agenda will be available post meeting.",
+    date: 'Jun 18, 2026',
+    time: '4:00 PM UTC',
+    startsAt: '2026-06-18T16:00:00Z',
+    href: 'https://luma.com/openhands-community-18jun26',
   },
 ];
 
@@ -75,21 +79,18 @@ const FIRST_TIME_CONTRIBUTORS = [
     title: 'fix: avoid rewriting provider credit errors',
     href: 'https://github.com/OpenHands/OpenHands/pull/14437',
     avatar: 'https://avatars.githubusercontent.com/u/39442065?v=4',
-    titleWidth: '193px',
   },
   {
     name: 'smolpaws',
     title: 'Add issue duplicate automation workflow',
     href: 'https://github.com/OpenHands/OpenHands/pull/14444',
     avatar: 'https://avatars.githubusercontent.com/u/255025612?v=4',
-    titleWidth: '150px',
   },
   {
     name: 'Cao-R',
     title: 'fix Windows compatibility: use cross-platform temp directory for sandbox',
     href: 'https://github.com/OpenHands/OpenHands/pull/14261',
     avatar: 'https://avatars.githubusercontent.com/u/176635150?v=4',
-    titleWidth: '215px',
   },
 ] as const;
 
@@ -164,6 +165,42 @@ const MetadataIcon = ({ type }: { type: 'calendar' | 'clock' }) => {
   );
 };
 
+
+const useLocalEventLabel = (
+  startsAt: string | undefined,
+  fallback: string,
+  options: Intl.DateTimeFormatOptions,
+) => {
+  const [label, setLabel] = useState(fallback);
+
+  useEffect(() => {
+    if (!startsAt) return;
+    setLabel(new Intl.DateTimeFormat(undefined, options).format(new Date(startsAt)));
+  }, [fallback, options, startsAt]);
+
+  return label;
+};
+
+const EventDate = ({ startsAt, fallback }: { startsAt?: string; fallback: string }) => {
+  const label = useLocalEventLabel(startsAt, fallback, {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+
+  return <>{label}</>;
+};
+
+const EventTime = ({ startsAt, fallback }: { startsAt?: string; fallback: string }) => {
+  const label = useLocalEventLabel(startsAt, fallback, {
+    hour: 'numeric',
+    minute: '2-digit',
+    timeZoneName: 'short',
+  });
+
+  return <>{label}</>;
+};
+
 const MetadataItem = ({
   type,
   tone,
@@ -171,7 +208,7 @@ const MetadataItem = ({
 }: {
   type: 'calendar' | 'clock';
   tone: 'dark' | 'light';
-  children: string;
+  children: ReactNode;
 }) => (
   // Live wraps each metadata datum in a flex `div` whose inner `<p>`
   // remains a regular block element — keeping the icon outside the
@@ -298,8 +335,8 @@ const Community = () => {
                       </p>
                     </div>
                     <div data-wf-el='previous-event_content_meta' style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', columnGap: '32px', rowGap: '16px', marginTop: 'auto' }}>
-                      <MetadataItem type='calendar' tone='dark'>{event.date}</MetadataItem>
-                      <MetadataItem type='clock' tone='dark'>{event.time}</MetadataItem>
+                      <MetadataItem type='calendar' tone='dark'><EventDate startsAt={event.startsAt} fallback={event.date} /></MetadataItem>
+                      <MetadataItem type='clock' tone='dark'><EventTime startsAt={event.startsAt} fallback={event.time} /></MetadataItem>
                     </div>
                   </div>
                 </div>
@@ -392,7 +429,7 @@ const Community = () => {
                         </div>
                       </div>
                       <p className='text-[16px] font-normal leading-[22.4px] text-brand-fg' style={{ margin: 0, width: '241.5px' }}>
-                        <span style={{ display: 'inline-block', transform: contributor.titleWidth === '193px' ? 'scaleX(0.811)' : contributor.titleWidth === '150px' ? 'scaleX(0.664)' : 'scaleX(0.903)', transformOrigin: 'left center' }}>{contributor.title}</span>
+                        {contributor.title}
                       </p>
                     </div>
                   </a>

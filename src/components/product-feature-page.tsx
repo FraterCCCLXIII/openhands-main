@@ -3,6 +3,7 @@ import type { ProductFeaturePageData } from '~/data/product-feature-pages';
 import { Footer } from '~/components/footer';
 import ASCIIAnimation from '~/components/ascii-animation';
 import { OverlayLinkButton } from '~/components/overlay-link-button';
+import { FAQ_TRIGGER_DIVIDER, CLOSED_FAQ_ITEM_PROPS } from '~/components/faq-accordion';
 
 export interface ProductPageAction {
   label: string;
@@ -162,20 +163,20 @@ const ProductGuiIntroSection = ({
   description: string;
 }) => (
   <section data-wf-el='section' style={{ display: 'block', backgroundColor: 'rgb(34, 21, 13)', color: 'rgb(249, 240, 217)', position: 'relative', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px' }}>
-    <div data-wf-el='container' className='mx-auto max-w-[1238px]' style={{ display: 'block', width: '1238px', marginLeft: '101px', marginRight: '101px' }}>
+    <div data-wf-el='container' className='mx-auto max-w-[1238px]' style={{ display: 'block', width: 'calc(100% - 80px)', maxWidth: '1238px' }}>
       <div style={{ display: 'flex', marginLeft: '-20px', marginRight: '-20px' }}>
-        <div style={{ width: '50%', paddingLeft: '20px', paddingRight: '20px', minHeight: '469px' }}>
-          <div data-wf-el='product-list_img_wrap' className='bg-brand-bg' style={{ backgroundColor: 'rgb(249, 240, 217)', border: '1px solid rgb(179, 168, 140)', borderRadius: '16px', boxSizing: 'border-box', color: 'rgb(249, 240, 217)', display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative', overflow: 'hidden', width: '599px', minHeight: '100%', marginLeft: '0px', padding: '96px 64px 64px', boxShadow: 'none' }}>
+        <div style={{ width: '50%', paddingLeft: '20px', paddingRight: '20px', minHeight: 'min(469px, 52.5vw)' }}>
+          <div data-wf-el='product-list_img_wrap' className='bg-brand-bg' style={{ backgroundColor: 'rgb(249, 240, 217)', border: '1px solid rgb(179, 168, 140)', borderRadius: '16px', boxSizing: 'border-box', color: 'rgb(249, 240, 217)', display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative', overflow: 'hidden', width: '100%', minHeight: '100%', marginLeft: '0px', padding: '96px 64px 64px', boxShadow: 'none' }}>
             <div data-wf-el='product-list_img_overlay' className='absolute inset-x-0 top-0 text-brand-fg' style={{ backgroundColor: 'rgb(179, 168, 140)', color: 'rgb(34, 21, 13)', zIndex: 1, padding: '16px' }}>
-              <div data-wf-el='eyebrow' className='font-mono' style={{ fontSize: '14.08px', lineHeight: '16.896px', marginBottom: '0px', width: '565px' }}>Web&nbsp;GUI</div>
+              <div data-wf-el='eyebrow' className='font-mono' style={{ fontSize: '14.08px', lineHeight: '16.896px', marginBottom: '0px', width: '100%' }}>Web&nbsp;GUI</div>
             </div>
-            <img data-wf-el='product-list_img' src={image.src} alt={image.alt} style={{ width: '469px', height: '307px', borderRadius: '0px', color: 'rgb(249, 240, 217)', display: 'block', objectFit: 'scale-down' }} />
+            <img data-wf-el='product-list_img' src={image.src} alt={image.alt} style={{ width: '100%', maxWidth: '469px', height: 'auto', borderRadius: '0px', color: 'rgb(249, 240, 217)', display: 'block', objectFit: 'scale-down' }} />
           </div>
         </div>
-        <div style={{ width: '50%', paddingLeft: '20px', paddingRight: '20px', minHeight: '469px' }}>
-          <div data-wf-el='heading-stack' className='text-brand-bg' style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-start', paddingLeft: '0px', paddingRight: '0px', width: '599px', height: '469px' }}>
+        <div style={{ width: '50%', paddingLeft: '20px', paddingRight: '20px', minHeight: 'min(469px, 52.5vw)' }}>
+          <div data-wf-el='heading-stack' className='text-brand-bg' style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-start', paddingLeft: '0px', paddingRight: '0px', width: '100%', height: '100%' }}>
             <h2 className='section-title'>{title}</h2>
-            <p data-wf-el='paragraph-lg' className='fluid-body-lg text-[#b3a88c]' style={{ marginTop: '0px', marginBottom: '20.8px', width: '599px', textWrap: 'pretty', wordSpacing: '0.025px' }}>{description}</p>
+            <p data-wf-el='paragraph-lg' className='fluid-body-lg text-[#b3a88c]' style={{ marginTop: '0px', marginBottom: '20.8px', width: '100%', textWrap: 'pretty', wordSpacing: '0.025px' }}>{description}</p>
           </div>
         </div>
       </div>
@@ -323,13 +324,12 @@ export const ProductFaqSection = ({ faqs }: { faqs: readonly ProductFaqItem[] })
                 {faqs.map((faq) => (
                   <div role='listitem' key={faq.question} data-wf-el='standard-collection-list-item' style={{ display: 'block', justifyContent: 'space-between', alignItems: 'center', gap: '16px' }}>
                     <details
-                      open
                       data-wf-el='accordion-item'
-                      data-accordion-start-open='false'
+                      {...CLOSED_FAQ_ITEM_PROPS}
                       className='group'
                       style={{ borderRadius: '8px', borderWidth: '1px', borderStyle: 'solid', borderColor: 'rgb(249, 240, 217)', display: 'flex', flexDirection: 'column', padding: '0' }}
                     >
-                      <summary data-wf-el='accordion-trigger' className='flex cursor-pointer list-none items-center justify-between font-normal text-brand-fg' style={{ fontSize: '16px', lineHeight: '22.4px', padding: '24px', gap: 'normal', borderBottom: '1px solid rgb(249, 240, 217)', overflow: 'hidden' }}>
+                      <summary data-wf-el='accordion-trigger' className='flex cursor-pointer list-none items-center justify-between font-normal text-brand-fg' style={{ fontSize: '16px', lineHeight: '22.4px', padding: '24px', gap: 'normal', borderBottom: FAQ_TRIGGER_DIVIDER, overflow: 'hidden' }}>
                         <label data-wf-el='accordion-title' className='block pointer-events-none cursor-default font-medium' style={{ paddingRight: '12px', fontSize: '24px', lineHeight: '33.6px' }}>{renderFaqQuestion(faq.question)}</label>
                         <svg data-wf-el='accordion-icon' className='h-8 w-8 flex-shrink-0 text-brand-fg' width='32' height='32' viewBox='0 0 32 32' fill='none' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' style={{ verticalAlign: 'baseline' }}>
                           <path fillRule='evenodd' clipRule='evenodd' d='M17 17L27.3137 17L27.3137 15H17V4.68631L15 4.68631L15 15H4.68629L4.68629 17L15 17V27.3137H17V17Z' fill='currentColor' />

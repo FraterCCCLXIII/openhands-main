@@ -30,8 +30,5 @@
       "destination": "https://docs.google.com/forms/d/e/1FAIpQLSd7vO0VtN-QZChZjs7cMQEEBA2wnTAXBFHD66wt3mWgqJ_27Q/viewform?usp=publish-editor",
       "permanent": true
     }
-  ],
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/" }
   ]
 }

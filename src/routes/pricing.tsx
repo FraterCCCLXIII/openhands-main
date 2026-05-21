@@ -3,6 +3,7 @@ import type { Route } from './+types/pricing';
 import ASCIIAnimation from '~/components/ascii-animation';
 import { Footer } from '~/components/footer';
 import { OverlayLinkButton } from '~/components/overlay-link-button';
+import { FAQ_TRIGGER_DIVIDER } from '~/components/faq-accordion';
 
 export const handle = { hideGlobalFooter: true };
 
@@ -625,7 +626,7 @@ const Pricing = () => {
                         style={{
                           padding: '24px',
                           fontWeight: 400,
-                          borderBottom: '1px solid rgb(249, 240, 217)',
+                          borderBottom: FAQ_TRIGGER_DIVIDER,
                           overflow: 'hidden',
                         }}
                       >

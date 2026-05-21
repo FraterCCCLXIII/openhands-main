@@ -6,7 +6,7 @@ import { OverlayLinkButton } from '~/components/overlay-link-button';
 import { DEFAULT_SOCIAL_IMAGE } from '~/utils/seo';
 
 const ASCII_HOLE_BG = '/assets/webflow/backgrounds/690b397ae76441160bed52b6_asci-art-hole.png';
-const CONTROL_PLANE_IMG = '/assets/webflow/enterprise/control-plane.png';
+const CONTROL_PLANE_IMG = '/assets/webflow/enterprise/69fb21f8dc8c20b014d24bad_9761f727961757aba10787e99f6f05dd_control-plane-p-1600.png';
 const STEPS_IMG = '/assets/webflow/enterprise/steps.png';
 // Filenames intentionally match the live Webflow CDN image filenames
 // (after the parity script's normalization: strip extensions, URL
@@ -636,7 +636,7 @@ const Enterprise = () => {
           <div data-wf-el='heading-stack' style={{ marginBottom: '24px' }}>
             <div data-wf-el='heading-stack' className='flex flex-col items-start' style={{ marginBottom: '0px', justifyContent: 'center' }}>
               <Eyebrow className='text-brand-fg'>OpenHands Enterprise</Eyebrow>
-              <h2 className='section-title max-w-[724px] text-brand-fg'>Built for teams running agents at scale. </h2>
+              <h2 className='section-title text-brand-fg'>Built for teams running agents at scale. </h2>
               <p data-wf-el='paragraph-lg' className='fluid-body-lg text-[#5f5f5f]' style={{ marginBottom: '20.8px' }}>
                 Self-hosted in your VPC via Kubernetes. Source-available. Backed by extended support and direct access to our research team.
               </p>

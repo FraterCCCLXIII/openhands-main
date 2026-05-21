@@ -828,3 +828,18 @@
 .h1 {
   @apply text-4xl lg:text-6xl font-bold leading-tight;
 }
+
+@keyframes contact-logo-track-scroll {
+  from {
+    transform: translateX(-116px);
+  }
+
+  to {
+    transform: translateX(0px);
+  }
+}
+
+.contact-logo-track {
+  animation: contact-logo-track-scroll 9.1s linear infinite alternate;
+  will-change: transform;
+}
