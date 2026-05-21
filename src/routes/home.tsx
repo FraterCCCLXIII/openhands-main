@@ -273,7 +273,7 @@ const DEVELOPER_QUOTES = [
   },
 ];
 
-const ENTERPRISE_LOGOS_HTML = "<div data-wf-el=\"enterprise-logos\" class=\"enterprise-logos\" style=\"display:flex;justify-content:center;align-items:center;gap:48px;margin-top:32px;color:#F9F0D9\"><div data-wf-el=\"enterprise-logo\" class=\"enterprise-logo\" style=\"width:87px;height:64px;color:#F9F0D9\"><svg xmlns=\"http://www.w3.org/2000/svg\" id=\"svg2\" x=\"0px\" y=\"0px\" height=\"100%\" viewBox=\"35.188 31.512 351.46 258.785\" width=\"auto\"><path id=\"path17\" d=\"M384.195,282.109c0,3.771-2.769,6.302-6.047,6.302v-0.023c-3.371,0.023-6.089-2.508-6.089-6.278  c0-3.769,2.718-6.293,6.089-6.293C381.427,275.816,384.195,278.34,384.195,282.109z M386.648,282.109c0-5.175-4.02-8.179-8.5-8.179  c-4.511,0-8.531,3.004-8.531,8.179c0,5.172,4.021,8.188,8.531,8.188C382.629,290.297,386.648,287.281,386.648,282.109   M376.738,282.801h0.91l2.109,3.703h2.316l-2.336-3.859c1.207-0.086,2.2-0.661,2.2-2.286c0-2.019-1.392-2.668-3.75-2.668h-3.411  v8.813h1.961V282.801 M376.738,281.309v-2.122h1.364c0.742,0,1.753,0.06,1.753,0.965c0,0.985-0.523,1.157-1.398,1.157H376.738\"></path><path id=\"path19\" d=\"M329.406,237.027l10.598,28.993H318.48L329.406,237.027z M318.056,225.738l-24.423,61.88h17.246l3.863-10.934  h28.903l3.656,10.934h18.722l-24.605-61.888L318.056,225.738z M269.023,287.641h17.497v-61.922l-17.5-0.004L269.023,287.641z   M147.556,225.715l-14.598,49.078l-13.984-49.074l-18.879-0.004l19.972,61.926h25.207l20.133-61.926H147.556z M218.281,239.199h7.52  c10.91,0,17.966,4.898,17.966,17.609c0,12.714-7.056,17.613-17.966,17.613h-7.52V239.199z M200.931,225.715v61.926h28.366  c15.113,0,20.048-2.512,25.384-8.148c3.769-3.957,6.207-12.641,6.207-22.134c0-8.707-2.063-16.468-5.66-21.304  c-6.481-8.649-15.817-10.34-29.75-10.34H200.931z M35.188,225.629v62.012h17.645v-47.086l13.672,0.004  c4.527,0,7.754,1.128,9.934,3.457c2.765,2.945,3.894,7.699,3.894,16.395v27.23h17.098v-34.262c0-24.453-15.586-27.75-30.836-27.75  H35.188z M172.771,225.715l0.007,61.926h17.489v-61.926H172.771z\"></path><path id=\"path21\" fill=\"currentColor\" d=\"M82.211,102.414c0,0,22.504-33.203,67.437-36.638V53.73  c-49.769,3.997-92.867,46.149-92.867,46.149s24.41,70.565,92.867,77.026v-12.804C99.411,157.781,82.211,102.414,82.211,102.414z   M149.648,138.637v11.726c-37.968-6.769-48.507-46.237-48.507-46.237s18.23-20.195,48.507-23.47v12.867  c-0.023,0-0.039-0.007-0.058-0.007c-15.891-1.907-28.305,12.938-28.305,12.938S128.243,131.445,149.648,138.637 M149.648,31.512  V53.73c1.461-0.112,2.922-0.207,4.391-0.257c56.582-1.907,93.449,46.406,93.449,46.406s-42.343,51.488-86.457,51.488  c-4.043,0-7.828-0.375-11.383-1.005v13.739c3.04,0.386,6.192,0.613,9.481,0.613c41.051,0,70.738-20.965,99.484-45.778  c4.766,3.817,24.278,13.103,28.289,17.168c-27.332,22.883-91.031,41.329-127.144,41.329c-3.481,0-6.824-0.211-10.11-0.528v19.306  h156.032V31.512H149.648z M149.648,80.656V65.777c1.446-0.101,2.903-0.179,4.391-0.226c40.688-1.278,67.382,34.965,67.382,34.965  s-28.832,40.043-59.746,40.043c-4.449,0-8.438-0.715-12.028-1.922V93.523c15.84,1.914,19.028,8.911,28.551,24.786l21.18-17.859  c0,0-15.461-20.277-41.524-20.277C155.021,80.172,152.31,80.371,149.648,80.656\"></path></svg></div><div data-wf-el=\"enterprise-logo\" class=\"enterprise-logo amd\" style=\"width:268px;height:64px;color:#F9F0D9\"><svg xmlns=\"http://www.w3.org/2000/svg\" id=\"Layer_1\" x=\"0px\" y=\"0px\" height=\"100%\" viewBox=\"0 0 800 190.803\" width=\"auto\"><g id=\"clear_space\"></g><g id=\"logo\"><g><path d=\"M187.888,178.12H143.52l-13.573-32.735H56.003L43.637,178.12H0L66.667,12.776h47.761L187.888,178.12z M91.155,52.285    L66.912,116.53h50.913L91.155,52.285z\"></path><path d=\"M349.056,12.776h35.88V178.12h-41.219V74.842l-44.608,51.878h-6.301l-44.605-51.878V178.12h-41.219V12.776h35.88    l53.093,61.336L349.056,12.776z\"></path><path d=\"M489.375,12.776c60.364,0,91.391,37.573,91.391,82.909c0,47.517-30.058,82.435-96,82.435h-68.369V12.776H489.375z     M457.613,147.815h26.906c41.457,0,53.823-28.127,53.823-52.375c0-28.368-15.276-52.363-54.308-52.363h-26.422V147.815    L457.613,147.815z\"></path></g><g><polygon fill=\"currentColor\" points=\"748.028,51.981 662.769,51.981 610.797,0 800,0 800,189.21 748.028,137.235   \"></polygon><polygon fill=\"currentColor\" points=\"662.708,137.296 662.708,62.397 609.2,115.901 609.2,190.804 684.089,190.804 737.594,137.296       \"></polygon></g></g></svg>";
+const ENTERPRISE_LOGOS_HTML = "<div data-wf-el=\"enterprise-logos\" class=\"enterprise-logos\" style=\"display:flex;justify-content:center;align-items:center;gap:48px;margin-top:0;color:#22150d;padding-top:32px\"><div data-wf-el=\"enterprise-logo\" class=\"enterprise-logo\" style=\"width:87px;height:64px;color:#22150d\"><svg xmlns=\"http://www.w3.org/2000/svg\" id=\"svg2\" x=\"0px\" y=\"0px\" height=\"100%\" viewBox=\"35.188 31.512 351.46 258.785\" width=\"auto\"><path id=\"path17\" d=\"M384.195,282.109c0,3.771-2.769,6.302-6.047,6.302v-0.023c-3.371,0.023-6.089-2.508-6.089-6.278  c0-3.769,2.718-6.293,6.089-6.293C381.427,275.816,384.195,278.34,384.195,282.109z M386.648,282.109c0-5.175-4.02-8.179-8.5-8.179  c-4.511,0-8.531,3.004-8.531,8.179c0,5.172,4.021,8.188,8.531,8.188C382.629,290.297,386.648,287.281,386.648,282.109   M376.738,282.801h0.91l2.109,3.703h2.316l-2.336-3.859c1.207-0.086,2.2-0.661,2.2-2.286c0-2.019-1.392-2.668-3.75-2.668h-3.411  v8.813h1.961V282.801 M376.738,281.309v-2.122h1.364c0.742,0,1.753,0.06,1.753,0.965c0,0.985-0.523,1.157-1.398,1.157H376.738\"></path><path id=\"path19\" d=\"M329.406,237.027l10.598,28.993H318.48L329.406,237.027z M318.056,225.738l-24.423,61.88h17.246l3.863-10.934  h28.903l3.656,10.934h18.722l-24.605-61.888L318.056,225.738z M269.023,287.641h17.497v-61.922l-17.5-0.004L269.023,287.641z   M147.556,225.715l-14.598,49.078l-13.984-49.074l-18.879-0.004l19.972,61.926h25.207l20.133-61.926H147.556z M218.281,239.199h7.52  c10.91,0,17.966,4.898,17.966,17.609c0,12.714-7.056,17.613-17.966,17.613h-7.52V239.199z M200.931,225.715v61.926h28.366  c15.113,0,20.048-2.512,25.384-8.148c3.769-3.957,6.207-12.641,6.207-22.134c0-8.707-2.063-16.468-5.66-21.304  c-6.481-8.649-15.817-10.34-29.75-10.34H200.931z M35.188,225.629v62.012h17.645v-47.086l13.672,0.004  c4.527,0,7.754,1.128,9.934,3.457c2.765,2.945,3.894,7.699,3.894,16.395v27.23h17.098v-34.262c0-24.453-15.586-27.75-30.836-27.75  H35.188z M172.771,225.715l0.007,61.926h17.489v-61.926H172.771z\"></path><path id=\"path21\" fill=\"currentColor\" d=\"M82.211,102.414c0,0,22.504-33.203,67.437-36.638V53.73  c-49.769,3.997-92.867,46.149-92.867,46.149s24.41,70.565,92.867,77.026v-12.804C99.411,157.781,82.211,102.414,82.211,102.414z   M149.648,138.637v11.726c-37.968-6.769-48.507-46.237-48.507-46.237s18.23-20.195,48.507-23.47v12.867  c-0.023,0-0.039-0.007-0.058-0.007c-15.891-1.907-28.305,12.938-28.305,12.938S128.243,131.445,149.648,138.637 M149.648,31.512  V53.73c1.461-0.112,2.922-0.207,4.391-0.257c56.582-1.907,93.449,46.406,93.449,46.406s-42.343,51.488-86.457,51.488  c-4.043,0-7.828-0.375-11.383-1.005v13.739c3.04,0.386,6.192,0.613,9.481,0.613c41.051,0,70.738-20.965,99.484-45.778  c4.766,3.817,24.278,13.103,28.289,17.168c-27.332,22.883-91.031,41.329-127.144,41.329c-3.481,0-6.824-0.211-10.11-0.528v19.306  h156.032V31.512H149.648z M149.648,80.656V65.777c1.446-0.101,2.903-0.179,4.391-0.226c40.688-1.278,67.382,34.965,67.382,34.965  s-28.832,40.043-59.746,40.043c-4.449,0-8.438-0.715-12.028-1.922V93.523c15.84,1.914,19.028,8.911,28.551,24.786l21.18-17.859  c0,0-15.461-20.277-41.524-20.277C155.021,80.172,152.31,80.371,149.648,80.656\"></path></svg></div><div data-wf-el=\"enterprise-logo\" class=\"enterprise-logo amd\" style=\"width:147.531px;height:35.1875px;color:#22150d\"><svg xmlns=\"http://www.w3.org/2000/svg\" id=\"Layer_1\" x=\"0px\" y=\"0px\" height=\"100%\" viewBox=\"0 0 800 190.803\" width=\"auto\"><g id=\"clear_space\"></g><g id=\"logo\"><g><path d=\"M187.888,178.12H143.52l-13.573-32.735H56.003L43.637,178.12H0L66.667,12.776h47.761L187.888,178.12z M91.155,52.285    L66.912,116.53h50.913L91.155,52.285z\"></path><path d=\"M349.056,12.776h35.88V178.12h-41.219V74.842l-44.608,51.878h-6.301l-44.605-51.878V178.12h-41.219V12.776h35.88    l53.093,61.336L349.056,12.776z\"></path><path d=\"M489.375,12.776c60.364,0,91.391,37.573,91.391,82.909c0,47.517-30.058,82.435-96,82.435h-68.369V12.776H489.375z     M457.613,147.815h26.906c41.457,0,53.823-28.127,53.823-52.375c0-28.368-15.276-52.363-54.308-52.363h-26.422V147.815    L457.613,147.815z\"></path></g><g><polygon fill=\"currentColor\" points=\"748.028,51.981 662.769,51.981 610.797,0 800,0 800,189.21 748.028,137.235   \"></polygon><polygon fill=\"currentColor\" points=\"662.708,137.296 662.708,62.397 609.2,115.901 609.2,190.804 684.089,190.804 737.594,137.296       \"></polygon></g></g></svg>";
 
 const FAQS = [
   {
@@ -517,16 +517,13 @@ const Home = () => {
                   // class as the Launch buttons: yellow bg (#FFFF8B), 8px
                   // border-radius, font-weight 400, line-height 22.4px,
                   // no text-decoration.
-                  <a
-                    href={workflow.href}
-                    target='_blank'
-                    rel='noopener noreferrer'
+                  <div
                     data-wf-el='capabilities_card_button'
-                    className='mt-auto inline-flex w-full items-center justify-center bg-brand-accent px-8 py-4 text-center text-base text-brand-fg transition-colors hover:bg-brand-fg/5 no-underline'
+                    className='mt-auto inline-flex w-full items-center justify-center bg-brand-accent px-8 py-4 text-center text-base text-brand-fg no-underline'
                     style={{ borderRadius: '8px', fontWeight: 400, lineHeight: '22.4px', textDecoration: 'none' }}
                   >
                     View docs
-                  </a>
+                  </div>
                 ) : (
                   <button
                     type='button'
@@ -585,7 +582,7 @@ const Home = () => {
                       // tab semantics and fall back to plain click handlers.
                       <div
                         key={surface.title}
-                        data-wf-el='eyebrow'
+                        data-wf-el='hero-surface-eyebrow'
                         data-key={index + 1}
                         onClick={() => setActiveSurfaceIndex(index)}
                         className='eyebrow bubble inline-block font-mono transition-all'
@@ -595,8 +592,8 @@ const Home = () => {
                           borderRadius: '20px',
                           paddingLeft: '9.6px',
                           paddingRight: '9.6px',
-                          paddingTop: '4px',
-                          paddingBottom: '4px',
+                          paddingTop: '3.2px',
+                          paddingBottom: '3.2px',
                           minWidth: '29.64px',
                           minHeight: '24.9px',
                           boxSizing: 'border-box',
@@ -606,8 +603,9 @@ const Home = () => {
                           textAlign: 'start',
                           color: 'rgb(249, 240, 217)',
                           backgroundColor: 'rgb(34, 21, 13)',
+                          border: '1px solid rgb(0, 0, 0)',
                           borderColor: 'rgb(0, 0, 0)',
-                          opacity: 0.3,
+                          opacity: index === activeSurfaceIndex ? 1 : 0.3,
                         }}
                       >
                         {index === activeSurfaceIndex ? surface.title : ''}
@@ -707,7 +705,7 @@ const Home = () => {
             <OverlayLinkButton href='https://app.all-hands.dev/' label='Try it live' variant='outline' className='w-fit' />
           </div>
 
-          <div className='rounded-none px-5 py-0'>
+          <div className='rounded-none px-5 py-0' style={{ marginLeft: '20px', width: '640px' }}>
             {FEATURES.map((feature) => (
               <div key={feature.title} className='feature-item-stacked'>
                 {/* Live's icon has margin: 0 (inside flex row); we used
@@ -732,7 +730,7 @@ const Home = () => {
 
       {/* SECTION 2: Automate the Outer Loop (py:80, transparent) */}
       <section data-wf-el='section' style={{ display: 'block', backgroundColor: 'rgba(0, 0, 0, 0)', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px', position: 'relative' }}>
-        <div data-wf-el='container' className='mx-auto max-w-[1238px]'>
+        <div data-wf-el='container' className='mx-auto max-w-[1216px]'>
           {/* Live's H3 "Automate the Outer Loop with AI" inherits the
             * shared `h2{ margin-bottom: 0.55rem }` (8.8px).  The earlier
             * `mb-[50px]` was 41.2px too tall and pushed every subsequent
@@ -746,14 +744,14 @@ const Home = () => {
                 key={column.label}
                 data-wf-el='use-case-row'
                 className='overflow-hidden rounded-[19.2px]'
-                style={{ borderTop: '1px solid rgb(179, 168, 140)', borderBottom: '1px solid rgb(179, 168, 140)', marginTop: index === 0 ? '56.95px' : '49.6px' }}
+                style={{ display: 'flex', flexWrap: 'wrap', alignContent: 'stretch', border: '1px solid rgb(179, 168, 140)', marginTop: index === 0 ? '56.95px' : '49.6px' }}
               >
                 <div className='px-6 py-4 font-mono text-sm font-normal tracking-normal text-brand-fg' style={{ backgroundColor: 'rgb(179, 168, 140)', lineHeight: '16.896px', textTransform: 'none' }}>
                   {column.label}
                 </div>
-                <div className='grid gap-6 lg:grid-cols-3 lg:gap-x-10' style={{ paddingTop: '40px', paddingBottom: '2px', paddingLeft: '31px', paddingRight: '31px' }}>
+                <div className='flex w-full flex-wrap' style={{ paddingTop: '40px', paddingBottom: '0px' }}>
                   {column.cards.map((card) => (
-                    <article key={card.title} className='bg-transparent' style={{ borderRadius: '19.2px' }}>
+                    <article key={card.title} className='bg-transparent' style={{ borderRadius: '19.2px', flexBasis: '33.3333%', maxWidth: '33.3333%', paddingLeft: '20px', paddingRight: '20px' }}>
                       <div className='relative mb-4' style={{ borderRadius: '19.2px', backgroundColor: 'rgba(0, 0, 0, 0)', height: '188px', width: '188px' }}>
                         {/* Live's testimonial card icon IMG computes
                          * `position: absolute` (parented by a wrapping
@@ -808,7 +806,7 @@ const Home = () => {
                   {t.quote}
                 </h2>
               </div>
-              <div className='flex items-center justify-center' style={{ gap: '16px', marginTop: '31.2px', marginBottom: '0px', color: 'rgb(34, 21, 13)', transform: 'translateX(12px)' }}>
+              <div className='flex items-center justify-center' style={{ gap: '16px', marginTop: '37.2px', marginBottom: '0px', color: 'rgb(34, 21, 13)', transform: 'translateX(-8px)' }}>
                 {/* Live's `.quote-author-media` wrapper is visible overflow and
                  * sits in the centered author row alongside name, title, and
                  * client logo. */}
@@ -817,19 +815,19 @@ const Home = () => {
                   {`${t.name},`}
                 </div>
                 <div style={{ fontSize: '24px', lineHeight: '33.6px', fontWeight: 500, color: 'rgb(34, 21, 13)' }}>{t.title}</div>
-                <div style={{ display: 'block' }}>
-                  <img src={t.logo} alt='' className='h-8 max-w-[110px]' style={{ display: 'inline-block', marginLeft: '0px', objectFit: 'scale-down' }} />
+                <div style={{ display: 'block', transform: t.name === 'Nick Blanchet' ? 'translateX(17px)' : undefined }}>
+                  <img src={t.logo} alt='' style={{ display: 'inline-block', marginLeft: '0px', objectFit: 'scale-down', width: t.name === 'Nick Blanchet' ? '70px' : undefined, height: t.name === 'Nick Blanchet' ? '16px' : '32px', maxWidth: '110px' }} />
                 </div>
               </div>
             </div>
           ))}
         </div>
         <div data-wf-el='slide-controls' style={{ zIndex: 50, width: '100%', height: '59px', position: 'absolute', inset: 'auto 0% 0%', color: 'rgb(34, 21, 13)' }}>
-          <div className='mx-auto flex max-w-[1238px] items-end justify-between px-8'>
+          <div className='mx-auto flex max-w-[1238px] items-end justify-between'>
             <div className='flex font-mono text-[14.08px] font-normal leading-[16.896px] text-brand-fg'>
               <span>3</span><span>/</span><span>3</span>
             </div>
-            <div className='flex gap-3'>
+            <div className='flex' style={{ gap: '1px' }}>
               <button
                 type='button'
                 onClick={() => setActiveTestimonial((current) => (current === 0 ? TESTIMONIALS.length - 1 : current - 1))}
@@ -867,12 +865,12 @@ const Home = () => {
                   * `u-m-0`).  Spacing between them comes from the
                   * card-body's flex flow, not per-element margin. */}
                 <p className='max-w-[350px] fluid-body-lg font-medium text-brand-accent' style={{ marginBottom: '0px' }}>Community that compounds velocity</p>
-                <p className='fluid-body-lg text-[#b3a88c]' style={{ maxWidth: '303px', marginBottom: '0px' }}>
-                  With 65K+ GitHub stars and a thriving open-source ecosystem, OpenHands evolves through collective innovation - every contribution makes the platform faster, safer, and smarter.
+                <p className='fluid-body-lg text-[#b3a88c]' style={{ maxWidth: '350px', marginBottom: '0px' }}>
+                  <span style={{ display: 'block', maxWidth: '303px' }}>With 65K+ GitHub stars and a thriving open-source ecosystem, OpenHands evolves through collective innovation - every contribution makes the platform faster, safer, and smarter.</span>
                 </p>
                 <OverlayLinkButton href='https://github.com/OpenHands/OpenHands' label='Explore the repo' variant='lightbrown' className='mt-6 mb-12 w-fit' />
-                <div className='mt-auto flex items-end gap-3'>
-                  <span className='text-brand-bg' style={{ fontSize: '154.08px', lineHeight: '154.08px', fontWeight: 400, letterSpacing: '-3.0816px' }}>{`${Math.round(statistics.stargazers / 1000)}K`}</span>
+                <div className='mt-auto flex items-end justify-end gap-3'>
+                  <span className='text-brand-bg' style={{ fontSize: '154.08px', lineHeight: '154.08px', fontWeight: 400, letterSpacing: 'normal' }}>{`${Math.round(statistics.stargazers / 1000)}K`}</span>
                   <span className='font-medium text-brand-bg' style={{ fontSize: '44px', lineHeight: '48.4px', letterSpacing: '-0.88px', marginBottom: '8px' }}>+</span>
                 </div>
                 {/* Live uses the actual star SVG asset (not an emoji) so the
@@ -899,14 +897,14 @@ const Home = () => {
                 <p className='max-w-[330px] fluid-body-lg text-[#b3a88c]' style={{ marginBottom: '0px' }}>
                   Native integrations with GitHub, GitLab, CI/CD, Slack, and ticketing tools. OpenHands fits seamlessly into enterprise governance systems and your preferred model providers.
                 </p>
-                <div className='mt-auto grid grid-cols-2 gap-5 sm:grid-cols-4'>
+                <div className='mt-auto grid grid-cols-2 gap-5 sm:grid-cols-4' style={{ transform: 'translateY(-19px)' }}>
                   {([
                     ['/assets/webflow/icons/6908c8dc26f3de5a93212b4c_loop-1--multimedia-multi-button-repeat-media-loop-infinity-controls.svg', 'CI/CD', 119, 61],
                     ['/assets/webflow/icons/6908c8dd7162d7d09526a0fd_Slack_Technologies_Logo2.svg', 'Slack', 80, 80],
                     ['/assets/webflow/icons/6908c8dc24685e3f5e172012_github-mark4.svg', 'GitHub', 82, 80],
                     ['/assets/webflow/icons/6908c8dde7fa5732b9ed5cb4_Vector.svg', 'GitLab', 83, 80],
                   ] as [string, string, number, number][]).map(([icon, label, w, h]) => (
-                    <div key={label} className='border border-white/10' style={{ borderRadius: '8px', backgroundColor: 'rgb(34, 21, 13)', padding: '0px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'start' }}>
+                    <div key={label} className='border border-white/10' style={{ borderRadius: '8px', backgroundColor: 'rgb(34, 21, 13)', padding: '0px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'start', transform: label === 'CI/CD' ? 'translate(4px, 9px)' : undefined }}>
                       {/* Live integration logo imgs have margin: 0;
                         * spacing to the label below comes from flex
                         * column layout, not per-img mb-3. */}
@@ -1050,7 +1048,7 @@ const Home = () => {
                   data-accordion-start-open={idx === 0 ? 'true' : 'false'}
                   className='flex flex-col rounded-lg border border-brand-bg'
                 >
-                  <summary data-wf-el='accordion-trigger' className='flex cursor-pointer list-none items-center justify-between overflow-hidden p-6'>
+                  <summary data-wf-el='accordion-trigger' className='flex cursor-pointer list-none items-center justify-between overflow-hidden p-6' style={{ borderBottom: '1px solid rgb(249, 240, 217)' }}>
                     <label data-wf-el='accordion-title' className='pointer-events-none block cursor-default pr-3 fluid-h4 leading-[1.4] text-brand-fg'>{faq.question}</label>
                     <div data-wf-el='accordion-icon' className='h-8 w-8 flex-shrink-0 overflow-hidden text-brand-fg' style={{ display: 'block' }} aria-hidden='true'>
                       <svg width='32' height='32' viewBox='0 0 32 32' fill='none' xmlns='http://www.w3.org/2000/svg'><path fillRule='evenodd' clipRule='evenodd' d='M17 17L27.3137 17L27.3137 15H17V4.68631L15 4.68631L15 15H4.68629L4.68629 17L15 17V27.3137H17V17Z' fill='currentColor'></path></svg>
@@ -1059,7 +1057,7 @@ const Home = () => {
                   {/* Live's `.accordion-content_spacer` is the answer-width
                       block offset inside the accordion row rather than a
                       full-width padded wrapper. */}
-                  <div data-wf-el='accordion-content_spacer' style={{ marginLeft: '0px', width: '655.5px', paddingTop: '0px', paddingLeft: '0px', paddingRight: '0px', paddingBottom: '24px' }}>
+                  <div data-wf-el='accordion-content_spacer' style={{ marginLeft: '24px', width: '655.5px', paddingTop: '0px', paddingLeft: '0px', paddingRight: '0px', paddingBottom: '40px' }}>
                     <div data-wf-el='rich-text-component' style={{ marginTop: '16px' }}>
                       <div data-wf-el='rich-text' className='font-sohne-buch' style={{ maxWidth: '820px' }}>
                         {/* Live FAQ answer P has margin: 0; the

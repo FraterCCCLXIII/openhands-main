@@ -132,6 +132,7 @@ const Product = () => {
         standalone
         showSocialLinks
         compactNav
+        showCopyright
         minHeight={1144}
         marketingCtaPrimary={{ href: 'https://app.all-hands.dev/', label: 'Try it live' }}
         marketingCtaSecondary={{ href: 'https://docs.openhands.dev/overview/introduction', label: 'See developer docs' }}

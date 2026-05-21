@@ -338,6 +338,11 @@ function compareStyleValue(prop, liveValue, testValue, liveStyle, testStyle) {
       fontWeight: 50,
       lineHeight: 1,
       borderRadius: 3,
+      borderWidth: 0,
+      borderTopWidth: 0,
+      borderRightWidth: 0,
+      borderBottomWidth: 0,
+      borderLeftWidth: 0,
       letterSpacing: 0.25,
       textUnderlineOffset: 2,
       textDecorationThickness: 1,
@@ -346,7 +351,9 @@ function compareStyleValue(prop, liveValue, testValue, liveStyle, testStyle) {
       paddingLeft: 8,
       paddingRight: 8,
     };
-    const tolerance = Math.max(0.25, toleranceByProp[prop] ?? 2);
+    const tolerance = Object.prototype.hasOwnProperty.call(toleranceByProp, prop)
+      ? toleranceByProp[prop]
+      : 2;
     if (Math.abs(livePx - testPx) <= tolerance) return null;
   }
 
@@ -584,10 +591,11 @@ function compareLayout(tag, liveRect, testRect) {
   for (const key of ['top', 'left', 'width', 'height']) {
     const lv = liveRect[key] || 0;
     const tv = testRect[key] || 0;
-    // Allow a small tolerance for sub-pixel/font rounding. Localized
-    // screenshot regions and container audits catch visually meaningful drift;
-    // 2-4px text box differences create noisy false positives across routes.
-    const tolerance = (key === 'top' || key === 'left') ? 4 : 4;
+    // Keep a small tolerance for positional drift/noisy scroll rounding, but
+    // compare rendered sizes exactly. Subtle width/height deltas (for example
+    // 1px borders or 2px pill-width differences) are visually meaningful in
+    // parity work and should not be hidden by the layout tolerance.
+    const tolerance = (key === 'top' || key === 'left') ? 4 : 0;
     if (Math.abs(lv - tv) > tolerance) {
       diffs.push(`${key}: live=${lv} test=${tv}`);
     }
@@ -1255,6 +1263,19 @@ async function extractWebflowElements(page, isLiveSite) {
     }
 
     function specialLiveKey(el) {
+      // Product selector pills on the homepage share the generic `eyebrow`
+      // class with footer/legal labels. Expose the bubble variant under a
+      // dedicated key so the three interactive pills are compared against the
+      // local controls directly instead of being buried in the noisy global
+      // eyebrow count mismatch.
+      if (
+        el.classList &&
+        el.classList.contains('eyebrow') &&
+        el.classList.contains('bubble')
+      ) {
+        return 'hero-surface-eyebrow';
+      }
+
       // The live footer uses Webflow utility classes for the social-icon
       // row (`row u-mt-lg ... u-mb-md`) rather than a unique semantic
       // class. That row's zero-height + margins control the Y-position of
@@ -1314,10 +1335,18 @@ async function extractWebflowElements(page, isLiveSite) {
 
       var computed = window.getComputedStyle(el);
       var rect = el.getBoundingClientRect();
+      var effectiveOpacity = 1;
+      for (var cur = el; cur; cur = cur.parentElement) {
+        effectiveOpacity *= Number(window.getComputedStyle(cur).opacity) || 0;
+      }
+      effectiveOpacity = Math.round(effectiveOpacity * 100) / 100;
+      var text = (el.innerText || el.textContent || '').replace(/\s+/g, ' ').trim();
 
       results.push({
         key: wfKey,
         tag: el.tagName,
+        text: text,
+        effectiveOpacity: effectiveOpacity,
         style: Object.fromEntries(propsToCapture.map(function(p) { return [p, computed[p]]; })),
         rect: {
           top: Math.round(rect.top + window.scrollY),
@@ -1388,6 +1417,22 @@ function compareWebflowElements(liveElements, testElements) {
       const diff = compareStyleValue(prop, liveEl.style?.[prop], testEl.style?.[prop], liveEl.style, testEl.style);
       if (diff) diffs.push(diff);
     }
+    if (key === 'hero-surface-eyebrow') {
+      const liveText = (liveEl.text || '').trim();
+      const testText = (testEl.text || '').trim();
+      if (liveText !== testText) {
+        diffs.push(`text: live=${JSON.stringify(liveText)} test=${JSON.stringify(testText)}`);
+      }
+    }
+    const parseEffectiveOpacity = (element) => {
+      const value = element.effectiveOpacity ?? Number.parseFloat(element.style?.opacity || '1');
+      return Number.isFinite(value) ? value : 1;
+    };
+    const liveOpacity = parseEffectiveOpacity(liveEl);
+    const testOpacity = parseEffectiveOpacity(testEl);
+    if (Math.abs(liveOpacity - testOpacity) > 0.05) {
+      diffs.push(`effectiveOpacity: live=${liveOpacity} test=${testOpacity}`);
+    }
     const layoutDiffs = compareLayout(liveEl.tag || 'DIV', liveEl.rect, testEl.rect);
     return {
       key,
@@ -1395,6 +1440,8 @@ function compareWebflowElements(liveElements, testElements) {
       passed: diffs.length === 0 && layoutDiffs.length === 0,
       styleDiffs: diffs,
       layoutDiffs,
+      liveText: liveEl.text || '',
+      testText: testEl.text || '',
       liveRect: liveEl.rect,
       testRect: testEl.rect,
     };
@@ -4046,7 +4093,11 @@ function compareDynamicControlStyleValue(prop, liveValue, testValue, liveStyle, 
       lineHeight: 1,
       fontWeight: 50,
       borderRadius: 2,
-      borderWidth: 1,
+      borderWidth: 0,
+      borderTopWidth: 0,
+      borderRightWidth: 0,
+      borderBottomWidth: 0,
+      borderLeftWidth: 0,
       paddingTop: 2,
       paddingRight: 2,
       paddingBottom: 2,
@@ -4059,7 +4110,9 @@ function compareDynamicControlStyleValue(prop, liveValue, testValue, liveStyle, 
       rowGap: 2,
       columnGap: 2,
     };
-    const tolerance = Math.max(0.25, toleranceByProp[prop] ?? 1);
+    const tolerance = Object.prototype.hasOwnProperty.call(toleranceByProp, prop)
+      ? toleranceByProp[prop]
+      : 1;
     if (Math.abs(livePx - testPx) <= tolerance) return null;
   }
 
@@ -4957,8 +5010,10 @@ function summarizeRouteComparison(routePath, livePage, testPage, screenshotDiff)
         const lh = lWrap.height || 0;
         const tw = tWrap.width || 0;
         const th = tWrap.height || 0;
-        // Use 4px tolerance (sub-pixel rounding + minor layout flex)
-        if (Math.abs(lw - tw) > 4 || Math.abs(lh - th) > 4) {
+        // Compare interactive/button wrapper sizes exactly; these are
+        // rounded CSS pixel measurements, and small differences often reveal
+        // missing borders/padding that are visually meaningful.
+        if (Math.abs(lw - tw) > 0 || Math.abs(lh - th) > 0) {
           const label = (li.wrapperRect || ti.wrapperRect) ? 'wrapperSize' : 'size';
           sizeDiffs.push(`${label}: live=${lw}×${lh} test=${tw}×${th}`);
         }

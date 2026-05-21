@@ -26,8 +26,8 @@ describe('home route parity structure', () => {
     expect(headingTexts).toContain('Developers love OpenHands');
     expect(headingTexts).toContain("FAQ's");
 
-    expect(screen.queryByRole('heading', { name: 'Cloud' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('heading', { name: 'CLI' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Running in under 5 minutes.' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Download Agent Canvas' })).not.toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Building the open standard for autonomous software development.' })).not.toBeInTheDocument();
   });
 
@@ -37,8 +37,10 @@ describe('home route parity structure', () => {
     expect(screen.getAllByTestId('workflow-launch')).toHaveLength(4);
     expect((container.innerHTML.match(/>Launch</g) ?? []).length).toBe(4);
     expect(screen.queryByRole('link', { name: 'Download CLI' })).not.toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'View docs' })).toBeInTheDocument();
+    expect(screen.getByText('View docs')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Talk to us' })).toBeInTheDocument();
+    expect(screen.getAllByRole('link', { name: 'Build with SDK' }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole('link', { name: 'Try it live' }).length).toBeGreaterThan(0);
 
     expect(container.innerHTML).toContain('lg:grid-cols-3');
     expect(container.querySelectorAll('[data-key]')).toHaveLength(3);

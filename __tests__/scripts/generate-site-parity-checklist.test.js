@@ -720,6 +720,27 @@ describe('generalized visual parity comparisons', () => {
     ]);
   });
 
+  it('reports homepage hero surface eyebrow text and opacity differences', () => {
+    const baseRect = { top: 100, left: 40, width: 47, height: 25 };
+    const live = [
+      { key: 'hero-surface-eyebrow', tag: 'DIV', text: 'SDK', effectiveOpacity: 1, style: { opacity: '1' }, rect: baseRect },
+    ];
+    const test = [
+      { key: 'hero-surface-eyebrow', tag: 'DIV', text: '', effectiveOpacity: 0.3, style: { opacity: '0.3' }, rect: baseRect },
+    ];
+
+    const result = compareWebflowElements(live, test);
+
+    expect(result.matched).toHaveLength(1);
+    expect(result.matched[0].styleDiffs).toEqual(
+      expect.arrayContaining([
+        'text: live="SDK" test=""',
+        'effectiveOpacity: live=1 test=0.3',
+      ]),
+    );
+    expect(result.matched[0].passed).toBe(false);
+  });
+
   it('detects missing runtime motion by stable signature', () => {
     const live = [
       { signature: 'wf:ascii-pre', tag: 'PRE', hasRuntimeMotion: true, changedFields: ['contentHash'], mutationCount: 3 },

@@ -22,7 +22,6 @@ interface FooterProps {
    * because their live footer variants intentionally omit the copyright row.
    */
   webflowLayout?: boolean;
-  showCopyright?: boolean;
   /**
    * When true (default), the footer renders the marketing CTA at
    * the top of the footer section, matching live's footer markup
@@ -41,7 +40,6 @@ interface FooterProps {
   marketingCtaDescription?: string;
   marketingCtaPrimary?: FooterCta;
   marketingCtaSecondary?: FooterCta | null;
-  showCopyright?: boolean;
 }
 
 /**
@@ -157,6 +155,7 @@ const footerNavLinkStyle = {
   fontWeight: 500,
   lineHeight: '22.4px',
   whiteSpace: 'nowrap',
+  textAlign: 'start',
 } as const;
 
 const footerResourceLinkStyle = {
@@ -166,6 +165,7 @@ const footerResourceLinkStyle = {
   fontSize: '14px',
   fontWeight: 400,
   lineHeight: '19.6px',
+  textAlign: 'start',
 } as const;
 
 type WebflowFooterContentProps = Pick<
@@ -234,7 +234,7 @@ const WebflowFooterContent = ({
       ) : null}
 
       {showSocialLinks ? (
-        <div data-wf-el='footer-social-row' className='row u-mt-lg row-justify-center u-mb-md' style={{ ...FOOTER_ROW_STYLE, justifyContent: 'center', marginTop: '128px', marginBottom: '49px', rowGap: '40px', textAlign: 'start' }}>
+        <div data-wf-el='footer-social-row' className='row u-mt-lg row-justify-center u-mb-md' style={{ ...FOOTER_ROW_STYLE, justifyContent: 'center', marginTop: showMarketingCta ? '128px' : '80px', marginBottom: '49px', rowGap: '40px', textAlign: 'start' }}>
           <div className='col' style={FOOTER_COL_STYLE}>
             <div className='row row-gap-sm row-justify-center' style={{ ...FOOTER_ROW_STYLE, justifyContent: 'center', columnGap: '8px', rowGap: '16px' }}>
               {SOCIAL_LINKS.map((item) => (
@@ -258,9 +258,9 @@ const WebflowFooterContent = ({
 
       <div className='row row-justify-center u-mb-sm' style={{ ...FOOTER_ROW_STYLE, justifyContent: 'center', marginBottom: '24px' }}>
         <div className='col col-lg-8 col-md-12' style={FOOTER_COL_LG_8_STYLE}>
-          <div data-wf-el='footer-nav' className='footer-nav justify-between' style={{ display: 'flex', flexFlow: 'row nowrap', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%', paddingBottom: '16px', borderBottom: '1px solid #b3a88c' }}>
+          <div data-wf-el='footer-nav' className='footer-nav justify-between' style={{ display: 'flex', flexFlow: 'row nowrap', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%', paddingBottom: '16px', borderBottom: '1px solid #b3a88c', textAlign: 'start' }}>
             {FOOTER_NAV_ITEMS.map(renderTopLevelLink)}
-            <div data-wf-el='footer-drop' id='footer-resources' className='footer-drop' style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'flex-start' }}>
+            <div data-wf-el='footer-drop' id='footer-resources' className='footer-drop' style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'flex-start', textAlign: 'start' }}>
               <a href='#footer-resources' data-wf-el='nav-link' className='nav-link hover:text-[#8a5f45]' style={footerNavLinkStyle}>
                 Resources
               </a>
@@ -375,7 +375,6 @@ export const Footer = ({
       <div data-wf-el='container' className='relative z-10 mx-auto max-w-[1238px]'>
         <WebflowFooterContent
           showSocialLinks={showSocialLinks}
-          showCopyright={showCopyright}
           {...ctaProps}
         />
       </div>
