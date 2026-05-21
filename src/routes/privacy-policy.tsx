@@ -81,17 +81,17 @@ function PrivacyPolicy() {
         data-wf-el='section'
         style={{
           display: 'block',
-          paddingTop: '80px',
-          paddingBottom: '80px',
+          paddingTop: 'var(--section-padding-y)',
+          paddingBottom: 'var(--section-padding-y)',
           paddingLeft: '0px',
           paddingRight: '0px',
           position: 'relative',
         }}
       >
-        <div data-wf-el='container' className='mx-auto w-full max-w-[950.08px]'>
+        <div data-wf-el='container' className='mx-auto w-[90%] max-w-[950.08px]'>
           <h1
             className={`${legalHeadingClass} mt-0 text-center fluid-h3`}
-            style={{ lineHeight: '38.4px', marginBottom: '48px', position: 'relative' }}
+            style={{ lineHeight: 1.2, marginBottom: '1.5em', position: 'relative' }}
           >
             Privacy Policy
           </h1>
@@ -144,6 +144,7 @@ function PrivacyPolicy() {
           </Markdown>
           </div>
         </div>
+        <div aria-hidden='true' className='privacy-section-desktop-nudge' />
       </section>
     </main>
   );

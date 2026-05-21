@@ -20,6 +20,7 @@ interface FooterProps {
   minHeight?: number;
   compactSpacerHeight?: number;
   showCopyright?: boolean;
+  footerContainerNudge?: number;
   footerContainerTransform?: string;
   /**
    * Render the legacy Webflow footer grid/row structure used by the
@@ -180,6 +181,7 @@ type WebflowFooterContentProps = Pick<
   | 'showMarketingCta'
   | 'showCopyright'
   | 'compactNavSpacerHeight'
+  | 'footerContainerNudge'
   | 'marketingCtaTitle'
   | 'marketingCtaDescription'
   | 'marketingCtaPrimary'
@@ -198,6 +200,7 @@ const WebflowFooterContent = ({
   marketingCtaDescription,
   marketingCtaPrimary,
   marketingCtaSecondary,
+  footerContainerNudge,
   footerContainerTransform,
   containerWfEl = 'container',
   containerStyle,
@@ -223,15 +226,15 @@ const WebflowFooterContent = ({
   };
 
   return (
-    <div data-wf-el={containerWfEl ?? undefined} className='container u-position-relative u-z-index-1' style={{ position: 'relative', zIndex: 1, width: 'var(--footer-container-width, 100%)', maxWidth: '1238px', height: 'var(--footer-container-height, auto)', top: 'var(--footer-container-top, 0px)', marginLeft: 'auto', marginRight: 'auto', ...containerStyle, ...(footerContainerTransform ? { transform: footerContainerTransform, transformOrigin: 'top' } : {}) }}>
+    <div data-wf-el={containerWfEl ?? undefined} className='container u-position-relative u-z-index-1' style={{ position: 'relative', zIndex: 1, width: 'var(--footer-container-width, 90%)', maxWidth: '1238px', height: 'var(--footer-container-height, auto)', top: 'var(--footer-container-top, 0px)', marginLeft: 'auto', marginRight: 'auto', ...containerStyle, ...(footerContainerTransform ? { transform: footerContainerTransform, transformOrigin: 'top' } : {}) }}>
       <div style={{ transform: 'var(--footer-content-transform, none)' }}>
       {showMarketingCta ? (
         <div className='row row-justify-center u-mt-md u-position-relative u-z-index-1' style={{ ...FOOTER_ROW_STYLE, justifyContent: 'center', position: 'relative', zIndex: 1, marginTop: 'var(--footer-cta-row-margin-top, 50px)' }}>
-          <div className='col col-lg-8 col-sm-12' style={{ ...FOOTER_COL_LG_8_STYLE, flexBasis: 'var(--footer-cta-col-basis, 66.67%)', maxWidth: 'var(--footer-cta-col-max-width, 66.6667%)' }}>
+          <div className='col col-lg-8 col-sm-12 footer-cta-col' style={{ ...FOOTER_COL_LG_8_STYLE, flexBasis: 'var(--footer-cta-col-basis, 66.67%)', maxWidth: 'var(--footer-cta-col-max-width, 66.6667%)' }}>
             <div className='h2 u-text-center u-mb-xs section-title text-brand-fg' style={{ textAlign: 'center', marginBottom: '22px', letterSpacing: '-0.02em' }}>
               {marketingCtaTitle ?? DEFAULT_CTA_TITLE}
             </div>
-            <p data-wf-el='paragraph-lg' className='u-m-0 u-text-darkgray u-text-center font-medium text-brand-muted' style={{ margin: '0px', textAlign: 'center', fontSize: 'var(--footer-paragraph-lg-font-size, 20.8px)', lineHeight: 'var(--footer-paragraph-lg-line-height, 24.96px)', height: 'var(--footer-paragraph-lg-height, auto)' }}>
+            <p data-wf-el='paragraph-lg' className='u-m-0 u-text-darkgray u-text-center font-medium text-brand-muted' style={{ margin: '0px', textAlign: 'center', fontSize: 'var(--footer-paragraph-lg-font-size, var(--paragraph-lg-font-size))', lineHeight: 'var(--footer-paragraph-lg-line-height, 1.2)', height: 'var(--footer-paragraph-lg-height, auto)' }}>
               {marketingCtaDescription ?? DEFAULT_CTA_DESCRIPTION}
             </p>
             <div className='row row-gap-button u-mt-md row-justify-center' style={{ ...FOOTER_ROW_STYLE, justifyContent: 'center', columnGap: '16px', rowGap: '16px', marginTop: 'var(--footer-cta-button-margin-top, 51px)', flexDirection: 'var(--footer-cta-button-direction, row)' as React.CSSProperties['flexDirection'], alignItems: 'center' }}>
@@ -272,7 +275,7 @@ const WebflowFooterContent = ({
       ) : null}
 
       <div className='row row-justify-center u-mb-sm' style={{ ...FOOTER_ROW_STYLE, justifyContent: 'center', marginBottom: '24px' }}>
-        <div className='col col-lg-8 col-md-12' style={{ ...FOOTER_COL_LG_8_STYLE, flexBasis: 'var(--footer-nav-col-basis, 66.67%)', maxWidth: 'var(--footer-nav-col-max-width, 66.6667%)' }}>
+        <div className='col col-lg-8 col-md-12 footer-nav-col' style={{ ...FOOTER_COL_LG_8_STYLE, flexBasis: 'var(--footer-nav-col-basis, 66.67%)', maxWidth: 'var(--footer-nav-col-max-width, 66.6667%)' }}>
           <div data-wf-el='footer-nav' className='footer-nav justify-between' style={{ display: 'flex', flexFlow: 'var(--footer-nav-flow, row nowrap)', justifyContent: 'space-between', alignItems: 'var(--footer-nav-align, flex-start)', width: '100%', height: 'var(--footer-nav-height, auto)', paddingBottom: '16px', borderBottom: '1px solid #b3a88c', textAlign: 'start' }}>
             {FOOTER_NAV_ITEMS.map(renderTopLevelLink)}
             <div data-wf-el='footer-drop' id='footer-resources' className='footer-drop' style={{ display: 'flex', flexDirection: 'column', alignItems: 'var(--footer-drop-align, flex-start)', justifyContent: 'flex-start', textAlign: 'start', height: 'var(--footer-drop-height, auto)' }}>
@@ -305,7 +308,7 @@ const WebflowFooterContent = ({
       </div>
 
       <div className='row row-justify-center u-mb-md' style={{ ...FOOTER_ROW_STYLE, justifyContent: 'center', marginBottom: '40px' }}>
-        <div className='col col-lg-8' style={FOOTER_COL_LG_8_STYLE}>
+        <div className='col col-lg-8 footer-copyright-col' style={FOOTER_COL_LG_8_STYLE}>
           {showCopyright ? (
             <div data-wf-el='eyebrow' className='eyebrow u-text-center' style={{ textAlign: 'center', marginBottom: '21.12px', fontFamily: 'GeistMono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace', fontSize: '14px', fontWeight: 400, lineHeight: '16.896px', wordSpacing: '0.2px' }}>
               <span style={{ display: 'inline-block', transform: 'scaleX(1.0038)', transformOrigin: 'center' }}>© <span data-year=' '>{currentYear}</span> OpenHands - All rights reserved</span>
@@ -317,18 +320,19 @@ const WebflowFooterContent = ({
             to='/privacy'
             data-wf-el='eyebrow'
             className='eyebrow u-text-center is-link hover:text-[#8a5f45]'
-            style={{ alignSelf: 'center', display: 'block', textAlign: 'center', marginBottom: '21.12px', fontFamily: 'GeistMono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace', fontSize: '14px', fontWeight: 400, lineHeight: '16.896px', textDecoration: 'none', cursor: 'pointer', width: 'var(--footer-privacy-width, auto)' }}
+            style={{ alignSelf: 'center', display: 'block', textAlign: 'center', marginBottom: '21.12px', fontFamily: 'GeistMono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace', fontSize: 'var(--footer-privacy-font-size, 14.08px)', fontWeight: 400, lineHeight: '16.896px', textDecoration: 'none', cursor: 'pointer', width: 'var(--footer-privacy-width, auto)' }}
           >
             Privacy Policy
           </Link>
         </div>
-        <div className='col col-lg-8' style={{ ...FOOTER_COL_LG_8_STYLE, marginTop: '39px' }}>
+        <div className='col col-lg-8 footer-logo-col' style={{ ...FOOTER_COL_LG_8_STYLE, marginTop: '39px' }}>
           <div className='row row-gap-sm row-justify-center' style={{ ...FOOTER_ROW_STYLE, justifyContent: 'center', rowGap: '16px' }}>
-            <div data-wf-el='standard-media' className='standard-media contain-center' style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', textAlign: 'start', width: 'var(--footer-logo-width, 610px)', height: 'var(--footer-logo-height, 102px)', objectFit: 'contain' }}>
-              <img data-wf-el='standard-media-img' src='/assets/webflow/backgrounds/openhands_logo_black.svg' alt='' style={{ display: 'block', width: 'var(--footer-logo-width, 610px)', height: 'var(--footer-logo-height, 102px)', textAlign: 'start', objectFit: 'scale-down' }} />
+            <div data-wf-el='standard-media' className='standard-media contain-center footer-logo-media' style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', textAlign: 'start', width: 'var(--footer-logo-width, 610px)', height: 'var(--footer-logo-height, 102px)', objectFit: 'contain' }}>
+              <img data-wf-el='standard-media-img' className='footer-logo-img' src='/assets/webflow/backgrounds/openhands_logo_black.svg' alt='' style={{ display: 'block', width: 'var(--footer-logo-width, 610px)', height: 'var(--footer-logo-height, 102px)', textAlign: 'start', objectFit: 'scale-down' }} />
             </div>
           </div>
         </div>
+        {footerContainerNudge ? <div aria-hidden='true' style={{ flexBasis: '100%', height: `${footerContainerNudge}px` }} /> : null}
       </div>
       </div>
     </div>
@@ -347,6 +351,7 @@ export const Footer = ({
   compactSpacerHeight = compactNavSpacerHeight ?? 50,
   showMarketingCta = true,
   showCopyright = true,
+  footerContainerNudge,
   marketingCtaTitle,
   marketingCtaDescription,
   marketingCtaPrimary,
@@ -360,6 +365,7 @@ export const Footer = ({
     marketingCtaDescription,
     marketingCtaPrimary,
     marketingCtaSecondary,
+    footerContainerNudge,
     footerContainerTransform,
   };
   if (!standalone) {
@@ -379,7 +385,7 @@ export const Footer = ({
     <section
       data-wf-el='section'
       className='section u-bg-primary relative overflow-visible bg-brand-accent text-brand-fg footer-webflow-layout'
-      style={{ padding: 'var(--footer-section-padding, 80px) 0px', height: 'var(--footer-section-height, auto)' }}
+      style={{ padding: 'var(--footer-section-padding, var(--section-padding-y)) 0px', height: 'var(--footer-section-height, auto)' }}
     >
       <div data-wf-el='asci-wrap' className='absolute inset-0 overflow-hidden' style={{ maxHeight: 'none' }}>
         <img

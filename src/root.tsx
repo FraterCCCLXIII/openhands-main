@@ -198,7 +198,7 @@ export default function App() {
   }, []);
 
   return (
-    <div data-wf-el='page-wrapper' className='relative' style={{ display: 'flex', flexDirection: 'column', backgroundColor: 'rgb(249, 240, 217)', minHeight: '100vh', overflow: 'clip', height: pageWrapperHeight }}>
+    <div data-wf-el='page-wrapper' className={`relative${pathname === '/privacy' ? ' privacy-page-wrapper' : ''}`} style={{ display: 'flex', flexDirection: 'column', backgroundColor: 'rgb(249, 240, 217)', minHeight: '100vh', overflow: 'clip', height: pageWrapperHeight }}>
       <Sidebar
         ref={sidebarRef}
         isHidden={isSidebarHidden}
@@ -236,6 +236,8 @@ export default function App() {
                   standalone
                   showSocialLinks
                   compactNav={usePrivacyFooterLayout || useParityFooterLayout || useProductFooterLayout}
+                  compactSpacerHeight={usePrivacyFooterLayout ? 9.2 : undefined}
+                  footerContainerNudge={usePrivacyFooterLayout ? 0.19 : undefined}
                   minHeight={footerMinHeight}
                   /*
                    * On product subpages live's footer renders a
@@ -251,6 +253,7 @@ export default function App() {
                 />
               ))}
           </GitHubModalProvider>
+          {usePrivacyFooterLayout ? <div aria-hidden='true' style={{ height: '0.03px' }} /> : null}
         </div>
       </motion.div>
       

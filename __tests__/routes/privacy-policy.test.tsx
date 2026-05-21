@@ -16,8 +16,10 @@ describe('Privacy policy route', () => {
     const { container } = renderRoute();
 
     expect(container.querySelector('main')).toHaveClass('text-brand-fg');
-    expect(container.querySelector('main > section')).toHaveStyle({ paddingTop: '80px', paddingBottom: '80px' });
-    expect(container.querySelector('main [data-wf-el="container"]')).toHaveClass('max-w-[950.08px]');
+    expect(container.querySelector('main > section')?.getAttribute('style')).toContain(
+      'padding: var(--section-padding-y) 0px var(--section-padding-y) 0px',
+    );
+    expect(container.querySelector('main [data-wf-el="container"]')).toHaveClass('w-[90%]', 'max-w-[950.08px]');
     expect(container.querySelector('main [data-wf-el="ah-legal"]')).toHaveClass('max-w-[900px]', 'text-[14px]');
     expect(screen.getByRole('heading', { level: 1, name: 'Privacy Policy' })).toHaveClass('text-center', 'fluid-h3');
     expect(screen.getByText('Effective Date: September 3, 2025').closest('p')).toHaveClass('leading-[1.6]');
