@@ -89,10 +89,7 @@ describe('Marketing parity routes', () => {
       screen.getByText(/Scale AI agents in production with the control, visibility, and repeatability/i),
     ).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Book a demo' })).toHaveAttribute('href', '/contact');
-    expect(screen.getByRole('link', { name: 'Trust Center' })).toHaveAttribute(
-      'href',
-      'https://app.vanta.com/openhands.dev/trust/an0kgh9goh7xyqkhsb6tlp',
-    );
+    expect(screen.getByRole('link', { name: 'Try it' })).toHaveAttribute('href', 'https://app.all-hands.dev/');
 
     // Control plane intro section
     expect(
@@ -125,6 +122,8 @@ describe('Marketing parity routes', () => {
     expect(container.querySelector('img[data-wf-el="acp_graphic_img"]')).toHaveAttribute('src', '/assets/webflow/enterprise/control-plane.png');
     expect(container.querySelector('img[data-wf-el="acp_quote_img"]')).toHaveAttribute('src', '/assets/webflow/enterprise/image96x96.png');
     expect(container.querySelector('img[data-wf-el="acp_quote_logo"]')).toHaveAttribute('src', '/assets/webflow/enterprise/c3ailogo.svg');
+    expect(container.querySelectorAll('[data-wf-el="heading-stack"]')).toHaveLength(6);
+    expect(container.querySelectorAll('[data-wf-el="paragraph-lg"]')).toHaveLength(4);
 
     expect(screen.getByText(/Sina Pakazad, VP of Data Science at C3\.ai/i)).toBeInTheDocument();
 

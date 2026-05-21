@@ -281,7 +281,9 @@ const Enterprise = () => {
          * pages: an absolute `.asci-wrap` paint layer containing an
          * `.ascii-pre` text surface. */}
         <div data-wf-el='asci-wrap' className='pointer-events-auto absolute inset-0 overflow-hidden' style={{ '--ascii-opacity': '0.12', maxHeight: '2400px' } as CSSProperties} aria-hidden='true'>
-          <ASCIIAnimation className='h-full w-full' />
+          <div data-wf-el='asci-embed' className='h-full w-full overflow-hidden'>
+            <ASCIIAnimation className='h-full w-full' />
+          </div>
         </div>
         {/* Live's `.container` sits inside `section-hero` with padding 0
          * vertically; the visual rhythm comes from the inner
@@ -336,8 +338,8 @@ const Enterprise = () => {
                 className='!px-[30.4px] !py-[14.4px]'
               />
               <OverlayLinkButton
-                href='https://app.vanta.com/openhands.dev/trust/an0kgh9goh7xyqkhsb6tlp'
-                label='Trust Center'
+                href='https://app.all-hands.dev/'
+                label='Try it'
                 variant='outline'
                 wfEl='button'
                 textWfEl='btn-text'
@@ -423,6 +425,7 @@ const Enterprise = () => {
             * lines and the smaller mb-10 (40px) further widened the
             * gap, accumulating 23px of cumulative drift through the
             * rest of the page. */}
+          <div data-wf-el='heading-stack' style={{ marginBottom: '24px' }}>
           <h3 className='section-title text-brand-fg' style={{ marginBottom: '66px' }}>
             Everything you need to govern agents in production.
           </h3>
@@ -448,7 +451,7 @@ const Enterprise = () => {
                 data-wf-el='acp_features_item'
                 className={`flex flex-col items-start justify-start gap-4 p-10 ${idx === 0 ? 'md:col-span-2' : ''}`}
                 style={{
-                  borderBottom: '1px solid rgb(179, 168, 140)',
+                  borderBottom: idx >= 3 ? '0' : '1px solid rgb(179, 168, 140)',
                   borderRight:
                     // No right border on the spanning first card (full width)
                     // or on the right-column cards (idx 2, 4) so we don't
@@ -517,7 +520,7 @@ const Enterprise = () => {
               </article>
             ))}
           </div>
-          <div aria-hidden='true' style={{ height: '23px' }} />
+          </div>
         </Container>
       </section>
 
@@ -535,7 +538,7 @@ const Enterprise = () => {
                   Automations
                 </div>
                 <h2 className='section-title text-brand-bg' style={{ width: '599px', marginBottom: '8.8px' }}>From event to PR, no human in the loop.</h2>
-                <p className='fluid-body-lg text-[#b3a88c]' style={{ marginBottom: '20.8px', width: '599px' }}>
+                <p data-wf-el='paragraph-lg' className='fluid-body-lg text-[#b3a88c]' style={{ marginBottom: '20.8px', width: '599px' }}>
                   Wire OpenHands to the tools your team already uses. When something happens, the right agent fires, does the work, and opens a pull request.
                   <br />
                   <br />
@@ -552,7 +555,7 @@ const Enterprise = () => {
 
       {/* C3.ai QUOTE — light section with ASCII hole bg */}
       <section data-wf-el='section' className='overflow-visible' style={SECTION_BASE}>
-        <div data-wf-el='asci-wrap' className='absolute inset-0 bg-brand-accent' style={{ overflow: 'hidden' }} aria-hidden='true'>
+        <div data-wf-el='asci-wrap' className='absolute inset-0 bg-brand-accent' style={{ overflow: 'hidden', maxHeight: '2400px' }} aria-hidden='true'>
           <img
             data-wf-el='asci-media'
             src={ASCII_HOLE_BG}
@@ -630,11 +633,11 @@ const Enterprise = () => {
       {/* BUILT FOR TEAMS — 3+2 layout (3-col grid, last 2 cards on row 2). */}
       <section data-wf-el='section' style={SECTION_BASE}>
         <Container>
-          <div style={{ marginBottom: '24px' }}>
-            <div className='flex flex-col items-start' style={{ marginBottom: '0px', justifyContent: 'center' }}>
+          <div data-wf-el='heading-stack' style={{ marginBottom: '24px' }}>
+            <div data-wf-el='heading-stack' className='flex flex-col items-start' style={{ marginBottom: '0px', justifyContent: 'center' }}>
               <Eyebrow className='text-brand-fg'>OpenHands Enterprise</Eyebrow>
               <h2 className='section-title max-w-[724px] text-brand-fg'>Built for teams running agents at scale. </h2>
-              <p className='fluid-body-lg text-[#5f5f5f]' style={{ marginBottom: '20.8px' }}>
+              <p data-wf-el='paragraph-lg' className='fluid-body-lg text-[#5f5f5f]' style={{ marginBottom: '20.8px' }}>
                 Self-hosted in your VPC via Kubernetes. Source-available. Backed by extended support and direct access to our research team.
               </p>
             </div>
@@ -742,6 +745,7 @@ const Enterprise = () => {
         marketingCtaPrimary={{ href: '/contact', label: 'Book a Demo' }}
         marketingCtaSecondary={{ href: 'https://docs.openhands.dev/sdk', label: 'Build with SDK' }}
         showCopyright
+        compactSpacerHeight={9}
       />
     </main>
   );
