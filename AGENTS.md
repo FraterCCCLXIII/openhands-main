@@ -258,6 +258,12 @@ npm run parity:checklist  # Crawl openhands.dev and compare against local site
 - `/pricing` FAQ details: live's `.accordion-item` has no border-radius and no padding on the `<details>` element itself; padding lives on the inner trigger/content blocks. Drop `rounded-lg` / `border` on the `<details>`, keep padding (`py-6` / `pb-6`) on the summary children and content div.
 - The pricing comparison-table wrapper currently uses `rounded-[24px] bg-brand-fg px-6 py-6 lg:px-8 lg:py-6`; live's equivalent is a Webflow `.card` that resolves to `display: grid; gap: 8px` with no border-radius or padding, which is the source of ~87 lingering ancestor mismatches on `/pricing`.
 
+### Notion Blog Source Sync
+- Blog source-of-truth migration uses Notion database `2cbcf0dd-f241-4e40-8c6d-0918e45f316f` (`OpenHands Blog Source`) under the Notion `Content (Blog, Vid, etc)` page.
+- Use `npm run seed:notion-blog` with `NOTION_API_KEY` or `NOTION_INTEGRATION_KEY` plus `NOTION_BLOG_DATABASE_ID` to seed missing Notion pages from `src/posts/*.md`.
+- Use `npm run sync:notion-blog:check` to verify Notion markdown/assets match the repository without writing changes; the expected clean result after the initial seed is `Markdown updates: 0; asset updates: 0; deleted posts: 0`.
+- Blog pages are normal Notion pages (not whole-post markdown code blocks); the sync script exports page blocks back to markdown and uses page properties for metadata/frontmatter and asset hash fields.
+
 ## Legal Page Parity Notes
 - Live `/privacy` renders the body as a narrow legal-rich-text block with a centered 32px desktop title, real `h2`/`h3` hierarchy, and the shared `MarketingFooterCta` above the global footer.
 - Current live `/privacy` parity expects a duplicated `Changes to this Privacy Policy` subsection and a trailing zero-width paragraph (`‍`) in the legal copy; keep both if parity checks regress on that route.
