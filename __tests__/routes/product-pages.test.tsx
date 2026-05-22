@@ -66,7 +66,7 @@ describe('Product parity routes', () => {
     expect(
       screen.getByRole('heading', { name: 'Build agents your way.' })
     ).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Join Slack' })).toHaveAttribute(
+    expect(screen.getAllByRole('link', { name: 'Join Slack' })[0]).toHaveAttribute(
       'href',
       'https://docs.openhands.dev/sdk',
     );
@@ -88,7 +88,7 @@ describe('Product parity routes', () => {
     expect(screen.getByText('OpenHands - All rights reserved', { exact: false })).toBeInTheDocument();
     const summaryLabel = container.querySelector('summary label');
     expect(summaryLabel).toBeInTheDocument();
-    expect(summaryLabel).toHaveStyle({ fontSize: '24px' });
+    expect(summaryLabel).toHaveClass('fluid-h4');
   });
 
   it('renders the Web GUI product page content', () => {
@@ -127,7 +127,9 @@ describe('Product parity routes', () => {
     expect(screen.queryByAltText('OpenHands CLI interface screenshot.')).not.toBeInTheDocument();
     expect(screen.queryByAltText('OpenHands comparison illustration.')).not.toBeInTheDocument();
     expect(container.querySelectorAll('summary label')).toHaveLength(5);
-    expect(container.querySelector('summary label')).toHaveStyle({ fontSize: '24px' });
+    expect(container.querySelector('summary label')).toHaveClass('fluid-h4');
+    expect(container.querySelector('main')).toHaveClass('product-feature-page--cli');
+    expect(container.querySelector('.product-detail-grid--top')).toBeInTheDocument();
     expect(screen.getByText('Control your agents like real infrastructure.')).toBeInTheDocument();
     expect(screen.getByText('Run OpenHands from the terminal or automate it end to end with the CLI.')).toBeInTheDocument();
     expect(screen.getAllByRole('link', { name: 'Try it live' }).length).toBeGreaterThan(0);
@@ -170,7 +172,7 @@ describe('Product parity routes', () => {
       expect(screen.getByRole('heading', { name: proofHeading })).toHaveClass(proofHeadingClass);
       expect(screen.getByText(closingDescription)).toBeInTheDocument();
       container.querySelectorAll('summary label').forEach((label) => {
-        expect(label).toHaveStyle({ fontSize: '24px' });
+        expect(label).toHaveClass('fluid-h4');
       });
       Array.from(container.querySelectorAll('img[alt]')).forEach((image) => {
         expect(image.getAttribute('alt') ?? '').not.toMatch(forbiddenImageAlt);

@@ -74,7 +74,7 @@ describe('Marketing parity routes', () => {
     renderRoute(<ProductSdk />);
 
     expect(screen.getByRole('heading', { name: /Build agents your way/i })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Join Slack' })).toHaveAttribute('href', 'https://docs.openhands.dev/sdk');
+    expect(screen.getAllByRole('link', { name: 'Join Slack' })[0]).toHaveAttribute('href', 'https://docs.openhands.dev/sdk');
     expect(screen.getByText('Programmatic task creation')).toBeInTheDocument();
     expect(screen.getByText('Build domain-specific agents')).toBeInTheDocument();
     expect(screen.getByText('What is the Large Codebase SDK?')).toBeInTheDocument();

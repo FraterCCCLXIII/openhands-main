@@ -283,18 +283,17 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
         {/* Mobile nav */}
-        <div className='flex items-center justify-between px-4 lg:hidden' style={{ height: isMobile ? '37.3437px' : '52px' }}>
-          <div className='w-[38px]'>
+        <div className='mobile-nav flex items-center justify-between px-4 lg:hidden' style={{ height: '52px' }}>
+          <Link data-wf-el='nav_logo_link' to='/' aria-label='Go to Home' className='mobile-nav-logo w-inline-block'>
+            <AnimatedHeaderLogo renderText={textIsVisible} />
+          </Link>
+          <div className='w-[40px]'>
             {showMenuIcon && (
-              <button aria-label='Open Menu' onClick={onClickMenuButton}>
-                <MenuIcon width={38} height={38} />
+              <button className='nav_hamburger_button' aria-label='Open Menu' onClick={onClickMenuButton}>
+                <MenuIcon width={40} height={24} />
               </button>
             )}
           </div>
-          <Link to='/' aria-label='Go to Home'>
-            <AnimatedHeaderLogo renderText={textIsVisible} />
-          </Link>
-          <div className='w-[38px]' />
         </div>
       </div>
     </nav>

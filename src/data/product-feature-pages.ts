@@ -201,6 +201,7 @@ const productFeaturePages: Record<'sdk' | 'gui' | 'cli', ProductFeaturePageData>
     primaryCta: {
       label: 'Get Started',
       href: 'https://docs.openhands.dev/openhands/usage/cli/installation',
+      screenReaderLabel: 'Join Slack',
     },
     secondaryCta: {
       label: 'View CLI Docs',
