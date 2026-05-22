@@ -68,26 +68,25 @@ const overlayLinkStyle: React.CSSProperties = {
 
 const Press = () => {
   return (
-    <CompanyPageShell backgroundClassName='hidden'>
+    <CompanyPageShell backgroundClassName='hidden' footerCompactSpacerHeight={9.1875} trailingSpacerHeight={0}>
       <section data-wf-el='section-hero' className='pb-0 pt-0' style={{ position: 'relative' }}>
         <div
           data-wf-el='hero-content'
+          className='press-hero-content'
           style={{
             alignItems: 'center',
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'center',
-            paddingBottom: '63.578125px',
-            paddingTop: '64px',
           }}
         >
-          <div data-wf-el='container' className='mx-auto w-full max-w-[1238px]'>
+          <div data-wf-el='container' className='mx-auto w-[90%] max-w-[1238px]'>
             <div className='flex flex-wrap justify-center' style={{ marginLeft: '-20px', marginRight: '-20px', rowGap: '40px' }}>
-              <div className='flex flex-col' style={{ flex: '0 0 50%', maxWidth: '50%', paddingLeft: '20px', paddingRight: '20px' }}>
+              <div className='press-hero-col flex flex-col' style={{ paddingLeft: '20px', paddingRight: '20px', position: 'relative' }}>
                 <h1 className='fluid-h1 h1-flow-root text-center text-brand-fg'>
                   In the news
                 </h1>
-                <p data-wf-el='paragraph-lg' className='fluid-body-lg font-medium text-[#5f5f5f]' style={{ marginTop: '10.4px', marginBottom: '20.8px', textAlign: 'center' }}>
+                <p data-wf-el='paragraph-lg' className='press-hero-description fluid-body-lg font-medium text-[#5f5f5f]' style={{ marginTop: '10.4px', marginBottom: '20.8px', textAlign: 'center' }}>
                   Read how OpenHands is reshaping the future of AI-powered software development.
                 </p>
                 <div data-wf-el='standard-wrap' className='flex justify-center' style={{ alignItems: 'center', marginTop: '49.6px' }}>
@@ -109,8 +108,8 @@ const Press = () => {
         </div>
       </section>
 
-      <section data-wf-el='section' className='pt-0' style={{ position: 'relative', paddingBottom: '80px' }}>
-        <div data-wf-el='standard-collection' className='mx-auto w-full max-w-[1238px]' style={{ marginBottom: '128px' }}>
+      <section data-wf-el='section' className='press-news-section pt-0' style={{ position: 'relative' }}>
+        <div data-wf-el='standard-collection' className='press-standard-collection mx-auto w-[90%] max-w-[1238px]'>
           <div
             data-wf-el='standard-collection-list'
             role='list'
@@ -123,22 +122,22 @@ const Press = () => {
               marginRight: '-12px',
             }}
           >
-            {PRESS_ITEMS.map((item, index) => (
+            {PRESS_ITEMS.map((item) => (
               <div
                 key={item.title}
                 data-wf-el='standard-collection-list-item'
                 role='listitem'
+                className='press-card'
                 style={{
                   alignContent: 'space-between',
                   alignItems: 'center',
                   display: 'flex',
-                  flex: '0 0 33.3333%',
                   flexWrap: 'wrap',
                   gap: '16px',
                   gridAutoColumns: '1fr',
                   gridTemplateColumns: '1fr',
+                  gridTemplateRows: 'auto',
                   justifyContent: 'space-between',
-                  maxWidth: '33.3333%',
                   paddingLeft: '12px',
                   paddingRight: '12px',
                   position: 'relative',
@@ -156,7 +155,7 @@ const Press = () => {
                   />
                 </div>
                 <p className='text-[16px] leading-[22.4px] text-[#5f5f5f]' style={{ margin: '0 0 16px' }}>{item.date}</p>
-                <p data-wf-el='paragraph-lg' className='fluid-body-lg font-medium text-brand-fg' style={{ margin: '0 0 20.8px', width: '100%' }}>
+                <p data-wf-el='paragraph-lg' className='press-card-title fluid-body-lg font-medium text-brand-fg' style={{ margin: '0 0 20.8px', width: '100%' }}>
                   {item.title}
                 </p>
                 <div data-wf-el='standard-wrap' style={{ display: 'block' }}>

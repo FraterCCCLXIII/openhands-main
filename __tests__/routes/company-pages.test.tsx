@@ -166,7 +166,12 @@ describe('company information pages parity', () => {
     expect(screen.getByText('All Hands AI raises $5M to build open source agents for developers').tagName).toBe('P');
     expect(screen.getAllByRole('link', { name: 'Read more' })).toHaveLength(4);
     expect(container.querySelectorAll('[data-wf-el="standard-collection-list-item"]')).toHaveLength(4);
+    expect(container.querySelectorAll('.press-card')).toHaveLength(4);
+    expect(container.querySelector('[data-wf-el="section-hero"] [data-wf-el="container"]')).toHaveClass('w-[90%]');
+    expect(container.querySelector('[data-wf-el="standard-collection"]')).toHaveClass('press-standard-collection', 'w-[90%]');
     expect(container.querySelector('[data-wf-el="standard-collection-list"]')).toHaveAttribute('role', 'list');
+    expect(container.querySelector('main')?.lastElementChild?.tagName).toBe('SECTION');
+    expect(container.querySelector('section.bg-brand-accent > div[aria-hidden="true"]')).toHaveStyle({ height: 'var(--footer-compact-spacer-height, 9.1875px)' });
     expect(screen.getByText(/OpenHands - All rights reserved/).textContent?.replace(/\u00a0/g, ' ')).toContain(`${new Date().getFullYear()} OpenHands - All rights reserved`);
     expect(screen.queryByRole('heading', { name: 'OpenHands Raises $18.8M Series A to Bring Open-Source Cloud Coding Agents to Enterprises' })).not.toBeInTheDocument();
     expect(screen.queryByText('Media Kit')).not.toBeInTheDocument();
