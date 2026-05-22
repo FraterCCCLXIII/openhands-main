@@ -11,6 +11,7 @@ const HUBSPOT_PORTAL_ID = '50790961';
 const HUBSPOT_WHITEPAPER_FORM_ID = '4426798e-b2ea-48ec-b9ee-e314cbeda890';
 const HUBSPOT_REGION = 'na1';
 const HUBSPOT_WHITEPAPER_FORM_SCRIPT_SRC = `https://js.hsforms.net/forms/embed/${HUBSPOT_PORTAL_ID}.js`;
+const HUBSPOT_WHITEPAPER_FORM_SCRIPT_ID = 'hs-whitepaper-form-script';
 const HUBSPOT_FORM_SUCCESS_EVENT = 'hs-form-event:on-submission:success';
 
 const WHITEPAPER_LEARNINGS = [
@@ -21,6 +22,28 @@ const WHITEPAPER_LEARNINGS = [
   'Real-world workflows for migrating COBOL and large systems',
   'How to evaluate if your system is a fit',
 ] as const;
+
+function HubSpotWhitepaperForm() {
+  useEffect(() => {
+    if (document.getElementById(HUBSPOT_WHITEPAPER_FORM_SCRIPT_ID)) return;
+
+    const script = document.createElement('script');
+    script.id = HUBSPOT_WHITEPAPER_FORM_SCRIPT_ID;
+    script.src = HUBSPOT_WHITEPAPER_FORM_SCRIPT_SRC;
+    script.defer = true;
+    document.body.appendChild(script);
+  }, []);
+
+  return (
+    <div
+      className='hs-form-frame'
+      data-region={HUBSPOT_REGION}
+      data-form-id={HUBSPOT_WHITEPAPER_FORM_ID}
+      data-portal-id={HUBSPOT_PORTAL_ID}
+    />
+  );
+}
+
 
 
 export const meta: MetaFunction = ({ location }) => [
@@ -118,13 +141,7 @@ export default function WhitepaperModernizeLegacySystemsWithAiAgents() {
                       </span>
                     </h2>
 
-                    <script src={HUBSPOT_WHITEPAPER_FORM_SCRIPT_SRC} defer />
-                    <div
-                      className='hs-form-frame'
-                      data-region={HUBSPOT_REGION}
-                      data-form-id={HUBSPOT_WHITEPAPER_FORM_ID}
-                      data-portal-id={HUBSPOT_PORTAL_ID}
-                    />
+                    <HubSpotWhitepaperForm />
                   </>
                 )}
               </div>

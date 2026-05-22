@@ -48,6 +48,21 @@ export const links: Route.LinksFunction = () => [
   },
 ];
 
+function HubSpotTrackingScript() {
+  React.useEffect(() => {
+    if (document.getElementById('hs-script-loader')) return;
+
+    const script = document.createElement('script');
+    script.id = 'hs-script-loader';
+    script.src = 'https://js.hs-scripts.com/50790961.js';
+    script.async = true;
+    script.defer = true;
+    document.head.appendChild(script);
+  }, []);
+
+  return null;
+}
+
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <html lang='en'>
@@ -57,11 +72,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Meta />
         <Links />
         <script src="/reo-init.js" defer />
-        <script id="hs-script-loader" src="https://js.hs-scripts.com/50790961.js" async defer />
       </head>
       <body>
         <PHProvider>
           {children}
+          <HubSpotTrackingScript />
           <Analytics />
           <ScrollRestoration />
           <Scripts />

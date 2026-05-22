@@ -3,6 +3,8 @@ import { MemoryRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
 import { AnimatedHeaderLogo } from '../../src/components/animated-header-logo';
 import { Footer } from '../../src/components/footer';
+import { Header } from '../../src/components/header';
+import { Sidebar } from '../../src/components/sidebar/sidebar';
 
 describe('site shell parity helpers', () => {
   it('renders a decorative header logo image', () => {
@@ -50,6 +52,46 @@ describe('site shell parity helpers', () => {
       height: 'var(--footer-logo-height, 102px)',
     });
     expect(container.textContent).toContain(`©${String.fromCharCode(160)}${new Date().getFullYear()}${String.fromCharCode(160)}OpenHands - All rights reserved`);
+  });
+
+
+  it('renders the live-style compact close state in the header', () => {
+    const { container } = render(
+      <MemoryRouter>
+        <Header width={375} showMenuIcon={false} onClickMenuButton={() => {}} />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByRole('button', { name: 'Close Menu' })).toHaveClass('is-open');
+    expect(container.querySelector('[data-wf-el="nav_wrap"]')).toHaveClass('is-menu-open');
+    expect(container.querySelector('[data-wf-el="mobile_menu"]')).not.toBeInTheDocument();
+  });
+
+  it('uses the live compact header from the medium breakpoint', () => {
+    const { container } = render(
+      <MemoryRouter>
+        <Header width={768} showMenuIcon onClickMenuButton={() => {}} />
+      </MemoryRouter>
+    );
+
+    expect(container.querySelector('[data-wf-el="nav_wrap"]')).toHaveStyle({ height: '83.578125px' });
+    expect(container.querySelector('[data-wf-el="nav_grid"]')).toHaveStyle({ display: 'none' });
+    expect(container.querySelector('.compact-nav')).toHaveStyle({ display: 'flex' });
+    expect(screen.getByRole('button', { name: 'Open Menu' })).toHaveTextContent('Menu');
+    expect(screen.getByRole('link', { name: 'Build with SDK' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Try it live' })).toBeInTheDocument();
+    expect(container.querySelector('[data-wf-el="mobile_menu"]')).not.toBeInTheDocument();
+  });
+
+  it('renders the compact sidebar as the live full-screen menu overlay', () => {
+    const { container } = render(
+      <MemoryRouter>
+        <Sidebar isHidden={false} onClose={() => {}} />
+      </MemoryRouter>
+    );
+
+    expect(container.querySelector('[data-testid="sidebar"]')).toHaveClass('fixed', 'inset-0', 'w-screen');
+    expect(screen.getByRole('button', { name: 'Product' })).toHaveAttribute('aria-expanded', 'false');
   });
 
 

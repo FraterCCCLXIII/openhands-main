@@ -408,7 +408,7 @@ export const ProductFeaturePage = ({
           <div data-wf-el='container' className='product-feature-container mx-auto w-full max-w-[1238px]' style={{ display: 'block' }}>
             <div data-wf-el='hero-content' className='flex flex-col items-center' style={{ position: 'relative', width: '100%', height: heroHeight, justifyContent: 'center', paddingTop: '56px', paddingBottom: '56px', textAlign: 'center' }}>
             <ProductEyebrow label={page.eyebrow} />
-            <h1 className='fluid-h1 text-brand-fg' style={{ textAlign: 'center', ...(variant === 'sdk' ? { width: '404px' } : {}) }}>
+            <h1 className='fluid-h1 text-brand-fg' style={{ textAlign: 'center' }}>
               {page.heading}
             </h1>
               <p data-wf-el='paragraph-lg' className='fluid-body-lg max-w-[560px] text-[#5f5f5f]' style={{ textAlign: 'center', marginTop: '10.4px', marginBottom: '20.8px', textWrap: 'pretty', ...(isCli ? { wordSpacing: '0.12px' } : {}) }}>{page.description}</p>

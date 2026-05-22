@@ -455,6 +455,7 @@ export const Footer = ({
         <WebflowFooterContent
           showSocialLinks={showSocialLinks}
           containerWfEl={standaloneContainerHeight ? null : undefined}
+          containerStyle={standaloneContainerHeight ? { width: '100%' } : undefined}
           {...ctaProps}
         />
       </div>

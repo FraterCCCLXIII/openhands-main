@@ -31,7 +31,10 @@ describe('modernize legacy systems whitepaper route', () => {
         name: /Download the whitepaper to learn how it works/i,
       }),
     ).toHaveClass('fluid-h4');
-    expect(container.querySelector('script[src="https://js.hsforms.net/forms/embed/50790961.js"]')).toBeInTheDocument();
+    expect(document.getElementById('hs-whitepaper-form-script')).toHaveAttribute(
+      'src',
+      'https://js.hsforms.net/forms/embed/50790961.js',
+    );
     expect(container.querySelector('.hs-form-frame')).toHaveAttribute('data-region', 'na1');
     expect(container.querySelector('.hs-form-frame')).toHaveAttribute('data-portal-id', '50790961');
     expect(container.querySelector('.hs-form-frame')).toHaveAttribute('data-form-id', '4426798e-b2ea-48ec-b9ee-e314cbeda890');

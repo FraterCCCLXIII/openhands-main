@@ -461,15 +461,15 @@ const Home = () => {
                   * forcing the inline announcement text to wrap to 2 lines
                   * on desktop — taller banner ⇒ ~27px Y-drift on the H1
                   * below it and cascading drift through the page. */}
-                <div data-wf-el='banner-wrap' className='w-full text-center' style={{ backgroundColor: 'rgba(0, 0, 0, 0)', borderRadius: '0px', paddingTop: '9.3px', paddingBottom: '9.3px', paddingLeft: '20px', paddingRight: '20px' }}>
-                  <div className='flex flex-col items-center justify-center sm:flex-row'>
-                    <div className='sm:flex-1' style={{ padding: '0 12px' }}>
+                <div data-wf-el='banner-wrap' className='home-whitepaper-banner-wrap w-full text-center'>
+                  <div className='home-whitepaper-banner-row'>
+                    <div className='home-whitepaper-banner-copy'>
                       <p className='text-base font-normal leading-[1.4] text-brand-fg'>Modernize legacy systems before your expertise disappears</p>
                     </div>
-                    <div className='hidden flex-shrink-0 sm:block' style={{ padding: '0 12px' }}>
-                      <div className='h-8 w-px bg-brand-fg/20' aria-hidden='true' />
+                    <div className='home-whitepaper-banner-separator-col' aria-hidden='true'>
+                      <div className='home-whitepaper-banner-separator' />
                     </div>
-                    <div className='flex-shrink-0' style={{ padding: '0 12px' }}>
+                    <div className='home-whitepaper-banner-link-col'>
                       <Link data-wf-el='standard-link' to='/whitepapers/modernize-legacy-systems-with-ai-agents' className='font-sohne-buch text-base font-normal leading-[22.4px] hover:text-[#8a5f45]' style={{ display: 'block' }}>
                         Read the whitepaper
                       </Link>
@@ -579,7 +579,7 @@ const Home = () => {
               <article
                 key={workflow.title}
                 data-wf-el='capabilities_card_wrap'
-                className='flex flex-shrink-0 cursor-grab flex-col gap-4 rounded-2xl border border-[rgba(30,21,15,0.2)] bg-[#f9f6e9] p-6 lg:w-[352px]'
+                className='flex w-[270px] flex-shrink-0 cursor-grab flex-col gap-4 rounded-2xl border border-[rgba(30,21,15,0.2)] bg-[#f9f6e9] p-6 md:w-[352px]'
                 style={{ scrollSnapAlign: 'start', justifyContent: 'flex-start', alignItems: 'flex-start' }}
               >
                 {/* Live's `.capabilities_card_icon` is `width: 2.25rem`
@@ -658,15 +658,15 @@ const Home = () => {
               the matching hero media on the right. Dimensions and offsets
               mirror the live Webflow export so rendered image rects line up
               without relying on screenshots. */}
-          <div data-wf-el='hero-content' data-slider='hero-surfaces' className='w-full' style={{ display: 'block', marginTop: '0px' }}>
-            <div className='mx-auto max-w-[1238px]'>
-              <div id='hero-media' className='flex flex-col lg:flex-row lg:items-start lg:gap-6'>
+          <div data-wf-el='hero-content' data-slider='hero-surfaces' className='home-hero-surfaces w-full' style={{ display: 'block', marginTop: '0px' }}>
+            <div className='home-hero-surfaces-container mx-auto max-w-[1238px]'>
+              <div id='hero-media' className='home-hero-media-row flex flex-col lg:flex-row lg:items-start lg:gap-6'>
                 {/* LEFT col: selector controls + active card. Match live's
                     Webflow row: the selector keys align with the top of the
                     media background, then the active card starts immediately
                     below them. */}
-                <div className='flex flex-col' style={{ flex: '0 0 270px', maxWidth: '270px', gap: '0px', minHeight: '792px' }}>
-                  <div className='flex flex-nowrap items-center justify-start' style={{ position: 'relative', zIndex: 1, marginTop: '49.6px', gap: '9.6px' }}>
+                <div className='home-hero-media-copy-col flex flex-col' style={{ flex: '0 0 270px', maxWidth: '270px', gap: '0px' }}>
+                  <div className='flex flex-nowrap items-center justify-start' style={{ position: 'relative', zIndex: 1, marginTop: '0px', gap: '9.6px' }}>
                     {PRODUCT_SURFACES.map((surface, index) => (
                       // Live Webflow renders these as plain `<div class="eyebrow bubble ...">`
                       // pills (no role/aria semantics).  Adding `role="tab"` made our test
@@ -742,7 +742,7 @@ const Home = () => {
                     Match live's static post-animation geometry: 944px wide
                     media, 47.1875px vertical padding, and overflow visible on
                     the brown media background. */}
-                <div style={{ flex: '0 0 944px', maxWidth: '944px', display: 'flex', position: 'relative', marginTop: '49.6px', alignSelf: 'flex-start' }}>
+                <div className='home-hero-media-visual-col' style={{ flex: '0 0 944px', maxWidth: '944px', display: 'flex', position: 'relative', marginTop: '0px', alignSelf: 'flex-start' }}>
                   <div className='w-full' style={{ display: 'block' }}>
                     <div data-wf-el='hero-media-bg' style={{ position: 'relative', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'stretch', backgroundColor: 'rgb(34, 21, 13)', borderRadius: '24px', paddingTop: '47.1875px', paddingBottom: '47.1875px', paddingLeft: '0px', paddingRight: '0px', overflow: 'visible', height: '614.375px', width: '944px' }} className='w-full'>
                       {/* Keep every media panel mounted and cross-fade/slide between them so
@@ -790,7 +790,7 @@ const Home = () => {
               feature column dictate row height; previous flex-justify-between
               left a 700+px gap on test where the right column was much taller
               than live's. */}
-          <div className='flex flex-col items-start'>
+          <div className='flex min-w-0 flex-col items-start'>
             {/* Live's H3 here gets `margin-bottom: 1.375rem` (22px) from
               * the base h3 typography rules.  Without it on test, the
               * "Try it live" CTA below sat too close to the heading. */}
@@ -954,7 +954,7 @@ const Home = () => {
       {/* SECTION 4: Dark cards continued (py:80, transparent) */}
       <section data-wf-el='section' style={{ display: 'block', backgroundColor: 'rgba(0, 0, 0, 0)', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px', position: 'relative', height: '1269.25px' }}>
         <div data-wf-el='container' className='mx-auto max-w-[1238px] space-y-6' style={{ marginTop: '49.6px' }}>
-          <div className='grid gap-6 lg:grid-cols-2'>
+          <div className='grid gap-6 md:grid-cols-2'>
             <article data-wf-el='card' className='card-dark' style={{ height: '616.328px', overflow: 'hidden' }}>
               <div data-wf-el='card-body' className='flex h-full flex-col p-6'>
                 {/* Live's `.paragraph-lg.u-m-0.u-text-primary` headline

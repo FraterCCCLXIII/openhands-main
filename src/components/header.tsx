@@ -70,8 +70,8 @@ export const Header: React.FC<HeaderProps> = ({
   const [textIsVisible, setTextIsVisible] = React.useState(true);
   const [resourcesOpen, setResourcesOpen] = React.useState(false);
   const [productOpen, setProductOpen] = React.useState(false);
+  const isMobile = width < 768;
   const isCompact = width <= 1360;
-  const isNarrow = width < 768;
   const menuOpen = showMenuIcon === false;
 
   useMotionValueEvent(scrollY, 'change', (latest) => {
@@ -88,7 +88,7 @@ export const Header: React.FC<HeaderProps> = ({
       className={clsx('sticky top-0 left-0 right-0 z-50 w-full', menuOpen && 'is-menu-open')}
       style={{
         display: 'block',
-        height: isNarrow ? '69.3437px' : '84px',
+        height: isMobile ? '69.3437px' : '83.578125px',
         backgroundColor: menuOpen ? 'rgb(34, 21, 13)' : 'rgb(249, 240, 217)',
         color: menuOpen ? 'rgb(249, 240, 217)' : 'rgb(34, 21, 13)',
         paddingTop: '1rem',
@@ -297,20 +297,50 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
         </div>
 
-        {/* Compact nav */}
-        <div className='mobile-nav flex items-center justify-between' style={{ display: isCompact ? 'flex' : 'none' }}>
-          <Link to='/' aria-label='Go to Home' className='mobile-nav-logo' style={{ width: '56px', lineHeight: '16px' }}>
-            <img data-wf-el='nav_logo_img' src='/assets/webflow/brand/openhands-logo-mobile.svg' alt='' style={{ width: '56px', height: 'auto' }} />
+        {/* Compact nav: live keeps the CTA buttons and Menu control until the full nav fits. */}
+        <div className='compact-nav mobile-nav flex items-center justify-between' style={{ display: isCompact ? 'flex' : 'none' }}>
+          <Link data-wf-el='nav_logo_link' to='/' aria-label='Go to Home' className='compact-nav-logo mobile-nav-logo w-inline-block'>
+            <img data-wf-el='nav_logo_img' src='/assets/webflow/brand/openhands-logo-mobile.svg' alt='' />
           </Link>
-          <button
-            type='button'
-            className='mobile-menu-button'
-            aria-label={menuOpen ? 'Close Menu' : 'Open Menu'}
-            aria-expanded={menuOpen}
-            onClick={menuOpen ? onClickCloseMenuButton ?? onClickMenuButton : onClickMenuButton}
-          >
-            {menuOpen ? 'Close' : 'Menu'}
-          </button>
+          <div data-wf-el='nav_right' className='compact-nav-right'>
+            {!isMobile ? (
+              <>
+                <a
+                  data-wf-el='nav-menu_gh_count'
+                  href='https://github.com/OpenHands/OpenHands'
+                  target='_blank'
+                  rel='noopener noreferrer'
+                  className='flex items-center gap-[4px] text-base leading-[22.4px] hover:opacity-80'
+                  style={{ justifyContent: 'center', alignSelf: 'center' }}
+                >
+                  <div data-wf-el='nav-menu_gh_icon'><GitHubLogoBlack data-wf-el='bi-github' className='h-4 w-4 flex-shrink-0' style={{ width: '16px', height: '16px', verticalAlign: 'baseline' }} /></div>
+                  <div data-wf-el='nav-menu_gh_num' style={{ fontSize: '12.96px', lineHeight: '18.144px' }}><span style={{ fontWeight: 400 }}>{formatThousands(statistics.stargazers)}</span></div>
+                </a>
+                <div data-wf-el='button' className='btn btn-outline relative' style={{ padding: '0.9em 1.9em', margin: 0, borderRadius: '8px', backgroundColor: 'rgba(255,255,255,0.34)', borderColor: 'rgb(34, 21, 13)', backdropFilter: 'blur(5px)', textDecoration: 'none', textDecorationThickness: 'auto', textUnderlineOffset: 'auto', cursor: 'auto', boxShadow: 'rgb(249, 240, 217) 0px 0px 0px 0px inset', gap: '6.4px' }}>
+                  <div data-wf-el='btn-text' aria-hidden='true' style={{ whiteSpace: 'nowrap', cursor: 'auto', textUnderlineOffset: 'auto', pointerEvents: 'none' }}>Build with SDK</div>
+                  <a href='https://docs.openhands.dev/sdk' target='_blank' rel='noopener noreferrer' className='absolute inset-0' style={{ textDecoration: 'underline', textDecorationThickness: '1.6px' }}>
+                    <span className='sr-only'>Build with SDK</span>
+                  </a>
+                </div>
+                <div data-wf-el='button' className='btn btn-primary relative' style={{ padding: '0.9em 1.9em', margin: 0, borderRadius: '8px', textDecoration: 'none', textDecorationThickness: 'auto', textUnderlineOffset: 'auto', cursor: 'auto', boxShadow: 'rgba(0, 0, 0, 0) 0px 0px 0px 0px inset', gap: '6.4px' }}>
+                  <div data-wf-el='btn-text' aria-hidden='true' style={{ whiteSpace: 'nowrap', cursor: 'auto', textUnderlineOffset: 'auto', pointerEvents: 'none' }}>Try it live</div>
+                  <a href='https://app.all-hands.dev/' target='_blank' rel='noopener noreferrer' className='absolute inset-0' style={{ textDecoration: 'underline', textDecorationThickness: '1.6px' }}>
+                    <span className='sr-only'>Try it live</span>
+                  </a>
+                </div>
+              </>
+            ) : null}
+            <button
+              type='button'
+              className={clsx('nav_hamburger_button mobile-menu-button', menuOpen && 'is-open')}
+              aria-label={menuOpen ? 'Close Menu' : 'Open Menu'}
+              aria-expanded={menuOpen}
+              onClick={menuOpen ? onClickCloseMenuButton ?? onClickMenuButton : onClickMenuButton}
+            >
+              <span className='nav_hamburger_text' aria-hidden='true'>Menu</span>
+              <span className='nav_hamburger_text' aria-hidden='true'>Close</span>
+            </button>
+          </div>
         </div>
       </div>
     </nav>

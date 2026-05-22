@@ -46,7 +46,7 @@ describe('home route parity structure', () => {
     expect(container.innerHTML).toContain('lg:grid-cols-3');
     expect(container.querySelectorAll('[data-key]')).toHaveLength(3);
     expect(container.querySelectorAll('[data-heroslide]')).toHaveLength(3);
-    expect(container.innerHTML).toContain('min-height: 792px');
+    expect(container.innerHTML).toContain('home-hero-surfaces');
     expect(container.innerHTML).toContain('h-full w-full object-cover');
     expect(container.innerHTML).not.toContain('xl:grid-cols-4');
     expect(screen.getByRole('img', { name: 'ASCII art depicting a large black hole with light and particles swirling around it.' })).toHaveClass(
@@ -56,6 +56,8 @@ describe('home route parity structure', () => {
     );
     expect(screen.queryAllByTestId('footer-social-link')).toHaveLength(3);
     expect(container.querySelector('main[data-testid="home-content"]')).toHaveClass('home-mobile-parity');
+    expect(container.querySelector('[data-wf-el="banner-wrap"] .home-whitepaper-banner-row')).toBeInTheDocument();
+    expect(container.querySelector('[data-wf-el="banner-wrap"] .home-whitepaper-banner-separator')).toBeInTheDocument();
     expect(container.querySelector('section.text-center.text-brand-fg > [data-wf-el="container"]')).toBeInTheDocument();
   });
 
