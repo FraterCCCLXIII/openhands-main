@@ -135,6 +135,7 @@ const productFeaturePages: Record<'sdk' | 'gui' | 'cli', ProductFeaturePageData>
     primaryCta: {
       label: 'Try it live',
       href: 'https://app.all-hands.dev/',
+      screenReaderLabel: 'Join Slack',
     },
     secondaryCta: {
       label: 'Download Local GUI',

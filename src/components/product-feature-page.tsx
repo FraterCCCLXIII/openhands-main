@@ -86,7 +86,7 @@ const ProductFeatureIntroBand = ({
   image?: ProductFeaturePageData['heroImage'];
   wideDescription?: boolean;
 }) => (
-  <section data-wf-el='section' className='relative' style={{ display: 'block', backgroundColor: 'rgba(0, 0, 0, 0)', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px' }}>
+  <section data-wf-el='section' className='product-feature-section relative' style={{ display: 'block', backgroundColor: 'rgba(0, 0, 0, 0)', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px' }}>
     <div data-wf-el='asci-wrap' className='absolute inset-0 overflow-hidden bg-brand-accent' style={{ maxHeight: '2400px' }} aria-hidden='true'>
       {image ? (
         <img
@@ -100,7 +100,7 @@ const ProductFeatureIntroBand = ({
         <AsciiBackdrop opacity='opacity-[0.14]' />
       )}
     </div>
-    <div data-wf-el='container' className='mx-auto max-w-[1238px]'>
+    <div data-wf-el='container' className='product-feature-container mx-auto max-w-[1238px]'>
       <div data-wf-el='heading-stack' className={classNames('relative text-center', wideDescription ? '' : '')} style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'center', paddingTop: '64px', paddingBottom: wideDescription ? '64px' : '65px', width: '100%' }}>
         <h2 className='fluid-h3 text-brand-fg' style={{ textAlign: 'center' }}>
           {title}
@@ -129,7 +129,7 @@ const ProductFeatureProofBand = ({
   wideDescription?: boolean;
   descriptionClassName?: string;
 }) => (
-  <section data-wf-el='section' className='relative' style={{ display: 'block', backgroundColor: 'rgba(0, 0, 0, 0)', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px' }}>
+  <section data-wf-el='section' className='product-feature-section relative' style={{ display: 'block', backgroundColor: 'rgba(0, 0, 0, 0)', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px' }}>
     <div data-wf-el='asci-wrap' className={image && headingClassName === 'text-brand-fg' ? 'absolute inset-0 overflow-hidden bg-brand-accent' : image ? 'absolute inset-0 overflow-hidden bg-brand-fg' : 'absolute inset-0 overflow-hidden bg-brand-fg opacity-[0.28]'} style={{ maxHeight: '2400px' }} aria-hidden='true'>
       <img
         data-wf-el='asci-media'
@@ -139,7 +139,7 @@ const ProductFeatureProofBand = ({
         style={{ textAlign: 'start', position: 'static', display: 'inline-block' }}
       />
     </div>
-    <div data-wf-el='container' className='mx-auto max-w-[1238px]'>
+    <div data-wf-el='container' className='product-feature-container mx-auto max-w-[1238px]'>
       <div data-wf-el='heading-stack' className={classNames('relative text-center', headingClassName === 'text-white' ? 'text-white' : '')} style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'center', paddingTop: '64px', paddingBottom: wideDescription ? '64px' : '65px', width: '100%' }}>
         <h2 className={classNames('fluid-h3', headingClassName)} style={{ marginBottom: '9.6px' }}>
           {title}
@@ -162,18 +162,18 @@ const ProductGuiIntroSection = ({
   title: string;
   description: string;
 }) => (
-  <section data-wf-el='section' style={{ display: 'block', backgroundColor: 'rgb(34, 21, 13)', color: 'rgb(249, 240, 217)', position: 'relative', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px' }}>
-    <div data-wf-el='container' className='mx-auto max-w-[1238px]' style={{ display: 'block', width: 'calc(100% - 80px)', maxWidth: '1238px' }}>
-      <div style={{ display: 'flex', marginLeft: '-20px', marginRight: '-20px' }}>
-        <div style={{ width: '50%', paddingLeft: '20px', paddingRight: '20px', minHeight: 'min(469px, 52.5vw)' }}>
-          <div data-wf-el='product-list_img_wrap' className='bg-brand-bg' style={{ backgroundColor: 'rgb(249, 240, 217)', border: '1px solid rgb(179, 168, 140)', borderRadius: '16px', boxSizing: 'border-box', color: 'rgb(249, 240, 217)', display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative', overflow: 'hidden', width: '100%', minHeight: '100%', marginLeft: '0px', padding: '96px 64px 64px', boxShadow: 'none' }}>
+  <section data-wf-el='section' className='product-feature-section product-gui-intro-section' style={{ display: 'block', backgroundColor: 'rgb(34, 21, 13)', color: 'rgb(249, 240, 217)', position: 'relative', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px' }}>
+    <div data-wf-el='container' className='product-feature-container mx-auto max-w-[1238px]' style={{ display: 'block', width: 'calc(100% - 80px)', maxWidth: '1238px', marginLeft: 'auto', marginRight: 'auto' }}>
+      <div className='product-gui-intro-row' style={{ display: 'flex', marginLeft: '-20px', marginRight: '-20px' }}>
+        <div className='product-gui-intro-media-col' style={{ width: '50%', paddingLeft: '20px', paddingRight: '20px', minHeight: 'min(469px, 52.5vw)' }}>
+          <div data-wf-el='product-list_img_wrap' className='product-gui-hero-image-wrap bg-brand-bg' style={{ backgroundColor: 'rgb(249, 240, 217)', border: '1px solid rgb(179, 168, 140)', borderRadius: '16px', boxSizing: 'border-box', color: 'rgb(249, 240, 217)', display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative', overflow: 'hidden', width: '100%', minHeight: '100%', marginLeft: '0px', padding: '96px 64px 64px', boxShadow: 'none' }}>
             <div data-wf-el='product-list_img_overlay' className='absolute inset-x-0 top-0 text-brand-fg' style={{ backgroundColor: 'rgb(179, 168, 140)', color: 'rgb(34, 21, 13)', zIndex: 1, padding: '16px' }}>
               <div data-wf-el='eyebrow' className='font-mono' style={{ fontSize: '14.08px', lineHeight: '16.896px', marginBottom: '0px', width: '100%' }}>Web&nbsp;GUI</div>
             </div>
             <img data-wf-el='product-list_img' src={image.src} alt={image.alt} style={{ width: '100%', maxWidth: '469px', height: 'auto', borderRadius: '0px', color: 'rgb(249, 240, 217)', display: 'block', objectFit: 'scale-down' }} />
           </div>
         </div>
-        <div style={{ width: '50%', paddingLeft: '20px', paddingRight: '20px', minHeight: 'min(469px, 52.5vw)' }}>
+        <div className='product-gui-intro-copy-col' style={{ width: '50%', paddingLeft: '20px', paddingRight: '20px', minHeight: 'min(469px, 52.5vw)' }}>
           <div data-wf-el='heading-stack' className='text-brand-bg' style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-start', paddingLeft: '0px', paddingRight: '0px', width: '100%', height: '100%' }}>
             <h2 className='section-title'>{title}</h2>
             <p data-wf-el='paragraph-lg' className='fluid-body-lg text-[#b3a88c]' style={{ marginTop: '0px', marginBottom: '20.8px', width: '100%', textWrap: 'pretty', wordSpacing: '0.025px' }}>{description}</p>
@@ -185,9 +185,9 @@ const ProductGuiIntroSection = ({
 );
 
 const ProductList = ({ items }: { items: readonly string[] }) => (
-  <ul data-wf-el='product-list_ul' style={{ borderStyle: 'none', textAlign: 'start', width: '571px', marginTop: '0px', listStyleType: 'none', paddingLeft: '0px' }}>
+  <ul data-wf-el='product-list_ul' className='product-list' style={{ borderStyle: 'none', textAlign: 'start', width: '571px', marginTop: '0px', listStyleType: 'none', paddingLeft: '0px' }}>
     {items.map((item) => (
-      <li data-wf-el='product-list_element' key={item} className='fluid-body-lg py-4 text-[#5f5f5f] font-medium' style={{ display: 'list-item', textAlign: 'start', borderBottom: '1px solid rgba(34, 21, 13, 0.28)' }}>
+      <li data-wf-el='product-list_element' key={item} className='product-list-item fluid-body-lg py-4 text-[#5f5f5f] font-medium' style={{ display: 'list-item', textAlign: 'start', borderBottom: '1px solid rgba(34, 21, 13, 0.28)' }}>
         {item}
       </li>
     ))}
@@ -206,7 +206,7 @@ const ProductImageCard = ({
   const useLiveCliImageHeight = src.includes('699490d1d9729682e0daf0a5_cli') || className.includes('cli-how-height');
 
   return (
-    <div data-wf-el='product-list_img_wrap' className={classNames('rounded-[18px]', className)} style={{ backgroundColor: 'rgba(0,0,0,0)', borderWidth: '1px', borderStyle: 'solid', borderColor: 'rgb(179, 168, 140)', boxShadow: 'none', padding: '64px', display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative', overflow: 'hidden', minHeight: '100%' }}>
+    <div data-wf-el='product-list_img_wrap' className={classNames('product-image-card rounded-[18px]', className)} style={{ backgroundColor: 'rgba(0,0,0,0)', borderWidth: '1px', borderStyle: 'solid', borderColor: 'rgb(179, 168, 140)', boxShadow: 'none', padding: '64px', display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative', overflow: 'hidden', minHeight: '100%' }}>
       <img data-wf-el='product-list_img' src={src} alt={alt} className='img-block w-full' style={{ borderRadius: '0px', objectFit: 'scale-down', ...(useLiveCliImageHeight ? { height: '322.906px' } : {}) }} />
     </div>
   );
@@ -234,8 +234,8 @@ export const ProductComparisonTable = ({
   const tickColor = headerColor ?? (dark ? 'rgb(179, 168, 140)' : 'rgb(138, 95, 69)');
 
   return (
-    <section data-wf-el='section' className={classNames('product-comparison-section relative', dark ? 'text-brand-bg' : 'text-brand-fg')} style={{ display: 'block', backgroundColor: dark ? 'rgb(34, 21, 13)' : 'rgba(0, 0, 0, 0)', paddingTop: 'var(--product-comparison-padding-top, var(--product-section-padding-y, 80px))', paddingBottom: 'var(--product-comparison-padding-bottom, var(--product-section-padding-y, 80px))', paddingLeft: '0px', paddingRight: '0px' }}>
-      <div data-wf-el='container' data-product-comparison-container className='product-comparison-container mx-auto max-w-[1238px]' style={{ display: 'block', color: dark ? 'rgb(249, 240, 217)' : 'rgb(34, 21, 13)', zIndex: 1, width: 'var(--product-container-width, 100%)', height: 'var(--product-comparison-container-height, auto)', marginTop: minHeight ? '128px' : '0px', marginBottom: minHeight ? '128px' : '0px' }}>
+    <section data-wf-el='section' className={classNames('product-feature-section product-comparison-section relative', dark ? 'text-brand-bg' : 'text-brand-fg')} style={{ display: 'block', backgroundColor: dark ? 'rgb(34, 21, 13)' : 'rgba(0, 0, 0, 0)', paddingTop: 'var(--product-comparison-padding-top, var(--product-section-padding-y, 80px))', paddingBottom: 'var(--product-comparison-padding-bottom, var(--product-section-padding-y, 80px))', paddingLeft: '0px', paddingRight: '0px' }}>
+      <div data-wf-el='container' data-product-comparison-container className='product-feature-container product-comparison-container mx-auto max-w-[1238px]' style={{ display: 'block', color: dark ? 'rgb(249, 240, 217)' : 'rgb(34, 21, 13)', zIndex: 1, width: 'var(--product-container-width, 100%)', height: 'var(--product-comparison-container-height, auto)', marginTop: minHeight ? '128px' : '0px', marginBottom: minHeight ? '128px' : '0px' }}>
         <div className='product-comparison-heading-row' style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginLeft: '-20px', marginRight: '-20px' }}>
           <div className={classNames('section-title text-center', headingClass)} style={{ marginBottom: 'var(--product-comparison-heading-margin-bottom, 8.8px)', maxWidth: 'var(--product-comparison-heading-max-width, 599px)' }}>
             The only open, secure, and scalable agent platform built for real engineering work
@@ -304,8 +304,8 @@ const renderFaqQuestion = (question: string) => {
 
 export const ProductFaqSection = ({ faqs }: { faqs: readonly ProductFaqItem[] }) => {
   return (
-    <section data-wf-el='section' className='product-faq-section relative' style={{ display: 'block', backgroundColor: 'rgba(0, 0, 0, 0)', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px', marginTop: '-1px' }}>
-      <div data-wf-el='container' className='product-faq-container mx-auto max-w-[1238px]' style={{ display: 'block', paddingTop: '0px', paddingBottom: '0px', gap: 'normal' }}>
+    <section data-wf-el='section' className='product-feature-section product-faq-section relative' style={{ display: 'block', backgroundColor: 'rgba(0, 0, 0, 0)', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px', marginTop: '-1px' }}>
+      <div data-wf-el='container' className='product-feature-container product-faq-container mx-auto max-w-[1238px]' style={{ display: 'block', paddingTop: '0px', paddingBottom: '0px', gap: 'normal' }}>
         <div className='product-faq-row product-faq-layout' style={{ display: 'flex', alignItems: 'start', marginLeft: '-20px', marginRight: '-20px' }}>
           <div className='product-faq-heading-col' style={{ display: 'flex', flexDirection: 'column', position: 'relative', width: '41.6667%', maxWidth: '41.6667%', paddingLeft: '20px', paddingRight: '20px' }}>
             <h2 className='section-title text-brand-fg' style={{ marginBottom: '22px' }}>
@@ -399,20 +399,20 @@ export const ProductFeaturePage = ({
         data-wf-el='section-product_hero'
         style={{ padding: '0', overflow: 'visible' }}
       >
-        <div data-wf-el='asci-wrap' className='pointer-events-auto absolute inset-x-0 top-0 h-screen overflow-hidden' style={{ '--ascii-opacity': '0.12', maxHeight: '2400px' } as CSSProperties} aria-hidden='true'>
+        <div data-wf-el='asci-wrap' className='product-hero-ascii pointer-events-auto absolute inset-x-0 top-0 h-screen overflow-hidden' style={{ '--ascii-opacity': '0.12', maxHeight: '2400px' } as CSSProperties} aria-hidden='true'>
           <div className='asci-embed w-embed h-full w-full overflow-hidden'>
             <ASCIIAnimation className='h-full w-full' />
           </div>
         </div>
-        <div data-wf-el='hero' className='relative flex w-full flex-col items-center' style={{ textAlign: 'start', justifyContent: 'flex-start', height: heroHeight, overflow: 'hidden' }}>
-          <div data-wf-el='container' className='mx-auto w-full max-w-[1238px]' style={{ display: 'block' }}>
+        <div data-wf-el='hero' className='product-hero relative flex w-full flex-col items-center' style={{ textAlign: 'start', justifyContent: 'flex-start', height: heroHeight, overflow: 'hidden' }}>
+          <div data-wf-el='container' className='product-feature-container mx-auto w-full max-w-[1238px]' style={{ display: 'block' }}>
             <div data-wf-el='hero-content' className='flex flex-col items-center' style={{ position: 'relative', width: '100%', height: heroHeight, justifyContent: 'center', paddingTop: '56px', paddingBottom: '56px', textAlign: 'center' }}>
             <ProductEyebrow label={page.eyebrow} />
             <h1 className='fluid-h1 text-brand-fg' style={{ textAlign: 'center', ...(variant === 'sdk' ? { width: '404px' } : {}) }}>
               {page.heading}
             </h1>
               <p data-wf-el='paragraph-lg' className='fluid-body-lg max-w-[560px] text-[#5f5f5f]' style={{ textAlign: 'center', marginTop: '10.4px', marginBottom: '20.8px', textWrap: 'pretty', ...(isCli ? { wordSpacing: '0.12px' } : {}) }}>{page.description}</p>
-              <div data-wf-el='hero_btn_wrap' className='flex flex-wrap' style={{ maxWidth: '100%', paddingTop: '32px', gap: '8px 16px', textAlign: 'center' }}>
+              <div data-wf-el='hero_btn_wrap' className='flex flex-wrap items-center justify-center' style={{ maxWidth: '100%', paddingTop: '32px', gap: '8px 16px', textAlign: 'center' }}>
               <ProductPageActionLink
                 href={page.primaryCta.href}
                 label={page.primaryCta.label}
@@ -462,9 +462,9 @@ export const ProductFeaturePage = ({
         </>
       )}
 
-      <section data-wf-el='section' className='product-feature-grid-section relative' style={{ display: 'block', backgroundColor: 'rgb(249, 240, 217)', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px' }}>
-        <div data-wf-el='container' className='mx-auto max-w-[1238px]' style={{ display: 'block' }}>
-          <div className='product-feature-row product-feature-row-capabilities product-detail-grid product-detail-grid--top grid gap-10 lg:grid-cols-2' style={{ marginBottom: '128px', alignItems: 'start', marginLeft: '-20px', marginRight: '-20px' }}>
+      <section data-wf-el='section' className='product-feature-section product-showcase-section product-feature-grid-section relative' style={{ display: 'block', backgroundColor: 'rgb(249, 240, 217)', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px' }}>
+        <div data-wf-el='container' className='product-feature-container mx-auto max-w-[1238px]' style={{ display: 'block' }}>
+          <div className='product-showcase-grid product-feature-row product-feature-row-capabilities product-detail-grid product-detail-grid--top grid gap-10 lg:grid-cols-2' style={{ marginBottom: '128px', alignItems: 'start', marginLeft: '-20px', marginRight: '-20px' }}>
             <div data-wf-el='card' style={{ borderStyle: 'none', borderRadius: '8px', position: 'relative', display: 'flex', overflow: 'hidden', flexDirection: 'column', justifyContent: 'flex-start' }}>
               <div data-wf-el='card-body' style={{ padding: '24px', position: 'relative', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start' }}>
                 <h2 className='section-title text-brand-fg' style={{ textAlign: 'start' }}>
@@ -477,7 +477,7 @@ export const ProductFeaturePage = ({
               <ProductImageCard src={page.showcaseImages[0].src} alt={page.showcaseImages[0].alt} className={isCli ? '' : 'lg:-translate-x-5'} />
             </div>
           </div>
-          <div className='product-feature-row product-feature-row-usecases product-detail-grid grid gap-10 lg:grid-cols-2' style={{ alignItems: 'start', marginLeft: '-20px', marginRight: '-20px' }}>
+          <div className='product-showcase-grid product-feature-row product-feature-row-usecases product-detail-grid grid gap-10 lg:grid-cols-2' style={{ alignItems: 'start', marginLeft: '-20px', marginRight: '-20px' }}>
             <div style={isCli ? { transform: 'translateX(20px)' } : undefined}>
               <ProductImageCard src={page.showcaseImages[1].src} alt={page.showcaseImages[1].alt} className={classNames(!isCli && 'lg:translate-x-5', isCli && 'cli-how-height')} />
             </div>
@@ -508,7 +508,7 @@ export const ProductFeaturePage = ({
         compactNav
         showCopyright
         minHeight={1056}
-        compactSpacerHeight={isCli ? 2 : 9}
+        compactSpacerHeight={isGui ? 2 : isCli ? 2 : 9}
         marketingCtaTitle={page.closingTitle}
         marketingCtaDescription={page.closingDescription}
         marketingCtaPrimary={page.closingPrimaryCta}

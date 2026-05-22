@@ -92,11 +92,16 @@ describe('Product parity routes', () => {
   });
 
   it('renders the Web GUI product page content', () => {
-    renderRoute(<ProductGUI />);
+    const { container } = renderRoute(<ProductGUI />);
 
     expect(
       screen.getByRole('heading', { name: 'Agentic development, made human.' })
     ).toBeInTheDocument();
+    expect(container.querySelector('main')).toHaveClass('product-feature-page--gui');
+    expect(screen.getByRole('link', { name: 'Join Slack' })).toHaveAttribute(
+      'href',
+      'https://app.all-hands.dev/',
+    );
     expect(screen.getAllByRole('link', { name: 'Try it live' })[0]).toHaveAttribute(
       'href',
       'https://app.all-hands.dev/',
