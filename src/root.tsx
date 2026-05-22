@@ -198,8 +198,11 @@ export default function App() {
     };
   }, []);
 
+  const pageWrapperClassName = `relative${pathname === '/about' ? ' about-page-wrapper' : ''}${pathname === '/privacy' ? ' privacy-page-wrapper' : ''}`;
+
   return (
-    <div data-wf-el='page-wrapper' className={`relative${pathname === '/privacy' ? ' privacy-page-wrapper' : ''}`} style={{ display: 'flex', flexDirection: 'column', backgroundColor: 'rgb(249, 240, 217)', minHeight: '100vh', overflow: 'clip', height: pageWrapperHeight }}>
+      <div data-wf-el='page-wrapper' className={pageWrapperClassName} style={{ display: 'flex', flexDirection: 'column', backgroundColor: 'rgb(249, 240, 217)', minHeight: '100vh', overflow: 'clip', height: pageWrapperHeight }}>
+
       <Sidebar
         ref={sidebarRef}
         isHidden={isSidebarHidden}

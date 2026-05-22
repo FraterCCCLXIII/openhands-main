@@ -5461,7 +5461,6 @@ async function capturePageScreenshotInChunks(page, outputPath, metrics, options 
   for (let y = 0; y < metrics.height; y += chunkHeight) {
     const height = Math.min(chunkHeight, metrics.height - y);
     await page.evaluate((scrollY) => window.scrollTo(0, scrollY), y);
-    await settleAfterScroll(page);
 
     const buffer = await page.screenshot({
       captureBeyondViewport: true,
@@ -5586,6 +5585,14 @@ async function capturePageScreenshot(page, outputPath, options = {}) {
   return capturePageScreenshotInChunks(page, outputPath, metrics, options);
 }
 
+async function preparePageForScreenshot(page, origin, routePath) {
+  await page.goto(new URL(routePath, origin).toString(), {
+    waitUntil: 'domcontentloaded',
+    timeout: 60000,
+  });
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+}
+
 async function captureScreenshotDiff(livePage, testPage, routePath) {
   const screenshotDir = path.join(OUTPUT_DIR, 'screenshots');
   await fsp.mkdir(screenshotDir, { recursive: true });
@@ -5595,10 +5602,15 @@ async function captureScreenshotDiff(livePage, testPage, routePath) {
   const testPath = path.join(screenshotDir, `${slug}-test.png`);
   const diffPath = path.join(screenshotDir, `${slug}-diff.png`);
 
-  const [liveCapture, testCapture] = await Promise.all([
-    capturePageScreenshot(livePage, livePath, { label: `${routePath} live` }),
-    capturePageScreenshot(testPage, testPath, { label: `${routePath} test` }),
-  ]);
+  await preparePageForScreenshot(livePage, LIVE_ORIGIN, routePath);
+  await preparePageForScreenshot(testPage, TEST_ORIGIN, routePath);
+
+  // Capture sequentially to avoid Puppeteer protocol contention on very tall
+  // mobile pages. Concurrent full-page/chunked captures can starve one page's
+  // Runtime calls long enough to hit protocolTimeout even though each capture
+  // succeeds quickly on its own.
+  const liveCapture = await capturePageScreenshot(livePage, livePath, { label: `${routePath} live` });
+  const testCapture = await capturePageScreenshot(testPage, testPath, { label: `${routePath} test` });
 
   const [liveBuffer, testBuffer] = await Promise.all([fsp.readFile(livePath), fsp.readFile(testPath)]);
   const liveImage = PNG.sync.read(liveBuffer);

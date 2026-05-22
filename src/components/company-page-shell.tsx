@@ -50,6 +50,7 @@ export const CompanyPageShell = ({
       <div className='relative'>{children}</div>
       <Footer standalone compactNav showSocialLinks compactSpacerHeight={footerCompactSpacerHeight} />
       {spacerHeight > 0 ? <div aria-hidden='true' style={{ height: `${spacerHeight}px` }} /> : null}
+
     </main>
   );
 };

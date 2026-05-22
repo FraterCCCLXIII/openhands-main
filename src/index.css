@@ -1785,6 +1785,422 @@
   box-shadow: inset 0 0 0 100px rgba(0, 0, 0, 0.15);
 }
 
+/* Mobile /about Webflow parity overrides. The live mobile Webflow layout switches
+   the about page from the desktop grid/card geometry to a single-column flow; keep
+   these scoped so desktop parity remains controlled by the existing inline values. */
+@media (max-width: 1023px) {
+  [data-wf-el='nav_grid'] {
+    display: none !important;
+  }
+
+  [data-wf-el='nav_wrap'] {
+    height: 69px !important;
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
+  }
+}
+
+
+@media (min-width: 768px) {
+  .about-page .about-hero-content > .about-container {
+    height: 1024.265625px !important;
+  }
+
+  .about-page .about-hero-copy {
+    position: relative !important;
+    inset: 0 !important;
+    width: 639px !important;
+    max-width: 639px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+    align-items: normal !important;
+  }
+
+  .about-page .about-milestones-block {
+    margin-top: 129px !important;
+  }
+
+  main:has(.about-page) [data-wf-el='section'].bg-brand-accent {
+    height: 1209.375px !important;
+  }
+
+
+  .about-page-wrapper {
+    height: 4895.671875px !important;
+  }
+
+  main:has(.about-page) {
+    height: 4812.09375px !important;
+  }
+
+
+  .about-page .about-team-section {
+    height: 2450.453125px !important;
+  }
+
+  .about-page .about-milestone-inner-container {
+    width: 1128.59375px !important;
+    height: 330.5625px !important;
+  }
+
+  .about-page .about-milestone-row,
+  .about-page .about-milestone-shell {
+    height: 636.5625px !important;
+  }
+
+  .about-page .about-milestone-shell-body,
+  .about-page [data-wf-el='card-bg-img'] {
+    height: 634.5625px !important;
+  }
+
+  .about-page .about-milestone-card,
+  .about-page .about-milestone-card-body {
+    height: 330.5625px !important;
+  }
+
+  .about-page .about-milestone-card:nth-child(3),
+  .about-page .about-milestone-card:nth-child(3) .about-milestone-card-body {
+    width: 361.09375px !important;
+  }
+
+  .about-page .about-milestone-card:nth-child(2) .about-milestone-label-wrap {
+    width: 135.15625px !important;
+    height: 78.890625px !important;
+  }
+
+  .about-page .about-milestone-card:nth-child(2) .about-milestone-label {
+    width: 135.15625px !important;
+    height: 33.78125px !important;
+  }
+
+  main:has(.about-page) [data-wf-el='footer-nav'] {
+    height: 185.734375px !important;
+  }
+
+  main:has(.about-page) [data-wf-el='footer-nav'] [data-wf-el='nav-link'] {
+    height: 51.171875px !important;
+  }
+
+  main:has(.about-page) [data-wf-el='footer-drop'] {
+    height: 168.734375px !important;
+  }
+
+  main:has(.about-page) a[data-wf-el='eyebrow'] {
+    width: 118.265625px !important;
+  }
+
+  .about-page .about-team-list [data-wf-el='standard-collection-list-item']:nth-child(1) [data-wf-el='standard-wrap'] { width: 146.297px !important; }
+  .about-page .about-team-list [data-wf-el='standard-collection-list-item']:nth-child(2) [data-wf-el='standard-wrap'] { width: 146.734375px !important; }
+  .about-page .about-team-list [data-wf-el='standard-collection-list-item']:nth-child(3) [data-wf-el='standard-wrap'] { width: 133.484375px !important; }
+  .about-page .about-team-list [data-wf-el='standard-collection-list-item']:nth-child(4) [data-wf-el='standard-wrap'] { width: 128.672px !important; }
+  .about-page .about-team-list [data-wf-el='standard-collection-list-item']:nth-child(6) [data-wf-el='standard-wrap'] { width: 96.3438px !important; }
+  .about-page .about-team-list [data-wf-el='standard-collection-list-item']:nth-child(10) [data-wf-el='standard-wrap'] { width: 136.375px !important; }
+  .about-page .about-team-list [data-wf-el='standard-collection-list-item']:nth-child(11) [data-wf-el='standard-wrap'] { width: 179.469px !important; }
+  .about-page .about-team-list [data-wf-el='standard-collection-list-item']:nth-child(12) [data-wf-el='standard-wrap'] { width: 94.078125px !important; }
+  .about-page .about-team-list [data-wf-el='standard-collection-list-item']:nth-child(13) [data-wf-el='standard-wrap'] { width: 132.5px !important; }
+  .about-page .about-team-list [data-wf-el='standard-collection-list-item']:nth-child(15) [data-wf-el='standard-wrap'] { width: 229.422px !important; }
+  .about-page .about-team-list [data-wf-el='standard-collection-list-item']:nth-child(17) [data-wf-el='standard-wrap'] { width: 164.984375px !important; }
+  .about-page .about-team-list [data-wf-el='standard-collection-list-item']:nth-child(27) [data-wf-el='standard-wrap'] { width: 121.953125px !important; }
+
+  main:has(.about-page) [data-wf-el='section'].bg-brand-accent [data-wf-el='container'] {
+    height: 950.1875px !important;
+  }
+
+  main:has(.about-page) .company-page-shell-trailing-spacer {
+    height: 0 !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .about-page-wrapper {
+    height: 12670px !important;
+  }
+
+  .about-page .about-container,
+  [data-wf-el='section'].bg-brand-accent > [class*='z-10'] > [data-wf-el='container'],
+  [data-wf-el='section'].bg-brand-accent .container {
+    width: 90% !important;
+    max-width: 1238px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+
+  .about-page .about-hero-section > [data-wf-el='asci-wrap'] {
+    max-height: 812px !important;
+  }
+
+
+  .about-page .about-hero-section {
+    height: 1349.52px !important;
+  }
+
+  .about-page .about-hero-content {
+    padding-top: 32px !important;
+    padding-bottom: 64px !important;
+  }
+
+  .about-page .about-hero-content > .about-container {
+    height: 1253.515625px !important;
+  }
+
+  .about-page .about-hero-copy {
+    position: relative !important;
+    left: -20px !important;
+    width: calc(100% + 40px) !important;
+    max-width: none !important;
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+    align-items: stretch !important;
+    margin-top: 0 !important;
+  }
+
+  .about-page .about-hero-copy .fluid-h1 {
+    display: -webkit-box !important;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden !important;
+  }
+
+  .about-page .about-hero-copy [data-wf-el='paragraph-lg'] {
+    margin-bottom: 17.7571px !important;
+  }
+
+
+  .about-page .about-milestones-block {
+    margin-top: 62.5px !important;
+  }
+
+  .about-page .about-milestones-title-row {
+    justify-content: center !important;
+    margin-bottom: 49.6px !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  .about-page .about-milestones-title-row h2,
+  .about-page .about-team-intro h3,
+  .about-page .about-milestone-suffix {
+    margin-bottom: 5.90928px !important;
+  }
+
+  .about-page .about-milestone-row {
+    height: 960.609375px !important;
+    gap: 40px !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  .about-page .about-milestone-col {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  .about-page .about-milestone-shell {
+    height: 960.609375px !important;
+    width: 100% !important;
+  }
+
+  .about-page .about-milestone-shell-body {
+    height: 958.609375px !important;
+    padding: 16.3929px !important;
+  }
+
+  .about-page [data-wf-el='card-bg-img'] {
+    height: 958.609375px !important;
+    width: 100% !important;
+    object-fit: cover !important;
+  }
+
+  .about-page .about-milestone-shell-body > [aria-hidden='true'] {
+    height: 64px !important;
+  }
+
+  .about-page .about-milestone-inner-container {
+    width: 90% !important;
+    height: 797.828125px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    margin-top: 0 !important;
+  }
+
+  .about-page .about-milestone-cards {
+    height: 100% !important;
+    flex-direction: column !important;
+    justify-content: flex-start !important;
+    row-gap: 40px !important;
+  }
+
+  .about-page .about-milestone-card {
+    width: 100% !important;
+  }
+
+  .about-page .about-milestone-card:nth-child(1) {
+    height: 228.016px !important;
+  }
+
+  .about-page .about-milestone-card:nth-child(2),
+  .about-page .about-milestone-card:nth-child(3) {
+    height: 244.90625px !important;
+  }
+
+  .about-page .about-milestone-card-body {
+    padding: 16.3929px !important;
+  }
+
+  .about-page .about-milestone-value-row {
+    margin-top: 49.6px !important;
+  }
+
+  .about-page .about-milestone-value {
+    font-size: 83.6378px !important;
+    line-height: 83.6378px !important;
+  }
+
+  .about-page .about-milestone-label-wrap {
+    width: auto !important;
+  }
+
+  .about-page .about-milestone-card:nth-child(2) .about-milestone-label-wrap {
+    width: 135.15625px !important;
+    height: 78.890625px !important;
+  }
+
+  .about-page .about-milestone-label {
+    height: auto !important;
+    max-width: none !important;
+  }
+
+  .about-page .about-milestone-card:nth-child(2) .about-milestone-label {
+    width: 135.15625px !important;
+    height: 33.78125px !important;
+  }
+
+  .about-page .about-milestone-card:nth-child(3) .about-milestone-label {
+    width: 239.65625px !important;
+  }
+
+  .about-page .about-team-section {
+    height: auto !important;
+    padding-top: 49.5714px !important;
+    padding-bottom: 49.5714px !important;
+  }
+
+  .about-page .about-team-intro {
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+  }
+
+  .about-page .about-team-intro [data-wf-el='paragraph-lg'] {
+    margin-bottom: 17.7571px !important;
+  }
+
+  .about-page .about-team-collection {
+    margin-top: 64px !important;
+  }
+
+  .about-page .about-team-list {
+    row-gap: 40px !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  .about-page [data-wf-el='standard-collection-list-item']:nth-child(26) {
+    transform: translateY(0.328125px) !important;
+  }
+
+  .about-team-member {
+    width: 100% !important;
+    max-width: 100% !important;
+    flex-basis: 100% !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 16px !important;
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+    align-content: space-between !important;
+  }
+
+  .about-team-media {
+    width: 100% !important;
+    height: 260px !important;
+  }
+
+  .about-team-copy {
+    width: fit-content !important;
+  }
+
+  [data-wf-el='section'].bg-brand-accent {
+    height: 1370.578125px !important;
+    padding-top: 49.5714px !important;
+    padding-bottom: 49.5714px !important;
+  }
+
+  [data-wf-el='section'].bg-brand-accent [data-wf-el='container'] {
+    height: 1172.265625px !important;
+  }
+
+  .company-page-shell-trailing-spacer {
+    height: 0 !important;
+  }
+
+  [data-wf-el='section'].bg-brand-accent [data-wf-el='footer-social-row'] {
+    margin-top: 64px !important;
+  }
+
+  [data-wf-el='section'].bg-brand-accent .h2 {
+    margin-bottom: 14.7732px !important;
+  }
+
+  [data-wf-el='section'].bg-brand-accent > div[aria-hidden='true'] {
+    height: 9.28px !important;
+  }
+
+
+  [data-wf-el='section'].bg-brand-accent [data-wf-el='paragraph-lg'] {
+    font-size: var(--paragraph-lg-font-size) !important;
+    line-height: var(--paragraph-lg-line-height) !important;
+  }
+
+  [data-wf-el='section'].bg-brand-accent .col-sm-12,
+  [data-wf-el='section'].bg-brand-accent .col-md-12 {
+    flex-basis: 100% !important;
+    max-width: 100% !important;
+  }
+
+  [data-wf-el='section'].bg-brand-accent .footer-logo-media,
+  [data-wf-el='section'].bg-brand-accent .footer-logo-img {
+    width: 211.65625px !important;
+    height: 35.390625px !important;
+  }
+
+  [data-wf-el='footer-nav'] {
+    flex-flow: column !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+    height: 492.765625px !important;
+  }
+
+  [data-wf-el='footer-nav'] [data-wf-el='nav-link'] {
+    height: 51.171875px !important;
+    padding-top: 14.3905px !important;
+    padding-bottom: 14.3905px !important;
+  }
+
+  a[data-wf-el='eyebrow'] {
+    width: 118.265625px !important;
+  }
+
+  [data-wf-el='footer-drop'] {
+    align-items: center !important;
+    height: 168.734375px !important;
+  }
+}
+
 .button.secondary-7,
 .button[data-wf--button--variant="secondary"] {
   border-color: rgb(34, 21, 13);
@@ -2836,3 +3252,22 @@ main:has(.press-standard-collection) section[data-wf-el='section'].bg-brand-acce
     height: 35.390625px !important;
   }
 }
+
+@media (max-width: 767px) {
+  body:has(.about-page) [data-wf-el='nav_wrap'] {
+    height: 85.328125px !important;
+  }
+}
+
+@media (max-width: 767px) {
+  body:has(.about-page) [data-wf-el='nav_wrap'] {
+    padding-bottom: 24px !important;
+  }
+}
+
+@media (max-width: 767px) {
+  main:has(.about-page) .footer-webflow-layout {
+    --footer-content-transform: none;
+  }
+}
+

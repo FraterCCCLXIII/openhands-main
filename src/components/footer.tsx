@@ -361,9 +361,11 @@ const WebflowFooterContent = ({
         </div>
         <div className='col col-lg-8 footer-logo-col' style={{ ...FOOTER_COL_LG_8_STYLE, marginTop: 'var(--footer-logo-margin-top, 39px)' }}>
           <div className='row row-gap-sm row-justify-center' style={{ ...FOOTER_ROW_STYLE, justifyContent: 'center', rowGap: '16px' }}>
+
             {isManifestoMobile ? (
               <div data-wf-el='standard-media' className='standard-media contain-center footer-logo-media' style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', textAlign: 'start', width: '211.65625px', height: '35.390625px', objectFit: 'contain' }}>
                 <img data-wf-el='standard-media-img' className='footer-logo-img' src='/assets/webflow/backgrounds/openhands_logo_black.svg' alt='' style={{ display: 'block', width: '211.65625px', height: '35.390625px', textAlign: 'start', objectFit: 'scale-down' }} />
+
               </div>
             ) : (
               <div data-wf-el='standard-media' className='standard-media contain-center footer-logo-media' style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', textAlign: 'start', width: 'var(--footer-logo-width, 610px)', height: 'var(--footer-logo-height, 102px)', objectFit: 'contain' }}>

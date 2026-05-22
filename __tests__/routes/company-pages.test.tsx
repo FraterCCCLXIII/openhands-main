@@ -55,8 +55,15 @@ describe('company information pages parity', () => {
         image.getAttribute('src')?.startsWith('/assets/')
       )
     ).toBe(true);
+    expect(container.querySelector('.about-page')).toBeInTheDocument();
+    expect(container.querySelector('.about-hero-section')).toBeInTheDocument();
+    expect(container.querySelector('.about-team-section')).toBeInTheDocument();
     expect(container.querySelectorAll('[data-wf-el="standard-collection-list-item"]')).toHaveLength(teamMembers.length + 2);
     expect(container.querySelectorAll('[data-wf-el="card-2"]')).toHaveLength(4);
+    expect(container.querySelector('.about-milestone-cards')).toBeInTheDocument();
+    expect(container.querySelector('.about-team-list')).toBeInTheDocument();
+    expect(screen.getByText('Robert Brennan')).toHaveClass('fluid-body-lg');
+    expect(screen.getByText('CEO')).toHaveClass('fluid-sm');
     expect(screen.getByText('OSS contributors')).toBeInTheDocument();
   });
 
