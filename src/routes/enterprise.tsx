@@ -6,8 +6,24 @@ import { OverlayLinkButton } from '~/components/overlay-link-button';
 import { DEFAULT_SOCIAL_IMAGE } from '~/utils/seo';
 
 const ASCII_HOLE_BG = '/assets/webflow/backgrounds/690b397ae76441160bed52b6_asci-art-hole.png';
+const ASCII_HOLE_SRCSET = [
+  '/assets/webflow/enterprise/690b397ae76441160bed52b6_asci-art-hole-p-500.png 500w',
+  '/assets/webflow/enterprise/690b397ae76441160bed52b6_asci-art-hole-p-800.png 800w',
+  '/assets/webflow/enterprise/690b397ae76441160bed52b6_asci-art-hole-p-1080.png 1080w',
+  `${ASCII_HOLE_BG} 1440w`,
+].join(', ');
 const CONTROL_PLANE_IMG = '/assets/webflow/enterprise/69fb21f8dc8c20b014d24bad_9761f727961757aba10787e99f6f05dd_control-plane-p-1600.png';
+const CONTROL_PLANE_SRCSET = [
+  '/assets/webflow/enterprise/69fb21f8dc8c20b014d24bad_9761f727961757aba10787e99f6f05dd_control-plane-p-500.png 500w',
+  '/assets/webflow/enterprise/69fb21f8dc8c20b014d24bad_9761f727961757aba10787e99f6f05dd_control-plane-p-800.png 800w',
+  '/assets/webflow/enterprise/69fb21f8dc8c20b014d24bad_9761f727961757aba10787e99f6f05dd_control-plane-p-1080.png 1080w',
+  `${CONTROL_PLANE_IMG} 1600w`,
+].join(', ');
 const STEPS_IMG = '/assets/webflow/enterprise/steps.png';
+const STEPS_SRCSET = [
+  '/assets/webflow/enterprise/69fb2416b628253a2db6a017_947e9b2e2e6d72c882da1634fe57f949_steps-p-500.png 500w',
+  `${STEPS_IMG} 932w`,
+].join(', ');
 // Filenames intentionally match the live Webflow CDN image filenames
 // (after the parity script's normalization: strip extensions, URL
 // encoding, underscores/spaces, and lowercase).  Live uses
@@ -20,10 +36,12 @@ const C3AI_LOGO = '/assets/webflow/enterprise/c3ailogo.svg';
 // Section base styles matching live Webflow: padding 80px 0, no horizontal
 // padding on the section itself (inner container handles the gutter), and
 // the dark surface lives on the SECTION itself rather than a wrapper div.
+const SECTION_Y_PADDING = 'clamp(49.5714px, calc(31.9956px + 4.6869vw), 80.008px)';
+
 const SECTION_BASE: React.CSSProperties = {
   display: 'block',
-  paddingTop: '80px',
-  paddingBottom: '80px',
+  paddingTop: SECTION_Y_PADDING,
+  paddingBottom: SECTION_Y_PADDING,
   paddingLeft: '0px',
   paddingRight: '0px',
   position: 'relative',
@@ -162,6 +180,14 @@ const CONTROL_FEATURES: ControlFeature[] = [
     ],
   },
 ];
+const CONTROL_HEADING_DESKTOP_WIDTHS = ['456.609375px', '317.328125px', 'auto', '467px', '261.359375px'];
+const BUILT_HEADING_DESKTOP_WIDTHS = ['253.0625px', '178.90625px', '239.640625px', '343.59375px', '211.953125px'];
+
+const desktopWidthStyle = (width: string): CSSProperties => (
+  width === 'auto' ? {} : ({ '--enterprise-desktop-width': width } as CSSProperties)
+);
+
+
 
 interface BuiltForFeature {
   Icon: () => JSX.Element;
@@ -245,9 +271,9 @@ export const handle = { hideGlobalFooter: true };
 // (paddingLeft/Right, marginLeft/Right, maxWidth) on each route.
 const Container = ({ children, className = '' }: { children: React.ReactNode; className?: string }) => (
   <div
-    className={`mx-auto w-full px-5 lg:px-0 ${className}`}
+    className={`mx-auto ${className}`}
     data-wf-el='container'
-    style={{ maxWidth: '1238px' }}
+    style={{ width: '90%', maxWidth: 'var(--enterprise-container-max-width, 1238px)' }}
   >
     {children}
   </div>
@@ -265,7 +291,7 @@ const Eyebrow = ({ children, className = '' }: { children: React.ReactNode; clas
 
 const Enterprise = () => {
   return (
-    <main data-wf-el='page-main' style={{ display: 'flex', flexDirection: 'column' }}>
+    <main className='enterprise-page' data-wf-el='page-main' style={{ display: 'flex', flexDirection: 'column' }}>
       {/* HERO — live's section-hero has padding 0 on the SECTION; the
        * inner container handles the gutter and vertical rhythm. */}
       <section
@@ -280,15 +306,15 @@ const Enterprise = () => {
         {/* Live's hero uses the same animated ASCII embed as the product
          * pages: an absolute `.asci-wrap` paint layer containing an
          * `.ascii-pre` text surface. */}
-        <div data-wf-el='asci-wrap' className='pointer-events-auto absolute inset-0 overflow-hidden' style={{ '--ascii-opacity': '0.12', maxHeight: '2400px' } as CSSProperties} aria-hidden='true'>
-          <div data-wf-el='asci-embed' className='h-full w-full overflow-hidden'>
+        <div data-wf-el='asci-wrap' className='pointer-events-auto absolute inset-0 overflow-hidden' style={{ '--ascii-opacity': '0.12', maxHeight: '100vh' } as CSSProperties} aria-hidden='true'>
+          <div className='h-full w-full overflow-hidden'>
             <ASCIIAnimation className='h-full w-full' />
           </div>
         </div>
         {/* Live's `.container` sits inside `section-hero` with padding 0
          * vertically; the visual rhythm comes from the inner
          * `.hero-content.is-center` block, which has padding 56px 0px. */}
-        <Container className='py-10 lg:py-0'>
+        <Container>
           {/* Live's `.hero-content.is-center` spans the full container
            * width (no max-width); the heading/subhead are centered via
            * `text-align: center` and the buttons have their own flex-wrap
@@ -312,7 +338,8 @@ const Enterprise = () => {
               data-wf-el='paragraph-lg-3'
               id='hero-subheading'
               className='fluid-body-lg text-brand-muted'
-              style={{ marginTop: '10.4px', marginBottom: '20.8px' }}
+              data-enterprise-desktop-width
+              style={{ marginTop: '0.5em', marginBottom: '1em', '--enterprise-desktop-width': '878.344px' } as CSSProperties}
             >
               Scale AI agents in production with the control, visibility, and repeatability your enterprise needs.
             </p>
@@ -328,7 +355,7 @@ const Enterprise = () => {
             <div
               data-wf-el='hero_btn_wrap'
               className='flex flex-wrap'
-              style={{ gap: '8px 16px', paddingTop: '32px', maxWidth: '100%' }}
+              style={{ gap: '8px 16px', paddingTop: '32px', maxWidth: '100%', justifyContent: 'var(--enterprise-hero-btn-justify, center)', alignItems: 'var(--enterprise-hero-btn-align, center)' }}
             >
               <OverlayLinkButton
                 href='/contact'
@@ -373,14 +400,14 @@ const Enterprise = () => {
             <h3
               data-wf-el='h2-2'
               className='section-title text-brand-bg'
-              style={{ marginBottom: '8.8px' }}
+              style={{ marginBottom: '0.2em' }}
             >
               A control plane for every layer of your agent stack
             </h3>
             <p
               data-wf-el='paragraph-lg'
               className='fluid-body-lg text-[#b3a88c]'
-              style={{ marginTop: '10.4px', marginBottom: '20.8px' }}
+              style={{ marginTop: '0.5em', marginBottom: '1em' }}
             >
               From the policies that govern how agents run, to the automations that trigger them, OpenHands Enterprise gives you control at every layer.
             </p>
@@ -397,8 +424,8 @@ const Enterprise = () => {
             data-wf-el='acp_graphic_wrap'
             className='mx-auto w-full'
             style={{
-              padding: '32px',
-              borderRadius: '32px',
+              padding: 'clamp(16px, calc(6.7566px + 2.4649vw), 32px)',
+              borderRadius: 'clamp(16px, calc(6.7566px + 2.4649vw), 32px)',
               border: '1px solid rgb(249, 240, 217)',
               overflow: 'hidden',
             }}
@@ -406,6 +433,8 @@ const Enterprise = () => {
             <img
               data-wf-el='acp_graphic_img'
               src={CONTROL_PLANE_IMG}
+              srcSet={CONTROL_PLANE_SRCSET}
+              sizes='(max-width: 2592px) 100vw, 2592px'
               alt=''
               className='h-auto w-full object-cover'
               loading='lazy'
@@ -426,7 +455,7 @@ const Enterprise = () => {
             * gap, accumulating 23px of cumulative drift through the
             * rest of the page. */}
           <div data-wf-el='heading-stack' style={{ marginBottom: '24px' }}>
-          <h3 className='section-title text-brand-fg' style={{ marginBottom: '66px' }}>
+          <h3 className='section-title text-brand-fg' style={{ marginBottom: '1.5em' }}>
             Everything you need to govern agents in production.
           </h3>
           {/* Live's `.acp_features_layout` is a 24px-rounded grid container
@@ -438,7 +467,7 @@ const Enterprise = () => {
            * page-wrapper, which collapses ~20 ancestor mismatches per grid. */}
           <div
             data-wf-el='acp_features_layout'
-            className='grid grid-cols-1 overflow-hidden md:grid-cols-2'
+            className='enterprise-feature-layout overflow-hidden md:grid md:grid-cols-2'
             style={{
               borderRadius: '24px',
               border: '1px solid rgb(179, 168, 140)',
@@ -449,17 +478,8 @@ const Enterprise = () => {
               <article
                 key={heading}
                 data-wf-el='acp_features_item'
-                className={`flex flex-col items-start justify-start gap-4 p-10 ${idx === 0 ? 'md:col-span-2' : ''}`}
-                style={{
-                  borderBottom: idx >= 3 ? '0' : '1px solid rgb(179, 168, 140)',
-                  borderRight:
-                    // No right border on the spanning first card (full width)
-                    // or on the right-column cards (idx 2, 4) so we don't
-                    // double up against the outer container border.
-                    idx === 0 || idx === 2 || idx === 4
-                      ? '0'
-                      : '1px solid rgb(179, 168, 140)',
-                }}
+                data-card-index={idx}
+                className={`enterprise-control-card flex flex-col items-start justify-start gap-4 ${idx === 0 ? 'md:col-span-2' : ''}`}
               >
                 {/* Live's icon is a 40×40 dark-brown chip (24×24 SVG +
                  * 8px padding all around).  Box-sizing is content-box on
@@ -480,7 +500,12 @@ const Enterprise = () => {
                 <div data-wf-el='acp_features_eyebrow' className='font-mono text-[14px] font-normal leading-[16.896px] text-brand-fg'>
                   {eyebrow}
                 </div>
-                <h3 data-wf-el='acp_features_heading' className='fluid-h4 font-medium text-brand-fg' style={{ marginBottom: 0 }}>{heading}</h3>
+                <h3
+                  data-wf-el='acp_features_heading'
+                  data-enterprise-desktop-width={CONTROL_HEADING_DESKTOP_WIDTHS[idx] === 'auto' ? undefined : true}
+                  className='fluid-h4 font-medium text-brand-fg'
+                  style={{ marginBottom: 0, ...desktopWidthStyle(CONTROL_HEADING_DESKTOP_WIDTHS[idx]) }}
+                >{heading}</h3>
                 <p data-wf-el='acp_features_paragraph' className='text-[16px] leading-[22.4px] text-[#5f5f5f]' style={{ maxWidth: '808.961px', marginBottom: '0px' }}>{paragraph}</p>
                 {/* Live's `.product-list_ul` has padding-left:0 and uses
                  * the dark-brown body color; bullets get explicit 16px
@@ -537,8 +562,8 @@ const Enterprise = () => {
                 >
                   Automations
                 </div>
-                <h2 className='section-title text-brand-bg' style={{ width: '599px', marginBottom: '8.8px' }}>From event to PR, no human in the loop.</h2>
-                <p data-wf-el='paragraph-lg' className='fluid-body-lg text-[#b3a88c]' style={{ marginBottom: '20.8px', width: '599px' }}>
+                <h2 className='section-title text-brand-bg' style={{ width: '100%', maxWidth: '599px', marginBottom: '0.2em' }}>From event to PR, no human in the loop.</h2>
+                <p data-wf-el='paragraph-lg' className='fluid-body-lg text-[#b3a88c]' style={{ marginBottom: '1em', width: '100%' }}>
                   Wire OpenHands to the tools your team already uses. When something happens, the right agent fires, does the work, and opens a pull request.
                   <br />
                   <br />
@@ -547,7 +572,7 @@ const Enterprise = () => {
               </div>
             </div>
             <div className='flex basis-full flex-col px-5 lg:basis-1/2' style={{ position: 'relative' }}>
-              <img src={STEPS_IMG} alt='' className='img-block h-auto w-full object-fill' loading='lazy' />
+              <img src={STEPS_IMG} srcSet={STEPS_SRCSET} sizes='100vw' alt='' className='img-block h-auto w-full object-fill' loading='lazy' />
             </div>
           </div>
         </Container>
@@ -555,10 +580,12 @@ const Enterprise = () => {
 
       {/* C3.ai QUOTE — light section with ASCII hole bg */}
       <section data-wf-el='section' className='overflow-visible' style={SECTION_BASE}>
-        <div data-wf-el='asci-wrap' className='absolute inset-0 bg-brand-accent' style={{ overflow: 'hidden', maxHeight: '2400px' }} aria-hidden='true'>
+        <div data-wf-el='asci-wrap' className='absolute inset-0 bg-brand-accent' style={{ overflow: 'hidden', maxHeight: '100vh' }} aria-hidden='true'>
           <img
             data-wf-el='asci-media'
             src={ASCII_HOLE_BG}
+            srcSet={ASCII_HOLE_SRCSET}
+            sizes='100vw'
             alt='ASCII art depicting a large black hole with light and particles swirling around it.'
             className='h-full w-full object-cover'
             style={{ textAlign: 'start' }}
@@ -577,14 +604,14 @@ const Enterprise = () => {
           >
             <p
               className='testimonial-quote text-brand-fg'
-              style={{ marginTop: '0px', marginBottom: '22px' }}
+              style={{ marginTop: '0px', marginBottom: '0.5em' }}
             >
               “OpenHands was the only solution that let us prompt an autonomous coding agent remotely at scale — not just on a laptop or inside a narrow CI template.”
             </p>
             <div
               data-wf-el='acp_quote_wrap'
-              className='flex flex-nowrap items-center justify-center'
-              style={{ gap: '32px' }}
+              className='flex flex-col items-center justify-center md:flex-row md:flex-nowrap'
+              style={{ gap: 'var(--enterprise-quote-gap, 16px)' }}
             >
               {/* Live wraps the portrait in a `.quote-author-media`
                * div and applies the circular crop / dark background to
@@ -598,6 +625,9 @@ const Enterprise = () => {
                 data-wf-el='quote-author-media'
                 className='h-12 w-12'
                 style={{
+                  width: '48px',
+                  height: '48px',
+                  flexShrink: 0,
                   borderRadius: '50%',
                   backgroundColor: 'rgb(34, 21, 13)',
                   display: 'block',
@@ -609,7 +639,7 @@ const Enterprise = () => {
                   src={C3AI_AUTHOR_IMG}
                   alt=''
                   className='h-12 w-12 object-cover'
-                  style={{ display: 'inline-block' }}
+                  style={{ display: 'inline-block', width: '48px', height: '48px' }}
                   loading='lazy'
                 />
               </div>
@@ -619,12 +649,12 @@ const Enterprise = () => {
               <p
                 data-wf-el='acp_quote_attr'
                 className='text-brand-fg'
-                style={{ fontSize: '24px', lineHeight: '33.6px', fontWeight: 500 }}
+                style={{ width: 'var(--enterprise-quote-attr-width, 100%)', marginBottom: '0px', fontSize: 'clamp(19.4357px, calc(17.8273px + 0.4289vw), 24px)', lineHeight: 1.4, fontWeight: 500 }}
               >
                 Sina Pakazad, VP of Data Science at C3.ai
               </p>
-              <div className='h-10 w-px rotate-12 bg-brand-fg/30' aria-hidden='true' />
-              <img data-wf-el='acp_quote_logo' src={C3AI_LOGO} alt='' className='h-auto w-[80px]' loading='lazy' />
+              <div className='v-line rotate enterprise-quote-divider' style={{ width: 'var(--enterprise-quote-divider-width, 40px)', height: 'var(--enterprise-quote-divider-height, 1px)', backgroundColor: 'rgb(34, 21, 13)' }} />
+              <img data-wf-el='acp_quote_logo' src={C3AI_LOGO} alt='' className='acp_quote_logo h-auto w-[80px]' style={{ display: 'block', width: '80px', height: 'auto', flexShrink: 0 }} loading='lazy' />
             </div>
           </div>
         </Container>
@@ -636,8 +666,8 @@ const Enterprise = () => {
           <div data-wf-el='heading-stack' style={{ marginBottom: '24px' }}>
             <div data-wf-el='heading-stack' className='flex flex-col items-start' style={{ marginBottom: '0px', justifyContent: 'center' }}>
               <Eyebrow className='text-brand-fg'>OpenHands Enterprise</Eyebrow>
-              <h2 className='section-title text-brand-fg'>Built for teams running agents at scale. </h2>
-              <p data-wf-el='paragraph-lg' className='fluid-body-lg text-[#5f5f5f]' style={{ marginBottom: '20.8px' }}>
+              <h2 className='section-title text-brand-fg' style={{ marginBottom: '0.2em' }}>Built for teams running agents at scale. </h2>
+              <p data-wf-el='paragraph-lg' className='fluid-body-lg text-[#5f5f5f]' data-enterprise-desktop-width style={{ marginBottom: '1em', '--enterprise-desktop-width': '1168.08px' } as CSSProperties}>
                 Self-hosted in your VPC via Kubernetes. Source-available. Backed by extended support and direct access to our research team.
               </p>
             </div>
@@ -650,7 +680,7 @@ const Enterprise = () => {
            * each so the second row fills the full width. */}
           <div
             data-wf-el='acp_features_layout'
-            className='grid grid-cols-1 overflow-hidden md:grid-cols-6'
+            className='enterprise-feature-layout overflow-hidden md:grid md:grid-cols-6'
             style={{
               borderRadius: '24px',
               border: '1px solid rgb(179, 168, 140)',
@@ -660,18 +690,13 @@ const Enterprise = () => {
             {BUILT_FOR_FEATURES.map(({ Icon, heading, paragraph }, idx) => {
               // Row 1: cards 0,1,2 each span 2 of 6 cols (one-third).
               // Row 2: cards 3,4 each span 3 of 6 cols (one-half).
-              const isLastCol = idx === 2 || idx === 4;
-              const isLastRow = idx >= 3;
               const span = idx <= 2 ? 'md:col-span-2' : 'md:col-span-3';
               return (
                 <article
                   key={heading}
                   data-wf-el='acp_enterprise_item'
-                  className={`flex flex-col items-start justify-start gap-4 p-10 ${span}`}
-                  style={{
-                    borderBottom: isLastRow ? '0' : '1px solid rgb(179, 168, 140)',
-                    borderRight: isLastCol ? '0' : '1px solid rgb(179, 168, 140)',
-                  }}
+                  data-card-index={idx}
+                  className={`enterprise-built-card flex flex-col items-start justify-start gap-4 ${span}`}
                 >
                   <div
                     data-wf-el='acp_features_icon'
@@ -680,7 +705,12 @@ const Enterprise = () => {
                   >
                     <Icon />
                   </div>
-                  <h3 data-wf-el='acp_features_heading' className='fluid-h4 font-medium text-brand-fg' style={{ marginBottom: 0 }}>{heading}</h3>
+                  <h3
+                    data-wf-el='acp_features_heading'
+                    data-enterprise-desktop-width
+                    className='fluid-h4 font-medium text-brand-fg'
+                    style={{ marginBottom: 0, ...desktopWidthStyle(BUILT_HEADING_DESKTOP_WIDTHS[idx]) }}
+                  >{heading}</h3>
                   <p data-wf-el='acp_features_paragraph' className='text-[16px] leading-[22.4px] text-[#5f5f5f]' style={{ maxWidth: '808.961px', marginBottom: '0px' }}>{paragraph}</p>
                 </article>
               );
@@ -707,14 +737,14 @@ const Enterprise = () => {
             <h3
               data-wf-el='whitepaper_heading'
               className='section-title text-brand-bg'
-              style={{ maxWidth: '834.238px', marginBottom: '8.8px' }}
+              style={{ maxWidth: 'var(--enterprise-whitepaper-heading-max-width, 560px)', marginBottom: '0.2em' }}
             >
               Whitepaper: Modernize legacy systems before your expertise disappears
             </h3>
             <p
               data-wf-el='whitepaper_paragraph'
               className='fluid-body-lg text-[#b3a88c]'
-              style={{ maxWidth: '657.178px', marginBottom: '20.8px' }}
+              style={{ maxWidth: 'var(--enterprise-whitepaper-paragraph-max-width, 560px)', marginBottom: '1em' }}
             >
               Legacy modernization projects fail 74% of the time and the engineers who understand your COBOL, mainframe, and legacy systems are retiring faster than you can replace them.
             </p>
@@ -745,7 +775,7 @@ const Enterprise = () => {
         marketingCtaPrimary={{ href: '/contact', label: 'Book a Demo' }}
         marketingCtaSecondary={{ href: 'https://docs.openhands.dev/sdk', label: 'Build with SDK' }}
         showCopyright
-        compactSpacerHeight={9}
+        compactSpacerHeight={9.6}
       />
     </main>
   );

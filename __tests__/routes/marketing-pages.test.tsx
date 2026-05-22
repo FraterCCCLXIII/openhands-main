@@ -126,6 +126,14 @@ describe('Marketing parity routes', () => {
     expect(container.querySelectorAll('[data-wf-el="heading-stack"]')).toHaveLength(6);
     expect(container.querySelectorAll('[data-wf-el="paragraph-lg"]')).toHaveLength(4);
 
+    expect(container.querySelector('[data-wf-el="container"]')).toHaveStyle({ width: '90%' });
+    expect(container.querySelector('[data-wf-el="section-hero"] [data-wf-el="asci-wrap"]')).toHaveStyle({ maxHeight: '100vh' });
+    expect(container.querySelector('[data-wf-el="section-hero"] [data-wf-el="asci-embed"]')).not.toBeNull();
+    expect(container.querySelectorAll('[data-wf-el="section-hero"] [data-wf-el="asci-embed"]')).toHaveLength(1);
+    expect(container.querySelector('[data-wf-el="acp_features_layout"]')).toHaveClass('enterprise-feature-layout');
+    expect(container.querySelector('[data-wf-el="acp_features_item"]')).toHaveClass('enterprise-control-card');
+    expect(container.querySelector('[data-wf-el="acp_features_item"]')).toHaveAttribute('data-card-index', '0');
+
     expect(screen.getByText(/Sina Pakazad, VP of Data Science at C3\.ai/i)).toBeInTheDocument();
 
     // Built-for-teams grid
