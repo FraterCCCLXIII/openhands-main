@@ -92,10 +92,115 @@
   /* Button - exact Webflow values */
   --btn-padding-y: 14.4px;
   --btn-padding-x: 30.4px;
+
+  /* Pricing and footer parity defaults (desktop first). */
+  --pricing-page-wrapper-height: 4330.046875px;
+  --pricing-hero-content-padding: 64px 0px;
+  --pricing-hero-copy-width: 599px;
+  --pricing-section-padding-y: 80px;
+  --pricing-card-body-padding: 24px;
+  --pricing-table-embed-margin-left: 29.7031px;
+  --pricing-table-embed-margin-right: 29.7031px;
+  --pricing-table-embed-width: 1128.59375px;
+  --pricing-body-copy-line-height: 22.3844px;
+  --pricing-plan-title-font-size: 24px;
+  --pricing-plan-title-line-height: 33.6px;
+  --pricing-plan-price-font-size: 20px;
+  --pricing-plan-price-line-height: 28px;
+  --pricing-plan-price-margin-bottom: 20px;
+  --pricing-card-intro-margin-top: 21.6px;
+  --pricing-card-intro-margin-bottom: 14.4px;
+  --pricing-compare-font-size: 14.4px;
+  --pricing-compare-line-height: 21.6094px;
+  --pricing-compare-margin-bottom: 14.4px;
+  --pricing-faq-heading-margin-bottom: 22px;
+  --pricing-accordion-padding: 24px;
+  --pricing-accordion-title-font-size: 24px;
+  --pricing-accordion-title-line-height: 33.6px;
+  --pricing-accordion-title-padding-right: 12px;
+  --pricing-accordion-icon-size: 32px;
+  --pricing-accordion-content-padding-bottom: 24px;
+  --pricing-accordion-icon-display: block;
+  --pricing-accordion-icon-align-items: normal;
+  --footer-section-padding-y: 80px;
+  --footer-section-height: 1209.375px;
+  --footer-container-width: 100%;
+  --footer-container-height: 950.1875px;
+  --footer-nav-link-height: 51.171875px;
+  --footer-privacy-link-width: 118.265625px;
+  --pricing-first-faq-rich-text-height: 243.109375px;
+  --pricing-faq-contact-width: 492.5px;
+  --footer-social-margin-top: 128px;
+  --footer-nav-flex-flow: row nowrap;
+  --footer-nav-align-items: flex-start;
+  --footer-drop-align-items: flex-start;
+  --footer-logo-width: 610px;
+  --footer-social-icon-size: 65px;
+  --footer-cta-title-margin-bottom: 22px;
+  --footer-cta-buttons-margin-top: 51px;
+  --footer-col-lg-8-flex-basis: 66.67%;
+  --footer-col-lg-8-max-width: 66.6667%;
+  --nav-wrap-height: 84px;
+  --nav-wrap-padding-y: 1rem;
   
   /* Banner */
   --banner-border-radius: 6.4px;
 }
+
+
+@media (max-width: 767px) {
+  :root {
+    --pricing-page-wrapper-height: 5589.546875px;
+    --pricing-hero-content-padding: 32px 0px 64px;
+    --pricing-hero-copy-width: 100%;
+    --pricing-section-padding-y: 49.5714px;
+    --pricing-card-body-padding: 16.3929px;
+    --pricing-table-embed-margin-left: 7.5625px;
+    --pricing-table-embed-margin-right: 7.57812px;
+    --pricing-table-embed-width: 287.578125px;
+    --pricing-body-copy-line-height: 22.3844px;
+    --pricing-plan-title-font-size: 19.4357px;
+    --pricing-plan-title-line-height: 27.21px;
+    --pricing-plan-price-font-size: 16.1964px;
+    --pricing-plan-price-line-height: 22.675px;
+    --pricing-plan-price-margin-bottom: 16.1964px;
+    --pricing-card-intro-margin-top: 19.3179px;
+    --pricing-card-intro-margin-bottom: 12.8786px;
+    --pricing-compare-font-size: 12.8786px;
+    --pricing-compare-line-height: 19.3179px;
+    --pricing-compare-margin-bottom: 12.8786px;
+    --pricing-faq-heading-margin-bottom: 14.7732px;
+    --pricing-accordion-padding: 20px;
+    --pricing-accordion-title-font-size: 20.9571px;
+    --pricing-accordion-title-line-height: 29.3281px;
+    --pricing-accordion-title-padding-right: 10.4786px;
+    --pricing-accordion-icon-size: 28px;
+    --pricing-accordion-content-padding-bottom: 16.3929px;
+    --pricing-accordion-icon-display: flex;
+    --pricing-accordion-icon-align-items: center;
+    --footer-section-padding-y: 49.5714px;
+    --footer-section-height: 1370.578125px;
+    --footer-container-width: 90%;
+    --footer-container-height: 1172.265625px;
+    --footer-nav-link-height: 51.171875px;
+    --footer-privacy-link-width: 118.265625px;
+    --pricing-first-faq-rich-text-height: 444.625px;
+    --pricing-faq-contact-width: auto;
+    --footer-social-margin-top: 64px;
+    --footer-nav-flex-flow: column nowrap;
+    --footer-nav-align-items: center;
+    --footer-drop-align-items: center;
+    --footer-logo-width: 56.4417vw;
+    --footer-social-icon-size: 65px;
+    --footer-cta-title-margin-bottom: 14.7732px;
+    --footer-cta-buttons-margin-top: 49.6px;
+    --footer-col-lg-8-flex-basis: 100%;
+    --footer-col-lg-8-max-width: 100%;
+    --nav-wrap-height: 69.3333px;
+    --nav-wrap-padding-y: 8.6667px;
+  }
+}
+
 
 
 
@@ -271,6 +376,13 @@
     --footer-cta-buttons-margin-top: 51px;
     --footer-nav-link-padding-top: 14.39px;
     --footer-nav-link-padding-bottom: 14.39px;
+
+  }
+}
+
+@media (max-width: 767px) {
+  [data-wf-el='page-wrapper']:has(.pricing-page) .footer-webflow-layout {
+    --footer-content-transform: none;
   }
 }
 
@@ -982,6 +1094,86 @@
   .code-window {
     @apply bg-card-bg rounded-2xl overflow-hidden shadow-xl;
   }
+
+
+/* Pricing route parity helpers */
+.pricing-container {
+  width: min(100%, var(--container-max-width));
+}
+
+.pricing-plan-list {
+  flex-flow: row wrap;
+}
+
+.pricing-plan-item {
+  display: flex;
+  flex: 1 1 0%;
+  justify-content: space-between;
+}
+
+.pricing-compare-mobile-control {
+  display: none !important;
+}
+
+.pricing-faq-layout {
+  display: grid;
+  gap: 40px;
+}
+
+.select-form {
+  appearance: none;
+  -webkit-appearance: none;
+  background-color: rgb(34, 21, 13);
+  border: 0;
+  color: rgb(249, 240, 217);
+  font: inherit;
+  line-height: inherit;
+  margin: 0;
+  padding: 0;
+  width: 60px;
+}
+
+.pc-mobile-ctrl {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 var(--pricing-compare-margin-bottom);
+  color: rgb(249, 240, 217);
+  font-family: "Sohne Kraftig", Arial, sans-serif;
+  font-size: var(--pricing-compare-font-size);
+  line-height: var(--pricing-compare-line-height);
+}
+
+@media (max-width: 767px) {
+  .pricing-container {
+    width: 90%;
+  }
+
+  .pricing-plan-item {
+    flex: 1 1 100%;
+    flex-wrap: wrap;
+    max-width: 100%;
+  }
+
+  .pricing-compare-desktop-head,
+  .pricing-compare-mobile-hidden {
+    display: none !important;
+  }
+
+  .pricing-compare-mobile-control {
+    display: block !important;
+  }
+
+  .pricing-compare-mobile-selected {
+    display: flex !important;
+  }
+
+  .pricing-faq-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+  }
+}
 
   .code-header {
     @apply px-4 py-3 flex items-center gap-2 bg-white/5;

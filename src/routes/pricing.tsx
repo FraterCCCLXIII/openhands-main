@@ -178,7 +178,7 @@ const FAQS = [
 // 36px height comes from the p's 21.6 + 14.4 margin-bottom.  Match
 // these exact values so each row is 36px on test (was 22.4) and the
 // total compare-table height matches live (1431).
-const COMPARE_ROW: React.CSSProperties = { display: 'flex', marginLeft: '-20px', marginRight: '-20px' };
+const COMPARE_ROW: React.CSSProperties = { display: 'flex', flexWrap: 'wrap', marginLeft: '-20px', marginRight: '-20px' };
 // Live's `.col` is `display: flex; flex-direction: column` — the
 // column direction is critical because it makes the cross-axis
 // horizontal, so the inner `<p>` stretches to fill the col's inner
@@ -200,11 +200,11 @@ const COMPARE_LABEL_COL: React.CSSProperties = COMPARE_COL;
 // Live applies `paragraph-sm u-text-lightbrown buch` to body rows.
 const COMPARE_TEXT: React.CSSProperties = {
   fontFamily: '"Sohne Buch", Arial, sans-serif',
-  fontSize: '14.4px',
-  lineHeight: '21.6px',
+  fontSize: 'var(--pricing-compare-font-size)',
+  lineHeight: 'var(--pricing-compare-line-height)',
   fontWeight: 400,
   color: 'rgb(179, 168, 140)',
-  margin: '0px 0px 14.4px',
+  margin: '0px 0px var(--pricing-compare-margin-bottom)',
 };
 // Header-row cells (Features / Open Source / Individual / Enterprise):
 // Sohne Kraftig + cream color. Live uses `paragraph-sm u-text-cream`
@@ -272,11 +272,15 @@ const CompareSectionHead = ({ label }: { label: string }) => (
 
 const renderCompareRow = (key: string, label: string, cells: React.ReactNode[]) => (
   <div key={key} className='row' style={COMPARE_ROW}>
-    <div data-wf-el='pc-label' className='col pc-label' style={COMPARE_LABEL_COL}>
+    <div data-wf-el='pc-label' className='col pc-label pricing-compare-label' style={COMPARE_LABEL_COL}>
       <CompareParagraph>{label}</CompareParagraph>
     </div>
     {cells.map((cell, i) => (
-      <div key={`${key}-${i}`} className='col' style={COMPARE_COL}>
+      <div
+        key={`${key}-${i}`}
+        className={`col pricing-compare-plan ${i === 1 ? 'pricing-compare-mobile-selected' : 'pricing-compare-mobile-hidden'}`}
+        style={COMPARE_COL}
+      >
         {cell}
       </div>
     ))}
@@ -294,14 +298,23 @@ const CompareTable = () => {
       className='row pc-head'
       style={{ ...COMPARE_ROW, gap: '40px normal' }}
     >
-      <div data-wf-el='pc-label' className='col pc-label' style={COMPARE_LABEL_COL}>
+      <div data-wf-el='pc-label' className='col pc-label pricing-compare-label' style={COMPARE_LABEL_COL}>
         <CompareParagraph style={COMPARE_HEAD_TEXT}>Features</CompareParagraph>
+      </div>
+      <div data-wf-el='hide-on-large' className='col hide-on-large pricing-compare-mobile-control' style={COMPARE_COL}>
+        <div data-wf-el='pc-mobile-ctrl' className='pc-mobile-ctrl paragraph-sm u-text-cream'>
+          <select data-wf-el='select-form' className='select-form' defaultValue='Individual' style={{ fontSize: 'var(--pricing-compare-font-size)', lineHeight: 'var(--pricing-compare-line-height)', height: 'var(--pricing-compare-line-height)' }}>
+            <option>Individual</option>
+            <option>Enterprise</option>
+          </select>
+          <img src='/assets/webflow/icons/690e1fc1bceb905b0d646dc9_Vector.svg' alt='Description of image' loading='lazy' style={{ width: '10px', height: 'auto', maxWidth: '100%' }} />
+        </div>
       </div>
       {['Open Source', 'Individual', 'Enterprise'].map((plan) => (
         <div
           key={plan}
           data-wf-el='pc-plan'
-          className='col pc-plan hide-on-small'
+          className='col pc-plan hide-on-small pricing-compare-desktop-head'
           style={COMPARE_COL}
         >
           <CompareParagraph style={COMPARE_HEAD_TEXT}>{plan}</CompareParagraph>
@@ -422,37 +435,37 @@ export const meta: Route.MetaFunction = ({ location }) => {
 
 const Pricing = () => {
   return (
-    <main data-wf-el='page-main' style={{ display: 'flex', flexDirection: 'column' }}>
+    <main data-wf-el='page-main' className='pricing-page' style={{ display: 'flex', flexDirection: 'column' }}>
       <section data-wf-el='hero-section'>
         <div
           data-wf-el='hero-content'
-          style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '64px 0px' }}
+          style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 'var(--pricing-hero-content-padding)' }}
         >
-          <div data-wf-el='asci-wrap' className='pointer-events-auto absolute inset-x-0 top-0 h-screen overflow-hidden' style={{ '--ascii-opacity': '0.12', '--ascii-filter': 'drop-shadow(0 0 6px rgba(160, 200, 255, 0.1))', maxHeight: '2400px' } as CSSProperties} aria-hidden='true'>
-            <div data-wf-el='asci-embed' className='h-full w-full overflow-hidden'>
+          <div data-wf-el='asci-wrap' className='pointer-events-auto absolute inset-x-0 top-0 h-screen overflow-hidden' style={{ '--ascii-opacity': '0.12', '--ascii-filter': 'drop-shadow(0 0 6px rgba(160, 200, 255, 0.1))', maxHeight: '100vh' } as CSSProperties} aria-hidden='true'>
+            <div className='h-full w-full overflow-hidden'>
               <ASCIIAnimation className='pricing-ascii h-full w-full' />
             </div>
           </div>
-          <div data-wf-el='container' className='mx-auto block w-full max-w-[1238px] px-5 lg:px-0'>
+          <div data-wf-el='container' className='pricing-container mx-auto block max-w-[1238px]'>
             <div className='flex flex-col items-center text-center'>
-              <h1 className='fluid-h1 text-brand-fg' style={{ position: 'relative', marginBottom: '0px', width: '599px', textAlign: 'center' }}>
+              <h1 className='fluid-h1 text-brand-fg' style={{ position: 'relative', marginBottom: '0px', width: '100%', maxWidth: '599px', textAlign: 'center' }}>
                 Pricing that fits your rollout
               </h1>
-              <p data-wf-el='paragraph-lg' className='fluid-body-lg text-brand-muted' style={{ marginTop: '10.4px', marginBottom: '20.8px', width: '599px', textAlign: 'center' }}>
+              <p data-wf-el='paragraph-lg' className='fluid-body-lg text-brand-muted' style={{ marginTop: 'calc(var(--paragraph-lg-font-size) / 2)', marginBottom: 'var(--paragraph-lg-font-size)', width: 'var(--pricing-hero-copy-width)', textAlign: 'center' }}>
                 Run locally, in our cloud, or self-host. Pay only for what you need
               </p>
             </div>
           </div>
           <div
             data-wf-el='standard-collection'
-            className='relative z-[1] mx-auto mt-[49.6px] block w-full max-w-[1238px] px-5 lg:px-0'
+            className='pricing-container relative z-[1] mx-auto mt-[49.6px] block max-w-[1238px]'
           >
-            <div data-wf-el='standard-collection-list' className='flex flex-col lg:flex-row' style={{ margin: '0px -12px', gap: '24px normal' }}>
+            <div data-wf-el='standard-collection-list' className='pricing-plan-list flex' style={{ margin: '0px -12px', gap: '24px normal' }}>
               {PRICING_PLANS.map((plan) => (
                 <div
                   key={plan.title}
                   data-wf-el='standard-collection-list-item'
-                  className='flex w-full flex-1 justify-between'
+                  className='pricing-plan-item'
                   style={{ padding: '0px 12px', position: 'relative', alignItems: 'center', gap: '16px' }}
                 >
                   <article
@@ -462,30 +475,34 @@ const Pricing = () => {
                   >
                     <div
                       data-wf-el='card-body'
-                      className='relative flex h-full flex-col items-stretch p-6 text-brand-fg'
-                      style={{ justifyContent: 'space-between' }}
+                      className='relative flex h-full flex-col items-stretch text-brand-fg'
+                      style={{ justifyContent: 'space-between', padding: 'var(--pricing-card-body-padding)' }}
                     >
                       <div data-wf-el='standard-wrap'>
                         <div
-                          data-wf-el='eyebrow'
+                          data-wf-el='hero-surface-eyebrow'
                           className='font-mono text-[14.08px] font-normal leading-[16.896px] text-brand-fg'
                           style={{ display: 'inline-block', padding: '3.2px 9.6px', marginBottom: '21.12px', borderRadius: '20px', backgroundColor: 'rgb(179, 168, 140)' }}
                         >
                           {plan.eyebrow}
                         </div>
-                        <div data-wf-el='paragraph-xl' className='text-brand-fg' style={{ fontSize: '24px', lineHeight: '33.6px', fontWeight: 500, marginBottom: '0px' }}>{plan.title}</div>
-                        <p data-wf-el='paragraph-md' className='text-[20px] font-normal leading-[28px] text-[#5f5f5f]' style={{ marginTop: '0px', marginBottom: '20px' }}>{plan.price}</p>
-                        <p className='text-[16px] leading-[22.4px] text-brand-muted' style={{ marginTop: '0px', marginBottom: '24px' }}>{plan.description}</p>
+                        <div data-wf-el='paragraph-xl' className='text-brand-fg' style={{ fontSize: 'var(--pricing-plan-title-font-size)', lineHeight: 'var(--pricing-plan-title-line-height)', fontWeight: 500, marginBottom: '0px' }}>{plan.title}</div>
+                        <p data-wf-el='paragraph-md' className='font-normal text-[#5f5f5f]' style={{ fontSize: 'var(--pricing-plan-price-font-size)', lineHeight: 'var(--pricing-plan-price-line-height)', marginTop: '0px', marginBottom: 'var(--pricing-plan-price-margin-bottom)' }}>{plan.price}</p>
+                        <p className='text-[16px] text-brand-muted' style={{ lineHeight: 'var(--pricing-body-copy-line-height)', marginTop: '0px', marginBottom: '24px' }}>{plan.description}</p>
                         <div aria-hidden='true' style={{ height: '1px', margin: '0px', backgroundColor: 'rgba(34, 21, 13, 0.2)' }} />
-                        <p data-wf-el='paragraph-sm' className='fluid-sm font-normal text-[#5f5f5f]' style={{ marginTop: '21.6px', marginBottom: '14.4px' }}>{plan.intro}</p>
-                        <ul className='flex flex-1 flex-col' style={{ marginTop: '0px', marginLeft: '-4px', width: 'calc(100% + 8px)' }}>
+                        <p data-wf-el='paragraph-sm' className='fluid-sm font-normal text-[#5f5f5f]' style={{ marginTop: 'var(--pricing-card-intro-margin-top)', marginBottom: 'var(--pricing-card-intro-margin-bottom)' }}>{plan.intro}</p>
+                        <div className='flex flex-1 flex-col' style={{ marginTop: '0px', width: '100%' }}>
                           {plan.features.map((feature) => (
-                            <li key={feature} className='flex items-center gap-2 font-sohne-buch fluid-sm leading-[1.5] text-[#5f5f5f]' style={{ marginBottom: '8px', paddingLeft: '4px', paddingRight: '4px' }}>
-                              <img data-wf-el='icon-media' src={CARD_CHECK_ICON} alt='' aria-hidden='true' className='h-5 w-5 flex-none' style={{ color: 'rgb(34, 21, 13)', fontSize: '16px', lineHeight: '22.4px', fontFamily: '"Sohne Kraftig", Arial, sans-serif' }} />
-                              <p data-wf-el='paragraph-sm' className='flex-1'>{feature}</p>
-                            </li>
+                            <div key={feature} className='row row-gap-sm row-align-center u-mb-xs' style={{ display: 'flex', alignItems: 'center', gap: '8px normal', margin: '0px -4px 8px', padding: '0px' }}>
+                              <div className='col col-shrink' style={{ display: 'flex', flexDirection: 'column', position: 'relative', flex: '0 0 auto', padding: '0px 4px' }}>
+                                <img data-wf-el='icon-media' src={CARD_CHECK_ICON} alt='' aria-hidden='true' className='icon-media' style={{ display: 'block', width: '20px', height: '20px', color: 'rgb(34, 21, 13)', fontSize: '16px', lineHeight: '22.4px', fontFamily: '"Sohne Kraftig", Arial, sans-serif' }} />
+                              </div>
+                              <div className='col' style={{ display: 'flex', flexDirection: 'column', position: 'relative', flex: '1 1 0%', padding: '0px 4px' }}>
+                                <p data-wf-el='paragraph-sm' className='fluid-sm font-sohne-buch text-[#5f5f5f]' style={{ margin: '0px' }}>{feature}</p>
+                              </div>
+                            </div>
                           ))}
-                        </ul>
+                        </div>
                       </div>
                       <OverlayLinkButton
                         href={plan.buttonHref}
@@ -527,14 +544,14 @@ const Pricing = () => {
         data-wf-el='section'
         style={{
           display: 'block',
-          paddingTop: '80px',
-          paddingBottom: '80px',
+          paddingTop: 'var(--pricing-section-padding-y)',
+          paddingBottom: 'var(--pricing-section-padding-y)',
           paddingLeft: '0px',
           paddingRight: '0px',
           position: 'relative',
         }}
       >
-        <div className='mx-auto max-w-[1238px] px-5 lg:px-0' data-wf-el='container'>
+        <div className='pricing-container mx-auto max-w-[1238px]' data-wf-el='container'>
           <h2 className='sr-only'>Compare plans</h2>
           {/* Live's compare-table has a 1px outer border + 24px top/
            * bottom margin around the `.table-embed` inner block (the
@@ -548,12 +565,12 @@ const Pricing = () => {
           >
             <div
               data-wf-el='card-body'
-              className='relative bg-brand-fg p-6 text-brand-fg'
-              style={{ backgroundColor: 'rgb(34, 21, 13)', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start' }}
+              className='relative bg-brand-fg text-brand-fg'
+              style={{ backgroundColor: 'rgb(34, 21, 13)', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', padding: 'var(--pricing-card-body-padding)' }}
             >
               <div
                 data-wf-el='table-embed'
-                style={{ display: 'flex', margin: '24px 29.7031px', color: 'rgb(34, 21, 13)' }}
+                style={{ display: 'flex', width: 'var(--pricing-table-embed-width)', margin: '24px var(--pricing-table-embed-margin-right) 24px var(--pricing-table-embed-margin-left)', color: 'rgb(34, 21, 13)' }}
               >
                 {/* Live's compare-table is a div-grid (NOT a <table>):
                  *
@@ -590,20 +607,20 @@ const Pricing = () => {
         data-wf-el='section'
         style={{
           display: 'block',
-          paddingTop: '80px',
-          paddingBottom: '80px',
+          paddingTop: 'var(--pricing-section-padding-y)',
+          paddingBottom: 'var(--pricing-section-padding-y)',
           paddingLeft: '0px',
           paddingRight: '0px',
           position: 'relative',
         }}
       >
-        <div className='mx-auto block max-w-[1238px] px-5 lg:px-0' data-wf-el='container'>
-          <div className='grid gap-10 lg:grid-cols-[493px_705.5px] lg:gap-10'>
+        <div className='pricing-container mx-auto block max-w-[1238px]' data-wf-el='container'>
+          <div className='pricing-faq-layout lg:grid lg:grid-cols-[493px_705.5px] lg:gap-10'>
             <div>
-              <h2 className='section-title text-brand-fg' style={{ marginBottom: '22px' }}>
+              <h2 className='section-title text-brand-fg' style={{ marginBottom: 'var(--pricing-faq-heading-margin-bottom)' }}>
                 FAQ&apos;s
               </h2>
-              <div data-wf-el='standard-wrap'>
+              <div data-wf-el='standard-wrap' style={{ width: 'var(--pricing-faq-contact-width)' }}>
                 <OverlayLinkButton href='/contact' label='Contact us' variant='outline' wfEl='button' textWfEl='btn-text' />
               </div>
             </div>
@@ -624,7 +641,7 @@ const Pricing = () => {
                         data-wf-el='accordion-trigger'
                         className='flex cursor-pointer list-none items-center justify-between text-brand-fg'
                         style={{
-                          padding: '24px',
+                          padding: 'var(--pricing-accordion-padding)',
                           fontWeight: 400,
                           borderBottom: FAQ_TRIGGER_DIVIDER,
                           overflow: 'hidden',
@@ -634,10 +651,10 @@ const Pricing = () => {
                           data-wf-el='accordion-title'
                           className='pointer-events-none m-0 cursor-default'
                           style={{
-                            fontSize: '24px',
-                            lineHeight: '33.6px',
+                            fontSize: 'var(--pricing-accordion-title-font-size)',
+                            lineHeight: 'var(--pricing-accordion-title-line-height)',
                             fontWeight: 500,
-                            paddingRight: '12px',
+                            paddingRight: 'var(--pricing-accordion-title-padding-right)',
                           }}
                         >
                           {faq.question}
@@ -649,20 +666,20 @@ const Pricing = () => {
                           width='100%'
                           viewBox='0 0 32 32'
                           fill='none'
-                          style={{ display: 'block', width: '32px', height: '32px', verticalAlign: 'baseline' }}
+                          style={{ display: 'var(--pricing-accordion-icon-display)', width: 'var(--pricing-accordion-icon-size)', height: 'var(--pricing-accordion-icon-size)', alignItems: 'var(--pricing-accordion-icon-align-items)', verticalAlign: 'baseline' }}
                           aria-hidden='true'
                         >
                           <path fillRule='evenodd' clipRule='evenodd' d='M17 17L27.3137 17L27.3137 15H17V4.68631L15 4.68631L15 15H4.68629L4.68629 17L15 17V27.3137H17V17Z' fill='currentColor' />
                         </svg>
                       </summary>
-                      <div style={{ marginLeft: '24px', marginRight: '24px' }}>
-                        <div data-wf-el='accordion-content_spacer' style={{ padding: '0px 0px 24px' }}>
+                      <div style={{ marginLeft: 'var(--pricing-accordion-padding)', marginRight: 'var(--pricing-accordion-padding)' }}>
+                        <div data-wf-el='accordion-content_spacer' style={{ padding: '0px 0px var(--pricing-accordion-content-padding-bottom)' }}>
                           <div data-wf-el='slot' style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
                             <div data-wf-el='rich-text-component' style={{ marginTop: '16px', width: '100%' }}>
                               <div
                                 data-wf-el='rich-text'
-                                className='faq-answer pricing-rich-text w-richtext font-sohne-buch text-[16px] leading-[22.4px] text-brand-fg'
-                                style={{ padding: '0px', maxWidth: '820px' }}
+                                className='faq-answer pricing-rich-text w-richtext font-sohne-buch text-[16px] text-brand-fg'
+                                style={{ height: idx === 0 ? 'var(--pricing-first-faq-rich-text-height)' : undefined, lineHeight: 'var(--pricing-body-copy-line-height)', padding: '0px', maxWidth: '820px' }}
                               >
                                 {faq.answer}
                               </div>

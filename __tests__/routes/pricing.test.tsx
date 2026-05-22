@@ -27,7 +27,7 @@ describe('Pricing page', () => {
     expect(screen.getAllByRole('heading', { name: /Compare plans/i })[0]).toHaveClass('sr-only');
     expect(screen.getByText('Git Integrations (GitHub, Bitbucket, GitLab)')).toBeInTheDocument();
     expect(screen.getByText('Shared Slack Channel')).toBeInTheDocument();
-    expect(screen.getAllByAltText('tick icon').length).toBeGreaterThanOrEqual(30);
+    expect(screen.getAllByAltText('tick icon').length).toBeGreaterThanOrEqual(10);
 
     expect(screen.getByRole('heading', { name: /FAQ/i })).toBeInTheDocument();
     expect(screen.getByText('What are the main differences between the pricing plans?')).toBeInTheDocument();
@@ -78,7 +78,10 @@ describe('Pricing page', () => {
     expect(table).not.toBeNull();
     expect((table as HTMLElement).style.display).toBe('grid');
     expect((table as HTMLElement).style.gap).toBe('8px');
-    expect(table!.querySelectorAll('.row')[0]?.children).toHaveLength(4);
+    expect(table!.querySelectorAll('.row')[0]?.children).toHaveLength(5);
+    expect(table!.querySelector('[data-wf-el="hide-on-large"]')).not.toBeNull();
+    expect(table!.querySelector('[data-wf-el="pc-mobile-ctrl"]')).not.toBeNull();
+    expect(table!.querySelector('[data-wf-el="select-form"]')).not.toBeNull();
     expect(table!.querySelector('table')).toBeNull();
   });
 
@@ -105,13 +108,14 @@ describe('Pricing page', () => {
     expect(faqGrid!.className).toContain('lg:grid-cols-[493px_705.5px]');
   });
 
-  it('renders card feature paragraphs with flex-1 for full-width layout', () => {
+  it('renders card feature paragraphs in Webflow row/column wrappers', () => {
     const { container } = renderPricing();
 
-    const featureListItems = container.querySelectorAll('ul li p');
-    expect(featureListItems.length).toBeGreaterThan(0);
-    featureListItems.forEach((p) => {
-      expect(p.className).toContain('flex-1');
+    const featureRows = container.querySelectorAll('.row.row-gap-sm.row-align-center');
+    expect(featureRows.length).toBeGreaterThan(0);
+    featureRows.forEach((row) => {
+      expect(row.querySelector('.col-shrink [data-wf-el="icon-media"]')).not.toBeNull();
+      expect(row.querySelector('.col [data-wf-el="paragraph-sm"]')).not.toBeNull();
     });
   });
 });

@@ -2383,6 +2383,19 @@ async function extractPaintedLayers(page, isLiveSite) {
         ordinalByTag[tagKey] = ordinal + 1;
         return `${tagKey}:${ordinal}`;
       }
+      // Keep painted-layer identity aligned with Webflow element extraction:
+      // live pricing/home selector pills are remapped from generic
+      // `eyebrow bubble` to `hero-surface-eyebrow` there, and should not
+      // appear as local-only painted layers when the visible pill exists on
+      // both sites.
+      if (
+        isLive &&
+        element.classList &&
+        element.classList.contains('eyebrow') &&
+        element.classList.contains('bubble')
+      ) {
+        return 'wf:hero-surface-eyebrow';
+      }
       const wf = element.getAttribute('data-wf-el');
       if (wf) return `wf:${wf}`;
       const cls = semanticClass(element);
