@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
+import statistics from '../../src/data/statistics.json';
 import Home from '../../src/routes/home';
 
 const renderRoute = () => {
@@ -67,7 +68,7 @@ describe('home route parity structure', () => {
     expect(container.querySelectorAll('[data-wf-el="accordion-item"][data-accordion-start-open="false"]')).toHaveLength(5);
 
     expect(screen.getByText('Nick Blanchet,')).toBeInTheDocument();
-    expect(screen.getByText('74K')).toBeInTheDocument();
+    expect(screen.getByText(`${Math.round(statistics.stargazers / 1000)}K`)).toBeInTheDocument();
     expect(container.textContent).toContain(`©${String.fromCharCode(160)}${new Date().getFullYear()}${String.fromCharCode(160)}OpenHands - All rights reserved`);
 
     expect(screen.getByText('@allhands_ai')).toBeInTheDocument();

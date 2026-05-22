@@ -89,24 +89,34 @@ describe('company information pages parity', () => {
     expect(container.querySelectorAll('[data-wf-el="track-item"]')).toHaveLength(16);
     expect(container.querySelector('select[data-wf-el="select-field"].contact-select-field')).toBeInTheDocument();
     expect(container.querySelector('input[type="submit"][value="Submit"][data-wf-el="button"]')).toBeInTheDocument();
-    expect(container.querySelector('#contact-page-form')).toHaveClass('form-block--form', 'u-mt-sm', 'u-mb-sm');
+    expect(container.querySelector('#contact-page-form')).toHaveClass('contact-form', 'form-block--form', 'u-mt-sm', 'u-mb-sm');
+    expect(container.querySelector('[data-wf-el="page-main"]')).toHaveClass('contact-page-main');
+    expect(container.querySelector('.contact-form-section')).toBeInTheDocument();
 
     expect(container.querySelector('button[type="submit"]')).not.toBeInTheDocument();
     expect(screen.getByText('We’ll be in touch soon')).toBeInTheDocument();
     expect(screen.getByText('Oops! Something went wrong while submitting the form.')).toBeInTheDocument();
   });
 
-  it('tabs through the contact form name fields in visual row order', async () => {
+  it('tabs through the contact form fields in live mobile stacking order', async () => {
     const user = userEvent.setup();
-    renderRoute(<Contact />);
+    const { container } = renderRoute(<Contact />);
+    const fields = Array.from(container.querySelectorAll('.contact-half-field input'));
+
+    expect(fields.map((field) => field.getAttribute('placeholder'))).toEqual([
+      'James',
+      'email@company.com',
+      'Smith',
+      'Acme',
+    ]);
 
     screen.getByPlaceholderText('James').focus();
     await user.tab();
 
-    expect(screen.getByPlaceholderText('Smith')).toHaveFocus();
+    expect(screen.getByPlaceholderText('email@company.com')).toHaveFocus();
 
     await user.tab();
-    expect(screen.getByPlaceholderText('email@company.com')).toHaveFocus();
+    expect(screen.getByPlaceholderText('Smith')).toHaveFocus();
 
     await user.tab();
     expect(screen.getByPlaceholderText('Acme')).toHaveFocus();

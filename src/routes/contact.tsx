@@ -145,16 +145,16 @@ const Contact = () => {
   };
 
   return (
-    <CompanyPageShell>
+    <CompanyPageShell mainClassName='contact-page-main'>
       <section
         data-wf-el='section-hero'
-        className='relative px-6 pb-0 pt-0 lg:px-10'
+        className='contact-hero-section relative px-6 pb-0 pt-0 lg:px-10'
         style={{ marginTop: '0px', height: '266px', paddingTop: '0px', paddingLeft: '0px', paddingRight: '0px' }}
       >
-        <div data-wf-el='asci-wrap' className='pointer-events-auto absolute inset-0 overflow-hidden' style={{ '--ascii-opacity': '0.12', maxHeight: '2400px', textAlign: 'center' } as CSSProperties} aria-hidden='true'>
+        <div data-wf-el='asci-wrap' className='contact-hero-ascii pointer-events-auto absolute inset-0 overflow-hidden' style={{ '--ascii-opacity': '0.12', maxHeight: '2400px', textAlign: 'center' } as CSSProperties} aria-hidden='true'>
           <ASCIIAnimation className='h-full w-full' />
         </div>
-        <div data-wf-el='hero-content' className='relative flex w-full flex-col items-center justify-center text-center' style={{ height: '266.438px', paddingTop: '56px', paddingBottom: '56px' }}>
+        <div data-wf-el='hero-content' className='contact-hero-content relative flex w-full flex-col items-center justify-center text-center' style={{ height: '266.438px', paddingTop: '56px', paddingBottom: '56px' }}>
           <h1 className='h1-flow-root max-w-[560px] fluid-h1 text-brand-fg'>
             Talk to the OpenHands Team
           </h1>
@@ -166,39 +166,39 @@ const Contact = () => {
 
       <section
         data-wf-el='section'
-        className='px-6 pb-16 pt-0 lg:px-10 lg:pb-20'
+        className='contact-form-section px-6 pb-16 pt-0 lg:px-10 lg:pb-20'
         style={{ position: 'relative', marginTop: '0px', height: '821.359px', paddingTop: '80px', paddingLeft: '0px', paddingRight: '0px' }}
       >
-        <div data-wf-el='container' className='mx-auto max-w-[1238px]' style={{ marginTop: '49.6px' }}>
-          <div style={{ display: 'flex', margin: '0px', width: '1238px', height: '611.766px', rowGap: '40px' }}>
-            <div style={{ display: 'flex', position: 'relative', flexDirection: 'column', width: '619px', maxWidth: '50%', paddingLeft: '20px', paddingRight: '20px' }}>
-              <div className='fluid-h3 text-center text-brand-fg' style={{ marginBottom: '9.6px' }}>
+        <div data-wf-el='container' className='contact-content-container mx-auto max-w-[1238px]' style={{ marginTop: '49.6px' }}>
+          <div className='contact-content-row' style={{ display: 'flex', margin: '0px', width: '1238px', height: '611.766px', rowGap: '40px' }}>
+            <div className='contact-info-col' style={{ display: 'flex', position: 'relative', flexDirection: 'column', width: '619px', maxWidth: '50%', paddingLeft: '20px', paddingRight: '20px' }}>
+              <div className='contact-info-title fluid-h3 text-center text-brand-fg' style={{ marginBottom: '9.6px' }}>
                 Why enterprises <br />choose OpenHands
               </div>
 
               {CONTACT_FEATURES.map((feature, index) => (
-                <div key={feature} style={{ display: 'flex', marginTop: '24px', marginBottom: index === CONTACT_FEATURES.length - 1 ? '8px' : '0px', marginLeft: '-4px', marginRight: '-4px', width: '587px', height: '28px', rowGap: '8px' }}>
-                  <div style={{ display: 'flex', position: 'relative', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', width: '28px', height: '28px', paddingLeft: '4px', paddingRight: '4px' }}>
+                <div key={feature} className='contact-feature-row' style={{ display: 'flex', marginTop: '24px', marginBottom: index === CONTACT_FEATURES.length - 1 ? '8px' : '0px', marginLeft: '-4px', marginRight: '-4px', width: '587px', height: '28px', rowGap: '8px' }}>
+                  <div className='contact-feature-icon-col' style={{ display: 'flex', position: 'relative', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', width: '28px', height: '28px', paddingLeft: '4px', paddingRight: '4px' }}>
                     <img data-wf-el='icon-media' src={CHECK_ICON} alt='' className='h-5 w-5' style={{ marginTop: '0px' }} />
                   </div>
-                  <div style={{ display: 'flex', position: 'relative', flexDirection: 'column', width: '559px', height: '28px', paddingLeft: '4px', paddingRight: '4px' }}>
-                    <p data-wf-el='paragraph-md' className='font-sohne-buch text-[20px] leading-[28px] text-[#5f5f5f]' style={{ marginTop: '0px', marginBottom: '0px' }}>{feature}</p>
+                  <div className='contact-feature-text-col' style={{ display: 'flex', position: 'relative', flexDirection: 'column', width: '559px', height: '28px', paddingLeft: '4px', paddingRight: '4px' }}>
+                    <p data-wf-el='paragraph-md' className='contact-feature-text font-sohne-buch text-[20px] leading-[28px] text-[#5f5f5f]' style={{ marginTop: '0px', marginBottom: '0px' }}>{feature}</p>
                   </div>
                 </div>
               ))}
 
-              <div className='font-medium text-brand-fg' style={{ marginTop: '74.4px', marginBottom: '9.6px', fontSize: '24px', lineHeight: '33.6px', letterSpacing: 'normal' }}>
+              <div className='contact-trusted-heading font-medium text-brand-fg' style={{ marginTop: '74.4px', marginBottom: '9.6px', fontSize: '24px', lineHeight: '33.6px', letterSpacing: 'normal' }}>
                 Trusted by engineers at
               </div>
 
-              <div style={{ display: 'flex', width: '619px', height: '74.7344px', marginLeft: '-20px', marginRight: '-20px', rowGap: '40px' }}>
-                <div style={{ display: 'flex', position: 'relative', flexDirection: 'column', width: '619px', paddingLeft: '20px', paddingRight: '20px' }}>
-                  <div data-wf-el='eyebrow-slider' className='eyebrow-slider w-dyn-list' style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden', width: '579px', height: '74.7344px', paddingTop: '20px', paddingBottom: '20px' }}>
+              <div className='contact-logo-row' style={{ display: 'flex', width: '619px', height: '74.7344px', marginLeft: '-20px', marginRight: '-20px', rowGap: '40px' }}>
+                <div className='contact-logo-col' style={{ display: 'flex', position: 'relative', flexDirection: 'column', width: '619px', paddingLeft: '20px', paddingRight: '20px' }}>
+                  <div data-wf-el='eyebrow-slider' className='contact-logo-slider eyebrow-slider w-dyn-list' style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden', width: '579px', height: '74.7344px', paddingTop: '20px', paddingBottom: '20px' }}>
                     <div role='list' className='track contact-logo-track w-dyn-items' style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: '16px', width: '1840px', height: '34.7344px', transform: 'translateX(0px)' }}>
                       {CUSTOMER_LOGOS.map((logo) => (
-                        <div data-wf-el='track-item' role='listitem' key={logo} className='track-item w-dyn-item' style={{ flex: '0 0 100px', width: '100px', minWidth: '100px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <div data-wf-el='standard-media' className='standard-media contain-center inline-block' style={{ display: 'block', justifyContent: 'center', alignItems: 'center', objectFit: 'contain' }}>
-                            <img data-wf-el='standard-media-img' src={logo} alt='' className='standard-media-img' style={{ maxWidth: '100px', width: 'auto', height: 'auto', verticalAlign: 'middle', objectFit: 'scale-down', borderStyle: 'none' }} />
+                        <div data-wf-el='track-item' role='listitem' key={logo} className='contact-logo-track-item track-item w-dyn-item' style={{ flex: '0 0 100px', width: '100px', minWidth: '100px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <div data-wf-el='standard-media' className='contact-logo-media standard-media contain-center inline-block' style={{ display: 'block', justifyContent: 'center', alignItems: 'center', objectFit: 'contain' }}>
+                            <img data-wf-el='standard-media-img' src={logo} alt='' className='contact-logo-img standard-media-img' style={{ maxWidth: '100px', width: 'auto', height: 'auto', verticalAlign: 'middle', objectFit: 'scale-down', borderStyle: 'none' }} />
                           </div>
                         </div>
                       ))}
@@ -208,10 +208,10 @@ const Contact = () => {
               </div>
             </div>
 
-            <div style={{ display: 'flex', position: 'relative', flexDirection: 'column', width: '619px', paddingLeft: '20px', paddingRight: '20px' }}>
-              <div data-wf-el='card' style={{ display: 'flex', position: 'relative', flexDirection: 'column', justifyContent: 'flex-start', overflow: 'hidden', width: '579px', height: '611.766px', border: '1px solid rgb(34, 21, 13)', borderRadius: '8px' }}>
-                <div data-wf-el='card-body' style={{ display: 'block', position: 'relative', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', width: '577px', height: '609.766px', padding: '24px' }}>
-                  <div data-wf-el='form-block' className='w-form' style={{ display: 'block', width: '529px', marginBottom: '15px' }}>
+            <div className='contact-form-col' style={{ display: 'flex', position: 'relative', flexDirection: 'column', width: '619px', paddingLeft: '20px', paddingRight: '20px' }}>
+              <div data-wf-el='card' className='contact-form-card' style={{ display: 'flex', position: 'relative', flexDirection: 'column', justifyContent: 'flex-start', overflow: 'hidden', width: '579px', height: '611.766px', border: '1px solid rgb(34, 21, 13)', borderRadius: '8px' }}>
+                <div data-wf-el='card-body' className='contact-form-card-body' style={{ display: 'block', position: 'relative', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', width: '577px', height: '609.766px', padding: '24px' }}>
+                  <div data-wf-el='form-block' className='contact-form-block w-form' style={{ display: 'block', width: '529px', marginBottom: '15px' }}>
                     <form
                       ref={formRef}
                       data-wf-el='form-block--form'
@@ -219,58 +219,61 @@ const Contact = () => {
                       name='wf-form-Contact-page-form'
                       data-name={WEBFLOW_CONTACT_FORM_NAME}
                       method='get'
-                      className='form-block--form u-mt-sm u-mb-sm'
+                      className='contact-form form-block--form u-mt-sm u-mb-sm'
                       aria-label={WEBFLOW_CONTACT_FORM_NAME}
                       data-wf-page-id={WEBFLOW_CONTACT_FORM_PAGE_ID}
                       data-wf-element-id={WEBFLOW_CONTACT_FORM_ELEMENT_ID}
                       onSubmit={handleSubmit}
                       style={{ display: formStatus === 'success' ? 'none' : 'block', width: '529px', marginTop: '24px', marginBottom: '24px' }}
                     >
-                      <div style={{ display: 'flex', flexWrap: 'wrap', margin: '0px -12px', rowGap: '24px', width: '553px' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '276.5px 276.5px', width: '553px' }}>
-                      <div style={{ display: 'flex', position: 'relative', flexDirection: 'column', width: '276.5px', paddingLeft: '12px', paddingRight: '12px' }}>
-                        <p data-wf-el='paragraph-sm' className={fieldLabelClass}>First Name *</p>
-                        <input data-wf-el='text-field' id='firstname' type='text' name='firstname' data-name='firstname' maxLength={256} placeholder='James' required className={`${textFieldClass} field-input`} />
-                      </div>
-                      <div style={{ display: 'flex', position: 'relative', flexDirection: 'column', width: '276.5px', paddingLeft: '12px', paddingRight: '12px' }}>
-                        <p data-wf-el='paragraph-sm' className={fieldLabelClass}>Last name *</p>
-                        <input data-wf-el='text-field' id='lastname' type='text' name='lastname' data-name='lastname' maxLength={256} placeholder='Smith' required className={`${textFieldClass} field-input`} />
-                      </div>
-                      <div style={{ display: 'flex', position: 'relative', flexDirection: 'column', width: '276.5px', paddingLeft: '12px', paddingRight: '12px' }}>
-                        <p data-wf-el='paragraph-sm' className={fieldLabelClass}>Company email *</p>
-                        <input data-wf-el='text-field' id='Email' type='email' name='Email' data-name='Email' maxLength={256} placeholder='email@company.com' required className={`${textFieldClass} field-input field-input--last`} />
-                      </div>
-                      <div style={{ display: 'flex', position: 'relative', flexDirection: 'column', width: '276.5px', paddingLeft: '12px', paddingRight: '12px' }}>
-                        <p data-wf-el='paragraph-sm' className={fieldLabelClass}>Company name *</p>
-                        <input data-wf-el='text-field' id='company' type='text' name='company' data-name='company' maxLength={256} placeholder='Acme' required className={`${textFieldClass} field-input field-input--last`} />
-                      </div>
-                    </div>
+                      <div className='contact-fields-row' style={{ display: 'flex', flexWrap: 'wrap', margin: '0px -12px', rowGap: '24px', width: '553px' }}>
+                        <div className='contact-name-col contact-half-field' style={{ display: 'flex', position: 'relative', flexDirection: 'column', width: '276.5px', paddingLeft: '12px', paddingRight: '12px' }}>
+                          <div className='contact-field' style={{ marginBottom: '16px' }}>
+                            <p data-wf-el='paragraph-sm' className={fieldLabelClass}>First Name *</p>
+                            <input data-wf-el='text-field' id='firstname' type='text' name='firstname' data-name='firstname' maxLength={256} placeholder='James' required className={`${textFieldClass} field-input`} />
+                          </div>
+                          <div className='contact-field' style={{ marginBottom: '16px' }}>
+                            <p data-wf-el='paragraph-sm' className={fieldLabelClass}>Company email *</p>
+                            <input data-wf-el='text-field' id='Email' type='email' name='Email' data-name='Email' maxLength={256} placeholder='email@company.com' required className={`${textFieldClass} field-input field-input--last`} />
+                          </div>
+                        </div>
 
-                    <div style={{ display: 'flex', position: 'relative', flexDirection: 'column', width: '553px', maxWidth: '100%', paddingLeft: '12px', paddingRight: '12px' }}>
-                      <p data-wf-el='paragraph-sm' className={fieldLabelClass}>Engineering team size*</p>
-                      <select data-wf-el='select-field' id='Engineering-size' name='Engineering-size' data-name='Engineering-size' defaultValue='' required className={`${textFieldClass} contact-select-field field-input field-input--last`} style={{ height: '38px', lineHeight: '20px' }}>
-                        <option value=''>Select one...</option>
-                        <option value='51-500'>1-50</option>
-                        <option value='50-100'>50-100</option>
-                        <option value='501+'>501+</option>
-                      </select>
-                    </div>
+                        <div className='contact-name-col contact-half-field' style={{ display: 'flex', position: 'relative', flexDirection: 'column', width: '276.5px', paddingLeft: '12px', paddingRight: '12px' }}>
+                          <div className='contact-field' style={{ marginBottom: '16px' }}>
+                            <p data-wf-el='paragraph-sm' className={fieldLabelClass}>Last name *</p>
+                            <input data-wf-el='text-field' id='lastname' type='text' name='lastname' data-name='lastname' maxLength={256} placeholder='Smith' required className={`${textFieldClass} field-input`} />
+                          </div>
+                          <div className='contact-field' style={{ marginBottom: '16px' }}>
+                            <p data-wf-el='paragraph-sm' className={fieldLabelClass}>Company name *</p>
+                            <input data-wf-el='text-field' id='company' type='text' name='company' data-name='company' maxLength={256} placeholder='Acme' required className={`${textFieldClass} field-input field-input--last`} />
+                          </div>
+                        </div>
 
-                    <div style={{ display: 'flex', position: 'relative', flexDirection: 'column', width: '553px', paddingLeft: '12px', paddingRight: '12px' }}>
-                      <p data-wf-el='paragraph-sm' className={fieldLabelClass}>Message *</p>
-                      <textarea
-                        data-wf-el='text-area'
-                        id='Message-comments'
-                        name='Message-comments'
-                        data-name='Message-comments'
-                        maxLength={5000}
-                        placeholder='Send us a note here....'
-                        required
-                        className={`${textFieldClass} resize-y`}
-                        style={{ height: '120px', minHeight: '120px', marginTop: '0px', marginBottom: '10px' }}
-                      />
-                    </div>
-                  </div>
+                        <div className='contact-full-field' style={{ display: 'flex', position: 'relative', flexDirection: 'column', width: '553px', maxWidth: '100%', paddingLeft: '12px', paddingRight: '12px' }}>
+                          <p data-wf-el='paragraph-sm' className={fieldLabelClass}>Engineering team size*</p>
+                          <select data-wf-el='select-field' id='Engineering-size' name='Engineering-size' data-name='Engineering-size' defaultValue='' required className={`${textFieldClass} contact-select-field field-input field-input--last`} style={{ height: '38px', lineHeight: '20px' }}>
+                            <option value=''>Select one...</option>
+                            <option value='51-500'>1-50</option>
+                            <option value='50-100'>50-100</option>
+                            <option value='501+'>501+</option>
+                          </select>
+                        </div>
+
+                        <div className='contact-full-field' style={{ display: 'flex', position: 'relative', flexDirection: 'column', width: '553px', paddingLeft: '12px', paddingRight: '12px' }}>
+                          <p data-wf-el='paragraph-sm' className={fieldLabelClass}>Message *</p>
+                          <textarea
+                            data-wf-el='text-area'
+                            id='Message-comments'
+                            name='Message-comments'
+                            data-name='Message-comments'
+                            maxLength={5000}
+                            placeholder='Send us a note here....'
+                            required
+                            className={`${textFieldClass} resize-y`}
+                            style={{ height: '120px', minHeight: '120px', marginTop: '0px', marginBottom: '10px' }}
+                          />
+                        </div>
+                      </div>
 
                   <input
                     data-wf-el='button'

@@ -3271,3 +3271,680 @@ main:has(.press-standard-collection) section[data-wf-el='section'].bg-brand-acce
   }
 }
 
+/* Contact route Webflow mobile parity overrides. */
+.contact-page-main .asci-embed,
+.contact-page-main .ascii-embed,
+.contact-page-main .ascii-pre {
+  text-align: center;
+}
+
+@media (min-width: 480px) {
+  .contact-page-main .contact-name-col .contact-field {
+    margin-bottom: 0 !important;
+  }
+}
+
+/* Mobile /contact parity: live Webflow switches the contact route to a
+   single-column 90%-width layout and a compact yellow footer below 480px. */
+@media (max-width: 991px) {
+  body:has(.contact-page-main) [data-wf-el='nav_grid'] {
+    display: none !important;
+  }
+}
+
+@media (max-width: 479px) {
+  body:has(.contact-page-main) [data-wf-el='nav_wrap'] {
+    height: 69px !important;
+    padding-top: 8.5px !important;
+    padding-bottom: 8.5px !important;
+  }
+
+  .contact-page-main .contact-hero-section,
+  .contact-page-main .contact-hero-ascii,
+  .contact-page-main .contact-hero-content {
+    height: 274.203px !important;
+  }
+
+  .contact-page-main .contact-hero-ascii {
+    max-height: 812px !important;
+  }
+
+  .contact-page-main .asci-embed,
+  .contact-page-main .ascii-embed,
+  .contact-page-main .ascii-pre {
+    text-align: center !important;
+  }
+
+  .contact-page-main .contact-hero-content {
+    padding-top: 56px !important;
+    padding-bottom: 56px !important;
+  }
+
+  .contact-page-main .contact-hero-content [data-wf-el='paragraph-lg'] {
+    margin-bottom: 17.7571px !important;
+  }
+
+  .contact-page-main .contact-form-section {
+    height: 1695.41px !important;
+    padding-top: 49.5714px !important;
+    padding-bottom: 49.5714px !important;
+  }
+
+  .contact-page-main .contact-content-container {
+    width: 90% !important;
+    max-width: 1238px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    margin-top: 49.6px !important;
+    height: 1546.69px !important;
+  }
+
+  .contact-page-main .contact-content-row {
+    flex-wrap: wrap !important;
+    width: 377.5px !important;
+    height: 1546.69px !important;
+    margin-left: -20px !important;
+    margin-right: -20px !important;
+    row-gap: 40px !important;
+  }
+
+  .contact-page-main .contact-info-col,
+  .contact-page-main .contact-form-col {
+    flex: 1 0 100% !important;
+    flex-basis: 100% !important;
+    max-width: 100% !important;
+    width: 377.5px !important;
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+  }
+
+  .contact-page-main .contact-info-col {
+    height: 610px !important;
+  }
+
+  .contact-page-main .contact-info-title {
+    text-align: center !important;
+  }
+
+  .contact-page-main .contact-feature-row {
+    width: 337.5px !important;
+    min-height: 45.3438px !important;
+    height: 45.3438px !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  .contact-page-main .contact-feature-icon-col {
+    width: 28px !important;
+    height: 45.3438px !important;
+  }
+
+  .contact-page-main .contact-feature-text-col {
+    width: 277.5px !important;
+    height: 45.3438px !important;
+  }
+
+  .contact-page-main .contact-feature-text {
+    width: 269.5px !important;
+    height: 45.3438px !important;
+    font-size: 16.1964px !important;
+    line-height: 22.675px !important;
+  }
+
+  .contact-page-main .contact-trusted-heading {
+    margin-top: 74.4px !important;
+    font-size: 20.9571px !important;
+    line-height: 29.34px !important;
+    text-align: center !important;
+  }
+
+  .contact-page-main .contact-logo-row,
+  .contact-page-main .contact-logo-col {
+    width: 377.5px !important;
+  }
+
+  .contact-page-main .contact-logo-slider {
+    width: 297.5px !important;
+    height: 71.2656px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+
+  .contact-page-main .contact-logo-track {
+    animation: none !important;
+    transform: translateX(-116px) !important;
+    gap: 16px !important;
+  }
+
+  .contact-page-main .contact-logo-track-item {
+    flex: 0 0 90px !important;
+    width: 90px !important;
+    min-width: 90px !important;
+  }
+
+  .contact-page-main .contact-logo-media,
+  .contact-page-main .contact-logo-img {
+    max-width: 90px !important;
+  }
+
+  .contact-page-main .contact-form-col {
+    height: 896px !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  .contact-page-main .contact-form-card {
+    width: 377.5px !important;
+    height: 896px !important;
+  }
+
+  .contact-page-main .contact-form-card-body {
+    width: 375.5px !important;
+    height: 894px !important;
+    padding: 24px !important;
+  }
+
+  .contact-page-main .contact-form-block,
+  .contact-page-main .contact-form {
+    width: 327.5px !important;
+  }
+
+  .contact-page-main .contact-fields-row,
+  .contact-page-main .contact-name-grid {
+    width: 351.5px !important;
+  }
+
+  .contact-page-main .contact-name-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .contact-page-main .contact-half-field,
+  .contact-page-main .contact-full-field {
+    width: 351.5px !important;
+    max-width: 100% !important;
+  }
+
+  .contact-page-main .text-field,
+  .contact-page-main .select-field,
+  .contact-page-main textarea[data-wf-el='text-area'] {
+    width: 100% !important;
+  }
+
+  .contact-page-main > [data-wf-el='section'] {
+    padding-top: 49.5714px !important;
+    padding-bottom: 49.5714px !important;
+  }
+
+  .contact-page-main > [data-wf-el='section'].bg-brand-accent,
+  .contact-page-main > [data-wf-el='section'].relative.overflow-visible {
+    height: 1370.58px !important;
+  }
+
+  .contact-page-main [data-wf-el='footer-social-row'] {
+    margin-top: 64px !important;
+    width: 377.5px !important;
+  }
+
+  .contact-page-main [data-wf-el='footer-nav'] {
+    width: 337.5px !important;
+    height: 492.766px !important;
+    flex-direction: column !important;
+    align-items: center !important;
+  }
+
+  .contact-page-main [data-wf-el='footer-drop'] {
+    align-items: center !important;
+  }
+
+  .contact-page-main .col.col-lg-8,
+  .contact-page-main .col.col-md-12,
+  .contact-page-main .col.col-sm-12 {
+    flex-basis: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .contact-page-main [data-wf-el='container'].container {
+    width: 90% !important;
+    max-width: 1238px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+
+  .contact-page-main [data-wf-el='paragraph-lg'].u-m-0 {
+    width: 337.5px !important;
+    font-size: 17.7571px !important;
+    line-height: 21.3086px !important;
+  }
+
+  .contact-page-main > [data-wf-el='section'].bg-brand-accent > div > .container {
+    margin-top: -8px !important;
+  }
+
+
+  .contact-page-main [data-wf-el='standard-media']:has([src*='openhands_logo_black']) {
+    width: 211.656px !important;
+    height: 35.3906px !important;
+  }
+
+  .contact-page-main [data-wf-el='standard-media-img'][src*='openhands_logo_black'] {
+    width: 211.656px !important;
+    height: 35.3906px !important;
+  }
+}
+
+
+@media (max-width: 479px) {
+  .contact-page-main > div[aria-hidden='true']:last-child {
+    height: 0 !important;
+  }
+
+  .contact-page-main .contact-info-col {
+    height: 664px !important;
+  }
+
+  .contact-page-main .contact-feature-row {
+    margin-left: 16px !important;
+    width: 321.5px !important;
+  }
+
+  .contact-page-main .contact-trusted-heading {
+    text-align: start !important;
+  }
+
+  .contact-page-main .contact-logo-row {
+    margin-top: -13px !important;
+  }
+
+  .contact-page-main .contact-logo-slider {
+    margin-left: 20px !important;
+    margin-right: 0 !important;
+  }
+
+  .contact-page-main .contact-logo-track {
+    transform: translateX(10px) !important;
+    will-change: auto !important;
+  }
+
+  .contact-page-main .contact-logo-media {
+    max-width: none !important;
+  }
+
+  .contact-page-main .contact-logo-img {
+    max-width: 100% !important;
+  }
+
+  .contact-page-main .contact-form-col {
+    height: 842.859px !important;
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+  }
+
+  .contact-page-main .contact-form-card {
+    width: 337.5px !important;
+    height: 842.859px !important;
+  }
+
+  .contact-page-main .contact-form-card-body {
+    width: 335.5px !important;
+    height: 840.859px !important;
+  }
+
+  .contact-page-main .contact-form-block,
+  .contact-page-main .contact-form,
+  .contact-page-main .contact-name-grid {
+    width: 302.719px !important;
+  }
+
+  .contact-page-main .contact-fields-row {
+    width: 326.719px !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    row-gap: 0 !important;
+  }
+
+  .contact-page-main .contact-half-field,
+  .contact-page-main .contact-full-field {
+    display: block !important;
+    position: static !important;
+    width: 302.719px !important;
+    max-width: none !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    margin-bottom: 16px !important;
+  }
+
+  .contact-page-main [data-wf-el='paragraph-sm'] {
+    width: 302.719px !important;
+    height: 19.3125px !important;
+    font-size: 12.8786px !important;
+    line-height: 19.3179px !important;
+  }
+
+  .contact-page-main [data-wf-el='text-field'],
+  .contact-page-main [data-wf-el='select-field'],
+  .contact-page-main textarea[data-wf-el='text-area'] {
+    width: 302.719px !important;
+  }
+
+  .contact-page-main [data-wf-el='select-field'] {
+    margin-bottom: 16px !important;
+    line-height: 20px !important;
+  }
+
+  .contact-page-main textarea[data-wf-el='text-area'] {
+    margin-bottom: 16px !important;
+  }
+
+  .contact-page-main [data-wf-el='button'].field-submit {
+    left: 0 !important;
+  }
+
+
+  .contact-page-main .contact-half-field:nth-child(2),
+  .contact-page-main .contact-half-field:nth-child(4) {
+    margin-bottom: 31px !important;
+  }
+
+  .contact-page-main .contact-form-block,
+  .contact-page-main .contact-form {
+    height: 754.578px !important;
+  }
+
+}
+
+
+
+@media (max-width: 479px) {
+  .contact-page-main .contact-logo-col {
+    padding-left: 40px !important;
+  }
+
+  .contact-page-main .contact-logo-slider {
+    margin-left: 0 !important;
+  }
+
+  .contact-page-main .contact-logo-track {
+    transform: translateX(0) !important;
+  }
+
+  .contact-page-main .contact-form-card-body {
+    padding: 16.3929px !important;
+  }
+
+  .contact-page-main .contact-form-block,
+  .contact-page-main .contact-form {
+    height: 760.078px !important;
+  }
+
+  .contact-page-main .contact-fields-row {
+    width: 326.719px !important;
+    margin-left: -12px !important;
+    margin-right: -12px !important;
+    row-gap: 24px !important;
+  }
+
+  .contact-page-main .contact-half-field,
+  .contact-page-main .contact-full-field {
+    display: flex !important;
+    position: relative !important;
+    flex-direction: column !important;
+    width: 326.719px !important;
+    max-width: 100% !important;
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+    margin-bottom: 0 !important;
+  }
+
+  .contact-page-main .contact-field {
+    width: 302.719px !important;
+    margin-bottom: 16px !important;
+  }
+
+  .contact-page-main .contact-half-field:nth-child(2),
+  .contact-page-main .contact-half-field:nth-child(4) {
+    margin-bottom: 0 !important;
+  }
+
+  .contact-page-main [data-wf-el='select-field'] {
+    line-height: 20px !important;
+    font: 14px / 20px "Sohne Kraftig", Arial, sans-serif !important;
+  }
+
+  .contact-page-main > [data-wf-el='section'].bg-brand-accent > div > .container {
+    margin-top: 0 !important;
+  }
+
+  .contact-page-main .footer-legal-col {
+    flex-basis: 66.6667% !important;
+    max-width: 66.6667% !important;
+  }
+
+  .contact-page-main div[data-wf-el='eyebrow'].u-text-center {
+    width: 211.656px !important;
+    height: 33.7812px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    font-size: 14.08px !important;
+  }
+
+  .contact-page-main div[data-wf-el='eyebrow'].u-text-center > span {
+    display: inline !important;
+    transform: none !important;
+  }
+
+  .contact-page-main .contact-hero-section,
+  .contact-page-main .contact-hero-ascii,
+  .contact-page-main .contact-hero-content,
+  .contact-page-main .asci-embed,
+  .contact-page-main .ascii-embed,
+  .contact-page-main .ascii-pre {
+    height: 274.203125px !important;
+  }
+
+  .contact-page-main .contact-hero-content h1 {
+    height: 71.6875px !important;
+    max-width: none !important;
+  }
+
+  .contact-page-main > [data-wf-el='section'].bg-brand-accent > div > .container > .row:first-child {
+    margin-top: 42px !important;
+  }
+
+  .contact-page-main .footer-legal-col.col.col-lg-8 {
+    flex-basis: 66.6667% !important;
+    max-width: 66.6667% !important;
+  }
+
+  .contact-page-main div[data-wf-el='eyebrow'].u-text-center {
+    align-self: center !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  .contact-page-main [data-wf-el='standard-media']:has([src*='openhands_logo_black']),
+  .contact-page-main [data-wf-el='standard-media-img'][src*='openhands_logo_black'] {
+    width: 211.65625px !important;
+    height: 35.390625px !important;
+  }
+
+  .contact-page-main > [data-wf-el='section'].bg-brand-accent .h2.u-text-center {
+    transform: translateY(8px) !important;
+  }
+
+  .contact-page-main .contact-full-field:nth-of-type(4),
+  .contact-page-main [data-wf-el='button'].field-submit {
+    transform: translateY(-5px) !important;
+  }
+
+  .contact-page-main [data-wf-el='select-field'] {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+  }
+
+  .contact-page-main .contact-hero-content h1 {
+    transform: scaleY(1.022) !important;
+    transform-origin: top center !important;
+  }
+
+  .contact-page-main .footer-legal-col.col.col-lg-8 {
+    align-items: center !important;
+  }
+
+  .contact-page-main div[data-wf-el='eyebrow'].u-text-center {
+    align-self: auto !important;
+    width: 211.671875px !important;
+    height: 33.796875px !important;
+  }
+
+  .contact-page-main a[data-wf-el='eyebrow'].u-text-center {
+    width: 118.28125px !important;
+  }
+
+  .contact-page-main .contact-hero-content h1 {
+    transform: none !important;
+    padding-bottom: 1.53125px !important;
+  }
+
+  .contact-page-main [data-wf-el='paragraph-lg'].u-m-0 {
+    height: 85.1875px !important;
+  }
+
+  .contact-page-main .contact-logo-slider {
+    height: 71.28125px !important;
+  }
+
+  .contact-page-main .contact-form-card {
+    height: 842.875px !important;
+  }
+
+  .contact-page-main .contact-form-card-body {
+    height: 840.875px !important;
+  }
+
+  .contact-page-main .contact-form-block,
+  .contact-page-main .contact-form {
+    height: 760.09375px !important;
+  }
+
+  .contact-page-main [data-wf-el='nav-link'] {
+    height: 51.171875px !important;
+  }
+
+  .contact-page-main [data-wf-el='footer-drop'] {
+    height: 168.734375px !important;
+  }
+
+  .contact-page-main div[data-wf-el='eyebrow'].u-text-center {
+    width: 211.664px !important;
+    height: 33.789px !important;
+  }
+
+  .contact-page-main a[data-wf-el='eyebrow'].u-text-center {
+    width: 118.273px !important;
+  }
+
+
+}
+
+/* Final /contact parity adjustments after merging shared mobile footer fixes. */
+.contact-page-main .contact-logo-track {
+  animation: none !important;
+  will-change: auto !important;
+}
+
+.contact-page-main [data-wf-el='select-field'] {
+  font: 14px / 20px "Sohne Kraftig", Arial, sans-serif !important;
+}
+
+.contact-page-main .contact-logo-img[src*='C3ai_logo1'],
+.contact-page-main .contact-logo-img[src*='mastercard1'] {
+  width: auto !important;
+}
+
+@media (min-width: 480px) {
+  .contact-page-main .contact-hero-section,
+  .contact-page-main .contact-hero-ascii,
+  .contact-page-main .contact-hero-content,
+  .contact-page-main .asci-wrap,
+  .contact-page-main .asci-embed,
+  .contact-page-main .ascii-embed,
+  .contact-page-main .ascii-pre {
+    height: 266.438px !important;
+  }
+
+  [data-wf-el='page-wrapper']:has(.contact-page-main) {
+    height: 2400px !important;
+  }
+
+  .contact-page-main {
+    height: 2316.43px !important;
+  }
+
+  .contact-page-main .contact-form-section {
+    height: 821.36px !important;
+  }
+
+  .contact-page-main .contact-form-block,
+  .contact-page-main .contact-form {
+    height: 513.766px !important;
+  }
+
+  .contact-page-main [data-wf-el='paragraph-sm'] {
+    height: 21.6094px !important;
+  }
+
+  .contact-page-main .contact-logo-img[src*='mongodb-ar211'],
+  .contact-page-main .contact-logo-img[src*='NVIDIA_logo1'] {
+    width: 100px !important;
+  }
+
+  .contact-page-main [data-wf-el='select-field'] {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+  }
+}
+
+@media (max-width: 479px) {
+  [data-wf-el='page-wrapper']:has(.contact-page-main) {
+    height: 3409.52px !important;
+  }
+
+  .contact-page-main {
+    --footer-marketing-margin-top: 28.4px;
+  }
+
+  .contact-page-main .footer-webflow-layout {
+    top: 0 !important;
+    --footer-content-transform: none;
+  }
+
+  .contact-page-main .contact-hero-content h1 {
+    height: 72px !important;
+    min-height: 72px !important;
+    line-height: 36px !important;
+    padding-bottom: 0 !important;
+  }
+
+  .contact-page-main .contact-logo-slider {
+    height: 71.265625px !important;
+  }
+
+  .contact-page-main .contact-form-col,
+  .contact-page-main .contact-form-card {
+    height: 842.86px !important;
+  }
+
+  .contact-page-main .contact-form-card-body {
+    height: 840.86px !important;
+  }
+
+  .contact-page-main .contact-form-block,
+  .contact-page-main .contact-form {
+    height: 760.08px !important;
+  }
+
+  .contact-page-main > [data-wf-el='section'].bg-brand-accent .h2.u-text-center,
+  .contact-page-main .footer-webflow-layout [data-wf-el='paragraph-lg'] {
+    transform: translateY(4px) !important;
+  }
+}

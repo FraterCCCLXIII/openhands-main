@@ -5,6 +5,7 @@ interface CompanyPageShellProps {
   children: ReactNode;
   backgroundClassName?: string;
   showBackground?: boolean;
+  mainClassName?: string;
   footerCompactSpacerHeight?: number;
   footerFlowSpacerHeight?: number;
   trailingSpacerHeight?: number;
@@ -28,6 +29,7 @@ export const CompanyPageShell = ({
   children,
   backgroundClassName = 'opacity-[0.12]',
   showBackground = true,
+  mainClassName,
   footerCompactSpacerHeight,
   footerFlowSpacerHeight = 19,
   trailingSpacerHeight,
@@ -35,7 +37,7 @@ export const CompanyPageShell = ({
   const spacerHeight = trailingSpacerHeight ?? footerFlowSpacerHeight;
 
   return (
-    <main data-wf-el='page-main' className='relative overflow-visible' style={{ display: 'flex', flexDirection: 'column', position: 'static' }}>
+    <main data-wf-el='page-main' className={['relative overflow-visible', mainClassName].filter(Boolean).join(' ')} style={{ display: 'flex', flexDirection: 'column', position: 'static' }}>
       {showBackground ? (
         <div
           aria-hidden='true'
@@ -49,8 +51,7 @@ export const CompanyPageShell = ({
       ) : null}
       <div className='relative'>{children}</div>
       <Footer standalone compactNav showSocialLinks compactSpacerHeight={footerCompactSpacerHeight} />
-      {spacerHeight > 0 ? <div aria-hidden='true' style={{ height: `${spacerHeight}px` }} /> : null}
-
+      {spacerHeight > 0 ? <div aria-hidden='true' className='company-page-shell-trailing-spacer' style={{ height: `${spacerHeight}px` }} /> : null}
     </main>
   );
 };
