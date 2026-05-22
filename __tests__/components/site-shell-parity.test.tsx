@@ -29,7 +29,7 @@ describe('site shell parity helpers', () => {
     );
 
     expect(container.querySelector('section[data-wf-el="section"]')).toHaveStyle({
-      padding: 'var(--footer-section-padding, var(--section-padding-y)) 0px',
+      padding: 'var(--footer-section-padding, var(--product-section-padding-y, var(--section-padding-y))) 0px',
       height: 'var(--footer-section-height, auto)',
     });
     expect(container.querySelector('section[data-wf-el="section"]')).toHaveClass('section', 'u-bg-primary', 'footer-webflow-layout');
@@ -41,7 +41,7 @@ describe('site shell parity helpers', () => {
       fontSize: 'var(--footer-paragraph-lg-font-size, var(--paragraph-lg-font-size))',
       lineHeight: 'var(--footer-paragraph-lg-line-height, 1.2)',
     });
-    expect(container.querySelector('.section-title')).toHaveStyle({ marginBottom: '22px' });
+    expect(container.querySelector('.section-title')).toHaveStyle({ marginBottom: 'var(--footer-marketing-title-margin-bottom, var(--footer-cta-title-margin-bottom, 22px))' });
     expect(container.querySelector('#footer-resources')?.parentElement).toHaveClass('justify-between');
     expect(container.querySelector('#footer-resources')).toHaveClass('footer-drop');
     expect(screen.getByRole('link', { name: 'About' })).toHaveClass('py-[14.4px]');

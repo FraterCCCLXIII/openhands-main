@@ -158,6 +158,12 @@ describe('Marketing parity routes', () => {
   it('renders the updated community page content', () => {
     const { container } = renderRoute(<Community />);
 
+    expect(container.querySelector('main.community-page')).not.toBeNull();
+    expect(container.querySelector('section#latest-call')).not.toBeNull();
+    expect(container.querySelector('section#contributions')).not.toBeNull();
+    expect(container.querySelector('[data-wf-el="events-list_cms_list"]')).toHaveClass('events-list_cms_list');
+    expect(container.querySelector('[data-wf-el="community-contributing_cards_wrap"]')).toHaveClass('community-contributing_cards_wrap');
+    expect(container.querySelector('[data-wf-el="contributions_list"]')).toHaveClass('contributions_list');
     expect(screen.getByRole('heading', { name: /Join the OpenHands Community/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /Latest Community Call/i })).toBeInTheDocument();
     expect(screen.getByTitle('Latest OpenHands community call')).toHaveAttribute(

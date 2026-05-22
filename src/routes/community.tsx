@@ -232,7 +232,7 @@ const MetadataItem = ({
 
 const Community = () => {
   return (
-    <main data-wf-el='page-main' style={{ display: 'flex', flexDirection: 'column' }}>
+    <main className='community-page' data-wf-el='page-main' style={{ display: 'flex', flexDirection: 'column' }}>
       <section data-wf-el='section-community-hero' style={{ height: '360.016px', padding: '0px' }}>
         <div data-wf-el='hero' className='flex flex-col items-center overflow-hidden' style={{ height: '360.016px', position: 'relative', justifyContent: 'flex-start' }}>
           <div data-wf-el='container' className='mx-auto max-w-[1238px]' style={{ width: '100%', height: '360.016px' }}>
@@ -268,7 +268,7 @@ const Community = () => {
         </div>
       </section>
 
-      <section data-wf-el='section' className='bg-brand-fg text-brand-bg' style={{ height: '506.828px', padding: '80px 0px', position: 'relative' }}>
+      <section id='latest-call' data-wf-el='section' className='section u-bg-darkbrown u-text-cream bg-brand-fg text-brand-bg' style={{ height: '506.828px', padding: '80px 0px', position: 'relative' }}>
         <div data-wf-el='container' className='mx-auto max-w-[1238px]' style={{ height: '346.828px' }}>
           <div className='row row-justify-center row-gap-md' style={{ display: 'flex', justifyContent: 'center', rowGap: '24px', marginLeft: '-12px', marginRight: '-12px' }}>
             <div className='col' style={{ display: 'flex', flexDirection: 'column', position: 'relative', width: '631px', padding: '0px 12px' }}>
@@ -313,7 +313,7 @@ const Community = () => {
             Upcoming Events
           </h2>
 
-          <div data-wf-el='events-list_cms_list' className='grid grid-cols-3' style={{ gap: '16px', height: '1436.66px' }}>
+          <div data-wf-el='events-list_cms_list' className='events-list_cms_list grid grid-cols-3' style={{ gap: '16px', height: '1436.66px' }}>
             {EVENTS.map((event) => (
               <a
                 key={event.title}
@@ -344,7 +344,7 @@ const Community = () => {
             ))}
           </div>
 
-          <div data-wf-el='events_button_wrap' className='flex justify-center items-center' style={{ marginTop: '32px' }}>
+          <div data-wf-el='events_button_wrap' className='events_button_wrap flex justify-center items-center' style={{ marginTop: '32px' }}>
             <OverlayLinkButton
               href='https://luma.com/openhands?k=c'
               label='View All Events'
@@ -365,12 +365,12 @@ const Community = () => {
             </p>
           </div>
 
-          <div data-wf-el='community-contributing_cards_wrap' className='grid grid-cols-3' style={{ gap: '24px', height: '295.547px' }}>
+          <div data-wf-el='community-contributing_cards_wrap' className='community-contributing_cards_wrap grid grid-cols-3' style={{ gap: '24px', height: '295.547px' }}>
             {CONTRIBUTION_PATHS.map((path) => (
               <article
                 key={path.title}
                 data-wf-el='community-contributing_cards_card'
-                className='relative flex flex-col overflow-hidden rounded-[8px] border border-[#b3a88c] bg-transparent'
+                className='community-contributing_cards_card relative flex flex-col overflow-hidden rounded-[8px] border border-[#b3a88c] bg-transparent'
                 style={{ height: '295.547px', justifyContent: 'flex-start', textAlign: 'start' }}
               >
                 <div data-wf-el='card-body' className='flex flex-col items-center justify-center p-6 text-center' style={{ position: 'relative', height: '293.547px', gap: '24px' }}>
@@ -395,7 +395,7 @@ const Community = () => {
         </div>
       </section>
 
-      <section data-wf-el='section' style={{ height: '437.562px', padding: '80px 0px', position: 'relative' }}>
+      <section id='contributions' data-wf-el='section' style={{ height: '437.562px', padding: '80px 0px', position: 'relative' }}>
         <div data-wf-el='container' className='mx-auto max-w-[1238px]' style={{ height: '277.562px' }}>
           <div data-wf-el='slot' className='cc-section flex flex-col items-stretch'>
             <div data-wf-el='lovewall_wrap'>
@@ -404,7 +404,7 @@ const Community = () => {
                   <h2 className='section-title text-brand-fg'><span style={{ display: 'inline-block', transform: 'scaleX(1.0016)', transformOrigin: 'center' }}>Recognizing first-time contributors</span></h2>
                 </div>
               </div>
-              <div data-wf-el='contributions_list' className='grid grid-cols-4' style={{ gap: '24px', height: '181.172px' }}>
+              <div data-wf-el='contributions_list' className='contributions_list grid grid-cols-4' style={{ gap: '24px', height: '181.172px' }}>
                 {FIRST_TIME_CONTRIBUTORS.map((contributor) => (
                   <a
                     key={contributor.name}
@@ -449,7 +449,7 @@ const Community = () => {
                   <h2 className='section-title text-brand-fg'>Community contributor spotlight</h2>
                 </div>
               </div>
-              <div data-wf-el='card' className='relative flex flex-col overflow-hidden rounded-[8px] border border-[#b3a88c]' style={{ height: '449.953px', justifyContent: 'flex-start' }}>
+              <div data-wf-el='card' className='card relative flex flex-col overflow-hidden rounded-[8px] border border-[#b3a88c]' style={{ height: '449.953px', justifyContent: 'flex-start' }}>
                 <div data-wf-el='community-contributor_card_body' className='flex flex-col items-center justify-center p-8 text-center' style={{ height: '447.953px', gap: '24px', position: 'relative' }}>
                   <img
                     data-wf-el='community-contributor_card_img'
