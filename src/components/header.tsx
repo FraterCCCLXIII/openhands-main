@@ -52,6 +52,7 @@ function ResourceDropdownIcon({ name }: { name: string }) {
 
 interface HeaderProps {
   onClickMenuButton: () => void;
+  onClickCloseMenuButton?: () => void;
   showMenuIcon?: boolean;
   width?: number;
   onClickGitHubButton?: () => void;
@@ -60,6 +61,7 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({
   showMenuIcon,
   onClickMenuButton,
+  onClickCloseMenuButton,
   width = 1024,
 }) => {
   const { scrollY } = useScroll();
@@ -68,7 +70,9 @@ export const Header: React.FC<HeaderProps> = ({
   const [textIsVisible, setTextIsVisible] = React.useState(true);
   const [resourcesOpen, setResourcesOpen] = React.useState(false);
   const [productOpen, setProductOpen] = React.useState(false);
-  const isMobile = width < 1024;
+  const isCompact = width <= 1360;
+  const isNarrow = width < 768;
+  const menuOpen = showMenuIcon === false;
 
   useMotionValueEvent(scrollY, 'change', (latest) => {
     if (latest > 0) {
@@ -79,9 +83,21 @@ export const Header: React.FC<HeaderProps> = ({
   });
 
   return (
-    <nav data-wf-el='nav_wrap' className='sticky top-0 left-0 right-0 z-50 w-full' style={{ display: 'block', height: isMobile ? '69.3437px' : '84px', backgroundColor: 'rgb(249, 240, 217)', paddingTop: '1rem', paddingBottom: '1rem', containerType: 'inline-size' as React.CSSProperties['containerType'] }}>
+    <nav
+      data-wf-el='nav_wrap'
+      className={clsx('sticky top-0 left-0 right-0 z-50 w-full', menuOpen && 'is-menu-open')}
+      style={{
+        display: 'block',
+        height: isNarrow ? '69.3437px' : '84px',
+        backgroundColor: menuOpen ? 'rgb(34, 21, 13)' : 'rgb(249, 240, 217)',
+        color: menuOpen ? 'rgb(249, 240, 217)' : 'rgb(34, 21, 13)',
+        paddingTop: '1rem',
+        paddingBottom: '1rem',
+        containerType: 'inline-size' as React.CSSProperties['containerType'],
+      }}
+    >
       <div data-wf-el='nav_contain' style={{ display: 'block', width: '95%', marginLeft: 'auto', marginRight: 'auto' }}>
-        <div data-wf-el='nav_grid' className='hidden lg:grid' style={{ display: isMobile ? 'none' : 'grid', gap: '16px', gridTemplateColumns: '1fr min-content 1fr', alignContent: 'center', position: 'relative' }}>
+        <div data-wf-el='nav_grid' className='hidden lg:grid' style={{ display: isCompact ? 'none' : 'grid', gap: '16px', gridTemplateColumns: '1fr min-content 1fr', alignContent: 'center', position: 'relative' }}>
           <div className='flex justify-start'>
             {/* Live's `.nav_logo_link` has an explicit `width: 192px` —
               * the SVG natural size is 195×30 but the link clamps it. */}
@@ -281,16 +297,20 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
         </div>
 
-        {/* Mobile nav */}
-        <div className='mobile-nav flex items-center justify-between lg:hidden'>
-          <Link to='/' aria-label='Go to Home' className='mobile-nav-logo'>
-            <img src='/assets/webflow/brand/openhands-logo-mobile.svg' alt='' />
+        {/* Compact nav */}
+        <div className='mobile-nav flex items-center justify-between' style={{ display: isCompact ? 'flex' : 'none' }}>
+          <Link to='/' aria-label='Go to Home' className='mobile-nav-logo' style={{ width: '56px', lineHeight: '16px' }}>
+            <img data-wf-el='nav_logo_img' src='/assets/webflow/brand/openhands-logo-mobile.svg' alt='' style={{ width: '56px', height: 'auto' }} />
           </Link>
-          {showMenuIcon ? (
-            <button type='button' className='mobile-menu-button' aria-label='Open Menu' onClick={onClickMenuButton}>
-              Menu
-            </button>
-          ) : <div aria-hidden='true' />}
+          <button
+            type='button'
+            className='mobile-menu-button'
+            aria-label={menuOpen ? 'Close Menu' : 'Open Menu'}
+            aria-expanded={menuOpen}
+            onClick={menuOpen ? onClickCloseMenuButton ?? onClickMenuButton : onClickMenuButton}
+          >
+            {menuOpen ? 'Close' : 'Menu'}
+          </button>
         </div>
       </div>
     </nav>

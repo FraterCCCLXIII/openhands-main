@@ -139,7 +139,7 @@ export default function App() {
   const matches = useMatches();
   const pathname = normalizePathname(location.pathname);
   const width = useWidth();
-  const isDesktop = width >= 1024;
+  const isCompactNav = width <= 1360;
   const hideGlobalFooter = matches.some(
     (match) => (match.handle as { hideGlobalFooter?: boolean } | undefined)?.hideGlobalFooter,
   );
@@ -182,6 +182,16 @@ export default function App() {
   };
 
   React.useEffect(() => {
+    setIsSidebarHidden(true);
+  }, [location.pathname]);
+
+  React.useEffect(() => {
+    if (!isCompactNav) {
+      setIsSidebarHidden(true);
+    }
+  }, [isCompactNav]);
+
+  React.useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
         sidebarRef.current &&
@@ -211,19 +221,13 @@ export default function App() {
       />
       <motion.div
         className='flex flex-col min-h-screen'
-        animate={{
-          paddingLeft:
-            isDesktop && !isSidebarHidden ? sidebarRef.current?.clientWidth : 0,
-        }}
+        animate={{ paddingLeft: 0 }}
       >
         <Header
           onClickMenuButton={() => setIsSidebarHidden(false)}
+          onClickCloseMenuButton={() => setIsSidebarHidden(true)}
           showMenuIcon={isSidebarHidden}
-          width={
-            !isSidebarHidden && sidebarRef.current && isDesktop
-              ? width - sidebarRef.current?.clientWidth
-              : width
-          }
+          width={width}
           onClickGitHubButton={handleOpenGitHubModal}
         />
         <div className='flex-1'>
