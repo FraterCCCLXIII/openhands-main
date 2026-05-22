@@ -1,2 +1,0 @@
-https://openhands.dev/blog/agent-control-plane
-The Software Agent Control Plane | Mar 30, 2026

@@ -1,2 +1,0 @@
-http://127.0.0.1:12000/blog/
-OpenHands Blog | Cloud Coding Agents, AI Development, and Open Source Insights

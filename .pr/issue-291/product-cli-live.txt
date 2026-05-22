@@ -1,2 +1,0 @@
-https://openhands.dev/product/cli
-OpenHands CLI | Secure, Scalable Agentic Software Development
