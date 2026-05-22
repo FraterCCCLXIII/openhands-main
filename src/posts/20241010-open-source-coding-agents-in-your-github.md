@@ -3,8 +3,8 @@ title: 'Open-source Coding Agents in your GitHub, Fixing your Issues'
 slug: open-source-coding-agents-in-your-github-fixing-your-issues
 excerpt: 'We introduce the OpenHands resolver, an open-source coding agent that can automatically fix issues in your GitHub repositories.'
 coverImage: /assets/webflow/misc/6914f592dc4b02cbaf5adc96_6914f59109c10a375306240c_fixed-issues.png
-coverAlt: Cover image
-date: '2024-10-10T12:00:00.000Z'
+coverAlt: 'Cover image'
+date: '2024-10-10T12:00:00.000+00:00'
 authors:
   - name: Graham Neubig
 ogImage:
@@ -21,7 +21,7 @@ The OpenHands resolver is based on [OpenHands](https://github.com/OpenHands/open
 
 Normally you use OpenHands through a UI where you dynamically interact with the agents, but in order to resolve individual issues you need to spin up the interface, copy-paste in the issue description, and wait a few minutes for the agent to propose a fix, which takes a bit of work.
 
-Instead for the OpenHands resolver, you can run it as a GitHub action, and it will automatically fix any issues in your repository that you tag with the `fix-me` label. You can also run the resolver locally, where it can even attempt to solve _all_ the issues in your repository with one fell swoop.
+Instead for the OpenHands resolver, you can run it as a GitHub action, and it will automatically fix any issues in your repository that you tag with the `fix-me` label. You can also run the resolver locally, where it can even attempt to solve *all* the issues in your repository with one fell swoop.
 
 ## What can the Resolver Do?
 
@@ -87,8 +87,11 @@ recent pypi package. We should:
 Are you interested? It's pretty easy to set it up on your own repos, so try it out!
 
 1. Open up [openhands-resolver.yml](https://github.com/OpenHands/openhands-resolver/blob/main/examples/openhands-resolver.yml) and copy it into the `.github/workflows` folder in your repository.
-2. Create a personal access token for github and an LLM API key and set them as secrets in your repository. (more details [here](https://github.com/OpenHands/openhands-resolver?tab=readme-ov-file#using-the-github-actions-workflow))
-3. Run the resolver on an issue by adding the `fix-me` label to the issue. The resolver will immediately start working, and in a few minutes you'll either see a pull request, or a message that the resolver wasn't able to fix the issue (and a branch with its intermediate progress).
+
+1. Create a personal access token for github and an LLM API key and set them as secrets in your repository. (more details [here](https://github.com/OpenHands/openhands-resolver?tab=readme-ov-file#using-the-github-actions-workflow))
+
+1. Run the resolver on an issue by adding the `fix-me` label to the issue. The resolver will immediately start working, and in a few minutes you'll either see a pull request, or a message that the resolver wasn't able to fix the issue (and a branch with its intermediate progress).
+
 ## Build with AI and Build with Us
 
 We believe that this could be a pretty useful tool for developers, and it could be even better with your help and involvement!
@@ -96,6 +99,9 @@ We believe that this could be a pretty useful tool for developers, and it could 
 We invite you to:
 
 1. Try out the [OpenHands resolver](https://github.com/OpenHands/openhands-resolver) on your own repositories.
-2. Contribute to its development by submitting pull requests, reporting bugs, or discussing on our [slack](https://join.slack.com/t/openhands-ai/shared_invite/zt-34zm4j0gj-Qz5kRHoca8DFCbqXPS~f_A).
-3. Star the repository and spread the word to fellow developers.
+
+1. Contribute to its development by submitting pull requests, reporting bugs, or discussing on our [slack](https://join.slack.com/t/openhands-ai/shared_invite/zt-34zm4j0gj-Qz5kRHoca8DFCbqXPS~f_A).
+
+1. Star the repository and spread the word to fellow developers.
+
 Together, we can build a more efficient, collaborative, and innovative future for open-source development.

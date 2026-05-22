@@ -1,17 +1,17 @@
 ---
-title: Automating Massive Refactors with Parallel Agents
+title: 'Automating Massive Refactors with Parallel Agents'
 slug: automating-massive-refactors-with-parallel-agents
 excerpt: 'Discover how AI-powered coding agents can tackle large-scale refactoring projects in days instead of months, using parallel workflows and the refactor-sdk toolkit.'
 coverImage: /assets/webflow/blog/agent-control-plane/cover.png
-coverAlt: Image from blog post
-date: '2025-10-09T12:00:00.000Z'
+coverAlt: 'Image from blog post'
+date: '2025-10-09T12:00:00.000+00:00'
 authors:
   - name: Robert Brennan
 ogImage:
   url: /assets/webflow/blog/agent-control-plane/cover.png
 seoTitleDate: 'Nov 12, 2025'
 ---
-Today's coding agents are great for small, atomic coding tasks—the sort of things that can be done in a single commit. But that's just a small part of software development: a ton of effort still goes into planning, decomposition, operations, QA, architecture…the idea of an LLM-powered agent _replacing_ a software engineer still feels pretty farfetched.
+Today's coding agents are great for small, atomic coding tasks—the sort of things that can be done in a single commit. But that's just a small part of software development: a ton of effort still goes into planning, decomposition, operations, QA, architecture…the idea of an LLM-powered agent *replacing* a software engineer still feels pretty farfetched.
 
 But there are some coding tasks that seem extremely automatable, but remain out of reach for today's agents. Things like rewriting a program from C or Cobol to Java, migrating from VueJS to React, or refactoring a monolith into something more modular.
 
@@ -23,7 +23,7 @@ Only a few years ago n November 2022, ChatGPT 3.5 launched, and much to my surpr
 
 The next year, GitHub Copilot went mainstream (though it had already been in GA for a while). Having an LLM right there in neovim felt like magic—Copilot was able to predict what I was going to type before my hands even hit the keyboard. It had at least a small window into my codebase—no more copy/pasting back and forth into the ChatGPT window.
 
-Then, in 2024, Cognition released their demo video of an autonomous coding agent—an AI that didn't just _write_ code! It could run the code, Google error messages, add debug statements, and keep iterating until it solved the task at hand. The next day, OpenDevin—now [OpenHands](https://github.com/OpenHands/OpenHands)—was born.
+Then, in 2024, Cognition released their demo video of an autonomous coding agent—an AI that didn't just *write* code! It could run the code, Google error messages, add debug statements, and keep iterating until it solved the task at hand. The next day, OpenDevin—now [OpenHands](https://github.com/OpenHands/OpenHands)—was born.
 
 This was a massive leap forward in AI-driven development. Agents were able to take on the entire inner loop of software development, making incremental changes, testing them, and constructing entire PRs on their own. But, of course, the code is rarely perfect—we still need a human in the loop to review and QA the agent's output.
 
@@ -65,9 +65,12 @@ To make managing these large-scale refactoring projects easier, we at OpenHands 
 The refactor-sdk provides:
 
 - **Task decomposition tools** to break down large refactoring projects into agent-sized chunks
+
 - **Fixing and verifying** tools to specify how the code should be fixed, and how to check that the fix was successful
+
 - **Progress tracking** to monitor the status of each agent's work
-![Refactoring process](/assets/blog/20251009-automating-refactors/refactoring-process.png)
+
+![Incremental process](/assets/blog/20251009-automating-refactors/incremental-process.png)
 
 The Refactor SDK is still in private beta, but if you are faced with a large refactoring task, please [contact](https://www.all-hands.dev/contact) us and we'd be happy to learn more about your use case.
 
@@ -112,8 +115,11 @@ Managing fleets of agents is wildly fun once you've got a good workflow down. I 
 If you're interested in operating fleets of agents for large-scale refactoring projects, here's how to get started:
 
 1. **Try OpenHands**: Check out [OpenHands](https://github.com/OpenHands/OpenHands) to run coding agents locally or in the cloud
-2. **Explore the refactor-sdk**: [Contact us](https://www.all-hands.dev/contact) to join the beta of the refactor sdk, a toolkit for managing large-scale refactoring projects with AI agents
-3. **Join the community**: Connect with other developers tackling similar challenges in our [Slack community](https://join.slack.com/t/openhands-ai/shared_invite/zt-2tom0er4z-RiNl7RbPZaIW60cMFm1Q1A)
+
+1. **Explore the refactor-sdk**: [Contact us](https://www.all-hands.dev/contact) to join the beta of the refactor sdk, a toolkit for managing large-scale refactoring projects with AI agents
+
+1. **Join the community**: Connect with other developers tackling similar challenges in our [Slack community](https://join.slack.com/t/openhands-ai/shared_invite/zt-2tom0er4z-RiNl7RbPZaIW60cMFm1Q1A)
+
 I believe the future of software development isn't about precisely this sort of thing, it's about augmenting engineers with powerful tools that handle the tedious work, freeing them to focus on the creative, strategic aspects of building great software.
 
 Happy refactoring! 🚀

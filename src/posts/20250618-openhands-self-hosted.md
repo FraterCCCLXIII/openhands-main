@@ -3,8 +3,8 @@ title: 'OpenHands Cloud Self-hosted: Secure, Convenient Deployment of AI Softwar
 slug: openhands-cloud-self-hosted-secure-convenient-deployment-of-ai-software-development-agents
 excerpt: 'OpenHands Cloud is now available as a self-hosted solution, providing secure, convenient deployment of AI software development agents. It features a 30-day free trial and is available as a source-available Helm Chart.'
 coverImage: /assets/webflow/blog/agent-control-plane/cover.png
-coverAlt: Image from blog post
-date: '2025-06-18T12:00:00.000Z'
+coverAlt: 'Image from blog post'
+date: '2025-06-18T12:00:00.000+00:00'
 authors:
   - name: Robert Brennan
 ogImage:
@@ -40,7 +40,7 @@ The self-hosted cloud allows for cloud delivery and the security of keeping your
 
 ## Delivery of OpenHands Cloud: Source-available Helm Chart
 
-While the core OpenHands project remains MIT-licensed for individual developers, OpenHands Cloud has mainly been available through our [online app](https://app.all-hands.dev).
+While the core OpenHands project remains MIT-licensed for individual developers, OpenHands Cloud has mainly been available through our [online app](https://app.all-hands.dev/).
 
 For the self-hosted cloud, we are [releasing a source-available Helm Chart](https://github.com/OpenHands/OpenHands-cloud) for installing OpenHands Cloud in your own Kubernetes cluster, including a 30-day free trial.
 This bridges the gap between our open-source individual developer experience and our commercial team-focused platform, helping organizations get started with OpenHands more easily.
@@ -50,8 +50,11 @@ If you try it out and like it, [contact us](https://docs.google.com/forms/d/e/1F
 Why are we taking this method of making our proprietary code public? It's for several reasons:
 
 1. Most importantly, we realize that developers and platform engineers like to read and try things. They don't want to talk with a sales team to get started (we're the same!).
-2. If there are any issues that the cloud subscribers encounter while using the chart, they can modify and fix it to contribute back.
-3. We believe in our user community, and largely trust them to do the right thing -- we're hopeful that we will not need to do any enforcement against people who violate the terms.
+
+1. If there are any issues that the cloud subscribers encounter while using the chart, they can modify and fix it to contribute back.
+
+1. We believe in our user community, and largely trust them to do the right thing -- we're hopeful that we will not need to do any enforcement against people who violate the terms.
+
 ## How do we get started?
 
 If you want to try out OpenHands Cloud in your own Kubernetes cluster, you can [follow the instructions here](https://github.com/OpenHands/OpenHands-Cloud/tree/main/charts/openhands).

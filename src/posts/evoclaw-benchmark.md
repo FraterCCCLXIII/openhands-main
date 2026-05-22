@@ -3,14 +3,14 @@ title: 'EvoClaw: Evaluating AI Agents on Continuous Software Evolution'
 slug: evoclaw-benchmark
 excerpt: 'EvoClaw evaluates coding agents on milestone-level, long-horizon software evolution. The early results show a clear pattern: agents keep adding new functionality, but regressions and technical debt compound faster than they can repair them.'
 coverImage: /assets/webflow/blog/evoclaw-benchmark/202603-evoblog-1.webp
-date: '2026-03-23T12:00:00.000Z'
+date: '2026-03-23T12:00:00.000+00:00'
 authors:
   - name: Gangda Deng and Zhaoling Chen
 ogImage:
   url: /assets/webflow/blog/evoclaw-benchmark/202603-evoblog-1.webp
 seoTitleDate: 'Mar 20, 2026'
 ---
-_This is a guest blog by [Gangda Deng](https://hydrapse.github.io/) and [Zhaoling Chen](https://czlll.github.io/), introducing EvoClaw—a benchmark built with OpenHands to move beyond isolated coding tasks and toward continuous software evolution._
+*This is a guest blog by *[*Gangda Deng*](https://hydrapse.github.io/)* and *[*Zhaoling Chen*](https://czlll.github.io/)*, introducing EvoClaw—a benchmark built with OpenHands to move beyond isolated coding tasks and toward continuous software evolution.*
 
 AI coding has entered a new phase. In early 2026, stronger LLMs and projects like [OpenClaw](https://github.com/openclaw/openclaw) started pushing agents toward long-running, iterative workflows instead of one-off conversational task solving.
 
@@ -49,7 +49,9 @@ EvoClaw covers repositories across **five programming languages**. For each repo
 The benchmark focuses on two complementary dimensions:
 
 - **Recall**: how much of the newly required functionality the agent implements
+
 - **Precision**: how much existing functionality the agent preserves without introducing regressions
+
 Those two signals are then combined into a milestone-level score using an F1-style aggregation.
 
 This framing matters because the hard part of real software evolution is often not adding new code. It is keeping the existing system from breaking while the codebase gets more complicated.
@@ -103,6 +105,9 @@ That points to where the next breakthroughs need to happen: proactive refactorin
 If you want to dig deeper, the full project is available here:
 
 - [Leaderboard](https://evo-claw.com/)
+
 - [Paper (arXiv)](https://arxiv.org/abs/2603.13428)
+
 - [Dataset](https://huggingface.co/datasets/hyd2apse/EvoClaw-data)
+
 - [Code](https://github.com/Hydrapse/EvoClaw)

@@ -1,9 +1,9 @@
 ---
-title: Use AI Agents in Your Favorite Editor through the Agent Client Protocol
+title: 'Use AI Agents in Your Favorite Editor through the Agent Client Protocol'
 slug: 20251209-use-openhands-in-your-ide-with-acp
 excerpt: 'Learn how to bring OpenHands'' powerful AI coding capabilities directly into your editor using the Agent Client Protocol. Whether you use Zed, JetBrains, neovim, Obsidian, or more you can now access OpenHands without leaving your editor.'
 coverImage: /assets/webflow/blog/agent-control-plane/cover.png
-date: '2025-12-09T12:00:00.000Z'
+date: '2025-12-09T12:00:00.000+00:00'
 authors:
   - name: Graham Neubig
 ogImage:
@@ -98,6 +98,7 @@ Follow the prompts to configure your LLM provider, API key, and other settings.
 ![](/assets/webflow/blog/20251207-use-openhands-in-your-ide-with-acp/acp-zed-add-agent.avif)
 
 - **Add the OpenHands configuration** to the `"agent_servers"` section:
+
 ```json
 {
   "agent_servers": {

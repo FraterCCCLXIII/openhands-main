@@ -3,7 +3,7 @@ title: 'Debugging Production Issues with AI Agents: Automating Datadog Error Ana
 slug: debugging-production-issues-with-ai-agents-automating-datadog-error-analysis
 excerpt: 'This blog and video demonstrates how to transform production errors into actionable insights automatically. Learn how the OpenHands SDK enables AI agents to debug Datadog errors, analyze code across multiple repositories, and post detailed findings—all through a simple GitHub Actions workflow.'
 coverImage: /assets/webflow/blog/agent-control-plane/cover.png
-date: '2025-11-17T12:00:00.000Z'
+date: '2025-11-17T12:00:00.000+00:00'
 authors:
   - name: Graham Neubig
 ogImage:
@@ -39,7 +39,9 @@ Next, we can switch over to our GitHub repository where we have set up a GitHub 
 Our GitHub Actions workflow can be triggered in two ways:
 
 1. **Search Query**: You can provide a search query (e.g., "JSONDecodeError") to find all recent errors matching that pattern. This is useful for investigating categories of errors.
-2. **Specific Error ID**: You can provide a specific Datadog error tracking ID to deep-dive into a known issue.
+
+1. **Specific Error ID**: You can provide a specific Datadog error tracking ID to deep-dive into a known issue.
+
 In this example, we can try the second one by clicking on the "Actions" button in DataDog's error tracking UI and copy the error ID to use as input to the workflow:
 
 ![](/assets/blog/20251111-datadog-debugging-automation/datadog_error_id.png)
@@ -53,10 +55,15 @@ And then we travel to the GitHub Actions tab in our repository and manually trig
 When the workflow runs, it automatically performs the following steps:
 
 1. Get detailed info from the DataDog API
-2. Create or find an existing GitHub issue to track the error
-3. Clone all relevant repositories to get full code context
-4. Run an OpenHands agent to analyze the error and investigate the code
-5. Post the findings as a comment on the GitHub issue
+
+1. Create or find an existing GitHub issue to track the error
+
+1. Clone all relevant repositories to get full code context
+
+1. Run an OpenHands agent to analyze the error and investigate the code
+
+1. Post the findings as a comment on the GitHub issue
+
 As the workflow progresses, we can see comments on the issue being added by the agent with its findings.
 In this particular case of the JSONDecodeError, the agent was able to identify the exact file and line number where the error originated, determine the root cause, and provide specific recommendations for fixing it.
 
@@ -72,9 +79,13 @@ The complete Datadog debugging workflow is available in the OpenHands SDK reposi
 To set it up in your own repository:
 
 1. Copy the workflow file to `.github/workflows/` in your repository
-2. Configure the required secrets (Datadog API keys, LLM API key)
-3. Customize the default queries and repository lists for your needs
-4. Run the workflow manually or set up scheduled runs
+
+1. Configure the required secrets (Datadog API keys, LLM API key)
+
+1. Customize the default queries and repository lists for your needs
+
+1. Run the workflow manually or set up scheduled runs
+
 The workflow is designed to work out of the box but is fully customizable. You can modify the prompts to focus on specific types of analysis, adjust the agent's tools to fit your workflow, or extend it to integrate with other services beyond GitHub and Datadog.
 And if you'd like more details about the SDK and additional examples, visit the [OpenHands SDK repository](https://github.com/OpenHands/software-agent-sdk) and check out our [docs](https://docs.openhands.dev/sdk) to learn more.
 

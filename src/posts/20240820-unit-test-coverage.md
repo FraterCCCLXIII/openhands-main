@@ -1,10 +1,10 @@
 ---
-title: Using OpenHands to Improve your Test Coverage
+title: 'Using OpenHands to Improve your Test Coverage'
 slug: using-openhands-to-improve-your-test-coverage
-excerpt: Here is a practical example of how OpenHands (Formerly OpenDevin) can improve your unit test coverage right now.
+excerpt: 'Here is a practical example of how OpenHands (Formerly OpenDevin) can improve your unit test coverage right now.'
 coverImage: /assets/blog/20240820-unit-test-coverage/unit-test-coverage.jpeg
-coverAlt: Image from blog post
-date: '2024-08-20T12:00:00.000Z'
+coverAlt: 'Image from blog post'
+date: '2024-08-20T12:00:00.000+00:00'
 authors:
   - name: Tim O'Farrell
 ogImage:
@@ -20,8 +20,11 @@ Here is a practical example of how [OpenHands](https://github.com/OpenHands/Open
 I used an old side project for this: [Json Urley](https://github.com/tofarr/json-urley). This project converts json objects to / from readable url parameters compatible with OpenAPI. The actual intent of this project is not that important for this article - I chose this project because:
 
 - It is quite small
+
 - The objective is well defined in the project README
+
 - It already uses linting and code coverage tools. The current coverage is 100% - every line of code is run by at least 1 test
+
 ## The Sanity Check
 
 I began by using some standard prompts - I am sanity checking here as I want to be sure that the project does what I expect at each step:
@@ -56,4 +59,4 @@ I removed this code snippet and the `test_conflicting_types` test case. That lef
 
 ## Conclusions
 
-My colleague Graham has written [a fantastic article describing levels of autonomy in automated systems](../20240801-levels-of-autonomy). My practical take away is that at present, we still need a human in the mix, but that tools like OpenHands can make that human more productive and catch things they missed. AI agents will not fully replace human engineers (Yet!), but any of us that aren't using AI Agents will be soon - if only to catch our potential mistakes and make us more productive.
+My colleague Graham has written [a fantastic article describing levels of autonomy in automated systems](https://openhands.dev/blog/20240801-levels-of-autonomy). My practical take away is that at present, we still need a human in the mix, but that tools like OpenHands can make that human more productive and catch things they missed. AI agents will not fully replace human engineers (Yet!), but any of us that aren't using AI Agents will be soon - if only to catch our potential mistakes and make us more productive.

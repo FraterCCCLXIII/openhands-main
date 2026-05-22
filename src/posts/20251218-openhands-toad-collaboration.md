@@ -3,7 +3,7 @@ title: 'OpenHands Partners with Toad: A Universal Terminal Interface for AI Agen
 slug: 20251218-openhands-toad-collaboration
 excerpt: 'OpenHands is sponsoring the development of Toad, a universal terminal interface for AI agents. Toad provides a polished, consistent experience for agentic coding tools, and OpenHands is one of its recommended agents.'
 coverImage: /assets/webflow/blog/694412959429f7fe869af4ce_cover-1.png
-date: '2025-12-18T12:00:00.000Z'
+date: '2025-12-18T12:00:00.000+00:00'
 authors:
   - name: OpenHands Team
 ogImage:
@@ -14,7 +14,7 @@ Terminal-based AI coding assistants have grown rapidly in popularity. Tools like
 
 But each tool comes with its own interface, its own quirks, and its own limitations. What if there was a universal interface that could work with any AI agent?
 
-That's the vision behind [Toad](#), a project by [Will McGugan](#), the creator of the popular Python libraries [Rich](#) and [Textual](#). OpenHands is proud to be a sponsor of Toad's development and one of its recommended agents.
+That's the vision behind [Toad](https://openhands.dev/), a project by [Will McGugan](https://openhands.dev/), the creator of the popular Python libraries [Rich](https://openhands.dev/) and [Textual](https://openhands.dev/). OpenHands is proud to be a sponsor of Toad's development and one of its recommended agents.
 
 # What is Toad?
 
@@ -26,11 +26,11 @@ Toad addresses several limitations common to existing terminal-based AI tools:
 
 **Scrollback that works.** You can scroll back through your conversation history and interact with previous outputs, including copying text without garbled formatting.
 
-**A unified experience.** Instead of learning different interfaces for different AI agents, Toad provides a consistent experience across all supported agents through the [Agent Client Protocol](#) (ACP).
+**A unified experience.** Instead of learning different interfaces for different AI agents, Toad provides a consistent experience across all supported agents through the [Agent Client Protocol](https://openhands.dev/) (ACP).
 
 # The Agent Client Protocol
 
-Toad uses the [Agent Client Protocol](#) (ACP) to communicate with AI agents. ACP is a standardized protocol—similar in concept to the Language Server Protocol (LSP)—that allows editors and interfaces to communicate with any compatible AI agent. We previously wrote about [how to use OpenHands in your favorite editor through ACP](#).
+Toad uses the [Agent Client Protocol](https://openhands.dev/) (ACP) to communicate with AI agents. ACP is a standardized protocol—similar in concept to the Language Server Protocol (LSP)—that allows editors and interfaces to communicate with any compatible AI agent. We previously wrote about [how to use OpenHands in your favorite editor through ACP](https://openhands.dev/).
 
 With ACP support, Toad can act as a front-end for multiple agents. Users can switch between Claude Code, Gemini, OpenHands, and other compatible agents from within the same interface.
 
@@ -41,9 +41,13 @@ OpenHands is included as a recommended agent in Toad's agent store. When users b
 The integration uses the OpenHands CLI's ACP mode. After installing OpenHands, users can launch it directly from Toad's interface:
 
 1. Open Toad's agent store
-2. Find OpenHands in the list of recommended agents
-3. Click "Install" to set up OpenHands via `uv tool install openhands --python 3.12 && openhands login`
-4. Select OpenHands and start a conversation
+
+1. Find OpenHands in the list of recommended agents
+
+1. Click "Install" to set up OpenHands via `uv tool install openhands --python 3.12 && openhands login`
+
+1. Select OpenHands and start a conversation
+
 Toad handles the ACP communication layer, so users get the same polished terminal experience whether they're using OpenHands or any other supported agent.
 
 # Why This Partnership?
@@ -56,10 +60,10 @@ By sponsoring Toad's development, OpenHands is helping to build open infrastruct
 
 # Get Started
 
-To try Toad with OpenHands, install it using [uv](#):
+To try Toad with OpenHands, install it using [uv](https://openhands.dev/):
 
 `uvx batrachian-toad‍`
 
-For more installation options and documentation, visit [batrachian.ai](#).
+For more installation options and documentation, visit [batrachian.ai](https://openhands.dev/).
 
-From there, you can browse Toad's agent store and install OpenHands with a single click. To learn more about OpenHands, visit our [documentation](#), try [OpenHands Cloud](#), or join our [Slack community](#).
+From there, you can browse Toad's agent store and install OpenHands with a single click. To learn more about OpenHands, visit our [documentation](https://openhands.dev/), try [OpenHands Cloud](https://openhands.dev/), or join our [Slack community](https://openhands.dev/).

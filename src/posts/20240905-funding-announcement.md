@@ -3,7 +3,7 @@ title: 'Press Release: All Hands Announces $5M to Scale AI Agent for Software De
 slug: press-release-all-hands-announces-5m-to-scale-ai-agent-for-software-development
 excerpt: 'All Hands AI, a company making open source AI to help developers build software, today announced that it’s raised $5 million in seed funding. Menlo led the round, with additional investors including Pillar VC, Betaworks, and Rebellion.'
 coverImage: /assets/webflow/blog/press-release-all-hands-announces-5m-to-scale-ai-agent-for-software-development/placeholder.60f9b1840c.svg
-date: '2024-09-05T12:00:00.000Z'
+date: '2024-09-05T12:00:00.000+00:00'
 authors:
   - name: Robert Brennan
 ogImage:
@@ -24,4 +24,4 @@ All Hands’ co-founders, Robert Brennan, Xingyao Wang, and Graham Neubig, PhD, 
 
 ## About All Hands AI
 
-All Hands AI's mission is to build AI tools to help developers build software faster and better, and do it in the open. The company’s flagship project, OpenHands (formerly OpenDevin), is an open-source software development agent that can autonomously solve software development tasks end-to-end. To learn more, visit [www.all-hands.dev](https://www.all-hands.dev).
+All Hands AI's mission is to build AI tools to help developers build software faster and better, and do it in the open. The company’s flagship project, OpenHands (formerly OpenDevin), is an open-source software development agent that can autonomously solve software development tasks end-to-end. To learn more, visit [www.all-hands.dev](https://www.all-hands.dev/).

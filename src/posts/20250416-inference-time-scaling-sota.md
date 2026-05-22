@@ -1,10 +1,10 @@
 ---
-title: SOTA on SWE-Bench Verified with Inference-Time Scaling and Critic Model
+title: 'SOTA on SWE-Bench Verified with Inference-Time Scaling and Critic Model'
 slug: sota-on-swe-bench-verified-with-inference-time-scaling-and-critic-model
 excerpt: 'OpenHands now tops the SWE-Bench Verified leaderboard! By training a critic model to select the best solutions from multiple agent attempts, we''ve significantly improved performance on real-world programming tasks.'
 coverImage: /assets/webflow/misc/6914ea781d6d5cf27100d131_6914ea769e3520100138ff4d_inference-time-scaling-fig.png
-coverAlt: Cover image
-date: '2025-04-17T12:00:00.000Z'
+coverAlt: 'Cover image'
+date: '2025-04-17T12:00:00.000+00:00'
 authors:
   - name: Xingyao Wang
 ogImage:
@@ -38,18 +38,22 @@ This idea of using choosing the best of multiple solutions has been tried by oth
 Rather than using this prompt-based reranking strategy, we trained a dedicated critic model, which we found provided more effective results.
 
 For the training process, we:
+
 - Roll out agent trajectories from
+
  to avoid data leakage
+
 - Implement a temporal difference (TD) learning objective to propagate trajectory-level success signals from unit test execution backward through each trajectory
+
 - Add a regression head on top of the last layer to predict reward values
 
 The TD learning objective is particularly powerful because it helps the model understand which actions contributed to the final outcome:
 
 $$
-r_t = \\gamma r_{t+1}
+r*t = \gamma r*{t+1}
 $$
 
-Where $r_t$ is the reward at time step $t$ (i.e., the t-th action produced by agent), $\\gamma$ is the discount factor. The process starts with the final reward $r_T$ which is determined by running the unit tests on the completed solution - 1 for passing all tests and 0 for failing. This terminal reward is then propagated backwards through the trajectory, with each previous step discounted by $\\gamma$. We use $\\gamma=0.99$.
+Where $r*t$ is the reward at time step $t$ (i.e., the t-th action produced by agent), $\gamma$ is the discount factor. The process starts with the final reward $r*T$ which is determined by running the unit tests on the completed solution - 1 for passing all tests and 0 for failing. This terminal reward is then propagated backwards through the trajectory, with each previous step discounted by $\gamma$. We use $\gamma=0.99$.
 
 We use [veRL](https://github.com/volcengine/verl) to finetune [Qwen 2.5 Coder Instruct 32B](https://huggingface.co/Qwen/Qwen2.5-Coder-32B-Instruct) as a critic model. During inference, we use a [modified version of vLLM](https://github.com/xingyaoww/vllm/tree/add-token-classification-support) to serve this model for evaluation (fun fact: OpenHands agent itself wrote most of the functional [code](https://github.com/vllm-project/vllm/compare/main...xingyaoww:vllm:add-token-classification-support) there).
 
@@ -70,7 +74,7 @@ We're actively working on integrating these signals more deeply into the OpenHan
 
 ## Try OpenHands Today
 
-Besides being state-of-the-art on SWE-Bench Verified, OpenHands is also a top-performing agent on [LiveSWEBench](https://liveswebench.github.io), a contamination-free benchmark for AI software engineers. Additionally, OpenHands ranks first on [Multi-SWE-Bench](https://multi-swe-bench.github.io), a variant of SWE-Bench that evaluates across 8 different programming languages.
+Besides being state-of-the-art on SWE-Bench Verified, OpenHands is also a top-performing agent on [LiveSWEBench](https://liveswebench.github.io/), a contamination-free benchmark for AI software engineers. Additionally, OpenHands ranks first on [Multi-SWE-Bench](https://multi-swe-bench.github.io/), a variant of SWE-Bench that evaluates across 8 different programming languages.
 
 Overall, we feel confident in saying that OpenHands is the best agent out there for a wide variety of tasks!
 If you'd like to try it out today you can:

@@ -1,9 +1,9 @@
 ---
-title: Refactoring COBOL to Java with AI Agents
+title: 'Refactoring COBOL to Java with AI Agents'
 slug: 20251218-cobol-to-java-refactoring
-excerpt: Learn how to use AI agents to modernize legacy COBOL codebases to Java. We walk through an iterative refinement approach that uses multiple agents to convert and verify code quality until it meets your standards.
+excerpt: 'Learn how to use AI agents to modernize legacy COBOL codebases to Java. We walk through an iterative refinement approach that uses multiple agents to convert and verify code quality until it meets your standards.'
 coverImage: /assets/webflow/blog/agent-control-plane/cover.png
-date: '2025-12-18T12:00:00.000Z'
+date: '2025-12-18T12:00:00.000+00:00'
 authors:
   - name: Graham Neubig
 ogImage:
@@ -18,11 +18,14 @@ The challenge is acute: [47% of organizations](https://softwaremodernizationserv
 
 Simply converting COBOL syntax to Java isn't enough—the converted code needs to preserve business logic, follow Java conventions, and be maintainable by modern development teams.
 
-At [OpenHands](https://openhands.dev), one effective method we've found is an iterative refinement pattern using multiple agents in a feedback loop:
+At [OpenHands](https://openhands.dev/), one effective method we've found is an iterative refinement pattern using multiple agents in a feedback loop:
 
 1. A **refactoring agent** converts COBOL files to Java
-2. A **critique agent** evaluates the quality of each conversion and scores it
-3. If the score is below your quality threshold, the process repeats with the critique feedback
+
+1. A **critique agent** evaluates the quality of each conversion and scores it
+
+1. If the score is below your quality threshold, the process repeats with the critique feedback
+
 The result is more than just code that runs, it's code that faithfully reproduces the original and meets your standards on quality and maintainability.
 
 ## How It Works
@@ -84,8 +87,10 @@ public class CustomerManagement {
 
 The full iterative refinement example is available in the OpenHands SDK. Once the pending PRs are merged, you can find it at:
 
-- **Code**: [examples/01_standalone_sdk/31_iterative_refinement.py](https://github.com/OpenHands/software-agent-sdk/blob/main/examples/01_standalone_sdk/31_iterative_refinement.py)
+- **Code**: [examples/01](https://github.com/OpenHands/software-agent-sdk/blob/main/examples/01_standalone_sdk/31_iterative_refinement.py)[*standalone*](https://github.com/OpenHands/software-agent-sdk/blob/main/examples/01_standalone_sdk/31_iterative_refinement.py)[sdk/31](https://github.com/OpenHands/software-agent-sdk/blob/main/examples/01_standalone_sdk/31_iterative_refinement.py)[*iterative*](https://github.com/OpenHands/software-agent-sdk/blob/main/examples/01_standalone_sdk/31_iterative_refinement.py)[refinement.py](https://github.com/OpenHands/software-agent-sdk/blob/main/examples/01_standalone_sdk/31_iterative_refinement.py)
+
 - **Documentation**: [Iterative Refinement Guide](https://docs.openhands.dev/sdk/guides/iterative-refinement)
+
 To run the example:
 
 ```bash
@@ -103,9 +108,13 @@ The iterative refinement example works well for small to medium codebases. But e
 For these large-scale modernization projects, we've developed the OpenHands Large Codebase SDK. This toolkit extends the iterative refinement pattern with:
 
 - **Dependency analysis tools** that identify independent components and optimal migration order
+
 - **Parallel agent orchestration** for processing multiple files simultaneously
+
 - **Progress tracking dashboards** to monitor the overall modernization status
+
 - **Semantic equivalence verification** to ensure the new Java application behaves exactly like the legacy COBOL system
+
 The Large Codebase SDK also includes specialized COBOL refactoring workflows that understand common mainframe patterns—CICS transactions, JCL jobs, VSAM file handling—and convert them to appropriate Java equivalents.
 
 ## Learn More
@@ -115,4 +124,5 @@ Legacy modernization is a significant undertaking, but AI agents are making it m
 If you're interested in modernizing your legacy systems with AI agents:
 
 - [Contact our team](https://openhands.dev/contact) to discuss your use case
+
 - [Join our Slack community](https://dub.sh/openhands) to connect with others tackling similar challenges

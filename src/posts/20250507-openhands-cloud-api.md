@@ -1,10 +1,10 @@
 ---
-title: Programmatically Access Coding Agents with the OpenHands Cloud API
+title: 'Programmatically Access Coding Agents with the OpenHands Cloud API'
 slug: programmatically-access-coding-agents-with-the-openhands-cloud-api
-excerpt: The new OpenHands Cloud API allows you to start coding tasks with a single funciton call.
+excerpt: 'The new OpenHands Cloud API allows you to start coding tasks with a single funciton call.'
 coverImage: /assets/webflow/misc/6914f57a99de854947447ae5_6914f5792f5c0a3f0edec40b_openhands-cloud-api.png
-coverAlt: Cover image
-date: '2025-05-07T12:00:00.000Z'
+coverAlt: 'Cover image'
+date: '2025-05-07T12:00:00.000+00:00'
 authors:
   - name: Graham Neubig
 ogImage:
@@ -15,7 +15,7 @@ Today, we're excited to announce the launch of the **OpenHands Cloud API** – a
 
 ## Why a Cloud API?
 
-While our [OpenHands Cloud](https://app.all-hands.dev) web interface provides an excellent experience if you want to manually boot up and interact with agents, we have gotten feedback from many teams and developers that they would like to:
+While our [OpenHands Cloud](https://app.all-hands.dev/) web interface provides an excellent experience if you want to manually boot up and interact with agents, we have gotten feedback from many teams and developers that they would like to:
 
 The OpenHands Cloud API addresses these needs by providing a simple, RESTful interface to AI agents.
 
@@ -47,7 +47,6 @@ response = requests.post(url, headers=headers, json=data)
 conversation = response.json()
 print(f"Conversation Link: https://app.all-hands.dev/conversations/{conversation['conversation_id']}")
 ```
-
 
 ### Repository Context
 
@@ -87,7 +86,6 @@ def weekly_maintenance():
         conversation = response.json()
         logger.info(f"Maintenance started for {repo.name}: {conversation['conversation_id']}")
 ```
-
 
 ### 2. Custom Developer Tools
 
@@ -130,7 +128,6 @@ app.post('/webhook/new-pr', async (req, res) => {
     res.status(200).send('Code review initiated');
 });
 ```
-
 
 ## Getting Started
 

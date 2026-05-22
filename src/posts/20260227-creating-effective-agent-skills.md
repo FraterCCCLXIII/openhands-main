@@ -1,9 +1,9 @@
 ---
-title: How to Create Effective Agent Skills
+title: 'How to Create Effective Agent Skills'
 slug: 20260227-creating-effective-agent-skills
 excerpt: 'Skills are specialised knowledge packages that extend coding agents with domain-specific expertise. Learn how to create, deploy, monitor, and improve skills to automate your repetitive workflows.'
 coverImage: /assets/webflow/blog/69a1c2205f3bc4043684b411_69a1c21db643dd0e30ac9596_blog-20260227-agent-skills-cover-v2.png
-date: '2026-02-27T12:00:00.000Z'
+date: '2026-02-27T12:00:00.000+00:00'
 authors:
   - name: Juan Michelini
   - name: Graham Neubig
@@ -92,8 +92,11 @@ Once you have done this, it's also good to test the skill a few times to see if 
 Once you've created effective skills, share them with your team. Skills can be:
 
 - Added directly to your repository (`.agents/skills/` directory), as mentioned above.
+
 - Shared via GitHub (other teams can use `/add-skill https://github.com/yourorg/repo`)
+
 - Published to the [OpenHands Extensions registry](https://github.com/OpenHands/extensions)
+
 When your whole team uses the same skills, you get consistency across code reviews, implementations, and standards enforcement.
 
 One of our other favorite ways to deploy skills in repetitive workflows is through automations in your favorite software, such as **GitHub CI**. We have examples of automations for several skills in the [plugins section](https://github.com/OpenHands/extensions/tree/main/plugins) of the OpenHands Extensions repo (plugins are a set of multiple skills together with other conveniences like GitHub workflows). In particular, one of our favorite skills to be used in this way is our [pull request review pipeline](https://github.com/OpenHands/extensions/tree/main/plugins/pr-review), which we apply every time a pull request becomes "ready for review" on one of our repos.
@@ -105,9 +108,13 @@ One of our other favorite ways to deploy skills in repetitive workflows is throu
 Now comes the harder part. You have created a skill that codifies one of your workflows, and started using it. Now how do you know whether that skill is working properly in production? To ensure this, we use a four-part process of:
 
 1. **Logging** the agent's behavior on each skill usage
-2. **Evaluating** the agent's performance for each skill usage
-3. **Dashboarding** the evaluation scores
-4. **Aggregating** this feedback and suggesting improvements to the skill
+
+1. **Evaluating** the agent's performance for each skill usage
+
+1. **Dashboarding** the evaluation scores
+
+1. **Aggregating** this feedback and suggesting improvements to the skill
+
 Let's take an example of how we do this in production with our PR review skill.
 
 ### Logging Agent Behavior
@@ -162,7 +169,7 @@ and what things the agent could've commented about but missed.
 
 ### Dashboarding Evaluation Scores
 
-Once you have the data in your system, you can start dashboarding. We use the [laminar.sh](http://laminar.sh) dashboard functionality, and create a SQL query that pulls out the AI suggestions and AI suggestions reflected over time, to calculate the accuracy of the AI comments. Here is our graph of PR review accuracy over time—it's going up and to the right, which is a good sign:
+Once you have the data in your system, you can start dashboarding. We use the [laminar.sh](http://laminar.sh/) dashboard functionality, and create a SQL query that pulls out the AI suggestions and AI suggestions reflected over time, to calculate the accuracy of the AI comments. Here is our graph of PR review accuracy over time—it's going up and to the right, which is a good sign:
 
 ![Laminar dashboard showing PR review accuracy over time](/assets/webflow/blog/20260227-creating-effective-agent-skills/blog-agent-skills-laminar-accuracy.png)
 
@@ -173,7 +180,9 @@ This also opens up interesting possibilities: you can monitor how well skills ar
 One of the most powerful tools for skill improvement is to use language models themselves to **aggregate feedback to improve your skills**. We have an example script that pulls:
 
 1. The current version of the prompt
-2. All of the free-text analyses of agent behavior that we have aggregated over past runs
+
+1. All of the free-text analyses of agent behavior that we have aggregated over past runs
+
 We can then throw all of these into a reasoning model with long context (we used Gemini-3-Pro, but any one with a long context window and strong reasoning should do) and ask it for suggestions. Here are an example of some of the issues it suggested for our review bot, along with examples:
 
 ```
@@ -247,8 +256,11 @@ And if you're a development team that is serious about getting the workflows wor
 ### Resources
 
 - [**Skills Documentation**](https://docs.openhands.dev/overview/skills/creating) - Comprehensive guide with detailed best practices
+
 - [**Official OpenHands Extensions Registry**](https://github.com/OpenHands/extensions) - Browse community-created skills for inspiration
+
 - [**Plugins Documentation**](https://docs.openhands.dev/overview/plugins) - When you're ready to bundle multiple components
+
 ### Acknowledgements
 
-We'd like to thank Robert Kim and the [laminar.sh](http://laminar.sh) team for their support in setting up monitoring in Laminar for this blog!
+We'd like to thank Robert Kim and the [laminar.sh](http://laminar.sh/) team for their support in setting up monitoring in Laminar for this blog!

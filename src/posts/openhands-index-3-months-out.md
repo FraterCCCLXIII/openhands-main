@@ -3,7 +3,7 @@ title: 'The OpenHands Index: 3 Months Out'
 slug: openhands-index-3-months-out
 excerpt: 'Three months after launch, the OpenHands Index adds new model results from frontier labs, startups, and new entrants, with updated views of accuracy, cost, and runtime across software engineering tasks.'
 coverImage: /assets/webflow/blog/openhands-index/20260511-index-01-costper.png
-date: '2026-05-11T12:00:00.000Z'
+date: '2026-05-11T12:00:00.000+00:00'
 authors:
   - name: Juan Michelini
   - name: Graham Neubig
@@ -15,7 +15,7 @@ The [OpenHands Index](https://index.openhands.dev/) is a leaderboard that evalua
 
 We released the [OpenHands Index](https://openhands.dev/blog/openhands-index) three months ago, and a lot has happened since then!
 
-The most important thing is that we have added a bunch of new models across the board: we have representatives from both the big frontier labs like Anthropic, OpenAI, and Google DeepMind, as well as startups like DeepSeek, [z.ai](http://z.ai), and Minimax, and new entrants such as NVIDIA. Let’s look at the results!
+The most important thing is that we have added a bunch of new models across the board: we have representatives from both the big frontier labs like Anthropic, OpenAI, and Google DeepMind, as well as startups like DeepSeek, [z.ai](http://z.ai/), and Minimax, and new entrants such as NVIDIA. Let’s look at the results!
 
 First, cost/performance, our main graph. We can see that overall Opus 4.7 takes the top spot, although GPT-5.5 is very competitive (it’s the OpenAI logo right next to Opus). GPT-5.4 does very well at a bit of a cheaper price point, and Gemini 3.1 Pro does well at even cheaper. Our least expensive contender DeepSeek-3.2-Thinker is very solid at 1/10 the price of Claude.
 

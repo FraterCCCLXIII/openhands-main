@@ -3,8 +3,8 @@ title: 'OpenHands Meets Slack: AI-Powered Development in Your Workspace'
 slug: openhands-meets-slack-ai-powered-development-in-your-workspace
 excerpt: 'Bring the power of OpenHands AI development agents directly into your Slack workspace. Start conversations, get code assistance, and collaborate with AI seamlessly within your team''s communication hub.'
 coverImage: /assets/webflow/blog/agent-control-plane/cover.png
-coverAlt: Image from blog post
-date: '2025-06-24T12:00:00.000Z'
+coverAlt: 'Image from blog post'
+date: '2025-06-24T12:00:00.000+00:00'
 authors:
   - name: Rohit Malhotra
   - name: Tim O'Farrell
@@ -36,11 +36,11 @@ Today we're excited to announce the beta release of OpenHands Slack integration,
 
 Setting up OpenHands in your Slack workspace requires two simple steps:
 
-**For Slack Admins**: [Install the OpenHands Slack App](https://slack.com/oauth/v2/authorize?client_id=7477886716822.8729519890534&scope=app_mentions:read,chat:write,users:read,channels:history,groups:history,mpim:history,im:history&user_scope=channels:history,groups:history,im:history,mpim:history) to your workspace and review the permissions.
+**For Slack Admins**: [Install the OpenHands Slack App](https://slack.com/oauth/v2/authorize?client_id=7477886716822.8729519890534&scope=app_mentions%3Aread%2Cchat%3Awrite%2Cusers%3Aread%2Cchannels%3Ahistory%2Cgroups%3Ahistory%2Cmpim%3Ahistory%2Cim%3Ahistory&user_scope=channels%3Ahistory%2Cgroups%3Ahistory%2Cim%3Ahistory%2Cmpim%3Ahistory) to your workspace and review the permissions.
 
-**For Team Members**: Sign in to the [OpenHands Cloud](https://app.all-hands.dev) then visit your [OpenHands Cloud integrations settings](https://app.all-hands.dev/settings/integrations), click "Install Slack App," and authorize the integration.
+**For Team Members**: Sign in to the [OpenHands Cloud](https://app.all-hands.dev/) then visit your [OpenHands Cloud integrations settings](https://app.all-hands.dev/settings/integrations), click "Install Slack App," and authorize the integration.
 
-_Note: Depending on your workspace settings, you may need admin approval for the authorization step._
+*Note: Depending on your workspace settings, you may need admin approval for the authorization step.*
 
 ## Some Starting Prompts
 

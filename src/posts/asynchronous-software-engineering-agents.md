@@ -1,22 +1,22 @@
 ---
-title: Effective Strategies for Asynchronous Software Engineering Agents
+title: 'Effective Strategies for Asynchronous Software Engineering Agents'
 slug: asynchronous-software-engineering-agents
 excerpt: 'CAID shows how multi-agent coding systems improve long-horizon software tasks by using the same primitives human teams already rely on: git worktrees, branches, merges, and test-based verification.'
 coverImage: /assets/webflow/blog/asynchronous-software-engineering-agents/caid-workflow.png
-date: '2026-04-27T12:00:00.000Z'
+date: '2026-04-27T12:00:00.000+00:00'
 authors:
   - name: Jiayi Geng
 ogImage:
   url: /assets/webflow/blog/asynchronous-software-engineering-agents/caid-workflow.png
 seoTitleDate: 'Apr 27, 2026'
 ---
-_This guest blog by [Jiayi Geng](https://jiayigeng.github.io/) of Carnegie Mellon University introduces CAID, a multi-agent system built on OpenHands that uses git worktrees, branches, merges, and tests to coordinate long-horizon software engineering tasks._
+*This guest blog by *[*Jiayi Geng*](https://jiayigeng.github.io/)* of Carnegie Mellon University introduces CAID, a multi-agent system built on OpenHands that uses git worktrees, branches, merges, and tests to coordinate long-horizon software engineering tasks.*
 
 AI coding agents have gotten remarkably good at isolated tasks like [resolving GitHub issues](https://www.swebench.com/SWE-bench/). But the tasks we actually want agents to do are getting larger. For example, building a Python library from scratch ([Commit0](https://arxiv.org/abs/2412.01769)) or reproducing the results of a research paper ([PaperBench](https://arxiv.org/pdf/2504.01848)) involves dozens of interdependent subtasks that unfold over hours. A single agent working on these tasks struggles both with accuracy and with wall-clock time.
 
 A natural solution is to have multiple agents work in parallel on different parts of the task. But multi-agent collaboration on a shared codebase has proven surprisingly fragile. The central difficulty is integration. Imagine that two agents each produce correct code independently, but when their changes are combined, the result breaks. One agent renames a function while another writes new code calling the old name. Both complete their work successfully in isolation. The merged result fails to run. These conflicts surface only at integration time, and the fix is rarely a one-line patch.
 
-In our paper [Effective Strategies for Asynchronous Software Engineering Agents](https://arxiv.org/abs/2603.21489), we introduce CAID, a multi-agent system built on top of _OpenHands_ that tackles this problem by grounding agent coordination in the same primitives human engineering teams already use: git worktrees, branches, merges, and test-based verification.
+In our paper [Effective Strategies for Asynchronous Software Engineering Agents](https://arxiv.org/abs/2603.21489), we introduce CAID, a multi-agent system built on top of *OpenHands* that tackles this problem by grounding agent coordination in the same primitives human engineering teams already use: git worktrees, branches, merges, and test-based verification.
 
 ## Human developers solved this decades ago
 
@@ -73,11 +73,17 @@ Our work suggests a practical shift in how to deploy coding agents on complex ta
 If you want to dig deeper, the project is available here:
 
 - [Paper (arXiv)](https://arxiv.org/abs/2603.21489)
+
 - [Code](https://github.com/JiayiGeng/CAID)
+
 ## References
 
-1. J. Geng and G. Neubig. 2026. _Effective Strategies for Asynchronous Software Engineering Agents_. arXiv preprint arXiv:2603.21489.
-2. C. E. Jimenez, J. Yang, A. Wettig, S. Yao, K. Li, H. Chen, K. Narasimhan, and O. Press. 2023. _SWE-bench: Can language models resolve real-world GitHub issues?_ arXiv preprint arXiv:2310.06770.
-3. X. Wang, B. Li, Y. Song, F. F. Xu, X. Tang, M. Zhuge, J. Pan, Y. Song, B. Li, J. Singh, et al. 2024. _OpenHands: An open platform for AI software developers as generalist agents_. arXiv preprint arXiv:2407.16741.
-4. W. Zhao, N. Jiang, C. Lee, J. T. Chiu, C. Cardie, M. Gallé, and A. M. Rush. 2024. _Commit0: Library generation from scratch_. arXiv preprint arXiv:2412.01769.
-5. G. Starace, O. Jaffe, D. Sherburn, J. Aung, J. S. Chan, L. Maksin, R. Dias, E. Mays, B. Kinsella, W. Thompson, et al. 2025. _PaperBench: Evaluating AI's ability to replicate AI research_. arXiv preprint arXiv:2504.01848.
+1. J. Geng and G. Neubig. 2026. *Effective Strategies for Asynchronous Software Engineering Agents*. arXiv preprint arXiv:2603.21489.
+
+1. C. E. Jimenez, J. Yang, A. Wettig, S. Yao, K. Li, H. Chen, K. Narasimhan, and O. Press. 2023. *SWE-bench: Can language models resolve real-world GitHub issues?* arXiv preprint arXiv:2310.06770.
+
+1. X. Wang, B. Li, Y. Song, F. F. Xu, X. Tang, M. Zhuge, J. Pan, Y. Song, B. Li, J. Singh, et al. 2024. *OpenHands: An open platform for AI software developers as generalist agents*. arXiv preprint arXiv:2407.16741.
+
+1. W. Zhao, N. Jiang, C. Lee, J. T. Chiu, C. Cardie, M. Gallé, and A. M. Rush. 2024. *Commit0: Library generation from scratch*. arXiv preprint arXiv:2412.01769.
+
+1. G. Starace, O. Jaffe, D. Sherburn, J. Aung, J. S. Chan, L. Maksin, R. Dias, E. Mays, B. Kinsella, W. Thompson, et al. 2025. *PaperBench: Evaluating AI's ability to replicate AI research*. arXiv preprint arXiv:2504.01848.

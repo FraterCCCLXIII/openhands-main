@@ -1,9 +1,8 @@
 ---
-title: OpenHands Product Update - March 2026
+title: 'OpenHands Product Update - March 2026'
 slug: openhands-product-update---march-2026
-excerpt: ''
 coverImage: /assets/webflow/misc/69a8470f9d00e34ff3c8d8df_openhands_product_update_v3.png
-date: '2026-03-06T12:00:00.000Z'
+date: '2026-03-06T12:00:00.000+00:00'
 authors:
   - name: Joe Pelletier
 ogImage:

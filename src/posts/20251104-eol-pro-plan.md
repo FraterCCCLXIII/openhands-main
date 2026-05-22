@@ -1,10 +1,10 @@
 ---
-title: Bring your own LLM is now available to all OpenHands Cloud users
+title: 'Bring your own LLM is now available to all OpenHands Cloud users'
 slug: bring-your-own-llm-is-now-available-to-all-openhands-cloud-users
 excerpt: 'We’re excited to announce the expansion of our Bring your own Key (BYOK) support, making this available to all new and existing users of OpenHands Cloud'
 coverImage: /assets/webflow/misc/6914f56a0fc76f5a160eb9d6_6914f56932cafa0ea56f4cb2_eol-pro-plan-graphic.png
-coverAlt: Cover image
-date: '2025-11-04T12:00:00.000Z'
+coverAlt: 'Cover image'
+date: '2025-11-04T12:00:00.000+00:00'
 authors:
   - name: Joe Pelletier
 ogImage:
@@ -20,5 +20,7 @@ The new BYOK tier is free and limited to 1 user, plus some usage restrictions on
 To get started, [sign in to OpenHands Cloud](https://app.all-hands.dev/) and follow these steps:
 
 1. Click your avatar in the lower-left corner of the screen
-2. Select Language Model (LLM)
-3. Select the OpenHands provider, or another provider of your choice
+
+1. Select Language Model (LLM)
+
+1. Select the OpenHands provider, or another provider of your choice

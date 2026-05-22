@@ -1,9 +1,9 @@
 ---
-title: We’ve Just Raised $18.8M to Build the Open Standard for Autonomous Software Development
+title: 'We’ve Just Raised $18.8M to Build the Open Standard for Autonomous Software Development'
 slug: weve-just-raised-18-8m-to-build-the-open-standard-for-autonomous-software-development
 excerpt: 'OpenHands raised $18.8M in a Series A led by Madrona to build the open, secure, and model-agnostic platform for cloud coding agents. Plus, we''re collaborating with AMD to make local agents even better. This funding helps us stick to our mission: powerful coding agents for every developer, for free, forever.'
 coverImage: /assets/webflow/blog/weve-just-raised-18-8m-to-build-the-open-standard-for-autonomous-software-development/LinkedIn.png
-date: '2025-11-18T12:00:00.000Z'
+date: '2025-11-18T12:00:00.000+00:00'
 authors:
   - name: Robert Brennan
 ogImage:
@@ -47,8 +47,11 @@ The response from the developer community has been incredible. We've hit over 65
 But the real validation comes from what early enterprise adopters are achieving:
 
 - **50% reduction in code maintenance backlogs** by automating dependency upgrades, lint fixes, and vulnerability remediation
+
 - **Vulnerability resolution times cut from days to minutes** through automated security sweeps
+
 - **Parallel code refactoring across hundreds of repos** that would have taken teams weeks to coordinate manually
+
 The software engineering community is increasingly aligning behind OpenHands as the open source standard for doing agentic software development at scale.
 
 ## Our collaboration with AMD
@@ -61,9 +64,9 @@ This partnership exemplifies what we're trying to build: an ecosystem where deve
 
 ## How teams are using OpenHands today
 
-Most AI-driven developer tooling focuses on the _inner loop_ of development: it acts as an assistant as the engineer tweaks the code, checks the changes, and iterates.
+Most AI-driven developer tooling focuses on the *inner loop* of development: it acts as an assistant as the engineer tweaks the code, checks the changes, and iterates.
 
-But OpenHands shines in the _outer loop_: it can take on whole tasks, and execute them in a sandboxed environment, automating away the entire inner loop for certain categories of tasks, like:
+But OpenHands shines in the *outer loop*: it can take on whole tasks, and execute them in a sandboxed environment, automating away the entire inner loop for certain categories of tasks, like:
 
 The most common use cases we're seeing fall into a few categories:
 
@@ -84,8 +87,11 @@ As Soma Somasegar from Madrona explains: "OpenHands represents a major shift in 
 The funding allows us to:
 
 - **Keep pushing the research forward** - About a third of our engineering team works on advancing the state-of-the-art in coding agents, and all that research goes directly into the open source project
+
 - **Scale our infrastructure** - Building a platform that can handle thousands of concurrent agents requires serious engineering investment
+
 - **Support our growing community** - As more developers adopt OpenHands, we need better tooling, documentation, and support systems
+
 ## Staying true to open source
 
 We've written before about [navigating the challenges of commercial open source](https://openhands.dev/blog/walking-the-line-with-commercial-open-source), and this funding reinforces our commitment to transparency.
@@ -100,7 +106,7 @@ This approach means we can keep building a public good while creating sustainabl
 
 We're just getting started. The future we're working toward is one where every software team has access to powerful AI agents that augment human creativity rather than replace it.
 
-If you're curious about what we're building, check out [OpenHands on GitHub](https://github.com/OpenHands/OpenHands). You can run it locally in minutes, or try [OpenHands Cloud](https://cloud.openhands.dev) for free.
+If you're curious about what we're building, check out [OpenHands on GitHub](https://github.com/OpenHands/OpenHands). You can run it locally in minutes, or try [OpenHands Cloud](https://cloud.openhands.dev/) for free.
 
 And if you want to chat about how OpenHands might fit into your team's workflow. Join our [Slack community](https://dub.sh/openhands), we'd love to hear from you.
 
@@ -108,6 +114,6 @@ The future of software development is being written right now. We're making sure
 
 ‍
 
-_Want to stay updated on what we're building? Subscribe to our [blog](https://openhands.dev/blog) for insights and updates from the OpenHands team._
+*Want to stay updated on what we're building? Subscribe to our *[*blog*](https://openhands.dev/blog)* for insights and updates from the OpenHands team.*
 
 ‍

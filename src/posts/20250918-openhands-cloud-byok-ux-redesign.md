@@ -3,8 +3,8 @@ title: 'All New OpenHands Cloud: More Model Choice, Lower Prices, Slicker Design
 slug: all-new-openhands-cloud-more-model-choice-lower-prices-slicker-design
 excerpt: 'We''re introducing a new subscription model with bring-your-own-key support, expanded model choices at API pricing, and a completely redesigned GUI experience that makes OpenHands more accessible and cost-effective than ever.'
 coverImage: /assets/webflow/blog/20250814-ai-agent-security/image4.png
-coverAlt: Cover image
-date: '2025-09-18T12:00:00.000Z'
+coverAlt: 'Cover image'
+date: '2025-09-18T12:00:00.000+00:00'
 authors:
   - name: Graham Neubig
   - name: Joe Pelletier

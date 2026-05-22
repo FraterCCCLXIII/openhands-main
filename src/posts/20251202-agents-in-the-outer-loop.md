@@ -1,18 +1,18 @@
 ---
-title: Agents in the Outer Loop
+title: 'Agents in the Outer Loop'
 slug: 20251202-agents-in-the-outer-loop
-excerpt: Most developers using AI are accelerating the inner loop of development. But there's an emerging paradigm of cloud-based agents that shine in the outer loop. Learn how the most effective development teams are using both.
+excerpt: 'Most developers using AI are accelerating the inner loop of development. But there''s an emerging paradigm of cloud-based agents that shine in the outer loop. Learn how the most effective development teams are using both.'
 coverImage: /assets/webflow/blog/20251202-agents-in-the-outer-loop/agentsintheloop-large.png
-date: '2025-12-02T12:00:00.000Z'
+date: '2025-12-02T12:00:00.000+00:00'
 authors:
   - name: Robert Brennan
 ogImage:
   url: /assets/webflow/blog/20251202-agents-in-the-outer-loop/agentsintheloop-large.png
 seoTitleDate: 'Dec 02, 2025'
 ---
-Most developers using AI are using it to accelerate the _inner loop_ of development. They're using an AI-powered IDE or a CLI agent, running locally on their laptop. As they make progress, tweaking the code and checking the results, the AI helps them go a bit faster.
+Most developers using AI are using it to accelerate the *inner loop* of development. They're using an AI-powered IDE or a CLI agent, running locally on their laptop. As they make progress, tweaking the code and checking the results, the AI helps them go a bit faster.
 
-On the other hand, there's an emerging paradigm of cloud-based agents that shine in the _outer loop_. Devs invoke agents from Slack, Jira, and GitHub to take on entire tasks, without ever having to open their IDE.
+On the other hand, there's an emerging paradigm of cloud-based agents that shine in the *outer loop*. Devs invoke agents from Slack, Jira, and GitHub to take on entire tasks, without ever having to open their IDE.
 
 In this blog I'll describe a bit about this emerging paradigm, and argue that the most effective developers and development teams will be using both.
 
@@ -42,9 +42,9 @@ The gains here are incremental though. The developer is still actively focused o
 
 Increasingly, devs are starting to figure out how to run agents in the outer loop.
 
-In the outer loop, agents run on _their own_ infrastructure, instead of on your laptop. They might run inside of a GitHub Action, a Kubernetes pod, or on a service like [OpenHands Cloud](https://app.all-hands.dev/). They get their own filesystem, their own terminal, their own web browser, and their own copy of your codebase.
+In the outer loop, agents run on *their own* infrastructure, instead of on your laptop. They might run inside of a GitHub Action, a Kubernetes pod, or on a service like [OpenHands Cloud](https://app.all-hands.dev/). They get their own filesystem, their own terminal, their own web browser, and their own copy of your codebase.
 
-There are two major implications here: _safety_ and _scalability._
+There are two major implications here: *safety* and *scalability.*
 
 ## Safety
 
@@ -60,13 +60,13 @@ Running in the cloud also offers far more scalability than running local agents.
 
 Sure, you can run a few different agents at the same time locally. But with each agent, you increase the chances that they'll try to edit the same file, or run commands that compete for resources. And of course, you'll also need to watch them and approve their actions. Most developers hit a limit at around 2-3 local agents.
 
-In the cloud, we can scale to dozens—even thousands!—of agents without breaking a sweat. Each one gets its own workstation, its own memory and CPU. Things might get _expensive_, but in the cloud there's nothing stopping us from spinning up another VM or container for our agent to work in.
+In the cloud, we can scale to dozens—even thousands!—of agents without breaking a sweat. Each one gets its own workstation, its own memory and CPU. Things might get *expensive*, but in the cloud there's nothing stopping us from spinning up another VM or container for our agent to work in.
 
-The big question is: _what can we do with 1000s of agents?_
+The big question is: *what can we do with 1000s of agents?*
 
 # Tech Debt and Toil
 
-Most developers want to spend their time _shipping features_. Sure, some of us really love a good refactor, or tuning the logs, or updating old dependencies. But what gets us excited (and promoted) is shipping new value to end users.
+Most developers want to spend their time *shipping features*. Sure, some of us really love a good refactor, or tuning the logs, or updating old dependencies. But what gets us excited (and promoted) is shipping new value to end users.
 
 But every large codebase sits on a mountain of tech debt. Dependencies rot and go out of support. Decisions made last year no longer make sense. New open source vulnerabilities get announced, leaving you exposed to attack. Some teams spend a majority of their time just keeping the lights on.
 
@@ -80,9 +80,9 @@ The process of remediating CVEs is a pain. You need to figure out where the vuln
 
 But it's a very rote process, so agents are a great fit for CVE resolution!
 
-Now, you _could_ do this with inner loop agents. You could assign each CVE to a developer, and have that developer work with an agent locally to fix the CVE. That'd be closest to how we're used to working.
+Now, you *could* do this with inner loop agents. You could assign each CVE to a developer, and have that developer work with an agent locally to fix the CVE. That'd be closest to how we're used to working.
 
-But what if you kicked off an outer loop agent _immediately_ after the CVE was announced? The agent can run completely on its own, researching, resolving, and verifying a fix. And it can automatically open up a pull request for the team to review, without needing a human supervisor.
+But what if you kicked off an outer loop agent *immediately* after the CVE was announced? The agent can run completely on its own, researching, resolving, and verifying a fix. And it can automatically open up a pull request for the team to review, without needing a human supervisor.
 
 This is much closer to how pre-AI automation like Dependabot work. PRs magically appear, and the devs just have to spot-check and merge it.
 
@@ -106,9 +106,9 @@ We have more details on this one in [a blog](https://openhands.dev/blog/debuggin
 
 We're finding that there's a place for agents in both the inner loop and the outer loop.
 
-Inner loop agents are great for _ad hoc_ work: if you've got a new feature to implement, or a tricky bug you're trying to uncover, you'll probably work best inside an IDE—but having an agent there with you to take on smaller bits of the task can be a great lift.
+Inner loop agents are great for *ad hoc* work: if you've got a new feature to implement, or a tricky bug you're trying to uncover, you'll probably work best inside an IDE—but having an agent there with you to take on smaller bits of the task can be a great lift.
 
-Outer loop agents are great for _repeatable_ work: if you're toiling away at the same annoying chores, you can probably craft a prompt that will drive an agent through the same process. This is a great way to keep your maintenance backlog at bay.
+Outer loop agents are great for *repeatable* work: if you're toiling away at the same annoying chores, you can probably craft a prompt that will drive an agent through the same process. This is a great way to keep your maintenance backlog at bay.
 
 You might want to use the same solution for both (OpenHands provides both [a CLI for the inner loop](https://docs.openhands.dev/openhands/usage/run-openhands/cli-mode), and [an SDK for the outer loop](https://github.com/OpenHands/software-agent-sdk)). But more likely, you'll want to let each dev on your team choose their own inner loop tooling, and standardize on a single solution for the outer loop.
 

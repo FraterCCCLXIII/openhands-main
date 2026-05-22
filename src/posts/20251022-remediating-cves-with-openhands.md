@@ -1,10 +1,10 @@
 ---
-title: Remediating CVEs at Scale with Agents
+title: 'Remediating CVEs at Scale with Agents'
 slug: remediating-cves-at-scale-with-agents
 excerpt: 'While developers adapt to terminal-based agents, forward-thinking organizations are automating CVE remediation at scale. Learn how OpenHands enables teams to tackle millions of vulnerabilities with AI-powered agents, custom dashboards, and cloud-based automation.'
 coverImage: /assets/webflow/blog/agent-control-plane/cover.png
-coverAlt: Image from blog post
-date: '2025-10-22T12:00:00.000Z'
+coverAlt: 'Image from blog post'
+date: '2025-10-22T12:00:00.000+00:00'
 authors:
   - name: Robert Brennan
 ogImage:
@@ -21,7 +21,7 @@ Software is rarely (never?) bug-free. Novel exploits are found every day—and m
 
 `cURL` is a good example here—despite being a reasonably small (180 kLOC), self-contained (few dependencies), and stable (not many new features), [dozens of new vulnerabilities are reported each year](https://app.opencve.io/cve/?vendor=curl)! And that's just one tiny corner of the open source ecosystem driving every production workload in the world.
 
-Mature organizations track publicly-reported vulnerabilities, via aggregators like [NIST's National Vulnerability Database](https://nvd.nist.gov). They can cross-reference these databases with their code using Docker image scanners like [Trivy](https://trivy.dev/latest/), or through static analysis tools like [Dependabot](https://docs.github.com/en/code-security/getting-started/dependabot-quickstart-guide). Every time a new CVE comes out, they jump on it and get it solved, ensuring their codebase stays completely free of known vulnerabilities.
+Mature organizations track publicly-reported vulnerabilities, via aggregators like [NIST's National Vulnerability Database](https://nvd.nist.gov/). They can cross-reference these databases with their code using Docker image scanners like [Trivy](https://trivy.dev/latest/), or through static analysis tools like [Dependabot](https://docs.github.com/en/code-security/getting-started/dependabot-quickstart-guide). Every time a new CVE comes out, they jump on it and get it solved, ensuring their codebase stays completely free of known vulnerabilities.
 
 Just kidding! Keeping your codebase 100% CVE-free is a Herculean task—arguably an impossible task. Every organization has a heaping backlog of unsolved CVEs.
 
@@ -89,4 +89,4 @@ Over the next year, we expect the bulk of coding agents will be running in the c
 
 We're already seeing organizations use OpenHands like this—leveling mountains of tech debt with only a few highly-skilled agent engineers. It's incredible being at the forefront of agent-driven development, and we're excited to see how our users put OpenHands to work next!
 
-_Interested in tearing down your tech debt? OpenHands provides a [Cloud Agent SDK](https://github.com/OpenHands/agent-sdk/), a Refactor Kit, and other purpose-built tools for code maintenance at scale. Check out [our GitHub repos](http://github.com/OpenHands/) or [get in touch with our research team](mailto:contact@openhands.dev)!_
+*Interested in tearing down your tech debt? OpenHands provides a *[*Cloud Agent SDK*](https://github.com/OpenHands/agent-sdk/)*, a Refactor Kit, and other purpose-built tools for code maintenance at scale. Check out *[*our GitHub repos*](http://github.com/OpenHands/)* or *[*get in touch with our research team*](mailto:contact@openhands.dev)*!*

@@ -3,8 +3,8 @@ title: 'The OpenHands CLI: AI-Powered Development in Your Terminal'
 slug: the-openhands-cli-ai-powered-development-in-your-terminal
 excerpt: 'Experience the full power of OpenHands development agents directly from your command line. No Docker required, just install and start coding with AI assistance in seconds.'
 coverImage: /assets/webflow/blog/agent-control-plane/cover.png
-coverAlt: Image from blog post
-date: '2025-06-17T12:00:00.000Z'
+coverAlt: 'Image from blog post'
+date: '2025-06-17T12:00:00.000+00:00'
 authors:
   - name: Graham Neubig
 ogImage:
@@ -20,13 +20,11 @@ pip install openhands-ai
 openhands
 ```
 
-
 Or if you prefer not to manage your own Python environment, you can use [uvx](https://docs.astral.sh/uv/getting-started/installation/):
 
 ```bash
 uvx --python 3.12 --from openhands-ai openhands
 ```
-
 
 That's it, no need for Docker, no need for a web interface, and you can immediately access OpenHands' top-performing coding agents.
 And unlike other options, it's fully open source, with no model lock-in.

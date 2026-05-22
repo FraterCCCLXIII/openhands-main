@@ -3,7 +3,7 @@ title: 'MiniMax M2.5: Open Weights Models Catch Up to Claude Sonnet'
 slug: minimax-m2-5-open-weights-models-catch-up-to-claude
 excerpt: 'With the new release of MiniMax M2.5, there is now an open model that is basically up to the quality of Claude Sonnet. We got early access to test it.'
 coverImage: /assets/webflow/blog/minimax-m2-5-open-weights-models-catch-up-to-claude/Screenshot_2026-02-12_at_1.56.30_AM.png
-date: '2026-02-12T12:00:00.000Z'
+date: '2026-02-12T12:00:00.000+00:00'
 authors:
   - name: OpenHands Team
 ogImage:
@@ -47,8 +47,11 @@ In addition, looking at the model size, M2.5 is 230B parameters, with 10B active
 Of course, we can’t rely solely on benchmarks to see how well a model is doing, it is equally important to actually try out the model ourselves! So we put it through its paces. Typically open models have struggled with **generalization** — they were quite good at one-shot solving of bugs on repos, but less good at doing more complex things like interacting with APIs, etc. Here are some things we tried out:
 
 - Checking the review on a pull request using the github API, fixing the review comments, and resolving them through the github API.
+
 - Filtering through all the pull requests open on a repo, and assigning them to the appropriate maintainer to review using git blame.
+
 - Finding out why a frontend app was not displaying properly and fixing the issues.
+
 and several others. Overall, the model proved quite capable, and all of the tasks we tried it managed to finish, although sometimes with a little back-and-forth. Very impressive!
 
 That being said, we there were some issues. For instance, the model pushed to the wrong branch once, and also in one of our benchmarks it was instructed to add its answer between the solution tags “”, but occasionally it forgot, leading to a lower score on this information gathering task. So while a very strong model, there is still room to improve.
@@ -59,7 +62,7 @@ As part of our early access to M2.5 for testing purposes, MiniMax has extended t
 
 To access M2.5, travel to the [OpenHands Cloud LLM Settings](https://app.all-hands.dev/settings), select OpenHands as the provider, then `minimax-m2.5` as your model.
 
-![](/assets/webflow/blog/minimax-m2-5-open-weights-models-catch-up-to-claude/Screenshot 2026-02-12 at 9.46.50 AM.png)
+!
 
 You’ll be able to code with this very capable model entirely for free through the [GUI](https://docs.openhands.dev/openhands/usage/cloud/cloud-ui), [CLI](https://docs.openhands.dev/openhands/usage/cli/installation), [SDK](https://docs.openhands.dev/sdk), or integrations into [GitHub](https://docs.openhands.dev/openhands/usage/cloud/github-installation) and [Slack](https://docs.openhands.dev/openhands/usage/cloud/slack-installation).
 

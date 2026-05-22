@@ -1,13 +1,12 @@
 ---
-title: What is a Coding Agent? Comparing Agents to AI Code Assistants
+title: 'What is a Coding Agent? Comparing Agents to AI Code Assistants'
 slug: agentic-coding-vs-code-completion
-excerpt: ''
-coverImage: '/assets/webflow/blog/agentic-coding-vs-code-completion/Agents vs Assistants.png'
-date: '2026-01-21T12:00:00.000Z'
+coverImage: /assets/webflow/blog/agentic-coding-vs-code-completion/Agents vs Assistants.png
+date: '2026-01-21T12:00:00.000+00:00'
 authors:
   - name: Mathew Pregasen
 ogImage:
-  url: '/assets/webflow/blog/agentic-coding-vs-code-completion/Agents vs Assistants.png'
+  url: /assets/webflow/blog/agentic-coding-vs-code-completion/Agents vs Assistants.png
 seoTitleDate: 'Jan 21, 2026'
 ---
 Traditional code completion tools focus on small-scale productivity, accelerating syntax recall and micro-refactors within a single file. However, as LLMs improve and systems scale, the primary developer bottleneck shifts from writing lines of code to coordinating complex tasks across multiple files and testing environments.
@@ -32,7 +31,7 @@ As a metaphor, agentic coding is akin to hiring a modular development studio to 
 
 ## Differences in Architecture and Autonomy
 
-![](/assets/webflow/blog/agentic-coding-vs-code-completion/Code Completion Assistants vs Agentic Coding.jpg)
+!
 
 ## When to use Agents over Code Completion
 
@@ -69,6 +68,9 @@ Standard tools like GitHub Copilot are great for quick IDE-level suggestions, bu
 The shift from token-level suggestions to autonomous cooperation represents a change in the developer’s role, from writing code to orchestrating workflows. Future development will likely rely on hybrid workflows that combine fast code completions with the task-level autonomy of agents. Looking forward, teams should experiment with agentic systems in limited settings while refining the goals and prompting strategies that guide them. Measuring their effects on existing delivery cycles will provide a data-driven basis for integrating these systems into the broader software development lifecycle.
 
 - Code completion tools optimize for local productivity by accelerating typing, syntax recall, and small refactors
+
 - As codebases grow and tasks span multiple files, tests, and systems, developers increasingly spend time coordinating work rather than writing code.
+
 - Agentic coding is a response to this coordination bottleneck, aiming to offload planning and execution of multi-step tasks.
+
 - [Recent research](https://arxiv.org/abs/2507.08149) of 20 Python-proficient developers indicates that coding for, instead of with (i.e. agentic coding) significantly cuts user effort by 50%, but requires more proverbial babysitting so the wall-clock time is still similar.

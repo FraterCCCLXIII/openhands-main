@@ -1,9 +1,9 @@
 ---
-title: Introducing the OpenHands Index
+title: 'Introducing the OpenHands Index'
 slug: openhands-index
-excerpt: The OpenHands Index is a comprehensive benchmark that tests agentic software engineering models across a broad variety of tasks.
+excerpt: 'The OpenHands Index is a comprehensive benchmark that tests agentic software engineering models across a broad variety of tasks.'
 coverImage: /assets/webflow/blog/openhands-index/openhands-index-hero.png
-date: '2026-01-29T12:00:00.000Z'
+date: '2026-01-29T12:00:00.000+00:00'
 authors:
   - name: OpenHands Team
 ogImage:
@@ -37,15 +37,20 @@ For datasets, we took a systematic approach. First, we looked at statistics from
 ![](/assets/webflow/blog/openhands-index/openhands-index-tasks.png)
 
 - **Issue Resolution:** One major class of coding tasks is fixing issues, such as those posted on GitHub. For this, we use the common [SWE-Bench-Verified](https://openai.com/index/introducing-swe-bench-verified/) benchmark.
+
 - **Greenfield Development:** This includes creating applications from scratch over long horizons. We test this using the [commit0](https://commit-0.github.io/) benchmark.
+
 - **Frontend Development:** A common use case for “vibe coding”, this involves making improvements to frontend apps. We use a new “verified” version of the [SWE-Bench Multimodal](https://www.swebench.com/multimodal.html) benchmark, filtered to improve accuracy.
+
 - **Software Testing:** When debugging software, a first essential step is to identify the bug and generate tests that can reproduce the error. For this we use [SWT-Bench](https://swtbench.com/?results=verified).
+
 - **Information Gathering:** When performing software development, it is essential to gather information about APIs or other implementation details. We measure this using the [GAIA benchmark](https://huggingface.co/spaces/gaia-benchmark/leaderboard).
+
 All of these are implemented and open sourced in the [OpenHands/benchmarks](https://github.com/OpenHands/benchmarks) repo.
 
 ## The Takeaways
 
-Together with our release, we have benchmarked 9 language models from top providers such as Anthropic, OpenAI, Google, Deepseek, and Alibaba Qwen. Here are some takeaways for users of language models. Below we’ve plotted the models, and you can see more results on the [OpenHands Index site](https://index.openhands.dev).
+Together with our release, we have benchmarked 9 language models from top providers such as Anthropic, OpenAI, Google, Deepseek, and Alibaba Qwen. Here are some takeaways for users of language models. Below we’ve plotted the models, and you can see more results on the [OpenHands Index site](https://index.openhands.dev/).
 
 ### Claude 4.5 Opus: The Overall Winner
 
@@ -82,7 +87,9 @@ This indicates that GPT 5.2 Codex is a strong companion if you want to perform t
 However, two characteristics of Claude Opus and GPT 5.2 is that they are somewhat pricy. Looking at the cost-accuracy curve, there were two other models that stand out.
 
 - **Google Gemini** comes in two editions, the larger [Gemini 3 Pro](https://deepmind.google/models/gemini/pro/) and the smaller [Gemini 3 Flash](https://blog.google/products-and-platforms/products/gemini/gemini-3-flash/). Interestingly, Gemini 3 Flash actually exceeded the accuracy of Gemini 3 Pro on average. It was particularly good at standard code-based tasks such as issue resolution, greenfield development, and testing, but struggled on frontend development. Overall, Google’s models are strong contenders, but did not quite rise to the level of those from Anthropic or OpenAI.
+
 - **Deepseek**, the Chinese company which made a name for itself in creating the open-weight DeepSeek R1, a serious competitor to closed models, continues to put out strong models. Its latest [DeepSeek-v3.2](https://api-docs.deepseek.com/news/news251201) was the strongest open model. It particularly shined at long-horizon greenfield development tasks.
+
 ### Task Resolution Speed
 
 In addition to cost, the efficiency with which tasks can be resolved is another important point — more speedy resolution means that users can form a tighter feedback loop with the agents.
@@ -105,7 +112,10 @@ Going forward, in the near future, we’re planning on adding more models of int
 
 Want to explore more? If you are:
 
-- **A coding agent aficionado:** please tell us what you think! [Join our slack](https://openhands.dev/joinslack) and join the `#dev-agent` channel to discuss or leave an issue on the [OpenHands/openhands-index-results](https://github.com/OpenHands/openhands-index-results) repo for results you’d like to see. You can also [try out OpenHands](https://docs.openhands.dev) through a GUI, CLI, or SDK.
+- **A coding agent aficionado:** please tell us what you think! [Join our slack](https://openhands.dev/joinslack) and join the `#dev-agent` channel to discuss or leave an issue on the [OpenHands/openhands-index-results](https://github.com/OpenHands/openhands-index-results) repo for results you’d like to see. You can also [try out OpenHands](https://docs.openhands.dev/) through a GUI, CLI, or SDK.
+
 - **A language model developer:** we’d love to help you benchmark your new models, please contact us via [email](https://openhands.dev/contact) or [join our slack](https://openhands.dev/joinslack). Also, all our [benchmarking code](https://github.com/OpenHands/benchmarks) is released, so you can reproduce our results on your own if you wish.
+
 - **A benchmark developer:** If you have a good benchmark to test skills related to software engineering, we’d love to have you contribute a harness to our [benchmarks repo](https://github.com/OpenHands/benchmarks), and we’ll consider adding them to the next version of the index.
+
 ‍

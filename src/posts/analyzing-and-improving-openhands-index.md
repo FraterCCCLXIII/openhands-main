@@ -1,9 +1,9 @@
 ---
-title: Analyzing and Improving the OpenHands Index
+title: 'Analyzing and Improving the OpenHands Index'
 slug: analyzing-and-improving-openhands-index
 excerpt: 'How collaboration with CMU researchers helped us discover and fix a benchmark vulnerability, leading to more reliable model evaluations.'
 coverImage: /assets/webflow/blog/analyzing-and-improving-openhands-index/openhands-index-cover-hero.png
-date: '2026-02-20T12:00:00.000Z'
+date: '2026-02-20T12:00:00.000+00:00'
 authors:
   - name: Graham Neubig
 ogImage:
@@ -14,13 +14,18 @@ At OpenHands, we're committed to providing the most reliable and comprehensive e
 
 ## What Is the OpenHands Index?
 
-For those who missed our [original announcement](https://all-hands.dev/blog/introducing-the-openhands-index), the [OpenHands Index](https://index.openhands.dev) is a comprehensive benchmark that evaluates language models across a broad variety of software engineering tasks. Unlike benchmarks that focus on a single dimension, the OpenHands Index tests models on five key areas that reflect real-world coding agent use cases:
+For those who missed our [original announcement](https://all-hands.dev/blog/introducing-the-openhands-index), the [OpenHands Index](https://index.openhands.dev/) is a comprehensive benchmark that evaluates language models across a broad variety of software engineering tasks. Unlike benchmarks that focus on a single dimension, the OpenHands Index tests models on five key areas that reflect real-world coding agent use cases:
 
 - **Issue Resolution** - Fixing bugs and issues, tested via SWE-Bench Verified
+
 - **Greenfield Development** - Building applications from scratch, tested via Commit0
+
 - **Frontend Development** - Creating and improving frontend apps, tested via SWE-Bench Multimodal
+
 - **Software Testing** - Identifying bugs and generating reproduction tests, tested via SWT-Bench
+
 - **Information Gathering** - Researching APIs and implementation details, tested via GAIA
+
 This broad coverage provides a more complete picture of each model's capabilities, allowing users to choose the best model for their specific use cases and priorities.
 
 ## Recent Updates to the Index
@@ -28,10 +33,15 @@ This broad coverage provides a more complete picture of each model's capabilitie
 We've been actively adding new results to the OpenHands Index. Since our initial release, we've added evaluations for:
 
 - **Claude 4.6 Opus** - Anthropic's latest flagship model
+
 - **GPT 5.2 Codex** - OpenAI's coding-focused model
+
 - **Kimi K2.5** - Moonshot AI's latest reasoning model
+
 - **GLM-4.7** - Zhipu AI's latest model
+
 - **MiniMax M2.5** - MiniMax's newest model
+
 All of these results, along with complete evaluation traces, are available in our [openhands-index-results repository](https://github.com/OpenHands/openhands-index-results). We believe in transparency, so every evaluation comes with full trajectory data that allows researchers and developers to inspect exactly how each model approached each task.
 
 ## New: Partnership with Laminar for Trace Visualization
@@ -40,9 +50,9 @@ We're excited to announce a new partnership with [Laminar](https://www.laminar.s
 
 Laminar integration is built directly into the [OpenHands Software Agent SDK](https://github.com/OpenHands/software-agent-sdk). When running evaluations, the SDK automatically instruments agent actions using [Laminar's](https://www.laminar.sh/) observability framework. This captures every LLM call with inputs, outputs, and token usage; tool executions (bash commands, file operations, browser actions); timing information for each step; and cost tracking per model call.
 
-In our [benchmarks repository](https://github.com/OpenHands/benchmarks), each evaluation harness creates a Laminar evaluation session and links individual benchmark instances to their traces. This allows us to track not just whether a model solved a task, but _how_ it approached the problem.
+In our [benchmarks repository](https://github.com/OpenHands/benchmarks), each evaluation harness creates a Laminar evaluation session and links individual benchmark instances to their traces. This allows us to track not just whether a model solved a task, but *how* it approached the problem.
 
-On the [OpenHands Index](https://index.openhands.dev), you'll find a "Visualization" column in each benchmark table. Clicking the chart icon opens the [Laminar](https://www.laminar.sh/) trace viewer for that model's evaluation run.
+On the [OpenHands Index](https://index.openhands.dev/), you'll find a "Visualization" column in each benchmark table. Clicking the chart icon opens the [Laminar](https://www.laminar.sh/) trace viewer for that model's evaluation run.
 
 ![Where to find traces on the OpenHands Index](/assets/webflow/blog/analyzing-and-improving-openhands-index/laminar-where-to-find.png)
 
@@ -54,7 +64,7 @@ This level of transparency is important for understanding model behavior beyond 
 
 ## Discovering and Fixing a Benchmark Vulnerability
 
-A significant development since our last update has been our collaboration with researchers at Carnegie Mellon University. [Ziqian Zhong](https://fjzzq2002.github.io/), [Shashwat Saxena](https://scholar.google.com/citations?user=7sw01QYAAAAJ), and [Aditi Raghunathan](https://www.cs.cmu.edu/~aditirag/) developed **[Hodoscope](https://hodoscope.dev/)**, an open-source tool for analyzing agent trajectories at scale using unsupervised methods.
+A significant development since our last update has been our collaboration with researchers at Carnegie Mellon University. [Ziqian Zhong](https://fjzzq2002.github.io/), [Shashwat Saxena](https://scholar.google.com/citations?user=7sw01QYAAAAJ), and [Aditi Raghunathan](https://www.cs.cmu.edu/~aditirag/) developed [**Hodoscope**](https://hodoscope.dev/), an open-source tool for analyzing agent trajectories at scale using unsupervised methods.
 
 Hodoscope takes a novel approach to understanding agent behavior: it summarizes each agent action into a high-level behavioral description, embeds summaries into a shared vector space where similar behaviors cluster together, and uses kernel density estimates to reveal behaviors that are unique to specific models or setups. This approach is particularly valuable for exploratory analysis where you don't know in advance what failure modes to look for.
 
@@ -82,4 +92,4 @@ We want to be clear: MiniMax-M2.5 remains a capable model with strong accuracy o
 
 This experience reinforces our commitment to rigorous, high-quality benchmarking. We're implementing additional checks to detect potential benchmark vulnerabilities before they affect results - tools like Hodoscope will be part of our regular analysis pipeline. We'll continue refreshing the index with new benchmarks covering important aspects of software engineering. All our benchmarking code is open-source in [OpenHands/benchmarks](https://github.com/OpenHands/benchmarks), and all results include full traces in [OpenHands/openhands-index-results](https://github.com/OpenHands/openhands-index-results).
 
-We're grateful to the CMU team for their work on Hodoscope and their analysis of our data, and to the [Laminar](https://www.laminar.sh/) team for their partnership on trace visualization. If you're working on agent evaluation, benchmark development, or related research, we'd love to collaborate - [join our Slack](https://openhands.dev/joinslack) and head to the `#proj-agent` channel, or check out the [OpenHands Index](https://index.openhands.dev) to explore the data yourself.
+We're grateful to the CMU team for their work on Hodoscope and their analysis of our data, and to the [Laminar](https://www.laminar.sh/) team for their partnership on trace visualization. If you're working on agent evaluation, benchmark development, or related research, we'd love to collaborate - [join our Slack](https://openhands.dev/joinslack) and head to the `#proj-agent` channel, or check out the [OpenHands Index](https://index.openhands.dev/) to explore the data yourself.

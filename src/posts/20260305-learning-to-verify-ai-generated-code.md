@@ -1,9 +1,9 @@
 ---
-title: Learning to Verify AI-Generated Code
+title: 'Learning to Verify AI-Generated Code'
 slug: 20260305-learning-to-verify-ai-generated-code
 excerpt: 'LLMs made generating code cheap. The real bottleneck is verification: checking that a change is correct, follows repo conventions, and is something your team can trust, review, and merge. This post introduces the first layer of our verification stack.'
 coverImage: /assets/webflow/blog/20260305-learning-to-verify-ai-generated-code/learning-to-verify-ai-cover.png
-date: '2026-03-05T12:00:00.000Z'
+date: '2026-03-05T12:00:00.000+00:00'
 authors:
   - name: Xingyao Wang
 ogImage:
@@ -105,9 +105,15 @@ This post covered layer one: judging an entire trajectory. Layer two is more sur
 In the meantime, here are the best places to go deeper or try it yourself:
 
 - **Docs:**
-  - SDK guide: [https://docs.openhands.dev/sdk/guides/critic](https://docs.openhands.dev/sdk/guides/critic)
-  - CLI guide: [https://docs.openhands.dev/openhands/usage/cli/critic](https://docs.openhands.dev/openhands/usage/cli/critic)
+
+- SDK guide: [https://docs.openhands.dev/sdk/guides/critic](https://docs.openhands.dev/sdk/guides/critic)
+
+- CLI guide: [https://docs.openhands.dev/openhands/usage/cli/critic](https://docs.openhands.dev/openhands/usage/cli/critic)
+
 - **Paper (arXiv):** [https://arxiv.org/abs/2603.03800](https://arxiv.org/abs/2603.03800)
+
 - **Model weights:** [https://huggingface.co/OpenHands/openhands-critic-4b-v1.0](https://huggingface.co/OpenHands/openhands-critic-4b-v1.0)
+
 - **Code / GitHub repo:** [https://github.com/OpenHands/critic-rubrics](https://github.com/OpenHands/critic-rubrics)
+
 If you're deploying OpenHands in a team setting and want critic-based verification wired into your workflow (policy checks, custom thresholds, feedback pipelines), reach out—we're happy to help.

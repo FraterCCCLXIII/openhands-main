@@ -1,10 +1,10 @@
 ---
-title: Building a Frontend App with Open Source AI Agents
+title: 'Building a Frontend App with Open Source AI Agents'
 slug: building-a-frontend-app-with-open-source-ai-agents
 excerpt: 'Luckily, with the help of recent AI tools, that barrier has significantly lowered, and it''s now possible to build practical frontend apps, almost entirely automatically. In this post I''ll demonstrate how I built a frontend for a GitHub Pull Request viewer using OpenHands, the open-source AI agent for software development that we''re building at All Hands AI.'
 coverImage: /assets/webflow/misc/6914ea2d2f9894c9a9f459ec_6914ea2b174a5acc2767a2f0_pr-viewer-with-dark-mode.png
-coverAlt: Cover image
-date: '2024-09-10T12:00:00.000Z'
+coverAlt: 'Cover image'
+date: '2024-09-10T12:00:00.000+00:00'
 authors:
   - name: Graham Neubig
 ogImage:
@@ -15,11 +15,11 @@ seoTitleDate: 'Nov 12, 2025'
 
 I consider myself a pretty good Python programmer. I can architect systems, build backend servers, train models, etc. One thing that I'm not super-good at, though, is frontend development. Many times I've wanted to show off a project that includes a cool UI or build a tool that would be helpful for my own workflow, but I usually hesitate because it would take me too long to crank one out.
 
-Luckily, with the help of recent AI tools, that barrier has significantly lowered, and it's now possible to build practical frontend apps, almost entirely automatically. In this post I'll demonstrate how I built a frontend for a GitHub Pull Request viewer using [OpenHands](#), the open-source AI agent for software development that we're building at [All Hands AI](#).
+Luckily, with the help of recent AI tools, that barrier has significantly lowered, and it's now possible to build practical frontend apps, almost entirely automatically. In this post I'll demonstrate how I built a frontend for a GitHub Pull Request viewer using [OpenHands](https://openhands.dev/), the open-source AI agent for software development that we're building at [All Hands AI](https://openhands.dev/).
 
 The GitHub PR viewer is an example of something that's simple but practical -- it allows me as a developer to view all open PRs across my team's GitHub repositories, and it would have been a pain to build manually, but with OpenHands it took around 30 minutes to go from nothing to something that actually worked and even had a few bells and whistles.
 
-If you want to take a look at the code that the agent built, you can find it [here](#).
+If you want to take a look at the code that the agent built, you can find it [here](https://openhands.dev/).
 
 ## Step 1: Setting the Foundation
 
@@ -46,8 +46,11 @@ a .gitignore file, and commit the changes.
 A few notes about this prompt:
 
 - This prompt was intentionally detailed. While AI agents have come a long way, they can sometimes make suboptimal implementation decisions. By breaking down the requirements, I ensured that OpenHands would choose the right path for our project, using the specific tech stack that I'm intereted in (react + vite + typescript).
-- By default the agent doesn't have credentials to access the github api, so I added the token to the .env file, which gives it access. Fortunately, GitHub has very nice [personal access tokens](#) that make it easy to create a token with the right permissions so you don't have to give the agent access to repositories in ways that you don't want to. I put this token in a `.env` file in the [OpenHands workspace directory](#), so the agent can access it.
+
+- By default the agent doesn't have credentials to access the github api, so I added the token to the .env file, which gives it access. Fortunately, GitHub has very nice [personal access tokens](https://openhands.dev/) that make it easy to create a token with the right permissions so you don't have to give the agent access to repositories in ways that you don't want to. I put this token in a `.env` file in the [OpenHands workspace directory](https://openhands.dev/), so the agent can access it.
+
 - I asked the agent to do testing. This is important because agents have the ability to go back and check if the code is working properly, resolve library issues, etc. But they might not do it unless you ask them to.
+
 I let OpenHands do its thing and in a few minutes it had created the repo, initialized the git repo, and added the initial code. Tests passed, and I got something that looked like this:
 
 ![A Screenshot of a Blank Screen](/assets/blog/20240916-ai-assisted-frontend-development/blank-screen.png)
@@ -57,7 +60,7 @@ Um yeah, that's a blank screen. Something is wrong, and unfortunately the agent 
 ## Step 2: Debugging with AI
 
 While I'm not a huge fan of frontend development, I do know enough to open up the browser and see what's going on.
-So I fired up the repo (according to the instructions that OpenHands had kindly provided in the README.md), opened up Chrome, went to the [developer console](#), and saw this:
+So I fired up the repo (according to the instructions that OpenHands had kindly provided in the README.md), opened up Chrome, went to the [developer console](https://openhands.dev/), and saw this:
 
 ```
 PullRequestViewer.tsx:8
@@ -112,6 +115,6 @@ Overall, the resulting app was pretty simple, but it demonstrated how you can go
 
 What's particularly exciting is the potential this holds for developers across all specializations. AI agents like OpenHands can help bridge skill gaps, allowing developers to venture into areas outside their comfort zones with greater confidence.
 
-If you're interested in trying out OpenHands, download the project [here](#) and get started right away, or try it online at [OpenHands Cloud](#).
+If you're interested in trying out OpenHands, download the project [here](https://openhands.dev/) and get started right away, or try it online at [OpenHands Cloud](https://openhands.dev/).
 
-**Acknowledgement:** I'd like to thank [Bryan Finster](#) of [Defense Unicorns](#) for his original inspiration for the app featured here.
+**Acknowledgement:** I'd like to thank [Bryan Finster](https://openhands.dev/) of [Defense Unicorns](https://openhands.dev/) for his original inspiration for the app featured here.

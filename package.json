@@ -15,7 +15,10 @@
     "parity:checklist": "node scripts/generate-site-parity-checklist.cjs",
     "sync:notion-blog": "node scripts/sync-notion-blog.mjs",
     "sync:notion-blog:check": "node scripts/sync-notion-blog.mjs --check",
-    "seed:notion-blog": "node scripts/sync-notion-blog.mjs --seed"
+    "seed:notion-blog": "node scripts/sync-notion-blog.mjs --seed",
+    "refresh:notion-blog-rich-text": "node scripts/sync-notion-blog.mjs --refresh-rich-text",
+    "rebuild:notion-blog-blocks": "node scripts/sync-notion-blog.mjs --rebuild-blocks",
+    "audit:notion-blog": "node scripts/sync-notion-blog.mjs --audit"
   },
   "dependencies": {
     "@forge42/seo-tools": "^1.4.2",

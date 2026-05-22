@@ -1,9 +1,9 @@
 ---
-title: Host Your Own Coding Agents with OpenHands using AMD Ryzen AI
+title: 'Host Your Own Coding Agents with OpenHands using AMD Ryzen AI'
 slug: 20251119-amd-ryzen-ai-collaboration
 excerpt: 'Coding agents can automate many software development tasks, but running them typically requires expensive cloud APIs. With AMD''s Ryzen AI Max+ 395 and Lemonade Server, you can run coding agents like OpenHands directly on your workstation while maintaining privacy and controlling costs.'
 coverImage: /assets/webflow/blog/694412959429f7fe869af4ce_cover-1.png
-date: '2025-11-19T12:00:00.000Z'
+date: '2025-11-19T12:00:00.000+00:00'
 authors:
   - name: Xingyao Wang
   - name: Graham Neubig
@@ -11,7 +11,7 @@ ogImage:
   url: /assets/webflow/blog/694412959429f7fe869af4ce_cover-1.png
 seoTitleDate: 'Nov 17, 2025'
 ---
-Coding agents like [OpenHands](https://openhands.dev) can automate many software development tasks. However, running them typically requires expensive cloud APIs or dedicated data center infrastructure, raising concerns about cost and privacy. An alternative is to run coding agents directly on your workstation. With advances in open-weight models and edge AI processing, smaller locally-runnable models are now achieving competitive results—approaching their larger counterparts on benchmarks like [SWE-Bench Verified](https://www.swebench.com/)—making self-hosted coding agents a viable option.
+Coding agents like [OpenHands](https://openhands.dev/) can automate many software development tasks. However, running them typically requires expensive cloud APIs or dedicated data center infrastructure, raising concerns about cost and privacy. An alternative is to run coding agents directly on your workstation. With advances in open-weight models and edge AI processing, smaller locally-runnable models are now achieving competitive results—approaching their larger counterparts on benchmarks like [SWE-Bench Verified](https://www.swebench.com/)—making self-hosted coding agents a viable option.
 
 ## The AMD Stack for Language Model Serving
 

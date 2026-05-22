@@ -1,10 +1,10 @@
 ---
 title: 'Devstral: A new state-of-the-art open model for coding agents'
 slug: devstral-a-new-state-of-the-art-open-model-for-coding-agents
-excerpt: Devstral is an agentic LLM for software engineering tasks that outperforms all open-source models on SWE-Bench Verified by a large margin.
+excerpt: 'Devstral is an agentic LLM for software engineering tasks that outperforms all open-source models on SWE-Bench Verified by a large margin.'
 coverImage: /assets/webflow/blog/20250814-ai-agent-security/image2.png
-coverAlt: Cover image
-date: '2025-05-20T12:00:00.000Z'
+coverAlt: 'Cover image'
+date: '2025-05-20T12:00:00.000+00:00'
 authors:
   - name: Xingyao Wang
   - name: Graham Neubig
@@ -40,7 +40,7 @@ Alternatively, if you would like to try out OpenHands without going through the 
 
 We are releasing this model for free under an Apache 2.0 license for the community to build on, customize, and accelerate autonomous software development.
 
-The model is also available on the [Mistral API](https://docs.mistral.ai/api/) under the name `devstral-small-2505` at the same price as Mistral Small 3.1: \\$0.1/M input tokens and \\$0.3/M output tokens.
+The model is also available on the [Mistral API](https://docs.mistral.ai/api/) under the name `devstral-small-2505` at the same price as Mistral Small 3.1: \$0.1/M input tokens and \$0.3/M output tokens.
 
 For comparison, Claude 3.7 Sonnet is 30x more expensive per input token and 50x per output token.
 
@@ -53,4 +53,5 @@ The performance of the model also makes it a suitable choice for agentic coding 
 We'd love to hear what you think of this new model release. We're excited about it and we hope that you are too. If you'd like to join the community:
 
 - [Join our Slack workspace](https://join.slack.com/t/openhands-ai/shared_invite/zt-34zm4j0gj-Qz5kRHoca8DFCbqXPS~f_A) - Here we talk about research, architecture, and future development.
+
 - [Join our Discord server](https://discord.gg/ESHStjSjD4) - This is a community-run server for general discussion, questions, and feedback.

@@ -34,6 +34,13 @@ jobs:
           NOTION_BLOG_DATABASE_ID: ${{ vars.NOTION_BLOG_DATABASE_ID || secrets.NOTION_BLOG_DATABASE_ID || '2cbcf0dd-f241-4e40-8c6d-0918e45f316f' }}
         run: npm run sync:notion-blog
 
+      - name: Audit Notion blog content parity
+        env:
+          NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
+          NOTION_INTEGRATION_KEY: ${{ secrets.NOTION_INTEGRATION_KEY }}
+          NOTION_BLOG_DATABASE_ID: ${{ vars.NOTION_BLOG_DATABASE_ID || secrets.NOTION_BLOG_DATABASE_ID || '2cbcf0dd-f241-4e40-8c6d-0918e45f316f' }}
+        run: npm run audit:notion-blog
+
       - name: Open pull request for blog updates
         uses: peter-evans/create-pull-request@v7
         with:

@@ -1,10 +1,10 @@
 ---
 title: 'OpenHands: From README to open source movement'
 slug: openhands-from-readme-to-open-source-movement
-excerpt: OpenHands exists because our community willed it. Here’s how it all started.
+excerpt: 'OpenHands exists because our community willed it. Here’s how it all started.'
 coverImage: /assets/webflow/misc/6914f5eeeddff54443d84633_6914f5ee32cafa0ea56fd6d3_all-hands-founders-full.jpeg
-coverAlt: Cover image
-date: '2024-10-17T12:00:00.000Z'
+coverAlt: 'Cover image'
+date: '2024-10-17T12:00:00.000+00:00'
 authors:
   - name: Ana Hevesi
 ogImage:

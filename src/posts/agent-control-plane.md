@@ -1,10 +1,10 @@
 ---
-title: The Software Agent Control Plane
+title: 'The Software Agent Control Plane'
 slug: agent-control-plane
 excerpt: 'OpenHands views the software-agent stack as harness, orchestrator, and control plane. Here''s why the control plane is becoming essential for running software agents securely at scale.'
 coverImage: /assets/webflow/blog/agent-control-plane/cover.png
-coverAlt: The Software Agent Control Plane cover image
-date: '2026-04-03T12:00:00.000Z'
+coverAlt: 'The Software Agent Control Plane cover image'
+date: '2026-04-03T12:00:00.000+00:00'
 authors:
   - name: Robert Brennan
 ogImage:
@@ -14,9 +14,12 @@ seoTitleDate: 'Mar 30, 2026'
 The tech stack for running software agents—agents that write, test, and ship code—is still growing and evolving. At OpenHands, we see three pillars in the stack:
 
 - The Harness: an agentic loop on top of one or more LLMs
+
 - The Orchestrator: an environment—or set of environments—for agents to run in
+
 - The Control Plane: a way to observe and orchestrate many agents at scale
-![Three pillars of the software agent stack: harness, orchestrator, and control plane](/assets/webflow/blog/agent-control-plane/software-agent-stack-pillars.png)
+
+![Diagram of the OpenHands agent control plane with runtime environments, routing, budgets, policies, and observability](/assets/webflow/blog/agent-control-plane/agent-control-plane-diagram.png)
 
 The Control Plane is an emerging category. While other projects can claim pieces of the control plane—LiteLLM for budgeting, OpenRouter for routing, Gray Swan for security, and Laminar or Langfuse for observability—OpenHands Enterprise is the first to put all of this together in one platform.
 
@@ -31,13 +34,18 @@ Agents are powerful. But they are also expensive, chaotic, and dangerous. You ne
 An Agent Control Plane gives you a central place to define all sorts of guardrails:
 
 - LLM routing policies
+
 - MCP access
+
 - Secrets access
+
 - Budgets
+
 - User management and auth
+
 And it provides a central pane of glass, letting you observe and audit every agentic workflow in your organization.
 
-At OpenHands, we are specifically focused on the Control Plane for _software_ agents—agents that are making modifications to your codebase, touching your infrastructure, leaving code reviews, and more. These agents come with their own specific challenges.
+At OpenHands, we are specifically focused on the Control Plane for *software* agents—agents that are making modifications to your codebase, touching your infrastructure, leaving code reviews, and more. These agents come with their own specific challenges.
 
 ## Why do we need a Control Plane?
 
@@ -63,7 +71,7 @@ At this point, most organizations can at least segment their token spend by user
 
 An Agent Control Plane solves this. Not only is every token tracked, it is also associated with a user, a session, a Git repository, related skills or plugins, and more. You can even add customized labels to each session with additional metadata. This allows you to slice the data and understand the total cost and ROI of different use cases. You might decide to discontinue some workflows based on that data, or downgrade to a cheaper model to improve ROI.
 
-Even better, you can start setting up _budgets_ on a per-project or per-use-case basis. Instead of just giving each developer a chunk of money to burn through, you can make sure that money is going to the right types of projects.
+Even better, you can start setting up *budgets* on a per-project or per-use-case basis. Instead of just giving each developer a chunk of money to burn through, you can make sure that money is going to the right types of projects.
 
 ### Security
 
@@ -72,7 +80,9 @@ Agents can be dangerous. We have seen countless instances where agents have inno
 An Agent Control Plane helps tackle the security problem from two angles:
 
 - It sets clear policies for how agents run and what they have access to
+
 - It provides an audit trail for every action an agent takes
+
 The former is important for prevention. When an agent runs locally, it has access to all of that developer's secrets. When it runs behind a Control Plane, the control plane decides which secrets it gets. And the Control Plane can hook into each agent action to analyze it for prompt injection or other potential risks, halting the agent until a human can review.
 
 The latter is important for detecting problems and improving your prevention measures. You can periodically review audit logs for suspicious activity or prompt injection attempts, and check how the system responded. If an agent does go off the rails and do something dangerous, you can review exactly what happened and take measures to ensure the accident is not repeated.

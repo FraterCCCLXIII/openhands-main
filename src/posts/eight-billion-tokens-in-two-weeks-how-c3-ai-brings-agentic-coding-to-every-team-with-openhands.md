@@ -3,7 +3,7 @@ title: 'Eight billion tokens in two weeks: How C3 AI brings agentic coding to ev
 slug: eight-billion-tokens-in-two-weeks-how-c3-ai-brings-agentic-coding-to-every-team-with-openhands
 excerpt: 'C3 AI adopted OpenHands Cloud as enterprise-grade, self-hosted agentic coding infrastructure, letting sales, solution engineers, and builders collaborate through a chat interface while workflows run directly against C3 AI’s Ontology Objects for production-aligned code. In early rollout, they processed ~8B tokens in two weeks and cut a representative workflow from ~3,000 lines to ~254, shrinking delivery time from months to hours.'
 coverImage: /assets/webflow/misc/694301052b3d4c5b35784c67_1.png
-date: '2025-12-17T12:00:00.000Z'
+date: '2025-12-17T12:00:00.000+00:00'
 authors:
   - name: Robert Brennan
 ogImage:
@@ -40,7 +40,7 @@ C3 AI’s use case development flows can now begin with a standard LLM that acts
 
 “We prompt an LLM to shape the request, then we prompt OpenHands to build and ship. People focus on what they want, not how to wire the system."
 
-![](/assets/webflow/blog/eight-billion-tokens-in-two-weeks-how-c3-ai-brings-agentic-coding-to-every-team-with-openhands/Screenshot 2025-12-17 at 1.33.22 PM.png)
+!
 
 ## Implementation
 

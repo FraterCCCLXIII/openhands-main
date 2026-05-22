@@ -1,9 +1,9 @@
 ---
-title: How to Evaluate Agent Skills (And Why You Should)
+title: 'How to Evaluate Agent Skills (And Why You Should)'
 slug: evaluating-agent-skills
 excerpt: 'Skills can make coding agents dramatically better, slightly more reliable, or actively worse. This post shows how to evaluate agent skills with deterministic tasks, verifiers, and no-skill baselines so you can measure what actually helps.'
 coverImage: /assets/webflow/blog/evaluating-agent-skills/evaluating-agent-skills-cover.png
-date: '2026-03-18T12:00:00.000Z'
+date: '2026-03-18T12:00:00.000+00:00'
 authors:
   - name: Rajiv Shah
 ogImage:
@@ -35,14 +35,19 @@ That is why evaluation matters. "Improved skill" is just a hypothesis until it i
 A good skill evaluation has three ingredients:
 
 1. A bounded task the agent can finish in one run
-2. A deterministic verifier that can say pass or fail
-3. A no-skill baseline to compare against
+
+1. A deterministic verifier that can say pass or fail
+
+1. A no-skill baseline to compare against
+
 That last point is the one teams most often skip. If you only test the skill-enabled version, success tells you almost nothing. Maybe the model would have passed anyway. Maybe the skill made it slower. Maybe the same task would have been easier without the added constraints.
 
 So the minimum comparison is:
 
 - **No-skill**: the agent gets the task with no procedural guidance
+
 - **Skill-enabled**: the agent gets the same task with the skill injected
+
 Pass/fail is the primary metric. Runtime, event count, and tool usage are useful secondary metrics because they tell you whether the skill also made the agent more efficient.
 
 ## A hands-on evaluation setup
@@ -50,17 +55,27 @@ Pass/fail is the primary metric. Runtime, event count, and tool usage are useful
 To make this concrete, I built the [evaluating-skills-tutorial](https://github.com/rajshah4/evaluating-skills-tutorial) repo. It contains:
 
 - three deterministic tasks
+
 - a no-skill baseline and an improved skill for each task
+
 - local verifiers
+
 - scripts to run evaluations on OpenHands Cloud or a local agent server
+
 - saved result summaries you can inspect and reproduce
+
 We ran the tasks across five models:
 
 - Claude Sonnet 4.5
+
 - Gemini 3 Pro
+
 - Gemini 3 Flash
+
 - Kimi K2
+
 - MiniMax M2.5
+
 The point was not to produce one grand benchmark number. It was to show how different tasks reveal different kinds of skill value.
 
 ## Three tasks, three different stories
@@ -74,10 +89,15 @@ This task is procedural. Without guidance, agents tend to improvise: they try di
 The improved skill fixes that by encoding a specific workflow:
 
 - check for a pinned offline Trivy snapshot
+
 - prefer deterministic local inputs
+
 - keep only HIGH and CRITICAL findings
+
 - extract CVSS scores in a specific priority order
+
 - sort the output deterministically
+
 The result is dramatic:
 
 | Condition | Pass Rate | Avg Runtime | Avg Events |
@@ -96,8 +116,11 @@ Most strong models can already do this kind of task. The data is right there in 
 Instead, the improved skill adds:
 
 - exact formulas for derived metrics
+
 - instructions to use local files only
+
 - guidance to use Python for arithmetic instead of computing by hand
+
 The result:
 
 | Condition | Pass Rate | Avg Runtime |
@@ -123,8 +146,11 @@ The overall result looks mildly positive:
 But that aggregate number hides the interesting part: the effect varies by model and backend.
 
 - Some models pass more reliably with the skill
+
 - Some models already solve the task better without the extra guidance
+
 - At least one model regressed on the skill-enabled version in Cloud
+
 This is the key lesson: **skills can be counterproductive**. If a skill nudges the model into a brittle implementation path, it may reduce robustness rather than increase it.
 
 ## The bigger lesson
@@ -132,8 +158,11 @@ This is the key lesson: **skills can be counterproductive**. If a skill nudges t
 These three tasks produce three different conclusions:
 
 1. Some skills are essential
-2. Some skills mainly improve reliability
-3. Some skills are mixed and must be measured carefully
+
+1. Some skills mainly improve reliability
+
+1. Some skills are mixed and must be measured carefully
+
 If you only evaluate one task, it is easy to overgeneralize.
 
 If you only tested the dependency audit, you would conclude that skills are transformative.
@@ -153,8 +182,11 @@ Pass/fail tells you whether the skill worked. Traces tell you why.
 When you inspect traces, you can often see patterns like:
 
 - unnecessary exploration in no-skill runs
+
 - clean, direct workflows in successful skill-enabled runs
+
 - overconstraint or brittle recovery in failed skill-enabled runs
+
 Here is an example trace from a sales pivot analysis run, viewed in Laminar:
 
 ![Trace example from Laminar](/assets/webflow/blog/evaluating-agent-skills/evaluating-agent-skills-trace-example.png)
@@ -168,11 +200,17 @@ In the tutorial repo, we used [Laminar](https://www.lmnr.ai/) for observability,
 If you want to test whether a skill actually helps, use a loop like this:
 
 1. Choose a bounded task
-2. Define one output artifact
-3. Write a deterministic verifier
-4. Run the task with no skill
-5. Run the same task with the skill enabled
-6. Compare pass/fail first, then runtime and traces
+
+1. Define one output artifact
+
+1. Write a deterministic verifier
+
+1. Run the task with no skill
+
+1. Run the same task with the skill enabled
+
+1. Compare pass/fail first, then runtime and traces
+
 That is enough to give you a signal.
 
 You do not need a huge benchmark to start. A small number of carefully designed tasks is often enough to show whether your skill is adding real value.
@@ -182,6 +220,7 @@ You do not need a huge benchmark to start. A small number of carefully designed 
 The full repo is available here:
 
 - [evaluating-skills-tutorial](https://github.com/rajshah4/evaluating-skills-tutorial)
+
 It includes the task definitions, skills, verifiers, result summaries, and scripts needed to reproduce the runs or adapt the setup for your own workflows.
 
 The main point of the project is simple:

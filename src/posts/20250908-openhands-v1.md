@@ -1,10 +1,10 @@
 ---
-title: The Path to OpenHands v1
+title: 'The Path to OpenHands v1'
 slug: the-path-to-openhands-v1
 excerpt: 'A look at how we’re stabilizing the OpenHands platform for a v1: a lightweight SDK, a streamlined CLI, and a server architecture built on a synchronous conversation model.'
 coverImage: /assets/webflow/blog/6914ead8ba1c303de166eaf1_6914e738ef96d4db714b7e45_image.png
-coverAlt: Cover image
-date: '2025-09-04T12:00:00.000Z'
+coverAlt: 'Cover image'
+date: '2025-09-04T12:00:00.000+00:00'
 authors:
   - name: Robert Brennan
 ogImage:
@@ -23,7 +23,7 @@ We’re due for a major overhaul. So we’ve sketched out our wish list for a v1
 
 ## OpenHands SDK v1
 
-First off, we want a flavor of OpenHands that’s _extremely_ light-weight. We’re tracking this in [GitHub](https://github.com/OpenHands/OpenHands/issues/10577).
+First off, we want a flavor of OpenHands that’s *extremely* light-weight. We’re tracking this in [GitHub](https://github.com/OpenHands/OpenHands/issues/10577).
 
 Our current docker image is close to 10GB, and our CLI takes several minutes to install due to a wild list of transitive dependencies (including a YouTube API client for some reason??)
 

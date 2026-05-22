@@ -1,10 +1,10 @@
 ---
-title: Introducing the OpenHands Software Agent SDK
+title: 'Introducing the OpenHands Software Agent SDK'
 slug: introducing-the-openhands-software-agent-sdk
 excerpt: 'Open-source, simple to use, powerful, and highly customizable. The OpenHands software agent SDK makes it possible to build plug-and-play coding agents for any workflow.'
 coverImage: /assets/webflow/blog/agent-control-plane/cover.png
-coverAlt: Image from blog post
-date: '2025-11-05T12:00:00.000Z'
+coverAlt: 'Image from blog post'
+date: '2025-11-05T12:00:00.000+00:00'
 authors:
   - name: Graham Neubig
 ogImage:
@@ -24,7 +24,7 @@ Some examples where people already are using OpenHands include:
 
 ## What is Necessary to Build On?
 
-Based on the lessons that we've learned watching thousands of developers use OpenHands, we realized that to truly enable the _build on_ use case, we needed to build a completely new experience for developers building on top of coding agents.
+Based on the lessons that we've learned watching thousands of developers use OpenHands, we realized that to truly enable the *build on* use case, we needed to build a completely new experience for developers building on top of coding agents.
 
 Based on this, we designed and built the OpenHands Software Agent SDK from the ground up with a few things in mind:
 
@@ -59,7 +59,6 @@ conversation.send_message("Write 3 facts about the current project into FACTS.tx
 conversation.run()
 ```
 
-
 Despite its simplicity, this agent is essentially the same as the ones we use to get scores near the top of competitive leaderboards like [SWE-Bench Verified](https://www.swebench.com/).
 
 ## Customizing Workflows
@@ -82,7 +81,6 @@ class GrepTool(ToolDefinition[GrepAction, GrepObservation]):
         return [cls(action_type=GrepAction, ...)]
 ```
 
-
 **Skills and Context** ([example](https://github.com/OpenHands/software-agent-sdk/blob/main/examples/01_standalone_sdk/03_activate_skill.py)): Inject domain-specific knowledge that activates based on keywords or conditions:
 
 ```python
@@ -100,7 +98,6 @@ agent_context = AgentContext(
 )
 ```
 
-
 **Conversation Persistence** ([example](https://github.com/OpenHands/software-agent-sdk/blob/main/examples/01_standalone_sdk/10_persistence.py)): Save and restore agent conversations for long-running workflows:
 
 ```python
@@ -114,7 +111,6 @@ conversation = Conversation(
 # Later, restore with the same conversation_id
 ```
 
-
 **Docker Workspaces** ([example](https://github.com/OpenHands/software-agent-sdk/blob/main/examples/02_remote_agent_server/02_convo_with_docker_sandboxed_server.py)): Run agents in isolated Docker containers for enhanced security and scalability:
 
 ```python
@@ -127,7 +123,6 @@ with DockerWorkspace(
     conversation = Conversation(agent=agent, workspace=workspace)
     # Agent runs in isolated Docker environment
 ```
-
 
 ## Real-World Applications
 

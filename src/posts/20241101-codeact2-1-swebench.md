@@ -3,8 +3,8 @@ title: 'OpenHands CodeAct 2.1: An Open, State-of-the-Art Software Development Ag
 slug: openhands-codeact-21-an-open-state-of-the-art-software-development-agent
 excerpt: 'We introduce CodeAct 2.1, achieving state-of-the-art 53% resolve rate on SWE-Bench Verified.'
 coverImage: /assets/webflow/misc/6914f58f09c10a3753062249_6914f58ed1a7b682cc7316ab_swebench-leaderboard.jpeg
-coverAlt: Cover image
-date: '2024-11-01T12:00:00.000Z'
+coverAlt: 'Cover image'
+date: '2024-11-01T12:00:00.000+00:00'
 authors:
   - name: Graham Neubig
   - name: Xingyao Wang
@@ -17,12 +17,17 @@ OpenHands just released the strongest AI software developer to date, and it is o
 Based on our new agent, CodeAct 2.1 (powered by the new Claude Sonnet 3.5), we achieved:
 
 - 🥇 53% resolve rate on SWE-Bench Verified
+
 - 🥇 41.7% resolve rate on SWE-Bench Lite
+
 These numbers demonstrate the strength of our agents, and the difference in user experience using them is palpable - they resolve more issues more autonomously than ever before. Read on more for details, or jump right in to:
 
 - [Run OpenHands locally](https://docs.all-hands.dev/modules/usage/installation)
+
 - [Run OpenHands in github actions](https://github.com/OpenHands/OpenHands-resolver/)
-- [Try OpenHands Cloud](https://app.all-hands.dev)
+
+- [Try OpenHands Cloud](https://app.all-hands.dev/)
+
 ## What is SWE-Bench?
 
 [SWE-bench](https://www.swebench.com/) is a benchmark designed to evaluate large language models' (LLMs) capabilities in addressing real-world software engineering challenges. It consists of issues and corresponding pull requests from 12 popular Python repositories on GitHub, tasking models with generating code patches to resolve specified issues. Due to its realism and the potential vast benefits of AI agents that could autonomously solve real-world software development challenges, it is used widely throughout academia and industry as a gold-standard for measuring the abilities of AI software developers.
@@ -34,8 +39,11 @@ We released a new agent, OpenHands CodeAct 2.1. CodeAct is a strong [single agen
 CodeAct was already a competitive agent for SWE-Bench, but for CodeAct 2.1, we made a number of further improvements:
 
 - Switched to use function calling, a method used by language models to more precisely specify the functions available to them
+
 - We switched to Anthropic's new claude-3.5 model, released in October
+
 - Made a number of fixes to make it easier for agents to traverse directories
+
 ## Why is this important?
 
 From a **user experience** perspective, the difference is palpable. We use OpenHands every day in our development through the UI and github issue resolver, and things are smoother – more issues get resolved without human intervention, bigger issues can be tackled, agents don't get stuck in circles as much.
@@ -45,4 +53,5 @@ Further, at All Hands AI we believe strongly that **AI agents are going to be tr
 If this mission resonates with you, we would love to have you start out by using OpenHands through the links above, and further:
 
 - [Contribute to the open source](https://github.com/OpenHands/OpenHands?tab=readme-ov-file#-how-to-contribute)
+
 - [Apply to work with us at All Hands AI](https://allhandsai.applytojob.com/apply/)

@@ -1,10 +1,10 @@
 ---
-title: Announcing All Hands Online (Beta)
+title: 'Announcing All Hands Online (Beta)'
 slug: announcing-all-hands-online-beta
-excerpt: Today we're excited to announce our official hosted version of the OpenHands AI software developer! Learn about our new features including GitHub integration and improved multi-session support.
+excerpt: 'Today we''re excited to announce our official hosted version of the OpenHands AI software developer! Learn about our new features including GitHub integration and improved multi-session support.'
 coverImage: /assets/webflow/blog/agent-control-plane/cover.png
-coverAlt: Image from blog post
-date: '2024-11-04T12:00:00.000Z'
+coverAlt: 'Image from blog post'
+date: '2024-11-04T12:00:00.000+00:00'
 authors:
   - name: Robert Brennan
 ogImage:
@@ -19,17 +19,21 @@ Now all you have to do is go to app.all-hands.dev and get to work within seconds
 
 We're doing a gradual rollout to ensure we can scale up to meet demand. We've already invited our core open source maintainers, and will be adding more users over the coming weeks. We expect to have a fully open release in early 2025.
 
-You can try OpenHands Cloud at [app.all-hands.dev](https://app.all-hands.dev). You can also go over to the [GitHub repo](https://github.com/OpenHands/OpenHands) and download it yourself, as always. We will also be prioritizing access to OpenHands contributors, so this is as good a time as ever to start contributing!
+You can try OpenHands Cloud at [app.all-hands.dev](https://app.all-hands.dev/). You can also go over to the [GitHub repo](https://github.com/OpenHands/OpenHands) and download it yourself, as always. We will also be prioritizing access to OpenHands contributors, so this is as good a time as ever to start contributing!
 
 ## New UI
 
 We've completely redesigned the OpenHands interface to be more intuitive and easier to use. The new UI includes:
 
 - A cleaner, more modern look
+
 - Better organization of conversations and projects
+
 - Improved visibility into what the agent is doing
+
 - More intuitive navigation
-![New OpenHands UI](/assets/blog/20241104-beta-rollout/new-ui.png)
+
+![GitHub Integration](/assets/blog/20241104-beta-rollout/github-integration.png)
 
 Huge thanks to Paul Bloch for his work on the designs here, and to Stephan Psaras for his implementation.
 

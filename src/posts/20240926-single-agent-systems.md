@@ -1,10 +1,10 @@
 ---
-title: Don't Sleep on Single-agent Systems
+title: 'Don''t Sleep on Single-agent Systems'
 slug: dont-sleep-on-single-agent-systems
 excerpt: 'This post discusses some of the benefits of single-agent systems, and contrasts them with multi-agent systems.'
 coverImage: /assets/webflow/misc/6914f599fd4d8499f96fd1e4_6914f598fe6b36e9c3bf5e4c_single-agent-systems.png
-coverAlt: Cover image
-date: '2024-09-26T12:00:00.000Z'
+coverAlt: 'Cover image'
+date: '2024-09-26T12:00:00.000+00:00'
 authors:
   - name: Graham Neubig
 ogImage:
@@ -53,4 +53,4 @@ None of this is to say that multi-agent systems don't have their place. For inst
 
 The purpose of this post is just to get us to think critically about the trend of adding complexity to our systems. Sometimes simple is best, and with powerful models, powerful tools, and versatile prompts, we are already well on our path there.
 
-If any of this resonates with you, you can try out strong open-source software developers based on a single generalist AI agent through our [open-source](https://github.com/OpenHands/OpenHands) or [online](https://app.all-hands.dev) versions, or [join our community](https://github.com/OpenHands/OpenHands?tab=readme-ov-file#-join-our-community) and [contribute](https://github.com/OpenHands/OpenHands/blob/main/CONTRIBUTING.md)!
+If any of this resonates with you, you can try out strong open-source software developers based on a single generalist AI agent through our [open-source](https://github.com/OpenHands/OpenHands) or [online](https://app.all-hands.dev/) versions, or [join our community](https://github.com/OpenHands/OpenHands?tab=readme-ov-file#-join-our-community) and [contribute](https://github.com/OpenHands/OpenHands/blob/main/CONTRIBUTING.md)!

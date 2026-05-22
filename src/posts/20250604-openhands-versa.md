@@ -1,10 +1,10 @@
 ---
-title: Building a Provably Versatile Agent
+title: 'Building a Provably Versatile Agent'
 slug: building-a-provably-versatile-agent
 excerpt: 'OpenHands Versa is a versatile agent that excels across multiple benchmarks, from software engineering to web browsing and frontend development.'
 coverImage: /assets/webflow/blog/20250814-ai-agent-security/image2.png
-coverAlt: Image from blog post
-date: '2025-06-04T12:00:00.000Z'
+coverAlt: 'Image from blog post'
+date: '2025-06-04T12:00:00.000+00:00'
 authors:
   - name: Juan Michelini
   - name: Xingyao Wang
@@ -24,10 +24,12 @@ However, there's a lot more to life than solving bugs on Python repos. If you're
 Today, we're announcing two first steps towards this goal:
 
 - First, **VersaBench**, a new broad-coverage benchmark for evaluating agents on many different tasks from software development to more general business-relevant tasks.
+
 - Second, **OpenHands Versa**, an agent that can not only capably solve software engineering tasks, but cover a much broader spectrum of use cases.
+
 OpenHands Versa is quite capable, delivering performance that exceeds the state of the art on 5/8 benchmarks on VersaBench and is competitive on the others. This is the first time that a single agent has been demonstrated to be so broadly capable, and we think that you'll like it if you try it out.
 
-OpenHands Versa is enabled by default in the most recent version of OpenHands, so you can use it in the [OpenHands Cloud](https://app.all-hands.dev) today, [download OpenHands](https://github.com/OpenHands/OpenHands) 0.41 or higher, and read on to learn more.
+OpenHands Versa is enabled by default in the most recent version of OpenHands, so you can use it in the [OpenHands Cloud](https://app.all-hands.dev/) today, [download OpenHands](https://github.com/OpenHands/OpenHands) 0.41 or higher, and read on to learn more.
 
 ## VersaBench: A Diverse Benchmark for Software Engineering
 
@@ -65,6 +67,8 @@ Overall, the takeaway is simple: OpenHands is an agent that actually delivers ac
 
 Getting started with this new version of OpenHands is easy. You can:
 
-- Immediately access it through the [OpenHands Cloud](https://app.all-hands.dev), where new users can get started right away with $20 in free credits.
+- Immediately access it through the [OpenHands Cloud](https://app.all-hands.dev/), where new users can get started right away with $20 in free credits.
+
 - [Download OpenHands](https://github.com/OpenHands/OpenHands) and run locally, selecting a version 0.41.0 or higher.
+
 We also encourage you to join the community – connect with us on [Slack](https://join.slack.com/t/openhands-ai/shared_invite/zt-34zm4j0gj-Qz5kRHoca8DFCbqXPS~f_A), read our [documentation](https://docs.all-hands.dev/), and stay updated on our latest developments. Looking forward to what you all do with the world's most versatile agent!
