@@ -1,6 +1,5 @@
 import React from 'react';
 import { useMotionValueEvent, useScroll } from 'framer-motion';
-import MenuIcon from '~/svgs/menu.svg?react';
 import { Link, useLocation } from 'react-router';
 import { AnimatedHeaderLogo } from './animated-header-logo';
 import clsx from 'clsx';
@@ -283,17 +282,15 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
         {/* Mobile nav */}
-        <div className='mobile-nav flex items-center justify-between px-4 lg:hidden' style={{ height: '52px' }}>
-          <Link data-wf-el='nav_logo_link' to='/' aria-label='Go to Home' className='mobile-nav-logo w-inline-block'>
-            <AnimatedHeaderLogo renderText={textIsVisible} />
+        <div className='mobile-nav flex items-center justify-between lg:hidden'>
+          <Link to='/' aria-label='Go to Home' className='mobile-nav-logo'>
+            <img src='/assets/webflow/brand/openhands-logo-mobile.svg' alt='' />
           </Link>
-          <div className='w-[40px]'>
-            {showMenuIcon && (
-              <button className='nav_hamburger_button' aria-label='Open Menu' onClick={onClickMenuButton}>
-                <MenuIcon width={40} height={24} />
-              </button>
-            )}
-          </div>
+          {showMenuIcon ? (
+            <button type='button' className='mobile-menu-button' aria-label='Open Menu' onClick={onClickMenuButton}>
+              Menu
+            </button>
+          ) : <div aria-hidden='true' />}
         </div>
       </div>
     </nav>

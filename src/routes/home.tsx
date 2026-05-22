@@ -374,7 +374,7 @@ const Home = () => {
   const closeWorkflowDialog = () => setActiveWorkflow(null);
 
   return (
-    <main data-testid='home-content' data-wf-el='page-main' style={{ display: 'flex', flexDirection: 'column', backgroundColor: 'rgba(0, 0, 0, 0)' }}>
+    <main data-testid='home-content' data-wf-el='page-main' className='home-mobile-parity' style={{ display: 'flex', flexDirection: 'column', backgroundColor: 'rgba(0, 0, 0, 0)' }}>
       <dialog
         ref={workflowDialogRef}
         data-modal='modal'
@@ -470,7 +470,7 @@ const Home = () => {
                       <div className='h-8 w-px bg-brand-fg/20' aria-hidden='true' />
                     </div>
                     <div className='flex-shrink-0' style={{ padding: '0 12px' }}>
-                      <Link to='/whitepapers/modernize-legacy-systems-with-ai-agents' className='font-sohne-buch text-base font-normal leading-[22.4px] hover:text-[#8a5f45]' style={{ display: 'block' }}>
+                      <Link data-wf-el='standard-link' to='/whitepapers/modernize-legacy-systems-with-ai-agents' className='font-sohne-buch text-base font-normal leading-[22.4px] hover:text-[#8a5f45]' style={{ display: 'block' }}>
                         Read the whitepaper
                       </Link>
                     </div>
@@ -494,13 +494,13 @@ const Home = () => {
                 * collapsed all four blocks together. */}
               <div data-wf-el='hero-heading_wrap' className='flex flex-col items-center gap-2 text-center' style={{ justifyContent: 'center' }}>
                 {/* Live's `.hero-heading_h1.h1` has `margin-bottom: 0`. */}
-                <h1 id='hero-heading' className='fluid-h1 font-medium tracking-[-0.03em] text-brand-fg' style={{ marginBottom: '0px' }}>
+                <h1 data-wf-el='hero-heading_h1' id='hero-heading' className='fluid-h1 font-medium tracking-[-0.03em] text-brand-fg' style={{ marginBottom: '0px' }}>
                   Build with coding agents, your way.
                 </h1>
                 {/* Live's `.hero-heading_paragraph.paragraph-lg.u-text-darkgray`
                   * has `max-width: 40ch; margin-bottom: 0`.  The earlier
                   * `mb-7` (28px) was adding extra space above the CTAs. */}
-                <p id='hero-subheading' className='max-w-[40ch] fluid-body-lg font-medium text-brand-muted' style={{ marginLeft: '0px', marginRight: '0px', marginBottom: '0px' }}>
+                <p data-wf-el='hero-heading_paragraph' id='hero-subheading' className='max-w-[40ch] fluid-body-lg font-medium text-brand-muted' style={{ marginLeft: '0px', marginRight: '0px', marginBottom: '0px' }}>
                   Open-source, customizable. Run locally or at scale.
                 </p>
               </div>
@@ -698,7 +698,7 @@ const Home = () => {
                           backgroundColor: 'rgb(34, 21, 13)',
                           border: '1px solid rgb(0, 0, 0)',
                           borderColor: 'rgb(0, 0, 0)',
-                          opacity: index === activeSurfaceIndex ? 1 : 0.3,
+                          opacity: 0.3,
                         }}
                       >
                         {index === activeSurfaceIndex ? surface.title : ''}
@@ -770,7 +770,7 @@ const Home = () => {
                               pointerEvents: idx === activeSurfaceIndex ? 'auto' : 'none',
                             }}
                           >
-                            <img src={surface.image} alt='' data-wf-el='standard-media' width={1846} height={1280} loading='lazy' decoding='async' style={{ display: 'inline-block', width: '943.969px', height: '654.297px', maxWidth: '100%', borderRadius: '0px', objectFit: 'fill', objectPosition: '50% 50%' }} />
+                            <img src={surface.image} alt='' data-wf-el='standard-media' loading='lazy' decoding='async' style={{ display: 'inline-block', width: '943.969px', height: '654.297px', maxWidth: '100%', borderRadius: '0px', objectFit: 'fill', objectPosition: '50% 50%' }} />
                           </div>
                         ))}
                       </div>
@@ -1144,7 +1144,7 @@ const Home = () => {
                   {/* Live's `.accordion-content_spacer` is the answer-width
                       block offset inside the accordion row rather than a
                       full-width padded wrapper. */}
-                  <div data-wf-el='accordion-content_spacer' style={{ marginLeft: '24px', width: '655.5px', paddingTop: '0px', paddingLeft: '0px', paddingRight: '0px', paddingBottom: '40px' }}>
+                  <div data-wf-el='accordion-content_spacer' style={{ marginLeft: '24px', width: '655.5px', paddingTop: '0px', paddingLeft: '0px', paddingRight: '0px', paddingBottom: '24px' }}>
                     <div data-wf-el='rich-text-component' style={{ marginTop: '16px' }}>
                       <div data-wf-el='rich-text' className='font-sohne-buch' style={{ maxWidth: '820px' }}>
                         {/* Live FAQ answer P has margin: 0; the
@@ -1172,7 +1172,7 @@ const Home = () => {
             style={{ textAlign: 'start' }}
           />
         </div>
-        <div className='relative z-10 mx-auto max-w-[1238px]' style={{ marginTop: '49.6px' }}>
+        <div data-wf-el='container' className='relative z-10 mx-auto max-w-[1238px]' style={{ marginTop: '49.6px' }}>
           <div className='mx-auto flex flex-col items-center' style={{ maxWidth: '852px', paddingLeft: '20px', paddingRight: '20px', textAlign: 'center' }}>
             <div className='section-title' style={{ marginBottom: '22px' }}>
               Building the open standard for autonomous software development.
@@ -1200,7 +1200,7 @@ const Home = () => {
               * this Footer would render the entire marketing CTA block a
               * second time, inflating the section by ~163px and cascading
               * footer/page-height drift versus the live site. */}
-            <Footer compactNav showMarketingCta={false} showSocialLinks showCopyright />
+            <Footer compactNav showMarketingCta={false} showSocialLinks showCopyright containerWfEl={null} />
           </div>
         </div>
       </section>

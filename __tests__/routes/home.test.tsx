@@ -55,6 +55,8 @@ describe('home route parity structure', () => {
       'object-cover',
     );
     expect(screen.queryAllByTestId('footer-social-link')).toHaveLength(3);
+    expect(container.querySelector('main[data-testid="home-content"]')).toHaveClass('home-mobile-parity');
+    expect(container.querySelector('section.text-center.text-brand-fg > [data-wf-el="container"]')).toBeInTheDocument();
   });
 
   it('preserves live Webflow text-node and widget parity markers', () => {

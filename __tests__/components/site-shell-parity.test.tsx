@@ -51,4 +51,16 @@ describe('site shell parity helpers', () => {
     });
     expect(container.textContent).toContain(`©${String.fromCharCode(160)}${new Date().getFullYear()}${String.fromCharCode(160)}OpenHands - All rights reserved`);
   });
+
+
+  it('can suppress the inner footer container Webflow marker when nested in a live container', () => {
+    const { container } = render(
+      <MemoryRouter>
+        <Footer compactNav containerWfEl={null} />
+      </MemoryRouter>
+    );
+
+    expect(container.querySelector('[data-wf-el="container"]')).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Privacy Policy' })).toBeInTheDocument();
+  });
 });
