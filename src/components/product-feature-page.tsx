@@ -234,9 +234,9 @@ export const ProductComparisonTable = ({
   const tickColor = headerColor ?? (dark ? 'rgb(179, 168, 140)' : 'rgb(138, 95, 69)');
 
   return (
-    <section data-wf-el='section' className={classNames('relative', dark ? 'text-brand-bg' : 'text-brand-fg')} style={{ display: 'block', backgroundColor: dark ? 'rgb(34, 21, 13)' : 'rgba(0, 0, 0, 0)', paddingTop: 'var(--product-comparison-padding-top, var(--product-section-padding-y, 80px))', paddingBottom: 'var(--product-comparison-padding-bottom, var(--product-section-padding-y, 80px))', paddingLeft: '0px', paddingRight: '0px' }}>
-      <div data-wf-el='container' data-product-comparison-container className='mx-auto max-w-[1238px]' style={{ display: 'block', color: dark ? 'rgb(249, 240, 217)' : 'rgb(34, 21, 13)', zIndex: 1, width: 'var(--product-container-width, 100%)', height: 'var(--product-comparison-container-height, auto)', marginTop: minHeight ? '128px' : '0px', marginBottom: minHeight ? '128px' : '0px' }}>
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginLeft: '-20px', marginRight: '-20px' }}>
+    <section data-wf-el='section' className={classNames('product-comparison-section relative', dark ? 'text-brand-bg' : 'text-brand-fg')} style={{ display: 'block', backgroundColor: dark ? 'rgb(34, 21, 13)' : 'rgba(0, 0, 0, 0)', paddingTop: 'var(--product-comparison-padding-top, var(--product-section-padding-y, 80px))', paddingBottom: 'var(--product-comparison-padding-bottom, var(--product-section-padding-y, 80px))', paddingLeft: '0px', paddingRight: '0px' }}>
+      <div data-wf-el='container' data-product-comparison-container className='product-comparison-container mx-auto max-w-[1238px]' style={{ display: 'block', color: dark ? 'rgb(249, 240, 217)' : 'rgb(34, 21, 13)', zIndex: 1, width: 'var(--product-container-width, 100%)', height: 'var(--product-comparison-container-height, auto)', marginTop: minHeight ? '128px' : '0px', marginBottom: minHeight ? '128px' : '0px' }}>
+        <div className='product-comparison-heading-row' style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginLeft: '-20px', marginRight: '-20px' }}>
           <div className={classNames('section-title text-center', headingClass)} style={{ marginBottom: 'var(--product-comparison-heading-margin-bottom, 8.8px)', maxWidth: 'var(--product-comparison-heading-max-width, 599px)' }}>
             The only open, secure, and scalable agent platform built for real engineering work
           </div>
@@ -255,7 +255,7 @@ export const ProductComparisonTable = ({
                 <th data-wf-el='product-table_th' className='py-4 font-normal text-left' style={{ paddingTop: '16px', paddingBottom: '16px', paddingRight: '0px', letterSpacing: 'normal', textTransform: 'none', fontSize: 'var(--product-table-cell-font-size, inherit)', lineHeight: 'var(--product-table-cell-line-height, inherit)', color: thColor }}>Feature</th>
                 <th data-wf-el='product-table_th' className='py-4 text-center font-normal' style={{ paddingTop: '16px', paddingBottom: '16px', paddingLeft: '0', paddingRight: '0', letterSpacing: 'normal', textTransform: 'none', fontSize: 'var(--product-table-cell-font-size, inherit)', lineHeight: 'var(--product-table-cell-line-height, inherit)', color: thColor }}>OpenHands</th>
                 <th data-wf-el='product-table_th' className='py-4 text-center font-normal' style={{ paddingTop: '16px', paddingBottom: '16px', paddingLeft: '0', paddingRight: '0', letterSpacing: 'normal', textTransform: 'none', fontSize: 'var(--product-table-cell-font-size, inherit)', lineHeight: 'var(--product-table-cell-line-height, inherit)', color: thColor }}>Devin</th>
-                <th data-wf-el='product-table_th' className='py-4 text-center font-normal' style={{ paddingTop: '16px', paddingBottom: '16px', paddingLeft: '0', paddingRight: '0', letterSpacing: 'normal', textTransform: 'none', fontSize: 'var(--product-table-cell-font-size, inherit)', lineHeight: 'var(--product-table-cell-line-height, inherit)', color: thColor }}><span className='product-table-claude-code'>Claude Code</span></th>
+                <th data-wf-el='product-table_th' className='py-4 text-center font-normal' style={{ paddingTop: '16px', paddingBottom: '16px', paddingLeft: '0', paddingRight: '0', letterSpacing: 'normal', textTransform: 'none', fontSize: 'var(--product-table-cell-font-size, inherit)', lineHeight: 'var(--product-table-cell-line-height, inherit)', color: thColor }}><span className='product-table-claude-code product-table-claude-label'>Claude Code</span></th>
                 <th data-wf-el='product-table_th' className='py-4 text-center font-normal' style={{ paddingTop: '16px', paddingBottom: '16px', paddingLeft: '0', paddingRight: '0', letterSpacing: 'normal', textTransform: 'none', fontSize: 'var(--product-table-cell-font-size, inherit)', lineHeight: 'var(--product-table-cell-line-height, inherit)', color: thColor }}>Factory</th>
               </tr>
             </thead>
@@ -305,8 +305,8 @@ const renderFaqQuestion = (question: string) => {
 export const ProductFaqSection = ({ faqs }: { faqs: readonly ProductFaqItem[] }) => {
   return (
     <section data-wf-el='section' className='product-faq-section relative' style={{ display: 'block', backgroundColor: 'rgba(0, 0, 0, 0)', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px', marginTop: '-1px' }}>
-      <div data-wf-el='container' className='mx-auto max-w-[1238px]' style={{ display: 'block', paddingTop: '0px', paddingBottom: '0px', gap: 'normal' }}>
-        <div className='product-faq-layout' style={{ display: 'flex', alignItems: 'start', marginLeft: '-20px', marginRight: '-20px' }}>
+      <div data-wf-el='container' className='product-faq-container mx-auto max-w-[1238px]' style={{ display: 'block', paddingTop: '0px', paddingBottom: '0px', gap: 'normal' }}>
+        <div className='product-faq-row product-faq-layout' style={{ display: 'flex', alignItems: 'start', marginLeft: '-20px', marginRight: '-20px' }}>
           <div className='product-faq-heading-col' style={{ display: 'flex', flexDirection: 'column', position: 'relative', width: '41.6667%', maxWidth: '41.6667%', paddingLeft: '20px', paddingRight: '20px' }}>
             <h2 className='section-title text-brand-fg' style={{ marginBottom: '22px' }}>
               FAQ&apos;s
@@ -394,7 +394,7 @@ export const ProductFeaturePage = ({
   const isCli = variant === 'cli';
   const heroHeight = isCli ? '432px' : isGui ? '407px' : '382px';
   return (
-    <main data-wf-el='page-main' className={classNames('product-feature-page', `product-feature-page--${variant}`)} style={{ display: 'flex', flexDirection: 'column', ...(variant === 'sdk' ? { paddingBottom: '1px', marginBottom: '-1px' } : {}), ...(isGui ? { marginBottom: '-0.313px' } : {}) }}>
+    <main data-wf-el='page-main' data-product-feature-page={variant} className={classNames('product-feature-page', `product-feature-page--${variant}`)} style={{ display: 'flex', flexDirection: 'column', ...(variant === 'sdk' ? { paddingBottom: '1px', marginBottom: '-1px' } : {}), ...(isGui ? { marginBottom: '-0.313px' } : {}) }}>
       <section
         data-wf-el='section-product_hero'
         style={{ padding: '0', overflow: 'visible' }}
@@ -462,9 +462,9 @@ export const ProductFeaturePage = ({
         </>
       )}
 
-      <section data-wf-el='section' className='relative' style={{ display: 'block', backgroundColor: 'rgb(249, 240, 217)', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px' }}>
+      <section data-wf-el='section' className='product-feature-grid-section relative' style={{ display: 'block', backgroundColor: 'rgb(249, 240, 217)', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px' }}>
         <div data-wf-el='container' className='mx-auto max-w-[1238px]' style={{ display: 'block' }}>
-          <div className='product-detail-grid product-detail-grid--top grid gap-10 lg:grid-cols-2' style={{ marginBottom: '128px', alignItems: 'start', marginLeft: '-20px', marginRight: '-20px' }}>
+          <div className='product-feature-row product-feature-row-capabilities product-detail-grid product-detail-grid--top grid gap-10 lg:grid-cols-2' style={{ marginBottom: '128px', alignItems: 'start', marginLeft: '-20px', marginRight: '-20px' }}>
             <div data-wf-el='card' style={{ borderStyle: 'none', borderRadius: '8px', position: 'relative', display: 'flex', overflow: 'hidden', flexDirection: 'column', justifyContent: 'flex-start' }}>
               <div data-wf-el='card-body' style={{ padding: '24px', position: 'relative', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start' }}>
                 <h2 className='section-title text-brand-fg' style={{ textAlign: 'start' }}>
@@ -477,7 +477,7 @@ export const ProductFeaturePage = ({
               <ProductImageCard src={page.showcaseImages[0].src} alt={page.showcaseImages[0].alt} className={isCli ? '' : 'lg:-translate-x-5'} />
             </div>
           </div>
-          <div className='product-detail-grid grid gap-10 lg:grid-cols-2' style={{ alignItems: 'start', marginLeft: '-20px', marginRight: '-20px' }}>
+          <div className='product-feature-row product-feature-row-usecases product-detail-grid grid gap-10 lg:grid-cols-2' style={{ alignItems: 'start', marginLeft: '-20px', marginRight: '-20px' }}>
             <div style={isCli ? { transform: 'translateX(20px)' } : undefined}>
               <ProductImageCard src={page.showcaseImages[1].src} alt={page.showcaseImages[1].alt} className={classNames(!isCli && 'lg:translate-x-5', isCli && 'cli-how-height')} />
             </div>

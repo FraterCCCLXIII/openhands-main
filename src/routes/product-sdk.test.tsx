@@ -37,4 +37,14 @@ describe('/product/sdk parity markup', () => {
     expect(html).toContain('<span class="sr-only">Join Slack</span>');
     expect(html).toContain('href="/contact"');
   });
+
+  it('marks SDK product sections for mobile Webflow parity overrides', () => {
+    const html = renderProductSdk();
+
+    expect(html).toContain('data-product-feature-page="sdk"');
+    expect(html).toContain('product-feature-grid-section');
+    expect(html).toContain('product-comparison-section');
+    expect(html).toContain('product-faq-section');
+    expect(html.match(/data-wf-el="asci-embed"/g)).toHaveLength(1);
+  });
 });
