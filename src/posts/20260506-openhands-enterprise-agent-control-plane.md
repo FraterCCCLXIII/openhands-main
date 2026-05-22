@@ -1,5 +1,6 @@
 ---
 title: 'From Agents to Systems: Introducing OpenHands Enterprise, the Agent Control Plane'
+importance: Featured
 slug: openhands-enterprise-agent-control-plane
 excerpt: 'OpenHands Enterprise gives teams a system for running AI agents across the organization, with the infrastructure required to control, observe, and scale that work. Today we are also making OpenHands Automations generally available.'
 coverImage: /assets/webflow/blog/20260506-openhands-enterprise-agent-control-plane/20260506-openhands-enterprise-agent-control-plane-cover.png

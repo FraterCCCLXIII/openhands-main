@@ -5,6 +5,7 @@ interface Post {
     slug?: string;
     aliases?: string[];
     published?: boolean;
+    importance?: 'Featured' | 'Standard' | 'SEO';
     seoTitleDate?: string;
     excerpt: string;
     coverImage: string | undefined;

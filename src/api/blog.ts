@@ -7,6 +7,7 @@ type BlogPost = Post & {
     slug?: string;
     aliases?: string[];
     published?: boolean;
+    importance?: 'Featured' | 'Standard' | 'SEO';
     seoTitleDate?: string;
     coverAlt?: string;
     coverRadius?: 'none';
@@ -48,6 +49,13 @@ const parseFrontmatterValue = (value: string) => {
   }
 
   return trimmed;
+};
+
+const normalizeDateValue = (value: unknown) => {
+  if (typeof value !== 'string' || !value) return value;
+
+  const timestamp = Date.parse(value);
+  return Number.isNaN(timestamp) ? value : new Date(timestamp).toISOString();
 };
 
 const parseIndentedFrontmatterBlock = (lines: string[]) => {
@@ -115,6 +123,8 @@ const parsePost = (rawPost: string): BlogPost => {
     }
     data[key] = parseIndentedFrontmatterBlock(blockLines);
   }
+
+  data.date = normalizeDateValue(data.date);
 
   return {
     content: rawPost.slice(frontmatterMatch[0].length),

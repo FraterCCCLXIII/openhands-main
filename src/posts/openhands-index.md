@@ -1,5 +1,6 @@
 ---
 title: 'Introducing the OpenHands Index'
+importance: Featured
 slug: openhands-index
 excerpt: 'The OpenHands Index is a comprehensive benchmark that tests agentic software engineering models across a broad variety of tasks.'
 coverImage: /assets/webflow/blog/openhands-index/openhands-index-hero.png

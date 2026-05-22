@@ -7,6 +7,7 @@ const API = 'https://api.notion.com/v1';
 const NOTION_VERSION = process.env.NOTION_VERSION ?? '2022-06-28';
 const POSTS_DIR = process.env.BLOG_POSTS_DIR ?? 'src/posts';
 const PUBLIC_DIR = process.env.PUBLIC_DIR ?? 'public';
+const BLOG_API_FILE = process.env.BLOG_API_FILE ?? 'src/api/blog.ts';
 const NOTICE = 'This Notion page was created by an AI agent (OpenHands) on behalf of the user during the GitHub-to-Notion blog migration.';
 const rawArgs = process.argv.slice(2);
 const argv = new Set(rawArgs);
@@ -456,7 +457,9 @@ const parsePostMeta = (file, raw) => {
     authors: parseAuthors(frontmatter),
     ogImage: parseFrontmatterValue(parseOgImage(frontmatter)),
     seoTitleDate: parseFrontmatterValue(extractFrontmatterValue(frontmatter, 'seoTitleDate')),
+    importance: parseFrontmatterValue(extractFrontmatterValue(frontmatter, 'importance')),
   };
+  if (!data.importance) delete data.importance;
   if (data.published !== false) delete data.published;
   return { frontmatter, body, data, slug: data.slug || stringToSlug(data.title) };
 };
@@ -548,9 +551,10 @@ const pageBodyMarkdown = async (pageId, context, report) => {
   return body ? `${body}\n` : '';
 };
 const yamlString = (value) => `'${String(value ?? '').replaceAll("'", "''")}'`;
-const buildFrontmatter = ({ title, slug, excerpt, coverImage, coverAlt, coverRadius, date, authors, ogImage, seoTitleDate, published }) => {
+const buildFrontmatter = ({ title, slug, excerpt, coverImage, coverAlt, coverRadius, date, authors, ogImage, seoTitleDate, published, importance }) => {
   const lines = [`title: ${yamlString(title)}`];
   if (published === false) lines.push('published: false');
+  if (importance && importance !== 'Standard') lines.push(`importance: ${importance}`);
   if (slug) lines.push(`slug: ${slug}`);
   if (excerpt) lines.push(`excerpt: ${yamlString(excerpt)}`);
   if (coverImage) lines.push(`coverImage: ${coverImage}`);
@@ -578,15 +582,32 @@ const pageMetadata = async (page, context, report) => {
     ogImage: await filePropertyAssetPath(pageProp(page, ['OG image']), context, report),
     seoTitleDate: pageProp(page, ['SEO title date']) || '',
     published: undefined,
+    importance: pageProp(page, ['Importance']) || 'Standard',
   };
 };
+
+const updateFeaturedSlug = async (slug, report) => {
+  if (!slug) return;
+  const file = repoPath(BLOG_API_FILE);
+  const current = await readIfExists(file);
+  if (!current) throw new Error(`Cannot update featured blog slug; file not found: ${BLOG_API_FILE}`);
+  const source = current.toString('utf8');
+  const pattern = /export const BLOG_FEATURED_SLUG = '[^']*';/;
+  if (!pattern.test(source)) throw new Error(`Cannot find BLOG_FEATURED_SLUG in ${BLOG_API_FILE}`);
+  const next = source.replace(pattern, `export const BLOG_FEATURED_SLUG = '${slug}';`);
+  if (next === source) return;
+  report.featuredSlugUpdates += 1;
+  await writeIfChanged(file, next, report, BLOG_API_FILE);
+};
+
 
 const syncFromNotion = async () => {
   const databaseId = normalizeId(assertValue('NOTION_BLOG_DATABASE_ID', process.env.NOTION_BLOG_DATABASE_ID));
   const pages = await queryDatabase(databaseId);
   const index = await localBlogIndex();
   const expected = new Set();
-  const report = { pages: pages.length, markdownUpdates: 0, assetUpdates: 0, assetsUnchanged: 0, deletedPosts: 0, changed: [] };
+  const featuredCandidates = [];
+  const report = { pages: pages.length, markdownUpdates: 0, assetUpdates: 0, assetsUnchanged: 0, deletedPosts: 0, featuredSlugUpdates: 0, changed: [] };
   for (const page of pages) {
     const title = pageProp(page, ['Name', 'Title']);
     const status = pageProp(page, ['Status']) || (page.properties?.Published?.checkbox === false ? 'Draft' : 'Published');
@@ -602,6 +623,7 @@ const syncFromNotion = async () => {
     const context = { slug, imagePathByName: index.imagePathBySlugAndName.get(slug) ?? new Map() };
     expected.add(relative);
     const metadata = await pageMetadata(page, context, report);
+    if (metadata.importance === 'Featured') featuredCandidates.push({ slug, date: metadata.date });
     const body = await pageBodyMarkdown(page.id, context, report);
     const markdown = `---\n${buildFrontmatter(metadata)}\n---\n${body}`;
     const current = await readIfExists(repoPath(relative));
@@ -609,6 +631,10 @@ const syncFromNotion = async () => {
     const markdownMatches = currentMarkdown && (sha256(currentMarkdown) === sha256(markdown) || comparableMarkdownHash(currentMarkdown) === comparableMarkdownHash(markdown));
     if (!markdownMatches) { report.markdownUpdates += 1; await writeIfChanged(repoPath(relative), markdown, report, relative); }
   }
+  const latestFeatured = featuredCandidates
+    .sort((left, right) => new Date(right.date || 0).getTime() - new Date(left.date || 0).getTime())[0];
+  await updateFeaturedSlug(latestFeatured?.slug, report);
+
   if (!keepMissing) {
     for (const file of await readdir(postsDir)) {
       if (!file.endsWith('.md')) continue;
@@ -620,7 +646,7 @@ const syncFromNotion = async () => {
     }
   }
   console.log(`Notion blog sync checked ${report.pages} Notion pages.`);
-  console.log(`Markdown updates: ${report.markdownUpdates}; asset updates: ${report.assetUpdates}; deleted posts: ${report.deletedPosts}.`);
+  console.log(`Markdown updates: ${report.markdownUpdates}; asset updates: ${report.assetUpdates}; deleted posts: ${report.deletedPosts}; featured slug updates: ${report.featuredSlugUpdates}.`);
   if (!report.changed.length) return console.log('No differences found between Notion and the repository.');
   console.log('Changed paths:');
   for (const changed of report.changed) console.log(`- ${changed}`);
@@ -635,6 +661,15 @@ const desiredDatabaseProperties = () => ({
         { name: 'Draft', color: 'gray' },
         { name: 'Ready', color: 'yellow' },
         { name: 'Published', color: 'green' },
+      ],
+    },
+  },
+  Importance: {
+    select: {
+      options: [
+        { name: 'Featured', color: 'red' },
+        { name: 'Standard', color: 'gray' },
+        { name: 'SEO', color: 'blue' },
       ],
     },
   },
@@ -660,6 +695,7 @@ const filePropertyFromAsset = async (assetPath) => {
 const postProperties = async (file, post) => ({
   Name: titleProp(post.data.title ?? file),
   Status: { select: { name: post.data.published === false ? 'Draft' : 'Published' } },
+  Importance: { select: { name: post.data.importance || 'Standard' } },
   Slug: richTextProp(post.slug),
   'Publication date': post.data.date ? { date: { start: post.data.date } } : { date: null },
   Authors: richTextProp(post.data.authors.join(', ')),
@@ -934,9 +970,11 @@ const auditNotion = async () => {
   const database = await notion(`/databases/${databaseId}`);
   const forbidden = ['File', 'Markdown SHA256', 'Assets SHA256', 'Frontmatter', 'OG image URL', 'Published'].filter((name) => database.properties[name]);
   const statusOptions = new Set(database.properties.Status?.select?.options?.map((option) => option.name) ?? []);
+  const importanceOptions = new Set(database.properties.Importance?.select?.options?.map((option) => option.name) ?? []);
   const failures = [];
   if (forbidden.length) failures.push(`Forbidden derived/redundant properties still exist: ${forbidden.join(', ')}`);
   for (const status of ['Draft', 'Ready', 'Published']) if (!statusOptions.has(status)) failures.push(`Missing Status option: ${status}`);
+  for (const importance of ['Featured', 'Standard', 'SEO']) if (!importanceOptions.has(importance)) failures.push(`Missing Importance option: ${importance}`);
   const local = await localBlogIndex();
   const pages = await queryDatabase(databaseId);
   let audited = 0;
