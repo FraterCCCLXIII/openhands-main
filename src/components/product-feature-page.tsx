@@ -1,5 +1,5 @@
 import { Fragment, type CSSProperties } from 'react';
-import type { ProductFeaturePageData } from '~/data/product-feature-pages';
+import type { ProductFeatureFaq, ProductFeaturePageData, ProductFeatureVariant } from '~/data/product-feature-pages';
 import { Footer } from '~/components/footer';
 import { getRouteFooterProps } from '~/constants/route-layout';
 import ASCIIAnimation from '~/components/ascii-animation';
@@ -13,10 +13,7 @@ export interface ProductPageAction {
   screenReaderLabel?: string;
 }
 
-export interface ProductFaqItem {
-  question: string;
-  answer: string;
-}
+export type ProductFaqItem = ProductFeatureFaq;
 
 const TABLE_TICK_ICON = '/assets/webflow/icons/691234bd9e72712ffbcf9470_tick.svg';
 
@@ -384,12 +381,10 @@ export const ProductPageFooterCta = ({
 
 export const ProductFeaturePage = ({
   page,
-  faqs,
   variant,
 }: {
   page: ProductFeaturePageData;
-  faqs: readonly ProductFaqItem[];
-  variant: 'cli' | 'gui' | 'sdk';
+  variant: ProductFeatureVariant;
 }) => {
   const isGui = variant === 'gui';
   const isCli = variant === 'cli';
@@ -500,7 +495,7 @@ export const ProductFeaturePage = ({
         ctaLabel={page.comparisonCta?.label ?? 'Try it live'}
         minHeight={1082}
       />
-      <ProductFaqSection faqs={faqs} />
+      <ProductFaqSection faqs={page.faqs} />
       {/* Live renders the page-specific closing CTA inside the yellow footer
         section, and the footer section itself is a child of page-main. */}
       <Footer {...getRouteFooterProps(`/product/${variant}`)} />

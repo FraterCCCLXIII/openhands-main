@@ -1,47 +1,8 @@
-import type { MetaFunction } from 'react-router';
-import { ProductFeaturePage } from '~/components/product-feature-page';
-import { PRODUCT_FEATURE_PAGES } from '~/data/product-feature-pages';
-import { createSocialPreviewMeta } from '~/utils/seo';
+import { createProductFeatureRoute } from '~/components/product-feature-route';
 
-const FAQS = [
-  {
-    question: 'What is the OpenHands CLI?',
-    answer:
-      'The OpenHands CLI is built for developers who want to delegate real tasks to agents without leaving their terminal, from refactoring code to running multi-step workflows.',
-  },
-  {
-    question: 'How does the OpenHands CLI improve developer productivity?',
-    answer:
-      'The CLI enables developers to delegate repetitive or complex tasks to AI agents while staying in their existing workflow. This reduces context switching and allows faster iteration directly from the command line.',
-  },
-  {
-    question: 'Can I use the OpenHands CLI with my existing tools?',
-    answer:
-      'Yes. The OpenHands CLI integrates with standard developer tools, environments, and workflows, making it easy to adopt without changing your existing setup.',
-  },
-  {
-    question: 'Is the OpenHands CLI suitable for advanced engineering workflows?',
-    answer:
-      'Yes. The CLI is designed for experienced developers who want fine-grained control over agent behavior, task execution, and system-level operations across their codebase.',
-  },
-  {
-    question: 'Does the OpenHands CLI require cloud connectivity?',
-    answer:
-      'OpenHands can be deployed in cloud or self-hosted environments, allowing teams to run the CLI in secure, isolated setups depending on their infrastructure requirements.',
-  },
-] as const;
+const route = createProductFeatureRoute('cli');
 
-const PAGE = PRODUCT_FEATURE_PAGES.cli;
+export const meta = route.meta;
+export const handle = route.handle;
 
-export const meta: MetaFunction = () =>
-  createSocialPreviewMeta({
-    title: PAGE.metaTitle,
-    description: PAGE.metaDescription,
-    pathname: '/product/cli',
-  });
-
-export const handle = { hideGlobalFooter: true };
-
-export default function ProductCli() {
-  return <ProductFeaturePage page={PAGE} faqs={FAQS} variant='cli' />;
-}
+export default route.Component;

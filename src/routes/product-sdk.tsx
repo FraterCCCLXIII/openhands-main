@@ -1,47 +1,8 @@
-import type { MetaFunction } from 'react-router';
-import { ProductFeaturePage } from '~/components/product-feature-page';
-import { PRODUCT_FEATURE_PAGES } from '~/data/product-feature-pages';
-import { createSocialPreviewMeta } from '~/utils/seo';
+import { createProductFeatureRoute } from '~/components/product-feature-route';
 
-const FAQS = [
-  {
-    question: 'What is the OpenHands SDK?',
-    answer:
-      'The OpenHands SDK is a developer toolkit for building, customizing, and orchestrating AI coding agents. It allows teams to integrate OpenHands capabilities directly into their own systems and workflows.',
-  },
-  {
-    question: 'What is the Large Codebase SDK?',
-    answer:
-      'The Large Codebase SDK is a specialized component that enables OpenHands to understand and operate on complex codebases. It maps dependencies, sequences changes correctly, and allows multiple agents to work in parallel without conflicts.',
-  },
-  {
-    question: 'How can developers use the OpenHands SDK?',
-    answer:
-      'Developers can use the SDK to build custom agent workflows, automate engineering processes, and extend OpenHands to fit their specific infrastructure and development needs.',
-  },
-  {
-    question: 'Is the OpenHands SDK model-agnostic?',
-    answer:
-      'Yes. The SDK is designed to be model-agnostic, allowing teams to use different large language models depending on performance, cost, or compliance requirements.',
-  },
-  {
-    question: 'Who should use the OpenHands SDK?',
-    answer:
-      'The SDK is best suited for platform teams, infrastructure engineers, and organizations looking to deeply integrate AI-driven development into their systems and scale it across teams.',
-  },
-] as const;
+const route = createProductFeatureRoute('sdk');
 
-const PAGE = PRODUCT_FEATURE_PAGES.sdk;
+export const meta = route.meta;
+export const handle = route.handle;
 
-export const meta: MetaFunction = () =>
-  createSocialPreviewMeta({
-    title: PAGE.metaTitle,
-    description: PAGE.metaDescription,
-    pathname: '/product/sdk',
-  });
-
-export const handle = { hideGlobalFooter: true };
-
-export default function ProductSdk() {
-  return <ProductFeaturePage page={PAGE} faqs={FAQS} variant='sdk' />;
-}
+export default route.Component;

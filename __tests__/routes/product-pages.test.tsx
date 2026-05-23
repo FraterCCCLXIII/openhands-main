@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import type { ReactElement } from 'react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
-import { PRODUCT_OG_IMAGE } from '../../src/data/product-feature-pages';
+import { PRODUCT_FEATURE_PAGES, PRODUCT_OG_IMAGE } from '../../src/data/product-feature-pages';
 import Product, { meta as productMeta } from '../../src/routes/product';
 import ProductCLI, { meta as productCliMeta } from '../../src/routes/product-cli';
 import ProductGUI, { meta as productGuiMeta } from '../../src/routes/product-gui';
@@ -140,6 +140,27 @@ describe('Product parity routes', () => {
     expect(screen.getAllByRole('link', { name: 'Try it live' }).length).toBeGreaterThan(0);
   });
 
+  it('stores product detail FAQs with the rest of the product page data', () => {
+    const detailPages = [
+      { element: <ProductSDK />, variant: 'sdk' as const },
+      { element: <ProductGUI />, variant: 'gui' as const },
+      { element: <ProductCLI />, variant: 'cli' as const },
+    ];
+
+    detailPages.forEach(({ element, variant }) => {
+      const page = PRODUCT_FEATURE_PAGES[variant];
+      const { container, unmount } = renderRoute(element);
+
+      expect(page.faqs).toHaveLength(5);
+      expect(container.querySelectorAll('summary label')).toHaveLength(page.faqs.length);
+      page.faqs.forEach((faq) => {
+        expect(screen.getByText(faq.answer)).toBeInTheDocument();
+      });
+
+      unmount();
+    });
+  });
+
   it('locks live product detail CTA, proof heading, and FAQ typography parity', () => {
     const detailPages: Array<{
       element: ReactElement;
@@ -224,19 +245,19 @@ describe('Product parity routes', () => {
   });
 
   it('matches live metadata for the dedicated product pages', () => {
-    expectSocialMetadata(productSdkMeta({} as never), {
+    expectSocialMetadata(productSdkMeta({ location: { pathname: '/product/sdk' } } as never), {
       title: 'OpenHands SDK | Secure, Scalable Agentic Software Development',
       description: 'Extend OpenHands with code, not constraints.',
       pathname: '/product/sdk',
     });
 
-    expectSocialMetadata(productGuiMeta({} as never), {
+    expectSocialMetadata(productGuiMeta({ location: { pathname: '/product/gui' } } as never), {
       title: 'OpenHands Web GUI | Secure, Scalable Agentic Software Development',
       description: 'Plan, run, and review agent work together in a collaborative UI.',
       pathname: '/product/gui',
     });
 
-    expectSocialMetadata(productCliMeta({} as never), {
+    expectSocialMetadata(productCliMeta({ location: { pathname: '/product/cli' } } as never), {
       title: 'OpenHands CLI | Secure, Scalable Agentic Software Development',
       description:
         'Run, inspect, and automate OpenHands agents directly from the terminal or headlessly in your pipelines with full visibility and control.',
