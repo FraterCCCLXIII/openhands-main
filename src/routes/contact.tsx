@@ -1,45 +1,19 @@
 import { useEffect, useRef, useState, type CSSProperties, type FormEvent, type MouseEvent } from 'react';
 import ASCIIAnimation from '~/components/ascii-animation';
 import { CompanyPageShell } from '~/components/company-page-shell';
+import { createSocialPreviewMeta } from '~/utils/seo';
 import type { Route } from './+types/contact';
 
-export const meta: Route.MetaFunction = ({ location }) => {
-  return [
-    { title: 'Get in Touch | OpenHands Sales & Support' },
-    {
-      name: 'description',
-      content:
-        "Connect with the OpenHands team to explore cloud coding agents, enterprise deployments, support, or partnerships. We're here to help.",
-    },
-    { property: 'og:title', content: 'Get in Touch | OpenHands Sales & Support' },
-    {
-      property: 'og:description',
-      content:
-        "Connect with the OpenHands team to explore cloud coding agents, enterprise deployments, support, or partnerships. We're here to help.",
-    },
-    {
-      property: 'og:image',
-      content:
-        'https://openhands.dev/assets/webflow/og/69161b32abf448a2df921a73_openhands_opengraph_01.png',
-    },
-    { property: 'og:url', content: 'https://openhands.dev' + location.pathname },
-    { property: 'og:type', content: 'website' },
-    { property: 'og:site_name', content: 'OpenHands' },
-    { name: 'twitter:card', content: 'summary_large_image' },
-    { name: 'twitter:title', content: 'Get in Touch | OpenHands Sales & Support' },
-    {
-      name: 'twitter:description',
-      content:
-        "Connect with the OpenHands team to explore cloud coding agents, enterprise deployments, support, or partnerships. We're here to help.",
-    },
-    {
-      name: 'twitter:image',
-      content:
-        'https://openhands.dev/assets/webflow/og/69161b32abf448a2df921a73_openhands_opengraph_01.png',
-    },
-    { tagName: 'link', rel: 'canonical', href: 'https://openhands.dev' + location.pathname },
-  ];
-};
+const CONTACT_META_TITLE = 'Get in Touch | OpenHands Sales & Support';
+const CONTACT_META_DESCRIPTION =
+  "Connect with the OpenHands team to explore cloud coding agents, enterprise deployments, support, or partnerships. We're here to help.";
+
+export const meta: Route.MetaFunction = ({ location }) =>
+  createSocialPreviewMeta({
+    title: CONTACT_META_TITLE,
+    description: CONTACT_META_DESCRIPTION,
+    pathname: location.pathname,
+  });
 
 const CHECK_ICON =
   '/assets/webflow/icons/690cb1513c759a7404df1ba1_check.svg';

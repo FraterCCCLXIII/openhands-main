@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { type MetaFunction } from 'react-router';
 import { Footer } from '~/components/footer';
 import { getRouteFooterProps } from '~/constants/route-layout';
+import { createSocialPreviewMeta } from '~/utils/seo';
 
 const WHITEPAPER_TITLE = 'Modernize Legacy Systems with AI Agents | OpenHands Whitepaper';
 const WHITEPAPER_DESCRIPTION =
@@ -47,27 +48,12 @@ function HubSpotWhitepaperForm() {
 
 
 
-export const meta: MetaFunction = ({ location }) => [
-  { title: WHITEPAPER_TITLE },
-  { name: 'description', content: WHITEPAPER_DESCRIPTION },
-  { property: 'og:title', content: WHITEPAPER_TITLE },
-  { property: 'og:description', content: WHITEPAPER_DESCRIPTION },
-  {
-    property: 'og:image',
-    content: 'https://openhands.dev/assets/webflow/og/69161b32abf448a2df921a73_openhands_opengraph_01.png',
-  },
-  { property: 'og:url', content: `https://openhands.dev${location.pathname}` },
-  { property: 'og:type', content: 'website' },
-  { property: 'og:site_name', content: 'OpenHands' },
-  { name: 'twitter:card', content: 'summary_large_image' },
-  { name: 'twitter:title', content: WHITEPAPER_TITLE },
-  { name: 'twitter:description', content: WHITEPAPER_DESCRIPTION },
-  {
-    name: 'twitter:image',
-    content: 'https://openhands.dev/assets/webflow/og/69161b32abf448a2df921a73_openhands_opengraph_01.png',
-  },
-  { tagName: 'link', rel: 'canonical', href: `https://openhands.dev${location.pathname}` },
-];
+export const meta: MetaFunction = ({ location }) =>
+  createSocialPreviewMeta({
+    title: WHITEPAPER_TITLE,
+    description: WHITEPAPER_DESCRIPTION,
+    pathname: location.pathname,
+  });
 
 export const handle = { hideGlobalFooter: true };
 

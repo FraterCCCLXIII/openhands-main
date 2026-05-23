@@ -2,35 +2,14 @@ import type { Route } from "./+types/responsible-disclosure-policy";
 import Markdown from "react-markdown";
 import { Bold, ExternalLink } from "../components/custom-elements";
 import rdp from "../legal/responsible-disclosure-policy.md?raw";
+import { createSocialPreviewMeta } from '~/utils/seo';
 
-export const meta: Route.MetaFunction = ({ location }) => {
-  return [
-    { title: "Responsible Disclosure Policy" },
-    {
-      name: "description",
-      content: "OpenHands Responsible Disclosure Policy",
-    },
-    {
-      property: "og:title",
-      content: "Responsible Disclosure Policy",
-    },
-    {
-      property: "og:description",
-      content: "OpenHands Responsible Disclosure Policy",
-    },
-    {
-      property: "og:image",
-      content: "https://openhands.dev/assets/webflow/og/69161b32abf448a2df921a73_openhands_opengraph_01.png",
-    },
-    {
-      property: "og:url",
-      content: "https://openhands.dev" + location.pathname,
-    },
-    { property: "og:type", content: "website" },
-    { property: "og:site_name", content: "OpenHands" },
-    { tagName: "link", rel: "canonical", href: "https://openhands.dev" + location.pathname },
-  ];
-};
+export const meta: Route.MetaFunction = ({ location }) =>
+  createSocialPreviewMeta({
+    title: "Responsible Disclosure Policy",
+    description: "OpenHands Responsible Disclosure Policy",
+    pathname: location.pathname,
+  });
 
 function Rdp() {
   return (

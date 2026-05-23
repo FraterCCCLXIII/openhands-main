@@ -1,24 +1,14 @@
 import tosHtml from '~/legal/tos-live.html?raw';
+import { createSocialPreviewMeta } from '~/utils/seo';
 import type { Route } from './+types/tos';
 
-export const meta: Route.MetaFunction = ({ location }) => {
-  return [
-    { title: 'Terms of Service' },
-    { name: 'description', content: 'OpenHands Terms of Service' },
-    { property: 'og:title', content: 'Terms of Service' },
-    { property: 'og:description', content: 'OpenHands Terms of Service' },
-    { property: 'og:image', content: 'https://openhands.dev/assets/webflow/og/69161b32abf448a2df921a73_openhands_opengraph_01.png' },
-    { property: 'og:url', content: 'https://openhands.dev' + location.pathname },
-    { property: 'og:type', content: 'website' },
-    { property: 'og:site_name', content: 'OpenHands' },
-    { name: 'twitter:card', content: 'summary_large_image' },
-    { name: 'twitter:title', content: 'Terms of Service' },
-    { name: 'twitter:description', content: 'OpenHands Terms of Service' },
-    { name: 'twitter:image', content: 'https://openhands.dev/assets/webflow/og/69161b32abf448a2df921a73_openhands_opengraph_01.png' },
-    { tagName: 'link', rel: 'canonical', href: 'https://openhands.dev' + location.pathname },
-    { name: 'robots', content: 'noindex, nofollow' },
-  ];
-};
+export const meta: Route.MetaFunction = ({ location }) =>
+  createSocialPreviewMeta({
+    title: 'Terms of Service',
+    description: 'OpenHands Terms of Service',
+    pathname: location.pathname,
+    extra: [{ name: 'robots', content: 'noindex, nofollow' }],
+  });
 
 function TOS() {
   return (

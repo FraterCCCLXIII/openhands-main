@@ -2,13 +2,12 @@ import Markdown from 'react-markdown';
 import type { ReactNode } from 'react';
 
 import privacyPolicy from '~/legal/privacy-policy.md?raw';
+import { createSocialPreviewMeta } from '~/utils/seo';
 
 import type { Route } from './+types/privacy-policy';
 
 const legalHeadingClass = 'font-medium leading-[1.15] tracking-normal text-brand-fg';
 const legalDescription = 'OpenHands Privacy Policy';
-const socialImage =
-  'https://openhands.dev/assets/webflow/og/69161b32abf448a2df921a73_openhands_opengraph_01.png';
 const privacyBody = privacyPolicy.replace(/^# Privacy Policy\s*/, '');
 
 const shouldKeepPrivacyLink = (href?: string, text = '') => {
@@ -55,24 +54,13 @@ const getPrivacyListItemStyle = (children: ReactNode) => {
   return undefined;
 };
 
-export const meta: Route.MetaFunction = ({ location }) => {
-  return [
-    { title: 'Privacy Policy' },
-    { name: 'description', content: legalDescription },
-    { property: 'og:title', content: 'Privacy Policy' },
-    { property: 'og:description', content: legalDescription },
-    { property: 'og:image', content: socialImage },
-    { property: 'og:url', content: 'https://openhands.dev' + location.pathname },
-    { property: 'og:type', content: 'website' },
-    { property: 'og:site_name', content: 'OpenHands' },
-    { name: 'twitter:card', content: 'summary_large_image' },
-    { name: 'twitter:title', content: 'Privacy Policy' },
-    { name: 'twitter:description', content: legalDescription },
-    { name: 'twitter:image', content: socialImage },
-    { tagName: 'link', rel: 'canonical', href: 'https://openhands.dev' + location.pathname },
-    { name: 'robots', content: 'noindex, nofollow' },
-  ];
-};
+export const meta: Route.MetaFunction = ({ location }) =>
+  createSocialPreviewMeta({
+    title: 'Privacy Policy',
+    description: legalDescription,
+    pathname: location.pathname,
+    extra: [{ name: 'robots', content: 'noindex, nofollow' }],
+  });
 
 function PrivacyPolicy() {
   return (

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { meta as aboutMeta } from '../../src/routes/about';
 import { meta as blogMeta } from '../../src/routes/blog';
 import { meta as blogPostMeta } from '../../src/routes/blog.$slug';
 import { meta as featuresMeta } from '../../src/routes/features';
@@ -8,6 +9,7 @@ import { meta as disclosureMeta } from '../../src/routes/responsible-disclosure-
 import { meta as shareMeta } from '../../src/routes/share';
 import { meta as tosMeta } from '../../src/routes/tos';
 import { meta as whitepaperMeta } from '../../src/routes/whitepapers.modernize-legacy-systems-with-ai-agents';
+import { DEFAULT_SOCIAL_IMAGE } from '../../src/utils/seo';
 
 type MetaEntry = Record<string, unknown>;
 
@@ -16,6 +18,43 @@ const getTitle = (entries: MetaEntry[]) =>
 
 const findEntry = (entries: MetaEntry[], key: string, value: string) =>
   entries.find((entry) => entry[key] === value);
+
+const expectCompleteSocialPreview = ({
+  entries,
+  title,
+  description,
+  image,
+  imageAlt = title,
+  url,
+  type = 'website',
+}: {
+  entries: MetaEntry[];
+  title: string;
+  description: string;
+  image: string;
+  imageAlt?: string;
+  url: string;
+  type?: string;
+}) => {
+  expect(findEntry(entries, 'name', 'description')?.content).toBe(description);
+  expect(findEntry(entries, 'property', 'og:title')?.content).toBe(title);
+  expect(findEntry(entries, 'property', 'og:description')?.content).toBe(description);
+  expect(findEntry(entries, 'property', 'og:image')?.content).toBe(image);
+  expect(findEntry(entries, 'property', 'og:image:secure_url')?.content).toBe(image);
+  expect(findEntry(entries, 'property', 'og:image:type')?.content).toBe('image/png');
+  expect(findEntry(entries, 'property', 'og:image:width')?.content).toBe('1200');
+  expect(findEntry(entries, 'property', 'og:image:height')?.content).toBe('630');
+  expect(findEntry(entries, 'property', 'og:image:alt')?.content).toBe(imageAlt);
+  expect(findEntry(entries, 'property', 'og:url')?.content).toBe(url);
+  expect(findEntry(entries, 'property', 'og:type')?.content).toBe(type);
+  expect(findEntry(entries, 'property', 'og:site_name')?.content).toBe('OpenHands');
+  expect(findEntry(entries, 'name', 'twitter:card')?.content).toBe('summary_large_image');
+  expect(findEntry(entries, 'name', 'twitter:title')?.content).toBe(title);
+  expect(findEntry(entries, 'name', 'twitter:description')?.content).toBe(description);
+  expect(findEntry(entries, 'name', 'twitter:image')?.content).toBe(image);
+  expect(findEntry(entries, 'name', 'twitter:image:alt')?.content).toBe(imageAlt);
+  expect(findEntry(entries, 'rel', 'canonical')?.href).toBe(url);
+};
 
 describe('route metadata branding parity', () => {
   it('updates privacy and terms metadata to OpenHands branding', () => {
@@ -78,6 +117,53 @@ describe('route metadata branding parity', () => {
     ).not.toContain('All Hands AI');
   });
 
+  it('emits the full social preview contract for static and dynamic routes', () => {
+    const aboutEntries = (aboutMeta as any)({
+      location: { pathname: '/about' },
+    }) as MetaEntry[];
+    const blogPostEntries = (blogPostMeta as any)({
+      data: {
+        title: 'Test Post',
+        excerpt: 'Test excerpt',
+        ogImage: DEFAULT_SOCIAL_IMAGE,
+        url: 'https://openhands.dev/blog/test-post',
+        date: '2026-01-01',
+        authors: [{ name: 'Jane Doe' }],
+        cover: DEFAULT_SOCIAL_IMAGE,
+        coverAlt: 'Test cover alt',
+        content: 'hello world',
+        seoTitleDate: 'Jan 01, 2026',
+      },
+      location: { pathname: '/blog/test-post' },
+    }) as MetaEntry[];
+
+    expect(getTitle(aboutEntries)).toBe(
+      'About OpenHands | Our Mission, Team, and Community'
+    );
+    expectCompleteSocialPreview({
+      entries: aboutEntries,
+      title: 'About OpenHands | Our Mission, Team, and Community',
+      description:
+        'Learn about OpenHands - the open, model-agnostic AI platform redefining how software gets built. Backed by a global OSS community and trusted by enterprises.',
+      image: DEFAULT_SOCIAL_IMAGE,
+      url: 'https://openhands.dev/about',
+    });
+
+    expect(getTitle(blogPostEntries)).toBe('Test Post | Jan 01, 2026');
+    expectCompleteSocialPreview({
+      entries: blogPostEntries,
+      title: 'Test Post',
+      description: 'Test excerpt',
+      image: DEFAULT_SOCIAL_IMAGE,
+      imageAlt: 'Test cover alt',
+      url: 'https://openhands.dev/blog/test-post',
+      type: 'article',
+    });
+    expect(findEntry(blogPostEntries, 'property', 'article:published_time')?.content).toBe(
+      '2026-01-01'
+    );
+  });
+
   it('normalizes OpenHands canonical and publisher metadata', () => {
     const homeEntries = (homeMeta as any)({}) as MetaEntry[];
     const blogEntries = (blogMeta as any)({
@@ -87,14 +173,14 @@ describe('route metadata branding parity', () => {
       data: {
         title: 'Test Post',
         excerpt: 'Test excerpt',
-        ogImage:
-          'https://openhands.dev/assets/webflow/og/69161b32abf448a2df921a73_openhands_opengraph_01.png',
+        ogImage: DEFAULT_SOCIAL_IMAGE,
         url: 'https://openhands.dev/blog/test-post',
         date: '2026-01-01',
         authors: [{ name: 'Jane Doe' }],
-        cover:
-          'https://openhands.dev/assets/webflow/og/69161b32abf448a2df921a73_openhands_opengraph_01.png',
+        cover: DEFAULT_SOCIAL_IMAGE,
+        coverAlt: 'Test cover alt',
         content: 'hello world',
+        seoTitleDate: 'Jan 01, 2026',
       },
     }) as MetaEntry[];
     const disclosureEntries = (disclosureMeta as any)({

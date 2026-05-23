@@ -5,6 +5,7 @@ import { Footer } from '~/components/footer';
 import { getRouteFooterProps } from '~/constants/route-layout';
 import { OverlayLinkButton } from '~/components/overlay-link-button';
 import { FAQ_TRIGGER_DIVIDER } from '~/components/faq-accordion';
+import { createSocialPreviewMeta } from '~/utils/seo';
 
 export const handle = { hideGlobalFooter: true };
 
@@ -398,41 +399,16 @@ const CompareTable = () => {
   );
 };
 
-export const meta: Route.MetaFunction = ({ location }) => {
-  return [
-    { title: 'OpenHands Pricing | Start Building for Free' },
-    {
-      name: 'description',
-      content:
-        'Choose the right plan for your team. Start for free with OpenHands Open Source or upgrade to Team and Enterprise plans for advanced control and scalability.',
-    },
-    { property: 'og:title', content: 'OpenHands Pricing | Start Building for Free' },
-    {
-      property: 'og:description',
-      content:
-        'Choose the right plan for your team. Start for free with OpenHands Open Source or upgrade to Team and Enterprise plans for advanced control and scalability.',
-    },
-    {
-      property: 'og:image',
-      content: 'https://openhands.dev/assets/webflow/og/69161b32abf448a2df921a73_openhands_opengraph_01.png',
-    },
-    { property: 'og:url', content: 'https://openhands.dev' + location.pathname },
-    { property: 'og:type', content: 'website' },
-    { property: 'og:site_name', content: 'OpenHands' },
-    { name: 'twitter:card', content: 'summary_large_image' },
-    { name: 'twitter:title', content: 'OpenHands Pricing | Start Building for Free' },
-    {
-      name: 'twitter:description',
-      content:
-        'Choose the right plan for your team. Start for free with OpenHands Open Source or upgrade to Team and Enterprise plans for advanced control and scalability.',
-    },
-    {
-      name: 'twitter:image',
-      content: 'https://openhands.dev/assets/webflow/og/69161b32abf448a2df921a73_openhands_opengraph_01.png',
-    },
-    { tagName: 'link', rel: 'canonical', href: 'https://openhands.dev' + location.pathname },
-  ];
-};
+const PRICING_META_TITLE = 'OpenHands Pricing | Start Building for Free';
+const PRICING_META_DESCRIPTION =
+  'Choose the right plan for your team. Start for free with OpenHands Open Source or upgrade to Team and Enterprise plans for advanced control and scalability.';
+
+export const meta: Route.MetaFunction = ({ location }) =>
+  createSocialPreviewMeta({
+    title: PRICING_META_TITLE,
+    description: PRICING_META_DESCRIPTION,
+    pathname: location.pathname,
+  });
 
 const Pricing = () => {
   return (

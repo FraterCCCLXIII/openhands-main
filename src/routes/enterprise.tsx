@@ -4,7 +4,7 @@ import ASCIIAnimation from '~/components/ascii-animation';
 import { Footer } from '~/components/footer';
 import { getRouteFooterProps } from '~/constants/route-layout';
 import { OverlayLinkButton } from '~/components/overlay-link-button';
-import { DEFAULT_SOCIAL_IMAGE } from '~/utils/seo';
+import { createSocialPreviewMeta } from '~/utils/seo';
 
 const ASCII_HOLE_BG = '/assets/webflow/backgrounds/690b397ae76441160bed52b6_asci-art-hole.png';
 const ASCII_HOLE_SRCSET = [
@@ -229,40 +229,20 @@ const BUILT_FOR_FEATURES: BuiltForFeature[] = [
   },
 ];
 
-export const meta: Route.MetaFunction = ({ location }) => {
-  return [
-    { title: 'OpenHands for Enterprise | Secure, Scalable Agentic Software Development' },
-    {
-      name: 'description',
-      content:
-        'Scale AI agents in production with the control, visibility, and repeatability your enterprise needs. Self-hosted in your VPC, source-available, and backed by direct research-team access.',
-    },
-    {
-      property: 'og:title',
-      content: 'OpenHands for Enterprise | Secure, Scalable Agentic Software Development',
-    },
-    {
-      property: 'og:description',
-      content:
-        'Deploy OpenHands securely across your organization. Enterprise-grade governance, compliance, and customization for regulated industries.',
-    },
-    { property: 'og:image', content: DEFAULT_SOCIAL_IMAGE },
-    { property: 'og:url', content: 'https://openhands.dev' + location.pathname },
-    { property: 'og:type', content: 'website' },
-    { name: 'twitter:card', content: 'summary_large_image' },
-    {
-      name: 'twitter:title',
-      content: 'OpenHands for Enterprise | Secure, Scalable Agentic Software Development',
-    },
-    {
-      name: 'twitter:description',
-      content:
-        'Deploy OpenHands securely across your organization. Enterprise-grade governance, compliance, and customization for regulated industries.',
-    },
-    { name: 'twitter:image', content: DEFAULT_SOCIAL_IMAGE },
-    { tagName: 'link', rel: 'canonical', href: 'https://openhands.dev' + location.pathname },
-  ];
-};
+const ENTERPRISE_META_TITLE =
+  'OpenHands for Enterprise | Secure, Scalable Agentic Software Development';
+const ENTERPRISE_META_DESCRIPTION =
+  'Scale AI agents in production with the control, visibility, and repeatability your enterprise needs. Self-hosted in your VPC, source-available, and backed by direct research-team access.';
+const ENTERPRISE_SOCIAL_DESCRIPTION =
+  'Deploy OpenHands securely across your organization. Enterprise-grade governance, compliance, and customization for regulated industries.';
+
+export const meta: Route.MetaFunction = ({ location }) =>
+  createSocialPreviewMeta({
+    title: ENTERPRISE_META_TITLE,
+    description: ENTERPRISE_META_DESCRIPTION,
+    socialDescription: ENTERPRISE_SOCIAL_DESCRIPTION,
+    pathname: location.pathname,
+  });
 
 export const handle = { hideGlobalFooter: true };
 

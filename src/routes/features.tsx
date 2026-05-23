@@ -2,6 +2,7 @@ import React from 'react';
 import clsx from 'clsx';
 import { TryItLiveButton } from '~/components/buttons/try-it-live-button';
 import { ViewPricingButton } from '~/components/buttons/view-pricing-button';
+import { createSocialPreviewMeta } from '~/utils/seo';
 import type { Route } from './+types/features';
 
 interface FeatureProps {
@@ -68,31 +69,26 @@ const Feature: React.FC<FeatureProps> = ({
   );
 };
 
-export const meta: Route.MetaFunction = ({ location }) => {
-  return [
-    { title: 'OpenHands Cloud' },
-    { name: 'description', content: 'Explore the powerful features of OpenHands cloud coding agents that supercharge your engineering team.' },
-    { property: 'og:title', content: 'OpenHands Cloud' },
-    { property: 'og:description', content: 'Explore the powerful features of OpenHands cloud coding agents that supercharge your engineering team.' },
-    { property: 'og:image', content: 'https://openhands.dev/assets/webflow/og/69161b32abf448a2df921a73_openhands_opengraph_01.png' },
-    { property: 'og:url', content: 'https://openhands.dev' + location.pathname },
-    { property: 'og:type', content: 'website' },
-    { property: 'og:site_name', content: 'OpenHands' },
-    { name: 'twitter:card', content: 'summary_large_image' },
-    { name: 'twitter:title', content: 'OpenHands Cloud' },
-    { name: 'twitter:description', content: 'Explore the powerful features of OpenHands cloud coding agents that supercharge your engineering team.' },
-    { name: 'twitter:image', content: 'https://openhands.dev/assets/webflow/og/69161b32abf448a2df921a73_openhands_opengraph_01.png' },
-    { tagName: 'link', rel: 'canonical', href: 'https://openhands.dev' + location.pathname },
-    {
-      'script:ld+json': JSON.stringify({
-        '@context': 'https://schema.org',
-        '@type': 'SoftwareApplication',
-        name: 'OpenHands',
-        applicationCategory: 'DeveloperApplication',
-      }),
-    },
-  ];
-};
+const FEATURES_META_TITLE = 'OpenHands Cloud';
+const FEATURES_META_DESCRIPTION =
+  'Explore the powerful features of OpenHands cloud coding agents that supercharge your engineering team.';
+
+export const meta: Route.MetaFunction = ({ location }) =>
+  createSocialPreviewMeta({
+    title: FEATURES_META_TITLE,
+    description: FEATURES_META_DESCRIPTION,
+    pathname: location.pathname,
+    extra: [
+      {
+        'script:ld+json': JSON.stringify({
+          '@context': 'https://schema.org',
+          '@type': 'SoftwareApplication',
+          name: 'OpenHands',
+          applicationCategory: 'DeveloperApplication',
+        }),
+      },
+    ],
+  });
 
 const Features = () => {
   const features = [

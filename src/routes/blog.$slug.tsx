@@ -16,6 +16,7 @@ import { PlaceholderImage } from '~/components/placeholder-image';
 import { getOpenHandsBlogUrl } from '~/utils/blog-slug-aliases';
 import { formatDate } from '~/utils/format-date';
 import { handleNewsletterSubscription } from '~/utils/newsletter-subscription';
+import { createSocialPreviewMeta } from '~/utils/seo';
 import type { Route } from './+types/blog.$slug';
 import 'katex/dist/katex.min.css';
 
@@ -99,56 +100,54 @@ export const ErrorBoundary = () => {
   );
 };
 
-export const meta: Route.MetaFunction = ({ data }) => {
+export const meta: Route.MetaFunction = ({ data, location }) => {
   if (!data) {
-    return [
-      { title: 'OpenHands Blog' },
-      { name: 'description', content: 'Read the latest from the OpenHands team.' },
-    ];
+    return createSocialPreviewMeta({
+      title: 'OpenHands Blog',
+      description: 'Read the latest from the OpenHands team.',
+      pathname: location.pathname,
+    });
   }
-  return [
-    { title: `${data.title} | ${data.seoTitleDate}` },
-    { name: 'description', content: data.excerpt },
-    { property: 'og:title', content: data.title },
-    { property: 'og:description', content: data.excerpt },
-    { property: 'og:image', content: data.ogImage },
-    { property: 'og:url', content: data.url },
-    { property: 'og:type', content: 'article' },
-    { property: 'og:site_name', content: 'OpenHands' },
-    { property: 'article:published_time', content: data.date },
-    {
-      property: 'article:author',
-      content: data.authors.map((author) => author.name).join(', '),
-    },
-    { name: 'twitter:card', content: 'summary_large_image' },
-    { name: 'twitter:title', content: data.title },
-    { name: 'twitter:description', content: data.excerpt },
-    { name: 'twitter:image', content: data.ogImage },
-    { tagName: 'link', rel: 'canonical', href: data.url },
-    {
-      'script:ld+json': JSON.stringify({
-        '@context': 'https://schema.org',
-        '@type': 'BlogPosting',
-        headline: data.title,
-        description: data.excerpt,
-        image: data.cover,
-        datePublished: data.date,
-        author: data.authors.map((author) => ({
-          '@type': 'Person',
-          name: author.name,
-          image: author.picture || undefined,
-          url: author.link || undefined,
-        })),
-        publisher: {
-          '@type': 'Organization',
-          name: 'OpenHands',
-        },
-        articleBody: data.content,
-        wordCount: data.content.split(' ').length,
-        inLanguage: 'en-US',
-      }),
-    },
-  ];
+
+  return createSocialPreviewMeta({
+    title: `${data.title} | ${data.seoTitleDate}`,
+    description: data.excerpt,
+    socialTitle: data.title,
+    image: data.ogImage,
+    imageAlt: data.coverAlt || data.title,
+    type: 'article',
+    canonical: data.url,
+    extra: [
+      { property: 'article:published_time', content: data.date },
+      {
+        property: 'article:author',
+        content: data.authors.map((author) => author.name).join(', '),
+      },
+      {
+        'script:ld+json': JSON.stringify({
+          '@context': 'https://schema.org',
+          '@type': 'BlogPosting',
+          headline: data.title,
+          description: data.excerpt,
+          image: data.cover,
+          datePublished: data.date,
+          author: data.authors.map((author) => ({
+            '@type': 'Person',
+            name: author.name,
+            image: author.picture || undefined,
+            url: author.link || undefined,
+          })),
+          publisher: {
+            '@type': 'Organization',
+            name: 'OpenHands',
+          },
+          articleBody: data.content,
+          wordCount: data.content.split(' ').length,
+          inLanguage: 'en-US',
+        }),
+      },
+    ],
+  });
 };
 
 const BlogDetails = () => {

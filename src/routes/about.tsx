@@ -4,45 +4,19 @@ import { CompanyPageShell } from '~/components/company-page-shell';
 import { MemberCard } from '~/components/member-card';
 import { OverlayLinkButton } from '~/components/overlay-link-button';
 import { teamMembers } from '~/constants/members';
+import { createSocialPreviewMeta } from '~/utils/seo';
 import type { Route } from './+types/about';
 
-export const meta: Route.MetaFunction = ({ location }) => {
-  return [
-    { title: 'About OpenHands | Our Mission, Team, and Community' },
-    {
-      name: 'description',
-      content:
-        'Learn about OpenHands - the open, model-agnostic AI platform redefining how software gets built. Backed by a global OSS community and trusted by enterprises.',
-    },
-    { property: 'og:title', content: 'About OpenHands | Our Mission, Team, and Community' },
-    {
-      property: 'og:description',
-      content:
-        'Learn about OpenHands - the open, model-agnostic AI platform redefining how software gets built. Backed by a global OSS community and trusted by enterprises.',
-    },
-    {
-      property: 'og:image',
-      content:
-        'https://openhands.dev/assets/webflow/og/69161b32abf448a2df921a73_openhands_opengraph_01.png',
-    },
-    { property: 'og:url', content: 'https://openhands.dev' + location.pathname },
-    { property: 'og:type', content: 'website' },
-    { property: 'og:site_name', content: 'OpenHands' },
-    { name: 'twitter:card', content: 'summary_large_image' },
-    { name: 'twitter:title', content: 'About OpenHands | Our Mission, Team, and Community' },
-    {
-      name: 'twitter:description',
-      content:
-        'Learn about OpenHands - the open, model-agnostic AI platform redefining how software gets built. Backed by a global OSS community and trusted by enterprises.',
-    },
-    {
-      name: 'twitter:image',
-      content:
-        'https://openhands.dev/assets/webflow/og/69161b32abf448a2df921a73_openhands_opengraph_01.png',
-    },
-    { tagName: 'link', rel: 'canonical', href: 'https://openhands.dev' + location.pathname },
-  ];
-};
+const ABOUT_META_TITLE = 'About OpenHands | Our Mission, Team, and Community';
+const ABOUT_META_DESCRIPTION =
+  'Learn about OpenHands - the open, model-agnostic AI platform redefining how software gets built. Backed by a global OSS community and trusted by enterprises.';
+
+export const meta: Route.MetaFunction = ({ location }) =>
+  createSocialPreviewMeta({
+    title: ABOUT_META_TITLE,
+    description: ABOUT_META_DESCRIPTION,
+    pathname: location.pathname,
+  });
 
 const MILESTONES = [
   {
