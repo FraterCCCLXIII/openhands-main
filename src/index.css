@@ -4531,12 +4531,14 @@
   }
 }
 
-@media (min-width: 992px) {
-  .whitepaper-modernize-page .hs-form-frame {
-    display: none !important;
-    height: 0 !important;
-    overflow: hidden !important;
-  }
+.whitepaper-modernize-page .hs-form-frame {
+  height: 0 !important;
+  overflow: hidden;
+}
+
+.whitepaper-modernize-page .hs-form-frame iframe,
+.whitepaper-modernize-page .hs-form-frame form {
+  display: none !important;
 }
 
 @media (max-width: 991px) {

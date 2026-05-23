@@ -1,7 +1,10 @@
+import { readFileSync } from 'node:fs';
 import { act, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
 import Whitepaper from '../../src/routes/whitepapers.modernize-legacy-systems-with-ai-agents';
+
+const css = readFileSync('src/index.css', 'utf8');
 
 const renderRoute = () => render(
   <MemoryRouter>
@@ -51,6 +54,14 @@ describe('modernize legacy systems whitepaper route', () => {
     expect(screen.queryByRole('heading', { name: /Bring your team into the loop/i })).not.toBeInTheDocument();
     expect(screen.getByText(/OpenHands - All rights reserved/i)).toBeVisible();
     expect(container.querySelectorAll('[data-wf-el="eyebrow"]')).toHaveLength(2);
+  });
+
+  it('keeps the desktop HubSpot capture frame compact like the live card state', () => {
+    expect(css).toContain('.whitepaper-modernize-page .hs-form-frame {\n  height: 0 !important;');
+    expect(css).toContain('overflow: hidden;');
+    expect(css).toContain('.whitepaper-modernize-page .hs-form-frame iframe,\n.whitepaper-modernize-page .hs-form-frame form {\n  display: none !important;');
+    expect(css).toContain('@media (max-width: 991px) {\n  .whitepaper-modernize-page {');
+    expect(css).toContain('.whitepaper-modernize-page .hs-form-frame {\n    height: 702px !important;');
   });
 
   it('reveals the direct download CTA after the native HubSpot form reports success', () => {
