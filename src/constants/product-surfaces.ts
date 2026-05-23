@@ -1,3 +1,5 @@
+import { webflowPngSrcSet } from './webflow-assets';
+
 export interface ProductSurface {
   title: string;
   subtitle: string;
@@ -7,11 +9,6 @@ export interface ProductSurface {
   srcSet: string;
 }
 
-const webflowPngSrcSet = (basePath: string) => {
-  const extensionIndex = basePath.lastIndexOf('.png');
-  const base = basePath.slice(0, extensionIndex);
-  return `${base}-p-500.png 500w, ${base}-p-800.png 800w, ${basePath} 978w`;
-};
 
 export const PRODUCT_SURFACES: ProductSurface[] = [
   {

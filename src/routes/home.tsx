@@ -9,24 +9,9 @@ import { FAQ_TRIGGER_DIVIDER, CLOSED_FAQ_ITEM_PROPS } from '~/components/faq-acc
 import { formatThousands } from '~/utils/format-thousands';
 import { ASCIIAnimation } from '~/components/ascii-animation';
 import { createSocialPreviewMeta } from '~/utils/seo';
-
-const CLIENT_LOGOS = [
-  { name: 'TikTok', url: '/assets/webflow/logos/69137f6974b71a1a4a932f82_TikTok_logo.svg' },
-  { name: 'VMware', url: '/assets/webflow/logos/69137f523b08f91a5aa905b9_Vmware.svg' },
-  { name: 'Roche', url: '/assets/webflow/logos/69137f2cb537758796a9dba1_Roche_Logo.svg' },
-  { name: 'Amazon', url: '/assets/webflow/logos/69137f10c3975e28b3932320_Amazon_logo1.svg' },
-  { name: 'Cloudera', url: '/assets/webflow/misc/69137efe8466ac374a9bc8a1_idlJcLIGV__17611861580951.svg' },
-  { name: 'Fujitsu', url: '/assets/webflow/misc/69137eedd7c29cc9046de43f_Group.svg' },
-  { name: 'C3.ai', url: '/assets/webflow/logos/69137ec5a6f77dd174e557ce_C3ai_logo1.svg' },
-  { name: 'Netflix', url: '/assets/webflow/logos/69137eac8f27ca27f5e48420_Netflix_2015_logo1.svg' },
-  { name: 'Mastercard', url: '/assets/webflow/misc/69137e8df2c028b9e1506ede_mastercard1.svg' },
-  { name: 'Red Hat', url: '/assets/webflow/logos/69137e783790933dd06f9d59_Red_Hat_Logo_20191.svg' },
-  { name: 'MongoDB', url: '/assets/webflow/logos/69137e5fa006d963a1d1904d_mongodb-ar211.svg' },
-  { name: 'Apple', url: '/assets/webflow/logos/69137e47b45195da10c50f49_apple-111.svg' },
-  { name: 'Nvidia', url: '/assets/webflow/logos/69137e34e3a5ab71e37082a7_NVIDIA_logo1.svg' },
-  { name: 'Google', url: '/assets/webflow/logos/69137e199ce2cb594b0210ab_google-ar211.svg' },
-  { name: 'AMD', url: '/assets/webflow/logos/690b9e5400fdae4c12eedd75_small-client-logo.svg' },
-];
+import { EnterpriseLogoStrip } from '~/components/logos/enterprise-logo-strip';
+import { HOME_CUSTOMER_LOGOS } from '~/constants/customer-logos';
+import { ASCII_HOLE_IMAGE, ASCII_HOLE_IMAGE_1080 } from '~/constants/webflow-assets';
 
 const WORKFLOWS = [
   {
@@ -279,8 +264,6 @@ const DEVELOPER_QUOTES = [
     ],
   },
 ];
-
-const ENTERPRISE_LOGOS_HTML = "<div data-wf-el=\"enterprise-logos\" class=\"enterprise-logos\" style=\"display:flex;justify-content:center;align-items:center;gap:48px;margin-top:0;color:#22150d;padding-top:32px\"><div data-wf-el=\"enterprise-logo\" class=\"enterprise-logo\" style=\"width:87px;height:64px;color:#22150d\"><svg xmlns=\"http://www.w3.org/2000/svg\" id=\"svg2\" x=\"0px\" y=\"0px\" height=\"100%\" viewBox=\"35.188 31.512 351.46 258.785\" width=\"100%\"><path id=\"path17\" d=\"M384.195,282.109c0,3.771-2.769,6.302-6.047,6.302v-0.023c-3.371,0.023-6.089-2.508-6.089-6.278  c0-3.769,2.718-6.293,6.089-6.293C381.427,275.816,384.195,278.34,384.195,282.109z M386.648,282.109c0-5.175-4.02-8.179-8.5-8.179  c-4.511,0-8.531,3.004-8.531,8.179c0,5.172,4.021,8.188,8.531,8.188C382.629,290.297,386.648,287.281,386.648,282.109   M376.738,282.801h0.91l2.109,3.703h2.316l-2.336-3.859c1.207-0.086,2.2-0.661,2.2-2.286c0-2.019-1.392-2.668-3.75-2.668h-3.411  v8.813h1.961V282.801 M376.738,281.309v-2.122h1.364c0.742,0,1.753,0.06,1.753,0.965c0,0.985-0.523,1.157-1.398,1.157H376.738\"></path><path id=\"path19\" d=\"M329.406,237.027l10.598,28.993H318.48L329.406,237.027z M318.056,225.738l-24.423,61.88h17.246l3.863-10.934  h28.903l3.656,10.934h18.722l-24.605-61.888L318.056,225.738z M269.023,287.641h17.497v-61.922l-17.5-0.004L269.023,287.641z   M147.556,225.715l-14.598,49.078l-13.984-49.074l-18.879-0.004l19.972,61.926h25.207l20.133-61.926H147.556z M218.281,239.199h7.52  c10.91,0,17.966,4.898,17.966,17.609c0,12.714-7.056,17.613-17.966,17.613h-7.52V239.199z M200.931,225.715v61.926h28.366  c15.113,0,20.048-2.512,25.384-8.148c3.769-3.957,6.207-12.641,6.207-22.134c0-8.707-2.063-16.468-5.66-21.304  c-6.481-8.649-15.817-10.34-29.75-10.34H200.931z M35.188,225.629v62.012h17.645v-47.086l13.672,0.004  c4.527,0,7.754,1.128,9.934,3.457c2.765,2.945,3.894,7.699,3.894,16.395v27.23h17.098v-34.262c0-24.453-15.586-27.75-30.836-27.75  H35.188z M172.771,225.715l0.007,61.926h17.489v-61.926H172.771z\"></path><path id=\"path21\" fill=\"currentColor\" d=\"M82.211,102.414c0,0,22.504-33.203,67.437-36.638V53.73  c-49.769,3.997-92.867,46.149-92.867,46.149s24.41,70.565,92.867,77.026v-12.804C99.411,157.781,82.211,102.414,82.211,102.414z   M149.648,138.637v11.726c-37.968-6.769-48.507-46.237-48.507-46.237s18.23-20.195,48.507-23.47v12.867  c-0.023,0-0.039-0.007-0.058-0.007c-15.891-1.907-28.305,12.938-28.305,12.938S128.243,131.445,149.648,138.637 M149.648,31.512  V53.73c1.461-0.112,2.922-0.207,4.391-0.257c56.582-1.907,93.449,46.406,93.449,46.406s-42.343,51.488-86.457,51.488  c-4.043,0-7.828-0.375-11.383-1.005v13.739c3.04,0.386,6.192,0.613,9.481,0.613c41.051,0,70.738-20.965,99.484-45.778  c4.766,3.817,24.278,13.103,28.289,17.168c-27.332,22.883-91.031,41.329-127.144,41.329c-3.481,0-6.824-0.211-10.11-0.528v19.306  h156.032V31.512H149.648z M149.648,80.656V65.777c1.446-0.101,2.903-0.179,4.391-0.226c40.688-1.278,67.382,34.965,67.382,34.965  s-28.832,40.043-59.746,40.043c-4.449,0-8.438-0.715-12.028-1.922V93.523c15.84,1.914,19.028,8.911,28.551,24.786l21.18-17.859  c0,0-15.461-20.277-41.524-20.277C155.021,80.172,152.31,80.371,149.648,80.656\"></path></svg></div><div data-wf-el=\"enterprise-logo\" class=\"enterprise-logo amd\" style=\"width:147.531px;height:35.1875px;color:#22150d\"><svg xmlns=\"http://www.w3.org/2000/svg\" id=\"Layer_1\" x=\"0px\" y=\"0px\" height=\"100%\" viewBox=\"0 0 800 190.803\" width=\"100%\"><g id=\"clear_space\"></g><g id=\"logo\"><g><path d=\"M187.888,178.12H143.52l-13.573-32.735H56.003L43.637,178.12H0L66.667,12.776h47.761L187.888,178.12z M91.155,52.285    L66.912,116.53h50.913L91.155,52.285z\"></path><path d=\"M349.056,12.776h35.88V178.12h-41.219V74.842l-44.608,51.878h-6.301l-44.605-51.878V178.12h-41.219V12.776h35.88    l53.093,61.336L349.056,12.776z\"></path><path d=\"M489.375,12.776c60.364,0,91.391,37.573,91.391,82.909c0,47.517-30.058,82.435-96,82.435h-68.369V12.776H489.375z     M457.613,147.815h26.906c41.457,0,53.823-28.127,53.823-52.375c0-28.368-15.276-52.363-54.308-52.363h-26.422V147.815    L457.613,147.815z\"></path></g><g><polygon fill=\"currentColor\" points=\"748.028,51.981 662.769,51.981 610.797,0 800,0 800,189.21 748.028,137.235   \"></polygon><polygon fill=\"currentColor\" points=\"662.708,137.296 662.708,62.397 609.2,115.901 609.2,190.804 684.089,190.804 737.594,137.296       \"></polygon></g></g></svg>";
 
 const FAQS = [
   {
@@ -647,8 +630,8 @@ const Home = () => {
             <div data-wf-el='logo-grid-component_container' className='mx-auto max-w-[1238px]'>
               <div data-wf-el='logo-grid-component_cms_wrap' style={{ paddingTop: '24px' }}>
                 <div data-wf-el='logo-grid-component_cms_list' className='logo-grid'>
-                  {CLIENT_LOGOS.map((logo) => (
-                    <img key={logo.name} src={logo.url} alt='' />
+                  {HOME_CUSTOMER_LOGOS.map((logo) => (
+                    <img key={logo.name} src={logo.src} alt={logo.alt} />
                   ))}
                 </div>
               </div>
@@ -885,8 +868,8 @@ const Home = () => {
         <div data-wf-el='asci-wrap' className='absolute inset-0 overflow-hidden' style={{ backgroundColor: 'rgb(255, 255, 139)' }}>
           <img
             data-wf-el='asci-media'
-            src='/assets/webflow/backgrounds/690b397ae76441160bed52b6_asci-art-hole.png'
-            alt='ASCII art depicting a large black hole with light and particles swirling around it.'
+            src={ASCII_HOLE_IMAGE.src}
+            alt={ASCII_HOLE_IMAGE.alt}
             className='h-full w-full object-cover'
           />
         </div>
@@ -1096,11 +1079,11 @@ const Home = () => {
         <div data-wf-el='asci-wrap' className='absolute inset-0 overflow-hidden' style={{ backgroundColor: 'rgb(255, 255, 139)' }}>
           <img
             data-wf-el='asci-media'
-            src='/assets/webflow/backgrounds/690b397ae76441160bed52b6_asci-art-hole-p-1080.png'
-            srcSet='/assets/webflow/backgrounds/690b397ae76441160bed52b6_asci-art-hole-p-800.png 800w, /assets/webflow/backgrounds/690b397ae76441160bed52b6_asci-art-hole-p-1080.png 1080w, /assets/webflow/backgrounds/690b397ae76441160bed52b6_asci-art-hole.png 1440w'
+            src={ASCII_HOLE_IMAGE_1080.src}
+            srcSet={ASCII_HOLE_IMAGE_1080.srcSet}
             sizes='100vw'
-            width={1440}
-            height={800}
+            width={ASCII_HOLE_IMAGE_1080.width}
+            height={ASCII_HOLE_IMAGE_1080.height}
             loading='lazy'
             decoding='async'
             alt=''
@@ -1114,7 +1097,7 @@ const Home = () => {
           <p className='fluid-body-lg font-medium text-[#5f5f5f]' style={{ width: '1238px', maxWidth: '100%', marginTop: '10.4px', marginBottom: '20.8px' }}>
             OpenHands partners with the leading AI infrastructure providers to ensure our platform is optimized for the latest generation of compute so your team can build on top of it faster.
           </p>
-          <div dangerouslySetInnerHTML={{ __html: ENTERPRISE_LOGOS_HTML }} />
+          <EnterpriseLogoStrip />
         </div>
       </section>
 

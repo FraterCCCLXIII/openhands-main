@@ -1,3 +1,5 @@
+import { ASCII_ACCENT_15_IMAGE, ASCII_HOLE_IMAGE } from '~/constants/webflow-assets';
+
 export const PRODUCT_OG_IMAGE =
   'https://openhands.dev/assets/webflow/og/69161b32abf448a2df921a73_openhands_opengraph_01.png';
 
@@ -71,8 +73,8 @@ const productFeaturePages: Record<ProductFeatureVariant, ProductFeaturePageData>
     heading: 'Build agents your way.',
     description: 'Extend OpenHands with code, not constraints.',
     heroImage: {
-      src: '/assets/webflow/backgrounds/690b397ae76441160bed52b6_asci-art-hole.png',
-      alt: 'ASCII art depicting a large black hole with light and particles swirling around it.',
+      src: ASCII_HOLE_IMAGE.src,
+      alt: ASCII_HOLE_IMAGE.alt,
     },
     primaryCta: {
       label: 'View SDK Doc',
@@ -91,8 +93,8 @@ const productFeaturePages: Record<ProductFeatureVariant, ProductFeaturePageData>
     introDescription:
       'The OpenHands SDK lets teams create specialized agents, integrate internal tools, and orchestrate complex workflows programmatically.',
     accentImage: {
-      src: '/assets/webflow/backgrounds/690b50c95a72e7b17a1412a8_09a6ecb11584c3309a64a00d57130313_ascii-art_(15)_1.svg',
-      alt: 'asci art',
+      src: ASCII_ACCENT_15_IMAGE.src,
+      alt: ASCII_ACCENT_15_IMAGE.alt,
     },
     proofTitle: 'Solve real edge cases.',
     proofDescription:
@@ -182,8 +184,8 @@ const productFeaturePages: Record<ProductFeatureVariant, ProductFeaturePageData>
     introDescription:
       'The OpenHands Web GUI gives teams a shared workspace to scope tasks, monitor execution, and review results. It turns autonomous agents into teammates you can understand and trust.',
     accentImage: {
-      src: '/assets/webflow/backgrounds/690b397ae76441160bed52b6_asci-art-hole.png',
-      alt: 'ASCII art depicting a large black hole with light and particles swirling around it.',
+      src: ASCII_HOLE_IMAGE.src,
+      alt: ASCII_HOLE_IMAGE.alt,
     },
     proofTitle: 'Trust requires visibility.',
     proofDescription:
@@ -260,8 +262,8 @@ const productFeaturePages: Record<ProductFeatureVariant, ProductFeaturePageData>
     description:
       'Run, inspect, and automate OpenHands agents directly from the terminal or headlessly in your pipelines with full visibility and control.',
     heroImage: {
-      src: '/assets/webflow/backgrounds/690b397ae76441160bed52b6_asci-art-hole.png',
-      alt: 'ASCII art depicting a large black hole with light and particles swirling around it.',
+      src: ASCII_HOLE_IMAGE.src,
+      alt: ASCII_HOLE_IMAGE.alt,
     },
     primaryCta: {
       label: 'Get Started',
@@ -276,8 +278,8 @@ const productFeaturePages: Record<ProductFeatureVariant, ProductFeaturePageData>
     introDescription:
       'The OpenHands Terminal / CLI gives developers direct, low-latency control over cloud-based coding agents. Use it interactively from your terminal or run it headlessly from CI, cron jobs, or internal systems.\n\nSame agent. Same runtime. Two modes of control.',
     accentImage: {
-      src: '/assets/webflow/backgrounds/690b50c95a72e7b17a1412a8_09a6ecb11584c3309a64a00d57130313_ascii-art_(15)_1.svg',
-      alt: 'asci art',
+      src: ASCII_ACCENT_15_IMAGE.src,
+      alt: ASCII_ACCENT_15_IMAGE.alt,
     },
     proofTitle: 'Real autonomy needs observability and repeatability.',
     proofDescription:

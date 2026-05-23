@@ -2,37 +2,17 @@ import type { CSSProperties } from 'react';
 import type { Route } from './+types/enterprise';
 import ASCIIAnimation from '~/components/ascii-animation';
 import { Footer } from '~/components/footer';
-import { getRouteFooterProps } from '~/constants/route-layout';
+import { BootstrapIcon, type BootstrapIconName } from '~/components/icons/bootstrap-icons';
 import { OverlayLinkButton } from '~/components/overlay-link-button';
+import { getRouteFooterProps } from '~/constants/route-layout';
+import {
+  C3AI_AUTHOR_IMAGE,
+  C3AI_LOGO_IMAGE,
+  ENTERPRISE_ASCII_HOLE_IMAGE,
+  ENTERPRISE_CONTROL_PLANE_IMAGE,
+  ENTERPRISE_STEPS_IMAGE,
+} from '~/constants/webflow-assets';
 import { createSocialPreviewMeta } from '~/utils/seo';
-
-const ASCII_HOLE_BG = '/assets/webflow/backgrounds/690b397ae76441160bed52b6_asci-art-hole.png';
-const ASCII_HOLE_SRCSET = [
-  '/assets/webflow/enterprise/690b397ae76441160bed52b6_asci-art-hole-p-500.png 500w',
-  '/assets/webflow/enterprise/690b397ae76441160bed52b6_asci-art-hole-p-800.png 800w',
-  '/assets/webflow/enterprise/690b397ae76441160bed52b6_asci-art-hole-p-1080.png 1080w',
-  `${ASCII_HOLE_BG} 1440w`,
-].join(', ');
-const CONTROL_PLANE_IMG = '/assets/webflow/enterprise/69fb21f8dc8c20b014d24bad_9761f727961757aba10787e99f6f05dd_control-plane-p-1600.png';
-const CONTROL_PLANE_SRCSET = [
-  '/assets/webflow/enterprise/69fb21f8dc8c20b014d24bad_9761f727961757aba10787e99f6f05dd_control-plane-p-500.png 500w',
-  '/assets/webflow/enterprise/69fb21f8dc8c20b014d24bad_9761f727961757aba10787e99f6f05dd_control-plane-p-800.png 800w',
-  '/assets/webflow/enterprise/69fb21f8dc8c20b014d24bad_9761f727961757aba10787e99f6f05dd_control-plane-p-1080.png 1080w',
-  `${CONTROL_PLANE_IMG} 1600w`,
-].join(', ');
-const STEPS_IMG = '/assets/webflow/enterprise/steps.png';
-const STEPS_SRCSET = [
-  '/assets/webflow/enterprise/69fb2416b628253a2db6a017_947e9b2e2e6d72c882da1634fe57f949_steps-p-500.png 500w',
-  `${STEPS_IMG} 932w`,
-].join(', ');
-// Filenames intentionally match the live Webflow CDN image filenames
-// (after the parity script's normalization: strip extensions, URL
-// encoding, underscores/spaces, and lowercase).  Live uses
-// "Image%2096x96.png" → image96x96 and "C3ai%20Logo.svg" → c3ailogo,
-// so our local files are named to produce the same normalized
-// signature, which is what the IMG-by-src-filename audit pairs on.
-const C3AI_AUTHOR_IMG = '/assets/webflow/enterprise/image96x96.png';
-const C3AI_LOGO = '/assets/webflow/enterprise/c3ailogo.svg';
 
 // Section base styles matching live Webflow: padding 80px 0, no horizontal
 // padding on the section itself (inner container handles the gutter), and
@@ -54,63 +34,8 @@ const SECTION_DARK: React.CSSProperties = {
   color: 'rgb(249, 240, 217)',
 };
 
-// Bootstrap-icon SVGs the live Webflow page inlines for each card.
-const IconLightning = () => (
-  <svg data-wf-el='bi-lightning-charge' xmlns='http://www.w3.org/2000/svg' width='100%' fill='currentColor' className='bi bi-lightning-charge' viewBox='0 0 16 16'>
-    <path d='M11.251.068a.5.5 0 0 1 .227.58L9.677 6.5H13a.5.5 0 0 1 .364.843l-8 8.5a.5.5 0 0 1-.842-.49L6.323 9.5H3a.5.5 0 0 1-.364-.843l8-8.5a.5.5 0 0 1 .615-.09zM4.157 8.5H7a.5.5 0 0 1 .478.647L6.11 13.59l5.732-6.09H9a.5.5 0 0 1-.478-.647L9.89 2.41z' />
-  </svg>
-);
-const IconBarChart = () => (
-  <svg data-wf-el='bi-bar-chart' xmlns='http://www.w3.org/2000/svg' width='100%' fill='currentColor' className='bi bi-bar-chart' viewBox='0 0 16 16'>
-    <path d='M4 11H2v3h2zm5-4H7v7h2zm5-5v12h-2V2zm-2-1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1zM6 7a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1zm-5 4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1z' />
-  </svg>
-);
-const IconLock = () => (
-  <svg data-wf-el='bi-lock' xmlns='http://www.w3.org/2000/svg' width='100%' fill='currentColor' className='bi bi-lock' viewBox='0 0 16 16'>
-    <path fillRule='evenodd' d='M8 0a4 4 0 0 1 4 4v2.05a2.5 2.5 0 0 1 2 2.45v5a2.5 2.5 0 0 1-2.5 2.5h-7A2.5 2.5 0 0 1 2 13.5v-5a2.5 2.5 0 0 1 2-2.45V4a4 4 0 0 1 4-4M4.5 7A1.5 1.5 0 0 0 3 8.5v5A1.5 1.5 0 0 0 4.5 15h7a1.5 1.5 0 0 0 1.5-1.5v-5A1.5 1.5 0 0 0 11.5 7zM8 1a3 3 0 0 0-3 3v2h6V4a3 3 0 0 0-3-3' />
-  </svg>
-);
-const IconGraphUp = () => (
-  <svg data-wf-el='bi-graph-up-arrow' xmlns='http://www.w3.org/2000/svg' width='100%' fill='currentColor' className='bi bi-graph-up-arrow' viewBox='0 0 16 16'>
-    <path fillRule='evenodd' d='M0 0h1v15h15v1H0zm10 3.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 .5.5v4a.5.5 0 0 1-1 0V4.9l-3.613 4.417a.5.5 0 0 1-.74.037L7.06 6.767l-3.656 5.027a.5.5 0 0 1-.808-.588l4-5.5a.5.5 0 0 1 .758-.06l2.609 2.61L13.445 4H10.5a.5.5 0 0 1-.5-.5' />
-  </svg>
-);
-const IconShield = () => (
-  <svg data-wf-el='bi-shield-shaded' xmlns='http://www.w3.org/2000/svg' width='100%' fill='currentColor' className='bi bi-shield-shaded' viewBox='0 0 16 16'>
-    <path fillRule='evenodd' d='M8 14.933a1 1 0 0 0 .1-.025q.114-.034.294-.118c.24-.113.547-.29.893-.533a10.7 10.7 0 0 0 2.287-2.233c1.527-1.997 2.807-5.031 2.253-9.188a.48.48 0 0 0-.328-.39c-.651-.213-1.75-.56-2.837-.855C9.552 1.29 8.531 1.067 8 1.067zM5.072.56C6.157.265 7.31 0 8 0s1.843.265 2.928.56c1.11.3 2.229.655 2.887.87a1.54 1.54 0 0 1 1.044 1.262c.596 4.477-.787 7.795-2.465 9.99a11.8 11.8 0 0 1-2.517 2.453 7 7 0 0 1-1.048.625c-.28.132-.581.24-.829.24s-.548-.108-.829-.24a7 7 0 0 1-1.048-.625 11.8 11.8 0 0 1-2.517-2.453C1.928 10.487.545 7.169 1.141 2.692A1.54 1.54 0 0 1 2.185 1.43 63 63 0 0 1 5.072.56' />
-  </svg>
-);
-const IconHdd = () => (
-  <svg data-wf-el='bi-hdd' xmlns='http://www.w3.org/2000/svg' width='100%' fill='currentColor' className='bi bi-hdd' viewBox='0 0 16 16'>
-    <path d='M4.5 11a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1M3 10.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0' />
-    <path d='M16 11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V9.51c0-.418.105-.83.305-1.197l2.472-4.531A1.5 1.5 0 0 1 4.094 3h7.812a1.5 1.5 0 0 1 1.317.782l2.472 4.53c.2.368.305.78.305 1.198zM3.655 4.26 1.592 8.043Q1.79 8 2 8h12q.21 0 .408.042L12.345 4.26a.5.5 0 0 0-.439-.26H4.094a.5.5 0 0 0-.44.26zM1 10v1a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-1a1 1 0 0 0-1-1H2a1 1 0 0 0-1 1' />
-  </svg>
-);
-const IconBraces = () => (
-  <svg data-wf-el='bi-braces' xmlns='http://www.w3.org/2000/svg' width='100%' fill='currentColor' className='bi bi-braces' viewBox='0 0 16 16'>
-    <path d='M2.114 8.063V7.9c1.005-.102 1.497-.615 1.497-1.6V4.503c0-1.094.39-1.538 1.354-1.538h.273V2h-.376C3.25 2 2.49 2.759 2.49 4.352v1.524c0 1.094-.376 1.456-1.49 1.456v1.299c1.114 0 1.49.362 1.49 1.456v1.524c0 1.593.759 2.352 2.372 2.352h.376v-.964h-.273c-.964 0-1.354-.444-1.354-1.538V9.663c0-.984-.492-1.497-1.497-1.6M13.886 7.9v.163c-1.005.103-1.497.616-1.497 1.6v1.798c0 1.094-.39 1.538-1.354 1.538h-.273v.964h.376c1.613 0 2.372-.759 2.372-2.352v-1.524c0-1.094.376-1.456 1.49-1.456V7.332c-1.114 0-1.49-.362-1.49-1.456V4.352C13.51 2.759 12.75 2 11.138 2h-.376v.964h.273c.964 0 1.354.444 1.354 1.538V6.3c0 .984.492 1.497 1.497 1.6' />
-  </svg>
-);
-const IconPeople = () => (
-  <svg data-wf-el='bi-people' xmlns='http://www.w3.org/2000/svg' width='100%' fill='currentColor' className='bi bi-people' viewBox='0 0 16 16'>
-    <path d='M15 14s1 0 1-1-1-4-5-4-5 3-5 4 1 1 1 1zm-7.978-1L7 12.996c.001-.264.167-1.03.76-1.72C8.312 10.629 9.282 10 11 10c1.717 0 2.687.63 3.24 1.276.593.69.758 1.457.76 1.72l-.008.002-.014.002zM11 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4m3-2a3 3 0 1 1-6 0 3 3 0 0 1 6 0M6.936 9.28a6 6 0 0 0-1.23-.247A7 7 0 0 0 5 9c-4 0-5 3-5 4q0 1 1 1h4.216A2.24 2.24 0 0 1 5 13c0-1.01.377-2.042 1.09-2.904.243-.294.526-.569.846-.816M4.92 10A5.5 5.5 0 0 0 4 13H1c0-.26.164-1.03.76-1.724.545-.636 1.492-1.256 3.16-1.275ZM1.5 5.5a3 3 0 1 1 6 0 3 3 0 0 1-6 0m3-2a2 2 0 1 0 0 4 2 2 0 0 0 0-4' />
-  </svg>
-);
-const IconLink = () => (
-  <svg data-wf-el='bi-link' xmlns='http://www.w3.org/2000/svg' width='100%' fill='currentColor' className='bi bi-link' viewBox='0 0 16 16'>
-    <path d='M6.354 5.5H4a3 3 0 0 0 0 6h3a3 3 0 0 0 2.83-4H9q-.13 0-.25.031A2 2 0 0 1 7 10.5H4a2 2 0 1 1 0-4h1.535c.218-.376.495-.714.82-1z' />
-    <path d='M9 5.5a3 3 0 0 0-2.83 4h1.098A2 2 0 0 1 9 6.5h3a2 2 0 1 1 0 4h-1.535a4 4 0 0 1-.82 1H12a3 3 0 1 0 0-6z' />
-  </svg>
-);
-const IconRobot = () => (
-  <svg data-wf-el='bi-robot' xmlns='http://www.w3.org/2000/svg' width='100%' fill='currentColor' className='bi bi-robot' viewBox='0 0 16 16'>
-    <path d='M6 12.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1-.5-.5M3 8.062C3 6.76 4.235 5.765 5.53 5.886a26.6 26.6 0 0 0 4.94 0C11.765 5.765 13 6.76 13 8.062v1.157a.93.93 0 0 1-.765.935c-.845.147-2.34.346-4.235.346s-3.39-.2-4.235-.346A.93.93 0 0 1 3 9.219zm4.542-.827a.25.25 0 0 0-.217.068l-.92.9a25 25 0 0 1-1.871-.183.25.25 0 0 0-.068.495c.55.076 1.232.149 2.02.193a.25.25 0 0 0 .189-.071l.754-.736.847 1.71a.25.25 0 0 0 .404.062l.932-.97a25 25 0 0 0 1.922-.188.25.25 0 0 0-.068-.495c-.538.074-1.207.145-1.98.189a.25.25 0 0 0-.166.076l-.754.785-.842-1.7a.25.25 0 0 0-.182-.135' />
-    <path d='M8.5 1.866a1 1 0 1 0-1 0V3h-2A4.5 4.5 0 0 0 1 7.5V8a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1v1a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-1a1 1 0 0 0 1-1V9a1 1 0 0 0-1-1v-.5A4.5 4.5 0 0 0 10.5 3h-2zM14 7.5V13a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V7.5A3.5 3.5 0 0 1 5.5 4h5A3.5 3.5 0 0 1 14 7.5' />
-  </svg>
-);
-
 interface ControlFeature {
-  Icon: () => JSX.Element;
+  icon: BootstrapIconName;
   eyebrow: string;
   heading: string;
   paragraph: string;
@@ -119,7 +44,7 @@ interface ControlFeature {
 
 const CONTROL_FEATURES: ControlFeature[] = [
   {
-    Icon: IconLightning,
+    icon: 'lightningCharge',
     eyebrow: 'Automations',
     heading: 'Agents that run themselves, on your terms.',
     paragraph:
@@ -131,7 +56,7 @@ const CONTROL_FEATURES: ControlFeature[] = [
     ],
   },
   {
-    Icon: IconBarChart,
+    icon: 'barChart',
     eyebrow: 'Cost Control',
     heading: 'Know where every token goes',
     // Keep ASCII apostrophe to match live HTML's &#x27; entity.
@@ -144,7 +69,7 @@ const CONTROL_FEATURES: ControlFeature[] = [
     ],
   },
   {
-    Icon: IconLock,
+    icon: 'lock',
     eyebrow: 'Security',
     heading: 'Agents get access to what they need. Nothing more.',
     paragraph:
@@ -156,7 +81,7 @@ const CONTROL_FEATURES: ControlFeature[] = [
     ],
   },
   {
-    Icon: IconGraphUp,
+    icon: 'graphUpArrow',
     eyebrow: 'Productivity',
     // ASCII apostrophes to match live HTML's &#x27; entities.
     heading: "Measure what's working. Improve what isn't.",
@@ -169,7 +94,7 @@ const CONTROL_FEATURES: ControlFeature[] = [
     ],
   },
   {
-    Icon: IconShield,
+    icon: 'shieldShaded',
     eyebrow: 'Governance',
     heading: 'One view for every team.',
     paragraph:
@@ -191,38 +116,38 @@ const desktopWidthStyle = (width: string): CSSProperties => (
 
 
 interface BuiltForFeature {
-  Icon: () => JSX.Element;
+  icon: BootstrapIconName;
   heading: string;
   paragraph: string;
 }
 
 const BUILT_FOR_FEATURES: BuiltForFeature[] = [
   {
-    Icon: IconHdd,
+    icon: 'hdd',
     heading: 'Self-hosted in your VPC',
     paragraph:
       'Deploy on your own Kubernetes infrastructure. Your code never leaves your environment. No shared tenancy.',
   },
   {
-    Icon: IconBraces,
+    icon: 'braces',
     heading: 'Source-available',
     paragraph:
       'Inspect all the code. Every capability and integration is readable and auditable by your security team.',
   },
   {
-    Icon: IconPeople,
+    icon: 'people',
     heading: 'Research team access',
     paragraph:
       'Enterprise contracts include direct access to the team building the models. Not just support tickets.',
   },
   {
-    Icon: IconLink,
+    icon: 'link',
     heading: 'Enterprise integrations included',
     paragraph:
       'GitHub, GitLab, Slack, Jira, and Linear out of the box. RBAC, multi- user support, and conversation sharing built in.',
   },
   {
-    Icon: IconRobot,
+    icon: 'robot',
     heading: 'Bring your own LLM',
     paragraph:
       'Model-agnostic by design. Use Anthropic, OpenAl, Bedrock, or any other model provider your team prefers.',
@@ -413,8 +338,8 @@ const Enterprise = () => {
           >
             <img
               data-wf-el='acp_graphic_img'
-              src={CONTROL_PLANE_IMG}
-              srcSet={CONTROL_PLANE_SRCSET}
+              src={ENTERPRISE_CONTROL_PLANE_IMAGE.src}
+              srcSet={ENTERPRISE_CONTROL_PLANE_IMAGE.srcSet}
               sizes='(max-width: 2592px) 100vw, 2592px'
               alt=''
               className='h-auto w-full object-cover'
@@ -455,7 +380,7 @@ const Enterprise = () => {
               gap: '0px',
             }}
           >
-            {CONTROL_FEATURES.map(({ Icon, eyebrow, heading, paragraph, bullets }, idx) => (
+            {CONTROL_FEATURES.map(({ icon, eyebrow, heading, paragraph, bullets }, idx) => (
               <article
                 key={heading}
                 data-wf-el='acp_features_item'
@@ -473,7 +398,7 @@ const Enterprise = () => {
                   className='h-10 w-10 p-2 text-[#FFFF8B]'
                   style={{ backgroundColor: 'rgb(34, 21, 13)', borderRadius: '8px', display: 'block', width: '24px', height: '24px', padding: '8px', boxSizing: 'content-box', aspectRatio: '1 / 1' }}
                 >
-                  <Icon />
+                  <BootstrapIcon name={icon} />
                 </div>
                 {/* Live's eyebrow is title-cased text (e.g. "Automations")
                  * with no text-transform and normal letter-spacing — the
@@ -553,7 +478,7 @@ const Enterprise = () => {
               </div>
             </div>
             <div className='flex basis-full flex-col px-5 lg:basis-1/2' style={{ position: 'relative' }}>
-              <img src={STEPS_IMG} srcSet={STEPS_SRCSET} sizes='100vw' alt='' className='img-block h-auto w-full object-fill' loading='lazy' />
+              <img src={ENTERPRISE_STEPS_IMAGE.src} srcSet={ENTERPRISE_STEPS_IMAGE.srcSet} sizes='100vw' alt='' className='img-block h-auto w-full object-fill' loading='lazy' />
             </div>
           </div>
         </Container>
@@ -564,10 +489,10 @@ const Enterprise = () => {
         <div data-wf-el='asci-wrap' className='absolute inset-0 bg-brand-accent' style={{ overflow: 'hidden', maxHeight: '100vh' }} aria-hidden='true'>
           <img
             data-wf-el='asci-media'
-            src={ASCII_HOLE_BG}
-            srcSet={ASCII_HOLE_SRCSET}
+            src={ENTERPRISE_ASCII_HOLE_IMAGE.src}
+            srcSet={ENTERPRISE_ASCII_HOLE_IMAGE.srcSet}
             sizes='100vw'
-            alt='ASCII art depicting a large black hole with light and particles swirling around it.'
+            alt={ENTERPRISE_ASCII_HOLE_IMAGE.alt}
             className='h-full w-full object-cover'
             style={{ textAlign: 'start' }}
           />
@@ -617,7 +542,7 @@ const Enterprise = () => {
               >
                 <img
                   data-wf-el='acp_quote_img'
-                  src={C3AI_AUTHOR_IMG}
+                  src={C3AI_AUTHOR_IMAGE}
                   alt=''
                   className='h-12 w-12 object-cover'
                   style={{ display: 'inline-block', width: '48px', height: '48px' }}
@@ -635,7 +560,7 @@ const Enterprise = () => {
                 Sina Pakazad, VP of Data Science at C3.ai
               </p>
               <div className='v-line rotate enterprise-quote-divider' style={{ width: 'var(--enterprise-quote-divider-width, 40px)', height: 'var(--enterprise-quote-divider-height, 1px)', backgroundColor: 'rgb(34, 21, 13)' }} />
-              <img data-wf-el='acp_quote_logo' src={C3AI_LOGO} alt='' className='acp_quote_logo h-auto w-[80px]' style={{ display: 'block', width: '80px', height: 'auto', flexShrink: 0 }} loading='lazy' />
+              <img data-wf-el='acp_quote_logo' src={C3AI_LOGO_IMAGE} alt='' className='acp_quote_logo h-auto w-[80px]' style={{ display: 'block', width: '80px', height: 'auto', flexShrink: 0 }} loading='lazy' />
             </div>
           </div>
         </Container>
@@ -668,7 +593,7 @@ const Enterprise = () => {
               gap: '0px',
             }}
           >
-            {BUILT_FOR_FEATURES.map(({ Icon, heading, paragraph }, idx) => {
+            {BUILT_FOR_FEATURES.map(({ icon, heading, paragraph }, idx) => {
               // Row 1: cards 0,1,2 each span 2 of 6 cols (one-third).
               // Row 2: cards 3,4 each span 3 of 6 cols (one-half).
               const span = idx <= 2 ? 'md:col-span-2' : 'md:col-span-3';
@@ -684,7 +609,7 @@ const Enterprise = () => {
                     className='h-10 w-10 p-2 text-[#FFFF8B]'
                     style={{ backgroundColor: 'rgb(34, 21, 13)', borderRadius: '8px', display: 'block', width: '24px', height: '24px', padding: '8px', boxSizing: 'content-box', aspectRatio: '1 / 1' }}
                   >
-                    <Icon />
+                    <BootstrapIcon name={icon} />
                   </div>
                   <h3
                     data-wf-el='acp_features_heading'

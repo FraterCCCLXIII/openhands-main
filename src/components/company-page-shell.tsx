@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { useLocation } from 'react-router';
 import { Footer } from '~/components/footer';
 import { getRouteLayoutConfig, toFooterProps } from '~/constants/route-layout';
+import { ASCII_HOLE_BACKGROUND_IMAGE } from '~/constants/webflow-assets';
 
 interface CompanyPageShellProps {
   children: ReactNode;
@@ -44,8 +45,7 @@ export const CompanyPageShell = ({
           data-testid='company-page-background'
           className={`pointer-events-none absolute inset-0 bg-cover bg-top bg-no-repeat ${backgroundClassName}`}
           style={{
-            backgroundImage:
-              "url('/assets/webflow/backgrounds/690b397ae76441160bed52b6_asci-art-hole.png')",
+            backgroundImage: ASCII_HOLE_BACKGROUND_IMAGE,
           }}
         />
       ) : null}

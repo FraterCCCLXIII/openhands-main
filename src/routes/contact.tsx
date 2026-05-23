@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type CSSProperties, type FormEvent, type MouseEvent } from 'react';
 import ASCIIAnimation from '~/components/ascii-animation';
 import { CompanyPageShell } from '~/components/company-page-shell';
+import { CONTACT_CUSTOMER_LOGOS } from '~/constants/customer-logos';
 import { createSocialPreviewMeta } from '~/utils/seo';
 import type { Route } from './+types/contact';
 
@@ -25,25 +26,6 @@ const CONTACT_FEATURES = [
   'Open source and transparent by design',
   'Access to proprietary SDK kits and custom applications',
   'Designated support, training, and services offerings',
-] as const;
-
-const CUSTOMER_LOGOS = [
-  '/assets/webflow/logos/6915b02ded45d0b434a0974d_flextract.png',
-  '/assets/webflow/logos/69137f6974b71a1a4a932f82_TikTok_logo.svg',
-  '/assets/webflow/logos/69137f523b08f91a5aa905b9_Vmware.svg',
-  '/assets/webflow/logos/69137f2cb537758796a9dba1_Roche_Logo.svg',
-  '/assets/webflow/logos/69137f10c3975e28b3932320_Amazon_logo1.svg',
-  '/assets/webflow/misc/69137efe8466ac374a9bc8a1_idlJcLIGV__17611861580951.svg',
-  '/assets/webflow/misc/69137eedd7c29cc9046de43f_Group.svg',
-  '/assets/webflow/logos/69137ec5a6f77dd174e557ce_C3ai_logo1.svg',
-  '/assets/webflow/logos/69137eac8f27ca27f5e48420_Netflix_2015_logo1.svg',
-  '/assets/webflow/misc/69137e8df2c028b9e1506ede_mastercard1.svg',
-  '/assets/webflow/logos/69137e783790933dd06f9d59_Red_Hat_Logo_20191.svg',
-  '/assets/webflow/logos/69137e5fa006d963a1d1904d_mongodb-ar211.svg',
-  '/assets/webflow/logos/69137e47b45195da10c50f49_apple-111.svg',
-  '/assets/webflow/logos/69137e34e3a5ab71e37082a7_NVIDIA_logo1.svg',
-  '/assets/webflow/logos/69137e199ce2cb594b0210ab_google-ar211.svg',
-  '/assets/webflow/logos/690b9e5400fdae4c12eedd75_small-client-logo.svg',
 ] as const;
 
 // Live's contact form labels use the lighter `Sohne Buch` (Webflow's
@@ -169,10 +151,10 @@ const Contact = () => {
                 <div className='contact-logo-col' style={{ display: 'flex', position: 'relative', flexDirection: 'column', width: '619px', paddingLeft: '20px', paddingRight: '20px' }}>
                   <div data-wf-el='eyebrow-slider' className='contact-logo-slider eyebrow-slider w-dyn-list' style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden', width: '579px', height: '74.7344px', paddingTop: '20px', paddingBottom: '20px' }}>
                     <div role='list' className='track contact-logo-track w-dyn-items' style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: '16px', width: '1840px', height: '34.7344px', transform: 'translateX(0px)' }}>
-                      {CUSTOMER_LOGOS.map((logo) => (
-                        <div data-wf-el='track-item' role='listitem' key={logo} className='contact-logo-track-item track-item w-dyn-item' style={{ flex: '0 0 100px', width: '100px', minWidth: '100px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      {CONTACT_CUSTOMER_LOGOS.map((logo) => (
+                        <div data-wf-el='track-item' role='listitem' key={logo.name} className='contact-logo-track-item track-item w-dyn-item' style={{ flex: '0 0 100px', width: '100px', minWidth: '100px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                           <div data-wf-el='standard-media' className='contact-logo-media standard-media contain-center inline-block' style={{ display: 'block', justifyContent: 'center', alignItems: 'center', objectFit: 'contain' }}>
-                            <img data-wf-el='standard-media-img' src={logo} alt='' className='contact-logo-img standard-media-img' style={{ maxWidth: '100px', width: 'auto', height: 'auto', verticalAlign: 'middle', objectFit: 'scale-down', borderStyle: 'none' }} />
+                            <img data-wf-el='standard-media-img' src={logo.src} alt={logo.alt} className='contact-logo-img standard-media-img' style={{ maxWidth: '100px', width: 'auto', height: 'auto', verticalAlign: 'middle', objectFit: 'scale-down', borderStyle: 'none' }} />
                           </div>
                         </div>
                       ))}
