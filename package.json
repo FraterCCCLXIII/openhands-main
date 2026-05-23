@@ -12,7 +12,6 @@
     "test:e2e": "playwright test",
     "fetch-contributors": "node scripts/fetch-contributors.js",
     "fetch-repo-statistics": "node scripts/fetch-repo-statistics.js",
-    "parity:checklist": "node scripts/generate-site-parity-checklist.cjs",
     "sync:notion-blog": "node scripts/sync-notion-blog.mjs",
     "sync:notion-blog:check": "node scripts/sync-notion-blog.mjs --check",
     "seed:notion-blog": "node scripts/sync-notion-blog.mjs --seed",

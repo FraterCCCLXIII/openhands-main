@@ -153,15 +153,15 @@ function shouldExclude(element, diffType) {
   // Exclude SVG and path elements - icon implementation details
   if (tag === 'svg' || tag === 'path') return 'SVG icon (implementation detail)';
   
-  // Exclude feature container divs (we check individual feature items via deep-visual-parity)
+  // Exclude feature container divs
   if (tag === 'DIV' && element.text.includes('Extensible and customizable')) {
-    return 'Feature container (items checked via deep-visual-parity)';
+    return 'Feature container';
   }
   if (tag === 'DIV' && element.text.includes('Model-agnostic') && element.w > 500) {
-    return 'Feature container (items checked via deep-visual-parity)';
+    return 'Feature container';
   }
   if (tag === 'DIV' && element.text.includes('Works where you do') && element.w > 500) {
-    return 'Feature container (items checked via deep-visual-parity)';
+    return 'Feature container';
   }
   
   // Exclude small text labels that are duplicated in nested structure

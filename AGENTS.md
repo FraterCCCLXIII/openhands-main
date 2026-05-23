@@ -66,21 +66,6 @@ Located at: `scripts/validate-visual-styles.cjs`
 - `.btn-wrap-primary` and `.btn-wrap-dark` override text color to `#F9F0D9` (beige) for wrapped buttons and their descendant `<a>` elements.
 - Live Webflow CTA pairs swap roles between nav/hero (Try it live = primary) and footer CTA (Build with SDK = primary).
 
-### Cross-route parity checklist
-Located at: `scripts/generate-site-parity-checklist.cjs`
-- Checks: visible text/signature inventory, heading order, style mismatches (including font family, cursor, text-decoration, letter-spacing), first-instance layout mismatches, container/section background style auditing, interactive element inventory and behavior comparison (cursor, transitions, pointer-events), per-element interactivity audit (cursor, pointerEvents, clickable role/semantics), hover effect comparison, unexpected extra elements on the test site, and screenshot pixel diffs for the first `PARITY_SCREENSHOT_PAGE_LIMIT` routes
-- Use: `PARITY_MAX_PAGES=12 PARITY_DISCOVERY_LIMIT=20 PARITY_SCREENSHOT_PAGE_LIMIT=12 TEST_ORIGIN=http://127.0.0.1:12001 LIVE_ORIGIN=https://openhands.dev node scripts/generate-site-parity-checklist.cjs`
-- Mobile use: `PARITY_VIEWPORT_WIDTH=375 PARITY_VIEWPORT_HEIGHT=812 PARITY_OUTPUT_DIR=.agent_tmp/parity-mobile PARITY_MAX_PAGES=10 TEST_ORIGIN=http://127.0.0.1:12001 LIVE_ORIGIN=https://openhands.dev node scripts/generate-site-parity-checklist.cjs`
-- Output: Markdown/JSON parity reports plus screenshot artifacts under `PARITY_OUTPUT_DIR`
-- The report now includes per-route sections for: container/section style mismatches, per-element interactivity mismatches, missing/extra interactive elements, interactivity behavior mismatches, and hover effect mismatches
-- Per-element interactivity captures: cursor (pointer vs default), pointerEvents (none vs auto), and clickable semantics (button/link/form-control role mismatches)
-- Ancestor walk uses `maxDepth = 8` to find visual wrapper elements (bg, borderRadius, boxShadow) above each text element. One-sided ancestor mismatches are only flagged when the ancestor has a **visible** backgroundColor or boxShadow — not borderRadius alone on a transparent container. Additionally, ancestors whose bg matches the page-level body/html background are silently skipped, since the page bg is always visible and finding it on a different structural container (Webflow page-wrapper div vs React body) is not a meaningful visual difference.
-- Button component parity intentionally keys buttons by the visible label (including `aria-hidden` Webflow text wrappers) rather than overlay-anchor `aria-label` / `.sr-only` text, so Webflow-style visual labels such as `Try it live` still match local overlay links whose accessible label is `Join Slack`.
-- Runtime motion parity collapses nested animated/mutating descendants to the outermost moving component root, preventing one ASCII/background animation from producing four duplicate motion findings (`asci-wrap`, `asci-embed`, `ascii-embed`, `ascii-pre`).
-- Painted-layer parity should compare visual paint only (backgrounds, borders, shadows, filters, opacity/pseudo paint), not layout-only CSS such as `position`; container/Webflow/layout audits own those non-paint concerns.
-- Social preview parity extracts non-visible `<head>` metadata and compares Open Graph / Twitter preview contracts. Use `src/utils/seo.ts#createSocialPreviewMeta` for marketing routes so `og:title`, `og:description`, `og:image`, `og:url`, `og:type`, `og:site_name`, `twitter:card`, `twitter:title`, `twitter:description`, `twitter:image`, and canonical stay consistent.
-- Container parity suppresses min/max size constraints when the computed rectangle already matches and one side's constraint equals the rendered size, avoiding non-visual `min-height: auto` vs `816px` noise while still reporting actual rect-height drift.
-
 ## Common Discrepancy Patterns
 
 ### Background Colors
@@ -129,16 +114,7 @@ Located at: `scripts/generate-site-parity-checklist.cjs`
 ```bash
 npm run build             # Build for production
 npm run dev               # Run dev server (usually port 12001 in this workspace)
-npm run parity:checklist  # Crawl openhands.dev and compare against local site
 ```
-
-### Parity Audit Output
-- Script: `scripts/generate-site-parity-checklist.cjs`
-- Output: `.agent_tmp/parity/site-parity-checklist.{json,md}`
-- Helpful env vars:
-  - `PARITY_MAX_PAGES` to cap crawl size
-  - `PARITY_DISCOVERY_LIMIT` to cap link discovery breadth
-  - `PARITY_OUTPUT_DIR` to redirect report output
 
 ## Tailwind Color Tokens
 - `brand-bg`: `#F9F0D9` (tan/beige)
@@ -163,7 +139,6 @@ npm run parity:checklist  # Crawl openhands.dev and compare against local site
 - The homepage `Developers love OpenHands` wall aligns closer to live with a 3-column desktop grid and slightly taller cards; this section materially affects downstream FAQ/footer Y-position parity.
 - For homepage parity spacing that uses exact one-off pixel values, prefer inline styles or static Tailwind class strings; dynamically assembled arbitrary classes may not be emitted into the production CSS.
 
-- `PARITY_MAX_PAGES=10 npm run parity:checklist` is enough to recheck `/` plus major top-level routes during homepage work.
 
 ## Company Page Parity Notes
 - `/about`, `/contact`, `/press`, and `/manifesto` now use live Webflow copy patterns rather than the older marketing-page placeholders.
@@ -213,7 +188,6 @@ npm run parity:checklist  # Crawl openhands.dev and compare against local site
 - Live `/pricing` parity depends on rendering comparison-table copy in visible `p`/`label` elements; checklist extraction does not inspect plain `th`/`td` text reliably.
 - Pricing screenshot parity improves when the hero/cards share the ASCII backdrop, the comparison table is rendered as a dark full-width block without a separate visible `Compare plans` heading, and the FAQ uses collapsed divider rows instead of open rounded cards.
 - Live `/community` uses a dark `Latest Community Call` block and a dark `Start contributing` block, with event titles as `h2` elements and event descriptions using ASCII apostrophes (`We'll`).
-- After issue #278 work, parity checklist counts dropped to: `/product` 1 fail, `/enterprise` 2 fails, `/pricing` 2 fails, `/community` 0 fails using `PARITY_MAX_PAGES=12 PARITY_DISCOVERY_LIMIT=20 TEST_ORIGIN=http://127.0.0.1:12001 LIVE_ORIGIN=https://openhands.dev npm run parity:checklist`.
 - Keep dedicated product detail pages at `/product/sdk`, `/product/gui`, and `/product/cli`, and wire the main product interface cards to those routes.
 - `joinslack` should behave as a server redirect, not a client-only redirect, so crawlers and non-JS clients match the live `301` to `https://dub.sh/openhands`.
 - Do not keep or add `mirror-*.tsx` marketing routes or `~/utils/webflow-mirror-route`; implement live pages natively instead.
