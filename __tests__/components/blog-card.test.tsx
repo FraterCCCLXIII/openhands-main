@@ -87,8 +87,13 @@ describe('BlogCard', () => {
     expect(featuredCard).toBeInTheDocument();
     expect(screen.getByText('Introducing the OpenHands Index')).toBeInTheDocument();
     expect(readMoreLink).toHaveAttribute('href', '/blog/openhands-index');
+    const image = featuredCard.querySelector('img');
+
     expect(featuredCard).toHaveStyle({ height: '620px' });
     expect(featuredCard.querySelector('[data-wf-el="standard-media"]')).toHaveClass('h-full');
-    expect(featuredCard.querySelector('img')?.getAttribute('alt')).toBe('');
+    expect(image?.getAttribute('alt')).toBe('');
+    expect(image).toHaveClass('h-full', 'w-full', 'object-cover');
+    expect(image?.className).not.toContain('transition-transform');
+    expect(image?.className).not.toContain('group-hover:scale');
   });
 });

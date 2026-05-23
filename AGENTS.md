@@ -146,6 +146,7 @@ npm run dev               # Run dev server (usually port 12001 in this workspace
 - The about page roster is sourced from `src/constants/members.ts` as an ordered `teamMembers` list that matches the live team names and roles.
 - The contact page intentionally mirrors the live enterprise lead form fields/placeholders (`James`, `Smith`, `Acme`, `email@company.com`, `Send us a note here....`) for parity tests.
 - Company pages should render the shared bottom CTA via `src/components/marketing-footer-cta.tsx` before the standalone site footer, and the footer-gating logic must normalize trailing slashes (`/about/` should behave like `/about`).
+
 - Live `/about` semantics use `H3: Team`, a paragraph subtitle, and paragraph-only member name/title text; the roster is a vertical image-above-text grid, and the milestone labels should not be rendered as visible `p` elements.
 - `/about` team headshots should render in fixed `190px × 190px` media frames; expanding them to full column width creates large cumulative Y-offset drift across the roster.
 - `/about` milestone parity is sensitive to the dark panel height and should use a CSS background layer (not a visible `<img>`) so screenshot/layout parity improves without introducing extra `IMG:` signatures.
@@ -164,6 +165,8 @@ npm run dev               # Run dev server (usually port 12001 in this workspace
 
 ## Blog Parity Notes
 - Live `/blog` uses a centered hero with only the newsletter signup (no `Try it live` / `Build with SDK` CTA buttons), followed by one featured story card and a full grid of post cards.
+- Tablet `/blog` parity is sensitive to hover transforms on the featured card image: the parity script parks the pointer near the lower-right of the viewport, which lands over the 768px featured image. Keep the featured `standard-media-img` static (no `group-hover:scale-*` / `transition-transform`) so its rect remains 768×620 and dynamic motion does not report an extra transform.
+
 - Mobile `/blog` parity depends on scoped `.blog-index-page` CSS overrides for 375px layout: a 514.984px hero, 90% (337.5px) containers, single-column 337.5px post cards, fluid paragraph/date typography, and the Webflow-style yellow footer positioning.
 - Live blog index grid cards show publication date plus title only; featured card uses a dark overlay with `Read more` CTA copy.
 - Live blog/article links use the brand brown accent (`#8a5f45`) rather than bright blue, and article headings use medium-weight 44px desktop sizing instead of Quincy 48px/60px styles.
