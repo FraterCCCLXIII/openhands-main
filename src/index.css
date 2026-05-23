@@ -4531,6 +4531,13 @@
   }
 }
 
+@media (min-width: 992px) {
+  .whitepaper-modernize-page .hs-form-frame {
+    display: none !important;
+    height: 0 !important;
+    overflow: hidden !important;
+  }
+}
 
 @media (max-width: 991px) {
   .whitepaper-modernize-page {

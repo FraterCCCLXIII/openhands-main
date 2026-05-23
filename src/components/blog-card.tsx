@@ -31,7 +31,7 @@ export const FeaturedBlogCard: React.FC<FeaturedBlogCardProps> = ({
           data-wf-el='standard-media-img'
           src={img}
           alt={imgAlt}
-          className='h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]'
+          className='h-full w-full object-cover'
           style={{ color: 'rgb(34, 21, 13)' }}
         />
       )}
