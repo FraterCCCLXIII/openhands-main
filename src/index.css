@@ -1463,15 +1463,43 @@
     @apply font-mono text-sm mb-6 text-brand-muted;
   }
 
-  /* Trust logos - match openhands.dev: 970px container, 48px gap, 64px wide logos.
-   * Live uses `display: flex` with `gap` so children resolve to
-   * `display: block` (flex blockification) + `margin: 0`; we mirror
-   * that exactly. */
+  /* Trust logos - seamless marquee: duplicate the row and animate with
+   * transform instead of mutating scrollLeft, avoiding a visible reset. */
   .logo-grid {
-    @apply flex flex-wrap justify-center items-center;
-    gap: 32px 48px;
+    overflow: hidden;
     max-width: 970px;
     margin: 0 auto;
+    white-space: nowrap;
+    scrollbar-width: none;
+  }
+
+  .logo-grid::-webkit-scrollbar {
+    display: none;
+  }
+
+  .logo-marquee-track {
+    display: flex;
+    width: max-content;
+    will-change: transform;
+    animation: logo-marquee var(--logo-marquee-duration, 42s) linear infinite;
+  }
+
+  .logo-marquee-group {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 48px;
+    padding-right: 48px;
+  }
+
+  @keyframes logo-marquee {
+    from {
+      transform: translateX(0);
+    }
+
+    to {
+      transform: translateX(calc(-1 * var(--logo-marquee-distance, 50%)));
+    }
   }
 
   /* Match openhands.dev: logo strip fixes height at 24px and lets
@@ -1479,6 +1507,8 @@
    * narrower than the 64px cap). */
   .logo-grid img {
     @apply opacity-100 hover:opacity-80 transition-opacity;
+    display: block;
+    flex: 0 0 auto;
     width: auto;
     height: 24px;
     max-width: 64px;
@@ -2266,7 +2296,7 @@
   }
 
   .home-hero-media-row {
-    transform: translateY(154px) !important;
+    transform: translateY(64px) !important;
   }
 
   .home-mobile-parity [data-wf-el='container'],
@@ -2303,7 +2333,7 @@
   }
 
   .home-mobile-parity > section:nth-of-type(3) {
-    height: 2676.11px !important;
+    height: 2520px !important;
   }
 
   .home-mobile-parity [data-wf-el='asci-wrap'] {
@@ -2371,27 +2401,31 @@
     padding-top: 56px !important;
   }
 
-  .home-mobile-parity .logo-grid {
+  .home-mobile-parity [data-wf-el='logo-grid-component_cms_list'].logo-grid {
     width: 337.5px !important;
     max-width: 337.5px !important;
     height: 64px !important;
-    overflow: hidden !important;
+    overflow-x: hidden !important;
+    overflow-y: hidden !important;
+    white-space: nowrap !important;
+    scrollbar-width: none !important;
+  }
+
+  .home-mobile-parity .logo-marquee-group {
     gap: 24px !important;
-    flex-wrap: nowrap !important;
-    justify-content: center !important;
+    padding-right: 24px !important;
+  }
+
+  .home-mobile-parity .logo-grid::-webkit-scrollbar {
+    display: none !important;
   }
 
   .home-mobile-parity .logo-grid img {
-    display: none !important;
+    display: block !important;
+    flex: 0 0 auto !important;
     width: auto !important;
     height: 24px !important;
     max-width: 72px !important;
-  }
-
-  .home-mobile-parity .logo-grid img:nth-child(7),
-  .home-mobile-parity .logo-grid img:nth-child(8),
-  .home-mobile-parity .logo-grid img:nth-child(9) {
-    display: inline-block !important;
   }
 
   .home-mobile-parity [data-slider='hero-surfaces'] {
@@ -2412,7 +2446,7 @@
     width: 337.5px !important;
     max-width: 337.5px !important;
     min-height: 0 !important;
-    margin-top: -29px !important;
+    margin-top: 0 !important;
     align-self: center !important;
   }
 
@@ -2490,18 +2524,18 @@
 
   .home-mobile-parity > section:nth-of-type(2) [style*='width:640px'],
   .home-mobile-parity > section:nth-of-type(2) [style*='width: 640px'] {
-    width: 337.5px !important;
-    margin-left: 20px !important;
-    padding-left: 20px !important;
-    padding-right: 20px !important;
+    width: 100% !important;
+    margin-left: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
   }
 
   .home-mobile-parity .feature-item-stacked {
     display: grid !important;
-    grid-template-columns: 24px 297.5px !important;
+    grid-template-columns: 24px minmax(0, 1fr) !important;
     column-gap: 16px !important;
-    width: 337.5px !important;
-    margin-left: -40px !important;
+    width: 100% !important;
+    margin-left: 0 !important;
     padding-top: 16px !important;
     padding-left: 0 !important;
   }
@@ -2513,7 +2547,8 @@
   }
 
   .home-mobile-parity .feature-item-stacked > div {
-    width: 297.5px !important;
+    width: auto !important;
+    min-width: 0 !important;
   }
 
   .home-mobile-parity [data-wf-el='use-case-row'] {
@@ -2611,7 +2646,9 @@
   .home-mobile-parity > section:nth-of-type(5) [data-wf-el='standard-wrap'] {
     width: 303px !important;
     height: 118px !important;
+    margin-top: 24px !important;
     overflow: hidden !important;
+    transform: none !important;
   }
 
   .home-mobile-parity > section:nth-of-type(5) [data-wf-el='row'] {
@@ -2723,7 +2760,7 @@
   }
 
   .home-mobile-parity .footer-logo-media {
-    transform: translateY(-90px) !important;
+    transform: none !important;
   }
 
   .home-mobile-parity [data-wf-el='footer-nav'] {

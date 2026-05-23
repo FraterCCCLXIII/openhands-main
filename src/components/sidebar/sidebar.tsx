@@ -17,7 +17,7 @@ interface SidebarProps {
 type MenuGroup = 'product' | 'resources';
 
 const menuLinkClassName =
-  'flex w-full items-center justify-between text-left text-base leading-[22.4px] text-brand-bg hover:text-brand-accent';
+  'flex w-full items-center justify-start gap-2 text-left text-base leading-[22.4px] text-brand-bg hover:text-brand-accent';
 
 function InternalOrExternalMenuLink({
   item,
@@ -180,7 +180,7 @@ export const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
                 href='https://docs.openhands.dev/sdk'
                 target='_blank'
                 rel='noopener noreferrer'
-                className='inline-flex text-brand-bg underline decoration-[1.6px] hover:text-brand-accent'
+                className='inline-flex text-brand-bg no-underline hover:text-brand-accent'
                 onClick={onClose}
               >
                 Build with SDK
@@ -191,7 +191,7 @@ export const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
                 href='https://app.all-hands.dev/'
                 target='_blank'
                 rel='noopener noreferrer'
-                className='inline-flex text-brand-bg underline decoration-[1.6px] hover:text-brand-accent'
+                className='inline-flex text-brand-bg no-underline hover:text-brand-accent'
                 onClick={onClose}
               >
                 Try it live
@@ -201,7 +201,7 @@ export const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
               <li>
                 <button
                   type='button'
-                  className='text-brand-bg underline decoration-[1.6px] hover:text-brand-accent'
+                  className='text-brand-bg no-underline hover:text-brand-accent'
                   onClick={() => {
                     onClose();
                     onClickGitHubButton();

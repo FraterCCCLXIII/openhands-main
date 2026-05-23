@@ -306,6 +306,9 @@ const Home = () => {
   const [activeSurfaceIndex, setActiveSurfaceIndex] = React.useState(0);
   const [activeWorkflow, setActiveWorkflow] = React.useState<(typeof WORKFLOWS)[number] | null>(null);
   const workflowDialogRef = React.useRef<HTMLDialogElement>(null);
+  const logoMarqueeRef = React.useRef<HTMLDivElement>(null);
+  const logoMarqueeTrackRef = React.useRef<HTMLDivElement>(null);
+  const logoMarqueeGroupRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
     const dialog = workflowDialogRef.current;
@@ -324,6 +327,44 @@ const Home = () => {
       else dialog.removeAttribute('open');
     }
   }, [activeWorkflow]);
+
+  React.useEffect(() => {
+    const marquee = logoMarqueeRef.current;
+    const track = logoMarqueeTrackRef.current;
+    const group = logoMarqueeGroupRef.current;
+    if (!marquee || !track || !group || typeof window === 'undefined') return undefined;
+
+    const pixelsPerSecond = 36;
+
+    const updateMarqueeTiming = () => {
+      const distance = group.getBoundingClientRect().width;
+      if (distance <= 0) return;
+
+      marquee.style.setProperty('--logo-marquee-distance', `${distance}px`);
+      marquee.style.setProperty('--logo-marquee-duration', `${distance / pixelsPerSecond}s`);
+
+      track.style.animation = 'none';
+      void track.offsetHeight;
+      track.style.animation = '';
+    };
+
+    updateMarqueeTiming();
+
+    let resizeObserver: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== 'undefined') {
+      resizeObserver = new ResizeObserver(updateMarqueeTiming);
+      resizeObserver.observe(group);
+      resizeObserver.observe(marquee);
+    }
+
+    window.addEventListener('pageshow', updateMarqueeTiming);
+    window.addEventListener('resize', updateMarqueeTiming);
+    return () => {
+      resizeObserver?.disconnect();
+      window.removeEventListener('pageshow', updateMarqueeTiming);
+      window.removeEventListener('resize', updateMarqueeTiming);
+    };
+  }, []);
 
   // IntersectionObserver-driven scroll pinning for the SDK/Cloud/CLI hero.
   // Mirrors live's GSAP ScrollTrigger: as each .surface-card enters the
@@ -629,10 +670,19 @@ const Home = () => {
             </div>
             <div data-wf-el='logo-grid-component_container' className='mx-auto max-w-[1238px]'>
               <div data-wf-el='logo-grid-component_cms_wrap' style={{ paddingTop: '24px' }}>
-                <div data-wf-el='logo-grid-component_cms_list' className='logo-grid'>
-                  {HOME_CUSTOMER_LOGOS.map((logo) => (
-                    <img key={logo.name} src={logo.src} alt={logo.alt} />
-                  ))}
+                <div data-wf-el='logo-grid-component_cms_list' className='logo-grid logo-marquee' ref={logoMarqueeRef}>
+                  <div className='logo-marquee-track' ref={logoMarqueeTrackRef}>
+                    <div className='logo-marquee-group' ref={logoMarqueeGroupRef}>
+                      {HOME_CUSTOMER_LOGOS.map((logo) => (
+                        <img key={logo.name} src={logo.src} alt={logo.alt} />
+                      ))}
+                    </div>
+                    <div className='logo-marquee-group' aria-hidden='true'>
+                      {HOME_CUSTOMER_LOGOS.map((logo) => (
+                        <img key={`duplicate-${logo.name}`} src={logo.src} alt='' />
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

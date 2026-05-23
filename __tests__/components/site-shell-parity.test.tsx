@@ -111,7 +111,10 @@ describe('site shell parity helpers', () => {
     );
 
     expect(container.querySelector('[data-testid="sidebar"]')).toHaveClass('fixed', 'inset-0', 'w-screen');
-    expect(screen.getByRole('button', { name: 'Product' })).toHaveAttribute('aria-expanded', 'false');
+    const productButton = screen.getByRole('button', { name: 'Product' });
+    expect(productButton).toHaveAttribute('aria-expanded', 'false');
+    expect(productButton).toHaveClass('justify-start', 'gap-2');
+    expect(productButton).not.toHaveClass('justify-between');
   });
 
 

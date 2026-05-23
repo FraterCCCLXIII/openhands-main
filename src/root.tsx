@@ -121,9 +121,14 @@ export default function App() {
 
   React.useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target;
+      if (target instanceof Element && target.closest('.mobile-menu-button')) {
+        return;
+      }
+
       if (
         sidebarRef.current &&
-        !sidebarRef.current.contains(event.target as Node)
+        !sidebarRef.current.contains(target as Node)
       ) {
         setIsSidebarHidden(true);
       }
