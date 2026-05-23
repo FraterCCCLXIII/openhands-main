@@ -89,7 +89,7 @@ const Manifesto = () => {
     : { marginTop: '32px', marginBottom: '9.6px' };
 
   return (
-    <CompanyPageShell showBackground={false} footerFlowSpacerHeight={0}>
+    <CompanyPageShell layoutPath='/manifesto' showBackground={false}>
       <section data-wf-el='section-hero' className='relative' style={{ height: heroHeight, padding: '0px' }}>
         <div data-wf-el='standard-collection' style={isMobile ? undefined : { height: heroHeight }}>
           <div data-wf-el='standard-collection-list' style={isMobile ? undefined : { height: heroHeight }}>

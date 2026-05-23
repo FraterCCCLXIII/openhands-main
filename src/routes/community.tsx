@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import type { Route } from './+types/community';
 import { Footer } from '~/components/footer';
+import { getRouteFooterProps } from '~/constants/route-layout';
 import { OverlayLinkButton } from '~/components/overlay-link-button';
 import { createSocialPreviewMeta } from '~/utils/seo';
 
@@ -129,9 +130,6 @@ const CONTRIBUTION_PATHS = [
     minTextHeight: '89.568px',
   }
 ];
-
-const DEFAULT_FOOTER_PRIMARY = { href: 'https://docs.openhands.dev/sdk', label: 'Build with SDK' };
-const DEFAULT_FOOTER_SECONDARY = { href: 'https://app.all-hands.dev/', label: 'Try it live' };
 
 export const meta: Route.MetaFunction = ({ location }) =>
   createSocialPreviewMeta({
@@ -471,15 +469,7 @@ const Community = () => {
         </div>
       </section>
 
-      <Footer
-        standalone
-        showSocialLinks
-        compactNav
-        compactNavSpacerHeight={10.36}
-        showCopyright
-        marketingCtaPrimary={DEFAULT_FOOTER_PRIMARY}
-        marketingCtaSecondary={DEFAULT_FOOTER_SECONDARY}
-      />
+      <Footer {...getRouteFooterProps('/community')} />
     </main>
   );
 };

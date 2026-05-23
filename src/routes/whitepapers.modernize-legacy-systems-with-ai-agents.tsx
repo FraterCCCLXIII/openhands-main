@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { type MetaFunction } from 'react-router';
 import { Footer } from '~/components/footer';
+import { getRouteFooterProps } from '~/constants/route-layout';
 
 const WHITEPAPER_TITLE = 'Modernize Legacy Systems with AI Agents | OpenHands Whitepaper';
 const WHITEPAPER_DESCRIPTION =
@@ -150,17 +151,7 @@ export default function WhitepaperModernizeLegacySystemsWithAiAgents() {
         </div>
       </section>
 
-      <Footer
-        standalone
-        showSocialLinks
-        compactNav
-        webflowLayout
-        showCopyright
-        marketingCtaTitle='Bring your team into the loop.'
-        marketingCtaDescription='Use the OpenHands Web GUI to collaborate with agents.'
-        marketingCtaPrimary={{ label: 'Try it live', href: 'https://app.all-hands.dev/' }}
-        marketingCtaSecondary={{ label: 'Download Local GUI', href: 'https://docs.openhands.dev/openhands/usage/run-openhands/local-setup' }}
-      />
+      <Footer {...getRouteFooterProps('/whitepapers/modernize-legacy-systems-with-ai-agents')} />
     </main>
   );
 }

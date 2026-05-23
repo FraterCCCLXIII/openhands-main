@@ -68,7 +68,7 @@ const overlayLinkStyle: React.CSSProperties = {
 
 const Press = () => {
   return (
-    <CompanyPageShell backgroundClassName='hidden' footerCompactSpacerHeight={9.1875} trailingSpacerHeight={0}>
+    <CompanyPageShell layoutPath='/press' backgroundClassName='hidden'>
       <section data-wf-el='section-hero' className='pb-0 pt-0' style={{ position: 'relative' }}>
         <div
           data-wf-el='hero-content'

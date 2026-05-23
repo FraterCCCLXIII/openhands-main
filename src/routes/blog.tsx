@@ -3,6 +3,7 @@ import { useActionData, useLoaderData, useNavigation } from 'react-router';
 import { blogAPI, getBlogSlug } from '~/api/blog';
 import { BlogCard, FeaturedBlogCard } from '~/components/blog-card';
 import { Footer } from '~/components/footer';
+import { getRouteFooterProps } from '~/constants/route-layout';
 import { NewsletterForm } from '~/components/newsletter-form';
 import { handleNewsletterSubscription } from '~/utils/newsletter-subscription';
 import type { Route } from './+types/blog';
@@ -176,7 +177,7 @@ const Blog = () => {
         )}
       </section>
 
-      <Footer standalone showSocialLinks compactNav compactNavSpacerHeight={9.36} standaloneContainerHeight={950} standaloneContainerFlowSpacerHeight={41} />
+      <Footer {...getRouteFooterProps('/blog')} />
     </main>
   );
 };

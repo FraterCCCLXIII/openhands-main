@@ -5,12 +5,12 @@ import { normalizePathname } from '~/utils/normalize-pathname';
 import { OverlayLinkButton } from '~/components/overlay-link-button';
 import { useWidth } from '~/hooks/use-media';
 
-interface FooterCta {
+export interface FooterCta {
   href: string;
   label: string;
 }
 
-interface FooterProps {
+export interface FooterProps {
   standalone?: boolean;
   showSocialLinks?: boolean;
   compactNav?: boolean;
@@ -24,6 +24,7 @@ interface FooterProps {
   footerContainerNudge?: number;
   footerContainerTransform?: string;
   containerWfEl?: string | null;
+  layoutVariant?: 'default' | 'manifesto';
   /**
    * Render the legacy Webflow footer grid/row structure used by the
    * whitepaper page. Other routes keep the existing compact React layout
@@ -192,13 +193,18 @@ type WebflowFooterContentProps = Pick<
   | 'marketingCtaDescription'
   | 'marketingCtaPrimary'
   | 'marketingCtaSecondary'
+  | 'layoutVariant'
 > & {
+  activePathname: string;
+  isMobile: boolean;
   footerContainerTransform?: string;
   containerWfEl?: string | null;
   containerStyle?: React.CSSProperties;
 };
 
 const WebflowFooterContent = ({
+  activePathname,
+  isMobile,
   showSocialLinks = false,
   showMarketingCta = true,
   showCopyright = true,
@@ -210,12 +216,9 @@ const WebflowFooterContent = ({
   footerContainerTransform,
   containerWfEl = 'container',
   containerStyle,
+  layoutVariant = 'default',
 }: WebflowFooterContentProps) => {
-  const location = useLocation();
-  const pathname = normalizePathname(location.pathname);
-  const width = useWidth();
-  const isMobile = width < 768;
-  const isManifesto = pathname === '/manifesto';
+  const isManifesto = layoutVariant === 'manifesto';
   const isManifestoMobile = isManifesto && isMobile;
   const currentYear = new Date().getFullYear();
   const footerContainerStyle = {
@@ -245,7 +248,7 @@ const WebflowFooterContent = ({
     : footerNavLinkStyle;
 
   const renderTopLevelLink = (item: (typeof FOOTER_NAV_ITEMS)[number]) => {
-    const isActive = normalizePathname(item.to) === pathname;
+    const isActive = normalizePathname(item.to) === activePathname;
     return (
       <Link
         key={item.name}
@@ -331,9 +334,9 @@ const WebflowFooterContent = ({
             </div>
             <Link
               to='/contact'
-              aria-current={normalizePathname('/contact') === pathname ? 'page' : undefined}
+              aria-current={normalizePathname('/contact') === activePathname ? 'page' : undefined}
               data-wf-el='nav-link'
-              className={clsx('nav-link link-hover hover:text-[#8a5f45] py-[14.4px]', normalizePathname('/contact') === pathname && 'text-[#8a5f45]')}
+              className={clsx('nav-link link-hover hover:text-[#8a5f45] py-[14.4px]', normalizePathname('/contact') === activePathname && 'text-[#8a5f45]')}
               style={navLinkStyle}
             >
               Contact
@@ -399,11 +402,13 @@ export const Footer = ({
   marketingCtaSecondary,
   footerContainerTransform,
   containerWfEl,
+  layoutVariant = 'default',
 }: FooterProps) => {
-  const pathname = normalizePathname(useLocation().pathname);
+  const activePathname = normalizePathname(useLocation().pathname);
   const width = useWidth();
-  const isManifesto = pathname === '/manifesto';
-  const isManifestoMobile = isManifesto && width < 768;
+  const isMobile = width < 768;
+  const isManifesto = layoutVariant === 'manifesto';
+  const isManifestoMobile = isManifesto && isMobile;
   const effectiveCompactSpacerHeight = isManifestoMobile ? 9.21 : compactSpacerHeight;
   const compactSpacerCssHeight = typeof effectiveCompactSpacerHeight === 'number' ? `var(--footer-compact-spacer-height, ${effectiveCompactSpacerHeight}px)` : effectiveCompactSpacerHeight;
   const ctaProps = {
@@ -415,10 +420,13 @@ export const Footer = ({
     marketingCtaSecondary,
     footerContainerNudge,
     footerContainerTransform,
+    layoutVariant,
   };
   if (!standalone) {
     return (
       <WebflowFooterContent
+        activePathname={activePathname}
+        isMobile={isMobile}
         showSocialLinks={showSocialLinks}
         containerWfEl={containerWfEl}
         {...ctaProps}
@@ -453,6 +461,8 @@ export const Footer = ({
         style={standaloneContainerHeight ? { height: `${standaloneContainerHeight}px` } : undefined}
       >
         <WebflowFooterContent
+          activePathname={activePathname}
+          isMobile={isMobile}
           showSocialLinks={showSocialLinks}
           containerWfEl={standaloneContainerHeight ? null : undefined}
           containerStyle={standaloneContainerHeight ? { width: '100%' } : undefined}

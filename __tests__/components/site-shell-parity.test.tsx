@@ -55,6 +55,26 @@ describe('site shell parity helpers', () => {
   });
 
 
+  it('drives manifesto footer structure from props instead of the current route', () => {
+    const { container } = render(
+      <MemoryRouter initialEntries={['/']}>
+        <Footer standalone compactNav layoutVariant='manifesto' />
+      </MemoryRouter>
+    );
+
+    expect(container.querySelector('section[data-wf-el="section"]')).toHaveStyle({
+      padding: 'var(--footer-section-padding, var(--product-section-padding-y, var(--section-padding-y))) 0px',
+      height: '1209.38px',
+    });
+    expect(container.querySelector('[data-wf-el="container"]')).toHaveStyle({
+      width: 'var(--footer-container-width, 90%)',
+      height: '950.1875px',
+    });
+    expect(container.querySelector('[data-wf-el="footer-nav"]')).toHaveStyle({
+      height: '185.734375px',
+    });
+  });
+
   it('renders the live-style compact close state in the header', () => {
     const { container } = render(
       <MemoryRouter>

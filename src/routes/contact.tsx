@@ -145,7 +145,7 @@ const Contact = () => {
   };
 
   return (
-    <CompanyPageShell mainClassName='contact-page-main'>
+    <CompanyPageShell layoutPath='/contact' mainClassName='contact-page-main'>
       <section
         data-wf-el='section-hero'
         className='contact-hero-section relative px-6 pb-0 pt-0 lg:px-10'

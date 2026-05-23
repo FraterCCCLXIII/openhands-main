@@ -2,6 +2,7 @@ import type { CSSProperties } from 'react';
 import type { Route } from './+types/enterprise';
 import ASCIIAnimation from '~/components/ascii-animation';
 import { Footer } from '~/components/footer';
+import { getRouteFooterProps } from '~/constants/route-layout';
 import { OverlayLinkButton } from '~/components/overlay-link-button';
 import { DEFAULT_SOCIAL_IMAGE } from '~/utils/seo';
 
@@ -766,17 +767,7 @@ const Enterprise = () => {
        * /enterprise, not after </main>. Keeping Footer here avoids a
        * full footer-height page-main delta in parity while preserving the
        * same one yellow section containing CTA, social icons, nav, and ASCII art. */}
-      <Footer
-        standalone
-        showSocialLinks
-        compactNav
-        marketingCtaTitle='What comes after Claude Code?'
-        marketingCtaDescription='The teams shipping the most are moving beyond individual agent sessions to governed, automated workflows. Let us show you what that looks like in practice.'
-        marketingCtaPrimary={{ href: '/contact', label: 'Book a Demo' }}
-        marketingCtaSecondary={{ href: 'https://docs.openhands.dev/sdk', label: 'Build with SDK' }}
-        showCopyright
-        compactSpacerHeight={9.6}
-      />
+      <Footer {...getRouteFooterProps('/enterprise')} />
     </main>
   );
 };

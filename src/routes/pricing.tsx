@@ -2,6 +2,7 @@ import type { CSSProperties } from 'react';
 import type { Route } from './+types/pricing';
 import ASCIIAnimation from '~/components/ascii-animation';
 import { Footer } from '~/components/footer';
+import { getRouteFooterProps } from '~/constants/route-layout';
 import { OverlayLinkButton } from '~/components/overlay-link-button';
 import { FAQ_TRIGGER_DIVIDER } from '~/components/faq-accordion';
 
@@ -698,16 +699,7 @@ const Pricing = () => {
 
       {/* Live renders the closing CTA inside the yellow footer section, and
           the footer section itself is a child of page-main. */}
-      <Footer
-        standalone
-        showSocialLinks
-        compactNav
-        marketingCtaTitle='Building the open standard for autonomous software development.'
-        marketingCtaDescription='OpenHands is the foundation for secure, transparent, model-agnostic coding agents - empowering every software team to build faster with full control.'
-        marketingCtaPrimary={{ href: 'https://docs.openhands.dev/sdk', label: 'Build with SDK' }}
-        marketingCtaSecondary={{ href: 'https://app.all-hands.dev/', label: 'Try it live' }}
-        compactNavSpacerHeight={10.4}
-      />
+      <Footer {...getRouteFooterProps('/pricing')} />
     </main>
   );
 };

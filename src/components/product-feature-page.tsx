@@ -1,6 +1,7 @@
 import { Fragment, type CSSProperties } from 'react';
 import type { ProductFeaturePageData } from '~/data/product-feature-pages';
 import { Footer } from '~/components/footer';
+import { getRouteFooterProps } from '~/constants/route-layout';
 import ASCIIAnimation from '~/components/ascii-animation';
 import { OverlayLinkButton } from '~/components/overlay-link-button';
 import { FAQ_TRIGGER_DIVIDER, CLOSED_FAQ_ITEM_PROPS } from '~/components/faq-accordion';
@@ -502,19 +503,7 @@ export const ProductFeaturePage = ({
       <ProductFaqSection faqs={faqs} />
       {/* Live renders the page-specific closing CTA inside the yellow footer
         section, and the footer section itself is a child of page-main. */}
-      <Footer
-        standalone
-        showSocialLinks
-        compactNav
-        showCopyright
-        minHeight={1056}
-        compactSpacerHeight={isGui ? 2 : isCli ? 2 : 9}
-        marketingCtaTitle={page.closingTitle}
-        marketingCtaDescription={page.closingDescription}
-        marketingCtaPrimary={page.closingPrimaryCta}
-        marketingCtaSecondary={page.closingSecondaryCta}
-        footerContainerTransform={isGui ? 'scaleY(0.99975)' : undefined}
-      />
+      <Footer {...getRouteFooterProps(`/product/${variant}`)} />
       {isGui ? <div aria-hidden='true' style={{ height: '0.313px' }} /> : null}
     </main>
   );

@@ -11,6 +11,7 @@ import { blogAPI, getBlogSlug } from '~/api/blog';
 import { BlogFooter } from '~/components/blog-footer';
 import { CMarkdown } from '~/components/c-markdown';
 import { Footer } from '~/components/footer';
+import { getRouteFooterProps } from '~/constants/route-layout';
 import { PlaceholderImage } from '~/components/placeholder-image';
 import { getOpenHandsBlogUrl } from '~/utils/blog-slug-aliases';
 import { formatDate } from '~/utils/format-date';
@@ -254,7 +255,7 @@ const BlogDetails = () => {
         articleHighlights={data.articleHighlights}
       />
 
-      <Footer standalone showSocialLinks compactNav />
+      <Footer {...getRouteFooterProps('/blog/:slug')} />
     </main>
   );
 };

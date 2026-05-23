@@ -2,6 +2,7 @@ import type { CSSProperties } from 'react';
 import type { Route } from './+types/product';
 import ASCIIAnimation from '~/components/ascii-animation';
 import { Footer } from '~/components/footer';
+import { getRouteFooterProps } from '~/constants/route-layout';
 import {
   ProductComparisonTable,
   ProductPageActionLink,
@@ -130,16 +131,7 @@ const Product = () => {
       <ProductComparisonTable ctaHref='https://app.all-hands.dev/' ctaLabel='Try it live' />
       {/* Live renders the default closing CTA inside the yellow footer section,
         and the footer section itself is a child of page-main. */}
-      <Footer
-        standalone
-        showSocialLinks
-        compactNav
-        compactSpacerHeight={9.188}
-        showCopyright
-        minHeight={1144}
-        marketingCtaPrimary={{ href: 'https://app.all-hands.dev/', label: 'Try it live' }}
-        marketingCtaSecondary={{ href: 'https://docs.openhands.dev/overview/introduction', label: 'See developer docs' }}
-      />
+      <Footer {...getRouteFooterProps('/product')} />
     </main>
   );
 };

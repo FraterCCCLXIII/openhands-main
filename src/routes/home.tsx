@@ -3,6 +3,7 @@ import { Link } from 'react-router';
 import type { Route } from './+types/home';
 import statistics from '~/data/statistics.json';
 import { Footer } from '~/components/footer';
+import { getRouteFooterProps } from '~/constants/route-layout';
 import { OverlayLinkButton } from '~/components/overlay-link-button';
 import { FAQ_TRIGGER_DIVIDER, CLOSED_FAQ_ITEM_PROPS } from '~/components/faq-accordion';
 import { formatThousands } from '~/utils/format-thousands';
@@ -1200,7 +1201,7 @@ const Home = () => {
               * this Footer would render the entire marketing CTA block a
               * second time, inflating the section by ~163px and cascading
               * footer/page-height drift versus the live site. */}
-            <Footer compactNav showMarketingCta={false} showSocialLinks showCopyright containerWfEl={null} />
+            <Footer {...getRouteFooterProps('/')} />
           </div>
         </div>
       </section>

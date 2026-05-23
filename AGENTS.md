@@ -124,6 +124,7 @@ npm run dev               # Run dev server (usually port 12001 in this workspace
 
 ## Shared Shell Parity Notes
 - Shared marketing chrome/nav/footer links are centralized in `src/constants/site-shell.ts`.
+- Route-specific page-wrapper and footer parity decisions are centralized in `src/constants/route-layout.ts`; use `getRouteLayoutConfig`, `getRouteFooterProps`, and `toFooterProps` instead of adding pathname checks or footer CTA/min-height literals in `root.tsx`, route components, or `Footer`.
 - For parity work on issue-based PRs, store browser screenshots under `.pr/issue-<number>/` and include both local and live captures for the analogous page.
 - `.github/workflows/pr-artifacts.yml` is intended to remove `.pr/` from the base branch after a PR merges.
 - The shared footer nav wrapper now defaults to `max-w-[825px]`; parity-sensitive routes can still tighten it (for example `max-w-[760px]`) via the `Footer` component’s `navWidthClass` prop.

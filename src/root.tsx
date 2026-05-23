@@ -16,13 +16,12 @@ import { motion } from 'framer-motion';
 import React from 'react';
 import { Footer } from './components/footer';
 import { Header } from './components/header';
-import { MarketingFooterCta } from './components/marketing-footer-cta';
 import { Sidebar } from './components/sidebar/sidebar';
-import { PRODUCT_FEATURE_PAGES } from './data/product-feature-pages';
 import { GitHubModal } from './components/github-modal';
 import { GitHubModalProvider } from './contexts/github-modal-context';
 import { useWidth } from './hooks/use-media';
 import { normalizePathname } from './utils/normalize-pathname';
+import { getRouteLayoutConfig, toFooterProps } from './constants/route-layout';
 import './index.css';
 import { PHProvider } from './provider';
 
@@ -86,66 +85,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
-// Live openhands.dev no longer renders a marketing-footer CTA section
-// before the global footer on /about, /contact, /manifesto, /press —
-// they jump straight from the page content to the footer.  Keeping
-// this path set empty preserves the boolean codepath while turning
-// the CTA off everywhere it does not match live.
-const MARKETING_FOOTER_PATHS = new Set<string>();
-
-type FooterCtaOverride = {
-  marketingCtaTitle?: string;
-  marketingCtaDescription?: string;
-  marketingCtaPrimary?: { href: string; label: string };
-  marketingCtaSecondary?: { href: string; label: string };
-};
-
-const PRODUCT_SUBPAGE_CTA: Record<string, FooterCtaOverride> = {
-  '/product/cli': buildProductCta('cli'),
-  '/product/gui': buildProductCta('gui'),
-  '/product/sdk': buildProductCta('sdk'),
-  // Live /enterprise renders a page-specific CTA at the top of the
-  // global footer's yellow section instead of the default marketing
-  // copy; mirroring it here keeps our enterprise page from doubling
-  // up the CTA (closing section + footer marketing block) and keeps
-  // the rendered DOM structurally identical to live (one yellow
-  // section containing the CTA + social + nav + ASCII art).
-  '/enterprise': {
-    marketingCtaTitle: 'What comes after Claude Code?',
-    marketingCtaDescription:
-      'The teams shipping the most are moving beyond individual agent sessions to governed, automated workflows. Let us show you what that looks like in practice.',
-    marketingCtaPrimary: { href: '/contact', label: 'Book a Demo' },
-    marketingCtaSecondary: { href: 'https://docs.openhands.dev/sdk', label: 'Build with SDK' },
-  },
-  // Live /pricing renders the closing "Building the open standard…"
-  // CTA inside the yellow footer section (`section.u-bg-primary`),
-  // not as a separate section above it.  Threading the copy through
-  // the Footer's marketingCta* props keeps our DOM in lockstep with
-  // live (one yellow section instead of two stacked sections).
-  '/pricing': {
-    marketingCtaTitle:
-      'Building the open standard for autonomous software development.',
-    marketingCtaDescription:
-      'OpenHands is the foundation for secure, transparent, model-agnostic coding agents - empowering every software team to build faster with full control.',
-    marketingCtaPrimary: { href: 'https://docs.openhands.dev/sdk', label: 'Build with SDK' },
-    marketingCtaSecondary: { href: 'https://app.all-hands.dev/', label: 'Try it live' },
-  },
-};
-
-function buildProductCta(variant: 'cli' | 'gui' | 'sdk'): FooterCtaOverride {
-  const page = PRODUCT_FEATURE_PAGES[variant];
-  return {
-    marketingCtaTitle: page.closingTitle,
-    marketingCtaDescription: page.closingDescription,
-    marketingCtaPrimary: page.closingPrimaryCta,
-    marketingCtaSecondary: page.closingSecondaryCta,
-  };
-}
-
-function productSubpageCtaProps(pathname: string) {
-  return PRODUCT_SUBPAGE_CTA[pathname] ?? {};
-}
-
 export default function App() {
   const [isSidebarHidden, setIsSidebarHidden] = React.useState(true);
   const [isGitHubModalOpen, setIsGitHubModalOpen] = React.useState(false);
@@ -155,38 +94,12 @@ export default function App() {
   const pathname = normalizePathname(location.pathname);
   const width = useWidth();
   const isCompactNav = width <= 1360;
+  const routeLayout = getRouteLayoutConfig(pathname, width);
   const hideGlobalFooter = matches.some(
     (match) => (match.handle as { hideGlobalFooter?: boolean } | undefined)?.hideGlobalFooter,
   );
-  // Routes that render their own Footer inside <main> (via CompanyPageShell).
-  // Live openhands.dev places the closing yellow `section.u-bg-primary`
-  // (CTA + footer nav) INSIDE `<main>` for these pages; rendering Footer
-  // here in addition would put it outside `<main>` and create a
-  // ~1100-1200px page-main height delta in the parity audit.
-  const usesShellFooter = pathname === '/about' || pathname === '/press' || pathname === '/manifesto' || pathname === '/contact';
-  const showGlobalFooter = pathname !== '/' && !hideGlobalFooter && !usesShellFooter;
-  const useMarketingFooter = MARKETING_FOOTER_PATHS.has(pathname);
-  const usePrivacyFooterLayout = pathname === '/privacy';
-  const useParityFooterLayout = pathname === '/blog' || pathname === '/community' || pathname === '/enterprise' || pathname === '/pricing';
-  const useProductFooterLayout = pathname === '/product' || pathname.startsWith('/product/');
-  // Live's footer section uses min-height: auto and is sized by its
-  // content; hardcoded values were a leftover from earlier parity work
-  // and now show up as a containerMismatch (live=auto vs test=NNNpx).
-  // Only set min-height on routes where the live footer also has one.
-  // Live /enterprise yellow footer renders at 1161px tall (with the
-  // ASCII backdrop fully expanded; under earlier image-load timing it
-  // measured 1096).  Live uses min-height: auto and lets content drive
-  // height — but without an explicit min-height our reduced
-  // marketing-CTA block collapses to ~850px and pushes 246px of
-  // cumulative Y-offset onto every element below it.  We accept the
-  // small 'minHeight: live=auto test=NNNNpx' parity diff in exchange
-  // for keeping the page layout in lockstep with live.  Per-route
-  // values come from live's measured rendered height of the
-  // `section.u-bg-primary` (yellow CTA + footer block) — most pages
-  // render at 1209px once the social-icon row + footer-nav are in.
-  const footerMinHeight = pathname === '/privacy' ? undefined : pathname === '/product' ? 1144 : pathname.startsWith('/product/') ? 1071 : pathname === '/enterprise' ? 1161 : 1209;
-  const pageWrapperHeight = pathname === '/manifesto' ? (width < 768 ? '4313.75px' : '3553.38px') : pathname === '/blog' ? '3485.38px' : pathname === '/product' ? 'var(--product-page-wrapper-height, auto)' : pathname === '/pricing' ? 'var(--pricing-page-wrapper-height)' : undefined;
-
+  const showGlobalFooter = routeLayout.footer.mode === 'global' && !hideGlobalFooter;
+  const pageWrapperHeight = routeLayout.pageWrapper?.height;
 
   const handleOpenGitHubModal = () => {
     setIsGitHubModalOpen(true);
@@ -223,7 +136,7 @@ export default function App() {
     };
   }, []);
 
-  const pageWrapperClassName = `relative${pathname === '/about' ? ' about-page-wrapper' : ''}${pathname === '/privacy' ? ' privacy-page-wrapper' : ''}`;
+  const pageWrapperClassName = ['relative', routeLayout.pageWrapper?.className].filter(Boolean).join(' ');
 
   return (
       <div data-wf-el='page-wrapper' className={pageWrapperClassName} style={{ display: 'flex', flexDirection: 'column', backgroundColor: 'rgb(249, 240, 217)', minHeight: '100vh', overflow: 'clip', height: pageWrapperHeight }}>
@@ -248,35 +161,9 @@ export default function App() {
         <div className='flex-1'>
           <GitHubModalProvider openGitHubModal={handleOpenGitHubModal}>
             <Outlet />
-            {showGlobalFooter &&
-              (useMarketingFooter ? (
-                <>
-                  <MarketingFooterCta />
-                  <Footer standalone compactNav minHeight={footerMinHeight} />
-                </>
-              ) : (
-                <Footer
-                  standalone
-                  showSocialLinks
-                  compactNav={usePrivacyFooterLayout || useParityFooterLayout || useProductFooterLayout}
-                  compactSpacerHeight={usePrivacyFooterLayout ? 9.2 : undefined}
-                  footerContainerNudge={usePrivacyFooterLayout ? 0.19 : undefined}
-                  minHeight={footerMinHeight}
-                  /*
-                   * On product subpages live's footer renders a
-                   * page-specific CTA (e.g. "Control your agents
-                   * like real infrastructure" on /product/cli)
-                   * instead of the default "Building the open
-                   * standard..." marketing CTA.  Look up the
-                   * per-page closing copy from the same data file
-                   * the page itself uses so the footer stays in
-                   * sync.
-                   */
-                  {...productSubpageCtaProps(pathname)}
-                />
-              ))}
+            {showGlobalFooter ? <Footer {...toFooterProps(routeLayout.footer)} /> : null}
           </GitHubModalProvider>
-          {usePrivacyFooterLayout ? <div aria-hidden='true' style={{ height: '0.03px' }} /> : null}
+          {routeLayout.afterGlobalFooterSpacerHeight ? <div aria-hidden='true' style={{ height: routeLayout.afterGlobalFooterSpacerHeight }} /> : null}
         </div>
       </motion.div>
       

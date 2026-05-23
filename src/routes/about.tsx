@@ -106,7 +106,7 @@ const MilestoneCard = ({ milestone, index }: { milestone: (typeof MILESTONES)[nu
 
 const About = () => {
   return (
-    <CompanyPageShell footerFlowSpacerHeight={0}>
+    <CompanyPageShell layoutPath='/about'>
       <div className='about-page'>
       <section data-wf-el='section-hero' className='about-hero-section relative pt-0 pb-0' style={{ height: '1152.27px', borderStyle: 'none' }}>
         <div data-wf-el='asci-wrap' className='pointer-events-auto absolute inset-0 overflow-hidden' style={{ '--ascii-opacity': '0.12', '--ascii-filter': 'drop-shadow(0 0 6px rgba(160, 200, 255, 0.1))', maxHeight: '2400px', borderStyle: 'none' } as CSSProperties} aria-hidden='true'>
