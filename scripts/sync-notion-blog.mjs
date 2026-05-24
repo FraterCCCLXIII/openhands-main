@@ -442,6 +442,19 @@ const parseAuthors = (frontmatter) => {
   }
   return authors;
 };
+const parseRedirectFrom = (frontmatter) => {
+  const items = [];
+  const lines = frontmatter.split(/\r?\n/);
+  for (let index = 0; index < lines.length; index += 1) {
+    if (!/^redirectFrom:\s*$/.test(lines[index])) continue;
+    while (index + 1 < lines.length && /^\s+/.test(lines[index + 1])) {
+      index += 1;
+      const slug = lines[index].match(/^\s*-\s+(.*)$/)?.[1];
+      if (slug) items.push(parseFrontmatterValue(slug));
+    }
+  }
+  return items;
+};
 const parseOgImage = (frontmatter) => frontmatter.match(/^ogImage:\s*\n\s+url:\s*(.*)$/m)?.[1];
 const parsePostMeta = (file, raw) => {
   const { frontmatter, body } = splitMarkdown(raw);
@@ -449,14 +462,13 @@ const parsePostMeta = (file, raw) => {
     title: parseFrontmatterValue(extractFrontmatterValue(frontmatter, 'title')) || file.replace(/\.md$/, ''),
     published: parseFrontmatterValue(extractFrontmatterValue(frontmatter, 'published')),
     slug: parseFrontmatterValue(extractFrontmatterValue(frontmatter, 'slug')),
+    redirectFrom: parseRedirectFrom(frontmatter),
     excerpt: parseFrontmatterValue(extractFrontmatterValue(frontmatter, 'excerpt')),
     coverImage: parseFrontmatterValue(extractFrontmatterValue(frontmatter, 'coverImage')),
     coverAlt: parseFrontmatterValue(extractFrontmatterValue(frontmatter, 'coverAlt')),
-    coverRadius: parseFrontmatterValue(extractFrontmatterValue(frontmatter, 'coverRadius')),
     date: parseFrontmatterValue(extractFrontmatterValue(frontmatter, 'date')),
     authors: parseAuthors(frontmatter),
     ogImage: parseFrontmatterValue(parseOgImage(frontmatter)),
-    seoTitleDate: parseFrontmatterValue(extractFrontmatterValue(frontmatter, 'seoTitleDate')),
     importance: parseFrontmatterValue(extractFrontmatterValue(frontmatter, 'importance')),
   };
   if (!data.importance) delete data.importance;
@@ -551,36 +563,35 @@ const pageBodyMarkdown = async (pageId, context, report) => {
   return body ? `${body}\n` : '';
 };
 const yamlString = (value) => `'${String(value ?? '').replaceAll("'", "''")}'`;
-const buildFrontmatter = ({ title, slug, excerpt, coverImage, coverAlt, coverRadius, date, authors, ogImage, seoTitleDate, published, importance }) => {
+const buildFrontmatter = ({ title, slug, redirectFrom, excerpt, coverImage, coverAlt, date, authors, ogImage, published, importance }) => {
   const lines = [`title: ${yamlString(title)}`];
   if (published === false) lines.push('published: false');
   if (importance && importance !== 'Standard') lines.push(`importance: ${importance}`);
   if (slug) lines.push(`slug: ${slug}`);
+  if (redirectFrom?.length) { lines.push('redirectFrom:'); for (const from of redirectFrom) lines.push(`  - ${from}`); }
   if (excerpt) lines.push(`excerpt: ${yamlString(excerpt)}`);
   if (coverImage) lines.push(`coverImage: ${coverImage}`);
   if (coverAlt !== undefined && coverAlt !== '') lines.push(`coverAlt: ${yamlString(coverAlt)}`);
-  if (coverRadius) lines.push(`coverRadius: ${coverRadius}`);
   if (date) lines.push(`date: ${yamlString(date)}`);
   if (authors?.length) { lines.push('authors:'); for (const author of authors) lines.push(`  - name: ${author}`); }
   if (ogImage) lines.push('ogImage:', `  url: ${ogImage}`);
-  if (seoTitleDate) lines.push(`seoTitleDate: ${yamlString(seoTitleDate)}`);
   return lines.join('\n');
 };
 const pageMetadata = async (page, context, report) => {
   const title = pageProp(page, ['Name', 'Title']);
   const slug = pageProp(page, ['Slug']) || stringToSlug(title);
   const authors = String(pageProp(page, ['Authors']) || '').split(',').map((author) => author.trim()).filter(Boolean);
+  const redirectFrom = String(pageProp(page, ['Redirect From']) || '').split(',').map((s) => s.trim()).filter(Boolean);
   return {
     title,
     slug,
+    redirectFrom,
     excerpt: pageProp(page, ['Excerpt']) || '',
     coverImage: await filePropertyAssetPath(pageProp(page, ['Cover image']), context, report),
     coverAlt: pageProp(page, ['Cover alt']) || '',
-    coverRadius: pageProp(page, ['Cover radius']) || '',
     date: pageProp(page, ['Publication date']) || '',
     authors,
     ogImage: await filePropertyAssetPath(pageProp(page, ['OG image']), context, report),
-    seoTitleDate: pageProp(page, ['SEO title date']) || '',
     published: undefined,
     importance: pageProp(page, ['Importance']) || 'Standard',
   };
@@ -603,6 +614,7 @@ const updateFeaturedSlug = async (slug, report) => {
 
 const syncFromNotion = async () => {
   const databaseId = normalizeId(assertValue('NOTION_BLOG_DATABASE_ID', process.env.NOTION_BLOG_DATABASE_ID));
+  await ensureDatabaseProperties(databaseId);
   const pages = await queryDatabase(databaseId);
   const index = await localBlogIndex();
   const expected = new Set();
@@ -673,14 +685,14 @@ const desiredDatabaseProperties = () => ({
       ],
     },
   },
-  Slug: { rich_text: {} }, 'Publication date': { date: {} }, Authors: { rich_text: {} }, Excerpt: { rich_text: {} },
-  'Cover image': { files: {} }, 'Cover alt': { rich_text: {} }, 'Cover radius': { rich_text: {} }, 'OG image': { files: {} }, 'SEO title date': { rich_text: {} },
+  Slug: { rich_text: {} }, 'Redirect From': { rich_text: {} }, 'Publication date': { date: {} }, Authors: { rich_text: {} }, Excerpt: { rich_text: {} },
+  'Cover image': { files: {} }, 'Cover alt': { rich_text: {} }, 'OG image': { files: {} },
 });
 const createDatabase = (parentPageId) => notion('/databases', { method: 'POST', body: JSON.stringify({ parent: { type: 'page_id', page_id: parentPageId }, icon: { type: 'emoji', emoji: '✍️' }, title: [{ type: 'text', text: { content: 'OpenHands Blog Source' } }], description: [{ type: 'text', text: { content: NOTICE } }], properties: desiredDatabaseProperties() }) });
 const ensureDatabaseProperties = async (databaseId) => {
   const database = await notion(`/databases/${databaseId}`);
   const remove = {};
-  for (const propertyName of ['File', 'Markdown SHA256', 'Assets SHA256', 'Frontmatter', 'OG image URL', 'Published']) if (database.properties[propertyName]) remove[propertyName] = null;
+  for (const propertyName of ['File', 'Markdown SHA256', 'Assets SHA256', 'Frontmatter', 'OG image URL', 'Published', 'Cover radius', 'SEO title date']) if (database.properties[propertyName]) remove[propertyName] = null;
   if (database.properties['Cover image'] && database.properties['Cover image'].type !== 'files') remove['Cover image'] = null;
   if (Object.keys(remove).length) await notion(`/databases/${databaseId}`, { method: 'PATCH', body: JSON.stringify({ properties: remove }) });
   await notion(`/databases/${databaseId}`, { method: 'PATCH', body: JSON.stringify({ properties: desiredDatabaseProperties() }) });
@@ -697,11 +709,13 @@ const postProperties = async (file, post) => ({
   Status: { select: { name: post.data.published === false ? 'Draft' : 'Published' } },
   Importance: { select: { name: post.data.importance || 'Standard' } },
   Slug: richTextProp(post.slug),
+  'Redirect From': richTextProp((post.data.redirectFrom ?? []).join(', ')),
   'Publication date': post.data.date ? { date: { start: post.data.date } } : { date: null },
   Authors: richTextProp(post.data.authors.join(', ')),
   Excerpt: richTextProp(post.data.excerpt ?? ''),
   'Cover image': { files: await filePropertyFromAsset(post.data.coverImage) },
-  'Cover alt': richTextProp(post.data.coverAlt ?? ''), 'Cover radius': richTextProp(post.data.coverRadius ?? ''), 'OG image': { files: await filePropertyFromAsset(post.data.ogImage) }, 'SEO title date': richTextProp(post.data.seoTitleDate ?? ''),
+  'Cover alt': richTextProp(post.data.coverAlt ?? ''),
+  'OG image': { files: await filePropertyFromAsset(post.data.ogImage) },
 });
 const appendBlocks = async (pageId, blocks) => { for (let i = 0; i < blocks.length; i += 100) await notion(`/blocks/${pageId}/children`, { method: 'PATCH', body: JSON.stringify({ children: blocks.slice(i, i + 100) }) }); };
 const archiveChildren = async (pageId) => { for (const block of await listBlocks(pageId)) await notion(`/blocks/${block.id}`, { method: 'PATCH', body: JSON.stringify({ archived: true }) }); };
@@ -968,7 +982,7 @@ const countNotionBlocks = async (pageId) => {
 const auditNotion = async () => {
   const databaseId = normalizeId(assertValue('NOTION_BLOG_DATABASE_ID', process.env.NOTION_BLOG_DATABASE_ID));
   const database = await notion(`/databases/${databaseId}`);
-  const forbidden = ['File', 'Markdown SHA256', 'Assets SHA256', 'Frontmatter', 'OG image URL', 'Published'].filter((name) => database.properties[name]);
+  const forbidden = ['File', 'Markdown SHA256', 'Assets SHA256', 'Frontmatter', 'OG image URL', 'Published', 'Cover radius', 'SEO title date'].filter((name) => database.properties[name]);
   const statusOptions = new Set(database.properties.Status?.select?.options?.map((option) => option.name) ?? []);
   const importanceOptions = new Set(database.properties.Importance?.select?.options?.map((option) => option.name) ?? []);
   const failures = [];

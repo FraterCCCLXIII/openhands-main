@@ -38,6 +38,12 @@ export const loader = ({ params, request }: LoaderFunctionArgs) => {
   }
 
   const slug = params.slug.toString();
+
+  const redirectTarget = blogAPI.getRedirectTarget(slug);
+  if (redirectTarget) {
+    throw redirect(`/blog/${redirectTarget}`, 301);
+  }
+
   const blog = blogAPI.getBlogBySlug(slug);
 
   if (!blog) {
@@ -55,7 +61,6 @@ export const loader = ({ params, request }: LoaderFunctionArgs) => {
     date: data.date,
     cover: data.coverImage || null,
     coverAlt: data.coverAlt ?? '',
-    coverRadius: data.coverRadius || null,
     authors: data.authors.map((author) => ({
       name: author.name,
       picture: author.picture || null,
@@ -69,7 +74,6 @@ export const loader = ({ params, request }: LoaderFunctionArgs) => {
       coverAlt: highlight.data.coverAlt ?? '',
       href: `/blog/${getBlogSlug(highlight)}`,
     })),
-    seoTitleDate: data.seoTitleDate || formatSeoTitleDate(data.date),
     url,
   };
 };
@@ -110,7 +114,7 @@ export const meta: Route.MetaFunction = ({ data, location }) => {
   }
 
   return createSocialPreviewMeta({
-    title: `${data.title} | ${data.seoTitleDate}`,
+    title: `${data.title} | ${formatSeoTitleDate(data.date)}`,
     description: data.excerpt,
     socialTitle: data.title,
     image: data.ogImage,
@@ -185,7 +189,7 @@ const BlogDetails = () => {
             </h1>
           </div>
 
-          <figure className={`w-full overflow-hidden ${data.coverRadius === 'none' ? 'rounded-none' : 'rounded-[8px]'}`}>
+          <figure className="w-full overflow-hidden rounded-[8px]">
             {!data.cover && (
               <PlaceholderImage className='w-full rounded-none' />
             )}

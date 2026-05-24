@@ -23,7 +23,6 @@ vi.mock('react-router', async () => {
       authors: [{ name: 'OpenHands Team', picture: null, link: null }],
       excerpt: 'Featured excerpt',
       ogImage: '/cover.png',
-      seoTitleDate: 'Jan 28, 2026',
       url: 'https://example.com/blog/openhands-index',
       articleHighlights: [
         {

@@ -3,13 +3,11 @@ title: 'OpenHands Product Update - May 2026'
 slug: openhands-product-update---may-2026
 excerpt: 'We''re excited to share a round up of the latest features in OpenHands! The latest release of the OpenHands Local GUI brings significant improvements to LLM profile management, enhanced security, and a variety of quality-of-life improvements across the platform.'
 coverImage: /assets/webflow/blog/openhands-product-update-may-2026/69a8470f9d00e34ff3c8d8df_openhands_product_update_v3.png
-coverRadius: none
 date: '2026-05-20T12:00:00.000+00:00'
 authors:
   - name: Joe Pelletier
 ogImage:
   url: /assets/webflow/blog/openhands-product-update-may-2026/69a8470f9d00e34ff3c8d8df_openhands_product_update_v3.png
-seoTitleDate: 'May 20, 2026'
 ---
 We're excited to share a round up of the latest features in OpenHands! The latest release of the OpenHands Local GUI brings significant improvements to LLM profile management, enhanced security, and a variety of quality-of-life improvements across the platform. We have also made a few important enhancements and fixes to OpenHands Enterprise.
 

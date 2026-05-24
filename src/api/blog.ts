@@ -6,11 +6,10 @@ type BlogPost = Post & {
   data: Post["data"] & {
     slug?: string;
     aliases?: string[];
+    redirectFrom?: string[];
     published?: boolean;
     importance?: 'Featured' | 'Standard' | 'SEO';
-    seoTitleDate?: string;
     coverAlt?: string;
-    coverRadius?: 'none';
     featuredImage?: string;
   };
 };
@@ -135,6 +134,7 @@ const parsePost = (rawPost: string): BlogPost => {
 class BlogAPI {
   private posts: BlogPost[] = [];
   private postsBySlug = new Map<string, BlogPost>();
+  private redirectFromMap = new Map<string, string>();
 
   constructor() {
     this.posts = sortBlogsByDate(
@@ -144,10 +144,15 @@ class BlogAPI {
     );
 
     for (const post of this.posts) {
-      this.postsBySlug.set(getBlogSlug(post), post);
+      const canonicalSlug = getBlogSlug(post);
+      this.postsBySlug.set(canonicalSlug, post);
 
       for (const alias of getBlogAliases(post)) {
         this.postsBySlug.set(alias, post);
+      }
+
+      for (const from of (post.data.redirectFrom ?? [])) {
+        this.redirectFromMap.set(from, canonicalSlug);
       }
     }
   }
@@ -170,6 +175,10 @@ class BlogAPI {
 
   public getBlogBySlug(slug: string): BlogPost | undefined {
     return this.postsBySlug.get(slug) ?? this.postsBySlug.get(resolveBlogSlug(slug));
+  }
+
+  public getRedirectTarget(slug: string): string | undefined {
+    return this.redirectFromMap.get(slug);
   }
 }
 

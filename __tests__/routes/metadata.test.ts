@@ -127,12 +127,11 @@ describe('route metadata branding parity', () => {
         excerpt: 'Test excerpt',
         ogImage: DEFAULT_SOCIAL_IMAGE,
         url: 'https://openhands.dev/blog/test-post',
-        date: '2026-01-01',
+        date: '2026-01-01T12:00:00.000Z',
         authors: [{ name: 'Jane Doe' }],
         cover: DEFAULT_SOCIAL_IMAGE,
         coverAlt: 'Test cover alt',
         content: 'hello world',
-        seoTitleDate: 'Jan 01, 2026',
       },
       location: { pathname: '/blog/test-post' },
     }) as MetaEntry[];
@@ -160,7 +159,7 @@ describe('route metadata branding parity', () => {
       type: 'article',
     });
     expect(findEntry(blogPostEntries, 'property', 'article:published_time')?.content).toBe(
-      '2026-01-01'
+      '2026-01-01T12:00:00.000Z'
     );
   });
 
@@ -175,12 +174,11 @@ describe('route metadata branding parity', () => {
         excerpt: 'Test excerpt',
         ogImage: DEFAULT_SOCIAL_IMAGE,
         url: 'https://openhands.dev/blog/test-post',
-        date: '2026-01-01',
+        date: '2026-01-01T12:00:00.000Z',
         authors: [{ name: 'Jane Doe' }],
         cover: DEFAULT_SOCIAL_IMAGE,
         coverAlt: 'Test cover alt',
         content: 'hello world',
-        seoTitleDate: 'Jan 01, 2026',
       },
     }) as MetaEntry[];
     const disclosureEntries = (disclosureMeta as any)({

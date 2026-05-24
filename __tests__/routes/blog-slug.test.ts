@@ -23,16 +23,23 @@ test("blog loader resolves canonical ACP slugs without redirecting away", () => 
   expect(data.title).toBe(
     "Use AI Agents in Your Favorite Editor through the Agent Client Protocol"
   );
-  expect(data.seoTitleDate).toBe("Dec 07, 2025");
+  expect(data.date).toBeTruthy();
 });
 
-test("blog loader preserves live title dates via seoTitleDate metadata", () => {
-  const data = loader({
-    params: { slug: "20251119-amd-ryzen-ai-collaboration" },
-    request: new Request("https://example.com/blog/20251119-amd-ryzen-ai-collaboration"),
-  } as never);
-
-  expect(data.seoTitleDate).toBe("Nov 17, 2025");
+test("blog loader issues 301 for redirectFrom slugs", () => {
+  try {
+    loader({
+      params: { slug: "20250409-oh-condenser-release" },
+      request: new Request("https://example.com/blog/20250409-oh-condenser-release"),
+    } as never);
+    throw new Error("Expected loader to throw a redirect for a redirectFrom slug");
+  } catch (error) {
+    expect(error).toBeInstanceOf(Response);
+    expect((error as Response).status).toBe(301);
+    expect((error as Response).headers.get("Location")).toBe(
+      "/blog/openhands-context-condensensation-for-more-efficient-ai-agents"
+    );
+  }
 });
 
 test("blog loader redirects unknown live-only slugs to openhands.dev", () => {
