@@ -44,9 +44,13 @@ const Blog = () => {
   const [visibleGridPosts, setVisibleGridPosts] = React.useState(INITIAL_GRID_POSTS);
   const visibleBlogs = gridBlogs.slice(0, visibleGridPosts);
   const hasMoreBlogs = visibleGridPosts < gridBlogs.length;
+  const isBlogGridExpanded = visibleGridPosts > INITIAL_GRID_POSTS;
 
   return (
-    <main data-wf-el='page-main' className='blog-index-page flex flex-col'>
+    <main
+      data-wf-el='page-main'
+      className={`blog-index-page flex flex-col${isBlogGridExpanded ? ' blog-index-page--expanded' : ''}`}
+    >
       <section data-wf-el='section-hero' className='blog-hero relative w-full' style={{ height: '396.484px', textAlign: 'start' }}>
         <div data-wf-el='hero-content' className='relative flex h-full w-full flex-col items-center justify-center text-center' style={{ paddingTop: '56px', paddingBottom: '56px' }}>
           <div data-wf-el='container' className='blog-hero-container mx-auto max-w-[1238px] text-center' style={{ height: '284.48px' }}>
@@ -128,7 +132,7 @@ const Blog = () => {
                   aria-label='Load more'
                   onClick={(event) => {
                     event.preventDefault();
-                    setVisibleGridPosts((count) => count + INITIAL_GRID_POSTS);
+                    setVisibleGridPosts((count) => Math.min(count + INITIAL_GRID_POSTS, gridBlogs.length));
                   }}
                 >
                   <span className='sr-only'>Load more</span>

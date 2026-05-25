@@ -85,6 +85,7 @@ describe('Blog route', () => {
     await user.click(container.querySelector('a[href="#blog-grid"]')!);
 
     expect(screen.getByText('Grid Post 7')).toBeInTheDocument();
+    expect(container.querySelector('main')?.className).toContain('blog-index-page--expanded');
     expect(
       screen.getByText('Building the open standard for autonomous software development.')
     ).toBeInTheDocument();

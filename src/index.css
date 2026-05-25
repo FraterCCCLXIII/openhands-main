@@ -1998,6 +1998,26 @@
 
 }
 
+/* Let the blog index grow after the interactive Load more action.
+   Initial fixed heights are kept for Webflow parity, but expanded content must
+   contribute to the document height so newly revealed posts remain scrollable. */
+[data-wf-el='page-wrapper']:has(.blog-index-page.blog-index-page--expanded) {
+  height: auto !important;
+  overflow: visible !important;
+}
+
+.blog-index-page.blog-index-page--expanded .blog-grid-section {
+  height: auto !important;
+  min-height: 1015.94px;
+}
+
+@media (max-width: 767px) {
+  .blog-index-page.blog-index-page--expanded .blog-grid-section {
+    min-height: 2552.125px;
+  }
+}
+
+
 .home-mobile-parity [data-wf-el='hero-surface-eyebrow'] {
   opacity: 0.3 !important;
 }
