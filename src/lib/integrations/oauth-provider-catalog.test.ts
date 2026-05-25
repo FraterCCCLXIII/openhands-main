@@ -19,6 +19,7 @@ describe("listOAuthProviderCatalog", () => {
     const figma = providers.find((provider) => provider.slug === "figma");
     const slack = providers.find((provider) => provider.slug === "slack");
     const webflow = providers.find((provider) => provider.slug === "webflow");
+    const datadog = providers.find((provider) => provider.slug === "datadog");
     const hubspot = providers.find((provider) => provider.slug === "hubspot");
     const github = providers.find((provider) => provider.slug === "github");
 
@@ -26,6 +27,7 @@ describe("listOAuthProviderCatalog", () => {
     expect(figma).toMatchObject({ availability: "oauth_ready", managedConnectorSlug: "figma" });
     expect(slack).toMatchObject({ availability: "oauth_ready", managedConnectorSlug: "slack" });
     expect(webflow).toMatchObject({ availability: "oauth_ready", managedConnectorSlug: "webflow" });
+    expect(datadog).toMatchObject({ availability: "oauth_ready", managedConnectorSlug: "datadog" });
     expect(hubspot).toMatchObject({ availability: "oauth_ready", managedConnectorSlug: "hubspot" });
     expect(github).toMatchObject({ availability: "manual_token", managedConnectorSlug: "github" });
   });
@@ -60,6 +62,7 @@ describe("listOAuthProviderCatalog", () => {
     const webflow = providers.find((provider) => provider.slug === "webflow");
     const hubspot = providers.find((provider) => provider.slug === "hubspot");
     const github = providers.find((provider) => provider.slug === "github");
+    const datadog = providers.find((provider) => provider.slug === "datadog");
     const elevenlabs = providers.find((provider) => provider.slug === "elevenlabs");
 
     expect(github?.registrationDefaults).toMatchObject({
@@ -87,6 +90,18 @@ describe("listOAuthProviderCatalog", () => {
       clientAuthentication: "none",
       pkce: true,
       scopes: [],
+    });
+    expect(datadog).toMatchObject({
+      availability: "oauth_ready",
+      managedConnectorSlug: "datadog",
+      docsUrl: "https://docs.datadoghq.com/bits_ai/mcp_server/setup/",
+    });
+    expect(datadog?.registrationDefaults).toMatchObject({
+      provider: "mcp",
+      serverUrl: "https://mcp.datadoghq.com/api/unstable/mcp-server/mcp",
+      authorizationUrl: "https://app.datadoghq.com/oauth2/v1/authorize",
+      tokenUrl: "https://api.datadoghq.com/oauth2/v1/token",
+      scopes: ["dashboards_read", "monitors_read"],
     });
     expect(hubspot).toMatchObject({
       availability: "oauth_ready",

@@ -372,10 +372,12 @@ const oauthProviderCatalog = [
     name: "Datadog",
     description: "Logs, metrics, monitors, incidents, and observability workflows.",
     categories: ["Observability", "Operations"],
-    availability: "planned",
+    availability: "oauth_ready",
+    managedConnectorSlug: "datadog",
     appUrl: "https://www.datadoghq.com",
-    docsUrl: "https://docs.datadoghq.com/developers/integrations/oauth/",
-    notes: "Useful for production debugging and monitoring assistants.",
+    docsUrl: "https://docs.datadoghq.com/bits_ai/mcp_server/setup/",
+    notes:
+      "Uses Datadog's official hosted MCP server. The default registration targets the US1 endpoint and can be edited for other Datadog sites.",
   }),
   provider(36, {
     slug: "sentry",

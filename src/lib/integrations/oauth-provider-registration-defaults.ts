@@ -67,6 +67,7 @@ const officialManagedMcpServerUrls: Record<string, string> = {
   hubspot: hubspotMcpServerUrl,
   slack: "https://mcp.slack.com/mcp",
   webflow: "https://mcp.webflow.com/mcp",
+  datadog: "https://mcp.datadoghq.com/api/unstable/mcp-server/mcp",
   ordinal: "https://app.tryordinal.com/api/mcp",
 };
 
@@ -421,14 +422,10 @@ const registrationDefaults: Record<string, OAuthProviderRegistrationDefaults> = 
     requestPath: "/designs",
   },
   datadog: {
-    apiBaseUrl: "https://api.datadoghq.com/api/v2",
+    provider: "mcp",
     authorizationUrl: "https://app.datadoghq.com/oauth2/v1/authorize",
     tokenUrl: "https://api.datadoghq.com/oauth2/v1/token",
     scopes: ["dashboards_read", "monitors_read"],
-    toolName: "list_monitors",
-    toolDescription: "List Datadog monitors for the connected org.",
-    requestMethod: "GET",
-    requestPath: "/monitors",
   },
   sentry: {
     apiBaseUrl: "https://sentry.io/api/0",

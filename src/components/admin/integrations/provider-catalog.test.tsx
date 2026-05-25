@@ -185,6 +185,27 @@ const providerCatalog: OAuthProviderCatalogOption[] = [
       scopes: [],
     },
   },
+  {
+    slug: "datadog",
+    name: "Datadog",
+    description: "Logs, metrics, monitors, incidents, and observability workflows.",
+    categories: ["Observability", "Operations"],
+    authStrategy: "oauth2",
+    availability: "oauth_ready",
+    managedConnectorSlug: "datadog",
+    docsUrl: "https://docs.datadoghq.com/bits_ai/mcp_server/setup/",
+    notes:
+      "Uses Datadog's official hosted MCP server. The default registration targets the US1 endpoint and can be edited for other Datadog sites.",
+    popularityRank: 6,
+    registrationDefaults: {
+      provider: "mcp",
+      serverUrl: "https://mcp.datadoghq.com/api/unstable/mcp-server/mcp",
+      authorizationUrl: "https://app.datadoghq.com/oauth2/v1/authorize",
+      tokenUrl: "https://api.datadoghq.com/oauth2/v1/token",
+      scopes: ["dashboards_read", "monitors_read"],
+    },
+  },
+
 
   {
     slug: "elevenlabs",
@@ -673,6 +694,109 @@ describe("ProviderCatalog", () => {
     });
     expect(container.textContent).toContain("Ready now");
     expect(container.textContent).toContain("Use Slack");
+  });
+
+  it("registers Datadog as a managed MCP connector backed by the official hosted MCP server", async () => {
+    fetchMock.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          slug: "datadog",
+          oauthConfigured: true,
+        }),
+        {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        },
+      ),
+    );
+
+    await act(async () => {
+      root.render(
+        <ProviderCatalog
+          providerCatalog={providerCatalog}
+          readyManagedConnectors={readyManagedConnectors}
+          canRegisterManagedConnectors
+          oauthCallbackBaseUrl={oauthCallbackBaseUrl}
+        />,
+      );
+    });
+
+    const datadogButton = Array.from(container.querySelectorAll("button")).find((button) =>
+      button.textContent?.includes("Datadog"),
+    );
+    expect(datadogButton).toBeTruthy();
+
+    await act(async () => {
+      datadogButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    expect(container.textContent).toContain(
+      "Enter the MCP details below to register this connector once for the whole service.",
+    );
+    expect(container.textContent).toContain("How to create Datadog OAuth credentials");
+    expect(container.textContent).toContain(`${oauthCallbackBaseUrl}/datadog/callback`);
+    expect(container.textContent).toContain("MCP server URL");
+    expect(container.textContent).not.toContain("API base URL");
+    expect(container.textContent).not.toContain("Starter API function:");
+
+    const urlInputs = Array.from(container.querySelectorAll('input[type="url"]'));
+    expect(urlInputs).toHaveLength(1);
+    expect((urlInputs[0] as HTMLInputElement | undefined)?.value).toBe(
+      "https://mcp.datadoghq.com/api/unstable/mcp-server/mcp",
+    );
+
+    await act(async () => {
+      setInputValue(
+        Array.from(container.querySelectorAll('input[type="text"]')).find(
+          (input) => (input as HTMLInputElement).value === "",
+        ) ?? null,
+        "datadog-client-id",
+      );
+      setInputValue(
+        container.querySelector('input[type="password"]'),
+        "datadog-client-secret",
+      );
+    });
+
+    const form = container.querySelector("form");
+    expect(form).toBeTruthy();
+
+    await act(async () => {
+      form?.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    const [, requestInit] = fetchMock.mock.calls.at(-1) as [string, RequestInit];
+    const body = JSON.parse(String(requestInit.body)) as {
+      slug: string;
+      provider: string;
+      apiBaseUrl?: string;
+      serverUrl?: string;
+      oauthConfig: {
+        authorizationUrl: string;
+        tokenUrl: string;
+        scopes: string[];
+      };
+      oauthClientId: string;
+      oauthClientSecret: string;
+      functions?: Array<unknown>;
+    };
+
+    expect(body).toMatchObject({
+      slug: "datadog",
+      provider: "mcp",
+      serverUrl: "https://mcp.datadoghq.com/api/unstable/mcp-server/mcp",
+      oauthClientId: "datadog-client-id",
+      oauthClientSecret: "datadog-client-secret",
+    });
+    expect(body.apiBaseUrl).toBeUndefined();
+    expect(body.oauthConfig).toMatchObject({
+      authorizationUrl: "https://app.datadoghq.com/oauth2/v1/authorize",
+      tokenUrl: "https://api.datadoghq.com/oauth2/v1/token",
+      scopes: ["dashboards_read", "monitors_read"],
+    });
+    expect(container.textContent).toContain("Ready now");
+    expect(container.textContent).toContain("Use Datadog");
   });
 
   it("registers Webflow with deployment-scoped MCP OAuth client registration instead of manual client secrets", async () => {
