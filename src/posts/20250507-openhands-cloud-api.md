@@ -25,6 +25,10 @@ The OpenHands Cloud API addresses these needs by providing a simple, RESTful int
 
 Our API follows RESTful principles, making it easy to integrate with any programming language or framework. With just a few lines of code, you can:
 
+- Start new conversations with specific instructions
+- Check the status of ongoing tasks
+- Retrieve results and logs
+
 Here is an example from Python:
 
 ```python
@@ -133,12 +137,21 @@ app.post('/webhook/new-pr', async (req, res) => {
 
 To start using the OpenHands Cloud API:
 
-docs.
-And for detailed documentation, including all available endpoints and parameters, visit our
+1. Log in to your [OpenHands Cloud](https://app.all-hands.dev) account
+2. Navigate to the [Settings page](https://app.all-hands.dev/settings)
+3. Generate an API key in the "API Keys" section
+4. Use the key in your API requests with the Authorization header
+
+We have a few more details in the [getting started](https://docs.all-hands.dev/modules/usage/cloud/cloud-api) docs.
+And for detailed documentation, including all available endpoints and parameters, visit our [API Reference](https://docs.all-hands.dev/swagger-ui/).
 
 ## Sign Up Today
 
-today and start exploring the API.
+If this sound exciting to you, [sign up for OpenHands Cloud](https://app.all-hands.dev) today and start exploring the API.
 Of course, the Cloud API is just one of several ways to interact with OpenHands:
+
+- **Web Interface**: The [OpenHands Cloud](https://app.all-hands.dev) web app provides a full-featured interactive experience
+- **GitHub Resolver**: Use the [Cloud GitHub Resolver](https://docs.all-hands.dev/modules/usage/cloud/cloud-github-resolver) to integrate OpenHands with your GitHub workflows
+- **Run Locally**: As always, OpenHands is [open source](https://github.com/OpenHands/OpenHands) and you can download, run, and modify away!
 
 And as always, if you have any questions or feature requests, come join us on [Slack](https://join.slack.com/t/openhands-ai/shared_invite/zt-2ngejmfw6-9gW4APWOC9XUp1n~SiQ6iw) or [Discord](https://discord.gg/ESHStjSjD4), or open issues on [GitHub](https://github.com/OpenHands/openhands-cloud).

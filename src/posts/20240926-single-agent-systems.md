@@ -15,9 +15,18 @@ Recently "**multi-agent system**" is one of the hottest buzzwords in AI, the foc
 
 In the summary, we'll discuss:
 
+- The elements that go into modern AI agents – large language models, prompts, and action spaces
+- An illustrative example of a multi-agent system
+- Some issues with multi-agent systems
+- How we can transition from using multiple specialized agents to one strong agent, and some of the remaining issues to be addressed
+
 ## What makes an LLM-based Agent?
 
 Recently most practical agents are based on large language models like [Claude](https://www.anthropic.com/claude) by Anthropic or the [OpenAI language models](https://platform.openai.com/docs/models). But a language model is not enough to build an agent, you need at least three components
+
+- **The Underlying LLM**
+- **The Prompt:** This can be the system prompt that is used to specify the model's general behavior, or the type of information that you pull in from the agent's surrounding environment.
+- **The Action Space:** These are the tools that we provide to the agent to allow it to act in the world.
 
 In general, when we talk about multi-agent systems, we're varying at least one of these three components.
 
@@ -25,11 +34,21 @@ In general, when we talk about multi-agent systems, we're varying at least one o
 
 For instance, let's say we're building an AI software developer. We could look at [CodeR](https://arxiv.org/abs/2406.01304), a multi-agent framework for AI software development. It includes several agents, all using the same underlying LM but varying the prompt and action space:
 
+- **Manager:** This agent has a *prompt* that specifies that it should write a plan for other agents to execute, and an *action space* of output plans.
+- **Reproducer:** This agent has a *prompt* that tells it to reproduce the issue, and an *action space* of writing code into a file reproduce.py that reproduces the error.
+- **Fault Localizer:** This agent has a *prompt* that tells it to find the files that are causing the error, and an *action space* of using tools from software engineering for fault localization and listing up files for later consumption.
+- **Editor:** This agent has a *prompt* that takes in the results of the reproducer and fault localizer, and an *action space* that allows it to make edits to files.
+- **Verifier:** This agent has a *prompt* that takes in the results of the other agents and asks it to verify the results, and an *action space* of outputting a yes/no decision of whether the issue is resolved or not.
+
 This is a very intuitive structure for building a system, but there are a number of difficulties in building such systems.
 
 ## Some Issues with Multi-agent Systems
 
 When building a multi-agent system, you can encounter a number of difficulties:
+
+- **Getting the Structure Right:** Multi-agent systems add structure to solve problems. This is great when the problem the agent faces exactly matches the specified structure, but what if it doesn't? For instance, what if the verifier wants to perform file localization to be sure that it has verified the answer properly? Because these agents are completely separate, the verifier would not have access to the tools necessary to do its job.
+- **Preserving Context:** Multi-agent systems typically pass information between multiple agents, but this can be a source of information loss. For instance, if the fault localizer passes only a summary of its work on to the further agents, it often results in loss of important contextual information that could be useful to the downstream agents for their jobs.
+- **Maintainability:** Finally, each of these agents is typically its own separate code base, or at least a separate prompt. Because of this, multi-agent systems can have larger and more complex codebases.
 
 Interestingly, a lot of these challenges map onto human organizations as well! I think we have all had experience of being on teams that were poorly organized, had poor communication, or had issues with maintaining the necessary skill sets when one of the members left, for instance.
 
@@ -44,6 +63,9 @@ It is important to note that there's a reason why people make multi-agent system
 **Single Prompting Technique:** This is the place where things are tricky! We need to make sure that the agent gets the appropriate directions on how to solve its task, as well as the appropriate information from its environment.
 
 There are a couple options here:
+
+- *Concatenate All the Prompts:* If we have a multi-agent system with 10 different prompts, why not just concatenate them all together? Recently we have long-context models that can handle up to hundreds of thousands or millions of tokens (Claude stands at 200k tokens, and Llama stands at 128k). This is the approach we currently take in OpenHands. There a couple of downsides to this however. The first is cost, longer prompts cost more money and time, although features such as [Anthropic's prompt caching](https://www.anthropic.com/news/prompt-caching) make this much more affordable than it was before. Another downside to this is that LLMs can be [distracted by being provided with too much extra context](https://arxiv.org/abs/2307.03172), although again the more powerful language models are getting better and better at identifying important information from long contexts.
+- *Retrieval-augmented Prompting:* Another possible option is to resort to retrieval. Just like [retrieval-augmented generation](https://learnbybuilding.ai/tutorials/rag-from-scratch) systems cut down on very long contexts for efficiency or accuracy reasons, we could perform retrieval-augmented prompting. There is some [research work](https://arxiv.org/abs/2209.11755) on selecting the examples that we provide to LLMs in prompts, but as far as I know less research work in the context of agents.
 
 Finding the best method for this is still an active research question, but one that I believe is surmountable. If you'd be interested in tackling it together with us, [jump on the OpenHands slack](https://join.slack.com/t/openhands-ai/shared_invite/zt-34zm4j0gj-Qz5kRHoca8DFCbqXPS~f_A) and we'd be happy to discuss more!
 
