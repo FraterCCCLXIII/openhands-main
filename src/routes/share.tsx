@@ -76,12 +76,12 @@ const Share = () => {
       <p className='description h-[25px]'>
         {navigation.state === 'loading' && 'Loading...'}
       </p>
-      <Form className='flex gap-2'>
+      <Form className='flex w-full max-w-[620px] flex-col gap-2 px-4 sm:w-auto sm:flex-row sm:px-0'>
         <input
           name='share_id'
           type='text'
           placeholder='Enter Share ID'
-          className='lg:w-[500px] rounded-md px-4 py-2'
+          className='min-w-0 rounded-md px-4 py-2 sm:w-[320px] lg:w-[500px]'
           defaultValue={'id' in data ? data.id : ''}
         />
         <button
@@ -89,7 +89,7 @@ const Share = () => {
           disabled={navigation.state === 'loading'}
           className={clsx(
             'bg-black text-white',
-            'font-semibold px-4 rounded-lg hover:bg-[#4B5563] hover:text-white disabled:opacity-50 transition-colors duration-50'
+            'rounded-lg px-4 py-2 font-semibold transition-colors duration-50 hover:bg-[#4B5563] hover:text-white disabled:opacity-50'
           )}
         >
           Search
