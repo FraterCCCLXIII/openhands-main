@@ -11,9 +11,7 @@ ogImage:
 ---
 There is no single best language model for every software engineering task.
 
-Some tasks call for the strongest reasoning model you can get: planning a risky migration, debugging a subtle production issue, or reviewing a large pull request. Other tasks are better served by a faster or lower-cost model: routine implementation, repetitive code changes, first-pass exploration, or high-volume workflows where cost and latency matter as much as raw capability. And people are noticing this more and more, as OpenAI CTO Greg Brockman said recently, “the model alone is no longer just the product”.
-
-<iframe src="https://twitter.com/gdb/status/2057670776803996110" allowfullscreen=""></iframe>
+Some tasks call for the strongest reasoning model you can get: planning a risky migration, debugging a subtle production issue, or reviewing a large pull request. Other tasks are better served by a faster or lower-cost model: routine implementation, repetitive code changes, first-pass exploration, or high-volume workflows where cost and latency matter as much as raw capability. And people are noticing this more and more, as OpenAI CTO Greg Brockman said recently, [“the model alone is no longer just the product”](https://twitter.com/gdb/status/2057670776803996110).
 
 OpenHands has always been designed as an LM-agnostic coding agent, and we extensively test it to make sure it performs well with many LMs on the [OpenHands Index](https://index.openhands.dev/home). The next step is making model choice easy enough to use in the middle of real work.
 
