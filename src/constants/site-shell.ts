@@ -27,13 +27,13 @@ export const PRODUCT_DROPDOWN_ITEMS: ProductDropdownItem[] = [
   },
   {
     name: 'Automations',
-    to: '/enterprise#automations',
+    to: 'https://openhands.dev/product',
     description: 'Build it once. Let it run forever.',
     icon: 'automations',
   },
   {
     name: 'Cloud',
-    to: '/features',
+    to: 'https://openhands.dev/product',
     description: "Agents that don't stop when you do.",
     icon: 'cloud',
   },

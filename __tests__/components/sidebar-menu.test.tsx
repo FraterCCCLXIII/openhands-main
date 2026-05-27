@@ -49,7 +49,11 @@ describe('compact sidebar menu parity', () => {
     );
     expect(screen.getByRole('link', { name: /automations/i })).toHaveAttribute(
       'href',
-      '/enterprise#automations',
+      'https://openhands.dev/product',
+    );
+    expect(screen.getByRole('link', { name: /cloud/i })).toHaveAttribute(
+      'href',
+      'https://openhands.dev/product',
     );
     expect(screen.getByRole('link', { name: /agent control plane/i })).toHaveAttribute(
       'href',
