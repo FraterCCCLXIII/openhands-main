@@ -16,7 +16,7 @@ describe('home route parity structure', () => {
   it('matches the visible heading sequence expected by the parity audit', () => {
     renderRoute();
 
-    expect(screen.getByText('Build with coding agents, your way.')).toBeInTheDocument();
+    expect(screen.getByText('One workspace for all your AI coding agents')).toBeInTheDocument();
 
     const headingTexts = screen.getAllByRole('heading').map((heading) => heading.textContent?.trim());
     expect(headingTexts).toContain('Start with a proven workflow');
@@ -39,7 +39,14 @@ describe('home route parity structure', () => {
     expect((container.innerHTML.match(/>Launch</g) ?? []).length).toBe(4);
     expect(screen.queryByRole('link', { name: 'Download CLI' })).not.toBeInTheDocument();
     expect(screen.getByText('View docs')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Talk to us' })).toBeInTheDocument();
+    const installLink = screen.getByRole('link', { name: 'Install OpenHands' });
+    expect(installLink).toHaveAttribute(
+      'href',
+      'https://docs.openhands.dev/openhands/usage/run-openhands/local-setup',
+    );
+    expect(screen.getByText('Keep your existing subscription. Connects to:')).toBeInTheDocument();
+    expect(screen.getByText('Claude Code')).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'OpenHands Automations dashboard screenshot' })).toBeInTheDocument();
     expect(screen.getAllByRole('link', { name: 'Build with SDK' }).length).toBeGreaterThan(0);
     expect(screen.getAllByRole('link', { name: 'Try it live' }).length).toBeGreaterThan(0);
 
@@ -56,8 +63,7 @@ describe('home route parity structure', () => {
     );
     expect(screen.queryAllByTestId('footer-social-link')).toHaveLength(3);
     expect(container.querySelector('main[data-testid="home-content"]')).toHaveClass('home-mobile-parity');
-    expect(container.querySelector('[data-wf-el="banner-wrap"] .home-whitepaper-banner-row')).toBeInTheDocument();
-    expect(container.querySelector('[data-wf-el="banner-wrap"] .home-whitepaper-banner-separator')).toBeInTheDocument();
+    expect(container.querySelector('[data-wf-el="hero-subscription"]')).toBeInTheDocument();
     expect(container.querySelector('section.text-center.text-brand-fg > [data-wf-el="container"]')).toBeInTheDocument();
   });
 

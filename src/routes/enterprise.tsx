@@ -284,7 +284,7 @@ const Enterprise = () => {
       </section>
 
       {/* CONTROL PLANE INTRO (dark) — live uses h3.h2-2 for the heading. */}
-      <section data-wf-el='section' style={SECTION_DARK}>
+      <section data-wf-el='section' id='control-plane' style={SECTION_DARK}>
         <Container>
           {/* Live's `.heading-stack` is a flex column with `max-width:
            * 808.96px` (≈ 65.34% of the 1238 container; centered with
@@ -456,7 +456,7 @@ const Enterprise = () => {
       </section>
 
       {/* EVENT TO PR — dark 2-column with image */}
-      <section data-wf-el='section' style={SECTION_DARK}>
+      <section data-wf-el='section' id='automations' style={SECTION_DARK}>
         <Container>
           <div className='flex flex-wrap' style={{ margin: '0px -20px', rowGap: '40px' }}>
             <div className='flex basis-full flex-col px-5 lg:basis-1/2' style={{ position: 'relative' }}>

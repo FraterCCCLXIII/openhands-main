@@ -9,17 +9,40 @@ export interface SiteLinkGroup {
   links: SiteLink[];
 }
 
+export type ProductDropdownIcon = 'canvas' | 'automations' | 'cloud' | 'controlPlane';
+
 export interface ProductDropdownItem {
   name: string;
   to: string;
   description: string;
-  icon: 'cli' | 'gui' | 'sdk';
+  icon: ProductDropdownIcon;
 }
 
 export const PRODUCT_DROPDOWN_ITEMS: ProductDropdownItem[] = [
-  { name: 'Terminal / CLI', to: '/product/cli', description: 'Agentic power from the command line', icon: 'cli' },
-  { name: 'Web GUI', to: '/product/gui', description: 'Agentic development, made human.', icon: 'gui' },
-  { name: 'SDK', to: '/product/sdk', description: 'Build agents your way.', icon: 'sdk' },
+  {
+    name: 'Agent Canvas',
+    to: '/product/gui',
+    description: 'One workspace to manage all your agents.',
+    icon: 'canvas',
+  },
+  {
+    name: 'Automations',
+    to: '/enterprise#automations',
+    description: 'Build it once. Let it run forever.',
+    icon: 'automations',
+  },
+  {
+    name: 'Cloud',
+    to: '/features',
+    description: "Agents that don't stop when you do.",
+    icon: 'cloud',
+  },
+  {
+    name: 'Agent Control Plane',
+    to: '/enterprise#control-plane',
+    description: 'From agents to systems.',
+    icon: 'controlPlane',
+  },
 ];
 
 export const DESKTOP_NAV_ITEMS: SiteLink[] = [

@@ -37,22 +37,30 @@ describe('compact sidebar menu parity', () => {
 
     expect(productButton).toHaveAttribute('aria-expanded', 'false');
     expect(resourcesButton).toHaveAttribute('aria-expanded', 'false');
-    expect(screen.queryByRole('link', { name: /terminal \/ cli/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /agent canvas/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /^docs$/i })).not.toBeInTheDocument();
 
     await user.click(productButton);
 
     expect(productButton).toHaveAttribute('aria-expanded', 'true');
-    expect(screen.getByRole('link', { name: /terminal \/ cli/i })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: /agent canvas/i })).toHaveAttribute(
       'href',
-      '/product/cli',
+      '/product/gui',
+    );
+    expect(screen.getByRole('link', { name: /automations/i })).toHaveAttribute(
+      'href',
+      '/enterprise#automations',
+    );
+    expect(screen.getByRole('link', { name: /agent control plane/i })).toHaveAttribute(
+      'href',
+      '/enterprise#control-plane',
     );
 
     await user.click(resourcesButton);
 
     expect(productButton).toHaveAttribute('aria-expanded', 'false');
     expect(resourcesButton).toHaveAttribute('aria-expanded', 'true');
-    expect(screen.queryByRole('link', { name: /terminal \/ cli/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /agent canvas/i })).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: /^docs$/i })).toHaveAttribute(
       'href',
       'https://docs.openhands.dev/',
@@ -64,7 +72,7 @@ describe('compact sidebar menu parity', () => {
     const { onClose } = renderSidebar();
 
     await user.click(screen.getByRole('button', { name: /product/i }));
-    await user.click(screen.getByRole('link', { name: /web gui/i }));
+    await user.click(screen.getByRole('link', { name: /agent canvas/i }));
 
     expect(onClose).toHaveBeenCalledTimes(1);
   });

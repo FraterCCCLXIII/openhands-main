@@ -13,6 +13,36 @@ import { EnterpriseLogoStrip } from '~/components/logos/enterprise-logo-strip';
 import { HOME_CUSTOMER_LOGOS } from '~/constants/customer-logos';
 import { ASCII_HOLE_IMAGE, ASCII_HOLE_IMAGE_1080 } from '~/constants/webflow-assets';
 
+
+const INSTALL_OPENHANDS_URL = 'https://docs.openhands.dev/openhands/usage/run-openhands/local-setup';
+
+const HERO_COMPATIBILITY_BADGES = [
+  {
+    name: 'Claude Code',
+    iconText: '</>',
+    iconBg: 'rgb(242, 173, 118)',
+  },
+  {
+    name: 'Codex',
+    iconText: 'C',
+    iconBg: 'rgb(155, 182, 255)',
+  },
+  {
+    name: 'Gemini CLI',
+    iconText: '✦',
+    iconBg: 'rgb(135, 214, 255)',
+  },
+  {
+    name: 'OpenHands',
+    iconSrc: '/assets/webflow/brand/openhands-logo-mobile.svg',
+    iconAlt: '',
+    iconBg: 'rgb(255, 255, 139)',
+  },
+];
+
+const HERO_AUTOMATIONS_IMAGE =
+  '/assets/webflow/blog/openhands-enterprise-agent-control-plane/20260506-openhands-enterprise-agent-control-plane-automations.png';
+
 const WORKFLOWS = [
   {
     title: 'Fix Vulnerabilities',
@@ -480,28 +510,6 @@ const Home = () => {
 
           <div data-wf-el='container' className='relative z-10 mx-auto w-full max-w-[1238px]'>
             <div data-wf-el='hero-content' className='w-full' style={{ textAlign: 'center', paddingTop: '56px', paddingBottom: '72px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: '32px' }}>
-              <div data-wf-el='banner' style={{ backgroundColor: 'rgb(255, 255, 139)', borderRadius: '6.4px' }}>
-                {/* Live's `.banner-wrap` is full-width inside its container
-                  * (no max-width).  The earlier `mx-auto max-w-[688px]` was
-                  * forcing the inline announcement text to wrap to 2 lines
-                  * on desktop — taller banner ⇒ ~27px Y-drift on the H1
-                  * below it and cascading drift through the page. */}
-                <div data-wf-el='banner-wrap' className='home-whitepaper-banner-wrap w-full text-center'>
-                  <div className='home-whitepaper-banner-row'>
-                    <div className='home-whitepaper-banner-copy'>
-                      <p className='text-base font-normal leading-[1.4] text-brand-fg'>Modernize legacy systems before your expertise disappears</p>
-                    </div>
-                    <div className='home-whitepaper-banner-separator-col' aria-hidden='true'>
-                      <div className='home-whitepaper-banner-separator' />
-                    </div>
-                    <div className='home-whitepaper-banner-link-col'>
-                      <Link data-wf-el='standard-link' to='/whitepapers/modernize-legacy-systems-with-ai-agents' className='font-sohne-buch text-base font-normal leading-[22.4px] hover:text-[#8a5f45]' style={{ display: 'block' }}>
-                        Read the whitepaper
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              </div>
 
               {/* Live's `.hero-heading_wrap` has no max-width and no auto
                 * margins — it inherits flex centering from its parent.
@@ -520,41 +528,44 @@ const Home = () => {
               <div data-wf-el='hero-heading_wrap' className='flex flex-col items-center gap-2 text-center' style={{ justifyContent: 'center' }}>
                 {/* Live's `.hero-heading_h1.h1` has `margin-bottom: 0`. */}
                 <h1 data-wf-el='hero-heading_h1' id='hero-heading' className='fluid-h1 font-medium tracking-[-0.03em] text-brand-fg' style={{ marginBottom: '0px' }}>
-                  Build with coding agents, your way.
+                  One workspace for all your AI coding agents
                 </h1>
                 {/* Live's `.hero-heading_paragraph.paragraph-lg.u-text-darkgray`
                   * has `max-width: 40ch; margin-bottom: 0`.  The earlier
                   * `mb-7` (28px) was adding extra space above the CTAs. */}
-                <p data-wf-el='hero-heading_paragraph' id='hero-subheading' className='max-w-[40ch] fluid-body-lg font-medium text-brand-muted' style={{ marginLeft: '0px', marginRight: '0px', marginBottom: '0px' }}>
-                  Open-source, customizable. Run locally or at scale.
+                <p data-wf-el='hero-heading_paragraph' id='hero-subheading' className='max-w-[60ch] fluid-body-lg font-medium text-brand-muted' style={{ marginLeft: '0px', marginRight: '0px', marginBottom: '0px' }}>
+                  OpenHands is the open-source platform for building and running AI coding agents. Parallel sessions, built-in automations, and a path from your laptop to your whole org.
                 </p>
               </div>
 
               {/* hero_btn_wrap — sibling of hero-heading_wrap on live. */}
               <div data-wf-el='hero_btn_wrap' className='flex flex-wrap items-center justify-center gap-4' style={{ marginBottom: '0px', paddingTop: '0px' }}>
-                <OverlayLinkButton href='https://app.all-hands.dev/' label='Try it live' variant='primary' />
-                <OverlayLinkButton href='https://docs.openhands.dev/sdk' label='Build with SDK' variant='outline' />
+                <OverlayLinkButton href={INSTALL_OPENHANDS_URL} label='Install OpenHands' variant='primary' />
               </div>
 
-              {/* hero_sublink_text — sibling of hero-heading_wrap on live.
-                * Live's wrapper uses `font-size: .88rem` (14.08px) and
-                * `font-weight: 400`. */}
-              <div data-wf-el='hero_sublink_text' className='text-brand-fg' style={{ fontSize: '14.08px', lineHeight: '19.712px', fontWeight: 400 }}>
-                Need a self-hosted or air-gapped deployment?{' '}
-                <Link
-                  to='/contact'
-                  className='font-normal text-brand-fg hover:decoration-[#8a5f45]'
-                  style={{
-                    textDecoration: 'underline',
-                    textDecorationThickness: '1.408px',
-                    textUnderlineOffset: '2px',
-                    fontSize: '14.08px',
-                    lineHeight: '19.712px',
-                  }}
-                >
-
-                  Talk to us
-                </Link>
+              <div data-wf-el='hero-subscription' className='flex w-full flex-wrap items-center justify-center gap-4 rounded-[999px] border border-[rgba(34,21,13,0.2)] bg-[#f9f3de] px-6 py-4 text-brand-fg' style={{ maxWidth: '980px' }}>
+                <span className='text-base font-normal leading-[22.4px] text-brand-fg'>Keep your existing subscription. Connects to:</span>
+                <div className='flex flex-wrap items-center justify-center gap-3'>
+                  {HERO_COMPATIBILITY_BADGES.map((badge) => (
+                    <div
+                      key={badge.name}
+                      className='flex items-center gap-2 rounded-full border border-[rgba(34,21,13,0.2)] bg-[#f9f0d9] px-4 py-2'
+                    >
+                      <span
+                        className='flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-semibold text-brand-fg'
+                        style={{ backgroundColor: badge.iconBg }}
+                        aria-hidden='true'
+                      >
+                        {badge.iconSrc ? (
+                          <img src={badge.iconSrc} alt={badge.iconAlt ?? ''} className='h-4 w-4' />
+                        ) : (
+                          badge.iconText
+                        )}
+                      </span>
+                      <span className='text-base font-medium leading-[22.4px] text-brand-fg'>{badge.name}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
 
@@ -676,6 +687,7 @@ const Home = () => {
                       {HOME_CUSTOMER_LOGOS.map((logo) => (
                         <img key={logo.name} src={logo.src} alt={logo.alt} />
                       ))}
+
                     </div>
                     <div className='logo-marquee-group' aria-hidden='true'>
                       {HOME_CUSTOMER_LOGOS.map((logo) => (
@@ -686,6 +698,16 @@ const Home = () => {
                 </div>
               </div>
             </div>
+          </div>
+
+
+          <div data-wf-el='hero-preview' className='mx-auto w-full max-w-[1238px]' style={{ paddingTop: '40px', paddingBottom: '24px' }}>
+            <img
+              src={HERO_AUTOMATIONS_IMAGE}
+              alt='OpenHands Automations dashboard screenshot'
+              className='w-full rounded-[24px] border border-[rgba(34,21,13,0.2)]'
+              loading='lazy'
+            />
           </div>
 
           {/* Product surface row: active SDK/Cloud/CLI card on the left and
