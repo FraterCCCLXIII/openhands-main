@@ -9,7 +9,6 @@ authors:
   - name: OpenHands Team
 ogImage:
   url: /assets/blog/20250909-us-mobile-case-study/cover.png
-seoTitleDate: 'Nov 12, 2025'
 ---
 [US Mobile](https://www.usmobile.com/) is a fast-growing wireless telecom provider, known for its first-of-its-kind tech that enables consumers to switch between any of the big three mobile networks. Priding itself on innovation, customer-centricity, and flexibility, US Mobile has leveraged technology since its founding to stay ahead of customer needs and differentiate itself.
 

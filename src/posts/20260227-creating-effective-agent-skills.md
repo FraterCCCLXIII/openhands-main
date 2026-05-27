@@ -9,7 +9,6 @@ authors:
   - name: Graham Neubig
 ogImage:
   url: /assets/webflow/blog/69a1c2205f3bc4043684b411_69a1c21db643dd0e30ac9596_blog-20260227-agent-skills-cover-v2.png
-seoTitleDate: 'Feb 27, 2026'
 ---
 Software engineering can be a lot of fun—solving creative challenges, coming up with new designs, and turning them into working software that delights you or your users. But at the same time there is a lot of toil: repetitive tasks that you need to do over and over again to make sure that your software works properly. These can be adding tests, doing code reviewing, upgrading out of date libraries, etc. One of the most promising uses of coding agents is to get rid of that toil, automating away your repetitive tasks so you can focus on the fun stuff.
 

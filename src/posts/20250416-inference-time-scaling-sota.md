@@ -1,8 +1,6 @@
 ---
 title: 'SOTA on SWE-Bench Verified with Inference-Time Scaling and Critic Model'
 slug: sota-on-swe-bench-verified-with-inference-time-scaling-and-critic-model
-redirectFrom:
-  - 20250416-inference-time-scaling-sota
 excerpt: 'OpenHands now tops the SWE-Bench Verified leaderboard! By training a critic model to select the best solutions from multiple agent attempts, we''ve significantly improved performance on real-world programming tasks.'
 coverImage: /assets/webflow/misc/6914ea781d6d5cf27100d131_6914ea769e3520100138ff4d_inference-time-scaling-fig.png
 coverAlt: 'Cover image'
@@ -11,7 +9,6 @@ authors:
   - name: Xingyao Wang
 ogImage:
   url: /assets/webflow/misc/6914ea781d6d5cf27100d131_6914ea769e3520100138ff4d_inference-time-scaling-fig.png
-seoTitleDate: 'Nov 12, 2025'
 ---
 We're thrilled to announce that OpenHands has reached a new milestone, achieving state-of-the-art results on SWE-Bench Verified!
 

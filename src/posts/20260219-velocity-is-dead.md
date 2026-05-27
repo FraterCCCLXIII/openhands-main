@@ -8,7 +8,6 @@ authors:
   - name: Ray Myers
 ogImage:
   url: /assets/webflow/blog/20260219-velocity-is-dead/cover.png
-seoTitleDate: 'Feb 18, 2026'
 ---
 *This post by OpenHands Chief Architect Ray Myers reflects on what really matters in a world where velocity of code creation is no longer the bottleneck in software engineering.*
 

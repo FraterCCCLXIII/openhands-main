@@ -9,7 +9,6 @@ authors:
   - name: Graham Neubig
 ogImage:
   url: /assets/blog/20250331-introducing-openhands-cloud/cover.png
-seoTitleDate: 'Nov 12, 2025'
 ---
 Today, we're thrilled to announce the full release of OpenHands Cloud, our hosted platform that brings the power of state-of-the-art AI software development to your browser at [app.all-hands.dev](https://app.all-hands.dev/)!
 

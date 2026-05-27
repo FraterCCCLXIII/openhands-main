@@ -9,7 +9,6 @@ authors:
   - name: Graham Neubig
 ogImage:
   url: /assets/webflow/misc/6914f57e32f47d66454d962e_6914f57d09c10a3753061151_vibe-coding-fig.png
-seoTitleDate: 'Nov 12, 2025'
 ---
 Ever since the term **vibe coding** was [coined by Andrej Karpathy](https://x.com/karpathy/status/1886192184808149383?lang=en), it has been on top of many developers' minds.
 Basically, vibe coding is using AI agents to generate code for you with very little to no human intervention.

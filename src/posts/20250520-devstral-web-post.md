@@ -10,7 +10,6 @@ authors:
   - name: Graham Neubig
 ogImage:
   url: /assets/webflow/blog/20250814-ai-agent-security/image2.png
-seoTitleDate: 'Nov 12, 2025'
 ---
 Today we introduce Devstral, an agentic LLM for software engineering tasks. Devstral is built under a collaboration between [Mistral AI](https://mistral.ai/) and All Hands AI, and outperforms all open-source models on SWE-Bench Verified by a large margin. We release Devstral under the Apache 2.0 license.
 

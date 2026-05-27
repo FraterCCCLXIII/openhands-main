@@ -8,7 +8,6 @@ authors:
   - name: Xingyao Wang
 ogImage:
   url: /assets/webflow/blog/20260305-learning-to-verify-ai-generated-code/learning-to-verify-ai-cover.png
-seoTitleDate: 'Mar 05, 2026'
 ---
 LLMs made generating code cheap. The real bottleneck is **verification**: checking that a change is correct, follows repo conventions, and is something your team can trust, review, and merge.
 

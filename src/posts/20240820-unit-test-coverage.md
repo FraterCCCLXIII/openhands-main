@@ -9,7 +9,6 @@ authors:
   - name: Tim O'Farrell
 ogImage:
   url: /assets/blog/20240820-unit-test-coverage/unit-test-coverage.jpeg
-seoTitleDate: 'Nov 12, 2025'
 ---
 There is a lot of conjecture and abstract articles out there about what AI may or may not be able to do for you. There is also a lot of FUD about how it is going to replace everybody and crash the economy.
 

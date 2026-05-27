@@ -9,7 +9,6 @@ authors:
   - name: Joe Pelletier
 ogImage:
   url: /assets/webflow/misc/6914f571ee7039780f6331dd_6914f56cb1ff587d5aee91aa_ai-routing-llms.png
-seoTitleDate: 'Nov 12, 2025'
 ---
 One of our most important objectives at OpenHands is to make state-of-the-art software development agents accessible to any developer no matter what your circumstances. As an open source AI coding agent, developers often use OpenHands locally through a [GUI](https://docs.all-hands.dev/usage/how-to/gui-mode) or [CLI](https://docs.all-hands.dev/usage/how-to/cli-mode) with an API key to their LLM provider of choice. However, many OpenHands users find managing API keys for multiple LLM providers a nuisance, and low rate limits leading to a sub-optimal experience.
 

@@ -10,7 +10,6 @@ authors:
   - name: Xingyao Wang
 ogImage:
   url: /assets/webflow/misc/6914f58f09c10a3753062249_6914f58ed1a7b682cc7316ab_swebench-leaderboard.jpeg
-seoTitleDate: 'Nov 12, 2025'
 ---
 OpenHands just released the strongest AI software developer to date, and it is open source, reproducible, and available for anyone to use.
 

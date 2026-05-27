@@ -9,7 +9,6 @@ authors:
   - name: Robert Brennan
 ogImage:
   url: /assets/blog/20251009-automating-refactors/cover.png
-seoTitleDate: 'Nov 12, 2025'
 ---
 Today's coding agents are great for small, atomic coding tasks—the sort of things that can be done in a single commit. But that's just a small part of software development: a ton of effort still goes into planning, decomposition, operations, QA, architecture…the idea of an LLM-powered agent *replacing* a software engineer still feels pretty farfetched.
 

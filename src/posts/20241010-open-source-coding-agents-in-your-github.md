@@ -9,7 +9,6 @@ authors:
   - name: Graham Neubig
 ogImage:
   url: /assets/webflow/misc/6914f592dc4b02cbaf5adc96_6914f59109c10a375306240c_fixed-issues.png
-seoTitleDate: 'Nov 12, 2025'
 ---
 The backlog. It's the long list of issues that you haven't been able to get to (and possibly never will). Every developer knows and fears it.
 

@@ -9,7 +9,6 @@ authors:
   - name: Graham Neubig
 ogImage:
   url: /assets/blog/20251105-openhands-sdk-plug-and-play-coding-agents/cover.png
-seoTitleDate: 'Nov 12, 2025'
 ---
 Today we're introducing the OpenHands SDK, our new open-sourced, MIT licensed tool, that makes it easy to build powerful coding agents that can be spun up in a few lines of code, but customized to fit any developer workflow.
 
@@ -23,8 +22,11 @@ However, more and more it's been clear that for agents that create software, the
 Some examples where people already are using OpenHands include:
 
 - **Custom debugging agents** that can analyze application logs and suggest fixes
+
 - **Automated code review bots** that can understand the full code context and provide detailed feedback
+
 - **Data ingestion agents** that take in a folder of unstructured data from a user and upload it to a database
+
 - **Security auditing agents** that investigate software for vulnerabilities and create pull requests to fix them
 
 ## What is Necessary to Build On?
@@ -34,11 +36,16 @@ Based on the lessons that we've learned watching thousands of developers use Ope
 Based on this, we designed and built the OpenHands Software Agent SDK from the ground up with a few things in mind:
 
 1. **Simplicity**: It should be easy to get started with the SDK, with minimal setup and configuration required to get an agent that works seamlessly with many workflows.
-2. **Performance**: The SDK should provide production-ready performance out of the box, without requiring extensive prompt engineering or optimization.
-3. **Flexibility**: The SDK should be model-agnostic, allowing developers to use any LLM provider they choose, without being locked into a specific vendor.
-4. **Customizability**: The SDK should allow developers to easily create custom tools and integrate them into their agents if (and only if) necessary.
-5. **Production Readiness**: The SDK should be designed with enterprise needs in mind, including type-safe APIs, error handling, conversation serialization, and logging.
-6. **Run Anywhere**: The SDK should be able to run locally on a developers computer, and then with minimal changes be able to spin up thousands of instances on the cloud.
+
+1. **Performance**: The SDK should provide production-ready performance out of the box, without requiring extensive prompt engineering or optimization.
+
+1. **Flexibility**: The SDK should be model-agnostic, allowing developers to use any LLM provider they choose, without being locked into a specific vendor.
+
+1. **Customizability**: The SDK should allow developers to easily create custom tools and integrate them into their agents if (and only if) necessary.
+
+1. **Production Readiness**: The SDK should be designed with enterprise needs in mind, including type-safe APIs, error handling, conversation serialization, and logging.
+
+1. **Run Anywhere**: The SDK should be able to run locally on a developers computer, and then with minimal changes be able to spin up thousands of instances on the cloud.
 
 ## Hello OpenHands SDK
 

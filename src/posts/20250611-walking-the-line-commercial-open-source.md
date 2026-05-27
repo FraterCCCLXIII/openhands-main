@@ -9,7 +9,6 @@ authors:
   - name: Robert Brennan
 ogImage:
   url: /assets/blog/20250611-walking-the-line-commercial-open-source/github-stars.png
-seoTitleDate: 'Nov 12, 2025'
 ---
 I've been building commercial open source software for over a decade. I'd like to think I've figured out all the tricks, that I know how to do it perfectly, and give everyone—users, contributors, maintainers, employees, investors, customers—exactly what they want.
 

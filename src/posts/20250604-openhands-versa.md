@@ -1,8 +1,6 @@
 ---
 title: 'Building a Provably Versatile Agent'
 slug: building-a-provably-versatile-agent
-redirectFrom:
-  - 20250604-openhands-versa
 excerpt: 'OpenHands Versa is a versatile agent that excels across multiple benchmarks, from software engineering to web browsing and frontend development.'
 coverImage: /assets/webflow/blog/20250814-ai-agent-security/image2.png
 coverAlt: 'Image from blog post'
@@ -13,7 +11,6 @@ authors:
   - name: Graham Neubig
 ogImage:
   url: /assets/webflow/blog/20250814-ai-agent-security/image2.png
-seoTitleDate: 'Nov 12, 2025'
 ---
 There's a lot of news in agents nowadays, ones that code, ones that browse the web, ones that perform customer service, ones that wash your socks. However, while there is a lot of excitement around agents, there is also a lot of disappointment. When you actually try them out, they often make simple mistakes, get stuck in loops, and don't get the job done.
 

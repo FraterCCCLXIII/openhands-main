@@ -9,7 +9,6 @@ authors:
   - name: Xingyao Wang
 ogImage:
   url: /assets/webflow/misc/6914ea68174a5acc2767c54e_6914ea66f1e6cd9678c8e114_performance_scatter.png
-seoTitleDate: 'Nov 12, 2025'
 ---
 Autonomous agents for software development are already contributing to a [wide range of software development tasks](https://openhands.dev/blog/8-use-cases-for-generalist-software-development-agents).
 But up to this point, strong coding agents have relied on proprietary models, which means that even if you use an open-source agent like [OpenHands](https://github.com/OpenHands/OpenHands), you are still reliant on API calls to an external service.

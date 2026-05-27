@@ -10,14 +10,14 @@ authors:
   - name: Joe Pelletier
 ogImage:
   url: /assets/webflow/blog/20250814-ai-agent-security/image4.png
-seoTitleDate: 'Nov 12, 2025'
 ---
 At OpenHands, our number one mission is to build a highly autonomous and accessible coding agent that can be used for any software development task, any time. One of our flagship ways to provide this is through the [OpenHands Cloud](https://app.all-hands.dev/) where users can interact with agents through a [GUI](https://docs.all-hands.dev/usage/cloud/cloud-ui), [API](https://docs.all-hands.dev/usage/cloud/cloud-api), or integrations into [Slack](https://docs.all-hands.dev/usage/cloud/slack-installation), [GitHub](https://docs.all-hands.dev/usage/cloud/github-installation), [GitLab](https://docs.all-hands.dev/usage/cloud/gitlab-installation), and [BitBucket](https://docs.all-hands.dev/usage/cloud/bitbucket-installation).
 
 We are constantly listening to feedback from the cloud users, and this month worked hard to fix two major requests that we got from users:
 
 1. **Cost of the Agents**
-2. **Usability of the GUI Experience**
+
+1. **Usability of the GUI Experience**
 
 We thought hard about how to deliver these, and here's our best try for both.
 
@@ -26,11 +26,13 @@ We thought hard about how to deliver these, and here's our best try for both.
 Up until this point, the cloud version of OpenHands was mainly powered by Claude Sonnet, and in order to cover the cost of developing and serving the OpenHands Cloud, we were charging 2x the API costs of Claude itself. This had two issues:
 
 - **Cost:** While Claude Sonnet is a great model, it is also a relatively expensive one, and that meant at 2x cost, it was even more expensive! This was a major barrier for people using the cloud.
+
 - **Lack of Choice:** There are now many models out there that work well with OpenHands, and some are better in some cases than others. For instance, we have gotten great results with GPT-5 (but it can be a little slow), and Qwen-3-Coder is also a formidable open model that can be served at a fraction of the cost of the others.
 
 In order to make this possible, we are introducing a new subscription model, where you can subscribe for **$20/month** which unlocks a number of nice features:
 
 - **Model Choice:** You can choose from the [list of OpenHands provider models](https://docs.all-hands.dev/usage/llms/openhands-llms) with *no markup*, which means you'll pay the same price as hitting an API directly.
+
 - **Bring-your-own-key:** If you'd prefer to use your own LLM key, you can do that too!
 
 We hope this will greatly improve the economics of using OpenHands for users, and also allow you to choose between your favorite models without lock-in to a single provider.
@@ -64,8 +66,11 @@ These are just some of the changes you'll see in the latest release from the Ope
 With these updates, OpenHands Cloud becomes significantly more accessible and cost-effective:
 
 - **Lower costs:** Pay API pricing directly instead of marked-up rates
+
 - **More flexibility:** Choose the right model for your specific use case
+
 - **Better experience:** Enjoy a streamlined, intuitive interface designed for productivity
+
 - **Greater control:** Use your own API keys when you prefer
 
 Whether you're working on a quick bug fix, implementing a complex feature, or maintaining an open-source project, these improvements make OpenHands Cloud a more powerful and economical choice for AI-assisted development.

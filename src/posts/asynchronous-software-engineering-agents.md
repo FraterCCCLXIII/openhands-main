@@ -8,7 +8,6 @@ authors:
   - name: Jiayi Geng
 ogImage:
   url: /assets/webflow/blog/asynchronous-software-engineering-agents/caid-workflow.png
-seoTitleDate: 'Apr 27, 2026'
 ---
 *This guest blog by *[*Jiayi Geng*](https://jiayigeng.github.io/)* of Carnegie Mellon University introduces CAID, a multi-agent system built on OpenHands that uses git worktrees, branches, merges, and tests to coordinate long-horizon software engineering tasks.*
 

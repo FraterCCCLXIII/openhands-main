@@ -9,7 +9,6 @@ authors:
   - name: Graham Neubig
 ogImage:
   url: /assets/webflow/misc/6914f58cfdffde8b3cfc47e2_6914f58b09c10a375306207e_header.png
-seoTitleDate: 'Nov 12, 2025'
 ---
 # 8 Use Cases for Generalist Software Development Agents (w/ Prompts)
 

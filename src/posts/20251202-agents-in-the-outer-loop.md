@@ -8,7 +8,6 @@ authors:
   - name: Robert Brennan
 ogImage:
   url: /assets/webflow/blog/20251202-agents-in-the-outer-loop/agentsintheloop-large.png
-seoTitleDate: 'Dec 02, 2025'
 ---
 Most developers using AI are using it to accelerate the *inner loop* of development. They're using an AI-powered IDE or a CLI agent, running locally on their laptop. As they make progress, tweaking the code and checking the results, the AI helps them go a bit faster.
 

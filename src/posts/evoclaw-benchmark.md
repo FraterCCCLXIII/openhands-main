@@ -8,7 +8,6 @@ authors:
   - name: Gangda Deng and Zhaoling Chen
 ogImage:
   url: /assets/webflow/blog/evoclaw-benchmark/202603-evoblog-1.webp
-seoTitleDate: 'Mar 20, 2026'
 ---
 *This is a guest blog by *[*Gangda Deng*](https://hydrapse.github.io/)* and *[*Zhaoling Chen*](https://czlll.github.io/)*, introducing EvoClaw—a benchmark built with OpenHands to move beyond isolated coding tasks and toward continuous software evolution.*
 

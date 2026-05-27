@@ -9,7 +9,6 @@ authors:
   - name: Graham Neubig
 ogImage:
   url: /assets/webflow/blog/openhands-index/20260511-index-01-costper.png
-seoTitleDate: 'May 11, 2026'
 ---
 The [OpenHands Index](https://index.openhands.dev/) is a leaderboard that evaluates language models across a range of software engineering tasks: issue resolution, building greenfield apps, frontend development, software testing, and information gathering. It measures not just accuracy, but also cost and runtime, so you can pick the model that fits your tasks.
 

@@ -9,7 +9,6 @@ authors:
   - name: Ana Hevesi
 ogImage:
   url: /assets/webflow/misc/6914f5eeeddff54443d84633_6914f5ee32cafa0ea56fd6d3_all-hands-founders-full.jpeg
-seoTitleDate: 'Nov 12, 2025'
 ---
 [OpenHands](https://github.com/OpenHands/OpenHands) exists because our community willed it.
 

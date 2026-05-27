@@ -7,7 +7,6 @@ authors:
   - name: Joe Pelletier
 ogImage:
   url: /assets/webflow/misc/69a8470f9d00e34ff3c8d8df_openhands_product_update_v3.png
-seoTitleDate: 'Mar 04, 2026'
 ---
 We’re excited to announce new features in our latest OpenHands Cloud release that help you plan and scope your work, and discover Agent Skills more efficiently!
 

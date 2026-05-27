@@ -9,7 +9,6 @@ authors:
   - name: Graham Neubig
 ogImage:
   url: /assets/webflow/blog/694412959429f7fe869af4ce_cover-1.png
-seoTitleDate: 'Nov 17, 2025'
 ---
 Coding agents like [OpenHands](https://openhands.dev/) can automate many software development tasks. However, running them typically requires expensive cloud APIs or dedicated data center infrastructure, raising concerns about cost and privacy. An alternative is to run coding agents directly on your workstation. With advances in open-weight models and edge AI processing, smaller locally-runnable models are now achieving competitive results—approaching their larger counterparts on benchmarks like [SWE-Bench Verified](https://www.swebench.com/)—making self-hosted coding agents a viable option.
 

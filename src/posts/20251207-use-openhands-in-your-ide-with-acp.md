@@ -8,7 +8,6 @@ authors:
   - name: Graham Neubig
 ogImage:
   url: /assets/webflow/blog/693817516e4d3f7532687380_cover.png
-seoTitleDate: 'Dec 07, 2025'
 ---
 Developers are creatures of habit. We each have our favorite code editor, carefully configured with our preferred keybindings, color schemes, and plugins. Some of us swear by [Zed](https://zed.dev/)'s speed, others by [JetBrains](https://www.jetbrains.com/)' powerful refactoring tools, and still others can't imagine leaving [neovim](https://neovim.io/).
 
@@ -31,9 +30,13 @@ The protocol assumes that users are primarily working in their editor and want t
 The ACP ecosystem is growing rapidly, with several major editors already implementing support:
 
 - **Zed**: The fast, collaborative code editor was one of the first to implement ACP support, making it easy to integrate any ACP-compatible agent.
+
 - **JetBrains IDEs**: JetBrains has joined as a co-developer of the ACP protocol and plans to bring support to their entire editor lineup, including [IntelliJ IDEA](https://www.jetbrains.com/idea/), [PyCharm](https://www.jetbrains.com/pycharm/), [WebStorm](https://www.jetbrains.com/webstorm/), and more.
+
 - **Neovim**: Through community plugins like [CodeCompanion.nvim](https://github.com/olimorris/codecompanion.nvim), neovim users can now leverage ACP to bring AI agents into their workflow.
+
 - **Obsidian**: The knowledge management and note-taking app [Obsidian](https://obsidian.md/) supports ACP, enabling AI-assisted writing and content generation workflows.
+
 You can find the full list of ACP-compatible clients and agents at [agentclientprotocol.com/overview/clients](https://agentclientprotocol.com/overview/clients).
 
 # Configuring ACP for OpenHands
@@ -91,10 +94,13 @@ Follow the prompts to configure your LLM provider, API key, and other settings.
 ## Adding OpenHands to Zed
 
 - **Open the command palette** in Zed by pressing `Cmd+Shift+P` on macOS or `Ctrl+Shift+P` on Linux/Windows.
+
 - **Search for "agent: open settings"** and select it. This will open Zed's agent configuration settings.
+
 ![](/assets/webflow/blog/20251207-use-openhands-in-your-ide-with-acp/acp-zed-settings.avif)
 
 - **Click "+ Add Agent"** at the bottom of the settings panel, then select **"Add Custom Agent"**.
+
 ![](/assets/webflow/blog/20251207-use-openhands-in-your-ide-with-acp/acp-zed-add-agent.avif)
 
 - **Add the OpenHands configuration** to the `"agent_servers"` section:
@@ -114,6 +120,7 @@ Follow the prompts to configure your LLM provider, API key, and other settings.
 ```
 
 - **Save the settings** and close the panel.
+
 Now you can invoke OpenHands directly from Zed! Select some code or place your cursor where you want the agent to work, open the command palette, and type "agent" to see the available agent commands. Choose "OpenHands" from the list, and the agent will start working right in your editor.
 
 # Get Started Today

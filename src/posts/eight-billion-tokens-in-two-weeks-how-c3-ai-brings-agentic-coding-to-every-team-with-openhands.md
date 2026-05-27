@@ -8,7 +8,6 @@ authors:
   - name: Robert Brennan
 ogImage:
   url: /assets/webflow/misc/694301052b3d4c5b35784c67_1.png
-seoTitleDate: 'Dec 17, 2025'
 ---
 > “OpenHands was the only option that let us talk to an autonomous coding agent over the network at scale, the same way we talk to an LLM.”
 

@@ -9,7 +9,6 @@ authors:
   - name: Graham Neubig
 ogImage:
   url: /assets/webflow/misc/6914f5894434007e8995f196_6914f58877e721f8e77321f3_growth.png
-seoTitleDate: 'Nov 12, 2025'
 ---
 Today marks a significant milestone in our journey: OpenHands is celebrating its first anniversary! Over the past year, we've grown from an ambitious idea into a thriving open-source project that's reshaping how developers interact with AI-powered coding assistants.
 

@@ -9,7 +9,6 @@ authors:
   - name: Robert Brennan
 ogImage:
   url: /assets/blog/20250618-openhands-self-hosted/cover.png
-seoTitleDate: 'Nov 12, 2025'
 ---
 [OpenHands](https://github.com/OpenHands/OpenHands) is an MIT-licensed open source platform for AI agents for software development.
 On top of OpenHands, we have built [OpenHands Cloud](https://app.all-hands.dev/), a centralized, multi-tenant OpenHands server that can scale to thousands of coding agents and includes convenient features like integrations into github and slack, API access, and more.

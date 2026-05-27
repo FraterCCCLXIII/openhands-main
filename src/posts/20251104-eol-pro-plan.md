@@ -9,7 +9,6 @@ authors:
   - name: Joe Pelletier
 ogImage:
   url: /assets/webflow/misc/6914f56a0fc76f5a160eb9d6_6914f56932cafa0ea56f4cb2_eol-pro-plan-graphic.png
-seoTitleDate: 'Nov 12, 2025'
 ---
 We’re excited to announce the expansion of our Bring your own Key (BYOK) support, making this available to all new and existing users of OpenHands Cloud! With this change, developers can sign up for free, bring their own LLM key, and run multiple conversations with the powerful OpenHands coding agent in the new “BYOK” tier.
 

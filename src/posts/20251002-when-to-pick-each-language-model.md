@@ -9,7 +9,6 @@ authors:
   - name: Graham Neubig
 ogImage:
   url: /assets/blog/20251002-when-to-pick-language-models/cover.png
-seoTitleDate: 'Nov 12, 2025'
 ---
 There are currently a plethora of large language models available to be used with coding agents, and which one you choose has a significant impact on your experience using them.
 In this blog I'm going to share a bit of my personal experience with coding models, and give some recommendations on when to pick each one.

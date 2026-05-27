@@ -10,7 +10,6 @@ authors:
   - name: Tim O'Farrell
 ogImage:
   url: /assets/blog/20250624-slack-integration/cover.png
-seoTitleDate: 'Nov 12, 2025'
 ---
 As AI agents like [OpenHands](https://github.com/OpenHands/OpenHands) incorporate more and more into software development, we expect that developers will want to interact with AI in the same places where they interact with other co-workers.
 And today, much of that interaction happens in Slack.

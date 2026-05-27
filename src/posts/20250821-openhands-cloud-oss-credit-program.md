@@ -9,7 +9,6 @@ authors:
   - name: OpenHands Team
 ogImage:
   url: /assets/blog/20250821-oss-credit-program/cover.png
-seoTitleDate: 'Nov 12, 2025'
 ---
 [OpenHands](https://github.com/OpenHands/OpenHands) was built in the open—growing from an ambitious idea into a thriving, ~60K‑star open‑source project that's reshaping how developers work with AI. We rely on the OSS ecosystem—and we want to give back *where it moves the needle most*: active maintainers of **established (mid‑size and up) open‑source projects** who spend real time on upkeep.
 

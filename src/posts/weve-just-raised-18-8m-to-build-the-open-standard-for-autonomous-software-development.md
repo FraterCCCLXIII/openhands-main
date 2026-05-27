@@ -8,7 +8,6 @@ authors:
   - name: Robert Brennan
 ogImage:
   url: /assets/webflow/blog/weve-just-raised-18-8m-to-build-the-open-standard-for-autonomous-software-development/LinkedIn.png
-seoTitleDate: 'Nov 17, 2025'
 ---
 ‍**The TLDR:** We raised $18.8M in a Series A led by Madrona to build the open, secure, and model-agnostic platform for cloud coding agents. Plus, we're collaborating with AMD to make local agents even better. This funding helps us stick to our mission: powerful coding agents for every developer, for free, forever.
 

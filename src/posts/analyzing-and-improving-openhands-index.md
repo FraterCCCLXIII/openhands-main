@@ -8,7 +8,6 @@ authors:
   - name: Graham Neubig
 ogImage:
   url: /assets/webflow/blog/analyzing-and-improving-openhands-index/openhands-index-cover-hero.png
-seoTitleDate: 'Feb 20, 2026'
 ---
 At OpenHands, we're committed to providing the most reliable and comprehensive evaluations of language models for software engineering tasks. Today, we're sharing an update on the OpenHands Index, including new results, a collaboration that helped us discover a benchmark vulnerability, and how we're working to continuously improve the quality of our evaluations.
 

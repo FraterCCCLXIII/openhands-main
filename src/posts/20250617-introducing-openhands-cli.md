@@ -9,7 +9,6 @@ authors:
   - name: Graham Neubig
 ogImage:
   url: /assets/blog/20250617-introducing-openhands-cli/cover.png
-seoTitleDate: 'Nov 12, 2025'
 ---
 Today we're announcing the OpenHands CLI, a new way to use software development agents directly from your terminal.
 
@@ -37,16 +36,21 @@ No need to wait for us, go ahead and get started! (or read on for more details)
 
 OpenHands has been around for a while, and there are several convenient ways to use it:
 
-- **GUI**: This gives good visibility into agents' work, and is easy to use through the [OpenHands Cloud](https://app.all-hands.dev) and [local web interface](https://docs.all-hands.dev/usage/how-to/gui-mode).
+- **GUI**: This gives good visibility into agents' work, and is easy to use through the [OpenHands Cloud](https://app.all-hands.dev/) and [local web interface](https://docs.all-hands.dev/usage/how-to/gui-mode).
+
 - **GitHub/GitLab Resolver**: The [Cloud GitHub Resolver](https://docs.all-hands.dev/usage/cloud/github-installation) and [GitLab Integration](https://docs.all-hands.dev/usage/cloud/gitlab-installation) allow you to call OpenHands by adding a `@openhands` comment to your code.
+
 - **API**: The [OpenHands Cloud API](https://docs.all-hands.dev/modules/usage/cloud/cloud-api) allows for programmatic access.
 
 But we've also heard from developers who prefer to work directly in their terminal, or found the installation process for the GUI too cumbersome.
 The CLI delivers:
 
 - **Easy install**: In contrast to the GUI, installation is easy and no Docker is required -- commands are run directly in your dev environment.
+
 - **Native terminal experience**: Work where you're already comfortable, including on remote servers or in your IDE.
+
 - **Convenient commands and features**: Use slash commands to get started with common tasks, and increase safety with confirmation mode.
+
 - **Full performance**: Same strong performance as agents in the GUI.
 
 ## What can you do with it?
@@ -54,10 +58,15 @@ The CLI delivers:
 If you want some examples of things to get started with, you can ask it to:
 
 - **Add a new feature**: `add a user data validation function to user_data.py`
+
 - **Fix a bug**: `do RCA on the bug causing new users to be unable to login`
+
 - **Add tests**: `increase test coverage of the mapping service`
+
 - **Refactor code**: `refactor the process_user_data function to be more readable`
+
 - **Document code**: `document the database schema`
+
 - **Explain code**: `explain to me how the location service works`
 
 ## Features
@@ -79,7 +88,7 @@ The CLI is fully open source, included in the MIT-licensed [OpenHands repository
 It's available for you to build with or build on.
 
 **Top-performing agents**:
-OpenHands is one of the top-performing agents in the world (e.g. on [SWE-Bench Verified](https://swebench.com)), and the CLI uses the same agents that are supported via any of the other modalities.
+OpenHands is one of the top-performing agents in the world (e.g. on [SWE-Bench Verified](https://swebench.com/)), and the CLI uses the same agents that are supported via any of the other modalities.
 
 ## Join the community
 

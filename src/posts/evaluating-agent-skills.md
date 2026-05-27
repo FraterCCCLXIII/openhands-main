@@ -8,7 +8,6 @@ authors:
   - name: Rajiv Shah
 ogImage:
   url: /assets/webflow/blog/evaluating-agent-skills/evaluating-agent-skills-cover.png
-seoTitleDate: 'Mar 18, 2026'
 ---
 Skills are becoming a core building block for AI coding agents. Research is documenting their value. For example, [SkillsBench](https://arxiv.org/abs/2602.12670) found large gains across a broad task set. At OpenHands, we also recently wrote about [how to create effective agent skills](https://openhands.dev/blog/20260227-creating-effective-agent-skills).
 

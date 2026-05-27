@@ -9,7 +9,6 @@ authors:
   - name: Robert Brennan
 ogImage:
   url: /assets/webflow/blog/agent-control-plane/cover.png
-seoTitleDate: 'Mar 30, 2026'
 ---
 The tech stack for running software agents—agents that write, test, and ship code—is still growing and evolving. At OpenHands, we see three pillars in the stack:
 

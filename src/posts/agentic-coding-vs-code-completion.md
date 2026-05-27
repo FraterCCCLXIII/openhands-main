@@ -7,7 +7,6 @@ authors:
   - name: Mathew Pregasen
 ogImage:
   url: /assets/webflow/blog/agentic-coding-vs-code-completion/Agents vs Assistants.png
-seoTitleDate: 'Jan 21, 2026'
 ---
 Traditional code completion tools focus on small-scale productivity, accelerating syntax recall and micro-refactors within a single file. However, as LLMs improve and systems scale, the primary developer bottleneck shifts from writing lines of code to coordinating complex tasks across multiple files and testing environments.
 

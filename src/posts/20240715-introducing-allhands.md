@@ -9,7 +9,6 @@ authors:
   - name: Graham Neubig
 ogImage:
   url: /assets/webflow/blog/6914ea039169676c38adf612_6914e45a192c2aeeb952f307_cover.jpeg
-seoTitleDate: 'Nov 12, 2025'
 ---
 Hello world. We are [All Hands AI](https://www.all-hands.dev/), a new company founded by [Robert Brennan](https://rbren.io/), [Xingyao Wang](https://xwang.dev/), and [Graham Neubig](https://phontron.com/). Our mission is to **build the world’s best AI software development agents, for everyone, in the open**.
 

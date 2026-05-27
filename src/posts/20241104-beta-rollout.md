@@ -9,7 +9,6 @@ authors:
   - name: Robert Brennan
 ogImage:
   url: /assets/blog/20241104-beta-rollout/cover.png
-seoTitleDate: 'Nov 12, 2025'
 ---
 Today we're excited to announce something we've been working hard for for the past couple months: we now have an official hosted version of the OpenHands AI software developer!
 

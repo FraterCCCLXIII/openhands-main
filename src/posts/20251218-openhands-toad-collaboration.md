@@ -8,7 +8,6 @@ authors:
   - name: OpenHands Team
 ogImage:
   url: /assets/webflow/blog/694412959429f7fe869af4ce_cover-1.png
-seoTitleDate: 'Dec 18, 2025'
 ---
 Terminal-based AI coding assistants have grown rapidly in popularity. Tools like Claude Code, Gemini CLI, and OpenHands CLI give developers the ability to interact with AI agents directly in the terminal—the environment where many of us spend most of our working day.
 

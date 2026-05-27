@@ -9,7 +9,6 @@ authors:
   - name: OpenHands Team
 ogImage:
   url: /assets/webflow/blog/openhands-index/openhands-index-hero.png
-seoTitleDate: 'Jan 28, 2026'
 ---
 # Introducing The OpenHands Index
 

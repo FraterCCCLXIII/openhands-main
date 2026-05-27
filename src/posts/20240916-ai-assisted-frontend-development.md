@@ -9,7 +9,6 @@ authors:
   - name: Graham Neubig
 ogImage:
   url: /assets/webflow/misc/6914ea2d2f9894c9a9f459ec_6914ea2b174a5acc2767a2f0_pr-viewer-with-dark-mode.png
-seoTitleDate: 'Nov 12, 2025'
 ---
 # Building a Frontend App with Open Source AI Agents
 

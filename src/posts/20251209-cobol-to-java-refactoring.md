@@ -8,7 +8,6 @@ authors:
   - name: Graham Neubig
 ogImage:
   url: /assets/webflow/blog/69440b1f5fe2cccb76212e08_cover.png
-seoTitleDate: 'Dec 18, 2025'
 ---
 [COBOL](https://en.wikipedia.org/wiki/COBOL) modernization is one of the most pressing challenges facing enterprises today. Gartner estimated there were over 200 billion lines of COBOL code in existence, running 80% of the world's business systems. As of 2020, COBOL was still running background processes for 95% of credit and debit card transactions.
 

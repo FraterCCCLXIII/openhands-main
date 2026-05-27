@@ -8,7 +8,6 @@ authors:
   - name: Graham Neubig
 ogImage:
   url: /assets/blog/20251111-datadog-debugging-automation/cover.png
-seoTitleDate: 'Nov 15, 2025'
 ---
 Running a production service is **hard**.
 Errors and bugs crop up due to product updates, infrastructure changes, or unexpected user behavior.

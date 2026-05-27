@@ -9,7 +9,6 @@ authors:
   - name: Robert Brennan
 ogImage:
   url: /assets/blog/20251022-remediating-cves/cover.png
-seoTitleDate: 'Nov 12, 2025'
 ---
 While individual developers are still getting used to running agents in their terminal (e.g. Claude Code or the OpenHands CLI), the most advanced AI adopters are using agents to build scalable automation using agents. We've seen folks use OpenHands to react to errors in Datadog logs; to automatically and intelligently pick the best reviewer for a given PR; and to keep their docs up-to-date.
 
@@ -34,22 +33,39 @@ Getting a CVE solved is not always trivial. It's a fairly rote, tedious process,
 The workflow looks something like this:
 
 - Identify the CVE and the source package
-  - A scanner like Trivy will give you this info
+
+- A scanner like Trivy will give you this info
+
 - Figure out if there's a fix available in a newer version of the package
-  - Scanners will often include this information as well!
+
+- Scanners will often include this information as well!
+
 - Find where inside your codebase or build process the package is being pulled in
-  - It could come from a few different places:
-    - Your base operating system
-    - A package installed on the OS
-    - An app-level dependency
-    - A *transitive* app-level dependency
-    - Somewhere else
+
+- It could come from a few different places:
+
+- Your base operating system
+
+- A package installed on the OS
+
+- An app-level dependency
+
+- A *transitive* app-level dependency
+
+- Somewhere else
+
 - Decide if you really need this package, or if it's an unused dependency
-  - If it's unused, remove it
-  - If it's being used, upgrade to the fixed version
+
+- If it's unused, remove it
+
+- If it's being used, upgrade to the fixed version
+
 - Test the code to ensure everything still works as expected
-  - Hopefully your CI pipeline is enough to give you confidence here
-  - You may need to alter other dependencies or modify your application code if there are breaking changes in the update
+
+- Hopefully your CI pipeline is enough to give you confidence here
+
+- You may need to alter other dependencies or modify your application code if there are breaking changes in the update
+
 - Merge and re-scan!
 
 I've lost entire days to the above process, after being handed a critical-level CVE that needed to get squashed.
@@ -95,11 +111,16 @@ Fortunately, the OpenHands Cloud Agent SDK allows you to quickly create custom e
 As an example, here's a vibecoded prototype that uses the OpenHands SDK to:
 
 - Generate a list of know vulnerabilities across all our GitHub repos
+
 - For each vulnerability, we can:
-  - Start a new OpenHands conversation to fix the vulnerability
-  - See the agent's status (working, finished, errored)
-  - See the resulting PR's status (CI running, CI successful, CI failed)
-  - Restart the agent if CI failed
+
+- Start a new OpenHands conversation to fix the vulnerability
+
+- See the agent's status (working, finished, errored)
+
+- See the resulting PR's status (CI running, CI successful, CI failed)
+
+- Restart the agent if CI failed
 
 ![CVE Remediation Dashboard](/assets/blog/20251022-remediating-cves/dashboard.png)
 

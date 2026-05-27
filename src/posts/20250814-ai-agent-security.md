@@ -9,7 +9,6 @@ authors:
   - name: Robert Brennan
 ogImage:
   url: /assets/webflow/blog/20250814-ai-agent-security/cover.png
-seoTitleDate: 'Nov 12, 2025'
 ---
 There's a major [security dilemma](https://simonwillison.net/2025/Jun/16/the-lethal-trifecta/) when it comes to working with AI agents. If you give an agent both:
 

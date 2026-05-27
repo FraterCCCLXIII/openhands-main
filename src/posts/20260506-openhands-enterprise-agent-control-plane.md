@@ -10,7 +10,6 @@ authors:
   - name: OpenHands Team
 ogImage:
   url: /assets/webflow/blog/20260506-openhands-enterprise-agent-control-plane/20260506-openhands-enterprise-agent-control-plane-cover.png
-seoTitleDate: 'May 05, 2026'
 ---
 Teams are starting to use AI agents for real engineering work, but that usage breaks down quickly at scale. There is no centralized control over what agents can access or how they behave, which makes them difficult to approve for production use. Workflows are fragmented across tools and scripts, with little ability to reuse or standardize how work gets done. Teams also lack visibility into what agents are actually doing. There is no reliable audit trail, no clear understanding of cost, and no way to improve performance over time.
 

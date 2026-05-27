@@ -8,7 +8,6 @@ authors:
   - name: Jeffrey Ma and Vijay Janapa Reddi
 ogImage:
   url: /assets/webflow/blog/20260216-swefficiency-benchmark/swefficiency-cover-final.png
-seoTitleDate: 'Feb 16, 2026'
 ---
 *This is a guest blog by *[*Jeffrey Ma*](https://18jeffreyma.github.io/)* and *[*Vijay Janapa Reddi*](https://seas.harvard.edu/person/vijay-janapa-reddi)* of Harvard, introducing an exciting benchmark that uses OpenHands to tackle a new direction—performance engineering.*
 

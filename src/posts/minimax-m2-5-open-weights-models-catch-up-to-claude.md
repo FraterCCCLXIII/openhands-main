@@ -8,7 +8,6 @@ authors:
   - name: OpenHands Team
 ogImage:
   url: /assets/webflow/blog/minimax-m2-5-open-weights-models-catch-up-to-claude/Screenshot_2026-02-12_at_1.56.30_AM.png
-seoTitleDate: 'Feb 11, 2026'
 ---
 # MiniMax M2.5: Open Weights Models Catch Up to Claude Sonnet
 

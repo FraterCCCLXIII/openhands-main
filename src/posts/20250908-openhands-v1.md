@@ -9,7 +9,6 @@ authors:
   - name: Robert Brennan
 ogImage:
   url: /assets/webflow/blog/6914ead8ba1c303de166eaf1_6914e738ef96d4db714b7e45_image.png
-seoTitleDate: 'Nov 12, 2025'
 ---
 The [OpenHands GitHub repository](https://github.com/OpenHands/OpenHands) has grown organically over the last 18 months. We’re averaging about 60 commits per week (!) with contributions from nearly 400 unique developers.
 
