@@ -2,13 +2,13 @@
 title: 'A Practical Guide to Choosing the Right Language Model for Coding Agents'
 slug: a-practical-guide-to-choosing-the-right-language-model-for-coding-agents
 excerpt: 'Coding agents are powered by large language models, but which one should you choose? We share our experiences with Claude Sonnet 4, GPT-5, and Qwen3 Coder to help you make the right decision for your specific use case.'
-coverImage: /assets/webflow/blog/agent-control-plane/cover.png
+coverImage: /assets/blog/20251002-when-to-pick-language-models/cover.png
 coverAlt: 'Image from blog post'
 date: '2025-10-02T12:00:00.000+00:00'
 authors:
   - name: Graham Neubig
 ogImage:
-  url: /assets/webflow/blog/agent-control-plane/cover.png
+  url: /assets/blog/20251002-when-to-pick-language-models/cover.png
 seoTitleDate: 'Nov 12, 2025'
 ---
 There are currently a plethora of large language models available to be used with coding agents, and which one you choose has a significant impact on your experience using them.

@@ -2,12 +2,12 @@
 title: 'Refactoring COBOL to Java with AI Agents'
 slug: 20251218-cobol-to-java-refactoring
 excerpt: 'Learn how to use AI agents to modernize legacy COBOL codebases to Java. We walk through an iterative refinement approach that uses multiple agents to convert and verify code quality until it meets your standards.'
-coverImage: /assets/webflow/blog/agent-control-plane/cover.png
+coverImage: /assets/webflow/blog/69440b1f5fe2cccb76212e08_cover.png
 date: '2025-12-18T12:00:00.000+00:00'
 authors:
   - name: Graham Neubig
 ogImage:
-  url: /assets/webflow/blog/agent-control-plane/cover.png
+  url: /assets/webflow/blog/69440b1f5fe2cccb76212e08_cover.png
 seoTitleDate: 'Dec 18, 2025'
 ---
 [COBOL](https://en.wikipedia.org/wiki/COBOL) modernization is one of the most pressing challenges facing enterprises today. Gartner estimated there were over 200 billion lines of COBOL code in existence, running 80% of the world's business systems. As of 2020, COBOL was still running background processes for 95% of credit and debit card transactions.

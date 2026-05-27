@@ -994,10 +994,11 @@ const auditNotion = async () => {
   let audited = 0;
   for (const page of pages) {
     const title = pageProp(page, ['Name', 'Title']);
-    const status = pageProp(page, ['Status']) || 'Published';
-    const slug = pageProp(page, ['Slug']) || stringToSlug(title);
-    for (const propName of ['Cover image', 'OG image']) for (const file of pageProp(page, [propName]) || []) if (file.type === 'external') failures.push(`${slug}: ${propName} uses an external file link`);
+    const status = pageProp(page, ['Status']) || (page.properties?.Published?.checkbox === false ? 'Draft' : 'Published');
     if (status === 'Draft') continue;
+    const slug = pageProp(page, ['Slug']) || stringToSlug(title);
+    if (!slug) { if (verbose) console.warn(`Skipping Notion page without slug/title during audit: ${page.id}`); continue; }
+    for (const propName of ['Cover image', 'OG image']) for (const file of pageProp(page, [propName]) || []) if (file.type === 'external') failures.push(`${slug}: ${propName} uses an external file link`);
     const localPost = local.bySlug.get(slug);
     if (!localPost) { failures.push(`${slug}: no matching local post for audit`); continue; }
     audited += 1;

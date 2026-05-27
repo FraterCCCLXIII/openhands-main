@@ -58,6 +58,18 @@ describe("blogAPI", () => {
     ).toBeUndefined();
   });
 
+  test("does not reuse the agent control plane cover for unrelated posts", () => {
+    const agentControlPlaneCover =
+      "/assets/webflow/blog/agent-control-plane/cover.png";
+
+    for (const blog of blogAPI.getAllBlogs()) {
+      if (getBlogSlug(blog) === "agent-control-plane") continue;
+
+      expect(blog.data.coverImage).not.toBe(agentControlPlaneCover);
+      expect(blog.data.ogImage?.url).not.toBe(agentControlPlaneCover);
+    }
+  });
+
   test("keeps representative blog parity content synced to live", () => {
     const outerLoop = blogAPI.getBlogBySlug("20251202-agents-in-the-outer-loop");
     const promptInjection = blogAPI.getBlogBySlug(

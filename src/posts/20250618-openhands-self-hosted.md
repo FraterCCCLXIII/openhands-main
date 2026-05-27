@@ -2,13 +2,13 @@
 title: 'OpenHands Cloud Self-hosted: Secure, Convenient Deployment of AI Software Development Agents'
 slug: openhands-cloud-self-hosted-secure-convenient-deployment-of-ai-software-development-agents
 excerpt: 'OpenHands Cloud is now available as a self-hosted solution, providing secure, convenient deployment of AI software development agents. It features a 30-day free trial and is available as a source-available Helm Chart.'
-coverImage: /assets/webflow/blog/agent-control-plane/cover.png
+coverImage: /assets/blog/20250618-openhands-self-hosted/cover.png
 coverAlt: 'Image from blog post'
 date: '2025-06-18T12:00:00.000+00:00'
 authors:
   - name: Robert Brennan
 ogImage:
-  url: /assets/webflow/blog/agent-control-plane/cover.png
+  url: /assets/blog/20250618-openhands-self-hosted/cover.png
 seoTitleDate: 'Nov 12, 2025'
 ---
 [OpenHands](https://github.com/OpenHands/OpenHands) is an MIT-licensed open source platform for AI agents for software development.

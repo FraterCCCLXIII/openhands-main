@@ -2,13 +2,13 @@
 title: 'Remediating CVEs at Scale with Agents'
 slug: remediating-cves-at-scale-with-agents
 excerpt: 'While developers adapt to terminal-based agents, forward-thinking organizations are automating CVE remediation at scale. Learn how OpenHands enables teams to tackle millions of vulnerabilities with AI-powered agents, custom dashboards, and cloud-based automation.'
-coverImage: /assets/webflow/blog/agent-control-plane/cover.png
+coverImage: /assets/blog/20251022-remediating-cves/cover.png
 coverAlt: 'Image from blog post'
 date: '2025-10-22T12:00:00.000+00:00'
 authors:
   - name: Robert Brennan
 ogImage:
-  url: /assets/webflow/blog/agent-control-plane/cover.png
+  url: /assets/blog/20251022-remediating-cves/cover.png
 seoTitleDate: 'Nov 12, 2025'
 ---
 While individual developers are still getting used to running agents in their terminal (e.g. Claude Code or the OpenHands CLI), the most advanced AI adopters are using agents to build scalable automation using agents. We've seen folks use OpenHands to react to errors in Datadog logs; to automatically and intelligently pick the best reviewer for a given PR; and to keep their docs up-to-date.

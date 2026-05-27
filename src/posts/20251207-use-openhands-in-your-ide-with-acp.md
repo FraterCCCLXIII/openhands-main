@@ -2,12 +2,12 @@
 title: 'Use AI Agents in Your Favorite Editor through the Agent Client Protocol'
 slug: 20251209-use-openhands-in-your-ide-with-acp
 excerpt: 'Learn how to bring OpenHands'' powerful AI coding capabilities directly into your editor using the Agent Client Protocol. Whether you use Zed, JetBrains, neovim, Obsidian, or more you can now access OpenHands without leaving your editor.'
-coverImage: /assets/webflow/blog/agent-control-plane/cover.png
+coverImage: /assets/webflow/blog/693817516e4d3f7532687380_cover.png
 date: '2025-12-09T12:00:00.000+00:00'
 authors:
   - name: Graham Neubig
 ogImage:
-  url: /assets/webflow/blog/agent-control-plane/cover.png
+  url: /assets/webflow/blog/693817516e4d3f7532687380_cover.png
 seoTitleDate: 'Dec 07, 2025'
 ---
 Developers are creatures of habit. We each have our favorite code editor, carefully configured with our preferred keybindings, color schemes, and plugins. Some of us swear by [Zed](https://zed.dev/)'s speed, others by [JetBrains](https://www.jetbrains.com/)' powerful refactoring tools, and still others can't imagine leaving [neovim](https://neovim.io/).

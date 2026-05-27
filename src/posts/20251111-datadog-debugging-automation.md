@@ -2,12 +2,12 @@
 title: 'Debugging Production Issues with AI Agents: Automating Datadog Error Analysis'
 slug: debugging-production-issues-with-ai-agents-automating-datadog-error-analysis
 excerpt: 'This blog and video demonstrates how to transform production errors into actionable insights automatically. Learn how the OpenHands SDK enables AI agents to debug Datadog errors, analyze code across multiple repositories, and post detailed findings—all through a simple GitHub Actions workflow.'
-coverImage: /assets/webflow/blog/agent-control-plane/cover.png
+coverImage: /assets/blog/20251111-datadog-debugging-automation/cover.png
 date: '2025-11-17T12:00:00.000+00:00'
 authors:
   - name: Graham Neubig
 ogImage:
-  url: /assets/webflow/blog/agent-control-plane/cover.png
+  url: /assets/blog/20251111-datadog-debugging-automation/cover.png
 seoTitleDate: 'Nov 15, 2025'
 ---
 Running a production service is **hard**.

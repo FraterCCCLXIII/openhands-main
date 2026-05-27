@@ -2,13 +2,13 @@
 title: 'Automating Massive Refactors with Parallel Agents'
 slug: automating-massive-refactors-with-parallel-agents
 excerpt: 'Discover how AI-powered coding agents can tackle large-scale refactoring projects in days instead of months, using parallel workflows and the refactor-sdk toolkit.'
-coverImage: /assets/webflow/blog/agent-control-plane/cover.png
+coverImage: /assets/blog/20251009-automating-refactors/cover.png
 coverAlt: 'Image from blog post'
 date: '2025-10-09T12:00:00.000+00:00'
 authors:
   - name: Robert Brennan
 ogImage:
-  url: /assets/webflow/blog/agent-control-plane/cover.png
+  url: /assets/blog/20251009-automating-refactors/cover.png
 seoTitleDate: 'Nov 12, 2025'
 ---
 Today's coding agents are great for small, atomic coding tasks—the sort of things that can be done in a single commit. But that's just a small part of software development: a ton of effort still goes into planning, decomposition, operations, QA, architecture…the idea of an LLM-powered agent *replacing* a software engineer still feels pretty farfetched.

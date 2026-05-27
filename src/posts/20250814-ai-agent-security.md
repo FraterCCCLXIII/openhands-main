@@ -2,13 +2,13 @@
 title: 'Mitigating Prompt Injection Attacks in Software Agents'
 slug: mitigating-prompt-injection-attacks-in-software-agents
 excerpt: 'There''s a major security dilemma when it comes to working with AI agents. If you give an agent access to untrusted data sources and the ability to take destructive actions, you become vulnerable to prompt injection attacks. Here''s how we''re addressing this challenge at OpenHands.'
-coverImage: /assets/webflow/blog/agent-control-plane/cover.png
+coverImage: /assets/webflow/blog/20250814-ai-agent-security/cover.png
 coverAlt: 'Image from blog post'
 date: '2025-08-14T12:00:00.000+00:00'
 authors:
   - name: Robert Brennan
 ogImage:
-  url: /assets/webflow/blog/agent-control-plane/cover.png
+  url: /assets/webflow/blog/20250814-ai-agent-security/cover.png
 seoTitleDate: 'Nov 12, 2025'
 ---
 There's a major [security dilemma](https://simonwillison.net/2025/Jun/16/the-lethal-trifecta/) when it comes to working with AI agents. If you give an agent both:

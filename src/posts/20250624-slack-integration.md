@@ -2,14 +2,14 @@
 title: 'OpenHands Meets Slack: AI-Powered Development in Your Workspace'
 slug: openhands-meets-slack-ai-powered-development-in-your-workspace
 excerpt: 'Bring the power of OpenHands AI development agents directly into your Slack workspace. Start conversations, get code assistance, and collaborate with AI seamlessly within your team''s communication hub.'
-coverImage: /assets/webflow/blog/agent-control-plane/cover.png
+coverImage: /assets/blog/20250624-slack-integration/cover.png
 coverAlt: 'Image from blog post'
 date: '2025-06-24T12:00:00.000+00:00'
 authors:
   - name: Rohit Malhotra
   - name: Tim O'Farrell
 ogImage:
-  url: /assets/webflow/blog/agent-control-plane/cover.png
+  url: /assets/blog/20250624-slack-integration/cover.png
 seoTitleDate: 'Nov 12, 2025'
 ---
 As AI agents like [OpenHands](https://github.com/OpenHands/OpenHands) incorporate more and more into software development, we expect that developers will want to interact with AI in the same places where they interact with other co-workers.

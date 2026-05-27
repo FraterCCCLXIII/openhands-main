@@ -2,13 +2,13 @@
 title: 'Case Study: How US Mobile Supercharges Software Engineering with OpenHands'
 slug: case-study-how-us-mobile-supercharges-software-engineering-with-openhands
 excerpt: 'Learn how US Mobile leveraged OpenHands to reduce development time by 80% and transform an 8-point user story into a 2-point task, enabling their engineers to focus on higher-value work while delivering features faster.'
-coverImage: /assets/webflow/blog/agent-control-plane/cover.png
+coverImage: /assets/blog/20250909-us-mobile-case-study/cover.png
 coverAlt: 'Image from blog post'
 date: '2025-09-09T12:00:00.000+00:00'
 authors:
   - name: OpenHands Team
 ogImage:
-  url: /assets/webflow/blog/agent-control-plane/cover.png
+  url: /assets/blog/20250909-us-mobile-case-study/cover.png
 seoTitleDate: 'Nov 12, 2025'
 ---
 [US Mobile](https://www.usmobile.com/) is a fast-growing wireless telecom provider, known for its first-of-its-kind tech that enables consumers to switch between any of the big three mobile networks. Priding itself on innovation, customer-centricity, and flexibility, US Mobile has leveraged technology since its founding to stay ahead of customer needs and differentiate itself.
