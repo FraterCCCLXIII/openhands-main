@@ -514,17 +514,30 @@ const filePropertyAssetPath = async (files, context, report) => {
   await downloadNotionFile(url, assetPath, report);
   return assetPath;
 };
-const blockToMarkdown = async (block, context, report) => {
-  if (block.type === 'paragraph') return richTextToMarkdown(block.paragraph.rich_text);
-  if (block.type === 'heading_1') return `# ${richTextToMarkdown(block.heading_1.rich_text)}`;
-  if (block.type === 'heading_2') return `## ${richTextToMarkdown(block.heading_2.rich_text)}`;
-  if (block.type === 'heading_3') return `### ${richTextToMarkdown(block.heading_3.rich_text)}`;
-  if (block.type === 'bulleted_list_item') return `- ${richTextToMarkdown(block.bulleted_list_item.rich_text)}`;
-  if (block.type === 'numbered_list_item') return `1. ${richTextToMarkdown(block.numbered_list_item.rich_text)}`;
-  if (block.type === 'quote') return richTextToMarkdown(block.quote.rich_text).split('\n').map((line) => `> ${line}`).join('\n');
+const indentMarkdown = (markdown, depth) => {
+  if (!depth || !markdown) return markdown;
+  const indent = '  '.repeat(depth);
+  return markdown.split('\n').map((line) => line ? `${indent}${line}` : line).join('\n');
+};
+const childBlocksToMarkdown = async (block, context, report, depth) => {
+  if (!block.has_children) return '';
+  return blocksToMarkdown(await listBlocks(block.id), context, report, depth);
+};
+const blockToMarkdown = async (block, context, report, depth = 0) => {
+  const withChildren = async (markdown) => {
+    const childMarkdown = await childBlocksToMarkdown(block, context, report, depth + 1);
+    return childMarkdown ? `${markdown}\n${childMarkdown}` : markdown;
+  };
+  if (block.type === 'paragraph') return withChildren(indentMarkdown(richTextToMarkdown(block.paragraph.rich_text), depth));
+  if (block.type === 'heading_1') return indentMarkdown(`# ${richTextToMarkdown(block.heading_1.rich_text)}`, depth);
+  if (block.type === 'heading_2') return indentMarkdown(`## ${richTextToMarkdown(block.heading_2.rich_text)}`, depth);
+  if (block.type === 'heading_3') return indentMarkdown(`### ${richTextToMarkdown(block.heading_3.rich_text)}`, depth);
+  if (block.type === 'bulleted_list_item') return withChildren(`${'  '.repeat(depth)}- ${richTextToMarkdown(block.bulleted_list_item.rich_text)}`);
+  if (block.type === 'numbered_list_item') return withChildren(`${'  '.repeat(depth)}1. ${richTextToMarkdown(block.numbered_list_item.rich_text)}`);
+  if (block.type === 'quote') return indentMarkdown(richTextToMarkdown(block.quote.rich_text).split('\n').map((line) => `> ${line}`).join('\n'), depth);
   if (block.type === 'embed') {
     const caption = plain(block.embed.caption);
-    return caption || `<iframe src="${block.embed.url}" allowfullscreen=""></iframe>`;
+    return indentMarkdown(caption || `<iframe src="${block.embed.url}" allowfullscreen=""></iframe>`, depth);
   }
   if (block.type === 'table') {
     const rows = await listBlocks(block.id);
@@ -535,12 +548,12 @@ const blockToMarkdown = async (block, context, report) => {
       const width = rows.find((row) => row.type === 'table_row')?.table_row.cells.length ?? 1;
       markdownRows.splice(1, 0, `| ${Array.from({ length: width }, () => '---').join(' | ')} |`);
     }
-    return markdownRows.join('\n');
+    return indentMarkdown(markdownRows.join('\n'), depth);
   }
   if (block.type === 'code') {
     const originalLanguage = plain(block.code.caption);
     const language = originalLanguage || (block.code.language && block.code.language !== 'plain text' ? block.code.language : '');
-    return `\`\`\`${language}\n${plain(block.code.rich_text)}\n\`\`\``;
+    return indentMarkdown(`\`\`\`${language}\n${plain(block.code.rich_text)}\n\`\`\``, depth);
   }
   if (block.type === 'image') {
     const url = imageUrl(block.image);
@@ -548,18 +561,21 @@ const blockToMarkdown = async (block, context, report) => {
     const filename = fileNameFromUrl(url);
     const assetPath = resolveAssetPath(context, filename);
     await downloadNotionFile(url, assetPath, report);
-    return `![${plain(block.image.caption)}](${assetPath})`;
+    return indentMarkdown(`![${plain(block.image.caption)}](${assetPath})`, depth);
   }
-  if (block.type === 'divider') return '---';
+  if (block.type === 'divider') return indentMarkdown('---', depth);
   return '';
 };
-const pageBodyMarkdown = async (pageId, context, report) => {
+const blocksToMarkdown = async (blocks, context, report, depth = 0) => {
   const parts = [];
-  for (const block of await listBlocks(pageId)) {
-    const markdown = await blockToMarkdown(block, context, report);
+  for (const block of blocks) {
+    const markdown = await blockToMarkdown(block, context, report, depth);
     if (markdown && markdown !== NOTICE) parts.push(markdown);
   }
-  const body = parts.join('\n\n');
+  return parts.join(depth ? '\n' : '\n\n');
+};
+const pageBodyMarkdown = async (pageId, context, report) => {
+  const body = await blocksToMarkdown(await listBlocks(pageId), context, report);
   return body ? `${body}\n` : '';
 };
 const yamlString = (value) => `'${String(value ?? '').replaceAll("'", "''")}'`;
@@ -961,22 +977,25 @@ const countMarkdownBody = (body) => {
   }
   return counts;
 };
+const addNotionBlockCounts = async (block, counts) => {
+  if (block.type === 'paragraph') addInlinePartCounts(block.paragraph.rich_text, counts);
+  else if (block.type.startsWith('heading_')) { counts.headings += 1; addInlinePartCounts(block[block.type].rich_text, counts); }
+  else if (block.type === 'bulleted_list_item') { counts.bulleted += 1; addInlinePartCounts(block.bulleted_list_item.rich_text, counts); }
+  else if (block.type === 'numbered_list_item') { counts.numbered += 1; addInlinePartCounts(block.numbered_list_item.rich_text, counts); }
+  else if (block.type === 'quote') { counts.quotes += 1; addInlinePartCounts(block.quote.rich_text, counts); }
+  else if (block.type === 'image') { counts.images += 1; if (block.image.type === 'external') counts.externalImages += 1; }
+  else if (block.type === 'embed') counts.embeds += 1;
+  else if (block.type === 'divider') counts.dividers += 1;
+  else if (block.type === 'table') {
+    counts.tables += 1;
+    for (const row of await listBlocks(block.id)) if (row.type === 'table_row') for (const cell of row.table_row.cells) addInlinePartCounts(cell, counts);
+    return;
+  }
+  if (block.has_children) for (const child of await listBlocks(block.id)) await addNotionBlockCounts(child, counts);
+};
 const countNotionBlocks = async (pageId) => {
   const counts = emptyCounts();
-  for (const block of await listBlocks(pageId)) {
-    if (block.type === 'paragraph') addInlinePartCounts(block.paragraph.rich_text, counts);
-    else if (block.type.startsWith('heading_')) { counts.headings += 1; addInlinePartCounts(block[block.type].rich_text, counts); }
-    else if (block.type === 'bulleted_list_item') { counts.bulleted += 1; addInlinePartCounts(block.bulleted_list_item.rich_text, counts); }
-    else if (block.type === 'numbered_list_item') { counts.numbered += 1; addInlinePartCounts(block.numbered_list_item.rich_text, counts); }
-    else if (block.type === 'quote') { counts.quotes += 1; addInlinePartCounts(block.quote.rich_text, counts); }
-    else if (block.type === 'image') { counts.images += 1; if (block.image.type === 'external') counts.externalImages += 1; }
-    else if (block.type === 'embed') counts.embeds += 1;
-    else if (block.type === 'divider') counts.dividers += 1;
-    else if (block.type === 'table') {
-      counts.tables += 1;
-      for (const row of await listBlocks(block.id)) if (row.type === 'table_row') for (const cell of row.table_row.cells) addInlinePartCounts(cell, counts);
-    }
-  }
+  for (const block of await listBlocks(pageId)) await addNotionBlockCounts(block, counts);
   return counts;
 };
 const auditNotion = async () => {
