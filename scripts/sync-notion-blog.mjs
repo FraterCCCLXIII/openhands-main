@@ -383,16 +383,34 @@ const markdownBodyToBlocks = async (body, options = {}) => {
       });
       continue;
     }
-    const list = lines[i].match(/^\s*(?:[-*+]\s+|(\d+)\.\s+)(.*)$/);
+    const listItem = (line) => line.match(/^(\s*)([-*+]|\d+\.)\s+(.*)$/);
+    const listItemIndent = (match) => match[1].replace(/\t/g, '  ').length;
+    const isOrderedListItem = (match) => /\d+\./.test(match[2]);
+    const list = listItem(lines[i]);
     if (list) {
-      const ordered = Boolean(list[1]);
-      const type = ordered ? 'numbered_list_item' : 'bulleted_list_item';
-      while (i < lines.length) {
-        const item = lines[i].match(/^\s*(?:[-*+]\s+|(\d+)\.\s+)(.*)$/);
-        if (!item || Boolean(item[1]) !== ordered) break;
-        blocks.push({ object: 'block', type, [type]: { rich_text: richText(item[2]) } });
-        i += 1;
-      }
+      const parseList = (indent, ordered) => {
+        const items = [];
+        while (i < lines.length) {
+          const item = listItem(lines[i]);
+          if (!item) break;
+          const itemIndent = listItemIndent(item);
+          const itemOrdered = isOrderedListItem(item);
+          if (itemIndent < indent) break;
+          if (itemIndent > indent) {
+            if (!items.length) break;
+            const parent = items[items.length - 1];
+            const parentData = parent[parent.type];
+            parentData.children = [...(parentData.children ?? []), ...parseList(itemIndent, itemOrdered)];
+            continue;
+          }
+          if (itemOrdered !== ordered) break;
+          const type = ordered ? 'numbered_list_item' : 'bulleted_list_item';
+          items.push({ object: 'block', type, [type]: { rich_text: richText(item[3]) } });
+          i += 1;
+        }
+        return items;
+      };
+      blocks.push(...parseList(listItemIndent(list), isOrderedListItem(list)));
       continue;
     }
     const heading = lines[i].match(/^(#{1,3})\s+(.*)$/);
