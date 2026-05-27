@@ -121,7 +121,9 @@ const PRODUCT_SURFACES = [
   },
 ];
 
-const HOME_PRODUCT_SURFACES = PRODUCT_SURFACES.filter((surface) => SHOW_SDK_SURFACE || surface.title !== 'SDK');
+const SHOULD_RENDER_SURFACE = (surface: { title: string }) => SHOW_SDK_SURFACE || surface.title !== 'SDK';
+
+const DEFAULT_SURFACE_INDEX = SHOW_SDK_SURFACE ? 0 : 1;
 
 const FEATURES = [
   {
@@ -337,7 +339,7 @@ export const meta: Route.MetaFunction = () =>
 const Home = () => {
   const [activeTestimonial, setActiveTestimonial] = React.useState(0);
   const [workflowOffset, setWorkflowOffset] = React.useState(0);
-  const [activeSurfaceIndex, setActiveSurfaceIndex] = React.useState(0);
+  const [activeSurfaceIndex, setActiveSurfaceIndex] = React.useState(DEFAULT_SURFACE_INDEX);
   const [activeWorkflow, setActiveWorkflow] = React.useState<(typeof WORKFLOWS)[number] | null>(null);
   const workflowDialogRef = React.useRef<HTMLDialogElement>(null);
   const logoMarqueeRef = React.useRef<HTMLDivElement>(null);
@@ -727,76 +729,84 @@ const Home = () => {
                     below them. */}
                 <div className='home-hero-media-copy-col flex flex-col' style={{ flex: '0 0 270px', maxWidth: '270px', gap: '0px' }}>
                   <div className='flex flex-nowrap items-center justify-start' style={{ position: 'relative', zIndex: 1, marginTop: '0px', gap: '9.6px' }}>
-                    {HOME_PRODUCT_SURFACES.map((surface, index) => (
+                    {PRODUCT_SURFACES.map((surface, index) => {
+                      if (!SHOULD_RENDER_SURFACE(surface)) return null;
+
                       // Live Webflow renders these as plain `<div class="eyebrow bubble ...">`
                       // pills (no role/aria semantics).  Adding `role="tab"` made our test
                       // divs surface in the parity inventory while live's didn't, producing
                       // 3 fake "extra-on-test" DIV:CLI/Cloud/SDK signatures.  Drop the
                       // tab semantics and fall back to plain click handlers.
-                      <div
-                        key={surface.title}
-                        data-wf-el='hero-surface-eyebrow'
-                        data-key={index + 1}
-                        onClick={() => setActiveSurfaceIndex(index)}
-                        className='eyebrow bubble inline-block font-mono transition-all'
-                        style={{
-                          display: 'block',
-                          cursor: 'pointer',
-                          borderRadius: '20px',
-                          paddingLeft: '9.6px',
-                          paddingRight: '9.6px',
-                          paddingTop: '3.2px',
-                          paddingBottom: '3.2px',
-                          minWidth: '29.64px',
-                          minHeight: '24.9px',
-                          boxSizing: 'border-box',
-                          fontSize: '14.08px',
-                          lineHeight: '16.896px',
-                          fontWeight: 400,
-                          textAlign: 'start',
-                          color: 'rgb(249, 240, 217)',
-                          backgroundColor: 'rgb(34, 21, 13)',
-                          border: '1px solid rgb(0, 0, 0)',
-                          borderColor: 'rgb(0, 0, 0)',
-                          opacity: 0.3,
-                        }}
-                      >
-                        {index === activeSurfaceIndex ? surface.title : ''}
-                      </div>
-                    ))}
+                      return (
+                        <div
+                          key={surface.title}
+                          data-wf-el='hero-surface-eyebrow'
+                          data-key={index + 1}
+                          onClick={() => setActiveSurfaceIndex(index)}
+                          className='eyebrow bubble inline-block font-mono transition-all'
+                          style={{
+                            display: 'block',
+                            cursor: 'pointer',
+                            borderRadius: '20px',
+                            paddingLeft: '9.6px',
+                            paddingRight: '9.6px',
+                            paddingTop: '3.2px',
+                            paddingBottom: '3.2px',
+                            minWidth: '29.64px',
+                            minHeight: '24.9px',
+                            boxSizing: 'border-box',
+                            fontSize: '14.08px',
+                            lineHeight: '16.896px',
+                            fontWeight: 400,
+                            textAlign: 'start',
+                            color: 'rgb(249, 240, 217)',
+                            backgroundColor: 'rgb(34, 21, 13)',
+                            border: '1px solid rgb(0, 0, 0)',
+                            borderColor: 'rgb(0, 0, 0)',
+                            opacity: 0.3,
+                          }}
+                        >
+                          {index === activeSurfaceIndex ? surface.title : ''}
+                        </div>
+                      );
+                    })}
                   </div>
                   {/* Only the active copy card occupies layout; the mounted
                       media stack on the right handles the animated transition. */}
-                  {HOME_PRODUCT_SURFACES.map((surface, idx) => (
-                    <div
-                      key={surface.title}
-                      data-wf-el='card'
-                      data-surface-index={idx}
-                      ref={(node) => { surfaceCardRefs.current[idx] = node; }}
-                      aria-hidden={idx !== activeSurfaceIndex || undefined}
-                      style={{
-                        borderRadius: '0px',
-                        flexDirection: 'column',
-                        justifyContent: 'flex-start',
-                        borderStyle: 'none',
-                        overflow: 'hidden',
-                        minHeight: idx === activeSurfaceIndex ? '236px' : '0px',
-                        marginTop: '0px',
-                        display: idx === activeSurfaceIndex ? 'flex' : 'none',
-                      }}
-                    >
-                      {/* Live's SDK/CLI/GUI heading has margin-top:
+                  {PRODUCT_SURFACES.map((surface, idx) => {
+                    if (!SHOULD_RENDER_SURFACE(surface)) return null;
+
+                    return (
+                      <div
+                        key={surface.title}
+                        data-wf-el='card'
+                        data-surface-index={idx}
+                        ref={(node) => { surfaceCardRefs.current[idx] = node; }}
+                        aria-hidden={idx !== activeSurfaceIndex || undefined}
+                        style={{
+                          borderRadius: '0px',
+                          flexDirection: 'column',
+                          justifyContent: 'flex-start',
+                          borderStyle: 'none',
+                          overflow: 'hidden',
+                          minHeight: idx === activeSurfaceIndex ? '236px' : '0px',
+                          marginTop: '0px',
+                          display: idx === activeSurfaceIndex ? 'flex' : 'none',
+                        }}
+                      >
+                        {/* Live's SDK/CLI/GUI heading has margin-top:
                           22px and margin-bottom: 8.8px (live h2-2
                           tokens).  Our previous mt-2/mb-3 was wrong. */}
-                      <h2 className='section-title text-brand-fg' style={{ marginTop: '22px', marginBottom: '8.8px' }}>{surface.title}</h2>
-                      <p data-wf-el='paragraph-lg' className='mb-5 fluid-body-lg font-medium text-brand-muted'>{surface.description}</p>
-                      {surface.cta ? (
-                        <div data-wf-el='standard-wrap'>
-                          <OverlayLinkButton href={surface.href} label={surface.cta} variant='outline' />
-                        </div>
-                      ) : null}
-                    </div>
-                  ))}
+                        <h2 className='section-title text-brand-fg' style={{ marginTop: '22px', marginBottom: '8.8px' }}>{surface.title}</h2>
+                        <p data-wf-el='paragraph-lg' className='mb-5 fluid-body-lg font-medium text-brand-muted'>{surface.description}</p>
+                        {surface.cta ? (
+                          <div data-wf-el='standard-wrap'>
+                            <OverlayLinkButton href={surface.href} label={surface.cta} variant='outline' />
+                          </div>
+                        ) : null}
+                      </div>
+                    );
+                  })}
                 </div>
                 {/* RIGHT col: hero-media-bg with hero-track of 3 images.
                     Match live's static post-animation geometry: 944px wide
@@ -809,30 +819,34 @@ const Home = () => {
                           the controls and scroll observer can animate the screenshot
                           without introducing visible duplicate images. */}
                       <div data-wf-el='hero-track' style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10%', overflow: 'hidden', width: '944px', height: '520px' }}>
-                        {HOME_PRODUCT_SURFACES.map((surface, idx) => (
-                          <div
-                            key={surface.title}
-                            data-wf-el='hero-media'
-                            data-heroslide={surface.title.toLowerCase()}
-                            style={{
-                              position: 'absolute',
-                              top: '-67.14px',
-                              left: '0px',
-                              width: '944px',
-                              height: '654.297px',
-                              borderRadius: '16px',
-                              overflow: 'hidden',
-                              flex: '0 0 100%',
-                              display: 'block',
-                              opacity: idx === activeSurfaceIndex ? 1 : 0,
-                              transform: `translateY(${idx === activeSurfaceIndex ? 0 : idx < activeSurfaceIndex ? -24 : 24}px)`,
-                              transition: 'opacity 360ms ease, transform 360ms ease',
-                              pointerEvents: idx === activeSurfaceIndex ? 'auto' : 'none',
-                            }}
-                          >
-                            <img src={surface.image} alt='' data-wf-el='standard-media' loading='lazy' decoding='async' style={{ display: 'inline-block', width: '943.969px', height: '654.297px', maxWidth: '100%', borderRadius: '0px', objectFit: 'fill', objectPosition: '50% 50%' }} />
-                          </div>
-                        ))}
+                        {PRODUCT_SURFACES.map((surface, idx) => {
+                          if (!SHOULD_RENDER_SURFACE(surface)) return null;
+
+                          return (
+                            <div
+                              key={surface.title}
+                              data-wf-el='hero-media'
+                              data-heroslide={surface.title.toLowerCase()}
+                              style={{
+                                position: 'absolute',
+                                top: '-67.14px',
+                                left: '0px',
+                                width: '944px',
+                                height: '654.297px',
+                                borderRadius: '16px',
+                                overflow: 'hidden',
+                                flex: '0 0 100%',
+                                display: 'block',
+                                opacity: idx === activeSurfaceIndex ? 1 : 0,
+                                transform: `translateY(${idx === activeSurfaceIndex ? 0 : idx < activeSurfaceIndex ? -24 : 24}px)`,
+                                transition: 'opacity 360ms ease, transform 360ms ease',
+                                pointerEvents: idx === activeSurfaceIndex ? 'auto' : 'none',
+                              }}
+                            >
+                              <img src={surface.image} alt='' data-wf-el='standard-media' loading='lazy' decoding='async' style={{ display: 'inline-block', width: '943.969px', height: '654.297px', maxWidth: '100%', borderRadius: '0px', objectFit: 'fill', objectPosition: '50% 50%' }} />
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   </div>
