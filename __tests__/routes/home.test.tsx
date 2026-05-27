@@ -21,7 +21,8 @@ describe('home route parity structure', () => {
     const headingTexts = screen.getAllByRole('heading').map((heading) => heading.textContent?.trim());
     expect(headingTexts).toContain('Start with a proven workflow');
     expect(headingTexts).toContain('Fix Vulnerabilities');
-    expect(headingTexts).toContain('SDK');
+    expect(headingTexts).toContain('Cloud');
+    expect(headingTexts).not.toContain('SDK');
     expect(headingTexts).toContain('Why teams choose OpenHands');
     expect(headingTexts).toContain('Automate the Outer Loop with AI');
     expect(headingTexts).toContain('Developers love OpenHands');
@@ -51,8 +52,8 @@ describe('home route parity structure', () => {
     expect(screen.getAllByRole('link', { name: 'Try it live' }).length).toBeGreaterThan(0);
 
     expect(container.innerHTML).toContain('lg:grid-cols-3');
-    expect(container.querySelectorAll('[data-key]')).toHaveLength(3);
-    expect(container.querySelectorAll('[data-heroslide]')).toHaveLength(3);
+    expect(container.querySelectorAll('[data-key]')).toHaveLength(2);
+    expect(container.querySelectorAll('[data-heroslide]')).toHaveLength(2);
     expect(container.innerHTML).toContain('home-hero-surfaces');
     expect(container.innerHTML).toContain('h-full w-full object-cover');
     expect(container.innerHTML).not.toContain('xl:grid-cols-4');

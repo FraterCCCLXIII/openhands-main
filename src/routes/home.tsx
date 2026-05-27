@@ -95,6 +95,8 @@ const WORKFLOWS = [
 // Live homepage renders three stacked cards (SDK / Cloud / CLI) inside one
 // "hero-content" column plus a hero-track of three images alongside, rather
 // than a tabbed surface picker. Only the SDK card carries a CTA on live.
+const SHOW_SDK_SURFACE = false;
+
 const PRODUCT_SURFACES = [
   {
     title: 'SDK',
@@ -118,6 +120,8 @@ const PRODUCT_SURFACES = [
     image: '/assets/webflow/misc/691b30b28b25626f4d315588_CLI.webp',
   },
 ];
+
+const HOME_PRODUCT_SURFACES = PRODUCT_SURFACES.filter((surface) => SHOW_SDK_SURFACE || surface.title !== 'SDK');
 
 const FEATURES = [
   {
@@ -396,7 +400,7 @@ const Home = () => {
     };
   }, []);
 
-  // IntersectionObserver-driven scroll pinning for the SDK/Cloud/CLI hero.
+  // IntersectionObserver-driven scroll pinning for the surface hero (SDK optional).
   // Mirrors live's GSAP ScrollTrigger: as each .surface-card enters the
   // top-half of the viewport, the active surface index advances, which
   // updates the right-column hero-track translate and card opacity.
@@ -723,7 +727,7 @@ const Home = () => {
                     below them. */}
                 <div className='home-hero-media-copy-col flex flex-col' style={{ flex: '0 0 270px', maxWidth: '270px', gap: '0px' }}>
                   <div className='flex flex-nowrap items-center justify-start' style={{ position: 'relative', zIndex: 1, marginTop: '0px', gap: '9.6px' }}>
-                    {PRODUCT_SURFACES.map((surface, index) => (
+                    {HOME_PRODUCT_SURFACES.map((surface, index) => (
                       // Live Webflow renders these as plain `<div class="eyebrow bubble ...">`
                       // pills (no role/aria semantics).  Adding `role="tab"` made our test
                       // divs surface in the parity inventory while live's didn't, producing
@@ -763,7 +767,7 @@ const Home = () => {
                   </div>
                   {/* Only the active copy card occupies layout; the mounted
                       media stack on the right handles the animated transition. */}
-                  {PRODUCT_SURFACES.map((surface, idx) => (
+                  {HOME_PRODUCT_SURFACES.map((surface, idx) => (
                     <div
                       key={surface.title}
                       data-wf-el='card'
@@ -805,7 +809,7 @@ const Home = () => {
                           the controls and scroll observer can animate the screenshot
                           without introducing visible duplicate images. */}
                       <div data-wf-el='hero-track' style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10%', overflow: 'hidden', width: '944px', height: '520px' }}>
-                        {PRODUCT_SURFACES.map((surface, idx) => (
+                        {HOME_PRODUCT_SURFACES.map((surface, idx) => (
                           <div
                             key={surface.title}
                             data-wf-el='hero-media'
