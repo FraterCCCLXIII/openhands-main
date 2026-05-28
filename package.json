@@ -29,11 +29,14 @@
     "lint:python:fix": "cd backend && uv run ruff format . && uv run ruff check --fix .",
     "typecheck:python": "cd backend && uv run pyright",
     "audit": "npm audit --audit-level=moderate",
+    "generate:snapshot": "node scripts/generate-integration-catalog-snapshot.mjs",
+    "check:snapshot": "npm run generate:snapshot && git diff --exit-code backend/app/integration_catalog_snapshot.json",
     "test:backend:python": "cd backend && uv run pytest tests -q"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.28.0",
     "@neondatabase/serverless": "^1.0.2",
+    "@openhands/extensions": "github:OpenHands/extensions#c4d8d9727405d26fe9013f7ac4ca477cb61a37f6",
     "@tanstack/react-query": "^5.95.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

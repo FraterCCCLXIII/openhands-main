@@ -1,8 +1,26 @@
 import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 
 import { listOAuthProviderCatalog } from "@/src/lib/integrations/oauth-provider-catalog";
 
 describe("listOAuthProviderCatalog", () => {
+  it("matches the backend snapshot generated from @openhands/extensions", () => {
+    const snapshot = JSON.parse(
+      readFileSync(
+        join(process.cwd(), "backend/app/integration_catalog_snapshot.json"),
+        "utf8",
+      ),
+    );
+    const providers = listOAuthProviderCatalog();
+
+    expect(snapshot.providers).toEqual(providers);
+    expect(snapshot.defaultManagedConnectors.map((connector: { slug: string }) => connector.slug)).toEqual([
+      "elevenlabs",
+      "ordinal",
+    ]);
+  });
+
   it("returns the curated provider catalog with unique slugs and auth strategies", () => {
     const providers = listOAuthProviderCatalog();
 

@@ -162,6 +162,22 @@ For a fuller route map and auth breakdown, see [API.md](./API.md).
 
 7. Visit `/integrations` once to provision the personal agent/runtime API key, then open `/agent-connection` for the generated REST and MCP connection examples.
 
+## Integration catalog snapshot
+
+The backend reads `backend/app/integration_catalog_snapshot.json`, which is
+generated from `@openhands/extensions/integrations` so server routes and the
+frontend provider catalog use the same source of truth.
+
+Regenerate and check the snapshot whenever `@openhands/extensions` is updated:
+
+```bash
+npm run generate:snapshot
+npm run check:snapshot
+```
+
+CI runs `npm run check:snapshot` and fails if the committed snapshot drifts from
+the pinned extensions package.
+
 ## Environment variables
 
 Core variables:

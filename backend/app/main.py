@@ -24,7 +24,11 @@ from pydantic import ValidationError
 
 from .auth import DEFAULT_OWNER, is_admin_owner
 from .config import INTERNAL_AUTH_HEADER, get_default_config
-from .managed_connectors import get_managed_connector, list_managed_connectors
+from .managed_connectors import (
+    get_managed_connector,
+    integration_catalog_snapshot,
+    list_managed_connectors,
+)
 from .models import (
     AccessRequest,
     ContextInvocationRequest,
@@ -1554,146 +1558,34 @@ def disable_unused_tools(owner: str, body: dict[str, Any]) -> dict[str, Any]:
 
 def oauth_provider_catalog() -> list[dict[str, Any]]:
     managed = {connector.slug: connector for connector in list_managed_connectors()}
-    seeds = [
-        (
-            "github",
-            "GitHub",
-            "Source control, issues, pull requests, and developer workflows.",
-            ["Engineering", "Source control"],
-            "manual_token",
-        ),
-        (
-            "google-docs",
-            "Google Docs",
-            "Docs authoring and Google Workspace document automation.",
-            ["Documents", "Knowledge base"],
-            "manual_token",
-        ),
-        (
-            "slack",
-            "Slack",
-            "Channels, messaging, workflows, canvases, and operational collaboration.",
-            ["Communication", "Operations"],
-            "oauth_ready",
-        ),
-        (
-            "notion",
-            "Notion",
-            "Workspace search, pages, databases, and knowledge management.",
-            ["Knowledge base", "Documentation"],
-            "oauth_ready",
-        ),
-        (
-            "figma",
-            "Figma",
-            "Design files, nodes, and developer handoff automation.",
-            ["Design", "Frontend"],
-            "oauth_ready",
-        ),
-        (
-            "elevenlabs",
-            "ElevenLabs",
-            "Voice generation, text-to-speech, speech-to-text, and audio tools.",
-            ["AI", "Audio"],
-            "manual_token",
-        ),
-        (
-            "ordinal",
-            "Ordinal",
-            "Social media management through Ordinal's hosted MCP server.",
-            ["Social media", "Marketing"],
-            "manual_token",
-        ),
-        (
-            "google-drive",
-            "Google Drive",
-            "File search, metadata, folders, and document discovery.",
-            ["Storage", "Documents"],
-            "planned",
-        ),
-        (
-            "google-sheets",
-            "Google Sheets",
-            "Spreadsheet reads, writes, formulas, and reporting workflows.",
-            ["Spreadsheets", "Analytics"],
-            "planned",
-        ),
-        (
-            "gmail",
-            "Gmail",
-            "Mailbox search, drafting, sending, and thread triage.",
-            ["Communication", "Email"],
-            "planned",
-        ),
-        (
-            "google-calendar",
-            "Google Calendar",
-            "Calendar search, event scheduling, and meeting coordination.",
-            ["Calendar", "Scheduling"],
-            "planned",
-        ),
-        (
-            "jira",
-            "Jira",
-            "Issue tracking, sprint workflows, and engineering program management.",
-            ["Project management", "Engineering"],
-            "planned",
-        ),
-        (
-            "linear",
-            "Linear",
-            "Issues, projects, cycles, and product planning.",
-            ["Project management", "Engineering"],
-            "manual_token",
-        ),
-        (
-            "hubspot",
-            "HubSpot",
-            "CRM records, owners, tickets, deals, and marketing campaign analytics.",
-            ["CRM", "Marketing"],
-            "oauth_ready",
-        ),
-        (
-            "webflow",
-            "Webflow",
-            "Designer, CMS, assets, sites, and content automation.",
-            ["Website", "CMS"],
-            "oauth_ready",
-        ),
-    ]
     catalog = []
-    for rank, (slug, name, description, categories, availability) in enumerate(
-        seeds, start=1
-    ):
+    for provider in integration_catalog_snapshot()["providers"]:
+        slug = provider["slug"]
         connector = managed.get(slug)
         catalog.append(
             {
                 "slug": slug,
-                "name": connector.name if connector else name,
-                "description": connector.description if connector else description,
+                "name": connector.name if connector else provider["name"],
+                "description": connector.description
+                if connector
+                else provider["description"],
                 "categories": connector.categories
                 if connector and connector.categories
-                else categories,
-                "availability": availability,
-                "managedConnectorSlug": slug
+                else provider["categories"],
+                "availability": provider["availability"],
+                "managedConnectorSlug": connector.slug
                 if connector
-                or slug
-                in {
-                    "github",
-                    "google-docs",
-                    "slack",
-                    "notion",
-                    "linear",
-                    "hubspot",
-                    "webflow",
-                }
-                else None,
-                "authStrategy": connector.authStrategy if connector else "oauth2",
-                "popularityRank": rank,
-                "appUrl": connector.appUrl if connector else None,
-                "docsUrl": connector.docsUrl if connector else None,
-                "registrationDefaults": connector.response() if connector else None,
-                "notes": "",
+                else provider.get("managedConnectorSlug"),
+                "authStrategy": connector.authStrategy
+                if connector
+                else provider["authStrategy"],
+                "popularityRank": provider["popularityRank"],
+                "appUrl": connector.appUrl if connector else provider.get("appUrl"),
+                "docsUrl": connector.docsUrl if connector else provider.get("docsUrl"),
+                "registrationDefaults": connector.response()
+                if connector
+                else provider.get("registrationDefaults"),
+                "notes": provider.get("notes", ""),
             }
         )
     return catalog
