@@ -90,7 +90,7 @@ describe('Marketing parity routes', () => {
       screen.getByText(/Scale AI agents in production with the control, visibility, and repeatability/i),
     ).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Book a demo' })).toHaveAttribute('href', '/contact');
-    expect(screen.getByRole('link', { name: 'Try it' })).toHaveAttribute('href', 'https://app.all-hands.dev/');
+    expect(screen.getByRole('link', { name: 'Try it' })).toHaveAttribute('href', 'https://install.r9.all-hands.dev/openhands/signup');
 
     // Control plane intro section
     expect(

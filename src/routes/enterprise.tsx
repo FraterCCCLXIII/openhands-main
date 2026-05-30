@@ -271,7 +271,7 @@ const Enterprise = () => {
                 className='!px-[30.4px] !py-[14.4px]'
               />
               <OverlayLinkButton
-                href='https://app.all-hands.dev/'
+                href='https://install.r9.all-hands.dev/openhands/signup'
                 label='Try it'
                 variant='outline'
                 wfEl='button'

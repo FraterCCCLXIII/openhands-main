@@ -1,6 +1,8 @@
 ---
 title: 'Building a Provably Versatile Agent'
 slug: building-a-provably-versatile-agent
+redirectFrom:
+  - 20250604-openhands-versa
 excerpt: 'OpenHands Versa is a versatile agent that excels across multiple benchmarks, from software engineering to web browsing and frontend development.'
 coverImage: /assets/webflow/blog/20250814-ai-agent-security/image2.png
 coverAlt: 'Image from blog post'

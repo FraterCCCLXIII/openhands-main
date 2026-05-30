@@ -1,6 +1,8 @@
 ---
 title: 'OpenHands Context Condensensation for More Efficient AI Agents'
 slug: openhands-context-condensensation-for-more-efficient-ai-agents
+redirectFrom:
+  - 20250409-oh-condenser-release
 excerpt: 'Say ''goodbye'' to long conversation frustrations. Our context condenser intelligently summarizes conversation history to maintain performance, cuts API costs by 50%, and keeps your agents responsive through even the longest problem-solving sessions.'
 coverImage: /assets/webflow/misc/6914ea7140489497b2180a7d_6914ea6da242f3d389d12b1b_cost-per-turn.png
 coverAlt: 'Cover image'
