@@ -1,6 +1,6 @@
 export const HOME_VARIANT_STORAGE_KEY = 'openhands-homepage-variant';
 
-export type HomeVariantId = 'v1' | 'v2' | 'v3';
+export type HomeVariantId = 'v1' | 'v2' | 'v3' | 'v4';
 
 export const DEFAULT_HOME_VARIANT: HomeVariantId = 'v2';
 
@@ -26,7 +26,20 @@ export const HOME_VARIANT_OPTIONS: readonly HomeVariantOption[] = [
     label: 'Version 3',
     description: 'Version 2 layout with compact header nav',
   },
+  {
+    id: 'v4',
+    label: 'Version 4',
+    description: 'Value prop above preview, no platform subcopy',
+  },
 ] as const;
+
+export const HOME_HERO_PLATFORM_COPY =
+  'OpenHands is the open-source platform for building and running AI coding agents.';
+
+export const HOME_HERO_VALUE_COPY =
+  'Parallel sessions, built-in automations, and a path from your laptop to your whole org.';
+
+export const HOME_HERO_DEFAULT_SUBCOPY = `${HOME_HERO_PLATFORM_COPY} ${HOME_HERO_VALUE_COPY}`;
 
 export const HOME_VARIANT_SWITCHER_LABEL = 'Homepage layout variants';
 
@@ -37,11 +50,15 @@ export const HOME_V3_NAV_CTA_FONT_SIZE = '14px';
 export const HOME_V3_NAV_DROPDOWN_ICON_SIZE = '16px';
 
 export function isHomeVariantId(value: string | null): value is HomeVariantId {
-  return value === 'v1' || value === 'v2' || value === 'v3';
+  return value === 'v1' || value === 'v2' || value === 'v3' || value === 'v4';
 }
 
 export function usesVersion2HomeLayout(variant: HomeVariantId): boolean {
-  return variant === 'v2' || variant === 'v3';
+  return variant === 'v2' || variant === 'v3' || variant === 'v4';
+}
+
+export function usesVersion4HeroCopy(variant: HomeVariantId): boolean {
+  return variant === 'v4';
 }
 
 export function usesCompactHomeHeader(variant: HomeVariantId): boolean {

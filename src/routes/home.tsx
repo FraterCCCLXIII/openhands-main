@@ -9,6 +9,7 @@ import {
   Download,
   Eye,
   GitPullRequest,
+  Plus,
   ShieldAlert,
   TriangleAlert,
 } from 'lucide-react';
@@ -29,7 +30,7 @@ import { HERO_APP_PREVIEW_SLIDES } from '~/constants/hero-app-preview-slides';
 import { HomeHeroLogoGrid } from '~/components/home-hero-logo-grid';
 import { HomeVariantSwitcher } from '~/components/home-variant-switcher';
 import { useHomeVariant } from '~/contexts/home-variant-context';
-import { getHomeHeroContentPadding } from '~/constants/home-variants';
+import { getHomeHeroContentPadding, HOME_HERO_DEFAULT_SUBCOPY, HOME_HERO_VALUE_COPY, usesVersion4HeroCopy } from '~/constants/home-variants';
 
 const INSTALL_OPENHANDS_URL = HEADER_GET_OPENHANDS_URL;
 
@@ -54,6 +55,40 @@ const HERO_COMPATIBILITY_BADGES: HeroCompatibilityBadge[] = [
     iconWrapperClassName: 'h-4 w-7',
   },
 ];
+
+function HeroCompatibilityBadgesRow() {
+  return (
+    <div className='flex flex-wrap items-center justify-center gap-2'>
+      {HERO_COMPATIBILITY_BADGES.map((badge, index) => {
+        const { name, Icon, iconClassName, iconWrapperClassName, iconSrc, iconAlt } = badge;
+        return (
+          <React.Fragment key={name}>
+            {index > 0 ? (
+              <Plus
+                className='h-4 w-4 flex-shrink-0 text-brand-fg/50'
+                strokeWidth={2}
+                aria-hidden='true'
+              />
+            ) : null}
+            <div className='flex items-center gap-2 rounded-full border border-[rgba(34,21,13,0.2)] bg-[#f9f0d9] px-4 py-2'>
+              <span
+                className={`flex flex-shrink-0 items-center justify-center text-brand-fg ${iconWrapperClassName ?? 'h-6 w-6'}`}
+                aria-hidden='true'
+              >
+                {iconSrc ? (
+                  <img src={iconSrc} alt={iconAlt ?? ''} className={iconClassName ?? 'h-4 w-4'} />
+                ) : Icon ? (
+                  <Icon className={iconClassName ?? 'h-4 w-4'} />
+                ) : null}
+              </span>
+              <span className='text-base font-medium leading-[22.4px] text-brand-fg'>{name}</span>
+            </div>
+          </React.Fragment>
+        );
+      })}
+    </div>
+  );
+}
 
 type WorkflowItem = {
   title: string;
@@ -350,6 +385,7 @@ export const meta: Route.MetaFunction = () =>
 const Home = () => {
   const { variant, setVariant } = useHomeVariant();
   const isVersion1 = variant === 'v1';
+  const isVersion4 = usesVersion4HeroCopy(variant);
   const heroContentPadding = getHomeHeroContentPadding(variant);
   const [activeTestimonial, setActiveTestimonial] = React.useState(0);
   const [workflowOffset, setWorkflowOffset] = React.useState(0);
@@ -597,19 +633,31 @@ const Home = () => {
               <div
                 data-wf-el='hero-heading_wrap'
                 className='hero-heading-scrim flex flex-col items-center gap-2 text-center'
-                style={{ justifyContent: 'center' }}
+                style={{
+                  justifyContent: 'center',
+                  ...(isVersion4 ? { paddingBottom: '0.5rem' } : {}),
+                }}
               >
                 {/* Live's `.hero-heading_h1.h1` has `margin-bottom: 0`. */}
                 <h1 data-wf-el='hero-heading_h1' id='hero-heading' className='hero-heading-h1 font-medium tracking-[-0.03em] text-brand-fg' style={{ marginBottom: '0px' }}>
                   One workspace for all your AI coding agents
                 </h1>
-                {/* Live's `.hero-heading_paragraph.paragraph-lg.u-text-darkgray`
-                  * has `max-width: 40ch; margin-bottom: 0`.  The earlier
-                  * `mb-7` (28px) was adding extra space above the CTAs. */}
+                {!isVersion4 ? (
                 <p data-wf-el='hero-heading_paragraph' id='hero-subheading' className='max-w-[60ch] fluid-body-lg font-medium text-brand-muted' style={{ marginLeft: '0px', marginRight: '0px', marginBottom: '0px' }}>
-                  OpenHands is the open-source platform for building and running AI coding agents. Parallel sessions, built-in automations, and a path from your laptop to your whole org.
+                  {HOME_HERO_DEFAULT_SUBCOPY}
                 </p>
+                ) : null}
               </div>
+
+              {isVersion4 ? (
+              <div
+                data-wf-el='hero-subscription'
+                className='hero-content-foreground flex w-full flex-col items-center justify-center gap-4 text-brand-fg'
+                style={{ maxWidth: '980px', marginTop: '-20px' }}
+              >
+                <HeroCompatibilityBadgesRow />
+              </div>
+              ) : null}
 
               {/* hero_btn_wrap — sibling of hero-heading_wrap on live. */}
               <div
@@ -626,36 +674,16 @@ const Home = () => {
                 />
               </div>
 
+              {!isVersion4 ? (
               <div
                 data-wf-el='hero-subscription'
                 className='hero-content-foreground flex w-full flex-col items-center justify-center gap-4 text-brand-fg'
                 style={{ maxWidth: '980px' }}
               >
                 <span className='text-center text-base font-normal leading-[22.4px] text-brand-fg'>OpenHands works with all of your agents</span>
-                <div className='flex flex-wrap items-center justify-center gap-3'>
-                  {HERO_COMPATIBILITY_BADGES.map((badge) => {
-                    const { name, Icon, iconClassName, iconWrapperClassName, iconSrc, iconAlt } = badge;
-                    return (
-                    <div
-                      key={name}
-                      className='flex items-center gap-2 rounded-full border border-[rgba(34,21,13,0.2)] bg-[#f9f0d9] px-4 py-2'
-                    >
-                      <span
-                        className={`flex flex-shrink-0 items-center justify-center text-brand-fg ${iconWrapperClassName ?? 'h-6 w-6'}`}
-                        aria-hidden='true'
-                      >
-                        {iconSrc ? (
-                          <img src={iconSrc} alt={iconAlt ?? ''} className={iconClassName ?? 'h-4 w-4'} />
-                        ) : Icon ? (
-                          <Icon className={iconClassName ?? 'h-4 w-4'} />
-                        ) : null}
-                      </span>
-                      <span className='text-base font-medium leading-[22.4px] text-brand-fg'>{name}</span>
-                    </div>
-                    );
-                  })}
-                </div>
+                <HeroCompatibilityBadgesRow />
               </div>
+              ) : null}
             </div>
           </div>
           </div>
@@ -794,6 +822,15 @@ const Home = () => {
 
           <div data-wf-el='hero-preview' className='relative z-10 mx-auto w-full max-w-[1238px] overflow-visible px-4 md:px-6' style={{ paddingTop: '56px', paddingBottom: '56px' }}>
             <HeroAppPreview slides={HERO_APP_PREVIEW_SLIDES} />
+            {isVersion4 ? (
+              <p
+                data-wf-el='hero-preview-lead'
+                className='hero-content-foreground mx-auto max-w-[38ch] text-center fluid-h3 font-medium text-brand-fg'
+                style={{ marginTop: '80px', marginBottom: 0 }}
+              >
+                {HOME_HERO_VALUE_COPY}
+              </p>
+            ) : null}
           </div>
         </div>
 

@@ -5,7 +5,7 @@ import statistics from '../../src/data/statistics.json';
 import { Header } from '../../src/components/header';
 import { PixelBlastProvider } from '../../src/contexts/pixel-blast-context';
 import { HomeVariantProvider } from '../../src/contexts/home-variant-context';
-import { HOME_VARIANT_STORAGE_KEY } from '../../src/constants/home-variants';
+import { HOME_HERO_PLATFORM_COPY, HOME_HERO_VALUE_COPY, HOME_VARIANT_STORAGE_KEY } from '../../src/constants/home-variants';
 import Home from '../../src/routes/home';
 
 const renderRoute = ({ includeHeader = false, width = 1440 }: { includeHeader?: boolean; width?: number } = {}) => {
@@ -21,7 +21,7 @@ const renderRoute = ({ includeHeader = false, width = 1440 }: { includeHeader?: 
   );
 };
 
-const selectHomeVariant = (variantId: 'v1' | 'v2') => {
+const selectHomeVariant = (variantId: 'v1' | 'v2' | 'v3' | 'v4') => {
   fireEvent.click(screen.getByTestId('home-variant-switcher-trigger'));
   fireEvent.click(screen.getByTestId(`home-variant-option-${variantId}`));
 };
@@ -127,6 +127,28 @@ describe('home route parity structure', () => {
 
     const headerCta = within(nav).getByRole('link', { name: 'Get OpenHands' });
     expect(headerCta.parentElement).toHaveStyle({ padding: '0.65em 1.35em' });
+  });
+
+  it('places value prop below preview with darker larger copy on Version 4', () => {
+    const { container } = renderRoute();
+    selectHomeVariant('v4');
+
+    expect(screen.queryByText(HOME_HERO_PLATFORM_COPY)).not.toBeInTheDocument();
+    expect(screen.getByText(HOME_HERO_VALUE_COPY)).toBeInTheDocument();
+    expect(container.querySelector('[data-wf-el="hero-heading_paragraph"]')).not.toBeInTheDocument();
+
+    const previewLead = container.querySelector('[data-wf-el="hero-preview-lead"]');
+    const preview = container.querySelector('[data-wf-el="hero-preview"]');
+    const appPreview = screen.getByTestId('hero-app-preview');
+
+    expect(previewLead?.closest('[data-wf-el="hero-preview"]')).toBe(preview);
+    expect(previewLead).toHaveClass('text-brand-fg', 'fluid-h3');
+    expect(appPreview.compareDocumentPosition(previewLead!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(screen.queryByText('OpenHands works with all of your agents')).not.toBeInTheDocument();
+
+    const heroSubscription = container.querySelector('[data-wf-el="hero-subscription"]');
+    const heroButton = container.querySelector('[data-wf-el="hero_btn_wrap"]');
+    expect(heroSubscription?.compareDocumentPosition(heroButton!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   it.skip('opens a live-like workflow launch dialog instead of navigating directly', () => {
