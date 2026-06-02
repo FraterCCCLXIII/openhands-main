@@ -51,7 +51,7 @@ describe('home route parity structure', () => {
       'href',
       'https://docs.openhands.dev/overview/quickstart',
     );
-    expect(screen.getByText('OpenHands works with all of your agent subscriptions')).toBeInTheDocument();
+    expect(screen.getByText('OpenHands works with all of your agents')).toBeInTheDocument();
     expect(screen.getByText('Claude Code')).toBeInTheDocument();
     expect(screen.getByTestId('hero-app-preview')).toBeInTheDocument();
     expect(screen.getByRole('img', { name: 'OpenHands Agent Canvas home with conversations' })).toBeInTheDocument();

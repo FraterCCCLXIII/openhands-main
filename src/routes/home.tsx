@@ -598,7 +598,7 @@ const Home = () => {
                 className='hero-content-foreground flex w-full flex-col items-center justify-center gap-4 text-brand-fg'
                 style={{ maxWidth: '980px' }}
               >
-                <span className='text-center text-base font-normal leading-[22.4px] text-brand-fg'>OpenHands works with all of your agent subscriptions</span>
+                <span className='text-center text-base font-normal leading-[22.4px] text-brand-fg'>OpenHands works with all of your agents</span>
                 <div className='flex flex-wrap items-center justify-center gap-3'>
                   {HERO_COMPATIBILITY_BADGES.map((badge) => {
                     const { name, Icon, iconClassName, iconWrapperClassName, iconSrc, iconAlt } = badge;
