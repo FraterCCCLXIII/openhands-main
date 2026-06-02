@@ -247,6 +247,8 @@ const WebflowFooterContent = ({
   const navLinkStyle = isManifesto
     ? { ...footerNavLinkStyle, ...(isManifestoMobile ? { padding: '14.390625px 5px' } : {}), height: '51.1719px' }
     : footerNavLinkStyle;
+  const resolvedMarketingCtaPrimary = marketingCtaPrimary ?? DEFAULT_CTA_PRIMARY;
+  const resolvedMarketingCtaSecondary = marketingCtaSecondary ?? DEFAULT_CTA_SECONDARY;
 
   const renderTopLevelLink = (item: (typeof FOOTER_NAV_ITEMS)[number]) => {
     const isActive = normalizePathname(item.to) === activePathname;
@@ -278,11 +280,11 @@ const WebflowFooterContent = ({
             </p>
             <div className='row row-gap-button u-mt-md row-justify-center' style={{ ...FOOTER_ROW_STYLE, justifyContent: 'center', columnGap: '16px', rowGap: '16px', marginTop: 'var(--footer-cta-buttons-margin-top, var(--footer-cta-button-margin-top, 51px))', flexDirection: (isManifestoMobile ? 'row' : 'var(--footer-cta-button-flex-direction, var(--footer-cta-button-direction, row))') as React.CSSProperties['flexDirection'], alignItems: 'center' }}>
               <div className='col col-shrink' style={FOOTER_COL_SHRINK_NO_PADDING_STYLE}>
-                <OverlayLinkButton href={(marketingCtaPrimary ?? DEFAULT_CTA_PRIMARY).href} label={(marketingCtaPrimary ?? DEFAULT_CTA_PRIMARY).label} variant='primary' wfEl='button' textWfEl='btn-text' />
+                <OverlayLinkButton href={resolvedMarketingCtaPrimary.href} label={resolvedMarketingCtaPrimary.label} variant='primary' wfEl='button' textWfEl='btn-text' />
               </div>
-              {marketingCtaSecondary !== null ? (
+              {resolvedMarketingCtaSecondary ? (
                 <div className='col col-shrink' style={FOOTER_COL_SHRINK_NO_PADDING_STYLE}>
-                  <OverlayLinkButton href={(marketingCtaSecondary ?? DEFAULT_CTA_SECONDARY).href} label={(marketingCtaSecondary ?? DEFAULT_CTA_SECONDARY).label} variant='outline' wfEl='button' textWfEl='btn-text' />
+                  <OverlayLinkButton href={resolvedMarketingCtaSecondary.href} label={resolvedMarketingCtaSecondary.label} variant='outline' wfEl='button' textWfEl='btn-text' />
                 </div>
               ) : null}
             </div>
