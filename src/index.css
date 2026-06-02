@@ -1030,7 +1030,7 @@
   }
 
   .btn-primary {
-    @apply bg-brand-fg text-brand-bg border border-transparent;
+    @apply bg-brand-fg text-white border border-transparent;
   }
 
   .btn-outline {
@@ -1066,11 +1066,17 @@
   }
   .btn-wrap-primary {
     background-color: rgb(34, 21, 13);
-    color: #F9F0D9;
+    color: #ffffff;
+  }
+  .btn-wrap-primary a {
+    color: inherit;
   }
   .btn-wrap-dark {
     background-color: rgba(241, 234, 224, 0.2);
-    color: #F9F0D9;
+    color: #ffffff;
+  }
+  .btn-wrap-dark a {
+    color: inherit;
   }
 
   .btn:hover,
@@ -1533,7 +1539,7 @@
   -webkit-appearance: none;
   background-color: rgb(34, 21, 13);
   border: 0;
-  color: rgb(249, 240, 217);
+  color: #ffffff;
   font: inherit;
   line-height: inherit;
   margin: 0;
@@ -3559,7 +3565,7 @@
   border: 1px solid transparent;
   border-radius: var(--btn-border-radius);
   background-color: rgb(34, 21, 13);
-  color: rgb(249, 240, 217);
+  color: #ffffff;
   font-family: "Sohne Kraftig", Arial, sans-serif;
   font-size: 16px;
   font-weight: 500;

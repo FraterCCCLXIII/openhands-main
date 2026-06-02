@@ -98,11 +98,23 @@ const WORKFLOWS: WorkflowItem[] = [
   },
 ];
 
+const GLASS_SURFACE_HOVER =
+  'hover:border-[rgb(34,21,13)] hover:bg-[rgba(255,255,255,0.34)] hover:backdrop-blur-[5px]';
+
+const WORKFLOW_CARD_CLASS =
+  `flex w-[270px] flex-shrink-0 cursor-pointer flex-col gap-4 rounded-2xl border border-[rgba(30,21,15,0.2)] bg-transparent p-6 transition-colors ${GLASS_SURFACE_HOVER} md:w-[352px]`;
+
+const WORKFLOW_ARROW_BTN_CLASS =
+  'flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full border border-[rgba(30,21,15,0.2)] bg-transparent text-brand-fg transition-all duration-200 ease-out';
+
+const WORKFLOW_ARROW_BTN_HOVER =
+  'cursor-pointer hover:border-[rgb(34,21,13)] hover:bg-[rgba(255,255,255,0.34)] hover:backdrop-blur-[5px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[rgb(34,21,13)]/30 active:scale-95';
+
 function WorkflowCarouselIcon({ icon: Icon }: { icon: LucideIcon }) {
   return (
     <div
       data-wf-el='capabilities_card_icon'
-      className='flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-brand-accent text-brand-fg'
+      className='flex flex-shrink-0 text-brand-fg'
       style={{ marginTop: '0px' }}
       aria-hidden='true'
     >
@@ -661,7 +673,11 @@ const Home = () => {
               * `<div className='max-w-[384px]'>` wrapper was breaking
               * the structural parity. */}
             <div data-wf-el='hero-splide_top' className='mb-4 flex w-full flex-wrap justify-center gap-x-12 gap-y-4 text-center' style={{ alignItems: 'center', paddingTop: '32px' }}>
-              <h2 data-wf-el='hero-splide_heading' className='w-full font-medium text-brand-fg' style={{ fontSize: '32px', lineHeight: '1.1', letterSpacing: '-0.02em', marginBottom: '0px', textAlign: 'center' }}>
+              <h2
+                data-wf-el='hero-splide_heading'
+                className='fluid-h4 w-full text-center font-medium text-brand-fg'
+                style={{ letterSpacing: '-0.02em', marginBottom: '0px' }}
+              >
                 Start with a proven workflow
               </h2>
             </div>
@@ -671,10 +687,8 @@ const Home = () => {
               type='button'
               onClick={() => shiftWorkflow(-1)}
               disabled={isAtWorkflowStart}
-              className={`flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full border border-[rgba(30,21,15,0.2)] bg-[#f9f6e9] text-brand-fg transition-colors ${
-                isAtWorkflowStart
-                  ? 'cursor-default opacity-40'
-                  : 'cursor-pointer hover:bg-brand-accent'
+              className={`${WORKFLOW_ARROW_BTN_CLASS} ${
+                isAtWorkflowStart ? 'cursor-default opacity-40' : WORKFLOW_ARROW_BTN_HOVER
               }`}
               style={{ boxSizing: 'border-box' }}
               aria-label='Previous workflow'
@@ -717,7 +731,7 @@ const Home = () => {
                     target='_blank'
                     rel='noopener noreferrer'
                     data-wf-el='capabilities_card_wrap'
-                    className='flex w-[270px] flex-shrink-0 cursor-pointer flex-col gap-4 rounded-2xl border border-[rgba(30,21,15,0.2)] bg-[#f9f6e9] p-6 no-underline transition-colors hover:bg-[#f3eedc] md:w-[352px]'
+                    className={`${WORKFLOW_CARD_CLASS} no-underline`}
                     style={{ scrollSnapAlign: 'start', justifyContent: 'flex-start', alignItems: 'flex-start' }}
                   >
                     {cardBody}
@@ -742,7 +756,7 @@ const Home = () => {
                       setActiveWorkflow(workflow);
                     }
                   }}
-                  className='flex w-[270px] flex-shrink-0 cursor-pointer flex-col gap-4 rounded-2xl border border-[rgba(30,21,15,0.2)] bg-[#f9f6e9] p-6 transition-colors hover:bg-[#f3eedc] md:w-[352px]'
+                  className={WORKFLOW_CARD_CLASS}
                   style={{ scrollSnapAlign: 'start', justifyContent: 'flex-start', alignItems: 'flex-start' }}
                 >
                   {cardBody}
@@ -757,10 +771,8 @@ const Home = () => {
               type='button'
               onClick={() => shiftWorkflow(1)}
               disabled={isAtWorkflowEnd}
-              className={`flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full border border-[rgba(30,21,15,0.2)] bg-[#f9f6e9] text-brand-fg transition-colors ${
-                isAtWorkflowEnd
-                  ? 'cursor-default opacity-40'
-                  : 'cursor-pointer hover:bg-brand-accent'
+              className={`${WORKFLOW_ARROW_BTN_CLASS} ${
+                isAtWorkflowEnd ? 'cursor-default opacity-40' : WORKFLOW_ARROW_BTN_HOVER
               }`}
               style={{ boxSizing: 'border-box' }}
               aria-label='Next workflow'
@@ -779,7 +791,9 @@ const Home = () => {
               {/* Live's `.h2` margin-bottom (used for this heading via
                 * the `.u-mb-xs` modifier) computes to 9.6px — `mb-5` was
                 * 20px, adding ~10px of unwanted space above the logos. */}
-              <div data-wf-el='logo-grid-component_heading_heading' className='text-center fluid-h3 text-brand-fg' style={{ marginBottom: '9.6px' }}>Trusted by engineers at</div>
+              <div data-wf-el='logo-grid-component_heading_heading' className='fluid-h4 text-center text-brand-fg' style={{ marginBottom: '9.6px' }}>
+                Trusted by engineers at
+              </div>
             </div>
             <div data-wf-el='logo-grid-component_container' className='mx-auto max-w-[1238px]'>
               <div data-wf-el='logo-grid-component_cms_wrap' style={{ paddingTop: '24px' }}>

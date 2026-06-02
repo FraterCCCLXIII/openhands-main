@@ -9,6 +9,11 @@ import { DESKTOP_NAV_ITEMS, RESOURCE_LINK_GROUPS, PRODUCT_DROPDOWN_ITEMS, type P
 import { formatThousands } from '~/utils/format-thousands';
 import { isPathActive, normalizePathname } from '~/utils/normalize-pathname';
 
+const NAV_DROPDOWN_WIDTH = '880px';
+const RESOURCE_DROPDOWN_COLUMN_COUNT = Math.max(
+  ...RESOURCE_LINK_GROUPS.map((group) => group.links.length),
+);
+
 const PRODUCT_ICON_WF_EL: Record<ProductDropdownIcon, string> = {
   canvas: 'bi-terminal',
   automations: 'bi-display',
@@ -147,11 +152,11 @@ export const Header: React.FC<HeaderProps> = ({
                 <div
                   data-wf-el='nav_links_dropdown_wrap'
                   className='absolute left-0 top-full z-50 origin-top-left scale-95 opacity-0 pointer-events-none transition group-hover:scale-100 group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:scale-100 group-focus-within:opacity-100 group-focus-within:pointer-events-auto'
-                  style={{ paddingTop: '8px', width: '880px' }}
+                  style={{ paddingTop: '8px', width: NAV_DROPDOWN_WIDTH }}
                   onMouseEnter={() => setProductOpen(true)}
                   onMouseLeave={() => setProductOpen(false)}
                 >
-                  <div data-wf-el='nav_links_dropdown' style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: '32px', backgroundColor: 'rgb(34, 21, 13)', color: 'rgb(249, 240, 217)', borderRadius: '16px', padding: '23px', boxShadow: 'none', width: '880px' }}>
+                  <div data-wf-el='nav_links_dropdown' style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: '32px', backgroundColor: 'rgb(34, 21, 13)', color: 'rgb(249, 240, 217)', borderRadius: '16px', padding: '23px', boxShadow: 'none', width: NAV_DROPDOWN_WIDTH }}>
                     <div data-wf-el='nav_links_dropdown_group' style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', gap: '24px', margin: 0 }}>
                       <div data-wf-el='dropdown-eyebrow' className='eyebrow u-mb-0 font-mono' style={{ margin: 0, color: 'rgb(249, 240, 217)', fontSize: '14.08px', lineHeight: '16.896px' }}>Features</div>
                       <ul data-wf-el='nav_links_list' className='is-dropdown' style={{ position: 'relative', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', justifyContent: 'center', alignItems: 'stretch', gap: '21.6px', margin: 0, padding: 0, width: '100%' }}>
@@ -229,17 +234,17 @@ export const Header: React.FC<HeaderProps> = ({
                 <div
                   data-wf-el='nav_links_dropdown_wrap'
                   className='absolute left-0 right-0 top-full z-50 origin-top-right scale-95 opacity-0 pointer-events-none transition group-hover:scale-100 group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:scale-100 group-focus-within:opacity-100 group-focus-within:pointer-events-auto'
-                  style={{ paddingTop: '8px' }}
+                  style={{ paddingTop: '8px', width: NAV_DROPDOWN_WIDTH }}
                   onMouseEnter={() => setResourcesOpen(true)}
                   onMouseLeave={() => setResourcesOpen(false)}
                 >
-                  <div data-wf-el='nav_links_dropdown' style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: '32px', backgroundColor: 'rgb(34, 21, 13)', color: 'rgb(249, 240, 217)', borderRadius: '16px', padding: '23px', boxShadow: 'none', width: '100%' }}>
+                  <div data-wf-el='nav_links_dropdown' style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: '32px', backgroundColor: 'rgb(34, 21, 13)', color: 'rgb(249, 240, 217)', borderRadius: '16px', padding: '23px', boxShadow: 'none', width: NAV_DROPDOWN_WIDTH }}>
                     {RESOURCE_LINK_GROUPS.map((group) => (
-                      <div key={group.title} data-wf-el='nav_links_dropdown_group' style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', gap: '24px', margin: 0 }}>
+                      <div key={group.title} data-wf-el='nav_links_dropdown_group' style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', gap: '24px', margin: 0, width: '100%' }}>
                         <div data-wf-el='dropdown-eyebrow' className='eyebrow u-mb-0 font-mono' style={{ margin: 0, color: 'rgb(249, 240, 217)', fontSize: '14.08px', lineHeight: '16.896px' }}>
                           {group.title}
                         </div>
-                        <ul data-wf-el='nav_links_list' className='is-dropdown' style={{ position: 'relative', display: 'grid', gridTemplateColumns: `repeat(${group.links.length}, 1fr)`, justifyContent: 'center', alignItems: 'stretch', gap: '21.6px', margin: 0, padding: 0, width: '100%' }}>
+                        <ul data-wf-el='nav_links_list' className='is-dropdown' style={{ position: 'relative', display: 'grid', gridTemplateColumns: `repeat(${RESOURCE_DROPDOWN_COLUMN_COUNT}, 1fr)`, justifyContent: 'center', alignItems: 'stretch', gap: '21.6px', margin: 0, padding: 0, width: '100%' }}>
                           {group.links.map((resItem) => (
                             <li data-wf-el='nav_links_li' className='is-dropdown' key={resItem.name} style={{ display: 'list-item', margin: 0, padding: 0 }}>
                               {resItem.external ? (
