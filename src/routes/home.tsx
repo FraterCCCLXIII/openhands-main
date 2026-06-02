@@ -29,6 +29,7 @@ import { HeroAppPreview } from '~/components/hero-app-preview';
 import { HERO_APP_PREVIEW_SLIDES } from '~/constants/hero-app-preview-slides';
 
 const INSTALL_OPENHANDS_URL = HEADER_GET_OPENHANDS_URL;
+const SHOW_HERO_WORKFLOW_CAROUSEL = false;
 
 type HeroCompatibilityBadge = {
   name: string;
@@ -627,6 +628,7 @@ const Home = () => {
           </div>
           </div>
 
+          {SHOW_HERO_WORKFLOW_CAROUSEL ? (
           <div data-wf-el='container' className='relative z-10 mx-auto w-full max-w-[1238px]'>
             {/* Workflow carousel (inside hero section).  Live's
               * `.hero-splide_top` directly contains an `<h2>` and a
@@ -745,9 +747,16 @@ const Home = () => {
             </button>
           </div>
           </div>
+          ) : null}
 
-          {/* Logo grid (inside hero section) */}
-          <div data-wf-el='logo-grid-component_wrap' className='w-full' style={{ paddingTop: '80px', paddingBottom: '80px' }}>
+        </div>
+
+          <div data-wf-el='hero-preview' className='relative z-10 mx-auto w-full max-w-[1238px] overflow-visible px-4 md:px-6' style={{ paddingTop: '56px', paddingBottom: '56px' }}>
+            <HeroAppPreview slides={HERO_APP_PREVIEW_SLIDES} />
+          </div>
+
+          {/* Logo grid — below product preview on paul-review-2 layout */}
+          <div data-wf-el='logo-grid-component_wrap' className='w-full' style={{ paddingTop: '48px', paddingBottom: '80px' }}>
             <div data-wf-el='logo-grid-component_heading_container' className='mx-auto max-w-[1238px]' style={{ textAlign: 'center' }}>
               {/* Live's `.h2` margin-bottom (used for this heading via
                 * the `.u-mb-xs` modifier) computes to 9.6px — `mb-5` was
@@ -775,13 +784,6 @@ const Home = () => {
                 </div>
               </div>
             </div>
-          </div>
-
-
-        </div>
-
-          <div data-wf-el='hero-preview' className='relative z-10 mx-auto w-full max-w-[1238px] overflow-visible px-4 md:px-6' style={{ paddingTop: '56px', paddingBottom: '56px' }}>
-            <HeroAppPreview slides={HERO_APP_PREVIEW_SLIDES} />
           </div>
       </section>
 

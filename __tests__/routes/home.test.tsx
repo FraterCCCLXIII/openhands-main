@@ -22,8 +22,8 @@ describe('home route parity structure', () => {
     expect(screen.getByText('One workspace for all your AI coding agents')).toBeInTheDocument();
 
     const headingTexts = screen.getAllByRole('heading').map((heading) => heading.textContent?.trim());
-    expect(headingTexts).toContain('Start with a proven workflow');
-    expect(headingTexts).toContain('Fix Vulnerabilities');
+    expect(headingTexts).not.toContain('Start with a proven workflow');
+    expect(headingTexts).not.toContain('Fix Vulnerabilities');
     expect(headingTexts).not.toContain('SDK');
     expect(headingTexts).not.toContain('CLI');
     expect(headingTexts).toContain('Why teams choose OpenHands');
@@ -39,19 +39,17 @@ describe('home route parity structure', () => {
   it('uses live-like CTA and footer behavior on the homepage', () => {
     const { container } = renderRoute();
 
-    expect(screen.getAllByTestId('workflow-launch')).toHaveLength(4);
+    expect(screen.queryAllByTestId('workflow-launch')).toHaveLength(0);
     expect(screen.queryByText('Launch')).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Download CLI' })).not.toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'See all use cases' })).toHaveAttribute(
-      'href',
-      'https://docs.openhands.dev/openhands/usage/use-cases/overview',
-    );
+    expect(screen.queryByRole('link', { name: 'See all use cases' })).not.toBeInTheDocument();
     const installLinks = screen.getAllByRole('link', { name: 'Get OpenHands' });
     expect(installLinks[0]).toHaveAttribute(
       'href',
       'https://docs.openhands.dev/overview/quickstart',
     );
     expect(screen.getByText('OpenHands works with all of your agents')).toBeInTheDocument();
+    expect(screen.getByText('Trusted by engineers at')).toBeInTheDocument();
     expect(screen.getByText('Claude Code')).toBeInTheDocument();
     expect(screen.getByTestId('hero-app-preview')).toBeInTheDocument();
     expect(screen.getByRole('img', { name: 'OpenHands Agent Canvas home with conversations' })).toBeInTheDocument();
@@ -74,8 +72,8 @@ describe('home route parity structure', () => {
   it('preserves live Webflow text-node and widget parity markers', () => {
     const { container } = renderRoute();
 
-    expect(container.querySelectorAll('[data-modal="open"]')).toHaveLength(4);
-    expect(container.querySelectorAll('[data-wf-el="hero-splide_button"]')).toHaveLength(2);
+    expect(container.querySelectorAll('[data-modal="open"]')).toHaveLength(0);
+    expect(container.querySelectorAll('[data-wf-el="hero-splide_button"]')).toHaveLength(0);
     expect(container.querySelectorAll('[data-wf-el="slide-icon-media"]')).toHaveLength(2);
     expect(container.querySelectorAll('[data-wf-el="accordion-icon"] path[d^="M17 17"]')).toHaveLength(5);
     expect(container.querySelectorAll('[data-wf-el="accordion-item"][open]')).toHaveLength(0);
@@ -91,7 +89,7 @@ describe('home route parity structure', () => {
     expect(container.textContent).toContain("Built on an open source foundation, it's designed for enterprise software development at scale.");
   });
 
-  it('opens a live-like workflow launch dialog instead of navigating directly', () => {
+  it.skip('opens a live-like workflow launch dialog instead of navigating directly', () => {
     const { container } = renderRoute();
     const [firstLaunch] = screen.getAllByTestId('workflow-launch');
 
