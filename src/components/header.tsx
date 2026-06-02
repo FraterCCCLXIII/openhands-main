@@ -23,6 +23,7 @@ import {
   usesCompactHomeHeader,
 } from '~/constants/home-variants';
 import { useHomeVariant } from '~/contexts/home-variant-context';
+import { MARKETING_NEUTRAL } from '~/constants/marketing-neutral-colors';
 import { formatThousands } from '~/utils/format-thousands';
 import { isPathActive, normalizePathname } from '~/utils/normalize-pathname';
 
@@ -123,7 +124,7 @@ const NAV_DROPDOWN_LINK_STYLE: React.CSSProperties = {
   height: '100%',
   minHeight: '100%',
   flex: '1 1 auto',
-  color: 'rgb(249, 240, 217)',
+  color: 'rgb(247, 243, 238)',
   fontSize: '16px',
   lineHeight: '22.4px',
   textDecoration: 'none',
@@ -136,6 +137,19 @@ const NAV_DROPDOWN_ITEM_STYLE: React.CSSProperties = {
   padding: 0,
   height: '100%',
   minHeight: '100%',
+};
+
+const NAV_DROPDOWN_PANEL_STYLE: React.CSSProperties = {
+  position: 'relative',
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '32px',
+  backgroundColor: MARKETING_NEUTRAL.dropdownBg,
+  color: 'rgb(247, 243, 238)',
+  borderRadius: '16px',
+  padding: '23px',
+  boxShadow: 'none',
+  width: NAV_DROPDOWN_WIDTH,
 };
 
 function NavHeaderCtaButton({
@@ -292,8 +306,8 @@ export const Header: React.FC<HeaderProps> = ({
         flexDirection: useCompactNav ? 'column' : undefined,
         justifyContent: useCompactNav ? 'center' : undefined,
         height: isMobile ? '69.3437px' : '83.578125px',
-        backgroundColor: menuOpen ? 'rgb(24, 24, 24)' : 'rgb(249, 240, 217)',
-        color: menuOpen ? 'rgb(249, 240, 217)' : 'rgb(24, 24, 24)',
+        backgroundColor: menuOpen ? 'rgb(24, 24, 24)' : 'rgb(247, 243, 238)',
+        color: menuOpen ? 'rgb(247, 243, 238)' : 'rgb(24, 24, 24)',
         paddingTop: '1rem',
         paddingBottom: '1rem',
         containerType: 'inline-size' as React.CSSProperties['containerType'],
@@ -365,9 +379,9 @@ export const Header: React.FC<HeaderProps> = ({
                   onMouseEnter={() => setProductOpen(true)}
                   onMouseLeave={() => setProductOpen(false)}
                 >
-                  <div data-wf-el='nav_links_dropdown' style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: '32px', backgroundColor: 'rgb(24, 24, 24)', color: 'rgb(249, 240, 217)', borderRadius: '16px', padding: '23px', boxShadow: 'none', width: NAV_DROPDOWN_WIDTH }}>
+                  <div data-wf-el='nav_links_dropdown' style={NAV_DROPDOWN_PANEL_STYLE}>
                     <div data-wf-el='nav_links_dropdown_group' style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', gap: '24px', margin: 0 }}>
-                      <div data-wf-el='dropdown-eyebrow' className='eyebrow u-mb-0 font-mono' style={{ margin: 0, color: 'rgb(249, 240, 217)', fontSize: '14.08px', lineHeight: '16.896px' }}>Features</div>
+                      <div data-wf-el='dropdown-eyebrow' className='eyebrow u-mb-0 font-mono' style={{ margin: 0, color: 'rgb(247, 243, 238)', fontSize: '14.08px', lineHeight: '16.896px' }}>Features</div>
                       <ul data-wf-el='nav_links_list' className='is-dropdown' style={{ position: 'relative', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', justifyContent: 'center', alignItems: 'stretch', gap: '21.6px', margin: 0, padding: 0, width: '100%' }}>
                         {PRODUCT_DROPDOWN_ITEMS.map((item) => (
                           <li data-wf-el='nav_links_li' className='is-dropdown' key={item.name} style={NAV_DROPDOWN_ITEM_STYLE}>
@@ -460,10 +474,10 @@ export const Header: React.FC<HeaderProps> = ({
                   onMouseEnter={() => setResourcesOpen(true)}
                   onMouseLeave={() => setResourcesOpen(false)}
                 >
-                  <div data-wf-el='nav_links_dropdown' style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: '32px', backgroundColor: 'rgb(24, 24, 24)', color: 'rgb(249, 240, 217)', borderRadius: '16px', padding: '23px', boxShadow: 'none', width: NAV_DROPDOWN_WIDTH }}>
+                  <div data-wf-el='nav_links_dropdown' style={NAV_DROPDOWN_PANEL_STYLE}>
                     {RESOURCE_LINK_GROUPS.map((group) => (
                       <div key={group.title} data-wf-el='nav_links_dropdown_group' style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', gap: '24px', margin: 0, width: '100%' }}>
-                        <div data-wf-el='dropdown-eyebrow' className='eyebrow u-mb-0 font-mono' style={{ margin: 0, color: 'rgb(249, 240, 217)', fontSize: '14.08px', lineHeight: '16.896px' }}>
+                        <div data-wf-el='dropdown-eyebrow' className='eyebrow u-mb-0 font-mono' style={{ margin: 0, color: 'rgb(247, 243, 238)', fontSize: '14.08px', lineHeight: '16.896px' }}>
                           {group.title}
                         </div>
                         <ul data-wf-el='nav_links_list' className='is-dropdown' style={{ position: 'relative', display: 'grid', gridTemplateColumns: `repeat(${RESOURCE_DROPDOWN_COLUMN_COUNT}, 1fr)`, justifyContent: 'center', alignItems: 'stretch', gap: '21.6px', margin: 0, padding: 0, width: '100%' }}>

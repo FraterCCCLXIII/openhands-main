@@ -17,11 +17,22 @@ export const NEUTRAL_PALETTE = {
   975: '#101010',
 } as const;
 
+/** Primary site surface (page background, cream text on dark UI). */
+export const MARKETING_BRAND = {
+  bg: '#f7f3ee',
+  bgRgb: '247, 243, 238',
+} as const;
+
 /** Semantic marketing tokens (replaces legacy brown foreground accents). */
 export const MARKETING_NEUTRAL = {
   fg: NEUTRAL_PALETTE[950],
   accent: NEUTRAL_PALETTE[600],
   muted: NEUTRAL_PALETTE[500],
+  dropdownBg: NEUTRAL_PALETTE[700],
+  cardDarkBg: NEUTRAL_PALETTE[900],
+  cardDarkMuted: NEUTRAL_PALETTE[500],
   borderRgb: '24, 24, 24',
   fgRgb: '24, 24, 24',
+  dropdownBgRgb: '64, 64, 64',
+  cardDarkBgRgb: '40, 40, 40',
 } as const;

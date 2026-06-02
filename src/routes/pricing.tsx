@@ -6,6 +6,7 @@ import { getRouteFooterProps } from '~/constants/route-layout';
 import { OverlayLinkButton } from '~/components/overlay-link-button';
 import { FAQ_TRIGGER_DIVIDER } from '~/components/faq-accordion';
 import { createSocialPreviewMeta } from '~/utils/seo';
+import { MARKETING_NEUTRAL } from '~/constants/marketing-neutral-colors';
 
 export const handle = { hideGlobalFooter: true };
 
@@ -214,7 +215,7 @@ const COMPARE_TEXT: React.CSSProperties = {
 const COMPARE_HEAD_TEXT: React.CSSProperties = {
   ...COMPARE_TEXT,
   fontFamily: '"Sohne Kraftig", Arial, sans-serif',
-  color: 'rgb(249, 240, 217)',
+  color: 'rgb(247, 243, 238)',
 };
 // Section-header cells (Key Capabilities / Integrations / Support):
 // Sohne Kraftig (no `buch` modifier on live) but keep the muted light-
@@ -387,8 +388,8 @@ const CompareTable = () => {
     <div className='mx-auto w-full' style={{ maxWidth: '1129px' }}>
       <section
         data-wf-el='plans-compare'
-        className='bg-brand-fg text-brand-bg plans-compare w-full'
-        style={{ display: 'grid', gap: '8px', padding: '0px' }}
+        className='text-brand-bg plans-compare w-full'
+        style={{ display: 'grid', gap: '8px', padding: '0px', backgroundColor: MARKETING_NEUTRAL.dropdownBg }}
       >
         <h2 className='sr-only' data-wf-el='pc-visually-hidden'>
           Compare plans
@@ -540,12 +541,12 @@ const Pricing = () => {
           >
             <div
               data-wf-el='card-body'
-              className='relative bg-brand-fg text-brand-fg'
-              style={{ backgroundColor: 'rgb(24, 24, 24)', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', padding: 'var(--pricing-card-body-padding)' }}
+              className='relative text-brand-bg'
+              style={{ backgroundColor: MARKETING_NEUTRAL.dropdownBg, flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', padding: 'var(--pricing-card-body-padding)' }}
             >
               <div
                 data-wf-el='table-embed'
-                style={{ display: 'flex', width: 'var(--pricing-table-embed-width)', margin: '24px var(--pricing-table-embed-margin-right) 24px var(--pricing-table-embed-margin-left)', color: 'rgb(24, 24, 24)' }}
+                style={{ display: 'flex', width: 'var(--pricing-table-embed-width)', margin: '24px var(--pricing-table-embed-margin-right) 24px var(--pricing-table-embed-margin-left)' }}
               >
                 {/* Live's compare-table is a div-grid (NOT a <table>):
                  *
@@ -608,7 +609,7 @@ const Pricing = () => {
                       data-accordion-start-open={idx === 0 ? 'true' : 'false'}
                       className='flex flex-col'
                       style={{
-                        border: '1px solid rgb(249, 240, 217)',
+                        border: '1px solid rgb(247, 243, 238)',
                         borderRadius: '8px',
                       }}
                     >

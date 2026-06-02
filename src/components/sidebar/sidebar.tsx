@@ -107,7 +107,7 @@ export const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
         className='fixed inset-0 z-40 h-screen w-screen overflow-y-auto'
         style={{
           backgroundColor: 'rgb(24, 24, 24)',
-          color: 'rgb(249, 240, 217)',
+          color: 'rgb(247, 243, 238)',
           padding: '128px 2.5vw 48px',
         }}
       >

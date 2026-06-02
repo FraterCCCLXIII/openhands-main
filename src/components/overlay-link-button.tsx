@@ -168,7 +168,7 @@ export const OverlayLinkButton = ({
           lineHeight: sizeConfig.lineHeight,
           maxWidth: '100%',
           // Inherit color from .btn-wrap-* parent so the overlay anchor's
-          // color/textDecorationColor matches live (e.g. #F9F0D9 inside
+          // color/textDecorationColor matches live (e.g. #F7F3EE inside
           // .btn-wrap-primary instead of body brand-fg).
           color: 'inherit',
         }}

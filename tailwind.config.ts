@@ -1,4 +1,4 @@
-import { MARKETING_NEUTRAL, NEUTRAL_PALETTE } from './src/constants/marketing-neutral-colors';
+import { MARKETING_BRAND, MARKETING_NEUTRAL, NEUTRAL_PALETTE } from './src/constants/marketing-neutral-colors';
 
 export default {
   content: [
@@ -14,7 +14,7 @@ export default {
         party: "#FFE165",
         // Modern Webflow design system
         brand: {
-          bg: "#f9f0d9",
+          bg: MARKETING_BRAND.bg,
           fg: MARKETING_NEUTRAL.fg,
           accent: "#ffff8b",
           "accent-hover": "#e6e67a",
@@ -24,7 +24,8 @@ export default {
         },
         card: {
           bg: NEUTRAL_PALETTE[950],
-          text: "#f9f0d9",
+          text: MARKETING_BRAND.bg,
+          muted: NEUTRAL_PALETTE[500],
         },
       },
       fontFamily: {

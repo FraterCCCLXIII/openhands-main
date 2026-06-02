@@ -149,7 +149,7 @@ export default function App() {
   return (
     <PixelBlastProvider>
       <HomeVariantProvider>
-      <div data-wf-el='page-wrapper' className={pageWrapperClassName} style={{ display: 'flex', flexDirection: 'column', backgroundColor: 'rgb(249, 240, 217)', minHeight: '100vh', overflow: 'clip', height: pageWrapperHeight }}>
+      <div data-wf-el='page-wrapper' className={pageWrapperClassName} style={{ display: 'flex', flexDirection: 'column', backgroundColor: 'rgb(247, 243, 238)', minHeight: '100vh', overflow: 'clip', height: pageWrapperHeight }}>
 
       <Sidebar
         ref={sidebarRef}

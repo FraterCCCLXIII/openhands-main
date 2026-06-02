@@ -68,21 +68,21 @@ const Product = () => {
           </div>
         </div>
 
-        <section data-wf-el='section' style={{ display: 'block', backgroundColor: 'rgb(24, 24, 24)', color: 'rgb(249, 240, 217)', paddingTop: 'var(--product-section-padding-y)', paddingBottom: 'var(--product-section-padding-y)', paddingLeft: '0px', paddingRight: '0px', marginTop: '0px', position: 'relative' }}>
-          <div data-wf-el='container' className='mx-auto max-w-[1238px]' style={{ display: 'block', color: 'rgb(249, 240, 217)', width: 'var(--product-container-width)' }}>
+        <section data-wf-el='section' style={{ display: 'block', backgroundColor: 'rgb(24, 24, 24)', color: 'rgb(247, 243, 238)', paddingTop: 'var(--product-section-padding-y)', paddingBottom: 'var(--product-section-padding-y)', paddingLeft: '0px', paddingRight: '0px', marginTop: '0px', position: 'relative' }}>
+          <div data-wf-el='container' className='mx-auto max-w-[1238px]' style={{ display: 'block', color: 'rgb(247, 243, 238)', width: 'var(--product-container-width)' }}>
             <div className='flex flex-col' style={{ rowGap: 'var(--product-surface-row-gap)', marginLeft: 'var(--product-surface-list-margin-x)', marginRight: 'var(--product-surface-list-margin-x)' }}>
             {PRODUCT_SURFACES.map((item, index) => {
               const imageCard = (
                 <div style={{ marginLeft: index === 1 ? 'var(--product-image-card-margin-left)' : '0px', order: 'var(--product-image-order)', padding: 'var(--product-image-card-padding)', boxSizing: 'border-box' }}>
-                  <div data-wf-el='product-list_img_wrap' className='bg-brand-bg' style={{ alignItems: 'center', borderRadius: '16px', border: '1px solid rgb(179, 168, 140)', boxSizing: 'border-box', color: 'rgb(249, 240, 217)', display: 'flex', height: 'var(--product-image-wrap-height)', justifyContent: 'center', minHeight: 'var(--product-image-wrap-min-height)', overflow: 'hidden', padding: '64px', position: 'relative', width: 'var(--product-image-wrap-width)' }}>
-                    <img data-wf-el='product-list_img' src={item.image} srcSet={item.srcSet} sizes='(max-width: 978px) 100vw, 978px' alt='' className='img-block product-list_img' style={{ width: '100%', maxWidth: '100%', height: 'auto', borderRadius: '0px', color: 'rgb(249, 240, 217)', display: 'block', objectFit: 'scale-down' }} />
+                  <div data-wf-el='product-list_img_wrap' className='bg-brand-bg' style={{ alignItems: 'center', borderRadius: '16px', border: '1px solid rgb(179, 168, 140)', boxSizing: 'border-box', color: 'rgb(247, 243, 238)', display: 'flex', height: 'var(--product-image-wrap-height)', justifyContent: 'center', minHeight: 'var(--product-image-wrap-min-height)', overflow: 'hidden', padding: '64px', position: 'relative', width: 'var(--product-image-wrap-width)' }}>
+                    <img data-wf-el='product-list_img' src={item.image} srcSet={item.srcSet} sizes='(max-width: 978px) 100vw, 978px' alt='' className='img-block product-list_img' style={{ width: '100%', maxWidth: '100%', height: 'auto', borderRadius: '0px', color: 'rgb(247, 243, 238)', display: 'block', objectFit: 'scale-down' }} />
                   </div>
                 </div>
               );
 
               const textBlock = (
                 <div data-wf-el='mobile-order-last' style={{ display: 'flex', flexDirection: 'column', marginLeft: 'var(--product-text-margin-left)', order: 'var(--product-text-order)', position: 'relative', transform: index === 1 ? 'var(--product-webgui-text-transform)' : undefined, width: 'var(--product-text-column-width)', maxWidth: 'var(--product-text-column-max-width, var(--product-text-max-width, none))' }}>
-                  <div data-wf-el='content-block' style={{ alignItems: 'flex-start', color: 'rgb(249, 240, 217)', display: 'flex', flexDirection: 'column', gap: '16px', height: 'var(--product-content-height)', justifyContent: 'center', padding: 'var(--product-content-padding)', position: 'relative', width: 'var(--product-content-width)' }}>
+                  <div data-wf-el='content-block' style={{ alignItems: 'flex-start', color: 'rgb(247, 243, 238)', display: 'flex', flexDirection: 'column', gap: '16px', height: 'var(--product-content-height)', justifyContent: 'center', padding: 'var(--product-content-padding)', position: 'relative', width: 'var(--product-content-width)' }}>
                     <h2 className='w-fit section-title text-brand-bg' style={{ marginBottom: 'var(--product-surface-heading-margin-bottom)' }}>
                       {item.title}
                     </h2>

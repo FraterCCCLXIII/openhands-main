@@ -70,7 +70,7 @@ function HeroCompatibilityBadgesRow() {
                 aria-hidden='true'
               />
             ) : null}
-            <div className='flex items-center gap-2 rounded-full border border-[rgba(24,24,24,0.2)] bg-[#f9f0d9] px-4 py-2'>
+            <div className='flex items-center gap-2 rounded-full border border-[rgba(24,24,24,0.2)] bg-[#f7f3ee] px-4 py-2'>
               <span
                 className={`flex flex-shrink-0 items-center justify-center text-brand-fg ${iconWrapperClassName ?? 'h-6 w-6'}`}
                 aria-hidden='true'
@@ -947,7 +947,7 @@ const Home = () => {
         </div>
         <div data-wf-el='hero-track' className='relative z-10 mx-auto flex h-full max-w-[1238px]' style={{ paddingBottom: '0px', paddingLeft: '0px', paddingRight: '0px', justifyContent: 'center', alignItems: 'center', gap: '10%' }}>
           {TESTIMONIALS.map((t, i) => (
-            <div key={t.name} data-wf-el='card-body' style={{ width: '1238px', backgroundColor: 'rgba(0, 0, 0, 0)', display: 'block', color: 'rgb(249, 240, 217)', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', position: i === activeTestimonial ? 'static' : 'absolute', opacity: i === activeTestimonial ? 1 : 0, pointerEvents: i === activeTestimonial ? 'auto' : 'none', left: i === activeTestimonial ? undefined : '-9999px' }}>
+            <div key={t.name} data-wf-el='card-body' style={{ width: '1238px', backgroundColor: 'rgba(0, 0, 0, 0)', display: 'block', color: 'rgb(247, 243, 238)', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', position: i === activeTestimonial ? 'static' : 'absolute', opacity: i === activeTestimonial ? 1 : 0, pointerEvents: i === activeTestimonial ? 'auto' : 'none', left: i === activeTestimonial ? undefined : '-9999px' }}>
               {/* Live renders the testimonial quote as <h2 class="h2 ..."/>
                   inside .testimonial_quote.  Matching the heading semantic
                   keeps the heading-order audit aligned (live has 13 visible
@@ -1019,7 +1019,7 @@ const Home = () => {
                   * `u-m-0`).  Spacing between them comes from the
                   * card-body's flex flow, not per-element margin. */}
                 <p className='max-w-[350px] fluid-body-lg font-medium text-brand-accent' style={{ marginBottom: '0px' }}>Community that compounds velocity</p>
-                <p className='fluid-body-lg text-[#b3a88c]' style={{ maxWidth: '350px', marginBottom: '0px' }}>
+                <p className='fluid-body-lg' style={{ maxWidth: '350px', marginBottom: '0px', color: 'var(--neutral-card-dark-muted)' }}>
                   <span style={{ display: 'block', maxWidth: '303px' }}>With 65K+ GitHub stars and a thriving open-source ecosystem, OpenHands evolves through collective innovation - every contribution makes the platform faster, safer, and smarter.</span>
                 </p>
                 <OverlayLinkButton href='https://github.com/OpenHands/OpenHands' label='Explore the repo' variant='lightbrown' className='mt-6 mb-12 w-fit' />
@@ -1035,7 +1035,7 @@ const Home = () => {
                  * the surrounding muted "GitHub stars" caption. */}
                 <div className='mt-3 flex items-center justify-end gap-2 font-mono text-[14.08px] font-normal leading-[16.896px] text-brand-bg' style={{ textAlign: 'right' }}>
                   <span>GitHub stars</span>
-                  <span className='text-brand-bg' style={{ display: 'inline-flex', width: '24px', height: '24px', color: 'rgb(249, 240, 217)' }}>
+                  <span className='text-brand-bg' style={{ display: 'inline-flex', width: '24px', height: '24px', color: 'rgb(247, 243, 238)' }}>
                     <img src='/assets/webflow/icons/star.svg' alt='' className='h-6 w-6' style={{ objectFit: 'fill' }} />
                   </span>
                 </div>
@@ -1048,7 +1048,7 @@ const Home = () => {
                   * margin: 0 on both paragraphs and lets the flex flow
                   * place them.  Earlier mb-3/mb-10 added 12+40px extra. */}
                 <p className='max-w-[330px] fluid-body-lg font-medium text-brand-accent' style={{ marginBottom: '0px' }}>Plays well with your stack</p>
-                <p className='max-w-[330px] fluid-body-lg text-[#b3a88c]' style={{ marginBottom: '0px' }}>
+                <p className='max-w-[330px] fluid-body-lg' style={{ marginBottom: '0px', color: 'var(--neutral-card-dark-muted)' }}>
                   Native integrations with GitHub, GitLab, CI/CD, Slack, and ticketing tools. OpenHands fits seamlessly into enterprise governance systems and your preferred model providers.
                 </p>
                 <div data-wf-el='standard-wrap' className='mt-auto' style={{ width: '557px', height: '118px', transform: 'translateY(-18px)' }}>
@@ -1071,14 +1071,14 @@ const Home = () => {
           </div>
 
           <article className='card-dark'>
-            <div data-wf-el='card-body' className='relative p-6' style={{ display: 'block', color: 'rgb(249, 240, 217)', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start' }}>
+            <div data-wf-el='card-body' className='relative p-6' style={{ display: 'block', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start' }}>
               <div className='grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-start'>
                 <div>
                   {/* Live's `.paragraph-lg.u-mb-0` (eyebrow) and
                       `.paragraph-lg.u-text-darkgray.u-m-0` (description)
                       both have margin: 0; remove `mb-3` / `mb-6`. */}
                   <p className='max-w-[369px] fluid-body-lg font-medium text-brand-accent' style={{ marginBottom: '0px' }}>Enterprise-grade security and control</p>
-                  <p className='max-w-[369px] fluid-body-lg text-[#b3a88c]' style={{ marginBottom: '0px' }}>
+                  <p className='max-w-[369px] fluid-body-lg' style={{ marginBottom: '0px', color: 'var(--neutral-card-dark-muted)' }}>
                     Control every layer of your environment with fine-grained access control, model-agnostic architecture, and flexible self-hosted or private cloud deployment options that keep your code and data secure.
                   </p>
                   <OverlayLinkButton href='/enterprise' label='Learn about Enterprise' variant='lightbrown' className='mt-6' />
@@ -1097,7 +1097,7 @@ const Home = () => {
       </section>
 
       {/* SECTION 5: Lovewall (cc-themed, py:80, brand-bg) */}
-      <section data-wf-el='cc-themed' style={{ display: 'block', backgroundColor: 'rgb(249, 240, 217)', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px', position: 'relative' }}>
+      <section data-wf-el='cc-themed' style={{ display: 'block', backgroundColor: 'rgb(247, 243, 238)', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px', position: 'relative' }}>
         <div data-wf-el='lovewall_wrap' className='mx-auto max-w-[1238px]'>
           <div data-wf-el='lovewall_heading_wrap' className='mb-12 text-center'>
             {/* Live's love-wall H2 uses margin-bottom: 8.8px (h2-2). */}

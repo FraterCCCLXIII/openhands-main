@@ -397,7 +397,7 @@ export const UseCaseCarousel: React.FC = () => {
       onMouseLeave={() => setIsPaused(false)}
       data-testid="use-case-carousel"
       style={{ 
-        backgroundColor: '#F9F0D9',
+        backgroundColor: '#F7F3EE',
         border: '1px solid rgba(24, 24, 24, 0.1)'
       }}
     >

@@ -24,7 +24,7 @@ describe('compact sidebar menu parity', () => {
     expect(sidebar).not.toHaveClass('lg:w-[323px]');
     expect(sidebar).toHaveStyle({
       backgroundColor: 'rgb(24, 24, 24)',
-      color: 'rgb(249, 240, 217)',
+      color: 'rgb(247, 243, 238)',
     });
   });
 

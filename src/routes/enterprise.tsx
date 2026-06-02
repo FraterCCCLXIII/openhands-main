@@ -31,7 +31,7 @@ const SECTION_BASE: React.CSSProperties = {
 const SECTION_DARK: React.CSSProperties = {
   ...SECTION_BASE,
   backgroundColor: 'rgb(24, 24, 24)',
-  color: 'rgb(249, 240, 217)',
+  color: 'rgb(247, 243, 238)',
 };
 
 interface ControlFeature {
@@ -330,7 +330,7 @@ const Enterprise = () => {
             style={{
               padding: 'clamp(16px, calc(6.7566px + 2.4649vw), 32px)',
               borderRadius: 'clamp(16px, calc(6.7566px + 2.4649vw), 32px)',
-              border: '1px solid rgb(249, 240, 217)',
+              border: '1px solid rgb(247, 243, 238)',
               overflow: 'hidden',
             }}
           >

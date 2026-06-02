@@ -160,15 +160,15 @@ const ProductGuiIntroSection = ({
   title: string;
   description: string;
 }) => (
-  <section data-wf-el='section' className='product-feature-section product-gui-intro-section' style={{ display: 'block', backgroundColor: 'rgb(24, 24, 24)', color: 'rgb(249, 240, 217)', position: 'relative', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px' }}>
+  <section data-wf-el='section' className='product-feature-section product-gui-intro-section' style={{ display: 'block', backgroundColor: 'rgb(24, 24, 24)', color: 'rgb(247, 243, 238)', position: 'relative', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px' }}>
     <div data-wf-el='container' className='product-feature-container mx-auto max-w-[1238px]' style={{ display: 'block', width: 'calc(100% - 80px)', maxWidth: '1238px', marginLeft: 'auto', marginRight: 'auto' }}>
       <div className='product-gui-intro-row' style={{ display: 'flex', marginLeft: '-20px', marginRight: '-20px' }}>
         <div className='product-gui-intro-media-col' style={{ width: '50%', paddingLeft: '20px', paddingRight: '20px', minHeight: 'min(469px, 52.5vw)' }}>
-          <div data-wf-el='product-list_img_wrap' className='product-gui-hero-image-wrap bg-brand-bg' style={{ backgroundColor: 'rgb(249, 240, 217)', border: '1px solid rgb(179, 168, 140)', borderRadius: '16px', boxSizing: 'border-box', color: 'rgb(249, 240, 217)', display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative', overflow: 'hidden', width: '100%', minHeight: '100%', marginLeft: '0px', padding: '96px 64px 64px', boxShadow: 'none' }}>
+          <div data-wf-el='product-list_img_wrap' className='product-gui-hero-image-wrap bg-brand-bg' style={{ backgroundColor: 'rgb(247, 243, 238)', border: '1px solid rgb(179, 168, 140)', borderRadius: '16px', boxSizing: 'border-box', color: 'rgb(247, 243, 238)', display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative', overflow: 'hidden', width: '100%', minHeight: '100%', marginLeft: '0px', padding: '96px 64px 64px', boxShadow: 'none' }}>
             <div data-wf-el='product-list_img_overlay' className='absolute inset-x-0 top-0 text-brand-fg' style={{ backgroundColor: 'rgb(179, 168, 140)', color: 'rgb(24, 24, 24)', zIndex: 1, padding: '16px' }}>
               <div data-wf-el='eyebrow' className='font-mono' style={{ fontSize: '14.08px', lineHeight: '16.896px', marginBottom: '0px', width: '100%' }}>Web&nbsp;GUI</div>
             </div>
-            <img data-wf-el='product-list_img' src={image.src} alt={image.alt} style={{ width: '100%', maxWidth: '469px', height: 'auto', borderRadius: '0px', color: 'rgb(249, 240, 217)', display: 'block', objectFit: 'scale-down' }} />
+            <img data-wf-el='product-list_img' src={image.src} alt={image.alt} style={{ width: '100%', maxWidth: '469px', height: 'auto', borderRadius: '0px', color: 'rgb(247, 243, 238)', display: 'block', objectFit: 'scale-down' }} />
           </div>
         </div>
         <div className='product-gui-intro-copy-col' style={{ width: '50%', paddingLeft: '20px', paddingRight: '20px', minHeight: 'min(469px, 52.5vw)' }}>
@@ -225,22 +225,22 @@ export const ProductComparisonTable = ({
 }) => {
   const headingClass = dark ? 'text-brand-bg' : 'text-brand-fg';
   const cellClass = dark ? 'text-[#b3a88c]' : 'text-[#5f5f5f]';
-  const trColor = headerColor ?? (dark ? 'rgb(249, 240, 217)' : 'rgb(24, 24, 24)');
+  const trColor = headerColor ?? (dark ? 'rgb(247, 243, 238)' : 'rgb(24, 24, 24)');
   // Live computed colors for product-table_th: rgb(24,24,24) on light bg,
-  // rgb(249,240,217) on dark bg. Live also uses fontWeight 400 (not 500).
-  const thColor = headerColor ?? (dark ? 'rgb(249, 240, 217)' : 'rgb(24, 24, 24)');
+  // rgb(247,243,238) on dark bg. Live also uses fontWeight 400 (not 500).
+  const thColor = headerColor ?? (dark ? 'rgb(247, 243, 238)' : 'rgb(24, 24, 24)');
   const tickColor = headerColor ?? (dark ? 'rgb(179, 168, 140)' : 'rgb(138, 95, 69)');
 
   return (
     <section data-wf-el='section' className={classNames('product-feature-section product-comparison-section relative', dark ? 'text-brand-bg' : 'text-brand-fg')} style={{ display: 'block', backgroundColor: dark ? 'rgb(24, 24, 24)' : 'rgba(0, 0, 0, 0)', paddingTop: 'var(--product-comparison-padding-top, var(--product-section-padding-y, 80px))', paddingBottom: 'var(--product-comparison-padding-bottom, var(--product-section-padding-y, 80px))', paddingLeft: '0px', paddingRight: '0px' }}>
-      <div data-wf-el='container' data-product-comparison-container className='product-feature-container product-comparison-container mx-auto max-w-[1238px]' style={{ display: 'block', color: dark ? 'rgb(249, 240, 217)' : 'rgb(24, 24, 24)', zIndex: 1, width: 'var(--product-container-width, 100%)', height: 'var(--product-comparison-container-height, auto)', marginTop: minHeight ? '128px' : '0px', marginBottom: minHeight ? '128px' : '0px' }}>
+      <div data-wf-el='container' data-product-comparison-container className='product-feature-container product-comparison-container mx-auto max-w-[1238px]' style={{ display: 'block', color: dark ? 'rgb(247, 243, 238)' : 'rgb(24, 24, 24)', zIndex: 1, width: 'var(--product-container-width, 100%)', height: 'var(--product-comparison-container-height, auto)', marginTop: minHeight ? '128px' : '0px', marginBottom: minHeight ? '128px' : '0px' }}>
         <div className='product-comparison-heading-row' style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginLeft: '-20px', marginRight: '-20px' }}>
           <div className={classNames('section-title text-center', headingClass)} style={{ marginBottom: 'var(--product-comparison-heading-margin-bottom, 8.8px)', maxWidth: 'var(--product-comparison-heading-max-width, 599px)' }}>
             The only open, secure, and scalable agent platform built for real engineering work
           </div>
         </div>
-        <div style={{ width: '100%', color: dark ? 'rgb(249, 240, 217)' : 'rgb(24, 24, 24)' }}>
-          <table data-wf-el='product-table' className='w-full border-collapse text-left' style={{ display: 'table', position: 'relative', overflow: 'visible', marginTop: '49.6px', transform: 'var(--product-comparison-content-transform, none)', color: 'rgb(249, 240, 217)' }}>
+        <div style={{ width: '100%', color: dark ? 'rgb(247, 243, 238)' : 'rgb(24, 24, 24)' }}>
+          <table data-wf-el='product-table' className='w-full border-collapse text-left' style={{ display: 'table', position: 'relative', overflow: 'visible', marginTop: '49.6px', transform: 'var(--product-comparison-content-transform, none)', color: 'rgb(247, 243, 238)' }}>
             <colgroup>
               <col style={{ width: 'var(--product-table-col-1, 407px)' }} />
               <col style={{ width: 'var(--product-table-col-2, 262px)' }} />
@@ -322,7 +322,7 @@ export const ProductFaqSection = ({ faqs }: { faqs: readonly ProductFaqItem[] })
                       data-wf-el='accordion-item'
                       {...CLOSED_FAQ_ITEM_PROPS}
                       className='group'
-                      style={{ borderRadius: '8px', borderWidth: '1px', borderStyle: 'solid', borderColor: 'rgb(249, 240, 217)', display: 'flex', flexDirection: 'column', padding: '0' }}
+                      style={{ borderRadius: '8px', borderWidth: '1px', borderStyle: 'solid', borderColor: 'rgb(247, 243, 238)', display: 'flex', flexDirection: 'column', padding: '0' }}
                     >
                       <summary data-wf-el='accordion-trigger' className='flex cursor-pointer list-none items-center justify-between font-normal text-brand-fg' style={{ fontSize: '16px', lineHeight: '22.4px', padding: '24px', gap: 'normal', borderBottom: FAQ_TRIGGER_DIVIDER, overflow: 'hidden' }}>
                         <label data-wf-el='accordion-title' className='fluid-h4 block pointer-events-none cursor-default font-medium' style={{ paddingRight: '12px' }}>{renderFaqQuestion(faq.question)}</label>
@@ -456,7 +456,7 @@ export const ProductFeaturePage = ({
         </>
       )}
 
-      <section data-wf-el='section' className='product-feature-section product-showcase-section product-feature-grid-section relative' style={{ display: 'block', backgroundColor: 'rgb(249, 240, 217)', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px' }}>
+      <section data-wf-el='section' className='product-feature-section product-showcase-section product-feature-grid-section relative' style={{ display: 'block', backgroundColor: 'rgb(247, 243, 238)', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px' }}>
         <div data-wf-el='container' className='product-feature-container mx-auto max-w-[1238px]' style={{ display: 'block' }}>
           <div className='product-showcase-grid product-feature-row product-feature-row-capabilities product-detail-grid product-detail-grid--top grid gap-10 lg:grid-cols-2' style={{ marginBottom: '128px', alignItems: 'start', marginLeft: '-20px', marginRight: '-20px' }}>
             <div data-wf-el='card' style={{ borderStyle: 'none', borderRadius: '8px', position: 'relative', display: 'flex', overflow: 'hidden', flexDirection: 'column', justifyContent: 'flex-start' }}>

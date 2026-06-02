@@ -69,7 +69,7 @@ export default function WhitepaperModernizeLegacySystemsWithAiAgents() {
 
   return (
     <main data-wf-el='page-main' className='page-main whitepaper-modernize-page' style={{ display: 'flex', flexDirection: 'column', backgroundColor: 'rgba(0, 0, 0, 0)' }}>
-      <section data-wf-el='section' className='section cc-themed' style={{ position: 'relative', padding: 'var(--whitepaper-section-padding, 80px) 0px', backgroundColor: 'rgb(249, 240, 217)' }}>
+      <section data-wf-el='section' className='section cc-themed' style={{ position: 'relative', padding: 'var(--whitepaper-section-padding, 80px) 0px', backgroundColor: 'rgb(247, 243, 238)' }}>
         <div data-wf-el='container' className='container' style={{ width: 'var(--whitepaper-container-width, 100%)', maxWidth: '1238px', marginLeft: 'auto', marginRight: 'auto' }}>
           <div
             data-wf-el='whitepaper_heading-stack'
