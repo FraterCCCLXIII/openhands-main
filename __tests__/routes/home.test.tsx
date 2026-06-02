@@ -129,6 +129,17 @@ describe('home route parity structure', () => {
     expect(headerCta.parentElement).toHaveStyle({ padding: '0.65em 1.35em' });
   });
 
+  it('uses compact header nav links and CTA on Version 4', () => {
+    renderRoute({ includeHeader: true, width: 1440 });
+    selectHomeVariant('v4');
+
+    const nav = screen.getByRole('navigation');
+    expect(within(nav).getByRole('link', { name: 'Community' })).toHaveClass('text-sm');
+
+    const headerCta = within(nav).getByRole('link', { name: 'Get OpenHands' });
+    expect(headerCta.parentElement).toHaveStyle({ padding: '0.65em 1.35em' });
+  });
+
   it('places value prop below preview with darker larger copy on Version 4', () => {
     const { container } = renderRoute();
     selectHomeVariant('v4');

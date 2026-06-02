@@ -29,7 +29,7 @@ export const HOME_VARIANT_OPTIONS: readonly HomeVariantOption[] = [
   {
     id: 'v4',
     label: 'Version 4',
-    description: 'Value prop above preview, no platform subcopy',
+    description: 'Version 4 hero with compact header nav',
   },
 ] as const;
 
@@ -62,7 +62,7 @@ export function usesVersion4HeroCopy(variant: HomeVariantId): boolean {
 }
 
 export function usesCompactHomeHeader(variant: HomeVariantId): boolean {
-  return variant === 'v3';
+  return variant === 'v3' || variant === 'v4';
 }
 
 export const HOME_V1_HERO_CONTENT_PADDING = {
