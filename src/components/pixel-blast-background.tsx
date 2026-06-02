@@ -15,6 +15,7 @@ export const PIXEL_BLAST_BACKGROUND_PROPS: PixelBlastProps = {
   speed: 1.1,
   transparent: true,
   edgeFade: 0,
+  antialias: false,
 };
 
 type PixelBlastBackgroundProps = {

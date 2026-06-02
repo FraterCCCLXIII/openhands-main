@@ -212,9 +212,7 @@ float fbm2(vec2 uv, float t){
 
 float maskCircle(vec2 p, float cov){
   float r = sqrt(cov) * .25;
-  float d = length(p - 0.5) - r;
-  float aa = 0.5 * fwidth(d);
-  return cov * (1.0 - smoothstep(-aa, aa, d * 2.0));
+  return cov * step(length(p - 0.5), r);
 }
 
 float maskTriangle(vec2 p, vec2 id, float cov){

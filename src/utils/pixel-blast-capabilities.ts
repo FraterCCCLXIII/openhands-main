@@ -16,4 +16,4 @@ export function shouldDisablePixelBlastAnimation(): boolean {
 }
 
 /** Max device pixel ratio for the pixel blast canvas (lower = less GPU work). */
-export const PIXEL_BLAST_MAX_DEVICE_PIXEL_RATIO = 1;
+export const PIXEL_BLAST_MAX_DEVICE_PIXEL_RATIO = 2;
