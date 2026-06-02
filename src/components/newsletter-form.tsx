@@ -44,7 +44,7 @@ export const NewsletterForm: React.FC<NewsletterFormProps> = ({
             value='Subscribe'
             disabled={disabled}
             className='btn-primary inline-flex min-h-[52px] cursor-pointer items-center justify-center rounded-[8px] px-[30.4px] py-[12px] text-[16px] font-medium leading-[1.3] disabled:cursor-not-allowed disabled:opacity-50'
-            style={{ boxShadow: 'rgba(0, 0, 0, 0) 0px 0px 0px 0px inset', marginTop: '0px', marginBottom: '10px', position: 'relative', minHeight: 'auto', minWidth: 'auto', gap: '6.4px', paddingTop: '14.4px', paddingBottom: '14.4px' }}
+            style={{ marginTop: '0px', marginBottom: '10px', position: 'relative', minHeight: 'auto', minWidth: 'auto', gap: '6.4px', paddingTop: '14.4px', paddingBottom: '14.4px' }}
           />
         </div>
 

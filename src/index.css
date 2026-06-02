@@ -1018,9 +1018,6 @@
   /* Button styles - exact Webflow computed values */
   .btn {
     @apply inline-flex items-center justify-center font-medium cursor-pointer relative text-center;
-    /* Live's inner anchor does NOT carry a transition (the wrapper
-       .btn-wrap* div does). Keep this rule transition-free so the hover
-       behavior fires from the wrapper, matching live exactly. */
     padding: var(--btn-padding-y) var(--btn-padding-x);
     border-radius: var(--btn-border-radius);
     font-size: 16px;
@@ -1029,20 +1026,15 @@
     text-decoration: underline;
     text-decoration-thickness: 1.6px;
     text-underline-offset: 3px;
+    transition: opacity 0.15s ease;
   }
 
   .btn-primary {
     @apply bg-brand-fg text-brand-bg border border-transparent;
   }
-  .btn-primary:hover {
-    box-shadow: inset 0 0 0 100px rgba(0, 0, 0, 0.15);
-  }
 
   .btn-outline {
     @apply bg-transparent text-brand-fg border border-brand-fg;
-  }
-  .btn-outline:hover {
-    box-shadow: inset 0 0 0 100px rgba(0, 0, 0, 0.15);
   }
 
   /* Button wrapper — matches live Webflow CTA wrapper divs that provide
@@ -1063,22 +1055,13 @@
     line-height: 1.3;
     text-align: center;
     gap: 6.4px;
-    /* Live's `.button*` outer wrap uses `text-decoration: none`.  The
-     * underline AGENTS.md notes referenced earlier applies to the inner
-     * btn-text element, not the wrapper; keeping underline on the wrap
-     * was producing a visible mismatch with live's clean cap. */
     text-decoration: none;
     cursor: pointer;
-    /* Live carries the hover transition on the wrapper div, not the inner
-       anchor. Match by transitioning border-color and box-shadow on hover. */
-    transition: box-shadow 0.3s, border-color 0.3s;
-    box-shadow: rgba(0, 0, 0, 0) 0px 0px 0px 0px inset;
-
+    transition: opacity 0.15s ease;
   }
   .btn-wrap {
     background-color: rgba(255, 255, 255, 0.34);
     border-color: rgb(34, 21, 13);
-    box-shadow: rgb(249, 240, 217) 0px 0px 0px 0px inset;
     backdrop-filter: blur(5px);
   }
   .btn-wrap-primary {
@@ -1089,15 +1072,15 @@
     background-color: rgba(241, 234, 224, 0.2);
     color: #F9F0D9;
   }
+
+  .btn:hover,
+  .btn-primary:hover,
+  .btn-outline:hover,
   .btn-wrap:hover,
   .btn-wrap-primary:hover,
-  .btn-wrap-dark:hover {
-    box-shadow: inset 0 0 0 100px rgba(0, 0, 0, 0.15);
-  }
-
+  .btn-wrap-dark:hover,
   .capabilities_card_button:hover {
-    background-color: rgb(34, 21, 13);
-    color: rgb(249, 240, 217);
+    opacity: 0.8;
   }
 
   /* Inner .btn inside a wrapper: wrapper carries the padding, so strip it
@@ -3585,12 +3568,11 @@
   text-decoration: none;
   cursor: auto;
   pointer-events: auto;
-  transition: box-shadow 0.3s cubic-bezier(0.165, 0.84, 0.44, 1), border-color 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
-  box-shadow: inset 0 0 0 0 transparent;
+  transition: opacity 0.15s ease;
 }
 
 .button:hover {
-  box-shadow: inset 0 0 0 100px rgba(0, 0, 0, 0.15);
+  opacity: 0.8;
 }
 
 /* Mobile /about Webflow parity overrides. The live mobile Webflow layout switches
@@ -4014,7 +3996,6 @@
   border-color: rgb(34, 21, 13);
   background-color: rgba(255, 255, 255, 0.34);
   color: rgb(34, 21, 13);
-  box-shadow: inset 0 0 0 0 rgb(249, 240, 217);
   backdrop-filter: blur(5px);
 }
 

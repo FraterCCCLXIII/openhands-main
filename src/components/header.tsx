@@ -293,13 +293,13 @@ export const Header: React.FC<HeaderProps> = ({
                 <div data-wf-el='nav-menu_gh_icon'><GitHubLogoBlack data-wf-el='bi-github' className='h-4 w-4 flex-shrink-0' style={{ width: '16px', height: '16px', verticalAlign: 'baseline' }} /></div>
                 <div data-wf-el='nav-menu_gh_num' style={{ fontSize: '12.96px', lineHeight: '18.144px' }}><span style={{ fontWeight: 400 }}>{formatThousands(statistics.stargazers)}</span></div>
               </a>
-              <div data-wf-el='button' className='btn btn-outline relative' style={{ padding: '0.9em 1.9em', margin: 0, borderRadius: '8px', backgroundColor: 'rgba(255,255,255,0.34)', borderColor: 'rgb(34, 21, 13)', backdropFilter: 'blur(5px)', textDecoration: 'none', textDecorationThickness: 'auto', textUnderlineOffset: 'auto', cursor: 'auto', boxShadow: 'rgb(249, 240, 217) 0px 0px 0px 0px inset', gap: '6.4px' }}>
+              <div data-wf-el='button' className='btn btn-outline relative' style={{ padding: '0.9em 1.9em', margin: 0, borderRadius: '8px', backgroundColor: 'rgba(255,255,255,0.34)', borderColor: 'rgb(34, 21, 13)', backdropFilter: 'blur(5px)', textDecoration: 'none', textDecorationThickness: 'auto', textUnderlineOffset: 'auto', cursor: 'auto', gap: '6.4px' }}>
                 <div data-wf-el='btn-text' aria-hidden='true' style={{ whiteSpace: 'nowrap', cursor: 'auto', textUnderlineOffset: 'auto', pointerEvents: 'none' }}>Build with SDK</div>
                 <a href='https://docs.openhands.dev/sdk' target='_blank' rel='noopener noreferrer' className='absolute inset-0' style={{ textDecoration: 'underline', textDecorationThickness: '1.6px' }}>
                   <span className='sr-only'>Build with SDK</span>
                 </a>
               </div>
-              <div data-wf-el='button' className='btn btn-primary relative' style={{ padding: '0.9em 1.9em', margin: 0, borderRadius: '8px', textDecoration: 'none', textDecorationThickness: 'auto', textUnderlineOffset: 'auto', cursor: 'auto', boxShadow: 'rgba(0, 0, 0, 0) 0px 0px 0px 0px inset', gap: '6.4px' }}>
+              <div data-wf-el='button' className='btn btn-primary relative' style={{ padding: '0.9em 1.9em', margin: 0, borderRadius: '8px', textDecoration: 'none', textDecorationThickness: 'auto', textUnderlineOffset: 'auto', cursor: 'auto', gap: '6.4px' }}>
                 <div data-wf-el='btn-text' aria-hidden='true' style={{ whiteSpace: 'nowrap', cursor: 'auto', textUnderlineOffset: 'auto', pointerEvents: 'none' }}>Try it live</div>
                 <a href='https://app.all-hands.dev/' target='_blank' rel='noopener noreferrer' className='absolute inset-0' style={{ textDecoration: 'underline', textDecorationThickness: '1.6px' }}>
                   <span className='sr-only'>Try it live</span>
@@ -327,13 +327,13 @@ export const Header: React.FC<HeaderProps> = ({
                   <div data-wf-el='nav-menu_gh_icon'><GitHubLogoBlack data-wf-el='bi-github' className='h-4 w-4 flex-shrink-0' style={{ width: '16px', height: '16px', verticalAlign: 'baseline' }} /></div>
                   <div data-wf-el='nav-menu_gh_num' style={{ fontSize: '12.96px', lineHeight: '18.144px' }}><span style={{ fontWeight: 400 }}>{formatThousands(statistics.stargazers)}</span></div>
                 </a>
-                <div data-wf-el='button' className='btn btn-outline relative' style={{ padding: '0.9em 1.9em', margin: 0, borderRadius: '8px', backgroundColor: 'rgba(255,255,255,0.34)', borderColor: 'rgb(34, 21, 13)', backdropFilter: 'blur(5px)', textDecoration: 'none', textDecorationThickness: 'auto', textUnderlineOffset: 'auto', cursor: 'auto', boxShadow: 'rgb(249, 240, 217) 0px 0px 0px 0px inset', gap: '6.4px' }}>
+                <div data-wf-el='button' className='btn btn-outline relative' style={{ padding: '0.9em 1.9em', margin: 0, borderRadius: '8px', backgroundColor: 'rgba(255,255,255,0.34)', borderColor: 'rgb(34, 21, 13)', backdropFilter: 'blur(5px)', textDecoration: 'none', textDecorationThickness: 'auto', textUnderlineOffset: 'auto', cursor: 'auto', gap: '6.4px' }}>
                   <div data-wf-el='btn-text' aria-hidden='true' style={{ whiteSpace: 'nowrap', cursor: 'auto', textUnderlineOffset: 'auto', pointerEvents: 'none' }}>Build with SDK</div>
                   <a href='https://docs.openhands.dev/sdk' target='_blank' rel='noopener noreferrer' className='absolute inset-0' style={{ textDecoration: 'underline', textDecorationThickness: '1.6px' }}>
                     <span className='sr-only'>Build with SDK</span>
                   </a>
                 </div>
-                <div data-wf-el='button' className='btn btn-primary relative' style={{ padding: '0.9em 1.9em', margin: 0, borderRadius: '8px', textDecoration: 'none', textDecorationThickness: 'auto', textUnderlineOffset: 'auto', cursor: 'auto', boxShadow: 'rgba(0, 0, 0, 0) 0px 0px 0px 0px inset', gap: '6.4px' }}>
+                <div data-wf-el='button' className='btn btn-primary relative' style={{ padding: '0.9em 1.9em', margin: 0, borderRadius: '8px', textDecoration: 'none', textDecorationThickness: 'auto', textUnderlineOffset: 'auto', cursor: 'auto', gap: '6.4px' }}>
                   <div data-wf-el='btn-text' aria-hidden='true' style={{ whiteSpace: 'nowrap', cursor: 'auto', textUnderlineOffset: 'auto', pointerEvents: 'none' }}>Try it live</div>
                   <a href='https://app.all-hands.dev/' target='_blank' rel='noopener noreferrer' className='absolute inset-0' style={{ textDecoration: 'underline', textDecorationThickness: '1.6px' }}>
                     <span className='sr-only'>Try it live</span>

@@ -238,7 +238,7 @@ const Contact = () => {
                     value={isSubmitting ? 'Please wait...' : 'Submit'}
                     disabled={isSubmitting}
                     className='btn-primary w-fit field-submit'
-                    style={{ position: 'relative', display: 'inline-flex', justifyContent: 'center', alignItems: 'center', gap: '6.4px', borderRadius: '8px', padding: '14.4px 30.4px', fontSize: '16px', fontWeight: 500, lineHeight: '20.8px', cursor: isSubmitting ? 'default' : 'pointer', border: '1px solid transparent', marginTop: '24px', marginBottom: '10px', boxShadow: 'rgba(0,0,0,0) 0px 0px 0px 0px inset' }}
+                    style={{ position: 'relative', display: 'inline-flex', justifyContent: 'center', alignItems: 'center', gap: '6.4px', borderRadius: '8px', padding: '14.4px 30.4px', fontSize: '16px', fontWeight: 500, lineHeight: '20.8px', cursor: isSubmitting ? 'default' : 'pointer', border: '1px solid transparent', marginTop: '24px', marginBottom: '10px' }}
                   />
                     </form>
                     <div
