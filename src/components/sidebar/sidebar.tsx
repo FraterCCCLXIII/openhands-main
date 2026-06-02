@@ -198,17 +198,6 @@ export const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
                 Get OpenHands
               </a>
             </li>
-            <li>
-              <a
-                href='https://app.all-hands.dev/'
-                target='_blank'
-                rel='noopener noreferrer'
-                className='inline-flex text-brand-bg no-underline hover:text-brand-accent'
-                onClick={onClose}
-              >
-                Try it live
-              </a>
-            </li>
             {onClickGitHubButton ? (
               <li>
                 <button

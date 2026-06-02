@@ -16,7 +16,7 @@ import type { Route } from './+types/home';
 import statistics from '~/data/statistics.json';
 import { Footer } from '~/components/footer';
 import { getRouteFooterProps } from '~/constants/route-layout';
-import { HEADER_GET_OPENHANDS_URL } from '~/constants/site-shell';
+import { GET_OPENHANDS_CTA, HEADER_GET_OPENHANDS_URL } from '~/constants/site-shell';
 import { OverlayLinkButton } from '~/components/overlay-link-button';
 import { FAQ_TRIGGER_DIVIDER, CLOSED_FAQ_ITEM_PROPS } from '~/components/faq-accordion';
 import { formatThousands } from '~/utils/format-thousands';
@@ -133,39 +133,6 @@ function WorkflowDialogIcon({ icon: Icon }: { icon: LucideIcon }) {
     </div>
   );
 }
-
-// Live homepage renders three stacked cards (SDK / Cloud / CLI) inside one
-// "hero-content" column plus a hero-track of three images alongside, rather
-// than a tabbed surface picker. Only the SDK card carries a CTA on live.
-const SHOW_SDK_SURFACE = false;
-
-const PRODUCT_SURFACES = [
-  {
-    title: 'SDK',
-    description: 'Use the SDK to embed OpenHands into apps and workflows',
-    href: 'https://docs.openhands.dev/sdk',
-    cta: 'Get the SDK',
-    image: '/assets/webflow/misc/691b30aa3c700dcb47a96c00_SDK.webp',
-  },
-  {
-    title: 'Cloud',
-    description: 'Plan and execute complex tasks via the desktop or mobile web',
-    href: 'https://app.all-hands.dev/',
-    cta: '',
-    image: '/assets/webflow/misc/691b30afadf69b956d353513_Cloud.webp',
-  },
-  {
-    title: 'CLI',
-    description: 'Pair with OpenHands CLI right from your terminal',
-    href: 'https://docs.openhands.dev/openhands/usage/cli/installation',
-    cta: '',
-    image: '/assets/webflow/misc/691b30b28b25626f4d315588_CLI.webp',
-  },
-];
-
-const SHOULD_RENDER_SURFACE = (surface: { title: string }) => SHOW_SDK_SURFACE || surface.title !== 'SDK';
-
-const DEFAULT_SURFACE_INDEX = SHOW_SDK_SURFACE ? 0 : 1;
 
 const FEATURES = [
   {
@@ -381,7 +348,6 @@ export const meta: Route.MetaFunction = () =>
 const Home = () => {
   const [activeTestimonial, setActiveTestimonial] = React.useState(0);
   const [workflowOffset, setWorkflowOffset] = React.useState(0);
-  const [activeSurfaceIndex, setActiveSurfaceIndex] = React.useState(DEFAULT_SURFACE_INDEX);
   const [activeWorkflow, setActiveWorkflow] = React.useState<WorkflowItem | null>(null);
   const workflowDialogRef = React.useRef<HTMLDialogElement>(null);
   const workflowViewportRef = React.useRef<HTMLDivElement>(null);
@@ -447,30 +413,6 @@ const Home = () => {
       window.removeEventListener('pageshow', updateMarqueeTiming);
       window.removeEventListener('resize', updateMarqueeTiming);
     };
-  }, []);
-
-  // IntersectionObserver-driven scroll pinning for the surface hero (SDK optional).
-  // Mirrors live's GSAP ScrollTrigger: as each .surface-card enters the
-  // top-half of the viewport, the active surface index advances, which
-  // updates the right-column hero-track translate and card opacity.
-  const surfaceCardRefs = React.useRef<Array<HTMLDivElement | null>>([]);
-  React.useEffect(() => {
-    if (typeof window === 'undefined' || typeof IntersectionObserver === 'undefined') return undefined;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            const idx = Number((entry.target as HTMLElement).dataset.surfaceIndex);
-            if (Number.isFinite(idx)) setActiveSurfaceIndex(idx);
-          }
-        }
-      },
-      { rootMargin: '-40% 0px -40% 0px', threshold: 0 },
-    );
-    for (const node of surfaceCardRefs.current) {
-      if (node) observer.observe(node);
-    }
-    return () => observer.disconnect();
   }, []);
 
   React.useEffect(() => {
@@ -845,145 +787,6 @@ const Home = () => {
               loading='lazy'
             />
           </div>
-
-          {/* Product surface row: active SDK/Cloud/CLI card on the left and
-              the matching hero media on the right. Dimensions and offsets
-              mirror the live Webflow export so rendered image rects line up
-              without relying on screenshots. */}
-          <div data-wf-el='hero-content' data-slider='hero-surfaces' className='home-hero-surfaces w-full' style={{ display: 'block', marginTop: '0px' }}>
-            <div className='home-hero-surfaces-container mx-auto max-w-[1238px]'>
-              <div id='hero-media' className='home-hero-media-row flex flex-col lg:flex-row lg:items-start lg:gap-6'>
-                {/* LEFT col: selector controls + active card. Match live's
-                    Webflow row: the selector keys align with the top of the
-                    media background, then the active card starts immediately
-                    below them. */}
-                <div className='home-hero-media-copy-col flex flex-col' style={{ flex: '0 0 270px', maxWidth: '270px', gap: '0px' }}>
-                  <div className='flex flex-nowrap items-center justify-start' style={{ position: 'relative', zIndex: 1, marginTop: '0px', gap: '9.6px' }}>
-                    {PRODUCT_SURFACES.map((surface, index) => {
-                      if (!SHOULD_RENDER_SURFACE(surface)) return null;
-
-                      // Live Webflow renders these as plain `<div class="eyebrow bubble ...">`
-                      // pills (no role/aria semantics).  Adding `role="tab"` made our test
-                      // divs surface in the parity inventory while live's didn't, producing
-                      // 3 fake "extra-on-test" DIV:CLI/Cloud/SDK signatures.  Drop the
-                      // tab semantics and fall back to plain click handlers.
-                      return (
-                        <div
-                          key={surface.title}
-                          data-wf-el='hero-surface-eyebrow'
-                          data-key={index + 1}
-                          onClick={() => setActiveSurfaceIndex(index)}
-                          className='eyebrow bubble inline-block font-mono transition-all'
-                          style={{
-                            display: 'block',
-                            cursor: 'pointer',
-                            borderRadius: '20px',
-                            paddingLeft: '9.6px',
-                            paddingRight: '9.6px',
-                            paddingTop: '3.2px',
-                            paddingBottom: '3.2px',
-                            minWidth: '29.64px',
-                            minHeight: '24.9px',
-                            boxSizing: 'border-box',
-                            fontSize: '14.08px',
-                            lineHeight: '16.896px',
-                            fontWeight: 400,
-                            textAlign: 'start',
-                            color: 'rgb(249, 240, 217)',
-                            backgroundColor: 'rgb(34, 21, 13)',
-                            border: '1px solid rgb(0, 0, 0)',
-                            borderColor: 'rgb(0, 0, 0)',
-                            opacity: 0.3,
-                          }}
-                        >
-                          {index === activeSurfaceIndex ? surface.title : ''}
-                        </div>
-                      );
-                    })}
-                  </div>
-                  {/* Only the active copy card occupies layout; the mounted
-                      media stack on the right handles the animated transition. */}
-                  {PRODUCT_SURFACES.map((surface, idx) => {
-                    if (!SHOULD_RENDER_SURFACE(surface)) return null;
-
-                    return (
-                      <div
-                        key={surface.title}
-                        data-wf-el='card'
-                        data-surface-index={idx}
-                        ref={(node) => { surfaceCardRefs.current[idx] = node; }}
-                        aria-hidden={idx !== activeSurfaceIndex || undefined}
-                        style={{
-                          borderRadius: '0px',
-                          flexDirection: 'column',
-                          justifyContent: 'flex-start',
-                          borderStyle: 'none',
-                          overflow: 'hidden',
-                          minHeight: idx === activeSurfaceIndex ? '236px' : '0px',
-                          marginTop: '0px',
-                          display: idx === activeSurfaceIndex ? 'flex' : 'none',
-                        }}
-                      >
-                        {/* Live's SDK/CLI/GUI heading has margin-top:
-                          22px and margin-bottom: 8.8px (live h2-2
-                          tokens).  Our previous mt-2/mb-3 was wrong. */}
-                        <h2 className='section-title text-brand-fg' style={{ marginTop: '22px', marginBottom: '8.8px' }}>{surface.title}</h2>
-                        <p data-wf-el='paragraph-lg' className='mb-5 fluid-body-lg font-medium text-brand-muted'>{surface.description}</p>
-                        {surface.cta ? (
-                          <div data-wf-el='standard-wrap'>
-                            <OverlayLinkButton href={surface.href} label={surface.cta} variant='outline' />
-                          </div>
-                        ) : null}
-                      </div>
-                    );
-                  })}
-                </div>
-                {/* RIGHT col: hero-media-bg with hero-track of 3 images.
-                    Match live's static post-animation geometry: 944px wide
-                    media, 47.1875px vertical padding, and overflow visible on
-                    the brown media background. */}
-                <div className='home-hero-media-visual-col' style={{ flex: '0 0 944px', maxWidth: '944px', display: 'flex', position: 'relative', marginTop: '0px', alignSelf: 'flex-start' }}>
-                  <div className='w-full' style={{ display: 'block' }}>
-                    <div data-wf-el='hero-media-bg' style={{ position: 'relative', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'stretch', backgroundColor: 'rgb(34, 21, 13)', borderRadius: '24px', paddingTop: '47.1875px', paddingBottom: '47.1875px', paddingLeft: '0px', paddingRight: '0px', overflow: 'visible', height: '614.375px', width: '944px' }} className='w-full'>
-                      {/* Keep every media panel mounted and cross-fade/slide between them so
-                          the controls and scroll observer can animate the screenshot
-                          without introducing visible duplicate images. */}
-                      <div data-wf-el='hero-track' style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10%', overflow: 'hidden', width: '944px', height: '520px' }}>
-                        {PRODUCT_SURFACES.map((surface, idx) => {
-                          if (!SHOULD_RENDER_SURFACE(surface)) return null;
-
-                          return (
-                            <div
-                              key={surface.title}
-                              data-wf-el='hero-media'
-                              data-heroslide={surface.title.toLowerCase()}
-                              style={{
-                                position: 'absolute',
-                                top: '-67.14px',
-                                left: '0px',
-                                width: '944px',
-                                height: '654.297px',
-                                borderRadius: '16px',
-                                overflow: 'hidden',
-                                flex: '0 0 100%',
-                                display: 'block',
-                                opacity: idx === activeSurfaceIndex ? 1 : 0,
-                                transform: `translateY(${idx === activeSurfaceIndex ? 0 : idx < activeSurfaceIndex ? -24 : 24}px)`,
-                                transition: 'opacity 360ms ease, transform 360ms ease',
-                                pointerEvents: idx === activeSurfaceIndex ? 'auto' : 'none',
-                              }}
-                            >
-                              <img src={surface.image} alt='' data-wf-el='standard-media' loading='lazy' decoding='async' style={{ display: 'inline-block', width: '943.969px', height: '654.297px', maxWidth: '100%', borderRadius: '0px', objectFit: 'fill', objectPosition: '50% 50%' }} />
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </section>
 
@@ -999,7 +802,7 @@ const Home = () => {
               * the base h3 typography rules.  Without it on test, the
               * "Try it live" CTA below sat too close to the heading. */}
             <h3 className='max-w-[386px] section-title text-brand-fg' style={{ marginBottom: '22px' }}>Why teams choose OpenHands</h3>
-            <OverlayLinkButton href='https://app.all-hands.dev/' label='Try it live' variant='outline' className='w-fit' />
+            <OverlayLinkButton href={GET_OPENHANDS_CTA.href} label={GET_OPENHANDS_CTA.label} variant='outline' className='w-fit' />
           </div>
 
           <div className='rounded-none px-5 py-0' style={{ marginLeft: '20px', width: '640px' }}>
@@ -1119,7 +922,7 @@ const Home = () => {
             </div>
           ))}
         </div>
-        <div data-wf-el='slide-controls' style={{ zIndex: 50, width: '100%', height: '59px', position: 'absolute', inset: 'auto 0% 0%', color: 'rgb(34, 21, 13)' }}>
+        <div data-wf-el='slide-controls' style={{ zIndex: 10, width: '100%', height: '59px', position: 'absolute', inset: 'auto 0% 0%', color: 'rgb(34, 21, 13)' }}>
           <div className='mx-auto flex max-w-[1238px] items-end justify-between'>
             <div className='flex font-mono text-[14.08px] font-normal leading-[16.896px] text-brand-fg'>
               <span>3</span><span>/</span><span>3</span>
@@ -1364,8 +1167,7 @@ const Home = () => {
               OpenHands is the foundation for secure, transparent, model-agnostic coding agents - empowering every software team to build faster with full control.
             </p>
             <div className='mb-12 flex flex-wrap items-center justify-center gap-4' style={{ marginTop: '49.6px' }}>
-              <OverlayLinkButton href='https://docs.openhands.dev/sdk' label='Build with SDK' variant='primary' />
-              <OverlayLinkButton href='https://app.all-hands.dev/' label='Try it live' variant='outline' />
+              <OverlayLinkButton href={GET_OPENHANDS_CTA.href} label={GET_OPENHANDS_CTA.label} variant='primary' />
             </div>
           </div>
           {/* Spacing gap between the hero CTAs and the footer nav block.

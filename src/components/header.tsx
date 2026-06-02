@@ -8,8 +8,8 @@ import statistics from '~/data/statistics.json';
 import {
   DESKTOP_NAV_ITEMS,
   HEADER_CENTER_NAV_LINK,
+  GET_OPENHANDS_CTA,
   HEADER_GET_OPENHANDS_URL,
-  HEADER_TRY_IT_LIVE_URL,
   RESOURCE_LINK_GROUPS,
   PRODUCT_DROPDOWN_ITEMS,
   type ProductDropdownIcon,
@@ -18,6 +18,7 @@ import { formatThousands } from '~/utils/format-thousands';
 import { isPathActive, normalizePathname } from '~/utils/normalize-pathname';
 
 const NAV_DROPDOWN_WIDTH = '880px';
+const SHOW_TRY_IT_LIVE_HEADER_BUTTON = false;
 const RESOURCE_DROPDOWN_COLUMN_COUNT = Math.max(
   ...RESOURCE_LINK_GROUPS.map((group) => group.links.length),
 );
@@ -375,7 +376,9 @@ export const Header: React.FC<HeaderProps> = ({
                 <div data-wf-el='nav-menu_gh_icon'><GitHubLogoBlack data-wf-el='bi-github' className='h-4 w-4 flex-shrink-0' style={{ width: '16px', height: '16px', verticalAlign: 'baseline' }} /></div>
                 <div data-wf-el='nav-menu_gh_num' style={{ fontSize: '12.96px', lineHeight: '18.144px' }}><span style={{ fontWeight: 400 }}>{formatThousands(statistics.stargazers)}</span></div>
               </a>
-              <NavHeaderCtaButton label='Try it live' href={HEADER_TRY_IT_LIVE_URL} variant='outline' />
+              {SHOW_TRY_IT_LIVE_HEADER_BUTTON ? (
+                <NavHeaderCtaButton label={GET_OPENHANDS_CTA.label} href={GET_OPENHANDS_CTA.href} variant='outline' />
+              ) : null}
               <NavHeaderCtaButton label='Get OpenHands' href={HEADER_GET_OPENHANDS_URL} variant='primary' />
             </div>
         </div>
@@ -399,7 +402,9 @@ export const Header: React.FC<HeaderProps> = ({
                   <div data-wf-el='nav-menu_gh_icon'><GitHubLogoBlack data-wf-el='bi-github' className='h-4 w-4 flex-shrink-0' style={{ width: '16px', height: '16px', verticalAlign: 'baseline' }} /></div>
                   <div data-wf-el='nav-menu_gh_num' style={{ fontSize: '12.96px', lineHeight: '18.144px' }}><span style={{ fontWeight: 400 }}>{formatThousands(statistics.stargazers)}</span></div>
                 </a>
-                <NavHeaderCtaButton label='Try it live' href={HEADER_TRY_IT_LIVE_URL} variant='outline' />
+                {SHOW_TRY_IT_LIVE_HEADER_BUTTON ? (
+                  <NavHeaderCtaButton label={GET_OPENHANDS_CTA.label} href={GET_OPENHANDS_CTA.href} variant='outline' />
+                ) : null}
                 <NavHeaderCtaButton label='Get OpenHands' href={HEADER_GET_OPENHANDS_URL} variant='primary' />
               </>
             ) : null}

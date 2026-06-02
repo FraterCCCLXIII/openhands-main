@@ -1,11 +1,12 @@
 import clsx from 'clsx';
 import { Link } from 'react-router';
+import { GET_OPENHANDS_CTA } from '~/constants/site-shell';
 
 interface TryItLiveButtonProps {}
 
 export const TryItLiveButton: React.FC<TryItLiveButtonProps> = () => (
   <Link
-    to='https://app.all-hands.dev'
+    to={GET_OPENHANDS_CTA.href}
     target='_blank'
     rel='noopener noreferrer'
     className={clsx(
@@ -15,6 +16,6 @@ export const TryItLiveButton: React.FC<TryItLiveButtonProps> = () => (
       'flex items-center gap-[15px]'
     )}
   >
-    Try it live
+    {GET_OPENHANDS_CTA.label}
   </Link>
 );

@@ -1,4 +1,5 @@
 import type { FooterProps } from '~/components/footer';
+import { GET_OPENHANDS_CTA } from '~/constants/site-shell';
 import { PRODUCT_FEATURE_PAGES } from '~/data/product-feature-pages';
 import { normalizePathname } from '~/utils/normalize-pathname';
 
@@ -100,7 +101,7 @@ const shellFooter = (overrides: Partial<RouteFooterConfig> = {}): RouteFooterCon
 const footerCtaVariants = {
   default: {},
   product: {
-    marketingCtaPrimary: { href: 'https://app.all-hands.dev/', label: 'Try it live' },
+    marketingCtaPrimary: { href: GET_OPENHANDS_CTA.href, label: GET_OPENHANDS_CTA.label },
     marketingCtaSecondary: {
       href: 'https://docs.openhands.dev/overview/introduction',
       label: 'See developer docs',
@@ -118,13 +119,13 @@ const footerCtaVariants = {
       'Building the open standard for autonomous software development.',
     marketingCtaDescription:
       'OpenHands is the foundation for secure, transparent, model-agnostic coding agents - empowering every software team to build faster with full control.',
-    marketingCtaPrimary: { href: 'https://docs.openhands.dev/sdk', label: 'Build with SDK' },
-    marketingCtaSecondary: { href: 'https://app.all-hands.dev/', label: 'Try it live' },
+    marketingCtaPrimary: { href: GET_OPENHANDS_CTA.href, label: GET_OPENHANDS_CTA.label },
+    marketingCtaSecondary: null,
   },
   whitepaper: {
     marketingCtaTitle: 'Bring your team into the loop.',
     marketingCtaDescription: 'Use the OpenHands Web GUI to collaborate with agents.',
-    marketingCtaPrimary: { label: 'Try it live', href: 'https://app.all-hands.dev/' },
+    marketingCtaPrimary: { label: GET_OPENHANDS_CTA.label, href: GET_OPENHANDS_CTA.href },
     marketingCtaSecondary: {
       label: 'Download Local GUI',
       href: 'https://docs.openhands.dev/openhands/usage/run-openhands/local-setup',

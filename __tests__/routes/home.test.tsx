@@ -21,8 +21,8 @@ describe('home route parity structure', () => {
     const headingTexts = screen.getAllByRole('heading').map((heading) => heading.textContent?.trim());
     expect(headingTexts).toContain('Start with a proven workflow');
     expect(headingTexts).toContain('Fix Vulnerabilities');
-    expect(headingTexts).toContain('Cloud');
     expect(headingTexts).not.toContain('SDK');
+    expect(headingTexts).not.toContain('CLI');
     expect(headingTexts).toContain('Why teams choose OpenHands');
     expect(headingTexts).toContain('Automate the Outer Loop with AI');
     expect(headingTexts).toContain('Developers love OpenHands');
@@ -43,22 +43,21 @@ describe('home route parity structure', () => {
       'href',
       'https://docs.openhands.dev/openhands/usage/use-cases/overview',
     );
-    const installLink = screen.getByRole('link', { name: 'Get OpenHands' });
-    expect(installLink).toHaveAttribute(
+    const installLinks = screen.getAllByRole('link', { name: 'Get OpenHands' });
+    expect(installLinks[0]).toHaveAttribute(
       'href',
       'https://docs.openhands.dev/overview/quickstart',
     );
     expect(screen.getByText('OpenHands works with all of your agent subscriptions')).toBeInTheDocument();
     expect(screen.getByText('Claude Code')).toBeInTheDocument();
     expect(screen.getByRole('img', { name: 'OpenHands Automations dashboard screenshot' })).toBeInTheDocument();
-    expect(screen.getAllByRole('link', { name: 'Build with SDK' }).length).toBeGreaterThan(0);
-    expect(screen.getAllByRole('link', { name: 'Try it live' }).length).toBeGreaterThan(0);
+    expect(screen.queryByRole('link', { name: 'Build with SDK' })).not.toBeInTheDocument();
+    expect(screen.getAllByRole('link', { name: 'Get OpenHands' }).length).toBeGreaterThan(0);
 
     expect(container.innerHTML).toContain('lg:grid-cols-3');
-    expect(container.querySelectorAll('[data-key]')).toHaveLength(2);
-    expect(container.querySelectorAll('[data-heroslide]')).toHaveLength(2);
-    expect(container.innerHTML).toContain('home-hero-surfaces');
-    expect(container.innerHTML).toContain('h-full w-full object-cover');
+    expect(container.innerHTML).not.toContain('home-hero-surfaces');
+    expect(container.innerHTML).not.toContain('data-heroslide');
+    expect(container.innerHTML).toContain('object-cover');
     expect(container.innerHTML).not.toContain('xl:grid-cols-4');
     expect(container.querySelectorAll('.hero-pixel-blast')).toHaveLength(4);
     expect(screen.queryAllByTestId('footer-social-link')).toHaveLength(3);

@@ -54,7 +54,8 @@ describe('route layout configuration', () => {
     expect(getRouteFooterProps('/pricing')).toMatchObject({
       marketingCtaTitle:
         'Building the open standard for autonomous software development.',
-      marketingCtaPrimary: { href: 'https://docs.openhands.dev/sdk', label: 'Build with SDK' },
+      marketingCtaPrimary: { href: 'https://docs.openhands.dev/overview/quickstart', label: 'Get OpenHands' },
+      marketingCtaSecondary: null,
       compactNavSpacerHeight: ROUTE_PARITY_MEASUREMENTS.footerSpacers.pricingCompact,
     });
 

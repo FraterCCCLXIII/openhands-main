@@ -24,9 +24,9 @@ describe('Product parity routes', () => {
         'The only open, secure, and scalable agent platform built for real engineering work'
       )
     ).toBeInTheDocument();
-    expect(screen.getAllByRole('link', { name: 'Try it live' })[0]).toHaveAttribute(
+    expect(screen.getAllByRole('link', { name: 'Get OpenHands' })[0]).toHaveAttribute(
       'href',
-      'https://app.all-hands.dev/',
+      'https://docs.openhands.dev/overview/quickstart',
     );
     expect(
       screen.getByText('Building the open standard for autonomous software development.')
@@ -98,19 +98,15 @@ describe('Product parity routes', () => {
       screen.getByRole('heading', { name: 'Agentic development, made human.' })
     ).toBeInTheDocument();
     expect(container.querySelector('main')).toHaveClass('product-feature-page--gui');
-    expect(screen.getByRole('link', { name: 'Join Slack' })).toHaveAttribute(
+    expect(screen.getAllByRole('link', { name: 'Get OpenHands' })[0]).toHaveAttribute(
       'href',
-      'https://app.all-hands.dev/',
-    );
-    expect(screen.getAllByRole('link', { name: 'Try it live' })[0]).toHaveAttribute(
-      'href',
-      'https://app.all-hands.dev/',
+      'https://docs.openhands.dev/overview/quickstart',
     );
     expect(screen.getAllByText('Download Local GUI').length).toBeGreaterThan(0);
     expect(screen.getByText('Trust requires visibility.')).toBeInTheDocument();
     expect(screen.getByText('Bring your team into the loop.')).toBeInTheDocument();
     expect(screen.getByText('Use the OpenHands Web GUI to collaborate with agents.')).toBeInTheDocument();
-    expect(screen.getAllByRole('link', { name: 'Try it live' }).length).toBeGreaterThan(1);
+    expect(screen.getAllByRole('link', { name: 'Get OpenHands' }).length).toBeGreaterThan(1);
     expect(screen.queryByAltText('OpenHands Web GUI review interface.')).not.toBeInTheDocument();
     expect(screen.queryByAltText('OpenHands Web GUI planning interface.')).not.toBeInTheDocument();
   });
@@ -137,7 +133,7 @@ describe('Product parity routes', () => {
     expect(container.querySelector('.product-detail-grid--top')).toBeInTheDocument();
     expect(screen.getByText('Control your agents like real infrastructure.')).toBeInTheDocument();
     expect(screen.getByText('Run OpenHands from the terminal or automate it end to end with the CLI.')).toBeInTheDocument();
-    expect(screen.getAllByRole('link', { name: 'Try it live' }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole('link', { name: 'Get OpenHands' }).length).toBeGreaterThan(0);
   });
 
   it('stores product detail FAQs with the rest of the product page data', () => {

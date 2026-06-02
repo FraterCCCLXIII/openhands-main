@@ -99,7 +99,7 @@ describe('site shell parity helpers', () => {
     expect(container.querySelector('.compact-nav')).toHaveStyle({ display: 'flex' });
     expect(screen.getByRole('button', { name: 'Open Menu' })).toHaveTextContent('Menu');
     expect(screen.getByRole('link', { name: 'Get OpenHands' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Try it live' })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Try it live' })).not.toBeInTheDocument();
     expect(container.querySelector('[data-wf-el="mobile_menu"]')).not.toBeInTheDocument();
   });
 

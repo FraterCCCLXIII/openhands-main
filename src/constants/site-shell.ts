@@ -46,8 +46,14 @@ export const PRODUCT_DROPDOWN_ITEMS: ProductDropdownItem[] = [
 ];
 
 export const HEADER_SDK_URL = 'https://docs.openhands.dev/sdk';
-export const HEADER_TRY_IT_LIVE_URL = 'https://app.all-hands.dev/';
 export const HEADER_GET_OPENHANDS_URL = 'https://docs.openhands.dev/overview/quickstart';
+/** @deprecated Use {@link GET_OPENHANDS_CTA} — kept for legacy imports. */
+export const HEADER_TRY_IT_LIVE_URL = HEADER_GET_OPENHANDS_URL;
+
+export const GET_OPENHANDS_CTA = {
+  label: 'Get OpenHands',
+  href: HEADER_GET_OPENHANDS_URL,
+} as const;
 
 export const DESKTOP_NAV_ITEMS: SiteLink[] = [
   { name: 'Product', to: '/product' },

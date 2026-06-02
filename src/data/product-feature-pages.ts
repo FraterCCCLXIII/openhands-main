@@ -1,3 +1,4 @@
+import { GET_OPENHANDS_CTA } from '~/constants/site-shell';
 import { ASCII_ACCENT_15_IMAGE, ASCII_HOLE_IMAGE } from '~/constants/webflow-assets';
 
 export const PRODUCT_OG_IMAGE =
@@ -86,8 +87,8 @@ const productFeaturePages: Record<ProductFeatureVariant, ProductFeaturePageData>
       href: '/contact',
     },
     comparisonCta: {
-      label: 'Try it live',
-      href: 'https://app.all-hands.dev/',
+      label: GET_OPENHANDS_CTA.label,
+      href: GET_OPENHANDS_CTA.href,
     },
     introTitle: 'An open SDK for building custom agents and workflows.',
     introDescription:
@@ -172,9 +173,9 @@ const productFeaturePages: Record<ProductFeatureVariant, ProductFeaturePageData>
       alt: '',
     },
     primaryCta: {
-      label: 'Try it live',
-      href: 'https://app.all-hands.dev/',
-      screenReaderLabel: 'Join Slack',
+      label: GET_OPENHANDS_CTA.label,
+      href: GET_OPENHANDS_CTA.href,
+      screenReaderLabel: GET_OPENHANDS_CTA.label,
     },
     secondaryCta: {
       label: 'Download Local GUI',
@@ -244,8 +245,8 @@ const productFeaturePages: Record<ProductFeatureVariant, ProductFeaturePageData>
     closingTitle: 'Bring your team into the loop.',
     closingDescription: 'Use the OpenHands Web GUI to collaborate with agents.',
     closingPrimaryCta: {
-      label: 'Try it live',
-      href: 'https://app.all-hands.dev/',
+      label: GET_OPENHANDS_CTA.label,
+      href: GET_OPENHANDS_CTA.href,
     },
     closingSecondaryCta: {
       label: 'Download Local GUI',

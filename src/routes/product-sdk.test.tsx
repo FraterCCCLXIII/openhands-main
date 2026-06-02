@@ -22,7 +22,7 @@ describe('/product/sdk parity markup', () => {
     expect(html).toContain('Custom agent behaviors');
     expect(html).toContain('Turn OpenHands into your agent platform.');
     expect(html).toContain('View SDK Doc');
-    expect(html).toContain('Try it live');
+    expect(html).toContain('Get OpenHands');
     expect(html).toContain('View SDK Docs');
 
     expect(html).not.toContain('The open foundation for custom coding agents.');

@@ -1,7 +1,7 @@
 import { Link, useLocation } from 'react-router';
 import { PixelBlastBackground } from '~/components/pixel-blast-background';
 import clsx from 'clsx';
-import { FOOTER_NAV_ITEMS, FOOTER_RESOURCE_LINKS } from '~/constants/site-shell';
+import { FOOTER_NAV_ITEMS, FOOTER_RESOURCE_LINKS, GET_OPENHANDS_CTA } from '~/constants/site-shell';
 import { normalizePathname } from '~/utils/normalize-pathname';
 import { OverlayLinkButton } from '~/components/overlay-link-button';
 import { useWidth } from '~/hooks/use-media';
@@ -54,7 +54,7 @@ export interface FooterProps {
 
 /**
  * Renders the "Building the open standard..." headline + supporting
- * paragraph + Build with SDK / Try it live buttons that live
+ * paragraph + Get OpenHands button that live
  * openhands.dev embeds at the top of every footer section.
  */
 interface FooterMarketingCtaProps {
@@ -67,8 +67,8 @@ interface FooterMarketingCtaProps {
 
 const DEFAULT_CTA_TITLE = 'Building the open standard for autonomous software development.';
 const DEFAULT_CTA_DESCRIPTION = 'OpenHands is the foundation for secure, transparent, model-agnostic coding agents - empowering every software team to build faster with full control.';
-const DEFAULT_CTA_PRIMARY: FooterCta = { href: 'https://docs.openhands.dev/sdk', label: 'Build with SDK' };
-const DEFAULT_CTA_SECONDARY: FooterCta = { href: 'https://app.all-hands.dev/', label: 'Try it live' };
+const DEFAULT_CTA_PRIMARY: FooterCta = { href: GET_OPENHANDS_CTA.href, label: GET_OPENHANDS_CTA.label };
+const DEFAULT_CTA_SECONDARY: FooterCta | null = null;
 
 const FooterMarketingCta = ({
   title = DEFAULT_CTA_TITLE,

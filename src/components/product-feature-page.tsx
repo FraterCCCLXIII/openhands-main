@@ -2,6 +2,7 @@ import { Fragment, type CSSProperties } from 'react';
 import type { ProductFeatureFaq, ProductFeaturePageData, ProductFeatureVariant } from '~/data/product-feature-pages';
 import { Footer } from '~/components/footer';
 import { getRouteFooterProps } from '~/constants/route-layout';
+import { GET_OPENHANDS_CTA } from '~/constants/site-shell';
 import { PixelBlastBackground } from '~/components/pixel-blast-background';
 import { OverlayLinkButton } from '~/components/overlay-link-button';
 import { FAQ_TRIGGER_DIVIDER, CLOSED_FAQ_ITEM_PROPS } from '~/components/faq-accordion';
@@ -488,8 +489,8 @@ export const ProductFeaturePage = ({
 
       <ProductComparisonTable
         dark
-        ctaHref={page.comparisonCta?.href ?? 'https://app.all-hands.dev/'}
-        ctaLabel={page.comparisonCta?.label ?? 'Try it live'}
+        ctaHref={page.comparisonCta?.href ?? GET_OPENHANDS_CTA.href}
+        ctaLabel={page.comparisonCta?.label ?? GET_OPENHANDS_CTA.label}
         minHeight={1082}
       />
       <ProductFaqSection faqs={page.faqs} />

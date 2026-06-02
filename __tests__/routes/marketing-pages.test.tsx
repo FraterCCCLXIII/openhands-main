@@ -54,7 +54,7 @@ describe('Marketing parity routes', () => {
       '/product/gui',
       '/product/sdk',
     ]);
-    expect(screen.getAllByRole('link', { name: 'Try it live' })[0]).toHaveAttribute('href', 'https://app.all-hands.dev/');
+    expect(screen.getAllByRole('link', { name: 'Get OpenHands' })[0]).toHaveAttribute('href', 'https://docs.openhands.dev/overview/quickstart');
     expect(screen.getByText('Coding Agent SDK')).toBeInTheDocument();
     expect(screen.getByText(/Building the open standard for autonomous software development/i)).toBeInTheDocument();
     expect(
@@ -88,7 +88,7 @@ describe('Marketing parity routes', () => {
     renderRoute(<ProductGui />);
 
     expect(screen.getByRole('heading', { name: /Agentic development, made human/i })).toBeInTheDocument();
-    expect(screen.getAllByRole('link', { name: 'Try it live' })[0]).toHaveAttribute('href', 'https://app.all-hands.dev/');
+    expect(screen.getAllByRole('link', { name: 'Get OpenHands' })[0]).toHaveAttribute('href', 'https://docs.openhands.dev/overview/quickstart');
     expect(screen.getByText('Generate technical plans and PRDs')).toBeInTheDocument();
     expect(screen.getByText('Break epics into agent-sized tasks')).toBeInTheDocument();
     expect(screen.getByText('What is the OpenHands GUI?')).toBeInTheDocument();

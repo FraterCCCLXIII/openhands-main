@@ -3,6 +3,7 @@ import type { Route } from './+types/product';
 import { PixelBlastBackground } from '~/components/pixel-blast-background';
 import { Footer } from '~/components/footer';
 import { getRouteFooterProps } from '~/constants/route-layout';
+import { GET_OPENHANDS_CTA } from '~/constants/site-shell';
 import {
   ProductComparisonTable,
   ProductPageActionLink,
@@ -53,9 +54,9 @@ const Product = () => {
               </p>
               <div data-wf-el='hero_btn_wrap' className='flex flex-wrap' style={{ paddingTop: '32px', gap: '8px 16px', maxWidth: '100%', alignItems: 'var(--product-hero-button-align-items, var(--product-hero-btn-align-items, normal))', justifyContent: 'var(--product-hero-button-justify-content, var(--product-hero-btn-justify-content, normal))' }}>
                 <ProductPageActionLink
-                  href='https://app.all-hands.dev/'
-                  label='Try it live'
-                  screenReaderLabel='Join Slack'
+                  href={GET_OPENHANDS_CTA.href}
+                  label={GET_OPENHANDS_CTA.label}
+                  screenReaderLabel={GET_OPENHANDS_CTA.label}
                 />
                 <ProductPageActionLink
                   href='https://docs.openhands.dev/overview/introduction'
@@ -126,7 +127,7 @@ const Product = () => {
         </section>
       </section>
 
-      <ProductComparisonTable ctaHref='https://app.all-hands.dev/' ctaLabel='Try it live' />
+      <ProductComparisonTable ctaHref={GET_OPENHANDS_CTA.href} ctaLabel={GET_OPENHANDS_CTA.label} />
       {/* Live renders the default closing CTA inside the yellow footer section,
         and the footer section itself is a child of page-main. */}
       <Footer {...getRouteFooterProps('/product')} />
