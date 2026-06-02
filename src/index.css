@@ -4121,9 +4121,9 @@
   pointer-events: none;
   background-color: var(--bg);
   box-shadow:
-    0 0 48px 32px var(--bg),
-    0 0 96px 56px var(--bg),
-    0 0 120px 72px rgba(249, 240, 217, 0.9);
+    0 0 28px 18px var(--bg),
+    0 0 52px 32px var(--bg),
+    0 0 72px 40px rgba(249, 240, 217, 0.72);
 }
 
 /* Homepage hero H1 — one step above global fluid-h1 (≈36–52px). */
