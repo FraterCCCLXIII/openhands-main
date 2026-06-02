@@ -19,6 +19,9 @@ import { isPathActive, normalizePathname } from '~/utils/normalize-pathname';
 
 const NAV_DROPDOWN_WIDTH = '880px';
 const SHOW_TRY_IT_LIVE_HEADER_BUTTON = false;
+const HOME_HERO_SENTINEL_SELECTOR = '[data-wf-el="hero-top"]';
+const HOME_NAV_CTA_FADE_START_PX = 96;
+const HOME_NAV_CTA_FADE_DISTANCE_PX = 160;
 const RESOURCE_DROPDOWN_COLUMN_COUNT = Math.max(
   ...RESOURCE_LINK_GROUPS.map((group) => group.links.length),
 );
@@ -100,26 +103,35 @@ function NavHeaderCtaButton({
   label,
   href,
   variant,
+  blend,
 }: {
   label: string;
   href: string;
   variant: 'primary' | 'outline';
+  blend?: number;
 }) {
   const isOutline = variant === 'outline';
+  const useScrollBlend = blend !== undefined;
+  const resolvedBlend = blend ?? (variant === 'primary' ? 1 : 0);
 
   return (
     <div
       data-wf-el='button'
-      className={clsx('btn relative', isOutline ? 'btn-outline' : 'btn-primary')}
+      className={clsx(
+        'btn relative',
+        useScrollBlend ? 'nav-header-cta' : isOutline ? 'btn-outline' : 'btn-primary',
+      )}
       style={{
         ...NAV_CTA_BASE_STYLE,
-        ...(isOutline
-          ? {
-              backgroundColor: 'rgba(255,255,255,0.34)',
-              borderColor: 'rgb(34, 21, 13)',
-              backdropFilter: 'blur(5px)',
-            }
-          : {}),
+        ...(useScrollBlend
+          ? ({ '--nav-cta-blend': resolvedBlend } as React.CSSProperties)
+          : isOutline
+            ? {
+                backgroundColor: 'rgba(255,255,255,0.34)',
+                borderColor: 'rgb(34, 21, 13)',
+                backdropFilter: 'blur(5px)',
+              }
+            : {}),
       }}
     >
       <div data-wf-el='btn-text' aria-hidden='true' style={{ whiteSpace: 'nowrap', cursor: 'auto', textUnderlineOffset: 'auto', pointerEvents: 'none' }}>
@@ -155,6 +167,50 @@ export const Header: React.FC<HeaderProps> = ({
   const isMobile = width < 768;
   const isCompact = width <= 1360;
   const menuOpen = showMenuIcon === false;
+  const isHomePage = pathname === '/';
+  const [homeNavCtaBlend, setHomeNavCtaBlend] = React.useState(isHomePage ? 0 : 1);
+
+  const updateHomeNavCtaBlend = React.useCallback(() => {
+    if (pathname !== '/') {
+      setHomeNavCtaBlend(1);
+      return;
+    }
+
+    const hero = document.querySelector(HOME_HERO_SENTINEL_SELECTOR);
+    if (!hero) {
+      setHomeNavCtaBlend(0);
+      return;
+    }
+
+    const heroBottom = hero.getBoundingClientRect().bottom;
+    const blend = Math.min(
+      1,
+      Math.max(0, (HOME_NAV_CTA_FADE_START_PX - heroBottom) / HOME_NAV_CTA_FADE_DISTANCE_PX),
+    );
+    setHomeNavCtaBlend(blend);
+  }, [pathname]);
+
+  React.useEffect(() => {
+    updateHomeNavCtaBlend();
+  }, [updateHomeNavCtaBlend]);
+
+  React.useEffect(() => {
+    if (!isHomePage) {
+      return;
+    }
+
+    const onScroll = () => {
+      updateHomeNavCtaBlend();
+    };
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+    };
+  }, [isHomePage, updateHomeNavCtaBlend]);
 
   useMotionValueEvent(scrollY, 'change', (latest) => {
     if (latest > 0) {
@@ -162,6 +218,8 @@ export const Header: React.FC<HeaderProps> = ({
     } else {
       setTextIsVisible(true);
     }
+
+    updateHomeNavCtaBlend();
   });
 
   return (
@@ -379,7 +437,12 @@ export const Header: React.FC<HeaderProps> = ({
               {SHOW_TRY_IT_LIVE_HEADER_BUTTON ? (
                 <NavHeaderCtaButton label={GET_OPENHANDS_CTA.label} href={GET_OPENHANDS_CTA.href} variant='outline' />
               ) : null}
-              <NavHeaderCtaButton label='Get OpenHands' href={HEADER_GET_OPENHANDS_URL} variant='primary' />
+              <NavHeaderCtaButton
+                label='Get OpenHands'
+                href={HEADER_GET_OPENHANDS_URL}
+                variant={homeNavCtaBlend >= 0.5 ? 'primary' : 'outline'}
+                blend={isHomePage ? homeNavCtaBlend : 1}
+              />
             </div>
         </div>
 
@@ -405,7 +468,12 @@ export const Header: React.FC<HeaderProps> = ({
                 {SHOW_TRY_IT_LIVE_HEADER_BUTTON ? (
                   <NavHeaderCtaButton label={GET_OPENHANDS_CTA.label} href={GET_OPENHANDS_CTA.href} variant='outline' />
                 ) : null}
-                <NavHeaderCtaButton label='Get OpenHands' href={HEADER_GET_OPENHANDS_URL} variant='primary' />
+                <NavHeaderCtaButton
+                label='Get OpenHands'
+                href={HEADER_GET_OPENHANDS_URL}
+                variant={homeNavCtaBlend >= 0.5 ? 'primary' : 'outline'}
+                blend={isHomePage ? homeNavCtaBlend : 1}
+              />
               </>
             ) : null}
             <button

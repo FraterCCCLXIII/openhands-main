@@ -1,6 +1,6 @@
-import { render, screen } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { AnimatedHeaderLogo } from '../../src/components/animated-header-logo';
 import { Footer } from '../../src/components/footer';
 import { Header } from '../../src/components/header';
@@ -127,5 +127,76 @@ describe('site shell parity helpers', () => {
 
     expect(container.querySelector('[data-wf-el="container"]')).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Privacy Policy' })).toBeInTheDocument();
+  });
+
+  describe('homepage nav Get OpenHands CTA', () => {
+    let heroElement: HTMLDivElement;
+
+    beforeEach(() => {
+      heroElement = document.createElement('div');
+      heroElement.setAttribute('data-wf-el', 'hero-top');
+      heroElement.style.height = '600px';
+      document.body.appendChild(heroElement);
+      heroElement.getBoundingClientRect = () =>
+        ({
+          bottom: 400,
+          top: 0,
+          left: 0,
+          right: 0,
+          width: 1200,
+          height: 600,
+          x: 0,
+          y: 0,
+          toJSON: () => ({}),
+        }) as DOMRect;
+    });
+
+    afterEach(() => {
+      document.body.innerHTML = '';
+    });
+
+    it('uses secondary outline styling on the homepage until the hero scrolls away', () => {
+      render(
+        <MemoryRouter initialEntries={['/']}>
+          <Header width={1440} showMenuIcon onClickMenuButton={() => {}} />
+        </MemoryRouter>,
+      );
+
+      const cta = screen.getByRole('link', { name: 'Get OpenHands' }).closest('.nav-header-cta');
+      expect(cta).toHaveStyle({ '--nav-cta-blend': '0' });
+
+      heroElement.getBoundingClientRect = () =>
+        ({
+          bottom: -120,
+          top: -720,
+          left: 0,
+          right: 0,
+          width: 1200,
+          height: 600,
+          x: 0,
+          y: -720,
+          toJSON: () => ({}),
+        }) as DOMRect;
+
+      act(() => {
+        window.dispatchEvent(new Event('scroll'));
+      });
+
+      expect(screen.getByRole('link', { name: 'Get OpenHands' }).closest('.nav-header-cta')).toHaveStyle({
+        '--nav-cta-blend': '1',
+      });
+    });
+
+    it('keeps primary styling on non-home routes', () => {
+      render(
+        <MemoryRouter initialEntries={['/about']}>
+          <Header width={1440} showMenuIcon onClickMenuButton={() => {}} />
+        </MemoryRouter>,
+      );
+
+      expect(screen.getByRole('link', { name: 'Get OpenHands' }).closest('.nav-header-cta')).toHaveStyle({
+        '--nav-cta-blend': '1',
+      });
+    });
   });
 });

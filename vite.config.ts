@@ -13,7 +13,7 @@ export default defineConfig({
   },
   server: {
     host: '0.0.0.0',
-    port: 12000,
+    port: 12001,
     cors: true,
     allowedHosts: [
       'work-1-jobyjlkutwzfesrq.prod-runtime.all-hands.dev',

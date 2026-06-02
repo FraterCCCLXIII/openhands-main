@@ -1037,6 +1037,38 @@
     @apply bg-transparent text-brand-fg border border-brand-fg;
   }
 
+  /* Homepage header CTA — scroll-driven blend between glass outline and solid primary. */
+  .nav-header-cta {
+    --nav-cta-blend: 0;
+    border-width: 1px;
+    border-style: solid;
+    background-color: color-mix(
+      in srgb,
+      rgba(255, 255, 255, 0.34) calc((1 - var(--nav-cta-blend)) * 100%),
+      rgb(34, 21, 13) calc(var(--nav-cta-blend) * 100%)
+    );
+    color: color-mix(
+      in srgb,
+      rgb(34, 21, 13) calc((1 - var(--nav-cta-blend)) * 100%),
+      rgb(255, 255, 255) calc(var(--nav-cta-blend) * 100%)
+    );
+    border-color: color-mix(
+      in srgb,
+      rgb(34, 21, 13) calc((1 - var(--nav-cta-blend)) * 100%),
+      transparent calc(var(--nav-cta-blend) * 100%)
+    );
+    backdrop-filter: blur(calc((1 - var(--nav-cta-blend, 0)) * 5px));
+    -webkit-backdrop-filter: blur(calc((1 - var(--nav-cta-blend, 0)) * 5px));
+  }
+
+  .nav-header-cta a {
+    color: inherit;
+  }
+
+  .hero-app-preview-shell {
+    transform-origin: center center;
+  }
+
   /* Button wrapper — matches live Webflow CTA wrapper divs that provide
      rounded corners, glassmorphic/dark background, padding, and text styling.
      All three variants share the base btn text appearance. */
@@ -2419,6 +2451,7 @@
 
   .home-mobile-parity [data-wf-el='logo-grid-component_wrap'] {
     padding-top: 56px !important;
+    padding-bottom: 56px !important;
   }
 
   .home-mobile-parity [data-wf-el='logo-grid-component_cms_list'].logo-grid {

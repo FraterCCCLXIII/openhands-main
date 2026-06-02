@@ -747,12 +747,12 @@ const Home = () => {
           </div>
 
           {/* Logo grid (inside hero section) */}
-          <div data-wf-el='logo-grid-component_wrap' className='w-full' style={{ paddingTop: '80px' }}>
+          <div data-wf-el='logo-grid-component_wrap' className='w-full' style={{ paddingTop: '80px', paddingBottom: '80px' }}>
             <div data-wf-el='logo-grid-component_heading_container' className='mx-auto max-w-[1238px]' style={{ textAlign: 'center' }}>
               {/* Live's `.h2` margin-bottom (used for this heading via
                 * the `.u-mb-xs` modifier) computes to 9.6px — `mb-5` was
                 * 20px, adding ~10px of unwanted space above the logos. */}
-              <div data-wf-el='logo-grid-component_heading_heading' className='fluid-h4 text-center text-brand-fg' style={{ marginBottom: '9.6px' }}>
+              <div data-wf-el='logo-grid-component_heading_heading' className='fluid-sm text-center text-brand-fg' style={{ marginBottom: '9.6px' }}>
                 Trusted by engineers at
               </div>
             </div>
@@ -778,10 +778,11 @@ const Home = () => {
           </div>
 
 
-          <div data-wf-el='hero-preview' className='mx-auto w-full max-w-[1238px]' style={{ paddingTop: '56px', paddingBottom: '48px' }}>
+        </div>
+
+          <div data-wf-el='hero-preview' className='relative z-10 mx-auto w-full max-w-[1238px] overflow-visible px-4 md:px-6' style={{ paddingTop: '56px', paddingBottom: '56px' }}>
             <HeroAppPreview slides={HERO_APP_PREVIEW_SLIDES} />
           </div>
-        </div>
       </section>
 
       {/* SECTION 1: Why teams choose OpenHands (py:80, transparent) */}
