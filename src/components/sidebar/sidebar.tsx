@@ -3,6 +3,7 @@ import React from 'react';
 import { Link } from 'react-router';
 import {
   DESKTOP_NAV_ITEMS,
+  HEADER_GET_OPENHANDS_URL,
   PRODUCT_DROPDOWN_ITEMS,
   RESOURCE_LINK_GROUPS,
   type SiteLink,
@@ -183,7 +184,18 @@ export const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
                 className='inline-flex text-brand-bg no-underline hover:text-brand-accent'
                 onClick={onClose}
               >
-                Build with SDK
+                SDK
+              </a>
+            </li>
+            <li>
+              <a
+                href={HEADER_GET_OPENHANDS_URL}
+                target='_blank'
+                rel='noopener noreferrer'
+                className='inline-flex text-brand-bg no-underline hover:text-brand-accent'
+                onClick={onClose}
+              >
+                Get OpenHands
               </a>
             </li>
             <li>

@@ -98,7 +98,7 @@ describe('site shell parity helpers', () => {
     expect(container.querySelector('[data-wf-el="nav_grid"]')).toHaveStyle({ display: 'none' });
     expect(container.querySelector('.compact-nav')).toHaveStyle({ display: 'flex' });
     expect(screen.getByRole('button', { name: 'Open Menu' })).toHaveTextContent('Menu');
-    expect(screen.getByRole('link', { name: 'Build with SDK' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Get OpenHands' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Try it live' })).toBeInTheDocument();
     expect(container.querySelector('[data-wf-el="mobile_menu"]')).not.toBeInTheDocument();
   });

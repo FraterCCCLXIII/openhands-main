@@ -5,7 +5,15 @@ import { AnimatedHeaderLogo } from './animated-header-logo';
 import clsx from 'clsx';
 import GitHubLogoBlack from '~/svgs/github-logo-black.svg?react';
 import statistics from '~/data/statistics.json';
-import { DESKTOP_NAV_ITEMS, RESOURCE_LINK_GROUPS, PRODUCT_DROPDOWN_ITEMS, type ProductDropdownIcon } from '~/constants/site-shell';
+import {
+  DESKTOP_NAV_ITEMS,
+  HEADER_CENTER_NAV_LINK,
+  HEADER_GET_OPENHANDS_URL,
+  HEADER_TRY_IT_LIVE_URL,
+  RESOURCE_LINK_GROUPS,
+  PRODUCT_DROPDOWN_ITEMS,
+  type ProductDropdownIcon,
+} from '~/constants/site-shell';
 import { formatThousands } from '~/utils/format-thousands';
 import { isPathActive, normalizePathname } from '~/utils/normalize-pathname';
 
@@ -64,6 +72,63 @@ const RESOURCE_ICONS: Record<string, React.ReactNode> = {
 
 function ResourceDropdownIcon({ name }: { name: string }) {
   return <>{RESOURCE_ICONS[name] ?? null}</>;
+}
+
+const NAV_LINK_STYLE: React.CSSProperties = {
+  position: 'relative',
+  display: 'flex',
+  justifyContent: 'center',
+  alignItems: 'center',
+  gap: '8px',
+  height: '100%',
+  padding: '0 8px',
+};
+
+const NAV_CTA_BASE_STYLE: React.CSSProperties = {
+  padding: '0.9em 1.9em',
+  margin: 0,
+  borderRadius: '8px',
+  textDecoration: 'none',
+  textDecorationThickness: 'auto',
+  textUnderlineOffset: 'auto',
+  cursor: 'auto',
+  gap: '6.4px',
+};
+
+function NavHeaderCtaButton({
+  label,
+  href,
+  variant,
+}: {
+  label: string;
+  href: string;
+  variant: 'primary' | 'outline';
+}) {
+  const isOutline = variant === 'outline';
+
+  return (
+    <div
+      data-wf-el='button'
+      className={clsx('btn relative', isOutline ? 'btn-outline' : 'btn-primary')}
+      style={{
+        ...NAV_CTA_BASE_STYLE,
+        ...(isOutline
+          ? {
+              backgroundColor: 'rgba(255,255,255,0.34)',
+              borderColor: 'rgb(34, 21, 13)',
+              backdropFilter: 'blur(5px)',
+            }
+          : {}),
+      }}
+    >
+      <div data-wf-el='btn-text' aria-hidden='true' style={{ whiteSpace: 'nowrap', cursor: 'auto', textUnderlineOffset: 'auto', pointerEvents: 'none' }}>
+        {label}
+      </div>
+      <a href={href} target='_blank' rel='noopener noreferrer' className='absolute inset-0' style={{ textDecoration: 'underline', textDecorationThickness: '1.6px' }}>
+        <span className='sr-only'>{label}</span>
+      </a>
+    </div>
+  );
 }
 
 interface HeaderProps {
@@ -214,6 +279,18 @@ export const Header: React.FC<HeaderProps> = ({
                   )}
                 </li>
               ))}
+              <li data-wf-el='nav_links_li' style={{ display: 'list-item' }}>
+                <a
+                  href={HEADER_CENTER_NAV_LINK.to}
+                  target='_blank'
+                  rel='noopener noreferrer'
+                  data-wf-el='nav_links_link'
+                  className='text-base font-normal leading-[22.4px] hover:text-[#8a5f45]'
+                  style={NAV_LINK_STYLE}
+                >
+                  {HEADER_CENTER_NAV_LINK.name}
+                </a>
+              </li>
               {/* Resources dropdown */}
               <li data-wf-el='nav_links_li' className='group' style={{ display: 'list-item' }}>
                 <button
@@ -298,18 +375,8 @@ export const Header: React.FC<HeaderProps> = ({
                 <div data-wf-el='nav-menu_gh_icon'><GitHubLogoBlack data-wf-el='bi-github' className='h-4 w-4 flex-shrink-0' style={{ width: '16px', height: '16px', verticalAlign: 'baseline' }} /></div>
                 <div data-wf-el='nav-menu_gh_num' style={{ fontSize: '12.96px', lineHeight: '18.144px' }}><span style={{ fontWeight: 400 }}>{formatThousands(statistics.stargazers)}</span></div>
               </a>
-              <div data-wf-el='button' className='btn btn-outline relative' style={{ padding: '0.9em 1.9em', margin: 0, borderRadius: '8px', backgroundColor: 'rgba(255,255,255,0.34)', borderColor: 'rgb(34, 21, 13)', backdropFilter: 'blur(5px)', textDecoration: 'none', textDecorationThickness: 'auto', textUnderlineOffset: 'auto', cursor: 'auto', gap: '6.4px' }}>
-                <div data-wf-el='btn-text' aria-hidden='true' style={{ whiteSpace: 'nowrap', cursor: 'auto', textUnderlineOffset: 'auto', pointerEvents: 'none' }}>Build with SDK</div>
-                <a href='https://docs.openhands.dev/sdk' target='_blank' rel='noopener noreferrer' className='absolute inset-0' style={{ textDecoration: 'underline', textDecorationThickness: '1.6px' }}>
-                  <span className='sr-only'>Build with SDK</span>
-                </a>
-              </div>
-              <div data-wf-el='button' className='btn btn-primary relative' style={{ padding: '0.9em 1.9em', margin: 0, borderRadius: '8px', textDecoration: 'none', textDecorationThickness: 'auto', textUnderlineOffset: 'auto', cursor: 'auto', gap: '6.4px' }}>
-                <div data-wf-el='btn-text' aria-hidden='true' style={{ whiteSpace: 'nowrap', cursor: 'auto', textUnderlineOffset: 'auto', pointerEvents: 'none' }}>Try it live</div>
-                <a href='https://app.all-hands.dev/' target='_blank' rel='noopener noreferrer' className='absolute inset-0' style={{ textDecoration: 'underline', textDecorationThickness: '1.6px' }}>
-                  <span className='sr-only'>Try it live</span>
-                </a>
-              </div>
+              <NavHeaderCtaButton label='Try it live' href={HEADER_TRY_IT_LIVE_URL} variant='outline' />
+              <NavHeaderCtaButton label='Get OpenHands' href={HEADER_GET_OPENHANDS_URL} variant='primary' />
             </div>
         </div>
 
@@ -332,18 +399,8 @@ export const Header: React.FC<HeaderProps> = ({
                   <div data-wf-el='nav-menu_gh_icon'><GitHubLogoBlack data-wf-el='bi-github' className='h-4 w-4 flex-shrink-0' style={{ width: '16px', height: '16px', verticalAlign: 'baseline' }} /></div>
                   <div data-wf-el='nav-menu_gh_num' style={{ fontSize: '12.96px', lineHeight: '18.144px' }}><span style={{ fontWeight: 400 }}>{formatThousands(statistics.stargazers)}</span></div>
                 </a>
-                <div data-wf-el='button' className='btn btn-outline relative' style={{ padding: '0.9em 1.9em', margin: 0, borderRadius: '8px', backgroundColor: 'rgba(255,255,255,0.34)', borderColor: 'rgb(34, 21, 13)', backdropFilter: 'blur(5px)', textDecoration: 'none', textDecorationThickness: 'auto', textUnderlineOffset: 'auto', cursor: 'auto', gap: '6.4px' }}>
-                  <div data-wf-el='btn-text' aria-hidden='true' style={{ whiteSpace: 'nowrap', cursor: 'auto', textUnderlineOffset: 'auto', pointerEvents: 'none' }}>Build with SDK</div>
-                  <a href='https://docs.openhands.dev/sdk' target='_blank' rel='noopener noreferrer' className='absolute inset-0' style={{ textDecoration: 'underline', textDecorationThickness: '1.6px' }}>
-                    <span className='sr-only'>Build with SDK</span>
-                  </a>
-                </div>
-                <div data-wf-el='button' className='btn btn-primary relative' style={{ padding: '0.9em 1.9em', margin: 0, borderRadius: '8px', textDecoration: 'none', textDecorationThickness: 'auto', textUnderlineOffset: 'auto', cursor: 'auto', gap: '6.4px' }}>
-                  <div data-wf-el='btn-text' aria-hidden='true' style={{ whiteSpace: 'nowrap', cursor: 'auto', textUnderlineOffset: 'auto', pointerEvents: 'none' }}>Try it live</div>
-                  <a href='https://app.all-hands.dev/' target='_blank' rel='noopener noreferrer' className='absolute inset-0' style={{ textDecoration: 'underline', textDecorationThickness: '1.6px' }}>
-                    <span className='sr-only'>Try it live</span>
-                  </a>
-                </div>
+                <NavHeaderCtaButton label='Try it live' href={HEADER_TRY_IT_LIVE_URL} variant='outline' />
+                <NavHeaderCtaButton label='Get OpenHands' href={HEADER_GET_OPENHANDS_URL} variant='primary' />
               </>
             ) : null}
             <button

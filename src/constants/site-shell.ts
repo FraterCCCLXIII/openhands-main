@@ -45,6 +45,10 @@ export const PRODUCT_DROPDOWN_ITEMS: ProductDropdownItem[] = [
   },
 ];
 
+export const HEADER_SDK_URL = 'https://docs.openhands.dev/sdk';
+export const HEADER_TRY_IT_LIVE_URL = 'https://app.all-hands.dev/';
+export const HEADER_GET_OPENHANDS_URL = 'https://docs.openhands.dev/overview/quickstart';
+
 export const DESKTOP_NAV_ITEMS: SiteLink[] = [
   { name: 'Product', to: '/product' },
   { name: 'Enterprise', to: '/enterprise' },
@@ -52,6 +56,13 @@ export const DESKTOP_NAV_ITEMS: SiteLink[] = [
   { name: 'Benchmarks', to: 'https://index.openhands.dev/home', external: true },
   { name: 'Community', to: '/community' },
 ];
+
+/** Center-column nav link (external docs CTA rendered as text, not a header button). */
+export const HEADER_CENTER_NAV_LINK: SiteLink = {
+  name: 'SDK',
+  to: HEADER_SDK_URL,
+  external: true,
+};
 
 export const RESOURCE_LINK_GROUPS: SiteLinkGroup[] = [
   {

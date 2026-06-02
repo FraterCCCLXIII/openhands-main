@@ -16,6 +16,7 @@ import type { Route } from './+types/home';
 import statistics from '~/data/statistics.json';
 import { Footer } from '~/components/footer';
 import { getRouteFooterProps } from '~/constants/route-layout';
+import { HEADER_GET_OPENHANDS_URL } from '~/constants/site-shell';
 import { OverlayLinkButton } from '~/components/overlay-link-button';
 import { FAQ_TRIGGER_DIVIDER, CLOSED_FAQ_ITEM_PROPS } from '~/components/faq-accordion';
 import { formatThousands } from '~/utils/format-thousands';
@@ -25,7 +26,7 @@ import { EnterpriseLogoStrip } from '~/components/logos/enterprise-logo-strip';
 import { HOME_CUSTOMER_LOGOS } from '~/constants/customer-logos';
 import { ClaudeCodeIcon, CodexIcon, GeminiCliIcon } from '~/components/icons/agent-subscription-icons';
 
-const INSTALL_OPENHANDS_URL = 'https://docs.openhands.dev/overview/quickstart';
+const INSTALL_OPENHANDS_URL = HEADER_GET_OPENHANDS_URL;
 
 type HeroCompatibilityBadge = {
   name: string;
