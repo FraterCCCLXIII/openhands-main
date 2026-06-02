@@ -1,5 +1,16 @@
 import React from 'react';
 import { Link } from 'react-router';
+import { domAnimation, LazyMotion, m } from 'framer-motion';
+import type { LucideIcon } from 'lucide-react';
+import {
+  ArrowRightCircle,
+  ChevronLeft,
+  ChevronRight,
+  Eye,
+  GitPullRequest,
+  ShieldAlert,
+  TriangleAlert,
+} from 'lucide-react';
 import type { Route } from './+types/home';
 import statistics from '~/data/statistics.json';
 import { Footer } from '~/components/footer';
@@ -43,54 +54,69 @@ const HERO_COMPATIBILITY_BADGES = [
 const HERO_AUTOMATIONS_IMAGE =
   '/assets/webflow/blog/openhands-enterprise-agent-control-plane/20260506-openhands-enterprise-agent-control-plane-automations.png';
 
-const WORKFLOWS = [
+type WorkflowItem = {
+  title: string;
+  description: string;
+  href: string;
+  sdkHref: string;
+  icon: LucideIcon;
+  isLink?: boolean;
+};
+
+const WORKFLOWS: WorkflowItem[] = [
   {
     title: 'Fix Vulnerabilities',
     description: 'Scans repositories, fixes vulnerabilities, and opens reviewable PRs.',
     href: 'https://app.all-hands.dev/login',
     sdkHref: 'https://github.com/OpenHands/extensions/tree/main/plugins/vulnerability-remediation',
-    iconSrc:
-      '/assets/webflow/icons/Tools_Icon.svg',
+    icon: ShieldAlert,
   },
   {
     title: 'Review PRs',
     description: 'Reviews PRs for quality, security, and best practices.',
     href: 'https://app.all-hands.dev/login',
     sdkHref: 'https://github.com/OpenHands/extensions/tree/main/plugins/pr-review',
-    iconSrc:
-      '/assets/webflow/icons/Search_Icon.svg',
+    icon: GitPullRequest,
   },
   {
     title: 'Migrate Code',
     description: 'Migrates legacy COBOL systems to Java with testing and validation built in.',
     href: 'https://app.all-hands.dev/login',
     sdkHref: 'https://github.com/OpenHands/extensions/tree/main/plugins/cobol-modernization',
-    iconSrc:
-      '/assets/webflow/icons/Arrow_Right_Circle.svg',
+    icon: ArrowRightCircle,
   },
   {
     title: 'Triage Incidents',
     description: 'Investigates errors, finds root causes, and posts actionable debugging insights.',
     href: 'https://app.all-hands.dev/login',
     sdkHref: 'https://github.com/OpenHands/software-agent-sdk/tree/main/examples/03_github_workflows/05_posthog_debugging',
-    iconSrc:
-      '/assets/webflow/icons/Exclamation_Triangle_Icon.svg',
+    icon: TriangleAlert,
   },
   {
     title: 'See all use cases',
-    // Live's "See all use cases" final card has no description paragraph
-    // and uses an Eye Icon (not Search), so keep description empty and
-    // point at the local Eye_Icon asset.  Earlier the card used the
-    // Search icon + a description, producing both an extra-on-test P:
-    // signature and an IMG:[src:eyeicon] missing-on-test entry.
     description: '',
     href: 'https://docs.openhands.dev/openhands/usage/use-cases/overview',
     sdkHref: '',
-    iconSrc:
-      '/assets/webflow/icons/Eye_Icon.svg',
+    icon: Eye,
     isLink: true,
   },
 ];
+
+function WorkflowCarouselIcon({ icon: Icon }: { icon: LucideIcon }) {
+  return (
+    <div data-wf-el='capabilities_card_icon' className='flex h-9 w-9 flex-shrink-0 items-center justify-center text-brand-fg' aria-hidden='true'>
+      <Icon className='h-6 w-6' strokeWidth={1.75} aria-hidden='true' />
+    </div>
+  );
+}
+
+function WorkflowDialogIcon({ icon: Icon }: { icon: LucideIcon }) {
+  return (
+    <div data-modal-content='icon' className='dialog_top_icon flex items-center justify-center text-brand-fg' aria-hidden='true'>
+      <Icon className='h-8 w-8' strokeWidth={1.75} aria-hidden='true' />
+    </div>
+  );
+}
 
 // Live homepage renders three stacked cards (SDK / Cloud / CLI) inside one
 // "hero-content" column plus a hero-track of three images alongside, rather
@@ -340,8 +366,13 @@ const Home = () => {
   const [activeTestimonial, setActiveTestimonial] = React.useState(0);
   const [workflowOffset, setWorkflowOffset] = React.useState(0);
   const [activeSurfaceIndex, setActiveSurfaceIndex] = React.useState(DEFAULT_SURFACE_INDEX);
-  const [activeWorkflow, setActiveWorkflow] = React.useState<(typeof WORKFLOWS)[number] | null>(null);
+  const [activeWorkflow, setActiveWorkflow] = React.useState<WorkflowItem | null>(null);
   const workflowDialogRef = React.useRef<HTMLDialogElement>(null);
+  const workflowViewportRef = React.useRef<HTMLDivElement>(null);
+  const workflowTrackRef = React.useRef<HTMLDivElement>(null);
+  const [workflowCardStep, setWorkflowCardStep] = React.useState(294);
+  const [maxWorkflowOffset, setMaxWorkflowOffset] = React.useState(WORKFLOWS.length - 1);
+  const [maxWorkflowTranslate, setMaxWorkflowTranslate] = React.useState(0);
   const logoMarqueeRef = React.useRef<HTMLDivElement>(null);
   const logoMarqueeTrackRef = React.useRef<HTMLDivElement>(null);
   const logoMarqueeGroupRef = React.useRef<HTMLDivElement>(null);
@@ -426,11 +457,52 @@ const Home = () => {
     return () => observer.disconnect();
   }, []);
 
-  const visibleWorkflows = React.useMemo(
-    () => Array.from({ length: WORKFLOWS.length }, (_, index) => WORKFLOWS[(workflowOffset + index) % WORKFLOWS.length]),
-    [workflowOffset],
-  );
+  React.useEffect(() => {
+    const measureWorkflowCarousel = () => {
+      const track = workflowTrackRef.current;
+      const viewport = workflowViewportRef.current;
+      const firstCard = track?.firstElementChild as HTMLElement | null;
+      if (!track || !viewport || !firstCard) return;
 
+      const gap = Number.parseFloat(getComputedStyle(track).columnGap || getComputedStyle(track).gap || '24') || 24;
+      const step = firstCard.offsetWidth + gap;
+      const maxTranslate = Math.max(0, track.scrollWidth - viewport.clientWidth);
+      const lastOffset = step > 0 ? Math.ceil(maxTranslate / step) : 0;
+
+      setWorkflowCardStep(step);
+      setMaxWorkflowTranslate(maxTranslate);
+      setMaxWorkflowOffset(lastOffset);
+      setWorkflowOffset((current) => Math.min(current, lastOffset));
+    };
+
+    measureWorkflowCarousel();
+    window.addEventListener('resize', measureWorkflowCarousel);
+
+    let resizeObserver: ResizeObserver | undefined;
+    if (typeof ResizeObserver !== 'undefined') {
+      resizeObserver = new ResizeObserver(measureWorkflowCarousel);
+      if (workflowTrackRef.current) resizeObserver.observe(workflowTrackRef.current);
+      if (workflowViewportRef.current) resizeObserver.observe(workflowViewportRef.current);
+    }
+
+    return () => {
+      window.removeEventListener('resize', measureWorkflowCarousel);
+      resizeObserver?.disconnect();
+    };
+  }, []);
+
+  const shiftWorkflow = (direction: -1 | 1) => {
+    setWorkflowOffset((current) => {
+      if (direction === -1) return Math.max(0, current - 1);
+      return Math.min(maxWorkflowOffset, current + 1);
+    });
+  };
+
+  const isAtWorkflowStart = workflowOffset === 0;
+  const isAtWorkflowEnd = workflowOffset >= maxWorkflowOffset;
+  const workflowTranslateX = workflowOffset >= maxWorkflowOffset
+    ? maxWorkflowTranslate
+    : workflowOffset * workflowCardStep;
 
   const closeWorkflowDialog = () => setActiveWorkflow(null);
 
@@ -461,7 +533,7 @@ const Home = () => {
                   <path d='M0.183617 0.183617C0.241674 0.125413 0.310643 0.0792341 0.386575 0.047726C0.462506 0.016218 0.543908 0 0.626117 0C0.708326 0 0.789728 0.016218 0.865659 0.047726C0.941591 0.0792341 1.01056 0.125413 1.06862 0.183617L4.37612 3.49237L7.68362 0.183617C7.74173 0.125507 7.81071 0.0794115 7.88664 0.0479627C7.96256 0.0165138 8.04394 0.000327229 8.12612 0.000327229C8.2083 0.000327229 8.28967 0.0165138 8.3656 0.0479627C8.44152 0.0794115 8.51051 0.125507 8.56862 0.183617C8.62673 0.241727 8.67282 0.310713 8.70427 0.386637C8.73572 0.462562 8.75191 0.543937 8.75191 0.626117C8.75191 0.708297 8.73572 0.789672 8.70427 0.865597C8.67282 0.941521 8.62673 1.01051 8.56862 1.06862L5.25987 4.37612L8.56862 7.68362C8.62673 7.74173 8.67282 7.81071 8.70427 7.88664C8.73572 7.96256 8.75191 8.04394 8.75191 8.12612C8.75191 8.2083 8.73572 8.28967 8.70427 8.3656C8.67282 8.44152 8.62673 8.51051 8.56862 8.56862C8.51051 8.62673 8.44152 8.67282 8.3656 8.70427C8.28967 8.73572 8.2083 8.75191 8.12612 8.75191C8.04394 8.75191 7.96256 8.73572 7.88664 8.70427C7.81071 8.67282 7.74173 8.62673 7.68362 8.56862L4.37612 5.25987L1.06862 8.56862C1.01051 8.62673 0.941521 8.67282 0.865597 8.70427C0.789672 8.73572 0.708297 8.75191 0.626117 8.75191C0.543937 8.75191 0.462562 8.73572 0.386637 8.70427C0.310713 8.67282 0.241727 8.62673 0.183617 8.56862C0.125507 8.51051 0.0794115 8.44152 0.0479627 8.3656C0.0165138 8.28967 0.000327229 8.2083 0.000327229 8.12612C0.000327229 8.04394 0.0165138 7.96256 0.0479627 7.88664C0.0794115 7.81071 0.125507 7.74173 0.183617 7.68362L3.49237 4.37612L0.183617 1.06862C0.125413 1.01056 0.0792341 0.941591 0.047726 0.865659C0.016218 0.789728 0 0.708326 0 0.626117C0 0.543908 0.016218 0.462506 0.047726 0.386575C0.0792341 0.310643 0.125413 0.241674 0.183617 0.183617Z' fill='currentColor' />
                 </svg>
               </button>
-              <img data-modal-content='icon' src={activeWorkflow.iconSrc} alt='' className='dialog_top_icon' />
+              <WorkflowDialogIcon icon={activeWorkflow.icon} />
               <div className='dialog_top_content'>
                 <h3 id='workflow-dialog-title' data-modal-content='title' className='dialog_top_heading h3'>
                   {activeWorkflow.title}
@@ -503,7 +575,7 @@ const Home = () => {
       </dialog>
 
       {/* SECTION 0: section-hero — contains hero+carousel+logos+SDK (matches live 1761px mega-section) */}
-      <section data-wf-el='section-hero' className='relative' style={{ display: 'block', backgroundColor: 'rgba(0, 0, 0, 0)', paddingTop: '0px', paddingBottom: '0px', paddingLeft: '0px', paddingRight: '0px' }}>
+      <section data-wf-el='section-hero' className='relative' style={{ display: 'block', backgroundColor: 'rgba(0, 0, 0, 0)', paddingTop: '24px', paddingBottom: '64px', paddingLeft: '0px', paddingRight: '0px' }}>
         {/* Live's `.hero` has `min-height: 100vh` — required so the
           * ASCII canvas behind the hero can fill the viewport on tall
           * screens.  Without it, the hero collapses to the height of
@@ -515,7 +587,7 @@ const Home = () => {
           </div>
 
           <div data-wf-el='container' className='relative z-10 mx-auto w-full max-w-[1238px]'>
-            <div data-wf-el='hero-content' className='w-full' style={{ textAlign: 'center', paddingTop: '56px', paddingBottom: '72px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: '32px' }}>
+            <div data-wf-el='hero-content' className='w-full' style={{ textAlign: 'center', paddingTop: '88px', paddingBottom: '56px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: '40px' }}>
 
               {/* Live's `.hero-heading_wrap` has no max-width and no auto
                 * margins — it inherits flex centering from its parent.
@@ -580,105 +652,121 @@ const Home = () => {
               * buttons div as siblings — the earlier extra
               * `<div className='max-w-[384px]'>` wrapper was breaking
               * the structural parity. */}
-            <div data-wf-el='hero-splide_top' className='mb-4 flex flex-wrap justify-between gap-x-12 gap-y-4' style={{ alignItems: 'center' }}>
-              {/* Live: `.hero-splide_heading.h2 { margin-bottom: 0;
-                * font-size: 2rem (32px) }`.  Use a fixed 32px size
-                * here (not `fluid-h3`) to match live exactly. */}
-              <h2 data-wf-el='hero-splide_heading' className='font-medium text-brand-fg' style={{ fontSize: '32px', lineHeight: '1.1', letterSpacing: '-0.02em', marginBottom: '0px' }}>
+            <div data-wf-el='hero-splide_top' className='mb-4 flex w-full flex-wrap justify-center gap-x-12 gap-y-4 text-center' style={{ alignItems: 'center', paddingTop: '32px' }}>
+              <h2 data-wf-el='hero-splide_heading' className='w-full font-medium text-brand-fg' style={{ fontSize: '32px', lineHeight: '1.1', letterSpacing: '-0.02em', marginBottom: '0px', textAlign: 'center' }}>
                 Start with a proven workflow
               </h2>
-            <div data-wf-el='hero-splide_buttons' className='hidden items-center gap-4 md:flex' style={{ justifyContent: 'flex-start' }}>
-              <button
-                type='button'
-                onClick={() => setWorkflowOffset((current) => (current === 0 ? WORKFLOWS.length - 1 : current - 1))}
-                className='block w-8 cursor-pointer p-1 text-brand-fg transition-colors hover:opacity-80'
-                style={{ background: 'transparent', boxSizing: 'content-box' }}
-                aria-label='Previous workflow'
-              >
-                <svg data-wf-el='hero-splide_button' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' className='block w-full' style={{ fill: 'none' }} aria-hidden='true'>
-                  <path fillRule='evenodd' clipRule='evenodd' d='M30 16C30 16.2652 29.8946 16.5195 29.7071 16.7071C29.5196 16.8946 29.2652 17 29 17L5.414 17L11.708 23.292C11.8958 23.4797 12.0013 23.7344 12.0013 24C12.0013 24.2655 11.8958 24.5202 11.708 24.708C11.5202 24.8957 11.2656 25.0012 11 25.0012C10.7344 25.0012 10.4798 24.8957 10.292 24.708L2.292 16.708C2.19887 16.6151 2.12499 16.5047 2.07458 16.3832C2.02416 16.2617 1.99821 16.1315 1.99821 16C1.99821 15.8684 2.02416 15.7382 2.07458 15.6167C2.12499 15.4952 2.19887 15.3848 2.292 15.292L10.292 7.29196C10.4798 7.10419 10.7345 6.9987 11 6.9987C11.2656 6.9987 11.5202 7.10419 11.708 7.29196C11.8958 7.47973 12.0013 7.73441 12.0013 7.99996C12.0013 8.26551 11.8958 8.52019 11.708 8.70796L5.414 15L29 15C29.2652 15 29.5196 15.1053 29.7071 15.2929C29.8946 15.4804 30 15.7347 30 16Z' />
-                </svg>
-              </button>
-              <button
-                type='button'
-                onClick={() => setWorkflowOffset((current) => (current + 1) % WORKFLOWS.length)}
-                className='block w-8 cursor-pointer p-1 text-brand-fg transition-colors hover:opacity-80'
-                style={{ background: 'transparent', boxSizing: 'content-box' }}
-                aria-label='Next workflow'
-              >
-                <svg data-wf-el='hero-splide_button' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' className='block w-full' style={{ fill: 'none' }} aria-hidden='true'>
-                  <path fillRule='evenodd' clipRule='evenodd' d='M2 16C2 15.7348 2.10536 15.4805 2.29289 15.2929C2.48043 15.1054 2.73478 15 3 15H26.586L20.292 8.70804C20.1042 8.52027 19.9987 8.26559 19.9987 8.00004C19.9987 7.73449 20.1042 7.47982 20.292 7.29204C20.4798 7.10427 20.7344 6.99878 21 6.99878C21.2656 6.99878 21.5202 7.10427 21.708 7.29204L29.708 15.292C29.8011 15.3849 29.875 15.4953 29.9254 15.6168C29.9758 15.7383 30.0018 15.8685 30.0018 16C30.0018 16.1316 29.9758 16.2618 29.9254 16.3833C29.875 16.5048 29.8011 16.6152 29.708 16.708L21.708 24.708C21.5202 24.8958 21.2656 25.0013 21 25.0013C20.7344 25.0013 20.4798 24.8958 20.292 24.708C20.1042 24.5203 19.9987 24.2656 19.9987 24C19.9987 23.7345 20.1042 23.4798 20.292 23.292L26.586 17H3C2.73478 17 2.48043 16.8947 2.29289 16.7071C2.10536 16.5196 2 16.2653 2 16Z' />
-                </svg>
-              </button>
             </div>
-          </div>
 
-          {/* Live wraps this in a Splide carousel; we use a CSS scroll-snap
-              row with manual prev/next buttons. Tag with `data-splide` so the
-              widget parity check matches live's mast Splide instance. */}
-          <div data-splide='workflows' className='flex cursor-grab gap-6 overflow-x-auto lg:overflow-visible' style={{ scrollSnapType: 'x mandatory' }}>
-            {visibleWorkflows.map((workflow) => (
-              <article
-                key={workflow.title}
-                data-wf-el='capabilities_card_wrap'
-                className='flex w-[270px] flex-shrink-0 cursor-grab flex-col gap-4 rounded-2xl border border-[rgba(30,21,15,0.2)] bg-[#f9f6e9] p-6 md:w-[352px]'
-                style={{ scrollSnapAlign: 'start', justifyContent: 'flex-start', alignItems: 'flex-start' }}
+          <div className='flex items-center gap-3 pb-8 md:gap-4 md:pb-10'>
+            <button
+              type='button'
+              onClick={() => shiftWorkflow(-1)}
+              disabled={isAtWorkflowStart}
+              className={`flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full border border-[rgba(30,21,15,0.2)] bg-[#f9f6e9] text-brand-fg transition-colors ${
+                isAtWorkflowStart
+                  ? 'cursor-default opacity-40'
+                  : 'cursor-pointer hover:bg-brand-accent'
+              }`}
+              style={{ boxSizing: 'border-box' }}
+              aria-label='Previous workflow'
+              aria-disabled={isAtWorkflowStart}
+            >
+              <span data-wf-el='hero-splide_button' className='flex items-center justify-center' aria-hidden='true'>
+                <ChevronLeft className='h-6 w-6' strokeWidth={1.75} />
+              </span>
+            </button>
+
+          <div ref={workflowViewportRef} className='min-w-0 flex-1 overflow-hidden'>
+            <LazyMotion features={domAnimation}>
+              <m.div
+                ref={workflowTrackRef}
+                data-splide='workflows'
+                className='flex w-max cursor-grab gap-6'
+                animate={{ x: -workflowTranslateX }}
+                transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
               >
-                {/* Live's `.capabilities_card_icon` is `width: 2.25rem`
-                  * (36px) with NO margin-bottom — the spacing between
-                  * the icon and the title comes from the `gap: 1rem`
-                  * on `.capabilities_card_wrap`.  The earlier `mb-4`
-                  * doubled that gap (gap-4 = 16px parent gap + mb-4 =
-                  * 16px on the icon = 32px total) and pushed every
-                  * H3/P beneath the icon down by 16px. */}
-                <img data-wf-el='capabilities_card_icon' src={workflow.iconSrc} alt='' className='h-9 w-9' style={{ verticalAlign: 'bottom', marginBottom: '0px', objectFit: 'fill' }} />
-                <div data-wf-el='capabilities_card_content' className='flex flex-col gap-1'>
-                  {/* Live's `.capabilities_card_heading` strips the
-                      H3 element's default mb (9.6) — vertical spacing
-                      below the heading comes from the next element's
-                      mt instead. */}
-                  <h3 data-wf-el='capabilities_card_heading' className='text-[24px] font-medium leading-[1.2] text-brand-fg' style={{ marginBottom: 0 }}>{workflow.title}</h3>
-                  {workflow.description ? (
-                    <p data-wf-el='capabilities_card_paragraph' className='font-mono text-base leading-[1.3] text-brand-fg'>{workflow.description}</p>
-                  ) : null}
-                </div>
-                {workflow.isLink ? (
-                  // Live's "View docs" link uses the same `.capabilities_card_button`
-                  // class as the Launch buttons: yellow bg (#FFFF8B), 8px
-                  // border-radius, font-weight 400, line-height 22.4px,
-                  // no text-decoration.
+            {WORKFLOWS.map((workflow) => {
+              const cardBody = (
+                <>
+                  <WorkflowCarouselIcon icon={workflow.icon} />
+                  <div data-wf-el='capabilities_card_content' className='flex flex-col gap-1'>
+                    <h3 data-wf-el='capabilities_card_heading' className='text-[24px] font-medium leading-[1.2] text-brand-fg' style={{ marginBottom: 0 }}>{workflow.title}</h3>
+                    {workflow.description ? (
+                      <p data-wf-el='capabilities_card_paragraph' className='fluid-sm font-medium text-brand-muted' style={{ margin: 0 }}>
+                        {workflow.description}
+                      </p>
+                    ) : null}
+                  </div>
+                </>
+              );
+
+              if (workflow.isLink) {
+                return (
                   <a
-                    data-wf-el='capabilities_card_button'
+                    key={workflow.title}
                     href={workflow.href}
                     target='_blank'
                     rel='noopener noreferrer'
-                    className='capabilities_card_button mt-auto inline-flex w-full items-center justify-center bg-brand-accent px-8 py-4 text-center text-base text-brand-fg no-underline'
-                    style={{ borderRadius: '8px', fontWeight: 400, lineHeight: '22.4px', textDecoration: 'none' }}
+                    data-wf-el='capabilities_card_wrap'
+                    className='flex w-[270px] flex-shrink-0 cursor-pointer flex-col gap-4 rounded-2xl border border-[rgba(30,21,15,0.2)] bg-[#f9f6e9] p-6 no-underline transition-colors hover:bg-[#f3eedc] md:w-[352px]'
+                    style={{ scrollSnapAlign: 'start', justifyContent: 'flex-start', alignItems: 'flex-start' }}
                   >
-                    View docs
+                    {cardBody}
                   </a>
-                ) : (
-                  <button
-                    type='button'
-                    data-testid='workflow-launch'
-                    data-modal='open'
-                    data-wf-el='capabilities_card_button'
-                    data-sdk-url={workflow.sdkHref ?? ''}
-                    data-cloud-url=''
-                    onClick={() => setActiveWorkflow(workflow)}
-                    className='capabilities_card_button mt-auto inline-flex w-full items-center justify-center bg-brand-accent px-8 py-4 text-base text-brand-fg transition-colors'
-                    style={{ borderRadius: '8px', fontWeight: 400, lineHeight: '22.4px' }}
-                  >
-                    <div>Launch</div>
-                  </button>
-                )}
-              </article>
-            ))}
+                );
+              }
+
+              return (
+                <article
+                  key={workflow.title}
+                  data-testid='workflow-launch'
+                  data-modal='open'
+                  data-wf-el='capabilities_card_wrap'
+                  data-sdk-url={workflow.sdkHref ?? ''}
+                  data-cloud-url=''
+                  role='button'
+                  tabIndex={0}
+                  onClick={() => setActiveWorkflow(workflow)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault();
+                      setActiveWorkflow(workflow);
+                    }
+                  }}
+                  className='flex w-[270px] flex-shrink-0 cursor-pointer flex-col gap-4 rounded-2xl border border-[rgba(30,21,15,0.2)] bg-[#f9f6e9] p-6 transition-colors hover:bg-[#f3eedc] md:w-[352px]'
+                  style={{ scrollSnapAlign: 'start', justifyContent: 'flex-start', alignItems: 'flex-start' }}
+                >
+                  {cardBody}
+                </article>
+              );
+            })}
+              </m.div>
+            </LazyMotion>
+          </div>
+
+            <button
+              type='button'
+              onClick={() => shiftWorkflow(1)}
+              disabled={isAtWorkflowEnd}
+              className={`flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full border border-[rgba(30,21,15,0.2)] bg-[#f9f6e9] text-brand-fg transition-colors ${
+                isAtWorkflowEnd
+                  ? 'cursor-default opacity-40'
+                  : 'cursor-pointer hover:bg-brand-accent'
+              }`}
+              style={{ boxSizing: 'border-box' }}
+              aria-label='Next workflow'
+              aria-disabled={isAtWorkflowEnd}
+            >
+              <span data-wf-el='hero-splide_button' className='flex items-center justify-center' aria-hidden='true'>
+                <ChevronRight className='h-6 w-6' strokeWidth={1.75} />
+              </span>
+            </button>
           </div>
           </div>
 
           {/* Logo grid (inside hero section) */}
-          <div data-wf-el='logo-grid-component_wrap' className='w-full' style={{ paddingTop: '56px' }}>
+          <div data-wf-el='logo-grid-component_wrap' className='w-full' style={{ paddingTop: '80px' }}>
             <div data-wf-el='logo-grid-component_heading_container' className='mx-auto max-w-[1238px]' style={{ textAlign: 'center' }}>
               {/* Live's `.h2` margin-bottom (used for this heading via
                 * the `.u-mb-xs` modifier) computes to 9.6px — `mb-5` was
@@ -707,7 +795,7 @@ const Home = () => {
           </div>
 
 
-          <div data-wf-el='hero-preview' className='mx-auto w-full max-w-[1238px]' style={{ paddingTop: '40px', paddingBottom: '24px' }}>
+          <div data-wf-el='hero-preview' className='mx-auto w-full max-w-[1238px]' style={{ paddingTop: '56px', paddingBottom: '48px' }}>
             <img
               src={HERO_AUTOMATIONS_IMAGE}
               alt='OpenHands Automations dashboard screenshot'

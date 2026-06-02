@@ -37,9 +37,12 @@ describe('home route parity structure', () => {
     const { container } = renderRoute();
 
     expect(screen.getAllByTestId('workflow-launch')).toHaveLength(4);
-    expect((container.innerHTML.match(/>Launch</g) ?? []).length).toBe(4);
+    expect(screen.queryByText('Launch')).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Download CLI' })).not.toBeInTheDocument();
-    expect(screen.getByText('View docs')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'See all use cases' })).toHaveAttribute(
+      'href',
+      'https://docs.openhands.dev/openhands/usage/use-cases/overview',
+    );
     const installLink = screen.getByRole('link', { name: 'Install OpenHands' });
     expect(installLink).toHaveAttribute(
       'href',
