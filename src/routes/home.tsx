@@ -752,7 +752,7 @@ const Home = () => {
               {/* Live's `.h2` margin-bottom (used for this heading via
                 * the `.u-mb-xs` modifier) computes to 9.6px — `mb-5` was
                 * 20px, adding ~10px of unwanted space above the logos. */}
-              <div data-wf-el='logo-grid-component_heading_heading' className='fluid-sm text-center text-brand-fg' style={{ marginBottom: '9.6px' }}>
+              <div data-wf-el='logo-grid-component_heading_heading' className='fluid-h4 w-full text-center font-medium text-brand-fg' style={{ letterSpacing: '-0.02em', marginBottom: '9.6px' }}>
                 Trusted by engineers at
               </div>
             </div>

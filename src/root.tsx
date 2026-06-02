@@ -30,7 +30,7 @@ import { PixelBlastRenderer } from './components/pixel-blast-renderer';
 export const links: Route.LinksFunction = () => [
   {
     rel: 'icon',
-    href: '/all-hands-logo-1.svg',
+    href: '/favicon.svg',
     type: 'image/svg+xml',
   },
   // Preload the exact live Webflow brand font used above the fold.
