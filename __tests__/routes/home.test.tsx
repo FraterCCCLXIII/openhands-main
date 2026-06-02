@@ -1,21 +1,35 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import statistics from '../../src/data/statistics.json';
+import { Header } from '../../src/components/header';
 import { PixelBlastProvider } from '../../src/contexts/pixel-blast-context';
+import { HomeVariantProvider } from '../../src/contexts/home-variant-context';
+import { HOME_VARIANT_STORAGE_KEY } from '../../src/constants/home-variants';
 import Home from '../../src/routes/home';
 
-const renderRoute = () => {
+const renderRoute = ({ includeHeader = false, width = 1440 }: { includeHeader?: boolean; width?: number } = {}) => {
   return render(
     <MemoryRouter initialEntries={['/']}>
-      <PixelBlastProvider>
-        <Home />
-      </PixelBlastProvider>
+      <HomeVariantProvider>
+        <PixelBlastProvider>
+          {includeHeader ? <Header width={width} showMenuIcon onClickMenuButton={() => {}} /> : null}
+          <Home />
+        </PixelBlastProvider>
+      </HomeVariantProvider>
     </MemoryRouter>,
   );
 };
 
+const selectHomeVariant = (variantId: 'v1' | 'v2') => {
+  fireEvent.click(screen.getByTestId('home-variant-switcher-trigger'));
+  fireEvent.click(screen.getByTestId(`home-variant-option-${variantId}`));
+};
+
 describe('home route parity structure', () => {
+  beforeEach(() => {
+    window.localStorage.removeItem(HOME_VARIANT_STORAGE_KEY);
+  });
   it('matches the visible heading sequence expected by the parity audit', () => {
     renderRoute();
 
@@ -89,8 +103,35 @@ describe('home route parity structure', () => {
     expect(container.textContent).toContain("Built on an open source foundation, it's designed for enterprise software development at scale.");
   });
 
+  it('renders the homepage variant switcher', () => {
+    renderRoute();
+
+    expect(screen.getByTestId('home-variant-switcher')).toBeInTheDocument();
+    expect(screen.getByTestId('home-variant-switcher-trigger')).toBeInTheDocument();
+  });
+
+  it('shows Version 1 workflow carousel when selected', () => {
+    renderRoute();
+    selectHomeVariant('v1');
+
+    expect(screen.getByRole('heading', { name: 'Start with a proven workflow' })).toBeInTheDocument();
+    expect(screen.getAllByTestId('workflow-launch').length).toBeGreaterThan(0);
+  });
+
+  it('uses compact header nav links and CTA on Version 3', () => {
+    renderRoute({ includeHeader: true, width: 1440 });
+    selectHomeVariant('v3');
+
+    const nav = screen.getByRole('navigation');
+    expect(within(nav).getByRole('link', { name: 'Community' })).toHaveClass('text-sm');
+
+    const headerCta = within(nav).getByRole('link', { name: 'Get OpenHands' });
+    expect(headerCta.parentElement).toHaveStyle({ padding: '0.65em 1.35em' });
+  });
+
   it.skip('opens a live-like workflow launch dialog instead of navigating directly', () => {
     const { container } = renderRoute();
+    selectHomeVariant('v1');
     const [firstLaunch] = screen.getAllByTestId('workflow-launch');
 
     expect(firstLaunch).toHaveAttribute(

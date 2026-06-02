@@ -14,6 +14,15 @@ import {
   PRODUCT_DROPDOWN_ITEMS,
   type ProductDropdownIcon,
 } from '~/constants/site-shell';
+import {
+  HOME_V3_NAV_CTA_FONT_SIZE,
+  HOME_V3_NAV_CTA_PADDING,
+  HOME_V3_NAV_DROPDOWN_ICON_SIZE,
+  HOME_V3_NAV_LINK_CLASS,
+  HOME_V3_NAV_LINK_GAP,
+  usesCompactHomeHeader,
+} from '~/constants/home-variants';
+import { useHomeVariant } from '~/contexts/home-variant-context';
 import { formatThousands } from '~/utils/format-thousands';
 import { isPathActive, normalizePathname } from '~/utils/normalize-pathname';
 
@@ -99,16 +108,48 @@ const NAV_CTA_BASE_STYLE: React.CSSProperties = {
   gap: '6.4px',
 };
 
+const NAV_LINK_CLASS = 'text-base font-normal leading-[22.4px]';
+
+const NAV_DROPDOWN_LINK_CLASS = 'nav_links_link is-dropdown nav-dropdown-link';
+
+const NAV_DROPDOWN_LINK_STYLE: React.CSSProperties = {
+  position: 'relative',
+  display: 'flex',
+  flexDirection: 'column',
+  justifyContent: 'flex-start',
+  alignItems: 'flex-start',
+  gap: '8px',
+  width: '100%',
+  height: '100%',
+  minHeight: '100%',
+  flex: '1 1 auto',
+  color: 'rgb(249, 240, 217)',
+  fontSize: '16px',
+  lineHeight: '22.4px',
+  textDecoration: 'none',
+};
+
+const NAV_DROPDOWN_ITEM_STYLE: React.CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  margin: 0,
+  padding: 0,
+  height: '100%',
+  minHeight: '100%',
+};
+
 function NavHeaderCtaButton({
   label,
   href,
   variant,
   blend,
+  compact = false,
 }: {
   label: string;
   href: string;
   variant: 'primary' | 'outline';
   blend?: number;
+  compact?: boolean;
 }) {
   const isOutline = variant === 'outline';
   const useScrollBlend = blend !== undefined;
@@ -123,6 +164,13 @@ function NavHeaderCtaButton({
       )}
       style={{
         ...NAV_CTA_BASE_STYLE,
+        ...(compact
+          ? {
+              padding: HOME_V3_NAV_CTA_PADDING,
+              fontSize: HOME_V3_NAV_CTA_FONT_SIZE,
+              alignSelf: 'center',
+            }
+          : {}),
         ...(useScrollBlend
           ? ({ '--nav-cta-blend': resolvedBlend } as React.CSSProperties)
           : isOutline
@@ -134,7 +182,7 @@ function NavHeaderCtaButton({
             : {}),
       }}
     >
-      <div data-wf-el='btn-text' aria-hidden='true' style={{ whiteSpace: 'nowrap', cursor: 'auto', textUnderlineOffset: 'auto', pointerEvents: 'none' }}>
+      <div data-wf-el='btn-text' aria-hidden='true' style={{ whiteSpace: 'nowrap', cursor: 'auto', textUnderlineOffset: 'auto', pointerEvents: 'none', fontSize: compact ? HOME_V3_NAV_CTA_FONT_SIZE : undefined }}>
         {label}
       </div>
       <a href={href} target='_blank' rel='noopener noreferrer' className='absolute inset-0' style={{ textDecoration: 'underline', textDecorationThickness: '1.6px' }}>
@@ -160,6 +208,7 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const { scrollY } = useScroll();
   const location = useLocation();
+  const { variant: homeVariant } = useHomeVariant();
   const pathname = normalizePathname(location.pathname);
   const [textIsVisible, setTextIsVisible] = React.useState(true);
   const [resourcesOpen, setResourcesOpen] = React.useState(false);
@@ -168,6 +217,17 @@ export const Header: React.FC<HeaderProps> = ({
   const isCompact = width <= 1360;
   const menuOpen = showMenuIcon === false;
   const isHomePage = pathname === '/';
+  const useCompactNav = isHomePage && usesCompactHomeHeader(homeVariant);
+  const navLinkClass = useCompactNav ? HOME_V3_NAV_LINK_CLASS : NAV_LINK_CLASS;
+  const navLinkGap = useCompactNav ? HOME_V3_NAV_LINK_GAP : '1.5cqw';
+  const navDropdownIconSize = useCompactNav ? HOME_V3_NAV_DROPDOWN_ICON_SIZE : '19px';
+  const navLinkStyle: React.CSSProperties = useCompactNav
+    ? { ...NAV_LINK_STYLE, height: 'auto' }
+    : NAV_LINK_STYLE;
+  const navGitHubClass = clsx(
+    'flex items-center gap-[4px] hover:opacity-80',
+    useCompactNav ? HOME_V3_NAV_LINK_CLASS : 'text-base leading-[22.4px]',
+  );
   const [homeNavCtaBlend, setHomeNavCtaBlend] = React.useState(isHomePage ? 0 : 1);
 
   const updateHomeNavCtaBlend = React.useCallback(() => {
@@ -225,9 +285,12 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <nav
       data-wf-el='nav_wrap'
+      data-home-nav-compact={useCompactNav || undefined}
       className={clsx('sticky top-0 left-0 right-0 z-50 w-full', menuOpen && 'is-menu-open')}
       style={{
-        display: 'block',
+        display: useCompactNav ? 'flex' : 'block',
+        flexDirection: useCompactNav ? 'column' : undefined,
+        justifyContent: useCompactNav ? 'center' : undefined,
         height: isMobile ? '69.3437px' : '83.578125px',
         backgroundColor: menuOpen ? 'rgb(34, 21, 13)' : 'rgb(249, 240, 217)',
         color: menuOpen ? 'rgb(249, 240, 217)' : 'rgb(34, 21, 13)',
@@ -237,8 +300,19 @@ export const Header: React.FC<HeaderProps> = ({
       }}
     >
       <div data-wf-el='nav_contain' style={{ display: 'block', width: '95%', marginLeft: 'auto', marginRight: 'auto' }}>
-        <div data-wf-el='nav_grid' className='hidden lg:grid' style={{ display: isCompact ? 'none' : 'grid', gap: '16px', gridTemplateColumns: '1fr min-content 1fr', alignContent: 'center', position: 'relative' }}>
-          <div className='flex justify-start'>
+        <div
+          data-wf-el='nav_grid'
+          className='hidden lg:grid'
+          style={{
+            display: isCompact ? 'none' : 'grid',
+            gap: '16px',
+            gridTemplateColumns: '1fr min-content 1fr',
+            alignContent: 'center',
+            alignItems: useCompactNav ? 'center' : undefined,
+            position: 'relative',
+          }}
+        >
+          <div className={clsx('flex justify-start', useCompactNav && 'items-center')}>
             {/* Live's `.nav_logo_link` has an explicit `width: 192px` —
               * the SVG natural size is 195×30 but the link clamps it. */}
             <Link data-wf-el='nav_logo_link' to='/' className='w-inline-block' style={{ width: '192px', lineHeight: '16px', textDecorationLine: 'underline', textDecorationThickness: '1.6px', color: 'rgb(255, 255, 139)', alignSelf: 'center', position: 'relative', maxWidth: '100%' }}>
@@ -246,8 +320,18 @@ export const Header: React.FC<HeaderProps> = ({
             </Link>
           </div>
 
-          <div className='flex items-stretch justify-center'>
-            <ul data-wf-el='nav_links_list' style={{ display: 'flex', justifyContent: 'center', gap: '1.5cqw', alignItems: 'stretch', width: 'min-content', position: 'relative' }}>
+          <div className={clsx('flex justify-center', useCompactNav ? 'items-center' : 'items-stretch')}>
+            <ul
+              data-wf-el='nav_links_list'
+              style={{
+                display: 'flex',
+                justifyContent: 'center',
+                gap: navLinkGap,
+                alignItems: useCompactNav ? 'center' : 'stretch',
+                width: 'min-content',
+                position: 'relative',
+              }}
+            >
               {/* Product dropdown */}
               <li data-wf-el='nav_links_li' className='group' style={{ display: 'list-item' }}>
                 <a
@@ -259,15 +343,16 @@ export const Header: React.FC<HeaderProps> = ({
                     // Live's "Product" dropdown trigger is NOT highlighted when on
                     // /product subroutes — it stays brand-fg. Active highlight is
                     // applied per-item inside the dropdown only.
-                    'w-inline-block text-base font-normal leading-[22.4px] hover:text-[#8a5f45]'
+                    'w-inline-block hover:text-[#8a5f45]',
+                    navLinkClass,
                   )}
-                  style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', height: '100%', padding: '0 8px' }}
+                  style={navLinkStyle}
                   onMouseEnter={() => setProductOpen(true)}
                   onFocus={() => setProductOpen(true)}
                   onClick={(e) => { e.preventDefault(); setProductOpen(true); }}
                 >
                   <div>Product</div>
-                  <div data-wf-el='nav_links_icon' className={clsx('transition-transform', productOpen && 'rotate-180')} style={{ display: 'block', width: '19px', height: '19px', cursor: 'pointer', textAlign: 'start' }}>
+                  <div data-wf-el='nav_links_icon' className={clsx('transition-transform', productOpen && 'rotate-180')} style={{ display: 'block', width: navDropdownIconSize, height: navDropdownIconSize, cursor: 'pointer', textAlign: 'start' }}>
                     <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' style={{ width: '100%' }}>
                       <path d='M16.293 9.29297L12 13.586L7.70697 9.29297L6.29297 10.707L12 16.414L17.707 10.707L16.293 9.29297Z' fill='currentColor' />
                     </svg>
@@ -285,12 +370,12 @@ export const Header: React.FC<HeaderProps> = ({
                       <div data-wf-el='dropdown-eyebrow' className='eyebrow u-mb-0 font-mono' style={{ margin: 0, color: 'rgb(249, 240, 217)', fontSize: '14.08px', lineHeight: '16.896px' }}>Features</div>
                       <ul data-wf-el='nav_links_list' className='is-dropdown' style={{ position: 'relative', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', justifyContent: 'center', alignItems: 'stretch', gap: '21.6px', margin: 0, padding: 0, width: '100%' }}>
                         {PRODUCT_DROPDOWN_ITEMS.map((item) => (
-                          <li data-wf-el='nav_links_li' className='is-dropdown' key={item.name} style={{ display: 'list-item', margin: 0, padding: 0 }}>
+                          <li data-wf-el='nav_links_li' className='is-dropdown' key={item.name} style={NAV_DROPDOWN_ITEM_STYLE}>
                             <Link
                               to={item.to}
                               data-wf-el='nav_links_link'
-                              className='is-dropdown'
-                              style={{ position: 'relative', display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', gap: '8px', padding: 0, width: '100%', color: 'rgb(249, 240, 217)', fontSize: '16px', lineHeight: '22.4px' }}
+                              className={NAV_DROPDOWN_LINK_CLASS}
+                              style={NAV_DROPDOWN_LINK_STYLE}
                               onClick={() => setProductOpen(false)}
                             >
                               <div data-wf-el='nav_links_dropdown_icon' className='flex-shrink-0' style={{ display: 'flex', width: '30px', height: '30px', padding: '7px', color: 'rgb(255, 255, 139)', backgroundColor: 'rgb(0, 0, 0)', borderRadius: '8px', justifyContent: 'center', alignItems: 'center' }}>
@@ -315,8 +400,8 @@ export const Header: React.FC<HeaderProps> = ({
                       target='_blank'
                       rel='noopener noreferrer'
                       data-wf-el='nav_links_link'
-                      className='text-base font-normal leading-[22.4px] hover:text-[#8a5f45]'
-                      style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', height: '100%', padding: '0 8px' }}
+                      className={clsx(navLinkClass, 'hover:text-[#8a5f45]')}
+                      style={navLinkStyle}
                     >
                       {item.name}
                     </a>
@@ -325,13 +410,14 @@ export const Header: React.FC<HeaderProps> = ({
                       to={item.to}
                       data-wf-el='nav_links_link'
                       className={clsx(
-                        'text-base font-normal leading-[22.4px] hover:text-[#8a5f45]',
+                        navLinkClass,
+                        'hover:text-[#8a5f45]',
                         // Live openhands.dev only tints the *Home* nav link when active;
                         // other links (Community/Pricing/etc.) stay default brand-fg even
                         // on their own page. Tinting them produced parity color diffs.
                         item.to === '/' && isPathActive(pathname, item.to) && 'text-[#8a5f45]'
                       )}
-                      style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', height: '100%', padding: '0 8px' }}
+                      style={navLinkStyle}
                     >
                       {item.name}
                     </Link>
@@ -344,8 +430,8 @@ export const Header: React.FC<HeaderProps> = ({
                   target='_blank'
                   rel='noopener noreferrer'
                   data-wf-el='nav_links_link'
-                  className='text-base font-normal leading-[22.4px] hover:text-[#8a5f45]'
-                  style={NAV_LINK_STYLE}
+                  className={clsx(navLinkClass, 'hover:text-[#8a5f45]')}
+                  style={navLinkStyle}
                 >
                   {HEADER_CENTER_NAV_LINK.name}
                 </a>
@@ -353,15 +439,15 @@ export const Header: React.FC<HeaderProps> = ({
               {/* Resources dropdown */}
               <li data-wf-el='nav_links_li' className='group' style={{ display: 'list-item' }}>
                 <button
-                  className='flex items-center gap-1 text-base font-normal leading-[22.4px] hover:text-[#8a5f45]'
-                  style={{ cursor: 'default', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', height: '100%', padding: '0 8px', position: 'relative' }}
+                  className={clsx('flex items-center gap-1 hover:text-[#8a5f45]', navLinkClass)}
+                  style={{ ...navLinkStyle, cursor: 'default' }}
                   onMouseEnter={() => setResourcesOpen(true)}
                   onFocus={() => setResourcesOpen(true)}
                   onClick={() => setResourcesOpen(true)}
                   type='button'
                 >
                   <div>Resources</div>
-                  <div data-wf-el='nav_links_icon' className={clsx('transition-transform', resourcesOpen && 'rotate-180')} style={{ display: 'block', width: '19px', height: '19px', cursor: 'default', textAlign: 'center' }}>
+                  <div data-wf-el='nav_links_icon' className={clsx('transition-transform', resourcesOpen && 'rotate-180')} style={{ display: 'block', width: navDropdownIconSize, height: navDropdownIconSize, cursor: 'default', textAlign: 'center' }}>
                     <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' style={{ width: '100%' }}>
                       <path d='M16.293 9.29297L12 13.586L7.70697 9.29297L6.29297 10.707L12 16.414L17.707 10.707L16.293 9.29297Z' fill='currentColor' />
                     </svg>
@@ -382,15 +468,15 @@ export const Header: React.FC<HeaderProps> = ({
                         </div>
                         <ul data-wf-el='nav_links_list' className='is-dropdown' style={{ position: 'relative', display: 'grid', gridTemplateColumns: `repeat(${RESOURCE_DROPDOWN_COLUMN_COUNT}, 1fr)`, justifyContent: 'center', alignItems: 'stretch', gap: '21.6px', margin: 0, padding: 0, width: '100%' }}>
                           {group.links.map((resItem) => (
-                            <li data-wf-el='nav_links_li' className='is-dropdown' key={resItem.name} style={{ display: 'list-item', margin: 0, padding: 0 }}>
+                            <li data-wf-el='nav_links_li' className='is-dropdown' key={resItem.name} style={NAV_DROPDOWN_ITEM_STYLE}>
                               {resItem.external ? (
                                 <a
                                   href={resItem.to}
                                   target='_blank'
                                   rel='noopener noreferrer'
                                   data-wf-el='nav_links_link'
-                                  className='is-dropdown'
-                                  style={{ position: 'relative', display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', gap: '8px', padding: 0, width: '100%', color: 'rgb(249, 240, 217)', fontSize: '16px', lineHeight: '22.4px' }}
+                                  className={NAV_DROPDOWN_LINK_CLASS}
+                                  style={NAV_DROPDOWN_LINK_STYLE}
                                   onClick={() => setResourcesOpen(false)}
                                 >
                                   <div data-wf-el='nav_links_dropdown_icon' className='flex-shrink-0' style={{ display: 'flex', width: '30px', height: '30px', padding: '7px', color: 'rgb(255, 255, 139)', backgroundColor: 'rgb(0, 0, 0)', borderRadius: '8px', justifyContent: 'center', alignItems: 'center' }}>
@@ -402,8 +488,8 @@ export const Header: React.FC<HeaderProps> = ({
                                 <a
                                   href={resItem.to}
                                   data-wf-el='nav_links_link'
-                                  className='is-dropdown'
-                                  style={{ position: 'relative', display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', gap: '8px', padding: 0, width: '100%', color: 'rgb(249, 240, 217)', fontSize: '16px', lineHeight: '22.4px' }}
+                                  className={NAV_DROPDOWN_LINK_CLASS}
+                                  style={NAV_DROPDOWN_LINK_STYLE}
                                 >
                                   <div data-wf-el='nav_links_dropdown_icon' className='flex-shrink-0' style={{ display: 'flex', width: '30px', height: '30px', padding: '7px', color: 'rgb(255, 255, 139)', backgroundColor: 'rgb(0, 0, 0)', borderRadius: '8px', justifyContent: 'center', alignItems: 'center' }}>
                                     <ResourceDropdownIcon name={resItem.name} />
@@ -422,13 +508,17 @@ export const Header: React.FC<HeaderProps> = ({
             </ul>
           </div>
 
-          <div data-wf-el='nav_right' className='flex-shrink-0 items-center gap-5' style={{ position: 'relative', display: 'flex', justifyContent: 'flex-end' }}>
+          <div
+            data-wf-el='nav_right'
+            className={clsx('flex flex-shrink-0 items-center gap-5', useCompactNav && 'self-center')}
+            style={{ position: 'relative', display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}
+          >
               <a
                 data-wf-el='nav-menu_gh_count'
                 href='https://github.com/OpenHands/OpenHands'
                 target='_blank'
                 rel='noopener noreferrer'
-                className='flex items-center gap-[4px] text-base leading-[22.4px] hover:opacity-80'
+                className={navGitHubClass}
                 style={{ justifyContent: 'center', alignSelf: 'center' }}
               >
                 <div data-wf-el='nav-menu_gh_icon'><GitHubLogoBlack data-wf-el='bi-github' className='h-4 w-4 flex-shrink-0' style={{ width: '16px', height: '16px', verticalAlign: 'baseline' }} /></div>
@@ -442,6 +532,7 @@ export const Header: React.FC<HeaderProps> = ({
                 href={HEADER_GET_OPENHANDS_URL}
                 variant={homeNavCtaBlend >= 0.5 ? 'primary' : 'outline'}
                 blend={isHomePage ? homeNavCtaBlend : 1}
+                compact={useCompactNav}
               />
             </div>
         </div>
@@ -459,7 +550,7 @@ export const Header: React.FC<HeaderProps> = ({
                   href='https://github.com/OpenHands/OpenHands'
                   target='_blank'
                   rel='noopener noreferrer'
-                  className='flex items-center gap-[4px] text-base leading-[22.4px] hover:opacity-80'
+                  className={navGitHubClass}
                   style={{ justifyContent: 'center', alignSelf: 'center' }}
                 >
                   <div data-wf-el='nav-menu_gh_icon'><GitHubLogoBlack data-wf-el='bi-github' className='h-4 w-4 flex-shrink-0' style={{ width: '16px', height: '16px', verticalAlign: 'baseline' }} /></div>
@@ -473,6 +564,7 @@ export const Header: React.FC<HeaderProps> = ({
                 href={HEADER_GET_OPENHANDS_URL}
                 variant={homeNavCtaBlend >= 0.5 ? 'primary' : 'outline'}
                 blend={isHomePage ? homeNavCtaBlend : 1}
+                compact={useCompactNav}
               />
               </>
             ) : null}

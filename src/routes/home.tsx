@@ -23,13 +23,15 @@ import { formatThousands } from '~/utils/format-thousands';
 import { PixelBlastBackground } from '~/components/pixel-blast-background';
 import { createSocialPreviewMeta } from '~/utils/seo';
 import { EnterpriseLogoStrip } from '~/components/logos/enterprise-logo-strip';
-import { HOME_CUSTOMER_LOGOS } from '~/constants/customer-logos';
 import { ClaudeCodeIcon, CodexIcon, GeminiCliIcon } from '~/components/icons/agent-subscription-icons';
 import { HeroAppPreview } from '~/components/hero-app-preview';
 import { HERO_APP_PREVIEW_SLIDES } from '~/constants/hero-app-preview-slides';
+import { HomeHeroLogoGrid } from '~/components/home-hero-logo-grid';
+import { HomeVariantSwitcher } from '~/components/home-variant-switcher';
+import { useHomeVariant } from '~/contexts/home-variant-context';
+import { getHomeHeroContentPadding } from '~/constants/home-variants';
 
 const INSTALL_OPENHANDS_URL = HEADER_GET_OPENHANDS_URL;
-const SHOW_HERO_WORKFLOW_CAROUSEL = false;
 
 type HeroCompatibilityBadge = {
   name: string;
@@ -346,6 +348,9 @@ export const meta: Route.MetaFunction = () =>
   });
 
 const Home = () => {
+  const { variant, setVariant } = useHomeVariant();
+  const isVersion1 = variant === 'v1';
+  const heroContentPadding = getHomeHeroContentPadding(variant);
   const [activeTestimonial, setActiveTestimonial] = React.useState(0);
   const [workflowOffset, setWorkflowOffset] = React.useState(0);
   const [activeWorkflow, setActiveWorkflow] = React.useState<WorkflowItem | null>(null);
@@ -413,7 +418,7 @@ const Home = () => {
       window.removeEventListener('pageshow', updateMarqueeTiming);
       window.removeEventListener('resize', updateMarqueeTiming);
     };
-  }, []);
+  }, [variant]);
 
   React.useEffect(() => {
     const measureWorkflowCarousel = () => {
@@ -534,19 +539,46 @@ const Home = () => {
 
       {/* SECTION 0: section-hero — contains hero+carousel+logos+SDK (matches live 1761px mega-section) */}
       <section data-wf-el='section-hero' className='relative' style={{ display: 'block', backgroundColor: 'rgba(0, 0, 0, 0)', paddingTop: '0px', paddingBottom: '64px', paddingLeft: '0px', paddingRight: '0px' }}>
+        <div className='relative w-full'>
+          {!isVersion1 ? (
+            <div
+              data-wf-el='asci-wrap'
+              className='absolute inset-0 z-0 overflow-hidden'
+              style={{ backgroundColor: 'rgba(0, 0, 0, 0)', pointerEvents: 'auto' }}
+              aria-hidden='true'
+            >
+              <PixelBlastBackground />
+            </div>
+          ) : null}
+
         <div data-wf-el='hero' className='relative' style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', justifyContent: 'flex-start', alignItems: 'center' }}>
-          {/* ASCII murmuration is scoped to the top hero band only (heading + CTAs). */}
+          {/* Version 1: pixel background covers the heading band only. Version 2: it spans hero + preview via the wrapper above. */}
           <div
             data-wf-el='hero-top'
             className='relative w-full overflow-hidden'
             style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'center' }}
           >
+            {isVersion1 ? (
             <div data-wf-el='asci-wrap' className='absolute inset-0 z-0 overflow-hidden' style={{ backgroundColor: 'rgba(0, 0, 0, 0)', pointerEvents: 'auto' }}>
               <PixelBlastBackground />
             </div>
+            ) : null}
 
             <div data-wf-el='container' className='relative z-10 mx-auto w-full max-w-[1238px]'>
-              <div data-wf-el='hero-content' className='w-full' style={{ textAlign: 'center', paddingTop: '104px', paddingBottom: '80px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: '40px' }}>
+              <div
+                data-wf-el='hero-content'
+                className='w-full'
+                style={{
+                  textAlign: 'center',
+                  paddingTop: `${heroContentPadding.top}px`,
+                  paddingBottom: `${heroContentPadding.bottom}px`,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  gap: '40px',
+                }}
+              >
 
               {/* Live's `.hero-heading_wrap` has no max-width and no auto
                 * margins — it inherits flex centering from its parent.
@@ -628,7 +660,7 @@ const Home = () => {
           </div>
           </div>
 
-          {SHOW_HERO_WORKFLOW_CAROUSEL ? (
+          {isVersion1 ? (
           <div data-wf-el='container' className='relative z-10 mx-auto w-full max-w-[1238px]'>
             {/* Workflow carousel (inside hero section).  Live's
               * `.hero-splide_top` directly contains an `<h2>` and a
@@ -749,42 +781,30 @@ const Home = () => {
           </div>
           ) : null}
 
+          {isVersion1 ? (
+            <HomeHeroLogoGrid
+              key='home-logo-grid-v1'
+              logoMarqueeRef={logoMarqueeRef}
+              logoMarqueeTrackRef={logoMarqueeTrackRef}
+              logoMarqueeGroupRef={logoMarqueeGroupRef}
+            />
+          ) : null}
+
         </div>
 
           <div data-wf-el='hero-preview' className='relative z-10 mx-auto w-full max-w-[1238px] overflow-visible px-4 md:px-6' style={{ paddingTop: '56px', paddingBottom: '56px' }}>
             <HeroAppPreview slides={HERO_APP_PREVIEW_SLIDES} />
           </div>
+        </div>
 
-          {/* Logo grid — below product preview on paul-review-2 layout */}
-          <div data-wf-el='logo-grid-component_wrap' className='w-full' style={{ paddingTop: '48px', paddingBottom: '80px' }}>
-            <div data-wf-el='logo-grid-component_heading_container' className='mx-auto max-w-[1238px]' style={{ textAlign: 'center' }}>
-              {/* Live's `.h2` margin-bottom (used for this heading via
-                * the `.u-mb-xs` modifier) computes to 9.6px — `mb-5` was
-                * 20px, adding ~10px of unwanted space above the logos. */}
-              <div data-wf-el='logo-grid-component_heading_heading' className='fluid-h4 w-full text-center font-medium text-brand-fg' style={{ letterSpacing: '-0.02em', marginBottom: '9.6px' }}>
-                Trusted by engineers at
-              </div>
-            </div>
-            <div data-wf-el='logo-grid-component_container' className='mx-auto max-w-[1238px]'>
-              <div data-wf-el='logo-grid-component_cms_wrap' style={{ paddingTop: '24px' }}>
-                <div data-wf-el='logo-grid-component_cms_list' className='logo-grid logo-marquee' ref={logoMarqueeRef}>
-                  <div className='logo-marquee-track' ref={logoMarqueeTrackRef}>
-                    <div className='logo-marquee-group' ref={logoMarqueeGroupRef}>
-                      {HOME_CUSTOMER_LOGOS.map((logo) => (
-                        <img key={logo.name} src={logo.src} alt={logo.alt} />
-                      ))}
-
-                    </div>
-                    <div className='logo-marquee-group' aria-hidden='true'>
-                      {HOME_CUSTOMER_LOGOS.map((logo) => (
-                        <img key={`duplicate-${logo.name}`} src={logo.src} alt='' />
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          {!isVersion1 ? (
+            <HomeHeroLogoGrid
+              key='home-logo-grid-v2'
+              logoMarqueeRef={logoMarqueeRef}
+              logoMarqueeTrackRef={logoMarqueeTrackRef}
+              logoMarqueeGroupRef={logoMarqueeGroupRef}
+            />
+          ) : null}
       </section>
 
       {/* SECTION 1: Why teams choose OpenHands (py:80, transparent) */}
@@ -1182,6 +1202,8 @@ const Home = () => {
           </div>
         </div>
       </section>
+
+      <HomeVariantSwitcher variant={variant} onVariantChange={setVariant} />
     </main>
   );
 };
