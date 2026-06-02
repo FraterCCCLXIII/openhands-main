@@ -18,14 +18,13 @@ import { getRouteFooterProps } from '~/constants/route-layout';
 import { OverlayLinkButton } from '~/components/overlay-link-button';
 import { FAQ_TRIGGER_DIVIDER, CLOSED_FAQ_ITEM_PROPS } from '~/components/faq-accordion';
 import { formatThousands } from '~/utils/format-thousands';
-import { ASCIIAnimation } from '~/components/ascii-animation';
+import { PixelBlastBackground } from '~/components/pixel-blast-background';
 import { createSocialPreviewMeta } from '~/utils/seo';
 import { EnterpriseLogoStrip } from '~/components/logos/enterprise-logo-strip';
 import { HOME_CUSTOMER_LOGOS } from '~/constants/customer-logos';
-import { ASCII_HOLE_IMAGE, ASCII_HOLE_IMAGE_1080 } from '~/constants/webflow-assets';
 import { ClaudeCodeIcon, CodexIcon, GeminiCliIcon } from '~/components/icons/agent-subscription-icons';
 
-const INSTALL_OPENHANDS_URL = 'https://docs.openhands.dev/openhands/usage/run-openhands/local-setup';
+const INSTALL_OPENHANDS_URL = 'https://docs.openhands.dev/overview/quickstart';
 
 type HeroCompatibilityBadge = {
   name: string;
@@ -577,19 +576,20 @@ const Home = () => {
       </dialog>
 
       {/* SECTION 0: section-hero — contains hero+carousel+logos+SDK (matches live 1761px mega-section) */}
-      <section data-wf-el='section-hero' className='relative' style={{ display: 'block', backgroundColor: 'rgba(0, 0, 0, 0)', paddingTop: '24px', paddingBottom: '64px', paddingLeft: '0px', paddingRight: '0px' }}>
-        {/* Live's `.hero` has `min-height: 100vh` — required so the
-          * ASCII canvas behind the hero can fill the viewport on tall
-          * screens.  Without it, the hero collapses to the height of
-          * its content (banner + heading + buttons + logo grid) and
-          * the canvas underneath gets clipped. */}
-        <div data-wf-el='hero' className='relative' style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', justifyContent: 'flex-start', alignItems: 'center', minHeight: '100vh' }}>
-          <div data-wf-el='asci-wrap' className='absolute inset-0 z-0 overflow-hidden' style={{ backgroundColor: 'rgba(0, 0, 0, 0)', pointerEvents: 'auto' }}>
-            <div data-wf-el='asci-embed' className='h-full w-full overflow-hidden'><ASCIIAnimation /></div>
-          </div>
+      <section data-wf-el='section-hero' className='relative' style={{ display: 'block', backgroundColor: 'rgba(0, 0, 0, 0)', paddingTop: '0px', paddingBottom: '64px', paddingLeft: '0px', paddingRight: '0px' }}>
+        <div data-wf-el='hero' className='relative' style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', justifyContent: 'flex-start', alignItems: 'center' }}>
+          {/* ASCII murmuration is scoped to the top hero band only (heading + CTAs). */}
+          <div
+            data-wf-el='hero-top'
+            className='relative w-full overflow-hidden'
+            style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'center' }}
+          >
+            <div data-wf-el='asci-wrap' className='absolute inset-0 z-0 overflow-hidden' style={{ backgroundColor: 'rgba(0, 0, 0, 0)', pointerEvents: 'auto' }}>
+              <PixelBlastBackground />
+            </div>
 
-          <div data-wf-el='container' className='relative z-10 mx-auto w-full max-w-[1238px]'>
-            <div data-wf-el='hero-content' className='w-full' style={{ textAlign: 'center', paddingTop: '88px', paddingBottom: '56px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: '40px' }}>
+            <div data-wf-el='container' className='relative z-10 mx-auto w-full max-w-[1238px]'>
+              <div data-wf-el='hero-content' className='w-full' style={{ textAlign: 'center', paddingTop: '104px', paddingBottom: '80px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: '40px' }}>
 
               {/* Live's `.hero-heading_wrap` has no max-width and no auto
                 * margins — it inherits flex centering from its parent.
@@ -651,7 +651,10 @@ const Home = () => {
                 </div>
               </div>
             </div>
+          </div>
+          </div>
 
+          <div data-wf-el='container' className='relative z-10 mx-auto w-full max-w-[1238px]'>
             {/* Workflow carousel (inside hero section).  Live's
               * `.hero-splide_top` directly contains an `<h2>` and a
               * buttons div as siblings — the earlier extra
@@ -1048,13 +1051,8 @@ const Home = () => {
           mast slider script binds the prev/next controls; we replicate the
           attributes statically since our prev/next handlers already work. */}
       <section data-wf-el='section' data-slider='testimonials' style={{ display: 'block', backgroundColor: 'rgba(0, 0, 0, 0)', paddingTop: '0px', paddingBottom: '0px', paddingLeft: '0px', paddingRight: '0px', position: 'relative', height: '800px', maxHeight: '800px', overflow: 'visible' }}>
-        <div data-wf-el='asci-wrap' className='absolute inset-0 overflow-hidden' style={{ backgroundColor: 'rgb(255, 255, 139)' }}>
-          <img
-            data-wf-el='asci-media'
-            src={ASCII_HOLE_IMAGE.src}
-            alt={ASCII_HOLE_IMAGE.alt}
-            className='h-full w-full object-cover'
-          />
+        <div data-wf-el='asci-wrap' className='absolute inset-0 overflow-hidden' style={{ backgroundColor: 'rgb(255, 255, 139)', pointerEvents: 'auto' }}>
+          <PixelBlastBackground />
         </div>
         <div data-wf-el='hero-track' className='relative z-10 mx-auto flex h-full max-w-[1238px]' style={{ paddingBottom: '0px', paddingLeft: '0px', paddingRight: '0px', justifyContent: 'center', alignItems: 'center', gap: '10%' }}>
           {TESTIMONIALS.map((t, i) => (
@@ -1259,21 +1257,8 @@ const Home = () => {
 
 
       <section data-wf-el='section' style={{ display: 'block', backgroundColor: 'rgba(0, 0, 0, 0)', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px', position: 'relative', height: '513.078px', overflow: 'visible' }}>
-        <div data-wf-el='asci-wrap' className='absolute inset-0 overflow-hidden' style={{ backgroundColor: 'rgb(255, 255, 139)' }}>
-          <img
-            data-wf-el='asci-media'
-            src={ASCII_HOLE_IMAGE_1080.src}
-            srcSet={ASCII_HOLE_IMAGE_1080.srcSet}
-            sizes='100vw'
-            width={ASCII_HOLE_IMAGE_1080.width}
-            height={ASCII_HOLE_IMAGE_1080.height}
-            loading='lazy'
-            decoding='async'
-            alt=''
-            aria-hidden='true'
-            className='h-full w-full object-cover'
-            style={{ textAlign: 'start' }}
-          />
+        <div data-wf-el='asci-wrap' className='absolute inset-0 overflow-hidden' style={{ backgroundColor: 'rgb(255, 255, 139)', pointerEvents: 'auto' }}>
+          <PixelBlastBackground />
         </div>
         <div className='relative z-10 mx-auto flex max-w-[1238px] flex-col items-center text-center' style={{ height: '353.078px', paddingTop: '64px', paddingBottom: '64px' }}>
           <h2 className='fluid-h3 text-brand-fg' style={{ marginBottom: '9.6px' }}>Powering enterprise AI with the world&rsquo;s best</h2>
@@ -1329,15 +1314,8 @@ const Home = () => {
 
       {/* SECTION 7: CTA (u-bg-primary, py:80, yellow bg) */}
       <section data-wf-el='section' style={{ display: 'block', backgroundColor: 'rgb(255, 255, 139)', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px', position: 'relative', height: '1209.375px' }} className='text-center text-brand-fg'>
-        <div className='absolute inset-0'>
-          <img
-            src='/assets/webflow/backgrounds/6908d170831c19b2b6976323_ascii-art_(16)_1.svg'
-            alt=''
-            loading='lazy'
-            decoding='async'
-            className='h-full w-full object-cover'
-            style={{ textAlign: 'start' }}
-          />
+        <div data-wf-el='asci-wrap' className='absolute inset-0 overflow-hidden' style={{ pointerEvents: 'auto' }}>
+          <PixelBlastBackground />
         </div>
         <div data-wf-el='container' className='relative z-10 mx-auto max-w-[1238px]' style={{ marginTop: '49.6px' }}>
           <div className='mx-auto flex flex-col items-center' style={{ maxWidth: '852px', paddingLeft: '20px', paddingRight: '20px', textAlign: 'center' }}>

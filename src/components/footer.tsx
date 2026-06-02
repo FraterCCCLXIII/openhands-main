@@ -1,4 +1,5 @@
 import { Link, useLocation } from 'react-router';
+import { PixelBlastBackground } from '~/components/pixel-blast-background';
 import clsx from 'clsx';
 import { FOOTER_NAV_ITEMS, FOOTER_RESOURCE_LINKS } from '~/constants/site-shell';
 import { normalizePathname } from '~/utils/normalize-pathname';
@@ -444,16 +445,8 @@ export const Footer = ({
       className='section u-bg-primary relative overflow-visible bg-brand-accent text-brand-fg footer-webflow-layout'
       style={{ padding: isManifestoMobile ? '49.5714px 0px' : 'var(--footer-section-padding, var(--product-section-padding-y, var(--section-padding-y))) 0px', height: isManifesto ? (isManifestoMobile ? '1370.58px' : '1209.38px') : 'var(--footer-section-height, auto)' }}
     >
-      <div data-wf-el='asci-wrap' className='absolute inset-0 overflow-hidden' style={{ maxHeight: 'none' }}>
-        <img
-          data-wf-el='asci-media'
-          src='/assets/webflow/backgrounds/6908d170831c19b2b6976323_ascii-art_(16)_1.svg'
-          alt=''
-          loading='lazy'
-          decoding='async'
-          className='h-full w-full object-cover'
-          style={{ display: 'inline-block', textAlign: 'start' }}
-        />
+      <div data-wf-el='asci-wrap' className='absolute inset-0 overflow-hidden' style={{ maxHeight: 'none', pointerEvents: 'auto' }}>
+        <PixelBlastBackground />
       </div>
       <div
         data-wf-el={standaloneContainerHeight ? 'container' : undefined}

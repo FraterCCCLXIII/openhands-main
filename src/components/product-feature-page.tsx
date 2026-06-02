@@ -2,7 +2,7 @@ import { Fragment, type CSSProperties } from 'react';
 import type { ProductFeatureFaq, ProductFeaturePageData, ProductFeatureVariant } from '~/data/product-feature-pages';
 import { Footer } from '~/components/footer';
 import { getRouteFooterProps } from '~/constants/route-layout';
-import ASCIIAnimation from '~/components/ascii-animation';
+import { PixelBlastBackground } from '~/components/pixel-blast-background';
 import { OverlayLinkButton } from '~/components/overlay-link-button';
 import { FAQ_TRIGGER_DIVIDER, CLOSED_FAQ_ITEM_PROPS } from '~/components/faq-accordion';
 
@@ -27,16 +27,6 @@ export const PRODUCT_COMPARISON_ROWS = [
 
 const classNames = (...values: Array<string | false | null | undefined>) =>
   values.filter(Boolean).join(' ');
-
-const asciiOpacityValue = (opacityClass: string) => opacityClass.match(/opacity-\[([\d.]+)\]/)?.[1] || '0.12';
-
-const AsciiBackdrop = ({ opacity = 'opacity-[0.12]' }: { opacity?: string }) => (
-  <div data-wf-el='asci-wrap' className='absolute inset-0' style={{ '--ascii-opacity': asciiOpacityValue(opacity) } as CSSProperties}>
-    <div data-wf-el='asci-embed' className='h-full w-full'>
-      <ASCIIAnimation className='h-full w-full' />
-    </div>
-  </div>
-);
 
 const ProductEyebrow = ({ label }: { label: string }) => (
   <div className='mb-6'>
@@ -85,7 +75,12 @@ const ProductFeatureIntroBand = ({
   wideDescription?: boolean;
 }) => (
   <section data-wf-el='section' className='product-feature-section relative' style={{ display: 'block', backgroundColor: 'rgba(0, 0, 0, 0)', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px' }}>
-    <div data-wf-el='asci-wrap' className='absolute inset-0 overflow-hidden bg-brand-accent' style={{ maxHeight: '2400px' }} aria-hidden='true'>
+    <div
+      data-wf-el='asci-wrap'
+      className='absolute inset-0 overflow-hidden bg-brand-accent'
+      style={{ maxHeight: '2400px', ...(!image ? { '--ascii-opacity': '0.14' } : {}) } as CSSProperties}
+      aria-hidden='true'
+    >
       {image ? (
         <img
           data-wf-el='asci-media'
@@ -95,7 +90,7 @@ const ProductFeatureIntroBand = ({
           style={{ position: 'static', display: 'inline-block' }}
         />
       ) : (
-        <AsciiBackdrop opacity='opacity-[0.14]' />
+        <PixelBlastBackground className='h-full w-full' />
       )}
     </div>
     <div data-wf-el='container' className='product-feature-container mx-auto max-w-[1238px]'>
@@ -128,14 +123,18 @@ const ProductFeatureProofBand = ({
   descriptionClassName?: string;
 }) => (
   <section data-wf-el='section' className='product-feature-section relative' style={{ display: 'block', backgroundColor: 'rgba(0, 0, 0, 0)', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px' }}>
-    <div data-wf-el='asci-wrap' className={image && headingClassName === 'text-brand-fg' ? 'absolute inset-0 overflow-hidden bg-brand-accent' : image ? 'absolute inset-0 overflow-hidden bg-brand-fg' : 'absolute inset-0 overflow-hidden bg-brand-fg opacity-[0.28]'} style={{ maxHeight: '2400px' }} aria-hidden='true'>
-      <img
-        data-wf-el='asci-media'
-        src={image ? image.src : '/assets/webflow/backgrounds/690b397ae76441160bed52b6_asci-art-hole.png'}
-        alt={image ? image.alt : ''}
-        className='h-full w-full object-cover'
-        style={{ textAlign: 'start', position: 'static', display: 'inline-block' }}
-      />
+    <div data-wf-el='asci-wrap' className={image && headingClassName === 'text-brand-fg' ? 'absolute inset-0 overflow-hidden bg-brand-accent' : image ? 'absolute inset-0 overflow-hidden bg-brand-fg' : 'absolute inset-0 overflow-hidden bg-brand-fg opacity-[0.28]'} style={{ maxHeight: '2400px', pointerEvents: image ? undefined : 'auto' }} aria-hidden='true'>
+      {image ? (
+        <img
+          data-wf-el='asci-media'
+          src={image.src}
+          alt={image.alt}
+          className='h-full w-full object-cover'
+          style={{ textAlign: 'start', position: 'static', display: 'inline-block' }}
+        />
+      ) : (
+        <PixelBlastBackground className='h-full w-full' />
+      )}
     </div>
     <div data-wf-el='container' className='product-feature-container mx-auto max-w-[1238px]'>
       <div data-wf-el='heading-stack' className={classNames('relative text-center', headingClassName === 'text-white' ? 'text-white' : '')} style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'center', paddingTop: '64px', paddingBottom: wideDescription ? '64px' : '65px', width: '100%' }}>
@@ -396,9 +395,7 @@ export const ProductFeaturePage = ({
         style={{ padding: '0', overflow: 'visible' }}
       >
         <div data-wf-el='asci-wrap' className='product-hero-ascii pointer-events-auto absolute inset-x-0 top-0 h-screen overflow-hidden' style={{ '--ascii-opacity': '0.12', maxHeight: '2400px' } as CSSProperties} aria-hidden='true'>
-          <div className='asci-embed w-embed h-full w-full overflow-hidden'>
-            <ASCIIAnimation className='h-full w-full' />
-          </div>
+          <PixelBlastBackground className='h-full w-full' />
         </div>
         <div data-wf-el='hero' className='product-hero relative flex w-full flex-col items-center' style={{ textAlign: 'start', justifyContent: 'flex-start', height: heroHeight, overflow: 'hidden' }}>
           <div data-wf-el='container' className='product-feature-container mx-auto w-full max-w-[1238px]' style={{ display: 'block' }}>

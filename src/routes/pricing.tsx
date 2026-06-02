@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react';
 import type { Route } from './+types/pricing';
-import ASCIIAnimation from '~/components/ascii-animation';
+import { PixelBlastBackground } from '~/components/pixel-blast-background';
 import { Footer } from '~/components/footer';
 import { getRouteFooterProps } from '~/constants/route-layout';
 import { OverlayLinkButton } from '~/components/overlay-link-button';
@@ -419,9 +419,7 @@ const Pricing = () => {
           style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 'var(--pricing-hero-content-padding)' }}
         >
           <div data-wf-el='asci-wrap' className='pointer-events-auto absolute inset-x-0 top-0 h-screen overflow-hidden' style={{ '--ascii-opacity': '0.12', '--ascii-filter': 'drop-shadow(0 0 6px rgba(160, 200, 255, 0.1))', maxHeight: '100vh' } as CSSProperties} aria-hidden='true'>
-            <div className='h-full w-full overflow-hidden'>
-              <ASCIIAnimation className='pricing-ascii h-full w-full' />
-            </div>
+            <PixelBlastBackground className='pricing-ascii h-full w-full' />
           </div>
           <div data-wf-el='container' className='pricing-container mx-auto block max-w-[1238px]'>
             <div className='flex flex-col items-center text-center'>

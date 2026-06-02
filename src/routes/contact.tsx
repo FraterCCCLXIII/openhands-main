@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type CSSProperties, type FormEvent, type MouseEvent } from 'react';
-import ASCIIAnimation from '~/components/ascii-animation';
+import { PixelBlastBackground } from '~/components/pixel-blast-background';
 import { CompanyPageShell } from '~/components/company-page-shell';
 import { CONTACT_CUSTOMER_LOGOS } from '~/constants/customer-logos';
 import { createSocialPreviewMeta } from '~/utils/seo';
@@ -108,7 +108,7 @@ const Contact = () => {
         style={{ marginTop: '0px', height: '266px', paddingTop: '0px', paddingLeft: '0px', paddingRight: '0px' }}
       >
         <div data-wf-el='asci-wrap' className='contact-hero-ascii pointer-events-auto absolute inset-0 overflow-hidden' style={{ '--ascii-opacity': '0.12', maxHeight: '2400px', textAlign: 'center' } as CSSProperties} aria-hidden='true'>
-          <ASCIIAnimation className='h-full w-full' />
+          <PixelBlastBackground className='h-full w-full' />
         </div>
         <div data-wf-el='hero-content' className='contact-hero-content relative flex w-full flex-col items-center justify-center text-center' style={{ height: '266.438px', paddingTop: '56px', paddingBottom: '56px' }}>
           <h1 className='h1-flow-root max-w-[560px] fluid-h1 text-brand-fg'>

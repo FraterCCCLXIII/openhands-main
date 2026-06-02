@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react';
 import type { Route } from './+types/product';
-import ASCIIAnimation from '~/components/ascii-animation';
+import { PixelBlastBackground } from '~/components/pixel-blast-background';
 import { Footer } from '~/components/footer';
 import { getRouteFooterProps } from '~/constants/route-layout';
 import {
@@ -33,9 +33,7 @@ const Product = () => {
       */}
       <section data-wf-el='section-product_hero' style={{ display: 'block', backgroundColor: 'rgba(0, 0, 0, 0)', paddingTop: '0px', paddingBottom: '0px', paddingLeft: '0px', paddingRight: '0px' }}>
         <div data-wf-el='asci-wrap' className='pointer-events-auto absolute inset-x-0 top-0 h-screen overflow-hidden' style={{ '--ascii-opacity': '0.12', maxHeight: 'var(--product-hero-ascii-max-height)' } as CSSProperties} aria-hidden='true'>
-          <div className='h-full w-full overflow-hidden'>
-            <ASCIIAnimation className='h-full w-full' />
-          </div>
+          <PixelBlastBackground className='h-full w-full' />
         </div>
         <div data-wf-el='hero' className='relative flex w-full flex-col items-center overflow-hidden' style={{ height: 'var(--product-hero-height)', justifyContent: 'flex-start', textAlign: 'start' }}>
           <div data-wf-el='container' className='mx-auto max-w-[1238px]' style={{ display: 'block', width: 'var(--product-container-width)' }}>

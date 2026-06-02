@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react';
 import type { Route } from './+types/enterprise';
-import ASCIIAnimation from '~/components/ascii-animation';
+import { PixelBlastBackground } from '~/components/pixel-blast-background';
 import { Footer } from '~/components/footer';
 import { BootstrapIcon, type BootstrapIconName } from '~/components/icons/bootstrap-icons';
 import { OverlayLinkButton } from '~/components/overlay-link-button';
@@ -8,7 +8,6 @@ import { getRouteFooterProps } from '~/constants/route-layout';
 import {
   C3AI_AUTHOR_IMAGE,
   C3AI_LOGO_IMAGE,
-  ENTERPRISE_ASCII_HOLE_IMAGE,
   ENTERPRISE_CONTROL_PLANE_IMAGE,
   ENTERPRISE_STEPS_IMAGE,
 } from '~/constants/webflow-assets';
@@ -213,9 +212,7 @@ const Enterprise = () => {
          * pages: an absolute `.asci-wrap` paint layer containing an
          * `.ascii-pre` text surface. */}
         <div data-wf-el='asci-wrap' className='pointer-events-auto absolute inset-0 overflow-hidden' style={{ '--ascii-opacity': '0.12', maxHeight: '100vh' } as CSSProperties} aria-hidden='true'>
-          <div className='h-full w-full overflow-hidden'>
-            <ASCIIAnimation className='h-full w-full' />
-          </div>
+          <PixelBlastBackground className='h-full w-full' />
         </div>
         {/* Live's `.container` sits inside `section-hero` with padding 0
          * vertically; the visual rhythm comes from the inner
@@ -486,16 +483,8 @@ const Enterprise = () => {
 
       {/* C3.ai QUOTE — light section with ASCII hole bg */}
       <section data-wf-el='section' className='overflow-visible' style={SECTION_BASE}>
-        <div data-wf-el='asci-wrap' className='absolute inset-0 bg-brand-accent' style={{ overflow: 'hidden', maxHeight: '100vh' }} aria-hidden='true'>
-          <img
-            data-wf-el='asci-media'
-            src={ENTERPRISE_ASCII_HOLE_IMAGE.src}
-            srcSet={ENTERPRISE_ASCII_HOLE_IMAGE.srcSet}
-            sizes='100vw'
-            alt={ENTERPRISE_ASCII_HOLE_IMAGE.alt}
-            className='h-full w-full object-cover'
-            style={{ textAlign: 'start' }}
-          />
+        <div data-wf-el='asci-wrap' className='absolute inset-0 bg-brand-accent' style={{ overflow: 'hidden', maxHeight: '100vh', pointerEvents: 'auto' }} aria-hidden='true'>
+          <PixelBlastBackground className='h-full w-full' />
         </div>
         <Container>
           {/* Live's testimonial layout: heading-stack with 64px top/

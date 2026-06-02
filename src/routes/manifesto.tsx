@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import ASCIIAnimation from '~/components/ascii-animation';
+import { PixelBlastBackground } from '~/components/pixel-blast-background';
 import { CompanyPageShell } from '~/components/company-page-shell';
 import type { Route } from './+types/manifesto';
 import { createSocialPreviewMeta } from '~/utils/seo';
@@ -105,7 +105,7 @@ const Manifesto = () => {
                   style={{ '--ascii-opacity': '0.12', maxHeight: isMobile ? '812px' : '2400px', textAlign: 'center' } as CSSProperties}
                   aria-hidden='true'
                 >
-                  <ASCIIAnimation className='h-full w-full' />
+                  <PixelBlastBackground className='h-full w-full' />
                 </div>
                 <div data-wf-el='container' className='text-center' style={{ width: '90%', maxWidth: '1238px', marginLeft: 'auto', marginRight: 'auto' }}>
                   <div style={{ maxWidth: isMobile ? '493px' : '492.5px', marginLeft: 'auto', marginRight: 'auto' }}>

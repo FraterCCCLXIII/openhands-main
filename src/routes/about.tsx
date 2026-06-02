@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import ASCIIAnimation from '~/components/ascii-animation';
+import { PixelBlastBackground } from '~/components/pixel-blast-background';
 import { CompanyPageShell } from '~/components/company-page-shell';
 import { MemberCard } from '~/components/member-card';
 import { OverlayLinkButton } from '~/components/overlay-link-button';
@@ -84,9 +84,7 @@ const About = () => {
       <div className='about-page'>
       <section data-wf-el='section-hero' className='about-hero-section relative pt-0 pb-0' style={{ height: '1152.27px', borderStyle: 'none' }}>
         <div data-wf-el='asci-wrap' className='pointer-events-auto absolute inset-0 overflow-hidden' style={{ '--ascii-opacity': '0.12', '--ascii-filter': 'drop-shadow(0 0 6px rgba(160, 200, 255, 0.1))', maxHeight: '2400px', borderStyle: 'none' } as CSSProperties} aria-hidden='true'>
-          <div className='h-full w-full overflow-hidden'>
-            <ASCIIAnimation className='h-full w-full' />
-          </div>
+          <PixelBlastBackground className='h-full w-full' />
         </div>
 
         <div data-wf-el='standard-collection' className='h-full'>

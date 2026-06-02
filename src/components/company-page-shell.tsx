@@ -1,8 +1,10 @@
-import type { ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import { useLocation } from 'react-router';
 import { Footer } from '~/components/footer';
 import { getRouteLayoutConfig, toFooterProps } from '~/constants/route-layout';
-import { ASCII_HOLE_BACKGROUND_IMAGE } from '~/constants/webflow-assets';
+import { PixelBlastBackground } from '~/components/pixel-blast-background';
+
+const opacityFromClassName = (className: string) => className.match(/opacity-\[([\d.]+)\]/)?.[1] ?? '0.12';
 
 interface CompanyPageShellProps {
   children: ReactNode;
@@ -43,11 +45,11 @@ export const CompanyPageShell = ({
         <div
           aria-hidden='true'
           data-testid='company-page-background'
-          className={`pointer-events-none absolute inset-0 bg-cover bg-top bg-no-repeat ${backgroundClassName}`}
-          style={{
-            backgroundImage: ASCII_HOLE_BACKGROUND_IMAGE,
-          }}
-        />
+          className={`pointer-events-auto absolute inset-0 overflow-hidden ${backgroundClassName}`}
+          style={{ '--ascii-opacity': opacityFromClassName(backgroundClassName) } as CSSProperties}
+        >
+          <PixelBlastBackground className='h-full w-full' />
+        </div>
       ) : null}
       <div className='relative'>{children}</div>
       <Footer {...toFooterProps(routeLayout.footer)} />

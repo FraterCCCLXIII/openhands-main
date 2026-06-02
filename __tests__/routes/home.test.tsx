@@ -46,7 +46,7 @@ describe('home route parity structure', () => {
     const installLink = screen.getByRole('link', { name: 'Install OpenHands' });
     expect(installLink).toHaveAttribute(
       'href',
-      'https://docs.openhands.dev/openhands/usage/run-openhands/local-setup',
+      'https://docs.openhands.dev/overview/quickstart',
     );
     expect(screen.getByText('OpenHands works with all of your agent subscriptions')).toBeInTheDocument();
     expect(screen.getByText('Claude Code')).toBeInTheDocument();
@@ -60,11 +60,7 @@ describe('home route parity structure', () => {
     expect(container.innerHTML).toContain('home-hero-surfaces');
     expect(container.innerHTML).toContain('h-full w-full object-cover');
     expect(container.innerHTML).not.toContain('xl:grid-cols-4');
-    expect(screen.getByRole('img', { name: 'ASCII art depicting a large black hole with light and particles swirling around it.' })).toHaveClass(
-      'h-full',
-      'w-full',
-      'object-cover',
-    );
+    expect(container.querySelectorAll('.hero-pixel-blast')).toHaveLength(4);
     expect(screen.queryAllByTestId('footer-social-link')).toHaveLength(3);
     expect(container.querySelector('main[data-testid="home-content"]')).toHaveClass('home-mobile-parity');
     expect(container.querySelector('[data-wf-el="hero-subscription"]')).toBeInTheDocument();
