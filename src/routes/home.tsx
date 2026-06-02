@@ -25,6 +25,8 @@ import { createSocialPreviewMeta } from '~/utils/seo';
 import { EnterpriseLogoStrip } from '~/components/logos/enterprise-logo-strip';
 import { HOME_CUSTOMER_LOGOS } from '~/constants/customer-logos';
 import { ClaudeCodeIcon, CodexIcon, GeminiCliIcon } from '~/components/icons/agent-subscription-icons';
+import { HeroAppPreview } from '~/components/hero-app-preview';
+import { HERO_APP_PREVIEW_SLIDES } from '~/constants/hero-app-preview-slides';
 
 const INSTALL_OPENHANDS_URL = HEADER_GET_OPENHANDS_URL;
 
@@ -49,9 +51,6 @@ const HERO_COMPATIBILITY_BADGES: HeroCompatibilityBadge[] = [
     iconWrapperClassName: 'h-4 w-7',
   },
 ];
-
-const HERO_AUTOMATIONS_IMAGE =
-  '/assets/webflow/blog/openhands-enterprise-agent-control-plane/20260506-openhands-enterprise-agent-control-plane-automations.png';
 
 type WorkflowItem = {
   title: string;
@@ -780,12 +779,7 @@ const Home = () => {
 
 
           <div data-wf-el='hero-preview' className='mx-auto w-full max-w-[1238px]' style={{ paddingTop: '56px', paddingBottom: '48px' }}>
-            <img
-              src={HERO_AUTOMATIONS_IMAGE}
-              alt='OpenHands Automations dashboard screenshot'
-              className='w-full rounded-[24px] border border-[rgba(34,21,13,0.2)]'
-              loading='lazy'
-            />
+            <HeroAppPreview slides={HERO_APP_PREVIEW_SLIDES} />
           </div>
         </div>
       </section>

@@ -50,7 +50,9 @@ describe('home route parity structure', () => {
     );
     expect(screen.getByText('OpenHands works with all of your agent subscriptions')).toBeInTheDocument();
     expect(screen.getByText('Claude Code')).toBeInTheDocument();
-    expect(screen.getByRole('img', { name: 'OpenHands Automations dashboard screenshot' })).toBeInTheDocument();
+    expect(screen.getByTestId('hero-app-preview')).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'OpenHands Agent Canvas home with conversations' })).toBeInTheDocument();
+    expect(container.querySelectorAll('[data-wf-el="hero-preview-slide"]')).toHaveLength(6);
     expect(screen.queryByRole('link', { name: 'Build with SDK' })).not.toBeInTheDocument();
     expect(screen.getAllByRole('link', { name: 'Get OpenHands' }).length).toBeGreaterThan(0);
 
