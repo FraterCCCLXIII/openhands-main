@@ -1,5 +1,6 @@
-import { useEffect, useState, type CSSProperties, type ComponentType } from 'react';
+import { useCallback, type CSSProperties } from 'react';
 import type { PixelBlastProps } from '~/components/PixelBlast/PixelBlast';
+import { usePixelBlastHostRegistration } from '~/contexts/pixel-blast-context';
 
 export const PIXEL_BLAST_BACKGROUND_PROPS: PixelBlastProps = {
   variant: 'circle',
@@ -20,22 +21,20 @@ type PixelBlastBackgroundProps = {
   className?: string;
 };
 
+/**
+ * Parity shell for Webflow `asci-embed` / `ascii-embed` markup. The actual
+ * WebGL animation is rendered once via `PixelBlastRenderer` and portaled
+ * into the most visible host on the page.
+ */
 export function PixelBlastBackground({ className = '' }: PixelBlastBackgroundProps) {
-  const [PixelBlast, setPixelBlast] = useState<ComponentType<PixelBlastProps> | null>(null);
+  const registerHost = usePixelBlastHostRegistration();
 
-  useEffect(() => {
-    let cancelled = false;
-
-    import('~/components/PixelBlast/PixelBlast').then((mod) => {
-      if (!cancelled) {
-        setPixelBlast(() => mod.default);
-      }
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const hostRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      registerHost(node);
+    },
+    [registerHost],
+  );
 
   const surfaceStyle: CSSProperties = {
     width: '100%',
@@ -46,9 +45,12 @@ export function PixelBlastBackground({ className = '' }: PixelBlastBackgroundPro
 
   return (
     <div data-wf-el='asci-embed' className={`h-full w-full overflow-hidden ${className}`.trim()}>
-      <div data-wf-el='ascii-embed' className='ascii-embed hero-pixel-blast' style={surfaceStyle}>
-        {PixelBlast ? <PixelBlast {...PIXEL_BLAST_BACKGROUND_PROPS} style={{ width: '100%', height: '100%' }} /> : null}
-      </div>
+      <div
+        ref={hostRef}
+        data-wf-el='ascii-embed'
+        className='ascii-embed hero-pixel-blast'
+        style={surfaceStyle}
+      />
     </div>
   );
 }

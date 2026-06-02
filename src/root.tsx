@@ -24,6 +24,8 @@ import { normalizePathname } from './utils/normalize-pathname';
 import { getRouteLayoutConfig, toFooterProps } from './constants/route-layout';
 import './index.css';
 import { PHProvider } from './provider';
+import { PixelBlastProvider } from './contexts/pixel-blast-context';
+import { PixelBlastRenderer } from './components/pixel-blast-renderer';
 
 export const links: Route.LinksFunction = () => [
   {
@@ -144,6 +146,7 @@ export default function App() {
   const pageWrapperClassName = ['relative', routeLayout.pageWrapper?.className].filter(Boolean).join(' ');
 
   return (
+    <PixelBlastProvider>
       <div data-wf-el='page-wrapper' className={pageWrapperClassName} style={{ display: 'flex', flexDirection: 'column', backgroundColor: 'rgb(249, 240, 217)', minHeight: '100vh', overflow: 'clip', height: pageWrapperHeight }}>
 
       <Sidebar
@@ -177,8 +180,11 @@ export default function App() {
         isOpen={isGitHubModalOpen} 
         onClose={handleCloseGitHubModal} 
       />
+
+      <PixelBlastRenderer />
       
     </div>
+    </PixelBlastProvider>
   );
 }
 

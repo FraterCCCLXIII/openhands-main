@@ -2,12 +2,15 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
 import statistics from '../../src/data/statistics.json';
+import { PixelBlastProvider } from '../../src/contexts/pixel-blast-context';
 import Home from '../../src/routes/home';
 
 const renderRoute = () => {
   return render(
     <MemoryRouter initialEntries={['/']}>
-      <Home />
+      <PixelBlastProvider>
+        <Home />
+      </PixelBlastProvider>
     </MemoryRouter>,
   );
 };
