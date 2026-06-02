@@ -43,7 +43,7 @@ describe('home route parity structure', () => {
       'href',
       'https://docs.openhands.dev/openhands/usage/use-cases/overview',
     );
-    const installLink = screen.getByRole('link', { name: 'Install OpenHands' });
+    const installLink = screen.getByRole('link', { name: 'Get OpenHands' });
     expect(installLink).toHaveAttribute(
       'href',
       'https://docs.openhands.dev/overview/quickstart',

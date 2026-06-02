@@ -1,14 +1,17 @@
 import clsx from 'clsx';
+import type { ReactNode } from 'react';
 
 interface OverlayLinkButtonProps {
   href: string;
   label: string;
   srLabel?: string;
-  variant?: 'primary' | 'outline' | 'lightbrown';
+  variant?: 'primary' | 'outline' | 'lightbrown' | 'accent';
+  size?: 'default' | 'lg';
   className?: string;
   textClassName?: string;
   wrapperStyle?: React.CSSProperties;
   textStyle?: React.CSSProperties;
+  icon?: ReactNode;
   iconSrc?: string;
   iconAlt?: string;
   fullWidth?: boolean;
@@ -27,17 +30,31 @@ const VARIANT_CONFIG: Record<NonNullable<OverlayLinkButtonProps['variant']>, { c
   primary: { cls: 'btn-wrap-primary', isWrap: true },
   outline: { cls: 'btn-wrap', isWrap: true },
   lightbrown: { cls: 'btn-wrap-dark', isWrap: true },
+  accent: { cls: 'btn-wrap-accent', isWrap: true },
 };
+
+const SIZE_CONFIG = {
+  default: { fontSize: '16px', lineHeight: '20.8px', padding: undefined, boxShadow: undefined, iconPx: 19.1875 },
+  lg: {
+    fontSize: '18px',
+    lineHeight: '23.4px',
+    padding: '18px 38.4px',
+    boxShadow: '0 8px 24px rgba(34, 21, 13, 0.28)',
+    iconPx: 20,
+  },
+} as const;
 
 export const OverlayLinkButton = ({
   href,
   label,
   srLabel,
   variant = 'primary',
+  size = 'default',
   className,
   textClassName,
   wrapperStyle,
   textStyle: customTextStyle,
+  icon,
   iconSrc,
   iconAlt = '',
   fullWidth = false,
@@ -50,6 +67,7 @@ export const OverlayLinkButton = ({
 }: OverlayLinkButtonProps) => {
   const isExternalLink = /^https?:\/\//.test(href);
   const config = VARIANT_CONFIG[variant];
+  const sizeConfig = SIZE_CONFIG[size];
 
   // Live's `.button-N` outer wrap has cursor:auto and a 10px
   // margin-bottom (Webflow's default form-control margin); inheriting
@@ -78,12 +96,52 @@ export const OverlayLinkButton = ({
         fullWidth && 'w-full',
         className,
       )}
-      style={config.isWrap ? { ...baseStyle, ...wrapperStyle } : { ...baseStyle, borderRadius: 0, ...wrapperStyle }}
+      style={
+        config.isWrap
+          ? {
+              ...baseStyle,
+              ...(sizeConfig.padding
+                ? {
+                    padding: sizeConfig.padding,
+                    fontSize: sizeConfig.fontSize,
+                    lineHeight: sizeConfig.lineHeight,
+                    ...(sizeConfig.boxShadow ? { boxShadow: sizeConfig.boxShadow } : {}),
+                  }
+                : {}),
+              ...wrapperStyle,
+            }
+          : { ...baseStyle, borderRadius: 0, ...wrapperStyle }
+      }
     >
-      {iconSrc ? (
-        <div data-wf-el={iconWrapWfEl} style={{ display: 'flex', width: '19.1875px', height: '19.1875px', maxWidth: '19.2px', justifyContent: 'center', alignItems: 'center', lineHeight: '16px' }}>
-          <div data-wf-el={iconColorWfEl} style={{ display: 'flex', color: variant === 'primary' ? 'rgb(255, 255, 139)' : 'currentColor' }}>
-            <img data-wf-el={iconWfEl} src={iconSrc} alt={iconAlt} style={{ display: 'block', width: '19.1875px', height: '19.1875px', objectFit: 'fill' }} />
+      {iconSrc || icon ? (
+        <div
+          data-wf-el={iconWrapWfEl}
+          aria-hidden='true'
+          style={{
+            display: 'flex',
+            width: `${sizeConfig.iconPx}px`,
+            height: `${sizeConfig.iconPx}px`,
+            maxWidth: `${sizeConfig.iconPx}px`,
+            justifyContent: 'center',
+            alignItems: 'center',
+            lineHeight: '16px',
+            flexShrink: 0,
+          }}
+        >
+          <div
+            data-wf-el={iconColorWfEl}
+            style={{ display: 'flex', color: variant === 'primary' ? 'rgb(255, 255, 139)' : 'currentColor' }}
+          >
+            {iconSrc ? (
+              <img
+                data-wf-el={iconWfEl}
+                src={iconSrc}
+                alt={iconAlt}
+                style={{ display: 'block', width: `${sizeConfig.iconPx}px`, height: `${sizeConfig.iconPx}px`, objectFit: 'fill' }}
+              />
+            ) : (
+              icon
+            )}
           </div>
         </div>
       ) : null}
@@ -106,8 +164,8 @@ export const OverlayLinkButton = ({
           textDecoration: 'underline',
           textDecorationThickness: '1.6px',
           textUnderlineOffset: '3px',
-          fontSize: '16px',
-          lineHeight: '20.8px',
+          fontSize: sizeConfig.fontSize,
+          lineHeight: sizeConfig.lineHeight,
           maxWidth: '100%',
           // Inherit color from .btn-wrap-* parent so the overlay anchor's
           // color/textDecorationColor matches live (e.g. #F9F0D9 inside

@@ -6,6 +6,7 @@ import {
   ArrowRightCircle,
   ChevronLeft,
   ChevronRight,
+  Download,
   Eye,
   GitPullRequest,
   ShieldAlert,
@@ -28,22 +29,23 @@ const INSTALL_OPENHANDS_URL = 'https://docs.openhands.dev/overview/quickstart';
 
 type HeroCompatibilityBadge = {
   name: string;
-  iconBg: string;
   Icon?: ComponentType<SVGProps<SVGSVGElement>>;
   iconClassName?: string;
+  iconWrapperClassName?: string;
   iconSrc?: string;
   iconAlt?: string;
 };
 
 const HERO_COMPATIBILITY_BADGES: HeroCompatibilityBadge[] = [
-  { name: 'Claude Code', Icon: ClaudeCodeIcon, iconBg: 'rgb(242, 173, 118)' },
-  { name: 'Codex', Icon: CodexIcon, iconBg: 'rgb(155, 182, 255)' },
-  { name: 'Gemini CLI', Icon: GeminiCliIcon, iconBg: 'rgb(135, 214, 255)' },
+  { name: 'Claude Code', Icon: ClaudeCodeIcon },
+  { name: 'Codex', Icon: CodexIcon },
+  { name: 'Gemini CLI', Icon: GeminiCliIcon },
   {
     name: 'OpenHands',
-    iconSrc: '/assets/webflow/brand/openhands-logo-mobile.svg',
+    iconSrc: '/assets/webflow/brand/openhands-logo-mobile-mono.svg',
     iconAlt: '',
-    iconBg: 'rgb(255, 255, 139)',
+    iconClassName: 'h-4 w-auto',
+    iconWrapperClassName: 'h-4 w-7',
   },
 ];
 
@@ -617,9 +619,13 @@ const Home = () => {
                 * Earlier we nested everything inside hero-heading_wrap
                 * with the heading_wrap's tighter `gap-2` (8px) which
                 * collapsed all four blocks together. */}
-              <div data-wf-el='hero-heading_wrap' className='flex flex-col items-center gap-2 text-center' style={{ justifyContent: 'center' }}>
+              <div
+                data-wf-el='hero-heading_wrap'
+                className='hero-heading-scrim flex flex-col items-center gap-2 text-center'
+                style={{ justifyContent: 'center' }}
+              >
                 {/* Live's `.hero-heading_h1.h1` has `margin-bottom: 0`. */}
-                <h1 data-wf-el='hero-heading_h1' id='hero-heading' className='fluid-h1 font-medium tracking-[-0.03em] text-brand-fg' style={{ marginBottom: '0px' }}>
+                <h1 data-wf-el='hero-heading_h1' id='hero-heading' className='hero-heading-h1 font-medium tracking-[-0.03em] text-brand-fg' style={{ marginBottom: '0px' }}>
                   One workspace for all your AI coding agents
                 </h1>
                 {/* Live's `.hero-heading_paragraph.paragraph-lg.u-text-darkgray`
@@ -631,27 +637,40 @@ const Home = () => {
               </div>
 
               {/* hero_btn_wrap — sibling of hero-heading_wrap on live. */}
-              <div data-wf-el='hero_btn_wrap' className='flex flex-wrap items-center justify-center gap-4' style={{ marginBottom: '0px', paddingTop: '0px' }}>
-                <OverlayLinkButton href={INSTALL_OPENHANDS_URL} label='Install OpenHands' variant='primary' />
+              <div
+                data-wf-el='hero_btn_wrap'
+                className='hero-content-foreground flex flex-wrap items-center justify-center gap-4'
+                style={{ marginBottom: '0px', paddingTop: '0px' }}
+              >
+                <OverlayLinkButton
+                  href={INSTALL_OPENHANDS_URL}
+                  label='Get OpenHands'
+                  variant='primary'
+                  size='lg'
+                  icon={<Download className='h-5 w-5' strokeWidth={2} aria-hidden='true' />}
+                />
               </div>
 
-              <div data-wf-el='hero-subscription' className='flex w-full flex-col items-center justify-center gap-4 text-brand-fg' style={{ maxWidth: '980px' }}>
+              <div
+                data-wf-el='hero-subscription'
+                className='hero-content-foreground flex w-full flex-col items-center justify-center gap-4 text-brand-fg'
+                style={{ maxWidth: '980px' }}
+              >
                 <span className='text-center text-base font-normal leading-[22.4px] text-brand-fg'>OpenHands works with all of your agent subscriptions</span>
                 <div className='flex flex-wrap items-center justify-center gap-3'>
                   {HERO_COMPATIBILITY_BADGES.map((badge) => {
-                    const { name, Icon, iconClassName, iconBg, iconSrc, iconAlt } = badge;
+                    const { name, Icon, iconClassName, iconWrapperClassName, iconSrc, iconAlt } = badge;
                     return (
                     <div
                       key={name}
                       className='flex items-center gap-2 rounded-full border border-[rgba(34,21,13,0.2)] bg-[#f9f0d9] px-4 py-2'
                     >
                       <span
-                        className='flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-brand-fg'
-                        style={{ backgroundColor: iconBg }}
+                        className={`flex flex-shrink-0 items-center justify-center text-brand-fg ${iconWrapperClassName ?? 'h-6 w-6'}`}
                         aria-hidden='true'
                       >
                         {iconSrc ? (
-                          <img src={iconSrc} alt={iconAlt ?? ''} className='h-4 w-4' />
+                          <img src={iconSrc} alt={iconAlt ?? ''} className={iconClassName ?? 'h-4 w-4'} />
                         ) : Icon ? (
                           <Icon className={iconClassName ?? 'h-4 w-4'} />
                         ) : null}

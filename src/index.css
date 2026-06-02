@@ -1042,7 +1042,8 @@
      All three variants share the base btn text appearance. */
   .btn-wrap,
   .btn-wrap-primary,
-  .btn-wrap-dark {
+  .btn-wrap-dark,
+  .btn-wrap-accent {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -1078,6 +1079,14 @@
   .btn-wrap-dark a {
     color: inherit;
   }
+  .btn-wrap-accent {
+    background-color: rgb(255, 255, 139);
+    border-color: rgb(34, 21, 13);
+    color: rgb(34, 21, 13);
+  }
+  .btn-wrap-accent a {
+    color: inherit;
+  }
 
   .btn:hover,
   .btn-primary:hover,
@@ -1085,6 +1094,7 @@
   .btn-wrap:hover,
   .btn-wrap-primary:hover,
   .btn-wrap-dark:hover,
+  .btn-wrap-accent:hover,
   .capabilities_card_button:hover {
     opacity: 0.8;
   }
@@ -1093,7 +1103,8 @@
      from the inner element to avoid doubling. */
   .btn-wrap > .btn,
   .btn-wrap-primary > .btn,
-  .btn-wrap-dark > .btn {
+  .btn-wrap-dark > .btn,
+  .btn-wrap-accent > .btn {
     border-radius: 0;
     background: transparent;
     border-color: transparent;
@@ -4053,6 +4064,46 @@
 
 .hero-content.is-center {
   @apply flex flex-col items-center;
+}
+
+/* Soft page-color halo behind hero H1/subcopy so PixelBlast dots don't show through.
+ * Glow lives on ::before with a tight bottom inset so it does not wash over CTAs below.
+ * Siblings use .hero-content-foreground to stack above the scrim halo. */
+.hero-heading-scrim {
+  position: relative;
+  z-index: 0;
+  isolation: isolate;
+  padding: 1.5rem 2.5rem;
+  background-color: var(--bg);
+}
+
+.hero-heading-scrim::before {
+  content: '';
+  position: absolute;
+  top: -2rem;
+  right: -5rem;
+  bottom: -0.75rem;
+  left: -5rem;
+  z-index: -1;
+  pointer-events: none;
+  background-color: var(--bg);
+  box-shadow:
+    0 0 48px 32px var(--bg),
+    0 0 96px 56px var(--bg),
+    0 0 120px 72px rgba(249, 240, 217, 0.9);
+}
+
+/* Homepage hero H1 — one step above global fluid-h1 (≈36–52px). */
+.hero-heading-h1 {
+  position: relative;
+  font-size: clamp(2.25rem, 1.85rem + 1.6vw, 3.25rem);
+  line-height: var(--h1-line-height);
+  font-weight: var(--h1-font-weight);
+}
+
+.hero-content-foreground {
+  position: relative;
+  z-index: 2;
 }
 
 .hero_btn_wrap {
