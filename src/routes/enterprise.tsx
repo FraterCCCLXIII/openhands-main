@@ -1,5 +1,7 @@
 import type { CSSProperties } from 'react';
 import type { Route } from './+types/enterprise';
+import { AutomationStepsFlow } from '~/components/enterprise/automation-steps-flow';
+import { ControlPlaneGraphic } from '~/components/enterprise/control-plane-graphic';
 import { PixelBlastBackground } from '~/components/pixel-blast-background';
 import { Footer } from '~/components/footer';
 import { BootstrapIcon, type BootstrapIconName } from '~/components/icons/bootstrap-icons';
@@ -9,8 +11,6 @@ import { GET_OPENHANDS_CTA } from '~/constants/site-shell';
 import {
   C3AI_AUTHOR_IMAGE,
   C3AI_LOGO_IMAGE,
-  ENTERPRISE_CONTROL_PLANE_IMAGE,
-  ENTERPRISE_STEPS_IMAGE,
 } from '~/constants/webflow-assets';
 import { createSocialPreviewMeta } from '~/utils/seo';
 
@@ -316,35 +316,7 @@ const Enterprise = () => {
               From the policies that govern how agents run, to the automations that trigger them, OpenHands Enterprise gives you control at every layer.
             </p>
           </div>
-          {/* Live's `.acp_graphic_wrap` spans the full container width
-           * (1238px) with 32px padding; constraining it to max-w-1100px
-           * scales the image down ~138px wide which translates to ~65px
-           * of section-height drift via the preserved aspect ratio. */}
-          {/* Live's `.acp_graphic_wrap` has `border: 1px solid rgb(249,
-           * 240, 217)` — a 1px cream border that frames the screenshot
-           * inside the dark overview section.  Without it, the parity
-           * border-color check sees the default browser gray. */}
-          <div
-            data-wf-el='acp_graphic_wrap'
-            className='mx-auto w-full'
-            style={{
-              padding: 'clamp(16px, calc(6.7566px + 2.4649vw), 32px)',
-              borderRadius: 'clamp(16px, calc(6.7566px + 2.4649vw), 32px)',
-              border: '1px solid rgb(247, 243, 238)',
-              overflow: 'hidden',
-            }}
-          >
-            <img
-              data-wf-el='acp_graphic_img'
-              src={ENTERPRISE_CONTROL_PLANE_IMAGE.src}
-              srcSet={ENTERPRISE_CONTROL_PLANE_IMAGE.srcSet}
-              sizes='(max-width: 2592px) 100vw, 2592px'
-              alt=''
-              className='h-auto w-full object-cover'
-              loading='lazy'
-              style={{ textAlign: 'start' }}
-            />
-          </div>
+          <ControlPlaneGraphic />
         </Container>
       </section>
 
@@ -467,7 +439,7 @@ const Enterprise = () => {
                   Automations
                 </div>
                 <h2 className='section-title text-brand-bg' style={{ width: '100%', maxWidth: '599px', marginBottom: '0.2em' }}>From event to PR, no human in the loop.</h2>
-                <p data-wf-el='paragraph-lg' className='fluid-body-lg text-[#b3a88c]' style={{ marginBottom: '1em', width: '100%' }}>
+                <p data-wf-el='paragraph-lg' className='fluid-body-lg' style={{ marginBottom: '1em', width: '100%', color: 'var(--neutral-card-dark-muted)' }}>
                   Wire OpenHands to the tools your team already uses. When something happens, the right agent fires, does the work, and opens a pull request.
                   <br />
                   <br />
@@ -476,7 +448,7 @@ const Enterprise = () => {
               </div>
             </div>
             <div className='flex basis-full flex-col px-5 lg:basis-1/2' style={{ position: 'relative' }}>
-              <img src={ENTERPRISE_STEPS_IMAGE.src} srcSet={ENTERPRISE_STEPS_IMAGE.srcSet} sizes='100vw' alt='' className='img-block h-auto w-full object-fill' loading='lazy' />
+              <AutomationStepsFlow />
             </div>
           </div>
         </Container>

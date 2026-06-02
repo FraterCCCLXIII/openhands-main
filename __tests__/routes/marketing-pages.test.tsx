@@ -145,7 +145,8 @@ describe('Marketing parity routes', () => {
       screen.getByText(/OpenHands was the only solution that let us prompt an autonomous coding agent/i),
     ).toBeInTheDocument();
     expect(screen.getByText(/Automation doesn't mean unsupervised\./i)).toBeInTheDocument();
-    expect(container.querySelector('img[data-wf-el="acp_graphic_img"]')).toHaveAttribute('src', '/assets/webflow/enterprise/69fb21f8dc8c20b014d24bad_9761f727961757aba10787e99f6f05dd_control-plane-p-1600.png');
+    expect(container.querySelector('[data-wf-el="acp_graphic"]')).toBeInTheDocument();
+    expect(screen.getByText('Agent Control Plane')).toBeInTheDocument();
     expect(container.querySelector('img[data-wf-el="acp_quote_img"]')).toHaveAttribute('src', '/assets/webflow/enterprise/image96x96.png');
     expect(container.querySelector('img[data-wf-el="acp_quote_logo"]')).toHaveAttribute('src', '/assets/webflow/enterprise/c3ailogo.svg');
     expect(container.querySelectorAll('[data-wf-el="heading-stack"]')).toHaveLength(6);

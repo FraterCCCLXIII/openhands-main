@@ -1476,8 +1476,13 @@
   }
 
   /* Description copy under card titles — neutral grey, not warm tan/cream */
-  .card-dark p.fluid-body-lg:not(.text-brand-accent) {
+  .card-dark p.fluid-body-lg:not(.text-brand-accent):not([data-wf-el='acp_automation_step_title']) {
     color: var(--neutral-card-dark-muted);
+  }
+
+  .card-dark p[data-wf-el='acp_automation_step_title'] {
+    color: #ffffff;
+    font-weight: 500;
   }
 
   /* Feature list item */
@@ -6540,6 +6545,280 @@ main:has(.press-standard-collection) section[data-wf-el='section'].bg-brand-acce
 
 /* Enterprise route parity: live Webflow stacks feature grids on mobile
    * while keeping the desktop grid spans and exact card divider rhythm. */
+  .enterprise-control-plane-graphic-wrap {
+    padding: clamp(16px, calc(6.7566px + 2.4649vw), 32px);
+    border-radius: clamp(16px, calc(6.7566px + 2.4649vw), 32px);
+    border: 1px solid rgb(var(--brand-bg-rgb));
+    overflow: hidden;
+  }
+
+  .enterprise-control-plane-graphic {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .enterprise-control-plane-graphic__top {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+  }
+
+  .enterprise-control-plane-graphic__main {
+    overflow: hidden;
+  }
+
+  .enterprise-control-plane-graphic__header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 20px;
+    background-color: var(--neutral-800);
+    border-bottom: 1px solid var(--neutral-700);
+  }
+
+  .enterprise-control-plane-graphic__features {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    padding: 16px 20px;
+  }
+
+  .enterprise-control-plane-graphic__feature {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+  }
+
+  .enterprise-control-plane-graphic__layer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 20px;
+    background-color: var(--neutral-800);
+    border-top: 1px solid var(--neutral-700);
+  }
+
+  .enterprise-control-plane-graphic__layer--muted {
+    background-color: var(--neutral-900);
+  }
+
+  .enterprise-control-plane-graphic__icon-chip {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background-color: var(--neutral-950);
+  }
+
+  .enterprise-control-plane-graphic__integrations {
+    position: relative;
+    min-width: 0;
+  }
+
+  .enterprise-control-plane-graphic__integrations-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .enterprise-control-plane-graphic__integration-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+  }
+
+  .enterprise-control-plane-graphic__connector {
+    display: flex;
+    justify-content: center;
+    opacity: 0.7;
+  }
+
+  .enterprise-control-plane-graphic__agents {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .enterprise-control-plane-graphic__agent-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 12px;
+    text-align: center;
+  }
+
+  @media (min-width: 768px) {
+    .enterprise-control-plane-graphic__top {
+      grid-template-columns: minmax(0, 1fr) minmax(200px, 240px);
+      align-items: start;
+    }
+
+    .enterprise-control-plane-graphic__features {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .enterprise-control-plane-graphic__agents {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 16px;
+    }
+  }
+
+  .enterprise-automation-steps {
+    position: relative;
+    width: 100%;
+  }
+
+  .enterprise-automation-steps__list {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .enterprise-automation-steps__item {
+    position: relative;
+    padding-left: 28px;
+  }
+
+  .enterprise-automation-steps__rail-track,
+  .enterprise-automation-steps__rail {
+    position: absolute;
+    top: var(--rail-top, 0px);
+    left: 7px;
+    width: 1px;
+    height: var(--rail-height, 0px);
+    transform-origin: top center;
+  }
+
+  .enterprise-automation-steps__rail-track {
+    background-color: var(--neutral-800);
+  }
+
+  .enterprise-automation-steps__rail {
+    background-color: var(--neutral-500);
+  }
+
+  .enterprise-automation-steps__dot {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    z-index: 1;
+    width: 15px;
+    height: 15px;
+    border: 2px solid var(--neutral-500);
+    border-radius: 9999px;
+    background-color: rgb(24, 24, 24);
+    transform: translateY(-50%);
+  }
+
+  .enterprise-automation-steps--animate {
+    --rail-duration: 1750ms;
+  }
+
+  .enterprise-automation-steps--animate:not(.is-active) .enterprise-automation-steps__rail {
+    transform: scaleY(0);
+  }
+
+  .enterprise-automation-steps--animate:not(.is-active) .enterprise-automation-steps__dot,
+  .enterprise-automation-steps--animate:not(.is-active) .enterprise-automation-steps__item article {
+    opacity: 0;
+    visibility: hidden;
+  }
+
+  .enterprise-automation-steps--animate.is-active .enterprise-automation-steps__rail {
+    animation: enterprise-automation-rail-grow var(--rail-duration) linear forwards;
+  }
+
+  .enterprise-automation-steps--animate.is-active .enterprise-automation-steps__dot {
+    visibility: visible;
+    transform: translateY(-50%);
+    animation: enterprise-automation-dot-in 0.2s ease backwards;
+    animation-delay: var(--step-delay, 0ms);
+  }
+
+  .enterprise-automation-steps--animate.is-active .enterprise-automation-steps__item article {
+    visibility: visible;
+    animation: enterprise-automation-step-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+    animation-delay: var(--card-delay, var(--step-delay, 0ms));
+  }
+
+  @keyframes enterprise-automation-rail-grow {
+    from {
+      transform: scaleY(0);
+    }
+
+    to {
+      transform: scaleY(1);
+    }
+  }
+
+  @keyframes enterprise-automation-step-in {
+    from {
+      opacity: 0;
+      transform: translateX(16px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes enterprise-automation-dot-in {
+    from {
+      opacity: 0;
+    }
+
+    to {
+      opacity: 1;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .enterprise-automation-steps__rail {
+      transform: none;
+      animation: none;
+    }
+
+    .enterprise-automation-steps__item article,
+    .enterprise-automation-steps__dot {
+      opacity: 1;
+      visibility: visible;
+      transform: none;
+      animation: none;
+    }
+
+    .enterprise-automation-steps__dot {
+      transform: translateY(-50%);
+    }
+  }
+
+  .enterprise-automation-steps__icon {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    padding: 8px;
+    border-radius: 8px;
+    background-color: var(--neutral-950);
+    box-sizing: border-box;
+  }
+
   .enterprise-feature-layout {
     display: flex;
     flex-direction: column;
