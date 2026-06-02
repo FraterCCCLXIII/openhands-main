@@ -32,7 +32,7 @@ export const FeaturedBlogCard: React.FC<FeaturedBlogCardProps> = ({
           src={img}
           alt={imgAlt}
           className='h-full w-full object-cover'
-          style={{ color: 'rgb(34, 21, 13)' }}
+          style={{ color: 'rgb(24, 24, 24)' }}
         />
       )}
     </div>

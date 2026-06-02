@@ -106,7 +106,7 @@ export const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
         aria-label='Main menu'
         className='fixed inset-0 z-40 h-screen w-screen overflow-y-auto'
         style={{
-          backgroundColor: 'rgb(34, 21, 13)',
+          backgroundColor: 'rgb(24, 24, 24)',
           color: 'rgb(249, 240, 217)',
           padding: '128px 2.5vw 48px',
         }}

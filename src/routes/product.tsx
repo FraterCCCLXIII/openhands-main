@@ -68,7 +68,7 @@ const Product = () => {
           </div>
         </div>
 
-        <section data-wf-el='section' style={{ display: 'block', backgroundColor: 'rgb(34, 21, 13)', color: 'rgb(249, 240, 217)', paddingTop: 'var(--product-section-padding-y)', paddingBottom: 'var(--product-section-padding-y)', paddingLeft: '0px', paddingRight: '0px', marginTop: '0px', position: 'relative' }}>
+        <section data-wf-el='section' style={{ display: 'block', backgroundColor: 'rgb(24, 24, 24)', color: 'rgb(249, 240, 217)', paddingTop: 'var(--product-section-padding-y)', paddingBottom: 'var(--product-section-padding-y)', paddingLeft: '0px', paddingRight: '0px', marginTop: '0px', position: 'relative' }}>
           <div data-wf-el='container' className='mx-auto max-w-[1238px]' style={{ display: 'block', color: 'rgb(249, 240, 217)', width: 'var(--product-container-width)' }}>
             <div className='flex flex-col' style={{ rowGap: 'var(--product-surface-row-gap)', marginLeft: 'var(--product-surface-list-margin-x)', marginRight: 'var(--product-surface-list-margin-x)' }}>
             {PRODUCT_SURFACES.map((item, index) => {

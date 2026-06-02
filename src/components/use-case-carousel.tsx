@@ -51,9 +51,9 @@ const VulnerabilityDiagram = () => (
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <rect x="20" y="25" width="50" height="70" rx="4" fill="#22150d" opacity="0.1" stroke="#22150d" strokeWidth="1.5" />
-        <line x1="30" y1="40" x2="60" y2="40" stroke="#22150d" strokeWidth="2" opacity="0.3" />
-        <line x1="30" y1="50" x2="55" y2="50" stroke="#22150d" strokeWidth="2" opacity="0.3" />
+        <rect x="20" y="25" width="50" height="70" rx="4" fill="#181818" opacity="0.1" stroke="#181818" strokeWidth="1.5" />
+        <line x1="30" y1="40" x2="60" y2="40" stroke="#181818" strokeWidth="2" opacity="0.3" />
+        <line x1="30" y1="50" x2="55" y2="50" stroke="#181818" strokeWidth="2" opacity="0.3" />
         <m.line 
           x1="30" y1="60" x2="60" y2="60" 
           stroke="#dc2626" strokeWidth="2"
@@ -61,8 +61,8 @@ const VulnerabilityDiagram = () => (
           animate={{ opacity: [0.3, 1, 0.3] }}
           transition={{ duration: 2, repeat: Infinity }}
         />
-        <line x1="30" y1="70" x2="50" y2="70" stroke="#22150d" strokeWidth="2" opacity="0.3" />
-        <line x1="30" y1="80" x2="58" y2="80" stroke="#22150d" strokeWidth="2" opacity="0.3" />
+        <line x1="30" y1="70" x2="50" y2="70" stroke="#181818" strokeWidth="2" opacity="0.3" />
+        <line x1="30" y1="80" x2="58" y2="80" stroke="#181818" strokeWidth="2" opacity="0.3" />
       </m.g>
       
       {/* OpenHands agent */}
@@ -71,14 +71,14 @@ const VulnerabilityDiagram = () => (
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.5, delay: 0.3 }}
       >
-        <circle cx="100" cy="60" r="22" fill="#FFFF8B" stroke="#22150d" strokeWidth="1.5" />
-        <text x="100" y="65" textAnchor="middle" fontSize="20" fill="#22150d">🤲</text>
+        <circle cx="100" cy="60" r="22" fill="#FFFF8B" stroke="#181818" strokeWidth="1.5" />
+        <text x="100" y="65" textAnchor="middle" fontSize="20" fill="#181818">🤲</text>
       </m.g>
       
       {/* Arrow from file to agent */}
       <m.path
         d="M75 60 L78 60"
-        stroke="#22150d"
+        stroke="#181818"
         strokeWidth="2"
         strokeDasharray="3 2"
         initial={{ pathLength: 0 }}
@@ -92,9 +92,9 @@ const VulnerabilityDiagram = () => (
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.5, delay: 0.6 }}
       >
-        <rect x="130" y="25" width="50" height="70" rx="4" fill="#22150d" opacity="0.1" stroke="#22150d" strokeWidth="1.5" />
-        <line x1="140" y1="40" x2="170" y2="40" stroke="#22150d" strokeWidth="2" opacity="0.3" />
-        <line x1="140" y1="50" x2="165" y2="50" stroke="#22150d" strokeWidth="2" opacity="0.3" />
+        <rect x="130" y="25" width="50" height="70" rx="4" fill="#181818" opacity="0.1" stroke="#181818" strokeWidth="1.5" />
+        <line x1="140" y1="40" x2="170" y2="40" stroke="#181818" strokeWidth="2" opacity="0.3" />
+        <line x1="140" y1="50" x2="165" y2="50" stroke="#181818" strokeWidth="2" opacity="0.3" />
         <m.line 
           x1="140" y1="60" x2="170" y2="60" 
           stroke="#16a34a" strokeWidth="2"
@@ -102,8 +102,8 @@ const VulnerabilityDiagram = () => (
           animate={{ opacity: 1 }}
           transition={{ duration: 0.3, delay: 0.8 }}
         />
-        <line x1="140" y1="70" x2="160" y2="70" stroke="#22150d" strokeWidth="2" opacity="0.3" />
-        <line x1="140" y1="80" x2="168" y2="80" stroke="#22150d" strokeWidth="2" opacity="0.3" />
+        <line x1="140" y1="70" x2="160" y2="70" stroke="#181818" strokeWidth="2" opacity="0.3" />
+        <line x1="140" y1="80" x2="168" y2="80" stroke="#181818" strokeWidth="2" opacity="0.3" />
         {/* Checkmark */}
         <m.circle 
           cx="170" cy="35" r="8" fill="#16a34a"
@@ -125,7 +125,7 @@ const VulnerabilityDiagram = () => (
       {/* Arrow from agent to fixed file */}
       <m.path
         d="M122 60 L125 60"
-        stroke="#22150d"
+        stroke="#181818"
         strokeWidth="2"
         strokeDasharray="3 2"
         initial={{ pathLength: 0 }}
@@ -145,13 +145,13 @@ const CodeReviewDiagram = () => (
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <rect x="20" y="30" width="60" height="60" rx="6" fill="#22150d" opacity="0.1" stroke="#22150d" strokeWidth="1.5" />
-        <circle cx="35" cy="50" r="6" fill="#22150d" opacity="0.3" />
-        <circle cx="35" cy="70" r="6" fill="#22150d" opacity="0.3" />
-        <line x1="35" y1="56" x2="35" y2="64" stroke="#22150d" strokeWidth="2" opacity="0.3" />
-        <line x1="45" y1="50" x2="70" y2="50" stroke="#22150d" strokeWidth="2" opacity="0.3" />
-        <line x1="45" y1="60" x2="65" y2="60" stroke="#22150d" strokeWidth="2" opacity="0.3" />
-        <line x1="45" y1="70" x2="70" y2="70" stroke="#22150d" strokeWidth="2" opacity="0.3" />
+        <rect x="20" y="30" width="60" height="60" rx="6" fill="#181818" opacity="0.1" stroke="#181818" strokeWidth="1.5" />
+        <circle cx="35" cy="50" r="6" fill="#181818" opacity="0.3" />
+        <circle cx="35" cy="70" r="6" fill="#181818" opacity="0.3" />
+        <line x1="35" y1="56" x2="35" y2="64" stroke="#181818" strokeWidth="2" opacity="0.3" />
+        <line x1="45" y1="50" x2="70" y2="50" stroke="#181818" strokeWidth="2" opacity="0.3" />
+        <line x1="45" y1="60" x2="65" y2="60" stroke="#181818" strokeWidth="2" opacity="0.3" />
+        <line x1="45" y1="70" x2="70" y2="70" stroke="#181818" strokeWidth="2" opacity="0.3" />
       </m.g>
       
       {/* OpenHands agent reviewing */}
@@ -160,8 +160,8 @@ const CodeReviewDiagram = () => (
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.5, delay: 0.3 }}
       >
-        <circle cx="120" cy="40" r="22" fill="#FFFF8B" stroke="#22150d" strokeWidth="1.5" />
-        <text x="120" y="45" textAnchor="middle" fontSize="20" fill="#22150d">🤲</text>
+        <circle cx="120" cy="40" r="22" fill="#FFFF8B" stroke="#181818" strokeWidth="1.5" />
+        <text x="120" y="45" textAnchor="middle" fontSize="20" fill="#181818">🤲</text>
       </m.g>
       
       {/* Comment bubbles */}
@@ -170,16 +170,16 @@ const CodeReviewDiagram = () => (
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.3, delay: 0.8 }}
       >
-        <rect x="100" y="70" width="70" height="35" rx="6" fill="#FFFF8B" stroke="#22150d" strokeWidth="1" />
-        <line x1="110" y1="80" x2="160" y2="80" stroke="#22150d" strokeWidth="2" opacity="0.5" />
-        <line x1="110" y1="90" x2="150" y2="90" stroke="#22150d" strokeWidth="2" opacity="0.5" />
-        <polygon points="115,70 125,70 120,62" fill="#FFFF8B" stroke="#22150d" strokeWidth="1" />
+        <rect x="100" y="70" width="70" height="35" rx="6" fill="#FFFF8B" stroke="#181818" strokeWidth="1" />
+        <line x1="110" y1="80" x2="160" y2="80" stroke="#181818" strokeWidth="2" opacity="0.5" />
+        <line x1="110" y1="90" x2="150" y2="90" stroke="#181818" strokeWidth="2" opacity="0.5" />
+        <polygon points="115,70 125,70 120,62" fill="#FFFF8B" stroke="#181818" strokeWidth="1" />
       </m.g>
       
       {/* Animated review line */}
       <m.path
         d="M80 60 L95 50"
-        stroke="#22150d"
+        stroke="#181818"
         strokeWidth="2"
         strokeDasharray="4 3"
         initial={{ pathLength: 0 }}
@@ -199,10 +199,10 @@ const DocsDiagram = () => (
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <rect x="15" y="30" width="45" height="60" rx="4" fill="#22150d" opacity="0.1" stroke="#22150d" strokeWidth="1.5" />
-        <text x="37" y="55" textAnchor="middle" fontSize="10" fill="#22150d" opacity="0.6">{'{ }'}</text>
-        <line x1="25" y1="70" x2="50" y2="70" stroke="#22150d" strokeWidth="2" opacity="0.3" />
-        <line x1="25" y1="78" x2="45" y2="78" stroke="#22150d" strokeWidth="2" opacity="0.3" />
+        <rect x="15" y="30" width="45" height="60" rx="4" fill="#181818" opacity="0.1" stroke="#181818" strokeWidth="1.5" />
+        <text x="37" y="55" textAnchor="middle" fontSize="10" fill="#181818" opacity="0.6">{'{ }'}</text>
+        <line x1="25" y1="70" x2="50" y2="70" stroke="#181818" strokeWidth="2" opacity="0.3" />
+        <line x1="25" y1="78" x2="45" y2="78" stroke="#181818" strokeWidth="2" opacity="0.3" />
       </m.g>
       
       {/* OpenHands agent */}
@@ -211,14 +211,14 @@ const DocsDiagram = () => (
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.5, delay: 0.3 }}
       >
-        <circle cx="100" cy="60" r="22" fill="#FFFF8B" stroke="#22150d" strokeWidth="1.5" />
-        <text x="100" y="65" textAnchor="middle" fontSize="20" fill="#22150d">🤲</text>
+        <circle cx="100" cy="60" r="22" fill="#FFFF8B" stroke="#181818" strokeWidth="1.5" />
+        <text x="100" y="65" textAnchor="middle" fontSize="20" fill="#181818">🤲</text>
       </m.g>
       
       {/* Arrow */}
       <m.path
         d="M65 60 L75 60"
-        stroke="#22150d"
+        stroke="#181818"
         strokeWidth="2"
         strokeDasharray="3 2"
         initial={{ pathLength: 0 }}
@@ -232,24 +232,24 @@ const DocsDiagram = () => (
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.5, delay: 0.6 }}
       >
-        <rect x="140" y="25" width="45" height="70" rx="4" fill="#22150d" opacity="0.1" stroke="#22150d" strokeWidth="1.5" />
-        <text x="162" y="42" textAnchor="middle" fontSize="8" fontWeight="bold" fill="#22150d" opacity="0.7">DOC</text>
+        <rect x="140" y="25" width="45" height="70" rx="4" fill="#181818" opacity="0.1" stroke="#181818" strokeWidth="1.5" />
+        <text x="162" y="42" textAnchor="middle" fontSize="8" fontWeight="bold" fill="#181818" opacity="0.7">DOC</text>
         <m.g
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.3, delay: 0.9 }}
         >
           <line x1="148" y1="52" x2="178" y2="52" stroke="#16a34a" strokeWidth="2" />
-          <line x1="148" y1="62" x2="175" y2="62" stroke="#22150d" strokeWidth="2" opacity="0.3" />
-          <line x1="148" y1="72" x2="170" y2="72" stroke="#22150d" strokeWidth="2" opacity="0.3" />
-          <line x1="148" y1="82" x2="176" y2="82" stroke="#22150d" strokeWidth="2" opacity="0.3" />
+          <line x1="148" y1="62" x2="175" y2="62" stroke="#181818" strokeWidth="2" opacity="0.3" />
+          <line x1="148" y1="72" x2="170" y2="72" stroke="#181818" strokeWidth="2" opacity="0.3" />
+          <line x1="148" y1="82" x2="176" y2="82" stroke="#181818" strokeWidth="2" opacity="0.3" />
         </m.g>
       </m.g>
       
       {/* Arrow */}
       <m.path
         d="M125 60 L135 60"
-        stroke="#22150d"
+        stroke="#181818"
         strokeWidth="2"
         strokeDasharray="3 2"
         initial={{ pathLength: 0 }}
@@ -269,12 +269,12 @@ const ModernizeDiagram = () => (
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <rect x="15" y="25" width="50" height="70" rx="4" fill="#7b6d5d" opacity="0.2" stroke="#7b6d5d" strokeWidth="1.5" />
-        <text x="40" y="45" textAnchor="middle" fontSize="8" fill="#7b6d5d" fontWeight="bold">COBOL</text>
-        <line x1="23" y1="55" x2="57" y2="55" stroke="#7b6d5d" strokeWidth="2" opacity="0.4" />
-        <line x1="23" y1="65" x2="50" y2="65" stroke="#7b6d5d" strokeWidth="2" opacity="0.4" />
-        <line x1="23" y1="75" x2="55" y2="75" stroke="#7b6d5d" strokeWidth="2" opacity="0.4" />
-        <line x1="23" y1="85" x2="48" y2="85" stroke="#7b6d5d" strokeWidth="2" opacity="0.4" />
+        <rect x="15" y="25" width="50" height="70" rx="4" fill="#737373" opacity="0.2" stroke="#737373" strokeWidth="1.5" />
+        <text x="40" y="45" textAnchor="middle" fontSize="8" fill="#737373" fontWeight="bold">COBOL</text>
+        <line x1="23" y1="55" x2="57" y2="55" stroke="#737373" strokeWidth="2" opacity="0.4" />
+        <line x1="23" y1="65" x2="50" y2="65" stroke="#737373" strokeWidth="2" opacity="0.4" />
+        <line x1="23" y1="75" x2="55" y2="75" stroke="#737373" strokeWidth="2" opacity="0.4" />
+        <line x1="23" y1="85" x2="48" y2="85" stroke="#737373" strokeWidth="2" opacity="0.4" />
       </m.g>
       
       {/* OpenHands agent */}
@@ -283,14 +283,14 @@ const ModernizeDiagram = () => (
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.5, delay: 0.3 }}
       >
-        <circle cx="100" cy="60" r="22" fill="#FFFF8B" stroke="#22150d" strokeWidth="1.5" />
-        <text x="100" y="65" textAnchor="middle" fontSize="20" fill="#22150d">🤲</text>
+        <circle cx="100" cy="60" r="22" fill="#FFFF8B" stroke="#181818" strokeWidth="1.5" />
+        <text x="100" y="65" textAnchor="middle" fontSize="20" fill="#181818">🤲</text>
       </m.g>
       
       {/* Arrow */}
       <m.path
         d="M70 60 L75 60"
-        stroke="#22150d"
+        stroke="#181818"
         strokeWidth="2"
         strokeDasharray="3 2"
         initial={{ pathLength: 0 }}
@@ -304,7 +304,7 @@ const ModernizeDiagram = () => (
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.5, delay: 0.6 }}
       >
-        <rect x="135" y="25" width="50" height="70" rx="4" fill="#22150d" opacity="0.1" stroke="#22150d" strokeWidth="1.5" />
+        <rect x="135" y="25" width="50" height="70" rx="4" fill="#181818" opacity="0.1" stroke="#181818" strokeWidth="1.5" />
         <m.text 
           x="160" y="45" 
           textAnchor="middle" 
@@ -322,10 +322,10 @@ const ModernizeDiagram = () => (
           animate={{ opacity: 1 }}
           transition={{ duration: 0.3, delay: 0.9 }}
         >
-          <line x1="143" y1="55" x2="177" y2="55" stroke="#22150d" strokeWidth="2" opacity="0.3" />
-          <line x1="143" y1="65" x2="170" y2="65" stroke="#22150d" strokeWidth="2" opacity="0.3" />
-          <line x1="143" y1="75" x2="175" y2="75" stroke="#22150d" strokeWidth="2" opacity="0.3" />
-          <line x1="143" y1="85" x2="168" y2="85" stroke="#22150d" strokeWidth="2" opacity="0.3" />
+          <line x1="143" y1="55" x2="177" y2="55" stroke="#181818" strokeWidth="2" opacity="0.3" />
+          <line x1="143" y1="65" x2="170" y2="65" stroke="#181818" strokeWidth="2" opacity="0.3" />
+          <line x1="143" y1="75" x2="175" y2="75" stroke="#181818" strokeWidth="2" opacity="0.3" />
+          <line x1="143" y1="85" x2="168" y2="85" stroke="#181818" strokeWidth="2" opacity="0.3" />
         </m.g>
         {/* Sparkle */}
         <m.text
@@ -343,7 +343,7 @@ const ModernizeDiagram = () => (
       {/* Arrow */}
       <m.path
         d="M125 60 L130 60"
-        stroke="#22150d"
+        stroke="#181818"
         strokeWidth="2"
         strokeDasharray="3 2"
         initial={{ pathLength: 0 }}
@@ -398,7 +398,7 @@ export const UseCaseCarousel: React.FC = () => {
       data-testid="use-case-carousel"
       style={{ 
         backgroundColor: '#F9F0D9',
-        border: '1px solid rgba(34, 21, 13, 0.1)'
+        border: '1px solid rgba(24, 24, 24, 0.1)'
       }}
     >
       {/* Header */}

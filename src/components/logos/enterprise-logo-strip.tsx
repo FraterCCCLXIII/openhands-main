@@ -1,4 +1,4 @@
-const logoColor = '#22150d';
+const logoColor = '#181818';
 
 const NvidiaLogo = () => (
   <svg xmlns='http://www.w3.org/2000/svg' id='svg2' x='0px' y='0px' height='100%' viewBox='35.188 31.512 351.46 258.785' width='100%' aria-hidden='true' focusable='false'>

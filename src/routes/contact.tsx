@@ -165,7 +165,7 @@ const Contact = () => {
             </div>
 
             <div className='contact-form-col' style={{ display: 'flex', position: 'relative', flexDirection: 'column', width: '619px', paddingLeft: '20px', paddingRight: '20px' }}>
-              <div data-wf-el='card' className='contact-form-card' style={{ display: 'flex', position: 'relative', flexDirection: 'column', justifyContent: 'flex-start', overflow: 'hidden', width: '579px', height: '611.766px', border: '1px solid rgb(34, 21, 13)', borderRadius: '8px' }}>
+              <div data-wf-el='card' className='contact-form-card' style={{ display: 'flex', position: 'relative', flexDirection: 'column', justifyContent: 'flex-start', overflow: 'hidden', width: '579px', height: '611.766px', border: '1px solid rgb(24, 24, 24)', borderRadius: '8px' }}>
                 <div data-wf-el='card-body' className='contact-form-card-body' style={{ display: 'block', position: 'relative', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', width: '577px', height: '609.766px', padding: '24px' }}>
                   <div data-wf-el='form-block' className='contact-form-block w-form' style={{ display: 'block', width: '529px', marginBottom: '15px' }}>
                     <form

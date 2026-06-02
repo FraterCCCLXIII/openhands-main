@@ -104,7 +104,7 @@ export default function WhitepaperModernizeLegacySystemsWithAiAgents() {
               </div>
             </div>
 
-            <div data-wf-el='card' className='card u-border-dark' style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', alignSelf: 'start', position: 'relative', overflow: 'hidden', border: '1px solid rgb(34, 21, 13)', borderRadius: '8px' }}>
+            <div data-wf-el='card' className='card u-border-dark' style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', alignSelf: 'start', position: 'relative', overflow: 'hidden', border: '1px solid rgb(24, 24, 24)', borderRadius: '8px' }}>
               <div data-wf-el='card-body' className='card-body' style={{ position: 'relative', padding: 'var(--whitepaper-card-body-padding, 24px)', flex: '1 1 0%', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start' }}>
                 {isDownloadReady ? (
                   <div role='status' className='whitepaper-link' style={{ textAlign: 'center', paddingTop: '16px', paddingBottom: '16px' }}>

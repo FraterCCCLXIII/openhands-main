@@ -114,7 +114,7 @@ export const BlogFooter: React.FC<BlogFooterProps> = ({
           <p className='w-full text-[20.8px] leading-[24.96px] font-medium text-[#5f5f5f]' style={{ marginTop: '10.4px', marginBottom: '20.8px' }}>
             Insights and updates from the OpenHands team
           </p>
-          <p className='max-w-[560px] text-[16px] leading-[22.4px] text-[#22150d]' style={{ marginBottom: '16px' }}>
+          <p className='max-w-[560px] text-[16px] leading-[22.4px] text-[#181818]' style={{ marginBottom: '16px' }}>
             Sign up for our newsletter for updates, events, and community insights.
           </p>
           <NewsletterForm

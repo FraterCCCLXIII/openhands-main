@@ -446,7 +446,7 @@ const Pricing = () => {
                   <article
                     data-wf-el='card'
                     className='relative flex h-full w-full flex-col justify-start overflow-hidden rounded-lg bg-brand-bg'
-                    style={{ borderRadius: '8px', border: '1px solid rgb(34, 21, 13)' }}
+                    style={{ borderRadius: '8px', border: '1px solid rgb(24, 24, 24)' }}
                   >
                     <div
                       data-wf-el='card-body'
@@ -464,13 +464,13 @@ const Pricing = () => {
                         <div data-wf-el='paragraph-xl' className='text-brand-fg' style={{ fontSize: 'var(--pricing-plan-title-font-size)', lineHeight: 'var(--pricing-plan-title-line-height)', fontWeight: 500, marginBottom: '0px' }}>{plan.title}</div>
                         <p data-wf-el='paragraph-md' className='font-normal text-[#5f5f5f]' style={{ fontSize: 'var(--pricing-plan-price-font-size)', lineHeight: 'var(--pricing-plan-price-line-height)', marginTop: '0px', marginBottom: 'var(--pricing-plan-price-margin-bottom)' }}>{plan.price}</p>
                         <p className='text-[16px] text-brand-muted' style={{ lineHeight: 'var(--pricing-body-copy-line-height)', marginTop: '0px', marginBottom: '24px' }}>{plan.description}</p>
-                        <div aria-hidden='true' style={{ height: '1px', margin: '0px', backgroundColor: 'rgba(34, 21, 13, 0.2)' }} />
+                        <div aria-hidden='true' style={{ height: '1px', margin: '0px', backgroundColor: 'rgba(24, 24, 24, 0.2)' }} />
                         <p data-wf-el='paragraph-sm' className='fluid-sm font-normal text-[#5f5f5f]' style={{ marginTop: 'var(--pricing-card-intro-margin-top)', marginBottom: 'var(--pricing-card-intro-margin-bottom)' }}>{plan.intro}</p>
                         <div className='flex flex-1 flex-col' style={{ marginTop: '0px', width: '100%' }}>
                           {plan.features.map((feature) => (
                             <div key={feature} className='row row-gap-sm row-align-center u-mb-xs' style={{ display: 'flex', alignItems: 'center', gap: '8px normal', margin: '0px -4px 8px', padding: '0px' }}>
                               <div className='col col-shrink' style={{ display: 'flex', flexDirection: 'column', position: 'relative', flex: '0 0 auto', padding: '0px 4px' }}>
-                                <img data-wf-el='icon-media' src={CARD_CHECK_ICON} alt='' aria-hidden='true' className='icon-media' style={{ display: 'block', width: '20px', height: '20px', color: 'rgb(34, 21, 13)', fontSize: '16px', lineHeight: '22.4px', fontFamily: '"Sohne Kraftig", Arial, sans-serif' }} />
+                                <img data-wf-el='icon-media' src={CARD_CHECK_ICON} alt='' aria-hidden='true' className='icon-media' style={{ display: 'block', width: '20px', height: '20px', color: 'rgb(24, 24, 24)', fontSize: '16px', lineHeight: '22.4px', fontFamily: '"Sohne Kraftig", Arial, sans-serif' }} />
                               </div>
                               <div className='col' style={{ display: 'flex', flexDirection: 'column', position: 'relative', flex: '1 1 0%', padding: '0px 4px' }}>
                                 <p data-wf-el='paragraph-sm' className='fluid-sm font-sohne-buch text-[#5f5f5f]' style={{ margin: '0px' }}>{feature}</p>
@@ -541,11 +541,11 @@ const Pricing = () => {
             <div
               data-wf-el='card-body'
               className='relative bg-brand-fg text-brand-fg'
-              style={{ backgroundColor: 'rgb(34, 21, 13)', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', padding: 'var(--pricing-card-body-padding)' }}
+              style={{ backgroundColor: 'rgb(24, 24, 24)', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', padding: 'var(--pricing-card-body-padding)' }}
             >
               <div
                 data-wf-el='table-embed'
-                style={{ display: 'flex', width: 'var(--pricing-table-embed-width)', margin: '24px var(--pricing-table-embed-margin-right) 24px var(--pricing-table-embed-margin-left)', color: 'rgb(34, 21, 13)' }}
+                style={{ display: 'flex', width: 'var(--pricing-table-embed-width)', margin: '24px var(--pricing-table-embed-margin-right) 24px var(--pricing-table-embed-margin-left)', color: 'rgb(24, 24, 24)' }}
               >
                 {/* Live's compare-table is a div-grid (NOT a <table>):
                  *

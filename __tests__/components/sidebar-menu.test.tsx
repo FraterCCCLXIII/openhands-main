@@ -23,7 +23,7 @@ describe('compact sidebar menu parity', () => {
     expect(sidebar).toHaveClass('fixed', 'inset-0', 'w-screen');
     expect(sidebar).not.toHaveClass('lg:w-[323px]');
     expect(sidebar).toHaveStyle({
-      backgroundColor: 'rgb(34, 21, 13)',
+      backgroundColor: 'rgb(24, 24, 24)',
       color: 'rgb(249, 240, 217)',
     });
   });
@@ -118,7 +118,7 @@ describe('compact header menu controls', () => {
       'true',
     );
     expect(container.querySelector('[data-wf-el="nav_wrap"]')).toHaveStyle({
-      backgroundColor: 'rgb(34, 21, 13)',
+      backgroundColor: 'rgb(24, 24, 24)',
     });
 
     await user.click(screen.getByRole('button', { name: /close menu/i }));

@@ -176,7 +176,7 @@ function NavHeaderCtaButton({
           : isOutline
             ? {
                 backgroundColor: 'rgba(255,255,255,0.34)',
-                borderColor: 'rgb(34, 21, 13)',
+                borderColor: 'rgb(24, 24, 24)',
                 backdropFilter: 'blur(5px)',
               }
             : {}),
@@ -292,8 +292,8 @@ export const Header: React.FC<HeaderProps> = ({
         flexDirection: useCompactNav ? 'column' : undefined,
         justifyContent: useCompactNav ? 'center' : undefined,
         height: isMobile ? '69.3437px' : '83.578125px',
-        backgroundColor: menuOpen ? 'rgb(34, 21, 13)' : 'rgb(249, 240, 217)',
-        color: menuOpen ? 'rgb(249, 240, 217)' : 'rgb(34, 21, 13)',
+        backgroundColor: menuOpen ? 'rgb(24, 24, 24)' : 'rgb(249, 240, 217)',
+        color: menuOpen ? 'rgb(249, 240, 217)' : 'rgb(24, 24, 24)',
         paddingTop: '1rem',
         paddingBottom: '1rem',
         containerType: 'inline-size' as React.CSSProperties['containerType'],
@@ -343,7 +343,7 @@ export const Header: React.FC<HeaderProps> = ({
                     // Live's "Product" dropdown trigger is NOT highlighted when on
                     // /product subroutes — it stays brand-fg. Active highlight is
                     // applied per-item inside the dropdown only.
-                    'w-inline-block hover:text-[#8a5f45]',
+                    'w-inline-block hover:text-[#565656]',
                     navLinkClass,
                   )}
                   style={navLinkStyle}
@@ -365,7 +365,7 @@ export const Header: React.FC<HeaderProps> = ({
                   onMouseEnter={() => setProductOpen(true)}
                   onMouseLeave={() => setProductOpen(false)}
                 >
-                  <div data-wf-el='nav_links_dropdown' style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: '32px', backgroundColor: 'rgb(34, 21, 13)', color: 'rgb(249, 240, 217)', borderRadius: '16px', padding: '23px', boxShadow: 'none', width: NAV_DROPDOWN_WIDTH }}>
+                  <div data-wf-el='nav_links_dropdown' style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: '32px', backgroundColor: 'rgb(24, 24, 24)', color: 'rgb(249, 240, 217)', borderRadius: '16px', padding: '23px', boxShadow: 'none', width: NAV_DROPDOWN_WIDTH }}>
                     <div data-wf-el='nav_links_dropdown_group' style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', gap: '24px', margin: 0 }}>
                       <div data-wf-el='dropdown-eyebrow' className='eyebrow u-mb-0 font-mono' style={{ margin: 0, color: 'rgb(249, 240, 217)', fontSize: '14.08px', lineHeight: '16.896px' }}>Features</div>
                       <ul data-wf-el='nav_links_list' className='is-dropdown' style={{ position: 'relative', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', justifyContent: 'center', alignItems: 'stretch', gap: '21.6px', margin: 0, padding: 0, width: '100%' }}>
@@ -400,7 +400,7 @@ export const Header: React.FC<HeaderProps> = ({
                       target='_blank'
                       rel='noopener noreferrer'
                       data-wf-el='nav_links_link'
-                      className={clsx(navLinkClass, 'hover:text-[#8a5f45]')}
+                      className={clsx(navLinkClass, 'hover:text-[#565656]')}
                       style={navLinkStyle}
                     >
                       {item.name}
@@ -411,11 +411,11 @@ export const Header: React.FC<HeaderProps> = ({
                       data-wf-el='nav_links_link'
                       className={clsx(
                         navLinkClass,
-                        'hover:text-[#8a5f45]',
+                        'hover:text-[#565656]',
                         // Live openhands.dev only tints the *Home* nav link when active;
                         // other links (Community/Pricing/etc.) stay default brand-fg even
                         // on their own page. Tinting them produced parity color diffs.
-                        item.to === '/' && isPathActive(pathname, item.to) && 'text-[#8a5f45]'
+                        item.to === '/' && isPathActive(pathname, item.to) && 'text-[#565656]'
                       )}
                       style={navLinkStyle}
                     >
@@ -430,7 +430,7 @@ export const Header: React.FC<HeaderProps> = ({
                   target='_blank'
                   rel='noopener noreferrer'
                   data-wf-el='nav_links_link'
-                  className={clsx(navLinkClass, 'hover:text-[#8a5f45]')}
+                  className={clsx(navLinkClass, 'hover:text-[#565656]')}
                   style={navLinkStyle}
                 >
                   {HEADER_CENTER_NAV_LINK.name}
@@ -439,7 +439,7 @@ export const Header: React.FC<HeaderProps> = ({
               {/* Resources dropdown */}
               <li data-wf-el='nav_links_li' className='group' style={{ display: 'list-item' }}>
                 <button
-                  className={clsx('flex items-center gap-1 hover:text-[#8a5f45]', navLinkClass)}
+                  className={clsx('flex items-center gap-1 hover:text-[#565656]', navLinkClass)}
                   style={{ ...navLinkStyle, cursor: 'default' }}
                   onMouseEnter={() => setResourcesOpen(true)}
                   onFocus={() => setResourcesOpen(true)}
@@ -460,7 +460,7 @@ export const Header: React.FC<HeaderProps> = ({
                   onMouseEnter={() => setResourcesOpen(true)}
                   onMouseLeave={() => setResourcesOpen(false)}
                 >
-                  <div data-wf-el='nav_links_dropdown' style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: '32px', backgroundColor: 'rgb(34, 21, 13)', color: 'rgb(249, 240, 217)', borderRadius: '16px', padding: '23px', boxShadow: 'none', width: NAV_DROPDOWN_WIDTH }}>
+                  <div data-wf-el='nav_links_dropdown' style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: '32px', backgroundColor: 'rgb(24, 24, 24)', color: 'rgb(249, 240, 217)', borderRadius: '16px', padding: '23px', boxShadow: 'none', width: NAV_DROPDOWN_WIDTH }}>
                     {RESOURCE_LINK_GROUPS.map((group) => (
                       <div key={group.title} data-wf-el='nav_links_dropdown_group' style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', gap: '24px', margin: 0, width: '100%' }}>
                         <div data-wf-el='dropdown-eyebrow' className='eyebrow u-mb-0 font-mono' style={{ margin: 0, color: 'rgb(249, 240, 217)', fontSize: '14.08px', lineHeight: '16.896px' }}>

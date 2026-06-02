@@ -160,12 +160,12 @@ const ProductGuiIntroSection = ({
   title: string;
   description: string;
 }) => (
-  <section data-wf-el='section' className='product-feature-section product-gui-intro-section' style={{ display: 'block', backgroundColor: 'rgb(34, 21, 13)', color: 'rgb(249, 240, 217)', position: 'relative', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px' }}>
+  <section data-wf-el='section' className='product-feature-section product-gui-intro-section' style={{ display: 'block', backgroundColor: 'rgb(24, 24, 24)', color: 'rgb(249, 240, 217)', position: 'relative', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px' }}>
     <div data-wf-el='container' className='product-feature-container mx-auto max-w-[1238px]' style={{ display: 'block', width: 'calc(100% - 80px)', maxWidth: '1238px', marginLeft: 'auto', marginRight: 'auto' }}>
       <div className='product-gui-intro-row' style={{ display: 'flex', marginLeft: '-20px', marginRight: '-20px' }}>
         <div className='product-gui-intro-media-col' style={{ width: '50%', paddingLeft: '20px', paddingRight: '20px', minHeight: 'min(469px, 52.5vw)' }}>
           <div data-wf-el='product-list_img_wrap' className='product-gui-hero-image-wrap bg-brand-bg' style={{ backgroundColor: 'rgb(249, 240, 217)', border: '1px solid rgb(179, 168, 140)', borderRadius: '16px', boxSizing: 'border-box', color: 'rgb(249, 240, 217)', display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative', overflow: 'hidden', width: '100%', minHeight: '100%', marginLeft: '0px', padding: '96px 64px 64px', boxShadow: 'none' }}>
-            <div data-wf-el='product-list_img_overlay' className='absolute inset-x-0 top-0 text-brand-fg' style={{ backgroundColor: 'rgb(179, 168, 140)', color: 'rgb(34, 21, 13)', zIndex: 1, padding: '16px' }}>
+            <div data-wf-el='product-list_img_overlay' className='absolute inset-x-0 top-0 text-brand-fg' style={{ backgroundColor: 'rgb(179, 168, 140)', color: 'rgb(24, 24, 24)', zIndex: 1, padding: '16px' }}>
               <div data-wf-el='eyebrow' className='font-mono' style={{ fontSize: '14.08px', lineHeight: '16.896px', marginBottom: '0px', width: '100%' }}>Web&nbsp;GUI</div>
             </div>
             <img data-wf-el='product-list_img' src={image.src} alt={image.alt} style={{ width: '100%', maxWidth: '469px', height: 'auto', borderRadius: '0px', color: 'rgb(249, 240, 217)', display: 'block', objectFit: 'scale-down' }} />
@@ -185,7 +185,7 @@ const ProductGuiIntroSection = ({
 const ProductList = ({ items }: { items: readonly string[] }) => (
   <ul data-wf-el='product-list_ul' className='product-list' style={{ borderStyle: 'none', textAlign: 'start', width: '571px', marginTop: '0px', listStyleType: 'none', paddingLeft: '0px' }}>
     {items.map((item) => (
-      <li data-wf-el='product-list_element' key={item} className='product-list-item fluid-body-lg py-4 text-[#5f5f5f] font-medium' style={{ display: 'list-item', textAlign: 'start', borderBottom: '1px solid rgba(34, 21, 13, 0.28)' }}>
+      <li data-wf-el='product-list_element' key={item} className='product-list-item fluid-body-lg py-4 text-[#5f5f5f] font-medium' style={{ display: 'list-item', textAlign: 'start', borderBottom: '1px solid rgba(24, 24, 24, 0.28)' }}>
         {item}
       </li>
     ))}
@@ -225,21 +225,21 @@ export const ProductComparisonTable = ({
 }) => {
   const headingClass = dark ? 'text-brand-bg' : 'text-brand-fg';
   const cellClass = dark ? 'text-[#b3a88c]' : 'text-[#5f5f5f]';
-  const trColor = headerColor ?? (dark ? 'rgb(249, 240, 217)' : 'rgb(34, 21, 13)');
-  // Live computed colors for product-table_th: rgb(34,21,13) on light bg,
+  const trColor = headerColor ?? (dark ? 'rgb(249, 240, 217)' : 'rgb(24, 24, 24)');
+  // Live computed colors for product-table_th: rgb(24,24,24) on light bg,
   // rgb(249,240,217) on dark bg. Live also uses fontWeight 400 (not 500).
-  const thColor = headerColor ?? (dark ? 'rgb(249, 240, 217)' : 'rgb(34, 21, 13)');
+  const thColor = headerColor ?? (dark ? 'rgb(249, 240, 217)' : 'rgb(24, 24, 24)');
   const tickColor = headerColor ?? (dark ? 'rgb(179, 168, 140)' : 'rgb(138, 95, 69)');
 
   return (
-    <section data-wf-el='section' className={classNames('product-feature-section product-comparison-section relative', dark ? 'text-brand-bg' : 'text-brand-fg')} style={{ display: 'block', backgroundColor: dark ? 'rgb(34, 21, 13)' : 'rgba(0, 0, 0, 0)', paddingTop: 'var(--product-comparison-padding-top, var(--product-section-padding-y, 80px))', paddingBottom: 'var(--product-comparison-padding-bottom, var(--product-section-padding-y, 80px))', paddingLeft: '0px', paddingRight: '0px' }}>
-      <div data-wf-el='container' data-product-comparison-container className='product-feature-container product-comparison-container mx-auto max-w-[1238px]' style={{ display: 'block', color: dark ? 'rgb(249, 240, 217)' : 'rgb(34, 21, 13)', zIndex: 1, width: 'var(--product-container-width, 100%)', height: 'var(--product-comparison-container-height, auto)', marginTop: minHeight ? '128px' : '0px', marginBottom: minHeight ? '128px' : '0px' }}>
+    <section data-wf-el='section' className={classNames('product-feature-section product-comparison-section relative', dark ? 'text-brand-bg' : 'text-brand-fg')} style={{ display: 'block', backgroundColor: dark ? 'rgb(24, 24, 24)' : 'rgba(0, 0, 0, 0)', paddingTop: 'var(--product-comparison-padding-top, var(--product-section-padding-y, 80px))', paddingBottom: 'var(--product-comparison-padding-bottom, var(--product-section-padding-y, 80px))', paddingLeft: '0px', paddingRight: '0px' }}>
+      <div data-wf-el='container' data-product-comparison-container className='product-feature-container product-comparison-container mx-auto max-w-[1238px]' style={{ display: 'block', color: dark ? 'rgb(249, 240, 217)' : 'rgb(24, 24, 24)', zIndex: 1, width: 'var(--product-container-width, 100%)', height: 'var(--product-comparison-container-height, auto)', marginTop: minHeight ? '128px' : '0px', marginBottom: minHeight ? '128px' : '0px' }}>
         <div className='product-comparison-heading-row' style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginLeft: '-20px', marginRight: '-20px' }}>
           <div className={classNames('section-title text-center', headingClass)} style={{ marginBottom: 'var(--product-comparison-heading-margin-bottom, 8.8px)', maxWidth: 'var(--product-comparison-heading-max-width, 599px)' }}>
             The only open, secure, and scalable agent platform built for real engineering work
           </div>
         </div>
-        <div style={{ width: '100%', color: dark ? 'rgb(249, 240, 217)' : 'rgb(34, 21, 13)' }}>
+        <div style={{ width: '100%', color: dark ? 'rgb(249, 240, 217)' : 'rgb(24, 24, 24)' }}>
           <table data-wf-el='product-table' className='w-full border-collapse text-left' style={{ display: 'table', position: 'relative', overflow: 'visible', marginTop: '49.6px', transform: 'var(--product-comparison-content-transform, none)', color: 'rgb(249, 240, 217)' }}>
             <colgroup>
               <col style={{ width: 'var(--product-table-col-1, 407px)' }} />
@@ -331,7 +331,7 @@ export const ProductFaqSection = ({ faqs }: { faqs: readonly ProductFaqItem[] })
                         </svg>
                       </summary>
                       <div style={{ paddingLeft: '24px', paddingRight: '24px' }}>
-                        <div data-wf-el='accordion-content_spacer' style={{ color: 'rgb(34, 21, 13)', marginTop: '0px', marginLeft: '0px', marginRight: '0px', padding: '0px 0px 24px' }}>
+                        <div data-wf-el='accordion-content_spacer' style={{ color: 'rgb(24, 24, 24)', marginTop: '0px', marginLeft: '0px', marginRight: '0px', padding: '0px 0px 24px' }}>
                           <div data-wf-el='slot' style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
                             <div data-wf-el='rich-text-component' style={{ marginTop: '16px' }}>
                               <div data-wf-el='rich-text' className='font-sohne-buch' style={{ maxWidth: '820px', width: '100%' }}>

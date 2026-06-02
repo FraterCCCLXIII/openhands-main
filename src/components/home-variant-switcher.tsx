@@ -47,7 +47,7 @@ export function HomeVariantSwitcher({ variant, onVariantChange }: HomeVariantSwi
           ref={panelRef}
           role='dialog'
           aria-label={HOME_VARIANT_SWITCHER_LABEL}
-          className='w-[240px] rounded-lg border border-[rgba(34,21,13,0.12)] bg-brand-bg p-4 shadow-lg'
+          className='w-[240px] rounded-lg border border-[rgba(24,24,24,0.12)] bg-brand-bg p-4 shadow-lg'
         >
           <p className='mb-3 text-sm font-medium text-brand-fg'>{HOME_VARIANT_SWITCHER_LABEL}</p>
           <div className='flex flex-col gap-2'>
@@ -65,8 +65,8 @@ export function HomeVariantSwitcher({ variant, onVariantChange }: HomeVariantSwi
                   }}
                   className={`rounded-md border px-3 py-2 text-left transition-colors ${
                     isSelected
-                      ? 'border-brand-fg bg-[rgba(34,21,13,0.06)]'
-                      : 'border-[rgba(34,21,13,0.12)] hover:border-[rgba(34,21,13,0.3)]'
+                      ? 'border-brand-fg bg-[rgba(24,24,24,0.06)]'
+                      : 'border-[rgba(24,24,24,0.12)] hover:border-[rgba(24,24,24,0.3)]'
                   }`}
                 >
                   <span className='block text-sm font-medium text-brand-fg'>{option.label}</span>
@@ -86,7 +86,7 @@ export function HomeVariantSwitcher({ variant, onVariantChange }: HomeVariantSwi
         aria-expanded={isOpen}
         aria-haspopup='dialog'
         onClick={() => setIsOpen((open) => !open)}
-        className='flex h-12 w-12 items-center justify-center rounded-full border border-[rgba(34,21,13,0.12)] bg-brand-bg text-brand-fg shadow-md transition-colors hover:border-[rgba(34,21,13,0.3)] hover:bg-[rgba(34,21,13,0.04)]'
+        className='flex h-12 w-12 items-center justify-center rounded-full border border-[rgba(24,24,24,0.12)] bg-brand-bg text-brand-fg shadow-md transition-colors hover:border-[rgba(24,24,24,0.3)] hover:bg-[rgba(24,24,24,0.04)]'
       >
         <Settings className='h-5 w-5' strokeWidth={1.75} aria-hidden='true' />
       </button>

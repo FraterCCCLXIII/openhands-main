@@ -81,7 +81,7 @@ export const HeroAppPreview: React.FC<HeroAppPreviewProps> = ({ slides }) => {
       card.style.transform = `scale(${scale})`;
       card.style.boxShadow =
         shadow > 0.01
-          ? `0 28px 70px -16px rgba(34, 21, 13, ${shadow}), 0 12px 40px rgba(34, 21, 13, ${shadow * 0.55})`
+          ? `0 28px 70px -16px rgba(24, 24, 24, ${shadow}), 0 12px 40px rgba(24, 24, 24, ${shadow * 0.55})`
           : 'none';
     };
 
@@ -129,17 +129,17 @@ export const HeroAppPreview: React.FC<HeroAppPreviewProps> = ({ slides }) => {
       <div
         ref={cardRef}
         data-testid='hero-app-preview'
-        className='origin-center overflow-hidden rounded-lg border border-[rgba(34,21,13,0.2)] bg-[#ebe4d4]'
+        className='origin-center overflow-hidden rounded-lg border border-[rgba(24,24,24,0.2)] bg-[#ebe4d4]'
       >
         <div
           data-wf-el='hero-preview-chrome'
-          className='flex items-center border-b border-[rgba(34,21,13,0.12)] px-3 py-2.5'
+          className='flex items-center border-b border-[rgba(24,24,24,0.12)] px-3 py-2.5'
           aria-hidden='true'
         >
           <div className='flex shrink-0 items-center gap-1.5'>
-            <span className='h-2.5 w-2.5 rounded-full bg-[#22150d]/35' />
-            <span className='h-2.5 w-2.5 rounded-full bg-[#22150d]/35' />
-            <span className='h-2.5 w-2.5 rounded-full bg-[#22150d]/35' />
+            <span className='h-2.5 w-2.5 rounded-full bg-[#181818]/35' />
+            <span className='h-2.5 w-2.5 rounded-full bg-[#181818]/35' />
+            <span className='h-2.5 w-2.5 rounded-full bg-[#181818]/35' />
           </div>
         </div>
 

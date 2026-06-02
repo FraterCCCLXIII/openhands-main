@@ -70,7 +70,7 @@ function HeroCompatibilityBadgesRow() {
                 aria-hidden='true'
               />
             ) : null}
-            <div className='flex items-center gap-2 rounded-full border border-[rgba(34,21,13,0.2)] bg-[#f9f0d9] px-4 py-2'>
+            <div className='flex items-center gap-2 rounded-full border border-[rgba(24,24,24,0.2)] bg-[#f9f0d9] px-4 py-2'>
               <span
                 className={`flex flex-shrink-0 items-center justify-center text-brand-fg ${iconWrapperClassName ?? 'h-6 w-6'}`}
                 aria-hidden='true'
@@ -139,16 +139,16 @@ const WORKFLOWS: WorkflowItem[] = [
 ];
 
 const GLASS_SURFACE_HOVER =
-  'hover:border-[rgb(34,21,13)] hover:bg-[rgba(255,255,255,0.34)] hover:backdrop-blur-[5px]';
+  'hover:border-[rgb(24,24,24)] hover:bg-[rgba(255,255,255,0.34)] hover:backdrop-blur-[5px]';
 
 const WORKFLOW_CARD_CLASS =
-  `flex w-[270px] flex-shrink-0 cursor-pointer flex-col gap-4 rounded-2xl border border-[rgba(30,21,15,0.2)] bg-transparent p-6 transition-colors ${GLASS_SURFACE_HOVER} md:w-[352px]`;
+  `flex w-[270px] flex-shrink-0 cursor-pointer flex-col gap-4 rounded-2xl border border-[rgba(24,24,24,0.2)] bg-transparent p-6 transition-colors ${GLASS_SURFACE_HOVER} md:w-[352px]`;
 
 const WORKFLOW_ARROW_BTN_CLASS =
-  'flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full border border-[rgba(30,21,15,0.2)] bg-transparent text-brand-fg transition-all duration-200 ease-out';
+  'flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full border border-[rgba(24,24,24,0.2)] bg-transparent text-brand-fg transition-all duration-200 ease-out';
 
 const WORKFLOW_ARROW_BTN_HOVER =
-  'cursor-pointer hover:border-[rgb(34,21,13)] hover:bg-[rgba(255,255,255,0.34)] hover:backdrop-blur-[5px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[rgb(34,21,13)]/30 active:scale-95';
+  'cursor-pointer hover:border-[rgb(24,24,24)] hover:bg-[rgba(255,255,255,0.34)] hover:backdrop-blur-[5px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[rgb(24,24,24)]/30 active:scale-95';
 
 function WorkflowCarouselIcon({ icon: Icon }: { icon: LucideIcon }) {
   return (
@@ -960,15 +960,15 @@ const Home = () => {
                   {t.quote}
                 </h2>
               </div>
-              <div className='flex items-center justify-center' style={{ gap: '16px', marginTop: '37.2px', marginBottom: '0px', color: 'rgb(34, 21, 13)', transform: 'translateX(-8px)' }}>
+              <div className='flex items-center justify-center' style={{ gap: '16px', marginTop: '37.2px', marginBottom: '0px', color: 'rgb(24, 24, 24)', transform: 'translateX(-8px)' }}>
                 {/* Live's `.quote-author-media` wrapper is visible overflow and
                  * sits in the centered author row alongside name, title, and
                  * client logo. */}
-                <div data-wf-el='quote-author-media' className='h-12 w-12 flex-shrink-0' style={{ backgroundColor: 'rgb(34, 21, 13)', borderRadius: '50%', display: 'block', overflow: 'visible' }}><img src={t.photo} alt='' className='h-12 w-12 object-cover' style={{ display: 'inline-block' }} /></div>
-                <div data-wf-el='paragraph-xl' style={{ fontSize: '24px', lineHeight: '33.6px', fontWeight: 500, color: 'rgb(34, 21, 13)' }}>
+                <div data-wf-el='quote-author-media' className='h-12 w-12 flex-shrink-0' style={{ backgroundColor: 'rgb(24, 24, 24)', borderRadius: '50%', display: 'block', overflow: 'visible' }}><img src={t.photo} alt='' className='h-12 w-12 object-cover' style={{ display: 'inline-block' }} /></div>
+                <div data-wf-el='paragraph-xl' style={{ fontSize: '24px', lineHeight: '33.6px', fontWeight: 500, color: 'rgb(24, 24, 24)' }}>
                   {`${t.name},`}
                 </div>
-                <div style={{ fontSize: '24px', lineHeight: '33.6px', fontWeight: 500, color: 'rgb(34, 21, 13)' }}>{t.title}</div>
+                <div style={{ fontSize: '24px', lineHeight: '33.6px', fontWeight: 500, color: 'rgb(24, 24, 24)' }}>{t.title}</div>
                 <div style={{ display: 'block', transform: t.name === 'Nick Blanchet' ? 'translateX(17px)' : undefined }}>
                   <img src={t.logo} alt='' style={{ display: 'inline-block', marginLeft: '0px', objectFit: 'scale-down', width: t.name === 'Nick Blanchet' ? '70px' : undefined, height: t.name === 'Nick Blanchet' ? '16px' : '32px', maxWidth: '110px' }} />
                 </div>
@@ -976,7 +976,7 @@ const Home = () => {
             </div>
           ))}
         </div>
-        <div data-wf-el='slide-controls' style={{ zIndex: 10, width: '100%', height: '59px', position: 'absolute', inset: 'auto 0% 0%', color: 'rgb(34, 21, 13)' }}>
+        <div data-wf-el='slide-controls' style={{ zIndex: 10, width: '100%', height: '59px', position: 'absolute', inset: 'auto 0% 0%', color: 'rgb(24, 24, 24)' }}>
           <div className='mx-auto flex max-w-[1238px] items-end justify-between'>
             <div className='flex font-mono text-[14.08px] font-normal leading-[16.896px] text-brand-fg'>
               <span>3</span><span>/</span><span>3</span>
@@ -1116,7 +1116,7 @@ const Home = () => {
                   <div data-wf-el='lovewall_cms_item_top' className='mb-4 flex items-center gap-3' style={{ justifyContent: 'flex-start' }}>
                     <img data-wf-el='lovewall_cms_item_avatar' src={quote.avatar} alt={quote.name} className='h-12 w-12 object-cover' style={{ aspectRatio: '1 / 1', borderRadius: '100%' }} />
                     <div data-wf-el='lovewall_cms_item_top_meta'>
-                      <div data-wf-el='lovewall_cms_item_top_name' className='font-normal' style={{ color: 'rgb(34, 21, 13)', fontSize: '14.08px' }}>{quote.name}</div>
+                      <div data-wf-el='lovewall_cms_item_top_name' className='font-normal' style={{ color: 'rgb(24, 24, 24)', fontSize: '14.08px' }}>{quote.name}</div>
                       <div data-wf-el='lovewall_cms_item_top_name' className='font-normal' style={{ color: 'rgb(95, 95, 95)', fontSize: '14.08px' }}>{quote.title}</div>
                     </div>
                   </div>
@@ -1131,7 +1131,7 @@ const Home = () => {
                       <p key={line} className='text-base leading-[1.4] text-brand-fg' style={{ marginBottom: isLast ? '0px' : '16px' }}>
                         {line.includes('@allhands_ai') ? (
                           <>
-                            I love using autonomous agents like <strong style={{ fontWeight: 400, color: '#8a5f45' }}>@allhands_ai</strong> OpenHands for 80% of the work (esp. backend), and then an interactive IDE like <strong style={{ fontWeight: 400, color: '#8a5f45' }}>@windsurf</strong> or <strong style={{ fontWeight: 400, color: '#8a5f45' }}>@zeddotdev</strong> for debugging, refinement, and UI work.
+                            I love using autonomous agents like <strong style={{ fontWeight: 400, color: '#565656' }}>@allhands_ai</strong> OpenHands for 80% of the work (esp. backend), and then an interactive IDE like <strong style={{ fontWeight: 400, color: '#565656' }}>@windsurf</strong> or <strong style={{ fontWeight: 400, color: '#565656' }}>@zeddotdev</strong> for debugging, refinement, and UI work.
                           </>
                         ) : line}
                       </p>

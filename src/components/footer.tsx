@@ -258,7 +258,7 @@ const WebflowFooterContent = ({
         to={item.to}
         aria-current={isActive ? 'page' : undefined}
         data-wf-el='nav-link'
-        className={clsx('nav-link link-hover hover:text-[#8a5f45] py-[14.4px]', isActive && 'text-[#8a5f45]')}
+        className={clsx('nav-link link-hover hover:text-[#565656] py-[14.4px]', isActive && 'text-[#565656]')}
         style={navLinkStyle}
       >
         {item.name}
@@ -320,16 +320,16 @@ const WebflowFooterContent = ({
           <div data-wf-el='footer-nav' className='footer-nav justify-between' style={{ display: 'flex', flexFlow: isManifestoMobile ? 'column nowrap' : 'var(--footer-nav-flow, row nowrap)', justifyContent: 'space-between', alignItems: isManifestoMobile ? 'center' : 'var(--footer-nav-align, flex-start)', width: '100%', height: isManifesto ? (isManifestoMobile ? '492.766px' : '185.734375px') : 'var(--footer-nav-height, auto)', paddingBottom: '16px', borderBottom: '1px solid #b3a88c', textAlign: 'start' }}>
             {FOOTER_NAV_ITEMS.map(renderTopLevelLink)}
             <div data-wf-el='footer-drop' id='footer-resources' className='footer-drop' style={{ display: 'flex', flexDirection: 'column', alignItems: isManifestoMobile ? 'center' : 'var(--footer-drop-align, flex-start)', justifyContent: 'flex-start', textAlign: 'start', height: isManifesto ? (isManifestoMobile ? 'auto' : '168.734375px') : 'var(--footer-drop-height, auto)' }}>
-              <a href='#footer-resources' data-wf-el='nav-link' className='nav-link hover:text-[#8a5f45]' style={navLinkStyle}>
+              <a href='#footer-resources' data-wf-el='nav-link' className='nav-link hover:text-[#565656]' style={navLinkStyle}>
                 Resources
               </a>
               {FOOTER_RESOURCE_LINKS.map((item) =>
                 item.external ? (
-                  <a key={item.name} href={item.to} target='_blank' rel='noopener noreferrer' data-wf-el='footer-nav-link' className='footer-nav-link buch hover:text-[#8a5f45]' style={footerResourceLinkStyle}>
+                  <a key={item.name} href={item.to} target='_blank' rel='noopener noreferrer' data-wf-el='footer-nav-link' className='footer-nav-link buch hover:text-[#565656]' style={footerResourceLinkStyle}>
                     {item.name}
                   </a>
                 ) : (
-                  <Link key={item.name} to={item.to} data-wf-el='footer-nav-link' className='footer-nav-link buch hover:text-[#8a5f45]' style={footerResourceLinkStyle}>
+                  <Link key={item.name} to={item.to} data-wf-el='footer-nav-link' className='footer-nav-link buch hover:text-[#565656]' style={footerResourceLinkStyle}>
                     {item.name}
                   </Link>
                 ),
@@ -339,7 +339,7 @@ const WebflowFooterContent = ({
               to='/contact'
               aria-current={normalizePathname('/contact') === activePathname ? 'page' : undefined}
               data-wf-el='nav-link'
-              className={clsx('nav-link link-hover hover:text-[#8a5f45] py-[14.4px]', normalizePathname('/contact') === activePathname && 'text-[#8a5f45]')}
+              className={clsx('nav-link link-hover hover:text-[#565656] py-[14.4px]', normalizePathname('/contact') === activePathname && 'text-[#565656]')}
               style={navLinkStyle}
             >
               Contact
@@ -360,7 +360,7 @@ const WebflowFooterContent = ({
           <Link
             to='/privacy'
             data-wf-el='eyebrow'
-            className='eyebrow u-text-center is-link hover:text-[#8a5f45]'
+            className='eyebrow u-text-center is-link hover:text-[#565656]'
             style={{ alignSelf: 'center', display: 'block', textAlign: 'center', marginBottom: '21.12px', fontFamily: 'GeistMono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace', fontSize: 'var(--footer-privacy-font-size, var(--footer-eyebrow-font-size, 14px))', fontWeight: 400, lineHeight: '16.896px', textDecoration: 'none', cursor: 'pointer', width: isManifesto ? '118.266px' : 'var(--footer-privacy-width, 118.266px)' }}
           >
             Privacy Policy

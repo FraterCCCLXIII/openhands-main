@@ -5,7 +5,7 @@ import { usePixelBlastHostRegistration } from '~/contexts/pixel-blast-context';
 export const PIXEL_BLAST_BACKGROUND_PROPS: PixelBlastProps = {
   variant: 'circle',
   pixelSize: 8,
-  color: '#22150d',
+  color: '#181818',
   patternScale: 2,
   patternDensity: 1.3,
   enableRipples: true,

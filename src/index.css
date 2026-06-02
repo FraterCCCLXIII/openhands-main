@@ -51,9 +51,18 @@
 
 /* CSS Variables matching Webflow computed styles exactly */
 :root {
-  /* Colors - exact Webflow values */
+  /* agent-canvas openhands-neutral greys */
+  --neutral-950: #181818;
+  --neutral-900: #282828;
+  --neutral-800: #313131;
+  --neutral-700: #404040;
+  --neutral-600: #565656;
+  --neutral-500: #737373;
+  --neutral-400: #979797;
+
+  /* Colors - tan/yellow unchanged; browns → neutral greys */
   --bg: #f9f0d9;
-  --fg: #22150d;
+  --fg: var(--neutral-950);
   --accent: #ffff8b;
   --muted: #b3a88c;
   
@@ -1045,16 +1054,16 @@
     background-color: color-mix(
       in srgb,
       rgba(255, 255, 255, 0.34) calc((1 - var(--nav-cta-blend)) * 100%),
-      rgb(34, 21, 13) calc(var(--nav-cta-blend) * 100%)
+      rgb(24, 24, 24) calc(var(--nav-cta-blend) * 100%)
     );
     color: color-mix(
       in srgb,
-      rgb(34, 21, 13) calc((1 - var(--nav-cta-blend)) * 100%),
+      rgb(24, 24, 24) calc((1 - var(--nav-cta-blend)) * 100%),
       rgb(255, 255, 255) calc(var(--nav-cta-blend) * 100%)
     );
     border-color: color-mix(
       in srgb,
-      rgb(34, 21, 13) calc((1 - var(--nav-cta-blend)) * 100%),
+      rgb(24, 24, 24) calc((1 - var(--nav-cta-blend)) * 100%),
       transparent calc(var(--nav-cta-blend) * 100%)
     );
     backdrop-filter: blur(calc((1 - var(--nav-cta-blend, 0)) * 5px));
@@ -1094,11 +1103,11 @@
   }
   .btn-wrap {
     background-color: rgba(255, 255, 255, 0.34);
-    border-color: rgb(34, 21, 13);
+    border-color: rgb(24, 24, 24);
     backdrop-filter: blur(5px);
   }
   .btn-wrap-primary {
-    background-color: rgb(34, 21, 13);
+    background-color: rgb(24, 24, 24);
     color: #ffffff;
   }
   .btn-wrap-primary a {
@@ -1113,8 +1122,8 @@
   }
   .btn-wrap-accent {
     background-color: rgb(255, 255, 139);
-    border-color: rgb(34, 21, 13);
-    color: rgb(34, 21, 13);
+    border-color: rgb(24, 24, 24);
+    color: rgb(24, 24, 24);
   }
   .btn-wrap-accent a {
     color: inherit;
@@ -1580,7 +1589,7 @@
 .select-form {
   appearance: none;
   -webkit-appearance: none;
-  background-color: rgb(34, 21, 13);
+  background-color: rgb(24, 24, 24);
   border: 0;
   color: #ffffff;
   font: inherit;
@@ -2318,7 +2327,7 @@
   .mobile-menu-button {
     padding: 0 !important;
     background: transparent !important;
-    color: rgb(34, 21, 13) !important;
+    color: rgb(24, 24, 24) !important;
     font-family: "Sohne Kraftig", Arial, sans-serif !important;
     font-size: 16px !important;
     font-weight: 400 !important;
@@ -2831,7 +2840,7 @@
 
   .home-mobile-parity [data-wf-el='footer-nav'] [data-wf-el='nav-link'],
   .home-mobile-parity [data-wf-el='footer-nav'] [data-wf-el='footer-nav-link'] {
-    color: rgb(34, 21, 13) !important;
+    color: rgb(24, 24, 24) !important;
     text-decoration: none !important;
   }
 
@@ -2990,7 +2999,7 @@
   margin: 0;
   text-align: start;
   overflow: hidden;
-  color: var(--fg, #22150d);
+  color: var(--fg, #181818);
   background: transparent;
   opacity: var(--ascii-opacity, 0.12);
   filter: var(--ascii-filter, none);
@@ -3111,7 +3120,7 @@
   padding: 0;
   border: 0;
   background: transparent;
-  color: rgb(34, 21, 13);
+  color: rgb(24, 24, 24);
   font-family: "Sohne Kraftig", Arial, sans-serif;
   font-size: 16px;
   font-weight: 400;
@@ -3646,7 +3655,7 @@
   padding: var(--btn-padding-y) var(--btn-padding-x);
   border: 1px solid transparent;
   border-radius: var(--btn-border-radius);
-  background-color: rgb(34, 21, 13);
+  background-color: rgb(24, 24, 24);
   color: #ffffff;
   font-family: "Sohne Kraftig", Arial, sans-serif;
   font-size: 16px;
@@ -4081,9 +4090,9 @@
 
 .button.secondary-7,
 .button[data-wf--button--variant="secondary"] {
-  border-color: rgb(34, 21, 13);
+  border-color: rgb(24, 24, 24);
   background-color: rgba(255, 255, 255, 0.34);
-  color: rgb(34, 21, 13);
+  color: rgb(24, 24, 24);
   backdrop-filter: blur(5px);
 }
 
@@ -4918,7 +4927,7 @@
     left: 0;
     width: 100%;
     height: 862.469px;
-    border: 1px solid rgb(34, 21, 13);
+    border: 1px solid rgb(24, 24, 24);
     border-radius: 8px;
     box-sizing: border-box;
     pointer-events: none;

@@ -30,7 +30,7 @@ const SECTION_BASE: React.CSSProperties = {
 
 const SECTION_DARK: React.CSSProperties = {
   ...SECTION_BASE,
-  backgroundColor: 'rgb(34, 21, 13)',
+  backgroundColor: 'rgb(24, 24, 24)',
   color: 'rgb(249, 240, 217)',
 };
 
@@ -394,7 +394,7 @@ const Enterprise = () => {
                 <div
                   data-wf-el='acp_features_icon'
                   className='h-10 w-10 p-2 text-[#FFFF8B]'
-                  style={{ backgroundColor: 'rgb(34, 21, 13)', borderRadius: '8px', display: 'block', width: '24px', height: '24px', padding: '8px', boxSizing: 'content-box', aspectRatio: '1 / 1' }}
+                  style={{ backgroundColor: 'rgb(24, 24, 24)', borderRadius: '8px', display: 'block', width: '24px', height: '24px', padding: '8px', boxSizing: 'content-box', aspectRatio: '1 / 1' }}
                 >
                   <BootstrapIcon name={icon} />
                 </div>
@@ -414,7 +414,7 @@ const Enterprise = () => {
                 {/* Live's `.product-list_ul` has padding-left:0 and uses
                  * the dark-brown body color; bullets get explicit 16px
                  * top/bottom padding instead of the default UL spacing. */}
-                {/* Live's `.product-list_ul` uses brand-fg (#22150d)
+                {/* Live's `.product-list_ul` uses brand-fg (#181818)
                  * for the marker/border color but each `.product-list_element`
                  * paragraph inherits the muted #5f5f5f body color. */}
                 {/* Live's `.product-list_ul` is `display:block` with an
@@ -525,7 +525,7 @@ const Enterprise = () => {
                   height: '48px',
                   flexShrink: 0,
                   borderRadius: '50%',
-                  backgroundColor: 'rgb(34, 21, 13)',
+                  backgroundColor: 'rgb(24, 24, 24)',
                   display: 'block',
                   overflow: 'visible',
                 }}
@@ -549,7 +549,7 @@ const Enterprise = () => {
               >
                 Sina Pakazad, VP of Data Science at C3.ai
               </p>
-              <div className='v-line rotate enterprise-quote-divider' style={{ width: 'var(--enterprise-quote-divider-width, 40px)', height: 'var(--enterprise-quote-divider-height, 1px)', backgroundColor: 'rgb(34, 21, 13)' }} />
+              <div className='v-line rotate enterprise-quote-divider' style={{ width: 'var(--enterprise-quote-divider-width, 40px)', height: 'var(--enterprise-quote-divider-height, 1px)', backgroundColor: 'rgb(24, 24, 24)' }} />
               <img data-wf-el='acp_quote_logo' src={C3AI_LOGO_IMAGE} alt='' className='acp_quote_logo h-auto w-[80px]' style={{ display: 'block', width: '80px', height: 'auto', flexShrink: 0 }} loading='lazy' />
             </div>
           </div>
@@ -597,7 +597,7 @@ const Enterprise = () => {
                   <div
                     data-wf-el='acp_features_icon'
                     className='h-10 w-10 p-2 text-[#FFFF8B]'
-                    style={{ backgroundColor: 'rgb(34, 21, 13)', borderRadius: '8px', display: 'block', width: '24px', height: '24px', padding: '8px', boxSizing: 'content-box', aspectRatio: '1 / 1' }}
+                    style={{ backgroundColor: 'rgb(24, 24, 24)', borderRadius: '8px', display: 'block', width: '24px', height: '24px', padding: '8px', boxSizing: 'content-box', aspectRatio: '1 / 1' }}
                   >
                     <BootstrapIcon name={icon} />
                   </div>

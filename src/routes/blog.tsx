@@ -62,7 +62,7 @@ const Blog = () => {
             </p>
             <div className='blog-hero-newsletter-spacer' aria-hidden='true' style={{ height: '48px' }} />
             <div data-wf-el='align-center' className='blog-newsletter-prompt flex w-full items-center justify-center'>
-              <p className='max-w-[503px] text-center text-[16px] leading-[22.4px] text-[#22150d]' style={{ marginTop: '0px', marginBottom: '16px', marginLeft: '0px', marginRight: '0px' }}>
+              <p className='max-w-[503px] text-center text-[16px] leading-[22.4px] text-[#181818]' style={{ marginTop: '0px', marginBottom: '16px', marginLeft: '0px', marginRight: '0px' }}>
                 Sign up for our newsletter for updates, events, and community insights.
               </p>
             </div>

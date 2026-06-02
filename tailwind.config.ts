@@ -1,3 +1,5 @@
+import { MARKETING_NEUTRAL, NEUTRAL_PALETTE } from './src/constants/marketing-neutral-colors';
+
 export default {
   content: [
     "./index.html",
@@ -13,15 +15,15 @@ export default {
         // Modern Webflow design system
         brand: {
           bg: "#f9f0d9",
-          fg: "#22150d",
+          fg: MARKETING_NEUTRAL.fg,
           accent: "#ffff8b",
           "accent-hover": "#e6e67a",
-          brown: "#8a5f45",
-          muted: "#5f5f5f",
-          border: "rgba(34, 21, 13, 0.1)",
+          brown: MARKETING_NEUTRAL.accent,
+          muted: MARKETING_NEUTRAL.muted,
+          border: `rgba(${MARKETING_NEUTRAL.borderRgb}, 0.1)`,
         },
         card: {
-          bg: "#22150d",
+          bg: NEUTRAL_PALETTE[950],
           text: "#f9f0d9",
         },
       },

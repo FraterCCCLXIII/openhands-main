@@ -22,7 +22,7 @@ describe('CTA button hover styles', () => {
 
   it('applies the same opacity hover to workflow card CTAs', () => {
     expect(cssBlock('.capabilities_card_button:hover')).toContain('opacity: 0.8;');
-    expect(cssBlock('.capabilities_card_button:hover')).not.toContain('background-color: rgb(34, 21, 13);');
+    expect(cssBlock('.capabilities_card_button:hover')).not.toContain('background-color: rgb(24, 24, 24);');
   });
 
   it('uses native Webflow modal backdrop styling for workflow dialog', () => {

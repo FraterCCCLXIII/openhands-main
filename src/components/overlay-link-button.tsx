@@ -39,7 +39,7 @@ const SIZE_CONFIG = {
     fontSize: '18px',
     lineHeight: '23.4px',
     padding: '18px 38.4px',
-    boxShadow: '0 8px 24px rgba(34, 21, 13, 0.28)',
+    boxShadow: '0 8px 24px rgba(24, 24, 24, 0.28)',
     iconPx: 20,
   },
 } as const;
