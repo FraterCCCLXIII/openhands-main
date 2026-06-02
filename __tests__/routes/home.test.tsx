@@ -48,7 +48,7 @@ describe('home route parity structure', () => {
       'href',
       'https://docs.openhands.dev/openhands/usage/run-openhands/local-setup',
     );
-    expect(screen.getByText('Keep your existing subscription. Connects to:')).toBeInTheDocument();
+    expect(screen.getByText('OpenHands works with all of your agent subscriptions')).toBeInTheDocument();
     expect(screen.getByText('Claude Code')).toBeInTheDocument();
     expect(screen.getByRole('img', { name: 'OpenHands Automations dashboard screenshot' })).toBeInTheDocument();
     expect(screen.getAllByRole('link', { name: 'Build with SDK' }).length).toBeGreaterThan(0);

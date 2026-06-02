@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { type ComponentType, type SVGProps } from 'react';
 import { Link } from 'react-router';
 import { domAnimation, LazyMotion, m } from 'framer-motion';
 import type { LucideIcon } from 'lucide-react';
@@ -23,26 +23,23 @@ import { createSocialPreviewMeta } from '~/utils/seo';
 import { EnterpriseLogoStrip } from '~/components/logos/enterprise-logo-strip';
 import { HOME_CUSTOMER_LOGOS } from '~/constants/customer-logos';
 import { ASCII_HOLE_IMAGE, ASCII_HOLE_IMAGE_1080 } from '~/constants/webflow-assets';
-
+import { ClaudeCodeIcon, CodexIcon, GeminiCliIcon } from '~/components/icons/agent-subscription-icons';
 
 const INSTALL_OPENHANDS_URL = 'https://docs.openhands.dev/openhands/usage/run-openhands/local-setup';
 
-const HERO_COMPATIBILITY_BADGES = [
-  {
-    name: 'Claude Code',
-    iconText: '</>',
-    iconBg: 'rgb(242, 173, 118)',
-  },
-  {
-    name: 'Codex',
-    iconText: 'C',
-    iconBg: 'rgb(155, 182, 255)',
-  },
-  {
-    name: 'Gemini CLI',
-    iconText: '✦',
-    iconBg: 'rgb(135, 214, 255)',
-  },
+type HeroCompatibilityBadge = {
+  name: string;
+  iconBg: string;
+  Icon?: ComponentType<SVGProps<SVGSVGElement>>;
+  iconClassName?: string;
+  iconSrc?: string;
+  iconAlt?: string;
+};
+
+const HERO_COMPATIBILITY_BADGES: HeroCompatibilityBadge[] = [
+  { name: 'Claude Code', Icon: ClaudeCodeIcon, iconBg: 'rgb(242, 173, 118)' },
+  { name: 'Codex', Icon: CodexIcon, iconBg: 'rgb(155, 182, 255)' },
+  { name: 'Gemini CLI', Icon: GeminiCliIcon, iconBg: 'rgb(135, 214, 255)' },
   {
     name: 'OpenHands',
     iconSrc: '/assets/webflow/brand/openhands-logo-mobile.svg',
@@ -104,8 +101,13 @@ const WORKFLOWS: WorkflowItem[] = [
 
 function WorkflowCarouselIcon({ icon: Icon }: { icon: LucideIcon }) {
   return (
-    <div data-wf-el='capabilities_card_icon' className='flex h-9 w-9 flex-shrink-0 items-center justify-center text-brand-fg' aria-hidden='true'>
-      <Icon className='h-6 w-6' strokeWidth={1.75} aria-hidden='true' />
+    <div
+      data-wf-el='capabilities_card_icon'
+      className='flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-brand-accent text-brand-fg'
+      style={{ marginTop: '0px' }}
+      aria-hidden='true'
+    >
+      <Icon className='h-5 w-5' strokeWidth={1.75} aria-hidden='true' />
     </div>
   );
 }
@@ -621,28 +623,31 @@ const Home = () => {
                 <OverlayLinkButton href={INSTALL_OPENHANDS_URL} label='Install OpenHands' variant='primary' />
               </div>
 
-              <div data-wf-el='hero-subscription' className='flex w-full flex-wrap items-center justify-center gap-4 rounded-[999px] border border-[rgba(34,21,13,0.2)] bg-[#f9f3de] px-6 py-4 text-brand-fg' style={{ maxWidth: '980px' }}>
-                <span className='text-base font-normal leading-[22.4px] text-brand-fg'>Keep your existing subscription. Connects to:</span>
+              <div data-wf-el='hero-subscription' className='flex w-full flex-col items-center justify-center gap-4 text-brand-fg' style={{ maxWidth: '980px' }}>
+                <span className='text-center text-base font-normal leading-[22.4px] text-brand-fg'>OpenHands works with all of your agent subscriptions</span>
                 <div className='flex flex-wrap items-center justify-center gap-3'>
-                  {HERO_COMPATIBILITY_BADGES.map((badge) => (
+                  {HERO_COMPATIBILITY_BADGES.map((badge) => {
+                    const { name, Icon, iconClassName, iconBg, iconSrc, iconAlt } = badge;
+                    return (
                     <div
-                      key={badge.name}
+                      key={name}
                       className='flex items-center gap-2 rounded-full border border-[rgba(34,21,13,0.2)] bg-[#f9f0d9] px-4 py-2'
                     >
                       <span
-                        className='flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-semibold text-brand-fg'
-                        style={{ backgroundColor: badge.iconBg }}
+                        className='flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-brand-fg'
+                        style={{ backgroundColor: iconBg }}
                         aria-hidden='true'
                       >
-                        {badge.iconSrc ? (
-                          <img src={badge.iconSrc} alt={badge.iconAlt ?? ''} className='h-4 w-4' />
-                        ) : (
-                          badge.iconText
-                        )}
+                        {iconSrc ? (
+                          <img src={iconSrc} alt={iconAlt ?? ''} className='h-4 w-4' />
+                        ) : Icon ? (
+                          <Icon className={iconClassName ?? 'h-4 w-4'} />
+                        ) : null}
                       </span>
-                      <span className='text-base font-medium leading-[22.4px] text-brand-fg'>{badge.name}</span>
+                      <span className='text-base font-medium leading-[22.4px] text-brand-fg'>{name}</span>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             </div>
