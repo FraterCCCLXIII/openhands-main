@@ -107,7 +107,7 @@ We're just getting started. The future we're working toward is one where every s
 
 If you're curious about what we're building, check out [OpenHands on GitHub](https://github.com/OpenHands/OpenHands). You can run it locally in minutes, or try [OpenHands Cloud](https://cloud.openhands.dev/) for free.
 
-And if you want to chat about how OpenHands might fit into your team's workflow. Join our [Slack community](https://dub.sh/openhands), we'd love to hear from you.
+And if you want to chat about how OpenHands might fit into your team's workflow. Join our [Slack community](https://go.openhands.dev/slack), we'd love to hear from you.
 
 The future of software development is being written right now. We're making sure it stays open.
 

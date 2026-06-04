@@ -1,7 +1,7 @@
 import { redirect } from 'react-router';
 import type { Route } from './+types/joinslack';
 
-const SLACK_REDIRECT_URL = 'https://dub.sh/openhands';
+const SLACK_REDIRECT_URL = 'https://go.openhands.dev/slack';
 
 export const meta: Route.MetaFunction = () => [
   { title: 'Join OpenHands Slack - Redirecting...' },

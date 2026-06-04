@@ -79,4 +79,4 @@ Whether you're working on a quick bug fix, implementing a complex feature, or ma
 
 Ready to experience the new OpenHands Cloud? [Sign up today](https://app.all-hands.dev/) and take advantage of our new subscription model with expanded model choices and the redesigned interface.
 
-Please let us know what you think of these improvements by joining the [Slack](https://dub.sh/openhands) or [emailing us](mailto:contact@all-hands.dev) directly!
+Please let us know what you think of these improvements by joining the [Slack](https://go.openhands.dev/slack) or [emailing us](mailto:contact@all-hands.dev) directly!

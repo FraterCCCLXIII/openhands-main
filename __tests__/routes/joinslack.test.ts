@@ -6,6 +6,6 @@ describe('JoinSlack route', () => {
     const response = loader();
 
     expect(response.status).toBe(301);
-    expect(response.headers.get('Location')).toBe('https://dub.sh/openhands');
+    expect(response.headers.get('Location')).toBe('https://go.openhands.dev/slack');
   });
 });
