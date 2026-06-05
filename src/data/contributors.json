@@ -88,12 +88,12 @@
     "login": "Sparkier"
   },
   {
-    "id": 182006032,
-    "login": "all-hands-bot"
-  },
-  {
     "id": 81847,
     "login": "claude"
+  },
+  {
+    "id": 182006032,
+    "login": "all-hands-bot"
   },
   {
     "id": 33391300,
@@ -156,12 +156,16 @@
     "login": "huybery"
   },
   {
+    "id": 65051545,
+    "login": "bashwara"
+  },
+  {
     "id": 12579618,
     "login": "jlav"
   },
   {
-    "id": 65051545,
-    "login": "bashwara"
+    "id": 182316592,
+    "login": "nehaaprasad"
   },
   {
     "id": 2945814,
@@ -170,10 +174,6 @@
   {
     "id": 97225946,
     "login": "808vita"
-  },
-  {
-    "id": 182316592,
-    "login": "nehaaprasad"
   },
   {
     "id": 728167,
