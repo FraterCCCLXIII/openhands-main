@@ -108,12 +108,12 @@
     "login": "llamantino"
   },
   {
-    "id": 1708914,
-    "login": "assertion"
-  },
-  {
     "id": 157206163,
     "login": "simonrosenberg"
+  },
+  {
+    "id": 1708914,
+    "login": "assertion"
   },
   {
     "id": 20578281,
@@ -156,16 +156,16 @@
     "login": "huybery"
   },
   {
-    "id": 65051545,
-    "login": "bashwara"
-  },
-  {
     "id": 12579618,
     "login": "jlav"
   },
   {
-    "id": 728167,
-    "login": "saurya"
+    "id": 65051545,
+    "login": "bashwara"
+  },
+  {
+    "id": 2945814,
+    "login": "happyherp"
   },
   {
     "id": 97225946,
@@ -176,12 +176,8 @@
     "login": "nehaaprasad"
   },
   {
-    "id": 2945814,
-    "login": "happyherp"
-  },
-  {
-    "id": 5805397,
-    "login": "isavita"
+    "id": 728167,
+    "login": "saurya"
   },
   {
     "id": 25279767,
@@ -192,12 +188,16 @@
     "login": "github-actions[bot]"
   },
   {
-    "id": 8560257,
-    "login": "foragerr"
+    "id": 5805397,
+    "login": "isavita"
   },
   {
     "id": 44589723,
     "login": "jpelletier1"
+  },
+  {
+    "id": 8560257,
+    "login": "foragerr"
   },
   {
     "id": 20098977,
