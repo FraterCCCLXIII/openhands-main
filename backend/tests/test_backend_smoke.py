@@ -512,6 +512,7 @@ def test_approval_required_requests_are_deduplicated_and_policy_denials_do_not_c
     assert client.post("/api/integrations", json=integration).status_code == 200
     agent_key = client.get("/api/user/agent-key").json()["apiKey"]
 
+    denial_messages = []
     for _ in range(2):
         response = client.post(
             "/api/context/approval-api/needs_approval",
@@ -524,9 +525,13 @@ def test_approval_required_requests_are_deduplicated_and_policy_denials_do_not_c
             },
         )
         assert response.status_code == 403
+        detail = response.json()["detail"]
+        denial_messages.append(detail)
+        assert "http://testserver/case-by-case-approvals" in detail
     requests = client.get("/api/case-by-case-approvals").json()
     assert len(requests) == 1
     assert requests[0]["toolName"] == "needs_approval"
+    assert all(requests[0]["id"] in message for message in denial_messages)
 
     assert (
         client.put("/api/agent-classes/developer", json={"rules": []}).status_code
@@ -1233,6 +1238,57 @@ def test_mcp_tools_expose_input_schema_and_strip_context_arguments(
     assert call_response.status_code == 200
     text = call_response.json()["result"]["content"][0]["text"]
     assert json.loads(text) == {"payload": {"recordId": "abc", "expand": True}}
+
+
+def test_mcp_approval_required_error_includes_approval_link_and_request_id(
+    config_env: ConfigEnvFixture, monkeypatch
+) -> None:
+    config_env("INTHUB_DISABLE_AUTH", "true")
+    client = TestClient(app)
+    integration = {
+        "key": "approval-mcp",
+        "name": "Approval MCP",
+        "kind": "api",
+        "provider": "mock",
+        "authStrategy": "none",
+        "tools": {
+            "write": {
+                "name": "write",
+                "description": "Write data",
+                "accessMode": "approval_required",
+                "executionMode": "mock",
+                "mockResponse": {"ok": True},
+            }
+        },
+    }
+    assert client.post("/api/integrations", json=integration).status_code == 200
+    agent_key = client.get("/api/user/agent-key").json()["apiKey"]
+
+    response = client.post(
+        "/api/mcp",
+        headers={"Authorization": f"Bearer {agent_key}"},
+        json={
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "tools/call",
+            "params": {
+                "name": "approval-mcp__write",
+                "arguments": {
+                    "contextAgentId": "agent-1",
+                    "contextAgentClass": "developer",
+                },
+            },
+        },
+    )
+
+    assert response.status_code == 200
+    message = response.json()["error"]["message"]
+    assert "Human approval is required before calling this tool." in message
+    assert "http://testserver/case-by-case-approvals" in message
+    requests = client.get("/api/case-by-case-approvals").json()
+    assert len(requests) == 1
+    assert requests[0]["id"] in message
+    assert requests[0]["toolName"] == "write"
 
 
 def test_mcp_tool_call_returns_downstream_result(

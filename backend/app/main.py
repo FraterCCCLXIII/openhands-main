@@ -73,6 +73,8 @@ ADMIN_KEY_MANAGEMENT_DETAIL = "Only app administrators can manage admin API keys
 
 DEPRECATED_ADMIN_CONNECTIONS_MESSAGE = "Admin API keys can no longer read self-scoped OAuth connections. Use the user API key with /api/user/connections instead."
 
+CASE_BY_CASE_APPROVAL_PATH = "/case-by-case-approvals"
+
 
 def admin_connection_filters(request: Request) -> dict[str, Any]:
     params = request.query_params
@@ -89,6 +91,22 @@ def admin_connection_filters(request: Request) -> dict[str, Any]:
 
 def base_url(request: Request) -> str:
     return f"{request.url.scheme}://{request.url.netloc}"
+
+
+def case_by_case_approval_url(request: Request) -> str:
+    return f"{base_url(request)}{CASE_BY_CASE_APPROVAL_PATH}"
+
+
+def human_approval_required_detail(
+    approval_url: str, access_request_id: str | None = None
+) -> str:
+    parts = [
+        "Human approval is required before calling this tool.",
+        f"Ask a human to approve it at {approval_url}.",
+    ]
+    if access_request_id:
+        parts.append(f"Request ID: {access_request_id}.")
+    return " ".join(parts)
 
 
 def context_openapi(owner: str, request: Request) -> dict[str, Any]:
@@ -1028,12 +1046,13 @@ def ensure_pending_access_request(
     scopes: list[str],
     agent_id: str | None,
     agent_class: str | None,
-) -> None:
-    if repository.find_matching_pending_access_request(
+) -> AccessRequest:
+    existing = repository.find_matching_pending_access_request(
         owner, agent_id, agent_class, integration.key, tool.name, scopes
-    ):
-        return
-    repository.save_access_request(
+    )
+    if existing:
+        return existing
+    return repository.save_access_request(
         owner,
         AccessRequest(
             agentId=agent_id,
@@ -1055,11 +1074,15 @@ def deny_tool_invocation(
     agent_class: str | None,
     reason: str,
     create_access_request: bool = False,
+    approval_url: str = CASE_BY_CASE_APPROVAL_PATH,
 ) -> None:
+    access_request_id = None
     if create_access_request:
-        ensure_pending_access_request(
+        access_request = ensure_pending_access_request(
             owner, integration, tool, scopes, agent_id, agent_class
         )
+        access_request_id = access_request.id
+        reason = human_approval_required_detail(approval_url, access_request_id)
     repository.record_tool_invocation(
         owner,
         integration,
@@ -1082,6 +1105,7 @@ def invoke_enabled_tool(
     payload: dict[str, Any],
     agent_id: str | None = None,
     agent_class: str | None = None,
+    approval_url: str = CASE_BY_CASE_APPROVAL_PATH,
 ) -> Any:
     scopes = effective_scopes(tool, scopes)
     grant = active_temporary_grant(
@@ -1098,6 +1122,7 @@ def invoke_enabled_tool(
             agent_class,
             "Human approval is required before calling this tool.",
             True,
+            approval_url,
         )
 
     policy = repository.get_policy(agent_class) if agent_class else None
@@ -1254,7 +1279,9 @@ def jsonrpc_response(
     return response
 
 
-def mcp_call(owner: str, body: dict[str, Any]) -> dict[str, Any] | Response:
+def mcp_call(
+    owner: str, body: dict[str, Any], approval_url: str
+) -> dict[str, Any] | Response:
     method = body.get("method")
     if method == "initialize":
         return jsonrpc_response(
@@ -1310,6 +1337,7 @@ def mcp_call(owner: str, body: dict[str, Any]) -> dict[str, Any] | Response:
                 argument_payload,
                 agent_id,
                 agent_class,
+                approval_url,
             )
         except HTTPException as exc:
             return jsonrpc_response(
@@ -2061,7 +2089,11 @@ async def fastapi_handler(request: Request):
             )
         if method == "DELETE":
             return {"terminated": True}
-        return mcp_call(owner, body if isinstance(body, dict) else {})
+        return mcp_call(
+            owner,
+            body if isinstance(body, dict) else {},
+            case_by_case_approval_url(request),
+        )
 
     if path.startswith("/api/admin/integrations") and path not in {
         "/api/admin/integrations/managed-connectors",
@@ -2259,6 +2291,7 @@ async def fastapi_handler(request: Request):
             payload.payload,
             payload.agentId,
             payload.agentClass,
+            case_by_case_approval_url(request),
         )
         return {
             "integration": integration.key,
