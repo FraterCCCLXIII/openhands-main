@@ -88,12 +88,12 @@
     "login": "Sparkier"
   },
   {
-    "id": 81847,
-    "login": "claude"
-  },
-  {
     "id": 182006032,
     "login": "all-hands-bot"
+  },
+  {
+    "id": 81847,
+    "login": "claude"
   },
   {
     "id": 33391300,
@@ -180,12 +180,12 @@
     "login": "saurya"
   },
   {
-    "id": 25279767,
-    "login": "idagelic"
-  },
-  {
     "id": 41898282,
     "login": "github-actions[bot]"
+  },
+  {
+    "id": 25279767,
+    "login": "idagelic"
   },
   {
     "id": 5805397,
