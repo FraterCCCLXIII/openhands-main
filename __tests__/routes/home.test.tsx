@@ -71,7 +71,7 @@ describe('home route parity structure', () => {
     expect(screen.queryByRole('link', { name: 'Build with SDK' })).not.toBeInTheDocument();
     expect(screen.getAllByRole('link', { name: 'Get OpenHands' }).length).toBeGreaterThan(0);
 
-    expect(container.innerHTML).toContain('lg:grid-cols-3');
+    expect(container.innerHTML).toContain('lovewall-marquee-rows');
     expect(container.innerHTML).not.toContain('home-hero-surfaces');
     expect(container.innerHTML).not.toContain('data-heroslide');
     expect(container.innerHTML).toContain('object-cover');
@@ -97,9 +97,9 @@ describe('home route parity structure', () => {
     expect(screen.getByText(`${Math.round(statistics.stargazers / 1000)}K`)).toBeInTheDocument();
     expect(container.textContent).toContain(`©${String.fromCharCode(160)}${new Date().getFullYear()}${String.fromCharCode(160)}OpenHands - All rights reserved`);
 
-    expect(screen.getByText('@allhands_ai')).toBeInTheDocument();
-    expect(screen.getByText('@windsurf')).toBeInTheDocument();
-    expect(screen.getByText('@zeddotdev')).toBeInTheDocument();
+    expect(screen.getAllByText('@allhands_ai').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('@windsurf').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('@zeddotdev').length).toBeGreaterThan(0);
     expect(container.textContent).toContain("Built on an open source foundation, it's designed for enterprise software development at scale.");
   });
 

@@ -25,6 +25,8 @@ import { HeroAppPreview } from '~/components/hero-app-preview';
 import { HeroWorkflowCarousel } from '~/components/hero-workflow-carousel';
 import { HERO_APP_PREVIEW_SLIDES } from '~/constants/hero-app-preview-slides';
 import { HomeHeroLogoGrid } from '~/components/home-hero-logo-grid';
+import { HomeLovewallMarquee } from '~/components/home-lovewall-marquee';
+import { useMarqueeTiming } from '~/hooks/use-marquee-timing';
 import { HomeVariantSwitcher } from '~/components/home-variant-switcher';
 import { useHomeVariant } from '~/contexts/home-variant-context';
 import { getHomeHeroContentPadding, HOME_HERO_DEFAULT_SUBCOPY, HOME_HERO_VALUE_COPY, usesVersion4HeroCopy } from '~/constants/home-variants';
@@ -257,6 +259,9 @@ const DEVELOPER_QUOTES = [
   },
 ];
 
+const DEVELOPER_QUOTES_ROW_ONE = DEVELOPER_QUOTES.slice(0, 4);
+const DEVELOPER_QUOTES_ROW_TWO = DEVELOPER_QUOTES.slice(4);
+
 const FAQS = [
   {
     question: 'What is OpenHands?',
@@ -302,43 +307,11 @@ const Home = () => {
   const logoMarqueeTrackRef = React.useRef<HTMLDivElement>(null);
   const logoMarqueeGroupRef = React.useRef<HTMLDivElement>(null);
 
-  React.useEffect(() => {
-    const marquee = logoMarqueeRef.current;
-    const track = logoMarqueeTrackRef.current;
-    const group = logoMarqueeGroupRef.current;
-    if (!marquee || !track || !group || typeof window === 'undefined') return undefined;
-
-    const pixelsPerSecond = 36;
-
-    const updateMarqueeTiming = () => {
-      const distance = group.getBoundingClientRect().width;
-      if (distance <= 0) return;
-
-      marquee.style.setProperty('--logo-marquee-distance', `${distance}px`);
-      marquee.style.setProperty('--logo-marquee-duration', `${distance / pixelsPerSecond}s`);
-
-      track.style.animation = 'none';
-      void track.offsetHeight;
-      track.style.animation = '';
-    };
-
-    updateMarqueeTiming();
-
-    let resizeObserver: ResizeObserver | null = null;
-    if (typeof ResizeObserver !== 'undefined') {
-      resizeObserver = new ResizeObserver(updateMarqueeTiming);
-      resizeObserver.observe(group);
-      resizeObserver.observe(marquee);
-    }
-
-    window.addEventListener('pageshow', updateMarqueeTiming);
-    window.addEventListener('resize', updateMarqueeTiming);
-    return () => {
-      resizeObserver?.disconnect();
-      window.removeEventListener('pageshow', updateMarqueeTiming);
-      window.removeEventListener('resize', updateMarqueeTiming);
-    };
-  }, [variant]);
+  useMarqueeTiming(logoMarqueeRef, logoMarqueeTrackRef, logoMarqueeGroupRef, {
+    pixelsPerSecond: 36,
+    distanceProperty: '--logo-marquee-distance',
+    durationProperty: '--logo-marquee-duration',
+  });
 
   return (
     <main data-testid='home-content' data-wf-el='page-main' className='home-mobile-parity' style={{ display: 'flex', flexDirection: 'column', backgroundColor: 'rgba(0, 0, 0, 0)' }}>
@@ -750,44 +723,12 @@ const Home = () => {
                 of 20.8px font-size = 20.8px). */}
             <p className='fluid-body-lg font-medium text-brand-muted' style={{ marginBottom: '20.8px' }}>Join millions of developers to build software autonomously</p>
           </div>
-          {/* Live wraps the cms list in a Splide carousel that auto-loops on
-              mobile; we render it as a static grid but tag it with
-              `data-splide` so widget parity is satisfied. */}
-          <div data-wf-el='lovewall_cms_list' data-splide='lovewall' className='grid gap-6 md:grid-cols-2 lg:grid-cols-3'>
-            {DEVELOPER_QUOTES.map((quote) => (
-              <article key={quote.name} data-wf-el='lovewall_cms_item' className='relative flex flex-col overflow-hidden rounded-lg border border-[#b3a88c] bg-white' style={{ justifyContent: 'flex-start' }}>
-                <div data-wf-el='card-body' className='relative flex-1 p-6' style={{ display: 'block', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start' }}>
-                  <div data-wf-el='lovewall_cms_item_top' className='mb-4 flex items-center gap-3' style={{ justifyContent: 'flex-start' }}>
-                    <img data-wf-el='lovewall_cms_item_avatar' src={quote.avatar} alt={quote.name} className='h-12 w-12 object-cover' style={{ aspectRatio: '1 / 1', borderRadius: '100%' }} />
-                    <div data-wf-el='lovewall_cms_item_top_meta'>
-                      <div data-wf-el='lovewall_cms_item_top_name' className='font-normal' style={{ color: 'rgb(24, 24, 24)', fontSize: '14.08px' }}>{quote.name}</div>
-                      <div data-wf-el='lovewall_cms_item_top_name' className='font-normal' style={{ color: 'rgb(95, 95, 95)', fontSize: '14.08px' }}>{quote.title}</div>
-                    </div>
-                  </div>
-                  <div data-wf-el='lovewall_cms_rt'>
-                  {quote.lines.map((line, lineIdx) => {
-                    /* Live wraps each line in `.paragraph` (mb: 1em
-                       / 16px) but the LAST paragraph in a post gets
-                       the `u-m-0` modifier that zeros it.  Match
-                       both. */
-                    const isLast = lineIdx === quote.lines.length - 1;
-                    return (
-                      <p key={line} className='text-base leading-[1.4] text-brand-fg' style={{ marginBottom: isLast ? '0px' : '16px' }}>
-                        {line.includes('@allhands_ai') ? (
-                          <>
-                            I love using autonomous agents like <strong style={{ fontWeight: 400, color: '#565656' }}>@allhands_ai</strong> OpenHands for 80% of the work (esp. backend), and then an interactive IDE like <strong style={{ fontWeight: 400, color: '#565656' }}>@windsurf</strong> or <strong style={{ fontWeight: 400, color: '#565656' }}>@zeddotdev</strong> for debugging, refinement, and UI work.
-                          </>
-                        ) : line}
-                      </p>
-                    );
-                  })}
-                </div>
-                </div>
-              </article>
-            ))}
-          </div>
           <p className='sr-only'>‍</p>
         </div>
+        <HomeLovewallMarquee
+          topRowQuotes={DEVELOPER_QUOTES_ROW_ONE}
+          bottomRowQuotes={DEVELOPER_QUOTES_ROW_TWO}
+        />
       </section>
 
 

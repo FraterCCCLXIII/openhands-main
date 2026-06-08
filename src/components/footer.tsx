@@ -1,7 +1,7 @@
 import { Link, useLocation } from 'react-router';
 import { PixelBlastBackground } from '~/components/pixel-blast-background';
 import clsx from 'clsx';
-import { FOOTER_NAV_ITEMS, FOOTER_RESOURCE_LINKS, GET_OPENHANDS_CTA } from '~/constants/site-shell';
+import { GET_OPENHANDS_CTA } from '~/constants/site-shell';
 import { normalizePathname } from '~/utils/normalize-pathname';
 import { OverlayLinkButton } from '~/components/overlay-link-button';
 import { useWidth } from '~/hooks/use-media';
@@ -155,32 +155,18 @@ const FOOTER_COL_SHRINK_NO_PADDING_STYLE = {
 } as const;
 
 
-const footerNavLinkStyle = {
-  display: 'flex',
-  justifyContent: 'center',
-  alignItems: 'center',
-  gap: '4.8px',
-  height: 'var(--footer-nav-link-height, 51.1719px)',
-  boxSizing: 'border-box',
-  paddingTop: 'var(--footer-nav-link-padding-top, 14.39px)',
-  paddingBottom: 'var(--footer-nav-link-padding-bottom, 14.39px)',
-  paddingLeft: '5px',
-  paddingRight: '5px',
-  fontSize: '16px',
-  fontWeight: 500,
-  lineHeight: '22.4px',
-  whiteSpace: 'nowrap',
-  textAlign: 'start',
+const footerLegalTextStyle = {
+  fontFamily: 'GeistMono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+  fontSize: 'var(--footer-eyebrow-font-size, 14px)',
+  fontWeight: 400,
+  lineHeight: '16.896px',
+  wordSpacing: '0.2px',
 } as const;
 
-const footerResourceLinkStyle = {
-  paddingLeft: '5px',
-  paddingRight: '5px',
-  fontFamily: '"Sohne Buch", "Sohne Kraftig", Arial, sans-serif',
-  fontSize: '14px',
-  fontWeight: 400,
-  lineHeight: '19.6px',
-  textAlign: 'start',
+const footerLegalLinkStyle = {
+  ...footerLegalTextStyle,
+  textDecoration: 'none',
+  cursor: 'pointer',
 } as const;
 
 type WebflowFooterContentProps = Pick<
@@ -239,32 +225,9 @@ const WebflowFooterContent = ({
     flexBasis: isManifestoMobile ? '100%' : 'var(--footer-cta-col-basis, 66.67%)',
     maxWidth: isManifestoMobile ? '100%' : 'var(--footer-cta-col-max-width, 66.6667%)',
   } as React.CSSProperties;
-  const navColStyle = {
-    ...FOOTER_COL_LG_8_STYLE,
-    flexBasis: isManifestoMobile ? '100%' : 'var(--footer-nav-col-basis, 66.67%)',
-    maxWidth: isManifestoMobile ? '100%' : 'var(--footer-nav-col-max-width, 66.6667%)',
-  } as React.CSSProperties;
-  const navLinkStyle = isManifesto
-    ? { ...footerNavLinkStyle, ...(isManifestoMobile ? { padding: '14.390625px 5px' } : {}), height: '51.1719px' }
-    : footerNavLinkStyle;
   const resolvedMarketingCtaPrimary = marketingCtaPrimary ?? DEFAULT_CTA_PRIMARY;
   const resolvedMarketingCtaSecondary = marketingCtaSecondary ?? DEFAULT_CTA_SECONDARY;
-
-  const renderTopLevelLink = (item: (typeof FOOTER_NAV_ITEMS)[number]) => {
-    const isActive = normalizePathname(item.to) === activePathname;
-    return (
-      <Link
-        key={item.name}
-        to={item.to}
-        aria-current={isActive ? 'page' : undefined}
-        data-wf-el='nav-link'
-        className={clsx('nav-link link-hover hover:text-[#565656] py-[14.4px]', isActive && 'text-[#565656]')}
-        style={navLinkStyle}
-      >
-        {item.name}
-      </Link>
-    );
-  };
+  const isContactActive = normalizePathname('/contact') === activePathname;
 
   return (
     <div data-wf-el={containerWfEl ?? undefined} className='container u-position-relative u-z-index-1' style={footerContainerStyle}>
@@ -315,58 +278,8 @@ const WebflowFooterContent = ({
         </div>
       ) : null}
 
-      <div className='row row-justify-center u-mb-sm' style={{ ...FOOTER_ROW_STYLE, justifyContent: 'center', marginBottom: '24px' }}>
-        <div className='col col-lg-8 col-md-12 footer-nav-col' style={navColStyle}>
-          <div data-wf-el='footer-nav' className='footer-nav justify-between' style={{ display: 'flex', flexFlow: isManifestoMobile ? 'column nowrap' : 'var(--footer-nav-flow, row nowrap)', justifyContent: 'space-between', alignItems: isManifestoMobile ? 'center' : 'var(--footer-nav-align, flex-start)', width: '100%', height: isManifesto ? (isManifestoMobile ? '492.766px' : '185.734375px') : 'var(--footer-nav-height, auto)', paddingBottom: '16px', borderBottom: '1px solid #b3a88c', textAlign: 'start' }}>
-            {FOOTER_NAV_ITEMS.map(renderTopLevelLink)}
-            <div data-wf-el='footer-drop' id='footer-resources' className='footer-drop' style={{ display: 'flex', flexDirection: 'column', alignItems: isManifestoMobile ? 'center' : 'var(--footer-drop-align, flex-start)', justifyContent: 'flex-start', textAlign: 'start', height: isManifesto ? (isManifestoMobile ? 'auto' : '168.734375px') : 'var(--footer-drop-height, auto)' }}>
-              <a href='#footer-resources' data-wf-el='nav-link' className='nav-link hover:text-[#565656]' style={navLinkStyle}>
-                Resources
-              </a>
-              {FOOTER_RESOURCE_LINKS.map((item) =>
-                item.external ? (
-                  <a key={item.name} href={item.to} target='_blank' rel='noopener noreferrer' data-wf-el='footer-nav-link' className='footer-nav-link buch hover:text-[#565656]' style={footerResourceLinkStyle}>
-                    {item.name}
-                  </a>
-                ) : (
-                  <Link key={item.name} to={item.to} data-wf-el='footer-nav-link' className='footer-nav-link buch hover:text-[#565656]' style={footerResourceLinkStyle}>
-                    {item.name}
-                  </Link>
-                ),
-              )}
-            </div>
-            <Link
-              to='/contact'
-              aria-current={normalizePathname('/contact') === activePathname ? 'page' : undefined}
-              data-wf-el='nav-link'
-              className={clsx('nav-link link-hover hover:text-[#565656] py-[14.4px]', normalizePathname('/contact') === activePathname && 'text-[#565656]')}
-              style={navLinkStyle}
-            >
-              Contact
-            </Link>
-          </div>
-        </div>
-      </div>
-
       <div className='row row-justify-center u-mb-md' style={{ ...FOOTER_ROW_STYLE, justifyContent: 'center', marginBottom: 'var(--footer-bottom-row-margin-bottom, 40px)' }}>
-        <div className='col col-lg-8 footer-copyright-col footer-legal-col' style={FOOTER_COL_LG_8_STYLE}>
-          {showCopyright ? (
-            <div data-wf-el='eyebrow' className='eyebrow u-text-center' style={{ textAlign: 'center', marginBottom: '21.12px', fontFamily: 'GeistMono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace', fontSize: 'var(--footer-eyebrow-font-size, 14px)', fontWeight: 400, lineHeight: '16.896px', wordSpacing: '0.2px' }}>
-              <span style={{ display: 'inline-block', transform: 'scaleX(1.0038)', transformOrigin: 'center' }}>© <span data-year=' '>{currentYear}</span> OpenHands - All rights reserved</span>
-            </div>
-          ) : (
-            <span className='sr-only'>© {currentYear} OpenHands - All rights reserved</span>
-          )}
-          <Link
-            to='/privacy'
-            data-wf-el='eyebrow'
-            className='eyebrow u-text-center is-link hover:text-[#565656]'
-            style={{ alignSelf: 'center', display: 'block', textAlign: 'center', marginBottom: '21.12px', fontFamily: 'GeistMono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace', fontSize: 'var(--footer-privacy-font-size, var(--footer-eyebrow-font-size, 14px))', fontWeight: 400, lineHeight: '16.896px', textDecoration: 'none', cursor: 'pointer', width: isManifesto ? '118.266px' : 'var(--footer-privacy-width, 118.266px)' }}
-          >
-            Privacy Policy
-          </Link>
-        </div>
-        <div className='col col-lg-8 footer-logo-col' style={{ ...FOOTER_COL_LG_8_STYLE, marginTop: 'var(--footer-logo-margin-top, 39px)' }}>
+        <div className='col col-lg-8 footer-logo-col' style={FOOTER_COL_LG_8_STYLE}>
           <div className='row row-gap-sm row-justify-center' style={{ ...FOOTER_ROW_STYLE, justifyContent: 'center', rowGap: '16px' }}>
             {isManifestoMobile ? (
               <div data-wf-el='standard-media' className='standard-media contain-center footer-logo-media' style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', textAlign: 'start', width: '211.65625px', height: '35.390625px', objectFit: 'contain' }}>
@@ -377,6 +290,49 @@ const WebflowFooterContent = ({
                 <img data-wf-el='standard-media-img' className='footer-logo-img' src='/assets/webflow/backgrounds/openhands_logo_black.svg' alt='' style={{ display: 'block', width: 'var(--footer-logo-width, 610px)', height: 'var(--footer-logo-height, 102px)', textAlign: 'start', objectFit: 'scale-down' }} />
               </div>
             )}
+          </div>
+        </div>
+        <div
+          className='col col-lg-8 footer-copyright-col footer-legal-col'
+          style={{ ...FOOTER_COL_LG_8_STYLE, marginTop: 'var(--footer-legal-margin-top, 39px)' }}
+        >
+          <div
+            data-wf-el='footer-legal-row'
+            className='footer-legal-row u-text-center'
+            style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              justifyContent: 'center',
+              alignItems: 'center',
+              gap: '16px',
+              textAlign: 'center',
+              marginBottom: '21.12px',
+            }}
+          >
+            {showCopyright ? (
+              <div data-wf-el='eyebrow' className='eyebrow' style={footerLegalTextStyle}>
+                <span style={{ display: 'inline-block', transform: 'scaleX(1.0038)', transformOrigin: 'center' }}>© <span data-year=' '>{currentYear}</span> OpenHands - All rights reserved</span>
+              </div>
+            ) : (
+              <span className='sr-only'>© {currentYear} OpenHands - All rights reserved</span>
+            )}
+            <Link
+              to='/privacy'
+              data-wf-el='eyebrow'
+              className='eyebrow is-link hover:text-[#565656]'
+              style={footerLegalLinkStyle}
+            >
+              Privacy Policy
+            </Link>
+            <Link
+              to='/contact'
+              aria-current={isContactActive ? 'page' : undefined}
+              data-wf-el='nav-link'
+              className={clsx('nav-link is-link hover:text-[#565656]', isContactActive && 'text-[#565656]')}
+              style={footerLegalLinkStyle}
+            >
+              Contact
+            </Link>
           </div>
         </div>
         {footerContainerNudge ? <div aria-hidden='true' style={{ flexBasis: '100%', height: `${footerContainerNudge}px` }} /> : null}

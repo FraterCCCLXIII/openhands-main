@@ -44,9 +44,8 @@ describe('site shell parity helpers', () => {
       lineHeight: 'var(--footer-paragraph-lg-line-height, 1.2)',
     });
     expect(container.querySelector('.section-title')).toHaveStyle({ marginBottom: 'var(--footer-marketing-title-margin-bottom, var(--footer-cta-title-margin-bottom, 22px))' });
-    expect(container.querySelector('#footer-resources')?.parentElement).toHaveClass('justify-between');
-    expect(container.querySelector('#footer-resources')).toHaveClass('footer-drop');
-    expect(screen.getByRole('link', { name: 'About' })).toHaveClass('py-[14.4px]');
+    expect(container.querySelector('[data-wf-el="footer-legal-row"]')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Contact' })).toBeInTheDocument();
     expect(container.querySelector('.footer-logo-img')).toHaveStyle({
       width: 'var(--footer-logo-width, 610px)',
       height: 'var(--footer-logo-height, 102px)',
@@ -70,9 +69,9 @@ describe('site shell parity helpers', () => {
       width: 'var(--footer-container-width, 90%)',
       height: '950.1875px',
     });
-    expect(container.querySelector('[data-wf-el="footer-nav"]')).toHaveStyle({
-      height: '185.734375px',
-    });
+    expect(container.querySelector('[data-wf-el="footer-legal-row"]')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Privacy Policy' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Contact' })).toBeInTheDocument();
   });
 
   it('renders the live-style compact close state in the header', () => {

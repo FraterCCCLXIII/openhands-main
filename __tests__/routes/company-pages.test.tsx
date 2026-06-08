@@ -244,7 +244,7 @@ describe('company information pages parity', () => {
 
     await waitFor(() => {
       expect(footerSection).toHaveStyle({ height: '1370.58px' });
-      expect(container.querySelector('[data-wf-el="footer-nav"]')).toHaveStyle({ height: '492.766px' });
+      expect(container.querySelector('[data-wf-el="footer-legal-row"]')).toBeInTheDocument();
     });
   });
 

@@ -1576,17 +1576,92 @@
     }
   }
 
-  /* Match openhands.dev: logo strip fixes height at 24px and lets
-   * each SVG keep its intrinsic width (Apple/Mastercard/Roche are
-   * narrower than the 64px cap). */
+  /* Logo strip fixes height and lets each SVG keep its intrinsic width
+   * (Apple/Mastercard/Roche are narrower than the max-width cap). */
   .logo-grid img {
     @apply opacity-100 hover:opacity-80 transition-opacity;
     display: block;
     flex: 0 0 auto;
     width: auto;
-    height: 24px;
-    max-width: 64px;
+    height: 36px;
+    max-width: 96px;
     object-fit: fill;
+  }
+
+  /* Lovewall quote marquee rows */
+  .lovewall-marquee-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    width: 100%;
+    overflow: hidden;
+  }
+
+  .lovewall-marquee {
+    overflow: hidden;
+    width: 100%;
+    white-space: nowrap;
+    scrollbar-width: none;
+  }
+
+  .lovewall-marquee::-webkit-scrollbar {
+    display: none;
+  }
+
+  .lovewall-marquee-track {
+    display: flex;
+    width: max-content;
+    will-change: transform;
+  }
+
+  .lovewall-marquee--ltr .lovewall-marquee-track {
+    animation: lovewall-marquee-ltr var(--lovewall-marquee-duration, 42s) linear infinite;
+  }
+
+  .lovewall-marquee--rtl .lovewall-marquee-track {
+    animation: lovewall-marquee-rtl var(--lovewall-marquee-duration, 42s) linear infinite;
+  }
+
+  .lovewall-marquee-group {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: stretch;
+    gap: 24px;
+    padding-right: 24px;
+  }
+
+  .lovewall-marquee-card {
+    flex: 0 0 auto;
+    width: 380px;
+    max-width: 380px;
+    white-space: normal;
+  }
+
+  @keyframes lovewall-marquee-ltr {
+    from {
+      transform: translateX(calc(-1 * var(--lovewall-marquee-distance, 50%)));
+    }
+
+    to {
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes lovewall-marquee-rtl {
+    from {
+      transform: translateX(0);
+    }
+
+    to {
+      transform: translateX(calc(-1 * var(--lovewall-marquee-distance, 50%)));
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .lovewall-marquee-track {
+      animation: none !important;
+      transform: none !important;
+    }
   }
 
   /* Code window */
@@ -2210,7 +2285,7 @@
 
 
   .home-mobile-parity .logo-grid {
-    height: 64px !important;
+    height: 96px !important;
     overflow: hidden !important;
   }
 
@@ -2503,7 +2578,7 @@
   .home-mobile-parity [data-wf-el='logo-grid-component_cms_list'].logo-grid {
     width: 337.5px !important;
     max-width: 337.5px !important;
-    height: 64px !important;
+    height: 96px !important;
     overflow-x: hidden !important;
     overflow-y: hidden !important;
     white-space: nowrap !important;
@@ -2523,8 +2598,8 @@
     display: block !important;
     flex: 0 0 auto !important;
     width: auto !important;
-    height: 24px !important;
-    max-width: 72px !important;
+    height: 36px !important;
+    max-width: 108px !important;
   }
 
   .home-mobile-parity [data-slider='hero-surfaces'] {
@@ -2776,9 +2851,20 @@
   }
 
   .home-mobile-parity [data-wf-el='lovewall_cms_list'] {
-    display: grid !important;
-    grid-template-columns: 1fr !important;
+    display: flex !important;
+    flex-direction: column !important;
     gap: 24px !important;
+    overflow: hidden !important;
+  }
+
+  .home-mobile-parity .lovewall-marquee-card {
+    width: 300px !important;
+    max-width: 300px !important;
+  }
+
+  .home-mobile-parity .lovewall-marquee-group {
+    gap: 16px !important;
+    padding-right: 16px !important;
   }
 
   .home-mobile-parity > section:nth-of-type(6) {
