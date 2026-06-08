@@ -1,23 +1,19 @@
 import React, { type ComponentType, type SVGProps } from 'react';
 import { Link } from 'react-router';
-import { domAnimation, LazyMotion, m } from 'framer-motion';
-import type { LucideIcon } from 'lucide-react';
 import {
-  ArrowRightCircle,
-  ChevronLeft,
-  ChevronRight,
+  BookOpen,
+  Box,
   Download,
-  Eye,
-  GitPullRequest,
+  Layers,
   Plus,
-  ShieldAlert,
-  TriangleAlert,
+  Settings,
 } from 'lucide-react';
 import type { Route } from './+types/home';
 import statistics from '~/data/statistics.json';
 import { Footer } from '~/components/footer';
 import { getRouteFooterProps } from '~/constants/route-layout';
-import { GET_OPENHANDS_CTA, HEADER_GET_OPENHANDS_URL } from '~/constants/site-shell';
+import { AGENT_CANVAS_INSTALL_COMMAND, GET_OPENHANDS_CTA, HEADER_GET_OPENHANDS_URL } from '~/constants/site-shell';
+import { CopyInstallPill } from '~/components/copy-install-pill';
 import { OverlayLinkButton } from '~/components/overlay-link-button';
 import { FAQ_TRIGGER_DIVIDER, CLOSED_FAQ_ITEM_PROPS } from '~/components/faq-accordion';
 import { formatThousands } from '~/utils/format-thousands';
@@ -26,6 +22,7 @@ import { createSocialPreviewMeta } from '~/utils/seo';
 import { EnterpriseLogoStrip } from '~/components/logos/enterprise-logo-strip';
 import { ClaudeCodeIcon, CodexIcon, GeminiCliIcon } from '~/components/icons/agent-subscription-icons';
 import { HeroAppPreview } from '~/components/hero-app-preview';
+import { HeroWorkflowCarousel } from '~/components/hero-workflow-carousel';
 import { HERO_APP_PREVIEW_SLIDES } from '~/constants/hero-app-preview-slides';
 import { HomeHeroLogoGrid } from '~/components/home-hero-logo-grid';
 import { HomeVariantSwitcher } from '~/components/home-variant-switcher';
@@ -90,119 +87,32 @@ function HeroCompatibilityBadgesRow() {
   );
 }
 
-type WorkflowItem = {
-  title: string;
-  description: string;
-  href: string;
-  sdkHref: string;
-  icon: LucideIcon;
-  isLink?: boolean;
-};
-
-const WORKFLOWS: WorkflowItem[] = [
+const WHY_TEAMS_FEATURES = [
   {
-    title: 'Fix Vulnerabilities',
-    description: 'Scans repositories, fixes vulnerabilities, and opens reviewable PRs.',
-    href: 'https://app.all-hands.dev/login',
-    sdkHref: 'https://github.com/OpenHands/extensions/tree/main/plugins/vulnerability-remediation',
-    icon: ShieldAlert,
+    title: 'Run agents where your code and data live',
+    description:
+      'Open source, model-agnostic, and deployable in your environment, so you control how agents operate, what they can access, and where your data stays.',
+    icon: BookOpen,
   },
   {
-    title: 'Review PRs',
-    description: 'Reviews PRs for quality, security, and best practices.',
-    href: 'https://app.all-hands.dev/login',
-    sdkHref: 'https://github.com/OpenHands/extensions/tree/main/plugins/pr-review',
-    icon: GitPullRequest,
+    title: 'Build your own agent experience',
+    description:
+      'Fork the codebase, create a custom interface, or embed the OpenHands SDK into your product or internal platform. MIT licensed, so you can modify, extend, and distribute freely.',
+    icon: Settings,
   },
   {
-    title: 'Migrate Code',
-    description: 'Migrates legacy COBOL systems to Java with testing and validation built in.',
-    href: 'https://app.all-hands.dev/login',
-    sdkHref: 'https://github.com/OpenHands/extensions/tree/main/plugins/cobol-modernization',
-    icon: ArrowRightCircle,
+    title: 'Run agents beyond your laptop',
+    description:
+      'Run agents in isolated sandboxes on a VM or in the cloud, no local hardware dependency. Schedule recurring tasks or trigger them from GitHub, Slack, or PagerDuty events, even when your machine is off.',
+    icon: Layers,
   },
   {
-    title: 'Triage Incidents',
-    description: 'Investigates errors, finds root causes, and posts actionable debugging insights.',
-    href: 'https://app.all-hands.dev/login',
-    sdkHref: 'https://github.com/OpenHands/software-agent-sdk/tree/main/examples/03_github_workflows/05_posthog_debugging',
-    icon: TriangleAlert,
+    title: 'Scale agent usage without losing control',
+    description:
+      'Run agents across teams and enterprise workflows with the visibility, access controls, audit trails, and cost guardrails your organization needs.',
+    icon: Box,
   },
-  {
-    title: 'See all use cases',
-    description: '',
-    href: 'https://docs.openhands.dev/openhands/usage/use-cases/overview',
-    sdkHref: '',
-    icon: Eye,
-    isLink: true,
-  },
-];
-
-const GLASS_SURFACE_HOVER =
-  'hover:border-[rgb(24,24,24)] hover:bg-[rgba(255,255,255,0.34)] hover:backdrop-blur-[5px]';
-
-const WORKFLOW_CARD_CLASS =
-  `flex w-[270px] flex-shrink-0 cursor-pointer flex-col gap-4 rounded-2xl border border-[rgba(24,24,24,0.2)] bg-transparent p-6 transition-colors ${GLASS_SURFACE_HOVER} md:w-[352px]`;
-
-const WORKFLOW_ARROW_BTN_CLASS =
-  'flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full border border-[rgba(24,24,24,0.2)] bg-transparent text-brand-fg transition-all duration-200 ease-out';
-
-const WORKFLOW_ARROW_BTN_HOVER =
-  'cursor-pointer hover:border-[rgb(24,24,24)] hover:bg-[rgba(255,255,255,0.34)] hover:backdrop-blur-[5px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[rgb(24,24,24)]/30 active:scale-95';
-
-function WorkflowCarouselIcon({ icon: Icon }: { icon: LucideIcon }) {
-  return (
-    <div
-      data-wf-el='capabilities_card_icon'
-      className='flex flex-shrink-0 text-brand-fg'
-      style={{ marginTop: '0px' }}
-      aria-hidden='true'
-    >
-      <Icon className='h-5 w-5' strokeWidth={1.75} aria-hidden='true' />
-    </div>
-  );
-}
-
-function WorkflowDialogIcon({ icon: Icon }: { icon: LucideIcon }) {
-  return (
-    <div data-modal-content='icon' className='dialog_top_icon flex items-center justify-center text-brand-fg' aria-hidden='true'>
-      <Icon className='h-8 w-8' strokeWidth={1.75} aria-hidden='true' />
-    </div>
-  );
-}
-
-const FEATURES = [
-  {
-    title: 'Extensible and customizable for any workflow',
-    description: 'Build and orchestrate your own agents with open SDKs, APIs, and micro-agents.',
-    icon: '/assets/webflow/features/690b95df7d9ca76624d45550_Frame48095777.svg',
-  },
-  {
-    title: 'Model-agnostic',
-    description: 'Adapt OpenHands to any model, CI/CD pipeline, or codebase with fine-grained configurability.',
-    icon: '/assets/webflow/features/690b95d99040920ad0084107_Frame48095776.svg',
-  },
-  {
-    title: 'Works where you do',
-    description: 'Delegate tasks directly from GitHub, GitLab, Slack, or via the API and SDK',
-    icon: '/assets/webflow/features/690b95d3c92c94a6a9b249f8_Frame48095775.svg',
-  },
-  {
-    title: 'Secure, sandboxed runtime you control',
-    description: 'Deploy in isolated Docker or Kubernetes environments, self-hosted or cloud, with full access control and auditability.',
-    icon: '/assets/webflow/features/690b95ca541b813083e0b38a_Frame48095774.svg',
-  },
-  {
-    title: 'Open source and transparent by design',
-    description: 'Full visibility into every agent and artifact.',
-    icon: '/assets/webflow/features/690b95bf82d3695da1690cb8_Frame48095773.svg',
-  },
-  {
-    title: 'Cloud coding agents that scale',
-    description: 'From a single task to thousands of parallel runs.',
-    icon: '/assets/webflow/features/690b95b580671251fa0903f4_Frame48095772.svg',
-  },
-];
+] as const;
 
 const USE_CASE_COLUMNS = [
   {
@@ -388,35 +298,9 @@ const Home = () => {
   const isVersion4 = usesVersion4HeroCopy(variant);
   const heroContentPadding = getHomeHeroContentPadding(variant);
   const [activeTestimonial, setActiveTestimonial] = React.useState(0);
-  const [workflowOffset, setWorkflowOffset] = React.useState(0);
-  const [activeWorkflow, setActiveWorkflow] = React.useState<WorkflowItem | null>(null);
-  const workflowDialogRef = React.useRef<HTMLDialogElement>(null);
-  const workflowViewportRef = React.useRef<HTMLDivElement>(null);
-  const workflowTrackRef = React.useRef<HTMLDivElement>(null);
-  const [workflowCardStep, setWorkflowCardStep] = React.useState(294);
-  const [maxWorkflowOffset, setMaxWorkflowOffset] = React.useState(WORKFLOWS.length - 1);
-  const [maxWorkflowTranslate, setMaxWorkflowTranslate] = React.useState(0);
   const logoMarqueeRef = React.useRef<HTMLDivElement>(null);
   const logoMarqueeTrackRef = React.useRef<HTMLDivElement>(null);
   const logoMarqueeGroupRef = React.useRef<HTMLDivElement>(null);
-
-  React.useEffect(() => {
-    const dialog = workflowDialogRef.current;
-    if (!dialog) return;
-
-    if (activeWorkflow) {
-      if (!dialog.open) {
-        if (typeof dialog.showModal === 'function') dialog.showModal();
-        else dialog.setAttribute('open', '');
-      }
-      return;
-    }
-
-    if (dialog.open) {
-      if (typeof dialog.close === 'function') dialog.close();
-      else dialog.removeAttribute('open');
-    }
-  }, [activeWorkflow]);
 
   React.useEffect(() => {
     const marquee = logoMarqueeRef.current;
@@ -456,123 +340,8 @@ const Home = () => {
     };
   }, [variant]);
 
-  React.useEffect(() => {
-    const measureWorkflowCarousel = () => {
-      const track = workflowTrackRef.current;
-      const viewport = workflowViewportRef.current;
-      const firstCard = track?.firstElementChild as HTMLElement | null;
-      if (!track || !viewport || !firstCard) return;
-
-      const gap = Number.parseFloat(getComputedStyle(track).columnGap || getComputedStyle(track).gap || '24') || 24;
-      const step = firstCard.offsetWidth + gap;
-      const maxTranslate = Math.max(0, track.scrollWidth - viewport.clientWidth);
-      const lastOffset = step > 0 ? Math.ceil(maxTranslate / step) : 0;
-
-      setWorkflowCardStep(step);
-      setMaxWorkflowTranslate(maxTranslate);
-      setMaxWorkflowOffset(lastOffset);
-      setWorkflowOffset((current) => Math.min(current, lastOffset));
-    };
-
-    measureWorkflowCarousel();
-    window.addEventListener('resize', measureWorkflowCarousel);
-
-    let resizeObserver: ResizeObserver | undefined;
-    if (typeof ResizeObserver !== 'undefined') {
-      resizeObserver = new ResizeObserver(measureWorkflowCarousel);
-      if (workflowTrackRef.current) resizeObserver.observe(workflowTrackRef.current);
-      if (workflowViewportRef.current) resizeObserver.observe(workflowViewportRef.current);
-    }
-
-    return () => {
-      window.removeEventListener('resize', measureWorkflowCarousel);
-      resizeObserver?.disconnect();
-    };
-  }, []);
-
-  const shiftWorkflow = (direction: -1 | 1) => {
-    setWorkflowOffset((current) => {
-      if (direction === -1) return Math.max(0, current - 1);
-      return Math.min(maxWorkflowOffset, current + 1);
-    });
-  };
-
-  const isAtWorkflowStart = workflowOffset === 0;
-  const isAtWorkflowEnd = workflowOffset >= maxWorkflowOffset;
-  const workflowTranslateX = workflowOffset >= maxWorkflowOffset
-    ? maxWorkflowTranslate
-    : workflowOffset * workflowCardStep;
-
-  const closeWorkflowDialog = () => setActiveWorkflow(null);
-
   return (
     <main data-testid='home-content' data-wf-el='page-main' className='home-mobile-parity' style={{ display: 'flex', flexDirection: 'column', backgroundColor: 'rgba(0, 0, 0, 0)' }}>
-      <dialog
-        ref={workflowDialogRef}
-        data-modal='modal'
-        data-active-usecase=' '
-        aria-labelledby='workflow-dialog-title'
-        className='dialog'
-        onCancel={(event) => {
-          event.preventDefault();
-          closeWorkflowDialog();
-        }}
-      >
-        {activeWorkflow ? (
-          <>
-            <div className='dialog_top_wrap'>
-              <button
-                type='button'
-                data-modal='close'
-                aria-label='Close workflow dialog'
-                onClick={closeWorkflowDialog}
-                className='dialog_top_close'
-              >
-                <svg xmlns='http://www.w3.org/2000/svg' width='100%' viewBox='0 0 9 9' fill='none' aria-hidden='true'>
-                  <path d='M0.183617 0.183617C0.241674 0.125413 0.310643 0.0792341 0.386575 0.047726C0.462506 0.016218 0.543908 0 0.626117 0C0.708326 0 0.789728 0.016218 0.865659 0.047726C0.941591 0.0792341 1.01056 0.125413 1.06862 0.183617L4.37612 3.49237L7.68362 0.183617C7.74173 0.125507 7.81071 0.0794115 7.88664 0.0479627C7.96256 0.0165138 8.04394 0.000327229 8.12612 0.000327229C8.2083 0.000327229 8.28967 0.0165138 8.3656 0.0479627C8.44152 0.0794115 8.51051 0.125507 8.56862 0.183617C8.62673 0.241727 8.67282 0.310713 8.70427 0.386637C8.73572 0.462562 8.75191 0.543937 8.75191 0.626117C8.75191 0.708297 8.73572 0.789672 8.70427 0.865597C8.67282 0.941521 8.62673 1.01051 8.56862 1.06862L5.25987 4.37612L8.56862 7.68362C8.62673 7.74173 8.67282 7.81071 8.70427 7.88664C8.73572 7.96256 8.75191 8.04394 8.75191 8.12612C8.75191 8.2083 8.73572 8.28967 8.70427 8.3656C8.67282 8.44152 8.62673 8.51051 8.56862 8.56862C8.51051 8.62673 8.44152 8.67282 8.3656 8.70427C8.28967 8.73572 8.2083 8.75191 8.12612 8.75191C8.04394 8.75191 7.96256 8.73572 7.88664 8.70427C7.81071 8.67282 7.74173 8.62673 7.68362 8.56862L4.37612 5.25987L1.06862 8.56862C1.01051 8.62673 0.941521 8.67282 0.865597 8.70427C0.789672 8.73572 0.708297 8.75191 0.626117 8.75191C0.543937 8.75191 0.462562 8.73572 0.386637 8.70427C0.310713 8.67282 0.241727 8.62673 0.183617 8.56862C0.125507 8.51051 0.0794115 8.44152 0.0479627 8.3656C0.0165138 8.28967 0.000327229 8.2083 0.000327229 8.12612C0.000327229 8.04394 0.0165138 7.96256 0.0479627 7.88664C0.0794115 7.81071 0.125507 7.74173 0.183617 7.68362L3.49237 4.37612L0.183617 1.06862C0.125413 1.01056 0.0792341 0.941591 0.047726 0.865659C0.016218 0.789728 0 0.708326 0 0.626117C0 0.543908 0.016218 0.462506 0.047726 0.386575C0.0792341 0.310643 0.125413 0.241674 0.183617 0.183617Z' fill='currentColor' />
-                </svg>
-              </button>
-              <WorkflowDialogIcon icon={activeWorkflow.icon} />
-              <div className='dialog_top_content'>
-                <h3 id='workflow-dialog-title' data-modal-content='title' className='dialog_top_heading h3'>
-                  {activeWorkflow.title}
-                </h3>
-                <p data-modal-content='description' className='dialog_top_paragraph'>
-                  {activeWorkflow.description}
-                </p>
-              </div>
-            </div>
-
-            <div className='dialog_bottom_wrap'>
-              <div className='dialog_bottom_item'>
-                <div className='dialog_bottom_content'>
-                  <h4 className='dialog_bottom_heading'>Launch in Cloud</h4>
-                  <p className='dialog_bottom_paragraph'>Fastest way to try this workflow</p>
-                </div>
-                <div className='button'>
-                  <div aria-hidden='true' className='btn-text'>Start for Free</div>
-                  <a data-cta-button='cloud' data-modal-content='cloudUrl' href={activeWorkflow.href} target='_blank' rel='noopener noreferrer' className='u-link-cover'>
-                    <div className='u-sr-only'>Launch in Cloud</div>
-                  </a>
-                </div>
-              </div>
-              <div className='dialog_bottom_item'>
-                <div className='dialog_bottom_content'>
-                  <h4 className='dialog_bottom_heading'>Customize with open-source.</h4>
-                  <p className='dialog_bottom_paragraph'>Explore the code and customize for your stack.</p>
-                </div>
-                <div className='button secondary-7'>
-                  <div aria-hidden='true' className='btn-text'>Get SDK Example</div>
-                  <a data-cta-button='sdk' data-modal-content='sdkUrl' href={activeWorkflow.sdkHref ?? activeWorkflow.href} target='_blank' rel='noopener noreferrer' className='u-link-cover'>
-                    <div className='u-sr-only'>Get SDK Example</div>
-                  </a>
-                </div>
-              </div>
-            </div>
-          </>
-        ) : null}
-      </dialog>
-
       {/* SECTION 0: section-hero — contains hero+carousel+logos+SDK (matches live 1761px mega-section) */}
       <section data-wf-el='section-hero' className='relative' style={{ display: 'block', backgroundColor: 'rgba(0, 0, 0, 0)', paddingTop: '0px', paddingBottom: '64px', paddingLeft: '0px', paddingRight: '0px' }}>
         <div className='relative w-full'>
@@ -662,7 +431,7 @@ const Home = () => {
               {/* hero_btn_wrap — sibling of hero-heading_wrap on live. */}
               <div
                 data-wf-el='hero_btn_wrap'
-                className='hero-content-foreground flex flex-wrap items-center justify-center gap-4'
+                className='hero-content-foreground flex flex-col items-center justify-center gap-3'
                 style={{ marginBottom: '0px', paddingTop: '0px' }}
               >
                 <OverlayLinkButton
@@ -672,6 +441,7 @@ const Home = () => {
                   size='lg'
                   icon={<Download className='h-5 w-5' strokeWidth={2} aria-hidden='true' />}
                 />
+                <CopyInstallPill command={AGENT_CANVAS_INSTALL_COMMAND} />
               </div>
 
               {!isVersion4 ? (
@@ -688,126 +458,7 @@ const Home = () => {
           </div>
           </div>
 
-          {isVersion1 ? (
-          <div data-wf-el='container' className='relative z-10 mx-auto w-full max-w-[1238px]'>
-            {/* Workflow carousel (inside hero section).  Live's
-              * `.hero-splide_top` directly contains an `<h2>` and a
-              * buttons div as siblings — the earlier extra
-              * `<div className='max-w-[384px]'>` wrapper was breaking
-              * the structural parity. */}
-            <div data-wf-el='hero-splide_top' className='mb-4 flex w-full flex-wrap justify-center gap-x-12 gap-y-4 text-center' style={{ alignItems: 'center', paddingTop: '32px' }}>
-              <h2
-                data-wf-el='hero-splide_heading'
-                className='fluid-h4 w-full text-center font-medium text-brand-fg'
-                style={{ letterSpacing: '-0.02em', marginBottom: '0px' }}
-              >
-                Start with a proven workflow
-              </h2>
-            </div>
-
-          <div className='flex items-center gap-3 pb-8 md:gap-4 md:pb-10'>
-            <button
-              type='button'
-              onClick={() => shiftWorkflow(-1)}
-              disabled={isAtWorkflowStart}
-              className={`${WORKFLOW_ARROW_BTN_CLASS} ${
-                isAtWorkflowStart ? 'cursor-default opacity-40' : WORKFLOW_ARROW_BTN_HOVER
-              }`}
-              style={{ boxSizing: 'border-box' }}
-              aria-label='Previous workflow'
-              aria-disabled={isAtWorkflowStart}
-            >
-              <span data-wf-el='hero-splide_button' className='flex items-center justify-center' aria-hidden='true'>
-                <ChevronLeft className='h-6 w-6' strokeWidth={1.75} />
-              </span>
-            </button>
-
-          <div ref={workflowViewportRef} className='min-w-0 flex-1 overflow-hidden'>
-            <LazyMotion features={domAnimation}>
-              <m.div
-                ref={workflowTrackRef}
-                data-splide='workflows'
-                className='flex w-max cursor-grab gap-6'
-                animate={{ x: -workflowTranslateX }}
-                transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-              >
-            {WORKFLOWS.map((workflow) => {
-              const cardBody = (
-                <>
-                  <WorkflowCarouselIcon icon={workflow.icon} />
-                  <div data-wf-el='capabilities_card_content' className='flex flex-col gap-1'>
-                    <h3 data-wf-el='capabilities_card_heading' className='text-[24px] font-medium leading-[1.2] text-brand-fg' style={{ marginBottom: 0 }}>{workflow.title}</h3>
-                    {workflow.description ? (
-                      <p data-wf-el='capabilities_card_paragraph' className='fluid-sm font-medium text-brand-muted' style={{ margin: 0 }}>
-                        {workflow.description}
-                      </p>
-                    ) : null}
-                  </div>
-                </>
-              );
-
-              if (workflow.isLink) {
-                return (
-                  <a
-                    key={workflow.title}
-                    href={workflow.href}
-                    target='_blank'
-                    rel='noopener noreferrer'
-                    data-wf-el='capabilities_card_wrap'
-                    className={`${WORKFLOW_CARD_CLASS} no-underline`}
-                    style={{ scrollSnapAlign: 'start', justifyContent: 'flex-start', alignItems: 'flex-start' }}
-                  >
-                    {cardBody}
-                  </a>
-                );
-              }
-
-              return (
-                <article
-                  key={workflow.title}
-                  data-testid='workflow-launch'
-                  data-modal='open'
-                  data-wf-el='capabilities_card_wrap'
-                  data-sdk-url={workflow.sdkHref ?? ''}
-                  data-cloud-url=''
-                  role='button'
-                  tabIndex={0}
-                  onClick={() => setActiveWorkflow(workflow)}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter' || event.key === ' ') {
-                      event.preventDefault();
-                      setActiveWorkflow(workflow);
-                    }
-                  }}
-                  className={WORKFLOW_CARD_CLASS}
-                  style={{ scrollSnapAlign: 'start', justifyContent: 'flex-start', alignItems: 'flex-start' }}
-                >
-                  {cardBody}
-                </article>
-              );
-            })}
-              </m.div>
-            </LazyMotion>
-          </div>
-
-            <button
-              type='button'
-              onClick={() => shiftWorkflow(1)}
-              disabled={isAtWorkflowEnd}
-              className={`${WORKFLOW_ARROW_BTN_CLASS} ${
-                isAtWorkflowEnd ? 'cursor-default opacity-40' : WORKFLOW_ARROW_BTN_HOVER
-              }`}
-              style={{ boxSizing: 'border-box' }}
-              aria-label='Next workflow'
-              aria-disabled={isAtWorkflowEnd}
-            >
-              <span data-wf-el='hero-splide_button' className='flex items-center justify-center' aria-hidden='true'>
-                <ChevronRight className='h-6 w-6' strokeWidth={1.75} />
-              </span>
-            </button>
-          </div>
-          </div>
-          ) : null}
+          {isVersion1 ? <HeroWorkflowCarousel /> : null}
 
           {isVersion1 ? (
             <HomeHeroLogoGrid
@@ -822,6 +473,7 @@ const Home = () => {
 
           <div data-wf-el='hero-preview' className='relative z-10 mx-auto w-full max-w-[1238px] overflow-visible px-4 md:px-6' style={{ paddingTop: '56px', paddingBottom: '56px' }}>
             <HeroAppPreview slides={HERO_APP_PREVIEW_SLIDES} />
+            {!isVersion1 ? <HeroWorkflowCarousel topSpacing={isVersion4 ? 80 : 0} /> : null}
             {isVersion4 ? (
               <p
                 data-wf-el='hero-preview-lead'
@@ -847,37 +499,29 @@ const Home = () => {
       {/* SECTION 1: Why teams choose OpenHands (py:80, transparent) */}
       <section data-wf-el='section' style={{ display: 'block', backgroundColor: 'rgba(0, 0, 0, 0)', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px', position: 'relative' }}>
         <div className='mx-auto grid max-w-[1238px] gap-10 lg:grid-cols-[558px_640px]'>
-          {/* Live stacks H3 + CTA tightly (~119px gap) and lets the right
-              feature column dictate row height; previous flex-justify-between
-              left a 700+px gap on test where the right column was much taller
-              than live's. */}
-          <div className='flex min-w-0 flex-col items-start'>
-            {/* Live's H3 here gets `margin-bottom: 1.375rem` (22px) from
-              * the base h3 typography rules.  Without it on test, the
-              * "Try it live" CTA below sat too close to the heading. */}
-            <h3 className='max-w-[386px] section-title text-brand-fg' style={{ marginBottom: '22px' }}>Why teams choose OpenHands</h3>
-            <OverlayLinkButton href={GET_OPENHANDS_CTA.href} label={GET_OPENHANDS_CTA.label} variant='outline' className='w-fit' />
+          <div className='home-why-teams-heading flex min-w-0 flex-col items-start'>
+            <h3 className='max-w-[386px] section-title text-brand-fg' style={{ marginBottom: 0 }}>Why teams choose OpenHands</h3>
           </div>
 
           <div className='rounded-none px-5 py-0' style={{ marginLeft: '20px', width: '640px' }}>
-            {FEATURES.map((feature) => (
-              <div key={feature.title} className='feature-item-stacked'>
-                {/* Live's icon has margin: 0 (inside flex row); we used
-                    mt-1 (4px) which gave 6 IMG marginTop mismatches. */}
-                <img src={feature.icon} alt='' className='h-6 w-6 flex-shrink-0' style={{ marginTop: '0px' }} />
-                <div className='min-w-0 flex-1'>
-                  {/* Live's `.paragraph-lg.u-m-0` (title) has margin: 0;
-                    * the description paragraph uses
-                    * `.paragraph-lg.u-text-darkgray.u-mb-sm` which
-                    * resolves to `margin-bottom: 1.95rem` (31.2px).
-                    * The earlier `mb-1` on the title plus `mb-0` on the
-                    * description was 0 + 0 instead of 0 + 31.2 — pulling
-                    * every following row up by 31px on test. */}
-                  <p className='fluid-body-lg font-medium text-brand-fg' style={{ marginBottom: '0px' }}>{feature.title}</p>
-                  <p className='fluid-body-lg font-medium text-brand-muted' style={{ marginBottom: '31.2px' }}>{feature.description}</p>
+            {WHY_TEAMS_FEATURES.map((feature) => {
+              const Icon = feature.icon;
+              return (
+                <div key={feature.title} className='feature-item-stacked'>
+                  <div
+                    className='home-why-teams-feature-icon flex flex-shrink-0 items-center justify-center text-[#FFFF8B]'
+                    style={{ marginTop: '0px' }}
+                    aria-hidden='true'
+                  >
+                    <Icon className='h-6 w-6' strokeWidth={1.5} />
+                  </div>
+                  <div className='min-w-0 flex-1'>
+                    <p className='fluid-body-lg font-medium text-brand-fg' style={{ marginBottom: '0px' }}>{feature.title}</p>
+                    <p className='fluid-body-lg font-medium text-brand-muted' style={{ marginBottom: '31.2px' }}>{feature.description}</p>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>

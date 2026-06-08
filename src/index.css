@@ -1510,6 +1510,23 @@
     padding-left: 1px;
   }
 
+  .home-why-teams-heading {
+    position: sticky;
+    top: var(--site-nav-height);
+    z-index: 10;
+    align-self: start;
+    padding-top: 8px;
+    padding-bottom: 16px;
+    background-color: rgb(var(--brand-bg-rgb));
+  }
+
+  .home-why-teams-feature-icon {
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+    border-radius: 8px;
+    background-color: rgb(24, 24, 24);
+  }
 
   /* Use case block */
   .use-case-block {
@@ -2614,7 +2631,7 @@
 
   .home-mobile-parity .feature-item-stacked {
     display: grid !important;
-    grid-template-columns: 24px minmax(0, 1fr) !important;
+    grid-template-columns: 44px minmax(0, 1fr) !important;
     column-gap: 16px !important;
     width: 100% !important;
     margin-left: 0 !important;
@@ -2622,10 +2639,10 @@
     padding-left: 0 !important;
   }
 
-  .home-mobile-parity .feature-item-stacked > img {
+  .home-mobile-parity .home-why-teams-feature-icon {
     position: static !important;
-    width: 24px !important;
-    height: 24px !important;
+    width: 44px !important;
+    height: 44px !important;
   }
 
   .home-mobile-parity .feature-item-stacked > div {
@@ -6671,6 +6688,45 @@ main:has(.press-standard-collection) section[data-wf-el='section'].bg-brand-acce
     .enterprise-control-plane-graphic__agents {
       grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 16px;
+    }
+  }
+
+  .enterprise-control-plane-graphic-wrap--animate {
+    --control-plane-reveal-step: 65ms;
+    --control-plane-reveal-duration: 0.45s;
+  }
+
+  .enterprise-control-plane-graphic-wrap--animate:not(.is-active) .enterprise-control-plane-graphic__reveal {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(12px);
+  }
+
+  .enterprise-control-plane-graphic-wrap--animate.is-active .enterprise-control-plane-graphic__reveal {
+    visibility: visible;
+    animation: enterprise-control-plane-reveal var(--control-plane-reveal-duration)
+      cubic-bezier(0.22, 1, 0.36, 1) backwards;
+    animation-delay: calc(var(--reveal-order, 0) * var(--control-plane-reveal-step));
+  }
+
+  @keyframes enterprise-control-plane-reveal {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .enterprise-control-plane-graphic-wrap--animate .enterprise-control-plane-graphic__reveal {
+      opacity: 1;
+      visibility: visible;
+      transform: none;
+      animation: none;
     }
   }
 

@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import {
   ArrowDown,
@@ -18,6 +19,7 @@ import {
   Wallet,
   Zap,
 } from 'lucide-react';
+import { useEnterpriseScrollReveal } from '~/components/enterprise/use-enterprise-scroll-reveal';
 
 type GraphicItem = {
   icon: LucideIcon;
@@ -47,6 +49,20 @@ const AGENT_TYPES: GraphicItem[] = [
   { icon: TriangleAlert, label: 'Incident Triage' },
 ];
 
+const REVEAL = {
+  header: 0,
+  integrationsLabel: 1,
+  featureBase: 2,
+  integrationBase: 2,
+  contextLayer: 9,
+  apiLayer: 10,
+  connector: 11,
+  agentBase: 12,
+} as const;
+
+const revealStyle = (order: number): CSSProperties =>
+  ({ '--reveal-order': order }) as CSSProperties;
+
 const GraphicIcon = ({ icon: Icon }: { icon: LucideIcon }) => (
   <Icon className='h-5 w-5' strokeWidth={1.75} aria-hidden='true' />
 );
@@ -57,89 +73,124 @@ const IconChip = ({ icon }: { icon: LucideIcon }) => (
   </div>
 );
 
-export const ControlPlaneGraphic = () => (
-  <div
-    data-wf-el='acp_graphic_wrap'
-    className='enterprise-control-plane-graphic-wrap mx-auto w-full'
-  >
-    <div data-wf-el='acp_graphic' className='enterprise-control-plane-graphic'>
-      <div className='enterprise-control-plane-graphic__top'>
-        <article data-wf-el='acp_graphic_main' className='card-dark enterprise-control-plane-graphic__main'>
-          <header className='enterprise-control-plane-graphic__header'>
-            <Shield className='h-5 w-5 text-brand-bg' strokeWidth={1.75} aria-hidden='true' />
-            <h4 className='fluid-h4 font-medium text-brand-bg' style={{ margin: 0 }}>
-              Agent Control Plane
-            </h4>
-          </header>
+export const ControlPlaneGraphic = () => {
+  const { rootRef, shouldAnimate, isActive } = useEnterpriseScrollReveal();
 
-          <div className='enterprise-control-plane-graphic__features'>
-            {CONTROL_PLANE_FEATURES.map((feature) => (
-              <div key={feature.label} data-wf-el='acp_graphic_feature' className='enterprise-control-plane-graphic__feature'>
-                <IconChip icon={feature.icon} />
-                <span className='font-mono text-[13px] leading-[16.896px] text-brand-bg'>{feature.label}</span>
-              </div>
-            ))}
-          </div>
+  const wrapClassName = [
+    'enterprise-control-plane-graphic-wrap mx-auto w-full',
+    shouldAnimate ? 'enterprise-control-plane-graphic-wrap--animate' : '',
+    isActive ? 'is-active' : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
 
-          <div className='enterprise-control-plane-graphic__layer'>
-            <div className='flex min-w-0 items-center gap-2'>
-              <IconChip icon={FolderOpen} />
-              <span className='fluid-sm font-medium text-brand-bg'>Context Layer</span>
-            </div>
-            <span
-              className='font-mono text-[12px] leading-[16.896px]'
-              style={{ color: 'var(--neutral-card-dark-muted)' }}
+  return (
+    <div ref={rootRef} data-wf-el='acp_graphic_wrap' className={wrapClassName}>
+      <div data-wf-el='acp_graphic' className='enterprise-control-plane-graphic'>
+        <div className='enterprise-control-plane-graphic__top'>
+          <article data-wf-el='acp_graphic_main' className='card-dark enterprise-control-plane-graphic__main'>
+            <header
+              className='enterprise-control-plane-graphic__header enterprise-control-plane-graphic__reveal'
+              style={revealStyle(REVEAL.header)}
             >
-              Repos • Docs • Internal data
-            </span>
-          </div>
+              <Shield className='h-5 w-5 text-brand-bg' strokeWidth={1.75} aria-hidden='true' />
+              <h4 className='fluid-h4 font-medium text-brand-bg' style={{ margin: 0 }}>
+                Agent Control Plane
+              </h4>
+            </header>
 
-          <div className='enterprise-control-plane-graphic__layer enterprise-control-plane-graphic__layer--muted'>
-            <div className='flex min-w-0 items-center gap-2'>
-              <IconChip icon={Code2} />
-              <span className='fluid-sm font-medium text-brand-bg'>API &amp; Automations</span>
-            </div>
-            <span
-              className='font-mono text-[12px] leading-[16.896px]'
-              style={{ color: 'var(--neutral-card-dark-muted)' }}
-            >
-              GitHub • Slack • Jira • Cron
-            </span>
-          </div>
-        </article>
-
-        <aside data-wf-el='acp_graphic_integrations' className='enterprise-control-plane-graphic__integrations'>
-          <p
-            className='font-mono text-[14px] font-normal leading-[16.896px]'
-            style={{ margin: '0 0 16px', color: 'var(--neutral-card-dark-muted)' }}
-          >
-            Integrations
-          </p>
-          <ul className='enterprise-control-plane-graphic__integrations-list'>
-            {INTEGRATIONS.map((item) => (
-              <li key={item.label} className='enterprise-control-plane-graphic__integrations-item'>
-                <div className='card-dark enterprise-control-plane-graphic__integration-card'>
-                  <IconChip icon={item.icon} />
-                  <span className='font-mono text-[12px] leading-[16.896px] text-brand-bg'>{item.label}</span>
+            <div className='enterprise-control-plane-graphic__features'>
+              {CONTROL_PLANE_FEATURES.map((feature, index) => (
+                <div
+                  key={feature.label}
+                  data-wf-el='acp_graphic_feature'
+                  className='enterprise-control-plane-graphic__feature enterprise-control-plane-graphic__reveal'
+                  style={revealStyle(REVEAL.featureBase + index)}
+                >
+                  <IconChip icon={feature.icon} />
+                  <span className='font-mono text-[13px] leading-[16.896px] text-brand-bg'>{feature.label}</span>
                 </div>
-              </li>
-            ))}
-          </ul>
-        </aside>
-      </div>
+              ))}
+            </div>
 
-      <div aria-hidden='true' className='enterprise-control-plane-graphic__connector'>
-        <ArrowDown className='h-6 w-6 text-brand-bg' strokeWidth={1.75} />
-      </div>
+            <div
+              className='enterprise-control-plane-graphic__layer enterprise-control-plane-graphic__reveal'
+              style={revealStyle(REVEAL.contextLayer)}
+            >
+              <div className='flex min-w-0 items-center gap-2'>
+                <IconChip icon={FolderOpen} />
+                <span className='fluid-sm font-medium text-brand-bg'>Context Layer</span>
+              </div>
+              <span
+                className='font-mono text-[12px] leading-[16.896px]'
+                style={{ color: 'var(--neutral-card-dark-muted)' }}
+              >
+                Repos • Docs • Internal data
+              </span>
+            </div>
 
-      <div data-wf-el='acp_graphic_agents' className='enterprise-control-plane-graphic__agents'>
-        {AGENT_TYPES.map((agent) => (
-          <article key={agent.label} data-wf-el='acp_graphic_agent' className='card-dark enterprise-control-plane-graphic__agent-card'>
-            <IconChip icon={agent.icon} />
-            <span className='font-mono text-[13px] leading-[16.896px] text-brand-bg'>{agent.label}</span>
+            <div
+              className='enterprise-control-plane-graphic__layer enterprise-control-plane-graphic__layer--muted enterprise-control-plane-graphic__reveal'
+              style={revealStyle(REVEAL.apiLayer)}
+            >
+              <div className='flex min-w-0 items-center gap-2'>
+                <IconChip icon={Code2} />
+                <span className='fluid-sm font-medium text-brand-bg'>API &amp; Automations</span>
+              </div>
+              <span
+                className='font-mono text-[12px] leading-[16.896px]'
+                style={{ color: 'var(--neutral-card-dark-muted)' }}
+              >
+                GitHub • Slack • Jira • Cron
+              </span>
+            </div>
           </article>
-        ))}
+
+          <aside data-wf-el='acp_graphic_integrations' className='enterprise-control-plane-graphic__integrations'>
+            <p
+              className='enterprise-control-plane-graphic__reveal font-mono text-[14px] font-normal leading-[16.896px]'
+              style={{ ...revealStyle(REVEAL.integrationsLabel), margin: '0 0 16px', color: 'var(--neutral-card-dark-muted)' }}
+            >
+              Integrations
+            </p>
+            <ul className='enterprise-control-plane-graphic__integrations-list'>
+              {INTEGRATIONS.map((item, index) => (
+                <li key={item.label} className='enterprise-control-plane-graphic__integrations-item'>
+                  <div
+                    className='card-dark enterprise-control-plane-graphic__integration-card enterprise-control-plane-graphic__reveal'
+                    style={revealStyle(REVEAL.integrationBase + index)}
+                  >
+                    <IconChip icon={item.icon} />
+                    <span className='font-mono text-[12px] leading-[16.896px] text-brand-bg'>{item.label}</span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </aside>
+        </div>
+
+        <div
+          aria-hidden='true'
+          className='enterprise-control-plane-graphic__connector enterprise-control-plane-graphic__reveal'
+          style={revealStyle(REVEAL.connector)}
+        >
+          <ArrowDown className='h-6 w-6 text-brand-bg' strokeWidth={1.75} />
+        </div>
+
+        <div data-wf-el='acp_graphic_agents' className='enterprise-control-plane-graphic__agents'>
+          {AGENT_TYPES.map((agent, index) => (
+            <article
+              key={agent.label}
+              data-wf-el='acp_graphic_agent'
+              className='card-dark enterprise-control-plane-graphic__agent-card enterprise-control-plane-graphic__reveal'
+              style={revealStyle(REVEAL.agentBase + index)}
+            >
+              <IconChip icon={agent.icon} />
+              <span className='font-mono text-[13px] leading-[16.896px] text-brand-bg'>{agent.label}</span>
+            </article>
+          ))}
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};

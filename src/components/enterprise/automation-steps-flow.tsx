@@ -1,7 +1,8 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useLayoutEffect } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import { Bot, Box, CircleCheck } from 'lucide-react';
 import { BootstrapIcon, type BootstrapIconName } from '~/components/icons/bootstrap-icons';
+import { useEnterpriseScrollReveal } from '~/components/enterprise/use-enterprise-scroll-reveal';
 
 type AutomationStepIcon =
   | { kind: 'bootstrap'; name: BootstrapIconName }
@@ -88,53 +89,7 @@ function layoutAutomationSteps(root: HTMLElement) {
 }
 
 export const AutomationStepsFlow = () => {
-  const rootRef = useRef<HTMLDivElement>(null);
-  const [shouldAnimate, setShouldAnimate] = useState(false);
-  const [isActive, setIsActive] = useState(false);
-
-  useEffect(() => {
-    const root = rootRef.current;
-    if (!root) return undefined;
-
-    const prefersReducedMotion =
-      typeof window.matchMedia === 'function' &&
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-    if (prefersReducedMotion) {
-      return undefined;
-    }
-
-    const isInView = () => {
-      const rect = root.getBoundingClientRect();
-      const viewportHeight = window.innerHeight;
-      return rect.top < viewportHeight * 0.85 && rect.bottom > viewportHeight * 0.15;
-    };
-
-    if (isInView()) {
-      setShouldAnimate(true);
-      requestAnimationFrame(() => {
-        layoutAutomationSteps(root);
-        setIsActive(true);
-      });
-      return undefined;
-    }
-
-    setShouldAnimate(true);
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry?.isIntersecting) {
-          layoutAutomationSteps(root);
-          setIsActive(true);
-          observer.disconnect();
-        }
-      },
-      { threshold: 0.35, rootMargin: '0px 0px -8% 0px' },
-    );
-
-    observer.observe(root);
-    return () => observer.disconnect();
-  }, []);
+  const { rootRef, shouldAnimate, isActive } = useEnterpriseScrollReveal();
 
   useLayoutEffect(() => {
     const root = rootRef.current;
@@ -145,7 +100,7 @@ export const AutomationStepsFlow = () => {
     const handleResize = () => layoutAutomationSteps(root);
     window.addEventListener('resize', handleResize, { passive: true });
     return () => window.removeEventListener('resize', handleResize);
-  }, [shouldAnimate, isActive]);
+  }, [shouldAnimate, isActive, rootRef]);
 
   const rootClassName = [
     'enterprise-automation-steps',

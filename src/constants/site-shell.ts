@@ -55,6 +55,8 @@ export const GET_OPENHANDS_CTA = {
   href: HEADER_GET_OPENHANDS_URL,
 } as const;
 
+export const AGENT_CANVAS_INSTALL_COMMAND = 'npm install -g @openhands/agent-canvas';
+
 export const DESKTOP_NAV_ITEMS: SiteLink[] = [
   { name: 'Product', to: '/product' },
   { name: 'Enterprise', to: '/enterprise' },
