@@ -28,11 +28,14 @@ export const MARKETING_NEUTRAL = {
   fg: NEUTRAL_PALETTE[950],
   accent: NEUTRAL_PALETTE[600],
   muted: NEUTRAL_PALETTE[500],
-  dropdownBg: NEUTRAL_PALETTE[700],
+  dropdownBg: NEUTRAL_PALETTE[950],
   cardDarkBg: NEUTRAL_PALETTE[900],
+  /** Pricing compare table — darker than dropdown surfaces for clearer contrast. */
+  pricingCompareBg: NEUTRAL_PALETTE[950],
   cardDarkMuted: NEUTRAL_PALETTE[500],
   borderRgb: '24, 24, 24',
   fgRgb: '24, 24, 24',
-  dropdownBgRgb: '64, 64, 64',
+  dropdownBgRgb: '24, 24, 24',
   cardDarkBgRgb: '40, 40, 40',
+  pricingCompareBgRgb: '24, 24, 24',
 } as const;

@@ -11,8 +11,6 @@ import { MARKETING_NEUTRAL } from '~/constants/marketing-neutral-colors';
 export const handle = { hideGlobalFooter: true };
 
 const CARD_CHECK_ICON = '/assets/webflow/icons/690cb1513c759a7404df1ba1_check.svg';
-const TABLE_TICK_ICON = '/assets/webflow/icons/691234bd9e72712ffbcf9470_tick.svg';
-
 const PRICING_PLANS = [
   {
     eyebrow: 'Local',
@@ -225,18 +223,27 @@ const COMPARE_SECTION_TEXT: React.CSSProperties = {
   fontFamily: '"Sohne Kraftig", Arial, sans-serif',
 };
 
-// Live's tick image is `display: inline-block` with `width: 10px;
-// height: auto;` (no explicit width/height attributes).  Setting an
-// explicit `height={12}` made the natural-square image stretch to
-// 12×36 inside a 36px-tall flex column — generating 42 image-rendered
-// diffs in the parity report.  Mirror live exactly: drop the
-// explicit `height` and let the natural aspect ratio drive sizing.
+const COMPARE_TICK_SIZE = 20;
+
 const CompareTick = () => (
-  <img
-    src={TABLE_TICK_ICON}
-    alt='tick icon'
-    style={{ display: 'inline-block', width: '12px', height: 'auto' }}
-  />
+  <svg
+    width={COMPARE_TICK_SIZE}
+    height={COMPARE_TICK_SIZE}
+    viewBox='0 0 22 22'
+    fill='none'
+    xmlns='http://www.w3.org/2000/svg'
+    role='img'
+    aria-label='Included'
+    style={{ display: 'inline-block' }}
+  >
+    <path
+      d='M4.77344 10.2387L9.53478 15L17.2262 7.30859'
+      stroke='#FFFF8B'
+      strokeWidth='2.2'
+      strokeLinecap='round'
+      strokeLinejoin='round'
+    />
+  </svg>
 );
 
 const CompareLine = ({
@@ -389,7 +396,7 @@ const CompareTable = () => {
       <section
         data-wf-el='plans-compare'
         className='text-brand-bg plans-compare w-full'
-        style={{ display: 'grid', gap: '8px', padding: '0px', backgroundColor: MARKETING_NEUTRAL.dropdownBg }}
+        style={{ display: 'grid', gap: '8px', padding: '0px', backgroundColor: MARKETING_NEUTRAL.pricingCompareBg }}
       >
         <h2 className='sr-only' data-wf-el='pc-visually-hidden'>
           Compare plans
@@ -457,8 +464,8 @@ const Pricing = () => {
                       <div data-wf-el='standard-wrap'>
                         <div
                           data-wf-el='hero-surface-eyebrow'
-                          className='font-mono text-[14.08px] font-normal leading-[16.896px] text-brand-fg'
-                          style={{ display: 'inline-block', padding: '3.2px 9.6px', marginBottom: '21.12px', borderRadius: '20px', backgroundColor: 'rgb(179, 168, 140)' }}
+                          className='font-mono text-[14.08px] font-normal leading-[16.896px] bg-brand-accent text-brand-fg'
+                          style={{ display: 'inline-block', padding: '3.2px 9.6px', marginBottom: '21.12px', borderRadius: '20px' }}
                         >
                           {plan.eyebrow}
                         </div>
@@ -537,12 +544,12 @@ const Pricing = () => {
           <div
             data-wf-el='card'
             className='relative flex flex-col justify-start overflow-hidden rounded-lg'
-            style={{ borderRadius: '8px', border: '1px solid rgb(179, 168, 140)' }}
+            style={{ borderRadius: '8px' }}
           >
             <div
               data-wf-el='card-body'
               className='relative text-brand-bg'
-              style={{ backgroundColor: MARKETING_NEUTRAL.dropdownBg, flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', padding: 'var(--pricing-card-body-padding)' }}
+              style={{ backgroundColor: MARKETING_NEUTRAL.pricingCompareBg, flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', padding: 'var(--pricing-card-body-padding)', borderRadius: '8px' }}
             >
               <div
                 data-wf-el='table-embed'

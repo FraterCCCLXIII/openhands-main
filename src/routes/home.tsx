@@ -25,11 +25,12 @@ import { HeroAppPreview } from '~/components/hero-app-preview';
 import { HeroWorkflowCarousel } from '~/components/hero-workflow-carousel';
 import { HERO_APP_PREVIEW_SLIDES } from '~/constants/hero-app-preview-slides';
 import { HomeHeroLogoGrid } from '~/components/home-hero-logo-grid';
+import { HomeFullJourneySection } from '~/components/home-full-journey-section';
 import { HomeLovewallMarquee } from '~/components/home-lovewall-marquee';
 import { useMarqueeTiming } from '~/hooks/use-marquee-timing';
 import { HomeVariantSwitcher } from '~/components/home-variant-switcher';
 import { useHomeVariant } from '~/contexts/home-variant-context';
-import { getHomeHeroContentPadding, HOME_HERO_DEFAULT_SUBCOPY, HOME_HERO_VALUE_COPY, usesVersion4HeroCopy } from '~/constants/home-variants';
+import { getHomeHeroContentPadding, HOME_HERO_DEFAULT_SUBCOPY, usesVersion4HeroCopy } from '~/constants/home-variants';
 
 const INSTALL_OPENHANDS_URL = HEADER_GET_OPENHANDS_URL;
 
@@ -115,49 +116,6 @@ const WHY_TEAMS_FEATURES = [
     icon: Box,
   },
 ] as const;
-
-const USE_CASE_COLUMNS = [
-  {
-    label: 'Reduce engineering toil',
-    cards: [
-      {
-        title: 'Speed up code reviews',
-        description: 'Summarize pull requests, apply feedback, fix tests, and push fixes instantly so code reviews move from hours to minutes.',
-        icon: '/assets/webflow/testimonials/690db602c5ec8e837c1ff9b9_Frame48095783.svg',
-      },
-      {
-        title: 'Expand test coverage',
-        description: 'Generate and maintain tests for new features to boost reliability and catch regressions before they ship.',
-        icon: '/assets/webflow/testimonials/690db60c9a0ef2e561f859b8_Frame48095783-1.svg',
-      },
-      {
-        title: 'Automate docs & release notes',
-        description: 'Generate accurate documentation and release notes directly from commits and pull requests, no manual updates required.',
-        icon: '/assets/webflow/testimonials/690db61152b4d406db66af21_Frame48095783-2.svg',
-      },
-    ],
-  },
-  {
-    label: 'Streamline complex work',
-    cards: [
-      {
-        title: 'Refactor old code',
-        description: 'Decompose monoliths, clean up tech debt, and modernize legacy codebases automatically without slowing down the roadmap.',
-        icon: '/assets/webflow/testimonials/690db655aca9f8ee7a0d001f_Frame48095783.svg',
-      },
-      {
-        title: 'Eliminate security debt',
-        description: 'Harness OpenHands to upgrade dependencies, fix security vulnerabilities, and reduce complexity for large scale, multi-repo changes.',
-        icon: '/assets/webflow/testimonials/690db65c8a83399ae0b30aab_Frame48095783-1.svg',
-      },
-      {
-        title: 'Triage & fix prod issues',
-        description: 'Deploy agents to analyze logs, pinpoint root causes, and generate fixed PRs ready for your team to review and approve.',
-        icon: '/assets/webflow/testimonials/690db661c0a9589bc9d70bb3_Frame48095783-2.svg',
-      },
-    ],
-  },
-];
 
 const TESTIMONIALS = [
   {
@@ -447,15 +405,6 @@ const Home = () => {
           <div data-wf-el='hero-preview' className='relative z-10 mx-auto w-full max-w-[1238px] overflow-visible px-4 md:px-6' style={{ paddingTop: '56px', paddingBottom: '56px' }}>
             <HeroAppPreview slides={HERO_APP_PREVIEW_SLIDES} />
             {!isVersion1 ? <HeroWorkflowCarousel topSpacing={isVersion4 ? 80 : 0} /> : null}
-            {isVersion4 ? (
-              <p
-                data-wf-el='hero-preview-lead'
-                className='hero-content-foreground mx-auto max-w-[38ch] text-center fluid-h3 font-medium text-brand-fg'
-                style={{ marginTop: '80px', marginBottom: 0 }}
-              >
-                {HOME_HERO_VALUE_COPY}
-              </p>
-            ) : null}
           </div>
         </div>
 
@@ -499,60 +448,7 @@ const Home = () => {
         </div>
       </section>
 
-      {/* SECTION 2: Automate the Outer Loop (py:80, transparent) */}
-      <section data-wf-el='section' style={{ display: 'block', backgroundColor: 'rgba(0, 0, 0, 0)', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px', position: 'relative' }}>
-        <div data-wf-el='container' className='mx-auto max-w-[1216px]'>
-          {/* Live's H3 "Automate the Outer Loop with AI" inherits the
-            * shared `h2{ margin-bottom: 0.55rem }` (8.8px).  The earlier
-            * `mb-[50px]` was 41.2px too tall and pushed every subsequent
-            * use-case row down by 41px on test. */}
-          <h3 className='max-w-[1216px] section-title text-brand-fg' style={{ marginBottom: '8.8px', marginLeft: '0px' }}>
-            Automate the Outer Loop with AI
-          </h3>
-          <div className='space-y-6'>
-            {USE_CASE_COLUMNS.map((column, index) => (
-              <div
-                key={column.label}
-                data-wf-el='use-case-row'
-                className='overflow-hidden rounded-[19.2px]'
-                style={{ display: 'flex', flexWrap: 'wrap', alignContent: 'stretch', border: '1px solid rgb(179, 168, 140)', marginTop: index === 0 ? '56.95px' : '49.6px' }}
-              >
-                <div
-                  data-wf-el='custom-interface'
-                  style={{ backgroundColor: 'rgb(179, 168, 140)', width: '100%', flex: '0 0 auto', alignSelf: 'flex-start', paddingTop: '16px', paddingBottom: '16px', position: 'static' }}
-                >
-                  <div className='px-6 font-mono text-sm font-normal tracking-normal text-brand-fg' style={{ lineHeight: '16.896px', textTransform: 'none' }}>
-                    {column.label}
-                  </div>
-                </div>
-                <div className='flex w-full flex-wrap' style={{ paddingTop: '40px', paddingBottom: '0px' }}>
-                  {column.cards.map((card) => (
-                    <article key={card.title} className='bg-transparent' style={{ borderRadius: '19.2px', flexBasis: '33.3333%', maxWidth: '33.3333%', paddingLeft: '20px', paddingRight: '20px' }}>
-                      <div className='relative mb-4' style={{ borderRadius: '19.2px', backgroundColor: 'rgba(0, 0, 0, 0)', height: '188px', width: '188px' }}>
-                        {/* Live's testimonial card icon IMG computes
-                         * `position: absolute` (parented by a wrapping
-                         * div with explicit width/height). Mirror that
-                         * so the IMG itself is absolute, not the
-                         * default static block. */}
-                        <img src={card.icon} alt='' className='img-block' style={{ position: 'absolute', inset: 0, width: '188px', height: '188px', objectFit: 'cover', objectPosition: '0% 0%' }} />
-                      </div>
-                      {/* Live's card-title P has `u-mt-sm`+`u-mb-0`
-                          (margin-top: 31.2px, margin-bottom: 0).  Our
-                          earlier mb-2 + 0 mt was inverted. */}
-                      <p className='fluid-body-lg font-medium text-brand-fg' style={{ marginTop: '31.2px', marginBottom: '0px' }}>{card.title}</p>
-                      {/* Live's card-description P has `u-text-darkgray
-                          u-mb-sm` (margin-bottom: 31.2px).  The new
-                          `p { mb: 1em }` default produced 20.8px on
-                          test (font-size 20.8 × 1em). */}
-                      <p className='fluid-body-lg font-medium text-brand-muted' style={{ marginBottom: '31.2px' }}>{card.description}</p>
-                    </article>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      <HomeFullJourneySection />
 
       {/* SECTION 3: Testimonials / black hole (p:0, h:800, transparent, position:relative).
           Live carries data-slider/data-slider-overflow on the section so the

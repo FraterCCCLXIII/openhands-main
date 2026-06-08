@@ -31,17 +31,18 @@ describe('home route parity structure', () => {
     window.localStorage.removeItem(HOME_VARIANT_STORAGE_KEY);
   });
   it('matches the visible heading sequence expected by the parity audit', () => {
-    renderRoute();
+    const { container } = renderRoute();
 
     expect(screen.getByText('One workspace for all your AI coding agents')).toBeInTheDocument();
 
     const headingTexts = screen.getAllByRole('heading').map((heading) => heading.textContent?.trim());
-    expect(headingTexts).toContain('Start with a proven workflow');
+    expect(headingTexts).not.toContain('Start with a proven workflow');
     expect(headingTexts).toContain('Fix Vulnerabilities');
     expect(headingTexts).not.toContain('SDK');
     expect(headingTexts).not.toContain('CLI');
     expect(headingTexts).toContain('Why teams choose OpenHands');
-    expect(headingTexts).toContain('Automate the Outer Loop with AI');
+    expect(headingTexts).not.toContain('Parallel sessions, built-in automations, and a path from your laptop to your whole org.');
+    expect(container.querySelector('[data-wf-el="hero-preview-lead"]')).not.toBeInTheDocument();
     expect(headingTexts).toContain('Developers love OpenHands');
     expect(headingTexts).toContain("FAQ's");
 
@@ -77,7 +78,7 @@ describe('home route parity structure', () => {
     expect(container.innerHTML).toContain('object-cover');
     expect(container.innerHTML).not.toContain('xl:grid-cols-4');
     expect(container.querySelectorAll('.hero-pixel-blast')).toHaveLength(4);
-    expect(screen.queryAllByTestId('footer-social-link')).toHaveLength(3);
+    expect(screen.queryAllByTestId('footer-social-link')).toHaveLength(4);
     expect(container.querySelector('main[data-testid="home-content"]')).toHaveClass('home-mobile-parity');
     expect(container.querySelector('[data-wf-el="hero-subscription"]')).toBeInTheDocument();
     expect(container.querySelector('section.text-center.text-brand-fg > [data-wf-el="container"]')).toBeInTheDocument();
@@ -114,31 +115,31 @@ describe('home route parity structure', () => {
     const { container } = renderRoute();
     selectHomeVariant('v1');
 
-    expect(screen.getByRole('heading', { name: 'Start with a proven workflow' })).toBeInTheDocument();
     expect(screen.getAllByTestId('workflow-card').length).toBeGreaterThan(0);
 
-    const carouselHeading = screen.getByRole('heading', { name: 'Start with a proven workflow' });
     const preview = container.querySelector('[data-wf-el="hero-preview"]');
+    const workflowCarousel = container.querySelector('[data-wf-el="hero-splide_button"]')?.closest('[data-wf-el="container"]');
 
-    expect(carouselHeading.closest('[data-wf-el="hero-preview"]')).not.toBe(preview);
-    expect(container.querySelector('[data-wf-el="hero-splide_heading"]')?.closest('[data-wf-el="container"]')).toBeInTheDocument();
+    expect(container.querySelector('[data-wf-el="hero-preview-lead"]')).not.toBeInTheDocument();
+    expect(container.querySelector('[data-wf-el="hero-splide_heading"]')).not.toBeInTheDocument();
+    expect(workflowCarousel?.closest('[data-wf-el="hero-preview"]')).not.toBe(preview);
   });
 
   it('shows Version 4 workflow carousel below the hero preview when selected', () => {
     const { container } = renderRoute();
     selectHomeVariant('v4');
 
-    expect(screen.getByRole('heading', { name: 'Start with a proven workflow' })).toBeInTheDocument();
     expect(screen.getAllByTestId('workflow-card').length).toBeGreaterThan(0);
     expect(screen.queryAllByTestId('workflow-launch')).toHaveLength(0);
     expect(container.querySelectorAll('[data-modal="open"]')).toHaveLength(0);
 
     const preview = container.querySelector('[data-wf-el="hero-preview"]');
-    const carouselHeading = screen.getByRole('heading', { name: 'Start with a proven workflow' });
+    const workflowCarousel = container.querySelector('[data-wf-el="hero-splide_button"]')?.closest('[data-wf-el="container"]');
     const appPreview = screen.getByTestId('hero-app-preview');
 
-    expect(carouselHeading.closest('[data-wf-el="hero-preview"]')).toBe(preview);
-    expect(appPreview.compareDocumentPosition(carouselHeading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(container.querySelector('[data-wf-el="hero-preview-lead"]')).not.toBeInTheDocument();
+    expect(workflowCarousel?.closest('[data-wf-el="hero-preview"]')).toBe(preview);
+    expect(appPreview.compareDocumentPosition(workflowCarousel!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   it('uses compact header nav links and CTA on Version 3', () => {
@@ -163,23 +164,21 @@ describe('home route parity structure', () => {
     expect(headerCta.parentElement).toHaveStyle({ padding: '0.65em 1.35em' });
   });
 
-  it('places value prop below preview with darker larger copy on Version 4', () => {
+  it('places the workflow carousel below the preview on Version 4 without a lead paragraph', () => {
     const { container } = renderRoute();
     selectHomeVariant('v4');
 
     expect(screen.queryByText(HOME_HERO_PLATFORM_COPY)).not.toBeInTheDocument();
-    expect(screen.getByText(HOME_HERO_VALUE_COPY)).toBeInTheDocument();
+    expect(screen.queryByText(HOME_HERO_VALUE_COPY)).not.toBeInTheDocument();
     expect(container.querySelector('[data-wf-el="hero-heading_paragraph"]')).not.toBeInTheDocument();
+    expect(container.querySelector('[data-wf-el="hero-preview-lead"]')).not.toBeInTheDocument();
 
-    const previewLead = container.querySelector('[data-wf-el="hero-preview-lead"]');
     const preview = container.querySelector('[data-wf-el="hero-preview"]');
     const appPreview = screen.getByTestId('hero-app-preview');
-    const carouselHeading = screen.getByRole('heading', { name: 'Start with a proven workflow' });
+    const workflowCarousel = container.querySelector('[data-wf-el="hero-splide_button"]')?.closest('[data-wf-el="container"]');
 
-    expect(previewLead?.closest('[data-wf-el="hero-preview"]')).toBe(preview);
-    expect(previewLead).toHaveClass('text-brand-fg', 'fluid-h3');
-    expect(appPreview.compareDocumentPosition(carouselHeading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(carouselHeading.compareDocumentPosition(previewLead!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(workflowCarousel?.closest('[data-wf-el="hero-preview"]')).toBe(preview);
+    expect(appPreview.compareDocumentPosition(workflowCarousel!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(screen.queryByText('OpenHands works with all of your agents')).not.toBeInTheDocument();
 
     const heroSubscription = container.querySelector('[data-wf-el="hero-subscription"]');

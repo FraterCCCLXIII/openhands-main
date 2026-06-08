@@ -59,8 +59,9 @@
   --neutral-600: #565656;
   --neutral-500: #737373;
   --neutral-400: #979797;
-  --neutral-dropdown-bg: #404040;
+  --neutral-dropdown-bg: #181818;
   --neutral-card-dark-bg: #282828;
+  --pricing-compare-bg: #181818;
   --neutral-card-dark-muted: #737373;
 
   /* Colors - tan/yellow unchanged; browns → neutral greys */
@@ -1685,8 +1686,9 @@
   justify-content: space-between;
 }
 
-[data-wf-el='plans-compare'] {
-  background-color: var(--neutral-dropdown-bg);
+.pricing-page [data-wf-el='card-body']:has([data-wf-el='plans-compare']),
+.pricing-page [data-wf-el='plans-compare'] {
+  background-color: var(--pricing-compare-bg) !important;
 }
 
 .pricing-compare-mobile-control {

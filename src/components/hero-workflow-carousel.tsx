@@ -132,20 +132,6 @@ export function HeroWorkflowCarousel({ topSpacing = 0 }: HeroWorkflowCarouselPro
       className='relative z-10 mx-auto w-full max-w-[1238px]'
       style={topSpacing > 0 ? { marginTop: `${topSpacing}px` } : undefined}
     >
-      <div
-        data-wf-el='hero-splide_top'
-        className='mb-4 flex w-full flex-wrap justify-center gap-x-12 gap-y-4 text-center'
-        style={{ alignItems: 'center', paddingTop: '32px' }}
-      >
-        <h2
-          data-wf-el='hero-splide_heading'
-          className='fluid-h4 w-full text-center font-medium text-brand-fg'
-          style={{ letterSpacing: '-0.02em', marginBottom: '0px' }}
-        >
-          Start with a proven workflow
-        </h2>
-      </div>
-
       <div className='flex items-center gap-3 pb-8 md:gap-4 md:pb-10'>
         <button
           type='button'

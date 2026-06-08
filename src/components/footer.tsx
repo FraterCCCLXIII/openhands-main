@@ -1,7 +1,7 @@
 import { Link, useLocation } from 'react-router';
 import { PixelBlastBackground } from '~/components/pixel-blast-background';
 import clsx from 'clsx';
-import { GET_OPENHANDS_CTA } from '~/constants/site-shell';
+import { GET_OPENHANDS_CTA, OPENHANDS_LINKEDIN_URL } from '~/constants/site-shell';
 import { normalizePathname } from '~/utils/normalize-pathname';
 import { OverlayLinkButton } from '~/components/overlay-link-button';
 import { useWidth } from '~/hooks/use-media';
@@ -115,6 +115,12 @@ const SOCIAL_LINKS = [
     href: 'https://github.com/OpenHands/OpenHands',
     icon: '/assets/webflow/misc/6908d21a36dee3e7147b3d21_Frame48095724.svg',
     label: 'GitHub',
+    external: true,
+  },
+  {
+    href: OPENHANDS_LINKEDIN_URL,
+    icon: '/assets/webflow/misc/openhands-footer-linkedin.svg',
+    label: 'LinkedIn',
     external: true,
   },
 ] as const;
@@ -255,30 +261,15 @@ const WebflowFooterContent = ({
         </div>
       ) : null}
 
-      {showSocialLinks ? (
-        <div data-wf-el='footer-social-row' className='row u-mt-lg row-justify-center u-mb-md' style={{ ...FOOTER_ROW_STYLE, justifyContent: 'center', marginTop: isManifestoMobile ? '64px' : showMarketingCta ? 'var(--footer-social-margin-top, 128px)' : '80px', marginBottom: 'var(--footer-social-margin-bottom, 49px)', rowGap: '40px', textAlign: 'start' }}>
-          <div className='col' style={FOOTER_COL_STYLE}>
-            <div className='row row-gap-sm row-justify-center' style={{ ...FOOTER_ROW_STYLE, justifyContent: 'center', columnGap: '8px', rowGap: '16px' }}>
-              {SOCIAL_LINKS.map((item) => (
-                <div key={item.label} className='col col-shrink' style={FOOTER_COL_SHRINK_NO_PADDING_STYLE}>
-                  <a
-                    href={item.href}
-                    {...('external' in item && item.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-                    className='standard-media contain-center w-inline-block'
-                    data-wf-el='standard-media'
-                    data-testid='footer-social-link'
-                    style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '65px', height: '65px', maxWidth: '100%', textAlign: 'start', textDecoration: 'underline', textDecorationThickness: '1.6px', textUnderlineOffset: '1.6px', objectFit: 'contain' }}
-                  >
-                    <img data-wf-el='standard-media-img' src={item.icon} alt='' style={{ width: '65px', height: '65px', objectFit: 'scale-down', textUnderlineOffset: '1.6px' }} />
-                  </a>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      ) : null}
-
-      <div className='row row-justify-center u-mb-md' style={{ ...FOOTER_ROW_STYLE, justifyContent: 'center', marginBottom: 'var(--footer-bottom-row-margin-bottom, 40px)' }}>
+      <div
+        className='row row-justify-center u-mb-md'
+        style={{
+          ...FOOTER_ROW_STYLE,
+          justifyContent: 'center',
+          marginTop: isManifestoMobile ? '64px' : showMarketingCta ? 'var(--footer-social-margin-top, 128px)' : showSocialLinks ? '80px' : undefined,
+          marginBottom: 'var(--footer-bottom-row-margin-bottom, 40px)',
+        }}
+      >
         <div className='col col-lg-8 footer-logo-col' style={FOOTER_COL_LG_8_STYLE}>
           <div className='row row-gap-sm row-justify-center' style={{ ...FOOTER_ROW_STYLE, justifyContent: 'center', rowGap: '16px' }}>
             {isManifestoMobile ? (
@@ -306,7 +297,7 @@ const WebflowFooterContent = ({
               alignItems: 'center',
               gap: '16px',
               textAlign: 'center',
-              marginBottom: '21.12px',
+              marginBottom: showSocialLinks ? '16px' : '21.12px',
             }}
           >
             {showCopyright ? (
@@ -334,6 +325,29 @@ const WebflowFooterContent = ({
               Contact
             </Link>
           </div>
+          {showSocialLinks ? (
+            <div data-wf-el='footer-social-row' className='row row-justify-center' style={{ ...FOOTER_ROW_STYLE, justifyContent: 'center', marginBottom: 'var(--footer-social-margin-bottom, 49px)', rowGap: '16px', textAlign: 'start' }}>
+              <div className='col' style={{ ...FOOTER_COL_STYLE, flex: '1 1 100%', maxWidth: '100%' }}>
+                <div className='row row-gap-sm row-justify-center' style={{ ...FOOTER_ROW_STYLE, justifyContent: 'center', columnGap: '8px', rowGap: '16px' }}>
+                  {SOCIAL_LINKS.map((item) => (
+                    <div key={item.label} className='col col-shrink' style={FOOTER_COL_SHRINK_NO_PADDING_STYLE}>
+                      <a
+                        href={item.href}
+                        {...('external' in item && item.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                        aria-label={item.label}
+                        className='footer-social-link standard-media contain-center inline-flex items-center justify-center rounded-full border border-transparent text-brand-fg transition-all duration-200 ease-out hover:border-[rgba(24,24,24,0.2)] hover:bg-[rgba(255,255,255,0.34)] hover:backdrop-blur-[5px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[rgb(24,24,24)]/30 active:scale-95'
+                        data-wf-el='standard-media'
+                        data-testid='footer-social-link'
+                        style={{ width: '60px', height: '60px', maxWidth: '100%', textDecoration: 'none' }}
+                      >
+                        <img data-wf-el='standard-media-img' src={item.icon} alt='' style={{ width: '44px', height: '44px', objectFit: 'contain' }} />
+                      </a>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ) : null}
         </div>
         {footerContainerNudge ? <div aria-hidden='true' style={{ flexBasis: '100%', height: `${footerContainerNudge}px` }} /> : null}
       </div>

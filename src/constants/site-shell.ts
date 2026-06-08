@@ -57,6 +57,8 @@ export const GET_OPENHANDS_CTA = {
 
 export const AGENT_CANVAS_INSTALL_COMMAND = 'npm install -g @openhands/agent-canvas';
 
+export const OPENHANDS_LINKEDIN_URL = 'https://www.linkedin.com/company/103318432/';
+
 export const DESKTOP_NAV_ITEMS: SiteLink[] = [
   { name: 'Product', to: '/product' },
   { name: 'Enterprise', to: '/enterprise' },
