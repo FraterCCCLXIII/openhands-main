@@ -458,9 +458,9 @@ const Home = () => {
         <div data-wf-el='asci-wrap' className='absolute inset-0 overflow-hidden' style={{ backgroundColor: 'rgb(255, 255, 139)', pointerEvents: 'auto' }}>
           <PixelBlastBackground />
         </div>
-        <div data-wf-el='hero-track' className='relative z-10 mx-auto flex h-full max-w-[1238px]' style={{ paddingBottom: '0px', paddingLeft: '0px', paddingRight: '0px', justifyContent: 'center', alignItems: 'center', gap: '10%' }}>
+        <div data-wf-el='hero-track' className='relative z-10 mx-auto box-border flex h-full w-full max-w-[1238px] px-5 md:px-0' style={{ paddingBottom: '0px', justifyContent: 'center', alignItems: 'center', gap: '10%' }}>
           {TESTIMONIALS.map((t, i) => (
-            <div key={t.name} data-wf-el='card-body' style={{ width: '1238px', backgroundColor: 'rgba(0, 0, 0, 0)', display: 'block', color: 'rgb(247, 243, 238)', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', position: i === activeTestimonial ? 'static' : 'absolute', opacity: i === activeTestimonial ? 1 : 0, pointerEvents: i === activeTestimonial ? 'auto' : 'none', left: i === activeTestimonial ? undefined : '-9999px' }}>
+            <div key={t.name} data-wf-el='card-body' className='w-full max-w-[1238px]' style={{ backgroundColor: 'rgba(0, 0, 0, 0)', display: 'block', color: 'rgb(247, 243, 238)', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', position: i === activeTestimonial ? 'static' : 'absolute', opacity: i === activeTestimonial ? 1 : 0, pointerEvents: i === activeTestimonial ? 'auto' : 'none', left: i === activeTestimonial ? undefined : '-9999px' }}>
               {/* Live renders the testimonial quote as <h2 class="h2 ..."/>
                   inside .testimonial_quote.  Matching the heading semantic
                   keeps the heading-order audit aligned (live has 13 visible
@@ -468,7 +468,7 @@ const Home = () => {
               {/* Live's testimonial heading is `text-align: center` and
                   uses `margin-bottom: 8.8px` (h2-2 token).  Our previous
                   `mb-6` (24px) caused a ~15px drift after the quote. */}
-              <div style={{ width: '1038px', paddingLeft: '4px', paddingRight: '4px', marginLeft: 'auto', marginRight: 'auto' }}>
+              <div className='mx-auto w-full max-w-[1038px] px-1'>
                 <h2 className='section-title text-brand-fg' style={{ textAlign: 'center', marginBottom: '8.8px' }}>
                   {t.quote}
                 </h2>
@@ -490,7 +490,7 @@ const Home = () => {
           ))}
         </div>
         <div data-wf-el='slide-controls' style={{ zIndex: 10, width: '100%', height: '59px', position: 'absolute', inset: 'auto 0% 0%', color: 'rgb(24, 24, 24)' }}>
-          <div className='mx-auto flex max-w-[1238px] items-end justify-between'>
+          <div className='mx-auto box-border flex w-full max-w-[1238px] items-end justify-between px-5 md:px-0'>
             <div className='flex font-mono text-[14.08px] font-normal leading-[16.896px] text-brand-fg'>
               <span>3</span><span>/</span><span>3</span>
             </div>

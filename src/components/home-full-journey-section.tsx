@@ -82,8 +82,8 @@ export function HomeFullJourneySection() {
       <div className='mx-auto max-w-[1238px] px-5'>
         <div className='mx-auto text-center'>
           <h2
-            className='section-title whitespace-nowrap text-brand-fg'
-            style={{ marginBottom: 0, overflowWrap: 'normal' }}
+            className='section-title text-brand-fg md:whitespace-nowrap'
+            style={{ marginBottom: 0 }}
           >
             {JOURNEY_TITLE}
           </h2>

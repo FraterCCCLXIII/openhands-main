@@ -46,7 +46,7 @@ const WORKFLOWS: WorkflowItem[] = [
 ];
 
 const WORKFLOW_CARD_CLASS =
-  'flex w-[270px] flex-shrink-0 flex-col gap-4 rounded-2xl border border-[rgba(24,24,24,0.2)] bg-[#f7f3ee] p-6 md:w-[352px]';
+  'hero-workflow-carousel__card flex w-[270px] flex-shrink-0 flex-col gap-4 rounded-2xl border border-[rgba(24,24,24,0.2)] bg-[#f7f3ee] p-6 md:w-[352px]';
 
 const WORKFLOW_ARROW_BTN_CLASS =
   'flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full border border-[rgba(24,24,24,0.2)] bg-transparent text-brand-fg transition-all duration-200 ease-out';
@@ -79,7 +79,7 @@ export function HeroWorkflowCarousel({ topSpacing = 0 }: HeroWorkflowCarouselPro
   const [maxWorkflowOffset, setMaxWorkflowOffset] = React.useState(WORKFLOWS.length - 1);
   const [maxWorkflowTranslate, setMaxWorkflowTranslate] = React.useState(0);
 
-  React.useEffect(() => {
+  React.useLayoutEffect(() => {
     const measureWorkflowCarousel = () => {
       const track = workflowTrackRef.current;
       const viewport = workflowViewportRef.current;
@@ -87,8 +87,18 @@ export function HeroWorkflowCarousel({ topSpacing = 0 }: HeroWorkflowCarouselPro
       if (!track || !viewport || !firstCard) return;
 
       const gap = Number.parseFloat(getComputedStyle(track).columnGap || getComputedStyle(track).gap || '24') || 24;
+      const viewportWidth = viewport.clientWidth;
+
+      const isMobileLayout = viewportWidth > 0 && viewportWidth < 768;
+
+      if (isMobileLayout) {
+        viewport.style.setProperty('--workflow-viewport-width', `${viewportWidth}px`);
+      } else {
+        viewport.style.removeProperty('--workflow-viewport-width');
+      }
+
       const step = firstCard.offsetWidth + gap;
-      const maxTranslate = Math.max(0, track.scrollWidth - viewport.clientWidth);
+      const maxTranslate = Math.max(0, track.scrollWidth - viewportWidth);
       const lastOffset = step > 0 ? Math.ceil(maxTranslate / step) : 0;
 
       setWorkflowCardStep(step);
@@ -129,10 +139,13 @@ export function HeroWorkflowCarousel({ topSpacing = 0 }: HeroWorkflowCarouselPro
   return (
     <div
       data-wf-el='container'
-      className='relative z-10 mx-auto w-full max-w-[1238px]'
+      className='hero-workflow-carousel relative z-10 mx-auto w-full max-w-[1238px]'
       style={topSpacing > 0 ? { marginTop: `${topSpacing}px` } : undefined}
     >
-      <div className='flex items-center gap-3 pb-8 md:gap-4 md:pb-10'>
+      <div
+        data-wf-el='hero-splide_buttons'
+        className='hero-workflow-carousel__controls flex items-center gap-3 pb-8 md:gap-4 md:pb-10'
+      >
         <button
           type='button'
           onClick={() => shiftWorkflow(-1)}
@@ -149,12 +162,12 @@ export function HeroWorkflowCarousel({ topSpacing = 0 }: HeroWorkflowCarouselPro
           </span>
         </button>
 
-        <div ref={workflowViewportRef} className='min-w-0 flex-1 overflow-hidden'>
+        <div ref={workflowViewportRef} className='hero-workflow-carousel__viewport min-w-0 flex-1 overflow-hidden'>
           <LazyMotion features={domAnimation}>
             <m.div
               ref={workflowTrackRef}
               data-splide='workflows'
-              className='flex w-max gap-6'
+              className='hero-workflow-carousel__track flex w-max gap-6'
               animate={{ x: -workflowTranslateX }}
               transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
             >
