@@ -156,24 +156,12 @@
     "login": "huybery"
   },
   {
-    "id": 65051545,
-    "login": "bashwara"
-  },
-  {
     "id": 12579618,
     "login": "jlav"
   },
   {
-    "id": 182316592,
-    "login": "nehaaprasad"
-  },
-  {
-    "id": 2945814,
-    "login": "happyherp"
-  },
-  {
-    "id": 41898282,
-    "login": "github-actions[bot]"
+    "id": 65051545,
+    "login": "bashwara"
   },
   {
     "id": 97225946,
@@ -184,20 +172,32 @@
     "login": "saurya"
   },
   {
-    "id": 25279767,
-    "login": "idagelic"
+    "id": 41898282,
+    "login": "github-actions[bot]"
+  },
+  {
+    "id": 2945814,
+    "login": "happyherp"
+  },
+  {
+    "id": 182316592,
+    "login": "nehaaprasad"
   },
   {
     "id": 5805397,
     "login": "isavita"
   },
   {
-    "id": 44589723,
-    "login": "jpelletier1"
+    "id": 25279767,
+    "login": "idagelic"
   },
   {
     "id": 8560257,
     "login": "foragerr"
+  },
+  {
+    "id": 44589723,
+    "login": "jpelletier1"
   },
   {
     "id": 20098977,
