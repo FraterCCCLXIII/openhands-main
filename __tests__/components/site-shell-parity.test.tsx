@@ -37,7 +37,7 @@ describe('site shell parity helpers', () => {
     expect(container.querySelector('section[data-wf-el="section"]')).toHaveClass('section', 'u-bg-primary', 'footer-webflow-layout');
     expect(container.querySelector('[data-wf-el="container"]')).toHaveStyle({
       width: 'var(--footer-container-width, 90%)',
-      height: 'var(--footer-container-height, auto)',
+      height: 'auto',
     });
     expect(container.querySelector('[data-wf-el="paragraph-lg"]')).toHaveStyle({
       fontSize: 'var(--footer-paragraph-lg-font-size, var(--paragraph-lg-font-size))',

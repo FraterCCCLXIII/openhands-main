@@ -219,7 +219,7 @@ const WebflowFooterContent = ({
     zIndex: 1,
     width: isManifestoMobile ? '90%' : 'var(--footer-container-width, 90%)',
     maxWidth: '1238px',
-    height: isManifesto ? (isManifestoMobile ? '1172.27px' : '950.1875px') : 'var(--footer-container-height, auto)',
+    height: isManifesto ? (isManifestoMobile ? '1172.27px' : '950.1875px') : 'auto',
     top: isManifestoMobile ? '0px' : 'var(--footer-container-top, 0px)',
     marginLeft: 'auto',
     marginRight: 'auto',

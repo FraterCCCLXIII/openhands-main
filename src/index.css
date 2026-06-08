@@ -137,9 +137,11 @@
   --pricing-accordion-icon-display: block;
   --pricing-accordion-icon-align-items: normal;
   --footer-section-padding-y: 80px;
-  --footer-section-height: 1209.375px;
+  --footer-section-height: auto;
   --footer-container-width: 100%;
-  --footer-container-height: 950.1875px;
+  --footer-container-height: auto;
+  --footer-bottom-row-margin-bottom: 24px;
+  --footer-social-margin-bottom: 24px;
   --footer-nav-link-height: 51.171875px;
   --footer-privacy-link-width: 118.265625px;
   --pricing-first-faq-rich-text-height: 243.109375px;
@@ -193,9 +195,11 @@
     --pricing-accordion-icon-display: flex;
     --pricing-accordion-icon-align-items: center;
     --footer-section-padding-y: 49.5714px;
-    --footer-section-height: 1370.578125px;
+    --footer-section-height: auto;
     --footer-container-width: 90%;
-    --footer-container-height: 1172.265625px;
+    --footer-container-height: auto;
+    --footer-bottom-row-margin-bottom: 0px;
+    --footer-social-margin-bottom: 16px;
     --footer-nav-link-height: 51.171875px;
     --footer-privacy-link-width: 118.265625px;
     --pricing-first-faq-rich-text-height: 444.625px;
@@ -377,15 +381,15 @@
     --product-surface-heading-margin-bottom: 5.90929px;
     --product-hero-paragraph-margin-bottom: 17.7571px;
     --footer-container-width: 90%;
-    --footer-container-height: 1249.844px;
-    --footer-section-height: 1448.16px;
+    --footer-container-height: auto;
+    --footer-section-height: auto;
     --footer-col-lg-8-flex-basis: 100%;
     --footer-col-lg-8-max-width: 100%;
     --footer-nav-flex-direction: column;
     --footer-nav-align-items: center;
     --footer-social-margin-top: 64px;
-    --footer-social-margin-bottom: 49px;
-    --footer-bottom-row-margin-bottom: 40px;
+    --footer-social-margin-bottom: 16px;
+    --footer-bottom-row-margin-bottom: 0px;
     --footer-logo-margin-top: 39px;
     --footer-eyebrow-font-size: 14px;
     --footer-compact-spacer-height: 10.187px;
@@ -2940,8 +2944,22 @@
   }
 
   .home-mobile-parity [data-wf-el='footer-social-row'] {
-    margin-top: 80px !important;
-    margin-bottom: 49px !important;
+    margin-top: 48px !important;
+    margin-bottom: 16px !important;
+  }
+
+  .home-mobile-parity > section:nth-of-type(9) > [data-wf-el='container'],
+  .home-mobile-parity > section:nth-of-type(9) .container.u-position-relative {
+    height: auto !important;
+    min-height: 0 !important;
+  }
+
+  .home-mobile-parity > section:nth-of-type(9) .row.u-mb-md {
+    margin-bottom: 0 !important;
+  }
+
+  .home-mobile-parity > section:nth-of-type(9) {
+    padding-bottom: 24px !important;
   }
 
   .home-mobile-parity .col-lg-8,

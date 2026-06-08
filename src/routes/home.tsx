@@ -685,7 +685,7 @@ const Home = () => {
       </section>
 
       {/* SECTION 7: CTA (u-bg-primary, py:80, yellow bg) */}
-      <section data-wf-el='section' style={{ display: 'block', backgroundColor: 'rgb(255, 255, 139)', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px', position: 'relative', height: '1209.375px' }} className='text-center text-brand-fg'>
+      <section data-wf-el='section' style={{ display: 'block', backgroundColor: 'rgb(255, 255, 139)', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px', position: 'relative' }} className='text-center text-brand-fg'>
         <div data-wf-el='asci-wrap' className='absolute inset-0 overflow-hidden' style={{ pointerEvents: 'auto' }}>
           <PixelBlastBackground />
         </div>
@@ -710,7 +710,7 @@ const Home = () => {
             * max-w-[1238px] container with no additional max-width limit
             * and no second `data-wf-el="footer-nav"` wrapper -- its only
             * footer-nav is the one Footer renders internally. */}
-          <div className='mt-[80px]'>
+          <div className='mt-12 md:mt-20'>
             {/* Pass showMarketingCta={false} because home already renders the
               * "Building the open standard..." headline + CTAs above; without
               * this Footer would render the entire marketing CTA block a
