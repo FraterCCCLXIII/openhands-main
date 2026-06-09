@@ -1,11 +1,50 @@
 import { useEffect, useState, type ReactNode } from 'react';
+import { type LoaderFunctionArgs, useLoaderData } from 'react-router';
 import type { Route } from './+types/community';
 import { Footer } from '~/components/footer';
 import { getRouteFooterProps } from '~/constants/route-layout';
 import { OverlayLinkButton } from '~/components/overlay-link-button';
 import { createSocialPreviewMeta } from '~/utils/seo';
 
-const LATEST_COMMUNITY_CALL = {
+type CommunityCall = {
+  description: string;
+  date: string;
+  duration?: string;
+  videoUrl: string;
+  embedUrl: string;
+};
+
+type CommunityEvent = {
+  id?: string;
+  title: string;
+  description: string;
+  date: string;
+  time: string;
+  startsAt?: string;
+  href: string;
+  titleScale?: number;
+  descriptionHeight?: string;
+};
+
+type FirstTimeContributor = {
+  name: string;
+  title: string;
+  href: string;
+  avatar: string;
+};
+
+type LoaderData = {
+  latestCommunityCall: CommunityCall;
+  events: CommunityEvent[];
+  firstTimeContributors: FirstTimeContributor[];
+};
+
+const COMMUNITY_CALL_PLAYLIST_ID = 'PLuSH2PRpZ97vwUwxcRHHf7kv6TaksGMJP';
+const LUMA_LIST_EVENTS_ENDPOINT = 'https://public-api.luma.com/v1/calendar/list-events';
+const CHAMPIONS_LIST_CONTRIBUTORS_ENDPOINT =
+  'https://api.github.com/repos/OpenHands/champions-list/contents/data/contributors.generated.json';
+
+const FALLBACK_LATEST_COMMUNITY_CALL: CommunityCall = {
   description:
     'Catch up on our most recent community call where we discuss updates, roadmap, and answer questions from the community.',
   date: 'May 8, 2026',
@@ -14,7 +53,7 @@ const LATEST_COMMUNITY_CALL = {
   embedUrl: 'https://www.youtube.com/embed/20HNd4cb2vA',
 };
 
-const EVENTS = [
+const FALLBACK_EVENTS: CommunityEvent[] = [
   {
     title: 'Scaling Enterprise AI Agents: Security, Privacy & Real-World Deployment',
     titleScale: 1.0032,
@@ -72,9 +111,233 @@ By RSVPing, you consent to receive marketing emails from the hosts. You can with
   },
 ];
 
+const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+const parseXmlTag = (xml: string, tagName: string) => {
+  const tag = escapeRegExp(tagName);
+  const match = xml.match(new RegExp(`<${tag}>([^<]+)</${tag}>`));
+  return match?.[1]?.trim() || null;
+};
+
+const formatUtc = (value: string, options: Intl.DateTimeFormatOptions) =>
+  new Intl.DateTimeFormat('en-US', { ...options, timeZone: 'UTC' }).format(new Date(value));
+
+const youtubeVideoUrl = (videoId: string) => `https://www.youtube.com/watch?v=${videoId}`;
+const youtubeEmbedUrl = (videoId: string) => `https://www.youtube.com/embed/${videoId}`;
+
+const fetchLatestYouTubePlaylistVideo = async (): Promise<
+  | { videoId: string; publishedAt?: string }
+  | null
+> => {
+  const url = new URL('https://www.youtube.com/feeds/videos.xml');
+  url.searchParams.set('playlist_id', COMMUNITY_CALL_PLAYLIST_ID);
+
+  const response = await fetch(url.toString());
+  if (!response.ok) return null;
+
+  const xml = await response.text();
+  const entryMatch = xml.match(/<entry>([\s\S]*?)<\/entry>/);
+  const entry = entryMatch?.[1];
+  if (!entry) return null;
+
+  const videoId = parseXmlTag(entry, 'yt:videoId');
+  if (!videoId) return null;
+
+  const publishedAt = parseXmlTag(entry, 'published') ?? undefined;
+  return { videoId, publishedAt };
+};
+
+const fetchUpcomingLumaEvents = async (limit = 3): Promise<CommunityEvent[] | null> => {
+  const apiKey = process.env.LUMA_KEY;
+  if (!apiKey) return null;
+
+  const url = new URL(LUMA_LIST_EVENTS_ENDPOINT);
+  url.searchParams.set('after', new Date().toISOString());
+  url.searchParams.set('sort_column', 'start_at');
+  url.searchParams.set('sort_direction', 'asc');
+  url.searchParams.set('pagination_limit', String(limit));
+  url.searchParams.set('status', 'approved');
+
+  const response = await fetch(url.toString(), {
+    headers: {
+      'x-luma-api-key': apiKey,
+    },
+  });
+
+  if (!response.ok) return null;
+
+  const payload = (await response.json()) as unknown;
+  if (!payload || typeof payload !== 'object') return null;
+
+  const entries = (payload as { entries?: unknown }).entries;
+  if (!Array.isArray(entries)) return null;
+
+  const events: CommunityEvent[] = [];
+
+  for (const entry of entries) {
+    if (!entry || typeof entry !== 'object') continue;
+    const maybeEvent = 'event' in entry ? (entry as { event: unknown }).event : entry;
+    if (!maybeEvent || typeof maybeEvent !== 'object') continue;
+
+    const event = maybeEvent as Record<string, unknown>;
+    const visibility = typeof event.visibility === 'string' ? event.visibility : null;
+    if (visibility === 'private' || visibility === 'members-only') continue;
+
+    const startsAt = typeof event.start_at === 'string' ? event.start_at : undefined;
+    const title = typeof event.name === 'string' ? event.name : '';
+    const href = typeof event.url === 'string' ? event.url : '';
+
+    if (!startsAt || !title || !href) continue;
+
+    const description =
+      typeof event.description === 'string'
+        ? event.description
+        : typeof event.description_md === 'string'
+          ? event.description_md
+          : '';
+
+    events.push({
+      id: typeof event.id === 'string' ? event.id : undefined,
+      title,
+      description,
+      startsAt,
+      date: formatUtc(startsAt, { month: 'short', day: 'numeric', year: 'numeric' }),
+      time: formatUtc(startsAt, {
+        hour: 'numeric',
+        minute: '2-digit',
+        timeZoneName: 'short',
+      }),
+      href,
+    });
+  }
+
+  return events;
+};
+
+const decodeBase64Utf8 = (value: string): string => {
+  if (typeof Buffer !== 'undefined') {
+    return Buffer.from(value, 'base64').toString('utf-8');
+  }
+
+  // eslint-disable-next-line no-restricted-globals
+  return decodeURIComponent(escape(atob(value)));
+};
+
+const fetchFirstTimeContributors = async (limit = 4): Promise<FirstTimeContributor[] | null> => {
+  const githubToken = process.env.GITHUB_TOKEN;
+  if (!githubToken) return null;
+
+  const response = await fetch(CHAMPIONS_LIST_CONTRIBUTORS_ENDPOINT, {
+    headers: {
+      accept: 'application/vnd.github+json',
+      authorization: `Bearer ${githubToken}`,
+    },
+  });
+
+  if (!response.ok) return null;
+
+  const json = (await response.json()) as unknown;
+  if (!json || typeof json !== 'object') return null;
+
+  const content = (json as { content?: unknown }).content;
+  if (typeof content !== 'string' || !content) return null;
+
+  let payload: unknown;
+  try {
+    payload = JSON.parse(decodeBase64Utf8(content.replace(/\n/g, '')));
+  } catch {
+    return null;
+  }
+
+  if (!payload || typeof payload !== 'object') return null;
+
+  const contributors = (payload as { contributors?: unknown }).contributors;
+  if (!Array.isArray(contributors)) return null;
+
+  const parsed = contributors
+    .map((entry) => {
+      if (!entry || typeof entry !== 'object') return null;
+      const login = typeof (entry as { login?: unknown }).login === 'string' ? (entry as { login: string }).login : null;
+      const avatarUrl = typeof (entry as { avatarUrl?: unknown }).avatarUrl === 'string' ? (entry as { avatarUrl: string }).avatarUrl : null;
+      const firstMergedPr = (entry as { firstMergedPr?: unknown }).firstMergedPr;
+      if (!login || !avatarUrl || !firstMergedPr || typeof firstMergedPr !== 'object') return null;
+
+      const mergedAt = typeof (firstMergedPr as { mergedAt?: unknown }).mergedAt === 'string' ? (firstMergedPr as { mergedAt: string }).mergedAt : null;
+      const title = typeof (firstMergedPr as { title?: unknown }).title === 'string' ? (firstMergedPr as { title: string }).title : null;
+      const url = typeof (firstMergedPr as { url?: unknown }).url === 'string' ? (firstMergedPr as { url: string }).url : null;
+
+      if (!mergedAt || !title || !url) return null;
+
+      return {
+        mergedAt,
+        contributor: {
+          name: login,
+          title,
+          href: url,
+          avatar: avatarUrl,
+        } satisfies FirstTimeContributor,
+      };
+    })
+    .filter((entry): entry is { mergedAt: string; contributor: FirstTimeContributor } => Boolean(entry));
+
+  parsed.sort((a, b) => b.mergedAt.localeCompare(a.mergedAt));
+
+  return parsed.slice(0, limit).map((entry) => entry.contributor);
+};
+
+export const loader = async (_: LoaderFunctionArgs): Promise<LoaderData> => {
+  const [latestCallResult, lumaEventsResult, championsResult] = await Promise.allSettled([
+    fetchLatestYouTubePlaylistVideo(),
+    fetchUpcomingLumaEvents(10),
+    fetchFirstTimeContributors(4),
+  ]);
+
+  let latestCommunityCall = FALLBACK_LATEST_COMMUNITY_CALL;
+  if (latestCallResult.status === 'fulfilled' && latestCallResult.value) {
+    const { videoId, publishedAt } = latestCallResult.value;
+    latestCommunityCall = {
+      ...FALLBACK_LATEST_COMMUNITY_CALL,
+      videoUrl: youtubeVideoUrl(videoId),
+      embedUrl: youtubeEmbedUrl(videoId),
+      date: publishedAt
+        ? formatUtc(publishedAt, { month: 'long', day: 'numeric', year: 'numeric' })
+        : FALLBACK_LATEST_COMMUNITY_CALL.date,
+    };
+  }
+
+  let events: CommunityEvent[] = [];
+  if (lumaEventsResult.status === 'fulfilled' && lumaEventsResult.value?.length) {
+    events = lumaEventsResult.value;
+  }
+
+  if (events.length < 3) {
+    const seen = new Set(events.map((event) => event.href));
+    for (const event of FALLBACK_EVENTS) {
+      if (events.length >= 3) break;
+      if (seen.has(event.href)) continue;
+      events.push(event);
+    }
+  }
+
+  let firstTimeContributors: FirstTimeContributor[] = [];
+  if (championsResult.status === 'fulfilled' && championsResult.value?.length) {
+    firstTimeContributors = championsResult.value;
+  }
+
+  if (firstTimeContributors.length < 3) {
+    firstTimeContributors = [...FALLBACK_FIRST_TIME_CONTRIBUTORS];
+  }
+
+  return {
+    latestCommunityCall,
+    events: events.slice(0, 3),
+    firstTimeContributors: firstTimeContributors.slice(0, 4),
+  };
+};
+
 const MICHAEL_MAY_IMAGE = '/assets/webflow/team/698653c2074b111e59086ff8_mike.jpeg';
 
-const FIRST_TIME_CONTRIBUTORS = [
+const FALLBACK_FIRST_TIME_CONTRIBUTORS: FirstTimeContributor[] = [
   {
     name: 'Kage18',
     title: 'fix: avoid rewriting provider credit errors',
@@ -93,7 +356,7 @@ const FIRST_TIME_CONTRIBUTORS = [
     href: 'https://github.com/OpenHands/OpenHands/pull/14261',
     avatar: 'https://avatars.githubusercontent.com/u/176635150?v=4',
   },
-] as const;
+];
 
 const CONTRIBUTION_PATHS = [
   {
@@ -229,6 +492,8 @@ const MetadataItem = ({
 );
 
 const Community = () => {
+  const { latestCommunityCall, events, firstTimeContributors } = useLoaderData() as LoaderData;
+
   return (
     <main className='community-page' data-wf-el='page-main' style={{ display: 'flex', flexDirection: 'column' }}>
       <section data-wf-el='section-community-hero' style={{ height: '360.016px', padding: '0px' }}>
@@ -273,14 +538,16 @@ const Community = () => {
               <div data-wf-el='previous-event_content_wrap' style={{ display: 'flex', height: '346.828px', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-start', gap: '24px' }}>
                 <div data-wf-el='previous-event_content_headers'>
                   <h2 className='section-title text-brand-bg'>Latest Community Call</h2>
-                  <p className='text-[16px] leading-[22.4px] text-brand-bg' style={{ margin: 0 }}>{LATEST_COMMUNITY_CALL.description}</p>
+                  <p className='text-[16px] leading-[22.4px] text-brand-bg' style={{ margin: 0 }}>{latestCommunityCall.description}</p>
                 </div>
                 <div data-wf-el='previous-event_content_meta' style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', columnGap: '32px', rowGap: '16px' }}>
-                  <MetadataItem type='calendar' tone='light'>{LATEST_COMMUNITY_CALL.date}</MetadataItem>
-                  <MetadataItem type='clock' tone='light'>{LATEST_COMMUNITY_CALL.duration}</MetadataItem>
+                  <MetadataItem type='calendar' tone='light'>{latestCommunityCall.date}</MetadataItem>
+                  {latestCommunityCall.duration && (
+                    <MetadataItem type='clock' tone='light'>{latestCommunityCall.duration}</MetadataItem>
+                  )}
                 </div>
                 <OverlayLinkButton
-                  href={LATEST_COMMUNITY_CALL.videoUrl}
+                  href={latestCommunityCall.videoUrl}
                   label='Watch on YouTube'
                   variant='lightbrown'
                   wfEl='button'
@@ -293,7 +560,7 @@ const Community = () => {
               <div className='w-embed w-iframe' style={{ width: '607px', height: '346.828px' }}>
                 <iframe
                   title='Latest OpenHands community call'
-                  src={LATEST_COMMUNITY_CALL.embedUrl}
+                  src={latestCommunityCall.embedUrl}
                   className='h-full w-full border-0'
                   allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share'
                   referrerPolicy='strict-origin-when-cross-origin'
@@ -305,30 +572,38 @@ const Community = () => {
         </div>
       </section>
 
-      <section data-wf-el='section' id='events' style={{ height: '1804.62px', padding: '80px 0px', position: 'relative' }}>
-        <div data-wf-el='container' className='mx-auto max-w-[1238px]' style={{ height: '1644.62px' }}>
+      <section data-wf-el='section' id='events' style={{ padding: '80px 0px', position: 'relative' }}>
+        <div data-wf-el='container' className='mx-auto max-w-[1238px]'>
           <h2 className='section-title text-center text-brand-fg' style={{ marginBottom: '66px' }}>
             Upcoming Events
           </h2>
 
-          <div data-wf-el='events-list_cms_list' className='events-list_cms_list grid grid-cols-3' style={{ gap: '16px', height: '1436.66px' }}>
-            {EVENTS.map((event) => (
+          <div data-wf-el='events-list_cms_list' className='events-list_cms_list grid grid-cols-3' style={{ gap: '16px' }}>
+            {events.map((event) => (
               <a
-                key={event.title}
+                key={event.id ?? event.href}
                 href={event.href}
                 target='_blank'
                 rel='noopener noreferrer'
                 data-wf-el='contribution_card_link'
-                className='relative flex flex-col overflow-hidden rounded-[8px] border border-[#b3a88c] bg-transparent transition-transform hover:-translate-y-0.5'
-                style={{ height: '1436.66px', maxWidth: '100%', justifyContent: 'flex-start' }}
+                className='relative flex h-[560px] flex-col overflow-hidden rounded-[8px] border border-[#b3a88c] bg-transparent transition-transform hover:-translate-y-0.5'
               >
-                <div data-wf-el='card-body' style={{ position: 'relative', display: 'block', height: '1434.66px', padding: '24px', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start' }}>
-                  <div data-wf-el='events-list_card_content' style={{ display: 'flex', height: '1386.66px', flexDirection: 'column', gap: '24px' }}>
-                    <div data-wf-el='events-list_card_content_top' style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div data-wf-el='card-body' className='flex flex-1 flex-col p-6' style={{ position: 'relative' }}>
+                  <div data-wf-el='events-list_card_content' className='flex flex-1 flex-col gap-6'>
+                    <div data-wf-el='events-list_card_content_top' className='flex min-h-0 flex-1 flex-col gap-2'>
                       <h2 className='fluid-h4 leading-[1.4] text-brand-fg' style={{ marginBottom: '0px' }}>
                         <span style={event.titleScale ? { display: 'inline-block', transform: `scaleX(${event.titleScale})`, transformOrigin: 'left center' } : undefined}>{event.title}</span>
                       </h2>
-                      <p className='text-[16px] leading-[22.4px] text-brand-muted' style={{ margin: 0, height: event.descriptionHeight }}>
+                      <p
+                        className='text-[16px] leading-[22.4px] text-brand-muted'
+                        style={{
+                          margin: 0,
+                          overflow: 'hidden',
+                          display: '-webkit-box',
+                          WebkitBoxOrient: 'vertical',
+                          WebkitLineClamp: 10,
+                        }}
+                      >
                         {event.description}
                       </p>
                     </div>
@@ -403,7 +678,7 @@ const Community = () => {
                 </div>
               </div>
               <div data-wf-el='contributions_list' className='contributions_list grid grid-cols-4' style={{ gap: '24px', height: '181.172px' }}>
-                {FIRST_TIME_CONTRIBUTORS.map((contributor) => (
+                {firstTimeContributors.map((contributor) => (
                   <a
                     key={contributor.name}
                     href={contributor.href}

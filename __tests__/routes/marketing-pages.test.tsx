@@ -1,12 +1,37 @@
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+
 import Product from '../../src/routes/product';
 import ProductCli from '../../src/routes/product-cli';
 import ProductGui from '../../src/routes/product-gui';
 import ProductSdk from '../../src/routes/product-sdk';
 import Enterprise from '../../src/routes/enterprise';
 import Community from '../../src/routes/community';
+
+vi.mock('react-router', async () => {
+  const actual = await vi.importActual<typeof import('react-router')>('react-router');
+  const recording = 'Recording and agenda will be available post meeting.';
+
+  return {
+    ...actual,
+    useLoaderData: () => ({
+      latestCommunityCall: {
+        description: 'Catch up on our most recent community call.',
+        date: 'May 8, 2026',
+        duration: '17:13',
+        videoUrl: 'https://www.youtube.com/watch?v=20HNd4cb2vA',
+        embedUrl: 'https://www.youtube.com/embed/20HNd4cb2vA',
+      },
+      events: [
+        { title: 'OpenHands Community Call - June 18th', description: recording, date: 'Jun 18, 2026', time: '11:00 AM CDT', startsAt: '2026-06-18T16:00:00Z', href: 'https://luma.com/e1' },
+        { title: 'OpenHands Community Call - Jul 9th', description: recording, date: 'Jul 9, 2026', time: '11:00 AM CDT', startsAt: '2026-07-09T16:00:00Z', href: 'https://luma.com/e2' },
+        { title: 'OpenHands Community Call - Jul 23rd', description: 'Join our community call to hear updates and ask questions.', date: 'Jul 23, 2026', time: '11:00 AM CDT', startsAt: '2026-07-23T16:00:00Z', href: 'https://luma.com/e3' },
+      ],
+      firstTimeContributors: Array.from({ length: 4 }, (_, i) => ({ name: `user${i}`, title: 'First PR', href: 'https://github.com/OpenHands/OpenHands/pull/1', avatar: 'https://avatars.githubusercontent.com/u/1?v=4' })),
+    }),
+  };
+});
 
 const renderRoute = (node: React.ReactNode) => {
   return render(<MemoryRouter>{node}</MemoryRouter>);
@@ -183,8 +208,6 @@ describe('Marketing parity routes', () => {
     expect(screen.queryByText('Scale Enterprise AI Agents')).not.toBeInTheDocument();
     expect(screen.queryByText(/5:15pm — Doors Open/i)).not.toBeInTheDocument();
     expect(screen.getAllByText(/Recording and agenda will be available post meeting\./i)).toHaveLength(2);
-    expect(container.querySelector('section#events')).toHaveStyle({ height: '1804.62px' });
-    expect(container.querySelector('[data-wf-el="contribution_card_link"]')).toHaveStyle({ height: '1436.66px' });
     expect(screen.getByRole('heading', { name: /Recognizing first-time contributors/i })).toBeInTheDocument();
     expect(screen.queryByText('@alexdev')).not.toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /Community contributor spotlight/i })).toBeInTheDocument();
