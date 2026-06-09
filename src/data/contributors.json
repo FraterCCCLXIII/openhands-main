@@ -156,12 +156,16 @@
     "login": "huybery"
   },
   {
-    "id": 12579618,
-    "login": "jlav"
-  },
-  {
     "id": 65051545,
     "login": "bashwara"
+  },
+  {
+    "id": 41898282,
+    "login": "github-actions[bot]"
+  },
+  {
+    "id": 12579618,
+    "login": "jlav"
   },
   {
     "id": 2945814,
@@ -174,10 +178,6 @@
   {
     "id": 97225946,
     "login": "808vita"
-  },
-  {
-    "id": 41898282,
-    "login": "github-actions[bot]"
   },
   {
     "id": 182316592,
@@ -208,6 +208,10 @@
     "login": "RainRat"
   },
   {
+    "id": 138990495,
+    "login": "Umpire2018"
+  },
+  {
     "id": 56214007,
     "login": "RajWorking"
   },
@@ -216,16 +220,8 @@
     "login": "cshimmin"
   },
   {
-    "id": 138990495,
-    "login": "Umpire2018"
-  },
-  {
     "id": 133818254,
     "login": "abhayymishraa"
-  },
-  {
-    "id": 22633385,
-    "login": "eltociear"
   },
   {
     "id": 62982824,
@@ -234,5 +230,9 @@
   {
     "id": 18455687,
     "login": "pandukamuditha"
+  },
+  {
+    "id": 16740055,
+    "login": "WannaTen"
   }
 ]
