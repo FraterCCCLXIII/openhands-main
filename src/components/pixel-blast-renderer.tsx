@@ -39,18 +39,15 @@ export function PixelBlastRenderer() {
       return;
     }
 
-    const mobileQuery = window.matchMedia('(max-width: 768px)');
     const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
 
     const updateEnabled = () => {
       setAnimationEnabled(!shouldDisablePixelBlastAnimation());
     };
 
-    mobileQuery.addEventListener('change', updateEnabled);
     motionQuery.addEventListener('change', updateEnabled);
 
     return () => {
-      mobileQuery.removeEventListener('change', updateEnabled);
       motionQuery.removeEventListener('change', updateEnabled);
     };
   }, []);
