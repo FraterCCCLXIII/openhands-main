@@ -34,8 +34,6 @@ const RESOURCE_DROPDOWN_COLUMN_COUNT = Math.max(
 
 const PRODUCT_ICON_WF_EL: Record<ProductDropdownIcon, string> = {
   canvas: 'bi-terminal',
-  automations: 'bi-display',
-  cloud: 'bi-cloud',
   controlPlane: 'bi-box-seam',
 };
 
@@ -47,18 +45,6 @@ function ProductDropdownIcon({ type }: { type: ProductDropdownIcon }) {
         <svg data-wf-el={wfEl} xmlns='http://www.w3.org/2000/svg' width='100%' fill='currentColor' viewBox='0 0 16 16'>
           <path d='M6 9a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 0 1h-3A.5.5 0 0 1 6 9M3.854 4.146a.5.5 0 1 0-.708.708L4.793 6.5 3.146 8.146a.5.5 0 1 0 .708.708l2-2a.5.5 0 0 0 0-.708z' />
           <path d='M2 1a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2zm12 1a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z' />
-        </svg>
-      );
-    case 'automations':
-      return (
-        <svg data-wf-el={wfEl} xmlns='http://www.w3.org/2000/svg' width='100%' fill='currentColor' viewBox='0 0 16 16'>
-          <path d='M0 4s0-2 2-2h12s2 0 2 2v6s0 2-2 2h-4q0 1 .25 1.5H11a.5.5 0 0 1 0 1H5a.5.5 0 0 1 0-1h.75Q6 13 6 12H2s-2 0-2-2zm1.398-.855a.76.76 0 0 0-.254.302A1.5 1.5 0 0 0 1 4.01V10c0 .325.078.502.145.602q.105.156.302.254a1.5 1.5 0 0 0 .538.143L2.01 11H14c.325 0 .502-.078.602-.145a.76.76 0 0 0 .254-.302 1.5 1.5 0 0 0 .143-.538L15 9.99V4c0-.325-.078-.502-.145-.602a.76.76 0 0 0-.302-.254A1.5 1.5 0 0 0 13.99 3H2c-.325 0-.502.078-.602.145' />
-        </svg>
-      );
-    case 'cloud':
-      return (
-        <svg data-wf-el={wfEl} xmlns='http://www.w3.org/2000/svg' width='100%' fill='currentColor' viewBox='0 0 16 16'>
-          <path d='M4.406 3.342A5.53 5.53 0 0 1 8 2c2.69 0 4.923 1.91 5.166 4.579A3.5 3.5 0 0 1 13.5 13H4a2.5 2.5 0 0 1-.149-4.996 5.53 5.53 0 0 1 .555-4.662z' />
         </svg>
       );
     case 'controlPlane':
@@ -145,6 +131,26 @@ const NAV_DROPDOWN_PANEL_STYLE: React.CSSProperties = {
   padding: '23px',
   boxShadow: 'none',
   width: NAV_DROPDOWN_WIDTH,
+};
+
+const PRODUCT_DROPDOWN_LINK_STYLE: React.CSSProperties = {
+  ...NAV_DROPDOWN_LINK_STYLE,
+  width: 'auto',
+  height: 'auto',
+  minHeight: 0,
+  flex: '0 0 auto',
+};
+
+const PRODUCT_DROPDOWN_ITEM_STYLE: React.CSSProperties = {
+  ...NAV_DROPDOWN_ITEM_STYLE,
+  height: 'auto',
+  minHeight: 0,
+};
+
+const PRODUCT_DROPDOWN_PANEL_STYLE: React.CSSProperties = {
+  ...NAV_DROPDOWN_PANEL_STYLE,
+  width: 'max-content',
+  gap: 0,
 };
 
 function NavHeaderCtaButton({
@@ -366,21 +372,34 @@ export const Header: React.FC<HeaderProps> = ({
                 <div
                   data-wf-el='nav_links_dropdown_wrap'
                   className='absolute left-0 top-full z-50 origin-top-left scale-95 opacity-0 pointer-events-none transition group-hover:scale-100 group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:scale-100 group-focus-within:opacity-100 group-focus-within:pointer-events-auto'
-                  style={{ paddingTop: '8px', width: NAV_DROPDOWN_WIDTH }}
+                  style={{ paddingTop: '8px', width: 'max-content' }}
                   onMouseEnter={() => setProductOpen(true)}
                   onMouseLeave={() => setProductOpen(false)}
                 >
-                  <div data-wf-el='nav_links_dropdown' style={NAV_DROPDOWN_PANEL_STYLE}>
-                    <div data-wf-el='nav_links_dropdown_group' style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', gap: '24px', margin: 0 }}>
-                      <div data-wf-el='dropdown-eyebrow' className='eyebrow u-mb-0 font-mono' style={{ margin: 0, color: 'rgb(247, 243, 238)', fontSize: '14.08px', lineHeight: '16.896px' }}>Features</div>
-                      <ul data-wf-el='nav_links_list' className='is-dropdown' style={{ position: 'relative', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', justifyContent: 'center', alignItems: 'stretch', gap: '21.6px', margin: 0, padding: 0, width: '100%' }}>
+                  <div data-wf-el='nav_links_dropdown' style={PRODUCT_DROPDOWN_PANEL_STYLE}>
+                    <div data-wf-el='nav_links_dropdown_group' style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', margin: 0 }}>
+                      <ul
+                        data-wf-el='nav_links_list'
+                        className='is-dropdown'
+                        style={{
+                          position: 'relative',
+                          display: 'grid',
+                          gridTemplateColumns: `repeat(${PRODUCT_DROPDOWN_ITEMS.length}, max-content)`,
+                          justifyContent: 'start',
+                          alignItems: 'start',
+                          gap: '21.6px',
+                          margin: 0,
+                          padding: 0,
+                          width: 'max-content',
+                        }}
+                      >
                         {PRODUCT_DROPDOWN_ITEMS.map((item) => (
-                          <li data-wf-el='nav_links_li' className='is-dropdown' key={item.name} style={NAV_DROPDOWN_ITEM_STYLE}>
+                          <li data-wf-el='nav_links_li' className='is-dropdown' key={item.name} style={PRODUCT_DROPDOWN_ITEM_STYLE}>
                             <Link
                               to={item.to}
                               data-wf-el='nav_links_link'
                               className={NAV_DROPDOWN_LINK_CLASS}
-                              style={NAV_DROPDOWN_LINK_STYLE}
+                              style={PRODUCT_DROPDOWN_LINK_STYLE}
                               onClick={() => setProductOpen(false)}
                             >
                               <div data-wf-el='nav_links_dropdown_icon' className='flex-shrink-0' style={{ display: 'flex', width: '30px', height: '30px', padding: '7px', color: 'rgb(255, 255, 139)', backgroundColor: 'rgb(0, 0, 0)', borderRadius: '8px', justifyContent: 'center', alignItems: 'center' }}>

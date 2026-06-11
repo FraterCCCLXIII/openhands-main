@@ -1,5 +1,5 @@
 import type { FooterProps } from '~/components/footer';
-import { GET_OPENHANDS_CTA } from '~/constants/site-shell';
+import { FOOTER_COMMUNITY_CTA, GET_OPENHANDS_CTA } from '~/constants/site-shell';
 import { PRODUCT_FEATURE_PAGES } from '~/data/product-feature-pages';
 import { normalizePathname } from '~/utils/normalize-pathname';
 
@@ -101,7 +101,7 @@ const shellFooter = (overrides: Partial<RouteFooterConfig> = {}): RouteFooterCon
 const footerCtaVariants = {
   default: {},
   product: {
-    marketingCtaPrimary: { href: GET_OPENHANDS_CTA.href, label: GET_OPENHANDS_CTA.label },
+    marketingCtaPrimary: { href: FOOTER_COMMUNITY_CTA.href, label: FOOTER_COMMUNITY_CTA.label },
     marketingCtaSecondary: {
       href: 'https://docs.openhands.dev/overview/introduction',
       label: 'See developer docs',
@@ -119,7 +119,7 @@ const footerCtaVariants = {
       'Building the open standard for autonomous software development.',
     marketingCtaDescription:
       'OpenHands is the foundation for secure, transparent, model-agnostic coding agents - empowering every software team to build faster with full control.',
-    marketingCtaPrimary: { href: GET_OPENHANDS_CTA.href, label: GET_OPENHANDS_CTA.label },
+    marketingCtaPrimary: { href: FOOTER_COMMUNITY_CTA.href, label: FOOTER_COMMUNITY_CTA.label },
     marketingCtaSecondary: null,
   },
   whitepaper: {

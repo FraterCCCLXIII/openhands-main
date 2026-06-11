@@ -47,14 +47,8 @@ describe('compact sidebar menu parity', () => {
       'href',
       '/product/gui',
     );
-    expect(screen.getByRole('link', { name: /automations/i })).toHaveAttribute(
-      'href',
-      'https://openhands.dev/product',
-    );
-    expect(screen.getByRole('link', { name: /cloud/i })).toHaveAttribute(
-      'href',
-      'https://openhands.dev/product',
-    );
+    expect(screen.queryByRole('link', { name: /automations/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /^cloud$/i })).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: /agent control plane/i })).toHaveAttribute(
       'href',
       '/enterprise#control-plane',

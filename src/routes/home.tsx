@@ -12,7 +12,7 @@ import type { Route } from './+types/home';
 import statistics from '~/data/statistics.json';
 import { Footer } from '~/components/footer';
 import { getRouteFooterProps } from '~/constants/route-layout';
-import { AGENT_CANVAS_INSTALL_COMMAND, GET_OPENHANDS_CTA, HEADER_GET_OPENHANDS_URL } from '~/constants/site-shell';
+import { AGENT_CANVAS_INSTALL_COMMAND, FOOTER_COMMUNITY_CTA, GET_OPENHANDS_CTA, HEADER_GET_OPENHANDS_URL } from '~/constants/site-shell';
 import { CopyInstallPill } from '~/components/copy-install-pill';
 import { OverlayLinkButton } from '~/components/overlay-link-button';
 import { FAQ_TRIGGER_DIVIDER, CLOSED_FAQ_ITEM_PROPS } from '~/components/faq-accordion';
@@ -102,7 +102,7 @@ const WHY_TEAMS_FEATURES = [
     icon: Settings,
   },
   {
-    title: 'Run agents beyond your laptop',
+    title: 'Run agents beyond your laptops',
     description:
       'Run agents in isolated sandboxes on a VM or in the cloud, no local hardware dependency. Schedule recurring tasks or trigger them from GitHub, Slack, or PagerDuty events, even when your machine is off.',
     icon: Layers,
@@ -655,7 +655,7 @@ const Home = () => {
               OpenHands is the foundation for secure, transparent, model-agnostic coding agents - empowering every software team to build faster with full control.
             </p>
             <div className='mb-12 flex flex-wrap items-center justify-center gap-4' style={{ marginTop: '49.6px' }}>
-              <OverlayLinkButton href={GET_OPENHANDS_CTA.href} label={GET_OPENHANDS_CTA.label} variant='primary' />
+              <OverlayLinkButton href={FOOTER_COMMUNITY_CTA.href} label={FOOTER_COMMUNITY_CTA.label} variant='primary' />
             </div>
           </div>
           {/* Spacing gap between the hero CTAs and the footer nav block.

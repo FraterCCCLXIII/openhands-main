@@ -9,7 +9,7 @@ export interface SiteLinkGroup {
   links: SiteLink[];
 }
 
-export type ProductDropdownIcon = 'canvas' | 'automations' | 'cloud' | 'controlPlane';
+export type ProductDropdownIcon = 'canvas' | 'controlPlane';
 
 export interface ProductDropdownItem {
   name: string;
@@ -24,18 +24,6 @@ export const PRODUCT_DROPDOWN_ITEMS: ProductDropdownItem[] = [
     to: '/product/gui',
     description: 'One workspace to manage all your agents.',
     icon: 'canvas',
-  },
-  {
-    name: 'Automations',
-    to: 'https://openhands.dev/product',
-    description: 'Build it once. Let it run forever.',
-    icon: 'automations',
-  },
-  {
-    name: 'Cloud',
-    to: 'https://openhands.dev/product',
-    description: "Agents that don't stop when you do.",
-    icon: 'cloud',
   },
   {
     name: 'Agent Control Plane',
@@ -53,6 +41,11 @@ export const HEADER_TRY_IT_LIVE_URL = HEADER_GET_OPENHANDS_URL;
 export const GET_OPENHANDS_CTA = {
   label: 'Get OpenHands',
   href: HEADER_GET_OPENHANDS_URL,
+} as const;
+
+export const FOOTER_COMMUNITY_CTA = {
+  label: 'Join The Community',
+  href: '/community',
 } as const;
 
 export const COMPACT_NAV_LINK_CLASS = 'text-sm font-normal leading-[19.6px]';

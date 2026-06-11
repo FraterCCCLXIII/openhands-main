@@ -1,7 +1,7 @@
 import { Link, useLocation } from 'react-router';
 import { PixelBlastBackground } from '~/components/pixel-blast-background';
 import clsx from 'clsx';
-import { GET_OPENHANDS_CTA, OPENHANDS_LINKEDIN_URL } from '~/constants/site-shell';
+import { FOOTER_COMMUNITY_CTA, OPENHANDS_LINKEDIN_URL } from '~/constants/site-shell';
 import { normalizePathname } from '~/utils/normalize-pathname';
 import { OverlayLinkButton } from '~/components/overlay-link-button';
 import { useWidth } from '~/hooks/use-media';
@@ -54,7 +54,7 @@ export interface FooterProps {
 
 /**
  * Renders the "Building the open standard..." headline + supporting
- * paragraph + Get OpenHands button that live
+ * paragraph + community CTA button that live
  * openhands.dev embeds at the top of every footer section.
  */
 interface FooterMarketingCtaProps {
@@ -67,7 +67,7 @@ interface FooterMarketingCtaProps {
 
 const DEFAULT_CTA_TITLE = 'Building the open standard for autonomous software development.';
 const DEFAULT_CTA_DESCRIPTION = 'OpenHands is the foundation for secure, transparent, model-agnostic coding agents - empowering every software team to build faster with full control.';
-const DEFAULT_CTA_PRIMARY: FooterCta = { href: GET_OPENHANDS_CTA.href, label: GET_OPENHANDS_CTA.label };
+const DEFAULT_CTA_PRIMARY: FooterCta = { href: FOOTER_COMMUNITY_CTA.href, label: FOOTER_COMMUNITY_CTA.label };
 const DEFAULT_CTA_SECONDARY: FooterCta | null = null;
 
 const FooterMarketingCta = ({

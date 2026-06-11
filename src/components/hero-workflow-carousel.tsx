@@ -5,7 +5,6 @@ import {
   ArrowRightCircle,
   ChevronLeft,
   ChevronRight,
-  Eye,
   GitPullRequest,
   ShieldAlert,
   TriangleAlert,
@@ -37,11 +36,6 @@ const WORKFLOWS: WorkflowItem[] = [
     title: 'Triage Incidents',
     description: 'Investigates errors, finds root causes, and posts actionable debugging insights.',
     icon: TriangleAlert,
-  },
-  {
-    title: 'See all use cases',
-    description: '',
-    icon: Eye,
   },
 ];
 
