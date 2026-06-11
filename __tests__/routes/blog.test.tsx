@@ -63,7 +63,9 @@ describe('Blog route', () => {
     expect(container.querySelector('[data-wf-el="hero-content"]')).toBeInTheDocument();
     expect(container.querySelector('[data-wf-el="section-hero"]')).toHaveClass('blog-hero');
     expect(container.querySelector('[data-wf-el="section-hero"] [data-wf-el="container"]')).toHaveClass('blog-hero-container');
-    expect(container.querySelector('[data-wf-el="section-hero"] [data-wf-el="container"]')).toHaveStyle({ height: '284.48px' });
+    expect(container.querySelector('[data-wf-el="section-hero"] [data-wf-el="container"]')).toHaveClass('text-left');
+    expect(screen.getByRole('heading', { name: 'OpenHands Blog' })).toHaveClass('text-left');
+    expect(container.querySelector('.blog-featured-newsletter')).toBeInTheDocument();
     expect(container.querySelector('[data-wf-el="standard-collection-list-item"]')).toBeInTheDocument();
     expect(container.querySelector('.blog-grid-item')).toBeInTheDocument();
     expect(screen.getByText('Insights and updates from the OpenHands team')).toHaveAttribute('data-wf-el', 'paragraph-lg');
@@ -73,12 +75,9 @@ describe('Blog route', () => {
       'href',
       '/blog/openhands-index'
     );
-    expect(container.querySelector('[data-testid="featured-blog-card"] img')?.getAttribute('src')).toBe(
-      '/featured-card.png'
-    );
-    expect(container.querySelector('[data-testid="featured-blog-card"] img')?.getAttribute('alt')).toBe(
-      ''
-    );
+    expect(container.querySelector('[data-testid="featured-blog-card"] img')).not.toBeInTheDocument();
+    expect(container.querySelector('.blog-card--typography img')).not.toBeInTheDocument();
+    expect(container.querySelector('.blog-card--typography .line-clamp-2')).toBeInTheDocument();
     expect(screen.getByText('Grid Post 6')).toBeInTheDocument();
     expect(screen.queryByText('Grid Post 7')).not.toBeInTheDocument();
 

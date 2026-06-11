@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { act, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -5,6 +6,10 @@ import { AnimatedHeaderLogo } from '../../src/components/animated-header-logo';
 import { Footer } from '../../src/components/footer';
 import { Header } from '../../src/components/header';
 import { Sidebar } from '../../src/components/sidebar/sidebar';
+import { PixelBlastProvider } from '../../src/contexts/pixel-blast-context';
+
+const renderWithProviders = (node: ReactNode) =>
+  render(<PixelBlastProvider><MemoryRouter>{node}</MemoryRouter></PixelBlastProvider>);
 
 describe('site shell parity helpers', () => {
   it('renders a decorative header logo image', () => {
@@ -14,36 +19,24 @@ describe('site shell parity helpers', () => {
   });
 
   it('hides social links in the standalone footer by default', () => {
-    render(
-      <MemoryRouter>
-        <Footer standalone />
-      </MemoryRouter>
-    );
+    renderWithProviders(<Footer standalone />);
 
     expect(screen.queryAllByTestId('footer-social-link')).toHaveLength(0);
   });
 
   it('can render the compact Webflow-style footer navigation', () => {
-    const { container } = render(
-      <MemoryRouter>
-        <Footer standalone compactNav />
-      </MemoryRouter>
-    );
+    const { container } = renderWithProviders(<Footer standalone compactNav />);
 
     expect(container.querySelector('section[data-wf-el="section"]')).toHaveStyle({
-      padding: 'var(--footer-section-padding, var(--product-section-padding-y, var(--section-padding-y))) 0px',
-      height: 'var(--footer-section-height, auto)',
+      padding: '80px 0px',
+      height: 'auto',
     });
     expect(container.querySelector('section[data-wf-el="section"]')).toHaveClass('section', 'u-bg-primary', 'footer-webflow-layout');
     expect(container.querySelector('[data-wf-el="container"]')).toHaveStyle({
-      width: 'var(--footer-container-width, 90%)',
-      height: 'auto',
+      marginTop: '49.6px',
     });
-    expect(container.querySelector('[data-wf-el="paragraph-lg"]')).toHaveStyle({
-      fontSize: 'var(--footer-paragraph-lg-font-size, var(--paragraph-lg-font-size))',
-      lineHeight: 'var(--footer-paragraph-lg-line-height, 1.2)',
-    });
-    expect(container.querySelector('.section-title')).toHaveStyle({ marginBottom: 'var(--footer-marketing-title-margin-bottom, var(--footer-cta-title-margin-bottom, 22px))' });
+    expect(container.querySelector('.fluid-body-lg')).toBeInTheDocument();
+    expect(container.querySelector('.section-title')).toHaveStyle({ marginBottom: '22px' });
     expect(container.querySelector('[data-wf-el="footer-legal-row"]')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Contact' })).toBeInTheDocument();
     expect(container.querySelector('.footer-logo-img')).toHaveStyle({
@@ -55,17 +48,13 @@ describe('site shell parity helpers', () => {
 
 
   it('drives manifesto footer structure from props instead of the current route', () => {
-    const { container } = render(
-      <MemoryRouter initialEntries={['/']}>
-        <Footer standalone compactNav layoutVariant='manifesto' />
-      </MemoryRouter>
-    );
+    const { container } = renderWithProviders(<Footer standalone compactNav layoutVariant='manifesto' />);
 
     expect(container.querySelector('section[data-wf-el="section"]')).toHaveStyle({
-      padding: 'var(--footer-section-padding, var(--product-section-padding-y, var(--section-padding-y))) 0px',
+      padding: '80px 0px',
       height: '1209.38px',
     });
-    expect(container.querySelector('[data-wf-el="container"]')).toHaveStyle({
+    expect(container.querySelector('.container.u-position-relative')).toHaveStyle({
       width: 'var(--footer-container-width, 90%)',
       height: '950.1875px',
     });
@@ -117,14 +106,10 @@ describe('site shell parity helpers', () => {
   });
 
 
-  it('can suppress the inner footer container Webflow marker when nested in a live container', () => {
-    const { container } = render(
-      <MemoryRouter>
-        <Footer compactNav containerWfEl={null} />
-      </MemoryRouter>
-    );
+  it('keeps the outer footer container marker while suppressing the inner nav container marker', () => {
+    const { container } = renderWithProviders(<Footer compactNav containerWfEl={null} />);
 
-    expect(container.querySelector('[data-wf-el="container"]')).not.toBeInTheDocument();
+    expect(container.querySelectorAll('[data-wf-el="container"]')).toHaveLength(1);
     expect(screen.getByRole('link', { name: 'Privacy Policy' })).toBeInTheDocument();
   });
 

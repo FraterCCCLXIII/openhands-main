@@ -1766,11 +1766,11 @@
 
   @media (min-width: 768px) {
     .blog-index-page [data-wf-el='section-hero'] {
-      height: 396.484375px !important;
+      height: auto !important;
     }
 
     .blog-index-page .blog-hero-container {
-      height: 284.484375px !important;
+      height: auto !important;
     }
 
     .blog-index-page .blog-newsletter-prompt {
@@ -1786,24 +1786,33 @@
     }
 
     .blog-index-page .featured-blog-copy {
-      width: 495.828125px !important;
+      width: 100% !important;
+      max-width: 720px !important;
     }
 
     .blog-index-page .blog-card-copy {
-      width: 351.8125px !important;
-      max-width: 351.8125px !important;
+      width: 100% !important;
+      max-width: 100% !important;
     }
 
-    .blog-index-page .blog-card-copy [data-wf-el='paragraph-sm'] {
+    .blog-index-page .blog-card-copy [data-wf-el='paragraph-sm']:not(.blog-card-excerpt) {
       height: 21.609375px !important;
     }
 
+    .blog-index-page .blog-card-excerpt {
+      display: -webkit-box !important;
+      -webkit-box-orient: vertical !important;
+      -webkit-line-clamp: 2 !important;
+      overflow: hidden !important;
+      height: auto !important;
+    }
+
     .blog-index-page > [data-wf-el='section']:last-child {
-      height: 1209.375px !important;
+      height: auto !important;
     }
 
     .blog-index-page > [data-wf-el='section']:last-child > [data-wf-el='container'] {
-      height: 950.1875px !important;
+      height: auto !important;
     }
 
     .blog-index-page > [data-wf-el='section']:last-child [data-wf-el='footer-nav'] {
@@ -1870,11 +1879,12 @@
     }
 
     [data-wf-el='page-wrapper']:has(.blog-index-page) {
-      height: 5226.140625px !important;
+      height: auto !important;
+      overflow: visible !important;
     }
 
     .blog-index-page [data-wf-el='section-hero'] {
-      height: 514.984375px !important;
+      height: auto !important;
     }
 
     .blog-index-page .blog-hero-container,
@@ -1889,7 +1899,7 @@
     }
 
     .blog-index-page .blog-hero-container {
-      height: 402.984375px !important;
+      height: auto !important;
     }
 
     .blog-index-page .blog-hero-subtitle {
@@ -1942,27 +1952,25 @@
     }
 
     .blog-index-page .blog-featured-section {
-      height: 719.125px !important;
-      padding-top: 49.5714px !important;
+      height: auto !important;
+      padding-top: 0 !important;
       padding-bottom: 49.5714px !important;
     }
 
     .blog-index-page .blog-grid-section {
-      height: 2552.125px !important;
+      height: auto !important;
       padding-top: 0 !important;
       padding-bottom: 49.5714px !important;
     }
 
     .blog-index-page .blog-grid-list {
-      width: calc(100% + 40px) !important;
+      width: 100% !important;
       row-gap: 40px !important;
     }
 
     .blog-index-page .blog-grid-item {
       width: 100% !important;
       max-width: 100% !important;
-      flex-basis: 100% !important;
-      flex-wrap: wrap !important;
     }
 
     .blog-index-page .blog-grid-card {
@@ -1984,19 +1992,28 @@
     }
 
     .blog-index-page .blog-card-copy {
-      position: relative !important;
-      left: -12px !important;
+      position: static !important;
+      left: auto !important;
       box-sizing: border-box !important;
-      width: 331.375px !important;
-      max-width: none !important;
-      padding-left: 12px !important;
-      padding-right: 12px !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      padding-left: 0 !important;
+      padding-right: 0 !important;
     }
 
-    .blog-index-page .blog-card-copy [data-wf-el='paragraph-sm'] {
+    .blog-index-page .blog-card-copy [data-wf-el='paragraph-sm']:not(.blog-card-excerpt) {
       font-size: var(--paragraph-sm-font-size) !important;
       line-height: 1.5 !important;
       margin-bottom: 12.8786px !important;
+    }
+
+    .blog-index-page .blog-card-excerpt {
+      display: -webkit-box !important;
+      -webkit-box-orient: vertical !important;
+      -webkit-line-clamp: 2 !important;
+      overflow: hidden !important;
+      font-size: var(--paragraph-sm-font-size) !important;
+      line-height: 1.5 !important;
     }
 
     .blog-index-page .blog-card-copy [data-wf-el='paragraph-lg'],
@@ -2006,7 +2023,12 @@
     }
 
     .blog-index-page .featured-blog-card-body {
-      padding: 16.3929px !important;
+      padding: 0 !important;
+    }
+
+    .blog-index-page .featured-blog-card--typography [data-wf-el='blog-item-content'] {
+      padding-top: 32px !important;
+      padding-bottom: 32px !important;
     }
 
     .blog-index-page .featured-blog-copy {
@@ -2014,18 +2036,27 @@
       max-width: 100% !important;
     }
 
+    .blog-index-page .blog-featured-layout {
+      gap: 32px !important;
+    }
+
+    .blog-index-page .blog-featured-newsletter {
+      width: 100% !important;
+    }
+
     .blog-index-page > [data-wf-el='section'] {
       padding-top: 49.5714px !important;
       padding-bottom: 49.5714px !important;
     }
 
+    .blog-index-page .blog-featured-section,
     .blog-index-page .blog-grid-section {
       padding-top: 0 !important;
     }
 
     .blog-index-page > [data-wf-el='section']:last-child {
       --footer-paragraph-lg-height: 85.1875px;
-      height: 1305.578125px !important;
+      height: auto !important;
     }
 
 
@@ -2129,7 +2160,7 @@
     }
 
     .blog-index-page > [data-wf-el='section']:last-child > [data-wf-el='container'] {
-      height: 1172.265625px !important;
+      height: auto !important;
     }
 
     .blog-index-page > [data-wf-el='section']:last-child > [data-wf-el='container'] .container {
@@ -2146,23 +2177,16 @@
 
 }
 
-/* Let the blog index grow after the interactive Load more action.
-   Initial fixed heights are kept for Webflow parity, but expanded content must
-   contribute to the document height so newly revealed posts remain scrollable. */
-[data-wf-el='page-wrapper']:has(.blog-index-page.blog-index-page--expanded) {
+/* Blog index uses natural document height instead of legacy Webflow parity locks. */
+[data-wf-el='page-wrapper']:has(.blog-index-page) {
   height: auto !important;
   overflow: visible !important;
 }
 
+.blog-index-page .blog-grid-section,
 .blog-index-page.blog-index-page--expanded .blog-grid-section {
   height: auto !important;
-  min-height: 1015.94px;
-}
-
-@media (max-width: 767px) {
-  .blog-index-page.blog-index-page--expanded .blog-grid-section {
-    min-height: 2552.125px;
-  }
+  min-height: 0 !important;
 }
 
 

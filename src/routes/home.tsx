@@ -12,7 +12,7 @@ import type { Route } from './+types/home';
 import statistics from '~/data/statistics.json';
 import { Footer } from '~/components/footer';
 import { getRouteFooterProps } from '~/constants/route-layout';
-import { AGENT_CANVAS_INSTALL_COMMAND, FOOTER_COMMUNITY_CTA, GET_OPENHANDS_CTA, HEADER_GET_OPENHANDS_URL } from '~/constants/site-shell';
+import { AGENT_CANVAS_INSTALL_COMMAND, GET_OPENHANDS_CTA, HEADER_GET_OPENHANDS_URL } from '~/constants/site-shell';
 import { CopyInstallPill } from '~/components/copy-install-pill';
 import { OverlayLinkButton } from '~/components/overlay-link-button';
 import { FAQ_TRIGGER_DIVIDER, CLOSED_FAQ_ITEM_PROPS } from '~/components/faq-accordion';
@@ -637,43 +637,7 @@ const Home = () => {
         </div>
       </section>
 
-      {/* SECTION 7: CTA (u-bg-primary, py:80, yellow bg) */}
-      <section data-wf-el='section' style={{ display: 'block', backgroundColor: 'rgb(255, 255, 139)', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px', position: 'relative' }} className='text-center text-brand-fg'>
-        <div data-wf-el='asci-wrap' className='absolute inset-0 overflow-hidden' style={{ pointerEvents: 'auto' }}>
-          <PixelBlastBackground />
-        </div>
-        <div data-wf-el='container' className='relative z-10 mx-auto max-w-[1238px]' style={{ marginTop: '49.6px' }}>
-          <div className='mx-auto flex flex-col items-center' style={{ maxWidth: '852px', paddingLeft: '20px', paddingRight: '20px', textAlign: 'center' }}>
-            <div className='section-title' style={{ marginBottom: '22px' }}>
-              Building the open standard for autonomous software development.
-            </div>
-            {/* Live's CTA-section subtitle sits inside a centered `.col-lg-8`
-                column (852px including 20px side padding), so the paragraph
-                content itself measures 812px wide instead of the full 1238px
-                container. */}
-            <p className='fluid-body-lg font-medium text-brand-muted' style={{ margin: 0 }}>
-              OpenHands is the foundation for secure, transparent, model-agnostic coding agents - empowering every software team to build faster with full control.
-            </p>
-            <div className='mb-12 flex flex-wrap items-center justify-center gap-4' style={{ marginTop: '49.6px' }}>
-              <OverlayLinkButton href={FOOTER_COMMUNITY_CTA.href} label={FOOTER_COMMUNITY_CTA.label} variant='primary' />
-            </div>
-          </div>
-          {/* Spacing gap between the hero CTAs and the footer nav block.
-            * Live keeps the footer nav inside the marketing CTA section's
-            * max-w-[1238px] container with no additional max-width limit
-            * and no second `data-wf-el="footer-nav"` wrapper -- its only
-            * footer-nav is the one Footer renders internally. */}
-          <div className='mt-12 md:mt-20'>
-            {/* Pass showMarketingCta={false} because home already renders the
-              * "Building the open standard..." headline + CTAs above; without
-              * this Footer would render the entire marketing CTA block a
-              * second time, inflating the section by ~163px and cascading
-              * footer/page-height drift versus the live site. */}
-            <Footer {...getRouteFooterProps('/')} />
-          </div>
-        </div>
-      </section>
-
+      <Footer {...getRouteFooterProps('/')} />
     </main>
   );
 };

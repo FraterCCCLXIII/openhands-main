@@ -130,7 +130,10 @@ export const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
                       <Link
                         to={item.to}
                         className='flex flex-col gap-1 text-brand-bg hover:text-brand-accent'
-                        onClick={onClose}
+                        onClick={() => {
+                          setOpenGroup(null);
+                          onClose();
+                        }}
                       >
                         <span>{item.name}</span>
                         <span className='text-sm leading-[21.6px] text-[#b3a88c]'>
@@ -166,7 +169,13 @@ export const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
                       <ul className='flex list-none flex-col gap-4 p-0 m-0'>
                         {group.links.map((item) => (
                           <li key={item.name}>
-                            <InternalOrExternalMenuLink item={item} onClose={onClose} />
+                            <InternalOrExternalMenuLink
+                              item={item}
+                              onClose={() => {
+                                setOpenGroup(null);
+                                onClose();
+                              }}
+                            />
                           </li>
                         ))}
                       </ul>

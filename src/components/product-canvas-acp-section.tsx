@@ -81,7 +81,7 @@ export function ProductCanvasAcpSection() {
             <p data-wf-el='paragraph-lg' className='fluid-body-lg text-brand-muted' style={{ marginTop: 0, marginBottom: '32px', textWrap: 'pretty' }}>
               No migration. No new model to learn. OpenHands adds the system layer those tools are missing.
             </p>
-            <OverlayLinkButton href={PRODUCT_CANVAS_ACP_LEARN_MORE_URL} label='Learn more' variant='primary' />
+            <OverlayLinkButton href={PRODUCT_CANVAS_ACP_LEARN_MORE_URL} label='Learn more' variant='outline' />
           </div>
 
           <LazyMotion features={domAnimation}>

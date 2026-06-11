@@ -11,43 +11,28 @@ vi.mock('react-router', () => ({
 }));
 
 describe('BlogCard', () => {
-  it('renders the compact live-style card metadata', () => {
+  it('renders the typography-first blog index card without images', () => {
     render(
       <BlogCard
         title='Velocity Is Dead'
         date='2026-02-18T12:00:00.000Z'
         href='/blog/velocity-is-dead'
-        img='/assets/example.png'
-      />
-    );
-
-    expect(screen.getByRole('link')).toHaveAttribute('href', '/blog/velocity-is-dead');
-    expect(screen.getByText('February 18, 2026')).toBeInTheDocument();
-    expect(screen.getByText('Velocity Is Dead')).toBeInTheDocument();
-    expect(screen.getByAltText('Velocity Is Dead cover image')).toBeInTheDocument();
-    expect(screen.queryByText('Read More')).not.toBeInTheDocument();
-  });
-
-  it('can mirror the live /blog grid Webflow element structure', () => {
-    render(
-      <BlogCard
-        title='OpenHands Product Update - May 2026'
-        date='2026-05-20T12:00:00.000Z'
-        href='/blog/openhands-product-update---may-2026'
-        img='/assets/update.png'
+        excerpt='What really matters when velocity of code creation is no longer the bottleneck?'
         webflowIndexCard
-        verticalOffset={49}
       />
     );
 
-    const card = screen.getByRole('link', { name: /May 20, 2026\s+OpenHands Product Update/i });
+    const card = screen.getByRole('link', { name: /February 18, 2026\s+Velocity Is Dead/i });
 
+    expect(card).toHaveAttribute('href', '/blog/velocity-is-dead');
     expect(card).toHaveAttribute('data-wf-el', 'blog-item');
-    expect(card).toHaveStyle({ maxWidth: '100%', top: '-49px' });
-    expect(card.querySelector('[data-wf-el="standard-media"]')).toBeInTheDocument();
-    expect(card.querySelector('img')).toHaveAttribute('data-wf-el', 'standard-media-img');
-    expect(screen.getByText('May 20, 2026')).toHaveAttribute('data-wf-el', 'paragraph-sm');
-    expect(screen.getByText('OpenHands Product Update - May 2026')).toHaveAttribute('data-wf-el', 'paragraph-lg');
+    expect(card).toHaveClass('blog-card--typography');
+    expect(card).toHaveStyle({ maxWidth: '100%' });
+    expect(screen.getByText('February 18, 2026')).toHaveAttribute('data-wf-el', 'paragraph-sm');
+    expect(screen.getByText('Velocity Is Dead')).toHaveAttribute('data-wf-el', 'paragraph-lg');
+    expect(screen.getByText(/What really matters when velocity/i)).toHaveClass('line-clamp-2');
+    expect(card.querySelector('img')).not.toBeInTheDocument();
+    expect(card.querySelector('[data-wf-el="standard-media"]')).not.toBeInTheDocument();
   });
 
   it('supports title-only related cards without visible dates', () => {
@@ -70,14 +55,12 @@ describe('BlogCard', () => {
     expect(document.querySelector('img')?.getAttribute('alt')).toBe('');
   });
 
-  it('renders the featured overlay card copy', () => {
+  it('renders the featured typography card copy', () => {
     render(
       <FeaturedBlogCard
         href='/blog/openhands-index'
         title='Introducing the OpenHands Index'
         description='A comprehensive benchmark for agentic software engineering models.'
-        img='/assets/featured.png'
-        imgAlt=''
       />
     );
 
@@ -85,15 +68,11 @@ describe('BlogCard', () => {
     const readMoreLink = featuredCard.querySelector('a');
 
     expect(featuredCard).toBeInTheDocument();
+    expect(featuredCard).toHaveClass('featured-blog-card--typography');
     expect(screen.getByText('Introducing the OpenHands Index')).toBeInTheDocument();
+    expect(screen.getByText(/comprehensive benchmark/i)).toHaveClass('line-clamp-2');
     expect(readMoreLink).toHaveAttribute('href', '/blog/openhands-index');
-    const image = featuredCard.querySelector('img');
-
-    expect(featuredCard).toHaveStyle({ height: '620px' });
-    expect(featuredCard.querySelector('[data-wf-el="standard-media"]')).toHaveClass('h-full');
-    expect(image?.getAttribute('alt')).toBe('');
-    expect(image).toHaveClass('h-full', 'w-full', 'object-cover');
-    expect(image?.className).not.toContain('transition-transform');
-    expect(image?.className).not.toContain('group-hover:scale');
+    expect(featuredCard.querySelector('img')).not.toBeInTheDocument();
+    expect(featuredCard.querySelector('[data-wf-el="standard-media"]')).not.toBeInTheDocument();
   });
 });

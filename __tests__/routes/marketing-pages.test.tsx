@@ -8,6 +8,7 @@ import ProductCanvas from '../../src/routes/product-canvas';
 import ProductSdk from '../../src/routes/product-sdk';
 import Enterprise from '../../src/routes/enterprise';
 import Community from '../../src/routes/community';
+import { PixelBlastProvider } from '../../src/contexts/pixel-blast-context';
 
 vi.mock('react-router', async () => {
   const actual = await vi.importActual<typeof import('react-router')>('react-router');
@@ -34,7 +35,11 @@ vi.mock('react-router', async () => {
 });
 
 const renderRoute = (node: React.ReactNode) => {
-  return render(<MemoryRouter>{node}</MemoryRouter>);
+  return render(
+    <PixelBlastProvider>
+      <MemoryRouter>{node}</MemoryRouter>
+    </PixelBlastProvider>,
+  );
 };
 
 const FAQ_LABEL_COUNT = 5;
@@ -70,10 +75,9 @@ describe('Marketing parity routes', () => {
     expect(screen.getByText('Terminal / CLI')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /Agentic power from the command line/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /A first-class terminal and CLI interface for autonomous agents/i })).toBeInTheDocument();
-    expect(screen.getAllByRole('link', { name: 'Get Started' })[0]).toHaveAttribute(
-      'href',
-      'https://docs.openhands.dev/openhands/usage/cli/installation',
-    );
+    expect(
+      container.querySelector('a[href="https://docs.openhands.dev/openhands/usage/cli/installation"]'),
+    ).toBeInTheDocument();
     expect(screen.getByText('Intuitive and powerful Terminal UX')).toBeInTheDocument();
     expect(screen.getByText('Fix bugs before standup')).toBeInTheDocument();
     expect(screen.getByText('Does the OpenHands CLI require cloud connectivity?')).toBeInTheDocument();
@@ -92,9 +96,12 @@ describe('Marketing parity routes', () => {
       'href',
       'https://docs.openhands.dev/openhands/usage/run-openhands/local-setup',
     );
-    expect(screen.getByText('Generate technical plans and PRDs')).toBeInTheDocument();
-    expect(screen.getByText('Break epics into agent-sized tasks')).toBeInTheDocument();
-    expect(screen.getByText('What is the OpenHands GUI?')).toBeInTheDocument();
+    expect(screen.getByText('More than a new UI')).toBeInTheDocument();
+    expect(screen.getByText(/Ready to go further\?/i)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Download Agent Canvas' })).toHaveAttribute(
+      'href',
+      'https://github.com/OpenHands/agent-canvas/releases',
+    );
     expect(screen.queryByRole('heading', { name: /Bring your team into the loop/i })).not.toBeInTheDocument();
   });
 
@@ -153,7 +160,7 @@ describe('Marketing parity routes', () => {
     expect(container.querySelector('img[data-wf-el="acp_quote_img"]')).toHaveAttribute('src', '/assets/webflow/enterprise/image96x96.png');
     expect(container.querySelector('img[data-wf-el="acp_quote_logo"]')).toHaveAttribute('src', '/assets/webflow/enterprise/c3ailogo.svg');
     expect(container.querySelectorAll('[data-wf-el="heading-stack"]')).toHaveLength(6);
-    expect(container.querySelectorAll('[data-wf-el="paragraph-lg"]')).toHaveLength(4);
+    expect(container.querySelectorAll('[data-wf-el="paragraph-lg"]')).toHaveLength(3);
 
     expect(container.querySelector('[data-wf-el="container"]')).toHaveStyle({ width: '90%' });
     expect(container.querySelector('[data-wf-el="section-hero"] [data-wf-el="asci-wrap"]')).toHaveStyle({ maxHeight: '100vh' });
@@ -181,8 +188,8 @@ describe('Marketing parity routes', () => {
       '/whitepapers/modernize-legacy-systems-with-ai-agents',
     );
 
-    // Closing footer section mirrors the live enterprise footer, including the visible copyright.
-    expect(screen.getByText(/What comes after Claude Code\?/i)).toBeInTheDocument();
+    // Closing footer uses the shared site footer, including the visible copyright.
+    expect(screen.getByText(/Building the open standard for autonomous software development\./i)).toBeInTheDocument();
     expect(screen.getByText(/OpenHands - All rights reserved/i).textContent?.replace(/\u00a0/g, ' ')).toMatch(/© \d{4} OpenHands - All rights reserved/i);
 
     // Old marketing-page placeholders should be gone now

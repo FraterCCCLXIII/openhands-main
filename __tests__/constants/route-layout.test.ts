@@ -43,20 +43,21 @@ describe('route layout configuration', () => {
     });
   });
 
-  it('centralizes footer CTA variants for commercial routes', () => {
+  it('uses the shared footer everywhere except Agent Canvas custom copy', () => {
     expect(getRouteFooterProps('/enterprise')).toMatchObject({
-      marketingCtaTitle: 'What comes after Claude Code?',
-      marketingCtaPrimary: { href: '/contact', label: 'Book a Demo' },
+      showCopyright: true,
+      showSocialLinks: true,
       compactSpacerHeight: 0,
     });
+    expect(getRouteFooterProps('/enterprise').marketingCtaTitle).toBeUndefined();
 
     expect(getRouteFooterProps('/pricing')).toMatchObject({
-      marketingCtaTitle:
-        'Building the open standard for autonomous software development.',
-      marketingCtaPrimary: { href: '/community', label: 'Join The Community' },
-      marketingCtaSecondary: null,
       compactNavSpacerHeight: ROUTE_PARITY_MEASUREMENTS.footerSpacers.pricingCompact,
+      showCopyright: true,
     });
+    expect(getRouteFooterProps('/pricing').marketingCtaTitle).toBeUndefined();
+
+    expect(getRouteFooterProps('/product/cli').marketingCtaTitle).toBeUndefined();
 
     expect(getRouteFooterProps('/product/canvas')).toMatchObject({
       marketingCtaTitle: 'Ready to go further?',

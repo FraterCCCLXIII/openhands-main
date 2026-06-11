@@ -1,5 +1,4 @@
 import type { FooterProps } from '~/components/footer';
-import { FOOTER_COMMUNITY_CTA, GET_OPENHANDS_CTA } from '~/constants/site-shell';
 import { PRODUCT_FEATURE_PAGES } from '~/data/product-feature-pages';
 import { normalizePathname } from '~/utils/normalize-pathname';
 
@@ -101,52 +100,18 @@ const shellFooter = (overrides: Partial<RouteFooterConfig> = {}): RouteFooterCon
 
 const footerCtaVariants = {
   default: {},
-  product: {
-    marketingCtaPrimary: { href: FOOTER_COMMUNITY_CTA.href, label: FOOTER_COMMUNITY_CTA.label },
-    marketingCtaSecondary: {
-      href: 'https://docs.openhands.dev/overview/introduction',
-      label: 'See developer docs',
-    },
-  },
-  enterprise: {
-    marketingCtaTitle: 'What comes after Claude Code?',
-    marketingCtaDescription:
-      'The teams shipping the most are moving beyond individual agent sessions to governed, automated workflows. Let us show you what that looks like in practice.',
-    marketingCtaPrimary: { href: '/contact', label: 'Book a Demo' },
-    marketingCtaSecondary: { href: 'https://docs.openhands.dev/sdk', label: 'Build with SDK' },
-  },
-  pricing: {
-    marketingCtaTitle:
-      'Building the open standard for autonomous software development.',
-    marketingCtaDescription:
-      'OpenHands is the foundation for secure, transparent, model-agnostic coding agents - empowering every software team to build faster with full control.',
-    marketingCtaPrimary: { href: FOOTER_COMMUNITY_CTA.href, label: FOOTER_COMMUNITY_CTA.label },
-    marketingCtaSecondary: null,
-  },
-  whitepaper: {
-    marketingCtaTitle: 'Bring your team into the loop.',
-    marketingCtaDescription: 'Use the OpenHands Web GUI to collaborate with agents.',
-    marketingCtaPrimary: { label: GET_OPENHANDS_CTA.label, href: GET_OPENHANDS_CTA.href },
-    marketingCtaSecondary: {
-      label: 'Download Local GUI',
-      href: 'https://docs.openhands.dev/openhands/usage/run-openhands/local-setup',
-    },
-  },
-  'product-cli': productFeatureCta('cli'),
+  product: {},
+  enterprise: {},
+  pricing: {},
+  whitepaper: {},
+  'product-cli': {},
   'product-gui': productFeatureCta('gui'),
-  'product-sdk': productFeatureCta('sdk'),
+  'product-sdk': {},
 } satisfies Record<FooterCtaVariant, Partial<FooterProps>>;
 
 const ROUTE_LAYOUTS: Record<string, RouteLayoutConfig> = {
   '/': {
-    footer: {
-      mode: 'shell',
-      compactNav: true,
-      showMarketingCta: false,
-      showSocialLinks: true,
-      showCopyright: true,
-      containerWfEl: null,
-    },
+    footer: shellFooter({ showCopyright: true }),
   },
   '/about': {
     footer: shellFooter({ shellTrailingSpacerHeight: 0 }),
@@ -173,10 +138,7 @@ const ROUTE_LAYOUTS: Record<string, RouteLayoutConfig> = {
   '/blog': {
     footer: shellFooter({
       compactNavSpacerHeight: ROUTE_PARITY_MEASUREMENTS.footerSpacers.blogIndexCompact,
-      standaloneContainerHeight: ROUTE_PARITY_MEASUREMENTS.footerSpacers.blogIndexContainer,
-      standaloneContainerFlowSpacerHeight: ROUTE_PARITY_MEASUREMENTS.footerSpacers.blogIndexFlowSpacer,
     }),
-    pageWrapper: { height: ROUTE_PARITY_MEASUREMENTS.pageWrapperHeights.blogIndex },
   },
   '/blog/:slug': {
     footer: shellFooter(),
@@ -189,15 +151,13 @@ const ROUTE_LAYOUTS: Record<string, RouteLayoutConfig> = {
   },
   '/enterprise': {
     footer: shellFooter({
-      cta: 'enterprise',
       showCopyright: true,
-      minHeight: ROUTE_PARITY_MEASUREMENTS.footerSection.enterpriseMinHeight,
     }),
   },
   '/pricing': {
     footer: shellFooter({
-      cta: 'pricing',
       compactNavSpacerHeight: ROUTE_PARITY_MEASUREMENTS.footerSpacers.pricingCompact,
+      showCopyright: true,
     }),
     pageWrapper: { height: ROUTE_PARITY_MEASUREMENTS.pageWrapperHeights.pricing },
   },
@@ -213,16 +173,12 @@ const ROUTE_LAYOUTS: Record<string, RouteLayoutConfig> = {
   },
   '/product': {
     footer: shellFooter({
-      cta: 'product',
       showCopyright: true,
-      minHeight: ROUTE_PARITY_MEASUREMENTS.footerSection.productIndexMinHeight,
     }),
     pageWrapper: { height: ROUTE_PARITY_MEASUREMENTS.pageWrapperHeights.productIndex },
   },
   '/whitepapers/modernize-legacy-systems-with-ai-agents': {
     footer: shellFooter({
-      cta: 'whitepaper',
-      webflowLayout: true,
       showCopyright: true,
     }),
   },
@@ -270,7 +226,7 @@ function getDynamicRouteLayout(pathname: string): RouteLayoutConfig | undefined 
   if (productVariant) {
     return {
       footer: shellFooter({
-        cta: `product-${productVariant}`,
+        ...(productVariant === 'gui' ? { cta: 'product-gui' } : {}),
         showCopyright: true,
       }),
     };
