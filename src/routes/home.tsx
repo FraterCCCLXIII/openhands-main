@@ -324,7 +324,7 @@ const Home = () => {
                 }}
               >
                 <h1 data-wf-el='hero-heading_h1' id='hero-heading' className='hero-heading-h1 font-medium tracking-[-0.03em] text-brand-fg' style={{ marginBottom: '0px' }}>
-                  One workspace for all your AI coding agents
+                  Turn coding agents into org-wide automation
                 </h1>
               </div>
 

@@ -7,7 +7,6 @@ import { Footer } from '~/components/footer';
 import { BootstrapIcon, type BootstrapIconName } from '~/components/icons/bootstrap-icons';
 import { OverlayLinkButton } from '~/components/overlay-link-button';
 import { getRouteFooterProps } from '~/constants/route-layout';
-import { GET_OPENHANDS_CTA } from '~/constants/site-shell';
 import {
   C3AI_AUTHOR_IMAGE,
   C3AI_LOGO_IMAGE,

@@ -21,7 +21,7 @@ describe('home route parity structure', () => {
   it('matches the visible heading sequence expected by the parity audit', () => {
     const { container } = renderRoute();
 
-    expect(screen.getByText('One workspace for all your AI coding agents')).toBeInTheDocument();
+    expect(screen.getByText('Turn coding agents into org-wide automation')).toBeInTheDocument();
 
     const headingTexts = screen.getAllByRole('heading').map((heading) => heading.textContent?.trim());
     expect(headingTexts).not.toContain('Start with a proven workflow');
