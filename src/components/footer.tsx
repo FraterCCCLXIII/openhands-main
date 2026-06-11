@@ -266,8 +266,8 @@ const WebflowFooterContent = ({
         style={{
           ...FOOTER_ROW_STYLE,
           justifyContent: 'center',
-          marginTop: isManifestoMobile ? '64px' : showMarketingCta ? 'var(--footer-social-margin-top, 128px)' : showSocialLinks ? '80px' : undefined,
-          marginBottom: 'var(--footer-bottom-row-margin-bottom, 40px)',
+          marginTop: isManifestoMobile ? '64px' : showMarketingCta ? 'var(--footer-social-margin-top, 80px)' : showSocialLinks ? '80px' : undefined,
+          marginBottom: 'var(--footer-bottom-row-margin-bottom, 24px)',
         }}
       >
         <div className='col col-lg-8 footer-logo-col' style={FOOTER_COL_LG_8_STYLE}>
@@ -326,7 +326,7 @@ const WebflowFooterContent = ({
             </Link>
           </div>
           {showSocialLinks ? (
-            <div data-wf-el='footer-social-row' className='row row-justify-center' style={{ ...FOOTER_ROW_STYLE, justifyContent: 'center', marginBottom: 'var(--footer-social-margin-bottom, 49px)', rowGap: '16px', textAlign: 'start' }}>
+            <div data-wf-el='footer-social-row' className='row row-justify-center' style={{ ...FOOTER_ROW_STYLE, justifyContent: 'center', marginBottom: 'var(--footer-social-margin-bottom, 24px)', rowGap: '16px', textAlign: 'start' }}>
               <div className='col' style={{ ...FOOTER_COL_STYLE, flex: '1 1 100%', maxWidth: '100%' }}>
                 <div className='row row-gap-sm row-justify-center' style={{ ...FOOTER_ROW_STYLE, justifyContent: 'center', columnGap: '8px', rowGap: '16px' }}>
                   {SOCIAL_LINKS.map((item) => (
@@ -365,7 +365,7 @@ export const Footer = ({
   standaloneContainerFlowSpacerHeight = 1,
   navWidthClass,
   minHeight: _minHeight,
-  compactSpacerHeight = compactNavSpacerHeight ?? 50,
+  compactSpacerHeight = 0,
   showMarketingCta = true,
   showCopyright = true,
   footerContainerNudge,
@@ -435,7 +435,9 @@ export const Footer = ({
         />
       </div>
       {standaloneContainerHeight ? <div aria-hidden='true' style={{ height: `${standaloneContainerFlowSpacerHeight}px` }} /> : null}
-      {compactNav && compactSpacerCssHeight ? <div aria-hidden='true' style={{ height: compactSpacerCssHeight }} /> : null}
+      {compactNav && effectiveCompactSpacerHeight > 0 && compactSpacerCssHeight ? (
+        <div aria-hidden='true' style={{ height: compactSpacerCssHeight }} />
+      ) : null}
     </section>
   );
 };

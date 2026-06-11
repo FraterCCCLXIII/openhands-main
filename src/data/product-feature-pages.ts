@@ -29,7 +29,7 @@ export interface ProductFeaturePageData {
     href: string;
     screenReaderLabel?: string;
   };
-  secondaryCta: {
+  secondaryCta?: {
     label: string;
     href: string;
     screenReaderLabel?: string;
@@ -162,23 +162,20 @@ const productFeaturePages: Record<ProductFeatureVariant, ProductFeaturePageData>
     },
   },
   gui: {
-    pageTitle: 'Web GUI',
-    metaTitle: 'OpenHands Web GUI | Secure, Scalable Agentic Software Development',
-    metaDescription: 'Plan, run, and review agent work together in a collaborative UI.',
-    eyebrow: 'Web GUI',
-    heading: 'Agentic development, made human.',
-    description: 'Plan, run, and review agent work together in a collaborative UI.',
+    pageTitle: 'Agent Canvas',
+    metaTitle: 'OpenHands Agent Canvas | Secure, Scalable Agentic Software Development',
+    metaDescription:
+      'Agent Canvas is a local, visual workspace for running AI coding agents. Install on your laptop, connect the agents you already use, and start.',
+    eyebrow: 'Agent Canvas',
+    heading: 'From prompting to process',
+    description:
+      'Agent Canvas, the new face of OpenHands, is a local, visual workspace for running AI coding agents. Install on your laptop, connect the agents you already use, and start.',
     heroImage: {
       src: '/assets/webflow/misc/6994c3bfa634f5f3966d2150_4c76230966d0d54a446a009e4f4a19c2_gui.png',
       alt: '',
     },
     primaryCta: {
-      label: GET_OPENHANDS_CTA.label,
-      href: GET_OPENHANDS_CTA.href,
-      screenReaderLabel: GET_OPENHANDS_CTA.label,
-    },
-    secondaryCta: {
-      label: 'Download Local GUI',
+      label: 'Download for free',
       href: 'https://docs.openhands.dev/openhands/usage/run-openhands/local-setup',
     },
     introTitle: 'A collaborative interface for agentic workflows.',
@@ -242,15 +239,16 @@ const productFeaturePages: Record<ProductFeatureVariant, ProductFeaturePageData>
           'Yes. The GUI supports secure deployment options and integrates with enterprise infrastructure, making it suitable for teams that require governance, visibility, and collaboration at scale.',
       },
     ],
-    closingTitle: 'Bring your team into the loop.',
-    closingDescription: 'Use the OpenHands Web GUI to collaborate with agents.',
+    closingTitle: 'Ready to go further?',
+    closingDescription:
+      "Agent Canvas is step one. When you're ready, scale into Teams, Enterprise, or build custom agents with the SDK.",
     closingPrimaryCta: {
-      label: GET_OPENHANDS_CTA.label,
-      href: GET_OPENHANDS_CTA.href,
+      label: 'Download Agent Canvas',
+      href: 'https://github.com/OpenHands/agent-canvas/releases',
     },
     closingSecondaryCta: {
-      label: 'Download Local GUI',
-      href: 'https://docs.openhands.dev/openhands/usage/run-openhands/local-setup',
+      label: 'Explore Enterprise',
+      href: '/enterprise',
     },
   },
   cli: {

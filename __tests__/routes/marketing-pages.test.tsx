@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import Product from '../../src/routes/product';
 import ProductCli from '../../src/routes/product-cli';
-import ProductGui from '../../src/routes/product-gui';
+import ProductCanvas from '../../src/routes/product-canvas';
 import ProductSdk from '../../src/routes/product-sdk';
 import Enterprise from '../../src/routes/enterprise';
 import Community from '../../src/routes/community';
@@ -51,7 +51,7 @@ describe('Marketing parity routes', () => {
     expect(screen.getAllByRole('link', { name: 'Learn more' })).toHaveLength(3);
     expect(screen.getAllByRole('link', { name: 'Learn more' }).map((link) => link.getAttribute('href'))).toEqual([
       '/product/cli',
-      '/product/gui',
+      '/product/canvas',
       '/product/sdk',
     ]);
     expect(screen.getAllByRole('link', { name: 'Get OpenHands' })[0]).toHaveAttribute('href', 'https://docs.openhands.dev/overview/quickstart');
@@ -84,11 +84,14 @@ describe('Marketing parity routes', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('renders the GUI product page content', () => {
-    renderRoute(<ProductGui />);
+  it('renders the Agent Canvas product page content', () => {
+    renderRoute(<ProductCanvas />);
 
-    expect(screen.getByRole('heading', { name: /Agentic development, made human/i })).toBeInTheDocument();
-    expect(screen.getAllByRole('link', { name: 'Get OpenHands' })[0]).toHaveAttribute('href', 'https://docs.openhands.dev/overview/quickstart');
+    expect(screen.getByRole('heading', { name: /From prompting to process/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Download for free' })).toHaveAttribute(
+      'href',
+      'https://docs.openhands.dev/openhands/usage/run-openhands/local-setup',
+    );
     expect(screen.getByText('Generate technical plans and PRDs')).toBeInTheDocument();
     expect(screen.getByText('Break epics into agent-sized tasks')).toBeInTheDocument();
     expect(screen.getByText('What is the OpenHands GUI?')).toBeInTheDocument();

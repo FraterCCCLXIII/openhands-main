@@ -35,7 +35,7 @@ export const Button: React.FC<ButtonProps> = ({
   const commonClassName = clsx(
     style === 'primary'
       ? 'border border-transparent bg-brand-fg text-brand-bg'
-      : 'border border-brand-fg bg-transparent text-brand-fg',
+      : 'border border-[rgba(24,24,24,0.12)] bg-transparent text-brand-fg',
     'font-medium px-4 rounded-lg transition-colors duration-200 hover:bg-brand-fg hover:text-brand-bg',
     icon && 'flex items-center gap-[15px]',
     variant === 'small' ? 'py-2 text-sm leading-[20.8px]' : 'py-[11px]',

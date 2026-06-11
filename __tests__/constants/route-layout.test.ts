@@ -39,7 +39,6 @@ describe('route layout configuration', () => {
       standalone: true,
       showSocialLinks: true,
       compactNav: true,
-      compactSpacerHeight: ROUTE_PARITY_MEASUREMENTS.footerSpacers.privacyCompact,
       footerContainerNudge: ROUTE_PARITY_MEASUREMENTS.footerSpacers.privacyNudge,
     });
   });
@@ -48,7 +47,7 @@ describe('route layout configuration', () => {
     expect(getRouteFooterProps('/enterprise')).toMatchObject({
       marketingCtaTitle: 'What comes after Claude Code?',
       marketingCtaPrimary: { href: '/contact', label: 'Book a Demo' },
-      compactSpacerHeight: ROUTE_PARITY_MEASUREMENTS.footerSpacers.enterpriseCompact,
+      compactSpacerHeight: 0,
     });
 
     expect(getRouteFooterProps('/pricing')).toMatchObject({
@@ -59,10 +58,16 @@ describe('route layout configuration', () => {
       compactNavSpacerHeight: ROUTE_PARITY_MEASUREMENTS.footerSpacers.pricingCompact,
     });
 
-    expect(getRouteFooterProps('/product/gui')).toMatchObject({
-      marketingCtaTitle: 'Bring your team into the loop.',
-      compactSpacerHeight: 2,
-      footerContainerTransform: 'scaleY(0.99975)',
+    expect(getRouteFooterProps('/product/canvas')).toMatchObject({
+      marketingCtaTitle: 'Ready to go further?',
+      marketingCtaDescription:
+        "Agent Canvas is step one. When you're ready, scale into Teams, Enterprise, or build custom agents with the SDK.",
+      marketingCtaPrimary: {
+        label: 'Download Agent Canvas',
+        href: 'https://github.com/OpenHands/agent-canvas/releases',
+      },
+      marketingCtaSecondary: { label: 'Explore Enterprise', href: '/enterprise' },
+      compactSpacerHeight: 0,
     });
   });
 });

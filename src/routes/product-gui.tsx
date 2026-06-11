@@ -1,8 +1,8 @@
-import { createProductFeatureRoute } from '~/components/product-feature-route';
+import { redirect } from 'react-router';
+import type { Route } from './+types/product-gui';
 
-const route = createProductFeatureRoute('gui');
+export const loader = () => redirect('/product/canvas', 301);
 
-export const meta = route.meta;
-export const handle = route.handle;
-
-export default route.Component;
+export default function ProductGuiRedirect() {
+  return null;
+}

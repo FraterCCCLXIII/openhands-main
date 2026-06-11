@@ -1,9 +1,16 @@
-import { Fragment, type CSSProperties } from 'react';
+import { Download } from 'lucide-react';
+import { Fragment, type CSSProperties, type ReactNode } from 'react';
 import type { ProductFeatureFaq, ProductFeaturePageData, ProductFeatureVariant } from '~/data/product-feature-pages';
 import { Footer } from '~/components/footer';
 import { getRouteFooterProps } from '~/constants/route-layout';
 import { GET_OPENHANDS_CTA } from '~/constants/site-shell';
 import { PixelBlastBackground } from '~/components/pixel-blast-background';
+import { HeroAppPreview } from '~/components/hero-app-preview';
+import { ProductCanvasAcpSection } from '~/components/product-canvas-acp-section';
+import { ProductCanvasBackendsSection } from '~/components/product-canvas-backends-section';
+import { ProductCanvasGetStartedSection } from '~/components/product-canvas-get-started-section';
+import { ProductCanvasFeatureGrid } from '~/components/product-canvas-feature-grid';
+import { HERO_APP_PREVIEW_SLIDES } from '~/constants/hero-app-preview-slides';
 import { OverlayLinkButton } from '~/components/overlay-link-button';
 import { FAQ_TRIGGER_DIVIDER, CLOSED_FAQ_ITEM_PROPS } from '~/components/faq-accordion';
 
@@ -12,6 +19,7 @@ export interface ProductPageAction {
   href: string;
   variant?: 'primary' | 'outline' | 'lightbrown';
   screenReaderLabel?: string;
+  icon?: ReactNode;
 }
 
 export type ProductFaqItem = ProductFeatureFaq;
@@ -44,6 +52,7 @@ export const ProductPageActionLink = ({
   className = '',
   screenReaderLabel,
   wrapperStyle,
+  icon,
 }: ProductPageAction & { className?: string; wrapperStyle?: React.CSSProperties }) => {
   return (
     <OverlayLinkButton
@@ -53,6 +62,8 @@ export const ProductPageActionLink = ({
       variant={variant}
       className={className}
       wrapperStyle={wrapperStyle}
+      icon={icon}
+      iconWrapWfEl={icon ? 'btn-icon' : undefined}
       wfEl='button'
       textWfEl='btn-text'
     />
@@ -108,7 +119,7 @@ const ProductFeatureIntroBand = ({
   </section>
 );
 
-const ProductFeatureProofBand = ({
+export const ProductFeatureProofBand = ({
   title,
   description,
   image,
@@ -151,37 +162,6 @@ const ProductFeatureProofBand = ({
   </section>
 );
 
-const ProductGuiIntroSection = ({
-  image,
-  title,
-  description,
-}: {
-  image: ProductFeaturePageData['heroImage'];
-  title: string;
-  description: string;
-}) => (
-  <section data-wf-el='section' className='product-feature-section product-gui-intro-section' style={{ display: 'block', backgroundColor: 'rgb(24, 24, 24)', color: 'rgb(247, 243, 238)', position: 'relative', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px' }}>
-    <div data-wf-el='container' className='product-feature-container mx-auto max-w-[1238px]' style={{ display: 'block', width: 'calc(100% - 80px)', maxWidth: '1238px', marginLeft: 'auto', marginRight: 'auto' }}>
-      <div className='product-gui-intro-row' style={{ display: 'flex', marginLeft: '-20px', marginRight: '-20px' }}>
-        <div className='product-gui-intro-media-col' style={{ width: '50%', paddingLeft: '20px', paddingRight: '20px', minHeight: 'min(469px, 52.5vw)' }}>
-          <div data-wf-el='product-list_img_wrap' className='product-gui-hero-image-wrap bg-brand-bg' style={{ backgroundColor: 'rgb(247, 243, 238)', border: '1px solid rgb(179, 168, 140)', borderRadius: '16px', boxSizing: 'border-box', color: 'rgb(247, 243, 238)', display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative', overflow: 'hidden', width: '100%', minHeight: '100%', marginLeft: '0px', padding: '96px 64px 64px', boxShadow: 'none' }}>
-            <div data-wf-el='product-list_img_overlay' className='absolute inset-x-0 top-0 text-brand-fg' style={{ backgroundColor: 'rgb(179, 168, 140)', color: 'rgb(24, 24, 24)', zIndex: 1, padding: '16px' }}>
-              <div data-wf-el='eyebrow' className='font-mono' style={{ fontSize: '14.08px', lineHeight: '16.896px', marginBottom: '0px', width: '100%' }}>Web&nbsp;GUI</div>
-            </div>
-            <img data-wf-el='product-list_img' src={image.src} alt={image.alt} style={{ width: '100%', maxWidth: '469px', height: 'auto', borderRadius: '0px', color: 'rgb(247, 243, 238)', display: 'block', objectFit: 'scale-down' }} />
-          </div>
-        </div>
-        <div className='product-gui-intro-copy-col' style={{ width: '50%', paddingLeft: '20px', paddingRight: '20px', minHeight: 'min(469px, 52.5vw)' }}>
-          <div data-wf-el='heading-stack' className='text-brand-bg' style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-start', paddingLeft: '0px', paddingRight: '0px', width: '100%', height: '100%' }}>
-            <h2 className='section-title'>{title}</h2>
-            <p data-wf-el='paragraph-lg' className='fluid-body-lg text-[#b3a88c]' style={{ marginTop: '0px', marginBottom: '20.8px', width: '100%', textWrap: 'pretty', wordSpacing: '0.025px' }}>{description}</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-);
-
 const ProductList = ({ items }: { items: readonly string[] }) => (
   <ul data-wf-el='product-list_ul' className='product-list' style={{ borderStyle: 'none', textAlign: 'start', width: '571px', marginTop: '0px', listStyleType: 'none', paddingLeft: '0px' }}>
     {items.map((item) => (
@@ -207,6 +187,53 @@ const ProductImageCard = ({
     <div data-wf-el='product-list_img_wrap' className={classNames('product-image-card rounded-[18px]', className)} style={{ backgroundColor: 'rgba(0,0,0,0)', borderWidth: '1px', borderStyle: 'solid', borderColor: 'rgb(179, 168, 140)', boxShadow: 'none', padding: '64px', display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative', overflow: 'hidden', minHeight: '100%' }}>
       <img data-wf-el='product-list_img' src={src} alt={alt} className='img-block w-full' style={{ borderRadius: '0px', objectFit: 'scale-down', ...(useLiveCliImageHeight ? { height: '322.906px' } : {}) }} />
     </div>
+  );
+};
+
+export const ProductFeatureShowcaseSection = ({
+  capabilities,
+  useCases,
+  showcaseImages,
+  variant,
+}: {
+  capabilities: readonly string[];
+  useCases: readonly string[];
+  showcaseImages: ProductFeaturePageData['showcaseImages'];
+  variant: ProductFeatureVariant;
+}) => {
+  const isCli = variant === 'cli';
+
+  return (
+    <section data-wf-el='section' className='product-feature-section product-showcase-section product-feature-grid-section relative' style={{ display: 'block', backgroundColor: 'rgb(247, 243, 238)', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px' }}>
+      <div data-wf-el='container' className='product-feature-container mx-auto max-w-[1238px]' style={{ display: 'block' }}>
+        <div className='product-showcase-grid product-feature-row product-feature-row-capabilities product-detail-grid product-detail-grid--top grid gap-10 lg:grid-cols-2' style={{ marginBottom: '128px', alignItems: 'start', marginLeft: '-20px', marginRight: '-20px' }}>
+          <div data-wf-el='card' style={{ borderStyle: 'none', borderRadius: '8px', position: 'relative', display: 'flex', overflow: 'hidden', flexDirection: 'column', justifyContent: 'flex-start' }}>
+            <div data-wf-el='card-body' style={{ padding: '24px', position: 'relative', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start' }}>
+              <h2 className='section-title text-brand-fg' style={{ textAlign: 'start' }}>
+                Key capabilities
+              </h2>
+              <ProductList items={capabilities} />
+            </div>
+          </div>
+          <div style={isCli ? { transform: 'translateX(-20px)' } : undefined}>
+            <ProductImageCard src={showcaseImages[0].src} alt={showcaseImages[0].alt} className={isCli ? '' : 'lg:-translate-x-5'} />
+          </div>
+        </div>
+        <div className='product-showcase-grid product-feature-row product-feature-row-usecases product-detail-grid grid gap-10 lg:grid-cols-2' style={{ alignItems: 'start', marginLeft: '-20px', marginRight: '-20px' }}>
+          <div style={isCli ? { transform: 'translateX(20px)' } : undefined}>
+            <ProductImageCard src={showcaseImages[1].src} alt={showcaseImages[1].alt} className={classNames(!isCli && 'lg:translate-x-5', isCli && 'cli-how-height')} />
+          </div>
+          <div data-wf-el='card' style={{ borderStyle: 'none', borderRadius: '8px', position: 'relative', display: 'flex', overflow: 'hidden', flexDirection: 'column', justifyContent: 'flex-start' }}>
+            <div data-wf-el='card-body' style={{ padding: '24px', position: 'relative', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start' }}>
+              <h2 className='section-title text-brand-fg' style={{ textAlign: 'start' }}>
+                How teams use it
+              </h2>
+              <ProductList items={useCases} />
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
   );
 };
 
@@ -411,35 +438,41 @@ export const ProductFeaturePage = ({
                 href={page.primaryCta.href}
                 label={page.primaryCta.label}
                 screenReaderLabel={page.primaryCta.screenReaderLabel}
+                icon={
+                  isGui ? (
+                    <Download className='h-5 w-5' strokeWidth={2} aria-hidden='true' />
+                  ) : undefined
+                }
               />
-              <ProductPageActionLink
-                href={page.secondaryCta.href}
-                label={page.secondaryCta.label}
-                screenReaderLabel={page.secondaryCta.screenReaderLabel}
-                variant='outline'
-              />
+              {page.secondaryCta ? (
+                <ProductPageActionLink
+                  href={page.secondaryCta.href}
+                  label={page.secondaryCta.label}
+                  screenReaderLabel={page.secondaryCta.screenReaderLabel}
+                  variant='outline'
+                />
+              ) : null}
             </div>
           </div>
         </div>
         </div>
+        {isGui ? (
+          <div
+            data-wf-el='hero-preview'
+            className='relative z-10 mx-auto w-full max-w-[1238px] overflow-visible px-4 md:px-6'
+            style={{ paddingTop: '56px', paddingBottom: '56px' }}
+          >
+            <HeroAppPreview slides={HERO_APP_PREVIEW_SLIDES} />
+          </div>
+        ) : null}
       </section>
 
-      {isGui ? (
-        <>
-          <ProductGuiIntroSection
-            image={page.heroImage}
-            title={page.introTitle}
-            description={page.introDescription}
-          />
-          <ProductFeatureProofBand
-            title={page.proofTitle}
-            description={page.proofDescription}
-            image={page.accentImage}
-            headingClassName='text-brand-fg'
-            descriptionClassName='text-[#5f5f5f]'
-          />
-        </>
-      ) : (
+      {isGui ? <ProductCanvasFeatureGrid /> : null}
+      {isGui ? <ProductCanvasAcpSection /> : null}
+      {isGui ? <ProductCanvasBackendsSection /> : null}
+      {isGui ? <ProductCanvasGetStartedSection /> : null}
+
+      {!isGui ? (
         <>
           <ProductFeatureIntroBand
             title={page.introTitle}
@@ -454,50 +487,29 @@ export const ProductFeaturePage = ({
             wideDescription={isCli}
           />
         </>
-      )}
+      ) : null}
 
-      <section data-wf-el='section' className='product-feature-section product-showcase-section product-feature-grid-section relative' style={{ display: 'block', backgroundColor: 'rgb(247, 243, 238)', paddingTop: '80px', paddingBottom: '80px', paddingLeft: '0px', paddingRight: '0px' }}>
-        <div data-wf-el='container' className='product-feature-container mx-auto max-w-[1238px]' style={{ display: 'block' }}>
-          <div className='product-showcase-grid product-feature-row product-feature-row-capabilities product-detail-grid product-detail-grid--top grid gap-10 lg:grid-cols-2' style={{ marginBottom: '128px', alignItems: 'start', marginLeft: '-20px', marginRight: '-20px' }}>
-            <div data-wf-el='card' style={{ borderStyle: 'none', borderRadius: '8px', position: 'relative', display: 'flex', overflow: 'hidden', flexDirection: 'column', justifyContent: 'flex-start' }}>
-              <div data-wf-el='card-body' style={{ padding: '24px', position: 'relative', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start' }}>
-                <h2 className='section-title text-brand-fg' style={{ textAlign: 'start' }}>
-                  Key capabilities
-                </h2>
-                <ProductList items={page.capabilities} />
-              </div>
-            </div>
-            <div style={isCli ? { transform: 'translateX(-20px)' } : undefined}>
-              <ProductImageCard src={page.showcaseImages[0].src} alt={page.showcaseImages[0].alt} className={isCli ? '' : 'lg:-translate-x-5'} />
-            </div>
-          </div>
-          <div className='product-showcase-grid product-feature-row product-feature-row-usecases product-detail-grid grid gap-10 lg:grid-cols-2' style={{ alignItems: 'start', marginLeft: '-20px', marginRight: '-20px' }}>
-            <div style={isCli ? { transform: 'translateX(20px)' } : undefined}>
-              <ProductImageCard src={page.showcaseImages[1].src} alt={page.showcaseImages[1].alt} className={classNames(!isCli && 'lg:translate-x-5', isCli && 'cli-how-height')} />
-            </div>
-            <div data-wf-el='card' style={{ borderStyle: 'none', borderRadius: '8px', position: 'relative', display: 'flex', overflow: 'hidden', flexDirection: 'column', justifyContent: 'flex-start' }}>
-              <div data-wf-el='card-body' style={{ padding: '24px', position: 'relative', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start' }}>
-                <h2 className='section-title text-brand-fg' style={{ textAlign: 'start' }}>
-                  How teams use it
-                </h2>
-                <ProductList items={page.useCases} />
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      {!isGui ? (
+        <ProductFeatureShowcaseSection
+          capabilities={page.capabilities}
+          useCases={page.useCases}
+          showcaseImages={page.showcaseImages}
+          variant={variant}
+        />
+      ) : null}
 
-      <ProductComparisonTable
-        dark
-        ctaHref={page.comparisonCta?.href ?? GET_OPENHANDS_CTA.href}
-        ctaLabel={page.comparisonCta?.label ?? GET_OPENHANDS_CTA.label}
-        minHeight={1082}
-      />
-      <ProductFaqSection faqs={page.faqs} />
+      {!isGui ? (
+        <ProductComparisonTable
+          dark
+          ctaHref={page.comparisonCta?.href ?? GET_OPENHANDS_CTA.href}
+          ctaLabel={page.comparisonCta?.label ?? GET_OPENHANDS_CTA.label}
+          minHeight={1082}
+        />
+      ) : null}
+      {!isGui ? <ProductFaqSection faqs={page.faqs} /> : null}
       {/* Live renders the page-specific closing CTA inside the yellow footer
         section, and the footer section itself is a child of page-main. */}
-      <Footer {...getRouteFooterProps(`/product/${variant}`)} />
-      {isGui ? <div aria-hidden='true' style={{ height: '0.313px' }} /> : null}
+      <Footer {...getRouteFooterProps(isGui ? '/product/canvas' : `/product/${variant}`)} />
     </main>
   );
 };

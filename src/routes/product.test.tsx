@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { MemoryRouter } from 'react-router';
 import Product from './product';
-import ProductGui from './product-gui';
+import ProductCanvas from './product-canvas';
 
 const renderProduct = () =>
   renderToStaticMarkup(
@@ -11,10 +11,10 @@ const renderProduct = () =>
     </MemoryRouter>,
   );
 
-const renderProductGui = () =>
+const renderProductCanvas = () =>
   renderToStaticMarkup(
-    <MemoryRouter initialEntries={['/product/gui']}>
-      <ProductGui />
+    <MemoryRouter initialEntries={['/product/canvas']}>
+      <ProductCanvas />
     </MemoryRouter>,
   );
 
@@ -33,8 +33,8 @@ describe('/product parity markup', () => {
     expect(html.match(/data-wf-el="product-table_th"/g)).toHaveLength(30);
   });
 
-  it('keeps the product GUI footer Webflow anchors aligned with live', () => {
-    const html = renderProductGui();
+  it('keeps the product canvas footer Webflow anchors aligned with live', () => {
+    const html = renderProductCanvas();
 
     expect(html.match(/data-wf-el="container"/g)).toHaveLength(7);
     expect(html.match(/data-wf-el="button"/g)).toHaveLength(6);

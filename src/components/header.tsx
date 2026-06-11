@@ -135,14 +135,16 @@ const NAV_DROPDOWN_PANEL_STYLE: React.CSSProperties = {
 
 const PRODUCT_DROPDOWN_LINK_STYLE: React.CSSProperties = {
   ...NAV_DROPDOWN_LINK_STYLE,
-  width: 'auto',
-  height: 'auto',
+  width: '100%',
+  height: '100%',
   minHeight: 0,
-  flex: '0 0 auto',
+  flex: '1 1 auto',
 };
 
 const PRODUCT_DROPDOWN_ITEM_STYLE: React.CSSProperties = {
   ...NAV_DROPDOWN_ITEM_STYLE,
+  width: '100%',
+  minWidth: 0,
   height: 'auto',
   minHeight: 0,
 };
@@ -191,7 +193,7 @@ function NavHeaderCtaButton({
           : isOutline
             ? {
                 backgroundColor: 'rgba(255,255,255,0.34)',
-                borderColor: 'rgb(24, 24, 24)',
+                borderColor: 'rgba(24, 24, 24, 0.12)',
                 backdropFilter: 'blur(5px)',
               }
             : {}),
@@ -384,9 +386,8 @@ export const Header: React.FC<HeaderProps> = ({
                         style={{
                           position: 'relative',
                           display: 'grid',
-                          gridTemplateColumns: `repeat(${PRODUCT_DROPDOWN_ITEMS.length}, max-content)`,
-                          justifyContent: 'start',
-                          alignItems: 'start',
+                          gridTemplateColumns: `repeat(${PRODUCT_DROPDOWN_ITEMS.length}, minmax(0, 1fr))`,
+                          alignItems: 'stretch',
                           gap: '21.6px',
                           margin: 0,
                           padding: 0,

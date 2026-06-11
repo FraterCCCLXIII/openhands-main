@@ -94,6 +94,7 @@ const shellFooter = (overrides: Partial<RouteFooterConfig> = {}): RouteFooterCon
   mode: 'shell',
   standalone: true,
   compactNav: true,
+  compactSpacerHeight: 0,
   showSocialLinks: true,
   ...overrides,
 });
@@ -154,11 +155,11 @@ const ROUTE_LAYOUTS: Record<string, RouteLayoutConfig> = {
   '/contact': {
     footer: shellFooter({ shellTrailingSpacerHeight: 19 }),
   },
+  '/internal/component-examples': {
+    footer: defaultFooter('global'),
+  },
   '/press': {
-    footer: shellFooter({
-      compactSpacerHeight: ROUTE_PARITY_MEASUREMENTS.footerSpacers.pressCompact,
-      shellTrailingSpacerHeight: 0,
-    }),
+    footer: shellFooter({ shellTrailingSpacerHeight: 0 }),
   },
   '/manifesto': {
     footer: shellFooter({ layoutVariant: 'manifesto', shellTrailingSpacerHeight: 0 }),
@@ -190,7 +191,6 @@ const ROUTE_LAYOUTS: Record<string, RouteLayoutConfig> = {
     footer: shellFooter({
       cta: 'enterprise',
       showCopyright: true,
-      compactSpacerHeight: ROUTE_PARITY_MEASUREMENTS.footerSpacers.enterpriseCompact,
       minHeight: ROUTE_PARITY_MEASUREMENTS.footerSection.enterpriseMinHeight,
     }),
   },
@@ -205,7 +205,6 @@ const ROUTE_LAYOUTS: Record<string, RouteLayoutConfig> = {
     footer: {
       ...defaultFooter('global'),
       compactNav: true,
-      compactSpacerHeight: ROUTE_PARITY_MEASUREMENTS.footerSpacers.privacyCompact,
       footerContainerNudge: ROUTE_PARITY_MEASUREMENTS.footerSpacers.privacyNudge,
       minHeight: undefined,
     },
@@ -215,7 +214,6 @@ const ROUTE_LAYOUTS: Record<string, RouteLayoutConfig> = {
   '/product': {
     footer: shellFooter({
       cta: 'product',
-      compactSpacerHeight: ROUTE_PARITY_MEASUREMENTS.footerSpacers.productIndexCompact,
       showCopyright: true,
       minHeight: ROUTE_PARITY_MEASUREMENTS.footerSection.productIndexMinHeight,
     }),
@@ -274,9 +272,6 @@ function getDynamicRouteLayout(pathname: string): RouteLayoutConfig | undefined 
       footer: shellFooter({
         cta: `product-${productVariant}`,
         showCopyright: true,
-        minHeight: ROUTE_PARITY_MEASUREMENTS.footerSection.productSubpageMinHeight,
-        compactSpacerHeight: productVariant === 'sdk' ? 9 : 2,
-        footerContainerTransform: productVariant === 'gui' ? 'scaleY(0.99975)' : undefined,
       }),
     };
   }
@@ -286,7 +281,7 @@ function getDynamicRouteLayout(pathname: string): RouteLayoutConfig | undefined 
 
 function productFeatureVariantFromPathname(pathname: string): 'cli' | 'gui' | 'sdk' | undefined {
   if (pathname === '/product/cli') return 'cli';
-  if (pathname === '/product/gui') return 'gui';
+  if (pathname === '/product/canvas' || pathname === '/product/gui') return 'gui';
   if (pathname === '/product/sdk') return 'sdk';
   return undefined;
 }

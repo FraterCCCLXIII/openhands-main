@@ -45,7 +45,7 @@ describe('compact sidebar menu parity', () => {
     expect(productButton).toHaveAttribute('aria-expanded', 'true');
     expect(screen.getByRole('link', { name: /agent canvas/i })).toHaveAttribute(
       'href',
-      '/product/gui',
+      '/product/canvas',
     );
     expect(screen.queryByRole('link', { name: /automations/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /^cloud$/i })).not.toBeInTheDocument();

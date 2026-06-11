@@ -12,6 +12,7 @@ export default [
   route("/features", "routes/features.tsx"),
   route("/product", "routes/product.tsx"),
   route("/product/cli", "routes/product-cli.tsx"),
+  route("/product/canvas", "routes/product-canvas.tsx"),
   route("/product/gui", "routes/product-gui.tsx"),
   route("/product/sdk", "routes/product-sdk.tsx"),
   route("/enterprise", "routes/enterprise.tsx"),
@@ -31,6 +32,10 @@ export default [
   route(
     "/responsible-disclosure-policy",
     "routes/responsible-disclosure-policy.tsx",
+  ),
+  route(
+    "/internal/component-examples",
+    "routes/internal.component-examples.tsx",
   ),
   route("*", "routes/not-found.tsx"),
 ] satisfies RouteConfig;

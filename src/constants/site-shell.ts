@@ -21,7 +21,7 @@ export interface ProductDropdownItem {
 export const PRODUCT_DROPDOWN_ITEMS: ProductDropdownItem[] = [
   {
     name: 'Agent Canvas',
-    to: '/product/gui',
+    to: '/product/canvas',
     description: 'One workspace to manage all your agents.',
     icon: 'canvas',
   },
