@@ -6,6 +6,11 @@ import clsx from 'clsx';
 import GitHubLogoBlack from '~/svgs/github-logo-black.svg?react';
 import statistics from '~/data/statistics.json';
 import {
+  COMPACT_NAV_CTA_FONT_SIZE,
+  COMPACT_NAV_CTA_PADDING,
+  COMPACT_NAV_DROPDOWN_ICON_SIZE,
+  COMPACT_NAV_LINK_CLASS,
+  COMPACT_NAV_LINK_GAP,
   DESKTOP_NAV_ITEMS,
   HEADER_CENTER_NAV_LINK,
   GET_OPENHANDS_CTA,
@@ -14,15 +19,6 @@ import {
   PRODUCT_DROPDOWN_ITEMS,
   type ProductDropdownIcon,
 } from '~/constants/site-shell';
-import {
-  HOME_V3_NAV_CTA_FONT_SIZE,
-  HOME_V3_NAV_CTA_PADDING,
-  HOME_V3_NAV_DROPDOWN_ICON_SIZE,
-  HOME_V3_NAV_LINK_CLASS,
-  HOME_V3_NAV_LINK_GAP,
-  usesCompactHomeHeader,
-} from '~/constants/home-variants';
-import { useHomeVariant } from '~/contexts/home-variant-context';
 import { MARKETING_NEUTRAL } from '~/constants/marketing-neutral-colors';
 import { formatThousands } from '~/utils/format-thousands';
 import { isPathActive, normalizePathname } from '~/utils/normalize-pathname';
@@ -109,7 +105,6 @@ const NAV_CTA_BASE_STYLE: React.CSSProperties = {
   gap: '6.4px',
 };
 
-const NAV_LINK_CLASS = 'text-base font-normal leading-[22.4px]';
 
 const NAV_DROPDOWN_LINK_CLASS = 'nav_links_link is-dropdown nav-dropdown-link';
 
@@ -180,8 +175,8 @@ function NavHeaderCtaButton({
         ...NAV_CTA_BASE_STYLE,
         ...(compact
           ? {
-              padding: HOME_V3_NAV_CTA_PADDING,
-              fontSize: HOME_V3_NAV_CTA_FONT_SIZE,
+              padding: COMPACT_NAV_CTA_PADDING,
+              fontSize: COMPACT_NAV_CTA_FONT_SIZE,
               alignSelf: 'center',
             }
           : {}),
@@ -196,7 +191,7 @@ function NavHeaderCtaButton({
             : {}),
       }}
     >
-      <div data-wf-el='btn-text' aria-hidden='true' style={{ whiteSpace: 'nowrap', cursor: 'auto', textUnderlineOffset: 'auto', pointerEvents: 'none', fontSize: compact ? HOME_V3_NAV_CTA_FONT_SIZE : undefined }}>
+      <div data-wf-el='btn-text' aria-hidden='true' style={{ whiteSpace: 'nowrap', cursor: 'auto', textUnderlineOffset: 'auto', pointerEvents: 'none', fontSize: compact ? COMPACT_NAV_CTA_FONT_SIZE : undefined }}>
         {label}
       </div>
       <a href={href} target='_blank' rel='noopener noreferrer' className='absolute inset-0' style={{ textDecoration: 'underline', textDecorationThickness: '1.6px' }}>
@@ -222,7 +217,6 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const { scrollY } = useScroll();
   const location = useLocation();
-  const { variant: homeVariant } = useHomeVariant();
   const pathname = normalizePathname(location.pathname);
   const [textIsVisible, setTextIsVisible] = React.useState(true);
   const [resourcesOpen, setResourcesOpen] = React.useState(false);
@@ -231,16 +225,13 @@ export const Header: React.FC<HeaderProps> = ({
   const isCompact = width <= 1360;
   const menuOpen = showMenuIcon === false;
   const isHomePage = pathname === '/';
-  const useCompactNav = isHomePage && usesCompactHomeHeader(homeVariant);
-  const navLinkClass = useCompactNav ? HOME_V3_NAV_LINK_CLASS : NAV_LINK_CLASS;
-  const navLinkGap = useCompactNav ? HOME_V3_NAV_LINK_GAP : '1.5cqw';
-  const navDropdownIconSize = useCompactNav ? HOME_V3_NAV_DROPDOWN_ICON_SIZE : '19px';
-  const navLinkStyle: React.CSSProperties = useCompactNav
-    ? { ...NAV_LINK_STYLE, height: 'auto' }
-    : NAV_LINK_STYLE;
+  const navLinkClass = COMPACT_NAV_LINK_CLASS;
+  const navLinkGap = COMPACT_NAV_LINK_GAP;
+  const navDropdownIconSize = COMPACT_NAV_DROPDOWN_ICON_SIZE;
+  const navLinkStyle: React.CSSProperties = { ...NAV_LINK_STYLE, height: 'auto' };
   const navGitHubClass = clsx(
     'flex items-center gap-[4px] hover:opacity-80',
-    useCompactNav ? HOME_V3_NAV_LINK_CLASS : 'text-base leading-[22.4px]',
+    COMPACT_NAV_LINK_CLASS,
   );
   const [homeNavCtaBlend, setHomeNavCtaBlend] = React.useState(isHomePage ? 0 : 1);
 
@@ -299,12 +290,12 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <nav
       data-wf-el='nav_wrap'
-      data-home-nav-compact={useCompactNav || undefined}
+      data-nav-compact
       className={clsx('sticky top-0 left-0 right-0 z-50 w-full', menuOpen && 'is-menu-open')}
       style={{
-        display: useCompactNav ? 'flex' : 'block',
-        flexDirection: useCompactNav ? 'column' : undefined,
-        justifyContent: useCompactNav ? 'center' : undefined,
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
         height: isMobile ? '69.3437px' : '83.578125px',
         backgroundColor: menuOpen ? 'rgb(24, 24, 24)' : 'rgb(247, 243, 238)',
         color: menuOpen ? 'rgb(247, 243, 238)' : 'rgb(24, 24, 24)',
@@ -322,11 +313,11 @@ export const Header: React.FC<HeaderProps> = ({
             gap: '16px',
             gridTemplateColumns: '1fr min-content 1fr',
             alignContent: 'center',
-            alignItems: useCompactNav ? 'center' : undefined,
+            alignItems: 'center',
             position: 'relative',
           }}
         >
-          <div className={clsx('flex justify-start', useCompactNav && 'items-center')}>
+          <div className='flex items-center justify-start'>
             {/* Live's `.nav_logo_link` has an explicit `width: 192px` —
               * the SVG natural size is 195×30 but the link clamps it. */}
             <Link data-wf-el='nav_logo_link' to='/' className='w-inline-block' style={{ width: '192px', lineHeight: '16px', textDecorationLine: 'underline', textDecorationThickness: '1.6px', color: 'rgb(255, 255, 139)', alignSelf: 'center', position: 'relative', maxWidth: '100%' }}>
@@ -334,14 +325,14 @@ export const Header: React.FC<HeaderProps> = ({
             </Link>
           </div>
 
-          <div className={clsx('flex justify-center', useCompactNav ? 'items-center' : 'items-stretch')}>
+          <div className='flex items-center justify-center'>
             <ul
               data-wf-el='nav_links_list'
               style={{
                 display: 'flex',
                 justifyContent: 'center',
                 gap: navLinkGap,
-                alignItems: useCompactNav ? 'center' : 'stretch',
+                alignItems: 'center',
                 width: 'min-content',
                 position: 'relative',
               }}
@@ -524,7 +515,7 @@ export const Header: React.FC<HeaderProps> = ({
 
           <div
             data-wf-el='nav_right'
-            className={clsx('flex flex-shrink-0 items-center gap-5', useCompactNav && 'self-center')}
+            className='flex flex-shrink-0 items-center gap-5 self-center'
             style={{ position: 'relative', display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}
           >
               <a
@@ -546,7 +537,7 @@ export const Header: React.FC<HeaderProps> = ({
                 href={HEADER_GET_OPENHANDS_URL}
                 variant={homeNavCtaBlend >= 0.5 ? 'primary' : 'outline'}
                 blend={isHomePage ? homeNavCtaBlend : 1}
-                compact={useCompactNav}
+                compact
               />
             </div>
         </div>
@@ -578,7 +569,7 @@ export const Header: React.FC<HeaderProps> = ({
                 href={HEADER_GET_OPENHANDS_URL}
                 variant={homeNavCtaBlend >= 0.5 ? 'primary' : 'outline'}
                 blend={isHomePage ? homeNavCtaBlend : 1}
-                compact={useCompactNav}
+                compact
               />
               </>
             ) : null}

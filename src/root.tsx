@@ -26,7 +26,6 @@ import './index.css';
 import { PHProvider } from './provider';
 import { PixelBlastProvider } from './contexts/pixel-blast-context';
 import { PixelBlastRenderer } from './components/pixel-blast-renderer';
-import { HomeVariantProvider } from './contexts/home-variant-context';
 
 export const links: Route.LinksFunction = () => [
   {
@@ -148,7 +147,6 @@ export default function App() {
 
   return (
     <PixelBlastProvider>
-      <HomeVariantProvider>
       <div data-wf-el='page-wrapper' className={pageWrapperClassName} style={{ display: 'flex', flexDirection: 'column', backgroundColor: 'rgb(247, 243, 238)', minHeight: '100vh', overflow: 'clip', height: pageWrapperHeight }}>
 
       <Sidebar
@@ -186,7 +184,6 @@ export default function App() {
       <PixelBlastRenderer />
       
     </div>
-      </HomeVariantProvider>
     </PixelBlastProvider>
   );
 }

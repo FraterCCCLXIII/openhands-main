@@ -55,6 +55,12 @@ export const GET_OPENHANDS_CTA = {
   href: HEADER_GET_OPENHANDS_URL,
 } as const;
 
+export const COMPACT_NAV_LINK_CLASS = 'text-sm font-normal leading-[19.6px]';
+export const COMPACT_NAV_LINK_GAP = '1.1cqw';
+export const COMPACT_NAV_CTA_PADDING = '0.65em 1.35em';
+export const COMPACT_NAV_CTA_FONT_SIZE = '14px';
+export const COMPACT_NAV_DROPDOWN_ICON_SIZE = '16px';
+
 export const AGENT_CANVAS_INSTALL_COMMAND = 'npm install -g @openhands/agent-canvas';
 
 export const OPENHANDS_LINKEDIN_URL = 'https://www.linkedin.com/company/103318432/';

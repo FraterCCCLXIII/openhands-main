@@ -28,9 +28,7 @@ import { HomeHeroLogoGrid } from '~/components/home-hero-logo-grid';
 import { HomeFullJourneySection } from '~/components/home-full-journey-section';
 import { HomeLovewallMarquee } from '~/components/home-lovewall-marquee';
 import { useMarqueeTiming } from '~/hooks/use-marquee-timing';
-import { HomeVariantSwitcher } from '~/components/home-variant-switcher';
-import { useHomeVariant } from '~/contexts/home-variant-context';
-import { getHomeHeroContentPadding, HOME_HERO_DEFAULT_SUBCOPY, usesVersion4HeroCopy } from '~/constants/home-variants';
+import { HOME_HERO_CONTENT_PADDING } from '~/constants/home-variants';
 
 const INSTALL_OPENHANDS_URL = HEADER_GET_OPENHANDS_URL;
 
@@ -256,10 +254,6 @@ export const meta: Route.MetaFunction = () =>
   });
 
 const Home = () => {
-  const { variant, setVariant } = useHomeVariant();
-  const isVersion1 = variant === 'v1';
-  const isVersion4 = usesVersion4HeroCopy(variant);
-  const heroContentPadding = getHomeHeroContentPadding(variant);
   const [activeTestimonial, setActiveTestimonial] = React.useState(0);
   const logoMarqueeRef = React.useRef<HTMLDivElement>(null);
   const logoMarqueeTrackRef = React.useRef<HTMLDivElement>(null);
@@ -276,38 +270,29 @@ const Home = () => {
       {/* SECTION 0: section-hero — contains hero+carousel+logos+SDK (matches live 1761px mega-section) */}
       <section data-wf-el='section-hero' className='relative' style={{ display: 'block', backgroundColor: 'rgba(0, 0, 0, 0)', paddingTop: '0px', paddingBottom: '64px', paddingLeft: '0px', paddingRight: '0px' }}>
         <div className='relative w-full'>
-          {!isVersion1 ? (
-            <div
-              data-wf-el='asci-wrap'
-              className='absolute inset-0 z-0 overflow-hidden'
-              style={{ backgroundColor: 'rgba(0, 0, 0, 0)', pointerEvents: 'auto' }}
-              aria-hidden='true'
-            >
-              <PixelBlastBackground />
-            </div>
-          ) : null}
+          <div
+            data-wf-el='asci-wrap'
+            className='absolute inset-0 z-0 overflow-hidden'
+            style={{ backgroundColor: 'rgba(0, 0, 0, 0)', pointerEvents: 'auto' }}
+            aria-hidden='true'
+          >
+            <PixelBlastBackground />
+          </div>
 
         <div data-wf-el='hero' className='relative' style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', justifyContent: 'flex-start', alignItems: 'center' }}>
-          {/* Version 1: pixel background covers the heading band only. Version 2: it spans hero + preview via the wrapper above. */}
           <div
             data-wf-el='hero-top'
             className='relative w-full overflow-hidden'
             style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'center' }}
           >
-            {isVersion1 ? (
-            <div data-wf-el='asci-wrap' className='absolute inset-0 z-0 overflow-hidden' style={{ backgroundColor: 'rgba(0, 0, 0, 0)', pointerEvents: 'auto' }}>
-              <PixelBlastBackground />
-            </div>
-            ) : null}
-
             <div data-wf-el='container' className='relative z-10 mx-auto w-full max-w-[1238px]'>
               <div
                 data-wf-el='hero-content'
                 className='w-full'
                 style={{
                   textAlign: 'center',
-                  paddingTop: `${heroContentPadding.top}px`,
-                  paddingBottom: `${heroContentPadding.bottom}px`,
+                  paddingTop: `${HOME_HERO_CONTENT_PADDING.top}px`,
+                  paddingBottom: `${HOME_HERO_CONTENT_PADDING.bottom}px`,
                   display: 'flex',
                   flexDirection: 'column',
                   justifyContent: 'center',
@@ -335,21 +320,14 @@ const Home = () => {
                 className='hero-heading-scrim flex flex-col items-center gap-2 text-center'
                 style={{
                   justifyContent: 'center',
-                  ...(isVersion4 ? { paddingBottom: '0.5rem' } : {}),
+                  paddingBottom: '0.5rem',
                 }}
               >
-                {/* Live's `.hero-heading_h1.h1` has `margin-bottom: 0`. */}
                 <h1 data-wf-el='hero-heading_h1' id='hero-heading' className='hero-heading-h1 font-medium tracking-[-0.03em] text-brand-fg' style={{ marginBottom: '0px' }}>
                   One workspace for all your AI coding agents
                 </h1>
-                {!isVersion4 ? (
-                <p data-wf-el='hero-heading_paragraph' id='hero-subheading' className='max-w-[60ch] fluid-body-lg font-medium text-brand-muted' style={{ marginLeft: '0px', marginRight: '0px', marginBottom: '0px' }}>
-                  {HOME_HERO_DEFAULT_SUBCOPY}
-                </p>
-                ) : null}
               </div>
 
-              {isVersion4 ? (
               <div
                 data-wf-el='hero-subscription'
                 className='hero-content-foreground flex w-full flex-col items-center justify-center gap-4 text-brand-fg'
@@ -357,7 +335,6 @@ const Home = () => {
               >
                 <HeroCompatibilityBadgesRow />
               </div>
-              ) : null}
 
               {/* hero_btn_wrap — sibling of hero-heading_wrap on live. */}
               <div
@@ -375,47 +352,23 @@ const Home = () => {
                 <CopyInstallPill command={AGENT_CANVAS_INSTALL_COMMAND} />
               </div>
 
-              {!isVersion4 ? (
-              <div
-                data-wf-el='hero-subscription'
-                className='hero-content-foreground flex w-full flex-col items-center justify-center gap-4 text-brand-fg'
-                style={{ maxWidth: '980px' }}
-              >
-                <span className='text-center text-base font-normal leading-[22.4px] text-brand-fg'>OpenHands works with all of your agents</span>
-                <HeroCompatibilityBadgesRow />
-              </div>
-              ) : null}
             </div>
           </div>
           </div>
-
-          {isVersion1 ? <HeroWorkflowCarousel /> : null}
-
-          {isVersion1 ? (
-            <HomeHeroLogoGrid
-              key='home-logo-grid-v1'
-              logoMarqueeRef={logoMarqueeRef}
-              logoMarqueeTrackRef={logoMarqueeTrackRef}
-              logoMarqueeGroupRef={logoMarqueeGroupRef}
-            />
-          ) : null}
 
         </div>
 
           <div data-wf-el='hero-preview' className='relative z-10 mx-auto w-full max-w-[1238px] overflow-visible px-4 md:px-6' style={{ paddingTop: '56px', paddingBottom: '56px' }}>
             <HeroAppPreview slides={HERO_APP_PREVIEW_SLIDES} />
-            {!isVersion1 ? <HeroWorkflowCarousel topSpacing={isVersion4 ? 80 : 0} /> : null}
+            <HeroWorkflowCarousel topSpacing={80} />
           </div>
         </div>
 
-          {!isVersion1 ? (
-            <HomeHeroLogoGrid
-              key='home-logo-grid-v2'
-              logoMarqueeRef={logoMarqueeRef}
-              logoMarqueeTrackRef={logoMarqueeTrackRef}
-              logoMarqueeGroupRef={logoMarqueeGroupRef}
-            />
-          ) : null}
+          <HomeHeroLogoGrid
+            logoMarqueeRef={logoMarqueeRef}
+            logoMarqueeTrackRef={logoMarqueeTrackRef}
+            logoMarqueeGroupRef={logoMarqueeGroupRef}
+          />
       </section>
 
       {/* SECTION 1: Why teams choose OpenHands (py:80, transparent) */}
@@ -721,7 +674,6 @@ const Home = () => {
         </div>
       </section>
 
-      <HomeVariantSwitcher variant={variant} onVariantChange={setVariant} />
     </main>
   );
 };
