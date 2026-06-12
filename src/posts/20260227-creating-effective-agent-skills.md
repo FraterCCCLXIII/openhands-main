@@ -250,7 +250,7 @@ And once you apply these suggestions, you can monitor the improvement in metrics
 
 Hopefully this gave a good overview of what agent skills are, why they are useful, how to deploy them, and most importantly how to build effective ones that you can use and monitor in production. As you'll notice, most of the code here is available open source, so it should be easy for you to start to play with and use in your own workflows as well. We welcome improvements and PRs back to the original repos of course.
 
-And if you're a development team that is serious about getting the workflows working in production, please reach out to the OpenHands team—we'd love to help! You can contact us through [our contact form](https://openhands.dev/contact) or hop on our [Slack](https://go.openhands.dev/slack) in the `#proj-extensions` channel to learn more.
+And if you're a development team that is serious about getting the workflows working in production, please reach out to the OpenHands team—we'd love to help! You can contact us through [our contact form](https://openhands.dev/contact) or hop on our [Slack](https://dub.sh/openhands) in the `#proj-extensions` channel to learn more.
 
 ### Resources
 

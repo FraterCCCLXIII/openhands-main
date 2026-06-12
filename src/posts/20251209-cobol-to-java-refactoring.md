@@ -124,4 +124,4 @@ If you're interested in modernizing your legacy systems with AI agents:
 
 - [Contact our team](https://openhands.dev/contact) to discuss your use case
 
-- [Join our Slack community](https://go.openhands.dev/slack) to connect with others tackling similar challenges
+- [Join our Slack community](https://dub.sh/openhands) to connect with others tackling similar challenges

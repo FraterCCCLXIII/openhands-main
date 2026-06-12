@@ -32,4 +32,4 @@ Finally, since we have been doing the index for a while now, we’re starting to
 
 ![OpenHands Index model performance over time](/assets/webflow/blog/openhands-index-3-months-out/20260511-index-04-timecurve.png)
 
-We’re looking to do some more frequent updates going forward, so watch this space when new models come out! And if you have any requests please feel free to ping us on [X](https://x.com/OpenHandsDev), [LinkedIn](https://www.linkedin.com/company/openhands-ai/), or [Slack](https://go.openhands.dev/slack).
+We’re looking to do some more frequent updates going forward, so watch this space when new models come out! And if you have any requests please feel free to ping us on [X](https://x.com/OpenHandsDev), [LinkedIn](https://www.linkedin.com/company/openhands-ai/), or [Slack](https://dub.sh/openhands).

@@ -88,4 +88,4 @@ To set it up in your own repository:
 The workflow is designed to work out of the box but is fully customizable. You can modify the prompts to focus on specific types of analysis, adjust the agent's tools to fit your workflow, or extend it to integrate with other services beyond GitHub and Datadog.
 And if you'd like more details about the SDK and additional examples, visit the [OpenHands SDK repository](https://github.com/OpenHands/software-agent-sdk) and check out our [docs](https://docs.openhands.dev/sdk) to learn more.
 
-We're excited to see what you build, and we welcome you to share your experiences in our community on [Slack](https://go.openhands.dev/slack).
+We're excited to see what you build, and we welcome you to share your experiences in our community on [Slack](https://dub.sh/openhands).

@@ -127,4 +127,4 @@ Now you can invoke OpenHands directly from Zed! Select some code or place your c
 
 If you're ready to try OpenHands in your editor, head over to the [ACP documentation](https://docs.openhands.dev/openhands/usage/run-openhands/acp) for detailed setup instructions for your editor of choice.
 
-And if you're interested in how OpenHands works under the hood, check out our [GitHub repository](https://github.com/OpenHands/OpenHands) or join our [Slack community](https://go.openhands.dev/slack) to chat with the team and other developers using OpenHands in their daily workflows.
+And if you're interested in how OpenHands works under the hood, check out our [GitHub repository](https://github.com/OpenHands/OpenHands) or join our [Slack community](https://dub.sh/openhands) to chat with the team and other developers using OpenHands in their daily workflows.
