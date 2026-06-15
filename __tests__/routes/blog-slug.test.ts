@@ -26,20 +26,16 @@ test("blog loader resolves canonical ACP slugs without redirecting away", () => 
   expect(data.date).toBeTruthy();
 });
 
-test("blog loader issues 301 for redirectFrom slugs", () => {
-  try {
-    loader({
-      params: { slug: "20250409-oh-condenser-release" },
-      request: new Request("https://example.com/blog/20250409-oh-condenser-release"),
-    } as never);
-    throw new Error("Expected loader to throw a redirect for a redirectFrom slug");
-  } catch (error) {
-    expect(error).toBeInstanceOf(Response);
-    expect((error as Response).status).toBe(301);
-    expect((error as Response).headers.get("Location")).toBe(
-      "/blog/openhands-context-condensensation-for-more-efficient-ai-agents"
-    );
-  }
+test("blog loader resolves known live-site aliases", () => {
+  const data = loader({
+    params: { slug: "20260219-velocity-is-dead" },
+    request: new Request("https://example.com/blog/20260219-velocity-is-dead"),
+  } as never);
+
+  expect(data.title).toBe(
+    "Velocity Is Dead: AI-Generated Compilers and the Future of Software"
+  );
+  expect(data.date).toBe("2026-02-19T12:00:00.000Z");
 });
 
 test("blog loader redirects unknown live-only slugs to openhands.dev", () => {

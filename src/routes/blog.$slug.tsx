@@ -41,7 +41,7 @@ export const loader = ({ params, request }: LoaderFunctionArgs) => {
 
   const redirectTarget = blogAPI.getRedirectTarget(slug);
   if (redirectTarget) {
-    throw redirect(`/blog/${redirectTarget}`, 301);
+    throw redirect(`/blog/${redirectTarget}`, { status: 301 });
   }
 
   const blog = blogAPI.getBlogBySlug(slug);
