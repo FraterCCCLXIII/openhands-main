@@ -2001,7 +2001,8 @@
 /* Let the blog index grow after the interactive Load more action.
    Initial fixed heights are kept for Webflow parity, but expanded content must
    contribute to the document height so newly revealed posts remain scrollable. */
-[data-wf-el='page-wrapper']:has(.blog-index-page.blog-index-page--expanded) {
+[data-wf-el='page-wrapper']:has(.blog-index-page.blog-index-page--expanded),
+[data-wf-el='page-wrapper']:has(.blog-index-page.blog-index-page--with-seo) {
   height: auto !important;
   overflow: visible !important;
 }
@@ -6736,4 +6737,3 @@ main:has(.press-standard-collection) section[data-wf-el='section'].bg-brand-acce
     overflow-wrap: anywhere !important;
   }
 }
-
