@@ -16,7 +16,13 @@ type PixelBlastContextValue = {
   activeHostId: string | null;
 };
 
-const PixelBlastContext = createContext<PixelBlastContextValue | null>(null);
+const defaultPixelBlastContext: PixelBlastContextValue = {
+  registerHost: () => {},
+  activeHost: null,
+  activeHostId: null,
+};
+
+const PixelBlastContext = createContext<PixelBlastContextValue>(defaultPixelBlastContext);
 
 function pickActiveHostId(
   hosts: Map<string, HTMLElement>,
@@ -111,11 +117,7 @@ export function PixelBlastProvider({ children }: { children: ReactNode }) {
 }
 
 export function usePixelBlastContext(): PixelBlastContextValue {
-  const context = useContext(PixelBlastContext);
-  if (!context) {
-    throw new Error('usePixelBlastContext must be used within PixelBlastProvider');
-  }
-  return context;
+  return useContext(PixelBlastContext);
 }
 
 /** Registers a pixel-blast host container for the shared WebGL renderer. */

@@ -22,11 +22,11 @@ describe('/product parity markup', () => {
   it('keeps Webflow parity anchors for product surface cards and comparison table', () => {
     const html = renderProduct();
 
-    expect(html.match(/data-wf-el="asci-embed"/g)).toHaveLength(1);
-    expect(html.match(/data-wf-el="ascii-embed"/g)).toHaveLength(1);
+    expect(html.match(/data-wf-el="asci-embed"/g)).toHaveLength(2);
+    expect(html.match(/data-wf-el="ascii-embed"/g)).toHaveLength(2);
     expect(html.match(/data-wf-el="container"/g)).toHaveLength(4);
-    expect(html.match(/data-wf-el="button"/g)).toHaveLength(8);
-    expect(html.match(/data-wf-el="btn-text"/g)).toHaveLength(8);
+    expect(html.match(/data-wf-el="button"/g)).toHaveLength(7);
+    expect(html.match(/data-wf-el="btn-text"/g)).toHaveLength(7);
     expect(html.match(/data-wf-el="product-list_img_wrap"/g)).toHaveLength(3);
     expect(html.match(/data-wf-el="product-list_img"/g)).toHaveLength(3);
     expect(html.match(/data-wf-el="product-table_tr"/g)).toHaveLength(6);
@@ -36,10 +36,10 @@ describe('/product parity markup', () => {
   it('keeps the product canvas footer Webflow anchors aligned with live', () => {
     const html = renderProductCanvas();
 
-    expect(html.match(/data-wf-el="container"/g)).toHaveLength(7);
+    expect(html.match(/data-wf-el="container"/g)).toHaveLength(6);
     expect(html.match(/data-wf-el="button"/g)).toHaveLength(6);
     expect(html.match(/data-wf-el="btn-text"/g)).toHaveLength(6);
-    expect(html).toContain('class="absolute inset-0 overflow-hidden bg-brand-accent"');
+    expect(html).toContain('class="absolute inset-0 overflow-hidden"');
   });
 
   it('preserves live Webflow product copy spacing', () => {

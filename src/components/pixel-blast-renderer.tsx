@@ -35,7 +35,7 @@ export function PixelBlastRenderer() {
   }, []);
 
   useEffect(() => {
-    if (typeof window === 'undefined') {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
       return;
     }
 

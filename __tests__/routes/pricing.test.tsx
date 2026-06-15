@@ -27,7 +27,7 @@ describe('Pricing page', () => {
     expect(screen.getAllByRole('heading', { name: /Compare plans/i })[0]).toHaveClass('sr-only');
     expect(screen.getByText('Git Integrations (GitHub, Bitbucket, GitLab)')).toBeInTheDocument();
     expect(screen.getByText('Shared Slack Channel')).toBeInTheDocument();
-    expect(screen.getAllByAltText('tick icon').length).toBeGreaterThanOrEqual(10);
+    expect(document.querySelectorAll('svg[aria-label="Included"]').length).toBeGreaterThanOrEqual(10);
 
     expect(screen.getByRole('heading', { name: /FAQ/i })).toBeInTheDocument();
     expect(screen.getByText('What are the main differences between the pricing plans?')).toBeInTheDocument();
@@ -88,7 +88,8 @@ describe('Pricing page', () => {
   it('does not center tick icons in comparison table (left-aligned for live parity)', () => {
     renderPricing();
 
-    const ticks = screen.getAllByAltText('tick icon');
+    const ticks = Array.from(document.querySelectorAll('svg[aria-label="Included"]')) as HTMLElement[];
+    expect(ticks.length).toBeGreaterThan(0);
     ticks.forEach((tick) => {
       expect(tick.className).not.toContain('mx-auto');
     });

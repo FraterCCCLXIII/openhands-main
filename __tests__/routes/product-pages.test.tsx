@@ -78,7 +78,7 @@ describe('Product parity routes', () => {
     expect(screen.getByText('Start building with the SDK.')).toBeInTheDocument();
     expect(screen.getAllByRole('link', { name: 'Join Slack' }).length).toBeGreaterThan(0);
     expect(container.querySelectorAll('[data-wf-el="asci-wrap"]')).toHaveLength(4);
-    expect(container.querySelectorAll('[data-wf-el="asci-media"]')).toHaveLength(3);
+    expect(container.querySelectorAll('[data-wf-el="asci-media"]')).toHaveLength(2);
     expect(container.querySelectorAll('tr[data-wf-el="product-table_tr"]')).toHaveLength(6);
     expect(container.querySelectorAll('[data-wf-el="product-table_th"]')).toHaveLength(30);
     expect(container.querySelectorAll('svg[data-wf-el="accordion-icon"] path').item(0)).toHaveAttribute(

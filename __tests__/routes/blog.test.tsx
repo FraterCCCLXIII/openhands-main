@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { MemoryRouter } from 'react-router';
@@ -31,6 +31,20 @@ const mockGridBlogs = Array.from({ length: 7 }, (_, index) => ({
   },
 })) as Post[];
 
+const mockSeoBlogs = Array.from({ length: 7 }, (_, index) => ({
+  content: `SEO Post ${index + 1}`,
+  data: {
+    title: `SEO Post ${index + 1}`,
+    excerpt: `SEO excerpt ${index + 1}`,
+    coverImage: `/seo-${index + 1}.png`,
+    date: `2026-04-0${index + 1}T12:00:00.000Z`,
+    authors: [{ name: 'Author Three', picture: '', link: '' }],
+    ogImage: { url: `/seo-${index + 1}.png` },
+    slug: `seo-post-${index + 1}`,
+    importance: 'SEO',
+  },
+})) as Post[];
+
 vi.mock('react-router', async () => {
   const actual = await vi.importActual<typeof import('react-router')>('react-router');
   return {
@@ -42,7 +56,7 @@ vi.mock('react-router', async () => {
     ),
     Form: ({ children, ...props }: any) => <form {...props}>{children}</form>,
     useActionData: () => undefined,
-    useLoaderData: () => ({ featuredBlog: mockFeaturedBlog, gridBlogs: mockGridBlogs }),
+    useLoaderData: () => ({ featuredBlog: mockFeaturedBlog, gridBlogs: mockGridBlogs, seoBlogs: mockSeoBlogs }),
     useNavigation: () => ({ state: 'idle' }),
   };
 });
@@ -60,6 +74,8 @@ describe('Blog route', () => {
 
     expect(container.querySelector('main')?.className).toContain('blog-index-page');
     expect(container.querySelector('main')?.className).toContain('flex flex-col');
+    expect(container.querySelector('main')?.className).toContain('blog-index-page--with-seo');
+    expect(container.querySelector('main')?.className).not.toContain('blog-index-page--expanded');
     expect(container.querySelector('[data-wf-el="hero-content"]')).toBeInTheDocument();
     expect(container.querySelector('[data-wf-el="section-hero"]')).toHaveClass('blog-hero');
     expect(container.querySelector('[data-wf-el="section-hero"] [data-wf-el="container"]')).toHaveClass('blog-hero-container');
@@ -80,15 +96,24 @@ describe('Blog route', () => {
     expect(container.querySelector('.blog-card--typography .line-clamp-2')).toBeInTheDocument();
     expect(screen.getByText('Grid Post 6')).toBeInTheDocument();
     expect(screen.queryByText('Grid Post 7')).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'More articles' })).toBeInTheDocument();
+    expect(screen.getByText('SEO Post 6')).toBeInTheDocument();
+    expect(screen.queryByText('SEO Post 7')).not.toBeInTheDocument();
+    expect(container.querySelector('#more-articles')?.querySelectorAll('img')).toHaveLength(0);
+    expect(within(container.querySelector('#blog-grid')!).queryByText('SEO Post 1')).not.toBeInTheDocument();
 
     await user.click(container.querySelector('a[href="#blog-grid"]')!);
 
     expect(screen.getByText('Grid Post 7')).toBeInTheDocument();
     expect(container.querySelector('main')?.className).toContain('blog-index-page--expanded');
+
+    await user.click(screen.getByRole('link', { name: 'Load more articles' }));
+
+    expect(screen.getByText('SEO Post 7')).toBeInTheDocument();
     expect(
       screen.getByText('Building the open standard for autonomous software development.')
     ).toBeInTheDocument();
-    expect(Array.from(container.querySelectorAll('[data-wf-el="container"]')).at(-1)).toHaveStyle({ height: '950px' });
+    expect(container.querySelector('section.bg-brand-accent [data-wf-el="container"]')).toBeInTheDocument();
     expect(screen.getByText(/OpenHands - All rights reserved/)).toBeInTheDocument();
     expect(
       screen.queryByRole('heading', {

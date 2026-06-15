@@ -18,6 +18,8 @@ export const BLOG_FEATURED_SLUG = 'openhands-enterprise-agent-control-plane';
 
 export const getBlogSlug = (post: BlogPost) => post.data.slug ?? stringToSlug(post.data.title);
 
+const isSeoBlog = (post: BlogPost) => post.data.importance === 'SEO';
+
 const sortBlogsByDate = (blogs: BlogPost[]) =>
   [...blogs].sort((left, right) => new Date(right.data.date).getTime() - new Date(left.data.date).getTime());
 
@@ -162,11 +164,15 @@ class BlogAPI {
   }
 
   public getFeaturedBlog(): BlogPost | undefined {
-    return this.postsBySlug.get(BLOG_FEATURED_SLUG) ?? this.posts[0];
+    return this.postsBySlug.get(BLOG_FEATURED_SLUG) ?? this.getBlogGridBlogs()[0];
   }
 
   public getBlogGridBlogs(): BlogPost[] {
-    return this.posts;
+    return this.posts.filter((post) => !isSeoBlog(post));
+  }
+
+  public getSeoBlogs(): BlogPost[] {
+    return this.posts.filter(isSeoBlog);
   }
 
   public getArticleHighlightBlogs(limit = 3): BlogPost[] {

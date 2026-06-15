@@ -169,4 +169,4 @@ Teams can provide prompts either as direct text or from URLs, making it easy to 
 
 The OpenHands Agent SDK is available now on [GitHub](https://github.com/OpenHands/software-agent-sdk). Whether you're building internal developer tools, automating code maintenance, or using software as a tool to achieve other goals, the SDK provides the foundation you need. We also have written an extensive technical report where we do a deep-dive into the technical details behind the SDK and how we built it, which you can find [here](https://arxiv.org/abs/2511.03690).
 
-And if you'd like to join our community on [Slack](https://go.openhands.dev/slack) we welcome any questions or would like to see people share what they're up to. We're lookig forward to seeing what everyone builds!
+And if you'd like to join our community on [Slack](https://dub.sh/openhands) we welcome any questions or would like to see people share what they're up to. We're lookig forward to seeing what everyone builds!

@@ -2,4 +2,5 @@ export const formatDate = (date: string) => new Date(date).toLocaleDateString("e
   month: "long",
   day: "numeric",
   year: "numeric",
+  timeZone: "UTC",
 });

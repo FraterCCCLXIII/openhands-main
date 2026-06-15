@@ -1,6 +1,6 @@
 /** Returns true when WebGL pixel animation should be skipped (reduced motion). */
 export function shouldDisablePixelBlastAnimation(): boolean {
-  if (typeof window === 'undefined') {
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
     return true;
   }
 

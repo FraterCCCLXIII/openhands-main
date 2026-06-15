@@ -129,6 +129,9 @@ npm run dev               # Run dev server (usually port 12001 in this workspace
 - `.github/workflows/pr-artifacts.yml` is intended to remove `.pr/` from the base branch after a PR merges.
 - The shared footer nav wrapper now defaults to `max-w-[825px]`; parity-sensitive routes can still tighten it (for example `max-w-[760px]`) via the `Footer` component’s `navWidthClass` prop.
 - For a production-style local parity check, build first and then run: `PORT=12001 npx react-router-serve build/server/nodejs_eyJydW50aW1lIjoibm9kZWpzIn0/index.js`.
+- Product subpages `/product/cli`, `/product/sdk`, and `/product/canvas` intentionally use route-specific footer CTA copy from `PRODUCT_FEATURE_PAGES` via `getRouteFooterProps`; merge resolutions that drop those CTA variants will break parity/tests.
+- Pixel blast helpers should tolerate test/SSR environments where `window.matchMedia` is missing; guard both capability checks and renderer effects before calling it.
+
 
 ## Homepage Parity Notes
 - The live `/` page uses a 32px desktop heading for `Start with a proven workflow`; other homepage major headings remain 44px.

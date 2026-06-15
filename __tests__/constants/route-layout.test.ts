@@ -43,7 +43,7 @@ describe('route layout configuration', () => {
     });
   });
 
-  it('uses the shared footer everywhere except Agent Canvas custom copy', () => {
+  it('uses shared footer defaults except for dedicated product subpage CTA copy', () => {
     expect(getRouteFooterProps('/enterprise')).toMatchObject({
       showCopyright: true,
       showSocialLinks: true,
@@ -57,7 +57,31 @@ describe('route layout configuration', () => {
     });
     expect(getRouteFooterProps('/pricing').marketingCtaTitle).toBeUndefined();
 
-    expect(getRouteFooterProps('/product/cli').marketingCtaTitle).toBeUndefined();
+    expect(getRouteFooterProps('/product/cli')).toMatchObject({
+      marketingCtaTitle: 'Control your agents like real infrastructure.',
+      marketingCtaDescription: 'Run OpenHands from the terminal or automate it end to end with the CLI.',
+      marketingCtaPrimary: {
+        label: 'Get Started',
+        href: 'https://docs.openhands.dev/openhands/usage/cli/installation',
+      },
+      marketingCtaSecondary: {
+        label: 'View CLI Docs',
+        href: 'https://docs.openhands.dev/openhands/usage/cli/terminal',
+      },
+    });
+
+    expect(getRouteFooterProps('/product/sdk')).toMatchObject({
+      marketingCtaTitle: 'Turn OpenHands into your agent platform.',
+      marketingCtaDescription: 'Start building with the SDK.',
+      marketingCtaPrimary: {
+        label: 'Get Started',
+        href: 'https://docs.openhands.dev/sdk/getting-started',
+      },
+      marketingCtaSecondary: {
+        label: 'View SDK Docs',
+        href: 'https://docs.openhands.dev/sdk',
+      },
+    });
 
     expect(getRouteFooterProps('/product/canvas')).toMatchObject({
       marketingCtaTitle: 'Ready to go further?',
@@ -68,7 +92,7 @@ describe('route layout configuration', () => {
         href: 'https://github.com/OpenHands/agent-canvas/releases',
       },
       marketingCtaSecondary: { label: 'Explore Enterprise', href: '/enterprise' },
-      compactSpacerHeight: 0,
+      compactSpacerHeight: 2,
     });
   });
 });

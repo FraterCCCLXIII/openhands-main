@@ -50,8 +50,7 @@ describe('modernize legacy systems whitepaper route', () => {
     });
 
     expect(container.querySelector('[data-wf-el="card-body"]')).toBeInTheDocument();
-    expect(screen.getByText(/Bring your team into the loop/i)).toBeInTheDocument();
-    expect(screen.queryByRole('heading', { name: /Bring your team into the loop/i })).not.toBeInTheDocument();
+    expect(screen.getByText(/apply for our Q2 2026 Proof-of-Concept program/i)).toBeInTheDocument();
     expect(screen.getByText(/OpenHands - All rights reserved/i)).toBeVisible();
     expect(container.querySelectorAll('[data-wf-el="eyebrow"]')).toHaveLength(2);
   });

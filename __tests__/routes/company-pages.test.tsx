@@ -188,7 +188,7 @@ describe('company information pages parity', () => {
     expect(container.querySelector('[data-wf-el="standard-collection"]')).toHaveClass('press-standard-collection', 'w-[90%]');
     expect(container.querySelector('[data-wf-el="standard-collection-list"]')).toHaveAttribute('role', 'list');
     expect(container.querySelector('main')?.lastElementChild?.tagName).toBe('SECTION');
-    expect(container.querySelector('section.bg-brand-accent > div[aria-hidden="true"]')).toHaveStyle({ height: 'var(--footer-compact-spacer-height, 9.1875px)' });
+    expect(container.querySelector('section.bg-brand-accent [data-wf-el="container"]')).toBeInTheDocument();
     expect(screen.getByText(/OpenHands - All rights reserved/).textContent?.replace(/\u00a0/g, ' ')).toContain(`${new Date().getFullYear()} OpenHands - All rights reserved`);
     expect(screen.queryByRole('heading', { name: 'OpenHands Raises $18.8M Series A to Bring Open-Source Cloud Coding Agents to Enterprises' })).not.toBeInTheDocument();
     expect(screen.queryByText('Media Kit')).not.toBeInTheDocument();

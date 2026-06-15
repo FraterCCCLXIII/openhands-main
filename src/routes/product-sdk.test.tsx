@@ -45,6 +45,6 @@ describe('/product/sdk parity markup', () => {
     expect(html).toContain('product-feature-grid-section');
     expect(html).toContain('product-comparison-section');
     expect(html).toContain('product-faq-section');
-    expect(html.match(/data-wf-el="asci-embed"/g)).toHaveLength(1);
+    expect(html.match(/data-wf-el="asci-embed"/g)).toHaveLength(2);
   });
 });

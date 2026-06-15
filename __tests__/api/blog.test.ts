@@ -58,6 +58,18 @@ describe("blogAPI", () => {
     ).toBeUndefined();
   });
 
+  test("separates SEO posts from editorial blog surfaces", () => {
+    expect(blogAPI.getSeoBlogs().map(getBlogSlug)).toEqual(
+      expect.arrayContaining([
+        "cursor-alternatives",
+        "finding-vulnerabilities-in-source-code",
+        "what-are-coding-agents",
+      ]),
+    );
+    expect(blogAPI.getBlogGridBlogs().every((blog) => blog.data.importance !== "SEO")).toBe(true);
+    expect(blogAPI.getArticleHighlightBlogs().every((blog) => blog.data.importance !== "SEO")).toBe(true);
+  });
+
   test("does not reuse the agent control plane cover for unrelated posts", () => {
     const agentControlPlaneCover =
       "/assets/webflow/blog/agent-control-plane/cover.png";

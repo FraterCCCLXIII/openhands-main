@@ -49,9 +49,9 @@ describe('legacy routes parity', () => {
     expect(main.querySelector('.hs-form-frame')).toHaveAttribute('data-region', 'na1');
     expect(main.querySelector('.hs-form-frame')).toHaveAttribute('data-portal-id', '50790961');
     expect(main.querySelector('.hs-form-frame')).toHaveAttribute('data-form-id', '4426798e-b2ea-48ec-b9ee-e314cbeda890');
-    expect(screen.getByRole('link', { name: 'Download Local GUI' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'Join The Community' })).toHaveAttribute(
       'href',
-      'https://docs.openhands.dev/openhands/usage/run-openhands/local-setup'
+      '/community'
     );
   });
 

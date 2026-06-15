@@ -75,13 +75,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <script src="/reo-init.js" defer />
       </head>
       <body>
-        <PHProvider>
-          {children}
-          <HubSpotTrackingScript />
-          <Analytics />
-          <ScrollRestoration />
-          <Scripts />
-        </PHProvider>
+        <PixelBlastProvider>
+          <PHProvider>
+            {children}
+            <HubSpotTrackingScript />
+            <Analytics />
+            <ScrollRestoration />
+            <Scripts />
+          </PHProvider>
+        </PixelBlastProvider>
       </body>
     </html>
   );
@@ -146,9 +148,7 @@ export default function App() {
   const pageWrapperClassName = ['relative', routeLayout.pageWrapper?.className].filter(Boolean).join(' ');
 
   return (
-    <PixelBlastProvider>
-      <div data-wf-el='page-wrapper' className={pageWrapperClassName} style={{ display: 'flex', flexDirection: 'column', backgroundColor: 'rgb(247, 243, 238)', minHeight: '100vh', overflow: 'clip', height: pageWrapperHeight }}>
-
+    <div data-wf-el='page-wrapper' className={pageWrapperClassName} style={{ display: 'flex', flexDirection: 'column', backgroundColor: 'rgb(247, 243, 238)', minHeight: '100vh', overflow: 'clip', height: pageWrapperHeight }}>
       <Sidebar
         ref={sidebarRef}
         isHidden={isSidebarHidden}
@@ -174,17 +174,15 @@ export default function App() {
           {routeLayout.afterGlobalFooterSpacerHeight ? <div aria-hidden='true' style={{ height: routeLayout.afterGlobalFooterSpacerHeight }} /> : null}
         </div>
       </motion.div>
-      
+
       {/* GitHub Modal */}
-      <GitHubModal 
-        isOpen={isGitHubModalOpen} 
-        onClose={handleCloseGitHubModal} 
+      <GitHubModal
+        isOpen={isGitHubModalOpen}
+        onClose={handleCloseGitHubModal}
       />
 
       <PixelBlastRenderer />
-      
     </div>
-    </PixelBlastProvider>
   );
 }
 

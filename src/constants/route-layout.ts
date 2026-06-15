@@ -104,9 +104,9 @@ const footerCtaVariants = {
   enterprise: {},
   pricing: {},
   whitepaper: {},
-  'product-cli': {},
+  'product-cli': productFeatureCta('cli'),
   'product-gui': productFeatureCta('gui'),
-  'product-sdk': {},
+  'product-sdk': productFeatureCta('sdk'),
 } satisfies Record<FooterCtaVariant, Partial<FooterProps>>;
 
 const ROUTE_LAYOUTS: Record<string, RouteLayoutConfig> = {
@@ -226,8 +226,11 @@ function getDynamicRouteLayout(pathname: string): RouteLayoutConfig | undefined 
   if (productVariant) {
     return {
       footer: shellFooter({
-        ...(productVariant === 'gui' ? { cta: 'product-gui' } : {}),
+        cta: `product-${productVariant}`,
         showCopyright: true,
+        minHeight: ROUTE_PARITY_MEASUREMENTS.footerSection.productSubpageMinHeight,
+        compactSpacerHeight: productVariant === 'sdk' ? 9 : 2,
+        footerContainerTransform: productVariant === 'gui' ? 'scaleY(0.99975)' : undefined,
       }),
     };
   }

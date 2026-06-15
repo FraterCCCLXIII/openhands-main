@@ -40,7 +40,8 @@ export function PHProvider({ children }: { children: React.ReactNode }) {
 
           const client = posthogModule.default;
           client.init(apiKey, {
-            api_host: 'https://us.i.posthog.com',
+            api_host: 'https://z.openhands.dev',
+            ui_host: 'https://us.posthog.com',
             defaults: '2025-05-24',
           });
 
