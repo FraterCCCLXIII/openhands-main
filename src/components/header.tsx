@@ -511,9 +511,14 @@ export const Header: React.FC<HeaderProps> = ({
                 </button>
                 <div
                   data-wf-el='nav_links_dropdown_wrap'
-                  className={clsx(NAV_DROPDOWN_WRAP_CLASS, 'left-0 right-0 origin-top-right')}
+                  className={clsx(NAV_DROPDOWN_WRAP_CLASS, 'right-0 origin-top-right')}
                   data-open={resourcesOpen}
-                  style={{ paddingTop: '8px', width: NAV_DROPDOWN_WIDTH }}
+                  style={{
+                    paddingTop: '8px',
+                    width: NAV_DROPDOWN_WIDTH,
+                    maxWidth: 'min(880px, calc(100vw - 2.5rem))',
+                    left: 'auto',
+                  }}
                   onMouseEnter={() => setResourcesOpen(true)}
                 >
                   <div data-wf-el='nav_links_dropdown' style={NAV_DROPDOWN_PANEL_STYLE}>
