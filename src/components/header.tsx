@@ -123,6 +123,57 @@ const NAV_DROPDOWN_ITEM_STYLE: React.CSSProperties = {
 const NAV_DROPDOWN_WRAP_CLASS =
   'absolute top-full z-50 origin-top-left scale-95 opacity-0 pointer-events-none transition data-[open=true]:scale-100 data-[open=true]:opacity-100 data-[open=true]:pointer-events-auto';
 
+const RESOURCES_DROPDOWN_VIEWPORT_MARGIN_PX = 20;
+
+function useClampedDropdownLeft(
+  open: boolean,
+  triggerRef: React.RefObject<HTMLElement | null>,
+  dropdownRef: React.RefObject<HTMLElement | null>,
+  containerRef: React.RefObject<HTMLElement | null>,
+) {
+  const [left, setLeft] = React.useState<number | null>(null);
+
+  const update = React.useCallback(() => {
+    const trigger = triggerRef.current;
+    const dropdown = dropdownRef.current;
+    const container = containerRef.current;
+    if (!trigger || !dropdown || !container) {
+      return;
+    }
+
+    const triggerRect = trigger.getBoundingClientRect();
+    const containerRect = container.getBoundingClientRect();
+    const dropdownWidth = dropdown.getBoundingClientRect().width;
+    const triggerCenterX = triggerRect.left + triggerRect.width / 2;
+    const idealLeft = triggerCenterX - dropdownWidth / 2;
+    const clampedViewportLeft = Math.max(
+      RESOURCES_DROPDOWN_VIEWPORT_MARGIN_PX,
+      Math.min(
+        idealLeft,
+        window.innerWidth - dropdownWidth - RESOURCES_DROPDOWN_VIEWPORT_MARGIN_PX,
+      ),
+    );
+
+    setLeft(clampedViewportLeft - containerRect.left);
+  }, [triggerRef, dropdownRef, containerRef]);
+
+  React.useLayoutEffect(() => {
+    if (!open) {
+      setLeft(null);
+      return;
+    }
+
+    update();
+    window.addEventListener('resize', update);
+
+    return () => {
+      window.removeEventListener('resize', update);
+    };
+  }, [open, update]);
+
+  return left;
+}
+
 const NAV_DROPDOWN_PANEL_STYLE: React.CSSProperties = {
   position: 'relative',
   display: 'flex',
@@ -232,6 +283,15 @@ export const Header: React.FC<HeaderProps> = ({
   const [textIsVisible, setTextIsVisible] = React.useState(true);
   const [resourcesOpen, setResourcesOpen] = React.useState(false);
   const [productOpen, setProductOpen] = React.useState(false);
+  const resourcesTriggerRef = React.useRef<HTMLButtonElement>(null);
+  const resourcesDropdownRef = React.useRef<HTMLDivElement>(null);
+  const resourcesItemRef = React.useRef<HTMLLIElement>(null);
+  const resourcesDropdownLeft = useClampedDropdownLeft(
+    resourcesOpen,
+    resourcesTriggerRef,
+    resourcesDropdownRef,
+    resourcesItemRef,
+  );
   const isMobile = width < 768;
   const isCompact = width <= 1360;
   const menuOpen = showMenuIcon === false;
@@ -487,6 +547,7 @@ export const Header: React.FC<HeaderProps> = ({
               </li>
               {/* Resources dropdown */}
               <li
+                ref={resourcesItemRef}
                 data-wf-el='nav_links_li'
                 className='group relative'
                 style={{ display: 'list-item' }}
@@ -495,6 +556,7 @@ export const Header: React.FC<HeaderProps> = ({
                 onBlur={(event) => closeDropdownOnBlur(event, setResourcesOpen)}
               >
                 <button
+                  ref={resourcesTriggerRef}
                   className={clsx('flex items-center gap-1 hover:text-[#565656]', navLinkClass)}
                   style={{ ...navLinkStyle, cursor: 'default' }}
                   onMouseEnter={() => setResourcesOpen(true)}
@@ -510,14 +572,15 @@ export const Header: React.FC<HeaderProps> = ({
                   </div>
                 </button>
                 <div
+                  ref={resourcesDropdownRef}
                   data-wf-el='nav_links_dropdown_wrap'
-                  className={clsx(NAV_DROPDOWN_WRAP_CLASS, 'right-0 origin-top-right')}
+                  className={clsx(NAV_DROPDOWN_WRAP_CLASS, 'origin-top')}
                   data-open={resourcesOpen}
                   style={{
                     paddingTop: '8px',
                     width: NAV_DROPDOWN_WIDTH,
                     maxWidth: 'min(880px, calc(100vw - 2.5rem))',
-                    left: 'auto',
+                    left: resourcesDropdownLeft ?? 0,
                   }}
                   onMouseEnter={() => setResourcesOpen(true)}
                 >
