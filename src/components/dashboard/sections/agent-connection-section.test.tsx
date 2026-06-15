@@ -6,7 +6,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AgentConnectionSection } from "@/src/components/dashboard/sections/agent-connection-section";
 
-import { enableReactActEnvironment } from "@/src/test-utils/jsdom-helpers";
+import {
+  enableReactActEnvironment,
+  setInputValue,
+} from "@/src/test-utils/jsdom-helpers";
 
 enableReactActEnvironment();
 
@@ -32,6 +35,27 @@ const createDefaultProps = () => ({
   },
   agentMcpConfigExample: '{"transport":"streamable-http"}',
   agentMcpEndpoint: "https://example.com/api/mcp",
+  permissionProfiles: [
+    {
+      id: "default-profile",
+      ownerId: "dev@localhost",
+      name: null,
+      agentApiKey: "cla_default_profile_key",
+      createdAt: "2026-06-10T00:00:00.000Z",
+      updatedAt: "2026-06-10T00:00:00.000Z",
+      snapshot: { integrations: {} },
+    },
+    {
+      id: "research-profile",
+      ownerId: "dev@localhost",
+      name: "Research assistant",
+      agentApiKey: "cla_research_profile_key",
+      createdAt: "2026-06-10T00:00:00.000Z",
+      updatedAt: "2026-06-10T00:00:00.000Z",
+      snapshot: { integrations: {} },
+    },
+  ],
+
   agentMcpToolName: "github__list_issues",
   agentOpenApiSchemaEndpoint: "https://example.com/api/context/openapi",
   agentRestPromptExample: "Use the agent REST API.",
@@ -77,6 +101,7 @@ describe("AgentConnectionSection", () => {
           {...props}
           contextApiReady={false}
           isAdmin={false}
+          permissionProfiles={[]}
           adminPromptExample=""
           adminSchemaEndpoint=""
           agentKey={{
@@ -111,6 +136,12 @@ describe("AgentConnectionSection", () => {
 
   it("renders admin connection details and forwards reveal/copy actions for every key card", async () => {
     const props = createDefaultProps();
+    const writeTextMock = vi.fn().mockResolvedValue(undefined);
+    vi.stubGlobal("navigator", {
+      clipboard: {
+        writeText: writeTextMock,
+      },
+    });
 
     await act(async () => {
       root.render(
@@ -145,22 +176,27 @@ describe("AgentConnectionSection", () => {
     expect(container.textContent).toContain("https://example.com/api/admin/openapi");
     expect(container.textContent).toContain("https://example.com/api/user/openapi");
     expect(container.textContent).toContain("https://example.com/api/context/openapi");
-    expect(container.textContent).toContain("Hide");
 
     const buttons = Array.from(container.querySelectorAll("button"));
+    expect(container.textContent).toContain("Agent key");
+    expect(container.textContent).not.toContain("Permission profile key");
+    expect(container.textContent).toContain("Default profile agent key");
+    expect(container.textContent).not.toContain("Research assistant agent key");
+    expect(container.textContent).not.toContain("cla_default_profile_key");
+    expect(container.textContent).not.toContain("cla_research_profile_key");
+
+    const profileSelect = container.querySelector("select") as HTMLSelectElement | null;
+    expect(profileSelect?.value).toBe("default-profile");
+
     const revealButtons = buttons.filter((button) => button.textContent?.includes("Reveal"));
-    const hideButtons = buttons.filter((button) => button.textContent?.includes("Hide"));
-    const copyAgentButton = container.querySelector(
-      'button[aria-label="Copy agent key"]',
-    ) as HTMLButtonElement | null;
     const copyUserButton = container.querySelector(
       'button[aria-label="Copy user automation key"]',
     ) as HTMLButtonElement | null;
     const copyAdminButton = container.querySelector(
       'button[aria-label="Copy admin automation key"]',
     ) as HTMLButtonElement | null;
-    const rotateAgentButton = container.querySelector(
-      'button[aria-label="Rotate agent key"]',
+    const copyDefaultProfileButton = container.querySelector(
+      'button[aria-label="Copy default profile agent key"]',
     ) as HTMLButtonElement | null;
     const rotateUserButton = container.querySelector(
       'button[aria-label="Rotate user automation key"]',
@@ -168,27 +204,80 @@ describe("AgentConnectionSection", () => {
     const rotateAdminButton = container.querySelector(
       'button[aria-label="Rotate admin automation key"]',
     ) as HTMLButtonElement | null;
+    const rotateDefaultProfileButton = container.querySelector(
+      'button[aria-label="Rotate default profile agent key"]',
+    ) as HTMLButtonElement | null;
+
+    expect(rotateDefaultProfileButton?.disabled).toBe(false);
 
     await act(async () => {
-      hideButtons[0]?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
       revealButtons[0]?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-      copyAgentButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-      rotateAgentButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      copyDefaultProfileButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
       copyUserButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
       rotateUserButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
       revealButtons[1]?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
       copyAdminButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
       rotateAdminButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      revealButtons[2]?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      await Promise.resolve();
     });
 
-    expect(props.agentKey.toggleReveal).toHaveBeenCalledTimes(1);
+    expect(container.textContent).toContain("cla_default_profile_key");
+    expect(props.agentKey.toggleReveal).not.toHaveBeenCalled();
+    expect(props.agentKey.handleCopy).not.toHaveBeenCalled();
+    expect(props.agentKey.handleRotate).not.toHaveBeenCalled();
     expect(props.userKey.handleReveal).toHaveBeenCalledTimes(1);
     expect(props.adminKey.handleReveal).toHaveBeenCalledTimes(1);
-    expect(props.agentKey.handleCopy).toHaveBeenCalledTimes(1);
-    expect(props.agentKey.handleRotate).toHaveBeenCalledTimes(1);
+    expect(writeTextMock).toHaveBeenCalledWith("cla_default_profile_key");
     expect(props.userKey.handleCopy).toHaveBeenCalledTimes(1);
     expect(props.userKey.handleRotate).toHaveBeenCalledTimes(1);
     expect(props.adminKey.handleCopy).toHaveBeenCalledTimes(1);
     expect(props.adminKey.handleRotate).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      setInputValue(profileSelect, "research-profile");
+    });
+
+    expect(container.textContent).toContain("Research assistant agent key");
+    expect(container.textContent).not.toContain("cla_research_profile_key");
+    expect(container.textContent).not.toContain("cla_default_profile_key");
+    expect(
+      container.querySelector(
+        'button[aria-label="Rotate research assistant agent key"]',
+      ),
+    ).not.toBeNull();
+  });
+
+  it("shows profile key provisioning on the agent connection page even before the legacy agent key is ready", async () => {
+    const props = createDefaultProps();
+
+    await act(async () => {
+      root.render(
+        <AgentConnectionSection
+          {...props}
+          contextApiReady={false}
+          agentKey={{
+            ...props.agentKey,
+            maskedValue: "",
+          }}
+          permissionProfiles={[
+            {
+              ...props.permissionProfiles[0]!,
+              agentApiKey: "",
+            },
+          ]}
+        />,
+      );
+    });
+
+    expect(container.textContent).toContain("Default profile agent key");
+    expect(container.textContent).toContain(
+      "No agent key has been provisioned for this profile yet.",
+    );
+
+    const provisionButton = container.querySelector(
+      'button[aria-label="Provision default profile agent key"]',
+    ) as HTMLButtonElement | null;
+    expect(provisionButton?.disabled).toBe(false);
   });
 });

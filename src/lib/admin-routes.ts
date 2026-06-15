@@ -1,6 +1,7 @@
 export type AdminSection =
   | "profile"
   | "integrations"
+  | "permissionProfiles"
   | "apiKeys"
   | "caseByCaseApprovals";
 
@@ -10,6 +11,7 @@ export type AdminSection =
 const ADMIN_SECTION_PATHS: Record<AdminSection, string> = {
   profile: "/profile",
   integrations: "/integrations",
+  permissionProfiles: "/permission-profiles",
   apiKeys: "/agent-connection",
   caseByCaseApprovals: "/case-by-case-approvals",
 };
@@ -26,6 +28,8 @@ export const getAdminSectionFromPath = (pathname: string): AdminSection => {
       return "profile";
     case "/agent-connection":
       return "apiKeys";
+    case "/permission-profiles":
+      return "permissionProfiles";
     case "/case-by-case-approvals":
       return "caseByCaseApprovals";
     case "/home":

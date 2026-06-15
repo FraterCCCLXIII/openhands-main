@@ -273,7 +273,12 @@ export class PostgresRepository implements ContextRepository {
 
   async getAgentApiKeyByOwner(ownerId: string) {
     const sql = getSql();
-    const rows: Row[] = await sql`SELECT * FROM agent_api_keys WHERE owner_id = ${ownerId}`;
+    const rows: Row[] = await sql`
+      SELECT k.*
+      FROM agent_api_keys k
+      JOIN permission_profiles p ON p.id = k.profile_id
+      WHERE LOWER(p.owner_id) = LOWER(${ownerId}) AND p.name IS NULL
+    `;
     const row = rows[0];
     if (!row) {
       return null;
@@ -293,15 +298,40 @@ export class PostgresRepository implements ContextRepository {
 
   async saveAgentApiKey(record: AgentApiKeyRecord) {
     const sql = getSql();
+    let profileId = record.permissionProfileId;
+    if (!profileId) {
+      const insertedProfiles: Row[] = await sql`
+        INSERT INTO permission_profiles (id, owner_id, name, snapshot, created_at, updated_at)
+        VALUES ('default:' || md5(LOWER(${record.ownerId})), ${record.ownerId}, NULL, ${JSON.stringify({ integrations: {} })}, ${record.createdAt}, ${record.updatedAt})
+        ON CONFLICT DO NOTHING
+        RETURNING id
+      `;
+      profileId = insertedProfiles[0]?.id
+        ? String(insertedProfiles[0].id)
+        : undefined;
+      if (!profileId) {
+        const defaultProfiles: Row[] = await sql`
+          SELECT id FROM permission_profiles
+          WHERE LOWER(owner_id) = LOWER(${record.ownerId}) AND name IS NULL
+          LIMIT 1
+        `;
+        const defaultProfile = defaultProfiles[0];
+        if (!defaultProfile) {
+          throw new Error("Unable to create default permission profile for agent API key.");
+        }
+        profileId = String(defaultProfile.id);
+      }
+    }
     await sql`
-      INSERT INTO agent_api_keys (owner_id, api_key, created_at, updated_at)
-      VALUES (${record.ownerId}, ${record.apiKey}, ${record.createdAt}, ${record.updatedAt})
-      ON CONFLICT (owner_id) DO UPDATE SET
+      INSERT INTO agent_api_keys (profile_id, owner_id, api_key, created_at, updated_at)
+      VALUES (${profileId}, ${record.ownerId}, ${record.apiKey}, ${record.createdAt}, ${record.updatedAt})
+      ON CONFLICT (profile_id) DO UPDATE SET
+        owner_id = EXCLUDED.owner_id,
         api_key = EXCLUDED.api_key,
         created_at = EXCLUDED.created_at,
         updated_at = EXCLUDED.updated_at
     `;
-    return record;
+    return { ...record, permissionProfileId: profileId };
   }
 
   async getUserApiKeyByOwner(ownerId: string) {

@@ -75,6 +75,37 @@ class AccessRequest(BaseModel):
     decidedBy: str | None = None
 
 
+class PermissionProfileIntegrationSnapshot(BaseModel):
+    enabled: bool = True
+    tools: dict[str, ToolAccessMode] = Field(default_factory=dict)
+
+
+class PermissionProfileSnapshot(BaseModel):
+    integrations: dict[str, PermissionProfileIntegrationSnapshot] = Field(
+        default_factory=dict
+    )
+
+
+class PermissionProfile(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid4()))
+    ownerId: str
+    name: str | None = None
+    snapshot: PermissionProfileSnapshot = Field(
+        default_factory=PermissionProfileSnapshot
+    )
+    agentApiKey: str = ""
+    createdAt: str = Field(default_factory=now_iso)
+    updatedAt: str = Field(default_factory=now_iso)
+
+
+class PermissionProfileApplyResult(BaseModel):
+    profile: PermissionProfile
+    appliedIntegrations: int
+    appliedTools: int
+    skippedIntegrations: list[str] = Field(default_factory=list)
+    skippedTools: list[str] = Field(default_factory=list)
+
+
 class ManagedConnectorTool(BaseModel):
     name: str
     description: str = ""

@@ -37,6 +37,9 @@ def setup_test_env(config_env: ConfigEnvFixture):
     repository.policies.clear()
     repository.temporary_grants.clear()
     repository.tool_invocations.clear()
+    repository.profile_agent_keys.clear()
+
+    repository.permission_profiles.clear()
     yield
 
 
@@ -52,6 +55,7 @@ def sample_path(path: str) -> str:
         .replace("{requestId}", "req-sample")
         .replace("{slug}", "sample-connector")
         .replace("{provider}", "sample")
+        .replace("{profileId}", "profile-sample")
         .replace("{agentClass}", "developer")
     )
 

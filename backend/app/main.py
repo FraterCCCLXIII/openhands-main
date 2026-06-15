@@ -35,6 +35,11 @@ from .models import (
     IntegrationSpec,
     ManagedConnector,
     ManagedConnectorTool,
+    PermissionProfile,
+    PermissionProfileApplyResult,
+    PermissionProfileIntegrationSnapshot,
+    PermissionProfileSnapshot,
+    ToolAccessMode,
     ToolSpec,
     now_iso,
 )
@@ -109,12 +114,14 @@ def human_approval_required_detail(
     return " ".join(parts)
 
 
-def context_openapi(owner: str, request: Request) -> dict[str, Any]:
+def context_openapi(
+    owner: str, request: Request, profile: PermissionProfile | None = None
+) -> dict[str, Any]:
     connection_keys = {
         item["integrationKey"] for item in repository.list_connections(owner)
     }
     paths: dict[str, Any] = {}
-    for integration in repository.list_integrations(owner):
+    for integration in profiled_integrations(owner, profile):
         if not integration.enabled or (
             integration.authStrategy == "oauth2"
             and integration.key not in connection_keys
@@ -1106,6 +1113,7 @@ def invoke_enabled_tool(
     agent_id: str | None = None,
     agent_class: str | None = None,
     approval_url: str = CASE_BY_CASE_APPROVAL_PATH,
+    persist_tool_metrics: bool = True,
 ) -> Any:
     scopes = effective_scopes(tool, scopes)
     grant = active_temporary_grant(
@@ -1149,7 +1157,8 @@ def invoke_enabled_tool(
         data = invoke_tool_payload(owner, integration, tool, payload)
     except HTTPException as exc:
         tool.lastInvocationOutcome = "error"
-        repository.save_tool(owner, integration.key, tool)
+        if persist_tool_metrics:
+            repository.save_tool(owner, integration.key, tool)
         repository.record_tool_invocation(
             owner,
             integration,
@@ -1163,7 +1172,8 @@ def invoke_enabled_tool(
         )
         raise
     tool.lastInvocationOutcome = "success"
-    repository.save_tool(owner, integration.key, tool)
+    if persist_tool_metrics:
+        repository.save_tool(owner, integration.key, tool)
     repository.record_tool_invocation(
         owner,
         integration,
@@ -1250,9 +1260,11 @@ def mcp_tool_input_schema(tool: ToolSpec) -> dict[str, Any]:
     }
 
 
-def mcp_tool_list(owner: str) -> list[dict[str, Any]]:
+def mcp_tool_list(
+    owner: str, profile: PermissionProfile | None = None
+) -> list[dict[str, Any]]:
     tools: list[dict[str, Any]] = []
-    for integration in repository.list_integrations(owner):
+    for integration in profiled_integrations(owner, profile):
         if not integration.enabled:
             continue
         for tool in integration.tools.values():
@@ -1280,7 +1292,10 @@ def jsonrpc_response(
 
 
 def mcp_call(
-    owner: str, body: dict[str, Any], approval_url: str
+    owner: str,
+    body: dict[str, Any],
+    approval_url: str,
+    profile: PermissionProfile | None = None,
 ) -> dict[str, Any] | Response:
     method = body.get("method")
     if method == "initialize":
@@ -1297,7 +1312,7 @@ def mcp_call(
     if method == "notifications/initialized":
         return Response(status_code=202)
     if method == "tools/list":
-        return jsonrpc_response(body, {"tools": mcp_tool_list(owner)})
+        return jsonrpc_response(body, {"tools": mcp_tool_list(owner, profile)})
     if method == "tools/call":
         params = body.get("params", {})
         name = params.get("name", "")
@@ -1310,7 +1325,7 @@ def mcp_call(
                 },
             )
         integration_key, tool_name = name.split("__", 1)
-        integration = repository.get_integration(owner, integration_key)
+        integration = profiled_integration(owner, integration_key, profile)
         if not integration:
             return jsonrpc_response(
                 body, error={"code": -32004, "message": "Integration not found."}
@@ -1338,6 +1353,7 @@ def mcp_call(
                 agent_id,
                 agent_class,
                 approval_url,
+                profile is None,
             )
         except HTTPException as exc:
             return jsonrpc_response(
@@ -1372,8 +1388,11 @@ def requires_dashboard_session(path: str, method: str) -> bool:
         "/api/admin/key",
         "/api/oauth/connections",
         "/api/notifications",
+        "/api/permission-profiles",
         "/api/agent-classes/{agentClass}",
     }:
+        return True
+    if path.startswith("/api/permission-profiles/"):
         return True
     if path.startswith("/api/integrations") and path not in {
         "/api/integrations/managed-connectors",
@@ -1418,7 +1437,7 @@ def extract_api_key(request: Request) -> str:
     return (request.headers.get("x-api-key") or "").strip()
 
 
-def authorized_agent_owner(request: Request, purpose: str) -> str:
+def authorized_agent_record(request: Request, purpose: str) -> dict[str, Any]:
     if not repository.has_agent_api_keys():
         raise HTTPException(
             status_code=503,
@@ -1431,7 +1450,12 @@ def authorized_agent_owner(request: Request, purpose: str) -> str:
             detail="Provide a valid personal integrations-hub API key in the Authorization bearer header or X-API-Key.",
             headers={"WWW-Authenticate": 'Bearer realm="agent-integrations-hub"'},
         )
-    return str(record["ownerId"]).lower()
+    record["ownerId"] = str(record["ownerId"]).lower()
+    return record
+
+
+def authorized_agent_owner(request: Request, purpose: str) -> str:
+    return str(authorized_agent_record(request, purpose)["ownerId"])
 
 
 def authorize_user_api_owner(request: Request) -> tuple[str, bool]:
@@ -1584,6 +1608,197 @@ def disable_unused_tools(owner: str, body: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def trimmed_profile_name(body: Any) -> str:
+    name = str((body or {}).get("name") or "").strip()
+    if not name:
+        raise HTTPException(status_code=400, detail="Profile name is required.")
+    if len(name) > 80:
+        raise HTTPException(
+            status_code=400, detail="Profile name must be 80 characters or fewer."
+        )
+    return name
+
+
+def tool_access_mode(tool: ToolSpec) -> ToolAccessMode:
+    if tool.accessMode:
+        return tool.accessMode
+    return "enabled" if tool.enabled else "disabled"
+
+
+def current_permission_snapshot(owner: str) -> PermissionProfileSnapshot:
+    return PermissionProfileSnapshot(
+        integrations={
+            integration.key: PermissionProfileIntegrationSnapshot(
+                enabled=integration.enabled,
+                tools={
+                    tool_name: tool_access_mode(tool)
+                    for tool_name, tool in integration.tools.items()
+                },
+            )
+            for integration in repository.list_integrations(owner)
+        }
+    )
+
+
+def ensure_default_permission_profile(
+    owner: str, refresh: bool = False
+) -> PermissionProfile:
+    snapshot = current_permission_snapshot(owner)
+    profile = repository.get_default_permission_profile(owner)
+    if profile is None:
+        return repository.save_permission_profile(
+            owner,
+            PermissionProfile(ownerId=owner, name=None, snapshot=snapshot),
+        )
+    if refresh or not profile.agentApiKey:
+        profile = profile.model_copy(
+            update={"snapshot": snapshot, "updatedAt": now_iso()}
+        )
+        return repository.save_permission_profile(owner, profile)
+    return profile
+
+
+def sync_default_permission_profile(owner: str) -> None:
+    if repository.get_default_permission_profile(owner) is not None:
+        ensure_default_permission_profile(owner, refresh=True)
+
+
+def rotate_permission_profile_agent_key(
+    owner: str, profile_id: str
+) -> PermissionProfile:
+    profile = repository.get_permission_profile(owner, profile_id)
+    if profile is None:
+        raise HTTPException(status_code=404, detail="Permission profile not found.")
+
+    key = repository.rotate_permission_profile_api_key(owner, profile.id)
+    if profile.name is None:
+        repository.agent_keys[owner] = str(key["api_key"])
+    return repository.get_permission_profile(owner, profile.id) or profile.model_copy(
+        update={"agentApiKey": str(key["api_key"]), "updatedAt": now_iso()}
+    )
+
+
+def agent_permission_profile(record: dict[str, Any]) -> PermissionProfile | None:
+    owner = str(record["ownerId"]).lower()
+    profile_id = record.get("permissionProfileId")
+    if profile_id is None or profile_id == "":
+        return ensure_default_permission_profile(owner, refresh=True)
+    profile = repository.get_permission_profile(owner, str(profile_id))
+    if profile and profile.name is None:
+        return ensure_default_permission_profile(owner, refresh=True)
+    return profile
+
+
+def permission_profile_label(profile: PermissionProfile) -> str:
+    return profile.name or "Default profile"
+
+
+def apply_permission_profile_to_integration(
+    integration: IntegrationSpec, profile: PermissionProfile | None
+) -> IntegrationSpec:
+    if profile is None:
+        return integration
+    saved = profile.snapshot.integrations.get(integration.key)
+    if saved is None:
+        return integration.model_copy(update={"enabled": False})
+    tools: dict[str, ToolSpec] = {}
+    for tool_name, tool in integration.tools.items():
+        requested_mode = saved.tools.get(tool_name, "disabled")
+        access_mode = clamp_access_mode(requested_mode, tool.maxAccessMode)
+        tools[tool_name] = tool.model_copy(
+            update={"accessMode": access_mode, "enabled": access_mode != "disabled"}
+        )
+    return integration.model_copy(update={"enabled": saved.enabled, "tools": tools})
+
+
+def profiled_integrations(
+    owner: str, profile: PermissionProfile | None
+) -> list[IntegrationSpec]:
+    return [
+        apply_permission_profile_to_integration(integration, profile)
+        for integration in repository.list_integrations(owner)
+    ]
+
+
+def profiled_integration(
+    owner: str, integration_key: str, profile: PermissionProfile | None
+) -> IntegrationSpec | None:
+    integration = repository.get_integration(owner, integration_key)
+    if integration is None:
+        return None
+    return apply_permission_profile_to_integration(integration, profile)
+
+
+def create_permission_profile(owner: str, body: Any) -> PermissionProfile:
+    name = trimmed_profile_name(body)
+    if repository.permission_profile_name_exists(owner, name):
+        raise HTTPException(
+            status_code=409,
+            detail=f"A permission profile named '{name}' already exists.",
+        )
+    return repository.save_permission_profile(
+        owner,
+        PermissionProfile(
+            ownerId=owner,
+            name=name,
+            snapshot=current_permission_snapshot(owner),
+        ),
+    )
+
+
+def update_permission_profile(owner: str, profile_id: str) -> PermissionProfile:
+    profile = repository.get_permission_profile(owner, profile_id)
+    if not profile:
+        raise HTTPException(status_code=404, detail="Permission profile not found.")
+    updated = profile.model_copy(
+        update={"snapshot": current_permission_snapshot(owner), "updatedAt": now_iso()}
+    )
+    return repository.save_permission_profile(owner, updated)
+
+
+def apply_permission_profile(
+    owner: str, profile_id: str
+) -> PermissionProfileApplyResult:
+    profile = repository.get_permission_profile(owner, profile_id)
+    if not profile:
+        raise HTTPException(status_code=404, detail="Permission profile not found.")
+
+    applied_integrations = 0
+    applied_tools = 0
+    skipped_integrations: list[str] = []
+    skipped_tools: list[str] = []
+
+    for integration_key, saved in profile.snapshot.integrations.items():
+        integration = repository.get_integration(owner, integration_key)
+        if not integration:
+            skipped_integrations.append(integration_key)
+            continue
+        changed = integration.enabled != saved.enabled
+        integration.enabled = saved.enabled
+        applied_integrations += 1
+        for tool_name, requested_mode in saved.tools.items():
+            tool = integration.tools.get(tool_name)
+            if not tool:
+                skipped_tools.append(f"{integration_key}.{tool_name}")
+                continue
+            access_mode = clamp_access_mode(requested_mode, tool.maxAccessMode)
+            integration.tools[tool_name] = tool.model_copy(
+                update={"accessMode": access_mode, "enabled": access_mode != "disabled"}
+            )
+            applied_tools += 1
+            changed = True
+        if changed:
+            repository.save_integration(owner, integration)
+
+    return PermissionProfileApplyResult(
+        profile=profile,
+        appliedIntegrations=applied_integrations,
+        appliedTools=applied_tools,
+        skippedIntegrations=skipped_integrations,
+        skippedTools=skipped_tools,
+    )
+
+
 def oauth_provider_catalog() -> list[dict[str, Any]]:
     managed = {connector.slug: connector for connector in list_managed_connectors()}
     catalog = []
@@ -1661,13 +1876,13 @@ def reject_access_request(
     return request
 
 
-def clamp_access_mode(requested: str, maximum: str | None) -> str:
+def clamp_access_mode(
+    requested: ToolAccessMode, maximum: ToolAccessMode | None
+) -> ToolAccessMode:
     if not maximum:
         return requested
     return (
-        requested
-        if ACCESS_PRIORITY.get(requested, 0) <= ACCESS_PRIORITY.get(maximum, 0)
-        else maximum
+        requested if ACCESS_PRIORITY[requested] <= ACCESS_PRIORITY[maximum] else maximum
     )
 
 
@@ -2043,10 +2258,15 @@ async def fastapi_handler(request: Request):
         else owner_id(request)
     )
     user_api_is_admin = is_admin_owner(owner)
+    active_permission_profile: PermissionProfile | None = None
     if path.startswith("/api/context"):
-        owner = authorized_agent_owner(request, "call /api/context")
+        agent_record = authorized_agent_record(request, "call /api/context")
+        owner = str(agent_record["ownerId"])
+        active_permission_profile = agent_permission_profile(agent_record)
     if path == "/api/mcp":
-        owner = authorized_agent_owner(request, "connect to MCP")
+        agent_record = authorized_agent_record(request, "connect to MCP")
+        owner = str(agent_record["ownerId"])
+        active_permission_profile = agent_permission_profile(agent_record)
     if path.startswith("/api/user/") and path not in {
         "/api/user/key",
         "/api/user/agent-key",
@@ -2057,11 +2277,28 @@ async def fastapi_handler(request: Request):
         user_api_is_admin = True
     body = await json_body(request) if method in {"POST", "PATCH", "PUT"} else {}
 
+    if path == "/api/permission-profiles":
+        ensure_default_permission_profile(owner, refresh=True)
+        if method == "GET":
+            return repository.list_permission_profiles(owner)
+        return create_permission_profile(owner, body)
+
+    if path == "/api/permission-profiles/{profileId}/update":
+        return update_permission_profile(owner, params["profileId"])
+
+    if path == "/api/permission-profiles/{profileId}/agent-key":
+        return rotate_permission_profile_agent_key(owner, params["profileId"])
+
+    if path == "/api/permission-profiles/{profileId}/load":
+        result = apply_permission_profile(owner, params["profileId"])
+        sync_default_permission_profile(owner)
+        return result
+
     if path == "/api/health":
         return {"status": "ok", "backend": "fastapi"}
 
     if path == "/api/context/openapi":
-        return context_openapi(owner, request)
+        return context_openapi(owner, request, active_permission_profile)
     if path == "/api/user/openapi":
         return user_openapi(request, user_api_is_admin)
     if path == "/api/admin/openapi":
@@ -2074,7 +2311,7 @@ async def fastapi_handler(request: Request):
 
     if path == "/api/context/skill":
         lines = ["# OpenHands Integrations Hub", "", "Available tools:"]
-        for integration in repository.list_integrations(owner):
+        for integration in profiled_integrations(owner, active_permission_profile):
             for tool in integration.tools.values():
                 if tool.enabled and tool.accessMode != "disabled":
                     lines.append(
@@ -2093,6 +2330,7 @@ async def fastapi_handler(request: Request):
             owner,
             body if isinstance(body, dict) else {},
             case_by_case_approval_url(request),
+            active_permission_profile,
         )
 
     if path.startswith("/api/admin/integrations") and path not in {
@@ -2177,9 +2415,11 @@ async def fastapi_handler(request: Request):
                 detail="OAuth integrations cannot store credentials directly. Save per-user OAuth connections instead.",
             )
         assert_user_can_save_integration(owner, integration)
-        return repository.save_integration(
+        saved_integration = repository.save_integration(
             owner, apply_managed_constraints(integration)
         )
+        sync_default_permission_profile(owner)
+        return saved_integration
 
     if (
         path == "/api/integrations/{integrationKey}"
@@ -2187,6 +2427,7 @@ async def fastapi_handler(request: Request):
     ):
         if not repository.delete_integration(owner, params["integrationKey"]):
             raise HTTPException(status_code=404, detail="Integration not found.")
+        sync_default_permission_profile(owner)
         return {"deleted": True, "integrationKey": params["integrationKey"]}
 
     if path == "/api/integrations/{integrationKey}/toggle":
@@ -2194,9 +2435,11 @@ async def fastapi_handler(request: Request):
         if not integration:
             raise HTTPException(status_code=404, detail="Integration not found.")
         integration.enabled = bool(body.get("enabled", not integration.enabled))
-        return repository.save_integration(
+        saved_integration = repository.save_integration(
             owner, apply_managed_constraints(integration)
         )
+        sync_default_permission_profile(owner)
+        return saved_integration
 
     if path == "/api/integrations/{integrationKey}/tools":
         tool = repository.save_tool(
@@ -2204,6 +2447,7 @@ async def fastapi_handler(request: Request):
         )
         if not tool:
             raise HTTPException(status_code=404, detail="Integration not found.")
+        sync_default_permission_profile(owner)
         return tool
 
     if path in {
@@ -2218,6 +2462,7 @@ async def fastapi_handler(request: Request):
             raise HTTPException(status_code=403, detail=str(exc)) from exc
         if not tool:
             raise HTTPException(status_code=404, detail="Tool not found.")
+        sync_default_permission_profile(owner)
         return tool
 
     if path == "/api/integrations/{integrationKey}/tools/{toolName}/toggle":
@@ -2233,6 +2478,7 @@ async def fastapi_handler(request: Request):
             raise HTTPException(status_code=403, detail=str(exc)) from exc
         if not tool:
             raise HTTPException(status_code=404, detail="Tool not found.")
+        sync_default_permission_profile(owner)
         return tool
 
     if path in {"/api/integrations/discover", "/api/admin/integrations/discover"}:
@@ -2241,7 +2487,9 @@ async def fastapi_handler(request: Request):
         return discovered_integration(body, owner)
 
     if path == "/api/integrations/disable-unused":
-        return disable_unused_tools(owner, body if isinstance(body, dict) else {})
+        result = disable_unused_tools(owner, body if isinstance(body, dict) else {})
+        sync_default_permission_profile(owner)
+        return result
 
     if path in {
         "/api/integrations/managed-connectors",
@@ -2274,7 +2522,9 @@ async def fastapi_handler(request: Request):
         return index_managed_connector_functions(params["slug"], owner)
 
     if path == "/api/context/{integrationKey}/{toolName}":
-        integration = repository.get_integration(owner, params["integrationKey"])
+        integration = profiled_integration(
+            owner, params["integrationKey"], active_permission_profile
+        )
         payload = ContextInvocationRequest.model_validate(body)
         if not integration or not integration.enabled:
             raise HTTPException(
@@ -2292,6 +2542,7 @@ async def fastapi_handler(request: Request):
             payload.agentId,
             payload.agentClass,
             case_by_case_approval_url(request),
+            active_permission_profile is None,
         )
         return {
             "integration": integration.key,
@@ -2326,6 +2577,7 @@ async def fastapi_handler(request: Request):
     if path == "/api/user/key":
         bucket, prefix = repository.user_keys, "clu"
     elif path == "/api/user/agent-key":
+        ensure_default_permission_profile(owner, refresh=True)
         bucket, prefix = repository.agent_keys, "cla"
     elif path == "/api/admin/key":
         bucket, prefix = repository.admin_keys, "clad"
@@ -2350,6 +2602,7 @@ async def fastapi_handler(request: Request):
                 "ownerId": owner,
                 "apiKey": data["apiKey"],
                 "createdAt": key.get("createdAt") or now_iso(),
+                "permissionProfileId": data.get("permissionProfileId"),
                 "updatedAt": key.get("updatedAt") or now_iso(),
             }
         if method == "POST":

@@ -41,6 +41,8 @@ def setup_function() -> None:
     repository.policies.clear()
     repository.temporary_grants.clear()
     repository.tool_invocations.clear()
+    repository.permission_profiles.clear()
+    repository.profile_agent_keys.clear()
 
 
 def test_register_integration_and_invoke_mock_tool(
@@ -84,6 +86,146 @@ def test_register_integration_and_invoke_mock_tool(
     )
     assert result.status_code == 200
     assert result.json()["data"] == {"ok": True}
+
+
+def test_permission_profiles_save_load_and_update_current_settings(
+    config_env: ConfigEnvFixture,
+) -> None:
+    config_env("INTHUB_DISABLE_AUTH", "true")
+    client = TestClient(app)
+    integration = {
+        "key": "docs",
+        "name": "Docs",
+        "kind": "api",
+        "provider": "mock",
+        "authStrategy": "none",
+        "enabled": True,
+        "fineGrainedPermissions": True,
+        "config": {},
+        "credentials": {},
+        "tools": {
+            "read": {
+                "name": "read",
+                "enabled": True,
+                "accessMode": "enabled",
+                "fineGrainedPermissions": True,
+                "defaultScopes": [],
+                "executionMode": "mock",
+                "config": {},
+            },
+            "write": {
+                "name": "write",
+                "enabled": True,
+                "accessMode": "approval_required",
+                "fineGrainedPermissions": True,
+                "defaultScopes": [],
+                "executionMode": "mock",
+                "config": {},
+            },
+        },
+    }
+    assert client.post("/api/integrations", json=integration).status_code == 200
+
+    created = client.post("/api/permission-profiles", json={"name": "Research"})
+    assert created.status_code == 200
+    created_body = created.json()
+    profile_id = created_body["id"]
+    assert created_body["agentApiKey"].startswith("cla_")
+
+    repository.profile_agent_keys.pop(profile_id)
+    saved_profile = repository.permission_profiles["dev@localhost"][profile_id]
+    repository.permission_profiles["dev@localhost"][profile_id] = (
+        saved_profile.model_copy(update={"agentApiKey": ""})
+    )
+    missing_key_profiles = client.get("/api/permission-profiles").json()
+    missing_key_profile = next(
+        profile for profile in missing_key_profiles if profile["id"] == profile_id
+    )
+    assert missing_key_profile["agentApiKey"] == ""
+
+    provisioned = client.post(f"/api/permission-profiles/{profile_id}/agent-key")
+    assert provisioned.status_code == 200
+    provisioned_key = provisioned.json()["agentApiKey"]
+    assert provisioned_key.startswith("cla_")
+    assert provisioned_key != created_body["agentApiKey"]
+
+    rotated = client.post(f"/api/permission-profiles/{profile_id}/agent-key")
+    assert rotated.status_code == 200
+    rotated_key = rotated.json()["agentApiKey"]
+    assert rotated_key.startswith("cla_")
+    assert rotated_key != provisioned_key
+
+    duplicate = client.post("/api/permission-profiles", json={"name": "research"})
+    assert duplicate.status_code == 409
+    assert (
+        duplicate.json()["detail"]
+        == "A permission profile named 'research' already exists."
+    )
+
+    profiles = client.get("/api/permission-profiles").json()
+    default_profiles = [profile for profile in profiles if profile["name"] is None]
+    assert len(default_profiles) == 1
+    assert default_profiles[0]["agentApiKey"].startswith("cla_")
+    assert default_profiles[0]["agentApiKey"] != created_body["agentApiKey"]
+
+    client.patch(
+        "/api/integrations/docs/tools/read",
+        json={"accessMode": "disabled"},
+    )
+    client.patch(
+        "/api/integrations/docs/tools/write",
+        json={"accessMode": "enabled"},
+    )
+
+    refreshed_profiles = client.get("/api/permission-profiles").json()
+    refreshed_default_profiles = [
+        profile for profile in refreshed_profiles if profile["name"] is None
+    ]
+    assert len(refreshed_default_profiles) == 1
+    assert (
+        refreshed_default_profiles[0]["snapshot"]["integrations"]["docs"]["tools"][
+            "read"
+        ]
+        == "disabled"
+    )
+
+    named_profile_result = client.post(
+        "/api/context/docs/read",
+        headers={"Authorization": f"Bearer {rotated_key}"},
+        json={"scopes": [], "payload": {}},
+    )
+    assert named_profile_result.status_code == 200
+
+    default_profile_result = client.post(
+        "/api/context/docs/read",
+        headers={
+            "Authorization": f"Bearer {refreshed_default_profiles[0]['agentApiKey']}"
+        },
+        json={"scopes": [], "payload": {}},
+    )
+    assert default_profile_result.status_code == 403
+
+    client.post("/api/integrations/docs/toggle", json={"enabled": False})
+
+    loaded = client.post(f"/api/permission-profiles/{profile_id}/load")
+    assert loaded.status_code == 200
+    assert loaded.json()["appliedTools"] == 2
+
+    [restored] = client.get("/api/integrations").json()
+    assert restored["enabled"] is True
+    assert restored["tools"]["read"]["accessMode"] == "enabled"
+    assert restored["tools"]["write"]["accessMode"] == "approval_required"
+
+    client.patch(
+        "/api/integrations/docs/tools/read",
+        json={"accessMode": "disabled"},
+    )
+    updated = client.post(f"/api/permission-profiles/{profile_id}/update")
+    assert updated.status_code == 200
+    assert (
+        updated.json()["snapshot"]["integrations"]["docs"]["tools"]["read"]
+        == "disabled"
+    )
 
 
 def test_managed_connector_discovery_and_user_key_flow(

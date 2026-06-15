@@ -109,6 +109,7 @@ export const mapNotificationRow = (row: PostgresRow): NotificationRecord => ({
 export const mapAgentApiKeyRow = (row: PostgresRow): AgentApiKeyRecord => ({
   ownerId: String(row.owner_id),
   apiKey: String(row.api_key),
+  permissionProfileId: row.profile_id ? String(row.profile_id) : undefined,
   createdAt: toIsoString(row.created_at),
   updatedAt: toIsoString(row.updated_at),
 });

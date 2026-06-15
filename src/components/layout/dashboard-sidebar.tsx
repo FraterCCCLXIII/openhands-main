@@ -3,6 +3,7 @@ import {
   Activity,
   CheckCircle2,
   KeyRound,
+  ListChecks,
   PlugZap,
   ShieldCheck,
   User,
@@ -44,6 +45,12 @@ const DASHBOARD_SECTION_ITEMS: Array<{
     label: "Agent Connection",
     icon: KeyRound,
     href: getAdminSectionPath("apiKeys"),
+  },
+  {
+    id: "permissionProfiles",
+    label: "Permission Profiles",
+    icon: ListChecks,
+    href: getAdminSectionPath("permissionProfiles"),
   },
   {
     id: "profile",

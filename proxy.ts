@@ -27,6 +27,8 @@ const requiresDashboardSession = (request: NextRequest) => {
     path === "/api/admin/key" ||
     path === "/api/oauth/connections" ||
     path === "/api/notifications" ||
+    path === "/api/permission-profiles" ||
+    path.startsWith("/api/permission-profiles/") ||
     path.startsWith("/api/case-by-case-approvals") ||
     path.startsWith("/api/oauth/") && path.endsWith("/start") ||
     path.startsWith("/api/integrations") &&

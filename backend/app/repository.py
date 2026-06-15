@@ -16,7 +16,15 @@ from .crypto import (
     encrypt_api_key,
     encrypt_credentials,
 )
-from .models import AccessRequest, IntegrationSpec, ManagedConnector, ToolSpec, now_iso
+from .models import (
+    AccessRequest,
+    IntegrationSpec,
+    ManagedConnector,
+    PermissionProfile,
+    PermissionProfileSnapshot,
+    ToolSpec,
+    now_iso,
+)
 
 
 @dataclass
@@ -144,6 +152,10 @@ class Repository:
     policies: dict[str, dict[str, Any]] = field(default_factory=dict)
     temporary_grants: dict[str, dict[str, Any]] = field(default_factory=dict)
     tool_invocations: list[dict[str, Any]] = field(default_factory=list)
+    permission_profiles: dict[str, dict[str, PermissionProfile]] = field(
+        default_factory=dict
+    )
+    profile_agent_keys: dict[str, str] = field(default_factory=dict)
 
     def row_to_integration(self, row: dict[str, Any]) -> IntegrationSpec:
         return IntegrationSpec(
@@ -283,6 +295,198 @@ class Repository:
         integration.tools[tool_name] = next_tool
         self.save_integration(owner_id, integration)
         return next_tool
+
+    def create_agent_key_value(self) -> str:
+        return f"cla_{token_urlsafe(24)}"
+
+    def row_to_permission_profile(self, row: dict[str, Any]) -> PermissionProfile:
+        return PermissionProfile(
+            id=str(row["id"]),
+            ownerId=str(row["owner_id"]),
+            name=str(row["name"]) if row.get("name") is not None else None,
+            snapshot=PermissionProfileSnapshot.model_validate(
+                row.get("snapshot") or {}
+            ),
+            agentApiKey=str(row.get("api_key") or ""),
+            createdAt=self.iso(row.get("created_at")) or now_iso(),
+            updatedAt=self.iso(row.get("updated_at")) or now_iso(),
+        )
+
+    def ensure_permission_profile_api_key(
+        self, owner_id: str, profile_id: str
+    ) -> dict[str, Any]:
+        if self.database_url:
+            rows = self.db_rows(
+                """
+                INSERT INTO agent_api_keys (profile_id, owner_id, api_key, created_at, updated_at)
+                VALUES (%s, %s, %s, NOW(), NOW())
+                ON CONFLICT (profile_id) DO UPDATE SET owner_id = EXCLUDED.owner_id
+                RETURNING *
+                """,
+                (profile_id, owner_id, self.create_agent_key_value()),
+            )
+            return rows[0]
+        value = self.profile_agent_keys.get(profile_id)
+        if value is None:
+            value = self.create_agent_key_value()
+            self.profile_agent_keys[profile_id] = value
+        return {
+            "profile_id": profile_id,
+            "owner_id": owner_id,
+            "api_key": value,
+            "created_at": now_iso(),
+            "updated_at": now_iso(),
+        }
+
+    def rotate_permission_profile_api_key(
+        self, owner_id: str, profile_id: str, value: str | None = None
+    ) -> dict[str, Any]:
+        value = value or self.create_agent_key_value()
+        if self.database_url:
+            rows = self.db_rows(
+                """
+                INSERT INTO agent_api_keys (profile_id, owner_id, api_key, created_at, updated_at)
+                VALUES (%s, %s, %s, NOW(), NOW())
+                ON CONFLICT (profile_id) DO UPDATE SET
+                    owner_id = EXCLUDED.owner_id,
+                    api_key = EXCLUDED.api_key,
+                    updated_at = NOW()
+                RETURNING *
+                """,
+                (profile_id, owner_id, value),
+            )
+            return rows[0]
+        updated_at = now_iso()
+        self.profile_agent_keys[profile_id] = value
+        profile = self.permission_profiles.get(owner_id, {}).get(profile_id)
+        if profile is not None:
+            self.permission_profiles[owner_id][profile_id] = profile.model_copy(
+                update={"agentApiKey": value, "updatedAt": updated_at}
+            )
+        return {
+            "profile_id": profile_id,
+            "owner_id": owner_id,
+            "api_key": value,
+            "created_at": updated_at,
+            "updated_at": updated_at,
+        }
+
+    def list_permission_profiles(self, owner_id: str) -> list[PermissionProfile]:
+        if self.database_url:
+            rows = self.db_rows(
+                """
+                SELECT p.*, k.api_key
+                FROM permission_profiles p
+                LEFT JOIN agent_api_keys k ON k.profile_id = p.id
+                WHERE LOWER(p.owner_id) = LOWER(%s)
+                ORDER BY p.name IS NOT NULL ASC, p.updated_at DESC, p.name ASC
+                """,
+                (owner_id,),
+            )
+            return [self.row_to_permission_profile(row) for row in rows]
+        return list(self.permission_profiles.get(owner_id, {}).values())
+
+    def get_permission_profile(
+        self, owner_id: str, profile_id: str
+    ) -> PermissionProfile | None:
+        if self.database_url:
+            rows = self.db_rows(
+                """
+                SELECT p.*, k.api_key
+                FROM permission_profiles p
+                LEFT JOIN agent_api_keys k ON k.profile_id = p.id
+                WHERE LOWER(p.owner_id) = LOWER(%s) AND p.id = %s
+                """,
+                (owner_id, profile_id),
+            )
+            return self.row_to_permission_profile(rows[0]) if rows else None
+        return self.permission_profiles.get(owner_id, {}).get(profile_id)
+
+    def get_default_permission_profile(self, owner_id: str) -> PermissionProfile | None:
+        if self.database_url:
+            rows = self.db_rows(
+                """
+                SELECT p.*, k.api_key
+                FROM permission_profiles p
+                LEFT JOIN agent_api_keys k ON k.profile_id = p.id
+                WHERE LOWER(p.owner_id) = LOWER(%s) AND p.name IS NULL
+                LIMIT 1
+                """,
+                (owner_id,),
+            )
+            return self.row_to_permission_profile(rows[0]) if rows else None
+        for profile in self.permission_profiles.get(owner_id, {}).values():
+            if profile.name is None:
+                return profile
+        return None
+
+    def get_or_create_default_permission_profile(
+        self, owner_id: str
+    ) -> PermissionProfile:
+        profile = self.get_default_permission_profile(owner_id)
+        if profile is not None:
+            return profile
+        return self.save_permission_profile(
+            owner_id,
+            PermissionProfile(
+                ownerId=owner_id,
+                name=None,
+                snapshot=PermissionProfileSnapshot(),
+            ),
+        )
+
+    def permission_profile_name_exists(
+        self, owner_id: str, name: str, exclude_id: str | None = None
+    ) -> bool:
+        normalized_name = name.strip().casefold()
+        for profile in self.list_permission_profiles(owner_id):
+            if profile.name is None:
+                continue
+            if exclude_id and profile.id == exclude_id:
+                continue
+            if profile.name.strip().casefold() == normalized_name:
+                return True
+        return False
+
+    def save_permission_profile(
+        self, owner_id: str, profile: PermissionProfile
+    ) -> PermissionProfile:
+        if self.database_url:
+            self.execute_db(
+                """
+                INSERT INTO permission_profiles (
+                    id, owner_id, name, snapshot, created_at, updated_at
+                ) VALUES (%s, %s, %s, %s, %s, NOW())
+                ON CONFLICT (id) DO UPDATE SET
+                    owner_id = EXCLUDED.owner_id,
+                    name = EXCLUDED.name,
+                    snapshot = EXCLUDED.snapshot,
+                    updated_at = NOW()
+                """,
+                (
+                    profile.id,
+                    owner_id,
+                    profile.name,
+                    Jsonb(profile.snapshot.model_dump()),
+                    profile.createdAt,
+                ),
+            )
+            self.ensure_permission_profile_api_key(owner_id, profile.id)
+            saved = self.get_permission_profile(owner_id, profile.id)
+            return saved or profile
+        api_key = profile.agentApiKey or self.profile_agent_keys.get(profile.id)
+        if not api_key:
+            api_key = self.create_agent_key_value()
+        self.profile_agent_keys[profile.id] = api_key
+        profile = profile.model_copy(
+            update={
+                "ownerId": owner_id,
+                "agentApiKey": api_key,
+                "updatedAt": now_iso(),
+            }
+        )
+        self.permission_profiles.setdefault(owner_id, {})[profile.id] = profile
+        return profile
 
     def row_to_access_request(self, row: dict[str, Any]) -> AccessRequest:
         return AccessRequest(
@@ -932,14 +1136,21 @@ class Repository:
     def has_agent_api_keys(self) -> bool:
         if self.database_url:
             return bool(self.db_rows("SELECT owner_id FROM agent_api_keys LIMIT 1"))
-        return bool(self.agent_keys)
+        return bool(self.profile_agent_keys or self.agent_keys)
 
     def find_agent_api_key(self, api_key: str) -> dict[str, Any] | None:
-        if not api_key.strip():
+        value = api_key.strip()
+        if not value:
             return None
         if self.database_url:
             rows = self.db_rows(
-                "SELECT * FROM agent_api_keys WHERE api_key = %s", (api_key.strip(),)
+                """
+                SELECT k.*, p.id AS permission_profile_id, p.name AS permission_profile_name
+                FROM agent_api_keys k
+                JOIN permission_profiles p ON p.id = k.profile_id
+                WHERE k.api_key = %s
+                """,
+                (value,),
             )
             if not rows:
                 return None
@@ -947,14 +1158,31 @@ class Repository:
             return {
                 "ownerId": row["owner_id"],
                 "apiKey": row["api_key"],
+                "permissionProfileId": row.get("permission_profile_id"),
+                "permissionProfileName": row.get("permission_profile_name"),
                 "createdAt": self.iso(row.get("created_at")),
                 "updatedAt": self.iso(row.get("updated_at")),
             }
-        for owner_id, value in self.agent_keys.items():
-            if value == api_key.strip():
+        for owner_id, profiles in self.permission_profiles.items():
+            for profile_id in profiles:
+                if self.profile_agent_keys.get(profile_id) == value:
+                    profile = profiles[profile_id]
+                    return {
+                        "ownerId": owner_id,
+                        "apiKey": value,
+                        "permissionProfileId": profile_id,
+                        "permissionProfileName": profile.name,
+                        "createdAt": profile.createdAt,
+                        "updatedAt": profile.updatedAt,
+                    }
+        for owner_id, stored in self.agent_keys.items():
+            if stored == value:
+                profile = self.get_default_permission_profile(owner_id)
                 return {
                     "ownerId": owner_id,
-                    "apiKey": value,
+                    "apiKey": stored,
+                    "permissionProfileId": profile.id if profile else None,
+                    "permissionProfileName": None,
                     "createdAt": now_iso(),
                     "updatedAt": now_iso(),
                 }
@@ -990,41 +1218,35 @@ class Repository:
         }
 
     def get_key(self, owner_id: str, kind: str) -> dict[str, Any]:
+        if kind == "agent":
+            profile = self.get_or_create_default_permission_profile(owner_id)
+            if profile.agentApiKey:
+                key = {
+                    "api_key": profile.agentApiKey,
+                    "created_at": profile.createdAt,
+                    "updated_at": profile.updatedAt,
+                }
+            else:
+                key = self.rotate_permission_profile_api_key(owner_id, profile.id)
+            value = str(key["api_key"])
+            self.agent_keys[owner_id] = value
+            return {
+                "apiKey": value,
+                "key": self.key_status(
+                    value, key.get("created_at"), key.get("updated_at")
+                ),
+                "hasKey": True,
+                "permissionProfileId": profile.id,
+            }
         if not self.database_url:
-            bucket = {
-                "agent": self.agent_keys,
-                "user": self.user_keys,
-                "admin": self.admin_keys,
-            }[kind]
+            bucket = {"user": self.user_keys, "admin": self.admin_keys}[kind]
             value = bucket.get(owner_id)
-            if value is None and kind == "agent":
-                value = self.rotate_key(bucket, owner_id, "cla")
             return {
                 "apiKey": value,
                 "key": self.key_status(value),
                 "hasKey": value is not None,
             }
-        table = {
-            "agent": "agent_api_keys",
-            "user": "user_api_keys",
-            "admin": "admin_api_keys",
-        }[kind]
-        if kind == "agent":
-            rows = self.db_rows(
-                f"SELECT * FROM {table} WHERE owner_id = %s", (owner_id,)
-            )
-            if not rows:
-                value = self.rotate_key(self.agent_keys, owner_id, "cla")
-                self.save_key(owner_id, kind, value)
-                return {"apiKey": value, "key": self.key_status(value), "hasKey": True}
-            value = rows[0]["api_key"]
-            return {
-                "apiKey": value,
-                "key": self.key_status(
-                    value, rows[0].get("created_at"), rows[0].get("updated_at")
-                ),
-                "hasKey": True,
-            }
+        table = "user_api_keys" if kind == "user" else "admin_api_keys"
         rows = self.db_rows(f"SELECT * FROM {table} WHERE owner_id = %s", (owner_id,))
         if not rows:
             return {"apiKey": None, "key": None, "hasKey": False}
@@ -1042,50 +1264,58 @@ class Repository:
         }
 
     def save_key(self, owner_id: str, kind: str, value: str) -> dict[str, Any]:
+        if kind == "agent":
+            profile = self.get_or_create_default_permission_profile(owner_id)
+            key = self.rotate_permission_profile_api_key(owner_id, profile.id, value)
+            self.agent_keys[owner_id] = value
+            return {
+                "apiKey": value,
+                "key": self.key_status(
+                    value, key.get("created_at"), key.get("updated_at")
+                ),
+                "permissionProfileId": profile.id,
+            }
         if not self.database_url:
-            bucket = {
-                "agent": self.agent_keys,
-                "user": self.user_keys,
-                "admin": self.admin_keys,
-            }[kind]
+            bucket = {"user": self.user_keys, "admin": self.admin_keys}[kind]
             bucket[owner_id] = value
             return {"apiKey": value, "key": self.key_status(value)}
-        if kind == "agent":
-            self.execute_db(
-                """INSERT INTO agent_api_keys (owner_id, api_key, created_at, updated_at) VALUES (%s, %s, NOW(), NOW())
-                ON CONFLICT (owner_id) DO UPDATE SET api_key = EXCLUDED.api_key, updated_at = NOW()""",
-                (owner_id, value),
-            )
-        else:
-            table = "user_api_keys" if kind == "user" else "admin_api_keys"
-            self.execute_db(
-                f"""INSERT INTO {table} (owner_id, api_key_hash, key_prefix, key_suffix, encrypted_api_key, created_at, updated_at)
-                VALUES (%s, %s, %s, %s, %s, NOW(), NOW())
-                ON CONFLICT (owner_id) DO UPDATE SET api_key_hash = EXCLUDED.api_key_hash, key_prefix = EXCLUDED.key_prefix,
-                key_suffix = EXCLUDED.key_suffix, encrypted_api_key = EXCLUDED.encrypted_api_key, updated_at = NOW()""",
-                (
-                    owner_id,
-                    self.hash_key(value),
-                    value[:12],
-                    value[-4:],
-                    encrypt_api_key(value),
-                ),
-            )
+        table = "user_api_keys" if kind == "user" else "admin_api_keys"
+        self.execute_db(
+            f"""INSERT INTO {table} (owner_id, api_key_hash, key_prefix, key_suffix, encrypted_api_key, created_at, updated_at)
+            VALUES (%s, %s, %s, %s, %s, NOW(), NOW())
+            ON CONFLICT (owner_id) DO UPDATE SET api_key_hash = EXCLUDED.api_key_hash, key_prefix = EXCLUDED.key_prefix,
+            key_suffix = EXCLUDED.key_suffix, encrypted_api_key = EXCLUDED.encrypted_api_key, updated_at = NOW()""",
+            (
+                owner_id,
+                self.hash_key(value),
+                value[:12],
+                value[-4:],
+                encrypt_api_key(value),
+            ),
+        )
         return {"apiKey": value, "key": self.key_status(value)}
 
     def delete_key(self, owner_id: str, kind: str) -> bool:
+        if kind == "agent":
+            profile = self.get_default_permission_profile(owner_id)
+            if profile is None:
+                return False
+            self.agent_keys.pop(owner_id, None)
+            self.profile_agent_keys.pop(profile.id, None)
+            profiles = self.permission_profiles.get(owner_id, {})
+            if profile.id in profiles:
+                profiles[profile.id] = profile.model_copy(update={"agentApiKey": ""})
+            if self.database_url:
+                rows = self.db_rows(
+                    "DELETE FROM agent_api_keys WHERE profile_id = %s RETURNING owner_id",
+                    (profile.id,),
+                )
+                return bool(rows)
+            return True
         if not self.database_url:
-            bucket = {
-                "agent": self.agent_keys,
-                "user": self.user_keys,
-                "admin": self.admin_keys,
-            }[kind]
+            bucket = {"user": self.user_keys, "admin": self.admin_keys}[kind]
             return bucket.pop(owner_id, None) is not None
-        table = {
-            "agent": "agent_api_keys",
-            "user": "user_api_keys",
-            "admin": "admin_api_keys",
-        }[kind]
+        table = "user_api_keys" if kind == "user" else "admin_api_keys"
         rows = self.db_rows(
             f"DELETE FROM {table} WHERE owner_id = %s RETURNING owner_id", (owner_id,)
         )

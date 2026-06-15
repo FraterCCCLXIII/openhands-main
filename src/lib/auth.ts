@@ -2,6 +2,7 @@ import NextAuth from "next-auth";
 import GitHub from "next-auth/providers/github";
 
 import { getAuthSecret, getGithubClientId, getGithubClientSecret, isAuthDisabled } from "@/src/lib/auth-config";
+import { mapGitHubProfile } from "@/src/lib/github-profile";
 
 export { isAuthDisabled } from "@/src/lib/auth-config";
 
@@ -19,6 +20,7 @@ const nextAuth = NextAuth({
       clientId: getGithubClientId() || "dummy",
       clientSecret: getGithubClientSecret() || "dummy",
       authorization: { params: { scope: "read:user user:email" } },
+      profile: mapGitHubProfile,
     }),
   ],
   pages: {

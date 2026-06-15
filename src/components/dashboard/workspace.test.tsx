@@ -368,6 +368,11 @@ describe("DashboardWorkspace", () => {
     );
     expect(profileLink).toBeTruthy();
     expect(profileLink?.getAttribute("href")).toBe("/profile");
+
+    const sidebarLabels = Array.from(container.querySelectorAll("aside nav a")).map(
+      (link) => link.textContent,
+    );
+    expect(sidebarLabels.slice(-2)).toEqual(["Permission Profiles", "User Profile"]);
   });
 
   it("shows integrations as the default section with a searchable add-integration panel", async () => {

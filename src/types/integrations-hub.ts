@@ -68,6 +68,33 @@ export interface OwnerIntegrationRecord {
   updatedAt: string;
 }
 
+export interface PermissionProfileIntegrationSnapshot {
+  enabled: boolean;
+  tools: Record<string, ToolAccessMode>;
+}
+
+export interface PermissionProfileSnapshot {
+  integrations: Record<string, PermissionProfileIntegrationSnapshot>;
+}
+
+export interface PermissionProfile {
+  id: string;
+  ownerId: string;
+  name: string | null;
+  snapshot: PermissionProfileSnapshot;
+  agentApiKey?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PermissionProfileApplyResult {
+  profile: PermissionProfile;
+  appliedIntegrations: number;
+  appliedTools: number;
+  skippedIntegrations: string[];
+  skippedTools: string[];
+}
+
 export interface ManagedConnectorOption {
   slug: string;
   name: string;
@@ -263,6 +290,7 @@ export interface NotificationRecord {
 export interface AgentApiKeyRecord {
   ownerId: string;
   apiKey: string;
+  permissionProfileId?: string;
   createdAt: string;
   updatedAt: string;
 }

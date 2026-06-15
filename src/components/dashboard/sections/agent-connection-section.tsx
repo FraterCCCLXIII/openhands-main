@@ -1,85 +1,15 @@
-import { CheckCircle2, Copy, Eye, EyeOff, KeyRound, RotateCw, ShieldCheck } from "lucide-react";
+import { KeyRound, ShieldCheck } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 
+import { DashboardApiKeyCard } from "@/src/components/dashboard/api-key-card";
+import { PermissionProfileAgentKeyCard } from "@/src/components/dashboard/permission-profile-agent-key-card";
 import {
   CompactPanel,
   KeyValueRow,
+  dashboardInputClassName,
 } from "@/src/components/dashboard/shared";
 import { Badge } from "@/src/components/ui/badge";
-import { Button } from "@/src/components/ui/button";
-
-interface DashboardApiKeyCardProps {
-  description: string;
-  maskedValue: string;
-  badgeTone?: "default" | "success" | "warning" | "danger";
-  badgeLabel: string;
-  copied: boolean;
-  label: string;
-  onCopy: () => void | Promise<void>;
-  onRevealToggle: () => void | Promise<void>;
-  onRotate: () => void | Promise<void>;
-  revealDisabled?: boolean;
-  revealed: boolean;
-  rotateLabel?: string;
-}
-
-const DashboardApiKeyCard = ({
-  description,
-  maskedValue,
-  badgeTone = "default",
-  badgeLabel,
-  copied,
-  label,
-  onCopy,
-  onRevealToggle,
-  onRotate,
-  revealDisabled = false,
-  revealed,
-  rotateLabel = "Rotate",
-}: DashboardApiKeyCardProps) => (
-  <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-4">
-    <div className="flex items-start justify-between gap-3">
-      <div>
-        <h3 className="text-sm font-semibold text-white">{label}</h3>
-        <p className="mt-1 text-sm text-[var(--color-text-base)]">{description}</p>
-      </div>
-      <Badge tone={badgeTone}>{badgeLabel}</Badge>
-    </div>
-    <div className="mt-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)] px-3 py-3">
-      <code className="block break-all text-sm text-white">{maskedValue}</code>
-    </div>
-    <div className="mt-4 flex flex-wrap gap-2">
-      <Button
-        variant="secondary"
-        className="h-8 gap-2 rounded-md px-3 text-xs"
-        onClick={onRevealToggle}
-        disabled={revealDisabled}
-      >
-        {revealed ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-        {revealed ? "Hide" : "Reveal"}
-      </Button>
-      <Button
-        variant="secondary"
-        className="h-8 gap-2 rounded-md px-3 text-xs"
-        onClick={onCopy}
-        disabled={revealDisabled}
-        aria-label={`Copy ${label.toLowerCase()}`}
-      >
-        {copied ? <CheckCircle2 className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-        Copy
-      </Button>
-      <Button
-        variant="secondary"
-        className="h-8 gap-2 rounded-md px-3 text-xs"
-        onClick={onRotate}
-        disabled={revealDisabled}
-        aria-label={`${rotateLabel} ${label.toLowerCase()}`}
-      >
-        <RotateCw className="h-4 w-4" />
-        {rotateLabel}
-      </Button>
-    </div>
-  </div>
-);
+import type { PermissionProfile } from "@/src/types/integrations-hub";
 
 interface ConnectionDetailCardProps {
   body: string;
@@ -191,6 +121,80 @@ const DashboardConnectionDetails = ({
   </CompactPanel>
 );
 
+const profileLabel = (profile: PermissionProfile) =>
+  profile.name ?? "Default profile";
+
+const AgentKeyProfileSelector = ({
+  profiles,
+}: {
+  profiles: PermissionProfile[];
+}) => {
+  const defaultProfileId = useMemo(
+    () => profiles.find((profile) => profile.name === null)?.id ?? profiles[0]?.id ?? "",
+    [profiles],
+  );
+  const [selectedProfileId, setSelectedProfileId] = useState(defaultProfileId);
+
+  useEffect(() => {
+    if (!defaultProfileId) {
+      setSelectedProfileId("");
+      return;
+    }
+
+    const selectedProfileExists = profiles.some(
+      (profile) => profile.id === selectedProfileId,
+    );
+    if (!selectedProfileId || !selectedProfileExists) {
+      setSelectedProfileId(defaultProfileId);
+    }
+  }, [defaultProfileId, profiles, selectedProfileId]);
+
+  const selectedProfile =
+    profiles.find((profile) => profile.id === selectedProfileId) ??
+    profiles.find((profile) => profile.id === defaultProfileId);
+
+  if (!selectedProfile) {
+    return null;
+  }
+
+  return (
+    <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-4">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+        <div>
+          <h3 className="text-sm font-semibold text-white">Agent key</h3>
+          <p className="mt-1 text-sm text-[var(--color-text-base)]">
+            Give your agent the key for the permission profile it should use.
+          </p>
+        </div>
+        <Badge>{profiles.length} profiles</Badge>
+      </div>
+      <label className="mt-4 block space-y-2">
+        <span className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-base)]">
+          Permission profile
+        </span>
+        <select
+          className={`${dashboardInputClassName} w-full`}
+          value={selectedProfile.id}
+          onChange={(event) => setSelectedProfileId(event.target.value)}
+        >
+          {profiles.map((profile) => (
+            <option key={profile.id} value={profile.id}>
+              {profileLabel(profile)}
+            </option>
+          ))}
+        </select>
+      </label>
+      <div className="mt-4">
+        <PermissionProfileAgentKeyCard
+          key={selectedProfile.id}
+          profile={selectedProfile}
+          variant="inline"
+        />
+      </div>
+    </div>
+  );
+};
+
 interface AgentConnectionSectionProps {
   adminKey: {
     copied: boolean;
@@ -218,6 +222,8 @@ interface AgentConnectionSectionProps {
   agentRestPromptExample: string;
   contextApiReady: boolean;
   isAdmin: boolean;
+  permissionProfiles: PermissionProfile[];
+
   userKey: {
     copied: boolean;
     handleCopy: () => void | Promise<void>;
@@ -243,6 +249,7 @@ export const AgentConnectionSection = ({
   agentRestPromptExample,
   contextApiReady,
   isAdmin,
+  permissionProfiles,
   userKey,
   userOpenApiSchemaEndpoint,
   userRestPromptExample,
@@ -250,19 +257,23 @@ export const AgentConnectionSection = ({
   <section className="space-y-3">
     <CompactPanel title="API keys" icon={KeyRound}>
       <div className="space-y-3">
-        <DashboardApiKeyCard
-          label="Agent key"
-          description="Give this key to your agent."
-          maskedValue={agentKey.maskedValue || "No agent key available yet."}
-          badgeTone={contextApiReady ? "success" : "warning"}
-          badgeLabel="agent"
-          copied={agentKey.copied}
-          onRevealToggle={agentKey.toggleReveal}
-          onCopy={agentKey.handleCopy}
-          onRotate={agentKey.handleRotate}
-          revealDisabled={!contextApiReady}
-          revealed={agentKey.revealed}
-        />
+        {permissionProfiles.length > 0 ? (
+          <AgentKeyProfileSelector profiles={permissionProfiles} />
+        ) : (
+          <DashboardApiKeyCard
+            label="Agent key"
+            description="Give this key to your agent."
+            maskedValue={agentKey.maskedValue || "No agent key available yet."}
+            badgeTone={contextApiReady ? "success" : "warning"}
+            badgeLabel="agent"
+            copied={agentKey.copied}
+            onRevealToggle={agentKey.toggleReveal}
+            onCopy={agentKey.handleCopy}
+            onRotate={agentKey.handleRotate}
+            revealDisabled={!contextApiReady}
+            revealed={agentKey.revealed}
+          />
+        )}
         <DashboardApiKeyCard
           label="User automation key"
           description="Use this key to programmatically manage user-scoped integrations-hub settings."

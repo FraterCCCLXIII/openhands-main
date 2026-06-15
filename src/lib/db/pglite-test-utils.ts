@@ -117,8 +117,26 @@ export const initializeTestSchema = async (pglite: PGlite): Promise<void> => {
       created_at TIMESTAMPTZ NOT NULL
     );
 
+    CREATE TABLE IF NOT EXISTS permission_profiles (
+      id TEXT PRIMARY KEY,
+      owner_id TEXT NOT NULL,
+      name TEXT,
+      snapshot JSONB NOT NULL DEFAULT '{"integrations": {}}'::jsonb,
+      created_at TIMESTAMPTZ NOT NULL,
+      updated_at TIMESTAMPTZ NOT NULL
+    );
+
+    CREATE UNIQUE INDEX IF NOT EXISTS permission_profiles_owner_default_idx
+      ON permission_profiles (LOWER(owner_id))
+      WHERE name IS NULL;
+
+    CREATE UNIQUE INDEX IF NOT EXISTS permission_profiles_owner_name_idx
+      ON permission_profiles (LOWER(owner_id), LOWER(name))
+      WHERE name IS NOT NULL;
+
     CREATE TABLE IF NOT EXISTS agent_api_keys (
-      owner_id TEXT PRIMARY KEY,
+      profile_id TEXT PRIMARY KEY,
+      owner_id TEXT NOT NULL,
       api_key TEXT NOT NULL UNIQUE,
       created_at TIMESTAMPTZ NOT NULL,
       updated_at TIMESTAMPTZ NOT NULL

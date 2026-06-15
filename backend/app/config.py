@@ -3,20 +3,20 @@
 This module provides a single source of truth for all environment-based
 configuration. Access via `get_default_config()`.
 
-Pattern follows the agent server config from the OpenHands SDK:
-https://github.com/OpenHands/software-agent-sdk/blob/main/openhands-agent-server/openhands/agent_server/config.py
+Pattern follows the agent server config shape from the OpenHands SDK while
+parsing this app's documented environment variables directly.
 """
 
 from __future__ import annotations
 
+import json
 import os
 from typing import ClassVar
 
-from openhands.agent_server.env_parser import from_env
 from pydantic import BaseModel, ConfigDict, Field, SecretStr
 
 
-# Environment variable prefix for all config fields
+# Environment variable prefix for all config fields.
 ENVIRONMENT_VARIABLE_PREFIX = "INTHUB"
 
 # HTTP header for internal service-to-service auth
@@ -26,20 +26,26 @@ INTERNAL_AUTH_HEADER = "x-integrations-hub-internal-secret"
 def _default_postgres_url() -> str | None:
     """Get database URL from environment with fallback.
 
-    Checks INTHUB_POSTGRES_URL first (via from_env), then falls back to
-    legacy POSTGRES_URL and DATABASE_URL environment variables.
+    Checks INTHUB_POSTGRES_URL first, then falls back to legacy POSTGRES_URL
+    and DATABASE_URL environment variables.
     """
-    return os.getenv("POSTGRES_URL") or os.getenv("DATABASE_URL") or None
+    return (
+        _optional_env("INTHUB_POSTGRES_URL")
+        or os.getenv("POSTGRES_URL")
+        or os.getenv("DATABASE_URL")
+        or None
+    )
 
 
 def _default_internal_auth_secret() -> SecretStr | None:
     """Get internal auth secret with fallbacks to Auth.js secrets.
 
-    Checks INTHUB_INTERNAL_AUTH_SECRET first (via from_env), then falls back
-    to legacy environment variables.
+    Checks INTHUB_INTERNAL_AUTH_SECRET first, then falls back to legacy
+    environment variables.
     """
     secret = (
-        os.getenv("INTEGRATIONS_HUB_INTERNAL_SECRET")
+        _optional_env("INTHUB_INTERNAL_AUTH_SECRET")
+        or os.getenv("INTEGRATIONS_HUB_INTERNAL_SECRET")
         or os.getenv("AUTH_SECRET")
         or os.getenv("NEXTAUTH_SECRET")
         or ""
@@ -49,28 +55,70 @@ def _default_internal_auth_secret() -> SecretStr | None:
 
 def _default_cron_secret() -> SecretStr | None:
     """Get cron secret for scheduled job authentication."""
-    secret = (os.getenv("CRON_SECRET") or "").strip()
+    secret = (
+        _optional_env("INTHUB_CRON_SECRET") or os.getenv("CRON_SECRET") or ""
+    ).strip()
     return SecretStr(secret) if secret else None
 
 
 def _default_app_admin_emails() -> list[str]:
     """Parse admin emails from comma-separated environment variable."""
-    raw = os.getenv("APP_ADMIN_EMAILS", "")
-    return [email.strip().lower() for email in raw.split(",") if email.strip()]
+    raw = os.getenv("INTHUB_APP_ADMIN_EMAILS")
+    if raw is None:
+        raw = os.getenv("APP_ADMIN_EMAILS", "")
+    return _parse_email_list(raw)
 
 
 def _default_credential_encryption_key() -> SecretStr | None:
     """Get credential encryption key for encrypting stored secrets."""
-    key = (os.getenv("CREDENTIAL_ENCRYPTION_KEY") or "").strip()
+    key = (
+        _optional_env("INTHUB_CREDENTIAL_ENCRYPTION_KEY")
+        or os.getenv("CREDENTIAL_ENCRYPTION_KEY")
+        or ""
+    ).strip()
     return SecretStr(key) if key else None
+
+
+def _optional_env(key: str) -> str | None:
+    value = os.getenv(key)
+    if value is None:
+        return None
+    stripped = value.strip()
+    return stripped or None
+
+
+def _parse_bool(value: str | None) -> bool:
+    if value is None:
+        return False
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _parse_email_list(value: str) -> list[str]:
+    raw = value.strip()
+    if not raw:
+        return []
+    if raw.startswith("["):
+        try:
+            parsed = json.loads(raw)
+        except json.JSONDecodeError:
+            parsed = []
+        if isinstance(parsed, list):
+            return [
+                str(email).strip().lower() for email in parsed if str(email).strip()
+            ]
+    return [email.strip().lower() for email in raw.split(",") if email.strip()]
+
+
+def _default_static_dir() -> str | None:
+    return _optional_env("INTHUB_STATIC_DIR") or _optional_env("STATIC_DIR")
 
 
 class Config(BaseModel):
     """Immutable configuration for the Integrations Hub backend.
 
-    All settings are loaded from environment variables using the SDK's
-    from_env() parser with prefix INTHUB. Legacy environment variable
-    names are supported via default_factory fallbacks.
+    All settings are loaded from environment variables with prefix INTHUB.
+    Legacy environment variable names are supported via default_factory
+    fallbacks.
 
     Environment variables:
         INTHUB_POSTGRES_URL: Database connection URL
@@ -93,7 +141,7 @@ class Config(BaseModel):
 
     # Authentication
     disable_auth: bool = Field(
-        default=False,
+        default_factory=lambda: _parse_bool(os.getenv("INTHUB_DISABLE_AUTH")),
         description=(
             "Bypass authentication for local development. Set INTHUB_DISABLE_AUTH=true "
             "to enable."
@@ -136,7 +184,7 @@ class Config(BaseModel):
 
     # Static file serving (K8s mode)
     static_dir: str | None = Field(
-        default=None,
+        default_factory=_default_static_dir,
         description=(
             "Directory containing pre-built Next.js SPA static files. When set, "
             "FastAPI serves the SPA directly (for K8s/Docker deployments). "
@@ -178,15 +226,15 @@ _default_config: Config | None = None
 def get_default_config() -> Config:
     """Get the default config shared across the application.
 
-    The config is created once from environment variables using the SDK's
-    from_env() parser with prefix INTHUB, then cached. Legacy environment
-    variable names (without prefix) are supported via default_factory fallbacks.
+    The config is created once from environment variables, then cached.
+    Legacy environment variable names (without prefix) are supported via
+    default_factory fallbacks.
 
     Use reset_config() to clear the cache (useful for testing).
     """
     global _default_config
     if _default_config is None:
-        _default_config = from_env(Config, ENVIRONMENT_VARIABLE_PREFIX)
+        _default_config = Config()
     return _default_config
 
 
