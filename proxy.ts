@@ -17,6 +17,14 @@ const internalAuthSecret = () =>
   process.env.NEXTAUTH_SECRET?.trim() ||
   "";
 
+const hasApiKeyCredential = (request: NextRequest) => {
+  const authorization = request.headers.get("authorization")?.trim() ?? "";
+  return (
+    Boolean(request.headers.get("x-api-key")?.trim()) ||
+    authorization.toLowerCase().startsWith("bearer ")
+  );
+};
+
 const requiresDashboardSession = (request: NextRequest) => {
   const path = request.nextUrl.pathname;
   const method = request.method.toUpperCase();
@@ -30,10 +38,18 @@ const requiresDashboardSession = (request: NextRequest) => {
     path === "/api/permission-profiles" ||
     path.startsWith("/api/permission-profiles/") ||
     path.startsWith("/api/case-by-case-approvals") ||
-    path.startsWith("/api/oauth/") && path.endsWith("/start") ||
-    path.startsWith("/api/integrations") &&
+    (path.startsWith("/api/oauth/") && path.endsWith("/start")) ||
+    (path.startsWith("/api/integrations") &&
       path !== "/api/integrations/managed-connectors" &&
-      path !== "/api/integrations/oauth-provider-catalog"
+      path !== "/api/integrations/oauth-provider-catalog")
+  ) {
+    return true;
+  }
+
+  if (
+    path.startsWith("/api/admin/") &&
+    path !== "/api/admin/key" &&
+    !hasApiKeyCredential(request)
   ) {
     return true;
   }

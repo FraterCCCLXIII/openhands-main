@@ -75,6 +75,7 @@ ADMIN_CONNECTOR_MANAGEMENT_DETAIL = (
 )
 ADMIN_NOTIFICATIONS_DETAIL = "Only app administrators can view notifications."
 ADMIN_KEY_MANAGEMENT_DETAIL = "Only app administrators can manage admin API keys."
+ADMIN_API_SESSION_DETAIL = "Only app administrators can use admin API routes."
 
 DEPRECATED_ADMIN_CONNECTIONS_MESSAGE = "Admin API keys can no longer read self-scoped OAuth connections. Use the user API key with /api/user/connections instead."
 
@@ -1471,7 +1472,16 @@ def authorize_user_api_owner(request: Request) -> tuple[str, bool]:
 
 
 def authorize_admin_api_owner(request: Request) -> str:
-    record = repository.find_scoped_api_key("admin", extract_api_key(request))
+    api_key = extract_api_key(request)
+    if not api_key and (
+        request.headers.get(INTERNAL_AUTH_HEADER) or request.headers.get("x-owner-id")
+    ):
+        owner = authorize_dashboard_owner(request)
+        if not is_admin_owner(owner):
+            raise HTTPException(status_code=403, detail=ADMIN_API_SESSION_DETAIL)
+        return owner
+
+    record = repository.find_scoped_api_key("admin", api_key)
     if not record:
         raise HTTPException(
             status_code=401,

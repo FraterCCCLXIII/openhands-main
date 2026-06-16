@@ -137,6 +137,59 @@ describe("proxy", () => {
     expect(response.status).toBe(200);
   });
 
+  it("requires a signed-in dashboard session for admin routes without API keys", async () => {
+    process.env.DISABLE_AUTH = "false";
+    process.env.AUTH_SECRET = "test-secret";
+
+    const response = await proxy(
+      new NextRequest("https://integrations-hub.example.com/api/admin/managed-connectors", {
+        headers: { host: "integrations-hub.example.com" },
+      }),
+    );
+
+    expect(response.status).toBe(401);
+    await expect(response.json()).resolves.toEqual({
+      detail: "Sign in to the dashboard before using this endpoint.",
+    });
+  });
+
+  it("accepts a signed-in dashboard session for admin routes without API keys", async () => {
+    process.env.DISABLE_AUTH = "false";
+    process.env.AUTH_SECRET = "test-secret";
+    const sessionToken = await encode({
+      secret: "test-secret",
+      salt: "__Secure-authjs.session-token",
+      token: { email: "admin@example.com", isAdmin: true },
+    });
+
+    const response = await proxy(
+      new NextRequest("https://integrations-hub.example.com/api/admin/managed-connectors", {
+        headers: {
+          cookie: `__Secure-authjs.session-token=${sessionToken}`,
+          host: "integrations-hub.example.com",
+        },
+      }),
+    );
+
+    expect(response.status).toBe(200);
+  });
+
+  it("allows admin API key clients through admin routes without a dashboard session", async () => {
+    process.env.DISABLE_AUTH = "false";
+    delete process.env.AUTH_SECRET;
+
+    const response = await proxy(
+      new NextRequest("https://integrations-hub.example.com/api/admin/managed-connectors", {
+        headers: {
+          authorization: "Bearer clad_test_admin_key",
+          host: "integrations-hub.example.com",
+        },
+      }),
+    );
+
+    expect(response.status).toBe(200);
+  });
+
   it("rejects spoofed loopback forwarded hosts when auth is disabled", async () => {
     process.env.DISABLE_AUTH = "true";
 

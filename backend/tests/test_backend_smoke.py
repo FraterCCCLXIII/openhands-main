@@ -922,6 +922,82 @@ def test_admin_privileges_fail_closed_without_allowlist(
     assert response.status_code == 403
 
 
+def test_admin_api_routes_accept_allowlisted_dashboard_session(
+    config_env: ConfigEnvFixture, monkeypatch
+) -> None:
+    config_env("INTHUB_DISABLE_AUTH")
+    config_env("AUTH_SECRET", "test-internal-secret")
+    config_env("APP_ADMIN_EMAILS", "admin@example.com")
+    client = TestClient(app)
+
+    response = client.get(
+        "/api/admin/overview",
+        headers={
+            "X-Owner-Id": "Admin@Example.com",
+            "X-Integrations-Hub-Internal-Secret": "test-internal-secret",
+        },
+    )
+
+    assert response.status_code == 200
+    assert "duplicateExternalAccounts" in response.json()
+
+
+def test_admin_api_routes_reject_non_admin_dashboard_session(
+    config_env: ConfigEnvFixture, monkeypatch
+) -> None:
+    config_env("INTHUB_DISABLE_AUTH")
+    config_env("AUTH_SECRET", "test-internal-secret")
+    config_env("APP_ADMIN_EMAILS", "admin@example.com")
+    client = TestClient(app)
+
+    response = client.get(
+        "/api/admin/overview",
+        headers={
+            "X-Owner-Id": "user@example.com",
+            "X-Integrations-Hub-Internal-Secret": "test-internal-secret",
+        },
+    )
+
+    assert response.status_code == 403
+    assert (
+        response.json()["detail"] == "Only app administrators can use admin API routes."
+    )
+
+
+def test_admin_api_routes_reject_spoofed_dashboard_owner_without_internal_auth(
+    config_env: ConfigEnvFixture, monkeypatch
+) -> None:
+    config_env("INTHUB_DISABLE_AUTH")
+    config_env("AUTH_SECRET", "test-internal-secret")
+    config_env("APP_ADMIN_EMAILS", "admin@example.com")
+    client = TestClient(app)
+
+    response = client.get(
+        "/api/admin/overview", headers={"X-Owner-Id": "admin@example.com"}
+    )
+
+    assert response.status_code == 401
+    assert "Sign in" in response.json()["detail"]
+
+
+def test_admin_api_key_still_authorizes_admin_routes_without_dashboard_session(
+    config_env: ConfigEnvFixture, monkeypatch
+) -> None:
+    config_env("INTHUB_DISABLE_AUTH")
+    config_env("AUTH_SECRET", "test-internal-secret")
+    config_env("APP_ADMIN_EMAILS", "admin@example.com")
+    client = TestClient(app)
+    repository.save_key("admin@example.com", "admin", "clad_test_admin_key")
+
+    response = client.get(
+        "/api/admin/overview",
+        headers={"Authorization": "Bearer clad_test_admin_key"},
+    )
+
+    assert response.status_code == 200
+    assert "duplicateExternalAccounts" in response.json()
+
+
 def test_non_admin_dashboard_routes_reject_privileged_api_calls(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:
