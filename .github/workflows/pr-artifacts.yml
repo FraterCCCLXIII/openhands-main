@@ -34,10 +34,10 @@ jobs:
         id: validate-pat
         if: steps.check-fork.outputs.is_fork == 'false'
         env:
-          PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
+          PAT_TOKEN: ${{ secrets.OPENHANDS_BOT_GITHUB_PAT_PRIVATE }}
         run: |
           if [ -z "$PAT_TOKEN" ]; then
-            echo "::error::PAT_TOKEN secret not configured"
+            echo "::error::OPENHANDS_BOT_GITHUB_PAT_PRIVATE secret not configured"
             exit 1
           fi
 
@@ -45,7 +45,7 @@ jobs:
             -H "Authorization: Bearer $PAT_TOKEN" \
             -H "Accept: application/vnd.github+json" \
             https://api.github.com/user)" || {
-            echo "::error::Failed to validate PAT_TOKEN against the GitHub API"
+            echo "::error::Failed to validate OPENHANDS_BOT_GITHUB_PAT_PRIVATE against the GitHub API"
             exit 1
           }
 
@@ -57,7 +57,7 @@ jobs:
           login = user.get("login")
           user_id = user.get("id")
           if not login or not user_id:
-              print("::error::PAT_TOKEN did not return a usable GitHub user identity")
+              print("::error::OPENHANDS_BOT_GITHUB_PAT_PRIVATE did not return a usable GitHub user identity")
               raise SystemExit(1)
 
           with open(sys.argv[2], "a", encoding="utf-8") as handle:
@@ -69,7 +69,7 @@ jobs:
         if: steps.check-fork.outputs.is_fork == 'false'
         with:
           ref: ${{ github.event.pull_request.head.ref }}
-          token: ${{ secrets.PAT_TOKEN }}
+          token: ${{ secrets.OPENHANDS_BOT_GITHUB_PAT_PRIVATE }}
 
       - name: Remove .pr/ directory
         id: remove
@@ -81,7 +81,7 @@ jobs:
             git rm -rf .pr/
             git commit -m "chore: Remove PR-only artifacts [automated]"
             git push || {
-              echo "::error::Push failed. Check: 1) PAT_TOKEN has push access, 2) branch protection allows cleanup commits, 3) the token has not expired, 4) GitHub was reachable from Actions."
+              echo "::error::Push failed. Check: 1) OPENHANDS_BOT_GITHUB_PAT_PRIVATE has push access, 2) branch protection allows cleanup commits, 3) the token has not expired, 4) GitHub was reachable from Actions."
               exit 1
             }
             echo "removed=true" >> $GITHUB_OUTPUT
