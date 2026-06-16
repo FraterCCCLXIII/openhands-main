@@ -3,13 +3,13 @@
 import { useSession } from "next-auth/react";
 import { useMemo } from "react";
 
-import { isAppAdminEmail } from "@/src/lib/app-admins";
 import { normalizeCaseInsensitiveText } from "@/src/lib/text-utils";
 
 export interface ClientUser {
   name?: string | null;
   email?: string | null;
   image?: string | null;
+  isAdmin?: boolean | null;
 }
 
 export interface ClientAuthState {
@@ -60,7 +60,7 @@ export function useClientAuth(authDisabled = false): ClientAuthState {
     return {
       user,
       ownerId,
-      isAdmin: isAppAdminEmail(user?.email ?? undefined),
+      isAdmin: Boolean(user?.isAdmin),
       isLoading,
       isAuthenticated: Boolean(user),
     };
