@@ -11,14 +11,15 @@ import {
 
 import { useAuth } from "@/src/components/auth/auth-context";
 import { LoadingSpinner } from "@/src/components/feedback/loading-spinner";
-import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
 import {
   currentBrowserPath,
   redirectToMainAppLogin,
 } from "@/src/lib/main-app-auth";
 import { uiPath } from "@/src/shared/paths";
-import { Card } from "@/src/components/ui/card";
+
+const LOGO_WIDTH = 92;
+const LOGO_HEIGHT = 60;
 
 const features = [
   {
@@ -57,52 +58,50 @@ export default function HomePage() {
   }
 
   return (
-    <main className="min-h-screen px-6 py-12">
-      <div className="mx-auto flex max-w-6xl flex-col gap-8">
-        <header className="flex flex-col gap-6 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-workspace)] px-8 py-10">
-          <div className="flex items-center gap-3 text-sm text-[var(--color-text-base)]">
-            <Badge>Managed + MCP adapters</Badge>
-            <Badge>Scoped approvals</Badge>
-          </div>
-          <div className="max-w-3xl space-y-5">
-            <h1 className="text-5xl font-bold tracking-tight text-white">
-              OpenHands Integrations Hub
-            </h1>
-            <p className="text-lg leading-8 text-[var(--color-text-base)]">
-              A unified endpoint and admin workspace for AI agents to access
-              APIs and MCP tools with temporary approvals, permission profiles,
-              and persistent integration storage.
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-3">
-            {isAuthenticated || authDisabled ? (
-              <a href={uiPath("/integrations")}>
-                <Button className="gap-2">
-                  Open dashboard
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </a>
-            ) : null}
-            <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)] px-4 py-2 text-sm text-[var(--color-text-base)]">
-              Unified route:{" "}
-              <code>POST /api/agent/[integration]/[function]</code>
-            </div>
-          </div>
-        </header>
+    <main className="min-h-screen">
+      <div className="flex min-h-screen flex-col items-center justify-center px-4">
+        <div className="mx-auto flex w-full max-w-5xl flex-col items-center text-center">
+          <img
+            src="/openhands-logo.svg"
+            alt=""
+            width={LOGO_WIDTH}
+            height={LOGO_HEIGHT}
+            className="mb-8"
+          />
 
-        <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
-          {features.map((item) => (
-            <Card key={item.title} className="p-6">
-              <item.icon className="mb-4 h-8 w-8 text-[var(--color-accent)]" />
-              <h2 className="mb-2 text-lg font-semibold text-white">
-                {item.title}
-              </h2>
-              <p className="text-sm leading-7 text-[var(--color-text-base)]">
-                {item.body}
-              </p>
-            </Card>
-          ))}
-        </section>
+          <h1 className="text-3xl font-medium leading-9 tracking-[-0.02em] text-white">
+            OpenHands Integrations Hub
+          </h1>
+
+          <p className="mt-3 max-w-xl text-sm leading-6 text-text-secondary">
+            A unified endpoint and admin workspace for AI agents to access APIs and MCP tools with
+            agent-class policies, temporary approvals, and persistent integration storage.
+          </p>
+
+          {isAuthenticated || authDisabled ? (
+            <a href={uiPath("/integrations")} className="mt-6">
+              <Button className="gap-2">
+                Open dashboard
+                <ArrowRight className="h-4 w-4" aria-hidden />
+              </Button>
+            </a>
+          ) : null}
+
+          <div className="mt-6 w-fit rounded-xl border border-[var(--oh-border)] bg-base-secondary px-4 py-3 text-sm text-text-secondary">
+            Unified route:{" "}
+            <code className="text-foreground">POST /api/context/[integration]/[function]</code>
+          </div>
+
+          <section className="mt-8 grid w-full max-w-5xl grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {features.map((item) => (
+              <div key={item.title} className="p-3 text-left">
+                <item.icon className="mb-2 h-4 w-4 text-primary" aria-hidden />
+                <h2 className="text-sm font-medium text-white">{item.title}</h2>
+                <p className="mt-1 text-xs leading-5 text-text-secondary">{item.body}</p>
+              </div>
+            ))}
+          </section>
+        </div>
       </div>
     </main>
   );
