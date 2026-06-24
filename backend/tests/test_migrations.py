@@ -84,3 +84,27 @@ def test_0003_keeps_existing_permission_profile_history_compatible(
     assert migration.revision == "0003"
     assert migration.down_revision == "0002"
     assert capture.statements == []
+
+
+def test_0004_adds_icon_columns_to_managed_connectors(monkeypatch) -> None:
+    migration = importlib.import_module(
+        "backend.alembic.versions.20260624_0004_managed_connectors_icon_columns"
+    )
+    capture = CapturingOp()
+    monkeypatch.setattr(migration, "op", capture)
+
+    migration.upgrade()
+
+    joined = "\n".join(capture.statements)
+    assert migration.revision == "0004"
+    assert migration.down_revision == "0003"
+    assert "ALTER TABLE managed_connectors" in joined
+    assert "ADD COLUMN IF NOT EXISTS icon_bg TEXT" in joined
+    assert "ADD COLUMN IF NOT EXISTS icon_color TEXT" in joined
+
+    capture.statements.clear()
+    migration.downgrade()
+
+    joined = "\n".join(capture.statements)
+    assert "DROP COLUMN IF EXISTS icon_color" in joined
+    assert "DROP COLUMN IF EXISTS icon_bg" in joined
