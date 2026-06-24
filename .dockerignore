@@ -1,0 +1,14 @@
+.git
+.github
+.agents
+.openhands
+.vercel
+.next
+node_modules
+out
+backend/.venv
+backend/.pytest_cache
+backend/.ruff_cache
+backend/**/__pycache__
+*.pyc
+coverage

@@ -28,11 +28,15 @@ def get_database_url() -> str:
     Follows the same fallback chain as the application config.
     Converts to postgresql+psycopg:// for SQLAlchemy with psycopg3 driver.
     """
-    url = os.getenv("POSTGRES_URL") or os.getenv("DATABASE_URL")
+    url = (
+        os.getenv("INTHUB_POSTGRES_URL")
+        or os.getenv("POSTGRES_URL")
+        or os.getenv("DATABASE_URL")
+    )
     if not url:
         raise RuntimeError(
-            "Database URL not configured. Set POSTGRES_URL or DATABASE_URL "
-            "environment variable."
+            "Database URL not configured. Set INTHUB_POSTGRES_URL, POSTGRES_URL, "
+            "or DATABASE_URL environment variable."
         )
     # Convert to SQLAlchemy URL with psycopg3 driver
     # postgres:// or postgresql:// -> postgresql+psycopg://
