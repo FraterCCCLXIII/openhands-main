@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import base64
 import json
+import logging
 import re
 import secrets
 import urllib.error
@@ -54,6 +55,9 @@ from .openapi_tools import generate_openapi_tools
 from .repository import repository
 from .route_manifest import ROUTES
 from .static_files import mount_static_files
+
+
+logger = logging.getLogger("integrations_hub")
 
 
 app = FastAPI(
@@ -1974,6 +1978,24 @@ def managed_tool_from_tool_spec(
     )
 
 
+def _sanitized_log_url(url: str | None) -> str:
+    """Return scheme://host[:port]/path for safe logging.
+
+    Managed connector OpenAPI URLs are admin-controlled and may contain signed
+    query credentials, URL userinfo (``user:pass@host``), or point at private
+    infrastructure; log drains can have broader access than the secret store, so
+    never log the raw URL. Strips query, fragment, and userinfo.
+    """
+    if not url:
+        return "none"
+    parsed = urllib.parse.urlsplit(url)
+    host = parsed.hostname
+    if not parsed.scheme or not host:
+        return "private"
+    netloc = host if parsed.port is None else f"{host}:{parsed.port}"
+    return f"{parsed.scheme}://{netloc}{parsed.path}"
+
+
 def index_managed_connector_functions(
     slug: str, owner: str | None = None
 ) -> dict[str, Any]:
@@ -1982,6 +2004,12 @@ def index_managed_connector_functions(
         raise HTTPException(status_code=404, detail="Managed connector not found.")
     existing_modes = {tool.name: tool.accessMode for tool in connector.tools}
     provider = connector.provider or ("http" if connector.openApiUrl else "mcp")
+    logger.info(
+        "indexing managed connector tools: slug=%s provider=%s openApiUrl=%s",
+        slug,
+        provider,
+        _sanitized_log_url(connector.openApiUrl),
+    )
 
     if provider == "http":
         if not connector.openApiUrl:
@@ -2021,7 +2049,15 @@ def index_managed_connector_functions(
         ]
 
     connector.updatedAt = now_iso()
-    return repository.save_managed_connector(connector).response()
+    saved = repository.save_managed_connector(connector)
+    with_input_schema = sum(1 for tool in saved.tools if tool.config.get("inputSchema"))
+    logger.info(
+        "indexed managed connector tools: slug=%s tools=%d with_input_schema=%d",
+        slug,
+        len(saved.tools),
+        with_input_schema,
+    )
+    return saved.response()
 
 
 def infer_auth_strategy(credentials: dict[str, Any]) -> str:
@@ -2534,7 +2570,10 @@ async def fastapi_handler(request: Request):
             raise HTTPException(status_code=404, detail="Managed connector not found.")
         return {"deleted": True, "slug": params["slug"]}
 
-    if path == "/api/managed-connectors/{slug}/functions":
+    if (
+        path == "/api/managed-connectors/{slug}/functions"
+        or path == "/api/admin/managed-connectors/{slug}/functions"
+    ):
         require_app_admin(owner, ADMIN_CONNECTOR_MANAGEMENT_DETAIL)
         return index_managed_connector_functions(params["slug"], owner)
 

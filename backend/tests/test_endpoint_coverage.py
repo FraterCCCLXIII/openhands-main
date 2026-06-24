@@ -269,3 +269,136 @@ def test_context_and_mcp_require_valid_agent_api_key() -> None:
     )
     assert bad_response.status_code == 401
     assert bad_response.headers["www-authenticate"].startswith("Bearer")
+
+
+def test_admin_api_key_can_reindex_managed_connector_tools(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The admin API key must be able to trigger tool re-indexing, and the
+    indexed OpenAPI inputSchema must be persisted so MCP clients know which
+    tools require a request body."""
+    from backend.app import main as main_module
+
+    slug = "notion-write"
+    repository.save_key(OWNER, "admin", ADMIN_KEY)
+    repository.save_managed_connector(
+        ManagedConnector(
+            slug=slug,
+            name="Notion (write)",
+            description="Notion HTTP connector",
+            provider="http",
+            authStrategy="bearer",
+            openApiUrl="https://example.com/openapi.json",
+            credentialLabel="Token",
+            credentialPlaceholder="Token",
+            credentialHelp="Token",
+            tools=[
+                ManagedConnectorTool(
+                    name="create_page",
+                    description="Create a page",
+                    accessMode="enabled",
+                    request={"method": "POST", "path": "/v1/pages"},
+                )
+            ],
+        )
+    )
+    before = repository.get_managed_connector(slug)
+    assert before is not None
+    stale_updated_at = before.updatedAt
+    assert not before.tools[0].config.get("inputSchema")
+
+    def fake_generate_openapi_tools(open_api_url: str, auth_strategy: str):
+        return [
+            ManagedConnectorTool(
+                name="create_page",
+                description="Create a page",
+                accessMode="enabled",
+                request={"method": "POST", "path": "/v1/pages", "body": "{{body}}"},
+                config={
+                    "inputSchema": {
+                        "type": "object",
+                        "properties": {"body": {"type": "object"}},
+                        "required": ["body"],
+                    }
+                },
+            )
+        ]
+
+    monkeypatch.setattr(
+        main_module, "generate_openapi_tools", fake_generate_openapi_tools
+    )
+
+    client = get_client()
+    response = client.post(
+        f"/api/admin/managed-connectors/{slug}/functions",
+        headers={"Authorization": f"Bearer {ADMIN_KEY}", "X-Owner-Id": OWNER},
+    )
+
+    assert response.status_code == 200, response.text
+    body = response.json()
+    tools = body.get("tools", [])
+    assert tools, "re-index should return at least one tool"
+    create_page = next(tool for tool in tools if tool["name"] == "create_page")
+    input_schema = create_page.get("config", {}).get("inputSchema")
+    assert input_schema is not None, "inputSchema must be populated by re-index"
+    assert "body" in input_schema.get("required", [])
+
+    persisted = repository.get_managed_connector(slug)
+    assert persisted is not None
+    assert persisted.tools[0].config.get("inputSchema") is not None
+    assert persisted.updatedAt != stale_updated_at
+
+
+def test_admin_api_key_reindex_rejects_non_admin_key() -> None:
+    """A non-admin (agent/user) API key must not be able to re-index tools."""
+    repository.save_key(OWNER, "agent", AGENT_KEY)
+    slug = "notion-write"
+    repository.save_managed_connector(
+        ManagedConnector(
+            slug=slug,
+            name="Notion (write)",
+            description="Notion HTTP connector",
+            provider="http",
+            authStrategy="bearer",
+            openApiUrl="https://example.com/openapi.json",
+            credentialLabel="Token",
+            credentialPlaceholder="Token",
+            credentialHelp="Token",
+            tools=[],
+        )
+    )
+    client = get_client()
+    response = client.post(
+        f"/api/admin/managed-connectors/{slug}/functions",
+        headers={"Authorization": f"Bearer {AGENT_KEY}", "X-Owner-Id": OWNER},
+    )
+    assert response.status_code in {401, 403}
+
+
+def test_sanitized_log_url_strips_query_and_fragment() -> None:
+    """Re-index logging must never expose signed query strings or fragments."""
+    from backend.app.main import _sanitized_log_url
+
+    assert _sanitized_log_url(None) == "none"
+    assert _sanitized_log_url("") == "none"
+    assert _sanitized_log_url("not a url") == "private"
+    assert (
+        _sanitized_log_url("https://api.example.com/v1/openapi.json")
+        == "https://api.example.com/v1/openapi.json"
+    )
+    assert (
+        _sanitized_log_url("https://api.example.com/v1/openapi.json?token=secret")
+        == "https://api.example.com/v1/openapi.json"
+    )
+    assert (
+        _sanitized_log_url("https://api.example.com/v1/openapi.json#section")
+        == "https://api.example.com/v1/openapi.json"
+    )
+    assert (
+        _sanitized_log_url("https://user:pass@example.com/v1/openapi.json?token=secret")
+        == "https://example.com/v1/openapi.json"
+    )
+    assert (
+        _sanitized_log_url("https://user:pass@example.com:8080/v1/openapi.json")
+        == "https://example.com:8080/v1/openapi.json"
+    )
