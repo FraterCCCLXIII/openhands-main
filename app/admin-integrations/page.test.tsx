@@ -63,15 +63,20 @@ describe("app/admin-integrations/page (ClientAdminIntegrationsPage)", () => {
           { slug: "github", name: "GitHub", oauthConfigured: true },
         ]);
       }
-      if (url === "/api/integrations/oauth-provider-catalog") {
+      if (url === "/api/integrations/catalog") {
         return Promise.resolve([
           {
             slug: "github",
             name: "GitHub",
             description: "GitHub API",
             categories: ["development", "version-control"],
-            oauthAuthorizationUrl: "https://github.com/login/oauth/authorize",
-            oauthTokenUrl: "https://github.com/login/oauth/access_token",
+                    connectionDefaults: {
+              provider: "mcp",
+              authStrategy: "oauth2",
+              serverUrl: "https://api.githubcopilot.com/mcp/",
+              authorizationUrl: "https://github.com/login/oauth/authorize",
+              tokenUrl: "https://github.com/login/oauth/access_token",
+            },
           },
         ]);
       }

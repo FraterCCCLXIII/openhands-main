@@ -20,13 +20,14 @@ from fastapi.responses import (
     Response,
     StreamingResponse,
 )
+from openhands_extensions import list_integration_catalog
 from pydantic import ValidationError
 
 from .auth import DEFAULT_OWNER, is_admin_owner
 from .config import INTERNAL_AUTH_HEADER, get_default_config
+from .integration_catalog import connection_defaults_from_option
 from .managed_connectors import (
     get_managed_connector,
-    integration_catalog_snapshot,
     list_managed_connectors,
 )
 from .models import (
@@ -1397,7 +1398,7 @@ def requires_dashboard_session(path: str, method: str) -> bool:
         return True
     if path.startswith("/api/integrations") and path not in {
         "/api/integrations/managed-connectors",
-        "/api/integrations/oauth-provider-catalog",
+        "/api/integrations/catalog",
     }:
         return True
     if path.startswith("/api/case-by-case-approvals"):
@@ -1809,36 +1810,37 @@ def apply_permission_profile(
     )
 
 
-def oauth_provider_catalog() -> list[dict[str, Any]]:
+def integration_catalog() -> list[dict[str, Any]]:
     managed = {connector.slug: connector for connector in list_managed_connectors()}
     catalog = []
-    for provider in integration_catalog_snapshot()["providers"]:
-        slug = provider["slug"]
+    for entry in list_integration_catalog():
+        option = (entry.get("connectionOptions") or [None])[0]
+        if not option:
+            continue
+        slug = entry["id"]
         connector = managed.get(slug)
         catalog.append(
             {
                 "slug": slug,
-                "name": connector.name if connector else provider["name"],
+                "name": connector.name if connector else entry["name"],
                 "description": connector.description
                 if connector
-                else provider["description"],
+                else entry["description"],
                 "categories": connector.categories
                 if connector and connector.categories
-                else provider["categories"],
-                "availability": provider["availability"],
-                "managedConnectorSlug": connector.slug
+                else entry.get("categories", []),
+                "popularityRank": entry.get("popularityRank", 0),
+                "appUrl": connector.appUrl if connector else entry.get("appUrl"),
+                "docsUrl": connector.docsUrl if connector else entry.get("docsUrl"),
+                "logoUrl": connector.logoUrl if connector else entry.get("logoUrl"),
+                "iconBg": connector.iconBg if connector else entry.get("iconBg"),
+                "iconColor": connector.iconColor
                 if connector
-                else provider.get("managedConnectorSlug"),
-                "authStrategy": connector.authStrategy
+                else entry.get("iconColor"),
+                "connectionDefaults": connector.response()
                 if connector
-                else provider["authStrategy"],
-                "popularityRank": provider["popularityRank"],
-                "appUrl": connector.appUrl if connector else provider.get("appUrl"),
-                "docsUrl": connector.docsUrl if connector else provider.get("docsUrl"),
-                "registrationDefaults": connector.response()
-                if connector
-                else provider.get("registrationDefaults"),
-                "notes": provider.get("notes", ""),
+                else connection_defaults_from_option(option),
+                "notes": entry.get("notes", ""),
             }
         )
     return catalog
@@ -2204,6 +2206,11 @@ def discovered_integration(payload: dict[str, Any], owner: str) -> dict[str, Any
     connector = get_managed_connector(str(slug) if slug else "")
     if connector:
         integration_key = str(payload.get("key") or connector.slug)
+        if connector.authStrategy == "oauth2" and not connector.oauthConfigured:
+            raise HTTPException(
+                status_code=403,
+                detail=f"{connector.name} needs an admin to configure OAuth before users can add it.",
+            )
         resolved_credentials = managed_connector_credentials(connector, credentials)
         tools = connector_tools(connector)
         if connector.provider == "mcp" and not tools:
@@ -2345,15 +2352,15 @@ async def fastapi_handler(request: Request):
 
     if path.startswith("/api/admin/integrations") and path not in {
         "/api/admin/integrations/managed-connectors",
-        "/api/admin/integrations/oauth-provider-catalog",
+        "/api/admin/integrations/catalog",
         "/api/admin/integrations/discover",
     }:
         raise HTTPException(
             status_code=410, detail=DEPRECATED_ADMIN_INTEGRATIONS_MESSAGE
         )
 
-    if path.endswith("/oauth-provider-catalog"):
-        return oauth_provider_catalog()
+    if path.endswith("/catalog"):
+        return integration_catalog()
 
     if path in {"/api/oauth/connections", "/api/user/connections"}:
         return repository.list_connections(owner)

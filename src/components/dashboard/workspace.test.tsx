@@ -457,7 +457,7 @@ describe("DashboardWorkspace", () => {
     );
 
     expect(addMenuSlugs).not.toContain("github");
-    expect(addMenuSlugs).toEqual(["slack", "notion", "linear", "elevenlabs"]);
+    expect(addMenuSlugs).toEqual(["elevenlabs", "notion", "linear", "slack"]);
     expect(container.textContent).toContain("4 available");
   });
 
@@ -527,7 +527,7 @@ describe("DashboardWorkspace", () => {
     });
 
     const managedConnectorInput = Array.from(container.querySelectorAll("input")).find(
-      (input) => input.getAttribute("placeholder") === "Choose GitHub, Notion, Slack...",
+      (input) => input.getAttribute("placeholder") === "Search supported connectors...",
     ) as HTMLInputElement | undefined;
     expect(managedConnectorInput?.value).toBe("GitHub (github)");
 

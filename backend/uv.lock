@@ -1056,6 +1056,7 @@ dependencies = [
     { name = "fastapi" },
     { name = "httpx" },
     { name = "openhands-agent-server" },
+    { name = "openhands-extensions" },
     { name = "psycopg", extra = ["binary"] },
     { name = "pydantic" },
     { name = "uvicorn", extra = ["standard"] },
@@ -1081,6 +1082,7 @@ requires-dist = [
     { name = "fastapi", specifier = ">=0.115,<1" },
     { name = "httpx", specifier = ">=0.28,<1" },
     { name = "openhands-agent-server", specifier = ">=1.0.0,<2" },
+    { name = "openhands-extensions", specifier = "==0.6.0" },
     { name = "psycopg", extras = ["binary"], specifier = ">=3.2,<4" },
     { name = "pydantic", specifier = ">=2.10,<3" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8,<9" },
@@ -1778,6 +1780,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/82/05/51e20f6c34aa1249c53fd74c0d2e8ba147f06dcd499e273cc3185fb1cc09/openhands_agent_server-1.22.0.tar.gz", hash = "sha256:e0d9129c5db84f8807a184b47978372ab002fa1a7dfdb912b74d367c0832a9f2", size = 120583, upload-time = "2026-05-11T18:24:32.044Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/56/e4/a2d8d2f8216276f087aca13b9f28b30d091b4427773d8aea6962b2414178/openhands_agent_server-1.22.0-py3-none-any.whl", hash = "sha256:182b2c74028f120c58353ff5af4ab0e14124a3287581bf07ab3f56c6302cb406", size = 142559, upload-time = "2026-05-11T18:24:39.554Z" },
+]
+
+[[package]]
+name = "openhands-extensions"
+version = "0.6.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/0d/f2/02a1c0949e0c0d4f920c13b2844cc064af9c18ea11319b05831717b6b5b0/openhands_extensions-0.6.0.tar.gz", hash = "sha256:0b7bd655059a3cc9b1884f3438f401c467c05c72b5454a27fce193be77a0f408", size = 683967, upload-time = "2026-06-23T15:32:10.246Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/74/32/191a9ee07158c694610a25fd58a205e732b230b9e71e30bee0be759cbe87/openhands_extensions-0.6.0-py3-none-any.whl", hash = "sha256:6402d9c2378b12b293fd01e761d53a5c6517168134e6ad2bee517ecfc034698a", size = 59811, upload-time = "2026-06-23T15:32:08.959Z" },
 ]
 
 [[package]]

@@ -1155,8 +1155,24 @@ def test_default_managed_connectors_are_listed_and_require_credentials(
     connectors = client.get("/api/integrations/managed-connectors").json()
     by_slug = {connector["slug"]: connector for connector in connectors}
 
+    assert len(by_slug) > 13
     assert by_slug["elevenlabs"]["apiKeyHeaderName"] == "xi-api-key"
+    assert by_slug["linear"]["toolCount"] == 1
+    assert by_slug["notion"]["logoUrl"] == "https://cdn.simpleicons.org/notion/000000"
+    assert by_slug["notion"]["iconBg"] == "#FFFFFF"
     assert by_slug["ordinal"]["authStrategy"] == "bearer"
+    assert by_slug["ordinal"]["logoUrl"] == "https://app.tryordinal.com/favicon.ico"
+    assert by_slug["datadog"]["authStrategy"] == "oauth2"
+    assert by_slug["datadog"]["oauthConfigured"] is False
+    assert by_slug["cloudflare-docs"]["logoUrl"] == "https://cdn.simpleicons.org/cloudflare/FFFFFF"
+    assert by_slug["cloudflare-docs"]["iconBg"] == "#F38020"
+    assert by_slug["atlassian"]["authStrategy"] == "oauth2"
+    assert by_slug["atlassian"]["oauthConfigured"] is False
+    assert by_slug["deepwiki"]["authStrategy"] == "none"
+
+    catalog = client.get("/api/integrations/catalog").json()
+    catalog_by_slug = {entry["slug"]: entry for entry in catalog}
+    assert catalog_by_slug["cloudflare-docs"]["logoUrl"] == "https://cdn.simpleicons.org/cloudflare/FFFFFF"
 
     repository.save_managed_connector(
         ManagedConnector(
@@ -1185,6 +1201,17 @@ def test_default_managed_connectors_are_listed_and_require_credentials(
         "/api/integrations/discover",
         json={"kind": "managed", "key": "ordinal", "credentials": {}},
     )
+
+    unconfigured_oauth = client.post(
+        "/api/integrations/discover",
+        json={"kind": "managed", "key": "datadog", "credentials": {}},
+    )
+    assert unconfigured_oauth.status_code == 403
+    assert (
+        "Datadog needs an admin to configure OAuth"
+        in unconfigured_oauth.json()["detail"]
+    )
+
     assert missing_credential.status_code == 400
     assert "Ordinal API key" in missing_credential.json()["detail"]
 
@@ -1928,7 +1955,7 @@ def test_oauth_catalog_and_admin_overview_are_data_driven(
     config_env("INTHUB_DISABLE_AUTH", "true")
     config_env("CREDENTIAL_ENCRYPTION_KEY", "test-credential-key")
     client = TestClient(app)
-    catalog = client.get("/api/integrations/oauth-provider-catalog").json()
+    catalog = client.get("/api/integrations/catalog").json()
     assert {item["slug"] for item in catalog} >= {
         "github",
         "slack",

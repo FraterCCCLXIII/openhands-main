@@ -171,6 +171,8 @@ def upgrade() -> None:
             name TEXT NOT NULL,
             description TEXT NOT NULL,
             logo_url TEXT,
+            icon_bg TEXT,
+            icon_color TEXT,
             app_url TEXT,
             docs_url TEXT,
             categories JSONB NOT NULL DEFAULT '[]'::jsonb,

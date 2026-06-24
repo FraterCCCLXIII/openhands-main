@@ -1,4 +1,6 @@
 import { ChevronRight, PlugZap, ToggleLeft, ToggleRight, Trash2 } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+
 
 import {
   CompactPanel,
@@ -9,6 +11,7 @@ import {
 import {
   formatTrackedUsage,
   UNUSED_TOOL_WINDOW_OPTIONS,
+  type ConnectorLogoMetadata,
   type FilteredIntegrationToolEntry,
 } from "@/src/components/dashboard/utils";
 import {
@@ -25,6 +28,10 @@ import type {
   ToolAccessMode,
   UnusedToolWindowUnit,
 } from "@/src/types/integrations-hub";
+
+
+const INITIAL_MARKETPLACE_CONNECTOR_COUNT = 5;
+const MARKETPLACE_CONNECTOR_PAGE_SIZE = 5;
 
 interface IntegrationsSectionProps {
   addIntegrationSearch: string;
@@ -52,7 +59,9 @@ interface IntegrationsSectionProps {
     toolName: string,
     accessMode: ToolAccessMode,
   ) => void;
-  resolveIntegrationLogoUrl: (integration: IntegrationSpec) => string | null;
+  resolveIntegrationLogoMetadata: (
+    integration: IntegrationSpec,
+  ) => ConnectorLogoMetadata;
   setAddIntegrationSearch: (value: string) => void;
   setHideDisabledTools: (value: boolean) => void;
   setIntegrationSearch: (value: string) => void;
@@ -91,7 +100,7 @@ export const IntegrationsSection = ({
   onToggleIntegrationEnabled,
   onToggleIntegrationExpanded,
   onUpdateToolAccessMode,
-  resolveIntegrationLogoUrl,
+  resolveIntegrationLogoMetadata,
   setAddIntegrationSearch,
   setHideDisabledTools,
   setIntegrationSearch,
@@ -106,7 +115,21 @@ export const IntegrationsSection = ({
   expandedTools,
   expandedIntegrations,
   visibleToolCount,
-}: IntegrationsSectionProps) => (
+}: IntegrationsSectionProps) => {
+  const [marketplaceDisplayLimit, setMarketplaceDisplayLimit] = useState(
+    INITIAL_MARKETPLACE_CONNECTOR_COUNT,
+  );
+  useEffect(() => {
+    setMarketplaceDisplayLimit(INITIAL_MARKETPLACE_CONNECTOR_COUNT);
+  }, [addIntegrationSearch]);
+  const displayedMarketplaceConnectors = useMemo(
+    () => marketplaceConnectors.slice(0, marketplaceDisplayLimit),
+    [marketplaceConnectors, marketplaceDisplayLimit],
+  );
+  const canLoadMoreMarketplaceConnectors =
+    displayedMarketplaceConnectors.length < marketplaceConnectors.length;
+
+  return (
   <section className="space-y-4">
     {showIntegrationWizard ? (
       <IntegrationWizard
@@ -121,7 +144,7 @@ export const IntegrationsSection = ({
       <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-4">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--color-text-base)]">
-            <Badge>{marketplaceConnectors.length} shown</Badge>
+            <Badge>{displayedMarketplaceConnectors.length} shown</Badge>
             <Badge>{availableConnectorCount} available</Badge>
           </div>
           <input
@@ -148,13 +171,29 @@ export const IntegrationsSection = ({
               No popular integrations match the current search.
             </div>
           ) : (
-            marketplaceConnectors.map((connector) => (
-              <IntegrationMarketplaceCard
-                key={connector.slug}
-                connector={connector}
-                onClick={() => onOpenIntegrationWizard(connector.slug)}
-              />
-            ))
+            <>
+              {displayedMarketplaceConnectors.map((connector) => (
+                <IntegrationMarketplaceCard
+                  key={connector.slug}
+                  connector={connector}
+                  onClick={() => onOpenIntegrationWizard(connector.slug)}
+                />
+              ))}
+              {canLoadMoreMarketplaceConnectors ? (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="w-full justify-center"
+                  onClick={() =>
+                    setMarketplaceDisplayLimit((current) =>
+                      current + MARKETPLACE_CONNECTOR_PAGE_SIZE,
+                    )
+                  }
+                >
+                  Load more integrations
+                </Button>
+              ) : null}
+            </>
           )}
         </div>
 
@@ -223,6 +262,7 @@ export const IntegrationsSection = ({
               {filteredIntegrations.map(({ integration, tools, visibleTools }) => {
                 const isExpanded =
                   expandedIntegrations[integration.key] ?? Boolean(integrationSearch.trim());
+                const logoMetadata = resolveIntegrationLogoMetadata(integration);
 
                 return (
                   <div
@@ -234,7 +274,9 @@ export const IntegrationsSection = ({
                       <div className="flex min-w-0 items-start gap-3">
                         <ConnectorLogo
                           name={integration.name}
-                          logoUrl={resolveIntegrationLogoUrl(integration)}
+                          logoUrl={logoMetadata.logoUrl}
+                          iconBg={logoMetadata.iconBg}
+                          iconColor={logoMetadata.iconColor}
                           className="h-9 w-9 rounded-lg"
                         />
                         <div className="min-w-0">
@@ -468,4 +510,5 @@ export const IntegrationsSection = ({
       )}
     </CompactPanel>
   </section>
-);
+  );
+};

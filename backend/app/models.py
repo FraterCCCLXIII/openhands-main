@@ -120,6 +120,8 @@ class ManagedConnector(BaseModel):
     name: str
     description: str
     logoUrl: str | None = None
+    iconBg: str | None = None
+    iconColor: str | None = None
     appUrl: str | None = None
     docsUrl: str | None = None
     categories: list[str] = Field(default_factory=list)
@@ -148,6 +150,8 @@ class ManagedConnector(BaseModel):
             "name": self.name,
             "description": self.description,
             "logoUrl": self.logoUrl,
+            "iconBg": self.iconBg,
+            "iconColor": self.iconColor,
             "appUrl": self.appUrl,
             "toolCount": len(self.tools),
             "categories": self.categories,

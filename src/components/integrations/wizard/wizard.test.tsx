@@ -96,7 +96,7 @@ describe("IntegrationWizard", () => {
     useSearchParamsMock.mockReset();
   });
 
-  it("shows only ready managed connectors and links users to admin-integrations", async () => {
+  it("shows managed connectors including OAuth entries that need admin setup", async () => {
     await act(async () => {
       root.render(
         <QueryClientProvider client={queryClient}>
@@ -126,11 +126,10 @@ describe("IntegrationWizard", () => {
     const options = Array.from(container.querySelectorAll("datalist option")).map(
       (option) => option.getAttribute("value"),
     );
-    expect(options).toEqual(["GitHub (github)"]);
+    expect(options).toEqual(["GitHub (github)", "Notion (notion)"]);
 
     const addConnectorLink = container.querySelector('a[href="/admin-integrations"]');
     expect(addConnectorLink?.textContent).toContain("Click here");
-    expect(container.textContent).not.toContain("Notion (notion)");
   });
 
   it("disables raw MCP installs for non-admin users", async () => {

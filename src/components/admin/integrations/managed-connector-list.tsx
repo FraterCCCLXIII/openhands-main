@@ -181,13 +181,24 @@ const formatUpdatedAt = (value: string) =>
   value ? new Date(value).toLocaleString() : "Unknown";
 
 const ConnectorAvatar = ({ connector }: { connector: ManagedConnectorDefinition }) => {
+  const style = {
+    backgroundColor: connector.iconBg ?? undefined,
+    color: connector.iconColor ?? undefined,
+  };
+
   if (connector.logoUrl?.trim()) {
     return (
-      <img
-        src={connector.logoUrl}
-        alt={`${connector.name} logo`}
-        className="h-10 w-10 shrink-0 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] object-cover"
-      />
+      <span
+        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]"
+        style={style}
+        aria-hidden="true"
+      >
+        <img
+          src={connector.logoUrl}
+          alt={`${connector.name} logo`}
+          className="h-full w-full object-contain p-2"
+        />
+      </span>
     );
   }
 
@@ -196,6 +207,7 @@ const ConnectorAvatar = ({ connector }: { connector: ManagedConnectorDefinition 
       role="img"
       aria-label={`${connector.name} logo`}
       className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-input)] text-xs font-semibold tracking-[0.14em] text-white"
+      style={style}
     >
       {getConnectorInitials(connector.name)}
     </span>

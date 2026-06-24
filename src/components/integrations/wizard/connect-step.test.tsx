@@ -246,7 +246,7 @@ describe("ConnectStep", () => {
       container.querySelectorAll('#managed-connector-options option'),
     ).map((option) => (option as HTMLOptionElement).value);
 
-    expect(searchInput?.placeholder).toBe("Choose GitHub, Notion, Slack...");
+    expect(searchInput?.placeholder).toBe("Search supported connectors...");
     expect(optionValues).toEqual([
       "Notion (notion)",
       "ElevenLabs (elevenlabs)",
@@ -314,12 +314,12 @@ describe("ConnectStep", () => {
     });
     const unavailableButton = Array.from(
       unavailable.container.querySelectorAll("button"),
-    ).find((button) => button.textContent?.includes("Not available"));
+    ).find((button) => button.textContent?.includes("Contact admin"));
 
     expect(unavailableButton).toBeTruthy();
     expect((unavailableButton as HTMLButtonElement | undefined)?.disabled).toBe(true);
     expect(unavailable.container.textContent).toContain(
-      "Notion is not available on this deployment yet. Visit the admin integrations page to request it.",
+      "Notion needs an admin to configure OAuth for this deployment before users can connect it.",
     );
 
     await unavailable.cleanup();
@@ -563,10 +563,10 @@ describe("ConnectStep", () => {
 
     expect(container.textContent).toContain("Could not load managed connectors.");
     expect(container.textContent).toContain(
-      "Notion is not available on this deployment yet. Visit the admin integrations page to request it.",
+      "Notion needs an admin to configure OAuth for this deployment before users can connect it.",
     );
     expect(container.textContent).toContain(
-      "Notion is not available on this deployment yet. Visit /admin-integrations to request it.",
+      "Contact an admin to configure OAuth for Notion before you can add it.",
     );
 
     const connectorInput = container.querySelector(
@@ -578,7 +578,7 @@ describe("ConnectStep", () => {
     expect(connectorInput?.hasAttribute("disabled")).toBe(true);
 
     const notAvailableButton = Array.from(container.querySelectorAll("button")).find(
-      (button) => button.textContent?.includes("Not available"),
+      (button) => button.textContent?.includes("Contact admin"),
     );
     const discoverButton = Array.from(container.querySelectorAll("button")).find(
       (button) => button.textContent?.includes("Discover tools"),

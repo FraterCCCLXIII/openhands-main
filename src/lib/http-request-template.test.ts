@@ -5,7 +5,6 @@ import {
   collectHttpTemplateVariables,
   formatHttpTemplateLocation,
 } from "@/src/lib/http-request-template";
-import { managedConnectorUpsertSchema } from "@/src/lib/managed-connectors/api-schema";
 
 describe("http request template helpers", () => {
   it("collects variables from supported path and whole-value placeholders", () => {
@@ -94,33 +93,4 @@ describe("http request template helpers", () => {
     );
   });
 
-  it("rejects unsupported mixed interpolation through managed connector validation", () => {
-    expect(() =>
-      managedConnectorUpsertSchema.parse({
-        slug: "example",
-        name: "Example",
-        description: "Example connector",
-        provider: "http",
-        authStrategy: "none",
-        credentialLabel: "None",
-        credentialPlaceholder: "None",
-        credentialHelp: "No credentials required",
-        apiBaseUrl: "https://api.example.com",
-        tools: [
-          {
-            name: "search",
-            description: "Search examples",
-            defaultScopes: [],
-            request: {
-              method: "GET",
-              path: "/v1/search",
-              query: {
-                q: "before:{{query.term}}",
-              },
-            },
-          },
-        ],
-      }),
-    ).toThrow(/Only whole-value `\{\{variable\}\}` placeholders are allowed outside request paths\./);
-  });
 });

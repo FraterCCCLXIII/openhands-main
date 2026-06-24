@@ -98,10 +98,10 @@ const createDefaultProps = () => ({
   onToggleToolExpanded: vi.fn(),
   onToggleIntegrationEnabled: vi.fn(),
   onUpdateToolAccessMode: vi.fn(),
+  resolveIntegrationLogoMetadata: vi.fn(() => ({ logoUrl: null })),
   onUnusedThresholdBlur: vi.fn(),
   onUnusedThresholdUnitChange: vi.fn(),
   onUnusedThresholdValueChange: vi.fn(),
-  resolveIntegrationLogoUrl: vi.fn(() => "https://github.com/favicon.ico"),
   setAddIntegrationSearch: vi.fn(),
   setHideDisabledTools: vi.fn(),
   setIntegrationSearch: vi.fn(),
@@ -191,6 +191,43 @@ describe("IntegrationsSection", () => {
       marketplaceCard?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
     expect(props.onOpenIntegrationWizard).toHaveBeenCalledWith("github");
+  });
+
+  it("shows five marketplace connectors initially and loads more on demand", async () => {
+    const marketplaceConnectors = Array.from({ length: 7 }, (_, index) => ({
+      ...connectors[0]!,
+      slug: `connector-${index + 1}`,
+      name: `Connector ${index + 1}`,
+    }));
+    const props = createDefaultProps();
+
+    await act(async () => {
+      root.render(
+        <IntegrationsSection
+          {...props}
+          availableConnectorCount={marketplaceConnectors.length}
+          marketplaceConnectors={marketplaceConnectors}
+        />,
+      );
+    });
+
+    expect(container.textContent).toContain("5 shown");
+    expect(container.textContent).toContain("7 available");
+    expect(container.querySelector('[data-managed-connector-slug="connector-5"]')).toBeTruthy();
+    expect(container.querySelector('[data-managed-connector-slug="connector-6"]')).toBeNull();
+
+    const loadMoreButton = Array.from(container.querySelectorAll("button")).find((button) =>
+      button.textContent?.includes("Load more integrations"),
+    );
+    expect(loadMoreButton).toBeTruthy();
+
+    await act(async () => {
+      loadMoreButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    expect(container.textContent).toContain("7 shown");
+    expect(container.querySelector('[data-managed-connector-slug="connector-6"]')).toBeTruthy();
+    expect(container.textContent).not.toContain("Load more integrations");
   });
 
   it("renders the empty installed state when the user has no integrations", async () => {

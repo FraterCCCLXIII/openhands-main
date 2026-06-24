@@ -21,3 +21,5 @@ __pycache__/
 .venv/
 .vscode/launch.json
 .spa-build-backup/
+# Generated from backend/pyproject.toml for Vercel Python runtime installs.
+/requirements.txt

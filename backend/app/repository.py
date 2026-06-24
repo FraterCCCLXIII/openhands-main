@@ -670,6 +670,8 @@ class Repository:
             name=str(row["name"]),
             description=str(row["description"]),
             logoUrl=row.get("logo_url"),
+            iconBg=row.get("icon_bg"),
+            iconColor=row.get("icon_color"),
             appUrl=row.get("app_url"),
             docsUrl=row.get("docs_url"),
             categories=row.get("categories") or [],
@@ -712,15 +714,17 @@ class Repository:
             self.execute_db(
                 """
                 INSERT INTO managed_connectors (
-                    slug, name, description, logo_url, app_url, docs_url, categories,
+                    slug, name, description, logo_url, icon_bg, icon_color, app_url, docs_url, categories,
                     auth_modes, auth_strategy, provider, credential_label, credential_placeholder,
                     credential_help, api_base_url, server_url, open_api_url, oauth_config,
                     encrypted_oauth_client, functions, enabled, created_at, updated_at
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW())
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW())
                 ON CONFLICT (slug) DO UPDATE SET
                     name = EXCLUDED.name,
                     description = EXCLUDED.description,
                     logo_url = EXCLUDED.logo_url,
+                    icon_bg = EXCLUDED.icon_bg,
+                    icon_color = EXCLUDED.icon_color,
                     app_url = EXCLUDED.app_url,
                     docs_url = EXCLUDED.docs_url,
                     categories = EXCLUDED.categories,
@@ -744,6 +748,8 @@ class Repository:
                     connector.name,
                     connector.description,
                     connector.logoUrl,
+                    connector.iconBg,
+                    connector.iconColor,
                     connector.appUrl,
                     connector.docsUrl,
                     Jsonb(connector.categories),

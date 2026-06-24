@@ -100,6 +100,8 @@ export interface ManagedConnectorOption {
   name: string;
   description: string;
   logoUrl?: string;
+  iconBg?: string;
+  iconColor?: string;
   appUrl?: string;
   toolCount: number;
   categories: string[];
@@ -112,10 +114,6 @@ export interface ManagedConnectorOption {
   apiKeyHeaderName?: string;
 }
 
-export type OAuthProviderAvailability =
-  | "oauth_ready"
-  | "manual_token"
-  | "planned";
 
 export type ManagedConnectorOAuthClientStatus =
   | "not_applicable"
@@ -123,7 +121,7 @@ export type ManagedConnectorOAuthClientStatus =
   | "decryptable"
   | "unreadable";
 
-export interface OAuthProviderRegistrationDefaults {
+export interface IntegrationConnectionDefaults {
   provider?: "mcp" | "http";
   authModes?: AuthStrategy[];
   authStrategy?: Exclude<AuthStrategy, "mcp_session">;
@@ -131,6 +129,7 @@ export interface OAuthProviderRegistrationDefaults {
   credentialPlaceholder?: string;
   credentialHelp?: string;
   apiKeyHeaderName?: string;
+  apiKeyOptional?: boolean;
   apiBaseUrl?: string;
   serverUrl?: string;
   openApiUrl?: string;
@@ -151,19 +150,19 @@ export interface OAuthProviderRegistrationDefaults {
   requestPath?: string;
 }
 
-export interface OAuthProviderCatalogOption {
+export interface IntegrationCatalogOption {
   slug: string;
   name: string;
   description: string;
   categories: string[];
-  authStrategy: Exclude<AuthStrategy, "mcp_session">;
-  availability: OAuthProviderAvailability;
-  managedConnectorSlug?: string;
   appUrl?: string;
   docsUrl?: string;
+  logoUrl?: string;
+  iconBg?: string;
+  iconColor?: string;
   notes: string;
   popularityRank: number;
-  registrationDefaults?: OAuthProviderRegistrationDefaults;
+  connectionDefaults: IntegrationConnectionDefaults;
 }
 
 export interface GenericOAuthConfig {
@@ -205,6 +204,8 @@ export interface ManagedConnectorDefinition {
   name: string;
   description: string;
   logoUrl?: string;
+  iconBg?: string;
+  iconColor?: string;
   appUrl?: string;
   docsUrl?: string;
   categories: string[];

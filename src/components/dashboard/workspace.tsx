@@ -21,7 +21,7 @@ import {
   filterIntegrationsForDisplay,
   matchesAccessRequestFilter,
   matchesAccessRequestSearch,
-  resolveIntegrationLogoUrl,
+  resolveIntegrationLogoMetadata,
   subtractUnusedWindow,
   type ApprovalRequestFilter,
 } from "@/src/components/dashboard/utils";
@@ -770,8 +770,8 @@ export const DashboardWorkspace = ({
             onUnusedThresholdBlur={handleUnusedThresholdBlur}
             onUnusedThresholdUnitChange={setUnusedThresholdUnit}
             onUnusedThresholdValueChange={setUnusedThresholdValue}
-            resolveIntegrationLogoUrl={(integration) =>
-              resolveIntegrationLogoUrl({
+            resolveIntegrationLogoMetadata={(integration) =>
+              resolveIntegrationLogoMetadata({
                 integration,
                 connectorBySlug,
                 getConnectorLogoUrl,

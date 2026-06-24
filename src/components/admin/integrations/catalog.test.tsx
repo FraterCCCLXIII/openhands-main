@@ -15,24 +15,23 @@ import {
 import type {
   ManagedConnectorOption,
   ManagedConnectorDefinition,
-  OAuthProviderCatalogOption,
+  IntegrationCatalogOption,
 } from "@/src/types/integrations-hub";
 
 enableReactActEnvironment();
 
-const providerCatalog: OAuthProviderCatalogOption[] = [
+const integrationCatalog: IntegrationCatalogOption[] = [
   {
     slug: "google-calendar",
     name: "Google Calendar",
     description: "Calendar events and schedules",
     categories: ["Productivity"],
-    authStrategy: "oauth2",
-    availability: "oauth_ready",
     docsUrl: "https://developers.google.com/identity/protocols/oauth2",
     notes: "Useful for scheduling workflows.",
     popularityRank: 1,
-    registrationDefaults: {
+    connectionDefaults: {
       provider: "http",
+      authStrategy: "oauth2",
       apiBaseUrl: "https://www.googleapis.com/calendar/v3",
       authorizationUrl: "https://accounts.google.com/o/oauth2/v2/auth",
       tokenUrl: "https://oauth2.googleapis.com/token",
@@ -104,18 +103,15 @@ if (!googleManagedConnector) {
 }
 
 
-const manualTokenProvider: OAuthProviderCatalogOption = {
+const manualTokenProvider: IntegrationCatalogOption = {
   slug: "elevenlabs",
   name: "ElevenLabs",
   description: "Text to speech and audio generation",
   categories: ["Audio"],
-  authStrategy: "api_key",
-  availability: "manual_token",
-  managedConnectorSlug: "elevenlabs",
   docsUrl: "https://elevenlabs.io/docs/api-reference/introduction",
   notes: "Published API schema with manual user API keys.",
   popularityRank: 2,
-  registrationDefaults: {
+  connectionDefaults: {
     provider: "http",
     authModes: ["api_key"],
     authStrategy: "api_key",
@@ -164,12 +160,14 @@ const createManagedConnectorOption = (
 });
 
 const createProvider = (
-  overrides: Partial<OAuthProviderCatalogOption> & Pick<OAuthProviderCatalogOption, "slug" | "name">,
-): OAuthProviderCatalogOption => ({
-  description: `${overrides.name} provider`,
+  overrides: Partial<IntegrationCatalogOption> & Pick<IntegrationCatalogOption, "slug" | "name">,
+): IntegrationCatalogOption => ({
+  description: `${overrides.name} integration`,
   categories: ["AI"],
-  authStrategy: "oauth2",
-  availability: "oauth_ready",
+  connectionDefaults: {
+    provider: "http",
+    authStrategy: "oauth2",
+  },
   docsUrl: `https://example.com/${overrides.slug}`,
   notes: `${overrides.name} notes`,
   popularityRank: 99,
@@ -214,7 +212,7 @@ describe("catalog helper utilities", () => {
     const oauthProvider = createProvider({
       slug: "google-calendar",
       name: "Google Calendar",
-      registrationDefaults: {
+      connectionDefaults: {
         provider: "http",
         apiBaseUrl: "https://www.googleapis.com/calendar/v3",
         openApiUrl: "https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest",
@@ -223,8 +221,7 @@ describe("catalog helper utilities", () => {
     const incompleteHttpProvider = createProvider({
       slug: "airtable",
       name: "Airtable",
-      authStrategy: "api_key",
-      registrationDefaults: {
+      connectionDefaults: {
         provider: "http",
         authStrategy: "api_key",
         apiBaseUrl: "https://api.airtable.com",
@@ -233,8 +230,7 @@ describe("catalog helper utilities", () => {
     const incompleteMcpProvider = createProvider({
       slug: "webflow",
       name: "Webflow",
-      authStrategy: "bearer",
-      registrationDefaults: {
+      connectionDefaults: {
         provider: "mcp",
         authStrategy: "bearer",
       },
@@ -242,10 +238,8 @@ describe("catalog helper utilities", () => {
     const readyManualProvider = createProvider({
       slug: "elevenlabs",
       name: "ElevenLabs",
-      managedConnectorSlug: "elevenlabs",
-      authStrategy: "api_key",
       appUrl: "https://elevenlabs.io",
-      registrationDefaults: {
+      connectionDefaults: {
         provider: "http",
         authStrategy: "api_key",
         authModes: ["api_key"],
@@ -279,7 +273,7 @@ describe("catalog helper utilities", () => {
     const explicitOauthDefault = createProvider({
       slug: "google-drive",
       name: "Google Drive",
-      registrationDefaults: {
+      connectionDefaults: {
         provider: "http",
         authStrategy: "oauth2",
         apiBaseUrl: "https://www.googleapis.com/drive/v3",
@@ -289,9 +283,7 @@ describe("catalog helper utilities", () => {
     const readyMcpDefault = createProvider({
       slug: "ordinal",
       name: "Ordinal",
-      managedConnectorSlug: "ordinal-managed",
-      authStrategy: "bearer",
-      registrationDefaults: {
+      connectionDefaults: {
         provider: "mcp",
         authStrategy: "bearer",
         authModes: ["" as unknown as "bearer"],
@@ -301,7 +293,7 @@ describe("catalog helper utilities", () => {
 
     expect(toDefaultReadyManagedConnector(explicitOauthDefault)).toBeNull();
     expect(toDefaultReadyManagedConnector(readyMcpDefault)).toMatchObject({
-      slug: "ordinal-managed",
+      slug: "ordinal",
       name: "Ordinal",
       authStrategy: "bearer",
       authModes: ["bearer"],
@@ -355,7 +347,7 @@ describe("IntegrationsCatalog", () => {
     await act(async () => {
       root.render(
         <IntegrationsCatalog
-          providerCatalog={providerCatalog}
+          integrationCatalog={integrationCatalog}
           initialReadyManagedConnectors={readyManagedConnectors}
           managedConnectors={managedConnectors}
           canRegisterManagedConnectors
@@ -411,7 +403,7 @@ describe("IntegrationsCatalog", () => {
     await act(async () => {
       root.render(
         <IntegrationsCatalog
-          providerCatalog={providerCatalog}
+          integrationCatalog={integrationCatalog}
           initialReadyManagedConnectors={readyManagedConnectors}
           managedConnectors={managedConnectors}
           canRegisterManagedConnectors={false}
@@ -442,7 +434,7 @@ describe("IntegrationsCatalog", () => {
     await act(async () => {
       root.render(
         <IntegrationsCatalog
-          providerCatalog={providerCatalog}
+          integrationCatalog={integrationCatalog}
           initialReadyManagedConnectors={[]}
           managedConnectors={[{ ...googleManagedConnector, oauthConfigured: false }]}
           canRegisterManagedConnectors
@@ -496,7 +488,7 @@ describe("IntegrationsCatalog", () => {
     await act(async () => {
       root.render(
         <IntegrationsCatalog
-          providerCatalog={[manualTokenProvider]}
+          integrationCatalog={[manualTokenProvider]}
           initialReadyManagedConnectors={[]}
           managedConnectors={[manualTokenConnector]}
           canRegisterManagedConnectors
@@ -550,7 +542,7 @@ describe("IntegrationsCatalog", () => {
     await act(async () => {
       root.render(
         <IntegrationsCatalog
-          providerCatalog={[manualTokenProvider]}
+          integrationCatalog={[manualTokenProvider]}
           initialReadyManagedConnectors={[]}
           managedConnectors={[]}
           canRegisterManagedConnectors
@@ -602,7 +594,7 @@ describe("IntegrationsCatalog", () => {
     await act(async () => {
       root.render(
         <IntegrationsCatalog
-          providerCatalog={providerCatalog}
+          integrationCatalog={integrationCatalog}
           initialReadyManagedConnectors={readyManagedConnectors}
           managedConnectors={[googleManagedConnector]}
           canRegisterManagedConnectors

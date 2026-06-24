@@ -12,12 +12,12 @@ import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
 import { buildAdminSectionHref } from "@/src/lib/admin-routes";
 import { fetchJson } from "@/src/lib/fetch-json";
-import type { ManagedConnectorDefinition, ManagedConnectorOption, OAuthProviderCatalogOption } from "@/src/types/integrations-hub";
+import type { ManagedConnectorDefinition, ManagedConnectorOption, IntegrationCatalogOption } from "@/src/types/integrations-hub";
 
 interface AdminIntegrationsData {
   managedConnectors: ManagedConnectorDefinition[];
   readyConnectors: ManagedConnectorOption[];
-  providerCatalog: OAuthProviderCatalogOption[];
+  integrationCatalog: IntegrationCatalogOption[];
 }
 
 function LoadingSpinner() {
@@ -37,18 +37,18 @@ export function ClientAdminIntegrationsPage() {
   const { data, isLoading: dataLoading, error } = useQuery({
     queryKey: ["admin-integrations-init"],
     queryFn: async (): Promise<AdminIntegrationsData> => {
-      const [managedConnectors, allConnectors, providerCatalog] = await Promise.all([
+      const [managedConnectors, allConnectors, integrationCatalog] = await Promise.all([
         isAdmin
           ? fetchJson<ManagedConnectorDefinition[]>("/api/admin/managed-connectors")
           : Promise.resolve([]),
         fetchJson<ManagedConnectorOption[]>("/api/integrations/managed-connectors"),
-        fetchJson<OAuthProviderCatalogOption[]>("/api/integrations/oauth-provider-catalog"),
+        fetchJson<IntegrationCatalogOption[]>("/api/integrations/catalog"),
       ]);
 
       return {
         managedConnectors,
         readyConnectors: allConnectors.filter((c) => c.oauthConfigured !== false),
-        providerCatalog,
+        integrationCatalog,
       };
     },
     enabled: isAuthenticated,
@@ -106,7 +106,7 @@ export function ClientAdminIntegrationsPage() {
                 userEmail={userEmail}
                 badges={[
                   <Badge key="ready">{data.readyConnectors.length} ready</Badge>,
-                  <Badge key="catalog">{data.providerCatalog.length} catalog</Badge>,
+                  <Badge key="catalog">{data.integrationCatalog.length} catalog</Badge>,
                 ]}
                 action={<DashboardSignOutButton />}
               />
@@ -133,7 +133,7 @@ export function ClientAdminIntegrationsPage() {
                 <Badge>{data.managedConnectors.length} registered</Badge>
               ) : null}
               <Badge>{data.readyConnectors.length} ready now</Badge>
-              <Badge>{data.providerCatalog.length} catalog options</Badge>
+              <Badge>{data.integrationCatalog.length} catalog options</Badge>
             </div>
           </header>
 
@@ -204,7 +204,7 @@ export function ClientAdminIntegrationsPage() {
           )}
 
           <IntegrationsCatalog
-            providerCatalog={data.providerCatalog}
+            integrationCatalog={data.integrationCatalog}
             initialReadyManagedConnectors={data.readyConnectors}
             managedConnectors={data.managedConnectors}
             canRegisterManagedConnectors={isAdmin}

@@ -3,7 +3,6 @@ import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 
 import { isAuthDisabled } from "@/src/lib/auth-config";
-import { isAllowedWhenAuthDisabled } from "@/src/lib/request-context";
 import { applySecurityHeaders } from "@/src/lib/security-headers";
 
 const LOCAL_ONLY_MESSAGE =
@@ -41,7 +40,7 @@ const requiresDashboardSession = (request: NextRequest) => {
     (path.startsWith("/api/oauth/") && path.endsWith("/start")) ||
     (path.startsWith("/api/integrations") &&
       path !== "/api/integrations/managed-connectors" &&
-      path !== "/api/integrations/oauth-provider-catalog")
+      path !== "/api/integrations/catalog")
   ) {
     return true;
   }
@@ -60,6 +59,37 @@ const requiresDashboardSession = (request: NextRequest) => {
 
   return path.startsWith("/api/agent-classes/");
 };
+
+const stripHostPort = (value: string) => {
+  const trimmed = value.trim().toLowerCase();
+  if (!trimmed) {
+    return "";
+  }
+
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+    return new URL(trimmed).hostname.toLowerCase();
+  }
+
+  if (trimmed.startsWith("[")) {
+    const endIndex = trimmed.indexOf("]");
+    return endIndex >= 0 ? trimmed.slice(1, endIndex) : trimmed;
+  }
+
+  return trimmed.split(":")[0] ?? "";
+};
+
+const isLoopbackHost = (value: string) => {
+  const host = stripHostPort(value);
+  return (
+    host === "localhost" ||
+    host === "127.0.0.1" ||
+    host === "::1" ||
+    host.endsWith(".localhost")
+  );
+};
+
+const isAllowedWhenAuthDisabled = (requestHeaders: Headers) =>
+  !isAuthDisabled() || isLoopbackHost(requestHeaders.get("host") ?? "");
 
 const isHttpsRequest = (request: NextRequest) =>
   (request.headers.get("x-forwarded-proto") ?? request.nextUrl.protocol.replace(/:$/, "")) ===

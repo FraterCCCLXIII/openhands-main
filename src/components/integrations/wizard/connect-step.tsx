@@ -68,7 +68,7 @@ export const ConnectStep = ({
                 placeholder={
                   managedConnectorsPending
                     ? "Loading supported connectors..."
-                    : "Choose GitHub, Notion, Slack..."
+                    : "Search supported connectors..."
                 }
                 value={connectorSearch}
                 onChange={(event) => onConnectorSearchChange(event.target.value)}
@@ -127,7 +127,7 @@ export const ConnectStep = ({
                         </p>
                         <p className="mt-1 text-xs leading-6 text-[var(--color-text-base)]">
                           {!oauthConnectionEnabled
-                            ? `${selectedConnector.name} is not available on this deployment yet. Visit the admin integrations page to request it.`
+                            ? `${selectedConnector.name} needs an admin to configure OAuth for this deployment before users can connect it.`
                             : selectedConnection
                               ? `This ${selectedConnector.name} token is stored per user in the database and will be injected automatically for agent calls.`
                               : selectedConnector.credentialHelp}
@@ -154,7 +154,7 @@ export const ConnectStep = ({
                         }}
                       >
                         {!oauthConnectionEnabled
-                          ? "Not available"
+                          ? "Contact admin"
                           : selectedConnection
                             ? "Reconnect"
                             : "Connect"}
@@ -216,7 +216,7 @@ export const ConnectStep = ({
             {requiresOAuthConnection ? (
               <div className="rounded-xl border border-dashed border-[var(--color-border)] px-4 py-4 text-sm text-[var(--color-text-base)]">
                 {!oauthConnectionEnabled
-                  ? `${selectedConnector?.name ?? "This provider"} is not available on this deployment yet. Visit /admin-integrations to request it.`
+                  ? `Contact an admin to configure OAuth for ${selectedConnector?.name ?? "this provider"} before you can add it.`
                   : selectedConnection
                     ? `${selectedConnector?.name} is connected. Click Discover to save this integration with your stored OAuth credentials.`
                     : `Connect ${selectedConnector?.name ?? "this provider"} before discovering tools.`}
@@ -343,7 +343,7 @@ export const ConnectStep = ({
               <span className="font-medium">Integration key</span>
               <input
                 className={integrationWizardInputClassName}
-                placeholder="figma-mcp"
+                placeholder="my-mcp"
                 value={draft.key}
                 onChange={(event) =>
                   setDraft((current) => ({
@@ -358,7 +358,7 @@ export const ConnectStep = ({
               <span className="font-medium">Display name</span>
               <input
                 className={integrationWizardInputClassName}
-                placeholder="Figma MCP"
+                placeholder="My MCP"
                 value={draft.name}
                 onChange={(event) =>
                   setDraft((current) => ({

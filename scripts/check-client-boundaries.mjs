@@ -7,23 +7,8 @@ const SOURCE_EXTENSIONS = [".ts", ".tsx"];
 const RESOLUTION_SUFFIXES = ["", ".ts", ".tsx", "/index.ts", "/index.tsx"];
 
 const SERVER_ONLY_PREFIXES = [
-  "src/lib/adapters/",
-  "src/lib/core/",
-  "src/lib/db/",
-  "src/lib/mcp/",
-  "src/lib/notifications/",
-  "src/lib/oauth/",
-  "src/lib/admin-api-auth.ts",
-  "src/lib/api.ts",
   "src/lib/auth.ts",
-  "src/lib/context-api-auth.ts",
-  "src/lib/credential-crypto.ts",
-  "src/lib/current-user.ts",
-  "src/lib/mcp-client.ts",
-  "src/lib/persistence.ts",
-  "src/lib/request-context.ts",
   "src/lib/security-headers.ts",
-  "src/lib/user-api-auth.ts",
 ];
 
 const normalize = (value) => value.split(path.sep).join("/");

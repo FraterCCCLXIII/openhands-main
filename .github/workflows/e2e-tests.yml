@@ -20,6 +20,8 @@ jobs:
           node-version: "22"
           cache: "npm"
 
+      - uses: astral-sh/setup-uv@v6
+
       - name: Install dependencies
         run: npm ci
 

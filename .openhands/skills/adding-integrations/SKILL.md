@@ -70,10 +70,10 @@ Use this table in preference order:
 
 | Preferred shape | Usually update |
 | --- | --- |
-| MCP + OAuth | catalog + registration defaults + OAuth tests; runtime only if the provider has transport/auth quirks |
-| MCP + bearer/API key | catalog + registration defaults + discovery/runtime tests |
-| HTTP/OpenAPI + OAuth | `src/lib/integrations/oauth-provider-catalog.ts`, `src/lib/integrations/oauth-provider-registration-defaults.ts`, plus OAuth-specific tests or runtime changes only if the provider is non-standard |
-| HTTP/OpenAPI + API key | `src/lib/integrations/oauth-provider-catalog.ts`, `src/lib/integrations/oauth-provider-registration-defaults.ts`, tests |
+| MCP + OAuth | OpenHands/extensions catalog JSON connectionOptions + OAuth tests; hub changes only if UI/runtime behavior changes |
+| MCP + bearer/API key | OpenHands/extensions catalog JSON connectionOptions + discovery/runtime tests |
+| HTTP/OpenAPI + OAuth | OpenHands/extensions catalog JSON connectionOptions, plus OAuth-specific tests or runtime changes only if the provider is non-standard |
+| HTTP/OpenAPI + API key | OpenHands/extensions catalog JSON connectionOptions and tests |
 | HTTP provider without usable OpenAPI | manual function definitions and possibly `src/lib/adapters/http-adapter.ts` / `src/lib/managed-connectors/openapi.ts` |
 
 Start at the top and move down only when the provider cannot support a higher-preference option.
@@ -84,13 +84,13 @@ If the provider matches Slack, Webflow, Ordinal, Notion, or ElevenLabs, copy tha
 
 ### Usually touched
 
+- OpenHands/extensions `integrations/catalog/<id>.json`
+  - curated metadata and all connection defaults under `connectionOptions`
 - `src/types/integrations-hub.ts`
   - only if the provider genuinely needs a new shared type or auth/config field
-- `src/lib/integrations/oauth-provider-catalog.ts`
-  - curated metadata: slug, name, availability, docs URL, notes, categories, `managedConnectorSlug`
-- `src/lib/integrations/oauth-provider-registration-defaults.ts`
-  - runtime defaults: `provider`, `authStrategy`, URLs, scopes, credential labels, and OpenAPI or MCP defaults
-- matching tests for the files above
+- `src/lib/integrations/integration-catalog.ts`
+  - only for generic adapter behavior from raw catalog entries to hub UI/API options
+- matching tests for changed hub files
 
 ### Touch only when needed
 
@@ -180,7 +180,7 @@ Do not change discovery unless the provider cannot be represented by the existin
 
 Typical coverage:
 
-- `src/lib/integrations/oauth-provider-catalog.test.ts`
+- `src/lib/integrations/integration-catalog.test.ts`
 - `src/lib/integrations/discovery.test.ts`
 - `src/lib/mcp-client.test.ts` when MCP behavior changes
 - `src/lib/oauth/provider-resolver.test.ts` when OAuth behavior changes

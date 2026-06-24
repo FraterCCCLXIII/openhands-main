@@ -8,6 +8,7 @@ const sourceFiles = ["**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}"];
 export default defineConfig([
   globalIgnores([
     ".next/**",
+    "backend/.venv/**",
     "coverage/**",
     "next-env.d.ts",
     "tsconfig.tsbuildinfo",

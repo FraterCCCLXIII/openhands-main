@@ -2,18 +2,18 @@
 
 import { useMemo, useState } from "react";
 
-import { ProviderCatalog } from "@/src/components/admin/integrations/provider-catalog";
+import { IntegrationCatalogPanel } from "@/src/components/admin/integrations/integration-catalog-panel";
 import { ManagedConnectorList } from "@/src/components/admin/integrations/managed-connector-list";
 import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
 import type {
   ManagedConnectorOption,
   ManagedConnectorDefinition,
-  OAuthProviderCatalogOption,
+  IntegrationCatalogOption,
 } from "@/src/types/integrations-hub";
 
 interface IntegrationsCatalogProps {
-  providerCatalog: OAuthProviderCatalogOption[];
+  integrationCatalog: IntegrationCatalogOption[];
   initialReadyManagedConnectors: ManagedConnectorOption[];
   managedConnectors: ManagedConnectorDefinition[];
   canRegisterManagedConnectors: boolean;
@@ -32,6 +32,8 @@ export const toReadyManagedConnector = (
   name: connector.name,
   description: connector.description,
   logoUrl: connector.logoUrl,
+  iconBg: connector.iconBg,
+  iconColor: connector.iconColor,
   appUrl: connector.appUrl,
   toolCount: connector.tools.length,
   categories: connector.categories,
@@ -44,12 +46,12 @@ export const toReadyManagedConnector = (
 });
 
 export const toDefaultReadyManagedConnector = (
-  provider: OAuthProviderCatalogOption,
+  provider: IntegrationCatalogOption,
 ): ManagedConnectorOption | null => {
-  const defaults = provider.registrationDefaults;
-  const authStrategy = defaults?.authStrategy ?? provider.authStrategy;
+  const defaults = provider.connectionDefaults;
+  const authStrategy = defaults.authStrategy;
 
-  if (!defaults?.authStrategy || defaults.authStrategy === "oauth2") {
+  if (!authStrategy || authStrategy === "oauth2") {
     return null;
   }
 
@@ -61,9 +63,12 @@ export const toDefaultReadyManagedConnector = (
   }
 
   return {
-    slug: provider.managedConnectorSlug ?? provider.slug,
+    slug: provider.slug,
     name: provider.name,
     description: provider.description,
+    logoUrl: provider.logoUrl,
+    iconBg: provider.iconBg,
+    iconColor: provider.iconColor,
     appUrl: provider.appUrl,
     toolCount: 0,
     categories: provider.categories,
@@ -91,7 +96,7 @@ export const upsertReadyManagedConnector = (
   ]);
 
 export function IntegrationsCatalog({
-  providerCatalog,
+  integrationCatalog,
   initialReadyManagedConnectors,
   managedConnectors,
   canRegisterManagedConnectors,
@@ -104,15 +109,15 @@ export function IntegrationsCatalog({
   const defaultReadyManagedConnectors = useMemo(() => {
     const defaults = new Map<string, ManagedConnectorOption>();
 
-    for (const provider of providerCatalog) {
+    for (const provider of integrationCatalog) {
       const connector = toDefaultReadyManagedConnector(provider);
       if (connector) {
-        defaults.set(provider.managedConnectorSlug ?? provider.slug, connector);
+        defaults.set(provider.slug, connector);
       }
     }
 
     return defaults;
-  }, [providerCatalog]);
+  }, [integrationCatalog]);
 
   const resetReadyManagedConnector = (slug: string) => {
     setReadyManagedConnectors((current) => {
@@ -166,14 +171,14 @@ export function IntegrationsCatalog({
           <div>
             <h2 className="text-lg font-semibold text-white">Popular official provider options</h2>
             <p className="mt-2 text-sm leading-7 text-[var(--color-text-base)]">
-              Researched catalog of 50 popular providers with official API or MCP entry points. Register one of these providers to make it show up in the integrations wizard.
+              Researched catalog of popular integrations with official API or MCP entry points. Register one to make it show up in the integrations wizard.
             </p>
           </div>
-          <Badge>{providerCatalog.length} options</Badge>
+          <Badge>{integrationCatalog.length} options</Badge>
         </div>
 
-        <ProviderCatalog
-          providerCatalog={providerCatalog}
+        <IntegrationCatalogPanel
+          integrationCatalog={integrationCatalog}
           readyManagedConnectors={readyManagedConnectors}
           canRegisterManagedConnectors={canRegisterManagedConnectors}
           oauthCallbackBaseUrl={oauthCallbackBaseUrl}

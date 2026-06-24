@@ -7,9 +7,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { enableReactActEnvironment, setInputValue } from "@/src/test-utils/jsdom-helpers";
 
 import {
-  ProviderCatalog,
-  availabilityLabel,
-  availabilityTone,
+  IntegrationCatalogPanel,
+  integrationStatusLabel,
   buildCallbackUrl,
   buildDefaultHttpTools,
   buildManagedConnectorPayload,
@@ -19,10 +18,10 @@ import {
   getManagedConnectorProvider,
   requiresManualOAuthClientCredentials,
   usesDynamicOAuthRegistration,
-} from "@/src/components/admin/integrations/provider-catalog";
+} from "@/src/components/admin/integrations/integration-catalog-panel";
 import type {
   ManagedConnectorOption,
-  OAuthProviderCatalogOption,
+  IntegrationCatalogOption,
 } from "@/src/types/integrations-hub";
 
 enableReactActEnvironment();
@@ -45,31 +44,30 @@ const readyManagedConnectors: ManagedConnectorOption[] = [
 
 const oauthCallbackBaseUrl = "https://openhands-integrations-hub.vercel.app/api/oauth";
 
-const providerCatalog: OAuthProviderCatalogOption[] = [
+const integrationCatalog: IntegrationCatalogOption[] = [
   {
     slug: "github",
     name: "GitHub",
     description: "GitHub repositories and pull requests",
     categories: ["Engineering"],
-    authStrategy: "oauth2",
-    availability: "oauth_ready",
-    managedConnectorSlug: "github",
     appUrl: "https://github.com",
     docsUrl: "https://docs.github.com/apps/oauth-apps",
     notes: "Available now as a managed connector.",
     popularityRank: 1,
+    connectionDefaults: {
+      provider: "http",
+      authStrategy: "oauth2",
+    },
   },
   {
     slug: "google-calendar",
     name: "Google Calendar",
     description: "Calendar events and schedules",
     categories: ["Productivity"],
-    authStrategy: "oauth2",
-    availability: "planned",
     docsUrl: "https://developers.google.com/identity/protocols/oauth2",
     notes: "Useful for scheduling workflows.",
     popularityRank: 2,
-    registrationDefaults: {
+    connectionDefaults: {
       provider: "http",
       apiBaseUrl: "https://www.googleapis.com/calendar/v3",
       authorizationUrl: "https://accounts.google.com/o/oauth2/v2/auth",
@@ -86,14 +84,11 @@ const providerCatalog: OAuthProviderCatalogOption[] = [
     name: "HubSpot",
     description: "CRM contacts, companies, deals, and tickets",
     categories: ["CRM"],
-    authStrategy: "oauth2",
-    availability: "oauth_ready",
-    managedConnectorSlug: "hubspot",
     docsUrl:
       "https://developers.hubspot.com/docs/apps/developer-platform/build-apps/integrate-with-the-remote-hubspot-mcp-server",
     notes: "Uses HubSpot's official remote MCP server plus MCP auth apps with PKCE.",
     popularityRank: 3,
-    registrationDefaults: {
+    connectionDefaults: {
       provider: "mcp",
       serverUrl: "https://mcp.hubspot.com",
       authorizationUrl: "https://mcp.hubspot.com/oauth/authorize/user",
@@ -111,13 +106,10 @@ const providerCatalog: OAuthProviderCatalogOption[] = [
     name: "Notion",
     description: "Workspace search, pages, databases, and knowledge management",
     categories: ["Knowledge base"],
-    authStrategy: "oauth2",
-    availability: "oauth_ready",
-    managedConnectorSlug: "notion",
     docsUrl: "https://developers.notion.com/docs/authorization",
     notes: "Uses the official REST OpenAPI schema.",
     popularityRank: 3,
-    registrationDefaults: {
+    connectionDefaults: {
       provider: "http",
       apiBaseUrl: "https://api.notion.com",
       openApiUrl: "https://developers.notion.com/openapi.json",
@@ -131,13 +123,10 @@ const providerCatalog: OAuthProviderCatalogOption[] = [
     name: "Slack",
     description: "Channels, messaging, workflows, canvases, and operational collaboration",
     categories: ["Communication", "Operations"],
-    authStrategy: "oauth2",
-    availability: "oauth_ready",
-    managedConnectorSlug: "slack",
     docsUrl: "https://docs.slack.dev/ai/slack-mcp-server",
     notes: "Uses Slack's official hosted MCP server with confidential OAuth user-token auth.",
     popularityRank: 4,
-    registrationDefaults: {
+    connectionDefaults: {
       provider: "mcp",
       serverUrl: "https://mcp.slack.com/mcp",
       authorizationUrl: "https://slack.com/oauth/v2_user/authorize",
@@ -168,13 +157,10 @@ const providerCatalog: OAuthProviderCatalogOption[] = [
     name: "Webflow",
     description: "CMS items, sites, and web publishing workflows.",
     categories: ["CMS", "Marketing"],
-    authStrategy: "oauth2",
-    availability: "oauth_ready",
-    managedConnectorSlug: "webflow",
     docsUrl: "https://developers.webflow.com/mcp/reference/getting-started",
     notes: "Uses Webflow's hosted MCP server and deployment-scoped OAuth registration.",
     popularityRank: 5,
-    registrationDefaults: {
+    connectionDefaults: {
       provider: "mcp",
       serverUrl: "https://mcp.webflow.com/mcp",
       authorizationUrl: "https://mcp.webflow.com/oauth/authorize",
@@ -190,14 +176,11 @@ const providerCatalog: OAuthProviderCatalogOption[] = [
     name: "Datadog",
     description: "Logs, metrics, monitors, incidents, and observability workflows.",
     categories: ["Observability", "Operations"],
-    authStrategy: "oauth2",
-    availability: "oauth_ready",
-    managedConnectorSlug: "datadog",
     docsUrl: "https://docs.datadoghq.com/bits_ai/mcp_server/setup/",
     notes:
       "Uses Datadog's official hosted MCP server. The default registration targets the US1 endpoint and can be edited for other Datadog sites.",
     popularityRank: 6,
-    registrationDefaults: {
+    connectionDefaults: {
       provider: "mcp",
       serverUrl: "https://mcp.datadoghq.com/api/unstable/mcp-server/mcp",
       authorizationUrl: "https://app.datadoghq.com/oauth2/v1/authorize",
@@ -212,13 +195,10 @@ const providerCatalog: OAuthProviderCatalogOption[] = [
     name: "ElevenLabs",
     description: "Text to speech, voices, transcription, audio generation, and agents",
     categories: ["Audio", "AI"],
-    authStrategy: "api_key",
-    availability: "manual_token",
-    managedConnectorSlug: "elevenlabs",
     docsUrl: "https://elevenlabs.io/docs/api-reference/introduction",
     notes: "Uses the published API schema and user API keys.",
     popularityRank: 5,
-    registrationDefaults: {
+    connectionDefaults: {
       provider: "http",
       authModes: ["api_key"],
       authStrategy: "api_key",
@@ -233,24 +213,22 @@ const providerCatalog: OAuthProviderCatalogOption[] = [
 ];
 
 const getProvider = (slug: string) => {
-  const provider = providerCatalog.find((candidate) => candidate.slug === slug);
+  const provider = integrationCatalog.find((candidate) => candidate.slug === slug);
   if (!provider) {
     throw new Error(`Missing provider: ${slug}`);
   }
   return provider;
 };
 
-const bearerProvider: OAuthProviderCatalogOption = {
+const bearerProvider: IntegrationCatalogOption = {
   slug: "ordinal",
   name: "Ordinal",
   description: "Social scheduling",
   categories: ["Marketing"],
-  authStrategy: "bearer",
-  availability: "manual_token",
   docsUrl: "https://ordinal.app/docs",
   notes: "Uses bearer tokens.",
   popularityRank: 10,
-  registrationDefaults: {
+  connectionDefaults: {
     provider: "mcp",
     authStrategy: "bearer",
     credentialLabel: "Ordinal bearer token",
@@ -260,14 +238,11 @@ const bearerProvider: OAuthProviderCatalogOption = {
   },
 };
 
-describe("provider catalog helper utilities", () => {
-  it("returns the expected availability tone and label for each catalog state", () => {
-    expect(availabilityTone("oauth_ready")).toBe("success");
-    expect(availabilityLabel("oauth_ready")).toBe("OAuth ready");
-    expect(availabilityTone("manual_token")).toBe("default");
-    expect(availabilityLabel("manual_token")).toBe("Manual token today");
-    expect(availabilityTone("planned")).toBe("warning");
-    expect(availabilityLabel("planned")).toBe("Planned");
+describe("integration catalog helper utilities", () => {
+  it("returns the expected integration status label for each auth type", () => {
+    expect(integrationStatusLabel(getProvider("slack"))).toBe("OAuth");
+    expect(integrationStatusLabel(getProvider("elevenlabs"))).toBe("Ready");
+    expect(integrationStatusLabel(getProvider("google-calendar"))).toBe("OAuth");
   });
 
   it("distinguishes dynamic OAuth registration from manual client credentials", () => {
@@ -407,7 +382,7 @@ describe("provider catalog helper utilities", () => {
 
 
 
-describe("ProviderCatalog", () => {
+describe("IntegrationCatalogPanel", () => {
   let container: HTMLDivElement;
   let root: Root;
   let fetchMock: ReturnType<typeof vi.fn>;
@@ -442,8 +417,8 @@ describe("ProviderCatalog", () => {
   it("renders a compact searchable list and lets app admins register a provider in-app", async () => {
     await act(async () => {
       root.render(
-        <ProviderCatalog
-          providerCatalog={providerCatalog}
+        <IntegrationCatalogPanel
+          integrationCatalog={integrationCatalog}
           readyManagedConnectors={readyManagedConnectors}
           canRegisterManagedConnectors
           oauthCallbackBaseUrl={oauthCallbackBaseUrl}
@@ -591,8 +566,8 @@ describe("ProviderCatalog", () => {
 
     await act(async () => {
       root.render(
-        <ProviderCatalog
-          providerCatalog={providerCatalog}
+        <IntegrationCatalogPanel
+          integrationCatalog={integrationCatalog}
           readyManagedConnectors={readyManagedConnectors}
           canRegisterManagedConnectors
           oauthCallbackBaseUrl={oauthCallbackBaseUrl}
@@ -712,8 +687,8 @@ describe("ProviderCatalog", () => {
 
     await act(async () => {
       root.render(
-        <ProviderCatalog
-          providerCatalog={providerCatalog}
+        <IntegrationCatalogPanel
+          integrationCatalog={integrationCatalog}
           readyManagedConnectors={readyManagedConnectors}
           canRegisterManagedConnectors
           oauthCallbackBaseUrl={oauthCallbackBaseUrl}
@@ -815,8 +790,8 @@ describe("ProviderCatalog", () => {
 
     await act(async () => {
       root.render(
-        <ProviderCatalog
-          providerCatalog={providerCatalog}
+        <IntegrationCatalogPanel
+          integrationCatalog={integrationCatalog}
           readyManagedConnectors={readyManagedConnectors}
           canRegisterManagedConnectors
           oauthCallbackBaseUrl={oauthCallbackBaseUrl}
@@ -908,8 +883,8 @@ describe("ProviderCatalog", () => {
 
     await act(async () => {
       root.render(
-        <ProviderCatalog
-          providerCatalog={providerCatalog}
+        <IntegrationCatalogPanel
+          integrationCatalog={integrationCatalog}
           readyManagedConnectors={readyManagedConnectors}
           canRegisterManagedConnectors
           oauthCallbackBaseUrl={oauthCallbackBaseUrl}
@@ -988,8 +963,8 @@ describe("ProviderCatalog", () => {
 
     await act(async () => {
       root.render(
-        <ProviderCatalog
-          providerCatalog={providerCatalog}
+        <IntegrationCatalogPanel
+          integrationCatalog={integrationCatalog}
           readyManagedConnectors={readyManagedConnectors}
           canRegisterManagedConnectors
           oauthCallbackBaseUrl={oauthCallbackBaseUrl}
@@ -1058,8 +1033,8 @@ describe("ProviderCatalog", () => {
   it("does not render legacy Composio MCP template guidance", async () => {
     await act(async () => {
       root.render(
-        <ProviderCatalog
-          providerCatalog={providerCatalog}
+        <IntegrationCatalogPanel
+          integrationCatalog={integrationCatalog}
           readyManagedConnectors={readyManagedConnectors}
           canRegisterManagedConnectors
           oauthCallbackBaseUrl={oauthCallbackBaseUrl}
@@ -1082,8 +1057,8 @@ describe("ProviderCatalog", () => {
   it("requires OAuth client credentials before registering a connector", async () => {
     await act(async () => {
       root.render(
-        <ProviderCatalog
-          providerCatalog={providerCatalog}
+        <IntegrationCatalogPanel
+          integrationCatalog={integrationCatalog}
           readyManagedConnectors={readyManagedConnectors}
           canRegisterManagedConnectors
           oauthCallbackBaseUrl={oauthCallbackBaseUrl}
@@ -1121,8 +1096,8 @@ describe("ProviderCatalog", () => {
   it("shows an access notice instead of the registration form for non-admin users", async () => {
     await act(async () => {
       root.render(
-        <ProviderCatalog
-          providerCatalog={providerCatalog}
+        <IntegrationCatalogPanel
+          integrationCatalog={integrationCatalog}
           readyManagedConnectors={readyManagedConnectors}
         />,
       );

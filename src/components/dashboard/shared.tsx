@@ -54,8 +54,14 @@ export const KeyValueRow = ({ label, value }: KeyValueRowProps) => (
 );
 
 export const getConnectorLogoUrl = (connector: {
+  logoUrl?: string;
   appUrl?: string;
 }): string | null => {
+  const logoUrl = connector.logoUrl?.trim();
+  if (logoUrl) {
+    return logoUrl;
+  }
+
   const appUrl = connector.appUrl?.trim();
   if (!appUrl) {
     return null;
@@ -72,12 +78,16 @@ export const getConnectorLogoUrl = (connector: {
 interface ConnectorLogoProps {
   name: string;
   logoUrl?: string | null;
+  iconBg?: string | null;
+  iconColor?: string | null;
   className?: string;
 }
 
 export const ConnectorLogo = ({
   name,
   logoUrl,
+  iconBg,
+  iconColor,
   className,
 }: ConnectorLogoProps) => {
   const initial = name.trim().charAt(0).toUpperCase() || "?";
@@ -88,13 +98,17 @@ export const ConnectorLogo = ({
         "flex items-center justify-center overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)] text-sm font-semibold text-white",
         className,
       )}
+      style={{
+        backgroundColor: iconBg ?? undefined,
+        color: iconColor ?? undefined,
+      }}
       aria-hidden="true"
     >
       {logoUrl ? (
         <img
           src={logoUrl}
           alt={`${name} logo`}
-          className="h-full w-full object-cover"
+          className="h-full w-full object-contain p-2"
           onError={(event) => {
             const target = event.currentTarget;
             target.style.display = "none";
@@ -125,7 +139,13 @@ export const IntegrationMarketplaceCard = ({
       className="flex w-full cursor-pointer items-center justify-between gap-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)] px-4 py-3 text-left transition-colors hover:bg-[var(--color-bg-active)]"
     >
       <div className="flex min-w-0 items-center gap-3">
-        <ConnectorLogo name={connector.name} logoUrl={logoUrl} className="h-10 w-10" />
+        <ConnectorLogo
+          name={connector.name}
+          logoUrl={logoUrl}
+          iconBg={connector.iconBg}
+          iconColor={connector.iconColor}
+          className="h-10 w-10"
+        />
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <p className="text-sm font-semibold text-white">{connector.name}</p>

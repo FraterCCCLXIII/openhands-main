@@ -3,6 +3,7 @@ import {
   matchesToolSearch,
 } from "@/src/components/integrations/tool-access-controls";
 import { approvalStatusLabel } from "@/src/lib/access-requests";
+import { listIntegrationCatalogOptions } from "@/src/lib/integrations/integration-catalog";
 import {
   matchesSearchQuery,
   normalizeCaseInsensitiveText,
@@ -16,13 +17,12 @@ import type {
   UnusedToolWindowUnit,
 } from "@/src/types/integrations-hub";
 
-const POPULAR_INTEGRATION_SLUGS = [
-  "github",
-  "slack",
-  "notion",
-  "linear",
-  "elevenlabs",
-] as const;
+// Popularity ordering is sourced from @openhands/extensions (popularityRank on
+// each catalog provider) so the hub keeps no provider-specific list.
+const POPULARITY_RANK_BY_SLUG = new Map(
+  listIntegrationCatalogOptions().map((provider) => [provider.slug, provider.popularityRank]),
+);
+const DEFAULT_POPULARITY_RANK = Number.MAX_SAFE_INTEGER;
 
 export type ApprovalRequestFilter = "pending" | "approved" | "denied";
 
@@ -301,12 +301,8 @@ export const buildMarketplaceConnectors = ({
   installedIntegrationKeys: Set<string>;
   search: string;
 }) => {
-  const normalizeRank = (connector: ManagedConnectorOption) => {
-    const explicitIndex = POPULAR_INTEGRATION_SLUGS.indexOf(
-      connector.slug as (typeof POPULAR_INTEGRATION_SLUGS)[number],
-    );
-    return explicitIndex >= 0 ? explicitIndex : POPULAR_INTEGRATION_SLUGS.length + 1;
-  };
+  const normalizeRank = (connector: ManagedConnectorOption) =>
+    POPULARITY_RANK_BY_SLUG.get(connector.slug) ?? DEFAULT_POPULARITY_RANK;
 
   return [...managedConnectors]
     .filter((connector) => !installedIntegrationKeys.has(connector.slug))
@@ -314,8 +310,7 @@ export const buildMarketplaceConnectors = ({
       const rankDelta = normalizeRank(left) - normalizeRank(right);
       return rankDelta !== 0 ? rankDelta : left.name.localeCompare(right.name);
     })
-    .filter((connector) => matchesConnectorSearch(connector, search))
-    .slice(0, 5);
+    .filter((connector) => matchesConnectorSearch(connector, search));
 };
 
 export const buildUnusedToolCandidates = ({
@@ -343,15 +338,40 @@ export const buildUnusedToolCandidates = ({
 export const buildConnectorMap = (connectors: ManagedConnectorOption[]) =>
   new Map(connectors.map((connector) => [connector.slug, connector] as const));
 
-export const resolveIntegrationLogoUrl = ({
+export type ConnectorLogoMetadata = {
+  logoUrl: string | null;
+  iconBg?: string | null;
+  iconColor?: string | null;
+};
+
+const fallbackConnectorLogoInput = (integration: IntegrationSpec) => ({
+  logoUrl:
+    typeof integration.config.logoUrl === "string" ? integration.config.logoUrl.trim() : "",
+  appUrl:
+    typeof integration.config.appUrl === "string"
+      ? integration.config.appUrl.trim()
+      : typeof integration.config.serverUrl === "string"
+        ? integration.config.serverUrl.trim()
+        : typeof integration.config.apiBaseUrl === "string"
+          ? integration.config.apiBaseUrl.trim()
+          : "",
+  iconBg:
+    typeof integration.config.iconBg === "string" ? integration.config.iconBg.trim() : null,
+  iconColor:
+    typeof integration.config.iconColor === "string"
+      ? integration.config.iconColor.trim()
+      : null,
+});
+
+export const resolveIntegrationLogoMetadata = ({
   integration,
   connectorBySlug,
   getConnectorLogoUrl,
 }: {
   integration: IntegrationSpec;
   connectorBySlug: Map<string, ManagedConnectorOption>;
-  getConnectorLogoUrl: (connector: { appUrl?: string }) => string | null;
-}) => {
+  getConnectorLogoUrl: (connector: { logoUrl?: string; appUrl?: string }) => string | null;
+}): ConnectorLogoMetadata => {
   const managedConnectorSlug =
     typeof integration.config.managedConnectorSlug === "string"
       ? integration.config.managedConnectorSlug.trim()
@@ -360,20 +380,26 @@ export const resolveIntegrationLogoUrl = ({
     connectorBySlug.get(managedConnectorSlug) ?? connectorBySlug.get(integration.key.trim());
 
   if (connector) {
-    return getConnectorLogoUrl(connector);
+    return {
+      logoUrl: getConnectorLogoUrl(connector),
+      iconBg: connector.iconBg,
+      iconColor: connector.iconColor,
+    };
   }
 
-  const appUrl =
-    typeof integration.config.appUrl === "string"
-      ? integration.config.appUrl.trim()
-      : typeof integration.config.serverUrl === "string"
-        ? integration.config.serverUrl.trim()
-        : typeof integration.config.apiBaseUrl === "string"
-          ? integration.config.apiBaseUrl.trim()
-          : "";
-
-  return getConnectorLogoUrl({ appUrl });
+  const fallback = fallbackConnectorLogoInput(integration);
+  return {
+    logoUrl: getConnectorLogoUrl(fallback),
+    iconBg: fallback.iconBg,
+    iconColor: fallback.iconColor,
+  };
 };
+
+export const resolveIntegrationLogoUrl = (input: {
+  integration: IntegrationSpec;
+  connectorBySlug: Map<string, ManagedConnectorOption>;
+  getConnectorLogoUrl: (connector: { logoUrl?: string; appUrl?: string }) => string | null;
+}) => resolveIntegrationLogoMetadata(input).logoUrl;
 
 export const buildToolAccessPatch = (
   integrationKey: string,

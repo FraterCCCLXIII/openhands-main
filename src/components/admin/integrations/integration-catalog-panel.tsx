@@ -9,30 +9,11 @@ import { buildAdminSectionHref } from "@/src/lib/admin-routes";
 import { matchesSearchQuery } from "@/src/lib/text-utils";
 import type {
   ManagedConnectorOption,
-  OAuthProviderCatalogOption,
+  IntegrationCatalogOption,
 } from "@/src/types/integrations-hub";
 
-export const availabilityTone = (availability: "oauth_ready" | "manual_token" | "planned") => {
-  switch (availability) {
-    case "oauth_ready":
-      return "success" as const;
-    case "planned":
-      return "warning" as const;
-    default:
-      return "default" as const;
-  }
-};
-
-export const availabilityLabel = (availability: "oauth_ready" | "manual_token" | "planned") => {
-  switch (availability) {
-    case "oauth_ready":
-      return "OAuth ready";
-    case "manual_token":
-      return "Manual token today";
-    case "planned":
-      return "Planned";
-  }
-};
+export const integrationStatusLabel = (provider: IntegrationCatalogOption) =>
+  getProviderAuthStrategy(provider) === "oauth2" ? "OAuth" : "Ready";
 
 interface RegistrationFormState {
   apiBaseUrl: string;
@@ -49,32 +30,32 @@ interface RegistrationFormState {
   message: string;
 }
 
-const getProviderAuthStrategy = (provider: OAuthProviderCatalogOption) =>
-  provider.registrationDefaults?.authStrategy ?? provider.authStrategy;
+const getProviderAuthStrategy = (provider: IntegrationCatalogOption) =>
+  provider.connectionDefaults.authStrategy ?? "oauth2";
 
-const usesOAuthConnector = (provider: OAuthProviderCatalogOption) =>
+const usesOAuthConnector = (provider: IntegrationCatalogOption) =>
   getProviderAuthStrategy(provider) === "oauth2";
 
-export const usesDynamicOAuthRegistration = (provider: OAuthProviderCatalogOption) =>
+export const usesDynamicOAuthRegistration = (provider: IntegrationCatalogOption) =>
   usesOAuthConnector(provider) &&
-  provider.registrationDefaults?.clientAuthentication === "none" &&
-  Boolean(provider.registrationDefaults?.registrationUrl);
+  provider.connectionDefaults?.clientAuthentication === "none" &&
+  Boolean(provider.connectionDefaults?.registrationUrl);
 
-export const requiresManualOAuthClientCredentials = (provider: OAuthProviderCatalogOption) =>
+export const requiresManualOAuthClientCredentials = (provider: IntegrationCatalogOption) =>
   usesOAuthConnector(provider) && !usesDynamicOAuthRegistration(provider);
 
-export const getCredentialCopy = (provider: OAuthProviderCatalogOption) => {
+export const getCredentialCopy = (provider: IntegrationCatalogOption) => {
   const authStrategy = getProviderAuthStrategy(provider);
 
   if (authStrategy === "api_key") {
     return {
       label:
-        provider.registrationDefaults?.credentialLabel ?? `${provider.name} API key`,
+        provider.connectionDefaults?.credentialLabel ?? `${provider.name} API key`,
       placeholder:
-        provider.registrationDefaults?.credentialPlaceholder ??
+        provider.connectionDefaults?.credentialPlaceholder ??
         `Paste your ${provider.name} API key`,
       help:
-        provider.registrationDefaults?.credentialHelp ??
+        provider.connectionDefaults?.credentialHelp ??
         `API key provided by ${provider.name}.`,
     };
   }
@@ -82,30 +63,30 @@ export const getCredentialCopy = (provider: OAuthProviderCatalogOption) => {
   if (authStrategy === "bearer") {
     return {
       label:
-        provider.registrationDefaults?.credentialLabel ?? `${provider.name} bearer token`,
+        provider.connectionDefaults?.credentialLabel ?? `${provider.name} bearer token`,
       placeholder:
-        provider.registrationDefaults?.credentialPlaceholder ??
+        provider.connectionDefaults?.credentialPlaceholder ??
         `Paste your ${provider.name} bearer token`,
       help:
-        provider.registrationDefaults?.credentialHelp ??
+        provider.connectionDefaults?.credentialHelp ??
         `Bearer token for ${provider.name}.`,
     };
   }
 
   return {
-    label: provider.registrationDefaults?.credentialLabel ?? `Connect ${provider.name}`,
+    label: provider.connectionDefaults?.credentialLabel ?? `Connect ${provider.name}`,
     placeholder:
-      provider.registrationDefaults?.credentialPlaceholder ?? `Connect ${provider.name}`,
+      provider.connectionDefaults?.credentialPlaceholder ?? `Connect ${provider.name}`,
     help:
-      provider.registrationDefaults?.credentialHelp ??
+      provider.connectionDefaults?.credentialHelp ??
       `OAuth connection for ${provider.name}.`,
   };
 };
 
 export const createRegistrationFormState = (
-  provider: OAuthProviderCatalogOption,
+  provider: IntegrationCatalogOption,
 ): RegistrationFormState => {
-  const defaults = provider.registrationDefaults;
+  const defaults = provider.connectionDefaults;
 
   return {
     apiBaseUrl: defaults?.apiBaseUrl ?? "",
@@ -123,15 +104,15 @@ export const createRegistrationFormState = (
   };
 };
 
-export const getManagedConnectorProvider = (provider: OAuthProviderCatalogOption) =>
-  provider.registrationDefaults?.provider ??
-  (provider.registrationDefaults?.serverUrl
+export const getManagedConnectorProvider = (provider: IntegrationCatalogOption) =>
+  provider.connectionDefaults?.provider ??
+  (provider.connectionDefaults?.serverUrl
     ? "mcp"
-    : provider.registrationDefaults?.apiBaseUrl || provider.registrationDefaults?.openApiUrl
+    : provider.connectionDefaults?.apiBaseUrl || provider.connectionDefaults?.openApiUrl
       ? "http"
       : "mcp");
 
-const isHttpManagedConnector = (provider: OAuthProviderCatalogOption) =>
+const isHttpManagedConnector = (provider: IntegrationCatalogOption) =>
   getManagedConnectorProvider(provider) === "http";
 
 const parseScopes = (value: string) =>
@@ -140,8 +121,8 @@ const parseScopes = (value: string) =>
     .map((scope) => scope.trim())
     .filter(Boolean);
 
-export const buildDefaultHttpTools = (provider: OAuthProviderCatalogOption) => {
-  const defaults = provider.registrationDefaults;
+export const buildDefaultHttpTools = (provider: IntegrationCatalogOption) => {
+  const defaults = provider.connectionDefaults;
   if (
     !defaults ||
     defaults.openApiUrl ||
@@ -166,18 +147,18 @@ export const buildDefaultHttpTools = (provider: OAuthProviderCatalogOption) => {
   ];
 };
 
-const hasFixedOAuthConfig = (provider: OAuthProviderCatalogOption) =>
+const hasFixedOAuthConfig = (provider: IntegrationCatalogOption) =>
   usesOAuthConnector(provider) &&
   Boolean(
-    provider.registrationDefaults?.authorizationUrl &&
-      provider.registrationDefaults?.tokenUrl,
+    provider.connectionDefaults?.authorizationUrl &&
+      provider.connectionDefaults?.tokenUrl,
   );
 
 export const buildCallbackUrl = (callbackBaseUrl: string, slug: string) =>
   `${callbackBaseUrl || "https://<your-deployment>/api/oauth"}/${slug}/callback`;
 
 export const buildManagedConnectorPayload = (
-  provider: OAuthProviderCatalogOption,
+  provider: IntegrationCatalogOption,
   form: RegistrationFormState,
 ) => {
   const authStrategy = getProviderAuthStrategy(provider);
@@ -190,13 +171,16 @@ export const buildManagedConnectorPayload = (
     slug: provider.slug,
     name: provider.name,
     description: provider.description,
+    logoUrl: provider.logoUrl,
+    iconBg: provider.iconBg,
+    iconColor: provider.iconColor,
     appUrl: provider.appUrl,
     docsUrl: provider.docsUrl,
     categories: provider.categories,
     authModes:
-      provider.registrationDefaults?.authModes?.length &&
-      provider.registrationDefaults.authModes.every(Boolean)
-        ? provider.registrationDefaults.authModes
+      provider.connectionDefaults?.authModes?.length &&
+      provider.connectionDefaults.authModes.every(Boolean)
+        ? provider.connectionDefaults.authModes
         : [authStrategy],
     authStrategy,
     provider: managedConnectorProvider,
@@ -205,36 +189,36 @@ export const buildManagedConnectorPayload = (
     credentialHelp: credentialCopy.help,
     apiBaseUrl:
       managedConnectorProvider === "http"
-        ? form.apiBaseUrl.trim() || provider.registrationDefaults?.apiBaseUrl || ""
+        ? form.apiBaseUrl.trim() || provider.connectionDefaults?.apiBaseUrl || ""
         : undefined,
     serverUrl:
       managedConnectorProvider === "mcp"
-        ? form.serverUrl.trim() || provider.registrationDefaults?.serverUrl || ""
+        ? form.serverUrl.trim() || provider.connectionDefaults?.serverUrl || ""
         : undefined,
     openApiUrl:
       managedConnectorProvider === "http"
-        ? form.openApiUrl.trim() || provider.registrationDefaults?.openApiUrl || undefined
+        ? form.openApiUrl.trim() || provider.connectionDefaults?.openApiUrl || undefined
         : undefined,
     oauthConfig:
       authStrategy === "oauth2"
         ? {
             authorizationUrl:
               form.authorizationUrl.trim() ||
-              provider.registrationDefaults?.authorizationUrl ||
+              provider.connectionDefaults?.authorizationUrl ||
               "",
             tokenUrl:
-              form.tokenUrl.trim() || provider.registrationDefaults?.tokenUrl || "",
+              form.tokenUrl.trim() || provider.connectionDefaults?.tokenUrl || "",
             scopes,
             optionalScopes,
-            scopeSeparator: provider.registrationDefaults?.scopeSeparator,
-            pkce: provider.registrationDefaults?.pkce,
+            scopeSeparator: provider.connectionDefaults?.scopeSeparator,
+            pkce: provider.connectionDefaults?.pkce,
             clientAuthentication:
-              provider.registrationDefaults?.clientAuthentication,
-            registrationUrl: provider.registrationDefaults?.registrationUrl,
+              provider.connectionDefaults?.clientAuthentication,
+            registrationUrl: provider.connectionDefaults?.registrationUrl,
             additionalAuthorizationParams:
-              provider.registrationDefaults?.additionalAuthorizationParams,
+              provider.connectionDefaults?.additionalAuthorizationParams,
             additionalTokenParams:
-              provider.registrationDefaults?.additionalTokenParams,
+              provider.connectionDefaults?.additionalTokenParams,
           }
         : undefined,
     oauthClientId: authStrategy === "oauth2" ? form.oauthClientId.trim() : undefined,
@@ -247,47 +231,50 @@ export const buildManagedConnectorPayload = (
 };
 
 export const buildReadyManagedConnectorOption = (
-  provider: OAuthProviderCatalogOption,
+  provider: IntegrationCatalogOption,
 ): ManagedConnectorOption => {
   const authStrategy = getProviderAuthStrategy(provider);
   const credentialCopy = getCredentialCopy(provider);
 
   return {
-    slug: provider.managedConnectorSlug ?? provider.slug,
+    slug: provider.slug,
     name: provider.name,
     description: provider.description,
+    logoUrl: provider.logoUrl,
+    iconBg: provider.iconBg,
+    iconColor: provider.iconColor,
     appUrl: provider.appUrl,
     toolCount: getManagedConnectorProvider(provider) === "http" ? buildDefaultHttpTools(provider).length : 0,
     categories: provider.categories,
     authModes:
-      provider.registrationDefaults?.authModes?.length &&
-      provider.registrationDefaults.authModes.every(Boolean)
-        ? provider.registrationDefaults.authModes
+      provider.connectionDefaults?.authModes?.length &&
+      provider.connectionDefaults.authModes.every(Boolean)
+        ? provider.connectionDefaults.authModes
         : [authStrategy],
     authStrategy,
     oauthConfigured: true,
     credentialLabel: credentialCopy.label,
     credentialPlaceholder: credentialCopy.placeholder,
     credentialHelp: credentialCopy.help,
-    apiKeyHeaderName: provider.registrationDefaults?.apiKeyHeaderName,
+    apiKeyHeaderName: provider.connectionDefaults?.apiKeyHeaderName,
   };
 };
 
-interface ProviderCatalogProps {
-  providerCatalog: OAuthProviderCatalogOption[];
+interface IntegrationCatalogPanelProps {
+  integrationCatalog: IntegrationCatalogOption[];
   readyManagedConnectors: ManagedConnectorOption[];
   canRegisterManagedConnectors?: boolean;
   oauthCallbackBaseUrl?: string;
   onConnectorRegistered?: (connector: ManagedConnectorOption) => void;
 }
 
-export function ProviderCatalog({
-  providerCatalog,
+export function IntegrationCatalogPanel({
+  integrationCatalog,
   readyManagedConnectors,
   canRegisterManagedConnectors = false,
   oauthCallbackBaseUrl = "",
   onConnectorRegistered,
-}: ProviderCatalogProps) {
+}: IntegrationCatalogPanelProps) {
   const [query, setQuery] = useState("");
   const [expandedSlug, setExpandedSlug] = useState<string | null>(null);
   const [registrationForms, setRegistrationForms] = useState<
@@ -302,7 +289,7 @@ export function ProviderCatalog({
   }, [readyManagedConnectors]);
 
   const updateRegistrationForm = (
-    provider: OAuthProviderCatalogOption,
+    provider: IntegrationCatalogOption,
     updates: Partial<RegistrationFormState>,
   ) => {
     setRegistrationForms((current) => ({
@@ -314,12 +301,12 @@ export function ProviderCatalog({
     }));
   };
 
-  const getRegistrationForm = (provider: OAuthProviderCatalogOption) =>
+  const getRegistrationForm = (provider: IntegrationCatalogOption) =>
     registrationForms[provider.slug] ?? createRegistrationFormState(provider);
 
   const handleRegistrationSubmit = async (
     event: FormEvent<HTMLFormElement>,
-    provider: OAuthProviderCatalogOption,
+    provider: IntegrationCatalogOption,
   ) => {
     event.preventDefault();
 
@@ -329,7 +316,7 @@ export function ProviderCatalog({
 
     if (
       isHttpConnector &&
-      !(currentForm.apiBaseUrl.trim() || provider.registrationDefaults?.apiBaseUrl)
+      !(currentForm.apiBaseUrl.trim() || provider.connectionDefaults?.apiBaseUrl)
     ) {
       updateRegistrationForm(provider, {
         submitting: false,
@@ -379,7 +366,7 @@ export function ProviderCatalog({
         throw new Error(body?.detail || "Failed to register connector.");
       }
 
-      const connectorSlug = provider.managedConnectorSlug ?? provider.slug;
+      const connectorSlug = provider.slug;
       if (body?.oauthConfigured !== false) {
         setReadyConnectorSlugs((current) => new Set([...current, connectorSlug]));
         onConnectorRegistered?.(buildReadyManagedConnectorOption(provider));
@@ -404,7 +391,7 @@ export function ProviderCatalog({
 
   const filteredProviders = useMemo(
     () =>
-      providerCatalog.filter((provider) =>
+      integrationCatalog.filter((provider) =>
         matchesSearchQuery(
           [
             provider.name,
@@ -416,7 +403,7 @@ export function ProviderCatalog({
           query,
         ),
       ),
-    [providerCatalog, query],
+    [integrationCatalog, query],
   );
 
   return (
@@ -428,7 +415,7 @@ export function ProviderCatalog({
             type="search"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search by provider, category, or status"
+            placeholder="Search by integration, category, or status"
             className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-subtle)] px-3 py-2 text-sm text-white outline-none placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-accent)]"
           />
         </label>
@@ -443,7 +430,7 @@ export function ProviderCatalog({
         <div className="overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] divide-y divide-[var(--color-border)]">
           {filteredProviders.map((provider) => {
             const authStrategy = getProviderAuthStrategy(provider);
-            const connectorSlug = provider.managedConnectorSlug ?? provider.slug;
+            const connectorSlug = provider.slug;
             const isReadyNow = readyConnectorSlugs.has(connectorSlug);
             const isExpanded = expandedSlug === provider.slug;
             const registrationForm = getRegistrationForm(provider);
@@ -466,7 +453,7 @@ export function ProviderCatalog({
                   <span className="shrink-0 text-[var(--color-text-muted)]">({provider.slug})</span>
                   <span className="shrink-0 text-[var(--color-text-base)]">—</span>
                   <span className="shrink-0 text-[var(--color-text-base)]">
-                    {availabilityLabel(provider.availability)}
+                    {integrationStatusLabel(provider)}
                   </span>
                   {isReadyNow ? (
                     <span className="shrink-0 text-[var(--color-accent)]">— Ready now</span>
@@ -486,8 +473,8 @@ export function ProviderCatalog({
                       {provider.categories.map((category) => (
                         <Badge key={`${provider.slug}-${category}`}>{category}</Badge>
                       ))}
-                      <Badge tone={availabilityTone(provider.availability)}>
-                        {availabilityLabel(provider.availability)}
+                      <Badge tone="success">
+                        {integrationStatusLabel(provider)}
                       </Badge>
                       <Badge>{authStrategy}</Badge>
                       {isReadyNow ? <Badge tone="success">Ready now</Badge> : null}
@@ -543,8 +530,8 @@ export function ProviderCatalog({
                             }
                             placeholder={
                               isHttpConnector
-                                ? provider.registrationDefaults?.apiBaseUrl ?? "https://api.example.com"
-                                : provider.registrationDefaults?.serverUrl ?? "https://mcp.example.com"
+                                ? provider.connectionDefaults?.apiBaseUrl ?? "https://api.example.com"
+                                : provider.connectionDefaults?.serverUrl ?? "https://mcp.example.com"
                             }
                             className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-white outline-none placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-accent)]"
                           />
@@ -562,18 +549,18 @@ export function ProviderCatalog({
                         ) : null}
                         {isHttpConnector &&
                         !registrationForm.openApiUrl &&
-                        provider.registrationDefaults?.toolName &&
-                        provider.registrationDefaults?.requestMethod &&
-                        provider.registrationDefaults?.requestPath ? (
+                        provider.connectionDefaults?.toolName &&
+                        provider.connectionDefaults?.requestMethod &&
+                        provider.connectionDefaults?.requestPath ? (
                           <div className="md:col-span-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-[11px] leading-5 text-[var(--color-text-base)]">
                             <p>
                               Starter API tool:
                               <code className="mx-1 text-white">
-                                {provider.registrationDefaults.toolName}
+                                {provider.connectionDefaults.toolName}
                               </code>
                               will call
                               <code className="mx-1 text-white">
-                                {provider.registrationDefaults.requestMethod} {provider.registrationDefaults.requestPath}
+                                {provider.connectionDefaults.requestMethod} {provider.connectionDefaults.requestPath}
                               </code>
                               until you replace it with a richer generated catalog or additional custom tool templates.
                             </p>

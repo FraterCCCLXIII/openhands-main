@@ -35,6 +35,7 @@ const connectors: ManagedConnectorOption[] = [
     slug: "slack",
     name: "Slack",
     description: "Chat",
+    logoUrl: "https://cdn.simpleicons.org/slack/FFFFFF",
     appUrl: "https://slack.com",
     toolCount: 10,
     categories: ["Communication"],
@@ -167,9 +168,9 @@ describe("dashboard-workspace-utils", () => {
     });
 
     expect(results.map((connector) => connector.slug)).toEqual([
+      "airtable",
       "notion",
       "linear",
-      "airtable",
     ]);
   });
 
@@ -408,6 +409,14 @@ describe("dashboard-workspace-utils", () => {
     ]);
 
     const connectorBySlug = buildConnectorMap(connectors);
+    expect(getConnectorLogoUrl(connectors[0]!)).toBe("https://cdn.simpleicons.org/slack/FFFFFF");
+    expect(
+      resolveIntegrationLogoUrl({
+        integration: integrations[0]!,
+        connectorBySlug,
+        getConnectorLogoUrl,
+      }),
+    ).toBe("https://cdn.simpleicons.org/slack/FFFFFF");
     expect(
       resolveIntegrationLogoUrl({
         integration: integrationsWithVariants[1]!,

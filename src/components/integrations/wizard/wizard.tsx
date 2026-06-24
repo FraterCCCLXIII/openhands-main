@@ -15,7 +15,6 @@ import {
 } from "@/src/components/integrations/wizard/shared";
 import { useWizardState } from "@/src/components/integrations/wizard/use-wizard-state";
 import { Card } from "@/src/components/ui/card";
-import { filterReadyManagedConnectors } from "@/src/lib/integrations/connector-readiness";
 import type {
   ManagedConnectorOption,
   IntegrationConnectionStatus,
@@ -56,7 +55,7 @@ export const IntegrationWizard = ({
   });
 
   const managedConnectors = useMemo(
-    () => filterReadyManagedConnectors(managedConnectorsQuery.data ?? []),
+    () => managedConnectorsQuery.data ?? [],
     [managedConnectorsQuery.data],
   );
 
