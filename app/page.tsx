@@ -51,7 +51,7 @@ export default function HomePage() {
               OpenHands Integrations Hub
             </h1>
             <p className="text-lg leading-8 text-[var(--color-text-base)]">
-              A unified endpoint and admin workspace for AI agents to access APIs and MCP tools with agent-class policies, temporary approvals, and persistent integration storage.
+              A unified endpoint and admin workspace for AI agents to access APIs and MCP tools with temporary approvals, permission profiles, and persistent integration storage.
             </p>
           </div>
           <div className="flex flex-wrap gap-3">

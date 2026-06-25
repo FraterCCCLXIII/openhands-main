@@ -38,7 +38,6 @@ def setup_function() -> None:
     reset_config()
 
     repository.oauth_states.clear()
-    repository.policies.clear()
     repository.temporary_grants.clear()
     repository.tool_invocations.clear()
     repository.permission_profiles.clear()
@@ -624,7 +623,7 @@ def test_dynamic_oauth_client_registration_for_public_clients(
         thread.join(timeout=2)
 
 
-def test_approval_required_requests_are_deduplicated_and_policy_denials_do_not_create_requests(
+def test_approval_required_requests_are_deduplicated(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:
     config_env("INTHUB_DISABLE_AUTH", "true")
@@ -642,13 +641,7 @@ def test_approval_required_requests_are_deduplicated_and_policy_denials_do_not_c
                 "accessMode": "approval_required",
                 "executionMode": "mock",
                 "mockResponse": {"ok": True},
-            },
-            "policy_limited": {
-                "name": "policy_limited",
-                "description": "Policy limited",
-                "executionMode": "mock",
-                "mockResponse": {"ok": True},
-            },
+            }
         },
     }
     assert client.post("/api/integrations", json=integration).status_code == 200
@@ -674,23 +667,6 @@ def test_approval_required_requests_are_deduplicated_and_policy_denials_do_not_c
     assert len(requests) == 1
     assert requests[0]["toolName"] == "needs_approval"
     assert all(requests[0]["id"] in message for message in denial_messages)
-
-    assert (
-        client.put("/api/agent-classes/developer", json={"rules": []}).status_code
-        == 200
-    )
-    denied = client.post(
-        "/api/context/approval-api/policy_limited",
-        headers={"Authorization": f"Bearer {agent_key}"},
-        json={
-            "agentId": "agent-1",
-            "agentClass": "developer",
-            "payload": {},
-            "scopes": [],
-        },
-    )
-    assert denied.status_code == 403
-    assert len(client.get("/api/case-by-case-approvals").json()) == 1
 
 
 def test_repository_uses_owner_header_identity(
@@ -1825,63 +1801,6 @@ def test_case_by_case_approvals_are_scoped_by_in_app_notification_target(
 
     assert [request["id"] for request in requests] == ["req-approved"]
     assert requests[0]["status"] == "approved"
-
-
-def test_agent_class_policy_is_persisted_and_enforced(
-    config_env: ConfigEnvFixture, monkeypatch
-) -> None:
-    config_env("INTHUB_DISABLE_AUTH", "true")
-    client = TestClient(app)
-    integration = {
-        "key": "policy-demo",
-        "name": "Policy demo",
-        "kind": "api",
-        "provider": "mock",
-        "authStrategy": "none",
-        "tools": {
-            "allowed": {
-                "name": "allowed",
-                "executionMode": "mock",
-                "mockResponse": {"allowed": True},
-            },
-            "blocked": {
-                "name": "blocked",
-                "executionMode": "mock",
-                "mockResponse": {"blocked": True},
-            },
-        },
-    }
-    assert client.post("/api/integrations", json=integration).status_code == 200
-    policy = client.put(
-        "/api/agent-classes/reviewer",
-        json={
-            "rules": [
-                {
-                    "integrationKey": "policy-demo",
-                    "toolNames": ["allowed"],
-                    "scopes": [],
-                    "enabled": True,
-                }
-            ]
-        },
-    )
-    assert policy.status_code == 200
-    assert policy.json()["rules"][0]["toolNames"] == ["allowed"]
-    agent_key = client.get("/api/user/agent-key").json()["apiKey"]
-
-    allowed = client.post(
-        "/api/context/policy-demo/allowed",
-        headers={"Authorization": f"Bearer {agent_key}"},
-        json={"agentClass": "reviewer", "payload": {}, "scopes": []},
-    )
-    blocked = client.post(
-        "/api/context/policy-demo/blocked",
-        headers={"Authorization": f"Bearer {agent_key}"},
-        json={"agentClass": "reviewer", "payload": {}, "scopes": []},
-    )
-    assert allowed.status_code == 200
-    assert blocked.status_code == 403
-    assert "agent class policy" in blocked.json()["detail"]
 
 
 def test_disable_unused_tools_uses_invocation_history(

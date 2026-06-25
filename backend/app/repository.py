@@ -149,7 +149,6 @@ class Repository:
     admin_keys: dict[str, str] = field(default_factory=dict)
     oauth_states: dict[str, dict[str, Any]] = field(default_factory=dict)
     connections: dict[tuple[str, str], dict[str, Any]] = field(default_factory=dict)
-    policies: dict[str, dict[str, Any]] = field(default_factory=dict)
     temporary_grants: dict[str, dict[str, Any]] = field(default_factory=dict)
     tool_invocations: list[dict[str, Any]] = field(default_factory=list)
     permission_profiles: dict[str, dict[str, PermissionProfile]] = field(
@@ -1326,39 +1325,6 @@ class Repository:
             f"DELETE FROM {table} WHERE owner_id = %s RETURNING owner_id", (owner_id,)
         )
         return bool(rows)
-
-    def upsert_policy(
-        self, agent_class: str, rules: list[dict[str, Any]]
-    ) -> dict[str, Any]:
-        policy = {"agentClass": agent_class, "rules": rules}
-        if self.database_url:
-            self.execute_db(
-                """INSERT INTO agent_class_policies (agent_class, rules, updated_at)
-                VALUES (%s, %s, NOW())
-                ON CONFLICT (agent_class) DO UPDATE SET rules = EXCLUDED.rules, updated_at = NOW()""",
-                (agent_class, Jsonb(rules)),
-            )
-        else:
-            self.policies[agent_class] = policy
-        return policy
-
-    def get_policy(self, agent_class: str | None) -> dict[str, Any] | None:
-        if not agent_class:
-            return None
-        if self.database_url:
-            rows = self.db_rows(
-                "SELECT agent_class, rules FROM agent_class_policies WHERE agent_class = %s",
-                (agent_class,),
-            )
-            return (
-                {
-                    "agentClass": rows[0]["agent_class"],
-                    "rules": rows[0].get("rules") or [],
-                }
-                if rows
-                else None
-            )
-        return self.policies.get(agent_class)
 
     def list_temporary_grants(self) -> list[dict[str, Any]]:
         if self.database_url:

@@ -51,7 +51,6 @@ ROUTES = [
     ("DELETE", "/api/admin/integrations/{integrationKey}"),
     ("DELETE", "/api/admin/managed-connectors/{slug}"),
     ("POST", "/api/admin/managed-connectors/{slug}/functions"),
-    ("PUT", "/api/agent-classes/{agentClass}"),
     ("POST", "/api/case-by-case-approvals/{requestId}/approve"),
     ("POST", "/api/case-by-case-approvals/{requestId}/reject"),
     ("DELETE", "/api/integrations/{integrationKey}"),

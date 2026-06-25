@@ -34,7 +34,6 @@ def setup_test_env(config_env: ConfigEnvFixture):
     repository.admin_keys.clear()
     repository.connections.clear()
     repository.oauth_states.clear()
-    repository.policies.clear()
     repository.temporary_grants.clear()
     repository.tool_invocations.clear()
     repository.profile_agent_keys.clear()
@@ -162,8 +161,6 @@ def body_for(path: str) -> object:
         return {"durationMinutes": 60}
     if path.endswith("/reject"):
         return {}
-    if path == "/api/agent-classes/{agentClass}":
-        return {"rules": []}
     if path in {
         "/api/integrations",
         "/api/user/integrations",

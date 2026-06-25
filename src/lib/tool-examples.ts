@@ -110,14 +110,14 @@ export const selectExampleIntegration = (integrations: IntegrationSpec[]) =>
 
 export const buildPermissionNote = (toolSpec?: ToolSpec) => {
   if (!toolSpec) {
-    return "Enabled tools are callable by default unless you configure an agent-class policy to narrow access; case-by-case tools still need a temporary approval grant.";
+    return "Enabled tools are callable by default; case-by-case tools still need a temporary approval grant.";
   }
 
   if (getToolAccessMode(toolSpec) === "approval_required") {
     return "This sample tool is marked case-by-case, so it returns a permission prompt until a temporary approval grant is active for the chosen agent.";
   }
 
-  return "Enabled tools are callable by default unless you configure an agent-class policy to narrow access for that agent class.";
+  return "Enabled tools are callable by default unless you mark them for case-by-case approval.";
 };
 
 export { getToolAccessMode };

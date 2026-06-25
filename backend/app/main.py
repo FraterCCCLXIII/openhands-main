@@ -139,7 +139,7 @@ def context_openapi(
             paths[f"/api/context/{integration.key}/{tool.name}"] = {
                 "post": {
                     "summary": tool.description or tool.name,
-                    "description": "Invocation identity is optional; agentId and agentClass default to null when omitted. Enabled tools are callable by default unless you configure an agent-class policy to narrow access.",
+                    "description": "Invocation identity is optional; agentId and agentClass default to null when omitted. Enabled tools are callable by default unless you mark them for case-by-case approval.",
                     "requestBody": {
                         "required": True,
                         "content": {
@@ -1028,30 +1028,6 @@ def active_temporary_grant(
     return None
 
 
-def policy_allows(
-    policy: dict[str, Any] | None,
-    integration: IntegrationSpec,
-    tool: ToolSpec,
-    scopes: list[str],
-) -> bool:
-    if not policy:
-        return True
-    fine_grained = integration.fineGrainedPermissions and tool.fineGrainedPermissions
-    for rule in policy.get("rules") or []:
-        if not rule.get("enabled", True):
-            continue
-        if rule.get("integrationKey") != integration.key:
-            continue
-        tool_names = rule.get("toolNames") or []
-        if fine_grained and tool_names and tool.name not in tool_names:
-            continue
-        rule_scopes = rule.get("scopes") or []
-        if rule_scopes and not all(scope in rule_scopes for scope in scopes):
-            continue
-        return True
-    return False
-
-
 def ensure_pending_access_request(
     owner: str,
     integration: IntegrationSpec,
@@ -1137,24 +1113,6 @@ def invoke_enabled_tool(
             "Human approval is required before calling this tool.",
             True,
             approval_url,
-        )
-
-    policy = repository.get_policy(agent_class) if agent_class else None
-    if (
-        tool.accessMode != "approval_required"
-        and policy
-        and not policy_allows(policy, integration, tool, scopes)
-        and not grant
-    ):
-        deny_tool_invocation(
-            owner,
-            integration,
-            tool,
-            scopes,
-            payload,
-            agent_id,
-            agent_class,
-            "Permission required by agent class policy.",
         )
 
     tool.invocationCount = (tool.invocationCount or 0) + 1
@@ -1404,7 +1362,6 @@ def requires_dashboard_session(path: str, method: str) -> bool:
         "/api/oauth/connections",
         "/api/notifications",
         "/api/permission-profiles",
-        "/api/agent-classes/{agentClass}",
     }:
         return True
     if path.startswith("/api/permission-profiles/"):
@@ -2463,22 +2420,6 @@ async def fastapi_handler(request: Request):
         if request.headers.get("authorization") != f"Bearer {secret}":
             raise HTTPException(status_code=401, detail="Unauthorized")
         return {"purged": repository.purge_expired_grants()}
-
-    if path == "/api/agent-classes/{agentClass}":
-        rules = body.get("rules", []) if isinstance(body, dict) else []
-        if not isinstance(rules, list):
-            raise HTTPException(status_code=400, detail="Policy rules must be a list.")
-        normalized_rules = [
-            {
-                "integrationKey": str(rule.get("integrationKey") or ""),
-                "toolNames": [str(item) for item in (rule.get("toolNames") or [])],
-                "scopes": [str(item) for item in (rule.get("scopes") or [])],
-                "enabled": bool(rule.get("enabled", True)),
-            }
-            for rule in rules
-            if isinstance(rule, dict) and str(rule.get("integrationKey") or "").strip()
-        ]
-        return repository.upsert_policy(params["agentClass"], normalized_rules)
 
     if path == "/api/integrations" or path == "/api/user/integrations":
         if method == "GET":
