@@ -22,8 +22,13 @@ const ADMIN_SECTION_PATHS: Record<AdminSection, string> = {
 export const getAdminSectionPath = (section: AdminSection) =>
   ADMIN_SECTION_PATHS[section];
 
+const normalizeDashboardPath = (pathname: string) => {
+  const pathOnly = pathname.split(/[?#]/, 1)[0] || "/";
+  return pathOnly === "/" ? pathOnly : pathOnly.replace(/\/+$/, "");
+};
+
 export const getAdminSectionFromPath = (pathname: string): AdminSection => {
-  switch (pathname) {
+  switch (normalizeDashboardPath(pathname)) {
     case "/profile":
       return "profile";
     case "/agent-connection":

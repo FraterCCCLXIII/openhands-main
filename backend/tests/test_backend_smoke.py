@@ -564,6 +564,19 @@ def test_oauth_start_uses_proxy_scopes_and_additional_params(
     assert query["optional_scope"] == ["extra,legacy"]
     assert query["audience"] == ["api"]
 
+    json_start = client.get(
+        "/api/oauth/oauth-params/start",
+        headers={"Accept": "application/json"},
+    )
+    assert json_start.status_code == 200
+    json_location = json_start.json()["redirectUrl"]
+    assert urllib.parse.urlparse(json_location).netloc == "auth.example"
+    json_query = urllib.parse.parse_qs(urllib.parse.urlparse(json_location).query)
+    assert json_query["redirect_uri"] == [
+        "https://stable.example.dev/api/oauth/oauth-params/callback"
+    ]
+    assert json_query["scope"] == ["read,write"]
+
 
 def test_dynamic_oauth_client_registration_for_public_clients(
     config_env: ConfigEnvFixture, monkeypatch

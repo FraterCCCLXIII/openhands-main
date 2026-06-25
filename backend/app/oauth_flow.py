@@ -257,8 +257,8 @@ def ensure_managed_oauth_client(connector: ManagedConnector) -> ManagedConnector
 
 
 def start_oauth_redirect(
-    request: Request, provider: str, owner: str
-) -> RedirectResponse:
+    request: Request, provider: str, owner: str, *, response_as_json: bool = False
+) -> RedirectResponse | dict[str, str]:
     connector = get_managed_connector(provider)
     if not connector or not connector.oauthConfig:
         raise HTTPException(
@@ -322,9 +322,12 @@ def start_oauth_redirect(
         None,
         oauth_expiry(),
     )
-    return RedirectResponse(
+    redirect_url = (
         f"{connector.oauthConfig['authorizationUrl']}?{urllib.parse.urlencode(query)}"
     )
+    if response_as_json:
+        return {"redirectUrl": redirect_url}
+    return RedirectResponse(redirect_url)
 
 
 def exchange_oauth_code(provider: str, state: str, code: str) -> dict[str, Any]:

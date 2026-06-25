@@ -2429,7 +2429,14 @@ async def fastapi_handler(request: Request):
         return repository.list_notifications()
 
     if path == "/api/oauth/{provider}/start":
-        return start_oauth_redirect(request, params["provider"], owner)
+        accepts_json = "application/json" in request.headers.get("accept", "")
+        return start_oauth_redirect(
+            request,
+            params["provider"],
+            owner,
+            response_as_json=accepts_json
+            or request.query_params.get("response") == "json",
+        )
 
     if path == "/api/oauth/{provider}/callback":
         provider = params["provider"]

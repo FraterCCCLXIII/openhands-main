@@ -5,6 +5,10 @@ import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ConnectStep } from "@/src/components/integrations/wizard/connect-step";
+import {
+  clearStoredOpenHandsToken,
+  setStoredOpenHandsToken,
+} from "@/src/lib/cloud-auth-storage";
 import type {
   ManagedConnectorOption,
   IntegrationConnectionStatus,
@@ -209,6 +213,20 @@ const renderConnectStep = async (options: RenderOptions = {}) => {
   };
 };
 
+const mockOAuthStartResponse = (
+  redirectUrl = "https://auth.example/authorize?state=test",
+) => {
+  const fetchMock = vi.fn(
+    async (_input: RequestInfo | URL, _init?: RequestInit) =>
+      new Response(JSON.stringify({ redirectUrl }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }),
+  );
+  vi.stubGlobal("fetch", fetchMock);
+  return fetchMock;
+};
+
 describe("ConnectStep", () => {
   const originalLocation = window.location;
 
@@ -220,6 +238,8 @@ describe("ConnectStep", () => {
   });
 
   afterEach(() => {
+    clearStoredOpenHandsToken();
+    vi.unstubAllGlobals();
     Object.defineProperty(window, "location", {
       configurable: true,
       value: originalLocation,
@@ -389,7 +409,11 @@ describe("ConnectStep", () => {
     await enabled.cleanup();
   });
 
-  it("starts the per-user OAuth flow for managed connectors", async () => {
+  it("starts the per-user OAuth flow with the stored OpenHands token", async () => {
+    setStoredOpenHandsToken("cloud-token-123");
+    const fetchMock = mockOAuthStartResponse(
+      "https://auth.example/authorize?state=oauth-state",
+    );
     const { container, cleanup } = await renderConnectStep({
       draft: {
         ...baseManagedDraft,
@@ -415,9 +439,14 @@ describe("ConnectStep", () => {
       connectButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
 
-    expect(window.location.href).toBe(
+    expect(fetchMock).toHaveBeenCalledWith(
       "/api/oauth/notion/start?integrationKey=notion-workspace&redirectTo=%2Fintegrations%3FshowIntegrationWizard%3D1%26managedConnector%3Dnotion",
+      expect.objectContaining({ headers: expect.any(Headers) }),
     );
+    const headers = fetchMock.mock.calls[0]?.[1]?.headers as Headers;
+    expect(headers.get("Accept")).toBe("application/json");
+    expect(headers.get("Authorization")).toBe("Bearer cloud-token-123");
+    expect(window.location.href).toBe("https://auth.example/authorize?state=oauth-state");
 
     await cleanup();
   });
@@ -501,6 +530,10 @@ describe("ConnectStep", () => {
   });
 
   it("shows connected OAuth state, expiry details, and reconnects with the connector slug fallback", async () => {
+    setStoredOpenHandsToken("cloud-token-456");
+    const fetchMock = mockOAuthStartResponse(
+      "https://auth.example/authorize?state=reconnect-state",
+    );
     const { container, cleanup } = await renderConnectStep({
       draft: {
         ...baseManagedDraft,
@@ -537,8 +570,12 @@ describe("ConnectStep", () => {
       reconnectButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
 
-    expect(window.location.href).toBe(
+    expect(fetchMock).toHaveBeenCalledWith(
       "/api/oauth/notion/start?integrationKey=notion&redirectTo=%2Fprofile%3FshowIntegrationWizard%3D1%26managedConnector%3Dnotion",
+      expect.objectContaining({ headers: expect.any(Headers) }),
+    );
+    expect(window.location.href).toBe(
+      "https://auth.example/authorize?state=reconnect-state",
     );
 
     await cleanup();

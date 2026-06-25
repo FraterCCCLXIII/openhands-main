@@ -1,6 +1,7 @@
 import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
 import { buildAdminSectionHref, type AdminSection } from "@/src/lib/admin-routes";
+import { fetchJson } from "@/src/lib/fetch-json";
 import type {
   ManagedConnectorOption,
   IntegrationConnectionStatus,
@@ -33,6 +34,56 @@ interface ConnectStepProps {
   onConnectorSearchChange: (value: string) => void;
   onDiscover: () => void;
 }
+
+interface OAuthStartResponse {
+  redirectUrl: string;
+}
+
+const buildOAuthStartPath = ({
+  provider,
+  integrationKey,
+  redirectSection,
+  managedConnector,
+}: {
+  provider: string;
+  integrationKey: string;
+  redirectSection: AdminSection;
+  managedConnector: string;
+}) =>
+  `/api/oauth/${provider}/start?integrationKey=${encodeURIComponent(
+    integrationKey,
+  )}&redirectTo=${encodeURIComponent(
+    buildAdminSectionHref(redirectSection, {
+      showIntegrationWizard: "1",
+      managedConnector,
+    }),
+  )}`;
+
+const startOAuthConnection = async ({
+  provider,
+  integrationKey,
+  redirectSection,
+  managedConnector,
+}: {
+  provider: string;
+  integrationKey: string;
+  redirectSection: AdminSection;
+  managedConnector: string;
+}) => {
+  const response = await fetchJson<OAuthStartResponse>(
+    buildOAuthStartPath({
+      provider,
+      integrationKey,
+      redirectSection,
+      managedConnector,
+    }),
+    { headers: { Accept: "application/json" } },
+  );
+  if (!response.redirectUrl) {
+    throw new Error("OAuth start response did not include a redirect URL.");
+  }
+  window.location.href = response.redirectUrl;
+};
 
 export const ConnectStep = ({
   managedConnectors,
@@ -142,15 +193,19 @@ export const ConnectStep = ({
                         className="h-9 rounded-lg px-4 text-xs"
                         disabled={!draft.managedConnectorSlug.trim() || !oauthConnectionEnabled}
                         onClick={() => {
-                          window.location.href = `/api/oauth/${selectedConnector.slug}/start?integrationKey=${encodeURIComponent(
-                            draft.key.trim() || selectedConnector.slug,
-                          )}&redirectTo=${encodeURIComponent(
-                            buildAdminSectionHref(redirectSection, {
-                              showIntegrationWizard: "1",
-                              managedConnector:
-                                draft.managedConnectorSlug || selectedConnector.slug,
-                            }),
-                          )}`;
+                          void startOAuthConnection({
+                            provider: selectedConnector.slug,
+                            integrationKey: draft.key.trim() || selectedConnector.slug,
+                            redirectSection,
+                            managedConnector:
+                              draft.managedConnectorSlug || selectedConnector.slug,
+                          }).catch((error: unknown) => {
+                            window.alert(
+                              error instanceof Error
+                                ? error.message
+                                : "Failed to start OAuth flow.",
+                            );
+                          });
                         }}
                       >
                         {!oauthConnectionEnabled
