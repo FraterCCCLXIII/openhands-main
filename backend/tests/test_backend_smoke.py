@@ -669,6 +669,78 @@ def test_approval_required_requests_are_deduplicated(
     assert all(requests[0]["id"] in message for message in denial_messages)
 
 
+def test_temporary_grants_are_owner_scoped(
+    config_env: ConfigEnvFixture, monkeypatch
+) -> None:
+    config_env("INTHUB_DISABLE_AUTH", "true")
+    config_env("APP_ADMIN_EMAILS", "owner-a@example.com,owner-b@example.com")
+    client = TestClient(app)
+    integration = {
+        "key": "grant-api",
+        "name": "Grant API",
+        "kind": "api",
+        "provider": "mock",
+        "authStrategy": "none",
+        "tools": {
+            "call": {
+                "name": "call",
+                "description": "Call",
+                "accessMode": "approval_required",
+                "executionMode": "mock",
+                "mockResponse": {"ok": True},
+            }
+        },
+    }
+    owner_a = {"X-Owner-Id": "owner-a@example.com"}
+    owner_b = {"X-Owner-Id": "owner-b@example.com"}
+    assert (
+        client.post("/api/integrations", headers=owner_a, json=integration).status_code
+        == 200
+    )
+    assert (
+        client.post("/api/integrations", headers=owner_b, json=integration).status_code
+        == 200
+    )
+    key_a = client.get("/api/user/agent-key", headers=owner_a).json()["apiKey"]
+    key_b = client.get("/api/user/agent-key", headers=owner_b).json()["apiKey"]
+    payload = {
+        "agentId": "agent-1",
+        "agentClass": "developer",
+        "payload": {},
+        "scopes": [],
+    }
+
+    denied_a = client.post(
+        "/api/context/grant-api/call",
+        headers={"Authorization": f"Bearer {key_a}"},
+        json=payload,
+    )
+    assert denied_a.status_code == 403
+    request_id = client.get("/api/case-by-case-approvals", headers=owner_a).json()[0][
+        "id"
+    ]
+    assert (
+        client.post(
+            f"/api/case-by-case-approvals/{request_id}/approve", headers=owner_a
+        ).status_code
+        == 200
+    )
+
+    allowed_a = client.post(
+        "/api/context/grant-api/call",
+        headers={"Authorization": f"Bearer {key_a}"},
+        json=payload,
+    )
+    denied_b = client.post(
+        "/api/context/grant-api/call",
+        headers={"Authorization": f"Bearer {key_b}"},
+        json=payload,
+    )
+
+    assert allowed_a.status_code == 200
+    assert denied_b.status_code == 403
+
+
 def test_repository_uses_owner_header_identity(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:
@@ -877,7 +949,7 @@ def test_dashboard_key_routes_accept_openhands_bearer_token(
     )
 
     assert response.status_code == 200
-    assert response.json()["ownerId"] == "user@example.com"
+    assert response.json()["ownerId"] == "user-1:org-1"
     assert calls == [
         {
             "url": "https://staging.all-hands.dev/api/v1/users/me",
@@ -911,10 +983,130 @@ def test_auth_session_reports_openhands_admin_flag(
 
     assert response.status_code == 200
     assert response.json()["user"] == {
+        "id": "admin-1",
         "name": "admin@example.com",
         "email": "admin@example.com",
+        "ownerId": "admin-1:org-1",
+        "orgId": "org-1",
+        "orgName": None,
+        "role": "owner",
+        "permissions": ["manage_items"],
         "isAdmin": True,
     }
+
+
+def test_personal_org_normalizes_to_null_and_uses_env_admins(
+    config_env: ConfigEnvFixture, monkeypatch
+) -> None:
+    config_env("INTHUB_DISABLE_AUTH")
+    config_env("INTHUB_OPENHANDS_BASE_URL", "https://staging.all-hands.dev")
+    config_env("APP_ADMIN_EMAILS", "personal@example.com")
+    _patch_openhands_user_me(
+        monkeypatch,
+        {
+            "id": "user-personal",
+            "org_id": "user-personal",
+            "email": "Personal@Example.com",
+            "role": "owner",
+            "permissions": ["manage_items"],
+        },
+    )
+
+    response = TestClient(app).get(
+        "/api/auth/session", headers={"Authorization": "Bearer personal-token"}
+    )
+
+    assert response.status_code == 200
+    assert response.json()["user"]["ownerId"] == "user-personal:null"
+    assert response.json()["user"]["orgId"] is None
+    assert response.json()["user"]["isAdmin"] is True
+
+
+def test_personal_org_owner_is_not_admin_without_env_allowlist(
+    config_env: ConfigEnvFixture, monkeypatch
+) -> None:
+    config_env("INTHUB_DISABLE_AUTH")
+    config_env("INTHUB_OPENHANDS_BASE_URL", "https://staging.all-hands.dev")
+    config_env("APP_ADMIN_EMAILS")
+    _patch_openhands_user_me(
+        monkeypatch,
+        {
+            "id": "user-personal",
+            "org_id": "user-personal",
+            "email": "Personal@Example.com",
+            "role": "owner",
+            "permissions": ["manage_items"],
+        },
+    )
+
+    response = TestClient(app).get(
+        "/api/admin/overview", headers={"Authorization": "Bearer personal-token"}
+    )
+
+    assert response.status_code == 403
+
+
+def test_non_null_org_member_is_not_admin(
+    config_env: ConfigEnvFixture, monkeypatch
+) -> None:
+    config_env("INTHUB_DISABLE_AUTH")
+    config_env("INTHUB_OPENHANDS_BASE_URL", "https://staging.all-hands.dev")
+    _patch_openhands_user_me(
+        monkeypatch,
+        {
+            "id": "user-1",
+            "org_id": "org-1",
+            "email": "User@Example.com",
+            "role": "member",
+            "permissions": [],
+        },
+    )
+
+    response = TestClient(app).get(
+        "/api/admin/overview", headers={"Authorization": "Bearer member-token"}
+    )
+
+    assert response.status_code == 403
+
+
+def test_x_org_id_is_forwarded_and_varies_auth_cache(
+    config_env: ConfigEnvFixture, monkeypatch
+) -> None:
+    config_env("INTHUB_DISABLE_AUTH")
+    config_env("INTHUB_OPENHANDS_BASE_URL", "https://staging.all-hands.dev")
+    calls = _patch_openhands_user_me(
+        monkeypatch,
+        {
+            "id": "user-1",
+            "org_id": "org-1",
+            "email": "User@Example.com",
+            "role": "admin",
+            "permissions": [],
+        },
+    )
+    client = TestClient(app)
+
+    first = client.get(
+        "/api/auth/session",
+        headers={"Authorization": "Bearer token", "X-Org-Id": "org-1"},
+    )
+    second = client.get(
+        "/api/auth/session",
+        headers={"Authorization": "Bearer token", "X-Org-Id": "org-2"},
+    )
+
+    assert first.status_code == 200
+    assert second.status_code == 200
+    assert calls == [
+        {
+            "url": "https://staging.all-hands.dev/api/v1/users/me",
+            "headers": {"Authorization": "Bearer token", "X-Org-Id": "org-1"},
+        },
+        {
+            "url": "https://staging.all-hands.dev/api/v1/users/me",
+            "headers": {"Authorization": "Bearer token", "X-Org-Id": "org-2"},
+        },
+    ]
 
 
 def test_auth_config_reports_openhands_base_url(config_env: ConfigEnvFixture) -> None:

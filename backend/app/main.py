@@ -1005,6 +1005,7 @@ def effective_scopes(tool: ToolSpec, requested_scopes: list[str]) -> list[str]:
 
 
 def active_temporary_grant(
+    owner: str,
     agent_id: str | None,
     agent_class: str | None,
     integration_key: str,
@@ -1012,7 +1013,7 @@ def active_temporary_grant(
     scopes: list[str],
 ) -> dict[str, Any] | None:
     current = now_iso()
-    for grant in repository.list_temporary_grants():
+    for grant in repository.list_temporary_grants(owner):
         if grant.get("agentId") != agent_id or grant.get("agentClass") != agent_class:
             continue
         if (
@@ -1099,7 +1100,7 @@ def invoke_enabled_tool(
 ) -> Any:
     scopes = effective_scopes(tool, scopes)
     grant = active_temporary_grant(
-        agent_id, agent_class, integration.key, tool.name, scopes
+        owner, agent_id, agent_class, integration.key, tool.name, scopes
     )
     if tool.accessMode == "approval_required" and not grant:
         deny_tool_invocation(
@@ -1380,26 +1381,48 @@ def requires_dashboard_session(path: str, method: str) -> bool:
     return False
 
 
+def requested_org_id_from_request(request: Request) -> str | None:
+    value = request.headers.get("x-org-id")
+    if not value:
+        return None
+    stripped = value.strip()
+    return stripped or None
+
+
 def openhands_user_from_request(request: Request) -> OpenHandsUser | None:
     token = extract_api_key(request)
-    return authenticate_token(token) if token else None
+    return (
+        authenticate_token(token, requested_org_id_from_request(request))
+        if token
+        else None
+    )
 
 
 def openhands_owner_from_request(request: Request) -> str | None:
     user = openhands_user_from_request(request)
-    return user.email.lower() if user else None
+    return user.owner_id if user else None
+
+
+def authorize_dashboard_user(request: Request) -> OpenHandsUser:
+    user = openhands_user_from_request(request)
+    if user:
+        return user
+    raise HTTPException(
+        status_code=401,
+        detail="Sign in with OpenHands Cloud before using this endpoint.",
+    )
 
 
 def authorize_dashboard_owner(request: Request) -> str:
     if is_auth_disabled():
         return owner_id(request)
-    owner = openhands_owner_from_request(request)
-    if owner:
-        return owner
-    raise HTTPException(
-        status_code=401,
-        detail="Sign in with OpenHands Cloud before using this endpoint.",
-    )
+    return authorize_dashboard_user(request).owner_id
+
+
+def owner_is_admin(owner: str, user: OpenHandsUser | None = None) -> bool:
+    if user and owner == user.owner_id:
+        return user.is_admin
+    return is_admin_owner(owner)
 
 
 def extract_api_key(request: Request) -> str:
@@ -1447,11 +1470,8 @@ def authorize_admin_api_owner(request: Request) -> str:
     record = repository.find_scoped_api_key("admin", api_key) if api_key else None
     if record:
         owner = str(record["ownerId"]).lower()
-        if not is_admin_owner(owner):
-            raise HTTPException(
-                status_code=403,
-                detail="This endpoint requires an active admin API key for an allowlisted admin user.",
-            )
+        if ":" not in owner and not is_admin_owner(owner):
+            raise HTTPException(status_code=403, detail=ADMIN_API_SESSION_DETAIL)
         return owner
 
     if api_key and (
@@ -1468,10 +1488,9 @@ def authorize_admin_api_owner(request: Request) -> str:
 
     user = openhands_user_from_request(request)
     if user:
-        owner = user.email.lower()
-        if not is_admin_owner(owner):
+        if not user.is_admin:
             raise HTTPException(status_code=403, detail=ADMIN_API_SESSION_DETAIL)
-        return owner
+        return user.owner_id
 
     raise HTTPException(
         status_code=401,
@@ -1492,13 +1511,15 @@ def optional_trimmed_config(config: dict[str, Any], key: str) -> str | None:
     return trimmed or None
 
 
-def require_app_admin(owner: str, detail: str) -> None:
-    if not is_admin_owner(owner):
+def require_app_admin(owner: str, detail: str, is_admin: bool | None = None) -> None:
+    if not (owner_is_admin(owner) if is_admin is None else is_admin):
         raise HTTPException(status_code=403, detail=detail)
 
 
-def assert_user_can_save_integration(owner: str, integration: IntegrationSpec) -> None:
-    if is_admin_owner(owner):
+def assert_user_can_save_integration(
+    owner: str, integration: IntegrationSpec, is_admin: bool | None = None
+) -> None:
+    if owner_is_admin(owner) if is_admin is None else is_admin:
         return
     managed_slug = optional_trimmed_config(integration.config, "managedConnectorSlug")
     api_base_url = optional_trimmed_config(integration.config, "apiBaseUrl")
@@ -1509,8 +1530,12 @@ def assert_user_can_save_integration(owner: str, integration: IntegrationSpec) -
         )
 
 
-def assert_user_can_discover_integration(owner: str, payload: dict[str, Any]) -> None:
-    if is_admin_owner(owner) or payload.get("kind") == "managed":
+def assert_user_can_discover_integration(
+    owner: str, payload: dict[str, Any], is_admin: bool | None = None
+) -> None:
+    if (owner_is_admin(owner) if is_admin is None else is_admin) or payload.get(
+        "kind"
+    ) == "managed":
         return
     raise HTTPException(
         status_code=403, detail=RAW_CONNECTOR_DISCOVERY_FORBIDDEN_DETAIL
@@ -1846,9 +1871,15 @@ def approve_access_request(
         .isoformat()
         .replace("+00:00", "Z")
     )
+    grant_owner = owner or repository.access_request_owner_id(request)
+    if not grant_owner:
+        raise HTTPException(
+            status_code=400, detail="Access request is missing an owner."
+        )
     return repository.save_temporary_grant(
         {
             "id": secrets.token_urlsafe(18),
+            "ownerId": grant_owner,
             "agentId": request.agentId,
             "agentClass": request.agentClass,
             "integrationKey": request.integrationKey,
@@ -2284,12 +2315,14 @@ async def fastapi_handler(request: Request):
     params = request.path_params
     path = request.scope["route"].path
     method = request.method
-    owner = (
-        authorize_dashboard_owner(request)
-        if requires_dashboard_session(path, method)
-        else owner_id(request)
-    )
-    user_api_is_admin = is_admin_owner(owner)
+    session_user: OpenHandsUser | None = None
+    if not is_auth_disabled() and requires_dashboard_session(path, method):
+        session_user = authorize_dashboard_user(request)
+        owner = session_user.owner_id
+        user_api_is_admin = session_user.is_admin
+    else:
+        owner = owner_id(request)
+        user_api_is_admin = is_admin_owner(owner)
     active_permission_profile: PermissionProfile | None = None
     if path.startswith("/api/context"):
         agent_record = authorized_agent_record(request, "call /api/context")
@@ -2389,7 +2422,7 @@ async def fastapi_handler(request: Request):
         return repository.list_connections(filters=admin_connection_filters(request))
 
     if path == "/api/notifications":
-        require_app_admin(owner, ADMIN_NOTIFICATIONS_DETAIL)
+        require_app_admin(owner, ADMIN_NOTIFICATIONS_DETAIL, user_api_is_admin)
         return repository.list_notifications()
 
     if path == "/api/admin/notifications":
@@ -2430,7 +2463,7 @@ async def fastapi_handler(request: Request):
                 status_code=400,
                 detail="OAuth integrations cannot store credentials directly. Save per-user OAuth connections instead.",
             )
-        assert_user_can_save_integration(owner, integration)
+        assert_user_can_save_integration(owner, integration, user_api_is_admin)
         saved_integration = repository.save_integration(
             owner, apply_managed_constraints(integration)
         )
@@ -2499,7 +2532,7 @@ async def fastapi_handler(request: Request):
 
     if path in {"/api/integrations/discover", "/api/admin/integrations/discover"}:
         if path == "/api/integrations/discover" and isinstance(body, dict):
-            assert_user_can_discover_integration(owner, body)
+            assert_user_can_discover_integration(owner, body, user_api_is_admin)
         return discovered_integration(body, owner)
 
     if path == "/api/integrations/disable-unused":
@@ -2520,7 +2553,7 @@ async def fastapi_handler(request: Request):
     if path == "/api/managed-connectors" or path == "/api/admin/managed-connectors":
         if method == "GET":
             return [connector.response() for connector in list_managed_connectors()]
-        require_app_admin(owner, ADMIN_CONNECTOR_MANAGEMENT_DETAIL)
+        require_app_admin(owner, ADMIN_CONNECTOR_MANAGEMENT_DETAIL, user_api_is_admin)
         connector = ensure_managed_oauth_client(ManagedConnector.model_validate(body))
         return repository.save_managed_connector(connector).response()
 
@@ -2528,7 +2561,7 @@ async def fastapi_handler(request: Request):
         path == "/api/managed-connectors/{slug}"
         or path == "/api/admin/managed-connectors/{slug}"
     ):
-        require_app_admin(owner, ADMIN_CONNECTOR_MANAGEMENT_DETAIL)
+        require_app_admin(owner, ADMIN_CONNECTOR_MANAGEMENT_DETAIL, user_api_is_admin)
         if not repository.delete_managed_connector(params["slug"]):
             raise HTTPException(status_code=404, detail="Managed connector not found.")
         return {"deleted": True, "slug": params["slug"]}
@@ -2537,7 +2570,7 @@ async def fastapi_handler(request: Request):
         path == "/api/managed-connectors/{slug}/functions"
         or path == "/api/admin/managed-connectors/{slug}/functions"
     ):
-        require_app_admin(owner, ADMIN_CONNECTOR_MANAGEMENT_DETAIL)
+        require_app_admin(owner, ADMIN_CONNECTOR_MANAGEMENT_DETAIL, user_api_is_admin)
         return index_managed_connector_functions(params["slug"], owner)
 
     if path == "/api/context/{integrationKey}/{toolName}":
@@ -2607,7 +2640,7 @@ async def fastapi_handler(request: Request):
             "agent" if prefix == "cla" else "user" if prefix == "clu" else "admin"
         )
         if key_kind == "admin":
-            require_app_admin(owner, ADMIN_KEY_MANAGEMENT_DETAIL)
+            require_app_admin(owner, ADMIN_KEY_MANAGEMENT_DETAIL, user_api_is_admin)
         if method == "DELETE":
             return {"revoked": repository.delete_key(owner, key_kind)}
         if method == "POST":
@@ -2646,17 +2679,35 @@ async def auth_handler(request: Request):
 
     if is_auth_disabled():
         owner = owner_id(request)
-    else:
-        owner = openhands_owner_from_request(request)
-        if not owner:
-            raise HTTPException(status_code=401, detail="Sign in with OpenHands Cloud.")
-
-    return {
-        "user": {
+        user_payload = {
             "name": owner,
             "email": owner,
+            "ownerId": owner,
+            "orgId": None,
+            "orgName": None,
+            "role": "owner" if is_admin_owner(owner) else "member",
+            "permissions": [],
             "isAdmin": is_admin_owner(owner),
-        },
+        }
+    else:
+        user = openhands_user_from_request(request)
+        if not user:
+            raise HTTPException(status_code=401, detail="Sign in with OpenHands Cloud.")
+        owner = user.owner_id
+        user_payload = {
+            "id": user.id,
+            "name": user.email.lower(),
+            "email": user.email.lower(),
+            "ownerId": owner,
+            "orgId": user.normalized_org_id,
+            "orgName": user.org_name,
+            "role": user.role,
+            "permissions": list(user.permissions),
+            "isAdmin": user.is_admin,
+        }
+
+    return {
+        "user": user_payload,
         "expires": "2099-01-01T00:00:00.000Z",
     }
 

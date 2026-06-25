@@ -1326,14 +1326,26 @@ class Repository:
         )
         return bool(rows)
 
-    def list_temporary_grants(self) -> list[dict[str, Any]]:
+    def list_temporary_grants(
+        self, owner_id: str | None = None
+    ) -> list[dict[str, Any]]:
+
         if self.database_url:
-            rows = self.db_rows(
-                "SELECT * FROM temporary_grants ORDER BY created_at DESC"
-            )
+            if owner_id:
+                rows = self.db_rows(
+                    """SELECT * FROM temporary_grants
+                    WHERE LOWER(owner_id) = LOWER(%s)
+                    ORDER BY created_at DESC""",
+                    (owner_id,),
+                )
+            else:
+                rows = self.db_rows(
+                    "SELECT * FROM temporary_grants ORDER BY created_at DESC"
+                )
             return [
                 {
                     "id": str(row["id"]),
+                    "ownerId": str(row.get("owner_id") or ""),
                     "agentId": row.get("agent_id"),
                     "agentClass": row.get("agent_class"),
                     "integrationKey": str(row["integration_key"]),
@@ -1345,16 +1357,24 @@ class Repository:
                 }
                 for row in rows
             ]
-        return list(self.temporary_grants.values())
+        grants = list(self.temporary_grants.values())
+        if owner_id:
+            return [
+                grant
+                for grant in grants
+                if str(grant.get("ownerId") or "").lower() == owner_id.lower()
+            ]
+        return grants
 
     def save_temporary_grant(self, grant: dict[str, Any]) -> dict[str, Any]:
         if self.database_url:
             self.execute_db(
-                """INSERT INTO temporary_grants (id, agent_id, agent_class, integration_key, function_name, scopes, granted_by, created_at, expires_at)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-                ON CONFLICT (id) DO UPDATE SET agent_id = EXCLUDED.agent_id, agent_class = EXCLUDED.agent_class, integration_key = EXCLUDED.integration_key, function_name = EXCLUDED.function_name, scopes = EXCLUDED.scopes, granted_by = EXCLUDED.granted_by, created_at = EXCLUDED.created_at, expires_at = EXCLUDED.expires_at""",
+                """INSERT INTO temporary_grants (id, owner_id, agent_id, agent_class, integration_key, function_name, scopes, granted_by, created_at, expires_at)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                ON CONFLICT (id) DO UPDATE SET owner_id = EXCLUDED.owner_id, agent_id = EXCLUDED.agent_id, agent_class = EXCLUDED.agent_class, integration_key = EXCLUDED.integration_key, function_name = EXCLUDED.function_name, scopes = EXCLUDED.scopes, granted_by = EXCLUDED.granted_by, created_at = EXCLUDED.created_at, expires_at = EXCLUDED.expires_at""",
                 (
                     grant["id"],
+                    grant["ownerId"],
                     grant.get("agentId"),
                     grant.get("agentClass"),
                     grant["integrationKey"],

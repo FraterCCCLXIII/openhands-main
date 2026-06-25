@@ -11,9 +11,15 @@ import {
 import { normalizeCaseInsensitiveText } from "@/src/lib/text-utils";
 
 export interface ClientUser {
+  id?: string | null;
   name?: string | null;
   email?: string | null;
   image?: string | null;
+  ownerId?: string | null;
+  orgId?: string | null;
+  orgName?: string | null;
+  role?: string | null;
+  permissions?: string[] | null;
   isAdmin?: boolean | null;
 }
 
@@ -125,11 +131,13 @@ export function useClientAuth(authDisabled = false): ClientAuthState {
       };
     }
 
-    const ownerId = user?.email
-      ? normalizeCaseInsensitiveText(user.email.trim())
-      : user?.name
-        ? normalizeCaseInsensitiveText(user.name.trim())
-        : null;
+    const ownerId = user?.ownerId
+      ? normalizeCaseInsensitiveText(user.ownerId.trim())
+      : user?.email
+        ? normalizeCaseInsensitiveText(user.email.trim())
+        : user?.name
+          ? normalizeCaseInsensitiveText(user.name.trim())
+          : null;
 
     return {
       user,

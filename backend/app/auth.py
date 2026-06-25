@@ -17,18 +17,55 @@ _MISS = object()
 _logger = logging.getLogger("integrations_hub.auth")
 
 
+NULL_ORG_SCOPE = "null"
+_ADMIN_ROLES = frozenset({"owner", "admin"})
+
+
 @dataclass(frozen=True)
 class OpenHandsUser:
     id: str
-    org_id: str
+    org_id: str | None
     email: str
     role: str
     permissions: tuple[str, ...]
+    org_name: str | None = None
+
+    @property
+    def normalized_org_id(self) -> str | None:
+        return normalize_org_id(self.id, self.org_id)
+
+    @property
+    def owner_id(self) -> str:
+        return owner_scope_id(self.id, self.normalized_org_id)
+
+    @property
+    def is_null_org(self) -> bool:
+        return self.normalized_org_id is None
+
+    @property
+    def is_admin(self) -> bool:
+        if self.is_null_org:
+            return get_default_config().is_admin_email(self.email)
+        return self.role.strip().lower() in _ADMIN_ROLES
+
+
+def normalize_org_id(user_id: str, org_id: str | None) -> str | None:
+    """Normalize personal OpenHands orgs to the integrations-hub null org."""
+    normalized_user = user_id.strip().lower()
+    normalized_org = (org_id or "").strip()
+    if not normalized_org or normalized_org.lower() == normalized_user:
+        return None
+    return normalized_org
+
+
+def owner_scope_id(user_id: str, org_id: str | None) -> str:
+    org_scope = org_id.strip().lower() if org_id else NULL_ORG_SCOPE
+    return f"{user_id.strip().lower()}:{org_scope}"
 
 
 _DEV_USER = OpenHandsUser(
     id="dev-user-id",
-    org_id="dev-org-id",
+    org_id=None,
     email=DEFAULT_OWNER,
     role="owner",
     permissions=("manage_items",),
@@ -36,12 +73,12 @@ _DEV_USER = OpenHandsUser(
 
 
 def admin_email_set() -> frozenset[str]:
-    """Return the set of admin email addresses from config."""
+    """Return the set of null-org admin email addresses from config."""
     return frozenset(get_default_config().app_admin_emails)
 
 
 def is_admin_owner(owner_id: str) -> bool:
-    """Check if the given owner ID is an admin."""
+    """Legacy null-org admin check for local/dev owner identifiers."""
     return get_default_config().is_admin_email(owner_id)
 
 
@@ -77,12 +114,13 @@ def _parse_user(payload: object) -> OpenHandsUser | None:
     email = payload.get("email")
     if not isinstance(user_id, str) or not user_id:
         return None
-    if not isinstance(org_id, str) or not org_id:
+    if org_id is not None and not isinstance(org_id, str):
         return None
     if not isinstance(email, str) or not email:
         return None
     role = payload.get("role")
     permissions = payload.get("permissions")
+    org_name = payload.get("org_name")
     return OpenHandsUser(
         id=user_id,
         org_id=org_id,
@@ -91,10 +129,13 @@ def _parse_user(payload: object) -> OpenHandsUser | None:
         permissions=tuple(
             item for item in (permissions or []) if isinstance(item, str)
         ),
+        org_name=org_name if isinstance(org_name, str) else None,
     )
 
 
-def _call_openhands_users_me(token: str) -> OpenHandsUser | None:
+def _call_openhands_users_me(
+    token: str, requested_org_id: str | None = None
+) -> OpenHandsUser | None:
     cfg = get_default_config()
     if cfg.disable_auth:
         return _DEV_USER
@@ -103,12 +144,12 @@ def _call_openhands_users_me(token: str) -> OpenHandsUser | None:
             "OpenHands auth requested but INTHUB_OPENHANDS_BASE_URL is unset"
         )
         return None
+    headers = {"Authorization": f"Bearer {token}"}
+    if requested_org_id:
+        headers["X-Org-Id"] = requested_org_id
     try:
         with httpx.Client(timeout=10.0) as client:
-            response = client.get(
-                cfg.openhands_user_me_url,
-                headers={"Authorization": f"Bearer {token}"},
-            )
+            response = client.get(cfg.openhands_user_me_url, headers=headers)
     except httpx.RequestError as exc:
         _logger.warning("OpenHands auth request failed: %s", exc)
         return None
@@ -123,13 +164,17 @@ def _call_openhands_users_me(token: str) -> OpenHandsUser | None:
         return None
 
 
-def authenticate_token(token: str) -> OpenHandsUser | None:
+def authenticate_token(
+    token: str, requested_org_id: str | None = None
+) -> OpenHandsUser | None:
     token = token.strip()
+    org_key = (requested_org_id or "").strip().lower()
     if not token:
         return None
-    cached = _cache_lookup(token)
+    cache_key = f"{token}\0{org_key}"
+    cached = _cache_lookup(cache_key)
     if cached is not _MISS:
         return cached if isinstance(cached, OpenHandsUser) else None
-    user = _call_openhands_users_me(token)
-    _cache_store(token, user)
+    user = _call_openhands_users_me(token, requested_org_id)
+    _cache_store(cache_key, user)
     return user
