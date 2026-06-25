@@ -75,7 +75,7 @@ For a fuller route map and auth breakdown, see [API.md](./API.md).
 - Next.js App Router
 - React 19 + TypeScript
 - Tailwind CSS 4
-- Auth.js
+- OpenHands Cloud OAuth device flow
 - Neon serverless Postgres driver
 - TanStack Query + Zustand
 - Vitest + PGlite-backed repository tests
@@ -151,7 +151,7 @@ For a fuller route map and auth breakdown, see [API.md](./API.md).
    npm run dev
 
    # Or bypass interactive auth for localhost-only development
-   DISABLE_AUTH=true npm run dev
+   INTHUB_DISABLE_AUTH=true npm run dev
    ```
 
 6. Open the dashboard:
@@ -175,10 +175,8 @@ Core variables:
 
 - `POSTGRES_URL` or `DATABASE_URL`
 - `USE_STANDARD_PG` set to `true` for local Docker Postgres (uses standard `pg` driver instead of Neon serverless)
-- `AUTH_SECRET` (or `NEXTAUTH_SECRET`) for Auth.js session security
+- `INTHUB_OPENHANDS_BASE_URL` for OpenHands Cloud device-flow login and token validation
 - `CREDENTIAL_ENCRYPTION_KEY` for stored third-party provider credentials
-- `GITHUB_CLIENT_ID`
-- `GITHUB_CLIENT_SECRET`
 - `CRON_SECRET`
 
 Optional integration/provider variables:
@@ -191,9 +189,7 @@ Optional integration/provider variables:
 
 Optional deployment variables:
 
-- `NEXTAUTH_URL` for localhost sign-in flows
-- `AUTH_TRUST_HOST=true` for Vercel/custom proxy deployments
-- `AUTH_REDIRECT_PROXY_URL=https://<stable-host>/api/auth` for preview-deployment GitHub OAuth
+- `INTHUB_OAUTH_REDIRECT_PROXY_URL=https://<stable-host>` for preview-deployment provider OAuth callbacks
 - `APP_ADMIN_EMAILS` to allowlist admin-integrations and admin automation features
 
 Optional notification variables:
@@ -206,23 +202,11 @@ Optional notification variables:
 
 See [`.env.example`](./.env.example) for the full template.
 
-## GitHub sign-in setup
+## OpenHands Cloud sign-in setup
 
-1. Create a GitHub OAuth App:
-   - https://github.com/organizations/OpenHands/settings/applications/new
-2. Set the app values to your deployment origin:
-   - **Homepage URL:** `https://<your-host>`
-   - **Authorization callback URL:** `https://<your-host>/api/auth/callback/github`
-3. Set these values in Vercel or `.env.local`:
-   - `GITHUB_CLIENT_ID`
-   - `GITHUB_CLIENT_SECRET`
-   - `AUTH_SECRET`
-   - `AUTH_TRUST_HOST=true` for hosted deployments
-4. For localhost sign-in, set:
-   - `NEXTAUTH_URL=http://localhost:3000`
-5. For preview deployments, keep the GitHub callback fixed to a stable deployment and set `AUTH_REDIRECT_PROXY_URL` in every environment.
+Set `INTHUB_OPENHANDS_BASE_URL` to the OpenHands Cloud deployment users should authenticate against. The dashboard starts the OpenHands OAuth device flow from `/signin`, stores the returned OpenHands API key in browser storage, and sends it as `Authorization: Bearer <token>` to FastAPI. FastAPI validates each dashboard request with `GET <INTHUB_OPENHANDS_BASE_URL>/api/v1/users/me`.
 
-If you set `DISABLE_AUTH=true`, the app bypasses interactive login, only serves localhost requests, and you should open `/integrations` (not `/admin`) for local development.
+For local development only, set `INTHUB_DISABLE_AUTH=true` and open `/integrations`; this bypass uses the dev owner `dev@localhost`.
 
 ## Provider OAuth setup
 

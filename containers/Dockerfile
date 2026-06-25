@@ -9,7 +9,7 @@ COPY app/ app/
 COPY public/ public/
 COPY scripts/ scripts/
 COPY src/ src/
-COPY next.config.ts postcss.config.mjs proxy.ts tsconfig.json ./
+COPY next.config.ts postcss.config.mjs tsconfig.json ./
 RUN npm run build:spa
 
 # Stage 2: Python/FastAPI application serving the SPA and API.

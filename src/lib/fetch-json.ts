@@ -1,31 +1,21 @@
+import { getStoredOpenHandsToken } from "@/src/lib/cloud-auth-storage";
+
 export type ApiDebugDetails = Record<string, unknown>;
 
-declare global {
-  interface Window {
-    __INTEGRATIONS_HUB_OWNER_ID__?: string;
+export function apiFetch(input: RequestInfo, init?: RequestInit): Promise<Response> {
+  const nextInit: RequestInit = { ...init };
+
+  if (typeof input === "string" && input.startsWith("/api/")) {
+    const token = getStoredOpenHandsToken();
+    if (token) {
+      const headers = new Headers(init?.headers);
+      headers.set("Authorization", `Bearer ${token}`);
+      nextInit.headers = headers;
+    }
   }
+
+  return fetch(input, nextInit);
 }
-
-const withOwnerHeader = (input: RequestInfo, init?: RequestInit): RequestInit => {
-  // Always include credentials for same-origin API requests
-  const baseInit: RequestInit = {
-    ...init,
-    credentials: init?.credentials ?? "same-origin",
-  };
-
-  if (typeof window === "undefined" || typeof input !== "string" || !input.startsWith("/api/")) {
-    return baseInit;
-  }
-
-  const ownerId = window.__INTEGRATIONS_HUB_OWNER_ID__;
-  if (!ownerId) {
-    return baseInit;
-  }
-
-  const headers = new Headers(init?.headers);
-  headers.set("X-Owner-Id", ownerId);
-  return { ...baseInit, headers };
-};
 
 export class ApiRequestError extends Error {
   public readonly debugDetails?: ApiDebugDetails;
@@ -41,7 +31,7 @@ export const fetchJson = async <T,>(
   input: RequestInfo,
   init?: RequestInit,
 ): Promise<T> => {
-  const response = await fetch(input, withOwnerHeader(input, init));
+  const response = await apiFetch(input, init);
 
   if (!response.ok) {
     const body = (await response.json().catch(() => null)) as {

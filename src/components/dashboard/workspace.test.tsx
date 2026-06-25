@@ -5,7 +5,7 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { pushMock, usePathnameMock, useRouterMock, useSearchParamsMock, signOutMock } =
+const { pushMock, usePathnameMock, useRouterMock, useSearchParamsMock } =
   vi.hoisted(() => ({
     pushMock: vi.fn(),
     usePathnameMock: vi.fn(() => "/integrations"),
@@ -13,7 +13,6 @@ const { pushMock, usePathnameMock, useRouterMock, useSearchParamsMock, signOutMo
       push: pushMock,
     })),
     useSearchParamsMock: vi.fn(() => new URLSearchParams()),
-    signOutMock: vi.fn(),
   }));
 
 vi.mock("next/navigation", () => ({
@@ -22,9 +21,6 @@ vi.mock("next/navigation", () => ({
   useSearchParams: useSearchParamsMock,
 }));
 
-vi.mock("next-auth/react", () => ({
-  signOut: signOutMock,
-}));
 
 import { DashboardWorkspace } from "@/src/components/dashboard/workspace";
 
@@ -156,7 +152,6 @@ describe("DashboardWorkspace", () => {
     usePathnameMock.mockReset();
     useRouterMock.mockReset();
     useSearchParamsMock.mockReset();
-    signOutMock.mockReset();
   });
 
   it("shows admin-only sidebar links for overview and admin integrations", async () => {

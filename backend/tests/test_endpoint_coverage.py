@@ -241,14 +241,15 @@ def test_mcp_initialized_notification_returns_no_jsonrpc_body() -> None:
     assert response.content == b""
 
 
-def test_auth_compatibility_routes_are_available() -> None:
+def test_auth_routes_are_available() -> None:
     client = get_client()
-    for method in ("GET", "POST"):
-        response = client.request(
-            method, "/api/auth/session", headers={"X-Owner-Id": OWNER}
-        )
-        assert response.status_code == 200
-        assert response.json()["user"]["email"] == OWNER
+    session_response = client.get("/api/auth/session", headers={"X-Owner-Id": OWNER})
+    assert session_response.status_code == 200
+    assert session_response.json()["user"]["email"] == OWNER
+
+    config_response = client.get("/api/auth/config")
+    assert config_response.status_code == 200
+    assert "openhandsBaseUrl" in config_response.json()
 
 
 def test_context_and_mcp_require_valid_agent_api_key() -> None:

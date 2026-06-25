@@ -7,7 +7,6 @@ const SOURCE_EXTENSIONS = [".ts", ".tsx"];
 const RESOLUTION_SUFFIXES = ["", ".ts", ".tsx", "/index.ts", "/index.tsx"];
 
 const SERVER_ONLY_PREFIXES = [
-  "src/lib/auth.ts",
   "src/lib/security-headers.ts",
 ];
 

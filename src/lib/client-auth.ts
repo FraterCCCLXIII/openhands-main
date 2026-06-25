@@ -1,8 +1,13 @@
 "use client";
 
-import { useSession } from "next-auth/react";
-import { useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
+import {
+  clearStoredOpenHandsToken,
+  getStoredOpenHandsToken,
+  setStoredOpenHandsToken,
+  subscribeToOpenHandsTokenChanges,
+} from "@/src/lib/cloud-auth-storage";
 import { normalizeCaseInsensitiveText } from "@/src/lib/text-utils";
 
 export interface ClientUser {
@@ -18,25 +23,94 @@ export interface ClientAuthState {
   isAdmin: boolean;
   isLoading: boolean;
   isAuthenticated: boolean;
+  signInWithOpenHandsToken: (token: string) => void;
+  signOut: () => void;
+}
+
+interface SessionResponse {
+  user?: ClientUser | null;
 }
 
 const DEV_USER: ClientUser = {
   name: "Local Dev User",
   email: "dev@localhost",
+  isAdmin: true,
 };
 
 const DEV_OWNER_ID = "dev@localhost";
 
-/**
- * Client-side hook for accessing the current user session.
- * Falls back to a mock dev user when auth is disabled.
- *
- * In SPA mode (static export), this hook calls the /api/auth/session endpoint
- * which is served by the FastAPI backend instead of Next.js API routes.
- * The FastAPI backend implements compatible NextAuth session endpoints.
- */
+async function fetchSession(token: string, signal: AbortSignal): Promise<ClientUser | null> {
+  const response = await fetch("/api/auth/session", {
+    method: "GET",
+    credentials: "same-origin",
+    headers: { Authorization: `Bearer ${token}` },
+    signal,
+  });
+
+  if (response.status === 401 || response.status === 403) return null;
+  if (!response.ok) throw new Error(`Session request failed with ${response.status}`);
+
+  const body = (await response.json()) as SessionResponse;
+  return body.user ?? null;
+}
+
 export function useClientAuth(authDisabled = false): ClientAuthState {
-  const { data: session, status } = useSession();
+  const [token, setToken] = useState<string | null>(() => getStoredOpenHandsToken());
+  const [user, setUser] = useState<ClientUser | null>(null);
+  const [isLoading, setIsLoading] = useState(!authDisabled && Boolean(token));
+
+  useEffect(
+    () => subscribeToOpenHandsTokenChanges(() => setToken(getStoredOpenHandsToken())),
+    [],
+  );
+
+  useEffect(() => {
+    if (authDisabled) {
+      setUser(DEV_USER);
+      setIsLoading(false);
+      return;
+    }
+
+    if (!token) {
+      setUser(null);
+      setIsLoading(false);
+      return;
+    }
+
+    const controller = new AbortController();
+    setIsLoading(true);
+    fetchSession(token, controller.signal)
+      .then((sessionUser) => {
+        if (!sessionUser) {
+          clearStoredOpenHandsToken();
+          setUser(null);
+          return;
+        }
+        setUser(sessionUser);
+      })
+      .catch((error: unknown) => {
+        if (!controller.signal.aborted) {
+          console.error("Failed to load OpenHands session", error);
+          setUser(null);
+        }
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setIsLoading(false);
+      });
+
+    return () => controller.abort();
+  }, [authDisabled, token]);
+
+  const signInWithOpenHandsToken = useCallback((nextToken: string) => {
+    setStoredOpenHandsToken(nextToken);
+    setToken(nextToken.trim() || null);
+  }, []);
+
+  const signOut = useCallback(() => {
+    clearStoredOpenHandsToken();
+    setToken(null);
+    setUser(null);
+  }, []);
 
   return useMemo(() => {
     if (authDisabled) {
@@ -46,11 +120,11 @@ export function useClientAuth(authDisabled = false): ClientAuthState {
         isAdmin: true,
         isLoading: false,
         isAuthenticated: true,
+        signInWithOpenHandsToken,
+        signOut,
       };
     }
 
-    const isLoading = status === "loading";
-    const user = session?.user ?? null;
     const ownerId = user?.email
       ? normalizeCaseInsensitiveText(user.email.trim())
       : user?.name
@@ -63,11 +137,10 @@ export function useClientAuth(authDisabled = false): ClientAuthState {
       isAdmin: Boolean(user?.isAdmin),
       isLoading,
       isAuthenticated: Boolean(user),
+      signInWithOpenHandsToken,
+      signOut,
     };
-  }, [authDisabled, session, status]);
+  }, [authDisabled, isLoading, signInWithOpenHandsToken, signOut, user]);
 }
 
-/**
- * Normalize an owner ID for comparison.
- */
 export const normalizeOwnerId = normalizeCaseInsensitiveText;

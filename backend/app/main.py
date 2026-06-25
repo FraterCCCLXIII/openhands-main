@@ -24,8 +24,8 @@ from fastapi.responses import (
 from openhands_extensions import list_integration_catalog
 from pydantic import ValidationError
 
-from .auth import DEFAULT_OWNER, is_admin_owner
-from .config import INTERNAL_AUTH_HEADER, get_default_config
+from .auth import DEFAULT_OWNER, OpenHandsUser, authenticate_token, is_admin_owner
+from .config import get_default_config
 from .integration_catalog import connection_defaults_from_option
 from .managed_connectors import (
     get_managed_connector,
@@ -1374,17 +1374,26 @@ def mcp_call(
     )
 
 
-def internal_auth_secret() -> str:
-    """Get the internal auth secret from config."""
-    cfg = get_default_config()
-    return (
-        cfg.internal_auth_secret.get_secret_value() if cfg.internal_auth_secret else ""
-    )
-
-
 def is_auth_disabled() -> bool:
     """Check if authentication is disabled."""
     return get_default_config().disable_auth
+
+
+def is_loopback_request(request: Request) -> bool:
+    raw_host = request.headers.get("host") or ""
+    host = raw_host.split(":", 1)[0].strip("[]").lower()
+    if host:
+        return host in {"localhost", "127.0.0.1", "::1", "testserver"}
+    client_host = (request.client.host if request.client else "").lower()
+    return client_host in {"localhost", "127.0.0.1", "::1", "testclient"}
+
+
+def ensure_auth_disabled_is_local(request: Request) -> None:
+    if is_auth_disabled() and not is_loopback_request(request):
+        raise HTTPException(
+            status_code=403,
+            detail="INTHUB_DISABLE_AUTH is only allowed for localhost development.",
+        )
 
 
 def requires_dashboard_session(path: str, method: str) -> bool:
@@ -1414,26 +1423,26 @@ def requires_dashboard_session(path: str, method: str) -> bool:
     return False
 
 
+def openhands_user_from_request(request: Request) -> OpenHandsUser | None:
+    token = extract_api_key(request)
+    return authenticate_token(token) if token else None
+
+
+def openhands_owner_from_request(request: Request) -> str | None:
+    user = openhands_user_from_request(request)
+    return user.email.lower() if user else None
+
+
 def authorize_dashboard_owner(request: Request) -> str:
     if is_auth_disabled():
         return owner_id(request)
-    secret = internal_auth_secret()
-    if not secret:
-        raise HTTPException(
-            status_code=503, detail="Dashboard API authentication is not configured."
-        )
-    if request.headers.get(INTERNAL_AUTH_HEADER) != secret:
-        raise HTTPException(
-            status_code=401,
-            detail="Sign in to the dashboard before using this endpoint.",
-        )
-    owner = (request.headers.get("x-owner-id") or "").strip().lower()
-    if not owner:
-        raise HTTPException(
-            status_code=401,
-            detail="Sign in to the dashboard before using this endpoint.",
-        )
-    return owner
+    owner = openhands_owner_from_request(request)
+    if owner:
+        return owner
+    raise HTTPException(
+        status_code=401,
+        detail="Sign in with OpenHands Cloud before using this endpoint.",
+    )
 
 
 def extract_api_key(request: Request) -> str:
@@ -1478,28 +1487,40 @@ def authorize_user_api_owner(request: Request) -> tuple[str, bool]:
 
 def authorize_admin_api_owner(request: Request) -> str:
     api_key = extract_api_key(request)
-    if not api_key and (
-        request.headers.get(INTERNAL_AUTH_HEADER) or request.headers.get("x-owner-id")
+    record = repository.find_scoped_api_key("admin", api_key) if api_key else None
+    if record:
+        owner = str(record["ownerId"]).lower()
+        if not is_admin_owner(owner):
+            raise HTTPException(
+                status_code=403,
+                detail="This endpoint requires an active admin API key for an allowlisted admin user.",
+            )
+        return owner
+
+    if api_key and (
+        repository.find_agent_api_key(api_key)
+        or repository.find_scoped_api_key("user", api_key)
     ):
-        owner = authorize_dashboard_owner(request)
+        raise HTTPException(status_code=403, detail=ADMIN_API_SESSION_DETAIL)
+
+    if is_auth_disabled():
+        owner = owner_id(request)
         if not is_admin_owner(owner):
             raise HTTPException(status_code=403, detail=ADMIN_API_SESSION_DETAIL)
         return owner
 
-    record = repository.find_scoped_api_key("admin", api_key)
-    if not record:
-        raise HTTPException(
-            status_code=401,
-            detail="Provide a valid admin API key in the Authorization bearer header or X-API-Key.",
-            headers={"WWW-Authenticate": 'Bearer realm="integrations-hub-admin-api"'},
-        )
-    owner = str(record["ownerId"]).lower()
-    if not is_admin_owner(owner):
-        raise HTTPException(
-            status_code=403,
-            detail="This endpoint requires an active admin API key for an allowlisted admin user.",
-        )
-    return owner
+    user = openhands_user_from_request(request)
+    if user:
+        owner = user.email.lower()
+        if not is_admin_owner(owner):
+            raise HTTPException(status_code=403, detail=ADMIN_API_SESSION_DETAIL)
+        return owner
+
+    raise HTTPException(
+        status_code=401,
+        detail="Provide a valid admin API key or sign in with OpenHands Cloud as an app administrator.",
+        headers={"WWW-Authenticate": 'Bearer realm="integrations-hub-admin-api"'},
+    )
 
 
 def owner_id(request: Request) -> str:
@@ -2302,6 +2323,7 @@ async def json_body(request: Request) -> Any:
 
 
 async def fastapi_handler(request: Request):
+    ensure_auth_disabled_is_local(request)
     params = request.path_params
     path = request.scope["route"].path
     method = request.method
@@ -2675,32 +2697,27 @@ async def fastapi_handler(request: Request):
 
 
 async def auth_handler(request: Request):
-    owner = owner_id(request)
+    ensure_auth_disabled_is_local(request)
     path = request.url.path
-    if path.endswith("/session"):
-        return {
-            "user": {"name": owner, "email": owner},
-            "expires": "2099-01-01T00:00:00.000Z",
-        }
-    if path.endswith("/providers"):
-        return {
-            "github": {
-                "id": "github",
-                "name": "GitHub",
-                "type": "oauth",
-                "signinUrl": "/api/auth/signin/github",
-                "callbackUrl": "/api/auth/callback/github",
-            }
-        }
-    if path.endswith("/csrf"):
-        return {"csrfToken": "fastapi-preview-csrf"}
-    if "/signin" in path:
-        return RedirectResponse("/integrations")
-    if "/signout" in path:
-        return RedirectResponse("/signin")
-    if "/callback" in path:
-        return RedirectResponse("/integrations")
-    return {"ok": True}
+    cfg = get_default_config()
+    if path.endswith("/config"):
+        return {"openhandsBaseUrl": cfg.openhands_base_url or ""}
+
+    if is_auth_disabled():
+        owner = owner_id(request)
+    else:
+        owner = openhands_owner_from_request(request)
+        if not owner:
+            raise HTTPException(status_code=401, detail="Sign in with OpenHands Cloud.")
+
+    return {
+        "user": {
+            "name": owner,
+            "email": owner,
+            "isAdmin": is_admin_owner(owner),
+        },
+        "expires": "2099-01-01T00:00:00.000Z",
+    }
 
 
 for route_method, route_path in ROUTES:
@@ -2715,16 +2732,9 @@ app.add_api_route(
     "/api/health", fastapi_handler, methods=["GET"], name="GET /api/health"
 )
 
-for auth_path in [
-    "/api/auth/session",
-    "/api/auth/providers",
-    "/api/auth/csrf",
-    "/api/auth/signin/{provider}",
-    "/api/auth/signout",
-    "/api/auth/callback/{provider}",
-]:
+for auth_path in ["/api/auth/config", "/api/auth/session"]:
     app.add_api_route(
-        auth_path, auth_handler, methods=["GET", "POST"], name=f"AUTH {auth_path}"
+        auth_path, auth_handler, methods=["GET"], name=f"AUTH {auth_path}"
     )
 
 # Mount static files for SPA serving (K8s/Docker mode only).

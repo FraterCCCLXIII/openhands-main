@@ -51,7 +51,7 @@ Important boundaries:
 
 | Surface | Auth mechanism | Scope |
 | --- | --- | --- |
-| Dashboard pages | Auth.js GitHub sign-in, or `DISABLE_AUTH=true` for localhost-only development | Human dashboard access |
+| Dashboard pages | OpenHands Cloud device-flow login, or `INTHUB_DISABLE_AUTH=true` for localhost-only development | Human dashboard access |
 | Agent REST runtime (`/api/context/*`) | Personal agent/runtime key `cla_...` | Least-privileged tool invocation only |
 | MCP runtime (`/api/mcp`) | Personal agent/runtime key `cla_...` | Same least-privileged runtime surface via MCP |
 | User automation API (`/api/user/*`) | User automation key `clu_...` | Dashboard-equivalent management for the authenticated owner |
@@ -62,7 +62,7 @@ Key rules:
 - `cla_...` keys are for runtime invocation only. They should not be accepted for `/api/user/*` or `/api/admin/*`.
 - `clu_...` keys are owner-scoped and should map to the same owner-visible management surface as the signed-in dashboard.
 - `clad_...` keys are available only to emails allowlisted in `APP_ADMIN_EMAILS` and are re-checked against that allowlist during auth.
-- When `DISABLE_AUTH=true`, the app is intentionally limited to loopback requests so local auth bypass does not become a shared-environment escape hatch.
+- When `INTHUB_DISABLE_AUTH=true`, the app is intentionally limited to loopback requests so local auth bypass does not become a shared-environment escape hatch.
 
 ### Authorization model
 

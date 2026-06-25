@@ -67,7 +67,8 @@ def _to_default_managed_connector(entry: dict[str, Any]) -> dict[str, Any]:
         "authModes": resolved_auth_modes,
         "authStrategy": defaults["authStrategy"],
         "provider": defaults.get("provider"),
-        "credentialLabel": defaults.get("credentialLabel") or f"{entry['name']} credential",
+        "credentialLabel": defaults.get("credentialLabel")
+        or f"{entry['name']} credential",
         "credentialPlaceholder": defaults.get("credentialPlaceholder")
         or f"Paste your {entry['name']} credential",
         "credentialHelp": defaults.get("credentialHelp")

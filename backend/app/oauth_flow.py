@@ -44,7 +44,7 @@ def join_oauth_scopes(scopes: list[str], separator: str | None = None) -> str:
 
 
 def oauth_callback_base_url(request: Request) -> str:
-    proxy = (os.getenv("AUTH_REDIRECT_PROXY_URL") or "").strip().rstrip("/")
+    proxy = (os.getenv("INTHUB_OAUTH_REDIRECT_PROXY_URL") or "").strip().rstrip("/")
     if proxy:
         return f"{urllib.parse.urlparse(proxy).scheme}://{urllib.parse.urlparse(proxy).netloc}/api/oauth"
     return f"{request.url.scheme}://{request.url.netloc}/api/oauth"
@@ -157,13 +157,11 @@ def is_expired(expires_at: str | None) -> bool:
 
 
 def configured_oauth_callback_url(provider: str) -> str:
-    proxy = (os.getenv("AUTH_REDIRECT_PROXY_URL") or "").strip().rstrip("/")
+    proxy = (os.getenv("INTHUB_OAUTH_REDIRECT_PROXY_URL") or "").strip().rstrip("/")
     if proxy:
         parsed = urllib.parse.urlparse(proxy)
         return f"{parsed.scheme}://{parsed.netloc}/api/oauth/{provider}/callback"
-    explicit = (
-        (os.getenv("AUTH_URL") or os.getenv("NEXTAUTH_URL") or "").strip().rstrip("/")
-    )
+    explicit = (os.getenv("AUTH_URL") or "").strip().rstrip("/")
     if explicit:
         return f"{explicit}/api/oauth/{provider}/callback"
     vercel_url = (os.getenv("VERCEL_URL") or "").strip().rstrip("/")

@@ -9,7 +9,7 @@ This project uses [uv](https://docs.astral.sh/uv/) for dependency management. De
 ```bash
 cd backend
 uv sync --dev
-DISABLE_AUTH=true uv run uvicorn backend.app.main:app --reload --app-dir ..
+INTHUB_DISABLE_AUTH=true uv run uvicorn backend.app.main:app --reload --app-dir ..
 ```
 
 Or if you prefer a traditional venv workflow:
@@ -19,10 +19,10 @@ cd backend
 uv venv
 source .venv/bin/activate
 uv pip install -e ".[dev]"
-DISABLE_AUTH=true uvicorn backend.app.main:app --reload --app-dir ..
+INTHUB_DISABLE_AUTH=true uvicorn backend.app.main:app --reload --app-dir ..
 ```
 
-The FastAPI app owns the `/api/...` backend paths that were previously implemented as Next.js route handlers. For local parity testing, set `DISABLE_AUTH=true` or send `X-Owner-Id: <email>` headers.
+The FastAPI app owns the `/api/...` backend paths that were previously implemented as Next.js route handlers. For local parity testing, set `INTHUB_DISABLE_AUTH=true` or send `X-Owner-Id: <email>` headers.
 
 ## Running tests
 
@@ -42,7 +42,7 @@ For the combined preview app, the root `vercel.json` rewrites `/api/:path*` to t
 Required/optional environment variables are intentionally aligned with the root application where possible:
 
 - `APP_ADMIN_EMAILS` — comma-separated allowlist for admin-only routes.
-- `DISABLE_AUTH=true` — local/preview auth bypass for contract testing.
+- `INTHUB_DISABLE_AUTH=true` — local/preview auth bypass for contract testing.
 - `FASTAPI_DEFAULT_OWNER` — owner identity used when auth is disabled.
 
 The first FastAPI stack uses an in-process repository to make route behavior testable and deployable. Persistent Postgres-backed storage can be added behind `backend/app/repository.py` without changing route contracts.

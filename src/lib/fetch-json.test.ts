@@ -2,16 +2,17 @@
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { clearStoredOpenHandsToken, setStoredOpenHandsToken } from "@/src/lib/cloud-auth-storage";
 import { fetchJson } from "@/src/lib/fetch-json";
 
 describe("fetchJson", () => {
   afterEach(() => {
+    clearStoredOpenHandsToken();
     vi.restoreAllMocks();
-    delete window.__INTEGRATIONS_HUB_OWNER_ID__;
   });
 
-  it("adds the signed-in owner header to same-origin API requests", async () => {
-    window.__INTEGRATIONS_HUB_OWNER_ID__ = "user@example.com";
+  it("adds the OpenHands bearer token to same-origin API requests", async () => {
+    setStoredOpenHandsToken("oh-token");
     const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
       new Response(JSON.stringify({ ok: true }), {
         headers: { "content-type": "application/json" },
@@ -21,11 +22,11 @@ describe("fetchJson", () => {
     await expect(fetchJson("/api/integrations")).resolves.toEqual({ ok: true });
 
     const [, init] = fetchMock.mock.calls[0] ?? [];
-    expect(new Headers(init?.headers).get("X-Owner-Id")).toBe("user@example.com");
+    expect(new Headers(init?.headers).get("Authorization")).toBe("Bearer oh-token");
   });
 
-  it("does not add owner headers to external URLs", async () => {
-    window.__INTEGRATIONS_HUB_OWNER_ID__ = "user@example.com";
+  it("does not add auth headers to external URLs", async () => {
+    setStoredOpenHandsToken("oh-token");
     const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
       new Response(JSON.stringify({ ok: true }), {
         headers: { "content-type": "application/json" },
@@ -35,6 +36,6 @@ describe("fetchJson", () => {
     await fetchJson("https://example.com/api/integrations");
 
     const [, init] = fetchMock.mock.calls[0] ?? [];
-    expect(new Headers(init?.headers).has("X-Owner-Id")).toBe(false);
+    expect(new Headers(init?.headers).has("Authorization")).toBe(false);
   });
 });

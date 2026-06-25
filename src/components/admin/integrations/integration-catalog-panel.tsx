@@ -1,5 +1,6 @@
 "use client";
 
+import { apiFetch } from "@/src/lib/fetch-json";
 import { type FormEvent, useEffect, useMemo, useState } from "react";
 import { ExternalLink } from "lucide-react";
 
@@ -347,7 +348,7 @@ export function IntegrationCatalogPanel({
     });
 
     try {
-      const response = await fetch("/api/managed-connectors", {
+      const response = await apiFetch("/api/managed-connectors", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

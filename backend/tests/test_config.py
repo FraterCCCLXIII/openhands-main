@@ -20,11 +20,9 @@ def test_prefixed_admin_emails_accept_json_arrays(config_env) -> None:
     assert config.app_admin_emails == ["admin@example.com", "ops@example.com"]
 
 
-def test_prefixed_secret_and_database_values_override_legacy(config_env) -> None:
+def test_prefixed_database_and_encryption_values_override_legacy(config_env) -> None:
     config_env("POSTGRES_URL", "postgres://legacy")
     config_env("INTHUB_POSTGRES_URL", "postgres://prefixed")
-    config_env("AUTH_SECRET", "legacy-secret")
-    config_env("INTHUB_INTERNAL_AUTH_SECRET", "prefixed-secret")
     config_env("CREDENTIAL_ENCRYPTION_KEY", "legacy-encryption-key")
     config_env("INTHUB_CREDENTIAL_ENCRYPTION_KEY", "prefixed-encryption-key")
     config_env("INTHUB_DISABLE_AUTH", "true")
@@ -33,8 +31,6 @@ def test_prefixed_secret_and_database_values_override_legacy(config_env) -> None
 
     assert config.postgres_url == "postgres://prefixed"
     assert config.disable_auth is True
-    assert config.internal_auth_secret is not None
-    assert config.internal_auth_secret.get_secret_value() == "prefixed-secret"
     assert config.credential_encryption_key is not None
     assert (
         config.credential_encryption_key.get_secret_value() == "prefixed-encryption-key"

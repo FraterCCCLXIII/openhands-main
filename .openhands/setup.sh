@@ -13,8 +13,8 @@ if [ ! -f .env.local ] && [ -f .env.example ]; then
   created_env_local=1
 fi
 
-if [ "$created_env_local" -eq 1 ] && ! grep -Eq '^DISABLE_AUTH=' .env.local; then
-  printf '\nDISABLE_AUTH=true\n' >> .env.local
+if [ "$created_env_local" -eq 1 ] && ! grep -Eq '^INTHUB_DISABLE_AUTH=' .env.local; then
+  printf '\nINTHUB_DISABLE_AUTH=true\n' >> .env.local
 fi
 
-export DISABLE_AUTH="${DISABLE_AUTH:-true}"
+export INTHUB_DISABLE_AUTH="${INTHUB_DISABLE_AUTH:-true}"

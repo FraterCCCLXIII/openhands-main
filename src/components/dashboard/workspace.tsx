@@ -329,12 +329,6 @@ export const DashboardWorkspace = ({
     onStatus: setStatusMessage,
   });
 
-  const ownerId = (currentUser.email?.trim() || currentUser.name?.trim() || "dev@localhost").toLowerCase();
-
-  if (typeof window !== "undefined") {
-    window.__INTEGRATIONS_HUB_OWNER_ID__ = ownerId;
-  }
-
   const userName = currentUser.name?.trim() || "Admin User";
   const userEmail = currentUser.email?.trim() || "Not provided";
   const authMode =

@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 import httpx
 from fastapi.testclient import TestClient
 
-from backend.app import main as backend_main, oauth_flow
+from backend.app import auth as backend_auth, main as backend_main, oauth_flow
 from backend.app.config import reset_config
 from backend.app.main import app
 from backend.app.models import (
@@ -522,7 +522,7 @@ def test_oauth_start_uses_proxy_scopes_and_additional_params(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:
     config_env("INTHUB_DISABLE_AUTH", "true")
-    config_env("AUTH_REDIRECT_PROXY_URL", "https://stable.example.dev/api/auth")
+    config_env("INTHUB_OAUTH_REDIRECT_PROXY_URL", "https://stable.example.dev")
     client = TestClient(app)
     admin_key = client.post("/api/admin/key").json()["apiKey"]
     response = client.post(
@@ -819,11 +819,55 @@ def test_http_provider_invocation_uses_request_template_and_auth(
         thread.join(timeout=2)
 
 
-def test_dashboard_key_routes_reject_spoofed_owner_without_internal_auth(
+class _AuthResponse:
+    def __init__(self, status_code: int, payload: object | None = None) -> None:
+        self.status_code = status_code
+        self._payload = payload
+
+    @property
+    def is_success(self) -> bool:
+        return 200 <= self.status_code < 300
+
+    def json(self) -> object:
+        return self._payload
+
+
+class _AuthClient:
+    def __init__(self, response: _AuthResponse, calls: list[dict[str, object]]) -> None:
+        self._response = response
+        self._calls = calls
+
+    def __enter__(self) -> _AuthClient:
+        return self
+
+    def __exit__(self, *_exc: object) -> None:
+        return None
+
+    def get(self, url: str, headers: dict[str, str]) -> _AuthResponse:
+        self._calls.append({"url": url, "headers": dict(headers)})
+        return self._response
+
+
+def _patch_openhands_user_me(
+    monkeypatch,
+    payload: object,
+    status_code: int = 200,
+) -> list[dict[str, object]]:
+    calls: list[dict[str, object]] = []
+    response = _AuthResponse(status_code, payload)
+    monkeypatch.setattr(
+        backend_auth.httpx,
+        "Client",
+        lambda *_args, **_kwargs: _AuthClient(response, calls),
+    )
+    backend_auth.reset_auth_cache()
+    return calls
+
+
+def test_dashboard_key_routes_reject_spoofed_owner_without_token(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:
     config_env("INTHUB_DISABLE_AUTH")
-    config_env("AUTH_SECRET", "test-internal-secret")
 
     client = TestClient(app)
     response = client.get(
@@ -834,35 +878,90 @@ def test_dashboard_key_routes_reject_spoofed_owner_without_internal_auth(
     assert "Sign in" in response.json()["detail"]
 
 
-def test_dashboard_key_routes_accept_internal_proxy_owner(
+def test_dashboard_key_routes_accept_openhands_bearer_token(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:
     config_env("INTHUB_DISABLE_AUTH")
-    config_env("AUTH_SECRET", "test-internal-secret")
+    config_env("INTHUB_OPENHANDS_BASE_URL", "https://staging.all-hands.dev")
+    calls = _patch_openhands_user_me(
+        monkeypatch,
+        {
+            "id": "user-1",
+            "org_id": "org-1",
+            "email": "User@Example.com",
+            "role": "member",
+            "permissions": [],
+        },
+    )
 
     client = TestClient(app)
     response = client.get(
-        "/api/user/key",
-        headers={
-            "X-Owner-Id": "User@Example.com",
-            "X-Integrations-Hub-Internal-Secret": "test-internal-secret",
-        },
+        "/api/user/agent-key",
+        headers={"Authorization": "Bearer valid-openhands-token"},
     )
 
     assert response.status_code == 200
-    assert response.json()["hasKey"] is False
+    assert response.json()["ownerId"] == "user@example.com"
+    assert calls == [
+        {
+            "url": "https://staging.all-hands.dev/api/v1/users/me",
+            "headers": {"Authorization": "Bearer valid-openhands-token"},
+        }
+    ]
 
-    agent_response = client.get(
-        "/api/user/agent-key",
-        headers={
-            "X-Owner-Id": "User@Example.com",
-            "X-Integrations-Hub-Internal-Secret": "test-internal-secret",
+
+def test_auth_session_reports_openhands_admin_flag(
+    config_env: ConfigEnvFixture, monkeypatch
+) -> None:
+    config_env("INTHUB_DISABLE_AUTH")
+    config_env("INTHUB_OPENHANDS_BASE_URL", "https://staging.all-hands.dev")
+    config_env("APP_ADMIN_EMAILS", "admin@example.com")
+    _patch_openhands_user_me(
+        monkeypatch,
+        {
+            "id": "admin-1",
+            "org_id": "org-1",
+            "email": "Admin@Example.com",
+            "role": "owner",
+            "permissions": ["manage_items"],
         },
     )
-    assert agent_response.status_code == 200
-    assert agent_response.json()["ownerId"] == "user@example.com"
-    assert agent_response.json()["apiKey"].startswith("cla_")
-    assert "key" not in agent_response.json()
+
+    client = TestClient(app)
+    response = client.get(
+        "/api/auth/session",
+        headers={"Authorization": "Bearer admin-openhands-token"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["user"] == {
+        "name": "admin@example.com",
+        "email": "admin@example.com",
+        "isAdmin": True,
+    }
+
+
+def test_auth_config_reports_openhands_base_url(config_env: ConfigEnvFixture) -> None:
+    config_env("INTHUB_OPENHANDS_BASE_URL", "https://staging.all-hands.dev")
+
+    response = TestClient(app).get("/api/auth/config")
+
+    assert response.status_code == 200
+    assert response.json() == {"openhandsBaseUrl": "https://staging.all-hands.dev"}
+
+
+def test_auth_disabled_rejects_non_loopback_hosts(config_env: ConfigEnvFixture) -> None:
+    config_env("INTHUB_DISABLE_AUTH", "true")
+
+    response = TestClient(app).get(
+        "/api/auth/session",
+        headers={"host": "integrations.example.com", "x-owner-id": "user@example.com"},
+    )
+
+    assert response.status_code == 403
+    assert response.json()["detail"] == (
+        "INTHUB_DISABLE_AUTH is only allowed for localhost development."
+    )
 
 
 def test_user_key_reveal_returns_metadata_when_stored_key_cannot_be_decrypted(
@@ -906,8 +1005,7 @@ def test_user_key_reveal_returns_metadata_when_stored_key_cannot_be_decrypted(
 def test_admin_privileges_fail_closed_without_allowlist(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:
-    config_env("INTHUB_DISABLE_AUTH")
-    config_env("AUTH_SECRET", "test-internal-secret")
+    config_env("INTHUB_DISABLE_AUTH", "true")
     config_env("APP_ADMIN_EMAILS")
     client = TestClient(app)
 
@@ -915,18 +1013,16 @@ def test_admin_privileges_fail_closed_without_allowlist(
         "/api/admin/key",
         headers={
             "X-Owner-Id": "admin@example.com",
-            "X-Integrations-Hub-Internal-Secret": "test-internal-secret",
         },
     )
 
     assert response.status_code == 403
 
 
-def test_admin_api_routes_accept_allowlisted_dashboard_session(
+def test_admin_api_routes_accept_auth_disabled_admin_owner(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:
-    config_env("INTHUB_DISABLE_AUTH")
-    config_env("AUTH_SECRET", "test-internal-secret")
+    config_env("INTHUB_DISABLE_AUTH", "true")
     config_env("APP_ADMIN_EMAILS", "admin@example.com")
     client = TestClient(app)
 
@@ -934,7 +1030,6 @@ def test_admin_api_routes_accept_allowlisted_dashboard_session(
         "/api/admin/overview",
         headers={
             "X-Owner-Id": "Admin@Example.com",
-            "X-Integrations-Hub-Internal-Secret": "test-internal-secret",
         },
     )
 
@@ -942,11 +1037,10 @@ def test_admin_api_routes_accept_allowlisted_dashboard_session(
     assert "duplicateExternalAccounts" in response.json()
 
 
-def test_admin_api_routes_reject_non_admin_dashboard_session(
+def test_admin_api_routes_reject_auth_disabled_non_admin_owner(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:
-    config_env("INTHUB_DISABLE_AUTH")
-    config_env("AUTH_SECRET", "test-internal-secret")
+    config_env("INTHUB_DISABLE_AUTH", "true")
     config_env("APP_ADMIN_EMAILS", "admin@example.com")
     client = TestClient(app)
 
@@ -954,7 +1048,6 @@ def test_admin_api_routes_reject_non_admin_dashboard_session(
         "/api/admin/overview",
         headers={
             "X-Owner-Id": "user@example.com",
-            "X-Integrations-Hub-Internal-Secret": "test-internal-secret",
         },
     )
 
@@ -964,27 +1057,10 @@ def test_admin_api_routes_reject_non_admin_dashboard_session(
     )
 
 
-def test_admin_api_routes_reject_spoofed_dashboard_owner_without_internal_auth(
+def test_admin_api_key_authorizes_admin_routes(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:
-    config_env("INTHUB_DISABLE_AUTH")
-    config_env("AUTH_SECRET", "test-internal-secret")
-    config_env("APP_ADMIN_EMAILS", "admin@example.com")
-    client = TestClient(app)
-
-    response = client.get(
-        "/api/admin/overview", headers={"X-Owner-Id": "admin@example.com"}
-    )
-
-    assert response.status_code == 401
-    assert "Sign in" in response.json()["detail"]
-
-
-def test_admin_api_key_still_authorizes_admin_routes_without_dashboard_session(
-    config_env: ConfigEnvFixture, monkeypatch
-) -> None:
-    config_env("INTHUB_DISABLE_AUTH")
-    config_env("AUTH_SECRET", "test-internal-secret")
+    config_env("INTHUB_DISABLE_AUTH", "true")
     config_env("APP_ADMIN_EMAILS", "admin@example.com")
     client = TestClient(app)
     repository.save_key("admin@example.com", "admin", "clad_test_admin_key")
@@ -998,16 +1074,14 @@ def test_admin_api_key_still_authorizes_admin_routes_without_dashboard_session(
     assert "duplicateExternalAccounts" in response.json()
 
 
-def test_non_admin_dashboard_routes_reject_privileged_api_calls(
+def test_non_admin_dashboard_routes_reject_privileged_api_calls_in_dev_mode(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:
-    config_env("INTHUB_DISABLE_AUTH")
-    config_env("AUTH_SECRET", "test-internal-secret")
+    config_env("INTHUB_DISABLE_AUTH", "true")
     config_env("APP_ADMIN_EMAILS", "admin@example.com")
     client = TestClient(app)
     user_headers = {
         "X-Owner-Id": "user@example.com",
-        "X-Integrations-Hub-Internal-Secret": "test-internal-secret",
     }
     repository.save_managed_connector(
         ManagedConnector(
@@ -1074,16 +1148,14 @@ def test_non_admin_dashboard_routes_reject_privileged_api_calls(
     )
 
 
-def test_admin_dashboard_routes_allow_privileged_api_calls(
+def test_admin_dashboard_routes_allow_privileged_api_calls_in_dev_mode(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:
-    config_env("INTHUB_DISABLE_AUTH")
-    config_env("AUTH_SECRET", "test-internal-secret")
+    config_env("INTHUB_DISABLE_AUTH", "true")
     config_env("APP_ADMIN_EMAILS", "admin@example.com")
     client = TestClient(app)
     admin_headers = {
         "X-Owner-Id": "admin@example.com",
-        "X-Integrations-Hub-Internal-Secret": "test-internal-secret",
     }
     connector = {
         "slug": "sample",
@@ -1125,15 +1197,13 @@ def test_admin_dashboard_routes_allow_privileged_api_calls(
 def test_deprecated_admin_oauth_connections_route_returns_410(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:
-    config_env("INTHUB_DISABLE_AUTH")
-    config_env("AUTH_SECRET", "test-internal-secret")
+    config_env("INTHUB_DISABLE_AUTH", "true")
     config_env("APP_ADMIN_EMAILS", "admin@example.com")
     client = TestClient(app)
     key_response = client.post(
         "/api/admin/key",
         headers={
             "X-Owner-Id": "admin@example.com",
-            "X-Integrations-Hub-Internal-Secret": "test-internal-secret",
         },
     )
     admin_key = key_response.json()["apiKey"]
@@ -1164,7 +1234,10 @@ def test_default_managed_connectors_are_listed_and_require_credentials(
     assert by_slug["ordinal"]["logoUrl"] == "https://app.tryordinal.com/favicon.ico"
     assert by_slug["datadog"]["authStrategy"] == "oauth2"
     assert by_slug["datadog"]["oauthConfigured"] is False
-    assert by_slug["cloudflare-docs"]["logoUrl"] == "https://cdn.simpleicons.org/cloudflare/FFFFFF"
+    assert (
+        by_slug["cloudflare-docs"]["logoUrl"]
+        == "https://cdn.simpleicons.org/cloudflare/FFFFFF"
+    )
     assert by_slug["cloudflare-docs"]["iconBg"] == "#F38020"
     assert by_slug["atlassian"]["authStrategy"] == "oauth2"
     assert by_slug["atlassian"]["oauthConfigured"] is False
@@ -1172,7 +1245,10 @@ def test_default_managed_connectors_are_listed_and_require_credentials(
 
     catalog = client.get("/api/integrations/catalog").json()
     catalog_by_slug = {entry["slug"]: entry for entry in catalog}
-    assert catalog_by_slug["cloudflare-docs"]["logoUrl"] == "https://cdn.simpleicons.org/cloudflare/FFFFFF"
+    assert (
+        catalog_by_slug["cloudflare-docs"]["logoUrl"]
+        == "https://cdn.simpleicons.org/cloudflare/FFFFFF"
+    )
 
     repository.save_managed_connector(
         ManagedConnector(

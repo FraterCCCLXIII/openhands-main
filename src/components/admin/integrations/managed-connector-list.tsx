@@ -1,5 +1,6 @@
 "use client";
 
+import { apiFetch } from "@/src/lib/fetch-json";
 import { ChevronRight, RefreshCw, Trash2 } from "lucide-react";
 import { type FormEvent, useMemo, useState } from "react";
 
@@ -310,7 +311,7 @@ export function ManagedConnectorList({
     });
 
     try {
-      const response = await fetch("/api/managed-connectors", {
+      const response = await apiFetch("/api/managed-connectors", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -368,7 +369,7 @@ export function ManagedConnectorList({
     });
 
     try {
-      const response = await fetch(
+      const response = await apiFetch(
         `/api/managed-connectors/${encodeURIComponent(connector.slug)}/functions`,
         {
           method: "POST",
@@ -455,7 +456,7 @@ export function ManagedConnectorList({
     });
 
     try {
-      const response = await fetch(
+      const response = await apiFetch(
         `/api/managed-connectors/${encodeURIComponent(connector.slug)}`,
         {
           method: "DELETE",

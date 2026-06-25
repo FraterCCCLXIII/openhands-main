@@ -4,18 +4,11 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { clearStoredOpenHandsToken, setStoredOpenHandsToken } from "@/src/lib/cloud-auth-storage";
 import { useClientAuth } from "@/src/lib/client-auth";
 import { enableReactActEnvironment } from "@/src/test-utils/jsdom-helpers";
 
 enableReactActEnvironment();
-
-const { useSessionMock } = vi.hoisted(() => ({
-  useSessionMock: vi.fn(),
-}));
-
-vi.mock("next-auth/react", () => ({
-  useSession: () => useSessionMock(),
-}));
 
 const AuthProbe = ({ onAuth }: { onAuth: (isAdmin: boolean) => void }) => {
   const auth = useClientAuth();
@@ -31,7 +24,7 @@ describe("useClientAuth", () => {
     container = document.createElement("div");
     document.body.appendChild(container);
     root = createRoot(container);
-    useSessionMock.mockReset();
+    clearStoredOpenHandsToken();
   });
 
   afterEach(async () => {
@@ -39,45 +32,39 @@ describe("useClientAuth", () => {
       root.unmount();
     });
     container.remove();
-    vi.unstubAllEnvs();
+    clearStoredOpenHandsToken();
+    vi.restoreAllMocks();
   });
 
-  it("uses the admin flag from the server session", async () => {
-    useSessionMock.mockReturnValue({
-      data: {
-        user: {
-          name: "Admin",
-          email: "admin@example.com",
-          isAdmin: true,
-        },
-      },
-      status: "authenticated",
-    });
+  it("uses the admin flag returned by the backend session", async () => {
+    setStoredOpenHandsToken("oh-token");
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
+      Response.json({
+        user: { name: "Admin", email: "admin@example.com", isAdmin: true },
+      }),
+    );
 
     let isAdmin = false;
     await act(async () => {
       root.render(<AuthProbe onAuth={(value) => { isAdmin = value; }} />);
     });
+    await act(async () => undefined);
 
     expect(isAdmin).toBe(true);
   });
 
-  it("does not evaluate APP_ADMIN_EMAILS in the client hook", async () => {
+  it("does not infer admin status from client environment variables", async () => {
     vi.stubEnv("APP_ADMIN_EMAILS", "admin@example.com");
-    useSessionMock.mockReturnValue({
-      data: {
-        user: {
-          name: "Admin",
-          email: "admin@example.com",
-        },
-      },
-      status: "authenticated",
-    });
+    setStoredOpenHandsToken("oh-token");
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
+      Response.json({ user: { name: "Admin", email: "admin@example.com" } }),
+    );
 
     let isAdmin = true;
     await act(async () => {
       root.render(<AuthProbe onAuth={(value) => { isAdmin = value; }} />);
     });
+    await act(async () => undefined);
 
     expect(isAdmin).toBe(false);
   });

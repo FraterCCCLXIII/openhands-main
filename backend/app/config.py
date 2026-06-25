@@ -19,9 +19,6 @@ from pydantic import BaseModel, ConfigDict, Field, SecretStr
 # Environment variable prefix for all config fields.
 ENVIRONMENT_VARIABLE_PREFIX = "INTHUB"
 
-# HTTP header for internal service-to-service auth
-INTERNAL_AUTH_HEADER = "x-integrations-hub-internal-secret"
-
 
 def _default_postgres_url() -> str | None:
     """Get database URL from environment with fallback.
@@ -35,22 +32,6 @@ def _default_postgres_url() -> str | None:
         or os.getenv("DATABASE_URL")
         or None
     )
-
-
-def _default_internal_auth_secret() -> SecretStr | None:
-    """Get internal auth secret with fallbacks to Auth.js secrets.
-
-    Checks INTHUB_INTERNAL_AUTH_SECRET first, then falls back to legacy
-    environment variables.
-    """
-    secret = (
-        _optional_env("INTHUB_INTERNAL_AUTH_SECRET")
-        or os.getenv("INTEGRATIONS_HUB_INTERNAL_SECRET")
-        or os.getenv("AUTH_SECRET")
-        or os.getenv("NEXTAUTH_SECRET")
-        or ""
-    ).strip()
-    return SecretStr(secret) if secret else None
 
 
 def _default_cron_secret() -> SecretStr | None:
@@ -113,6 +94,12 @@ def _default_static_dir() -> str | None:
     return _optional_env("INTHUB_STATIC_DIR") or _optional_env("STATIC_DIR")
 
 
+def _default_openhands_base_url() -> str | None:
+    return _optional_env("INTHUB_OPENHANDS_BASE_URL") or _optional_env(
+        "OPENHANDS_BASE_URL"
+    )
+
+
 class Config(BaseModel):
     """Immutable configuration for the Integrations Hub backend.
 
@@ -123,7 +110,7 @@ class Config(BaseModel):
     Environment variables:
         INTHUB_POSTGRES_URL: Database connection URL
         INTHUB_DISABLE_AUTH: Set to "true" to bypass auth (default: false)
-        INTHUB_INTERNAL_AUTH_SECRET: Service-to-service auth secret
+        INTHUB_OPENHANDS_BASE_URL: OpenHands base URL for session validation
         INTHUB_CRON_SECRET: Secret for cron job authentication
         INTHUB_APP_ADMIN_EMAILS: Comma-separated admin email addresses
         INTHUB_CREDENTIAL_ENCRYPTION_KEY: Key for encrypting stored credentials
@@ -147,12 +134,11 @@ class Config(BaseModel):
             "to enable."
         ),
     )
-    internal_auth_secret: SecretStr | None = Field(
-        default_factory=_default_internal_auth_secret,
+    openhands_base_url: str | None = Field(
+        default_factory=_default_openhands_base_url,
         description=(
-            "Internal service-to-service authentication secret. Reads from "
-            "INTHUB_INTERNAL_AUTH_SECRET with fallback to AUTH_SECRET "
-            "or NEXTAUTH_SECRET."
+            "OpenHands base URL used to validate session cookies and API keys. "
+            "Reads from INTHUB_OPENHANDS_BASE_URL with fallback to OPENHANDS_BASE_URL."
         ),
     )
     cron_secret: SecretStr | None = Field(
@@ -199,6 +185,12 @@ class Config(BaseModel):
         if not email:
             return False
         return email.strip().lower() in self.app_admin_emails
+
+    @property
+    def openhands_user_me_url(self) -> str:
+        if not self.openhands_base_url:
+            return ""
+        return f"{self.openhands_base_url.rstrip('/')}/api/v1/users/me"
 
     def require_credential_encryption_key(self) -> str:
         """Get the credential encryption key or raise an error if not configured."""

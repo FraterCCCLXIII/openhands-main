@@ -2,7 +2,7 @@
 
 ## Repository purpose
 
-This repository contains a Next.js/TypeScript implementation of an agent integrations hub. It exposes a single agent-facing context endpoint, supports DB-backed managed connectors plus MCP SDK-backed integrations, provides fine-grained agent-class permissions plus temporary approval grants, and ships with a Tailwind admin dashboard styled after the OpenHands KPI tracker.
+This repository contains a Next.js/TypeScript implementation of an agent integrations hub. It exposes a single agent-facing context endpoint, supports DB-backed managed connectors plus MCP SDK-backed integrations, provides fine-grained agent-class permissions plus temporary approval grants, and ships with a Tailwind dashboard styled after OpenHands.
 
 The root `LICENSE` is proprietary: `Copyright All Hands AI, Inc. All rights reserved.`
 
@@ -12,8 +12,8 @@ The root `LICENSE` is proprietary: `Copyright All Hands AI, Inc. All rights rese
 - All dashboard pages (`/integrations`, `/profile`, `/agent-connection`, `/case-by-case-approvals`, `/admin-integrations`, `/admin-overview`) now export client components that fetch data via TanStack Query.
 - For static site generation, set `SPA_MODE=true` in the build environment; this enables `output: "export"` in `next.config.ts` with trailing slashes and unoptimized images.
 - Server-side rendering (SSR) versions of pages are preserved in `src/components/dashboard/server-page.tsx` for legacy SSR deployments.
-- Client-side auth state is managed via `useAuth()` from `src/components/auth/auth-context.tsx`, which wraps `useSession` from NextAuth and provides a dev user fallback when `authDisabled` is true.
-- The `Providers` component always wraps children with `SessionProvider` to satisfy React hook rules, then passes `authDisabled` to the `AuthProvider` context.
+- Client-side auth state is managed via `useAuth()` from `src/components/auth/auth-context.tsx`, backed by OpenHands Cloud OAuth device flow and a stored OpenHands bearer token. `INTHUB_DISABLE_AUTH=true` still provides a dev user fallback.
+- `Providers` only supplies React Query and `AuthProvider`; there is no legacy auth provider layer.
 - Page tests that use `renderStaticDocument` for SSR testing should import from `server-page.tsx` versions explicitly (e.g., `ServerDashboardPage`).
 
 ## Deployment Architecture (Vercel + K8s)
@@ -23,9 +23,8 @@ The repository supports deployment to both Vercel and self-hosted K8s environmen
 ### Vercel Deployment (Standard Next.js)
 - Uses standard Next.js build (`npm run build`) with SSR capabilities
 - Vercel handles page routing and static file serving via CDN
-- `/api/auth/*` routes stay with Next.js for NextAuth.js integration
-- Other `/api/*` routes rewrite to the FastAPI backend at `api/index.py`
-- This leverages Vercel's optimized Next.js integration
+- All `/api/*` routes, including `/api/auth/config` and `/api/auth/session`, rewrite to the FastAPI backend at `api/index.py`
+- The dashboard uses OpenHands Cloud OAuth device flow; do not reintroduce legacy dashboard auth providers or Next.js auth routes
 
 ### K8s/Docker Deployment (SPA Mode)
 - `npm run build:spa` builds a static export to `out/` for K8s deployments
@@ -39,7 +38,6 @@ The repository supports deployment to both Vercel and self-hosted K8s environmen
 ### Build Commands
 - `npm run build` - Standard Next.js build (for Vercel)
 - `npm run build:spa` - Static export for K8s deployments (outputs to `out/`)
-- The SPA build script temporarily moves `app/api/auth/` to avoid static export conflicts
 
 ### Environment Variables for K8s
 - `STATIC_DIR=/app/out` - Path to pre-built SPA files (enables FastAPI static serving)
@@ -50,7 +48,7 @@ The repository supports deployment to both Vercel and self-hosted K8s environmen
 - Bootstrap an OpenHands session: `.openhands/setup.sh`
 - Run the pre-commit validation gate: `.openhands/pre-commit.sh`
 - Install dependencies: `npm install`
-- Run locally with auth bypass: `DISABLE_AUTH=true npm run dev`
+- Run locally with auth bypass: `INTHUB_DISABLE_AUTH=true npm run dev`
 - Build for static export (SPA mode): `npm run build:spa` (outputs to `out/`)
 - Run database migrations: `npm run db:migrate` (or `./scripts/run-migrations.sh`)
 - Check migration status: `npm run db:migrate:check`
@@ -95,11 +93,11 @@ The `.openhands/pre-commit.sh` script runs these Python checks alongside the Typ
 - All automated tests use PGlite via `src/lib/db/pglite-test-utils.ts`; the standard pattern is `vi.mock("@neondatabase/serverless", () => ({ neon: () => getActiveSql() }))`, `createTestRepository()` in `beforeEach`, and `cleanup()` in `afterEach`.
 - For direct MCP server unit coverage, mocking `@modelcontextprotocol/sdk/server/mcp.js` and asserting against captured `registerTool(...)` handlers is an effective way to exercise session-default, approval, and result-formatting branches without spinning up a transport client.
 - Full repo validation that already exercises the real SQL schema through PGlite: `npm run test:unit && npm run test:e2e && npm run typecheck && npm run build`.
-- For live localhost HTTP validation without a real Postgres instance, use a temporary local-only PGlite-backed Neon shim under `.agent_tmp/`, point the installed `@neondatabase/serverless` package at that shim locally (never commit `node_modules`), seed the runtime DB with `PostgresRepository`, then run `POSTGRES_URL='pglite://<name>' DISABLE_AUTH='true' npm run dev -- --hostname 127.0.0.1 --port 12000`.
+- For live localhost HTTP validation without a real Postgres instance, use a temporary local-only PGlite-backed Neon shim under `.agent_tmp/`, point the installed `@neondatabase/serverless` package at that shim locally (never commit `node_modules`), seed the runtime DB with `PostgresRepository`, then run `POSTGRES_URL='pglite://<name>' INTHUB_DISABLE_AUTH='true' npm run dev -- --hostname 127.0.0.1 --port 12000`.
 - Proven live validation pattern for `/api/context/skill`: seed `saveAgentApiKey(...)` plus `upsertOwnerIntegration(...)` for `dev@localhost`, start the app with the same `POSTGRES_URL`, then `curl -i http://127.0.0.1:12000/api/context/skill -H 'Authorization: Bearer <api-key>'` and expect `200 OK` plus `Content-Disposition: attachment; filename="SKILL.md"`.
 - OAuth branch-coverage work is concentrated in `src/lib/oauth/provider-resolver.test.ts` and `src/lib/oauth/managed-oauth-client.test.ts`; for quick verification of provider/client-flow regressions, run `npm test -- src/lib/oauth/provider-resolver.test.ts src/lib/oauth/managed-oauth-client.test.ts --coverage --coverage.include='src/lib/oauth/provider-resolver.ts' --coverage.include='src/lib/oauth/managed-oauth-client.ts'`.
 
-- When `DISABLE_AUTH=true`, localhost requests are allowed but non-loopback hosts are rejected; open `/integrations` locally if you need the app to provision a fresh personal API key instead of seeding one directly. `/home` is now a legacy redirect.
+- When `INTHUB_DISABLE_AUTH=true`, localhost requests are allowed but non-loopback hosts are rejected; open `/integrations` locally if you need the app to provision a fresh personal API key instead of seeding one directly. `/home` is now a legacy redirect.
 
 
 ## Workflow notes
@@ -140,16 +138,15 @@ The `.openhands/pre-commit.sh` script runs these Python checks alongside the Typ
 - The Python/FastAPI backend lives in `backend/`, owns the `/api/...` route surface, and is configured for a separate Vercel project rooted at `backend/`. Keep `backend/app/route_manifest.py` and `backend/tests/test_route_parity.py` aligned when adding/removing backend API routes.
 - Root docs now include `README.md`, `ARCHITECTURE.md`, `API.md`, `CONTRIBUTING.md`, `CHANGELOG.md`, and `LICENSE`; `ARCHITECTURE.md` is the canonical contributor reference for the security model, testing strategy, and glossary. Keep README/API route references aligned with the canonical dashboard pages (`/integrations`, `/agent-connection`, `/profile`, `/case-by-case-approvals`, `/admin-overview`, `/admin-integrations`) and generated OpenAPI endpoints.
 - `/api/mcp` now pre-validates obvious Streamable HTTP protocol mismatches before handing requests to the MCP SDK transport: session GETs must accept `text/event-stream`, POSTs must advertise both `application/json` and `text/event-stream` plus JSON bodies, and any request with `mcp-session-id` must include `mcp-protocol-version`. This helps turn bad-client/Vercel timeout scenarios into fast 4xx responses with clearer diagnostics.
-- Service OAuth callbacks now follow the same stable-domain preview proxy pattern as Auth.js: when `AUTH_REDIRECT_PROXY_URL` is configured, provider auth flows register and exchange against `<stable-origin>/api/oauth/<provider>/callback`, and the stable callback forwards back to the preview deployment callback URL stored in OAuth state before finishing the token exchange.
+- Service OAuth callbacks can use the stable-domain preview proxy pattern: when `INTHUB_OAUTH_REDIRECT_PROXY_URL` is configured, provider auth flows register and exchange against `<stable-origin>/api/oauth/<provider>/callback`, and the stable callback forwards back to the preview deployment callback URL stored in OAuth state before finishing the token exchange.
 - Managed connector registration defaults should prefer the most reliable official surface for each provider: remote MCP when that is stable, otherwise a managed HTTP connector generated from an official OpenAPI schema. Notion now follows the latter path via `https://developers.notion.com/openapi.json` instead of the hosted Notion MCP.
 - Webflow remains a managed oauth-ready connector backed by the official hosted MCP server at `https://mcp.webflow.com/mcp`, but the hosted MCP endpoint expects tokens from its own OAuth server (`https://mcp.webflow.com/oauth/*`), not Webflow Data API app tokens. The admin registration flow now creates a deployment-scoped public PKCE client automatically via `https://mcp.webflow.com/oauth/register`, then each user authorizes their own sites/workspaces through that MCP OAuth flow.
 - Datadog is an oauth-ready managed connector backed by the official hosted MCP server. The default US1 endpoint is `https://mcp.datadoghq.com/api/unstable/mcp-server/mcp`; admins can edit the server URL for other Datadog regional sites after registration if needed.
 
 - The old static connector concept has been removed; the integrations wizard now refers to service-level connector registrations simply as managed connectors.
 
-- `src/lib/auth.ts` configures Auth.js for GitHub OAuth on the hosted dashboard using the same preview-deployment redirect proxy pattern as `OpenHands/kpi-tracker`; the GitHub provider requests both `read:user` and `user:email` so the dashboard can populate signed-in email addresses more reliably. `DISABLE_AUTH=true` bypasses interactive auth for local development.
 - Shared case-insensitive text normalization and UI/backend search matching now live in `src/lib/text-utils.ts`; prefer reusing `normalizeCaseInsensitiveText`, `matchesSearchQuery`, and `matchesExactSearchQuery` instead of open-coding new `trim().toLowerCase()` search helpers.
-- `app/layout.tsx` passes `isAuthDisabled()` into `src/components/providers.tsx`; when auth is disabled, `Providers` must skip `SessionProvider` entirely so the client does not fetch `/api/auth/session` and trigger Auth.js configuration errors during local/shared preview QA.
+- `app/layout.tsx` passes `isAuthDisabled()` into `src/components/providers.tsx`; when auth is enabled, `/signin` uses OpenHands Cloud device flow and FastAPI validates bearer tokens via `/api/v1/users/me`.
 
 - `src/components/dashboard/workspace.tsx` is the OpenHands-inspired Tailwind dashboard workspace using TanStack Query + Zustand, coordinated by the server entrypoint in `src/components/dashboard/page.tsx`.
 - `src/components/dashboard/workspace.tsx` now contains the main sidebar-driven dashboard UX with Integrations as the default first section, followed by Agent Connection and User Profile; the server entrypoint for signed-in user routes now lives at `src/components/dashboard/page.tsx`.
@@ -231,9 +228,9 @@ The `.openhands/pre-commit.sh` script runs these Python checks alongside the Typ
 - The combined dashboard API keys card must only server-render metadata for user/admin automation keys. Plaintext user/admin key material should be fetched from `/api/user/key` or `/api/admin/key` with `cache: "no-store"` only after an explicit reveal/copy action, and missing keys should be generated only through those explicit client actions rather than during server render.
 - Admin automation key issuance and lookup are service-layer gated: only allowlisted `APP_ADMIN_EMAILS` owners may rotate/read/revoke admin keys, and deallowlisted admin-key hashes should authenticate as unauthorized instead of exposing legacy records.
 - MCP discovery should only infer `api_key` auth when a secret is present; a default header name by itself should still resolve to `none`, which matters for local proxy-based QA.
-- Local QA can be exercised with `DISABLE_AUTH=true npm run dev` on localhost plus a tiny localhost proxy that forwards `http://127.0.0.1:12001/` to GitHub's hosted MCP using `GITHUB_TOKEN`; the dashboard provisions a per-user context API key server-side, and agents cannot call `/api/context/*` until a user has opened `/integrations` once to provision that key.
+- Local QA can be exercised with `INTHUB_DISABLE_AUTH=true npm run dev` on localhost plus a tiny localhost proxy that forwards `http://127.0.0.1:12001/` to GitHub's hosted MCP using `GITHUB_TOKEN`; the dashboard provisions a per-user context API key server-side, and agents cannot call `/api/context/*` until a user has opened `/integrations` once to provision that key.
 - `ToolSpec.accessMode` now supports `enabled`, `disabled`, and `approval_required`; `approval_required` bypasses agent-class policy and requires a temporary grant, while `enabled` functions are callable by default unless a matching agent-class policy is configured to narrow access.
-- Stored provider credentials now require a dedicated `CREDENTIAL_ENCRYPTION_KEY` in every environment; `AUTH_SECRET` / `NEXTAUTH_SECRET` no longer act as encryption fallbacks, and there is no baked-in local-development encryption fallback.
+- Stored provider credentials require a dedicated `CREDENTIAL_ENCRYPTION_KEY` in every environment; there is no baked-in local-development encryption fallback.
 - FastAPI `/api/cron/expire-grants` is intended for a Vercel cron job to purge expired temporary grants, and it must fail closed unless `CRON_SECRET` is configured and presented as a bearer token.
 - `.github/workflows/` now includes the OpenHands PR review pair (`pr-review.yml`, `pr-review-evaluation.yml`) plus the vulnerability remediation wrapper (`vulnerability-scan.yml`) copied from `OpenHands/extensions` plugins.
 - The app favicon now mirrors the OpenHands frontend assets: `public/favicon.ico`, `public/favicon-16x16.png`, and `public/favicon-32x32.png`, referenced explicitly via `app/layout.tsx` metadata.
