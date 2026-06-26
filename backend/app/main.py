@@ -24,7 +24,13 @@ from fastapi.responses import (
 from openhands_extensions import list_integration_catalog
 from pydantic import ValidationError
 
-from .auth import DEFAULT_OWNER, OpenHandsUser, authenticate_token, is_admin_owner
+from .auth import (
+    DEFAULT_OWNER,
+    AuthUnavailable,
+    OpenHandsUser,
+    authenticate_token,
+    is_admin_owner,
+)
 from .config import get_default_config
 from .integration_catalog import connection_defaults_from_option
 from .managed_connectors import (
@@ -1402,7 +1408,13 @@ def openhands_owner_from_request(request: Request) -> str | None:
 
 
 def authorize_dashboard_user(request: Request) -> OpenHandsUser:
-    user = openhands_user_from_request(request)
+    try:
+        user = openhands_user_from_request(request)
+    except AuthUnavailable as exc:
+        raise HTTPException(
+            status_code=503,
+            detail="OpenHands Cloud is temporarily unavailable. Please retry.",
+        ) from exc
     if user:
         return user
     raise HTTPException(
@@ -1532,7 +1544,13 @@ def authorize_admin_api_owner(request: Request) -> str:
             raise HTTPException(status_code=403, detail=ADMIN_API_SESSION_DETAIL)
         return owner
 
-    user = openhands_user_from_request(request)
+    try:
+        user = openhands_user_from_request(request)
+    except AuthUnavailable as exc:
+        raise HTTPException(
+            status_code=503,
+            detail="OpenHands Cloud is temporarily unavailable. Please retry.",
+        ) from exc
     if user:
         if not user.is_admin:
             raise HTTPException(status_code=403, detail=ADMIN_API_SESSION_DETAIL)
@@ -2748,7 +2766,13 @@ async def auth_handler(request: Request):
             "isAdmin": is_admin_owner(owner),
         }
     else:
-        user = openhands_user_from_request(request)
+        try:
+            user = openhands_user_from_request(request)
+        except AuthUnavailable as exc:
+            raise HTTPException(
+                status_code=503,
+                detail="OpenHands Cloud is temporarily unavailable. Please retry.",
+            ) from exc
         if not user:
             raise HTTPException(status_code=401, detail="Sign in with OpenHands Cloud.")
         owner = user.owner_id

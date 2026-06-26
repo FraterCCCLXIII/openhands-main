@@ -11,10 +11,23 @@ from .config import get_default_config
 
 DEFAULT_OWNER = "dev@localhost"
 _AUTH_CACHE_TTL_SECONDS = 20.0
+_AUTH_UNAVAILABLE_CACHE_TTL_SECONDS = 2.0
 _AUTH_CACHE_MAX_ENTRIES = 1024
-_AUTH_CACHE: dict[str, tuple[float, OpenHandsUser | None]] = {}
+_AUTH_CACHE: dict[str, tuple[float, OpenHandsUser | None | object]] = {}
 _MISS = object()
+_UNAVAILABLE = object()
 _logger = logging.getLogger("integrations_hub.auth")
+
+
+class AuthUnavailable(Exception):
+    """OpenHands Cloud could not be reached or returned a non-auth error.
+
+    Raised (and surfaced as HTTP 503) when a session check fails for reasons
+    other than an invalid token — e.g. network blip, DNS not ready, or a 5xx
+    from OpenHands Cloud. Distinct from "token invalid" (401/403) so the
+    dashboard does not delete the stored long-lived API key and force a
+    re-login on transient failures.
+    """
 
 
 NULL_ORG_SCOPE = "null"
@@ -97,13 +110,15 @@ def _cache_lookup(key: str) -> OpenHandsUser | None | object:
     return user
 
 
-def _cache_store(key: str, value: OpenHandsUser | None) -> None:
+def _cache_store(
+    key: str, value: OpenHandsUser | None | object, ttl: float = _AUTH_CACHE_TTL_SECONDS
+) -> None:
     if len(_AUTH_CACHE) >= _AUTH_CACHE_MAX_ENTRIES:
         try:
             _AUTH_CACHE.pop(next(iter(_AUTH_CACHE)), None)
         except StopIteration:
             pass
-    _AUTH_CACHE[key] = (time.monotonic() + _AUTH_CACHE_TTL_SECONDS, value)
+    _AUTH_CACHE[key] = (time.monotonic() + ttl, value)
 
 
 def _parse_user(payload: object) -> OpenHandsUser | None:
@@ -136,6 +151,13 @@ def _parse_user(payload: object) -> OpenHandsUser | None:
 def _call_openhands_users_me(
     token: str, requested_org_id: str | None = None
 ) -> OpenHandsUser | None:
+    """Resolve a bearer token to an OpenHands user.
+
+    Returns ``None`` only when the token is definitively invalid (401/403).
+    Raises :class:`AuthUnavailable` for transient/infrastructure failures
+    (network errors, 5xx) so callers can surface 503 instead of 401 and
+    avoid destroying a still-valid long-lived API key.
+    """
     cfg = get_default_config()
     if cfg.disable_auth:
         return _DEV_USER
@@ -143,7 +165,7 @@ def _call_openhands_users_me(
         _logger.warning(
             "OpenHands auth requested but INTHUB_OPENHANDS_BASE_URL is unset"
         )
-        return None
+        raise AuthUnavailable("OpenHands auth base URL is not configured")
     headers = {"Authorization": f"Bearer {token}"}
     if requested_org_id:
         headers["X-Org-Id"] = requested_org_id
@@ -152,16 +174,19 @@ def _call_openhands_users_me(
             response = client.get(cfg.openhands_user_me_url, headers=headers)
     except httpx.RequestError as exc:
         _logger.warning("OpenHands auth request failed: %s", exc)
-        return None
+        raise AuthUnavailable("OpenHands Cloud is temporarily unreachable") from exc
     if response.status_code in {401, 403}:
         return None
     if not response.is_success:
         _logger.warning("OpenHands auth returned status %s", response.status_code)
-        return None
+        raise AuthUnavailable(
+            f"OpenHands Cloud returned status {response.status_code}"
+        )
     try:
         return _parse_user(response.json())
-    except ValueError:
-        return None
+    except ValueError as exc:
+        _logger.warning("OpenHands auth returned invalid JSON: %s", exc)
+        raise AuthUnavailable("OpenHands Cloud returned an invalid response") from exc
 
 
 def authenticate_token(
@@ -174,7 +199,13 @@ def authenticate_token(
     cache_key = f"{token}\0{org_key}"
     cached = _cache_lookup(cache_key)
     if cached is not _MISS:
+        if cached is _UNAVAILABLE:
+            raise AuthUnavailable("OpenHands Cloud is temporarily unreachable")
         return cached if isinstance(cached, OpenHandsUser) else None
-    user = _call_openhands_users_me(token, requested_org_id)
+    try:
+        user = _call_openhands_users_me(token, requested_org_id)
+    except AuthUnavailable:
+        _cache_store(cache_key, _UNAVAILABLE, ttl=_AUTH_UNAVAILABLE_CACHE_TTL_SECONDS)
+        raise
     _cache_store(cache_key, user)
     return user

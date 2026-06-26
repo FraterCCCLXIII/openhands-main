@@ -925,6 +925,35 @@ def _patch_openhands_user_me(
     return calls
 
 
+class _RaisingAuthClient:
+    def __init__(self, exc: Exception, calls: list[dict[str, object]]) -> None:
+        self._exc = exc
+        self._calls = calls
+
+    def __enter__(self) -> _RaisingAuthClient:
+        return self
+
+    def __exit__(self, *_exc: object) -> None:
+        return None
+
+    def get(self, url: str, headers: dict[str, str]) -> object:
+        self._calls.append({"url": url, "headers": dict(headers)})
+        raise self._exc
+
+
+def _patch_openhands_user_me_request_error(
+    monkeypatch, exc: Exception
+) -> list[dict[str, object]]:
+    calls: list[dict[str, object]] = []
+    monkeypatch.setattr(
+        backend_auth.httpx,
+        "Client",
+        lambda *_args, **_kwargs: _RaisingAuthClient(exc, calls),
+    )
+    backend_auth.reset_auth_cache()
+    return calls
+
+
 def test_dashboard_key_routes_reject_spoofed_owner_without_token(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:
@@ -1120,6 +1149,63 @@ def test_x_org_id_is_forwarded_and_varies_auth_cache(
             "headers": {"Authorization": "Bearer token", "X-Org-Id": "org-2"},
         },
     ]
+
+
+def test_auth_session_returns_503_on_transient_network_error(
+    config_env: ConfigEnvFixture, monkeypatch
+) -> None:
+    """A network blip reaching OpenHands Cloud must surface 503, not 401.
+
+    Regression for #295: previously a transient RequestError collapsed to
+    None and the dashboard returned 401, which made the frontend delete the
+    stored long-lived API key and force a re-login.
+    """
+    config_env("INTHUB_DISABLE_AUTH")
+    config_env("INTHUB_OPENHANDS_BASE_URL", "https://staging.all-hands.dev")
+    _patch_openhands_user_me_request_error(
+        monkeypatch, httpx.ConnectError("DNS not ready")
+    )
+
+    response = TestClient(app).get(
+        "/api/auth/session", headers={"Authorization": "Bearer still-valid-token"}
+    )
+
+    assert response.status_code == 503
+    assert "temporarily unavailable" in response.json()["detail"].lower()
+
+
+def test_dashboard_route_returns_503_on_openhands_5xx(
+    config_env: ConfigEnvFixture, monkeypatch
+) -> None:
+    """A 5xx from OpenHands Cloud is infra, not an invalid token -> 503."""
+    config_env("INTHUB_DISABLE_AUTH")
+    config_env("INTHUB_OPENHANDS_BASE_URL", "https://staging.all-hands.dev")
+    _patch_openhands_user_me(
+        monkeypatch,
+        {"id": "user-1", "email": "user@example.com"},
+        status_code=503,
+    )
+
+    response = TestClient(app).get(
+        "/api/user/key", headers={"Authorization": "Bearer still-valid-token"}
+    )
+
+    assert response.status_code == 503
+
+
+def test_auth_session_returns_401_on_invalid_token(
+    config_env: ConfigEnvFixture, monkeypatch
+) -> None:
+    """A genuine 401/403 from OpenHands Cloud must still clear the session (401)."""
+    config_env("INTHUB_DISABLE_AUTH")
+    config_env("INTHUB_OPENHANDS_BASE_URL", "https://staging.all-hands.dev")
+    _patch_openhands_user_me(monkeypatch, {"error": "invalid_token"}, status_code=401)
+
+    response = TestClient(app).get(
+        "/api/auth/session", headers={"Authorization": "Bearer revoked-token"}
+    )
+
+    assert response.status_code == 401
 
 
 def test_auth_config_reports_openhands_base_url(config_env: ConfigEnvFixture) -> None:
