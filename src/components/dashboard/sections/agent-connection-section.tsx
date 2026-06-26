@@ -1,5 +1,12 @@
-import { KeyRound, ShieldCheck } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import {
+  CircleCheck,
+  CircleX,
+  Copy,
+  KeyRound,
+  ShieldCheck,
+} from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import type { ReactNode } from "react";
 
 import { DashboardApiKeyCard } from "@/src/components/dashboard/api-key-card";
 import { PermissionProfileAgentKeyCard } from "@/src/components/dashboard/permission-profile-agent-key-card";
@@ -8,8 +15,80 @@ import {
   KeyValueRow,
   dashboardInputClassName,
 } from "@/src/components/dashboard/shared";
+import { copyTextToClipboard } from "@/src/components/dashboard/utils";
 import { Badge } from "@/src/components/ui/badge";
 import type { PermissionProfile } from "@/src/types/integrations-hub";
+
+interface CopyableFieldProps {
+  label?: string;
+  render: () => ReactNode;
+  value: string;
+}
+
+type CopyStatus = "idle" | "copied" | "error";
+
+const CopyableField = ({ label, render, value }: CopyableFieldProps) => {
+  const [status, setStatus] = useState<CopyStatus>("idle");
+  const timerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current !== null) {
+        window.clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, []);
+
+  const scheduleReset = () => {
+    timerRef.current = window.setTimeout(() => {
+      timerRef.current = null;
+      setStatus("idle");
+    }, 2000);
+  };
+
+  const handleCopy = async () => {
+    if (timerRef.current !== null) {
+      window.clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+    try {
+      await copyTextToClipboard(value);
+      setStatus("copied");
+      scheduleReset();
+    } catch (errorValue) {
+      console.error("Failed to copy to clipboard", errorValue);
+      setStatus("error");
+      scheduleReset();
+    }
+  };
+
+  const ariaLabel = status === "error"
+    ? `${label ?? "Copy to clipboard"} (failed)`
+    : label ?? "Copy to clipboard";
+
+  return (
+    <div className="group relative">
+      {render()}
+      <button
+        type="button"
+        onClick={handleCopy}
+        aria-label={ariaLabel}
+        data-copied={status === "copied"}
+        data-error={status === "error"}
+        className="absolute right-1.5 top-1.5 cursor-pointer rounded border border-[var(--color-border)] bg-[var(--color-surface-muted)] p-1 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 data-[copied=true]:opacity-100 data-[error=true]:opacity-100 data-[copied=false]:data-[error=false]:opacity-0"
+      >
+        {status === "error" ? (
+          <CircleX className="h-3.5 w-3.5 text-red-400" />
+        ) : status === "copied" ? (
+          <CircleCheck className="h-3.5 w-3.5 text-green-400" />
+        ) : (
+          <Copy className="h-3.5 w-3.5 text-[var(--color-text-base)]" />
+        )}
+      </button>
+    </div>
+  );
+};
 
 interface ConnectionDetailCardProps {
   body: string;
@@ -30,17 +109,31 @@ const ConnectionDetailCard = ({
     <div className="mt-3 divide-y divide-[var(--color-border)]">
       <KeyValueRow
         label="OpenAPI schema"
-        value={<code className="break-all text-xs text-[var(--color-text-active)]">{schemaEndpoint}</code>}
+        value={
+          <CopyableField
+            value={schemaEndpoint}
+            label={`Copy ${label} OpenAPI schema URL`}
+            render={() => (
+              <code className="block break-all pr-7 text-xs text-[var(--color-text-active)]">{schemaEndpoint}</code>
+            )}
+          />
+        }
       />
     </div>
-    <div className="mt-3 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)]">
-      <div className="border-b border-[var(--color-border)] px-3 py-2 text-xs uppercase tracking-[0.18em] text-[var(--color-text-base)]">
-        Example agent prompt
-      </div>
-      <pre className="overflow-x-auto whitespace-pre-wrap px-3 py-3 text-xs leading-6 text-[var(--color-text-base)]">
-        {promptExample}
-      </pre>
-    </div>
+    <CopyableField
+      value={promptExample}
+      label={`Copy ${label} example agent prompt`}
+      render={() => (
+        <div className="mt-3 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)]">
+          <div className="border-b border-[var(--color-border)] px-3 py-2 text-xs uppercase tracking-[0.18em] text-[var(--color-text-base)]">
+            Example agent prompt
+          </div>
+          <pre className="overflow-x-auto whitespace-pre-wrap px-3 py-3 pr-9 text-xs leading-6 text-[var(--color-text-base)]">
+            {promptExample}
+          </pre>
+        </div>
+      )}
+    />
   </div>
 );
 
@@ -80,21 +173,43 @@ const DashboardConnectionDetails = ({
         <div className="mt-3 divide-y divide-[var(--color-border)]">
           <KeyValueRow
             label="Endpoint"
-            value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentMcpEndpoint}</code>}
+            value={
+              <CopyableField
+                value={agentMcpEndpoint}
+                label="Copy MCP endpoint"
+                render={() => (
+                  <code className="block break-all pr-7 text-xs text-[var(--color-text-active)]">{agentMcpEndpoint}</code>
+                )}
+              />
+            }
           />
           <KeyValueRow
             label="Example tool"
-            value={<code className="break-all text-xs text-[var(--color-text-active)]">{agentMcpToolName}</code>}
+            value={
+              <CopyableField
+                value={agentMcpToolName}
+                label="Copy example tool name"
+                render={() => (
+                  <code className="block break-all pr-7 text-xs text-[var(--color-text-active)]">{agentMcpToolName}</code>
+                )}
+              />
+            }
           />
         </div>
-        <div className="mt-3 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)]">
-          <div className="border-b border-[var(--color-border)] px-3 py-2 text-xs uppercase tracking-[0.18em] text-[var(--color-text-base)]">
-            MCP config example
-          </div>
-          <pre className="overflow-x-auto whitespace-pre-wrap px-3 py-3 text-xs leading-6 text-[var(--color-text-base)]">
-            {agentMcpConfigExample}
-          </pre>
-        </div>
+        <CopyableField
+          value={agentMcpConfigExample}
+          label="Copy MCP config example"
+          render={() => (
+            <div className="mt-3 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)]">
+              <div className="border-b border-[var(--color-border)] px-3 py-2 text-xs uppercase tracking-[0.18em] text-[var(--color-text-base)]">
+                MCP config example
+              </div>
+              <pre className="overflow-x-auto whitespace-pre-wrap px-3 py-3 pr-9 text-xs leading-6 text-[var(--color-text-base)]">
+                {agentMcpConfigExample}
+              </pre>
+            </div>
+          )}
+        />
       </div>
 
       <ConnectionDetailCard
