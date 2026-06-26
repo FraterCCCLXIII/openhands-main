@@ -1907,7 +1907,7 @@ def test_mcp_tools_expose_input_schema_and_strip_context_arguments(
     tool_schema = tools_response.json()["result"]["tools"][0]["inputSchema"]
     assert tool_schema["properties"]["recordId"] == {"type": "string"}
     assert "expand" in tool_schema["properties"]
-    assert "contextScopes" in tool_schema["properties"]
+    assert "scopes" in tool_schema["properties"]
     assert tool_schema["required"] == ["recordId"]
 
     call_response = client.post(
@@ -1922,8 +1922,8 @@ def test_mcp_tools_expose_input_schema_and_strip_context_arguments(
                 "arguments": {
                     "recordId": "abc",
                     "expand": True,
-                    "contextScopes": ["schema.read"],
-                    "contextAgentId": "agent-1",
+                    "scopes": ["schema.read"],
+                    "agentId": "agent-1",
                 },
             },
         },

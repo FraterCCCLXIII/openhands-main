@@ -57,9 +57,9 @@ const createDefaultProps = () => ({
   ],
 
   agentMcpToolName: "github__list_issues",
-  agentOpenApiSchemaEndpoint: "https://example.com/api/context/openapi",
+  agentOpenApiSchemaEndpoint: "https://example.com/api/agent/openapi",
   agentRestPromptExample: "Use the agent REST API.",
-  contextApiReady: true,
+  agentApiReady: true,
   isAdmin: true,
   userKey: {
     copied: false,
@@ -99,7 +99,7 @@ describe("AgentConnectionSection", () => {
       root.render(
         <AgentConnectionSection
           {...props}
-          contextApiReady={false}
+          agentApiReady={false}
           isAdmin={false}
           permissionProfiles={[]}
           adminPromptExample=""
@@ -175,7 +175,7 @@ describe("AgentConnectionSection", () => {
     expect(container.textContent).toContain("github__list_issues");
     expect(container.textContent).toContain("https://example.com/api/admin/openapi");
     expect(container.textContent).toContain("https://example.com/api/user/openapi");
-    expect(container.textContent).toContain("https://example.com/api/context/openapi");
+    expect(container.textContent).toContain("https://example.com/api/agent/openapi");
 
     const buttons = Array.from(container.querySelectorAll("button"));
     expect(container.textContent).toContain("Agent key");
@@ -255,7 +255,7 @@ describe("AgentConnectionSection", () => {
       root.render(
         <AgentConnectionSection
           {...props}
-          contextApiReady={false}
+          agentApiReady={false}
           agentKey={{
             ...props.agentKey,
             maskedValue: "",

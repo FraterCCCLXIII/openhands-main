@@ -467,7 +467,7 @@ export interface AccessDecision {
   effectiveScopes: string[];
 }
 
-export interface ContextInvocationResult {
+export interface AgentInvocationResult {
   integration: string;
   tool: string;
   provider: IntegrationProvider;
@@ -476,3 +476,6 @@ export interface ContextInvocationResult {
   decision: AccessDecision;
   data: unknown;
 }
+
+// Backward-compatible alias for callers that still import the old name.
+export type ContextInvocationResult = AgentInvocationResult;

@@ -173,7 +173,7 @@ const useStoredApiKey = <TStatus extends { keyPrefix: string; keySuffix: string 
 };
 
 interface UseDashboardApiKeysOptions {
-  contextApiKey: string;
+  agentApiKey: string;
   userApiKey: UserApiKeyStatus | null;
   userApiKeyValue?: string | null;
   adminApiKey: AdminApiKeyStatus | null;
@@ -182,30 +182,30 @@ interface UseDashboardApiKeysOptions {
 }
 
 export const useApiKeys = ({
-  contextApiKey,
+  agentApiKey: initialAgentApiKey,
   userApiKey,
   userApiKeyValue = null,
   adminApiKey,
   adminApiKeyValue = null,
   onStatus,
 }: UseDashboardApiKeysOptions) => {
-  const [agentApiKey, setAgentApiKey] = useState(contextApiKey);
+  const [agentApiKey, setAgentApiKey] = useState(initialAgentApiKey);
   const [hasLocalAgentKeyOverride, setHasLocalAgentKeyOverride] = useState(false);
   const [revealAgentKey, setRevealAgentKey] = useState(false);
   const { copied: agentKeyCopied, setCopied: setAgentKeyCopied } = useCopiedFlag();
 
   useEffect(() => {
     if (!hasLocalAgentKeyOverride) {
-      setAgentApiKey(contextApiKey);
+      setAgentApiKey(initialAgentApiKey);
       return;
     }
 
-    if (contextApiKey && contextApiKey === agentApiKey) {
+    if (initialAgentApiKey && initialAgentApiKey === agentApiKey) {
       setHasLocalAgentKeyOverride(false);
     }
-  }, [agentApiKey, contextApiKey, hasLocalAgentKeyOverride]);
+  }, [agentApiKey, initialAgentApiKey, hasLocalAgentKeyOverride]);
 
-  const contextApiReady = (agentApiKey ?? "").trim().length > 0;
+  const agentApiReady = (agentApiKey ?? "").trim().length > 0;
 
   const userKey = useStoredApiKey<UserApiKeyStatus>({
     initialStatus: userApiKey,
@@ -232,7 +232,7 @@ export const useApiKeys = ({
   });
 
   const handleCopyAgentKey = async () => {
-    if (!contextApiReady) {
+    if (!agentApiReady) {
       onStatus("The agent key is not available yet.");
       return;
     }
@@ -264,7 +264,7 @@ export const useApiKeys = ({
   };
 
   return {
-    contextApiReady,
+    agentApiReady,
     agentKey: {
       copied: agentKeyCopied,
       revealed: revealAgentKey,

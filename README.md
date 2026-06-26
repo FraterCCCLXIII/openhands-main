@@ -6,9 +6,9 @@ Teams use it to connect SaaS tools and custom MCP servers, attach each user's ow
 
 ## Highlights
 
-- Unified agent runtime endpoint: `POST /api/context/[integrationKey]/[toolName]`
+- Unified agent runtime endpoint: `POST /api/agent/[integrationKey]/[toolName]`
 - Agent-facing MCP server at `POST /api/mcp`
-- Generated agent docs via the downloadable tool catalog at `GET /api/context/skill` and the OpenAPI document at `GET /api/context/openapi`
+- Generated agent docs via the downloadable tool catalog at `GET /api/agent/skill` and the OpenAPI document at `GET /api/agent/openapi`
 - Separate user and admin automation APIs with their own OpenAPI documents
 - Per-user managed connectors, OAuth connections, and remote MCP integrations
 - Function-level access modes: `enabled`, `disabled`, and `approval_required`
@@ -46,9 +46,9 @@ Legacy compatibility routes still exist, but new docs and links should target th
 
 ### Agent runtime
 
-- `POST /api/context/[integrationKey]/[toolName]`
-- `GET /api/context/skill`
-- `GET /api/context/openapi`
+- `POST /api/agent/[integrationKey]/[toolName]`
+- `GET /api/agent/skill`
+- `GET /api/agent/openapi`
 - `POST /api/mcp`
 
 ### User automation API

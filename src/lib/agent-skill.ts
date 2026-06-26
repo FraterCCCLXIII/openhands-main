@@ -1,4 +1,4 @@
-import { OPENHANDS_CONTEXT_KEY_ENV } from "@/src/shared/agent-connection";
+import { OPENHANDS_AGENT_KEY_ENV } from "@/src/shared/agent-connection";
 import type {
   ToolAccessMode,
   ToolSpec,
@@ -52,17 +52,17 @@ export const buildAgentSkillMarkdown = ({
   const lines = [
     "---",
     "name: integrations-hub-profile-tools",
-    "description: Generated tool catalog for the current OpenHands Integrations Hub profile. Use it when an agent should call one of the registered tools through /api/context.",
+    "description: Generated tool catalog for the current OpenHands Integrations Hub profile. Use it when an agent should call one of the registered tools through /api/agent.",
     "---",
     "",
     "This generated tool catalog lists the tools that are currently available through the OpenHands Integrations Hub profile.",
     "",
     "## Auth",
     "",
-    `- Store the personal integrations-hub API key in ${OPENHANDS_CONTEXT_KEY_ENV}.`,
-    `- Send \`Authorization: Bearer ${OPENHANDS_CONTEXT_KEY_ENV}\`.`,
+    `- Store the personal integrations-hub API key in ${OPENHANDS_AGENT_KEY_ENV}.`,
+    `- Send \`Authorization: Bearer ${OPENHANDS_AGENT_KEY_ENV}\`.`,
     `- Base URL: \`${normalizedBaseUrl}\``,
-    `- Endpoint pattern: \`POST ${normalizedBaseUrl}/api/context/{integrationKey}/{toolName}\``,
+    `- Endpoint pattern: \`POST ${normalizedBaseUrl}/api/agent/{integrationKey}/{toolName}\``,
     "",
     "## Request body",
     "",
@@ -100,7 +100,7 @@ export const buildAgentSkillMarkdown = ({
           `#### \`${integration.key}.${toolSpec.name}\``,
           "",
           `- Description: ${toolSpec.description || "No description provided."}`,
-          `- Invoke with: \`POST ${normalizedBaseUrl}/api/context/${integration.key}/${toolSpec.name}\``,
+          `- Invoke with: \`POST ${normalizedBaseUrl}/api/agent/${integration.key}/${toolSpec.name}\``,
           `- Default scopes: ${renderScopes(toolSpec.defaultScopes)}`,
           `- Access: ${renderAccessMode(toolSpec)}`,
           "",

@@ -12,7 +12,9 @@ import {
 } from "@/src/lib/tool-examples";
 import type { IntegrationSpec } from "@/src/types/integrations-hub";
 
-export const OPENHANDS_CONTEXT_KEY_ENV = "$OPENHANDS_CONTEXT_KEY";
+export const OPENHANDS_AGENT_KEY_ENV = "$OPENHANDS_AGENT_KEY";
+// Backward-compatible alias for callers that still reference the old env name.
+export const OPENHANDS_CONTEXT_KEY_ENV = OPENHANDS_AGENT_KEY_ENV;
 // Default MCP URL for OpenHands Cloud - replace with your deployment URL
 export const OPENHANDS_CLOUD_SHTTP_MCP_URL =
   "https://integrations-hub.example.com/api/mcp";
@@ -66,8 +68,8 @@ export const buildAgentConnectionGuide = ({
     payload: sampleTool ? buildExamplePayload(sampleTool) : {},
   };
   const normalizedBaseUrl = baseUrl.replace(/\/$/, "");
-  const endpoint = `${normalizedBaseUrl}/api/context/${integrationKey}/${toolName}`;
-  const openApiSchemaEndpoint = `${normalizedBaseUrl}/api/context/openapi`;
+  const endpoint = `${normalizedBaseUrl}/api/agent/${integrationKey}/${toolName}`;
+  const openApiSchemaEndpoint = `${normalizedBaseUrl}/api/agent/openapi`;
   const mcpEndpoint = `${normalizedBaseUrl}/api/mcp`;
   const mcpToolName = buildIntegrationsHubMcpToolName(integrationKey, toolName);
   const mcpSetAgentIdToolName = INTEGRATIONS_HUB_MCP_SET_AGENT_ID_TOOL_NAME;
@@ -91,7 +93,7 @@ export const buildAgentConnectionGuide = ({
 });
 
 const result = await response.json();`;
-  const skillEndpoint = `${normalizedBaseUrl}/api/context/skill`;
+  const skillEndpoint = `${normalizedBaseUrl}/api/agent/skill`;
   const skillCurlExample = [
     `curl -L "${skillEndpoint}"`,
     `  -H "Authorization: Bearer ${apiKey}"`,
@@ -122,7 +124,7 @@ const result = await response.json();`;
     `2. Call ${mcpToolName} directly; if you omit agent identity, the session keeps agentId and agentClass unset (null).`,
     `3. Optionally call ${mcpSetAgentIdToolName} and ${mcpSetAgentClassToolName} to set or clear the identity for the rest of the session.`,
     `4. If you plan to request case-by-case tools, call ${mcpSetAgentDataToolName} with your conversationLink first so humans can review the originating conversation.`,
-    "5. You can also pass contextAgentId and contextAgentClass per tool call, including null when you need a one-off override.",
+    "5. You can also pass agentId and agentClass per tool call, including null when you need a one-off override.",
   ].join("\n");
 
   return {

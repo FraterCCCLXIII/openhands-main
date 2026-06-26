@@ -21,10 +21,10 @@ Legacy redirects:
 
 ### REST tool invocation
 
-- `POST /api/context/[integrationKey]/[toolName]`
+- `POST /api/agent/[integrationKey]/[toolName]`
 - Auth: personal agent/runtime API key (`cla_...`)
-- Generated schema: `GET /api/context/openapi`
-- Generated tool catalog markdown: `GET /api/context/skill`
+- Generated schema: `GET /api/agent/openapi`
+- Generated tool catalog markdown: `GET /api/agent/skill`
 
 ### MCP server
 
@@ -64,5 +64,5 @@ Legacy redirects:
 
 - `src/lib/agent-connection.ts` builds the connection examples shown in the dashboard
 - `src/lib/agent-skill.ts` builds the downloadable `SKILL.md` tool catalog
-- `src/lib/context-openapi.ts` builds the agent runtime OpenAPI document
+- `backend/app/main.py` (`agent_openapi`) builds the agent runtime OpenAPI document
 - `src/lib/user-openapi.ts` and `src/lib/admin-openapi.ts` build the automation API documents

@@ -39,7 +39,7 @@ from .managed_connectors import (
 )
 from .models import (
     AccessRequest,
-    ContextInvocationRequest,
+    AgentInvocationRequest,
     IntegrationSpec,
     ManagedConnector,
     ManagedConnectorTool,
@@ -126,7 +126,7 @@ def human_approval_required_detail(
     return " ".join(parts)
 
 
-def context_openapi(
+def agent_openapi(
     owner: str, request: Request, profile: PermissionProfile | None = None
 ) -> dict[str, Any]:
     connection_keys = {
@@ -142,7 +142,7 @@ def context_openapi(
         for tool in integration.tools.values():
             if not tool.enabled or tool.accessMode == "disabled":
                 continue
-            paths[f"/api/context/{integration.key}/{tool.name}"] = {
+            paths[f"/api/agent/{integration.key}/{tool.name}"] = {
                 "post": {
                     "summary": tool.description or tool.name,
                     "description": "Invocation identity is optional; agentId and agentClass default to null when omitted. Enabled tools are callable by default unless you mark them for case-by-case approval.",
@@ -162,23 +162,27 @@ def context_openapi(
                         },
                     },
                     "responses": {"200": {"description": "Tool invocation result"}},
-                    "security": [{"ContextApiKey": []}],
+                    "security": [{"AgentApiKey": []}],
                 }
             }
     return {
         "openapi": "3.0.3",
-        "info": {"title": "OpenHands Integrations Hub Context API", "version": "0.1.0"},
+        "info": {"title": "OpenHands Integrations Hub Agent API", "version": "0.1.0"},
         "servers": [{"url": base_url(request)}],
         "paths": paths,
         "components": {
-            "securitySchemes": {"ContextApiKey": {"type": "http", "scheme": "bearer"}},
+            "securitySchemes": {"AgentApiKey": {"type": "http", "scheme": "bearer"}},
             "schemas": {
-                "ContextInvokeRequest": {"type": "object"},
-                "ContextInvocationResult": {"type": "object"},
+                "AgentInvokeRequest": {"type": "object"},
+                "AgentInvocationResult": {"type": "object"},
                 "ErrorResponse": {"type": "object"},
             },
         },
     }
+
+
+# Backward-compatible alias for callers that still import the old name.
+context_openapi = agent_openapi
 
 
 def user_openapi(request: Request, is_admin: bool) -> dict[str, Any]:
@@ -1202,15 +1206,15 @@ def json_schema_properties(schema: Any) -> tuple[dict[str, Any], set[str]]:
 
 def mcp_tool_input_schema(tool: ToolSpec) -> dict[str, Any]:
     properties: dict[str, Any] = {
-        "contextAgentId": {
+        "agentId": {
             "type": ["string", "null"],
             "description": "Optional agent ID override for this call.",
         },
-        "contextAgentClass": {
+        "agentClass": {
             "type": ["string", "null"],
             "description": "Optional agent class override for this call.",
         },
-        "contextScopes": {
+        "scopes": {
             "type": "array",
             "items": {"type": "string"},
             "description": "Optional requested scopes for this call.",
@@ -1314,11 +1318,16 @@ def mcp_call(
         arguments = params.get("arguments", {})
         argument_payload = arguments if isinstance(arguments, dict) else {}
         requested_scopes = argument_payload.pop(
-            "contextScopes", params.get("scopes", [])
+            "scopes",
+            argument_payload.pop("contextScopes", params.get("scopes", [])),
         )
         scopes = requested_scopes if isinstance(requested_scopes, list) else []
-        agent_id = argument_payload.pop("contextAgentId", None)
-        agent_class = argument_payload.pop("contextAgentClass", None)
+        agent_id = argument_payload.pop(
+            "agentId", argument_payload.pop("contextAgentId", None)
+        )
+        agent_class = argument_payload.pop(
+            "agentClass", argument_payload.pop("contextAgentClass", None)
+        )
         try:
             data = invoke_enabled_tool(
                 owner,
@@ -2456,8 +2465,8 @@ async def fastapi_handler(request: Request):
         owner = owner_id(request)
         user_api_is_admin = is_admin_owner(owner)
     active_permission_profile: PermissionProfile | None = None
-    if path.startswith("/api/context"):
-        agent_record = authorized_agent_record(request, "call /api/context")
+    if path.startswith("/api/agent") or path.startswith("/api/context"):
+        agent_record = authorized_agent_record(request, "call /api/agent")
         owner = str(agent_record["ownerId"])
         active_permission_profile = agent_permission_profile(agent_record)
     if path == "/api/mcp":
@@ -2499,8 +2508,8 @@ async def fastapi_handler(request: Request):
     if path == "/api/health":
         return {"status": "ok", "backend": "fastapi"}
 
-    if path == "/api/context/openapi":
-        return context_openapi(owner, request, active_permission_profile)
+    if path in {"/api/agent/openapi", "/api/context/openapi"}:
+        return agent_openapi(owner, request, active_permission_profile)
     if path == "/api/user/openapi":
         return user_openapi(request, user_api_is_admin)
     if path == "/api/admin/openapi":
@@ -2511,7 +2520,7 @@ async def fastapi_handler(request: Request):
     }:
         return managed_openapi(request)
 
-    if path == "/api/context/skill":
+    if path in {"/api/agent/skill", "/api/context/skill"}:
         lines = ["# OpenHands Integrations Hub", "", "Available tools:"]
         for integration in profiled_integrations(owner, active_permission_profile):
             for tool in integration.tools.values():
@@ -2727,11 +2736,14 @@ async def fastapi_handler(request: Request):
         require_app_admin(owner, ADMIN_CONNECTOR_MANAGEMENT_DETAIL, user_api_is_admin)
         return index_managed_connector_functions(params["slug"], owner)
 
-    if path == "/api/context/{integrationKey}/{toolName}":
+    if path in {
+        "/api/agent/{integrationKey}/{toolName}",
+        "/api/context/{integrationKey}/{toolName}",
+    }:
         integration = profiled_integration(
             owner, params["integrationKey"], active_permission_profile
         )
-        payload = ContextInvocationRequest.model_validate(body)
+        payload = AgentInvocationRequest.model_validate(body)
         if not integration or not integration.enabled:
             raise HTTPException(
                 status_code=404, detail="Integration not found or disabled."

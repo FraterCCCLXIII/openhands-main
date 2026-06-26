@@ -31,7 +31,7 @@ interface AdminKeyApiResponse {
 interface InitialDataResponse {
   integrations: IntegrationSpec[];
   accessRequests: AccessRequest[];
-  contextApiKey: string;
+  agentApiKey: string;
   userApiKey: UserApiKeyStatus | null;
   adminApiKey: AdminApiKeyStatus | null;
 }
@@ -91,7 +91,7 @@ export function ClientDashboardPage() {
       return {
         integrations,
         accessRequests,
-        contextApiKey: agentKeyRes.apiKey ?? "",
+        agentApiKey: agentKeyRes.apiKey ?? "",
         // Extract the nested 'key' property from the API response wrapper
         userApiKey: userKeyRes?.key ?? null,
         adminApiKey: adminKeyRes?.key ?? null,
@@ -103,7 +103,7 @@ export function ClientDashboardPage() {
   });
 
   // Get base URL from window
-  const contextApiBaseUrl = useMemo(() => {
+  const agentApiBaseUrl = useMemo(() => {
     if (typeof window === "undefined") return "";
     return window.location.origin;
   }, []);
@@ -168,8 +168,8 @@ export function ClientDashboardPage() {
           currentUser={currentUser}
           initialIntegrations={data.integrations}
           initialAccessRequests={data.accessRequests}
-          contextApiBaseUrl={contextApiBaseUrl}
-          contextApiKey={data.contextApiKey}
+          agentApiBaseUrl={agentApiBaseUrl}
+          agentApiKey={data.agentApiKey}
           userApiKey={data.userApiKey}
           adminApiKey={data.adminApiKey}
           isAdmin={isAdmin}

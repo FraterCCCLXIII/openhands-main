@@ -18,7 +18,7 @@ describe("branch coverage reporting", () => {
     "/workspace/project/integrations-hub/app/page.tsx": {
       branches: { total: 4, covered: 3, skipped: 0, pct: 75 },
     },
-    "/workspace/project/integrations-hub/app/api/context/route.ts": {
+    "/workspace/project/integrations-hub/app/api/agent/route.ts": {
       branches: { total: 12, covered: 7, skipped: 0, pct: 58.33 },
     },
     "/workspace/project/integrations-hub/src/components/dashboard/workspace.tsx": {
@@ -40,7 +40,7 @@ describe("branch coverage reporting", () => {
     expect(classifyCoverageArea("src/components/dashboard/workspace.tsx")).toBe(
       "frontend-components",
     );
-    expect(classifyCoverageArea("app/api/context/route.ts")).toBe("backend-api");
+    expect(classifyCoverageArea("app/api/agent/route.ts")).toBe("backend-api");
     expect(classifyCoverageArea("src/lib/core/service.ts")).toBe("backend-lib");
     expect(classifyCoverageArea("proxy.ts")).toBeNull();
   });
@@ -109,7 +109,7 @@ describe("branch coverage reporting", () => {
         uncoveredBranches: 8,
       }),
       expect.objectContaining({
-        relativePath: "app/api/context/route.ts",
+        relativePath: "app/api/agent/route.ts",
         uncoveredBranches: 5,
       }),
     ]);

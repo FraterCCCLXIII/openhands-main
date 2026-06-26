@@ -50,11 +50,15 @@ class IntegrationSpec(BaseModel):
         return self.model_copy(update={"credentials": {}})
 
 
-class ContextInvocationRequest(BaseModel):
+class AgentInvocationRequest(BaseModel):
     agentId: str | None = None
     agentClass: str | None = None
     scopes: list[str] = Field(default_factory=list)
     payload: dict[str, Any] = Field(default_factory=dict)
+
+
+# Backward-compatible alias for callers that still import the old name.
+ContextInvocationRequest = AgentInvocationRequest
 
 
 class AccessRequest(BaseModel):

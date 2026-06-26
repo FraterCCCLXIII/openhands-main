@@ -220,7 +220,7 @@ interface AgentConnectionSectionProps {
   agentMcpToolName: string;
   agentOpenApiSchemaEndpoint: string;
   agentRestPromptExample: string;
-  contextApiReady: boolean;
+  agentApiReady: boolean;
   isAdmin: boolean;
   permissionProfiles: PermissionProfile[];
 
@@ -247,7 +247,7 @@ export const AgentConnectionSection = ({
   agentMcpToolName,
   agentOpenApiSchemaEndpoint,
   agentRestPromptExample,
-  contextApiReady,
+  agentApiReady,
   isAdmin,
   permissionProfiles,
   userKey,
@@ -264,13 +264,13 @@ export const AgentConnectionSection = ({
             label="Agent key"
             description="Give this key to your agent."
             maskedValue={agentKey.maskedValue || "No agent key available yet."}
-            badgeTone={contextApiReady ? "success" : "warning"}
+            badgeTone={agentApiReady ? "success" : "warning"}
             badgeLabel="agent"
             copied={agentKey.copied}
             onRevealToggle={agentKey.toggleReveal}
             onCopy={agentKey.handleCopy}
             onRotate={agentKey.handleRotate}
-            revealDisabled={!contextApiReady}
+            revealDisabled={!agentApiReady}
             revealed={agentKey.revealed}
           />
         )}

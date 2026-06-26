@@ -162,8 +162,8 @@ describe("DashboardWorkspace", () => {
             initialIntegrations={[]}
             initialAccessRequests={[]}
             currentUser={{ name: "Admin User", email: "admin@example.com" }}
-            contextApiBaseUrl="https://example.com"
-            contextApiKey="test-key"
+            agentApiBaseUrl="https://example.com"
+            agentApiKey="test-key"
           />
         </QueryClientProvider>,
       );
@@ -223,8 +223,8 @@ describe("DashboardWorkspace", () => {
             initialIntegrations={integrationsState}
             initialAccessRequests={[]}
             currentUser={{ name: "User", email: "user@example.com" }}
-            contextApiBaseUrl="https://example.com"
-            contextApiKey="test-key"
+            agentApiBaseUrl="https://example.com"
+            agentApiKey="test-key"
             isAdmin={false}
           />
         </QueryClientProvider>,
@@ -315,8 +315,8 @@ describe("DashboardWorkspace", () => {
             initialIntegrations={integrationsState}
             initialAccessRequests={[]}
             currentUser={{ name: "User", email: "user@example.com" }}
-            contextApiBaseUrl="https://example.com"
-            contextApiKey="test-key"
+            agentApiBaseUrl="https://example.com"
+            agentApiKey="test-key"
             isAdmin={false}
           />
         </QueryClientProvider>,
@@ -351,8 +351,8 @@ describe("DashboardWorkspace", () => {
             initialIntegrations={[]}
             initialAccessRequests={[]}
             currentUser={{ name: "Admin User", email: "admin@example.com" }}
-            contextApiBaseUrl="https://example.com"
-            contextApiKey="test-key"
+            agentApiBaseUrl="https://example.com"
+            agentApiKey="test-key"
           />
         </QueryClientProvider>,
       );
@@ -380,8 +380,8 @@ describe("DashboardWorkspace", () => {
             initialIntegrations={[]}
             initialAccessRequests={[]}
             currentUser={{ name: "Admin User", email: "admin@example.com" }}
-            contextApiBaseUrl="https://example.com"
-            contextApiKey="test-key"
+            agentApiBaseUrl="https://example.com"
+            agentApiKey="test-key"
           />
         </QueryClientProvider>,
       );
@@ -436,8 +436,8 @@ describe("DashboardWorkspace", () => {
             initialIntegrations={integrationsState}
             initialAccessRequests={[]}
             currentUser={{ name: "Admin User", email: "admin@example.com" }}
-            contextApiBaseUrl="https://example.com"
-            contextApiKey="test-key"
+            agentApiBaseUrl="https://example.com"
+            agentApiKey="test-key"
           />
         </QueryClientProvider>,
       );
@@ -487,8 +487,8 @@ describe("DashboardWorkspace", () => {
               initialIntegrations={[]}
               initialAccessRequests={[]}
               currentUser={{ name: "Admin User", email: "admin@example.com" }}
-              contextApiBaseUrl="https://example.com"
-              contextApiKey="test-key"
+              agentApiBaseUrl="https://example.com"
+              agentApiKey="test-key"
             />
           </QueryClientProvider>,
         );
@@ -566,8 +566,8 @@ describe("DashboardWorkspace", () => {
             initialIntegrations={[]}
             initialAccessRequests={[]}
             currentUser={{ name: "Admin User", email: "admin@example.com" }}
-            contextApiBaseUrl="https://example.com"
-            contextApiKey="test-key"
+            agentApiBaseUrl="https://example.com"
+            agentApiKey="test-key"
           />
         </QueryClientProvider>,
       );
@@ -594,8 +594,8 @@ describe("DashboardWorkspace", () => {
               initialIntegrations={[]}
               initialAccessRequests={[]}
               currentUser={{ name: "Admin User", email: "admin@example.com" }}
-              contextApiBaseUrl="https://example.com"
-              contextApiKey="test-key"
+              agentApiBaseUrl="https://example.com"
+              agentApiKey="test-key"
               userApiKey={{
                 keyPrefix: "clu_12345678",
                 keySuffix: "mnop",
@@ -650,7 +650,7 @@ describe("DashboardWorkspace", () => {
       expect(text).toContain("Agent REST API");
       expect(text).toContain("User REST API");
       expect(text).toContain("Admin REST API");
-      expect(text).toContain("https://example.com/api/context/openapi");
+      expect(text).toContain("https://example.com/api/agent/openapi");
       expect(text).toContain("https://example.com/api/user/openapi");
       expect(text).toContain("https://example.com/api/admin/openapi");
       expect(text).toContain(
@@ -662,9 +662,9 @@ describe("DashboardWorkspace", () => {
       expect(text).toContain(
         "I have provided you with an admin API key in $OPENHANDS_INTEGRATIONS_HUB_ADMIN_KEY",
       );
-      expect(text).not.toContain("Works with /api/context/*");
+      expect(text).not.toContain("Works with /api/agent/*");
       expect(text).not.toContain("Works with /api/user/*");
-      expect(text).not.toContain("https://example.com/api/context/skill");
+      expect(text).not.toContain("https://example.com/api/agent/skill");
       expect(text).not.toContain("Generate");
       expect(text).not.toContain("Revoke");
     });
@@ -804,8 +804,8 @@ describe("DashboardWorkspace", () => {
               initialIntegrations={integrationsState}
               initialAccessRequests={[]}
               currentUser={{ name: "Admin User", email: "admin@example.com" }}
-              contextApiBaseUrl="https://example.com"
-              contextApiKey="test-key"
+              agentApiBaseUrl="https://example.com"
+              agentApiKey="test-key"
             />
           </QueryClientProvider>,
         );
@@ -1092,8 +1092,8 @@ describe("DashboardWorkspace", () => {
             initialIntegrations={integrationsState}
             initialAccessRequests={[]}
             currentUser={{ name: "Admin User", email: "admin@example.com" }}
-            contextApiBaseUrl="https://example.com"
-            contextApiKey="test-key"
+            agentApiBaseUrl="https://example.com"
+            agentApiKey="test-key"
           />
         </QueryClientProvider>,
       );
@@ -1159,8 +1159,8 @@ describe("DashboardWorkspace", () => {
             initialIntegrations={[]}
             initialAccessRequests={[]}
             currentUser={{ name: "Admin User", email: "admin@example.com" }}
-            contextApiBaseUrl="https://example.com"
-            contextApiKey="test-key"
+            agentApiBaseUrl="https://example.com"
+            agentApiKey="test-key"
           />
         </QueryClientProvider>,
       );
@@ -1233,8 +1233,8 @@ describe("DashboardWorkspace", () => {
             initialIntegrations={[]}
             initialAccessRequests={[]}
             currentUser={{ name: "Admin User", email: "admin@example.com" }}
-            contextApiBaseUrl="https://example.com"
-            contextApiKey="cla_original_1234567890abcdefghijkl"
+            agentApiBaseUrl="https://example.com"
+            agentApiKey="cla_original_1234567890abcdefghijkl"
           />
         </QueryClientProvider>,
       );
@@ -1293,7 +1293,7 @@ describe("DashboardWorkspace", () => {
       });
     });
 
-    const staleContextApiKey = "cla_original_stale_prop_1234567890";
+    const staleAgentApiKey = "cla_original_stale_prop_1234567890";
 
     await act(async () => {
       root.render(
@@ -1302,8 +1302,8 @@ describe("DashboardWorkspace", () => {
             initialIntegrations={[]}
             initialAccessRequests={[]}
             currentUser={{ name: "Admin User", email: "admin@example.com" }}
-            contextApiBaseUrl="https://example.com"
-            contextApiKey={staleContextApiKey}
+            agentApiBaseUrl="https://example.com"
+            agentApiKey={staleAgentApiKey}
           />
         </QueryClientProvider>,
       );
@@ -1330,8 +1330,8 @@ describe("DashboardWorkspace", () => {
             initialIntegrations={[]}
             initialAccessRequests={[]}
             currentUser={{ name: "Admin User", email: "admin@example.com" }}
-            contextApiBaseUrl="https://example.com"
-            contextApiKey={staleContextApiKey}
+            agentApiBaseUrl="https://example.com"
+            agentApiKey={staleAgentApiKey}
           />
         </QueryClientProvider>,
       );
@@ -1340,7 +1340,7 @@ describe("DashboardWorkspace", () => {
     });
 
     expect(container.textContent).toContain("cla_rotated_stale_safe_1234567890");
-    expect(container.textContent).not.toContain(staleContextApiKey);
+    expect(container.textContent).not.toContain(staleAgentApiKey);
   });
 
 
@@ -1392,8 +1392,8 @@ describe("DashboardWorkspace", () => {
             initialIntegrations={[]}
             initialAccessRequests={[]}
             currentUser={{ name: "Admin User", email: "admin@example.com" }}
-            contextApiBaseUrl="https://example.com"
-            contextApiKey="test-key"
+            agentApiBaseUrl="https://example.com"
+            agentApiKey="test-key"
             userApiKey={{
               keyPrefix: "clu_12345678",
               keySuffix: "mnop",
@@ -1500,8 +1500,8 @@ describe("DashboardWorkspace", () => {
             initialIntegrations={[]}
             initialAccessRequests={[]}
             currentUser={{ name: "Admin User", email: "admin@example.com" }}
-            contextApiBaseUrl="https://example.com"
-            contextApiKey="test-key"
+            agentApiBaseUrl="https://example.com"
+            agentApiKey="test-key"
           />
         </QueryClientProvider>,
       );
@@ -1585,8 +1585,8 @@ describe("DashboardWorkspace", () => {
             initialIntegrations={[]}
             initialAccessRequests={[]}
             currentUser={{ name: "Admin User", email: "admin@example.com" }}
-            contextApiBaseUrl="https://example.com"
-            contextApiKey="test-key"
+            agentApiBaseUrl="https://example.com"
+            agentApiKey="test-key"
             adminApiKey={{
               keyPrefix: "clad_123456",
               keySuffix: "wxyz",
@@ -1732,8 +1732,8 @@ describe("DashboardWorkspace", () => {
               initialIntegrations={[]}
               initialAccessRequests={accessRequestsState}
               currentUser={{ name: "Admin User", email: "admin@example.com" }}
-              contextApiBaseUrl="https://example.com"
-              contextApiKey="test-key"
+              agentApiBaseUrl="https://example.com"
+              agentApiKey="test-key"
             />
           </QueryClientProvider>,
         );
@@ -1891,8 +1891,8 @@ describe("DashboardWorkspace", () => {
             initialIntegrations={[]}
             initialAccessRequests={accessRequestsState}
             currentUser={{ name: "Admin User", email: "admin@example.com" }}
-            contextApiBaseUrl="https://example.com"
-            contextApiKey="test-key"
+            agentApiBaseUrl="https://example.com"
+            agentApiKey="test-key"
           />
         </QueryClientProvider>,
       );
@@ -1948,8 +1948,8 @@ describe("DashboardWorkspace", () => {
             initialIntegrations={[]}
             initialAccessRequests={[]}
             currentUser={{ name: "", email: "dev@localhost" }}
-            contextApiBaseUrl="https://example.com"
-            contextApiKey=""
+            agentApiBaseUrl="https://example.com"
+            agentApiKey=""
             isAdmin={false}
           />
         </QueryClientProvider>,
@@ -1963,7 +1963,7 @@ describe("DashboardWorkspace", () => {
     expect(container.textContent).toContain("Agent key status");
     expect(container.textContent).toContain("Not available yet");
     expect(container.textContent).toContain(
-      "Open /integrations once to provision the agent key before agents call /api/context/*.",
+      "Open /integrations once to provision the agent key before agents call /api/agent/*.",
     );
   });
 
@@ -2033,8 +2033,8 @@ describe("DashboardWorkspace", () => {
             initialIntegrations={integrationsState}
             initialAccessRequests={[]}
             currentUser={{ name: "User", email: "user@example.com" }}
-            contextApiBaseUrl="https://example.com"
-            contextApiKey="test-key"
+            agentApiBaseUrl="https://example.com"
+            agentApiKey="test-key"
             isAdmin={false}
           />
         </QueryClientProvider>,
@@ -2129,8 +2129,8 @@ describe("DashboardWorkspace", () => {
             initialIntegrations={integrationsState}
             initialAccessRequests={[]}
             currentUser={{ name: "User", email: "user@example.com" }}
-            contextApiBaseUrl="https://example.com"
-            contextApiKey="test-key"
+            agentApiBaseUrl="https://example.com"
+            agentApiKey="test-key"
             isAdmin={false}
           />
         </QueryClientProvider>,
@@ -2238,8 +2238,8 @@ describe("DashboardWorkspace", () => {
             initialIntegrations={integrationsState}
             initialAccessRequests={[]}
             currentUser={{ name: "User", email: "user@example.com" }}
-            contextApiBaseUrl="https://example.com"
-            contextApiKey="test-key"
+            agentApiBaseUrl="https://example.com"
+            agentApiKey="test-key"
             isAdmin={false}
           />
         </QueryClientProvider>,
@@ -2327,8 +2327,8 @@ describe("DashboardWorkspace", () => {
             initialIntegrations={[]}
             initialAccessRequests={accessRequestsState}
             currentUser={{ name: "", email: "" }}
-            contextApiBaseUrl="https://example.com"
-            contextApiKey="test-key"
+            agentApiBaseUrl="https://example.com"
+            agentApiKey="test-key"
           />
         </QueryClientProvider>,
       );
@@ -2427,8 +2427,8 @@ describe("DashboardWorkspace", () => {
             initialIntegrations={integrationsWithoutTrackedUsage}
             initialAccessRequests={[]}
             currentUser={{ name: "User", email: "user@example.com" }}
-            contextApiBaseUrl="https://example.com"
-            contextApiKey="test-key"
+            agentApiBaseUrl="https://example.com"
+            agentApiKey="test-key"
             isAdmin={false}
           />
         </QueryClientProvider>,

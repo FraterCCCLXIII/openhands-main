@@ -45,14 +45,14 @@ Important boundaries:
 
 - **Dashboard auth** identifies a human.
 - **Runtime auth** identifies an owner-scoped agent session.
-- **Agent identity metadata** (`agentId`, `agentClass`, optional `contextScopes`) affects authorization decisions, but it is not itself the authentication credential.
+- **Agent identity metadata** (`agentId`, `agentClass`, optional `scopes`) affects authorization decisions, but it is not itself the authentication credential.
 
 ### Authentication surfaces and key types
 
 | Surface | Auth mechanism | Scope |
 | --- | --- | --- |
 | Dashboard pages | OpenHands Cloud device-flow login, or `INTHUB_DISABLE_AUTH=true` for localhost-only development | Human dashboard access |
-| Agent REST runtime (`/api/context/*`) | Personal agent/runtime key `cla_...` | Least-privileged tool invocation only |
+| Agent REST runtime (`/api/agent/*`) | Personal agent/runtime key `cla_...` | Least-privileged tool invocation only |
 | MCP runtime (`/api/mcp`) | Personal agent/runtime key `cla_...` | Same least-privileged runtime surface via MCP |
 | User automation API (`/api/user/*`) | User automation key `clu_...` | Dashboard-equivalent management for the authenticated owner |
 | Admin automation API (`/api/admin/*`) | Admin automation key `clad_...` | Admin-only connector and approval operations |
@@ -91,7 +91,7 @@ There is also an **admin ceiling** on managed connectors:
 #### Enabled tool flow
 
 1. A user installs an integration and keeps a tool `enabled`.
-2. An agent calls `/api/context/...` or `/api/mcp` with a `cla_...` key.
+2. An agent calls `/api/agent/...` or `/api/mcp` with a `cla_...` key.
 3. The integrations hub resolves the owner, validates the integration, loads that owner's connection details if needed, and invokes the downstream connector.
 4. Invocation metadata is recorded as a best-effort audit side effect.
 
@@ -250,7 +250,7 @@ Current CI mapping:
 | Integrations hub | The owner-scoped service that sits between agents and external providers and exposes the controlled REST/MCP runtime surfaces |
 | Owner | The normalized signed-in identity that owns runtime keys, installed integrations, and per-user connection records |
 | Allowlisted admin | An owner whose email is present in `APP_ADMIN_EMAILS`, unlocking service-level connector and admin API operations |
-| Agent runtime key (`cla_...`) | Least-privileged key used only for `/api/context/*`, `/api/context/openapi`, `/api/context/skill`, and `/api/mcp` |
+| Agent runtime key (`cla_...`) | Least-privileged key used only for `/api/agent/*`, `/api/agent/openapi`, `/api/agent/skill`, and `/api/mcp` |
 | User automation key (`clu_...`) | Owner-scoped automation key for `/api/user/*` routes |
 | Admin automation key (`clad_...`) | Admin-only automation key for `/api/admin/*` routes |
 | Managed connector | A service-level connector definition registered once by admins and reused by many owners |

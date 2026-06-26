@@ -116,7 +116,7 @@ def headers_for(route_path: str) -> dict[str, str]:
         "/api/user/agent-key",
     }:
         return {"X-Owner-Id": OWNER, "Authorization": f"Bearer {USER_KEY}"}
-    if route_path.startswith("/api/context") or route_path == "/api/mcp":
+    if route_path.startswith("/api/context") or route_path.startswith("/api/agent") or route_path == "/api/mcp":
         return {"X-Owner-Id": OWNER, "Authorization": f"Bearer {AGENT_KEY}"}
     return {"X-Owner-Id": OWNER}
 
@@ -174,7 +174,7 @@ def body_for(path: str) -> object:
             "authStrategy": "none",
             "tools": {},
         }
-    if path == "/api/context/{integrationKey}/{toolName}":
+    if path in {"/api/agent/{integrationKey}/{toolName}", "/api/context/{integrationKey}/{toolName}"}:
         return {"payload": {}, "scopes": []}
     if path == "/api/mcp":
         return {"jsonrpc": "2.0", "id": 1, "method": "tools/list"}

@@ -9,8 +9,8 @@ interface ProfileSectionProps {
   userName: string;
   userEmail: string;
   authMode: string;
-  contextApiBaseUrl: string;
-  contextApiReady: boolean;
+  agentApiBaseUrl: string;
+  agentApiReady: boolean;
   integrationCount: number;
   pendingAccessRequestCount: number;
 }
@@ -19,8 +19,8 @@ export const ProfileSection = ({
   userName,
   userEmail,
   authMode,
-  contextApiBaseUrl,
-  contextApiReady,
+  agentApiBaseUrl,
+  agentApiReady,
   integrationCount,
   pendingAccessRequestCount,
 }: ProfileSectionProps) => (
@@ -34,7 +34,7 @@ export const ProfileSection = ({
           label="Context API base URL"
           value={
             <code className="break-all text-xs text-[var(--color-text-active)]">
-              {contextApiBaseUrl}
+              {agentApiBaseUrl}
             </code>
           }
         />
@@ -45,7 +45,7 @@ export const ProfileSection = ({
       <div className="divide-y divide-[var(--color-border)]">
         <KeyValueRow
           label="Agent key status"
-          value={contextApiReady ? "Provisioned" : "Not available yet"}
+          value={agentApiReady ? "Provisioned" : "Not available yet"}
         />
         <KeyValueRow label="Visible integrations" value={String(integrationCount)} />
         <KeyValueRow
@@ -56,7 +56,7 @@ export const ProfileSection = ({
           label="Endpoint pattern"
           value={
             <code className="break-all text-xs text-[var(--color-text-active)]">
-              {`${contextApiBaseUrl}/api/context/{integrationKey}/{toolName}`}
+              {`${agentApiBaseUrl}/api/agent/{integrationKey}/{toolName}`}
             </code>
           }
         />

@@ -81,7 +81,7 @@ describe("agent-skill", () => {
 
     expect(markdown).toContain("name: integrations-hub-profile-tools");
     expect(markdown).toContain(
-      "Endpoint pattern: `POST https://integrations-hub.example.com/api/context/{integrationKey}/{toolName}`",
+      "Endpoint pattern: `POST https://integrations-hub.example.com/api/agent/{integrationKey}/{toolName}`",
     );
     expect(markdown).toContain("Generated tool catalog for the current OpenHands Integrations Hub profile.");
     expect(markdown).toContain("## Available tools (2)");

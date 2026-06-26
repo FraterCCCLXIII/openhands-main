@@ -43,7 +43,7 @@ import {
   approvalHoursToMinutes,
   normalizeApprovalDurationHours,
 } from "@/src/lib/access-requests";
-import { buildAgentConnectionGuide } from "@/src/shared/agent-connection";
+import { buildAgentConnectionGuide, OPENHANDS_AGENT_KEY_ENV } from "@/src/shared/agent-connection";
 import type {
   AccessRequest,
   AdminApiKeyStatus,
@@ -61,8 +61,8 @@ interface DashboardWorkspaceProps {
   initialIntegrations: IntegrationSpec[];
   initialAccessRequests: AccessRequest[];
   currentUser: { name?: string | null; email?: string | null };
-  contextApiBaseUrl: string;
-  contextApiKey: string;
+  agentApiBaseUrl: string;
+  agentApiKey: string;
   userApiKey?: UserApiKeyStatus | null;
   userApiKeyValue?: string | null;
   adminApiKey?: AdminApiKeyStatus | null;
@@ -74,8 +74,8 @@ export const DashboardWorkspace = ({
   initialIntegrations,
   initialAccessRequests,
   currentUser,
-  contextApiBaseUrl,
-  contextApiKey,
+  agentApiBaseUrl,
+  agentApiKey,
   userApiKey = null,
   userApiKeyValue: initialUserApiKeyValue = null,
   adminApiKey = null,
@@ -320,8 +320,8 @@ export const DashboardWorkspace = ({
     (request) => request.status === "pending",
   );
 
-  const { contextApiReady, agentKey, userKey, adminKey } = useApiKeys({
-    contextApiKey,
+  const { agentApiReady, agentKey, userKey, adminKey } = useApiKeys({
+    agentApiKey,
     userApiKey,
     userApiKeyValue: initialUserApiKeyValue,
     adminApiKey,
@@ -372,13 +372,13 @@ export const DashboardWorkspace = ({
   const agentConnectionGuide = useMemo(
     () =>
       buildAgentConnectionGuide({
-        baseUrl: contextApiBaseUrl,
-        apiKey: "$OPENHANDS_CONTEXT_KEY",
+        baseUrl: agentApiBaseUrl,
+        apiKey: OPENHANDS_AGENT_KEY_ENV,
         integrations,
       }),
-    [contextApiBaseUrl, integrations],
+    [agentApiBaseUrl, integrations],
   );
-  const normalizedBaseUrl = contextApiBaseUrl.replace(/\/$/, "");
+  const normalizedBaseUrl = agentApiBaseUrl.replace(/\/$/, "");
   const userOpenApiSchemaEndpoint = `${normalizedBaseUrl}/api/user/openapi`;
   const adminOpenApiSchemaEndpoint = `${normalizedBaseUrl}/api/admin/openapi`;
   const agentRestPromptExample =
@@ -673,10 +673,10 @@ export const DashboardWorkspace = ({
           </div>
         ) : null}
 
-        {!contextApiReady ? (
+        {!agentApiReady ? (
           <div className="rounded-xl border border-[color:rgba(217,181,90,0.25)] bg-[color:rgba(217,181,90,0.12)] px-3 py-2 text-sm text-[var(--color-warning)]">
             Open <code className="text-white">/integrations</code> once to provision
-            the agent key before agents call <code className="text-white">/api/context/*</code>.
+            the agent key before agents call <code className="text-white">/api/agent/*</code>.
           </div>
         ) : null}
 
@@ -685,8 +685,8 @@ export const DashboardWorkspace = ({
             userName={userName}
             userEmail={userEmail}
             authMode={authMode}
-            contextApiBaseUrl={contextApiBaseUrl}
-            contextApiReady={contextApiReady}
+            agentApiBaseUrl={agentApiBaseUrl}
+            agentApiReady={agentApiReady}
             integrationCount={integrations.length}
             pendingAccessRequestCount={pendingAccessRequests.length}
           />
@@ -802,7 +802,7 @@ export const DashboardWorkspace = ({
             agentMcpToolName={agentConnectionGuide.mcpToolName}
             agentOpenApiSchemaEndpoint={agentConnectionGuide.openApiSchemaEndpoint}
             agentRestPromptExample={agentRestPromptExample}
-            contextApiReady={contextApiReady}
+            agentApiReady={agentApiReady}
             isAdmin={isAdmin}
             permissionProfiles={permissionProfiles}
             userKey={{

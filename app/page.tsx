@@ -62,7 +62,7 @@ export default function HomePage() {
               </Button>
             </Link>
             <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)] px-4 py-2 text-sm text-[var(--color-text-base)]">
-              Unified route: <code>POST /api/context/[integration]/[function]</code>
+              Unified route: <code>POST /api/agent/[integration]/[function]</code>
             </div>
           </div>
         </header>
