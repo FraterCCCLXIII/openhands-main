@@ -1372,8 +1372,6 @@ def requires_dashboard_session(path: str, method: str) -> bool:
         "/api/integrations/catalog",
     }:
         return True
-    if path.startswith("/api/case-by-case-approvals"):
-        return True
     if path == "/api/oauth/{provider}/start":
         return True
     if path.startswith("/api/managed-connectors") and method != "GET":
@@ -1463,6 +1461,54 @@ def authorize_user_api_owner(request: Request) -> tuple[str, bool]:
         )
     owner = str(record["ownerId"]).lower()
     return owner, is_admin_owner(owner)
+
+
+def authorize_user_api_owner_or_session(request: Request) -> str | None:
+    """Resolve the owner for a user-facing endpoint (e.g. case-by-case
+    approvals) from one of:
+
+    * a personal integrations-hub **user API key** (bearer / ``X-API-Key``),
+      validated against the stored user keys; or
+    * an OpenHands Cloud bearer token / dashboard session, when the supplied
+      credential is not a stored user key.
+
+    A bearer ``Authorization`` header can carry either an integrations-hub
+    user key or an OpenHands Cloud token (the dashboard UI sends the latter),
+    so when a credential is present we first try the user-key table and then
+    fall back to Cloud-token authentication instead of assuming every bearer
+    token is a user key.
+
+    Returns ``None`` when dashboard auth is disabled and no credential is
+    present, so the caller falls back to the default owner (``X-Owner-Id`` /
+    ``DEFAULT_OWNER``) -- preserving the open-access behavior used by the
+    test suite and local dashboards.
+
+    Raises HTTP 401 only when a credential is supplied but matches neither a
+    user key nor a valid Cloud session, and when dashboard auth is enabled but
+    no credential and no session are present.
+    """
+    credential = extract_api_key(request)
+    if credential:
+        record = repository.find_scoped_api_key("user", credential)
+        if record:
+            owner = str(record["ownerId"]).lower()
+            return owner
+        if is_auth_disabled():
+            # No Cloud session to fall back to when auth is disabled; a
+            # credential that is not a recognized user key is invalid.
+            raise HTTPException(
+                status_code=401,
+                detail="Provide a valid user API key in the Authorization bearer header or X-API-Key.",
+                headers={
+                    "WWW-Authenticate": 'Bearer realm="integrations-hub-user-api"'
+                },
+            )
+        user = authorize_dashboard_user(request)
+        return user.owner_id
+    if is_auth_disabled():
+        return None
+    user = authorize_dashboard_user(request)
+    return user.owner_id
 
 
 def authorize_admin_api_owner(request: Request) -> str:
@@ -2337,6 +2383,11 @@ async def fastapi_handler(request: Request):
         "/api/user/agent-key",
     }:
         owner, user_api_is_admin = authorize_user_api_owner(request)
+    if path.startswith("/api/case-by-case-approvals"):
+        resolved_owner = authorize_user_api_owner_or_session(request)
+        if resolved_owner is not None:
+            owner = resolved_owner
+            user_api_is_admin = is_admin_owner(owner)
     if path.startswith("/api/admin/") and path != "/api/admin/key":
         owner = authorize_admin_api_owner(request)
         user_api_is_admin = True

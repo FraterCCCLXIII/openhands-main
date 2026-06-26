@@ -2008,6 +2008,89 @@ def test_case_by_case_approvals_are_scoped_by_in_app_notification_target(
     assert requests[0]["status"] == "approved"
 
 
+def test_case_by_case_approvals_accept_user_api_key(
+    config_env: ConfigEnvFixture, monkeypatch
+) -> None:
+    config_env("INTHUB_DISABLE_AUTH", "true")
+    config_env("APP_ADMIN_EMAILS", "owner-a@example.com")
+    client = TestClient(app)
+    owner_a = {"X-Owner-Id": "owner-a@example.com"}
+    user_key = client.post("/api/user/key", headers=owner_a).json()["apiKey"]
+
+    repository.access_requests.setdefault("owner-a@example.com", {})["req-key"] = (
+        AccessRequest(
+            id="req-key",
+            agentId="agent-1",
+            agentClass="reviewer",
+            integrationKey="approval-demo",
+            toolName="lookup",
+            channels=["in_app"],
+            notificationTargets={"in_app": "owner-a@example.com"},
+            status="pending",
+        )
+    )
+
+    key_headers = {"Authorization": f"Bearer {user_key}"}
+    listed = client.get("/api/case-by-case-approvals", headers=key_headers).json()
+    assert [request["id"] for request in listed] == ["req-key"]
+
+    assert (
+        client.post(
+            "/api/case-by-case-approvals/req-key/approve", headers=key_headers
+        ).status_code
+        == 200
+    )
+
+    invalid = client.get(
+        "/api/case-by-case-approvals",
+        headers={"Authorization": "Bearer not-a-real-user-key"},
+    )
+    assert invalid.status_code == 401
+
+
+def test_case_by_case_approvals_accept_openhands_cloud_bearer_token(
+    config_env: ConfigEnvFixture, monkeypatch
+) -> None:
+    config_env("INTHUB_DISABLE_AUTH")
+    config_env("INTHUB_OPENHANDS_BASE_URL", "https://staging.all-hands.dev")
+    _patch_openhands_user_me(
+        monkeypatch,
+        {
+            "id": "user-1",
+            "org_id": "org-1",
+            "email": "User@Example.com",
+            "role": "member",
+            "permissions": [],
+        },
+    )
+    client = TestClient(app)
+    owner = "user-1:org-1"
+    repository.access_requests.setdefault(owner, {})["req-cloud"] = AccessRequest(
+        id="req-cloud",
+        agentId="agent-1",
+        agentClass="reviewer",
+        integrationKey="approval-demo",
+        toolName="lookup",
+        channels=["in_app"],
+        notificationTargets={"in_app": owner},
+        status="pending",
+    )
+
+    cloud_headers = {"Authorization": "Bearer valid-openhands-token"}
+    listed = client.get(
+        "/api/case-by-case-approvals", headers=cloud_headers
+    ).json()
+    assert [request["id"] for request in listed] == ["req-cloud"]
+
+    assert (
+        client.post(
+            "/api/case-by-case-approvals/req-cloud/approve",
+            headers=cloud_headers,
+        ).status_code
+        == 200
+    )
+
+
 def test_disable_unused_tools_uses_invocation_history(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:
