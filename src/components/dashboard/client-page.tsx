@@ -74,7 +74,7 @@ export function ClientDashboardPage() {
   }, [authLoading, isAuthenticated, authDisabled, sessionError, router]);
 
   // Fetch initial dashboard data
-  const { data, isLoading: dataLoading, error } = useQuery({
+  const { data, isLoading: dataLoading, isFetching, error, refetch } = useQuery({
     queryKey: ["dashboard-init", isAdmin],
     queryFn: async (): Promise<InitialDataResponse> => {
       const [integrations, accessRequests, agentKeyRes, userKeyRes, adminKeyRes] =
@@ -98,8 +98,13 @@ export function ClientDashboardPage() {
       };
     },
     enabled: isAuthenticated || authDisabled,
-    staleTime: 0,
-    retry: false,
+    // self-heal after transient failures
+    staleTime: 30_000,
+    gcTime: 5 * 60_000,
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 8_000),
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
   });
 
   // Get base URL from window
@@ -149,7 +154,15 @@ export function ClientDashboardPage() {
   // Error state - show service unavailable with error details
   if (error) {
     console.error("Dashboard data fetch error:", error);
-    return <ServiceUnavailableScreen isAdmin={isAdmin} />;
+    return (
+      <ServiceUnavailableScreen
+        isAdmin={isAdmin}
+        onRetry={() => {
+          void refetch();
+        }}
+        isRetrying={isFetching}
+      />
+    );
   }
 
   if (dataLoading || !data) {

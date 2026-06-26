@@ -1,14 +1,18 @@
-import { AlertTriangle, DatabaseZap } from "lucide-react";
+import { AlertTriangle, DatabaseZap, RefreshCw } from "lucide-react";
 
 import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
 
 type ServiceUnavailableScreenProps = {
   isAdmin: boolean;
+  onRetry?: () => void;
+  isRetrying?: boolean;
 };
 
 export const ServiceUnavailableScreen = ({
   isAdmin,
+  onRetry,
+  isRetrying = false,
 }: ServiceUnavailableScreenProps) => (
   <main className="min-h-screen px-6 py-12">
     <div className="mx-auto flex max-w-3xl flex-col gap-6">
@@ -30,6 +34,21 @@ export const ServiceUnavailableScreen = ({
               : "The integrations hub is temporarily unavailable. Please contact your administrator and try again later."}
           </p>
         </div>
+        {onRetry ? (
+          <div className="mt-6">
+            <button
+              type="button"
+              onClick={onRetry}
+              disabled={isRetrying}
+              className="inline-flex items-center gap-2 rounded-md border border-[var(--color-border)] bg-[var(--color-surface-subtle)] px-4 py-2 text-sm font-medium text-white transition hover:bg-[var(--color-surface)] disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <RefreshCw
+                className={isRetrying ? "h-4 w-4 animate-spin" : "h-4 w-4"}
+              />
+              {isRetrying ? "Retrying..." : "Try again"}
+            </button>
+          </div>
+        ) : null}
       </header>
 
       {isAdmin ? (
