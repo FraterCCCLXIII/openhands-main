@@ -412,8 +412,10 @@ describe("IntegrationsCatalog", () => {
       );
     });
 
-    expect(container.textContent).not.toContain("Registered managed connectors");
-    expect(container.textContent).toContain("Popular official provider options");
+    // Non-admins see the single unified "Integrations" list (the catalog
+    // panel) but not the registered-connector management controls.
+    expect(container.textContent).toContain("Integrations");
+    expect(container.textContent).not.toContain("Search and review registered connectors");
   });
 
   it("marks oauth providers ready after updating a managed connector", async () => {

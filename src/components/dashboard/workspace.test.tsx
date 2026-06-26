@@ -508,7 +508,7 @@ describe("DashboardWorkspace", () => {
       githubCard?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
 
-    expect(container.textContent).toContain("Step-by-step integration setup");
+    expect(container.textContent).toContain("Connect an integration");
     expect(pushMock).toHaveBeenCalledWith(
       "/integrations?showIntegrationWizard=1&managedConnector=github",
     );
@@ -577,7 +577,7 @@ describe("DashboardWorkspace", () => {
       await new Promise((resolve) => setTimeout(resolve, 50));
     });
 
-    expect(container.textContent).toContain("Step-by-step integration setup");
+    expect(container.textContent).toContain("Connect an integration");
     expect(container.textContent).toContain(
       'Webflow token exchange failed (400): {"error":"invalid_client"}',
     );

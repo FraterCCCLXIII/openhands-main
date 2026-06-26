@@ -267,6 +267,12 @@ interface IntegrationCatalogPanelProps {
   canRegisterManagedConnectors?: boolean;
   oauthCallbackBaseUrl?: string;
   onConnectorRegistered?: (connector: ManagedConnectorOption) => void;
+  // When rendered inside the unified admin list, the parent owns the search
+  // input and chrome. `hideChrome` suppresses this panel's own search
+  // wrapper, and `query`/`onQueryChange` wire it to the shared query.
+  hideChrome?: boolean;
+  query?: string;
+  onQueryChange?: (value: string) => void;
 }
 
 export function IntegrationCatalogPanel({
@@ -275,8 +281,13 @@ export function IntegrationCatalogPanel({
   canRegisterManagedConnectors = false,
   oauthCallbackBaseUrl = "",
   onConnectorRegistered,
+  hideChrome = false,
+  query: externalQuery,
+  onQueryChange,
 }: IntegrationCatalogPanelProps) {
-  const [query, setQuery] = useState("");
+  const [internalQuery, setInternalQuery] = useState("");
+  const query = externalQuery ?? internalQuery;
+  const setQuery = onQueryChange ?? setInternalQuery;
   const [expandedSlug, setExpandedSlug] = useState<string | null>(null);
   const [registrationForms, setRegistrationForms] = useState<
     Record<string, RegistrationFormState>
@@ -409,19 +420,21 @@ export function IntegrationCatalogPanel({
 
   return (
     <div className="mt-6 space-y-4">
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <label className="flex flex-1 flex-col gap-2 text-sm text-[var(--color-text-base)]">
-          <span>Search curated adaptors</span>
-          <input
-            type="search"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search by integration, category, or status"
-            className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-subtle)] px-3 py-2 text-sm text-white outline-none placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-accent)]"
-          />
-        </label>
-        <Badge>{filteredProviders.length} shown</Badge>
-      </div>
+      {hideChrome ? null : (
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <label className="flex flex-1 flex-col gap-2 text-sm text-[var(--color-text-base)]">
+            <span>Search curated adaptors</span>
+            <input
+              type="search"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search by integration, category, or status"
+              className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-subtle)] px-3 py-2 text-sm text-white outline-none placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-accent)]"
+            />
+          </label>
+          <Badge>{filteredProviders.length} shown</Badge>
+        </div>
+      )}
 
       {filteredProviders.length === 0 ? (
         <div className="rounded-xl border border-dashed border-[var(--color-border)] px-4 py-6 text-sm text-[var(--color-text-base)]">

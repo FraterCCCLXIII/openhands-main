@@ -550,6 +550,29 @@ describe("IntegrationCatalogPanel", () => {
     expect(container.textContent).toContain("Use Google Calendar");
   });
 
+  it("hides its own chrome and defers search to the parent when hideChrome is set", async () => {
+    await act(async () => {
+      root.render(
+        <IntegrationCatalogPanel
+          integrationCatalog={integrationCatalog}
+          readyManagedConnectors={readyManagedConnectors}
+          canRegisterManagedConnectors
+          oauthCallbackBaseUrl={oauthCallbackBaseUrl}
+          hideChrome
+          query="github"
+          onQueryChange={() => {}}
+        />,
+      );
+    });
+
+    // No own search wrapper/badge.
+    expect(container.textContent).not.toContain("Search curated adaptors");
+    expect(container.querySelector('input[type="search"]')).toBeNull();
+    // The parent-supplied query still filters the list.
+    expect(container.textContent).toContain("GitHub(github)");
+    expect(container.textContent).not.toContain("Slack");
+  });
+
   it("registers Slack as a managed MCP connector backed by the official hosted MCP server", async () => {
     fetchMock.mockResolvedValueOnce(
       new Response(

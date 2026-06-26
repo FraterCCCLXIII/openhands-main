@@ -40,7 +40,7 @@ export const useWizardState = ({
           key: initialManagedConnectorSlug,
           name: initialManagedConnectorSlug,
         }
-      : INITIAL_DRAFT,
+      : { ...INITIAL_DRAFT, kind: "managed" },
   );
   const [discovery, setDiscovery] = useState<DiscoveryResponse | null>(null);
   const [toolModes, setToolModes] = useState<Record<string, ToolAccessMode>>({});
@@ -298,7 +298,9 @@ export const useWizardState = ({
     setAccessModeForTools,
     setConnectorSearch,
     setDiscoverFeedback,
+    setDiscovery,
     setDraft,
+    setExpandedTools,
     setToolModes,
     setToolSearch,
     setSelectedTools,

@@ -114,21 +114,29 @@ export const DashboardWorkspace = ({
   >({});
   const [requestActionPending, setRequestActionPending] = useState(false);
 
-  const oauthStatusMessage = useMemo(() => {
-    const oauthStatus = searchParams.get("oauth_status");
+  const oauthStatus = useMemo(() => {
+    const oauthStatusValue = searchParams.get("oauth_status");
     const oauthProvider = searchParams.get("oauth_provider");
     const oauthError = searchParams.get("oauth_error");
 
-    if (oauthStatus === "connected" && oauthProvider) {
-      return `${oauthProvider[0]?.toUpperCase() ?? ""}${oauthProvider.slice(1)} connected successfully. Finish saving the integration to use it.`;
+    if (oauthStatusValue === "connected" && oauthProvider) {
+      return {
+        tone: "success" as const,
+        message: `${oauthProvider[0]?.toUpperCase() ?? ""}${oauthProvider.slice(1)} connected successfully. Finish saving the integration to use it.`,
+      };
     }
 
-    if (oauthStatus === "error") {
-      return oauthError || "OAuth connection failed.";
+    if (oauthStatusValue === "error") {
+      return {
+        tone: "error" as const,
+        message: oauthError || "OAuth connection failed.",
+      };
     }
 
     return null;
   }, [searchParams]);
+
+  const oauthStatusMessage = oauthStatus?.message ?? null;
 
   useEffect(() => {
     setActiveSection(getAdminSectionFromPath(pathname));
@@ -667,7 +675,7 @@ export const DashboardWorkspace = ({
           </div>
         </header>
 
-        {statusMessage || oauthStatusMessage ? (
+        {statusMessage || (oauthStatusMessage && !showIntegrationWizard) ? (
           <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] px-3 py-2 text-sm text-[var(--color-text-active)]">
             {statusMessage || oauthStatusMessage}
           </div>
@@ -754,6 +762,7 @@ export const DashboardWorkspace = ({
             isAdmin={isAdmin}
             isBulkDisablePending={bulkDisableMutation.isPending}
             marketplaceConnectors={marketplaceConnectors}
+            oauthStatus={oauthStatus}
             onCreated={handleIntegrationCreated}
             onOpenIntegrationWizard={openIntegrationWizard}
             onStatus={setStatusMessage}

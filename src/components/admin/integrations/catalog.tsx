@@ -106,6 +106,11 @@ export function IntegrationsCatalog({
     sortReadyManagedConnectors(initialReadyManagedConnectors),
   );
 
+  // Single shared search for the unified admin list. Registered connectors
+  // and catalog providers both filter against this query so the screen shows
+  // one list, not two.
+  const [sharedQuery, setSharedQuery] = useState("");
+
   const defaultReadyManagedConnectors = useMemo(() => {
     const defaults = new Map<string, ManagedConnectorOption>();
 
@@ -135,20 +140,37 @@ export function IntegrationsCatalog({
         ))}
       </div>
 
-      {canRegisterManagedConnectors ? (
-        <Card className="p-6">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h2 className="text-lg font-semibold text-white">Registered managed connectors</h2>
-              <p className="mt-2 text-sm leading-7 text-[var(--color-text-base)]">
-                Edit stale service-level connector settings in place or delete a connector before re-registering it with a new provider type.
-              </p>
-            </div>
-            <Badge>{managedConnectors.length} registered</Badge>
+      <Card className="p-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-semibold text-white">Integrations</h2>
+            <p className="mt-2 text-sm leading-7 text-[var(--color-text-base)]">
+              Register an official provider to make it available in the integrations wizard, or manage connectors you have already registered.
+            </p>
           </div>
+          <Badge>{integrationCatalog.length} options</Badge>
+        </div>
 
+        <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <label className="flex flex-1 flex-col gap-2 text-sm text-[var(--color-text-base)]">
+            <span>Search integrations</span>
+            <input
+              type="search"
+              value={sharedQuery}
+              onChange={(event) => setSharedQuery(event.target.value)}
+              placeholder="Search by provider, category, or status"
+              aria-label="Search integrations"
+              className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-subtle)] px-3 py-2 text-sm text-white outline-none placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-accent)]"
+            />
+          </label>
+        </div>
+
+        {canRegisterManagedConnectors ? (
           <ManagedConnectorList
             initialManagedConnectors={managedConnectors}
+            hideChrome
+            search={sharedQuery}
+            onSearchChange={setSharedQuery}
             onConnectorUpdated={(connector) => {
               if (connector.enabled && connector.oauthConfigured !== false) {
                 setReadyManagedConnectors((current) =>
@@ -163,25 +185,16 @@ export function IntegrationsCatalog({
               resetReadyManagedConnector(connector.slug);
             }}
           />
-        </Card>
-      ) : null}
-
-      <Card className="p-6">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h2 className="text-lg font-semibold text-white">Popular official provider options</h2>
-            <p className="mt-2 text-sm leading-7 text-[var(--color-text-base)]">
-              Researched catalog of popular integrations with official API or MCP entry points. Register one to make it show up in the integrations wizard.
-            </p>
-          </div>
-          <Badge>{integrationCatalog.length} options</Badge>
-        </div>
+        ) : null}
 
         <IntegrationCatalogPanel
           integrationCatalog={integrationCatalog}
           readyManagedConnectors={readyManagedConnectors}
           canRegisterManagedConnectors={canRegisterManagedConnectors}
           oauthCallbackBaseUrl={oauthCallbackBaseUrl}
+          hideChrome
+          query={sharedQuery}
+          onQueryChange={setSharedQuery}
           onConnectorRegistered={(connector) => {
             setReadyManagedConnectors((current) =>
               upsertReadyManagedConnector(current, connector),

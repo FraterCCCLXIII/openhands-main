@@ -9,7 +9,6 @@ import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
 import { cn } from "@/src/lib/utils";
 import {
-  authStrategyLabel,
   integrationWizardInputClassName,
   type DiscoveryResponse,
   type IntegrationKind,
@@ -49,14 +48,14 @@ interface ReviewStepProps {
 
 export const ReviewStep = ({
   createPending,
-  discovery,
+  discovery: _discovery,
   draftName,
   draftKey,
   filteredReviewedTools,
   toolModes,
   toolSearch,
   hasMatchingTools,
-  kind,
+  kind: _kind,
   matchingToolNames,
   reviewedTools,
   selectedToolCount,
@@ -74,11 +73,8 @@ export const ReviewStep = ({
   onSetSelectedStateForTools,
   onToggleToolExpanded,
 }: ReviewStepProps) => (
-  <div className="space-y-6">
-    <div className="flex flex-wrap items-center gap-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-4 text-sm text-[var(--color-text-base)]">
-      <Badge>{kind === "managed" ? "Managed connector" : "MCP"}</Badge>
-      <Badge>{discovery.provider}</Badge>
-      <Badge>{authStrategyLabel(discovery.authStrategy)}</Badge>
+  <div className="space-y-4">
+    <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-[var(--color-text-base)]">
       <span>
         {reviewedTools.length} tool
         {reviewedTools.length === 1 ? "" : "s"} discovered for {draftName || draftKey}
@@ -86,106 +82,89 @@ export const ReviewStep = ({
     </div>
 
     {reviewedTools.length === 0 ? (
-      <div className="rounded-xl border border-dashed border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-5 text-sm text-[var(--color-text-base)]">
+      <div className="rounded-lg border border-dashed border-[var(--color-border)] bg-[var(--color-surface-subtle)] px-3.5 py-3 text-sm text-[var(--color-text-base)]">
         No tools were discovered for this connector. Go back and confirm the
         selected managed connector or MCP server URL.
       </div>
     ) : (
-      <div className="space-y-4">
-        <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-4">
-          <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-            <div className="space-y-1">
-              <h3 className="text-sm font-semibold text-white">
-                Review tool access defaults
-              </h3>
-              <p className="text-xs leading-6 text-[var(--color-text-base)]">
-                Search, select, and update multiple tools at once. Bulk actions
-                apply to the currently selected tools, while select all and
-                deselect only affect the current search results.
-              </p>
-            </div>
-            <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--color-text-base)]">
-              <Badge>{filteredReviewedTools.length} matching</Badge>
-              <Badge>{selectedToolCount} selected</Badge>
-              {toolSearch.trim() ? (
-                <Badge>{selectedMatchingCount} selected in view</Badge>
-              ) : null}
-            </div>
-          </div>
-
-          <div className="mt-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <input
-              type="search"
-              value={toolSearch}
-              onChange={(event) => onToolSearchChange(event.target.value)}
-              placeholder="Search tools"
-              aria-label="Search tools"
-              className={cn(integrationWizardInputClassName, "w-full lg:max-w-md")}
-            />
-            <div className="flex flex-wrap gap-2">
-              <Button
-                type="button"
-                variant="ghost"
-                className="h-9 rounded-md px-3 text-xs"
-                disabled={!hasMatchingTools || allMatchingSelected}
-                onClick={() => onSetSelectedStateForTools(matchingToolNames, true)}
-              >
-                Select all matches
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                className="h-9 rounded-md px-3 text-xs"
-                disabled={!hasMatchingTools || selectedMatchingCount === 0}
-                onClick={() => onSetSelectedStateForTools(matchingToolNames, false)}
-              >
-                Deselect matches
-              </Button>
-            </div>
-          </div>
-
-          <div className="mt-3 flex flex-wrap gap-2">
+      <div className="space-y-3">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <input
+            type="search"
+            value={toolSearch}
+            onChange={(event) => onToolSearchChange(event.target.value)}
+            placeholder="Search tools"
+            aria-label="Search tools"
+            className={cn(integrationWizardInputClassName, "w-full lg:max-w-xs")}
+          />
+          <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--color-text-base)]">
+            <Badge>{filteredReviewedTools.length} matching</Badge>
+            <Badge>{selectedToolCount} selected</Badge>
+            {toolSearch.trim() ? (
+              <Badge>{selectedMatchingCount} selected in view</Badge>
+            ) : null}
             <Button
               type="button"
               variant="ghost"
-              className={cn("h-9 rounded-md px-3 text-xs", accessModeButtonClassName.enabled)}
-              disabled={selectedToolCount === 0}
-              onClick={() => onSetAccessModeForTools(selectedToolNames, "enabled")}
+              className="h-8 rounded-md px-3 text-xs"
+              disabled={!hasMatchingTools || allMatchingSelected}
+              onClick={() => onSetSelectedStateForTools(matchingToolNames, true)}
             >
-              Enable selected
+              Select all matches
             </Button>
             <Button
               type="button"
               variant="ghost"
-              className={cn(
-                "h-9 rounded-md px-3 text-xs",
-                accessModeButtonClassName.approval_required,
-              )}
-              disabled={selectedToolCount === 0}
-              onClick={() =>
-                onSetAccessModeForTools(selectedToolNames, "approval_required")
-              }
+              className="h-8 rounded-md px-3 text-xs"
+              disabled={!hasMatchingTools || selectedMatchingCount === 0}
+              onClick={() => onSetSelectedStateForTools(matchingToolNames, false)}
             >
-              Case-by-case selected
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              className={cn("h-9 rounded-md px-3 text-xs", accessModeButtonClassName.disabled)}
-              disabled={selectedToolCount === 0}
-              onClick={() => onSetAccessModeForTools(selectedToolNames, "disabled")}
-            >
-              Disable selected
+              Deselect matches
             </Button>
           </div>
         </div>
 
+        <div className="flex flex-wrap gap-2">
+          <Button
+            type="button"
+            variant="ghost"
+            className={cn("h-8 rounded-md px-3 text-xs", accessModeButtonClassName.enabled)}
+            disabled={selectedToolCount === 0}
+            onClick={() => onSetAccessModeForTools(selectedToolNames, "enabled")}
+          >
+            Enable selected
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            className={cn(
+              "h-8 rounded-md px-3 text-xs",
+              accessModeButtonClassName.approval_required,
+            )}
+            disabled={selectedToolCount === 0}
+            onClick={() =>
+              onSetAccessModeForTools(selectedToolNames, "approval_required")
+            }
+          >
+            Case-by-case selected
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            className={cn("h-8 rounded-md px-3 text-xs", accessModeButtonClassName.disabled)}
+            disabled={selectedToolCount === 0}
+            onClick={() => onSetAccessModeForTools(selectedToolNames, "disabled")}
+          >
+            Disable selected
+          </Button>
+        </div>
+
         {filteredReviewedTools.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-5 text-sm text-[var(--color-text-base)]">
+          <div className="rounded-lg border border-dashed border-[var(--color-border)] bg-[var(--color-surface-subtle)] px-3.5 py-3 text-sm text-[var(--color-text-base)]">
             No tools match this search. Try a different term.
           </div>
         ) : (
-          <div className="overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)]">
+          <div className="overflow-hidden rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-subtle)]">
             <div className="divide-y divide-[var(--color-border)]">
               {filteredReviewedTools.map(([name, toolSpec]) => {
                 const accessMode =
@@ -196,7 +175,7 @@ export const ReviewStep = ({
                 return (
                   <div
                     key={name}
-                    className="px-4 py-4"
+                    className="px-3.5 py-3"
                     data-tool-name={name}
                   >
                     <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
@@ -216,7 +195,7 @@ export const ReviewStep = ({
                           />
                           <div className="min-w-0 flex-1">
                             <p className="text-sm font-semibold text-white">{name}</p>
-                            <p className="mt-1 truncate text-xs leading-6 text-[var(--color-text-base)]">
+                            <p className="mt-1 truncate text-xs leading-5 text-[var(--color-text-base)]">
                               {toolSpec.description || "No description provided."}
                             </p>
                           </div>
@@ -252,12 +231,12 @@ export const ReviewStep = ({
                     {isExpanded ? (
                       <div
                         id={`tool-details-${name}`}
-                        className="mt-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-input)] p-4"
+                        className="mt-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-input)] p-3.5"
                       >
-                        <p className="text-sm leading-7 text-[var(--color-text-base)]">
+                        <p className="text-sm leading-6 text-[var(--color-text-base)]">
                           {toolSpec.description || "No description provided."}
                         </p>
-                        <p className="mt-2 text-xs leading-6 text-[var(--color-text-base)]">
+                        <p className="mt-2 text-xs leading-5 text-[var(--color-text-base)]">
                           Default scopes: {toolSpec.defaultScopes.join(", ") || "none"}
                         </p>
                       </div>
@@ -271,7 +250,7 @@ export const ReviewStep = ({
       </div>
     )}
 
-    <div className="flex flex-wrap gap-3">
+    <div className="flex flex-wrap gap-3 pt-1">
       <Button variant="secondary" type="button" onClick={onBack}>
         Back
       </Button>

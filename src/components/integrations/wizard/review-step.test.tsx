@@ -185,7 +185,6 @@ describe("ReviewStep", () => {
       expandedTools: {},
     });
 
-    expect(container.textContent).toContain("Managed connector");
     expect(container.textContent).toContain(
       "No tools were discovered for this connector.",
     );

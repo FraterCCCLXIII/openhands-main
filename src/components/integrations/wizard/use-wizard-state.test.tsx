@@ -254,7 +254,7 @@ describe("useWizardState", () => {
     const { getState, onStatus, rerender } = await renderWizardState();
 
     expect(getState().step).toBe(1);
-    expect(getState().draft).toEqual(INITIAL_DRAFT);
+    expect(getState().draft).toEqual({ ...INITIAL_DRAFT, kind: "managed" });
 
     onStatus.mockClear();
 
@@ -282,7 +282,7 @@ describe("useWizardState", () => {
 
     expect(getState().step).toBe(1);
     expect(getState().selectedConnector).toBeNull();
-    expect(getState().draft).toEqual(INITIAL_DRAFT);
+    expect(getState().draft).toEqual({ ...INITIAL_DRAFT, kind: "managed" });
   });
 
   it("tracks review filtering, bulk selection, expansion, and reset flows", async () => {

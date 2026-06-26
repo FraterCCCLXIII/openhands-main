@@ -6,12 +6,12 @@ import { useMemo, useState } from "react";
 
 import { fetchJson, ApiRequestError } from "@/src/lib/fetch-json";
 import { ConnectStep } from "@/src/components/integrations/wizard/connect-step";
-import { KindStep } from "@/src/components/integrations/wizard/kind-step";
 import { ReviewStep } from "@/src/components/integrations/wizard/review-step";
 import {
+  OAuthReturnBanner,
   WizardFeedback,
-  WizardIntro,
-  StepBadge,
+  WizardHeader,
+  type OAuthReturnStatus,
 } from "@/src/components/integrations/wizard/shared";
 import { useWizardState } from "@/src/components/integrations/wizard/use-wizard-state";
 import { Card } from "@/src/components/ui/card";
@@ -31,6 +31,7 @@ import { type AdminSection } from "@/src/lib/admin-routes";
 
 interface IntegrationWizardProps {
   isAdmin?: boolean;
+  oauthStatus?: OAuthReturnStatus | null;
   onCreated: () => Promise<void>;
   onStatus: (message: string | null) => void;
   redirectSection?: AdminSection;
@@ -38,6 +39,7 @@ interface IntegrationWizardProps {
 
 export const IntegrationWizard = ({
   isAdmin = true,
+  oauthStatus = null,
   onCreated,
   onStatus,
   redirectSection = "integrations",
@@ -177,38 +179,11 @@ export const IntegrationWizard = ({
 
   return (
     <Card className="p-6">
-      <div className="mb-6 flex flex-col gap-3 lg:flex-row">
-        <StepBadge
-          step={1}
-          label="Choose connector type"
-          active={state.step === 1}
-          complete={state.step > 1}
-        />
-        <StepBadge
-          step={2}
-          label="Connect and discover tools"
-          active={state.step === 2}
-          complete={state.step > 2}
-        />
-        <StepBadge
-          step={3}
-          label="Review access defaults"
-          active={state.step === 3}
-          complete={false}
-        />
-      </div>
+      <WizardHeader />
 
-      <WizardIntro />
+      {oauthStatus ? <OAuthReturnBanner status={oauthStatus} /> : null}
 
-      {state.step === 1 ? (
-        <KindStep
-          allowRawMcpInstall={isAdmin}
-          selectedKind={state.draft.kind}
-          onSelectKind={state.selectKind}
-        />
-      ) : null}
-
-      {state.step === 2 ? (
+      <div className="mt-1">
         <ConnectStep
           managedConnectors={managedConnectors}
           managedConnectorsError={
@@ -222,16 +197,13 @@ export const IntegrationWizard = ({
           discoverFeedback={state.discoverFeedback}
           discoverPending={discoverMutation.isPending}
           draft={state.draft}
+          isAdmin={isAdmin}
           oauthConnectionEnabled={state.oauthConnectionEnabled}
           redirectSection={redirectSection}
           requiresOAuthConnection={state.requiresOAuthConnection}
           selectedConnection={effectiveSelectedConnection}
           selectedConnector={state.selectedConnector}
           setDraft={state.setDraft}
-          onBack={() => {
-            state.setDiscoverFeedback(null);
-            state.setStep(1);
-          }}
           onConnectorSearchChange={state.handleConnectorSearchChange}
           onDiscover={() =>
             discoverMutation.mutate({
@@ -239,11 +211,12 @@ export const IntegrationWizard = ({
               connector: state.selectedConnector,
             })
           }
+          onSelectKind={state.selectKind}
         />
-      ) : null}
+      </div>
 
-      {state.step === 3 && state.discovery ? (
-        <>
+      {state.discovery ? (
+        <div className="mt-6 border-t border-[var(--color-border)] pt-6">
           {createFeedback ? (
             <div className="mb-4">
               <WizardFeedback tone={createFeedback.tone} testId="create-feedback">
@@ -281,6 +254,12 @@ export const IntegrationWizard = ({
             selectedMatchingCount={state.selectedMatchingCount}
             onBack={() => {
               setCreateFeedback(null);
+              state.setDiscoverFeedback(null);
+              state.setDiscovery(null);
+              state.setToolModes({});
+              state.setSelectedTools({});
+              state.setExpandedTools({});
+              state.setToolSearch("");
               state.setStep(2);
             }}
             onCreate={() =>
@@ -305,7 +284,7 @@ export const IntegrationWizard = ({
             onSetSelectedStateForTools={state.setSelectedStateForTools}
             onToggleToolExpanded={state.toggleToolExpanded}
           />
-        </>
+        </div>
       ) : null}
     </Card>
   );

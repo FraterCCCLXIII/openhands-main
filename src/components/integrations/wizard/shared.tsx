@@ -1,60 +1,38 @@
-import { CheckCircle2, PlugZap } from "lucide-react";
+import { PlugZap } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { cn } from "@/src/lib/utils";
 
-interface StepBadgeProps {
-  step: number;
-  label: string;
-  active?: boolean;
-  complete?: boolean;
-}
-
-export const StepBadge = ({
-  step,
-  label,
-  active = false,
-  complete = false,
-}: StepBadgeProps) => (
-  <div
-    className={cn(
-      "flex flex-1 items-center gap-3 rounded-xl border px-4 py-3 text-sm",
-      active
-        ? "border-[var(--color-accent)] bg-[var(--color-bg-active)] text-white"
-        : complete
-          ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-100"
-          : "border-[var(--color-border)] bg-[var(--color-surface-subtle)] text-[var(--color-text-base)]",
-    )}
-  >
-    <span
-      className={cn(
-        "flex h-8 w-8 items-center justify-center rounded-full text-xs font-semibold",
-        active
-          ? "bg-[var(--color-accent)] text-[var(--color-bg-primary)]"
-          : complete
-            ? "bg-emerald-500/20 text-emerald-100"
-            : "bg-[var(--color-bg-input)] text-white",
-      )}
-    >
-      {complete ? <CheckCircle2 className="h-4 w-4" /> : step}
-    </span>
-    <span>{label}</span>
+export const WizardHeader = () => (
+  <div className="mb-5 flex items-start gap-3">
+    <PlugZap className="mt-0.5 h-5 w-5 shrink-0 text-[var(--color-accent)]" />
+    <div className="space-y-1">
+      <h2 className="text-lg font-semibold text-white">Connect an integration</h2>
+      <p className="text-sm leading-6 text-[var(--color-text-base)]">
+        Pick a connector, connect your account or paste credentials, then review
+        the tools the agent can use.
+      </p>
+    </div>
   </div>
 );
 
-export const WizardIntro = () => (
-  <div className="mb-4 space-y-2">
-    <div className="flex items-center gap-3">
-      <PlugZap className="h-5 w-5 text-[var(--color-accent)]" />
-      <h2 className="text-xl font-semibold text-white">
-        Step-by-step integration setup
-      </h2>
-    </div>
-    <p className="text-sm leading-7 text-[var(--color-text-base)]">
-      Choose a Managed connector hosted in this deployment or a remote MCP server,
-      let the dashboard discover the available tools, then keep each tool
-      enabled, disable it, or mark it for case-by-case approval.
-    </p>
+export interface OAuthReturnStatus {
+  tone: "success" | "error";
+  message: string;
+}
+
+export const OAuthReturnBanner = ({ status }: { status: OAuthReturnStatus }) => (
+  <div
+    className={cn(
+      "mb-5 rounded-lg border px-4 py-3 text-sm leading-6",
+      status.tone === "success"
+        ? "border-[color:rgba(165,231,94,0.3)] bg-[color:rgba(165,231,94,0.1)] text-[var(--color-success)]"
+        : "border-[color:rgba(231,106,94,0.3)] bg-[color:rgba(231,106,94,0.1)] text-[var(--color-danger)]",
+    )}
+    data-testid="oauth-return-banner"
+    role="status"
+  >
+    {status.message}
   </div>
 );
 

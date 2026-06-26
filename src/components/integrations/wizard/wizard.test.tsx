@@ -105,15 +105,6 @@ describe("IntegrationWizard", () => {
       );
     });
 
-    const managedConnectorButton = Array.from(container.querySelectorAll("button")).find(
-      (button) => button.textContent?.includes("Managed connector"),
-    );
-    expect(managedConnectorButton).toBeTruthy();
-
-    await act(async () => {
-      managedConnectorButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-    });
-
     await act(async () => {
       await new Promise((resolve) => setTimeout(resolve, 25));
     });
@@ -132,7 +123,7 @@ describe("IntegrationWizard", () => {
     expect(addConnectorLink?.textContent).toContain("Click here");
   });
 
-  it("disables raw MCP installs for non-admin users", async () => {
+  it("hides the custom MCP server escape hatch from non-admin users", async () => {
     await act(async () => {
       root.render(
         <QueryClientProvider client={queryClient}>
@@ -141,15 +132,14 @@ describe("IntegrationWizard", () => {
       );
     });
 
-    const mcpButton = Array.from(container.querySelectorAll("button")).find((button) =>
-      button.textContent?.includes("MCP server"),
-    );
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 25));
+    });
 
-    expect(mcpButton).toBeTruthy();
-    expect((mcpButton as HTMLButtonElement | null)?.disabled).toBe(true);
-    expect(container.textContent).toContain(
-      "Only app administrators can add raw MCP server URLs. Ask an admin to register a managed connector instead.",
+    const customMcpLink = Array.from(container.querySelectorAll("button")).find(
+      (button) => button.textContent?.includes("Use a custom MCP server URL instead"),
     );
+    expect(customMcpLink).toBeFalsy();
   });
 
   it("discovers default API-key connectors with their configured header name", async () => {
@@ -359,11 +349,7 @@ describe("IntegrationWizard", () => {
     const managedConnectorButton = Array.from(container.querySelectorAll("button")).find(
       (button) => button.textContent?.includes("Managed connector"),
     );
-    expect(managedConnectorButton).toBeTruthy();
-
-    await act(async () => {
-      managedConnectorButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-    });
+    expect(managedConnectorButton).toBeFalsy();
 
     await act(async () => {
       await new Promise((resolve) => setTimeout(resolve, 25));
@@ -1057,7 +1043,7 @@ describe("IntegrationWizard", () => {
     expect(feedback?.textContent).toContain("Admin diagnostics");
     expect(feedback?.textContent).toContain('"startsWithBearerPrefix": false');
     expect(feedback?.textContent).toContain('"operationName": "listTools"');
-    expect(container.textContent).toContain("Connect and discover tools");
+    expect(container.textContent).toContain("Connect an integration");
   });
 
 

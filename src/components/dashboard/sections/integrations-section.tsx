@@ -19,6 +19,7 @@ import {
   getToolAccessMode,
 } from "@/src/components/integrations/tool-access-controls";
 import { IntegrationWizard } from "@/src/components/integrations/wizard/wizard";
+import type { OAuthReturnStatus } from "@/src/components/integrations/wizard/shared";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
 import { cn } from "@/src/lib/utils";
@@ -48,6 +49,7 @@ interface IntegrationsSectionProps {
   isAdmin: boolean;
   isBulkDisablePending: boolean;
   marketplaceConnectors: ManagedConnectorOption[];
+  oauthStatus?: OAuthReturnStatus | null;
   onCreated: () => Promise<void>;
   onOpenIntegrationWizard: (managedConnectorSlug?: string) => void;
   onStatus: (message: string | null) => void;
@@ -93,6 +95,7 @@ export const IntegrationsSection = ({
   isAdmin,
   isBulkDisablePending,
   marketplaceConnectors,
+  oauthStatus,
   onCreated,
   onOpenIntegrationWizard,
   onStatus,
@@ -134,6 +137,7 @@ export const IntegrationsSection = ({
     {showIntegrationWizard ? (
       <IntegrationWizard
         isAdmin={isAdmin}
+        oauthStatus={oauthStatus}
         onCreated={onCreated}
         onStatus={onStatus}
         redirectSection="integrations"

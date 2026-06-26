@@ -21,6 +21,14 @@ interface ManagedConnectorListProps {
   initialManagedConnectors: ManagedConnectorDefinition[];
   onConnectorUpdated?: (connector: ManagedConnectorDefinition) => void;
   onConnectorDeleted?: (connector: ManagedConnectorDefinition) => void;
+  // When rendered inside the unified admin list, the parent owns the search
+  // input and card chrome. `hideChrome` suppresses this component's own
+  // header/search wrapper, and `search`/`onSearchChange` wire it to the
+  // shared query so registered connectors and catalog providers filter
+  // together as one list.
+  hideChrome?: boolean;
+  search?: string;
+  onSearchChange?: (value: string) => void;
 }
 
 interface ManagedConnectorFormState {
@@ -219,11 +227,19 @@ export function ManagedConnectorList({
   initialManagedConnectors,
   onConnectorUpdated,
   onConnectorDeleted,
+  hideChrome = false,
+  search: externalSearch,
+  onSearchChange,
 }: ManagedConnectorListProps) {
   const [managedConnectors, setManagedConnectors] = useState(initialManagedConnectors);
   const [expandedSlug, setExpandedSlug] = useState<string | null>(null);
   const [formStates, setFormStates] = useState<Record<string, ManagedConnectorFormState>>({});
-  const [search, setSearch] = useState("");
+  const [internalSearch, setInternalSearch] = useState("");
+
+  // Use the parent-owned search when provided; otherwise fall back to the
+  // internal search box used in standalone rendering.
+  const search = externalSearch ?? internalSearch;
+  const setSearch = onSearchChange ?? setInternalSearch;
 
   const sortedConnectors = useMemo(
     () =>
@@ -496,35 +512,37 @@ export function ManagedConnectorList({
 
   return (
     <div className="mt-4 space-y-4">
-      <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-4">
-        <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-          <div className="space-y-1">
-            <h3 className="text-sm font-semibold text-white">
-              Search and review registered connectors
-            </h3>
-            <p className="text-xs leading-6 text-[var(--color-text-base)]">
-              Use the same compact card layout here to inspect configured providers,
-              update service-level settings, and delete stale connectors without digging
-              through hidden actions.
-            </p>
+      {hideChrome ? null : (
+        <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-4">
+          <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+            <div className="space-y-1">
+              <h3 className="text-sm font-semibold text-white">
+                Search and review registered connectors
+              </h3>
+              <p className="text-xs leading-6 text-[var(--color-text-base)]">
+                Use the same compact card layout here to inspect configured providers,
+                update service-level settings, and delete stale connectors without digging
+                through hidden actions.
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--color-text-base)]">
+              <Badge>{filteredConnectors.length} connectors</Badge>
+              <Badge>{visibleToolCount} tools</Badge>
+            </div>
           </div>
-          <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--color-text-base)]">
-            <Badge>{filteredConnectors.length} connectors</Badge>
-            <Badge>{visibleToolCount} tools</Badge>
-          </div>
-        </div>
 
-        <div className="mt-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <input
-            type="search"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search managed connectors"
-            aria-label="Search managed connectors"
-            className={cn(inputClassName, "w-full lg:max-w-md")}
-          />
+          <div className="mt-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <input
+              type="search"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Search managed connectors"
+              aria-label="Search managed connectors"
+              className={cn(inputClassName, "w-full lg:max-w-md")}
+            />
+          </div>
         </div>
-      </div>
+      )}
 
       {filteredConnectors.length === 0 ? (
         <div className="rounded-xl border border-dashed border-[var(--color-border)] bg-[var(--color-surface-subtle)] px-4 py-6 text-sm text-[var(--color-text-base)]">

@@ -365,6 +365,26 @@ describe("ManagedConnectorList", () => {
     expect(container.textContent).toContain("No managed connectors match the current search.");
   });
 
+  it("hides its own chrome and defers search to the parent when hideChrome is set", async () => {
+    await act(async () => {
+      root.render(
+        <ManagedConnectorList
+          initialManagedConnectors={[baseConnector, secondaryConnector]}
+          hideChrome
+          search="audio"
+          onSearchChange={() => {}}
+        />,
+      );
+    });
+
+    // No own header/search wrapper.
+    expect(container.textContent).not.toContain("Search and review registered connectors");
+    expect(container.querySelector('input[aria-label="Search managed connectors"]')).toBeNull();
+    // The parent-supplied query still filters the list.
+    expect(container.textContent).toContain("ElevenLabs");
+    expect(container.textContent).not.toContain("Stale Notion MCP connector");
+  });
+
   it("validates provider-specific URLs before saving connector changes", async () => {
     await act(async () => {
       root.render(

@@ -19,6 +19,11 @@ import type { NextConfig } from "next";
 const isSpaMode = process.env.SPA_MODE === "true";
 
 const nextConfig: NextConfig = {
+  // Allow local dev access via 127.0.0.1 and LAN IPs, not just "localhost".
+  // Next.js dev blocks the HMR WebSocket and dev resources from unknown
+  // origins, which leaves the client un-hydrated (stuck on the
+  // server-rendered loading spinner).
+  allowedDevOrigins: ["127.0.0.1", "0.0.0.0", "10.0.0.150"],
   ...(isSpaMode
     ? {
         output: "export",

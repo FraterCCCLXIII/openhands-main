@@ -136,6 +136,7 @@ type RenderOptions = {
   discoverPending?: boolean;
   redirectSection?: AdminSection;
   statefulDraft?: boolean;
+  isAdmin?: boolean;
 };
 
 const renderConnectStep = async (options: RenderOptions = {}) => {
@@ -143,9 +144,9 @@ const renderConnectStep = async (options: RenderOptions = {}) => {
   document.body.appendChild(container);
   const root = createRoot(container);
   const setDraft = vi.fn();
-  const onBack = vi.fn();
   const onConnectorSearchChange = vi.fn();
   const onDiscover = vi.fn();
+  const onSelectKind = vi.fn();
   const initialDraft = options.draft ?? baseManagedDraft;
   const managedConnectors =
     options.managedConnectors ??
@@ -176,15 +177,16 @@ const renderConnectStep = async (options: RenderOptions = {}) => {
           discoverFeedback={options.discoverFeedback ?? null}
           discoverPending={options.discoverPending ?? false}
           draft={draft}
+          isAdmin={options.isAdmin ?? false}
           oauthConnectionEnabled={options.oauthConnectionEnabled ?? false}
           redirectSection={options.redirectSection ?? "integrations"}
           requiresOAuthConnection={options.requiresOAuthConnection ?? false}
           selectedConnection={options.selectedConnection ?? null}
           selectedConnector={options.selectedConnector ?? null}
           setDraft={appliedSetDraft}
-          onBack={onBack}
           onConnectorSearchChange={onConnectorSearchChange}
           onDiscover={onDiscover}
+          onSelectKind={onSelectKind}
         />
         {options.statefulDraft ? (
           <pre data-draft-state>{JSON.stringify(draft)}</pre>
@@ -201,9 +203,9 @@ const renderConnectStep = async (options: RenderOptions = {}) => {
     container,
     root,
     setDraft,
-    onBack,
     onConnectorSearchChange,
     onDiscover,
+    onSelectKind,
     cleanup: async () => {
       await act(async () => {
         root.unmount();
@@ -480,8 +482,8 @@ describe("ConnectStep", () => {
     await cleanup();
   });
 
-  it("renders manual MCP fields, forwards navigation actions, and shows admin diagnostics", async () => {
-    const { container, cleanup, onBack, onDiscover } = await renderConnectStep({
+  it("renders manual MCP fields, forwards discover actions, and shows admin diagnostics", async () => {
+    const { container, cleanup, onDiscover } = await renderConnectStep({
       draft: {
         ...baseManagedDraft,
         kind: "mcp",
@@ -514,16 +516,14 @@ describe("ConnectStep", () => {
       '"serverUrl":"https://figma.example/mcp"',
     );
 
-    const buttons = Array.from(container.querySelectorAll("button"));
-    const backButton = buttons.find((button) => button.textContent?.includes("Back"));
-    const discoverButton = buttons.find((button) => button.textContent?.includes("Discover tools"));
+    const discoverButton = Array.from(container.querySelectorAll("button")).find(
+      (button) => button.textContent?.includes("Discover tools"),
+    );
 
     await act(async () => {
-      backButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
       discoverButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
 
-    expect(onBack).toHaveBeenCalledTimes(1);
     expect(onDiscover).toHaveBeenCalledTimes(1);
 
     await cleanup();
