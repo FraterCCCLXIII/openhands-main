@@ -6,7 +6,7 @@ Thanks for contributing to OpenHands Integrations Hub.
 
 - Node.js 22.12 or newer
 - npm
-- A Postgres connection string in `POSTGRES_URL` or `DATABASE_URL` for running the app locally
+- A Postgres connection string in `INTHUB_POSTGRES_URL` for running the app locally
 
 ## Local setup
 
@@ -22,7 +22,7 @@ Thanks for contributing to OpenHands Integrations Hub.
    cp .env.example .env.local
    ```
 
-3. Configure `POSTGRES_URL` or `DATABASE_URL`.
+3. Configure `INTHUB_POSTGRES_URL`.
 
 4. Start the app:
 

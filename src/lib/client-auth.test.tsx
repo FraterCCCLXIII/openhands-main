@@ -73,7 +73,7 @@ describe("useClientAuth", () => {
   });
 
   it("does not infer admin status from client environment variables", async () => {
-    vi.stubEnv("APP_ADMIN_EMAILS", "admin@example.com");
+    vi.stubEnv("INTHUB_APP_ADMIN_EMAILS", "admin@example.com");
     setStoredOpenHandsToken("oh-token");
     vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
       Response.json({ user: { name: "Admin", email: "admin@example.com" } }),

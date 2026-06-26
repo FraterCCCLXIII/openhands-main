@@ -61,7 +61,7 @@ Key rules:
 
 - `cla_...` keys are for runtime invocation only. They should not be accepted for `/api/user/*` or `/api/admin/*`.
 - `clu_...` keys are owner-scoped and should map to the same owner-visible management surface as the signed-in dashboard.
-- `clad_...` keys are available only to emails allowlisted in `APP_ADMIN_EMAILS` and are re-checked against that allowlist during auth.
+- `clad_...` keys are available only to emails allowlisted in `INTHUB_APP_ADMIN_EMAILS` and are re-checked against that allowlist during auth.
 - When `INTHUB_DISABLE_AUTH=true`, the app is intentionally limited to loopback requests so local auth bypass does not become a shared-environment escape hatch.
 
 ### Authorization model
@@ -103,7 +103,7 @@ There is also an **admin ceiling** on managed connectors:
 4. An allowlisted admin reviewer approves or rejects the request from `/case-by-case-approvals` or the admin approval APIs.
 5. Approval creates a temporary grant scoped to the agent metadata, tool, and scopes, with an expiry time.
 6. Future invocations succeed only while that grant remains active.
-7. Expired grants are purged by the cron route at `/api/cron/expire-grants` when called with `CRON_SECRET`.
+7. Expired grants are purged by the cron route at `/api/cron/expire-grants` when called with `INTHUB_CRON_SECRET`.
 
 MCP-specific note:
 
@@ -126,11 +126,11 @@ The repository keeps credential material server-side and resolves it only at inv
 
 #### Encryption behavior
 
-Stored credential encryption uses `CREDENTIAL_ENCRYPTION_KEY` only.
+Stored credential encryption uses `INTHUB_CREDENTIAL_ENCRYPTION_KEY` only.
 
 Important operational rules:
 
-- `CREDENTIAL_ENCRYPTION_KEY` must be configured anywhere encrypted credential storage is used.
+- `INTHUB_CREDENTIAL_ENCRYPTION_KEY` must be configured anywhere encrypted credential storage is used.
 - There is no baked-in development fallback key.
 - Provider credentials should live in per-user integration connection records, not inside shared integration specs.
 - Agents receive generated docs and invocation results, not raw provider secrets.
@@ -249,7 +249,7 @@ Current CI mapping:
 | --- | --- |
 | Integrations hub | The owner-scoped service that sits between agents and external providers and exposes the controlled REST/MCP runtime surfaces |
 | Owner | The normalized signed-in identity that owns runtime keys, installed integrations, and per-user connection records |
-| Allowlisted admin | An owner whose email is present in `APP_ADMIN_EMAILS`, unlocking service-level connector and admin API operations |
+| Allowlisted admin | An owner whose email is present in `INTHUB_APP_ADMIN_EMAILS`, unlocking service-level connector and admin API operations |
 | Agent runtime key (`cla_...`) | Least-privileged key used only for `/api/agent/*`, `/api/agent/openapi`, `/api/agent/skill`, and `/api/mcp` |
 | User automation key (`clu_...`) | Owner-scoped automation key for `/api/user/*` routes |
 | Admin automation key (`clad_...`) | Admin-only automation key for `/api/admin/*` routes |

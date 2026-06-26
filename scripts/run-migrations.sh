@@ -2,7 +2,7 @@
 # Run Alembic migrations for integrations-hub
 #
 # This script is intended to be run during deploy (e.g., Vercel build) or
-# manually before deploying. It requires POSTGRES_URL or DATABASE_URL to be set.
+# manually before deploying. It requires INTHUB_POSTGRES_URL to be set.
 #
 # Usage:
 #   ./scripts/run-migrations.sh          # Run migrations
@@ -16,7 +16,7 @@ BACKEND_DIR="$SCRIPT_DIR/../backend"
 cd "$BACKEND_DIR"
 
 # Check if database URL is configured first (skip early if not needed)
-if [[ -z "${POSTGRES_URL:-}" ]] && [[ -z "${DATABASE_URL:-}" ]]; then
+if [[ -z "${INTHUB_POSTGRES_URL:-}" ]]; then
     echo "ℹ️  No database configured (preview deployment). Skipping migrations."
     exit 0
 fi

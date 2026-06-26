@@ -94,7 +94,7 @@ For a fuller route map and auth breakdown, see [API.md](./API.md).
    cp .env.example .env.local
    ```
 
-3. Configure storage. The app requires `POSTGRES_URL` or `DATABASE_URL` for the dashboard/runtime; without one, signed-in users will see the service-unavailable screen.
+3. Configure storage. The app requires `INTHUB_POSTGRES_URL` for the backend runtime; without it, signed-in users will see the service-unavailable screen.
 
    <details>
    <summary>Option A: Local Docker Postgres (recommended for local dev)</summary>
@@ -113,11 +113,8 @@ For a fuller route map and auth breakdown, see [API.md](./API.md).
    Then set the connection in `.env.local`:
 
    ```bash
-   POSTGRES_URL="postgresql://postgres:postgres@localhost:5432/integrationshub"
-   USE_STANDARD_PG=true
+   INTHUB_POSTGRES_URL="postgresql://postgres:postgres@localhost:5432/integrationshub"
    ```
-
-   The `USE_STANDARD_PG=true` flag tells the app to use the standard `pg` driver instead of the Neon serverless driver.
 
    </details>
 
@@ -131,10 +128,8 @@ For a fuller route map and auth breakdown, see [API.md](./API.md).
    3. Copy the connection string from the Neon dashboard and add it to `.env.local`:
 
    ```bash
-   POSTGRES_URL="postgresql://user:password@ep-example-123456.us-east-2.aws.neon.tech/integrationshub?sslmode=require"
+   INTHUB_POSTGRES_URL="postgresql://user:password@ep-example-123456.us-east-2.aws.neon.tech/integrationshub?sslmode=require"
    ```
-
-   Do **not** set `USE_STANDARD_PG` when using Neon.
 
    </details>
 
@@ -173,11 +168,10 @@ truth — no generated snapshot is needed.
 
 Core variables:
 
-- `POSTGRES_URL` or `DATABASE_URL`
-- `USE_STANDARD_PG` set to `true` for local Docker Postgres (uses standard `pg` driver instead of Neon serverless)
+- `INTHUB_POSTGRES_URL` — database connection URL for the backend runtime
 - `INTHUB_OPENHANDS_BASE_URL` for OpenHands Cloud device-flow login and token validation
-- `CREDENTIAL_ENCRYPTION_KEY` for stored third-party provider credentials
-- `CRON_SECRET`
+- `INTHUB_CREDENTIAL_ENCRYPTION_KEY` for stored third-party provider credentials
+- `INTHUB_CRON_SECRET`
 
 Optional integration/provider variables:
 
@@ -190,7 +184,7 @@ Optional integration/provider variables:
 Optional deployment variables:
 
 - `INTHUB_OAUTH_REDIRECT_PROXY_URL=https://<stable-host>` for preview-deployment provider OAuth callbacks
-- `APP_ADMIN_EMAILS` to allowlist admin-integrations and admin automation features
+- `INTHUB_APP_ADMIN_EMAILS` to allowlist admin-integrations, admin automation features, and FastAPI admin routes. The dashboard infers admin status from the backend `/api/context/me` response, not from a client-side env var.
 
 Optional notification variables:
 

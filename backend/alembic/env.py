@@ -23,20 +23,16 @@ if config.config_file_name is not None:
 
 
 def get_database_url() -> str:
-    """Get the database URL from environment variables.
+    """Get the database URL from the INTHUB_POSTGRES_URL environment variable.
 
-    Follows the same fallback chain as the application config.
+    Matches the application config, which reads only the INTHUB_-prefixed URL.
     Converts to postgresql+psycopg:// for SQLAlchemy with psycopg3 driver.
     """
-    url = (
-        os.getenv("INTHUB_POSTGRES_URL")
-        or os.getenv("POSTGRES_URL")
-        or os.getenv("DATABASE_URL")
-    )
+    url = os.getenv("INTHUB_POSTGRES_URL")
     if not url:
         raise RuntimeError(
-            "Database URL not configured. Set INTHUB_POSTGRES_URL, POSTGRES_URL, "
-            "or DATABASE_URL environment variable."
+            "Database URL not configured. Set the INTHUB_POSTGRES_URL "
+            "environment variable."
         )
     # Convert to SQLAlchemy URL with psycopg3 driver
     # postgres:// or postgresql:// -> postgresql+psycopg://

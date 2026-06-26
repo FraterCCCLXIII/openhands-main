@@ -847,9 +847,11 @@ def discover_mcp_tools_with_transport_order(
 ) -> dict[str, ToolSpec]:
     return retry_mcp_transports(
         mcp_transport_urls(server_url, *configs),
-        lambda url: discover_mcp_tools(url, headers, timeout=timeout)
-        if timeout is not None
-        else discover_mcp_tools(url, headers),
+        lambda url: (
+            discover_mcp_tools(url, headers, timeout=timeout)
+            if timeout is not None
+            else discover_mcp_tools(url, headers)
+        ),
         {},
     )
 

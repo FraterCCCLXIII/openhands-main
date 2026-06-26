@@ -39,9 +39,13 @@ Vercel natively supports uv and will automatically use it to install dependencie
 
 For the combined preview app, the root `vercel.json` rewrites `/api/:path*` to the root Python entrypoint `api/index.py`, which exports the FastAPI `app` and keeps dashboard button actions on the same origin. You can also deploy `backend/` as a separate Vercel project/root directory; `backend/vercel.json` routes all requests to its own `api/index.py` and preserves the existing `/api/cron/expire-grants` schedule.
 
-Required/optional environment variables are intentionally aligned with the root application where possible:
+Required/optional environment variables use explicit `INTHUB_*` names. The backend reads only `INTHUB_*` names and never falls back to the root Next.js environment variable names.
 
-- `APP_ADMIN_EMAILS` — comma-separated allowlist for admin-only routes.
+- `INTHUB_POSTGRES_URL` — database connection URL for backend persistence.
+- `INTHUB_OPENHANDS_BASE_URL` — OpenHands Cloud base URL used to validate dashboard session tokens.
+- `INTHUB_CRON_SECRET` — bearer secret for cron routes.
+- `INTHUB_APP_ADMIN_EMAILS` — comma-separated allowlist for admin-only backend routes.
+- `INTHUB_CREDENTIAL_ENCRYPTION_KEY` — encryption key for stored provider credentials.
 - `INTHUB_DISABLE_AUTH=true` — local/preview auth bypass for contract testing.
 - `FASTAPI_DEFAULT_OWNER` — owner identity used when auth is disabled.
 

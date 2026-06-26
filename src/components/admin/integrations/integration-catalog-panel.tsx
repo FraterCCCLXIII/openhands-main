@@ -709,7 +709,7 @@ export function IntegrationCatalogPanel({
                       </form>
                     ) : (
                       <p className="mt-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-text-base)]">
-                        Only app administrators listed in <code className="text-white">APP_ADMIN_EMAILS</code> can register providers from this page.
+                        Only app administrators listed in <code className="text-white">INTHUB_APP_ADMIN_EMAILS</code> can register providers from this page.
                       </p>
                     )}
                   </div>

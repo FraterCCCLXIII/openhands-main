@@ -1112,7 +1112,7 @@ describe("IntegrationCatalogPanel", () => {
     });
 
     expect(container.textContent).toContain(
-      "Only app administrators listed in APP_ADMIN_EMAILS can register providers from this page.",
+      "Only app administrators listed in INTHUB_APP_ADMIN_EMAILS can register providers from this page.",
     );
     expect(container.textContent).not.toContain("Register this provider");
   });

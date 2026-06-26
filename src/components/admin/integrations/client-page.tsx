@@ -173,7 +173,7 @@ export function ClientAdminIntegrationsPage() {
                   </p>
                   <p>
                     The in-app registration form is only available to signed-in app
-                    administrators whose email appears in the <code className="text-white">APP_ADMIN_EMAILS</code> environment variable.
+                    administrators whose email appears in <code className="text-white">INTHUB_APP_ADMIN_EMAILS</code>.
                   </p>
                 </div>
               </div>

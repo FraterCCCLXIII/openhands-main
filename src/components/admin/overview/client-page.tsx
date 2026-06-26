@@ -217,7 +217,7 @@ export function ClientAdminOverviewPage() {
                 </div>
                 <div className="space-y-4 text-sm leading-7 text-[var(--color-text-base)]">
                   <p>
-                    Only app administrators listed in <code className="text-white">APP_ADMIN_EMAILS</code> can view connected identities, approval queues, notifications, and duplicate external accounts across all owners.
+                    Only app administrators listed in <code className="text-white">INTHUB_APP_ADMIN_EMAILS</code> can view connected identities, approval queues, notifications, and duplicate external accounts across all owners.
                   </p>
                   <p>
                     If you need a new connector or access workflow, use <Link

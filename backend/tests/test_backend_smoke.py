@@ -33,8 +33,8 @@ def setup_function() -> None:
     repository.user_keys.clear()
     repository.admin_keys.clear()
     repository.connections.clear()
-    os.environ["APP_ADMIN_EMAILS"] = "dev@localhost,admin@example.com"
-    os.environ["CREDENTIAL_ENCRYPTION_KEY"] = "test-encryption-key-for-tests"
+    os.environ["INTHUB_APP_ADMIN_EMAILS"] = "dev@localhost,admin@example.com"
+    os.environ["INTHUB_CREDENTIAL_ENCRYPTION_KEY"] = "test-encryption-key-for-tests"
     # Reset config cache to pick up env var changes
     reset_config()
 
@@ -284,7 +284,7 @@ def test_managed_oauth_mcp_discovery_uses_saved_connection(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:
     config_env("INTHUB_DISABLE_AUTH", "true")
-    config_env("CREDENTIAL_ENCRYPTION_KEY", "test-credential-key")
+    config_env("INTHUB_CREDENTIAL_ENCRYPTION_KEY", "test-credential-key")
     client = TestClient(app)
 
     admin_key = client.post("/api/admin/key").json()["apiKey"]
@@ -366,7 +366,7 @@ def test_oauth_callback_backfills_mcp_tools_for_saved_integration(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:
     config_env("INTHUB_DISABLE_AUTH", "true")
-    config_env("CREDENTIAL_ENCRYPTION_KEY", "test-credential-key")
+    config_env("INTHUB_CREDENTIAL_ENCRYPTION_KEY", "test-credential-key")
     client = TestClient(app)
 
     admin_key = client.post("/api/admin/key").json()["apiKey"]
@@ -516,7 +516,7 @@ def test_oauth_invocation_requires_connection_and_refreshes_expired_tokens(
     from http.server import BaseHTTPRequestHandler, HTTPServer
 
     config_env("INTHUB_DISABLE_AUTH", "true")
-    config_env("CREDENTIAL_ENCRYPTION_KEY", "test-credential-key")
+    config_env("INTHUB_CREDENTIAL_ENCRYPTION_KEY", "test-credential-key")
     client = TestClient(app)
 
     seen: dict[str, object] = {}
@@ -792,7 +792,7 @@ def test_temporary_grants_are_owner_scoped(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:
     config_env("INTHUB_DISABLE_AUTH", "true")
-    config_env("APP_ADMIN_EMAILS", "owner-a@example.com,owner-b@example.com")
+    config_env("INTHUB_APP_ADMIN_EMAILS", "owner-a@example.com,owner-b@example.com")
     client = TestClient(app)
     integration = {
         "key": "grant-api",
@@ -1111,7 +1111,7 @@ def test_auth_session_reports_openhands_admin_flag(
 ) -> None:
     config_env("INTHUB_DISABLE_AUTH")
     config_env("INTHUB_OPENHANDS_BASE_URL", "https://staging.all-hands.dev")
-    config_env("APP_ADMIN_EMAILS", "admin@example.com")
+    config_env("INTHUB_APP_ADMIN_EMAILS", "admin@example.com")
     _patch_openhands_user_me(
         monkeypatch,
         {
@@ -1148,7 +1148,7 @@ def test_personal_org_normalizes_to_null_and_uses_env_admins(
 ) -> None:
     config_env("INTHUB_DISABLE_AUTH")
     config_env("INTHUB_OPENHANDS_BASE_URL", "https://staging.all-hands.dev")
-    config_env("APP_ADMIN_EMAILS", "personal@example.com")
+    config_env("INTHUB_APP_ADMIN_EMAILS", "personal@example.com")
     _patch_openhands_user_me(
         monkeypatch,
         {
@@ -1175,7 +1175,7 @@ def test_personal_org_owner_is_not_admin_without_env_allowlist(
 ) -> None:
     config_env("INTHUB_DISABLE_AUTH")
     config_env("INTHUB_OPENHANDS_BASE_URL", "https://staging.all-hands.dev")
-    config_env("APP_ADMIN_EMAILS")
+    config_env("INTHUB_APP_ADMIN_EMAILS")
     _patch_openhands_user_me(
         monkeypatch,
         {
@@ -1341,7 +1341,7 @@ def test_user_key_reveal_returns_metadata_when_stored_key_cannot_be_decrypted(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:
     config_env("INTHUB_DISABLE_AUTH", "true")
-    config_env("POSTGRES_URL", "postgres://test")
+    config_env("INTHUB_POSTGRES_URL", "postgres://test")
 
     def fake_db_rows(query: str, _params: object = ()) -> list[dict[str, object]]:
         assert "FROM user_api_keys" in query
@@ -1379,7 +1379,7 @@ def test_admin_privileges_fail_closed_without_allowlist(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:
     config_env("INTHUB_DISABLE_AUTH", "true")
-    config_env("APP_ADMIN_EMAILS")
+    config_env("INTHUB_APP_ADMIN_EMAILS")
     client = TestClient(app)
 
     response = client.post(
@@ -1396,7 +1396,7 @@ def test_admin_api_routes_accept_auth_disabled_admin_owner(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:
     config_env("INTHUB_DISABLE_AUTH", "true")
-    config_env("APP_ADMIN_EMAILS", "admin@example.com")
+    config_env("INTHUB_APP_ADMIN_EMAILS", "admin@example.com")
     client = TestClient(app)
 
     response = client.get(
@@ -1414,7 +1414,7 @@ def test_admin_api_routes_reject_auth_disabled_non_admin_owner(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:
     config_env("INTHUB_DISABLE_AUTH", "true")
-    config_env("APP_ADMIN_EMAILS", "admin@example.com")
+    config_env("INTHUB_APP_ADMIN_EMAILS", "admin@example.com")
     client = TestClient(app)
 
     response = client.get(
@@ -1434,7 +1434,7 @@ def test_admin_api_key_authorizes_admin_routes(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:
     config_env("INTHUB_DISABLE_AUTH", "true")
-    config_env("APP_ADMIN_EMAILS", "admin@example.com")
+    config_env("INTHUB_APP_ADMIN_EMAILS", "admin@example.com")
     client = TestClient(app)
     repository.save_key("admin@example.com", "admin", "clad_test_admin_key")
 
@@ -1451,7 +1451,7 @@ def test_non_admin_dashboard_routes_reject_privileged_api_calls_in_dev_mode(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:
     config_env("INTHUB_DISABLE_AUTH", "true")
-    config_env("APP_ADMIN_EMAILS", "admin@example.com")
+    config_env("INTHUB_APP_ADMIN_EMAILS", "admin@example.com")
     client = TestClient(app)
     user_headers = {
         "X-Owner-Id": "user@example.com",
@@ -1525,7 +1525,7 @@ def test_admin_dashboard_routes_allow_privileged_api_calls_in_dev_mode(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:
     config_env("INTHUB_DISABLE_AUTH", "true")
-    config_env("APP_ADMIN_EMAILS", "admin@example.com")
+    config_env("INTHUB_APP_ADMIN_EMAILS", "admin@example.com")
     client = TestClient(app)
     admin_headers = {
         "X-Owner-Id": "admin@example.com",
@@ -1571,7 +1571,7 @@ def test_deprecated_admin_oauth_connections_route_returns_410(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:
     config_env("INTHUB_DISABLE_AUTH", "true")
-    config_env("APP_ADMIN_EMAILS", "admin@example.com")
+    config_env("INTHUB_APP_ADMIN_EMAILS", "admin@example.com")
     client = TestClient(app)
     key_response = client.post(
         "/api/admin/key",
@@ -2204,7 +2204,7 @@ def test_case_by_case_approvals_accept_user_api_key(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:
     config_env("INTHUB_DISABLE_AUTH", "true")
-    config_env("APP_ADMIN_EMAILS", "owner-a@example.com")
+    config_env("INTHUB_APP_ADMIN_EMAILS", "owner-a@example.com")
     client = TestClient(app)
     owner_a = {"X-Owner-Id": "owner-a@example.com"}
     user_key = client.post("/api/user/key", headers=owner_a).json()["apiKey"]
@@ -2269,9 +2269,7 @@ def test_case_by_case_approvals_accept_openhands_cloud_bearer_token(
     )
 
     cloud_headers = {"Authorization": "Bearer valid-openhands-token"}
-    listed = client.get(
-        "/api/case-by-case-approvals", headers=cloud_headers
-    ).json()
+    listed = client.get("/api/case-by-case-approvals", headers=cloud_headers).json()
     assert [request["id"] for request in listed] == ["req-cloud"]
 
     assert (
@@ -2428,7 +2426,7 @@ def test_oauth_catalog_and_admin_overview_are_data_driven(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:
     config_env("INTHUB_DISABLE_AUTH", "true")
-    config_env("CREDENTIAL_ENCRYPTION_KEY", "test-credential-key")
+    config_env("INTHUB_CREDENTIAL_ENCRYPTION_KEY", "test-credential-key")
     client = TestClient(app)
     catalog = client.get("/api/integrations/catalog").json()
     assert {item["slug"] for item in catalog} >= {

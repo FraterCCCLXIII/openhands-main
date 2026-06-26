@@ -179,9 +179,7 @@ def _call_openhands_users_me(
         return None
     if not response.is_success:
         _logger.warning("OpenHands auth returned status %s", response.status_code)
-        raise AuthUnavailable(
-            f"OpenHands Cloud returned status {response.status_code}"
-        )
+        raise AuthUnavailable(f"OpenHands Cloud returned status {response.status_code}")
     try:
         return _parse_user(response.json())
     except ValueError as exc:

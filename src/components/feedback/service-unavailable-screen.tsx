@@ -69,7 +69,7 @@ export const ServiceUnavailableScreen = ({
               <span className="font-medium text-white">1.</span> Provision a Postgres database for this environment.
             </li>
             <li>
-              <span className="font-medium text-white">2.</span> Add either <code className="text-white">POSTGRES_URL</code> or <code className="text-white">DATABASE_URL</code> in the deployment environment settings.
+              <span className="font-medium text-white">2.</span> Add <code className="text-white">INTHUB_POSTGRES_URL</code> in the deployment environment settings.
             </li>
             <li>
               <span className="font-medium text-white">3.</span> Redeploy the application so the server starts with the database connection available.

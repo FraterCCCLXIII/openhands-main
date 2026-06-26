@@ -23,9 +23,9 @@ ADMIN_KEY = "clad_test_admin_key"
 @pytest.fixture(autouse=True)
 def setup_test_env(config_env: ConfigEnvFixture):
     """Set up test environment before each test."""
-    config_env("APP_ADMIN_EMAILS", OWNER)
+    config_env("INTHUB_APP_ADMIN_EMAILS", OWNER)
     config_env("INTHUB_DISABLE_AUTH", "true")
-    config_env("CREDENTIAL_ENCRYPTION_KEY", "test-encryption-key-for-coverage")
+    config_env("INTHUB_CREDENTIAL_ENCRYPTION_KEY", "test-encryption-key-for-coverage")
     repository.integrations.clear()
     repository.access_requests.clear()
     repository.managed_connectors.clear()
@@ -116,7 +116,11 @@ def headers_for(route_path: str) -> dict[str, str]:
         "/api/user/agent-key",
     }:
         return {"X-Owner-Id": OWNER, "Authorization": f"Bearer {USER_KEY}"}
-    if route_path.startswith("/api/context") or route_path.startswith("/api/agent") or route_path == "/api/mcp":
+    if (
+        route_path.startswith("/api/context")
+        or route_path.startswith("/api/agent")
+        or route_path == "/api/mcp"
+    ):
         return {"X-Owner-Id": OWNER, "Authorization": f"Bearer {AGENT_KEY}"}
     return {"X-Owner-Id": OWNER}
 
@@ -174,7 +178,10 @@ def body_for(path: str) -> object:
             "authStrategy": "none",
             "tools": {},
         }
-    if path in {"/api/agent/{integrationKey}/{toolName}", "/api/context/{integrationKey}/{toolName}"}:
+    if path in {
+        "/api/agent/{integrationKey}/{toolName}",
+        "/api/context/{integrationKey}/{toolName}",
+    }:
         return {"payload": {}, "scopes": []}
     if path == "/api/mcp":
         return {"jsonrpc": "2.0", "id": 1, "method": "tools/list"}
