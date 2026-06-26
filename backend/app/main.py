@@ -836,11 +836,16 @@ def retry_mcp_transports[T](
 
 
 def discover_mcp_tools_with_transport_order(
-    server_url: str, headers: dict[str, str], *configs: dict[str, Any]
+    server_url: str,
+    headers: dict[str, str],
+    *configs: dict[str, Any],
+    timeout: float | None = None,
 ) -> dict[str, ToolSpec]:
     return retry_mcp_transports(
         mcp_transport_urls(server_url, *configs),
-        lambda url: discover_mcp_tools(url, headers),
+        lambda url: discover_mcp_tools(url, headers, timeout=timeout)
+        if timeout is not None
+        else discover_mcp_tools(url, headers),
         {},
     )
 
@@ -2200,8 +2205,10 @@ def mcp_discovery_headers(
     return http_auth_headers(integration, credentials)
 
 
-def discover_mcp_tools(server_url: str, headers: dict[str, str]) -> dict[str, ToolSpec]:
-    with httpx.Client(timeout=20, follow_redirects=True) as client:
+def discover_mcp_tools(
+    server_url: str, headers: dict[str, str], *, timeout: float = 20
+) -> dict[str, ToolSpec]:
+    with httpx.Client(timeout=timeout, follow_redirects=True) as client:
         initialized, session_id = post_mcp_message(
             client,
             server_url,
@@ -2279,6 +2286,8 @@ def discover_managed_mcp_tools_for_owner(
     integration_key: str,
     connector: ManagedConnector,
     credentials: dict[str, Any],
+    *,
+    timeout: float | None = None,
 ) -> dict[str, ToolSpec]:
     server_url = str(connector.serverUrl or connector.apiBaseUrl or "").strip()
     if not server_url:
@@ -2292,6 +2301,65 @@ def discover_managed_mcp_tools_for_owner(
     return discover_mcp_tools_with_transport_order(
         server_url,
         mcp_discovery_headers(connector.authStrategy, discovery_credentials),
+        timeout=timeout,
+    )
+
+
+def backfill_oauth_mcp_tools_after_connection(
+    owner: str,
+    integration_key: str,
+    connector: ManagedConnector,
+) -> None:
+    """Best-effort: after an OAuth connection is saved, live-discover the
+    connector's MCP tools with the user's new credentials and merge them into
+    any already-saved per-user integration so the full tool set is visible
+    immediately without a manual "Refresh indexed tools" step.
+
+    Only applies to MCP connectors (HTTP OAuth connectors ship a defaultTool
+    and have no OpenAPI URL, so there is no fuller set to discover). Failures
+    are logged and swallowed so the OAuth callback never breaks because of a
+    discovery hiccup.
+    """
+    if connector.provider != "mcp":
+        return
+    integration = repository.get_integration(owner, integration_key)
+    if not integration:
+        return
+    try:
+        discovered = discover_managed_mcp_tools_for_owner(
+            owner, integration_key, connector, {}, timeout=5
+        )
+    except Exception as exc:  # noqa: BLE001 - best-effort, never fail callback
+        logger.warning(
+            "post-oauth mcp tool discovery failed: owner=%s connector=%s error=%s",
+            owner,
+            connector.slug,
+            exc,
+        )
+        return
+    if not discovered:
+        return
+    existing_tools = dict(integration.tools)
+    changed = False
+    added_count = 0
+    for name, tool in discovered.items():
+        existing = existing_tools.get(name)
+        if existing:
+            # Preserve the user's chosen access mode; only fill missing pieces.
+            continue
+        existing_tools[name] = tool
+        changed = True
+        added_count += 1
+    if not changed:
+        return
+    updated = integration.model_copy(update={"tools": existing_tools})
+    repository.save_integration(owner, apply_managed_constraints(updated))
+    logger.info(
+        "post-oauth mcp tool backfill: owner=%s connector=%s added=%d total=%d",
+        owner,
+        connector.slug,
+        added_count,
+        len(existing_tools),
     )
 
 
@@ -2517,6 +2585,16 @@ async def fastapi_handler(request: Request):
                 f"/integrations?oauth_status=error&oauth_provider={provider}&oauth_error={urllib.parse.quote(error)}"
             )
         connection = exchange_oauth_code(provider, state, code)
+        # Best-effort: populate the full MCP tool set now that the user's
+        # OAuth credentials exist, so the integration doesn't show 1/no tools
+        # until a manual "Refresh indexed tools".
+        connector = get_managed_connector(provider)
+        if connector:
+            backfill_oauth_mcp_tools_after_connection(
+                str(connection.get("ownerId") or ""),
+                str(connection.get("integrationKey") or provider),
+                connector,
+            )
         return RedirectResponse(
             f"/integrations?oauth_status=connected&oauth_provider={provider}&integrationKey={connection['integrationKey']}"
         )

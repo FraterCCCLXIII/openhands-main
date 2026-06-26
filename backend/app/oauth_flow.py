@@ -376,7 +376,9 @@ def exchange_oauth_code(provider: str, state: str, code: str) -> dict[str, Any]:
             ),
         },
         oauth_metadata(connector, payload),
-    )
+    ) | {
+        "ownerId": str(record["owner_id"]),
+    }
 
 
 def refresh_oauth_connection(record: dict[str, Any]) -> dict[str, Any]:

@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import os
 import urllib.parse
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import httpx
 from fastapi.testclient import TestClient
@@ -13,6 +13,7 @@ from backend.app.config import reset_config
 from backend.app.main import app
 from backend.app.models import (
     AccessRequest,
+    IntegrationSpec,
     ManagedConnector,
     ManagedConnectorTool,
     ToolSpec,
@@ -327,7 +328,7 @@ def test_managed_oauth_mcp_discovery_uses_saved_connection(
     seen: dict[str, object] = {}
 
     def fake_discover_mcp_tools(
-        server_url: str, headers: dict[str, str]
+        server_url: str, headers: dict[str, str], **_: Any
     ) -> dict[str, ToolSpec]:
         seen["serverUrl"] = server_url
         seen["headers"] = headers
@@ -359,6 +360,111 @@ def test_managed_oauth_mcp_discovery_uses_saved_connection(
         "serverUrl": "https://mcp.linear.app/mcp",
         "headers": {"Authorization": "Bearer saved-linear-token"},
     }
+
+
+def test_oauth_callback_backfills_mcp_tools_for_saved_integration(
+    config_env: ConfigEnvFixture, monkeypatch
+) -> None:
+    config_env("INTHUB_DISABLE_AUTH", "true")
+    config_env("CREDENTIAL_ENCRYPTION_KEY", "test-credential-key")
+    client = TestClient(app)
+
+    admin_key = client.post("/api/admin/key").json()["apiKey"]
+    connector_response = client.post(
+        "/api/managed-connectors",
+        headers={"Authorization": f"Bearer {admin_key}"},
+        json={
+            "slug": "gh",
+            "name": "GitHub",
+            "description": "GitHub MCP",
+            "categories": ["dev"],
+            "authModes": ["oauth2"],
+            "authStrategy": "oauth2",
+            "provider": "mcp",
+            "serverUrl": "https://mcp.github.com/mcp",
+            "oauthConfigured": True,
+            "oauthClientId": "gh-client-id",
+            "oauthClientSecret": "gh-client-secret",
+            "oauthConfig": {
+                "authorizationUrl": "https://github.com/login/oauth/authorize",
+                "tokenUrl": "https://github.com/login/oauth/access_token",
+                "scopes": ["repo"],
+            },
+            "credentialLabel": "Connect GitHub",
+            "credentialPlaceholder": "Connect GitHub",
+            "credentialHelp": "Use OAuth to connect GitHub.",
+            "tools": [],
+            "enabled": True,
+        },
+    )
+    assert connector_response.status_code == 200
+
+    # User saved an integration for the connector with no tools yet (the
+    # state the wizard leaves things in before OAuth completes).
+    repository.save_integration(
+        "dev@localhost",
+        IntegrationSpec(
+            key="gh",
+            name="GitHub",
+            kind="mcp",
+            provider="mcp",
+            authStrategy="oauth2",
+            enabled=True,
+            fineGrainedPermissions=True,
+            config={"managedConnectorSlug": "gh"},
+            tools={},
+        ),
+    )
+
+    def fake_discover_mcp_tools(
+        server_url: str, headers: dict[str, str], **_: Any
+    ) -> dict[str, ToolSpec]:
+        assert server_url == "https://mcp.github.com/mcp"
+        assert headers == {"Authorization": "Bearer gh-fresh-token"}
+        return {
+            "search_repos": ToolSpec(
+                name="search_repos",
+                description="Search repositories",
+                config={"toolName": "search_repos", "inputSchema": {"type": "object"}},
+            ),
+            "get_repo": ToolSpec(
+                name="get_repo",
+                description="Get a repository",
+                config={"toolName": "get_repo", "inputSchema": {"type": "object"}},
+            ),
+        }
+
+    monkeypatch.setattr(backend_main, "discover_mcp_tools", fake_discover_mcp_tools)
+
+    # Seed an OAuth state and stub the token exchange so the callback can run
+    # end-to-end without hitting the network.
+    repository.save_oauth_state(
+        state="test-state-123",
+        owner_id="dev@localhost",
+        integration_key="gh",
+        provider="gh",
+        code_verifier=None,
+        redirect_to="/integrations",
+        redirect_uri="https://testserver/api/oauth/gh/callback",
+        callback_url=None,
+        expires_at="2099-01-01T00:00:00Z",
+    )
+    monkeypatch.setattr(
+        oauth_flow,
+        "fetch_oauth_token",
+        lambda connector, body, headers: {"access_token": "gh-fresh-token"},
+    )
+
+    response = client.get(
+        "/api/oauth/gh/callback?state=test-state-123&code=fake-code",
+        follow_redirects=False,
+    )
+    assert response.status_code in (302, 307)
+
+    saved = repository.get_integration("dev@localhost", "gh")
+    assert saved is not None
+    tool_names = set(saved.tools.keys())
+    assert {"search_repos", "get_repo"}.issubset(tool_names)
 
 
 def test_mcp_discovery_honors_streamable_transport_order(
