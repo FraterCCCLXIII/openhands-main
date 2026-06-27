@@ -550,21 +550,6 @@ def admin_openapi(request: Request) -> dict[str, Any]:
     return doc
 
 
-def openapi_document(title: str) -> dict[str, Any]:
-    return {
-        "openapi": "3.0.0",
-        "info": {"title": title, "version": "0.1.0"},
-        "paths": {
-            path: {
-                method.lower(): {"responses": {"200": {"description": "OK"}}}
-                for method, route_path in ROUTES
-                if route_path == path
-            }
-            for path in sorted({route_path for _, route_path in ROUTES})
-        },
-    }
-
-
 def get_by_path(source: dict[str, Any], path: str) -> Any:
     value: Any = source
     for part in path.split("."):
@@ -1418,11 +1403,6 @@ def openhands_user_from_request(request: Request) -> OpenHandsUser | None:
     )
 
 
-def openhands_owner_from_request(request: Request) -> str | None:
-    user = openhands_user_from_request(request)
-    return user.owner_id if user else None
-
-
 def authorize_dashboard_user(request: Request) -> OpenHandsUser:
     try:
         user = openhands_user_from_request(request)
@@ -1437,12 +1417,6 @@ def authorize_dashboard_user(request: Request) -> OpenHandsUser:
         status_code=401,
         detail="Sign in with OpenHands Cloud before using this endpoint.",
     )
-
-
-def authorize_dashboard_owner(request: Request) -> str:
-    if is_auth_disabled():
-        return owner_id(request)
-    return authorize_dashboard_user(request).owner_id
 
 
 def owner_is_admin(owner: str, user: OpenHandsUser | None = None) -> bool:
@@ -1473,10 +1447,6 @@ def authorized_agent_record(request: Request, purpose: str) -> dict[str, Any]:
         )
     record["ownerId"] = str(record["ownerId"]).lower()
     return record
-
-
-def authorized_agent_owner(request: Request, purpose: str) -> str:
-    return str(authorized_agent_record(request, purpose)["ownerId"])
 
 
 def authorize_user_api_owner(request: Request) -> tuple[str, bool]:
@@ -1785,10 +1755,6 @@ def agent_permission_profile(record: dict[str, Any]) -> PermissionProfile | None
     if profile and profile.name is None:
         return ensure_default_permission_profile(owner, refresh=True)
     return profile
-
-
-def permission_profile_label(profile: PermissionProfile) -> str:
-    return profile.name or "Default profile"
 
 
 def apply_permission_profile_to_integration(

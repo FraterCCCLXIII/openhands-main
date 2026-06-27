@@ -85,11 +85,6 @@ _DEV_USER = OpenHandsUser(
 )
 
 
-def admin_email_set() -> frozenset[str]:
-    """Return the set of null-org admin email addresses from config."""
-    return frozenset(get_default_config().app_admin_emails)
-
-
 def is_admin_owner(owner_id: str) -> bool:
     """Legacy null-org admin check for local/dev owner identifiers."""
     return get_default_config().is_admin_email(owner_id)
