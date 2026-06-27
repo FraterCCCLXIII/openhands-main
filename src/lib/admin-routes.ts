@@ -37,7 +37,6 @@ export const getAdminSectionFromPath = (pathname: string): AdminSection => {
       return "permissionProfiles";
     case "/case-by-case-approvals":
       return "caseByCaseApprovals";
-    case "/home":
     case "/integrations":
     default:
       return "integrations";

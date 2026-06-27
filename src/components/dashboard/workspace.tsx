@@ -35,9 +35,7 @@ interface DashboardWorkspaceProps {
   agentApiBaseUrl: string;
   agentApiKey: string;
   userApiKey?: UserApiKeyStatus | null;
-  userApiKeyValue?: string | null;
   adminApiKey?: AdminApiKeyStatus | null;
-  adminApiKeyValue?: string | null;
   isAdmin?: boolean;
 }
 
@@ -48,9 +46,7 @@ export const DashboardWorkspace = ({
   agentApiBaseUrl,
   agentApiKey,
   userApiKey = null,
-  userApiKeyValue: initialUserApiKeyValue = null,
   adminApiKey = null,
-  adminApiKeyValue: initialAdminApiKeyValue = null,
   isAdmin = true,
 }: DashboardWorkspaceProps) => {
   const queryClient = useQueryClient();
@@ -132,9 +128,7 @@ export const DashboardWorkspace = ({
   const { agentApiReady, agentKey, userKey, adminKey } = useApiKeys({
     agentApiKey,
     userApiKey,
-    userApiKeyValue: initialUserApiKeyValue,
     adminApiKey,
-    adminApiKeyValue: initialAdminApiKeyValue,
     onStatus: setStatusMessage,
   });
 

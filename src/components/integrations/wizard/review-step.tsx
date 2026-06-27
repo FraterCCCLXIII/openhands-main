@@ -10,21 +10,17 @@ import { Button } from "@/src/components/ui/button";
 import { cn } from "@/src/lib/utils";
 import {
   integrationWizardInputClassName,
-  type DiscoveryResponse,
-  type IntegrationKind,
 } from "@/src/components/integrations/wizard/utils";
 import type { ToolAccessMode, ToolSpec } from "@/src/types/integrations-hub";
 
 interface ReviewStepProps {
   createPending: boolean;
-  discovery: DiscoveryResponse;
   draftName: string;
   draftKey: string;
   filteredReviewedTools: Array<[string, ToolSpec]>;
   toolModes: Record<string, ToolAccessMode>;
   toolSearch: string;
   hasMatchingTools: boolean;
-  kind: IntegrationKind;
   matchingToolNames: string[];
   reviewedTools: Array<[string, ToolSpec]>;
   selectedToolCount: number;
@@ -48,14 +44,12 @@ interface ReviewStepProps {
 
 export const ReviewStep = ({
   createPending,
-  discovery: _discovery,
   draftName,
   draftKey,
   filteredReviewedTools,
   toolModes,
   toolSearch,
   hasMatchingTools,
-  kind: _kind,
   matchingToolNames,
   reviewedTools,
   selectedToolCount,

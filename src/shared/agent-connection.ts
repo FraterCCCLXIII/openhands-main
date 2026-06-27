@@ -1,12 +1,7 @@
 import {
   buildIntegrationsHubMcpToolName,
-  INTEGRATIONS_HUB_MCP_SET_AGENT_CLASS_TOOL_NAME,
-  INTEGRATIONS_HUB_MCP_SET_AGENT_DATA_TOOL_NAME,
-  INTEGRATIONS_HUB_MCP_SET_AGENT_ID_TOOL_NAME,
 } from "@/src/shared/mcp-tool-names";
 import {
-  buildExamplePayload,
-  buildPermissionNote,
   listExampleTools,
   selectExampleIntegration,
 } from "@/src/lib/tool-examples";
@@ -15,28 +10,14 @@ import type { IntegrationSpec } from "@/src/types/integrations-hub";
 export const OPENHANDS_AGENT_KEY_ENV = "$OPENHANDS_AGENT_KEY";
 
 interface AgentConnectionGuide {
-  endpoint: string;
-  integrationKey: string;
-  toolName: string;
   mcpEndpoint: string;
   mcpToolName: string;
-  mcpSetAgentIdToolName: string;
-  mcpSetAgentClassToolName: string;
-  mcpSetAgentDataToolName: string;
-  requestBody: string;
-  curlExample: string;
-  fetchExample: string;
-  skillEndpoint: string;
-  skillCurlExample: string;
-  openApiSchemaEndpoint: string;
-  openApiCurlExample: string;
   mcpConfigExample: string;
-  mcpSessionSetupExample: string;
-  permissionNote: string;
+  openApiSchemaEndpoint: string;
 }
 
 /**
- * Builds the agent-facing REST and MCP examples shown on the Agent Connection page.
+ * Builds the agent-facing MCP examples shown on the Agent Connection page.
  * Keep these examples aligned with the live runtime defaults and generated OpenAPI docs.
  */
 export const buildAgentConnectionGuide = ({
@@ -57,48 +38,9 @@ export const buildAgentConnectionGuide = ({
       : undefined;
   const integrationKey = sampleIntegration?.key ?? "your-integration";
   const toolName = sampleTool?.name ?? "your-tool";
-  const defaultScopes = sampleTool?.defaultScopes ?? [];
-  const requestPayload = {
-    scopes: defaultScopes,
-    payload: sampleTool ? buildExamplePayload(sampleTool) : {},
-  };
   const normalizedBaseUrl = baseUrl.replace(/\/$/, "");
-  const endpoint = `${normalizedBaseUrl}/api/agent/${integrationKey}/${toolName}`;
-  const openApiSchemaEndpoint = `${normalizedBaseUrl}/api/agent/openapi`;
   const mcpEndpoint = `${normalizedBaseUrl}/api/mcp`;
   const mcpToolName = buildIntegrationsHubMcpToolName(integrationKey, toolName);
-  const mcpSetAgentIdToolName = INTEGRATIONS_HUB_MCP_SET_AGENT_ID_TOOL_NAME;
-  const mcpSetAgentClassToolName = INTEGRATIONS_HUB_MCP_SET_AGENT_CLASS_TOOL_NAME;
-  const mcpSetAgentDataToolName = INTEGRATIONS_HUB_MCP_SET_AGENT_DATA_TOOL_NAME;
-  const requestBody = JSON.stringify(requestPayload, null, 2);
-  const escapedRequestBody = requestBody.replace(/'/g, "'\\''");
-  const curlExample = [
-    `curl -X POST \"${endpoint}\"`,
-    `  -H \"Authorization: Bearer ${apiKey}\"`,
-    '  -H "Content-Type: application/json"',
-    `  -d '${escapedRequestBody}'`,
-  ].join("\\n");
-  const fetchExample = `const response = await fetch("${endpoint}", {
-  method: "POST",
-  headers: {
-    Authorization: "Bearer ${apiKey}",
-    "Content-Type": "application/json",
-  },
-  body: JSON.stringify(${requestBody}),
-});
-
-const result = await response.json();`;
-  const skillEndpoint = `${normalizedBaseUrl}/api/agent/skill`;
-  const skillCurlExample = [
-    `curl -L "${skillEndpoint}"`,
-    `  -H "Authorization: Bearer ${apiKey}"`,
-    "  -o SKILL.md",
-  ].join("\\n");
-  const openApiCurlExample = [
-    `curl -X GET \"${openApiSchemaEndpoint}\"`,
-    `  -H \"Authorization: Bearer ${apiKey}\"`,
-    '  -H "Accept: application/json"',
-  ].join("\\n");
   const mcpConfigExample = JSON.stringify(
     {
       mcpServers: {
@@ -114,32 +56,12 @@ const result = await response.json();`;
     null,
     2,
   );
-  const mcpSessionSetupExample = [
-    `1. Connect your MCP client to ${mcpEndpoint}.`,
-    `2. Call ${mcpToolName} directly; if you omit agent identity, the session keeps agentId and agentClass unset (null).`,
-    `3. Optionally call ${mcpSetAgentIdToolName} and ${mcpSetAgentClassToolName} to set or clear the identity for the rest of the session.`,
-    `4. If you plan to request case-by-case tools, call ${mcpSetAgentDataToolName} with your conversationLink first so humans can review the originating conversation.`,
-    "5. You can also pass agentId and agentClass per tool call, including null when you need a one-off override.",
-  ].join("\n");
+  const openApiSchemaEndpoint = `${normalizedBaseUrl}/api/agent/openapi`;
 
   return {
-    endpoint,
-    integrationKey,
-    toolName,
     mcpEndpoint,
     mcpToolName,
-    mcpSetAgentIdToolName,
-    mcpSetAgentClassToolName,
-    mcpSetAgentDataToolName,
-    requestBody,
-    curlExample,
-    fetchExample,
-    skillEndpoint,
-    skillCurlExample,
-    openApiSchemaEndpoint,
-    openApiCurlExample,
     mcpConfigExample,
-    mcpSessionSetupExample,
-    permissionNote: buildPermissionNote(sampleTool),
+    openApiSchemaEndpoint,
   };
 };

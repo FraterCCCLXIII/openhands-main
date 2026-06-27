@@ -44,9 +44,6 @@ export interface ToolSpec {
   invocationCount?: number;
 }
 
-export type FunctionSpec = ToolSpec;
-
-
 export interface IntegrationSpec {
   key: string;
   name: string;
@@ -58,13 +55,6 @@ export interface IntegrationSpec {
   config: Record<string, unknown>;
   credentials: Record<string, unknown>;
   tools: Record<string, ToolSpec>;
-}
-
-export interface OwnerIntegrationRecord {
-  ownerId: string;
-  integration: IntegrationSpec;
-  createdAt: string;
-  updatedAt: string;
 }
 
 export interface PermissionProfileIntegrationSnapshot {
@@ -190,8 +180,6 @@ export interface ManagedConnectorToolDefinition {
   config?: Record<string, unknown>;
 }
 
-export type ManagedConnectorFunctionDefinition = ManagedConnectorToolDefinition;
-
 
 export interface ManagedConnectorDefinition {
   slug: string;
@@ -226,18 +214,6 @@ export interface ManagedConnectorRecord extends ManagedConnectorDefinition {
 }
 
 
-export interface PolicyRule {
-  integrationKey: string;
-  toolNames: string[];
-  scopes: string[];
-  enabled: boolean;
-}
-
-export interface AgentClassPolicy {
-  agentClass: string;
-  rules: PolicyRule[];
-}
-
 export interface AccessRequestAgentData {
   conversationLink?: string;
 }
@@ -260,18 +236,6 @@ export interface AccessRequest {
   decidedBy?: string;
 }
 
-export interface TemporaryGrant {
-  id: string;
-  agentId: string | null;
-  agentClass: string | null;
-  integrationKey: string;
-  toolName: string;
-  scopes: string[];
-  grantedBy: string;
-  createdAt: string;
-  expiresAt: string;
-}
-
 export interface NotificationRecord {
   id: string;
   channel: NotificationChannel;
@@ -282,24 +246,6 @@ export interface NotificationRecord {
   createdAt: string;
 }
 
-export interface AgentApiKeyRecord {
-  ownerId: string;
-  apiKey: string;
-  permissionProfileId?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface UserApiKeyRecord {
-  ownerId: string;
-  apiKeyHash: string;
-  keyPrefix: string;
-  keySuffix: string;
-  encryptedApiKey?: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
 export interface UserApiKeyStatus {
   keyPrefix: string;
   keySuffix: string;
@@ -307,36 +253,9 @@ export interface UserApiKeyStatus {
   updatedAt: string;
 }
 
-export interface AdminApiKeyRecord {
-  ownerId: string;
-  apiKeyHash: string;
-  keyPrefix: string;
-  keySuffix: string;
-  encryptedApiKey?: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
 export interface AdminApiKeyStatus {
   keyPrefix: string;
   keySuffix: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface IntegrationConnectionRecord {
-  ownerId: string;
-  integrationKey: string;
-  provider: string;
-  authStrategy: AuthStrategy;
-  encryptedCredentials: string;
-  tokenType?: string;
-  scopes: string[];
-  expiresAt?: string;
-  externalAccountId?: string;
-  externalWorkspaceId?: string;
-  displayName?: string;
-  metadata: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
 }
@@ -402,45 +321,6 @@ export interface AdminOperationalOverview {
   users: AdminOperationalOverviewUserSummary[];
 }
 
-export interface OAuthStateRecord {
-  state: string;
-  ownerId: string;
-  integrationKey: string;
-  provider: string;
-  codeVerifier?: string;
-  redirectTo: string;
-  redirectUri?: string;
-  callbackUrl?: string;
-  createdAt: string;
-  expiresAt: string;
-}
-
-export interface ToolInvocationRecord {
-  id: string;
-  ownerId?: string;
-  agentId: string | null;
-  agentClass: string | null;
-  integrationKey: string;
-  toolName: string;
-  scopes: string[];
-  provider: IntegrationProvider;
-  kind: IntegrationKind;
-  authStrategy: AuthStrategy;
-  outcome: ToolInvocationOutcome;
-  invokedAt: string;
-  durationMs?: number;
-  payloadKeys: string[];
-  errorMessage?: string;
-}
-
-export interface ToolUsageSummary {
-  integrationKey: string;
-  toolName: string;
-  lastInvokedAt: string;
-  lastInvocationOutcome: ToolInvocationOutcome;
-  invocationCount: number;
-}
-
 export interface DisabledToolSummary {
   integrationKey: string;
   toolName: string;
@@ -454,22 +334,3 @@ export interface DisableUnusedToolsResult {
   disabledCount: number;
   disabledTools: DisabledToolSummary[];
 }
-
-export interface AccessDecision {
-  allowed: boolean;
-  reason: string;
-  effectiveScopes: string[];
-}
-
-export interface AgentInvocationResult {
-  integration: string;
-  tool: string;
-  provider: IntegrationProvider;
-  kind: IntegrationKind;
-  authStrategy: AuthStrategy;
-  decision: AccessDecision;
-  data: unknown;
-}
-
-// Backward-compatible alias for callers that still import the old name.
-export type ContextInvocationResult = AgentInvocationResult;

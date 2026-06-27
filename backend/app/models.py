@@ -57,10 +57,6 @@ class AgentInvocationRequest(BaseModel):
     payload: dict[str, Any] = Field(default_factory=dict)
 
 
-# Backward-compatible alias for callers that still import the old name.
-ContextInvocationRequest = AgentInvocationRequest
-
-
 class AccessRequest(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid4()))
     agentId: str | None = None

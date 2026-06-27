@@ -52,7 +52,6 @@ const useCopiedFlag = () => {
 
 interface StoredApiKeyHookOptions<TStatus extends { keyPrefix: string; keySuffix: string }> {
   initialStatus: TStatus | null;
-  initialValue: string | null;
   fetchUrl: string;
   unavailableMessage: string;
   regenerateMessage: string;
@@ -62,7 +61,6 @@ interface StoredApiKeyHookOptions<TStatus extends { keyPrefix: string; keySuffix
 
 const useStoredApiKey = <TStatus extends { keyPrefix: string; keySuffix: string }>({
   initialStatus,
-  initialValue,
   fetchUrl,
   unavailableMessage,
   regenerateMessage,
@@ -70,17 +68,13 @@ const useStoredApiKey = <TStatus extends { keyPrefix: string; keySuffix: string 
   onStatus,
 }: StoredApiKeyHookOptions<TStatus>) => {
   const [status, setStatus] = useState<TStatus | null>(initialStatus);
-  const [value, setValue] = useState(initialValue ?? "");
+  const [value, setValue] = useState("");
   const [revealed, setRevealed] = useState(false);
   const { copied, setCopied } = useCopiedFlag();
 
   useEffect(() => {
     setStatus(initialStatus);
   }, [initialStatus]);
-
-  useEffect(() => {
-    setValue(initialValue ?? "");
-  }, [initialValue]);
 
   const rotateKey = async (hadKey: boolean) => {
     const rotated = await fetchJson<{
@@ -175,18 +169,14 @@ const useStoredApiKey = <TStatus extends { keyPrefix: string; keySuffix: string 
 interface UseDashboardApiKeysOptions {
   agentApiKey: string;
   userApiKey: UserApiKeyStatus | null;
-  userApiKeyValue?: string | null;
   adminApiKey: AdminApiKeyStatus | null;
-  adminApiKeyValue?: string | null;
   onStatus: (message: string) => void;
 }
 
 export const useApiKeys = ({
   agentApiKey: initialAgentApiKey,
   userApiKey,
-  userApiKeyValue = null,
   adminApiKey,
-  adminApiKeyValue = null,
   onStatus,
 }: UseDashboardApiKeysOptions) => {
   const [agentApiKey, setAgentApiKey] = useState(initialAgentApiKey);
@@ -209,7 +199,6 @@ export const useApiKeys = ({
 
   const userKey = useStoredApiKey<UserApiKeyStatus>({
     initialStatus: userApiKey,
-    initialValue: userApiKeyValue,
     fetchUrl: "/api/user/key",
     unavailableMessage: "Unable to load the full user automation key right now.",
     regenerateMessage:
@@ -221,7 +210,6 @@ export const useApiKeys = ({
 
   const adminKey = useStoredApiKey<AdminApiKeyStatus>({
     initialStatus: adminApiKey,
-    initialValue: adminApiKeyValue,
     fetchUrl: "/api/admin/key",
     unavailableMessage: "Unable to load the full admin automation key right now.",
     regenerateMessage:

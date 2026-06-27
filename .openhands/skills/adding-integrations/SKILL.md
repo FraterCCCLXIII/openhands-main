@@ -74,7 +74,7 @@ Use this table in preference order:
 | MCP + bearer/API key | OpenHands/extensions catalog JSON connectionOptions + discovery/runtime tests |
 | HTTP/OpenAPI + OAuth | OpenHands/extensions catalog JSON connectionOptions, plus OAuth-specific tests or runtime changes only if the provider is non-standard |
 | HTTP/OpenAPI + API key | OpenHands/extensions catalog JSON connectionOptions and tests |
-| HTTP provider without usable OpenAPI | manual function definitions and possibly `src/lib/adapters/http-adapter.ts` / `src/lib/managed-connectors/openapi.ts` |
+| HTTP provider without usable OpenAPI | manual function definitions and possibly `backend/app/main.py (invoke_http_tool)` / `backend/app/openapi_tools.py` |
 
 Start at the top and move down only when the provider cannot support a higher-preference option.
 
@@ -88,22 +88,22 @@ If the provider matches Slack, Webflow, Ordinal, Notion, or ElevenLabs, copy tha
   - curated metadata and all connection defaults under `connectionOptions`
 - `src/types/integrations-hub.ts`
   - only if the provider genuinely needs a new shared type or auth/config field
-- `src/lib/integrations/integration-catalog.ts`
+- `backend/app/integration_catalog.py`
   - only for generic adapter behavior from raw catalog entries to hub UI/API options
 - matching tests for changed hub files
 
 ### Touch only when needed
 
-- `src/lib/integrations/discovery.ts`
+- `backend/app/main.py (discovered_integration)`
   - discovery branching for managed connectors, HTTP/OpenAPI, and MCP
-- `src/lib/managed-connectors/openapi.ts`
+- `backend/app/openapi_tools.py`
   - when the provider's schema uses request-body or parameter features not already supported
-- `src/lib/adapters/http-adapter.ts`
+- `backend/app/main.py (invoke_http_tool)`
   - when runtime execution needs new HTTP behavior
-- `src/lib/mcp-client.ts`
+- `backend/app/main.py (discover_mcp_tools / invoke_mcp_tool)`
   - when a hosted MCP server needs special transport/auth handling
-- `src/lib/oauth/managed-oauth-client.ts`
-- `src/lib/oauth/provider-resolver.ts`
+- `backend/app/oauth_flow.py (ensure_managed_oauth_client)`
+- `backend/app/oauth_flow.py`
   - when the provider has non-standard OAuth behavior
 - `src/components/admin/*`
   - only if the admin/installation UX truly needs to change
@@ -157,7 +157,7 @@ Use the ElevenLabs shape:
 
 ### Discovery
 
-`src/lib/integrations/discovery.ts` decides whether a managed connector is discovered through:
+`backend/app/main.py (discovered_integration)` decides whether a managed connector is discovered through:
 
 - MCP discovery, or
 - OpenAPI-generated HTTP function definitions
@@ -166,7 +166,7 @@ Do not change discovery unless the provider cannot be represented by the existin
 
 ### Managed-connector persistence
 
-`src/lib/core/service.ts` handles managed connector upsert logic, including:
+`backend/app/main.py` handles managed connector upsert logic, including:
 
 - normalizing provider defaults
 - generating HTTP functions from OpenAPI when `openApiUrl` is present
@@ -174,7 +174,7 @@ Do not change discovery unless the provider cannot be represented by the existin
 
 ### Invocation
 
-`src/lib/core/service.ts` `invokeContext(...)` is the real runtime path. A connector is only done when discovery succeeds **and** a real invocation succeeds.
+`backend/app/main.py` `invokeContext(...)` is the real runtime path. A connector is only done when discovery succeeds **and** a real invocation succeeds.
 
 ## Step 6: Add tests for the code you changed
 
@@ -182,8 +182,8 @@ Typical coverage:
 
 - `src/lib/integrations/integration-catalog.test.ts`
 - `src/lib/integrations/discovery.test.ts`
-- `src/lib/mcp-client.test.ts` when MCP behavior changes
-- `src/lib/oauth/provider-resolver.test.ts` when OAuth behavior changes
+- `backend/tests/test_backend_smoke.py` when MCP behavior changes
+- `backend/tests/test_backend_smoke.py` when OAuth behavior changes
 - `src/lib/managed-connectors/openapi.test.ts` when schema-generation behavior changes
 - UI tests only when installation/admin flows visibly change
 

@@ -5,7 +5,6 @@ import { createRoot } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { ReviewStep } from "@/src/components/integrations/wizard/review-step";
-import type { DiscoveryResponse } from "@/src/components/integrations/wizard/utils";
 import type { ToolSpec } from "@/src/types/integrations-hub";
 
 import { enableReactActEnvironment } from "@/src/test-utils/jsdom-helpers";
@@ -43,22 +42,6 @@ const emptyTool: ToolSpec = {
   config: {},
 };
 
-const discovery: DiscoveryResponse = {
-  provider: "mcp",
-  authStrategy: "bearer",
-  config: {
-    serverUrl: "https://example.com/mcp",
-  },
-  credentials: {
-    accessToken: "secret-token",
-  },
-  tools: {
-    archiveDatabase: archiveTool,
-    searchPages: searchTool,
-    emptyTool,
-  },
-};
-
 const mountedRoots: Array<{ container: HTMLDivElement; unmount: () => void }> = [];
 
 type RenderOptions = Partial<ComponentProps<typeof ReviewStep>>;
@@ -91,7 +74,6 @@ const renderReviewStep = async (overrides: RenderOptions = {}) => {
 
   const props: ComponentProps<typeof ReviewStep> = {
     createPending: false,
-    discovery,
     draftKey: "demo-key",
     draftName: "Demo integration",
     filteredReviewedTools: [
@@ -106,7 +88,6 @@ const renderReviewStep = async (overrides: RenderOptions = {}) => {
     },
     toolSearch: "",
     hasMatchingTools: true,
-    kind: "mcp",
     matchingToolNames: ["archiveDatabase", "searchPages", "emptyTool"],
     reviewedTools: [
       ["archiveDatabase", archiveTool],
@@ -172,7 +153,6 @@ describe("ReviewStep", () => {
     const { container, onBack } = await renderReviewStep({
       createPending: true,
       draftName: "Empty integration",
-      kind: "managed",
       reviewedTools: [],
       filteredReviewedTools: [],
       matchingToolNames: [],

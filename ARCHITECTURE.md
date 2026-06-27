@@ -25,10 +25,10 @@ The codebase keeps frontend, shared, and backend concerns separate by convention
 
 - `src/components/` contains React UI. Files marked `"use client"` must not import server-only modules, even transitively.
 - `src/shared/` contains browser-safe helpers and constants that can be imported by both client UI and server/runtime code.
-- `src/lib/` contains backend/domain modules plus a small number of legacy shared helpers. New client-safe cross-layer helpers should prefer `src/shared/` so browser bundles do not accidentally pull in auth, DB, MCP server, OAuth, or credential-handling code.
+- `src/lib/` contains frontend utility modules (text utils, fetch helpers, type helpers, access-request constants, HTTP request template helpers). New client-safe cross-layer helpers should prefer `src/shared/` so browser bundles stay small.
 - `backend/` contains the Python/FastAPI backend and owns the `/api/...` route surface. It can be deployed as its own Vercel project rooted at `backend/`.
 
-`npm run lint` runs `scripts/check-client-boundaries.mjs` after ESLint to reject client components that reach into server-only paths such as `src/lib/core`, `src/lib/db`, `src/lib/mcp`, `src/lib/oauth`, or credential/auth helpers. Python route parity is covered by `backend/tests/test_route_parity.py`, which compares registered FastAPI routes against `backend/app/route_manifest.py`.
+`npm run lint` runs ESLint on the frontend. Python route parity is covered by `backend/tests/test_route_parity.py`, which compares registered FastAPI routes against `backend/app/route_manifest.py`.
 
 ## Security model
 
@@ -154,16 +154,15 @@ Instead, tests run against a real `PostgresRepository` backed by PGlite, which g
 
 | Layer | Typical target | Command |
 | --- | --- | --- |
-| Unit tests | Pure helpers, UI components, route handlers, service logic with focused stubs | `npm run test:unit` |
-| Repository / SQL tests | `PostgresRepository` behavior, schema changes, row mapping, persistence semantics | `npm run test:e2e` |
-| Service-stack end-to-end tests | Real service + repository flows such as key issuance, grants, and integration persistence | `npm run test:e2e` |
+| Frontend unit tests | Pure helpers, UI components, route handlers with focused stubs | `npm run test:unit` |
+| Backend tests | `PostgresRepository` behavior, schema changes, row mapping, persistence semantics, service logic | `npm run test:e2e` |
 | Full local validation | Combined regression pass before merge | `npm run test:unit && npm run test:e2e && npm run typecheck && npm run build` |
 
-In this repository, `test:e2e` means **real DB-backed end-to-end coverage inside Vitest**, not browser automation.
+In this repository, `test:e2e` runs the Python backend test suite via `cd backend && uv run pytest tests -q`.
 
-### When to use PGlite-backed tests
+### When to use DB-backed backend tests
 
-Use the standard PGlite-backed repository setup whenever a change touches:
+Use the backend test suite (`backend/tests/`) whenever a change touches:
 
 - Postgres schema or row mapping
 - repository queries
@@ -173,22 +172,16 @@ Use the standard PGlite-backed repository setup whenever a change touches:
 
 The standard pattern is:
 
-```ts
-import { afterEach, beforeEach, vi } from "vitest";
+```python
+from backend.app.repository import repository
+from backend.app.main import app
+from fastapi.testclient import TestClient
 
-import { createTestRepository, getActiveSql } from "@/src/lib/db/pglite-test-utils";
-
-vi.mock("@neondatabase/serverless", () => ({ neon: () => getActiveSql() }));
-
-let cleanup: (() => Promise<void>) | undefined;
-
-beforeEach(async () => {
-  ({ cleanup } = await createTestRepository());
-});
-
-afterEach(async () => {
-  await cleanup?.();
-});
+def test_my_flow(config_env):
+    config_env("INTHUB_DISABLE_AUTH", "true")
+    repository.integrations.clear()
+    client = TestClient(app)
+    # ... exercise the endpoint ...
 ```
 
 That pattern keeps repository-backed tests aligned with the real SQL schema instead of drifting into mock-only coverage.

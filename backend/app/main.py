@@ -80,7 +80,6 @@ async def validation_error_handler(_request: Request, exc: ValidationError):
     return JSONResponse(status_code=422, content={"detail": exc.errors()})
 
 
-DEPRECATED_ADMIN_INTEGRATIONS_MESSAGE = "Admin API keys can no longer manage self-scoped integrations. Use the user API key with /api/user/integrations instead."
 RAW_CONNECTOR_INSTALL_FORBIDDEN_DETAIL = "Only app administrators can install integrations from arbitrary connector URLs. Use a managed connector instead."
 RAW_CONNECTOR_DISCOVERY_FORBIDDEN_DETAIL = "Only app administrators can discover tools from arbitrary MCP server URLs. Ask an administrator to register a managed connector instead."
 ADMIN_CONNECTOR_MANAGEMENT_DETAIL = (
@@ -90,7 +89,6 @@ ADMIN_NOTIFICATIONS_DETAIL = "Only app administrators can view notifications."
 ADMIN_KEY_MANAGEMENT_DETAIL = "Only app administrators can manage admin API keys."
 ADMIN_API_SESSION_DETAIL = "Only app administrators can use admin API routes."
 
-DEPRECATED_ADMIN_CONNECTIONS_MESSAGE = "Admin API keys can no longer read self-scoped OAuth connections. Use the user API key with /api/user/connections instead."
 
 CASE_BY_CASE_APPROVAL_PATH = "/case-by-case-approvals"
 
@@ -181,10 +179,6 @@ def agent_openapi(
             },
         },
     }
-
-
-# Backward-compatible alias for callers that still import the old name.
-context_openapi = agent_openapi
 
 
 def user_openapi(request: Request, is_admin: bool) -> dict[str, Any]:
@@ -1594,20 +1588,6 @@ def assert_user_can_discover_integration(
     )
 
 
-def key_status(value: str | None) -> dict[str, Any] | None:
-    return (
-        None
-        if not value
-        else {
-            "keyPrefix": value[:8],
-            "keySuffix": value[-6:],
-            "recoverable": True,
-            "createdAt": now_iso(),
-            "updatedAt": now_iso(),
-        }
-    )
-
-
 ACCESS_PRIORITY = {"disabled": 0, "approval_required": 1, "enabled": 2}
 
 
@@ -2533,25 +2513,11 @@ async def fastapi_handler(request: Request):
             active_permission_profile,
         )
 
-    if path.startswith("/api/admin/integrations") and path not in {
-        "/api/admin/integrations/managed-connectors",
-        "/api/admin/integrations/catalog",
-        "/api/admin/integrations/discover",
-    }:
-        raise HTTPException(
-            status_code=410, detail=DEPRECATED_ADMIN_INTEGRATIONS_MESSAGE
-        )
-
     if path.endswith("/catalog"):
         return integration_catalog()
 
     if path in {"/api/oauth/connections", "/api/user/connections"}:
         return repository.list_connections(owner)
-
-    if path == "/api/admin/oauth/connections":
-        raise HTTPException(
-            status_code=410, detail=DEPRECATED_ADMIN_CONNECTIONS_MESSAGE
-        )
 
     if path == "/api/admin/connections":
         return repository.list_connections(filters=admin_connection_filters(request))

@@ -237,7 +237,6 @@ export const IntegrationWizard = ({
           <ReviewStep
             allMatchingSelected={state.allMatchingSelected}
             createPending={createMutation.isPending}
-            discovery={state.discovery}
             draftKey={state.draft.key}
             draftName={integrationDisplayName}
             expandedTools={state.expandedTools}
@@ -245,7 +244,6 @@ export const IntegrationWizard = ({
             toolModes={state.toolModes}
             toolSearch={state.toolSearch}
             hasMatchingTools={state.hasMatchingTools}
-            kind={state.draft.kind ?? "managed"}
             matchingToolNames={state.matchingToolNames}
             reviewedTools={state.reviewedTools}
             selectedToolCount={state.selectedToolCount}

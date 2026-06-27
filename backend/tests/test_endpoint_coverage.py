@@ -168,7 +168,6 @@ def body_for(path: str) -> object:
     if path in {
         "/api/integrations",
         "/api/user/integrations",
-        "/api/admin/integrations",
     }:
         return {
             "key": "sample",

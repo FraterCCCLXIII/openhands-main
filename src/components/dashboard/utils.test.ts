@@ -5,7 +5,6 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { getConnectorLogoUrl } from "@/src/components/dashboard/shared";
 import {
   approvalStatusTone,
-  buildConnectorMap,
   buildInstalledIntegrationKeys,
   buildMarketplaceConnectors,
   buildToolAccessPatch,
@@ -21,7 +20,6 @@ import {
   maskStoredApiKey,
   matchesAccessRequestFilter,
   matchesAccessRequestSearch,
-  resolveIntegrationLogoUrl,
   subtractUnusedWindow,
 } from "@/src/components/dashboard/utils";
 import type {
@@ -408,29 +406,7 @@ describe("dashboard-workspace-utils", () => {
       },
     ]);
 
-    const connectorBySlug = buildConnectorMap(connectors);
     expect(getConnectorLogoUrl(connectors[0]!)).toBe("https://cdn.simpleicons.org/slack/FFFFFF");
-    expect(
-      resolveIntegrationLogoUrl({
-        integration: integrations[0]!,
-        connectorBySlug,
-        getConnectorLogoUrl,
-      }),
-    ).toBe("https://cdn.simpleicons.org/slack/FFFFFF");
-    expect(
-      resolveIntegrationLogoUrl({
-        integration: integrationsWithVariants[1]!,
-        connectorBySlug,
-        getConnectorLogoUrl,
-      }),
-    ).toBe("https://github.com/favicon.ico");
-    expect(
-      resolveIntegrationLogoUrl({
-        integration: integrationsWithVariants[2]!,
-        connectorBySlug,
-        getConnectorLogoUrl,
-      }),
-    ).toBe("https://api.example.com/favicon.ico");
   });
 
   it("copies text through clipboard helpers and falls back when browser APIs are missing", async () => {

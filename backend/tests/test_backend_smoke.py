@@ -1755,28 +1755,6 @@ def test_admin_dashboard_routes_allow_privileged_api_calls_in_dev_mode(
     )
 
 
-def test_deprecated_admin_oauth_connections_route_returns_410(
-    config_env: ConfigEnvFixture, monkeypatch
-) -> None:
-    config_env("INTHUB_DISABLE_AUTH", "true")
-    config_env("INTHUB_APP_ADMIN_EMAILS", "admin@example.com")
-    client = TestClient(app)
-    key_response = client.post(
-        "/api/admin/key",
-        headers={
-            "X-Owner-Id": "admin@example.com",
-        },
-    )
-    admin_key = key_response.json()["apiKey"]
-
-    response = client.get(
-        "/api/admin/oauth/connections", headers={"Authorization": f"Bearer {admin_key}"}
-    )
-
-    assert response.status_code == 410
-    assert "Use the user API key" in response.json()["detail"]
-
-
 def test_default_managed_connectors_are_listed_and_require_credentials(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:

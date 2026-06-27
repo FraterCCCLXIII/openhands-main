@@ -26,7 +26,6 @@ export default defineConfig({
       exclude: [
         "**/*.d.ts",
         "**/*.test.{ts,tsx}",
-        "src/lib/db/pglite-test-utils.ts",
       ],
     },
   },

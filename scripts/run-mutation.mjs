@@ -10,9 +10,9 @@ const HELP_TEXT = `Usage:
   npm run test:mutation:dry -- <source-file>
 
 Examples:
-  npm run test:mutation -- src/lib/core/service.ts
-  npm run test:mutation -- src/lib/core/service.ts src/lib/api.ts
-  npm run test:mutation -- --mutate src/lib/core/service.ts --testFile src/lib/core/service.test.ts
+  npm run test:mutation -- src/components/integrations/wizard/utils.ts
+  npm run test:mutation -- src/components/dashboard/utils.ts src/lib/text-utils.ts
+  npm run test:mutation -- --mutate src/components/integrations/wizard/utils.ts --testFile src/components/integrations/wizard/utils.test.ts
   npm run test:mutation -- --all --soft-fail
 `;
 

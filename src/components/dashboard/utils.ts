@@ -393,12 +393,6 @@ export const resolveIntegrationLogoMetadata = ({
   };
 };
 
-export const resolveIntegrationLogoUrl = (input: {
-  integration: IntegrationSpec;
-  connectorBySlug: Map<string, ManagedConnectorOption>;
-  getConnectorLogoUrl: (connector: { logoUrl?: string; appUrl?: string }) => string | null;
-}) => resolveIntegrationLogoMetadata(input).logoUrl;
-
 export const buildToolAccessPatch = (
   integrationKey: string,
   toolName: string,
