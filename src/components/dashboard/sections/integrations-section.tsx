@@ -10,10 +10,10 @@ import {
 } from "@/src/components/dashboard/shared";
 import {
   formatTrackedUsage,
-  UNUSED_TOOL_WINDOW_OPTIONS,
   type ConnectorLogoMetadata,
   type FilteredIntegrationToolEntry,
 } from "@/src/components/dashboard/utils";
+import { BulkDisablePanel } from "@/src/components/dashboard/sections/bulk-disable-panel";
 import {
   AccessModeSlider,
   getToolAccessMode,
@@ -37,11 +37,15 @@ const MARKETPLACE_CONNECTOR_PAGE_SIZE = 5;
 interface IntegrationsSectionProps {
   addIntegrationSearch: string;
   availableConnectorCount: number;
+  integrations: IntegrationSpec[];
   managedConnectorsError?: string | null;
   managedConnectorsPending: boolean;
   filteredIntegrations: FilteredIntegrationToolEntry[];
   handleDeleteIntegration: (integration: IntegrationSpec) => void;
-  handleDisableUnusedTools: () => void;
+  handleDisableUnusedTools: (
+    thresholdValue: number,
+    thresholdUnit: UnusedToolWindowUnit,
+  ) => void;
   hideDisabledTools: boolean;
   integrationCount: number;
   integrationSearch: string;
@@ -68,13 +72,6 @@ interface IntegrationsSectionProps {
   setHideDisabledTools: (value: boolean) => void;
   setIntegrationSearch: (value: string) => void;
   showIntegrationWizard: boolean;
-  unusedToolCandidateCount: number;
-  unusedThresholdUnit: UnusedToolWindowUnit;
-  unusedThresholdValue: string;
-  unusedCutoffDateLabel: string;
-  onUnusedThresholdValueChange: (value: string) => void;
-  onUnusedThresholdUnitChange: (value: UnusedToolWindowUnit) => void;
-  onUnusedThresholdBlur: () => void;
   expandedTools: Record<string, boolean>;
   expandedIntegrations: Record<string, boolean>;
   visibleToolCount: number;
@@ -83,6 +80,7 @@ interface IntegrationsSectionProps {
 export const IntegrationsSection = ({
   addIntegrationSearch,
   availableConnectorCount,
+  integrations,
   managedConnectorsError,
   managedConnectorsPending,
   filteredIntegrations,
@@ -108,13 +106,6 @@ export const IntegrationsSection = ({
   setHideDisabledTools,
   setIntegrationSearch,
   showIntegrationWizard,
-  unusedToolCandidateCount,
-  unusedThresholdUnit,
-  unusedThresholdValue,
-  unusedCutoffDateLabel,
-  onUnusedThresholdValueChange,
-  onUnusedThresholdUnitChange,
-  onUnusedThresholdBlur,
   expandedTools,
   expandedIntegrations,
   visibleToolCount,
@@ -444,75 +435,20 @@ export const IntegrationsSection = ({
               })}
             </div>
           )}
-
-          <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)] p-4">
-            <div className="flex flex-col gap-4 xl:grid xl:grid-cols-[minmax(0,1fr)_auto] xl:items-end xl:gap-6">
-              <div className="space-y-1 xl:max-w-2xl">
-                <h4 className="text-sm font-semibold text-white">
-                  One-time bulk disable for unused tools
-                </h4>
-                <p className="text-xs leading-6 text-[var(--color-text-base)]">
-                  Disable enabled tools with tracked usage that has been inactive
-                  since before {unusedCutoffDateLabel}. Tools without tracked
-                  invocation history are skipped until new tracking data exists.
-                </p>
-              </div>
-              <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-end md:gap-3 xl:flex-nowrap">
-                <label className="flex flex-col gap-1 text-xs text-[var(--color-text-base)]">
-                  <span>Unused for at least</span>
-                  <input
-                    type="number"
-                    min={1}
-                    max={3650}
-                    inputMode="numeric"
-                    value={unusedThresholdValue}
-                    aria-label="Unused threshold value"
-                    onChange={(event) => onUnusedThresholdValueChange(event.target.value)}
-                    onBlur={onUnusedThresholdBlur}
-                    className={cn(dashboardInputClassName, "w-28")}
-                  />
-                </label>
-                <label className="flex flex-col gap-1 text-xs text-[var(--color-text-base)]">
-                  <span>Window</span>
-                  <select
-                    value={unusedThresholdUnit}
-                    aria-label="Unused threshold unit"
-                    onChange={(event) =>
-                      onUnusedThresholdUnitChange(
-                        event.target.value as UnusedToolWindowUnit,
-                      )
-                    }
-                    className={cn(dashboardInputClassName, "w-32")}
-                  >
-                    {UNUSED_TOOL_WINDOW_OPTIONS.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <div className="flex flex-col gap-2 sm:items-end">
-                  <p className="text-xs text-[var(--color-text-base)]">
-                    {unusedToolCandidateCount} tool
-                    {unusedToolCandidateCount === 1 ? "" : "s"} matched
-                  </p>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    className="h-8 shrink-0 rounded-md px-4 text-xs"
-                    onClick={handleDisableUnusedTools}
-                    disabled={isBulkDisablePending}
-                    aria-label="Disable unused tools"
-                  >
-                    Disable
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       )}
     </CompactPanel>
+
+    {integrationCount === 0 ? null : (
+      <BulkDisablePanel
+        integrations={integrations}
+        isPending={isBulkDisablePending}
+        onDisable={(thresholdValue, thresholdUnit) =>
+          handleDisableUnusedTools(thresholdValue, thresholdUnit)
+        }
+        onStatus={(message) => onStatus(message)}
+      />
+    )}
   </section>
   );
 };

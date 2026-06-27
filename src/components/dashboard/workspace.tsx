@@ -242,6 +242,7 @@ export const DashboardWorkspace = ({
       {activeSection === "integrations" ? (
         <IntegrationsSection
           {...integrationsSection}
+          integrations={integrations}
           isAdmin={isAdmin}
           oauthStatus={oauthStatus}
           onCreated={handleIntegrationCreated}

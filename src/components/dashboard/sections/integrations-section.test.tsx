@@ -76,9 +76,25 @@ const buildEntry = (
   ...overrides,
 });
 
+const oldInvocationDate = "2020-01-01T00:00:00.000Z";
+
+const trackedIntegration: IntegrationSpec = {
+  ...baseIntegration,
+  enabled: true,
+  tools: {
+    delete_repo: {
+      ...baseIntegration.tools.delete_repo!,
+      enabled: true,
+      accessMode: "enabled",
+      lastInvokedAt: oldInvocationDate,
+    },
+  },
+};
+
 const createDefaultProps = () => ({
   addIntegrationSearch: "",
   availableConnectorCount: 3,
+  integrations: [trackedIntegration],
   managedConnectorsError: null,
   managedConnectorsPending: false,
   filteredIntegrations: [buildEntry()],
@@ -99,17 +115,10 @@ const createDefaultProps = () => ({
   onToggleIntegrationEnabled: vi.fn(),
   onUpdateToolAccessMode: vi.fn(),
   resolveIntegrationLogoMetadata: vi.fn(() => ({ logoUrl: null })),
-  onUnusedThresholdBlur: vi.fn(),
-  onUnusedThresholdUnitChange: vi.fn(),
-  onUnusedThresholdValueChange: vi.fn(),
   setAddIntegrationSearch: vi.fn(),
   setHideDisabledTools: vi.fn(),
   setIntegrationSearch: vi.fn(),
   showIntegrationWizard: false,
-  unusedCutoffDateLabel: "4/1/2026",
-  unusedToolCandidateCount: 1,
-  unusedThresholdUnit: "days" as const,
-  unusedThresholdValue: "30",
   expandedTools: { "github:delete_repo": true },
   expandedIntegrations: {},
   visibleToolCount: 1,
@@ -318,9 +327,8 @@ describe("IntegrationsSection", () => {
       "delete_repo",
       "approval_required",
     );
-    expect(props.onUnusedThresholdValueChange).toHaveBeenCalledWith("60");
-    expect(props.onUnusedThresholdBlur).toHaveBeenCalled();
-    expect(props.onUnusedThresholdUnitChange).toHaveBeenCalledWith("weeks");
+    // BulkDisablePanel manages threshold state locally; the Disable button
+    // calls handleDisableUnusedTools with the current threshold value + unit.
     expect(props.handleDisableUnusedTools).toHaveBeenCalled();
   });
 
@@ -338,11 +346,51 @@ describe("IntegrationsSection", () => {
       name: "Hidden Tools",
       tools: baseIntegration.tools,
     };
+    // Provide integrations with tracked tools that have old lastInvokedAt
+    // dates so BulkDisablePanel reports "2 tools matched".
+    const oldDate = "2020-01-01T00:00:00.000Z";
+    const trackedIntegrations: IntegrationSpec[] = [
+      {
+        ...noToolsIntegration,
+        enabled: true,
+        tools: {
+          stale_tool_a: {
+            name: "stale_tool_a",
+            description: "",
+            enabled: true,
+            accessMode: "enabled",
+            fineGrainedPermissions: true,
+            defaultScopes: [],
+            executionMode: "provider",
+            config: {},
+            lastInvokedAt: oldDate,
+          },
+        },
+      },
+      {
+        ...hiddenToolsIntegration,
+        enabled: true,
+        tools: {
+          stale_tool_b: {
+            name: "stale_tool_b",
+            description: "",
+            enabled: true,
+            accessMode: "enabled",
+            fineGrainedPermissions: true,
+            defaultScopes: [],
+            executionMode: "provider",
+            config: {},
+            lastInvokedAt: oldDate,
+          },
+        },
+      },
+    ];
 
     await act(async () => {
       root.render(
         <IntegrationsSection
           {...props}
+          integrations={trackedIntegrations}
           integrationSearch=""
           expandedIntegrations={{ "empty-tools": true, "hidden-tools": true }}
           filteredIntegrations={[
@@ -358,7 +406,6 @@ describe("IntegrationsSection", () => {
             },
           ]}
           visibleToolCount={0}
-          unusedToolCandidateCount={2}
         />,
       );
     });

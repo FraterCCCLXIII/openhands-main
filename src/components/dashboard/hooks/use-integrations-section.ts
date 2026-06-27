@@ -38,9 +38,6 @@ export const useIntegrationsSection = ({
   const [addIntegrationSearch, setAddIntegrationSearch] = useState("");
   const [integrationSearch, setIntegrationSearch] = useState("");
   const [hideDisabledTools, setHideDisabledTools] = useState(true);
-  const [unusedThresholdValue, setUnusedThresholdValue] = useState("30");
-  const [unusedThresholdUnit, setUnusedThresholdUnit] =
-    useState<UnusedToolWindowUnit>("days");
   const [expandedIntegrations, setExpandedIntegrations] = useState<
     Record<string, boolean>
   >({});
@@ -121,14 +118,6 @@ export const useIntegrationsSection = ({
   const integrations = integrationsQuery.data ?? [];
   const managedConnectors = managedConnectorsQuery.data ?? [];
 
-  const normalizedUnusedThresholdValue = useMemo(() => {
-    const parsed = Number(unusedThresholdValue);
-    if (!Number.isFinite(parsed) || parsed <= 0) {
-      return 30;
-    }
-    return Math.min(Math.max(Math.trunc(parsed), 1), 3650);
-  }, [unusedThresholdValue]);
-
   const installedIntegrationKeys = useMemo(
     () => buildInstalledIntegrationKeys(integrations),
     [integrations],
@@ -166,23 +155,6 @@ export const useIntegrationsSection = ({
     (count, entry) => count + entry.visibleTools.length,
     0,
   );
-  const unusedCutoffDate = useMemo(
-    () =>
-      subtractUnusedWindow(
-        new Date(),
-        normalizedUnusedThresholdValue,
-        unusedThresholdUnit,
-      ),
-    [normalizedUnusedThresholdValue, unusedThresholdUnit],
-  );
-  const unusedToolCandidates = useMemo(
-    () =>
-      buildUnusedToolCandidates({
-        integrations,
-        cutoffDate: unusedCutoffDate,
-      }),
-    [integrations, unusedCutoffDate],
-  );
 
   const toggleIntegrationExpanded = (
     integrationKey: string,
@@ -211,12 +183,13 @@ export const useIntegrationsSection = ({
     );
   };
 
-  const handleUnusedThresholdBlur = () => {
-    setUnusedThresholdValue(String(normalizedUnusedThresholdValue));
-  };
-
-  const handleDisableUnusedTools = () => {
-    if (unusedToolCandidates.length === 0) {
+  const handleDisableUnusedTools = (
+    thresholdValue: number,
+    thresholdUnit: UnusedToolWindowUnit,
+  ) => {
+    const cutoff = subtractUnusedWindow(new Date(), thresholdValue, thresholdUnit);
+    const candidates = buildUnusedToolCandidates({ integrations, cutoffDate: cutoff });
+    if (candidates.length === 0) {
       onStatus("No tracked tools matched the selected unused window.");
       return;
     }
@@ -225,15 +198,15 @@ export const useIntegrationsSection = ({
       typeof window !== "undefined" &&
       typeof window.confirm === "function" &&
       !window.confirm(
-        `Disable ${unusedToolCandidates.length} tracked ${unusedToolCandidates.length === 1 ? "tool" : "tools"} that have not been used since ${unusedCutoffDate.toLocaleDateString()}?`,
+        `Disable ${candidates.length} tracked ${candidates.length === 1 ? "tool" : "tools"} that have not been used since ${cutoff.toLocaleDateString()}?`,
       )
     ) {
       return;
     }
 
     bulkDisableMutation.mutate({
-      thresholdValue: normalizedUnusedThresholdValue,
-      thresholdUnit: unusedThresholdUnit,
+      thresholdValue,
+      thresholdUnit,
     });
   };
 
@@ -273,7 +246,6 @@ export const useIntegrationsSection = ({
     handleDeleteIntegration,
     handleDisableUnusedTools,
     onToggleIntegrationEnabled: handleToggleIntegrationEnabled,
-    onUnusedThresholdBlur: handleUnusedThresholdBlur,
     hideDisabledTools,
     integrationCount: integrations.length,
     integrationSearch,
@@ -287,8 +259,6 @@ export const useIntegrationsSection = ({
     onToggleIntegrationExpanded: toggleIntegrationExpanded,
     onToggleToolExpanded: toggleToolExpanded,
     onUpdateToolAccessMode: updateToolAccessMode,
-    onUnusedThresholdUnitChange: setUnusedThresholdUnit,
-    onUnusedThresholdValueChange: setUnusedThresholdValue,
     resolveIntegrationLogoMetadata: (integration: IntegrationSpec) =>
       resolveIntegrationLogoMetadata({
         integration,
@@ -298,10 +268,6 @@ export const useIntegrationsSection = ({
     setAddIntegrationSearch,
     setHideDisabledTools,
     setIntegrationSearch,
-    unusedCutoffDateLabel: unusedCutoffDate.toLocaleDateString(),
-    unusedToolCandidateCount: unusedToolCandidates.length,
-    unusedThresholdUnit,
-    unusedThresholdValue,
     visibleToolCount,
   };
 };
