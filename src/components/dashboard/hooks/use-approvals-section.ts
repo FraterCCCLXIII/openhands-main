@@ -18,13 +18,13 @@ import {
 import type { AccessRequest } from "@/src/types/integrations-hub";
 
 interface UseApprovalsSectionOptions {
-  initialAccessRequests: AccessRequest[];
+  initialAccessRequests?: AccessRequest[];
   enabled: boolean;
   onStatus: (message: string | null) => void;
 }
 
 export const useApprovalsSection = ({
-  initialAccessRequests,
+  initialAccessRequests = [],
   enabled,
   onStatus,
 }: UseApprovalsSectionOptions) => {
@@ -45,6 +45,7 @@ export const useApprovalsSection = ({
     queryFn: () => fetchJson<AccessRequest[]>("/api/case-by-case-approvals"),
     initialData: initialAccessRequests,
     enabled,
+    staleTime: 30_000,
   });
 
   const invalidateAll = async () => {

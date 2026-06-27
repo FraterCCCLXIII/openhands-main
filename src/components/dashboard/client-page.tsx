@@ -10,9 +10,7 @@ import { ServiceUnavailableScreen } from "@/src/components/feedback/service-unav
 import { useAuth } from "@/src/components/auth/auth-context";
 import { fetchJson } from "@/src/lib/fetch-json";
 import type {
-  AccessRequest,
   AdminApiKeyStatus,
-  IntegrationSpec,
   UserApiKeyStatus,
 } from "@/src/types/integrations-hub";
 
@@ -30,8 +28,6 @@ interface AdminKeyApiResponse {
 }
 
 interface InitialDataResponse {
-  integrations: IntegrationSpec[];
-  accessRequests: AccessRequest[];
   agentApiKey: string;
   userApiKey: UserApiKeyStatus | null;
   adminApiKey: AdminApiKeyStatus | null;
@@ -63,24 +59,20 @@ export function ClientDashboardPage() {
     }
   }, [authLoading, isAuthenticated, authDisabled, sessionError, router]);
 
-  // Fetch initial dashboard data
+  // Fetch API key status only. Integrations and access-requests are owned by
+  // the workspace/section queries (same keys) so we don't double-fetch them.
   const { data, isLoading: dataLoading, isFetching, error, refetch } = useQuery({
     queryKey: ["dashboard-init", isAdmin],
     queryFn: async (): Promise<InitialDataResponse> => {
-      const [integrations, accessRequests, agentKeyRes, userKeyRes, adminKeyRes] =
-        await Promise.all([
-          fetchJson<IntegrationSpec[]>("/api/integrations"),
-          fetchJson<AccessRequest[]>("/api/case-by-case-approvals"),
-          fetchJson<{ apiKey: string | null }>("/api/user/agent-key"),
-          fetchJson<UserKeyApiResponse>("/api/user/key").catch(() => null),
-          isAdmin
-            ? fetchJson<AdminKeyApiResponse>("/api/admin/key").catch(() => null)
-            : Promise.resolve(null),
-        ]);
+      const [agentKeyRes, userKeyRes, adminKeyRes] = await Promise.all([
+        fetchJson<{ apiKey: string | null }>("/api/user/agent-key"),
+        fetchJson<UserKeyApiResponse>("/api/user/key").catch(() => null),
+        isAdmin
+          ? fetchJson<AdminKeyApiResponse>("/api/admin/key").catch(() => null)
+          : Promise.resolve(null),
+      ]);
 
       return {
-        integrations,
-        accessRequests,
         agentApiKey: agentKeyRes.apiKey ?? "",
         // Extract the nested 'key' property from the API response wrapper
         userApiKey: userKeyRes?.key ?? null,
@@ -169,8 +161,6 @@ export function ClientDashboardPage() {
       <div className="mx-auto max-w-7xl">
         <DashboardWorkspace
           currentUser={currentUser}
-          initialIntegrations={data.integrations}
-          initialAccessRequests={data.accessRequests}
           agentApiBaseUrl={agentApiBaseUrl}
           agentApiKey={data.agentApiKey}
           userApiKey={data.userApiKey}

@@ -29,8 +29,8 @@ import type {
 } from "@/src/types/integrations-hub";
 
 interface DashboardWorkspaceProps {
-  initialIntegrations: IntegrationSpec[];
-  initialAccessRequests: AccessRequest[];
+  initialIntegrations?: IntegrationSpec[];
+  initialAccessRequests?: AccessRequest[];
   currentUser: { name?: string | null; email?: string | null };
   agentApiBaseUrl: string;
   agentApiKey: string;
@@ -42,8 +42,8 @@ interface DashboardWorkspaceProps {
 }
 
 export const DashboardWorkspace = ({
-  initialIntegrations,
-  initialAccessRequests,
+  initialIntegrations = [],
+  initialAccessRequests = [],
   currentUser,
   agentApiBaseUrl,
   agentApiKey,
@@ -97,17 +97,23 @@ export const DashboardWorkspace = ({
     }
   }, [searchParams]);
 
-  // Shared counts for the sidebar/header badges — always available from bootstrap data.
+  // Shared counts for the sidebar/header badges. These queries own the
+  // canonical cache for integrations/access-requests; the section hooks
+  // reuse the same query keys so there is one fetch per endpoint per mount.
+  // `initialData` lets tests seed synchronous data; production leaves it
+  // empty so the single fetch populates the cache.
   const integrationsQuery = useQuery({
     queryKey: ["integrations"],
     queryFn: () => fetchJson<IntegrationSpec[]>("/api/integrations"),
     initialData: initialIntegrations,
+    staleTime: 30_000,
   });
   const accessRequestsQuery = useQuery({
     queryKey: ["access-requests"],
     queryFn: () => fetchJson<AccessRequest[]>("/api/case-by-case-approvals"),
     initialData: initialAccessRequests,
     enabled: activeSection === "caseByCaseApprovals",
+    staleTime: 30_000,
   });
 
   const integrations = integrationsQuery.data ?? [];

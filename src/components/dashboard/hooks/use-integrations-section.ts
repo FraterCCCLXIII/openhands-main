@@ -24,13 +24,13 @@ import type {
 } from "@/src/types/integrations-hub";
 
 interface UseIntegrationsSectionOptions {
-  initialIntegrations: IntegrationSpec[];
+  initialIntegrations?: IntegrationSpec[];
   enabled: boolean;
   onStatus: (message: string | null) => void;
 }
 
 export const useIntegrationsSection = ({
-  initialIntegrations,
+  initialIntegrations = [],
   enabled,
   onStatus,
 }: UseIntegrationsSectionOptions) => {
@@ -50,6 +50,8 @@ export const useIntegrationsSection = ({
     queryKey: ["integrations"],
     queryFn: () => fetchJson<IntegrationSpec[]>("/api/integrations"),
     initialData: initialIntegrations,
+    enabled,
+    staleTime: 30_000,
   });
 
   const managedConnectorsQuery = useQuery({
