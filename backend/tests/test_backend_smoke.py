@@ -1600,7 +1600,14 @@ def test_default_managed_connectors_are_listed_and_require_credentials(
 
     assert len(by_slug) > 13
     assert by_slug["elevenlabs"]["apiKeyHeaderName"] == "xi-api-key"
-    assert by_slug["linear"]["toolCount"] == 1
+    # HTTP connectors without an OpenAPI URL have no tool source (tools are
+    # generated from the schema server-side, never hardcoded), so they are not
+    # surfaced as default managed connectors. Linear's first connection option
+    # is http with no openApiUrl, so it is intentionally absent here.
+    assert "linear" not in by_slug
+    # HTTP connectors that DO ship an OpenAPI URL are listed but start with
+    # zero tools — the full set is generated on save/index.
+    assert by_slug["notion"]["toolCount"] == 0
     assert by_slug["notion"]["logoUrl"] == "https://cdn.simpleicons.org/notion/000000"
     assert by_slug["notion"]["iconBg"] == "#FFFFFF"
     assert by_slug["ordinal"]["authStrategy"] == "bearer"

@@ -113,9 +113,6 @@ describe("listIntegrationCatalogOptions", () => {
       openApiUrl: "https://developers.notion.com/openapi.json",
       authorizationUrl: "https://api.notion.com/v1/oauth/authorize",
       tokenUrl: "https://api.notion.com/v1/oauth/token",
-      toolName: "post_search",
-      requestMethod: "POST",
-      requestPath: "/v1/search",
     });
     expect(googleCalendar?.connectionDefaults).toMatchObject({
       provider: "http",
@@ -123,10 +120,11 @@ describe("listIntegrationCatalogOptions", () => {
       authorizationUrl: "https://accounts.google.com/o/oauth2/v2/auth",
       tokenUrl: "https://oauth2.googleapis.com/token",
       scopes: ["https://www.googleapis.com/auth/calendar.readonly"],
-      toolName: "list_events",
-      requestMethod: "GET",
-      requestPath: "/calendars/primary/events",
     });
+    // The catalog's defaultTool field is no longer mapped into connectionDefaults;
+    // tools are generated from the OpenAPI URL server-side, never hardcoded.
+    expect("toolName" in (notion?.connectionDefaults ?? {})).toBe(false);
+    expect("requestMethod" in (googleCalendar?.connectionDefaults ?? {})).toBe(false);
     expect(elevenlabs).toMatchObject({});
     expect(elevenlabs?.connectionDefaults).toMatchObject({
       provider: "http",

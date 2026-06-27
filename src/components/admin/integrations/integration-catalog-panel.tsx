@@ -122,32 +122,6 @@ const parseScopes = (value: string) =>
     .map((scope) => scope.trim())
     .filter(Boolean);
 
-export const buildDefaultHttpTools = (provider: IntegrationCatalogOption) => {
-  const defaults = provider.connectionDefaults;
-  if (
-    !defaults ||
-    defaults.openApiUrl ||
-    !defaults.toolName ||
-    !defaults.toolDescription ||
-    !defaults.requestMethod ||
-    !defaults.requestPath
-  ) {
-    return [];
-  }
-
-  return [
-    {
-      name: defaults.toolName,
-      description: defaults.toolDescription,
-      defaultScopes: defaults.toolScopes ?? defaults.scopes ?? [],
-      request: {
-        method: defaults.requestMethod,
-        path: defaults.requestPath,
-      },
-    },
-  ];
-};
-
 const hasFixedOAuthConfig = (provider: IntegrationCatalogOption) =>
   usesOAuthConnector(provider) &&
   Boolean(
@@ -225,8 +199,11 @@ export const buildManagedConnectorPayload = (
     oauthClientId: authStrategy === "oauth2" ? form.oauthClientId.trim() : undefined,
     oauthClientSecret:
       authStrategy === "oauth2" ? form.oauthClientSecret.trim() : undefined,
-    tools:
-      managedConnectorProvider === "http" ? buildDefaultHttpTools(provider) : [],
+    // Tools are never hardcoded from the catalog. HTTP connectors derive their
+    // tool set from their OpenAPI URL (generated server-side on save/index),
+    // and MCP connectors discover tools live from the MCP server. Send an empty
+    // list; the backend populates tools from the single source of truth.
+    tools: [],
     enabled: true,
   };
 };
@@ -245,7 +222,9 @@ export const buildReadyManagedConnectorOption = (
     iconBg: provider.iconBg,
     iconColor: provider.iconColor,
     appUrl: provider.appUrl,
-    toolCount: getManagedConnectorProvider(provider) === "http" ? buildDefaultHttpTools(provider).length : 0,
+    // Tools are discovered/generated server-side; the catalog never ships a
+    // hardcoded tool count.
+    toolCount: 0,
     categories: provider.categories,
     authModes:
       provider.connectionDefaults?.authModes?.length &&
@@ -561,22 +540,13 @@ export function IntegrationCatalogPanel({
                             </p>
                           </div>
                         ) : null}
-                        {isHttpConnector &&
-                        !registrationForm.openApiUrl &&
-                        provider.connectionDefaults?.toolName &&
-                        provider.connectionDefaults?.requestMethod &&
-                        provider.connectionDefaults?.requestPath ? (
+                        {isHttpConnector && !registrationForm.openApiUrl ? (
                           <div className="md:col-span-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-[11px] leading-5 text-[var(--color-text-base)]">
                             <p>
-                              Starter API tool:
-                              <code className="mx-1 text-white">
-                                {provider.connectionDefaults.toolName}
-                              </code>
-                              will call
-                              <code className="mx-1 text-white">
-                                {provider.connectionDefaults.requestMethod} {provider.connectionDefaults.requestPath}
-                              </code>
-                              until you replace it with a richer generated catalog or additional custom tool templates.
+                              This HTTP connector has no OpenAPI schema URL. Tools are generated
+                              server-side from that schema on save, so without one the connector
+                              will expose zero tools. Add an OpenAPI URL so the full tool set is
+                              generated from the schema.
                             </p>
                           </div>
                         ) : null}

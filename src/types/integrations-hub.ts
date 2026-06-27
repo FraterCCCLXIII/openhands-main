@@ -137,17 +137,12 @@ export interface IntegrationConnectionDefaults {
   tokenUrl?: string;
   scopes?: string[];
   optionalScopes?: string[];
-  toolScopes?: string[];
   scopeSeparator?: "space" | "comma";
   pkce?: boolean;
   clientAuthentication?: OAuthClientAuthentication;
   registrationUrl?: string;
   additionalAuthorizationParams?: Record<string, string>;
   additionalTokenParams?: Record<string, string>;
-  toolName?: string;
-  toolDescription?: string;
-  requestMethod?: string;
-  requestPath?: string;
 }
 
 export interface IntegrationCatalogOption {

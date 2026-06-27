@@ -18,7 +18,6 @@ const connectionDefaultsFromOption = (
   const auth = option.auth;
   const oauth = auth.oauth ?? {};
   const http = option.http ?? {};
-  const tool = http.defaultTool;
   const transportUrl = option.transport && "url" in option.transport ? option.transport.url : undefined;
 
   return definedEntries({
@@ -37,17 +36,12 @@ const connectionDefaultsFromOption = (
     tokenUrl: oauth.tokenUrl,
     scopes: oauth.scopes,
     optionalScopes: oauth.optionalScopes,
-    toolScopes: oauth.toolScopes,
     scopeSeparator: oauth.scopeSeparator,
     pkce: oauth.pkce,
     clientAuthentication: oauth.clientAuthentication,
     registrationUrl: oauth.registrationUrl,
     additionalAuthorizationParams: oauth.additionalAuthorizationParams,
     additionalTokenParams: oauth.additionalTokenParams,
-    toolName: tool?.name,
-    toolDescription: tool?.description,
-    requestMethod: tool?.method,
-    requestPath: tool?.path,
   }) as IntegrationConnectionDefaults;
 };
 

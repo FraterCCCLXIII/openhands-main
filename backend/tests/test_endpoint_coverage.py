@@ -380,6 +380,227 @@ def test_admin_api_key_reindex_rejects_non_admin_key() -> None:
     assert response.status_code in {401, 403}
 
 
+def test_save_http_oauth_connector_indexes_full_tool_set(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Saving an HTTP OAuth connector with an OpenAPI URL must load every tool
+    the schema exposes, not just the catalog's single defaultTool. This is the
+    admin-integrations "Save changes" path: previously it persisted whatever
+    tools the client sent (often one default tool or an empty list) and the
+    OAuth integration only ever exposed that one tool.
+    """
+    from backend.app import main as main_module
+
+    repository.save_key(OWNER, "admin", ADMIN_KEY)
+
+    def fake_generate_openapi_tools(open_api_url: str, auth_strategy: str):
+        return [
+            ManagedConnectorTool(
+                name="list_pages",
+                description="List pages",
+                accessMode="enabled",
+                request={"method": "GET", "path": "/v1/pages"},
+            ),
+            ManagedConnectorTool(
+                name="create_page",
+                description="Create a page",
+                accessMode="enabled",
+                request={"method": "POST", "path": "/v1/pages"},
+            ),
+            ManagedConnectorTool(
+                name="search",
+                description="Search the workspace",
+                accessMode="enabled",
+                request={"method": "POST", "path": "/v1/search"},
+            ),
+        ]
+
+    monkeypatch.setattr(
+        main_module, "generate_openapi_tools", fake_generate_openapi_tools
+    )
+
+    client = get_client()
+    response = client.post(
+        "/api/managed-connectors",
+        headers={"Authorization": f"Bearer {ADMIN_KEY}", "X-Owner-Id": OWNER},
+        json={
+            "slug": "notion",
+            "name": "Notion",
+            "description": "Notion HTTP OAuth connector",
+            "categories": ["Knowledge base"],
+            "authModes": ["oauth2"],
+            "authStrategy": "oauth2",
+            "provider": "http",
+            "apiBaseUrl": "https://api.notion.com",
+            "openApiUrl": "https://developers.notion.com/openapi.json",
+            "oauthConfigured": True,
+            "oauthClientId": "notion-client-id",
+            "oauthClientSecret": "notion-client-secret",
+            "oauthConfig": {
+                "authorizationUrl": "https://api.notion.com/v1/oauth/authorize",
+                "tokenUrl": "https://api.notion.com/v1/oauth/token",
+                "scopes": [],
+            },
+            "credentialLabel": "Connect Notion",
+            "credentialPlaceholder": "Connect Notion",
+            "credentialHelp": "Connect Notion with OAuth.",
+            # Client sends only the single defaultTool (the buggy state).
+            "tools": [
+                {
+                    "name": "post_search",
+                    "description": "Search pages and databases.",
+                    "defaultScopes": [],
+                    "accessMode": "enabled",
+                    "request": {"method": "POST", "path": "/v1/search"},
+                }
+            ],
+            "enabled": True,
+        },
+    )
+
+    assert response.status_code == 200, response.text
+    tools = response.json().get("tools", [])
+    tool_names = sorted(tool["name"] for tool in tools)
+    assert tool_names == ["create_page", "list_pages", "search"], tool_names
+    persisted = repository.get_managed_connector("notion")
+    assert persisted is not None
+    assert sorted(tool.name for tool in persisted.tools) == [
+        "create_page",
+        "list_pages",
+        "search",
+    ]
+
+
+def test_save_http_oauth_connector_preserves_existing_access_modes(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Re-saving a previously indexed HTTP OAuth connector must keep the
+    admin's per-tool access mode choices (by tool name) instead of resetting
+    them back to the schema defaults."""
+    from backend.app import main as main_module
+
+    repository.save_key(OWNER, "admin", ADMIN_KEY)
+    repository.save_managed_connector(
+        ManagedConnector(
+            slug="notion",
+            name="Notion",
+            description="Notion HTTP OAuth connector",
+            provider="http",
+            authStrategy="oauth2",
+            apiBaseUrl="https://api.notion.com",
+            openApiUrl="https://developers.notion.com/openapi.json",
+            oauthConfigured=True,
+            credentialLabel="Connect Notion",
+            credentialPlaceholder="Connect Notion",
+            credentialHelp="Connect Notion with OAuth.",
+            oauthConfig={
+                "authorizationUrl": "https://api.notion.com/v1/oauth/authorize",
+                "tokenUrl": "https://api.notion.com/v1/oauth/token",
+                "scopes": [],
+            },
+            tools=[
+                ManagedConnectorTool(
+                    name="create_page",
+                    description="Create a page",
+                    accessMode="approval_required",
+                    request={"method": "POST", "path": "/v1/pages"},
+                ),
+                ManagedConnectorTool(
+                    name="list_pages",
+                    description="List pages",
+                    accessMode="disabled",
+                    request={"method": "GET", "path": "/v1/pages"},
+                ),
+            ],
+        )
+    )
+
+    def fake_generate_openapi_tools(open_api_url: str, auth_strategy: str):
+        return [
+            ManagedConnectorTool(
+                name="list_pages",
+                description="List pages",
+                accessMode="enabled",
+                request={"method": "GET", "path": "/v1/pages"},
+            ),
+            ManagedConnectorTool(
+                name="create_page",
+                description="Create a page",
+                accessMode="enabled",
+                request={"method": "POST", "path": "/v1/pages"},
+            ),
+        ]
+
+    monkeypatch.setattr(
+        main_module, "generate_openapi_tools", fake_generate_openapi_tools
+    )
+
+    client = get_client()
+    response = client.post(
+        "/api/managed-connectors",
+        headers={"Authorization": f"Bearer {ADMIN_KEY}", "X-Owner-Id": OWNER},
+        json={
+            "slug": "notion",
+            "name": "Notion",
+            "description": "Notion HTTP OAuth connector",
+            "categories": ["Knowledge base"],
+            "authModes": ["oauth2"],
+            "authStrategy": "oauth2",
+            "provider": "http",
+            "apiBaseUrl": "https://api.notion.com",
+            "openApiUrl": "https://developers.notion.com/openapi.json",
+            "oauthConfigured": True,
+            "oauthClientId": "notion-client-id",
+            "oauthClientSecret": "notion-client-secret",
+            "oauthConfig": {
+                "authorizationUrl": "https://api.notion.com/v1/oauth/authorize",
+                "tokenUrl": "https://api.notion.com/v1/oauth/token",
+                "scopes": [],
+            },
+            "credentialLabel": "Connect Notion",
+            "credentialPlaceholder": "Connect Notion",
+            "credentialHelp": "Connect Notion with OAuth.",
+            "tools": [],
+            "enabled": True,
+        },
+    )
+
+    assert response.status_code == 200, response.text
+    tools = {tool["name"]: tool["accessMode"] for tool in response.json()["tools"]}
+    assert tools["create_page"] == "approval_required"
+    assert tools["list_pages"] == "disabled"
+
+
+def test_default_http_oauth_connector_with_openapi_has_no_default_tool() -> None:
+    """A catalog HTTP OAuth connector that ships an OpenAPI URL (e.g. Notion)
+    must default to an empty tool list so the full tool set is generated from
+    the schema on save/index, instead of shipping a hardcoded defaultTool.
+
+    HTTP connectors without an OpenAPI URL are not surfaced as default managed
+    connectors at all — they have no tool source once defaultTool is removed."""
+    from backend.app.managed_connectors import (
+        default_managed_connector,
+        default_managed_connectors,
+    )
+
+    notion = default_managed_connector("notion")
+    assert notion is not None
+    assert notion.provider == "http"
+    assert notion.openApiUrl
+    assert notion.tools == []
+
+    default_slugs = {connector.slug for connector in default_managed_connectors()}
+    # Linear's first connection option is http with no openApiUrl, so it has no
+    # tool source and is intentionally not a default managed connector.
+    assert "linear" not in default_slugs
+    # ElevenLabs is http with an openApiUrl, so it stays and ships 0 tools.
+    elevenlabs = default_managed_connector("elevenlabs")
+    assert elevenlabs is not None
+    assert elevenlabs.provider == "http"
+    assert elevenlabs.openApiUrl
+    assert elevenlabs.tools == []
+
+
 def test_sanitized_log_url_strips_query_and_fragment() -> None:
     """Re-index logging must never expose signed query strings or fragments."""
     from backend.app.main import _sanitized_log_url

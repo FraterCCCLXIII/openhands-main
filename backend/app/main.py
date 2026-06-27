@@ -2085,6 +2085,38 @@ def _sanitized_log_url(url: str | None) -> str:
     return f"{parsed.scheme}://{netloc}{parsed.path}"
 
 
+def regenerate_http_openapi_tools(
+    connector: ManagedConnector,
+    existing_modes: dict[str, str] | None = None,
+) -> None:
+    """Rebuild an HTTP managed connector's tools from its OpenAPI schema.
+
+    Mutates ``connector.tools`` in place. Preserves previously chosen access
+    modes by tool name so re-indexing is non-destructive. Raises the same
+    HTTPException as the index endpoint when the connector is missing an
+    OpenAPI URL or the schema cannot be loaded.
+    """
+    if not connector.openApiUrl:
+        raise HTTPException(
+            status_code=400,
+            detail="Managed HTTP connectors need an OpenAPI URL before their tools can be indexed.",
+        )
+    # Explicit None check: an empty dict means "preserve no modes", not "use
+    # the connector's current modes".
+    modes = (
+        existing_modes
+        if existing_modes is not None
+        else {tool.name: tool.accessMode for tool in connector.tools}
+    )
+    generated_tools = generate_openapi_tools(
+        connector.openApiUrl, connector.authStrategy
+    )
+    connector.tools = [
+        tool.model_copy(update={"accessMode": modes.get(tool.name, tool.accessMode)})
+        for tool in generated_tools
+    ]
+
+
 def index_managed_connector_functions(
     slug: str, owner: str | None = None
 ) -> dict[str, Any]:
@@ -2101,20 +2133,7 @@ def index_managed_connector_functions(
     )
 
     if provider == "http":
-        if not connector.openApiUrl:
-            raise HTTPException(
-                status_code=400,
-                detail="Managed HTTP connectors need an OpenAPI URL before their tools can be indexed.",
-            )
-        generated_tools = generate_openapi_tools(
-            connector.openApiUrl, connector.authStrategy
-        )
-        connector.tools = [
-            tool.model_copy(
-                update={"accessMode": existing_modes.get(tool.name, tool.accessMode)}
-            )
-            for tool in generated_tools
-        ]
+        regenerate_http_openapi_tools(connector, existing_modes)
     else:
         server_url = (connector.serverUrl or connector.apiBaseUrl or "").strip()
         if not server_url:
@@ -2326,10 +2345,10 @@ def backfill_oauth_mcp_tools_after_connection(
     any already-saved per-user integration so the full tool set is visible
     immediately without a manual "Refresh indexed tools" step.
 
-    Only applies to MCP connectors (HTTP OAuth connectors ship a defaultTool
-    and have no OpenAPI URL, so there is no fuller set to discover). Failures
-    are logged and swallowed so the OAuth callback never breaks because of a
-    discovery hiccup.
+    Only applies to MCP connectors (HTTP OAuth connectors generate tools from
+    their OpenAPI URL on save/index, so there is no fuller set to discover
+    here). Failures are logged and swallowed so the OAuth callback never
+    breaks because of a discovery hiccup.
     """
     if connector.provider != "mcp":
         return
@@ -2720,6 +2739,19 @@ async def fastapi_handler(request: Request):
             return [connector.response() for connector in list_managed_connectors()]
         require_app_admin(owner, ADMIN_CONNECTOR_MANAGEMENT_DETAIL, user_api_is_admin)
         connector = ensure_managed_oauth_client(ManagedConnector.model_validate(body))
+        # Regenerate HTTP tools on save so the persisted tool set reflects the
+        # schema (e.g. Notion's 44 endpoints), not whatever the client sent.
+        # Access modes merge in client-wins order: stored-by-name -> client-submitted.
+        if connector.provider == "http" and connector.openApiUrl:
+            previous = repository.get_managed_connector(connector.slug)
+            existing_modes = {
+                tool.name: tool.accessMode
+                for tool in (previous.tools if previous else [])
+            }
+            existing_modes.update(
+                {tool.name: tool.accessMode for tool in connector.tools}
+            )
+            regenerate_http_openapi_tools(connector, existing_modes)
         return repository.save_managed_connector(connector).response()
 
     if (

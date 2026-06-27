@@ -10,7 +10,6 @@ import {
   IntegrationCatalogPanel,
   integrationStatusLabel,
   buildCallbackUrl,
-  buildDefaultHttpTools,
   buildManagedConnectorPayload,
   buildReadyManagedConnectorOption,
   createRegistrationFormState,
@@ -70,13 +69,10 @@ const integrationCatalog: IntegrationCatalogOption[] = [
     connectionDefaults: {
       provider: "http",
       apiBaseUrl: "https://www.googleapis.com/calendar/v3",
+      openApiUrl: "https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest",
       authorizationUrl: "https://accounts.google.com/o/oauth2/v2/auth",
       tokenUrl: "https://oauth2.googleapis.com/token",
       scopes: ["https://www.googleapis.com/auth/calendar.readonly"],
-      toolName: "list_events",
-      toolDescription: "List events from the user's primary Google Calendar.",
-      requestMethod: "GET",
-      requestPath: "/calendars/primary/events",
     },
   },
   {
@@ -306,19 +302,18 @@ describe("integration catalog helper utilities", () => {
     expect(getManagedConnectorProvider(googleCalendar)).toBe("http");
     expect(getManagedConnectorProvider(getProvider("slack"))).toBe("mcp");
     expect(getManagedConnectorProvider(hubspot)).toBe("mcp");
-    expect(buildDefaultHttpTools(googleCalendar)).toEqual([
-      {
-        name: "list_events",
-        description: "List events from the user's primary Google Calendar.",
-        defaultScopes: ["https://www.googleapis.com/auth/calendar.readonly"],
-        request: {
-          method: "GET",
-          path: "/calendars/primary/events",
-        },
-      },
-    ]);
-    expect(buildDefaultHttpTools(hubspot)).toEqual([]);
-    expect(buildDefaultHttpTools(getProvider("notion"))).toEqual([]);
+    // Tools are never hardcoded from the catalog — HTTP connectors generate
+    // them from their OpenAPI URL server-side, MCP connectors discover them
+    // live. Registration payloads therefore always send an empty tool list.
+    expect(
+      buildManagedConnectorPayload(googleCalendar, googleForm).tools,
+    ).toEqual([]);
+    expect(buildManagedConnectorPayload(hubspot, hubspotForm).tools).toEqual([]);
+    expect(
+      buildManagedConnectorPayload(getProvider("notion"), createRegistrationFormState(getProvider("notion")))
+        .tools,
+    ).toEqual([]);
+    expect(buildReadyManagedConnectorOption(googleCalendar).toolCount).toBe(0);
 
     const googlePayload = buildManagedConnectorPayload(googleCalendar, {
       ...googleForm,
@@ -332,9 +327,11 @@ describe("integration catalog helper utilities", () => {
       credentialLabel: "Connect Google Calendar",
       oauthClientId: "calendar-client-id",
       oauthClientSecret: "calendar-client-secret",
-      tools: buildDefaultHttpTools(googleCalendar),
+      tools: [],
     });
-    expect(googlePayload.openApiUrl).toBeUndefined();
+    expect(googlePayload.openApiUrl).toBe(
+      "https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest",
+    );
 
     const hubspotPayload = buildManagedConnectorPayload(hubspot, {
       ...hubspotForm,
@@ -461,9 +458,14 @@ describe("IntegrationCatalogPanel", () => {
     expect(container.textContent).toContain(
       "The standard OAuth URLs and scopes for Google Calendar are already filled in.",
     );
-    expect(container.textContent).toContain("Starter API tool:");
-    expect(container.textContent).toContain("list_events");
-    expect(container.textContent).toContain("GET /calendars/primary/events");
+    // With an OpenAPI URL, the panel shows the schema source (tools are
+    // generated server-side) instead of a hardcoded "Starter API tool".
+    expect(container.textContent).toContain("API schema source:");
+    expect(container.textContent).toContain(
+      "https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest",
+    );
+    expect(container.textContent).not.toContain("Starter API tool:");
+    expect(container.textContent).not.toContain("list_events");
     expect(container.textContent).not.toContain("OAuth docs");
     expect(container.textContent).not.toContain("Scopes (comma separated)");
     expect(container.textContent).not.toContain("Authorization URL");
@@ -504,6 +506,7 @@ describe("IntegrationCatalogPanel", () => {
       slug: string;
       provider: string;
       apiBaseUrl: string;
+      openApiUrl?: string;
       serverUrl?: string;
       oauthConfig: {
         authorizationUrl: string;
@@ -535,17 +538,12 @@ describe("IntegrationCatalogPanel", () => {
     ]);
     expect(body.oauthClientId).toBe("calendar-client-id");
     expect(body.oauthClientSecret).toBe("calendar-client-secret");
-    expect(body.tools).toEqual([
-      {
-        name: "list_events",
-        description: "List events from the user's primary Google Calendar.",
-        defaultScopes: ["https://www.googleapis.com/auth/calendar.readonly"],
-        request: {
-          method: "GET",
-          path: "/calendars/primary/events",
-        },
-      },
-    ]);
+    // Tools are never hardcoded from the catalog — the registration payload
+    // sends an empty list and the backend generates tools from the OpenAPI URL.
+    expect(body.tools).toEqual([]);
+    expect(body.openApiUrl).toBe(
+      "https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest",
+    );
     expect(container.textContent).toContain("Ready now");
     expect(container.textContent).toContain("Use Google Calendar");
   });

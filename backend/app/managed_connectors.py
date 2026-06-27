@@ -6,44 +6,23 @@ from typing import Any
 from openhands_extensions import list_integration_catalog
 
 from .integration_catalog import first_connection_defaults
-from .models import ManagedConnector, ManagedConnectorTool
+from .models import ManagedConnector
 from .repository import repository
 
 
-def _has_default_http_tool(defaults: dict[str, Any]) -> bool:
-    return bool(
-        defaults.get("toolName")
-        and defaults.get("toolDescription")
-        and defaults.get("requestMethod")
-        and defaults.get("requestPath")
-    )
-
-
 def _is_default_managed_connector(entry: dict[str, Any]) -> bool:
+    # The catalog's `defaultTool` field is intentionally ignored; tools come
+    # from MCP `tools/list` (live) or HTTP OpenAPI (regenerated on save). An
+    # HTTP connector without an openApiUrl has no tool source, so we skip it
+    # rather than surface a zero-tool default.
     defaults = first_connection_defaults(entry)
     if not defaults or not defaults.get("authStrategy"):
         return False
     if defaults.get("provider") == "http" and defaults.get("apiBaseUrl"):
-        return bool(defaults.get("openApiUrl") or _has_default_http_tool(defaults))
+        return bool(defaults.get("openApiUrl"))
     if defaults.get("provider") == "mcp" and defaults.get("serverUrl"):
         return True
     return False
-
-
-def _default_tools(defaults: dict[str, Any]) -> list[ManagedConnectorTool]:
-    if defaults.get("provider") != "http" or not _has_default_http_tool(defaults):
-        return []
-    return [
-        ManagedConnectorTool(
-            name=defaults["toolName"],
-            description=defaults["toolDescription"],
-            defaultScopes=defaults.get("toolScopes") or defaults.get("scopes") or [],
-            request={
-                "method": defaults["requestMethod"],
-                "path": defaults["requestPath"],
-            },
-        )
-    ]
 
 
 def _to_default_managed_connector(entry: dict[str, Any]) -> dict[str, Any]:
@@ -84,7 +63,6 @@ def _to_default_managed_connector(entry: dict[str, Any]) -> dict[str, Any]:
                 "tokenUrl",
                 "scopes",
                 "optionalScopes",
-                "toolScopes",
                 "scopeSeparator",
                 "pkce",
                 "clientAuthentication",
@@ -95,7 +73,9 @@ def _to_default_managed_connector(entry: dict[str, Any]) -> dict[str, Any]:
             if defaults.get(key) is not None
         }
         or None,
-        "tools": _default_tools(defaults),
+        # Default connectors ship with no tools; tools are discovered (MCP) or
+        # generated from openApiUrl (HTTP) on connect/save/index.
+        "tools": [],
         "oauthConfigured": defaults["authStrategy"] != "oauth2",
     }
 

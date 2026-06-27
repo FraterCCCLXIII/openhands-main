@@ -112,12 +112,6 @@ describe("listIntegrationCatalogOptions — connection-defaults derivation", () 
             http: {
               apiBaseUrl: "https://api.example.com",
               openApiUrl: "https://api.example.com/openapi.json",
-              defaultTool: {
-                name: "list_items",
-                description: "List all items",
-                method: "GET",
-                path: "/v1/items",
-              },
             },
           },
         ],
@@ -137,11 +131,11 @@ describe("listIntegrationCatalogOptions — connection-defaults derivation", () 
       apiKeyOptional: false,
       apiBaseUrl: "https://api.example.com",
       openApiUrl: "https://api.example.com/openapi.json",
-      toolName: "list_items",
-      toolDescription: "List all items",
-      requestMethod: "GET",
-      requestPath: "/v1/items",
     });
+    // The catalog's defaultTool field is intentionally not mapped — tools are
+    // generated from the OpenAPI URL server-side, never hardcoded.
+    expect("toolName" in (result[0]?.connectionDefaults ?? {})).toBe(false);
+    expect("requestMethod" in (result[0]?.connectionDefaults ?? {})).toBe(false);
   });
 
   it("maps all mcp/oauth2 connectionOption fields into connectionDefaults", () => {
@@ -160,7 +154,6 @@ describe("listIntegrationCatalogOptions — connection-defaults derivation", () 
                 tokenUrl: "https://example.com/oauth/token",
                 scopes: ["read", "write"],
                 optionalScopes: ["admin"],
-                toolScopes: { create: ["write"] } as unknown as string[],
                 scopeSeparator: "space",
                 pkce: true,
                 clientAuthentication: "body",

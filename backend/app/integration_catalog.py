@@ -11,7 +11,6 @@ def connection_defaults_from_option(option: dict[str, Any]) -> dict[str, Any]:
     auth = option.get("auth", {})
     oauth = auth.get("oauth", {})
     http = option.get("http", {})
-    tool = http.get("defaultTool", {})
     transport = option.get("transport", {})
     return defined_values(
         {
@@ -30,17 +29,12 @@ def connection_defaults_from_option(option: dict[str, Any]) -> dict[str, Any]:
             "tokenUrl": oauth.get("tokenUrl"),
             "scopes": oauth.get("scopes"),
             "optionalScopes": oauth.get("optionalScopes"),
-            "toolScopes": oauth.get("toolScopes"),
             "scopeSeparator": oauth.get("scopeSeparator"),
             "pkce": oauth.get("pkce"),
             "clientAuthentication": oauth.get("clientAuthentication"),
             "registrationUrl": oauth.get("registrationUrl"),
             "additionalAuthorizationParams": oauth.get("additionalAuthorizationParams"),
             "additionalTokenParams": oauth.get("additionalTokenParams"),
-            "toolName": tool.get("name"),
-            "toolDescription": tool.get("description"),
-            "requestMethod": tool.get("method"),
-            "requestPath": tool.get("path"),
         }
     )
 
