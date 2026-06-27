@@ -467,6 +467,194 @@ def test_oauth_callback_backfills_mcp_tools_for_saved_integration(
     assert {"search_repos", "get_repo"}.issubset(tool_names)
 
 
+def _seed_oauth_connector_and_state(
+    client: TestClient, *, redirect_to: str, state: str = "test-state-redirect"
+) -> None:
+    admin_key = client.post("/api/admin/key").json()["apiKey"]
+    connector_response = client.post(
+        "/api/managed-connectors",
+        headers={"Authorization": f"Bearer {admin_key}"},
+        json={
+            "slug": "gh",
+            "name": "GitHub",
+            "description": "GitHub MCP",
+            "categories": ["dev"],
+            "authModes": ["oauth2"],
+            "authStrategy": "oauth2",
+            "provider": "mcp",
+            "serverUrl": "https://mcp.github.com/mcp",
+            "oauthConfigured": True,
+            "oauthClientId": "gh-client-id",
+            "oauthClientSecret": "gh-client-secret",
+            "oauthConfig": {
+                "authorizationUrl": "https://github.com/login/oauth/authorize",
+                "tokenUrl": "https://github.com/login/oauth/access_token",
+                "scopes": ["repo"],
+            },
+            "credentialLabel": "Connect GitHub",
+            "credentialPlaceholder": "Connect GitHub",
+            "credentialHelp": "Use OAuth to connect GitHub.",
+            "tools": [],
+            "enabled": True,
+        },
+    )
+    assert connector_response.status_code == 200
+    repository.save_oauth_state(
+        state=state,
+        owner_id="dev@localhost",
+        integration_key="gh",
+        provider="gh",
+        code_verifier=None,
+        redirect_to=redirect_to,
+        redirect_uri="https://testserver/api/oauth/gh/callback",
+        callback_url=None,
+        expires_at="2099-01-01T00:00:00Z",
+    )
+
+
+def test_oauth_callback_preserves_wizard_redirect_target(
+    config_env: ConfigEnvFixture, monkeypatch
+) -> None:
+    config_env("INTHUB_DISABLE_AUTH", "true")
+    config_env("INTHUB_CREDENTIAL_ENCRYPTION_KEY", "test-credential-key")
+    client = TestClient(app)
+
+    redirect_to = "/integrations?showIntegrationWizard=1&managedConnector=gh"
+    _seed_oauth_connector_and_state(client, redirect_to=redirect_to)
+    monkeypatch.setattr(
+        oauth_flow,
+        "fetch_oauth_token",
+        lambda connector, body, headers: {"access_token": "gh-fresh-token"},
+    )
+
+    response = client.get(
+        "/api/oauth/gh/callback?state=test-state-redirect&code=fake-code",
+        follow_redirects=False,
+    )
+    assert response.status_code in (302, 307)
+    location = response.headers["location"]
+    # The wizard return target is preserved so the user lands back inside the
+    # wizard they started OAuth from, with the success banner appended.
+    assert "showIntegrationWizard=1" in location
+    assert "managedConnector=gh" in location
+    assert "oauth_status=connected" in location
+    assert "oauth_provider=gh" in location
+    assert "integrationKey=gh" in location
+
+
+def test_oauth_callback_preserves_redirect_target_on_error(
+    config_env: ConfigEnvFixture,
+) -> None:
+    config_env("INTHUB_DISABLE_AUTH", "true")
+    config_env("INTHUB_CREDENTIAL_ENCRYPTION_KEY", "test-credential-key")
+    client = TestClient(app)
+
+    redirect_to = "/integrations?showIntegrationWizard=1&managedConnector=gh"
+    _seed_oauth_connector_and_state(client, redirect_to=redirect_to)
+
+    response = client.get(
+        "/api/oauth/gh/callback?state=test-state-redirect&error=access_denied",
+        follow_redirects=False,
+    )
+    assert response.status_code in (302, 307)
+    location = response.headers["location"]
+    assert "showIntegrationWizard=1" in location
+    assert "managedConnector=gh" in location
+    assert "oauth_status=error" in location
+    assert "oauth_provider=gh" in location
+    assert "oauth_error=access_denied" in location
+
+
+def test_oauth_callback_falls_back_to_integrations_without_redirect_target(
+    config_env: ConfigEnvFixture, monkeypatch
+) -> None:
+    config_env("INTHUB_DISABLE_AUTH", "true")
+    config_env("INTHUB_CREDENTIAL_ENCRYPTION_KEY", "test-credential-key")
+    client = TestClient(app)
+
+    _seed_oauth_connector_and_state(client, redirect_to="", state="test-state-fallback")
+    monkeypatch.setattr(
+        oauth_flow,
+        "fetch_oauth_token",
+        lambda connector, body, headers: {"access_token": "gh-fresh-token"},
+    )
+
+    response = client.get(
+        "/api/oauth/gh/callback?state=test-state-fallback&code=fake-code",
+        follow_redirects=False,
+    )
+    assert response.status_code in (302, 307)
+    location = response.headers["location"]
+    assert location.startswith("/integrations")
+    assert "oauth_status=connected" in location
+    # No wizard params when no redirect_to was saved.
+    assert "showIntegrationWizard" not in location
+
+
+def test_oauth_callback_rejects_external_redirect_target(
+    config_env: ConfigEnvFixture, monkeypatch
+) -> None:
+    """An attacker-crafted redirectTo=https://evil.example/... must not
+    produce an off-origin 302 — the callback must fall back to /integrations.
+    """
+    config_env("INTHUB_DISABLE_AUTH", "true")
+    config_env("INTHUB_CREDENTIAL_ENCRYPTION_KEY", "test-credential-key")
+    client = TestClient(app)
+
+    _seed_oauth_connector_and_state(
+        client,
+        redirect_to="https://evil.example/phish",
+        state="test-state-evil",
+    )
+    monkeypatch.setattr(
+        oauth_flow,
+        "fetch_oauth_token",
+        lambda connector, body, headers: {"access_token": "gh-fresh-token"},
+    )
+
+    response = client.get(
+        "/api/oauth/gh/callback?state=test-state-evil&code=fake-code",
+        follow_redirects=False,
+    )
+    assert response.status_code in (302, 307)
+    location = response.headers["location"]
+    # Must not redirect off-origin.
+    assert location.startswith("/integrations")
+    assert "evil.example" not in location
+    assert "oauth_status=connected" in location
+
+
+def test_oauth_callback_rejects_protocol_relative_redirect_target(
+    config_env: ConfigEnvFixture, monkeypatch
+) -> None:
+    """A protocol-relative //evil.example/ redirect target must also be
+    rejected.
+    """
+    config_env("INTHUB_DISABLE_AUTH", "true")
+    config_env("INTHUB_CREDENTIAL_ENCRYPTION_KEY", "test-credential-key")
+    client = TestClient(app)
+
+    _seed_oauth_connector_and_state(
+        client,
+        redirect_to="//evil.example/phish",
+        state="test-state-proto-rel",
+    )
+    monkeypatch.setattr(
+        oauth_flow,
+        "fetch_oauth_token",
+        lambda connector, body, headers: {"access_token": "gh-fresh-token"},
+    )
+
+    response = client.get(
+        "/api/oauth/gh/callback?state=test-state-proto-rel&code=fake-code",
+        follow_redirects=False,
+    )
+    assert response.status_code in (302, 307)
+    location = response.headers["location"]
+    assert location.startswith("/integrations")
+    assert "evil.example" not in location
+
+
 def test_mcp_discovery_honors_streamable_transport_order(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:

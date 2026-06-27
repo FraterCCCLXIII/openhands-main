@@ -52,6 +52,8 @@ from .models import (
     now_iso,
 )
 from .oauth_flow import (
+    build_oauth_callback_redirect,
+    consume_oauth_redirect_target,
     credentials_for,
     ensure_managed_oauth_client,
     exchange_oauth_code,
@@ -2577,8 +2579,14 @@ async def fastapi_handler(request: Request):
         code = request.query_params.get("code", "")
         error = request.query_params.get("error")
         if error:
+            redirect_to = consume_oauth_redirect_target(provider, state)
             return RedirectResponse(
-                f"/integrations?oauth_status=error&oauth_provider={provider}&oauth_error={urllib.parse.quote(error)}"
+                build_oauth_callback_redirect(
+                    redirect_to,
+                    oauth_status="error",
+                    oauth_provider=provider,
+                    oauth_error=error,
+                )
             )
         connection = exchange_oauth_code(provider, state, code)
         # Best-effort: populate the full MCP tool set now that the user's
@@ -2592,7 +2600,12 @@ async def fastapi_handler(request: Request):
                 connector,
             )
         return RedirectResponse(
-            f"/integrations?oauth_status=connected&oauth_provider={provider}&integrationKey={connection['integrationKey']}"
+            build_oauth_callback_redirect(
+                str(connection.get("redirect_to") or ""),
+                oauth_status="connected",
+                oauth_provider=provider,
+                integration_key=str(connection["integrationKey"]),
+            )
         )
 
     if path == "/api/cron/expire-grants":

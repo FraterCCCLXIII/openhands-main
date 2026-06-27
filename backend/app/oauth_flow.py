@@ -272,9 +272,17 @@ def start_oauth_redirect(
         )
     state = secrets.token_urlsafe(24)
     verifier = secrets.token_urlsafe(48) if connector.oauthConfig.get("pkce") else None
-    redirect_to = (
+    raw_redirect_to = (
         request.query_params.get("redirectTo")
         or f"/integrations?showIntegrationWizard=1&managedConnector={provider}"
+    )
+    # Defense-in-depth: reject external/protocol-relative redirect targets at
+    # ingest so obviously-bad rows never enter oauth_states. The callback
+    # also validates before issuing the 302.
+    redirect_to = (
+        raw_redirect_to
+        if raw_redirect_to.startswith("/") and not raw_redirect_to.startswith("//")
+        else f"/integrations?showIntegrationWizard=1&managedConnector={provider}"
     )
     integration_key = request.query_params.get("integrationKey") or provider
     redirect_uri = f"{oauth_callback_base_url(request)}/{provider}/callback"
@@ -362,7 +370,7 @@ def exchange_oauth_code(provider: str, state: str, code: str) -> dict[str, Any]:
             status_code=502,
             detail="OAuth token exchange did not return an access token.",
         )
-    return repository.save_connection(
+    connection = repository.save_connection(
         str(record["owner_id"]),
         str(record["integration_key"]),
         provider,
@@ -379,6 +387,62 @@ def exchange_oauth_code(provider: str, state: str, code: str) -> dict[str, Any]:
     ) | {
         "ownerId": str(record["owner_id"]),
     }
+    # Preserve the wizard return target (`redirect_to`) so the callback can
+    # send the user back into the integration wizard they started OAuth from,
+    # instead of dropping them on /integrations with the wizard closed.
+    connection["redirect_to"] = str(record.get("redirect_to") or "")
+    return connection
+
+
+def consume_oauth_redirect_target(provider: str, state: str) -> str:
+    """Return the saved `redirect_to` for an OAuth state, consuming the row.
+
+    Used by the OAuth callback error branch, where there is no code to exchange
+    but we still want to send the user back to the wizard (or other origin)
+    that kicked off the flow instead of a bare /integrations URL. The state is
+    consumed so it cannot be replayed.
+    """
+    record = repository.consume_oauth_state(state, provider)
+    return str((record or {}).get("redirect_to") or "")
+
+
+def build_oauth_callback_redirect(
+    base_redirect_to: str,
+    *,
+    oauth_status: str,
+    oauth_provider: str,
+    oauth_error: str | None = None,
+    integration_key: str | None = None,
+) -> str:
+    """Merge OAuth status params onto the saved return target.
+
+    The wizard starts OAuth with a `redirectTo` like
+    `/integrations?showIntegrationWizard=1&managedConnector=<slug>`. After the
+    provider redirects back, we append `oauth_status` / `oauth_provider` /
+    `oauth_error` / `integrationKey` so the dashboard can show the result
+    banner while keeping the wizard open. Falls back to `/integrations` when
+    no return target was saved.
+
+    Security: `base_redirect_to` originates from an untrusted query parameter
+    (`redirectTo` on `/api/oauth/{provider}/start`). Validate it is a
+    same-origin relative path to prevent open-redirect attacks — reject
+    absolute URLs (`https://evil.example/...`) and protocol-relative URLs
+    (`//evil.example/...`).
+    """
+    target = base_redirect_to.strip()
+    if not target or not target.startswith("/") or target.startswith("//"):
+        target = "/integrations"
+    parsed = urllib.parse.urlparse(target)
+    params = urllib.parse.parse_qsl(parsed.query, keep_blank_values=True)
+    params.append(("oauth_status", oauth_status))
+    params.append(("oauth_provider", oauth_provider))
+    if oauth_error:
+        params.append(("oauth_error", oauth_error))
+    if integration_key:
+        params.append(("integrationKey", integration_key))
+    return urllib.parse.urlunparse(
+        parsed._replace(query=urllib.parse.urlencode(params))
+    )
 
 
 def refresh_oauth_connection(record: dict[str, Any]) -> dict[str, Any]:
