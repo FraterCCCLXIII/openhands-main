@@ -1,0 +1,188 @@
+"use client";
+
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMemo, useState } from "react";
+
+import { fetchJson } from "@/src/lib/fetch-json";
+import {
+  countApprovalRequestsByStatus,
+  matchesAccessRequestFilter,
+  matchesAccessRequestSearch,
+  type ApprovalRequestFilter,
+} from "@/src/components/dashboard/utils";
+import {
+  DEFAULT_CASE_BY_CASE_APPROVAL_HOURS,
+  approvalHoursToMinutes,
+  normalizeApprovalDurationHours,
+} from "@/src/lib/access-requests";
+import type { AccessRequest } from "@/src/types/integrations-hub";
+
+interface UseApprovalsSectionOptions {
+  initialAccessRequests: AccessRequest[];
+  enabled: boolean;
+  onStatus: (message: string | null) => void;
+}
+
+export const useApprovalsSection = ({
+  initialAccessRequests,
+  enabled,
+  onStatus,
+}: UseApprovalsSectionOptions) => {
+  const queryClient = useQueryClient();
+  const [approvalSearch, setApprovalSearch] = useState("");
+  const [approvalFilter, setApprovalFilter] =
+    useState<ApprovalRequestFilter>("pending");
+  const [approvalDurationHours, setApprovalDurationHours] = useState(
+    String(DEFAULT_CASE_BY_CASE_APPROVAL_HOURS),
+  );
+  const [selectedApprovalRequests, setSelectedApprovalRequests] = useState<
+    Record<string, boolean>
+  >({});
+  const [requestActionPending, setRequestActionPending] = useState(false);
+
+  const accessRequestsQuery = useQuery({
+    queryKey: ["access-requests"],
+    queryFn: () => fetchJson<AccessRequest[]>("/api/case-by-case-approvals"),
+    initialData: initialAccessRequests,
+    enabled,
+  });
+
+  const invalidateAll = async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["integrations"] }),
+      queryClient.invalidateQueries({ queryKey: ["access-requests"] }),
+      queryClient.invalidateQueries({ queryKey: ["permission-profiles"] }),
+    ]);
+  };
+
+  const accessRequests = accessRequestsQuery.data ?? [];
+
+  const sortedAccessRequests = useMemo(
+    () =>
+      [...accessRequests].sort(
+        (left, right) =>
+          new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime(),
+      ),
+    [accessRequests],
+  );
+  const filteredAccessRequests = useMemo(
+    () =>
+      sortedAccessRequests.filter(
+        (request) =>
+          matchesAccessRequestFilter(request, approvalFilter) &&
+          matchesAccessRequestSearch(request, approvalSearch),
+      ),
+    [approvalFilter, approvalSearch, sortedAccessRequests],
+  );
+  const approvalCounts = useMemo(
+    () => countApprovalRequestsByStatus(accessRequests),
+    [accessRequests],
+  );
+  const selectedApprovalRequestIds = filteredAccessRequests
+    .filter((request) => selectedApprovalRequests[request.id])
+    .map((request) => request.id);
+  const hasVisibleApprovalRequests = filteredAccessRequests.length > 0;
+  const allVisibleApprovalRequestsSelected =
+    hasVisibleApprovalRequests &&
+    filteredAccessRequests.every((request) => selectedApprovalRequests[request.id]);
+  const selectedApprovalRequestCount = selectedApprovalRequestIds.length;
+  const normalizedApprovalDurationHours = useMemo(() => {
+    const parsed = Number(approvalDurationHours);
+    if (!Number.isFinite(parsed) || parsed <= 0) {
+      return DEFAULT_CASE_BY_CASE_APPROVAL_HOURS;
+    }
+    return normalizeApprovalDurationHours(parsed);
+  }, [approvalDurationHours]);
+
+  const setSelectedStateForApprovalRequests = (
+    requestIds: string[],
+    selected: boolean,
+  ) => {
+    setSelectedApprovalRequests((current) => {
+      const next = { ...current };
+      for (const requestId of requestIds) {
+        if (selected) {
+          next[requestId] = true;
+        } else {
+          delete next[requestId];
+        }
+      }
+      return next;
+    });
+  };
+
+  const handleApprovalDurationBlur = () => {
+    setApprovalDurationHours(String(normalizedApprovalDurationHours));
+  };
+
+  const handleAccessRequestDecision = async (
+    requestIds: string[],
+    action: "approve" | "deny",
+  ) => {
+    if (requestIds.length === 0) {
+      return;
+    }
+
+    setRequestActionPending(true);
+
+    try {
+      for (const requestId of requestIds) {
+        await fetchJson(
+          `/api/case-by-case-approvals/${requestId}/${action === "approve" ? "approve" : "reject"}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body:
+              action === "approve"
+                ? JSON.stringify({
+                    durationMinutes: approvalHoursToMinutes(
+                      normalizedApprovalDurationHours,
+                    ),
+                  })
+                : JSON.stringify({}),
+          },
+        );
+      }
+
+      setSelectedApprovalRequests((current) => {
+        const next = { ...current };
+        for (const requestId of requestIds) {
+          delete next[requestId];
+        }
+        return next;
+      });
+      onStatus(
+        action === "approve"
+          ? `Approved ${requestIds.length} request${requestIds.length === 1 ? "" : "s"}.`
+          : `Denied ${requestIds.length} request${requestIds.length === 1 ? "" : "s"}.`,
+      );
+      await invalidateAll();
+    } catch (error) {
+      onStatus(
+        error instanceof Error ? error.message : "Unable to update access request.",
+      );
+    } finally {
+      setRequestActionPending(false);
+    }
+  };
+
+  return {
+    allVisibleApprovalRequestsSelected,
+    approvalCounts,
+    approvalDurationHours,
+    approvalFilter,
+    approvalSearch,
+    filteredAccessRequests,
+    handleAccessRequestDecision,
+    handleApprovalDurationBlur,
+    hasVisibleApprovalRequests,
+    requestActionPending,
+    selectedApprovalRequestCount,
+    selectedApprovalRequestIds,
+    selectedApprovalRequests,
+    setApprovalDurationHours,
+    setApprovalFilter,
+    setApprovalSearch,
+    setSelectedStateForApprovalRequests,
+  };
+};
