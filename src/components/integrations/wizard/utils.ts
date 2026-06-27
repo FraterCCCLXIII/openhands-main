@@ -15,7 +15,7 @@ import type {
 
 export type IntegrationKind = "managed" | "mcp";
 export type WizardStep = 1 | 2 | 3;
-export type DiscoverFeedbackTone = "info" | "success" | "error";
+type DiscoverFeedbackTone = "info" | "success" | "error";
 export type ApiDebugDetails = Record<string, unknown>;
 
 export interface DiscoverFeedback {

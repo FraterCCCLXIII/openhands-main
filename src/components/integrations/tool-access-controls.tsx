@@ -1,7 +1,6 @@
 import {
   functionAccessModes,
   getAllowedFunctionAccessModes,
-  isFunctionAccessModeAllowed,
 } from "@/src/lib/function-access-mode";
 import { matchesSearchQuery } from "@/src/lib/text-utils";
 import { cn } from "@/src/lib/utils";
@@ -107,8 +106,3 @@ export const AccessModeSlider = ({
     </div>
   );
 };
-
-export const isToolModeSelectable = (
-  requestedMode: ToolAccessMode,
-  toolSpec: ToolSpec,
-) => !toolSpec.maxAccessMode || isFunctionAccessModeAllowed(requestedMode, toolSpec.maxAccessMode);

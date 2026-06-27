@@ -13,13 +13,8 @@ import {
 import type { IntegrationSpec } from "@/src/types/integrations-hub";
 
 export const OPENHANDS_AGENT_KEY_ENV = "$OPENHANDS_AGENT_KEY";
-// Backward-compatible alias for callers that still reference the old env name.
-export const OPENHANDS_CONTEXT_KEY_ENV = OPENHANDS_AGENT_KEY_ENV;
-// Default MCP URL for OpenHands Cloud - replace with your deployment URL
-export const OPENHANDS_CLOUD_SHTTP_MCP_URL =
-  "https://integrations-hub.example.com/api/mcp";
 
-export interface AgentConnectionGuide {
+interface AgentConnectionGuide {
   endpoint: string;
   integrationKey: string;
   toolName: string;

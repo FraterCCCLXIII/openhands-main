@@ -6,9 +6,7 @@ const SOURCE_ROOTS = ["app", "src"];
 const SOURCE_EXTENSIONS = [".ts", ".tsx"];
 const RESOLUTION_SUFFIXES = ["", ".ts", ".tsx", "/index.ts", "/index.tsx"];
 
-const SERVER_ONLY_PREFIXES = [
-  "src/lib/security-headers.ts",
-];
+const SERVER_ONLY_PREFIXES = [];
 
 const normalize = (value) => value.split(path.sep).join("/");
 

@@ -35,8 +35,6 @@ export const UNUSED_TOOL_WINDOW_OPTIONS: Array<{
   { value: "months", label: "months" },
 ];
 
-export const UNUSED_FUNCTION_WINDOW_OPTIONS = UNUSED_TOOL_WINDOW_OPTIONS;
-
 
 export const subtractUnusedWindow = (
   reference: Date,

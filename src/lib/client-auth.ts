@@ -10,7 +10,7 @@ import {
 } from "@/src/lib/cloud-auth-storage";
 import { normalizeCaseInsensitiveText } from "@/src/lib/text-utils";
 
-export interface ClientUser {
+interface ClientUser {
   id?: string | null;
   name?: string | null;
   email?: string | null;
@@ -190,5 +190,3 @@ export function useClientAuth(authDisabled = false): ClientAuthState {
     user,
   ]);
 }
-
-export const normalizeOwnerId = normalizeCaseInsensitiveText;

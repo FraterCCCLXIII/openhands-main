@@ -3,7 +3,7 @@ import type { GenericHttpRequestTemplate } from "@/src/types/integrations-hub";
 const EXACT_TEMPLATE = /^\{\{\s*([a-zA-Z0-9_.]+)\s*\}\}$/;
 const TEMPLATE = /\{\{\s*([a-zA-Z0-9_.]+)\s*\}\}/g;
 
-export interface HttpTemplateValidationIssue {
+interface HttpTemplateValidationIssue {
   path: Array<string | number>;
   message: string;
 }

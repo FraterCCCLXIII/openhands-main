@@ -88,5 +88,3 @@ export const DashboardApiKeyCard = ({
     </div>
   </div>
 );
-
-export type { DashboardApiKeyCardProps };

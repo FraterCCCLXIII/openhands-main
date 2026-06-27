@@ -42,7 +42,7 @@ const jsonResponse = (payload: unknown): Response =>
  * through to the standard handling", and any unmatched request still
  * throws so unexpected fetches stay loud.
  */
-export interface DashboardFetchMockOverrides {
+interface DashboardFetchMockOverrides {
   integrations?: IntegrationSpec[] | (() => IntegrationSpec[]);
   managedConnectors?: ManagedConnectorOption[];
   accessRequests?: AccessRequest[];

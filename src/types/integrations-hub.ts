@@ -27,7 +27,6 @@ export type ToolAccessMode = "enabled" | "disabled" | "approval_required";
 export type FunctionAccessMode = ToolAccessMode;
 export type ToolInvocationOutcome = "success" | "denied" | "error";
 export type UnusedToolWindowUnit = "days" | "weeks" | "months";
-export type UnusedFunctionWindowUnit = UnusedToolWindowUnit;
 
 export interface ToolSpec {
   name: string;

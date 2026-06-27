@@ -8,7 +8,7 @@ export class DeviceFlowError extends Error {
   }
 }
 
-export interface DeviceAuthorizationResponse {
+interface DeviceAuthorizationResponse {
   device_code: string;
   user_code: string;
   verification_uri: string;
