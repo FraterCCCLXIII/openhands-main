@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, ShieldCheck, UserRound } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 
@@ -9,16 +9,32 @@ import { DashboardSidebar, DashboardSidebarUserPanel } from "@/src/components/la
 import { DashboardSignOutButton } from "@/src/components/layout/dashboard-sign-out-button";
 import { useAuth } from "@/src/components/auth/auth-context";
 import { Badge } from "@/src/components/ui/badge";
-import { Card } from "@/src/components/ui/card";
 import { buildAdminSectionHref } from "@/src/lib/admin-routes";
 import { fetchJson } from "@/src/lib/fetch-json";
-import type { ManagedConnectorDefinition, ManagedConnectorOption, IntegrationCatalogOption } from "@/src/types/integrations-hub";
+import type {
+  ManagedConnectorDefinition,
+  ManagedConnectorOption,
+  IntegrationCatalogOption,
+} from "@/src/types/integrations-hub";
 
 interface AdminIntegrationsData {
   managedConnectors: ManagedConnectorDefinition[];
   readyConnectors: ManagedConnectorOption[];
   integrationCatalog: IntegrationCatalogOption[];
 }
+
+// The admin integrations page only deals with OAuth-based providers. Catalog
+// options without an explicit auth strategy default to OAuth (see
+// getProviderAuthStrategy in integration-catalog-panel), so treat undefined as
+// OAuth to stay consistent with the rest of the app.
+const isOAuthCatalogOption = (option: IntegrationCatalogOption) =>
+  (option.connectionDefaults.authStrategy ?? "oauth2") === "oauth2";
+
+const isOAuthManagedConnector = (connector: ManagedConnectorDefinition) =>
+  connector.authStrategy === "oauth2";
+
+const isOAuthReadyConnector = (connector: ManagedConnectorOption) =>
+  connector.authStrategy === "oauth2";
 
 function LoadingSpinner() {
   return (
@@ -46,9 +62,12 @@ export function ClientAdminIntegrationsPage() {
       ]);
 
       return {
-        managedConnectors,
-        readyConnectors: allConnectors.filter((c) => c.oauthConfigured !== false),
-        integrationCatalog,
+        managedConnectors: managedConnectors.filter(isOAuthManagedConnector),
+        readyConnectors: allConnectors.filter(
+          (connector) =>
+            connector.oauthConfigured !== false && isOAuthReadyConnector(connector),
+        ),
+        integrationCatalog: integrationCatalog.filter(isOAuthCatalogOption),
       };
     },
     enabled: isAuthenticated,
@@ -63,7 +82,6 @@ export function ClientAdminIntegrationsPage() {
     return <LoadingSpinner />;
   }
 
-  // Error state - show error message
   if (error) {
     console.error("Admin integrations data fetch error:", error);
     return (
@@ -92,7 +110,7 @@ export function ClientAdminIntegrationsPage() {
           badge={
             <Badge>
               {isAdmin
-                ? `${data.managedConnectors.length} registered`
+                ? `${data.managedConnectors.length} added`
                 : `${data.readyConnectors.length} ready`}
             </Badge>
           }
@@ -106,7 +124,7 @@ export function ClientAdminIntegrationsPage() {
                 userEmail={userEmail}
                 badges={[
                   <Badge key="ready">{data.readyConnectors.length} ready</Badge>,
-                  <Badge key="catalog">{data.integrationCatalog.length} catalog</Badge>,
+                  <Badge key="catalog">{data.integrationCatalog.length} available</Badge>,
                 ]}
                 action={<DashboardSignOutButton />}
               />
@@ -122,18 +140,16 @@ export function ClientAdminIntegrationsPage() {
               </p>
               <h1 className="mt-1 text-2xl font-semibold text-white">Admin integrations</h1>
               <p className="mt-2 max-w-3xl text-sm leading-7 text-[var(--color-text-base)]">
-                Service-level connector administration now uses the same dashboard
-                chrome as personal integrations. Regular users can request missing
-                providers, while admins can register, edit, and remove managed
-                connectors for the deployment.
+                Register OAuth-based integrations for the deployment. Admins can add a
+                provider from the available list and manage the connectors that have already
+                been added.
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
               {isAdmin ? (
-                <Badge>{data.managedConnectors.length} registered</Badge>
+                <Badge>{data.managedConnectors.length} added</Badge>
               ) : null}
-              <Badge>{data.readyConnectors.length} ready now</Badge>
-              <Badge>{data.integrationCatalog.length} catalog options</Badge>
+              <Badge>{data.integrationCatalog.length} available</Badge>
             </div>
           </header>
 
@@ -147,61 +163,7 @@ export function ClientAdminIntegrationsPage() {
               <ArrowLeft className="h-4 w-4" />
               Back to integrations
             </Link>
-            <Badge>{data.readyConnectors.length} connectors ready now</Badge>
           </div>
-
-          {isAdmin ? (
-            <Card className="p-6">
-              <div data-testid="admin-guidance-card">
-                <div className="mb-4 flex items-center gap-3">
-                  <span className="rounded-md border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-2">
-                    <ShieldCheck className="h-4 w-4 text-[var(--color-accent)]" />
-                  </span>
-                  <div>
-                    <h2 className="text-lg font-semibold text-white">For admins</h2>
-                    <p className="text-sm text-[var(--color-text-base)]">
-                      How to add a provider that is not currently showing up.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="space-y-4 text-sm leading-7 text-[var(--color-text-base)]">
-                  <p>
-                    Managing OAuth apps is a service-level admin action. Use this page to
-                    register a managed connector so every user can see it in the integrations
-                    wizard.
-                  </p>
-                  <p>
-                    The in-app registration form is only available to signed-in app
-                    administrators whose email appears in <code className="text-white">INTHUB_APP_ADMIN_EMAILS</code>.
-                  </p>
-                </div>
-              </div>
-            </Card>
-          ) : (
-            <Card className="p-6">
-              <div data-testid="user-guidance-card">
-                <div className="mb-4 flex items-center gap-3">
-                  <span className="rounded-md border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-2">
-                    <UserRound className="h-4 w-4 text-[var(--color-accent)]" />
-                  </span>
-                  <div>
-                    <h2 className="text-lg font-semibold text-white">For users</h2>
-                    <p className="text-sm text-[var(--color-text-base)]">
-                      What to do when the connector you want is not listed.
-                    </p>
-                  </div>
-                </div>
-                <div className="space-y-4 text-sm leading-7 text-[var(--color-text-base)]">
-                  <p>
-                    The integration wizard only shows connectors that are ready to use in this
-                    deployment. If you do not see the provider you need, please contact your
-                    deployment administrator to request additional connector registrations.
-                  </p>
-                </div>
-              </div>
-            </Card>
-          )}
 
           <IntegrationsCatalog
             integrationCatalog={data.integrationCatalog}
