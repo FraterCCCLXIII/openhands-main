@@ -11,7 +11,6 @@ import {
   type DiscoverFeedback,
   type DiscoveryResponse,
   type WizardDraft,
-  type WizardStep,
 } from "@/src/components/integrations/wizard/utils";
 
 interface SearchParamsLike {
@@ -30,7 +29,6 @@ export const useWizardState = ({
   searchParams,
 }: UseIntegrationWizardStateOptions) => {
   const initialManagedConnectorSlug = searchParams.get("managedConnector")?.trim() || "";
-  const [step, setStep] = useState<WizardStep>(initialManagedConnectorSlug ? 2 : 1);
   const [draft, setDraft] = useState<WizardDraft>(() =>
     initialManagedConnectorSlug
       ? {
@@ -186,7 +184,6 @@ export const useWizardState = ({
     setSelectedTools({});
     setExpandedTools({});
     setToolSearch("");
-    setStep(2);
     lastSyncedManagedConnectorSlug.current = initialManagedConnectorSlug;
   }, [
     handleConnectorSelect,
@@ -204,7 +201,6 @@ export const useWizardState = ({
     setConnectorSearch("");
     setToolSearch("");
     setDiscoverFeedback(null);
-    setStep(2);
     onStatus(null);
   };
 
@@ -221,7 +217,15 @@ export const useWizardState = ({
     setSelectedTools({});
     setExpandedTools({});
     setToolSearch("");
-    setStep(3);
+  };
+
+  const resetToConnectStep = () => {
+    setDiscoverFeedback(null);
+    setDiscovery(null);
+    setToolModes({});
+    setSelectedTools({});
+    setExpandedTools({});
+    setToolSearch("");
   };
 
   const resetAfterCreate = () => {
@@ -233,7 +237,6 @@ export const useWizardState = ({
     setConnectorSearch("");
     setToolSearch("");
     setDiscoverFeedback(null);
-    setStep(1);
   };
 
   const setAccessModeForTools = (
@@ -289,11 +292,11 @@ export const useWizardState = ({
     selectedToolNames,
     selectedTools,
     selectedMatchingCount,
-    step,
     applyDiscoveryResult,
     handleConnectorSearchChange,
     handleConnectorSelect,
     resetAfterCreate,
+    resetToConnectStep,
     selectKind,
     setAccessModeForTools,
     setConnectorSearch,
@@ -305,7 +308,6 @@ export const useWizardState = ({
     setToolSearch,
     setSelectedTools,
     setSelectedStateForTools,
-    setStep,
     toggleToolExpanded,
   };
 };

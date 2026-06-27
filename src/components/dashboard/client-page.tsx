@@ -5,6 +5,7 @@ import { useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import { DashboardWorkspace } from "@/src/components/dashboard/workspace";
+import { LoadingSpinner } from "@/src/components/feedback/loading-spinner";
 import { ServiceUnavailableScreen } from "@/src/components/feedback/service-unavailable-screen";
 import { useAuth } from "@/src/components/auth/auth-context";
 import { fetchJson } from "@/src/lib/fetch-json";
@@ -34,17 +35,6 @@ interface InitialDataResponse {
   agentApiKey: string;
   userApiKey: UserApiKeyStatus | null;
   adminApiKey: AdminApiKeyStatus | null;
-}
-
-function LoadingSpinner() {
-  return (
-    <div className="flex min-h-screen items-center justify-center">
-      <div className="flex flex-col items-center gap-4">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[var(--color-accent)] border-t-transparent" />
-        <p className="text-sm text-[var(--color-text-base)]">Loading dashboard...</p>
-      </div>
-    </div>
-  );
 }
 
 /**
@@ -115,7 +105,7 @@ export function ClientDashboardPage() {
 
   // Loading states
   if (authLoading) {
-    return <LoadingSpinner />;
+    return <LoadingSpinner label="Loading dashboard..." />;
   }
 
   // Transient session failure (503 / network): the stored token is preserved,
@@ -148,7 +138,7 @@ export function ClientDashboardPage() {
   }
 
   if (!isAuthenticated && !authDisabled) {
-    return <LoadingSpinner />;
+    return <LoadingSpinner label="Loading dashboard..." />;
   }
 
   // Error state - show service unavailable with error details
@@ -166,7 +156,7 @@ export function ClientDashboardPage() {
   }
 
   if (dataLoading || !data) {
-    return <LoadingSpinner />;
+    return <LoadingSpinner label="Loading dashboard..." />;
   }
 
   const currentUser = {

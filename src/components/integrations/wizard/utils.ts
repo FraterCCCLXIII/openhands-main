@@ -14,7 +14,6 @@ import type {
 } from "@/src/types/integrations-hub";
 
 export type IntegrationKind = "managed" | "mcp";
-export type WizardStep = 1 | 2 | 3;
 type DiscoverFeedbackTone = "info" | "success" | "error";
 export type ApiDebugDetails = Record<string, unknown>;
 

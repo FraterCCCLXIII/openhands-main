@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 
 import { IntegrationsCatalog } from "@/src/components/admin/integrations/catalog";
+import { LoadingSpinner } from "@/src/components/feedback/loading-spinner";
 import { DashboardSidebar, DashboardSidebarUserPanel } from "@/src/components/layout/dashboard-sidebar";
 import { DashboardSignOutButton } from "@/src/components/layout/dashboard-sign-out-button";
 import { useAuth } from "@/src/components/auth/auth-context";
@@ -35,17 +36,6 @@ const isOAuthManagedConnector = (connector: ManagedConnectorDefinition) =>
 
 const isOAuthReadyConnector = (connector: ManagedConnectorOption) =>
   connector.authStrategy === "oauth2";
-
-function LoadingSpinner() {
-  return (
-    <div className="flex min-h-screen items-center justify-center">
-      <div className="flex flex-col items-center gap-4">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[var(--color-accent)] border-t-transparent" />
-        <p className="text-sm text-[var(--color-text-base)]">Loading admin integrations...</p>
-      </div>
-    </div>
-  );
-}
 
 export function ClientAdminIntegrationsPage() {
   const { user, isAdmin, isAuthenticated, isLoading: authLoading } = useAuth();
@@ -79,7 +69,7 @@ export function ClientAdminIntegrationsPage() {
     typeof window !== "undefined" ? `${window.location.origin}/api/oauth` : "";
 
   if (authLoading) {
-    return <LoadingSpinner />;
+    return <LoadingSpinner label="Loading admin integrations..." />;
   }
 
   if (error) {
@@ -97,7 +87,7 @@ export function ClientAdminIntegrationsPage() {
   }
 
   if (dataLoading || !data) {
-    return <LoadingSpinner />;
+    return <LoadingSpinner label="Loading admin integrations..." />;
   }
 
   const userName = user?.name?.trim() || "Integrations Hub User";

@@ -254,13 +254,7 @@ export const IntegrationWizard = ({
             selectedMatchingCount={state.selectedMatchingCount}
             onBack={() => {
               setCreateFeedback(null);
-              state.setDiscoverFeedback(null);
-              state.setDiscovery(null);
-              state.setToolModes({});
-              state.setSelectedTools({});
-              state.setExpandedTools({});
-              state.setToolSearch("");
-              state.setStep(2);
+              state.resetToConnectStep();
             }}
             onCreate={() =>
               createMutation.mutate(

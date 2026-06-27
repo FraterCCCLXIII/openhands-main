@@ -11,10 +11,8 @@ The root `LICENSE` is proprietary: `Copyright All Hands AI, Inc. All rights rese
 - The dashboard has been refactored to support running as a Single Page Application (SPA) that queries REST endpoints client-side.
 - All dashboard pages (`/integrations`, `/profile`, `/agent-connection`, `/case-by-case-approvals`, `/admin-integrations`, `/admin-overview`) now export client components that fetch data via TanStack Query.
 - For static site generation, set `SPA_MODE=true` in the build environment; this enables `output: "export"` in `next.config.ts` with trailing slashes and unoptimized images.
-- Server-side rendering (SSR) versions of pages are preserved in `src/components/dashboard/server-page.tsx` for legacy SSR deployments.
 - Client-side auth state is managed via `useAuth()` from `src/components/auth/auth-context.tsx`, backed by OpenHands Cloud OAuth device flow and a stored OpenHands bearer token. `INTHUB_DISABLE_AUTH=true` still provides a dev user fallback.
 - `Providers` only supplies React Query and `AuthProvider`; there is no legacy auth provider layer.
-- Page tests that use `renderStaticDocument` for SSR testing should import from `server-page.tsx` versions explicitly (e.g., `ServerDashboardPage`).
 
 ## Deployment Architecture (Vercel + K8s)
 
@@ -61,7 +59,6 @@ The repository supports deployment to both Vercel and self-hosted K8s environmen
 - TypeScript strictness now also enables `noUncheckedIndexedAccess`; when reading dynamic config/credential records or keyed collections, prefer shared narrowing helpers (for example `src/lib/type-utils.ts`) and explicit undefined handling over inline `as string` assertions.
 - For targeted HTTP adapter coverage work, run `npx vitest run src/lib/adapters/http-adapter.test.ts --coverage --coverage.include=src/lib/adapters/http-adapter.ts --coverage.reporter=text`; the suite now covers auth-mode differences, templated query/header/body shaping, multipart/form/text encoding, validation errors, and response parsing fallbacks.
 
-- Shared server-rendered page DOM test helpers now live in `src/test-utils/static-dom.tsx`; reuse `renderStaticDocument`, `findHeading`, and `getCodeValues` instead of re-creating local `DOMParser`/`renderToStaticMarkup` helpers in page tests.
 - Shared dashboard fetch-mock builder lives at `src/test-utils/fetch-mock-helpers.ts`; prefer `createDashboardFetchMock({ integrations, managedConnectors, accessRequests, notifications, routeHandler })` over hand-rolled `vi.fn` route routers. Standard routes (`/api/integrations`, `/api/integrations/managed-connectors`, `/api/case-by-case-approvals`, `/api/notifications`) fall back to empty arrays; the `routeHandler` escape hatch handles per-test endpoints (PATCH/DELETE/POST or extra routes like `/api/oauth/connections`) before the standard fallbacks run, and unmatched routes still throw `"Unexpected fetch"` so tests can't silently drift.
 
 - Run e2e tests only: `npm run test:e2e`

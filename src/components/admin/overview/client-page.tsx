@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 
 import { CompactPanel } from "@/src/components/dashboard/shared";
+import { LoadingSpinner } from "@/src/components/feedback/loading-spinner";
 import {
   DashboardSidebar,
   DashboardSidebarUserPanel,
@@ -20,17 +21,6 @@ import type { AdminOperationalOverview } from "@/src/types/integrations-hub";
 const pluralize = (count: number, singular: string, plural = `${singular}s`) =>
   count === 1 ? singular : plural;
 
-function LoadingSpinner() {
-  return (
-    <div className="flex min-h-screen items-center justify-center">
-      <div className="flex flex-col items-center gap-4">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[var(--color-accent)] border-t-transparent" />
-        <p className="text-sm text-[var(--color-text-base)]">Loading admin overview...</p>
-      </div>
-    </div>
-  );
-}
-
 export function ClientAdminOverviewPage() {
   const { user, isAdmin, isAuthenticated, isLoading: authLoading } = useAuth();
 
@@ -42,7 +32,7 @@ export function ClientAdminOverviewPage() {
   });
 
   if (authLoading) {
-    return <LoadingSpinner />;
+    return <LoadingSpinner label="Loading admin overview..." />;
   }
 
   // Error state for admin users - show error message
@@ -61,7 +51,7 @@ export function ClientAdminOverviewPage() {
   }
 
   if (isAdmin && dataLoading) {
-    return <LoadingSpinner />;
+    return <LoadingSpinner label="Loading admin overview..." />;
   }
 
   const userName = user?.name?.trim() || "Integrations Hub User";

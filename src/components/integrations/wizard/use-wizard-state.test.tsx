@@ -159,7 +159,6 @@ describe("useWizardState", () => {
   it("initializes from the managedConnector search param and handles connector search transitions", async () => {
     const { getState, onStatus } = await renderWizardState("managedConnector=notion");
 
-    expect(getState().step).toBe(2);
     expect(getState().draft).toMatchObject({
       kind: "managed",
       managedConnectorSlug: "notion",
@@ -253,14 +252,12 @@ describe("useWizardState", () => {
   it("syncs to a managedConnector search param that appears after mount", async () => {
     const { getState, onStatus, rerender } = await renderWizardState();
 
-    expect(getState().step).toBe(1);
     expect(getState().draft).toEqual({ ...INITIAL_DRAFT, kind: "managed" });
 
     onStatus.mockClear();
 
     await rerender("managedConnector=generic-api");
 
-    expect(getState().step).toBe(2);
     expect(getState().selectedConnector?.slug).toBe("generic-api");
     expect(getState().connectorSearch).toBe("Generic API (generic-api)");
     expect(getState().draft).toMatchObject({
@@ -280,7 +277,6 @@ describe("useWizardState", () => {
   it("ignores the legacy builtIn search param", async () => {
     const { getState } = await renderWizardState("builtIn=notion");
 
-    expect(getState().step).toBe(1);
     expect(getState().selectedConnector).toBeNull();
     expect(getState().draft).toEqual({ ...INITIAL_DRAFT, kind: "managed" });
   });
@@ -288,13 +284,11 @@ describe("useWizardState", () => {
   it("tracks review filtering, bulk selection, expansion, and reset flows", async () => {
     const { getState, onStatus } = await renderWizardState();
 
-    expect(getState().step).toBe(1);
 
     await act(async () => {
       getState().selectKind("mcp");
     });
 
-    expect(getState().step).toBe(2);
     expect(getState().draft).toEqual({ ...INITIAL_DRAFT, kind: "mcp" });
     expect(onStatus).toHaveBeenLastCalledWith(null);
 
@@ -309,7 +303,6 @@ describe("useWizardState", () => {
       getState().applyDiscoveryResult(discoveryResult);
     });
 
-    expect(getState().step).toBe(3);
     expect(getState().reviewedTools.map(([name]) => name)).toEqual([
       "alphaTool",
       "betaTool",
@@ -385,7 +378,6 @@ describe("useWizardState", () => {
       getState().resetAfterCreate();
     });
 
-    expect(getState().step).toBe(1);
     expect(getState().draft).toEqual(INITIAL_DRAFT);
     expect(getState().discovery).toBeNull();
     expect(getState().toolModes).toEqual({});
