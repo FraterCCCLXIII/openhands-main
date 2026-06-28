@@ -64,6 +64,7 @@ from .openapi_tools import generate_openapi_tools
 from .repository import repository
 from .route_manifest import ROUTES
 from .static_files import mount_static_files
+from .url_security import urlopen_no_redirect, validate_external_url
 
 
 logger = logging.getLogger("integrations_hub")
@@ -703,6 +704,7 @@ def invoke_http_tool(
             detail=f"Tool '{tool.name}' is missing an HTTP request template.",
         )
     method = str(request_template["method"]).upper()
+    validate_external_url(base, purpose="HTTP API base")
     path = path_template(str(request_template["path"]), payload).lstrip("/")
     url = f"{base}/{path}"
     query = resolve_template(request_template.get("query") or {}, payload)
@@ -732,9 +734,12 @@ def invoke_http_tool(
         else:
             data = json.dumps(body).encode()
             headers["Content-Type"] = "application/json"
-    req = urllib.request.Request(url, data=data, headers=headers, method=method)
+    validated_url = validate_external_url(url, purpose="HTTP tool request")
+    req = urllib.request.Request(
+        validated_url, data=data, headers=headers, method=method
+    )
     try:
-        with urllib.request.urlopen(req, timeout=20) as response:
+        with urlopen_no_redirect(req, timeout=20) as response:
             raw = response.read()
             content_type = response.headers.get("content-type", "")
             if response.status == 204:
@@ -977,9 +982,10 @@ def invoke_mcp_tool(
     config = tool.config if isinstance(tool.config, dict) else {}
 
     def call_transport(candidate_url: str) -> dict[str, Any]:
-        with httpx.Client(timeout=20, follow_redirects=True) as client:
+        validated_url = validate_external_url(candidate_url, purpose="MCP server")
+        with httpx.Client(timeout=20, follow_redirects=False) as client:
             return invoke_mcp_session(
-                client, candidate_url, headers, tool_name, payload
+                client, validated_url, headers, tool_name, payload
             )
 
     return retry_mcp_transports(
@@ -2150,10 +2156,11 @@ def mcp_discovery_headers(
 def discover_mcp_tools(
     server_url: str, headers: dict[str, str], *, timeout: float = 20
 ) -> dict[str, ToolSpec]:
-    with httpx.Client(timeout=timeout, follow_redirects=True) as client:
+    validated_server_url = validate_external_url(server_url, purpose="MCP server")
+    with httpx.Client(timeout=timeout, follow_redirects=False) as client:
         initialized, session_id = post_mcp_message(
             client,
-            server_url,
+            validated_server_url,
             headers,
             {
                 "jsonrpc": "2.0",
@@ -2174,7 +2181,7 @@ def discover_mcp_tools(
         )
         post_mcp_message(
             client,
-            server_url,
+            validated_server_url,
             headers,
             {"jsonrpc": "2.0", "method": "notifications/initialized"},
             session_id,
@@ -2183,7 +2190,7 @@ def discover_mcp_tools(
         )
         result, _ = post_mcp_message(
             client,
-            server_url,
+            validated_server_url,
             headers,
             {"jsonrpc": "2.0", "id": 2, "method": "tools/list"},
             session_id,

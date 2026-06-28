@@ -17,6 +17,7 @@ from fastapi.responses import RedirectResponse
 from .managed_connectors import get_managed_connector
 from .models import IntegrationSpec, ManagedConnector
 from .repository import repository
+from .url_security import urlopen_no_redirect, validate_external_url
 
 
 def b64url(data: bytes) -> str:
@@ -98,14 +99,17 @@ def token_request_body(
 def fetch_oauth_token(
     connector: ManagedConnector, body: dict[str, str], headers: dict[str, str]
 ) -> dict[str, Any]:
+    token_url = validate_external_url(
+        str(connector.oauthConfig["tokenUrl"]), purpose="OAuth token endpoint"
+    )
     request = urllib.request.Request(
-        connector.oauthConfig["tokenUrl"],
+        token_url,
         data=urllib.parse.urlencode(body).encode(),
         headers=headers,
         method="POST",
     )
     try:
-        with urllib.request.urlopen(request, timeout=10) as response:
+        with urlopen_no_redirect(request, timeout=10) as response:
             payload = json.loads(response.read().decode() or "{}")
     except Exception as exc:
         raise HTTPException(
@@ -187,14 +191,17 @@ def register_dynamic_oauth_client(connector: ManagedConnector) -> ManagedConnect
             "token_endpoint_auth_method": oauth_config.get("clientAuthentication"),
         }
     ).encode()
+    registration_url = validate_external_url(
+        str(oauth_config["registrationUrl"]), purpose="OAuth registration endpoint"
+    )
     request = urllib.request.Request(
-        str(oauth_config["registrationUrl"]),
+        registration_url,
         data=data,
         headers={"Content-Type": "application/json"},
         method="POST",
     )
     try:
-        with urllib.request.urlopen(request, timeout=10) as response:
+        with urlopen_no_redirect(request, timeout=10) as response:
             payload = json.loads(response.read().decode() or "{}")
     except Exception as exc:
         raise HTTPException(

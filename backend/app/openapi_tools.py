@@ -9,6 +9,7 @@ from typing import Any
 from fastapi import HTTPException
 
 from .models import ManagedConnectorTool
+from .url_security import urlopen_no_redirect, validate_external_url
 
 
 READ_ONLY_METHODS = {"GET", "HEAD"}
@@ -159,11 +160,14 @@ def openapi_input_schema(
 def generate_openapi_tools(
     open_api_url: str, auth_strategy: str
 ) -> list[ManagedConnectorTool]:
+    validated_open_api_url = validate_external_url(
+        open_api_url, purpose="OpenAPI schema"
+    )
     try:
         request = urllib.request.Request(
-            open_api_url, headers={"Accept": "application/json"}
+            validated_open_api_url, headers={"Accept": "application/json"}
         )
-        with urllib.request.urlopen(request, timeout=20) as response:
+        with urlopen_no_redirect(request, timeout=20) as response:
             document = json.loads(response.read().decode() or "{}")
     except urllib.error.HTTPError as exc:
         raise HTTPException(

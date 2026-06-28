@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-import io
 import json
-import urllib.request
 
+from backend.app import openapi_tools
 from backend.app.openapi_tools import generate_openapi_tools
 
 
@@ -60,8 +59,8 @@ def test_generated_openapi_mutating_tools_require_approval(monkeypatch):
     }
 
     monkeypatch.setattr(
-        urllib.request,
-        "urlopen",
+        openapi_tools,
+        "urlopen_no_redirect",
         lambda *_args, **_kwargs: FakeResponse(document),
     )
 

@@ -81,8 +81,12 @@ def config_env(monkeypatch) -> ConfigEnvFixture:
     def setter(key: str, value: str | None = None) -> None:
         if value is None:
             monkeypatch.delenv(key, raising=False)
+            if key == "PYTEST_INTHUB_AUTH_BYPASS":
+                monkeypatch.delenv("INTHUB_ALLOW_PRIVATE_CONNECTOR_URLS", raising=False)
         else:
             monkeypatch.setenv(key, value)
+            if key == "PYTEST_INTHUB_AUTH_BYPASS" and value == "true":
+                monkeypatch.setenv("INTHUB_ALLOW_PRIVATE_CONNECTOR_URLS", "true")
         reset_config()  # Immediately reset so new config picks up change
 
     return setter

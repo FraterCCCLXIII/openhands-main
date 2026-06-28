@@ -94,6 +94,15 @@ class Config(BaseModel):
         ),
     )
 
+    # Connector URL safety
+    allow_private_connector_urls: bool = Field(
+        default=False,
+        description=(
+            "Allow connector-controlled outbound URLs to target localhost/private networks. "
+            "Reads from INTHUB_ALLOW_PRIVATE_CONNECTOR_URLS. Keep false in production."
+        ),
+    )
+
     # Static file serving (K8s mode)
     static_dir: str | None = Field(
         default=None,
