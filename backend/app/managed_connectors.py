@@ -11,10 +11,9 @@ from .repository import repository
 
 
 def _is_default_managed_connector(entry: dict[str, Any]) -> bool:
-    # The catalog's `defaultTool` field is intentionally ignored; tools come
-    # from MCP `tools/list` (live) or HTTP OpenAPI (regenerated on save). An
-    # HTTP connector without an openApiUrl has no tool source, so we skip it
-    # rather than surface a zero-tool default.
+    # Tools come from MCP `tools/list` (live) or HTTP OpenAPI (regenerated on
+    # save). An HTTP connector without an openApiUrl has no tool source, so we
+    # skip it rather than surface a zero-tool default.
     defaults = first_connection_defaults(entry)
     if not defaults or not defaults.get("authStrategy"):
         return False
