@@ -2044,27 +2044,44 @@ def test_managed_http_openapi_discovery_and_multipart_invocation(
             integration["tools"]["upload_file"]["config"]["request"]["contentType"]
             == "multipart_form_data"
         )
+        assert integration["tools"]["upload_file"]["accessMode"] == "approval_required"
 
         assert client.post("/api/integrations", json=integration).status_code == 200
         agent_key = client.get("/api/user/agent-key").json()["apiKey"]
+        invocation_body = {
+            "agentId": "agent-upload",
+            "agentClass": "developer",
+            "payload": {
+                "fileId": "abc 123",
+                "purpose": "voice",
+                "body": {
+                    "file": {
+                        "filename": "voice.txt",
+                        "contentType": "text/plain",
+                        "contentBase64": base64.b64encode(b"hello world").decode(),
+                    },
+                    "note": "demo",
+                },
+            },
+            "scopes": [],
+        }
+        denied = client.post(
+            "/api/context/upload-api/upload_file",
+            headers={"Authorization": f"Bearer {agent_key}"},
+            json=invocation_body,
+        )
+        assert denied.status_code == 403
+        assert "Human approval is required" in denied.json()["detail"]
+        request_id = client.get("/api/case-by-case-approvals").json()[0]["id"]
+        assert (
+            client.post(f"/api/case-by-case-approvals/{request_id}/approve").status_code
+            == 200
+        )
+
         response = client.post(
             "/api/context/upload-api/upload_file",
             headers={"Authorization": f"Bearer {agent_key}"},
-            json={
-                "payload": {
-                    "fileId": "abc 123",
-                    "purpose": "voice",
-                    "body": {
-                        "file": {
-                            "filename": "voice.txt",
-                            "contentType": "text/plain",
-                            "contentBase64": base64.b64encode(b"hello world").decode(),
-                        },
-                        "note": "demo",
-                    },
-                },
-                "scopes": [],
-            },
+            json=invocation_body,
         )
 
         assert response.status_code == 200

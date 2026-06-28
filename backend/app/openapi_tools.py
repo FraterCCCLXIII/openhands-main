@@ -11,6 +11,13 @@ from fastapi import HTTPException
 from .models import ManagedConnectorTool
 
 
+READ_ONLY_METHODS = {"GET", "HEAD"}
+
+
+def default_access_mode_for_method(method: str) -> str:
+    return "enabled" if method.upper() in READ_ONLY_METHODS else "approval_required"
+
+
 OPENAPI_METHODS = ("get", "post", "put", "patch", "delete")
 
 
@@ -227,6 +234,7 @@ def generate_openapi_tools(
             tools.append(
                 ManagedConnectorTool(
                     name=tool_name,
+                    accessMode=default_access_mode_for_method(method),
                     description=build_openapi_description(
                         operation,
                         path_params,
