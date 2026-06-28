@@ -131,12 +131,29 @@ describe("DashboardWorkspace", () => {
         },
       },
     });
-    fetchMock = vi.fn(async () =>
-      new Response(JSON.stringify([]), {
+    fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = typeof input === "string" ? input : input.toString();
+      if (url === "/api/permission-profiles") {
+        return new Response(
+          JSON.stringify([
+            {
+              id: "default-profile",
+              ownerId: "admin@example.com",
+              name: null,
+              agentApiKey: "cla_default_profile_key",
+              createdAt: "2026-06-10T00:00:00.000Z",
+              updatedAt: "2026-06-10T00:00:00.000Z",
+              snapshot: { integrations: {} },
+            },
+          ]),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      }
+      return new Response(JSON.stringify([]), {
         status: 200,
         headers: { "Content-Type": "application/json" },
-      }),
-    );
+      });
+    });
     vi.stubGlobal("fetch", fetchMock);
   });
 
@@ -612,6 +629,13 @@ describe("DashboardWorkspace", () => {
           </QueryClientProvider>,
         );
       });
+
+      // Wait for the permission-profiles query to resolve so the
+      // AgentKeyProfileSelector renders the profile card instead of the
+      // loading placeholder.
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 0));
+      });
     };
 
     it("renders all three API key sections with their hints", async () => {
@@ -620,7 +644,9 @@ describe("DashboardWorkspace", () => {
       const text = container.textContent ?? "";
       expect(text).toContain("API keys");
       expect(text).toContain("Agent key");
-      expect(text).toContain("Give this key to your agent.");
+      expect(text).toContain(
+        "Give this key to agents that should use this permission profile.",
+      );
       expect(text).toContain("User automation key");
       expect(text).toContain(
         "Use this key to programmatically manage user-scoped integrations-hub settings.",
@@ -1141,210 +1167,6 @@ describe("DashboardWorkspace", () => {
     confirmSpy.mockRestore();
   });
 
-  it("shows a temporary check icon when the API key is copied without posting a success message", async () => {
-    usePathnameMock.mockReturnValue("/agent-connection");
-    vi.useFakeTimers();
-
-    const writeTextMock = vi.fn().mockResolvedValue(undefined);
-    vi.stubGlobal("navigator", {
-      clipboard: {
-        writeText: writeTextMock,
-      },
-    });
-
-    await act(async () => {
-      root.render(
-        <QueryClientProvider client={queryClient}>
-          <DashboardWorkspace
-            initialIntegrations={[]}
-            initialAccessRequests={[]}
-            currentUser={{ name: "Admin User", email: "admin@example.com" }}
-            agentApiBaseUrl="https://example.com"
-            agentApiKey="test-key"
-          />
-        </QueryClientProvider>,
-      );
-    });
-
-    const copyButton = container.querySelector(
-      'button[aria-label="Copy agent key"]',
-    ) as HTMLButtonElement | null;
-    expect(copyButton).toBeTruthy();
-    expect(copyButton?.querySelector("svg")?.getAttribute("class")).toContain(
-      "lucide-copy",
-    );
-
-    await act(async () => {
-      copyButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-      await Promise.resolve();
-      await Promise.resolve();
-    });
-
-    expect(writeTextMock).toHaveBeenCalledWith("test-key");
-    expect(container.textContent).not.toContain("API key copied to clipboard.");
-    expect(copyButton?.querySelector("svg")?.getAttribute("class")).toContain(
-      "lucide-circle-check",
-    );
-
-    await act(async () => {
-      vi.advanceTimersByTime(2000);
-    });
-
-    const copyButtonAfterTimeout = container.querySelector(
-      'button[aria-label="Copy agent key"]',
-    ) as HTMLButtonElement | null;
-    expect(
-      copyButtonAfterTimeout?.querySelector("svg")?.getAttribute("class"),
-    ).toContain("lucide-copy");
-  });
-
-  it("rotates the agent key from the dashboard", async () => {
-    usePathnameMock.mockReturnValue("/agent-connection");
-
-    fetchMock.mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
-      const url = typeof input === "string" ? input : input.toString();
-      const method = init?.method ?? "GET";
-
-      if (url === "/api/user/agent-key" && method === "POST") {
-        return new Response(
-          JSON.stringify({
-            ownerId: "admin@example.com",
-            apiKey: "cla_rotated_1234567890abcdefghijklmnop",
-            createdAt: "2026-03-29T10:00:00.000Z",
-            updatedAt: "2026-03-29T11:00:00.000Z",
-          }),
-          {
-            status: 200,
-            headers: { "Content-Type": "application/json" },
-          },
-        );
-      }
-
-      return new Response(JSON.stringify([]), {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-      });
-    });
-
-    await act(async () => {
-      root.render(
-        <QueryClientProvider client={queryClient}>
-          <DashboardWorkspace
-            initialIntegrations={[]}
-            initialAccessRequests={[]}
-            currentUser={{ name: "Admin User", email: "admin@example.com" }}
-            agentApiBaseUrl="https://example.com"
-            agentApiKey="cla_original_1234567890abcdefghijkl"
-          />
-        </QueryClientProvider>,
-      );
-      await Promise.resolve();
-      await Promise.resolve();
-    });
-
-    const rotateButton = container.querySelector(
-      'button[aria-label="Rotate agent key"]',
-    ) as HTMLButtonElement | null;
-    expect(rotateButton).toBeTruthy();
-
-    await act(async () => {
-      rotateButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-      await Promise.resolve();
-      await Promise.resolve();
-    });
-
-    expect(
-      fetchMock.mock.calls.some(
-        ([input, init]) =>
-          String(input) === "/api/user/agent-key" && (init?.method ?? "GET") === "POST",
-      ),
-    ).toBe(true);
-    expect(container.textContent).toContain("cla_rotated_1234567890abcdefghijklmnop");
-    expect(container.textContent).toContain(
-      "Rotated your agent key. Update any existing agents or clients using the previous key.",
-    );
-  });
-
-  it("keeps a locally rotated agent key visible across stale parent rerenders", async () => {
-    usePathnameMock.mockReturnValue("/agent-connection");
-
-    fetchMock.mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
-      const url = typeof input === "string" ? input : input.toString();
-      const method = init?.method ?? "GET";
-
-      if (url === "/api/user/agent-key" && method === "POST") {
-        return new Response(
-          JSON.stringify({
-            ownerId: "admin@example.com",
-            apiKey: "cla_rotated_stale_safe_1234567890",
-            createdAt: "2026-03-29T10:00:00.000Z",
-            updatedAt: "2026-03-29T11:00:00.000Z",
-          }),
-          {
-            status: 200,
-            headers: { "Content-Type": "application/json" },
-          },
-        );
-      }
-
-      return new Response(JSON.stringify([]), {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-      });
-    });
-
-    const staleAgentApiKey = "cla_original_stale_prop_1234567890";
-
-    await act(async () => {
-      root.render(
-        <QueryClientProvider client={queryClient}>
-          <DashboardWorkspace
-            initialIntegrations={[]}
-            initialAccessRequests={[]}
-            currentUser={{ name: "Admin User", email: "admin@example.com" }}
-            agentApiBaseUrl="https://example.com"
-            agentApiKey={staleAgentApiKey}
-          />
-        </QueryClientProvider>,
-      );
-      await Promise.resolve();
-      await Promise.resolve();
-    });
-
-    const rotateButton = container.querySelector(
-      'button[aria-label="Rotate agent key"]',
-    ) as HTMLButtonElement | null;
-
-    await act(async () => {
-      rotateButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-      await Promise.resolve();
-      await Promise.resolve();
-    });
-
-    expect(container.textContent).toContain("cla_rotated_stale_safe_1234567890");
-
-    await act(async () => {
-      root.render(
-        <QueryClientProvider client={queryClient}>
-          <DashboardWorkspace
-            initialIntegrations={[]}
-            initialAccessRequests={[]}
-            currentUser={{ name: "Admin User", email: "admin@example.com" }}
-            agentApiBaseUrl="https://example.com"
-            agentApiKey={staleAgentApiKey}
-          />
-        </QueryClientProvider>,
-      );
-      await Promise.resolve();
-      await Promise.resolve();
-    });
-
-    expect(container.textContent).toContain("cla_rotated_stale_safe_1234567890");
-    expect(container.textContent).not.toContain(staleAgentApiKey);
-  });
-
-
-
   it("reveals and copies the user automation key even when only metadata is initially rendered", async () => {
     usePathnameMock.mockReturnValue("/agent-connection");
     vi.useFakeTimers();
@@ -1414,7 +1236,7 @@ describe("DashboardWorkspace", () => {
     const revealButtons = Array.from(container.querySelectorAll("button")).filter((button) =>
       button.textContent?.includes("Reveal"),
     );
-    const revealButton = revealButtons[1] as HTMLButtonElement | undefined;
+    const revealButton = revealButtons[0] as HTMLButtonElement | undefined;
     const copyButton = container.querySelector(
       'button[aria-label="Copy user automation key"]',
     ) as HTMLButtonElement | null;
@@ -1607,7 +1429,7 @@ describe("DashboardWorkspace", () => {
     const revealButtons = Array.from(container.querySelectorAll("button")).filter((button) =>
       button.textContent?.includes("Reveal"),
     );
-    const revealButton = revealButtons[2] as HTMLButtonElement | undefined;
+    const revealButton = revealButtons[1] as HTMLButtonElement | undefined;
     const copyButton = container.querySelector(
       'button[aria-label="Copy admin automation key"]',
     ) as HTMLButtonElement | null;

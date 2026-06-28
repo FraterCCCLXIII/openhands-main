@@ -125,7 +125,7 @@ export const DashboardWorkspace = ({
     (request) => request.status === "pending",
   );
 
-  const { agentApiReady, agentKey, userKey, adminKey } = useApiKeys({
+  const { agentApiReady, userKey, adminKey } = useApiKeys({
     agentApiKey,
     userApiKey,
     adminApiKey,
@@ -265,15 +265,15 @@ export const DashboardWorkspace = ({
           }}
           adminPromptExample={adminRestPromptExample}
           adminSchemaEndpoint={adminOpenApiSchemaEndpoint}
-          agentKey={agentKey}
           agentMcpConfigExample={agentConnectionGuide.mcpConfigExample}
           agentMcpEndpoint={agentConnectionGuide.mcpEndpoint}
           agentMcpToolName={agentConnectionGuide.mcpToolName}
           agentOpenApiSchemaEndpoint={agentConnectionGuide.openApiSchemaEndpoint}
           agentRestPromptExample={agentRestPromptExample}
-          agentApiReady={agentApiReady}
           isAdmin={isAdmin}
           permissionProfiles={permissionProfilesSection.profiles}
+          permissionProfilesLoading={permissionProfilesSection.isPending}
+          permissionProfilesError={permissionProfilesSection.errorMessage}
           userKey={{
             copied: userKey.copied,
             handleCopy: userKey.handleCopy,

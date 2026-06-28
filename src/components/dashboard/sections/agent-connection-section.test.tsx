@@ -25,14 +25,6 @@ const createDefaultProps = () => ({
   },
   adminPromptExample: "Use the admin key for QA.",
   adminSchemaEndpoint: "https://example.com/api/admin/openapi",
-  agentKey: {
-    copied: false,
-    handleCopy: vi.fn(),
-    handleRotate: vi.fn(),
-    maskedValue: "cla_••••••••",
-    revealed: false,
-    toggleReveal: vi.fn(),
-  },
   agentMcpConfigExample: '{"transport":"streamable-http"}',
   agentMcpEndpoint: "https://example.com/api/mcp",
   permissionProfiles: [
@@ -55,11 +47,12 @@ const createDefaultProps = () => ({
       snapshot: { integrations: {} },
     },
   ],
+  permissionProfilesLoading: false,
+  permissionProfilesError: null,
 
   agentMcpToolName: "github__list_issues",
   agentOpenApiSchemaEndpoint: "https://example.com/api/agent/openapi",
   agentRestPromptExample: "Use the agent REST API.",
-  agentApiReady: true,
   isAdmin: true,
   userKey: {
     copied: false,
@@ -99,15 +92,11 @@ describe("AgentConnectionSection", () => {
       root.render(
         <AgentConnectionSection
           {...props}
-          agentApiReady={false}
           isAdmin={false}
           permissionProfiles={[]}
+          permissionProfilesLoading
           adminPromptExample=""
           adminSchemaEndpoint=""
-          agentKey={{
-            ...props.agentKey,
-            maskedValue: "",
-          }}
           userKey={{
             ...props.userKey,
             maskedValue: "",
@@ -116,22 +105,29 @@ describe("AgentConnectionSection", () => {
       );
     });
 
-    expect(container.textContent).toContain("No agent key available yet.");
+    expect(container.textContent).toContain("Loading agent key…");
     expect(container.textContent).toContain(
       "No user automation key yet. Reveal or copy to create one.",
     );
     expect(container.textContent).not.toContain("Admin automation key");
     expect(container.textContent).not.toContain("Admin REST API");
+  });
 
-    const copyAgentButton = container.querySelector(
-      'button[aria-label="Copy agent key"]',
-    ) as HTMLButtonElement | null;
-    expect(copyAgentButton?.disabled).toBe(true);
+  it("surfaces a permission-profile fetch error on the agent key card", async () => {
+    const props = createDefaultProps();
 
-    const revealButtons = Array.from(container.querySelectorAll("button")).filter((button) =>
-      button.textContent?.includes("Reveal"),
-    );
-    expect(revealButtons[0]?.hasAttribute("disabled")).toBe(true);
+    await act(async () => {
+      root.render(
+        <AgentConnectionSection
+          {...props}
+          permissionProfiles={[]}
+          permissionProfilesLoading={false}
+          permissionProfilesError="Network error"
+        />,
+      );
+    });
+
+    expect(container.textContent).toContain("Unable to load agent key: Network error");
   });
 
   it("renders admin connection details and forwards reveal/copy actions for every key card", async () => {
@@ -152,12 +148,6 @@ describe("AgentConnectionSection", () => {
             copied: true,
             hasKey: true,
             maskedValue: "clad_1234••••••••wxyz",
-          }}
-          agentKey={{
-            ...props.agentKey,
-            copied: true,
-            revealed: true,
-            maskedValue: "cla_live_value",
           }}
           userKey={{
             ...props.userKey,
@@ -223,9 +213,6 @@ describe("AgentConnectionSection", () => {
     });
 
     expect(container.textContent).toContain("cla_default_profile_key");
-    expect(props.agentKey.toggleReveal).not.toHaveBeenCalled();
-    expect(props.agentKey.handleCopy).not.toHaveBeenCalled();
-    expect(props.agentKey.handleRotate).not.toHaveBeenCalled();
     expect(props.userKey.handleReveal).toHaveBeenCalledTimes(1);
     expect(props.adminKey.handleReveal).toHaveBeenCalledTimes(1);
     expect(writeTextMock).toHaveBeenCalledWith("cla_default_profile_key");
@@ -528,11 +515,6 @@ describe("AgentConnectionSection", () => {
       root.render(
         <AgentConnectionSection
           {...props}
-          agentApiReady={false}
-          agentKey={{
-            ...props.agentKey,
-            maskedValue: "",
-          }}
           permissionProfiles={[
             {
               ...props.permissionProfiles[0]!,

@@ -241,8 +241,12 @@ const profileLabel = (profile: PermissionProfile) =>
 
 const AgentKeyProfileSelector = ({
   profiles,
+  isLoading,
+  error,
 }: {
   profiles: PermissionProfile[];
+  isLoading: boolean;
+  error: string | null;
 }) => {
   const defaultProfileId = useMemo(
     () => profiles.find((profile) => profile.name === null)?.id ?? profiles[0]?.id ?? "",
@@ -269,7 +273,18 @@ const AgentKeyProfileSelector = ({
     profiles.find((profile) => profile.id === defaultProfileId);
 
   if (!selectedProfile) {
-    return null;
+    return (
+      <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-4">
+        <h3 className="text-sm font-semibold text-white">Agent key</h3>
+        <p className="mt-1 text-sm text-[var(--color-text-base)]">
+          {error
+            ? `Unable to load agent key: ${error}`
+            : isLoading
+              ? "Loading agent key…"
+              : "No agent key available. Save a permission profile to provision one."}
+        </p>
+      </div>
+    );
   }
 
   return (
@@ -322,22 +337,15 @@ interface AgentConnectionSectionProps {
   };
   adminPromptExample: string;
   adminSchemaEndpoint: string;
-  agentKey: {
-    copied: boolean;
-    handleCopy: () => void | Promise<void>;
-    handleRotate: () => void | Promise<void>;
-    maskedValue: string;
-    revealed: boolean;
-    toggleReveal: () => void;
-  };
   agentMcpConfigExample: string;
   agentMcpEndpoint: string;
   agentMcpToolName: string;
   agentOpenApiSchemaEndpoint: string;
   agentRestPromptExample: string;
-  agentApiReady: boolean;
   isAdmin: boolean;
   permissionProfiles: PermissionProfile[];
+  permissionProfilesLoading: boolean;
+  permissionProfilesError: string | null;
 
   userKey: {
     copied: boolean;
@@ -356,15 +364,15 @@ export const AgentConnectionSection = ({
   adminKey,
   adminPromptExample,
   adminSchemaEndpoint,
-  agentKey,
   agentMcpConfigExample,
   agentMcpEndpoint,
   agentMcpToolName,
   agentOpenApiSchemaEndpoint,
   agentRestPromptExample,
-  agentApiReady,
   isAdmin,
   permissionProfiles,
+  permissionProfilesLoading,
+  permissionProfilesError,
   userKey,
   userOpenApiSchemaEndpoint,
   userRestPromptExample,
@@ -372,23 +380,11 @@ export const AgentConnectionSection = ({
   <section className="space-y-3">
     <CompactPanel title="API keys" icon={KeyRound}>
       <div className="space-y-3">
-        {permissionProfiles.length > 0 ? (
-          <AgentKeyProfileSelector profiles={permissionProfiles} />
-        ) : (
-          <DashboardApiKeyCard
-            label="Agent key"
-            description="Give this key to your agent."
-            maskedValue={agentKey.maskedValue || "No agent key available yet."}
-            badgeTone={agentApiReady ? "success" : "warning"}
-            badgeLabel="agent"
-            copied={agentKey.copied}
-            onRevealToggle={agentKey.toggleReveal}
-            onCopy={agentKey.handleCopy}
-            onRotate={agentKey.handleRotate}
-            revealDisabled={!agentApiReady}
-            revealed={agentKey.revealed}
-          />
-        )}
+        <AgentKeyProfileSelector
+          profiles={permissionProfiles}
+          isLoading={permissionProfilesLoading}
+          error={permissionProfilesError}
+        />
         <DashboardApiKeyCard
           label="User automation key"
           description="Use this key to programmatically manage user-scoped integrations-hub settings."
