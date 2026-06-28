@@ -107,12 +107,12 @@ describe("listIntegrationCatalogOptions", () => {
       scopes: [],
       credentialHelp: expect.stringContaining("HubSpot MCP auth app"),
     });
+    // In 0.7.0 the catalog is MCP-first: notion's first option is a stdio MCP
+    // server, so its connectionDefaults reflect the MCP option (no HTTP/openApi
+    // defaults). The notion HTTP/oauth option is still present as the second
+    // connection option.
     expect(notion?.connectionDefaults).toMatchObject({
-      provider: "http",
-      apiBaseUrl: "https://api.notion.com",
-      openApiUrl: "https://developers.notion.com/openapi.json",
-      authorizationUrl: "https://api.notion.com/v1/oauth/authorize",
-      tokenUrl: "https://api.notion.com/v1/oauth/token",
+      provider: "mcp",
     });
     expect(googleCalendar?.connectionDefaults).toMatchObject({
       provider: "http",
@@ -123,7 +123,7 @@ describe("listIntegrationCatalogOptions", () => {
     });
     // The catalog's defaultTool field is no longer mapped into connectionDefaults;
     // tools are generated from the OpenAPI URL server-side, never hardcoded.
-    expect("toolName" in (notion?.connectionDefaults ?? {})).toBe(false);
+    expect("toolName" in (googleCalendar?.connectionDefaults ?? {})).toBe(false);
     expect("requestMethod" in (googleCalendar?.connectionDefaults ?? {})).toBe(false);
     expect(elevenlabs).toMatchObject({});
     expect(elevenlabs?.connectionDefaults).toMatchObject({

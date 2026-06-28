@@ -571,27 +571,35 @@ def test_save_http_oauth_connector_preserves_existing_access_modes(
 
 
 def test_default_http_oauth_connector_with_openapi_has_no_default_tool() -> None:
-    """A catalog HTTP OAuth connector that ships an OpenAPI URL (e.g. Notion)
-    must default to an empty tool list so the full tool set is generated from
-    the schema on save/index, instead of shipping a hardcoded defaultTool.
+    """Default managed connectors come from the first connection option.
 
-    HTTP connectors without an OpenAPI URL are not surfaced as default managed
-    connectors at all — they have no tool source once defaultTool is removed."""
+    In 0.7.0 the catalog is MCP-first:
+    - Linear's first option is a hosted shttp MCP server, so it qualifies as a
+      default managed MCP connector (tools discovered via tools/list).
+    - Notion's first option is a stdio MCP server (local npx), which has no
+      serverUrl and so is not a default managed connector.
+    - ElevenLabs is HTTP-only with an openApiUrl, so it stays and ships 0 tools.
+    """
     from backend.app.managed_connectors import (
         default_managed_connector,
         default_managed_connectors,
     )
 
-    notion = default_managed_connector("notion")
-    assert notion is not None
-    assert notion.provider == "http"
-    assert notion.openApiUrl
-    assert notion.tools == []
-
     default_slugs = {connector.slug for connector in default_managed_connectors()}
-    # Linear's first connection option is http with no openApiUrl, so it has no
-    # tool source and is intentionally not a default managed connector.
-    assert "linear" not in default_slugs
+
+    # Linear (shttp MCP) is a default managed connector.
+    linear = default_managed_connector("linear")
+    assert linear is not None
+    assert linear.provider == "mcp"
+    assert linear.serverUrl == "https://mcp.linear.app/mcp"
+    assert linear.tools == []
+    assert "linear" in default_slugs
+
+    # Notion's first option is stdio MCP (no serverUrl), so it is not surfaced
+    # as a default managed connector.
+    assert default_managed_connector("notion") is None
+    assert "notion" not in default_slugs
+
     # ElevenLabs is http with an openApiUrl, so it stays and ships 0 tools.
     elevenlabs = default_managed_connector("elevenlabs")
     assert elevenlabs is not None

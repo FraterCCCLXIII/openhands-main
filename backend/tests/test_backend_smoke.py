@@ -1766,16 +1766,17 @@ def test_default_managed_connectors_are_listed_and_require_credentials(
 
     assert len(by_slug) > 13
     assert by_slug["elevenlabs"]["apiKeyHeaderName"] == "xi-api-key"
-    # HTTP connectors without an OpenAPI URL have no tool source (tools are
-    # generated from the schema server-side, never hardcoded), so they are not
-    # surfaced as default managed connectors. Linear's first connection option
-    # is http with no openApiUrl, so it is intentionally absent here.
-    assert "linear" not in by_slug
-    # HTTP connectors that DO ship an OpenAPI URL are listed but start with
-    # zero tools — the full set is generated on save/index.
-    assert by_slug["notion"]["toolCount"] == 0
-    assert by_slug["notion"]["logoUrl"] == "https://cdn.simpleicons.org/notion/000000"
-    assert by_slug["notion"]["iconBg"] == "#FFFFFF"
+    # In 0.7.0 the catalog is MCP-first. Linear's only connection option is a
+    # hosted shttp MCP server, so it is surfaced as a default managed MCP
+    # connector with bearer auth and zero tools until discovered via tools/list.
+    assert by_slug["linear"]["authStrategy"] == "bearer"
+    assert by_slug["linear"]["toolCount"] == 0
+    # Notion's first option is a stdio MCP server (local npx, no serverUrl), so
+    # it is not surfaced as a default managed connector. Miro's first option is
+    # a hosted shttp MCP server, so it is listed (oauth2).
+    assert "notion" not in by_slug
+    assert by_slug["miro"]["authStrategy"] == "oauth2"
+    assert by_slug["miro"]["toolCount"] == 0
     assert by_slug["ordinal"]["authStrategy"] == "bearer"
     assert by_slug["ordinal"]["logoUrl"] == "https://app.tryordinal.com/favicon.ico"
     assert by_slug["datadog"]["authStrategy"] == "oauth2"
