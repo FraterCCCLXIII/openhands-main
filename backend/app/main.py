@@ -1337,28 +1337,6 @@ def mcp_call(
     )
 
 
-def is_auth_disabled() -> bool:
-    """Check if authentication is disabled."""
-    return get_default_config().disable_auth
-
-
-def is_loopback_request(request: Request) -> bool:
-    raw_host = request.headers.get("host") or ""
-    host = raw_host.split(":", 1)[0].strip("[]").lower()
-    if host:
-        return host in {"localhost", "127.0.0.1", "::1", "testserver"}
-    client_host = (request.client.host if request.client else "").lower()
-    return client_host in {"localhost", "127.0.0.1", "::1", "testclient"}
-
-
-def ensure_auth_disabled_is_local(request: Request) -> None:
-    if is_auth_disabled() and not is_loopback_request(request):
-        raise HTTPException(
-            status_code=403,
-            detail="INTHUB_DISABLE_AUTH is only allowed for localhost development.",
-        )
-
-
 def requires_dashboard_session(path: str, method: str) -> bool:
     if path in {
         "/api/user/key",
@@ -1473,14 +1451,9 @@ def authorize_user_api_owner_or_session(request: Request) -> str | None:
     fall back to Cloud-token authentication instead of assuming every bearer
     token is a user key.
 
-    Returns ``None`` when dashboard auth is disabled and no credential is
-    present, so the caller falls back to the default owner (``X-Owner-Id`` /
-    ``DEFAULT_OWNER``) -- preserving the open-access behavior used by the
-    test suite and local dashboards.
-
-    Raises HTTP 401 only when a credential is supplied but matches neither a
-    user key nor a valid Cloud session, and when dashboard auth is enabled but
-    no credential and no session are present.
+    When no stored user key is supplied, a valid OpenHands Cloud session is
+    required. Raises HTTP 401 when a credential matches neither a user key nor
+    a valid Cloud session, or when no credential/session is present.
     """
     credential = extract_api_key(request)
     if credential:
@@ -1488,20 +1461,8 @@ def authorize_user_api_owner_or_session(request: Request) -> str | None:
         if record:
             owner = str(record["ownerId"]).lower()
             return owner
-        if is_auth_disabled():
-            # No Cloud session to fall back to when auth is disabled; a
-            # credential that is not a recognized user key is invalid.
-            raise HTTPException(
-                status_code=401,
-                detail="Provide a valid user API key in the Authorization bearer header or X-API-Key.",
-                headers={
-                    "WWW-Authenticate": 'Bearer realm="integrations-hub-user-api"'
-                },
-            )
         user = authorize_dashboard_user(request)
         return user.owner_id
-    if is_auth_disabled():
-        return None
     user = authorize_dashboard_user(request)
     return user.owner_id
 
@@ -1520,12 +1481,6 @@ def authorize_admin_api_owner(request: Request) -> str:
         or repository.find_scoped_api_key("user", api_key)
     ):
         raise HTTPException(status_code=403, detail=ADMIN_API_SESSION_DETAIL)
-
-    if is_auth_disabled():
-        owner = owner_id(request)
-        if not is_admin_owner(owner):
-            raise HTTPException(status_code=403, detail=ADMIN_API_SESSION_DETAIL)
-        return owner
 
     try:
         user = openhands_user_from_request(request)
@@ -2448,12 +2403,11 @@ async def json_body(request: Request) -> Any:
 
 
 async def fastapi_handler(request: Request):
-    ensure_auth_disabled_is_local(request)
     params = request.path_params
     path = request.scope["route"].path
     method = request.method
     session_user: OpenHandsUser | None = None
-    if not is_auth_disabled() and requires_dashboard_session(path, method):
+    if requires_dashboard_session(path, method):
         session_user = authorize_dashboard_user(request)
         owner = session_user.owner_id
         user_api_is_admin = session_user.is_admin
@@ -2852,46 +2806,32 @@ async def fastapi_handler(request: Request):
 
 
 async def auth_handler(request: Request):
-    ensure_auth_disabled_is_local(request)
     path = request.url.path
     cfg = get_default_config()
     if path.endswith("/config"):
         return {"openhandsBaseUrl": cfg.openhands_base_url or ""}
 
-    if is_auth_disabled():
-        owner = owner_id(request)
-        user_payload = {
-            "name": owner,
-            "email": owner,
-            "ownerId": owner,
-            "orgId": None,
-            "orgName": None,
-            "role": "owner" if is_admin_owner(owner) else "member",
-            "permissions": [],
-            "isAdmin": is_admin_owner(owner),
-        }
-    else:
-        try:
-            user = openhands_user_from_request(request)
-        except AuthUnavailable as exc:
-            raise HTTPException(
-                status_code=503,
-                detail="OpenHands Cloud is temporarily unavailable. Please retry.",
-            ) from exc
-        if not user:
-            raise HTTPException(status_code=401, detail="Sign in with OpenHands Cloud.")
-        owner = user.owner_id
-        user_payload = {
-            "id": user.id,
-            "name": user.email.lower(),
-            "email": user.email.lower(),
-            "ownerId": owner,
-            "orgId": user.normalized_org_id,
-            "orgName": user.org_name,
-            "role": user.role,
-            "permissions": list(user.permissions),
-            "isAdmin": user.is_admin,
-        }
+    try:
+        user = openhands_user_from_request(request)
+    except AuthUnavailable as exc:
+        raise HTTPException(
+            status_code=503,
+            detail="OpenHands Cloud is temporarily unavailable. Please retry.",
+        ) from exc
+    if not user:
+        raise HTTPException(status_code=401, detail="Sign in with OpenHands Cloud.")
+    owner = user.owner_id
+    user_payload = {
+        "id": user.id,
+        "name": user.email.lower(),
+        "email": user.email.lower(),
+        "ownerId": owner,
+        "orgId": user.normalized_org_id,
+        "orgName": user.org_name,
+        "role": user.role,
+        "permissions": list(user.permissions),
+        "isAdmin": user.is_admin,
+    }
 
     return {
         "user": user_payload,

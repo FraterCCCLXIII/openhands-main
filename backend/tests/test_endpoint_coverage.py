@@ -24,7 +24,7 @@ ADMIN_KEY = "clad_test_admin_key"
 def setup_test_env(config_env: ConfigEnvFixture):
     """Set up test environment before each test."""
     config_env("INTHUB_APP_ADMIN_EMAILS", OWNER)
-    config_env("INTHUB_DISABLE_AUTH", "true")
+    config_env("PYTEST_INTHUB_AUTH_BYPASS", "true")
     config_env("INTHUB_CREDENTIAL_ENCRYPTION_KEY", "test-encryption-key-for-coverage")
     repository.integrations.clear()
     repository.access_requests.clear()

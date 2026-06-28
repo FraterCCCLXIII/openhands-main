@@ -26,10 +26,10 @@ def test_root_vercel_routes_api_to_fastapi_entrypoint() -> None:
     ).read_text().strip() == "from backend.app.main import app"
 
 
-def test_fastapi_auth_session_supports_auth_disabled_direct_backend_calls(
+def test_fastapi_auth_session_supports_test_auth_bypass_direct_backend_calls(
     monkeypatch,
 ) -> None:
-    monkeypatch.setenv("INTHUB_DISABLE_AUTH", "true")
+    monkeypatch.setenv("PYTEST_INTHUB_AUTH_BYPASS", "true")
     reset_config()
 
     response = TestClient(app).get(

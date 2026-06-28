@@ -33,7 +33,7 @@ Thanks for contributing to OpenHands Integrations Hub.
    For localhost-only development without interactive sign-in:
 
    ```bash
-   INTHUB_DISABLE_AUTH=true npm run dev
+   npm run dev
    ```
 
 5. Open `http://localhost:3000/integrations`.

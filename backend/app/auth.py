@@ -154,8 +154,6 @@ def _call_openhands_users_me(
     avoid destroying a still-valid long-lived API key.
     """
     cfg = get_default_config()
-    if cfg.disable_auth:
-        return _DEV_USER
     if not cfg.openhands_base_url:
         _logger.warning(
             "OpenHands auth requested but INTHUB_OPENHANDS_BASE_URL is unset"

@@ -11,7 +11,7 @@ The root `LICENSE` is proprietary: `Copyright All Hands AI, Inc. All rights rese
 - The dashboard has been refactored to support running as a Single Page Application (SPA) that queries REST endpoints client-side.
 - All dashboard pages (`/integrations`, `/profile`, `/agent-connection`, `/case-by-case-approvals`, `/admin-integrations`, `/admin-overview`) now export client components that fetch data via TanStack Query.
 - For static site generation, set `SPA_MODE=true` in the build environment; this enables `output: "export"` in `next.config.ts` with trailing slashes and unoptimized images.
-- Client-side auth state is managed via `useAuth()` from `src/components/auth/auth-context.tsx`, backed by OpenHands Cloud OAuth device flow and a stored OpenHands bearer token. `INTHUB_DISABLE_AUTH=true` still provides a dev user fallback.
+- Client-side auth state is managed via `useAuth()` from `src/components/auth/auth-context.tsx`, backed by OpenHands Cloud OAuth device flow and a stored OpenHands bearer token.
 - `Providers` only supplies React Query and `AuthProvider`; there is no legacy auth provider layer.
 
 ## Deployment Architecture (Vercel + K8s)
@@ -46,7 +46,7 @@ The repository supports deployment to both Vercel and self-hosted K8s environmen
 - Bootstrap an OpenHands session: `.openhands/setup.sh`
 - Run the pre-commit validation gate: `.openhands/pre-commit.sh`
 - Install dependencies: `npm install`
-- Run locally with auth bypass: `INTHUB_DISABLE_AUTH=true npm run dev`
+- Run locally with authenticated dashboard flow: `npm run dev`
 - Build for static export (SPA mode): `npm run build:spa` (outputs to `out/`)
 - Run database migrations: `npm run db:migrate` (or `./scripts/run-migrations.sh`)
 - Check migration status: `npm run db:migrate:check`
@@ -90,11 +90,11 @@ The `.openhands/pre-commit.sh` script runs these Python checks alongside the Typ
 - All automated tests use the Python backend test suite (`backend/tests/`) via `uv run pytest`; the FastAPI backend owns the DB layer through `backend/app/repository.py` (PostgresRepository). Frontend component tests use vitest with jsdom and mock `fetch` via `src/test-utils/fetch-mock-helpers.ts`.
 - For direct MCP server unit coverage, mocking `@modelcontextprotocol/sdk/server/mcp.js` and asserting against captured `registerTool(...)` handlers is an effective way to exercise session-default, approval, and result-formatting branches without spinning up a transport client.
 - Full repo validation that already exercises the real SQL schema through PGlite: `npm run test:unit && npm run test:e2e && npm run typecheck && npm run build`.
-- For live localhost HTTP validation without a real Postgres instance, use a temporary local-only PGlite-backed Neon shim under `.agent_tmp/`, point the installed `@neondatabase/serverless` package at that shim locally (never commit `node_modules`), seed the runtime DB with `PostgresRepository`, then run `INTHUB_POSTGRES_URL='pglite://<name>' INTHUB_DISABLE_AUTH='true' npm run dev -- --hostname 127.0.0.1 --port 12000`.
+- For live localhost HTTP validation without a real Postgres instance, use a temporary local-only PGlite-backed Neon shim under `.agent_tmp/`, point the installed `@neondatabase/serverless` package at that shim locally (never commit `node_modules`), seed the runtime DB with `PostgresRepository`, then run `INTHUB_POSTGRES_URL='pglite://<name>' npm run dev -- --hostname 127.0.0.1 --port 12000`.
 - Proven live validation pattern for `/api/agent/skill`: seed `saveAgentApiKey(...)` plus `upsertOwnerIntegration(...)` for `dev@localhost`, start the app with the same `INTHUB_POSTGRES_URL`, then `curl -i http://127.0.0.1:12000/api/agent/skill -H 'Authorization: Bearer <api-key>'` and expect `200 OK` plus `Content-Disposition: attachment; filename="SKILL.md"`.
 - OAuth branch-coverage work is concentrated in `backend/tests/test_backend_smoke.py` (OAuth callback, token exchange, connector registration) and `backend/tests/test_endpoint_coverage.py`; for quick verification of OAuth provider/client-flow regressions, run `cd backend && uv run pytest tests/test_backend_smoke.py -k oauth -q`.
 
-- When `INTHUB_DISABLE_AUTH=true`, localhost requests are allowed but non-loopback hosts are rejected; open `/integrations` locally if you need the app to provision a fresh personal API key instead of seeding one directly. `/home` is now a legacy redirect.
+- When authenticated local development, localhost requests are allowed but non-loopback hosts are rejected; open `/integrations` locally if you need the app to provision a fresh personal API key instead of seeding one directly. `/home` is now a legacy redirect.
 
 
 ## Workflow notes
@@ -226,7 +226,7 @@ The `.openhands/pre-commit.sh` script runs these Python checks alongside the Typ
 - The combined dashboard API keys card must only server-render metadata for user/admin automation keys. Plaintext user/admin key material should be fetched from `/api/user/key` or `/api/admin/key` with `cache: "no-store"` only after an explicit reveal/copy action, and missing keys should be generated only through those explicit client actions rather than during server render.
 - Admin automation key issuance and lookup are service-layer gated: only allowlisted `INTHUB_APP_ADMIN_EMAILS` owners may rotate/read/revoke admin keys, and deallowlisted admin-key hashes should authenticate as unauthorized instead of exposing legacy records.
 - MCP discovery should only infer `api_key` auth when a secret is present; a default header name by itself should still resolve to `none`, which matters for local proxy-based QA.
-- Local QA can be exercised with `INTHUB_DISABLE_AUTH=true npm run dev` on localhost plus a tiny localhost proxy that forwards `http://127.0.0.1:12001/` to GitHub's hosted MCP using `GITHUB_TOKEN`; the dashboard provisions a per-user agent API key server-side, and agents cannot call `/api/agent/*` until a user has opened `/integrations` once to provision that key.
+- Local QA can be exercised with `npm run dev` on localhost plus a tiny localhost proxy that forwards `http://127.0.0.1:12001/` to GitHub's hosted MCP using `GITHUB_TOKEN`; the dashboard provisions a per-user agent API key server-side, and agents cannot call `/api/agent/*` until a user has opened `/integrations` once to provision that key.
 - `ToolSpec.accessMode` now supports `enabled`, `disabled`, and `approval_required`; `approval_required` bypasses agent-class policy and requires a temporary grant, while `enabled` functions are callable by default unless a matching agent-class policy is configured to narrow access.
 - Stored provider credentials require a dedicated `INTHUB_CREDENTIAL_ENCRYPTION_KEY` in every environment; there is no baked-in local-development encryption fallback.
 - FastAPI `/api/cron/expire-grants` is intended for a Vercel cron job to purge expired temporary grants, and it must fail closed unless `INTHUB_CRON_SECRET` is configured and presented as a bearer token.

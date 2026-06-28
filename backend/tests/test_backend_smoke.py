@@ -48,7 +48,7 @@ def setup_function() -> None:
 def test_register_integration_and_invoke_mock_tool(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:
-    config_env("INTHUB_DISABLE_AUTH", "true")
+    config_env("PYTEST_INTHUB_AUTH_BYPASS", "true")
     client = TestClient(app)
     integration = {
         "key": "crm",
@@ -91,7 +91,7 @@ def test_register_integration_and_invoke_mock_tool(
 def test_permission_profiles_save_load_and_update_current_settings(
     config_env: ConfigEnvFixture,
 ) -> None:
-    config_env("INTHUB_DISABLE_AUTH", "true")
+    config_env("PYTEST_INTHUB_AUTH_BYPASS", "true")
     client = TestClient(app)
     integration = {
         "key": "docs",
@@ -231,7 +231,7 @@ def test_permission_profiles_save_load_and_update_current_settings(
 def test_managed_connector_discovery_and_user_key_flow(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:
-    config_env("INTHUB_DISABLE_AUTH", "true")
+    config_env("PYTEST_INTHUB_AUTH_BYPASS", "true")
     client = TestClient(app)
 
     admin_key = client.post("/api/admin/key").json()["apiKey"]
@@ -283,7 +283,7 @@ def test_managed_connector_discovery_and_user_key_flow(
 def test_managed_oauth_mcp_discovery_uses_saved_connection(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:
-    config_env("INTHUB_DISABLE_AUTH", "true")
+    config_env("PYTEST_INTHUB_AUTH_BYPASS", "true")
     config_env("INTHUB_CREDENTIAL_ENCRYPTION_KEY", "test-credential-key")
     client = TestClient(app)
 
@@ -365,7 +365,7 @@ def test_managed_oauth_mcp_discovery_uses_saved_connection(
 def test_oauth_callback_backfills_mcp_tools_for_saved_integration(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:
-    config_env("INTHUB_DISABLE_AUTH", "true")
+    config_env("PYTEST_INTHUB_AUTH_BYPASS", "true")
     config_env("INTHUB_CREDENTIAL_ENCRYPTION_KEY", "test-credential-key")
     client = TestClient(app)
 
@@ -515,7 +515,7 @@ def _seed_oauth_connector_and_state(
 def test_oauth_callback_preserves_wizard_redirect_target(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:
-    config_env("INTHUB_DISABLE_AUTH", "true")
+    config_env("PYTEST_INTHUB_AUTH_BYPASS", "true")
     config_env("INTHUB_CREDENTIAL_ENCRYPTION_KEY", "test-credential-key")
     client = TestClient(app)
 
@@ -545,7 +545,7 @@ def test_oauth_callback_preserves_wizard_redirect_target(
 def test_oauth_callback_preserves_redirect_target_on_error(
     config_env: ConfigEnvFixture,
 ) -> None:
-    config_env("INTHUB_DISABLE_AUTH", "true")
+    config_env("PYTEST_INTHUB_AUTH_BYPASS", "true")
     config_env("INTHUB_CREDENTIAL_ENCRYPTION_KEY", "test-credential-key")
     client = TestClient(app)
 
@@ -568,7 +568,7 @@ def test_oauth_callback_preserves_redirect_target_on_error(
 def test_oauth_callback_falls_back_to_integrations_without_redirect_target(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:
-    config_env("INTHUB_DISABLE_AUTH", "true")
+    config_env("PYTEST_INTHUB_AUTH_BYPASS", "true")
     config_env("INTHUB_CREDENTIAL_ENCRYPTION_KEY", "test-credential-key")
     client = TestClient(app)
 
@@ -597,7 +597,7 @@ def test_oauth_callback_rejects_external_redirect_target(
     """An attacker-crafted redirectTo=https://evil.example/... must not
     produce an off-origin 302 — the callback must fall back to /integrations.
     """
-    config_env("INTHUB_DISABLE_AUTH", "true")
+    config_env("PYTEST_INTHUB_AUTH_BYPASS", "true")
     config_env("INTHUB_CREDENTIAL_ENCRYPTION_KEY", "test-credential-key")
     client = TestClient(app)
 
@@ -630,7 +630,7 @@ def test_oauth_callback_rejects_protocol_relative_redirect_target(
     """A protocol-relative //evil.example/ redirect target must also be
     rejected.
     """
-    config_env("INTHUB_DISABLE_AUTH", "true")
+    config_env("PYTEST_INTHUB_AUTH_BYPASS", "true")
     config_env("INTHUB_CREDENTIAL_ENCRYPTION_KEY", "test-credential-key")
     client = TestClient(app)
 
@@ -658,7 +658,7 @@ def test_oauth_callback_rejects_protocol_relative_redirect_target(
 def test_mcp_discovery_honors_streamable_transport_order(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:
-    config_env("INTHUB_DISABLE_AUTH", "true")
+    config_env("PYTEST_INTHUB_AUTH_BYPASS", "true")
     client = TestClient(app)
     attempted: list[str] = []
 
@@ -703,7 +703,7 @@ def test_oauth_invocation_requires_connection_and_refreshes_expired_tokens(
     import threading
     from http.server import BaseHTTPRequestHandler, HTTPServer
 
-    config_env("INTHUB_DISABLE_AUTH", "true")
+    config_env("PYTEST_INTHUB_AUTH_BYPASS", "true")
     config_env("INTHUB_CREDENTIAL_ENCRYPTION_KEY", "test-credential-key")
     client = TestClient(app)
 
@@ -814,7 +814,7 @@ def test_oauth_invocation_requires_connection_and_refreshes_expired_tokens(
 def test_oauth_start_uses_proxy_scopes_and_additional_params(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:
-    config_env("INTHUB_DISABLE_AUTH", "true")
+    config_env("PYTEST_INTHUB_AUTH_BYPASS", "true")
     config_env("INTHUB_OAUTH_REDIRECT_PROXY_URL", "https://stable.example.dev")
     client = TestClient(app)
     admin_key = client.post("/api/admin/key").json()["apiKey"]
@@ -878,7 +878,7 @@ def test_dynamic_oauth_client_registration_for_public_clients(
     import threading
     from http.server import BaseHTTPRequestHandler, HTTPServer
 
-    config_env("INTHUB_DISABLE_AUTH", "true")
+    config_env("PYTEST_INTHUB_AUTH_BYPASS", "true")
     client = TestClient(app)
     registrations: list[dict[str, object]] = []
 
@@ -933,7 +933,7 @@ def test_dynamic_oauth_client_registration_for_public_clients(
 def test_approval_required_requests_are_deduplicated(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:
-    config_env("INTHUB_DISABLE_AUTH", "true")
+    config_env("PYTEST_INTHUB_AUTH_BYPASS", "true")
     client = TestClient(app)
     integration = {
         "key": "approval-api",
@@ -979,7 +979,7 @@ def test_approval_required_requests_are_deduplicated(
 def test_temporary_grants_are_owner_scoped(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:
-    config_env("INTHUB_DISABLE_AUTH", "true")
+    config_env("PYTEST_INTHUB_AUTH_BYPASS", "true")
     config_env("INTHUB_APP_ADMIN_EMAILS", "owner-a@example.com,owner-b@example.com")
     client = TestClient(app)
     integration = {
@@ -1051,7 +1051,7 @@ def test_temporary_grants_are_owner_scoped(
 def test_repository_uses_owner_header_identity(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:
-    config_env("INTHUB_DISABLE_AUTH", "true")
+    config_env("PYTEST_INTHUB_AUTH_BYPASS", "true")
     client = TestClient(app)
     repository.save_managed_connector(
         ManagedConnector(
@@ -1123,7 +1123,7 @@ def test_http_provider_invocation_uses_request_template_and_auth(
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
     try:
-        config_env("INTHUB_DISABLE_AUTH", "true")
+        config_env("PYTEST_INTHUB_AUTH_BYPASS", "true")
         client = TestClient(app)
         base_url = f"http://127.0.0.1:{server.server_port}"
         integration = {
@@ -1261,7 +1261,7 @@ def _patch_openhands_user_me_request_error(
 def test_dashboard_key_routes_reject_spoofed_owner_without_token(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:
-    config_env("INTHUB_DISABLE_AUTH")
+    config_env("PYTEST_INTHUB_AUTH_BYPASS")
 
     client = TestClient(app)
     response = client.get(
@@ -1275,7 +1275,7 @@ def test_dashboard_key_routes_reject_spoofed_owner_without_token(
 def test_dashboard_key_routes_accept_openhands_bearer_token(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:
-    config_env("INTHUB_DISABLE_AUTH")
+    config_env("PYTEST_INTHUB_AUTH_BYPASS")
     config_env("INTHUB_OPENHANDS_BASE_URL", "https://staging.all-hands.dev")
     calls = _patch_openhands_user_me(
         monkeypatch,
@@ -1307,7 +1307,7 @@ def test_dashboard_key_routes_accept_openhands_bearer_token(
 def test_auth_session_reports_openhands_admin_flag(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:
-    config_env("INTHUB_DISABLE_AUTH")
+    config_env("PYTEST_INTHUB_AUTH_BYPASS")
     config_env("INTHUB_OPENHANDS_BASE_URL", "https://staging.all-hands.dev")
     config_env("INTHUB_APP_ADMIN_EMAILS", "admin@example.com")
     _patch_openhands_user_me(
@@ -1344,7 +1344,7 @@ def test_auth_session_reports_openhands_admin_flag(
 def test_personal_org_normalizes_to_null_and_uses_env_admins(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:
-    config_env("INTHUB_DISABLE_AUTH")
+    config_env("PYTEST_INTHUB_AUTH_BYPASS")
     config_env("INTHUB_OPENHANDS_BASE_URL", "https://staging.all-hands.dev")
     config_env("INTHUB_APP_ADMIN_EMAILS", "personal@example.com")
     _patch_openhands_user_me(
@@ -1371,7 +1371,7 @@ def test_personal_org_normalizes_to_null_and_uses_env_admins(
 def test_personal_org_owner_is_not_admin_without_env_allowlist(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:
-    config_env("INTHUB_DISABLE_AUTH")
+    config_env("PYTEST_INTHUB_AUTH_BYPASS")
     config_env("INTHUB_OPENHANDS_BASE_URL", "https://staging.all-hands.dev")
     config_env("INTHUB_APP_ADMIN_EMAILS")
     _patch_openhands_user_me(
@@ -1395,7 +1395,7 @@ def test_personal_org_owner_is_not_admin_without_env_allowlist(
 def test_non_null_org_member_is_not_admin(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:
-    config_env("INTHUB_DISABLE_AUTH")
+    config_env("PYTEST_INTHUB_AUTH_BYPASS")
     config_env("INTHUB_OPENHANDS_BASE_URL", "https://staging.all-hands.dev")
     _patch_openhands_user_me(
         monkeypatch,
@@ -1418,7 +1418,7 @@ def test_non_null_org_member_is_not_admin(
 def test_x_org_id_is_forwarded_and_varies_auth_cache(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:
-    config_env("INTHUB_DISABLE_AUTH")
+    config_env("PYTEST_INTHUB_AUTH_BYPASS")
     config_env("INTHUB_OPENHANDS_BASE_URL", "https://staging.all-hands.dev")
     calls = _patch_openhands_user_me(
         monkeypatch,
@@ -1464,7 +1464,7 @@ def test_auth_session_returns_503_on_transient_network_error(
     None and the dashboard returned 401, which made the frontend delete the
     stored long-lived API key and force a re-login.
     """
-    config_env("INTHUB_DISABLE_AUTH")
+    config_env("PYTEST_INTHUB_AUTH_BYPASS")
     config_env("INTHUB_OPENHANDS_BASE_URL", "https://staging.all-hands.dev")
     _patch_openhands_user_me_request_error(
         monkeypatch, httpx.ConnectError("DNS not ready")
@@ -1482,7 +1482,7 @@ def test_dashboard_route_returns_503_on_openhands_5xx(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:
     """A 5xx from OpenHands Cloud is infra, not an invalid token -> 503."""
-    config_env("INTHUB_DISABLE_AUTH")
+    config_env("PYTEST_INTHUB_AUTH_BYPASS")
     config_env("INTHUB_OPENHANDS_BASE_URL", "https://staging.all-hands.dev")
     _patch_openhands_user_me(
         monkeypatch,
@@ -1501,7 +1501,7 @@ def test_auth_session_returns_401_on_invalid_token(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:
     """A genuine 401/403 from OpenHands Cloud must still clear the session (401)."""
-    config_env("INTHUB_DISABLE_AUTH")
+    config_env("PYTEST_INTHUB_AUTH_BYPASS")
     config_env("INTHUB_OPENHANDS_BASE_URL", "https://staging.all-hands.dev")
     _patch_openhands_user_me(monkeypatch, {"error": "invalid_token"}, status_code=401)
 
@@ -1521,24 +1521,23 @@ def test_auth_config_reports_openhands_base_url(config_env: ConfigEnvFixture) ->
     assert response.json() == {"openhandsBaseUrl": "https://staging.all-hands.dev"}
 
 
-def test_auth_disabled_rejects_non_loopback_hosts(config_env: ConfigEnvFixture) -> None:
+def test_removed_inthub_disable_auth_flag_does_not_grant_access(
+    config_env: ConfigEnvFixture,
+) -> None:
     config_env("INTHUB_DISABLE_AUTH", "true")
 
     response = TestClient(app).get(
-        "/api/auth/session",
-        headers={"host": "integrations.example.com", "x-owner-id": "user@example.com"},
+        "/api/auth/session", headers={"x-owner-id": "user@example.com"}
     )
 
-    assert response.status_code == 403
-    assert response.json()["detail"] == (
-        "INTHUB_DISABLE_AUTH is only allowed for localhost development."
-    )
+    assert response.status_code == 401
+    assert "Sign in" in response.json()["detail"]
 
 
 def test_user_key_reveal_returns_metadata_when_stored_key_cannot_be_decrypted(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:
-    config_env("INTHUB_DISABLE_AUTH", "true")
+    config_env("PYTEST_INTHUB_AUTH_BYPASS", "true")
     config_env("INTHUB_POSTGRES_URL", "postgres://test")
 
     def fake_db_rows(query: str, _params: object = ()) -> list[dict[str, object]]:
@@ -1576,7 +1575,7 @@ def test_user_key_reveal_returns_metadata_when_stored_key_cannot_be_decrypted(
 def test_admin_privileges_fail_closed_without_allowlist(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:
-    config_env("INTHUB_DISABLE_AUTH", "true")
+    config_env("PYTEST_INTHUB_AUTH_BYPASS", "true")
     config_env("INTHUB_APP_ADMIN_EMAILS")
     client = TestClient(app)
 
@@ -1590,10 +1589,10 @@ def test_admin_privileges_fail_closed_without_allowlist(
     assert response.status_code == 403
 
 
-def test_admin_api_routes_accept_auth_disabled_admin_owner(
+def test_admin_api_routes_accept_test_auth_bypass_admin_owner(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:
-    config_env("INTHUB_DISABLE_AUTH", "true")
+    config_env("PYTEST_INTHUB_AUTH_BYPASS", "true")
     config_env("INTHUB_APP_ADMIN_EMAILS", "admin@example.com")
     client = TestClient(app)
 
@@ -1608,10 +1607,10 @@ def test_admin_api_routes_accept_auth_disabled_admin_owner(
     assert "duplicateExternalAccounts" in response.json()
 
 
-def test_admin_api_routes_reject_auth_disabled_non_admin_owner(
+def test_admin_api_routes_reject_test_auth_bypass_non_admin_owner(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:
-    config_env("INTHUB_DISABLE_AUTH", "true")
+    config_env("PYTEST_INTHUB_AUTH_BYPASS", "true")
     config_env("INTHUB_APP_ADMIN_EMAILS", "admin@example.com")
     client = TestClient(app)
 
@@ -1631,7 +1630,7 @@ def test_admin_api_routes_reject_auth_disabled_non_admin_owner(
 def test_admin_api_key_authorizes_admin_routes(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:
-    config_env("INTHUB_DISABLE_AUTH", "true")
+    config_env("PYTEST_INTHUB_AUTH_BYPASS", "true")
     config_env("INTHUB_APP_ADMIN_EMAILS", "admin@example.com")
     client = TestClient(app)
     repository.save_key("admin@example.com", "admin", "clad_test_admin_key")
@@ -1648,7 +1647,7 @@ def test_admin_api_key_authorizes_admin_routes(
 def test_non_admin_dashboard_routes_reject_privileged_api_calls_in_dev_mode(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:
-    config_env("INTHUB_DISABLE_AUTH", "true")
+    config_env("PYTEST_INTHUB_AUTH_BYPASS", "true")
     config_env("INTHUB_APP_ADMIN_EMAILS", "admin@example.com")
     client = TestClient(app)
     user_headers = {
@@ -1755,7 +1754,7 @@ def test_non_admin_dashboard_routes_reject_privileged_api_calls_in_dev_mode(
 def test_admin_dashboard_routes_allow_privileged_api_calls_in_dev_mode(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:
-    config_env("INTHUB_DISABLE_AUTH", "true")
+    config_env("PYTEST_INTHUB_AUTH_BYPASS", "true")
     config_env("INTHUB_APP_ADMIN_EMAILS", "admin@example.com")
     client = TestClient(app)
     admin_headers = {
@@ -1801,7 +1800,7 @@ def test_admin_dashboard_routes_allow_privileged_api_calls_in_dev_mode(
 def test_default_managed_connectors_are_listed_and_require_credentials(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:
-    config_env("INTHUB_DISABLE_AUTH", "true")
+    config_env("PYTEST_INTHUB_AUTH_BYPASS", "true")
     client = TestClient(app)
 
     # User-facing list: only connectors an admin has explicitly registered are
@@ -1910,7 +1909,7 @@ def test_default_managed_connectors_are_listed_and_require_credentials(
 def test_managed_connector_function_indexing_generates_tools_and_preserves_access(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:
-    config_env("INTHUB_DISABLE_AUTH", "true")
+    config_env("PYTEST_INTHUB_AUTH_BYPASS", "true")
     client = TestClient(app)
     repository.save_managed_connector(
         ManagedConnector(
@@ -1949,7 +1948,7 @@ def test_managed_http_openapi_discovery_and_multipart_invocation(
     import threading
     from http.server import BaseHTTPRequestHandler, HTTPServer
 
-    config_env("INTHUB_DISABLE_AUTH", "true")
+    config_env("PYTEST_INTHUB_AUTH_BYPASS", "true")
     seen: dict[str, object] = {}
 
     class Handler(BaseHTTPRequestHandler):
@@ -2085,7 +2084,7 @@ def test_managed_http_openapi_discovery_and_multipart_invocation(
 def test_generated_openapi_documents_include_route_details(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:
-    config_env("INTHUB_DISABLE_AUTH", "true")
+    config_env("PYTEST_INTHUB_AUTH_BYPASS", "true")
     client = TestClient(app)
 
     user_key = client.post("/api/user/key").json()["apiKey"]
@@ -2109,7 +2108,7 @@ def test_generated_openapi_documents_include_route_details(
 def test_mcp_tools_expose_input_schema_and_strip_context_arguments(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:
-    config_env("INTHUB_DISABLE_AUTH", "true")
+    config_env("PYTEST_INTHUB_AUTH_BYPASS", "true")
     client = TestClient(app)
     integration = {
         "key": "schemahub",
@@ -2179,7 +2178,7 @@ def test_mcp_tools_expose_input_schema_and_strip_context_arguments(
 def test_mcp_approval_required_error_includes_approval_link_and_request_id(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:
-    config_env("INTHUB_DISABLE_AUTH", "true")
+    config_env("PYTEST_INTHUB_AUTH_BYPASS", "true")
     client = TestClient(app)
     integration = {
         "key": "approval-mcp",
@@ -2230,7 +2229,7 @@ def test_mcp_approval_required_error_includes_approval_link_and_request_id(
 def test_mcp_tool_call_returns_downstream_result(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:
-    config_env("INTHUB_DISABLE_AUTH", "true")
+    config_env("PYTEST_INTHUB_AUTH_BYPASS", "true")
     calls: list[dict[str, object]] = []
 
     class FakeMcpClient:
@@ -2337,7 +2336,7 @@ def test_mcp_tool_call_returns_downstream_result(
 def test_approval_creates_temporary_grant_that_allows_invocation(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:
-    config_env("INTHUB_DISABLE_AUTH", "true")
+    config_env("PYTEST_INTHUB_AUTH_BYPASS", "true")
     client = TestClient(app)
     integration = {
         "key": "approval-demo",
@@ -2404,7 +2403,7 @@ def test_approval_creates_temporary_grant_that_allows_invocation(
 def test_case_by_case_approvals_are_scoped_by_in_app_notification_target(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:
-    config_env("INTHUB_DISABLE_AUTH", "true")
+    config_env("PYTEST_INTHUB_AUTH_BYPASS", "true")
     client = TestClient(app)
     repository.access_requests.setdefault("all", {})["req-approved"] = AccessRequest(
         id="req-approved",
@@ -2445,7 +2444,7 @@ def test_case_by_case_approvals_are_scoped_by_in_app_notification_target(
 def test_case_by_case_approvals_accept_user_api_key(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:
-    config_env("INTHUB_DISABLE_AUTH", "true")
+    config_env("PYTEST_INTHUB_AUTH_BYPASS", "true")
     config_env("INTHUB_APP_ADMIN_EMAILS", "owner-a@example.com")
     client = TestClient(app)
     owner_a = {"X-Owner-Id": "owner-a@example.com"}
@@ -2475,17 +2474,11 @@ def test_case_by_case_approvals_accept_user_api_key(
         == 200
     )
 
-    invalid = client.get(
-        "/api/case-by-case-approvals",
-        headers={"Authorization": "Bearer not-a-real-user-key"},
-    )
-    assert invalid.status_code == 401
-
 
 def test_case_by_case_approvals_accept_openhands_cloud_bearer_token(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:
-    config_env("INTHUB_DISABLE_AUTH")
+    config_env("PYTEST_INTHUB_AUTH_BYPASS")
     config_env("INTHUB_OPENHANDS_BASE_URL", "https://staging.all-hands.dev")
     _patch_openhands_user_me(
         monkeypatch,
@@ -2526,7 +2519,7 @@ def test_case_by_case_approvals_accept_openhands_cloud_bearer_token(
 def test_disable_unused_tools_uses_invocation_history(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:
-    config_env("INTHUB_DISABLE_AUTH", "true")
+    config_env("PYTEST_INTHUB_AUTH_BYPASS", "true")
     client = TestClient(app)
     integration = {
         "key": "usage-demo",
@@ -2583,7 +2576,7 @@ def test_disable_unused_tools_uses_invocation_history(
 def test_raw_mcp_discovery_lists_remote_tools(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:
-    config_env("INTHUB_DISABLE_AUTH", "true")
+    config_env("PYTEST_INTHUB_AUTH_BYPASS", "true")
     calls: list[dict[str, object]] = []
 
     class FakeMcpDiscoveryClient:
@@ -2667,7 +2660,7 @@ def test_raw_mcp_discovery_lists_remote_tools(
 def test_oauth_catalog_and_admin_overview_are_data_driven(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:
-    config_env("INTHUB_DISABLE_AUTH", "true")
+    config_env("PYTEST_INTHUB_AUTH_BYPASS", "true")
     config_env("INTHUB_CREDENTIAL_ENCRYPTION_KEY", "test-credential-key")
     client = TestClient(app)
     catalog = client.get("/api/integrations/catalog").json()

@@ -83,21 +83,6 @@ def test_prefixed_admin_emails_accept_json_arrays(config_env) -> None:
     assert config.admin_email_list == ["admin@example.com", "ops@example.com"]
 
 
-def test_prefixed_disable_auth_flag_is_read(config_env) -> None:
-    config_env("INTHUB_POSTGRES_URL", "postgres://prefixed")
-    config_env("INTHUB_CREDENTIAL_ENCRYPTION_KEY", "prefixed-encryption-key")
-    config_env("INTHUB_DISABLE_AUTH", "true")
-
-    config = get_default_config()
-
-    assert config.postgres_url == "postgres://prefixed"
-    assert config.disable_auth is True
-    assert config.credential_encryption_key is not None
-    assert (
-        config.credential_encryption_key.get_secret_value() == "prefixed-encryption-key"
-    )
-
-
 def test_blank_prefixed_secret_is_unconfigured(config_env) -> None:
     """A blank/whitespace INTHUB_* secret resolves to None, not an empty secret.
 

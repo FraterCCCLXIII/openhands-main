@@ -45,7 +45,6 @@ class Config(BaseModel):
 
     Environment variables:
         INTHUB_POSTGRES_URL: Database connection URL
-        INTHUB_DISABLE_AUTH: Set to "true" to bypass auth (default: false)
         INTHUB_OPENHANDS_BASE_URL: OpenHands base URL for session validation
         INTHUB_CRON_SECRET: Secret for cron job authentication
         INTHUB_APP_ADMIN_EMAILS: Comma-separated admin email addresses
@@ -62,13 +61,6 @@ class Config(BaseModel):
     )
 
     # Authentication
-    disable_auth: bool = Field(
-        default=False,
-        description=(
-            "Bypass authentication for local development. Set INTHUB_DISABLE_AUTH=true "
-            "to enable."
-        ),
-    )
     openhands_base_url: str | None = Field(
         default=None,
         description=(

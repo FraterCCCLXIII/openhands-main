@@ -207,7 +207,7 @@ npm run build
 Run the app:
 
 ```bash
-INTHUB_DISABLE_AUTH=true npm run dev
+npm run dev
 ```
 
 Then use:

@@ -142,11 +142,7 @@ For a fuller route map and auth breakdown, see [API.md](./API.md).
 5. Start the app:
 
    ```bash
-   # Standard local development
    npm run dev
-
-   # Or bypass interactive auth for localhost-only development
-   INTHUB_DISABLE_AUTH=true npm run dev
    ```
 
 6. Open the dashboard:
@@ -200,7 +196,7 @@ See [`.env.example`](./.env.example) for the full template.
 
 Set `INTHUB_OPENHANDS_BASE_URL` to the OpenHands Cloud deployment users should authenticate against. The dashboard starts the OpenHands OAuth device flow from `/signin`, stores the returned OpenHands API key in browser storage, and sends it as `Authorization: Bearer <token>` to FastAPI. FastAPI validates each dashboard request with `GET <INTHUB_OPENHANDS_BASE_URL>/api/v1/users/me`.
 
-For local development only, set `INTHUB_DISABLE_AUTH=true` and open `/integrations`; this bypass uses the dev owner `dev@localhost`.
+For local development, sign in through the configured OpenHands Cloud base URL and open `/integrations`.
 
 ## Provider OAuth setup
 
