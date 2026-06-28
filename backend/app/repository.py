@@ -102,6 +102,15 @@ class Repository:
         except Exception:
             return None
 
+    @classmethod
+    def stored_agent_key_value(cls, row: dict[str, Any]) -> str:
+        encrypted = row.get("encrypted_api_key")
+        return (cls.decrypt_api_key_value(str(encrypted)) or "") if encrypted else ""
+
+    @classmethod
+    def agent_key_storage_marker(cls, value: str) -> str:
+        return "hashed:" + cls.hash_key(value)[:32]
+
     @staticmethod
     def hash_key(value: str) -> str:
         return hashlib.sha256(value.encode("utf-8")).hexdigest()
@@ -306,7 +315,7 @@ class Repository:
             snapshot=PermissionProfileSnapshot.model_validate(
                 row.get("snapshot") or {}
             ),
-            agentApiKey=str(row.get("api_key") or ""),
+            agentApiKey=self.stored_agent_key_value(row),
             createdAt=self.iso(row.get("created_at")) or now_iso(),
             updatedAt=self.iso(row.get("updated_at")) or now_iso(),
         )
@@ -315,16 +324,35 @@ class Repository:
         self, owner_id: str, profile_id: str
     ) -> dict[str, Any]:
         if self.database_url:
+            value = self.create_agent_key_value()
             rows = self.db_rows(
                 """
-                INSERT INTO agent_api_keys (profile_id, owner_id, api_key, created_at, updated_at)
-                VALUES (%s, %s, %s, NOW(), NOW())
-                ON CONFLICT (profile_id) DO UPDATE SET owner_id = EXCLUDED.owner_id
+                INSERT INTO agent_api_keys (
+                    profile_id, owner_id, api_key, api_key_hash, key_prefix,
+                    key_suffix, encrypted_api_key, created_at, updated_at
+                )
+                VALUES (%s, %s, %s, %s, %s, %s, %s, NOW(), NOW())
+                ON CONFLICT (profile_id) DO NOTHING
                 RETURNING *
                 """,
-                (profile_id, owner_id, self.create_agent_key_value()),
+                (
+                    profile_id,
+                    owner_id,
+                    self.agent_key_storage_marker(value),
+                    self.hash_key(value),
+                    value[:12],
+                    value[-4:],
+                    encrypt_api_key(value),
+                ),
             )
-            return rows[0]
+            if rows:
+                return {**rows[0], "api_key": value}
+            rows = self.db_rows(
+                "SELECT * FROM agent_api_keys WHERE profile_id = %s",
+                (profile_id,),
+            )
+            row = rows[0]
+            return {**row, "api_key": self.stored_agent_key_value(row)}
         value = self.profile_agent_keys.get(profile_id)
         if value is None:
             value = self.create_agent_key_value()
@@ -344,17 +372,32 @@ class Repository:
         if self.database_url:
             rows = self.db_rows(
                 """
-                INSERT INTO agent_api_keys (profile_id, owner_id, api_key, created_at, updated_at)
-                VALUES (%s, %s, %s, NOW(), NOW())
+                INSERT INTO agent_api_keys (
+                    profile_id, owner_id, api_key, api_key_hash, key_prefix,
+                    key_suffix, encrypted_api_key, created_at, updated_at
+                )
+                VALUES (%s, %s, %s, %s, %s, %s, %s, NOW(), NOW())
                 ON CONFLICT (profile_id) DO UPDATE SET
                     owner_id = EXCLUDED.owner_id,
                     api_key = EXCLUDED.api_key,
+                    api_key_hash = EXCLUDED.api_key_hash,
+                    key_prefix = EXCLUDED.key_prefix,
+                    key_suffix = EXCLUDED.key_suffix,
+                    encrypted_api_key = EXCLUDED.encrypted_api_key,
                     updated_at = NOW()
                 RETURNING *
                 """,
-                (profile_id, owner_id, value),
+                (
+                    profile_id,
+                    owner_id,
+                    self.agent_key_storage_marker(value),
+                    self.hash_key(value),
+                    value[:12],
+                    value[-4:],
+                    encrypt_api_key(value),
+                ),
             )
-            return rows[0]
+            return {**rows[0], "api_key": value}
         updated_at = now_iso()
         self.profile_agent_keys[profile_id] = value
         profile = self.permission_profiles.get(owner_id, {}).get(profile_id)
@@ -374,7 +417,7 @@ class Repository:
         if self.database_url:
             rows = self.db_rows(
                 """
-                SELECT p.*, k.api_key
+                SELECT p.*, k.api_key, k.encrypted_api_key, k.key_prefix, k.key_suffix
                 FROM permission_profiles p
                 LEFT JOIN agent_api_keys k ON k.profile_id = p.id
                 WHERE LOWER(p.owner_id) = LOWER(%s)
@@ -391,7 +434,7 @@ class Repository:
         if self.database_url:
             rows = self.db_rows(
                 """
-                SELECT p.*, k.api_key
+                SELECT p.*, k.api_key, k.encrypted_api_key, k.key_prefix, k.key_suffix
                 FROM permission_profiles p
                 LEFT JOIN agent_api_keys k ON k.profile_id = p.id
                 WHERE LOWER(p.owner_id) = LOWER(%s) AND p.id = %s
@@ -405,7 +448,7 @@ class Repository:
         if self.database_url:
             rows = self.db_rows(
                 """
-                SELECT p.*, k.api_key
+                SELECT p.*, k.api_key, k.encrypted_api_key, k.key_prefix, k.key_suffix
                 FROM permission_profiles p
                 LEFT JOIN agent_api_keys k ON k.profile_id = p.id
                 WHERE LOWER(p.owner_id) = LOWER(%s) AND p.name IS NULL
@@ -1153,16 +1196,16 @@ class Repository:
                 SELECT k.*, p.id AS permission_profile_id, p.name AS permission_profile_name
                 FROM agent_api_keys k
                 JOIN permission_profiles p ON p.id = k.profile_id
-                WHERE k.api_key = %s
+                WHERE k.api_key_hash = %s
                 """,
-                (value,),
+                (self.hash_key(value),),
             )
             if not rows:
                 return None
             row = rows[0]
             return {
                 "ownerId": row["owner_id"],
-                "apiKey": row["api_key"],
+                "apiKey": value,
                 "permissionProfileId": row.get("permission_profile_id"),
                 "permissionProfileName": row.get("permission_profile_name"),
                 "createdAt": self.iso(row.get("created_at")),
