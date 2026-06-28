@@ -5,7 +5,11 @@
     ".": {
       "release-type": "node",
       "changelog-type": "github",
-      "skip-changelog": true
+      "include-component-in-tag": false,
+      "skip-changelog": true,
+      "extra-files": [
+        { "type": "toml", "path": "backend/pyproject.toml", "jsonpath": "$.project.version" }
+      ]
     }
   }
 }
