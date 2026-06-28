@@ -24,18 +24,12 @@ interface AdminIntegrationsData {
   integrationCatalog: IntegrationCatalogOption[];
 }
 
-// The admin integrations page only deals with OAuth-based providers. Catalog
-// options without an explicit auth strategy default to OAuth (see
-// getProviderAuthStrategy in integration-catalog-panel), so treat undefined as
-// OAuth to stay consistent with the rest of the app.
-const isOAuthCatalogOption = (option: IntegrationCatalogOption) =>
-  (option.connectionDefaults.authStrategy ?? "oauth2") === "oauth2";
-
-const isOAuthManagedConnector = (connector: ManagedConnectorDefinition) =>
-  connector.authStrategy === "oauth2";
-
-const isOAuthReadyConnector = (connector: ManagedConnectorOption) =>
-  connector.authStrategy === "oauth2";
+// The admin integrations page shows every catalog connector regardless of
+// auth strategy (OAuth2, API key, bearer, or none) so admins can register
+// any provider. Only connectors an admin has explicitly added are surfaced
+// to users (see the backend /api/integrations/managed-connectors gating).
+const isReadyConnector = (connector: ManagedConnectorOption) =>
+  connector.oauthConfigured !== false;
 
 export function ClientAdminIntegrationsPage() {
   const { user, isAdmin, isAuthenticated, isLoading: authLoading } = useAuth();
@@ -52,12 +46,9 @@ export function ClientAdminIntegrationsPage() {
       ]);
 
       return {
-        managedConnectors: managedConnectors.filter(isOAuthManagedConnector),
-        readyConnectors: allConnectors.filter(
-          (connector) =>
-            connector.oauthConfigured !== false && isOAuthReadyConnector(connector),
-        ),
-        integrationCatalog: integrationCatalog.filter(isOAuthCatalogOption),
+        managedConnectors,
+        readyConnectors: allConnectors.filter(isReadyConnector),
+        integrationCatalog,
       };
     },
     enabled: isAuthenticated,
@@ -130,9 +121,10 @@ export function ClientAdminIntegrationsPage() {
               </p>
               <h1 className="mt-1 text-2xl font-semibold text-white">Admin integrations</h1>
               <p className="mt-2 max-w-3xl text-sm leading-7 text-[var(--color-text-base)]">
-                Register OAuth-based integrations for the deployment. Admins can add a
-                provider from the available list and manage the connectors that have already
-                been added.
+                Register integrations for the deployment. Admins can add a
+                provider (OAuth or MCP) from the available list and manage the
+                connectors that have already been added. Only connectors an
+                admin has added are available to users.
               </p>
             </div>
             <div className="flex flex-wrap gap-2">

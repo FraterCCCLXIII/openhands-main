@@ -34,6 +34,7 @@ from .auth import (
 from .config import get_default_config
 from .integration_catalog import connection_defaults_from_option
 from .managed_connectors import (
+    default_managed_connector,
     get_managed_connector,
     list_managed_connectors,
 )
@@ -1574,6 +1575,14 @@ def assert_user_can_save_integration(
         raise HTTPException(
             status_code=403, detail=RAW_CONNECTOR_INSTALL_FORBIDDEN_DETAIL
         )
+    if not repository.get_managed_connector(managed_slug):
+        raise HTTPException(
+            status_code=404,
+            detail=(
+                f"Managed connector '{managed_slug}' is not available. An admin must "
+                "add it before users can connect it."
+            ),
+        )
 
 
 def assert_user_can_discover_integration(
@@ -2341,7 +2350,9 @@ def backfill_oauth_mcp_tools_after_connection(
     )
 
 
-def discovered_integration(payload: dict[str, Any], owner: str) -> dict[str, Any]:
+def discovered_integration(
+    payload: dict[str, Any], owner: str, *, allow_catalog_defaults: bool = False
+) -> dict[str, Any]:
     config = payload.get("config") if isinstance(payload.get("config"), dict) else {}
     credentials = (
         payload.get("credentials")
@@ -2358,7 +2369,23 @@ def discovered_integration(payload: dict[str, Any], owner: str) -> dict[str, Any
         raise HTTPException(
             status_code=404, detail=f"Unknown managed connector '{slug}'."
         )
-    connector = get_managed_connector(str(slug) if slug else "")
+    # User-facing gate: a managed connector is only installable by users if an
+    # admin has explicitly added it (i.e. it exists in the repository). Catalog
+    # defaults are NOT installable by users without admin registration — this
+    # matches the /api/integrations/managed-connectors list gate so the list
+    # and the install path share one authorization boundary. The admin discover
+    # path passes allow_catalog_defaults=True so admins can preview defaults.
+    connector = stored_connector
+    if allow_catalog_defaults and not connector:
+        connector = default_managed_connector(str(slug) if slug else "")
+    if slug and not connector and payload.get("kind") == "managed":
+        raise HTTPException(
+            status_code=404,
+            detail=(
+                f"Managed connector '{slug}' is not available. An admin must "
+                "add it before users can connect it."
+            ),
+        )
     if connector:
         integration_key = str(payload.get("key") or connector.slug)
         if connector.authStrategy == "oauth2" and not connector.oauthConfigured:
@@ -2662,7 +2689,11 @@ async def fastapi_handler(request: Request):
     if path in {"/api/integrations/discover", "/api/admin/integrations/discover"}:
         if path == "/api/integrations/discover" and isinstance(body, dict):
             assert_user_can_discover_integration(owner, body, user_api_is_admin)
-        return discovered_integration(body, owner)
+        # The admin discover path may preview catalog-default connectors that
+        # have not been admin-added yet; the user path is gated to admin-added.
+        return discovered_integration(
+            body, owner, allow_catalog_defaults=path.startswith("/api/admin/")
+        )
 
     if path == "/api/integrations/disable-unused":
         result = disable_unused_tools(owner, body if isinstance(body, dict) else {})
@@ -2673,9 +2704,14 @@ async def fastapi_handler(request: Request):
         "/api/integrations/managed-connectors",
         "/api/admin/integrations/managed-connectors",
     }:
+        # User-facing list: only connectors an admin has explicitly registered
+        # are available to users. Catalog defaults are NOT surfaced here — an
+        # admin must add a connector (POST /api/managed-connectors) before
+        # users can see or connect it, even when API-token auth would otherwise
+        # work without registration.
         return [
             connector.option()
-            for connector in list_managed_connectors()
+            for connector in list_managed_connectors(include_defaults=False)
             if connector.enabled
         ]
 

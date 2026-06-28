@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 
 import { IntegrationCatalogPanel } from "@/src/components/admin/integrations/integration-catalog-panel";
 import { ManagedConnectorList } from "@/src/components/admin/integrations/managed-connector-list";
@@ -45,47 +45,6 @@ export const toReadyManagedConnector = (
   credentialHelp: connector.credentialHelp,
 });
 
-export const toDefaultReadyManagedConnector = (
-  provider: IntegrationCatalogOption,
-): ManagedConnectorOption | null => {
-  const defaults = provider.connectionDefaults;
-  const authStrategy = defaults.authStrategy;
-
-  if (!authStrategy || authStrategy === "oauth2") {
-    return null;
-  }
-
-  const isReadyDefault =
-    (defaults.provider === "http" && defaults.apiBaseUrl && defaults.openApiUrl) ||
-    (defaults.provider === "mcp" && defaults.serverUrl);
-  if (!isReadyDefault) {
-    return null;
-  }
-
-  return {
-    slug: provider.slug,
-    name: provider.name,
-    description: provider.description,
-    logoUrl: provider.logoUrl,
-    iconBg: provider.iconBg,
-    iconColor: provider.iconColor,
-    appUrl: provider.appUrl,
-    toolCount: 0,
-    categories: provider.categories,
-    authModes:
-      defaults.authModes?.length && defaults.authModes.every(Boolean)
-        ? defaults.authModes
-        : [authStrategy],
-    authStrategy,
-    oauthConfigured: true,
-    credentialLabel: defaults.credentialLabel ?? `${provider.name} credential`,
-    credentialPlaceholder:
-      defaults.credentialPlaceholder ?? `Paste your ${provider.name} credential`,
-    credentialHelp: defaults.credentialHelp ?? `Credential required by ${provider.name}.`,
-    apiKeyHeaderName: defaults.apiKeyHeaderName,
-  };
-};
-
 export const upsertReadyManagedConnector = (
   connectors: ManagedConnectorOption[],
   connector: ManagedConnectorOption,
@@ -111,25 +70,10 @@ export function IntegrationsCatalog({
   // one list, not two.
   const [sharedQuery, setSharedQuery] = useState("");
 
-  const defaultReadyManagedConnectors = useMemo(() => {
-    const defaults = new Map<string, ManagedConnectorOption>();
-
-    for (const provider of integrationCatalog) {
-      const connector = toDefaultReadyManagedConnector(provider);
-      if (connector) {
-        defaults.set(provider.slug, connector);
-      }
-    }
-
-    return defaults;
-  }, [integrationCatalog]);
-
   const resetReadyManagedConnector = (slug: string) => {
-    setReadyManagedConnectors((current) => {
-      const next = current.filter((connector) => connector.slug !== slug);
-      const fallback = defaultReadyManagedConnectors.get(slug);
-      return fallback ? upsertReadyManagedConnector(next, fallback) : next;
-    });
+    setReadyManagedConnectors((current) =>
+      current.filter((connector) => connector.slug !== slug),
+    );
   };
 
   return (

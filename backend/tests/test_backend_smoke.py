@@ -1053,6 +1053,16 @@ def test_repository_uses_owner_header_identity(
 ) -> None:
     config_env("INTHUB_DISABLE_AUTH", "true")
     client = TestClient(app)
+    repository.save_managed_connector(
+        ManagedConnector(
+            slug="ordinal",
+            name="Ordinal",
+            description="Ordinal",
+            authStrategy="bearer",
+            provider="mcp",
+            serverUrl="https://app.tryordinal.com/mcp",
+        )
+    )
     integration = {
         "key": "owned",
         "name": "Owned",
@@ -1670,6 +1680,39 @@ def test_non_admin_dashboard_routes_reject_privileged_api_calls_in_dev_mode(
         == 403
     )
 
+    default_managed_save = client.post(
+        "/api/integrations",
+        headers=user_headers,
+        json={
+            "key": "ordinal",
+            "name": "Ordinal",
+            "kind": "mcp",
+            "provider": "mcp",
+            "authStrategy": "bearer",
+            "config": {"managedConnectorSlug": "ordinal"},
+            "credentials": {"accessToken": "ordinal-token"},
+            "tools": {},
+        },
+    )
+    assert default_managed_save.status_code == 404
+    assert "admin must" in default_managed_save.json()["detail"].lower()
+
+    admin_added_managed_save = client.post(
+        "/api/integrations",
+        headers=user_headers,
+        json={
+            "key": "sample",
+            "name": "Sample",
+            "kind": "api",
+            "provider": "http",
+            "authStrategy": "none",
+            "config": {"managedConnectorSlug": "sample"},
+            "credentials": {},
+            "tools": {},
+        },
+    )
+    assert admin_added_managed_save.status_code == 200
+
     raw_discovery = client.post(
         "/api/integrations/discover",
         headers=user_headers,
@@ -1761,42 +1804,48 @@ def test_default_managed_connectors_are_listed_and_require_credentials(
     config_env("INTHUB_DISABLE_AUTH", "true")
     client = TestClient(app)
 
+    # User-facing list: only connectors an admin has explicitly registered are
+    # available to users. With no admin-added connectors, the user list is
+    # empty — catalog defaults (including API-token/bearer/none MCP servers)
+    # are NOT surfaced to users until an admin adds them.
     connectors = client.get("/api/integrations/managed-connectors").json()
-    by_slug = {connector["slug"]: connector for connector in connectors}
+    assert connectors == []
 
-    assert len(by_slug) > 13
-    assert by_slug["elevenlabs"]["apiKeyHeaderName"] == "xi-api-key"
-    # In 0.7.0 the catalog is MCP-first. Linear's only connection option is a
-    # hosted shttp MCP server, so it is surfaced as a default managed MCP
-    # connector with bearer auth and zero tools until discovered via tools/list.
-    assert by_slug["linear"]["authStrategy"] == "bearer"
-    assert by_slug["linear"]["toolCount"] == 0
-    # Notion's first option is a stdio MCP server (local npx, no serverUrl), so
-    # it is not surfaced as a default managed connector. Miro's first option is
-    # a hosted shttp MCP server, so it is listed (oauth2).
-    assert "notion" not in by_slug
-    assert by_slug["miro"]["authStrategy"] == "oauth2"
-    assert by_slug["miro"]["toolCount"] == 0
-    assert by_slug["ordinal"]["authStrategy"] == "bearer"
-    assert by_slug["ordinal"]["logoUrl"] == "https://app.tryordinal.com/favicon.ico"
-    assert by_slug["datadog"]["authStrategy"] == "oauth2"
-    assert by_slug["datadog"]["oauthConfigured"] is False
-    assert (
-        by_slug["cloudflare-docs"]["logoUrl"]
-        == "https://cdn.simpleicons.org/cloudflare/FFFFFF"
-    )
-    assert by_slug["cloudflare-docs"]["iconBg"] == "#F38020"
-    assert by_slug["atlassian"]["authStrategy"] == "oauth2"
-    assert by_slug["atlassian"]["oauthConfigured"] is False
-    assert by_slug["deepwiki"]["authStrategy"] == "none"
-
+    # The catalog still lists every entry so an admin can browse and add any
+    # provider (OAuth or MCP).
     catalog = client.get("/api/integrations/catalog").json()
     catalog_by_slug = {entry["slug"]: entry for entry in catalog}
+    assert len(catalog_by_slug) > 13
     assert (
         catalog_by_slug["cloudflare-docs"]["logoUrl"]
         == "https://cdn.simpleicons.org/cloudflare/FFFFFF"
     )
+    # Linear is MCP/bearer in 0.7.0; it is in the catalog but not in the user
+    # list until an admin adds it.
+    assert "linear" in catalog_by_slug
+    assert catalog_by_slug["linear"]["connectionDefaults"]["authStrategy"] == "bearer"
 
+    # An admin adding a bearer MCP connector (ordinal) makes it available to
+    # users with its credential requirements.
+    repository.save_managed_connector(
+        ManagedConnector(
+            slug="ordinal",
+            name="Ordinal",
+            description="Ordinal",
+            authStrategy="bearer",
+            provider="mcp",
+            serverUrl="https://app.tryordinal.com/mcp",
+            credentialLabel="Ordinal API key",
+            credentialPlaceholder="Paste your Ordinal API key",
+            credentialHelp="API key for Ordinal.",
+        )
+    )
+    listed = client.get("/api/integrations/managed-connectors").json()
+    by_slug = {connector["slug"]: connector for connector in listed}
+    assert "ordinal" in by_slug
+    assert by_slug["ordinal"]["authStrategy"] == "bearer"
+
+    # A disabled admin-added connector is not surfaced to users.
     repository.save_managed_connector(
         ManagedConnector(
             slug="ordinal",
@@ -1820,11 +1869,33 @@ def test_default_managed_connectors_are_listed_and_require_credentials(
     assert disabled_discovery.status_code == 404
     repository.managed_connectors.clear()
 
+    # A user cannot discover a catalog-default managed connector that an admin
+    # has not added — the gate returns 404 before credential validation.
     missing_credential = client.post(
         "/api/integrations/discover",
         json={"kind": "managed", "key": "ordinal", "credentials": {}},
     )
+    assert missing_credential.status_code == 404
+    assert "admin must" in missing_credential.json()["detail"].lower()
 
+    not_added_oauth = client.post(
+        "/api/integrations/discover",
+        json={"kind": "managed", "key": "datadog", "credentials": {}},
+    )
+    assert not_added_oauth.status_code == 404
+    assert "admin must" in not_added_oauth.json()["detail"].lower()
+
+    # After an admin adds datadog WITHOUT configuring OAuth, discovery reaches
+    # the OAuth-config check and returns 403 (not the 404 admin-added gate).
+    repository.save_managed_connector(
+        ManagedConnector(
+            slug="datadog",
+            name="Datadog",
+            description="Datadog",
+            authStrategy="oauth2",
+            provider="mcp",
+        )
+    )
     unconfigured_oauth = client.post(
         "/api/integrations/discover",
         json={"kind": "managed", "key": "datadog", "credentials": {}},
@@ -1834,9 +1905,6 @@ def test_default_managed_connectors_are_listed_and_require_credentials(
         "Datadog needs an admin to configure OAuth"
         in unconfigured_oauth.json()["detail"]
     )
-
-    assert missing_credential.status_code == 400
-    assert "Ordinal API key" in missing_credential.json()["detail"]
 
 
 def test_managed_connector_function_indexing_generates_tools_and_preserves_access(

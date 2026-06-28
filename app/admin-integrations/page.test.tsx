@@ -147,7 +147,7 @@ describe("app/admin-integrations/page (ClientAdminIntegrationsPage)", () => {
     expect(container.textContent).toContain("OpenHands Integrations Hub");
   });
 
-  it("renders only the available OAuth providers for non-admin users", async () => {
+  it("renders the available providers (OAuth and MCP) for non-admin users", async () => {
     await act(async () => {
       root.render(
         <QueryClientProvider client={queryClient}>
@@ -160,19 +160,20 @@ describe("app/admin-integrations/page (ClientAdminIntegrationsPage)", () => {
       await new Promise((resolve) => setTimeout(resolve, 100));
     });
 
-    // Non-admins see the available OAuth list, not the registered list.
+    // Non-admins see the available list, not the registered list.
     // The managed-connector management controls (Delete) are admin-only.
     expect(container.textContent).toContain("available");
     expect(container.textContent).not.toContain("Delete");
-    // OAuth provider is listed; non-OAuth provider is filtered out.
+    // Both OAuth and non-OAuth (api_key/MCP) providers are listed — the page
+    // no longer filters to OAuth-only.
     expect(container.textContent).toContain("GitHub");
-    expect(container.textContent).not.toContain("ElevenLabs");
+    expect(container.textContent).toContain("ElevenLabs");
     // Guidance cards were removed in the simplified page.
     expect(container.querySelector('[data-testid="user-guidance-card"]')).toBeFalsy();
     expect(container.querySelector('[data-testid="admin-guidance-card"]')).toBeFalsy();
   });
 
-  it("renders the added and available OAuth lists for admin users", async () => {
+  it("renders the added and available lists (OAuth and MCP) for admin users", async () => {
     useAuthMock.mockReturnValue({
       user: { name: "Admin", email: "admin@example.com" },
       ownerId: "admin@example.com",
@@ -194,13 +195,14 @@ describe("app/admin-integrations/page (ClientAdminIntegrationsPage)", () => {
       await new Promise((resolve) => setTimeout(resolve, 100));
     });
 
-    // Admins see both the added and available OAuth lists. The
-    // managed-connector management controls (Delete) render for admins.
+    // Admins see both the added and available lists. The managed-connector
+    // management controls (Delete) render for admins.
     expect(container.textContent).toContain("available");
     expect(container.textContent).toContain("Delete");
-    // The registered OAuth connector appears; the non-OAuth one does not.
+    // Both the registered OAuth connector and the non-OAuth catalog provider
+    // appear — the page no longer filters to OAuth-only.
     expect(container.textContent).toContain("GitHub");
-    expect(container.textContent).not.toContain("ElevenLabs");
+    expect(container.textContent).toContain("ElevenLabs");
     expect(container.querySelector('[data-testid="admin-guidance-card"]')).toBeFalsy();
     expect(container.querySelector('[data-testid="user-guidance-card"]')).toBeFalsy();
   });

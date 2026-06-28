@@ -9,7 +9,6 @@ import { enableReactActEnvironment } from "@/src/test-utils/jsdom-helpers";
 import {
   IntegrationsCatalog,
   sortReadyManagedConnectors,
-  toDefaultReadyManagedConnector,
   upsertReadyManagedConnector,
 } from "@/src/components/admin/integrations/catalog";
 import type {
@@ -156,21 +155,6 @@ const createManagedConnectorOption = (
   ...overrides,
 });
 
-const createProvider = (
-  overrides: Partial<IntegrationCatalogOption> & Pick<IntegrationCatalogOption, "slug" | "name">,
-): IntegrationCatalogOption => ({
-  description: `${overrides.name} integration`,
-  categories: ["AI"],
-  connectionDefaults: {
-    provider: "http",
-    authStrategy: "oauth2",
-  },
-  docsUrl: `https://example.com/${overrides.slug}`,
-  notes: `${overrides.name} notes`,
-  popularityRank: 99,
-  ...overrides,
-});
-
 describe("catalog helper utilities", () => {
   it("sorts ready connectors by name and slug while replacing duplicate slugs", () => {
     const sorted = sortReadyManagedConnectors([
@@ -205,100 +189,11 @@ describe("catalog helper utilities", () => {
     );
   });
 
-  it("only builds default ready connectors for non-OAuth providers with complete defaults", () => {
-    const oauthProvider = createProvider({
-      slug: "google-calendar",
-      name: "Google Calendar",
-      connectionDefaults: {
-        provider: "http",
-        apiBaseUrl: "https://www.googleapis.com/calendar/v3",
-        openApiUrl: "https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest",
-      },
-    });
-    const incompleteHttpProvider = createProvider({
-      slug: "airtable",
-      name: "Airtable",
-      connectionDefaults: {
-        provider: "http",
-        authStrategy: "api_key",
-        apiBaseUrl: "https://api.airtable.com",
-      },
-    });
-    const incompleteMcpProvider = createProvider({
-      slug: "webflow",
-      name: "Webflow",
-      connectionDefaults: {
-        provider: "mcp",
-        authStrategy: "bearer",
-      },
-    });
-    const readyManualProvider = createProvider({
-      slug: "elevenlabs",
-      name: "ElevenLabs",
-      appUrl: "https://elevenlabs.io",
-      connectionDefaults: {
-        provider: "http",
-        authStrategy: "api_key",
-        authModes: ["api_key"],
-        apiBaseUrl: "https://api.elevenlabs.io",
-        openApiUrl: "https://api.elevenlabs.io/openapi.json",
-        credentialLabel: "ElevenLabs API key",
-        credentialPlaceholder: "Paste your ElevenLabs API key",
-        credentialHelp: "Use a personal ElevenLabs key.",
-        apiKeyHeaderName: "xi-api-key",
-      },
-    });
-
-    expect(toDefaultReadyManagedConnector(oauthProvider)).toBeNull();
-    expect(toDefaultReadyManagedConnector(incompleteHttpProvider)).toBeNull();
-    expect(toDefaultReadyManagedConnector(incompleteMcpProvider)).toBeNull();
-    expect(toDefaultReadyManagedConnector(readyManualProvider)).toMatchObject({
-      slug: "elevenlabs",
-      name: "ElevenLabs",
-      authStrategy: "api_key",
-      authModes: ["api_key"],
-      oauthConfigured: true,
-      credentialLabel: "ElevenLabs API key",
-      credentialPlaceholder: "Paste your ElevenLabs API key",
-      credentialHelp: "Use a personal ElevenLabs key.",
-      apiKeyHeaderName: "xi-api-key",
-      toolCount: 0,
-    });
-  });
-
-  it("treats explicit OAuth defaults as unavailable and uses fallback copy for ready MCP defaults", () => {
-    const explicitOauthDefault = createProvider({
-      slug: "google-drive",
-      name: "Google Drive",
-      connectionDefaults: {
-        provider: "http",
-        authStrategy: "oauth2",
-        apiBaseUrl: "https://www.googleapis.com/drive/v3",
-        openApiUrl: "https://www.googleapis.com/discovery/v1/apis/drive/v3/rest",
-      },
-    });
-    const readyMcpDefault = createProvider({
-      slug: "ordinal",
-      name: "Ordinal",
-      connectionDefaults: {
-        provider: "mcp",
-        authStrategy: "bearer",
-        authModes: ["" as unknown as "bearer"],
-        serverUrl: "https://mcp.ordinal.app/mcp",
-      },
-    });
-
-    expect(toDefaultReadyManagedConnector(explicitOauthDefault)).toBeNull();
-    expect(toDefaultReadyManagedConnector(readyMcpDefault)).toMatchObject({
-      slug: "ordinal",
-      name: "Ordinal",
-      authStrategy: "bearer",
-      authModes: ["bearer"],
-      credentialLabel: "Ordinal credential",
-      credentialPlaceholder: "Paste your Ordinal credential",
-      credentialHelp: "Credential required by Ordinal.",
-      toolCount: 0,
-    });
+  it("does not derive ready connectors from catalog defaults", () => {
+    // Readiness is repository-only: catalog defaults can be registered by an
+    // admin, but they are not user-ready until the admin saves them.
+    const current: ManagedConnectorOption[] = [];
+    expect(sortReadyManagedConnectors(current)).toEqual([]);
   });
 
 });
@@ -476,7 +371,7 @@ describe("IntegrationsCatalog", () => {
     );
   });
 
-  it("restores default ready manual-token providers after updating stored connectors", async () => {
+  it("does not mark manual-token providers ready when the stored connector is not configured", async () => {
     fetchMock.mockResolvedValueOnce(
       new Response(JSON.stringify(manualTokenConnector), {
         status: 200,
@@ -524,10 +419,8 @@ describe("IntegrationsCatalog", () => {
     expect(findProviderToggle(container, "ElevenLabs")?.getAttribute("aria-expanded")).toBe(
       "true",
     );
-    expect(container.textContent).toContain("Use ElevenLabs");
-    expect(container.textContent).toContain(
-      "This provider is already available in the integration wizard, so no additional registration is needed.",
-    );
+    expect(container.textContent).not.toContain("Use ElevenLabs");
+    expect(container.textContent).toContain("Register this provider");
   });
 
   it("adds a ready badge immediately after registering a new manual-token provider", async () => {
