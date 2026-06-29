@@ -7,6 +7,7 @@ import { ManagedConnectorList } from "@/src/components/admin/integrations/manage
 import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
 import type {
+  IntegrationConnectionStatus,
   ManagedConnectorOption,
   ManagedConnectorDefinition,
   IntegrationCatalogOption,
@@ -18,6 +19,13 @@ interface IntegrationsCatalogProps {
   managedConnectors: ManagedConnectorDefinition[];
   canRegisterManagedConnectors: boolean;
   oauthCallbackBaseUrl: string;
+  // The acting admin's own OAuth connections, forwarded to the managed
+  // connector list so it can render the per-connector setup checklist and
+  // gate "Index tools" for OAuth2 MCP connectors until the admin connects.
+  connections?: IntegrationConnectionStatus[];
+  // Called when an action may have changed the admin's connections (e.g. the
+  // OAuth redirect returns to this page) so the parent can refetch.
+  onConnectionsStale?: () => void;
 }
 
 export const sortReadyManagedConnectors = (connectors: ManagedConnectorOption[]) =>
@@ -60,6 +68,8 @@ export function IntegrationsCatalog({
   managedConnectors,
   canRegisterManagedConnectors,
   oauthCallbackBaseUrl,
+  connections,
+  onConnectionsStale,
 }: IntegrationsCatalogProps) {
   const [readyManagedConnectors, setReadyManagedConnectors] = useState(() =>
     sortReadyManagedConnectors(initialReadyManagedConnectors),
@@ -115,11 +125,13 @@ export function IntegrationsCatalog({
             hideChrome
             search={sharedQuery}
             onSearchChange={setSharedQuery}
+            connections={connections}
             onConnectorUpdated={(connector) => {
               if (connector.enabled && connector.oauthConfigured !== false) {
                 setReadyManagedConnectors((current) =>
                   upsertReadyManagedConnector(current, toReadyManagedConnector(connector)),
                 );
+                onConnectionsStale?.();
                 return;
               }
 

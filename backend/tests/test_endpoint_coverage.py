@@ -379,6 +379,89 @@ def test_admin_api_key_reindex_rejects_non_admin_key() -> None:
     assert response.status_code in {401, 403}
 
 
+def test_reindex_oauth_mcp_connector_without_admin_connection_returns_friendly_error() -> (
+    None
+):
+    """Indexing an OAuth2 MCP connector (e.g. Slack) requires the acting admin
+    to have connected their own account. Without a stored user access token the
+    MCP server would reject the unauthenticated `initialize` handshake with an
+    opaque JSON-RPC error (Slack returns ``missing_token``); the backend must
+    surface a clear, actionable 403 instead of leaking the raw provider error.
+    """
+    repository.save_key(OWNER, "admin", ADMIN_KEY)
+    slug = "slack"
+    repository.save_managed_connector(
+        ManagedConnector(
+            slug=slug,
+            name="Slack",
+            description="Slack hosted MCP connector",
+            provider="mcp",
+            authStrategy="oauth2",
+            serverUrl="https://mcp.slack.com/mcp",
+            oauthConfigured=True,
+            oauthConfig={
+                "authorizationUrl": "https://slack.com/oauth/v2_user/authorize",
+                "tokenUrl": "https://slack.com/api/oauth.v2.user.access",
+                "scopes": [],
+            },
+            credentialLabel="Connect Slack",
+            credentialPlaceholder="Connect Slack",
+            credentialHelp="Connect Slack with OAuth.",
+            tools=[],
+        )
+    )
+    client = get_client()
+    response = client.post(
+        f"/api/admin/managed-connectors/{slug}/functions",
+        headers={"Authorization": f"Bearer {ADMIN_KEY}", "X-Owner-Id": OWNER},
+    )
+    assert response.status_code == 403
+    detail = response.json().get("detail", "")
+    assert "Connect Slack" in detail
+    assert "before indexing" in detail
+
+
+def test_reindex_oauth_mcp_connector_friendly_error_uses_credential_label() -> None:
+    """The friendly 403 must echo the connector's ``credentialLabel`` (the
+    button text the admin sees) rather than a hardcoded ``Connect <name>``,
+    so a connector configured with a custom label points the admin at the
+    right button. Also covers the ``credentials or {}`` fallback when
+    ``get_connection_credentials`` returns ``None`` (no connection record).
+    """
+    repository.save_key(OWNER, "admin", ADMIN_KEY)
+    slug = "custom-slack"
+    repository.save_managed_connector(
+        ManagedConnector(
+            slug=slug,
+            name="Slack",
+            description="Slack hosted MCP connector with a custom label",
+            provider="mcp",
+            authStrategy="oauth2",
+            serverUrl="https://mcp.slack.com/mcp",
+            oauthConfigured=True,
+            oauthConfig={
+                "authorizationUrl": "https://slack.com/oauth/v2_user/authorize",
+                "tokenUrl": "https://slack.com/api/oauth.v2.user.access",
+                "scopes": [],
+            },
+            credentialLabel="Link Slack account",
+            credentialPlaceholder="Link Slack account",
+            credentialHelp="Link your Slack account.",
+            tools=[],
+        )
+    )
+    client = get_client()
+    response = client.post(
+        f"/api/admin/managed-connectors/{slug}/functions",
+        headers={"Authorization": f"Bearer {ADMIN_KEY}", "X-Owner-Id": OWNER},
+    )
+    assert response.status_code == 403
+    detail = response.json().get("detail", "")
+    assert "Link Slack account" in detail
+    # The hardcoded fallback label must not leak through when a real label is set.
+    assert '"Connect Slack"' not in detail
+
+
 def test_save_http_oauth_connector_indexes_full_tool_set(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

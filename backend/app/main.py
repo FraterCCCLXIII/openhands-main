@@ -2064,6 +2064,29 @@ def index_managed_connector_functions(
             if owner and connector.authStrategy == "oauth2"
             else {}
         )
+        # OAuth2 MCP servers (e.g. Slack's hosted MCP) require a user access
+        # token on every request, including the `initialize` handshake used to
+        # list tools. Without one the server rejects the call with an opaque
+        # JSON-RPC error (Slack returns `missing_token`). Surface a clear,
+        # actionable error instead so the admin knows to connect their own
+        # account first. Use the connector's credentialLabel for the button
+        # name so the message matches the UI the admin actually sees.
+        if connector.authStrategy == "oauth2" and not (credentials or {}).get(
+            "accessToken"
+        ):
+            connect_label = (
+                str(connector.credentialLabel or "").strip()
+                or f"Connect {connector.name}"
+            )
+            raise HTTPException(
+                status_code=403,
+                detail=(
+                    f"{connect_label} with your own account before indexing "
+                    f"{connector.name}'s tools. Open the connector below, click "
+                    f'"{connect_label}", complete the authorization, then '
+                    f"retry indexing."
+                ),
+            )
         discovered = discover_mcp_tools(
             server_url, mcp_discovery_headers(connector.authStrategy, credentials or {})
         )

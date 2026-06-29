@@ -1,7 +1,7 @@
 "use client";
 
 import { apiFetch } from "@/src/lib/fetch-json";
-import { ChevronRight, RefreshCw, Trash2 } from "lucide-react";
+import { ChevronRight, Trash2 } from "lucide-react";
 import { type FormEvent, useMemo, useState } from "react";
 
 import {
@@ -10,17 +10,27 @@ import {
 } from "@/src/components/integrations/tool-access-controls";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
+import { ConnectorSetupProgress } from "@/src/components/admin/integrations/connector-setup-progress";
+import {
+  connectionsByIntegrationKey,
+  inferConnectorProvider,
+} from "@/src/components/admin/integrations/connector-predicates";
 import { matchesSearchQuery } from "@/src/lib/text-utils";
 import { cn } from "@/src/lib/utils";
 import type {
   ManagedConnectorDefinition,
   ManagedConnectorRecord,
+  IntegrationConnectionStatus,
 } from "@/src/types/integrations-hub";
 
 interface ManagedConnectorListProps {
   initialManagedConnectors: ManagedConnectorDefinition[];
   onConnectorUpdated?: (connector: ManagedConnectorDefinition) => void;
   onConnectorDeleted?: (connector: ManagedConnectorDefinition) => void;
+  // The acting admin's own OAuth connections, keyed by integration key. Used
+  // to tell the admin which OAuth2 MCP connectors they have already connected
+  // their own account for (required before indexing those connectors' tools).
+  connections?: IntegrationConnectionStatus[];
   // When rendered inside the unified admin list, the parent owns the search
   // input and card chrome. `hideChrome` suppresses this component's own
   // header/search wrapper, and `search`/`onSearchChange` wire it to the
@@ -58,8 +68,7 @@ const parseScopes = (value: string) =>
     .map((scope) => scope.trim())
     .filter(Boolean);
 
-const inferProvider = (connector: ManagedConnectorDefinition) =>
-  connector.provider ?? (connector.openApiUrl ? "http" : "mcp");
+const inferProvider = inferConnectorProvider;
 
 const getCredentialStatusLabel = (connector: ManagedConnectorDefinition) => {
   if (connector.authStrategy === "oauth2") {
@@ -227,6 +236,7 @@ export function ManagedConnectorList({
   initialManagedConnectors,
   onConnectorUpdated,
   onConnectorDeleted,
+  connections = [],
   hideChrome = false,
   search: externalSearch,
   onSearchChange,
@@ -235,6 +245,17 @@ export function ManagedConnectorList({
   const [expandedSlug, setExpandedSlug] = useState<string | null>(null);
   const [formStates, setFormStates] = useState<Record<string, ManagedConnectorFormState>>({});
   const [internalSearch, setInternalSearch] = useState("");
+
+  // O(1) lookup of the admin's connections keyed by integration key (managed
+  // connectors are keyed by slug, which matches the connection's
+  // integrationKey). Memoized so the per-connector render does not rescan.
+  const connectionByKey = useMemo(
+    () => connectionsByIntegrationKey(connections),
+    [connections],
+  );
+
+  const getConnection = (connector: ManagedConnectorDefinition) =>
+    connectionByKey.get(connector.slug) ?? null;
 
   // Use the parent-owned search when provided; otherwise fall back to the
   // internal search box used in standalone rendering.
@@ -640,32 +661,30 @@ export function ManagedConnectorList({
                       ) : null}
                     </div>
                     <div className="border-b border-[var(--color-border)] px-4 py-4">
+                      <ConnectorSetupProgress
+                        connector={connector}
+                        connection={getConnection(connector)}
+                        indexing={form.indexing}
+                        onIndex={() => void handleIndexFunctions(connector)}
+                      />
+                    </div>
+                    <div className="border-b border-[var(--color-border)] px-4 py-4">
                       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                         <div>
                           <h4 className="text-sm font-semibold text-white">Indexed tools</h4>
                           <p className="mt-1 text-xs leading-6 text-[var(--color-text-base)]">
-                            Index the connector's current tools here, then set the maximum access level each user is allowed to select.
+                            Review the indexed tools below and set the maximum access level each user is allowed to select. Use the setup checklist above to index or refresh tools.
                           </p>
                         </div>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          className="h-8 gap-2 rounded-md px-3 text-xs"
-                          disabled={form.submitting || form.deleting || form.indexing}
-                          onClick={() => void handleIndexFunctions(connector)}
-                        >
-                          <RefreshCw className={cn("h-4 w-4", form.indexing && "animate-spin")} />
-                          {form.indexing
-                            ? "Indexing…"
-                            : connector.tools.length > 0
-                              ? "Refresh indexed tools"
-                              : "Index tools"}
-                        </Button>
+                        <Badge tone={connector.tools.length > 0 ? "success" : "warning"}>
+                          {connector.tools.length} tool
+                          {connector.tools.length === 1 ? "" : "s"}
+                        </Badge>
                       </div>
 
                       {connector.tools.length === 0 ? (
                         <p className="mt-4 text-sm text-[var(--color-text-base)]">
-                          No tools are indexed yet. Index this connector to review and constrain user-facing tool permissions.
+                          No tools are indexed yet. Use the &quot;Index tools&quot; step in the setup checklist above to review and constrain user-facing tool permissions.
                         </p>
                       ) : (
                         <div className="mt-4 space-y-3">

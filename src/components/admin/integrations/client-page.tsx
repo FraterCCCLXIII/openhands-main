@@ -13,6 +13,7 @@ import { Badge } from "@/src/components/ui/badge";
 import { buildAdminSectionHref } from "@/src/lib/admin-routes";
 import { fetchJson } from "@/src/lib/fetch-json";
 import type {
+  IntegrationConnectionStatus,
   ManagedConnectorDefinition,
   ManagedConnectorOption,
   IntegrationCatalogOption,
@@ -54,6 +55,18 @@ export function ClientAdminIntegrationsPage() {
     enabled: isAuthenticated,
     staleTime: 0,
     retry: false,
+  });
+
+  // The acting admin's own OAuth connections. OAuth2 MCP connectors (e.g.
+  // Slack) require a user access token to list tools, so the admin must
+  // connect their own account before indexing. This is fetched separately so
+  // it can be re-run after the admin returns from an OAuth redirect without
+  // reloading the whole catalog.
+  const connectionsQuery = useQuery<IntegrationConnectionStatus[]>({
+    queryKey: ["admin-oauth-connections"],
+    queryFn: () => fetchJson<IntegrationConnectionStatus[]>("/api/oauth/connections"),
+    enabled: isAuthenticated,
+    staleTime: 15_000,
   });
 
   const oauthCallbackBaseUrl =
@@ -153,6 +166,8 @@ export function ClientAdminIntegrationsPage() {
             managedConnectors={data.managedConnectors}
             canRegisterManagedConnectors={isAdmin}
             oauthCallbackBaseUrl={oauthCallbackBaseUrl}
+            connections={connectionsQuery.data ?? []}
+            onConnectionsStale={() => void connectionsQuery.refetch()}
           />
         </div>
       </div>

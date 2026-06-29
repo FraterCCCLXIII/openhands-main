@@ -1,11 +1,14 @@
 // @vitest-environment jsdom
 
-import { act } from "react";
+import { act, type ReactElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ManagedConnectorList } from "@/src/components/admin/integrations/managed-connector-list";
-import type { ManagedConnectorDefinition } from "@/src/types/integrations-hub";
+import type {
+  IntegrationConnectionStatus,
+  ManagedConnectorDefinition,
+} from "@/src/types/integrations-hub";
 
 import { enableReactActEnvironment, setInputValue } from "@/src/test-utils/jsdom-helpers";
 
@@ -96,6 +99,18 @@ const unreadableOauthConnector: ManagedConnectorDefinition = {
   updatedAt: "2026-03-12T00:00:00.000Z",
 };
 
+const notionConnection: IntegrationConnectionStatus = {
+  integrationKey: "notion",
+  provider: "mcp",
+  authStrategy: "oauth2",
+  scopes: [],
+  externalAccountId: "admin@example.com",
+  displayName: "Admin Workspace",
+  metadata: {},
+  createdAt: "2026-03-09T00:00:00.000Z",
+  updatedAt: "2026-03-09T00:00:00.000Z",
+};
+
 
 
 const findConnectorDetailsToggle = (container: ParentNode, slug: string) =>
@@ -125,12 +140,13 @@ describe("ManagedConnectorList", () => {
     vi.unstubAllGlobals();
   });
 
-  it("shows connector logos and top-level delete buttons in the compact card view", async () => {
-    await act(async () => {
-      root.render(
-        <ManagedConnectorList initialManagedConnectors={initialConnectors} />,
-      );
+  const renderList = (element: ReactElement) =>
+    act(async () => {
+      root.render(element);
     });
+
+  it("shows connector logos and top-level delete buttons in the compact card view", async () => {
+    await renderList(<ManagedConnectorList initialManagedConnectors={initialConnectors} />);
 
     expect(container.querySelector('[aria-label="Notion logo"]')).toBeTruthy();
     expect(
@@ -158,11 +174,7 @@ describe("ManagedConnectorList", () => {
       ),
     );
 
-    await act(async () => {
-      root.render(
-        <ManagedConnectorList initialManagedConnectors={initialConnectors} />,
-      );
-    });
+    await renderList(<ManagedConnectorList initialManagedConnectors={initialConnectors} />);
 
     const expandButton = findConnectorDetailsToggle(container, "notion");
     expect(expandButton).toBeTruthy();
@@ -241,11 +253,7 @@ describe("ManagedConnectorList", () => {
         ),
       );
 
-    await act(async () => {
-      root.render(
-        <ManagedConnectorList initialManagedConnectors={initialConnectors} />,
-      );
-    });
+    await renderList(<ManagedConnectorList initialManagedConnectors={initialConnectors} connections={[notionConnection]} />);
 
     const expandButton = findConnectorDetailsToggle(container, "notion");
     expect(expandButton).toBeTruthy();
@@ -299,13 +307,9 @@ describe("ManagedConnectorList", () => {
   });
 
   it("shows derived connector metadata in the compact card view", async () => {
-    await act(async () => {
-      root.render(
-        <ManagedConnectorList
+    await renderList(<ManagedConnectorList
           initialManagedConnectors={[baseConnector, secondaryConnector]}
-        />,
-      );
-    });
+        />);
 
     const logoImage = container.querySelector('img[alt="ElevenLabs logo"]');
     expect(logoImage?.getAttribute("src")).toBe("https://cdn.example.com/elevenlabs.png");
@@ -315,11 +319,7 @@ describe("ManagedConnectorList", () => {
   });
 
   it("surfaces unreadable OAuth credentials with a repair hint for admins", async () => {
-    await act(async () => {
-      root.render(
-        <ManagedConnectorList initialManagedConnectors={[unreadableOauthConnector]} />,
-      );
-    });
+    await renderList(<ManagedConnectorList initialManagedConnectors={[unreadableOauthConnector]} />);
 
     expect(container.textContent).toContain("OAuth credentials unreadable");
 
@@ -336,13 +336,9 @@ describe("ManagedConnectorList", () => {
   });
 
   it("filters managed connectors and shows an empty search state", async () => {
-    await act(async () => {
-      root.render(
-        <ManagedConnectorList
+    await renderList(<ManagedConnectorList
           initialManagedConnectors={[baseConnector, secondaryConnector]}
-        />,
-      );
-    });
+        />);
 
     const searchInput = container.querySelector('input[aria-label="Search managed connectors"]');
     expect(searchInput).toBeTruthy();
@@ -366,16 +362,12 @@ describe("ManagedConnectorList", () => {
   });
 
   it("hides its own chrome and defers search to the parent when hideChrome is set", async () => {
-    await act(async () => {
-      root.render(
-        <ManagedConnectorList
+    await renderList(<ManagedConnectorList
           initialManagedConnectors={[baseConnector, secondaryConnector]}
           hideChrome
           search="audio"
           onSearchChange={() => {}}
-        />,
-      );
-    });
+        />);
 
     // No own header/search wrapper.
     expect(container.textContent).not.toContain("Search and review registered connectors");
@@ -386,11 +378,7 @@ describe("ManagedConnectorList", () => {
   });
 
   it("validates provider-specific URLs before saving connector changes", async () => {
-    await act(async () => {
-      root.render(
-        <ManagedConnectorList initialManagedConnectors={initialConnectors} />,
-      );
-    });
+    await renderList(<ManagedConnectorList initialManagedConnectors={initialConnectors} />);
 
     const expandButton = findConnectorDetailsToggle(container, "notion");
     expect(expandButton).toBeTruthy();
@@ -437,11 +425,7 @@ describe("ManagedConnectorList", () => {
       }),
     );
 
-    await act(async () => {
-      root.render(
-        <ManagedConnectorList initialManagedConnectors={initialConnectors} />,
-      );
-    });
+    await renderList(<ManagedConnectorList initialManagedConnectors={initialConnectors} />);
 
     const expandButton = findConnectorDetailsToggle(container, "notion");
     expect(expandButton).toBeTruthy();
@@ -484,11 +468,7 @@ describe("ManagedConnectorList", () => {
     const confirmMock = vi.fn(() => false);
     vi.stubGlobal("confirm", confirmMock);
 
-    await act(async () => {
-      root.render(
-        <ManagedConnectorList initialManagedConnectors={initialConnectors} />,
-      );
-    });
+    await renderList(<ManagedConnectorList initialManagedConnectors={initialConnectors} />);
 
     const expandButton = findConnectorDetailsToggle(container, "notion");
     expect(expandButton).toBeTruthy();
@@ -538,11 +518,7 @@ describe("ManagedConnectorList", () => {
         }),
       );
 
-    await act(async () => {
-      root.render(
-        <ManagedConnectorList initialManagedConnectors={initialConnectors} />,
-      );
-    });
+    await renderList(<ManagedConnectorList initialManagedConnectors={initialConnectors} connections={[notionConnection]} />);
 
     const expandButton = findConnectorDetailsToggle(container, "notion");
     expect(expandButton).toBeTruthy();
@@ -572,6 +548,35 @@ describe("ManagedConnectorList", () => {
     expect(container.textContent).toContain("list_pages");
   });
 
+  it("disables Index tools and surfaces a connect prompt for an OAuth2 MCP connector the admin has not connected", async () => {
+    await renderList(<ManagedConnectorList initialManagedConnectors={initialConnectors} />);
+
+    const expandButton = findConnectorDetailsToggle(container, "notion");
+    expect(expandButton).toBeTruthy();
+
+    await act(async () => {
+      expandButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    // No connections prop => the admin has not connected their own account.
+    const indexButtons = Array.from(
+      container.querySelectorAll<HTMLButtonElement>('button[aria-label*="Index"]'),
+    );
+    expect(indexButtons.length).toBeGreaterThan(0);
+    expect(indexButtons.every((button) => button.disabled)).toBe(true);
+    // The setup checklist explains why indexing is gated.
+    expect(container.textContent).toContain(
+      "provider requires a user token to list tools",
+    );
+    expect(container.textContent).toContain("Connect Notion");
+    // The legacy "Indexed tools" section no longer has its own index button;
+    // it points to the setup checklist instead.
+    expect(container.textContent).toContain("setup checklist above");
+
+    // No fetch should be issued for indexing while the action is gated.
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
 
   it("deletes a managed connector from the card header without expanding first", async () => {
     fetchMock.mockResolvedValueOnce(
@@ -581,11 +586,7 @@ describe("ManagedConnectorList", () => {
       }),
     );
 
-    await act(async () => {
-      root.render(
-        <ManagedConnectorList initialManagedConnectors={initialConnectors} />,
-      );
-    });
+    await renderList(<ManagedConnectorList initialManagedConnectors={initialConnectors} />);
 
     const deleteButton = container.querySelector(
       'button[aria-label="Delete Notion connector"]',
