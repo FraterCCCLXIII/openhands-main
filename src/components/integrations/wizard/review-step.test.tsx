@@ -7,7 +7,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { ReviewStep } from "@/src/components/integrations/wizard/review-step";
 import type { ToolSpec } from "@/src/types/integrations-hub";
 
-import { enableReactActEnvironment } from "@/src/test-utils/jsdom-helpers";
+import { enableReactActEnvironment, selectDropdownOption } from "@/src/test-utils/jsdom-helpers";
 
 enableReactActEnvironment();
 
@@ -312,13 +312,12 @@ describe("ReviewStep", () => {
 
     expect(getNextSelectionState()).toEqual({ searchPages: false });
 
-    const enabledButton = container.querySelector(
-      'button[aria-label="Enabled access for searchPages"]',
-    ) as HTMLButtonElement | null;
-    expect(enabledButton).toBeTruthy();
-
     await act(async () => {
-      enabledButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      await selectDropdownOption(
+        container,
+        "access-mode-searchPages",
+        "enabled",
+      );
     });
 
     expect(onSetToolMode).toHaveBeenCalledWith("searchPages", "enabled");

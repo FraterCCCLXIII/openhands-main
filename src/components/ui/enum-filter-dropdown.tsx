@@ -13,6 +13,7 @@ interface EnumFilterDropdownProps<T extends string> {
   ariaLabel: string;
   className?: string;
   triggerClassName?: string;
+  defaultValue?: T;
 }
 
 export function EnumFilterDropdown<T extends string>({
@@ -25,6 +26,7 @@ export function EnumFilterDropdown<T extends string>({
   ariaLabel,
   className,
   triggerClassName,
+  defaultValue,
 }: EnumFilterDropdownProps<T>) {
   return (
     <SelectDropdown
@@ -42,7 +44,7 @@ export function EnumFilterDropdown<T extends string>({
       triggerClassName={triggerClassName}
       menuAlign="right"
       highlightWhenNotDefault
-      defaultValue={options[0]}
+      defaultValue={defaultValue ?? options[0]}
     />
   );
 }

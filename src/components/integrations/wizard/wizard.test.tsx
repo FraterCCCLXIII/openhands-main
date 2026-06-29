@@ -15,7 +15,7 @@ vi.mock("next/navigation", () => ({
 
 import { IntegrationWizard } from "@/src/components/integrations/wizard/wizard";
 
-import { enableReactActEnvironment, setInputValue } from "@/src/test-utils/jsdom-helpers";
+import { enableReactActEnvironment, selectDropdownOption, setInputValue } from "@/src/test-utils/jsdom-helpers";
 
 enableReactActEnvironment();
 
@@ -824,12 +824,21 @@ describe("IntegrationWizard", () => {
       "searchPages",
     ]);
 
-    const searchEnabledButton = container.querySelector(
-      'button[aria-label="Enabled access for searchPages"]',
-    ) as HTMLButtonElement | null;
-    expect(searchEnabledButton?.disabled).toBe(true);
     expect(getToolMode("searchPages")).toBe("approval_required");
 
+    const searchAccessTrigger = container.querySelector(
+      '[data-testid="access-mode-searchPages-trigger"]',
+    ) as HTMLButtonElement | null;
+    expect(searchAccessTrigger?.textContent).toContain("Case-by-case");
+
+    await act(async () => {
+      searchAccessTrigger?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    expect(
+      document.querySelector('[data-testid="access-mode-searchPages-enabled"]'),
+    ).toBeNull();
 
     const searchInput = container.querySelector(
       'input[type="search"][aria-label="Search tools"]',

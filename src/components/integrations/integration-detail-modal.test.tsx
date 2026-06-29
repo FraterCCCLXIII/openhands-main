@@ -34,12 +34,10 @@ const baseIntegration: IntegrationSpec = {
   kind: "api",
   authStrategy: "bearer",
   enabled: false,
-  fineGrainedPermissions: true,
   tools: {
     create_pull_request: createPullRequestTool,
   },
   config: {},
-  credentials: {},
 };
 
 const baseEntry: FilteredIntegrationToolEntry = {
@@ -96,15 +94,12 @@ describe("IntegrationDetailModal integration enable row", () => {
     expect(enableRow).toBeTruthy();
     expect(header).toBeTruthy();
     expect(toolsPanel).toBeTruthy();
-    if (!enableRow || !header || !toolsPanel) {
-      throw new Error("Expected modal elements to render");
-    }
     expect(
-      header.compareDocumentPosition(enableRow) &
+      header?.compareDocumentPosition(enableRow!) &
         Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
     expect(
-      enableRow.compareDocumentPosition(toolsPanel) &
+      enableRow?.compareDocumentPosition(toolsPanel!) &
         Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
 

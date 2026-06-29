@@ -6,10 +6,10 @@ import { createPortal } from "react-dom";
 
 import { cn } from "@/src/lib/utils";
 import {
-  formControlFilterTriggerClassName,
   formControlSelectTriggerClassName,
 } from "@/src/styles/form-control-classes";
 import {
+  dropdownFilterTriggerClassName,
   dropdownMenuListClassName,
   dropdownMenuRowClassName,
   dropdownMenuSurfaceClassName,
@@ -77,18 +77,19 @@ export function SelectDropdown({
 
     const updatePosition = () => {
       const rect = trigger.getBoundingClientRect();
+      const menuOffset = variant === "filter" ? 8 : 4;
       setMenuPosition(
         menuAlign === "right"
           ? {
               position: "fixed",
-              top: rect.bottom + 4,
+              top: rect.bottom + menuOffset,
               right: window.innerWidth - rect.right,
               minWidth: rect.width,
               zIndex: 60,
             }
           : {
               position: "fixed",
-              top: rect.bottom + 4,
+              top: rect.bottom + menuOffset,
               left: rect.left,
               minWidth: rect.width,
               zIndex: 60,
@@ -135,7 +136,7 @@ export function SelectDropdown({
 
   const triggerBaseClassName =
     variant === "filter"
-      ? formControlFilterTriggerClassName
+      ? dropdownFilterTriggerClassName
       : formControlSelectTriggerClassName;
 
   const menu =
@@ -186,7 +187,11 @@ export function SelectDropdown({
 
   return (
     <div
-      className={cn("relative w-full min-w-0", className)}
+      className={cn(
+        "relative",
+        variant === "filter" ? "w-fit shrink-0" : "w-full min-w-0",
+        className,
+      )}
       data-testid={testId}
     >
       {name ? <input type="hidden" name={name} value={value} readOnly /> : null}
@@ -212,7 +217,12 @@ export function SelectDropdown({
           triggerClassName,
         )}
       >
-        <span className="min-w-0 flex-1 truncate whitespace-nowrap text-left">
+        <span
+          className={cn(
+            "min-w-0 truncate whitespace-nowrap text-left",
+            variant === "field" && "flex-1",
+          )}
+        >
           {selectedLabel}
         </span>
         <ChevronDown

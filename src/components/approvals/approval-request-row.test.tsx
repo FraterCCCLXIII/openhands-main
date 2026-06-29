@@ -42,6 +42,7 @@ describe("ApprovalRequestRow", () => {
   });
 
   const renderRow = async (overrides?: {
+    isSelected?: boolean;
     onToggleSelected?: ReturnType<typeof vi.fn>;
     onApprove?: ReturnType<typeof vi.fn>;
     onDeny?: ReturnType<typeof vi.fn>;
@@ -56,7 +57,7 @@ describe("ApprovalRequestRow", () => {
           <tbody>
             <ApprovalRequestRow
               request={pendingRequest}
-              isSelected={false}
+              isSelected={overrides?.isSelected ?? false}
               showSelectionColumn
               showDecisionColumns={false}
               showActionsColumn
@@ -74,30 +75,35 @@ describe("ApprovalRequestRow", () => {
     return { onToggleSelected, onApprove, onDeny };
   };
 
-  it("toggles selection only through the checkbox control", async () => {
+  it("toggles selection when a pending row is clicked", async () => {
     const { onToggleSelected } = await renderRow();
 
     const row = container.querySelector(
       '[data-testid="approval-request-row-req-pending"]',
     ) as HTMLTableRowElement | null;
-    const checkbox = container.querySelector(
-      'input[aria-label="Select request req-pending"]',
-    ) as HTMLInputElement | null;
 
     expect(row).toBeTruthy();
-    expect(checkbox).toBeTruthy();
 
     await act(async () => {
       row?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
 
-    expect(onToggleSelected).not.toHaveBeenCalled();
+    expect(onToggleSelected).toHaveBeenCalledWith("req-pending", true);
+  });
+
+  it("toggles selection through the checkbox control", async () => {
+    const { onToggleSelected } = await renderRow();
+
+    const checkbox = container.querySelector(
+      'input[aria-label="Select request req-pending"]',
+    ) as HTMLInputElement | null;
 
     await act(async () => {
       checkbox?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
       checkbox?.dispatchEvent(new Event("change", { bubbles: true }));
     });
 
+    expect(onToggleSelected).toHaveBeenCalledTimes(1);
     expect(onToggleSelected).toHaveBeenCalledWith("req-pending", true);
   });
 

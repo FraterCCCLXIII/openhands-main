@@ -1,4 +1,5 @@
 import { ArrowRight, Check, X } from "lucide-react";
+import type { MouseEvent } from "react";
 
 import {
   formatApprovalIdentityValue,
@@ -8,6 +9,7 @@ import {
 import { APPROVALS_PAGE_COPY } from "@/src/constants/approvals-page";
 import { cn } from "@/src/lib/utils";
 import { formControlTransitionClassName } from "@/src/styles/form-control-classes";
+import { settingsListRowHoverClassName } from "@/src/styles/settings-list-classes";
 import type { AccessRequest } from "@/src/types/integrations-hub";
 
 const approvalRowIconActionClassName = cn(
@@ -50,6 +52,14 @@ function formatRequestedDurationHours(requestedMinutes: number): string {
   return `${Math.max(1, Math.round(requestedMinutes / 60))}h`;
 }
 
+const isRowSelectionTarget = (target: EventTarget | null) => {
+  if (!(target instanceof HTMLElement)) {
+    return false;
+  }
+
+  return !target.closest("button, a, input, label");
+};
+
 export function ApprovalRequestRow({
   request,
   isSelected,
@@ -63,13 +73,29 @@ export function ApprovalRequestRow({
   onDeny,
 }: ApprovalRequestRowProps) {
   const toolLabel = `${request.integrationKey}.${request.toolName}`;
+  const isRowSelectable =
+    showSelectionColumn && request.status === "pending" && !requestActionPending;
+
+  const handleRowClick = (event: MouseEvent<HTMLTableRowElement>) => {
+    if (!isRowSelectable || !isRowSelectionTarget(event.target)) {
+      return;
+    }
+
+    onToggleSelected(request.id, !isSelected);
+  };
 
   return (
     <tr
       data-request-id={request.id}
       data-testid={`approval-request-row-${request.id}`}
       valign="middle"
-      className={cn(formControlTransitionClassName)}
+      onClick={handleRowClick}
+      className={cn(
+        formControlTransitionClassName,
+        isRowSelectable && settingsListRowHoverClassName,
+        isRowSelectable && "cursor-pointer",
+        isRowSelectable && isSelected && "bg-[var(--oh-interactive-selected)]",
+      )}
     >
       {showSelectionColumn ? (
         <td className={cn(tableCellClassName, "w-12 max-w-none align-middle pl-4 pr-2")}>
@@ -78,6 +104,7 @@ export function ApprovalRequestRow({
               type="checkbox"
               aria-label={`Select request ${request.id}`}
               checked={isSelected}
+              onClick={(event) => event.stopPropagation()}
               onChange={(event) =>
                 onToggleSelected(request.id, event.currentTarget.checked)
               }

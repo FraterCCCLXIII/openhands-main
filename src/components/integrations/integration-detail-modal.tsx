@@ -8,6 +8,7 @@ import {
 } from "@/src/components/dashboard/utils";
 import { DeleteIntegrationModal } from "@/src/components/integrations/delete-integration-modal";
 import { DetailsRevealCaret } from "@/src/components/integrations/details-reveal-caret";
+import { IntegrationEnableRow } from "@/src/components/integrations/integration-enable-row";
 import { IntegrationLogoBadge } from "@/src/components/integrations/integration-logo-badge";
 import { isRedundantIntegrationCardLabel } from "@/src/components/integrations/integration-card-labels";
 import {
@@ -26,7 +27,6 @@ import {
 import { ModalBackdrop } from "@/src/components/ui/modal-backdrop";
 import { modalShellClassName } from "@/src/components/ui/modal-shell";
 import {
-  extensionModuleCardDisabledPillClassName,
   extensionModuleCardPillClassName,
 } from "@/src/styles/extension-module-card-classes";
 import type { IntegrationSpec, ToolAccessMode } from "@/src/types/integrations-hub";
@@ -38,6 +38,7 @@ interface IntegrationDetailModalProps {
   expandedTools: Record<string, boolean>;
   onClose: () => void;
   onDelete: (integration: IntegrationSpec) => boolean;
+  onToggleIntegrationEnabled: (integration: IntegrationSpec) => void;
   onToggleToolExpanded: (toolKey: string) => void;
   onUpdateToolAccessMode: (
     integrationKey: string,
@@ -53,6 +54,7 @@ export function IntegrationDetailModal({
   expandedTools,
   onClose,
   onDelete,
+  onToggleIntegrationEnabled,
   onToggleToolExpanded,
   onUpdateToolAccessMode,
 }: IntegrationDetailModalProps) {
@@ -97,7 +99,7 @@ export function IntegrationDetailModal({
           testId={`integration-detail-modal-close-${integration.key}`}
         />
 
-        <div className="custom-scrollbar-always min-h-0 flex-1 overflow-y-auto px-7 pb-7 pt-7">
+        <div className="custom-scrollbar-always min-h-0 flex-1 overflow-y-auto px-7 pb-4 pt-7">
           <div className="flex items-start gap-3 pr-6">
             <IntegrationLogoBadge
               slug={integration.key}
@@ -112,14 +114,6 @@ export function IntegrationDetailModal({
                 >
                   {integration.name}
                 </h2>
-                {!integration.enabled ? (
-                  <span
-                    data-testid={`integration-detail-modal-disabled-${integration.key}`}
-                    className={extensionModuleCardDisabledPillClassName}
-                  >
-                    {INTEGRATIONS_PAGE_COPY.installedStatusDisabled}
-                  </span>
-                ) : null}
               </div>
               <p
                 data-testid={`integration-detail-modal-meta-${integration.key}`}
@@ -141,6 +135,19 @@ export function IntegrationDetailModal({
                 ))}
               </div>
             </div>
+          </div>
+
+          <div className="mt-4">
+            <IntegrationEnableRow
+              integrationKey={integration.key}
+              enabled={integration.enabled}
+              disabled={isActionPending}
+              onToggle={(nextEnabled) => {
+                if (nextEnabled !== integration.enabled) {
+                  onToggleIntegrationEnabled(integration);
+                }
+              }}
+            />
           </div>
 
           <div className="mt-6 overflow-hidden rounded-xl border border-[var(--oh-border)] bg-[var(--oh-bg-input)]">

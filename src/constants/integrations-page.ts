@@ -49,6 +49,8 @@ export const INTEGRATIONS_PAGE_COPY = {
   installedToolNoDescription: "No description provided.",
   installedShowToolDetails: "Show details",
   installedHideToolDetails: "Hide details",
+  installedEnabledStateLabel: "Enabled",
+  installedDisabledStateLabel: "Disabled",
   installedDefaultScopesLabel: "Default scopes:",
   installedNoneLabel: "none",
   installedIntegrationsCountLabel: "Integrations",
