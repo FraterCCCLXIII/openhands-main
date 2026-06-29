@@ -6,6 +6,7 @@ import {
   formatTimestampParts,
   hasMissingApprovalIdentity,
 } from "@/src/components/dashboard/utils";
+import { Checkbox } from "@/src/components/ui/checkbox";
 import { APPROVALS_PAGE_COPY } from "@/src/constants/approvals-page";
 import { cn } from "@/src/lib/utils";
 import { formControlTransitionClassName } from "@/src/styles/form-control-classes";
@@ -88,9 +89,9 @@ export function ApprovalRequestRow({
     <tr
       data-request-id={request.id}
       data-testid={`approval-request-row-${request.id}`}
-      valign="middle"
       onClick={handleRowClick}
       className={cn(
+        "align-middle",
         formControlTransitionClassName,
         isRowSelectable && settingsListRowHoverClassName,
         isRowSelectable && "cursor-pointer",
@@ -100,8 +101,7 @@ export function ApprovalRequestRow({
       {showSelectionColumn ? (
         <td className={cn(tableCellClassName, "w-12 max-w-none align-middle pl-4 pr-2")}>
           {request.status === "pending" ? (
-            <input
-              type="checkbox"
+            <Checkbox
               aria-label={`Select request ${request.id}`}
               checked={isSelected}
               onClick={(event) => event.stopPropagation()}
@@ -109,7 +109,6 @@ export function ApprovalRequestRow({
                 onToggleSelected(request.id, event.currentTarget.checked)
               }
               disabled={requestActionPending}
-              className="size-4 shrink-0 accent-[var(--oh-accent)]"
             />
           ) : (
             <span aria-hidden className="inline-block size-4 shrink-0" />

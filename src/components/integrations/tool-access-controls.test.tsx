@@ -52,11 +52,34 @@ describe("AccessModeSlider", () => {
 
     expect(trigger).toBeTruthy();
     expect(trigger?.textContent).toContain(accessModeLabel("enabled"));
-    expect(trigger?.className).toContain("bg-[var(--oh-bg-input)]");
+    expect(trigger?.className).toContain("text-[var(--oh-color-success)]");
+    expect(trigger?.querySelector("svg")?.getAttribute("class")).toContain("text-current");
+    expect(trigger?.className).toContain("hover:bg-[color:rgba(165,231,94,0.18)]");
     expect(trigger?.className).not.toContain("rounded-full");
     expect(
       container.querySelector('[data-access-mode="enabled"]'),
     ).toBeTruthy();
+  });
+
+  it("uses mode-specific trigger styling for non-default access modes", async () => {
+    await act(async () => {
+      root.render(
+        <AccessModeSlider
+          toolName="compose_plan"
+          mode="approval_required"
+          onChange={vi.fn()}
+        />,
+      );
+    });
+
+    const trigger = container.querySelector(
+      `[data-testid="${getAccessModeDropdownTestId("compose_plan")}-trigger"]`,
+    ) as HTMLButtonElement | null;
+
+    expect(trigger?.className).toContain("text-[var(--oh-warning)]");
+    expect(trigger?.className).toContain("hover:bg-[color:rgba(217,181,90,0.18)]");
+    expect(trigger?.className).not.toContain("bg-white/10");
+    expect(trigger?.className).not.toContain("border-white/60");
   });
 
   it("calls onChange when a different access mode is selected", async () => {

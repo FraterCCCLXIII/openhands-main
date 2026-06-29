@@ -3,7 +3,8 @@ import * as React from "react";
 import { cn } from "@/src/lib/utils";
 import { formControlCheckboxClassName } from "@/src/styles/form-control-classes";
 
-type CheckboxProps = React.InputHTMLAttributes<HTMLInputElement>;
+export interface CheckboxProps
+  extends React.InputHTMLAttributes<HTMLInputElement> {}
 
 export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
   ({ className, type = "checkbox", ...props }, ref) => (

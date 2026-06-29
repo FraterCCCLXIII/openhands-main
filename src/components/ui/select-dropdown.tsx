@@ -6,10 +6,11 @@ import { createPortal } from "react-dom";
 
 import { cn } from "@/src/lib/utils";
 import {
+  formControlFilterTriggerClassName,
   formControlSelectTriggerClassName,
 } from "@/src/styles/form-control-classes";
 import {
-  dropdownFilterTriggerClassName,
+  dropdownInstantColorClassName,
   dropdownMenuListClassName,
   dropdownMenuRowClassName,
   dropdownMenuSurfaceClassName,
@@ -136,7 +137,7 @@ export function SelectDropdown({
 
   const triggerBaseClassName =
     variant === "filter"
-      ? dropdownFilterTriggerClassName
+      ? cn(formControlFilterTriggerClassName, dropdownInstantColorClassName)
       : formControlSelectTriggerClassName;
 
   const menu =
@@ -227,7 +228,7 @@ export function SelectDropdown({
         </span>
         <ChevronDown
           className={cn(
-            "h-4 w-4 shrink-0 text-tertiary-alt transition-transform",
+            "h-4 w-4 shrink-0 text-current transition-transform",
             open && "rotate-180",
           )}
           aria-hidden

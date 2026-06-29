@@ -38,12 +38,3 @@ export const dropdownMenuRowIconWrapperClassName = cn(
 
 export const dropdownMenuSurfaceClassName =
   "z-50 flex flex-col rounded-md border border-[var(--oh-border-subtle)] bg-tertiary px-1 py-1 text-white context-menu-box-shadow";
-
-/** Compact filter/enum trigger — aligned with integrations toolbar menus. */
-export const dropdownFilterTriggerClassName = cn(
-  "inline-flex h-8 min-h-8 cursor-pointer items-center gap-1.5 rounded-md border px-3",
-  "border-[var(--oh-border)] bg-[var(--oh-bg-input)] text-sm font-normal text-white",
-  "hover:bg-surface-raised",
-  "focus-visible:border-white/40 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/20",
-  dropdownInstantColorClassName,
-);

@@ -48,5 +48,13 @@ export const formControlFilterTriggerClassName = cn(
   formControlButtonClassName,
   formControlBorderClassName,
   formControlSurfaceClassName,
-  "shrink-0 justify-between text-white",
+  formControlFocusClassName,
+  "shrink-0 justify-between gap-1.5 text-sm font-normal text-[var(--oh-muted)]",
+  "hover:bg-[var(--oh-interactive-hover)] hover:text-white",
+);
+
+export const formControlCheckboxClassName = cn(
+  "h-4 w-4 shrink-0 cursor-pointer rounded border border-[var(--oh-border)] bg-[var(--oh-bg-input)] accent-[var(--oh-accent)]",
+  formControlTransitionClassName,
+  "disabled:cursor-not-allowed disabled:opacity-30",
 );

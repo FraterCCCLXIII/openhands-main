@@ -7,6 +7,9 @@ import {
   filterReviewedTools,
   findConnectorByQuery,
   getReviewedTools,
+  getWizardFlow,
+  getWizardProgressIndex,
+  getWizardTotalSteps,
   hasManagedConnectorCredentialInput,
   type DiscoveryResponse,
   type WizardDraft,
@@ -388,5 +391,18 @@ describe("integration-wizard-utils", () => {
 
     expect(filteredByDescription.map(([name]) => name)).toEqual(["list_models"]);
     expect(filteredByScopes.map(([name]) => name)).toEqual(["delete_voice"]);
+  });
+
+  it("maps wizard flow and progress from search params", () => {
+    expect(getWizardFlow(new URLSearchParams())).toBe("add");
+    expect(getWizardFlow(new URLSearchParams("managedConnector=elevenlabs"))).toBe(
+      "catalog",
+    );
+    expect(getWizardTotalSteps("add")).toBe(3);
+    expect(getWizardTotalSteps("catalog")).toBe(2);
+    expect(getWizardProgressIndex("add", 1)).toBe(0);
+    expect(getWizardProgressIndex("add", 3)).toBe(2);
+    expect(getWizardProgressIndex("catalog", 2)).toBe(0);
+    expect(getWizardProgressIndex("catalog", 3)).toBe(1);
   });
 });

@@ -18,7 +18,7 @@ function ConnectionDetailSubsection({
   return (
     <section
       data-testid={testId}
-      className="flex flex-col gap-4 border-t border-[var(--oh-border)] pt-6 first:border-t-0 first:pt-0"
+      className="flex flex-col gap-4 border-t border-[var(--oh-border)] pt-6 pb-6 first:border-t-0 first:pt-0 last:pb-0"
     >
       <div>
         <h3 className="text-sm font-medium text-white">{title}</h3>
@@ -61,11 +61,7 @@ export function AgentConnectionDetailsContent({
       data-testid="agent-connection-details-content"
       className="flex flex-col"
     >
-      <p className="text-sm leading-5 text-tertiary-light">
-        {AGENT_CONNECTION_PAGE_COPY.connectionDetailsDescription}
-      </p>
-
-      <div className="mt-4 flex flex-col">
+      <div className="flex flex-col">
         <ConnectionDetailSubsection
           testId="agent-connection-mcp-section"
           title={AGENT_CONNECTION_PAGE_COPY.agentMcpTitle}

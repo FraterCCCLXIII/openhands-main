@@ -14,6 +14,7 @@ interface EnumFilterDropdownProps<T extends string> {
   className?: string;
   triggerClassName?: string;
   defaultValue?: T;
+  highlightWhenNotDefault?: boolean;
 }
 
 export function EnumFilterDropdown<T extends string>({
@@ -27,6 +28,7 @@ export function EnumFilterDropdown<T extends string>({
   className,
   triggerClassName,
   defaultValue,
+  highlightWhenNotDefault = true,
 }: EnumFilterDropdownProps<T>) {
   return (
     <SelectDropdown
@@ -43,7 +45,7 @@ export function EnumFilterDropdown<T extends string>({
       className={cn("shrink-0", className)}
       triggerClassName={triggerClassName}
       menuAlign="right"
-      highlightWhenNotDefault
+      highlightWhenNotDefault={highlightWhenNotDefault}
       defaultValue={defaultValue ?? options[0]}
     />
   );

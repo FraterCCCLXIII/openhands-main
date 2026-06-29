@@ -24,8 +24,8 @@ export function IntegrationsSearchInput({
     <div
       data-testid={testId}
       className={cn(
-        "relative flex min-w-0 flex-1 items-center",
-        "h-9 rounded-lg border border-[var(--oh-border)] bg-base-secondary",
+        "relative flex min-h-9 h-9 min-w-0 shrink-0 items-center",
+        "rounded-lg border border-[var(--oh-border)] bg-base-secondary",
         "transition-colors focus-within:border-white/40 focus-within:ring-1 focus-within:ring-white/20",
         className,
       )}
@@ -38,7 +38,7 @@ export function IntegrationsSearchInput({
         placeholder={placeholder}
         aria-label={ariaLabel}
         data-testid="integrations-search-input"
-        className="min-w-0 flex-1 border-0 bg-transparent px-3 text-sm text-white outline-none placeholder:text-tertiary-alt [&::-webkit-search-cancel-button]:hidden"
+        className="h-9 min-h-9 min-w-0 flex-1 border-0 bg-transparent px-3 py-0 text-sm leading-5 text-white outline-none placeholder:text-tertiary-alt [&::-webkit-search-cancel-button]:hidden"
       />
       {value ? (
         <button
