@@ -1,12 +1,13 @@
 "use client";
 
 import { CheckCircle2, CircleDashed, RefreshCw } from "lucide-react";
-import { type ReactNode } from "react";
+import { type ReactNode, useState } from "react";
 
 import { isOAuthMcpConnector } from "@/src/components/admin/integrations/connector-predicates";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
 import { buildAdminSectionHref } from "@/src/lib/admin-routes";
+import { fetchJson } from "@/src/lib/fetch-json";
 import { cn } from "@/src/lib/utils";
 import type {
   IntegrationConnectionStatus,
@@ -37,7 +38,7 @@ const oauthClientConfigured = (connector: ManagedConnectorDefinition) =>
       connector.oauthClientStatus !== "unreadable",
   );
 
-const buildOAuthStartHref = (connector: ManagedConnectorDefinition) =>
+const buildOAuthStartPath = (connector: ManagedConnectorDefinition) =>
   `/api/oauth/${encodeURIComponent(connector.slug)}/start?integrationKey=${encodeURIComponent(
     connector.slug,
   )}&redirectTo=${encodeURIComponent(
@@ -45,6 +46,21 @@ const buildOAuthStartHref = (connector: ManagedConnectorDefinition) =>
       managedConnector: connector.slug,
     }),
   )}`;
+
+interface OAuthStartResponse {
+  redirectUrl: string;
+}
+
+async function startOAuthConnection(connector: ManagedConnectorDefinition) {
+  const response = await fetchJson<OAuthStartResponse>(
+    buildOAuthStartPath(connector),
+    { headers: { Accept: "application/json" } },
+  );
+  if (!response.redirectUrl) {
+    throw new Error("OAuth start response did not include a redirect URL.");
+  }
+  window.location.href = response.redirectUrl;
+}
 
 const StepRow = ({ step }: { step: SetupStep }) => (
   <li
@@ -86,6 +102,7 @@ export const ConnectorSetupProgress = ({
   const clientConfigured = oauthClientConfigured(connector);
   const connectionConfigured = Boolean(connection);
   const toolsIndexed = connector.tools.length > 0;
+  const [oauthStarting, setOauthStarting] = useState(false);
 
   const steps: SetupStep[] = [];
 
@@ -127,20 +144,30 @@ export const ConnectorSetupProgress = ({
           <span className="text-xs text-[var(--color-text-muted)]">
             Connected as {connection?.displayName || connection?.externalAccountId || "your account"}
           </span>
-          <a
-            href={buildOAuthStartHref(connector)}
-            className="inline-flex items-center gap-1 text-xs text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
+          <button
+            type="button"
+            disabled={oauthStarting}
+            onClick={() => {
+              setOauthStarting(true);
+              void startOAuthConnection(connector).catch(() => setOauthStarting(false));
+            }}
+            className="inline-flex items-center gap-1 text-xs text-[var(--color-accent)] hover:text-[var(--color-accent-hover)] disabled:opacity-50"
           >
-            Reconnect
-          </a>
+            {oauthStarting ? "Redirecting…" : "Reconnect"}
+          </button>
         </div>
       ) : clientConfigured ? (
-        <a
-          href={buildOAuthStartHref(connector)}
-          className="inline-flex items-center gap-1 rounded-md border border-[var(--color-accent)] bg-[var(--color-accent)] px-3 py-1.5 text-xs font-medium text-[var(--color-accent-foreground)] hover:bg-[var(--color-accent-hover)]"
+        <button
+          type="button"
+          disabled={oauthStarting}
+          onClick={() => {
+            setOauthStarting(true);
+            void startOAuthConnection(connector).catch(() => setOauthStarting(false));
+          }}
+          className="inline-flex items-center gap-1 rounded-md border border-[var(--color-accent)] bg-[var(--color-accent)] px-3 py-1.5 text-xs font-medium text-[var(--color-accent-foreground)] hover:bg-[var(--color-accent-hover)] disabled:opacity-50"
         >
-          Connect {connector.name}
-        </a>
+          {oauthStarting ? "Redirecting…" : `Connect ${connector.name}`}
+        </button>
       ) : (
         <Badge tone="warning">Pending</Badge>
       ),

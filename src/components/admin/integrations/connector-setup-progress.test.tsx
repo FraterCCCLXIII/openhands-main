@@ -145,7 +145,15 @@ describe("ConnectorSetupProgress", () => {
     expect(container.textContent).toContain("ready for users");
   });
 
-  it("renders a Connect CTA linking to the OAuth start endpoint", async () => {
+  it("renders a Connect CTA that initiates an authenticated OAuth start", async () => {
+    const fetchMock = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ redirectUrl: "https://slack.com/oauth/authorize" }), {
+          headers: { "content-type": "application/json" },
+        }),
+      );
+
     await render(
       <ConnectorSetupProgress
         connector={baseSlackConnector}
@@ -155,13 +163,21 @@ describe("ConnectorSetupProgress", () => {
       />,
     );
 
-    const connectLink = container.querySelector<HTMLAnchorElement>(
-      'a[href*="/api/oauth/slack/start"]',
-    );
-    expect(connectLink).toBeTruthy();
-    expect(connectLink?.textContent).toContain("Connect Slack");
-    expect(connectLink?.getAttribute("href")).toContain(
-      "managedConnector%3Dslack",
-    );
+    const connectButton = Array.from(
+      container.querySelectorAll<HTMLButtonElement>("button"),
+    ).find((b) => b.textContent?.includes("Connect Slack"));
+    expect(connectButton).toBeTruthy();
+
+    await act(async () => {
+      connectButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const [url, init] = fetchMock.mock.calls[0] ?? [];
+    expect(String(url)).toContain("/api/oauth/slack/start");
+    expect(String(url)).toContain("managedConnector%3Dslack");
+    expect(new Headers(init?.headers).get("Accept")).toBe("application/json");
+
+    fetchMock.mockRestore();
   });
 });
