@@ -108,3 +108,105 @@ def test_0004_adds_icon_columns_to_managed_connectors(monkeypatch) -> None:
     joined = "\n".join(capture.statements)
     assert "DROP COLUMN IF EXISTS icon_color" in joined
     assert "DROP COLUMN IF EXISTS icon_bg" in joined
+
+
+class CapturingResult:
+    def __init__(self, rows: list[dict[str, object]]) -> None:
+        self.rows = rows
+
+    def mappings(self) -> list[dict[str, object]]:
+        return self.rows
+
+
+class CapturingBind:
+    def __init__(self, rows: list[dict[str, object]]) -> None:
+        self.rows = rows
+        self.statements: list[str] = []
+        self.params: list[dict[str, object] | None] = []
+
+    def execute(
+        self, statement: object, params: dict[str, object] | None = None
+    ) -> CapturingResult:
+        normalized = " ".join(str(statement).split())
+        self.statements.append(normalized)
+        self.params.append(params)
+        if normalized.startswith("SELECT profile_id, api_key"):
+            return CapturingResult(self.rows)
+        return CapturingResult([])
+
+
+class CapturingOpWithBind(CapturingOp):
+    def __init__(self, bind: CapturingBind) -> None:
+        super().__init__()
+        self.bind = bind
+
+    def get_bind(self) -> CapturingBind:
+        return self.bind
+
+
+def test_0007_overwrites_existing_agent_keys(monkeypatch) -> None:
+    migration = importlib.import_module(
+        "backend.alembic.versions.20260628_0007_agent_api_key_hashes"
+    )
+    legacy_key = "cla_legacy_plaintext_agent_key"
+    bind = CapturingBind(
+        [
+            {"profile_id": "profile-1", "api_key": legacy_key},
+        ]
+    )
+    capture = CapturingOpWithBind(bind)
+    monkeypatch.setattr(migration, "op", capture)
+    monkeypatch.setattr(
+        migration,
+        "_try_encrypt_agent_key",
+        lambda value: f"encrypted:{value}",
+    )
+
+    migration.upgrade()
+
+    joined = "\n".join(capture.statements + bind.statements)
+    assert migration.revision == "0007"
+    assert migration.down_revision == "0006"
+    assert "RAISE EXCEPTION" not in joined
+    assert (
+        "ALTER TABLE agent_api_keys ADD COLUMN IF NOT EXISTS api_key_hash TEXT"
+        in joined
+    )
+    assert (
+        "ALTER TABLE agent_api_keys ADD COLUMN IF NOT EXISTS key_prefix TEXT" in joined
+    )
+    assert (
+        "ALTER TABLE agent_api_keys ADD COLUMN IF NOT EXISTS key_suffix TEXT" in joined
+    )
+    assert (
+        "ALTER TABLE agent_api_keys ADD COLUMN IF NOT EXISTS encrypted_api_key TEXT"
+        in joined
+    )
+    assert "SELECT profile_id, api_key FROM agent_api_keys" in joined
+    assert "UPDATE agent_api_keys SET api_key = :api_key" in joined
+    assert "CREATE UNIQUE INDEX IF NOT EXISTS agent_api_keys_api_key_hash_idx" in joined
+
+    update_params = next(params for params in bind.params if params)
+    expected_hash = migration._hash_key(legacy_key)
+    assert update_params == {
+        "profile_id": "profile-1",
+        "api_key": f"hashed:{expected_hash[:32]}",
+        "api_key_hash": expected_hash,
+        "key_prefix": legacy_key[:12],
+        "key_suffix": legacy_key[-4:],
+        "encrypted_api_key": f"encrypted:{legacy_key}",
+    }
+
+    capture.statements.clear()
+    bind.statements.clear()
+    bind.params.clear()
+    migration.downgrade()
+
+    joined = "\n".join(capture.statements)
+    assert "DROP INDEX IF EXISTS agent_api_keys_api_key_hash_idx" in joined
+    assert (
+        "ALTER TABLE agent_api_keys DROP COLUMN IF EXISTS encrypted_api_key" in joined
+    )
+    assert "ALTER TABLE agent_api_keys DROP COLUMN IF EXISTS key_suffix" in joined
+    assert "ALTER TABLE agent_api_keys DROP COLUMN IF EXISTS key_prefix" in joined
+    assert "ALTER TABLE agent_api_keys DROP COLUMN IF EXISTS api_key_hash" in joined
