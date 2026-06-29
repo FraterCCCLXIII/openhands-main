@@ -175,7 +175,7 @@ describe("ConnectorSetupProgress", () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
     const [url, init] = fetchMock.mock.calls[0] ?? [];
     expect(String(url)).toContain("/api/oauth/slack/start");
-    expect(String(url)).toContain("managedConnector%3Dslack");
+    expect(String(url)).toContain("admin-integrations");
     expect(new Headers(init?.headers).get("Accept")).toBe("application/json");
 
     fetchMock.mockRestore();

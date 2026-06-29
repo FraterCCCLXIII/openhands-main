@@ -2,6 +2,8 @@
 
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import { IntegrationsCatalog } from "@/src/components/admin/integrations/catalog";
@@ -69,6 +71,37 @@ export function ClientAdminIntegrationsPage() {
     staleTime: 15_000,
   });
 
+  // When returning from an OAuth redirect, the callback appends
+  // oauth_status / oauth_provider / oauth_error to the URL. Force a
+  // connections refetch so the newly connected (or failed) account shows
+  // up immediately, and surface a status banner.
+  const searchParams = useSearchParams();
+  const [oauthStatusMessage, setOauthStatusMessage] = useState<{
+    tone: "success" | "error";
+    message: string;
+  } | null>(null);
+
+  useEffect(() => {
+    const status = searchParams.get("oauth_status");
+    const provider = searchParams.get("oauth_provider");
+    const oauthError = searchParams.get("oauth_error");
+    if (!status) return;
+
+    if (status === "connected" && provider) {
+      setOauthStatusMessage({
+        tone: "success",
+        message: `${provider[0]?.toUpperCase() ?? ""}${provider.slice(1)} connected successfully.`,
+      });
+      void connectionsQuery.refetch();
+    } else if (status === "error") {
+      setOauthStatusMessage({
+        tone: "error",
+        message: oauthError || "OAuth connection failed.",
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
   const oauthCallbackBaseUrl =
     typeof window !== "undefined" ? `${window.location.origin}/api/oauth` : "";
 
@@ -127,6 +160,17 @@ export function ClientAdminIntegrationsPage() {
         />
 
         <div className="space-y-4">
+          {oauthStatusMessage ? (
+            <div
+              className={`rounded-lg border p-3 text-sm ${
+                oauthStatusMessage.tone === "success"
+                  ? "border-[var(--color-success)]/40 bg-[var(--color-success)]/10 text-[var(--color-success)]"
+                  : "border-red-500/40 bg-red-500/10 text-red-200"
+              }`}
+            >
+              {oauthStatusMessage.message}
+            </div>
+          ) : null}
           <header className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
             <div className="min-w-0">
               <p className="text-[11px] uppercase tracking-[0.22em] text-[var(--color-text-base)]">

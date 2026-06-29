@@ -29,6 +29,10 @@ vi.mock("@/src/lib/fetch-json", () => ({
   fetchJson: fetchJsonMock,
 }));
 
+vi.mock("next/navigation", () => ({
+  useSearchParams: () => new URLSearchParams(),
+}));
+
 import { ClientAdminIntegrationsPage } from "@/src/components/admin/integrations/client-page";
 
 describe("app/admin-integrations/page (ClientAdminIntegrationsPage)", () => {

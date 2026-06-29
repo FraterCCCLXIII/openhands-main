@@ -6,7 +6,6 @@ import { type ReactNode, useState } from "react";
 import { isOAuthMcpConnector } from "@/src/components/admin/integrations/connector-predicates";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
-import { buildAdminSectionHref } from "@/src/lib/admin-routes";
 import { fetchJson } from "@/src/lib/fetch-json";
 import { cn } from "@/src/lib/utils";
 import type {
@@ -42,9 +41,7 @@ const buildOAuthStartPath = (connector: ManagedConnectorDefinition) =>
   `/api/oauth/${encodeURIComponent(connector.slug)}/start?integrationKey=${encodeURIComponent(
     connector.slug,
   )}&redirectTo=${encodeURIComponent(
-    buildAdminSectionHref("integrations", {
-      managedConnector: connector.slug,
-    }),
+    `/admin-integrations/?managedConnector=${encodeURIComponent(connector.slug)}`,
   )}`;
 
 interface OAuthStartResponse {
