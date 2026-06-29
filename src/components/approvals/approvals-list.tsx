@@ -5,7 +5,11 @@ import {
   type ApprovalStatusFilter,
 } from "@/src/constants/approvals-page";
 import { cn } from "@/src/lib/utils";
-import { settingsListContainerClassName } from "@/src/styles/settings-list-classes";
+import {
+  settingsListContainerClassName,
+  settingsListTableHeadClassName,
+  settingsListTableHeaderCellClassName,
+} from "@/src/styles/settings-list-classes";
 
 interface ApprovalsListProps {
   requests: AccessRequest[];
@@ -18,8 +22,10 @@ interface ApprovalsListProps {
   onDenyRequest?: (requestId: string) => void;
 }
 
-const tableHeaderCellClassName =
-  "px-2 py-2 text-left text-xs font-medium leading-tight whitespace-normal text-[var(--oh-text-secondary)]";
+const approvalsTableHeaderCellClassName = cn(
+  settingsListTableHeaderCellClassName,
+  "text-xs font-medium text-tertiary-light whitespace-normal",
+);
 
 export function ApprovalsList({
   requests,
@@ -43,6 +49,7 @@ export function ApprovalsList({
       <table className="w-full table-fixed border-collapse text-left">
         <colgroup>
           {showSelectionColumn ? <col className="w-12" /> : null}
+          <col className="w-12" />
           <col className="w-[22%]" />
           <col className="w-[18%]" />
           {showConversationColumn ? <col className="w-[14%]" /> : null}
@@ -57,47 +64,59 @@ export function ApprovalsList({
           <col className="w-[16%]" />
           {showActionsColumn ? <col className="w-[72px]" /> : null}
         </colgroup>
-        <thead>
-          <tr className="border-b border-[var(--oh-border)]">
+        <thead className={settingsListTableHeadClassName}>
+          <tr>
             {showSelectionColumn ? (
-              <th scope="col" className={cn(tableHeaderCellClassName, "w-12 pl-4 pr-2")}>
+              <th scope="col" className={cn(approvalsTableHeaderCellClassName, "w-12 pl-4 pr-2")}>
                 <span className="sr-only">
                   {APPROVALS_PAGE_COPY.tableColumnSelect}
                 </span>
               </th>
             ) : null}
-            <th scope="col" className={tableHeaderCellClassName}>
+            <th
+              scope="col"
+              className={cn(
+                approvalsTableHeaderCellClassName,
+                "w-12",
+                showSelectionColumn ? "px-2" : "pl-4 pr-2",
+              )}
+            >
+              <span className="sr-only">
+                {APPROVALS_PAGE_COPY.tableColumnIntegration}
+              </span>
+            </th>
+            <th scope="col" className={approvalsTableHeaderCellClassName}>
               {APPROVALS_PAGE_COPY.tableColumnTool}
             </th>
-            <th scope="col" className={tableHeaderCellClassName}>
+            <th scope="col" className={approvalsTableHeaderCellClassName}>
               {APPROVALS_PAGE_COPY.tableColumnInvocationIdentity}
             </th>
             {showConversationColumn ? (
-              <th scope="col" className={tableHeaderCellClassName}>
+              <th scope="col" className={approvalsTableHeaderCellClassName}>
                 {APPROVALS_PAGE_COPY.tableColumnConversation}
               </th>
             ) : null}
-            <th scope="col" className={tableHeaderCellClassName}>
+            <th scope="col" className={approvalsTableHeaderCellClassName}>
               {APPROVALS_PAGE_COPY.tableColumnRequested}
             </th>
-            <th scope="col" className={tableHeaderCellClassName}>
+            <th scope="col" className={approvalsTableHeaderCellClassName}>
               {APPROVALS_PAGE_COPY.tableColumnRequestedDuration}
             </th>
             {showDecisionColumns ? (
               <>
-                <th scope="col" className={tableHeaderCellClassName}>
+                <th scope="col" className={approvalsTableHeaderCellClassName}>
                   {APPROVALS_PAGE_COPY.tableColumnDecidedBy}
                 </th>
-                <th scope="col" className={tableHeaderCellClassName}>
+                <th scope="col" className={approvalsTableHeaderCellClassName}>
                   {APPROVALS_PAGE_COPY.tableColumnDecidedAt}
                 </th>
               </>
             ) : null}
-            <th scope="col" className={tableHeaderCellClassName}>
+            <th scope="col" className={approvalsTableHeaderCellClassName}>
               {APPROVALS_PAGE_COPY.tableColumnScopes}
             </th>
             {showActionsColumn ? (
-              <th scope="col" className={cn(tableHeaderCellClassName, "w-[72px]")}>
+              <th scope="col" className={cn(approvalsTableHeaderCellClassName, "w-[72px]")}>
                 <span className="sr-only">
                   {APPROVALS_PAGE_COPY.tableColumnActions}
                 </span>

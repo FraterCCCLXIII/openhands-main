@@ -38,6 +38,7 @@ export const APPROVALS_PAGE_COPY = {
   denyRequestAriaLabel: (toolName: string, integrationKey: string) =>
     `Deny ${toolName} on ${integrationKey}`,
   tableColumnSelect: "Select",
+  tableColumnIntegration: "Integration",
   tableColumnTool: "Tool",
   tableColumnInvocationIdentity: "Invocation identity",
   tableColumnConversation: "Conversation",

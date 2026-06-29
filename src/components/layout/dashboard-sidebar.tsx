@@ -29,7 +29,7 @@ import {
   sidebarNavDividerContentClassName,
   sidebarNavListClassName,
   sidebarStatsRowClassName,
-  SIDEBAR_STATS_TRANSITION_MS,
+  sidebarStatsRowStyle,
 } from "@/src/styles/sidebar-layout";
 
 export type DashboardSidebarItemId =
@@ -95,7 +95,7 @@ function DashboardSidebarStatsRow({
     <div
       data-testid="dashboard-sidebar-stats"
       className={sidebarStatsRowClassName(visible)}
-      style={{ transitionDuration: `${SIDEBAR_STATS_TRANSITION_MS}ms` }}
+      style={sidebarStatsRowStyle(visible)}
       aria-hidden={!visible}
     >
       <div className="grid w-full grid-cols-3 gap-2 pr-2.5">

@@ -49,7 +49,8 @@ export const HUB_PAGE_COPY = {
     subtitle:
       "Deployment-wide snapshot of /api/admin/overview, presented as a concise expandable user browser.",
     browseUsersTitle: "Browse users",
-    deploymentUserSummariesTitle: "Deployment-wide user summaries",
+    usersSearchPlaceholder: "Search users by owner id, integration, or provider",
+    usersSearchEmpty: "No users match your search.",
     deploymentUserSummariesDescription:
       "Expand a row to inspect saved identities, approval pressure, notification volume, and duplicate external-account groups for a specific user.",
     noUsersYet:
@@ -69,16 +70,12 @@ export const HUB_PAGE_COPY = {
     adminAccessGateAdminIntegrationsLink: "Admin integrations",
     connectedIdentitiesPill: (count: number) => `${count} connected identities`,
     pendingApprovalsPill: (count: number) => `${count} pending approvals`,
-    duplicateGroupsPill: (count: number, label: string) =>
-      `${count} duplicate ${label}`,
-    duplicateGroupLabel: "group",
-    duplicateGroupsLabel: "groups",
     adminAccessRequiredPill: "Admin access required",
-    usersShownPill: (count: number) => `${count} shown`,
-    connectedOwnersPill: (count: number) => `${count} connected owners`,
-    managedConnectorsPill: (count: number) => `${count} managed connectors`,
-    notificationsPill: (count: number) => `${count} notifications`,
-    accessRequestsPill: (count: number) => `${count} access requests`,
+    usersShownLabel: "Shown",
+    connectedOwnersLabel: "Connected owners",
+    managedConnectorsLabel: "Managed connectors",
+    notificationsCountLabel: "Notifications",
+    accessRequestsLabel: "Access requests",
     connectionCount: (count: number, label: string) => `${count} ${label}`,
     connectionLabel: "connection",
     connectionsLabel: "connections",

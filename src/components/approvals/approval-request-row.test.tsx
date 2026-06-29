@@ -43,6 +43,7 @@ describe("ApprovalRequestRow", () => {
 
   const renderRow = async (overrides?: {
     isSelected?: boolean;
+    showSelectionColumn?: boolean;
     onToggleSelected?: ReturnType<typeof vi.fn>;
     onApprove?: ReturnType<typeof vi.fn>;
     onDeny?: ReturnType<typeof vi.fn>;
@@ -58,7 +59,7 @@ describe("ApprovalRequestRow", () => {
             <ApprovalRequestRow
               request={pendingRequest}
               isSelected={overrides?.isSelected ?? false}
-              showSelectionColumn
+              showSelectionColumn={overrides?.showSelectionColumn ?? true}
               showDecisionColumns={false}
               showActionsColumn
               showConversationColumn={false}
@@ -125,5 +126,29 @@ describe("ApprovalRequestRow", () => {
     expect(onToggleSelected).not.toHaveBeenCalled();
     expect(onApprove).toHaveBeenCalledWith("req-pending");
     expect(onDeny).toHaveBeenCalledWith("req-pending");
+  });
+
+  it("renders the integration logo after the selection checkbox", async () => {
+    await renderRow();
+
+    const logoCell = container.querySelector(
+      '[data-testid="approval-request-logo-req-pending"]',
+    );
+
+    expect(logoCell).toBeTruthy();
+    expect(logoCell?.previousElementSibling?.querySelector('input[type="checkbox"]')).toBeTruthy();
+    expect(logoCell?.querySelector('[title="slack"]')).toBeTruthy();
+  });
+
+  it("adds left inset to the logo cell when the selection column is hidden", async () => {
+    await renderRow({ showSelectionColumn: false });
+
+    const logoCell = container.querySelector(
+      '[data-testid="approval-request-logo-req-pending"]',
+    );
+
+    expect(logoCell?.className).toContain("pl-4");
+    expect(logoCell?.className).toContain("pr-2");
+    expect(logoCell?.previousElementSibling).toBeNull();
   });
 });

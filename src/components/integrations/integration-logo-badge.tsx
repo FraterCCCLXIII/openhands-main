@@ -44,9 +44,10 @@ export function IntegrationLogoBadge({
       aria-hidden
       title={name}
       className={cn(
-        "inline-flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg",
+        "inline-flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg p-1.5",
         "border border-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.18)]",
-        "[&>svg]:h-5 [&>svg]:w-5 [&>img]:h-full [&>img]:w-full [&>img]:object-contain [&>img]:p-[22%]",
+        "[&>svg]:h-full [&>svg]:w-full [&>svg]:max-h-5 [&>svg]:max-w-5",
+        "[&>img]:h-full [&>img]:w-full [&>img]:object-contain",
         className,
       )}
       style={{

@@ -34,6 +34,27 @@ export const settingsListStaticRowClassName = cn(
   "flex items-center px-3",
 );
 
+export const settingsListTableRowClassName = cn(
+  settingsListRowHoverClassName,
+  formControlTransitionClassName,
+  "border-t border-[var(--oh-border)] first:border-t-0",
+);
+
+export const settingsListTableHeadClassName = cn(
+  formControlSurfaceClassName,
+  "sticky top-0 z-10 border-b border-[var(--oh-border)]",
+);
+
+export const settingsListTableHeaderCellClassName = cn(
+  settingsListRowHeightClassName,
+  "px-3 text-left text-sm font-medium align-middle",
+);
+
+export const settingsListTableCellClassName = cn(
+  settingsListRowHeightClassName,
+  "px-3 text-sm align-middle min-w-0",
+);
+
 export const settingsListIconActionButtonClassName = cn(
   "inline-flex cursor-pointer items-center justify-center rounded-md p-1 text-muted",
   formControlTransitionClassName,

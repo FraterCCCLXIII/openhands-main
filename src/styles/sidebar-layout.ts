@@ -108,7 +108,7 @@ export const SIDEBAR_SHELL_EXPANDED_CLASS = "md:w-[300px] md:min-w-[300px] pb-2 
 
 export const SIDEBAR_SHELL_COLLAPSED_CLASS = "md:w-[60px] md:min-w-[60px] md:px-2.5 pb-2";
 
-export const SIDEBAR_STATS_TRANSITION_MS = 200;
+export const SIDEBAR_STATS_TRANSITION_MS = 120;
 
 export function sidebarStatsRowClassName(visible: boolean): string {
   return cn(
@@ -117,6 +117,25 @@ export function sidebarStatsRowClassName(visible: boolean): string {
       ? "max-h-24 opacity-100 mt-2"
       : "max-h-0 opacity-0 mt-0 pointer-events-none",
   );
+}
+
+/** Opacity fades; max-height/margin snap on open and only after fade-out on close (no resize during fade). */
+export function sidebarStatsRowStyle(visible: boolean): {
+  transitionDuration: string;
+  transitionDelay: string;
+} {
+  const ms = SIDEBAR_STATS_TRANSITION_MS;
+  if (visible) {
+    return {
+      transitionDuration: `${ms}ms, 0ms, 0ms`,
+      transitionDelay: "0ms, 0ms, 0ms",
+    };
+  }
+
+  return {
+    transitionDuration: `${ms}ms, 0ms, 0ms`,
+    transitionDelay: `0ms, ${ms}ms, ${ms}ms`,
+  };
 }
 
 /** @deprecated Use dynamic shell classes on DashboardSidebar instead. */

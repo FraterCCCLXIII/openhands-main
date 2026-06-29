@@ -6,6 +6,7 @@ import {
   formatTimestampParts,
   hasMissingApprovalIdentity,
 } from "@/src/components/dashboard/utils";
+import { IntegrationLogoBadge } from "@/src/components/integrations/integration-logo-badge";
 import { Checkbox } from "@/src/components/ui/checkbox";
 import { APPROVALS_PAGE_COPY } from "@/src/constants/approvals-page";
 import { cn } from "@/src/lib/utils";
@@ -115,6 +116,21 @@ export function ApprovalRequestRow({
           )}
         </td>
       ) : null}
+
+      <td
+        data-testid={`approval-request-logo-${request.id}`}
+        className={cn(
+          tableCellClassName,
+          "w-12 max-w-none align-middle",
+          showSelectionColumn ? "px-2" : "pl-4 pr-2",
+        )}
+      >
+        <IntegrationLogoBadge
+          slug={request.integrationKey}
+          name={request.integrationKey}
+          className="h-7 w-7 rounded-md [&>svg]:max-h-3.5 [&>svg]:max-w-3.5 [&>img]:max-h-3.5 [&>img]:max-w-3.5"
+        />
+      </td>
 
       <td className={cn(tableCellClassName, "break-words")}>
         <p className="text-sm font-semibold text-white">{toolLabel}</p>
