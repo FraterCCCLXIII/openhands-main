@@ -40,19 +40,17 @@ import {
 } from "react-icons/si";
 import { TbBrandMonday, TbBrandOnedrive } from "react-icons/tb";
 
+import { CUSTOM_OAUTH_PROVIDER_LOGOS } from "@/src/components/integrations/custom-oauth-provider-logos";
+
 const LOGO_CLASS_NAME = "h-5 w-5";
 
-const simpleIcon = (Icon: React.ComponentType<{ className?: string }>) =>
-  createElement(Icon, { className: LOGO_CLASS_NAME });
+const simpleIcon = (Icon: React.ComponentType<{ className?: string; color?: string }>) =>
+  createElement(Icon, { className: LOGO_CLASS_NAME, color: "currentColor" });
 
-/** OAuth provider catalog slugs that rely on favicon URLs when no SVG brand icon exists. */
-export const OAUTH_PROVIDER_FAVICON_SLUGS = new Set([
-  "freshdesk",
-  "ordinal",
-  "pipedrive",
-  "plaid",
-  "servicenow",
-]);
+/** OAuth provider catalog slugs backed by custom inline SVG marks. */
+export const CUSTOM_OAUTH_PROVIDER_LOGO_SLUGS = new Set(
+  Object.keys(CUSTOM_OAUTH_PROVIDER_LOGOS),
+);
 
 export const OAUTH_PROVIDER_LOGOS: Record<string, ReactNode> = {
   "google-docs": simpleIcon(SiGoogledocs),
@@ -92,4 +90,5 @@ export const OAUTH_PROVIDER_LOGOS: Record<string, ReactNode> = {
   xero: simpleIcon(SiXero),
   gitlab: simpleIcon(SiGitlab),
   bitbucket: simpleIcon(SiBitbucket),
+  ...CUSTOM_OAUTH_PROVIDER_LOGOS,
 };

@@ -10,8 +10,6 @@ export const ADMIN_INTEGRATIONS_PAGE_COPY = {
   title: "Admin integrations",
   subtitle:
     "Register, edit, and remove managed connectors for this deployment. Regular users can request missing providers through the integrations wizard.",
-  metaSummary: (readyCount: number, catalogCount: number) =>
-    `${readyCount} connectors ready · ${catalogCount} catalog options`,
   userGuidanceTitle: "For users",
   userGuidanceSubtitle: "What to do when the connector you want is not listed.",
   userGuidanceInfoAriaLabel: "For users information",
