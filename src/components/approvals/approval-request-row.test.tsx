@@ -128,27 +128,33 @@ describe("ApprovalRequestRow", () => {
     expect(onDeny).toHaveBeenCalledWith("req-pending");
   });
 
-  it("renders the integration logo after the selection checkbox", async () => {
+  it("renders the integration logo in the tool column after the selection checkbox", async () => {
     await renderRow();
 
-    const logoCell = container.querySelector(
+    const toolCell = container.querySelector(
+      '[data-testid="approval-request-tool-req-pending"]',
+    );
+    const logoMarker = container.querySelector(
       '[data-testid="approval-request-logo-req-pending"]',
     );
 
-    expect(logoCell).toBeTruthy();
-    expect(logoCell?.previousElementSibling?.querySelector('input[type="checkbox"]')).toBeTruthy();
-    expect(logoCell?.querySelector('[title="slack"]')).toBeTruthy();
+    expect(toolCell).toBeTruthy();
+    expect(logoMarker).toBeTruthy();
+    expect(
+      toolCell?.previousElementSibling?.querySelector('input[type="checkbox"]'),
+    ).toBeTruthy();
+    expect(toolCell?.querySelector('[title="slack"]')).toBeTruthy();
   });
 
-  it("adds left inset to the logo cell when the selection column is hidden", async () => {
+  it("adds left inset to the tool column when the selection column is hidden", async () => {
     await renderRow({ showSelectionColumn: false });
 
-    const logoCell = container.querySelector(
-      '[data-testid="approval-request-logo-req-pending"]',
+    const toolCell = container.querySelector(
+      '[data-testid="approval-request-tool-req-pending"]',
     );
 
-    expect(logoCell?.className).toContain("pl-4");
-    expect(logoCell?.className).toContain("pr-2");
-    expect(logoCell?.previousElementSibling).toBeNull();
+    expect(toolCell?.className).toContain("pl-4");
+    expect(toolCell?.className).toContain("pr-2");
+    expect(toolCell?.previousElementSibling).toBeNull();
   });
 });

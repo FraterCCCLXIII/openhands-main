@@ -49,8 +49,7 @@ export function ApprovalsList({
       <table className="w-full table-fixed border-collapse text-left">
         <colgroup>
           {showSelectionColumn ? <col className="w-12" /> : null}
-          <col className="w-12" />
-          <col className="w-[22%]" />
+          <col className="w-[30%]" />
           <col className="w-[18%]" />
           {showConversationColumn ? <col className="w-[14%]" /> : null}
           <col className="w-[108px]" />
@@ -77,15 +76,9 @@ export function ApprovalsList({
               scope="col"
               className={cn(
                 approvalsTableHeaderCellClassName,
-                "w-12",
                 showSelectionColumn ? "px-2" : "pl-4 pr-2",
               )}
             >
-              <span className="sr-only">
-                {APPROVALS_PAGE_COPY.tableColumnIntegration}
-              </span>
-            </th>
-            <th scope="col" className={approvalsTableHeaderCellClassName}>
               {APPROVALS_PAGE_COPY.tableColumnTool}
             </th>
             <th scope="col" className={approvalsTableHeaderCellClassName}>

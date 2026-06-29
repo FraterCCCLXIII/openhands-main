@@ -22,6 +22,14 @@ const approvalRowIconActionClassName = cn(
 const tableCellClassName =
   "max-w-0 px-2 py-2.5 align-middle text-xs text-[var(--oh-text-secondary)]";
 
+function approvalToolColumnClassName(showSelectionColumn: boolean): string {
+  return cn(
+    tableCellClassName,
+    "break-words",
+    showSelectionColumn ? undefined : "pl-4 pr-2",
+  );
+}
+
 function ApprovalTimestamp({ value }: { value?: string }) {
   const parts = formatTimestampParts(value);
 
@@ -118,27 +126,29 @@ export function ApprovalRequestRow({
       ) : null}
 
       <td
-        data-testid={`approval-request-logo-${request.id}`}
-        className={cn(
-          tableCellClassName,
-          "w-12 max-w-none align-middle",
-          showSelectionColumn ? "px-2" : "pl-4 pr-2",
-        )}
+        data-testid={`approval-request-tool-${request.id}`}
+        className={approvalToolColumnClassName(showSelectionColumn)}
       >
-        <IntegrationLogoBadge
-          slug={request.integrationKey}
-          name={request.integrationKey}
-          className="h-7 w-7 rounded-md [&>svg]:max-h-3.5 [&>svg]:max-w-3.5 [&>img]:max-h-3.5 [&>img]:max-w-3.5"
-        />
-      </td>
-
-      <td className={cn(tableCellClassName, "break-words")}>
-        <p className="text-sm font-semibold text-white">{toolLabel}</p>
-        {request.justification ? (
-          <p className="mt-1 line-clamp-2 text-xs leading-5 text-[var(--oh-text-secondary)]">
-            {request.justification}
-          </p>
-        ) : null}
+        <div className="flex min-w-0 items-start gap-2.5">
+          <span
+            data-testid={`approval-request-logo-${request.id}`}
+            className="shrink-0"
+          >
+            <IntegrationLogoBadge
+              slug={request.integrationKey}
+              name={request.integrationKey}
+              className="h-7 w-7 rounded-md [&>svg]:max-h-3.5 [&>svg]:max-w-3.5 [&>img]:max-h-3.5 [&>img]:max-w-3.5"
+            />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold text-white">{toolLabel}</p>
+            {request.justification ? (
+              <p className="mt-1 line-clamp-2 text-xs leading-5 text-[var(--oh-text-secondary)]">
+                {request.justification}
+              </p>
+            ) : null}
+          </div>
+        </div>
       </td>
 
       <td className={cn(tableCellClassName, "break-words")}>
