@@ -108,34 +108,63 @@ export const SIDEBAR_SHELL_EXPANDED_CLASS = "md:w-[300px] md:min-w-[300px] pb-2 
 
 export const SIDEBAR_SHELL_COLLAPSED_CLASS = "md:w-[60px] md:min-w-[60px] md:px-2.5 pb-2";
 
+/** Keep in sync with `duration-200` on `SIDEBAR_SHELL_BASE_CLASS`. */
+export const SIDEBAR_SHELL_TRANSITION_MS = 200;
+
 export const SIDEBAR_STATS_TRANSITION_MS = 120;
 
-export function sidebarStatsRowClassName(visible: boolean): string {
+/** Nav margin slide before stats fade-in on sidebar expand (matches stats slot mt-2 + h-8). */
+export const SIDEBAR_NAV_SLIDE_MS = 120;
+
+export const SIDEBAR_NAV_EXPANDED_OFFSET_CLASS = "mt-[3.25rem]";
+
+/** Height of stats slot (mt-2 + h-8) — shifts nav up during collapse fade-out. */
+export const SIDEBAR_STATS_BLOCK_SHIFT_CLASS = "-translate-y-[2.5rem]";
+
+/** Fixed-height slot; height snaps only after fade + drawer close (no shrink during fade). */
+export function sidebarStatsSlotClassName(layoutVisible: boolean): string {
   return cn(
-    "overflow-hidden transition-[opacity,max-height,margin-top] motion-reduce:transition-none",
-    visible
-      ? "max-h-24 opacity-100 mt-2"
-      : "max-h-0 opacity-0 mt-0 pointer-events-none",
+    "relative w-full shrink-0",
+    layoutVisible ? "mt-2 h-8" : "mt-0 h-0",
   );
 }
 
-/** Opacity fades; max-height/margin snap on open and only after fade-out on close (no resize during fade). */
-export function sidebarStatsRowStyle(visible: boolean): {
-  transitionDuration: string;
-  transitionDelay: string;
-} {
-  const ms = SIDEBAR_STATS_TRANSITION_MS;
-  if (visible) {
-    return {
-      transitionDuration: `${ms}ms, 0ms, 0ms`,
-      transitionDelay: "0ms, 0ms, 0ms",
-    };
-  }
+export function sidebarStatsRowClassName(fadeVisible: boolean): string {
+  return cn(
+    "absolute inset-x-0 top-0 h-8 transition-opacity motion-reduce:transition-none",
+    fadeVisible ? "opacity-100" : "pointer-events-none opacity-0",
+  );
+}
 
-  return {
-    transitionDuration: `${ms}ms, 0ms, 0ms`,
-    transitionDelay: `0ms, ${ms}ms, ${ms}ms`,
-  };
+export function sidebarStatsRowStyle(): { transitionDuration: string } {
+  return { transitionDuration: `${SIDEBAR_STATS_TRANSITION_MS}ms` };
+}
+
+export function sidebarMainNavClassName(options: {
+  collapsed: boolean;
+  awaitingStats: boolean;
+  slideMargin: boolean;
+}): string {
+  const { collapsed, awaitingStats, slideMargin } = options;
+  return cn(
+    sidebarNavListClassName(collapsed),
+    awaitingStats ? SIDEBAR_NAV_EXPANDED_OFFSET_CLASS : "mt-3",
+    slideMargin &&
+      "transition-[margin-top] motion-reduce:transition-none duration-[120ms]",
+  );
+}
+
+export function sidebarBelowStatsBodyClassName(options: {
+  shiftUp: boolean;
+  animateShift: boolean;
+}): string {
+  const { shiftUp, animateShift } = options;
+  return cn(
+    "flex min-h-0 min-w-0 flex-1 flex-col",
+    animateShift &&
+      "transition-transform motion-reduce:transition-none duration-200",
+    shiftUp && SIDEBAR_STATS_BLOCK_SHIFT_CLASS,
+  );
 }
 
 /** @deprecated Use dynamic shell classes on DashboardSidebar instead. */

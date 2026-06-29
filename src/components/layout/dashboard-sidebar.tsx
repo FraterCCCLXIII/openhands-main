@@ -28,8 +28,14 @@ import {
   sidebarNavDividerClassName,
   sidebarNavDividerContentClassName,
   sidebarNavListClassName,
+  SIDEBAR_SHELL_TRANSITION_MS,
+  SIDEBAR_STATS_TRANSITION_MS,
   sidebarStatsRowClassName,
   sidebarStatsRowStyle,
+  sidebarStatsSlotClassName,
+  sidebarMainNavClassName,
+  sidebarBelowStatsBodyClassName,
+  SIDEBAR_NAV_SLIDE_MS,
 } from "@/src/styles/sidebar-layout";
 
 export type DashboardSidebarItemId =
@@ -74,7 +80,11 @@ interface DashboardSidebarRailBodyProps {
   onCollapse: () => void;
   onExpand: () => void;
   showCollapsedExpandButton: boolean;
-  statsVisible: boolean;
+  statsLayoutVisible: boolean;
+  statsFadeVisible: boolean;
+  navAwaitingStats: boolean;
+  navSlideMargin: boolean;
+  navCollapseShift: boolean;
 }
 
 function isNavItemActive(
@@ -84,30 +94,157 @@ function isNavItemActive(
   return activeItem === itemId;
 }
 
+function useSidebarExpandSequence(
+  expanded: boolean,
+  deferRevealUntilShellOpens: boolean,
+  userInitiatedCollapse: boolean,
+): {
+  layoutVisible: boolean;
+  fadeVisible: boolean;
+  navAwaitingStats: boolean;
+  navSlideMargin: boolean;
+  navCollapseShift: boolean;
+  shellExpanded: boolean;
+} {
+  const [layoutVisible, setLayoutVisible] = React.useState(expanded);
+  const [fadeVisible, setFadeVisible] = React.useState(expanded);
+  const [navAwaitingStats, setNavAwaitingStats] = React.useState(false);
+  const [navSlideMargin, setNavSlideMargin] = React.useState(false);
+  const [navCollapseShift, setNavCollapseShift] = React.useState(false);
+  const [shellExpanded, setShellExpanded] = React.useState(expanded);
+  const prevExpandedRef = React.useRef(expanded);
+
+  React.useEffect(() => {
+    const wasExpanded = prevExpandedRef.current;
+    prevExpandedRef.current = expanded;
+
+    if (!expanded) {
+      setNavAwaitingStats(false);
+
+      if (!wasExpanded || !userInitiatedCollapse) {
+        setFadeVisible(false);
+        setLayoutVisible(false);
+        setNavSlideMargin(false);
+        setNavCollapseShift(false);
+        setShellExpanded(false);
+        return;
+      }
+
+      setShellExpanded(true);
+      setFadeVisible(false);
+
+      let shiftFrame = 0;
+      let shiftFrameOuter = 0;
+      const shiftTimer = window.setTimeout(() => {
+        setNavSlideMargin(true);
+        shiftFrameOuter = requestAnimationFrame(() => {
+          shiftFrame = requestAnimationFrame(() => {
+            setNavCollapseShift(true);
+          });
+        });
+      }, SIDEBAR_STATS_TRANSITION_MS);
+
+      const widthTimer = window.setTimeout(() => {
+        setShellExpanded(false);
+      }, SIDEBAR_STATS_TRANSITION_MS);
+
+      const collapseTimer = window.setTimeout(() => {
+        setLayoutVisible(false);
+        setNavCollapseShift(false);
+        setNavSlideMargin(false);
+      }, SIDEBAR_STATS_TRANSITION_MS + SIDEBAR_SHELL_TRANSITION_MS);
+
+      return () => {
+        window.clearTimeout(shiftTimer);
+        window.clearTimeout(widthTimer);
+        window.clearTimeout(collapseTimer);
+        cancelAnimationFrame(shiftFrameOuter);
+        cancelAnimationFrame(shiftFrame);
+      };
+    }
+
+    if (wasExpanded) {
+      setLayoutVisible(true);
+      setFadeVisible(true);
+      setNavAwaitingStats(false);
+      setNavSlideMargin(false);
+      setNavCollapseShift(false);
+      setShellExpanded(true);
+      return;
+    }
+
+    if (deferRevealUntilShellOpens) {
+      setLayoutVisible(false);
+      setFadeVisible(false);
+      setNavAwaitingStats(false);
+      setNavSlideMargin(false);
+      setNavCollapseShift(false);
+      setShellExpanded(true);
+
+      let statsTimer = 0;
+      const shellTimer = window.setTimeout(() => {
+        setNavSlideMargin(true);
+        setNavAwaitingStats(true);
+        statsTimer = window.setTimeout(() => {
+          setLayoutVisible(true);
+          setFadeVisible(true);
+          setNavAwaitingStats(false);
+          setNavSlideMargin(false);
+        }, SIDEBAR_NAV_SLIDE_MS);
+      }, SIDEBAR_SHELL_TRANSITION_MS);
+
+      return () => {
+        window.clearTimeout(shellTimer);
+        window.clearTimeout(statsTimer);
+      };
+    }
+
+    setLayoutVisible(true);
+    setFadeVisible(true);
+    setNavAwaitingStats(false);
+    setNavSlideMargin(false);
+    setNavCollapseShift(false);
+    setShellExpanded(true);
+  }, [deferRevealUntilShellOpens, expanded, userInitiatedCollapse]);
+
+  return {
+    layoutVisible,
+    fadeVisible,
+    navAwaitingStats,
+    navSlideMargin,
+    navCollapseShift,
+    shellExpanded,
+  };
+}
+
 function DashboardSidebarStatsRow({
   stats,
-  visible,
+  layoutVisible,
+  fadeVisible,
 }: {
   stats: DashboardSidebarStats;
-  visible: boolean;
+  layoutVisible: boolean;
+  fadeVisible: boolean;
 }) {
   return (
-    <div
-      data-testid="dashboard-sidebar-stats"
-      className={sidebarStatsRowClassName(visible)}
-      style={sidebarStatsRowStyle(visible)}
-      aria-hidden={!visible}
-    >
-      <div className="grid w-full grid-cols-3 gap-2 pr-2.5">
-        <StatusPill className="w-full justify-center">
-          {stats.liveIntegrations} Live
-        </StatusPill>
-        <StatusPill className="w-full justify-center">
-          {stats.pendingUserApprovals} Pending
-        </StatusPill>
-        <StatusPill className="w-full justify-center">
-          {stats.toolCount} Tools
-        </StatusPill>
+    <div className={sidebarStatsSlotClassName(layoutVisible)}>
+      <div
+        data-testid="dashboard-sidebar-stats"
+        className={sidebarStatsRowClassName(fadeVisible)}
+        style={sidebarStatsRowStyle()}
+        aria-hidden={!fadeVisible}
+      >
+        <div className="grid w-full grid-cols-3 gap-2 pr-2.5">
+          <StatusPill className="w-full justify-center">
+            {stats.liveIntegrations} Live
+          </StatusPill>
+          <StatusPill className="w-full justify-center">
+            {stats.pendingUserApprovals} Pending
+          </StatusPill>
+          <StatusPill className="w-full justify-center">
+            {stats.toolCount} Tools
+          </StatusPill>
+        </div>
       </div>
     </div>
   );
@@ -129,7 +266,11 @@ function DashboardSidebarRailBody({
   onCollapse,
   onExpand,
   showCollapsedExpandButton,
-  statsVisible,
+  statsLayoutVisible,
+  statsFadeVisible,
+  navAwaitingStats,
+  navSlideMargin,
+  navCollapseShift,
 }: DashboardSidebarRailBodyProps) {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -207,9 +348,26 @@ function DashboardSidebarRailBody({
         )}
       </div>
 
-      <DashboardSidebarStatsRow stats={stats} visible={statsVisible} />
+      <DashboardSidebarStatsRow
+        stats={stats}
+        layoutVisible={statsLayoutVisible}
+        fadeVisible={statsFadeVisible}
+      />
 
-      <nav className={cn(sidebarNavListClassName(collapsed), "mt-3")} aria-label="Main">
+      <div
+        className={sidebarBelowStatsBodyClassName({
+          shiftUp: navCollapseShift,
+          animateShift: navSlideMargin,
+        })}
+      >
+        <nav
+          className={sidebarMainNavClassName({
+            collapsed,
+            awaitingStats: navAwaitingStats,
+            slideMargin: navSlideMargin,
+          })}
+          aria-label="Main"
+        >
         <DashboardNavLink
           href={getAdminSectionPath("integrations")}
           icon={PlugZap}
@@ -286,6 +444,7 @@ function DashboardSidebarRailBody({
           />
         </div>
       </div>
+      </div>
     </div>
   );
 }
@@ -309,6 +468,7 @@ export function DashboardSidebar({
 }) {
   const pathname = usePathname();
   const collapsed = useEffectiveSidebarCollapsed();
+  const userCollapsed = useSidebarStore((state) => state.collapsed);
   const setCollapsed = useSidebarStore((state) => state.setCollapsed);
   const { isOpen: isMobileNavOpen, close: closeMobileNav } = useDashboardMobileNav();
   const [mobileDrawerMounted, setMobileDrawerMounted] = React.useState(false);
@@ -403,6 +563,17 @@ export function DashboardSidebar({
   const showCollapsedExpandButton =
     collapsed && collapsedRailHovered && !suppressCollapsedExpandRef.current;
 
+  const desktopExpandSequence = useSidebarExpandSequence(
+    !collapsed,
+    true,
+    userCollapsed,
+  );
+  const mobileExpandSequence = useSidebarExpandSequence(
+    mobileDrawerVisible,
+    false,
+    false,
+  );
+
   const railBodyProps = {
     activeItem,
     stats,
@@ -435,14 +606,20 @@ export function DashboardSidebar({
         }}
         className={cn(
           SIDEBAR_SHELL_BASE_CLASS,
-          collapsed ? SIDEBAR_SHELL_COLLAPSED_CLASS : SIDEBAR_SHELL_EXPANDED_CLASS,
+          desktopExpandSequence.shellExpanded
+            ? SIDEBAR_SHELL_EXPANDED_CLASS
+            : SIDEBAR_SHELL_COLLAPSED_CLASS,
         )}
       >
         <DashboardSidebarRailBody
           {...railBodyProps}
           collapsed={collapsed}
           showCollapseToggle
-          statsVisible={!collapsed}
+          statsLayoutVisible={desktopExpandSequence.layoutVisible}
+          statsFadeVisible={desktopExpandSequence.fadeVisible}
+          navAwaitingStats={desktopExpandSequence.navAwaitingStats}
+          navSlideMargin={desktopExpandSequence.navSlideMargin}
+          navCollapseShift={desktopExpandSequence.navCollapseShift}
         />
       </aside>
 
@@ -480,7 +657,11 @@ export function DashboardSidebar({
               showCollapseToggle={false}
               showMobileCloseButton
               onCloseMobile={closeMobileNav}
-              statsVisible={mobileDrawerVisible}
+              statsLayoutVisible={mobileExpandSequence.layoutVisible}
+              statsFadeVisible={mobileExpandSequence.fadeVisible}
+              navAwaitingStats={mobileExpandSequence.navAwaitingStats}
+              navSlideMargin={mobileExpandSequence.navSlideMargin}
+              navCollapseShift={mobileExpandSequence.navCollapseShift}
             />
           </aside>
         </>
