@@ -73,7 +73,7 @@ export default function HomePage() {
             OpenHands Integrations Hub
           </h1>
 
-          <p className="mt-3 max-w-xl text-sm leading-6 text-text-secondary">
+          <p className="mt-3 max-w-xl text-sm leading-5 text-text-secondary">
             A unified endpoint and admin workspace for AI agents to access APIs and MCP tools with
             agent-class policies, temporary approvals, and persistent integration storage.
           </p>

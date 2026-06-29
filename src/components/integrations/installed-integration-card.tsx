@@ -26,7 +26,6 @@ interface InstalledIntegrationCardProps {
   totalToolCount: number;
   isActionPending: boolean;
   onOpen: () => void;
-  onDelete?: (integration: IntegrationSpec) => void;
   onToggleEnabled: (integration: IntegrationSpec) => void;
 }
 
@@ -37,7 +36,6 @@ export function InstalledIntegrationCard({
   totalToolCount,
   isActionPending,
   onOpen,
-  onDelete,
   onToggleEnabled,
 }: InstalledIntegrationCardProps) {
   const handleKeyDown = (event: React.KeyboardEvent) => {
@@ -83,11 +81,6 @@ export function InstalledIntegrationCard({
           slug={integration.key}
           name={integration.name}
           logoUrl={logoUrl ?? undefined}
-        />
-        <img
-          src="data:image/gif;base64,R0lGODlhAQABAAAAACw="
-          alt={`${integration.name} logo`}
-          className="sr-only"
         />
         <div className="flex min-w-0 flex-1 flex-col gap-3">
           <header className="flex items-start justify-between gap-3">
@@ -138,43 +131,6 @@ export function InstalledIntegrationCard({
                 {label}
               </span>
             ))}
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">
-            <button
-              type="button"
-              className="rounded-md border border-[var(--oh-border)] px-2.5 py-1 text-tertiary-light transition-colors hover:bg-[var(--oh-interactive-hover)] hover:text-white"
-              onClick={(event) => {
-                event.stopPropagation();
-                onOpen();
-              }}
-            >
-              Show tools
-            </button>
-            <button
-              type="button"
-              className="rounded-md border border-[var(--oh-border)] px-2.5 py-1 text-tertiary-light transition-colors hover:bg-[var(--oh-interactive-hover)] hover:text-white"
-              disabled={isActionPending}
-              onClick={(event) => {
-                event.stopPropagation();
-                onToggleEnabled(integration);
-              }}
-            >
-              {integration.enabled ? "Disable" : "Enable"}
-            </button>
-            {onDelete ? (
-              <button
-                type="button"
-                className="rounded-md border border-red-400/35 px-2.5 py-1 text-red-200 transition-colors hover:bg-red-500/10 hover:text-red-100"
-                disabled={isActionPending}
-                onClick={(event) => {
-                  event.stopPropagation();
-                  onDelete(integration);
-                }}
-              >
-                Delete
-              </button>
-            ) : null}
           </div>
         </div>
       </div>

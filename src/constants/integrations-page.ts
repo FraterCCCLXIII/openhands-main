@@ -37,79 +37,12 @@ export const INTEGRATIONS_PAGE_COPY = {
   installedDeleteLabel: "Delete",
   installedDeleteTooltip:
     "Remove this integration and any saved connection details from your personal dashboard.",
-  deleteModalAriaLabel: "Delete integration",
-  deleteModalTitle: "Delete integration?",
-  deleteModalDescription: (integrationName: string) =>
-    `This permanently removes "${integrationName}" and any saved connection details from your personal dashboard. This action cannot be undone.`,
-  deleteConfirm: "Delete integration",
-  cancel: "Cancel",
-  wizardContinue: "Continue",
-  wizardBack: "Back",
-  wizardDiscoverTools: "Discover tools",
-  wizardCreateIntegration: "Create integration",
-  wizardSetupTitle: "Step-by-step integration setup",
-  wizardSetupDescription:
-    "Choose a Managed connector hosted in this deployment or a remote MCP server, let the dashboard discover the available tools, then keep each tool enabled, disable it, or mark it for case-by-case approval.",
-  wizardConnectStepTitle: "Connect and discover tools",
-  wizardConnectStepDescription:
-    "Pick a managed connector or MCP server, connect with the required credentials, then discover the tools this integration exposes.",
-  wizardReviewStepTitle: "Review access defaults",
-  wizardReviewStepDescription:
-    "Review each discovered tool and set its default access. Keep tools enabled, disable them, or mark them for case-by-case approval before saving.",
-  wizardStepInfoAriaLabel: "What happens in this step",
-  wizardConnectSidebarTitle: "What happens in this step",
-  wizardConnectSidebarManagedBullets: [
-    "The dashboard loads the managed connectors registered for this service.",
-    "Choosing a connector auto-fills the integration key and display name, while still letting you customize them if needed.",
-    "For OAuth connectors, each user connects their own account and the token is stored server-side for that user only.",
-    "Choosing Discover tools calls the MCP for the selected connector and brings its full tool list into the review step.",
-  ] as const,
-  wizardConnectSidebarMcpBullets: [
-    "The dashboard connects to your MCP server and calls listTools.",
-    "It infers auth from the credentials you provide, without making you choose an auth type explicitly.",
-    "For GitHub MCP, use https://api.githubcopilot.com/mcp/ plus a GitHub PAT in Access token.",
-    "Every discovered tool is prepared as enabled by default for the review step.",
-  ] as const,
-  wizardManagedConnectorLabel: "Managed connector",
-  wizardManagedConnectorPlaceholder: "Choose GitHub, Notion, Slack...",
-  wizardManagedConnectorLoadingPlaceholder: "Loading supported connectors...",
-  wizardManagedConnectorHint:
-    "Use the dropdown and start typing to filter the managed connectors registered for this deployment. Selecting one auto-fills the key and display name below.",
-  wizardManagedConnectorMissingPrefix: "Don't see a connector you want?",
-  wizardIntegrationKeyLabel: "Integration key",
-  wizardIntegrationKeyHint:
-    "Edit this if you want more than one saved connection for the same managed connector.",
-  wizardDisplayNameLabel: "Display name",
-  wizardConnectBeforeDiscover: (name: string) =>
-    `Connect ${name} before discovering tools.`,
-  wizardConnectAccountTitle: (name: string) => `Connect your ${name} account`,
-  wizardConnectAccountDescriptionOAuth: (name: string) =>
-    `OAuth connection for ${name}.`,
-  wizardConnectAccountDescriptionApiKey: (name: string) =>
-    `API key connection for ${name}.`,
-  wizardOpenProviderDocs: "Open provider docs",
-  wizardConnect: "Connect",
-  wizardConnected: "Connected",
-  wizardReconnect: "Reconnect",
-  wizardNotAvailable: "Not available",
-  wizardReviewNoTools:
-    "No tools were discovered for this connector. Go back and confirm the selected managed connector or MCP server URL.",
-  wizardReviewSearchEmpty: "No tools match this search. Try a different term.",
-  wizardAdminDiagnosticsTitle: "Admin diagnostics",
-  wizardSearchToolsPlaceholder: "Search tools",
-  wizardEnableSelected: "Enable selected",
-  wizardCaseByCaseSelected: "Case-by-case selected",
-  wizardDisableSelected: "Disable selected",
   installedCloseLabel: "Close",
   installedNoTools: "No tools registered yet.",
   installedNoVisibleTools: "No visible tools match the current filters.",
   installedToolNoDescription: "No description provided.",
   installedShowToolDetails: "Show details",
   installedHideToolDetails: "Hide details",
-  viewMoreLabel: "View More",
-  viewLessLabel: "View Less",
-  installedEnabledStateLabel: "Enabled",
-  installedDisabledStateLabel: "Disabled",
   installedDefaultScopesLabel: "Default scopes:",
   installedNoneLabel: "none",
   installedIntegrationsCountLabel: "Integrations",
@@ -126,10 +59,6 @@ export function installedIntegrationsCountAriaLabel(count: number): string {
 
 export function installedVisibleToolsCountAriaLabel(count: number): string {
   return `${count} visible tool${count === 1 ? "" : "s"}`;
-}
-
-export function wizardDiscoveredToolsCountAriaLabel(count: number): string {
-  return `${count} tool${count === 1 ? "" : "s"}`;
 }
 
 export function formatBulkDisableDescription(cutoffDateLabel: string): string {

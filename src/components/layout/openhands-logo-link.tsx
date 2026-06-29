@@ -1,7 +1,6 @@
 import Link from "next/link";
 
 import { cn } from "@/src/lib/utils";
-import { uiPath } from "@/src/shared/paths";
 
 const LOGO_WIDTH = 34;
 const LOGO_HEIGHT = Math.round((LOGO_WIDTH * 30) / 46);
@@ -18,7 +17,7 @@ export function OpenHandsLogoLink({ className }: OpenHandsLogoLinkProps) {
       className={cn("inline-flex shrink-0 items-center overflow-visible", className)}
     >
       <img
-        src={uiPath("/openhands-logo.svg")}
+        src="/openhands-logo.svg"
         width={LOGO_WIDTH}
         height={LOGO_HEIGHT}
         alt=""

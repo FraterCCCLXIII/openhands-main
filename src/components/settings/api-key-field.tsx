@@ -20,7 +20,6 @@ interface ApiKeyFieldProps {
   revealDisabled?: boolean;
   copyDisabled?: boolean;
   rotateDisabled?: boolean;
-  fullWidth?: boolean;
   className?: string;
 }
 
@@ -37,14 +36,12 @@ export function ApiKeyField({
   revealDisabled = false,
   copyDisabled = false,
   rotateDisabled = false,
-  fullWidth = false,
   className,
 }: ApiKeyFieldProps) {
   return (
     <div
       className={cn(
-        "flex min-w-0 items-center gap-1",
-        fullWidth ? "w-full" : "w-full sm:w-auto",
+        "flex w-full min-w-0 items-center gap-1 sm:w-auto",
         formControlRadiusClassName,
         formControlBorderClassName,
         "bg-[var(--oh-bg-input)] py-1 pl-3 pr-1",
@@ -52,10 +49,7 @@ export function ApiKeyField({
       )}
     >
       <code
-        className={cn(
-          "min-w-0 flex-1 truncate font-mono text-xs text-[var(--oh-text-secondary)]",
-          !fullWidth && "max-w-[10rem] sm:max-w-[14rem] md:max-w-[18rem]",
-        )}
+        className="min-w-0 max-w-[10rem] flex-1 truncate font-mono text-xs text-[var(--oh-text-secondary)] sm:max-w-[14rem] md:max-w-[18rem]"
         title={value}
       >
         {value}

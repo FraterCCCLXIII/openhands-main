@@ -47,7 +47,7 @@ export function HubAppShell({
           showAdminIntegrationsLink={showAdminIntegrationsLink}
           showApprovalsLink={showApprovalsLink}
         />
-        <div className="flex h-full min-h-0 w-full min-w-0 flex-1 flex-col">
+        <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col">
           <DashboardMobileMenuBar />
           <div className={hubMainScrollClassName}>{children}</div>
         </div>

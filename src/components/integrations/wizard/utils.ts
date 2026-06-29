@@ -80,7 +80,7 @@ export const INITIAL_DRAFT: WizardDraft = {
 };
 
 export const integrationWizardInputClassName =
-  "rounded-md border border-[var(--color-border)] bg-[var(--color-bg-input)] px-4 py-3 text-white outline-none transition-colors focus:border-[var(--color-accent)]";
+  "rounded-md border border-[var(--oh-border)] bg-[var(--oh-bg-input)] px-4 py-3 text-white outline-none transition-colors focus:border-[var(--oh-accent)]";
 
 export const formatDebugDetails = (debugDetails: ApiDebugDetails) =>
   JSON.stringify(debugDetails, null, 2);

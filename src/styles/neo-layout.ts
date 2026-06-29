@@ -1,7 +1,7 @@
 export const hubPageShellClassName = "mx-auto w-full min-w-0 max-w-[800px]";
 
 export const hubAppShellClassName =
-  "flex h-screen flex-col overflow-hidden bg-base p-0 md:flex-row";
+  "flex h-screen flex-col overflow-hidden bg-base p-0 md:flex-row md:items-start";
 
 /** Mobile horizontal inset; desktop uses matching left/right gutters on the scroll column. */
 export const hubMainScrollClassName =

@@ -7,7 +7,8 @@ export const AGENT_CONNECTION_PAGE_COPY = {
     "Endpoints, OpenAPI schemas, and starter prompts for MCP and REST integrations.",
   connectionDetailsLink: "View connection details",
   connectionDetailsModalAriaLabel: "Connection details",
-  profilesCountLabel: "Profiles",
+  profilesCount: (count: number) =>
+    `${count} profile${count === 1 ? "" : "s"}`,
   permissionProfileLabel: "Permission profile",
   profileAgentKeyTitle: (profileName: string) => `${profileName} agent key`,
   profileAgentKeyDescription:
@@ -17,11 +18,11 @@ export const AGENT_CONNECTION_PAGE_COPY = {
   userAutomationKeyTitle: "User automation key",
   userAutomationKeyDescription:
     "Use this key to programmatically manage user-scoped integrations-hub settings.",
-  userAutomationKeyBadge: "User",
+  userAutomationKeyBadge: "user",
   adminAutomationKeyTitle: "Admin automation key",
   adminAutomationKeyDescription:
     "Use this key for admin-only QA and operational automation surfaces.",
-  adminAutomationKeyBadge: "Admin",
+  adminAutomationKeyBadge: "admin",
   noAgentKey: "No agent key available yet.",
   noUserAutomationKey:
     "No user automation key yet. Reveal or copy to create one.",
@@ -47,7 +48,3 @@ export const AGENT_CONNECTION_PAGE_COPY = {
   adminRestApiDescription:
     "Use the admin automation key with the admin-only OpenAPI schema for connector, discovery, and approval QA.",
 } as const;
-
-export function permissionProfilesCountAriaLabel(count: number): string {
-  return `${count} profile${count === 1 ? "" : "s"}`;
-}

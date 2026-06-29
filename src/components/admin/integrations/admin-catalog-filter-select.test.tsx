@@ -39,9 +39,6 @@ describe("AdminCatalogFilterSelect", () => {
       '[data-testid="admin-catalog-filter-select"]',
     ) as HTMLButtonElement;
     expect(trigger?.textContent).toContain("All");
-    expect(trigger?.className).toContain("bg-base-secondary");
-    expect(trigger?.className).toContain("text-[var(--oh-muted)]");
-    expect(trigger?.className).toContain("hover:bg-[var(--oh-interactive-hover)]");
 
     await act(async () => {
       trigger.click();

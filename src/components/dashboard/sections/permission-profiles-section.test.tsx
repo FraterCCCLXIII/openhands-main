@@ -53,16 +53,29 @@ const profileWithoutAgentKey: PermissionProfile = {
 };
 
 const createDefaultProps = () => ({
-  profileName: "",
   profiles: [profile],
   isPending: false,
   errorMessage: null,
   actionPending: false,
-  onCreateProfile: vi.fn(),
+  isSaveModalOpen: false,
+  onCloseSaveModal: vi.fn(),
+  onSaveProfile: vi.fn(),
   onLoadProfile: vi.fn(),
   onUpdateProfile: vi.fn(),
-  setProfileName: vi.fn(),
+  onDeleteProfile: vi.fn(),
 });
+
+const openActionsMenu = (container: HTMLElement, profileId: string) => {
+  const trigger = container.querySelector(
+    `[data-testid="permission-profile-menu-trigger-${profileId}"]`,
+  ) as HTMLButtonElement | null;
+  act(() => {
+    trigger?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+  });
+};
+
+const getMenuButton = (testId: string) =>
+  document.querySelector(`[data-testid="${testId}"]`) as HTMLButtonElement | null;
 
 describe("PermissionProfilesSection", () => {
   let container: HTMLDivElement;
@@ -80,7 +93,7 @@ describe("PermissionProfilesSection", () => {
     vi.clearAllMocks();
   });
 
-  it("renders saved profile counts and actions", () => {
+  it("renders saved profile summary and actions menu actions", () => {
     const props = createDefaultProps();
 
     act(() => {
@@ -88,23 +101,25 @@ describe("PermissionProfilesSection", () => {
     });
 
     expect(container.textContent).toContain("Research assistant");
-    expect(container.textContent).toContain("1/2 integrations on");
-    expect(container.textContent).toContain("1 enabled");
-    expect(container.textContent).toContain("1 case-by-case");
-    expect(container.textContent).toContain("3 disabled");
-
-    const buttons = Array.from(container.querySelectorAll("button"));
-    const loadButton = buttons.find((button) =>
-      button.textContent?.includes("Load profile"),
-    );
-    const updateButton = buttons.find((button) =>
-      button.textContent?.includes("Update from current"),
+    expect(container.textContent).toContain(
+      "1/2 integrations on · 1 enabled · 1 case-by-case · 3 disabled",
     );
 
-    act(() => loadButton?.click());
+    openActionsMenu(container, profile.id);
+
+    act(() => {
+      getMenuButton("permission-profile-load")?.dispatchEvent(
+        new MouseEvent("click", { bubbles: true }),
+      );
+    });
     expect(props.onLoadProfile).toHaveBeenCalledWith(profile);
 
-    act(() => updateButton?.click());
+    openActionsMenu(container, profile.id);
+    act(() => {
+      getMenuButton("permission-profile-update-from-current")?.dispatchEvent(
+        new MouseEvent("click", { bubbles: true }),
+      );
+    });
     expect(props.onUpdateProfile).toHaveBeenCalledWith(profile);
   });
 
@@ -121,7 +136,6 @@ describe("PermissionProfilesSection", () => {
       root.render(<PermissionProfilesSection {...props} />);
     });
 
-    expect(container.textContent).toContain("Research assistant agent key");
     expect(container.textContent).not.toContain("cla_profile_key");
     expect(
       container.querySelector(
@@ -130,7 +144,7 @@ describe("PermissionProfilesSection", () => {
     ).not.toBeNull();
 
     const revealButton = Array.from(container.querySelectorAll("button")).find(
-      (button) => button.textContent?.includes("Reveal"),
+      (button) => button.getAttribute("aria-label") === "Reveal key",
     );
     await act(async () => {
       revealButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
@@ -149,7 +163,7 @@ describe("PermissionProfilesSection", () => {
     expect(writeTextMock).toHaveBeenCalledWith("cla_profile_key");
   });
 
-  it("rotates an existing profile agent key from the shared key card action", async () => {
+  it("rotates an existing profile agent key from the inline key field", async () => {
     const props = createDefaultProps();
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
@@ -182,7 +196,7 @@ describe("PermissionProfilesSection", () => {
     expect(container.textContent).not.toContain("cla_profile_key");
   });
 
-  it("provisions a missing profile agent key from the profile card", async () => {
+  it("provisions a missing profile agent key from the inline key field", async () => {
     const props = createDefaultProps();
     props.profiles = [profileWithoutAgentKey];
     const fetchMock = vi.fn().mockResolvedValue({
@@ -198,12 +212,10 @@ describe("PermissionProfilesSection", () => {
       root.render(<PermissionProfilesSection {...props} />);
     });
 
-    expect(container.textContent).toContain(
-      "No agent key has been provisioned for this profile yet.",
-    );
+    expect(container.textContent).toContain("No agent key provisioned yet");
 
     const revealButton = Array.from(container.querySelectorAll("button")).find(
-      (button) => button.textContent?.includes("Reveal"),
+      (button) => button.getAttribute("aria-label") === "Reveal key",
     ) as HTMLButtonElement | undefined;
     const copyButton = container.querySelector(
       'button[aria-label="Copy research assistant agent key"]',
@@ -228,25 +240,29 @@ describe("PermissionProfilesSection", () => {
     expect(container.textContent).toContain("cla_new_profile_key");
   });
 
-  it("captures profile names before saving", () => {
+  it("captures profile names from the save modal before saving", () => {
     const props = createDefaultProps();
-    props.profileName = "QA";
+    props.isSaveModalOpen = true;
 
     act(() => {
       root.render(<PermissionProfilesSection {...props} />);
     });
 
-    act(() => setInputValue(container.querySelector("input"), "Production guardrails"));
-    expect(props.setProfileName).toHaveBeenCalledWith("Production guardrails");
+    act(() =>
+      setInputValue(
+        document.querySelector('[data-testid="save-permissions-profile-name"]'),
+        "Production guardrails",
+      ),
+    );
 
-    const saveButton = Array.from(container.querySelectorAll("button")).find(
+    const saveButton = Array.from(document.querySelectorAll("button")).find(
       (button) => button.textContent?.includes("Save current settings"),
     );
     act(() => saveButton?.click());
-    expect(props.onCreateProfile).toHaveBeenCalled();
+    expect(props.onSaveProfile).toHaveBeenCalledWith("Production guardrails");
   });
 
-  it("does not offer load or update actions for the default profile", () => {
+  it("marks the default profile and disables delete in the actions menu", () => {
     const props = createDefaultProps();
     props.profiles = [defaultProfile];
 
@@ -255,7 +271,11 @@ describe("PermissionProfilesSection", () => {
     });
 
     expect(container.textContent).toContain("Default profile");
-    expect(container.textContent).not.toContain("Load profile");
-    expect(container.textContent).not.toContain("Update from current");
+    expect(container.textContent).toContain("default");
+
+    openActionsMenu(container, defaultProfile.id);
+
+    const deleteButton = getMenuButton("permission-profile-delete");
+    expect(deleteButton?.disabled).toBe(true);
   });
 });

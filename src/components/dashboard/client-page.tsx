@@ -151,17 +151,13 @@ export function ClientDashboardPage() {
   };
 
   return (
-    <main className="min-h-screen px-6 py-8">
-      <div className="mx-auto max-w-7xl">
-        <DashboardWorkspace
+    <DashboardWorkspace
           currentUser={currentUser}
           agentApiBaseUrl={agentApiBaseUrl}
           agentApiKey={data.agentApiKey}
           userApiKey={data.userApiKey}
           adminApiKey={data.adminApiKey}
           isAdmin={isAdmin}
-        />
-      </div>
-    </main>
+      />
   );
 }

@@ -37,24 +37,10 @@ export const formControlButtonClassName = cn(
   "text-sm leading-5 font-normal disabled:cursor-not-allowed disabled:opacity-30",
 );
 
-/** Full-width field-style select triggers (settings forms, modals). */
-export const formControlSelectTriggerClassName = cn(
-  formControlFieldClassName,
-  "inline-flex cursor-pointer items-center justify-between gap-2 text-left",
-);
-
 /** Filter / enum dropdown triggers beside search toolbars. */
 export const formControlFilterTriggerClassName = cn(
   formControlButtonClassName,
   formControlBorderClassName,
   formControlSurfaceClassName,
-  formControlFocusClassName,
-  "shrink-0 justify-between gap-1.5 text-sm font-normal text-[var(--oh-muted)]",
-  "hover:bg-[var(--oh-interactive-hover)] hover:text-white",
-);
-
-export const formControlCheckboxClassName = cn(
-  "h-4 w-4 shrink-0 cursor-pointer rounded border border-[var(--oh-border)] bg-[var(--oh-bg-input)] accent-[var(--oh-accent)]",
-  formControlTransitionClassName,
-  "disabled:cursor-not-allowed disabled:opacity-30",
+  "shrink-0 text-white",
 );

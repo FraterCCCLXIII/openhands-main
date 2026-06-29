@@ -1,12 +1,10 @@
-import { SelectDropdown } from "@/src/components/ui/select-dropdown";
 import { cn } from "@/src/lib/utils";
+import { formControlSettingsFieldClassName } from "@/src/styles/form-control-classes";
 
 interface SettingsSelectOption {
   value: string;
   label: string;
 }
-
-type SettingsSelectLabelLayout = "stacked" | "inline";
 
 interface SettingsSelectProps {
   testId?: string;
@@ -15,7 +13,6 @@ interface SettingsSelectProps {
   value: string;
   options: SettingsSelectOption[];
   className?: string;
-  labelLayout?: SettingsSelectLabelLayout;
   onChange: (value: string) => void;
 }
 
@@ -26,39 +23,24 @@ export function SettingsSelect({
   value,
   options,
   className,
-  labelLayout = "stacked",
   onChange,
 }: SettingsSelectProps) {
-  const isInlineLabel = labelLayout === "inline";
-
   return (
-    <label
-      className={cn(
-        "flex min-w-0",
-        isInlineLabel
-          ? "w-auto shrink-0 flex-row items-center gap-3"
-          : "w-full flex-col gap-2.5",
-        className,
-      )}
-    >
-      <span
-        className={cn(
-          "text-sm",
-          isInlineLabel && "shrink-0 whitespace-nowrap",
-        )}
-      >
-        {label}
-      </span>
-      <SelectDropdown
-        testId={testId}
+    <label className={cn("flex w-full min-w-0 flex-col gap-2.5", className)}>
+      <span className="text-sm">{label}</span>
+      <select
+        data-testid={testId}
         name={name}
         value={value}
-        options={options}
-        ariaLabel={label}
-        onChange={onChange}
-        className={isInlineLabel ? "w-52 max-w-full min-w-[10rem]" : undefined}
-        triggerClassName="placeholder:italic"
-      />
+        onChange={(event) => onChange(event.target.value)}
+        className={cn(formControlSettingsFieldClassName, "cursor-pointer")}
+      >
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
     </label>
   );
 }

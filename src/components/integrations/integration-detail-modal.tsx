@@ -6,9 +6,7 @@ import {
   formatTrackedUsage,
   type FilteredIntegrationToolEntry,
 } from "@/src/components/dashboard/utils";
-import { DeleteIntegrationModal } from "@/src/components/integrations/delete-integration-modal";
 import { DetailsRevealCaret } from "@/src/components/integrations/details-reveal-caret";
-import { IntegrationEnableRow } from "@/src/components/integrations/integration-enable-row";
 import { IntegrationLogoBadge } from "@/src/components/integrations/integration-logo-badge";
 import { isRedundantIntegrationCardLabel } from "@/src/components/integrations/integration-card-labels";
 import {
@@ -16,6 +14,7 @@ import {
   getToolAccessMode,
 } from "@/src/components/integrations/tool-access-controls";
 import { ModalCloseButton } from "@/src/components/shared/modals/modal-close-button";
+import { Badge } from "@/src/components/ui/badge";
 import { BrandButton } from "@/src/components/ui/brand-button";
 import { Button } from "@/src/components/ui/button";
 import {
@@ -27,6 +26,7 @@ import {
 import { ModalBackdrop } from "@/src/components/ui/modal-backdrop";
 import { modalShellClassName } from "@/src/components/ui/modal-shell";
 import {
+  extensionModuleCardDisabledPillClassName,
   extensionModuleCardPillClassName,
 } from "@/src/styles/extension-module-card-classes";
 import type { IntegrationSpec, ToolAccessMode } from "@/src/types/integrations-hub";
@@ -37,8 +37,7 @@ interface IntegrationDetailModalProps {
   isActionPending: boolean;
   expandedTools: Record<string, boolean>;
   onClose: () => void;
-  onDelete: (integration: IntegrationSpec) => void;
-  onToggleIntegrationEnabled: (integration: IntegrationSpec) => void;
+  onDelete: (integration: IntegrationSpec) => boolean;
   onToggleToolExpanded: (toolKey: string) => void;
   onUpdateToolAccessMode: (
     integrationKey: string,
@@ -54,12 +53,10 @@ export function IntegrationDetailModal({
   expandedTools,
   onClose,
   onDelete,
-  onToggleIntegrationEnabled,
   onToggleToolExpanded,
   onUpdateToolAccessMode,
 }: IntegrationDetailModalProps) {
   const { integration, tools, visibleTools } = entry;
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = React.useState(false);
 
   const authLabel = getAuthTypeLabel(integration.authStrategy);
   const toolCountLabel = formatIntegrationToolCountLabel(
@@ -78,9 +75,10 @@ export function IntegrationDetailModal({
       ),
   );
 
-  const handleConfirmDelete = () => {
-    onDelete(integration);
-    onClose();
+  const handleDelete = () => {
+    if (onDelete(integration)) {
+      onClose();
+    }
   };
 
   return (
@@ -98,7 +96,7 @@ export function IntegrationDetailModal({
           testId={`integration-detail-modal-close-${integration.key}`}
         />
 
-        <div className="custom-scrollbar-always min-h-0 flex-1 overflow-y-auto px-7 pb-4 pt-7">
+        <div className="custom-scrollbar-always min-h-0 flex-1 overflow-y-auto px-7 pb-7 pt-7">
           <div className="flex items-start gap-3 pr-6">
             <IntegrationLogoBadge
               slug={integration.key}
@@ -113,6 +111,14 @@ export function IntegrationDetailModal({
                 >
                   {integration.name}
                 </h2>
+                {!integration.enabled ? (
+                  <span
+                    data-testid={`integration-detail-modal-disabled-${integration.key}`}
+                    className={extensionModuleCardDisabledPillClassName}
+                  >
+                    {INTEGRATIONS_PAGE_COPY.installedStatusDisabled}
+                  </span>
+                ) : null}
               </div>
               <p
                 data-testid={`integration-detail-modal-meta-${integration.key}`}
@@ -128,31 +134,11 @@ export function IntegrationDetailModal({
                   {toolCountLabel}
                 </span>
                 {detailBadges.map((label) => (
-                  <span key={label} className={extensionModuleCardPillClassName}>
-                    {label}
-                  </span>
+                  <Badge key={label}>{label}</Badge>
                 ))}
               </div>
             </div>
           </div>
-
-          <div className="mt-4">
-            <IntegrationEnableRow
-              integrationKey={integration.key}
-              enabled={integration.enabled}
-              disabled={isActionPending}
-              onToggle={(nextEnabled) => {
-                if (nextEnabled !== integration.enabled) {
-                  onToggleIntegrationEnabled(integration);
-                }
-              }}
-            />
-          </div>
-
-          <p className="mt-4 text-xs text-tertiary-light">
-            {visibleTools.length} {visibleTools.length === 1 ? "tool" : "tools"} matched
-          </p>
-
 
           <div className="mt-6 overflow-hidden rounded-xl border border-[var(--oh-border)] bg-[var(--oh-bg-input)]">
             {tools.length === 0 ? (
@@ -177,7 +163,7 @@ export function IntegrationDetailModal({
                       data-tool-key={toolKey}
                       data-tool-name={toolSpec.name}
                     >
-                      <div className="flex items-start justify-between gap-3">
+                      <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
                         <div className="min-w-0 flex-1">
                           <p className="text-sm font-semibold text-white">
                             {toolSpec.name}
@@ -190,7 +176,7 @@ export function IntegrationDetailModal({
                             {formatTrackedUsage(toolSpec)}
                           </p>
                         </div>
-                        <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 self-start">
+                        <div className="flex flex-wrap items-center gap-2 xl:justify-end">
                           <AccessModeSlider
                             toolName={toolSpec.name}
                             mode={accessMode}
@@ -237,31 +223,21 @@ export function IntegrationDetailModal({
           </div>
         </div>
 
-        <div className="flex items-center justify-between gap-2 border-t border-[var(--oh-border)] px-7 py-4">
+        <div className="flex items-center justify-end gap-2 border-t border-[var(--oh-border)] px-7 py-4">
+          <BrandButton type="button" variant="secondary" onClick={onClose}>
+            {INTEGRATIONS_PAGE_COPY.installedCloseLabel}
+          </BrandButton>
           <Button
             type="button"
             variant="danger"
             disabled={isActionPending}
-            data-testid={`integration-detail-modal-delete-${integration.key}`}
-            onClick={() => setIsDeleteModalOpen(true)}
+            onClick={handleDelete}
             title={INTEGRATIONS_PAGE_COPY.installedDeleteTooltip}
           >
             {INTEGRATIONS_PAGE_COPY.installedDeleteLabel}
           </Button>
-          <BrandButton type="button" variant="secondary" onClick={onClose}>
-            {INTEGRATIONS_PAGE_COPY.installedCloseLabel}
-          </BrandButton>
         </div>
       </section>
-
-      {isDeleteModalOpen ? (
-        <DeleteIntegrationModal
-          integration={integration}
-          actionPending={isActionPending}
-          onClose={() => setIsDeleteModalOpen(false)}
-          onConfirm={handleConfirmDelete}
-        />
-      ) : null}
     </ModalBackdrop>
   );
 }

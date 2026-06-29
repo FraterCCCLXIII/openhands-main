@@ -250,9 +250,11 @@ describe("ReviewStep", () => {
     expect(container.textContent).toContain("Default scopes: none");
 
     const clickButton = async (label: string) => {
-      const button = Array.from(container.querySelectorAll("button")).find(
-        (candidate) => candidate.textContent?.includes(label),
-      );
+      const button =
+        container.querySelector(`button[aria-label="${label}"]`) ??
+        Array.from(container.querySelectorAll("button")).find((candidate) =>
+          candidate.textContent?.includes(label),
+        );
       expect(button, `Missing button: ${label}`).toBeTruthy();
 
       await act(async () => {

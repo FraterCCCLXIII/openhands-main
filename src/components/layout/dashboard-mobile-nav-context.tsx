@@ -40,15 +40,12 @@ export function DashboardMobileNavProvider({
   );
 }
 
-const noop = () => undefined;
-
-const fallbackDashboardMobileNavContext: DashboardMobileNavContextValue = {
-  isOpen: false,
-  open: noop,
-  close: noop,
-  toggle: noop,
-};
-
 export function useDashboardMobileNav(): DashboardMobileNavContextValue {
-  return React.useContext(DashboardMobileNavContext) ?? fallbackDashboardMobileNavContext;
+  const context = React.useContext(DashboardMobileNavContext);
+  if (!context) {
+    throw new Error(
+      "useDashboardMobileNav must be used within DashboardMobileNavProvider",
+    );
+  }
+  return context;
 }

@@ -1,6 +1,7 @@
 "use client";
 
-import { Blocks, ChevronLeft, ChevronRight, CircleCheck, KeyRound, LayoutDashboard, ListChecks, PlugZap, UserRound } from "lucide-react";
+import { ChevronLeft, ChevronRight, CircleCheck, KeyRound, ListChecks, PlugZap, ShieldCheck, Activity } from "lucide-react";
+import { usePathname } from "next/navigation";
 import React from "react";
 
 import { SIDEBAR_LABELS } from "@/src/constants/sidebar-labels";
@@ -11,13 +12,11 @@ import { OpenHandsLogoLink } from "@/src/components/layout/openhands-logo-link";
 import { StatusPill } from "@/src/components/ui/status-pill";
 import { getAdminSectionPath, type AdminSection } from "@/src/lib/admin-routes";
 import { useEffectiveSidebarCollapsed } from "@/src/hooks/use-effective-sidebar-collapsed";
-import { usePendingApprovalsCount } from "@/src/hooks/use-pending-approvals-count";
 import { cn } from "@/src/lib/utils";
 import { useSidebarStore } from "@/src/stores/sidebar-store";
 import {
   SIDEBAR_COLLAPSE_TOGGLE_OVERLAY_CLASS,
   SIDEBAR_COLLAPSED_LOGO_WRAPPER_CLASS,
-  SIDEBAR_COLLAPSED_EXPAND_GAP_CLASS,
   SIDEBAR_ICON_BUTTON_CLASS,
   SIDEBAR_ICON_SLOT_CLASS,
   SIDEBAR_MOBILE_DRAWER_CLASS,
@@ -28,14 +27,9 @@ import {
   sidebarHeaderRowClassName,
   sidebarNavDividerClassName,
   sidebarNavDividerContentClassName,
-  SIDEBAR_SHELL_TRANSITION_MS,
-  SIDEBAR_STATS_TRANSITION_MS,
+  sidebarNavListClassName,
   sidebarStatsRowClassName,
-  sidebarStatsRowStyle,
-  sidebarStatsSlotClassName,
-  sidebarMainNavClassName,
-  sidebarBelowStatsBodyClassName,
-  SIDEBAR_NAV_SLIDE_MS,
+  SIDEBAR_STATS_TRANSITION_MS,
 } from "@/src/styles/sidebar-layout";
 
 export type DashboardSidebarItemId =
@@ -45,6 +39,7 @@ export type DashboardSidebarItemId =
 
 export interface DashboardSidebarStats {
   liveIntegrations: number;
+  pendingUserApprovals: number;
   toolCount: number;
 }
 
@@ -79,14 +74,7 @@ interface DashboardSidebarRailBodyProps {
   onCollapse: () => void;
   onExpand: () => void;
   showCollapsedExpandButton: boolean;
-  onCollapsedExpandZoneEnter: () => void;
-  onCollapsedExpandZoneLeave: () => void;
-  statsLayoutVisible: boolean;
-  statsFadeVisible: boolean;
-  navAwaitingStats: boolean;
-  navSlideMargin: boolean;
-  navCollapseShift: boolean;
-  userMenuCollapsed: boolean;
+  statsVisible: boolean;
 }
 
 function isNavItemActive(
@@ -96,176 +84,32 @@ function isNavItemActive(
   return activeItem === itemId;
 }
 
-function useSidebarExpandSequence(
-  expanded: boolean,
-  deferRevealUntilShellOpens: boolean,
-  userInitiatedCollapse: boolean,
-): {
-  layoutVisible: boolean;
-  fadeVisible: boolean;
-  navAwaitingStats: boolean;
-  navSlideMargin: boolean;
-  navCollapseShift: boolean;
-  shellExpanded: boolean;
-} {
-  const [layoutVisible, setLayoutVisible] = React.useState(expanded);
-  const [fadeVisible, setFadeVisible] = React.useState(expanded);
-  const [navAwaitingStats, setNavAwaitingStats] = React.useState(false);
-  const [navSlideMargin, setNavSlideMargin] = React.useState(false);
-  const [navCollapseShift, setNavCollapseShift] = React.useState(false);
-  const [shellExpanded, setShellExpanded] = React.useState(expanded);
-  const prevExpandedRef = React.useRef(expanded);
-
-  React.useEffect(() => {
-    const wasExpanded = prevExpandedRef.current;
-    prevExpandedRef.current = expanded;
-
-    if (!expanded) {
-      setNavAwaitingStats(false);
-
-      if (!wasExpanded || !userInitiatedCollapse) {
-        setFadeVisible(false);
-        setLayoutVisible(false);
-        setNavSlideMargin(false);
-        setNavCollapseShift(false);
-        setShellExpanded(false);
-        return;
-      }
-
-      setShellExpanded(true);
-      setFadeVisible(false);
-
-      let shiftFrame = 0;
-      let shiftFrameOuter = 0;
-      const shiftTimer = window.setTimeout(() => {
-        setNavSlideMargin(true);
-        shiftFrameOuter = requestAnimationFrame(() => {
-          shiftFrame = requestAnimationFrame(() => {
-            setNavCollapseShift(true);
-          });
-        });
-      }, SIDEBAR_STATS_TRANSITION_MS);
-
-      const widthTimer = window.setTimeout(() => {
-        setShellExpanded(false);
-      }, SIDEBAR_STATS_TRANSITION_MS);
-
-      const collapseTimer = window.setTimeout(() => {
-        setLayoutVisible(false);
-        setNavCollapseShift(false);
-        setNavSlideMargin(false);
-      }, SIDEBAR_STATS_TRANSITION_MS + SIDEBAR_SHELL_TRANSITION_MS);
-
-      return () => {
-        window.clearTimeout(shiftTimer);
-        window.clearTimeout(widthTimer);
-        window.clearTimeout(collapseTimer);
-        cancelAnimationFrame(shiftFrameOuter);
-        cancelAnimationFrame(shiftFrame);
-      };
-    }
-
-    if (wasExpanded) {
-      setLayoutVisible(true);
-      setFadeVisible(true);
-      setNavAwaitingStats(false);
-      setNavSlideMargin(false);
-      setNavCollapseShift(false);
-      setShellExpanded(true);
-      return;
-    }
-
-    if (deferRevealUntilShellOpens) {
-      setLayoutVisible(false);
-      setFadeVisible(false);
-      setNavAwaitingStats(false);
-      setNavSlideMargin(false);
-      setNavCollapseShift(false);
-      setShellExpanded(true);
-
-      let statsTimer = 0;
-      const shellTimer = window.setTimeout(() => {
-        setNavSlideMargin(true);
-        setNavAwaitingStats(true);
-        statsTimer = window.setTimeout(() => {
-          setLayoutVisible(true);
-          setFadeVisible(true);
-          setNavAwaitingStats(false);
-          setNavSlideMargin(false);
-        }, SIDEBAR_NAV_SLIDE_MS);
-      }, SIDEBAR_SHELL_TRANSITION_MS);
-
-      return () => {
-        window.clearTimeout(shellTimer);
-        window.clearTimeout(statsTimer);
-      };
-    }
-
-    setLayoutVisible(true);
-    setFadeVisible(true);
-    setNavAwaitingStats(false);
-    setNavSlideMargin(false);
-    setNavCollapseShift(false);
-    setShellExpanded(true);
-  }, [deferRevealUntilShellOpens, expanded, userInitiatedCollapse]);
-
-  return {
-    layoutVisible,
-    fadeVisible,
-    navAwaitingStats,
-    navSlideMargin,
-    navCollapseShift,
-    shellExpanded,
-  };
-}
-
 function DashboardSidebarStatsRow({
   stats,
-  layoutVisible,
-  fadeVisible,
+  visible,
 }: {
   stats: DashboardSidebarStats;
-  layoutVisible: boolean;
-  fadeVisible: boolean;
-}) {
-  return (
-    <div className={sidebarStatsSlotClassName(layoutVisible)}>
-      <div
-        data-testid="dashboard-sidebar-stats"
-        className={sidebarStatsRowClassName(fadeVisible)}
-        style={sidebarStatsRowStyle()}
-        aria-hidden={!fadeVisible}
-      >
-        <div className="grid w-full grid-cols-2 gap-2 pr-2.5">
-          <StatusPill className="w-full justify-center">
-            {stats.liveIntegrations} Live
-          </StatusPill>
-          <StatusPill className="w-full justify-center">
-            {stats.toolCount} Tools
-          </StatusPill>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function CollapsedSidebarExpandGap({
-  className,
-  onEnter,
-  onLeave,
-}: {
-  className?: string;
-  onEnter: () => void;
-  onLeave: () => void;
+  visible: boolean;
 }) {
   return (
     <div
-      aria-hidden
-      data-testid="dashboard-sidebar-expand-gap"
-      className={cn(SIDEBAR_COLLAPSED_EXPAND_GAP_CLASS, className)}
-      onMouseEnter={onEnter}
-      onMouseLeave={onLeave}
-    />
+      data-testid="dashboard-sidebar-stats"
+      className={sidebarStatsRowClassName(visible)}
+      style={{ transitionDuration: `${SIDEBAR_STATS_TRANSITION_MS}ms` }}
+      aria-hidden={!visible}
+    >
+      <div className="grid w-full grid-cols-3 gap-2 pr-2.5">
+        <StatusPill className="w-full justify-center">
+          {stats.liveIntegrations} Live
+        </StatusPill>
+        <StatusPill className="w-full justify-center">
+          {stats.pendingUserApprovals} Pending
+        </StatusPill>
+        <StatusPill className="w-full justify-center">
+          {stats.toolCount} Tools
+        </StatusPill>
+      </div>
+    </div>
   );
 }
 
@@ -285,20 +129,8 @@ function DashboardSidebarRailBody({
   onCollapse,
   onExpand,
   showCollapsedExpandButton,
-  onCollapsedExpandZoneEnter,
-  onCollapsedExpandZoneLeave,
-  statsLayoutVisible,
-  statsFadeVisible,
-  navAwaitingStats,
-  navSlideMargin,
-  navCollapseShift,
-  userMenuCollapsed,
+  statsVisible,
 }: DashboardSidebarRailBodyProps) {
-  const showCollapsedExpandZones = collapsed && showCollapseToggle;
-  const pendingApprovalsCount = usePendingApprovalsCount({
-    enabled: showApprovalsLink,
-  });
-
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className={sidebarHeaderRowClassName(collapsed)}>
@@ -309,12 +141,6 @@ function DashboardSidebarRailBody({
                 ? SIDEBAR_COLLAPSED_LOGO_WRAPPER_CLASS
                 : "flex min-w-0 shrink-0 items-center",
             )}
-            onMouseEnter={
-              showCollapsedExpandZones ? onCollapsedExpandZoneEnter : undefined
-            }
-            onMouseLeave={
-              showCollapsedExpandZones ? onCollapsedExpandZoneLeave : undefined
-            }
           >
             <div
               className={cn(
@@ -381,33 +207,9 @@ function DashboardSidebarRailBody({
         )}
       </div>
 
-      <DashboardSidebarStatsRow
-        stats={stats}
-        layoutVisible={statsLayoutVisible}
-        fadeVisible={statsFadeVisible}
-      />
+      <DashboardSidebarStatsRow stats={stats} visible={statsVisible} />
 
-      <div
-        className={sidebarBelowStatsBodyClassName({
-          shiftUp: navCollapseShift,
-          animateShift: navSlideMargin,
-        })}
-      >
-        {showCollapsedExpandZones ? (
-          <CollapsedSidebarExpandGap
-            className="h-3"
-            onEnter={onCollapsedExpandZoneEnter}
-            onLeave={onCollapsedExpandZoneLeave}
-          />
-        ) : null}
-        <nav
-          className={sidebarMainNavClassName({
-            collapsed,
-            awaitingStats: navAwaitingStats,
-            slideMargin: navSlideMargin,
-          })}
-          aria-label="Main"
-        >
+      <nav className={cn(sidebarNavListClassName(collapsed), "mt-3")} aria-label="Main">
         <DashboardNavLink
           href={getAdminSectionPath("integrations")}
           icon={PlugZap}
@@ -422,7 +224,6 @@ function DashboardSidebarRailBody({
             label="Case-by-case Approvals"
             active={isNavItemActive(activeItem, "caseByCaseApprovals")}
             collapsed={collapsed}
-            trailingCount={pendingApprovalsCount}
           />
         ) : null}
         <DashboardNavLink
@@ -439,38 +240,18 @@ function DashboardSidebarRailBody({
           active={isNavItemActive(activeItem, "permissionProfiles")}
           collapsed={collapsed}
         />
-        <DashboardNavLink
-          href={getAdminSectionPath("profile")}
-          icon={UserRound}
-          label="User Profile"
-          active={isNavItemActive(activeItem, "profile")}
-          collapsed={collapsed}
-        />
       </nav>
 
       {showAdminOverviewLink || showAdminIntegrationsLink ? (
-        <>
-          {showCollapsedExpandZones ? (
-            <CollapsedSidebarExpandGap
-              className="h-3"
-              onEnter={onCollapsedExpandZoneEnter}
-              onLeave={onCollapsedExpandZoneLeave}
-            />
-          ) : null}
-          <div
-            className={cn(
-              sidebarNavDividerClassName(collapsed),
-              collapsed ? "pt-3" : "mt-3 pt-3",
-            )}
-          >
-          <div
+        <div className={cn(sidebarNavDividerClassName(collapsed), "mt-3 pt-3")}>
+          <nav
             className={sidebarNavDividerContentClassName(collapsed)}
             aria-label="Administration"
           >
             {showAdminOverviewLink ? (
               <DashboardNavLink
                 href="/admin-overview"
-                icon={LayoutDashboard}
+                icon={Activity}
                 label="Operational overview"
                 active={isNavItemActive(activeItem, "adminOverview")}
                 collapsed={collapsed}
@@ -479,32 +260,21 @@ function DashboardSidebarRailBody({
             {showAdminIntegrationsLink ? (
               <DashboardNavLink
                 href="/admin-integrations"
-                icon={Blocks}
+                icon={ShieldCheck}
                 label="Admin integrations"
                 active={isNavItemActive(activeItem, "adminIntegrations")}
                 accentWhenActive
                 collapsed={collapsed}
               />
             ) : null}
-          </div>
-          </div>
-        </>
-      ) : null}
-      </div>
-
-      {showCollapsedExpandZones ? (
-        <CollapsedSidebarExpandGap
-          className="min-h-3 flex-1"
-          onEnter={onCollapsedExpandZoneEnter}
-          onLeave={onCollapsedExpandZoneLeave}
-        />
+          </nav>
+        </div>
       ) : null}
 
       <div
         className={cn(
           sidebarNavDividerClassName(collapsed),
-          !showCollapsedExpandZones && "mt-auto",
-          "shrink-0 pt-3",
+          "mt-auto pt-3",
           collapsed && "border-t-0",
         )}
       >
@@ -512,7 +282,7 @@ function DashboardSidebarRailBody({
           <DashboardUserMenu
             displayName={userDisplayName}
             email={userEmail}
-            collapsed={userMenuCollapsed}
+            collapsed={collapsed}
           />
         </div>
       </div>
@@ -520,72 +290,36 @@ function DashboardSidebarRailBody({
   );
 }
 
-export function DashboardSidebarUserPanel({
-  userName,
-  userEmail,
-  badges,
-  action,
-}: {
-  userName: string;
-  userEmail: string;
-  badges?: React.ReactNode[];
-  action?: React.ReactNode;
-}) {
-  return (
-    <div className="space-y-3 rounded-xl border border-[var(--oh-border)] bg-base-secondary p-3">
-      <div className="min-w-0">
-        <p className="truncate text-sm font-medium text-white">{userName}</p>
-        <p className="truncate text-xs text-tertiary-light">{userEmail}</p>
-      </div>
-      {badges?.length ? <div className="flex flex-wrap gap-2">{badges}</div> : null}
-      {action}
-    </div>
-  );
-}
-
 export function DashboardSidebar({
   activeItem,
-  stats = { liveIntegrations: 0, toolCount: 0 },
-  userDisplayName = "Integrations Hub User",
-  userEmail = "Not provided",
+  stats,
+  userDisplayName,
+  userEmail,
   showAdminOverviewLink = false,
   showAdminIntegrationsLink = false,
   showApprovalsLink = true,
 }: {
   activeItem: DashboardSidebarItemId;
-  stats?: DashboardSidebarStats;
-  userDisplayName?: string;
-  userEmail?: string;
+  stats: DashboardSidebarStats;
+  userDisplayName: string;
+  userEmail: string;
   showAdminOverviewLink?: boolean;
   showAdminIntegrationsLink?: boolean;
   showApprovalsLink?: boolean;
-  badge?: React.ReactNode;
-  footer?: React.ReactNode;
 }) {
+  const pathname = usePathname();
   const collapsed = useEffectiveSidebarCollapsed();
-  const userCollapsed = useSidebarStore((state) => state.collapsed);
   const setCollapsed = useSidebarStore((state) => state.setCollapsed);
   const { isOpen: isMobileNavOpen, close: closeMobileNav } = useDashboardMobileNav();
   const [mobileDrawerMounted, setMobileDrawerMounted] = React.useState(false);
   const [mobileDrawerVisible, setMobileDrawerVisible] = React.useState(false);
-  const [collapsedExpandHoverDepth, setCollapsedExpandHoverDepth] =
-    React.useState(0);
+  const [collapsedRailHovered, setCollapsedRailHovered] = React.useState(false);
   const suppressCollapsedExpandRef = React.useRef(false);
   const [, refreshCollapsedExpandGate] = React.useReducer((n) => n + 1, 0);
 
-  const handleCollapsedExpandZoneEnter = React.useCallback(() => {
-    setCollapsedExpandHoverDepth((depth) => depth + 1);
-  }, []);
-
-  const handleCollapsedExpandZoneLeave = React.useCallback(() => {
-    setCollapsedExpandHoverDepth((depth) => Math.max(0, depth - 1));
-  }, []);
-
   React.useEffect(() => {
-    if (!collapsed) {
-      setCollapsedExpandHoverDepth(0);
-    }
-  }, [collapsed]);
+    closeMobileNav();
+  }, [pathname, closeMobileNav]);
 
   React.useEffect(() => {
     if (isMobileNavOpen) {
@@ -656,7 +390,7 @@ export function DashboardSidebar({
   );
 
   const handleCollapse = React.useCallback(() => {
-    setCollapsedExpandHoverDepth(0);
+    setCollapsedRailHovered(false);
     suppressCollapsedExpandRef.current = true;
     refreshCollapsedExpandGate();
     setCollapsed(true);
@@ -667,25 +401,7 @@ export function DashboardSidebar({
   }, [setCollapsed]);
 
   const showCollapsedExpandButton =
-    collapsed &&
-    collapsedExpandHoverDepth > 0 &&
-    !suppressCollapsedExpandRef.current;
-
-  const collapsedExpandZoneProps = {
-    onCollapsedExpandZoneEnter: handleCollapsedExpandZoneEnter,
-    onCollapsedExpandZoneLeave: handleCollapsedExpandZoneLeave,
-  };
-
-  const desktopExpandSequence = useSidebarExpandSequence(
-    !collapsed,
-    true,
-    userCollapsed,
-  );
-  const mobileExpandSequence = useSidebarExpandSequence(
-    mobileDrawerVisible,
-    false,
-    false,
-  );
+    collapsed && collapsedRailHovered && !suppressCollapsedExpandRef.current;
 
   const railBodyProps = {
     activeItem,
@@ -699,35 +415,34 @@ export function DashboardSidebar({
     onCollapse: handleCollapse,
     onExpand: () => setCollapsed(false),
     showCollapsedExpandButton,
-    ...collapsedExpandZoneProps,
   };
 
   return (
     <>
+      {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- collapsed rail hit-area matches agent-canvas sidebar. */}
       <aside
         data-testid="dashboard-sidebar"
         data-collapsed={collapsed ? "true" : "false"}
         aria-label={SIDEBAR_LABELS.navigationAriaLabel}
         onClick={handleCollapsedRailClick}
+        onMouseEnter={() => {
+          if (collapsed) {
+            setCollapsedRailHovered(true);
+          }
+        }}
+        onMouseLeave={() => {
+          setCollapsedRailHovered(false);
+        }}
         className={cn(
           SIDEBAR_SHELL_BASE_CLASS,
-          desktopExpandSequence.shellExpanded
-            ? SIDEBAR_SHELL_EXPANDED_CLASS
-            : SIDEBAR_SHELL_COLLAPSED_CLASS,
+          collapsed ? SIDEBAR_SHELL_COLLAPSED_CLASS : SIDEBAR_SHELL_EXPANDED_CLASS,
         )}
       >
         <DashboardSidebarRailBody
           {...railBodyProps}
           collapsed={collapsed}
           showCollapseToggle
-          statsLayoutVisible={desktopExpandSequence.layoutVisible}
-          statsFadeVisible={desktopExpandSequence.fadeVisible}
-          navAwaitingStats={desktopExpandSequence.navAwaitingStats}
-          navSlideMargin={desktopExpandSequence.navSlideMargin}
-          navCollapseShift={desktopExpandSequence.navCollapseShift}
-          userMenuCollapsed={
-            collapsed && !desktopExpandSequence.shellExpanded
-          }
+          statsVisible={!collapsed}
         />
       </aside>
 
@@ -765,12 +480,7 @@ export function DashboardSidebar({
               showCollapseToggle={false}
               showMobileCloseButton
               onCloseMobile={closeMobileNav}
-              statsLayoutVisible={mobileExpandSequence.layoutVisible}
-              statsFadeVisible={mobileExpandSequence.fadeVisible}
-              navAwaitingStats={mobileExpandSequence.navAwaitingStats}
-              navSlideMargin={mobileExpandSequence.navSlideMargin}
-              navCollapseShift={mobileExpandSequence.navCollapseShift}
-              userMenuCollapsed={false}
+              statsVisible={mobileDrawerVisible}
             />
           </aside>
         </>

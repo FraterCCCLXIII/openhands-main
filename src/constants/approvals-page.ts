@@ -15,8 +15,14 @@ export const APPROVALS_PAGE_COPY = {
   selectAllMatches: "Select all matches",
   deselectMatches: "Deselect matches",
   decisionMenuLabel: "Bulk Actions",
+  decideSelectedTitle: "Decide selected requests",
   decideSelectedDescription: (defaultHours: number, maxHours: number) =>
     `Approvals default to ${defaultHours} hours and can last up to ${maxHours} hours.`,
+  approveModalAriaLabel: "Approve selected requests",
+  cancel: "Cancel",
+  confirmApprove: "Approve",
+  selectedCount: (count: number) => `${count} selected`,
+  durationLabel: "Duration",
   durationAriaLabel: "Approval duration in hours",
   hoursLabel: "hours",
   longDurationHintPrefix:
@@ -32,7 +38,6 @@ export const APPROVALS_PAGE_COPY = {
   denyRequestAriaLabel: (toolName: string, integrationKey: string) =>
     `Deny ${toolName} on ${integrationKey}`,
   tableColumnSelect: "Select",
-  tableColumnIntegration: "Integration",
   tableColumnTool: "Tool",
   tableColumnInvocationIdentity: "Invocation identity",
   tableColumnConversation: "Conversation",
