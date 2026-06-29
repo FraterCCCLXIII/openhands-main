@@ -28,6 +28,12 @@ export const settingsListRowClassName = cn(
   settingsListRowHoverClassName,
 );
 
+/** Settings list rows that are informational panels, not interactive list items. */
+export const settingsListStaticRowClassName = cn(
+  settingsListRowHeightClassName,
+  "flex items-center px-3",
+);
+
 export const settingsListIconActionButtonClassName = cn(
   "inline-flex cursor-pointer items-center justify-center rounded-md p-1 text-muted",
   formControlTransitionClassName,

@@ -8,7 +8,6 @@ import {
 import { APPROVALS_PAGE_COPY } from "@/src/constants/approvals-page";
 import { cn } from "@/src/lib/utils";
 import { formControlTransitionClassName } from "@/src/styles/form-control-classes";
-import { settingsListRowHoverClassName } from "@/src/styles/settings-list-classes";
 import type { AccessRequest } from "@/src/types/integrations-hub";
 
 const approvalRowIconActionClassName = cn(
@@ -70,10 +69,10 @@ export function ApprovalRequestRow({
       data-request-id={request.id}
       data-testid={`approval-request-row-${request.id}`}
       valign="middle"
-      className={cn(formControlTransitionClassName, settingsListRowHoverClassName)}
+      className={cn(formControlTransitionClassName)}
     >
       {showSelectionColumn ? (
-        <td className={cn(tableCellClassName, "w-10 max-w-none align-middle")}>
+        <td className={cn(tableCellClassName, "w-12 max-w-none align-middle pl-4 pr-2")}>
           {request.status === "pending" ? (
             <input
               type="checkbox"
@@ -172,7 +171,10 @@ export function ApprovalRequestRow({
                 request.integrationKey,
               )}
               disabled={requestActionPending}
-              onClick={() => onApprove?.(request.id)}
+              onClick={(event) => {
+                event.stopPropagation();
+                onApprove?.(request.id);
+              }}
               className={cn(
                 approvalRowIconActionClassName,
                 "text-[var(--oh-success)] hover:bg-[color:rgba(165,231,94,0.12)] hover:text-[var(--oh-success)] disabled:cursor-not-allowed disabled:opacity-60",
@@ -188,7 +190,10 @@ export function ApprovalRequestRow({
                 request.integrationKey,
               )}
               disabled={requestActionPending}
-              onClick={() => onDeny?.(request.id)}
+              onClick={(event) => {
+                event.stopPropagation();
+                onDeny?.(request.id);
+              }}
               className={cn(
                 approvalRowIconActionClassName,
                 "text-[var(--oh-danger)] hover:bg-[color:rgba(231,106,94,0.12)] hover:text-[var(--oh-danger)] disabled:cursor-not-allowed disabled:opacity-60",

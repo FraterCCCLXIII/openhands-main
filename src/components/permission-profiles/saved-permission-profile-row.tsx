@@ -62,7 +62,7 @@ export function SavedPermissionProfileRow({
           </span>
           {isDefault ? (
             <SemanticStatusPill variant="success" className="shrink-0">
-              default
+              Default
             </SemanticStatusPill>
           ) : null}
           <span

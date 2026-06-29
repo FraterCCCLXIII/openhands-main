@@ -10,7 +10,6 @@ import {
   formControlSelectTriggerClassName,
 } from "@/src/styles/form-control-classes";
 import {
-  dropdownInstantColorClassName,
   dropdownMenuListClassName,
   dropdownMenuRowClassName,
   dropdownMenuSurfaceClassName,
@@ -78,19 +77,18 @@ export function SelectDropdown({
 
     const updatePosition = () => {
       const rect = trigger.getBoundingClientRect();
-      const menuOffset = variant === "filter" ? 8 : 4;
       setMenuPosition(
         menuAlign === "right"
           ? {
               position: "fixed",
-              top: rect.bottom + menuOffset,
+              top: rect.bottom + 4,
               right: window.innerWidth - rect.right,
               minWidth: rect.width,
               zIndex: 60,
             }
           : {
               position: "fixed",
-              top: rect.bottom + menuOffset,
+              top: rect.bottom + 4,
               left: rect.left,
               minWidth: rect.width,
               zIndex: 60,
@@ -137,7 +135,7 @@ export function SelectDropdown({
 
   const triggerBaseClassName =
     variant === "filter"
-      ? cn(formControlFilterTriggerClassName, dropdownInstantColorClassName)
+      ? formControlFilterTriggerClassName
       : formControlSelectTriggerClassName;
 
   const menu =
@@ -188,11 +186,7 @@ export function SelectDropdown({
 
   return (
     <div
-      className={cn(
-        "relative",
-        variant === "filter" ? "w-fit shrink-0" : "w-full min-w-0",
-        className,
-      )}
+      className={cn("relative w-full min-w-0", className)}
       data-testid={testId}
     >
       {name ? <input type="hidden" name={name} value={value} readOnly /> : null}
@@ -218,17 +212,12 @@ export function SelectDropdown({
           triggerClassName,
         )}
       >
-        <span
-          className={cn(
-            "min-w-0 truncate whitespace-nowrap text-left",
-            variant === "field" && "flex-1",
-          )}
-        >
+        <span className="min-w-0 flex-1 truncate whitespace-nowrap text-left">
           {selectedLabel}
         </span>
         <ChevronDown
           className={cn(
-            "h-4 w-4 shrink-0 text-current transition-transform",
+            "h-4 w-4 shrink-0 text-tertiary-alt transition-transform",
             open && "rotate-180",
           )}
           aria-hidden

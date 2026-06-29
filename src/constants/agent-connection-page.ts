@@ -18,11 +18,11 @@ export const AGENT_CONNECTION_PAGE_COPY = {
   userAutomationKeyTitle: "User automation key",
   userAutomationKeyDescription:
     "Use this key to programmatically manage user-scoped integrations-hub settings.",
-  userAutomationKeyBadge: "user",
+  userAutomationKeyBadge: "User",
   adminAutomationKeyTitle: "Admin automation key",
   adminAutomationKeyDescription:
     "Use this key for admin-only QA and operational automation surfaces.",
-  adminAutomationKeyBadge: "admin",
+  adminAutomationKeyBadge: "Admin",
   noAgentKey: "No agent key available yet.",
   noUserAutomationKey:
     "No user automation key yet. Reveal or copy to create one.",

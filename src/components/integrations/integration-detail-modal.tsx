@@ -6,6 +6,7 @@ import {
   formatTrackedUsage,
   type FilteredIntegrationToolEntry,
 } from "@/src/components/dashboard/utils";
+import { DeleteIntegrationModal } from "@/src/components/integrations/delete-integration-modal";
 import { DetailsRevealCaret } from "@/src/components/integrations/details-reveal-caret";
 import { IntegrationLogoBadge } from "@/src/components/integrations/integration-logo-badge";
 import { isRedundantIntegrationCardLabel } from "@/src/components/integrations/integration-card-labels";
@@ -14,7 +15,6 @@ import {
   getToolAccessMode,
 } from "@/src/components/integrations/tool-access-controls";
 import { ModalCloseButton } from "@/src/components/shared/modals/modal-close-button";
-import { Badge } from "@/src/components/ui/badge";
 import { BrandButton } from "@/src/components/ui/brand-button";
 import { Button } from "@/src/components/ui/button";
 import {
@@ -57,6 +57,7 @@ export function IntegrationDetailModal({
   onUpdateToolAccessMode,
 }: IntegrationDetailModalProps) {
   const { integration, tools, visibleTools } = entry;
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = React.useState(false);
 
   const authLabel = getAuthTypeLabel(integration.authStrategy);
   const toolCountLabel = formatIntegrationToolCountLabel(
@@ -75,7 +76,7 @@ export function IntegrationDetailModal({
       ),
   );
 
-  const handleDelete = () => {
+  const handleConfirmDelete = () => {
     if (onDelete(integration)) {
       onClose();
     }
@@ -134,7 +135,9 @@ export function IntegrationDetailModal({
                   {toolCountLabel}
                 </span>
                 {detailBadges.map((label) => (
-                  <Badge key={label}>{label}</Badge>
+                  <span key={label} className={extensionModuleCardPillClassName}>
+                    {label}
+                  </span>
                 ))}
               </div>
             </div>
@@ -223,21 +226,31 @@ export function IntegrationDetailModal({
           </div>
         </div>
 
-        <div className="flex items-center justify-end gap-2 border-t border-[var(--oh-border)] px-7 py-4">
-          <BrandButton type="button" variant="secondary" onClick={onClose}>
-            {INTEGRATIONS_PAGE_COPY.installedCloseLabel}
-          </BrandButton>
+        <div className="flex items-center justify-between gap-2 border-t border-[var(--oh-border)] px-7 py-4">
           <Button
             type="button"
             variant="danger"
             disabled={isActionPending}
-            onClick={handleDelete}
+            data-testid={`integration-detail-modal-delete-${integration.key}`}
+            onClick={() => setIsDeleteModalOpen(true)}
             title={INTEGRATIONS_PAGE_COPY.installedDeleteTooltip}
           >
             {INTEGRATIONS_PAGE_COPY.installedDeleteLabel}
           </Button>
+          <BrandButton type="button" variant="secondary" onClick={onClose}>
+            {INTEGRATIONS_PAGE_COPY.installedCloseLabel}
+          </BrandButton>
         </div>
       </section>
+
+      {isDeleteModalOpen ? (
+        <DeleteIntegrationModal
+          integration={integration}
+          actionPending={isActionPending}
+          onClose={() => setIsDeleteModalOpen(false)}
+          onConfirm={handleConfirmDelete}
+        />
+      ) : null}
     </ModalBackdrop>
   );
 }

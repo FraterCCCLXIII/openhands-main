@@ -9,6 +9,7 @@ import {
 import { Button } from "@/src/components/ui/button";
 import { ModalBackdrop } from "@/src/components/ui/modal-backdrop";
 import { modalShellClassName } from "@/src/components/ui/modal-shell";
+import { SelectDropdown } from "@/src/components/ui/select-dropdown";
 import { dashboardInputClassName } from "@/src/components/dashboard/shared";
 import {
   UNUSED_TOOL_WINDOW_OPTIONS,
@@ -82,22 +83,16 @@ export function UnusedToolsBulkDisableModal({
             </label>
             <label className="flex flex-col gap-1 text-xs text-[var(--oh-text-secondary)]">
               <span>{INTEGRATIONS_PAGE_COPY.bulkDisableWindowLabel}</span>
-              <select
+              <SelectDropdown
+                testId="unused-tools-threshold-unit-select"
                 value={unusedThresholdUnit}
-                aria-label="Unused threshold unit"
-                onChange={(event) =>
-                  onUnusedThresholdUnitChange(
-                    event.target.value as UnusedToolWindowUnit,
-                  )
+                ariaLabel="Unused threshold unit"
+                onChange={(nextValue) =>
+                  onUnusedThresholdUnitChange(nextValue as UnusedToolWindowUnit)
                 }
-                className={cn(dashboardInputClassName, "w-32")}
-              >
-                {UNUSED_TOOL_WINDOW_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
+                options={UNUSED_TOOL_WINDOW_OPTIONS}
+                className="w-32"
+              />
             </label>
             <div className="flex flex-col gap-2 sm:items-end">
               <p

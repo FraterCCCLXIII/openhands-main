@@ -271,7 +271,7 @@ describe("PermissionProfilesSection", () => {
     });
 
     expect(container.textContent).toContain("Default profile");
-    expect(container.textContent).toContain("default");
+    expect(container.textContent).toContain("Default");
 
     openActionsMenu(container, defaultProfile.id);
 

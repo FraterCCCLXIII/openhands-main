@@ -8,6 +8,7 @@ import { AgentConnectionSection } from "@/src/components/dashboard/sections/agen
 
 import {
   enableReactActEnvironment,
+  selectDropdownOption,
   setInputValue,
 } from "@/src/test-utils/jsdom-helpers";
 
@@ -175,8 +176,10 @@ describe("AgentConnectionSection", () => {
     expect(container.textContent).not.toContain("cla_default_profile_key");
     expect(container.textContent).not.toContain("cla_research_profile_key");
 
-    const profileSelect = container.querySelector("select") as HTMLSelectElement | null;
-    expect(profileSelect?.value).toBe("default-profile");
+    const profileSelectTrigger = container.querySelector(
+      '[data-testid="agent-connection-permission-profile-select-trigger"]',
+    );
+    expect(profileSelectTrigger?.textContent).toContain("Default profile");
 
     const revealButtons = buttons.filter((button) => button.textContent?.includes("Reveal"));
     const copyUserButton = container.querySelector(
@@ -222,7 +225,11 @@ describe("AgentConnectionSection", () => {
     expect(props.adminKey.handleRotate).toHaveBeenCalledTimes(1);
 
     await act(async () => {
-      setInputValue(profileSelect, "research-profile");
+      await selectDropdownOption(
+        container,
+        "agent-connection-permission-profile-select",
+        "research-profile",
+      );
     });
 
     expect(container.textContent).toContain("Research assistant agent key");

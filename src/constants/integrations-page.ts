@@ -37,6 +37,12 @@ export const INTEGRATIONS_PAGE_COPY = {
   installedDeleteLabel: "Delete",
   installedDeleteTooltip:
     "Remove this integration and any saved connection details from your personal dashboard.",
+  deleteModalAriaLabel: "Delete integration",
+  deleteModalTitle: "Delete integration?",
+  deleteModalDescription: (integrationName: string) =>
+    `This permanently removes "${integrationName}" and any saved connection details from your personal dashboard. This action cannot be undone.`,
+  deleteConfirm: "Delete integration",
+  cancel: "Cancel",
   installedCloseLabel: "Close",
   installedNoTools: "No tools registered yet.",
   installedNoVisibleTools: "No visible tools match the current filters.",

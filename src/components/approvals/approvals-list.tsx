@@ -42,7 +42,7 @@ export function ApprovalsList({
     <div data-testid="approvals-list" className={settingsListContainerClassName}>
       <table className="w-full table-fixed border-collapse text-left">
         <colgroup>
-          {showSelectionColumn ? <col className="w-10" /> : null}
+          {showSelectionColumn ? <col className="w-12" /> : null}
           <col className="w-[22%]" />
           <col className="w-[18%]" />
           {showConversationColumn ? <col className="w-[14%]" /> : null}
@@ -60,7 +60,7 @@ export function ApprovalsList({
         <thead>
           <tr className="border-b border-[var(--oh-border)]">
             {showSelectionColumn ? (
-              <th scope="col" className={cn(tableHeaderCellClassName, "w-10")}>
+              <th scope="col" className={cn(tableHeaderCellClassName, "w-12 pl-4 pr-2")}>
                 <span className="sr-only">
                   {APPROVALS_PAGE_COPY.tableColumnSelect}
                 </span>
