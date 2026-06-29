@@ -27,7 +27,6 @@ def _assert_no_existing_agent_keys() -> None:
     """)
 
 
-
 def upgrade() -> None:
     _assert_no_existing_agent_keys()
 

@@ -6,7 +6,7 @@ requires-python = ">=3.12"
 dependencies = [
     "fastapi>=0.115,<1",
     "openhands-agent-server>=1.0.0,<2",
-    "openhands-extensions==0.7.0",
+    "openhands-extensions==0.7.2",
     "pydantic>=2.10,<3",
     "uvicorn[standard]>=0.34,<1",
     "psycopg[binary]>=3.2,<4",

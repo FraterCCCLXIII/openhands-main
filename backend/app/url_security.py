@@ -3,7 +3,6 @@ from __future__ import annotations
 import ipaddress
 import socket
 import urllib.parse
-
 import urllib.request
 
 from fastapi import HTTPException

@@ -1,6 +1,10 @@
 from __future__ import annotations
 
 import socket
+import threading
+import urllib.error
+import urllib.request
+from http.server import BaseHTTPRequestHandler, HTTPServer
 
 import pytest
 from fastapi import HTTPException
@@ -10,10 +14,6 @@ from backend.app.main import discover_mcp_tools, invoke_http_tool
 from backend.app.models import IntegrationSpec, ToolSpec
 from backend.app.openapi_tools import generate_openapi_tools
 from backend.app.url_security import urlopen_no_redirect, validate_external_url
-from http.server import BaseHTTPRequestHandler, HTTPServer
-import threading
-import urllib.error
-import urllib.request
 
 
 class ConfigEnvFixtureProtocol:

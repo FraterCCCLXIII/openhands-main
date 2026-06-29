@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 import json
+from typing import ClassVar
 
 from backend.app import openapi_tools
 from backend.app.openapi_tools import generate_openapi_tools
 
 
 class FakeResponse:
-    headers = {"content-type": "application/json"}
+    headers: ClassVar[dict[str, str]] = {"content-type": "application/json"}
     status = 200
 
     def __init__(self, payload: dict):

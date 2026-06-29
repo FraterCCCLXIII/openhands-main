@@ -1082,7 +1082,7 @@ requires-dist = [
     { name = "fastapi", specifier = ">=0.115,<1" },
     { name = "httpx", specifier = ">=0.28,<1" },
     { name = "openhands-agent-server", specifier = ">=1.0.0,<2" },
-    { name = "openhands-extensions", specifier = "==0.7.0" },
+    { name = "openhands-extensions", specifier = "==0.7.2" },
     { name = "psycopg", extras = ["binary"], specifier = ">=3.2,<4" },
     { name = "pydantic", specifier = ">=2.10,<3" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8,<9" },
@@ -1784,11 +1784,11 @@ wheels = [
 
 [[package]]
 name = "openhands-extensions"
-version = "0.7.0"
+version = "0.7.2"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/60/2e/8c0c9d74838ec98e420c968ae9584856263dd594d8ea8c86155bd1e37569/openhands_extensions-0.7.0.tar.gz", hash = "sha256:742e22ad1d61a70d96ed75d3d924ac1da272bb9645bd05f207581427e438c35c", size = 692172, upload-time = "2026-06-28T02:48:56.152Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/05/fe/711028aed157ba43ad94873ae9caf02002d5e07d296b5812d7b8ecc1379c/openhands_extensions-0.7.2.tar.gz", hash = "sha256:29cfe64b65975048f4ccfedda32fe692ee5c22075f7c7305cd1806c4481fc82e", size = 693208, upload-time = "2026-06-29T01:51:12.149Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a1/b8/bd40fe2b58cd26a7969efa542a61605119f9a0db4139add9a35bed50b604/openhands_extensions-0.7.0-py3-none-any.whl", hash = "sha256:ad7d2784feb1e9d87f896ca8854dcb550039a7afa5dfcb75f8471eddc9f5cb86", size = 52709, upload-time = "2026-06-28T02:48:54.744Z" },
+    { url = "https://files.pythonhosted.org/packages/1f/4b/9858d80c3e883da6ee97f155b354c9635b4602106b4862b3c20243055fc8/openhands_extensions-0.7.2-py3-none-any.whl", hash = "sha256:1e8282c1a90808b0e414e7ccfbba303c31bffd6c83a9d04f27bf671e58265d72", size = 52917, upload-time = "2026-06-29T01:51:10.848Z" },
 ]
 
 [[package]]

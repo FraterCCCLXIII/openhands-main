@@ -1819,10 +1819,15 @@ def test_default_managed_connectors_are_listed_and_require_credentials(
         catalog_by_slug["cloudflare-docs"]["logoUrl"]
         == "https://cdn.simpleicons.org/cloudflare/FFFFFF"
     )
-    # Linear is MCP/bearer in 0.7.0; it is in the catalog but not in the user
+    # Linear is MCP/OAuth in 0.7.2; it is in the catalog but not in the user
     # list until an admin adds it.
     assert "linear" in catalog_by_slug
-    assert catalog_by_slug["linear"]["connectionDefaults"]["authStrategy"] == "bearer"
+    assert catalog_by_slug["linear"]["connectionDefaults"]["authStrategy"] == "oauth2"
+    assert catalog_by_slug["linear"]["connectionDefaults"]["provider"] == "mcp"
+    assert (
+        catalog_by_slug["linear"]["connectionDefaults"]["serverUrl"]
+        == "https://mcp.linear.app/mcp"
+    )
 
     # An admin adding a bearer MCP connector (ordinal) makes it available to
     # users with its credential requirements.
